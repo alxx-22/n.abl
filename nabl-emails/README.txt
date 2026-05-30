@@ -70,11 +70,11 @@ sending. Common placeholders across templates:
   [Calendar Link]       — .ics / add-to-calendar link
   [Proposal Link]       — link to the hosted proposal document
   [Client Portal Link]  — link to the client portal (welcome)
-  [Reply Link]          — usually mailto:hello@nabl.co
+  [Reply Link]          — usually mailto:hello@nabl.agency
   [Unsubscribe Link]    — your list provider's unsubscribe URL
 
 Fixed brand values already filled in (no need to change):
-  hello@nabl.co  ·  www.nabl.co  ·  © 2026 n.abl
+  hello@nabl.agency  ·  www.nabl.agency  ·  © 2026 n.abl
 
 
 ----------------------------------------------------------
