@@ -1,0 +1,36 @@
+n.abl — Innovation. Automation. Optimisation.
+======================================================
+
+[!] ACTION REQUIRED
+
+Hi [First Name],
+
+We wanted to flag something that needs your attention.
+
+A key deadline on your project is approaching and we need a quick
+decision from you before we can move to the next stage. Acting on this
+now keeps everything on schedule and avoids any knock-on delays later
+in the build.
+
+------------------------------------------------------
+WHAT WE NEED FROM YOU:
+ • Confirm the final scope of the automation build
+ • Approve access to the reporting environment
+ • Nominate a point of contact for sign-off
+
+Please respond by [Date].
+------------------------------------------------------
+
+>> RESPOND NOW: [Action Link]
+
+Warm regards,
+[Your Name]
+n.abl
+hello@nabl.co
+www.nabl.co
+
+------------------------------------------------------
+n.abl · Innovation. Automation. Optimisation.
+© 2026 n.abl. All rights reserved.
+If you believe you received this in error, please contact hello@nabl.co
+Unsubscribe: [Unsubscribe Link]
