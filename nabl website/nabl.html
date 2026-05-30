@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>n.abl — We make your business work smarter.</title>
+
+<!-- Favicon: lowercase "n" + lime square dot -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23F9F9F9'/%3E%3Ctext x='8' y='78' font-family='Arial Black,Arial' font-weight='900' font-size='70' fill='%230A0A0A'%3En%3C/text%3E%3Crect x='66' y='58' width='20' height='20' fill='%23B8FF00'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --black: #0A0A0A;
+  --lime: #B8FF00;
+  --grey: #6B6B6B;
+  --bg: #F9F9F9;
+  --dark: #111111;
+  --pale-lime: #F2FFD6;
+  --card-grey: #AAAAAA;
+  --grid-line: #E8E8E8;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--black);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .archivo { font-family: 'Archivo Black', sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+section { position: relative; }
+
+/* ============================================================
+   THE BRAND SIGNATURE — LIME SQUARE DOT
+   ============================================================ */
+.dot {
+  display: inline-block;
+  width: 0.32em;
+  height: 0.32em;
+  background: var(--lime);
+  vertical-align: baseline;
+  margin: 0 0.04em;
+}
+/* dot used as a "full stop" replacement sits at baseline */
+.dot--baseline { vertical-align: 0; }
+
+/* ============================================================
+   PAGE LOAD OVERLAY ANIMATION
+   ============================================================ */
+#intro {
+  position: fixed;
+  inset: 0;
+  background: var(--black);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(0);
+}
+#intro.lift {
+  transform: translateY(-100%);
+  transition: transform 0.35s ease-in-out;
+}
+#intro .mark {
+  display: flex;
+  align-items: flex-end;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(70px, 14vw, 140px);
+  color: #fff;
+  line-height: 1;
+}
+#intro .mark .n {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: introN 0.25s ease-out forwards;
+}
+#intro .mark .sq {
+  width: 0.26em;
+  height: 0.26em;
+  background: var(--lime);
+  margin-left: 0.06em;
+  margin-bottom: 0.06em;
+  transform: scale(0);
+  animation: introSq 0.15s ease-out 0.1s forwards;
+}
+@keyframes introN {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes introSq {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* ============================================================
+   CUSTOM CURSOR (pointer devices only — toggled via JS)
+   ============================================================ */
+.custom-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  width: 8px; height: 8px;
+  background: var(--lime);
+  pointer-events: none;
+  z-index: 12000;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+  mix-blend-mode: difference;
+}
+body.cursor-active,
+body.cursor-active a,
+body.cursor-active button { cursor: none; }
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px clamp(20px, 5vw, 64px);
+  background: transparent;
+  transition: background 0.3s ease, padding 0.3s ease;
+}
+nav.scrolled {
+  background: var(--black);
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.logo {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 26px;
+  color: var(--black);
+  display: flex;
+  align-items: flex-end;
+  line-height: 1;
+  transition: color 0.3s ease;
+}
+nav.scrolled .logo { color: #fff; }
+.logo .sq {
+  width: 9px; height: 9px;
+  background: var(--lime);
+  margin: 0 2px 3px 2px;
+}
+.nav-links {
+  display: flex;
+  gap: clamp(18px, 2.6vw, 40px);
+  align-items: center;
+}
+.nav-links a {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--black);
+  position: relative;
+  padding-bottom: 8px;
+  transition: color 0.3s ease;
+}
+nav.scrolled .nav-links a { color: #fff; }
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  width: 6px; height: 6px;
+  background: var(--lime);
+  transition: transform 0.25s ease;
+}
+.nav-links a.active::after { transform: translateX(-50%) scale(1); }
+
+/* Hamburger */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1002;
+}
+.hamburger span {
+  width: 26px; height: 3px;
+  background: var(--black);
+  transition: transform 0.3s ease, opacity 0.3s ease, background 0.3s ease;
+}
+nav.scrolled .hamburger span { background: #fff; }
+body.menu-open .hamburger span { background: #fff; }
+body.menu-open .hamburger span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+body.menu-open .hamburger span:nth-child(2) { opacity: 0; }
+body.menu-open .hamburger span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+.mobile-nav {
+  position: fixed;
+  inset: 0;
+  background: var(--black);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 28px;
+  padding: 0 10vw;
+  transform: translateY(-100%);
+  transition: transform 0.4s cubic-bezier(0.77,0,0.18,1);
+}
+body.menu-open .mobile-nav { transform: translateY(0); }
+.mobile-nav a {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(28px, 8vw, 46px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.mobile-nav a .sq {
+  width: 12px; height: 12px;
+  background: var(--lime);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   GENERIC SECTION / REVEAL
+   ============================================================ */
+.section-pad {
+  padding: clamp(80px, 12vh, 160px) clamp(20px, 5vw, 64px);
+}
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lime);
+  /* lime needs a touch of weight on white — keep readable */
+  background: var(--black);
+  display: inline-block;
+  padding: 5px 10px;
+  margin-bottom: 26px;
+}
+.section-title {
+  font-size: clamp(32px, 5.5vw, 64px);
+  line-height: 1.02;
+  margin-bottom: 22px;
+  max-width: 16ch;
+}
+.section-sub {
+  font-size: clamp(16px, 1.4vw, 19px);
+  color: var(--grey);
+  max-width: 60ch;
+  margin-bottom: 60px;
+}
+
+/* Reveal animation base */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  will-change: transform, opacity;
+}
+.reveal.in { opacity: 1; transform: translateY(0); }
+.reveal.from-left  { transform: translateX(-50px); }
+.reveal.from-right { transform: translateX(50px); }
+.reveal.from-left.in, .reveal.from-right.in { transform: translateX(0); }
+
+/* ============================================================
+   HERO
+   ============================================================ */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 120px clamp(20px, 5vw, 64px) 60px;
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-color: var(--bg);
+}
+.hero-inner { will-change: transform; }
+.hero h1 {
+  font-size: clamp(44px, 9vw, 120px);
+  line-height: 0.96;
+  max-width: 14ch;
+  margin-bottom: 34px;
+}
+.hero h1 .word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(15px);
+}
+.hero h1 .word.animate { animation: wordIn 0.5s ease-out forwards; }
+@keyframes wordIn { to { opacity: 1; transform: translateY(0); } }
+.hero h1 .dot { width: 0.18em; height: 0.18em; margin-left: 0.02em; }
+.hero-sub {
+  font-size: clamp(17px, 1.6vw, 22px);
+  color: var(--grey);
+  max-width: 50ch;
+  margin-bottom: 44px;
+}
+.cta-row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.btn {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 16px 30px;
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn--solid { background: var(--black); color: var(--lime); }
+.btn--solid:hover { background: var(--lime); color: var(--black); border-color: var(--lime); }
+.btn--outline { background: #fff; color: var(--black); }
+.btn--outline:hover { background: var(--black); color: #fff; }
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: bounce 1.6s ease-in-out infinite;
+}
+.scroll-indicator svg { display: block; }
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(10px); }
+}
+
+/* ============================================================
+   WHAT WE DO — PILLAR CARDS
+   ============================================================ */
+#what-we-do { background: var(--bg); }
+.cards-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.pillar {
+  background: var(--black);
+  color: #fff;
+  padding: 44px 36px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease;
+}
+.pillar::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: var(--lime);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.35s ease;
+}
+.pillar:hover { transform: translateY(-3px); }
+.pillar:hover::before { transform: scaleY(1); }
+.pillar .num {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 44px;
+  color: var(--lime);
+  margin-bottom: 28px;
+}
+.pillar h3 { font-size: 30px; margin-bottom: 18px; }
+.pillar p { color: var(--card-grey); font-size: 16px; margin-bottom: 30px; }
+.pillar .tag {
+  display: inline-block;
+  background: var(--lime);
+  color: var(--black);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 8px 14px;
+}
+
+/* ============================================================
+   YOUR SYSTEMS
+   ============================================================ */
+#your-systems { background: #fff; }
+.sys-title { font-size: clamp(30px, 5vw, 60px); line-height: 1.04; max-width: 18ch; margin-bottom: 24px; }
+.sys-title .dot { width: 0.16em; height: 0.16em; }
+.sys-sub { font-size: clamp(16px, 1.4vw, 19px); color: var(--grey); max-width: 64ch; margin-bottom: 64px; }
+
+.sys-row {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 30px;
+  padding: 28px 0;
+  border-top: 1px solid #E0E0E0;
+  align-items: start;
+}
+.sys-row:last-child { border-bottom: 1px solid #E0E0E0; }
+.sys-cat { font-family: 'Archivo Black', sans-serif; font-size: 19px; line-height: 1.2; }
+.badges { display: flex; flex-wrap: wrap; gap: 10px; }
+.badge {
+  display: inline-block;
+  border: 1px solid var(--black);
+  background: #fff;
+  color: var(--black);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.badge:hover { background: var(--lime); }
+
+/* ============================================================
+   HOW WE WORK
+   ============================================================ */
+#how-we-work { background: var(--bg); }
+.steps {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: start;
+  gap: 0;
+}
+.step { padding: 0 24px; }
+.step .icon { margin-bottom: 24px; }
+.step .icon svg { width: 44px; height: 44px; stroke: var(--lime); fill: none; stroke-width: 2; }
+.step .snum { font-family: 'Archivo Black', sans-serif; font-size: 22px; color: var(--lime); margin-bottom: 10px; }
+.step h3 { font-size: 26px; margin-bottom: 14px; }
+.step p { color: var(--grey); font-size: 16px; }
+.connector { display: flex; align-items: center; padding-top: 22px; min-width: 60px; }
+.connector svg { width: 100%; height: 2px; overflow: visible; }
+.connector line {
+  stroke: var(--black);
+  stroke-width: 2;
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  transition: stroke-dashoffset 0.8s ease-out;
+}
+.connector.draw line { stroke-dashoffset: 0; }
+
+/* ============================================================
+   IMPACT NUMBERS
+   ============================================================ */
+#impact {
+  background: var(--dark);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+#impact::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.stat .stat-num {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(44px, 6vw, 76px);
+  color: var(--lime);
+  line-height: 1;
+  margin-bottom: 14px;
+}
+.stat .stat-label { color: #fff; font-size: 16px; max-width: 22ch; margin: 0 auto; }
+
+/* ============================================================
+   CASE STUDIES
+   ============================================================ */
+#cases { background: var(--bg); }
+.case-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.case {
+  background: #fff;
+  border: 1px solid var(--black);
+  padding: 32px 30px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.case:hover { transform: translateY(-5px); border-color: var(--lime); }
+.case .clabel {
+  align-self: flex-start;
+  background: var(--lime);
+  color: var(--black);
+  font-weight: 500;
+  font-size: 13px;
+  padding: 6px 12px;
+  margin-bottom: 22px;
+}
+.case h3 { font-size: 23px; line-height: 1.12; margin-bottom: 14px; }
+.case .industry { font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: var(--black); text-transform: uppercase; margin-bottom: 16px; }
+.case p { color: var(--grey); font-size: 15px; margin-bottom: 26px; flex-grow: 1; }
+.case .tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.case .tools .badge { font-size: 12px; padding: 6px 10px; }
+
+/* ============================================================
+   ABOUT
+   ============================================================ */
+#about { background: #fff; }
+.about-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: clamp(40px, 6vw, 90px);
+  align-items: start;
+}
+.pull-quote {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(30px, 4.4vw, 58px);
+  line-height: 1.04;
+}
+.pull-quote .dot { width: 0.16em; height: 0.16em; }
+.about-body p { color: var(--grey); font-size: 17px; margin-bottom: 22px; }
+.about-body .based { color: var(--black); font-weight: 500; margin-top: 10px; }
+
+/* ============================================================
+   CONTACT / CTA
+   ============================================================ */
+#contact {
+  background: var(--black);
+  color: #fff;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+#contact .watermark {
+  position: absolute;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(300px, 60vw, 720px);
+  color: #fff;
+  opacity: 0.04;
+  line-height: 0.8;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+  display: flex;
+  align-items: flex-end;
+}
+#contact .watermark .sq { width: 0.2em; height: 0.2em; background: #fff; margin-left: 0.04em; margin-bottom: 0.06em; }
+.contact-inner { position: relative; z-index: 1; }
+#contact h2 { font-size: clamp(32px, 5.5vw, 68px); line-height: 1.02; max-width: 18ch; margin: 0 auto 24px; }
+#contact .csub { color: var(--grey); font-size: clamp(16px, 1.5vw, 20px); max-width: 56ch; margin: 0 auto 44px; }
+.btn--lime {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 18px;
+  background: var(--lime);
+  color: var(--black);
+  border: 2px solid var(--lime);
+  padding: 20px 40px;
+}
+.btn--lime:hover { background: var(--black); color: var(--lime); }
+.contact-email { display: inline-block; margin-top: 36px; color: #fff; font-size: 18px; }
+.contact-email:hover { text-decoration: underline; text-decoration-color: var(--lime); text-underline-offset: 4px; }
+.contact-note { color: var(--grey); font-size: 14px; margin-top: 12px; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer { background: var(--black); color: #fff; }
+.footer-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 36px clamp(20px, 5vw, 64px);
+}
+.footer-row .logo { font-size: 22px; color: #fff; justify-self: start; }
+.footer-row .logo .sq { width: 7px; height: 7px; margin-bottom: 2px; }
+.footer-mid { color: var(--grey); font-size: 14px; letter-spacing: 0.04em; justify-self: center; text-align: center; }
+.footer-right { color: var(--grey); font-size: 14px; justify-self: end; text-align: right; }
+.footer-line { height: 1px; background: var(--lime); width: 100%; }
+.footer-micro { text-align: center; color: var(--grey); font-size: 12px; padding: 16px; }
+
+/* ============================================================
+   AUDIT MODAL
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-out, visibility 0s linear 0.2s;
+}
+.modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.2s ease-out;
+}
+.modal {
+  position: relative;
+  background: #fff;
+  border: 2px solid var(--black);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 44px clamp(24px, 5vw, 48px) 40px;
+  transform: scale(0.95) translateY(20px);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.modal-overlay.open .modal { transform: scale(1) translateY(0); }
+.modal-overlay.closing { opacity: 0; transition: opacity 0.15s ease-in; }
+.modal-overlay.closing .modal { transform: scale(0.97) translateY(10px); transition: transform 0.15s ease-in; }
+
+.modal-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--lime);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.modal-overlay.open .modal-accent {
+  animation: accentWipe 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+@keyframes accentWipe { to { transform: scaleX(1); } }
+
+/* staggered content entrance */
+.modal-form-wrap > *,
+.modal-success > * {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.modal-overlay.open .modal-form-wrap > *,
+.modal-overlay.open .modal-success > * {
+  animation: modalItemIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.modal-overlay.open .modal-form-wrap > *:nth-child(1) { animation-delay: 0.12s; }
+.modal-overlay.open .modal-form-wrap > *:nth-child(2) { animation-delay: 0.17s; }
+.modal-overlay.open .modal-form-wrap > *:nth-child(3) { animation-delay: 0.22s; }
+.modal-overlay.open .modal-form-wrap > *:nth-child(4) { animation-delay: 0.27s; }
+@keyframes modalItemIn { to { opacity: 1; transform: translateY(0); } }
+.modal-close {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 44px; height: 44px;
+  background: none;
+  border: none;
+  font-size: 34px;
+  line-height: 1;
+  color: var(--black);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-heading { font-size: clamp(24px, 3.4vw, 32px); line-height: 1.05; margin-bottom: 14px; }
+.modal-sub { color: var(--grey); font-size: 15px; margin-bottom: 28px; }
+
+.field { display: block; margin-bottom: 18px; }
+.field-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 7px; }
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--black);
+  background: #fff;
+  border: 1px solid var(--black);
+  border-radius: 0;
+  padding: 12px 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.field textarea { resize: vertical; }
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--black);
+  box-shadow: inset 0 -3px 0 var(--lime);
+}
+.btn-submit {
+  width: 100%;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 16px;
+  background: var(--lime);
+  color: var(--black);
+  border: 2px solid var(--lime);
+  padding: 16px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.btn-submit:hover { background: var(--black); color: var(--lime); }
+.btn-submit:disabled { cursor: default; opacity: 0.85; }
+.form-error {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--black);
+  border-left: 4px solid var(--lime);
+  background: var(--pale-lime);
+  color: var(--black);
+  font-size: 14px;
+}
+.form-error a { text-decoration: underline; text-underline-offset: 2px; font-weight: 500; }
+
+/* success state */
+.modal-success { text-align: center; padding: 12px 0 8px; }
+.modal-success h2 { font-size: clamp(24px, 3.4vw, 32px); margin-bottom: 12px; }
+.modal-success p { color: var(--grey); font-size: 16px; margin-bottom: 28px; }
+.success-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--grey); font-family: 'DM Sans', sans-serif; font-size: 15px;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.success-close:hover { color: var(--black); }
+
+.check {
+  width: 64px; height: 64px;
+  margin: 0 auto 24px;
+  position: relative;
+}
+.check::before {
+  content: "";
+  position: absolute;
+  left: 8px; top: 30px;
+  width: 18px; height: 4px;
+  background: var(--lime);
+  transform-origin: left center;
+  transform: rotate(45deg) scaleX(0);
+  animation: checkShort 0.18s ease-out forwards;
+}
+.check::after {
+  content: "";
+  position: absolute;
+  left: 19px; top: 34px;
+  width: 40px; height: 4px;
+  background: var(--lime);
+  transform-origin: left center;
+  transform: rotate(-50deg) scaleX(0);
+  animation: checkLong 0.22s ease-out 0.16s forwards;
+}
+@keyframes checkShort { to { transform: rotate(45deg) scaleX(1); } }
+@keyframes checkLong  { to { transform: rotate(-50deg) scaleX(1); } }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .cards-3 { grid-template-columns: 1fr; }
+  .case-grid { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); gap: 44px 24px; }
+  .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  .steps { grid-template-columns: 1fr; gap: 50px; }
+  .connector { display: none; }
+  .step { padding: 0; }
+  .sys-row { grid-template-columns: 1fr; gap: 16px; }
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+  .hero h1 { font-size: clamp(40px, 12vw, 72px); }
+}
+@media (max-width: 480px) {
+  .stats { grid-template-columns: 1fr; }
+  .cta-row { flex-direction: column; align-items: stretch; }
+  .btn { justify-content: center; }
+  .footer-row { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .footer-row .logo { justify-self: center; }
+  .footer-mid, .footer-right { justify-self: center; text-align: center; }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1 !important; transform: none !important; }
+  #intro { display: none !important; }
+  .hero h1 .word { opacity: 1 !important; transform: none !important; }
+  .custom-cursor { display: none !important; }
+  .scroll-indicator { animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================ INTRO OVERLAY ============================ -->
+<div id="intro" aria-hidden="true">
+  <div class="mark">
+    <span class="n">n</span><span class="sq"></span>
+  </div>
+</div>
+
+<!-- ============================ CUSTOM CURSOR ============================ -->
+<div class="custom-cursor" id="cursor" aria-hidden="true"></div>
+
+<!-- ============================ NAV ============================ -->
+<nav id="nav">
+  <a href="#hero" class="logo" aria-label="n.abl home">n<span class="sq"></span>abl</a>
+  <ul class="nav-links">
+    <li><a href="#what-we-do" data-section="what-we-do">What We Do</a></li>
+    <li><a href="#your-systems" data-section="your-systems">Your Systems</a></li>
+    <li><a href="#how-we-work" data-section="how-we-work">How We Work</a></li>
+    <li><a href="#about" data-section="about">About</a></li>
+    <li><a href="#contact" data-section="contact">Let's Talk</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ============================ MOBILE NAV ============================ -->
+<div class="mobile-nav" id="mobileNav">
+  <a href="#what-we-do"><span class="sq"></span>What We Do</a>
+  <a href="#your-systems"><span class="sq"></span>Your Systems</a>
+  <a href="#how-we-work"><span class="sq"></span>How We Work</a>
+  <a href="#about"><span class="sq"></span>About</a>
+  <a href="#contact"><span class="sq"></span>Let's Talk</a>
+</div>
+
+<main>
+
+<!-- ============================ HERO ============================ -->
+<section id="hero">
+  <div class="hero-inner">
+    <h1>
+      <span class="word">We</span> <span class="word">make</span> <span class="word">your</span><br>
+      <span class="word">business</span> <span class="word">work</span><br>
+      <span class="word">smarter</span><span class="word"><span class="dot dot--baseline"></span></span>
+    </h1>
+    <p class="hero-sub reveal">Innovation. Automation. Optimisation. Built entirely around the tools you already use.</p>
+    <div class="cta-row reveal">
+      <a href="#contact" class="btn btn--solid">Let's Talk →</a>
+      <a href="#what-we-do" class="btn btn--outline">See What We Do</a>
+    </div>
+  </div>
+  <a href="#what-we-do" class="scroll-indicator" aria-label="Scroll down">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B8FF00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  </a>
+</section>
+
+<!-- ============================ WHAT WE DO ============================ -->
+<section id="what-we-do" class="section-pad">
+  <span class="label reveal">What We Do</span>
+  <h2 class="section-title reveal">We don't ask you to<br>change your tools.<br>We master them<span class="dot dot--baseline"></span></h2>
+  <p class="section-sub reveal">Every engagement we take on is rooted in one of three disciplines — and most businesses need all three.</p>
+
+  <div class="cards-3">
+    <article class="pillar reveal">
+      <div class="num">01</div>
+      <h3>Innovation</h3>
+      <p>We look at your business with fresh eyes — identifying where modern tools and smarter thinking can create real competitive advantage. Not theory. Practical change that sticks.</p>
+      <span class="tag">Discover What's Possible</span>
+    </article>
+    <article class="pillar reveal">
+      <div class="num">02</div>
+      <h3>Automation</h3>
+      <p>Manual processes, repetitive data tasks, slow reporting cycles — we eliminate them. We build automations that run quietly inside your existing systems, saving your team hours every single week.</p>
+      <span class="tag">Save Time, Reduce Error</span>
+    </article>
+    <article class="pillar reveal">
+      <div class="num">03</div>
+      <h3>Optimisation</h3>
+      <p>Most businesses are already paying for powerful tools they barely scratch the surface of. We go in, learn your environment, and make everything you already own finally perform.</p>
+      <span class="tag">Get More From What You Have</span>
+    </article>
+  </div>
+</section>
+
+<!-- ============================ YOUR SYSTEMS ============================ -->
+<section id="your-systems" class="section-pad">
+  <span class="label reveal">Your Systems</span>
+  <h2 class="sys-title reveal">Your systems. Fully unlocked<span class="dot dot--baseline"></span></h2>
+  <p class="sys-sub reveal">Your business already runs on powerful systems. Most of them are being used at a fraction of their potential. We close that gap — learning your environment inside and out, so you get more from what you're already paying for.</p>
+
+  <div class="sys-row reveal">
+    <div class="sys-cat">Intelligent Automation &amp; Apps</div>
+    <div class="badges">
+      <span class="badge">Power BI</span>
+      <span class="badge">Power Automate</span>
+      <span class="badge">Power Apps</span>
+      <span class="badge">Copilot Studio</span>
+    </div>
+  </div>
+  <div class="sys-row reveal">
+    <div class="sys-cat">Productivity &amp; Collaboration</div>
+    <div class="badges">
+      <span class="badge">Microsoft 365 Suite (Excel, SharePoint, Teams, Outlook, OneDrive)</span>
+    </div>
+  </div>
+  <div class="sys-row reveal">
+    <div class="sys-cat">Data &amp; Analytics</div>
+    <div class="badges">
+      <span class="badge">Microsoft Fabric</span>
+      <span class="badge">Azure Data Services</span>
+      <span class="badge">Snowflake</span>
+      <span class="badge">DAX Studio</span>
+      <span class="badge">SAP BusinessObjects</span>
+      <span class="badge">SAP S/4HANA</span>
+    </div>
+  </div>
+  <div class="sys-row reveal">
+    <div class="sys-cat">CRM &amp; Revenue Tools</div>
+    <div class="badges">
+      <span class="badge">Salesforce</span>
+      <span class="badge">Clari</span>
+      <span class="badge">EPOS Systems</span>
+    </div>
+  </div>
+  <div class="sys-row reveal">
+    <div class="sys-cat">Back Office &amp; AI Agents</div>
+    <div class="badges">
+      <span class="badge">Polaris</span>
+      <span class="badge">AI Data Agents</span>
+      <span class="badge">Copilot-Powered Assistants</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ HOW WE WORK ============================ -->
+<section id="how-we-work" class="section-pad">
+  <span class="label reveal">How We Work</span>
+  <h2 class="section-title reveal">No servers. No bloat. Just results.</h2>
+  <p class="section-sub reveal">We work inside your world — not ours. No infrastructure on our end, no lock-in, no complexity handed back to you.</p>
+
+  <div class="steps">
+    <div class="step reveal">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>
+      </div>
+      <div class="snum">01</div>
+      <h3>Audit</h3>
+      <p>We map your current systems, workflows and data — finding the gaps, the inefficiencies, and the untapped opportunities hiding in plain sight.</p>
+    </div>
+
+    <div class="connector"><svg preserveAspectRatio="none"><line x1="0" y1="1" x2="100%" y2="1"></line></svg></div>
+
+    <div class="step reveal">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5 2.5-2.5z"></path></svg>
+      </div>
+      <div class="snum">02</div>
+      <h3>Build</h3>
+      <p>We build and implement directly inside your existing tools — no ripping out what works, no costly migrations, no learning curve for your team. Everything we deliver lives where your business already operates.</p>
+    </div>
+
+    <div class="connector"><svg preserveAspectRatio="none"><line x1="0" y1="1" x2="100%" y2="1"></line></svg></div>
+
+    <div class="step reveal">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="15 7 21 7 21 13"></polyline></svg>
+      </div>
+      <div class="snum">03</div>
+      <h3>Optimise</h3>
+      <p>We stay with you — refining, automating and unlocking more value as your business grows. The more we know your environment, the more we can do inside it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ IMPACT NUMBERS ============================ -->
+<section id="impact" class="section-pad">
+  <div class="stats">
+    <div class="stat reveal">
+      <div class="stat-num" data-target="47" data-suffix="+">0</div>
+      <div class="stat-label">Businesses transformed</div>
+    </div>
+    <div class="stat reveal">
+      <div class="stat-num" data-target="2.1" data-prefix="£" data-suffix="M+" data-decimals="1">0</div>
+      <div class="stat-label">Estimated client savings unlocked</div>
+    </div>
+    <div class="stat reveal">
+      <div class="stat-num" data-target="3" data-suffix="x">0</div>
+      <div class="stat-label">Average efficiency improvement</div>
+    </div>
+    <div class="stat reveal">
+      <div class="stat-num" data-target="100" data-suffix="%">0</div>
+      <div class="stat-label">Delivered inside your existing stack</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CASE STUDIES ============================ -->
+<section id="cases" class="section-pad">
+  <span class="label reveal">In Practice</span>
+  <h2 class="section-title reveal">What this actually looks like.</h2>
+  <p class="section-sub reveal">Real problems. Real tools. Real outcomes.</p>
+
+  <div class="case-grid">
+    <article class="case reveal">
+      <span class="clabel">Automation</span>
+      <h3>14 hours of weekly reporting. Gone.</h3>
+      <div class="industry">Retail Operations — UK SME</div>
+      <p>Manual weekly reports that took the operations team most of Monday morning were replaced with an automated flow that runs every night and lands in their inbox ready to act on.</p>
+      <div class="tools">
+        <span class="badge">Power Automate</span>
+        <span class="badge">Power BI</span>
+        <span class="badge">SharePoint</span>
+      </div>
+    </article>
+
+    <article class="case reveal">
+      <span class="clabel">Optimisation</span>
+      <h3>60% more accurate. Zero new software.</h3>
+      <div class="industry">Sales Team — B2B Technology</div>
+      <p>Their pipeline data was there — it just wasn't working for them. We restructured their existing CRM and forecasting setup so leadership finally had numbers they could trust.</p>
+      <div class="tools">
+        <span class="badge">Salesforce</span>
+        <span class="badge">Clari</span>
+        <span class="badge">Power BI</span>
+      </div>
+    </article>
+
+    <article class="case reveal">
+      <span class="clabel">Innovation</span>
+      <h3>An AI assistant that actually knows your business.</h3>
+      <div class="industry">Professional Services — Back Office</div>
+      <p>We built a custom AI agent connected directly to their back-office system. Staff now get instant answers to internal queries that used to mean emails, calls, and waiting.</p>
+      <div class="tools">
+        <span class="badge">Copilot Studio</span>
+        <span class="badge">Polaris</span>
+        <span class="badge">AI Data Agents</span>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ============================ ABOUT ============================ -->
+<section id="about" class="section-pad">
+  <div class="about-grid">
+    <div class="pull-quote reveal from-left">We don't sell you<br>new software.<br>We make the software<br>you have finally work<span class="dot dot--baseline"></span></div>
+    <div class="about-body reveal from-right">
+      <p>n.abl was built for the small businesses that are tired of being sold complexity. We come in, we learn your environment, and we build quietly — inside your world, not ours.</p>
+      <p>No servers on our end. No lock-in. No six-month onboarding. Just a small, expert team that genuinely understands your systems and uses that knowledge to make a real difference to how your business runs.</p>
+      <p class="based">Based in the UK. Working with businesses everywhere.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CONTACT / CTA ============================ -->
+<section id="contact" class="section-pad">
+  <div class="watermark" aria-hidden="true">n<span class="sq"></span></div>
+  <div class="contact-inner">
+    <h2 class="reveal">Ready to unlock what's already there?</h2>
+    <p class="csub reveal">Book a free 30-minute discovery call. No pitch deck. No pressure. Just an honest conversation about where you are and what's genuinely possible.</p>
+    <div class="reveal">
+      <button type="button" class="btn btn--lime" id="openAudit">BOOK YOUR FREE DISCOVERY CALL →</button>
+    </div>
+    <a href="mailto:hello@nabl.co" class="contact-email reveal">hello@nabl.co</a>
+    <p class="contact-note reveal">We typically respond within 4 hours.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================ AUDIT MODAL ============================ -->
+<div class="modal-overlay" id="auditModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalHeading">
+    <div class="modal-accent"></div>
+    <button class="modal-close" id="modalClose" aria-label="Close dialog">&times;</button>
+
+    <div class="modal-form-wrap" id="modalFormWrap">
+      <span class="label">Discovery Call</span>
+      <h2 id="modalHeading" class="modal-heading">Let's find out what's possible.</h2>
+      <p class="modal-sub">Fill in a few quick details and we'll be in touch within 4 hours to arrange your free 30-minute session. No pitch. No pressure.</p>
+
+      <form id="auditForm" novalidate>
+        <label class="field">
+          <span class="field-label">Full Name</span>
+          <input type="text" name="fullName" required autocomplete="name">
+        </label>
+        <label class="field">
+          <span class="field-label">Business Name</span>
+          <input type="text" name="businessName" required autocomplete="organization">
+        </label>
+        <label class="field">
+          <span class="field-label">Email Address</span>
+          <input type="email" name="email" required autocomplete="email">
+        </label>
+        <label class="field">
+          <span class="field-label">What best describes your business?</span>
+          <select name="businessType" required>
+            <option value="" disabled selected>Select one…</option>
+            <option>Retail</option>
+            <option>Professional Services</option>
+            <option>Technology</option>
+            <option>Manufacturing</option>
+            <option>Healthcare</option>
+            <option>Finance</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">What's your biggest challenge right now?</span>
+          <textarea name="challenge" rows="4" placeholder="e.g. our reporting takes too long, we have data we can't make sense of, our team is doing everything manually..."></textarea>
+        </label>
+        <button type="submit" class="btn-submit" id="auditSubmit">Send My Audit Request →</button>
+        <p class="form-error" id="auditError" role="alert" hidden>Something went wrong. Please email us directly at <a href="mailto:hello@nabl.co">hello@nabl.co</a></p>
+      </form>
+    </div>
+
+    <div class="modal-success" id="modalSuccess" hidden>
+      <div class="check" aria-hidden="true"></div>
+      <h2>You're on the list.</h2>
+      <p>We'll be in touch within 4 hours. Keep an eye on your inbox.</p>
+      <button class="success-close" id="successClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ FOOTER ============================ -->
+<footer>
+  <div class="footer-row">
+    <a href="#hero" class="logo">n<span class="sq"></span>abl</a>
+    <div class="footer-mid">Innovation · Automation · Optimisation</div>
+    <div class="footer-right">© 2026 n.abl. All rights reserved.</div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="footer-micro">Built for small business. Powered by your stack.</div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- INTRO OVERLAY ---------------- */
+  var intro = document.getElementById('intro');
+  function startHero() {
+    // stagger hero words in
+    var words = document.querySelectorAll('#hero h1 .word');
+    words.forEach(function (w, i) {
+      w.style.animationDelay = (i * 0.08) + 's';
+      w.classList.add('animate');
+    });
+    // reveal hero sub + ctas
+    document.querySelectorAll('#hero .reveal').forEach(function (el, i) {
+      setTimeout(function () { el.classList.add('in'); }, 600 + i * 120);
+    });
+    // nav fade
+    setTimeout(function () { document.getElementById('nav').style.opacity = 1; }, 800);
+  }
+
+  if (reduceMotion) {
+    if (intro) intro.style.display = 'none';
+    startHero();
+  } else {
+    // hold the mark, then lift the blind (~ n:0.25 + hold0.2 -> lift at ~0.45+0.2)
+    window.setTimeout(function () {
+      intro.classList.add('lift');
+    }, 650);
+    intro.addEventListener('transitionend', function () {
+      intro.style.display = 'none';
+    });
+    startHero();
+  }
+
+  /* ---------------- NAV SCROLL STATE ---------------- */
+  var nav = document.getElementById('nav');
+  var hero = document.getElementById('hero');
+  var navObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) nav.classList.remove('scrolled');
+      else nav.classList.add('scrolled');
+    });
+  }, { rootMargin: '-80px 0px 0px 0px', threshold: 0 });
+  navObserver.observe(hero);
+
+  /* ---------------- MOBILE MENU ---------------- */
+  var hamburger = document.getElementById('hamburger');
+  var mobileNav = document.getElementById('mobileNav');
+  hamburger.addEventListener('click', function () {
+    var open = document.body.classList.toggle('menu-open');
+    hamburger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    hamburger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  });
+  mobileNav.querySelectorAll('a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      document.body.classList.remove('menu-open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  /* ---------------- REVEAL ON SCROLL ---------------- */
+  var revealObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var section = e.target;
+      // stagger this section's reveal children
+      var items = section.querySelectorAll('.reveal');
+      items.forEach(function (el, i) {
+        setTimeout(function () { el.classList.add('in'); }, i * 120);
+      });
+      revealObserver.unobserve(section);
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('main section:not(#hero)').forEach(function (s) {
+    revealObserver.observe(s);
+  });
+
+  /* ---------------- CONNECTOR LINE DRAW ---------------- */
+  var connObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add('draw'); connObserver.unobserve(e.target); }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.connector').forEach(function (c) { connObserver.observe(c); });
+
+  /* ---------------- STAT COUNTERS ---------------- */
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+  function animateCounter(el) {
+    var target = parseFloat(el.getAttribute('data-target'));
+    var decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
+    var prefix = el.getAttribute('data-prefix') || '';
+    var suffix = el.getAttribute('data-suffix') || '';
+    if (reduceMotion) {
+      el.textContent = prefix + target.toFixed(decimals) + suffix;
+      return;
+    }
+    var duration = 1500, start = null;
+    function step(ts) {
+      if (start === null) start = ts;
+      var p = Math.min((ts - start) / duration, 1);
+      var val = target * easeOut(p);
+      el.textContent = prefix + val.toFixed(decimals) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = prefix + target.toFixed(decimals) + suffix;
+    }
+    requestAnimationFrame(step);
+  }
+  var statObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { animateCounter(e.target); statObserver.unobserve(e.target); }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.stat-num').forEach(function (s) { statObserver.observe(s); });
+
+  /* ---------------- ACTIVE NAV INDICATOR ---------------- */
+  var navLinks = document.querySelectorAll('.nav-links a');
+  var sectionMap = {};
+  navLinks.forEach(function (l) {
+    var id = l.getAttribute('data-section');
+    if (id) sectionMap[id] = l;
+  });
+  var activeObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        navLinks.forEach(function (l) { l.classList.remove('active'); });
+        var link = sectionMap[e.target.id];
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+  ['what-we-do', 'your-systems', 'how-we-work', 'about', 'contact'].forEach(function (id) {
+    var s = document.getElementById(id);
+    if (s) activeObserver.observe(s);
+  });
+
+  /* ---------------- HERO PARALLAX ---------------- */
+  var heroInner = document.querySelector('.hero-inner');
+  if (!reduceMotion && heroInner) {
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        var y = window.pageYOffset;
+        if (y < window.innerHeight) {
+          heroInner.style.transform = 'translateY(' + (y * 0.3) + 'px)';
+        }
+        ticking = false;
+      });
+    }, { passive: true });
+  }
+
+  /* ---------------- CUSTOM CURSOR (pointer devices only) ---------------- */
+  var finePointer = window.matchMedia('(pointer: fine)').matches;
+  if (finePointer && !reduceMotion) {
+    var cursor = document.getElementById('cursor');
+    document.body.classList.add('cursor-active');
+    var mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    var cx = mx, cy = my;
+    document.addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; });
+    (function render() {
+      cx += (mx - cx) * 0.18;
+      cy += (my - cy) * 0.18;
+      cursor.style.transform = 'translate(' + cx + 'px,' + cy + 'px) translate(-50%,-50%)';
+      requestAnimationFrame(render);
+    })();
+    document.addEventListener('mouseleave', function () { cursor.style.opacity = 0; });
+    document.addEventListener('mouseenter', function () { cursor.style.opacity = 1; });
+  } else {
+    var c = document.getElementById('cursor');
+    if (c) c.style.display = 'none';
+  }
+
+  /* ---------------- AUDIT MODAL ---------------- */
+  var overlay = document.getElementById('auditModal');
+  var openBtn = document.getElementById('openAudit');
+  var closeBtn = document.getElementById('modalClose');
+  var modalBox = overlay.querySelector('.modal');
+  var form = document.getElementById('auditForm');
+  var formWrap = document.getElementById('modalFormWrap');
+  var success = document.getElementById('modalSuccess');
+  var submitBtn = document.getElementById('auditSubmit');
+  var successClose = document.getElementById('successClose');
+  var lastFocus = null;
+
+  function openModal() {
+    lastFocus = document.activeElement;
+    overlay.classList.remove('closing');
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    // focus first field
+    var firstInput = form.querySelector('input, select, textarea');
+    if (firstInput) setTimeout(function () { firstInput.focus(); }, 220);
+  }
+
+  function closeModal() {
+    overlay.classList.add('closing');
+    overlay.classList.remove('open');
+    var done = function () {
+      overlay.classList.remove('closing');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      // reset to form state for next open
+      formWrap.hidden = false;
+      success.hidden = true;
+      form.reset();
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send My Audit Request →';
+      var errEl = document.getElementById('auditError');
+      if (errEl) errEl.hidden = true;
+      if (lastFocus) lastFocus.focus();
+      overlay.removeEventListener('transitionend', onEnd);
+    };
+    var onEnd = function (e) { if (e.target === overlay) done(); };
+    if (reduceMotion) { done(); }
+    else { overlay.addEventListener('transitionend', onEnd); }
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  successClose.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
+  });
+
+  var auditError = document.getElementById('auditError');
+
+  async function submitAuditForm(name, business, email, notes, businessType) {
+    var response = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_key: '2a4cc07f-441a-4bfe-8b85-586418d676ee',
+        subject: 'New Audit Request — n.abl Website',
+        from_name: 'n.abl Website',
+        name: name,
+        business: business,
+        email: email,
+        business_type: businessType,
+        notes: notes
+      })
+    });
+    var data = await response.json();
+    return data.success;
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    auditError.hidden = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    var ok = false;
+    try {
+      ok = await submitAuditForm(
+        form.fullName.value.trim(),
+        form.businessName.value.trim(),
+        form.email.value.trim(),
+        form.challenge.value.trim(),
+        form.businessType.value
+      );
+    } catch (err) {
+      ok = false;
+    }
+    if (ok) {
+      formWrap.hidden = true;
+      success.hidden = false;
+      modalBox.scrollTop = 0;
+    } else {
+      auditError.hidden = false;
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send My Audit Request →';
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
