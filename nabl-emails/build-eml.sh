@@ -23,7 +23,7 @@ for n in general alert meeting proposal welcome update; do
   boundary="=_nabl_$(date +%s)_${n}_part"
   out="email-${n}.eml"
   {
-    printf 'From: n.abl <hello@nabl.co>\r\n'
+    printf 'From: n.abl <hello@nabl.agency>\r\n'
     printf 'Subject: %s\r\n' "$subj"
     printf 'MIME-Version: 1.0\r\n'
     printf 'X-Unsent: 1\r\n'
