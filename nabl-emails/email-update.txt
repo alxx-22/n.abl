@@ -1,0 +1,35 @@
+n.abl — Innovation. Automation. Optimisation.
+======================================================
+
+PROJECT UPDATE — [Month Year]
+
+Hi [First Name],
+
+Here's a quick update on where things stand with your project.
+
+------------------------------------------------------
+PROGRESS
+ Systems audit and mapping ............. [COMPLETE]
+ Automation flow build ................. [IN PROGRESS]
+ Reporting dashboard setup ............. [UPCOMING]
+------------------------------------------------------
+
+THIS WEEK WE'RE FOCUSING ON:
+ • Finalising the first set of automated reporting flows
+ • Testing data accuracy against your existing reports
+
+WE NEED FROM YOU:
+ • Sign-off on the draft dashboard layout — due by [Date]
+
+>> REPLY WITH ANY QUESTIONS: [Reply Link]
+
+Warm regards,
+[Your Name]
+n.abl
+hello@nabl.co
+www.nabl.co
+
+------------------------------------------------------
+n.abl · Innovation. Automation. Optimisation.
+© 2026 n.abl. All rights reserved.
+Unsubscribe: [Unsubscribe Link]
