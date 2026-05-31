@@ -611,6 +611,11 @@ footer { position: relative; }
 }
 .team-dot:hover { opacity: 1; }
 
+/* Subtle team-login entry — the full stop in the footer "n.abl" wordmark.
+   Looks like plain text; only the team knows it links to /team. */
+.footer-team { color: inherit; text-decoration: none; cursor: text; }
+.footer-team:hover { color: var(--lime); }
+
 /* ============================================================
    AUDIT MODAL
    ============================================================ */
@@ -1199,7 +1204,7 @@ nav.scrolled .portal-btn:hover { background: var(--black); color: var(--lime) !i
   <div class="footer-row">
     <a href="#hero" class="logo">n<span class="sq"></span>abl</a>
     <div class="footer-mid">Innovation · Automation · Optimisation</div>
-    <div class="footer-right">© 2026 n.abl. All rights reserved.</div>
+    <div class="footer-right">© 2026 n<a href="/team" class="footer-team" aria-label="Team access">.</a>abl. All rights reserved.</div>
   </div>
   <div class="footer-line"></div>
   <div class="footer-micro">Built for small business. Powered by your stack.</div>

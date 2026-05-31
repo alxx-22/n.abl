@@ -1116,8 +1116,20 @@ select.tm-finput { appearance: none; cursor: pointer; }
   // ============================================================
   // DASHBOARD RENDER
   // ============================================================
+  // Prefer the display name set on the Supabase user (user_metadata), then the
+  // email's local part, then a generic fallback.
+  function displayName() {
+    const u = state.user;
+    if (!u) return 'team';
+    const meta = u.user_metadata || {};
+    const named = meta.display_name || meta.full_name || meta.name;
+    if (named && String(named).trim()) return String(named).trim();
+    if (u.email) return u.email.split('@')[0];
+    return 'team';
+  }
+
   function renderDashboard() {
-    const who = esc((state.user && state.user.email ? state.user.email.split('@')[0] : 'team'));
+    const who = esc(displayName());
     dash.innerHTML = `
       <div class="tm-dash-head">
         <div>
