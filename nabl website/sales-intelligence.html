@@ -537,9 +537,28 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       body: payload,
       headers: { Authorization: `Bearer ${session.access_token}` }
     });
-    if (error) throw new Error(error.message || 'AI research function failed.');
+    if (error) throw new Error(await functionErrorMessage(error));
     if (!data || !Array.isArray(data.leads)) throw new Error('AI research returned an unexpected shape.');
     return data;
+  }
+
+  async function functionErrorMessage(error) {
+    const fallback = error.message || 'AI research function failed.';
+    const response = error.context;
+    if (!response || typeof response.clone !== 'function') return fallback;
+
+    try {
+      const text = await response.clone().text();
+      if (!text) return fallback;
+      try {
+        const parsed = JSON.parse(text);
+        return [parsed.error, parsed.detail].filter(Boolean).join(': ') || fallback;
+      } catch (_) {
+        return text.slice(0, 400);
+      }
+    } catch (_) {
+      return fallback;
+    }
   }
 
   function leadFromAi(aiLead, status) {
@@ -894,7 +913,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       <article class="si-card accent">
         <span class="si-label">Demo fallback</span>
         <h3>Live AI research did not run.</h3>
-        <p class="muted">${esc(reason || 'Deploy the Supabase Edge Function and set OPENAI_API_KEY to enable live public web research.')}</p>
+        <p class="muted">${esc(reason || 'Deploy the Supabase Edge Function and set openai_api_key to enable live public web research.')}</p>
       </article>
       ${rows.slice(0, 6).map((row, index) => `
         <article class="si-card soft">

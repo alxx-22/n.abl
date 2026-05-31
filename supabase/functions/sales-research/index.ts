@@ -80,6 +80,7 @@ Deno.serve(async (req) => {
 
     const { response, raw } = await callOpenAi(openaiKey, prompt);
     if (!response.ok) {
+      console.error("sales-research OpenAI request failed", safeDetail(raw));
       return json({ error: "OpenAI request failed", detail: safeDetail(raw) }, 502);
     }
 
@@ -93,7 +94,9 @@ Deno.serve(async (req) => {
     result.leads = (result.leads || []).map(normaliseLead);
     return json(result);
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : "Unexpected error" }, 500);
+    const message = error instanceof Error ? error.message : "Unexpected error";
+    console.error("sales-research failed", message);
+    return json({ error: message }, 500);
   }
 });
 
