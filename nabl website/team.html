@@ -880,13 +880,13 @@ select.tm-finput { appearance: none; cursor: pointer; }
     const orderMap = {
       clients: ['created_at', false],
       quotes: ['created_at', false],
-      projects: ['created_at', false],
+      projects: [null, false],
       meetings: ['datetime', true],
       documents: ['uploaded_at', false]
     };
     const [col, asc] = orderMap[tab];
     let q = teamSb.from(tab).select('*');
-    try { q = q.order(col, { ascending: asc }); } catch (e) {}
+    if (col) q = q.order(col, { ascending: asc });
     const { data, error } = await q;
     if (error) { const m = friendlyError(error, 'Couldn’t load — please try again.'); if (m) showToast(m); return []; }
     return data || [];
