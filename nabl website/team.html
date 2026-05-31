@@ -587,6 +587,64 @@ select.tm-finput { appearance: none; cursor: pointer; }
 }
 
 /* ============================================================
+   PAGE LOAD OVERLAY ANIMATION  (mirrors index.html / portal intro)
+   ============================================================ */
+#tm-intro {
+  position: fixed;
+  inset: 0;
+  background: var(--black);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(0);
+}
+#tm-intro.lift {
+  transform: translateY(-100%);
+  transition: transform 0.35s ease-in-out;
+}
+#tm-intro .mark {
+  display: flex;
+  align-items: flex-end;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(70px, 14vw, 140px);
+  color: #fff;
+  line-height: 1;
+}
+#tm-intro .mark .n {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: introN 0.25s ease-out forwards;
+}
+#tm-intro .mark .sq {
+  width: 0.26em;
+  height: 0.26em;
+  background: var(--lime);
+  margin-left: 0.06em;
+  margin-bottom: 0.06em;
+  transform: scale(0);
+  animation: introSq 0.15s ease-out 0.1s forwards;
+}
+@keyframes introN { to { opacity: 1; transform: translateY(0); } }
+@keyframes introSq { from { transform: scale(0); } to { transform: scale(1); } }
+
+/* Login content holds hidden until the blind lifts, then staggers in */
+.tm-topbar.intro-hold { opacity: 0; }
+.tm-topbar.intro-in { animation: tmIntroUp 0.5s ease-out forwards; }
+.tm-login.intro-hold > * { opacity: 0; }
+.tm-login.intro-in > * { animation: tmIntroUp 0.55s ease-out forwards; }
+.tm-login.intro-in > *:nth-child(1) { animation-delay: 0.00s; }
+.tm-login.intro-in > *:nth-child(2) { animation-delay: 0.07s; }
+.tm-login.intro-in > *:nth-child(3) { animation-delay: 0.14s; }
+.tm-login.intro-in > *:nth-child(4) { animation-delay: 0.21s; }
+.tm-login.intro-in > *:nth-child(5) { animation-delay: 0.28s; }
+.tm-login.intro-in > *:nth-child(6) { animation-delay: 0.35s; }
+@keyframes tmIntroUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
    REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
@@ -596,13 +654,23 @@ select.tm-finput { appearance: none; cursor: pointer; }
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+  #tm-intro { display: none !important; }
+  .tm-topbar.intro-hold, .tm-login.intro-hold > * { opacity: 1 !important; }
+  .tm-topbar.intro-in, .tm-login.intro-in > * { animation: none !important; }
 }
 </style>
 </head>
 <body>
 
+<!-- ============================ INTRO OVERLAY ============================ -->
+<div id="tm-intro" aria-hidden="true">
+  <div class="mark">
+    <span class="n">n</span><span class="sq"></span>
+  </div>
+</div>
+
 <!-- ============================ TOP BAR ============================ -->
-<header class="tm-topbar">
+<header class="tm-topbar intro-hold">
   <a href="/" class="logo" aria-label="n.abl home">n<span class="sq"></span>abl</a>
   <a href="/" class="tm-back">← Back to site</a>
 </header>
@@ -611,7 +679,7 @@ select.tm-finput { appearance: none; cursor: pointer; }
 <main>
 <section id="team">
   <!-- LOGIN STATE -->
-  <div class="tm-login" id="teamLogin">
+  <div class="tm-login intro-hold" id="teamLogin">
     <span class="dot dot-top"></span>
     <span class="tm-label">Team Access</span>
     <h2>Internal only<span class="dot dot--baseline"></span></h2>
@@ -652,6 +720,40 @@ select.tm-finput { appearance: none; cursor: pointer; }
   <p>Your session timed out. Please sign in again.</p>
   <button type="button" class="tm-btn-lime" style="max-width:280px" id="tmExpiredBtn">Back to login →</button>
 </div>
+
+<!-- ============================================================
+     INTRO OVERLAY — animated mark lifts to reveal the team page
+     (plain script; runs independently of the Supabase module)
+     ============================================================ -->
+<script>
+(function () {
+  var intro = document.getElementById('tm-intro');
+  var topbar = document.querySelector('.tm-topbar');
+  var login = document.getElementById('teamLogin');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function reveal() {
+    if (topbar) { topbar.classList.remove('intro-hold'); topbar.classList.add('intro-in'); }
+    if (login) { login.classList.remove('intro-hold'); login.classList.add('intro-in'); }
+  }
+
+  if (reduceMotion) {
+    if (intro) intro.style.display = 'none';
+    reveal();
+    return;
+  }
+
+  // Hold the mark briefly, then lift the blind and reveal the login behind it.
+  window.setTimeout(function () {
+    if (intro) intro.classList.add('lift');
+    reveal();
+  }, 650);
+
+  if (intro) {
+    intro.addEventListener('transitionend', function () { intro.style.display = 'none'; });
+  }
+})();
+</script>
 
 <!-- ============================================================
      n.abl TEAM SPACE — Supabase Auth (email/password)
