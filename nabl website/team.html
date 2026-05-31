@@ -366,6 +366,38 @@ select.tm-finput { appearance: none; cursor: pointer; }
 .tm-prog-preview { height: 8px; background: #2A2A2A; width: 100%; margin-top: 8px; }
 .tm-prog-preview > span { display: block; height: 100%; background: var(--lime); width: 0; transition: width 0.15s linear; }
 
+/* file upload zone */
+.tm-file-hidden { display: none; }
+.tm-upload {
+  position: relative;
+  border: 2px dashed #fff;
+  background: var(--black);
+  padding: 26px 20px;
+  text-align: center;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.tm-upload.drag { border-style: solid; border-color: var(--lime); background: var(--pale-lime); }
+.tm-upload.drag .tm-upload-text, .tm-upload.drag .tm-upload-hint { color: var(--black); }
+.tm-upload.has-file { border-style: solid; border-color: var(--lime); padding: 16px 18px; text-align: left; }
+.tm-upload-text { color: #fff; font-size: 14px; margin-bottom: 10px; }
+.tm-upload-hint { color: var(--grey); font-size: 12px; margin-top: 10px; }
+.tm-choose { background: transparent; }
+.tm-file-selected { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tm-file-name { color: var(--lime); font-weight: 500; word-break: break-all; }
+.tm-file-size { color: var(--grey); font-size: 12px; margin-left: 6px; white-space: nowrap; }
+.tm-upload-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; overflow: hidden; opacity: 0; }
+.tm-upload-bar.active { opacity: 1; }
+.tm-upload-bar > span { display: block; height: 100%; width: 40%; background: var(--lime); animation: tmIndet 1s linear infinite; }
+@keyframes tmIndet { from { transform: translateX(-110%); } to { transform: translateX(360%); } }
+.tm-current-file { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+.tm-current-label { color: var(--grey); font-size: 13px; }
+.tm-current-name { color: #fff; word-break: break-all; }
+.tm-link-dl {
+  background: transparent; border: none; color: var(--lime);
+  font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 13px; cursor: pointer; padding: 0;
+}
+.tm-link-dl:hover { text-decoration: underline; text-underline-offset: 3px; }
+
 .tm-form-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
 .tm-btn-save {
   font-family: 'Archivo Black', sans-serif;
@@ -799,7 +831,8 @@ select.tm-finput { appearance: none; cursor: pointer; }
     filterClient: 'all',
     search: '',
     formOpen: false,
-    editing: null
+    editing: null,
+    pendingFiles: {}   // field name -> File chosen but not yet uploaded
   };
 
   // ============================================================
@@ -842,6 +875,24 @@ select.tm-finput { appearance: none; cursor: pointer; }
     let rand = '';
     for (let i = 0; i < 4; i++) rand += chars[Math.floor(Math.random() * chars.length)];
     return `${prefix}-${rand}-2026`;
+  }
+
+  // Last path segment of a storage path, e.g. "12/1700-quote.pdf" -> "quote.pdf"
+  function baseName(path) {
+    const seg = String(path || '').split('/').pop() || '';
+    // strip the leading "<timestamp>-" we prepend on upload
+    return seg.replace(/^\d{10,}-/, '');
+  }
+  const fmtSize = (bytes) => {
+    const b = Number(bytes) || 0;
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return (b / 1024).toFixed(0) + ' KB';
+    return (b / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+  // Build a storage path: [client_id]/[timestamp]-[sanitized original name]
+  function storagePath(clientId, file) {
+    const safe = String(file.name).replace(/[^A-Za-z0-9._-]/g, '_');
+    return `${clientId || 'unknown'}/${Date.now()}-${safe}`;
   }
 
   function showToast(msg) {
@@ -1010,7 +1061,7 @@ select.tm-finput { appearance: none; cursor: pointer; }
       { name: 'title', label: 'Title', type: 'text', req: true, full: true },
       { name: 'amount', label: 'Amount', type: 'money' },
       { name: 'status', label: 'Status', type: 'select', options: ['draft', 'sent', 'accepted', 'rejected'] },
-      { name: 'pdf_url', label: 'PDF URL', type: 'text', full: true },
+      { name: 'pdf_url', label: 'Quote PDF', type: 'file', full: true, bucket: 'quotes', accept: '.pdf,application/pdf', maxMB: 10, pdfOnly: true },
       { name: 'valid_until', label: 'Valid Until', type: 'date' }
     ],
     projects: [
@@ -1034,7 +1085,7 @@ select.tm-finput { appearance: none; cursor: pointer; }
       { name: 'client_id', label: 'Client', type: 'client', req: true },
       { name: 'title', label: 'Title', type: 'text', req: true, placeholder: 'Signed Service Agreement' },
       { name: 'document_type', label: 'Document Type', type: 'select', options: ['contract', 'quote', 'invoice', 'report', 'proposal', 'other'] },
-      { name: 'file_url', label: 'File URL', type: 'text', req: true, full: true, help: 'Paste a share link from OneDrive, Google Drive, or any hosted file location' }
+      { name: 'file_url', label: 'File', type: 'file', req: true, full: true, bucket: 'documents', accept: '', maxMB: 25 }
     ]
   };
 
@@ -1070,6 +1121,23 @@ select.tm-finput { appearance: none; cursor: pointer; }
       const pct = Math.max(0, Math.min(100, Number(v) || 0));
       control = `<input class="tm-finput" id="tmf_${f.name}" type="number" min="0" max="100" value="${pct}">
         <div class="tm-prog-preview"><span id="tmProgPrev" style="width:${pct}%"></span></div>`;
+    } else if (f.type === 'file') {
+      const existing = v ? String(v) : '';
+      const current = existing ? `<div class="tm-current-file" id="tmcur_${f.name}">
+          <span class="tm-current-label">Current:</span>
+          <span class="tm-current-name">${esc(baseName(existing))}</span>
+          <button type="button" class="tm-link-dl" data-dl="${f.name}" data-bucket="${esc(f.bucket)}" data-path="${esc(existing)}">Download current →</button>
+        </div>` : '';
+      control = `<input type="file" class="tm-file-hidden" id="tmf_${f.name}"${f.accept ? ` accept="${esc(f.accept)}"` : ''} data-bucket="${esc(f.bucket)}" data-maxmb="${f.maxMB}"${f.pdfOnly ? ' data-pdfonly="1"' : ''}>
+        <div class="tm-upload" id="tmuz_${f.name}" data-target="${f.name}">
+          <div class="tm-upload-bar" id="tmubar_${f.name}"><span></span></div>
+          <div class="tm-upload-body" id="tmubody_${f.name}">
+            <div class="tm-upload-text">${existing ? 'Drop a new file here to replace, or' : 'Drag &amp; drop a file here, or'}</div>
+            <button type="button" class="tm-gen tm-choose" data-choose="${f.name}">${existing ? 'Replace File' : 'Choose File'}</button>
+            <div class="tm-upload-hint">Max ${f.maxMB}MB${f.pdfOnly ? ' · PDF only' : ''}</div>
+          </div>
+        </div>
+        ${current}`;
     }
     const help = f.help ? `<span class="tm-field-help">${esc(f.help)}</span>` : '';
     return `<div class="${cls}">
@@ -1357,7 +1425,7 @@ select.tm-finput { appearance: none; cursor: pointer; }
   function wireTabContent() {
     const tab = state.activeTab;
     const addBtn = document.getElementById('tmAddBtn');
-    if (addBtn) addBtn.addEventListener('click', () => { state.editing = null; state.formOpen = true; renderTabContent(); document.getElementById('tmEntityForm')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' }); });
+    if (addBtn) addBtn.addEventListener('click', () => { state.editing = null; state.pendingFiles = {}; state.formOpen = true; renderTabContent(); document.getElementById('tmEntityForm')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' }); });
 
     const search = document.getElementById('tmSearch');
     if (search) search.addEventListener('input', () => {
@@ -1372,7 +1440,7 @@ select.tm-finput { appearance: none; cursor: pointer; }
     // Form wiring
     const entityForm = document.getElementById('tmEntityForm');
     if (entityForm) {
-      document.getElementById('tmCancel').addEventListener('click', () => { state.formOpen = false; state.editing = null; renderTabContent(); });
+      document.getElementById('tmCancel').addEventListener('click', () => { state.formOpen = false; state.editing = null; state.pendingFiles = {}; renderTabContent(); });
       entityForm.addEventListener('submit', (e) => { e.preventDefault(); saveEntity(); });
 
       const genBtn = document.getElementById('tmGenKey');
@@ -1386,6 +1454,8 @@ select.tm-finput { appearance: none; cursor: pointer; }
         const pv = document.getElementById('tmProgPrev');
         if (pv) pv.style.width = Math.max(0, Math.min(100, Number(prog.value) || 0)) + '%';
       });
+
+      wireFileFields();
     }
 
     // List actions (delegation)
@@ -1396,6 +1466,101 @@ select.tm-finput { appearance: none; cursor: pointer; }
       else if (act === 'edit') el.addEventListener('click', () => startEdit(el.dataset.id));
       else if (act === 'delete') el.addEventListener('click', () => deleteEntity(el.dataset.id, el.dataset.name));
     });
+  }
+
+  // ---- File upload field wiring (choose / drag-drop / remove / download current) ----
+  function wireFileFields() {
+    const tab = state.activeTab;
+    FORM_FIELDS[tab].forEach((f) => {
+      if (f.type !== 'file') return;
+      const input = document.getElementById('tmf_' + f.name);
+      const zone = document.getElementById('tmuz_' + f.name);
+      if (!input || !zone) return;
+
+      const chooseBtn = zone.querySelector('[data-choose]');
+      if (chooseBtn) chooseBtn.addEventListener('click', () => input.click());
+
+      input.addEventListener('change', () => {
+        if (input.files && input.files[0]) handleFilePick(f, input.files[0]);
+      });
+
+      // Drag & drop
+      ['dragenter', 'dragover'].forEach((ev) => zone.addEventListener(ev, (e) => {
+        e.preventDefault(); e.stopPropagation(); zone.classList.add('drag');
+      }));
+      ['dragleave', 'dragend'].forEach((ev) => zone.addEventListener(ev, (e) => {
+        e.preventDefault(); e.stopPropagation(); zone.classList.remove('drag');
+      }));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault(); e.stopPropagation(); zone.classList.remove('drag');
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) handleFilePick(f, file);
+      });
+    });
+
+    // Download-current (edit mode) — signed URL on demand
+    document.querySelectorAll('[data-dl]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const name = btn.dataset.dl;
+        setFieldError(name, '');
+        const url = await signedUrl(btn.dataset.bucket, btn.dataset.path);
+        if (url) window.open(url, '_blank', 'noopener');
+        else { const e = document.getElementById('tmerr_' + name); if (e) { e.classList.add('lime'); e.textContent = 'Unable to load file — please refresh'; } }
+      });
+    });
+  }
+
+  function handleFilePick(f, file) {
+    const errId = f.name;
+    setFieldError(errId, '');
+    const errEl = document.getElementById('tmerr_' + errId);
+    const fail = (msg) => { if (errEl) { errEl.classList.add('lime'); errEl.textContent = msg; } };
+
+    if (f.pdfOnly) {
+      const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+      if (!isPdf) { fail('Quotes must be PDF files'); return; }
+    }
+    if (file.size > f.maxMB * 1024 * 1024) { fail('File must be under ' + f.maxMB + 'MB'); return; }
+
+    state.pendingFiles[f.name] = file;
+    renderSelectedFile(f, file);
+  }
+
+  function renderSelectedFile(f, file) {
+    const body = document.getElementById('tmubody_' + f.name);
+    const zone = document.getElementById('tmuz_' + f.name);
+    if (!body || !zone) return;
+    zone.classList.add('has-file');
+    body.innerHTML = `<div class="tm-file-selected">
+        <div><span class="tm-file-name">${esc(file.name)}</span><span class="tm-file-size">${fmtSize(file.size)}</span></div>
+        <button type="button" class="tm-gen" data-remove="${f.name}">Remove</button>
+      </div>`;
+    body.querySelector('[data-remove]').addEventListener('click', () => removeSelectedFile(f));
+  }
+
+  function removeSelectedFile(f) {
+    delete state.pendingFiles[f.name];
+    const input = document.getElementById('tmf_' + f.name);
+    if (input) input.value = '';
+    const zone = document.getElementById('tmuz_' + f.name);
+    const body = document.getElementById('tmubody_' + f.name);
+    const hasExisting = state.editing && state.editing[f.name];
+    if (zone) zone.classList.remove('has-file');
+    if (body) body.innerHTML = `<div class="tm-upload-text">${hasExisting ? 'Drop a new file here to replace, or' : 'Drag &amp; drop a file here, or'}</div>
+        <button type="button" class="tm-gen tm-choose" data-choose="${f.name}">${hasExisting ? 'Replace File' : 'Choose File'}</button>
+        <div class="tm-upload-hint">Max ${f.maxMB}MB${f.pdfOnly ? ' · PDF only' : ''}</div>`;
+    const btn = body && body.querySelector('[data-choose]');
+    if (btn && input) btn.addEventListener('click', () => input.click());
+  }
+
+  // Create a fresh signed URL (60 min) for a stored path. Never cached.
+  async function signedUrl(bucket, path) {
+    if (!bucket || !path) return null;
+    try {
+      const { data, error } = await teamSb.storage.from(bucket).createSignedUrl(path, 3600);
+      if (error || !data) return null;
+      return data.signedUrl;
+    } catch (e) { return null; }
   }
 
   function refreshListOnly() {
@@ -1440,6 +1605,7 @@ select.tm-finput { appearance: none; cursor: pointer; }
     const row = state.rows.find((r) => String(r.id) === String(id));
     if (!row) return;
     state.editing = row;
+    state.pendingFiles = {};
     state.formOpen = true;
     renderTabContent();
     document.getElementById('tmEntityForm')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
@@ -1461,6 +1627,15 @@ select.tm-finput { appearance: none; cursor: pointer; }
     const out = {};
     let ok = true;
     for (const f of FORM_FIELDS[tab]) {
+      // File fields aren't collected from .value — handled via state.pendingFiles
+      // and the existing stored path during save. Validate "required" here.
+      if (f.type === 'file') {
+        const hasNew = !!state.pendingFiles[f.name];
+        const hasExisting = state.editing && state.editing[f.name];
+        if (f.req && !hasNew && !hasExisting) { setFieldError(f.name, 'Required.'); ok = false; }
+        continue;
+      }
+
       const el = document.getElementById('tmf_' + f.name);
       if (!el) continue;
       let val = el.value;
@@ -1497,8 +1672,45 @@ select.tm-finput { appearance: none; cursor: pointer; }
     const saveBtn = document.getElementById('tmSave');
     saveBtn.disabled = true;
     const original = saveBtn.textContent;
-    saveBtn.textContent = 'Saving…';
 
+    // ---- 1. Upload any selected files first ----
+    const fileFields = FORM_FIELDS[tab].filter((f) => f.type === 'file');
+    const oldPathsToDelete = [];   // {bucket, path} replaced files, removed only after a successful save
+    const newPathsToRollback = []; // {bucket, path} uploaded this attempt, removed if the DB write fails
+
+    for (const f of fileFields) {
+      const file = state.pendingFiles[f.name];
+      if (file) {
+        saveBtn.textContent = 'Uploading…';
+        setUploadBar(f.name, true);
+        const clientId = payload.client_id || (state.editing && state.editing.client_id);
+        const path = storagePath(clientId, file);
+        let upErr;
+        try {
+          ({ error: upErr } = await teamSb.storage.from(f.bucket).upload(path, file, {
+            cacheControl: '3600', upsert: false, contentType: file.type || undefined
+          }));
+        } catch (e) { upErr = e; }
+        setUploadBar(f.name, false);
+        if (upErr) {
+          saveBtn.disabled = false; saveBtn.textContent = original;
+          await rollbackUploads(newPathsToRollback);
+          const e = document.getElementById('tmerr_' + f.name);
+          if (e) { e.classList.add('lime'); e.textContent = 'Upload failed — please try again'; }
+          return;
+        }
+        newPathsToRollback.push({ bucket: f.bucket, path });
+        // Replacing an existing file? Mark the old path for deletion post-save.
+        if (state.editing && state.editing[f.name]) oldPathsToDelete.push({ bucket: f.bucket, path: state.editing[f.name] });
+        payload[f.name] = path;
+      } else if (state.editing) {
+        // No new file on edit — keep the existing stored path untouched.
+        payload[f.name] = state.editing[f.name] || null;
+      }
+    }
+
+    // ---- 2. Write the row ----
+    saveBtn.textContent = 'Saving…';
     try {
       let error;
       if (state.editing) {
@@ -1508,20 +1720,35 @@ select.tm-finput { appearance: none; cursor: pointer; }
       }
       if (error) {
         saveBtn.disabled = false; saveBtn.textContent = original;
+        await rollbackUploads(newPathsToRollback);
         const m = friendlyError(error, 'Couldn’t save — please try again.');
         if (m) setFieldError(FORM_FIELDS[tab][0].name, m);
         return;
       }
+      // ---- 3. Success — delete replaced old files, clear pending ----
+      await rollbackUploads(oldPathsToDelete);
+      state.pendingFiles = {};
       showToast('Saved ✓');
       state.formOpen = false;
       state.editing = null;
-      // refresh data (clients first if needed for names/dropdowns)
       await loadClients();
       state.rows = tab === 'clients' ? state.clients : await loadRows(tab);
       renderTabContent();
     } catch (err) {
       saveBtn.disabled = false; saveBtn.textContent = original;
+      await rollbackUploads(newPathsToRollback);
       setFieldError(FORM_FIELDS[tab][0].name, 'Connection lost. Refresh the page and try again.');
+    }
+  }
+
+  function setUploadBar(name, on) {
+    const bar = document.getElementById('tmubar_' + name);
+    if (bar) bar.classList.toggle('active', on);
+  }
+  // Remove uploaded objects from storage (best-effort). Used for rollback + replace cleanup.
+  async function rollbackUploads(list) {
+    for (const item of list) {
+      try { await teamSb.storage.from(item.bucket).remove([item.path]); } catch (e) { /* best effort */ }
     }
   }
 
@@ -1541,6 +1768,12 @@ select.tm-finput { appearance: none; cursor: pointer; }
         const m = friendlyError(error, 'Couldn’t delete — please try again.');
         if (m) showToast(m);
         return;
+      }
+      // Clean up any associated stored file(s) for this row.
+      const row = state.rows.find((r) => String(r.id) === String(id));
+      if (row) {
+        const fileFields = FORM_FIELDS[tab].filter((f) => f.type === 'file');
+        await rollbackUploads(fileFields.filter((f) => row[f.name]).map((f) => ({ bucket: f.bucket, path: row[f.name] })));
       }
       setTimeout(async () => {
         await loadClients();

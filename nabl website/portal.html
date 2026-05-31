@@ -621,7 +621,7 @@ section { position: relative; }
   // --- Renderers ---
   function renderQuote(q) {
     const pdf = q.pdf_url
-      ? `<a class="q-pdf" href="${esc(q.pdf_url)}" target="_blank" rel="noopener">VIEW PDF →</a>` : '';
+      ? `<a class="q-pdf" href="#" data-file-bucket="quotes" data-file-path="${esc(q.pdf_url)}" target="_blank" rel="noopener">VIEW PDF →</a>` : '';
     return `<article class="portal-card portal-anim">
       <div class="q-ref">${esc(q.reference || q.ref || '')}</div>
       <h3 class="q-title">${esc(q.title || 'Untitled quote')}</h3>
@@ -686,7 +686,7 @@ section { position: relative; }
       </div>
       <div class="d-right">
         ${doc.uploaded_at ? `<span class="d-date">${esc(dateLong(doc.uploaded_at))}</span>` : ''}
-        ${doc.file_url ? `<a class="d-download" href="${esc(doc.file_url)}" target="_blank" rel="noopener">DOWNLOAD →</a>` : ''}
+        ${doc.file_url ? `<a class="d-download" href="#" data-file-bucket="documents" data-file-path="${esc(doc.file_url)}" target="_blank" rel="noopener">DOWNLOAD →</a>` : ''}
       </div>
     </article>`;
   }
@@ -732,6 +732,39 @@ section { position: relative; }
 
     document.getElementById('portalLogout').addEventListener('click', logout);
     animateDashboard();
+    wireFileLinks();
+  }
+
+  // Generate a fresh signed URL (60 min) for a private storage path. Never cached
+  // in the DB — created on demand each time the link is clicked.
+  async function signedUrl(bucket, path) {
+    try {
+      const { data, error } = await sb.storage.from(bucket).createSignedUrl(path, 3600);
+      if (error || !data) return null;
+      return data.signedUrl;
+    } catch (e) { return null; }
+  }
+
+  function wireFileLinks() {
+    dash.querySelectorAll('[data-file-path]').forEach((a) => {
+      a.addEventListener('click', async (e) => {
+        const path = a.getAttribute('data-file-path');
+        const bucket = a.getAttribute('data-file-bucket');
+        if (!path) return;
+        e.preventDefault();
+        // Legacy rows may store a full pasted URL — open it directly.
+        if (/^https?:\/\//i.test(path)) { window.open(path, '_blank', 'noopener'); return; }
+        const original = a.textContent;
+        a.textContent = 'Loading…';
+        const url = await signedUrl(bucket, path);
+        a.textContent = original;
+        if (url) window.open(url, '_blank', 'noopener');
+        else {
+          a.textContent = 'Unable to load file — please refresh';
+          setTimeout(() => { a.textContent = original; }, 2500);
+        }
+      });
+    });
   }
 
   // --- Reveal animations (fade + slide up, staggered) ---
