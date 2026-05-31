@@ -6,50 +6,58 @@
 <meta name="robots" content="noindex, nofollow">
 <title>n.abl - Sales Intelligence</title>
 
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23F9F9F9'/%3E%3Ctext x='8' y='78' font-family='Arial Black,Arial' font-weight='900' font-size='70' fill='%230A0A0A'%3En%3C/text%3E%3Crect x='66' y='58' width='20' height='20' fill='%23B8FF00'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230A0A0A'/%3E%3Ctext x='8' y='78' font-family='Arial Black,Arial' font-weight='900' font-size='70' fill='%23FFFFFF'%3En%3C/text%3E%3Crect x='66' y='58' width='20' height='20' fill='%23B8FF00'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
 :root {
   --black: #0A0A0A;
   --lime: #B8FF00;
   --grey: #6B6B6B;
   --bg: #F9F9F9;
   --dark: #111111;
+  --surface: #151515;
   --card-grey: #AAAAAA;
-  --line: rgba(255,255,255,0.65);
+  --line: rgba(255,255,255,0.62);
+  --soft-line: rgba(255,255,255,0.18);
+  --red: #7A1E1E;
 }
+
 html { scroll-behavior: smooth; }
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'DM Sans', Arial, Helvetica, sans-serif;
   background: var(--black);
   color: #fff;
   line-height: 1.6;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3, .archivo { font-family: 'Archivo Black', sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+h1, h2, h3, .archivo { font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-weight: 900; letter-spacing: -0.02em; }
 a { color: inherit; text-decoration: none; }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.45; }
 .dot { display: inline-block; width: 0.32em; height: 0.32em; background: var(--lime); vertical-align: baseline; margin: 0 0.04em; }
 .dot--baseline { vertical-align: 0; }
+
 .si-topbar {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 40;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
-  padding: 22px clamp(20px, 5vw, 64px);
+  gap: 20px;
+  padding: 18px clamp(20px, 5vw, 64px);
   background: var(--black);
   border-bottom: 1px solid rgba(255,255,255,0.14);
 }
 .logo {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif;
   font-size: 26px;
   color: #fff;
   display: flex;
@@ -57,8 +65,10 @@ button { cursor: pointer; }
   line-height: 1;
 }
 .logo .sq { width: 9px; height: 9px; background: var(--lime); margin: 0 2px 3px 2px; }
-.si-back { color: var(--card-grey); font-size: 14px; font-weight: 500; }
-.si-back:hover { color: var(--lime); }
+.si-nav { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.si-nav a { color: var(--card-grey); font-size: 14px; font-weight: 500; }
+.si-nav a:hover { color: var(--lime); }
+
 .si-shell {
   min-height: 100vh;
   background-image:
@@ -66,11 +76,11 @@ button { cursor: pointer; }
     linear-gradient(90deg, #1A1A1A 1px, transparent 1px);
   background-size: 40px 40px;
 }
-.si-inner { width: min(1240px, calc(100% - 40px)); margin: 0 auto; }
-.si-hero { padding: clamp(60px, 9vw, 118px) 0 44px; }
+.si-inner { width: min(1320px, calc(100% - 40px)); margin: 0 auto; }
+.si-hero { padding: clamp(54px, 8vw, 108px) 0 36px; }
 .si-hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
   gap: clamp(28px, 6vw, 72px);
   align-items: end;
 }
@@ -81,69 +91,89 @@ button { cursor: pointer; }
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
-.si-hero h1 { font-size: clamp(44px, 8vw, 86px); line-height: 1; max-width: 10ch; }
-.si-copy { color: var(--card-grey); font-size: clamp(16px, 1.4vw, 19px); max-width: 58ch; }
-.si-band { padding: 34px 0; }
+.si-hero h1 { font-size: clamp(42px, 8vw, 88px); line-height: 1; max-width: 10ch; }
+.si-copy { color: var(--card-grey); font-size: clamp(16px, 1.4vw, 19px); max-width: 62ch; }
+.si-band { padding: 30px 0; }
 .si-grid { display: grid; gap: 18px; }
-.si-grid.metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.si-grid.two { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); align-items: start; }
+.metrics { grid-template-columns: repeat(8, minmax(130px, 1fr)); }
+.workspace { grid-template-columns: 340px minmax(0, 1fr); align-items: start; }
+.split { grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr); align-items: start; }
+.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
 .si-card {
   background: var(--dark);
   border: 1px solid var(--line);
   border-radius: 0;
-  padding: 24px;
+  padding: 22px;
 }
 .si-card.accent { border-left: 4px solid var(--lime); }
-.si-card h2 { font-size: clamp(28px, 4vw, 46px); line-height: 1.05; margin-bottom: 14px; }
-.si-card h3 { font-size: 22px; line-height: 1.12; margin-bottom: 8px; }
+.si-card.soft { background: var(--surface); border-color: rgba(255,255,255,0.34); }
+.si-card h2 { font-size: clamp(28px, 4vw, 48px); line-height: 1.05; margin-bottom: 12px; }
+.si-card h3 { font-size: 21px; line-height: 1.12; margin-bottom: 8px; }
 .muted { color: var(--card-grey); }
-.metric-value { font-family: 'Archivo Black', sans-serif; font-size: 42px; color: var(--lime); line-height: 1; }
-.metric-label { color: var(--card-grey); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 18px; }
-.field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
-.field span { color: var(--card-grey); font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
+.micro { color: var(--card-grey); font-size: 13px; }
+.metric-value { font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-size: 38px; color: var(--lime); line-height: 1; }
+.metric-label { color: var(--card-grey); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; margin-top: 16px; }
+
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field span {
+  color: var(--card-grey);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
 input, select, textarea {
   width: 100%;
   background: var(--black);
   color: #fff;
-  border: 1px solid rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.68);
   border-radius: 0;
-  padding: 12px 13px;
+  padding: 11px 12px;
 }
-textarea { min-height: 120px; resize: vertical; }
+textarea { min-height: 116px; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--lime); }
 select option { background: var(--black); color: #fff; }
+.form-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.filters { display: grid; grid-template-columns: minmax(220px, 1.2fr) repeat(4, minmax(130px, 0.8fr)); gap: 12px; margin-bottom: 14px; }
+
 .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 13px;
+  font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   background: var(--lime);
   color: var(--black);
   border: 2px solid var(--lime);
-  padding: 12px 18px;
-  min-height: 44px;
+  border-radius: 0;
+  padding: 11px 16px;
+  min-height: 42px;
 }
 .btn:hover { background: var(--black); color: var(--lime); }
 .btn.ghost { background: transparent; color: #fff; border-color: #fff; }
 .btn.ghost:hover { border-color: var(--lime); color: var(--lime); }
-.lead-list { display: flex; flex-direction: column; gap: 10px; }
+.btn.slim { min-height: 34px; padding: 7px 10px; font-size: 11px; border-width: 1px; }
+
+.lead-list { display: flex; flex-direction: column; gap: 10px; max-height: 760px; overflow: auto; padding-right: 4px; }
 .lead-btn {
   width: 100%;
   text-align: left;
   background: var(--dark);
   color: #fff;
-  border: 1px solid rgba(255,255,255,0.42);
+  border: 1px solid rgba(255,255,255,0.38);
   border-radius: 0;
   padding: 15px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
 }
-.lead-btn.active, .lead-btn:hover { border-color: var(--lime); }
-.lead-btn strong { display: block; font-family: 'Archivo Black', sans-serif; font-size: 18px; line-height: 1.15; margin-bottom: 5px; }
+.lead-btn.active, .lead-btn:hover { border-color: var(--lime); transform: translateY(-2px); }
+.lead-btn strong { display: block; font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-size: 18px; line-height: 1.15; margin-bottom: 5px; }
 .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .badge {
   display: inline-block;
@@ -155,17 +185,43 @@ select option { background: var(--black); color: #fff; }
   text-transform: uppercase;
 }
 .badge.lime { background: var(--lime); border-color: var(--lime); color: var(--black); }
-.research-output {
+.badge.red { background: var(--red); border-color: var(--red); color: #fff; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+.tab {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.48);
+  border-radius: 0;
+  padding: 9px 12px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tab.active, .tab:hover { background: var(--lime); color: var(--black); border-color: var(--lime); }
+.panel[hidden] { display: none; }
+.detail-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+.detail-head h2 { font-size: clamp(30px, 4.5vw, 52px); line-height: 1; max-width: 14ch; }
+.score-box {
+  width: 88px;
+  height: 88px;
+  border: 2px solid var(--lime);
+  display: grid;
+  place-items: center;
+  color: var(--lime);
+  font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif;
+  font-size: 30px;
+}
+.kv {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-  margin-top: 16px;
 }
-.research-output div {
-  border-top: 1px solid rgba(255,255,255,0.2);
+.kv div, .research-box {
+  border-top: 1px solid var(--soft-line);
   padding-top: 10px;
 }
-.research-output span {
+.kv span, .research-box span {
   display: block;
   color: var(--card-grey);
   font-size: 11px;
@@ -173,36 +229,64 @@ select option { background: var(--black); color: #fff; }
   text-transform: uppercase;
   margin-bottom: 4px;
 }
+.contact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.outreach-draft { min-height: 330px; white-space: pre-wrap; }
+
 .pipeline {
   display: grid;
-  grid-template-columns: repeat(5, minmax(190px, 1fr));
+  grid-template-columns: repeat(10, minmax(190px, 1fr));
   gap: 12px;
   overflow-x: auto;
+  padding-bottom: 8px;
 }
-.stage { min-height: 160px; background: var(--dark); border: 1px solid rgba(255,255,255,0.45); padding: 13px; }
-.stage h3 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
-.mini-card { background: var(--black); border: 1px solid rgba(255,255,255,0.25); padding: 10px; margin-bottom: 8px; }
-.warning {
+.stage {
+  min-height: 220px;
+  background: var(--dark);
+  border: 1px solid rgba(255,255,255,0.44);
+  padding: 13px;
+}
+.stage.over { border-color: var(--lime); }
+.stage h3 { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+.deal-card { background: var(--black); border: 1px solid rgba(255,255,255,0.28); padding: 10px; margin-bottom: 8px; }
+.deal-card strong { display: block; font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-size: 14px; line-height: 1.15; margin-bottom: 4px; }
+
+.timeline { display: flex; flex-direction: column; gap: 12px; }
+.event { border-left: 4px solid var(--lime); background: var(--surface); padding: 12px 14px; }
+.event time { display: block; color: var(--card-grey); font-size: 12px; margin-bottom: 4px; }
+.empty { border: 1px dashed rgba(255,255,255,0.32); padding: 22px; color: var(--card-grey); }
+.notice {
   background: var(--black);
-  border: 1px dashed rgba(255,255,255,0.4);
+  border: 1px dashed rgba(255,255,255,0.42);
   border-left: 4px solid var(--lime);
-  padding: 18px;
+  padding: 16px;
   color: var(--card-grey);
 }
-@media (max-width: 920px) {
-  .si-hero-grid, .si-grid.two { grid-template-columns: 1fr; }
-  .si-grid.metrics, .research-output { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.backend-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.backend-list code { color: var(--lime); font-family: 'Courier New', monospace; font-size: 13px; }
+
+@media (max-width: 1080px) {
+  .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .workspace, .split { grid-template-columns: 1fr; }
+  .form-grid, .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .backend-list { grid-template-columns: 1fr; }
 }
-@media (max-width: 620px) {
+@media (max-width: 680px) {
   .si-topbar { align-items: flex-start; flex-direction: column; }
-  .si-grid.metrics, .research-output { grid-template-columns: 1fr; }
+  .si-nav { justify-content: flex-start; }
+  .si-hero-grid, .metrics, .form-grid, .filters, .kv, .contact-grid, .cols-2, .cols-3 { grid-template-columns: 1fr; }
+  .si-card { padding: 18px; }
 }
 </style>
 </head>
 <body>
 <header class="si-topbar">
   <a href="/" class="logo" aria-label="n.abl home">n<span class="sq"></span>abl</a>
-  <a class="si-back" href="/team.html">Back to Team</a>
+  <nav class="si-nav" aria-label="Sales Intelligence navigation">
+    <a href="/team.html">Back to Team</a>
+    <a href="#discovery">Discovery</a>
+    <a href="#crm">CRM</a>
+    <a href="#backend">Backend Plan</a>
+  </nav>
 </header>
 
 <main class="si-shell">
@@ -213,48 +297,51 @@ select option { background: var(--black); color: #fff; }
         <h1>Research before outreach<span class="dot dot--baseline"></span></h1>
       </div>
       <div>
-        <p class="si-copy">A working front-end prototype for lead discovery, AI-style company research, approved outreach and pipeline tracking. Backend public-web fetching comes next in Supabase.</p>
+        <p class="si-copy">An internal sales workspace for discovering public-fit leads, turning research into approved outreach, and keeping every note, status change and next step in one place.</p>
+        <div class="actions">
+          <a class="btn" href="#discovery">Discover Leads</a>
+          <a class="btn ghost" href="#crm">Open CRM</a>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="si-band">
+  <section class="si-band" aria-label="Dashboard metrics">
     <div class="si-inner si-grid metrics" id="metrics"></div>
   </section>
 
-  <section class="si-band">
-    <div class="si-inner si-grid two">
-      <aside>
-        <span class="si-label">CRM</span>
-        <div class="lead-list" id="leadList"></div>
-      </aside>
-
-      <section class="si-card accent">
-        <span class="si-label">AI Public Web Research Tool</span>
-        <h2 id="researchTitle">Company research</h2>
-        <p class="muted" id="researchIntro"></p>
-
-        <div class="warning" style="margin-top:18px;">
-          Prototype status: this page does not crawl the live web from the browser. It demonstrates the research workflow using supplied public signals. The real version should run through Supabase Edge Functions so we can search/fetch public pages safely, log sources, and avoid CORS/client-side scraping problems.
-        </div>
-
-        <form id="researchForm" style="margin-top:18px;">
-          <label class="field">
-            <span>Company Website</span>
-            <input name="website" type="url" placeholder="https://example-business.co.uk">
-          </label>
-          <label class="field">
-            <span>Public Signals Found</span>
-            <textarea name="signals" placeholder="Paste public website notes, search result snippets, Companies House info, directory notes, contact page text..."></textarea>
-          </label>
-          <div class="actions">
-            <button class="btn" type="submit">Generate Research</button>
-            <button class="btn ghost" type="button" id="runExample">Run Case Example</button>
-          </div>
+  <section class="si-band" id="discovery">
+    <div class="si-inner">
+      <div class="si-card accent">
+        <span class="si-label">Lead Discovery</span>
+        <h2>Find businesses with public signals.</h2>
+        <p class="muted">Use the filters to simulate a public web discovery run. The browser version uses a curated public-signal catalogue; the Supabase version will run search/fetch/enrichment server-side and log sources.</p>
+        <form id="discoveryForm" class="form-grid" style="margin-top:18px;">
+          <label class="field"><span>Industry</span><select name="industry"><option value="">Any</option><option>Retail</option><option>Professional Services</option><option>Manufacturing</option><option>Healthcare</option><option>Finance</option><option>Technology</option></select></label>
+          <label class="field"><span>Location</span><select name="location"><option value="">Any</option><option>London</option><option>Manchester</option><option>Birmingham</option><option>Leeds</option><option>Bristol</option><option>UK Remote</option></select></label>
+          <label class="field"><span>Company Size</span><select name="size"><option value="">Any</option><option>1-10</option><option>11-50</option><option>51-200</option><option>201-500</option></select></label>
+          <label class="field"><span>Business Type</span><select name="type"><option value="">Any</option><option>SME</option><option>Multi-site</option><option>Back office heavy</option><option>Sales-led</option><option>Operations-led</option></select></label>
+          <button class="btn" type="submit">Generate Leads</button>
         </form>
+      </div>
+      <div class="si-grid cols-3" id="recommendations" style="margin-top:18px;"></div>
+    </div>
+  </section>
 
-        <div class="research-output" id="researchOutput"></div>
-      </section>
+  <section class="si-band" id="crm">
+    <div class="si-inner">
+      <span class="si-label">CRM</span>
+      <div class="filters">
+        <label class="field"><span>Search</span><input id="search" type="search" placeholder="Company, industry, location"></label>
+        <label class="field"><span>Status</span><select id="statusFilter"><option value="">Any status</option></select></label>
+        <label class="field"><span>Owner</span><select id="ownerFilter"><option value="">Any owner</option><option>Alex</option><option>n.abl Team</option></select></label>
+        <label class="field"><span>Minimum Score</span><input id="scoreFilter" type="number" min="0" max="100" value="0"></label>
+        <button class="btn ghost" type="button" id="resetData">Reset Demo</button>
+      </div>
+      <div class="si-grid workspace">
+        <aside class="lead-list" id="leadList"></aside>
+        <section class="si-card accent" id="leadDetail" aria-live="polite"></section>
+      </div>
     </div>
   </section>
 
@@ -264,65 +351,115 @@ select option { background: var(--black); color: #fff; }
       <div class="pipeline" id="pipeline"></div>
     </div>
   </section>
+
+  <section class="si-band">
+    <div class="si-inner">
+      <span class="si-label">AI Recommendations</span>
+      <div class="si-grid cols-3" id="insights"></div>
+    </div>
+  </section>
+
+  <section class="si-band" id="backend">
+    <div class="si-inner si-card accent">
+      <span class="si-label">Backend Next Steps</span>
+      <h2>Make the research real in Supabase.</h2>
+      <p class="muted">The front-end now has the workflow shape. The next move is to replace localStorage and simulated public-signal research with Supabase tables, Edge Functions, source logging, and approved email integrations.</p>
+      <div class="backend-list" style="margin-top:18px;">
+        <article class="si-card soft"><h3>Data Model</h3><p class="muted"><code>sales_leads</code>, <code>sales_contacts</code>, <code>sales_activities</code>, <code>sales_research_runs</code>, <code>sales_email_drafts</code>, <code>sales_pipeline_events</code>.</p></article>
+        <article class="si-card soft"><h3>Research Functions</h3><p class="muted">Edge Functions for search API calls, website fetch, Companies House lookup, page summarisation, source confidence, and GDPR-safe contact extraction.</p></article>
+        <article class="si-card soft"><h3>Email Flow</h3><p class="muted">Store drafts, require approval, then send via Microsoft 365, Zoho or SMTP. Never auto-send. Log every draft, approval and send event.</p></article>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
 (function () {
   'use strict';
 
-  const stages = ['New Lead', 'Researching', 'Ready To Contact', 'Contacted', 'Follow Up Required'];
-  const leads = [
-    {
-      company: 'Northline Office Supplies',
-      industry: 'Retail',
-      location: 'Manchester',
-      score: 88,
-      status: 'Ready To Contact',
-      website: 'https://example.com/northline',
-      signals: 'Multiple locations, account services, public catalogue, delivery routes, and contact form. Website copy suggests repeated stock, reporting and account follow-up processes.',
-      overview: 'Regional office supplier with multi-site operations and account-led sales.',
-      pain: 'Manual reporting, delivery visibility, customer follow-up and stock/account coordination.',
-      opportunity: 'Power BI reporting, Power Automate workflows, and a lightweight account follow-up process.',
-      angle: 'Ask where the team still copies account or stock information between tools.'
-    },
-    {
-      company: 'Marlow & Finch Advisory',
-      industry: 'Professional Services',
-      location: 'London',
-      score: 81,
-      status: 'Researching',
-      website: 'https://example.com/marlow-finch',
-      signals: 'Public team page, client onboarding copy, resources section and generic contact inbox. Service pages mention reporting packs and recurring client updates.',
-      overview: 'Boutique advisory firm with document-heavy client onboarding.',
-      pain: 'Document control, client status chasing and recurring update admin.',
-      opportunity: 'SharePoint structure, Teams workflow, and automated client update emails.',
-      angle: 'Lead with reducing admin drag without changing their client-facing process.'
-    },
-    {
-      company: 'Forgeway Components',
-      industry: 'Manufacturing',
-      location: 'Birmingham',
-      score: 74,
-      status: 'Contacted',
-      website: 'https://example.com/forgeway',
-      signals: 'Product catalogue, quality process page, supplier expansion news, and production planning language.',
-      overview: 'Manufacturer with supplier and production coordination signals.',
-      pain: 'Spreadsheet handoffs, supplier visibility and production reporting.',
-      opportunity: 'Power Automate approvals, exception reports and operational dashboards.',
-      angle: 'Ask where production reporting still depends on copied spreadsheets.'
-    }
+  const STORAGE_KEY = 'nabl.sales-intelligence.v2';
+  const stages = ['New Lead', 'Researching', 'Ready To Contact', 'Contacted', 'Follow Up Required', 'Replied', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'];
+
+  const catalogue = [
+    ['Cedar Retail Group', 'Retail', 'Leeds', '51-200', 'Multi-site', 87, 'Multiple locations, account services, ecommerce catalogue, stock-led operations, store contact pages and delivery notices.'],
+    ['Bluegate Dental Partners', 'Healthcare', 'Bristol', '11-50', 'Back office heavy', 79, 'Public booking flow, practice admin copy, contact forms, recurring appointment reminders and patient onboarding pages.'],
+    ['Orchard Finance Studio', 'Finance', 'London', '11-50', 'Professional Services', 83, 'Reporting packs, recurring client updates, public guides for finance teams, generic inbox and spreadsheet language.'],
+    ['Westbridge Fabrication', 'Manufacturing', 'Birmingham', '51-200', 'Operations-led', 77, 'Supplier pages, quote forms, catalogue downloads, production planning language and quality process notes.'],
+    ['Pixel & Ledger', 'Technology', 'UK Remote', '1-10', 'Sales-led', 69, 'Public services pages, inbound demo form, founder-led sales and lightweight CRM signals.'],
+    ['Hearth & Row', 'Retail', 'Manchester', '11-50', 'SME', 73, 'Store pages, ecommerce returns process, customer service inbox, manual fulfilment language and public phone number.']
   ];
 
-  let active = leads[0];
+  function seedLeads() {
+    return [
+      makeLead('Northline Office Supplies', 'Retail', 'Manchester', '51-200', 'Multi-site', 88, 'Ready To Contact', 'Alex', 'Multiple locations, account services, public catalogue, delivery routes, and contact form. Website copy suggests repeated stock, reporting and account follow-up processes.'),
+      makeLead('Marlow & Finch Advisory', 'Professional Services', 'London', '11-50', 'Back office heavy', 81, 'Researching', 'n.abl Team', 'Public team page, client onboarding copy, resources section and generic contact inbox. Service pages mention reporting packs and recurring client updates.'),
+      makeLead('Forgeway Components', 'Manufacturing', 'Birmingham', '201-500', 'Operations-led', 74, 'Contacted', 'Alex', 'Product catalogue, quality process page, supplier expansion news, and production planning language. Mentions reporting and supplier coordination.')
+    ];
+  }
 
-  const metrics = document.getElementById('metrics');
-  const leadList = document.getElementById('leadList');
-  const researchTitle = document.getElementById('researchTitle');
-  const researchIntro = document.getElementById('researchIntro');
-  const researchForm = document.getElementById('researchForm');
-  const researchOutput = document.getElementById('researchOutput');
-  const runExample = document.getElementById('runExample');
-  const pipeline = document.getElementById('pipeline');
+  let state = loadState();
+  let selectedId = state.leads[0] && state.leads[0].id;
+  let activeTab = 'research';
+
+  const els = {
+    metrics: document.getElementById('metrics'),
+    discoveryForm: document.getElementById('discoveryForm'),
+    recommendations: document.getElementById('recommendations'),
+    search: document.getElementById('search'),
+    statusFilter: document.getElementById('statusFilter'),
+    ownerFilter: document.getElementById('ownerFilter'),
+    scoreFilter: document.getElementById('scoreFilter'),
+    resetData: document.getElementById('resetData'),
+    leadList: document.getElementById('leadList'),
+    leadDetail: document.getElementById('leadDetail'),
+    pipeline: document.getElementById('pipeline'),
+    insights: document.getElementById('insights')
+  };
+
+  function makeLead(company, industry, location, size, type, score, status, owner, signals) {
+    const research = researchFromSignals(company, '', signals, industry, size, location);
+    const now = new Date().toISOString();
+    return {
+      id: 'lead-' + company.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      company,
+      website: 'https://example.com/' + company.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      industry,
+      location,
+      size,
+      type,
+      score,
+      status,
+      owner,
+      signals,
+      contacts: [{ name: 'Public contact route', role: 'Website', email: '', phone: 'Contact form', source: 'Company website', confidence: 64 }],
+      notes: '',
+      outreachDraft: '',
+      outreachApproved: false,
+      createdAt: now,
+      updatedAt: now,
+      research,
+      activities: [
+        activity('Lead created', 'Created from public web signals', now),
+        activity('Research generated', research.summary, now)
+      ]
+    };
+  }
+
+  function loadState() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (stored && Array.isArray(stored.leads)) return stored;
+    } catch (e) {}
+    return { leads: seedLeads() };
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function activity(type, text, at) {
+    return { id: 'act-' + Math.random().toString(16).slice(2), type, text, at: at || new Date().toISOString() };
+  }
 
   function esc(v) {
     return String(v == null ? '' : v)
@@ -330,127 +467,449 @@ select option { background: var(--black); color: #fff; }
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  function dateShort(value) {
+    const d = new Date(value);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function selectedLead() {
+    return state.leads.find((lead) => lead.id === selectedId) || state.leads[0];
+  }
+
+  function log(lead, type, text) {
+    lead.activities.unshift(activity(type, text));
+    lead.updatedAt = new Date().toISOString();
+    saveState();
+  }
+
+  function scoreFromSignals(signals, size) {
+    const text = signals.toLowerCase();
+    let score = 42;
+    ['manual', 'spreadsheet', 'reporting', 'multiple', 'multi-site', 'supplier', 'stock', 'onboarding', 'follow-up', 'account', 'contact form', 'public phone', 'booking', 'quality', 'production'].forEach((term) => {
+      if (text.includes(term)) score += 4;
+    });
+    if (size === '51-200' || size === '201-500') score += 8;
+    return Math.max(1, Math.min(100, score));
+  }
+
+  function researchFromSignals(company, website, signals, industry, size, location) {
+    const lower = signals.toLowerCase();
+    const pain = [];
+    if (lower.includes('spreadsheet') || lower.includes('reporting')) pain.push('manual reporting');
+    if (lower.includes('stock') || lower.includes('supplier') || lower.includes('production') || lower.includes('quality')) pain.push('operational visibility');
+    if (lower.includes('onboarding') || lower.includes('client') || lower.includes('patient')) pain.push('client workflow admin');
+    if (lower.includes('follow-up') || lower.includes('account') || lower.includes('demo')) pain.push('sales follow-up consistency');
+    if (!pain.length) pain.push('manual admin', 'disconnected processes');
+
+    const opportunity = lower.includes('reporting') || lower.includes('spreadsheet')
+      ? 'Power BI reporting, Power Automate cleanup, and source-of-truth workflow design.'
+      : 'Workflow audit, CRM hygiene, and practical automation inside existing tools.';
+
+    return {
+      summary: `${company} shows public signs of repeated processes, visible contact routes and enough operational complexity to justify a sales conversation.`,
+      overview: `${company} appears to be a ${size || 'SME'} ${industry || 'business'} based in ${location || 'the UK'}, with public signals that point to process improvement potential.`,
+      sourceBasis: website || 'Company website, public search snippets and directory-style notes supplied to the research run.',
+      recentActivity: lower.includes('news') ? 'Recent public updates found in supplied signals.' : 'No verified news feed yet. Backend research should check website news, Companies House and public search results.',
+      pain: pain.join(', '),
+      opportunity,
+      contactDiscovery: 'Use public business routes only: contact page, generic inbox, published phone number, contact form or public directory listing.',
+      angle: `Ask where ${company} still copies information between tools they already use, then offer a practical audit rather than a new platform.`,
+      confidence: Math.min(96, scoreFromSignals(signals, size) + 4),
+      gdpr: 'Record source URLs, confidence and lawful basis. No LinkedIn scraping, no authenticated access, no personal enrichment without a lawful basis.'
+    };
+  }
+
+  function render() {
+    populateStatusFilter();
+    renderMetrics();
+    renderLeadList();
+    renderDetail();
+    renderPipeline();
+    renderInsights();
+  }
+
+  function populateStatusFilter() {
+    if (els.statusFilter.options.length > 1) return;
+    stages.forEach((stage) => {
+      const option = document.createElement('option');
+      option.value = stage;
+      option.textContent = stage;
+      els.statusFilter.appendChild(option);
+    });
+  }
+
   function renderMetrics() {
+    const leads = state.leads;
     const items = [
       ['Total Leads', leads.length],
       ['New Leads', leads.filter(l => l.status === 'New Lead').length],
-      ['Contacted', leads.filter(l => ['Contacted', 'Follow Up Required'].includes(l.status)).length],
-      ['Ready', leads.filter(l => l.status === 'Ready To Contact').length]
+      ['Contacted', leads.filter(l => ['Contacted', 'Follow Up Required', 'Replied', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'].includes(l.status)).length],
+      ['Replies', leads.filter(l => ['Replied', 'Meeting Scheduled', 'Proposal Sent', 'Won'].includes(l.status)).length],
+      ['Meetings', leads.filter(l => l.status === 'Meeting Scheduled').length],
+      ['Opportunities', leads.filter(l => ['Proposal Sent', 'Won'].includes(l.status)).length],
+      ['Won Deals', leads.filter(l => l.status === 'Won').length],
+      ['Lost Deals', leads.filter(l => l.status === 'Lost').length]
     ];
-    metrics.innerHTML = items.map(([label, value]) => `<article class="si-card"><div class="metric-value">${value}</div><div class="metric-label">${esc(label)}</div></article>`).join('');
+    els.metrics.innerHTML = items.map(([label, value]) => `<article class="si-card"><div class="metric-value">${value}</div><div class="metric-label">${esc(label)}</div></article>`).join('');
+  }
+
+  function filteredLeads() {
+    const q = els.search.value.trim().toLowerCase();
+    const status = els.statusFilter.value;
+    const owner = els.ownerFilter.value;
+    const minScore = Number(els.scoreFilter.value) || 0;
+    return state.leads.filter((lead) => {
+      const text = [lead.company, lead.industry, lead.location, lead.status, lead.owner].join(' ').toLowerCase();
+      return (!q || text.includes(q)) && (!status || lead.status === status) && (!owner || lead.owner === owner) && lead.score >= minScore;
+    }).sort((a, b) => b.score - a.score);
   }
 
   function renderLeadList() {
-    leadList.innerHTML = leads.map((lead) => `
-      <button class="lead-btn${lead === active ? ' active' : ''}" data-company="${esc(lead.company)}">
+    const leads = filteredLeads();
+    if (!leads.length) {
+      els.leadList.innerHTML = '<div class="empty">No leads match the current filters.</div>';
+      return;
+    }
+    if (!leads.some((lead) => lead.id === selectedId)) selectedId = leads[0].id;
+    els.leadList.innerHTML = leads.map((lead) => `
+      <button class="lead-btn${lead.id === selectedId ? ' active' : ''}" data-select="${esc(lead.id)}">
         <strong>${esc(lead.company)}</strong>
-        <span class="muted">${esc(lead.industry)} - ${esc(lead.location)}</span>
+        <span class="muted">${esc(lead.industry)} - ${esc(lead.location)} - ${esc(lead.owner)}</span>
         <span class="badges"><span class="badge lime">${lead.score}</span><span class="badge">${esc(lead.status)}</span></span>
       </button>
     `).join('');
   }
 
-  function renderPipeline() {
-    pipeline.innerHTML = stages.map(stage => {
-      const cards = leads.filter(l => l.status === stage).map(l => `<div class="mini-card"><strong>${esc(l.company)}</strong><br><span class="muted">Score ${l.score}</span></div>`).join('');
-      return `<section class="stage"><h3>${esc(stage)}</h3>${cards || '<p class="muted">Empty</p>'}</section>`;
-    }).join('');
-  }
-
-  function scoreFromSignals(signals) {
-    const text = signals.toLowerCase();
-    let score = 45;
-    ['manual', 'spreadsheet', 'reporting', 'multiple', 'multi-site', 'supplier', 'stock', 'onboarding', 'follow-up', 'account'].forEach(term => {
-      if (text.includes(term)) score += 5;
-    });
-    return Math.max(1, Math.min(100, score));
-  }
-
-  function generateResearch(company, website, signals) {
-    const lower = signals.toLowerCase();
-    const score = scoreFromSignals(signals);
-    const pain = [];
-    if (lower.includes('spreadsheet') || lower.includes('reporting')) pain.push('manual reporting');
-    if (lower.includes('stock') || lower.includes('supplier') || lower.includes('production')) pain.push('operational visibility');
-    if (lower.includes('onboarding') || lower.includes('client')) pain.push('client workflow admin');
-    if (lower.includes('follow-up') || lower.includes('account')) pain.push('sales follow-up consistency');
-
-    const painText = pain.length ? pain.join(', ') : 'manual admin and disconnected process signals';
-    const opportunity = lower.includes('reporting') || lower.includes('spreadsheet')
-      ? 'Power BI reporting and Power Automate workflow cleanup'
-      : 'workflow audit, CRM hygiene and practical automation inside existing tools';
-
-    return {
-      score,
-      overview: `${company} shows public signals of a process-heavy business with enough operational repetition to justify research.`,
-      source: website || 'Public website / search snippets supplied by researcher',
-      pain: painText,
-      opportunity,
-      contact: 'Use only public business contact routes: contact page, generic inbox, published phone number or public directory listing.',
-      angle: `Open with a plain question about where ${company} still copies information between systems they already use.`,
-      gdpr: 'Record the public source, confidence, and avoid personal enrichment without a lawful basis.'
-    };
-  }
-
-  function renderResearch(lead) {
-    researchTitle.textContent = lead.company;
-    researchIntro.textContent = `${lead.industry} - ${lead.location} - score ${lead.score}/100`;
-    researchForm.website.value = lead.website;
-    researchForm.signals.value = lead.signals;
-    showOutput({
-      score: lead.score,
-      overview: lead.overview,
-      source: lead.website,
-      pain: lead.pain,
-      opportunity: lead.opportunity,
-      contact: 'Public contact form / generic company contact route only.',
-      angle: lead.angle,
-      gdpr: 'Public-source only. No LinkedIn scraping, no authentication bypassing.'
-    });
-  }
-
-  function showOutput(result) {
-    researchOutput.innerHTML = `
-      ${box('Lead Score', result.score + '/100')}
-      ${box('Source Basis', result.source)}
-      ${box('Company Overview', result.overview)}
-      ${box('Pain Points', result.pain)}
-      ${box('Service Opportunities', result.opportunity)}
-      ${box('Contact Discovery', result.contact)}
-      ${box('Suggested Outreach Angle', result.angle)}
-      ${box('GDPR Guardrail', result.gdpr)}
+  function renderDetail() {
+    const lead = selectedLead();
+    if (!lead) {
+      els.leadDetail.innerHTML = '<div class="empty">No leads yet.</div>';
+      return;
+    }
+    els.leadDetail.innerHTML = `
+      <div class="detail-head">
+        <div>
+          <span class="si-label">Lead record</span>
+          <h2>${esc(lead.company)}<span class="dot dot--baseline"></span></h2>
+          <p class="muted">${esc(lead.research.summary)}</p>
+        </div>
+        <div class="score-box">${lead.score}</div>
+      </div>
+      <div class="tabs">
+        ${tabButton('research', 'Research')}
+        ${tabButton('contacts', 'Contacts')}
+        ${tabButton('outreach', 'Outreach')}
+        ${tabButton('notes', 'Notes')}
+        ${tabButton('activity', 'Activity')}
+      </div>
+      <div class="panel" data-panel="research"${activeTab === 'research' ? '' : ' hidden'}>${researchPanel(lead)}</div>
+      <div class="panel" data-panel="contacts"${activeTab === 'contacts' ? '' : ' hidden'}>${contactsPanel(lead)}</div>
+      <div class="panel" data-panel="outreach"${activeTab === 'outreach' ? '' : ' hidden'}>${outreachPanel(lead)}</div>
+      <div class="panel" data-panel="notes"${activeTab === 'notes' ? '' : ' hidden'}>${notesPanel(lead)}</div>
+      <div class="panel" data-panel="activity"${activeTab === 'activity' ? '' : ' hidden'}>${activityPanel(lead)}</div>
     `;
   }
 
-  function box(label, value) {
+  function tabButton(id, label) {
+    return `<button class="tab${activeTab === id ? ' active' : ''}" type="button" data-tab="${id}">${label}</button>`;
+  }
+
+  function researchPanel(lead) {
+    return `
+      <div class="notice">Current research is generated from supplied public signals in the browser. Real search/fetch work belongs in Supabase Edge Functions so sources, consent and failures are logged.</div>
+      <div class="kv" style="margin-top:16px;">
+        ${kv('Industry', lead.industry)}
+        ${kv('Website', lead.website)}
+        ${kv('Estimated Size', lead.size)}
+        ${kv('Location', lead.location)}
+        ${kv('Recent Public Activity', lead.research.recentActivity)}
+        ${kv('Potential Pain Points', lead.research.pain)}
+        ${kv('Service Opportunities', lead.research.opportunity)}
+        ${kv('Suggested Outreach Angle', lead.research.angle)}
+        ${kv('Public Contact Info', lead.research.contactDiscovery)}
+        ${kv('Confidence', lead.research.confidence + '%')}
+      </div>
+      <form id="researchForm" style="margin-top:18px;">
+        <label class="field"><span>Public signals</span><textarea name="signals">${esc(lead.signals)}</textarea></label>
+        <div class="actions">
+          <button class="btn" type="submit">Regenerate Research</button>
+          <label class="field" style="min-width:230px;"><span>Status</span><select name="status">${stages.map(stage => `<option${stage === lead.status ? ' selected' : ''}>${esc(stage)}</option>`).join('')}</select></label>
+        </div>
+      </form>
+    `;
+  }
+
+  function kv(label, value) {
     return `<div><span>${esc(label)}</span><p>${esc(value)}</p></div>`;
   }
 
-  leadList.addEventListener('click', (event) => {
-    const btn = event.target.closest('[data-company]');
-    if (!btn) return;
-    active = leads.find(lead => lead.company === btn.dataset.company) || active;
-    renderLeadList();
-    renderResearch(active);
-  });
+  function contactsPanel(lead) {
+    const contacts = lead.contacts.length ? lead.contacts.map((contact, index) => `
+      <article class="si-card soft">
+        <h3>${esc(contact.name)}</h3>
+        <p class="muted">${esc(contact.role)} - ${esc(contact.source)}</p>
+        <div class="kv" style="margin-top:12px;">
+          ${kv('Email', contact.email || 'Not public')}
+          ${kv('Phone / Route', contact.phone || 'Not public')}
+          ${kv('Confidence', contact.confidence + '%')}
+          ${kv('Allowed Use', 'Public business contact only')}
+        </div>
+        <div class="actions"><button class="btn ghost slim" data-remove-contact="${index}" type="button">Remove</button></div>
+      </article>
+    `).join('') : '<div class="empty">No public contacts yet.</div>';
+    return `
+      <div class="contact-grid">${contacts}</div>
+      <form id="contactForm" class="form-grid" style="margin-top:18px;">
+        <label class="field"><span>Name / Route</span><input name="name" required placeholder="Generic inbox"></label>
+        <label class="field"><span>Email</span><input name="email" type="email" placeholder="hello@example.co.uk"></label>
+        <label class="field"><span>Phone / Form</span><input name="phone" placeholder="Contact form"></label>
+        <label class="field"><span>Confidence</span><input name="confidence" type="number" min="1" max="100" value="70"></label>
+        <button class="btn" type="submit">Add Contact</button>
+      </form>
+    `;
+  }
 
-  runExample.addEventListener('click', () => {
-    active = leads[0];
-    renderLeadList();
-    renderResearch(active);
-  });
+  function outreachPanel(lead) {
+    const draft = lead.outreachDraft || emailDraft(lead);
+    return `
+      <div class="si-grid split">
+        <div>
+          <label class="field"><span>Outreach Draft</span><textarea class="outreach-draft" id="draftText">${esc(draft)}</textarea></label>
+          <div class="actions">
+            <button class="btn ghost" type="button" data-action="generate-email">Generate Draft</button>
+            <button class="btn" type="button" data-action="approve-email">Approve Email</button>
+            <button class="btn ghost" type="button" data-action="send-email"${lead.outreachApproved ? '' : ' disabled'}>Open In Mail</button>
+          </div>
+        </div>
+        <aside class="si-card soft">
+          <span class="si-label">Approval</span>
+          <h3>${lead.outreachApproved ? 'Approved' : 'Not approved'}</h3>
+          <p class="muted">The page never sends automatically. Approval unlocks a mail client draft only. Backend should enforce the same rule server-side.</p>
+        </aside>
+      </div>
+    `;
+  }
 
-  researchForm.addEventListener('submit', (event) => {
+  function notesPanel(lead) {
+    return `
+      <label class="field"><span>Internal Notes</span><textarea id="noteText">${esc(lead.notes || '')}</textarea></label>
+      <div class="actions"><button class="btn" type="button" data-action="save-notes">Save Notes</button></div>
+    `;
+  }
+
+  function activityPanel(lead) {
+    if (!lead.activities.length) return '<div class="empty">No activity yet.</div>';
+    return `<div class="timeline">${lead.activities.map(item => `
+      <article class="event"><time>${esc(dateShort(item.at))}</time><strong>${esc(item.type)}</strong><p class="muted">${esc(item.text)}</p></article>
+    `).join('')}</div>`;
+  }
+
+  function emailDraft(lead) {
+    return `Subject: Quick idea for ${lead.company}\n\nHi,\n\nI came across ${lead.company} and noticed a few public signals that suggest there may be useful gains hiding in your current systems.\n\n${lead.research.angle}\n\nAt n.abl, we work inside the tools a business already uses - Microsoft 365, Power Platform, Salesforce, reporting tools and the surrounding process - to remove manual work without adding new bloat.\n\nWould a short conversation next week be useful?\n\nBest,\nAlex\nn.abl\nInnovation. Automation. Optimisation.\nhello@nabl.agency`;
+  }
+
+  function renderPipeline() {
+    els.pipeline.innerHTML = stages.map(stage => {
+      const cards = state.leads.filter(lead => lead.status === stage).map(lead => `
+        <div class="deal-card" draggable="true" data-drag-id="${esc(lead.id)}">
+          <strong>${esc(lead.company)}</strong>
+          <span class="muted">Score ${lead.score}</span>
+        </div>
+      `).join('');
+      return `<section class="stage" data-stage="${esc(stage)}"><h3>${esc(stage)}</h3>${cards || '<p class="muted">Empty</p>'}</section>`;
+    }).join('');
+  }
+
+  function renderInsights() {
+    const high = state.leads.slice().sort((a, b) => b.score - a.score)[0];
+    const followUps = state.leads.filter(lead => ['Contacted', 'Follow Up Required'].includes(lead.status));
+    const ready = state.leads.filter(lead => lead.status === 'Ready To Contact');
+    const industryCounts = {};
+    state.leads.forEach(lead => { industryCounts[lead.industry] = (industryCounts[lead.industry] || 0) + 1; });
+    const topIndustry = Object.keys(industryCounts).sort((a, b) => industryCounts[b] - industryCounts[a])[0] || 'Retail';
+    const cards = [
+      ['High-priority leads', high ? `${high.company} is the top fit at ${high.score}/100.` : 'No leads yet.'],
+      ['Follow-ups due', followUps.length ? `${followUps.length} lead(s) need a follow-up decision.` : 'No follow-ups due.'],
+      ['Ready to contact', ready.length ? `${ready.length} lead(s) are ready for approved outreach.` : 'No approved outreach queue yet.'],
+      ['Similar businesses', `Find more ${topIndustry} companies with public reporting, account, stock or onboarding signals.`],
+      ['Conversion opportunity', 'Move leads above 80 from research to approved outreach before adding more low-score records.'],
+      ['GDPR guardrail', 'Use public business contact routes, log sources and avoid personal scraping or authenticated access.']
+    ];
+    els.insights.innerHTML = cards.map(([title, body]) => `<article class="si-card soft"><span class="si-label">${esc(title)}</span><p>${esc(body)}</p></article>`).join('');
+  }
+
+  function addRecommendation(row) {
+    const lead = makeLead(row[0], row[1], row[2], row[3], row[4], row[5], 'New Lead', 'n.abl Team', row[6]);
+    if (state.leads.some(existing => existing.company === lead.company)) return;
+    state.leads.unshift(lead);
+    selectedId = lead.id;
+    activeTab = 'research';
+    saveState();
+    render();
+  }
+
+  els.discoveryForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    const company = active.company || 'Selected company';
-    const result = generateResearch(company, researchForm.website.value.trim(), researchForm.signals.value.trim());
-    showOutput(result);
+    const data = new FormData(els.discoveryForm);
+    const matches = catalogue.filter(row =>
+      (!data.get('industry') || row[1] === data.get('industry')) &&
+      (!data.get('location') || row[2] === data.get('location')) &&
+      (!data.get('size') || row[3] === data.get('size')) &&
+      (!data.get('type') || row[4] === data.get('type'))
+    );
+    els.recommendations.innerHTML = (matches.length ? matches : catalogue.slice(0, 3)).slice(0, 6).map((row, index) => `
+      <article class="si-card soft">
+        <span class="si-label">Score ${row[5]}</span>
+        <h3>${esc(row[0])}</h3>
+        <p class="muted">${esc(row[1])} - ${esc(row[2])} - ${esc(row[3])}</p>
+        <p>${esc(row[6])}</p>
+        <div class="actions"><button class="btn slim" type="button" data-add-reco="${index}">Add To CRM</button></div>
+      </article>
+    `).join('');
+    els.recommendations.querySelectorAll('[data-add-reco]').forEach((button) => {
+      button.addEventListener('click', () => addRecommendation((matches.length ? matches : catalogue.slice(0, 3))[Number(button.dataset.addReco)]));
+    });
   });
 
-  renderMetrics();
-  renderLeadList();
-  renderPipeline();
-  renderResearch(active);
+  [els.search, els.statusFilter, els.ownerFilter, els.scoreFilter].forEach((input) => {
+    input.addEventListener('input', render);
+    input.addEventListener('change', render);
+  });
+
+  els.resetData.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    state = { leads: seedLeads() };
+    selectedId = state.leads[0].id;
+    activeTab = 'research';
+    saveState();
+    render();
+  });
+
+  els.leadList.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-select]');
+    if (!button) return;
+    selectedId = button.dataset.select;
+    activeTab = 'research';
+    render();
+  });
+
+  els.leadDetail.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-tab]');
+    if (tab) {
+      activeTab = tab.dataset.tab;
+      renderDetail();
+      return;
+    }
+    const action = event.target.closest('[data-action]');
+    const lead = selectedLead();
+    if (action && action.dataset.action === 'generate-email') {
+      lead.outreachDraft = emailDraft(lead);
+      lead.outreachApproved = false;
+      log(lead, 'Email draft', 'Generated outreach draft');
+      renderDetail();
+    }
+    if (action && action.dataset.action === 'approve-email') {
+      lead.outreachDraft = document.getElementById('draftText').value.trim();
+      lead.outreachApproved = true;
+      log(lead, 'Email approved', 'Outreach approved for manual send');
+      renderDetail();
+    }
+    if (action && action.dataset.action === 'send-email') {
+      const contact = lead.contacts.find(c => c.email);
+      const to = contact ? contact.email : 'hello@nabl.agency';
+      const draft = lead.outreachDraft || emailDraft(lead);
+      const subject = (draft.match(/^Subject:\s*(.+)$/m) || ['', `Quick idea for ${lead.company}`])[1];
+      const body = draft.replace(/^Subject:.*\n\n?/m, '');
+      lead.status = 'Contacted';
+      log(lead, 'Email opened', 'Approved email opened in mail client');
+      saveState();
+      window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      render();
+    }
+    if (action && action.dataset.action === 'save-notes') {
+      lead.notes = document.getElementById('noteText').value.trim();
+      log(lead, 'Note', 'Internal notes updated');
+      renderDetail();
+    }
+    const remove = event.target.closest('[data-remove-contact]');
+    if (remove) {
+      lead.contacts.splice(Number(remove.dataset.removeContact), 1);
+      log(lead, 'Contact removed', 'Removed public contact route');
+      renderDetail();
+    }
+  });
+
+  els.leadDetail.addEventListener('submit', (event) => {
+    const lead = selectedLead();
+    if (event.target.id === 'researchForm') {
+      event.preventDefault();
+      const signals = new FormData(event.target).get('signals').trim();
+      lead.signals = signals;
+      lead.score = scoreFromSignals(signals, lead.size);
+      lead.research = researchFromSignals(lead.company, lead.website, signals, lead.industry, lead.size, lead.location);
+      log(lead, 'Research generated', lead.research.summary);
+      saveState();
+      render();
+    }
+    if (event.target.id === 'contactForm') {
+      event.preventDefault();
+      const data = new FormData(event.target);
+      lead.contacts.push({
+        name: data.get('name').trim(),
+        role: 'Public',
+        email: data.get('email').trim(),
+        phone: data.get('phone').trim(),
+        source: 'Public website',
+        confidence: Math.max(1, Math.min(100, Number(data.get('confidence')) || 70))
+      });
+      log(lead, 'Contact added', 'Added public contact route with confidence rating');
+      saveState();
+      renderDetail();
+    }
+  });
+
+  els.leadDetail.addEventListener('change', (event) => {
+    if (!event.target.matches('select[name="status"]')) return;
+    const lead = selectedLead();
+    const old = lead.status;
+    lead.status = event.target.value;
+    log(lead, 'Status change', `${old} to ${lead.status}`);
+    saveState();
+    render();
+  });
+
+  els.pipeline.addEventListener('dragstart', (event) => {
+    const card = event.target.closest('[data-drag-id]');
+    if (!card) return;
+    event.dataTransfer.setData('text/plain', card.dataset.dragId);
+  });
+  els.pipeline.addEventListener('dragover', (event) => {
+    const stage = event.target.closest('[data-stage]');
+    if (!stage) return;
+    event.preventDefault();
+    stage.classList.add('over');
+  });
+  els.pipeline.addEventListener('dragleave', (event) => {
+    const stage = event.target.closest('[data-stage]');
+    if (stage) stage.classList.remove('over');
+  });
+  els.pipeline.addEventListener('drop', (event) => {
+    const stage = event.target.closest('[data-stage]');
+    if (!stage) return;
+    event.preventDefault();
+    stage.classList.remove('over');
+    const lead = state.leads.find(item => item.id === event.dataTransfer.getData('text/plain'));
+    if (!lead) return;
+    const old = lead.status;
+    lead.status = stage.dataset.stage;
+    log(lead, 'Status change', `${old} to ${lead.status}`);
+    saveState();
+    render();
+  });
+
+  els.discoveryForm.dispatchEvent(new Event('submit'));
+  render();
 })();
 </script>
 </body>
