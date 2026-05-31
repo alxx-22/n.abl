@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>n.abl — Client Portal</title>
+
+<!-- Favicon: lowercase "n" + lime square dot -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23F9F9F9'/%3E%3Ctext x='8' y='78' font-family='Arial Black,Arial' font-weight='900' font-size='70' fill='%230A0A0A'%3En%3C/text%3E%3Crect x='66' y='58' width='20' height='20' fill='%23B8FF00'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   RESET & BASE  (shared n.abl brand foundation)
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --black: #0A0A0A;
+  --lime: #B8FF00;
+  --grey: #6B6B6B;
+  --bg: #F9F9F9;
+  --dark: #111111;
+  --pale-lime: #F2FFD6;
+  --card-grey: #AAAAAA;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--black);
+  color: #fff;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, .archivo { font-family: 'Archivo Black', sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+section { position: relative; }
+
+/* Brand signature — lime square dot */
+.dot {
+  display: inline-block;
+  width: 0.32em; height: 0.32em;
+  background: var(--lime);
+  vertical-align: baseline;
+  margin: 0 0.04em;
+}
+.dot--baseline { vertical-align: 0; }
+
+/* ============================================================
+   PORTAL TOP BAR  (logo home + back link)
+   ============================================================ */
+.portal-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px clamp(20px, 5vw, 64px);
+}
+.portal-topbar .logo {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 26px;
+  color: #fff;
+  display: flex;
+  align-items: flex-end;
+  line-height: 1;
+}
+.portal-topbar .logo .sq { width: 9px; height: 9px; background: var(--lime); margin: 0 2px 3px 2px; }
+.portal-back { font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 14px; color: var(--card-grey); transition: color 0.2s ease; }
+.portal-back:hover { color: var(--lime); }
+
+/* ============================================================
+   PORTAL  (login + dashboard)
+   ============================================================ */
+/* --- Portal section shell --- */
+#portal {
+  min-height: 100vh;
+  background-color: var(--black);
+  background-image:
+    linear-gradient(#1A1A1A 1px, transparent 1px),
+    linear-gradient(90deg, #1A1A1A 1px, transparent 1px);
+  background-size: 40px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(96px, 13vh, 150px) clamp(20px, 5vw, 64px);
+  color: #fff;
+}
+#portal.logged-in { align-items: flex-start; }
+
+.portal-label {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lime);
+}
+.portal-section-title {
+  font-family: 'Archivo Black', sans-serif;
+  color: #fff;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.04;
+  margin: 10px 0 30px;
+}
+
+/* --- Login screen --- */
+.portal-login {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+.portal-login.fade-out { opacity: 0; pointer-events: none; }
+.portal-login h2 {
+  font-size: clamp(40px, 7vw, 72px);
+  line-height: 1.0;
+  margin: 16px 0 18px;
+  color: #fff;
+}
+.portal-login h2 .dot { width: 0.18em; height: 0.18em; margin-left: 0.03em; }
+.portal-sub { color: var(--card-grey); font-size: clamp(15px, 1.4vw, 18px); margin-bottom: 40px; }
+.portal-key-input {
+  width: 100%;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(18px, 4.5vw, 24px);
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--black);
+  border: 2px solid #fff;
+  border-radius: 0;
+  padding: 18px 16px;
+  transition: border-color 0.2s ease;
+}
+.portal-key-input::placeholder { color: #555; }
+.portal-key-input:focus { outline: none; border-color: var(--lime); }
+.portal-key-input.shake { animation: portalShake 0.4s ease; }
+@keyframes portalShake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-8px); }
+  40%, 60% { transform: translateX(8px); }
+}
+.portal-access-btn {
+  width: 100%;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: var(--lime);
+  color: var(--black);
+  border: 2px solid var(--lime);
+  border-radius: 0;
+  padding: 16px;
+  margin-top: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.portal-access-btn:hover { background: var(--black); color: var(--lime); }
+.portal-access-btn:disabled { opacity: 0.5; cursor: default; }
+.portal-help { color: var(--card-grey); font-size: 14px; margin-top: 22px; }
+.portal-help a:hover { color: var(--lime); text-decoration: underline; text-underline-offset: 3px; }
+.portal-login-error { color: var(--lime); font-weight: 700; font-size: 14px; margin-top: 20px; min-height: 1.2em; }
+
+/* --- Dashboard --- */
+.portal-dash { width: 100%; max-width: 1200px; margin: 0 auto; }
+.portal-dash[hidden] { display: none; }
+.portal-dash-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.portal-dash-name {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1.0;
+  color: #fff;
+  margin: 8px 0 6px;
+}
+.portal-dash-contact { color: var(--card-grey); font-size: 16px; }
+.portal-logout {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  border-radius: 0;
+  padding: 12px 22px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.portal-logout:hover { border-color: var(--lime); color: var(--lime); }
+.portal-sep { height: 1px; background: var(--lime); width: 100%; margin: 26px 0 4px; }
+.portal-section { margin-top: 56px; }
+
+/* card base — dark surface, white hairline border, sharp corners */
+.portal-card {
+  background: var(--dark);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 0;
+  padding: 26px 24px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.portal-card:hover { transform: translateY(-4px); border-color: var(--lime); }
+
+.portal-grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
+.portal-list { display: flex; flex-direction: column; gap: 16px; }
+.portal-empty {
+  color: var(--card-grey);
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  padding: 28px 24px;
+  font-size: 16px;
+}
+.portal-empty a:hover { color: var(--lime); text-decoration: underline; }
+
+/* status badges — sharp corners, colour coded */
+.badge-status {
+  display: inline-block;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 0;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+}
+.badge-draft, .badge-paused { background: var(--grey); color: #fff; border-color: transparent; }
+.badge-sent { background: #fff; color: var(--black); border-color: transparent; }
+.badge-accepted, .badge-active, .badge-confirmed { background: var(--lime); color: var(--black); border-color: transparent; }
+.badge-rejected, .badge-cancelled { background: #7A1E1E; color: #fff; border-color: transparent; }
+.badge-complete, .badge-completed, .badge-scheduled { background: transparent; color: #fff; border-color: #fff; }
+
+/* quotes */
+.q-ref { font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lime); }
+.q-title { font-family: 'Archivo Black', sans-serif; font-size: 20px; color: #fff; margin: 10px 0 14px; line-height: 1.15; }
+.q-amount { font-family: 'Archivo Black', sans-serif; font-size: 30px; color: var(--lime); margin-bottom: 16px; }
+.q-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.q-valid { font-size: 13px; color: var(--card-grey); }
+.q-pdf { display: inline-block; margin-top: 18px; font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 14px; color: var(--lime); }
+.q-pdf:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* projects */
+.p-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.p-title { font-family: 'Archivo Black', sans-serif; font-size: 20px; color: #fff; line-height: 1.15; }
+.p-desc { color: var(--card-grey); font-size: 15px; margin-top: 10px; }
+.p-progress { height: 6px; background: #2A2A2A; width: 100%; margin: 22px 0 8px; }
+.p-progress-fill { height: 100%; background: var(--lime); width: 0; transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.p-pct { font-size: 13px; color: #fff; }
+.p-next { margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 16px; }
+.p-next-label { font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lime); }
+.p-next-text { color: #fff; font-size: 15px; margin-top: 6px; }
+.p-next-date { color: var(--card-grey); font-size: 13px; margin-top: 4px; }
+
+/* meetings */
+.m-row { display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; }
+.m-row.past { opacity: 0.6; }
+.m-date { text-align: center; min-width: 60px; }
+.m-day { font-family: 'Archivo Black', sans-serif; font-size: 40px; color: var(--lime); line-height: 1; }
+.m-monthyear { font-size: 12px; color: #fff; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+.m-title { font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #fff; line-height: 1.2; }
+.m-loc { color: var(--card-grey); font-size: 14px; margin-top: 6px; }
+.m-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.m-time { font-family: 'Archivo Black', sans-serif; font-size: 20px; color: #fff; }
+.m-join {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: var(--lime);
+  color: var(--black);
+  border: 1px solid var(--lime);
+  padding: 10px 16px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.m-join:hover { background: var(--black); color: var(--lime); }
+
+/* documents */
+.d-row { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; }
+.d-icon { flex-shrink: 0; }
+.d-icon svg { display: block; width: 30px; height: 30px; }
+.d-title { font-family: 'Archivo Black', sans-serif; font-size: 17px; color: #fff; line-height: 1.2; }
+.d-type { font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lime); margin-top: 6px; }
+.d-right { display: flex; align-items: center; gap: 18px; }
+.d-date { color: var(--card-grey); font-size: 13px; white-space: nowrap; }
+.d-download {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 10px 16px;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.d-download:hover { border-color: var(--lime); color: var(--lime); }
+
+/* --- Portal reveal animation --- */
+.portal-anim { opacity: 0; }
+.portal-anim.in { animation: portalUp 0.6s ease-out forwards; }
+@keyframes portalUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Responsive --- */
+@media (min-width: 768px) {
+  .portal-quotes { grid-template-columns: repeat(2, 1fr); }
+  .portal-projects { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1280px) {
+  .portal-quotes { grid-template-columns: repeat(3, 1fr); }
+  .portal-projects { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .m-row, .d-row { grid-template-columns: 1fr; gap: 14px; text-align: left; }
+  .m-date { display: flex; align-items: baseline; gap: 10px; text-align: left; }
+  .m-day { font-size: 30px; }
+  .m-right { align-items: flex-start; }
+  .d-right { width: 100%; justify-content: space-between; }
+  .portal-topbar { padding: 18px 20px; }
+  .portal-topbar .logo { font-size: 22px; }
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .portal-anim { opacity: 1 !important; }
+  .portal-anim.in { animation: none !important; }
+  .portal-login, .p-progress-fill { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================ TOP BAR ============================ -->
+<header class="portal-topbar">
+  <a href="/" class="logo" aria-label="n.abl home">n<span class="sq"></span>abl</a>
+  <a href="/" class="portal-back">← Back to site</a>
+</header>
+
+<!-- ============================ PORTAL ============================ -->
+<main>
+<section id="portal">
+  <!-- LOGIN STATE -->
+  <div class="portal-login" id="portalLogin">
+    <span class="portal-label">Client Portal</span>
+    <h2>Enter your access key<span class="dot dot--baseline"></span></h2>
+    <p class="portal-sub">Your private space for quotes, projects, meetings and documents.</p>
+    <form id="portalForm" novalidate>
+      <input type="text" id="portalKey" class="portal-key-input" placeholder="XXXX-XXXX-XXXX"
+             autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Access key">
+      <button type="submit" class="portal-access-btn" id="portalSubmit" disabled>Access Portal →</button>
+      <p class="portal-login-error" id="portalError" role="alert" aria-live="assertive"></p>
+    </form>
+    <p class="portal-help">Don't have a key? Contact <a href="mailto:hello@nabl.agency">hello@nabl.agency</a></p>
+  </div>
+
+  <!-- DASHBOARD STATE (built by JS once authenticated) -->
+  <div class="portal-dash" id="portalDash" hidden></div>
+</section>
+</main>
+
+<!-- ============================================================
+     CLIENT PORTAL — Supabase-backed login + dashboard
+     - Vanilla JS module, supabase-js loaded from esm.sh (no build step)
+     - Access key lives ONLY in memory (no localStorage/session/cookies)
+     - RLS filters all data server-side via the x-access-key header
+     ============================================================ -->
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL = 'https://rrkcoqopcqtowbyismcq.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJya2NvcW9wY3F0b3dieWlzbWNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjE1NTksImV4cCI6MjA5NTczNzU1OX0.p8Hj0sULNLos0_nZhJ_OyYyfiqfmAspwFxtLBdoK4R0';
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // --- Authenticated client: sends the access key as a custom header ---
+  function clientFor(accessKey) {
+    return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { 'x-access-key': accessKey } },
+      auth: { persistSession: false }
+    });
+  }
+
+  // --- Session state (in-memory only) ---
+  let sb = null;          // active authenticated client
+  let activeKey = null;   // held in memory only — never persisted/logged
+
+  // --- DOM refs ---
+  const portal = document.getElementById('portal');
+  const loginWrap = document.getElementById('portalLogin');
+  const dash = document.getElementById('portalDash');
+  const form = document.getElementById('portalForm');
+  const keyInput = document.getElementById('portalKey');
+  const submitBtn = document.getElementById('portalSubmit');
+  const errorEl = document.getElementById('portalError');
+
+  // This module body only runs once supabase-js has loaded from the CDN, so
+  // it's the right moment to enable the button (prevents a stray native form
+  // submit / page reload if someone hits Enter before the script is ready).
+  submitBtn.disabled = false;
+
+  // --- Helpers ---
+  const esc = (v) => String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const money = (n) => {
+    const num = Number(n);
+    if (!isFinite(num)) return '';
+    return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(num);
+  };
+
+  const dateLong = (v) => {
+    if (!v) return '';
+    const d = new Date(v);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+  const monthYear = (d) => d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
+  const timeStr = (d) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const badgeClass = (status) => 'badge-' + String(status || '').toLowerCase().trim().replace(/[^a-z]/g, '');
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    if (!reduceMotion) {
+      keyInput.classList.remove('shake');
+      void keyInput.offsetWidth; // restart animation
+      keyInput.classList.add('shake');
+    }
+  }
+
+  function setLoading(on) {
+    submitBtn.disabled = on;
+    submitBtn.textContent = on ? 'Verifying...' : 'Access Portal →';
+  }
+
+  // --- Login ---
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+    const key = keyInput.value.trim().toUpperCase();
+    if (!key) { showError('Please enter your access key.'); return; }
+
+    setLoading(true);
+    try {
+      const client = clientFor(key);
+      // Validate the key: a row in `clients` means it's valid; [] means invalid.
+      const { data, error } = await client.from('clients').select('*');
+      if (error) { setLoading(false); showError('Unable to load. Please try again in a moment.'); return; }
+      if (!data || data.length === 0) {
+        setLoading(false);
+        showError('Invalid access key. Please check and try again.');
+        return;
+      }
+      // Valid — promote to active session (key kept in memory only)
+      sb = client;
+      activeKey = key;
+      await enterDashboard(data[0]);
+    } catch (err) {
+      setLoading(false);
+      showError('Unable to load. Please try again in a moment.');
+    }
+  });
+
+  // Auto-uppercase as the user types
+  keyInput.addEventListener('input', () => {
+    const start = keyInput.selectionStart;
+    keyInput.value = keyInput.value.toUpperCase();
+    keyInput.setSelectionRange(start, start);
+  });
+
+  // --- Fetch dashboard data (RLS scopes everything to this client) ---
+  async function fetchTable(query) {
+    try {
+      const { data, error } = await query;
+      if (error) return [];
+      return data || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  async function loadDashboardData() {
+    const [quotes, projects, meetings, documents] = await Promise.all([
+      fetchTable(sb.from('quotes').select('*').order('created_at', { ascending: false })),
+      fetchTable(sb.from('projects').select('*')),
+      fetchTable(sb.from('meetings').select('*').order('datetime')),
+      fetchTable(sb.from('documents').select('*').order('uploaded_at', { ascending: false }))
+    ]);
+    return { quotes, projects, meetings, documents };
+  }
+
+  // --- Renderers ---
+  function renderQuote(q) {
+    const pdf = q.pdf_url
+      ? `<a class="q-pdf" href="${esc(q.pdf_url)}" target="_blank" rel="noopener">VIEW PDF →</a>` : '';
+    return `<article class="portal-card portal-anim">
+      <div class="q-ref">${esc(q.reference || q.ref || '')}</div>
+      <h3 class="q-title">${esc(q.title || 'Untitled quote')}</h3>
+      <div class="q-amount">${esc(money(q.amount))}</div>
+      <div class="q-meta">
+        <span class="badge-status ${badgeClass(q.status)}">${esc(q.status || '')}</span>
+        ${q.valid_until ? `<span class="q-valid">Valid until: ${esc(dateLong(q.valid_until))}</span>` : ''}
+      </div>
+      ${pdf}
+    </article>`;
+  }
+
+  function renderProject(p) {
+    const pct = Math.max(0, Math.min(100, Number(p.progress_percent) || 0));
+    const next = (p.next_milestone || p.next_milestone_date) ? `<div class="p-next">
+        <div class="p-next-label">Next</div>
+        ${p.next_milestone ? `<div class="p-next-text">${esc(p.next_milestone)}</div>` : ''}
+        ${p.next_milestone_date ? `<div class="p-next-date">Due ${esc(dateLong(p.next_milestone_date))}</div>` : ''}
+      </div>` : '';
+    return `<article class="portal-card portal-anim">
+      <div class="p-head">
+        <h3 class="p-title">${esc(p.title || 'Untitled project')}</h3>
+        <span class="badge-status ${badgeClass(p.status)}">${esc(p.status || '')}</span>
+      </div>
+      ${p.description ? `<p class="p-desc">${esc(p.description)}</p>` : ''}
+      <div class="p-progress"><div class="p-progress-fill" data-pct="${pct}"></div></div>
+      <div class="p-pct">${pct}% complete</div>
+      ${next}
+    </article>`;
+  }
+
+  function renderMeeting(m) {
+    const d = m.datetime ? new Date(m.datetime) : null;
+    const valid = d && !isNaN(d);
+    const isPast = valid && d.getTime() < Date.now();
+    const join = (m.join_url && !isPast)
+      ? `<a class="m-join" href="${esc(m.join_url)}" target="_blank" rel="noopener">JOIN MEETING →</a>` : '';
+    return `<article class="portal-card portal-anim m-row${isPast ? ' past' : ''}">
+      <div class="m-date">
+        <div class="m-day">${valid ? d.getDate() : '–'}</div>
+        <div class="m-monthyear">${valid ? esc(monthYear(d)) : ''}</div>
+      </div>
+      <div class="m-mid">
+        <div class="m-title">${esc(m.title || 'Meeting')}</div>
+        ${m.location ? `<div class="m-loc">${esc(m.location)}</div>` : ''}
+      </div>
+      <div class="m-right">
+        ${valid ? `<div class="m-time">${esc(timeStr(d))}</div>` : ''}
+        ${m.status ? `<span class="badge-status ${badgeClass(m.status)}">${esc(m.status)}</span>` : ''}
+        ${join}
+      </div>
+    </article>`;
+  }
+
+  const docIcon = `<span class="d-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#B8FF00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/></svg></span>`;
+  function renderDocument(doc) {
+    return `<article class="portal-card portal-anim d-row">
+      ${docIcon}
+      <div class="d-mid">
+        <div class="d-title">${esc(doc.title || 'Document')}</div>
+        ${doc.document_type ? `<div class="d-type">${esc(doc.document_type)}</div>` : ''}
+      </div>
+      <div class="d-right">
+        ${doc.uploaded_at ? `<span class="d-date">${esc(dateLong(doc.uploaded_at))}</span>` : ''}
+        ${doc.file_url ? `<a class="d-download" href="${esc(doc.file_url)}" target="_blank" rel="noopener">DOWNLOAD →</a>` : ''}
+      </div>
+    </article>`;
+  }
+
+  function section(label, title, gridClass, items, renderFn, emptyMsg) {
+    const body = (items && items.length)
+      ? `<div class="${gridClass}">${items.map(renderFn).join('')}</div>`
+      : `<div class="portal-empty">${emptyMsg}</div>`;
+    return `<section class="portal-section">
+      <span class="portal-label portal-anim">${label}</span>
+      <h3 class="portal-section-title portal-anim">${title}</h3>
+      ${body}
+    </section>`;
+  }
+
+  function renderDashboard(client, data) {
+    const name = esc(client.business_name || 'Your dashboard');
+    const contact = client.contact_name ? `<div class="portal-dash-contact">${esc(client.contact_name)}</div>` : '';
+
+    dash.innerHTML = `
+      <div class="portal-dash-head portal-anim">
+        <div>
+          <span class="portal-label">Welcome back</span>
+          <h2 class="portal-dash-name">${name}</h2>
+          ${contact}
+        </div>
+        <button type="button" class="portal-logout" id="portalLogout">Log Out</button>
+      </div>
+      <div class="portal-sep portal-anim"></div>
+
+      ${section('Quotes', 'Your quotes<span class="dot dot--baseline"></span>', 'portal-grid portal-quotes',
+        data.quotes, renderQuote, "No quotes yet. We'll let you know when there's something to review.")}
+
+      ${section('Projects', "What we're building<span class=\"dot dot--baseline\"></span>", 'portal-grid portal-projects',
+        data.projects, renderProject, "No active projects right now. Let's chat about what's next.")}
+
+      ${section('Meetings', "What's coming up<span class=\"dot dot--baseline\"></span>", 'portal-list',
+        data.meetings, renderMeeting, 'Nothing scheduled. Want to book a call? <a href="mailto:hello@nabl.agency">hello@nabl.agency</a>')}
+
+      ${section('Documents', 'Your files<span class="dot dot--baseline"></span>', 'portal-list',
+        data.documents, renderDocument, 'Nothing here yet.')}
+    `;
+
+    document.getElementById('portalLogout').addEventListener('click', logout);
+    animateDashboard();
+  }
+
+  // --- Reveal animations (fade + slide up, staggered) ---
+  function animateDashboard() {
+    // Stagger cards within each grid/list
+    dash.querySelectorAll('.portal-grid, .portal-list').forEach((group) => {
+      Array.prototype.forEach.call(group.children, (card, i) => {
+        if (!reduceMotion) card.style.animationDelay = (i * 0.1) + 's';
+      });
+    });
+
+    const reveal = (el) => {
+      el.classList.add('in');
+      // Once revealed, drop the anim class so :hover transforms work cleanly
+      if (el.classList.contains('portal-card')) {
+        el.addEventListener('animationend', function done() {
+          el.classList.remove('portal-anim', 'in');
+          el.style.animationDelay = '';
+          el.removeEventListener('animationend', done);
+        });
+      }
+    };
+
+    if (reduceMotion) {
+      dash.querySelectorAll('.portal-anim').forEach(reveal);
+    } else {
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) { reveal(entry.target); obs.unobserve(entry.target); }
+        });
+      }, { threshold: 0.15 });
+      dash.querySelectorAll('.portal-anim').forEach((el) => obs.observe(el));
+    }
+
+    // Animate progress bars
+    requestAnimationFrame(() => {
+      dash.querySelectorAll('.p-progress-fill').forEach((f) => {
+        f.style.width = (f.getAttribute('data-pct') || 0) + '%';
+      });
+    });
+  }
+
+  // --- Enter / leave dashboard ---
+  async function enterDashboard(client) {
+    let data;
+    try {
+      data = await loadDashboardData();
+    } catch (e) {
+      setLoading(false);
+      showError('Unable to load. Please try again in a moment.');
+      sb = null; activeKey = null;
+      return;
+    }
+    renderDashboard(client, data);
+
+    const swap = () => {
+      loginWrap.hidden = true;
+      loginWrap.style.display = 'none';
+      dash.hidden = false;
+      portal.classList.add('logged-in');
+      setLoading(false);
+    };
+    if (reduceMotion) {
+      swap();
+    } else {
+      loginWrap.classList.add('fade-out');
+      setTimeout(swap, 300);
+    }
+  }
+
+  function logout() {
+    // Clear in-memory session
+    sb = null;
+    activeKey = null;
+
+    dash.hidden = true;
+    dash.innerHTML = '';
+    portal.classList.remove('logged-in');
+
+    loginWrap.style.display = '';
+    loginWrap.hidden = false;
+    loginWrap.classList.remove('fade-out');
+
+    form.reset();
+    errorEl.textContent = '';
+    setLoading(false);
+    keyInput.focus();
+  }
+</script>
+</body>
+</html>

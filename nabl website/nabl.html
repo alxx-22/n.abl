@@ -813,6 +813,43 @@ footer { background: var(--black); color: #fff; }
   .custom-cursor { display: none !important; }
   .scroll-indicator { animation: none !important; }
 }
+
+/* ============================================================
+   CLIENT PORTAL NAV BUTTON
+   (the portal itself now lives on its own page — /portal)
+   ============================================================ */
+/* Desktop pill at the end of the nav links → links out to /portal.
+   - Light/top nav state: black outline, no fill, centred label, no dot.
+   - Solid-black (scrolled) nav state: lime fill, black text.
+   - Hover (either state): fills lime. */
+.portal-btn {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 24px;
+  background: transparent;
+  color: var(--black) !important;
+  border: 1px solid var(--black);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.portal-btn::after { content: none !important; } /* cancel the nav-link dot underline */
+.portal-btn:hover { background: var(--lime); color: var(--black) !important; border-color: var(--lime); }
+/* once the nav goes solid black, switch to a lime fill so it stays visible */
+nav.scrolled .portal-btn { background: var(--lime); color: var(--black) !important; border-color: var(--lime); }
+nav.scrolled .portal-btn:hover { background: var(--black); color: var(--lime) !important; border-color: var(--lime); }
+
+/* Mobile menu entry — prominent lime block */
+.mobile-nav a.mobile-portal {
+  margin-top: 8px;
+  padding: 14px 22px;
+  background: var(--lime);
+  color: var(--black);
+}
+.mobile-nav a.mobile-portal .sq { background: var(--black); }
 </style>
 </head>
 <body>
@@ -836,6 +873,7 @@ footer { background: var(--black); color: #fff; }
     <li><a href="#how-we-work" data-section="how-we-work">How We Work</a></li>
     <li><a href="#about" data-section="about">About</a></li>
     <li><a href="#contact" data-section="contact">Let's Talk</a></li>
+    <li><a href="/portal" class="portal-btn">Client Portal</a></li>
   </ul>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -849,6 +887,7 @@ footer { background: var(--black); color: #fff; }
   <a href="#how-we-work"><span class="sq"></span>How We Work</a>
   <a href="#about"><span class="sq"></span>About</a>
   <a href="#contact"><span class="sq"></span>Let's Talk</a>
+  <a href="/portal" class="mobile-portal"><span class="sq"></span>Client Portal</a>
 </div>
 
 <main>
@@ -1128,7 +1167,7 @@ footer { background: var(--black); color: #fff; }
           <span class="field-label">What's your biggest challenge right now?</span>
           <textarea name="challenge" rows="4" placeholder="e.g. our reporting takes too long, we have data we can't make sense of, our team is doing everything manually..."></textarea>
         </label>
-        <button type="submit" class="btn-submit" id="auditSubmit">Send My Audit Request →</button>
+        <button type="submit" class="btn-submit" id="auditSubmit">Book My Discovery Call →</button>
         <p class="form-error" id="auditError" role="alert" hidden>Something went wrong. Please email us directly at <a href="mailto:hello@nabl.agency">hello@nabl.agency</a></p>
       </form>
     </div>
@@ -1365,7 +1404,7 @@ footer { background: var(--black); color: #fff; }
       success.hidden = true;
       form.reset();
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Send My Audit Request →';
+      submitBtn.textContent = 'Book My Discovery Call →';
       var errEl = document.getElementById('auditError');
       if (errEl) errEl.hidden = true;
       if (lastFocus) lastFocus.focus();
@@ -1394,7 +1433,7 @@ footer { background: var(--black); color: #fff; }
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         access_key: '2a4cc07f-441a-4bfe-8b85-586418d676ee',
-        subject: 'New Audit Request — n.abl Website',
+        subject: 'New Discovery Call Request — n.abl Website',
         from_name: 'n.abl Website',
         name: name,
         business: business,
@@ -1432,7 +1471,7 @@ footer { background: var(--black); color: #fff; }
     } else {
       auditError.hidden = false;
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Send My Audit Request →';
+      submitBtn.textContent = 'Book My Discovery Call →';
     }
   });
 
