@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>n.abl — Team Space</title>
+
+<!-- Favicon: lowercase "n" + lime square dot -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23F9F9F9'/%3E%3Ctext x='8' y='78' font-family='Arial Black,Arial' font-weight='900' font-size='70' fill='%230A0A0A'%3En%3C/text%3E%3Crect x='66' y='58' width='20' height='20' fill='%23B8FF00'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   RESET & BASE  (shared n.abl brand foundation)
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --black: #0A0A0A;
+  --lime: #B8FF00;
+  --grey: #6B6B6B;
+  --bg: #F9F9F9;
+  --dark: #111111;
+  --pale-lime: #F2FFD6;
+  --card-grey: #AAAAAA;
+  --light-grey: #F2F2F2;
+  --red: #8B1A1A;
+  --red-text: #FF6B6B;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--black);
+  color: #fff;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, .archivo { font-family: 'Archivo Black', sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+section { position: relative; }
+button { font-family: inherit; cursor: pointer; }
+
+/* Brand signature — lime square dot */
+.dot {
+  display: inline-block;
+  width: 0.32em; height: 0.32em;
+  background: var(--lime);
+  vertical-align: baseline;
+  margin: 0 0.04em;
+}
+.dot--baseline { vertical-align: 0; }
+
+/* ============================================================
+   TOP BAR  (logo home + back link)
+   ============================================================ */
+.tm-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px clamp(20px, 5vw, 64px);
+}
+.tm-topbar .logo {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 26px;
+  color: #fff;
+  display: flex;
+  align-items: flex-end;
+  line-height: 1;
+}
+.tm-topbar .logo .sq { width: 9px; height: 9px; background: var(--lime); margin: 0 2px 3px 2px; }
+.tm-back { font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 14px; color: var(--card-grey); transition: color 0.2s ease; }
+.tm-back:hover { color: var(--lime); }
+
+/* ============================================================
+   TEAM SECTION SHELL
+   ============================================================ */
+#team {
+  min-height: 100vh;
+  background-color: var(--black);
+  background-image:
+    linear-gradient(#1A1A1A 1px, transparent 1px),
+    linear-gradient(90deg, #1A1A1A 1px, transparent 1px);
+  background-size: 40px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(96px, 13vh, 150px) clamp(20px, 5vw, 64px);
+  color: #fff;
+}
+#team.logged-in { align-items: flex-start; }
+
+/* ============================================================
+   LOGIN SCREEN
+   ============================================================ */
+.tm-login {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+.tm-login.fade-out { opacity: 0; pointer-events: none; }
+.tm-login .dot-top { width: 14px; height: 14px; margin: 0 auto 24px; }
+.tm-label {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lime);
+}
+.tm-login h2 {
+  font-size: clamp(40px, 7vw, 72px);
+  line-height: 1.0;
+  margin: 14px 0 18px;
+  color: #fff;
+}
+.tm-login h2 .dot { width: 0.16em; height: 0.16em; margin-left: 0.03em; }
+.tm-sub { color: var(--card-grey); font-size: clamp(15px, 1.4vw, 17px); margin-bottom: 38px; }
+
+/* Branded inputs (login) */
+.tm-input {
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  color: #fff;
+  background: var(--black);
+  border: 2px solid #fff;
+  border-radius: 0;
+  padding: 16px 16px;
+  margin-bottom: 14px;
+  transition: border-color 0.2s ease;
+}
+.tm-input::placeholder { color: #555; }
+.tm-input:focus { outline: none; border-color: var(--lime); }
+.tm-input.shake { animation: tmShake 0.4s ease; }
+@keyframes tmShake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-8px); }
+  40%, 60% { transform: translateX(8px); }
+}
+
+.tm-btn-lime {
+  width: 100%;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: var(--lime);
+  color: var(--black);
+  border: 2px solid var(--lime);
+  border-radius: 0;
+  padding: 16px;
+  margin-top: 6px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.tm-btn-lime:hover { background: var(--black); color: var(--lime); }
+.tm-btn-lime:disabled { opacity: 0.5; cursor: default; }
+.tm-help { color: var(--card-grey); font-size: 14px; margin-top: 22px; }
+.tm-login-error { color: var(--lime); font-weight: 700; font-size: 14px; margin-top: 18px; min-height: 1.2em; }
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+.tm-dash { width: 100%; max-width: 1200px; margin: 0 auto; }
+.tm-dash[hidden] { display: none; }
+
+.tm-dash-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.tm-dash-name {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1.0;
+  color: #fff;
+  margin: 8px 0 0;
+}
+.tm-dash-name .dot { width: 0.16em; height: 0.16em; }
+.tm-head-right { display: flex; align-items: center; gap: 20px; }
+.tm-conn { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--card-grey); white-space: nowrap; }
+.tm-conn .pulse {
+  width: 9px; height: 9px; background: var(--lime); display: inline-block;
+}
+@keyframes tmPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+.tm-conn .pulse { animation: tmPulse 1.8s ease-in-out infinite; }
+.tm-logout {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  border-radius: 0;
+  padding: 11px 20px;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.tm-logout:hover { border-color: var(--lime); color: var(--lime); }
+.tm-sep { height: 1px; background: var(--lime); width: 100%; margin: 22px 0 0; }
+
+/* ---- Tabs ---- */
+.tm-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--black);
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  margin-bottom: 32px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tm-tabs::-webkit-scrollbar { display: none; }
+.tm-tab {
+  position: relative;
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: var(--card-grey);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 18px 18px 16px;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+.tm-tab:hover { color: #fff; }
+.tm-tab.active { color: #fff; }
+.tm-tab-underline {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 4px;
+  width: 0;
+  background: var(--lime);
+  transition: left 0.2s ease, width 0.2s ease;
+}
+
+/* ---- Tab controls bar ---- */
+.tm-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.tm-controls-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.tm-btn-add {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: var(--lime);
+  color: var(--black);
+  border: 2px solid var(--lime);
+  border-radius: 0;
+  padding: 12px 18px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.tm-btn-add:hover { background: var(--black); color: var(--lime); }
+
+.tm-search, .tm-filter {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #fff;
+  background: var(--black);
+  border: 1px solid #fff;
+  border-radius: 0;
+  padding: 11px 14px;
+  min-width: 200px;
+  transition: border-color 0.2s ease;
+}
+.tm-search::placeholder { color: #555; }
+.tm-search:focus, .tm-filter:focus { outline: none; border-color: var(--lime); }
+
+/* ---- Forms ---- */
+.tm-form {
+  background: var(--dark);
+  border: 1px solid rgba(255,255,255,0.65);
+  border-radius: 0;
+  padding: 26px 24px;
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+.tm-form.opening { animation: tmSlideDown 0.2s ease-out; }
+@keyframes tmSlideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tm-form-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+.tm-field { display: flex; flex-direction: column; gap: 7px; }
+.tm-field label {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--card-grey);
+}
+.tm-field label .req { color: var(--lime); margin-left: 2px; }
+.tm-finput {
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: #fff;
+  background: var(--black);
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: 0;
+  padding: 12px 13px;
+  transition: border-color 0.2s ease;
+}
+textarea.tm-finput { resize: vertical; min-height: 96px; }
+.tm-finput::placeholder { color: #555; }
+.tm-finput:focus { outline: none; border-color: var(--lime); }
+select.tm-finput { appearance: none; cursor: pointer; }
+.tm-field-err { color: var(--red-text); font-size: 12.5px; font-weight: 500; min-height: 1em; }
+.tm-field-err.lime { color: var(--lime); }
+.tm-field-help { color: var(--grey); font-size: 12.5px; }
+
+/* money field */
+.tm-money { display: flex; align-items: stretch; border: 1px solid rgba(255,255,255,0.7); transition: border-color 0.2s ease; }
+.tm-money:focus-within { border-color: var(--lime); }
+.tm-money .sym { display: flex; align-items: center; padding: 0 13px; background: #1A1A1A; color: var(--lime); font-weight: 700; }
+.tm-money input { border: none; flex: 1; }
+.tm-money input:focus { border: none; }
+
+/* key field */
+.tm-keyrow { display: flex; gap: 10px; }
+.tm-keyrow .tm-finput { font-family: 'Courier New', monospace; letter-spacing: 0.04em; flex: 1; }
+.tm-gen {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 0 16px;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.tm-gen:hover { border-color: var(--lime); color: var(--lime); }
+
+/* progress field */
+.tm-prog-preview { height: 8px; background: #2A2A2A; width: 100%; margin-top: 8px; }
+.tm-prog-preview > span { display: block; height: 100%; background: var(--lime); width: 0; transition: width 0.15s linear; }
+
+.tm-form-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+.tm-btn-save {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: var(--lime);
+  color: var(--black);
+  border: 2px solid var(--lime);
+  border-radius: 0;
+  padding: 13px 24px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.tm-btn-save:hover { background: var(--black); color: var(--lime); }
+.tm-btn-save:disabled { opacity: 0.5; cursor: default; }
+.tm-btn-ghost {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  border-radius: 0;
+  padding: 13px 24px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.tm-btn-ghost:hover { border-color: var(--lime); color: var(--lime); }
+
+/* ---- Generic list / cards ---- */
+.tm-list { display: flex; flex-direction: column; gap: 16px; }
+.tm-grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+.tm-card {
+  background: var(--dark);
+  border: 1px solid rgba(255,255,255,0.65);
+  border-radius: 0;
+  padding: 22px 22px;
+  transition: transform 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+  position: relative;
+}
+.tm-card:hover { transform: translateY(-4px); border-color: var(--lime); }
+.tm-anim { animation: tmFadeUp 0.3s ease-out; }
+@keyframes tmFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.tm-card.removing { opacity: 0; transform: translateY(6px); }
+
+.tm-empty {
+  color: var(--card-grey);
+  border: 1px dashed rgba(255,255,255,0.25);
+  padding: 28px 24px;
+  font-size: 16px;
+}
+.tm-loading { color: var(--lime); text-align: center; padding: 50px 0; font-weight: 500; letter-spacing: 0.06em; }
+
+.tm-card-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.tm-act {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 8px 14px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.tm-act:hover { border-color: var(--lime); color: var(--lime); }
+.tm-act-del { color: var(--red-text); border-color: rgba(255,107,107,0.5); }
+.tm-act-del:hover { border-color: var(--red-text); color: var(--red-text); }
+
+/* status badges */
+.badge-status {
+  display: inline-block;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 0;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+}
+.badge-draft, .badge-paused { background: var(--grey); color: #fff; border-color: transparent; }
+.badge-sent { background: #fff; color: var(--black); border-color: transparent; }
+.badge-accepted, .badge-active, .badge-confirmed { background: var(--lime); color: var(--black); border-color: transparent; }
+.badge-rejected, .badge-cancelled { background: var(--red); color: #fff; border-color: transparent; }
+.badge-complete, .badge-completed, .badge-scheduled { background: transparent; color: #fff; border-color: #fff; }
+
+/* clients */
+.tm-client-row { display: grid; grid-template-columns: 1.3fr 1.2fr auto; gap: 22px; align-items: center; }
+.tm-client-name { font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #fff; line-height: 1.2; }
+.tm-client-meta { color: var(--card-grey); font-size: 14px; margin-top: 5px; }
+.tm-key-wrap { display: flex; align-items: center; gap: 10px; }
+.tm-key { font-family: 'Courier New', monospace; font-size: 14px; color: var(--lime); letter-spacing: 0.04em; word-break: break-all; }
+.tm-copy {
+  font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.5);
+  padding: 5px 9px; white-space: nowrap; transition: all 0.2s ease;
+}
+.tm-copy:hover { border-color: var(--lime); color: var(--lime); }
+.tm-copy.copied { color: var(--lime); border-color: var(--lime); }
+.tm-client-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.tm-date { color: var(--card-grey); font-size: 13px; white-space: nowrap; }
+
+/* quotes */
+.q-ref { font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lime); }
+.q-title { font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #fff; margin: 9px 0 12px; line-height: 1.15; }
+.q-amount { font-family: 'Archivo Black', sans-serif; font-size: 30px; color: var(--lime); margin-bottom: 14px; }
+.tm-card-client { font-size: 14px; color: var(--card-grey); margin-top: 12px; }
+.q-valid { font-size: 13px; color: var(--card-grey); margin-top: 4px; }
+
+/* projects */
+.p-title { font-family: 'Archivo Black', sans-serif; font-size: 19px; color: #fff; line-height: 1.15; }
+.p-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.p-desc { color: var(--card-grey); font-size: 14px; margin-top: 10px; }
+.p-progress { height: 6px; background: #2A2A2A; width: 100%; margin: 20px 0 8px; }
+.p-progress-fill { height: 100%; background: var(--lime); width: 0; transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.p-pct { font-size: 13px; color: #fff; }
+.p-next { margin-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 14px; }
+.p-next-label { font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lime); }
+.p-next-text { color: #fff; font-size: 15px; margin-top: 5px; }
+.p-next-date { color: var(--card-grey); font-size: 13px; margin-top: 3px; }
+
+/* meetings */
+.m-row { display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; }
+.m-row.past { opacity: 0.6; }
+.m-date { text-align: center; min-width: 60px; }
+.m-day { font-family: 'Archivo Black', sans-serif; font-size: 40px; color: var(--lime); line-height: 1; }
+.m-monthyear { font-size: 12px; color: #fff; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+.m-title { font-family: 'Archivo Black', sans-serif; font-size: 18px; color: #fff; line-height: 1.2; }
+.m-loc { color: var(--card-grey); font-size: 14px; margin-top: 5px; }
+.m-right { display: flex; flex-direction: column; align-items: flex-end; gap: 9px; }
+.m-client { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lime); }
+.m-join {
+  font-family: 'Archivo Black', sans-serif; font-size: 12px; text-transform: uppercase;
+  background: var(--lime); color: var(--black); border: 1px solid var(--lime);
+  padding: 9px 14px; transition: background 0.2s ease, color 0.2s ease;
+}
+.m-join:hover { background: var(--black); color: var(--lime); }
+
+/* documents */
+.d-row { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; }
+.d-icon svg { display: block; width: 30px; height: 30px; }
+.d-title { font-family: 'Archivo Black', sans-serif; font-size: 17px; color: #fff; line-height: 1.2; }
+.d-type { font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lime); margin-top: 5px; }
+.d-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ---- Modal ---- */
+.tm-modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.tm-modal-overlay.open { opacity: 1; pointer-events: auto; }
+.tm-modal {
+  background: var(--black); border: 2px solid #fff; border-radius: 0;
+  padding: 30px 28px; max-width: 440px; width: 100%;
+  transform: translateY(8px); transition: transform 0.2s ease;
+}
+.tm-modal-overlay.open .tm-modal { transform: translateY(0); }
+.tm-modal p { color: #fff; font-size: 16px; margin-bottom: 24px; }
+.tm-modal-actions { display: flex; gap: 12px; }
+.tm-modal-actions button { flex: 1; }
+.tm-btn-danger {
+  font-family: 'Archivo Black', sans-serif; font-size: 14px; text-transform: uppercase;
+  background: var(--red); color: #fff; border: 1px solid var(--red); border-radius: 0;
+  padding: 13px; transition: opacity 0.2s ease;
+}
+.tm-btn-danger:hover { opacity: 0.85; }
+
+/* ---- Toast ---- */
+.tm-toast {
+  position: fixed; left: 50%; bottom: 36px; transform: translateX(-50%) translateY(20px);
+  z-index: 120;
+  background: var(--dark); border: 1px solid var(--lime); color: var(--lime);
+  font-family: 'Archivo Black', sans-serif; font-size: 14px; letter-spacing: 0.04em;
+  padding: 14px 26px; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.tm-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---- Session-expired full screen ---- */
+.tm-expired {
+  position: fixed; inset: 0; z-index: 200; background: var(--black);
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 24px;
+}
+.tm-expired.show { display: flex; }
+.tm-expired h2 { font-size: clamp(28px, 5vw, 44px); color: #fff; margin-bottom: 14px; }
+.tm-expired p { color: var(--card-grey); margin-bottom: 26px; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (min-width: 768px) {
+  .tm-form-grid { grid-template-columns: repeat(2, 1fr); }
+  .tm-field.full { grid-column: 1 / -1; }
+  .tm-quotes, .tm-projects { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1280px) {
+  .tm-quotes { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 680px) {
+  .tm-client-row, .m-row, .d-row { grid-template-columns: 1fr; gap: 14px; }
+  .tm-client-right { align-items: flex-start; }
+  .m-date { display: flex; align-items: baseline; gap: 10px; text-align: left; }
+  .m-day { font-size: 30px; }
+  .m-right { align-items: flex-start; }
+  .d-right { justify-content: flex-start; }
+  .tm-search, .tm-filter { min-width: 0; width: 100%; }
+  .tm-controls-right { width: 100%; }
+  .tm-topbar { padding: 18px 20px; }
+  .tm-topbar .logo { font-size: 22px; }
+  .tm-dash-head { gap: 16px; }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================ TOP BAR ============================ -->
+<header class="tm-topbar">
+  <a href="/" class="logo" aria-label="n.abl home">n<span class="sq"></span>abl</a>
+  <a href="/" class="tm-back">← Back to site</a>
+</header>
+
+<!-- ============================ TEAM ============================ -->
+<main>
+<section id="team">
+  <!-- LOGIN STATE -->
+  <div class="tm-login" id="teamLogin">
+    <span class="dot dot-top"></span>
+    <span class="tm-label">Team Access</span>
+    <h2>Internal only<span class="dot dot--baseline"></span></h2>
+    <p class="tm-sub">If you're seeing this and you're not part of the n.abl team, you're in the wrong place. Try the client portal instead.</p>
+    <form id="teamForm" novalidate>
+      <input type="email" id="teamEmail" class="tm-input" placeholder="your@email.com"
+             autocomplete="username" spellcheck="false" aria-label="Email">
+      <input type="password" id="teamPassword" class="tm-input" placeholder="password"
+             autocomplete="current-password" aria-label="Password">
+      <button type="submit" class="tm-btn-lime" id="teamSubmit">Access Team Space →</button>
+      <p class="tm-login-error" id="teamError" role="alert" aria-live="assertive"></p>
+    </form>
+    <p class="tm-help">Forgot your password? Contact the admin.</p>
+  </div>
+
+  <!-- DASHBOARD STATE (built by JS once authenticated) -->
+  <div class="tm-dash" id="teamDash" hidden></div>
+</section>
+</main>
+
+<!-- ============================ MODAL ============================ -->
+<div class="tm-modal-overlay" id="tmModal" aria-hidden="true">
+  <div class="tm-modal" role="alertdialog" aria-modal="true">
+    <p id="tmModalText">Delete this item? This cannot be undone.</p>
+    <div class="tm-modal-actions">
+      <button type="button" class="tm-btn-ghost" id="tmModalCancel">Cancel</button>
+      <button type="button" class="tm-btn-danger" id="tmModalConfirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ TOAST ============================ -->
+<div class="tm-toast" id="tmToast" role="status" aria-live="polite"></div>
+
+<!-- ============================ SESSION EXPIRED ============================ -->
+<div class="tm-expired" id="tmExpired">
+  <h2>Session expired<span class="dot dot--baseline"></span></h2>
+  <p>Your session timed out. Please sign in again.</p>
+  <button type="button" class="tm-btn-lime" style="max-width:280px" id="tmExpiredBtn">Back to login →</button>
+</div>
+
+<!-- ============================================================
+     n.abl TEAM SPACE — Supabase Auth (email/password)
+     - SEPARATE Supabase client from the client portal (no x-access-key)
+     - Standard auth with built-in session persistence (localStorage)
+     ============================================================ -->
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL = 'https://rrkcoqopcqtowbyismcq.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJya2NvcW9wY3F0b3dieWlzbWNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjE1NTksImV4cCI6MjA5NTczNzU1OX0.p8Hj0sULNLos0_nZhJ_OyYyfiqfmAspwFxtLBdoK4R0';
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Standard-auth client — completely separate from the portal's x-access-key client.
+  const teamSb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ---- DOM refs ----
+  const teamSection = document.getElementById('team');
+  const loginWrap = document.getElementById('teamLogin');
+  const dash = document.getElementById('teamDash');
+  const form = document.getElementById('teamForm');
+  const emailInput = document.getElementById('teamEmail');
+  const passInput = document.getElementById('teamPassword');
+  const submitBtn = document.getElementById('teamSubmit');
+  const errorEl = document.getElementById('teamError');
+  const modal = document.getElementById('tmModal');
+  const modalText = document.getElementById('tmModalText');
+  const modalCancel = document.getElementById('tmModalCancel');
+  const modalConfirm = document.getElementById('tmModalConfirm');
+  const toast = document.getElementById('tmToast');
+  const expired = document.getElementById('tmExpired');
+
+  // ---- App state ----
+  const TABS = ['clients', 'quotes', 'projects', 'meetings', 'documents'];
+  const TAB_LABELS = { clients: 'Clients', quotes: 'Quotes', projects: 'Projects', meetings: 'Meetings', documents: 'Documents' };
+  const state = {
+    user: null,
+    activeTab: 'clients',
+    clients: [],
+    clientsById: {},
+    rows: [],
+    filterClient: 'all',
+    search: '',
+    formOpen: false,
+    editing: null
+  };
+
+  // ============================================================
+  // Helpers
+  // ============================================================
+  const esc = (v) => String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const money = (n) => {
+    const num = Number(n);
+    if (!isFinite(num)) return '£0.00';
+    return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(num);
+  };
+
+  const dateLong = (v) => {
+    if (!v) return '';
+    const d = new Date(v);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+  const monthYear = (d) => d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
+  const timeStr = (d) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const badgeClass = (s) => 'badge-' + String(s || '').toLowerCase().trim().replace(/[^a-z]/g, '');
+  const clientName = (id) => (state.clientsById[id] && state.clientsById[id].business_name) || 'Unknown client';
+
+  // Convert a stored ISO datetime into the value a datetime-local input wants
+  const toLocalInput = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  function genKey(businessName) {
+    let prefix = String(businessName || '').trim().split(/\s+/)[0].toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    if (!prefix) prefix = 'NABL';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let rand = '';
+    for (let i = 0; i < 4; i++) rand += chars[Math.floor(Math.random() * chars.length)];
+    return `${prefix}-${rand}-2026`;
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove('show'), 1400);
+  }
+
+  // Friendly error messaging — never surfaces raw error objects.
+  function friendlyError(err, fallback) {
+    const msg = (err && (err.message || err.error_description || '')) || '';
+    if (/jwt|token|expired|session|not authenticated|unauthor/i.test(msg)) {
+      showExpired();
+      return null;
+    }
+    if (/fetch|network|failed to/i.test(msg)) return 'Connection lost. Refresh the page and try again.';
+    return fallback;
+  }
+
+  function showExpired() {
+    expired.classList.add('show');
+  }
+
+  // ============================================================
+  // Confirmation modal — returns a Promise<boolean>
+  // ============================================================
+  let modalResolve = null;
+  function confirmDelete(itemName) {
+    modalText.textContent = `Delete ${itemName}? This cannot be undone.`;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    return new Promise((resolve) => { modalResolve = resolve; });
+  }
+  function closeModal(result) {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    if (modalResolve) { modalResolve(result); modalResolve = null; }
+  }
+  modalCancel.addEventListener('click', () => closeModal(false));
+  modalConfirm.addEventListener('click', () => closeModal(true));
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(false); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(false);
+  });
+
+  // ============================================================
+  // AUTH
+  // ============================================================
+  function setLoading(on) {
+    submitBtn.disabled = on;
+    submitBtn.textContent = on ? 'Authenticating...' : 'Access Team Space →';
+  }
+  function showLoginError() {
+    errorEl.textContent = 'Incorrect email or password.';
+    if (!reduceMotion) {
+      [emailInput, passInput].forEach((el) => {
+        el.classList.remove('shake');
+        void el.offsetWidth;
+        el.classList.add('shake');
+      });
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+    const email = emailInput.value.trim();
+    const password = passInput.value;
+    if (!email || !password) { showLoginError(); return; }
+
+    setLoading(true);
+    try {
+      const { data, error } = await teamSb.auth.signInWithPassword({ email, password });
+      if (error || !data || !data.user) { setLoading(false); showLoginError(); return; }
+      // onAuthStateChange handles the swap to the dashboard.
+    } catch (err) {
+      setLoading(false);
+      errorEl.textContent = 'Connection lost. Refresh the page and try again.';
+    }
+  });
+
+  async function enterDashboard(user) {
+    state.user = user;
+    setLoading(false);
+    expired.classList.remove('show');
+    await loadClients();
+    renderDashboard();
+    const swap = () => {
+      loginWrap.hidden = true;
+      loginWrap.style.display = 'none';
+      dash.hidden = false;
+      teamSection.classList.add('logged-in');
+    };
+    if (reduceMotion) swap();
+    else { loginWrap.classList.add('fade-out'); setTimeout(swap, 280); }
+  }
+
+  function backToLogin() {
+    state.user = null;
+    dash.hidden = true;
+    dash.innerHTML = '';
+    teamSection.classList.remove('logged-in');
+    loginWrap.style.display = '';
+    loginWrap.hidden = false;
+    loginWrap.classList.remove('fade-out');
+    form.reset();
+    errorEl.textContent = '';
+    setLoading(false);
+  }
+
+  document.getElementById('tmExpiredBtn').addEventListener('click', async () => {
+    expired.classList.remove('show');
+    try { await teamSb.auth.signOut(); } catch (e) {}
+    backToLogin();
+  });
+
+  teamSb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session && session.user) {
+      if (!state.user) enterDashboard(session.user);
+    } else if (event === 'SIGNED_OUT') {
+      backToLogin();
+    }
+  });
+
+  // ============================================================
+  // DATA
+  // ============================================================
+  async function loadClients() {
+    const { data, error } = await teamSb.from('clients').select('*').order('created_at', { ascending: false });
+    if (error) { friendlyError(error, ''); state.clients = []; }
+    else state.clients = data || [];
+    state.clientsById = {};
+    state.clients.forEach((c) => { state.clientsById[c.id] = c; });
+  }
+
+  async function loadRows(tab) {
+    const orderMap = {
+      clients: ['created_at', false],
+      quotes: ['created_at', false],
+      projects: ['created_at', false],
+      meetings: ['datetime', true],
+      documents: ['uploaded_at', false]
+    };
+    const [col, asc] = orderMap[tab];
+    let q = teamSb.from(tab).select('*');
+    try { q = q.order(col, { ascending: asc }); } catch (e) {}
+    const { data, error } = await q;
+    if (error) { const m = friendlyError(error, 'Couldn’t load — please try again.'); if (m) showToast(m); return []; }
+    return data || [];
+  }
+
+  // ============================================================
+  // FORM FIELD CONFIG (per tab)
+  // ============================================================
+  const FORM_FIELDS = {
+    clients: [
+      { name: 'business_name', label: 'Business Name', type: 'text', req: true, full: true },
+      { name: 'contact_name', label: 'Contact Name', type: 'text' },
+      { name: 'contact_email', label: 'Contact Email', type: 'email' },
+      { name: 'access_key', label: 'Access Key', type: 'key', req: true, full: true }
+    ],
+    quotes: [
+      { name: 'client_id', label: 'Client', type: 'client', req: true },
+      { name: 'reference', label: 'Reference', type: 'text', placeholder: 'Q-2026-001' },
+      { name: 'title', label: 'Title', type: 'text', req: true, full: true },
+      { name: 'amount', label: 'Amount', type: 'money' },
+      { name: 'status', label: 'Status', type: 'select', options: ['draft', 'sent', 'accepted', 'rejected'] },
+      { name: 'pdf_url', label: 'PDF URL', type: 'text', full: true },
+      { name: 'valid_until', label: 'Valid Until', type: 'date' }
+    ],
+    projects: [
+      { name: 'client_id', label: 'Client', type: 'client', req: true },
+      { name: 'title', label: 'Title', type: 'text', req: true },
+      { name: 'description', label: 'Description', type: 'textarea', full: true },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'paused', 'complete'] },
+      { name: 'progress_percent', label: 'Progress', type: 'progress' },
+      { name: 'next_milestone', label: 'Next Milestone', type: 'text' },
+      { name: 'next_milestone_date', label: 'Next Milestone Date', type: 'date' }
+    ],
+    meetings: [
+      { name: 'client_id', label: 'Client', type: 'client', req: true },
+      { name: 'title', label: 'Title', type: 'text', req: true, placeholder: 'Kickoff Call' },
+      { name: 'datetime', label: 'Date & Time', type: 'datetime', req: true },
+      { name: 'location', label: 'Location', type: 'text', placeholder: 'Microsoft Teams' },
+      { name: 'join_url', label: 'Join URL', type: 'text' },
+      { name: 'status', label: 'Status', type: 'select', options: ['scheduled', 'completed', 'cancelled'] }
+    ],
+    documents: [
+      { name: 'client_id', label: 'Client', type: 'client', req: true },
+      { name: 'title', label: 'Title', type: 'text', req: true, placeholder: 'Signed Service Agreement' },
+      { name: 'document_type', label: 'Document Type', type: 'select', options: ['contract', 'quote', 'invoice', 'report', 'proposal', 'other'] },
+      { name: 'file_url', label: 'File URL', type: 'text', req: true, full: true, help: 'Paste a share link from OneDrive, Google Drive, or any hosted file location' }
+    ]
+  };
+
+  const ADD_LABELS = { clients: '+ Add New Client', quotes: '+ New Quote', projects: '+ New Project', meetings: '+ Schedule Meeting', documents: '+ Add Document' };
+  const SAVE_LABELS = { clients: 'Create Client →', quotes: 'Save Quote →', projects: 'Save Project →', meetings: 'Save Meeting →', documents: 'Save Document →' };
+
+  function fieldHTML(f, val) {
+    const v = val == null ? '' : val;
+    const req = f.req ? '<span class="req">*</span>' : '';
+    const cls = 'tm-field' + (f.full ? ' full' : '');
+    let control = '';
+    if (f.type === 'text' || f.type === 'email') {
+      control = `<input class="tm-finput" id="tmf_${f.name}" type="${f.type === 'email' ? 'email' : 'text'}" value="${esc(v)}" placeholder="${esc(f.placeholder || '')}">`;
+    } else if (f.type === 'textarea') {
+      control = `<textarea class="tm-finput" id="tmf_${f.name}" rows="4" placeholder="${esc(f.placeholder || '')}">${esc(v)}</textarea>`;
+    } else if (f.type === 'date') {
+      control = `<input class="tm-finput" id="tmf_${f.name}" type="date" value="${esc(v ? String(v).slice(0, 10) : '')}">`;
+    } else if (f.type === 'datetime') {
+      control = `<input class="tm-finput" id="tmf_${f.name}" type="datetime-local" value="${esc(toLocalInput(v))}">`;
+    } else if (f.type === 'money') {
+      control = `<div class="tm-money"><span class="sym">£</span><input class="tm-finput" id="tmf_${f.name}" type="number" step="0.01" min="0" value="${esc(v)}" placeholder="0.00"></div>`;
+    } else if (f.type === 'select') {
+      const opts = f.options.map((o) => `<option value="${o}"${String(v).toLowerCase() === o ? ' selected' : ''}>${o.charAt(0).toUpperCase() + o.slice(1)}</option>`).join('');
+      control = `<select class="tm-finput" id="tmf_${f.name}">${opts}</select>`;
+    } else if (f.type === 'client') {
+      const opts = ['<option value="">Select a client…</option>'].concat(
+        state.clients.map((c) => `<option value="${esc(c.id)}"${String(v) === String(c.id) ? ' selected' : ''}>${esc(c.business_name)}</option>`)
+      ).join('');
+      control = `<select class="tm-finput" id="tmf_${f.name}">${opts}</select>`;
+    } else if (f.type === 'key') {
+      control = `<div class="tm-keyrow"><input class="tm-finput" id="tmf_${f.name}" type="text" value="${esc(v)}" placeholder="ACME-K7X2-2026"><button type="button" class="tm-gen" id="tmGenKey">Generate</button></div>`;
+    } else if (f.type === 'progress') {
+      const pct = Math.max(0, Math.min(100, Number(v) || 0));
+      control = `<input class="tm-finput" id="tmf_${f.name}" type="number" min="0" max="100" value="${pct}">
+        <div class="tm-prog-preview"><span id="tmProgPrev" style="width:${pct}%"></span></div>`;
+    }
+    const help = f.help ? `<span class="tm-field-help">${esc(f.help)}</span>` : '';
+    return `<div class="${cls}">
+      <label for="tmf_${f.name}">${esc(f.label)}${req}</label>
+      ${control}
+      ${help}
+      <span class="tm-field-err" id="tmerr_${f.name}"></span>
+    </div>`;
+  }
+
+  function formHTML(tab) {
+    const fields = FORM_FIELDS[tab].map((f) => fieldHTML(f, state.editing ? state.editing[f.name] : (f.name === 'status' ? FORM_FIELDS[tab].find(x => x.name === 'status').options[0] : ''))).join('');
+    return `<form class="tm-form opening" id="tmEntityForm" novalidate>
+      <div class="tm-form-grid">${fields}</div>
+      <div class="tm-form-actions">
+        <button type="submit" class="tm-btn-save" id="tmSave">${esc(SAVE_LABELS[tab])}</button>
+        <button type="button" class="tm-btn-ghost" id="tmCancel">Cancel</button>
+      </div>
+    </form>`;
+  }
+
+  // ============================================================
+  // ROW RENDERERS
+  // ============================================================
+  const docIcon = `<span class="d-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#B8FF00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/></svg></span>`;
+
+  function actionsHTML(id, name) {
+    return `<div class="tm-card-actions">
+      <button class="tm-act" data-act="edit" data-id="${esc(id)}">Edit</button>
+      <button class="tm-act tm-act-del" data-act="delete" data-id="${esc(id)}" data-name="${esc(name)}">Delete</button>
+    </div>`;
+  }
+
+  function renderClient(c) {
+    return `<article class="tm-card tm-anim" data-id="${esc(c.id)}">
+      <div class="tm-client-row">
+        <div>
+          <div class="tm-client-name">${esc(c.business_name || 'Unnamed')}</div>
+          ${c.contact_name ? `<div class="tm-client-meta">${esc(c.contact_name)}</div>` : ''}
+          ${c.contact_email ? `<div class="tm-client-meta">${esc(c.contact_email)}</div>` : ''}
+        </div>
+        <div class="tm-key-wrap">
+          <span class="tm-key">${esc(c.access_key || '')}</span>
+          <button class="tm-copy" data-act="copy" data-key="${esc(c.access_key || '')}">Copy</button>
+        </div>
+        <div class="tm-client-right">
+          <span class="tm-date">${esc(dateLong(c.created_at))}</span>
+          <div class="tm-card-actions" style="margin-top:0">
+            <button class="tm-act" data-act="edit" data-id="${esc(c.id)}">Edit</button>
+            <button class="tm-act tm-act-del" data-act="delete" data-id="${esc(c.id)}" data-name="${esc(c.business_name || 'this client')}">Delete</button>
+          </div>
+        </div>
+      </div>
+    </article>`;
+  }
+
+  function renderQuote(q) {
+    return `<article class="tm-card tm-anim" data-id="${esc(q.id)}">
+      <div class="q-ref">${esc(q.reference || '')}</div>
+      <h3 class="q-title">${esc(q.title || 'Untitled quote')}</h3>
+      <div class="q-amount">${esc(money(q.amount))}</div>
+      <span class="badge-status ${badgeClass(q.status)}">${esc(q.status || '')}</span>
+      <div class="tm-card-client">${esc(clientName(q.client_id))}</div>
+      ${q.valid_until ? `<div class="q-valid">Valid until: ${esc(dateLong(q.valid_until))}</div>` : ''}
+      ${actionsHTML(q.id, q.title || 'this quote')}
+    </article>`;
+  }
+
+  function renderProject(p) {
+    const pct = Math.max(0, Math.min(100, Number(p.progress_percent) || 0));
+    let desc = p.description || '';
+    if (desc.length > 200) desc = desc.slice(0, 200) + '…';
+    const next = (p.next_milestone || p.next_milestone_date) ? `<div class="p-next">
+        <div class="p-next-label">Next</div>
+        ${p.next_milestone ? `<div class="p-next-text">${esc(p.next_milestone)}</div>` : ''}
+        ${p.next_milestone_date ? `<div class="p-next-date">Due ${esc(dateLong(p.next_milestone_date))}</div>` : ''}
+      </div>` : '';
+    return `<article class="tm-card tm-anim" data-id="${esc(p.id)}">
+      <div class="p-head">
+        <h3 class="p-title">${esc(p.title || 'Untitled project')}</h3>
+        <span class="badge-status ${badgeClass(p.status)}">${esc(p.status || '')}</span>
+      </div>
+      ${desc ? `<p class="p-desc">${esc(desc)}</p>` : ''}
+      <div class="p-progress"><div class="p-progress-fill" data-pct="${pct}"></div></div>
+      <div class="p-pct">${pct}% complete</div>
+      ${next}
+      <div class="tm-card-client">${esc(clientName(p.client_id))}</div>
+      ${actionsHTML(p.id, p.title || 'this project')}
+    </article>`;
+  }
+
+  function renderMeeting(m) {
+    const d = m.datetime ? new Date(m.datetime) : null;
+    const valid = d && !isNaN(d);
+    const isPast = valid && d.getTime() < Date.now();
+    const join = (m.join_url && !isPast)
+      ? `<a class="m-join" href="${esc(m.join_url)}" target="_blank" rel="noopener">Join →</a>` : '';
+    return `<article class="tm-card tm-anim m-row${isPast ? ' past' : ''}" data-id="${esc(m.id)}">
+      <div class="m-date">
+        <div class="m-day">${valid ? d.getDate() : '–'}</div>
+        <div class="m-monthyear">${valid ? esc(monthYear(d)) : ''}</div>
+      </div>
+      <div class="m-mid">
+        <div class="m-title">${esc(m.title || 'Meeting')}</div>
+        <div class="m-loc">${m.location ? esc(m.location) : ''}${valid ? (m.location ? ' · ' : '') + esc(timeStr(d)) : ''}</div>
+        <div class="tm-card-actions">
+          <button class="tm-act" data-act="edit" data-id="${esc(m.id)}">Edit</button>
+          <button class="tm-act tm-act-del" data-act="delete" data-id="${esc(m.id)}" data-name="${esc(m.title || 'this meeting')}">Delete</button>
+        </div>
+      </div>
+      <div class="m-right">
+        <span class="m-client">${esc(clientName(m.client_id))}</span>
+        ${m.status ? `<span class="badge-status ${badgeClass(m.status)}">${esc(m.status)}</span>` : ''}
+        ${join}
+      </div>
+    </article>`;
+  }
+
+  function renderDocument(doc) {
+    return `<article class="tm-card tm-anim d-row" data-id="${esc(doc.id)}">
+      ${docIcon}
+      <div class="d-mid">
+        <div class="d-title">${esc(doc.title || 'Document')}</div>
+        ${doc.document_type ? `<div class="d-type">${esc(doc.document_type)}</div>` : ''}
+        <div class="tm-card-client">${esc(clientName(doc.client_id))}</div>
+      </div>
+      <div class="d-right">
+        ${doc.uploaded_at ? `<span class="tm-date">${esc(dateLong(doc.uploaded_at))}</span>` : ''}
+        ${doc.file_url ? `<a class="tm-act" href="${esc(doc.file_url)}" target="_blank" rel="noopener">View →</a>` : ''}
+        <button class="tm-act" data-act="edit" data-id="${esc(doc.id)}">Edit</button>
+        <button class="tm-act tm-act-del" data-act="delete" data-id="${esc(doc.id)}" data-name="${esc(doc.title || 'this document')}">Delete</button>
+      </div>
+    </article>`;
+  }
+
+  const RENDERERS = { clients: renderClient, quotes: renderQuote, projects: renderProject, meetings: renderMeeting, documents: renderDocument };
+  const GRID_CLASS = { clients: 'tm-list', quotes: 'tm-grid tm-quotes', projects: 'tm-grid tm-projects', meetings: 'tm-list', documents: 'tm-list' };
+  const EMPTY_MSG = {
+    clients: 'No clients yet. Add your first one above.',
+    quotes: 'No quotes yet.',
+    projects: 'No projects yet.',
+    meetings: 'No meetings yet.',
+    documents: 'No documents yet.'
+  };
+
+  // ============================================================
+  // DASHBOARD RENDER
+  // ============================================================
+  function renderDashboard() {
+    const who = esc((state.user && state.user.email ? state.user.email.split('@')[0] : 'team'));
+    dash.innerHTML = `
+      <div class="tm-dash-head">
+        <div>
+          <span class="tm-label">n.abl Team Space</span>
+          <h2 class="tm-dash-name">Hey, ${who}<span class="dot dot--baseline"></span></h2>
+        </div>
+        <div class="tm-head-right">
+          <span class="tm-conn"><span class="pulse"></span>Connected</span>
+          <button type="button" class="tm-logout" id="tmLogout">Log Out</button>
+        </div>
+      </div>
+      <div class="tm-sep"></div>
+      <div class="tm-tabs" id="tmTabs">
+        ${TABS.map((t) => `<button class="tm-tab${t === state.activeTab ? ' active' : ''}" data-tab="${t}">${TAB_LABELS[t]}</button>`).join('')}
+        <span class="tm-tab-underline" id="tmUnderline"></span>
+      </div>
+      <div id="tmTabContent"></div>
+    `;
+    document.getElementById('tmLogout').addEventListener('click', async () => {
+      try { await teamSb.auth.signOut(); } catch (e) {}
+    });
+    const tabsWrap = document.getElementById('tmTabs');
+    tabsWrap.addEventListener('click', (e) => {
+      const btn = e.target.closest('.tm-tab');
+      if (!btn) return;
+      switchTab(btn.dataset.tab);
+    });
+    switchTab(state.activeTab);
+  }
+
+  function positionUnderline() {
+    const active = dash.querySelector('.tm-tab.active');
+    const underline = document.getElementById('tmUnderline');
+    if (active && underline) {
+      underline.style.left = active.offsetLeft + 'px';
+      underline.style.width = active.offsetWidth + 'px';
+    }
+  }
+
+  async function switchTab(tab) {
+    state.activeTab = tab;
+    state.formOpen = false;
+    state.editing = null;
+    state.search = '';
+    state.filterClient = 'all';
+    dash.querySelectorAll('.tm-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+    positionUnderline();
+    const content = document.getElementById('tmTabContent');
+    content.innerHTML = `<div class="tm-loading">Loading…</div>`;
+    // Clients always needed for name lookups + dropdowns
+    await loadClients();
+    state.rows = tab === 'clients' ? state.clients : await loadRows(tab);
+    renderTabContent();
+  }
+
+  function filteredRows() {
+    let rows = state.rows.slice();
+    if (state.activeTab === 'clients' && state.search) {
+      const s = state.search.toLowerCase();
+      rows = rows.filter((r) => String(r.business_name || '').toLowerCase().includes(s));
+    }
+    if (state.activeTab !== 'clients' && state.filterClient !== 'all') {
+      rows = rows.filter((r) => String(r.client_id) === String(state.filterClient));
+    }
+    if (state.activeTab === 'meetings') {
+      const now = Date.now();
+      rows.sort((a, b) => {
+        const ta = a.datetime ? new Date(a.datetime).getTime() : Infinity;
+        const tb = b.datetime ? new Date(b.datetime).getTime() : Infinity;
+        const ap = ta < now, bp = tb < now;
+        if (ap !== bp) return ap ? 1 : -1;   // past meetings sink below upcoming
+        return ap ? tb - ta : ta - tb;        // upcoming soonest-first, past most-recent-first
+      });
+    }
+    return rows;
+  }
+
+  function controlsHTML(tab) {
+    if (tab === 'clients') {
+      return `<div class="tm-controls">
+        <button class="tm-btn-add" id="tmAddBtn">${esc(ADD_LABELS[tab])}</button>
+        <div class="tm-controls-right">
+          <input class="tm-search" id="tmSearch" type="text" placeholder="Search by business name…" value="${esc(state.search)}">
+        </div>
+      </div>`;
+    }
+    const opts = ['<option value="all">All Clients</option>'].concat(
+      state.clients.map((c) => `<option value="${esc(c.id)}"${String(state.filterClient) === String(c.id) ? ' selected' : ''}>${esc(c.business_name)}</option>`)
+    ).join('');
+    return `<div class="tm-controls">
+      <button class="tm-btn-add" id="tmAddBtn">${esc(ADD_LABELS[tab])}</button>
+      <div class="tm-controls-right">
+        <select class="tm-filter" id="tmFilter">${opts}</select>
+      </div>
+    </div>`;
+  }
+
+  function renderTabContent() {
+    const tab = state.activeTab;
+    const content = document.getElementById('tmTabContent');
+    const rows = filteredRows();
+    const listBody = rows.length
+      ? `<div class="${GRID_CLASS[tab]}">${rows.map(RENDERERS[tab]).join('')}</div>`
+      : `<div class="tm-empty">${esc(EMPTY_MSG[tab])}</div>`;
+    content.innerHTML = controlsHTML(tab)
+      + (state.formOpen ? formHTML(tab) : '')
+      + listBody;
+    wireTabContent();
+    animateProgress();
+  }
+
+  function animateProgress() {
+    requestAnimationFrame(() => {
+      dash.querySelectorAll('.p-progress-fill').forEach((f) => {
+        f.style.width = (f.getAttribute('data-pct') || 0) + '%';
+      });
+    });
+  }
+
+  // ============================================================
+  // WIRING (event listeners for the current tab content)
+  // ============================================================
+  function wireTabContent() {
+    const tab = state.activeTab;
+    const addBtn = document.getElementById('tmAddBtn');
+    if (addBtn) addBtn.addEventListener('click', () => { state.editing = null; state.formOpen = true; renderTabContent(); document.getElementById('tmEntityForm')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' }); });
+
+    const search = document.getElementById('tmSearch');
+    if (search) search.addEventListener('input', () => {
+      state.search = search.value;
+      // Re-render only the list to keep focus in the search box
+      refreshListOnly();
+    });
+
+    const filter = document.getElementById('tmFilter');
+    if (filter) filter.addEventListener('change', () => { state.filterClient = filter.value; refreshListOnly(); });
+
+    // Form wiring
+    const entityForm = document.getElementById('tmEntityForm');
+    if (entityForm) {
+      document.getElementById('tmCancel').addEventListener('click', () => { state.formOpen = false; state.editing = null; renderTabContent(); });
+      entityForm.addEventListener('submit', (e) => { e.preventDefault(); saveEntity(); });
+
+      const genBtn = document.getElementById('tmGenKey');
+      if (genBtn) genBtn.addEventListener('click', () => {
+        const biz = document.getElementById('tmf_business_name');
+        document.getElementById('tmf_access_key').value = genKey(biz ? biz.value : '');
+      });
+
+      const prog = document.getElementById('tmf_progress_percent');
+      if (prog) prog.addEventListener('input', () => {
+        const pv = document.getElementById('tmProgPrev');
+        if (pv) pv.style.width = Math.max(0, Math.min(100, Number(prog.value) || 0)) + '%';
+      });
+    }
+
+    // List actions (delegation)
+    const content = document.getElementById('tmTabContent');
+    content.querySelectorAll('[data-act]').forEach((el) => {
+      const act = el.dataset.act;
+      if (act === 'copy') el.addEventListener('click', () => copyKey(el));
+      else if (act === 'edit') el.addEventListener('click', () => startEdit(el.dataset.id));
+      else if (act === 'delete') el.addEventListener('click', () => deleteEntity(el.dataset.id, el.dataset.name));
+    });
+  }
+
+  function refreshListOnly() {
+    const tab = state.activeTab;
+    const content = document.getElementById('tmTabContent');
+    const rows = filteredRows();
+    // Replace just the list (last child) — keep controls/form & focus intact
+    const existingList = content.querySelector('.' + GRID_CLASS[tab].split(' ')[0]) || content.querySelector('.tm-empty');
+    const wrap = document.createElement('div');
+    wrap.innerHTML = rows.length
+      ? `<div class="${GRID_CLASS[tab]}">${rows.map(RENDERERS[tab]).join('')}</div>`
+      : `<div class="tm-empty">${esc(EMPTY_MSG[tab])}</div>`;
+    const newList = wrap.firstElementChild;
+    if (existingList) existingList.replaceWith(newList);
+    else content.appendChild(newList);
+    // re-wire only the new list's action buttons
+    newList.querySelectorAll('[data-act]').forEach((el) => {
+      const act = el.dataset.act;
+      if (act === 'copy') el.addEventListener('click', () => copyKey(el));
+      else if (act === 'edit') el.addEventListener('click', () => startEdit(el.dataset.id));
+      else if (act === 'delete') el.addEventListener('click', () => deleteEntity(el.dataset.id, el.dataset.name));
+    });
+    animateProgress();
+  }
+
+  function copyKey(btn) {
+    const key = btn.dataset.key || '';
+    const done = () => { btn.textContent = 'Copied ✓'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1200); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(key).then(done).catch(() => fallbackCopy(key, done));
+    } else fallbackCopy(key, done);
+  }
+  function fallbackCopy(text, done) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  function startEdit(id) {
+    const row = state.rows.find((r) => String(r.id) === String(id));
+    if (!row) return;
+    state.editing = row;
+    state.formOpen = true;
+    renderTabContent();
+    document.getElementById('tmEntityForm')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }
+
+  // ============================================================
+  // SAVE
+  // ============================================================
+  function clearFieldErrors() {
+    dash.querySelectorAll('.tm-field-err').forEach((e) => { e.textContent = ''; e.classList.remove('lime'); });
+  }
+  function setFieldError(name, msg) {
+    const el = document.getElementById('tmerr_' + name);
+    if (el) el.textContent = msg;
+  }
+
+  function collectAndValidate(tab) {
+    clearFieldErrors();
+    const out = {};
+    let ok = true;
+    for (const f of FORM_FIELDS[tab]) {
+      const el = document.getElementById('tmf_' + f.name);
+      if (!el) continue;
+      let val = el.value;
+      if (typeof val === 'string') val = val.trim();
+
+      if (f.req && !val) { setFieldError(f.name, 'Required.'); ok = false; continue; }
+
+      if (f.type === 'email' && val && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) {
+        setFieldError(f.name, 'Enter a valid email.'); ok = false; continue;
+      }
+      if (f.type === 'money') { out[f.name] = val === '' ? null : Number(val); continue; }
+      if (f.type === 'progress') {
+        let n = val === '' ? 0 : parseInt(val, 10);
+        if (isNaN(n) || n < 0 || n > 100) { setFieldError(f.name, '0–100 only.'); ok = false; continue; }
+        out[f.name] = n; continue;
+      }
+      if (f.type === 'datetime') { out[f.name] = val ? new Date(val).toISOString() : null; continue; }
+      if (f.type === 'date') { out[f.name] = val || null; continue; }
+      out[f.name] = val === '' ? null : val;
+    }
+    return ok ? out : null;
+  }
+
+  async function saveEntity() {
+    const tab = state.activeTab;
+    const payload = collectAndValidate(tab);
+    if (!payload) return;
+
+    // documents: stamp uploaded_at on first insert so the portal ordering works
+    if (tab === 'documents' && !state.editing && !payload.uploaded_at) {
+      payload.uploaded_at = new Date().toISOString();
+    }
+
+    const saveBtn = document.getElementById('tmSave');
+    saveBtn.disabled = true;
+    const original = saveBtn.textContent;
+    saveBtn.textContent = 'Saving…';
+
+    try {
+      let error;
+      if (state.editing) {
+        ({ error } = await teamSb.from(tab).update(payload).eq('id', state.editing.id));
+      } else {
+        ({ error } = await teamSb.from(tab).insert(payload));
+      }
+      if (error) {
+        saveBtn.disabled = false; saveBtn.textContent = original;
+        const m = friendlyError(error, 'Couldn’t save — please try again.');
+        if (m) setFieldError(FORM_FIELDS[tab][0].name, m);
+        return;
+      }
+      showToast('Saved ✓');
+      state.formOpen = false;
+      state.editing = null;
+      // refresh data (clients first if needed for names/dropdowns)
+      await loadClients();
+      state.rows = tab === 'clients' ? state.clients : await loadRows(tab);
+      renderTabContent();
+    } catch (err) {
+      saveBtn.disabled = false; saveBtn.textContent = original;
+      setFieldError(FORM_FIELDS[tab][0].name, 'Connection lost. Refresh the page and try again.');
+    }
+  }
+
+  // ============================================================
+  // DELETE
+  // ============================================================
+  async function deleteEntity(id, name) {
+    const yes = await confirmDelete(name || 'this item');
+    if (!yes) return;
+    const tab = state.activeTab;
+    const card = dash.querySelector(`.tm-card[data-id="${CSS.escape(String(id))}"]`);
+    if (card) card.classList.add('removing');
+    try {
+      const { error } = await teamSb.from(tab).delete().eq('id', id);
+      if (error) {
+        if (card) card.classList.remove('removing');
+        const m = friendlyError(error, 'Couldn’t delete — please try again.');
+        if (m) showToast(m);
+        return;
+      }
+      setTimeout(async () => {
+        await loadClients();
+        state.rows = tab === 'clients' ? state.clients : await loadRows(tab);
+        renderTabContent();
+      }, reduceMotion ? 0 : 200);
+    } catch (err) {
+      if (card) card.classList.remove('removing');
+      showToast('Connection lost. Refresh the page and try again.');
+    }
+  }
+
+  window.addEventListener('resize', () => { if (!dash.hidden) positionUnderline(); });
+
+  // ============================================================
+  // BOOT — restore an existing session if present
+  // ============================================================
+  (async () => {
+    try {
+      const { data: { session } } = await teamSb.auth.getSession();
+      if (session && session.user) {
+        await enterDashboard(session.user);
+      }
+    } catch (e) { /* show login by default */ }
+  })();
+</script>
+</body>
+</html>

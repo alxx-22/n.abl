@@ -598,6 +598,19 @@ footer { background: var(--black); color: #fff; }
 .footer-line { height: 1px; background: var(--lime); width: 100%; }
 .footer-micro { text-align: center; color: var(--grey); font-size: 12px; padding: 16px; }
 
+/* Hidden team-space trigger — tiny lime dot in the corner. No label, no tooltip. */
+footer { position: relative; }
+.team-dot {
+  position: absolute;
+  right: 8px; bottom: 8px;
+  width: 6px; height: 6px;
+  background: var(--lime);
+  opacity: 0.5;
+  display: block;
+  transition: opacity 0.2s ease;
+}
+.team-dot:hover { opacity: 1; }
+
 /* ============================================================
    AUDIT MODAL
    ============================================================ */
@@ -1190,6 +1203,7 @@ nav.scrolled .portal-btn:hover { background: var(--black); color: var(--lime) !i
   </div>
   <div class="footer-line"></div>
   <div class="footer-micro">Built for small business. Powered by your stack.</div>
+  <a href="/team" class="team-dot" aria-label="Team" tabindex="-1"></a>
 </footer>
 
 <script>
