@@ -1,15 +1,15 @@
 // Supabase Edge Function: sales-research
 //
 // Environment variables required:
-// - OPENAI_API_KEY
-// - SUPABASE_URL
-// - SUPABASE_ANON_KEY
+// - openai_api_key (or OPENAI_API_KEY via CLI)
+// - supabase_url (or SUPABASE_URL)
+// - supabase_anon_key (or SUPABASE_ANON_KEY)
 // Optional:
-// - OPENAI_MODEL (defaults to gpt-5-mini)
+// - openai_model (or OPENAI_MODEL, defaults to gpt-5-mini)
 //
 // Deploy:
 //   supabase functions deploy sales-research
-//   supabase secrets set OPENAI_API_KEY=... OPENAI_MODEL=gpt-5-mini
+//   supabase secrets set openai_api_key=... openai_model=gpt-5-mini
 
 type DiscoveryFilters = {
   industry?: string;
@@ -69,9 +69,9 @@ Deno.serve(async (req) => {
       return json({ error: "mode must be discover or research" }, 400);
     }
 
-    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    const openaiKey = getEnv("openai_api_key", "OPENAI_API_KEY");
     if (!openaiKey) {
-      return json({ error: "OPENAI_API_KEY is not configured" }, 500);
+      return json({ error: "openai_api_key is not configured" }, 500);
     }
 
     const prompt = body.mode === "discover"
@@ -115,7 +115,7 @@ async function fetchOpenAi(openaiKey: string, prompt: string, toolType: "web_sea
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: Deno.env.get("OPENAI_MODEL") || "gpt-5-mini",
+      model: getEnv("openai_model", "OPENAI_MODEL") || "gpt-5-mini",
       tools: [tool],
       tool_choice: "auto",
       input: [
@@ -156,8 +156,8 @@ function shouldRetryWithPreview(raw: string) {
 }
 
 async function assertAuthenticated(req: Request) {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const supabaseUrl = getEnv("supabase_url", "SUPABASE_URL");
+  const anonKey = getEnv("supabase_anon_key", "SUPABASE_ANON_KEY");
   const auth = req.headers.get("Authorization") || "";
   if (!supabaseUrl || !anonKey) throw new Error("Supabase env vars are not configured");
   if (!auth.startsWith("Bearer ")) throw new Error("Missing Supabase session");
@@ -169,6 +169,10 @@ async function assertAuthenticated(req: Request) {
     },
   });
   if (!userRes.ok) throw new Error("Invalid Supabase session");
+}
+
+function getEnv(lowerName: string, upperName: string) {
+  return Deno.env.get(lowerName) || Deno.env.get(upperName);
 }
 
 function discoveryPrompt(filters: DiscoveryFilters) {

@@ -24,10 +24,17 @@ This folder contains the first backend pass for the Sales Intelligence CRM.
 
 ```bash
 supabase db push
-supabase secrets set OPENAI_API_KEY=...
-supabase secrets set OPENAI_MODEL=gpt-5-mini
+supabase secrets set openai_api_key=...
+supabase secrets set openai_model=gpt-5-mini
 supabase functions deploy sales-research
 ```
+
+Use lowercase names in the Supabase dashboard secrets UI:
+
+- `openai_api_key`
+- `openai_model`
+
+The Edge Function also accepts uppercase CLI-style names, but the dashboard may reject uppercase names.
 
 If you are using the Supabase SQL editor instead of the CLI, run both migration files in order:
 
