@@ -297,7 +297,7 @@ select option { background: var(--black); color: #fff; }
         <h1>Research before outreach<span class="dot dot--baseline"></span></h1>
       </div>
       <div>
-        <p class="si-copy">An internal sales workspace for discovering public-fit leads, turning research into approved outreach, and keeping every note, status change and next step in one place.</p>
+        <p class="si-copy">An internal sales workspace for discovering public-fit leads, turning AI web research into approved outreach, and keeping every note, status change and next step in one place.</p>
         <div class="actions">
           <a class="btn" href="#discovery">Discover Leads</a>
           <a class="btn ghost" href="#crm">Open CRM</a>
@@ -315,7 +315,7 @@ select option { background: var(--black); color: #fff; }
       <div class="si-card accent">
         <span class="si-label">Lead Discovery</span>
         <h2>Find businesses with public signals.</h2>
-        <p class="muted">Use the filters to simulate a public web discovery run. The browser version uses a curated public-signal catalogue; the Supabase version will run search/fetch/enrichment server-side and log sources.</p>
+        <p class="muted">Use the filters to run an AI public web research workflow. If the Supabase function is not deployed yet, the page falls back to the local demo catalogue and tells you.</p>
         <form id="discoveryForm" class="form-grid" style="margin-top:18px;">
           <label class="field"><span>Industry</span><select name="industry"><option value="">Any</option><option>Retail</option><option>Professional Services</option><option>Manufacturing</option><option>Healthcare</option><option>Finance</option><option>Technology</option></select></label>
           <label class="field"><span>Location</span><select name="location"><option value="">Any</option><option>London</option><option>Manchester</option><option>Birmingham</option><option>Leeds</option><option>Bristol</option><option>UK Remote</option></select></label>
@@ -363,19 +363,25 @@ select option { background: var(--black); color: #fff; }
     <div class="si-inner si-card accent">
       <span class="si-label">Backend Next Steps</span>
       <h2>Make the research real in Supabase.</h2>
-      <p class="muted">The front-end now has the workflow shape. The next move is to replace localStorage and simulated public-signal research with Supabase tables, Edge Functions, source logging, and approved email integrations.</p>
+      <p class="muted">The first backend pieces now exist in this branch: a Supabase schema and a <code>sales-research</code> Edge Function that calls OpenAI Responses with web search and strict JSON output. The next move is deploying them, setting secrets, then replacing localStorage writes with Supabase table writes.</p>
       <div class="backend-list" style="margin-top:18px;">
         <article class="si-card soft"><h3>Data Model</h3><p class="muted"><code>sales_leads</code>, <code>sales_contacts</code>, <code>sales_activities</code>, <code>sales_research_runs</code>, <code>sales_email_drafts</code>, <code>sales_pipeline_events</code>.</p></article>
-        <article class="si-card soft"><h3>Research Functions</h3><p class="muted">Edge Functions for search API calls, website fetch, Companies House lookup, page summarisation, source confidence, and GDPR-safe contact extraction.</p></article>
-        <article class="si-card soft"><h3>Email Flow</h3><p class="muted">Store drafts, require approval, then send via Microsoft 365, Zoho or SMTP. Never auto-send. Log every draft, approval and send event.</p></article>
+        <article class="si-card soft"><h3>Research Function</h3><p class="muted"><code>supabase/functions/sales-research</code> accepts discovery filters or a lead record, searches public web sources, and returns CRM-ready JSON.</p></article>
+        <article class="si-card soft"><h3>Email Flow</h3><p class="muted">Next: store drafts, require approval, then send via Microsoft 365, Zoho or SMTP. Never auto-send. Log every draft, approval and send event.</p></article>
       </div>
     </div>
   </section>
 </main>
 
-<script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 (function () {
   'use strict';
+
+  const SUPABASE_URL = 'https://rrkcoqopcqtowbyismcq.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJya2NvcW9wY3F0b3dieWlzbWNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjE1NTksImV4cCI6MjA5NTczNzU1OX0.p8Hj0sULNLos0_nZhJ_OyYyfiqfmAspwFxtLBdoK4R0';
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const STORAGE_KEY = 'nabl.sales-intelligence.v2';
   const stages = ['New Lead', 'Researching', 'Ready To Contact', 'Contacted', 'Follow Up Required', 'Replied', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'];
@@ -438,6 +444,7 @@ select option { background: var(--black); color: #fff; }
       createdAt: now,
       updatedAt: now,
       research,
+      sourceUrls: research.sourceUrls || [],
       activities: [
         activity('Lead created', 'Created from public web signals', now),
         activity('Research generated', research.summary, now)
@@ -510,6 +517,7 @@ select option { background: var(--black); color: #fff; }
       summary: `${company} shows public signs of repeated processes, visible contact routes and enough operational complexity to justify a sales conversation.`,
       overview: `${company} appears to be a ${size || 'SME'} ${industry || 'business'} based in ${location || 'the UK'}, with public signals that point to process improvement potential.`,
       sourceBasis: website || 'Company website, public search snippets and directory-style notes supplied to the research run.',
+      sourceUrls: website ? [website] : [],
       recentActivity: lower.includes('news') ? 'Recent public updates found in supplied signals.' : 'No verified news feed yet. Backend research should check website news, Companies House and public search results.',
       pain: pain.join(', '),
       opportunity,
@@ -517,6 +525,70 @@ select option { background: var(--black); color: #fff; }
       angle: `Ask where ${company} still copies information between tools they already use, then offer a practical audit rather than a new platform.`,
       confidence: Math.min(96, scoreFromSignals(signals, size) + 4),
       gdpr: 'Record source URLs, confidence and lawful basis. No LinkedIn scraping, no authenticated access, no personal enrichment without a lawful basis.'
+    };
+  }
+
+  async function runAiWorkflow(payload) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      throw new Error('Sign in through the team page before running live AI research.');
+    }
+    const { data, error } = await sb.functions.invoke('sales-research', {
+      body: payload,
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+    if (error) throw new Error(error.message || 'AI research function failed.');
+    if (!data || !Array.isArray(data.leads)) throw new Error('AI research returned an unexpected shape.');
+    return data;
+  }
+
+  function leadFromAi(aiLead, status) {
+    const company = aiLead.company || 'Untitled company';
+    const research = {
+      summary: aiLead.recommendation_reason || aiLead.company_overview || `${company} was recommended by AI research.`,
+      overview: aiLead.company_overview || '',
+      sourceBasis: (aiLead.source_urls || []).join(', ') || aiLead.website || 'Public web research',
+      sourceUrls: aiLead.source_urls || [],
+      recentActivity: aiLead.recent_public_activity || '',
+      pain: aiLead.potential_pain_points || '',
+      opportunity: aiLead.service_opportunities || '',
+      contactDiscovery: aiLead.public_contact_info || '',
+      angle: aiLead.suggested_outreach_angle || '',
+      confidence: aiLead.confidence || 50,
+      gdpr: aiLead.gdpr_notes || 'Public-source only. No LinkedIn scraping or authenticated access.'
+    };
+    const now = new Date().toISOString();
+    return {
+      id: 'lead-' + company.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString(36),
+      company,
+      website: aiLead.website || '',
+      industry: aiLead.industry || '',
+      location: aiLead.location || '',
+      size: aiLead.estimated_size || '',
+      type: aiLead.business_type || '',
+      score: aiLead.lead_score || 50,
+      status: status || 'New Lead',
+      owner: 'n.abl Team',
+      signals: aiLead.recommendation_reason || aiLead.company_overview || '',
+      contacts: (aiLead.contacts || []).map((contact) => ({
+        name: contact.name || 'Public contact route',
+        role: contact.role || 'Public',
+        email: contact.email || '',
+        phone: contact.phone || '',
+        source: contact.source || 'Public web',
+        confidence: contact.confidence || 50
+      })),
+      notes: '',
+      outreachDraft: '',
+      outreachApproved: false,
+      createdAt: now,
+      updatedAt: now,
+      research,
+      sourceUrls: research.sourceUrls,
+      activities: [
+        activity('AI research', research.summary, now),
+        activity('Lead created', 'Created by live AI public web workflow', now)
+      ]
     };
   }
 
@@ -617,7 +689,7 @@ select option { background: var(--black); color: #fff; }
 
   function researchPanel(lead) {
     return `
-      <div class="notice">Current research is generated from supplied public signals in the browser. Real search/fetch work belongs in Supabase Edge Functions so sources, consent and failures are logged.</div>
+      <div class="notice">Live research uses the Supabase <code>sales-research</code> function to run public web search through OpenAI and return structured CRM data. If the function is not deployed or you are not signed in, this panel falls back to browser-only demo research and logs why.</div>
       <div class="kv" style="margin-top:16px;">
         ${kv('Industry', lead.industry)}
         ${kv('Website', lead.website)}
@@ -628,6 +700,7 @@ select option { background: var(--black); color: #fff; }
         ${kv('Service Opportunities', lead.research.opportunity)}
         ${kv('Suggested Outreach Angle', lead.research.angle)}
         ${kv('Public Contact Info', lead.research.contactDiscovery)}
+        ${sourceLinks(lead.research.sourceUrls || lead.sourceUrls || [])}
         ${kv('Confidence', lead.research.confidence + '%')}
       </div>
       <form id="researchForm" style="margin-top:18px;">
@@ -642,6 +715,12 @@ select option { background: var(--black); color: #fff; }
 
   function kv(label, value) {
     return `<div><span>${esc(label)}</span><p>${esc(value)}</p></div>`;
+  }
+
+  function sourceLinks(urls) {
+    const clean = (urls || []).filter(Boolean).slice(0, 6);
+    if (!clean.length) return kv('Source URLs', 'No source URLs logged yet');
+    return `<div><span>Source URLs</span><p>${clean.map(url => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>`).join('<br>')}</p></div>`;
   }
 
   function contactsPanel(lead) {
@@ -749,28 +828,88 @@ select option { background: var(--black); color: #fff; }
     render();
   }
 
-  els.discoveryForm.addEventListener('submit', (event) => {
+  els.discoveryForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const data = new FormData(els.discoveryForm);
-    const matches = catalogue.filter(row =>
-      (!data.get('industry') || row[1] === data.get('industry')) &&
-      (!data.get('location') || row[2] === data.get('location')) &&
-      (!data.get('size') || row[3] === data.get('size')) &&
-      (!data.get('type') || row[4] === data.get('type'))
-    );
-    els.recommendations.innerHTML = (matches.length ? matches : catalogue.slice(0, 3)).slice(0, 6).map((row, index) => `
-      <article class="si-card soft">
-        <span class="si-label">Score ${row[5]}</span>
-        <h3>${esc(row[0])}</h3>
-        <p class="muted">${esc(row[1])} - ${esc(row[2])} - ${esc(row[3])}</p>
-        <p>${esc(row[6])}</p>
-        <div class="actions"><button class="btn slim" type="button" data-add-reco="${index}">Add To CRM</button></div>
-      </article>
-    `).join('');
-    els.recommendations.querySelectorAll('[data-add-reco]').forEach((button) => {
-      button.addEventListener('click', () => addRecommendation((matches.length ? matches : catalogue.slice(0, 3))[Number(button.dataset.addReco)]));
-    });
+    const filters = {
+      industry: data.get('industry'),
+      location: data.get('location'),
+      size: data.get('size'),
+      type: data.get('type')
+    };
+    const submit = els.discoveryForm.querySelector('button[type="submit"]');
+    const oldText = submit.textContent;
+    submit.disabled = true;
+    submit.textContent = 'Researching...';
+    els.recommendations.innerHTML = '<article class="si-card soft"><span class="si-label">Live AI Research</span><p class="muted">Searching public web sources, refining candidates and building CRM-ready records.</p></article>';
+
+    try {
+      const result = await runAiWorkflow({ mode: 'discover', filters });
+      renderAiRecommendations(result.leads, result.query_summary, false);
+    } catch (error) {
+      const matches = catalogue.filter(row =>
+        (!filters.industry || row[1] === filters.industry) &&
+        (!filters.location || row[2] === filters.location) &&
+        (!filters.size || row[3] === filters.size) &&
+        (!filters.type || row[4] === filters.type)
+      );
+      renderFallbackRecommendations(matches.length ? matches : catalogue.slice(0, 3), error.message);
+    } finally {
+      submit.disabled = false;
+      submit.textContent = oldText;
+    }
   });
+
+  function renderAiRecommendations(aiLeads, summary, fromResearch) {
+    els.recommendations.innerHTML = `
+      <article class="si-card accent">
+        <span class="si-label">Live AI Output</span>
+        <h3>${fromResearch ? 'Research complete' : 'Discovery complete'}</h3>
+        <p class="muted">${esc(summary || 'AI research returned CRM-ready records from public web sources.')}</p>
+      </article>
+      ${aiLeads.map((lead, index) => `
+        <article class="si-card soft">
+          <span class="si-label">Score ${esc(lead.lead_score || 50)} / Confidence ${esc(lead.confidence || 50)}%</span>
+          <h3>${esc(lead.company)}</h3>
+          <p class="muted">${esc(lead.industry)} - ${esc(lead.location)} - ${esc(lead.estimated_size)}</p>
+          <p>${esc(lead.recommendation_reason || lead.company_overview)}</p>
+          <div class="actions"><button class="btn slim" type="button" data-add-ai="${index}">Add To CRM</button></div>
+        </article>
+      `).join('')}
+    `;
+    els.recommendations.querySelectorAll('[data-add-ai]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const lead = leadFromAi(aiLeads[Number(button.dataset.addAi)], fromResearch ? 'Researching' : 'New Lead');
+        state.leads.unshift(lead);
+        selectedId = lead.id;
+        activeTab = 'research';
+        saveState();
+        render();
+      });
+    });
+  }
+
+  function renderFallbackRecommendations(rows, reason) {
+    els.recommendations.innerHTML = `
+      <article class="si-card accent">
+        <span class="si-label">Demo fallback</span>
+        <h3>Live AI research did not run.</h3>
+        <p class="muted">${esc(reason || 'Deploy the Supabase Edge Function and set OPENAI_API_KEY to enable live public web research.')}</p>
+      </article>
+      ${rows.slice(0, 6).map((row, index) => `
+        <article class="si-card soft">
+          <span class="si-label">Demo Score ${row[5]}</span>
+          <h3>${esc(row[0])}</h3>
+          <p class="muted">${esc(row[1])} - ${esc(row[2])} - ${esc(row[3])}</p>
+          <p>${esc(row[6])}</p>
+          <div class="actions"><button class="btn slim" type="button" data-add-reco="${index}">Add To CRM</button></div>
+        </article>
+      `).join('')}
+    `;
+    els.recommendations.querySelectorAll('[data-add-reco]').forEach((button) => {
+      button.addEventListener('click', () => addRecommendation(rows[Number(button.dataset.addReco)]));
+    });
+  }
 
   [els.search, els.statusFilter, els.ownerFilter, els.scoreFilter].forEach((input) => {
     input.addEventListener('input', render);
@@ -840,17 +979,53 @@ select option { background: var(--black); color: #fff; }
     }
   });
 
-  els.leadDetail.addEventListener('submit', (event) => {
+  els.leadDetail.addEventListener('submit', async (event) => {
     const lead = selectedLead();
     if (event.target.id === 'researchForm') {
       event.preventDefault();
       const signals = new FormData(event.target).get('signals').trim();
-      lead.signals = signals;
-      lead.score = scoreFromSignals(signals, lead.size);
-      lead.research = researchFromSignals(lead.company, lead.website, signals, lead.industry, lead.size, lead.location);
-      log(lead, 'Research generated', lead.research.summary);
-      saveState();
-      render();
+      const submit = event.target.querySelector('button[type="submit"]');
+      const oldText = submit.textContent;
+      submit.disabled = true;
+      submit.textContent = 'Researching...';
+      try {
+        const result = await runAiWorkflow({
+          mode: 'research',
+          lead: {
+            company: lead.company,
+            website: lead.website,
+            industry: lead.industry,
+            location: lead.location,
+            size: lead.size,
+            type: lead.type,
+            signals
+          }
+        });
+        const aiLead = result.leads[0];
+        const enriched = leadFromAi(aiLead, lead.status);
+        lead.website = enriched.website || lead.website;
+        lead.industry = enriched.industry || lead.industry;
+        lead.location = enriched.location || lead.location;
+        lead.size = enriched.size || lead.size;
+        lead.type = enriched.type || lead.type;
+        lead.score = enriched.score;
+        lead.signals = signals;
+        lead.research = enriched.research;
+        lead.sourceUrls = enriched.sourceUrls;
+        if (enriched.contacts.length) lead.contacts = enriched.contacts;
+        log(lead, 'Live AI research', lead.research.summary);
+        renderAiRecommendations(result.leads, result.query_summary, true);
+      } catch (error) {
+        lead.signals = signals;
+        lead.score = scoreFromSignals(signals, lead.size);
+        lead.research = researchFromSignals(lead.company, lead.website, signals, lead.industry, lead.size, lead.location);
+        log(lead, 'Fallback research', `Local research used because live AI failed: ${error.message}`);
+      } finally {
+        submit.disabled = false;
+        submit.textContent = oldText;
+        saveState();
+        render();
+      }
     }
     if (event.target.id === 'contactForm') {
       event.preventDefault();
