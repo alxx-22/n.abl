@@ -53,6 +53,64 @@ section { position: relative; }
 .dot--baseline { vertical-align: 0; }
 
 /* ============================================================
+   PAGE LOAD OVERLAY ANIMATION  (mirrors index.html intro)
+   ============================================================ */
+#portal-intro {
+  position: fixed;
+  inset: 0;
+  background: var(--black);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(0);
+}
+#portal-intro.lift {
+  transform: translateY(-100%);
+  transition: transform 0.35s ease-in-out;
+}
+#portal-intro .mark {
+  display: flex;
+  align-items: flex-end;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(70px, 14vw, 140px);
+  color: #fff;
+  line-height: 1;
+}
+#portal-intro .mark .n {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: introN 0.25s ease-out forwards;
+}
+#portal-intro .mark .sq {
+  width: 0.26em;
+  height: 0.26em;
+  background: var(--lime);
+  margin-left: 0.06em;
+  margin-bottom: 0.06em;
+  transform: scale(0);
+  animation: introSq 0.15s ease-out 0.1s forwards;
+}
+@keyframes introN {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes introSq {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* Login content holds hidden until the blind lifts, then staggers in */
+.portal-topbar.intro-hold { opacity: 0; }
+.portal-topbar.intro-in { animation: portalUp 0.5s ease-out forwards; }
+.portal-login.intro-hold > * { opacity: 0; }
+.portal-login.intro-in > * { animation: portalUp 0.55s ease-out forwards; }
+.portal-login.intro-in > *:nth-child(1) { animation-delay: 0.00s; }
+.portal-login.intro-in > *:nth-child(2) { animation-delay: 0.08s; }
+.portal-login.intro-in > *:nth-child(3) { animation-delay: 0.16s; }
+.portal-login.intro-in > *:nth-child(4) { animation-delay: 0.24s; }
+.portal-login.intro-in > *:nth-child(5) { animation-delay: 0.32s; }
+
+/* ============================================================
    PORTAL TOP BAR  (logo home + back link)
    ============================================================ */
 .portal-topbar {
@@ -349,13 +407,23 @@ section { position: relative; }
   .portal-anim { opacity: 1 !important; }
   .portal-anim.in { animation: none !important; }
   .portal-login, .p-progress-fill { transition: none !important; }
+  #portal-intro { display: none !important; }
+  .portal-topbar.intro-hold, .portal-login.intro-hold > * { opacity: 1 !important; }
+  .portal-topbar.intro-in, .portal-login.intro-in > * { animation: none !important; }
 }
 </style>
 </head>
 <body>
 
+<!-- ============================ INTRO OVERLAY ============================ -->
+<div id="portal-intro" aria-hidden="true">
+  <div class="mark">
+    <span class="n">n</span><span class="sq"></span>
+  </div>
+</div>
+
 <!-- ============================ TOP BAR ============================ -->
-<header class="portal-topbar">
+<header class="portal-topbar intro-hold">
   <a href="/" class="logo" aria-label="n.abl home">n<span class="sq"></span>abl</a>
   <a href="/" class="portal-back">← Back to site</a>
 </header>
@@ -364,7 +432,7 @@ section { position: relative; }
 <main>
 <section id="portal">
   <!-- LOGIN STATE -->
-  <div class="portal-login" id="portalLogin">
+  <div class="portal-login intro-hold" id="portalLogin">
     <span class="portal-label">Client Portal</span>
     <h2>Enter your access key<span class="dot dot--baseline"></span></h2>
     <p class="portal-sub">Your private space for quotes, projects, meetings and documents.</p>
@@ -381,6 +449,43 @@ section { position: relative; }
   <div class="portal-dash" id="portalDash" hidden></div>
 </section>
 </main>
+
+<!-- ============================================================
+     INTRO OVERLAY — animated mark lifts to reveal the portal
+     (plain script; runs independently of the Supabase module)
+     ============================================================ -->
+<script>
+(function () {
+  var intro = document.getElementById('portal-intro');
+  var topbar = document.querySelector('.portal-topbar');
+  var login = document.getElementById('portalLogin');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function reveal() {
+    if (topbar) { topbar.classList.remove('intro-hold'); topbar.classList.add('intro-in'); }
+    if (login) { login.classList.remove('intro-hold'); login.classList.add('intro-in'); }
+  }
+
+  if (reduceMotion) {
+    if (intro) intro.style.display = 'none';
+    reveal();
+    return;
+  }
+
+  // Hold the mark briefly (n: 0.25s + square: 0.1s delay), then lift the blind
+  // and reveal the login content behind it.
+  window.setTimeout(function () {
+    if (intro) intro.classList.add('lift');
+    reveal();
+  }, 650);
+
+  if (intro) {
+    intro.addEventListener('transitionend', function () {
+      intro.style.display = 'none';
+    });
+  }
+})();
+</script>
 
 <!-- ============================================================
      CLIENT PORTAL — Supabase-backed login + dashboard
