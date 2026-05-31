@@ -216,6 +216,45 @@ button { font-family: inherit; cursor: pointer; }
 .tm-logout:hover { border-color: var(--lime); color: var(--lime); }
 .tm-sep { height: 1px; background: var(--lime); width: 100%; margin: 22px 0 0; }
 
+.tm-sales-entry {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+  background: var(--dark);
+  border: 1px solid rgba(255,255,255,0.65);
+  border-left: 4px solid var(--lime);
+  padding: 22px 24px;
+  margin: 28px 0 26px;
+}
+.tm-sales-entry h3 {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(22px, 3vw, 30px);
+  color: #fff;
+  line-height: 1.05;
+  margin-bottom: 8px;
+}
+.tm-sales-entry p {
+  color: var(--card-grey);
+  font-size: 15px;
+}
+.tm-sales-entry a {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--lime);
+  border: 2px solid var(--lime);
+  padding: 12px 18px;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.tm-sales-entry a:hover {
+  background: var(--black);
+  color: var(--lime);
+}
+
 /* ---- Tabs ---- */
 .tm-tabs {
   position: sticky;
@@ -606,6 +645,8 @@ select.tm-finput { appearance: none; cursor: pointer; }
 }
 @media (max-width: 680px) {
   .tm-client-row, .m-row, .d-row { grid-template-columns: 1fr; gap: 14px; }
+  .tm-sales-entry { grid-template-columns: 1fr; }
+  .tm-sales-entry a { text-align: center; }
   .tm-client-right { align-items: flex-start; }
   .m-date { display: flex; align-items: baseline; gap: 10px; text-align: left; }
   .m-day { font-size: 30px; }
@@ -1312,6 +1353,13 @@ select.tm-finput { appearance: none; cursor: pointer; }
         </div>
       </div>
       <div class="tm-sep"></div>
+      <section class="tm-sales-entry" aria-label="Sales Intelligence CRM">
+        <div>
+          <h3>Sales Intelligence CRM<span class="dot dot--baseline"></span></h3>
+          <p>Research public-fit leads, draft approved outreach, and track the sales pipeline.</p>
+        </div>
+        <a href="/sales-intelligence.html">Open CRM</a>
+      </section>
       <div class="tm-tabs" id="tmTabs">
         ${TABS.map((t) => `<button class="tm-tab${t === state.activeTab ? ' active' : ''}" data-tab="${t}">${TAB_LABELS[t]}</button>`).join('')}
         <span class="tm-tab-underline" id="tmUnderline"></span>
