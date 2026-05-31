@@ -1266,7 +1266,7 @@ select.tm-finput { appearance: none; cursor: pointer; }
       </div>
       <div class="d-right">
         ${doc.uploaded_at ? `<span class="tm-date">${esc(dateLong(doc.uploaded_at))}</span>` : ''}
-        ${doc.file_url ? `<a class="tm-act" href="${esc(doc.file_url)}" target="_blank" rel="noopener">View →</a>` : ''}
+        ${doc.file_url ? `<button class="tm-act" data-view="documents" data-path="${esc(doc.file_url)}">View →</button>` : ''}
         <button class="tm-act" data-act="edit" data-id="${esc(doc.id)}">Edit</button>
         <button class="tm-act tm-act-del" data-act="delete" data-id="${esc(doc.id)}" data-name="${esc(doc.title || 'this document')}">Delete</button>
       </div>
@@ -1466,6 +1466,7 @@ select.tm-finput { appearance: none; cursor: pointer; }
       else if (act === 'edit') el.addEventListener('click', () => startEdit(el.dataset.id));
       else if (act === 'delete') el.addEventListener('click', () => deleteEntity(el.dataset.id, el.dataset.name));
     });
+    content.querySelectorAll('[data-view]').forEach((el) => el.addEventListener('click', () => openStoredFile(el)));
   }
 
   // ---- File upload field wiring (choose / drag-drop / remove / download current) ----
@@ -1583,7 +1584,21 @@ select.tm-finput { appearance: none; cursor: pointer; }
       else if (act === 'edit') el.addEventListener('click', () => startEdit(el.dataset.id));
       else if (act === 'delete') el.addEventListener('click', () => deleteEntity(el.dataset.id, el.dataset.name));
     });
+    newList.querySelectorAll('[data-view]').forEach((el) => el.addEventListener('click', () => openStoredFile(el)));
     animateProgress();
+  }
+
+  // Open a stored file from a list "View" button via a fresh signed URL.
+  async function openStoredFile(btn) {
+    const bucket = btn.dataset.view;
+    const path = btn.dataset.path;
+    if (!path) return;
+    const original = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Loading…';
+    const url = await signedUrl(bucket, path);
+    btn.disabled = false; btn.textContent = original;
+    if (url) window.open(url, '_blank', 'noopener');
+    else showToast('Unable to load file — please refresh');
   }
 
   function copyKey(btn) {
