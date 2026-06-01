@@ -376,7 +376,7 @@ select option { background: var(--black); color: #fff; }
       <div class="filters">
         <label class="field"><span>Search</span><input id="search" type="search" placeholder="Company, industry, location"></label>
         <label class="field"><span>Status</span><select id="statusFilter"><option value="">Any status</option></select></label>
-        <label class="field"><span>Owner</span><select id="ownerFilter"><option value="">Any owner</option><option>n.abl Team</option></select></label>
+        <label class="field"><span>Owner</span><select id="ownerFilter"><option value="">Any owner</option></select></label>
         <label class="field"><span>Minimum Score</span><input id="scoreFilter" type="number" min="0" max="100" value="0"></label>
         <button class="btn" type="button" id="openAddLead">Add Lead</button>
       </div>
@@ -433,7 +433,7 @@ select option { background: var(--black); color: #fff; }
       <label class="field"><span>Business Type</span><select name="type"><option>SME</option><option>Multi-site</option><option>Back office heavy</option><option>Sales-led</option><option>Operations-led</option></select></label>
       <label class="field"><span>Lead Score</span><input name="score" type="number" min="1" max="100" value="60"></label>
       <label class="field"><span>Status</span><select name="status"></select></label>
-      <label class="field"><span>Owner</span><input name="owner" value="n.abl Team"></label>
+      <label class="field"><span>Owner</span><input name="owner" readonly></label>
       <label class="field"><span>Public Contact Email</span><input name="email" type="email" placeholder="name@company.co.uk"></label>
       <label class="field"><span>Public Phone / Form</span><input name="phone" placeholder="Contact form"></label>
       <label class="field"><span>Source URL</span><input name="sourceUrl" type="url" placeholder="https://"></label>
@@ -463,6 +463,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   let state = loadState();
   let selectedId = state.leads[0] && state.leads[0].id;
   let activeTab = 'research';
+  let currentUser = null;
+  let currentOwnerName = 'team';
 
   const els = {
     metrics: document.getElementById('metrics'),
@@ -547,6 +549,41 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  function displayNameFromUser(user) {
+    if (!user) return 'team';
+    const meta = user.user_metadata || {};
+    const named = meta.display_name || meta.full_name || meta.name;
+    if (named && String(named).trim()) return String(named).trim();
+    if (user.email) return user.email.split('@')[0];
+    return 'team';
+  }
+
+  async function hydrateCurrentUser() {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      currentUser = session && session.user ? session.user : null;
+      currentOwnerName = displayNameFromUser(currentUser);
+    } catch (_) {
+      currentUser = null;
+      currentOwnerName = 'team';
+    }
+  }
+
+  function ownerName() {
+    return currentOwnerName || 'team';
+  }
+
+  function migrateStoredOwnersToCurrentUser() {
+    let changed = false;
+    state.leads.forEach((lead) => {
+      if (!lead.owner || lead.owner === 'n.abl Team' || lead.owner === 'team') {
+        lead.owner = ownerName();
+        changed = true;
+      }
+    });
+    if (changed) saveState();
+  }
+
   function selectedLead() {
     return state.leads.find((lead) => lead.id === selectedId) || state.leads[0];
   }
@@ -600,6 +637,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     if (!session) {
       throw new Error('Sign in through the team page before running live AI research.');
     }
+    currentUser = session.user;
+    currentOwnerName = displayNameFromUser(session.user);
     const { data, error } = await sb.functions.invoke('sales-research', {
       body: payload,
       headers: { Authorization: `Bearer ${session.access_token}` }
@@ -657,7 +696,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       type: aiLead.business_type || '',
       score: aiLead.lead_score || 50,
       status: status || 'New Lead',
-      owner: 'n.abl Team',
+      owner: ownerName(),
       signals: aiLead.recommendation_reason || aiLead.company_overview || '',
       contacts: (aiLead.contacts || []).map((contact) => ({
         name: contact.name || 'Public contact route',
@@ -683,6 +722,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
   function render() {
     populateStatusFilter();
+    populateOwnerFilter();
     renderMetrics();
     renderLeadList();
     renderDetail();
@@ -1013,6 +1053,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       option.textContent = stage;
       statusSelect.appendChild(option);
     });
+    els.addLeadForm.elements.owner.value = ownerName();
     els.addLeadModal.classList.add('open');
     els.addLeadModal.setAttribute('aria-hidden', 'false');
     els.addLeadForm.company.focus();
@@ -1036,7 +1077,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       data.get('type'),
       Math.max(1, Math.min(100, Number(data.get('score')) || 60)),
       data.get('status') || 'New Lead',
-      data.get('owner').trim() || 'n.abl Team',
+      ownerName(),
       signals
     );
     lead.id = 'lead-' + company.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString(36);
@@ -1133,6 +1174,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         els.manualStatus.textContent = 'Lead added to CRM.';
       });
     });
+  }
+
+  function populateOwnerFilter() {
+    const owners = Array.from(new Set([ownerName(), ...state.leads.map(lead => lead.owner).filter(Boolean)]));
+    const current = els.ownerFilter.value;
+    els.ownerFilter.innerHTML = '<option value="">Any owner</option>' + owners.map(owner => `<option value="${esc(owner)}">${esc(owner)}</option>`).join('');
+    if (owners.includes(current)) els.ownerFilter.value = current;
   }
 
   function renderResearchError(reason) {
@@ -1360,8 +1408,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     render();
   });
 
-  renderDiscoveryIdle();
-  render();
+  (async () => {
+    await hydrateCurrentUser();
+    migrateStoredOwnersToCurrentUser();
+    renderDiscoveryIdle();
+    render();
+  })();
 })();
 </script>
 </body>
