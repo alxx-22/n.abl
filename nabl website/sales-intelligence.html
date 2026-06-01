@@ -325,6 +325,7 @@ select option { background: var(--black); color: #fff; }
         </form>
       </div>
       <div class="si-grid cols-3" id="recommendations" style="margin-top:18px;"></div>
+      <div class="si-card soft" id="aiDebug" style="margin-top:18px;"></div>
     </div>
   </section>
 
@@ -411,6 +412,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     metrics: document.getElementById('metrics'),
     discoveryForm: document.getElementById('discoveryForm'),
     recommendations: document.getElementById('recommendations'),
+    aiDebug: document.getElementById('aiDebug'),
     search: document.getElementById('search'),
     statusFilter: document.getElementById('statusFilter'),
     ownerFilter: document.getElementById('ownerFilter'),
@@ -480,6 +482,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  function debugAi(state, detail) {
+    if (!els.aiDebug) return;
+    const safeDetail = typeof detail === 'string' ? detail : JSON.stringify(detail || {}, null, 2);
+    els.aiDebug.innerHTML = `
+      <span class="si-label">AI Debug</span>
+      <h3>${esc(state)}</h3>
+      <pre class="micro" style="white-space:pre-wrap;margin-top:10px;">${esc(safeDetail)}</pre>
+    `;
+  }
+
   function selectedLead() {
     return state.leads.find((lead) => lead.id === selectedId) || state.leads[0];
   }
@@ -529,16 +541,47 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   }
 
   async function runAiWorkflow(payload) {
+    debugAi('Preparing request', {
+      mode: payload.mode,
+      filters: payload.filters || null,
+      lead: payload.lead ? {
+        company: payload.lead.company,
+        website: payload.lead.website,
+        industry: payload.lead.industry,
+        location: payload.lead.location,
+        size: payload.lead.size,
+        type: payload.lead.type
+      } : null
+    });
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
+      debugAi('No Supabase session', 'Sign in through team.html before running live AI research.');
       throw new Error('Sign in through the team page before running live AI research.');
     }
+    debugAi('Calling Edge Function', {
+      function: 'sales-research',
+      mode: payload.mode,
+      signedIn: true,
+      requestedAt: new Date().toISOString()
+    });
     const { data, error } = await sb.functions.invoke('sales-research', {
       body: payload,
       headers: { Authorization: `Bearer ${session.access_token}` }
     });
-    if (error) throw new Error(await functionErrorMessage(error));
-    if (!data || !Array.isArray(data.leads)) throw new Error('AI research returned an unexpected shape.');
+    if (error) {
+      const message = await functionErrorMessage(error);
+      debugAi('Edge Function error', message);
+      throw new Error(message);
+    }
+    if (!data || !Array.isArray(data.leads)) {
+      debugAi('Unexpected AI response', data || 'No response body');
+      throw new Error('AI research returned an unexpected shape.');
+    }
+    debugAi('AI research complete', {
+      leadsReturned: data.leads.length,
+      summary: data.query_summary || '',
+      completedAt: new Date().toISOString()
+    });
     return data;
   }
 
@@ -855,6 +898,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         <p class="muted">The page will only run live AI research after you click Generate Leads.</p>
       </article>
     `;
+    debugAi('Idle', 'No AI request has been sent yet.');
   }
 
   els.discoveryForm.addEventListener('submit', async (event) => {
