@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
     }
 
     const result = JSON.parse(outputText);
-    result.leads = (result.leads || []).map(normaliseLead);
+    result.leads = (result.leads || []).slice(0, 15).map(normaliseLead);
     return json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error";
@@ -180,7 +180,7 @@ function getEnv(lowerName: string, upperName: string) {
 
 function discoveryPrompt(filters: DiscoveryFilters) {
   return [
-    "Find 3 to 6 realistic sales prospects for n.abl using refined public web searches.",
+    "Find up to 15 realistic sales prospects for n.abl using refined public web searches. Prefer 10 to 15 when the filters are broad enough.",
     "n.abl sells practical innovation, automation and optimisation inside the tools businesses already use.",
     "Target businesses: UK SMEs already using or likely using Microsoft 365, Power Platform, Salesforce, reporting tools, spreadsheets, operations systems or CRM.",
     `Filters: industry=${filters.industry || "any"}; location=${filters.location || "UK"}; company_size=${filters.size || "any"}; business_type=${filters.type || "any"}.`,

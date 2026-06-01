@@ -138,7 +138,7 @@ textarea { min-height: 116px; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--lime); }
 select option { background: var(--black); color: #fff; }
 .form-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; align-items: end; }
-.filters { display: grid; grid-template-columns: minmax(220px, 1.2fr) repeat(4, minmax(130px, 0.8fr)); gap: 12px; margin-bottom: 14px; }
+.filters { display: grid; grid-template-columns: minmax(220px, 1.2fr) repeat(5, minmax(120px, 0.8fr)); gap: 12px; margin-bottom: 14px; }
 
 .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
 .btn {
@@ -261,6 +261,26 @@ select option { background: var(--black); color: #fff; }
   padding: 16px;
   color: var(--card-grey);
 }
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: none;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0,0,0,0.78);
+}
+.modal.open { display: grid; }
+.modal-panel {
+  width: min(940px, 100%);
+  max-height: min(86vh, 900px);
+  overflow: auto;
+  background: var(--dark);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--lime);
+  padding: 22px;
+}
+.modal-head { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; margin-bottom: 16px; }
 .backend-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .backend-list code { color: var(--lime); font-family: 'Courier New', monospace; font-size: 13px; }
 
@@ -315,7 +335,7 @@ select option { background: var(--black); color: #fff; }
       <div class="si-card accent">
         <span class="si-label">Lead Discovery</span>
         <h2>Find businesses with public signals.</h2>
-        <p class="muted">Use the filters to run an AI public web research workflow. If the Supabase function is not deployed yet, the page falls back to the local demo catalogue and tells you.</p>
+        <p class="muted">Use the filters to run live AI public web research for up to 15 companies, or generate a prompt and import JSON manually when needed.</p>
         <form id="discoveryForm" class="form-grid" style="margin-top:18px;">
           <label class="field"><span>Industry</span><select name="industry"><option value="">Any</option><option>Retail</option><option>Professional Services</option><option>Manufacturing</option><option>Healthcare</option><option>Finance</option><option>Technology</option></select></label>
           <label class="field"><span>Location</span><select name="location"><option value="">Any</option><option>London</option><option>Manchester</option><option>Birmingham</option><option>Leeds</option><option>Bristol</option><option>UK Remote</option></select></label>
@@ -324,8 +344,29 @@ select option { background: var(--black); color: #fff; }
           <button class="btn" type="submit">Generate Leads</button>
         </form>
       </div>
+      <div class="si-grid cols-2" style="margin-top:18px;">
+        <article class="si-card soft">
+          <span class="si-label">Manual Prompt</span>
+          <h3>Load a browser-ready prompt.</h3>
+          <p class="muted">Use this if you want to run the research manually in ChatGPT or Claude, then paste the JSON back into the CRM.</p>
+          <label class="field" style="margin-top:14px;"><span>Prompt</span><textarea id="manualPrompt" readonly></textarea></label>
+          <div class="actions">
+            <button class="btn slim" type="button" id="loadPrompt">Load Prompt</button>
+            <button class="btn slim ghost" type="button" id="copyPrompt">Copy Prompt</button>
+          </div>
+        </article>
+        <article class="si-card soft">
+          <span class="si-label">Manual JSON Import</span>
+          <h3>Paste AI results.</h3>
+          <p class="muted">Accepts raw JSON or a markdown JSON code block using the same CRM fields as live research.</p>
+          <label class="field" style="margin-top:14px;"><span>AI JSON</span><textarea id="manualJson" placeholder="{ &quot;query_summary&quot;: &quot;...&quot;, &quot;leads&quot;: [] }"></textarea></label>
+          <div class="actions">
+            <button class="btn slim" type="button" id="importJson">Import JSON</button>
+            <span class="micro" id="manualStatus" aria-live="polite"></span>
+          </div>
+        </article>
+      </div>
       <div class="si-grid cols-3" id="recommendations" style="margin-top:18px;"></div>
-      <div class="si-card soft" id="aiDebug" style="margin-top:18px;"></div>
     </div>
   </section>
 
@@ -338,6 +379,7 @@ select option { background: var(--black); color: #fff; }
         <label class="field"><span>Owner</span><select id="ownerFilter"><option value="">Any owner</option><option>Alex</option><option>n.abl Team</option></select></label>
         <label class="field"><span>Minimum Score</span><input id="scoreFilter" type="number" min="0" max="100" value="0"></label>
         <button class="btn ghost" type="button" id="resetData">Reset Demo</button>
+        <button class="btn" type="button" id="openAddLead">Add Lead</button>
       </div>
       <div class="si-grid workspace">
         <aside class="lead-list" id="leadList"></aside>
@@ -373,6 +415,38 @@ select option { background: var(--black); color: #fff; }
     </div>
   </section>
 </main>
+
+<div class="modal" id="addLeadModal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="addLeadTitle">
+    <div class="modal-head">
+      <div>
+        <span class="si-label">Manual CRM Entry</span>
+        <h2 id="addLeadTitle">Add Lead</h2>
+      </div>
+      <button class="btn ghost slim" type="button" id="closeAddLead">Close</button>
+    </div>
+    <form id="addLeadForm" class="si-grid cols-2">
+      <label class="field"><span>Company</span><input name="company" required></label>
+      <label class="field"><span>Website</span><input name="website" type="url" placeholder="https://example.co.uk"></label>
+      <label class="field"><span>Industry</span><input name="industry" placeholder="Retail"></label>
+      <label class="field"><span>Location</span><input name="location" placeholder="Manchester"></label>
+      <label class="field"><span>Estimated Size</span><select name="size"><option>1-10</option><option selected>11-50</option><option>51-200</option><option>201-500</option><option>Unknown</option></select></label>
+      <label class="field"><span>Business Type</span><select name="type"><option>SME</option><option>Multi-site</option><option>Back office heavy</option><option>Sales-led</option><option>Operations-led</option></select></label>
+      <label class="field"><span>Lead Score</span><input name="score" type="number" min="1" max="100" value="60"></label>
+      <label class="field"><span>Status</span><select name="status"></select></label>
+      <label class="field"><span>Owner</span><input name="owner" value="n.abl Team"></label>
+      <label class="field"><span>Public Contact Email</span><input name="email" type="email" placeholder="hello@example.co.uk"></label>
+      <label class="field"><span>Public Phone / Form</span><input name="phone" placeholder="Contact form"></label>
+      <label class="field"><span>Source URL</span><input name="sourceUrl" type="url" placeholder="https://example.co.uk/contact"></label>
+      <label class="field" style="grid-column:1 / -1;"><span>Public Signals</span><textarea name="signals" placeholder="Public website signals, contact route, operational clues"></textarea></label>
+      <label class="field" style="grid-column:1 / -1;"><span>Internal Notes</span><textarea name="notes" placeholder="Notes for the team"></textarea></label>
+      <div class="actions" style="grid-column:1 / -1;">
+        <button class="btn" type="submit">Save Lead</button>
+        <button class="btn ghost" type="button" id="cancelAddLead">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -412,12 +486,22 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     metrics: document.getElementById('metrics'),
     discoveryForm: document.getElementById('discoveryForm'),
     recommendations: document.getElementById('recommendations'),
-    aiDebug: document.getElementById('aiDebug'),
+    manualPrompt: document.getElementById('manualPrompt'),
+    loadPrompt: document.getElementById('loadPrompt'),
+    copyPrompt: document.getElementById('copyPrompt'),
+    manualJson: document.getElementById('manualJson'),
+    importJson: document.getElementById('importJson'),
+    manualStatus: document.getElementById('manualStatus'),
     search: document.getElementById('search'),
     statusFilter: document.getElementById('statusFilter'),
     ownerFilter: document.getElementById('ownerFilter'),
     scoreFilter: document.getElementById('scoreFilter'),
     resetData: document.getElementById('resetData'),
+    openAddLead: document.getElementById('openAddLead'),
+    addLeadModal: document.getElementById('addLeadModal'),
+    addLeadForm: document.getElementById('addLeadForm'),
+    closeAddLead: document.getElementById('closeAddLead'),
+    cancelAddLead: document.getElementById('cancelAddLead'),
     leadList: document.getElementById('leadList'),
     leadDetail: document.getElementById('leadDetail'),
     pipeline: document.getElementById('pipeline'),
@@ -482,16 +566,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  function debugAi(state, detail) {
-    if (!els.aiDebug) return;
-    const safeDetail = typeof detail === 'string' ? detail : JSON.stringify(detail || {}, null, 2);
-    els.aiDebug.innerHTML = `
-      <span class="si-label">AI Debug</span>
-      <h3>${esc(state)}</h3>
-      <pre class="micro" style="white-space:pre-wrap;margin-top:10px;">${esc(safeDetail)}</pre>
-    `;
-  }
-
   function selectedLead() {
     return state.leads.find((lead) => lead.id === selectedId) || state.leads[0];
   }
@@ -541,47 +615,19 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   }
 
   async function runAiWorkflow(payload) {
-    debugAi('Preparing request', {
-      mode: payload.mode,
-      filters: payload.filters || null,
-      lead: payload.lead ? {
-        company: payload.lead.company,
-        website: payload.lead.website,
-        industry: payload.lead.industry,
-        location: payload.lead.location,
-        size: payload.lead.size,
-        type: payload.lead.type
-      } : null
-    });
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
-      debugAi('No Supabase session', 'Sign in through team.html before running live AI research.');
       throw new Error('Sign in through the team page before running live AI research.');
     }
-    debugAi('Calling Edge Function', {
-      function: 'sales-research',
-      mode: payload.mode,
-      signedIn: true,
-      requestedAt: new Date().toISOString()
-    });
     const { data, error } = await sb.functions.invoke('sales-research', {
       body: payload,
       headers: { Authorization: `Bearer ${session.access_token}` }
     });
     if (error) {
       const message = await functionErrorMessage(error);
-      debugAi('Edge Function error', message);
       throw new Error(message);
     }
-    if (!data || !Array.isArray(data.leads)) {
-      debugAi('Unexpected AI response', data || 'No response body');
-      throw new Error('AI research returned an unexpected shape.');
-    }
-    debugAi('AI research complete', {
-      leadsReturned: data.leads.length,
-      summary: data.query_summary || '',
-      completedAt: new Date().toISOString()
-    });
+    if (!data || !Array.isArray(data.leads)) throw new Error('AI research returned an unexpected shape.');
     return data;
   }
 
@@ -727,6 +773,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
           <span class="si-label">Lead record</span>
           <h2>${esc(lead.company)}<span class="dot dot--baseline"></span></h2>
           <p class="muted">${esc(lead.research.summary)}</p>
+          <div class="actions"><button class="btn ghost slim" type="button" data-action="delete-lead">Delete Lead</button></div>
         </div>
         <div class="score-box">${lead.score}</div>
       </div>
@@ -880,6 +927,154 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     els.insights.innerHTML = cards.map(([title, body]) => `<article class="si-card soft"><span class="si-label">${esc(title)}</span><p>${esc(body)}</p></article>`).join('');
   }
 
+  function discoveryFilters() {
+    const data = new FormData(els.discoveryForm);
+    return {
+      industry: data.get('industry'),
+      location: data.get('location'),
+      size: data.get('size'),
+      type: data.get('type')
+    };
+  }
+
+  function buildDiscoveryPrompt(filters) {
+    return [
+      'You are helping n.abl build a sales intelligence CRM using only public web information.',
+      '',
+      'Find up to 15 realistic UK business prospects for n.abl using public sources such as company websites, search results, public business directories, company registries, public news and publicly accessible company profiles.',
+      '',
+      'Do not scrape LinkedIn, automate logged-in websites, bypass authentication, invent personal contact data, or use non-public information.',
+      '',
+      'n.abl sells practical innovation, automation and optimisation inside tools businesses already use, especially Microsoft 365, Power Platform, Salesforce, reporting tools, spreadsheets, operations systems and CRM.',
+      '',
+      'Filters:',
+      `- Industry: ${filters.industry || 'Any'}`,
+      `- Location: ${filters.location || 'UK'}`,
+      `- Company size: ${filters.size || 'Any'}`,
+      `- Business type: ${filters.type || 'Any'}`,
+      '',
+      'For each lead, look for operational signals such as manual reporting, spreadsheets, stock, supplier coordination, multi-site work, booking workflows, onboarding, account management, CRM hygiene, dashboards, contact forms and public support routes.',
+      '',
+      'Return only valid JSON. Do not include markdown, commentary or trailing commas. Use this exact shape:',
+      JSON.stringify({
+        query_summary: 'Short summary of how you searched and refined the prospects.',
+        compliance_notes: 'Public sources only. No LinkedIn scraping, authenticated access or invented personal data.',
+        leads: [{
+          company: 'Company name',
+          website: 'https://example.com',
+          industry: 'Industry',
+          location: 'Town/city/region',
+          estimated_size: '1-10, 11-50, 51-200, 201-500 or unknown',
+          business_type: 'SME, Multi-site, Back office heavy, Sales-led or Operations-led',
+          lead_score: 75,
+          recommendation_reason: 'Why this company is worth contacting.',
+          company_overview: 'Short public overview.',
+          recent_public_activity: 'Recent public activity or say not found.',
+          potential_pain_points: 'Likely business pain points inferred from public signals.',
+          service_opportunities: 'Relevant n.abl opportunities.',
+          suggested_outreach_angle: 'Practical outreach angle.',
+          public_contact_info: 'Generic inbox, phone, contact form or public contact route.',
+          contacts: [{
+            name: 'Public contact route',
+            role: 'General enquiries',
+            email: 'hello@example.com or blank',
+            phone: 'published phone or blank',
+            source: 'Source URL or public page name',
+            confidence: 70
+          }],
+          source_urls: ['https://example.com/contact'],
+          confidence: 80,
+          gdpr_notes: 'Public business data only; record source URLs and confidence.'
+        }]
+      }, null, 2)
+    ].join('\n');
+  }
+
+  async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    els.manualPrompt.select();
+    document.execCommand('copy');
+  }
+
+  function extractJsonText(value) {
+    const text = String(value || '').trim();
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    return (fenced ? fenced[1] : text).trim();
+  }
+
+  function parseManualAiResult(value) {
+    const parsed = JSON.parse(extractJsonText(value));
+    const result = Array.isArray(parsed) ? { query_summary: 'Imported AI result', leads: parsed } : parsed;
+    if (!result || !Array.isArray(result.leads)) throw new Error('JSON must contain a leads array.');
+    return {
+      query_summary: result.query_summary || 'Imported AI result',
+      compliance_notes: result.compliance_notes || '',
+      leads: result.leads.slice(0, 15)
+    };
+  }
+
+  function addAiLeadToCrm(aiLead, status) {
+    const lead = leadFromAi(aiLead, status);
+    if (state.leads.some(existing => existing.company.toLowerCase() === lead.company.toLowerCase())) return null;
+    state.leads.unshift(lead);
+    return lead;
+  }
+
+  function openLeadModal() {
+    const statusSelect = els.addLeadForm.elements.status;
+    stages.forEach((stage) => {
+      if ([...statusSelect.options].some(option => option.value === stage)) return;
+      const option = document.createElement('option');
+      option.value = stage;
+      option.textContent = stage;
+      statusSelect.appendChild(option);
+    });
+    els.addLeadModal.classList.add('open');
+    els.addLeadModal.setAttribute('aria-hidden', 'false');
+    els.addLeadForm.company.focus();
+  }
+
+  function closeLeadModal() {
+    els.addLeadModal.classList.remove('open');
+    els.addLeadModal.setAttribute('aria-hidden', 'true');
+    els.addLeadForm.reset();
+  }
+
+  function createManualLead(data) {
+    const company = data.get('company').trim();
+    const website = data.get('website').trim();
+    const signals = data.get('signals').trim() || 'Manually added lead. Public signals to be researched.';
+    const lead = makeLead(
+      company,
+      data.get('industry').trim() || 'Unknown',
+      data.get('location').trim() || 'Unknown',
+      data.get('size'),
+      data.get('type'),
+      Math.max(1, Math.min(100, Number(data.get('score')) || 60)),
+      data.get('status') || 'New Lead',
+      data.get('owner').trim() || 'n.abl Team',
+      signals
+    );
+    lead.id = 'lead-' + company.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString(36);
+    lead.website = website || lead.website;
+    lead.notes = data.get('notes').trim();
+    lead.sourceUrls = data.get('sourceUrl').trim() ? [data.get('sourceUrl').trim()] : (website ? [website] : []);
+    lead.research.sourceUrls = lead.sourceUrls;
+    lead.contacts = [{
+      name: 'Public contact route',
+      role: 'Manual entry',
+      email: data.get('email').trim(),
+      phone: data.get('phone').trim() || 'Contact form',
+      source: data.get('sourceUrl').trim() || website || 'Manual entry',
+      confidence: 65
+    }];
+    lead.activities.unshift(activity('Manual lead', 'Added manually by team user'));
+    return lead;
+  }
+
   function addRecommendation(row) {
     const lead = makeLead(row[0], row[1], row[2], row[3], row[4], row[5], 'New Lead', 'n.abl Team', row[6]);
     if (state.leads.some(existing => existing.company === lead.company)) return;
@@ -898,18 +1093,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         <p class="muted">The page will only run live AI research after you click Generate Leads.</p>
       </article>
     `;
-    debugAi('Idle', 'No AI request has been sent yet.');
   }
 
   els.discoveryForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = new FormData(els.discoveryForm);
-    const filters = {
-      industry: data.get('industry'),
-      location: data.get('location'),
-      size: data.get('size'),
-      type: data.get('type')
-    };
+    const filters = discoveryFilters();
     const submit = els.discoveryForm.querySelector('button[type="submit"]');
     const oldText = submit.textContent;
     submit.disabled = true;
@@ -934,13 +1122,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   });
 
   function renderAiRecommendations(aiLeads, summary, fromResearch) {
+    const leads = aiLeads.slice(0, 15);
     els.recommendations.innerHTML = `
       <article class="si-card accent">
-        <span class="si-label">Live AI Output</span>
+        <span class="si-label">AI Output</span>
         <h3>${fromResearch ? 'Research complete' : 'Discovery complete'}</h3>
         <p class="muted">${esc(summary || 'AI research returned CRM-ready records from public web sources.')}</p>
+        <div class="actions"><button class="btn slim" type="button" data-add-all-ai>Add All To CRM</button></div>
       </article>
-      ${aiLeads.map((lead, index) => `
+      ${leads.map((lead, index) => `
         <article class="si-card soft">
           <span class="si-label">Score ${esc(lead.lead_score || 50)} / Confidence ${esc(lead.confidence || 50)}%</span>
           <h3>${esc(lead.company)}</h3>
@@ -950,14 +1140,32 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         </article>
       `).join('')}
     `;
+    const addAll = els.recommendations.querySelector('[data-add-all-ai]');
+    if (addAll) {
+      addAll.addEventListener('click', () => {
+        let added = 0;
+        leads.forEach((aiLead) => {
+          if (addAiLeadToCrm(aiLead, fromResearch ? 'Researching' : 'New Lead')) added += 1;
+        });
+        if (state.leads[0]) selectedId = state.leads[0].id;
+        activeTab = 'research';
+        saveState();
+        render();
+        els.manualStatus.textContent = `${added} lead(s) added to CRM.`;
+      });
+    }
     els.recommendations.querySelectorAll('[data-add-ai]').forEach((button) => {
       button.addEventListener('click', () => {
-        const lead = leadFromAi(aiLeads[Number(button.dataset.addAi)], fromResearch ? 'Researching' : 'New Lead');
-        state.leads.unshift(lead);
+        const lead = addAiLeadToCrm(leads[Number(button.dataset.addAi)], fromResearch ? 'Researching' : 'New Lead');
+        if (!lead) {
+          els.manualStatus.textContent = 'Lead already exists in CRM.';
+          return;
+        }
         selectedId = lead.id;
         activeTab = 'research';
         saveState();
         render();
+        els.manualStatus.textContent = 'Lead added to CRM.';
       });
     });
   }
@@ -998,6 +1206,49 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     render();
   });
 
+  els.loadPrompt.addEventListener('click', () => {
+    els.manualPrompt.value = buildDiscoveryPrompt(discoveryFilters());
+    els.manualStatus.textContent = 'Prompt loaded.';
+  });
+
+  els.copyPrompt.addEventListener('click', async () => {
+    if (!els.manualPrompt.value.trim()) els.manualPrompt.value = buildDiscoveryPrompt(discoveryFilters());
+    try {
+      await copyText(els.manualPrompt.value);
+      els.manualStatus.textContent = 'Prompt copied.';
+    } catch (_) {
+      els.manualStatus.textContent = 'Select and copy the prompt manually.';
+    }
+  });
+
+  els.importJson.addEventListener('click', () => {
+    try {
+      const result = parseManualAiResult(els.manualJson.value);
+      renderAiRecommendations(result.leads, result.query_summary, false);
+      els.manualStatus.textContent = `${result.leads.length} imported lead(s) ready to add.`;
+    } catch (error) {
+      els.manualStatus.textContent = error.message || 'Could not import JSON.';
+    }
+  });
+
+  els.openAddLead.addEventListener('click', openLeadModal);
+  els.closeAddLead.addEventListener('click', closeLeadModal);
+  els.cancelAddLead.addEventListener('click', closeLeadModal);
+  els.addLeadModal.addEventListener('click', (event) => {
+    if (event.target === els.addLeadModal) closeLeadModal();
+  });
+
+  els.addLeadForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const lead = createManualLead(new FormData(els.addLeadForm));
+    state.leads.unshift(lead);
+    selectedId = lead.id;
+    activeTab = 'research';
+    saveState();
+    closeLeadModal();
+    render();
+  });
+
   els.leadList.addEventListener('click', (event) => {
     const button = event.target.closest('[data-select]');
     if (!button) return;
@@ -1020,6 +1271,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       lead.outreachApproved = false;
       log(lead, 'Email draft', 'Generated outreach draft');
       renderDetail();
+    }
+    if (action && action.dataset.action === 'delete-lead') {
+      if (!confirm(`Delete ${lead.company} from the CRM?`)) return;
+      state.leads = state.leads.filter(item => item.id !== lead.id);
+      selectedId = state.leads[0] && state.leads[0].id;
+      activeTab = 'research';
+      saveState();
+      render();
+      return;
     }
     if (action && action.dataset.action === 'approve-email') {
       lead.outreachDraft = document.getElementById('draftText').value.trim();
