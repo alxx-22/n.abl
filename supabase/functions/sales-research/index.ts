@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
     }
 
     const result = JSON.parse(outputText);
-    result.leads = (result.leads || []).slice(0, 15).map(normaliseLead);
+    result.leads = (result.leads || []).slice(0, body.mode === "discover" ? 12 : 1).map(normaliseLead);
     return json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error";
@@ -180,12 +180,14 @@ function getEnv(lowerName: string, upperName: string) {
 
 function discoveryPrompt(filters: DiscoveryFilters) {
   return [
-    "Find up to 15 realistic sales prospects for n.abl using refined public web searches. Prefer 10 to 15 when the filters are broad enough.",
+    "Find up to 12 realistic sales prospects for n.abl using refined public web searches. Prefer 8 to 12 when the filters are broad enough.",
     "n.abl sells practical innovation, automation and optimisation inside the tools businesses already use.",
-    "Target businesses: UK SMEs already using or likely using Microsoft 365, Power Platform, Salesforce, reporting tools, spreadsheets, operations systems or CRM.",
+    "Target buyers, not competitor/provider businesses. Exclude companies whose main business is automation, AI consulting, data analytics, CRM implementation, software development, digital transformation or managed IT services.",
+    "Prioritise UK SMEs that appear likely to have poor data/process management: operational complexity but limited specialist data/automation capacity, multi-location operations, back-office admin, manual forms, stock or supplier coordination, bookings, client onboarding, compliance paperwork, fragmented systems, downloadable PDFs, generic inboxes, spreadsheets, repeated reporting, small teams, founder-led operations or old/basic websites.",
     `Filters: industry=${filters.industry || "any"}; location=${filters.location || "UK"}; company_size=${filters.size || "any"}; business_type=${filters.type || "any"}.`,
     "For each prospect, derive score, recommendation reason, company research, public contact routes, pain points, service opportunities and outreach angle.",
-    "Search intelligently: combine location + industry + operational terms, then refine using signals like reporting, multi-site, account services, onboarding, booking, stock, supplier, CRM, dashboards, manual process, contact page.",
+    "Search intelligently: combine location + industry + operational pain terms, then refine using signals like manual reporting, spreadsheets, PDF forms, contact forms, multi-site, account services, onboarding, booking, stock, supplier coordination, compliance, CRM hygiene, dashboards, manual process, and basic/dated websites.",
+    "Score higher when public evidence suggests the company needs better data/workflow management but is unlikely to have enough in-house skill or bandwidth to solve it.",
   ].join("\n");
 }
 

@@ -32,12 +32,13 @@ body {
   font-family: 'DM Sans', Arial, Helvetica, sans-serif;
   background: var(--black);
   color: #fff;
-  line-height: 1.6;
+  line-height: 1.45;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, .archivo { font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-weight: 900; letter-spacing: -0.02em; }
 a { color: inherit; text-decoration: none; }
+.text-link { color: var(--lime); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: default; opacity: 0.45; }
@@ -51,8 +52,8 @@ button:disabled { cursor: default; opacity: 0.45; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
-  padding: 18px clamp(20px, 5vw, 64px);
+  gap: 14px;
+  padding: 12px clamp(16px, 4vw, 40px);
   background: var(--black);
   border-bottom: 1px solid rgba(255,255,255,0.14);
 }
@@ -76,12 +77,12 @@ button:disabled { cursor: default; opacity: 0.45; }
     linear-gradient(90deg, #1A1A1A 1px, transparent 1px);
   background-size: 40px 40px;
 }
-.si-inner { width: min(1320px, calc(100% - 40px)); margin: 0 auto; }
-.si-hero { padding: clamp(54px, 8vw, 108px) 0 36px; }
+.si-inner { width: min(1480px, calc(100% - 32px)); margin: 0 auto; }
+.si-hero { padding: 28px 0 16px; }
 .si-hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
-  gap: clamp(28px, 6vw, 72px);
+  grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
+  gap: 24px;
   align-items: end;
 }
 .si-label {
@@ -91,14 +92,14 @@ button:disabled { cursor: default; opacity: 0.45; }
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
-.si-hero h1 { font-size: clamp(42px, 8vw, 88px); line-height: 1; max-width: 10ch; }
-.si-copy { color: var(--card-grey); font-size: clamp(16px, 1.4vw, 19px); max-width: 62ch; }
-.si-band { padding: 30px 0; }
-.si-grid { display: grid; gap: 18px; }
-.metrics { grid-template-columns: repeat(8, minmax(130px, 1fr)); }
-.workspace { grid-template-columns: 340px minmax(0, 1fr); align-items: start; }
+.si-hero h1 { font-size: clamp(34px, 5vw, 58px); line-height: 1; max-width: 13ch; }
+.si-copy { color: var(--card-grey); font-size: 15px; max-width: 72ch; }
+.si-band { padding: 14px 0; }
+.si-grid { display: grid; gap: 12px; }
+.metrics { grid-template-columns: repeat(8, minmax(100px, 1fr)); }
+.workspace { grid-template-columns: 300px minmax(0, 1fr); align-items: start; }
 .split { grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr); align-items: start; }
 .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -107,18 +108,18 @@ button:disabled { cursor: default; opacity: 0.45; }
   background: var(--dark);
   border: 1px solid var(--line);
   border-radius: 0;
-  padding: 22px;
+  padding: 14px;
 }
 .si-card.accent { border-left: 4px solid var(--lime); }
 .si-card.soft { background: var(--surface); border-color: rgba(255,255,255,0.34); }
-.si-card h2 { font-size: clamp(28px, 4vw, 48px); line-height: 1.05; margin-bottom: 12px; }
-.si-card h3 { font-size: 21px; line-height: 1.12; margin-bottom: 8px; }
+.si-card h2 { font-size: clamp(24px, 3vw, 34px); line-height: 1.05; margin-bottom: 8px; }
+.si-card h3 { font-size: 17px; line-height: 1.15; margin-bottom: 6px; }
 .muted { color: var(--card-grey); }
 .micro { color: var(--card-grey); font-size: 13px; }
-.metric-value { font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-size: 38px; color: var(--lime); line-height: 1; }
-.metric-label { color: var(--card-grey); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; margin-top: 16px; }
+.metric-value { font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-size: 28px; color: var(--lime); line-height: 1; }
+.metric-label { color: var(--card-grey); font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; margin-top: 8px; }
 
-.field { display: flex; flex-direction: column; gap: 7px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
 .field span {
   color: var(--card-grey);
   font-size: 11px;
@@ -132,15 +133,15 @@ input, select, textarea {
   color: #fff;
   border: 1px solid rgba(255,255,255,0.68);
   border-radius: 0;
-  padding: 11px 12px;
+  padding: 8px 10px;
 }
-textarea { min-height: 116px; resize: vertical; }
+textarea { min-height: 84px; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--lime); }
 select option { background: var(--black); color: #fff; }
-.form-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; align-items: end; }
-.filters { display: grid; grid-template-columns: minmax(220px, 1.2fr) repeat(5, minmax(120px, 0.8fr)); gap: 12px; margin-bottom: 14px; }
+.form-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; align-items: end; }
+.filters { display: grid; grid-template-columns: minmax(180px, 1.2fr) repeat(5, minmax(110px, 0.8fr)); gap: 10px; margin-bottom: 10px; }
 
-.actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .btn {
   display: inline-flex;
   align-items: center;
@@ -153,15 +154,15 @@ select option { background: var(--black); color: #fff; }
   color: var(--black);
   border: 2px solid var(--lime);
   border-radius: 0;
-  padding: 11px 16px;
-  min-height: 42px;
+  padding: 8px 12px;
+  min-height: 36px;
 }
 .btn:hover { background: var(--black); color: var(--lime); }
 .btn.ghost { background: transparent; color: #fff; border-color: #fff; }
 .btn.ghost:hover { border-color: var(--lime); color: var(--lime); }
 .btn.slim { min-height: 34px; padding: 7px 10px; font-size: 11px; border-width: 1px; }
 
-.lead-list { display: flex; flex-direction: column; gap: 10px; max-height: 760px; overflow: auto; padding-right: 4px; }
+.lead-list { display: flex; flex-direction: column; gap: 8px; max-height: 680px; overflow: auto; padding-right: 4px; }
 .lead-btn {
   width: 100%;
   text-align: left;
@@ -169,57 +170,57 @@ select option { background: var(--black); color: #fff; }
   color: #fff;
   border: 1px solid rgba(255,255,255,0.38);
   border-radius: 0;
-  padding: 15px;
+  padding: 10px;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 .lead-btn.active, .lead-btn:hover { border-color: var(--lime); transform: translateY(-2px); }
-.lead-btn strong { display: block; font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-size: 18px; line-height: 1.15; margin-bottom: 5px; }
-.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.lead-btn strong { display: block; font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-size: 15px; line-height: 1.15; margin-bottom: 4px; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .badge {
   display: inline-block;
   border: 1px solid rgba(255,255,255,0.5);
   color: #fff;
-  padding: 4px 9px;
-  font-size: 11px;
+  padding: 3px 7px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .badge.lime { background: var(--lime); border-color: var(--lime); color: var(--black); }
 .badge.red { background: var(--red); border-color: var(--red); color: #fff; }
 
-.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
 .tab {
   background: transparent;
   color: #fff;
   border: 1px solid rgba(255,255,255,0.48);
   border-radius: 0;
-  padding: 9px 12px;
-  font-size: 12px;
+  padding: 7px 10px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .tab.active, .tab:hover { background: var(--lime); color: var(--black); border-color: var(--lime); }
 .panel[hidden] { display: none; }
 .detail-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
-.detail-head h2 { font-size: clamp(30px, 4.5vw, 52px); line-height: 1; max-width: 14ch; }
+.detail-head h2 { font-size: clamp(24px, 3.2vw, 36px); line-height: 1; max-width: 18ch; }
 .score-box {
-  width: 88px;
-  height: 88px;
+  width: 64px;
+  height: 64px;
   border: 2px solid var(--lime);
   display: grid;
   place-items: center;
   color: var(--lime);
   font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif;
-  font-size: 30px;
+  font-size: 22px;
 }
 .kv {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
 }
 .kv div, .research-box {
   border-top: 1px solid var(--soft-line);
-  padding-top: 10px;
+  padding-top: 8px;
 }
 .kv span, .research-box span {
   display: block;
@@ -230,35 +231,35 @@ select option { background: var(--black); color: #fff; }
   margin-bottom: 4px;
 }
 .contact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.outreach-draft { min-height: 330px; white-space: pre-wrap; }
+.outreach-draft { min-height: 230px; white-space: pre-wrap; }
 
 .pipeline {
   display: grid;
-  grid-template-columns: repeat(10, minmax(190px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(10, minmax(165px, 1fr));
+  gap: 8px;
   overflow-x: auto;
   padding-bottom: 8px;
 }
 .stage {
-  min-height: 220px;
+  min-height: 170px;
   background: var(--dark);
   border: 1px solid rgba(255,255,255,0.44);
-  padding: 13px;
+  padding: 10px;
 }
 .stage.over { border-color: var(--lime); }
 .stage h3 { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
-.deal-card { background: var(--black); border: 1px solid rgba(255,255,255,0.28); padding: 10px; margin-bottom: 8px; }
+.deal-card { background: var(--black); border: 1px solid rgba(255,255,255,0.28); padding: 8px; margin-bottom: 6px; }
 .deal-card strong { display: block; font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-size: 14px; line-height: 1.15; margin-bottom: 4px; }
 
-.timeline { display: flex; flex-direction: column; gap: 12px; }
-.event { border-left: 4px solid var(--lime); background: var(--surface); padding: 12px 14px; }
+.timeline { display: flex; flex-direction: column; gap: 8px; }
+.event { border-left: 4px solid var(--lime); background: var(--surface); padding: 9px 11px; }
 .event time { display: block; color: var(--card-grey); font-size: 12px; margin-bottom: 4px; }
-.empty { border: 1px dashed rgba(255,255,255,0.32); padding: 22px; color: var(--card-grey); }
+.empty { border: 1px dashed rgba(255,255,255,0.32); padding: 14px; color: var(--card-grey); }
 .notice {
   background: var(--black);
   border: 1px dashed rgba(255,255,255,0.42);
   border-left: 4px solid var(--lime);
-  padding: 16px;
+  padding: 11px;
   color: var(--card-grey);
 }
 .modal {
@@ -543,6 +544,20 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  function normaliseUrl(url) {
+    const value = String(url || '').trim();
+    if (!value) return '';
+    if (/^https?:\/\//i.test(value)) return value;
+    if (/^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(value)) return 'https://' + value;
+    return '';
+  }
+
+  function linkTo(url, label) {
+    const href = normaliseUrl(url);
+    if (!href) return esc(label || url || 'Not public');
+    return `<a class="text-link" href="${esc(href)}" target="_blank" rel="noopener">${esc(label || href)}</a>`;
+  }
+
   function dateShort(value) {
     const d = new Date(value);
     if (isNaN(d)) return '';
@@ -672,11 +687,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
   function leadFromAi(aiLead, status) {
     const company = aiLead.company || 'Untitled company';
+    const sourceUrls = Array.from(new Set([...(aiLead.source_urls || []), aiLead.website].filter(Boolean)));
     const research = {
       summary: aiLead.recommendation_reason || aiLead.company_overview || `${company} was recommended by AI research.`,
       overview: aiLead.company_overview || '',
-      sourceBasis: (aiLead.source_urls || []).join(', ') || aiLead.website || 'Public web research',
-      sourceUrls: aiLead.source_urls || [],
+      sourceBasis: sourceUrls.join(', ') || 'Public web research',
+      sourceUrls,
       recentActivity: aiLead.recent_public_activity || '',
       pain: aiLead.potential_pain_points || '',
       opportunity: aiLead.service_opportunities || '',
@@ -822,7 +838,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       <div class="notice">Live research uses the Supabase <code>sales-research</code> function to run public web search through OpenAI and return structured CRM data. If the function is unavailable, the error is logged in the activity timeline.</div>
       <div class="kv" style="margin-top:16px;">
         ${kv('Industry', lead.industry)}
-        ${kv('Website', lead.website)}
+        ${kvHtml('Website', linkTo(lead.website))}
         ${kv('Estimated Size', lead.size)}
         ${kv('Location', lead.location)}
         ${kv('Recent Public Activity', lead.research.recentActivity)}
@@ -847,10 +863,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     return `<div><span>${esc(label)}</span><p>${esc(value)}</p></div>`;
   }
 
+  function kvHtml(label, html) {
+    return `<div><span>${esc(label)}</span><p>${html || 'Not public'}</p></div>`;
+  }
+
   function sourceLinks(urls) {
     const clean = (urls || []).filter(Boolean).slice(0, 6);
     if (!clean.length) return kv('Source URLs', 'No source URLs logged yet');
-    return `<div><span>Source URLs</span><p>${clean.map(url => `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>`).join('<br>')}</p></div>`;
+    return `<div><span>Source URLs</span><p>${clean.map(url => linkTo(url)).join('<br>')}</p></div>`;
   }
 
   function contactsPanel(lead) {
@@ -962,11 +982,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     return [
       'You are helping n.abl build a sales intelligence CRM using only public web information.',
       '',
-      'Find up to 15 realistic UK business prospects for n.abl using public sources such as company websites, search results, public business directories, company registries, public news and publicly accessible company profiles.',
+      'Find up to 40 realistic UK business prospects for n.abl using public sources such as company websites, search results, public business directories, company registries, public news and publicly accessible company profiles.',
       '',
       'Do not scrape LinkedIn, automate logged-in websites, bypass authentication, invent personal contact data, or use non-public information.',
       '',
       'n.abl sells practical innovation, automation and optimisation inside tools businesses already use, especially Microsoft 365, Power Platform, Salesforce, reporting tools, spreadsheets, operations systems and CRM.',
+      '',
+      'Avoid companies whose main business is selling automation, AI consulting, data analytics, CRM implementation, software development, digital transformation or managed IT services. We are looking for buyers, not competitors or alternative providers.',
+      '',
+      'Prioritise businesses that appear likely to struggle with data management because they have operational complexity but limited specialist data/automation capacity: multi-location operations, back-office admin, manual forms, stock or supplier coordination, bookings, client onboarding, compliance paperwork, fragmented systems, downloadable PDFs, generic inboxes, spreadsheets, repeated reporting, small teams, founder-led operations, or old/basic websites.',
       '',
       'Filters:',
       `- Industry: ${filters.industry || 'Any'}`,
@@ -974,7 +998,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       `- Company size: ${filters.size || 'Any'}`,
       `- Business type: ${filters.type || 'Any'}`,
       '',
-      'For each lead, look for operational signals such as manual reporting, spreadsheets, stock, supplier coordination, multi-site work, booking workflows, onboarding, account management, CRM hygiene, dashboards, contact forms and public support routes.',
+      'For each lead, look for operational signals such as manual reporting, spreadsheets, stock, supplier coordination, multi-site work, booking workflows, onboarding, account management, CRM hygiene, dashboards, contact forms, PDF/forms, and public support routes. Score higher when the company looks like it needs better data/workflow management but is unlikely to have the in-house skill or bandwidth to build it.',
       '',
       'Return only valid JSON. Do not include markdown, commentary or trailing commas. Use this exact shape:',
       JSON.stringify({
@@ -1033,8 +1057,27 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     return {
       query_summary: result.query_summary || 'Imported AI result',
       compliance_notes: result.compliance_notes || '',
-      leads: result.leads.slice(0, 15)
+      leads: result.leads.slice(0, 40)
     };
+  }
+
+  function aiLeadRank(lead) {
+    const score = Number(lead.lead_score) || 0;
+    const confidence = Number(lead.confidence) || 0;
+    return (score + confidence) / 2;
+  }
+
+  function rankedAiLeads(aiLeads, limit) {
+    return (aiLeads || [])
+      .slice()
+      .sort((a, b) => aiLeadRank(b) - aiLeadRank(a))
+      .slice(0, limit);
+  }
+
+  function aiSourceLinks(lead) {
+    const urls = Array.from(new Set([...(lead.source_urls || []), lead.website].filter(Boolean))).slice(0, 3);
+    if (!urls.length) return 'Sources not returned';
+    return `Sources:<br>${urls.map(url => linkTo(url)).join('<br>')}`;
   }
 
   function addAiLeadToCrm(aiLead, status) {
@@ -1118,7 +1161,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
     try {
       const result = await runAiWorkflow({ mode: 'discover', filters });
-      renderAiRecommendations(result.leads, result.query_summary, false);
+      renderAiRecommendations(result.leads, result.query_summary, false, 12);
     } catch (error) {
       renderResearchError(error.message);
     } finally {
@@ -1127,8 +1170,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     }
   });
 
-  function renderAiRecommendations(aiLeads, summary, fromResearch) {
-    const leads = aiLeads.slice(0, 15);
+  function renderAiRecommendations(aiLeads, summary, fromResearch, limit = 12) {
+    const leads = rankedAiLeads(aiLeads, limit);
     els.recommendations.innerHTML = `
       <article class="si-card accent">
         <span class="si-label">AI Output</span>
@@ -1141,6 +1184,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
           <span class="si-label">Score ${esc(lead.lead_score || 50)} / Confidence ${esc(lead.confidence || 50)}%</span>
           <h3>${esc(lead.company)}</h3>
           <p class="muted">${esc(lead.industry)} - ${esc(lead.location)} - ${esc(lead.estimated_size)}</p>
+          <p class="micro">${lead.website ? linkTo(lead.website) : 'Website not returned'}</p>
+          <p class="micro">${aiSourceLinks(lead)}</p>
           <p>${esc(lead.recommendation_reason || lead.company_overview)}</p>
           <div class="actions"><button class="btn slim" type="button" data-add-ai="${index}">Add To CRM</button></div>
         </article>
@@ -1216,7 +1261,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   els.importJson.addEventListener('click', () => {
     try {
       const result = parseManualAiResult(els.manualJson.value);
-      renderAiRecommendations(result.leads, result.query_summary, false);
+      renderAiRecommendations(result.leads, result.query_summary, false, 40);
       els.manualStatus.textContent = `${result.leads.length} imported lead(s) ready to add.`;
     } catch (error) {
       els.manualStatus.textContent = error.message || 'Could not import JSON.';
@@ -1339,7 +1384,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         lead.sourceUrls = enriched.sourceUrls;
         if (enriched.contacts.length) lead.contacts = enriched.contacts;
         log(lead, 'Live AI research', lead.research.summary);
-        renderAiRecommendations(result.leads, result.query_summary, true);
+        renderAiRecommendations(result.leads, result.query_summary, true, 1);
       } catch (error) {
         lead.signals = signals;
         lead.score = scoreFromSignals(signals, lead.size);
