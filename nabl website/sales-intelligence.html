@@ -406,7 +406,7 @@ select option { background: var(--black); color: #fff; }
     <div class="si-inner si-card accent">
       <span class="si-label">Backend Next Steps</span>
       <h2>Make the research real in Supabase.</h2>
-      <p class="muted">The first backend pieces now exist in this branch: a Supabase schema and a <code>sales-research</code> Edge Function that calls OpenAI Responses with web search and strict JSON output. The next move is deploying them, setting secrets, then replacing localStorage writes with Supabase table writes.</p>
+      <p class="muted">The first backend pieces now exist: a Supabase schema, a <code>sales-research</code> Edge Function, and CRM writes into the sales tables when a team user is signed in. Local storage remains a fallback for offline testing.</p>
       <div class="backend-list" style="margin-top:18px;">
         <article class="si-card soft"><h3>Data Model</h3><p class="muted"><code>sales_leads</code>, <code>sales_contacts</code>, <code>sales_activities</code>, <code>sales_research_runs</code>, <code>sales_email_drafts</code>, <code>sales_pipeline_events</code>.</p></article>
         <article class="si-card soft"><h3>Research Function</h3><p class="muted"><code>supabase/functions/sales-research</code> accepts discovery filters or a lead record, searches public web sources, and returns CRM-ready JSON.</p></article>
@@ -533,6 +533,10 @@ select option { background: var(--black); color: #fff; }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
+  function setStatus(message) {
+    if (els.manualStatus) els.manualStatus.textContent = message;
+  }
+
   function activity(type, text, at) {
     return { id: 'act-' + Math.random().toString(16).slice(2), type, text, at: at || new Date().toISOString() };
   }
@@ -620,6 +624,10 @@ select option { background: var(--black); color: #fff; }
     saveState();
   }
 
+  function clampScore(value, fallback) {
+    return Math.max(1, Math.min(100, Number(value) || fallback || 50));
+  }
+
   function scoreFromSignals(signals, size) {
     const text = signals.toLowerCase();
     let score = 42;
@@ -694,6 +702,256 @@ select option { background: var(--black); color: #fff; }
       }
     } catch (_) {
       return fallback;
+    }
+  }
+
+  async function salesSession() {
+    const client = await supabaseClient();
+    const { data: { session } } = await client.auth.getSession();
+    if (!session) throw new Error('Sign in through the team page to save leads to Supabase.');
+    currentUser = session.user;
+    currentOwnerName = displayNameFromUser(session.user);
+    return { client, session };
+  }
+
+  function leadPayload(lead) {
+    const research = lead.research || {};
+    const sourceUrls = Array.from(new Set([...(lead.sourceUrls || []), ...(research.sourceUrls || [])].filter(Boolean)));
+    return {
+      company: lead.company,
+      website: lead.website || null,
+      industry: lead.industry || null,
+      location: lead.location || null,
+      estimated_size: lead.size || null,
+      business_type: lead.type || null,
+      lead_score: clampScore(lead.score, 50),
+      recommendation_reason: lead.signals || research.summary || null,
+      status: lead.status || 'New Lead',
+      owner_id: currentUser ? currentUser.id : null,
+      owner_name: lead.owner || ownerName(),
+      notes: lead.notes || null,
+      last_activity_at: lead.activities && lead.activities[0] ? lead.activities[0].at : (lead.updatedAt || new Date().toISOString()),
+      research_summary: research.summary || null,
+      research_json: {
+        ...research,
+        signals: lead.signals || '',
+        outreach_approved: !!lead.outreachApproved
+      },
+      source_urls: sourceUrls
+    };
+  }
+
+  function contactPayload(contact, leadId) {
+    return {
+      lead_id: leadId,
+      name: contact.name || 'Public contact route',
+      role: contact.role || null,
+      email: contact.email || null,
+      phone: contact.phone || null,
+      contact_form_url: normaliseUrl(contact.phone) || null,
+      source: contact.source || null,
+      confidence: clampScore(contact.confidence, 50)
+    };
+  }
+
+  function activityPayload(item, leadId) {
+    return {
+      lead_id: leadId,
+      actor_id: currentUser ? currentUser.id : null,
+      activity_type: item.type || 'Activity',
+      description: item.text || '',
+      metadata: {},
+      created_at: item.at || new Date().toISOString()
+    };
+  }
+
+  function draftPayload(lead, leadId) {
+    if (!lead.outreachDraft) return null;
+    const subject = (lead.outreachDraft.match(/^Subject:\s*(.+)$/m) || ['', `Quick idea for ${lead.company}`])[1];
+    const body = lead.outreachDraft.replace(/^Subject:.*\n\n?/m, '');
+    return {
+      lead_id: leadId,
+      subject,
+      body,
+      approved_at: lead.outreachApproved ? new Date().toISOString() : null,
+      approved_by: lead.outreachApproved && currentUser ? currentUser.id : null,
+      created_by: currentUser ? currentUser.id : null
+    };
+  }
+
+  async function persistLead(lead, options = {}) {
+    const { client } = await salesSession();
+    const payload = leadPayload(lead);
+    let saved;
+    if (lead.dbId) {
+      const { data, error } = await client
+        .from('sales_leads')
+        .update(payload)
+        .eq('id', lead.dbId)
+        .select('id, created_at, updated_at')
+        .single();
+      if (error) throw error;
+      saved = data;
+    } else {
+      const { data, error } = await client
+        .from('sales_leads')
+        .insert(payload)
+        .select('id, created_at, updated_at')
+        .single();
+      if (error) throw error;
+      saved = data;
+      lead.dbId = saved.id;
+    }
+
+    await persistLeadChildren(client, lead);
+    if (options.pipelineFrom !== undefined) await persistPipelineEvent(client, lead, options.pipelineFrom, lead.status);
+    lead.updatedAt = saved.updated_at || lead.updatedAt;
+    saveState();
+    return lead;
+  }
+
+  async function persistLeadChildren(client, lead) {
+    if (!lead.dbId) return;
+    await client.from('sales_contacts').delete().eq('lead_id', lead.dbId);
+    if (lead.contacts && lead.contacts.length) {
+      const { error } = await client.from('sales_contacts').insert(lead.contacts.map(contact => contactPayload(contact, lead.dbId)));
+      if (error) throw error;
+    }
+
+    await client.from('sales_activities').delete().eq('lead_id', lead.dbId);
+    if (lead.activities && lead.activities.length) {
+      const { error } = await client.from('sales_activities').insert(lead.activities.map(item => activityPayload(item, lead.dbId)));
+      if (error) throw error;
+    }
+
+    await client.from('sales_email_drafts').delete().eq('lead_id', lead.dbId);
+    const draft = draftPayload(lead, lead.dbId);
+    if (draft) {
+      const { error } = await client.from('sales_email_drafts').insert(draft);
+      if (error) throw error;
+    }
+  }
+
+  async function persistPipelineEvent(client, lead, fromStatus, toStatus) {
+    if (!lead.dbId || !toStatus) return;
+    const { error } = await client.from('sales_pipeline_events').insert({
+      lead_id: lead.dbId,
+      actor_id: currentUser ? currentUser.id : null,
+      from_status: fromStatus || null,
+      to_status: toStatus
+    });
+    if (error) throw error;
+  }
+
+  async function persistResearchRun(mode, result, filters, lead) {
+    try {
+      const { client } = await salesSession();
+      const sourceUrls = (result.leads || []).flatMap(item => urlList(item.source_urls)).filter(Boolean);
+      await client.from('sales_research_runs').insert({
+        lead_id: lead && lead.dbId ? lead.dbId : null,
+        requested_by: currentUser ? currentUser.id : null,
+        mode,
+        filters: filters || {},
+        result,
+        source_urls: Array.from(new Set(sourceUrls)),
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      });
+    } catch (_) {
+      // Manual workflows still work locally when Supabase is unavailable.
+    }
+  }
+
+  async function deleteLeadFromSupabase(lead) {
+    if (!lead.dbId) return;
+    const { client } = await salesSession();
+    const { error } = await client.from('sales_leads').delete().eq('id', lead.dbId);
+    if (error) throw error;
+  }
+
+  function leadFromDb(row, contacts, activities, drafts) {
+    const research = row.research_json || {};
+    const sourceUrls = urlList(row.source_urls);
+    const latestDraft = drafts[0];
+    return {
+      id: row.id,
+      dbId: row.id,
+      company: row.company,
+      website: row.website || '',
+      industry: row.industry || '',
+      location: row.location || '',
+      size: row.estimated_size || '',
+      type: row.business_type || '',
+      score: row.lead_score || 50,
+      status: row.status || 'New Lead',
+      owner: row.owner_name || ownerName(),
+      signals: research.signals || row.recommendation_reason || '',
+      contacts: contacts.map(contact => ({
+        name: contact.name || 'Public contact route',
+        role: contact.role || 'Public',
+        email: contact.email || '',
+        phone: contact.phone || contact.contact_form_url || '',
+        source: contact.source || '',
+        confidence: contact.confidence || 50
+      })),
+      notes: row.notes || '',
+      outreachDraft: latestDraft ? `Subject: ${latestDraft.subject}\n\n${latestDraft.body}` : '',
+      outreachApproved: !!(latestDraft && latestDraft.approved_at),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      research: {
+        summary: row.research_summary || research.summary || '',
+        overview: research.overview || '',
+        sourceBasis: research.sourceBasis || sourceUrls.join(', '),
+        sourceUrls,
+        recentActivity: research.recentActivity || '',
+        pain: research.pain || '',
+        opportunity: research.opportunity || '',
+        contactDiscovery: research.contactDiscovery || '',
+        angle: research.angle || '',
+        confidence: research.confidence || row.lead_score || 50,
+        gdpr: research.gdpr || 'Public-source only.'
+      },
+      sourceUrls,
+      activities: activities.length ? activities.map(item => ({
+        id: item.id,
+        type: item.activity_type,
+        text: item.description,
+        at: item.created_at
+      })) : [activity('Lead loaded', 'Loaded from Supabase sales_leads', row.updated_at)]
+    };
+  }
+
+  async function loadSalesFromSupabase() {
+    try {
+      const { client } = await salesSession();
+      const { data: leads, error } = await client.from('sales_leads').select('*').order('updated_at', { ascending: false });
+      if (error) throw error;
+      if (!leads || !leads.length) return;
+
+      const ids = leads.map(lead => lead.id);
+      const [contactsResult, activitiesResult, draftsResult] = await Promise.all([
+        client.from('sales_contacts').select('*').in('lead_id', ids),
+        client.from('sales_activities').select('*').in('lead_id', ids).order('created_at', { ascending: false }),
+        client.from('sales_email_drafts').select('*').in('lead_id', ids).order('created_at', { ascending: false })
+      ]);
+      if (contactsResult.error) throw contactsResult.error;
+      if (activitiesResult.error) throw activitiesResult.error;
+      if (draftsResult.error) throw draftsResult.error;
+
+      state = {
+        leads: leads.map(row => leadFromDb(
+          row,
+          (contactsResult.data || []).filter(item => item.lead_id === row.id),
+          (activitiesResult.data || []).filter(item => item.lead_id === row.id),
+          (draftsResult.data || []).filter(item => item.lead_id === row.id)
+        ))
+      };
+      selectedId = state.leads[0] && state.leads[0].id;
+      saveState();
+      setStatus(`Loaded ${state.leads.length} lead(s) from Supabase.`);
+    } catch (error) {
+      setStatus(`Using local leads only: ${error.message}`);
     }
   }
 
@@ -1189,6 +1447,7 @@ select option { background: var(--black); color: #fff; }
 
     try {
       const result = await runAiWorkflow({ mode: 'discover', filters });
+      await persistResearchRun('discover', result, filters, null);
       renderAiRecommendations(result.leads, result.query_summary, false, 12);
     } catch (error) {
       renderResearchError(error.message);
@@ -1221,30 +1480,49 @@ select option { background: var(--black); color: #fff; }
     `;
     const addAll = els.recommendations.querySelector('[data-add-all-ai]');
     if (addAll) {
-      addAll.addEventListener('click', () => {
+      addAll.addEventListener('click', async () => {
+        addAll.disabled = true;
         let added = 0;
-        leads.forEach((aiLead) => {
-          if (addAiLeadToCrm(aiLead, fromResearch ? 'Researching' : 'New Lead')) added += 1;
-        });
+        let synced = 0;
+        for (const aiLead of leads) {
+          const lead = addAiLeadToCrm(aiLead, fromResearch ? 'Researching' : 'New Lead');
+          if (!lead) continue;
+          added += 1;
+          try {
+            await persistLead(lead, { pipelineFrom: null });
+            synced += 1;
+          } catch (error) {
+            setStatus(`Added locally; Supabase save failed: ${error.message}`);
+          }
+        }
         if (state.leads[0]) selectedId = state.leads[0].id;
         activeTab = 'research';
         saveState();
         render();
-        els.manualStatus.textContent = `${added} lead(s) added to CRM.`;
+        setStatus(`${added} lead(s) added to CRM. ${synced} saved to Supabase.`);
+        addAll.disabled = false;
       });
     }
     els.recommendations.querySelectorAll('[data-add-ai]').forEach((button) => {
-      button.addEventListener('click', () => {
+      button.addEventListener('click', async () => {
+        button.disabled = true;
         const lead = addAiLeadToCrm(leads[Number(button.dataset.addAi)], fromResearch ? 'Researching' : 'New Lead');
         if (!lead) {
-          els.manualStatus.textContent = 'Lead already exists in CRM.';
+          setStatus('Lead already exists in CRM.');
+          button.disabled = false;
           return;
         }
         selectedId = lead.id;
         activeTab = 'research';
         saveState();
+        try {
+          await persistLead(lead, { pipelineFrom: null });
+          setStatus('Lead added to CRM and saved to Supabase.');
+        } catch (error) {
+          setStatus(`Lead added locally; Supabase save failed: ${error.message}`);
+        }
         render();
-        els.manualStatus.textContent = 'Lead added to CRM.';
+        button.disabled = false;
       });
     });
   }
@@ -1289,9 +1567,10 @@ select option { background: var(--black); color: #fff; }
     }
   }
 
-  function importManualJson() {
+  async function importManualJson() {
     try {
       const result = parseManualAiResult(els.manualJson.value);
+      await persistResearchRun('discover', result, discoveryFilters(), null);
       renderAiRecommendations(result.leads, result.query_summary, false, 40);
       els.manualStatus.textContent = `${result.leads.length} imported lead(s) ready to add.`;
       els.recommendations.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1316,13 +1595,19 @@ select option { background: var(--black); color: #fff; }
     if (event.target === els.addLeadModal) closeLeadModal();
   });
 
-  els.addLeadForm.addEventListener('submit', (event) => {
+  els.addLeadForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const lead = createManualLead(new FormData(els.addLeadForm));
     state.leads.unshift(lead);
     selectedId = lead.id;
     activeTab = 'research';
     saveState();
+    try {
+      await persistLead(lead, { pipelineFrom: null });
+      setStatus('Manual lead saved to Supabase.');
+    } catch (error) {
+      setStatus(`Manual lead saved locally only: ${error.message}`);
+    }
     closeLeadModal();
     render();
   });
@@ -1335,7 +1620,7 @@ select option { background: var(--black); color: #fff; }
     render();
   });
 
-  els.leadDetail.addEventListener('click', (event) => {
+  els.leadDetail.addEventListener('click', async (event) => {
     const tab = event.target.closest('[data-tab]');
     if (tab) {
       activeTab = tab.dataset.tab;
@@ -1348,10 +1633,22 @@ select option { background: var(--black); color: #fff; }
       lead.outreachDraft = emailDraft(lead);
       lead.outreachApproved = false;
       log(lead, 'Email draft', 'Generated outreach draft');
+      try {
+        await persistLead(lead);
+        setStatus('Email draft saved to Supabase.');
+      } catch (error) {
+        setStatus(`Email draft saved locally only: ${error.message}`);
+      }
       renderDetail();
     }
     if (action && action.dataset.action === 'delete-lead') {
       if (!confirm(`Delete ${lead.company} from the CRM?`)) return;
+      try {
+        await deleteLeadFromSupabase(lead);
+        setStatus('Lead deleted from Supabase.');
+      } catch (error) {
+        setStatus(`Lead deleted locally; Supabase delete failed: ${error.message}`);
+      }
       state.leads = state.leads.filter(item => item.id !== lead.id);
       selectedId = state.leads[0] && state.leads[0].id;
       activeTab = 'research';
@@ -1363,6 +1660,12 @@ select option { background: var(--black); color: #fff; }
       lead.outreachDraft = document.getElementById('draftText').value.trim();
       lead.outreachApproved = true;
       log(lead, 'Email approved', 'Outreach approved for manual send');
+      try {
+        await persistLead(lead);
+        setStatus('Approved email saved to Supabase.');
+      } catch (error) {
+        setStatus(`Approved email saved locally only: ${error.message}`);
+      }
       renderDetail();
     }
     if (action && action.dataset.action === 'send-email') {
@@ -1371,21 +1674,40 @@ select option { background: var(--black); color: #fff; }
       const draft = lead.outreachDraft || emailDraft(lead);
       const subject = (draft.match(/^Subject:\s*(.+)$/m) || ['', `Quick idea for ${lead.company}`])[1];
       const body = draft.replace(/^Subject:.*\n\n?/m, '');
+      const old = lead.status;
       lead.status = 'Contacted';
       log(lead, 'Email opened', 'Approved email opened in mail client');
       saveState();
+      try {
+        await persistLead(lead, { pipelineFrom: old });
+        setStatus('Email activity saved to Supabase.');
+      } catch (error) {
+        setStatus(`Email activity saved locally only: ${error.message}`);
+      }
       window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       render();
     }
     if (action && action.dataset.action === 'save-notes') {
       lead.notes = document.getElementById('noteText').value.trim();
       log(lead, 'Note', 'Internal notes updated');
+      try {
+        await persistLead(lead);
+        setStatus('Notes saved to Supabase.');
+      } catch (error) {
+        setStatus(`Notes saved locally only: ${error.message}`);
+      }
       renderDetail();
     }
     const remove = event.target.closest('[data-remove-contact]');
     if (remove) {
       lead.contacts.splice(Number(remove.dataset.removeContact), 1);
       log(lead, 'Contact removed', 'Removed public contact route');
+      try {
+        await persistLead(lead);
+        setStatus('Contact update saved to Supabase.');
+      } catch (error) {
+        setStatus(`Contact update saved locally only: ${error.message}`);
+      }
       renderDetail();
     }
   });
@@ -1426,6 +1748,7 @@ select option { background: var(--black); color: #fff; }
         if (enriched.contacts.length) lead.contacts = enriched.contacts;
         log(lead, 'Live AI research', lead.research.summary);
         renderAiRecommendations(result.leads, result.query_summary, true, 1);
+        await persistResearchRun('research', result, {}, lead);
       } catch (error) {
         lead.signals = signals;
         lead.score = scoreFromSignals(signals, lead.size);
@@ -1435,6 +1758,12 @@ select option { background: var(--black); color: #fff; }
         submit.disabled = false;
         submit.textContent = oldText;
         saveState();
+        try {
+          await persistLead(lead);
+          setStatus('Research saved to Supabase.');
+        } catch (error) {
+          setStatus(`Research saved locally only: ${error.message}`);
+        }
         render();
       }
     }
@@ -1451,17 +1780,29 @@ select option { background: var(--black); color: #fff; }
       });
       log(lead, 'Contact added', 'Added public contact route with confidence rating');
       saveState();
+      try {
+        await persistLead(lead);
+        setStatus('Contact saved to Supabase.');
+      } catch (error) {
+        setStatus(`Contact saved locally only: ${error.message}`);
+      }
       renderDetail();
     }
   });
 
-  els.leadDetail.addEventListener('change', (event) => {
+  els.leadDetail.addEventListener('change', async (event) => {
     if (!event.target.matches('select[name="status"]')) return;
     const lead = selectedLead();
     const old = lead.status;
     lead.status = event.target.value;
     log(lead, 'Status change', `${old} to ${lead.status}`);
     saveState();
+    try {
+      await persistLead(lead, { pipelineFrom: old });
+      setStatus('Status saved to Supabase.');
+    } catch (error) {
+      setStatus(`Status saved locally only: ${error.message}`);
+    }
     render();
   });
 
@@ -1480,7 +1821,7 @@ select option { background: var(--black); color: #fff; }
     const stage = event.target.closest('[data-stage]');
     if (stage) stage.classList.remove('over');
   });
-  els.pipeline.addEventListener('drop', (event) => {
+  els.pipeline.addEventListener('drop', async (event) => {
     const stage = event.target.closest('[data-stage]');
     if (!stage) return;
     event.preventDefault();
@@ -1491,11 +1832,18 @@ select option { background: var(--black); color: #fff; }
     lead.status = stage.dataset.stage;
     log(lead, 'Status change', `${old} to ${lead.status}`);
     saveState();
+    try {
+      await persistLead(lead, { pipelineFrom: old });
+      setStatus('Pipeline move saved to Supabase.');
+    } catch (error) {
+      setStatus(`Pipeline move saved locally only: ${error.message}`);
+    }
     render();
   });
 
   (async () => {
     await hydrateCurrentUser();
+    await loadSalesFromSupabase();
     migrateStoredOwnersToCurrentUser();
     renderDiscoveryIdle();
     render();
