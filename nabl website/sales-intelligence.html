@@ -847,6 +847,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     render();
   }
 
+  function renderDiscoveryIdle() {
+    els.recommendations.innerHTML = `
+      <article class="si-card soft">
+        <span class="si-label">Ready</span>
+        <h3>Choose filters, then generate leads.</h3>
+        <p class="muted">The page will only run live AI research after you click Generate Leads.</p>
+      </article>
+    `;
+  }
+
   els.discoveryForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const data = new FormData(els.discoveryForm);
@@ -1102,7 +1112,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     render();
   });
 
-  els.discoveryForm.dispatchEvent(new Event('submit'));
+  renderDiscoveryIdle();
   render();
 })();
 </script>
