@@ -315,14 +315,36 @@ select option { background: var(--black); color: #fff; }
       <div class="si-card accent">
         <span class="si-label">Lead Discovery</span>
         <h2>Find businesses with public signals.</h2>
-        <p class="muted">Use the filters to run an AI public web research workflow. If the Supabase function is not deployed yet, the page falls back to the local demo catalogue and tells you.</p>
+        <p class="muted">Use the filters to build a Claude or ChatGPT research prompt, then paste the JSON result back into this CRM. Live API search is still available separately when API billing is enabled.</p>
         <form id="discoveryForm" class="form-grid" style="margin-top:18px;">
           <label class="field"><span>Industry</span><select name="industry"><option value="">Any</option><option>Retail</option><option>Professional Services</option><option>Manufacturing</option><option>Healthcare</option><option>Finance</option><option>Technology</option></select></label>
           <label class="field"><span>Location</span><select name="location"><option value="">Any</option><option>London</option><option>Manchester</option><option>Birmingham</option><option>Leeds</option><option>Bristol</option><option>UK Remote</option></select></label>
           <label class="field"><span>Company Size</span><select name="size"><option value="">Any</option><option>1-10</option><option>11-50</option><option>51-200</option><option>201-500</option></select></label>
           <label class="field"><span>Business Type</span><select name="type"><option value="">Any</option><option>SME</option><option>Multi-site</option><option>Back office heavy</option><option>Sales-led</option><option>Operations-led</option></select></label>
-          <button class="btn" type="submit">Generate Leads</button>
+          <button class="btn" type="submit">Build AI Prompt</button>
         </form>
+      </div>
+      <div class="si-grid cols-2" style="margin-top:18px;">
+        <article class="si-card soft">
+          <span class="si-label">Manual AI Workflow</span>
+          <h3>Use Claude Pro or ChatGPT Plus.</h3>
+          <p class="muted">Copy this prompt into your paid chat session, ask it to browse public sources, then paste the JSON result below.</p>
+          <label class="field" style="margin-top:14px;"><span>AI Prompt</span><textarea id="manualPrompt" readonly></textarea></label>
+          <div class="actions">
+            <button class="btn slim" type="button" id="copyPrompt">Copy Prompt</button>
+            <button class="btn slim ghost" type="button" id="tryLiveDiscovery">Try Live API</button>
+          </div>
+        </article>
+        <article class="si-card soft">
+          <span class="si-label">Import Result</span>
+          <h3>Paste CRM JSON.</h3>
+          <p class="muted">The importer accepts raw JSON or JSON inside a markdown code block.</p>
+          <label class="field" style="margin-top:14px;"><span>AI JSON</span><textarea id="manualJson" placeholder="{ &quot;query_summary&quot;: &quot;...&quot;, &quot;leads&quot;: [] }"></textarea></label>
+          <div class="actions">
+            <button class="btn slim" type="button" id="importJson">Import JSON</button>
+            <span class="micro" id="manualStatus" aria-live="polite"></span>
+          </div>
+        </article>
       </div>
       <div class="si-grid cols-3" id="recommendations" style="margin-top:18px;"></div>
     </div>
@@ -410,6 +432,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   const els = {
     metrics: document.getElementById('metrics'),
     discoveryForm: document.getElementById('discoveryForm'),
+    manualPrompt: document.getElementById('manualPrompt'),
+    copyPrompt: document.getElementById('copyPrompt'),
+    tryLiveDiscovery: document.getElementById('tryLiveDiscovery'),
+    manualJson: document.getElementById('manualJson'),
+    importJson: document.getElementById('importJson'),
+    manualStatus: document.getElementById('manualStatus'),
     recommendations: document.getElementById('recommendations'),
     search: document.getElementById('search'),
     statusFilter: document.getElementById('statusFilter'),
@@ -708,7 +736,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
   function researchPanel(lead) {
     return `
-      <div class="notice">Live research uses the Supabase <code>sales-research</code> function to run public web search through OpenAI and return structured CRM data. If the function is not deployed or you are not signed in, this panel falls back to browser-only demo research and logs why.</div>
+      <div class="notice">Use manual research to copy a company-specific prompt into Claude or ChatGPT, then paste the returned JSON back into this lead. Live API research is still available through Regenerate Research when API billing is enabled.</div>
       <div class="kv" style="margin-top:16px;">
         ${kv('Industry', lead.industry)}
         ${kv('Website', lead.website)}
@@ -726,9 +754,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         <label class="field"><span>Public signals</span><textarea name="signals">${esc(lead.signals)}</textarea></label>
         <div class="actions">
           <button class="btn" type="submit">Regenerate Research</button>
+          <button class="btn ghost" type="button" data-action="copy-research-prompt">Copy Manual Prompt</button>
           <label class="field" style="min-width:230px;"><span>Status</span><select name="status">${stages.map(stage => `<option${stage === lead.status ? ' selected' : ''}>${esc(stage)}</option>`).join('')}</select></label>
         </div>
       </form>
+      <div class="si-card soft" style="margin-top:18px;">
+        <span class="si-label">Manual Research Import</span>
+        <label class="field" style="margin-top:10px;"><span>Company Research JSON</span><textarea id="researchJson" placeholder="{ &quot;leads&quot;: [{ &quot;company&quot;: &quot;${esc(lead.company)}&quot; }] }"></textarea></label>
+        <div class="actions">
+          <button class="btn slim" type="button" data-action="import-research-json">Import To This Lead</button>
+        </div>
+      </div>
     `;
   }
 
@@ -847,24 +883,182 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     render();
   }
 
-  els.discoveryForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
+  function discoveryFilters() {
     const data = new FormData(els.discoveryForm);
-    const filters = {
+    return {
       industry: data.get('industry'),
       location: data.get('location'),
       size: data.get('size'),
       type: data.get('type')
     };
-    const submit = els.discoveryForm.querySelector('button[type="submit"]');
-    const oldText = submit.textContent;
-    submit.disabled = true;
-    submit.textContent = 'Researching...';
+  }
+
+  function buildDiscoveryPrompt(filters) {
+    return [
+      'You are helping n.abl build a sales intelligence CRM using only public web information.',
+      '',
+      'Task:',
+      'Find 3 to 6 realistic UK business prospects for n.abl using public sources such as company websites, search results, public business directories, company registries, public news and publicly accessible company profiles.',
+      '',
+      'Do not scrape LinkedIn, automate logged-in websites, bypass authentication, invent personal contact data, or use non-public information.',
+      '',
+      'n.abl sells practical innovation, automation and optimisation inside tools businesses already use, especially Microsoft 365, Power Platform, Salesforce, reporting tools, spreadsheets, operations systems and CRM.',
+      '',
+      'Filters:',
+      `- Industry: ${filters.industry || 'Any'}`,
+      `- Location: ${filters.location || 'UK'}`,
+      `- Company size: ${filters.size || 'Any'}`,
+      `- Business type: ${filters.type || 'Any'}`,
+      '',
+      'For each lead, look for operational signals such as manual reporting, spreadsheets, stock, supplier coordination, multi-site work, booking workflows, onboarding, account management, CRM hygiene, dashboards, contact forms and public support routes.',
+      '',
+      'Return only valid JSON. Do not include markdown, commentary or trailing commas. Use this exact shape:',
+      JSON.stringify({
+        query_summary: 'Short summary of how you searched and refined the prospects.',
+        compliance_notes: 'Public sources only. No LinkedIn scraping, authenticated access or invented personal data.',
+        leads: [{
+          company: 'Company name',
+          website: 'https://example.com',
+          industry: 'Industry',
+          location: 'Town/city/region',
+          estimated_size: '1-10, 11-50, 51-200, 201-500 or unknown',
+          business_type: 'SME, Multi-site, Back office heavy, Sales-led or Operations-led',
+          lead_score: 75,
+          recommendation_reason: 'Why this company is worth contacting.',
+          company_overview: 'Short public overview.',
+          recent_public_activity: 'Recent public activity or say not found.',
+          potential_pain_points: 'Likely business pain points inferred from public signals.',
+          service_opportunities: 'Relevant n.abl opportunities.',
+          suggested_outreach_angle: 'Practical outreach angle.',
+          public_contact_info: 'Generic inbox, phone, contact form or public contact route.',
+          contacts: [{
+            name: 'Public contact route',
+            role: 'General enquiries',
+            email: 'hello@example.com or blank',
+            phone: 'published phone or blank',
+            source: 'Source URL or public page name',
+            confidence: 70
+          }],
+          source_urls: ['https://example.com/contact'],
+          confidence: 80,
+          gdpr_notes: 'Public business data only; record source URLs and confidence.'
+        }]
+      }, null, 2)
+    ].join('\n');
+  }
+
+  function buildCompanyResearchPrompt(lead, signals) {
+    return [
+      'You are helping n.abl enrich one CRM lead using only public web information.',
+      '',
+      'Task:',
+      'Research this company and return one CRM-ready lead record. Use company websites, search results, public directories, public registries, public news and public company profiles.',
+      '',
+      'Do not scrape LinkedIn, automate logged-in websites, bypass authentication, invent personal contact data, or use non-public information.',
+      '',
+      'Company to research:',
+      `- Company: ${lead.company || 'Unknown'}`,
+      `- Website: ${lead.website || 'Unknown'}`,
+      `- Industry: ${lead.industry || 'Unknown'}`,
+      `- Location: ${lead.location || 'Unknown'}`,
+      `- Estimated size: ${lead.size || 'Unknown'}`,
+      `- Business type: ${lead.type || 'Unknown'}`,
+      `- Existing public signals: ${signals || lead.signals || 'None'}`,
+      '',
+      'Return only valid JSON. Do not include markdown, commentary or trailing commas. Use this exact shape with exactly one item in leads:',
+      JSON.stringify({
+        query_summary: 'Short summary of public sources checked.',
+        compliance_notes: 'Public sources only. No LinkedIn scraping, authenticated access or invented personal data.',
+        leads: [{
+          company: lead.company || 'Company name',
+          website: lead.website || 'https://example.com',
+          industry: lead.industry || 'Industry',
+          location: lead.location || 'Town/city/region',
+          estimated_size: lead.size || 'unknown',
+          business_type: lead.type || 'SME',
+          lead_score: 75,
+          recommendation_reason: 'Why this company is worth contacting.',
+          company_overview: 'Short public overview.',
+          recent_public_activity: 'Recent public activity or say not found.',
+          potential_pain_points: 'Likely business pain points inferred from public signals.',
+          service_opportunities: 'Relevant n.abl opportunities.',
+          suggested_outreach_angle: 'Practical outreach angle.',
+          public_contact_info: 'Generic inbox, phone, contact form or public contact route.',
+          contacts: [{
+            name: 'Public contact route',
+            role: 'General enquiries',
+            email: 'hello@example.com or blank',
+            phone: 'published phone or blank',
+            source: 'Source URL or public page name',
+            confidence: 70
+          }],
+          source_urls: [lead.website || 'https://example.com'],
+          confidence: 80,
+          gdpr_notes: 'Public business data only; record source URLs and confidence.'
+        }]
+      }, null, 2)
+    ].join('\n');
+  }
+
+  function buildManualPrompt() {
+    const filters = discoveryFilters();
+    const prompt = buildDiscoveryPrompt(filters);
+    els.manualPrompt.value = prompt;
+    els.manualStatus.textContent = 'Prompt ready. Paste it into Claude or ChatGPT.';
+    const matches = catalogue.filter(row =>
+      (!filters.industry || row[1] === filters.industry) &&
+      (!filters.location || row[2] === filters.location) &&
+      (!filters.size || row[3] === filters.size) &&
+      (!filters.type || row[4] === filters.type)
+    );
+    renderFallbackRecommendations(matches.length ? matches : catalogue.slice(0, 3), 'Manual workflow ready. Copy the prompt, run it in Claude or ChatGPT, then paste the JSON result back here.');
+  }
+
+  async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    els.manualPrompt.select();
+    document.execCommand('copy');
+  }
+
+  function extractJsonText(value) {
+    const text = String(value || '').trim();
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    return (fenced ? fenced[1] : text).trim();
+  }
+
+  function parseManualAiResult(value) {
+    const parsed = JSON.parse(extractJsonText(value));
+    const result = Array.isArray(parsed) ? { query_summary: 'Imported AI result', leads: parsed } : parsed;
+    if (!result || !Array.isArray(result.leads)) throw new Error('JSON must contain a leads array.');
+    return {
+      query_summary: result.query_summary || 'Imported AI result',
+      compliance_notes: result.compliance_notes || '',
+      leads: result.leads
+    };
+  }
+
+  function addAiLeadToCrm(aiLead, status) {
+    const lead = leadFromAi(aiLead, status);
+    if (state.leads.some(existing => existing.company.toLowerCase() === lead.company.toLowerCase())) return null;
+    state.leads.unshift(lead);
+    return lead;
+  }
+
+  async function runLiveDiscovery() {
+    const filters = discoveryFilters();
+    const button = els.tryLiveDiscovery;
+    const oldText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Researching...';
     els.recommendations.innerHTML = '<article class="si-card soft"><span class="si-label">Live AI Research</span><p class="muted">Searching public web sources, refining candidates and building CRM-ready records.</p></article>';
 
     try {
       const result = await runAiWorkflow({ mode: 'discover', filters });
       renderAiRecommendations(result.leads, result.query_summary, false);
+      els.manualStatus.textContent = 'Live API research complete.';
     } catch (error) {
       const matches = catalogue.filter(row =>
         (!filters.industry || row[1] === filters.industry) &&
@@ -873,18 +1067,47 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         (!filters.type || row[4] === filters.type)
       );
       renderFallbackRecommendations(matches.length ? matches : catalogue.slice(0, 3), error.message);
+      els.manualStatus.textContent = 'Live API unavailable. Use the manual prompt instead.';
     } finally {
-      submit.disabled = false;
-      submit.textContent = oldText;
+      button.disabled = false;
+      button.textContent = oldText;
+    }
+  }
+
+  els.discoveryForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    buildManualPrompt();
+  });
+
+  els.copyPrompt.addEventListener('click', async () => {
+    if (!els.manualPrompt.value.trim()) buildManualPrompt();
+    try {
+      await copyText(els.manualPrompt.value);
+      els.manualStatus.textContent = 'Prompt copied.';
+    } catch (_) {
+      els.manualStatus.textContent = 'Select the prompt and copy it manually.';
+    }
+  });
+
+  els.tryLiveDiscovery.addEventListener('click', runLiveDiscovery);
+
+  els.importJson.addEventListener('click', () => {
+    try {
+      const result = parseManualAiResult(els.manualJson.value);
+      renderAiRecommendations(result.leads, result.query_summary, false);
+      els.manualStatus.textContent = `${result.leads.length} AI lead(s) imported. Add them to the CRM below.`;
+    } catch (error) {
+      els.manualStatus.textContent = error.message || 'Could not import JSON.';
     }
   });
 
   function renderAiRecommendations(aiLeads, summary, fromResearch) {
     els.recommendations.innerHTML = `
       <article class="si-card accent">
-        <span class="si-label">Live AI Output</span>
+        <span class="si-label">AI Output</span>
         <h3>${fromResearch ? 'Research complete' : 'Discovery complete'}</h3>
         <p class="muted">${esc(summary || 'AI research returned CRM-ready records from public web sources.')}</p>
+        <div class="actions"><button class="btn slim" type="button" data-add-all-ai>Add All To CRM</button></div>
       </article>
       ${aiLeads.map((lead, index) => `
         <article class="si-card soft">
@@ -896,14 +1119,33 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         </article>
       `).join('')}
     `;
+    const addAll = els.recommendations.querySelector('[data-add-all-ai]');
+    if (addAll) {
+      addAll.addEventListener('click', () => {
+        let added = 0;
+        aiLeads.forEach((aiLead) => {
+          if (addAiLeadToCrm(aiLead, fromResearch ? 'Researching' : 'New Lead')) added += 1;
+        });
+        const first = state.leads[0];
+        if (first) selectedId = first.id;
+        activeTab = 'research';
+        saveState();
+        render();
+        els.manualStatus.textContent = `${added} new lead(s) added to CRM.`;
+      });
+    }
     els.recommendations.querySelectorAll('[data-add-ai]').forEach((button) => {
       button.addEventListener('click', () => {
-        const lead = leadFromAi(aiLeads[Number(button.dataset.addAi)], fromResearch ? 'Researching' : 'New Lead');
-        state.leads.unshift(lead);
+        const lead = addAiLeadToCrm(aiLeads[Number(button.dataset.addAi)], fromResearch ? 'Researching' : 'New Lead');
+        if (!lead) {
+          els.manualStatus.textContent = 'Lead already exists in CRM.';
+          return;
+        }
         selectedId = lead.id;
         activeTab = 'research';
         saveState();
         render();
+        els.manualStatus.textContent = 'Lead added to CRM.';
       });
     });
   }
@@ -952,7 +1194,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     render();
   });
 
-  els.leadDetail.addEventListener('click', (event) => {
+  els.leadDetail.addEventListener('click', async (event) => {
     const tab = event.target.closest('[data-tab]');
     if (tab) {
       activeTab = tab.dataset.tab;
@@ -966,6 +1208,46 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       lead.outreachApproved = false;
       log(lead, 'Email draft', 'Generated outreach draft');
       renderDetail();
+    }
+    if (action && action.dataset.action === 'copy-research-prompt') {
+      const signalsField = document.querySelector('#researchForm textarea[name="signals"]');
+      const prompt = buildCompanyResearchPrompt(lead, signalsField ? signalsField.value.trim() : lead.signals);
+      try {
+        await navigator.clipboard.writeText(prompt);
+        log(lead, 'Manual research prompt', 'Copied company research prompt for Claude or ChatGPT');
+      } catch (_) {
+        const box = document.getElementById('researchJson');
+        if (box) box.value = prompt;
+        log(lead, 'Manual research prompt', 'Could not access clipboard, placed prompt in import box for manual copy');
+      }
+      saveState();
+      return;
+    }
+    if (action && action.dataset.action === 'import-research-json') {
+      try {
+        const result = parseManualAiResult(document.getElementById('researchJson').value);
+        const aiLead = result.leads[0];
+        if (!aiLead) throw new Error('JSON must include one lead.');
+        const enriched = leadFromAi(aiLead, lead.status);
+        lead.website = enriched.website || lead.website;
+        lead.industry = enriched.industry || lead.industry;
+        lead.location = enriched.location || lead.location;
+        lead.size = enriched.size || lead.size;
+        lead.type = enriched.type || lead.type;
+        lead.score = enriched.score;
+        lead.signals = enriched.signals || lead.signals;
+        lead.research = enriched.research;
+        lead.sourceUrls = enriched.sourceUrls;
+        if (enriched.contacts.length) lead.contacts = enriched.contacts;
+        log(lead, 'Manual AI research', result.query_summary || lead.research.summary);
+        saveState();
+        render();
+      } catch (error) {
+        log(lead, 'Manual AI import failed', error.message || 'Could not import company research JSON');
+        saveState();
+        renderDetail();
+      }
+      return;
     }
     if (action && action.dataset.action === 'approve-email') {
       lead.outreachDraft = document.getElementById('draftText').value.trim();
