@@ -336,7 +336,7 @@ select option { background: var(--black); color: #fff; }
       <div class="si-card accent">
         <span class="si-label">Lead Discovery</span>
         <h2>Find businesses with public signals.</h2>
-        <p class="muted">Use the filters to run live AI public web research for up to 15 companies, or generate a prompt and import JSON manually when needed.</p>
+        <p class="muted">Use the filters to run live AI public web research for up to 12 companies, or generate a prompt for up to 40 companies and import JSON manually when needed.</p>
         <form id="discoveryForm" class="form-grid" style="margin-top:18px;">
           <label class="field"><span>Industry</span><select name="industry"><option value="">Any</option><option>Retail</option><option>Professional Services</option><option>Manufacturing</option><option>Healthcare</option><option>Finance</option><option>Technology</option></select></label>
           <label class="field"><span>Location</span><select name="location"><option value="">Any</option><option>London</option><option>Manchester</option><option>Birmingham</option><option>Leeds</option><option>Bristol</option><option>UK Remote</option></select></label>
@@ -449,14 +449,13 @@ select option { background: var(--black); color: #fff; }
 </div>
 
 <script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 (function () {
   'use strict';
 
   const SUPABASE_URL = 'https://rrkcoqopcqtowbyismcq.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJya2NvcW9wY3F0b3dieWlzbWNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjE1NTksImV4cCI6MjA5NTczNzU1OX0.p8Hj0sULNLos0_nZhJ_OyYyfiqfmAspwFxtLBdoK4R0';
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let sb = null;
 
   const STORAGE_KEY = 'nabl.sales-intelligence.v3';
   const stages = ['New Lead', 'Researching', 'Ready To Contact', 'Contacted', 'Follow Up Required', 'Replied', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'];
@@ -564,6 +563,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  async function supabaseClient() {
+    if (sb) return sb;
+    try {
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+      sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      return sb;
+    } catch (_) {
+      throw new Error('Supabase could not load. Manual prompt and JSON import still work locally; sign-in and live AI need internet access to load Supabase.');
+    }
+  }
+
   function displayNameFromUser(user) {
     if (!user) return 'team';
     const meta = user.user_metadata || {};
@@ -575,7 +585,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
   async function hydrateCurrentUser() {
     try {
-      const { data: { session } } = await sb.auth.getSession();
+      const client = await supabaseClient();
+      const { data: { session } } = await client.auth.getSession();
       currentUser = session && session.user ? session.user : null;
       currentOwnerName = displayNameFromUser(currentUser);
     } catch (_) {
@@ -648,13 +659,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   }
 
   async function runAiWorkflow(payload) {
-    const { data: { session } } = await sb.auth.getSession();
+    const client = await supabaseClient();
+    const { data: { session } } = await client.auth.getSession();
     if (!session) {
       throw new Error('Sign in through the team page before running live AI research.');
     }
     currentUser = session.user;
     currentOwnerName = displayNameFromUser(session.user);
-    const { data, error } = await sb.functions.invoke('sales-research', {
+    const { data, error } = await client.functions.invoke('sales-research', {
       body: payload,
       headers: { Authorization: `Bearer ${session.access_token}` }
     });
@@ -687,7 +699,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
   function leadFromAi(aiLead, status) {
     const company = aiLead.company || 'Untitled company';
-    const sourceUrls = Array.from(new Set([...(aiLead.source_urls || []), aiLead.website].filter(Boolean)));
+    const sourceUrls = Array.from(new Set([...urlList(aiLead.source_urls), aiLead.website].filter(Boolean)));
     const research = {
       summary: aiLead.recommendation_reason || aiLead.company_overview || `${company} was recommended by AI research.`,
       overview: aiLead.company_overview || '',
@@ -1041,13 +1053,23 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       return;
     }
     els.manualPrompt.select();
-    document.execCommand('copy');
+    els.manualPrompt.setSelectionRange(0, els.manualPrompt.value.length);
+    const copied = document.execCommand && document.execCommand('copy');
+    if (!copied) throw new Error('Clipboard copy unavailable');
   }
 
   function extractJsonText(value) {
     const text = String(value || '').trim();
+    if (!text) return '';
     const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    return (fenced ? fenced[1] : text).trim();
+    if (fenced) return fenced[1].trim();
+    const objectStart = text.indexOf('{');
+    const objectEnd = text.lastIndexOf('}');
+    const arrayStart = text.indexOf('[');
+    const arrayEnd = text.lastIndexOf(']');
+    if (objectStart !== -1 && objectEnd > objectStart) return text.slice(objectStart, objectEnd + 1).trim();
+    if (arrayStart !== -1 && arrayEnd > arrayStart) return text.slice(arrayStart, arrayEnd + 1).trim();
+    return text;
   }
 
   function parseManualAiResult(value) {
@@ -1074,8 +1096,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       .slice(0, limit);
   }
 
+  function urlList(value) {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+    return [value];
+  }
+
   function aiSourceLinks(lead) {
-    const urls = Array.from(new Set([...(lead.source_urls || []), lead.website].filter(Boolean))).slice(0, 3);
+    const urls = Array.from(new Set([...urlList(lead.source_urls), lead.website].filter(Boolean))).slice(0, 3);
     if (!urls.length) return 'Sources not returned';
     return `Sources:<br>${urls.map(url => linkTo(url)).join('<br>')}`;
   }
@@ -1243,29 +1271,42 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     input.addEventListener('change', render);
   });
 
-  els.loadPrompt.addEventListener('click', () => {
+  function loadManualPrompt() {
     els.manualPrompt.value = buildDiscoveryPrompt(discoveryFilters());
     els.manualStatus.textContent = 'Prompt loaded.';
-  });
+    els.manualPrompt.focus();
+  }
 
-  els.copyPrompt.addEventListener('click', async () => {
+  async function copyManualPrompt() {
     if (!els.manualPrompt.value.trim()) els.manualPrompt.value = buildDiscoveryPrompt(discoveryFilters());
     try {
       await copyText(els.manualPrompt.value);
       els.manualStatus.textContent = 'Prompt copied.';
     } catch (_) {
-      els.manualStatus.textContent = 'Select and copy the prompt manually.';
+      els.manualPrompt.focus();
+      els.manualPrompt.select();
+      els.manualStatus.textContent = 'Prompt selected. Press Ctrl+C to copy.';
     }
-  });
+  }
 
-  els.importJson.addEventListener('click', () => {
+  function importManualJson() {
     try {
       const result = parseManualAiResult(els.manualJson.value);
       renderAiRecommendations(result.leads, result.query_summary, false, 40);
       els.manualStatus.textContent = `${result.leads.length} imported lead(s) ready to add.`;
+      els.recommendations.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
       els.manualStatus.textContent = error.message || 'Could not import JSON.';
     }
+  }
+
+  document.addEventListener('click', (event) => {
+    const control = event.target.closest('#loadPrompt, #copyPrompt, #importJson');
+    if (!control) return;
+    event.preventDefault();
+    if (control.id === 'loadPrompt') loadManualPrompt();
+    if (control.id === 'copyPrompt') copyManualPrompt();
+    if (control.id === 'importJson') importManualJson();
   });
 
   els.openAddLead.addEventListener('click', openLeadModal);
