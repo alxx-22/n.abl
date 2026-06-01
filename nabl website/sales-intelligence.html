@@ -376,9 +376,8 @@ select option { background: var(--black); color: #fff; }
       <div class="filters">
         <label class="field"><span>Search</span><input id="search" type="search" placeholder="Company, industry, location"></label>
         <label class="field"><span>Status</span><select id="statusFilter"><option value="">Any status</option></select></label>
-        <label class="field"><span>Owner</span><select id="ownerFilter"><option value="">Any owner</option><option>Alex</option><option>n.abl Team</option></select></label>
+        <label class="field"><span>Owner</span><select id="ownerFilter"><option value="">Any owner</option><option>n.abl Team</option></select></label>
         <label class="field"><span>Minimum Score</span><input id="scoreFilter" type="number" min="0" max="100" value="0"></label>
-        <button class="btn ghost" type="button" id="resetData">Reset Demo</button>
         <button class="btn" type="button" id="openAddLead">Add Lead</button>
       </div>
       <div class="si-grid workspace">
@@ -427,17 +426,17 @@ select option { background: var(--black); color: #fff; }
     </div>
     <form id="addLeadForm" class="si-grid cols-2">
       <label class="field"><span>Company</span><input name="company" required></label>
-      <label class="field"><span>Website</span><input name="website" type="url" placeholder="https://example.co.uk"></label>
-      <label class="field"><span>Industry</span><input name="industry" placeholder="Retail"></label>
-      <label class="field"><span>Location</span><input name="location" placeholder="Manchester"></label>
+      <label class="field"><span>Website</span><input name="website" type="url" placeholder="https://"></label>
+      <label class="field"><span>Industry</span><input name="industry"></label>
+      <label class="field"><span>Location</span><input name="location"></label>
       <label class="field"><span>Estimated Size</span><select name="size"><option>1-10</option><option selected>11-50</option><option>51-200</option><option>201-500</option><option>Unknown</option></select></label>
       <label class="field"><span>Business Type</span><select name="type"><option>SME</option><option>Multi-site</option><option>Back office heavy</option><option>Sales-led</option><option>Operations-led</option></select></label>
       <label class="field"><span>Lead Score</span><input name="score" type="number" min="1" max="100" value="60"></label>
       <label class="field"><span>Status</span><select name="status"></select></label>
       <label class="field"><span>Owner</span><input name="owner" value="n.abl Team"></label>
-      <label class="field"><span>Public Contact Email</span><input name="email" type="email" placeholder="hello@example.co.uk"></label>
+      <label class="field"><span>Public Contact Email</span><input name="email" type="email" placeholder="name@company.co.uk"></label>
       <label class="field"><span>Public Phone / Form</span><input name="phone" placeholder="Contact form"></label>
-      <label class="field"><span>Source URL</span><input name="sourceUrl" type="url" placeholder="https://example.co.uk/contact"></label>
+      <label class="field"><span>Source URL</span><input name="sourceUrl" type="url" placeholder="https://"></label>
       <label class="field" style="grid-column:1 / -1;"><span>Public Signals</span><textarea name="signals" placeholder="Public website signals, contact route, operational clues"></textarea></label>
       <label class="field" style="grid-column:1 / -1;"><span>Internal Notes</span><textarea name="notes" placeholder="Notes for the team"></textarea></label>
       <div class="actions" style="grid-column:1 / -1;">
@@ -458,25 +457,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJya2NvcW9wY3F0b3dieWlzbWNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjE1NTksImV4cCI6MjA5NTczNzU1OX0.p8Hj0sULNLos0_nZhJ_OyYyfiqfmAspwFxtLBdoK4R0';
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const STORAGE_KEY = 'nabl.sales-intelligence.v2';
+  const STORAGE_KEY = 'nabl.sales-intelligence.v3';
   const stages = ['New Lead', 'Researching', 'Ready To Contact', 'Contacted', 'Follow Up Required', 'Replied', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'];
-
-  const catalogue = [
-    ['Cedar Retail Group', 'Retail', 'Leeds', '51-200', 'Multi-site', 87, 'Multiple locations, account services, ecommerce catalogue, stock-led operations, store contact pages and delivery notices.'],
-    ['Bluegate Dental Partners', 'Healthcare', 'Bristol', '11-50', 'Back office heavy', 79, 'Public booking flow, practice admin copy, contact forms, recurring appointment reminders and patient onboarding pages.'],
-    ['Orchard Finance Studio', 'Finance', 'London', '11-50', 'Professional Services', 83, 'Reporting packs, recurring client updates, public guides for finance teams, generic inbox and spreadsheet language.'],
-    ['Westbridge Fabrication', 'Manufacturing', 'Birmingham', '51-200', 'Operations-led', 77, 'Supplier pages, quote forms, catalogue downloads, production planning language and quality process notes.'],
-    ['Pixel & Ledger', 'Technology', 'UK Remote', '1-10', 'Sales-led', 69, 'Public services pages, inbound demo form, founder-led sales and lightweight CRM signals.'],
-    ['Hearth & Row', 'Retail', 'Manchester', '11-50', 'SME', 73, 'Store pages, ecommerce returns process, customer service inbox, manual fulfilment language and public phone number.']
-  ];
-
-  function seedLeads() {
-    return [
-      makeLead('Northline Office Supplies', 'Retail', 'Manchester', '51-200', 'Multi-site', 88, 'Ready To Contact', 'Alex', 'Multiple locations, account services, public catalogue, delivery routes, and contact form. Website copy suggests repeated stock, reporting and account follow-up processes.'),
-      makeLead('Marlow & Finch Advisory', 'Professional Services', 'London', '11-50', 'Back office heavy', 81, 'Researching', 'n.abl Team', 'Public team page, client onboarding copy, resources section and generic contact inbox. Service pages mention reporting packs and recurring client updates.'),
-      makeLead('Forgeway Components', 'Manufacturing', 'Birmingham', '201-500', 'Operations-led', 74, 'Contacted', 'Alex', 'Product catalogue, quality process page, supplier expansion news, and production planning language. Mentions reporting and supplier coordination.')
-    ];
-  }
 
   let state = loadState();
   let selectedId = state.leads[0] && state.leads[0].id;
@@ -496,7 +478,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     statusFilter: document.getElementById('statusFilter'),
     ownerFilter: document.getElementById('ownerFilter'),
     scoreFilter: document.getElementById('scoreFilter'),
-    resetData: document.getElementById('resetData'),
     openAddLead: document.getElementById('openAddLead'),
     addLeadModal: document.getElementById('addLeadModal'),
     addLeadForm: document.getElementById('addLeadForm'),
@@ -514,7 +495,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     return {
       id: 'lead-' + company.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       company,
-      website: 'https://example.com/' + company.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      website: '',
       industry,
       location,
       size,
@@ -523,7 +504,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       status,
       owner,
       signals,
-      contacts: [{ name: 'Public contact route', role: 'Website', email: '', phone: 'Contact form', source: 'Company website', confidence: 64 }],
+      contacts: [],
       notes: '',
       outreachDraft: '',
       outreachApproved: false,
@@ -543,7 +524,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (stored && Array.isArray(stored.leads)) return stored;
     } catch (e) {}
-    return { leads: seedLeads() };
+    return { leads: [] };
   }
 
   function saveState() {
@@ -592,7 +573,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     if (lower.includes('spreadsheet') || lower.includes('reporting')) pain.push('manual reporting');
     if (lower.includes('stock') || lower.includes('supplier') || lower.includes('production') || lower.includes('quality')) pain.push('operational visibility');
     if (lower.includes('onboarding') || lower.includes('client') || lower.includes('patient')) pain.push('client workflow admin');
-    if (lower.includes('follow-up') || lower.includes('account') || lower.includes('demo')) pain.push('sales follow-up consistency');
+    if (lower.includes('follow-up') || lower.includes('account')) pain.push('sales follow-up consistency');
     if (!pain.length) pain.push('manual admin', 'disconnected processes');
 
     const opportunity = lower.includes('reporting') || lower.includes('spreadsheet')
@@ -798,7 +779,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
   function researchPanel(lead) {
     return `
-      <div class="notice">Live research uses the Supabase <code>sales-research</code> function to run public web search through OpenAI and return structured CRM data. If the function is not deployed or you are not signed in, this panel falls back to browser-only demo research and logs why.</div>
+      <div class="notice">Live research uses the Supabase <code>sales-research</code> function to run public web search through OpenAI and return structured CRM data. If the function is unavailable, the error is logged in the activity timeline.</div>
       <div class="kv" style="margin-top:16px;">
         ${kv('Industry', lead.industry)}
         ${kv('Website', lead.website)}
@@ -850,7 +831,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       <div class="contact-grid">${contacts}</div>
       <form id="contactForm" class="form-grid" style="margin-top:18px;">
         <label class="field"><span>Name / Route</span><input name="name" required placeholder="Generic inbox"></label>
-        <label class="field"><span>Email</span><input name="email" type="email" placeholder="hello@example.co.uk"></label>
+        <label class="field"><span>Email</span><input name="email" type="email" placeholder="name@company.co.uk"></label>
         <label class="field"><span>Phone / Form</span><input name="phone" placeholder="Contact form"></label>
         <label class="field"><span>Confidence</span><input name="confidence" type="number" min="1" max="100" value="70"></label>
         <button class="btn" type="submit">Add Contact</button>
@@ -894,7 +875,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   }
 
   function emailDraft(lead) {
-    return `Subject: Quick idea for ${lead.company}\n\nHi,\n\nI came across ${lead.company} and noticed a few public signals that suggest there may be useful gains hiding in your current systems.\n\n${lead.research.angle}\n\nAt n.abl, we work inside the tools a business already uses - Microsoft 365, Power Platform, Salesforce, reporting tools and the surrounding process - to remove manual work without adding new bloat.\n\nWould a short conversation next week be useful?\n\nBest,\nAlex\nn.abl\nInnovation. Automation. Optimisation.\nhello@nabl.agency`;
+    return `Subject: Quick idea for ${lead.company}\n\nHi,\n\nI came across ${lead.company} and noticed a few public signals that suggest there may be useful gains hiding in your current systems.\n\n${lead.research.angle}\n\nAt n.abl, we work inside the tools a business already uses - Microsoft 365, Power Platform, Salesforce, reporting tools and the surrounding process - to remove manual work without adding new bloat.\n\nWould a short conversation next week be useful?\n\nBest,\nn.abl team\nInnovation. Automation. Optimisation.\nhello@nabl.agency`;
   }
 
   function renderPipeline() {
@@ -961,7 +942,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
         compliance_notes: 'Public sources only. No LinkedIn scraping, authenticated access or invented personal data.',
         leads: [{
           company: 'Company name',
-          website: 'https://example.com',
+          website: '',
           industry: 'Industry',
           location: 'Town/city/region',
           estimated_size: '1-10, 11-50, 51-200, 201-500 or unknown',
@@ -977,12 +958,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
           contacts: [{
             name: 'Public contact route',
             role: 'General enquiries',
-            email: 'hello@example.com or blank',
+            email: '',
             phone: 'published phone or blank',
             source: 'Source URL or public page name',
             confidence: 70
           }],
-          source_urls: ['https://example.com/contact'],
+          source_urls: [],
           confidence: 80,
           gdpr_notes: 'Public business data only; record source URLs and confidence.'
         }]
@@ -1075,16 +1056,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     return lead;
   }
 
-  function addRecommendation(row) {
-    const lead = makeLead(row[0], row[1], row[2], row[3], row[4], row[5], 'New Lead', 'n.abl Team', row[6]);
-    if (state.leads.some(existing => existing.company === lead.company)) return;
-    state.leads.unshift(lead);
-    selectedId = lead.id;
-    activeTab = 'research';
-    saveState();
-    render();
-  }
-
   function renderDiscoveryIdle() {
     els.recommendations.innerHTML = `
       <article class="si-card soft">
@@ -1108,13 +1079,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
       const result = await runAiWorkflow({ mode: 'discover', filters });
       renderAiRecommendations(result.leads, result.query_summary, false);
     } catch (error) {
-      const matches = catalogue.filter(row =>
-        (!filters.industry || row[1] === filters.industry) &&
-        (!filters.location || row[2] === filters.location) &&
-        (!filters.size || row[3] === filters.size) &&
-        (!filters.type || row[4] === filters.type)
-      );
-      renderFallbackRecommendations(matches.length ? matches : catalogue.slice(0, 3), error.message);
+      renderResearchError(error.message);
     } finally {
       submit.disabled = false;
       submit.textContent = oldText;
@@ -1170,40 +1135,19 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     });
   }
 
-  function renderFallbackRecommendations(rows, reason) {
+  function renderResearchError(reason) {
     els.recommendations.innerHTML = `
       <article class="si-card accent">
-        <span class="si-label">Demo fallback</span>
+        <span class="si-label">Research unavailable</span>
         <h3>Live AI research did not run.</h3>
         <p class="muted">${esc(reason || 'Deploy the Supabase Edge Function and set openai_api_key to enable live public web research.')}</p>
       </article>
-      ${rows.slice(0, 6).map((row, index) => `
-        <article class="si-card soft">
-          <span class="si-label">Demo Score ${row[5]}</span>
-          <h3>${esc(row[0])}</h3>
-          <p class="muted">${esc(row[1])} - ${esc(row[2])} - ${esc(row[3])}</p>
-          <p>${esc(row[6])}</p>
-          <div class="actions"><button class="btn slim" type="button" data-add-reco="${index}">Add To CRM</button></div>
-        </article>
-      `).join('')}
     `;
-    els.recommendations.querySelectorAll('[data-add-reco]').forEach((button) => {
-      button.addEventListener('click', () => addRecommendation(rows[Number(button.dataset.addReco)]));
-    });
   }
 
   [els.search, els.statusFilter, els.ownerFilter, els.scoreFilter].forEach((input) => {
     input.addEventListener('input', render);
     input.addEventListener('change', render);
-  });
-
-  els.resetData.addEventListener('click', () => {
-    localStorage.removeItem(STORAGE_KEY);
-    state = { leads: seedLeads() };
-    selectedId = state.leads[0].id;
-    activeTab = 'research';
-    saveState();
-    render();
   });
 
   els.loadPrompt.addEventListener('click', () => {
