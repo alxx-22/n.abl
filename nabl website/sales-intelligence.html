@@ -570,7 +570,7 @@ select option { background: var(--black); color: #fff; }
   async function supabaseClient() {
     if (sb) return sb;
     try {
-      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.106.2');
       sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       return sb;
     } catch (_) {
