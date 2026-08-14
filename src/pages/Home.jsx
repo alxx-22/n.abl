@@ -3,17 +3,19 @@ import Nav from '../components/layout/Nav.jsx'
 import Footer from '../components/layout/Footer.jsx'
 import { EdgeCard, Reveal, prefersReducedMotion } from '../components/ui/index.jsx'
 import DiscoveryModal from '../components/DiscoveryModal.jsx'
+import { JourneyRail, Chapter, useParallax } from '../components/Journey.jsx'
+import { NodeField, PillarGlyph, Horizon } from '../components/Visuals.jsx'
 import '../styles/home.css'
 
 /* ============================================================
    CONTENT
    ============================================================ */
 const PILLARS = [
-  { n: '01', title: 'Innovation', tag: "Discover What's Possible",
+  { n: '01', title: 'Innovation', tag: "Discover What's Possible", glyph: 'innovation',
     body: "Most businesses are sitting on capability they've already paid for. We find it, and we prove what it can do." },
-  { n: '02', title: 'Automation', tag: 'Save Time, Reduce Error',
+  { n: '02', title: 'Automation', tag: 'Save Time, Reduce Error', glyph: 'automation',
     body: 'The repetitive work that eats your week gets handed to a system that never forgets a step.' },
-  { n: '03', title: 'Optimisation', tag: 'Get More From What You Have',
+  { n: '03', title: 'Optimisation', tag: 'Get More From What You Have', glyph: 'optimisation',
     body: 'Faster, cleaner, more accurate — without asking anyone to learn a new tool.' },
 ]
 
@@ -115,6 +117,7 @@ function Stat({ target, prefix = '', suffix = '', decimals = 0, label }) {
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false)
   const heroRef = useRef(null)
+  const statsRef = useParallax(0.06)
 
   // Gentle parallax on the hero while it is still on screen.
   useEffect(() => {
@@ -140,10 +143,13 @@ export default function Home() {
       <Intro />
       <Nav />
 
+      <JourneyRail />
+
       <main>
         {/* ---------------- HERO ---------------- */}
         <section id="hero" className="hero">
           <div className="hero__glow" aria-hidden="true" />
+          <NodeField />
           <div className="shell hero__inner" ref={heroRef}>
             <span className="eyebrow hero__eyebrow">Automation studio</span>
             <h1 className="hero__title">
@@ -169,7 +175,7 @@ export default function Home() {
         {/* ---------------- WHAT WE DO ---------------- */}
         <section id="what-we-do" className="section">
           <div className="shell">
-            <Reveal><span className="eyebrow">What we do</span></Reveal>
+            <Chapter index={1}>What we do</Chapter>
             <Reveal delay={0.06}>
               <h2 className="section__title">
                 We don&rsquo;t ask you to change your tools.<br />We master them<span className="dot" />
@@ -185,7 +191,10 @@ export default function Home() {
               {PILLARS.map((p, i) => (
                 <Reveal key={p.n} delay={0.1 + i * 0.08}>
                   <EdgeCard className="card-pad pillar">
-                    <span className="pillar__num">{p.n}</span>
+                    <div className="pillar__head">
+                      <span className="pillar__num">{p.n}</span>
+                      <PillarGlyph kind={p.glyph} />
+                    </div>
                     <h3 className="pillar__title">{p.title}</h3>
                     <p className="pillar__body">{p.body}</p>
                     <span className="pillar__tag">{p.tag}</span>
@@ -199,7 +208,7 @@ export default function Home() {
         {/* ---------------- YOUR SYSTEMS ---------------- */}
         <section id="your-systems" className="section section--alt">
           <div className="shell">
-            <Reveal><span className="eyebrow">Your systems</span></Reveal>
+            <Chapter index={2}>Your systems</Chapter>
             <Reveal delay={0.06}>
               <h2 className="section__title">Your systems. Fully unlocked<span className="dot" /></h2>
             </Reveal>
@@ -227,7 +236,7 @@ export default function Home() {
         {/* ---------------- HOW WE WORK ---------------- */}
         <section id="how-we-work" className="section">
           <div className="shell">
-            <Reveal><span className="eyebrow">How we work</span></Reveal>
+            <Chapter index={3}>How we work</Chapter>
             <Reveal delay={0.06}>
               <h2 className="section__title">No servers. No bloat. Just results<span className="dot" /></h2>
             </Reveal>
@@ -249,16 +258,18 @@ export default function Home() {
         {/* ---------------- IMPACT ---------------- */}
         <section id="impact" className="section section--impact">
           <div className="shell">
-            <div className="stats">
+            <Chapter index={4}>Impact</Chapter>
+            <div className="stats" ref={statsRef}>
               {STATS.map((s) => <Stat key={s.label} {...s} />)}
             </div>
+            <Horizon />
           </div>
         </section>
 
         {/* ---------------- CASES ---------------- */}
         <section id="cases" className="section">
           <div className="shell">
-            <Reveal><span className="eyebrow">In practice</span></Reveal>
+            <Chapter index={5}>In practice</Chapter>
             <Reveal delay={0.06}>
               <h2 className="section__title">What this actually looks like<span className="dot" /></h2>
             </Reveal>
