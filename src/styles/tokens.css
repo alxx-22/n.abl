@@ -1,0 +1,112 @@
+/* ============================================================
+   n.abl — DESIGN TOKENS  (rebrand v2)
+   Warm espresso base · cream light · low-opacity cream glow
+   ------------------------------------------------------------
+   Direction: modern, minimal, anti-corporate. No pure black,
+   no neon. Depth comes from warm greys and soft cream bloom.
+   ============================================================ */
+
+:root {
+  /* ---------- Base: warm espresso / charcoal ----------
+     Hue held at ~28deg so every dark step reads warm, never
+     the flat blue-black of a default corporate theme. */
+  --bg:          #0E0C0A;   /* page ground            */
+  --bg-alt:      #13100E;   /* alternating band       */
+  --surface-1:   #1A1613;   /* cards, panels          */
+  --surface-2:   #221D18;   /* raised / hover         */
+  --surface-3:   #2B241E;   /* inputs, active         */
+  --surface-4:   #362D25;   /* strongest raise        */
+
+  /* ---------- Cream: the light source ---------- */
+  --cream-100:   #FBF6EC;   /* headlines              */
+  --cream-200:   #F0E7D8;   /* primary text           */
+  --cream-300:   #DED2C0;
+  --cream-400:   #C8BBA8;   /* secondary text         */
+  --cream-600:   #9A8F80;   /* tertiary / muted (AA on every surface) */
+  --cream-800:   #5A5249;   /* disabled only — not for meaningful text */
+
+  /* Raw cream channel — used to build glows + hairlines */
+  --cream-rgb:   240, 231, 216;
+
+  /* ---------- Accent: warm amber (replaces electric lime) ---------- */
+  --accent-200:  #F8D9A4;
+  --accent-300:  #F2C57E;
+  --accent-400:  #E9AC57;   /* primary accent         */
+  --accent-500:  #D9922F;
+  --accent-600:  #B87718;
+  --accent-rgb:  233, 172, 87;
+
+  /* ---------- Support ---------- */
+  --danger:      #E0796D;   /* AA on every surface for small text */
+  --danger-deep: #8E3128;   /* fill behind cream text             */
+  --danger-soft: rgba(224, 121, 109, 0.13);
+  --success:     #9DBE97;
+
+  /* ---------- Hairlines (cream at low alpha) ---------- */
+  --line-faint:  rgba(var(--cream-rgb), 0.06);
+  --line:        rgba(var(--cream-rgb), 0.11);
+  --line-strong: rgba(var(--cream-rgb), 0.20);
+
+  /* ---------- Glow recipes ----------
+     Deliberately low opacity: a bloom, not a neon tube. */
+  --glow-xs:     0 0 12px rgba(var(--cream-rgb), 0.05);
+  --glow-sm:     0 0 24px rgba(var(--cream-rgb), 0.07);
+  --glow-md:     0 0 48px rgba(var(--cream-rgb), 0.10);
+  --glow-lg:     0 0 96px rgba(var(--cream-rgb), 0.13);
+  --glow-accent: 0 0 32px rgba(var(--accent-rgb), 0.20);
+  --glow-inset:  inset 0 1px 0 rgba(var(--cream-rgb), 0.06);
+
+  /* ---------- Type ---------- */
+  --font-display: 'Space Grotesk', 'Inter Tight', system-ui, sans-serif;
+  --font-sans:    'Inter Tight', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Fluid type scale */
+  --t-xs:   0.75rem;
+  --t-sm:   0.875rem;
+  --t-base: 1rem;
+  --t-lg:   1.125rem;
+  --t-xl:   clamp(1.25rem, 1.1rem + 0.6vw,  1.5rem);
+  --t-2xl:  clamp(1.6rem,  1.3rem + 1.4vw,  2.25rem);
+  --t-3xl:  clamp(2.1rem,  1.6rem + 2.4vw,  3.25rem);
+  --t-4xl:  clamp(2.8rem,  1.9rem + 4.2vw,  5rem);
+  --t-5xl:  clamp(3.4rem,  2.0rem + 6.4vw,  7rem);
+
+  --track-tight: -0.03em;
+  --track-snug:  -0.015em;
+  --track-wide:   0.14em;
+
+  /* ---------- Space ---------- */
+  --s-1: 0.25rem; --s-2: 0.5rem;  --s-3: 0.75rem; --s-4: 1rem;
+  --s-5: 1.5rem;  --s-6: 2rem;    --s-7: 3rem;    --s-8: 4rem;
+  --s-9: 6rem;    --s-10: 8rem;
+  --gutter: clamp(1.25rem, 5vw, 4.5rem);
+  --maxw:   1240px;
+  --maxw-prose: 68ch;
+
+  /* ---------- Radii ----------
+     Soft but not pill — modern minimal, a little rounding only. */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 24px; --r-full: 999px;
+
+  /* ---------- Motion ---------- */
+  --ease:     cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 0.18s;
+  --dur:      0.32s;
+  --dur-slow: 0.6s;
+
+  --z-nav: 50; --z-overlay: 100; --z-modal: 110; --z-toast: 120;
+}
+
+/* Registered custom property so the conic edge-glow can animate.
+   Progressive enhancement: without @property the border simply
+   sits static instead of rotating. */
+@property --glow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 0.001s; --dur: 0.001s; --dur-slow: 0.001s; }
+}

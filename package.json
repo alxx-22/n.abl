@@ -1,0 +1,22 @@
+{
+  "name": "nabl",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "n.abl — agency site, client portal, team space and CRM",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.106.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  }
+}

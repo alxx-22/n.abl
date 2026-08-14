@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 104 100" role="img" aria-label="n.abl mark">
+  <title>n.abl</title>
+  <!-- Geometric lowercase "n": left stem, semicircular shoulder, right stem.
+       Drawn as a single stroked path so the weight stays optically even. -->
+  <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82"
+        fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="butt"/>
+  <!-- The signature: a square full stop, sitting on the baseline -->
+  <rect x="78" y="69" width="13" height="13" fill="var(--mark-accent, #E9AC57)"/>
+</svg>
