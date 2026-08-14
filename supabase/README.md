@@ -1,56 +1,65 @@
-# Sales Intelligence backend
+# n.abl — Supabase
 
-This folder contains the first backend pass for the Sales Intelligence CRM.
+Backend for the client portal, the internal team space and the sales CRM.
 
-## What exists
+## Migrations
 
-- `migrations/202606010001_sales_intelligence.sql`
-  - Creates lead, contact, research run, email draft, activity and pipeline event tables.
-  - Enables RLS for authenticated team users.
+| File | What it does |
+|---|---|
+| `202606010001_sales_intelligence.sql` | Original CRM schema. **Already applied — do not edit.** |
+| `202606010002_sales_research_form_runs.sql` | Research RPCs. **Already applied — superseded below.** |
+| `202606020001_remove_sales_ai.sql` | Removes the AI layer from the CRM. **Destructive — read the header before running.** |
 
-- `functions/sales-research/index.ts`
-  - Supabase Edge Function.
-  - Requires a logged-in Supabase user.
-  - Calls OpenAI Responses API with the `web_search` tool.
-  - Forces CRM-ready JSON output for discovery and company research.
-
-- `migrations/202606010002_sales_research_form_runs.sql`
-  - Adds database support for the two front-end form actions.
-  - `create_sales_discovery_run(...)` records a discovery filter request.
-  - `create_sales_company_research_run(...)` records a company research request.
-  - `complete_sales_research_run(...)` stores the AI result, source URLs and failure state.
-
-## Deploy
+Apply a migration by pasting it into **Dashboard → SQL Editor**, or with the CLI:
 
 ```bash
 supabase db push
-supabase secrets set openai_api_key=...
-supabase secrets set openai_model=gpt-5-mini
-supabase functions deploy sales-research
 ```
 
-Use lowercase names in the Supabase dashboard secrets UI:
+### Removing the AI layer
 
-- `openai_api_key`
-- `openai_model`
+`202606020001_remove_sales_ai.sql` drops `sales_research_runs`, the three
+research RPCs, and the AI-authored columns on `sales_leads`.
 
-The Edge Function also accepts uppercase CLI-style names, but the dashboard may reject uppercase names.
+It first promotes each lead's free-text **signals** into its own column.
+That text used to live inside `research_json`, so running the drops without
+this migration would destroy it. Take a backup before running.
 
-If you are using the Supabase SQL editor instead of the CLI, run both migration files in order:
+Afterwards:
 
-1. `202606010001_sales_intelligence.sql`
-2. `202606010002_sales_research_form_runs.sql`
+```bash
+supabase functions delete sales-research      # source already removed from this repo
+supabase secrets unset openai_api_key openai_model
+```
 
-The front end calls `sales-research` from `nabl website/sales-intelligence.html`.
-If the function is not deployed or the user is not signed in, the page falls back to local demo data and shows why.
+## Edge functions
 
-## Next build step
+None. The `sales-research` function was the only one, and it has been removed
+along with the AI features it served.
 
-Replace the front-end `localStorage` writes with Supabase inserts/updates against:
+## Not yet version-controlled
 
-- `sales_leads`
-- `sales_contacts`
-- `sales_activities`
-- `sales_research_runs`
-- `sales_email_drafts`
-- `sales_pipeline_events`
+The **client-portal schema is not in this directory**. The `clients`, `quotes`,
+`projects`, `meetings` and `documents` tables, the `quotes` and `documents`
+storage buckets, and the `x-access-key` RLS policies that scope a client to
+their own rows all exist only in the hosted project.
+
+They should be introspected and committed as a migration so the backend can be
+rebuilt from source:
+
+```bash
+supabase db pull
+```
+
+## Access model
+
+Two independent auth paths share one project:
+
+- **Team** — standard Supabase Auth (email/password). Sessions persist.
+  RLS policies grant `authenticated` full access to the CRM tables.
+- **Client portal** — no Supabase user. The browser sends the client's access
+  key as an `x-access-key` header and RLS scopes every row to that client.
+  The key is held in memory only and never persisted.
+
+Storage buckets `quotes` and `documents` are private. Files are always served
+through short-lived signed URLs minted on demand — never stored in the database.
