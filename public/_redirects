@@ -1,1 +1,6 @@
-/*    /index.html   200
+# INTERIM — remove these two once Team.jsx and Crm.jsx are ported.
+/team                  /legacy/team.html                 200
+/sales-intelligence    /legacy/sales-intelligence.html   200
+
+# SPA fallback
+/*                     /index.html                       200

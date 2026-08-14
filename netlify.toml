@@ -5,7 +5,23 @@
 [build.environment]
   NODE_VERSION = "22"
 
-# SPA fallback — every route is served by the React app.
+# --- INTERIM: not yet ported to React ---------------------------------
+# The team space and CRM are still being rebuilt. Until their React ports
+# land, serve the previous working pages so the team's tools keep running.
+# Delete these two rules (and public/legacy/) once Team.jsx and Crm.jsx
+# are finished, so the routes fall through to the React app below.
+[[redirects]]
+  from = "/team"
+  to = "/legacy/team.html"
+  status = 200
+
+[[redirects]]
+  from = "/sales-intelligence"
+  to = "/legacy/sales-intelligence.html"
+  status = 200
+# ----------------------------------------------------------------------
+
+# SPA fallback — every other route is served by the React app.
 [[redirects]]
   from = "/*"
   to = "/index.html"
