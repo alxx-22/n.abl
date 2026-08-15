@@ -159,9 +159,19 @@ a:hover > .nabl-logo .nabl-logo__dot {
     padding: var(--gutter);
     background: var(--bg);
     transform: translateX(100%);
-    transition: transform var(--dur) var(--ease);
+    /* Closed, the sheet is parked off to the right. Translating alone
+       leaves it in the layout: it widened the document by its own width,
+       so every phone page had a sliver of sideways scroll, and its links
+       stayed focusable and readable to a screen reader behind a menu
+       nobody had opened. visibility takes it out of both. */
+    visibility: hidden;
+    transition: transform var(--dur) var(--ease), visibility 0s linear var(--dur);
   }
-  .nav__links--open { transform: translateX(0); }
+  .nav__links--open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform var(--dur) var(--ease), visibility 0s;
+  }
   .nav__link { font-size: var(--t-2xl); font-family: var(--font-display); color: var(--cream-100); }
 }
 

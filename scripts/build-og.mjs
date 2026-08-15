@@ -47,9 +47,9 @@ const html = `<!doctype html><meta charset="utf-8">
 </style>
 <div class="bloom"></div><div class="grain"></div>
 <div class="mark">${wordmark}</div>
-<h1>We make your business work smarter<i></i></h1>
+<h1>Tell us what&rsquo;s costing you. We build the fix<i></i></h1>
 <div class="foot">
-  <span class="eyebrow"><b></b>Automation studio</span>
+  <span class="eyebrow"><b></b>Technology implementation</span>
   <span>nabl.agency</span>
 </div>`
 

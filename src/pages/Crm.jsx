@@ -259,13 +259,13 @@ function emailDraft(lead) {
   if (context) lines.push('', context)
   lines.push(
     '',
-    'At n.abl, we work inside the tools a business already uses - Microsoft 365, Power Platform, Salesforce, reporting tools and the surrounding process - to remove manual work without adding new bloat.',
+    'At n.abl, we take a job that is costing a business time or accuracy and build the right fix for it - sometimes an automation, sometimes a small piece of software, sometimes just the tool you already pay for set up properly. Fixed price, agreed before we start.',
     '',
     'Would a short conversation next week be useful?',
     '',
     'Best,',
     'n.abl team',
-    'Innovation. Automation. Optimisation.',
+    'Technology implementation for small business.',
     'hello@nabl.agency',
   )
   return lines.join('\n')

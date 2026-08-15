@@ -11,9 +11,9 @@ import { prefersReducedMotion } from './ui/index.jsx'
 export const CHAPTERS = [
   { id: 'hero', label: 'Start' },
   { id: 'what-we-do', label: 'What we do' },
-  { id: 'your-systems', label: 'Your systems' },
+  { id: 'toolkit', label: 'The toolkit' },
   { id: 'how-we-work', label: 'How we work' },
-  { id: 'impact', label: 'Impact' },
+  { id: 'pricing', label: 'What it costs' },
   { id: 'cases', label: 'In practice' },
   { id: 'about', label: 'About' },
   { id: 'contact', label: "Let's talk" },

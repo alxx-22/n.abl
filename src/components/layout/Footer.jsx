@@ -14,7 +14,8 @@ export default function Footer() {
           <div>
             <a href="#hero" aria-label="n.abl home"><Logo size={22} /></a>
             <p className="footer__tag">
-              Innovation · Automation · Optimisation. Built entirely around the tools you already use.
+              A technology implementation partner for small businesses. We start with the
+              problem, not the technology.
             </p>
           </div>
 
@@ -23,6 +24,7 @@ export default function Footer() {
             <div className="footer__list">
               <a href="#what-we-do">What We Do</a>
               <a href="#how-we-work">How We Work</a>
+              <a href="#pricing">Pricing</a>
               <a href="#about">About</a>
               <a href="mailto:hello@nabl.agency">hello@nabl.agency</a>
             </div>
@@ -45,7 +47,7 @@ export default function Footer() {
             <Link to="/team" className="footer__teamdot" aria-label="Team access">.</Link>
             abl. All rights reserved.
           </span>
-          <span>Built for small business. Powered by your stack.</span>
+          <span>Built for small business. No retainers.</span>
         </div>
       </div>
 

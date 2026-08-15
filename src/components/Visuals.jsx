@@ -96,42 +96,87 @@ export function NodeField({ className = '' }) {
   return <canvas ref={canvasRef} className={`nodefield ${className}`} aria-hidden="true" />
 }
 
-/* ---------- Pillar glyphs — geometric, one per discipline ---------- */
-export function PillarGlyph({ kind }) {
+/* ---------- Category glyphs — one per problem the client arrives with.
+   These used to be three glyphs for three disciplines (Innovation,
+   Automation, Optimisation), which described our tools rather than the
+   client's problem. Six now, matching the six things people actually
+   turn up asking for. Same geometric language throughout: true circles,
+   a single stroke weight, one solid accent dot as the focal point. */
+export function CategoryGlyph({ kind }) {
   const common = {
     viewBox: '0 0 64 64', width: 46, height: 46, fill: 'none',
     stroke: 'currentColor', strokeWidth: 1.4,
     strokeLinecap: 'round', strokeLinejoin: 'round',
     'aria-hidden': 'true', className: 'glyph',
   }
-  if (kind === 'innovation') {
-    // radiating discovery
+
+  // Save time — a clock with the wasted wedge lifted out of it.
+  if (kind === 'time') {
     return (
       <svg {...common}>
-        <circle cx="32" cy="32" r="9" />
-        <circle cx="32" cy="32" r="19" strokeOpacity=".55" strokeDasharray="3 6" />
-        <circle cx="32" cy="32" r="28" strokeOpacity=".28" strokeDasharray="2 8" />
-        <circle cx="32" cy="32" r="3" fill="currentColor" stroke="none" />
+        <path d="M32 12a20 20 0 1 0 20 20" />
+        <path d="M32 12v20h20" strokeOpacity=".45" strokeDasharray="3 5" />
+        <path d="M32 32l-11 7" />
+        <circle cx="32" cy="32" r="2.6" fill="currentColor" stroke="none" />
       </svg>
     )
   }
-  if (kind === 'automation') {
-    // a loop that closes on itself
+
+  // Reduce mistakes — a run of steps, one of which was wrong and is now right.
+  if (kind === 'accuracy') {
     return (
       <svg {...common}>
-        <path d="M18 24h20a10 10 0 0 1 0 20H20" />
-        <path d="M26 16l-8 8 8 8" />
-        <rect x="10" y="38" width="12" height="12" rx="2" strokeOpacity=".5" />
-        <rect x="44" y="14" width="12" height="12" rx="2" strokeOpacity=".5" />
+        <rect x="10" y="16" width="44" height="32" rx="3" strokeOpacity=".45" />
+        <path d="M18 26h14" strokeOpacity=".55" />
+        <path d="M18 34h10" strokeOpacity=".55" />
+        <path d="M18 42h18" strokeOpacity=".55" />
+        <path d="M36 33l5 5 10-12" />
       </svg>
     )
   }
-  // optimisation — a rising, tightening signal
+
+  // Get more customers — a funnel that keeps hold of what enters it.
+  if (kind === 'customers') {
+    return (
+      <svg {...common}>
+        <path d="M12 16h40L37 34v14l-10 6V34z" />
+        <path d="M12 16h40" strokeOpacity=".45" />
+        <circle cx="32" cy="10" r="2.6" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  // Build something new — parts assembling into one thing.
+  if (kind === 'build') {
+    return (
+      <svg {...common}>
+        <rect x="10" y="10" width="20" height="20" rx="2" />
+        <rect x="34" y="10" width="20" height="20" rx="2" strokeOpacity=".45" strokeDasharray="3 5" />
+        <rect x="10" y="34" width="20" height="20" rx="2" strokeOpacity=".45" strokeDasharray="3 5" />
+        <path d="M38 44h12M44 38v12" />
+      </svg>
+    )
+  }
+
+  // Train your team — one point of understanding spreading to several people.
+  if (kind === 'train') {
+    return (
+      <svg {...common}>
+        <circle cx="32" cy="20" r="7" />
+        <path d="M20 50a12 12 0 0 1 24 0" />
+        <path d="M10 44a9 9 0 0 1 8-8" strokeOpacity=".45" />
+        <path d="M54 44a9 9 0 0 0-8-8" strokeOpacity=".45" />
+        <circle cx="32" cy="20" r="2.2" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  // Fix something — a spanner, reduced to a ring and a shaft.
   return (
     <svg {...common}>
-      <path d="M10 46l11-11 8 7 11-15 8 6" />
-      <path d="M10 54h44" strokeOpacity=".35" />
-      <circle cx="48" cy="33" r="3" fill="currentColor" stroke="none" />
+      <path d="M40 12a12 12 0 0 0-9.5 19.3L14 47.8a4 4 0 0 0 5.7 5.7l16.5-16.5A12 12 0 1 0 40 12z" strokeOpacity=".45" />
+      <circle cx="40" cy="24" r="6.5" />
+      <path d="M30.5 31.3L14 47.8a4 4 0 0 0 5.7 5.7l16.5-16.5" />
     </svg>
   )
 }

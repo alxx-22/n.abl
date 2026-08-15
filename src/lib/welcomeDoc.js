@@ -238,7 +238,7 @@ export function buildWelcomeDoc({ client, goals = null, owner = null, nextSteps 
   </section>
 
   <footer>
-    <span>n.abl · Innovation · Automation · Optimisation</span>
+    <span>n.abl · Technology implementation for small business</span>
     <span>nabl.agency</span>
   </footer>
 

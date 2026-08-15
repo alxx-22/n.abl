@@ -129,13 +129,32 @@
 .step__title { font-size: var(--t-xl); margin: var(--s-3) 0 var(--s-2); }
 .step__body  { color: var(--cream-400); font-size: var(--t-sm); }
 
-/* ---------- Impact ---------- */
+/* ---------- Pricing ---------- */
 .section--impact {
   background:
     radial-gradient(70ch 30ch at 50% 0%, rgba(var(--accent-rgb), 0.07), transparent 70%),
     var(--surface-1);
   border-block: 1px solid var(--line);
 }
+
+.price__kind {
+  font-size: var(--t-xs); letter-spacing: var(--track-wide);
+  text-transform: uppercase; color: var(--accent-400);
+}
+.price__title { font-size: var(--t-xl); margin: var(--s-3) 0 var(--s-3); line-height: 1.15; }
+.price__body  { color: var(--cream-400); font-size: var(--t-sm); }
+
+/* The worked example. Held inside a rule rather than a card so it reads as
+   the evidence under the two pricing cards, not a third option. */
+.worked {
+  margin-top: var(--s-8);
+  padding: var(--s-7) 0;
+  border-block: 1px solid var(--line);
+}
+.worked__head  { max-width: 62ch; margin-bottom: var(--s-7); }
+.worked__lead  { font-size: var(--t-lg); color: var(--cream-200); margin-top: var(--s-3); line-height: 1.4; }
+.worked__note  { color: var(--cream-600); font-size: var(--t-sm); max-width: 72ch; margin-top: var(--s-7); }
+
 .stats { display: grid; gap: var(--s-6); grid-template-columns: repeat(2, 1fr); }
 @media (min-width: 900px) { .stats { grid-template-columns: repeat(4, 1fr) } }
 .stat__num {
@@ -146,13 +165,36 @@
 }
 .stat__label { color: var(--cream-600); font-size: var(--t-sm); margin-top: var(--s-2); max-width: 22ch; }
 
+/* The last two figures are the point of the example, so they carry the
+   accent while the two inputs stay quiet. */
+.worked__stats .stat:nth-child(n+3) .stat__num {
+  color: var(--accent-400);
+  text-shadow: 0 0 40px rgba(var(--accent-rgb), 0.22);
+}
+
+.credits { margin-top: var(--s-8); display: grid; gap: var(--s-6); }
+@media (min-width: 1000px) { .credits { grid-template-columns: 0.9fr 1.1fr; gap: var(--s-8) } }
+.credits__title { font-size: var(--t-xl); line-height: 1.15; margin-bottom: var(--s-3); }
+.credits__body  { color: var(--cream-400); font-size: var(--t-sm); }
+.credits__grid  { display: grid; gap: var(--s-4); align-content: start; }
+@media (min-width: 640px) { .credits__grid { grid-template-columns: repeat(3, 1fr) } }
+.credit {
+  display: flex; flex-direction: column; gap: var(--s-2);
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent-400);
+  border-radius: var(--r-sm);
+  background: rgba(var(--cream-rgb), 0.02);
+}
+.credit__name { font-weight: 600; color: var(--cream-100); font-size: var(--t-sm); }
+.credit__body { color: var(--cream-600); font-size: var(--t-xs); line-height: 1.5; }
+
 /* ---------- Cases ---------- */
 .case__label {
   font-size: var(--t-xs); letter-spacing: var(--track-wide);
   text-transform: uppercase; color: var(--accent-400);
 }
-.case__title { font-size: var(--t-lg); margin: var(--s-3) 0 var(--s-2); line-height: 1.2; }
-.case__industry { color: var(--cream-600); font-size: var(--t-xs); margin-bottom: var(--s-3); }
+.case__title { font-size: var(--t-lg); margin: var(--s-3) 0 var(--s-3); line-height: 1.2; }
 .case__body { color: var(--cream-400); font-size: var(--t-sm); }
 .case__tools { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-4); }
 
@@ -314,11 +356,16 @@
   box-shadow: 0 0 18px rgba(var(--accent-rgb), .8);
   animation: travel 7s var(--ease) infinite;
 }
+/* The end position subtracts the spark's own width. Travelling to a bare
+   92% put its right edge past the container, which on a phone widened the
+   document and gave the whole page a sliver of sideways scroll that grew
+   as the animation ran. The glow either side is box-shadow and blur, which
+   paint outside the box without affecting layout. */
 @keyframes travel {
   0%   { left: 4%;  opacity: 0 }
   12%  { opacity: 1 }
   88%  { opacity: 1 }
-  100% { left: 92%; opacity: 0 }
+  100% { left: calc(96% - 90px); opacity: 0 }
 }
 @media (prefers-reduced-motion: reduce) {
   .horizon__spark { animation: none; opacity: .5; left: 46%; }

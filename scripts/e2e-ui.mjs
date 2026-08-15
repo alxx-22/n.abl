@@ -235,7 +235,7 @@ async function run() {
     await installMock(page, { db: makeDb() })
     results.push('\nROUTES')
     for (const [path, expect] of [
-      ['/', /We make your business work smarter/],
+      ['/', /We build the fix/],
       ['/privacy', /Privacy Policy/i],
       ['/terms', /Terms of Service/i],
       ['/cookies', /Cookie Policy/i],

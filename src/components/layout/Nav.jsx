@@ -4,8 +4,8 @@ import { Logo } from '../ui/index.jsx'
 
 const LINKS = [
   { id: 'what-we-do', label: 'What We Do' },
-  { id: 'your-systems', label: 'Your Systems' },
   { id: 'how-we-work', label: 'How We Work' },
+  { id: 'pricing', label: 'Pricing' },
   { id: 'about', label: 'About' },
   { id: 'contact', label: "Let's Talk" },
 ]
