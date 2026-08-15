@@ -93,7 +93,7 @@ export function EdgeCard({
    size. One construction throughout: a 13-unit monoline stroke with butt
    caps, every curve a true circle, x-height 21.5-82, ascenders from 6. */
 export function Logo({ size = 26, showWord = true, className = '' }) {
-  const w = showWord ? 277 : 104
+  const w = showWord ? 273 : 104
   // The viewBox is 100 tall but the letterforms occupy 6..82, so scale up a
   // little to keep the optical size matching the old text at the same `size`.
   const height = size * 1.28
@@ -109,13 +109,16 @@ export function Logo({ size = 26, showWord = true, className = '' }) {
     >
       <g fill="none" stroke="currentColor" strokeWidth="13" strokeLinecap="butt">
         <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82" />
+        {/* Spacing is optical: gaps of 7 / 7 / 13 / 10 between outer edges.
+            The a-b gap is widest because two flat verticals read tighter than
+            a curve facing a vertical. See public/brand/wordmark.svg. */}
         {showWord && (
           <>
-            <circle cx="135.25" cy="51.75" r="23.75" />
-            <path d="M159 21.5 L159 82" />
-            <path d="M182 6 L182 82" />
-            <circle cx="205.75" cy="51.75" r="23.75" />
-            <path d="M252.5 6 L252.5 82" />
+            <circle cx="128.25" cy="51.75" r="23.75" />
+            <path d="M152 21.5 L152 82" />
+            <path d="M178 6 L178 82" />
+            <circle cx="201.75" cy="51.75" r="23.75" />
+            <path d="M248.5 6 L248.5 82" />
           </>
         )}
       </g>

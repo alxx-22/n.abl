@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 277 100" role="img" aria-label="n.abl">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 273 100" role="img" aria-label="n.abl">
   <title>n.abl</title>
   <!-- Drawn, not set in a typeface.
 
@@ -9,21 +9,34 @@
 
        The circular shoulder on the "n" is the point of the mark — it is what
        plays against the square dot. A typeface with a squarer shoulder
-       competes with the dot instead of contrasting with it. -->
+       competes with the dot instead of contrasting with it.
+
+       SPACING is optical, not uniform. Measured gaps between outer edges:
+         n   -> dot   7    stem   | square
+         dot -> a     7    square | bowl    (matches the other side of the dot,
+                                             so the dot belongs to the whole
+                                             word rather than only to the n)
+         a   -> b    13    stem   | stem
+         b   -> l    10    bowl   | stem
+       The a/b gap is deliberately the widest. Two flat verticals facing each
+       other read tighter than a curve facing a vertical, because the curve
+       recedes from the eye at its extreme. Setting both to the same number
+       makes the straight pair look cramped — which is exactly what an equal
+       10/10 did before this was corrected. -->
   <g fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="butt">
     <!-- n: left stem, semicircular shoulder (r20), right stem -->
     <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82"/>
 
     <!-- a: circular bowl with a full x-height stem tangent to its right -->
-    <circle cx="135.25" cy="51.75" r="23.75"/>
-    <path d="M159 21.5 L159 82"/>
+    <circle cx="128.25" cy="51.75" r="23.75"/>
+    <path d="M152 21.5 L152 82"/>
 
     <!-- b: ascender stem with the bowl tangent to its right -->
-    <path d="M182 6 L182 82"/>
-    <circle cx="205.75" cy="51.75" r="23.75"/>
+    <path d="M178 6 L178 82"/>
+    <circle cx="201.75" cy="51.75" r="23.75"/>
 
     <!-- l -->
-    <path d="M252.5 6 L252.5 82"/>
+    <path d="M248.5 6 L248.5 82"/>
   </g>
   <!-- The signature: a square full stop on the baseline, in the accent. -->
   <rect x="78" y="69" width="13" height="13" fill="var(--mark-accent, #E9AC57)"/>
