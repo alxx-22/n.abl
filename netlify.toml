@@ -1,4 +1,15 @@
 [build]
+  # The app now lives at the repository root. Previously the site published the
+  # "nabl website" folder directly with no build step; that folder is gone.
+  #
+  # IMPORTANT: Netlify reads this file from the site's *base directory*. If the
+  # base directory is still set to "nabl website" in the Netlify UI, this file
+  # is never read at all and the build will fail looking for a folder that no
+  # longer exists. Clear the base directory in
+  #   Site configuration -> Build & deploy -> Build settings
+  # so it points at the repository root. That one setting cannot be overridden
+  # from here — it is what decides whether this file is loaded.
+  base = ""
   command = "npm run build"
   publish = "dist"
 
