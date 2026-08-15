@@ -112,15 +112,52 @@ export const toLocalInput = (iso) => {
 }
 
 /** [FIRST WORD UPPERCASE, MAX 6 ALNUM]-[4 RANDOM]-2026 */
+/* An access key is the ONLY credential guarding a client's quotes, projects,
+   meetings and documents, so it is generated like a password, not like an id.
+
+   The previous format was PREFIX-XXXX-2026: four characters of Math.random()
+   over a 36-character alphabet. That is 20.7 bits with a guessable prefix and
+   a fixed year — roughly 1.7 million candidates, which an unthrottled attacker
+   exhausts in hours. Math.random() made it worse: V8's xorshift128+ state can
+   be recovered from a few outputs, so seeing a handful of issued keys can be
+   enough to predict the next ones.
+
+   Now: 12 characters from crypto.getRandomValues over a 31-character
+   ambiguity-free alphabet (no O/0/I/1/L, so keys survive being read aloud or
+   copied off a screen). That is ~59 bits — about 7.9e17 candidates, which is
+   out of reach of brute force even with no rate limiting at all.
+
+   The prefix is kept purely so a human can recognise whose key it is; it is
+   not counted as secret. */
+const KEY_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'   // 31 chars, no O 0 I 1 L
+const KEY_LENGTH = 12
+
+function randomChars(n) {
+  const bytes = new Uint8Array(n * 2)
+  crypto.getRandomValues(bytes)
+  let out = ''
+  // Rejection sampling: bytes >= the largest multiple of the alphabet size are
+  // discarded so every character stays uniformly likely (modulo bias would
+  // quietly shave entropy off every key we issue).
+  const limit = Math.floor(256 / KEY_ALPHABET.length) * KEY_ALPHABET.length
+  for (let i = 0; out.length < n; i++) {
+    if (i >= bytes.length) { crypto.getRandomValues(bytes); i = 0 }
+    const b = bytes[i]
+    if (b < limit) out += KEY_ALPHABET[b % KEY_ALPHABET.length]
+  }
+  return out
+}
+
 export function generateKey(businessName) {
   let prefix = String(businessName || '').trim().split(/\s+/)[0]
     .toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
   if (!prefix) prefix = 'NABL'
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let rand = ''
-  for (let i = 0; i < 4; i++) rand += chars[Math.floor(Math.random() * chars.length)]
-  return `${prefix}-${rand}-2026`
+  const r = randomChars(KEY_LENGTH)
+  return `${prefix}-${r.slice(0, 4)}-${r.slice(4, 8)}-${r.slice(8, 12)}`
 }
+
+/** Bits of entropy in the random portion — used by the security self-test. */
+export const KEY_ENTROPY_BITS = Math.log2(KEY_ALPHABET.length ** KEY_LENGTH)
 
 /** Last path segment with the upload timestamp prefix stripped. */
 export function baseName(path) {

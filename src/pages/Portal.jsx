@@ -83,9 +83,18 @@ export default function Portal() {
     setLoading(true)
     try {
       const sb = portalClient(k)
-      const { data: rows, error: err } = await sb.from('clients').select('*')
+      // Sign in through the throttled RPC rather than selecting from `clients`
+      // directly. The access key is the only credential guarding this data, so
+      // the login path is rate limited per source IP server-side (10 failures
+      // in 15 minutes) and every attempt is logged by fingerprint, never by key.
+      const { data: rows, error: err } = await sb.rpc('portal_login', { p_key: k })
       if (err) {
         setLoading(false)
+        // P0001 is the lockout raised by portal_login.
+        if (err.code === 'P0001' || /too many attempts/i.test(err.message || '')) {
+          fail('Too many attempts. Please wait 15 minutes and try again.')
+          return
+        }
         const m = friendlyError(err, 'Unable to load. Please try again in a moment.')
         fail(m === 'SESSION_EXPIRED' ? 'Unable to load. Please try again in a moment.' : m)
         return

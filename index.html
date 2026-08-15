@@ -18,12 +18,13 @@
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Fonts are self-hosted. Loading them from Google would send every
+         visitor's IP address to a third party on page load, which is a
+         disclosable transfer under UK GDPR and needless when the files are
+         214 KB. Preload the two faces used above the fold. -->
+    <link rel="preload" href="/fonts/SpaceGrotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/InterTight-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
   </head>
   <body>
     <div id="root"></div>

@@ -143,6 +143,20 @@ export async function installMock(page, opts = {}) {
     const method = req.method()
     if (method === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS, body: '' })
 
+    // The portal signs in through the rate-limited portal_login RPC.
+    if (/\/rest\/v1\/rpc\/portal_login/.test(url)) {
+      let body = {}
+      try { body = JSON.parse(req.postData() || '{}') } catch {}
+      const key = body.p_key
+      log.push(`RPC portal_login key=${key}`)
+      const hit = db.clients.filter((c) => c.access_key === key)
+      return route.fulfill({ status: 200, headers: CORS, contentType: 'application/json',
+        body: JSON.stringify(hit.map((c) => ({
+          id: c.id, business_name: c.business_name, contact_name: c.contact_name,
+          contact_email: c.contact_email, created_at: c.created_at,
+        }))) })
+    }
+
     const table = tableOf(url)
     const headers = req.headers()
     const accessKey = headers['x-access-key']

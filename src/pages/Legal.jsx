@@ -4,7 +4,7 @@ import '../styles/legal.css'
 
 /* Drafts only. Every document renders the review notice — these have not
    been reviewed by a solicitor and must not be relied on as-is. */
-const LAST_UPDATED = 'Not yet set'
+const LAST_UPDATED = '15 August 2026'
 
 const DOCS = {
   privacy: {
@@ -33,6 +33,7 @@ const DOCS = {
         'Web3Forms — delivers submissions from the discovery-call form to our inbox.',
         'Netlify — serves this website.',
         'Each acts as a processor on our instructions. We do not permit them to use your data for their own purposes.',
+        'We do not load fonts, scripts or images from third-party content networks. Web fonts are served from our own domain specifically so that visiting the site does not disclose your IP address to another company.',
       ]],
       ['International transfers', [
         'Our database and file storage are hosted in the European Union. Where a provider processes data outside the UK or EEA, transfers rely on the UK International Data Transfer Agreement, the UK Addendum to the EU Standard Contractual Clauses, or an adequacy decision.',
