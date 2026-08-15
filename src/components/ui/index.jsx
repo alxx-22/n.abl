@@ -31,6 +31,16 @@ export function usePointerGlow() {
 
 /* ---------- Scroll reveal ----------
    One IntersectionObserver per element, unobserved after firing. */
+/* Reveal on enter AND on exit.
+
+   This used to fire once and unobserve, so anything scrolled past stayed
+   visible forever and scrolling back up showed a static page. The observer
+   now stays live and the element tracks which edge it left by, so content
+   rises in from below and lifts away upward — the motion always follows the
+   direction of travel rather than snapping back the way it came.
+
+   entry.boundingClientRect.top < 0 means the element left past the top of
+   the viewport; otherwise it left past the bottom. */
 export function useReveal(options = {}) {
   const ref = useRef(null)
   useEffect(() => {
@@ -40,10 +50,24 @@ export function useReveal(options = {}) {
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) { entry.target.classList.add('in'); obs.unobserve(entry.target) }
+          const t = entry.target
+          if (entry.isIntersecting) {
+            t.classList.add('in')
+            t.classList.remove('out-up', 'out-down')
+          } else {
+            const leftViaTop = entry.boundingClientRect.top < 0
+            t.classList.remove('in')
+            t.classList.toggle('out-up', leftViaTop)
+            t.classList.toggle('out-down', !leftViaTop)
+          }
         })
       },
-      { threshold: options.threshold ?? 0.15, rootMargin: options.rootMargin ?? '0px 0px -8% 0px' }
+      {
+        threshold: options.threshold ?? 0,
+        // Shrink the root so things settle before they reach the very edge,
+        // and start leaving before they clip off it.
+        rootMargin: options.rootMargin ?? '-10% 0px -10% 0px',
+      }
     )
     obs.observe(el)
     return () => obs.disconnect()
@@ -51,14 +75,16 @@ export function useReveal(options = {}) {
   return ref
 }
 
-/** Fade + rise on scroll. `delay` staggers siblings. */
+/** Fade + rise on scroll, both directions. `delay` staggers siblings.
+    The delay is passed as a custom property so CSS can apply it on entry
+    only — a staggered exit reads as lag, not choreography. */
 export function Reveal({ children, delay = 0, as: Tag = 'div', className = '', ...rest }) {
   const ref = useReveal()
   return (
     <Tag
       ref={ref}
       className={`reveal ${className}`}
-      style={{ transitionDelay: `${delay}s`, ...(rest.style || {}) }}
+      style={{ '--reveal-delay': `${delay}s`, ...(rest.style || {}) }}
       {...rest}
     >
       {children}

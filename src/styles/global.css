@@ -320,16 +320,39 @@ select.input { appearance: none; cursor: pointer;
 /* ============================================================
    SCROLL REVEAL
    ============================================================ */
+/* Scroll reveal, both directions.
+
+   Entry is staggered via --reveal-delay so a row of cards arrives in
+   sequence. Exit deliberately has NO delay: a staggered exit reads as the
+   page lagging behind the scroll rather than as choreography, and it is the
+   difference between the motion feeling intentional and feeling broken.
+
+   Exit direction follows travel — out-up when the element leaves past the
+   top, out-down when it leaves past the bottom — so nothing ever appears to
+   reverse into the direction you are scrolling. */
 .reveal {
   opacity: 0;
   transform: translateY(18px);
-  transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+  transition-delay: 0s;
   will-change: opacity, transform;
 }
-.reveal.in { opacity: 1; transform: none; }
+.reveal.in {
+  opacity: 1;
+  transform: none;
+  transition-delay: var(--reveal-delay, 0s);
+}
+/* Left past the top: lift away upward. */
+.reveal.out-up   { opacity: 0; transform: translateY(-14px); }
+/* Left past the bottom, or not yet reached: waiting below. */
+.reveal.out-down { opacity: 0; transform: translateY(18px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1 !important; transform: none !important; }
+  .reveal, .reveal.out-up, .reveal.out-down {
+    opacity: 1 !important; transform: none !important;
+  }
   .edge--rotate::before { animation: none !important; }
   .grain::before { display: none; }
 }
