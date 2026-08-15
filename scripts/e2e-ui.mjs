@@ -182,6 +182,49 @@ async function run() {
     await page.close()
   }
 
+  /* ---------------- SALES CRM ---------------- */
+  {
+    const db = makeDb()
+    const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } })
+    const errors = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    await installMock(page, { db, password: PASSWORD })
+    results.push('\nSALES CRM')
+
+    // signed out -> must invite sign-in, not crash
+    await page.goto(`${BASE}/sales-intelligence`, { waitUntil: 'networkidle' })
+    await page.waitForTimeout(1500)
+    const signedOut = await page.evaluate(() => document.body.innerText)
+    check('signed out shows a sign-in prompt, not a broken page',
+      /sign in/i.test(signedOut) && !/undefined|NaN/.test(signedOut))
+
+    // sign in through the team page, then come back
+    await page.goto(`${BASE}/team`, { waitUntil: 'networkidle' })
+    await page.fill('input[type=email]', 'alex@nabl.agency')
+    await page.fill('input[type=password]', PASSWORD)
+    await page.click('button.btn--accent')
+    await page.waitForTimeout(2000)
+    await page.goto(`${BASE}/sales-intelligence`, { waitUntil: 'networkidle' })
+    await page.waitForTimeout(2000)
+
+    const crm = await page.evaluate(() => document.body.innerText)
+    check('CRM loads for a signed-in team member', !/sign in through/i.test(crm))
+
+    // the whole point: no AI anywhere in the visible copy
+    const aiWords = (crm.match(/\b(AI|OpenAI|GPT|discovery run|regenerate research|research run)\b/gi) || [])
+      .filter((w) => !/^researching$/i.test(w))
+    check('no AI wording remains in the interface', aiWords.length === 0, aiWords.join(','))
+
+    // all ten pipeline stages must be present and exact
+    const STAGES = ['New Lead', 'Researching', 'Ready To Contact', 'Contacted',
+      'Follow Up Required', 'Replied', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost']
+    const missing = STAGES.filter((s) => !crm.includes(s))
+    check('all ten pipeline stages render', missing.length === 0, missing.join(','))
+
+    check('no runtime errors', errors.length === 0, errors[0])
+    await page.close()
+  }
+
   /* ---------------- ROUTES ---------------- */
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })

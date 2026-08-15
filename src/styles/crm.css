@@ -1,0 +1,282 @@
+/* ============================================================
+   SALES CRM — layout-only additions for src/pages/Crm.jsx
+   ------------------------------------------------------------
+   Everything here is a shape the shared layers don't cover:
+   the metric strip, the lead list, the pipeline board, the
+   audit timeline. Colour comes from tokens only — no hex.
+   All motion rides --dur, which tokens.css already collapses
+   under prefers-reduced-motion; nothing here moves geometry.
+   ============================================================ */
+
+/* ---------- Dashboard metric strip ---------- */
+.crm-metrics {
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 640px)  { .crm-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .crm-metrics { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+
+.crm-metric { padding: var(--s-4); }
+.crm-metric__value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--t-2xl);
+  line-height: 1;
+  color: var(--accent-400);
+}
+.crm-metric__label {
+  margin-top: var(--s-2);
+  font-size: var(--t-xs);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--cream-600);
+}
+
+/* ---------- Filter bar ---------- */
+.crm-filters {
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: 1fr;
+  margin: var(--s-6) 0 var(--s-5);
+}
+@media (min-width: 900px) {
+  .crm-filters {
+    grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)) auto;
+    align-items: end;
+  }
+}
+.crm-filter { display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; }
+
+/* ---------- Workspace: lead list + detail ---------- */
+.crm-workspace {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+@media (min-width: 1020px) {
+  .crm-workspace { grid-template-columns: 20rem minmax(0, 1fr); }
+}
+
+.crm-leadlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  max-height: 44rem;
+  overflow-y: auto;
+  padding-right: var(--s-2);
+}
+.crm-leadbtn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.crm-leadbtn:hover { border-color: var(--line-strong); box-shadow: var(--glow-sm); }
+.crm-leadbtn--active {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: var(--glow-accent);
+}
+.crm-leadbtn__name {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--track-snug);
+  color: var(--cream-100);
+}
+.crm-leadbtn__meta {
+  display: block;
+  margin-top: var(--s-1);
+  font-size: var(--t-sm);
+  color: var(--cream-600);
+}
+.crm-leadbtn__tags { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-3); }
+
+/* ---------- Lead detail ---------- */
+.crm-detail { padding: var(--s-5); }
+.crm-detail__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--s-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-5);
+}
+.crm-detail__title { font-size: var(--t-2xl); margin: var(--s-2) 0 var(--s-3); }
+.crm-detail__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  font-size: var(--t-sm);
+  color: var(--cream-400);
+}
+.crm-score { text-align: center; }
+.crm-score__box {
+  width: 4rem;
+  height: 4rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  box-shadow: var(--glow-accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--t-xl);
+  color: var(--accent-300);
+}
+.crm-score__label {
+  display: block;
+  margin-top: var(--s-2);
+  font-size: var(--t-xs);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--cream-600);
+}
+
+.crm-panel { padding-top: var(--s-5); }
+
+/* Key/value grid — plain CRM facts */
+.crm-kv { display: grid; gap: var(--s-4); grid-template-columns: 1fr; }
+@media (min-width: 620px) { .crm-kv { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.crm-kv > div { border-top: 1px solid var(--line-faint); padding-top: var(--s-3); min-width: 0; }
+.crm-kv dt {
+  font-size: var(--t-xs);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--cream-600);
+  margin-bottom: var(--s-1);
+}
+.crm-kv dd { color: var(--cream-200); overflow-wrap: anywhere; }
+
+.crm-link { color: var(--accent-400); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.crm-link:hover { color: var(--accent-300); }
+
+/* ---------- Contacts ---------- */
+.crm-contacts { display: grid; gap: var(--s-4); grid-template-columns: 1fr; }
+@media (min-width: 760px) { .crm-contacts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- Outreach ---------- */
+.crm-outreach { display: grid; gap: var(--s-4); grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 940px) { .crm-outreach { grid-template-columns: minmax(0, 1fr) 17rem; } }
+/* Double class: beats `textarea.input`, which also sets min-height. */
+.input.crm-draft { min-height: 17rem; font-family: var(--font-mono); font-size: var(--t-sm); line-height: 1.55; }
+
+/* Guardrail callout — the never-auto-send rule */
+.crm-note {
+  border: 1px solid rgba(var(--accent-rgb), 0.4);
+  border-left: 3px solid var(--accent-400);
+  border-radius: var(--r-md);
+  background: rgba(var(--accent-rgb), 0.07);
+  padding: var(--s-4) var(--s-5);
+  color: var(--cream-300);
+  font-size: var(--t-sm);
+}
+
+/* ---------- Pipeline board ---------- */
+.crm-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(11.5rem, 1fr);
+  gap: var(--s-3);
+  overflow-x: auto;
+  padding-bottom: var(--s-4);
+}
+.crm-stage {
+  min-height: 11rem;
+  padding: var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.crm-stage--over { border-color: var(--accent-400); background: rgba(var(--accent-rgb), 0.07); }
+.crm-stage__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+}
+.crm-stage__name {
+  font-size: var(--t-xs);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--cream-600);
+}
+.crm-stage__count { font-size: var(--t-xs); color: var(--accent-400); font-variant-numeric: tabular-nums; }
+.crm-stage__empty { font-size: var(--t-xs); color: var(--cream-800); }
+
+.crm-deal {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--s-3);
+  margin-bottom: var(--s-2);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line-faint);
+  cursor: grab;
+  transition: border-color var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+.crm-deal:hover { border-color: var(--line-strong); }
+.crm-deal--dragging { opacity: 0.45; }
+.crm-deal__name {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  color: var(--cream-100);
+}
+.crm-deal__meta { display: block; font-size: var(--t-xs); color: var(--cream-600); margin-top: var(--s-1); }
+
+/* ---------- Activity timeline ---------- */
+.crm-timeline { display: flex; flex-direction: column; gap: var(--s-3); }
+.crm-event {
+  border-left: 2px solid rgba(var(--accent-rgb), 0.55);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  background: var(--surface-1);
+  padding: var(--s-3) var(--s-4);
+}
+.crm-event__time { display: block; font-size: var(--t-xs); color: var(--cream-600); }
+.crm-event__type { display: block; font-weight: 500; color: var(--cream-100); margin-top: var(--s-1); }
+.crm-event__text { color: var(--cream-400); font-size: var(--t-sm); margin-top: var(--s-1); }
+
+/* ---------- Add-lead modal ---------- */
+/* Double class: `.modal` caps width at 27rem for the confirm dialog. */
+.modal.crm-modal {
+  position: relative;
+  max-width: 54rem;
+  max-height: 88dvh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+/* ---------- Pipeline stage badges ----------
+   Keys come from <Badge status> lowercasing and stripping non-letters,
+   so they track the ten CHECK-constrained stage names exactly.
+   Doubled class so these beat the base `.badge` border-color. */
+.badge.badge--newlead,
+.badge.badge--researching { background: rgba(var(--cream-rgb), 0.06); color: var(--cream-400); }
+.badge.badge--readytocontact,
+.badge.badge--replied,
+.badge.badge--meetingscheduled,
+.badge.badge--proposalsent {
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--accent-200);
+  border-color: rgba(var(--accent-rgb), 0.38);
+}
+.badge.badge--contacted,
+.badge.badge--followuprequired { background: rgba(var(--cream-rgb), 0.12); color: var(--cream-100); }
+.badge.badge--won  { background: transparent; color: var(--success); border-color: rgba(157, 190, 151, 0.45); }
+.badge.badge--lost { background: var(--danger-soft); color: var(--danger); border-color: rgba(224, 121, 109, 0.35); }
+.badge.badge--score {
+  background: rgba(var(--accent-rgb), 0.16);
+  color: var(--accent-200);
+  border-color: rgba(var(--accent-rgb), 0.4);
+  font-variant-numeric: tabular-nums;
+}
