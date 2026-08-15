@@ -2,10 +2,10 @@ From: n.abl <hello@nabl.agency>
 Subject: Project update from n.abl
 MIME-Version: 1.0
 X-Unsent: 1
-Content-Type: multipart/alternative; boundary="=_nabl_1780105436_update_part"
+Content-Type: multipart/alternative; boundary="=_nabl_1786779629_update_part"
 
 This is a multi-part message in MIME format.
---=_nabl_1780105436_update_part
+--=_nabl_1786779629_update_part
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
@@ -44,8 +44,10 @@ www.nabl.agency
 n.abl · Innovation. Automation. Optimisation.
 © 2026 n.abl. All rights reserved.
 Unsubscribe: [Unsubscribe Link]
+Privacy Policy: https://nabl.agency/privacy
+Terms: https://nabl.agency/terms
 
---=_nabl_1780105436_update_part
+--=_nabl_1786779629_update_part
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
@@ -60,28 +62,28 @@ Content-Transfer-Encoding: 8bit
 <style type="text/css">table,td{font-family:Arial,Helvetica,sans-serif !important;}</style>
 <![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#F9F9F9;">
-<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F9F9F9;">A quick update on where your project stands.</div>
+<body style="margin:0;padding:0;background-color:#F7F2E8;">
+<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F7F2E8;">A quick update on where your project stands.</div>
 
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F9F9F9" style="background-color:#F9F9F9;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F7F2E8" style="background-color:#F7F2E8;">
   <tr>
     <td align="center" style="padding:24px 12px;">
 
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background-color:#FFFFFF;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background-color:#FFFDF9;">
 
         <!-- LIME TOP BORDER -->
-        <tr><td height="4" style="height:4px;line-height:4px;font-size:0;background-color:#B8FF00;">&nbsp;</td></tr>
+        <tr><td height="4" style="height:4px;line-height:4px;font-size:0;background-color:#E9AC57;">&nbsp;</td></tr>
 
         <!-- HEADER / LOGO -->
         <tr>
-          <td style="padding:26px 32px;border-bottom:1px solid #0A0A0A;">
-            <span style="font-family:'Arial Black',Gadget,sans-serif;font-size:26px;font-weight:bold;color:#0A0A0A;letter-spacing:-1px;">n</span><span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#B8FF00;margin:0 1px;">&#9632;</span><span style="font-family:'Arial Black',Gadget,sans-serif;font-size:26px;font-weight:bold;color:#0A0A0A;letter-spacing:-1px;">abl</span>
+          <td style="padding:26px 32px;border-bottom:1px solid #0E0C0A;">
+            <span style="font-family:'Arial Black',Gadget,sans-serif;font-size:26px;font-weight:bold;color:#0E0C0A;letter-spacing:-1px;">n</span><span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#E9AC57;margin:0 1px;">&#9632;</span><span style="font-family:'Arial Black',Gadget,sans-serif;font-size:26px;font-weight:bold;color:#0E0C0A;letter-spacing:-1px;">abl</span>
           </td>
         </tr>
 
         <!-- UPDATE BANNER -->
         <tr>
-          <td bgcolor="#0A0A0A" style="background-color:#0A0A0A;padding:16px 32px;">
+          <td bgcolor="#0E0C0A" style="background-color:#0E0C0A;padding:16px 32px;">
             <p style="margin:0;font-family:'Arial Black',Gadget,sans-serif;font-size:16px;letter-spacing:1px;color:#FFFFFF;">PROJECT UPDATE — [Month Year]</p>
           </td>
         </tr>
@@ -89,8 +91,8 @@ Content-Transfer-Encoding: 8bit
         <!-- BODY -->
         <tr>
           <td style="padding:34px 32px 18px 32px;">
-            <p style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0A0A0A;">Hi [First Name],</p>
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0A0A0A;">Here's a quick update on where things stand with your project.</p>
+            <p style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0E0C0A;">Hi [First Name],</p>
+            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0E0C0A;">Here's a quick update on where things stand with your project.</p>
           </td>
         </tr>
 
@@ -104,10 +106,10 @@ Content-Transfer-Encoding: 8bit
                 <td style="padding:14px 0;border-bottom:1px solid #E8E8E8;">
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
-                      <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.4;color:#0A0A0A;"><strong>Systems audit and mapping</strong></td>
+                      <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.4;color:#0E0C0A;"><strong>Systems audit and mapping</strong></td>
                       <td valign="middle" align="right" width="130">
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr>
-                          <td bgcolor="#B8FF00" style="background-color:#B8FF00;padding:5px 12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;letter-spacing:0.5px;color:#0A0A0A;">COMPLETE</td>
+                          <td bgcolor="#E9AC57" style="background-color:#E9AC57;padding:5px 12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;letter-spacing:0.5px;color:#0E0C0A;">COMPLETE</td>
                         </tr></table>
                       </td>
                     </tr>
@@ -120,10 +122,10 @@ Content-Transfer-Encoding: 8bit
                 <td style="padding:14px 0;border-bottom:1px solid #E8E8E8;">
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
-                      <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.4;color:#0A0A0A;"><strong>Automation flow build</strong></td>
+                      <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.4;color:#0E0C0A;"><strong>Automation flow build</strong></td>
                       <td valign="middle" align="right" width="130">
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr>
-                          <td bgcolor="#0A0A0A" style="background-color:#0A0A0A;padding:5px 12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;letter-spacing:0.5px;color:#FFFFFF;">IN PROGRESS</td>
+                          <td bgcolor="#0E0C0A" style="background-color:#0E0C0A;padding:5px 12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;letter-spacing:0.5px;color:#FFFDF9;">IN PROGRESS</td>
                         </tr></table>
                       </td>
                     </tr>
@@ -136,10 +138,10 @@ Content-Transfer-Encoding: 8bit
                 <td style="padding:14px 0;">
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
-                      <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.4;color:#0A0A0A;"><strong>Reporting dashboard setup</strong></td>
+                      <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.4;color:#0E0C0A;"><strong>Reporting dashboard setup</strong></td>
                       <td valign="middle" align="right" width="130">
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right"><tr>
-                          <td bgcolor="#E2E2E2" style="background-color:#E2E2E2;padding:5px 12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;letter-spacing:0.5px;color:#0A0A0A;">UPCOMING</td>
+                          <td bgcolor="#E2E2E2" style="background-color:#E2E2E2;padding:5px 12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;letter-spacing:0.5px;color:#0E0C0A;">UPCOMING</td>
                         </tr></table>
                       </td>
                     </tr>
@@ -154,13 +156,13 @@ Content-Transfer-Encoding: 8bit
         <!-- THIS WEEK BOX -->
         <tr>
           <td style="padding:14px 32px 22px 32px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F9F9F9" style="background-color:#F9F9F9;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F7F2E8" style="background-color:#F7F2E8;">
               <tr>
                 <td style="padding:22px 26px;">
-                  <p style="margin:0 0 12px 0;font-family:'Arial Black',Gadget,sans-serif;font-size:15px;color:#0A0A0A;">This week we're focusing on:</p>
+                  <p style="margin:0 0 12px 0;font-family:'Arial Black',Gadget,sans-serif;font-size:15px;color:#0E0C0A;">This week we're focusing on:</p>
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr><td style="padding:0 0 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#0A0A0A;">&bull;&nbsp; Finalising the first set of automated reporting flows</td></tr>
-                    <tr><td style="padding:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#0A0A0A;">&bull;&nbsp; Testing data accuracy against your existing reports</td></tr>
+                    <tr><td style="padding:0 0 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#0E0C0A;">&bull;&nbsp; Finalising the first set of automated reporting flows</td></tr>
+                    <tr><td style="padding:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#0E0C0A;">&bull;&nbsp; Testing data accuracy against your existing reports</td></tr>
                   </table>
                 </td>
               </tr>
@@ -171,11 +173,11 @@ Content-Transfer-Encoding: 8bit
         <!-- BLOCKERS BOX -->
         <tr>
           <td style="padding:0 32px 30px 32px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF" style="background-color:#FFFFFF;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFDF9" style="background-color:#FFFDF9;">
               <tr>
-                <td style="padding:20px 26px;border:1px solid #E8E8E8;border-left:4px solid #B8FF00;">
-                  <p style="margin:0 0 10px 0;font-family:'Arial Black',Gadget,sans-serif;font-size:15px;color:#0A0A0A;">We need from you:</p>
-                  <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#0A0A0A;">&bull;&nbsp; Sign-off on the draft dashboard layout — <strong>due by [Date]</strong></p>
+                <td style="padding:20px 26px;border:1px solid #E8E8E8;border-left:4px solid #E9AC57;">
+                  <p style="margin:0 0 10px 0;font-family:'Arial Black',Gadget,sans-serif;font-size:15px;color:#0E0C0A;">We need from you:</p>
+                  <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#0E0C0A;">&bull;&nbsp; Sign-off on the draft dashboard layout — <strong>due by [Date]</strong></p>
                 </td>
               </tr>
             </table>
@@ -187,15 +189,15 @@ Content-Transfer-Encoding: 8bit
           <td align="center" style="padding:0 32px 34px 32px;">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td align="center" bgcolor="#0A0A0A" style="background-color:#0A0A0A;">
+                <td align="center" bgcolor="#0E0C0A" style="background-color:#0E0C0A;">
                   <!--[if mso]>
-                  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="[Reply Link]" style="height:50px;v-text-anchor:middle;width:280px;" arcsize="0%" strokecolor="#0A0A0A" fillcolor="#0A0A0A">
+                  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="[Reply Link]" style="height:50px;v-text-anchor:middle;width:280px;" arcsize="0%" strokecolor="#0E0C0A" fillcolor="#0E0C0A">
                   <w:anchorlock/>
-                  <center style="color:#B8FF00;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">Reply With Any Questions &rarr;</center>
+                  <center style="color:#E9AC57;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">Reply With Any Questions &rarr;</center>
                   </v:roundrect>
                   <![endif]-->
                   <!--[if !mso]><!-- -->
-                  <a href="[Reply Link]" style="background-color:#0A0A0A;color:#B8FF00;display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;line-height:50px;text-align:center;text-decoration:none;width:280px;-webkit-text-size-adjust:none;">Reply With Any Questions &rarr;</a>
+                  <a href="[Reply Link]" style="background-color:#0E0C0A;color:#E9AC57;display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;line-height:50px;text-align:center;text-decoration:none;width:280px;-webkit-text-size-adjust:none;">Reply With Any Questions &rarr;</a>
                   <!--<![endif]-->
                 </td>
               </tr>
@@ -206,24 +208,24 @@ Content-Transfer-Encoding: 8bit
         <!-- SIGN OFF -->
         <tr>
           <td style="padding:0 32px 36px 32px;">
-            <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0A0A0A;">Warm regards,</p>
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0A0A0A;">
+            <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0E0C0A;">Warm regards,</p>
+            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0E0C0A;">
               <strong>[Your Name]</strong><br>
               n.abl<br>
-              <a href="mailto:hello@nabl.agency" style="color:#0A0A0A;text-decoration:underline;">hello@nabl.agency</a><br>
-              <a href="https://www.nabl.agency" style="color:#0A0A0A;text-decoration:underline;">www.nabl.agency</a>
+              <a href="mailto:hello@nabl.agency" style="color:#0E0C0A;text-decoration:underline;">hello@nabl.agency</a><br>
+              <a href="https://www.nabl.agency" style="color:#0E0C0A;text-decoration:underline;">www.nabl.agency</a>
             </p>
           </td>
         </tr>
 
         <!-- FOOTER -->
         <tr>
-          <td bgcolor="#0A0A0A" style="background-color:#0A0A0A;padding:26px 32px;">
+          <td bgcolor="#0E0C0A" style="background-color:#0E0C0A;padding:26px 32px;">
             <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#FFFFFF;">
-              <span style="font-family:'Arial Black',Gadget,sans-serif;font-weight:bold;color:#FFFFFF;">n</span><span style="font-family:Arial,Helvetica,sans-serif;font-size:9px;color:#B8FF00;margin:0 1px;">&#9632;</span><span style="font-family:'Arial Black',Gadget,sans-serif;font-weight:bold;color:#FFFFFF;">abl</span>&nbsp;&middot; Innovation. Automation. Optimisation.
+              <span style="font-family:'Arial Black',Gadget,sans-serif;font-weight:bold;color:#FFFFFF;">n</span><span style="font-family:Arial,Helvetica,sans-serif;font-size:9px;color:#E9AC57;margin:0 1px;">&#9632;</span><span style="font-family:'Arial Black',Gadget,sans-serif;font-weight:bold;color:#FFFFFF;">abl</span>&nbsp;&middot; Innovation. Automation. Optimisation.
             </p>
-            <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#6B6B6B;">&copy; 2026 n.abl. All rights reserved.</p>
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#6B6B6B;"><a href="[Unsubscribe Link]" style="color:#6B6B6B;text-decoration:underline;">Unsubscribe</a> from these emails.</p>
+            <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#9A8F80;">&copy; 2026 n.abl. All rights reserved.</p>
+            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#9A8F80;"><a href="[Unsubscribe Link]" style="color:#9A8F80;text-decoration:underline;">Unsubscribe</a> from these emails.&nbsp; &middot;&nbsp; <a href="https://nabl.agency/privacy" style="color:#9A8F80;text-decoration:underline;">Privacy Policy</a>&nbsp; &middot;&nbsp; <a href="https://nabl.agency/terms" style="color:#9A8F80;text-decoration:underline;">Terms</a></p>
           </td>
         </tr>
 
@@ -235,4 +237,4 @@ Content-Transfer-Encoding: 8bit
 </body>
 </html>
 
---=_nabl_1780105436_update_part--
+--=_nabl_1786779629_update_part--

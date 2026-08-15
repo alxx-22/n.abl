@@ -9,10 +9,21 @@ formats:
   • .html  — the rich, branded version for email clients / browser preview
   • .txt   — a plain-text fallback for clients that block HTML
 
-All templates follow the n.abl brand identity: pure black (#0A0A0A),
-electric lime (#B8FF00) accent, a 4px lime signature bar across the top,
-and the n.abl logo rendered in pure HTML/CSS (no images) with the lime
-square "dot" as the brand mark.
+All templates follow the n.abl brand identity: warm espresso (#0E0C0A)
+with a raised panel tone (#1A1613), cream text (#F0E7D8 body, #FBF6EC
+headings), and a warm amber (#E9AC57) accent with a 4px amber signature
+bar across the top. The n.abl logo is still rendered in pure HTML/CSS
+(no images), with the square "dot" now amber.
+
+On light card areas the palette shifts for legibility: ink (#14110E) for
+body copy, a warm grey (#6B625A) for secondary text, and a deeper amber
+(#B87718) for accents — plain amber does not carry enough contrast on a
+near-white ground. Every template is checked with
+`node scripts/check-email-contrast.mjs`, which renders each file in a
+browser and measures the real composited colours; all six pass WCAG AA.
+
+Each footer carries an unsubscribe token plus links to the privacy policy
+and terms.
 
 
 ----------------------------------------------------------
