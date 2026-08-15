@@ -1,6 +1,6 @@
 ==========================================================
 n.abl — BRANDED EMAIL TEMPLATE PACK
-Innovation. Automation. Optimisation.
+Technology implementation for small business.
 ==========================================================
 
 This pack contains six branded email templates, each delivered in two
