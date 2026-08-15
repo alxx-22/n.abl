@@ -54,18 +54,35 @@ export function useReveal(options = {}) {
           if (entry.isIntersecting) {
             t.classList.add('in')
             t.classList.remove('out-up', 'out-down')
-          } else {
-            const leftViaTop = entry.boundingClientRect.top < 0
-            t.classList.remove('in')
-            t.classList.toggle('out-up', leftViaTop)
-            t.classList.toggle('out-down', !leftViaTop)
+            return
           }
+          /* HYSTERESIS.
+
+             Entry and exit must not share a boundary. With one inset
+             margin, an element parked near the top edge flips in/out on
+             every tiny scroll and the animation replays continuously —
+             which is exactly the flicker this had.
+
+             So: reveal on the inset margin (things settle before the very
+             edge), but only un-reveal once the element is COMPLETELY clear
+             of the real viewport. Anything still touching the screen stays
+             revealed, so there is a wide dead zone between the two states
+             and no amount of jiggling at the boundary can oscillate it. */
+          const r = entry.boundingClientRect
+          const vh = window.innerHeight || document.documentElement.clientHeight
+          const fullyAbove = r.bottom <= 0
+          const fullyBelow = r.top >= vh
+          if (!fullyAbove && !fullyBelow) return   // still on screen — leave it alone
+
+          t.classList.remove('in')
+          t.classList.toggle('out-up', fullyAbove)
+          t.classList.toggle('out-down', fullyBelow)
         })
       },
       {
         threshold: options.threshold ?? 0,
-        // Shrink the root so things settle before they reach the very edge,
-        // and start leaving before they clip off it.
+        // Inset governs ENTRY only; exit is decided above against the real
+        // viewport, which is what creates the gap between the two states.
         rootMargin: options.rootMargin ?? '-10% 0px -10% 0px',
       }
     )
