@@ -1,11 +1,10 @@
 /* ============================================================
-   Render the brand asset set from the live design tokens.
+   Render the brand asset set from the drawn wordmark.
 
-   The previous logo files were flat PNGs with no alpha and an
-   off-white background baked in, so they could only ever be used
-   on a light page. These are rendered transparent, at 3x, from
-   the same self-hosted typeface the site uses — so the wordmark
-   in a deck matches the wordmark in the nav.
+   The wordmark is artwork, not text: public/brand/wordmark.svg and
+   mark.svg are the masters, so these PNGs and the logo in the nav
+   are the same paths. Nothing here depends on a typeface being
+   installed or loaded.
 
    Usage: node scripts/build-logos.mjs
    ============================================================ */
@@ -19,53 +18,39 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'logos')
 mkdirSync(OUT, { recursive: true })
 
+const wordmark = readFileSync(join(ROOT, 'public/brand/wordmark.svg'), 'utf8')
+const mark = readFileSync(join(ROOT, 'public/brand/mark.svg'), 'utf8')
+
 const ESPRESSO = '#0E0C0A'
-const CREAM = '#F0E7D8'
-const CREAM_BRIGHT = '#FBF6EC'
+const CREAM = '#FBF6EC'
 const AMBER = '#E9AC57'
 
-// Inline the woff2 so the render never depends on the network.
-const fontData = readFileSync(join(ROOT, 'public/fonts/SpaceGrotesk-latin.woff2')).toString('base64')
-
-const page$ = (opts) => `<!doctype html><meta charset="utf-8">
+const page$ = (svg, opts) => `<!doctype html><meta charset="utf-8">
 <style>
-  @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:400 700;
-    src:url(data:font/woff2;base64,${fontData}) format('woff2')}
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{background:${opts.bg};}
-  .wrap{display:inline-flex;align-items:flex-end;padding:${opts.pad};
-        font-family:'Space Grotesk';font-weight:700;letter-spacing:-.045em;
-        line-height:1;font-size:${opts.size}px;color:${opts.fg};white-space:nowrap}
-  .sq{width:.2em;height:.2em;background:${AMBER};margin:0 .09em .1em;flex:0 0 auto;
-      ${opts.glow ? `box-shadow:0 0 ${opts.size * 0.35}px rgba(233,172,87,.55);` : ''}}
+  html,body{background:${opts.bg}}
+  #t{display:inline-block;padding:${opts.pad};color:${opts.fg};line-height:0}
+  #t svg{width:${opts.w}px;height:auto;display:block;overflow:visible}
+  #t rect{fill:${AMBER};${opts.glow ? `filter:drop-shadow(0 0 ${opts.w * 0.03}px rgba(233,172,87,.85));` : ''}}
 </style>
-<div class="wrap" id="t">${opts.short ? 'n<i class="sq"></i>' : 'n<i class="sq"></i>abl'}</div>`
+<div id="t">${svg}</div>`
 
-const VARIANTS = [
-  { file: 'nabl-wordmark-cream.png',            fg: CREAM_BRIGHT, bg: 'transparent', size: 220, pad: '40px 48px', glow: false },
-  { file: 'nabl-wordmark-espresso.png',         fg: ESPRESSO,     bg: 'transparent', size: 220, pad: '40px 48px', glow: false },
-  { file: 'nabl-wordmark-on-espresso.png',      fg: CREAM_BRIGHT, bg: ESPRESSO,      size: 220, pad: '64px 80px', glow: true },
-  { file: 'nabl-wordmark-on-cream.png',         fg: ESPRESSO,     bg: '#F7F2E8',     size: 220, pad: '64px 80px', glow: false },
-  { file: 'nabl-mark-cream.png',   short: true, fg: CREAM_BRIGHT, bg: 'transparent', size: 300, pad: '40px 44px', glow: false },
-  { file: 'nabl-mark-espresso.png',short: true, fg: ESPRESSO,     bg: 'transparent', size: 300, pad: '40px 44px', glow: false },
+const V = [
+  { file: 'nabl-wordmark-cream.png',       svg: wordmark, fg: CREAM,    bg: 'transparent', w: 1200, pad: '60px 70px', glow: false },
+  { file: 'nabl-wordmark-espresso.png',    svg: wordmark, fg: ESPRESSO, bg: 'transparent', w: 1200, pad: '60px 70px', glow: false },
+  { file: 'nabl-wordmark-on-espresso.png', svg: wordmark, fg: CREAM,    bg: ESPRESSO,      w: 1200, pad: '110px 140px', glow: true },
+  { file: 'nabl-wordmark-on-cream.png',    svg: wordmark, fg: ESPRESSO, bg: '#F7F2E8',     w: 1200, pad: '110px 140px', glow: false },
+  { file: 'nabl-mark-cream.png',           svg: mark,     fg: CREAM,    bg: 'transparent', w: 520,  pad: '50px 56px', glow: false },
+  { file: 'nabl-mark-espresso.png',        svg: mark,     fg: ESPRESSO, bg: 'transparent', w: 520,  pad: '50px 56px', glow: false },
 ]
 
 const browser = await chromium.launch()
-for (const v of VARIANTS) {
-  const page = await browser.newPage({
-    viewport: { width: 1600, height: 700 },
-    deviceScaleFactor: 3,
-    // Transparent background only works when the page itself is transparent.
-    ...(v.bg === 'transparent' ? {} : {}),
-  })
-  await page.setContent(page$(v), { waitUntil: 'load' })
-  await page.evaluate(() => document.fonts.ready)
-  await page.waitForTimeout(250)
+for (const v of V) {
+  const page = await browser.newPage({ viewport: { width: 1800, height: 800 }, deviceScaleFactor: 2 })
+  await page.setContent(page$(v.svg, v), { waitUntil: 'load' })
+  await page.waitForTimeout(200)
   const el = await page.$('#t')
-  await el.screenshot({
-    path: join(OUT, v.file),
-    omitBackground: v.bg === 'transparent',
-  })
+  await el.screenshot({ path: join(OUT, v.file), omitBackground: v.bg === 'transparent' })
   await page.close()
   console.log(`  ${v.file}`)
 }

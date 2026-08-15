@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 277 100" role="img" aria-label="n.abl">
+  <title>n.abl</title>
+  <!-- Drawn, not set in a typeface.
+
+       One construction throughout: a 13-unit monoline stroke, butt caps, and
+       every curve a true circle. x-height runs 21.5 to 82; ascenders start at
+       6. Because the caps are butt, a stroke endpoint IS the outer edge, so
+       stems and bowls land on exactly the same baseline and x-height.
+
+       The circular shoulder on the "n" is the point of the mark — it is what
+       plays against the square dot. A typeface with a squarer shoulder
+       competes with the dot instead of contrasting with it. -->
+  <g fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="butt">
+    <!-- n: left stem, semicircular shoulder (r20), right stem -->
+    <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82"/>
+
+    <!-- a: circular bowl with a full x-height stem tangent to its right -->
+    <circle cx="135.25" cy="51.75" r="23.75"/>
+    <path d="M159 21.5 L159 82"/>
+
+    <!-- b: ascender stem with the bowl tangent to its right -->
+    <path d="M182 6 L182 82"/>
+    <circle cx="205.75" cy="51.75" r="23.75"/>
+
+    <!-- l -->
+    <path d="M252.5 6 L252.5 82"/>
+  </g>
+  <!-- The signature: a square full stop on the baseline, in the accent. -->
+  <rect x="78" y="69" width="13" height="13" fill="var(--mark-accent, #E9AC57)"/>
+</svg>

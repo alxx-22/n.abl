@@ -81,19 +81,46 @@ export function EdgeCard({
   return <Tag ref={spotlight ? ref : undefined} className={cls} {...rest}>{children}</Tag>
 }
 
-/** Brand wordmark. Rendered as text + a square dot so it stays crisp and themeable. */
+/* Brand wordmark — drawn, not set in a typeface.
+
+   It used to be text in the display face plus a square span. That put a
+   typeface's lowercase n next to the mark's drawn one, and they disagreed:
+   the drawn n has a true semicircular shoulder, which is what plays against
+   the square dot, while the typeface's squarer shoulder competes with it.
+
+   These are the same paths as public/brand/{mark,wordmark}.svg, inlined so
+   they inherit currentColor, cost no extra request, and stay crisp at any
+   size. One construction throughout: a 13-unit monoline stroke with butt
+   caps, every curve a true circle, x-height 21.5-82, ascenders from 6. */
 export function Logo({ size = 26, showWord = true, className = '' }) {
+  const w = showWord ? 277 : 104
+  // The viewBox is 100 tall but the letterforms occupy 6..82, so scale up a
+  // little to keep the optical size matching the old text at the same `size`.
+  const height = size * 1.28
   return (
-    <span
+    <svg
       className={`nabl-logo ${className}`}
-      style={{ fontSize: size }}
-      aria-label="n.abl"
+      viewBox={`0 0 ${w} 100`}
+      height={height}
+      width={(height * w) / 100}
       role="img"
+      aria-label="n.abl"
+      style={{ display: 'block', overflow: 'visible' }}
     >
-      <span aria-hidden="true">n</span>
-      <i className="nabl-logo__dot" aria-hidden="true" />
-      {showWord && <span aria-hidden="true">abl</span>}
-    </span>
+      <g fill="none" stroke="currentColor" strokeWidth="13" strokeLinecap="butt">
+        <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82" />
+        {showWord && (
+          <>
+            <circle cx="135.25" cy="51.75" r="23.75" />
+            <path d="M159 21.5 L159 82" />
+            <path d="M182 6 L182 82" />
+            <circle cx="205.75" cy="51.75" r="23.75" />
+            <path d="M252.5 6 L252.5 82" />
+          </>
+        )}
+      </g>
+      <rect className="nabl-logo__dot" x="78" y="69" width="13" height="13" />
+    </svg>
   )
 }
 
