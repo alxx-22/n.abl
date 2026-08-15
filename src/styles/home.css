@@ -11,16 +11,25 @@
 }
 .intro--lift { transform: translateY(-100%); transition: transform 0.42s cubic-bezier(0.7, 0, 0.3, 1); }
 .intro__mark {
-  display: flex; align-items: flex-end;
-  font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(4rem, 14vw, 9rem); line-height: 1;
-  color: var(--cream-100); letter-spacing: -0.05em;
+  /* Drawn paths, not type — same artwork as the nav logo and the favicon. */
+  width: clamp(9rem, 26vw, 17rem);
+  height: auto;
+  color: var(--cream-100);
+  overflow: visible;
 }
-.intro__n { opacity: 0; transform: translateY(10px); animation: introN 0.3s var(--ease-out) forwards; }
+.intro__n {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: introN 0.3s var(--ease-out) forwards;
+}
 .intro__sq {
-  width: 0.2em; height: 0.2em; margin: 0 0 0.1em 0.1em;
-  background: var(--accent-400); transform: scale(0);
-  box-shadow: 0 0 40px rgba(var(--accent-rgb), 0.6);
+  fill: var(--accent-400);
+  transform: scale(0);
+  /* fill-box so the square scales about its own centre rather than the
+     SVG origin, which would send it flying in from the corner. */
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 22px rgba(var(--accent-rgb), 0.6));
   animation: introSq 0.22s var(--ease-out) 0.14s forwards;
 }
 @keyframes introN  { to { opacity: 1; transform: translateY(0) } }

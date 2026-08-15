@@ -25,6 +25,18 @@ browser and measures the real composited colours; all six pass WCAG AA.
 Each footer carries an unsubscribe token plus links to the privacy policy
 and terms.
 
+The wordmark is the drawn artwork, served from
+https://nabl.agency/brand/wordmark-email.png — the same paths as the logo on
+the site and the favicon, so the letterforms match everywhere. It is an image
+because SVG does not render in Outlook, and the drawn n cannot be reproduced
+in email-safe CSS without border-radius, which Outlook also ignores.
+
+If a client blocks images the alt text reads "n.abl", styled in cream Arial
+Black so the fallback still looks like the brand rather than a broken image.
+
+NOTE: that URL only resolves once the site is deployed. Until then the header
+logo will show the alt text.
+
 
 ----------------------------------------------------------
 1. WHAT EACH TEMPLATE IS FOR

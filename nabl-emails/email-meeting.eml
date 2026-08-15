@@ -2,10 +2,10 @@ From: n.abl <hello@nabl.agency>
 Subject: Your meeting with n.abl is confirmed
 MIME-Version: 1.0
 X-Unsent: 1
-Content-Type: multipart/alternative; boundary="=_nabl_1786779629_meeting_part"
+Content-Type: multipart/alternative; boundary="=_nabl_1786786576_meeting_part"
 
 This is a multi-part message in MIME format.
---=_nabl_1786779629_meeting_part
+--=_nabl_1786786576_meeting_part
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
@@ -52,7 +52,7 @@ Unsubscribe: [Unsubscribe Link]
 Privacy Policy: https://nabl.agency/privacy
 Terms: https://nabl.agency/terms
 
---=_nabl_1786779629_meeting_part
+--=_nabl_1786786576_meeting_part
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
@@ -82,7 +82,7 @@ Content-Transfer-Encoding: 8bit
         <!-- HEADER / LOGO -->
         <tr>
           <td style="padding:26px 32px;border-bottom:1px solid #0E0C0A;">
-            <span style="font-family:'Arial Black',Gadget,sans-serif;font-size:26px;font-weight:bold;color:#0E0C0A;letter-spacing:-1px;">n</span><span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#E9AC57;margin:0 1px;">&#9632;</span><span style="font-family:'Arial Black',Gadget,sans-serif;font-size:26px;font-weight:bold;color:#0E0C0A;letter-spacing:-1px;">abl</span>
+            <img src="https://nabl.agency/brand/wordmark-email.png" width="150" alt="n.abl" style="display:inline-block;border:0;outline:none;text-decoration:none;height:auto;vertical-align:middle;font-family:'Arial Black',Gadget,sans-serif;font-size:26px;font-weight:bold;color:#FBF6EC;letter-spacing:-1px;">
           </td>
         </tr>
 
@@ -192,7 +192,7 @@ Content-Transfer-Encoding: 8bit
         <tr>
           <td bgcolor="#0E0C0A" style="background-color:#0E0C0A;padding:26px 32px;">
             <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#FFFFFF;">
-              <span style="font-family:'Arial Black',Gadget,sans-serif;font-weight:bold;color:#FFFFFF;">n</span><span style="font-family:Arial,Helvetica,sans-serif;font-size:9px;color:#E9AC57;margin:0 1px;">&#9632;</span><span style="font-family:'Arial Black',Gadget,sans-serif;font-weight:bold;color:#FFFFFF;">abl</span>&nbsp;&middot; Innovation. Automation. Optimisation.
+              <img src="https://nabl.agency/brand/wordmark-email.png" width="64" alt="n.abl" style="display:inline-block;border:0;outline:none;text-decoration:none;height:auto;vertical-align:middle;font-family:'Arial Black',Gadget,sans-serif;font-size:13px;font-weight:bold;color:#FBF6EC;letter-spacing:-1px;">&nbsp;&middot; Innovation. Automation. Optimisation.
             </p>
             <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#9A8F80;">&copy; 2026 n.abl. All rights reserved.</p>
             <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#9A8F80;"><a href="[Unsubscribe Link]" style="color:#9A8F80;text-decoration:underline;">Unsubscribe</a> from these emails.&nbsp; &middot;&nbsp; <a href="https://nabl.agency/privacy" style="color:#9A8F80;text-decoration:underline;">Privacy Policy</a>&nbsp; &middot;&nbsp; <a href="https://nabl.agency/terms" style="color:#9A8F80;text-decoration:underline;">Terms</a></p>
@@ -207,4 +207,4 @@ Content-Transfer-Encoding: 8bit
 </body>
 </html>
 
---=_nabl_1786779629_meeting_part--
+--=_nabl_1786786576_meeting_part--

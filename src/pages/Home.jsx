@@ -67,10 +67,17 @@ function Intro() {
   if (gone) return null
   return (
     <div className={`intro ${lift ? 'intro--lift' : ''}`} aria-hidden="true">
-      <span className="intro__mark">
-        <span className="intro__n">n</span>
-        <i className="intro__sq" />
-      </span>
+      {/* The same drawn paths as the logo and favicon — the opening frame of
+          the site must not show a different letterform from the one in the
+          nav it reveals. */}
+      <svg className="intro__mark" viewBox="0 0 104 100" width="1" height="1">
+        <path
+          className="intro__n"
+          d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82"
+          fill="none" stroke="currentColor" strokeWidth="13" strokeLinecap="butt"
+        />
+        <rect className="intro__sq" x="78" y="69" width="13" height="13" />
+      </svg>
     </div>
   )
 }
