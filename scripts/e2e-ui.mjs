@@ -114,8 +114,12 @@ async function run() {
     await page.click('.keyrow button')
     await page.waitForTimeout(250)
     const genKey = await page.inputValue('#f-access_key')
+    // PREFIX-XXXX-XXXX-XXXX over a 31-glyph alphabet with O/0/I/1/L removed.
     check('generates an access key in the house format',
-      /^GLOBEX-[A-Z0-9]{4}-2026$/.test(genKey), genKey)
+      /^GLOBEX-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}(-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}){2}$/.test(genKey),
+      genKey)
+    check('the generated key has no ambiguous glyphs',
+      !/[O0I1L]/.test(genKey.split('-').slice(1).join('')), genKey)
 
     await page.click('.entity-form button[type=submit]')
     await page.waitForTimeout(1800)
