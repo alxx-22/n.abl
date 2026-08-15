@@ -16,6 +16,14 @@
 -- This migration is DESTRUCTIVE and irreversible. Take a backup first
 -- (Supabase Dashboard -> Database -> Backups) and run it in one transaction.
 -- Idempotent: safe to re-run.
+--
+-- STATUS: APPLIED to project rrkcoqopcqtowbyismcq on 2026-08-15, in two
+-- passes so the rescue could be verified before anything was dropped:
+--   pass 1  add_sales_leads_signals_and_backfill  -> 8/8 leads rescued, 0 at risk
+--   pass 2  remove_sales_ai_layer                 -> table, RPCs and columns dropped
+--   pass 3  drop_remaining_research_rpc           -> the eight-param RPC below
+-- Post-state verified: 0 research routines, 0 research tables, 0 AI columns,
+-- 8 leads / 8 contacts / 16 activities intact.
 -- =====================================================================
 
 begin;
@@ -58,6 +66,10 @@ drop function if exists public.create_sales_company_research_run(uuid, jsonb, te
 drop function if exists public.create_sales_company_research_run(uuid, jsonb, text, uuid);
 drop function if exists public.complete_sales_research_run(uuid, jsonb, jsonb, text, text);
 drop function if exists public.complete_sales_research_run(uuid, jsonb, jsonb, text);
+-- The deployed signature took eight text params, not the jsonb shape the
+-- original migration assumed, so it survived the drops above until this line
+-- was added. Verified against pg_proc on the live project.
+drop function if exists public.create_sales_company_research_run(uuid, text, text, text, text, text, text, text);
 
 -- ---------------------------------------------------------------------
 -- 5. Drop the AI-authored columns on sales_leads.
