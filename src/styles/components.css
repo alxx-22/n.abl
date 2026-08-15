@@ -392,3 +392,34 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .current-file { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; margin-top: var(--s-2); font-size: var(--t-sm); }
 .danger-text { color: var(--danger); border-color: rgba(224,121,109,.4); }
 .danger-text:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ---------- Welcome pack composer ---------- */
+.modal--doc { max-width: min(1180px, 94vw); max-height: 92dvh; overflow-y: auto; text-align: left; }
+.doc-grid { display: grid; gap: var(--s-5); grid-template-columns: 1fr; margin-top: var(--s-5); }
+@media (min-width: 940px) { .doc-grid { grid-template-columns: 1fr 1fr; } }
+
+.doc-input { display: flex; flex-direction: column; gap: var(--s-3); }
+
+/* Segmented toggle for how the goals section gets filled */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.seg__btn {
+  padding: 0.5rem 0.9rem; font-size: var(--t-xs);
+  letter-spacing: var(--track-wide); text-transform: uppercase;
+  color: var(--cream-600); transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.seg__btn:hover:not(:disabled) { color: var(--cream-200); }
+.seg__btn--on { background: rgba(var(--accent-rgb), 0.14); color: var(--accent-200); }
+.seg__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.doc-preview { display: flex; flex-direction: column; min-height: 26rem; }
+.doc-preview__bar {
+  display: flex; justify-content: space-between; gap: var(--s-3);
+  font-size: var(--t-xs); margin-bottom: var(--s-2);
+}
+.doc-preview__frame {
+  flex: 1; width: 100%; min-height: 26rem;
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--bg);
+}
+.modal__actions--wide { flex-wrap: wrap; margin-top: var(--s-5); }
+.modal__actions--wide > * { flex: 0 0 auto; }

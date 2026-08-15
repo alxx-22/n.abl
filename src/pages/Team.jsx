@@ -4,6 +4,7 @@ import { teamClient, signedUrl, friendlyError } from '../lib/supabase.js'
 import {
   Logo, Field, Badge, EdgeCard, ConfirmModal, useToast, Loading, Empty, prefersReducedMotion,
 } from '../components/ui/index.jsx'
+import WelcomeDocModal from '../components/WelcomeDocModal.jsx'
 import {
   TABS, TAB_LABEL, ADD_LABEL, SAVE_LABEL, EMPTY_MSG, ORDER, FIELDS,
   gbp, dateLong, monthYear, timeStr, toLocalInput, generateKey,
@@ -125,6 +126,7 @@ function Dashboard({ sb, user, onExpired }) {
   const [search, setSearch] = useState('')
   const [filterClient, setFilterClient] = useState('all')
   const [confirm, setConfirm] = useState(null)
+  const [welcomeFor, setWelcomeFor] = useState(null)
   const [toastNode, showToast] = useToast()
 
   const handle = useCallback((err, fallback) => {
@@ -185,6 +187,32 @@ function Dashboard({ sb, user, onExpired }) {
     }
     return out
   }, [rows, tab, search, filterClient])
+
+  /* Store the welcome pack as a document on the client's portal: upload the
+     HTML to the private bucket, then insert the row that points at it. Same
+     path convention and same rollback discipline as any other upload. */
+  async function saveWelcomePack(clientRow, html) {
+    const file = new File([html], 'welcome-pack.html', { type: 'text/html' })
+    const path = storagePath(clientRow.id, file)
+    const { error: upErr } = await sb.storage.from('documents')
+      .upload(path, file, { cacheControl: '3600', upsert: false, contentType: 'text/html' })
+    if (upErr) throw new Error('Could not upload the pack — please try again.')
+
+    const { error } = await sb.from('documents').insert({
+      client_id: clientRow.id,
+      title: 'Welcome pack',
+      document_type: 'other',
+      file_url: path,
+      uploaded_at: new Date().toISOString(),
+    })
+    if (error) {
+      try { await sb.storage.from('documents').remove([path]) } catch {}
+      const m = handle(error, 'Could not save to the portal — please try again.')
+      throw new Error(m || 'Could not save to the portal.')
+    }
+    showToast('Welcome pack saved to the portal')
+    refresh()
+  }
 
   async function onDelete(row) {
     const label = row.business_name || row.title || 'this item'
@@ -270,11 +298,21 @@ function Dashboard({ sb, user, onExpired }) {
               <Row key={row.id} sb={sb} tab={tab} row={row} clientName={clientName}
                    onEdit={() => { setEditing(row); setFormOpen(true) }}
                    onDelete={() => onDelete(row)}
-                   onCopy={() => showToast('Copied')} />
+                   onCopy={() => showToast('Copied')}
+                   onWelcome={() => setWelcomeFor(row)} />
             ))}
           </div>
         )}
       </div>
+
+      {welcomeFor && (
+        <WelcomeDocModal
+          client={welcomeFor}
+          ownerName={displayName(user)}
+          onClose={() => setWelcomeFor(null)}
+          onSaveDocument={(html) => saveWelcomePack(welcomeFor, html)}
+        />
+      )}
 
       <ConfirmModal
         open={!!confirm}
@@ -289,7 +327,7 @@ function Dashboard({ sb, user, onExpired }) {
 }
 
 /* ---------------- One row / card ---------------- */
-function Row({ sb, tab, row, clientName, onEdit, onDelete, onCopy }) {
+function Row({ sb, tab, row, clientName, onEdit, onDelete, onCopy, onWelcome }) {
   const actions = (
     <div className="card-actions">
       <button className="btn btn--ghost btn--sm" onClick={onEdit}>Edit</button>
@@ -311,7 +349,11 @@ function Row({ sb, tab, row, clientName, onEdit, onDelete, onCopy }) {
         </div>
         <div className="client-row__right">
           <span className="dim" style={{ fontSize: 'var(--t-sm)' }}>{dateLong(row.created_at)}</span>
-          {actions}
+          <div className="card-actions" style={{ marginTop: 0 }}>
+            <button className="btn btn--ghost btn--sm" onClick={onWelcome}>Welcome pack</button>
+            <button className="btn btn--ghost btn--sm" onClick={onEdit}>Edit</button>
+            <button className="btn btn--ghost btn--sm danger-text" onClick={onDelete}>Delete</button>
+          </div>
         </div>
       </EdgeCard>
     )
