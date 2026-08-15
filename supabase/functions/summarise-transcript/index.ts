@@ -22,8 +22,24 @@
    the welcome pack that costs anything at all.
    ============================================================ */
 
-const MODEL = Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-sonnet-4-5'
+const MODEL = Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-sonnet-5'
 const API_KEY = Deno.env.get('ANTHROPIC_API_KEY')
+
+/* The response shape, enforced by the API rather than hoped for.
+
+   This used to ask for JSON in the prompt and then dig it out of the reply
+   with a regex, which is exactly the kind of thing that works until the
+   model wraps the object in a code fence or writes a sentence first.
+   Structured outputs make the reply valid against this schema or nothing. */
+const SCHEMA = {
+  type: 'object',
+  properties: {
+    summary: { type: 'string' },
+    goals: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['summary', 'goals'],
+  additionalProperties: false,
+}
 
 // Only the team space calls this, and only from the site.
 const ALLOWED_ORIGINS = [
@@ -81,18 +97,17 @@ Deno.serve(async (req) => {
 
 Client: ${business || '[business]'}
 
-Read the transcript below and return JSON only, in exactly this shape:
+Read the transcript below and return:
 
-{
-  "summary": "Two or three sentences, addressed to the client as 'you', describing what we are setting out to achieve together. Plain English, no jargon, no bullet points.",
-  "goals": ["A concrete outcome", "Another concrete outcome"]
-}
+- summary: two or three sentences, addressed to the client as "you", describing
+  what we are setting out to achieve together. Plain English, no jargon, no
+  bullet points.
+- goals: concrete outcomes the client would recognise, not a task list.
 
 Rules:
 - Use only what is actually in the transcript. Do not invent goals, numbers, deadlines or system names that were not mentioned.
-- Between two and five goals. Each an outcome the client would recognise, not a task list.
-- If the transcript does not contain enough to state a goal, return fewer goals rather than padding.
-- No markdown, no commentary, JSON only.
+- Between two and five goals.
+- If the transcript does not contain enough to state a goal, return fewer goals rather than padding. An empty list is a valid answer.
 
 TRANSCRIPT
 ----------
@@ -108,7 +123,8 @@ ${transcript}`
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 900,
+        max_tokens: 2000,
+        output_config: { format: { type: 'json_schema', schema: SCHEMA } },
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -121,15 +137,25 @@ ${transcript}`
     }
 
     const data = await res.json()
-    const text = data?.content?.[0]?.text ?? ''
-    // Models sometimes fence the JSON despite instructions.
-    const match = text.match(/\{[\s\S]*\}/)
-    if (!match) {
+
+    // A safety classifier can decline a request and still return HTTP 200,
+    // with an empty content array. Reading content[0] first would throw.
+    if (data?.stop_reason === 'refusal') {
+      return new Response(JSON.stringify({ error: 'The summariser declined this transcript. Write the goals in by hand.' }), {
+        status: 422, headers: { ...cors(origin), 'Content-Type': 'application/json' },
+      })
+    }
+
+    let parsed
+    try {
+      parsed = JSON.parse(data?.content?.[0]?.text ?? '')
+    } catch {
+      // With a schema attached this should not happen; a truncated reply is
+      // the one way it can, and a half-written summary is not worth showing.
       return new Response(JSON.stringify({ error: 'Could not read the summary.' }), {
         status: 502, headers: { ...cors(origin), 'Content-Type': 'application/json' },
       })
     }
-    const parsed = JSON.parse(match[0])
 
     return new Response(JSON.stringify({
       summary: typeof parsed.summary === 'string' ? parsed.summary : '',
