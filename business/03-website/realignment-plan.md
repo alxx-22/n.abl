@@ -1,6 +1,16 @@
 # Realignment plan — website and business plan
 
-**Status: proposed. Awaiting approval. No implementation has begun.**
+**Status: approved 2026-08-16. In implementation.**
+
+The three open decisions were settled on approval:
+
+| § | Decision | Outcome |
+|---|---|---|
+| 6.1 | Card set | **Option B.** Save time · Reduce mistakes · Understand your data · Build something new · Train your team · Fix something |
+| 6.5 | Judgemental language | **Reading confirmed.** The banned phrasing was condescending *precondition* — deciding what is worth fixing before hearing the problem. The customer must feel heard on everything before a solution is proposed. Honest arithmetic, shown after listening and left as the customer's decision, stays |
+| 6.7 | Conversion measurement | **Option B.** First-party events into Supabase. No third-party request, no cookie, no consent banner |
+
+§6.2, §6.3, §6.4, §6.6 and §6.8 proceed on the recommendations recorded below.
 
 This is the Phase 1 output of the strategic realignment brief: restore the n.abl
 brand promise and the three pillars as *brand* architecture without reverting the
