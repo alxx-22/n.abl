@@ -296,6 +296,16 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .grid { display: grid; gap: var(--s-4); grid-template-columns: 1fr; }
 @media (min-width: 780px)  { .grid--2 { grid-template-columns: repeat(2, 1fr) } }
 @media (min-width: 1180px) { .grid--3 { grid-template-columns: repeat(3, 1fr) } }
+/* Five process steps. auto-fit rather than a fixed count so the row
+   collapses 5 -> 3 -> 2 -> 1 on its own as the viewport narrows; a
+   fixed repeat(5) would squeeze the step copy to a few words a line
+   on a tablet.
+
+   The minimum is 11.5rem because the shell is narrower than its
+   max-width once the gutter is taken: at 13.5rem only four tracks fit
+   on a 1440 viewport, which left step five orphaned on its own row and
+   broke the sequence the section exists to show. */
+.grid--steps { grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr)); }
 .rows { display: flex; flex-direction: column; gap: var(--s-3); }
 
 .card-pad { padding: var(--s-5); }
