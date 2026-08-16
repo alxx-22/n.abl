@@ -8,13 +8,18 @@ import { prefersReducedMotion } from './ui/index.jsx'
    sense of travel rather than just scrolling.
    ============================================================ */
 
+/* The order is the buyer's journey, not our taxonomy: recognise the
+   problem, hear the method, then see the capability that backs it,
+   the evidence, and only then the price. Sections and chapters are
+   deliberately not one-to-one — some bands (the pillars, credits)
+   are part of the section above them and do not earn a rail stop. */
 export const CHAPTERS = [
   { id: 'hero', label: 'Start' },
-  { id: 'what-we-do', label: 'What we do' },
-  { id: 'toolkit', label: 'The toolkit' },
+  { id: 'what-we-do', label: 'Your problem' },
   { id: 'how-we-work', label: 'How we work' },
-  { id: 'pricing', label: 'What it costs' },
+  { id: 'toolkit', label: 'What we build' },
   { id: 'cases', label: 'In practice' },
+  { id: 'pricing', label: 'What it costs' },
   { id: 'about', label: 'About' },
   { id: 'contact', label: "Let's talk" },
 ]

@@ -68,10 +68,10 @@ export default function Home() {
       <main>
         <Hero onBook={book} />
         <Problems />
-        <Capabilities />
         <Process />
-        <Pricing />
+        <Capabilities />
         <Examples />
+        <Pricing />
         <About />
         <Contact onBook={book} />
       </main>

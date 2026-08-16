@@ -29,7 +29,7 @@ export default function Problems() {
   return (
     <section id="what-we-do" className="section">
       <div className="shell">
-        <Chapter index={1}>What we do</Chapter>
+        <Chapter index={1}>Your problem</Chapter>
         <Reveal delay={0.06}>
           <h2 className="section__title">
             Start with the problem.<br />Not the technology<span className="dot" />

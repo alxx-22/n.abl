@@ -21,7 +21,7 @@ export default function Capabilities() {
   return (
     <section id="toolkit" className="section section--alt">
       <div className="shell">
-        <Chapter index={2}>The toolkit</Chapter>
+        <Chapter index={3}>What we build</Chapter>
         <Reveal delay={0.06}>
           <h2 className="section__title">Whatever the job actually needs<span className="dot" /></h2>
         </Reveal>

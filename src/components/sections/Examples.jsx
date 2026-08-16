@@ -23,7 +23,7 @@ export default function Examples() {
   return (
     <section id="cases" className="section">
       <div className="shell">
-        <Chapter index={5}>In practice</Chapter>
+        <Chapter index={4}>In practice</Chapter>
         <Reveal delay={0.06}>
           <h2 className="section__title">What this actually looks like<span className="dot" /></h2>
         </Reveal>

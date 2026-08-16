@@ -14,7 +14,7 @@ export default function Process() {
   return (
     <section id="how-we-work" className="section">
       <div className="shell">
-        <Chapter index={3}>How we work</Chapter>
+        <Chapter index={2}>How we work</Chapter>
         <Reveal delay={0.06}>
           <h2 className="section__title">Three steps, and then we get out of the way<span className="dot" /></h2>
         </Reveal>
