@@ -14,9 +14,13 @@ export default function Footer() {
           <div>
             <a href="#hero" aria-label="n.abl home"><Logo size={22} /></a>
             <p className="footer__tag">
-              A technology implementation partner for small businesses. We start with the
-              problem, not the technology.
+              We make your business work smarter. Technology implementation for
+              small businesses.
             </p>
+            {/* The mnemonic, restored as a strapline. It is brand framing —
+                what people remember us by — and never the service structure,
+                which is the problem set on the page above. */}
+            <p className="footer__pillars">Innovation · Automation · Optimisation</p>
           </div>
 
           <div>

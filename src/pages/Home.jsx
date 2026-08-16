@@ -6,6 +6,7 @@ import DiscoveryModal from '../components/DiscoveryModal.jsx'
 import { JourneyRail } from '../components/Journey.jsx'
 
 import Hero from '../components/sections/Hero.jsx'
+import Pillars from '../components/sections/Pillars.jsx'
 import Problems from '../components/sections/Problems.jsx'
 import Capabilities from '../components/sections/Capabilities.jsx'
 import Process from '../components/sections/Process.jsx'
@@ -67,6 +68,7 @@ export default function Home() {
 
       <main>
         <Hero onBook={book} />
+        <Pillars />
         <Problems />
         <Process />
         <Capabilities />

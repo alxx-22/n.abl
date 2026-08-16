@@ -62,6 +62,11 @@
 }
 .hero__sub { font-size: var(--t-lg); color: var(--cream-400); max-width: 52ch; margin-bottom: var(--s-6); }
 .hero__cta { display: flex; gap: var(--s-3); flex-wrap: wrap; }
+.hero__note {
+  margin-top: var(--s-5);
+  font-size: var(--t-sm);
+  color: var(--cream-600);
+}
 .hero__scroll {
   position: absolute; left: 50%; bottom: 2.5rem; transform: translateX(-50%);
   color: var(--cream-600);
@@ -77,7 +82,39 @@
 .section__sub   { color: var(--cream-400); font-size: var(--t-lg); }
 .section__body  { margin-top: var(--s-7); }
 
-/* ---------- Pillars ---------- */
+/* ---------- Brand pillars ----------
+   The band directly under the hero. A quiet typographic rail, not a
+   service menu and not three links: these are what the business is
+   remembered by, and the offer structure is the problem set below.
+   Built from the same row grammar as .sys__row so it reads as part of
+   the same system — hairline rules, display term, cream definition. */
+.pillars { padding-block: var(--s-7); }
+.pillars__list { display: flex; flex-direction: column; }
+.pillars__row {
+  display: grid; gap: var(--s-2);
+  grid-template-columns: 1fr;
+  padding: var(--s-4) 0;
+  border-top: 1px solid var(--line-faint);
+}
+.pillars__list > :last-child .pillars__row { border-bottom: 1px solid var(--line-faint); }
+@media (min-width: 860px) {
+  .pillars__row { grid-template-columns: 17rem 1fr; gap: var(--s-6); align-items: baseline; }
+}
+.pillars__term {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 600;
+  color: var(--cream-100);
+  letter-spacing: var(--track-snug);
+}
+.pillars__def { color: var(--cream-400); font-size: var(--t-base); }
+.pillars__rule {
+  margin-top: var(--s-5);
+  font-size: var(--t-sm);
+  color: var(--cream-600);
+}
+
+/* ---------- Problem cards ---------- */
 .pillar__num {
   font-family: var(--font-mono); font-size: var(--t-xs);
   color: var(--accent-400); letter-spacing: 0.1em;

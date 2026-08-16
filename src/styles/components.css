@@ -188,6 +188,15 @@ a:hover > .nabl-logo .nabl-logo__dot {
 }
 @media (min-width: 760px) { .footer__grid { grid-template-columns: 1.4fr 1fr 1fr; } }
 .footer__tag { color: var(--cream-600); font-size: var(--t-sm); margin-top: var(--s-3); max-width: 34ch; }
+.footer__pillars {
+  margin-top: var(--s-3);
+  font-size: var(--t-xs);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  /* cream-600 is the lightest step the tokens certify as AA on every
+     surface. cream-800 is disabled-state only and would fail here. */
+  color: var(--cream-600);
+}
 .footer__head {
   font-size: var(--t-xs); letter-spacing: var(--track-wide);
   text-transform: uppercase; color: var(--cream-600); margin-bottom: var(--s-3);
