@@ -2,10 +2,10 @@ From: n.abl <hello@nabl.agency>
 Subject: Project update from n.abl
 MIME-Version: 1.0
 X-Unsent: 1
-Content-Type: multipart/alternative; boundary="=_nabl_1786834738_update_part"
+Content-Type: multipart/alternative; boundary="=_nabl_1786864643_update_part"
 
 This is a multi-part message in MIME format.
---=_nabl_1786834738_update_part
+--=_nabl_1786864643_update_part
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
@@ -47,7 +47,7 @@ Unsubscribe: [Unsubscribe Link]
 Privacy Policy: https://nabl.agency/privacy
 Terms: https://nabl.agency/terms
 
---=_nabl_1786834738_update_part
+--=_nabl_1786864643_update_part
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
@@ -71,7 +71,7 @@ Content-Transfer-Encoding: 8bit
 
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background-color:#FFFDF9;">
 
-        <!-- LIME TOP BORDER -->
+        <!-- ACCENT TOP BORDER -->
         <tr><td height="4" style="height:4px;line-height:4px;font-size:0;background-color:#E9AC57;">&nbsp;</td></tr>
 
         <!-- HEADER / LOGO -->
@@ -237,4 +237,4 @@ Content-Transfer-Encoding: 8bit
 </body>
 </html>
 
---=_nabl_1786834738_update_part--
+--=_nabl_1786864643_update_part--

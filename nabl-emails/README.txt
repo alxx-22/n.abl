@@ -48,8 +48,8 @@ email-general    — GENERAL COMMUNICATION
 
 email-alert      — CUSTOMER ALERT
                    Time-sensitive notices: a deadline, a flagged issue, an
-                   action or decision required. Includes a black alert
-                   banner, a lime action box and a "Respond Now" button.
+                   action or decision required. Includes an espresso alert
+                   banner, an amber action box and a "Respond Now" button.
 
 email-meeting    — MEETING INVITE / CONFIRMATION
                    Confirming a discovery call, review or any scheduled
@@ -107,10 +107,14 @@ Fixed brand values already filled in (no need to change):
   • Double-click any .html file, or right-click > Open With > your browser.
   • Or drag the file onto an open browser window.
 
-What you should see: a centred 600px email card on a light grey page,
-with the lime top bar, the n.abl logo, and lime/black accents. The lime
-square should be visible on BOTH white (header/logo) and black (footer
-logo) backgrounds.
+What you should see: a centred 600px email card on a warm cream page,
+with the amber top bar, the n.abl wordmark, and amber accents on
+espresso. The square full stop should be visible on BOTH the light
+header and the dark footer.
+
+Note that amber only carries on dark grounds. Anywhere the accent sits
+on cream or white it must be the deep amber #B87718 — the primary
+#E9AC57 measures 1.97:1 there and fails contrast outright.
 
 The .txt files can be opened in any text editor (Notepad, VS Code, etc.).
 
