@@ -282,13 +282,46 @@
 .credit__name { font-weight: 600; color: var(--cream-100); font-size: var(--t-sm); }
 .credit__body { color: var(--cream-600); font-size: var(--t-xs); line-height: 1.5; }
 
-/* ---------- Cases ---------- */
+/* ---------- Cases ----------
+   Problem / fix / result, the same three rows on every card. The
+   provenance label is rendered from the data rather than written into
+   the copy, so it cannot be edited away while it is still true, and
+   cannot be left behind once a card becomes real client work. */
+.case__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--s-3); flex-wrap: wrap;
+  margin-bottom: var(--s-4);
+}
 .case__label {
   font-size: var(--t-xs); letter-spacing: var(--track-wide);
   text-transform: uppercase; color: var(--accent-400);
 }
-.case__title { font-size: var(--t-lg); margin: var(--s-3) 0 var(--s-3); line-height: 1.2; }
-.case__body { color: var(--cream-400); font-size: var(--t-sm); }
+.case__prov {
+  font-size: var(--t-xs);
+  color: var(--cream-600);
+  font-style: italic;
+}
+.case__prov--client {
+  font-style: normal;
+  color: var(--cream-100);
+  font-weight: 600;
+}
+.case__facts { display: flex; flex-direction: column; gap: var(--s-1); }
+.case__term {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--cream-600);
+}
+.case__def {
+  margin: 0 0 var(--s-3);
+  color: var(--cream-400);
+  font-size: var(--t-sm);
+}
+.case__facts > :last-child { margin-bottom: 0; }
+/* The result is the line the reader is here for. */
+.case__def--result { color: var(--cream-100); }
 .case__tools { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-4); }
 
 /* ---------- About ---------- */
