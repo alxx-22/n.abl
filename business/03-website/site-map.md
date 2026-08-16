@@ -77,38 +77,55 @@ and the scroll rail.
 
 | # | `id` | Chapter label | What it holds |
 |---|---|---|---|
-| 1 | `hero` | Start | Eyebrow, headline, sub, two calls to action, scroll cue |
-| 2 | `what-we-do` | What we do | The six problem-led category cards |
-| 3 | `toolkit` | The toolkit | Six rows of capability chips, grouped by purpose |
-| 4 | `how-we-work` | How we work | Three steps: understand, build, hand over |
-| 5 | `pricing` | What it costs | Two pricing cards, the worked example, the credits block |
-| 6 | `cases` | In practice | Three example cards, labelled as examples |
-| 7 | `about` | About | The positioning statement, in the first person |
-| 8 | `contact` | Let's talk | The closing question, the discovery-call button, the email address |
+| 1 | `hero` | Start | Eyebrow, the brand promise as the headline, sub, two calls to action, the no-retainer line, scroll cue |
+| 2 | `pillars` | — | Innovation / Automation / Optimisation as a brand band. No rail stop |
+| 3 | `what-we-do` | Your problem | The six problem cards, each led by the customer's own sentence |
+| 4 | `why-nabl` | How we help | "You don't need to know what technology you need", and the capability layer named |
+| 5 | `how-we-work` | How we work | Five steps: listen, understand, recommend, build, hand over |
+| 6 | `toolkit` | What we build | Six capability rows, each with what it covers and the tools beneath |
+| 7 | `cases` | In practice | Three example cards: problem, fix, result, with a provenance label |
+| 8 | `pricing` | What it costs | Two pricing cards and the compressed worked example |
+| 9 | `credits` | — | Build / Assist / Educate. No rail stop |
+| 10 | `about` | — | The positioning, in one paragraph. No rail stop |
+| 11 | `contact` | Let's talk | The ask, the discovery-call button, the email address |
 
-Chapter labels come from `CHAPTERS` in `src/components/Journey.jsx:11-20` and
-drive the fixed scroll rail. **If a section `id` changes, the rail, the nav and
-the footer all have to change with it.** Three of the eight were renamed in the
-repositioning: `your-systems` became `toolkit`, `impact` became `pricing`, and
-the pillars section kept its `id` but changed its contents entirely.
+Each section is its own component in `src/components/sections/`. `Home.jsx`
+holds the order and nothing else, so the shape of the page is readable from that
+one list.
+
+Chapter labels come from `CHAPTERS` in `src/components/Journey.jsx` and drive the
+fixed scroll rail. **If a section `id` changes, the rail, the nav and the footer
+all have to change with it.**
+
+**Sections and rail chapters are deliberately not one-to-one.** Eleven sections,
+eight rail stops. `pillars`, `credits` and `about` are bands within the
+narrative rather than destinations, and eleven dots stops the rail reading as a
+table of contents. If a section is added, decide whether it is a stop before
+adding it to `CHAPTERS`.
 
 ### The six categories
 
-From `CATEGORIES` in `src/pages/Home.jsx:18-31`. Each has a number, a glyph, a
-title and a one-line tag written as the client's own complaint.
+From `CATEGORIES` in `src/components/sections/Problems.jsx`. Each has a number, a
+glyph, a category label, the customer's own sentence as the card heading, and a
+supporting line.
 
-| # | Title | Tag | Glyph |
+| # | Category | The customer's sentence | Glyph |
 |---|---|---|---|
-| 01 | Save time | The job that eats your week | `time` |
-| 02 | Reduce mistakes | The thing that keeps going wrong | `accuracy` |
-| 03 | Get more customers | The enquiries you never followed up | `customers` |
-| 04 | Build something new | The thing you do not have yet | `build` |
-| 05 | Train your team | The software you already pay for | `train` |
-| 06 | Fix something | The bit that broke | `fix` |
+| 01 | Save time | "This takes longer than it should." | `time` |
+| 02 | Reduce mistakes | "We keep having to check this." | `accuracy` |
+| 03 | Understand your data | "We have the data, but not the answers." | `data` |
+| 04 | Build something new | "We need something that doesn't exist yet." | `build` |
+| 05 | Train your team | "We have the tools, but we're not getting enough from them." | `train` |
+| 06 | Fix something | "It works. Until it doesn't." | `fix` |
+
+The card leads with the customer's words rather than the category name, so it
+reads as a diagnosis being recognised rather than a service being offered.
 
 The glyphs are drawn in `CategoryGlyph` (`src/components/Visuals.jsx:105-183`),
 one per category, in a single geometric language: true circles, one stroke
 weight, one solid accent dot. They replaced three glyphs for three disciplines.
+The `customers` funnel was deleted with its category and `data`, a bar reading,
+drawn in its place — same 64×64 frame, same 1.4 stroke, same single accent dot.
 
 These six are the master plan's six categories in the master plan's order. They
 are not a design choice made on the site, and they should not be reordered or
@@ -116,17 +133,23 @@ renamed here without changing `01-positioning` first.
 
 ### The toolkit rows
 
-From `TOOLKIT` in `src/pages/Home.jsx:36-43`. Grouped by what a job needs, not
-by vendor.
+From `TOOLKIT` in `src/components/sections/Capabilities.jsx`. Grouped by
+capability, with what each covers in plain English and the tools as supporting
+detail beneath.
 
-| Row | Chips |
-|---|---|
-| Automation & integration | Make, Zapier, n8n, Power Automate, Custom scripts |
-| Custom software | Python, JavaScript, React, APIs, SQL databases |
-| Web & customer-facing | Websites, Booking flows, Payments, Client portals |
-| Data & reporting | Spreadsheets done properly, Power BI, Dashboards, Data cleaning |
-| AI, where it earns its place | Document handling, Drafting, Classification, Assistants |
-| What you already pay for | Microsoft 365, Google Workspace, Your CRM, Your booking system |
+| Capability | What it covers | Chips |
+|---|---|---|
+| Automation | Workflow automation, system integration, custom scripts | n8n, Make, Zapier, Power Automate, APIs |
+| Data & Analytics | Data cleaning, dashboards, reporting, decision support | Power BI, SQL, Spreadsheets done properly |
+| Software | Internal tools, applications, databases | Python, JavaScript, React |
+| Web | Websites, booking flows, customer portals, payments | React, Payments, Calendar sync |
+| AI | Document handling, classification, assistants, drafting, analysis | Where it earns its place |
+| Training & Support | Staff training, documentation, troubleshooting, improvements | Assistance credits |
+
+These are the **capability layer**, and the same six names appear in section 4
+(`why-nabl`) without the detail. The old sixth row, "What you already pay for",
+moved into About. The section sits below the method deliberately: tools are
+evidence that a capability is real, not a reason to buy.
 
 Every chip is a capability claim. The old list was a Microsoft-and-SAP CV, which
 described where the founders came from rather than what a small business needs.

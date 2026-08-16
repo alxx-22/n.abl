@@ -13,6 +13,105 @@ verified. The "why" is the part worth writing — the diff already says what.
 
 ---
 
+## 2026-08-16 — Realigned the site and the plan to the buyer's journey
+
+Nine commits, `8e98e1d` … `7ca0e4b`, plus the reconciliation of the business
+folders. Planned in [`realignment-plan.md`](realignment-plan.md), which carries
+the full contradiction register and the three decisions taken on approval.
+
+**The order changed from our taxonomy to the buyer's journey.** It was hero →
+what we do → toolkit → how we work → pricing → examples → about → contact, which
+asked a visitor to work through our capabilities before they had recognised
+their own problem, put Python and Power BI third, and put the evidence after the
+price. It is now: promise → pillars → your problem → how we help → how we work →
+what we build → in practice → what it costs → afterwards → about → the ask.
+
+**The brand promise and the pillars came back, at brand level.** The
+repositioning deleted "We make your business work smarter" and the
+Innovation · Automation · Optimisation strapline because both were being used as
+the offer structure. Right diagnosis, wrong remedy — the problem was the layer,
+not the words. The promise now leads the hero with "technology implementation"
+demoted to the eyebrow, the pillars have a band of their own beneath it, and the
+mnemonic is back in the footer. The offer stays problem-led.
+
+**"Get more customers" was removed from the offer entirely.** It was defined in
+the master plan as improving lead capture, follow-up and conversion, which is a
+lead generation offer, and n.abl has no deliverability record, data access,
+volume or proof to sell that credibly. Those systems remain internal growth
+infrastructure — `10-lead-sourcing` and `11-outreach`, both of which now say so
+explicitly in their first paragraph. "Understand your data" takes the slot,
+which also fixes data and analytics having been reachable only through the tool
+list.
+
+**A capability layer was named.** The page went straight from the visitor's
+problem to a list of vendors, so a prospect had to infer the capability from the
+tooling. A new section names all six — Automation, Data & Analytics, Custom
+Software, Web, AI, Training & Support — under the line that earns it: you don't
+need to know what technology you need. "What we build" repeats the same six in
+the same order with the detail, after the method.
+
+**Everything else that moved:**
+
+- Each section became its own component in `src/components/sections/`. `Home.jsx`
+  now holds the order and nothing else.
+- The problem cards lead with the customer's sentence as the heading, with the
+  category demoted to a small label. Staggered by index rather than by column,
+  so they read as a diagnostic rather than a menu dealt at once.
+- Three steps became five: Listen and Recommend are now explicit. The old set
+  started at Understand, which assumed the customer had already worked out and
+  explained the problem.
+- The examples take a fixed shape — problem, fix, result — and carry
+  `provenance` and `client` fields. The "illustrative example" label is rendered
+  from the data, so it cannot be edited away while true, nor left behind once a
+  card becomes real. The middle example is now a data and analytics job.
+- The worked example compressed from four animated counters to three lines.
+  Same figures. The `Stat` counter went with it; nothing else used it.
+- Credits were promoted from a pricing footnote to their own section. No pack
+  size is named, because none is decided.
+- About cut from three paragraphs to one, absorbed the "what you already pay
+  for" list, and gained a real heading — it previously had none, leaving a hole
+  in the document outline.
+- The rail gained "How we help" and dropped "About", staying at eight stops for
+  eleven sections.
+- `.pillar__*` became `.problem__*`. "Pillar" now means the brand pillars, and
+  one word for two structures is how the offer and the brand got confused.
+
+**Claims removed.**
+
+- *"We typically respond within 4 hours"* — the contact section, the discovery
+  modal's success state, and the generated client welcome pack. Nothing measured
+  it, and an unmeasured promise on a page selling reliability is a bad trade.
+- *"…including when the honest answer is that it isn't worth it"* — the contact
+  section. The business still declines work that would not pay for itself, and
+  still shows the arithmetic; that belongs in Recommend, after listening, with
+  the decision left with the client. As an ending it judged a problem we had not
+  heard.
+
+**The visual identity is provably unchanged.** `src/styles/tokens.css` has a
+zero diff: no new colour, type step, radius, easing or duration. New sections are
+composed from existing primitives. Two colour bugs were fixed on the way — the
+footer strapline and the old response-claim rule both used `--cream-800`, which
+the palette reserves for disabled states.
+
+**Two layout defects found while checking the new sections:**
+
+- The card-stretch fix for the problem grid was scoped to every `.reveal`, which
+  turned the toolkit's row wrappers into flex containers and made their hairline
+  rules shrink to the content width. Scoped to `.grid` instead.
+- `grid--steps` at a 13.5rem minimum fitted only four tracks on a 1440 viewport,
+  orphaning step five on its own row. The shell is narrower than its max-width
+  once the gutter is taken; the minimum is now 11.5rem.
+
+Verified: zero horizontal overflow at 390, 820 and 1440px; all 51 reveals
+resolve visible under `prefers-reduced-motion`; heading order h1 → h2 → h3
+throughout; every rail anchor resolves.
+
+**Not changed, and still outstanding:** the privacy and terms pages still
+describe n.abl as "an automation consultancy", and the metadata and share card
+still carry the previous hero. See the README's next actions.
+
+---
+
 ## 2026-08-15 — Repositioned the site as a technology implementation partner
 
 `7db234d` · 13 files, +326 / −103

@@ -1,5 +1,15 @@
 # 10 — Lead sourcing
 
+> **This folder is internal growth infrastructure. It is not a service.**
+>
+> Everything here builds n.abl's *own* customer acquisition: finding, enriching,
+> scoring and shortlisting businesses that n.abl might approach. None of it is
+> sold to anyone. Lead generation, lead conversion and outbound sales systems are
+> **not** customer-facing services — n.abl has no deliverability record, no data
+> access, no volume and no proof, and could not compete in that market credibly
+> today. They may become a service one day; that decision has not been made and
+> is not implied by anything in this folder. See `01-positioning/README.md`.
+
 **Status: not started.**
 
 Nothing in this folder has been built. There is no sourcing script, no candidate

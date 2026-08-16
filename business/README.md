@@ -34,25 +34,44 @@ deliberately, and this is the single most important change in the plan.
 3. It addresses a much larger market. Most small businesses do not have an AI
    problem. They have a process problem, and some of those are solved with AI.
 
-### The offer is problem-led, not tool-led
+### Three layers, and the job each one does
 
-The old structure was three pillars: Innovation, Automation, Optimisation. That
-is a description of our tools, arranged for our convenience. Clients do not
-arrive knowing which pillar they need.
+Most confusion about what n.abl is comes from mixing three layers that do
+different jobs. They are set out in full, with the worked example that settles
+arguments, in `01-positioning/README.md`.
 
-The customer question is: **what are you trying to improve?**
+| Layer | Job | Content |
+|---|---|---|
+| **Brand** | What people remember | *We make your business work smarter.* Innovation · Automation · Optimisation |
+| **Customer problems** | How the visitor enters the conversation | Save time · Reduce mistakes · Understand your data · Build something new · Train your team · Fix something |
+| **Capabilities** | What n.abl actually delivers | Automation · Data & Analytics · Custom Software · Web · AI · Training & Support |
+| **Proof** | Why anyone should believe it | Quantified savings, before/after, case studies, testimonials. Currently: labelled illustrative examples only. See `17-proof-and-case-studies` |
+
+**The pillars are brand, not offer.** Innovation / Automation / Optimisation is
+what the business is remembered by. It is not the organising structure of the
+offer, on the site or in conversation, and it must never become one again. The
+earlier instruction to delete it was an overcorrection: the problem was the
+layer it sat in, not the words.
+
+The customer question, which opens every conversation and structures every
+page, is: **what are you trying to improve?**
 
 | Category | What it means |
 |---|---|
-| **Save time** | Find repetitive work and automate it |
+| **Save time** | Find repetitive work and remove it |
 | **Reduce mistakes** | Replace fragile manual processes with reliable systems |
-| **Get more customers** | Improve lead capture, follow-up and conversion |
+| **Understand your data** | Turn spreadsheets, systems and reporting into something decisions can be made from |
 | **Build something new** | Design and build software, websites, internal tools |
 | **Train your team** | Make people better at the tools they already pay for |
 | **Fix something** | Assistance credits, for when something breaks or needs changing |
 
-Innovation / Automation / Optimisation may survive as a strapline. It must not
-be the organising structure of the offer, on the site or in conversation.
+**Lead generation is not on this list, and must not be added to it.** Lead
+capture, follow-up, conversion, outbound sending and AI SDR systems are
+**internal growth infrastructure** for n.abl's own acquisition — `10-lead-sourcing`
+and `11-outreach`. n.abl has no deliverability, data access, volume or proof to
+sell them credibly, and they must not appear as a customer offer: not as a
+homepage category, not in the capability list, not as a pricing example, not in
+a proposal. They may become a service later. That decision has not been made.
 
 ---
 
@@ -359,7 +378,9 @@ place to put clients, a place to run itself and a place to keep leads.
 **v2 — make what exists match the plan.** Nothing new is built until this is
 finished.
 
-- Rewrite the site copy from the three pillars to the six problem-led categories
+- ~~Rewrite the site copy from the three pillars to the six problem-led
+  categories~~ done, and since re-ordered as a buyer's journey with the pillars
+  restored as brand framing
 - Add the compliance fields from section 5 to the CRM, with the opt-out block
   enforced at the database level
 - Pull the client-portal schema into a committed migration so the backend can be
@@ -400,9 +421,9 @@ for starting, not a record of something built.
 
 | # | Folder | What it is for | Status |
 |---|---|---|---|
-| 01 | `01-positioning` | The repositioning, the six categories, the messaging spine, what we say no to | in progress |
+| 01 | `01-positioning` | The repositioning, the three layers, the six categories, the messaging spine, what we say no to | in progress |
 | 02 | `02-brand` | Palette, typefaces, logo masters, contrast rules, usage | done |
-| 03 | `03-website` | Public marketing site | done |
+| 03 | `03-website` | Public marketing site | in progress |
 | 04 | `04-legal` | Privacy, terms, cookies, plus client contracts and scope documents | in progress |
 | 05 | `05-portal` | Client portal | done |
 | 06 | `06-team-space` | Internal team space | done |
@@ -416,6 +437,8 @@ for starting, not a record of something built.
 | 14 | `14-delivery` | Onboarding, project runbook, handover, ownership transfer | not started |
 | 15 | `15-compute` | Class 1 / 2 / 3 routing, local model setup, cost tracking | not started |
 | 16 | `16-finance` | Costs, pricing outcomes, tax set-aside, spend decisions | not started |
+| 17 | `17-proof-and-case-studies` | How a delivery becomes evidence: measurement, permission, templates | not started |
+| 18 | `18-sales-conversation` | The sales pipeline and the questions that drive it | not started |
 
 Notes on the entries where the status could hide something:
 
@@ -425,11 +448,13 @@ Notes on the entries where the status could hide something:
   against a real list of local businesses, and for both founders to be able to
   give the positioning from memory. Neither has happened. There is also no
   proposal or contract written in the new framing yet.
-- **03 website** — built, live, and rewritten to the six categories. The three
-  pillars are gone from the offer structure, the invented impact metrics have
-  been deleted, and the case cards now state that they are examples rather than
-  clients. What it still lacks is any real proof: no client work to point at,
-  and no testimonials.
+- **03 website** — built, live, and now ordered as a buyer's journey: promise,
+  pillars, the visitor's problem, how we help, method, capability, evidence,
+  price, credits, trust, ask. The pillars are back as brand framing and are not
+  the offer structure. Its definition of done changed from "the site says the
+  right thing" to "the site is ready to perform as a sales asset", which is why
+  it is no longer `done`: there is no proof, no SEO, no conversion measurement,
+  and the lead-capture path has never been validated end to end.
 - **04 legal** — the three public pages are live. There is no client contract
   and no scope-of-work template. **None of the legal documents have been
   reviewed by a solicitor.** Do not tell anyone, in any document or

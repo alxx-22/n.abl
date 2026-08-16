@@ -22,6 +22,37 @@ Last substantive revision: 2026-08-16.
 
 ---
 
+## The full-solution principle
+
+**The solution is technology-agnostic.**
+
+Delivery may choose a Python application, custom software, a website, an
+automation, an analytics system, an integration, an AI workflow, a training
+programme, or a combination — based on the customer's goal and nothing else.
+
+Three things follow, and all three are load-bearing:
+
+1. **The customer never has to know what technology they need.** They describe
+   the problem; choosing what to build is our job, and it is disclosed after we
+   understand the work, never demanded before contact. See the five steps in
+   `01-positioning` — listen, understand, recommend, build, hand over.
+2. **We are not an automation shop, and not an AI shop.** Externally the line is
+   *"we build automation where automation is the right answer"*, never *"we sell
+   automation"*. The same holds for AI: some of what we build uses it, most does
+   not, and forcing it into a problem that does not have one is how a delivery
+   goes wrong before it starts.
+3. **The right answer is sometimes not a build.** A licence the client already
+   holds, an afternoon of training, or a spreadsheet done properly are all
+   legitimate outcomes of the recommend step. `12-pricing` §4 is a worked example
+   of that conversation, including the phrasing that keeps the decision with the
+   client rather than turning it into a verdict on their problem.
+
+What this does **not** mean: that scope is open-ended. The scope of a specific
+engagement is fixed in the quote before work starts. Technology-agnostic is
+about how the answer is chosen, not about how much of it there is.
+
+---
+
 ## The thing to notice first
 
 **The promise is already public, and it is the load-bearing one.**

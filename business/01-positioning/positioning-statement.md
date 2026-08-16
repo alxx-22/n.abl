@@ -79,7 +79,7 @@ The six answers are the six categories in
 |---|---|
 | Save time | "This takes us ages every month" |
 | Reduce mistakes | "We keep getting this wrong" |
-| Get more customers | "Enquiries come in and nothing happens to them" |
+| Understand your data | "We have the data, but not the answers" |
 | Build something new | "We need a thing that does X and nothing off the shelf does it" |
 | Train your team | "We pay for this software and nobody really uses it" |
 | Fix something | "It worked and now it doesn't" |
@@ -153,20 +153,36 @@ trust faster than anything else in the pitch:
 
 ## 5. Innovation / Automation / Optimisation
 
-The three pillars survive **only as a strapline**, if they survive at all.
+The three pillars are **brand architecture**. They are what n.abl is remembered
+by, alongside the promise: *We make your business work smarter.*
 
-They must not be the organising structure of the offer. Not the site navigation,
-not the service pages, not the proposal contents page, not the way a call is
-opened. Those are the six categories in section 2.
+> **INNOVATION** — Find better ways to do things.
+> **AUTOMATION** — Take repetitive work off people's hands.
+> **OPTIMISATION** — Get more from the people, processes, systems and data you
+> already have.
 
-The reason: Innovation / Automation / Optimisation is a description of our
-toolbox, arranged for our convenience. A client with a job that takes twelve
-hours a month does not know which pillar that is, and asking them to guess makes
-them feel stupid at exactly the moment we need them to talk freely.
+They belong in the strapline, in the band beneath the hero, in the footer, on a
+business card, and in the sentence you say when somebody asks what n.abl does
+and you have four seconds.
 
-**Current status: the live website is still organised around the three pillars.**
-Rewriting it is task v2 in the master plan and cannot be skipped. This is the
-largest single gap between this plan and reality.
+They must **not** be the organising structure of the offer. Not the site
+navigation, not the service pages, not the proposal contents page, not the way a
+call is opened. Those are the six categories in section 2.
+
+The reason for the split: Innovation / Automation / Optimisation is a
+description of our toolbox, arranged for our convenience. A client with a job
+that takes twelve hours a month does not know which pillar that is, and asking
+them to guess makes them feel stupid at exactly the moment we need them to talk
+freely. But the same three words, used as a mnemonic rather than a menu, are the
+most memorable thing the business has — and "technology implementation partner",
+while accurate, is not something anybody repeats to a friend.
+
+**Current status: done.** The site leads with the promise, carries the pillars
+as a brand band under the hero and as the footer strapline, and organises the
+offer around the six problem categories. Both halves are in place. The earlier
+version of this section said the pillars survived "only as a strapline, if at
+all", and that hedge got them deleted entirely in the repositioning. Do not
+re-introduce the hedge.
 
 ---
 
@@ -209,7 +225,7 @@ The five-element summary, so this file is usable on its own:
 |---|---|---|
 | 1 | The claim | Technology implementation partner for small businesses |
 | 2 | The question | "What are you trying to improve?" |
-| 3 | The six categories | Save time, reduce mistakes, get more customers, build something new, train your team, fix something |
+| 3 | The six categories | Save time, reduce mistakes, understand your data, build something new, train your team, fix something |
 | 4 | The commercial facts | No retainers. Priced on what it saves, not on hours. You own it. |
 | 5 | The AI position | One tool among several. If the answer is not AI, you get the boring version and pay less. |
 
@@ -244,7 +260,7 @@ about n.abl:
 
 | Surface | Which form | Status |
 |---|---|---|
-| Website hero | Short | Not done. Site still on three pillars. |
+| Website hero | Short | Done. Brand promise in the hero, descriptor in the eyebrow. |
 | Website About page | Standard | Not done |
 | Outreach first line | Short, adapted per prospect | Not done, blocked on v3 |
 | Proposal cover | Standard | No proposal template exists yet |

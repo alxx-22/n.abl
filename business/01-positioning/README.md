@@ -35,8 +35,9 @@ The change has three parts:
    alongside Python, web development, integration, automation and training. If
    the best answer is not AI, AI is not forced into it.
 2. **The structure changes.** The offer is organised by the client's problem, not
-   by our toolbox. Innovation / Automation / Optimisation may survive as a
-   strapline. It must not be the organising structure of the offer anywhere.
+   by our toolbox. Innovation / Automation / Optimisation moves from offer
+   architecture to **brand architecture** — it is the strapline and the band
+   under the hero, and it is never the organising structure of the offer.
 3. **The buyer gets specific.** Small businesses around Nottingham and Alcester,
    defined by employee count, sector and observable signals, tightly enough to
    throw work away.
@@ -68,11 +69,19 @@ in progress. Done is these nine statements being true and checkable.
 - [ ] The handoffs in the table below have been made, so the folders downstream
       are unblocked.
 - [ ] No document anywhere in the repository still describes n.abl as an AI
-      automation agency, or organises the offer around the three pillars.
+      automation agency, or organises **the offer** around the three pillars.
 
-The last one is currently false. The live website is still built on Innovation /
-Automation / Optimisation. That is the largest single gap between this plan and
-reality, and no amount of writing in this folder closes it.
+Read that last one carefully, because an earlier version of it caused a real
+mistake. The pillars are not banned. They are **brand architecture** — the
+strapline, the band under the hero, what people remember n.abl by — and they
+are correct there. What is banned is the pillars being the *offer structure*:
+the service menu, the navigation, the thing a client is asked to pick from.
+That job belongs to the six problem categories.
+
+An earlier reading of this line deleted "We make your business work smarter" and
+the pillar strapline from the site entirely. That was an overcorrection, and it
+cost the business its only memorable line. Both are back, at brand level. See
+the three layers above before changing this.
 
 ---
 
@@ -126,22 +135,76 @@ conversations to continue, `saying-no.md` is for conversations to end.
 
 ---
 
+## The three layers
+
+**This is the single source of truth for the questions that keep coming back.**
+Most arguments about what n.abl is are really arguments about which layer
+something belongs in.
+
+| Layer | Job | Content |
+|---|---|---|
+| **Brand** | What people remember | *We make your business work smarter.* Innovation · Automation · Optimisation |
+| **Customer problems** | How the visitor enters the conversation | Save time · Reduce mistakes · Understand your data · Build something new · Train your team · Fix something |
+| **Capabilities** | What n.abl actually delivers | Automation · Data & Analytics · Custom Software · Web · AI · Training & Support |
+| **Proof** | Why anyone should believe it | Quantified savings · before/after examples · case studies · testimonials · demonstrations · technical evidence. **Currently available: labelled illustrative examples only.** See `17-proof-and-case-studies` |
+
+The pillars, stated once, with what each means:
+
+> **INNOVATION** — Find better ways to do things.
+> **AUTOMATION** — Take repetitive work off people's hands.
+> **OPTIMISATION** — Get more from the people, processes, systems and data you
+> already have.
+>
+> In practice that means: Automation · Data & Analytics · Software · Web · AI ·
+> Training.
+
+### The worked example that settles the argument
+
+*"Should Automation be on the services page?"*
+
+Mechanically: **Automation is a brand pillar and a capability, but not a
+customer-problem entry point.** So it appears in the strapline, and it appears
+in the capability list on the site, and it does **not** appear as one of the six
+cards a visitor picks from. Nobody arrives saying "I would like some
+automation"; they arrive saying "someone is still doing this by hand", which is
+*Save time*.
+
+Run any similar question the same way. Which layer is it in? That decides where
+it goes.
+
+This is also why there is no "Automate processes" card. It would sit in the
+customer-problem layer, which the rule above excludes it from, and it would
+overlap "Save time" so heavily that the diagnostic would stop discriminating.
+
 ## The six categories
 
-The spine of everything here. Full detail, including the disqualifying signal for
-each, in [`service-categories.md`](service-categories.md).
+Full detail, including the disqualifying signal for each, in
+[`service-categories.md`](service-categories.md).
 
 | Category | What they say when they arrive | Pricing |
 |---|---|---|
-| **Save time** | "This takes us ages every month" | A — efficiency, priced on value |
-| **Reduce mistakes** | "We keep getting this wrong" | A — efficiency, priced on value |
-| **Get more customers** | "Enquiries come in and nothing happens" | A or B |
-| **Build something new** | "We need a thing that does X" | B — capability, fixed price |
-| **Train your team** | "We pay for this and nobody uses it" | B — fixed price |
-| **Fix something** | "It worked and now it doesn't" | C — credits |
+| **Save time** | "This takes longer than it should" | A — efficiency, priced on value |
+| **Reduce mistakes** | "We keep having to check this" | A — efficiency, priced on value |
+| **Understand your data** | "We have the data, but not the answers" | A or B |
+| **Build something new** | "We need something that doesn't exist yet" | B — capability, fixed price |
+| **Train your team** | "We have the tools, but we're not getting enough from them" | B — fixed price |
+| **Fix something** | "It works. Until it doesn't" | C — credits |
 
 The organising question, which opens every conversation and structures every
 page: **what are you trying to improve?**
+
+### What is not on this list
+
+**Lead generation, lead conversion and outbound sales systems are internal
+capabilities currently in development, not customer-facing services.**
+
+The old third category, "Get more customers", was defined as improving lead
+capture, follow-up and conversion. That is a lead generation offer, and n.abl
+cannot compete in that market yet: no deliverability record, no data access, no
+volume, no proof. `10-lead-sourcing` and `11-outreach` build these systems for
+n.abl's own acquisition. They may become a service one day. Until that decision
+is made and the proof exists, they appear on no customer-facing surface — not
+the homepage, not the capability list, not a pricing example, not a proposal.
 
 ---
 
@@ -164,7 +227,7 @@ these have been made.
 
 | To | What it needs from here | Status |
 |---|---|---|
-| `03-website` | The six categories as the navigation and page structure, replacing the three pillars. The short and standard statements as copy. The page skeleton in `messaging-spine.md` section 10. | Not made. Largest open gap. |
+| `03-website` | The six categories as the customer-facing entry points, the pillars as brand framing, and the capability layer named. | **Made.** The site runs the corrected six, the pillars are a brand band, and the capability layer is named in its own section |
 | `07-crm` | The scoring model and the disqualifier list as fields, so a lead can be scored and a rejection recorded with a reason. | Not made |
 | `10-lead-sourcing` | Territories, size bands, sectors, signals and the preferred source list. | Not made |
 | `12-pricing` | The A / B / C split per category, and the value-based method for A. | Not made |

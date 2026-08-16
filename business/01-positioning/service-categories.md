@@ -21,7 +21,7 @@ Last substantive revision: 2026-08-15.
 |---|---|---|---|---|
 | 1 | **Save time** | "This takes us ages every month" | A — efficiency, priced on value | Class 1, some Class 2 |
 | 2 | **Reduce mistakes** | "We keep getting this wrong" | A — efficiency, priced on value | Class 1 |
-| 3 | **Get more customers** | "Enquiries come in and nothing happens" | A or B | Class 1, Class 2, some Class 3 |
+| 3 | **Understand your data** | "We have the data, but not the answers" | A or B | Class 1, Class 2, some Class 3 |
 | 4 | **Build something new** | "We need a thing that does X" | B — capability, fixed price | Class 1 to run, Class 3 to build |
 | 5 | **Train your team** | "We pay for this and nobody uses it" | B — fixed price | Class 3 in preparation only |
 | 6 | **Fix something** | "It worked and now it doesn't" | C — credits | Class 1 |
@@ -252,125 +252,86 @@ trust it.
 
 ---
 
-## 3. Get more customers
+## 3. Understand your data
 
 ### What they say when they arrive
 
-> "Enquiries come in and nothing happens to them."
+> "We have the data, but not the answers."
 
 Other openings that are the same category:
 
-- "We send quotes out and never hear back."
-- "I know we're losing work but I can't prove where."
-- "By the time we ring them they've booked someone else."
-- "We need more leads." (Usually they do not. See below.)
-- "I don't know which of our advertising actually works."
+- "It takes me two days to work out how last month went."
+- "Every system gives me a different number and I don't know which is right."
+- "I'd like to know which jobs actually make money."
+- "We keep the figures, we just never look at them."
+- "Someone rebuilds that spreadsheet by hand every Monday."
 
 ### What we actually build
 
-Rarely a marketing problem. Almost always a leak between an enquiry arriving and
-somebody responding to it, or between a quote going out and anybody following it
-up. The most common shape: enquiries land in a mailbox one person watches, that
-person is on a job, the reply goes out two days later, and the customer has
-already booked someone else.
+Almost never a "big data" problem. Nearly always the same shape: the numbers
+exist, they live in three or four places that disagree, and assembling them by
+hand costs somebody a day a month — so it happens late, or not at all, and
+decisions get made on memory instead.
 
-- **Enquiry capture that actually works.** A form that reaches more than one
-  person, logs the enquiry, and cannot silently fail. Testing the existing one is
-  the first thing to do, and it fails more often than anyone expects.
-- **Immediate acknowledgement.** An automatic, honest reply that says when a real
-  answer is coming. Cheap to build and disproportionately effective, because most
-  competitors do not do it.
-- **Quote follow-up.** A quote sent and never chased is the most expensive
-  document in a small business. A deterministic timer, a sequence of reminders,
-  and a record of what was sent.
-- **Lead capture into a CRM** with the source recorded, so the business can see
-  which channels produce work rather than which ones feel busy.
-- **Review requests**, sent at the right point after a completed job.
-- **Reactivation of dormant customers** from historic invoice or job records,
-  subject to the compliance rules below, which are not optional.
-- **Missed enquiry alerts.** Escalation when nothing has happened to an enquiry
-  within a set time.
-- **Booking and availability**, where the current answer is "call us to check".
-- **Reply classification.** Incoming responses sorted into interested, not
-  interested, wrong person, out of office, unsubscribe. Class 2, local, and it
-  feeds the compliance fields automatically.
+- **Data cleaning and reconciliation.** Getting the same customer, product or job
+  to mean the same thing across the systems that hold it. Unglamorous, and the
+  step everything else depends on.
+- **A single dataset** assembled on a schedule from the systems already in use,
+  so there is one set of numbers rather than four.
+- **Reporting that builds itself.** The pack that somebody currently rebuilds by
+  hand, produced overnight and waiting before the meeting.
+- **Dashboards**, where a live view genuinely changes a decision. Where it does
+  not, a scheduled email with five numbers in it is better and cheaper.
+- **Decision support.** Job-level profitability, utilisation, where the time
+  actually goes. Usually the first time the business has seen it.
+- **Spreadsheets done properly.** Often the right answer. A well-built workbook
+  the owner already knows how to use beats a dashboard they have to be trained
+  into.
 
-### Compliance, which is a build requirement and not a policy
-
-Anything in this category that sends messages inherits the rules in the master
-plan, section 5, in full.
-
-The record carries `subscriber_type`, `lawful_basis`, `source`, `source_date`,
-`privacy_notice_status`, `marketing_status`, `opt_out`, `suppression_list` and
-`contact_history`. The sending path hard-blocks opted-out records at the database
-level, not in a query somebody might forget to apply. Identity and opt-out
-requirements apply to every message. ICO guidance distinguishes corporate
-subscribers from sole traders and individual subscribers, and the rules differ
-materially, so the schema must be able to tell them apart.
-
-This applies to systems we build for clients exactly as it applies to our own.
-Building a client a reactivation campaign with no suppression list is selling
-them a liability. If a client pushes back, the answer is that it is not
-negotiable and it is part of the price.
+**Start with the decision, not the data.** The question is never "what could we
+report?" — it is "what would you do differently if you knew?". If there is no
+answer to the second question, the report is decoration.
 
 ### Pricing category
 
-**A — efficiency**, where an existing process is being repaired and the value can
-be calculated: enquiries per month, current response rate, current conversion,
-average job value. A one-point improvement in conversion on a known volume at a
-known job value is a real number, and clients find it persuasive.
+**A — efficiency**, where reporting currently costs measurable hours. The
+arithmetic is the same as category 1: hours a month, loaded rate, hours
+afterwards. Two days a month of manual reporting reduced to two hours is a
+countable saving and prices cleanly.
 
-**B — capability, fixed price**, where something new is being created rather than
-a leak being closed.
-
-Be conservative. Overstating a conversion improvement is the fastest way to lose
-a client at the three-month mark, and this is the category where the temptation
-is strongest.
+**B — capability, fixed price**, where the business has never had the view at all
+and there is no before-and-after to measure. No savings figure is offered,
+because there is nothing to compare against and inventing one is the fastest way
+to lose the client at the three-month mark.
 
 ### The disqualifying signal
 
-**There are no enquiries to begin with.**
+**The underlying data does not exist, or nobody will own its accuracy.**
 
-Automating follow-up on zero enquiries produces zero. If the business genuinely
-has no demand, that is a marketing and demand problem, and we are not a marketing
-agency. Say so plainly and early. The alternative is being paid to build
-something that will be judged against a result it could never produce.
+Analytics on records nobody maintains produces confident, wrong answers, and the
+business will act on them. If job records are half-filled and nobody is
+accountable for filling them, that is a process problem to fix first — which may
+be category 1 or 2 — and the reporting comes after.
 
 Two supporting signals that also end it:
 
-- **They want a list bought, scraped or blasted.** Anyone asking for a lead list
-  built out of Google Maps, or for sending without opt-out handling, is asking
-  for something we do not build. Google's Maps terms restrict using Maps content
-  to create or augment business listings, mailing lists or telemarketing lists.
-- **They cannot say how many enquiries they get in a month, and will not go and
-  count.** Without a denominator there is no arithmetic, and category A pricing
-  becomes guesswork.
+- **They want a dashboard because a competitor has one.** No decision attached,
+  no question it answers.
+- **The answer is already available in a report they already own and do not
+  open.** Say so. It costs a sale and buys the relationship.
 
 ### Not this category
 
-If the enquiries arrive and are answered promptly but the conversion is poor,
-the problem is the quote, the price or the sales conversation. That may be
-category 1 (a faster, better quote) or nothing we sell at all.
+If the numbers are fine and the problem is that one person retypes them between
+two systems, that is category 1 or 2 — an integration, not an analytics job.
 
 ### Discovery questions
 
-1. How many enquiries a month, and where do they arrive?
-2. What happens to one, exactly, from arriving to being answered? Time it.
-3. What proportion turn into work? How do you know?
-4. What is an average job worth?
-5. How many quotes are outstanding right now, and who is chasing them?
-
-### Compute
-
-Class 1 for capture, logging, timers, routing and sending. Class 2 for reply
-classification and lead scoring, locally. Class 3 only for genuine copywriting,
-and behind a human approval gate every time.
-
-The rule from the master plan applies to client systems as well as our own:
-**automate research before automating sending.** A machine that can send 10,000
-bad emails is a liability, not an asset.
-
----
+1. What decision would you make differently if you had a better answer?
+2. Where do the numbers live now, and who needs them?
+3. Who assembles them, how long does it take, and how often?
+4. When two systems disagree, which one do you believe, and why?
+5. Who is responsible for the underlying records being right?
 
 ## 4. Build something new
 

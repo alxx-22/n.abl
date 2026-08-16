@@ -23,7 +23,7 @@ Five things, in this order. Everything else is decoration.
 |---|---|---|
 | 1 | **The claim** | Technology implementation partner for small businesses |
 | 2 | **The question** | "What are you trying to improve?" |
-| 3 | **The six categories** | Save time, reduce mistakes, get more customers, build something new, train your team, fix something |
+| 3 | **The six categories** | Save time, reduce mistakes, understand your data, build something new, train your team, fix something |
 | 4 | **The three commercial facts** | No retainers. Priced on what it saves, not on hours. You own it. |
 | 5 | **The honest position on AI** | AI is one tool among several. If the answer is not AI, you get the boring version and pay less. |
 
@@ -80,7 +80,7 @@ places, deliberately, so a client can always tell where they are.
 |---|---|---|
 | Save time | "This takes us ages every month" | "How many hours, and who does it?" |
 | Reduce mistakes | "We keep getting this wrong" | "When did it last go wrong, and what did that cost?" |
-| Get more customers | "Enquiries come in and nothing happens" | "How many a month, and where do they land?" |
+| Understand your data | "We have the data, but not the answers" | "Where does it live now, and who needs the answer?" |
 | Build something new | "We need a thing that does X" | "What do you do today instead of having it?" |
 | Train your team | "We pay for this and nobody uses it" | "What do you pay for monthly? All of it." |
 | Fix something | "It worked and now it doesn't" | "When did it last work, and what changed?" |
@@ -322,7 +322,7 @@ to read as competence, not as noise.
 
 | Surface | Which form | Status |
 |---|---|---|
-| Website hero | Short claim | Not done. Site still on the three pillars. |
+| Website hero | Short claim | Done. The hero carries the brand promise, with the descriptor as the eyebrow. |
 | Website navigation | The six categories | Not done |
 | Website About page | Standard paragraph | Not done |
 | Outreach first line | Short claim, adapted per prospect | Not done. Blocked on v3 and the CRM compliance fields. |

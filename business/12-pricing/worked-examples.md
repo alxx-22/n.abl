@@ -135,10 +135,17 @@ months to repay, and the client would be right to refuse it.
 
 **What to say:**
 
-> "Honestly, this one is not worth building. It is costing you about twenty pounds
-> a month, and anything I built for it would take a year and a half to pay for
-> itself. Tell me about the other thing you mentioned instead — the one with the
+> "Let me show you the arithmetic on this one. It's costing you about twenty
+> pounds a month, and anything I built for it would take a year and a half to
+> pay for itself. That's your call rather than mine — but on those numbers I'd
+> leave it. Tell me more about the other thing you mentioned, the one with the
 > spreadsheet."
+
+**Note the phrasing.** The numbers do the refusing, not us. "This isn't worth
+building" is a verdict on their problem; "here is the arithmetic, and on these
+numbers I'd leave it" is the same information with the decision left where it
+belongs. The distinction is in `02-brand/brand-promise.md` §4.2, and it is the
+difference between declining work honestly and grading a customer's problem.
 
 Three things that follow from saying it:
 
@@ -222,6 +229,78 @@ page, one pricing category.
 
 ---
 
+## 7. An automation job, priced on the work it removes
+
+The category-1 shape at a size where the arithmetic gets easy, and the example
+to reach for when somebody asks what "automation" is actually worth.
+
+**The problem, in their words.** *"Two people spend most of a day each week
+copying orders out of email into the system, and chasing the ones that look
+wrong."*
+
+**Their numbers, asked for and written down:**
+
+> Two people, roughly half a day each, five days a week. Call it 20 hours a
+> month between them once you take out the weeks it is quieter.
+>
+> Loaded cost £20 an hour → **£400 a month**, **£4,800 a year**.
+
+**Afterwards.** Orders arrive already in the system. Anything the parser is not
+confident about is flagged for a human rather than guessed at, which is the
+residual: somebody still looks at the exceptions.
+
+> Residual, agreed with them: about 3 hours a month → **£60 a month**.
+>
+> Saving: **£340 a month**, **£4,080 a year**. Round down: call it **£4,000**.
+
+**Price.** £2,000 to £3,200. At £2,600 the client spends once to remove about
+£4,000 a year of copying, and the payback lands inside eight months.
+
+**What makes this an automation job rather than a "save time" job.** Nothing.
+That is the point of the layer split: *save time* is how the client describes
+it, *automation* is what we build. The client never has to know the second word.
+
+---
+
+## 8. An analytics job, priced on the reporting it replaces
+
+Data and analytics work prices exactly like any other efficiency job when there
+is a manual reporting process to measure against. The mistake to avoid is
+treating analytics as inherently unmeasurable and defaulting to fixed price.
+
+**The problem, in their words.** *"It takes me two days at the start of every
+month to work out how the last one went, and by the time I know, it's too late
+to do anything about it."*
+
+**Their numbers:**
+
+> Two days a month, owner's own time. Loaded at £35 an hour — higher than staff
+> cost, because it is the owner and the hours have an alternative use.
+>
+> 16 hours × £35 = **£560 a month**, **£6,720 a year**.
+
+**Afterwards.** Sales, stock and hours are reconciled on a schedule into one
+dataset, and the monthly pack builds itself. The owner still reads it and still
+makes the judgement — that is the residual, and it is the part worth keeping.
+
+> Residual: about 2 hours a month reading and deciding → **£70 a month**.
+>
+> Saving: **£490 a month**, **£5,880 a year**. Round down: **£5,500**.
+
+**Price.** £2,750 to £4,400. At £3,500, payback lands around seven months.
+
+**The part not in the arithmetic, and not sold as if it were.** The owner sees
+the numbers on the 2nd instead of the 15th, which is worth something real and
+cannot be counted. Say it plainly as an unpriced benefit; do not put a figure on
+it. A number invented to make a proposal look better is the first thing to fall
+apart at the three-month review.
+
+**When this becomes category B instead.** If the business has never produced the
+report at all, there is no before-figure, nothing to measure, and it is a fixed
+price. Do not manufacture a baseline by asking what it "would" take.
+
+---
+
 ## The pattern across the examples
 
 | # | Case | First-year value | Price | Payback |
@@ -260,3 +339,9 @@ That number is tracked internally for `16-finance` and is never sold.
    estimate the client's risk.
 7. **Expected, not guaranteed.** These are projections built on figures a client
    supplied. `04-legal` is clear that value pricing is not a promise of value.
+8. **Automation and analytics are priced the same way as anything else.** §7 and
+   §8 exist because both get mistaken for special cases — automation for being
+   "just a script", analytics for being unmeasurable. Neither is. Where there is
+   a manual process with hours attached, the method in §1 applies unchanged.
+9. **Unpriced benefits stay unpriced.** Say them out loud, leave them out of the
+   arithmetic. §8 has one.

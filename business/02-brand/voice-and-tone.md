@@ -41,11 +41,14 @@ transformation" as a description of the business.
 
 The offer is organised by the client's problem, not our toolbox. The customer
 question is *what are you trying to improve?* and the answers are the six
-categories: save time, reduce mistakes, get more customers, build something new,
+categories: save time, reduce mistakes, understand your data, build something new,
 train your team, fix something.
 
-Innovation / Automation / Optimisation may still appear as a strapline. It must
-never be the structure of a page, a pitch or a proposal.
+Innovation / Automation / Optimisation is **brand framing** — the strapline, the
+band under the hero, the footer. Alongside the promise, *we make your business
+work smarter*, it is what the business is remembered by, and it should be used
+freely in that role. It must never be the structure of a page, a pitch or a
+proposal. Full detail in [`brand-promise.md`](brand-promise.md).
 
 ---
 
@@ -105,6 +108,18 @@ removed".
 | retainer, monthly plan | credits, bought when you need them |
 | AI-powered, AI-driven | say what the software does |
 | 10x, transform, revolutionise | the actual number, or nothing |
+| Let's establish what is actually worth fixing | Tell us what's getting in the way |
+| We'll tell you whether it's worth it | We'll show you the arithmetic and you decide |
+| Is this problem big enough for us? | Tell us what isn't working |
+| Qualifying your requirement | Understanding how the work happens today |
+
+**On that last block.** n.abl never grades a customer's problem before hearing
+it. The feeling to produce is *tell us everything, we're listening*, and
+expertise comes second. This does not stop us declining work that would not pay
+for itself — that is the most trust-building thing we do. It changes when and
+how: after listening, with the arithmetic shown, and the decision left with the
+customer. A gate is banned; advice with the working shown is not. See
+[`brand-promise.md`](brand-promise.md) §4.2.
 
 Words that are fine and should be used more: cost, hours, price, fix, build,
 own, remove, check, block, error, wrong, no.

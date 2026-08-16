@@ -1,5 +1,18 @@
 # 11 — Outreach
 
+> **This folder is internal growth infrastructure. It is not a service.**
+>
+> Everything here sends n.abl's *own* approaches to businesses on n.abl's own
+> shortlist. None of it is sold. Outbound sending, sequencing, reply handling and
+> AI SDR systems are **not** customer-facing services, for the reasons in
+> `01-positioning/README.md`: no deliverability record, no volume, no proof. The
+> compliance machinery described here exists because n.abl must obey it, not
+> because it is a product.
+>
+> If a client asks for outbound sending as part of a build, that is a scope
+> question governed by `01-positioning/service-categories.md`, and the compliance
+> rules in the master plan §5 apply to their system exactly as they apply to ours.
+
 **Status: not started.**
 
 There is no outreach engine. No sender, no scheduler, no reply classifier, no

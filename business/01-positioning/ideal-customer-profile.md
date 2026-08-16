@@ -205,8 +205,9 @@ prospect than a signal-free business in a strong-fit one.
   one vendor, an invoicing product mentioned somewhere else, a separate
   newsletter tool. Someone is the integration.
 - **Reviews mentioning slow responses**, "never got back to me", "had to chase",
-  "rang three times". Public evidence of a lead capture and follow-up failure,
-  which is the "get more customers" category with proof attached.
+  "rang three times". Public evidence that something between an enquiry arriving
+  and somebody answering it is broken — usually a "save time" or "fix something"
+  job once you get inside it.
 - **A price list published as a dated PDF.** The date is the version control.
 
 ### Tier 2 — supporting signals, meaningful in combination
@@ -395,9 +396,10 @@ Honest gaps. Fill them from real conversations, not from more thinking.
   very different: a city with an industrial base against a rural market town
   economy. The profile currently assumes one set of rules for both, and that
   assumption is untested.
-- Which of the six service categories actually opens doors. The expectation is
-  "save time", but "get more customers" may prove easier to sell because it sits
-  on the revenue side of the ledger rather than the cost side.
+- Which of the six categories actually opens doors. The expectation is "save
+  time", because it is the easiest to put a number against. "Understand your
+  data" may prove easier to sell to the businesses that already know their
+  reporting is costing them days, and harder everywhere else.
 - The real floor on price. The £800 to £1,500 band in the worked example is a
   reasoned starting point, not a tested one.
 - Whether the 5-employee floor is right. It may turn out that well-chosen

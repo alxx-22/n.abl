@@ -75,7 +75,7 @@ one signed first. See `contract-checklist.md` section 1.*
 `[PLACEHOLDER: two or three sentences, in the client's own words, describing what
 is expensive, repetitive or fragile today.]`
 
-**Category:** `[PLACEHOLDER: Save time / Reduce mistakes / Get more customers /
+**Category:** `[PLACEHOLDER: Save time / Reduce mistakes / Understand your data /
 Build something new / Train your team / Fix something]`
 
 *Guidance: one category. The six are defined in

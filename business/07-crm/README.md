@@ -2,6 +2,13 @@
 
 **Status: in progress.**
 
+> **The CRM's stages are n.abl's own sales pipeline, not a service menu.**
+> `New Lead` through `Won` describes n.abl pursuing a customer. There is no
+> service-category field in the CRM and there should not be one that mirrors a
+> lead-generation offer, because lead generation is not something n.abl sells —
+> see `01-positioning/README.md`. Where a service category is needed on a record,
+> it is one of the six customer-problem categories.
+
 The CRM is built and in daily use. It holds leads, contacts, pipeline stages,
 notes, activity and outreach drafts, and it works. What it does not have is a
 single one of the compliance fields the master plan requires. A search of the

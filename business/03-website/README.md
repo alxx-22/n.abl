@@ -1,16 +1,41 @@
 # 03 — Website
 
-**Status: done.** The public marketing site is built, deployed and rewritten to
-the six problem-led categories. The three pillars are gone from the offer
-structure, the invented impact metrics are deleted, and the case cards state
-plainly that they are examples rather than clients.
+```
+Status:       in progress
+Owner:        Alex
+Next review:  after 10 qualified conversations, or on the first real case study
+Evidence:     src/pages/Home.jsx + src/components/sections/, copy-deck.md,
+              the scored lead sheet once it exists
+```
 
-"Done" means the site now says the right thing. It does not mean the site has
-anything to prove it. There is no client work to point at and no testimonials,
-because there are no clients yet. That gap is real and it is not closed by
-writing better copy.
+The site is built, deployed, and ordered as a buyer's journey. What it does not
+yet have is any proof, any discoverability, any measurement, or a lead-capture
+path anybody has tested end to end.
 
-Last substantive revision: 2026-08-15.
+**The definition of done changed, and that is why this folder is no longer
+`done`.** It used to read:
+
+> Done = the site says the right thing
+
+It now reads:
+
+> **Done = the site is ready to perform as a sales asset.**
+
+The old definition was satisfiable by writing. The new one is not, and the
+difference is the point: work is not done because the code shipped.
+
+| Component | Status |
+|---|---|
+| Messaging | ✓ |
+| Brand | ✓ |
+| Structure | ✓ revised to the buyer's journey |
+| Proof | ✗ unavailable — no clients yet |
+| SEO | ✗ incomplete — no robots, no sitemap, no per-route metadata |
+| Conversion measurement | ✗ incomplete — nothing is instrumented |
+| Legal consistency | ✗ incomplete — retired positioning on public pages |
+| Lead capture | ✗ needs validation — never tested end to end |
+
+Last substantive revision: 2026-08-16.
 
 ---
 
@@ -46,45 +71,84 @@ The code lives in the application, not in this folder:
 
 ## What "done" looks like
 
-Ten statements. All ten are true today.
+Done = **the site is ready to perform as a sales asset.** Eight components,
+each with an honest state. Four are true. Four are not, and no amount of writing
+closes them.
 
-- [x] The offer on the page is the six problem-led categories from the master
-      plan: save time, reduce mistakes, get more customers, build something new,
-      train your team, fix something.
-- [x] Innovation / Automation / Optimisation no longer organises anything. It is
-      not in the nav, the sections, the cards or the footer.
-- [x] The hero leads with the problem, not the technology: "Tell us what's
-      costing you. We build the fix."
-- [x] The invented metrics are deleted. There is no "47 businesses transformed",
-      no "£2.1M client savings", no "3x average efficiency improvement" anywhere
-      in the repository.
-- [x] That slot now carries pricing: the two pricing categories, the worked
-      example, and credits instead of a retainer.
-- [x] The worked example matches the master plan exactly — £240 a month becomes
-      £40, saving £200 a month and £2,400 a year — and is labelled on the page as
-      illustrative arithmetic rather than an average of past work.
-- [x] The case cards carry no client attribution and the section says outright
-      that they are examples, not a client list.
-- [x] The toolkit section is grouped by what a job needs rather than by vendor,
-      and says plainly that most of what gets built is ordinary software.
-- [x] "No retainers" appears in the pricing section, the credits block and the
-      footer, and matches the commercial model in the master plan.
-- [x] The site is a React 18 + Vite SPA on Netlify with the app surfaces code
-      split, so a marketing visitor never downloads the portal, team or CRM
-      bundles.
+### Messaging ✓
 
-What is **not** claimed:
+- [x] The offer is the six corrected problem categories: save time, reduce
+      mistakes, understand your data, build something new, train your team, fix
+      something.
+- [x] Lead generation appears nowhere as a customer offer. "Get more customers"
+      is removed from the site, the master plan and the positioning folder.
+- [x] Automation and Data & Analytics are first-class named capabilities, not
+      buried in a tool list.
+- [x] No judgemental or gatekeeping framing. The site never grades a problem
+      before hearing it.
 
-- There is no proof on the site. No named client, no testimonial, no measured
-  outcome. Every example is illustrative and says so.
-- The site has no per-route metadata. Every URL serves the home page's title and
-  description in the static shell. See `seo-and-metadata.md`.
-- There is no `robots.txt` and no `sitemap.xml`.
-- The public legal pages still describe n.abl as "an automation consultancy".
-  That is the retired framing surviving on a public page.
-- Nothing here has been checked against real visitor behaviour. There is no
-  analytics on the site by design, so "does this page work" is currently a
-  question answered by conversations, not data.
+### Brand ✓
+
+- [x] The hero leads with the promise, "We make your business work smarter",
+      with the descriptor as the eyebrow.
+- [x] Innovation · Automation · Optimisation appears as brand framing — the band
+      under the hero and the footer strapline — and organises nothing.
+- [x] The visual identity is unchanged. `src/styles/tokens.css` has no diff:
+      no new colour, type step, radius, easing or duration.
+
+### Structure ✓
+
+- [x] The page follows the buyer's journey: promise, pillars, your problem, how
+      we help, method, capability, evidence, price, credits, trust, ask.
+- [x] The chapter rail, anchors and heading hierarchy survive the reorder.
+      Reduced-motion behaviour is intact: every reveal resolves visible.
+- [x] Each section is its own component in `src/components/sections/`, so the
+      order of the page is legible from `Home.jsx` alone.
+
+### Proof ✗ — unavailable
+
+- [ ] There is no proof on the site. No named client, no testimonial, no
+      measured outcome.
+- [x] Every example is labelled illustrative **by the component that renders
+      it**, from a `provenance` field in the data rather than from copy.
+- [x] A real case replaces an illustrative one one-for-one as a data change.
+      Process in `17-proof-and-case-studies`.
+
+This is the honest gap. It closes when there is a first delivery, not before.
+
+### SEO ✗ — incomplete
+
+- [ ] No `robots.txt`. `/team` and `/sales-intelligence` are crawlable via the
+      two deliberate footer links.
+- [ ] No `sitemap.xml`.
+- [ ] No per-route metadata. The SPA serves one shell, so `/privacy`, `/terms`
+      and `/cookies` report the home page's title to anything that does not run
+      JavaScript. Options in `seo-and-metadata.md`.
+
+### Conversion measurement ✗ — incomplete
+
+- [ ] Nothing is instrumented. Neither CTA, section reach depth nor form
+      submission is recorded, so "does this page work" is answered by
+      conversations rather than behaviour.
+- [x] The approach is decided: first-party events into Supabase, inside the
+      existing CSP. No third-party request, no cookie, no consent banner, and
+      the privacy policy stays true. Not built.
+
+### Legal consistency ✗ — incomplete
+
+- [ ] `src/pages/Legal.jsx:17` still calls n.abl "an automation consultancy" and
+      `:62` still sells "consultancy, automation and optimisation services".
+      Both are public and both are the retired framing.
+- [x] The draft-review notice is present on all three documents. **No legal
+      document here has been reviewed by a solicitor. Never say one has.**
+
+### Lead capture ✗ — needs validation
+
+- [ ] The discovery form posts to Web3Forms and nobody has confirmed end to end
+      that a submission reaches a human.
+- [ ] No spam protection beyond whatever the provider does. No honeypot, no rate
+      limit.
+- [x] The form has a confirmation state, a focus trap and an error path.
 
 ---
 
@@ -112,10 +176,12 @@ Each one is a closed job. None of them reopens the copy rewrite.
       JavaScript. Options and the recommendation are in `seo-and-metadata.md`.
 - [ ] **Add `public/sitemap.xml`** listing `/`, `/privacy`, `/terms` and
       `/cookies`. Four URLs, hand-written, no generator needed.
-- [ ] **Decide on the four-hour response claim.** "We typically respond within
-      4 hours" appears in the contact section, and the discovery modal promises
-      the same on success. Nothing measures it. Either commit to it and meet it,
-      or soften it to something that will still be true on a bad week.
+- [x] ~~**Decide on the four-hour response claim.**~~ Removed, 2026-08-16. It
+      appeared in the contact section, the discovery modal's success state and
+      the generated welcome pack. Nothing measured it, and an unmeasured promise
+      on a page selling reliability is a bad trade. If a response time is ever
+      offered again it is a priced commitment, measured, and named as one —
+      see `13-credits`, which is explicit that credits buy work and not standby.
 - [ ] **Replace one example with a real case, once there is one.** Not before.
       When there is a client willing to be named, the card carries their name
       with written permission and a number they agree with. Until then the cards
