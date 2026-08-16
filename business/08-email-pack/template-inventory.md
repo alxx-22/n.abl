@@ -1,8 +1,8 @@
 # Template inventory
 
-What is actually in `nabl-emails/`, file by file, as of 2026-08-15.
+What is actually in `nabl-emails/`, file by file, as checked on 2026-08-16.
 
-Twenty files: six templates × three formats, plus the pack's own readme and the
+Twenty files: six templates in three formats, plus the pack's own readme and the
 build script.
 
 ---
@@ -19,12 +19,13 @@ build script.
 | `email-update` | Progress update during an active engagement. | Project update from n.abl | `.html` 10,901 B · `.txt` 1,098 B · `.eml` 12,709 B |
 
 Subject lines are set in `build-eml.sh`, not in the HTML. If you change one,
-change it there and rebuild, or the `.eml` and the file drift apart.
+change it there and rebuild, or the `.eml` and your sent mail drift apart.
 
 ### Preheaders
 
 Every template carries a hidden preheader line, which is what the inbox shows
-after the subject.
+after the subject. All six are present and each is hidden with
+`display:none;max-height:0;overflow:hidden;font-size:1px`.
 
 | Template | Preheader |
 |---|---|
@@ -39,32 +40,67 @@ after the subject.
 
 | Template | Sections | Button |
 |---|---|---|
-| general | Amber bar, dark header, body, action box on surface with amber left rule, sign-off, dark footer | None. It is the plain workhorse. |
+| general | Amber bar, dark header, body, action box with amber left rule, sign-off, dark footer | None. It is the plain workhorse. |
 | alert | Amber bar, dark header, red alert banner, body, bullet list, action box, CTA, sign-off, footer | Respond Now → |
 | meeting | Amber bar, dark header, confirmed banner, body, meeting details box, prep checklist, CTA, reschedule line, sign-off, footer | Add to Calendar → |
-| proposal | Amber bar, dark header, body, proposal summary box on espresso, investment box, CTA, sub-button line, sign-off, footer | View Full Proposal → |
+| proposal | Amber bar, dark header, body, proposal summary box, investment box, CTA, sub-button line, sign-off, footer | View Full Proposal → |
 | welcome | Amber bar, dark header, welcome banner, body, three numbered steps, dedicated-contact box, CTA, warm sign-off, footer | Visit Your Client Portal → |
-| update | Amber bar, dark header, update banner, body, three status rows (complete / in progress / upcoming), this-week box, blockers box, CTA, sign-off, footer | Reply With Any Questions → |
+| update | Amber bar, dark header, update banner, body, three status rows (COMPLETE / IN PROGRESS / UPCOMING), this-week box, action-needed box, CTA, sign-off, footer | Reply With Any Questions → |
 
-All five buttons use the bulletproof pattern with a VML fallback, so they render
-as solid blocks in Outlook on Windows. That fallback has not been tested in
-Outlook. See `README.md`, next actions.
+Five templates carry a button; general does not. Each button appears twice in
+the source, once inside an `<!--[if mso]>` VML block and once outside it, which
+is the bulletproof pattern that makes it render as a solid block in Outlook on
+Windows. That fallback has not been tested in Outlook. See `README.md`, next
+actions.
 
 ### Construction, common to all six
 
 - 600px centred card, table layout, all styles inline. No `<style>` block, no
   flexbox, no grid.
-- Two font stacks only: `Arial, Helvetica, sans-serif` for body,
-  `'Arial Black', Gadget, sans-serif` for headings. Web-safe by necessity: the
+- Two font stacks only: `Arial, Helvetica, sans-serif` for body and
+  `'Arial Black', Gadget, sans-serif` for headings. Web-safe by necessity — the
   self-hosted brand faces cannot be used in email.
 - The wordmark is an image, `https://nabl.agency/brand/wordmark-email.png`,
-  632 × 244, 10,538 bytes. It is the drawn artwork, the same master the site and
-  favicon use. It is an image because SVG does not render in Outlook and the
-  drawn `n` cannot be reproduced in email-safe CSS.
+  10,538 bytes, the same drawn master the site and favicon use. It is an image
+  because SVG does not render in Outlook, and the drawn `n` cannot be reproduced
+  in email-safe CSS without border-radius, which Outlook also ignores.
 - If images are blocked, the alt text reads "n.abl" in cream Arial Black, so the
-  fallback still looks deliberate.
+  fallback still looks deliberate rather than broken.
 - Every footer carries the unsubscribe token, a privacy policy link and a terms
   link. Confirmed present in all six HTML files and all six text files.
+
+### Placeholders in use
+
+Counted across all twelve source files. Anything in square brackets that is not
+in this table is Outlook conditional syntax (`[if mso]`, `[endif]`) or a status
+label in the update template, and must be left alone.
+
+| Placeholder | Occurrences | What it is |
+|---|---|---|
+| `[Your Name]` | 15 | Sender's name in the signature |
+| `[Unsubscribe Link]` | 13 | List-provider unsubscribe URL |
+| `[First Name]` | 13 | Recipient's first name |
+| `[Date]` | 7 | Deadline, valid-until or due-by |
+| `[Reply Link]` | 4 | Usually `mailto:hello@nabl.agency` |
+| `[Proposal Link]` | 4 | Hosted proposal document |
+| `[Meeting URL]` | 4 | Video call link |
+| `[Client Portal Link]` | 4 | Client portal |
+| `[Calendar Link]` | 4 | `.ics` or add-to-calendar link |
+| `[Action Link]` | 4 | Destination for "Respond Now" |
+| `[Month Year]` | 3 | Reporting period, update template |
+| `[Day, Date Month Year]` | 3 | Full meeting date |
+| `[Business Name]` | 3 | Client's company name, proposal |
+| `[Amount]` | 3 | Indicative investment figure, proposal |
+| `[Name]` | 2 | The n.abl attendee, meeting template only |
+| `[00:00 AM – 00:00 AM]` | 2 | Meeting start and end time |
+
+`[Name]` is the odd one out. Everywhere else the recipient is `[First Name]`,
+and in the meeting template `[Name]` is us, not them. Renaming it is in the
+next-actions list.
+
+Values already filled in and not to be changed: `hello@nabl.agency`,
+`www.nabl.agency`, `https://nabl.agency/privacy`, `https://nabl.agency/terms`,
+`© 2026 n.abl`.
 
 ---
 
@@ -85,9 +121,9 @@ Outlook. See `README.md`, next actions.
 
 | Colour | Role | Measured against | Ratio |
 |---|---|---|---|
-| `#FFFDF9` | Card ground, four templates | — | — |
-| `#FBF6EC` | Card ground, alert | — | — |
-| `#F7F2E8` | Card ground, general | — | — |
+| `#FFFDF9` | Card ground: meeting, proposal, update, welcome | — | — |
+| `#FBF6EC` | Card ground: alert | — | — |
+| `#F7F2E8` | Card ground: general | — | — |
 | `#0E0C0A` | Body ink, four templates | on `#FFFDF9` | 19.22:1 |
 | `#14110E` | Body ink, alert and general | on `#F7F2E8` | 16.86:1 |
 | `#6B625A` | Secondary text on light | on `#FFFDF9` | 5.87:1 |
@@ -96,8 +132,8 @@ Outlook. See `README.md`, next actions.
 
 ### Off-palette colours
 
-Five values in the pack are not in the `02-brand` palette. Each is doing a real
-job and each passes contrast, but none is a named token.
+Five values in the pack are not named tokens in `02-brand`. Each does a real job
+and each passes contrast.
 
 | Colour | Where | Note |
 |---|---|---|
@@ -116,10 +152,10 @@ palette. Decision pending, see `README.md`.
 No old-brand hex value survives. `#B8FF00`, `#0A0A0A` and Archivo Black do not
 appear in any template.
 
-What does survive is wording. Six comments reading `<!-- LIME TOP BORDER -->` or
-`<!-- CTA BUTTON (lime) -->` across four HTML sources (meeting, proposal,
-update, welcome), mirrored into their four `.eml` outputs: eight files, twelve
-lines. `nabl-emails/README.txt` still tells the reader to expect a lime bar and
+What survives is wording. Six comments reading `<!-- LIME TOP BORDER -->` or
+`<!-- CTA BUTTON (lime) -->` sit in four HTML sources — meeting, proposal,
+update and welcome — and are mirrored into their four `.eml` outputs.
+`nabl-emails/README.txt` still tells the reader to expect a lime bar and
 lime accents, and names Impact as a heading font that no template uses.
 
 ---
@@ -129,8 +165,8 @@ lime accents, and names Impact as a heading font that no template uses.
 **On light grounds the amber must be the deep amber `#B87718`. Plain amber
 `#E9AC57` is not permitted as text on a light card.**
 
-The figures behind that rule, both measured on the near-white card ground
-`#FFFDF9`:
+Two measured failures produced that rule. Both were found on the near-white card
+ground, and both are recorded in commit `a6e67c9`.
 
 | What was found | Ratio | Threshold | Result |
 |---|---|---|---|
@@ -142,9 +178,12 @@ Both were fixed. The muted cream was replaced with warm grey `#6B625A` at
 
 Note the size dependency, because it is easy to get wrong. Deep amber on
 near-white is 3.63:1. That clears the 3.0:1 large-text threshold, which is what
-the 24px numerals need. It does **not** clear 4.5:1, so deep amber is for large
-text and for furniture such as rules and borders. Body-size text on a light card
-uses ink or the warm grey, never any amber.
+the 24px numerals needed. It does **not** clear 4.5:1. So deep amber is for
+large text and for furniture such as rules and borders. Body-size text on a
+light card uses ink or the warm grey, never any amber.
+
+The general rule, stated once: muted cream `#9A8F80` is a dark-ground colour and
+plain amber `#E9AC57` is a dark-ground colour. Neither crosses onto light.
 
 ### Contrast was verified by rendering in a browser
 
@@ -154,19 +193,19 @@ The check is `scripts/check-email-contrast.mjs`, run with `npm run test:emails`.
 It opens each HTML file in Chromium, walks every element holding its own visible
 text, reads the resolved colour, then walks up the ancestor chain to the first
 background that is not transparent. That is what a mail client actually
-composites. It applies the WCAG AA thresholds, 4.5:1 for body text and 3.0:1 for
+composites. It applies the WCAG AA thresholds — 4.5:1 for body text, 3.0:1 for
 large text, where large means 24px or more, or 18.66px at weight 700.
 
 **Two static regex passes over the markup were tried first, and both gave false
 results.** Table-based email HTML nests grounds inside grounds, and a regex walk
-cannot tell which one a run of text is sitting on. As recorded in commit
-`a6e67c9`, the static attempts reported 12 failures that were all false
-positives, and buried the two real defects above.
+cannot tell which ground a run of text is sitting on. The static attempts
+reported 12 failures that were all false positives, and buried the two real
+defects above.
 
-The rule that follows from that: do not reason about contrast in this pack from
-reading the source. Render it and measure it.
+The rule that follows: do not reason about contrast in this pack by reading the
+source. Render it and measure it.
 
-Current result, re-run 2026-08-15:
+Current result, re-run 2026-08-16:
 
 ```
   ✓ email-alert.html
@@ -186,12 +225,14 @@ The check exits non-zero when a template fails, so it works as a gate.
 ## 4. Build state
 
 `build-eml.sh` reads `email-<name>.html` and `email-<name>.txt`, converts both to
-CRLF, and writes a `multipart/alternative` message with the plain text part
-first and the HTML part second. It sets `From: n.abl <hello@nabl.agency>`,
-the subject from its own lookup table, and `X-Unsent: 1` so the file opens as a
-draft.
+CRLF, and writes a `multipart/alternative` message with the plain-text part
+first and the HTML part second. It sets `From: n.abl <hello@nabl.agency>`, the
+subject from its own lookup table, and `X-Unsent: 1` so the file opens as a
+draft rather than a received message.
 
-All six `.eml` files were parsed and compared against their sources today. Both
-parts match in all six. Nothing has drifted.
+All six `.eml` files were parsed and compared against their sources on
+2026-08-16. Both parts match in all six, and all six carry `X-Unsent: 1`.
+Nothing has drifted.
 
-If you edit an `.eml` directly, the next build discards the edit without warning.
+If you edit an `.eml` directly, the next build discards the edit without
+warning.
