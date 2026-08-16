@@ -14,7 +14,7 @@ const DOCS = {
       'How n.abl collects, uses and protects personal data, and the rights you have over it.',
     body: [
       ['Who we are', [
-        'n.abl is an automation consultancy based in the United Kingdom. For the purposes of UK GDPR we are the data controller for the personal data described in this policy.',
+        'n.abl is a technology implementation partner for small businesses, based in the United Kingdom. For the purposes of UK GDPR we are the data controller for the personal data described in this policy.',
         'You can reach us at hello@nabl.agency for any privacy question, including to exercise the rights set out below.',
       ]],
       ['What we collect and why', [
@@ -56,10 +56,10 @@ const DOCS = {
   terms: {
     label: 'Terms',
     title: 'Terms of Service',
-    intro: 'The terms on which n.abl provides consultancy and automation services.',
+    intro: 'The terms on which n.abl provides technology implementation services.',
     body: [
       ['Services', [
-        'We provide consultancy, automation and optimisation services, generally delivered within software platforms you already license. The specific scope of any engagement is set out in the quote or statement of work we agree with you.',
+        'We implement technology for small businesses: automation, data and analytics, custom software, web, AI and training, chosen according to the problem rather than fixed in advance. Work is generally delivered within software platforms you already license. The specific scope of any engagement is set out in the quote or statement of work we agree with you.',
         'Nothing on this website is an offer capable of acceptance; it is an invitation to discuss work.',
       ]],
       ['Engagement and quotes', [

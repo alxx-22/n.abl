@@ -1,2 +1,6 @@
-# SPA fallback
+# Per-route shells first (see netlify.toml for why these are explicit),
+# then the SPA fallback for everything else.
+/privacy               /privacy/index.html               200
+/terms                 /terms/index.html                 200
+/cookies               /cookies/index.html               200
 /*                     /index.html                       200

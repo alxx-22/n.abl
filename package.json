@@ -6,7 +6,7 @@
   "description": "n.abl \u2014 agency site, client portal, team space and CRM",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/build-routes.mjs",
     "preview": "vite preview --port 4173",
     "test:ui": "node scripts/e2e-ui.mjs",
     "test:live": "node scripts/e2e-live.mjs",

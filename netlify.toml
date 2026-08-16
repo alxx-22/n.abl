@@ -18,6 +18,31 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Per-route shells, written by scripts/build-routes.mjs after the Vite build.
+# Each is the same app shell with its own title, description, og tags and
+# canonical, so a crawler that does not run JavaScript gets the right head for
+# the URL it asked for.
+#
+# These are declared explicitly and BEFORE the catch-all. Netlify does serve an
+# existing static file ahead of a non-forced rewrite, so the catch-all alone
+# would probably do the right thing — but "probably" is the wrong basis for
+# something that silently degrades to serving the wrong metadata. Rules are
+# matched in order, first match wins, so this is deterministic.
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms"
+  to = "/terms/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/cookies"
+  to = "/cookies/index.html"
+  status = 200
+
 # SPA fallback — every other route is served by the React app.
 [[redirects]]
   from = "/*"

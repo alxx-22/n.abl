@@ -1,0 +1,20 @@
+# n.abl — nabl.agency
+#
+# A disallow asks well-behaved crawlers not to fetch a URL. It does not hide
+# anything from a person reading the HTML, and it is not access control — the
+# internal surfaces are behind Supabase Auth and an access key, which is what
+# actually protects them. This file is tidiness: an internal tool turning up in
+# a search for the company name looks careless and advertises the surface.
+
+User-agent: *
+
+# Internal. Reachable from the footer's two unlabelled links, so crawlable
+# without this.
+Disallow: /team
+Disallow: /sales-intelligence
+Disallow: /portal
+
+# Everything else is public: /, /privacy, /terms, /cookies
+Allow: /
+
+Sitemap: https://nabl.agency/sitemap.xml
