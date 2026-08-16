@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Field } from './ui/index.jsx'
+import { track } from '../lib/analytics.js'
 
 const BUSINESS_TYPES = [
   'Retail', 'Professional Services', 'Technology',
@@ -55,8 +56,16 @@ export default function DiscoveryModal({ open, onClose }) {
     e.preventDefault()
     const form = e.currentTarget
     if (!form.checkValidity()) { form.reportValidity(); return }
+
+    /* Honeypot. A field no human sees and no human fills; a bot that
+       walks the DOM fills everything. Show the success state rather
+       than an error, so a scripted submitter gets no signal about why
+       it failed and nothing is sent on. */
+    if (new FormData(form).get('company_website')) { setDone(true); return }
+
     setError('')
     setSending(true)
+    track('form_submit')
     const fd = new FormData(form)
     try {
       const res = await fetch('https://api.web3forms.com/submit', {
@@ -74,9 +83,13 @@ export default function DiscoveryModal({ open, onClose }) {
         }),
       })
       const data = await res.json()
-      if (data.success) { setDone(true) }
-      else { setError('Something went wrong. Email hello@nabl.agency and we’ll pick it up.') }
+      if (data.success) { track('form_success'); setDone(true) }
+      else {
+        track('form_error')
+        setError('Something went wrong. Email hello@nabl.agency and we’ll pick it up.')
+      }
     } catch {
+      track('form_error')
       setError('Couldn’t send just now. Email hello@nabl.agency and we’ll pick it up.')
     } finally {
       setSending(false)
@@ -136,6 +149,19 @@ export default function DiscoveryModal({ open, onClose }) {
                 <textarea id="d-challenge" name="challenge" className="input" rows={4}
                   placeholder="The report that takes all Monday, the inbox nobody owns…" />
               </Field>
+
+              {/* Honeypot. aria-hidden and out of the tab order so it is
+                  invisible to screen readers and keyboard users alike. */}
+              <div className="hp" aria-hidden="true">
+                <label htmlFor="d-company-website">Company website</label>
+                <input
+                  id="d-company-website"
+                  name="company_website"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
 
               <button type="submit" className="btn btn--accent btn--block" disabled={sending}>
                 {sending ? 'Sending…' : 'Book my discovery call'}

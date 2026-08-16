@@ -309,6 +309,17 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .rows { display: flex; flex-direction: column; gap: var(--s-3); }
 
 .card-pad { padding: var(--s-5); }
+
+/* Honeypot. Positioned off-screen rather than display:none — a bot that
+   is worth defending against skips fields it can see are hidden, and
+   this one has to look real to it while being unreachable to anyone
+   using the page. */
+.hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
 .card-actions { display: flex; gap: var(--s-2); margin-top: var(--s-4); flex-wrap: wrap; }
 
 /* ---------- Progress ---------- */

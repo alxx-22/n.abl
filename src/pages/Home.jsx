@@ -4,6 +4,7 @@ import Footer from '../components/layout/Footer.jsx'
 import { prefersReducedMotion } from '../components/ui/index.jsx'
 import DiscoveryModal from '../components/DiscoveryModal.jsx'
 import { JourneyRail } from '../components/Journey.jsx'
+import { track, observeDepth } from '../lib/analytics.js'
 
 import Hero from '../components/sections/Hero.jsx'
 import Pillars from '../components/sections/Pillars.jsx'
@@ -59,7 +60,17 @@ function Intro() {
    ============================================================ */
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false)
-  const book = () => setModalOpen(true)
+
+  // Which CTA opened the modal is the thing worth knowing, so the
+  // event name is passed in by the caller rather than inferred here.
+  const book = (source) => {
+    track(source)
+    track('form_open')
+    setModalOpen(true)
+  }
+
+  // Deepest section reached, sent once when the visitor leaves.
+  useEffect(() => observeDepth(), [])
 
   return (
     <div className="grain">
@@ -69,7 +80,7 @@ export default function Home() {
       <JourneyRail />
 
       <main>
-        <Hero onBook={book} />
+        <Hero onBook={() => book('cta_primary')} />
         <Pillars />
         <Problems />
         <HowWeHelp />
@@ -79,7 +90,7 @@ export default function Home() {
         <Pricing />
         <Credits />
         <About />
-        <Contact onBook={book} />
+        <Contact onBook={() => book('cta_final')} />
       </main>
 
       <Footer />

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../ui/index.jsx'
+import { track } from '../../lib/analytics.js'
 import { NodeField } from '../Visuals.jsx'
 
 /* ============================================================
@@ -48,7 +49,7 @@ export default function Hero({ onBook }) {
           <button className="btn btn--primary" onClick={onBook}>
             Book a free discovery call
           </button>
-          <a className="btn btn--ghost" href="#why-nabl">See how we help</a>
+          <a className="btn btn--ghost" href="#why-nabl" onClick={() => track('cta_secondary')}>See how we help</a>
         </div>
         {/* Stronger differentiator than any technology list: it tells an
             owner these people understand business, not just software. */}

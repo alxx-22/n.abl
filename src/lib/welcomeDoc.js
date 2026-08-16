@@ -91,7 +91,7 @@ export async function summarise(transcript, opts = {}) {
 
 /** The prompt to hand a model, whether that is an endpoint or a chat window. */
 export function transcriptPrompt(client, transcript) {
-  return `You are writing the project-goals section of a welcome document for a new client of n.abl, a UK automation consultancy.
+  return `You are writing the project-goals section of a welcome document for a new client of n.abl, a UK technology implementation partner for small businesses. n.abl starts with the client's problem rather than the technology, and builds whatever solves it properly — automation, data and analytics, software, web, AI or training.
 
 Client: ${client?.business_name || '[business]'}
 

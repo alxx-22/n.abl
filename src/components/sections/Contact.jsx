@@ -1,4 +1,5 @@
 import { Reveal } from '../ui/index.jsx'
+import { track } from '../../lib/analytics.js'
 
 /* ============================================================
    11 — FINAL CTA
@@ -35,7 +36,7 @@ export default function Contact({ onBook }) {
           </button>
         </Reveal>
         <Reveal delay={0.22}>
-          <a className="contact__email" href="mailto:hello@nabl.agency">hello@nabl.agency</a>
+          <a className="contact__email" href="mailto:hello@nabl.agency" onClick={() => track('cta_email')}>hello@nabl.agency</a>
         </Reveal>
       </div>
     </section>

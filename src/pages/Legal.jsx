@@ -21,7 +21,8 @@ const DOCS = {
         'Enquiry details. When you submit the discovery-call form we collect your name, business name, email address, business type and whatever you tell us about your challenge. We use this solely to respond to your enquiry and arrange a call.',
         'Client records. If you become a client we hold your business name, contact name and contact email, together with the quotes, project records, meeting details and documents that make up our engagement.',
         'Team accounts. Our own staff sign in with an email address and password to administer the above.',
-        'We do not run advertising or analytics tracking, we do not build behavioural profiles, and we do not sell or share personal data for marketing.',
+        'Website usage. We record a small number of anonymous events on our own website — which buttons are used, how far down the page people read, and whether the enquiry form succeeded — so we can tell whether the site is doing its job. These events carry no name, no IP address, no browser or device fingerprint and no cookie, and they cannot be linked to you, to another visit or to anything else. They are not personal data and we could not identify you from them if we wanted to. We honour Do Not Track.',
+        'We run no advertising and no third-party analytics, we do not build behavioural profiles, and we do not sell or share personal data for marketing. Nothing on this site is loaded from another company.',
       ]],
       ['Lawful bases', [
         'Legitimate interests — responding to an enquiry you sent us, and administering our own business records.',
@@ -29,7 +30,7 @@ const DOCS = {
         'Legal obligation — where we must retain records, for example for tax or accounting purposes.',
       ]],
       ['Service providers', [
-        'Supabase — hosts our database, authentication and private file storage. Our project is hosted in the EU (eu-north-1).',
+        'Supabase — hosts our database, authentication, private file storage and the anonymous website events described above. Our project is hosted in the EU (eu-north-1).',
         'Web3Forms — delivers submissions from the discovery-call form to our inbox.',
         'Netlify — serves this website.',
         'Each acts as a processor on our instructions. We do not permit them to use your data for their own purposes.',
@@ -106,13 +107,14 @@ const DOCS = {
     body: [
       ['The short version', [
         'We use no advertising cookies, no analytics cookies and no third-party tracking cookies. Nothing on this site follows you around the internet, and there is no consent banner because there is nothing to consent to.',
+        'We do count anonymous events — which buttons get used, how far down the page people read — but we do so without storing anything in your browser at all. There is no cookie, no local storage and no identifier that survives you closing the tab, which is why this is not a consent question.',
       ]],
       ['What we do store', [
         'Team authentication session. If you are a member of the n.abl team and sign in to the internal team space, your browser stores an authentication session so you are not asked to sign in on every page. This is strictly necessary for the sign-in to function and is only ever set after you deliberately sign in.',
         'Client portal. The portal deliberately stores nothing. Your access key is held in memory for the length of your visit and is discarded the moment you close the tab or log out.',
       ]],
       ['Third parties', [
-        'Submitting the discovery-call form sends its contents to Web3Forms so the message reaches our inbox. The site is served by Netlify. Neither is used to set tracking cookies on this site.',
+        'Submitting the discovery-call form sends its contents to Web3Forms so the message reaches our inbox. The site is served by Netlify, and the anonymous usage events described in our privacy policy go to our own Supabase project. None of the three is used to set a tracking cookie on this site.',
       ]],
       ['Controlling storage', [
         'You can clear or block site data at any time through your browser settings. Blocking storage for this site will not affect the marketing pages; it will prevent the internal team sign-in from persisting between pages.',

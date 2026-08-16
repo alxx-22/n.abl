@@ -1,14 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-/* The anon key is a public, RLS-guarded key — it is safe in the bundle.
-   Env vars are supported so the project can be repointed without a code
-   change, but the literals keep behaviour identical to the previous site. */
-export const SUPABASE_URL =
-  import.meta.env.VITE_SUPABASE_URL || 'https://rrkcoqopcqtowbyismcq.supabase.co'
-
-export const SUPABASE_ANON_KEY =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJya2NvcW9wY3F0b3dieWlzbWNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjE1NTksImV4cCI6MjA5NTczNzU1OX0.p8Hj0sULNLos0_nZhJ_OyYyfiqfmAspwFxtLBdoK4R0'
+/* The project constants live in supabaseConfig.js, which imports nothing.
+   Code that only needs the URL and the key — analytics.js on the marketing
+   page — can take them from there without pulling this module's SDK
+   dependency into the bundle. Re-exported here so existing imports of
+   SUPABASE_URL / SUPABASE_ANON_KEY from this file keep working. */
+export { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabaseConfig.js'
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabaseConfig.js'
 
 /* ============================================================
    TWO INDEPENDENT CLIENTS — these must never share state.
