@@ -239,48 +239,49 @@
 
 /* The worked example. Held inside a rule rather than a card so it reads as
    the evidence under the two pricing cards, not a third option. */
+/* The worked example, held inside a rule rather than a card so it reads
+   as evidence under the two pricing cards, not a third option.
+
+   It used to be four animated counters across the full width plus a
+   paragraph, which took roughly a third of the section. It is proof of
+   how we think about price, not the pitch itself, so it is now three
+   lines. The .stat counter went with it — nothing else on the site
+   used it. */
 .worked {
   margin-top: var(--s-8);
-  padding: var(--s-7) 0;
+  padding: var(--s-6) 0;
   border-block: 1px solid var(--line);
 }
-.worked__head  { max-width: 62ch; margin-bottom: var(--s-7); }
-.worked__lead  { font-size: var(--t-lg); color: var(--cream-200); margin-top: var(--s-3); line-height: 1.4; }
-.worked__note  { color: var(--cream-600); font-size: var(--t-sm); max-width: 72ch; margin-top: var(--s-7); }
-
-.stats { display: grid; gap: var(--s-6); grid-template-columns: repeat(2, 1fr); }
-@media (min-width: 900px) { .stats { grid-template-columns: repeat(4, 1fr) } }
-.stat__num {
-  font-family: var(--font-display); font-weight: 700;
-  font-size: var(--t-3xl); color: var(--cream-100);
-  letter-spacing: var(--track-tight);
-  text-shadow: 0 0 40px rgba(var(--cream-rgb), 0.14);
+.worked__line {
+  font-size: var(--t-lg);
+  color: var(--cream-200);
+  margin-top: var(--s-3);
+  line-height: 1.4;
 }
-.stat__label { color: var(--cream-600); font-size: var(--t-sm); margin-top: var(--s-2); max-width: 22ch; }
-
-/* The last two figures are the point of the example, so they carry the
-   accent while the two inputs stay quiet. */
-.worked__stats .stat:nth-child(n+3) .stat__num {
+.worked__line--figures {
+  font-family: var(--font-display);
+  font-weight: 600;
   color: var(--accent-400);
-  text-shadow: 0 0 40px rgba(var(--accent-rgb), 0.22);
 }
+.worked__note { color: var(--cream-600); font-size: var(--t-sm); max-width: 72ch; margin-top: var(--s-4); }
 
-.credits { margin-top: var(--s-8); display: grid; gap: var(--s-6); }
-@media (min-width: 1000px) { .credits { grid-template-columns: 0.9fr 1.1fr; gap: var(--s-8) } }
-.credits__title { font-size: var(--t-xl); line-height: 1.15; margin-bottom: var(--s-3); }
-.credits__body  { color: var(--cream-400); font-size: var(--t-sm); }
-.credits__grid  { display: grid; gap: var(--s-4); align-content: start; }
+/* Credits. A section in its own right now rather than a block at the
+   foot of pricing, so the type steps up one size from the footnote it
+   used to be. */
+.credits__grid { display: grid; gap: var(--s-4); align-content: start; }
 @media (min-width: 640px) { .credits__grid { grid-template-columns: repeat(3, 1fr) } }
+.credits__grid > .reveal { display: flex; }
 .credit {
   display: flex; flex-direction: column; gap: var(--s-2);
-  padding: var(--s-4) var(--s-5);
+  flex: 1;
+  padding: var(--s-5);
   border: 1px solid var(--line);
   border-left: 2px solid var(--accent-400);
   border-radius: var(--r-sm);
   background: rgba(var(--cream-rgb), 0.02);
 }
-.credit__name { font-weight: 600; color: var(--cream-100); font-size: var(--t-sm); }
-.credit__body { color: var(--cream-600); font-size: var(--t-xs); line-height: 1.5; }
+.credit__name { font-weight: 600; color: var(--cream-100); font-size: var(--t-lg); }
+.credit__body { color: var(--cream-400); font-size: var(--t-sm); line-height: 1.5; }
 
 /* ---------- Cases ----------
    Problem / fix / result, the same three rows on every card. The

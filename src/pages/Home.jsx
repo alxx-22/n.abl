@@ -12,6 +12,7 @@ import HowWeHelp from '../components/sections/HowWeHelp.jsx'
 import Capabilities from '../components/sections/Capabilities.jsx'
 import Process from '../components/sections/Process.jsx'
 import Pricing from '../components/sections/Pricing.jsx'
+import Credits from '../components/sections/Credits.jsx'
 import Examples from '../components/sections/Examples.jsx'
 import About from '../components/sections/About.jsx'
 import Contact from '../components/sections/Contact.jsx'
@@ -76,6 +77,7 @@ export default function Home() {
         <Capabilities />
         <Examples />
         <Pricing />
+        <Credits />
         <About />
         <Contact onBook={book} />
       </main>
