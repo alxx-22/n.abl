@@ -5,24 +5,38 @@ import { CategoryGlyph } from '../Visuals.jsx'
 /* ============================================================
    03 — WHAT ARE YOU TRYING TO IMPROVE?
 
-   The offer is organised by the problem the client arrives with,
-   not by the disciplines we happen to practise. Nobody wakes up
-   needing "optimisation"; they wake up knowing a job takes all
-   morning and shouldn't. See business/README.md §1.
+   The customer-problem layer, and the only one of the three that
+   faces the visitor. Brand (the pillars) is what they remember;
+   capabilities (automation, data, software, web, AI, training) are
+   what we deliver; this is how they enter the conversation.
+
+   Each card leads with the sentence the owner would actually say.
+   Nobody wakes up needing "optimisation" — they wake up knowing a
+   job takes all morning and shouldn't.
+
+   "Get more customers" was removed: lead capture, follow-up and
+   conversion are internal growth infrastructure, not something the
+   business can credibly sell yet. See business/01-positioning.
    ============================================================ */
 export const CATEGORIES = [
-  { n: '01', title: 'Save time', glyph: 'time', tag: 'The job that eats your week',
-    body: 'Something gets done by hand, over and over, and it always takes longer than it should. We find where the hours go and hand that work to something that does not get bored.' },
-  { n: '02', title: 'Reduce mistakes', glyph: 'accuracy', tag: 'The thing that keeps going wrong',
-    body: 'Retyped numbers, missed steps, the spreadsheet only one person understands. We replace the fragile bit with something that does it the same way every time.' },
-  { n: '03', title: 'Get more customers', glyph: 'customers', tag: 'The enquiries you never followed up',
-    body: 'Leads that arrive and go cold, follow-ups that depend on someone remembering. We make capture and follow-up happen whether anyone remembers or not.' },
-  { n: '04', title: 'Build something new', glyph: 'build', tag: 'The thing you do not have yet',
-    body: 'A website, a booking flow, an internal tool, a portal for your customers. Scoped properly and quoted at a fixed price before anyone starts.' },
-  { n: '05', title: 'Train your team', glyph: 'train', tag: 'The software you already pay for',
-    body: 'Most businesses use a fraction of what they own. Sessions built around your actual work, not a generic course, so people leave able to do the thing.' },
-  { n: '06', title: 'Fix something', glyph: 'fix', tag: 'The bit that broke',
-    body: 'Something stopped working, or needs changing, or was never quite right. Buy credits and spend them when you need us — no monthly retainer to sit on standby.' },
+  { n: '01', title: 'Save time', glyph: 'time',
+    quote: 'This takes longer than it should.',
+    body: 'Give your team hours back by removing repetitive work.' },
+  { n: '02', title: 'Reduce mistakes', glyph: 'accuracy',
+    quote: 'We keep having to check this.',
+    body: 'Replace fragile manual processes with systems that do the job consistently.' },
+  { n: '03', title: 'Understand your data', glyph: 'data',
+    quote: 'We have the data, but not the answers.',
+    body: 'Turn spreadsheets, systems and reporting into something you can make decisions with.' },
+  { n: '04', title: 'Build something new', glyph: 'build',
+    quote: "We need something that doesn't exist yet.",
+    body: 'Websites, internal tools, applications, portals and software built for you.' },
+  { n: '05', title: 'Train your team', glyph: 'train',
+    quote: "We have the tools, but we're not getting enough from them.",
+    body: 'Sessions built around your actual work, so people leave able to do the thing.' },
+  { n: '06', title: 'Fix something', glyph: 'fix',
+    quote: "It works. Until it doesn't.",
+    body: 'Something broke, or was never quite right. Buy credits and spend them when you need us.' },
 ]
 
 export default function Problems() {
@@ -31,28 +45,26 @@ export default function Problems() {
       <div className="shell">
         <Chapter index={1}>Your problem</Chapter>
         <Reveal delay={0.06}>
-          <h2 className="section__title">
-            Start with the problem.<br />Not the technology<span className="dot" />
-          </h2>
+          <h2 className="section__title">What are you trying to improve<span className="dot" /></h2>
         </Reveal>
         <Reveal delay={0.12}>
-          <p className="section__sub prose">
-            Nobody arrives knowing which tool they need. They arrive knowing what is
-            annoying them. Find the one that sounds like you.
-          </p>
+          <p className="section__sub prose">Which of these sounds familiar?</p>
         </Reveal>
 
+        {/* Staggered by full index rather than by column, so the six
+            arrive in sequence and read as a diagnostic being worked
+            through, not as a menu of six services dealt onto the page. */}
         <div className="grid grid--3 section__body">
           {CATEGORIES.map((c, i) => (
-            <Reveal key={c.n} delay={0.1 + (i % 3) * 0.08}>
-              <EdgeCard className="card-pad pillar">
-                <div className="pillar__head">
-                  <span className="pillar__num">{c.n}</span>
+            <Reveal key={c.n} delay={0.06 + i * 0.07}>
+              <EdgeCard className="card-pad problem">
+                <div className="problem__head">
+                  <span className="problem__num">{c.n}</span>
                   <CategoryGlyph kind={c.glyph} />
                 </div>
-                <h3 className="pillar__title">{c.title}</h3>
-                <p className="pillar__body">{c.body}</p>
-                <span className="pillar__tag">{c.tag}</span>
+                <span className="problem__label">{c.title}</span>
+                <h3 className="problem__quote">&ldquo;{c.quote}&rdquo;</h3>
+                <p className="problem__body">{c.body}</p>
               </EdgeCard>
             </Reveal>
           ))}

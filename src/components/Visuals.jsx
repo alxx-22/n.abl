@@ -101,7 +101,12 @@ export function NodeField({ className = '' }) {
    Automation, Optimisation), which described our tools rather than the
    client's problem. Six now, matching the six things people actually
    turn up asking for. Same geometric language throughout: true circles,
-   a single stroke weight, one solid accent dot as the focal point. */
+   a single stroke weight, one solid accent dot as the focal point.
+
+   The funnel that stood for "get more customers" is gone with the
+   category; a bar reading stands for "understand your data" in its
+   place. Same 64×64 frame, same 1.4 stroke, same single accent dot —
+   the drawing grammar is unchanged. */
 export function CategoryGlyph({ kind }) {
   const common = {
     viewBox: '0 0 64 64', width: 46, height: 46, fill: 'none',
@@ -135,13 +140,17 @@ export function CategoryGlyph({ kind }) {
     )
   }
 
-  // Get more customers — a funnel that keeps hold of what enters it.
-  if (kind === 'customers') {
+  // Understand your data — bars you already have, and the one reading
+  // that turns out to be the answer.
+  if (kind === 'data') {
     return (
       <svg {...common}>
-        <path d="M12 16h40L37 34v14l-10 6V34z" />
-        <path d="M12 16h40" strokeOpacity=".45" />
-        <circle cx="32" cy="10" r="2.6" fill="currentColor" stroke="none" />
+        <path d="M12 12v40h40" strokeOpacity=".45" />
+        <path d="M20 44v-8" strokeOpacity=".55" />
+        <path d="M29 44V28" strokeOpacity=".55" />
+        <path d="M38 44V34" strokeOpacity=".55" />
+        <path d="M47 44V20" />
+        <circle cx="47" cy="20" r="2.6" fill="currentColor" stroke="none" />
       </svg>
     )
   }

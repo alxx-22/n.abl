@@ -114,18 +114,38 @@
   color: var(--cream-600);
 }
 
-/* ---------- Problem cards ---------- */
-.pillar__num {
+/* ---------- Problem cards ----------
+   Renamed from .pillar__*: "pillar" now means the three brand pillars
+   above, and two different things called pillar in one stylesheet is
+   how the offer structure got confused with the brand in the first
+   place.
+
+   The customer's sentence is the heading. The category name is a small
+   label above it, so the card reads as a diagnosis being recognised
+   rather than a service being offered. */
+.problem__num {
   font-family: var(--font-mono); font-size: var(--t-xs);
   color: var(--accent-400); letter-spacing: 0.1em;
 }
-.pillar__title { font-size: var(--t-xl); margin: var(--s-3) 0 var(--s-3); }
-.pillar__body  { color: var(--cream-400); font-size: var(--t-sm); }
-.pillar__tag {
-  display: inline-block; margin-top: var(--s-4);
-  font-size: var(--t-xs); letter-spacing: var(--track-wide); text-transform: uppercase;
-  color: var(--cream-600);
+.problem__label {
+  display: block;
+  font-size: var(--t-xs); letter-spacing: var(--track-wide);
+  text-transform: uppercase; color: var(--cream-600);
 }
+.problem__quote {
+  font-size: var(--t-xl);
+  margin: var(--s-2) 0 var(--s-3);
+  line-height: 1.25;
+  color: var(--cream-100);
+  text-wrap: balance;
+}
+.problem__body { color: var(--cream-400); font-size: var(--t-sm); }
+/* The quotes are different lengths, so without this the cards in a row
+   end at different heights and the grid stops reading as a set. The
+   Reveal wrapper is the grid item and already stretches; the card
+   inside it has to be told to fill it. */
+.section__body .reveal { display: flex; }
+.section__body .reveal > .edge { flex: 1; }
 
 /* ---------- Systems ---------- */
 .sys { display: flex; flex-direction: column; }
@@ -409,4 +429,4 @@
   .chapter__rule { width: clamp(3rem, 12vw, 9rem); transition: none; }
 }
 
-.pillar__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-4); }
+.problem__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-4); }
