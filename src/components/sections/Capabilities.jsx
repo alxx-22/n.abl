@@ -37,7 +37,7 @@ export const TOOLKIT = [
 
 export default function Capabilities() {
   return (
-    <section id="toolkit" className="section">
+    <section id="toolkit" className="section section--alt">
       <div className="shell">
         <Chapter index={4}>What we build</Chapter>
         <Reveal delay={0.06}>

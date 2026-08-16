@@ -359,7 +359,9 @@
   transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
 .contact__email:hover { color: var(--accent-400); border-color: var(--accent-400); }
-.contact__note { color: var(--cream-800); font-size: var(--t-sm); margin-top: var(--s-3); }
+/* .contact__note held the four-hour response claim. Both are gone —
+   the rule used cream-800, which the palette reserves for disabled
+   states, so it was failing contrast as well as being unmeasured. */
 
 /* ============================================================
    JOURNEY RAIL — progress + chapters

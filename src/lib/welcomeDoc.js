@@ -234,7 +234,11 @@ export function buildWelcomeDoc({ client, goals = null, owner = null, nextSteps 
       <div><div class="role">Anything at all</div><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></div>
       ${client?.contact_email ? `<div><div class="role">We'll reach you at</div>${esc(client.contact_email)}</div>` : ''}
     </div>
-    <p class="muted" style="margin-top:16px;font-size:14px">We typically respond within 4 hours during the working day.</p>
+    <!-- No response-time promise. Nothing measures one, and credits buy
+         work rather than standby — see business/13-credits. A client
+         document is the worst place to state a service level we have
+         not agreed and cannot evidence. -->
+    <p class="muted" style="margin-top:16px;font-size:14px">Email us whenever something needs doing — no ticket, no portal, no queue.</p>
   </section>
 
   <footer>

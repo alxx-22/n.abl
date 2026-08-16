@@ -98,9 +98,11 @@ export default function DiscoveryModal({ open, onClose }) {
           <div className="modal__success">
             <div className="tick" aria-hidden="true" />
             <h2 id="discovery-heading" className="modal__title">You&rsquo;re on the list<span className="dot" /></h2>
+            {/* No response-time promise: nothing measures one, and this
+                is the moment a visitor is most likely to hold us to it. */}
             <p className="modal__body">
-              We&rsquo;ll be in touch within 4 hours to find a time. Nothing to prepare — just bring the
-              thing that&rsquo;s costing you the most time.
+              We&rsquo;ll be in touch to find a time. Nothing to prepare — just bring the
+              thing that&rsquo;s getting in the way.
             </p>
             <button className="btn btn--primary btn--block" onClick={onClose}>Close</button>
           </div>
@@ -130,7 +132,7 @@ export default function DiscoveryModal({ open, onClose }) {
                   {BUSINESS_TYPES.map((t) => <option key={t}>{t}</option>)}
                 </select>
               </Field>
-              <Field label="What's eating your time?" htmlFor="d-challenge">
+              <Field label="What's getting in the way?" htmlFor="d-challenge">
                 <textarea id="d-challenge" name="challenge" className="input" rows={4}
                   placeholder="The report that takes all Monday, the inbox nobody owns…" />
               </Field>
