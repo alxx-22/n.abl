@@ -8,6 +8,7 @@ import { JourneyRail } from '../components/Journey.jsx'
 import Hero from '../components/sections/Hero.jsx'
 import Pillars from '../components/sections/Pillars.jsx'
 import Problems from '../components/sections/Problems.jsx'
+import HowWeHelp from '../components/sections/HowWeHelp.jsx'
 import Capabilities from '../components/sections/Capabilities.jsx'
 import Process from '../components/sections/Process.jsx'
 import Pricing from '../components/sections/Pricing.jsx'
@@ -70,6 +71,7 @@ export default function Home() {
         <Hero onBook={book} />
         <Pillars />
         <Problems />
+        <HowWeHelp />
         <Process />
         <Capabilities />
         <Examples />

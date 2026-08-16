@@ -16,11 +16,11 @@ import { prefersReducedMotion } from './ui/index.jsx'
 export const CHAPTERS = [
   { id: 'hero', label: 'Start' },
   { id: 'what-we-do', label: 'Your problem' },
+  { id: 'why-nabl', label: 'How we help' },
   { id: 'how-we-work', label: 'How we work' },
   { id: 'toolkit', label: 'What we build' },
   { id: 'cases', label: 'In practice' },
   { id: 'pricing', label: 'What it costs' },
-  { id: 'about', label: 'About' },
   { id: 'contact', label: "Let's talk" },
 ]
 

@@ -143,12 +143,48 @@
 /* The quotes are different lengths, so without this the cards in a row
    end at different heights and the grid stops reading as a set. The
    Reveal wrapper is the grid item and already stretches; the card
-   inside it has to be told to fill it. */
-.section__body .reveal { display: flex; }
-.section__body .reveal > .edge { flex: 1; }
+   inside it has to be told to fill it.
+
+   Scoped to .grid deliberately. Applied to every .reveal it also turns
+   the toolkit's row wrappers into flex containers, which makes their
+   hairline rules shrink to the content width instead of spanning the
+   column. */
+.grid > .reveal { display: flex; }
+.grid > .reveal > .edge { flex: 1; }
+
+/* ---------- Capability list (section 04) ----------
+   The six capabilities named plainly, nothing more. Detail and vendors
+   are in "What we build" below. */
+.caps {
+  display: flex; flex-wrap: wrap;
+  gap: var(--s-3) var(--s-5);
+  list-style: none;
+}
+.caps__item {
+  display: flex; align-items: center; gap: var(--s-3);
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 600;
+  color: var(--cream-100);
+  letter-spacing: var(--track-snug);
+}
+/* An accent square between terms, the same mark as the brand full stop,
+   so the row reads as one phrase rather than six labels. The negative
+   margin is half the column gap, which centres the square between two
+   terms — without it the square sits flush against the term before it
+   and reads as that term's full stop rather than as a separator. */
+.caps__item + .caps__item::before {
+  content: '';
+  width: 0.28em; height: 0.28em;
+  background: var(--accent-400);
+  box-shadow: var(--glow-accent);
+  flex: none;
+  margin-left: calc(var(--s-3) * -1);
+}
 
 /* ---------- Systems ---------- */
 .sys { display: flex; flex-direction: column; }
+.sys__what { color: var(--cream-400); font-size: var(--t-sm); margin-bottom: var(--s-3); }
 .sys__row {
   display: grid; gap: var(--s-4);
   grid-template-columns: 1fr;

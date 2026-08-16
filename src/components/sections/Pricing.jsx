@@ -76,7 +76,7 @@ export default function Pricing() {
   return (
     <section id="pricing" className="section section--impact">
       <div className="shell">
-        <Chapter index={5}>What it costs</Chapter>
+        <Chapter index={6}>What it costs</Chapter>
         <Reveal delay={0.06}>
           <h2 className="section__title">No retainers. A price before we start<span className="dot" /></h2>
         </Reveal>

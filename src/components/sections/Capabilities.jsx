@@ -4,24 +4,42 @@ import { Chapter } from '../Journey.jsx'
 /* ============================================================
    06 — WHAT WE BUILD
 
-   Grouped by what it is for, not by vendor. The old list was a
-   Microsoft-and-SAP CV, which described where we came from rather
-   than what a small business needs.
+   Grouped by capability, with vendors as supporting detail and never
+   as headlines. Python, React, Power BI, n8n and Make are not buying
+   reasons — they are evidence that the capability named in section 04
+   is real, and they belong here, after the visitor has been told they
+   do not need to know any of it.
+
+   The old sixth row, "What you already pay for", moved to About,
+   where "no reseller agreements, no migration upsell" already says
+   the same thing in the right register.
    ============================================================ */
 export const TOOLKIT = [
-  { cat: 'Automation & integration', items: ['Make', 'Zapier', 'n8n', 'Power Automate', 'Custom scripts'] },
-  { cat: 'Custom software', items: ['Python', 'JavaScript', 'React', 'APIs', 'SQL databases'] },
-  { cat: 'Web & customer-facing', items: ['Websites', 'Booking flows', 'Payments', 'Client portals'] },
-  { cat: 'Data & reporting', items: ['Spreadsheets done properly', 'Power BI', 'Dashboards', 'Data cleaning'] },
-  { cat: 'AI, where it earns its place', items: ['Document handling', 'Drafting', 'Classification', 'Assistants'] },
-  { cat: 'What you already pay for', items: ['Microsoft 365', 'Google Workspace', 'Your CRM', 'Your booking system'] },
+  { cat: 'Automation',
+    what: 'Workflow automation, system integration, custom scripts',
+    items: ['n8n', 'Make', 'Zapier', 'Power Automate', 'APIs'] },
+  { cat: 'Data & Analytics',
+    what: 'Data cleaning, dashboards, reporting, decision support',
+    items: ['Power BI', 'SQL', 'Spreadsheets done properly'] },
+  { cat: 'Software',
+    what: 'Internal tools, applications, databases',
+    items: ['Python', 'JavaScript', 'React'] },
+  { cat: 'Web',
+    what: 'Websites, booking flows, customer portals, payments',
+    items: ['React', 'Payments', 'Calendar sync'] },
+  { cat: 'AI',
+    what: 'Document handling, classification, assistants, drafting, analysis',
+    items: ['Where it earns its place'] },
+  { cat: 'Training & Support',
+    what: 'Staff training, documentation, troubleshooting, improvements',
+    items: ['Assistance credits'] },
 ]
 
 export default function Capabilities() {
   return (
-    <section id="toolkit" className="section section--alt">
+    <section id="toolkit" className="section">
       <div className="shell">
-        <Chapter index={3}>What we build</Chapter>
+        <Chapter index={4}>What we build</Chapter>
         <Reveal delay={0.06}>
           <h2 className="section__title">Whatever the job actually needs<span className="dot" /></h2>
         </Reveal>
@@ -37,8 +55,11 @@ export default function Capabilities() {
             <Reveal key={s.cat} delay={i * 0.06}>
               <div className="sys__row">
                 <div className="sys__cat">{s.cat}</div>
-                <div className="sys__badges">
-                  {s.items.map((it) => <span key={it} className="chip">{it}</span>)}
+                <div>
+                  <p className="sys__what">{s.what}</p>
+                  <div className="sys__badges">
+                    {s.items.map((it) => <span key={it} className="chip">{it}</span>)}
+                  </div>
                 </div>
               </div>
             </Reveal>
