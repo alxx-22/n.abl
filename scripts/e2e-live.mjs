@@ -8,7 +8,12 @@
    Usage:
      node scripts/e2e-live.mjs
      TEAM_EMAIL=you@nabl.agency TEAM_PASSWORD=... node scripts/e2e-live.mjs
-     PORTAL_KEY=ACME-DEMO-2026 node scripts/e2e-live.mjs
+     PORTAL_KEY=NABL-XXXX-XXXX-XXXX node scripts/e2e-live.mjs
+
+   PORTAL_KEY has no default on purpose. Access keys rotate — one
+   baked in here would be a live client credential sitting in the
+   repository, and it would go stale the moment anyone rotated it.
+   Without it, the portal checks are skipped rather than failed.
 
    Read-only by default. It never writes unless WRITE=1 is set, in
    which case it creates and then deletes one throwaway client.
@@ -18,7 +23,10 @@ const URL = process.env.SUPABASE_URL || 'https://rrkcoqopcqtowbyismcq.supabase.c
 const ANON = process.env.SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJya2NvcW9wY3F0b3dieWlzbWNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjE1NTksImV4cCI6MjA5NTczNzU1OX0.p8Hj0sULNLos0_nZhJ_OyYyfiqfmAspwFxtLBdoK4R0'
 
-const PORTAL_KEY = process.env.PORTAL_KEY || 'ACME-DEMO-2026'
+const PORTAL_KEY = process.env.PORTAL_KEY || ''
+// Never print a live key into a test log. Enough to tell two apart, not
+// enough to sign in with.
+const keyLabel = PORTAL_KEY ? `${PORTAL_KEY.slice(0, 4)}…${PORTAL_KEY.slice(-2)}` : '(unset)'
 const TEAM_EMAIL = process.env.TEAM_EMAIL
 const TEAM_PASSWORD = process.env.TEAM_PASSWORD
 const WRITE = process.env.WRITE === '1'
@@ -80,16 +88,20 @@ async function main() {
     ? ok('an invalid access key returns no rows')
     : bad('invalid access key is rejected', `HTTP ${bogus.status}, ${bogus.json?.length} rows`)
 
-  const good = await req('/rest/v1/clients?select=*', { headers: { 'x-access-key': PORTAL_KEY } })
-  if (good.status === 200 && good.json?.length > 0) {
-    ok(`access key ${PORTAL_KEY} signs in`, good.json[0].business_name)
-    for (const t of ['quotes', 'projects', 'meetings', 'documents']) {
-      const r = await req(`/rest/v1/${t}?select=*`, { headers: { 'x-access-key': PORTAL_KEY } })
-      r.status === 200 ? ok(`portal can read ${t}`, `${r.json?.length ?? 0} rows`)
-                       : bad(`portal can read ${t}`, `HTTP ${r.status}`)
-    }
+  if (!PORTAL_KEY) {
+    meh('access key signs in', 'set PORTAL_KEY to run the portal checks')
   } else {
-    bad(`access key ${PORTAL_KEY} signs in`, `HTTP ${good.status}, ${good.json?.length ?? 0} rows`)
+    const good = await req('/rest/v1/clients?select=*', { headers: { 'x-access-key': PORTAL_KEY } })
+    if (good.status === 200 && good.json?.length > 0) {
+      ok(`access key ${keyLabel} signs in`, good.json[0].business_name)
+      for (const t of ['quotes', 'projects', 'meetings', 'documents']) {
+        const r = await req(`/rest/v1/${t}?select=*`, { headers: { 'x-access-key': PORTAL_KEY } })
+        r.status === 200 ? ok(`portal can read ${t}`, `${r.json?.length ?? 0} rows`)
+                         : bad(`portal can read ${t}`, `HTTP ${r.status}`)
+      }
+    } else {
+      bad(`access key ${keyLabel} signs in`, `HTTP ${good.status}, ${good.json?.length ?? 0} rows`)
+    }
   }
 
   line('\nSCHEMA')

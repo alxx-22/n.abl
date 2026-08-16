@@ -196,11 +196,14 @@ from the record and cannot be recovered. If you save a key you have not
 recorded anywhere, the client is locked out until you generate another and send
 that instead.
 
-### Rotating everyone — the pending migration
+### Rotating everyone — the applied migration
 
 `supabase/migrations/202608150003_rotate_access_keys.sql`.
-**Written, reviewed, and not yet applied.** Read its header in full before
-running it.
+**Applied 2026-08-16.** At that point the only client was the Acme Corp demo
+row, whose key was `ACME-DEMO-2027` — a guessable prefix plus a hardcoded
+year. That key is now dead and was verified dead. Read the header in full
+before running it again: a second run reissues everybody, invalidating the
+set you last sent out.
 
 What it does:
 

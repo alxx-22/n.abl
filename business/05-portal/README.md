@@ -6,10 +6,11 @@ quotes, projects, meetings and documents. Nobody else's rows are reachable, and
 nothing in the portal can write.
 
 "Done" means the thing exists and works. It does not mean there is nothing left
-to do. Three things are open and they are named in full below: the strong-key
-rotation has been written but **not applied**, so keys issued before
-2026-08-15 are still the weak format; the portal's database schema is not in
-version control; and a demo access key is committed to this repository.
+to do. Two things are open and they are named in full below: the portal's database
+schema is not in version control, and demo access keys are committed to this
+repository as test fixtures. The strong-key rotation, previously listed here
+as written-but-unapplied, was **applied on 2026-08-16** — every key in the
+database is now the 19-character CSPRNG format.
 
 Last substantive revision: 2026-08-15.
 

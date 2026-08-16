@@ -103,9 +103,9 @@ What is **not** claimed:
   2026-08-15 is the old `PREFIX-XXXX-2026` format: 20.7 bits from
   `Math.random()`, whose internal state is recoverable from a handful of
   outputs. The fix is written and sitting in
-  `supabase/migrations/202608150003_rotate_access_keys.sql`, and its own header
-  says it is not yet applied. New keys minted in the team space today are strong;
-  old ones in the database are not.
+  `supabase/migrations/202608150003_rotate_access_keys.sql`, and it was applied
+  on 2026-08-16. Both paths now produce the same 19-character format: keys
+  minted in the team space and keys already in the database are equally strong.
 - **The schema is not in version control.** The `clients`, `quotes`, `projects`,
   `meetings` and `documents` tables, both storage buckets, and the RLS policies
   behind them exist only in the hosted Supabase project. If that project is

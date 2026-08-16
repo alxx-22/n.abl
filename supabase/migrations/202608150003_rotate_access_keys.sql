@@ -1,7 +1,10 @@
 -- =====================================================================
 -- Rotate every client access key to the strong format.
 --
--- STATUS: NOT YET APPLIED. Read the whole header before running.
+-- STATUS: APPLIED 2026-08-16 against the live project, when the only
+-- client was the Acme Corp demo row. Its key was ACME-DEMO-2027 — a
+-- guessable prefix plus a hardcoded year — and is now dead. Do not run
+-- this again casually: see the re-run note at the foot of this header.
 --
 -- WHY
 -- Keys issued before 2026-08-15 are the old format: four characters over a

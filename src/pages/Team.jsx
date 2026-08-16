@@ -664,7 +664,7 @@ function Control({ f, id, value, set, clients, editing, file, onFile, onClearFil
       return (
         <div className="keyrow">
           <input {...common} className="input mono" value={value}
-                 placeholder="ACME-K7X2-2026" onChange={(e) => set(f.name, e.target.value)} />
+                 placeholder="ACME-K7X2-M4NP-Q8RS" onChange={(e) => set(f.name, e.target.value)} />
           <button type="button" className="btn btn--ghost btn--sm"
                   onClick={() => set(f.name, generateKey(businessName))}>Generate</button>
         </div>
