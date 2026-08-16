@@ -1,6 +1,13 @@
 # 02 — Brand
 
-**Status: done.** The identity is decided, specified and running in the product.
+```
+Status:       done
+Owner:        Alex
+Next review:  when a new surface is added, or before the first printed material
+Evidence:     src/styles/tokens.css, public/brand/*, scripts/check-email-contrast.mjs
+```
+
+The identity is decided, specified and running in the product.
 Nothing about it is still an open design question.
 
 "Done" here means the design work is finished. It does not mean every file in

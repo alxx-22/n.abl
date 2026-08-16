@@ -1,6 +1,11 @@
 # 13 — Credits
 
-**Status: not started.**
+```
+Status:       not started
+Owner:        Alex
+Next review:  after the first three real quotes, when pack sizes and prices get set
+Evidence:     none. No credit pack has been sold
+```
 
 There is no ledger. No `credit_packs` table, no `credit_ledger` table, no
 balance view, no redemption path, no team-space tab and nothing in the client

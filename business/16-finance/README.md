@@ -1,6 +1,11 @@
 # 16 — Finance
 
-**Status: not started.**
+```
+Status:       not started
+Owner:        Alex
+Next review:  on first revenue
+Evidence:     none. There is no revenue to account for
+```
 
 Nothing in this folder has been done. There is no business bank account. No
 accountant has been spoken to. The legal entity is undecided, so it is not

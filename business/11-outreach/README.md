@@ -13,7 +13,12 @@
 > question governed by `01-positioning/service-categories.md`, and the compliance
 > rules in the master plan §5 apply to their system exactly as they apply to ours.
 
-**Status: not started.**
+```
+Status:       not started
+Owner:        Alex
+Next review:  when v3 produces shortlists that are consistently worth reading
+Evidence:     none. Nothing in this folder has been built
+```
 
 There is no outreach engine. No sender, no scheduler, no reply classifier, no
 suppression endpoint, no sending domain, no provider account. Nothing in this

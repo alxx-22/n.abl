@@ -1,6 +1,13 @@
 # 06 — Team space
 
-**Status: done.** The internal team space is built, deployed and in use. Supabase
+```
+Status:       done
+Owner:        Alex
+Next review:  after one month of daily use with a real client in it
+Evidence:     scripts/e2e-ui.mjs — the portal, team and CRM assertions
+```
+
+The internal team space is built, deployed and in use. Supabase
 Auth guards it, five CRUD tabs run the client side of the business, and file
 uploads go to private storage buckets served through short-lived signed URLs.
 

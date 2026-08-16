@@ -1,6 +1,12 @@
 # 08 — Email pack
 
-**Status: done.**
+```
+Status:       done
+Owner:        Alex
+Next review:  before the first sequence goes out, and when a list provider exists
+              for [Unsubscribe Link] to point at
+Evidence:     nabl-emails/, scripts/check-email-contrast.mjs
+```
 
 Six branded email templates exist in the repository at `nabl-emails/`, each as
 an HTML file and a plain-text partner, with `.eml` files built from those two

@@ -1,6 +1,13 @@
 # 09 — Welcome pack
 
-**Status: done.** The generator exists in the application, is reachable from the
+```
+Status:       done
+Owner:        Alex
+Next review:  after the first real client has received one
+Evidence:     src/lib/welcomeDoc.js, and the first generated document
+```
+
+The generator exists in the application, is reachable from the
 team space, and produces a branded, self-contained welcome document for a client
 in about a minute. Most of the document needs no model and costs nothing to
 produce.

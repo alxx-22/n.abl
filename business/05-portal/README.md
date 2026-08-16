@@ -1,6 +1,14 @@
 # 05 — Client portal
 
-**Status: done.** The portal is built, deployed and in use at
+```
+Status:       done
+Owner:        Alex
+Next review:  on the second paying client, when point-in-time recovery stops being
+              optional
+Evidence:     supabase/migrations/, scripts/e2e-ui.mjs, scripts/security-check.mjs
+```
+
+The portal is built, deployed and in use at
 `nabl.agency/portal`. A client signs in with an access key, and sees their own
 quotes, projects, meetings and documents. Nobody else's rows are reachable, and
 nothing in the portal can write.

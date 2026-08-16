@@ -1,6 +1,11 @@
 # 12 — Pricing
 
-**Status: not started.**
+```
+Status:       not started
+Owner:        Alex
+Next review:  after the first three real quotes — the placeholders are waiting on them
+Evidence:     none. No quote has been sent
+```
 
 No quote has ever been issued. `Q-2026-001` does not exist. No ROI worksheet has
 been filled in on a real call, no implementation price has been agreed with

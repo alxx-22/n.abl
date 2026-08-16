@@ -419,6 +419,28 @@ against each folder's own definition of done rather than against whether files
 exist. Most of this business does not exist yet: several folders are the plan
 for starting, not a record of something built.
 
+### Every folder README carries four fields
+
+```
+Status:       in progress
+Owner:        Alex
+Next review:  after 10 qualified conversations
+Evidence:     link to the scored lead sheet
+```
+
+A status on its own is documentation. A status with an owner, a review trigger
+and a link to the evidence is a management system. The difference is that the
+second one tells you when to look again and how you would know if it were true.
+
+**Review triggers are events, not dates.** "After the first three real quotes"
+and "before any automated send" fire when the business actually moves. A date
+fires whether anything happened or not, and gets ignored the second time it is
+missed.
+
+**`Evidence: none` is a legitimate value** and appears in most folders today. It
+is more useful than an empty field, because it says the gap is known rather than
+overlooked.
+
 | # | Folder | What it is for | Status |
 |---|---|---|---|
 | 01 | `01-positioning` | The repositioning, the three layers, the six categories, the messaging spine, what we say no to | in progress |

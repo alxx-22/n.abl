@@ -1,6 +1,11 @@
 # 15 — Compute
 
-**Status: not started.**
+```
+Status:       not started
+Owner:        Alex
+Next review:  when Claude usage hits a measured ceiling, not before
+Evidence:     none. Routing has not been applied to real work yet
+```
 
 Nothing in this folder has been built. Ollama is not installed on either
 machine. No open-weight model has been downloaded, prompted or tested. No job

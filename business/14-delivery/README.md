@@ -1,6 +1,11 @@
 # 14 — Delivery
 
-**Status: not started.**
+```
+Status:       not started
+Owner:        Alex
+Next review:  before the first delivery starts, alongside 17-proof-and-case-studies
+Evidence:     none. No delivery has happened
+```
 
 No client has ever been delivered. The process in this folder has never been
 run, not once, and nothing in it has survived contact with a real engagement.

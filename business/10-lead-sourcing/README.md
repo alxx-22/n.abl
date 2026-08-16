@@ -10,7 +10,12 @@
 > today. They may become a service one day; that decision has not been made and
 > is not implied by anything in this folder. See `01-positioning/README.md`.
 
-**Status: not started.**
+```
+Status:       not started
+Owner:        Alex
+Next review:  when v2 completes and the CRM can lawfully hold a sourced record
+Evidence:     none. Nothing in this folder has been built
+```
 
 Nothing in this folder has been built. There is no sourcing script, no candidate
 file, no enrichment cache, no scoring code and no shortlist. A search of the

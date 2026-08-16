@@ -1,6 +1,12 @@
 # 04 — Legal
 
-**Status: in progress.**
+```
+Status:       in progress
+Owner:        Alex
+Next review:  before the first contract is signed — whichever comes first, that or
+              a solicitor becoming affordable
+Evidence:     none. No document here has been reviewed by a solicitor
+```
 
 The three public pages are live. The client-facing paperwork is not. Between
 those two facts sits everything this folder is for.

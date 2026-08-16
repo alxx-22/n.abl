@@ -1,6 +1,11 @@
 # 07 — Sales CRM
 
-**Status: in progress.**
+```
+Status:       in progress
+Owner:        Alex
+Next review:  before any automated send. The compliance migration gates it
+Evidence:     supabase/migrations/202606010001_sales_intelligence.sql
+```
 
 > **The CRM's stages are n.abl's own sales pipeline, not a service menu.**
 > `New Lead` through `Won` describes n.abl pursuing a customer. There is no

@@ -1,6 +1,12 @@
 # 01 — Positioning
 
-**Status: in progress.**
+```
+Status:       in progress
+Owner:        Alex
+Next review:  after 10 qualified conversations — rewrite the ICP signals and the
+              messaging spine using the words those businesses actually used
+Evidence:     the scored list of 20 local businesses, once it has been built
+```
 
 The positioning is decided, written down in this folder, and now carried
 through the client-facing copy: the website is organised around the six
