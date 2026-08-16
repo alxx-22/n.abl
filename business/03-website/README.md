@@ -29,11 +29,11 @@ difference is the point: work is not done because the code shipped.
 | Messaging | ✓ |
 | Brand | ✓ |
 | Structure | ✓ revised to the buyer's journey |
-| Proof | ✗ unavailable — no clients yet |
-| SEO | ✗ incomplete — no robots, no sitemap, no per-route metadata |
-| Conversion measurement | ✗ incomplete — nothing is instrumented |
-| Legal consistency | ✗ incomplete — retired positioning on public pages |
-| Lead capture | ✗ needs validation — never tested end to end |
+| Proof | ✗ unavailable — no clients yet. The only honest gap |
+| SEO | ✓ robots, sitemap, per-route metadata and canonicals |
+| Conversion measurement | ✓ first-party, cookieless, instrumented |
+| Legal consistency | ✓ retired positioning gone from every public surface |
+| Lead capture | ⚠ instrumented and spam-protected, but never tested end to end by a human |
 
 Last substantive revision: 2026-08-16.
 
@@ -116,39 +116,50 @@ closes them.
 
 This is the honest gap. It closes when there is a first delivery, not before.
 
-### SEO ✗ — incomplete
+### SEO ✓
 
-- [ ] No `robots.txt`. `/team` and `/sales-intelligence` are crawlable via the
-      two deliberate footer links.
-- [ ] No `sitemap.xml`.
-- [ ] No per-route metadata. The SPA serves one shell, so `/privacy`, `/terms`
-      and `/cookies` report the home page's title to anything that does not run
-      JavaScript. Options in `seo-and-metadata.md`.
+- [x] `public/robots.txt` disallows `/team`, `/sales-intelligence` and `/portal`
+      and points at the sitemap. Tidiness, not security — the sign-in is the
+      access control.
+- [x] `public/sitemap.xml` lists the four public URLs.
+- [x] Per-route metadata. `scripts/build-routes.mjs` writes a shell per public
+      route after the Vite build, each with its own title, description, og tags
+      and canonical. Rewrite rules are explicit and ahead of the catch-all.
+- [x] The shared metadata and the generated share card carry the current hero.
 
-### Conversion measurement ✗ — incomplete
+### Conversion measurement ✓
 
-- [ ] Nothing is instrumented. Neither CTA, section reach depth nor form
-      submission is recorded, so "does this page work" is answered by
-      conversations rather than behaviour.
-- [x] The approach is decided: first-party events into Supabase, inside the
-      existing CSP. No third-party request, no cookie, no consent banner, and
-      the privacy policy stays true. Not built.
+- [x] Both CTAs, the email link, the form's four states and section reach depth
+      are recorded.
+- [x] First-party and cookieless: events go to our own Supabase project inside
+      the existing CSP. No third-party request, no cookie, no storage, no IP, no
+      fingerprint, no identifier surviving the tab. Do Not Track honoured.
+- [x] Both legal pages updated in the same commit, so they stay true.
+- [ ] Nobody has read the data yet. The first review is the next action.
 
-### Legal consistency ✗ — incomplete
+**What this cannot answer:** unique visitors, returning visitors, anything
+across sessions. That is the price of collecting nothing that identifies anyone,
+and it was the right trade for a site whose privacy position is a
+differentiator.
 
-- [ ] `src/pages/Legal.jsx:17` still calls n.abl "an automation consultancy" and
-      `:62` still sells "consultancy, automation and optimisation services".
-      Both are public and both are the retired framing.
+### Legal consistency ✓
+
+- [x] The privacy policy and terms describe technology implementation. The
+      retired "automation consultancy" framing is gone from every public
+      surface, including the welcome-pack generator's model prompt.
 - [x] The draft-review notice is present on all three documents. **No legal
       document here has been reviewed by a solicitor. Never say one has.**
 
-### Lead capture ✗ — needs validation
+### Lead capture ⚠ — instrumented, not validated
 
-- [ ] The discovery form posts to Web3Forms and nobody has confirmed end to end
-      that a submission reaches a human.
-- [ ] No spam protection beyond whatever the provider does. No honeypot, no rate
-      limit.
-- [x] The form has a confirmation state, a focus trap and an error path.
+- [x] A honeypot rejects scripted submissions, off-screen and out of the tab
+      order, showing the success state rather than an error so a bot gets no
+      signal.
+- [x] The form has a confirmation state, a focus trap and an error path, and all
+      four outcomes are now measured.
+- [ ] **Nobody has confirmed end to end that a submission reaches a human.**
+      This needs a person to fill the form on the live site and check the inbox.
+      It is the last thing on this list that cannot be done from the repository.
 
 ---
 

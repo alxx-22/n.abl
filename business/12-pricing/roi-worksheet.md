@@ -250,12 +250,16 @@ internal cost line, it goes in the job record, and it is never sold.
 
 **The arithmetic is marginal.** First-year value is real but small. Options, in
 order: fold it into a larger piece of work in the same business, defer it and
-sell it later as credits, or say plainly that it is not worth building yet.
-Saying that is the cheapest reputation you will ever buy.
+sell it later as credits, or show them the numbers and say that on these figures
+you would leave it for now. Saying that is the cheapest reputation you will ever
+buy.
 
-**The arithmetic does not support any build.** Say so, on the call. See
-`worked-examples.md`, §4. A business told honestly that their annoying job is not
-worth automating remembers who told them.
+**The arithmetic does not support any build.** Show them, on the call. See
+`worked-examples.md`, §4 — the phrasing matters, and the rule is that the
+numbers do the refusing rather than us. "This isn't worth building" is a verdict
+on their problem; "here is the arithmetic, and on these figures I'd leave it" is
+the same information with the decision left where it belongs. A business shown
+honestly why their annoying job does not pay back remembers who showed them.
 
 **There is no before-figure at all.** It is a capability job. Fixed price, scope
 in writing, no ROI arithmetic anywhere on the document.
