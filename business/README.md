@@ -387,12 +387,16 @@ building v4 before v3 produces exactly the liability described in section 5.
 
 ## 7. How to use this folder
 
-Only this file exists in `business/` today. The folders below are the agreed
-structure. Create each one when work on it actually starts, so an empty folder
-never implies progress that has not happened.
+Each folder below holds the working documents for one step, and its own README
+states what that step is, what "done" would mean, and the next concrete
+actions. A folder existing means the thinking has been written down — it does
+not mean the work is finished. Read the status column, not the directory
+listing.
 
 Status values are `done`, `in progress`, `not started`, and they are set
-honestly. Most of this business does not exist yet.
+against each folder's own definition of done rather than against whether files
+exist. Most of this business does not exist yet: several folders are the plan
+for starting, not a record of something built.
 
 | # | Folder | What it is for | Status |
 |---|---|---|---|
