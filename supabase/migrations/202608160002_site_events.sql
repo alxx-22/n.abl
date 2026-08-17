@@ -124,5 +124,12 @@ $$;
 
 -- Same lesson as 202608160001: a security-definer function that anyone
 -- can execute is a deletion primitive handed to the internet.
-revoke all on function public.prune_site_events() from public;
-revoke all on function public.prune_site_events() from anon;
+--
+-- All three roles, not just public and anon. Supabase grants EXECUTE on
+-- public-schema functions to anon, authenticated and service_role directly
+-- rather than only through PUBLIC, so revoking from PUBLIC leaves the other
+-- grants standing. Missing `authenticated` here is exactly what the database
+-- linter caught the first time this was applied.
+revoke execute on function public.prune_site_events() from public;
+revoke execute on function public.prune_site_events() from anon;
+revoke execute on function public.prune_site_events() from authenticated;
