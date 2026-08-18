@@ -188,6 +188,10 @@ decide whether the rest is worth building.
 
 ## What each file in this folder is for
 
+- [`agency-playbook.md`](agency-playbook.md) — what current AI lead-gen agencies
+  actually do, which parts survive contact with n.abl's situation (most do not,
+  and the reasons matter), and the free stack that follows. Read it before
+  `build-plan.md`: it changes what should be built.
 | File | What it is for | Read it when |
 |---|---|---|
 | `README.md` | This file. What the step is, what done means, the honest status, what to do next. | Opening the folder cold |

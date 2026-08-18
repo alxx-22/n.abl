@@ -20,8 +20,9 @@ Two things gate almost everything else:
   real conversation. `18-sales-conversation` is the folder that starts it and it
   depends on nothing.
 
-Three folders can be worked on **right now with no dependency at all**:
-`14-delivery`, `15-compute` and `18-sales-conversation`.
+Four folders can be worked on **right now with no dependency at all**:
+`10-lead-sourcing` (the first filtering pass), `14-delivery`, `15-compute` and
+`18-sales-conversation`.
 
 | # &middot; Folder | Last step, and when | Next step, and what it waits on |
 |---|---|---|
@@ -34,7 +35,7 @@ Three folders can be worked on **right now with no dependency at all**:
 | **07** crm<br>*in progress* | Pipeline in daily use; `compliance-schema.md` specifies the missing fields as DDL. **16 Aug** | **Apply the compliance migration.** Technically depends on nothing — write the SQL and run it. It gates `10` and `11` entirely, so it is the highest-leverage item on this page. |
 | **08** email pack<br>*done* | Ink wordmark on light headers, signature set in the drawn mark, and image contrast now measured rather than assumed. **16 Aug** | A real render test through Litmus or Email on Acid, Outlook on Windows first. **Waits on a list provider** and the first sequence. |
 | **09** welcome pack<br>*done* | Summariser hardened: schema-enforced response, refusal handling, current model. **16 Aug** | Pass the business name through to the summariser, then run it on a real transcript. **Waits on the first client.** |
-| **10** lead sourcing<br>*not started* | Plan written, including the correction that Google Maps must never be the database of record. **16 Aug** | Read `sources.md`, then build sourcing against Companies House. **Waits on `07-crm`** — there is nowhere lawful to put a sourced record until then. |
+| **10** lead sourcing<br>*not started* | Research pass on how AI lead-gen agencies acquire clients, and what of it transfers. Found the free Companies House bulk snapshot answers the filtering problem. **16 Aug** | Download one Companies House bulk snapshot and filter it by postcode and SIC by hand, to find out how many local candidates actually exist. **No dependency** — see `agency-playbook.md`. Building the pipeline still waits on `07-crm`. |
 | **11** outreach<br>*not started* | Plan written: two human approval gates, both before anything leaves the building. **16 Aug** | Finish `07-crm`. **Waits on `07`, then `10`.** Nothing here should be built while the shortlist it sends to does not exist. |
 | **12** pricing<br>*not started* | ROI worksheet and quote template written around the £240→£40 worked example. **16 Aug** | Send three real quotes and let them set the placeholders. **Waits on qualified conversations** from `18`. |
 | **13** credits<br>*not started* | Build / Assist / Educate defined; pack sizes deliberately left as placeholders. **16 Aug** | Decide the credit unit — the one decision everything else in the folder waits on. **Waits on the first three quotes** (`12`). |
