@@ -408,6 +408,12 @@ building v4 before v3 produces exactly the liability described in section 5.
 
 ## 7. How to use this folder
 
+**For a one-screen view of where every folder stands, read
+[`STATUS.md`](STATUS.md).** It carries one row per folder: the last step and
+when it happened, the next step and what it is waiting on. This section explains
+the structure; that file tells you what to do today.
+
+
 Each folder below holds the working documents for one step, and its own README
 states what that step is, what "done" would mean, and the next concrete
 actions. A folder existing means the thinking has been written down — it does

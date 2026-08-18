@@ -85,7 +85,6 @@ const MEASURE = () => {
    the filename, so a recoloured asset is measured as it actually is.
    ------------------------------------------------------------------ */
 const BRAND = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'brand')
-const AMBER = '233,172,87'   // the square dot is meant to be amber; ignore it
 
 async function inkOf(page, file) {
   // Passed as a data: URI, not file://. A file:// image will not load into an
@@ -105,13 +104,15 @@ async function inkOf(page, file) {
     for (let i = 0; i < data.length; i += 4) {
       if (data[i + 3] < 200) continue
       const k = `${data[i]},${data[i + 1]},${data[i + 2]}`
-      if (k === amber) continue
       tally.set(k, (tally.get(k) || 0) + 1)
     }
-    let best = null, n = 0
-    for (const [k, v] of tally) if (v > n) { best = k; n = v }
-    return best
-  }, { url, amber: AMBER })
+    // Two inks, not one: the letterforms and the accent dot are separately
+    // capable of disappearing. An earlier version excluded the accent as
+    // "meant to be amber", which is exactly how a 1.97:1 dot shipped.
+    const ranked = [...tally.entries()].sort((a, b) => b[1] - a[1])
+    const total = ranked.reduce((n, [, v]) => n + v, 0)
+    return ranked.filter(([, v]) => v / total > 0.01).slice(0, 2).map(([k]) => k)
+  }, { url })
 }
 
 const MEASURE_LOGOS = (inks) => {
@@ -131,15 +132,18 @@ const MEASURE_LOGOS = (inks) => {
   const out = []
   document.querySelectorAll('img[src]').forEach((img) => {
     const file = img.getAttribute('src').split('/').pop()
-    const ink = inks[file]; if (!ink) return
-    const [r, g, b] = ink.split(',').map(Number)
+    const inkList = inks[file]; if (!inkList) return
     const bg = groundOf(img)
-    const x = lum(r, g, b), y = lum(bg.r, bg.g, bg.b)
-    const [hi, lo] = x > y ? [x, y] : [y, x]
-    const ratio = (hi + 0.05) / (lo + 0.05)
-    if (ratio < 3) out.push({
-      file, ink: `rgb(${ink})`, bg: `rgb(${bg.r}, ${bg.g}, ${bg.b})`,
-      ratio: Math.round(ratio * 100) / 100,
+    inkList.forEach((ink, idx) => {
+      const [r, g, b] = ink.split(',').map(Number)
+      const x = lum(r, g, b), y = lum(bg.r, bg.g, bg.b)
+      const [hi, lo] = x > y ? [x, y] : [y, x]
+      const ratio = (hi + 0.05) / (lo + 0.05)
+      if (ratio < 3) out.push({
+        file, part: idx === 0 ? 'letterforms' : 'accent dot',
+        ink: `rgb(${ink})`, bg: `rgb(${bg.r}, ${bg.g}, ${bg.b})`,
+        ratio: Math.round(ratio * 100) / 100,
+      })
     })
   })
   return out
@@ -159,7 +163,7 @@ const INKS = {}
 for (const a of assets) {
   try {
     INKS[a] = await inkOf(page, a)
-    if (!INKS[a]) throw new Error('no opaque pixels sampled')
+    if (!INKS[a] || !INKS[a].length) throw new Error('no opaque pixels sampled')
   } catch (e) {
     console.log(`  ! could not sample ${a} — ${e.message}`)
     console.log(`    logo contrast is NOT being checked for this asset`)
@@ -180,7 +184,7 @@ for (const f of readdirSync(DIR).filter((n) => /^email-.*\.html$/.test(n)).sort(
     console.log(`         "${x.text}"`)
   }
   for (const x of logos) {
-    console.log(`      ${x.ratio} (needs 3)  logo ${x.ink} on ${x.bg}`)
+    console.log(`      ${x.ratio} (needs 3)  ${x.part} ${x.ink} on ${x.bg}`)
     console.log(`         ${x.file} — wrong colourway for this ground`)
   }
 }
