@@ -24,8 +24,16 @@ const DOCS = {
         'Website usage. We record a small number of anonymous events on our own website — which buttons are used, how far down the page people read, and whether the enquiry form succeeded — so we can tell whether the site is doing its job. These events carry no name, no IP address, no browser or device fingerprint and no cookie, and they cannot be linked to you, to another visit or to anything else. They are not personal data and we could not identify you from them if we wanted to. We honour Do Not Track.',
         'We run no advertising and no third-party analytics, we do not build behavioural profiles, and we do not sell or share personal data for marketing. Nothing on this site is loaded from another company.',
       ]],
+      ['If we contacted you first', [
+        'If you received an email from us that you did not ask for, this section is the one that applies to you, and UK GDPR Article 14 is why it exists.',
+        'What we hold. Your name and role, a business email address, your company name and a note of why we thought the service was relevant to you. That is all — we do not build a profile and we do not enrich it from data brokers.',
+        'Where we got it. From your own company website, from the Companies House public register, or from a public trade or local directory. We do not buy or rent marketing lists, and we do not scrape at volume.',
+        'Why. To introduce a service we believe is relevant to your business. Our lawful basis is legitimate interests, and we have completed and recorded a written assessment weighing that interest against your rights before contacting anyone. We contact only registered companies, in small numbers, and only where we can say something specific about why we approached you.',
+        'How to stop it. Every message we send carries a one-click opt-out, and you can reply to any email or write to hello@nabl.agency asking us to stop. Your right to object to direct marketing is absolute — we do not weigh it, we do not ask you to reconsider, and there is no pause option. We honour it permanently, which means we keep a record of the fact that you objected so that we cannot contact you again by mistake. That record holds your contact details and nothing else, and suppressing you is the only thing it is ever used for.',
+        'How long. If you do not reply, we delete the record within six months. If you ask us to stop, the suppression record is kept indefinitely, because deleting it is what would allow us to contact you again.',
+      ]],
       ['Lawful bases', [
-        'Legitimate interests — responding to an enquiry you sent us, and administering our own business records.',
+        'Legitimate interests — responding to an enquiry you sent us, administering our own business records, and the business-to-business marketing described above.',
         'Contract — where processing is necessary to deliver services we have agreed with you.',
         'Legal obligation — where we must retain records, for example for tax or accounting purposes.',
       ]],
@@ -41,6 +49,7 @@ const DOCS = {
       ]],
       ['How long we keep it', [
         'Enquiries that do not become engagements are deleted once the conversation has clearly ended.',
+        'Details of businesses we approached who did not reply are deleted within six months.',
         'Client records are kept for the life of the engagement and then for as long as we need them for legal, tax and accounting purposes.',
         'Documents in the client portal are held in private storage and are only ever served through short-lived signed links, generated fresh each time and never stored.',
       ]],
