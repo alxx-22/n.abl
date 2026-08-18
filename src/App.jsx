@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 
 import Home from './pages/Home.jsx'
 import NotFound from './pages/NotFound.jsx'
@@ -34,7 +34,12 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/portal" element={<Portal />} />
           <Route path="/team" element={<Team />} />
-          <Route path="/sales-intelligence" element={<Crm />} />
+          {/* Named /crm, not /sales-intelligence. "Sales intelligence" was the
+              AI product that was deliberately stripped out; keeping its name on
+              the URL kept advertising a thing that no longer exists. The old
+              path still resolves so any saved link keeps working. */}
+          <Route path="/crm" element={<Crm />} />
+          <Route path="/sales-intelligence" element={<Navigate to="/crm" replace />} />
           <Route path="/privacy" element={<Legal doc="privacy" />} />
           <Route path="/terms" element={<Legal doc="terms" />} />
           <Route path="/cookies" element={<Legal doc="cookies" />} />

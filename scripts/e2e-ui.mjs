@@ -196,7 +196,7 @@ async function run() {
     results.push('\nSALES CRM')
 
     // signed out -> must invite sign-in, not crash
-    await page.goto(`${BASE}/sales-intelligence`, { waitUntil: 'networkidle' })
+    await page.goto(`${BASE}/crm`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(1500)
     const signedOut = await page.evaluate(() => document.body.innerText)
     check('signed out shows a sign-in prompt, not a broken page',
@@ -208,7 +208,7 @@ async function run() {
     await page.fill('input[type=password]', PASSWORD)
     await page.click('button.btn--accent')
     await page.waitForTimeout(2000)
-    await page.goto(`${BASE}/sales-intelligence`, { waitUntil: 'networkidle' })
+    await page.goto(`${BASE}/crm`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(2000)
 
     const crm = await page.evaluate(() => document.body.innerText)
@@ -235,7 +235,7 @@ async function run() {
     await installMock(page, { db: makeDb() })
     results.push('\nROUTES')
     for (const [path, expect] of [
-      ['/', /We build the fix/],
+      ['/', /We make your business work smarter/],
       ['/privacy', /Privacy Policy/i],
       ['/terms', /Terms of Service/i],
       ['/cookies', /Cookie Policy/i],

@@ -243,6 +243,9 @@ function Dashboard({ sb, user, onExpired }) {
         <Link to="/" aria-label="n.abl home"><Logo size={22} /></Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-4)' }}>
           <span className="conn"><i />Connected</span>
+          {/* The CRM had no way in. It linked out to here and nothing linked
+              back, so the only route to it was typing the URL from memory. */}
+          <Link to="/crm" className="btn btn--ghost btn--sm">Sales CRM</Link>
           <button className="btn btn--ghost btn--sm" onClick={() => sb.auth.signOut()}>Log out</button>
         </div>
       </div>

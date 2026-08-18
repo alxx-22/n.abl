@@ -11,6 +11,9 @@ User-agent: *
 # Internal. Reachable from the footer's two unlabelled links, so crawlable
 # without this.
 Disallow: /team
+Disallow: /crm
+# The CRM's former path. It redirects to /crm now, but a crawler that already
+# has the old URL should still be told not to fetch it.
 Disallow: /sales-intelligence
 Disallow: /portal
 

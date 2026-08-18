@@ -14,7 +14,10 @@ Evidence:     supabase/migrations/202606010001_sales_intelligence.sql
 > see `01-positioning/README.md`. Where a service category is needed on a record,
 > it is one of the six customer-problem categories.
 
-The CRM is built and in daily use. It holds leads, contacts, pipeline stages,
+The CRM is built and deployed. Describing it as "in daily use" was wrong until
+16 August: nothing in the app linked to it, so the only way in was typing the
+URL from memory. The team space now links to it. It holds leads, contacts,
+pipeline stages,
 notes, activity and outreach drafts, and it works. What it does not have is a
 single one of the compliance fields the master plan requires. A search of the
 whole repository for `subscriber_type`, `lawful_basis`, `opt_out` or
