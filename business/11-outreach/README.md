@@ -210,6 +210,9 @@ without them is the mistake this whole step is arranged to prevent.
 
 ## What each file in this folder is for
 
+- [`first-contact-template.md`](first-contact-template.md) — the only message
+  that may be sent to someone who has not heard from us before, with a table
+  mapping every element to the rule that requires it. Written, never sent.
 | File | What it is for | Read it when |
 |---|---|---|
 | `README.md` | This file. What the step is, what done means, honest status, what to do next. | Opening the folder cold |
