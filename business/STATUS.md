@@ -12,9 +12,14 @@ file is stale. Last reconciled against the folders and the live project on
 
 Two things gate almost everything else:
 
-- **`07-crm` has no compliance fields.** Until that migration is applied, no
-  outbound message can lawfully be sent, which freezes `10-lead-sourcing` and
-  `11-outreach` behind it. It is the single highest-value unblock on this list.
+- **The compliance migration is written but not applied.** Everything around it
+  is now done: the schema is executed and behaviour-checked locally (29
+  assertions), the legitimate interests assessment exists, the Article 14 notice
+  is published, and the first-contact message is written. What remains is one
+  step — run `202608160003_crm_compliance.sql` against the live project. Until
+  then no outbound message can lawfully be sent and `10-lead-sourcing` and
+  `11-outreach` stay frozen. It is a single action and it is the highest-value
+  unblock on this list.
 - **Nothing has been sold.** `12-pricing`, `13-credits`, `16-finance` and
   `17-proof` are all waiting on the same event: a first real quote, from a first
   real conversation. `18-sales-conversation` is the folder that starts it and it
