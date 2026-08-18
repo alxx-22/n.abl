@@ -133,7 +133,10 @@ The three-part test, which is what the assessment has to answer:
    click.
 
 The assessment has to be written down before any record is marked
-`legitimate_interests`. The schema records `lia_ref` and `lia_completed_at` per
+`legitimate_interests`. It now is: [`lia-2026-08-v1.md`](lia-2026-08-v1.md),
+which is what `lia_ref` points at. Note its section 6 — the assessment is
+complete but reliance is conditional, because the privacy policy still does not
+cover leads. The schema records `lia_ref` and `lia_completed_at` per
 lead so that a record can point at the assessment it was added under, and so a
 later change to the assessment does not silently rewrite history.
 

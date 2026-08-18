@@ -192,6 +192,10 @@ decided what it is relying on.
 
 ## What each file in this folder is for
 
+- [`lia-2026-08-v1.md`](lia-2026-08-v1.md) — the legitimate interests assessment
+  that `sales_leads.lia_ref` points at. The schema will not let a lead be marked
+  `legitimate_interests` without it, so nothing can be marketed to on that basis
+  until this exists — it now does. Immutable: changes become a new version.
 | File | What it is for | Read it when |
 |---|---|---|
 | `README.md` | This file. What the step is, what done means, honest status, what to do next. | Opening the folder cold |
