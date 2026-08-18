@@ -4,7 +4,10 @@
 Status:       in progress
 Owner:        Alex
 Next review:  before any automated send. The compliance migration gates it
-Evidence:     supabase/migrations/202606010001_sales_intelligence.sql
+Evidence:     supabase/migrations/202608160003_crm_compliance.sql, and
+              scripts/check-compliance-schema.mjs — 29 assertions, run with
+              npm run test:compliance. Written and locally verified; NOT yet
+              applied to the live project
 ```
 
 > **The CRM's stages are n.abl's own sales pipeline, not a service menu.**
