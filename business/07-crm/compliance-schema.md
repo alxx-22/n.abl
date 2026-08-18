@@ -587,7 +587,11 @@ as $$
     )
     and (
       (select at from blocked) is null
-      or (select at from reconsent) > (select at from blocked)
+      -- coalesce: NULL > timestamp is NULL, and `false or NULL` is NULL, so
+      -- a suppressed address with no re-consent made this function return
+      -- NULL rather than false. `if not NULL then` does not fire, and the
+      -- send went through. Caught by scripts/check-compliance-schema.mjs.
+      or coalesce((select at from reconsent) > (select at from blocked), false)
     );
 $$;
 
@@ -599,7 +603,7 @@ security definer
 set search_path = public, pg_catalog
 as $$
 begin
-  if not public.marketing_send_allowed(new.lead_id, new.channel, new.recipient) then
+  if not coalesce(public.marketing_send_allowed(new.lead_id, new.channel, new.recipient), false) then
     raise exception
       'blocked by compliance gate: % on channel % is not permitted (lead %)',
       new.recipient, new.channel, new.lead_id
