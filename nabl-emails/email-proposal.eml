@@ -2,10 +2,10 @@ From: n.abl <hello@nabl.agency>
 Subject: Your proposal from n.abl
 MIME-Version: 1.0
 X-Unsent: 1
-Content-Type: multipart/alternative; boundary="=_nabl_1786864643_proposal_part"
+Content-Type: multipart/alternative; boundary="=_nabl_1787084863_proposal_part"
 
 This is a multi-part message in MIME format.
---=_nabl_1786864643_proposal_part
+--=_nabl_1787084863_proposal_part
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
@@ -52,7 +52,7 @@ Unsubscribe: [Unsubscribe Link]
 Privacy Policy: https://nabl.agency/privacy
 Terms: https://nabl.agency/terms
 
---=_nabl_1786864643_proposal_part
+--=_nabl_1787084863_proposal_part
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
@@ -82,7 +82,7 @@ Content-Transfer-Encoding: 8bit
         <!-- HEADER / LOGO -->
         <tr>
           <td style="padding:26px 32px;border-bottom:1px solid #0E0C0A;">
-            <img src="https://nabl.agency/brand/wordmark-email.png" width="150" alt="n.abl" style="display:inline-block;border:0;outline:none;text-decoration:none;height:auto;vertical-align:middle;font-family:'Arial Black',Gadget,sans-serif;font-size:26px;font-weight:bold;color:#FBF6EC;letter-spacing:-1px;">
+            <img src="https://nabl.agency/brand/wordmark-email-ink.png" width="150" alt="n.abl" style="display:inline-block;border:0;outline:none;text-decoration:none;height:auto;vertical-align:middle;font-family:'Arial Black',Gadget,sans-serif;font-size:26px;font-weight:bold;color:#0E0C0A;letter-spacing:-1px;">
           </td>
         </tr>
 
@@ -162,7 +162,7 @@ Content-Transfer-Encoding: 8bit
             <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0E0C0A;">Warm regards,</p>
             <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#0E0C0A;">
               <strong>[Your Name]</strong><br>
-              n.abl<br>
+              <img src="https://nabl.agency/brand/wordmark-email-ink.png" width="72" alt="n.abl" style="display:inline-block;border:0;outline:none;text-decoration:none;height:auto;vertical-align:middle;font-family:'Arial Black',Gadget,sans-serif;font-size:15px;font-weight:bold;color:#0E0C0A;letter-spacing:-1px;"><br>
               <a href="mailto:hello@nabl.agency" style="color:#0E0C0A;text-decoration:underline;">hello@nabl.agency</a><br>
               <a href="https://www.nabl.agency" style="color:#0E0C0A;text-decoration:underline;">www.nabl.agency</a>
             </p>
@@ -188,4 +188,4 @@ Content-Transfer-Encoding: 8bit
 </body>
 </html>
 
---=_nabl_1786864643_proposal_part--
+--=_nabl_1787084863_proposal_part--
