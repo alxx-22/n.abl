@@ -18,3 +18,8 @@ npm-debug.log*
 
 # local scratch
 *.tmp
+
+# Lead-sourcing working files: bulk snapshots and candidate lists.
+# Large, regenerable, and they hold third-party business data that has
+# no reason to be in version control.
+.sourcing/
