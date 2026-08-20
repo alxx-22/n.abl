@@ -131,6 +131,22 @@ async function run() {
     const afterCreate = await page.evaluate(() => document.body.innerText)
     check('shows the new company in the list', /Globex Industries/.test(afterCreate))
 
+    // Creating a client should lead straight into its welcome pack — the step
+    // that was previously left to memory.
+    // Wait for it rather than sampling — the modal opens after the save and
+    // refresh resolve, and an instant isVisible() check races that.
+    const packModal = await page.waitForSelector('.modal--doc', { timeout: 4000 })
+      .then(() => true).catch(() => false)
+    check('creating a client opens its welcome pack', packModal)
+    // Dismiss unconditionally: if it did open and we skip this, the overlay
+    // swallows every later click in this block and the failure looks unrelated.
+    await page.keyboard.press('Escape').catch(() => {})
+    await page.waitForSelector('.modal--doc', { state: 'detached', timeout: 4000 }).catch(() => {})
+    // And a client with no pack yet says so on its row.
+    const flags = await page.$$eval('.packflag', (es) => es.map((e) => e.textContent?.trim()))
+    check('a client with no welcome pack is flagged as such',
+      flags.some((f) => /no welcome pack yet/i.test(f || '')), flags.join('|'))
+
     // ---- validation ----
     await page.click('.controls button.btn--accent')
     await page.waitForTimeout(600)

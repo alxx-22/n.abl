@@ -127,6 +127,10 @@ function Dashboard({ sb, user, onExpired }) {
   const [filterClient, setFilterClient] = useState('all')
   const [confirm, setConfirm] = useState(null)
   const [welcomeFor, setWelcomeFor] = useState(null)
+  // Which clients already have a welcome pack in the portal. Held so the
+  // clients list can show the absence of one — a step that is only ever
+  // skipped silently is a step that will be skipped.
+  const [packIds, setPackIds] = useState(() => new Set())
   const [toastNode, showToast] = useToast()
 
   const handle = useCallback((err, fallback) => {
@@ -150,13 +154,21 @@ function Dashboard({ sb, user, onExpired }) {
     return data || []
   }, [sb, handle, showToast])
 
+  const loadPackIds = useCallback(async () => {
+    const { data, error } = await sb.from('documents')
+      .select('client_id').eq('title', 'Welcome pack')
+    if (error) return new Set()          // a marker is not worth an error toast
+    return new Set((data || []).map((d) => String(d.client_id)))
+  }, [sb])
+
   const refresh = useCallback(async (t = tab) => {
     setLoading(true)
     const cs = await loadClients()
     setClients(cs)
     setRows(t === 'clients' ? cs : await loadRows(t))
+    if (t === 'clients') setPackIds(await loadPackIds())
     setLoading(false)
-  }, [tab, loadClients, loadRows])
+  }, [tab, loadClients, loadRows, loadPackIds])
 
   useEffect(() => { refresh(tab) /* eslint-disable-next-line */ }, [tab])
 
@@ -288,7 +300,14 @@ function Dashboard({ sb, user, onExpired }) {
           <EntityForm
             sb={sb} tab={tab} clients={clients} editing={editing}
             onCancel={() => { setFormOpen(false); setEditing(null) }}
-            onSaved={() => { setFormOpen(false); setEditing(null); showToast('Saved'); refresh() }}
+            onSaved={(saved, { created } = {}) => {
+              setFormOpen(false); setEditing(null); showToast('Saved'); refresh()
+              // A client is created at the moment you have just won the work
+              // and the key is new, which is exactly when the welcome pack
+              // should go out. Opening it here is the difference between a
+              // step you do and a step you meant to do.
+              if (created && tab === 'clients' && saved?.id) setWelcomeFor(saved)
+            }}
             onError={handle}
           />
         )}
@@ -302,7 +321,8 @@ function Dashboard({ sb, user, onExpired }) {
                    onEdit={() => { setEditing(row); setFormOpen(true) }}
                    onDelete={() => onDelete(row)}
                    onCopy={() => showToast('Copied')}
-                   onWelcome={() => setWelcomeFor(row)} />
+                   onWelcome={() => setWelcomeFor(row)}
+                   hasPack={packIds.has(String(row.id))} />
             ))}
           </div>
         )}
@@ -330,7 +350,7 @@ function Dashboard({ sb, user, onExpired }) {
 }
 
 /* ---------------- One row / card ---------------- */
-function Row({ sb, tab, row, clientName, onEdit, onDelete, onCopy, onWelcome }) {
+function Row({ sb, tab, row, clientName, onEdit, onDelete, onCopy, onWelcome, hasPack }) {
   const actions = (
     <div className="card-actions">
       <button className="btn btn--ghost btn--sm" onClick={onEdit}>Edit</button>
@@ -352,8 +372,15 @@ function Row({ sb, tab, row, clientName, onEdit, onDelete, onCopy, onWelcome }) 
         </div>
         <div className="client-row__right">
           <span className="dim" style={{ fontSize: 'var(--t-sm)' }}>{dateLong(row.created_at)}</span>
+          {/* Says which of the two states this client is in, rather than
+              leaving "did we send it?" to memory. */}
+          <span className={`packflag ${hasPack ? 'packflag--yes' : 'packflag--no'}`}>
+            {hasPack ? 'Welcome pack sent' : 'No welcome pack yet'}
+          </span>
           <div className="card-actions" style={{ marginTop: 0 }}>
-            <button className="btn btn--ghost btn--sm" onClick={onWelcome}>Welcome pack</button>
+            <button className={`btn btn--sm ${hasPack ? 'btn--ghost' : 'btn--accent'}`} onClick={onWelcome}>
+              {hasPack ? 'Welcome pack' : 'Create welcome pack'}
+            </button>
             <button className="btn btn--ghost btn--sm" onClick={onEdit}>Edit</button>
             <button className="btn btn--ghost btn--sm danger-text" onClick={onDelete}>Delete</button>
           </div>
@@ -572,9 +599,12 @@ function EntityForm({ sb, tab, clients, editing, onCancel, onSaved, onError }) {
       }
 
       setPhase('Saving…')
-      const { error } = editing
-        ? await sb.from(tab).update(payload).eq('id', editing.id)
-        : await sb.from(tab).insert(payload)
+      // The insert returns the new row so the caller knows what was just
+      // created. Without it nothing can follow a creation, which is why the
+      // welcome pack depended on somebody remembering.
+      const { data: saved, error } = editing
+        ? await sb.from(tab).update(payload).eq('id', editing.id).select().single()
+        : await sb.from(tab).insert(payload).select().single()
 
       if (error) {
         for (const u of uploaded) { try { await sb.storage.from(u.bucket).remove([u.path]) } catch {} }
@@ -585,7 +615,7 @@ function EntityForm({ sb, tab, clients, editing, onCancel, onSaved, onError }) {
       }
 
       for (const r of replaced) { try { await sb.storage.from(r.bucket).remove([r.path]) } catch {} }
-      onSaved()
+      onSaved(saved, { created: !editing })
     } catch {
       for (const u of uploaded) { try { await sb.storage.from(u.bucket).remove([u.path]) } catch {} }
       setBusy(false); setPhase('')

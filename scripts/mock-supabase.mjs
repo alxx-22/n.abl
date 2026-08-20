@@ -164,20 +164,29 @@ export async function installMock(page, opts = {}) {
     const isTeam = bearer.includes('mock-access-token')
     log.push(`REST ${method} ${table}${accessKey ? ` key=${accessKey}` : ''}${isTeam ? ' team' : ''}`)
 
+    // PostgREST returns a single object rather than an array when the client
+    // asks for one — which is what supabase-js .single() does. The mock used
+    // to always return an array, so every .single() call errored and any code
+    // path behind one was silently never exercised by these tests.
+    const wantsObject = /vnd\.pgrst\.object\+json/.test(headers['accept'] || '')
+    const shape = (rows) => (wantsObject ? (rows[0] ?? null) : rows)
+
     if (!table || !db[table]) {
-      return route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: '[]' })
+      return route.fulfill({ status: 200, headers: CORS, contentType: 'application/json',
+        body: JSON.stringify(wantsObject ? null : []) })
     }
 
     // Portal RLS: without a valid access key the client sees nothing.
     const portalScoped = accessKey !== undefined
     if (portalScoped && accessKey !== validKey) {
-      return route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: '[]' })
+      return route.fulfill({ status: 200, headers: CORS, contentType: 'application/json',
+        body: JSON.stringify(wantsObject ? null : []) })
     }
 
     if (method === 'GET') {
       const rows = applyFilters(db[table], url)
       return route.fulfill({ status: 200, headers: CORS, contentType: 'application/json',
-        body: JSON.stringify(rows) })
+        body: JSON.stringify(shape(rows)) })
     }
 
     if (method === 'POST') {
@@ -187,7 +196,7 @@ export async function installMock(page, opts = {}) {
       const created = list.map((r) => ({ id: `gen${idSeq++}`, created_at: new Date().toISOString(), ...r }))
       db[table].push(...created)
       return route.fulfill({ status: 201, headers: CORS, contentType: 'application/json',
-        body: JSON.stringify(created) })
+        body: JSON.stringify(shape(created)) })
     }
 
     if (method === 'PATCH') {
@@ -196,7 +205,7 @@ export async function installMock(page, opts = {}) {
       const targets = applyFilters(db[table], url)
       targets.forEach((t) => Object.assign(t, patch))
       return route.fulfill({ status: 200, headers: CORS, contentType: 'application/json',
-        body: JSON.stringify(targets) })
+        body: JSON.stringify(shape(targets)) })
     }
 
     if (method === 'DELETE') {
