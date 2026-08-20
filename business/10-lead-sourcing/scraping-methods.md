@@ -70,10 +70,9 @@ that matters:
   incorporated companies, which is exactly the population PECR lets us approach
   on legitimate interests. Sole traders never enter the pipeline.
 
-Verified on 20 August 2026, by running it. One part file is 70MB; part 1 alone
-holds **849,999 companies, of which 9,807 are active in NG/B49/B50** and 1,921
-were incorporated in the 12–36 month band. Extrapolated across all seven parts
-that is roughly 65,000 companies in territory.
+Verified on 20 August 2026 by running the whole thing. All seven parts:
+**5,695,466 companies scanned, 66,925 active in NG/B49/B50.** The download is
+about 490MB in total and takes a few minutes.
 
 **That settles a question the tracker has been carrying.** There is no shortage
 of candidates, so sourcing is not the hard part — scoring is. Any effort spent

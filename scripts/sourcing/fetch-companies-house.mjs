@@ -21,6 +21,7 @@
      node scripts/sourcing/fetch-companies-house.mjs --part 3
      node scripts/sourcing/fetch-companies-house.mjs --all           # all 7
      node scripts/sourcing/fetch-companies-house.mjs --areas NG,B49
+     node scripts/sourcing/fetch-companies-house.mjs --all --areas all   # national
      node scripts/sourcing/fetch-companies-house.mjs --keep          # keep the zip
 
    Output: .sourcing/candidates-<date>.json  (git-ignored)
@@ -107,6 +108,9 @@ function outwardArea(postcode) {
 }
 
 function inTerritory(postcode) {
+  // --areas all keeps every active company. Territory is a business decision,
+  // not a property of the data, and the whole register is the same download.
+  if (AREAS.length === 1 && AREAS[0] === 'ALL') return true
   const outward = outwardArea(postcode)
   if (!outward) return false
   const letters = outward.match(/^[A-Z]{1,2}/)?.[0] || ''
@@ -225,7 +229,8 @@ for (const part of PARTS) {
   console.log(`  part ${part}: ${scanned.toLocaleString()} scanned, ${kept.length.toLocaleString()} in territory so far`)
 }
 
-const outFile = join(OUT_DIR, `candidates-${snapshotDate}.json`)
+const tag = AREAS.length === 1 && AREAS[0] === 'ALL' ? 'national' : AREAS.join('-').toLowerCase()
+const outFile = join(OUT_DIR, `candidates-${snapshotDate}-${tag}.json`)
 writeFileSync(outFile, JSON.stringify({
   snapshot: snapshotDate,
   areas: AREAS,
