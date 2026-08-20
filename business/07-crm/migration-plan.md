@@ -284,3 +284,29 @@ records the applied state the way the AI-removal migration does, the eight
 existing leads carry honest values, and somebody who has never seen the system
 can look at a lead and answer "may we email this person, and why" without opening
 a document.
+
+---
+
+## Pre-flight check against the live project — 18 August 2026
+
+Run before applying `202608160003_crm_compliance.sql`. All clean:
+
+| Check | Result |
+|---|---|
+| `sales_leads` exists | yes |
+| `sales_contacts` exists, with an `email` column | yes — the generated `email_normalised` depends on it |
+| Compliance columns already present | none |
+| `marketing_*` tables already present | none |
+| Existing leads | 8 |
+| Existing contacts | 8 |
+
+**The consequence worth planning for.** All 8 existing leads will land on
+`marketing_status = 'do_not_contact'`, `lawful_basis = 'unassessed'` and
+`subscriber_type = 'unknown'`, because those are the column defaults. None of
+them can be contacted until a human has assessed each one and recorded a source,
+a source date and a subscriber type. That is the intended behaviour, not a
+migration defect — but it does mean the migration is followed by eight
+assessments, not by sending.
+
+The apply did not happen in that session: the Supabase connector dropped between
+the check and the apply. Nothing was partially written.
