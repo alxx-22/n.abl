@@ -12,14 +12,12 @@ file is stale. Last reconciled against the folders and the live project on
 
 Two things gate almost everything else:
 
-- **The compliance migration is written but not applied.** Everything around it
-  is now done: the schema is executed and behaviour-checked locally (29
-  assertions), the legitimate interests assessment exists, the Article 14 notice
-  is published, and the first-contact message is written. What remains is one
-  step — run `202608160003_crm_compliance.sql` against the live project. Until
-  then no outbound message can lawfully be sent and `10-lead-sourcing` and
-  `11-outreach` stay frozen. It is a single action and it is the highest-value
-  unblock on this list.
+- **The compliance layer is live.** The migration is applied and verified, the
+  legitimate interests assessment exists, the Article 14 notice is published and
+  the first-contact message is written. What blocks sending now is not
+  infrastructure: all 8 existing leads sit on `do_not_contact` / `unassessed` /
+  `unknown` by design, and each needs assessing by hand before it can be
+  contacted. That is eight decisions, not a build.
 - **Nothing has been sold.** `12-pricing`, `13-credits`, `16-finance` and
   `17-proof` are all waiting on the same event: a first real quote, from a first
   real conversation. `18-sales-conversation` is the folder that starts it and it
@@ -37,7 +35,7 @@ Four folders can be worked on **right now with no dependency at all**:
 | **04** legal<br>*in progress* | Contract checklist, SOW template and NDA draft written. Privacy policy given an Article 14 section for people we approach, which the LIA depended on. **18 Aug** | Solicitor review. **Waits on budget.** Nothing here has been reviewed and must not be described as if it has. The Article 14 notice for leads is published, so `LIA-2026-08-v1` is no longer blocked on legal. |
 | **05** portal<br>*done* | Access keys rotated to the 19-character CSPRNG format on the live project; the stray anon grant on `prune_portal_login_attempts` revoked. **16 Aug** | Turn on point-in-time recovery. **Waits on a second paying client** — before that the data loss is a rounding error. |
 | **06** team space<br>*done* | Key rotation run and verified end to end against live RLS. **16 Aug** | A month of daily use with a real client in it, then review what is actually clumsy. **Waits on the first client.** |
-| **07** crm<br>*in progress* | Compliance migration written as `202608160003_crm_compliance.sql`, executed against a local PostgreSQL and checked with 29 behavioural assertions (`npm run test:compliance`). The check found the send gate failing open on suppressed addresses; fixed. **18 Aug** | **Apply it to the live project**, then expose the fields in the CRM so a lead can actually be assessed. Waits on a Supabase connector being available. Still gates `10` and `11`. |
+| **07** crm<br>*in progress* | **Compliance migration applied to the live project, 20 Aug.** Verified: 8/8 columns, 3/3 tables, 4/4 constraints, 2/2 triggers, the gate carries its fail-closed guard, and no compliance function is anon-executable. All 8 existing leads correctly locked to `do_not_contact`. **20 Aug** | **Assess the 8 existing leads** — each needs a subscriber type, a lawful basis, a source and a source date before it can be contacted. Then expose those fields in the CRM. `10` and `11` are no longer gated by schema. |
 | **08** email pack<br>*done* | Ink wordmark on light headers, signature set in the drawn mark, and image contrast now measured rather than assumed. **16 Aug** | A real render test through Litmus or Email on Acid, Outlook on Windows first. **Waits on a list provider** and the first sequence. |
 | **09** welcome pack<br>*done* | Summariser hardened: schema-enforced response, refusal handling, current model. **16 Aug** | Pass the business name through to the summariser, then run it on a real transcript. **Waits on the first client.** |
 | **10** lead sourcing<br>*not started* | Research pass on how AI lead-gen agencies acquire clients, and what of it transfers. Found the free Companies House bulk snapshot answers the filtering problem. **16 Aug** | Download one Companies House bulk snapshot and filter it by postcode and SIC by hand, to find out how many local candidates actually exist. **No dependency** — see `agency-playbook.md`. Building the pipeline still waits on `07-crm`. |

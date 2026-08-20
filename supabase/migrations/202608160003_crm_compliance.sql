@@ -17,8 +17,9 @@
 -- hand before it can be marketed to. That is the intended outcome, not
 -- an inconvenience to be backfilled away.
 --
--- STATUS: WRITTEN, NOT YET APPLIED. Apply it against a branch or a
--- scratch project first and run scripts/check-compliance-schema.mjs.
+-- STATUS: APPLIED 2026-08-20 to the live project. The grants at section 9
+-- were insufficient as first written and needed a follow-up migration
+-- (202608200001); they are corrected here so a fresh apply is complete.
 -- =====================================================================
 
 begin;
@@ -457,13 +458,18 @@ create policy "team can add sends"
 --
 --    Trigger functions are never invoked directly and get nothing.
 -- ---------------------------------------------------------------------
-revoke all on function public.marketing_suppression_append_only() from public;
-revoke all on function public.marketing_sends_guard() from public;
+-- Revoking from PUBLIC is NOT enough on Supabase, and assuming it was is
+-- what made a follow-up migration necessary on 2026-08-20. Supabase sets
+-- default privileges that grant EXECUTE on every new function directly to
+-- anon, authenticated and service_role, and an explicit role grant is not
+-- removed by revoking from PUBLIC. Each role has to be named.
+revoke all on function public.marketing_suppression_append_only() from public, anon, authenticated;
+revoke all on function public.marketing_sends_guard() from public, anon, authenticated;
 
-revoke all on function public.marketing_send_allowed(uuid, text, text) from public;
+revoke all on function public.marketing_send_allowed(uuid, text, text) from public, anon, authenticated;
 grant execute on function public.marketing_send_allowed(uuid, text, text) to authenticated;
 
-revoke all on function public.apply_opt_out(uuid, text, text, text, text) from public;
+revoke all on function public.apply_opt_out(uuid, text, text, text, text) from public, anon, authenticated;
 grant execute on function public.apply_opt_out(uuid, text, text, text, text) to authenticated;
 
 -- NOTE on the public unsubscribe link. A recipient clicking "unsubscribe"

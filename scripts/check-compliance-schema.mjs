@@ -121,6 +121,12 @@ create table if not exists auth.users (id uuid primary key default gen_random_uu
 create or replace function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 grant usage on schema public, extensions to anon, authenticated, service_role;
+-- Supabase grants EXECUTE on every new function directly to anon,
+-- authenticated and service_role via default privileges. Without this line
+-- the harness differs from production in the one way that matters: a
+-- migration revoking only from PUBLIC looks correct here and leaves anon
+-- holding EXECUTE on the live project. That is exactly what happened.
+alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
 `)
   chmodSync(BOOTSTRAP, 0o644)
   psql(BOOTSTRAP, { file: true })
