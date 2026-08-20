@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { teamClient, friendlyError } from '../lib/supabase.js'
+import PipelineHandoff from '../components/PipelineHandoff.jsx'
 import {
   Logo, Field, Badge, EdgeCard, Reveal, ConfirmModal, useToast, Loading, Empty,
 } from '../components/ui/index.jsx'
@@ -338,6 +339,7 @@ function Workspace({ sb, user, onSignedOut }) {
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [handoff, setHandoff] = useState(null)
   const [ownerFilter, setOwnerFilter] = useState('')
   const [minScore, setMinScore] = useState(0)
 
@@ -487,6 +489,14 @@ function Workspace({ sb, user, onSignedOut }) {
     const from = lead.status
     const next = withActivity({ ...lead, status: toStatus }, 'Status change', `${from} to ${toStatus}`)
     saveLead(next, { pipelineFrom: from, okMsg: `Moved to ${toStatus}` })
+
+    // The two stages where a lead stops being a lead. Proposal Sent needs a
+    // portal account for the quote to live in; Won needs the welcome pack and
+    // the email that carries the key. Prompted, not silent — but pre-filled,
+    // so it is one click rather than a job for later.
+    if (toStatus === 'Proposal Sent' || toStatus === 'Won') {
+      setHandoff({ lead: next, stage: toStatus })
+    }
   }, [saveLead])
 
   const removeLead = useCallback(async (lead) => {
@@ -745,6 +755,15 @@ function Workspace({ sb, user, onSignedOut }) {
         onConfirm={() => confirm?.run()}
         onCancel={() => setConfirm(null)}
       />
+
+      {handoff && (
+        <PipelineHandoff
+          lead={handoff.lead}
+          stage={handoff.stage}
+          ownerName={displayName(user)}
+          onClose={() => setHandoff(null)}
+        />
+      )}
       {toastNode}
     </div>
   )

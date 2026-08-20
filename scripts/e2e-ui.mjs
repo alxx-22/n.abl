@@ -241,6 +241,43 @@ async function run() {
     const missing = STAGES.filter((s) => !crm.includes(s))
     check('all ten pipeline stages render', missing.length === 0, missing.join(','))
 
+    // ---- pipeline handoffs ----
+    // Moving a lead to Proposal Sent should offer to set up the portal
+    // account, and moving it to Won should offer the pack and the email.
+    // Both are the points where a lead stops being a lead.
+    const leadCard = await page.$('.lead-row, .board__card, [class*="lead"]')
+    if (leadCard) await leadCard.click().catch(() => {})
+    await page.waitForTimeout(900)
+
+    const stageSel = await page.$('select[id^="stage-"]')
+    if (!stageSel) {
+      check('a lead can be opened to change its stage', false, 'no stage select found')
+    } else {
+      check('a lead can be opened to change its stage', true)
+
+      await stageSel.selectOption('Proposal Sent')
+      const quoteHandoff = await page.waitForSelector('text=Set up the portal account', { timeout: 4000 })
+        .then(() => true).catch(() => false)
+      check('moving to Proposal Sent offers the portal account', quoteHandoff)
+      // The modal's title renders during its lookup phase too, so waiting on
+      // the title is not enough — wait for the field itself.
+      await page.waitForSelector('#ph-key', { timeout: 4000 }).catch(() => {})
+      const keyField = await page.inputValue('#ph-key').catch(() => '')
+      check('the portal account arrives with a key already generated',
+        /^[A-Z0-9]{2,6}-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}(-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}){2}$/.test(keyField),
+        keyField)
+      await page.keyboard.press('Escape').catch(() => {})
+      await page.waitForSelector('.modal--doc', { state: 'detached', timeout: 4000 }).catch(() => {})
+
+      const stageSel2 = await page.$('select[id^="stage-"]')
+      await stageSel2?.selectOption('Won')
+      const wonHandoff = await page.waitForSelector('text=Hand over to the client', { timeout: 4000 })
+        .then(() => true).catch(() => false)
+      check('moving to Won offers the welcome pack handover', wonHandoff)
+      await page.keyboard.press('Escape').catch(() => {})
+      await page.waitForSelector('.modal--doc', { state: 'detached', timeout: 4000 }).catch(() => {})
+    }
+
     check('no runtime errors', errors.length === 0, errors[0])
     await page.close()
   }

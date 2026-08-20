@@ -36,7 +36,35 @@ export function makeDb() {
       { id: 'd1', client_id: 'c1', title: 'Signed service agreement', document_type: 'contract',
         uploaded_at: '2026-05-31T10:00:00Z', file_url: 'c1/1700-agreement.pdf' },
     ],
-    sales_leads: [], sales_contacts: [], sales_activities: [],
+    // One seeded lead. Without it the CRM renders an empty pipeline and
+    // every assertion here could only ever check that stage names appear as
+    // text — nothing that happens *to* a lead was reachable.
+    sales_leads: [{
+      id: 'lead-1',
+      company: 'Wayne Logistics',
+      website: 'waynelogistics.example',
+      industry: 'Logistics',
+      location: 'Nottingham',
+      estimated_size: '11-50',
+      business_type: 'Operations-led',
+      lead_score: 72,
+      status: 'Meeting Scheduled',
+      owner_name: 'Alex',
+      notes: 'Books deliveries by phone and rekeys them into a spreadsheet.',
+      signals: 'Hiring an operations assistant.',
+      created_at: '2026-08-01T09:00:00.000Z',
+      updated_at: '2026-08-10T09:00:00.000Z',
+    }],
+    sales_contacts: [{
+      id: 'lead-contact-1',
+      lead_id: 'lead-1',
+      name: 'Lucius Fox',
+      role: 'Operations Manager',
+      email: 'lucius@waynelogistics.example',
+      confidence: 80,
+      created_at: '2026-08-01T09:00:00.000Z',
+    }],
+    sales_activities: [],
     sales_pipeline_events: [], sales_email_drafts: [],
   }
 }
@@ -70,8 +98,28 @@ function applyFilters(rows, url) {
   let out = [...rows]
   for (const [k, v] of qs.entries()) {
     if (['select', 'order', 'limit', 'offset', 'apikey'].includes(k)) continue
-    const m = String(v).match(/^eq\.(.*)$/)
-    if (m) out = out.filter((r) => String(r[k]) === m[1])
+    const raw = String(v)
+    const eq = raw.match(/^eq\.(.*)$/)
+    if (eq) { out = out.filter((r) => String(r[k]) === eq[1]); continue }
+
+    // ilike/like were previously ignored, which made them silent no-ops:
+    // a filtered query returned every row and any code relying on the
+    // filter appeared to work while matching the wrong record.
+    const lk = raw.match(/^(i?like)\.(.*)$/)
+    if (lk) {
+      const insensitive = lk[1] === 'ilike'
+      const pattern = lk[2].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/%/g, '.*').replace(/\\\*/g, '.*')
+      const re = new RegExp(`^${pattern}$`, insensitive ? 'i' : '')
+      out = out.filter((r) => re.test(String(r[k] ?? '')))
+      continue
+    }
+
+    const isf = raw.match(/^is\.(.*)$/)
+    if (isf) {
+      const want = isf[1] === 'null' ? null : isf[1] === 'true'
+      out = out.filter((r) => (want === null ? r[k] == null : r[k] === want))
+    }
   }
   const ord = qs.get('order')
   if (ord) {
