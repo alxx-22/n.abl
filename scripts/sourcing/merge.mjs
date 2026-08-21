@@ -33,27 +33,33 @@ const OUT = arg('--out', path.join(DIR, 'universe.json'))
    kept under their own key so nothing is lost in the flattening.
 
    Address provenance is the point of the whole exercise, so it is carried
-   explicitly rather than inferred. Companies House gives a REGISTERED office,
-   which for a small business is very often the accountant's; the FSA gives
-   the address the business actually trades from. Both are kept, and
-   `contact_*` resolves to the trading one whenever there is one. */
-const ADDRESS_KIND = {
-  companies_house: 'registered',
-  public_company_information: 'trading',
-}
+   explicitly rather than inferred. Three kinds, in descending order of how
+   likely they are to reach a human:
 
-function normalise(row) {
+     trading    - the FSA's premises address. Where the business physically is.
+     declared   - the ICO's. The address the organisation gave for itself, so
+                  usually real, but nothing forces it to be the trading one.
+     registered - Companies House. For a small business very often the
+                  accountant's, and a letter there does not reach the owner.
+
+   All three are kept and `contact_*` resolves to the best available. */
+const KIND_ORDER = ['trading', 'declared', 'registered']
+
+function normalise(row, kind) {
   const name = row.company || row.name || ''
   const postcode = postcodeKey(row.postcode)
-  const kind = ADDRESS_KIND[row.source] || 'registered'
   const address = row.address || row.address_line_1 || ''
+  const at = (k) => (kind === k ? address : '')
+  const pc = (k) => (kind === k ? postcode : '')
   return {
     name: name.replace(/^"|"$/g, '').trim(),
     name_key: nameKey(name),
-    registered_address: kind === 'registered' ? address : '',
-    registered_postcode: kind === 'registered' ? postcode : '',
-    trading_address: kind === 'trading' ? address : '',
-    trading_postcode: kind === 'trading' ? postcode : '',
+    registered_address: at('registered'),
+    registered_postcode: pc('registered'),
+    declared_address: at('declared'),
+    declared_postcode: pc('declared'),
+    trading_address: at('trading'),
+    trading_postcode: pc('trading'),
     town: row.town || '',
     lat: row.lat || null,
     lon: row.lon || null,
@@ -68,6 +74,10 @@ function normalise(row) {
     business_type: row.business_type || null,
     local_authority: row.local_authority || null,
     hygiene_rating: row.hygiene_rating || null,
+    ico_registration: row.ico_registration || null,
+    trading_names: row.trading_names || null,
+    payment_tier: row.payment_tier || null,
+    public_authority: row.public_authority || null,
     // Set once the record is final; see resolveContact below.
     contact_address: '',
     contact_postcode: '',
@@ -76,13 +86,13 @@ function normalise(row) {
   }
 }
 
-/* Where we would actually write. A trading address beats a registered one
-   every time — a letter to the accountant does not reach the owner. */
+/* Where we would actually write. Best available kind wins — a letter to the
+   accountant does not reach the owner. */
 function resolveContact(r) {
-  const useTrading = Boolean(r.trading_postcode || r.trading_address)
-  r.contact_address = useTrading ? r.trading_address : r.registered_address
-  r.contact_postcode = useTrading ? r.trading_postcode : r.registered_postcode
-  r.contact_address_kind = useTrading ? 'trading' : 'registered'
+  const kind = KIND_ORDER.find((k) => r[`${k}_postcode`] || r[`${k}_address`]) || ''
+  r.contact_address = kind ? r[`${kind}_address`] : ''
+  r.contact_postcode = kind ? r[`${kind}_postcode`] : ''
+  r.contact_address_kind = kind
   r.area = outwardArea(r.contact_postcode)
   return r
 }
@@ -100,27 +110,28 @@ function absorb(into, from) {
   return into
 }
 
-function loadRegister(file) {
+function loadRegister(file, kind) {
   const raw = JSON.parse(fs.readFileSync(path.join(DIR, file), 'utf8'))
   const rows = raw.candidates || raw.rows || (Array.isArray(raw) ? raw : [])
-  return rows.map(normalise).filter((r) => r.name && r.name_key)
+  return rows.map((r) => normalise(r, kind)).filter((r) => r.name && r.name_key)
 }
 
 /* Files are ingested in a fixed order so a rerun produces the same universe.
    Companies House first: it is the spine, and it is the only source with a
    company number to key a CRM record on. */
 const REGISTERS = [
-  { source: 'companies_house', match: /^candidates-.*\.json$/ },
-  { source: 'public_company_information', match: /^fsa-.*\.json$/ },
+  { source: 'companies_house', kind: 'registered', match: /^candidates-.*\.json$/ },
+  { source: 'public_company_information', kind: 'declared', match: /^ico-.*\.json$/ },
+  { source: 'public_company_information', kind: 'trading', match: /^fsa-.*\.json$/ },
 ]
 
 const files = fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && f !== path.basename(OUT))
 const ordered = []
 for (const reg of REGISTERS) {
-  for (const f of files.filter((f) => reg.match.test(f)).sort()) ordered.push({ file: f, source: reg.source })
+  for (const f of files.filter((f) => reg.match.test(f)).sort()) ordered.push({ file: f, source: reg.source, kind: reg.kind })
 }
 const unclaimed = files.filter((f) => !ordered.some((o) => o.file === f))
-for (const f of unclaimed.sort()) ordered.push({ file: f, source: 'unknown' })
+for (const f of unclaimed.sort()) ordered.push({ file: f, source: 'unknown', kind: 'registered' })
 
 if (!ordered.length) {
   console.error(`No register files in ${DIR}/. Run the fetch scripts first.`)
@@ -132,14 +143,14 @@ const byName = new Map()       // "NAMEKEY" -> [records], only distinctive keys
 const universe = []
 const stats = { read: 0, merged_exact: 0, merged_name: 0, dropped_ambiguous: 0, per_source: {} }
 
-for (const { file, source } of ordered) {
-  const rows = loadRegister(file)
+for (const { file, source, kind } of ordered) {
+  const rows = loadRegister(file, kind)
   let added = 0, mergedHere = 0
   console.log(`\n${file}  (${rows.length.toLocaleString()} rows)`)
 
   for (const row of rows) {
     stats.read++
-    const pc = row.trading_postcode || row.registered_postcode
+    const pc = row.trading_postcode || row.declared_postcode || row.registered_postcode
     const exactKey = pc ? `${row.name_key}|${pc}` : ''
 
     let target = exactKey ? byExact.get(exactKey) : undefined
@@ -176,7 +187,7 @@ for (const r of universe) resolveContact(r)
 
 /* A record is only worth contacting if there is somewhere to contact. */
 const withAddress = universe.filter((r) => r.contact_postcode || r.contact_address)
-const trading = universe.filter((r) => r.contact_address_kind === 'trading')
+const reachable = universe.filter((r) => r.contact_address_kind !== 'registered' && r.contact_address_kind)
 const multi = universe.filter((r) => r.sources.length > 1)
 
 const out = {
@@ -188,7 +199,7 @@ const out = {
   merged_name: stats.merged_name,
   ambiguous_name_kept_separate: stats.dropped_ambiguous,
   corroborated_by_two_registers: multi.length,
-  with_trading_address: trading.length,
+  not_a_registered_office: reachable.length,
   candidates: universe,
 }
 fs.writeFileSync(OUT, JSON.stringify(out, null, 1))
@@ -204,7 +215,7 @@ console.log(`
   ${universe.length.toLocaleString()} distinct businesses
   ${multi.length.toLocaleString()} corroborated by two registers
   ${withAddress.length.toLocaleString()} with an address to write to
-  ${trading.length.toLocaleString()} of those a real trading address, not a registered office
+  ${reachable.length.toLocaleString()} of those an address the business gave for itself, not a registered office
 
   ${Object.entries(byArea).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([a, n]) => `${a}:${n}`).join('  ')}
 
