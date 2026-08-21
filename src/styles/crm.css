@@ -280,3 +280,19 @@
   border-color: rgba(var(--accent-rgb), 0.4);
   font-variant-numeric: tabular-nums;
 }
+
+/* A compliance blocker or an objection notice. Amber for "you cannot do this
+   yet", not red: nothing has gone wrong, the record is simply incomplete. The
+   objection case reuses it because the message is the same shape — here is why
+   this lead cannot be contacted — and a second colour would only make the two
+   look like different kinds of problem. */
+.crm-warn {
+  margin: var(--s-5) 0 0;
+  padding: var(--s-3) var(--s-4);
+  border-left: 3px solid var(--accent);
+  background: var(--surface-2, rgba(201,143,74,.07));
+  border-radius: 0 var(--r-sm, 6px) var(--r-sm, 6px) 0;
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  color: var(--ink-2, inherit);
+}

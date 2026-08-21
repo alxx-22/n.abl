@@ -281,6 +281,58 @@ async function run() {
       await stale.close()
     }
 
+    /* The compliance panel is where a promoted lead gets checked, so it has to
+       show what the database will actually allow — and refuse before the save
+       rather than after, because a constraint violation arrives as a wall of
+       SQL. The fixture lead is half-answered on purpose. */
+    {
+      const card = await page.$('.lead-row, .board__card, [class*="lead"]')
+      if (card) await card.click().catch(() => {})
+      await page.waitForTimeout(700)
+      const complianceTab = await page.$('#crm-tab-compliance')
+      check('a Compliance tab exists on a lead', Boolean(complianceTab))
+      if (complianceTab) {
+        await complianceTab.click()
+        await page.waitForTimeout(600)
+        const text = await page.evaluate(() => document.body.innerText)
+        check('it states what each channel is allowed right now',
+          /Email/i.test(text) && /Post/i.test(text) && /Blocked/i.test(text))
+        check('and says why phone is blocked, not just that it is',
+          /TPS/.test(text))
+
+        // Permitting a lead with no lawful basis must be refused up front.
+        await page.selectOption('select[id^="ms-"]', 'permitted').catch(() => {})
+        await page.waitForTimeout(400)
+        const after = await page.evaluate(() => document.body.innerText)
+        check('permitting a lead with no lawful basis is refused before saving',
+          /Cannot be permitted yet/.test(after) && /lawful basis/.test(after))
+        const saveDisabled = await page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')]
+            .find((x) => /Save compliance record/i.test(x.textContent))
+          return b ? b.disabled : null
+        })
+        check('and the save button is disabled while it is refused', saveDisabled === true)
+
+        // Supplying the missing pieces must clear it.
+        await page.selectOption('select[id^="lb-"]', 'not_personal_data').catch(() => {})
+        await page.selectOption('select[id^="pn-"]', 'not_required').catch(() => {})
+        await page.waitForTimeout(400)
+        const fixed = await page.evaluate(() => document.body.innerText)
+        check('supplying a basis clears the blocker', !/Cannot be permitted yet/.test(fixed))
+        check('and email then reads as permitted for a corporate subscriber',
+          /Email\s*\n?\s*Permitted/i.test(fixed))
+        const nowEnabled = await page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')]
+            .find((x) => /Save compliance record/i.test(x.textContent))
+          return b ? !b.disabled : null
+        })
+        check('and the save button becomes usable', nowEnabled === true)
+
+        await page.click('#crm-tab-overview').catch(() => {})
+        await page.waitForTimeout(300)
+      }
+    }
+
     const leadCard = await page.$('.lead-row, .board__card, [class*="lead"]')
     if (leadCard) await leadCard.click().catch(() => {})
     await page.waitForTimeout(900)

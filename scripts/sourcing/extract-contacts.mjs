@@ -168,24 +168,60 @@ async function extract(site) {
   return out
 }
 
-const data = JSON.parse(fs.readFileSync(IN, 'utf8'))
-let sites = (data.results || []).filter((r) => r.outcome === 'confirmed' && r.website)
+/* Reads either the sweep's finished JSON or its in-progress JSONL checkpoint,
+   so extraction can start while the sweep is still running and be re-run to
+   pick up whatever it found in the meantime. */
+let all = []
+if (IN.endsWith('.jsonl')) {
+  for (const line of fs.readFileSync(IN, 'utf8').split('\n')) {
+    if (!line.trim()) continue
+    try { all.push(JSON.parse(line)) } catch { /* torn last line */ }
+  }
+} else {
+  all = JSON.parse(fs.readFileSync(IN, 'utf8')).results || []
+}
+
+let sites = all.filter((r) => r.outcome === 'confirmed' && r.website)
+
+/* Same checkpoint discipline as the sweep: one line per site as it completes,
+   and a rerun skips what is already there. Extraction fetches up to four
+   pages per site, so re-doing finished work is not just slow, it is four
+   requests to somebody who already answered them. */
+const CHECKPOINT = OUT.replace(/\.json$/, '.jsonl')
+const results = []
+const seen = new Set()
+if (fs.existsSync(CHECKPOINT)) {
+  for (const line of fs.readFileSync(CHECKPOINT, 'utf8').split('\n')) {
+    if (!line.trim()) continue
+    try { const r = JSON.parse(line); results.push(r); seen.add(r.name) } catch { /* torn */ }
+  }
+  console.log(`  resuming: ${results.length.toLocaleString()} already read`)
+}
+sites = sites.filter((s) => !seen.has(s.name))
 if (LIMIT) sites = sites.slice(0, LIMIT)
 
 console.log(`\n  ${sites.length.toLocaleString()} confirmed sites, ${CONCURRENCY} at a time\n`)
 
-const results = []
+const sink = fs.createWriteStream(CHECKPOINT, { flags: 'a' })
 const queue = [...sites]
 let done = 0
+const started = Date.now()
 async function worker() {
   while (queue.length) {
     const site = queue.shift()
-    try { results.push(await extract(site)) }
-    catch (e) { results.push({ name: site.name, website: site.website, outcome: `error: ${e.message}` }) }
-    if (++done % 20 === 0) console.log(`  ${done}/${sites.length}`)
+    let record
+    try { record = await extract(site) }
+    catch (e) { record = { name: site.name, website: site.website, outcome: `error: ${e.message}` } }
+    results.push(record)
+    sink.write(JSON.stringify(record) + '\n')
+    if (++done % 50 === 0) {
+      const rate = done / ((Date.now() - started) / 1000)
+      console.log(`  ${done}/${sites.length}  ${rate.toFixed(1)}/s  ~${((queue.length / rate) / 60).toFixed(0)}m left`)
+    }
   }
 }
 await Promise.all(Array.from({ length: CONCURRENCY }, worker))
+await new Promise((r) => sink.end(r))
 
 const by = {}
 for (const r of results) by[r.outcome] = (by[r.outcome] || 0) + 1

@@ -48,7 +48,48 @@ const TABS = [
   { id: 'contacts', label: 'Contacts' },
   { id: 'outreach', label: 'Outreach' },
   { id: 'notes', label: 'Notes' },
+  { id: 'compliance', label: 'Compliance' },
   { id: 'activity', label: 'Activity' },
+]
+
+/* The compliance fields, and what each value actually permits. The help text
+   is not decoration: these are the fields the send gate reads, and somebody
+   changing one from a dropdown should be able to see what they are changing.
+   Values must match the CHECK constraints in 202608160003 and 202608210003. */
+const SUBSCRIBER_TYPES = [
+  ['unknown', 'Unknown — cannot be marketed to at all'],
+  ['corporate', 'Limited company, LLP, PLC — email is lawful without consent'],
+  ['sole_trader', 'Sole trader — an individual subscriber; post only, unless they consented'],
+  ['partnership', 'Partnership, not an LLP — same as a sole trader'],
+  ['individual', 'A private person — same as a sole trader'],
+]
+const LAWFUL_BASES = [
+  ['unassessed', 'Unassessed — blocks every channel'],
+  ['not_personal_data', 'No personal data held — nothing to have a basis for'],
+  ['legitimate_interests', 'Legitimate interests — needs an assessment on file'],
+  ['consent', 'They asked to hear from us'],
+  ['contract', 'Necessary to deliver something agreed'],
+]
+const SOURCES = [
+  ['', 'Not recorded — blocks marketing'],
+  ['companies_house', 'Companies House'],
+  ['public_company_information', 'Another public register'],
+  ['own_website', 'Their own website'],
+  ['referral', 'Referral'],
+  ['event', 'Event'],
+  ['inbound_enquiry', 'They contacted us'],
+]
+const NOTICE_STATUSES = [
+  ['not_given', 'Not given — blocks marketing'],
+  ['given_at_first_contact', 'Linked in the first message'],
+  ['given_on_request', 'Sent when they asked'],
+  ['not_required', 'Not required — inbound, or no personal data'],
+]
+const MARKETING_STATUSES = [
+  ['do_not_contact', 'Do not contact'],
+  ['permitted', 'Permitted'],
+  ['paused', 'Paused'],
+  ['opted_out', 'Opted out — set by the opt-out path, not by hand'],
 ]
 
 /* Stages that mean "this lead has been approached at least once". */
@@ -159,6 +200,29 @@ function leadToRow(lead, userId, fallbackOwner) {
     notes: lead.notes || null,
     signals: lead.signals || null,
     last_activity_at: lead.activities?.[0]?.at || lead.updatedAt || new Date().toISOString(),
+
+    subscriber_type: lead.subscriberType || 'unknown',
+    subscriber_type_evidence: lead.subscriberEvidence || null,
+    /* Stamped whenever a type other than unknown is recorded, because
+       sales_leads_permitted_is_documented wants to know when it was checked
+       and "at some point" is not an answer. */
+    subscriber_type_checked_at: lead.subscriberType && lead.subscriberType !== 'unknown'
+      ? (lead.subscriberCheckedAt || new Date().toISOString())
+      : null,
+    lawful_basis: lead.lawfulBasis || 'unassessed',
+    lia_ref: lead.liaRef || null,
+    lia_completed_at: lead.lawfulBasis === 'legitimate_interests' && lead.liaRef
+      ? (lead.liaCompletedAt || new Date().toISOString())
+      : null,
+    source: lead.source || null,
+    source_detail: lead.sourceDetail || null,
+    source_date: lead.sourceDate || null,
+    privacy_notice_status: lead.noticeStatus || 'not_given',
+    marketing_status: lead.marketingStatus || 'do_not_contact',
+    /* opt_out, opt_out_at and opt_out_channel are deliberately absent. pushLead
+       sends the whole row on every save, so putting them here would let an
+       unrelated edit in a stale tab clear an objection. They move only through
+       apply_opt_out(). */
   }
 }
 
@@ -181,6 +245,25 @@ function leadFromRow(row, contacts, activities, drafts, fallbackOwner) {
        been applied yet, where the text still sits in the old blob. */
     signals: row.signals ?? row.research_json?.signals ?? '',
     notes: row.notes || '',
+
+    /* Compliance. Read and written as a block, because the database checks
+       them against each other: a permitted lead with no source, or
+       legitimate interests with no assessment, is refused at the constraint
+       rather than at the send. */
+    subscriberType: row.subscriber_type || 'unknown',
+    subscriberEvidence: row.subscriber_type_evidence || '',
+    lawfulBasis: row.lawful_basis || 'unassessed',
+    liaRef: row.lia_ref || '',
+    source: row.source || '',
+    sourceDetail: row.source_detail || '',
+    sourceDate: row.source_date || '',
+    noticeStatus: row.privacy_notice_status || 'not_given',
+    marketingStatus: row.marketing_status || 'do_not_contact',
+    /* Read-only here on purpose. An opt-out is set through apply_opt_out so
+       it also writes a permanent suppression row; letting a save clear it
+       would let one stale tab undo an objection. */
+    optOut: row.opt_out === true,
+    optOutAt: row.opt_out_at || null,
     contacts: contacts.map((contact) => ({
       name: contact.name || 'Public contact route',
       role: contact.role || 'Public',
@@ -862,6 +945,7 @@ function LeadDetail({ lead, tab, onTab, onSave, onMove, onDelete }) {
         {tab === 'contacts' && <ContactsPanel lead={lead} onSave={onSave} />}
         {tab === 'outreach' && <OutreachPanel lead={lead} onSave={onSave} />}
         {tab === 'notes' && <NotesPanel lead={lead} onSave={onSave} />}
+        {tab === 'compliance' && <CompliancePanel lead={lead} onSave={onSave} />}
         {tab === 'activity' && <ActivityPanel lead={lead} />}
       </div>
     </>
@@ -1123,6 +1207,169 @@ function OutreachPanel({ lead, onSave }) {
 }
 
 /* ---------------- Notes ---------------- */
+/* Why this panel exists.
+
+   Every one of these fields is read by public.marketing_send_allowed before
+   anything is sent, and until now none of them were visible in the CRM. A
+   lead could be blocked from every channel and the only way to find out was
+   to query the database. Worse, a lead promoted from the sourcing pipeline
+   arrives with all of them already answered, and nobody could check whether
+   the answers were right.
+
+   The panel deliberately shows what each value PERMITS rather than just
+   naming it. "sole_trader" tells you nothing; "an individual subscriber, post
+   only unless they consented" tells you why the email button will not work.
+
+   It cannot set opt_out. That moves only through apply_opt_out(), which also
+   writes a permanent suppression row — see the note in leadToRow. */
+function CompliancePanel({ lead, onSave }) {
+  const [form, setForm] = useState({
+    subscriberType: lead.subscriberType || 'unknown',
+    subscriberEvidence: lead.subscriberEvidence || '',
+    lawfulBasis: lead.lawfulBasis || 'unassessed',
+    liaRef: lead.liaRef || '',
+    source: lead.source || '',
+    sourceDetail: lead.sourceDetail || '',
+    sourceDate: lead.sourceDate || '',
+    noticeStatus: lead.noticeStatus || 'not_given',
+    marketingStatus: lead.marketingStatus || 'do_not_contact',
+  })
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
+  const dirty = Object.keys(form).some((k) => String(form[k] || '') !== String(lead[k] || ''))
+
+  /* The same rules the database enforces, stated before the save rather than
+     after it. A constraint violation arrives as a wall of SQL; this arrives as
+     a sentence, and it is checked against the migration rather than guessed:
+     sales_leads_permitted_is_documented and sales_leads_permitted_needs_a_basis. */
+  const blockers = []
+  if (form.marketingStatus === 'permitted') {
+    if (form.subscriberType === 'unknown') blockers.push('a subscriber type — unknown is never marketable')
+    if (form.lawfulBasis === 'unassessed') blockers.push('a lawful basis')
+    if (!form.source) blockers.push('a source')
+    if (!form.sourceDate) blockers.push('a source date')
+    if (form.subscriberType !== 'corporate'
+        && !['consent', 'not_personal_data'].includes(form.lawfulBasis)) {
+      blockers.push('either consent or "no personal data held", because this is an individual subscriber')
+    }
+  }
+  if (form.lawfulBasis === 'legitimate_interests' && !form.liaRef) {
+    blockers.push('an assessment reference, because legitimate interests is being relied on')
+  }
+
+  /* What this lead can actually be sent, restating the channel rules in
+     202608210003 so the answer is visible without running a query. */
+  const permitted = form.marketingStatus === 'permitted' && !blockers.length && !lead.optOut
+  const canEmail = permitted && form.subscriberType === 'corporate'
+    && form.noticeStatus !== 'not_given'
+  const canPost = permitted && form.noticeStatus !== 'not_given'
+    && ['not_personal_data', 'legitimate_interests', 'consent', 'contract'].includes(form.lawfulBasis)
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (blockers.length) return
+        onSave(withActivity({ ...lead, ...form }, 'Note', 'Compliance record updated'),
+          { okMsg: 'Compliance record saved' })
+      }}
+    >
+      {lead.optOut && (
+        <p className="crm-warn" role="status">
+          This business has objected. That is absolute and permanent, it cannot be
+          changed here, and nothing may be sent to them on any channel.
+        </p>
+      )}
+
+      <dl className="crm-kv">
+        <div>
+          <dt>Email</dt>
+          <dd>{canEmail ? 'Permitted' : 'Blocked'}</dd>
+        </div>
+        <div>
+          <dt>Post</dt>
+          <dd>{canPost ? 'Permitted' : 'Blocked'}</dd>
+        </div>
+        <div>
+          <dt>Phone</dt>
+          <dd>Blocked — needs TPS and CTPS screening we do not hold</dd>
+        </div>
+      </dl>
+
+      <Field label="Subscriber type" htmlFor={`st-${lead.id}`}
+        help="Which PECR rules apply. A question about legal form, not size — check Companies House.">
+        <select id={`st-${lead.id}`} className="input" value={form.subscriberType} onChange={set('subscriberType')}>
+          {SUBSCRIBER_TYPES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
+      </Field>
+
+      <Field label="Evidence for that" htmlFor={`se-${lead.id}`}
+        help='What settled it. "Companies House 09876543", or "their site says Ltd but gives no number".'>
+        <input id={`se-${lead.id}`} className="input" value={form.subscriberEvidence}
+          onChange={set('subscriberEvidence')} placeholder="Companies House 09876543" />
+      </Field>
+
+      <Field label="Lawful basis" htmlFor={`lb-${lead.id}`}
+        help="Only needed where personal data is held. A company at a role address holds none.">
+        <select id={`lb-${lead.id}`} className="input" value={form.lawfulBasis} onChange={set('lawfulBasis')}>
+          {LAWFUL_BASES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
+      </Field>
+
+      {form.lawfulBasis === 'legitimate_interests' && (
+        <Field label="Assessment reference" htmlFor={`lia-${lead.id}`}
+          help="The assessment relied on, e.g. LIA-2026-08-v2. It must exist and be on file.">
+          <input id={`lia-${lead.id}`} className="input" value={form.liaRef}
+            onChange={set('liaRef')} placeholder="LIA-2026-08-v2" />
+        </Field>
+      )}
+
+      <Field label="Where they came from" htmlFor={`src-${lead.id}`}
+        help='If you do not know, leave it unrecorded. A guess that clears a constraint is worse than a gap.'>
+        <select id={`src-${lead.id}`} className="input" value={form.source} onChange={set('source')}>
+          {SOURCES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
+      </Field>
+
+      <Field label="Source detail" htmlFor={`sd-${lead.id}`}>
+        <input id={`sd-${lead.id}`} className="input" value={form.sourceDetail}
+          onChange={set('sourceDetail')} placeholder="Which file, which page" />
+      </Field>
+
+      <Field label="Source date" htmlFor={`sdt-${lead.id}`} help="When we obtained it.">
+        <input id={`sdt-${lead.id}`} type="date" className="input" value={form.sourceDate}
+          onChange={set('sourceDate')} />
+      </Field>
+
+      <Field label="Privacy notice" htmlFor={`pn-${lead.id}`}
+        help="Article 14. Owed whenever personal data was obtained from someone other than them.">
+        <select id={`pn-${lead.id}`} className="input" value={form.noticeStatus} onChange={set('noticeStatus')}>
+          {NOTICE_STATUSES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
+      </Field>
+
+      <Field label="Marketing status" htmlFor={`ms-${lead.id}`}
+        help="Permitted still does not send anything. Every message goes through the gate as well.">
+        <select id={`ms-${lead.id}`} className="input" value={form.marketingStatus}
+          onChange={set('marketingStatus')} disabled={lead.optOut}>
+          {MARKETING_STATUSES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
+      </Field>
+
+      {blockers.length > 0 && (
+        <p className="crm-warn" role="status">
+          Cannot be permitted yet. Still needs {blockers.join('; ')}.
+        </p>
+      )}
+
+      <div className="card-actions">
+        <button type="submit" className="btn btn--accent btn--sm" disabled={!dirty || blockers.length > 0}>
+          Save compliance record
+        </button>
+      </div>
+    </form>
+  )
+}
+
 function NotesPanel({ lead, onSave }) {
   const [notes, setNotes] = useState(lead.notes || '')
   const dirty = notes.trim() !== String(lead.notes || '').trim()

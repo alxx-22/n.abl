@@ -54,6 +54,19 @@ export function makeDb() {
       signals: 'Hiring an operations assistant.',
       created_at: '2026-08-01T09:00:00.000Z',
       updated_at: '2026-08-10T09:00:00.000Z',
+      /* Deliberately half-answered: a subscriber type and a source, but no
+         lawful basis, so the compliance panel has something real to refuse.
+         A fixture where everything is already correct cannot test the part
+         that stops you. */
+      subscriber_type: 'corporate',
+      subscriber_type_evidence: 'Companies House 09876543',
+      lawful_basis: 'unassessed',
+      source: 'companies_house',
+      source_detail: 'bulk register',
+      source_date: '2026-08-01',
+      privacy_notice_status: 'not_given',
+      marketing_status: 'do_not_contact',
+      opt_out: false,
     }],
     sales_contacts: [{
       id: 'lead-contact-1',

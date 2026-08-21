@@ -52,9 +52,13 @@ const BAND = arg('--band', 'first')
 const PERMIT = has('--permit')
 const DRY = has('--dry-run')
 
+/* Short labels. These repeat on every row and the long forms made a batch
+   mostly boilerplate; the full titles and URLs live in
+   business/10-lead-sourcing/maximum-volume-plan.md section 2, which is where
+   anyone auditing provenance would look anyway. */
 const REGISTER_URL = {
-  companies_house: 'Companies House Free Company Data Product',
-  public_company_information: 'ICO Register of Fee Payers / FSA Food Hygiene Rating Scheme',
+  companies_house: 'Companies House bulk register',
+  public_company_information: 'ICO / FSA / CQC / Charity Commission open data',
 }
 
 /* Numbers are emitted unquoted. Postgres would cast '50' into an integer
@@ -96,10 +100,9 @@ function toLead(candidate) {
 
   const source = candidate.sources?.includes('companies_house')
     ? 'companies_house' : 'public_company_information'
-  const source_detail = [
-    REGISTER_URL[source],
-    site ? `website confirmed by ${site.confirmed_by?.join(' and ')}` : null,
-  ].filter(Boolean).join('; ')
+  const source_detail = site
+    ? `${REGISTER_URL[source]}; site confirmed by ${site.confirmed_by?.join(' + ')}`
+    : REGISTER_URL[source]
   const source_date = Object.values(candidate.source_date || {}).sort().pop() || null
 
   /* The best address we hold, and where it came from. A trading address beats
@@ -122,8 +125,7 @@ function toLead(candidate) {
        Notes should carry what signals cannot: where it came from, and
        anything that disagrees with the register. */
     notes: [
-      `${REGISTER_URL[source]}, ${source_date || 'undated'}.`,
-      candidate.contact_address_kind ? `${candidate.contact_address_kind} address.` : null,
+      `${REGISTER_URL[source]}, ${source_date || 'undated'}, ${candidate.contact_address_kind || 'no'} address.`,
       webPostcode && webPostcode !== candidate.contact_postcode
         ? `Website gives ${webPostcode}, register says ${candidate.contact_postcode}.` : null,
       contact?.named_emails_discarded
