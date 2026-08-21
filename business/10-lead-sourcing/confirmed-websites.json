@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-08-21T19:33:16.330Z",
+ "generated_at": "2026-08-21T19:36:39.506Z",
  "source": ".sourcing/websites-all.jsonl",
- "scanned": 4806,
- "confirmed": 1526,
+ "scanned": 5452,
+ "confirmed": 1702,
  "note": "Websites confirmed against the company name, postcode or company number. A partial file means the sweep was still running; rerun to extend it.",
  "results": [
   {
@@ -12929,6 +12929,1511 @@
    "name": "HYPERAMA PLC",
    "area": "NG7",
    "website": "https://hyperama.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "IDEAL CLEANING SERVICES LIMITED",
+   "area": "NG8",
+   "website": "https://www.ideal-cleaning.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "JCR HEALTH CARE LTD",
+   "area": "NG11",
+   "website": "https://jcrhealthcare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JAYFAIR RECRUITMENT SOLUTIONS LIMITED",
+   "area": "NG18",
+   "website": "https://www.jayfairrecruitment.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "JASMINE HEALTHCARE LIMITED",
+   "area": "NG34",
+   "website": "https://www.jasminehealthcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "JEPHSONS SHOPFITTERS LIMITED",
+   "area": "NG18",
+   "website": "https://www.jephsonsshopfitters.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "INFINITY SWITCH LTD",
+   "area": "NG9",
+   "website": "https://infinityswitch.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JOHN A. STEPHENS LIMITED",
+   "area": "NG2",
+   "website": "https://johnastephens.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JJS ARCHITECTURE LTD",
+   "area": "NG16",
+   "website": "https://www.jjsarchitecture.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "JB FORK TRUCKS LIMITED",
+   "area": "NG21",
+   "website": "https://www.heli-forklifts.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "JORDAN ROAD SURFACING LIMITED",
+   "area": "NG22",
+   "website": "https://jordanroadsurfacing.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JOHN NICHOLLS CONSULTANTS LTD",
+   "area": "NG16",
+   "website": "https://www.johnnicholls.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "JH LEGAL LTD",
+   "area": "NG18",
+   "website": "https://jhlegal.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KADAMPA MEDITATION CENTRE NOTTINGHAM LIMITED",
+   "area": "NG4",
+   "website": "https://www.meditateinnottingham.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JAMES KAY LIMITED",
+   "area": "NG12",
+   "website": "https://jameskay.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JSM ACCOUNTING AND BOOKKEEPING SERVICES LTD",
+   "area": "NG34",
+   "website": "https://www.jsmaccounting.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "JEFFREY ROSE LIMITED",
+   "area": "NG22",
+   "website": "https://www.jeffrey-rose.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JASON WILSON-LAW LTD",
+   "area": "NG31",
+   "website": "https://www.jasonwilson.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "JRB ACCOUNTANCY LTD",
+   "area": "NG18",
+   "website": "https://www.jrbaccountancy.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "KEYWORTH UNITED COMMUNITY FOOTBALL CLUB LTD",
+   "area": "NG12",
+   "website": "https://www.keyworthunited.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "K2 HEALTHCARE LIMITED",
+   "area": "NG34",
+   "website": "https://www.k2healthcare.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JK DRIVING SCHOOL LIMITED",
+   "area": "NG8",
+   "website": "https://jkdrivingschool.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JULIAN OWEN ASSOCIATES LIMITED",
+   "area": "NG9",
+   "website": "https://www.julianowen.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "K.B. EVENT LIMITED",
+   "area": "NG16",
+   "website": "https://www.kbevent.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "KELSO CREATIVE LIMITED",
+   "area": "B50",
+   "website": "https://kelsocreative.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "KALM PROPERTIES LTD",
+   "area": "NG10",
+   "website": "https://www.kalmproperties.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "K. & A. COX LIMITED",
+   "area": "NG16",
+   "website": "https://www.kacox.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number"
+   ]
+  },
+  {
+   "name": "KEN LAWTON LIMITED",
+   "area": "NG10",
+   "website": "https://kenlawton.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KERN RECRUITMENT LTD",
+   "area": "NG2",
+   "website": "https://kernrecruitment.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KG PRACTICE LTD",
+   "area": "NG12",
+   "website": "https://kgpractice.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JUST A BANK LIMITED",
+   "area": "NG31",
+   "website": "https://justabank.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KHIARI OUD LTD",
+   "area": "NG2",
+   "website": "https://khiarioud.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KEYWORTH DENTAL LIMITED",
+   "area": "NG12",
+   "website": "https://www.keyworthdental.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "KC CP LTD",
+   "area": "NG21",
+   "website": "https://www.kc-cp.com/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "KIN LIFETIME PLANNING LIMITED",
+   "area": "NG14",
+   "website": "https://www.kinlifetimeplanning.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "KILLICKS LIMITED",
+   "area": "NG17",
+   "website": "https://killicks.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "KINGSBURY HOUSE LIMITED",
+   "area": "NG15",
+   "website": "https://kingsburyhouse.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JOHN E. WRIGHT & CO. LIMITED",
+   "area": "NG1",
+   "website": "https://www.johnewright.com/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "KBR GAS SERVICES LIMITED",
+   "area": "NG31",
+   "website": "https://www.kbr-gas.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KINGSMILL INDUSTRIES (UK) LIMITED",
+   "area": "NG16",
+   "website": "https://kingsmillindustries.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "KSR ACCOUNTANTS LIMITED",
+   "area": "NG22",
+   "website": "https://ksraccountants.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "KITCHEN WORLD (MANSFIELD) LIMITED",
+   "area": "NG19",
+   "website": "https://www.kitchenworldmansfield.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "KITSON ASSOCIATES LIMITED",
+   "area": "NG2",
+   "website": "https://www.kitsonassociates.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KREATIVITY MARKETING LTD",
+   "area": "NG18",
+   "website": "https://www.kreativitymarketing.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "JON BRAMBLES (NEWARK) LIMITED",
+   "area": "NG24",
+   "website": "https://www.jonbrambles.com/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "KNIGHT EXECUTIVE TRAVEL LIMITED",
+   "area": "NG13",
+   "website": "https://www.knightexecutivetravel.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KREATIV JOINERY LIMITED",
+   "area": "NG4",
+   "website": "https://kreativjoinery.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "JOHN PYE SURVEYORS LIMITED",
+   "area": "NG7",
+   "website": "https://johnpyesurveyors.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KYC GLOBAL TECHNOLOGIES (UK) LIMITED",
+   "area": "NG80",
+   "website": "https://kyc360.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "KR THERAPIES LIMITED",
+   "area": "NG1",
+   "website": "https://kr-therapies.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KURB LETTINGS LTD",
+   "area": "NG2",
+   "website": "https://kurbproperty.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LABOSPORT LIMITED",
+   "area": "NG15",
+   "website": "https://labosport.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LAKER CONSULTING LTD",
+   "area": "NG8",
+   "website": "https://www.lakerconsulting.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "LANGUAGES FOR LIFE LIMITED",
+   "area": "NG31",
+   "website": "https://www.languagesforlife.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LANGLEY MILL BOATYARD LIMITED",
+   "area": "NG16",
+   "website": "https://langleymillboatyard.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "L J HANBURY LTD",
+   "area": "NG10",
+   "website": "https://www.ljhanbury.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "KNIGHT CONSTRUCTION LTD",
+   "area": "NG34",
+   "website": "https://knightconstruction.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "KYLES CORNER AUTOMOTIVE LTD",
+   "area": "NG17",
+   "website": "https://www.kylescorner.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "K J TAYLOR CONSULTING LIMITED",
+   "area": "NG13",
+   "website": "https://www.kjtaylorconsulting.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LAFFORD HOMES LIMITED",
+   "area": "NG34",
+   "website": "https://laffordgroup.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "LANGRIDGE HOMES LIMITED",
+   "area": "NG5",
+   "website": "https://langridgehomes.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LASER EXPERTISE LIMITED",
+   "area": "NG7",
+   "website": "https://laserexp.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "KWCONSTRUCTIONS LIMITED",
+   "area": "NG9",
+   "website": "https://kwconstructions.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LAZURA LIMITED",
+   "area": "NG6",
+   "website": "https://www.lazura.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LEALINDIS LIMITED",
+   "area": "NG24",
+   "website": "https://www.lealindis.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LASERSHAPE LIMITED",
+   "area": "NG9",
+   "website": "https://lasershape.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "LEAD4AGILITY LTD",
+   "area": "NG24",
+   "website": "https://www.lead4agility.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "LEGATUM PLANNING LTD",
+   "area": "NG12",
+   "website": "https://legatumplanning.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "LEEC HOLDINGS LIMITED",
+   "area": "NG4",
+   "website": "https://www.leec.co.uk/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "LEGUME TECHNOLOGY LIMITED",
+   "area": "NG13",
+   "website": "https://legumetechnology.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LET CORRECT UK LTD",
+   "area": "NG22",
+   "website": "https://www.letcorrect.com/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "LESLEY GREAVES LIMITED",
+   "area": "NG4",
+   "website": "https://www.lesleygreaves.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LANE ANALYTICS LIMITED",
+   "area": "NG14",
+   "website": "https://lane-analytics.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LET'S UPLIFT LTD",
+   "area": "NG5",
+   "website": "https://www.letsuplift.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LIGHTNING.STRIKE LIMITED",
+   "area": "NG15",
+   "website": "https://lightningstrike.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LINCOLNSHIRE CARROT SUPPLIES LIMITED",
+   "area": "NG22",
+   "website": "https://lincolnshirecarrotsupplies.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LIBBY UPTON WELLNESS LTD",
+   "area": "NG2",
+   "website": "https://libbyupton.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "LET IT LTD.",
+   "area": "NG24",
+   "website": "https://www.letit.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LINES MOTOR REPAIRS LIMITED",
+   "area": "NG15",
+   "website": "https://linesmotorrepairs.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LH CONSULTANTS LTD",
+   "area": "NG5",
+   "website": "https://lh-consultants.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LINQ FINANCE GROUP LIMITED",
+   "area": "NG19",
+   "website": "https://linqfinance.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LIGHTBULB CREDIT LTD",
+   "area": "NG10",
+   "website": "https://www.lightbulbcredit.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LINWOOD RAKER LIMITED",
+   "area": "NG17",
+   "website": "https://linwoodraker.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LET PAL LTD",
+   "area": "NG24",
+   "website": "https://letpal.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LITTLE CRAFTERS BOXES LTD",
+   "area": "NG34",
+   "website": "https://www.littlecraftersboxes.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LITHIA PROPERTY HOLDINGS LIMITED",
+   "area": "NG15",
+   "website": "https://lithiaproperty.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "LITIGANT ALLY LTD",
+   "area": "NG9",
+   "website": "https://www.litigantally.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LNER (GC) HERITAGE TRUST",
+   "area": "NG11",
+   "website": "https://lnergctrust.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LESTER & BINGLEY LIMITED",
+   "area": "NG18",
+   "website": "https://www.lester-bingley.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LINCOLNSHIRE PLANT SUPPORTS LTD",
+   "area": "NG33",
+   "website": "https://www.lincolnshireplantsupports.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LIFE IN ACTION LIMITED",
+   "area": "NG34",
+   "website": "https://www.lifeinaction.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LESSGEARS LIMITED",
+   "area": "NG12",
+   "website": "https://domainelettuce.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LOVE RUSSIA LIMITED",
+   "area": "NG11",
+   "website": "https://www.loverussia.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LIONHEART LIVING LIMITED",
+   "area": "NG24",
+   "website": "https://lionheartliving.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LJM SOLUTIONS LTD",
+   "area": "NG10",
+   "website": "https://ljmsolutions.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "LKH TOOLS LTD",
+   "area": "NG5",
+   "website": "https://www.lkhtools.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LME BUILDING CONTRACTORS LTD",
+   "area": "NG34",
+   "website": "https://lmebuildingcontractors.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LEARN 2 PRINT LIMITED",
+   "area": "NG22",
+   "website": "https://learn2.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "LKP TRAINING LIMITED",
+   "area": "NG16",
+   "website": "https://lkptraining.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LOXBRIDGE PLUS CARE LTD",
+   "area": "NG23",
+   "website": "https://www.loxbridgepluscare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LPAS 4 U LTD",
+   "area": "NG3",
+   "website": "https://www.lpas4u.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LIVE 9 EVENTS LTD",
+   "area": "NG4",
+   "website": "https://www.live9events.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "LOGOMEUP LIMITED",
+   "area": "NG13",
+   "website": "https://www.logomeup.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LINK INTEGRATED SECURITY SOLUTIONS LIMITED",
+   "area": "NG19",
+   "website": "https://www.linkintegrated.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LYNGSOE SYSTEMS LIMITED",
+   "area": "NG23",
+   "website": "https://lyngsoesystems.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LOVE & LACE BRIDAL LIMITED",
+   "area": "NG34",
+   "website": "https://lovelacebridal.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "LONDON ROAD AESTHETICS LTD",
+   "area": "NG24",
+   "website": "https://londonroadaesthetics.com/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "LYMER'S ASSIST LTD",
+   "area": "NG17",
+   "website": "https://www.lymersassist.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LOTUS PROJECTS LTD",
+   "area": "NG17",
+   "website": "https://lotusprojects.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LIGHTNING PROTECTION UK LIMITED",
+   "area": "NG4",
+   "website": "https://lightning-protection.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LYLA GREEN PROPERTIES LTD",
+   "area": "NG9",
+   "website": "https://lylagreenproperties.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "M D SLACK WEALTH MANAGEMENT LTD",
+   "area": "NG18",
+   "website": "https://www.mdslackwealthmanagement.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MADDOCK HAWKINS LIMITED",
+   "area": "NG2",
+   "website": "https://maddockhawkins.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MA ACCOUNTING SOLUTIONS LIMITED",
+   "area": "NG2",
+   "website": "https://www.maaccountingsolutions.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MAGNET EXPERT LTD",
+   "area": "NG22",
+   "website": "https://magnetexpert.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LYNWOOD EDUCATION LTD",
+   "area": "NG2",
+   "website": "https://lynwoodeducation-com.l.ink/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LOTUS THERAPY LIMITED",
+   "area": "NG18",
+   "website": "https://lotustherapy.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MALCOLM NICHOLLS LIMITED",
+   "area": "B50",
+   "website": "https://malcolmnicholls.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MAKING HEADSPACE LTD",
+   "area": "NG32",
+   "website": "https://makingheadspace.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MAINLINE MOULDINGS LTD.",
+   "area": "NG13",
+   "website": "https://mainlinemouldings.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MAJESTIC STAYS LTD",
+   "area": "NG21",
+   "website": "https://www.majestic-stays.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "M J LOGIC LTD",
+   "area": "NG2",
+   "website": "https://mjlogic.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MALONE ASSOCIATES LIMITED",
+   "area": "NG17",
+   "website": "https://www.maloneassociates.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MANSFIELD ANODISERS LIMITED",
+   "area": "NG18",
+   "website": "https://mansfield-anodisers.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MANDER COACHING LTD",
+   "area": "NG24",
+   "website": "https://www.mandercoaching.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MARK TIME CARE LIMITED",
+   "area": "NG6",
+   "website": "https://marktimecare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "LIVING WELL FAMILY SERVICES CIC",
+   "area": "NG9",
+   "website": "https://www.livingwell.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "LOVE WEDDING SHOWS LIMITED",
+   "area": "NG4",
+   "website": "https://www.loveweddingshows.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MANSFIELD SAND COMPANY LIMITED",
+   "area": "NG18",
+   "website": "https://mansfield-sand.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MATRO LTD",
+   "area": "NG15",
+   "website": "https://matro.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number"
+   ]
+  },
+  {
+   "name": "MARK RICE ESTATE AGENTS LIMITED",
+   "area": "NG34",
+   "website": "https://www.markrice.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MATHIAS PERRY LIMITED",
+   "area": "NG25",
+   "website": "https://mathiasperry.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MANSFIELD VAN HIRE LIMITED",
+   "area": "NG18",
+   "website": "https://mansfieldvanhire.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MAXWELL ELECTROTECHNICAL LIMITED",
+   "area": "NG17",
+   "website": "https://maxwell-electrotechnical.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LITTLE WRENS NURSERY LTD",
+   "area": "NG16",
+   "website": "https://www.littlewrensnursery.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MAYTHORNE PROPERTIES LIMITED",
+   "area": "NG25",
+   "website": "https://www.maythorneproperties.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MD JEWELLERS LTD",
+   "area": "NG31",
+   "website": "https://mdjewellers.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MARTIN WRIGHT LIMITED",
+   "area": "NG17",
+   "website": "https://martinwright.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MANSFIELD CRYOGENICS LTD",
+   "area": "NG18",
+   "website": "https://www.mansfieldcryogenics.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MANAGEMENT SOLUTIONS (CARE SERVICES) LTD",
+   "area": "NG10",
+   "website": "https://www.managementsolutions.com/en",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "MEASURE FOR MEASURE LTD",
+   "area": "NG11",
+   "website": "https://measureformeasure.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MEDIGARMENTS LIMITED",
+   "area": "NG10",
+   "website": "https://medigarments.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MARRIS FOSTON LIMITED",
+   "area": "NG32",
+   "website": "https://www.marrisfoston.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MAW AUTO-CARE LIMITED",
+   "area": "NG17",
+   "website": "https://www.mawautocare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MDB PLUMBING (NOTTM) LTD",
+   "area": "NG12",
+   "website": "https://mdbplumbing.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MEDLEY PRECISION ENGINEERS LTD",
+   "area": "NG18",
+   "website": "https://medleyprecision.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "MAPLE HOUSE CLINIC LIMITED",
+   "area": "NG16",
+   "website": "https://maplehouseclinic.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MEMORIAL PERFECTION LIMITED",
+   "area": "NG33",
+   "website": "https://memorialperfection.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MERCY CARE SERVICES & STAFFING LTD",
+   "area": "NG8",
+   "website": "https://mercycarestaffing.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "MERCURY ACCOUNTANTS LTD",
+   "area": "NG21",
+   "website": "https://mercuryaccountants.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MI KPI LTD",
+   "area": "NG9",
+   "website": "https://www.mi-kpi.com/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MEZZINO LIMITED",
+   "area": "NG22",
+   "website": "https://www.mezzino.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MET - CLAD CONTRACTS LIMITED",
+   "area": "NG15",
+   "website": "https://www.metclad.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MENALIA LTD",
+   "area": "NG3",
+   "website": "https://menalia.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MELLORS RIDES LIMITED",
+   "area": "NG5",
+   "website": "https://mellorsrides.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MINDFISH LIMITED",
+   "area": "NG12",
+   "website": "https://mindfish.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MILLENNIUM TRAVEL (MANSFIELD) LIMITED",
+   "area": "NG18",
+   "website": "https://www.millenniumtravelmansfield.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MILLSTONE LOGISTICS LIMITED",
+   "area": "NG2",
+   "website": "https://www.millstonelogistics.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MIND BODY UNIVERSE LTD",
+   "area": "NG2",
+   "website": "https://www.mindbodyuniverse.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MINSTER STYLISH LIVING LIMITED",
+   "area": "NG25",
+   "website": "https://www.minsterstylishliving.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MINES RESCUE SERVICE LIMITED",
+   "area": "NG19",
+   "website": "https://www.mrsl.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MILICO BUSINESS SERVICES LTD",
+   "area": "NG10",
+   "website": "https://solopreneurs.milico.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MICHON LIMITED",
+   "area": "NG12",
+   "website": "https://michoncreative.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MJ THERAPY LTD",
+   "area": "NG14",
+   "website": "https://www.mjtherapy.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MM DIXON GROUNDWORKS LIMITED",
+   "area": "NG31",
+   "website": "https://mmdixon.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MIXOLOGIST (LONDON) LIMITED",
+   "area": "NG22",
+   "website": "https://mixologist-london.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MONTERAWATCHES LIMITED",
+   "area": "NG2",
+   "website": "https://monterawatches.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MILLINGTON SPRINGS CARE CENTRE LTD",
+   "area": "NG16",
+   "website": "https://www.millingtonsprings.uk/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "MIDLAND FEEDS LIMITED",
+   "area": "NG13",
+   "website": "https://midlandfeeds.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MILESTONE CONSULT LTD",
+   "area": "NG13",
+   "website": "https://www.milestoneconsultingusa.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MONO LIGHTING LIMITED",
+   "area": "NG24",
+   "website": "https://monolighting.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MONUMENT WILLS & ESTATE PLANNING LIMITED",
+   "area": "NG24",
+   "website": "https://monumentwills.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MIDLAND AEROSPACE LIMITED",
+   "area": "NG17",
+   "website": "https://www.midlandaerospace.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MORAN HOMES LTD",
+   "area": "NG5",
+   "website": "https://moranhomes.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MOTING PROPERTY DEVELOPMENT LTD",
+   "area": "NG9",
+   "website": "https://motingproperty.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MECHANICAL SOLUTIONS LIMITED",
+   "area": "NG22",
+   "website": "https://mechanical-solutions.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "M-TECH ENGINEERING LIMITED",
+   "area": "NG15",
+   "website": "https://m-tech-engineering.com/",
    "confirmed_by": [
     "company name"
    ]
