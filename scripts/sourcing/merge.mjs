@@ -52,7 +52,10 @@ function normalise(row, kind) {
   const at = (k) => (kind === k ? address : '')
   const pc = (k) => (kind === k ? postcode : '')
   return {
-    name: name.replace(/^"|"$/g, '').trim(),
+    // Companies House wraps a trading name in quotes inside the legal name:
+    // `"4RENT ESTATES" LTD`. Stripping only the outer pair leaves a stray one
+    // mid-string, so all of them go.
+    name: name.replace(/"/g, '').replace(/\s+/g, ' ').trim(),
     name_key: nameKey(name),
     registered_address: at('registered'),
     registered_postcode: pc('registered'),
