@@ -223,6 +223,16 @@ function confirms(body, candidate) {
 }
 
 async function investigate(candidate) {
+  /* Some registers hand the website over. The CQC directory states one for
+     678 of its locations and the charities file for most of its rows, and
+     guessing a domain for a business that has already told us its domain is
+     the purest kind of wasted request. */
+  if (candidate.website) {
+    return { name: candidate.name, area: candidate.area, guesses: 0, resolved: [],
+             website: candidate.website.startsWith('http') ? candidate.website : `https://${candidate.website}`,
+             confirmed_by: ['stated on the register'], outcome: 'confirmed' }
+  }
+
   const guesses = domainGuesses(candidate.name)
   const record = { name: candidate.name, area: candidate.area, guesses: guesses.length,
                    resolved: [], website: null, confirmed_by: [], outcome: 'no domain found' }

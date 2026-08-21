@@ -86,6 +86,12 @@ const triaged = universe.map((c) => {
   /* Reachability first, because it is the only one that decides whether we can
      do anything at all. An address that is the accountant's is not a route to
      the owner, and a letter sent there is wasted postage. */
+  /* A contact route already in hand is worth more than any amount of guessing
+     at one, so it is the first thing the band looks at. */
+  if (c.email) reasons.push('role email address from the register')
+  if (c.phone) reasons.push('phone number from the register')
+  if (c.website) reasons.push('website stated on the register')
+
   if (c.contact_address_kind === 'trading') reasons.push('trading address')
   else if (c.contact_address_kind === 'declared') reasons.push('address the business gave for itself')
   else against.push('only a registered office, which is often an accountant')
@@ -132,8 +138,12 @@ const triaged = universe.map((c) => {
      and an ICO match is itself the second register. Dead logic in a ranking is
      worse than a coarse ranking, because nobody notices it is not running. */
   const reachable = c.contact_address_kind !== 'registered'
+  const hasRoute = Boolean(c.email || c.phone || c.website)
   const band =
     against.some((a) => a.startsWith('ICO tier 3') || a === 'a public authority') ? 'excluded'
+      // A published contact route plus somewhere to write is as good as this
+      // gets before anyone has spoken to them.
+      : hasRoute && reachable ? 'first'
       : reachable && matched.length ? 'first'
       : matched.length ? 'second'
       : reachable ? 'third'

@@ -78,7 +78,17 @@ function normalise(row, kind) {
     local_authority: row.local_authority || null,
     hygiene_rating: row.hygiene_rating || null,
     ico_registration: row.ico_registration || null,
-    trading_names: row.trading_names || null,
+    charity_number: row.charity_number || null,
+    cqc_location_id: row.cqc_location_id || null,
+    provider: row.provider || null,
+    specialisms: row.specialisms || null,
+    // Contact details that arrived with the register rather than from a
+    // website. The charities file and the CQC directory both carry them, which
+    // is why they are worth more per minute than any amount of crawling.
+    email: row.email || null,
+    phone: row.phone || null,
+    website: row.website || null,
+    trading_names: row.trading_names || row.trading_name || null,
     payment_tier: row.payment_tier || null,
     public_authority: row.public_authority || null,
     // Set once the record is final; see resolveContact below.
@@ -125,6 +135,8 @@ function loadRegister(file, kind) {
 const REGISTERS = [
   { source: 'companies_house', kind: 'registered', match: /^candidates-.*\.json$/ },
   { source: 'public_company_information', kind: 'declared', match: /^ico-.*\.json$/ },
+  { source: 'public_company_information', kind: 'declared', match: /^charities-.*\.json$/ },
+  { source: 'public_company_information', kind: 'trading', match: /^cqc-.*\.json$/ },
   { source: 'public_company_information', kind: 'trading', match: /^fsa-.*\.json$/ },
 ]
 
