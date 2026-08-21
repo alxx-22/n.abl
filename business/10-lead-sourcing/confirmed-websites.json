@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-08-21T19:57:28.588Z",
+ "generated_at": "2026-08-21T20:06:43.970Z",
  "source": ".sourcing/websites-all.jsonl",
- "scanned": 10008,
- "confirmed": 3725,
+ "scanned": 11900,
+ "confirmed": 4463,
  "note": "Websites confirmed against the company name, postcode or company number. A partial file means the sweep was still running; rerun to extend it.",
  "results": [
   {
@@ -31051,6 +31051,5951 @@
    "website": "https://www.brant-broughton.lincs.sch.uk",
    "confirmed_by": [
     "stated on the register"
+   ]
+  },
+  {
+   "name": "DUNHAM VILLAGE HALL",
+   "area": "NG22",
+   "website": "https://Dunhamontrentvillagehall.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD CHORAL SOCIETY",
+   "area": "NG19",
+   "website": "https://www.mansfieldchoral.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK CHORAL SOCIETY",
+   "area": "NG24",
+   "website": "https://www.newarkchoralsociety.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sir Donald Wolfit Charitable Trust",
+   "area": "NG24",
+   "website": "https://www.wolfitendowmentfund.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LINCOLN MINSTER ROUND TABLE CHARITABLE TRUST FUND",
+   "area": "NG24",
+   "website": "https://www.lincolnroundtable.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HECKINGTON COMMUNITY SWIMMING POOL",
+   "area": "NG34",
+   "website": "https://www.heckingtonpool.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE JOHN MILNER AWARD TRUST FUND",
+   "area": "NG22",
+   "website": "https://6KirtonPark.Kirton.Newark.NG229LR",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RACHEL FARMER TRUST",
+   "area": "NG13",
+   "website": "https://rachelfarmertrust.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE ORTHODOX PARISH OF SAINT AIDAN AND SAINT CHAD NOTTINGHAM",
+   "area": "NG4",
+   "website": "https://www.orthodoxeastmidlands.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Friends of Newton Bridge Academy (FONBA)",
+   "area": "NG31",
+   "website": "https://www.newtonbridge-cit.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEW LIFE CHILDREN'S CENTRES",
+   "area": "NG24",
+   "website": "https://www.newlifegambia.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD CHRISTIAN BOOK CENTRE",
+   "area": "NG18",
+   "website": "https://www.mansfieldchristianbooks.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE FRIENDS OF ST. WULFRAM'S CHURCH, GRANTHAM",
+   "area": "NG31",
+   "website": "https://www.discoverstwulframs.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GREAT PONTON VILLAGE CENTRE",
+   "area": "NG33",
+   "website": "http://www.greatponton.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE FRIENDS OF ST DENYS, EATON",
+   "area": "NG32",
+   "website": "https://obmils.fosd",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK EVANGELICAL CHURCH TRUST",
+   "area": "NG24",
+   "website": "https://www.newarkevangelical.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GONERBY HILL FOOT SCHOOL FRIENDS OF THE SCHOOL ASSOCIATION",
+   "area": "NG31",
+   "website": "https://www.gonerbyhillfoot.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ROYAL AIR FORCES ASSOCIATION KEYWORTH BRANCH",
+   "area": "NG12",
+   "website": "https://www.rafa.org.uk/keyworth",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ALLSORTS (NOTTINGHAMSHIRE)",
+   "area": "NG11",
+   "website": "https://allsortsnotts.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DUKERIES RIDING FOR THE DISABLED ASSOCIATION",
+   "area": "NG22",
+   "website": "https://www.rda.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE HECKINGTON AREA VOLUNTARY CAR SERVICE",
+   "area": "NG34",
+   "website": "http://parishes.lincolnshire.gov.uk/Heckington",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "1ST HORNCASTLE SCOUT GROUP",
+   "area": "NG34",
+   "website": "https://www.sleaforddistrictscouts.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD WOODHOUSE MILLENNIUM GREEN TRUST",
+   "area": "NG19",
+   "website": "https://www.mwmgreen.weebly.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ROYAL AIR FORCES ASSOCIATION EREWASH BRANCH",
+   "area": "NG10",
+   "website": "https://www.erewashrafa.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RIPPINGALE JUBILEE PLAYING FIELD TRUST",
+   "area": "NG34",
+   "website": "https://rippingale.parish.lincolnshire.gov.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TUXFORD MINE OF INFORMATION LTD",
+   "area": "NG22",
+   "website": "https://www.tuxfordonline.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Rospa Advanced Drivers and Riders , Lincolnshire",
+   "area": "NG34",
+   "website": "https://www.roadar.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF KESTEVEN AND GRANTHAM GIRLS SCHOOL",
+   "area": "NG31",
+   "website": "http://www.kestevengrantham.lincs.sch.uk/kg/parents/ptfa",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "COLSTERWORTH FESTIVAL OF PERFORMING ARTS",
+   "area": "NG33",
+   "website": "https://www.colsterworthfestival.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "STEPPING STONES (AMBER VALLEY)",
+   "area": "NG16",
+   "website": "https://www.steppingstonesav.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BINGHAM AMATEUR OPERATIC SOCIETY",
+   "area": "NG13",
+   "website": "http://www.binghammusicaltheatrecompany.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE COURT OAK GOSPEL AND CULTURE FORUM",
+   "area": "NG10",
+   "website": "https://www.courtoak.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BINGHAM HERITAGE TRAILS ASSOCIATION",
+   "area": "NG13",
+   "website": "https://www.binghamheritage.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BINGHAM PENGUINS SWIMMING CLUB",
+   "area": "NG24",
+   "website": "http://www.binghampenguins.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE MEDEN SCHOOL CHARITABLE TRUST",
+   "area": "NG20",
+   "website": "https://www.medenschool.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NPN",
+   "area": "NG4",
+   "website": "https://www.nottspact.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD AND DISTRICT AUTISM SUPPORT GROUP",
+   "area": "NG17",
+   "website": "http://www.mansfieldautismsupport.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ALLINGTON VILLAGE HALL",
+   "area": "NG32",
+   "website": "https://www.allingtononline.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE FRIENDS OF BYUMBA TRUST",
+   "area": "NG24",
+   "website": "http://friendsofbyumba.wordpress.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIEND AND FAMILY OF HIGHFIELDS AND/OR F.F.H",
+   "area": "NG24",
+   "website": "https://www.ffhcharity.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "EGMANTON VILLAGE HALL",
+   "area": "NG22",
+   "website": "https://www.egmantonvillagehall.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GRANTHAM BRANCH OF THE UNIVERSITY OF THE THIRD AGE (U3A)",
+   "area": "NG31",
+   "website": "https://grantham.u3asite.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SLEAFORD - SWAZILAND COMMUNITY FRIENDSHIP",
+   "area": "NG34",
+   "website": "https://www.communityfriendship.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Feeding Dreams (UK)",
+   "area": "NG13",
+   "website": "https://www.feedingdreamsuk.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "KNIPTON VILLAGE HALL",
+   "area": "NG32",
+   "website": "https://www.knipton.net",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SOUTHWELL TOWN BOWLS CLUB",
+   "area": "NG25",
+   "website": "https://www.southwelltownbowls.chessck.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NORTHERN ACADEMY OF PERFORMING ARTS",
+   "area": "NG15",
+   "website": "https://www.facebook.com/northernapa",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BRAD'S CANCER FOUNDATION",
+   "area": "NG4",
+   "website": "https://www.brads.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "COLLINGHAM SCOUT & GUIDE HEADQUARTERS MANAGEMENT ASSOCIATION",
+   "area": "NG23",
+   "website": "https://www.collinghamphoenixhall.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "KINGSTON PARISH HALL",
+   "area": "NG11",
+   "website": "https://www.kingston-on-soar.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "UNITED APOSTOLIC CHURCH AND FAITH HEALING MINISTRIES",
+   "area": "NG24",
+   "website": "https://www.uacministries.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FOALS",
+   "area": "NG12",
+   "website": "https://www.foals.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "POWER OF ONENESS MINISTRY",
+   "area": "NG31",
+   "website": "https://www.powerofoneness.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CHILLI CHILDREN OF RUKUNGIRI (UGANDA)",
+   "area": "NG13",
+   "website": "https://www.chillichildren.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BETHESDA MINISTRIES (NOTTINGHAM)",
+   "area": "NG4",
+   "website": "https://www.bethesdaministriesupc.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Hucknall Swimming Club",
+   "area": "NG15",
+   "website": "https://www.hucknallandlinbydolphins.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SLEAFORD SPORTS ASSOCIATION",
+   "area": "NG34",
+   "website": "https://www.clubsite.co.uk/sleafordtownfootballclub",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CHALLENGE MISSION IN ASIA",
+   "area": "NG12",
+   "website": "https://www.cmiasia.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ARMY OF CHRIST MINISTRY (INTERNATIONAL CHURCH)",
+   "area": "NG18",
+   "website": "https://www.armyofchristministry.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CARLTON PRE SCHOOL PLAYGROUP (NOTTINGHAM)",
+   "area": "NG4",
+   "website": "https://www.carltonpreschool.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "KING DAVID MEDICAL CENTRE",
+   "area": "NG17",
+   "website": "https://kingdavidmedicalcentre.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WILFORD YOUTH AND CHILDREN SCHEME",
+   "area": "NG11",
+   "website": "http://www.wycs.org.uk/wycs",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CHANGE 4 CHANGE",
+   "area": "NG18",
+   "website": "https://www.change4change.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RAUCEBY C OF E SCHOOL PTFA",
+   "area": "NG34",
+   "website": "https://www.rauceby.lincs.sch.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE RATCLIFFE CHORALE",
+   "area": "NG12",
+   "website": "http://www.ratcliffe-chorale.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GEDLING ALL HALLOWS PTA",
+   "area": "NG4",
+   "website": "https://www.allhallowsprimary.co.uk/pta",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PATRICK HINDS MINISTRIES",
+   "area": "",
+   "website": "https://www.patrickhindsministries.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD BOWLING CLUB",
+   "area": "NG19",
+   "website": "https://mansfieldbowlingclub.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DUKERIES THIRD AGE GROUP (U3A)",
+   "area": "NG22",
+   "website": "https://dukeries.u3asite.uk/welcome/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE NEPALESE CHILDREN'S TRUST",
+   "area": "NG20",
+   "website": "https://nepalesechildrenstrust.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK TOWN BOWLS CLUB",
+   "area": "NG24",
+   "website": "https://newarktownbowlsclub.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SUTTON-IN-ASHFIELD RECREATION GROUNDS 2006",
+   "area": "NG17",
+   "website": "https://www.ashfield-dc.gov.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SPEAKERS' CORNER TRUST",
+   "area": "NG11",
+   "website": "https://www.speakerscornertrust.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE FURNITURE PROJECT",
+   "area": "NG22",
+   "website": "https://www.thefurnitureproject.net",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CHINK (CHILDREN IN KENYA)",
+   "area": "NG22",
+   "website": "https://www.chink.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD TOWN COMMUNITY TRUST LTD",
+   "area": "NG18",
+   "website": "https://www.mansfieldtownct.net/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "POTTERS HOUSE CHRISTIAN FELLOWSHIP UK SUTTON CHURCH",
+   "area": "NG4",
+   "website": "https://www.phsutton.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SPELTHORNE YOUNG VOICES",
+   "area": "NG32",
+   "website": "http://www.spelthorneyoungvoices.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HUCKNALL SPORTS YOUTH CLUB",
+   "area": "NG15",
+   "website": "https://www.hucknallsports.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BLEASBY SCHOOL FRIENDS ASSOCIATION",
+   "area": "NG14",
+   "website": "https://www.bleasbyprimary.co.uk/topic/bsfa",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "REDEEMED CHRISTIAN CHURCH OF GOD - COVENANT RESTORATION ASSEMBLY,ST ANN'S",
+   "area": "NG15",
+   "website": "https://www.rccgstanns.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SOUTHWELL AND DISTRICT, NOTTINGHAMSHIRE U3A",
+   "area": "NG25",
+   "website": "https://www.southwell.u3asite.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK AND SOUTHWELL METHODIST CIRCUIT",
+   "area": "NG24",
+   "website": "https://www.methodist-nd.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PHILIP LANK TRUST",
+   "area": "NG31",
+   "website": "https://www.philiplanktrust.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GRANTHAM & VALE OF BELVOIR METHODIST CIRCUIT",
+   "area": "NG13",
+   "website": "https://www.gvbcircuit.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HYKEHAM SAILABILITY LIMITED",
+   "area": "NG33",
+   "website": "https://www.hykehamsailability.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST DENYS' NEW SLEAFORD",
+   "area": "NG34",
+   "website": "https://www.sleafordparishchurch.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF NEWARK ON TRENT ST MARY MAGDALENE WITH ST LEONARD",
+   "area": "NG24",
+   "website": "https://stmnewark.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST WULFRAM, GRANTHAM",
+   "area": "NG31",
+   "website": "https://www.stwulframs.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF RADCLIFFE ON TRENT",
+   "area": "NG12",
+   "website": "https://www.stmarysradcliffe.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST. MARY & ALL SAINTS, BINGHAM",
+   "area": "NG13",
+   "website": "https://www.binghamparishchurch.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF ECCLESIASTICAL PARISH OF ST PETERS CHURCH RAVENSHEAD",
+   "area": "NG15",
+   "website": "https://www.stpeterschurchravenshead.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST MARY MAGDALENE, SUTTON-IN-ASHFIELD",
+   "area": "NG17",
+   "website": "https://stmary-sutton.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE METHODIST CHURCH - SHERWOOD FOREST CIRCUIT",
+   "area": "NG18",
+   "website": "https://sherwoodforestmethodistcircuit.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF CHURCH OF THE HOLY ROOD, EDWALTON",
+   "area": "NG12",
+   "website": "http://www.churchedwalton.plus.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF HUCKNALL TORKARD",
+   "area": "NG15",
+   "website": "https://www.hucknallparishchurch.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GRANTHAM BAPTIST CHURCH",
+   "area": "NG31",
+   "website": "https://www.granthambaptistchurch.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST. GILES BALDERTON, SOUTHWELL AND NOTTINGHAM",
+   "area": "NG24",
+   "website": "https://www.bbc-churches.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE METHODIST CHURCH NOTTINGHAM & DERBY DISTRICT",
+   "area": "NG11",
+   "website": "https://www.methodist-nd.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NUTHALL METHODIST CHURCH",
+   "area": "NG16",
+   "website": "https://www.nuthallmethodistchurch.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PRIORY JUNIOR SCHOOL PARENT TEACHER ASSOCIATION",
+   "area": "NG4",
+   "website": "https://www.prioryjuniorschool.ik.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE LIGHTHOUSE PROJECT SPALDING",
+   "area": "NG34",
+   "website": "https://thelighthouseprojectspalding.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RESTLESS LEGS SYNDROME-UK/EKBOM SYNDROME ASSOCIATION",
+   "area": "NG31",
+   "website": "https://www.rls-uk.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF BUNNY SCHOOL",
+   "area": "NG11",
+   "website": "https://www.pta-events.co.uk/friendsofbunnyschool",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD BAPTIST CHURCH",
+   "area": "NG19",
+   "website": "https://www.mansfieldbaptist.church",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MID DERBYSHIRE METHODIST CIRCUIT",
+   "area": "NG10",
+   "website": "https://www.mid-derbyshire-methodist.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HEYDOUR PARISH HALL",
+   "area": "NG32",
+   "website": "https://www.facebook.com/groups/heydourparishvillagehall?locale=en_GB",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Royal Lancers & Nottinghamshire Yeomanry Museum Limited",
+   "area": "NG22",
+   "website": "https://www.rlnymuseum.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELDS HEROES MEMORIAL FUND",
+   "area": "NG19",
+   "website": "https://www.mansfields-heroes.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WATNALL ROAD BAPTIST CHURCH",
+   "area": "NG15",
+   "website": "https://www.wrbc.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD STREET PASTORS",
+   "area": "NG18",
+   "website": "https://www.mansfieldstreetpastors.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BURTON JOYCE WITH BULCOTE AND STOKE BARDOLPH PCC",
+   "area": "NG14",
+   "website": "http://www.bjbsb.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BRIERLEY FOREST PARK TRUST",
+   "area": "NG17",
+   "website": "https://www.brierleyforest.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bilsthorpe Heritage Museum",
+   "area": "NG22",
+   "website": "https://www.bilsthorpemuseum.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE SHERWOOD UNIVERSITY OF THE THIRD AGE",
+   "area": "NG19",
+   "website": "https://sherwoodu3a-mansfieldwoodhouse.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Friends of the National Civil War Centre-Newark Museum",
+   "area": "NG34",
+   "website": "https://www.civilwarnewark.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SLEAFORD CARING TRUST",
+   "area": "NG34",
+   "website": "https://www.evergreensleaford.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE TRUE SHEPHERD MINISTRIES",
+   "area": "NG6",
+   "website": "https://www.trueshepherdministry.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THINK CHILDREN",
+   "area": "NG13",
+   "website": "https://www.thinkchildren.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK & DISTRICT U3A",
+   "area": "NG24",
+   "website": "https://www.newark-u3a.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JOINT FORCES ALLIANCE LTD",
+   "area": "NG19",
+   "website": "http://jointforcesalliance.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LINCOLNSHIRE EMERGENCY BLOOD BIKES SERVICE",
+   "area": "NG32",
+   "website": "https://www.lebbs.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK HERITAGE BARGE CIO",
+   "area": "NG24",
+   "website": "https://WWW.newarkheritagebarge.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF ST MARY'S, BOTTESFORD",
+   "area": "NG13",
+   "website": "https://www.stmarysbottesford.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE ARTS SOCIETY DOVE VALLEY",
+   "area": "NG10",
+   "website": "https://artssocietydovevalley.weebly.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "AQUINAS FOUNDATION LIMITED",
+   "area": "NG11",
+   "website": "http://www.aquinasfoundation.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE SHAHJALAL MOSQUE",
+   "area": "NG7",
+   "website": "https://shahjalalmosque.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LITTLE ROOTS CHILDREN'S COMMUNITY ALLOTMENT",
+   "area": "NG19",
+   "website": "https://littleroots.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE SEARCH AND RESCUE TEAM",
+   "area": "NG21",
+   "website": "https://www.nsart.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF RUDDINGTON",
+   "area": "NG11",
+   "website": "https://www.stpeters-ruddington.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK COMMUNITY FIRST AID",
+   "area": "NG24",
+   "website": "https://www.newarkcommunityfirstaid.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LEICESTER TIGERS WHEELCHAIR RUGBY CLUB",
+   "area": "NG11",
+   "website": "https://www.leicestertigers.com/community/foundation/wheelchair-rugby",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RADCLIFFE-ON-TRENT UNIVERSITY OF THE THIRD AGE",
+   "area": "NG12",
+   "website": "http://u3asitec.org.uk/live/code/u3asite.php?site=414&page=1",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NIDUS-UK",
+   "area": "NG23",
+   "website": "https://www.nidotherapy.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JUBILEE HOUSE CHRISTIAN SCHOOL",
+   "area": "NG16",
+   "website": "https://www.jubileehouse.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD FIRE STATION PRESERVATION SOCIETY TRUST",
+   "area": "NG18",
+   "website": "https://www.mansfieldfiremuseum.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PAUL SMITH'S FOUNDATION",
+   "area": "NG7",
+   "website": "https://www.paulsmith.com/uk",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "RAVENSHEAD U3A",
+   "area": "NG21",
+   "website": "https://ravenshead.u3asite.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BURTON JOYCE & DISTRICT U3A",
+   "area": "NG14",
+   "website": "https://bju3a.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MOVEMENT FOR ALL",
+   "area": "NG16",
+   "website": "https://www.movementforall.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK AND SHERWOOD AUTISM SUPPORT GROUP",
+   "area": "NG24",
+   "website": "https://www.newarkautism.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM HOSPITALS' CHOIR",
+   "area": "NG10",
+   "website": "http://www.nottinghamhospitalschoir.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HARBY PLAYING FIELD",
+   "area": "NG23",
+   "website": "https://harbyparishcouncil.gov.uk/harby-playing-field",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK CRUSADER CIO",
+   "area": "NG24",
+   "website": "http://www.newarkcrusader.com/the-boat.html",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DREAM BIG GHANA FOUNDATION",
+   "area": "NG13",
+   "website": "https://www.dreambigghana.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FOREST TOWN NATURE CONSERVATION GROUP",
+   "area": "NG19",
+   "website": "http://foresttown.net/nature/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK PATRIOTIC FUND",
+   "area": "NG24",
+   "website": "https://www.newarkpatrioticfund.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RAF REGIMENT ASSOCIATION",
+   "area": "NG34",
+   "website": "https://www.rafregt.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "IMPART",
+   "area": "NG17",
+   "website": "https://www.impartcharity.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BINGHAM METHODIST CHURCH",
+   "area": "NG13",
+   "website": "https://www.binghammethodist.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WAY OF LIFE - SENTIDO DA VIDA",
+   "area": "NG31",
+   "website": "https://www.sentidodavidaigrejacrista.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "A LITTLE BIT OF LOVE",
+   "area": "NG20",
+   "website": "https://www.alittlebitoflove.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TEAM EDWARD",
+   "area": "NG18",
+   "website": "https://www.teamedwardlabradorrescue.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE GCR 567 LOCOMOTIVE GROUP",
+   "area": "NG12",
+   "website": "https://www.GCR567Loco.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RADCLIFFE-ON-TRENT METHODIST CHURCH",
+   "area": "NG12",
+   "website": "https://www.radcliffemethodist.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD SPIRITUALIST CENTRE",
+   "area": "NG18",
+   "website": "https://www.snu.org.uk/mansfield-spiritualist-centre",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PRINCESS EVIE'S TRUST",
+   "area": "NG19",
+   "website": "https://www.princesseviestrust.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HELP FOR HORSES UK",
+   "area": "NG22",
+   "website": "https://www.helpforhorsesuk.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LACE CITY CHORUS",
+   "area": "NG4",
+   "website": "https://lacecitychorus.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RUSKINGTON PARISH COMMUNITY LIBRARY CIO",
+   "area": "NG34",
+   "website": "http://parishes.lincolnshire.gov.uk/Ruskington/section.asp?catId=15783",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GEDLING SPORTS PARTNERSHIP CIO",
+   "area": "NG5",
+   "website": "https://www.gedlingsportspartnership.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ALPKIT FOUNDATION",
+   "area": "NG16",
+   "website": "https://www.alpkit.com/foundation",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE INTERNATIONAL RAMEAU ENSEMBLE",
+   "area": "NG25",
+   "website": "https://www.rameauensemble.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DANIELLE'S FLUTTERBYES",
+   "area": "NG15",
+   "website": "https://www.daniellesflutterbyes.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GUARDIAN ANGELS BIRD SANCTUARY",
+   "area": "NG16",
+   "website": "https://www.guardianangelsbirdsanctuary.webs.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NATIONAL JUNIOR SCHOOL PARENT TEACHER ASSOCIATION",
+   "area": "NG31",
+   "website": "https://www.friendsnationalschool.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BELVOIR VALE RDA",
+   "area": "NG12",
+   "website": "https://www.belvoirvalerda.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "VIZSLA RESCUE",
+   "area": "NG33",
+   "website": "https://www.vizslarescue.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LIGHTHOUSE MANSFIELD",
+   "area": "NG19",
+   "website": "https://www.lighthousecentral.net/our-lighthouses/mansfield",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LOWDHAM RAILWAY HERITAGE",
+   "area": "NG14",
+   "website": "https://facebook.com/lowdhamsignalbox",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GRANTHAM STREET PASTORS",
+   "area": "NG31",
+   "website": "http://streetpastors.org/locations/grantham/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BOTTESFORD COMMUNITY LIBRARY ASSOCIATION",
+   "area": "NG13",
+   "website": "https://Www.bottesfordcommunitylibrary.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "COLLINGHAM AND DISTRICT LOCAL HISTORY SOCIETY",
+   "area": "NG23",
+   "website": "https://www.collingham-history.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD UNIVERSITY OF THE THIRD AGE",
+   "area": "NG19",
+   "website": "https://mansfield.u3asite.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LD CARERS GROUP",
+   "area": "NG18",
+   "website": "https://www.ldcarersdirect.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "EASTWOOD & DISTRICT U3A",
+   "area": "NG16",
+   "website": "https://eastwood.u3asite.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ST BOTOLPH'S COFE SCHOOL PTA",
+   "area": "NG34",
+   "website": "https://stbotsptfa.hyperlincs.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PETERBOROUGH SPIRITUALIST CENTRE",
+   "area": "NG31",
+   "website": "https://www.snu.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MESOPOTAMIA",
+   "area": "NG6",
+   "website": "https://www.mesopotamia.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK & DISTRICT COMMUNITY FIRST RESPONDERS",
+   "area": "NG23",
+   "website": "https://newarkanddistrictcfrs.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FARNSTOCK",
+   "area": "NG22",
+   "website": "https://www.farnstock.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MOLDOVAN MISSION",
+   "area": "NG31",
+   "website": "https://www.moldovanmission.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CHURCH STREET ROOMS",
+   "area": "NG33",
+   "website": "http://www.churchstreetrooms.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WOODBOROUGH COMMUNITY ASSOCIATION",
+   "area": "NG14",
+   "website": "https://www.woodborough.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "COMMUNITY FOOD BANK, KIRKBY WOODHOUSE",
+   "area": "NG17",
+   "website": "https://www.facebook.com/COMMUNITYFOODBANKATSTJOHNSANNESLEY",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF ST PETER'S JUNIOR SCHOOL RUDDINGTON",
+   "area": "NG11",
+   "website": "https://www.stpetersjunior.org.uk/friends-of-school/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF SAWLEY ALL SAINTS'",
+   "area": "NG10",
+   "website": "https://www.parishofsawley.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WINTHORPE PRIMARY SCHOOL PTA",
+   "area": "NG24",
+   "website": "https://www.winthorpe.notts.sch.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE LAPWINGS WOMEN'S INSTITUTE",
+   "area": "NG15",
+   "website": "https://www.lapwingswi.weebly.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST MARY GREASLEY",
+   "area": "NG16",
+   "website": "https://greasleychurch.wordpress.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SOCIETI FOUNDATION",
+   "area": "NG24",
+   "website": "https://www.societi.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE SAFFI FOUNDATION",
+   "area": "NG34",
+   "website": "https://www.saffifoundation.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ROCK 'N' SOUL SINGERS",
+   "area": "NG16",
+   "website": "https://www.rocknsoul.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "EREWASH CANAL PRESERVATION AND DEVELOPMENT ASSOCIATION",
+   "area": "NG16",
+   "website": "https://www.ecpda.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ELSTON PRE-SCHOOL",
+   "area": "NG23",
+   "website": "https://www.elstonpreschool.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF ONCHAN PARK",
+   "area": "NG4",
+   "website": "https://onchanpark.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "EAST BRIDGFORD VILLAGE HALL",
+   "area": "NG13",
+   "website": "https://eastbridgfordvillagehall.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SAVE OUR SPANIELS",
+   "area": "NG33",
+   "website": "https://www.saveourspaniels.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DYSPRAXIC ME",
+   "area": "NG31",
+   "website": "https://www.dyspraxic.me.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE ADRIAN SUDBURY SCHOOLS EDUCATION TRUST (''ASSET'')",
+   "area": "NG16",
+   "website": "https://www.asset.uk.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SAMARITANS OF GRANTHAM",
+   "area": "NG31",
+   "website": "https://www.samaritans.org/branches/grantham/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GREAT GONERBY MEMORIAL HALL",
+   "area": "NG31",
+   "website": "https://www.ggmh.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM SAMARITANS",
+   "area": "NG1",
+   "website": "https://www.samaritans.org/nottingham",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HUCKNALL FLIGHT TEST MUSEUM",
+   "area": "NG15",
+   "website": "https://www.huftm.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF WILLOW FARM PRIMARY SCHOOL",
+   "area": "NG4",
+   "website": "https://friendsofwillowfarm.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HUCKNALL AND DISTRICT U3A",
+   "area": "NG15",
+   "website": "https://www.hucknallu3a.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Re Church",
+   "area": "NG4",
+   "website": "https://www.rechurch.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FAITH LIFE CHURCH - GRANTHAM",
+   "area": "NG31",
+   "website": "https://www.flcg.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HOOFPRINTS MINIATURE HAVEN",
+   "area": "NG24",
+   "website": "https://www.hoofprintsminiaturehaven.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SELSTON PARISH VILLAGE HALLS CHARITY",
+   "area": "NG16",
+   "website": "http://selstonparishcouncil.gov.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SRI LANKAN KIDNEY FOUNDATION",
+   "area": "NG31",
+   "website": "https://www.slkfoundation.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TEVERSAL CRICKET CLUB",
+   "area": "NG17",
+   "website": "https://www.teversal.play-cricket.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WINDMILL MISSIONAL COMMUNITY",
+   "area": "NG13",
+   "website": "https://www.achurchnearyou.com/church/33208/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF BELMONT SCHOOL- GRANTHAM",
+   "area": "NG31",
+   "website": "https://www.belmontprimary.com/fobs/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "KEFRAMA SCHOOL BUILD",
+   "area": "NG22",
+   "website": "https://www.keframaschoolbuild.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LAXTON VILLAGE HALL",
+   "area": "NG22",
+   "website": "https://laxtonvh.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK ISLAMIC CENTRE",
+   "area": "NG24",
+   "website": "https://www.newarkislamiccentre.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SUTTON IN ASHFIELD SPIRITUALIST CHURCH",
+   "area": "NG17",
+   "website": "https://www.snu.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JUBILEE CHURCH (ACM)",
+   "area": "NG31",
+   "website": "https://www.jubileegrantham.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GRANTHAM SUNRISE ROTARY CHARITY TRUST",
+   "area": "NG32",
+   "website": "https://Www.granthamsunriserotary.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE GARDENS TRUST",
+   "area": "NG13",
+   "website": "https://nottsgt.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BINGHAM U3A",
+   "area": "NG13",
+   "website": "https://www.Binghamu3a.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ASHFIELD UNIVERSITY OF THE THIRD AGE",
+   "area": "NG17",
+   "website": "http://www.ashfieldu3a.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MARANATHA COMMUNITY CHURCH OF JESUS",
+   "area": "NG11",
+   "website": "https://www.maranathacommunitychurchjs.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HOME AND DRY",
+   "area": "NG15",
+   "website": "https://www.homeanddry.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE NEWSTEAD ABBEY PARTNERSHIP",
+   "area": "NG33",
+   "website": "https://www.newsteadabbeypartnership.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TOLLERTON PLAYGROUP",
+   "area": "NG12",
+   "website": "https://www.tollertonplaygroup.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE BYTHAMS WOODLAND TRUST",
+   "area": "NG33",
+   "website": "https://www.bythamspinney.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WIVERTON IN THE VALE PAROCHIAL CHURCH COUNCIL",
+   "area": "NG12",
+   "website": "https://www.wivertoninthevale.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LONG EATON AND DISTRICT U3A",
+   "area": "NG10",
+   "website": "https://u3asites.org.uk/longeaton",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF KIMBERLEY AND NUTHALL",
+   "area": "NG16",
+   "website": "https://www.htsp.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "1ST GOTHAM SCOUT GROUP",
+   "area": "NG11",
+   "website": "https://www.gothamscouts.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GOWRIE LOCOMOTIVE TRUST CIO",
+   "area": "NG4",
+   "website": "https://www.gowrielocomotivetrust.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "COLLINGHAM & DISTRICT U3A",
+   "area": "NG23",
+   "website": "https://u3asites.org.uk/collingham",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FOREST TOWN & DISTRICT U3A",
+   "area": "NG18",
+   "website": "https://forest-town.u3asite.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CODDINGTON VILLAGE HALL",
+   "area": "NG24",
+   "website": "https://village.coddington.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SOUTHWELL AND DISTRICT LIONS CLUB (CIO)",
+   "area": "NG25",
+   "website": "https://www.southwell-lions.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD WILDLIFE RESCUE",
+   "area": "NG19",
+   "website": "https://mansfieldwildlife.givewildlife.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE TREETOP FOUNDATION",
+   "area": "NG33",
+   "website": "https://www.thetreetopfoundation.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WORKING FUTURES",
+   "area": "NG1",
+   "website": "https://workingfutures.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "COLLINGHAM AND DISTRICT MEN IN SHEDS",
+   "area": "NG23",
+   "website": "http://www.meninshedscollingham.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HER LOHRI PROJECT",
+   "area": "NG4",
+   "website": "http://www.herlohri.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CROSSROADS TRUST",
+   "area": "NG18",
+   "website": "https://www.crossroadstrust.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MISSING PIECE CHILD LOSS",
+   "area": "NG19",
+   "website": "https://www.missingpiecechildloss.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WORKSOP HARRIERS & ATHLETICS CLUB",
+   "area": "NG23",
+   "website": "http://www.worksopharriers.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS INDEED",
+   "area": "NG14",
+   "website": "https://friendsindeeddogrescue.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE CINEMA ORGAN SOCIETY",
+   "area": "NG34",
+   "website": "https://www.cinema-organs.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SLEAFORD ISLAMIC CENTRE",
+   "area": "NG34",
+   "website": "https://www.sleafordislamiccentre.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SUPPORT OUR MILITARY VETERANS",
+   "area": "NG6",
+   "website": "https://www.supportmilitaryveterans.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NG16 HELPHEDGEHOGS",
+   "area": "NG16",
+   "website": "https://NG16Hedgehogs.simplesite.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "KASHMIR SHELTER",
+   "area": "NG16",
+   "website": "https://www.kashmirshelter.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GRANTHAM ARK",
+   "area": "NG31",
+   "website": "https://www.granthamark.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RAVENSHEAD PRESCHOOL PLAYGROUP CHARITABLE INCORPORATED ORGANISATION",
+   "area": "NG15",
+   "website": "https://ravensheadpreschoolplaygroup.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD HARRIERS AND ATHLETICS CLUB",
+   "area": "NG18",
+   "website": "https://mansfieldharriers.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD CAT RESCUE",
+   "area": "NG19",
+   "website": "https://mansfieldcatrescue.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM SOUTH CHRISTADELPHIAN ECCLESIA",
+   "area": "NG11",
+   "website": "https://www.lightyourlife.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GROWING MANSFIELD",
+   "area": "NG21",
+   "website": "https://growingmansfield.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "UNANIMA THEATRE",
+   "area": "NG18",
+   "website": "https://www.unanimatheatre.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BUNDLES OF HOPE",
+   "area": "NG10",
+   "website": "https://www.facebook.com/bundlesofhopeandbabybasicslongeaton/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE CHESS FOUNDATION",
+   "area": "NG14",
+   "website": "https://Nottschessfoundation.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LINCOLNSHIRE COMMUNITY FOUNDATION CIO",
+   "area": "NG34",
+   "website": "https://www.lincolnshirecf.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "VALE OF BELVOIR LIONS CLUB (CIO)",
+   "area": "NG13",
+   "website": "https://www.voblions.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GREENWOOD RIDING FOR THE DISABLED ASSOCIATION INCORPORATING CARRIAGE DRIVING",
+   "area": "NG18",
+   "website": "https://www.greenwoodrda.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE ROCK CHURCH (WEST BRIDGFORD)",
+   "area": "NG12",
+   "website": "https://www.the-rock.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF NEWARK CASTLE AND VICTORIAN GARDENS",
+   "area": "NG24",
+   "website": "https://www.newarkcastlefriends.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CHURCH MONUMENTS SOCIETY",
+   "area": "NG4",
+   "website": "https://www.churchmonumentssociety.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "KWEST KENYA WATAMU EDUCATIONAL SUPPORT TRUST",
+   "area": "NG12",
+   "website": "https://www.KWEST16.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SUTTON-ON-TRENT PRIMARY AND NURSERY SCHOOL PTA",
+   "area": "NG23",
+   "website": "https://www.suttonontrentschool.co.uk/pta/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF COTGRAVE COUNTRY PARK",
+   "area": "NG12",
+   "website": "https://www.cotgravecountrypark.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ASSEMBLE CHURCH",
+   "area": "NG24",
+   "website": "https://www.assemblechurch.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SLEAFORD SPIRITUALIST CENTRE",
+   "area": "NG34",
+   "website": "https://www.snu.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE RAILWAY CHILDREN PRESCHOOL CIO",
+   "area": "NG4",
+   "website": "https://www.railwaychildrenpreschool.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE GETTAWAY CLUB",
+   "area": "NG4",
+   "website": "https://www.facebook.com/gettawayclub",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE REALITY OF FAITH AND LOVE MINISTRY",
+   "area": "NG4",
+   "website": "https://www.rofalm.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CHARDI KALA",
+   "area": "NG12",
+   "website": "https://chardikala.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SEAFORTH HIGHLANDERS ASSOCIATION NOTTS BRANCH PIPES AND DRUMS",
+   "area": "NG18",
+   "website": "https://www.seaforthhighlandersnottsbranch.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "OLD TYME STRENGTH",
+   "area": "NG18",
+   "website": "https://www.oldtymestrength.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "1ST SHELFORD AND EAST BRIDGFORD SCOUT GROUP",
+   "area": "NG13",
+   "website": "https://www.shelfordandeastbridgfordscouts.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE JAMES ANTHONY FOUNDATION",
+   "area": "NG34",
+   "website": "https://www.thejamesanthonyfoundation.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WALKING 4 HOPE",
+   "area": "NG19",
+   "website": "https://www.walking4hope.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DOGGY DENS UK RESCUE",
+   "area": "NG20",
+   "website": "https://www.doggydensukrescue.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEW HOPE INTERNATIONAL CHURCH UK",
+   "area": "NG31",
+   "website": "https://www.newhic-uk.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM CITYCARE COMMUNITY CHARITY",
+   "area": "NG6",
+   "website": "https://www.nottinghamcitycare.nhs.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEW HARVEST COMMUNITY CHURCH",
+   "area": "NG10",
+   "website": "https://www.newharvestlongeaton.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE GLOUCESTERSHIRE REGIMENT MEMORIAL",
+   "area": "NG32",
+   "website": "https://www.glosters.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "COPTIC KIDS WORLD",
+   "area": "NG11",
+   "website": "https://coptickidsworld.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "1ST BOTTESFORD SCOUT GROUP",
+   "area": "NG13",
+   "website": "https://www.bottesfordscoutgroup.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SUGGYS CHAMPIONS FOUNDATION",
+   "area": "NG24",
+   "website": "https://www.newarkabc.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEWARK TOWN BAND",
+   "area": "NG24",
+   "website": "https://Newarktownband.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF CODDINGTON SCHOOL",
+   "area": "NG24",
+   "website": "https://www.coddingtoncofeprimary.com/pta",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ENLIGHTEN THE SHADOWS",
+   "area": "NG17",
+   "website": "https://www.enlightentheshadows.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GREEK STRAY RES.Q AND SUPPORT",
+   "area": "NG34",
+   "website": "https://www.greekstrayrescue.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Holy Trinity Mar Thoma Church, Nottingham",
+   "area": "NG15",
+   "website": "https://www.nottinghammtc.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "COTGRAVE & DISTRICT U3A",
+   "area": "NG12",
+   "website": "https://cotgraveu3a.weebly.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FORGOTTEN DOGS OF TURKEY",
+   "area": "NG11",
+   "website": "https://www.forgottendogsofturkey.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF POPLAR FARM SCHOOL",
+   "area": "NG31",
+   "website": "https://www.poplarfarmsch-cit.co.uk/web/fop_-_friends_of_poplar/427689",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST JOHN THE EVANGELIST, CORBY GLEN, IN THE DIOCESE OF LINCOLN",
+   "area": "NG33",
+   "website": "http://www.achurchnearyou.com/St-John-The-Evangelist-Corby-Glen",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF FLINTHAM SCHOOL (PTFA)",
+   "area": "NG23",
+   "website": "https://www.flintham.notts.sch.uk/page/?title=Friends+of+Flintham+PTA&pid=65",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WELLSPRING BAPTIST CHURCH, NEWARK",
+   "area": "NG24",
+   "website": "https://www.wellspringbaptist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE GREAT NOTTS CHRISTMAS TOY APPEAL",
+   "area": "NG4",
+   "website": "https://www.greatnottschristmastoyappeal.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RAUCEBY VILLAGE HALL",
+   "area": "NG34",
+   "website": "https://www.raucebyvillagehall.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TORCHBEARERS MINISTRIES INTERNATIONAL",
+   "area": "NG18",
+   "website": "https://www.torchbearersminstriesinternationalunitedkingdom.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ALL SAINTS, BARROWBY, GRANTHAM",
+   "area": "NG32",
+   "website": "https://www.achurchnearyou.com/church/14631/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RUSHCLIFFE DEMENTIA ACTION NETWORK",
+   "area": "NG11",
+   "website": "https://rdan.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE JAN PARNHAM TRUST",
+   "area": "NG13",
+   "website": "https://www.laabingham.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ED BILBEY FOUNDATION",
+   "area": "NG12",
+   "website": "https://www.facebook.com/edbilbeyboxcup",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF LONG EATON SAINT JOHN'S",
+   "area": "NG10",
+   "website": "http://stjohnlongeaton.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CORBY GLEN PRESCHOOL",
+   "area": "NG33",
+   "website": "https://www.corbyglenpreschool.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PROJECT 3418",
+   "area": "NG17",
+   "website": "https://project3418.wixsite.com/project-3418",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE REDEEMED CHRISTIAN CHURCH OF GOD (RCCG) BETHEL PARISH MANSFIELD",
+   "area": "NG18",
+   "website": "https://rccgbethelparish.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CARLTON MALE VOICE CHOIR",
+   "area": "NG6",
+   "website": "https://www.carltonmvc.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SING ALONG WITH ELLIE",
+   "area": "NG16",
+   "website": "https://www.singalongwithellie.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DOROTHY HARRISON TRUST",
+   "area": "NG22",
+   "website": "http//walksoflifemuseum.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE HAWKINS FOUNDATION",
+   "area": "NG7",
+   "website": "https://www.hawkinsfoundation.org/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LONG EATON SWIMMING CLUB",
+   "area": "NG10",
+   "website": "https://uk.gomotionapp.com/team/lesc/page/home",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "YUSRA TRUST",
+   "area": "NG8",
+   "website": "https://yusratrust.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "1ST GEDLING SCOUT GROUP",
+   "area": "NG4",
+   "website": "https://scout.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "EASTWOOD SHED",
+   "area": "NG16",
+   "website": "https://www.EastwoodShed.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF CHRIST CHURCH, NEWARK-ON-TRENT, IN THE DIOCESE OF SOUTHWELL AND NOTTINGHAM",
+   "area": "NG24",
+   "website": "https://www.christchurchnewark.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "AWSWORTH VILLAGE HALL",
+   "area": "NG16",
+   "website": "https://www.awsworthvillagehall.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF ST DENYS CHURCH EATON, DIOCESE OF LEICESTER",
+   "area": "NG32",
+   "website": "https://www.ironstonechurches.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "UK FOUNDATION FOR MUSCULAR DYSTROPHY NIGERIA",
+   "area": "NG11",
+   "website": "https://ukfoundationformdng@gmail.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CALVERTON & DISTRICT UNIVERSITY OF THE THIRD AGE (U3A)",
+   "area": "NG14",
+   "website": "https://calverton.u3asite.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WOODBOROUGH VILLAGE PRESCHOOL",
+   "area": "NG14",
+   "website": "https://woodboroughvillagepreschool.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mindset Social Care",
+   "area": "NG15",
+   "website": "https://www.mindsetsocialcare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Suillean House",
+   "area": "NG34",
+   "website": "https://www.kisimul.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TRZ Care - Main Office",
+   "area": "NG6",
+   "website": "https://www.trzcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Shortwood House",
+   "area": "NG15",
+   "website": "https://www.shortwoodhouse.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Old Hall",
+   "area": "NG34",
+   "website": "https://www.the.oldhall.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Rivendell View",
+   "area": "NG14",
+   "website": "https://www.idealcarehomes.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Thistle Hill Hall",
+   "area": "NG19",
+   "website": "https://www.thistlehillhall.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Byars Nursing Home",
+   "area": "NG14",
+   "website": "https://www.byarscarehome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Fosse Healthcare - Armstrong Gardens",
+   "area": "NG22",
+   "website": "https://www.fossehealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Firs Residential Care Home",
+   "area": "NG14",
+   "website": "https://www.thefirslowdham.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Fairview Farm",
+   "area": "NG31",
+   "website": "https://www.granthammencap.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SpaMedica Newark",
+   "area": "NG24",
+   "website": "https://www.spamedica.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Keyline Care Supported Living",
+   "area": "NG15",
+   "website": "https://www.keylinecare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ashlands Care Home",
+   "area": "NG21",
+   "website": "https://www.ashlandscarehome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sutton House",
+   "area": "NG17",
+   "website": "https://www.mgbcareservices.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Greenwood Lodge",
+   "area": "NG11",
+   "website": "https://www.mgbcareservice.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Montague Street Care Home",
+   "area": "NG18",
+   "website": "https://www.mencap.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Hounsfield Surgery",
+   "area": "NG23",
+   "website": "https://www.hounsfieldsurgery.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mencap Central Notts Services",
+   "area": "NG17",
+   "website": "https://www.mencap.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mencap Derbyshire and Derby City Domiciliary Care Agency",
+   "area": "NG10",
+   "website": "https://www.mencap.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bluebird Care (Rushcliffe & Melton)",
+   "area": "NG12",
+   "website": "https://www.bluebirdcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Orchard House",
+   "area": "NG11",
+   "website": "https://www.my-care.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "St Peters Care Home",
+   "area": "NG11",
+   "website": "https://www.my-care.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Balmore Country House",
+   "area": "NG11",
+   "website": "https://www.my-care.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Radcliffe Manor House",
+   "area": "NG12",
+   "website": "https://www.radcliffemanorhouse.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Apple Trees Care & Reablement Centre",
+   "area": "NG31",
+   "website": "https://www.osjct.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Lawrence Mews",
+   "area": "NG16",
+   "website": "https://www.blueskycare.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Clifton Manor Nursing Home",
+   "area": "NG11",
+   "website": "https://www.monarchhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Willow Brook Care Home",
+   "area": "NG4",
+   "website": "https://www.rosmeadhealthcare.co.uk/willow-brook-carehome.",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Key 2 Care - Grantham",
+   "area": "NG31",
+   "website": "https://www.key2care.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Newton House",
+   "area": "NG31",
+   "website": "https://www.barchester.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Oakdene Care Home",
+   "area": "NG34",
+   "website": "https://www.oakdenecarehome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ashfield Nursing Home",
+   "area": "NG17",
+   "website": "https://www.ashahealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SQ Carers Ltd - Longeaton",
+   "area": "NG10",
+   "website": "https://www.sqcarers.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Woodleigh Care Home",
+   "area": "NG19",
+   "website": "https://www.woodleighcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Oakdene",
+   "area": "NG19",
+   "website": "https://www.prime-life.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Langwith Lodge Care Home",
+   "area": "NG20",
+   "website": "https://www.yourhealthgroup.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sheepwalk House",
+   "area": "NG15",
+   "website": "https://www.creativecare.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Woodlands - Innova House CLD",
+   "area": "NG18",
+   "website": "https://www.innova-house.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Rowan - Innova House CLD",
+   "area": "NG18",
+   "website": "https://www.innova-house.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Innova House -CBIR",
+   "area": "NG18",
+   "website": "https://www.innova-house.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Raynes Healthcare Ltd",
+   "area": "NG6",
+   "website": "https://www.rayneshealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Priory Hospital East Midlands",
+   "area": "NG15",
+   "website": "https://www.priorygroup.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "23 Church Street",
+   "area": "NG20",
+   "website": "https://www.voyagecare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Byards Keep",
+   "area": "NG34",
+   "website": "https://www.voyagecare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Beaumond House Hospice Care",
+   "area": "NG24",
+   "website": "https://www.beaumondhouse.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Edwalton Manor Care Home",
+   "area": "NG12",
+   "website": "https://www.hamberleycarehomes.co.uk/care-homes/edwalton-manor-care-home/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mencap South Notts Services",
+   "area": "NG10",
+   "website": "https://www.mencap.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Broadleaves",
+   "area": "NG22",
+   "website": "https://www.fossehealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ashdene Care Home",
+   "area": "NG34",
+   "website": "https://www.ashdenecarehome.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Chestnut Grange",
+   "area": "NG23",
+   "website": "https://www.voyagecare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEW SEWA FOUNDATION",
+   "area": "NG8",
+   "website": "https://www.newsewafoundation.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "The Hollies",
+   "area": "NG17",
+   "website": "https://www.qualitycare-em.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Adams House",
+   "area": "NG17",
+   "website": "https://www.qualitycare-em.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Willowcroft Care Home",
+   "area": "NG17",
+   "website": "https://www.bhcarehomes.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bright Smile Dental Practice",
+   "area": "NG4",
+   "website": "https://www.brightsmiledentalpractice.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "149 Thistledown Road, Nottingham, Nottinghamshire, United Kingdom, NG11 9EB",
+   "area": "NG11",
+   "website": "https://www.centeredproviderltd.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Newthorpe Medical Centre",
+   "area": "NG16",
+   "website": "https://www.newthorpemedicalcentre.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Gozian Healthcare Ltd",
+   "area": "NG6",
+   "website": "https://gozianhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Shared Lives",
+   "area": "NG8",
+   "website": "https://sharedlives.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "AR-RAHMAN TRUST UK",
+   "area": "NG2",
+   "website": "https://arrahmantrust.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Winslow",
+   "area": "NG6",
+   "website": "https://www.standrewshealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Gentle Hands Home Care",
+   "area": "NG12",
+   "website": "https://www.ashgatehomecare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Cedars Care Ltd",
+   "area": "NG14",
+   "website": "https://www.cedarscareltd.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "OLIVE TREE HOUSING",
+   "area": "NG16",
+   "website": "https://olivetreehousing.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Richmond Residential Care Home",
+   "area": "NG20",
+   "website": "https://www.richmondcarehome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Truvim England Limited",
+   "area": "NG21",
+   "website": "https://www.truvim.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nelson House",
+   "area": "NG5",
+   "website": "https://nelsonhouse.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Belmont Road",
+   "area": "NG17",
+   "website": "https://www.blueskycare.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Clifton View Care Home",
+   "area": "NG11",
+   "website": "https://www.cliftonviewcarehome.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bosworth Homecare Services",
+   "area": "NG10",
+   "website": "https://www.givecarehomecare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Delphi Wellness Clinic",
+   "area": "NG25",
+   "website": "https://www.delphiwellness.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bancroft Care Centre",
+   "area": "NG18",
+   "website": "https://www.ashahealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Hillside Support Group Main Office",
+   "area": "NG15",
+   "website": "https://www.hillsidesupport.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Blackwell Road",
+   "area": "NG17",
+   "website": "https://www.edensupportedhousing.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Glenside Country Main Practice",
+   "area": "NG33",
+   "website": "https://www.glensidecountrypractice.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Lilac",
+   "area": "NG18",
+   "website": "https://www.innovahouse.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Fosse Healthcare - Nottinghamshire",
+   "area": "NG19",
+   "website": "https://www.fossehealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bluebird Care (Newark and Sherwood)",
+   "area": "NG24",
+   "website": "https://www.bluebirdcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "A G Supply Solutions Ltd",
+   "area": "NG3",
+   "website": "https://agsupplysolutions.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Swingbridge Surgery",
+   "area": "NG31",
+   "website": "https://www.swingbridgesurgery.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HELPING HEARTS",
+   "area": "NG2",
+   "website": "https://helpinghearts.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Phillimon Care",
+   "area": "NG5",
+   "website": "https://phillimon-care.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Aslockton Hall Nursing & Residential Home",
+   "area": "NG13",
+   "website": "https://www.aslocktonhall.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Rosemary Street Health Centre",
+   "area": "NG19",
+   "website": "https://www.rosemarystreethealthcentre.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ruddington View",
+   "area": "NG11",
+   "website": "https://www.voyagecare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Shires Health Care",
+   "area": "NG20",
+   "website": "https://www.shireshealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Every Sensation",
+   "area": "NG17",
+   "website": "https://www.everysensation.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Westdale Lane Surgery",
+   "area": "NG4",
+   "website": "https://www.westdalelanesurgery.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Willowbrook Medical Practice",
+   "area": "NG17",
+   "website": "https://www.willowbrookmp.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Rainworth Surgery",
+   "area": "NG21",
+   "website": "https://www.rainworthsurgery.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Maun View",
+   "area": "NG19",
+   "website": "https://www.runwoodhomes.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Church Farm at Rusticus",
+   "area": "NG12",
+   "website": "https://www.churchfarmcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Magnolia House Residential Care Home",
+   "area": "NG19",
+   "website": "https://www.magnolia-care.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Acorn Medical Practice",
+   "area": "NG18",
+   "website": "https://www.acornmedicalpractice.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mansfield",
+   "area": "NG18",
+   "website": "https://www.heathcotes.net",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Red Roofs Residential Care Home",
+   "area": "NG24",
+   "website": "https://www.redhomes.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Millington Springs",
+   "area": "NG16",
+   "website": "https://www.millingtonsprings.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ambulance Station",
+   "area": "NG15",
+   "website": "https://www.centralmedicalservices.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Valued Living Home Care Services",
+   "area": "NG12",
+   "website": "https://www.vlhomecareservices.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Old Vicarage",
+   "area": "NG10",
+   "website": "https://www.theoldvicaragecarehome.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ashfield House - Annesley Woodhouse",
+   "area": "NG17",
+   "website": "https://www.ashfieldhousesurgery.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ruddington Manor Care Centre",
+   "area": "NG11",
+   "website": "https://www.newcarehomes.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "St Johns Medical Centre",
+   "area": "NG31",
+   "website": "https://www.stjohnsmedical.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Glenholme Holdingham Grange",
+   "area": "NG34",
+   "website": "https://www.glenholme.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Torkard Hill Medical Centre",
+   "area": "NG15",
+   "website": "https://www.torkardhill.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Churchfields Medical Practice",
+   "area": "NG6",
+   "website": "https://www.churchfieldsmedicalpractice.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Beech Court Care Home",
+   "area": "NG16",
+   "website": "https://www.careffp.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Five Gables Care Home",
+   "area": "NG17",
+   "website": "https://www.careffp.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Durbia Healthcare Ltd",
+   "area": "NG6",
+   "website": "https://www.durbiahealthcareltd.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Caythorpe & Ancaster Medical Practice",
+   "area": "NG32",
+   "website": "https://www.villagedoctor.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Lowmoor Road Surgery",
+   "area": "NG17",
+   "website": "https://www.doctorswhitebarishkarunaratne.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Spring Bank",
+   "area": "NG16",
+   "website": "https://www.blueskycare.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Vine Street Surgery",
+   "area": "NG31",
+   "website": "https://www.vinemedical.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Troc Care Home",
+   "area": "NG24",
+   "website": "https://www.thetroc.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Oaklands",
+   "area": "NG20",
+   "website": "https://www.oaklandscharity.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Helmsley Road Short Breaks Service",
+   "area": "NG21",
+   "website": "https://www.nottinghamshire.gov.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ICDS - Specialist Support Team",
+   "area": "NG18",
+   "website": "https://www.nottinghamshire.gov.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nottingham",
+   "area": "NG7",
+   "website": "https://www.nottingham.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Mapperley Dental Care",
+   "area": "NG3",
+   "website": "https://www.mapperleydental.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Five Bells Residential Care Home",
+   "area": "NG34",
+   "website": "https://www.compleatcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Cygnet Manor",
+   "area": "NG20",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FitzRoy Supported Living – Nottingham East",
+   "area": "NG4",
+   "website": "https://www.fitzroy.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Centricorp Care",
+   "area": "NG24",
+   "website": "https://centricorp.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Wollaton Park Dental Practice",
+   "area": "NG8",
+   "website": "https://www.wollatonparkdentalpractice.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SureCare Newark",
+   "area": "NG24",
+   "website": "https://www.surecare.co.uk/newark/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nottingham",
+   "area": "NG3",
+   "website": "https://www.nottingham.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "North Nottinghamshire Community Service",
+   "area": "NG22",
+   "website": "https://www.lifelinesitterservice.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Hazelgrove Care Home",
+   "area": "NG15",
+   "website": "https://www.milfordcare.co.uk/hazelgrove/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bilsthorpe Surgery",
+   "area": "NG22",
+   "website": "https://www.bilsthorpesurgery.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Eden Futures Mansfield Regional Office",
+   "area": "NG20",
+   "website": "https://www.edenfutures.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mydentist - Risley Hill - Sandiacre",
+   "area": "NG10",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Kingsbury House Limited",
+   "area": "NG5",
+   "website": "https://kingsburyhouse.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Treeline Dental Suite - Sleaford",
+   "area": "NG34",
+   "website": "https://www.treelinedental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Park House",
+   "area": "NG6",
+   "website": "https://www.springcare.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Fieldings",
+   "area": "NG17",
+   "website": "https://www.prime-life.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Carlton Care Home",
+   "area": "NG4",
+   "website": "https://www.carltoncarehome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Future Home Care Limited (Mansfield)",
+   "area": "NG19",
+   "website": "https://Lifeways.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Wollaton View Care Home",
+   "area": "NG8",
+   "website": "https://wollatonviewcarehome.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Voyage (DCA) Sleaford",
+   "area": "NG34",
+   "website": "https://www.voyagecare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Belvoir Home Care",
+   "area": "NG13",
+   "website": "https://www.belvoirhomecare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Premier Community",
+   "area": "NG19",
+   "website": "https://www.premiercommunity.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Elston House",
+   "area": "NG23",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mydentist - Bath Lane - Mansfield",
+   "area": "NG18",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Wollaton Park Care Home",
+   "area": "NG8",
+   "website": "https://wollatonparkcarehome.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Porchester Dental Practice",
+   "area": "NG3",
+   "website": "https://porchesterdental.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "St Catherine's Dental Practice",
+   "area": "NG31",
+   "website": "https://www.stcathsdental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Brierley Park Medical Group",
+   "area": "NG17",
+   "website": "https://www.huthwaitesurgery.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Alexandra Lodge Care Home",
+   "area": "NG3",
+   "website": "https://alexandralodge.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Clover Dental Care Limited - Sleaford",
+   "area": "NG34",
+   "website": "https://www.cloverdentalcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Orthoworld 2000 Nottingham",
+   "area": "NG1",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bulwell House Dental Practice",
+   "area": "NG6",
+   "website": "https://www.rodericksdental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mydentist - Nuthall Road - Nottingham",
+   "area": "NG8",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Pinxton Manor Nursing Home",
+   "area": "NG16",
+   "website": "https://www.monarchhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Natured Support - Main Office",
+   "area": "NG17",
+   "website": "https://www.naturedsupport.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Titchfield Dental Clinic",
+   "area": "NG19",
+   "website": "https://www.titchfieldparkdental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "304 Southwell Road",
+   "area": "NG21",
+   "website": "https://www.ncha.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "2-8 Orchard Street",
+   "area": "NG15",
+   "website": "https://www.ncha.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "14-17 Palmwood Court",
+   "area": "NG6",
+   "website": "https://www.ncha.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mansfield Community Hospital",
+   "area": "NG18",
+   "website": "https://www.sfh-tr.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Unique Smiles Dental Surgery",
+   "area": "B49",
+   "website": "https://www.uniquesmiles.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Bupa Dental Care Newark",
+   "area": "NG24",
+   "website": "https://www.baldertondental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mansfield Orthodontic Practice - 19 Woodhouse Road",
+   "area": "NG18",
+   "website": "https://www.goodsmile.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mansfield Orthodontic Practice - 17 Woodhouse Road",
+   "area": "NG18",
+   "website": "https://www.goodsmile.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Redcliffe House",
+   "area": "NG18",
+   "website": "https://www.voyagecare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Cedars (Mansfield)",
+   "area": "NG21",
+   "website": "https://www.voyagecare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mydentist - Appleton Gate - Newark",
+   "area": "NG24",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bupa Dental Care Long Eaton",
+   "area": "NG10",
+   "website": "https://www.longeatondental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Perthyn Nottinghamshire Office",
+   "area": "NG18",
+   "website": "https://www.perthyn.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Nottingham Road Clinic",
+   "area": "NG18",
+   "website": "https://www.nottinghamroadclinic.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Comfort Call Nottingham",
+   "area": "NG15",
+   "website": "https://www.comfortcall.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Loxbridge Plus Care",
+   "area": "NG23",
+   "website": "https://www.loxbridgepluscare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Beeston Rise Care Home",
+   "area": "NG9",
+   "website": "https://www.beestonrisecarehome.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Eastgate Dental Surgery",
+   "area": "NG34",
+   "website": "https://www.eastgatedentalsurgery.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Pearce & Nobles @ Sawley Dental",
+   "area": "NG10",
+   "website": "https://www.pearceandnobles.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Robinswood House",
+   "area": "NG3",
+   "website": "https://www.robinswoodhouse.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Nottingham Ear Clinic",
+   "area": "NG9",
+   "website": "https://www.nottinghamearclinic.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Carefound Home Care (West Bridgford)",
+   "area": "NG12",
+   "website": "https://www.carefound.co.uk/locations/nottinghamshire",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Your Home Care",
+   "area": "NG19",
+   "website": "https://www.yourhomecare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Malborn Teroan House",
+   "area": "NG20",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Pines",
+   "area": "NG19",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Blue Sky Care Ltd community services",
+   "area": "NG15",
+   "website": "https://www.blueskycare.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Salisbury House",
+   "area": "NG22",
+   "website": "https://www.kisimul.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bridgford Dental Practice",
+   "area": "NG2",
+   "website": "https://www.bridgforddental.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Respectful Care",
+   "area": "NG5",
+   "website": "https://www.respectfulcare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Care Solutions Nottingham",
+   "area": "NG15",
+   "website": "https://www.icare-solutions.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Kirkby Community Primary Care Centre",
+   "area": "NG17",
+   "website": "https://www.operosehealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Balderton Primary Care Centre",
+   "area": "NG24",
+   "website": "https://www.operosehealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Respectful Care",
+   "area": "NG19",
+   "website": "https://www.respectfulcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "King's Medical Centre",
+   "area": "NG17",
+   "website": "https://www.kingsmcsuttoninashfield.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Darlison Court",
+   "area": "NG15",
+   "website": "https://www.fossehealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "19 Barkla Close",
+   "area": "NG11",
+   "website": "https://www.nottinghamcity.gov.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ashfield Health Village",
+   "area": "NG17",
+   "website": "https://www.sfh-tr.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ash Villa",
+   "area": "NG34",
+   "website": "https://www.lpft.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Manthorpe Centre",
+   "area": "NG31",
+   "website": "https://www.lpft.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Blossomwood",
+   "area": "NG17",
+   "website": "https://www.nottinghamshirehealthcare.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "John Eastwood Hospice",
+   "area": "NG17",
+   "website": "https://www.nottinghamshirehealthcare.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sherwood Oaks Hospital",
+   "area": "NG18",
+   "website": "https://www.nottinghamshirehealthcare.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Manswick Care Home",
+   "area": "NG19",
+   "website": "https://www.rhodsaccarehome.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bhandal Homecare",
+   "area": "NG22",
+   "website": "https://www.bhandalhomecare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Phoenix Care 24/7",
+   "area": "NG7",
+   "website": "https://phoenixcare.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Riversdale Health Clinical",
+   "area": "NG34",
+   "website": "https://www.lincolnshirecommunityhealthservices.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Greenwood Homecare Grantham",
+   "area": "NG31",
+   "website": "https://www.greenwoodhomecare.co.uk/grantham/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Willis Lodge Care Home",
+   "area": "NG17",
+   "website": "https://www.hatzfeld.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Keyworth",
+   "area": "NG12",
+   "website": "https://www.treelinedental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Birches",
+   "area": "NG24",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Cripps Dental Centre",
+   "area": "NG7",
+   "website": "https://www.crippsdentalcentre.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "The Medical Centre",
+   "area": "NG7",
+   "website": "https://medicalcentre.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Clipstone Hall & Lodge",
+   "area": "NG21",
+   "website": "https://www.highgatecare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Insight Nottingham-CFM Ltd (Insight Care Services Ltd)",
+   "area": "NG6",
+   "website": "https://www.insightcareservicesltd.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Campbell Clinic Limited",
+   "area": "NG12",
+   "website": "https://www.campbell-clinic.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Langley Homes",
+   "area": "NG16",
+   "website": "https://www.oasiscareuk.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Cherry Tree House",
+   "area": "NG19",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Larwood House",
+   "area": "NG17",
+   "website": "https://www.potens-uk.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sherwood House",
+   "area": "NG15",
+   "website": "https://www.sherwoodhouse.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sleaford Smile Centre",
+   "area": "NG34",
+   "website": "https://www.teethuk.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DKM Healthcare Limited",
+   "area": "NG7",
+   "website": "https://dkmhealthcare.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Sandiacre Lodge",
+   "area": "NG10",
+   "website": "https://www.icsl.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Pathways Health Care Limited",
+   "area": "NG17",
+   "website": "https://www.exemplarhc.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Taylor View and Gilbert Lodge",
+   "area": "NG15",
+   "website": "https://www.heathcotes.net",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Moorgreen",
+   "area": "NG15",
+   "website": "https://www.heathcotes.net",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Hatzfeld House",
+   "area": "NG21",
+   "website": "https://www.hatzfeld.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Southwell Court Care Home",
+   "area": "NG25",
+   "website": "https://www.bondcare.co.uk/care-homes/southwell-court-care-home/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sawley",
+   "area": "NG10",
+   "website": "https://www.heathcotes.net",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "St Andrew's Nursing and Care Home",
+   "area": "NG34",
+   "website": "https://www.standrewscarehome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Gemini Exclusive Care Mansfield",
+   "area": "NG18",
+   "website": "https://www.geminiexclusivecare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Start Service - Mansfield and Ashfield Locality",
+   "area": "NG17",
+   "website": "https://www.nottinghamshire.gov.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Start Service - Newark and Bassetlaw Locality",
+   "area": "NG22",
+   "website": "https://www.nottinghamshire.gov.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Little Acres",
+   "area": "NG16",
+   "website": "https://www.prime-life.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Gregory House II",
+   "area": "NG5",
+   "website": "https://www.gregoryhouse.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Long Eaton View Care Home",
+   "area": "NG10",
+   "website": "https://www.longeatonviewcarehome.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Supported Living and Community Outreach",
+   "area": "NG11",
+   "website": "https://www.ncha.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Jubilee House",
+   "area": "NG2",
+   "website": "https://jubilee-house.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Braywood Gardens",
+   "area": "NG4",
+   "website": "https://www.runwoodhomes.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mydentist - West Furlong - Cotgrave",
+   "area": "NG12",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nightingale Nursing and Care Home",
+   "area": "NG21",
+   "website": "https://www.nightingale-carehome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Jubilee Court",
+   "area": "NG15",
+   "website": "https://www.runwoodhomes.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Home Instead Senior Care",
+   "area": "NG12",
+   "website": "https://www.homeinstead.co.uk/eastnottingham",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "134 Ashland Road",
+   "area": "NG17",
+   "website": "https://www.ncha.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Caremark (Mansfield & Ashfield)",
+   "area": "NG17",
+   "website": "https://www.caremark.co.uk/locations/mansfield",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Leymar Healthcare",
+   "area": "NG17",
+   "website": "https://www.leymarhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Cygnet Maple House",
+   "area": "NG13",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Kingfisher Court Care Centre",
+   "area": "NG11",
+   "website": "https://www.monarchhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Health in Menopause",
+   "area": "NG1",
+   "website": "https://healthinmenopause.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Cygnet Lodge",
+   "area": "NG17",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Cygnet Grange",
+   "area": "NG17",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Practice St Albans",
+   "area": "NG6",
+   "website": "https://www.thepracticestalbans.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Gordon Road Dental Care",
+   "area": "NG2",
+   "website": "https://gordonroaddentalcare.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Mansfield Dental Practice",
+   "area": "NG18",
+   "website": "https://www.mansfielddental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Clifton Manor Residential Home",
+   "area": "NG11",
+   "website": "https://www.monarchhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Home Office",
+   "area": "NG24",
+   "website": "https://www.kellycare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Southchurch Family Dental Centre",
+   "area": "NG11",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sandiacre Court Care Centre",
+   "area": "NG10",
+   "website": "https://www.hudsonhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Woodlands Medical Practice",
+   "area": "NG17",
+   "website": "https://www.woodlandsmedicalpractice.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Oakenhall Medical Practice",
+   "area": "NG15",
+   "website": "https://www.oakenhallmedicalpractice.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Beaumont House Care Home",
+   "area": "NG15",
+   "website": "https://www.crowncaregroup.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mydentist - Ratcliffe Gate - Mansfield",
+   "area": "NG18",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Wynhill Lodge Short Breaks Service",
+   "area": "NG13",
+   "website": "https://www.nottinghamshire.gov.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Aldercar Residential Care Home",
+   "area": "NG15",
+   "website": "https://www.aldercarcarehome.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Farndon Unit",
+   "area": "NG24",
+   "website": "https://www.elysiumhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "First Class Care Services",
+   "area": "NG8",
+   "website": "https://topdomains.co/buy-domain/firstclass.uk?redirected=true",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Hawthorne Nursing Home",
+   "area": "NG6",
+   "website": "https://www.hawthornenursinghome.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Red Court Care Community",
+   "area": "NG31",
+   "website": "https://www.redhomes.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Edingley Lodge Care Home",
+   "area": "NG22",
+   "website": "https://www.barchester.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Lancaster Grange",
+   "area": "NG24",
+   "website": "https://www.barchester.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Forest Care Home",
+   "area": "NG18",
+   "website": "https://www.barchester.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Parklands Dental Care",
+   "area": "NG8",
+   "website": "https://www.parklandsdentalcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Poppy Fields",
+   "area": "NG19",
+   "website": "https://www.fossehealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sleaford",
+   "area": "NG34",
+   "website": "https://www.treelinedental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Buddleia House Care Home",
+   "area": "NG15",
+   "website": "https://www.milfordcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Longmoor Lodge Care Home",
+   "area": "NG10",
+   "website": "https://www.hillcare.net",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mencap - Mansfield Domiciliary Care Agency",
+   "area": "NG19",
+   "website": "https://www.mencap.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sunshine Dental Limited",
+   "area": "NG10",
+   "website": "https://www.sunshinedental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Meadowcroft Health Care Limited",
+   "area": "NG17",
+   "website": "https://www.exemplarhc.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ambito Community Services East Midlands",
+   "area": "NG6",
+   "website": "https://www.salutemcareandeducation.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Alexandra House",
+   "area": "NG16",
+   "website": "https://www.springcare.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Basford Healthcare Limited",
+   "area": "NG7",
+   "website": "https://basfordhealthcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Unique Smiles Alcester",
+   "area": "B49",
+   "website": "https://www.uniquesmiles.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Holdingham Lodge",
+   "area": "NG34",
+   "website": "https://www.glenholme.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Helping Hands Newark",
+   "area": "NG24",
+   "website": "https://www.helpinghands.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Advantage Healthcare - Nottingham",
+   "area": "NG15",
+   "website": "https://www.interservehealthcare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "St Peters Hill Surgery",
+   "area": "NG31",
+   "website": "https://www.stpetershillsurgery.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sternhill Paddock",
+   "area": "NG22",
+   "website": "https://www.creativecare.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sutton Court",
+   "area": "NG17",
+   "website": "https://www.ashmerenotts.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Greenacres Care Home",
+   "area": "NG34",
+   "website": "https://www.greenacrescarehome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Tigh Cranntail",
+   "area": "NG21",
+   "website": "https://www.kisimul.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mydentist - Main Road - Jacksdale",
+   "area": "NG16",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Newark Hospital",
+   "area": "NG24",
+   "website": "https://www.sfh-tr.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Old Orchard Care Home",
+   "area": "NG12",
+   "website": "https://www.salutemcareandeducation.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Roxholm Hall Care Centre",
+   "area": "NG34",
+   "website": "https://www.stphilipscare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Weldon Homecare Services Limited",
+   "area": "NG24",
+   "website": "https://www.weldonhomecareservices.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Dent Blanche - Radcliffe-on-Trent",
+   "area": "NG12",
+   "website": "https://www.dentblanche.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Limes",
+   "area": "NG20",
+   "website": "https://www.elysiumhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Rose Cottage Dental Practice",
+   "area": "NG34",
+   "website": "https://www.rosecottagedentalpractice.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Belvoir Vale Care Home",
+   "area": "NG12",
+   "website": "https://www.mmcg.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Esmer House",
+   "area": "NG19",
+   "website": "https://www.voyagecare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Christie Development Centre",
+   "area": "NG21",
+   "website": "https://www.blueskycare.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Forest Hospital",
+   "area": "NG18",
+   "website": "https://www.barchester.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Royal Windsor Care Home",
+   "area": "NG31",
+   "website": "https://www.crowncaregroup.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ExtraCare Charitable Trust Lark Hill Village",
+   "area": "NG11",
+   "website": "https://www.extracare.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Pathfinders Specialist and Complex Care",
+   "area": "NG22",
+   "website": "https://www.pathfinders-care.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Optimum Care Services Ltd",
+   "area": "NG7",
+   "website": "https://optimumcare.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "The Old Vicarage",
+   "area": "NG16",
+   "website": "https://www.creativecare.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Shine Dental Care",
+   "area": "NG19",
+   "website": "https://www.shinedentalcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CIMA Huthwaite",
+   "area": "NG17",
+   "website": "https://www.cimacare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "41 West Hill",
+   "area": "NG17",
+   "website": "https://www.cimacare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sleaford Hall Care Home",
+   "area": "NG34",
+   "website": "https://www.tanglewoodcarehomes.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Old Orchard",
+   "area": "NG24",
+   "website": "https://www.withamvalleycaregroup.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "King's Mill Hospital",
+   "area": "NG17",
+   "website": "https://www.sfh-tr.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Kingsthorpe View Care Home",
+   "area": "NG3",
+   "website": "https://kingsthorpeviewcarehome.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Tuxford Manor Care Home",
+   "area": "NG22",
+   "website": "https://www.stronglifecare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Woodlands Care Home",
+   "area": "NG20",
+   "website": "https://www.woodlandsatspionkop.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nottingham Care Village Ltd",
+   "area": "NG4",
+   "website": "https://www.nottinghamcarevillage.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "first4care",
+   "area": "NG21",
+   "website": "https://www.first4care.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Fosse Healthcare - Newark",
+   "area": "NG24",
+   "website": "https://www.fossehealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Highbury Hospital",
+   "area": "NG6",
+   "website": "https://www.nottinghamshirehealthcare.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Greenfields Close",
+   "area": "NG24",
+   "website": "https://www.salutemcareandeducation.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Church Farm at Field House",
+   "area": "NG12",
+   "website": "https://www.churchfarmcare.co.uk/fieldhouse",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Autism Support and Care",
+   "area": "NG17",
+   "website": "https://www.austismsc.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Heckington Dental Practice",
+   "area": "NG34",
+   "website": "https://www.heckingtondentists.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mercie Grace Care (Nottingham)",
+   "area": "NG4",
+   "website": "https://www.merciegracecare.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Willow Lodge",
+   "area": "NG17",
+   "website": "https://www.godfreycare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Abbott Road",
+   "area": "NG19",
+   "website": "https://www.carenw.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Eden Futures = Newark Regional Office",
+   "area": "NG24",
+   "website": "https://www.edensupportedhousing.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Grantham and District Hospital",
+   "area": "NG31",
+   "website": "https://www.ulh.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Spire Nottingham Hospital",
+   "area": "NG12",
+   "website": "https://www.spirehealthcare.com/nottingham",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Percurra Grantham & Newark",
+   "area": "NG31",
+   "website": "https://www.percurra.com/grantham&newark",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Hucknall",
+   "area": "NG15",
+   "website": "https://www.heathcotes.net",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Red Rose Care Community",
+   "area": "NG24",
+   "website": "https://www.redhomes.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Spinnies",
+   "area": "NG15",
+   "website": "https://www.creativecare.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Bridle Lodge",
+   "area": "NG14",
+   "website": "https://www.creativecare.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ashcroft Care Home",
+   "area": "NG17",
+   "website": "https://www.bhcarehomes.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Holmlea",
+   "area": "NG22",
+   "website": "https://www.kisimul.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nottingham Dental Care",
+   "area": "NG5",
+   "website": "https://nottinghamdentalcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Cygnet Sherwood Lodge",
+   "area": "NG21",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "OSJCT Gregory House",
+   "area": "NG31",
+   "website": "https://www.osjct.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nottingham DCA",
+   "area": "NG18",
+   "website": "https://www.unitedresponse.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nottingham Brain Injury Rehabilitation and Neurological Care Centre",
+   "area": "NG15",
+   "website": "https://www.activecaregroup.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sutton Lodge",
+   "area": "NG17",
+   "website": "https://www.ashmere.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Libertas HBRS",
+   "area": "NG34",
+   "website": "https://www.libertas.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "VP Community Care",
+   "area": "NG15",
+   "website": "https://www.vpfn.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Reliable Healthcare and Support Services Ltd",
+   "area": "NG16",
+   "website": "https://www.rhssupportliving.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Cygnet Sherwood House and Cygnet Hospital Sherwood",
+   "area": "NG21",
+   "website": "https://www.cygnethealth.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Talbert Living Care Investment",
+   "area": "NG4",
+   "website": "https://www.talbertlivingcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Moriah House Limited",
+   "area": "NG4",
+   "website": "https://www.moriahhouse.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Moorfield Court",
+   "area": "NG25",
+   "website": "https://www.fossehealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CGL New Directions Mansfield",
+   "area": "NG18",
+   "website": "https://www.cgl.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Queens Road Dental Care",
+   "area": "NG9",
+   "website": "https://www.queensroaddentalcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Cygnet Hospital Clifton",
+   "area": "NG11",
+   "website": "https://www.cygnethealth.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Cherry Tree Lodge",
+   "area": "NG34",
+   "website": "https://www.homefromhomecare.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Eden Lodge Residential Care Home",
+   "area": "NG6",
+   "website": "https://www.edenlodgecarehome.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mydentist - Station Street - Kirkby-in-Ashfield",
+   "area": "NG17",
+   "website": "https://www.mydentist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Rise Park Smile Centre",
+   "area": "NG5",
+   "website": "https://riseparksmilecentre.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Caretaz Healthcare - Nottingham",
+   "area": "NG1",
+   "website": "https://caretazhealthcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Trent Bridge Care Home",
+   "area": "NG2",
+   "website": "https://www.trentbridgecarehome.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "West Lodge Care Home",
+   "area": "NG5",
+   "website": "https://westlodgecarehome.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Waterloo House",
+   "area": "B50",
+   "website": "https://waterloohouse.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Clarendon Court Care Home",
+   "area": "NG5",
+   "website": "https://clarendoncourtcarehome.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NEWARK MENCAP",
+   "area": "NG24",
+   "website": "https://www.newarkmencap.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LONG EATON MILITAIRES CARNIVAL BAND",
+   "area": "NG10",
+   "website": "https://www.longeatonmilitaires.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MSK REGEN",
+   "area": "NG34",
+   "website": "https://mskregen.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Appoline Dental Care",
+   "area": "NG31",
+   "website": "https://appolinedentalcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "HECKINGTON PAVILION AND PLAYING FIELDS CIO",
+   "area": "NG34",
+   "website": "https://heckingtonpavilion.com/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Keyworth Dental Practice",
+   "area": "NG12",
+   "website": "https://www.keyworthdental.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TRENT COLLEGE TRUST",
+   "area": "NG10",
+   "website": "https://www.trentschools.net/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "TRENT COLLEGE PARENTS ASSOCIATION",
+   "area": "NG10",
+   "website": "https://www.trentschools.net/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "PLUMTREE SCHOOL SCA (SCHOOL COMMUNITY ASSOCIATION)",
+   "area": "NG12",
+   "website": "https://www.plumtreeschool.co.uk/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "Birch House",
+   "area": "NG21",
+   "website": "https://www.Meeathome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Eastlands",
+   "area": "NG17",
+   "website": "https://eastlands.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Hearts4People Healthcare Services Ltd",
+   "area": "NG11",
+   "website": "https://hearts4peoplehealthcare.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Alexandra Care Home",
+   "area": "NG10",
+   "website": "https://www.bayswoodcare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NU Scan Ultrasound",
+   "area": "NG18",
+   "website": "https://www.nuscanultrasound.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Caring Companions 4 U LTD",
+   "area": "NG31",
+   "website": "https://caringcompanions.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Bingham Dental Practice",
+   "area": "NG13",
+   "website": "https://www.binghamdental.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "GRANDI'S BEAUTIFUL HEART",
+   "area": "NG16",
+   "website": "https://grandisbeautifulheart.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "LEON'S LEGACY",
+   "area": "NG17",
+   "website": "https://www.leonslegacy.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Kirkby Dental Practice and Aesthetic Centre",
+   "area": "NG17",
+   "website": "https://www.kirkbydental.co.uk/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "Managed Healthcare Services Limited",
+   "area": "NG17",
+   "website": "https://managed-healthcare.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Yorhealth Ltd",
+   "area": "NG15",
+   "website": "https://yorhealth.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Annesley Lodge Care Home",
+   "area": "NG15",
+   "website": "https://annesleylodge.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Community Supported Living, Lincolnshire",
+   "area": "NG34",
+   "website": "https://www.makingspace.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Hazel House",
+   "area": "NG31",
+   "website": "https://www.hazel-house.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Clipstone House",
+   "area": "NG21",
+   "website": "https://www.elysiumhealthcare.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Grantham Hospital",
+   "area": "NG31",
+   "website": "https://www.lincolnshirecommunityhealthservices.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Westcliffe Care Home",
+   "area": "NG12",
+   "website": "https://westcliffecarehome.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Dental Health Centre",
+   "area": "NG31",
+   "website": "https://www.dentalhealthcentre.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Highbury Dental Care",
+   "area": "NG6",
+   "website": "https://www.highburydentalcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Netherfield Smile Centre",
+   "area": "NG4",
+   "website": "https://netherfieldsmilecentre.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Hucknall Dental Care",
+   "area": "NG15",
+   "website": "https://hucknalldentalcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Premier Community Amber Valley",
+   "area": "NG19",
+   "website": "https://www.premiercommunity.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Adicare",
+   "area": "NG24",
+   "website": "https://www.adicare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Bulwell",
+   "area": "NG6",
+   "website": "https://www.nasmyth.com/companies/nasmyth-bulwell",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Wilford View Care Home",
+   "area": "NG11",
+   "website": "https://fortavahealthcare.co.uk/care-home/wilford-view/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Eastwood Dental Centre",
+   "area": "NG16",
+   "website": "https://rodericksdentalpartners.co.uk/our-practices/eastwood-dental",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Best Support Care Ltd",
+   "area": "NG4",
+   "website": "https://bestsupportcare.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Walfinch Mansfield",
+   "area": "NG21",
+   "website": "https://www.walfinch.com/hourly-care/mansfield/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Old Vicarage",
+   "area": "NG22",
+   "website": "https://oldvicarage.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Oak House",
+   "area": "NG18",
+   "website": "https://www.oakhouse.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Mansfield Manor Care Home",
+   "area": "NG19",
+   "website": "https://www.mansfieldmanor.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Stamford Healthcare Limited",
+   "area": "NG22",
+   "website": "https://www.stamfordhealthcare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Real Social Care Solutions Ltd",
+   "area": "NG20",
+   "website": "https://www.realsocialcaresolutions.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Baily House",
+   "area": "NG18",
+   "website": "https://bailyhouse.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SPX Healthcare Solutions - Main Office",
+   "area": "NG6",
+   "website": "https://spxhealthcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Netherfield Smile Centre",
+   "area": "NG4",
+   "website": "https://netherfieldsmilecentre.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Sutton Smile Centre",
+   "area": "NG17",
+   "website": "https://suttonsmilecentre.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "FESTYGREAT HEALTHCARE",
+   "area": "NG6",
+   "website": "https://festygreathealthcare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Care Ambassadors Ltd - Main Office",
+   "area": "NG6",
+   "website": "https://careambassadors.co.uk/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "The OM Surgery",
+   "area": "NG15",
+   "website": "https://om-surgery.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM OFFICE",
+   "area": "NG20",
+   "website": "https://www.nottingham-offices.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Collingham Dental Practice",
+   "area": "NG23",
+   "website": "https://www.collinghamdental.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "Hall Park Care Home",
+   "area": "NG6",
+   "website": "https://hallpark.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "Indigo",
+   "area": "NG18",
+   "website": "https://www.indigo.ca/?fdtcm=1",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Train 2 Save Ltd",
+   "area": "NG31",
+   "website": "https://train2save.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "Ashfield Dental Clinic",
+   "area": "NG17",
+   "website": "https://www.ashfielddental.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
    ]
   }
  ]
