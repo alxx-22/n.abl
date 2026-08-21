@@ -202,6 +202,54 @@ contacts a month, one band is one month of outreach.
 7. **Promote to CRM**, with subscriber type, source, source date and tier
    resolved — the fields the compliance gate refuses to send without.
 
+## 5b. Re-evaluated, 21 August — the crawl was the wrong thing to optimise
+
+Asked mid-build whether this was the efficient way to do it. It was not.
+
+**The base was already complete for the primary channel.** Post needs a name
+and an address and nothing else. We hold both for every candidate. Against
+monthly ceilings totalling 3,400 across all channels, 84,349 businesses is two
+years of supply — and a seven-hour crawl was running to find email addresses
+for a channel that can consume 2,400 a month.
+
+**Two registers state the contact details outright.** The Charity Commission
+bulk file carries phone and email; the CQC directory carries phone and, for
+678 of its locations, the website itself. Both were identified in the research
+in section 2 and neither had been built. Three minutes of downloading:
+
+| | Charity Commission | CQC |
+|---|---:|---:|
+| In territory | 2,760 | 1,265 |
+| With a phone number | 2,747 | 1,172 |
+| With a role email | 751 | — |
+| With a website already stated | ~1,600 | 678 |
+
+**3,865 businesses with a published contact route, no crawling.** The crawl
+finds a role email for about 13% of what it touches; these files hand one over
+for every row that has one.
+
+### What changed as a result
+
+- Both fetchers built and merged. Base grows to **84,349**.
+- `find-websites.mjs` skips any candidate whose register already states a
+  website. Guessing a domain for a business that has told us its domain is the
+  purest kind of wasted request, and there were 2,283 of them.
+- Triage bands a published contact route as highly as a sector hint.
+- The sweep is rescoped from all 80,385 to band one's 11,903 — about
+  forty-five minutes rather than seven hours, and still roughly three months
+  of email supply at the ceiling.
+
+### The rule this leaves behind
+
+**Order enrichment by cost per contact route, not by coverage.** A bulk file
+that states a phone number beats a crawl that infers one, every time. Crawl
+only for what no register will tell you, and only as far ahead as the ceilings
+can consume — which for us is a few thousand a month, not eighty thousand.
+
+The remaining unbuilt sources in section 2 should be judged the same way:
+OpenStreetMap states websites and phone numbers for businesses it maps, so it
+belongs ahead of any further crawling.
+
 ## 6. Where the law actually bites, and where it does not
 
 Worth writing down because the intuition is backwards.
