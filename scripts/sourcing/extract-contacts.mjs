@@ -29,6 +29,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import { isPostcodeArea } from './lib.mjs'
 
 const arg = (flag, fallback) => {
   const i = process.argv.indexOf(flag)
@@ -119,9 +120,16 @@ function harvest(html, found) {
   }
 
   /* A UK postcode in the page, which is what makes the footer address usable.
-     Anchored on the postcode because it is the only part with a fixed shape. */
-  for (const m of html.matchAll(/\b([A-Z]{1,2}\d{1,2}[A-Z]?)\s?(\d[A-Z]{2})\b/g)) {
-    found.postcodes.add(`${m[1]} ${m[2]}`)
+     Anchored on the postcode because it is the only part with a fixed shape —
+     and checked against the real list of postcode areas, because the shape
+     alone matches a great deal that is not one. This wrote "Website gives
+     F0F 5FA" into a lead's notes before the check was added; F0F is a hex
+     colour. The identical bug was fixed in find-websites.mjs and not here,
+     which is what sharing the helper now prevents. */
+  for (const m of html.matchAll(/\b([A-Z]{1,2}\d{1,2}[A-Z]?)\s?(\d[A-Z]{2})\b/gi)) {
+    const outward = m[1].toUpperCase()
+    if (!isPostcodeArea((outward.match(/^[A-Z]{1,2}/) || [''])[0])) continue
+    found.postcodes.add(`${outward} ${m[2].toUpperCase()}`)
   }
 }
 

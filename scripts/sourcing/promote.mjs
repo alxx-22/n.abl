@@ -83,8 +83,18 @@ if (fs.existsSync(WEBSITES)) {
     try { const r = JSON.parse(line); if (r.outcome === 'confirmed') websites.set(r.name, r) } catch { /* torn line */ }
   }
 }
+/* Prefers the JSONL checkpoint over the summary JSON, for the same reason the
+   websites are read that way: the summary is only written when extraction
+   finishes, so during a run it is stale, and after a partial run it does not
+   exist at all. */
 const contacts = new Map()
-if (fs.existsSync(CONTACTS)) {
+const CONTACTS_JSONL = CONTACTS.replace(/\.json$/, '.jsonl')
+if (fs.existsSync(CONTACTS_JSONL)) {
+  for (const line of fs.readFileSync(CONTACTS_JSONL, 'utf8').split('\n')) {
+    if (!line.trim()) continue
+    try { const r = JSON.parse(line); contacts.set(r.name, r) } catch { /* torn */ }
+  }
+} else if (fs.existsSync(CONTACTS)) {
   for (const r of JSON.parse(fs.readFileSync(CONTACTS, 'utf8')).results || []) contacts.set(r.name, r)
 }
 
@@ -220,11 +230,51 @@ let pool = triaged.filter((c) => (BAND === 'all' ? c.triage !== 'excluded' : c.t
    ranking hands the whole batch to charities however the weights are set.
    --any-sector promotes without the filter. */
 if (!has('--any-sector')) pool = pool.filter(hasSectorHint)
-pool = pool.map((c) => ({ c, reach: reachScore(c) }))
+const ranked = pool.map((c) => ({ c, reach: reachScore(c) }))
   .filter((x) => x.reach >= MIN_REACH)
   .sort((a, b) => b.reach - a.reach)
-  .slice(0, LIMIT)
-  .map((x) => x.c)
+
+/* Sectors take turns, rather than the batch going to whoever ranks highest.
+
+   Twice now a single sector has taken a whole batch, and both times for the
+   same structural reason: whichever register happens to publish contact
+   details decides which sector looks most reachable. Charities first, because
+   the Charity Commission file is the only one carrying email addresses. Then
+   care, once CQC arrived with phone numbers and websites. Both times the
+   obvious fix was "weight fit more heavily", and both times a different
+   sector simply won instead — the top 40 came back 21 professional services.
+
+   Taking turns needs no weight and no cap, and the next register we add
+   cannot skew it. Each sector offers its best-ranked candidate in turn; one
+   that runs out stops being offered. It over-represents small sectors
+   relative to the pool, which is the right trade for a batch somebody has to
+   work: forty leads across trades, manufacturing and professional services is
+   a week of varied calls, and forty care agencies is one conversation had
+   forty times. */
+const bySector = new Map()
+for (const { c } of ranked) {
+  const key = sectorHint(c).replace('sector hint:', '').split(',')[0]?.trim() || 'unclassified'
+  if (!bySector.has(key)) bySector.set(key, [])
+  bySector.get(key).push(c)
+}
+const picked = []
+/* Core sectors are offered first within each round. The ICP scores "strong
+   fit, both territories" above "additionally strong around Nottingham", and
+   the triage marks the second kind with a colon. Taking turns keeps the
+   spread; going first keeps the priority. */
+const queues = [...bySector.entries()]
+  .sort(([a], [b]) => Number(a.includes(':')) - Number(b.includes(':')))
+  .map(([, q]) => q)
+let offeredAny = true
+while (picked.length < LIMIT && offeredAny) {
+  offeredAny = false
+  for (const q of queues) {
+    if (picked.length >= LIMIT) break
+    const next = q.shift()
+    if (next) { picked.push(next); offeredAny = true }
+  }
+}
+pool = picked
 
 const leads = pool.map(toLead)
 const withSite = leads.filter((l) => l.website).length
@@ -239,6 +289,15 @@ const corporate = leads.filter((l) => l.subscriber_type === 'corporate').length
 const contactRows = leads
   .filter((l) => l._email || l._phone)
   .map((l) => ({ company: l.company, name: 'General enquiries', email: l._email, phone: l._phone }))
+
+/* Counted from the batch that was actually built, not from the tally the
+   picker kept — the fill-the-remainder pass below the cap can add to it. */
+const sectorTally = Object.entries(
+  pool.reduce((acc, c) => {
+    const k = sectorHint(c).replace('sector hint:', '').split(',')[0]?.trim() || 'unclassified'
+    return { ...acc, [k]: (acc[k] || 0) + 1 }
+  }, {}),
+).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ')
 
 const COLS = ['company', 'website', 'industry', 'location', 'lead_score', 'status', 'notes', 'signals',
   'subscriber_type', 'subscriber_type_evidence', 'lawful_basis', 'source', 'source_detail',
@@ -288,5 +347,6 @@ console.log(`  ${leads.length.toLocaleString()} candidates promoted from band "$
   ${withSite.toLocaleString()} with a confirmed website
   ${withRoute.toLocaleString()} with a published contact route, which get a contact row
   marketing_status: ${PERMIT ? 'permitted (--permit was passed)' : 'do_not_contact (pass --permit to change)'}
+  sectors: ${sectorTally}
 ${DRY ? '' : `\n  -> ${path.resolve(OUT)}`}
 `)
