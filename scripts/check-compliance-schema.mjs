@@ -131,7 +131,8 @@ alter default privileges in schema public grant execute on functions to anon, au
   chmodSync(BOOTSTRAP, 0o644)
   psql(BOOTSTRAP, { file: true })
 
-  for (const f of ['202606010001_sales_intelligence.sql', '202608160003_crm_compliance.sql']) {
+  for (const f of ['202606010001_sales_intelligence.sql', '202608160003_crm_compliance.sql',
+                   '202608210001_marketing_tier_ceilings.sql']) {
     const p = join(DIR, f)
     writeFileSync(p, sh('cat', [join(ROOT, 'supabase/migrations', f)]))
     chmodSync(p, 0o644)
@@ -142,6 +143,7 @@ alter default privileges in schema public grant execute on functions to anon, au
   ok('applies to a clean database')
   // Re-running must be harmless; every object uses if-not-exists / or-replace.
   allows('is idempotent on a second run', '\\i ' + join(DIR, '202608160003_crm_compliance.sql'))
+  allows('ceilings are idempotent too', '\\i ' + join(DIR, '202608210001_marketing_tier_ceilings.sql'))
 
   // ---- fixtures -----------------------------------------------------
   psql(`insert into auth.users (id, email) values
@@ -156,7 +158,7 @@ alter default privileges in schema public grant execute on functions to anon, au
                  from public.sales_leads where id='${L_DEFAULT}';`)
   d === 'unknown|unassessed|do_not_contact|not_given'
     ? ok('lands on unknown / unassessed / do_not_contact / not_given')
-    : bad('safe defaults', d)
+    : bad('lands on unknown / unassessed / do_not_contact / not_given', d)
 
   line('\nCONSTRAINTS — the illegal states')
   // Two constraints both refuse this and Postgres picks one; assert that it
@@ -299,12 +301,219 @@ alter default privileges in schema public grant execute on functions to anon, au
   val(`select count(*) from public.marketing_suppression where identifier='pat@optout.example';`) === '1'
     ? ok('writes the suppression row') : bad('writes the suppression row')
 
+  /* ---- LIA-2026-08-v2 tier ceilings ---------------------------------
+
+     The assessment splits the audience three ways and sets a monthly
+     first-contact ceiling per tier. Section 7 of the assessment says that
+     until the ceiling is enforced here it is an intention rather than a
+     safeguard, so these assertions are what let it be called one. Each has
+     been checked to fail with the guard removed. */
+
+  line('\nTIER — which regime a lead falls under')
+
+  const sendable = (company) => {
+    const id = lead(company)
+    psql(`update public.sales_leads set subscriber_type='corporate',
+          subscriber_type_evidence='companies house', subscriber_type_checked_at=now(),
+          lawful_basis='legitimate_interests', lia_ref='LIA-2026-08-v2',
+          lia_completed_at='2026-08-21', source='companies_house',
+          source_detail='bulk register', source_date='2026-08-21',
+          privacy_notice_status='given_at_first_contact', marketing_status='permitted'
+          where id='${id}';`)
+    return id
+  }
+  const sendTo = (id, addr) => psql(
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${id}','email','${addr}','hello','n.abl <hello@nabl.agency>', true, now());`)
+
+  const T_UNKNOWN = lead('Unknown Subscriber Ltd')
+  val(`select public.marketing_tier('${T_UNKNOWN}');`) === 'C'
+    ? ok('an unresolved subscriber type is tier C, not tier A') : bad('an unresolved subscriber type is tier C, not tier A')
+
+  const T_A = sendable('Generic Inbox Ltd')
+  val(`select public.marketing_tier('${T_A}');`) === 'A'
+    ? ok('a company with no named person is tier A') : bad('a company with no named person is tier A')
+
+  psql(`insert into public.sales_contacts (lead_id, name, email) values ('${T_A}','   ','x@a.example');`)
+  val(`select public.marketing_tier('${T_A}');`) === 'A'
+    ? ok('a whitespace-only contact name does not make it tier B') : bad('a whitespace-only contact name does not make it tier B')
+
+  const T_B = sendable('Named Director Ltd')
+  psql(`insert into public.sales_contacts (lead_id, name, email) values ('${T_B}','Sam Reed','sam@b.example');`)
+  val(`select public.marketing_tier('${T_B}');`) === 'B'
+    ? ok('holding a name moves the same company to tier B') : bad('holding a name moves the same company to tier B')
+
+  const ceilings = val(`select public.marketing_monthly_ceiling('A')||'|'||
+                        public.marketing_monthly_ceiling('B')||'|'||
+                        public.marketing_monthly_ceiling('C');`)
+  ceilings === '2000|400|0'
+    ? ok('ceilings are 2000 / 400 / 0, as LIA-2026-08-v2 section 6') : bad('ceilings are 2000 / 400 / 0, as LIA-2026-08-v2 section 6', ceilings)
+
+  line('\nCEILINGS — a monthly cap that actually stops a send')
+
+  allows('a first contact is accepted', `insert into public.marketing_sends
+    (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+    values ('${T_B}','email','sam@b.example','hello','n.abl <hello@nabl.agency>', true, now());`)
+
+  val(`select tier||'|'||is_first_contact::text||'|'||counts_toward_ceiling::text
+       from public.marketing_sends where lead_id='${T_B}';`) === 'B|true|true'
+    ? ok('and is stamped with its tier, marked a first contact, and counted')
+    : bad('and is stamped with its tier, marked a first contact, and counted')
+
+  sendTo(T_B, 'sam@b.example')
+  val(`select count(*) from public.marketing_sends where lead_id='${T_B}' and is_first_contact;`) === '1'
+    ? ok('a follow-up to the same lead is not a second first contact')
+    : bad('a follow-up to the same lead is not a second first contact')
+
+  /* Fill tier B to its ceiling with real rows rather than a test-only
+     override, so what is proved is the shipped number. */
+  /* Written to a file rather than passed with -c: the command reaches psql
+     through `su -c`, and bash expands $$ in a double-quoted string to its own
+     pid before psql ever sees the dollar-quoted block. */
+  const FILLER = join(DIR, 'filler.sql')
+  writeFileSync(FILLER, `do $$
+    declare v_id uuid;
+    begin
+      for i in 1..399 loop
+        insert into public.sales_leads (company, subscriber_type, subscriber_type_evidence,
+          subscriber_type_checked_at, lawful_basis, lia_ref, lia_completed_at, source,
+          source_detail, source_date, privacy_notice_status, marketing_status)
+        values ('Filler '||i, 'corporate', 'companies house', now(), 'legitimate_interests',
+          'LIA-2026-08-v2', '2026-08-21', 'companies_house', 'bulk register', '2026-08-21',
+          'given_at_first_contact', 'permitted') returning id into v_id;
+        insert into public.sales_contacts (lead_id, name, email)
+        values (v_id, 'Person '||i, 'p'||i||'@filler.example');
+        insert into public.marketing_sends (lead_id, channel, recipient, subject,
+          sender_identity, opt_out_included, approved_at)
+        values (v_id, 'email', 'p'||i||'@filler.example', 'hello',
+          'n.abl <hello@nabl.agency>', true, now());
+      end loop;
+    end $$;`)
+  chmodSync(FILLER, 0o644)
+  psql(FILLER, { file: true })
+  val(`select public.marketing_first_contacts_this_month('B');`) === '400'
+    ? ok('400 first contacts this month counts as 400') : bad('400 first contacts this month counts as 400',
+        val(`select public.marketing_first_contacts_this_month('B');`))
+
+  const T_OVER = sendable('One Too Many Ltd')
+  psql(`insert into public.sales_contacts (lead_id, name, email) values ('${T_OVER}','Jo Vale','jo@over.example');`)
+  refuses('the 401st tier B first contact is refused',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_OVER}','email','jo@over.example','hello','n.abl <hello@nabl.agency>', true, now());`,
+    /monthly ceiling reached/)
+
+  /* Tier B is full at this point. A corporate lead we hold consent for is
+     still tier B, and without the consent branch the legitimate interests
+     ceiling would refuse a send that the person asked for. The sole trader
+     below does not test this: the tier C branch exempts them anyway. */
+  const T_CORP_CONSENT = lead('Consented Company Ltd')
+  psql(`update public.sales_leads set subscriber_type='corporate',
+        subscriber_type_evidence='companies house', subscriber_type_checked_at=now(),
+        lawful_basis='consent', source='own_website', source_detail='newsletter signup',
+        source_date='2026-08-21', privacy_notice_status='not_required',
+        marketing_status='permitted' where id='${T_CORP_CONSENT}';`)
+  psql(`insert into public.sales_contacts (lead_id, name, email)
+        values ('${T_CORP_CONSENT}','Wren Ash','wren@corp.example');`)
+  val(`select public.marketing_tier('${T_CORP_CONSENT}');`) === 'B'
+    ? ok('a company we hold consent for is still tier B')
+    : bad('a company we hold consent for is still tier B')
+  allows('but consent is exempt from the ceiling, so it sends with tier B full',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_CORP_CONSENT}','email','wren@corp.example','hello','n.abl <hello@nabl.agency>', true, now());`)
+
+  /* And it must not be counted either. A send exempt from the ceiling that
+     still spends allowance would let a consented audience crowd out the
+     legitimate interests one. */
+  val(`select is_first_contact::text||'|'||counts_toward_ceiling::text
+       from public.marketing_sends where lead_id='${T_CORP_CONSENT}';`) === 'true|false'
+    ? ok('and it spends none of the tier B allowance')
+    : bad('and it spends none of the tier B allowance')
+  val(`select public.marketing_first_contacts_this_month('B');`) === '400'
+    ? ok('so the month total is unmoved by it')
+    : bad('so the month total is unmoved by it',
+        val(`select public.marketing_first_contacts_this_month('B');`))
+
+  allows('but a follow-up to a lead already contacted still goes',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_B}','email','sam@b.example','following up','n.abl <hello@nabl.agency>', true, now());`)
+
+  allows('and tier A is unaffected by tier B being full',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_A}','email','info@a.example','hello','n.abl <hello@nabl.agency>', true, now());`)
+
+  /* The window is a calendar month, so last month's sends must not count
+     against this one. UPDATE does not fire a BEFORE INSERT trigger, which is
+     what makes backdating possible here at all. */
+  psql(`update public.marketing_sends set sent_at = date_trunc('month', now()) - interval '1 day'
+        where lead_id in (select lead_id from public.marketing_sends where tier='B'
+                          and counts_toward_ceiling limit 50);`)
+  const afterBackdate = val(`select public.marketing_first_contacts_this_month('B');`)
+  afterBackdate === '350'
+    ? ok('last month\'s first contacts do not count against this month')
+    : bad('last month\'s first contacts do not count against this month', afterBackdate)
+
+  allows('so a first contact is possible again once the month rolls over',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_OVER}','email','jo@over.example','hello','n.abl <hello@nabl.agency>', true, now());`)
+
+  /* A multi-row INSERT is the case a per-row guard could plausibly miss, if a
+     query inside the trigger could not see rows inserted by the same command.
+     It can, so the row that crosses the ceiling is refused like any other.
+     This assertion is what establishes that, and it is why there is one guard
+     here and not two. */
+  const BULK = join(DIR, 'bulk.sql')
+  writeFileSync(BULK, `
+insert into public.sales_leads (company, subscriber_type, subscriber_type_evidence,
+  subscriber_type_checked_at, lawful_basis, lia_ref, lia_completed_at, source,
+  source_detail, source_date, privacy_notice_status, marketing_status)
+select 'Bulk '||i, 'corporate', 'companies house', now(), 'legitimate_interests',
+  'LIA-2026-08-v2', '2026-08-21', 'companies_house', 'bulk register', '2026-08-21',
+  'given_at_first_contact', 'permitted'
+from generate_series(1, 50) i;
+
+insert into public.sales_contacts (lead_id, name, email)
+select id, 'Bulk Person', 'bulk@x.example'
+from public.sales_leads where company like 'Bulk %';
+
+insert into public.marketing_sends (lead_id, channel, recipient, subject,
+  sender_identity, opt_out_included, approved_at)
+select id, 'email', 'bulk@x.example', 'hello', 'n.abl <hello@nabl.agency>', true, now()
+from public.sales_leads where company like 'Bulk %';
+`)
+  chmodSync(BULK, 0o644)
+  refuses('a multi-row INSERT is stopped on the row that crosses the ceiling',
+    '\\i ' + BULK, /ceiling/)
+
+  refuses('a send against a lead that does not exist is refused, not defaulted',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('99999999-9999-9999-9999-999999999999','email','x@x.example','hello','n.abl <hello@nabl.agency>', true, now());`,
+    /no such lead|violates foreign key/)
+
+  /* A consented sole trader is tier C, and tier C's ceiling is zero. The first
+     draft capped them there, which would have refused a send both assessments
+     allow: a ceiling limits how far we push ourselves onto people who did not
+     ask, and this one asked. */
+  const T_CONSENT = lead('Consented Sole Trader')
+  psql(`update public.sales_leads set subscriber_type='sole_trader',
+        subscriber_type_evidence='their website', subscriber_type_checked_at=now(),
+        lawful_basis='consent', source='own_website', source_detail='signup form',
+        source_date='2026-08-21', privacy_notice_status='not_required',
+        marketing_status='permitted' where id='${T_CONSENT}';`)
+  val(`select public.marketing_tier('${T_CONSENT}');`) === 'C'
+    ? ok('a sole trader is tier C even with consent') : bad('a sole trader is tier C even with consent')
+  allows('a consented sole trader sends too',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_CONSENT}','email','sole@trader.example','hello','n.abl <hello@nabl.agency>', true, now());`)
+
   line('\nGRANTS — the default EXECUTE to PUBLIC must be gone')
   for (const [fn, sig] of [
     ['apply_opt_out', 'uuid, text, text, text, text'],
     ['marketing_send_allowed', 'uuid, text, text'],
     ['marketing_suppression_append_only', ''],
     ['marketing_sends_guard', ''],
+    ['marketing_tier', 'uuid'],
+    ['marketing_first_contacts_this_month', 'text'],
+    ['marketing_ceiling_guard', ''],
   ]) {
     const anon = val(`select has_function_privilege('anon','public.${fn}(${sig})','execute')::text;`)
     anon === 'false' ? ok(`anon cannot execute ${fn}`) : bad(`anon cannot execute ${fn}`, 'anon has EXECUTE')
