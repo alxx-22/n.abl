@@ -33,7 +33,7 @@ const arg = (flag, fallback) => {
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : fallback
 }
 const IN = arg('--in', path.join(DIR, 'triaged.json'))
-const BAND = arg('--band', 'first')
+const BAND = arg('--band', 'first')   // a band name, or 'all'
 const SAMPLE = Number(arg('--sample', 0)) || 0
 const OUT = arg('--out', path.join(DIR, `websites-${BAND}${SAMPLE ? `-sample${SAMPLE}` : ''}.json`))
 const CONCURRENCY = Number(arg('--concurrency', 6))
@@ -261,7 +261,11 @@ async function investigate(candidate) {
 
 /* ---- run ---- */
 const data = JSON.parse(fs.readFileSync(IN, 'utf8'))
-let pool = data.candidates.filter((c) => c.triage === BAND)
+/* 'excluded' is never swept: those are ICO tier 3 and public authorities, and
+   the triage banded them out for reasons that a website cannot change. */
+let pool = BAND === 'all'
+  ? data.candidates.filter((c) => c.triage !== 'excluded')
+  : data.candidates.filter((c) => c.triage === BAND)
 if (SAMPLE) {
   // Evenly spaced rather than the first N: the file is sorted, so the head is
   // not representative of the band.
@@ -272,24 +276,46 @@ if (SAMPLE) {
 console.log(`\n  ${pool.length.toLocaleString()} candidates from band "${BAND}"`)
 console.log(`  ${CONCURRENCY} at a time, ${UA}\n`)
 
+/* Every result is appended to a JSONL checkpoint the moment it lands, and a
+   restart skips whatever the checkpoint already holds.
+
+   Sweeping the whole universe is hours of work, and a run that has to start
+   again from nothing after an interruption is a run nobody dares start. One
+   line per company, written as it completes: crash-safe without a database,
+   and readable while it is still going. */
+const CHECKPOINT = OUT.replace(/\.json$/, '.jsonl')
 const results = []
+const seen = new Set()
+if (fs.existsSync(CHECKPOINT)) {
+  for (const line of fs.readFileSync(CHECKPOINT, 'utf8').split('\n')) {
+    if (!line.trim()) continue
+    try { const r = JSON.parse(line); results.push(r); seen.add(r.name) } catch { /* a torn last line */ }
+  }
+  console.log(`  resuming: ${results.length.toLocaleString()} already done\n`)
+}
+const sink = fs.createWriteStream(CHECKPOINT, { flags: 'a' })
+
+const queue = pool.filter((c) => !seen.has(c.name))
 let done = 0
 const started = Date.now()
-const queue = [...pool]
 
 async function worker() {
   while (queue.length) {
     const candidate = queue.shift()
-    results.push(await investigate(candidate))
+    const record = await investigate(candidate)
+    results.push(record)
+    sink.write(JSON.stringify(record) + '\n')
     done++
-    if (done % 25 === 0) {
+    if (done % 100 === 0) {
       const rate = done / ((Date.now() - started) / 1000)
       const hits = results.filter((r) => r.outcome === 'confirmed').length
-      console.log(`  ${done}/${pool.length}  confirmed ${hits} (${(hits / done * 100).toFixed(0)}%)  ${rate.toFixed(1)}/s`)
+      const left = ((queue.length / rate) / 60).toFixed(0)
+      console.log(`  ${(results.length).toLocaleString()}/${pool.length.toLocaleString()}  confirmed ${hits.toLocaleString()} (${(hits / results.length * 100).toFixed(0)}%)  ${rate.toFixed(1)}/s  ~${left}m left`)
     }
   }
 }
 await Promise.all(Array.from({ length: CONCURRENCY }, worker))
+await new Promise((r) => sink.end(r))
 
 const by = {}
 for (const r of results) by[r.outcome] = (by[r.outcome] || 0) + 1
