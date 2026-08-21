@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-08-21T19:36:39.506Z",
+ "generated_at": "2026-08-21T19:37:24.443Z",
  "source": ".sourcing/websites-all.jsonl",
- "scanned": 5452,
- "confirmed": 1702,
+ "scanned": 5580,
+ "confirmed": 1739,
  "note": "Websites confirmed against the company name, postcode or company number. A partial file means the sweep was still running; rerun to extend it.",
  "results": [
   {
@@ -14435,6 +14435,325 @@
    "area": "NG15",
    "website": "https://m-tech-engineering.com/",
    "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MR TRANSPORT NOTTINGHAM LTD",
+   "area": "NG18",
+   "website": "https://www.mrtransportnottingham.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MY BUILD PRO LTD",
+   "area": "NG17",
+   "website": "https://mybuildpro.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MU CONSULTING LTD",
+   "area": "NG9",
+   "website": "https://muconsulting.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MIDLAND METAL WINDOWS LIMITED",
+   "area": "NG15",
+   "website": "https://www.midlandmetalwindows.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "MY BUILD PRO HOLDINGS LIMITED",
+   "area": "NG17",
+   "website": "https://mybuildpro.co.uk/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "MUSTARD SOFTWARE LTD",
+   "area": "NG24",
+   "website": "https://mustardsoftware.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MY APPAREL LIMITED",
+   "area": "NG15",
+   "website": "https://myapparel.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MULTIPLE TIMES BETTER LIMITED",
+   "area": "NG15",
+   "website": "https://multipletimesbetter.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MYTECGROUP LTD",
+   "area": "NG18",
+   "website": "https://mytecgroup.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MUSCLE FOODS LIMITED",
+   "area": "NG6",
+   "website": "https://www.brandwise.co.uk/musclefoods_co_uk.html",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MUSGROVE AND BALL LIMITED",
+   "area": "NG4",
+   "website": "https://musgroveball.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "NARA NURSERIES LIMITED",
+   "area": "NG10",
+   "website": "https://naranurseries.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "N P BUILDERS LIMITED",
+   "area": "NG24",
+   "website": "https://www.npbuilders.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NEW PERSPECTIVES THEATRE COMPANY",
+   "area": "NG6",
+   "website": "https://www.newperspectives.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NATIONWIDE CONCRETE CUTTING LIMITED",
+   "area": "NG20",
+   "website": "https://www.nationwideconcretecutting.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NAPIT TRAINING SERVICES LIMITED",
+   "area": "NG19",
+   "website": "https://www.napit.org.uk/napit-training/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "NATURAL CUT STONE LIMITED",
+   "area": "NG14",
+   "website": "https://naturalcutstone.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MONK ESTATES LIMITED",
+   "area": "NG1",
+   "website": "https://monkestates.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NEUROSYSTEMS LIMITED",
+   "area": "NG16",
+   "website": "https://neurosystems.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NAPIT TRAINING LIMITED",
+   "area": "NG19",
+   "website": "https://www.napit.org.uk/napit-training/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NEWARK ELECTRIC MOTORS LIMITED",
+   "area": "NG24",
+   "website": "https://www.newarkelectricmotorsltd.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NEWARK LORRY WASH LIMITED",
+   "area": "NG24",
+   "website": "https://newarklorrywash.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "MOSCA DIRECT LIMITED",
+   "area": "NG12",
+   "website": "https://www.mosca.com/en",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "NEWARK INTERIORS LTD",
+   "area": "NG24",
+   "website": "https://newarkinteriors.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NEURO-BUILD LTD",
+   "area": "NG2",
+   "website": "https://www.neurobuild.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NET TEMPS LIMITED",
+   "area": "NG4",
+   "website": "https://net-temps.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "NEON CREATE LTD",
+   "area": "NG22",
+   "website": "https://www.neoncreate.com/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "NEWARK ANTIQUES AND INTERIORS LTD",
+   "area": "NG24",
+   "website": "https://www.newarkantiques.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "NEWMAN MOORE LIMITED",
+   "area": "NG34",
+   "website": "https://www.newmanmoore.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "NEWTON CONSTRUCTION LIMITED",
+   "area": "NG6",
+   "website": "https://www.newtonconstruction.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NORFOLK STAY LTD",
+   "area": "NG32",
+   "website": "https://norfolkstay.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM AND DISTRICT CITIZENS ADVICE BUREAU",
+   "area": "NG1",
+   "website": "https://citizensadvicenottingham.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NIGHTINGALE NURSERIES LIMITED",
+   "area": "NG10",
+   "website": "https://www.nightingalenurseries.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NORTHERN OIL COMPANY LIMITED",
+   "area": "NG8",
+   "website": "https://www.northernoil.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NEXT LEVEL SPORTS LTD",
+   "area": "NG14",
+   "website": "https://www.nextlevelsports.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NINJAH LTD",
+   "area": "NG15",
+   "website": "https://ninjah.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NG23 TENDER SUPPORT LIMITED",
+   "area": "NG23",
+   "website": "https://ng23tendersupport.co.uk/",
+   "confirmed_by": [
+    "company number",
     "company name"
    ]
   }
