@@ -12,12 +12,17 @@ file is stale. Last reconciled against the folders and the live project on
 
 Two things gate almost everything else:
 
-- **The compliance layer is live, and now enforces a ceiling.** The migration
-  is applied, `LIA-2026-08-v2` reassesses the activity at register scale, and
-  `marketing_ceiling_guard` makes its monthly limits a control rather than a
-  number someone has to remember. What blocks sending is not infrastructure:
-  all 8 existing leads sit on `do_not_contact` / `unassessed` / `unknown` by
-  design, and each needs assessing by hand. That is eight decisions, not a build.
+- **The compliance layer is live and enforces a ceiling.** Both migrations are
+  applied and verified against the live project, including the check that
+  matters most: `marketing_tier` returns `C` for an unresolved lead, so the
+  gate fails closed in production and not only in the harness. A probe proved
+  the gate refuses a real send.
+- **The CRM is empty, deliberately.** The eight leads were produced by the old
+  AI CRM in a thirteen-minute burst on 1 June: all Birmingham against a
+  Nottinghamshire territory, all sized "11-50", all scored 73-92, none with a
+  source. Seven were deleted on 21 August and one had already vanished; see
+  `07-crm/deleted-leads-2026-08-21.md`, which is the only record of them. The
+  pipeline now fills from the register data instead.
 - **The channel was wrong, and that reorders the outreach plan.** Cold email
   cannot lawfully reach sole traders or ordinary partnerships, who are 63% of
   UK businesses and are not on the Companies House register at all. Post is
@@ -41,10 +46,10 @@ Four folders can be worked on **right now with no dependency at all**:
 | **04** legal<br>*in progress* | Contract checklist, SOW template and NDA draft written. Privacy policy given an Article 14 section for people we approach, which the LIA depended on. **18 Aug** | Solicitor review. **Waits on budget.** Nothing here has been reviewed and must not be described as if it has. The Article 14 notice for leads is published, so `LIA-2026-08-v1` is no longer blocked on legal. |
 | **05** portal<br>*done* | Access keys rotated to the 19-character CSPRNG format on the live project; the stray anon grant on `prune_portal_login_attempts` revoked. **16 Aug** | Turn on point-in-time recovery. **Waits on a second paying client** — before that the data loss is a rounding error. |
 | **06** team space<br>*done* | Key rotation run and verified end to end against live RLS. **16 Aug** | A month of daily use with a real client in it, then review what is actually clumsy. **Waits on the first client.** |
-| **07** crm<br>*in progress* | Compliance migration applied to live, 20 Aug. `LIA-2026-08-v2` written and `202608210001` added: three PECR/UK GDPR tiers, monthly first-contact ceilings of 2,000 / 400 / 0, enforced in the database and exempting consented recipients. 55 assertions green, and 9 mutations confirm each one can fail. **21 Aug** | **Apply `202608210001` to the live project**, then assess the 8 existing leads — each needs a subscriber type, lawful basis, source and source date. Then expose those fields in the CRM. **Waits on nothing but the migration run.** |
+| **07** crm<br>*in progress* | `202608210001` and `202608210002` applied to live and verified behaviourally, not just structurally. The eight old-CRM leads deleted, recorded first. A stale-tab bug fixed: the read path treated "no rows returned" the same as "the query failed" and kept the local mirror, so a deleted lead would have come back and been re-inserted on the next save. **21 Aug** | Expose the compliance fields in the CRM lead detail — subscriber type, lawful basis, source, notice status — so a lead can be assessed without SQL. **No dependency.** Then a deletion tombstone: nothing currently records that a lead existed and stopped existing. |
 | **08** email pack<br>*done* | Ink wordmark on light headers, signature set in the drawn mark, and image contrast now measured rather than assumed. **16 Aug** | A real render test through Litmus or Email on Acid, Outlook on Windows first. **Waits on a list provider** and the first sequence. |
 | **09** welcome pack<br>*done* | Summariser hardened: schema-enforced response, refusal handling, current model. **16 Aug** | Pass the business name through to the summariser, then run it on a real transcript. **Waits on the first client.** |
-| **10** lead sourcing<br>*in progress* | Three registers built and run — Companies House (5,695,466 scanned), the ICO Register of Fee Payers (1,438,413) and the FSA (612,489) — then merged on a normalised name key. **81,286 distinct businesses in territory at £0**, 13,633 corroborated by two registers, and contact addresses that are not an accountant's registered office up from 8,375 to 27,997. Plan and rejected sources written up in `maximum-volume-plan.md`. **21 Aug** | Build scoring. 81,286 is far more than we can write to, so ranking on what the registers already say — SIC against the ICP, company age, two-register corroboration, whether we hold a real address — is what decides the first thousand letters. **No dependency.** |
+| **10** lead sourcing<br>*in progress* | Three registers merged into **81,286 businesses in territory at £0**; triage bands them for enrichment, 8,317 in the first. Website discovery and contact extraction built and measuring: domains guessed from the name, DNS-resolved before any fetch, and confirmed against the page rather than trusted. Two of the first thirteen confirmations were a different company with the same name, so a weak match now has to survive a contradiction test. **21 Aug** | Finish the 500-company hit-rate measurement, then run the full first band. After that, promote to the CRM with subscriber type, source and tier resolved. **No dependency.** |
 | **11** outreach<br>*not started* | Two human approval gates written, both before anything leaves the building. First-contact email template written, mapping every element to the rule requiring it. **18 Aug** | **Write the postal assessment and a role-addressed letter.** Post is outside PECR and reaches all 81,286 candidates rather than the corporate minority, so it is the primary channel and neither LIA covers it yet. The email template stands for the corporate tier. **No dependency.** |
 | **12** pricing<br>*not started* | ROI worksheet and quote template written around the £240→£40 worked example. **16 Aug** | Send three real quotes and let them set the placeholders. **Waits on qualified conversations** from `18`. |
 | **13** credits<br>*not started* | Build / Assist / Educate defined; pack sizes deliberately left as placeholders. **16 Aug** | Decide the credit unit — the one decision everything else in the folder waits on. **Waits on the first three quotes** (`12`). |
