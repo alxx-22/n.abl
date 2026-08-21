@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-08-21T20:06:43.970Z",
+ "generated_at": "2026-08-21T20:07:30.568Z",
  "source": ".sourcing/websites-all.jsonl",
- "scanned": 11900,
+ "scanned": 11901,
  "confirmed": 4463,
  "note": "Websites confirmed against the company name, postcode or company number. A partial file means the sweep was still running; rerun to extend it.",
  "results": [
