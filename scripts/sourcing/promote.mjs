@@ -48,6 +48,7 @@ const WEBSITES = arg('--websites', path.join(DIR, 'websites-all.jsonl'))
 const CONTACTS = arg('--contacts', path.join(DIR, 'websites-all-contacts.json'))
 const OUT = arg('--out', path.join(DIR, 'promote.sql'))
 const LIMIT = Number(arg('--limit', 500))
+const SKIP = Number(arg('--skip', 0)) || 0
 const BAND = arg('--band', 'first')
 const PERMIT = has('--permit')
 const DRY = has('--dry-run')
@@ -222,6 +223,11 @@ function reachScore(c) {
    rule — but a registered office is usually the accountant's, and a lead with
    nothing else is not one anybody will pick up. --any-address includes them. */
 const MIN_REACH = has('--any-address') ? 1 : 10
+/* --best-regardless takes the top N by rank with no requirement for a
+   published contact route at all. Those leads are postal-only in practice —
+   we hold a name and an address and nothing else — which is a perfectly good
+   lead, just not one you can email today. */
+const BEST_REGARDLESS = Number(arg('--best-regardless', 0)) || 0
 
 let pool = triaged.filter((c) => (BAND === 'all' ? c.triage !== 'excluded' : c.triage === BAND))
 /* Out-of-profile candidates are excluded rather than merely ranked down.
@@ -231,7 +237,7 @@ let pool = triaged.filter((c) => (BAND === 'all' ? c.triage !== 'excluded' : c.t
    --any-sector promotes without the filter. */
 if (!has('--any-sector')) pool = pool.filter(hasSectorHint)
 const ranked = pool.map((c) => ({ c, reach: reachScore(c) }))
-  .filter((x) => x.reach >= MIN_REACH)
+  .filter((x) => (BEST_REGARDLESS ? true : x.reach >= MIN_REACH))
   .sort((a, b) => b.reach - a.reach)
 
 /* Sectors take turns, rather than the batch going to whoever ranks highest.
@@ -257,6 +263,14 @@ for (const { c } of ranked) {
   if (!bySector.has(key)) bySector.set(key, [])
   bySector.get(key).push(c)
 }
+/* Already-promoted names are skipped so a second batch does not repeat the
+   first. Matched on company name, which is what the CRM inserts on. */
+const ALREADY = new Set(
+  fs.existsSync('.sourcing/promoted.txt')
+    ? fs.readFileSync('.sourcing/promoted.txt', 'utf8').split('\n').map((x) => x.trim()).filter(Boolean)
+    : [],
+)
+
 const picked = []
 /* Core sectors are offered first within each round. The ICP scores "strong
    fit, both territories" above "additionally strong around Nottingham", and
@@ -270,7 +284,8 @@ while (picked.length < LIMIT && offeredAny) {
   offeredAny = false
   for (const q of queues) {
     if (picked.length >= LIMIT) break
-    const next = q.shift()
+    let next = q.shift()
+    while (next && ALREADY.has(next.name)) next = q.shift()
     if (next) { picked.push(next); offeredAny = true }
   }
 }
@@ -326,6 +341,20 @@ const sql = [
     '',
   ].join('\n') : '',
 ].join('\n')
+
+/* A machine-readable copy of the batch, so observe.mjs can read the same
+   leads without re-deriving the ranking and risking a different answer. */
+fs.writeFileSync(OUT.replace(/\.sql$/, '-batch.json'), JSON.stringify(
+  leads.map((l, i) => ({
+    company: l.company,
+    website: l.website,
+    industry: l.industry,
+    location: l.location,
+    email: l._email,
+    phone: l._phone,
+    trading_years: (pool[i]?.triage_for || []).find((r) => /^trading \d+ years/.test(r))?.match(/\d+/)?.[0] || null,
+    sector: (pool[i]?.triage_for || []).find((r) => r.startsWith('sector hint:'))?.replace('sector hint: ', '') || null,
+  })), null, 1))
 
 if (DRY) {
   console.log('\n  DRY RUN — nothing written\n')
