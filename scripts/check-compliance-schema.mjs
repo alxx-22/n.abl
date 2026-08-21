@@ -133,7 +133,8 @@ alter default privileges in schema public grant execute on functions to anon, au
 
   const MIGRATIONS = ['202606010001_sales_intelligence.sql', '202608160003_crm_compliance.sql',
                       '202608210001_marketing_tier_ceilings.sql',
-                      '202608210002_pin_search_path_on_ceiling_lookup.sql']
+                      '202608210002_pin_search_path_on_ceiling_lookup.sql',
+                      '202608210003_postal_channel.sql']
   for (const f of MIGRATIONS) {
     const p = join(DIR, f)
     writeFileSync(p, sh('cat', [join(ROOT, 'supabase/migrations', f)]))
@@ -153,9 +154,18 @@ alter default privileges in schema public grant execute on functions to anon, au
      version of this check did exactly that, and the search_path assertions
      below are what caught it. In production, "re-run the migration" therefore
      always means the ordered set, never one file. */
+  /* Written to a file and run with -f, NOT passed with -c. psql() collapses
+     whitespace so the command survives `su -c` as one shell string, which
+     turns a newline-separated list of \i commands into a single line — and
+     psql's \i takes the whole rest of the line as one filename. The first
+     version did that: it fed psql one mangled path, failed silently because a
+     backslash-command error does not trip ON_ERROR_STOP, and reported the
+     migrations as idempotent while replaying none of them. */
   const REPLAYABLE = MIGRATIONS.filter((f) => f !== '202606010001_sales_intelligence.sql')
-  allows('the compliance set is idempotent on a second run',
-    REPLAYABLE.map((f) => '\\i ' + join(DIR, f)).join('\n'))
+  const REPLAY = join(DIR, 'replay.sql')
+  writeFileSync(REPLAY, REPLAYABLE.map((f) => '\\i ' + join(DIR, f)).join('\n') + '\n')
+  chmodSync(REPLAY, 0o644)
+  allows('the compliance set is idempotent on a second run', '\\i ' + REPLAY)
 
   /* The June base migration is NOT re-runnable — its CREATE POLICY statements
      have no DROP POLICY IF EXISTS in front of them. Asserted rather than
@@ -187,7 +197,7 @@ alter default privileges in schema public grant execute on functions to anon, au
   // is refused, not which of them spoke first.
   refuses('cannot be permitted with no paperwork',
     `update public.sales_leads set marketing_status='permitted' where id='${L_DEFAULT}';`,
-    /permitted_is_documented|pecr_individual_needs_consent/)
+    /permitted_is_documented|permitted_needs_a_basis/)
 
   refuses('opt_out without a timestamp is refused',
     `update public.sales_leads set opt_out=true where id='${L_DEFAULT}';`,
@@ -207,7 +217,7 @@ alter default privileges in schema public grant execute on functions to anon, au
        privacy_notice_status='given_at_first_contact',
        marketing_status='permitted'
      where id='${L_SOLE}';`,
-    /pecr_individual_needs_consent/)
+    /permitted_needs_a_basis/)
 
   allows('the same sole trader can be permitted with consent',
     `update public.sales_leads set
@@ -365,9 +375,9 @@ alter default privileges in schema public grant execute on functions to anon, au
   val(`select public.marketing_tier('${T_B}');`) === 'B'
     ? ok('holding a name moves the same company to tier B') : bad('holding a name moves the same company to tier B')
 
-  const ceilings = val(`select public.marketing_monthly_ceiling('A')||'|'||
-                        public.marketing_monthly_ceiling('B')||'|'||
-                        public.marketing_monthly_ceiling('C');`)
+  const ceilings = val(`select public.marketing_monthly_ceiling('email','A')||'|'||
+                        public.marketing_monthly_ceiling('email','B')||'|'||
+                        public.marketing_monthly_ceiling('email','C');`)
   ceilings === '2000|400|0'
     ? ok('ceilings are 2000 / 400 / 0, as LIA-2026-08-v2 section 6') : bad('ceilings are 2000 / 400 / 0, as LIA-2026-08-v2 section 6', ceilings)
 
@@ -413,9 +423,9 @@ alter default privileges in schema public grant execute on functions to anon, au
     end $$;`)
   chmodSync(FILLER, 0o644)
   psql(FILLER, { file: true })
-  val(`select public.marketing_first_contacts_this_month('B');`) === '400'
+  val(`select public.marketing_first_contacts_this_month('email','B');`) === '400'
     ? ok('400 first contacts this month counts as 400') : bad('400 first contacts this month counts as 400',
-        val(`select public.marketing_first_contacts_this_month('B');`))
+        val(`select public.marketing_first_contacts_this_month('email','B');`))
 
   const T_OVER = sendable('One Too Many Ltd')
   psql(`insert into public.sales_contacts (lead_id, name, email) values ('${T_OVER}','Jo Vale','jo@over.example');`)
@@ -450,10 +460,10 @@ alter default privileges in schema public grant execute on functions to anon, au
        from public.marketing_sends where lead_id='${T_CORP_CONSENT}';`) === 'true|false'
     ? ok('and it spends none of the tier B allowance')
     : bad('and it spends none of the tier B allowance')
-  val(`select public.marketing_first_contacts_this_month('B');`) === '400'
+  val(`select public.marketing_first_contacts_this_month('email','B');`) === '400'
     ? ok('so the month total is unmoved by it')
     : bad('so the month total is unmoved by it',
-        val(`select public.marketing_first_contacts_this_month('B');`))
+        val(`select public.marketing_first_contacts_this_month('email','B');`))
 
   allows('but a follow-up to a lead already contacted still goes',
     `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
@@ -469,7 +479,7 @@ alter default privileges in schema public grant execute on functions to anon, au
   psql(`update public.marketing_sends set sent_at = date_trunc('month', now()) - interval '1 day'
         where lead_id in (select lead_id from public.marketing_sends where tier='B'
                           and counts_toward_ceiling limit 50);`)
-  const afterBackdate = val(`select public.marketing_first_contacts_this_month('B');`)
+  const afterBackdate = val(`select public.marketing_first_contacts_this_month('email','B');`)
   afterBackdate === '350'
     ? ok('last month\'s first contacts do not count against this month')
     : bad('last month\'s first contacts do not count against this month', afterBackdate)
@@ -527,6 +537,116 @@ from public.sales_leads where company like 'Bulk %';
     `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
      values ('${T_CONSENT}','email','sole@trader.example','hello','n.abl <hello@nabl.agency>', true, now());`)
 
+  /* ---- PMA-2026-08-v1: the postal channel ---------------------------
+
+     Post is outside PECR and, addressed to a role, engages no personal data
+     at all. The gate has to know that, and has to keep refusing the moment a
+     person's name appears. */
+
+  line('\nPOST — outside PECR, and the gate has to know it')
+
+  const T_POST = lead('Post Only Sole Trader')
+  psql(`update public.sales_leads set subscriber_type='sole_trader',
+        subscriber_type_evidence='not on the Companies House register',
+        subscriber_type_checked_at=now(), lawful_basis='not_personal_data',
+        source='public_company_information', source_detail='ICO register',
+        source_date='2026-08-21', privacy_notice_status='not_required',
+        marketing_status='permitted' where id='${T_POST}';`)
+
+  refuses('a sole trader still cannot be emailed',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_POST}','email','info@sole.example','hello','n.abl <hello@nabl.agency>', true, now());`,
+    /compliance gate/)
+
+  allows('but the same sole trader can be sent a letter',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_POST}','post','The Owner, 1 High Street, Nottingham NG1 1AA','hello','n.abl, Nottingham', true, now());`)
+
+  /* The whole postal assessment rests on there being no person in the record.
+     If one appears, 'not_personal_data' stops being true and the gate must
+     stop believing it — rather than trusting whoever set the column. */
+  psql(`insert into public.sales_contacts (lead_id, name, email)
+        values ('${T_POST}','Dana Fields','dana@sole.example');`)
+  refuses('once a person is named, not_personal_data no longer opens the door',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_POST}','post','Dana Fields, 1 High Street','hello','n.abl, Nottingham', true, now());`,
+    /compliance gate/)
+
+  /* The extraction pipeline only keeps role addresses, but a human can type
+     anything into the CRM and the old AI CRM filled this column with the
+     literal string "Public contact route". That is not a person. */
+  const T_ROUTE = lead('Generic Route Only Ltd')
+  psql(`update public.sales_leads set subscriber_type='sole_trader',
+        subscriber_type_evidence='not on the register', subscriber_type_checked_at=now(),
+        lawful_basis='not_personal_data', source='public_company_information',
+        source_detail='ICO register', source_date='2026-08-21',
+        privacy_notice_status='not_required', marketing_status='permitted'
+        where id='${T_ROUTE}';`)
+  psql(`insert into public.sales_contacts (lead_id, name, email)
+        values ('${T_ROUTE}','Public contact route','info@route.example');`)
+  val(`select public.has_named_individual('${T_ROUTE}')::text;`) === 'false'
+    ? ok('"Public contact route" is not treated as a person')
+    : bad('"Public contact route" is not treated as a person')
+  allows('so a letter to it is still allowed',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_ROUTE}','post','The Owner, 2 High Street','hello','n.abl, Nottingham', true, now());`)
+
+  /* Phone is lawful to businesses under reg 21 but only after screening
+     against both the CTPS and the TPS, and we hold no screening data. The
+     honest answer with nothing to check is no. */
+  refuses('phone is refused outright while there is no TPS screening',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_ROUTE}','phone','01159000000','hello','n.abl, Nottingham', true, now());`,
+    /compliance gate/)
+
+  /* An objection is absolute in any medium, so a postal suppression must stop
+     a letter exactly as an email suppression stops an email.
+
+     Suppressed against a DIFFERENT lead, deliberately. apply_out_out on the
+     lead itself also sets opt_out and marketing_status, and the gate refuses
+     on those before it ever consults the suppression list — so opting the
+     lead out proves the lead flags work and says nothing about suppression.
+     A mutation that broke postal suppression entirely left that version of
+     this test green. */
+  const T_SUPP = lead('Postally Suppressed Ltd')
+  psql(`update public.sales_leads set subscriber_type='sole_trader',
+        subscriber_type_evidence='not on the register', subscriber_type_checked_at=now(),
+        lawful_basis='not_personal_data', source='public_company_information',
+        source_detail='ICO register', source_date='2026-08-21',
+        privacy_notice_status='not_required', marketing_status='permitted'
+        where id='${T_SUPP}';`)
+  psql(`insert into public.marketing_suppression (channel, identifier, scope, reason, evidence)
+        values ('post','the owner, 9 quiet lane','address','do_not_contact_request','returned marked no thanks');`)
+  refuses('a postal suppression stops a letter to a still-permitted lead',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_SUPP}','post','The Owner, 9 Quiet Lane','hello','n.abl, Nottingham', true, now());`,
+    /compliance gate/)
+
+  allows('and a different address at that lead is untouched',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_SUPP}','post','The Owner, 10 Quiet Lane','hello','n.abl, Nottingham', true, now());`)
+
+  /* And an objection recorded through apply_opt_out still stops the lead. */
+  psql(`select public.apply_opt_out('${T_ROUTE}','post','The Owner, 2 High Street','do_not_contact_request','returned the letter marked no thanks');`)
+  refuses('a postal objection stops the next letter',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${T_ROUTE}','post','The Owner, 2 High Street','hello again','n.abl, Nottingham', true, now());`,
+    /compliance gate/)
+
+  const postCeiling = val(`select public.marketing_monthly_ceiling('post','A')||'|'||
+                           public.marketing_monthly_ceiling('post','C')||'|'||
+                           public.marketing_monthly_ceiling('phone','A');`)
+  postCeiling === '1000|1000|0'
+    ? ok('post is capped at 1000 whatever the tier, and phone at 0')
+    : bad('post is capped at 1000 whatever the tier, and phone at 0', postCeiling)
+
+  /* Channels do not share an allowance: a letter must not spend email's
+     ceiling, and the two are counted separately. */
+  const emailSpent = val(`select public.marketing_first_contacts_this_month('email','C');`)
+  emailSpent === '0'
+    ? ok('letters spend none of the email allowance')
+    : bad('letters spend none of the email allowance', emailSpent)
+
   line('\nGRANTS — the default EXECUTE to PUBLIC must be gone')
   for (const [fn, sig] of [
     ['apply_opt_out', 'uuid, text, text, text, text'],
@@ -534,7 +654,8 @@ from public.sales_leads where company like 'Bulk %';
     ['marketing_suppression_append_only', ''],
     ['marketing_sends_guard', ''],
     ['marketing_tier', 'uuid'],
-    ['marketing_first_contacts_this_month', 'text'],
+    ['marketing_first_contacts_this_month', 'text, text'],
+    ['has_named_individual', 'uuid'],
     ['marketing_ceiling_guard', ''],
   ]) {
     const anon = val(`select has_function_privilege('anon','public.${fn}(${sig})','execute')::text;`)
@@ -543,6 +664,7 @@ from public.sales_leads where company like 'Bulk %';
   line('\nSEARCH PATH — every compliance function must pin it')
   for (const fn of ['marketing_tier', 'marketing_monthly_ceiling',
                     'marketing_first_contacts_this_month', 'marketing_ceiling_guard',
+                    'has_named_individual',
                     'marketing_send_allowed', 'apply_opt_out']) {
     const cfg = val(`select coalesce(array_to_string(p.proconfig, ','), '')
                      from pg_proc p join pg_namespace n on n.oid = p.pronamespace

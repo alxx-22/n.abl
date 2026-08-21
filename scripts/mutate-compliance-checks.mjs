@@ -30,8 +30,10 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const MIGRATION = join(ROOT, 'supabase/migrations/202608210001_marketing_tier_ceilings.sql')
+const POSTAL = join(ROOT, 'supabase/migrations/202608210003_postal_channel.sql')
 const CHECKER = join(ROOT, 'scripts/check-compliance-schema.mjs')
 const ORIGINAL = readFileSync(MIGRATION, 'utf8')
+const POSTAL_ORIGINAL = readFileSync(POSTAL, 'utf8')
 
 /** Replace exactly once, and throw rather than no-op if the anchor moved. */
 const sub = (old, replacement) => (s) => {
@@ -50,46 +52,80 @@ const cut = (from, to) => (s) => {
 
 const CEILING_TEST = 'if coalesce(v_spent, 0) >= coalesce(v_ceiling, 0) then'
 
+/* Mutations name which file they edit. The ceiling logic lives in 0001 and
+   the channel logic in 0003, and 0003 redefines several of 0001's functions —
+   so a mutation to 0001's copy of marketing_ceiling_guard would be overwritten
+   and prove nothing. Anything the postal migration redefines must be mutated
+   there. */
 const MUTATIONS = [
-  ['the ceiling check removed entirely',
+  [POSTAL, 'the ceiling check removed entirely',
    'the 401st tier B first contact is refused',
    sub(`    ${CEILING_TEST}`, '    if false then')],
 
-  ['off-by-one: >= relaxed to >',
+  [POSTAL, 'post treated as if PECR reached it',
+   'but the same sole trader can be sent a letter',
+   sub("            when 'post' then\n              l.lawful_basis in ('not_personal_data', 'legitimate_interests', 'consent', 'contract')",
+       "            when 'post' then\n              l.subscriber_type = 'corporate'")],
+
+  [POSTAL, 'not_personal_data trusted even with a person named',
+   'once a person is named, not_personal_data no longer opens the door',
+   sub("        and not (l.lawful_basis = 'not_personal_data'\n                 and public.has_named_individual(l.id))",
+       '        and true')],
+
+  [POSTAL, 'a generic route counted as a named person',
+   '"Public contact route" is not treated as a person',
+   sub("      and lower(btrim(c.name)) not in ('public contact route', 'general enquiries', 'enquiries', 'reception')",
+       '')],
+
+  [POSTAL, 'phone opened without any TPS screening',
+   'phone is refused outright while there is no TPS screening',
+   sub("            when 'phone' then false", "            when 'phone' then true")],
+
+  [POSTAL, 'a postal objection no longer suppresses',
+   'a postal suppression stops a letter to a still-permitted lead',
+   sub("        (s.scope = 'address'         and lower(btrim(s.identifier)) = t.addr)",
+       "        (s.scope = 'address'         and s.channel = 'email' and lower(btrim(s.identifier)) = t.addr)")],
+
+  [POSTAL, 'channels share one allowance',
+   'letters spend none of the email allowance',
+   sub("  where s.channel = p_channel\n    and s.tier is not distinct from p_tier",
+       '  where s.tier is not distinct from p_tier')],
+
+  [POSTAL, 'off-by-one: >= relaxed to >',
    'the 401st tier B first contact is refused',
    sub(CEILING_TEST, 'if coalesce(v_spent, 0) > coalesce(v_ceiling, 0) then')],
 
-  ['a multi-row INSERT no longer counted row by row',
+  [POSTAL, 'a multi-row INSERT no longer counted row by row',
    'a multi-row INSERT is stopped on the row that crosses the ceiling',
    sub(`    ${CEILING_TEST}`, `    ${CEILING_TEST.replace('coalesce(v_ceiling, 0)', 'coalesce(v_ceiling, 0) + 100')}`)],
 
-  ['an unknown subscriber type treated as corporate',
+  [POSTAL, 'an unknown subscriber type treated as corporate',
    'an unresolved subscriber type is tier C, not tier A',
    sub("when l.subscriber_type is distinct from 'corporate' then 'C'",
        "when l.subscriber_type in ('sole_trader','partnership','individual') then 'C'")],
 
-  ['a blank contact name counted as a named person',
+  [POSTAL, 'a blank contact name counted as a named person',
    'a whitespace-only contact name does not make it tier B',
-   sub("where c.lead_id = l.id and btrim(coalesce(c.name, '')) <> ''", 'where c.lead_id = l.id')],
+   sub("      and btrim(coalesce(c.name, '')) <> ''\n", '')],
 
-  ['the month window widened to all time',
+  [POSTAL, 'the month window widened to all time',
    "last month's first contacts do not count against this month",
    sub("    and s.sent_at >= date_trunc('month', now())\n" +
        "    and s.sent_at < date_trunc('month', now()) + interval '1 month'", '    and true')],
 
-  ['a missing lead silently defaulted instead of refused',
+  [POSTAL, 'a missing lead silently defaulted instead of refused',
    'a send against a lead that does not exist is refused, not defaulted',
    sub("raise exception 'no such lead: %', new.lead_id\n      using errcode = 'check_violation';",
        "v_tier := 'A';")],
 
-  ['consented sends counted against the ceiling anyway',
+  [POSTAL, 'consented sends counted against the ceiling anyway',
    'and it spends none of the tier B allowance',
-   sub('    new.counts_toward_ceiling := false;\n    return new;\n  end if;\n\n  -- Tier C without consent',
-       '    new.counts_toward_ceiling := v_first;\n    return new;\n  end if;\n\n  -- Tier C without consent')],
+   sub("  if v_basis = 'consent' then\n    new.counts_toward_ceiling := false;",
+       "  if v_basis = 'consent' then\n    new.counts_toward_ceiling := v_first;")],
 
-  ['the consent exemption removed',
+  [POSTAL, 'the consent exemption removed',
    'but consent is exempt from the ceiling, so it sends with tier B full',
-   cut('  if (select l.lawful_basis', '  -- Tier C without consent')],
+   cut("  if v_basis = 'consent' then", '  -- Tier C on email without consent')],
 ]
 
 const runChecker = () => {
@@ -105,14 +141,15 @@ console.log('\nMUTATION — each bug must turn its own assertion red\n')
 let missed = 0
 
 try {
-  for (const [name, expect, mutate] of MUTATIONS) {
+  for (const [file, name, expect, mutate] of MUTATIONS) {
+    const base = file === POSTAL ? POSTAL_ORIGINAL : ORIGINAL
     let mutated
-    try { mutated = mutate(ORIGINAL) } catch (e) {
+    try { mutated = mutate(base) } catch (e) {
       console.log(`  HARNESS  | ${name} — ${e.message}`)
       missed++
       continue
     }
-    writeFileSync(MIGRATION, mutated)
+    writeFileSync(file, mutated)
     const reds = runChecker().split('\n').map((l) => l.trim()).filter((l) => l.startsWith('✗'))
     if (reds.some((r) => r.includes(expect))) {
       console.log(`  caught   | ${name}`)
@@ -125,6 +162,7 @@ try {
   }
 } finally {
   writeFileSync(MIGRATION, ORIGINAL)
+  writeFileSync(POSTAL, POSTAL_ORIGINAL)
 }
 
 const restored = runChecker().trim().split('\n').pop()
