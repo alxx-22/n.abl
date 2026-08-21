@@ -66,5 +66,12 @@ export function friendlyError(err, fallback = 'Something went wrong — please t
   if (/fetch|network|failed to fetch|load failed/i.test(msg)) {
     return 'Unable to reach the server. A browser extension or network may be blocking it.'
   }
+  /* The compliance gate raises a sentence that explains itself — "blocked by
+     compliance gate: x@y on channel email is not permitted (marketing_status
+     is do_not_contact)". Replacing that with a generic fallback throws away
+     the only part an operator can act on, so it is passed through verbatim.
+     Deliberately narrow: it matches the gate's own wording rather than
+     surfacing arbitrary database errors, which are not written for people. */
+  if (/blocked by compliance gate|monthly ceiling reached|no such lead/i.test(msg)) return msg
   return fallback
 }

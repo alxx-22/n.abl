@@ -281,6 +281,56 @@ async function run() {
       await stale.close()
     }
 
+    /* Sending has to ask the gate first, not after.
+
+       The CRM used to open a mail client and record nothing, so
+       marketing_send_allowed — the whole compliance layer — was never
+       consulted by the thing that actually sends. Both buttons now write a
+       marketing_sends row, and the insert IS the check: on the real database
+       a BEFORE INSERT trigger runs the gate and the ceiling, and the mock
+       refuses on the same conditions so these assertions are not decoration. */
+    {
+      const card = await page.$('.lead-row, .board__card, [class*="lead"]')
+      if (card) await card.click().catch(() => {})
+      await page.waitForTimeout(600)
+      await page.click('#crm-tab-outreach').catch(() => {})
+      await page.waitForTimeout(500)
+
+      const letterBtn = await page.$$eval('button', (bs) =>
+        bs.some((b) => /Record a letter sent/i.test(b.textContent)))
+      check('post can be recorded from the CRM, not only email', letterBtn === true)
+
+      // The fixture lead is do_not_contact with no lawful basis, so the gate
+      // must refuse and say why.
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find((x) => /Record a letter sent/i.test(x.textContent))
+        if (b) b.click()
+      })
+      await page.waitForTimeout(900)
+      /* Read from the panel's own warning, not from the whole page. A first
+         version tested document.body.innerText and passed on the panel's
+         explanatory paragraph, which contains the words "compliance gate" —
+         a false pass on text that is always there. */
+      const warnText = await page.evaluate(() =>
+        [...document.querySelectorAll('#crm-panel-outreach .crm-warn')].map((n) => n.innerText).join(' | '))
+      check('a letter to an unassessed lead is refused',
+        /blocked by compliance gate/i.test(warnText))
+      check('and the refusal names the rule that stopped it, not a generic failure',
+        /marketing_status|lawful basis|do_not_contact/i.test(warnText))
+      /* The stage select lives on the Overview tab, so it has to be switched
+         to before reading. A first version read it while still on Outreach,
+         got undefined, and passed on `'' !== 'Contacted'` — a check that could
+         not fail. */
+      await page.click('#crm-tab-overview').catch(() => {})
+      await page.waitForTimeout(500)
+      const stage = await page.evaluate(() =>
+        document.querySelector('select[id^="stage-"]')?.value || 'SELECT NOT FOUND')
+      check('a refused send does not move the lead to Contacted',
+        stage !== 'Contacted' && stage !== 'SELECT NOT FOUND')
+      await page.click('#crm-tab-outreach').catch(() => {})
+      await page.waitForTimeout(300)
+    }
+
     /* The compliance panel is where a promoted lead gets checked, so it has to
        show what the database will actually allow — and refuse before the save
        rather than after, because a constraint violation arrives as a wall of

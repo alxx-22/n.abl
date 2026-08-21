@@ -434,6 +434,43 @@ function Workspace({ sb, user, onSignedOut }) {
   /* Mirror every change to the local fallback store. */
   useEffect(() => { saveLocal(leads) }, [leads])
 
+  /* Ask the gate, and only then let the message out.
+
+     Until now the CRM opened a mail client and recorded nothing, so
+     marketing_send_allowed — the whole compliance layer — was never consulted
+     by the thing that actually sends. The panel even said "backend should
+     enforce the same rule server-side". It does; nothing was calling it.
+
+     The insert IS the check. marketing_sends carries a BEFORE INSERT trigger
+     that runs the gate and the monthly ceiling, so a refused send never
+     becomes a row and never opens a draft. Order matters: record first, send
+     second. The other way round would mean discovering a lead was suppressed
+     after the letter was in the post. */
+  const recordSend = useCallback(async ({ lead, channel, recipient, subject }) => {
+    if (!lead.dbId) {
+      return { ok: false, message: 'This lead has not been saved to the server yet.' }
+    }
+    const { error } = await sb.from('marketing_sends').insert({
+      lead_id: lead.dbId,
+      channel,
+      recipient,
+      subject: subject || null,
+      sender_identity: `n.abl <hello@nabl.agency>`,
+      // The template carries an opt-out route in every channel; the column
+      // exists so that claim is recorded rather than assumed.
+      opt_out_included: true,
+      approved_by: user?.id || null,
+      approved_at: new Date().toISOString(),
+      send_provider: channel === 'post' ? 'royal mail, by hand' : 'mail client',
+    })
+    if (!error) return { ok: true }
+    /* The gate raises check_violation with a sentence explaining itself.
+       Surfacing that verbatim is the point — "blocked by compliance gate:
+       x@y on channel email is not permitted" tells an operator exactly what
+       to fix, and a generic failure message would not. */
+    return { ok: false, message: friendlyError(error, 'That send was refused.') }
+  }, [sb, user])
+
   const handle = useCallback((err, fallback) => {
     const message = friendlyError(err, fallback)
     if (message === 'SESSION_EXPIRED') { setExpired(true); return null }
@@ -802,6 +839,7 @@ function Workspace({ sb, user, onSignedOut }) {
                   onTab={setTab}
                   onSave={saveLead}
                   onMove={moveLead}
+                  onRecordSend={recordSend}
                   onDelete={() => setConfirm({
                     title: `Delete ${selected.company}?`,
                     body: 'This removes the lead and everything attached to it — contacts, activity and drafts. This cannot be undone.',
@@ -873,7 +911,7 @@ function Workspace({ sb, user, onSignedOut }) {
    Lead detail
    ============================================================ */
 
-function LeadDetail({ lead, tab, onTab, onSave, onMove, onDelete }) {
+function LeadDetail({ lead, tab, onTab, onSave, onMove, onDelete, onRecordSend }) {
   const tabRefs = useRef({})
 
   function onTabKey(e) {
@@ -943,7 +981,7 @@ function LeadDetail({ lead, tab, onTab, onSave, onMove, onDelete }) {
       >
         {tab === 'overview' && <OverviewPanel lead={lead} onSave={onSave} onMove={onMove} />}
         {tab === 'contacts' && <ContactsPanel lead={lead} onSave={onSave} />}
-        {tab === 'outreach' && <OutreachPanel lead={lead} onSave={onSave} />}
+        {tab === 'outreach' && <OutreachPanel lead={lead} onSave={onSave} onRecordSend={onRecordSend} />}
         {tab === 'notes' && <NotesPanel lead={lead} onSave={onSave} />}
         {tab === 'compliance' && <CompliancePanel lead={lead} onSave={onSave} />}
         {tab === 'activity' && <ActivityPanel lead={lead} />}
@@ -1123,8 +1161,10 @@ function ContactsPanel({ lead, onSave }) {
 /* ---------------- Outreach ----------------
    Compose -> approve -> hand off to the mail client. The page has no
    send path of its own, by design. */
-function OutreachPanel({ lead, onSave }) {
+function OutreachPanel({ lead, onSave, onRecordSend }) {
   const [text, setText] = useState(lead.outreachDraft || emailDraft(lead))
+  const [refusal, setRefusal] = useState('')
+  const [busy, setBusy] = useState(false)
 
   /* Approval belongs to an exact body of text. Edit it and the approval
      lapses, so the mail handoff relocks until a human approves again. */
@@ -1153,21 +1193,43 @@ function OutreachPanel({ lead, onSave }) {
     onSave(next, { okMsg: 'Draft approved' })
   }
 
-  function openInMail() {
+  async function openInMail() {
     const contact = (lead.contacts || []).find((c) => c.email)
     const to = contact ? contact.email : 'hello@nabl.agency'
     const draft = lead.outreachDraft || emailDraft(lead)
     const subject = (draft.match(/^Subject:\s*(.+)$/m) || ['', `Quick idea for ${lead.company}`])[1]
     const body = draft.replace(/^Subject:.*\n\n?/m, '')
+
+    /* Recorded before the draft opens, never after. The insert runs the
+       compliance gate and the monthly ceiling, so if this lead is suppressed,
+       unassessed or over the cap, no mail window appears at all. */
+    setBusy(true); setRefusal('')
+    const result = await onRecordSend({ lead, channel: 'email', recipient: to, subject })
+    setBusy(false)
+    if (!result.ok) { setRefusal(result.message); return }
+
     const from = lead.status
-    const next = withActivity(
-      { ...lead, status: 'Contacted' },
-      'Email opened',
-      'Approved email opened in mail client',
-    )
-    onSave(next, { pipelineFrom: from, okMsg: 'Opened in your mail client' })
+    onSave(withActivity({ ...lead, status: 'Contacted' }, 'Email opened',
+      `Recorded as sent, then opened in mail client — ${to}`),
+      { pipelineFrom: from, okMsg: 'Recorded and opened in your mail client' })
     window.location.href =
       `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  }
+
+  /* Post has no draft and no mail client — the letter is printed and put in an
+     envelope. What the CRM does is the part software can do: ask the gate
+     first, and record that it happened so the suppression list and the monthly
+     ceiling stay true. */
+  async function recordLetter() {
+    const recipient = `The Owner, ${lead.location || lead.company}`
+    setBusy(true); setRefusal('')
+    const result = await onRecordSend({ lead, channel: 'post', recipient, subject: 'First contact letter' })
+    setBusy(false)
+    if (!result.ok) { setRefusal(result.message); return }
+    const from = lead.status
+    onSave(withActivity({ ...lead, status: 'Contacted' }, 'Letter sent',
+      `First contact letter recorded — ${recipient}`),
+      { pipelineFrom: from, okMsg: 'Letter recorded' })
   }
 
   return (
@@ -1186,10 +1248,15 @@ function OutreachPanel({ lead, onSave }) {
           <button type="button" className="btn btn--accent btn--sm" onClick={approve} disabled={!text.trim()}>
             Approve email
           </button>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={openInMail} disabled={!approvedNow}>
-            Open in mail
+          <button type="button" className="btn btn--ghost btn--sm" onClick={openInMail}
+            disabled={!approvedNow || busy}>
+            Record and open in mail
+          </button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={recordLetter} disabled={busy}>
+            Record a letter sent
           </button>
         </div>
+        {refusal && <p className="crm-warn" role="status">{refusal}</p>}
       </div>
 
       <EdgeCard className="card-pad" lift={false} spotlight={false}>
@@ -1198,8 +1265,12 @@ function OutreachPanel({ lead, onSave }) {
           {approvedNow ? 'Approved' : lead.outreachApproved ? 'Edited since approval' : 'Not approved'}
         </h3>
         <p className="muted" style={{ fontSize: 'var(--t-sm)' }}>
-          The page never sends automatically. Approval unlocks a mail client draft only.
-          Backend should enforce the same rule server-side.
+          The page never sends automatically. Both buttons write a
+          <code> marketing_sends </code> row first, which runs the compliance
+          gate and the monthly ceiling in the database — a refused send opens
+          nothing and records nothing. Post has no draft: the letter is printed
+          and posted by hand, and the button records that it happened so the
+          suppression list and the count stay true.
         </p>
       </EdgeCard>
     </div>

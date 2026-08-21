@@ -68,6 +68,8 @@ export function makeDb() {
       marketing_status: 'do_not_contact',
       opt_out: false,
     }],
+    marketing_sends: [],
+    marketing_suppression: [],
     sales_contacts: [{
       id: 'lead-contact-1',
       lead_id: 'lead-1',
@@ -254,6 +256,44 @@ export async function installMock(page, opts = {}) {
       let payload = []
       try { payload = JSON.parse(req.postData() || '[]') } catch {}
       const list = Array.isArray(payload) ? payload : [payload]
+
+      /* marketing_sends carries a BEFORE INSERT trigger on the real database
+         that runs marketing_send_allowed and the monthly ceiling. A mock that
+         accepts every insert would let a test of "the gate stops a refused
+         send" pass while the gate does nothing — which is the failure mode
+         this project has hit more than once. So the mock refuses too, on the
+         same conditions and with a Postgres-shaped error, and the assertions
+         mean something.
+
+         Deliberately not a reimplementation of the whole function. It checks
+         the conditions a UI can get wrong; the SQL harness in
+         check-compliance-schema.mjs is what proves the real gate. */
+      if (table === 'marketing_sends') {
+        for (const row of list) {
+          const lead = db.sales_leads.find((l) => l.id === row.lead_id)
+          const why = !lead ? `no such lead: ${row.lead_id}`
+            : lead.opt_out ? 'the lead has objected'
+            : lead.marketing_status !== 'permitted' ? `marketing_status is ${lead.marketing_status}`
+            : lead.lawful_basis === 'unassessed' ? 'no lawful basis is recorded'
+            : lead.privacy_notice_status === 'not_given' ? 'no privacy notice has been given'
+            : row.channel === 'email' && lead.subscriber_type !== 'corporate'
+              && lead.lawful_basis !== 'consent'
+              ? 'this is an individual subscriber and there is no consent'
+            : row.channel === 'phone' ? 'phone needs TPS and CTPS screening'
+            : !row.opt_out_included ? 'the message carries no opt-out route'
+            : null
+          if (why) {
+            log.push(`GATE refused ${row.channel} -> ${row.recipient}: ${why}`)
+            return route.fulfill({ status: 400, headers: CORS, contentType: 'application/json',
+              body: JSON.stringify({
+                code: '23514',
+                message: `blocked by compliance gate: ${row.recipient} on channel ${row.channel} is not permitted (${why})`,
+                details: null, hint: null,
+              }) })
+          }
+        }
+      }
+
       const created = list.map((r) => ({ id: `gen${idSeq++}`, created_at: new Date().toISOString(), ...r }))
       db[table].push(...created)
       return route.fulfill({ status: 201, headers: CORS, contentType: 'application/json',
