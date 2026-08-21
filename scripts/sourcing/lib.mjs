@@ -114,3 +114,21 @@ export function postcodeKey(postcode) {
   if (pc.length < 5 || pc.length > 7) return ''
   return pc.slice(0, -3) + ' ' + pc.slice(-3)
 }
+
+/* The 124 real UK postcode areas. Needed because a regex shaped like a
+   postcode matches a great deal that is not one: uppercased HTML is full of
+   hex colours, minified identifiers and base64, and "GQ1 2AB" or "JV3 9XY"
+   will match a pattern while belonging to no postal district on earth.
+
+   Without this list a contradiction test built on that regex rejects real
+   websites — it read "the page's addresses are all in AF, not NG" off a
+   stylesheet and threw the company away. */
+export const POSTCODE_AREAS = new Set(`
+AB AL B BA BB BD BH BL BN BR BS BT CA CB CF CH CM CO CR CT CV CW DA DD DE DG
+DH DL DN DT DY E EC EH EN EX FK FY G GL GU GY HA HD HG HP HR HS HU HX IG IM
+IP IV JE KA KT KW KY L LA LD LE LL LN LS LU M ME MK ML N NE NG NN NP NR NW OL
+OX PA PE PH PL PO PR RG RH RM S SA SE SG SK SL SM SN SO SP SR SS ST SW SY TA
+TD TF TN TQ TR TS TW UB W WA WC WD WF WN WR WS WV YO ZE
+`.trim().split(/\s+/))
+
+export const isPostcodeArea = (a) => POSTCODE_AREAS.has(String(a || '').toUpperCase())

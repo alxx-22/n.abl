@@ -25,7 +25,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import dns from 'node:dns/promises'
-import { nameKey } from './lib.mjs'
+import { nameKey, isPostcodeArea } from './lib.mjs'
 
 const DIR = '.sourcing'
 const arg = (flag, fallback) => {
@@ -178,7 +178,12 @@ function contradicts(body, candidate) {
     .filter(Boolean).map((v) => AREA_LETTERS(String(v).toUpperCase())).filter(Boolean))
   if (!ours.size) return null
 
-  const onPage = [...String(body).toUpperCase().matchAll(POSTCODE)].map((m) => AREA_LETTERS(m[1]))
+  /* Filtered to real postcode areas. The pattern alone matches hex colours
+     and minified identifiers in uppercased HTML, and a first run rejected
+     genuine sites on the strength of "the page's addresses are all in AF, not
+     NG" — AF is not a postcode area and never was. */
+  const onPage = [...String(body).toUpperCase().matchAll(POSTCODE)]
+    .map((m) => AREA_LETTERS(m[1])).filter(isPostcodeArea)
   if (onPage.length && !onPage.some((a) => ours.has(a))) {
     return `the page's addresses are all in ${[...new Set(onPage)].slice(0, 3).join('/')}, not ${[...ours].join('/')}`
   }
