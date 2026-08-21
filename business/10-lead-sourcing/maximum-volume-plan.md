@@ -159,15 +159,43 @@ that works.
    whether two registers corroborate, whether we have a non-registered-office
    address. Free, no fetching, and it decides who the first thousand letters go
    to.
-4. **Website discovery.** No free SERP API survives, so: generate candidate
-   domains from the normalised name, resolve, fetch, and confirm by matching
-   the company name, number or postcode in the page. Hit rate unknown — measure
-   it on a sample of 500 before building the full run.
-5. **Contact extraction.** Fetch `/`, `/contact`, `/about` on confirmed
-   domains; take `mailto:`, `tel:`, form actions and schema.org JSON-LD. This
-   also yields the best free trading address there is, because a footer address
-   beats a registered office. Robots.txt honoured, throttled, honest
-   user-agent.
+4. **~~Website discovery.~~** Built and measured. No free SERP API survives, so
+   domains are guessed from the normalised name, DNS-resolved before anything
+   is fetched, and confirmed against the page rather than trusted.
+5. **~~Contact extraction.~~** Built and measured. Fetches `/`, `/contact`,
+   `/about` on confirmed domains only; takes `mailto:`, `tel:`, form actions
+   and schema.org JSON-LD, honouring robots.txt and crawl-delay.
+
+### What steps 4 and 5 actually yield
+
+Measured over 500 companies drawn evenly from the first triage band on
+21 August 2026, not estimated:
+
+| | Count | Of the 500 |
+|---|---:|---:|
+| Website found and confirmed | 142 | 28% |
+| **A contact route of some kind** | **114** | **23%** |
+| A phone number | 90 | 18% |
+| A postcode on the page | 80 | 16% |
+| A role email address | 65 | 13% |
+
+Of the 80 sites publishing a postcode, **71 are in territory** — 89%. That is
+the number that says the confirmation step works: if domain guessing were
+matching the wrong companies, the addresses would be scattered.
+
+Where the other 358 went: 125 had no resolving domain at all, 60 answered 503,
+48 resolved but never mention the company, 46 were placeholder pages, and 24
+were a different business with the same name, caught by the contradiction test.
+
+**154 named email addresses were found and discarded** — `sarah@`, `james@`.
+Keeping them would move each of those records from tier A to tier B under
+`LIA-2026-08-v2`, engaging UK GDPR where nothing engaged it before, in exchange
+for an address no better than the `info@` next to it.
+
+**Projection for the full first band:** 8,317 candidates at 23% is roughly
+**1,900 businesses with a contact route**, at about 1.3 companies a second, so
+under two hours of throttled fetching. Against a ceiling of 2,400 first
+contacts a month, one band is one month of outreach.
 6. **Tech detection**, from HTML already fetched, against the GPL-3.0
    `webappanalyzer` fingerprints. This is the "fragile process" signal that
    makes a first contact specific rather than generic.
