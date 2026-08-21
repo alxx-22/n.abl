@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-08-21T19:37:24.443Z",
+ "generated_at": "2026-08-21T19:47:26.512Z",
  "source": ".sourcing/websites-all.jsonl",
- "scanned": 5580,
- "confirmed": 1739,
+ "scanned": 7438,
+ "confirmed": 2433,
  "note": "Websites confirmed against the company name, postcode or company number. A partial file means the sweep was still running; rerun to extend it.",
  "results": [
   {
@@ -14754,6 +14754,5805 @@
    "website": "https://ng23tendersupport.co.uk/",
    "confirmed_by": [
     "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM MEDIA CENTRE LIMITED",
+   "area": "NG1",
+   "website": "https://www.broadway.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM CHIROPRACTOR LIMITED",
+   "area": "NG11",
+   "website": "https://nottingham-chiropractor.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM YOUTH ORCHESTRA LIMITED",
+   "area": "NG25",
+   "website": "https://www.nottinghamyouthorchestra.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM CONSULTANTS LIMITED",
+   "area": "NG1",
+   "website": "https://nottinghamconsultants.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE BUILDING PRESERVATION TRUST LIMITED",
+   "area": "NG25",
+   "website": "https://www.nbpt.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE RIFLE ASSOCIATION LIMITED",
+   "area": "NG12",
+   "website": "https://www.nottsra.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM COUNSELLING COLLEGE LTD",
+   "area": "NG2",
+   "website": "https://nottinghamcounsellingcollege.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM SECURITY LIMITED",
+   "area": "NG1",
+   "website": "https://nottinghamsecurity.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "MSI PROPERTY LTD",
+   "area": "NG13",
+   "website": "https://msi-properties.fr/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NORTHFIELD CONSTRUCTION LIMITED",
+   "area": "NG15",
+   "website": "https://www.northfield-construction.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM GRAB HIRE LIMITED",
+   "area": "NG6",
+   "website": "https://www.nottinghamgrabhire.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM PRINTING LTD",
+   "area": "NG15",
+   "website": "https://nottinghamprinting.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM BAZAAR CASH AND CARRY LTD",
+   "area": "NG5",
+   "website": "https://nottinghambazaar.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "NORTHGATE BUSINESS CENTRE LIMITED",
+   "area": "NG24",
+   "website": "https://www.northgatecentre.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM TRANSPORT LTD",
+   "area": "NG3",
+   "website": "https://nottinghamtransport.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM EXPRESS CARRIERS LIMITED",
+   "area": "NG4",
+   "website": "https://nottinghamexpress.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM PEST CONTROL LTD",
+   "area": "NG4",
+   "website": "https://www.nottinghampestcontrol.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NOWSAFAR LTD",
+   "area": "NG3",
+   "website": "https://nowsafar.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "OAK TREE MOTOR HOMES LIMITED",
+   "area": "NG16",
+   "website": "https://oaktreemotorhomes.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOW HOMES LIMITED",
+   "area": "NG24",
+   "website": "https://www.nowhomes.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "NORTHWOOD CONSUMA TISSUE LTD",
+   "area": "NG32",
+   "website": "https://www.northwood.co.uk/retail/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NUKE CREATIVE LIMITED",
+   "area": "NG16",
+   "website": "https://nukecreative.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NPS LEGAL COSTS LIMITED",
+   "area": "NG15",
+   "website": "https://www.npslegalcosts.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "NOWUKAN LTD",
+   "area": "NG6",
+   "website": "https://www.nowukan.io/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "OCTINET LIMITED",
+   "area": "NG11",
+   "website": "https://www.octinet.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "NORTH + NEXT LTD",
+   "area": "NG2",
+   "website": "https://www.north-next.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM LETTINGS LTD",
+   "area": "NG18",
+   "website": "https://www.nottinghamlettings.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOT GUILTY FOOD CO LTD",
+   "area": "NG8",
+   "website": "https://www.notguiltyfood.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM CRANE HIRE LIMITED",
+   "area": "NG1",
+   "website": "https://chrisallsop.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "OPERATION CHRISTMAS BOX",
+   "area": "NG32",
+   "website": "https://www.operationchristmasbox.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "OCEANS DAY NURSERY LIMITED",
+   "area": "NG15",
+   "website": "https://www.oceansdaynursery.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NEST MANAGEMENT LIMITED",
+   "area": "NG11",
+   "website": "https://www.nestmanagement.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NU GROWTH THEORY LTD",
+   "area": "NG32",
+   "website": "https://nugrowththeory.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ONIS CONSULTING LIMITED",
+   "area": "NG31",
+   "website": "https://onis-consulting.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "OPEN ARMS ORGANISATION CIC",
+   "area": "NG7",
+   "website": "https://openarmsorganisation.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "OPENSEARCH LIMITED",
+   "area": "NG17",
+   "website": "https://opensearch.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM TRANSPORT SOLUTIONS LTD",
+   "area": "NG6",
+   "website": "https://www.nottinghamtransportsolutions.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM INDUSTRIAL CLEANERS LIMITED",
+   "area": "NG8",
+   "website": "https://nottinghamindustrialcleaners.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "ON ALL PAWZ LTD",
+   "area": "NG19",
+   "website": "https://www.onallpawz.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "OAKWOOD FEEDS LTD",
+   "area": "NG24",
+   "website": "https://oakwoodfeeds.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "OLDAN PADEL LTD",
+   "area": "NG14",
+   "website": "https://www.oldan.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "OO SECURITY LTD",
+   "area": "NG8",
+   "website": "https://www.oosecurity.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "OMNIGO LTD",
+   "area": "NG15",
+   "website": "https://www.omnigo.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ONSWITCH LIMITED",
+   "area": "NG34",
+   "website": "https://onswitch.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "OLD BASFORD SCHOOL",
+   "area": "NG6",
+   "website": "https://www.oldbasfordschool.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "OAKMONT TAX LIMITED",
+   "area": "NG7",
+   "website": "https://oakmonttax.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ONE VISION PARTNERSHIP LIMITED",
+   "area": "NG5",
+   "website": "https://onevisionpartnership.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "OPTIC CREATIVE LTD",
+   "area": "NG23",
+   "website": "https://studio-optic.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "ORIGIN KITCHEN LTD.",
+   "area": "NG5",
+   "website": "https://originkitchen.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ORBIT LEGAL LIMITED",
+   "area": "NG10",
+   "website": "https://www.orbit.legal/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "OPTIMISE ACCOUNTANTS LIMITED",
+   "area": "NG10",
+   "website": "https://www.optimiseaccountants.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "OT FOCUS LTD",
+   "area": "NG14",
+   "website": "https://www.otfocus.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "ORCHARD TOYS LIMITED",
+   "area": "NG1",
+   "website": "https://www.orchardtoys.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PAD TAX SERVICES LIMITED",
+   "area": "NG31",
+   "website": "https://padtax.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "OPTIMUM FINANCIALS LIMITED",
+   "area": "NG31",
+   "website": "https://optimumfinancials.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PALIZU LTD",
+   "area": "NG6",
+   "website": "https://palizu.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "P & S HEALTHCARE LIMITED",
+   "area": "NG17",
+   "website": "https://www.pshealthcare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "OVERTON ELECTRICAL SERVICES LTD",
+   "area": "NG18",
+   "website": "https://www.overton-electrical.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "P.F. COLLECTIONS LIMITED",
+   "area": "NG10",
+   "website": "https://longeatonsofas.com/trade-accounts",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "PARK CONSULTING SERVICES LTD",
+   "area": "NG16",
+   "website": "https://parkconsulting.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "OSE PROPERTY LTD",
+   "area": "NG5",
+   "website": "https://www.oseproperty.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PAPERMOON NURSERIES (FARADAY ROAD) LIMITED",
+   "area": "NG7",
+   "website": "https://papermoonnurseries.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "PARK ACCOUNTANCY LIMITED",
+   "area": "NG23",
+   "website": "https://www.parkaccountancy.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PEAK WELLBEING LIMITED",
+   "area": "NG12",
+   "website": "https://peakwellbeing.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PARKGATE BUILDERS LTD",
+   "area": "NG32",
+   "website": "https://www.parkgatebuilders.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PAYPLAN LIMITED",
+   "area": "NG31",
+   "website": "https://www.payplan.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PARK SYSTEMS UK LIMITED",
+   "area": "NG90",
+   "website": "https://www.parksystems.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "OVERSOLVE LIMITED",
+   "area": "NG3",
+   "website": "https://www.oversolve.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "OUTDOOR INSPIRATIONS LIMITED",
+   "area": "NG32",
+   "website": "https://outdoor-inspirations.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PARK PLACE CONSULTING LTD",
+   "area": "NG12",
+   "website": "https://parkplaceconsulting.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PENNY WORKS LTD",
+   "area": "NG4",
+   "website": "https://pennyworks.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PENNY STRUTTON LIMITED",
+   "area": "NG4",
+   "website": "https://pennystrutton.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PARK GROVE IP LIMITED",
+   "area": "NG90",
+   "website": "https://www.parkgrove.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "PEGASUS INSIGHT LIMITED",
+   "area": "NG33",
+   "website": "https://pegasus-insight.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PERSONALISED FUN MONEY LTD",
+   "area": "NG5",
+   "website": "https://personalisedfunmoney.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PEARCE SIGNS LIMITED",
+   "area": "NG7",
+   "website": "https://pearcesigns.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PERKINS FIRST FINANCIAL SOLUTIONS LIMITED",
+   "area": "NG16",
+   "website": "https://perkinsfirst.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PERFECT RESULTS LTD",
+   "area": "NG33",
+   "website": "https://perfectresults.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PETE NORRIS LIMITED",
+   "area": "NG13",
+   "website": "https://petenorris.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PETER COOK LIMITED",
+   "area": "NG1",
+   "website": "https://petercook.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PHOENIX BRICKWORK (UK) LIMITED",
+   "area": "NG16",
+   "website": "https://phoenixbrickwork.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PHOENIX DRYWALL (UK) LIMITED",
+   "area": "NG16",
+   "website": "https://phoenixdrywall.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PARKIN CONTRACTORS LIMITED",
+   "area": "NG17",
+   "website": "https://www.parkin-contractors.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PILING RECRUITMENT GROUP LTD",
+   "area": "NG4",
+   "website": "https://pilingrecruitment.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "P.R.S. HIRE SERVICES LIMITED",
+   "area": "NG5",
+   "website": "https://www.prshire.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PICADOR PROPERTIES LTD",
+   "area": "NG33",
+   "website": "https://www.picadorproperties.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PETER SMYTHE TRANSPORT TRAINING LIMITED",
+   "area": "NG17",
+   "website": "https://www.lifftgroup.co.uk/locations/peter-smythe-transport-training",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PHOENIX PARK NURSERY LTD",
+   "area": "NG8",
+   "website": "https://phoenixparknursery.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PORTLAND COLLEGE",
+   "area": "NG18",
+   "website": "https://www.portland.ac.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PILATES BY PHILIPPA LIMITED",
+   "area": "NG23",
+   "website": "https://pilatesbyphilippa.com/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PERFORMANCE HEALTH INTERNATIONAL LIMITED",
+   "area": "NG17",
+   "website": "https://performancehealth.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "PNE CONTROLS LIMITED",
+   "area": "NG18",
+   "website": "https://pnecontrols.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PETE BURTON BUILDING CONTRACTORS LIMITED",
+   "area": "NG16",
+   "website": "https://peteburtonbuildingcontractors.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PLAYHOORAY! LIMITED",
+   "area": "NG14",
+   "website": "https://playhooray.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "POSTEROUTE LIMITED",
+   "area": "NG31",
+   "website": "https://posteroute.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "POSITIVE ATTITUDES LIMITED",
+   "area": "NG31",
+   "website": "https://positiveattitudes.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PLUM CONSTRUCTION LIMITED",
+   "area": "NG12",
+   "website": "https://plumconstruction.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PHASE PRINT LIMITED",
+   "area": "NG16",
+   "website": "https://phaseprint.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PLANT WELDING AND ENGINEERING LIMITED",
+   "area": "NG4",
+   "website": "https://www.plantwelding.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "PARACHUTE BIOTECH SOLUTIONS LTD",
+   "area": "NG2",
+   "website": "https://parachutebiotechsolutions.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "POSITIVE INDEPENDENCE LTD",
+   "area": "NG24",
+   "website": "https://www.positiveindependence.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "POSTPACK LTD",
+   "area": "NG31",
+   "website": "https://www.postpack.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PMC POWDER COATING LTD",
+   "area": "NG10",
+   "website": "https://pmcpowdercoating.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PETER DREW CONTRACTS LTD.",
+   "area": "B50",
+   "website": "https://peterdrew.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PITCH AND TRACK LTD",
+   "area": "NG34",
+   "website": "https://pitch-track.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "PLATYPUS SWIM SCHOOL LTD",
+   "area": "NG23",
+   "website": "https://www.platypusswim.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PIPE FORCE (NEWARK) LIMITED",
+   "area": "NG22",
+   "website": "https://www.pipeforcenewark.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PREPOROD LIMITED",
+   "area": "NG24",
+   "website": "https://preporod.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "POLLY TEACH LIMITED",
+   "area": "NG18",
+   "website": "https://www.pollyteach.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PREMIER SURVEYS LIMITED",
+   "area": "NG5",
+   "website": "https://premiersurveys.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "POLLOCK ASSOCIATES LIMITED",
+   "area": "NG33",
+   "website": "https://pollock-associates.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PRO SMART LTD",
+   "area": "NG31",
+   "website": "https://prosmart.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PREMIUM ROOMS LTD",
+   "area": "NG18",
+   "website": "https://premium-rooms.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PRINTWORKS SIGN STUDIO LTD",
+   "area": "NG5",
+   "website": "https://printworkssignstudio.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PHOENIX WEAR LTD",
+   "area": "NG5",
+   "website": "https://www.phoenix-wear.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "POLY ADVISORY LIMITED",
+   "area": "NG12",
+   "website": "https://polyadvisory.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PROPERTY COMPLIANCE GROUP LIMITED",
+   "area": "NG1",
+   "website": "https://propertycompliance.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "PROGRESSION 4 WORK LTD",
+   "area": "NG16",
+   "website": "https://progression4work.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PROPERTY FROG LIMITED",
+   "area": "NG10",
+   "website": "https://propertyfrog.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PRORIDES LIMITED",
+   "area": "NG15",
+   "website": "https://prorides.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PRUDENT SUPPORTED LIVING LTD",
+   "area": "NG10",
+   "website": "https://prudentsupportedliving.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PROUDLOVE LTD",
+   "area": "NG10",
+   "website": "https://www.proudlove.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PROPEX MANAGEMENT LTD",
+   "area": "NG5",
+   "website": "https://www.propexmanagement.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "PROFESSIONAL PADDOCK CARE LIMITED",
+   "area": "NG34",
+   "website": "https://www.professionalpaddockcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PROCEDOR LIMITED",
+   "area": "NG24",
+   "website": "https://www.markfritzonline.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PROGRESSION 2WORK LIMITED",
+   "area": "NG16",
+   "website": "https://www.progression2work.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PRESTIGE LOCATIONS LTD",
+   "area": "NG7",
+   "website": "https://prestige-locations.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PROFIT BOX LTD",
+   "area": "NG13",
+   "website": "https://www.profitbox.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PROTOPART LTD",
+   "area": "NG17",
+   "website": "https://www.protopart.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PLAN-IT DESIGN LIMITED",
+   "area": "NG23",
+   "website": "https://www.plan-it-design.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PROSPARE LIMITED",
+   "area": "NG17",
+   "website": "https://www.prospare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PRIMARY WELLBEING C.I.C.",
+   "area": "NG24",
+   "website": "https://primarywellbeing.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "PMC ACCOUNTANCY LIMITED",
+   "area": "NG34",
+   "website": "https://pmcaccountancy.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PUMP SERVE LTD",
+   "area": "NG3",
+   "website": "https://pumpserve.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PRO SURFACE SOLUTIONS LIMITED",
+   "area": "NG18",
+   "website": "https://prosurfacesolutions.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PYRAMID PERFORMANCE & HEALTH LIMITED",
+   "area": "NG13",
+   "website": "https://pyramidperformancehealth.com/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "POTTER CLARKSON IP LIMITED",
+   "area": "NG1",
+   "website": "https://www.potterclarkson.com/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "PROPERTY PLUS SERVICES LTD",
+   "area": "NG18",
+   "website": "https://www.property-plus.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "QUAYLE INDUSTRIES LTD",
+   "area": "NG24",
+   "website": "https://www.quayleindustries.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PYRAMID PRESS LIMITED",
+   "area": "NG5",
+   "website": "https://www.pyramidpress.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "PROJECT GOLD LTD",
+   "area": "NG14",
+   "website": "https://projectgold.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "R J BOYLES BUILDING SERVICES LIMITED",
+   "area": "NG22",
+   "website": "https://www.rjboylesbuilding.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "R F P D LIMITED",
+   "area": "NG31",
+   "website": "https://www.rfpd.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "R. KEETON LIMITED",
+   "area": "NG16",
+   "website": "https://rkeeton.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "QUENSH GB (EUROPE) LIMITED",
+   "area": "NG19",
+   "website": "https://www.quenshgb.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RAILWAY SLEEPERS LTD",
+   "area": "NG12",
+   "website": "https://railwaysleepers.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "PRO-TRAINING LIMITED",
+   "area": "NG4",
+   "website": "https://www.protrainings.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "REALM PROJECTS LIMITED",
+   "area": "NG19",
+   "website": "https://realmprojects.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "REACH HOUSING LIMITED",
+   "area": "NG17",
+   "website": "https://reachhousing.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "RAKUEVENTS LTD",
+   "area": "NG14",
+   "website": "https://rakuevents.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "RECRUITMENT WOLF LIMITED",
+   "area": "NG4",
+   "website": "https://recruitment-wolf.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "RED RHINO CRUSHERS (UK) LIMITED",
+   "area": "NG31",
+   "website": "https://redrhinocrushers.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RACE TECHNOLOGY LIMITED",
+   "area": "NG16",
+   "website": "http://www.race-technology.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "REDCAD LIMITED",
+   "area": "NG24",
+   "website": "https://www.redcad.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "REAL SOCIAL CARE SOLUTIONS LTD",
+   "area": "NG20",
+   "website": "https://www.realsocialcaresolutions.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "REGENCY SOURCE LTD",
+   "area": "NG18",
+   "website": "https://www.regencysource.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "RELIABLE UK TRADING CO., LTD",
+   "area": "NG17",
+   "website": "https://reliabletrading.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "REDBOX GRAPHIC DESIGN LIMITED",
+   "area": "NG18",
+   "website": "https://www.redboxgraphicdesign.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "RELIANT MATERIAL SOLUTIONS LTD",
+   "area": "NG5",
+   "website": "https://aggregatesplus.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RED LETTINGS (NOTTINGHAM) LIMITED",
+   "area": "NG18",
+   "website": "https://red-lettings.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "REDBERRY LTD",
+   "area": "NG18",
+   "website": "https://www.redberry.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RED HOMES HEALTHCARE LIMITED",
+   "area": "NG31",
+   "website": "https://www.redhomes.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RED HOMES HEALTHCARE GRANTHAM LIMITED",
+   "area": "NG31",
+   "website": "https://www.redhomes.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "REFURBISH RIGHT LTD",
+   "area": "NG6",
+   "website": "https://www.refurbishright.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RISE & RECLINE LTD",
+   "area": "NG10",
+   "website": "https://www.mansfieldmobility.co.uk/product-category/rise-recliner-chairs/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ROBERT NAM PROPERTIES LIMITED",
+   "area": "NG15",
+   "website": "https://robertnamproperties.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RESOLUTE CARE LTD",
+   "area": "NG11",
+   "website": "https://www.resolutecare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RETFORD SADDLERY LIMITED",
+   "area": "NG22",
+   "website": "https://www.retfordsaddlery.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "ROBERTS TYRES LIMITED",
+   "area": "NG34",
+   "website": "https://www.robertstyres.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "REYNOLDS LOGISTICS (NOTTINGHAM) LIMITED",
+   "area": "NG9",
+   "website": "https://www.reynoldslogisticservices.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RICHARD WATKINSON LIMITED",
+   "area": "NG24",
+   "website": "https://www.richardwatkinson.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "ROTARY INTERNATIONAL IN GB & IRELAND",
+   "area": "B49",
+   "website": "https://www.rotarygbi.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RENSHAW MORTGAGE SOLUTIONS LIMITED",
+   "area": "NG16",
+   "website": "https://www.renshawmortgagesolutions.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "ROCKET DOOR FRAMES LIMITED",
+   "area": "NG31",
+   "website": "https://rocketdoorframes.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ROSE TUITION LTD",
+   "area": "NG2",
+   "website": "https://rosetuition.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ROUND GOVERNANCE SERVICES LIMITED",
+   "area": "NG23",
+   "website": "https://www.roundgovernance.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "REACT RECRUITMENT GROUP LTD",
+   "area": "NG14",
+   "website": "https://react-recruitment.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "REFLEX PACKAGING SOLUTIONS LIMITED",
+   "area": "NG18",
+   "website": "https://www.nefab.com/solutions/packaging-solutions/inner-packaging/reflex-cushioning/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "ROEMER BARNES TRAINING LIMITED",
+   "area": "NG4",
+   "website": "https://www.roemerbarnes.com/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "ROBA METALS LIMITED",
+   "area": "B49",
+   "website": "https://www.robametals.co.uk/en/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ROEMER BARNES CONSULTANCY LIMITED",
+   "area": "NG4",
+   "website": "https://www.roemerbarnes.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "ROODSAFE LIMITED",
+   "area": "NG6",
+   "website": "https://www.roodsafe.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "ROCKABILLIES LTD",
+   "area": "NG10",
+   "website": "https://www.rockabillies.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ROCK COMPLIANCE LIMITED",
+   "area": "B49",
+   "website": "https://www.rockcompliance.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "RICHMOND PLANT HIRE LIMITED",
+   "area": "NG32",
+   "website": "https://richmondplant.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RHAMES LTD",
+   "area": "NG15",
+   "website": "https://rhames.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "RUBIX KITCHENS LTD",
+   "area": "NG13",
+   "website": "https://rubixkitchens.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "ROAST BEEF HOLDINGS LIMITED",
+   "area": "NG24",
+   "website": "https://roastbeef.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "RUSKINGTON DENTAL PRACTICE LTD",
+   "area": "NG34",
+   "website": "https://ruskingtondentalpractice.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "ROY LOWE & SONS LIMITED",
+   "area": "NG17",
+   "website": "https://www.roylowe.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "RS HIRE LIMITED",
+   "area": "NG23",
+   "website": "https://rs-hire.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RP PODIATRY LTD",
+   "area": "NG13",
+   "website": "https://www.rppodiatry.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "RUSHCLIFFE ESTATES LIMITED",
+   "area": "NG2",
+   "website": "https://rushcliffeestates.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SAHARSH LIMITED",
+   "area": "NG18",
+   "website": "https://saharsh.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "REFLEX GAMING LIMITED",
+   "area": "NG24",
+   "website": "https://reflexgaming.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SALTHOUSE UK PROPERTIES LIMITED",
+   "area": "NG12",
+   "website": "https://salthouseproperties.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "SAMEDAYTODAY COURIERS LIMITED",
+   "area": "NG13",
+   "website": "https://samedaytodaycouriers.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SA POOL SYSTEMS LIMITED",
+   "area": "NG12",
+   "website": "https://www.sapoolsystems.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SAFE SOUL CARE LTD",
+   "area": "NG5",
+   "website": "https://safesoul.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "RUBBER COMPOUNDING SERVICES LIMITED",
+   "area": "NG6",
+   "website": "https://www.rubbercompounding.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "S.H. SALES (NOTTINGHAM) LIMITED",
+   "area": "NG3",
+   "website": "https://www.shsalesnottingham.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "S A ACCOUNTS LTD",
+   "area": "NG34",
+   "website": "https://saaccounts.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SAFETY TRAINING WOODWORKING LIMITED",
+   "area": "NG10",
+   "website": "https://www.safetytrainingwoodworking.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SEED CYCLE LIMITED",
+   "area": "NG9",
+   "website": "https://www.seedcycle.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SAFETY AIDE LTD",
+   "area": "NG11",
+   "website": "https://www.safetyaide.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SECO TOOLS (U.K.) LIMITED",
+   "area": "B49",
+   "website": "https://www.secotools.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "REPEAT DIGITAL LTD",
+   "area": "NG10",
+   "website": "https://repeatdigital.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SALTERFORD HOUSE PRIVATE SCHOOL LIMITED",
+   "area": "NG14",
+   "website": "https://salterfordhouseschool.co.uk/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "SAM ROGERS ELECTRICAL LTD",
+   "area": "NG31",
+   "website": "https://www.samrogerselectrical.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "S E W CONSULTANCY LIMITED",
+   "area": "NG16",
+   "website": "https://sewconsultancy.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHEKINAH SHUR MINISTRIES",
+   "area": "NG4",
+   "website": "https://www.shekinahshurministries.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SCREEN POP DIGITAL NETWORKING LIMITED",
+   "area": "NG25",
+   "website": "https://www.screenpop.co.uk/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "SHELFORD CONSULTING LTD",
+   "area": "NG7",
+   "website": "https://shelfordconsulting.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHARP RANDFIELD LTD",
+   "area": "NG15",
+   "website": "https://sharprandfield.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SHAHEEN ESTATES LTD",
+   "area": "NG8",
+   "website": "https://shaheenestates.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHE STARTS SMART LTD",
+   "area": "NG7",
+   "website": "https://shestartssmart.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SGD 3D LIMITED",
+   "area": "NG6",
+   "website": "https://sgd3d.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SHERWOOD HEALING LTD",
+   "area": "NG21",
+   "website": "https://sherwoodhealing.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHILOH CARE LTD",
+   "area": "NG6",
+   "website": "https://shilohcare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHAPING FUTURES LIMITED",
+   "area": "NG24",
+   "website": "https://shapingfutures.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SERENITY GARDEN ROOMS LTD",
+   "area": "NG21",
+   "website": "https://serenitygardenrooms.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHARPE MEICA SOLUTIONS LTD",
+   "area": "NG24",
+   "website": "https://www.sharpemeicasolutions.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SERENE STONE LIMITED",
+   "area": "NG16",
+   "website": "https://www.serenestone.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHERWOOD PROPERTY SOLUTIONS LTD",
+   "area": "NG11",
+   "website": "https://www.sherwoodproperty.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHELLEY WARD CONSULTANCY LTD",
+   "area": "NG23",
+   "website": "https://www.shelleywardconsultancy.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHIPWRECK KAYAKS LTD",
+   "area": "NG14",
+   "website": "https://www.shipwreckkayaks.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHEDS 4 U LTD",
+   "area": "NG19",
+   "website": "https://sheds-4-u.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SIGNSX LTD",
+   "area": "NG9",
+   "website": "https://signsx.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SILVINA LIMITED",
+   "area": "NG4",
+   "website": "https://silvina.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SBS PROPERTY SERVICES LTD",
+   "area": "NG14",
+   "website": "https://sbsproperty.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SILVION LIMITED",
+   "area": "NG23",
+   "website": "https://www.silvion.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SILVER PEAR COMMUNICATIONS LTD",
+   "area": "NG32",
+   "website": "https://www.silverpearcommunications.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SJ PICKERING CONSULTING LIMITED",
+   "area": "NG16",
+   "website": "https://sjpickeringconsulting.com/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SILVERROCK HEALTHCARE LTD",
+   "area": "NG8",
+   "website": "https://silverrockhealthcare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SKILLS AND EDUCATION GROUP",
+   "area": "NG8",
+   "website": "https://skillseducation.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "SIMBEC SOLUTIONS LTD",
+   "area": "NG10",
+   "website": "https://www.simbecsolutions.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SHIRE FABRICATIONS LTD",
+   "area": "NG20",
+   "website": "https://www.shirefabrications.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SKATE NOTTINGHAM C.I.C.",
+   "area": "NG10",
+   "website": "https://www.skatenottingham.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "SHOREWAY BUSINESS SUPPORT LTD",
+   "area": "NG11",
+   "website": "https://shorewaybusiness.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SLASHMENTAL LTD",
+   "area": "NG7",
+   "website": "https://www.slashmental.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SIMPLE MARKETING CONSULTANCY LIMITED",
+   "area": "NG12",
+   "website": "https://www.simplemarketingconsultancy.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SKILLS 2 SHARE LIMITED",
+   "area": "NG24",
+   "website": "https://www.skills2share.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SKW PROPERTY LIMITED",
+   "area": "NG25",
+   "website": "https://www.skwproperty.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SJI PROPERTIES LIMITED",
+   "area": "NG21",
+   "website": "https://sjiproperties.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SHIVA MANAGEMENT LTD",
+   "area": "NG10",
+   "website": "https://shivamanagement.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SIGMA 360 LTD",
+   "area": "NG10",
+   "website": "https://sigma-360.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SMLBIZ LIMITED",
+   "area": "NG13",
+   "website": "https://smlbiz.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SJI DESIGNS LIMITED",
+   "area": "NG21",
+   "website": "https://sjidesigns.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SM CLEAR VISION LTD",
+   "area": "NG9",
+   "website": "https://www.smclearvision.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SKYGAZER LIMITED",
+   "area": "NG31",
+   "website": "https://www.skygazer.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SIMPLY SSAS LTD",
+   "area": "NG18",
+   "website": "https://www.simplyssas.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SLIDE WARDROBES DIRECT LTD",
+   "area": "NG24",
+   "website": "https://www.slidewardrobesdirect.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SOILANDLEAF LTD",
+   "area": "NG5",
+   "website": "https://soilandleaf.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SOLARIS CORPORATION LIMITED",
+   "area": "NG18",
+   "website": "https://solariscorporation.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SOLAR CALIBRE DOORS LTD",
+   "area": "NG17",
+   "website": "https://solarcalibredoors.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SNISL LTD",
+   "area": "NG6",
+   "website": "https://snisl.co.uk/",
+   "confirmed_by": [
+    "postcode"
+   ]
+  },
+  {
+   "name": "SOAR VALLEY STEEL BOATS LTD",
+   "area": "NG11",
+   "website": "https://soarvalleysteelboats.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SOFABOX LIMITED",
+   "area": "NG14",
+   "website": "https://sofabox.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SOUTHWELL AND DISTRICT AGRICULTURAL SOCIETY",
+   "area": "NG25",
+   "website": "https://www.southwellploughingmatch.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SMITHS TIMBER MERCHANTS LIMITED",
+   "area": "NG24",
+   "website": "https://www.smithstimber.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SNOWDEN-JAMES GROUP LIMITED",
+   "area": "NG7",
+   "website": "https://snowden-james.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "SKILLUP NOTTS LTD",
+   "area": "NG7",
+   "website": "https://skillupnotts.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SOLAR PEAK RENEWABLES LTD",
+   "area": "NG9",
+   "website": "https://www.solarpeak.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SMART WILLS LIMITED",
+   "area": "NG16",
+   "website": "https://smart-wills.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SOUTHSIDE CARS LIMITED",
+   "area": "NG11",
+   "website": "https://southsidecars.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SPECTRUM BRANDS EMEA UK LIMITED",
+   "area": "NG8",
+   "website": "https://spectrumbrands.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "SPEEDY DENT REPAIR LIMITED",
+   "area": "NG16",
+   "website": "https://speedydentrepair.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SOUTHWELL HOLIDAY COTTAGES LTD",
+   "area": "NG25",
+   "website": "https://www.southwellholidaycottage.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SOLUTION:POSITIVE LTD",
+   "area": "NG22",
+   "website": "https://www.solutionpositive.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SOUTHWELL MOBILE SOLUTIONS LTD",
+   "area": "NG25",
+   "website": "https://www.southwellmobilesolutions.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SQUARE ONE ESTATES LIMITED",
+   "area": "NG13",
+   "website": "https://squareoneestates.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SPENCER CONSTRUCTION (HOMES) LIMITED",
+   "area": "NG4",
+   "website": "https://spencerconstructionhomes.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SOUTH COTTAGE LIMITED",
+   "area": "NG10",
+   "website": "https://southcottage.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SPORTEX AL -SPORTS SURFACES LTD",
+   "area": "NG31",
+   "website": "https://sportexal.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "STAFFLINE RECRUITMENT (NI) LIMITED",
+   "area": "NG2",
+   "website": "https://www.staffline.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "STAR FASTENERS (UK) LIMITED",
+   "area": "NG16",
+   "website": "https://www.starfasteners.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "STECH HOMES (UK) LTD",
+   "area": "NG1",
+   "website": "https://www.stechhomes.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "STAMFORD HEALTHCARE LIMITED",
+   "area": "NG15",
+   "website": "https://www.stamfordhealthcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "STAR FOSTERING LTD",
+   "area": "NG13",
+   "website": "https://starfostering.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "STERLING CONSULTANCY SUPPORT SERVICES LIMITED",
+   "area": "NG12",
+   "website": "https://sterlingconsultancy.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "STARSCALE LTD",
+   "area": "NG22",
+   "website": "https://starscale.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SOARING HIGH LIMITED",
+   "area": "NG6",
+   "website": "https://soaring-high.com/eagle/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "STEADFAST ENGINEERING COMPANY LIMITED",
+   "area": "B49",
+   "website": "https://steadfast-engineering.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SPX HEALTHCARE SOLUTIONS LTD",
+   "area": "NG6",
+   "website": "https://spxhealthcare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "STAFF ACCESS RECRUITMENT LIMITED",
+   "area": "NG21",
+   "website": "https://staffaccessrecruitment.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "STONEBRIDGE PROPERTY ADVISORY LTD",
+   "area": "NG1",
+   "website": "https://stonebridgepropertyadvisory.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "STRAPLAN LTD",
+   "area": "NG15",
+   "website": "https://www.straplan.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "STUDIO FINICKY LTD",
+   "area": "NG1",
+   "website": "https://www.studiofinicky.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SUTTON YOUTH RADIO LTD",
+   "area": "NG17",
+   "website": "https://WWW.TAKEOVERRADIOSUTTON.COM",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SUPER CAR SENTINEL LTD",
+   "area": "NG15",
+   "website": "https://supercarsentinel.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SUNNYDALE NURSERY LTD",
+   "area": "NG19",
+   "website": "https://sunnydalenursery.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SUNSHINE DENTAL LIMITED",
+   "area": "NG10",
+   "website": "https://sunshinedental.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SUNRISE WINDOW SYSTEMS LIMITED",
+   "area": "NG24",
+   "website": "https://www.sunrisewindowsystems.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "STORAL LEARNING LTD",
+   "area": "NG10",
+   "website": "https://www.storal.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "SURFLEET ACCOUNTING LTD",
+   "area": "NG9",
+   "website": "https://surfleetaccounting.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "STOPFORDS (MANSFIELD) LIMITED",
+   "area": "NG18",
+   "website": "https://stopfords.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "SUPERADDITIVITY LIMITED",
+   "area": "B50",
+   "website": "https://superadditivity.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SOURCE TALENT LIMITED",
+   "area": "NG18",
+   "website": "https://www.source-talent.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SWEETBREW LTD",
+   "area": "NG9",
+   "website": "https://sweetbrewtea.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "SYCAMORE BOOKBINDING, RESTORATION & PAPER CONSERVATION LIMITED",
+   "area": "NG16",
+   "website": "https://sycamorebookbinding.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "STUDIO CONTAINER STORAGE LTD",
+   "area": "NG7",
+   "website": "https://studiocontainer.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "T.M.S. (ANALYSIS) LIMITED",
+   "area": "NG5",
+   "website": "https://tmsanalysis.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "T. AND S. HEATING LIMITED",
+   "area": "NG5",
+   "website": "https://tsheating.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SOUND HEARING LIMITED",
+   "area": "NG10",
+   "website": "https://sound-hearing.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TEAM CARE DOMICILIARY SUPPORT LTD",
+   "area": "NG4",
+   "website": "https://www.teamcaredomiciliary.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TALOSTEX LTD",
+   "area": "NG5",
+   "website": "https://www.talostex.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "T 4 DESIGN LIMITED",
+   "area": "NG18",
+   "website": "https://www.t4design.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TALENT HUB 360 LIMITED",
+   "area": "NG21",
+   "website": "https://www.talenthub360.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "TARGET 1 CIC",
+   "area": "NG20",
+   "website": "https://www.target1.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TAXORA LTD",
+   "area": "NG7",
+   "website": "https://taxora.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "TAYLOR ACCOUNTANCY LTD",
+   "area": "NG15",
+   "website": "https://www.tayloraccountancy.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "SWITCH UTILITIES LIMITED",
+   "area": "NG12",
+   "website": "https://switchutilities.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TEMPLE PRINTING (NOTTINGHAM) LIMITED",
+   "area": "NG8",
+   "website": "https://templeprinting.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "TEKNOWHOW LIMITED",
+   "area": "NG15",
+   "website": "https://www.teknowhow.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THE BUSINESS EVOLUTION BUSINESS LIMITED",
+   "area": "NG23",
+   "website": "https://businessevolution.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "TAYLOR-MAYERS LTD",
+   "area": "NG34",
+   "website": "https://taylormayers.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "THE ALBERT HALL (NOTTINGHAM) LIMITED",
+   "area": "NG1",
+   "website": "https://www.alberthallnottingham.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "TEKIDAN LTD",
+   "area": "NG11",
+   "website": "https://tekidan.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TENNANT RUBBER LIMITED",
+   "area": "NG7",
+   "website": "https://www.tennantrubber.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "THE CHRISTMAS CABIN LIMITED",
+   "area": "NG33",
+   "website": "https://christmascabin.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THE EDUCATION MUTUAL LIMITED",
+   "area": "NG18",
+   "website": "https://www.educationmutual.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "THE FLOAT SPACE LIMITED",
+   "area": "NG22",
+   "website": "https://www.floatspace.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THE PLEASLEY PIT TRUST",
+   "area": "NG19",
+   "website": "https://www.pleasleypittrust.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE J M PRACTICE LIMITED",
+   "area": "NG31",
+   "website": "https://jmpractice.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THE ROBIN HOOD THEATRE COMPANY LIMITED",
+   "area": "NG23",
+   "website": "https://www.rhtc.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PERFECT POD COMPANY LTD",
+   "area": "NG11",
+   "website": "https://www.perfectpod.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THAALAM LIMITED",
+   "area": "NG9",
+   "website": "https://hi2chat.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THE SLEAFORD NAVIGATION TRUST",
+   "area": "NG34",
+   "website": "https://www.sleafordnavigation.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE SERENITY CARE COMPANY LIMITED",
+   "area": "NG31",
+   "website": "https://serenitycare.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THE SMART PARTNERSHIP LIMITED",
+   "area": "NG8",
+   "website": "https://smartpartnership.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "THE TALENT FACTORY LIMITED",
+   "area": "NG9",
+   "website": "https://talentfactory.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THE REGENCY DANCE CENTRE LIMITED",
+   "area": "NG17",
+   "website": "https://regencydancecentre.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THE WILKINS GROUP LIMITED",
+   "area": "NG4",
+   "website": "https://wilkins.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THERAPY NOTTINGHAM LTD",
+   "area": "NG1",
+   "website": "https://www.therapynottingham.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "THINK FIGURES LIMITED",
+   "area": "NG15",
+   "website": "https://thinkfigures.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THRIVE SCHOOL SOLUTIONS LTD",
+   "area": "NG2",
+   "website": "https://www.thriveschoolsolutions.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "TIM BENTON LIMITED",
+   "area": "NG34",
+   "website": "https://timbenton.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TIDYWARE UK LTD",
+   "area": "NG21",
+   "website": "https://www.tidyware.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "THE ROMO GROUP LIMITED",
+   "area": "NG17",
+   "website": "https://www.romo.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "TILE TEC FIREPLACES LIMITED",
+   "area": "NG4",
+   "website": "https://tiletec.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TLA DISTRIBUTION LIMITED",
+   "area": "NG13",
+   "website": "https://tlauk.net/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "THOMAS JAMES ESTATES LIMITED",
+   "area": "NG11",
+   "website": "https://thomasjamesestates.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TJ CLEANING SOLUTIONS LIMITED",
+   "area": "NG10",
+   "website": "https://www.tjcleaningsolutions.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "THE WELL PLACE LIMITED",
+   "area": "NG12",
+   "website": "https://wellplace.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TOP DOG NUTRITION LTD",
+   "area": "NG8",
+   "website": "https://topdognutrition.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRACEY HARTSHORN LIMITED",
+   "area": "NG10",
+   "website": "https://www.traceyhartshorn.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRENT VINEYARD",
+   "area": "NG7",
+   "website": "https://www.trentvineyard.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TRAIL BLOOM LTD",
+   "area": "NG14",
+   "website": "https://trailbloom.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THE LION CARS LTD",
+   "area": "NG8",
+   "website": "https://lion-cars.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TOMATO PROPERTY LIMITED",
+   "area": "NG10",
+   "website": "https://www.tomatoproperty.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "TOP GEAR CAR REPAIR LTD",
+   "area": "NG31",
+   "website": "https://topgearcarrepair.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "TRANSFORMATIONAL HRM LIMITED",
+   "area": "NG18",
+   "website": "https://transformationalhrm.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRANSRAP PACKAGING LIMITED",
+   "area": "NG17",
+   "website": "https://www.transrappackaging.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRANSPORT MANAGER SERVICES LTD",
+   "area": "NG17",
+   "website": "https://transportmanager.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "TRUE PATH GLOBAL LIMITED",
+   "area": "NG2",
+   "website": "https://truepath.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "TRP IMPORTS LTD",
+   "area": "NG34",
+   "website": "https://trpimports.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRUEDOORS LTD",
+   "area": "NG10",
+   "website": "https://www.truedoors.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRAFFORD OLIVER LIMITED",
+   "area": "NG23",
+   "website": "https://www.traffordoliver.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRINITE HOMES LTD",
+   "area": "NG19",
+   "website": "https://trinitehomes.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TWEEZERMAN UK LTD",
+   "area": "NG12",
+   "website": "https://tweezerman.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "UK COMMUNITY FOUNDATIONS",
+   "area": "NG24",
+   "website": "https://www.ukcommunityfoundations.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TYPERIGHT LIMITED",
+   "area": "NG32",
+   "website": "https://typeright.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TWO GUYS RESEARCH LIMITED",
+   "area": "NG6",
+   "website": "https://www.twoguysresearch.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TULIP KITCHENS LIMITED",
+   "area": "NG19",
+   "website": "https://tulipkitchens.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "TUXFORD EXPORTS LIMITED",
+   "area": "NG14",
+   "website": "https://tuxfordexports.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRIDENT TRAINING CENTRE LIMITED",
+   "area": "NG4",
+   "website": "https://tridenttrainingcentre.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "TUXFORD LAWNMOWER CENTRE LIMITED",
+   "area": "NG23",
+   "website": "https://www.tuxfordlawnmowercentre.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "THIS IS KODE LIMITED",
+   "area": "NG18",
+   "website": "https://www.thisiskode.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRAVIS MORLEY ASSOCIATES LIMITED",
+   "area": "NG10",
+   "website": "https://www.travismorley.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TRZ CARE LIMITED",
+   "area": "NG6",
+   "website": "https://www.trzcare.co.uk/wp-signup.php?new=trzcare.co.uk",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "TRIANGULAR TRAINING LTD",
+   "area": "NG15",
+   "website": "https://triangulartraining.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "TYRE EMERGENCY LTD",
+   "area": "NG22",
+   "website": "https://tyreemergency.com/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "ULTIMATE LEARNING RESOURCES LIMITED",
+   "area": "NG34",
+   "website": "https://ultimatelearningresources.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "ULTIMATION DIRECT LTD",
+   "area": "NG24",
+   "website": "https://ultimationdirect.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VALCANDO LTD",
+   "area": "NG6",
+   "website": "https://valcando.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "UNITED TRAINING SOLUTIONS LTD",
+   "area": "NG18",
+   "website": "https://www.unitedtrainingsolutions.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "UNIVERSAL CRANE MATS LTD",
+   "area": "NG17",
+   "website": "https://www.universal-crane-mats.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "UTILITY AID LIMITED",
+   "area": "NG34",
+   "website": "https://www.utility-aid.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "UPSTREAM PRINTING LIMITED",
+   "area": "NG15",
+   "website": "https://upstreamprinting.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "URBAN PROPERTIES INVESTMENTS LTD",
+   "area": "NG18",
+   "website": "https://www.urbanproperties.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "U.K. DIAMOND DRILLING LIMITED",
+   "area": "NG5",
+   "website": "https://www.ukdiamonddrilling.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "URBAN JOINERY LTD",
+   "area": "NG20",
+   "website": "https://urbanjoinery.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VALE AUTOMOTIVE LTD",
+   "area": "NG13",
+   "website": "https://valeautomotive.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "VALE RECRUITMENT LIMITED",
+   "area": "NG13",
+   "website": "https://valerecruitment.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TSM TECHNICAL LTD",
+   "area": "NG20",
+   "website": "https://tsmtechnical.current.jobs/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "VALE PROTECTIVE COATINGS LIMITED",
+   "area": "NG13",
+   "website": "https://valeprotective.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VALE CLEARANCES LTD",
+   "area": "NG13",
+   "website": "https://www.valeclearances.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VALENCIA ESTATES LIMITED",
+   "area": "NG18",
+   "website": "https://www.valenciaestates.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VEDHACART LTD",
+   "area": "NG1",
+   "website": "https://vedhacart.co.uk/app/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "UNIVERSAL PRINT FINISHERS LIMITED",
+   "area": "NG15",
+   "website": "https://www.universalprintfinishers.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VERIVIS SUPPORT LIMITED",
+   "area": "NG1",
+   "website": "https://www.verivissupport.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VDK RESEARCH LTD",
+   "area": "NG31",
+   "website": "https://www.vdkresearch.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "UNDERHILL & ASSOCIATES LIMITED",
+   "area": "NG31",
+   "website": "https://www.underhill-associates.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "VENTURE LEARNING LIMITED",
+   "area": "NG4",
+   "website": "https://venturelearning.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VFIT PHYSIO LTD",
+   "area": "NG21",
+   "website": "https://vfitphysio.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VERTEX ENGINEERING SOLUTIONS LIMITED",
+   "area": "NG32",
+   "website": "https://autocraftsg.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VERTEX SMART SYSTEMS LIMITED",
+   "area": "NG16",
+   "website": "https://vertexsmart.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "TOTAL CARE SECURITY LIMITED",
+   "area": "NG24",
+   "website": "https://www.totalcaresecurity.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "VIABILITY SOLUTIONS LTD",
+   "area": "NG23",
+   "website": "https://viability-solutions.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VEN CONSTRUCTION LIMITED",
+   "area": "NG21",
+   "website": "https://venconstruction.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VET CONNECT LIMITED",
+   "area": "NG16",
+   "website": "https://vet-connect.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VILLAGE HOLIDAYS LIMITED",
+   "area": "NG21",
+   "website": "https://www.villageholidays.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VAN DER KNIGHT LTD",
+   "area": "NG31",
+   "website": "https://www.vanderknight.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VALOUR CONSULTANCY LIMITED",
+   "area": "NG33",
+   "website": "https://valourconsultancy.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VIRTUALLY SMART LTD",
+   "area": "NG17",
+   "website": "https://virtuallysmart.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VOLTZ BIKES LIMITED",
+   "area": "NG17",
+   "website": "https://voltz-bikes.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "VIRTUAL TC LIMITED",
+   "area": "NG13",
+   "website": "https://www.virtualtc.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VIKING SIGNS LTD",
+   "area": "NG31",
+   "website": "https://vikingsigns.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VOXON DIGITAL LTD",
+   "area": "NG2",
+   "website": "https://voxondigital.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VIVERE LIFE LIMITED",
+   "area": "NG7",
+   "website": "https://www.viverelife.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VORTEX PROPERTY LTD",
+   "area": "NG10",
+   "website": "https://vortexproperty.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VERY NEW MEDIA LIMITED",
+   "area": "NG23",
+   "website": "https://www.verynewmedia.com/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "VISION ZERO CONNECT LIMITED",
+   "area": "NG22",
+   "website": "https://www.visionzeroconnect.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VP FORENSIC LIMITED",
+   "area": "NG15",
+   "website": "http://www.vpfn.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "URBAN BUSHCRAFT LIMITED",
+   "area": "NG6",
+   "website": "https://urbanbushcraft.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WARRENS ESTATE AGENTS LTD",
+   "area": "NG17",
+   "website": "https://warrensestateagents.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WATSONS RESIDENTIAL LTD",
+   "area": "NG16",
+   "website": "https://www.watsons-residential.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WEBFLEX LTD",
+   "area": "NG18",
+   "website": "https://webflex.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VXI POWER LIMITED",
+   "area": "NG24",
+   "website": "https://www.vxipower.com/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "WATT ENERGY SAVER LTD",
+   "area": "NG22",
+   "website": "https://www.wattenergysaver.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WARM DESIGN LIMITED",
+   "area": "NG18",
+   "website": "https://www.wearewarm.com/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "WEBSTERS RURAL LIMITED",
+   "area": "NG34",
+   "website": "https://webstersrural.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WHIRLING BLACK BUSINESS SERVICES LTD",
+   "area": "NG31",
+   "website": "https://whirlingblack.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "WHITE ISLAND PROPERTY HOLDINGS LTD",
+   "area": "NG10",
+   "website": "https://whiteisland.co.uk/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "WELHAM ARCHITECTS LIMITED",
+   "area": "NG12",
+   "website": "https://www.welhamarchitects.com/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WEST BRIDGFORD MACHINE CO. LIMITED",
+   "area": "NG2",
+   "website": "http://www.wbm-uk.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "W.J.P. ENGINEERING PLASTICS LIMITED",
+   "area": "NG8",
+   "website": "https://www.wjpengineeringplastics.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WHEATLEY WINDOWS & DOORS LTD",
+   "area": "NG21",
+   "website": "https://wheatleywindowsdoors.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WEST BRIDGFORD ACCOUNTANCY LIMITED",
+   "area": "NG2",
+   "website": "https://www.westbridgfordaccountancy.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "WELLSPRING PR LTD",
+   "area": "NG5",
+   "website": "https://wellspringpr.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WESTBULL CONSTRUCTION LIMITED",
+   "area": "NG11",
+   "website": "https://daaz.com/lander/?name=westbullconstruction.co.uk",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WATCH-IT SECURITY SERVICES LTD",
+   "area": "NG24",
+   "website": "https://watch-it-security.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WILD RIVER CAMPERS LTD",
+   "area": "NG10",
+   "website": "https://wildrivercampers.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WEST BRIDGFORD GLASS COMPANY LIMITED",
+   "area": "NG8",
+   "website": "https://westbridgfordglass.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WILL BARKER & CO LTD",
+   "area": "NG34",
+   "website": "https://www.willbarker.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WARDLE PROPERTY DEVELOPMENT LTD",
+   "area": "NG23",
+   "website": "https://wardleproperty.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "VIXEN SUPPLYING SOLUTION LTD",
+   "area": "NG7",
+   "website": "https://vixensupplyingsolution.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WILLIAMS & ROBINSON PROPERTY HOLDINGS LTD",
+   "area": "NG34",
+   "website": "https://williamsrobinson.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "WILSON ENERGY LTD",
+   "area": "NG24",
+   "website": "https://wilsonenergy.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "WOODHEAD ENTERPRISE LIMITED",
+   "area": "NG21",
+   "website": "https://woodhead-enterprise.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WILLOW TREE NURSERY LIMITED",
+   "area": "NG10",
+   "website": "https://www.storal.com/nursery-school/willow-tree-nursery-walthamstow",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "VIRTUAL ADMINISTRATION LIMITED",
+   "area": "NG24",
+   "website": "https://www.virtual-administration.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WOODLARK ASSOCIATES LIMITED",
+   "area": "NG5",
+   "website": "https://woodlarkassociates.co.uk/",
+   "confirmed_by": [
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "WOODLANDS RURAL LTD",
+   "area": "NG32",
+   "website": "https://www.woodlandsrural.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WINGSPAN ADVISORY SERVICES LTD",
+   "area": "NG12",
+   "website": "https://wingspanlegacy.com/",
+   "confirmed_by": [
+    "every word of the name"
+   ]
+  },
+  {
+   "name": "WINSOVER LIMITED",
+   "area": "NG12",
+   "website": "https://winsover.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WILLIAMS-ARCHITECTS LIMITED",
+   "area": "NG10",
+   "website": "https://www.williams-architects.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WINGMAN LIMITED",
+   "area": "NG23",
+   "website": "https://www.wingman.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WORKFORCE SKILLS SUPPORT LTD",
+   "area": "NG18",
+   "website": "https://workforceskillssupport.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "YOUR HOME CARE GROUP LIMITED",
+   "area": "NG19",
+   "website": "https://yourhomecare.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "The Ark at Wellin Lane pre-school",
+   "area": "NG12",
+   "website": "https://www.thearkpreschool.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Buttercross Pre-School",
+   "area": "NG13",
+   "website": "http://www.buttercrosspreschool.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Good Shepherd Pre-School",
+   "area": "NG5",
+   "website": "http://goodshepherdpreschool.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SHERWOOD PLAYGROUP",
+   "area": "NG5",
+   "website": "https://www.sherwoodplaygroup.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Green Academy Trust",
+   "area": "NG6",
+   "website": "http://www.greenacademytrust.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Sherwood Community Association CIO",
+   "area": "NG5",
+   "website": "https://sherwoodcommunitycentre.com/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Collingham and District Pre-School",
+   "area": "NG23",
+   "website": "https://www.collinghampreschool.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE ALICE MEDICAL CENTRE",
+   "area": "NG5",
+   "website": "https://www.bestwoodparkmedicalcentre.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "West Bridgford Medical Centre",
+   "area": "NG2",
+   "website": "https://www.westbridgfordmedicalcentre.nhs.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Derby Road Health Centre",
+   "area": "NG7",
+   "website": "https://www.drhc.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Long Eaton and Sawley Foodbank",
+   "area": "NG10",
+   "website": "http://longeatonsawley.foodbank.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Inflammatory Neuropathies UK",
+   "area": "NG34",
+   "website": "https://www.inflammatoryneuropathies.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANOR RESIDENTIAL HOME ARNOLD LTD",
+   "area": "NG5",
+   "website": "https://www.themanorcarehome.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Passion Church - Blidworth",
+   "area": "NG21",
+   "website": "https://www.passionchurch.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE FRANCIS BERNARD CAUNT EDUCATION TRUST",
+   "area": "NG24",
+   "website": "https://www.larken.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The United Charities of Abel Collin",
+   "area": "NG9",
+   "website": "https://www.abelcollins.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nottingham Operatic Society",
+   "area": "NG9",
+   "website": "https://www.nottinghamoperatic.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Mansfield and Sutton Astronomical Society",
+   "area": "NG17",
+   "website": "https://www.sherwood-observatory.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Helen Loewenstein Memorial Trust",
+   "area": "NG5",
+   "website": "https://www.hlmt.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Coddington Community Association CIO",
+   "area": "NG24",
+   "website": "http://www.coddingtoncommunitycentre.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "1st/2nd West Bridgford Scout Group",
+   "area": "NG2",
+   "website": "https://www.1st2ndwbscouts.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Farnsfield Trust",
+   "area": "NG22",
+   "website": "https://www.thefarnsfieldtrust.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Little Ted Foundation",
+   "area": "NG14",
+   "website": "https://www.thelittletedfoundation.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Moo Haven",
+   "area": "NG2",
+   "website": "https://www.moo-haven.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Karimia Institute",
+   "area": "NG7",
+   "website": "https://www.karimia.fortnet.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Support for Survivors",
+   "area": "NG5",
+   "website": "https://www.supportforsurvivors.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Breaking Barriers Building Bridges",
+   "area": "NG1",
+   "website": "https://www.4bbbb.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Ashfield MakerSpace",
+   "area": "NG17",
+   "website": "https://makerspaceashfield.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Your CVS",
+   "area": "NG12",
+   "website": "https://www.yourcvsnotts.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM BENGALI ASSOCIATION",
+   "area": "NG2",
+   "website": "https://nottinghambengaliassociation.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Arden Foodbank CIO",
+   "area": "B49",
+   "website": "https://arden.foodbank.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Nottingham Child Contact Centre",
+   "area": "NG1",
+   "website": "https://nottinghamchildcontactcentre.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Victoria Home Care Solutions",
+   "area": "NG5",
+   "website": "https://www.victoriahomecaresolutions.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Lambley Primary School",
+   "area": "NG4",
+   "website": "https://www.lambley.notts.sch.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Fiskerton-cum-Morton Village Hall Playing Field and Pavillion",
+   "area": "NG25",
+   "website": "https://arthur-radford.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The National Society for Education, Mentoring and Media",
+   "area": "NG1",
+   "website": "https://www.nsemm.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Brook Community Church & Centre",
+   "area": "NG20",
+   "website": "https://www.thebrookcc.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Y-NOTTS",
+   "area": "NG3",
+   "website": "https://www.y-notts.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ST PETER'S NOTTINGHAM CHURCH CHARITY",
+   "area": "NG1",
+   "website": "https://www.nottinghamchurches.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM LIBERAL SYNAGOGUE",
+   "area": "NG5",
+   "website": "https://www.nottinghamliberalsynagogue.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE FUND FOR THE REPLACEMENT OF ANIMALS IN MEDICAL EXPERIMENTS (F R A M E)",
+   "area": "NG1",
+   "website": "https://www.replacinganimalresearch.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CONGREGATIONAL FEDERATION",
+   "area": "NG1",
+   "website": "http://www.congregational.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PRIMATE SOCIETY OF GREAT BRITAIN",
+   "area": "NG2",
+   "website": "https://www.psgb.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE WHITELANDS COLLEGE GUILD OF ST URSULA",
+   "area": "NG5",
+   "website": "https://whitelandscollegeguild.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE JONES 1986 CHARITABLE TRUST",
+   "area": "NG1",
+   "website": "https://www.thejonescharitabletrust.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE HERTFORD CHARITABLE TRUST",
+   "area": "B49",
+   "website": "https://ragley.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HINDU TEMPLE CULTURAL AND COMMUNITY CENTRE OF NOTTINGHAM",
+   "area": "NG3",
+   "website": "https://www.hindutemple.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BEESTON AND DISTRICT CIVIC SOCIETY",
+   "area": "NG9",
+   "website": "https://www.beestoncivicsociety.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE NOTTINGHAM MEDICO-CHIRURGICAL SOCIETY CHARITY",
+   "area": "NG5",
+   "website": "https://www.medchi.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "3RD WOODTHORPE (ST MARK'S) SCOUT GROUP",
+   "area": "NG5",
+   "website": "https://www.3wscouts.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE NOTTINGHAM 'ROOSEVELT' MEMORIAL TRAVELLING SCHOLARSHIP FUND",
+   "area": "NG1",
+   "website": "https://www.rooseveltscholarship.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FAMILY CARE",
+   "area": "NG3",
+   "website": "https://www.familycare-nottingham.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRIENDS OF CARLTON DIGBY SCHOOL",
+   "area": "NG3",
+   "website": "https://www.carltondigby.notts.sch.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PATRA INCORPORATING ACDA LIMITED",
+   "area": "NG3",
+   "website": "https://www.patraeastmidlands.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LUCY AND VINCENT BROWN VILLAGE HALL",
+   "area": "NG9",
+   "website": "https://attenboroughvillagehall.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "2ND BEESTON SEA SCOUTS",
+   "area": "NG9",
+   "website": "https://www.2ndbeeston.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "5TH STAPLEFORD SCOUT GROUP",
+   "area": "NG9",
+   "website": "https://www.5thstaplefordscouts.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "124TH NOTTINGHAM SCOUT GROUP",
+   "area": "NG8",
+   "website": "https://www.124thnottinghamscouts.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "1ST LADY BAY SCOUT GROUP",
+   "area": "NG2",
+   "website": "https://ladybayscouts.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "3RD WEST BRIDGFORD (FRIARY) SCOUT GROUP",
+   "area": "NG2",
+   "website": "https://www.3rdwbfriaryscouts.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "1ST ALCESTER SCOUT GROUP",
+   "area": "B49",
+   "website": "https://www.1st-alcester.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LIBRARIES AND INFORMATION EAST MIDLANDS",
+   "area": "NG8",
+   "website": "https://www.liem.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE EARLY YEARS PLAYGROUP",
+   "area": "NG9",
+   "website": "http://www.earlyyearsplaygroup.co.uk/index.html",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE MUSEUM OF THE MERCIAN REGIMENT (WORCESTERSHIRE & SHERWOOD FORESTERS COLLECTION)",
+   "area": "NG9",
+   "website": "https://www.stand-firm-strike-hard.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JOHN BAGLEY MUSIC TRUST",
+   "area": "NG1",
+   "website": "https://www.johnbagleymusictrust.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ROSEHILL SCHOOL ASSOCIATION",
+   "area": "NG3",
+   "website": "https://www.therosehillschool.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM AND DISTRICT U3A",
+   "area": "NG1",
+   "website": "https://www.nottu3a.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "1ST TOTON (ST PETERS) SCOUT GROUP",
+   "area": "NG9",
+   "website": "https://www.1sttoton.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "STAPLEFORD ST JOHNS C OF E PRIMARY SCHOOL FUND",
+   "area": "NG9",
+   "website": "https://www.st-johns.notts.sch.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JOHN CLIFFORD SCHOOL FUND",
+   "area": "NG9",
+   "website": "https://www.johncliffordschool.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TRIRATNA BUDDHIST COMMUNITY (NOTTINGHAM)",
+   "area": "NG1",
+   "website": "https://www.nottinghambuddhistcentre.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WESTDALE JUNIOR SCHOOL FUND",
+   "area": "NG3",
+   "website": "https://www.westdalejuniors.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "KINGSWELL JUNIOR SCHOOL FUND",
+   "area": "NG5",
+   "website": "https://www.arnoldview.notts.sch.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ALBANY INFANT SCHOOL FUND",
+   "area": "NG9",
+   "website": "https://www.albanyinfants.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "The Lanes Primary School Fund",
+   "area": "NG9",
+   "website": "https://www.collegehouse.notts.sch.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Arnold Mill Primary School Fund",
+   "area": "NG5",
+   "website": "https://www.arnoldmill.ik.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WOODTHORPE INFANTS SCHOOL FUND",
+   "area": "NG5",
+   "website": "https://www.woodthorpeinfantschool.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DERBY BREAST CANCER SUPPORT GROUP",
+   "area": "NG2",
+   "website": "https://www.derbybreastcancersupport.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE SINFONIA CHORALE",
+   "area": "NG2",
+   "website": "https://www.sinfoniachorale.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ARK CHURCH NOTTINGHAM",
+   "area": "NG8",
+   "website": "https://www.arkchurch-nottingham.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "British Society for Mental Health and Deaf People",
+   "area": "NG5",
+   "website": "https://www.bsmhd.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DANCING EYE SYNDROME SUPPORT TRUST",
+   "area": "NG9",
+   "website": "https://www.dancingeyes.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JESSE GRAY SCHOOL FUND",
+   "area": "NG2",
+   "website": "http://www.jessegray.notts.sch.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE COALITION OF DISABLED PEOPLE",
+   "area": "NG1",
+   "website": "https://info@ncdp.org.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MALAWI ASSOCIATION (UK)",
+   "area": "NG8",
+   "website": "https://www.malawiassociation.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE CHINESE WELFARE ASSOCIATION",
+   "area": "NG1",
+   "website": "https://www.nottinghamchinese.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BROXTOWE YOUTH HOMELESSNESS",
+   "area": "NG9",
+   "website": "https://www.broxtoweyouthhomeless.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE BANGLADESH CENTRE",
+   "area": "NG1",
+   "website": "https://www.bangladeshcentre.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE FRIENDS OF ST MARY'S NOTTINGHAM",
+   "area": "NG1",
+   "website": "https://www.stmarysnottingham.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE DISABLED PEOPLES MOVEMENT",
+   "area": "NG5",
+   "website": "https://www.ndpm.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE ROYAL SCOTTISH COUNTRY DANCE SOCIETY NOTTINGHAM BRANCH",
+   "area": "NG7",
+   "website": "https://nottinghamrscds.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE CARDIAC SUPPORT GROUP (NOTTINGHAM)",
+   "area": "NG2",
+   "website": "https://www.heartsupport.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE SEVENTY-THIRD TRUST",
+   "area": "NG9",
+   "website": "https://www.73rdtrust.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM GIRLS' HIGH SCHOOL PTA",
+   "area": "NG1",
+   "website": "https://www.nottinghamgirlshigh.gdst.net",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "EDUCATION FOR THE CHILDREN FOUNDATION",
+   "area": "NG2",
+   "website": "https://www.eftcfoundation.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM TWINS & TRIPLETS CLUB",
+   "area": "NG8",
+   "website": "https://www.nottinghamtwins.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PAKISTAN FORUM NOTTINGHAM",
+   "area": "NG5",
+   "website": "https://www.pakistanforum.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ANGELS AND MONSTERS",
+   "area": "NG1",
+   "website": "https://WWW.CFS-LLP.COM",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE NOTTINGHAM ARIMATHEA TRUST",
+   "area": "NG3",
+   "website": "https://www.nottinghamarimathea.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MUNDI",
+   "area": "NG7",
+   "website": "https://www.mundi.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM OUTLAWS AMATEUR RUGBY LEAGUE FOOTBALL CLUB",
+   "area": "NG2",
+   "website": "https://www.nottinghamrl.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM INTER FAITH COUNCIL",
+   "area": "NG1",
+   "website": "https://www.interfaithnottingham.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TAGADERE",
+   "area": "NG1",
+   "website": "https://www.tagadere.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "KARAM YOG",
+   "area": "NG7",
+   "website": "https://www.nottinghamteachingcollege.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "OAK FIELD SCHOOL FUND",
+   "area": "NG8",
+   "website": "https://www.oakfieldschool.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD ROAD BAPTIST CHURCH, NOTTINGHAM",
+   "area": "NG7",
+   "website": "https://mrbc.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST. JAMES, PORCHESTER",
+   "area": "NG3",
+   "website": "https://www.st-james-nottingham.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BEESTON METHODIST CHURCH",
+   "area": "NG9",
+   "website": "https://www.beestonmethodist.church",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "STAA",
+   "area": "NG1",
+   "website": "https://www.staa-allotments.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WILLING AND ABEL",
+   "area": "NG9",
+   "website": "https://willingandabel.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CAISTOR ROMAN PROJECT LIMITED",
+   "area": "NG3",
+   "website": "https://www.caistorromanproject.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF NOTTINGHAM SAINT PETER AND ALL SAINTS",
+   "area": "NG1",
+   "website": "https://www.nottinghamchurches.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST MARY, ATTENBOROUGH.",
+   "area": "NG9",
+   "website": "https://www.attenboroughchurch.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST MARK'S WOODTHORPE",
+   "area": "NG5",
+   "website": "https://www.stmarksonline.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST NICHOLAS, NOTTINGHAM",
+   "area": "NG1",
+   "website": "https://www.stnics.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST. JUDE, MAPPERLEY, NOTTINGHAM",
+   "area": "NG3",
+   "website": "https://www.stjudeschurch.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WEST BRIDGFORD BAPTIST CHURCH",
+   "area": "NG2",
+   "website": "https://www.westbridgfordbaptist.church",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST LUKE, GAMSTON AND BRIDGFORD",
+   "area": "NG2",
+   "website": "https://www.st-lukes-gamston.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST ANDREW, NOTTINGHAM",
+   "area": "NG1",
+   "website": "https://www.trinitychurchnottingham.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PCC CHILWELL",
+   "area": "NG9",
+   "website": "https://www.chilwellparish.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST GILES WEST BRIDGFORD",
+   "area": "NG2",
+   "website": "https://www.stgilesparish.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BRAMCOTE OLD CHURCH TOWER TRUST",
+   "area": "NG9",
+   "website": "https://www.bramcoteoldtower.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ST PETER'S, TOTON",
+   "area": "NG9",
+   "website": "https://www.totonchurches.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE MIDLANDS GOSPEL PARTNERSHIP TRUST",
+   "area": "NG9",
+   "website": "https://www.midlandsgospel.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "VILLAGE FOUNDATIONS",
+   "area": "NG3",
+   "website": "https://www.village-foundations.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE POLISH LANGUAGE AND CULTURAL CENTRE IN NOTTINGHAM",
+   "area": "NG5",
+   "website": "http://www.polishschoolnottingham.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Major Oak Chorus",
+   "area": "NG2",
+   "website": "https://www.majoroakchorus.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM SOCIETY OF ARTISTS LTD",
+   "area": "NG1",
+   "website": "https://www.nottinghamartists.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TOP VALLEY COMMUNITY ASSOCIATION",
+   "area": "NG5",
+   "website": "https://www.topvalleycommunitycentre.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CALVARY APOSTOLIC ASSEMBLY",
+   "area": "NG8",
+   "website": "https://www.caachurches.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JERICHO ROAD PROJECT",
+   "area": "NG3",
+   "website": "https://www.jerichoroad.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE DOMINION HOUSE CHURCH",
+   "area": "NG7",
+   "website": "https://www.thedominionhouse.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ECOWORKS",
+   "area": "NG3",
+   "website": "https://www.ecoworks.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM FOCUS ON WELLBEING",
+   "area": "NG8",
+   "website": "https://www.nfow.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MUSIC FOR EVERYONE",
+   "area": "NG1",
+   "website": "https://www.music-for-everyone.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BASFORD, BESTWOOD & BULWELL FOODBANK",
+   "area": "NG5",
+   "website": "https://www.bestwoodbulwell.foodbank.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MUTED",
+   "area": "NG5",
+   "website": "https://www.muted.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CITY REVIVAL CHURCH INTERNATIONAL",
+   "area": "NG9",
+   "website": "https://www.kfcrm-crci.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SFICE FOUNDATION",
+   "area": "NG7",
+   "website": "https://www.sfice.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "RAINBOW PARENTS CARERS FORUM",
+   "area": "NG5",
+   "website": "http://www.rainbowpcf.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Aspley Christ Church",
+   "area": "NG8",
+   "website": "https://www.aspleychristchurch.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JOSEPH COOPER TRUST",
+   "area": "NG9",
+   "website": "https://www.josephcoopertrust.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ASSOCIATION OF VISITORS TO IMMIGRATION DETAINEES",
+   "area": "NG3",
+   "website": "https://www.aviddetention.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE NEIGHBOURHOOD WATCH",
+   "area": "NG2",
+   "website": "https://www.nottswatch.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "EMMANUEL CHURCH (BRAMCOTE)",
+   "area": "NG9",
+   "website": "https://www.bramcote.church",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WATER WORKS",
+   "area": "NG5",
+   "website": "https://www.waterworkscharity.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TEREMOK - NOTTINGHAM RUSSIAN SCHOOL",
+   "area": "NG5",
+   "website": "http://www.teremok.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM SPIRITUALIST CHURCH",
+   "area": "NG5",
+   "website": "http://www.nottinghamspiritualistchurch.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HOLME PIERREPONT CANOE CLUB",
+   "area": "NG2",
+   "website": "https://www.hppcc.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ANGELIC STARS",
+   "area": "NG1",
+   "website": "https://www.angelicstars.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "PASIC",
+   "area": "NG7",
+   "website": "https://www.pasic.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "AFRICAN INSTITUTE FOR SOCIAL DEVELOPMENT",
+   "area": "NG7",
+   "website": "https://www.http://africaninstitute.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BEESTON CONSOLIDATED CHARITY",
+   "area": "NG9",
+   "website": "https://www.beestonconsolidatedcharity.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TRENT DISTRICT COMMUNITY FIRST RESPONDERS",
+   "area": "NG2",
+   "website": "https://www.trentcfr.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE NOTTINGHAM IRISH CENTRE",
+   "area": "NG2",
+   "website": "https://nottinghamirishcentre.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NEW LIFE BAPTIST CHURCH",
+   "area": "NG2",
+   "website": "https://www.newlifebaptist.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Rosa Foundation",
+   "area": "NG2",
+   "website": "https://rosafoundation.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WHITE ROSE",
+   "area": "NG1",
+   "website": "https://www.whiterosefashion.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MOJATU FOUNDATION",
+   "area": "NG7",
+   "website": "https://www.mojatufoundation.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WORLD WARS MUSLIM MEMORIAL TRUST",
+   "area": "NG3",
+   "website": "https://www.wwmmt.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LITERACY VOLUNTEERS",
+   "area": "NG5",
+   "website": "https://www.literacyvolunteers.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "JLP TRUST ANIMAL RESCUE",
+   "area": "B49",
+   "website": "https://www.jlptrustanimalrescue.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GOD'S VINEYARD MINISTRIES",
+   "area": "NG7",
+   "website": "https://www.godsvineyardministries.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SALAAM SHALOM KITCHEN",
+   "area": "NG7",
+   "website": "https://salaamshalomkitchen.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "YOUNG CREATIVES NOTTINGHAM",
+   "area": "NG5",
+   "website": "https://www.youngcreativeawards.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM AFRICAN CONSORTIUM",
+   "area": "NG7",
+   "website": "https://www.naconsortium.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "EAGLE'S NEST COMMUNITY ACTION",
+   "area": "NG5",
+   "website": "https://www.encc.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "TRINITY CHURCH NOTTINGHAM",
+   "area": "NG1",
+   "website": "https://www.trinitychurchnottingham.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM CHRISTADELPHIAN ECCLESIA (JARVIS AVENUE HALL)",
+   "area": "NG3",
+   "website": "https://www.thegospelandyou.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "QUEEN'S WALK COMMUNITY FOUNDATION CIO",
+   "area": "NG2",
+   "website": "https://www.queenswalkcommunitycentre.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ECHO (ECHO EYECARE HEALTH ORGANISATION)",
+   "area": "NG3",
+   "website": "https://www.eyecarehealth.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SHOE AID",
+   "area": "NG7",
+   "website": "https://www.shoeaid.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CENTRE FOR MEDICAL INFORMATICS AND PROFESSIONAL DEVELOPMENT",
+   "area": "NG5",
+   "website": "https://cmipd.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ALL SAINTS HOMELESS SHELTER",
+   "area": "NG3",
+   "website": "http://allsaintsshelter.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM OPEN SPACES FORUM",
+   "area": "NG2",
+   "website": "http://nosf.org.uk/index.html",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM ASTRONOMICAL SOCIETY",
+   "area": "NG2",
+   "website": "https://www.nottinghamastro.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Replacing Animal Research",
+   "area": "NG1",
+   "website": "http://www.replacinganimalresearch.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "CHAYAH DEVELOPMENT PROJECT",
+   "area": "NG9",
+   "website": "https://www.chayahgroup.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "INCLUSION IN FINANCE FOUNDATION",
+   "area": "NG2",
+   "website": "https://inclusioninfinancefoundation.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL THE ECCLESIASTICAL PARISH OF ST MARY THE VIRGIN, THE LACE MARKET, NOTTINGHAM",
+   "area": "NG1",
+   "website": "https://stmarysnottingham.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE FRIENDS OF GEORGE SPENCER",
+   "area": "NG9",
+   "website": "http://www.george-spencer.notts.sch.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "AUTISTIC NOTTINGHAM",
+   "area": "NG1",
+   "website": "https://www.autisticnottingham.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "KIDS AGAINST PLASTIC",
+   "area": "NG5",
+   "website": "https://www.kidsagainstplastic.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MATTHEW 25:40",
+   "area": "NG1",
+   "website": "https://www.2540.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE AFRICAN DIASPORA ACADEMIC NETWORK",
+   "area": "NG7",
+   "website": "https://www.adanuk.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE WOLFPACK PROJECT",
+   "area": "NG5",
+   "website": "https://www.thewolfpackproject.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HAYWOOD ROAD COMMUNITY ASSOCIATION",
+   "area": "NG3",
+   "website": "https://haywoodroad.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "REDEEMER CHURCH NOTTINGHAM",
+   "area": "NG9",
+   "website": "https://www.redeemerchurch.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WEST BRIDGFORD COLTS FOOTBALL CLUB CHARITABLE INCORPORATED ORGANISATION",
+   "area": "NG2",
+   "website": "https://www.westbridgfordcolts.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "REFUGEE ROOTS",
+   "area": "NG1",
+   "website": "https://www.refugeeroots.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GURU NANAK'S MISSION",
+   "area": "NG9",
+   "website": "http://gurunanaksmission.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "VOLUNTEER GLOBAL HEALTH",
+   "area": "NG9",
+   "website": "https://www.volunteerglobalhealth.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "LOVE, MERCY, HOPE",
+   "area": "NG2",
+   "website": "https://www.lovemercyandhope.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WOLLATON UNIVERSITY OF THE THIRD AGE (U3A)",
+   "area": "NG8",
+   "website": "https://u3asites.org.uk/wollaton",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF STRELLEY ALL SAINTS",
+   "area": "NG8",
+   "website": "https://wearewoven.church",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Eagles Rest Church UK",
+   "area": "NG1",
+   "website": "https://WWW.eaglesrestchurchuk.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "AFRICAN WOMEN EMPOWERMENT FORUM (AWEF)",
+   "area": "NG1",
+   "website": "http://awef.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM FESTIVAL OF SCIENCE AND CURIOSITY LIMITED",
+   "area": "NG1",
+   "website": "https://nottsfosac.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM MUSLIM WOMEN'S NETWORK",
+   "area": "NG7",
+   "website": "https://nottinghammuslimwomensnetwork.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE RICHARD WHITEHEAD FOUNDATION",
+   "area": "NG2",
+   "website": "https://www.whitehead.foundation",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ALBINISM FELLOWSHIP",
+   "area": "NG2",
+   "website": "https://www.albinism.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "GOOD NEWS MUSIC",
+   "area": "NG8",
+   "website": "https://www.goodnewsmusic.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NG CHURCH NETWORK",
+   "area": "NG5",
+   "website": "https://www.ngchurchnetwork.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE GREIG HALL",
+   "area": "B49",
+   "website": "https://greighall.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM FINANCIAL RESILIENCE PARTNERSHIP",
+   "area": "NG3",
+   "website": "https://www.nottinghamfinancialresilience.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAMSHIRE DOWN'S SYNDROME SUPPORT GROUP",
+   "area": "NG2",
+   "website": "https://www.ndssg.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTS TRANS HUB",
+   "area": "NG1",
+   "website": "https://www.nottstranshub.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ALCESTER BAPTIST CHURCH",
+   "area": "B49",
+   "website": "https://www.alcesterbaptist.org.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "URBAN ABBEY",
+   "area": "NG2",
+   "website": "https://www.urbanabbey.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "OPEN MINDS NOTTINGHAM",
+   "area": "NG2",
+   "website": "https://www.emom.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ALBOS UK",
+   "area": "NG1",
+   "website": "https://www.albos.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE DYLAN RICH LEGACY",
+   "area": "NG2",
+   "website": "https://dylanrichlegacy.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ALL WOMEN AND GIRLS CIO",
+   "area": "NG7",
+   "website": "https://www.allwomenandgirls.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BIG C LITTLE C",
+   "area": "NG9",
+   "website": "https://bigclittlec.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FÉDÉRATION INTERNATIONALE DE POWERCHAIR FOOTBALL ASSOCIATION CIO",
+   "area": "NG9",
+   "website": "https://fipfa.org/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "SECTION 10 FOUNDATION",
+   "area": "NG2",
+   "website": "https://www.sec10foundation.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIATICAL PARISH OF ST PAUL'S DAYBROOK",
+   "area": "NG5",
+   "website": "https://www.stpaulsdaybrook.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NOTTINGHAM CROQUET CLUB",
+   "area": "NG7",
+   "website": "https://www.nottinghamcroquet.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WILD ACTION",
+   "area": "B50",
+   "website": "https://www.wildaction.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF NOTTINGHAM ST SAVIOUR",
+   "area": "NG2",
+   "website": "https://www.stsavioursnottingham.church",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "FRESH FOUNTAIN CHRISTIAN NETWORK",
+   "area": "NG7",
+   "website": "https://www.freshfountain.org",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "ARCHITECTS CHARITY LEAGUE",
+   "area": "NG1",
+   "website": "https://theNACL.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THE PAROCHIAL CHURCH COUNCIL OF THE ECCLESIASTICAL PARISH OF ALL HALLOWS CHURCH, LADY BAY",
+   "area": "NG2",
+   "website": "https://www.ladybaychurch.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "STRATFORD-ON-AVON BEEKEEPERS' ASSOCIATION",
+   "area": "B49",
+   "website": "https://www.stratfordbeekeepers.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WILD THINGS CHARITY",
+   "area": "NG7",
+   "website": "https://wildthings.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BARANKU SCHOOL FUNDRAISING CHARITY",
+   "area": "NG5",
+   "website": "https://www.barankuacademynurseryschool.gm",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "Support Through Sport",
+   "area": "NG7",
+   "website": "https://supportthroughsport.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "NATIONAL ASSOCIATION OF STANDING ADVISORY COUNCILS ON RELIGIOUS EDUCATION",
+   "area": "NG7",
+   "website": "https://www.nasacre.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DISCOBILITY",
+   "area": "NG1",
+   "website": "https://www.discobility.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "HOLLY'S MERRY MOGGIES",
+   "area": "NG3",
+   "website": "http://www.hollysmerrymoggies.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "DELIVERANCE FIRE MINISTRIES",
+   "area": "NG7",
+   "website": "https://www.deliverancefireministries.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WRITING EAST MIDLANDS CIO",
+   "area": "NG1",
+   "website": "https://www.writingeastmidlands.co.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "THEBARN",
+   "area": "B50",
+   "website": "https://www.thebarn.org.uk",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "MANSFIELD TOWN FILM FESTIVAL",
+   "area": "NG5",
+   "website": "https://www.mansfieldtownfilmfestival.com",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "BOOTS HOCKEY CLUB",
+   "area": "NG2",
+   "website": "https://www.bootshc.co.uk/",
+   "confirmed_by": [
+    "stated on the register"
+   ]
+  },
+  {
+   "name": "WATTBIKE LIMITED",
+   "area": "NG11",
+   "website": "https://wattbike.com/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "YATES ENGINEERING LIMITED",
+   "area": "NG14",
+   "website": "https://yatesengineering.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "XNM ACCOUNTANCY LIMITED",
+   "area": "NG19",
+   "website": "https://xnmaccountancy.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "WATT SOLAR COMPANY LTD",
+   "area": "NG9",
+   "website": "https://watt-solar.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "XN ARCHITECTS LTD",
+   "area": "NG15",
+   "website": "https://www.xnarchitects.com/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "YOUR PROPERTY MANAGEMENT LIMITED",
+   "area": "NG19",
+   "website": "https://yourpropertymanagement.co.uk/",
+   "confirmed_by": [
+    "company name"
+   ]
+  },
+  {
+   "name": "WOODSIDE AUTOCENTRE LIMITED",
+   "area": "NG16",
+   "website": "https://www.woodsideautocentre.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company name"
+   ]
+  },
+  {
+   "name": "WKL TRAINING LTD",
+   "area": "NG21",
+   "website": "https://wkltraining.co.uk/",
+   "confirmed_by": [
+    "postcode",
+    "company number",
+    "company name"
+   ]
+  },
+  {
+   "name": "ZOE'S CHILDCARE LTD",
+   "area": "NG18",
+   "website": "https://zoeschildcare.co.uk/",
+   "confirmed_by": [
     "company name"
    ]
   }
