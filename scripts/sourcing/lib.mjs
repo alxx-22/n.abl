@@ -55,3 +55,62 @@ export function isoDate(ddmmyyyy) {
 
 export const areasFrom = (v, fallback) =>
   String(v ?? fallback).split(',').map((a) => a.trim().toUpperCase()).filter(Boolean)
+
+/* Name matching across registers.
+
+   Companies House holds the legal name ("THE OLD BAKERY (NOTTINGHAM) LTD");
+   the FSA holds the trading name ("The Old Bakery"). They are the same
+   business, so the key has to survive the suffix, the punctuation and the
+   case. It must NOT survive the identity — "Bakery" and "The Bakery" are
+   different businesses in different towns, which is what the generic-name
+   guard below is for. */
+
+const LEGAL_SUFFIXES = [
+  'LIMITED', 'LTD', 'PLC', 'LLP', 'LP', 'CIC', 'CIO', 'LBG',
+  'PUBLIC LIMITED COMPANY', 'COMPANY', 'CO', 'AND CO', 'INCORPORATED', 'INC',
+]
+
+export function nameKey(name) {
+  let s = String(name || '').toUpperCase()
+  s = s.replace(/&/g, ' AND ')
+  s = s.replace(/[^A-Z0-9 ]+/g, ' ')
+  s = s.replace(/\s+/g, ' ').trim()
+  // Suffixes only strip from the end, and repeatedly: "FOO LTD" and
+  // "FOO CO LTD" both reduce to "FOO".
+  let changed = true
+  while (changed) {
+    changed = false
+    for (const suf of LEGAL_SUFFIXES) {
+      if (s.endsWith(' ' + suf)) { s = s.slice(0, -(suf.length + 1)).trim(); changed = true }
+    }
+  }
+  if (s.startsWith('THE ')) s = s.slice(4)
+  return s.replace(/\s+/g, ' ').trim()
+}
+
+/* A name is distinctive enough to match on WITHOUT a shared postcode only if
+   it is long and not a common trade word. "MOTORS" or "KITCHEN" appear
+   hundreds of times across the register and would merge unrelated firms.
+   Compared against a key that has already been through nameKey, so no entry
+   here carries a legal suffix or a leading "THE". */
+const GENERIC = new Set([
+  'MOTORS', 'KITCHEN', 'CAFE', 'BAR', 'GRILL', 'TAKEAWAY',
+  'RESTAURANT', 'SHOP', 'STORES', 'STORE', 'GARAGE', 'SALON', 'BARBERS',
+  'PHARMACY', 'POST OFFICE', 'NEWSAGENTS', 'CHIPPY', 'FISH AND CHIPS',
+  'PIZZA', 'KEBAB HOUSE', 'CHINESE TAKEAWAY', 'INDIAN TAKEAWAY', 'HOTEL',
+  'BAKERY', 'BUTCHERS', 'FLORIST', 'NURSERY', 'PRESCHOOL',
+])
+
+export function isDistinctiveName(key) {
+  if (!key || key.length < 10) return false
+  if (GENERIC.has(key)) return false
+  if (key.split(' ').length < 2) return false
+  return true
+}
+
+/** Full postcode, space-normalised, for exact-address matching. */
+export function postcodeKey(postcode) {
+  const pc = String(postcode || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (pc.length < 5 || pc.length > 7) return ''
+  return pc.slice(0, -3) + ' ' + pc.slice(-3)
+}
