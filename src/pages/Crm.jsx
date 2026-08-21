@@ -367,9 +367,26 @@ function Workspace({ sb, user, onSignedOut }) {
         if (error) throw error
         if (!alive) return
 
-        /* No rows server-side: keep whatever this device already holds
-           rather than blanking the workspace. */
-        if (!rows || !rows.length) { setLoading(false); return }
+        /* A successful read that returns nothing means the server genuinely
+           has no leads, and this device must agree with it.
+
+           This used to keep the local copy in that case, on the same reasoning
+           as the catch block below — do not blank someone's workspace over a
+           flaky connection. But the two situations are not the same, and only
+           one of them is about connectivity. A read that THREW is handled
+           below and still falls back to the device. A read that SUCCEEDED and
+           returned zero rows is an answer, not a failure.
+
+           It matters because of what happens next: the seven old-CRM leads
+           were deleted on 21 August, and a device holding the stale mirror
+           would not only keep showing them, it would re-insert one on the next
+           save through pushLead. A deletion that a stale browser tab can undo
+           is not a deletion. */
+        if (!rows || !rows.length) {
+          setLeads([])
+          setLoading(false)
+          return
+        }
 
         const ids = rows.map((row) => row.id)
         const [contacts, activities, drafts] = await Promise.all([

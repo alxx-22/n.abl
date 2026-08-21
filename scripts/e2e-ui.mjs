@@ -245,6 +245,42 @@ async function run() {
     // Moving a lead to Proposal Sent should offer to set up the portal
     // account, and moving it to Won should offer the pack and the email.
     // Both are the points where a lead stops being a lead.
+    /* A successful read that returns no leads must clear this device, not
+       fall back to its local mirror.
+
+       This is the path that would have undone the deletion of the seven
+       old-CRM leads on 21 August: the mirror kept them, and the next save
+       through pushLead would have re-inserted one. A deletion a stale browser
+       tab can undo is not a deletion.
+
+       Distinct from the offline case, which is still meant to fall back —
+       that one throws and is handled in the catch, and is asserted below. */
+    {
+      const emptyDb = makeDb()
+      emptyDb.sales_leads = []
+      emptyDb.sales_contacts = []
+      emptyDb.sales_activities = []
+      const stale = await browser.newPage({ viewport: { width: 1500, height: 1000 } })
+      await installMock(stale, { db: emptyDb, password: PASSWORD })
+      await stale.goto(`${BASE}/crm`, { waitUntil: 'networkidle' })
+      await stale.evaluate(() => localStorage.setItem('nabl.sales-intelligence.v3',
+        JSON.stringify({ leads: [{ id: 'ghost-1', company: 'Deleted Lead Ltd', status: 'New Lead' }] })))
+      await stale.goto(`${BASE}/team`, { waitUntil: 'networkidle' })
+      await stale.fill('input[type=email]', 'alex@nabl.agency')
+      await stale.fill('input[type=password]', PASSWORD)
+      await stale.click('button.btn--accent')
+      await stale.waitForTimeout(2000)
+      await stale.goto(`${BASE}/crm`, { waitUntil: 'networkidle' })
+      await stale.waitForTimeout(2000)
+      const text = await stale.evaluate(() => document.body.innerText)
+      check('a deleted lead does not come back from the local mirror',
+        !text.includes('Deleted Lead Ltd'))
+      const mirror = await stale.evaluate(() => localStorage.getItem('nabl.sales-intelligence.v3'))
+      check('and the mirror itself is cleared, not just the view',
+        !String(mirror).includes('Deleted Lead Ltd'))
+      await stale.close()
+    }
+
     const leadCard = await page.$('.lead-row, .board__card, [class*="lead"]')
     if (leadCard) await leadCard.click().catch(() => {})
     await page.waitForTimeout(900)
