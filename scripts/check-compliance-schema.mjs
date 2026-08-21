@@ -87,7 +87,7 @@ function refuses(name, sql, expect) {
 function allows(name, sql) {
   try { psql(sql); ok(name); return true }
   catch (e) {
-    bad(name, String(e.stderr || e.message).replace(/\s+/g, ' ').trim().slice(0, 110))
+    bad(name, String(e.stderr || e.message).replace(/\s+/g, ' ').replace(/NOTICE:[^\n]*?(?=(ERROR|NOTICE|$))/g, '').trim().slice(0, 300))
     return false
   }
 }
@@ -131,8 +131,10 @@ alter default privileges in schema public grant execute on functions to anon, au
   chmodSync(BOOTSTRAP, 0o644)
   psql(BOOTSTRAP, { file: true })
 
-  for (const f of ['202606010001_sales_intelligence.sql', '202608160003_crm_compliance.sql',
-                   '202608210001_marketing_tier_ceilings.sql']) {
+  const MIGRATIONS = ['202606010001_sales_intelligence.sql', '202608160003_crm_compliance.sql',
+                      '202608210001_marketing_tier_ceilings.sql',
+                      '202608210002_pin_search_path_on_ceiling_lookup.sql']
+  for (const f of MIGRATIONS) {
     const p = join(DIR, f)
     writeFileSync(p, sh('cat', [join(ROOT, 'supabase/migrations', f)]))
     chmodSync(p, 0o644)
@@ -141,9 +143,29 @@ alter default privileges in schema public grant execute on functions to anon, au
 
   line('\nMIGRATION')
   ok('applies to a clean database')
-  // Re-running must be harmless; every object uses if-not-exists / or-replace.
-  allows('is idempotent on a second run', '\\i ' + join(DIR, '202608160003_crm_compliance.sql'))
-  allows('ceilings are idempotent too', '\\i ' + join(DIR, '202608210001_marketing_tier_ceilings.sql'))
+  /* Re-running the compliance migrations must be harmless; every object in
+     them uses if-not-exists or or-replace.
+
+     Replayed as an ordered set rather than file by file, because a single file
+     is not a safe unit to re-run: 202608210001 defines
+     marketing_monthly_ceiling and 202608210002 redefines it to pin its
+     search_path, so replaying 0001 alone silently reverts 0002. The first
+     version of this check did exactly that, and the search_path assertions
+     below are what caught it. In production, "re-run the migration" therefore
+     always means the ordered set, never one file. */
+  const REPLAYABLE = MIGRATIONS.filter((f) => f !== '202606010001_sales_intelligence.sql')
+  allows('the compliance set is idempotent on a second run',
+    REPLAYABLE.map((f) => '\\i ' + join(DIR, f)).join('\n'))
+
+  /* The June base migration is NOT re-runnable — its CREATE POLICY statements
+     have no DROP POLICY IF EXISTS in front of them. Asserted rather than
+     quietly skipped: it has already run against live, so fixing it would mean
+     editing a migration that is now a record of what happened, and the useful
+     thing is for the next person replaying migrations to know which file will
+     stop them. */
+  refuses('the June base migration is not re-runnable, and this is known',
+    '\\i ' + join(DIR, '202606010001_sales_intelligence.sql'),
+    /already exists/)
 
   // ---- fixtures -----------------------------------------------------
   psql(`insert into auth.users (id, email) values
@@ -518,6 +540,18 @@ from public.sales_leads where company like 'Bulk %';
     const anon = val(`select has_function_privilege('anon','public.${fn}(${sig})','execute')::text;`)
     anon === 'false' ? ok(`anon cannot execute ${fn}`) : bad(`anon cannot execute ${fn}`, 'anon has EXECUTE')
   }
+  line('\nSEARCH PATH — every compliance function must pin it')
+  for (const fn of ['marketing_tier', 'marketing_monthly_ceiling',
+                    'marketing_first_contacts_this_month', 'marketing_ceiling_guard',
+                    'marketing_send_allowed', 'apply_opt_out']) {
+    const cfg = val(`select coalesce(array_to_string(p.proconfig, ','), '')
+                     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                     where n.nspname = 'public' and p.proname = '${fn}';`)
+    cfg.startsWith('search_path=')
+      ? ok(`${fn} pins its search_path`)
+      : bad(`${fn} pins its search_path`, cfg || 'not set')
+  }
+
   const authOk = val(`select has_function_privilege('authenticated','public.apply_opt_out(uuid, text, text, text, text)','execute')::text;`)
   authOk === 'true' ? ok('authenticated can execute apply_opt_out') : bad('authenticated can execute apply_opt_out')
 
