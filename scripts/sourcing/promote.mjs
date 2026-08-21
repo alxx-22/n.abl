@@ -96,8 +96,10 @@ function toLead(candidate) {
 
   const source = candidate.sources?.includes('companies_house')
     ? 'companies_house' : 'public_company_information'
-  const source_detail = [REGISTER_URL[source], site ? `website confirmed at ${site.website} by ${site.confirmed_by?.join(' and ')}` : null]
-    .filter(Boolean).join('; ')
+  const source_detail = [
+    REGISTER_URL[source],
+    site ? `website confirmed by ${site.confirmed_by?.join(' and ')}` : null,
+  ].filter(Boolean).join('; ')
   const source_date = Object.values(candidate.source_date || {}).sort().pop() || null
 
   /* The best address we hold, and where it came from. A trading address beats
@@ -108,25 +110,32 @@ function toLead(candidate) {
 
   return {
     company: candidate.name,
-    website: site?.website || null,
+    website: site?.website || candidate.website || null,
     industry: (candidate.sic || [])[0]?.replace(/^\d+\s*-\s*/, '') || candidate.business_type || null,
     location: location || null,
     estimated_size: null,          // never estimated; see scoring-model.md
     business_type: null,
     lead_score: 50,                // the CRM's neutral default, not a judgement
     status: 'New Lead',
+    /* Short on purpose. The triage reasons already live in `signals`, and
+       repeating them here made a 100-lead batch 132 KB of mostly duplication.
+       Notes should carry what signals cannot: where it came from, and
+       anything that disagrees with the register. */
     notes: [
-      `Sourced ${source_date || 'undated'} from ${REGISTER_URL[source]}.`,
-      candidate.triage_for?.length ? `Triaged "${candidate.triage}" because: ${candidate.triage_for.join('; ')}.` : null,
-      candidate.contact_address_kind ? `Address is the ${candidate.contact_address_kind} one.` : null,
+      `${REGISTER_URL[source]}, ${source_date || 'undated'}.`,
+      candidate.contact_address_kind ? `${candidate.contact_address_kind} address.` : null,
       webPostcode && webPostcode !== candidate.contact_postcode
-        ? `Their website gives ${webPostcode}, which differs from the register.` : null,
-      contact?.emails?.length ? `Published contact route: ${contact.emails.join(', ')}.` : null,
-      contact?.phones?.length ? `Phone: ${contact.phones.join(', ')}.` : null,
+        ? `Website gives ${webPostcode}, register says ${candidate.contact_postcode}.` : null,
       contact?.named_emails_discarded
-        ? `${contact.named_emails_discarded} named email address(es) were found and deliberately not kept.` : null,
+        ? `${contact.named_emails_discarded} named address(es) found and not kept.` : null,
     ].filter(Boolean).join(' '),
-    signals: candidate.triage_for?.join('; ') || null,
+    /* The three that most distinguish this lead, not all nine. The full list
+       is reproducible from the triage at any time, and repeating it per row
+       made the batch mostly duplication — "ICO tier 1, so a micro business"
+       is true of 20,034 of them and tells a reader nothing. */
+    signals: (candidate.triage_for || [])
+      .filter((r) => !/^ICO tier|^core territory|^on \d+ registers/.test(r))
+      .slice(0, 3).join('; ') || null,
 
     subscriber_type,
     subscriber_type_evidence,
@@ -136,20 +145,98 @@ function toLead(candidate) {
     source_date,
     privacy_notice_status: 'not_required',
     marketing_status: PERMIT ? 'permitted' : 'do_not_contact',
-    _contact: contact?.emails?.[0] || null,
+    _email: contact?.emails?.[0] || candidate.email || null,
+    _phone: contact?.phones?.[0] || candidate.phone || null,
   }
 }
 
-/* Only candidates we can actually reach. A lead with no address and no
-   contact route is a row in a table, not a prospect. */
+/* How contactable a candidate is, as one number, so the best records go into
+   the CRM first.
+
+   The first version took the top N off a sorted file and produced three leads
+   whose names began with a digit, none of which had a website or a contact of
+   any kind. They were postal-workable — the address is the route — but a lead
+   that shows as empty in the CRM is a lead nobody works, and "it is fine
+   really" is not an answer to that. */
+const sectorHint = (c) => (c.triage_for || []).find((r) => r.startsWith('sector hint:')) || ''
+const hasSectorHint = (c) => Boolean(sectorHint(c))
+
+/* The ICP scores "strong fit, both territories" above "additionally strong
+   around Nottingham", 15 points against 12, and the triage marks the second
+   kind with a colon — "care:nottingham". Honouring that distinction matters
+   more than it looks: SIC 88 covers a commercial domiciliary care agency and
+   a women's refuge equally, and only one of them buys software. */
+const isCoreSector = (c) => {
+  const hint = sectorHint(c).replace('sector hint:', '')
+  return hint.split(',').some((h) => h.trim() && !h.includes(':'))
+}
+
+function reachScore(c) {
+  const site = websites.get(c.name)
+  const contact = contacts.get(c.name)
+  let n = 0
+
+  /* Fit first, and by a wide margin. A first version scored only how
+     contactable a candidate was and produced a batch of thirty that were
+     every one of them a charity or community organisation — because the
+     charities file is the only register that carries email addresses, so
+     "has an email" and "is a charity" were very nearly the same fact.
+
+     None of them were in the ideal customer profile. That is the same mistake
+     the old AI CRM made, reached from the opposite direction: it optimised
+     for a plausible-looking signal and filled the pipeline with businesses we
+     do not serve. Contactability is worthless without fit. */
+  if (isCoreSector(c)) n += 60
+  else if (hasSectorHint(c)) n += 25
+
+  /* A registered charity is down-weighted rather than excluded. Some are
+     genuinely good customers — a housing association runs the same processes
+     as a letting agent — but most are small, grant-funded and have no budget
+     line for this, and the charities file is the only register carrying email
+     addresses, so without this they flood every batch. */
+  if (c.charity_number) n -= 45
+
+  if (contact?.emails?.length || c.email) n += 40   // a free channel, today
+  if (contact?.phones?.length || c.phone) n += 20
+  if (site || c.website) n += 20
+  if (c.contact_address_kind === 'trading') n += 15
+  else if (c.contact_address_kind === 'declared') n += 10
+  else if (c.contact_address_kind === 'registered') n += 2
+  if (c.sources?.length > 1) n += 5
+  return n
+}
+
+/* A postal address alone is a real route and this is not a crawl-or-nothing
+   rule — but a registered office is usually the accountant's, and a lead with
+   nothing else is not one anybody will pick up. --any-address includes them. */
+const MIN_REACH = has('--any-address') ? 1 : 10
+
 let pool = triaged.filter((c) => (BAND === 'all' ? c.triage !== 'excluded' : c.triage === BAND))
-pool = pool.filter((c) => c.contact_postcode || websites.has(c.name))
-pool = pool.slice(0, LIMIT)
+/* Out-of-profile candidates are excluded rather than merely ranked down.
+   Ranking alone is not enough when one sector dominates a signal: the
+   charities file supplies almost every register-held email address, so a pure
+   ranking hands the whole batch to charities however the weights are set.
+   --any-sector promotes without the filter. */
+if (!has('--any-sector')) pool = pool.filter(hasSectorHint)
+pool = pool.map((c) => ({ c, reach: reachScore(c) }))
+  .filter((x) => x.reach >= MIN_REACH)
+  .sort((a, b) => b.reach - a.reach)
+  .slice(0, LIMIT)
+  .map((x) => x.c)
 
 const leads = pool.map(toLead)
 const withSite = leads.filter((l) => l.website).length
-const withRoute = leads.filter((l) => l._contact).length
+const withRoute = leads.filter((l) => l._email || l._phone).length
 const corporate = leads.filter((l) => l.subscriber_type === 'corporate').length
+
+/* A contact row so the lead is not blank in the CRM. Named "General
+   enquiries", which public.has_named_individual recognises as a route rather
+   than a person — so these leads stay tier A and keep the not_personal_data
+   basis honest. Attaching a real name here would silently move every one of
+   them into tier B and engage UK GDPR. */
+const contactRows = leads
+  .filter((l) => l._email || l._phone)
+  .map((l) => ({ company: l.company, name: 'General enquiries', email: l._email, phone: l._phone }))
 
 const COLS = ['company', 'website', 'industry', 'location', 'lead_score', 'status', 'notes', 'signals',
   'subscriber_type', 'subscriber_type_evidence', 'lawful_basis', 'source', 'source_detail',
@@ -166,6 +253,17 @@ const sql = [
   leads.map((l) => `  (${COLS.map((c) => q(l[c])).join(', ')}, now())`).join(',\n'),
   'on conflict do nothing;',
   '',
+  contactRows.length ? [
+    '-- One contact row per lead that has a published route, so the lead is not',
+    '-- blank in the CRM. "General enquiries" is recognised by',
+    '-- public.has_named_individual as a route rather than a person.',
+    'insert into public.sales_contacts (lead_id, name, role, email, phone, source, confidence)',
+    contactRows.map((r) =>
+      `select id, 'General enquiries', 'Published contact route', ${q(r.email)}, ${q(r.phone)}, 'published on the register or their own website', 90
+   from public.sales_leads where company = ${q(r.company)}`).join('\nunion all\n'),
+    ';',
+    '',
+  ].join('\n') : '',
 ].join('\n')
 
 if (DRY) {
@@ -186,7 +284,7 @@ console.log(`  ${leads.length.toLocaleString()} candidates promoted from band "$
   ${corporate.toLocaleString()} corporate on the face of the register — emailable, subject to the gate
   ${(leads.length - corporate).toLocaleString()} legal form unestablished — postal only, by design
   ${withSite.toLocaleString()} with a confirmed website
-  ${withRoute.toLocaleString()} with a published contact route
+  ${withRoute.toLocaleString()} with a published contact route, which get a contact row
   marketing_status: ${PERMIT ? 'permitted (--permit was passed)' : 'do_not_contact (pass --permit to change)'}
 ${DRY ? '' : `\n  -> ${path.resolve(OUT)}`}
 `)
