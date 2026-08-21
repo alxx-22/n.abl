@@ -128,13 +128,23 @@ const REGISTERS = [
   { source: 'public_company_information', kind: 'trading', match: /^fsa-.*\.json$/ },
 ]
 
-const files = fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && f !== path.basename(OUT))
+const OUTPUTS = new Set([path.basename(OUT), 'universe.json', 'triaged.json', 'shortlist.json'])
+const files = fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && !OUTPUTS.has(f))
 const ordered = []
 for (const reg of REGISTERS) {
   for (const f of files.filter((f) => reg.match.test(f)).sort()) ordered.push({ file: f, source: reg.source, kind: reg.kind })
 }
+/* Anything not matching a declared register is SKIPPED and named, never
+   ingested. An earlier version swallowed unrecognised files as source
+   'unknown', which was convenient right up until it read its own downstream
+   output back in: triaged.json went in as a register and the universe grew
+   from 81,286 to 95,056 without a single error. Adding a source should be a
+   line in REGISTERS, not a file appearing in a directory. */
 const unclaimed = files.filter((f) => !ordered.some((o) => o.file === f))
-for (const f of unclaimed.sort()) ordered.push({ file: f, source: 'unknown', kind: 'registered' })
+
+if (unclaimed.length) {
+  console.log(`  skipped, not a declared register: ${unclaimed.sort().join(', ')}`)
+}
 
 if (!ordered.length) {
   console.error(`No register files in ${DIR}/. Run the fetch scripts first.`)
