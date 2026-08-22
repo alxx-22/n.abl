@@ -28,5 +28,16 @@
 
 # The shell must not be cached, or a deploy ships new assets behind an old
 # index that still references the previous hashes.
+#
+# Both paths, because these rules match the REQUEST path and not the file that
+# ends up being served. A visitor asks for `/`; Workers resolves that to
+# index.html internally, but the `/index.html` rule never sees it, so without
+# the `/` entry the shell fell through to Cloudflare's default. That default
+# happens to be equivalent — max-age=0, must-revalidate forces the same
+# revalidation no-cache does — but a config that describes something other
+# than what is served is a config nobody can trust the next time.
+/
+  Cache-Control: no-cache
+
 /index.html
   Cache-Control: no-cache
