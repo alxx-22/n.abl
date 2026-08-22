@@ -27,6 +27,35 @@ That second row is the one that would have bitten. Without `_headers` the site
 would have deployed perfectly and served no Content-Security-Policy, no HSTS
 and no `X-Frame-Options`, and looked completely normal while doing it.
 
+## It is a Worker, not a Pages project
+
+Cloudflare's dashboard now routes this through **Workers Builds** rather than
+Pages. The build succeeded on the first attempt — both guards passed — and the
+*deploy* step failed:
+
+```
+Detected Project Settings:
+ - Worker Name: n-abl
+ - Framework: Vite
+✘ The version of Vite used in the project ("5.4.21") cannot be automatically
+  configured. Please update the Vite version to at least "6.0.0".
+```
+
+With no `wrangler.jsonc` present, wrangler tried to auto-detect the framework
+and wire up the Cloudflare Vite plugin, which needs Vite 6.
+
+**The fix was not to upgrade Vite.** Nothing here needs that plugin: the build
+already produces a directory of static files, and the job is to upload it.
+`wrangler.jsonc` now declares an assets-only Worker, so wrangler stops
+guessing. No `main`, no `binding` — both are only valid with a Worker script,
+and this site has none.
+
+`_headers` and `_redirects` are supported natively by Workers Static Assets
+exactly as they were by Pages, so nothing about the security headers changes.
+SPA routing is set explicitly with `not_found_handling`, which the migration
+guide notes Workers requires deliberately: Pages inferred it, and inference is
+how a misconfiguration goes unnoticed.
+
 ## Steps
 
 1. **Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git.**

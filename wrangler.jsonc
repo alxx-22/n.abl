@@ -1,0 +1,30 @@
+{
+  // Serving the built site from Workers Static Assets.
+  //
+  // The first deploy failed because there was no config here: wrangler
+  // auto-detected Vite and tried to wire up the Cloudflare Vite plugin, which
+  // needs Vite 6 and this project is on 5.4. Declaring the project explicitly
+  // stops the guessing. Nothing here needs the plugin — the build already
+  // produces a directory of static files, and this uploads it.
+  //
+  // There is no "main" and no "binding" on purpose. Both are only valid with a
+  // Worker script, and this site has none: every route is either a file or the
+  // SPA shell.
+  "name": "n-abl",
+  "compatibility_date": "2026-08-22",
+  "assets": {
+    "directory": "./dist",
+
+    // React Router owns /crm, /portal, /team and the rest, so a request for a
+    // path with no matching file has to return index.html rather than a 404.
+    // Pages inferred this from the presence of index.html; Workers makes it
+    // explicit, which the migration guide notes is deliberate — inference is
+    // how a misconfiguration goes unnoticed.
+    //
+    // public/_redirects also carries a /* -> /index.html rule and is honoured
+    // natively here. The overlap is intentional: the file keeps working if the
+    // site ever moves back to a host that reads it, and this setting keeps
+    // working if the file is ever trimmed.
+    "not_found_handling": "single-page-application"
+  }
+}
