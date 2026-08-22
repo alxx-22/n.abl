@@ -1547,6 +1547,9 @@ function Board({ leads, onMove, onSelect }) {
               <h3 className="crm-stage__name">{stage}</h3>
               <span className="crm-stage__count">{inStage.length}</span>
             </div>
+            {/* Wrapper so the head stays fixed and only the cards scroll —
+                see .crm-stage__cards. */}
+            <div className="crm-stage__cards">
             {inStage.length === 0 ? <p className="crm-stage__empty">Empty</p> : inStage.map((lead) => (
               /* Deliberately a div, not a button: Chromium never fires
                  dragstart on a form control, so a <button draggable> card
@@ -1574,6 +1577,7 @@ function Board({ leads, onMove, onSelect }) {
                 <span className="crm-deal__meta">Priority {lead.score}</span>
               </div>
             ))}
+            </div>
           </section>
         )
       })}

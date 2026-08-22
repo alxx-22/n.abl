@@ -495,6 +495,76 @@ async function run() {
     await page.close()
   }
 
+  /* ---------------- MOBILE LAYOUT ----------------
+     Checked at a phone viewport with enough leads to behave like the real
+     thing. Two failures here were reported from a phone before they were
+     caught by anything: the leads view forced the page to 778px inside a
+     390px screen, and a board column with every lead in it grew to 3,014px. */
+  {
+    const db = makeDb()
+    const base = db.sales_leads[0]
+    for (let i = 2; i <= 40; i++) {
+      db.sales_leads.push({ ...base, id: `lead-${i}`,
+        company: `Test Business Number ${i} Limited`,
+        status: i % 4 === 0 ? 'Contacted' : 'New Lead' })
+    }
+    const page = await browser.newPage({
+      viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
+    })
+    await installMock(page, { db, password: PASSWORD })
+    results.push('\nMOBILE LAYOUT (390px)')
+
+    await page.goto(`${BASE}/team`, { waitUntil: 'networkidle' })
+    await page.fill('input[type=email]', 'alex@nabl.agency')
+    await page.fill('input[type=password]', PASSWORD)
+    await page.click('button.btn--accent')
+    await page.waitForTimeout(1800)
+    await page.goto(`${BASE}/crm`, { waitUntil: 'networkidle' })
+    await page.waitForTimeout(1500)
+
+    /* The page itself must never scroll sideways. Individual containers may —
+       the board scrolls horizontally on purpose and the detail tab strip has
+       always done so — but the document must not. */
+    const widthOf = async () => page.evaluate(() => ({
+      view: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }))
+
+    const onView = async (name) => {
+      await page.evaluate((n) => {
+        const b = [...document.querySelectorAll('.crm-view')].find((x) => x.textContent.trim().startsWith(n))
+        if (b) b.click()
+      }, name)
+      await page.waitForTimeout(800)
+    }
+
+    for (const view of ['Insights', 'Leads', 'Board']) {
+      await onView(view)
+      const w = await widthOf()
+      check(`${view.toLowerCase()} does not scroll the page sideways on a phone`,
+        w.scroll <= w.view + 1, `${w.scroll}px in a ${w.view}px viewport`)
+    }
+
+    /* A stage with every lead in it must not become ten screens of one column
+       with the other nine pushed off the bottom. */
+    await onView('Board')
+    const tallest = await page.evaluate(() => Math.max(0,
+      ...[...document.querySelectorAll('.crm-stage')].map((s) => s.getBoundingClientRect().height)))
+    check('a board column stays within a screen however many leads it holds',
+      tallest > 0 && tallest <= 844, `${Math.round(tallest)}px`)
+
+    const scrolls = await page.evaluate(() => {
+      const c = document.querySelector('.crm-stage__cards')
+      return c ? c.scrollHeight > c.clientHeight + 1 && getComputedStyle(c).overflowY === 'auto' : false
+    })
+    check('and its cards scroll inside it rather than being cut off', scrolls === true)
+
+    const errs = []
+    page.on('pageerror', (e) => errs.push(e.message))
+    check('no runtime errors at phone width', errs.length === 0, errs.join('; '))
+    await page.close()
+  }
+
   /* ---------------- ROUTES ---------------- */
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })

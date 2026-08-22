@@ -49,12 +49,19 @@
 .crm-filter { display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; }
 
 /* ---------- Workspace: lead list + detail ---------- */
+/* minmax(0, 1fr) rather than 1fr, and min-width on the children.
+   A grid item's default min-width is auto, which means it refuses to shrink
+   below its content — so a long company name pushed the lead list to 777px
+   inside a 390px viewport and the whole page scrolled sideways. On a phone
+   that is what "the layout is broken" looks like: the ribbon squeezed into
+   half the screen with black beside it. */
 .crm-workspace {
   display: grid;
   gap: var(--s-4);
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
+.crm-workspace > * { min-width: 0; }
 @media (min-width: 1020px) {
   .crm-workspace { grid-template-columns: 20rem minmax(0, 1fr); }
 }
@@ -70,6 +77,7 @@
 .crm-leadbtn {
   display: block;
   width: 100%;
+  min-width: 0;
   text-align: left;
   padding: var(--s-4);
   border-radius: var(--r-lg);
@@ -88,6 +96,10 @@
   font-weight: 600;
   letter-spacing: var(--track-snug);
   color: var(--cream-100);
+  /* Registered names are long and unbroken — "NOTTINGHAM BAZAAR CASH AND
+     CARRY LTD". Wrapping is right here: the row is a target you tap, and
+     truncating the name is worse than two lines of it. */
+  overflow-wrap: anywhere;
 }
 .crm-leadbtn__meta {
   display: block;
@@ -186,8 +198,15 @@
   overflow-x: auto;
   padding-bottom: var(--s-4);
 }
+/* The column is capped and its cards scroll inside it. With 150 leads in one
+   stage the column grew to 3,014px — ten screens of a single column, with the
+   other nine stages pushed off the bottom of the page and the board no longer
+   a board. */
 .crm-stage {
   min-height: 11rem;
+  max-height: min(34rem, 70vh);
+  display: flex;
+  flex-direction: column;
   padding: var(--s-3);
   border-radius: var(--r-lg);
   background: var(--surface-1);
@@ -209,6 +228,16 @@
   color: var(--cream-600);
 }
 .crm-stage__count { font-size: var(--t-xs); color: var(--accent-400); font-variant-numeric: tabular-nums; }
+
+/* Only the cards scroll. The stage name and its count stay put, so you can
+   still tell which column you are in halfway down it. */
+.crm-stage__cards {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
 .crm-stage__empty { font-size: var(--t-xs); color: var(--cream-800); }
 
 .crm-deal {
