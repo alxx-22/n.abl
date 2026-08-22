@@ -56,6 +56,31 @@ SPA routing is set explicitly with `not_found_handling`, which the migration
 guide notes Workers requires deliberately: Pages inferred it, and inference is
 how a misconfiguration goes unnoticed.
 
+### And then _redirects had to go
+
+The next deploy got further and was rejected by the API:
+
+```
+Line 6: Infinite loop detected in this rule. This would cause a redirect to
+strip `.html` or `/index` and end up triggering this rule again.
+```
+
+Correct, and worth understanding rather than working around. `/* -> /index.html`
+asks Workers to rewrite to a path it immediately normalises back to `/`, which
+matches `/*` again. The three route rules above it would loop the same way.
+
+They were also unnecessary. `html_handling` defaults to `auto-trailing-slash`,
+which already resolves `/privacy` to `/privacy/index.html`, and
+`not_found_handling` covers the SPA fallback.
+
+`public/_redirects` was deleted. It had always carried exactly the same four
+rules as `netlify.toml`, so it was duplication rather than configuration, and
+Netlify is unaffected.
+
+`_headers` stays. That one is **not** duplicated — Cloudflare does not read
+`netlify.toml`, so it is the only thing carrying the security headers on this
+host.
+
 ## Steps
 
 1. **Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git.**

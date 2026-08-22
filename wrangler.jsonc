@@ -21,10 +21,25 @@
     // explicit, which the migration guide notes is deliberate — inference is
     // how a misconfiguration goes unnoticed.
     //
-    // public/_redirects also carries a /* -> /index.html rule and is honoured
-    // natively here. The overlap is intentional: the file keeps working if the
-    // site ever moves back to a host that reads it, and this setting keeps
-    // working if the file is ever trimmed.
+    // There is no _redirects file any more, and this is what replaced it.
+    //
+    // It carried the same four rules netlify.toml already has, and Cloudflare
+    // rejected the deploy over the last one:
+    //
+    //   Line 6: Infinite loop detected in this rule. This would cause a
+    //   redirect to strip `.html` or `/index` and end up triggering this rule
+    //   again.
+    //
+    // Which is correct. `/* -> /index.html` asks Workers to rewrite to a path
+    // it then normalises straight back to `/`, matching `/*` again. The other
+    // three rules — /privacy, /terms, /cookies to their index.html — would
+    // loop the same way, and are unnecessary regardless: html_handling
+    // defaults to "auto-trailing-slash", which already resolves /privacy to
+    // /privacy/index.html.
+    //
+    // So the file was deleted rather than patched. Netlify keeps working
+    // because netlify.toml has always carried the identical four rules; the
+    // _redirects file was pure duplication of it.
     "not_found_handling": "single-page-application"
   }
 }
