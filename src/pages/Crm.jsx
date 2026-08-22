@@ -1763,7 +1763,7 @@ function Insights({ leads, onJump }) {
         <p className="dim crm-hint">
           {m.lost > 0 && `${m.lost} lost. `}
           {m.optedOut > 0 && `${m.optedOut} objected and can never be contacted again. `}
-          Counts, not conversion rates — a rate over {m.total} leads would be noise.
+          Counts, not conversion rates — a rate over {m.total} lead{m.total === 1 ? '' : 's'} would be noise.
         </p>
       </section>
 

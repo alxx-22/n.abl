@@ -289,12 +289,12 @@
 .crm-warn {
   margin: var(--s-5) 0 0;
   padding: var(--s-3) var(--s-4);
-  border-left: 3px solid var(--accent);
-  background: var(--surface-2, rgba(201,143,74,.07));
-  border-radius: 0 var(--r-sm, 6px) var(--r-sm, 6px) 0;
+  border-left: 3px solid var(--accent-400);
+  background: rgba(var(--accent-rgb), .07);
+  border-radius: 0 6px 6px 0;
   font-size: var(--t-sm);
   line-height: 1.55;
-  color: var(--ink-2, inherit);
+  color: var(--cream-300);
 }
 
 /* ============================================================
@@ -337,10 +337,10 @@
   gap: var(--s-2);
   transition: color .18s ease, background .18s ease;
 }
-.crm-view:hover { color: var(--ink); }
+.crm-view:hover { color: var(--cream-100); }
 /* The selected view is filled rather than underlined: an underline competes
    with the tab strip inside the lead detail one level down. */
-.crm-view--on { background: var(--accent); color: var(--espresso, #241b16); font-weight: 500; }
+.crm-view--on { background: var(--accent-400); color: #24170A; font-weight: 500; }
 .crm-view__count {
   font-size: var(--t-xs);
   padding: 0 .4em;
@@ -354,9 +354,9 @@
    list is explained rather than mysterious. */
 .crm-focus {
   appearance: none;
-  border: 1px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--ink);
+  border: 1px solid var(--accent-400);
+  background: color-mix(in srgb, var(--accent-400) 12%, transparent);
+  color: var(--cream-100);
   font: inherit;
   font-size: var(--t-sm);
   padding: var(--s-2) var(--s-4);
@@ -403,14 +403,14 @@
   color: inherit;
   font: inherit;
   padding: var(--s-3) var(--s-4);
-  border-radius: var(--r-sm, 8px);
+  border-radius: 8px;
   cursor: pointer;
   transition: border-color .18s ease, background .18s ease;
 }
-.crm-queue__row:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.crm-queue__row:hover { border-color: var(--accent-400); background: color-mix(in srgb, var(--accent-400) 6%, transparent); }
 /* Only the things a person is holding up get the accent. If everything is
    marked urgent then nothing is. */
-.crm-queue__row--urgent { border-left: 3px solid var(--accent); }
+.crm-queue__row--urgent { border-left: 3px solid var(--accent-400); }
 .crm-queue__n { font-size: var(--t-2xl); line-height: 1; font-variant-numeric: tabular-nums; }
 .crm-queue__label { font-size: var(--t-sm); display: grid; gap: 2px; }
 .crm-queue__note { font-style: normal; font-size: var(--t-xs); color: var(--cream-600); }
@@ -429,7 +429,7 @@
 }
 .crm-reach__row:disabled { opacity: .45; cursor: default; }
 .crm-reach__bar { height: 6px; border-radius: 999px; background: var(--line-faint); overflow: hidden; }
-.crm-reach__bar i { display: block; height: 100%; background: var(--accent); }
+.crm-reach__bar i { display: block; height: 100%; background: var(--accent-400); }
 .crm-reach__n { font-variant-numeric: tabular-nums; text-align: right; }
 .crm-reach__label { font-size: var(--t-sm); display: grid; gap: 1px; }
 .crm-reach__label em { font-style: normal; font-size: var(--t-xs); color: var(--cream-600); }
@@ -445,11 +445,11 @@
   appearance: none; border: 0; background: transparent; color: inherit; font: inherit;
   padding: var(--s-2) var(--s-2); border-radius: 6px; cursor: pointer;
 }
-.crm-funnel__row:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.crm-funnel__row:hover:not(:disabled) { background: color-mix(in srgb, var(--accent-400) 7%, transparent); }
 .crm-funnel__row:disabled { opacity: .4; cursor: default; }
 .crm-funnel__stage { font-size: var(--t-sm); }
 .crm-funnel__bar { height: 10px; border-radius: 3px; background: var(--line-faint); overflow: hidden; }
-.crm-funnel__bar i { display: block; height: 100%; background: var(--accent); }
+.crm-funnel__bar i { display: block; height: 100%; background: var(--accent-400); }
 .crm-funnel__n { font-variant-numeric: tabular-nums; text-align: right; font-size: var(--t-sm); }
 
 .crm-sectors { display: flex; flex-wrap: wrap; gap: var(--s-2); }
@@ -461,5 +461,5 @@
   padding: var(--s-2) var(--s-3);
   border-radius: 999px; cursor: pointer;
 }
-.crm-sector:hover { border-color: var(--accent); }
+.crm-sector:hover { border-color: var(--accent-400); }
 .crm-sector span { color: var(--cream-600); margin-left: .4em; font-variant-numeric: tabular-nums; }
