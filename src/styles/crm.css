@@ -296,3 +296,170 @@
   line-height: 1.55;
   color: var(--ink-2, inherit);
 }
+
+/* ============================================================
+   RIBBON
+
+   One sticky row instead of a header, a metrics strip and a filter
+   block stacked above the work. Those together took most of a
+   screen before a single lead was visible, which is the layout
+   problem this replaces.
+   ============================================================ */
+.crm-ribbon {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+  padding: var(--s-3) var(--s-6);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line-faint);
+}
+.crm-ribbon__brand { display: inline-flex; align-items: center; flex: 0 0 auto; }
+.crm-ribbon__right { margin-left: auto; display: flex; align-items: center; gap: var(--s-3); }
+.crm-ribbon__search { width: 15rem; max-width: 32vw; height: 2.1rem; font-size: var(--t-sm); }
+
+.crm-views { display: flex; gap: var(--s-1); }
+.crm-view {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--cream-600);
+  font: inherit;
+  font-size: var(--t-sm);
+  padding: var(--s-2) var(--s-4);
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  transition: color .18s ease, background .18s ease;
+}
+.crm-view:hover { color: var(--ink); }
+/* The selected view is filled rather than underlined: an underline competes
+   with the tab strip inside the lead detail one level down. */
+.crm-view--on { background: var(--accent); color: var(--espresso, #241b16); font-weight: 500; }
+.crm-view__count {
+  font-size: var(--t-xs);
+  padding: 0 .4em;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
+.crm-shell { padding-top: var(--s-6); padding-bottom: var(--s-9); }
+.crm-hint { font-size: var(--t-sm); margin: 0 0 var(--s-5); }
+
+/* A chip naming the filter an Insights click applied, so a suddenly short
+   list is explained rather than mysterious. */
+.crm-focus {
+  appearance: none;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--t-sm);
+  padding: var(--s-2) var(--s-4);
+  border-radius: 999px;
+  cursor: pointer;
+  align-self: end;
+}
+
+@media (max-width: 720px) {
+  .crm-ribbon { flex-wrap: wrap; gap: var(--s-3); padding: var(--s-3) var(--s-4); }
+  .crm-ribbon__right { width: 100%; margin-left: 0; }
+  .crm-ribbon__search { flex: 1; width: auto; max-width: none; }
+  .crm-ribbon__team { display: none; }
+  .crm-view { padding: var(--s-2) var(--s-3); }
+}
+
+/* ============================================================
+   INSIGHTS
+   ============================================================ */
+.crm-insights { display: grid; gap: var(--s-6); grid-template-columns: 1fr; }
+@media (min-width: 900px) { .crm-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.crm-ins__block--wide { grid-column: 1 / -1; }
+.crm-ins__h {
+  font-size: var(--t-xs);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--cream-600);
+  margin: 0 0 var(--s-4);
+  font-weight: 500;
+}
+
+.crm-queue, .crm-reach, .crm-funnel, .crm-sectors { list-style: none; margin: 0; padding: 0; }
+.crm-queue { display: grid; gap: var(--s-2); }
+.crm-queue__row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 3rem 1fr auto;
+  align-items: center;
+  gap: var(--s-4);
+  text-align: left;
+  appearance: none;
+  border: 1px solid var(--line-faint);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-sm, 8px);
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease;
+}
+.crm-queue__row:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+/* Only the things a person is holding up get the accent. If everything is
+   marked urgent then nothing is. */
+.crm-queue__row--urgent { border-left: 3px solid var(--accent); }
+.crm-queue__n { font-size: var(--t-2xl); line-height: 1; font-variant-numeric: tabular-nums; }
+.crm-queue__label { font-size: var(--t-sm); display: grid; gap: 2px; }
+.crm-queue__note { font-style: normal; font-size: var(--t-xs); color: var(--cream-600); }
+.crm-queue__go { color: var(--cream-600); }
+
+.crm-reach { display: grid; gap: var(--s-2); }
+.crm-reach__row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 4rem 2.5rem 1fr;
+  align-items: center;
+  gap: var(--s-3);
+  text-align: left;
+  appearance: none; border: 0; background: transparent; color: inherit; font: inherit;
+  padding: var(--s-2) 0; cursor: pointer;
+}
+.crm-reach__row:disabled { opacity: .45; cursor: default; }
+.crm-reach__bar { height: 6px; border-radius: 999px; background: var(--line-faint); overflow: hidden; }
+.crm-reach__bar i { display: block; height: 100%; background: var(--accent); }
+.crm-reach__n { font-variant-numeric: tabular-nums; text-align: right; }
+.crm-reach__label { font-size: var(--t-sm); display: grid; gap: 1px; }
+.crm-reach__label em { font-style: normal; font-size: var(--t-xs); color: var(--cream-600); }
+
+.crm-funnel { display: grid; gap: 2px; }
+.crm-funnel__row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 11rem 1fr 3rem;
+  align-items: center;
+  gap: var(--s-4);
+  text-align: left;
+  appearance: none; border: 0; background: transparent; color: inherit; font: inherit;
+  padding: var(--s-2) var(--s-2); border-radius: 6px; cursor: pointer;
+}
+.crm-funnel__row:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.crm-funnel__row:disabled { opacity: .4; cursor: default; }
+.crm-funnel__stage { font-size: var(--t-sm); }
+.crm-funnel__bar { height: 10px; border-radius: 3px; background: var(--line-faint); overflow: hidden; }
+.crm-funnel__bar i { display: block; height: 100%; background: var(--accent); }
+.crm-funnel__n { font-variant-numeric: tabular-nums; text-align: right; font-size: var(--t-sm); }
+
+.crm-sectors { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.crm-sector {
+  appearance: none;
+  border: 1px solid var(--line-faint);
+  background: transparent; color: inherit; font: inherit;
+  font-size: var(--t-sm);
+  padding: var(--s-2) var(--s-3);
+  border-radius: 999px; cursor: pointer;
+}
+.crm-sector:hover { border-color: var(--accent); }
+.crm-sector span { color: var(--cream-600); margin-left: .4em; font-variant-numeric: tabular-nums; }

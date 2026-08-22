@@ -230,16 +230,91 @@ async function run() {
     const crm = await page.evaluate(() => document.body.innerText)
     check('CRM loads for a signed-in team member', !/sign in through/i.test(crm))
 
+    /* Layout: a ribbon, three views, and Insights first.
+
+       The page used to stack a header, eight counters, a filter block, the
+       lead list, the board and the insights in one column, so finding
+       anything meant scrolling past everything else. */
+    {
+      const ribbon = await page.$('.crm-ribbon')
+      check('a sticky ribbon carries the workspace', Boolean(ribbon))
+      const sticky = await page.evaluate(() =>
+        getComputedStyle(document.querySelector('.crm-ribbon')).position)
+      check('and it is actually sticky, not just styled to look attached', sticky === 'sticky')
+
+      const first = await page.evaluate(() =>
+        document.querySelector('.crm-view--on')?.textContent?.trim() || '')
+      check('Insights is the view that opens first', /Insights/i.test(first))
+
+      const insightsText = await page.evaluate(() =>
+        document.querySelector('.crm-insights')?.innerText || 'NO INSIGHTS')
+      check('it opens on what needs doing, not on a lead list',
+        /What needs you/i.test(insightsText))
+      check('and says how the pipeline can actually be reached',
+        /How you can reach them/i.test(insightsText))
+
+      /* The old page carried the same advice for every pipeline. Advice that
+         cannot change is documentation, not an insight. */
+      check('no fixed advice masquerading as an insight',
+        !/GDPR guardrail|Conversion opportunity/i.test(insightsText))
+
+      // Clicking a count has to land on exactly those leads.
+      const jumped = await page.evaluate(() => {
+        const b = document.querySelector('.crm-funnel__row:not(:disabled), .crm-queue__row')
+        if (!b) return null
+        b.click()
+        return true
+      })
+      if (jumped) {
+        await page.waitForTimeout(600)
+        const onLeads = await page.evaluate(() =>
+          document.querySelector('.crm-view--on')?.textContent?.trim() || '')
+        check('clicking a count switches to the leads it counted', /Leads/i.test(onLeads))
+        const chip = await page.$('.crm-focus')
+        check('and a chip says which filter was applied', Boolean(chip))
+        await page.evaluate(() => document.querySelector('.crm-focus')?.click())
+        await page.waitForTimeout(400)
+        check('which can be cleared again', !(await page.$('.crm-focus')))
+      }
+
+      // Back to Leads for the assertions that follow.
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('.crm-view')].find((x) => /Leads/i.test(x.textContent))
+        if (b) b.click()
+      })
+      await page.waitForTimeout(600)
+    }
+
     // the whole point: no AI anywhere in the visible copy
     const aiWords = (crm.match(/\b(AI|OpenAI|GPT|discovery run|regenerate research|research run)\b/gi) || [])
       .filter((w) => !/^researching$/i.test(w))
     check('no AI wording remains in the interface', aiWords.length === 0, aiWords.join(','))
 
-    // all ten pipeline stages must be present and exact
+    /* All ten stages, checked on the Board — which is where they now live.
+       They used to be on the same scroll as everything else, so the old
+       assertion read the whole page; on the Insights view the funnel omits
+       Lost deliberately, and the check went red the moment the layout split.
+       That is the assertion doing its job, not a regression. */
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('.crm-view')].find((x) => /Board/i.test(x.textContent))
+      if (b) b.click()
+    })
+    await page.waitForTimeout(700)
+    /* Read from the DOM, not from innerText. .crm-stage__name is
+       text-transform: uppercase, and innerText returns what is painted — so
+       comparing against 'New Lead' fails on 'NEW LEAD' and the assertion
+       reports every stage missing while all ten are on screen. */
+    const boardStages = await page.evaluate(() =>
+      [...document.querySelectorAll('.crm-board .crm-stage__name')].map((n) => n.textContent.trim()))
     const STAGES = ['New Lead', 'Researching', 'Ready To Contact', 'Contacted',
       'Follow Up Required', 'Replied', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost']
-    const missing = STAGES.filter((s) => !crm.includes(s))
-    check('all ten pipeline stages render', missing.length === 0, missing.join(','))
+    const missing = STAGES.filter((s) => !boardStages.includes(s))
+    check('all ten pipeline stages render on the board', missing.length === 0, missing.join(','))
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('.crm-view')].find((x) => /Leads/i.test(x.textContent))
+      if (b) b.click()
+    })
+    await page.waitForTimeout(600)
 
     // ---- pipeline handoffs ----
     // Moving a lead to Proposal Sent should offer to set up the portal

@@ -43,6 +43,15 @@ const STAGES = [
 const SIZES = ['1-10', '11-50', '51-200', '201-500', 'Unknown']
 const TYPES = ['SME', 'Multi-site', 'Back office heavy', 'Sales-led', 'Operations-led']
 
+/* The three things a CRM is for: deciding what to do, doing it, and seeing
+   the shape of the pipeline. Insights leads because it is the only one that
+   answers "what now" without being asked. */
+const VIEWS = [
+  { id: 'insights', label: 'Insights' },
+  { id: 'leads', label: 'Leads' },
+  { id: 'board', label: 'Board' },
+]
+
 const TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'contacts', label: 'Contacts' },
@@ -419,6 +428,15 @@ function Workspace({ sb, user, onSignedOut }) {
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState(null)
   const [tab, setTab] = useState('overview')
+  /* Which of the three workspaces is showing. Everything used to be stacked on
+     one page — metrics, filters, the lead list, the board and the insights,
+     in that order — so finding anything meant scrolling past everything else.
+     They are the same three jobs a CRM does and they are now three views. */
+  const [view, setView] = useState('insights')
+  /* A predicate handed over from Insights, so clicking "12 ready to contact"
+     lands on exactly those twelve rather than on a stage filter that happens
+     to be close. Carries its own label so the chip can say what it did. */
+  const [focus, setFocus] = useState(null)
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -671,9 +689,10 @@ function Workspace({ sb, user, onSignedOut }) {
           && (!statusFilter || lead.status === statusFilter)
           && (!ownerFilter || lead.owner === ownerFilter)
           && (Number(lead.score) || 0) >= floor
+          && (!focus || focus.fn(lead))
       })
       .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0))
-  }, [leads, search, statusFilter, ownerFilter, minScore])
+  }, [leads, search, statusFilter, ownerFilter, minScore, focus])
 
   const selected = useMemo(
     () => visible.find((lead) => lead.id === selectedId) || visible[0] || null,
@@ -722,51 +741,77 @@ function Workspace({ sb, user, onSignedOut }) {
 
   return (
     <div className="grain">
-      <div className="app-top">
-        <Link to="/" aria-label="n.abl home"><Logo size={22} /></Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-4)' }}>
-          <span className="conn"><i />Connected</span>
-          <Link to="/team" className="btn btn--ghost btn--sm">Team space</Link>
+      {/* ---------- Ribbon ----------
+          One sticky row carrying identity, the three views, search and the one
+          action worth having always to hand. It replaces a header, a metrics
+          strip and a filter block that together took most of a screen before
+          any lead was visible. */}
+      <div className="crm-ribbon">
+        <Link to="/" className="crm-ribbon__brand" aria-label="n.abl home"><Logo size={20} /></Link>
+
+        <nav className="crm-views" role="tablist" aria-label="Workspace">
+          {VIEWS.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              role="tab"
+              aria-selected={view === v.id}
+              className={`crm-view ${view === v.id ? 'crm-view--on' : ''}`}
+              onClick={() => setView(v.id)}
+            >
+              {v.label}
+              {v.id === 'leads' && leads.length > 0 && (
+                <span className="crm-view__count">{leads.length}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        <div className="crm-ribbon__right">
+          <input
+            className="input crm-ribbon__search"
+            type="search"
+            value={search}
+            aria-label="Search leads"
+            placeholder="Search leads"
+            onChange={(e) => { setSearch(e.target.value); if (view === 'insights') setView('leads') }}
+          />
+          <button type="button" className="btn btn--accent btn--sm" onClick={() => setAddOpen(true)}>
+            + Lead
+          </button>
+          <Link to="/team" className="btn btn--ghost btn--sm crm-ribbon__team">Team</Link>
         </div>
       </div>
 
-      <div className="shell" style={{ paddingBottom: 'var(--s-9)' }}>
-        <header style={{ paddingTop: 'var(--s-7)' }}>
-          <span className="eyebrow">n.abl sales CRM</span>
-          <h1 style={{ fontSize: 'var(--t-3xl)', margin: 'var(--s-3) 0 var(--s-4)' }}>
-            Pipeline<span className="dot" />
-          </h1>
-          <p className="muted prose">
-            Leads, contacts, stages and approved outreach in one place. Every record here is
-            entered and maintained by the team.
-          </p>
-        </header>
+      <div className="shell crm-shell">
+        {view === 'insights' && (
+          <Insights
+            leads={leads}
+            onJump={(fn, label) => { setStatusFilter(''); setSearch(''); setView('leads'); setFocus({ fn, label }) }}
+          />
+        )}
 
-        {/* ---------- Dashboard ---------- */}
-        <section aria-label="Pipeline metrics" style={{ marginTop: 'var(--s-6)' }}>
-          <div className="crm-metrics">
-            {metrics.map(([label, value], i) => (
-              <Reveal key={label} delay={i * 0.03}>
-                <EdgeCard className="crm-metric" spotlight={false} lift={false}>
-                  <div className="crm-metric__value">{value}</div>
-                  <div className="crm-metric__label">{label}</div>
-                </EdgeCard>
-              </Reveal>
-            ))}
-          </div>
-        </section>
+        {view === 'board' && (
+          <section aria-label="Pipeline board">
+            <p className="dim crm-hint">
+              Drag a lead between columns to change its stage. Every move is logged.
+              Prefer the keyboard? Use the stage menu on the lead&rsquo;s Overview tab.
+            </p>
+            <Board leads={leads} onMove={moveLead} onSelect={(id) => { selectLead(id); setView('leads') }} />
+          </section>
+        )}
 
+        {view === 'leads' && (
+        <>
         {/* ---------- Filters ---------- */}
         <section aria-label="Lead filters">
           <div className="crm-filters">
-            <div className="crm-filter">
-              <label className="label" htmlFor="crm-search">Search</label>
-              <input
-                id="crm-search" className="input" type="search" value={search}
-                placeholder="Company, industry, location"
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+            {focus && (
+              <button type="button" className="crm-focus" onClick={() => setFocus(null)}>
+                {focus.label} <span aria-hidden="true">×</span>
+                <span className="sr-only">— clear this filter</span>
+              </button>
+            )}
             <div className="crm-filter">
               <label className="label" htmlFor="crm-status">Stage</label>
               <select
@@ -794,9 +839,6 @@ function Workspace({ sb, user, onSignedOut }) {
                 onChange={(e) => setMinScore(e.target.value)}
               />
             </div>
-            <button type="button" className="btn btn--accent" onClick={() => setAddOpen(true)}>
-              + Add lead
-            </button>
           </div>
         </section>
 
@@ -853,24 +895,8 @@ function Workspace({ sb, user, onSignedOut }) {
           </div>
         )}
 
-        {/* ---------- Pipeline board ---------- */}
-        <section aria-label="Pipeline board" style={{ marginTop: 'var(--s-8)' }}>
-          <span className="eyebrow">Pipeline board</span>
-          <p className="dim" style={{ fontSize: 'var(--t-sm)', margin: 'var(--s-3) 0 var(--s-4)' }}>
-            Drag a lead between columns to change its stage. Every move is logged. Prefer the
-            keyboard? Use the stage menu on the lead&rsquo;s Overview tab.
-          </p>
-          <Board leads={leads} onMove={moveLead} onSelect={selectLead} />
-        </section>
-
-        {/* ---------- Insights ---------- */}
-        <section aria-label="Pipeline insights" style={{ marginTop: 'var(--s-8)' }}>
-          <span className="eyebrow">Pipeline insights</span>
-          <p className="dim" style={{ fontSize: 'var(--t-sm)', margin: 'var(--s-3) 0 var(--s-4)' }}>
-            Counted from the leads on this page.
-          </p>
-          <Insights leads={leads} />
-        </section>
+        </>
+        )}
       </div>
 
       {addOpen && (
@@ -1559,47 +1585,203 @@ function Board({ leads, onMove, onSelect }) {
    Pipeline insights — arithmetic over the leads above, nothing else
    ============================================================ */
 
-function Insights({ leads }) {
-  const cards = useMemo(() => {
-    const top = [...leads].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0))[0]
-    const followUps = leads.filter((l) => ['Contacted', 'Follow Up Required'].includes(l.status))
-    const ready = leads.filter((l) => l.status === 'Ready To Contact')
+/* The page that opens first, so it has to answer "what do I do now" rather
+   than restate what is already on screen elsewhere.
 
-    const counts = {}
-    leads.forEach((lead) => {
-      const key = String(lead.industry || '').trim()
-      if (key) counts[key] = (counts[key] || 0) + 1
-    })
-    const topIndustry = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0]
+   The old version was six cards of prose, three of which were the same advice
+   for every pipeline — "move leads above 80 into approved outreach", "use
+   public business contact routes". Advice that does not change is
+   documentation, not an insight, and it belongs in the business pack where it
+   already is.
 
-    return [
-      ['High-priority leads', top
-        ? `${top.company} carries your highest priority score at ${top.score}/100.`
-        : 'No leads yet.'],
-      ['Follow-ups due', followUps.length
-        ? `${followUps.length} lead${followUps.length === 1 ? '' : 's'} need a follow-up decision.`
-        : 'No follow-ups due.'],
-      ['Ready to contact', ready.length
-        ? `${ready.length} lead${ready.length === 1 ? '' : 's'} are ready for approved outreach.`
-        : 'No approved outreach queue yet.'],
-      ['Similar businesses', topIndustry
-        ? `${topIndustry} is your densest segment with ${counts[topIndustry]} lead${counts[topIndustry] === 1 ? '' : 's'}. Worth keeping that shape in mind next time you add one by hand.`
-        : 'Add a few leads and your strongest segment will show up here.'],
-      ['Conversion opportunity', 'Move leads above 80 into approved outreach before adding more low-score records.'],
-      ['GDPR guardrail', 'Use public business contact routes, note where each one came from, and avoid personal scraping or authenticated access.'],
-    ]
+   What replaces it is three questions with numbers attached, each clickable
+   through to the leads it counted:
+
+     Where is everything?      the funnel, and where it stops
+     What is waiting on me?    the queue, in the order it should be worked
+     Can I actually reach it?  the split by channel, which decides the day
+
+   Nothing here is a target or a projection. Every figure is a count of rows
+   that exist. */
+function Insights({ leads, onJump }) {
+  const m = useMemo(() => {
+    const at = (...stages) => leads.filter((l) => stages.includes(l.status))
+    const total = leads.length
+
+    /* Reachability, which is the number that decides what work is possible
+       today. A lead with a role email is free to contact; one with only an
+       address costs a stamp; one with neither needs research first. */
+    const withEmail = leads.filter((l) => (l.contacts || []).some((c) => c.email))
+    const withPhone = leads.filter((l) => (l.contacts || []).some((c) => c.phone)
+      && !(l.contacts || []).some((c) => c.email))
+    const postOnly = leads.filter((l) => !(l.contacts || []).some((c) => c.email || c.phone)
+      && Boolean(l.location))
+    const unreachable = leads.filter((l) => !(l.contacts || []).some((c) => c.email || c.phone)
+      && !l.location)
+
+    /* The queue. Ordered by what unblocks the most, not by stage order:
+       a reply left sitting is worse than a lead not yet contacted. */
+    const queue = [
+      {
+        key: 'replied',
+        label: 'Replied — waiting on you',
+        n: at('Replied').length,
+        fn: (l) => l.status === 'Replied',
+        urgent: true,
+      },
+      {
+        key: 'followup',
+        label: 'Follow-up due',
+        n: at('Follow Up Required').length,
+        fn: (l) => l.status === 'Follow Up Required',
+        urgent: true,
+      },
+      {
+        key: 'ready',
+        label: 'Ready to contact',
+        n: at('Ready To Contact').length,
+        fn: (l) => l.status === 'Ready To Contact',
+      },
+      {
+        key: 'drafted',
+        label: 'Drafted, not yet approved',
+        n: leads.filter((l) => l.outreachDraft && !l.outreachApproved).length,
+        fn: (l) => Boolean(l.outreachDraft) && !l.outreachApproved,
+      },
+      {
+        key: 'blocked',
+        label: 'Blocked until assessed',
+        n: leads.filter((l) => l.marketingStatus !== 'permitted' && !l.optOut).length,
+        fn: (l) => l.marketingStatus !== 'permitted' && !l.optOut,
+        note: 'Nothing can be sent to these. Compliance tab on each one.',
+      },
+      {
+        key: 'proposal',
+        label: 'Proposal out, no answer',
+        n: at('Proposal Sent').length,
+        fn: (l) => l.status === 'Proposal Sent',
+      },
+    ].filter((q) => q.n > 0)
+
+    /* The funnel, as counts at each stage rather than a conversion rate.
+       A rate over twenty leads is noise, and quoting one would invite a
+       decision it cannot support. */
+    const funnel = STAGES
+      .filter((st) => st !== 'Lost')
+      .map((st) => ({ stage: st, n: leads.filter((l) => l.status === st).length }))
+    const peak = Math.max(1, ...funnel.map((f) => f.n))
+
+    const sectors = {}
+    for (const l of leads) {
+      const key = String(l.industry || '').trim()
+      if (key) sectors[key] = (sectors[key] || 0) + 1
+    }
+    const topSectors = Object.entries(sectors).sort((a, b) => b[1] - a[1]).slice(0, 6)
+
+    return { total, withEmail, withPhone, postOnly, unreachable, queue, funnel, peak, topSectors,
+      won: at('Won').length, lost: at('Lost').length, optedOut: leads.filter((l) => l.optOut).length }
   }, [leads])
 
+  if (!m.total) {
+    return (
+      <Empty>
+        Nothing in the pipeline yet. Add a lead from the ribbon, or load a sourced
+        batch — see <code>business/10-lead-sourcing</code>.
+      </Empty>
+    )
+  }
+
   return (
-    <div className="grid grid--3">
-      {cards.map(([title, body], i) => (
-        <Reveal key={title} delay={i * 0.04}>
-          <EdgeCard className="card-pad" lift={false}>
-            <span className="eyebrow">{title}</span>
-            <p className="muted" style={{ marginTop: 'var(--s-3)', fontSize: 'var(--t-sm)' }}>{body}</p>
-          </EdgeCard>
-        </Reveal>
-      ))}
+    <div className="crm-insights">
+      <section className="crm-ins__block" aria-label="What needs you">
+        <h2 className="crm-ins__h">What needs you</h2>
+        {m.queue.length === 0 ? (
+          <p className="dim crm-hint">Nothing waiting. Everything is either sent or parked.</p>
+        ) : (
+          <ul className="crm-queue">
+            {m.queue.map((q) => (
+              <li key={q.key}>
+                <button
+                  type="button"
+                  className={`crm-queue__row ${q.urgent ? 'crm-queue__row--urgent' : ''}`}
+                  onClick={() => onJump(q.fn, q.label)}
+                >
+                  <span className="crm-queue__n">{q.n}</span>
+                  <span className="crm-queue__label">
+                    {q.label}
+                    {q.note && <em className="crm-queue__note">{q.note}</em>}
+                  </span>
+                  <span className="crm-queue__go" aria-hidden="true">→</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="crm-ins__block" aria-label="How you can reach them">
+        <h2 className="crm-ins__h">How you can reach them</h2>
+        <ul className="crm-reach">
+          {[
+            ['Email', m.withEmail, 'free, and capped at 2,400 a month'],
+            ['Phone only', m.withPhone, 'needs TPS screening before any call'],
+            ['Post only', m.postOnly, 'costs a stamp, capped at 1,000 a month'],
+            ['No route yet', m.unreachable, 'needs an address or a website first'],
+          ].map(([label, set, note]) => (
+            <li key={label}>
+              <button type="button" className="crm-reach__row"
+                onClick={() => onJump((l) => set.some((x) => x.id === l.id), label)}
+                disabled={!set.length}>
+                <span className="crm-reach__bar" aria-hidden="true">
+                  <i style={{ width: `${Math.round((set.length / m.total) * 100)}%` }} />
+                </span>
+                <span className="crm-reach__n">{set.length}</span>
+                <span className="crm-reach__label">{label}<em>{note}</em></span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="crm-ins__block crm-ins__block--wide" aria-label="Pipeline shape">
+        <h2 className="crm-ins__h">Where everything is</h2>
+        <ul className="crm-funnel">
+          {m.funnel.map((f) => (
+            <li key={f.stage}>
+              <button type="button" className="crm-funnel__row"
+                onClick={() => onJump((l) => l.status === f.stage, f.stage)}
+                disabled={!f.n}>
+                <span className="crm-funnel__stage">{f.stage}</span>
+                <span className="crm-funnel__bar" aria-hidden="true">
+                  <i style={{ width: `${Math.round((f.n / m.peak) * 100)}%` }} />
+                </span>
+                <span className="crm-funnel__n">{f.n}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <p className="dim crm-hint">
+          {m.lost > 0 && `${m.lost} lost. `}
+          {m.optedOut > 0 && `${m.optedOut} objected and can never be contacted again. `}
+          Counts, not conversion rates — a rate over {m.total} leads would be noise.
+        </p>
+      </section>
+
+      {m.topSectors.length > 0 && (
+        <section className="crm-ins__block crm-ins__block--wide" aria-label="Sectors">
+          <h2 className="crm-ins__h">What is in there</h2>
+          <ul className="crm-sectors">
+            {m.topSectors.map(([name, n]) => (
+              <li key={name}>
+                <button type="button" className="crm-sector"
+                  onClick={() => onJump((l) => l.industry === name, name)}>
+                  {name} <span>{n}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }
