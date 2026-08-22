@@ -6,14 +6,15 @@
   "description": "n.abl \u2014 agency site, client portal, team space and CRM",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/check-css-tokens.mjs && vite build && node scripts/build-routes.mjs",
+    "build": "node scripts/check-css-tokens.mjs && node scripts/check-headers.mjs && vite build && node scripts/build-routes.mjs",
     "preview": "vite preview --port 4173",
     "test:ui": "node scripts/e2e-ui.mjs",
     "test:live": "node scripts/e2e-live.mjs",
     "test:security": "node scripts/security-check.mjs",
     "test:emails": "node scripts/check-email-contrast.mjs",
     "test:compliance": "node scripts/check-compliance-schema.mjs",
-    "test:css": "node scripts/check-css-tokens.mjs"
+    "test:css": "node scripts/check-css-tokens.mjs",
+    "test:headers": "node scripts/check-headers.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.106.2",
