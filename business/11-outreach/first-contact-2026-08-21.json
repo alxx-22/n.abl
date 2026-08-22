@@ -1,0 +1,1331 @@
+{
+ "generated_at": "2026-08-22T14:37:23.049Z",
+ "ruleset": "first-contact-template.md",
+ "drafts": [
+  {
+   "company": "JPK HEALTHCARE HOMES LTD",
+   "email": "admin@jpkhealthcare.co.uk",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at JPK Healthcare Homes",
+   "body": "Hi,\n\nI came across JPK Healthcare Homes on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found JPK Healthcare Homes on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 102,
+   "words_with_footer": 131,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "B. N. GIBSON LIMITED",
+   "email": "info@bngibson.co.uk",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at B. N. Gibson",
+   "body": "Hi,\n\nI came across B. N. Gibson on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found B. N. Gibson on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 102,
+   "words_with_footer": 131,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "BELLA BAMBINI DAY NURSERY LTD",
+   "email": "hello@bellabambinidaynursery.co.uk",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at Bella Bambini Day Nursery",
+   "body": "Hi,\n\nI came across Bella Bambini Day Nursery on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them. 8 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Bella Bambini Day Nursery on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 115,
+   "words_with_footer": 145,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "THE LOUNGE @ 26 LIMITED",
+   "email": null,
+   "signal": "placeholder_site",
+   "subject": "Your holding page, at The Lounge @ 26",
+   "body": "Hi,\n\nI came across The Lounge @ 26 on the Companies House register and noticed your website is still a holding page.\n\nThat is not a criticism — a holding page usually means the effort is going somewhere else that matters more. Over 6 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found The Lounge @ 26 on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 107,
+   "words_with_footer": 137,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "LYRIQ HEALTHCARE LTD",
+   "email": "enquiries@lyriqhealthcare.co.uk",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at Lyriq Healthcare",
+   "body": "Hi,\n\nI came across Lyriq Healthcare on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Lyriq Healthcare on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 101,
+   "words_with_footer": 129,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ALL SHIRES FOODS LIMITED",
+   "email": "info@allshiresfoods.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at All Shires Foods",
+   "body": "Hi,\n\nI came across All Shires Foods on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. Twenty years in, it is rarely the first time anyone has noticed it.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found All Shires Foods on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 125,
+   "words_with_footer": 154,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "KHARIS HEALTHCARE LIMITED",
+   "email": "info@kharishealthcare.com",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Kharis Healthcare",
+   "body": "Hi,\n\nI came across Kharis Healthcare on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Kharis Healthcare on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 111,
+   "words_with_footer": 139,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "MOUNTFORD HOUSE NURSERY LIMITED",
+   "email": "enquiries@mountfordhousenursery.co.uk",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at Mountford House Nursery",
+   "body": "Hi,\n\nI came across Mountford House Nursery on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves. Across 16 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Mountford House Nursery on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 112,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "THE THROCKMORTON LIMITED",
+   "email": null,
+   "signal": "placeholder_site",
+   "subject": "Your holding page, at The Throckmorton",
+   "body": "Hi,\n\nI came across The Throckmorton on the Companies House register and noticed your website is still a holding page.\n\nThat is not a criticism — a holding page usually means the effort is going somewhere else that matters more. Over 12 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found The Throckmorton on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 105,
+   "words_with_footer": 133,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "AINSLEY ASPHALT LTD",
+   "email": "info@ainsleyasphalt.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Ainsley Asphalt",
+   "body": "Hi,\n\nI came across Ainsley Asphalt on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. 8 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Ainsley Asphalt on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 123,
+   "words_with_footer": 151,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "LITANIA HEALTHCARE PROFESSIONAL SERVICES LTD",
+   "email": "info@litaniahealthcareps.com",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at Litania Healthcare Professional Services",
+   "body": "Hi,\n\nI came across Litania Healthcare Professional Services on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Litania Healthcare Professional Services on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 103,
+   "words_with_footer": 133,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "BAXTER FREIGHT LIMITED",
+   "email": "hello@baxterfreight.com",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at Baxter Freight",
+   "body": "Hi,\n\nI came across Baxter Freight on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them. Across 13 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Baxter Freight on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 111,
+   "words_with_footer": 139,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "CRISP VOCATIONAL PROVISION LIMITED",
+   "email": "office@crispvocationalprovision.co.uk",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at Crisp Vocational Provision",
+   "body": "Hi,\n\nI came across Crisp Vocational Provision on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them. Over 13 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Crisp Vocational Provision on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 108,
+   "words_with_footer": 137,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "JJ BLOODSTOCK LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at JJ Bloodstock",
+   "body": "Hi,\n\nI came across JJ Bloodstock on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything. It is a good age to sort it, before the volume makes it expensive.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found JJ Bloodstock on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 113,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ARDOUR HEALTHCARE SERVICES LTD",
+   "email": "admin@ardourhealthcare.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Ardour Healthcare Services",
+   "body": "Hi,\n\nI came across Ardour Healthcare Services on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Ardour Healthcare Services on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 112,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "APOLLO HOME IMPROVEMENTS LTD",
+   "email": "info@apollohomeimprovements.co.uk",
+   "signal": "quote_request",
+   "subject": "Your quote form, at Apollo Home Improvements",
+   "body": "Hi,\n\nI came across Apollo Home Improvements on the Companies House register and noticed a quote starts with a form on your site.\n\nQuoting from a form usually means somebody rebuilding the same document from scratch each time. Early enough that fixing it now costs less than fixing it later.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Apollo Home Improvements on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 109,
+   "words_with_footer": 138,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "PLUS POINT CARE LTD",
+   "email": "info@pluspointcare.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Plus Point Care",
+   "body": "Hi,\n\nI came across Plus Point Care on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Plus Point Care on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 112,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "CITY REMOVALS EAST MIDLANDS LTD",
+   "email": "info@cityremovalseastmidlands.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at City Removals East Midlands",
+   "body": "Hi,\n\nI came across City Removals East Midlands on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. 6 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found City Removals East Midlands on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 125,
+   "words_with_footer": 155,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "A.H.HILLER & SON LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at A.H.HILLER & Son",
+   "body": "Hi,\n\nI came across A.H.HILLER & Son on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found A.H.HILLER & Son on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 100,
+   "words_with_footer": 129,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "LIVE 9 EVENTS LTD",
+   "email": "info@live9events.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Live 9 Events",
+   "body": "Hi,\n\nI came across Live 9 Events on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. 9 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Live 9 Events on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 124,
+   "words_with_footer": 153,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ARDEN CAFE LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at Arden Cafe",
+   "body": "Hi,\n\nI came across Arden Cafe on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything. 9 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Arden Cafe on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 111,
+   "words_with_footer": 139,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "THE ALBERT HALL (NOTTINGHAM) LIMITED",
+   "email": "enquiries@alberthallnottingham.com",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at The Albert Hall",
+   "body": "Hi,\n\nI came across The Albert Hall on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found The Albert Hall on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 102,
+   "words_with_footer": 131,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "FOREST TRAVEL HOLIDAYS LIMITED",
+   "email": "info@foresttravelholidays.co.uk",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at Forest Travel Holidays",
+   "body": "Hi,\n\nI came across Forest Travel Holidays on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves. Over 19 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Forest Travel Holidays on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 108,
+   "words_with_footer": 137,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "E. GOULD LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at E. Gould",
+   "body": "Hi,\n\nI came across E. Gould on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found E. Gould on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 99,
+   "words_with_footer": 127,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "AVON HOLIDAY COTTAGES LTD",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at Avon Holiday Cottages",
+   "body": "Hi,\n\nI came across Avon Holiday Cottages on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything. 7 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Avon Holiday Cottages on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 112,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "A H ACCOUNTANTS LTD",
+   "email": "info@ahaccountants.com",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at A H Accountants",
+   "body": "Hi,\n\nI came across A H Accountants on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. Over 15 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found A H Accountants on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 118,
+   "words_with_footer": 147,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ASPIRE ESTATES LIMITED",
+   "email": "hello@aspireestates.uk",
+   "signal": "accreditations",
+   "subject": "CHAS renewals, at Aspire Estates",
+   "body": "Hi,\n\nI came across Aspire Estates on the Companies House register and noticed you carry CHAS accreditation, which has to be kept current.\n\nRenewal dates are the classic thing that sits in a spreadsheet until the month they matter. 10 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Aspire Estates on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": false,
+   "words": 110,
+   "words_with_footer": 138,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "BRAVO LIGHTING LIMITED",
+   "email": "info@bravolighting.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Bravo Lighting",
+   "body": "Hi,\n\nI came across Bravo Lighting on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. 11 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Bravo Lighting on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 123,
+   "words_with_footer": 151,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "AC MEDICAL SERVICES LTD",
+   "email": "enquiries@acmedical.co.uk",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at AC Medical Services",
+   "body": "Hi,\n\nI came across AC Medical Services on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found AC Medical Services on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 102,
+   "words_with_footer": 131,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "MRZ LOGISTICS UK LTD",
+   "email": "enquiries@mrzlogistics.co.uk",
+   "signal": "accreditations",
+   "subject": "CHAS renewals, at MRZ Logistics UK",
+   "body": "Hi,\n\nI came across MRZ Logistics UK on the Companies House register and noticed you carry CHAS accreditation, which has to be kept current.\n\nRenewal dates are the classic thing that sits in a spreadsheet until the month they matter. Over 13 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found MRZ Logistics UK on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": false,
+   "words": 105,
+   "words_with_footer": 134,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "THE REGENCY DANCE CENTRE LIMITED",
+   "email": "enquiries@regencydancecentre.com",
+   "signal": "accreditations",
+   "subject": "CHAS renewals, at The Regency Dance Centre",
+   "body": "Hi,\n\nI came across The Regency Dance Centre on the Companies House register and noticed you carry CHAS accreditation, which has to be kept current.\n\nRenewal dates are the classic thing that sits in a spreadsheet until the month they matter. Across 18 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found The Regency Dance Centre on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": false,
+   "words": 110,
+   "words_with_footer": 140,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "RICHMOND PLANT HIRE LIMITED",
+   "email": "enquiries@richmondplant.com",
+   "signal": "multi_site",
+   "subject": "Your two sites, at Richmond Plant Hire",
+   "body": "Hi,\n\nI came across Richmond Plant Hire on the Companies House register and noticed you run more than one website.\n\nTwo sites usually means the same information kept in two places and reconciled by hand. Over 19 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Richmond Plant Hire on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 100,
+   "words_with_footer": 129,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "BIDFORD BRIDGE HOUSE LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at Bidford Bridge House",
+   "body": "Hi,\n\nI came across Bidford Bridge House on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything. Twenty years in, it is rarely the first time anyone has noticed it.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Bidford Bridge House on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 113,
+   "words_with_footer": 142,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ATKINS RESIDENTIAL LTD",
+   "email": "contact@atkinsrl.co.uk",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at Atkins Residential",
+   "body": "Hi,\n\nI came across Atkins Residential on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves. It is a good age to sort it, before the volume makes it expensive.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Atkins Residential on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 115,
+   "words_with_footer": 143,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "LUBA DISTRIBUTION LTD",
+   "email": "info@luba-distribution.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Luba Distribution",
+   "body": "Hi,\n\nI came across Luba Distribution on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. Over 10 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Luba Distribution on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 117,
+   "words_with_footer": 145,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "BROOKE HEALTHCARE LTD",
+   "email": "admin@brookehealthcare.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Brooke Healthcare",
+   "body": "Hi,\n\nI came across Brooke Healthcare on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Brooke Healthcare on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 111,
+   "words_with_footer": 139,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "NIGHT OWL HOLDINGS LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at Night Owl Holdings",
+   "body": "Hi,\n\nI came across Night Owl Holdings on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything. 5 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Night Owl Holdings on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 112,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "DPR MOTORS MOT AND SERVICE CENTRE LTD",
+   "email": "sales@dprmotors.co.uk",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at DPR Motors MOT and Service Centre",
+   "body": "Hi,\n\nI came across DPR Motors MOT and Service Centre on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves. Across 11 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found DPR Motors MOT and Service Centre on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 115,
+   "words_with_footer": 147,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "RESPONSE-ABLE SOLUTIONS LTD",
+   "email": "bookings@car-movers.co.uk",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at Response-able Solutions",
+   "body": "Hi,\n\nI came across Response-able Solutions on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves. After 20 years that is a great many repetitions.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Response-able Solutions on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 110,
+   "words_with_footer": 138,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "OOSLAND BARNS LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at Oosland Barns",
+   "body": "Hi,\n\nI came across Oosland Barns on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything. Over 14 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Oosland Barns on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 105,
+   "words_with_footer": 133,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "RED VAPE LIMITED",
+   "email": "hello@redvape.com",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Red Vape",
+   "body": "Hi,\n\nI came across Red Vape on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. 12 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Red Vape on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 123,
+   "words_with_footer": 151,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "EAST MIDLANDS ALARMS LIMITED",
+   "email": "info@eastmidlandsalarms.co.uk",
+   "signal": "quote_request",
+   "subject": "Your quote form, at East Midlands Alarms",
+   "body": "Hi,\n\nI came across East Midlands Alarms on the Companies House register and noticed a quote starts with a form on your site.\n\nQuoting from a form usually means somebody rebuilding the same document from scratch each time. Across 8 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found East Midlands Alarms on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 107,
+   "words_with_footer": 136,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "AFFINITY DANCE SCHOOL LIMITED",
+   "email": "info@affinitydanceschool.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Affinity Dance School",
+   "body": "Hi,\n\nI came across Affinity Dance School on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. It is a good age to sort it, before the volume makes it expensive.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Affinity Dance School on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 126,
+   "words_with_footer": 155,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "SUBSIDE BAR LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at Subside Bar",
+   "body": "Hi,\n\nI came across Subside Bar on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything. Over 19 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Subside Bar on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 105,
+   "words_with_footer": 133,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ADC INFRASTRUCTURE LIMITED",
+   "email": "office@adcinfrastructure.com",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at ADC Infrastructure",
+   "body": "Hi,\n\nI came across ADC Infrastructure on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. 13 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found ADC Infrastructure on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 123,
+   "words_with_footer": 151,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "CDF ESTATES LIMITED",
+   "email": "info@cdfestates.co.uk",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at CDF Estates",
+   "body": "Hi,\n\nI came across CDF Estates on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves. On a 20-year-old business it has usually been worked around rather than fixed.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found CDF Estates on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 114,
+   "words_with_footer": 142,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ELITE CAMPERS LTD",
+   "email": "hello@elite-campers.com",
+   "signal": "accreditations",
+   "subject": "CHAS renewals, at Elite Campers",
+   "body": "Hi,\n\nI came across Elite Campers on the Companies House register and noticed you carry CHAS accreditation, which has to be kept current.\n\nRenewal dates are the classic thing that sits in a spreadsheet until the month they matter. Across 6 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Elite Campers on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": false,
+   "words": 108,
+   "words_with_footer": 136,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "TRADE PARTNERS INTERNATIONAL LIMITED",
+   "email": "info@trade-partners.net",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Trade Partners International",
+   "body": "Hi,\n\nI came across Trade Partners International on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. Over 19 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Trade Partners International on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 118,
+   "words_with_footer": 147,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "EVOENERGY LIMITED",
+   "email": "info@evoenergy.co.uk",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at Evoenergy",
+   "body": "Hi,\n\nI came across Evoenergy on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them. 19 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Evoenergy on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 112,
+   "words_with_footer": 139,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "AKHTER'S LIMITED",
+   "email": "info@akhters.com",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Akhter's",
+   "body": "Hi,\n\nI came across Akhter's on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. Across 19 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Akhter's on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 120,
+   "words_with_footer": 147,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "FHP LIVING LIMITED",
+   "email": "info@fhpliving.co.uk",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at FHP Living",
+   "body": "Hi,\n\nI came across FHP Living on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them. 12 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found FHP Living on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 113,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ENERTECH FM LIMITED",
+   "email": "info@enertechfm.co.uk",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at Enertech FM",
+   "body": "Hi,\n\nI came across Enertech FM on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them. Over 12 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Enertech FM on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 107,
+   "words_with_footer": 135,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ALERT ELECTRICAL WHOLESALERS LIMITED",
+   "email": "support@alertelectrical.com",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Alert Electrical Wholesalers",
+   "body": "Hi,\n\nI came across Alert Electrical Wholesalers on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. After 30 years that is a great many repetitions.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Alert Electrical Wholesalers on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 121,
+   "words_with_footer": 150,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "EXEID LTD",
+   "email": "info@exeid.com",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Exeid",
+   "body": "Hi,\n\nI came across Exeid on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. Across 16 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Exeid on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 120,
+   "words_with_footer": 147,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ANGLO SKILLS COLLEGE LIMITED",
+   "email": "admin@angloskillscollege.co.uk",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at Anglo Skills College",
+   "body": "Hi,\n\nI came across Anglo Skills College on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves. On a 21-year-old business it has usually been worked around rather than fixed.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Anglo Skills College on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 115,
+   "words_with_footer": 144,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "A1 MOBILE LIMITED",
+   "email": null,
+   "signal": "quote_request",
+   "subject": "Your quote form, at A1 Mobile",
+   "body": "Hi,\n\nI came across A1 Mobile on the Companies House register and noticed a quote starts with a form on your site.\n\nQuoting from a form usually means somebody rebuilding the same document from scratch each time. After 25 years that is a great many repetitions.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found A1 Mobile on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 105,
+   "words_with_footer": 133,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "THE BROOM TAVERN LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at The Broom Tavern",
+   "body": "Hi,\n\nI came across The Broom Tavern on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything. 13 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found The Broom Tavern on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 112,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "FEEL CLEAR LTD",
+   "email": "contact@feelclear.co.uk",
+   "signal": "accreditations",
+   "subject": "CHAS renewals, at Feel Clear",
+   "body": "Hi,\n\nI came across Feel Clear on the Companies House register and noticed you carry CHAS accreditation, which has to be kept current.\n\nRenewal dates are the classic thing that sits in a spreadsheet until the month they matter. 11 years of doing it by hand is a lot of afternoons.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Feel Clear on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": false,
+   "words": 110,
+   "words_with_footer": 138,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ANN ET VIN LIMITED",
+   "email": "info@annetvin.com",
+   "signal": "phone_booking",
+   "subject": "Taking bookings by phone, at Ann et Vin",
+   "body": "Hi,\n\nI came across Ann et Vin on the Companies House register and noticed bookings come through a phone call.\n\nPhone bookings are fine until two arrive at once, and then somebody is ringing people back all afternoon. On a 23-year-old business it has usually been worked around rather than fixed.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Ann et Vin on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": false,
+   "words": 110,
+   "words_with_footer": 139,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "HARRY'S HOME IMPROVEMENTS LTD",
+   "email": "info@harryshomeimprovements.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Harry's Home Improvements",
+   "body": "Hi,\n\nI came across Harry's Home Improvements on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. It is a good age to sort it, before the volume makes it expensive.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Harry's Home Improvements on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 126,
+   "words_with_footer": 155,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "AURA JOURNEYS LTD",
+   "email": "info@aurajourneys.com",
+   "signal": "multi_site",
+   "subject": "Your two sites, at Aura Journeys",
+   "body": "Hi,\n\nI came across Aura Journeys on the Companies House register and noticed you run more than one website.\n\nTwo sites usually means the same information kept in two places and reconciled by hand. Over 12 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Aura Journeys on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 99,
+   "words_with_footer": 127,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "TEMPORARYPODSOLUTIONS LTD",
+   "email": null,
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Temporarypodsolutions",
+   "body": "Hi,\n\nI came across Temporarypodsolutions on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Temporarypodsolutions on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 110,
+   "words_with_footer": 137,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "WESTGARTH PROPERTIES LTD",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at Westgarth Properties",
+   "body": "Hi,\n\nI came across Westgarth Properties on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything. Twenty years in, it is rarely the first time anyone has noticed it.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Westgarth Properties on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 112,
+   "words_with_footer": 140,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "AMBER PANELS AND ENCLOSURES LTD",
+   "email": "enquiries@amberpanels.co.uk",
+   "signal": "accreditations",
+   "subject": "ISO 9001 renewals, at Amber Panels and Enclosures",
+   "body": "Hi,\n\nI came across Amber Panels and Enclosures on the Companies House register and noticed you carry ISO 9001 accreditation, which has to be kept current.\n\nRenewal dates are the classic thing that sits in a spreadsheet until the month they matter. Across 10 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Amber Panels and Enclosures on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": false,
+   "words": 111,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "I & R PRIME PROPERTIES LTD",
+   "email": "info@irprimeproperties.co.uk",
+   "signal": "quote_request",
+   "subject": "Your quote form, at I & R Prime Properties",
+   "body": "Hi,\n\nI came across I & R Prime Properties on the Companies House register and noticed a quote starts with a form on your site.\n\nQuoting from a form usually means somebody rebuilding the same document from scratch each time. Over 5 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found I & R Prime Properties on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 105,
+   "words_with_footer": 136,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "FOSSE LIVING LIMITED",
+   "email": "info@fosseliving.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Fosse Living",
+   "body": "Hi,\n\nI came across Fosse Living on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. Across 7 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Fosse Living on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 121,
+   "words_with_footer": 149,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "BARNSWELL TIMBER LIMITED",
+   "email": "info@barnswelltimber.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Barnswell Timber",
+   "body": "Hi,\n\nI came across Barnswell Timber on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. Over 16 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Barnswell Timber on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 117,
+   "words_with_footer": 145,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "HENRY GROVES & SON LIMITED",
+   "email": "info@henrygroves.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Henry Groves & Son",
+   "body": "Hi,\n\nI came across Henry Groves & Son on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. After 23 years that is a great many repetitions.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Henry Groves & Son on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 122,
+   "words_with_footer": 152,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "B49 FINE DINING LIMITED",
+   "email": null,
+   "signal": "register_only",
+   "subject": "Finding you online, at B49 Fine Dining",
+   "body": "Hi,\n\nI came across B49 Fine Dining on the Companies House register and could not find a website for you anywhere.\n\nThat is a deliberate choice for plenty of businesses, and it usually means the phone and the inbox carry everything.\n\nI'm Alex — I run n.abl, a small technology implementation business in Alcester. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found B49 Fine Dining on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 100,
+   "words_with_footer": 129,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "APPROACH PERSONNEL LIMITED",
+   "email": "enquiries@approachpersonnel.co.uk",
+   "signal": "accreditations",
+   "subject": "CHAS renewals, at Approach Personnel",
+   "body": "Hi,\n\nI came across Approach Personnel on the Companies House register and noticed you carry CHAS accreditation, which has to be kept current.\n\nRenewal dates are the classic thing that sits in a spreadsheet until the month they matter. Across 19 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Approach Personnel on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": false,
+   "words": 108,
+   "words_with_footer": 136,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "LOCAL CLEANERS 4 U LTD",
+   "email": "info@localcleaners4u.co.uk",
+   "signal": "quote_request",
+   "subject": "Your quote form, at Local Cleaners 4 U",
+   "body": "Hi,\n\nI came across Local Cleaners 4 U on the Companies House register and noticed a quote starts with a form on your site.\n\nQuoting from a form usually means somebody rebuilding the same document from scratch each time. Over 11 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Local Cleaners 4 U on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 104,
+   "words_with_footer": 134,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "HOME FIXOLOGY LIMITED",
+   "email": "info@homefixology.co.uk",
+   "signal": "quote_request",
+   "subject": "Your quote form, at Home Fixology",
+   "body": "Hi,\n\nI came across Home Fixology on the Companies House register and noticed a quote starts with a form on your site.\n\nQuoting from a form usually means somebody rebuilding the same document from scratch each time. It is a good age to sort it, before the volume makes it expensive.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Home Fixology on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 110,
+   "words_with_footer": 138,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "ORANGE MOON TRAINING LIMITED",
+   "email": "info@omtraining.co.uk",
+   "signal": "enquiry_form_only",
+   "subject": "Your enquiry form, at Orange Moon Training",
+   "body": "Hi,\n\nI came across Orange Moon Training on the Companies House register and noticed enquiries reach you through the form on your site rather than a named inbox.\n\nThose land in one place and get worked through by hand, and the ones that arrive on a busy day are the ones that wait. Over 11 years that adds up.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Orange Moon Training on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 118,
+   "words_with_footer": 147,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "GENTLE SOLUTIONS HOME CARE LTD",
+   "email": "info@gentlesolutionshomecare.co.uk",
+   "signal": "hiring",
+   "subject": "The vacancy on your site, at Gentle Solutions Home Care",
+   "body": "Hi,\n\nI came across Gentle Solutions Home Care on the Companies House register and noticed you are advertising on your own careers page.\n\nHiring is usually when the manual jobs start to hurt, because someone new has to be taught every one of them.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Gentle Solutions Home Care on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 103,
+   "words_with_footer": 133,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "DIRECT (FLT) TRAINING LIMITED",
+   "email": "enquiries@forklift-training.co.uk",
+   "signal": "quote_request",
+   "subject": "Your quote form, at Direct (flt) Training",
+   "body": "Hi,\n\nI came across Direct (flt) Training on the Companies House register and noticed a quote starts with a form on your site.\n\nQuoting from a form usually means somebody rebuilding the same document from scratch each time. Across 10 years it is a fair amount of time.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Direct (flt) Training on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 107,
+   "words_with_footer": 136,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "PAPERMOON NURSERIES (GAMSTON) LIMITED",
+   "email": "admin@papermoonnurseries.co.uk",
+   "signal": "downloadable_pricelist",
+   "subject": "Your price list, at Papermoon Nurseries",
+   "body": "Hi,\n\nI came across Papermoon Nurseries on the Companies House register and noticed your price list goes out as a document to download.\n\nA price list that lives in a document has to be rebuilt and reissued every time one number moves. Twenty years in, it is rarely the first time anyone has noticed it.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Papermoon Nurseries on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": true,
+   "words": 114,
+   "words_with_footer": 142,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  },
+  {
+   "company": "MIDLAND COMMERCIAL CLEANERS LIMITED",
+   "email": "admin@mccleaners.co.uk",
+   "signal": "accreditations",
+   "subject": "CONSTRUCTIONLINE renewals, at Midland Commercial Cleaners",
+   "body": "Hi,\n\nI came across Midland Commercial Cleaners on the Companies House register and noticed you carry CONSTRUCTIONLINE accreditation, which has to be kept current.\n\nRenewal dates are the classic thing that sits in a spreadsheet until the month they matter. Twenty years in, it is rarely the first time anyone has noticed it.\n\nI'm Alex — I run n.abl, a small technology implementation business in Nottingham. We take one job that is costing a business time or accuracy and fix it properly.\n\nNo reply needed if that is not useful. If it is, I'll spend half an hour on it with you, free, and say honestly if it is not worth doing.\n\nAlex\nn.abl — {{POSTAL_ADDRESS}}\nhello@nabl.agency · nabl.agency\n\nYou're receiving this because we found Midland Commercial Cleaners on the Companies House register. What we hold and why: nabl.agency/privacy\nUnsubscribe: {{UNSUBSCRIBE_URL}}",
+   "shared_observation": false,
+   "words": 112,
+   "words_with_footer": 141,
+   "blockers": [
+    "postal_address_not_set",
+    "unsubscribe_url_not_built"
+   ]
+  }
+ ],
+ "dropped": [
+  {
+   "company": "ARNOLD DENTAL CARE LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "AERO EV SOLUTIONS LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ALNE PARK STUD LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "3D LETS LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "LW LABS LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "AEROCOM (UK) LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ACORN TRAVEL (UK) LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "VAN HIRE NOTTINGHAM LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "AKHTER'S ESTATES LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ADKINS BAKERY LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ADZSELL CAR HIRE LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ARAN PROPERTY LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ADL JOINERY LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ECO POWER DIRECT LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "OPEN ARMS ORGANISATION CIC",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ARGYLE PROPERTY ASSOCIATES LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "BLU BANANA GRAPHICS LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "INDUS VALLEY FURNITURE LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "APOLLO SCREEDING LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "SALTERFORD HOUSE PRIVATE SCHOOL LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "P.R.S. HIRE SERVICES LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "IVORY EGG (UK) LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "CABLE GUYS LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ABEC LEGAL LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "CHEFS CUT BUTCHERY LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "CASTLETON INSTALLATIONS LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "C & M PROPERTY SOLUTIONS LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "NEW HOLLYBECK NURSERIES LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "CARING CIRCLE LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ACTIONABLE INTELLIGENCE LTD.",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "BRIDGES VAN HIRE LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ACTION PLANNING CONSULTANCY LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "CAROLINE BAKER HOLDINGS LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "DOVETAIL WOOD LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "CARLTON DENTAL CARE LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "SKYLIFT CARS LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "COMPASSION CARE LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "AIRPORT LIFT UK LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "AM LAW SOLICITORS LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "HARMONY LETS LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "DELTAECHO CARE LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "ELIEZER SUPPORTED LIVING SERVICES LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "DRIP UK (IRRIGATION SERVICES) LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "EXTRA HELP CARE LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "DAYTONA TRAVEL LTD",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "EVERY OCCASION EVENTS LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "MERRITT ESTATES LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "JMC RECYCLING SYSTEMS LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  },
+  {
+   "company": "BANCROFT CONSULTING LIMITED",
+   "signal": "describes_itself",
+   "why": "no checkable observation — see the note on describes_itself above"
+  }
+ ]
+}
