@@ -14,7 +14,8 @@
     "test:emails": "node scripts/check-email-contrast.mjs",
     "test:compliance": "node scripts/check-compliance-schema.mjs",
     "test:css": "node scripts/check-css-tokens.mjs",
-    "test:headers": "node scripts/check-headers.mjs"
+    "test:headers": "node scripts/check-headers.mjs",
+    "verify:deploy": "node scripts/verify-deploy.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.106.2",
