@@ -19,13 +19,26 @@
 
   // No AI binding. The public assistant calls Groq, whose free tier carries an
   // order of magnitude more traffic than Workers AI's daily Neuron allowance —
-  // which matters when the audience is anyone who finds the site. The key is a
-  // Worker secret:
-  //     npx wrangler secret put GROQ_API_KEY
+  // which matters when the audience is anyone who finds the site.
   //
   // The CLIENT assistant, when it is built, goes the other way: it handles
   // client personal data, and Cloudflare is already a processor of that, so
   // Workers AI adds no sub-processor where Groq would.
+
+  // The Groq key, held in the account's Secrets Store rather than as a Worker
+  // secret. A store secret is account-level and reusable, but a Worker sees it
+  // only through this binding — without it env.GROQ_API_KEY is simply absent,
+  // which is exactly how it looked when the secret existed and this did not.
+  //
+  // Note it is an object, not a string: the value is read with
+  // `await env.GROQ_API_KEY.get()`.
+  "secrets_store_secrets": [
+    {
+      "binding": "GROQ_API_KEY",
+      "store_id": "f1e65670a69246bab739dddb05e8fd6a",
+      "secret_name": "GROQ_API_KEY"
+    }
+  ],
 
   "assets": {
     "directory": "./dist",

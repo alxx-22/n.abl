@@ -19,7 +19,10 @@
 import { KNOWLEDGE } from './knowledge.generated'
 
 interface Env {
-  GROQ_API_KEY: string
+  /* A Secrets Store binding, not a plain string. The value is fetched with an
+     async get() — treating it as a string yields "[object Object]" in the
+     Authorization header and a 401 that looks exactly like a wrong key. */
+  GROQ_API_KEY?: { get: () => Promise<string> }
 }
 
 /* Groq rather than Workers AI, and the reason is capacity against an audience
@@ -143,7 +146,13 @@ export default {
       { role: 'user', content: message },
     ]
 
-    if (!env.GROQ_API_KEY) {
+    let apiKey = ''
+    try {
+      apiKey = (await env.GROQ_API_KEY?.get()) ?? ''
+    } catch {
+      apiKey = ''
+    }
+    if (!apiKey) {
       return json({
         reply: "I'm not set up yet, sorry. Email hello@nabl.agency and someone will come back to you.",
         intent: 'unknown',
@@ -155,7 +164,7 @@ export default {
       const res = await fetch(GROQ_URL, {
         method: 'POST',
         headers: {
-          authorization: `Bearer ${env.GROQ_API_KEY}`,
+          authorization: `Bearer ${apiKey}`,
           'content-type': 'application/json',
         },
         body: JSON.stringify({
