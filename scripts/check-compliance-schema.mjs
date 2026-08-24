@@ -134,7 +134,8 @@ alter default privileges in schema public grant execute on functions to anon, au
   const MIGRATIONS = ['202606010001_sales_intelligence.sql', '202608160003_crm_compliance.sql',
                       '202608210001_marketing_tier_ceilings.sql',
                       '202608210002_pin_search_path_on_ceiling_lookup.sql',
-                      '202608210003_postal_channel.sql']
+                      '202608210003_postal_channel.sql',
+                      '202608230001_research_endpoints.sql']
   for (const f of MIGRATIONS) {
     const p = join(DIR, f)
     writeFileSync(p, sh('cat', [join(ROOT, 'supabase/migrations', f)]))
@@ -647,6 +648,97 @@ from public.sales_leads where company like 'Bulk %';
     ? ok('letters spend none of the email allowance')
     : bad('letters spend none of the email allowance', emailSpent)
 
+  /* ---- research endpoints ------------------------------------------
+
+     Each team member's runs go through their own Claude subscription, so the
+     edge function routes by caller rather than to a shared endpoint. Two
+     things have to hold: nobody can read anybody's service token, and the
+     rate limit is the database's rather than the edge function's. */
+
+  line('\nRESEARCH ENDPOINTS — one per person, token not readable by anyone')
+
+  psql(`insert into auth.users (id, email) values
+        ('22222222-2222-2222-2222-222222222222','sam@nabl.agency') on conflict do nothing;`)
+
+  allows('an endpoint can be registered', `insert into public.research_endpoints
+    (user_id, url, service_token, label) values
+    ('11111111-1111-1111-1111-111111111111','https://research.nabl.agency','tok-secret','Alex laptop');`)
+
+  refuses('a plain-http endpoint is refused, so the token never crosses the wire in clear',
+    `insert into public.research_endpoints (user_id, url, service_token) values
+     ('22222222-2222-2222-2222-222222222222','http://research.nabl.agency','tok-2');`,
+    /url_check|violates check/)
+
+  /* The whole design rests on this: the token sits in a row its owner is
+     allowed to read, so RLS alone does not hide it. It takes a column grant,
+     and a column grant is easy to write and easy to get wrong. */
+  const canReadToken = val(`select has_column_privilege('authenticated','public.research_endpoints','service_token','select')::text;`)
+  canReadToken === 'false'
+    ? ok('a signed-in user cannot read a service token, not even their own')
+    : bad('a signed-in user cannot read a service token', 'authenticated has SELECT on it')
+  const canReadUrl = val(`select has_column_privilege('authenticated','public.research_endpoints','url','select')::text;`)
+  canReadUrl === 'true'
+    ? ok('but can read the rest of their own row') : bad('can read the rest of their own row')
+  const anonSees = val(`select has_table_privilege('anon','public.research_endpoints','select')::text;`)
+  anonSees === 'false' ? ok('and anon sees nothing at all') : bad('anon sees nothing at all')
+
+  line('\nRESEARCH RUNS — the rate limit belongs to the database')
+
+  allows('a run can be started against a registered endpoint',
+    `insert into public.research_runs (user_id, lead_company) values
+     ('11111111-1111-1111-1111-111111111111','Test Ltd');`)
+
+  refuses('a user with no endpoint cannot start one',
+    `insert into public.research_runs (user_id, lead_company) values
+     ('22222222-2222-2222-2222-222222222222','Test Ltd');`,
+    /no research endpoint registered/)
+
+  psql(`update public.research_endpoints set runs_per_hour = 3
+        where user_id = '11111111-1111-1111-1111-111111111111';`)
+  psql(`insert into public.research_runs (user_id, lead_company) values
+        ('11111111-1111-1111-1111-111111111111','Two'),
+        ('11111111-1111-1111-1111-111111111111','Three');`)
+  refuses('the fourth run in an hour is refused when the limit is three',
+    `insert into public.research_runs (user_id, lead_company) values
+     ('11111111-1111-1111-1111-111111111111','Four');`,
+    /rate limit/)
+
+  /* A run that failed still spent the allowance. Counting only successes is a
+     rate limit an error loop walks straight through. */
+  psql(`update public.research_runs set status = 'failed', error = 'tunnel down'
+        where user_id = '11111111-1111-1111-1111-111111111111';`)
+  refuses('a failed run still counts against the limit',
+    `insert into public.research_runs (user_id, lead_company) values
+     ('11111111-1111-1111-1111-111111111111','Five');`,
+    /rate limit/)
+
+  psql(`update public.research_runs set started_at = now() - interval '2 hours'
+        where user_id = '11111111-1111-1111-1111-111111111111';`)
+  allows('but the window is rolling, so an hour later it opens again',
+    `insert into public.research_runs (user_id, lead_company) values
+     ('11111111-1111-1111-1111-111111111111','Six');`)
+
+  psql(`update public.research_endpoints set enabled = false
+        where user_id = '11111111-1111-1111-1111-111111111111';`)
+  refuses('a disabled endpoint refuses without being deleted',
+    `insert into public.research_runs (user_id, lead_company) values
+     ('11111111-1111-1111-1111-111111111111','Seven');`,
+    /disabled/)
+  psql(`update public.research_endpoints set enabled = true, runs_per_hour = 20
+        where user_id = '11111111-1111-1111-1111-111111111111';`)
+
+  /* Deleting a lead must not erase the record of what was asked about it. */
+  const L_RES = lead('Researched Then Deleted Ltd')
+  psql(`insert into public.research_runs (user_id, lead_id, lead_company) values
+        ('11111111-1111-1111-1111-111111111111','${L_RES}','Researched Then Deleted Ltd');`)
+  psql(`delete from public.sales_leads where id = '${L_RES}';`)
+  val(`select count(*) from public.research_runs where lead_company = 'Researched Then Deleted Ltd';`) === '1'
+    ? ok('a run survives the lead it was about being deleted')
+    : bad('a run survives the lead being deleted')
+  val(`select lead_id is null from public.research_runs where lead_company = 'Researched Then Deleted Ltd';`) === 't'
+    ? ok('and its lead_id is nulled rather than cascading the row away')
+    : bad('its lead_id is nulled, not cascaded')
+
   line('\nGRANTS — the default EXECUTE to PUBLIC must be gone')
   for (const [fn, sig] of [
     ['apply_opt_out', 'uuid, text, text, text, text'],
@@ -657,6 +749,7 @@ from public.sales_leads where company like 'Bulk %';
     ['marketing_first_contacts_this_month', 'text, text'],
     ['has_named_individual', 'uuid'],
     ['marketing_ceiling_guard', ''],
+    ['research_run_guard', ''],
   ]) {
     const anon = val(`select has_function_privilege('anon','public.${fn}(${sig})','execute')::text;`)
     anon === 'false' ? ok(`anon cannot execute ${fn}`) : bad(`anon cannot execute ${fn}`, 'anon has EXECUTE')
