@@ -485,14 +485,24 @@ a:hover > .nabl-logo .nabl-logo__dot {
   from { opacity: 0; transform: translateY(10px) scale(.97); }
   to   { opacity: 1; transform: none; }
 }
+@keyframes assistant-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(8px) scale(.96); }
+}
 @keyframes msg-in {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
+/* A whole turn, not a half: it loops while the cursor is on the launcher, and
+   0deg and 360deg are the same frame, so the repeat has no seam. The scale
+   pulses on the quarters so the spin has a pulse to it rather than reading as
+   a loading spinner. */
 @keyframes spark-turn {
-  from { transform: rotate(0deg) scale(1); }
-  50%  { transform: rotate(90deg) scale(1.12); }
-  to   { transform: rotate(180deg) scale(1); }
+  from { transform: rotate(0deg)   scale(1); }
+  25%  { transform: rotate(90deg)  scale(1.14); }
+  50%  { transform: rotate(180deg) scale(1); }
+  75%  { transform: rotate(270deg) scale(1.14); }
+  to   { transform: rotate(360deg) scale(1); }
 }
 @keyframes think {
   0%, 80%, 100% { opacity: .25; transform: translateY(0); }
@@ -560,8 +570,9 @@ a:hover > .nabl-logo .nabl-logo__dot {
   /* Two twinkles, spaced, then still. */
   animation: twinkle 4.5s var(--ease) 2.4s 2;
 }
-/* Hover overrides the twinkle with a full turn — one gesture at a time. */
-.assistant-fab:hover .spark { animation: spark-turn .7s var(--ease); }
+/* Hover overrides the twinkle and keeps turning for as long as the cursor is
+   there — one gesture at a time, and it stops the moment you leave. */
+.assistant-fab:hover .spark { animation: spark-turn 1.6s linear infinite; }
 .assistant-fab__label { animation: label-in .28s var(--ease) backwards; }
 .assistant-fab--open {
   background: var(--accent-400);
@@ -586,6 +597,13 @@ a:hover > .nabl-logo .nabl-logo__dot {
   overflow: hidden;
   transform-origin: bottom right;
   animation: assistant-in .34s cubic-bezier(.2, .9, .25, 1.12) backwards;
+}
+/* Forwards here, unlike everywhere else: the node is about to be removed, so
+   holding the final frame is the point. Duration matches CLOSE_MS in
+   SiteAssistant.jsx — if one changes the other has to. */
+.assistant--closing {
+  animation: assistant-out .2s var(--ease) forwards;
+  pointer-events: none;
 }
 
 .assistant__log {
@@ -700,6 +718,7 @@ a:hover > .nabl-logo .nabl-logo__dot {
 
 @media (prefers-reduced-motion: reduce) {
   .assistant,
+  .assistant--closing,
   .assistant__msg,
   .assistant__handoff,
   .assistant__handoff .btn,

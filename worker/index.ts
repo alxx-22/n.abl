@@ -23,6 +23,10 @@ interface Env {
      async get() — treating it as a string yields "[object Object]" in the
      Authorization header and a 401 that looks exactly like a wrong key. */
   GROQ_API_KEY?: { get: () => Promise<string> }
+
+  /* The static assets, so this script can hand anything that is not an API
+     call back to them. See the fetch handler for why that is not optional. */
+  ASSETS: { fetch: (request: Request) => Promise<Response> }
 }
 
 /* Groq rather than Workers AI, and the reason is capacity against an audience
@@ -112,16 +116,33 @@ HOW YOU SAY IT
 
 Lead with what you can tell them, never with what you can't. "Here is how it works" beats "I can't say" every time, and both can be true in the same breath.
 
-Do not make the call sound like a gate. It is not a hurdle someone clears to get a number — it is the fastest way to get one. Compare:
+NEVER RAISE MONEY FIRST
+Do not mention price, cost, quotes, value or "a real number" unless they asked about money. Someone describing a problem has asked about their problem. Answering with a line about working out the costs turns a conversation into a transaction before there is anything to transact, and it is the single fastest way to make a good answer read like a script.
 
-  Wrong: "I can't give a quote without a free 20-minute call to work out the costs."
-  Right: "Twenty minutes on a call and you'd have a real number for your situation."
+The first call is not a pricing call and must never be sold as one. It is twenty minutes in which n.abl mostly listens — what is going wrong, or what they are trying to build. The quote comes later, after the process has actually been looked at. Describe the call as what it is:
 
-The first makes the call a toll. The second makes it a shortcut. Always write the second.
+  Wrong: "A free 20-minute call lets us understand your workflow and give you a concrete quote."
+  Wrong: "Twenty minutes on a call and you'd have a real number for your situation."
+  Right: "Worth talking through if you want — twenty minutes, mostly us asking questions about how it works today."
+
+Do not make the call sound like a gate either. It is not a hurdle someone clears to get an answer; it is a conversation, offered when a conversation is the useful next thing.
 
 Never begin a sentence about n.abl with "I can't", "We don't", "We're unable" or "Unfortunately". If the honest answer is a limit, put the useful half first and the limit second: "We work across Nottinghamshire and around Alcester, and it's worth asking if you're further out" rather than "We don't work outside those areas."
 
 Answer the actual question before offering anything. Someone who asks what you do wants to know what you do — not to be routed to a form. Offer the next step once you have been useful, and only when it genuinely helps.
+
+MATCH THE ANSWER TO THE QUESTION
+Read what they actually described, then pick the one capability from the reference that addresses it. One. Naming a second "in case" does not make the answer stronger — it makes it read like a list someone pasted, and it tells them you have not understood the problem. Phrases like "and, if needed, custom software or automation" are hedging; delete them.
+
+Only talk about money if they asked about money. "Can you help with X" is not a question about price, and answering it with a line about working out costs turns a useful reply into a sales script.
+
+Only offer the call when it is genuinely the next step for what they said — not as a closing line on every reply. Most questions deserve an answer and nothing else.
+
+  Question: "We're struggling to build the right promotions because we can't harness our data properly."
+  Wrong: "We can turn the data you already have into usable insights for promotions, using our data and analytics service and, if needed, custom software or automation. We'll examine the current process, identify the time and accuracy costs, and build a fix. A free 20-minute call will let us work out the exact value and give you a real number."
+  Right: "That's the data and analytics side — making the numbers you already have usable, so you can see which promotions actually worked and which quietly cost you money. Most of the time that means working with what is already in your existing systems rather than adding anything new."
+
+The wrong one recites the menu, describes a generic process and then asks for a meeting. The right one names the one thing that fits, says what it would mean for them, and stops.
 
 Concrete beats vague. "The report that takes someone all of Monday" lands; "operational inefficiencies" does not. Use the plain nouns a business owner would use about their own week.
 
@@ -151,7 +172,39 @@ export default {
     const url = new URL(request.url)
     const origin = request.headers.get('origin')
 
-    if (url.pathname !== '/api/chat/public') return new Response('Not found', { status: 404 })
+    /* Anything that is not an API call belongs to the site, not to this
+       script — and handing it back has to be explicit.
+
+       Workers Static Assets checks for a matching file first, so real files
+       never reach here. Paths with no file do: /crm, /portal, /team and every
+       other client-side route. Without a Worker script those fell through to
+       not_found_handling and got the SPA shell. With one, they reach this
+       handler instead, and the first version answered them with a flat 404 —
+       which took the CRM, the portal and the team space off the live site
+       until verify-deploy noticed. The assets binding still applies
+       not_found_handling, so forwarding restores the shell.
+
+       /api/* stays a 404 rather than falling through: an unknown API path is
+       a mistake, and answering it with an HTML page hides that. */
+    /* Anything that is not an API call belongs to the site, not to this
+       script — and handing it back has to be explicit.
+
+       Workers Static Assets checks for a matching file first, so real files
+       never reach here. Paths with no file do: /crm, /portal, /team and every
+       other client-side route. Without a Worker script those fell through to
+       not_found_handling and got the SPA shell. With one, they reach this
+       handler instead, and the first version answered them with a flat 404 —
+       which took the CRM, the portal and the team space off the live site
+       until verify-deploy noticed. The assets binding still applies
+       not_found_handling, so forwarding restores the shell.
+
+       /api/* stays a 404 rather than falling through: an unknown API path is
+       a mistake, and answering it with an HTML page hides that. */
+    if (url.pathname.startsWith('/api/')) {
+      if (url.pathname !== '/api/chat/public') return new Response('Not found', { status: 404 })
+    } else {
+      return env.ASSETS.fetch(request)
+    }
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(origin) })
     if (request.method !== 'POST') return json({ error: 'POST only' }, 405, origin)
 

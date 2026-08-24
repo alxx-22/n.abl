@@ -72,6 +72,21 @@ try {
   check('and it says up front that it will hand over when it cannot answer',
     /pass it to the team|can't answer/i.test(opener))
 
+  /* Closing has to be animated too, which means the panel outlives the click.
+     Unmounting on the same tick would read as the box being deleted rather
+     than put away. Done here, before the handoff opens a dialog over the
+     page and takes the launcher out of reach. */
+  await page.click('.assistant-fab')
+  await page.waitForTimeout(60)
+  check('closing keeps the panel on screen to animate out',
+    Boolean(await page.$('#site-assistant.assistant--closing')))
+  await page.waitForTimeout(500)
+  check('and then it is gone', (await page.$$('#site-assistant')).length === 0)
+  await page.click('.assistant-fab')
+  await page.waitForTimeout(450)
+  check('and it opens again afterwards, not stuck half-closed',
+    Boolean(await page.$('#site-assistant')) && !(await page.$('.assistant--closing')))
+
   /* The box is a textarea so that shift+Enter can break a line and the height
      can follow the text. Measure it empty, then with enough text to wrap. */
   const emptyHeight = await page.evaluate(
@@ -95,6 +110,18 @@ try {
     `${grownHeight} -> ${shrunkHeight}`)
 
   check('there is an AI mark on the launcher', Boolean(await page.$('.assistant-fab .spark')))
+
+  /* It turns for as long as the cursor is on the launcher rather than once
+     and stopping, so a hover that lingers keeps moving. */
+  await page.hover('.assistant-fab')
+  await page.waitForTimeout(150)
+  const spin = await page.evaluate(() => {
+    const el = document.querySelector('.assistant-fab .spark')
+    const cs = getComputedStyle(el)
+    return { count: cs.animationIterationCount, name: cs.animationName }
+  })
+  check('and it keeps turning while hovered', spin.count === 'infinite' && /spark-turn/.test(spin.name),
+    JSON.stringify(spin))
   check('and no disclaimer paragraph in the panel — the legal pages carry that',
     (await page.$$('#site-assistant .assistant__note')).length === 0)
 

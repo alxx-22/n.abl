@@ -45,6 +45,10 @@ const OPENER = {
 
 export default function SiteAssistant({ onHandoff }) {
   const [open, setOpen] = useState(false)
+  /* The panel has to outlive the click that closes it, or there is nothing
+     left on screen to animate. `closing` keeps it mounted for the length of
+     the exit and then it goes. */
+  const [closing, setClosing] = useState(false)
   const [messages, setMessages] = useState([OPENER])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -53,6 +57,16 @@ export default function SiteAssistant({ onHandoff }) {
   const inputRef = useRef(null)
 
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 120) }, [open])
+
+  /* A timer rather than onAnimationEnd: under prefers-reduced-motion the
+     animation is removed entirely and the event would never fire, leaving the
+     panel stuck open. CLOSE_MS matches the animation in components.css. */
+  const CLOSE_MS = 200
+  function toggle() {
+    if (!open) { setOpen(true); return }
+    setClosing(true)
+    setTimeout(() => { setOpen(false); setClosing(false) }, CLOSE_MS)
+  }
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }) }, [messages, busy])
 
   /* Grow the box to fit what has been typed, up to a point. Height is reset to
@@ -112,7 +126,7 @@ export default function SiteAssistant({ onHandoff }) {
         className={`assistant-fab ${open ? 'assistant-fab--open' : ''}`}
         aria-expanded={open}
         aria-controls="site-assistant"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
       >
         <Spark />
         {/* Keyed so React swaps the node rather than the text: the label then
@@ -124,7 +138,12 @@ export default function SiteAssistant({ onHandoff }) {
       </button>
 
       {open && (
-        <div className="assistant" id="site-assistant" role="dialog" aria-label="Ask n.abl a question">
+        <div
+          className={`assistant ${closing ? 'assistant--closing' : ''}`}
+          id="site-assistant"
+          role="dialog"
+          aria-label="Ask n.abl a question"
+        >
           <div className="assistant__log">
             {messages.map((m, i) => (
               <p
@@ -150,7 +169,7 @@ export default function SiteAssistant({ onHandoff }) {
                   ? 'Shall I open the form so you can book a call?'
                   : 'Shall I pass this to the team?'}</p>
                 <button type="button" className="btn btn--accent btn--sm"
-                  onClick={() => { onHandoff?.(handoff.enquiry); setOpen(false); setHandoff(null) }}>
+                  onClick={() => { onHandoff?.(handoff.enquiry); toggle(); setHandoff(null) }}>
                   {handoff.intent === 'book_call' ? 'Book a call' : 'Ask the team'}
                 </button>
               </div>

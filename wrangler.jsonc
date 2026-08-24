@@ -7,14 +7,21 @@
   // stops the guessing. Nothing here needs the plugin — the build already
   // produces a directory of static files, and this uploads it.
   //
-  // There is no "main" and no "binding" on purpose. Both are only valid with a
-  // Worker script, and this site has none: every route is either a file or the
-  // SPA shell.
+  // For its first two weeks this file had no "main" and no "binding", because
+  // the site was files and nothing else. The assistant changed that, and the
+  // two lines are not independent: adding a script without the binding is what
+  // broke every client-side route.
   "name": "n-abl",
   "compatibility_date": "2026-08-22",
 
   // The public assistant. Static assets are matched first, so every real file
-  // is served without this script running at all — only /api/* reaches it.
+  // is served without this script running at all.
+  //
+  // Paths with no matching file are a different matter: they reach this script
+  // rather than not_found_handling, which is how /crm, /portal and /team came
+  // to 404 on the live site the moment a Worker existed. The script forwards
+  // them to the ASSETS binding below, which is what makes the SPA fallback
+  // apply again.
   "main": "./worker/index.ts",
 
   // No AI binding. The public assistant calls Groq, whose free tier carries an
@@ -42,6 +49,11 @@
 
   "assets": {
     "directory": "./dist",
+
+    // Named so the Worker can call env.ASSETS.fetch(). Without this binding
+    // there is no way for the script to hand a non-API request back to the
+    // site, and every client-side route is a 404.
+    "binding": "ASSETS",
 
     // React Router owns /crm, /portal, /team and the rest, so a request for a
     // path with no matching file has to return index.html rather than a 404.

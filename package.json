@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
-  "description": "n.abl \u2014 agency site, client portal, team space and CRM",
+  "description": "n.abl — agency site, client portal, team space and CRM",
   "scripts": {
     "dev": "vite",
     "build": "node scripts/check-css-tokens.mjs && node scripts/check-headers.mjs && node scripts/build-knowledge.mjs && vite build && node scripts/build-routes.mjs",
@@ -15,7 +15,8 @@
     "test:compliance": "node scripts/check-compliance-schema.mjs",
     "test:css": "node scripts/check-css-tokens.mjs",
     "test:headers": "node scripts/check-headers.mjs",
-    "verify:deploy": "node scripts/verify-deploy.mjs"
+    "verify:deploy": "node scripts/verify-deploy.mjs",
+    "test:routes": "node scripts/check-worker-routes.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.106.2",
