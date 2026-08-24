@@ -3,9 +3,10 @@
 What exists at `nabl.agency`, route by route and section by section. Recorded
 from the application source on 2026-08-15.
 
-The site is a React 18 + Vite single-page application deployed on Netlify.
-Routing is client-side (`react-router-dom`), with a server-side fallback so any
-URL serves the same shell. Source of truth for routes is `src/App.jsx`.
+The site is a React 18 + Vite single-page application served by a Cloudflare
+Worker with static assets; it moved off Netlify on 22 August 2026. Routing is
+client-side (`react-router-dom`), with a server-side fallback so any URL serves
+the same shell. Source of truth for routes is `src/App.jsx`.
 
 ---
 
