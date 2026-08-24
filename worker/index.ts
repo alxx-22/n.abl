@@ -178,16 +178,25 @@ export default {
           response_format: { type: 'json_object' },
         }),
       })
-      if (!res.ok) throw new Error(String(res.status))
+      if (!res.ok) {
+        const body = (await res.text()).slice(0, 300)
+        throw new Error(`${res.status} ${body}`)
+      }
       const data = await res.json() as { choices?: { message?: { content?: string } }[] }
       raw = data?.choices?.[0]?.message?.content ?? ''
-    } catch {
-      /* Running out of the daily free allowance looks exactly like this, and
-         so does the key being wrong. Say something a visitor can act on rather
-         than an error code — they did not ask about our rate limits. */
+    } catch (err) {
+      /* Running out of the daily allowance, a wrong key, a model that is not
+         on this tier and a network blip all end up here, and they need
+         completely different fixes. The visitor gets the same sentence either
+         way, but the reason travels in a separate field so it is diagnosable
+         from outside — an earlier version swallowed it entirely and left no
+         way to tell which had happened without guessing. Nothing here echoes
+         the request or the key: Groq's error bodies carry neither. */
+      const detail = String((err as Error).message ?? '').slice(0, 300)
       return json({
         reply: "I can't answer right now, sorry. Email hello@nabl.agency and someone will come back to you.",
         intent: 'unknown',
+        upstream: detail || 'unknown failure',
       }, 200, origin)
     }
 
