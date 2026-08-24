@@ -127,6 +127,46 @@ grant usage on schema public, extensions to anon, authenticated, service_role;
 -- migration revoking only from PUBLIC looks correct here and leaves anon
 -- holding EXECUTE on the live project. That is exactly what happened.
 alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
+
+-- The portal tables, bootstrapped rather than migrated.
+--
+-- clients, quotes, projects, meetings and documents exist on the live project
+-- but are in no migration in this repo — they predate the migration history.
+-- That is a real gap: the database could not be rebuilt from what is committed.
+-- Recreated here so the assistant migration has something to compile against,
+-- with the same columns the live tables have.
+create table if not exists public.clients (
+  id uuid primary key default gen_random_uuid(),
+  business_name text not null,
+  contact_name text,
+  contact_email text,
+  access_key text unique,
+  created_at timestamptz not null default now()
+);
+create table if not exists public.quotes (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.clients(id) on delete cascade,
+  reference text, title text, amount numeric, status text,
+  valid_until date, pdf_url text,
+  created_at timestamptz not null default now()
+);
+create table if not exists public.projects (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.clients(id) on delete cascade,
+  title text, description text, status text,
+  progress_percent integer, next_milestone text, next_milestone_date date
+);
+create table if not exists public.meetings (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.clients(id) on delete cascade,
+  title text, datetime timestamptz, location text, join_url text, status text
+);
+create table if not exists public.documents (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.clients(id) on delete cascade,
+  title text, document_type text, file_url text,
+  uploaded_at timestamptz not null default now()
+);
 `)
   chmodSync(BOOTSTRAP, 0o644)
   psql(BOOTSTRAP, { file: true })
@@ -135,7 +175,8 @@ alter default privileges in schema public grant execute on functions to anon, au
                       '202608210001_marketing_tier_ceilings.sql',
                       '202608210002_pin_search_path_on_ceiling_lookup.sql',
                       '202608210003_postal_channel.sql',
-                      '202608230001_research_endpoints.sql']
+                      '202608230001_research_endpoints.sql',
+                      '202608230002_portal_assistant.sql']
   for (const f of MIGRATIONS) {
     const p = join(DIR, f)
     writeFileSync(p, sh('cat', [join(ROOT, 'supabase/migrations', f)]))
@@ -738,6 +779,100 @@ from public.sales_leads where company like 'Bulk %';
   val(`select lead_id is null from public.research_runs where lead_company = 'Researched Then Deleted Ltd';`) === 't'
     ? ok('and its lead_id is nulled rather than cascading the row away')
     : bad('its lead_id is nulled, not cascaded')
+
+  /* ---- portal assistant ---------------------------------------------
+
+     The assistant puts a client's own record into a model prompt. The only
+     thing standing between that and a leak is that the context function takes
+     an access key and nothing else, so there is no argument anyone can pass
+     to ask about somebody else.
+
+     Two clients, and one asking about the other, is the test that matters. */
+
+  line('\nPORTAL ASSISTANT — one client, and only ever their own record')
+
+  const C_A = val(`insert into public.clients (business_name, contact_name, contact_email, access_key)
+    values ('Alpha Joinery','Ada','ada@alpha.example','KEY-ALPHA-0001') returning id;`)
+  const C_B = val(`insert into public.clients (business_name, contact_name, contact_email, access_key)
+    values ('Beta Haulage','Ben','ben@beta.example','KEY-BETA-0002') returning id;`)
+
+  psql(`insert into public.quotes (client_id, reference, title, amount, status)
+        values ('${C_A}','Q-A-1','Alpha invoicing fix', 2400, 'sent'),
+               ('${C_B}','Q-B-1','Beta rota system', 5900, 'sent');`)
+  psql(`insert into public.projects (client_id, title, status, progress_percent)
+        values ('${C_A}','Alpha onboarding','active',40),
+               ('${C_B}','Beta rollout','active',80);`)
+
+  const ctxA = val(`select public.portal_assistant_context('KEY-ALPHA-0001')::text;`)
+  ctxA.includes('Alpha Joinery') && ctxA.includes('Q-A-1')
+    ? ok('a client gets their own record') : bad('a client gets their own record')
+
+  /* The whole point. If any of Beta's data is reachable from Alpha's key, the
+     assistant will eventually say it out loud. */
+  !ctxA.includes('Beta') && !ctxA.includes('Q-B-1') && !ctxA.includes('ben@beta.example')
+    ? ok('and nothing whatsoever belonging to the other client')
+    : bad('and nothing whatsoever belonging to the other client', 'Beta data reachable from Alpha key')
+
+  const ctxB = val(`select public.portal_assistant_context('KEY-BETA-0002')::text;`)
+  ctxB.includes('Beta Haulage') && !ctxB.includes('Alpha')
+    ? ok('and the same holds in the other direction')
+    : bad('and the same holds in the other direction')
+
+  val(`select public.portal_assistant_context('KEY-DOES-NOT-EXIST')::text;`) === '{}'
+    ? ok('an unknown key gets an empty object, not an error that confirms the guess')
+    : bad('an unknown key gets an empty object, not an error that confirms the guess')
+
+  /* A signed URL inside a prompt is a signed URL inside whatever the model
+     says next, and these documents sit in private storage. */
+  psql(`insert into public.documents (client_id, title, document_type, file_url)
+        values ('${C_A}','Welcome pack','welcome','https://storage.example/signed?token=SECRET123');`)
+  const ctxDocs = val(`select public.portal_assistant_context('KEY-ALPHA-0001')::text;`)
+  ctxDocs.includes('Welcome pack') && !ctxDocs.includes('SECRET123')
+    ? ok('document titles are included but their signed URLs are not')
+    : bad('document titles are included but their signed URLs are not')
+
+  line('\nPORTAL REQUESTS — the assistant raises, it does not act')
+
+  const reqId = val(`select public.portal_raise_request('KEY-ALPHA-0001','ticket',
+    'Invoices not arriving','The Tuesday run did not send', null, 'assistant');`)
+  reqId.length > 10 ? ok('a request can be raised with a valid key') : bad('a request can be raised with a valid key')
+
+  val(`select client_id from public.portal_requests where id = '${reqId}';`) === C_A
+    ? ok('and is attached to the client the key belongs to')
+    : bad('and is attached to the client the key belongs to')
+
+  refuses('an unknown key cannot raise one',
+    `select public.portal_raise_request('KEY-NOPE','ticket','x','y');`,
+    /not signed in/)
+
+  refuses('an invented request kind is refused',
+    `select public.portal_raise_request('KEY-ALPHA-0001','delete_everything','x','y');`,
+    /portal_requests_kind_check|violates check/)
+
+  /* A chat box that writes a row can write ten thousand rows. */
+  /* Written to a file: bash expands $$ to its own pid before psql sees the
+     dollar-quoted block, the same trap as the ceiling filler. */
+  const FILLREQ = join(DIR, 'fill-requests.sql')
+  writeFileSync(FILLREQ, `do $$ begin for i in 1..19 loop
+    perform public.portal_raise_request('KEY-ALPHA-0001','question','q '||i,'body');
+  end loop; end $$;`)
+  chmodSync(FILLREQ, 0o644)
+  psql(FILLREQ, { file: true })
+  refuses('the twenty-first request in an hour is refused',
+    `select public.portal_raise_request('KEY-ALPHA-0001','question','one too many','body');`,
+    /too many requests/)
+
+  line('\nPORTAL GRANTS — the browser must not reach either function')
+  for (const [fn, sig] of [
+    ['portal_assistant_context', 'text'],
+    ['portal_raise_request', 'text, text, text, text, text, text'],
+  ]) {
+    const a = val(`select has_function_privilege('anon','public.${fn}(${sig})','execute')::text;`)
+    const u = val(`select has_function_privilege('authenticated','public.${fn}(${sig})','execute')::text;`)
+    a === 'false' && u === 'false'
+      ? ok(`neither anon nor a signed-in user can execute ${fn}`)
+      : bad(`neither anon nor authenticated can execute ${fn}`, `anon=${a} auth=${u}`)
+  }
 
   line('\nGRANTS — the default EXECUTE to PUBLIC must be gone')
   for (const [fn, sig] of [
