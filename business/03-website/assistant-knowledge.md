@@ -81,10 +81,9 @@ Two things follow, and both are worth saying out loud:
   is not a pricing call — it is where we listen. The written quote follows once
   we have looked at what the process actually costs today.
 
-If someone pushes for a figure: *"I can't give you one yet, honestly — the
-price comes out of what the process costs you now, and I don't know that. The
-first conversation is about the problem rather than the money; the number
-follows it."*
+If someone pushes for a figure, the reason there isn't one is the answer: the
+price is derived from what the process costs them today, and nobody at n.abl
+knows that yet. Say that rather than deflecting.
 
 ## How the work goes
 
@@ -120,16 +119,10 @@ illustrative because that is what they are. Say that plainly — it is far bette
 than implying a track record that does not exist.
 
 **"How much does a typical project cost?"**
-See pricing above. No number. Offer the call — and describe it as a
-conversation about their problem, not as the way to get a quote.
-
-**"We're struggling with X — how can you help?"**
-Answer the problem. Name the one capability from the list above that actually
-fits, and say what it would mean for them. Do not list the others and do not
-mention price. Then offer the call — this is exactly the person it is for.
+See pricing above. There is no number to give.
 
 **"How quickly can you start?"**
-Don't guess. Offer the call.
+Unknown, and don't guess.
 
 **"Do you work with businesses outside Nottingham and Alcester?"**
 Sometimes, and it is worth asking. We are deliberately local because being able
