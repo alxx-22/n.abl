@@ -17,9 +17,15 @@
   // is served without this script running at all — only /api/* reaches it.
   "main": "./worker/index.ts",
 
-  // Workers AI. The free allowance is 10,000 Neurons a day, and a turn of the
-  // public assistant costs roughly four.
-  "ai": { "binding": "AI" },
+  // No AI binding. The public assistant calls Groq, whose free tier carries an
+  // order of magnitude more traffic than Workers AI's daily Neuron allowance —
+  // which matters when the audience is anyone who finds the site. The key is a
+  // Worker secret:
+  //     npx wrangler secret put GROQ_API_KEY
+  //
+  // The CLIENT assistant, when it is built, goes the other way: it handles
+  // client personal data, and Cloudflare is already a processor of that, so
+  // Workers AI adds no sub-processor where Groq would.
 
   "assets": {
     "directory": "./dist",

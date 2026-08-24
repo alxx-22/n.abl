@@ -19,13 +19,25 @@
 import { KNOWLEDGE } from './knowledge.generated'
 
 interface Env {
-  AI: { run: (model: string, input: unknown) => Promise<{ response?: string }> }
+  GROQ_API_KEY: string
 }
 
-/* An 8B is reliable at short grounded answers and at picking from a fixed
-   list. It is not reliable at freeform generation, which is why the prompt
-   below asks for one of five intents and a short reply, and nothing else. */
-const MODEL = '@cf/meta/llama-3.1-8b-instruct-awq'
+/* Groq rather than Workers AI, and the reason is capacity against an audience
+   nobody controls.
+
+   This bot carries the whole knowledge file in every turn — about 1,320 tokens
+   before the question — so a turn costs roughly 28 Neurons. Against the 10,000
+   a day Workers AI gives free, that is about 357 turns: one curious afternoon
+   on a public page. Groq's free tier allows 14,400 requests a day at 6,000
+   tokens a minute, which is an order of magnitude more headroom and a 70B
+   model rather than an 8B.
+   
+   The argument that put the CLIENT assistant on Workers AI — Cloudflare is
+   already a processor of client personal data, so it adds no sub-processor —
+   does not apply here. This bot never touches client data. Anonymous visitor
+   questions are the only thing it sees. */
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
+const MODEL = 'llama-3.3-70b-versatile'
 
 const ALLOWED_ORIGINS = [
   'https://nabl.agency',
@@ -131,13 +143,39 @@ export default {
       { role: 'user', content: message },
     ]
 
+    if (!env.GROQ_API_KEY) {
+      return json({
+        reply: "I'm not set up yet, sorry. Email hello@nabl.agency and someone will come back to you.",
+        intent: 'unknown',
+      }, 200, origin)
+    }
+
     let raw = ''
     try {
-      const out = await env.AI.run(MODEL, { messages, max_tokens: 400 })
-      raw = out.response ?? ''
+      const res = await fetch(GROQ_URL, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${env.GROQ_API_KEY}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages,
+          max_tokens: 400,
+          /* Asked for as a format rather than described in the prompt. A model
+             told to return JSON returns JSON most of the time; one constrained
+             to it returns JSON always, and the fence-stripping below becomes a
+             belt rather than the mechanism. */
+          response_format: { type: 'json_object' },
+        }),
+      })
+      if (!res.ok) throw new Error(String(res.status))
+      const data = await res.json() as { choices?: { message?: { content?: string } }[] }
+      raw = data?.choices?.[0]?.message?.content ?? ''
     } catch {
-      /* The daily Neuron allowance running out looks like this. Say something
-         a visitor can act on rather than an error code. */
+      /* Running out of the daily free allowance looks exactly like this, and
+         so does the key being wrong. Say something a visitor can act on rather
+         than an error code — they did not ask about our rate limits. */
       return json({
         reply: "I can't answer right now, sorry. Email hello@nabl.agency and someone will come back to you.",
         intent: 'unknown',

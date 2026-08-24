@@ -136,6 +136,15 @@ Point at nabl.agency/privacy rather than paraphrasing it.
 
 ## Notes for whoever edits this
 
+**Which model answers this, and why it is not the same as the client one.**
+The public assistant runs on Groq's free tier — 14,400 requests a day against
+Workers AI's ~357 at this knowledge-file size, which matters when the audience
+is anyone who finds the site. It sees no client data, only anonymous visitor
+questions, so the sub-processor argument that keeps the *client* assistant on
+Cloudflare does not apply here. Visitor questions do leave for Groq, and the
+privacy notice should say so before this goes live.
+
+
 - Anything added here is public the moment it is pushed.
 - If a fact is not certain, leave it out. "I don't know, shall I ask the team?"
   is a good answer and a cheap one.
