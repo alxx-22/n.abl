@@ -19,7 +19,7 @@ Last substantive revision: 2026-08-16.
 | Claude Pro × 2 | All Class 3 work: architecture, difficult coding, client-facing documents, strategic analysis | Monthly, per seat | £36/month total | **No.** Assumed from master plan section 8. Check the actual charge. |
 | Domain `nabl.agency` | The marketing site, the portal, the team space, `hello@nabl.agency` | Annual | `[PLACEHOLDER — renewal price]` | No |
 | Domain renewal date | — | — | `[PLACEHOLDER — date]` | No |
-| Email hosting for `hello@nabl.agency` | The only public contact address, used on the site, the legal pages, the email pack and the welcome pack | `[PLACEHOLDER — monthly or annual]` | `[PLACEHOLDER]` | No. It may be included with the registrar or a separate charge. Nobody has checked which. |
+| Email hosting for `hello@nabl.agency` — **IONOS** | The only public contact address, used on the site, the legal pages, the email pack and the welcome pack | `[PLACEHOLDER — monthly or annual]` | `[PLACEHOLDER]` | Provider confirmed from DNS on 24 Aug 2026: MX `mx00`/`mx01.ionos.co.uk`, SPF `include:_spf-eu.ionos.com`. Whether it is bundled with the domain or billed separately is still unchecked. |
 
 **Known monthly total: £36.**
 **Known annual total: £432, plus the domain, plus whatever the email costs.**
