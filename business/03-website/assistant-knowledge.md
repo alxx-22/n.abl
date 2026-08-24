@@ -44,14 +44,35 @@ concentrated in the above.
 
 ## What we do
 
-Six things, and they overlap:
+Six things, and they overlap. This is the same list the site shows under
+"What we build", in the same order — it is what the assistant matches a
+visitor's problem against, so it carries the detail rather than the headline:
 
-- **Automation** — taking repetitive work off people's hands
-- **Data and analytics** — making the numbers a business already has usable
-- **Custom software** — small tools built for one job
-- **Web** — sites and the things attached to them
-- **AI** — where it genuinely helps, not as an ingredient
-- **Training and support** — so the fix survives us leaving
+- **Automation** — taking repetitive work off people's hands: workflow
+  automation, joining systems that do not talk to each other, custom scripts.
+  Built with n8n, Make, Zapier, Power Automate, APIs.
+- **Data and analytics** — making the numbers a business already has usable:
+  cleaning the data, dashboards, reporting, decision support. Power BI, SQL,
+  and spreadsheets done properly.
+- **Custom software** — internal tools, applications and databases built for
+  one job. Python, JavaScript, React.
+- **Web** — websites, online shops, booking flows, customer portals and taking
+  payments, including calendar sync.
+- **AI** — document handling, classification, assistants, drafting, analysis.
+  Where it genuinely helps, not as an ingredient.
+- **Training and support** — staff training, documentation, troubleshooting
+  and improvements, so the fix survives us leaving.
+
+**Building and setting up both count.** Plenty of the work is not written from
+scratch: it is getting a business properly set up on a mainstream platform it
+has chosen, or wants to choose, and making the rest of its systems work with
+it. Setting someone up on Shopify, for instance, is web work — a shop, a
+payment route and a booking or fulfilment flow are the same job whoever hosts
+them. n.abl is not tied to one platform and holds no reseller agreements, so
+there is nothing to upsell either way.
+
+If someone names a platform or a tool that is not listed above, do not assume
+either answer. Whether it fits is a question for the team.
 
 ## What we do not do
 

@@ -51,6 +51,41 @@ if (knowledge.length > MAX_CHARS) {
   process.exit(1)
 }
 
+/* The assistant matches a visitor's problem against the capability list, so a
+   capability the site advertises and the reference omits is work n.abl will
+   quietly decline to discuss. That is how "can you set us up on Shopify?"
+   became "I don't know" — the reference described Web as "sites and the things
+   attached to them" while the site said "websites, booking flows, customer
+   portals, payments".
+
+   Names only, not wording: the site's copy is written for a reader and the
+   reference for a model, and forcing them to match verbatim would be worse
+   than letting them drift. What must not happen is a seventh capability
+   appearing on the site that the assistant has never heard of. */
+const toolkit = readFileSync(new URL('../src/components/sections/Capabilities.jsx', import.meta.url), 'utf8')
+const cats = [...toolkit.matchAll(/cat:\s*'([^']+)'/g)].map((m) => m[1])
+if (cats.length < 3) {
+  console.error('\n  Could not read the capability list out of Capabilities.jsx — the check\n  that keeps it in step with the assistant is now blind. Fix the pattern.\n')
+  process.exit(1)
+}
+/* "Data & Analytics" and "Training & Support" are prose in the reference, and
+   "Software" is "custom software" there. Compare on the distinguishing word. */
+const missing = cats.filter((cat) => {
+  const key = cat.split(/\s*&\s*/)[0].trim()
+  return !new RegExp(`\\b${key}\\b`, 'i').test(knowledge)
+})
+if (missing.length) {
+  console.error(`
+  The site advertises capabilities the assistant has never heard of.
+
+    missing from assistant-knowledge.md: ${missing.join(', ')}
+
+  A visitor asking about one of these gets "I don't know" from the assistant
+  while the home page offers it. Add them to "What we do".
+`)
+  process.exit(1)
+}
+
 /* The assistant tells visitors how long the discovery call is, and so does the
    form on the site. They came apart once — the modal said thirty minutes, the
    knowledge file said twenty, and the assistant confidently gave the wrong
