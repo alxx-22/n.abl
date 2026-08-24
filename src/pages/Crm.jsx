@@ -25,6 +25,10 @@ import '../styles/crm.css'
 
 const STORAGE_KEY = 'nabl.sales-intelligence.v3'
 
+/* The research edge function. Absent by default: the CRM works without it,
+   and the button says so rather than failing when pressed. */
+const RESEARCH_URL = import.meta.env.VITE_RESEARCH_URL || ''
+
 /* sales_leads.status CHECK constraint — verified against
    supabase/migrations/202606010001_sales_intelligence.sql. */
 const STAGES = [
@@ -489,6 +493,34 @@ function Workspace({ sb, user, onSignedOut }) {
     return { ok: false, message: friendlyError(error, 'That send was refused.') }
   }, [sb, user])
 
+  /* Research runs on the caller's own Claude subscription, through their own
+     tunnel. This never learns the URL or the token — it sends a lead id and a
+     session, and the edge function looks up whose endpoint to ask.
+
+     Offered only when VITE_RESEARCH_URL is set, the same way the welcome-pack
+     summariser is: the CRM has to work without it. */
+  const researchLead = useCallback(async (lead) => {
+    if (!RESEARCH_URL) return { ok: false, message: 'Research is not configured for this site.' }
+    if (!lead.dbId) return { ok: false, message: 'Save the lead to the server first.' }
+    try {
+      const { data: { session } } = await sb.auth.getSession()
+      if (!session) return { ok: false, message: 'SESSION_EXPIRED' }
+      const res = await fetch(RESEARCH_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ lead_id: lead.dbId }),
+      })
+      const body = await res.json().catch(() => ({}))
+      /* The rate limit and the "no endpoint registered" case come back as
+         sentences from the database, and they are the useful part — "20 runs
+         in the last hour" tells you what to do, "request failed" does not. */
+      if (!res.ok) return { ok: false, message: body.error || `Research failed (${res.status}).` }
+      return { ok: true, result: body.result }
+    } catch (err) {
+      return { ok: false, message: friendlyError(err, 'Could not reach the research endpoint.') }
+    }
+  }, [sb])
+
   const handle = useCallback((err, fallback) => {
     const message = friendlyError(err, fallback)
     if (message === 'SESSION_EXPIRED') { setExpired(true); return null }
@@ -882,6 +914,7 @@ function Workspace({ sb, user, onSignedOut }) {
                   onSave={saveLead}
                   onMove={moveLead}
                   onRecordSend={recordSend}
+                  onResearch={researchLead}
                   onDelete={() => setConfirm({
                     title: `Delete ${selected.company}?`,
                     body: 'This removes the lead and everything attached to it — contacts, activity and drafts. This cannot be undone.',
@@ -937,7 +970,7 @@ function Workspace({ sb, user, onSignedOut }) {
    Lead detail
    ============================================================ */
 
-function LeadDetail({ lead, tab, onTab, onSave, onMove, onDelete, onRecordSend }) {
+function LeadDetail({ lead, tab, onTab, onSave, onMove, onDelete, onRecordSend, onResearch }) {
   const tabRefs = useRef({})
 
   function onTabKey(e) {
@@ -1007,7 +1040,9 @@ function LeadDetail({ lead, tab, onTab, onSave, onMove, onDelete, onRecordSend }
       >
         {tab === 'overview' && <OverviewPanel lead={lead} onSave={onSave} onMove={onMove} />}
         {tab === 'contacts' && <ContactsPanel lead={lead} onSave={onSave} />}
-        {tab === 'outreach' && <OutreachPanel lead={lead} onSave={onSave} onRecordSend={onRecordSend} />}
+        {tab === 'outreach' && (
+          <OutreachPanel lead={lead} onSave={onSave} onRecordSend={onRecordSend} onResearch={onResearch} />
+        )}
         {tab === 'notes' && <NotesPanel lead={lead} onSave={onSave} />}
         {tab === 'compliance' && <CompliancePanel lead={lead} onSave={onSave} />}
         {tab === 'activity' && <ActivityPanel lead={lead} />}
@@ -1187,10 +1222,33 @@ function ContactsPanel({ lead, onSave }) {
 /* ---------------- Outreach ----------------
    Compose -> approve -> hand off to the mail client. The page has no
    send path of its own, by design. */
-function OutreachPanel({ lead, onSave, onRecordSend }) {
+function OutreachPanel({ lead, onSave, onRecordSend, onResearch }) {
   const [text, setText] = useState(lead.outreachDraft || emailDraft(lead))
   const [refusal, setRefusal] = useState('')
   const [busy, setBusy] = useState(false)
+  const [researching, setResearching] = useState(false)
+  const [findings, setFindings] = useState(null)
+
+  /* Reads the lead's own website through the operator's Claude subscription
+     and comes back with observations, contact routes and a draft. The draft
+     lands unapproved: it is a starting point for a human, not an outbox. */
+  async function research() {
+    setResearching(true); setRefusal('')
+    const out = await onResearch(lead)
+    setResearching(false)
+    if (!out.ok) { setRefusal(out.message); return }
+    const r = out.result || {}
+    setFindings(r)
+    if (r.draft_body) setText(`Subject: ${r.draft_subject || lead.company}\n\n${r.draft_body}`)
+    onSave(withActivity({
+      ...lead,
+      signals: [lead.signals, ...(r.signals || [])].filter(Boolean).join('; ').slice(0, 2000),
+      outreachDraft: r.draft_body ? `Subject: ${r.draft_subject || lead.company}\n\n${r.draft_body}` : lead.outreachDraft,
+      /* Researching does not approve anything. A draft that arrived from a
+         model and approved itself would defeat both gates. */
+      outreachApproved: false,
+    }, 'Note', 'Researched from their website'), { okMsg: 'Research complete' })
+  }
 
   /* Approval belongs to an exact body of text. Edit it and the approval
      lapses, so the mail handoff relocks until a human approves again. */
@@ -1270,6 +1328,12 @@ function OutreachPanel({ lead, onSave, onRecordSend }) {
           />
         </Field>
         <div className="card-actions">
+          <button type="button" className="btn btn--ghost btn--sm" onClick={research}
+            disabled={researching || !RESEARCH_URL}
+            title={RESEARCH_URL ? 'Read their website and draft from what is actually there'
+              : 'Set VITE_RESEARCH_URL to enable this'}>
+            {researching ? 'Reading their site…' : 'Research this lead'}
+          </button>
           <button type="button" className="btn btn--ghost btn--sm" onClick={compose}>Compose draft</button>
           <button type="button" className="btn btn--accent btn--sm" onClick={approve} disabled={!text.trim()}>
             Approve email
@@ -1283,6 +1347,32 @@ function OutreachPanel({ lead, onSave, onRecordSend }) {
           </button>
         </div>
         {refusal && <p className="crm-warn" role="status">{refusal}</p>}
+
+        {findings && (
+          <div className="crm-findings">
+            {findings.summary && <p className="crm-findings__summary">{findings.summary}</p>}
+            {findings.signals?.length > 0 && (
+              <>
+                <h4 className="crm-findings__h">What is actually on their site</h4>
+                <ul>{findings.signals.map((s) => <li key={s}>{s}</li>)}</ul>
+              </>
+            )}
+            {findings.contacts?.length > 0 && (
+              <>
+                <h4 className="crm-findings__h">Published contact routes</h4>
+                <ul>{findings.contacts.map((c) => (
+                  <li key={`${c.kind}-${c.value}`}>{c.value} <em>{c.kind}{c.where ? ` · ${c.where}` : ''}</em></li>
+                ))}</ul>
+              </>
+            )}
+            {findings.fit && (
+              <>
+                <h4 className="crm-findings__h">Whether we can help</h4>
+                <p>{findings.fit}</p>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <EdgeCard className="card-pad" lift={false} spotlight={false}>

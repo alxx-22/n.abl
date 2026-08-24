@@ -492,3 +492,27 @@
 }
 .crm-sector:hover { border-color: var(--accent-400); }
 .crm-sector span { color: var(--cream-600); margin-left: .4em; font-variant-numeric: tabular-nums; }
+
+/* Research findings, shown under the draft they produced. Deliberately plain:
+   this is evidence to read before sending, not a dashboard. */
+.crm-findings {
+  margin-top: var(--s-5);
+  padding: var(--s-4);
+  border: 1px solid var(--line-faint);
+  border-radius: 8px;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+}
+.crm-findings__summary { margin: 0 0 var(--s-4); color: var(--cream-100); }
+.crm-findings__h {
+  font-size: var(--t-xs);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--cream-600);
+  margin: var(--s-4) 0 var(--s-2);
+  font-weight: 500;
+}
+.crm-findings ul { margin: 0; padding-left: var(--s-5); display: grid; gap: var(--s-2); }
+.crm-findings li { overflow-wrap: anywhere; }
+.crm-findings em { font-style: normal; color: var(--cream-600); font-size: var(--t-xs); }
+.crm-findings p { margin: 0; }
