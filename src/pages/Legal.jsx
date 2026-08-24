@@ -41,7 +41,8 @@ const DOCS = {
       ['Service providers', [
         'Supabase — hosts our database, authentication, private file storage and the anonymous website events described above. Our project is hosted in the EU (eu-north-1).',
         'Web3Forms — delivers submissions from the discovery-call form to our inbox.',
-        'Netlify — serves this website.',
+        'Cloudflare — serves this website and manages the domain\u2019s DNS. The site moved here from Netlify in August 2026.',
+        'Groq — answers questions put to the assistant on this site, if you use it. Only what you type into it is sent, together with a written summary of what n.abl does. Nothing about you is attached to it: not your name, not your email address, not anything you have sent us before, and not anything from a client account. Groq is in the United States, and that transfer relies on the UK International Data Transfer Agreement. If you would rather not use it, everything the assistant can tell you is also on this site, and the enquiry form does not go anywhere near it.',
         'Each acts as a processor on our instructions. We do not permit them to use your data for their own purposes.',
         'We do not load fonts, scripts or images from third-party content networks. Web fonts are served from our own domain specifically so that visiting the site does not disclose your IP address to another company.',
       ]],
