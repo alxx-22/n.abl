@@ -72,7 +72,32 @@ try {
   check('and it says up front that it will hand over when it cannot answer',
     /pass it to the team|can't answer/i.test(opener))
 
-  await page.fill('#site-assistant input', 'Do you integrate with Xero?')
+  /* The box is a textarea so that shift+Enter can break a line and the height
+     can follow the text. Measure it empty, then with enough text to wrap. */
+  const emptyHeight = await page.evaluate(
+    () => document.querySelector('#site-assistant textarea')?.getBoundingClientRect().height || 0)
+  await page.fill('#site-assistant textarea',
+    'Do you integrate with Xero, and if so how long does that sort of thing usually take to set up end to end?')
+  await page.waitForTimeout(120)
+  const grownHeight = await page.evaluate(
+    () => document.querySelector('#site-assistant textarea')?.getBoundingClientRect().height || 0)
+  check('the input grows as the text wraps', grownHeight > emptyHeight + 8,
+    `${emptyHeight} -> ${grownHeight}`)
+
+  await page.fill('#site-assistant textarea', 'Do you integrate with Xero?')
+  await page.waitForTimeout(120)
+  const shrunkHeight = await page.evaluate(
+    () => document.querySelector('#site-assistant textarea')?.getBoundingClientRect().height || 0)
+  /* And back down again. A box that can only ever get taller is the bug this
+     guards: scrollHeight of an already-tall element includes its own height,
+     so the reset to auto has to happen first. */
+  check('and shrinks again when the text does', shrunkHeight < grownHeight - 4,
+    `${grownHeight} -> ${shrunkHeight}`)
+
+  check('there is an AI mark on the launcher', Boolean(await page.$('.assistant-fab .spark')))
+  check('and no disclaimer paragraph in the panel — the legal pages carry that',
+    (await page.$$('#site-assistant .assistant__note')).length === 0)
+
   await page.click('#site-assistant button[type=submit]')
   await page.waitForTimeout(800)
 

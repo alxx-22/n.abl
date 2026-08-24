@@ -479,13 +479,59 @@ a:hover > .nabl-logo .nabl-logo__dot {
    SITE ASSISTANT
 
    A chat box, not a product. It sits out of the way until asked
-   for, and it says where its answers come from.
+   for, and everything that moves has somewhere to move from.
    ============================================================ */
+@keyframes assistant-in {
+  from { opacity: 0; transform: translateY(10px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes spark-turn {
+  from { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(90deg) scale(1.12); }
+  to   { transform: rotate(180deg) scale(1); }
+}
+@keyframes think {
+  0%, 80%, 100% { opacity: .25; transform: translateY(0); }
+  40%           { opacity: 1;   transform: translateY(-3px); }
+}
+@keyframes fab-in {
+  from { opacity: 0; transform: translateY(14px) scale(.9); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes label-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+/* The launcher catches the eye twice and then leaves you alone. A corner of
+   the page that never stops moving is an advert, not an offer of help. */
+@keyframes twinkle {
+  0%, 62%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  70%           { transform: scale(1.28) rotate(22deg); opacity: .85; }
+  82%           { transform: scale(.96) rotate(-8deg); }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(.86); }
+  60%  { transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); }
+  35%      { transform: translateY(-3px); }
+  70%      { transform: translateY(-1px); }
+}
+
 .assistant-fab {
   position: fixed;
   right: var(--s-5);
   bottom: var(--s-5);
   z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
   appearance: none;
   border: 1px solid var(--line-strong);
   background: var(--surface-2);
@@ -495,11 +541,34 @@ a:hover > .nabl-logo .nabl-logo__dot {
   padding: var(--s-3) var(--s-5);
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: var(--glow-sm);
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  box-shadow: 0 8px 28px rgba(0,0,0,.35);
+  transition: border-color .22s var(--ease), background .22s var(--ease),
+              transform .22s var(--ease), box-shadow .22s var(--ease);
+  /* Arrives a beat after the page has settled rather than being part of the
+     load, so it reads as an offer rather than furniture. */
+  animation: fab-in .4s var(--ease) .9s backwards;
 }
-.assistant-fab:hover { border-color: var(--accent-400); }
-.assistant-fab--open { background: var(--accent-400); color: #24170A; border-color: var(--accent-400); }
+.assistant-fab:hover {
+  border-color: var(--accent-400);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 34px rgba(0,0,0,.42), var(--glow-sm);
+}
+.assistant-fab:active { transform: translateY(0); }
+.assistant-fab .spark {
+  color: var(--accent-400);
+  flex: 0 0 auto;
+  /* Two twinkles, spaced, then still. */
+  animation: twinkle 4.5s var(--ease) 2.4s 2;
+}
+/* Hover overrides the twinkle with a full turn — one gesture at a time. */
+.assistant-fab:hover .spark { animation: spark-turn .7s var(--ease); }
+.assistant-fab__label { animation: label-in .28s var(--ease) backwards; }
+.assistant-fab--open {
+  background: var(--accent-400);
+  color: #24170A;
+  border-color: var(--accent-400);
+}
+.assistant-fab--open .spark { color: #24170A; }
 
 .assistant {
   position: fixed;
@@ -507,66 +576,140 @@ a:hover > .nabl-logo .nabl-logo__dot {
   bottom: calc(var(--s-5) + 3.5rem);
   z-index: 60;
   width: min(24rem, calc(100vw - var(--s-5) * 2));
-  /* Capped so a long conversation scrolls inside the panel rather than
-     growing past the top of the screen. */
   max-height: min(32rem, 70vh);
   display: flex;
   flex-direction: column;
   background: var(--surface-1);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  box-shadow: 0 24px 60px rgba(0,0,0,.45);
+  box-shadow: 0 24px 60px rgba(0,0,0,.5);
   overflow: hidden;
+  transform-origin: bottom right;
+  animation: assistant-in .34s cubic-bezier(.2, .9, .25, 1.12) backwards;
 }
+
 .assistant__log {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--s-4);
+  /* Generous top padding so the first message starts clear of the edge, and
+     a mask so anything scrolling past the top dissolves rather than being
+     guillotined by the border. */
+  padding: var(--s-6) var(--s-4) var(--s-4);
   display: grid;
   gap: var(--s-3);
   align-content: start;
+  scrollbar-width: thin;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, rgba(0,0,0,.35) 1.1rem, #000 3rem);
+  mask-image: linear-gradient(to bottom, transparent 0, rgba(0,0,0,.35) 1.1rem, #000 3rem);
 }
+
 .assistant__msg {
   margin: 0;
   font-size: var(--t-sm);
   line-height: 1.55;
   padding: var(--s-3) var(--s-4);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow-wrap: anywhere;
+  animation: msg-in .3s var(--ease) backwards;
 }
-.assistant__msg--assistant { background: var(--surface-2); color: var(--cream-200); }
+.assistant__msg--assistant {
+  background: var(--surface-2);
+  color: var(--cream-200);
+  border: 1px solid var(--line-faint);
+  border-bottom-left-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.22);
+  max-width: 92%;
+}
 .assistant__msg--user {
-  background: rgba(var(--accent-rgb), .14);
+  background: linear-gradient(180deg,
+    rgba(var(--accent-rgb), .22),
+    rgba(var(--accent-rgb), .14));
+  border: 1px solid rgba(var(--accent-rgb), .35);
   color: var(--cream-100);
   justify-self: end;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.22);
   max-width: 85%;
 }
-.assistant__msg--busy { color: var(--cream-600); }
+
+/* Three dots rather than the word "Thinking", so the wait reads as the
+   assistant composing rather than the page having stalled. */
+.assistant__msg--busy { display: inline-flex; gap: 5px; align-items: center; padding: var(--s-4); }
+.assistant__msg--busy i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-400);
+  animation: think 1.3s infinite var(--ease);
+}
+.assistant__msg--busy i:nth-child(2) { animation-delay: .18s; }
+.assistant__msg--busy i:nth-child(3) { animation-delay: .36s; }
 
 .assistant__handoff {
   border-top: 1px solid var(--line-faint);
-  padding-top: var(--s-3);
+  padding-top: var(--s-4);
   display: grid;
   gap: var(--s-3);
   justify-items: start;
+  animation: msg-in .3s var(--ease) backwards;
 }
 .assistant__handoff p { margin: 0; font-size: var(--t-sm); color: var(--cream-200); }
+/* The one thing in the panel worth pressing, so it arrives with a pop and
+   nudges twice — this is the moment the conversation becomes an enquiry. */
+.assistant__handoff .btn { animation: pop-in .3s var(--ease) .12s backwards, nudge 2.4s var(--ease) 1s 2; }
 
 .assistant__form {
   display: flex;
   gap: var(--s-2);
+  align-items: flex-end;
   padding: var(--s-3);
   border-top: 1px solid var(--line-faint);
+  background: var(--surface-1);
 }
-.assistant__form .input { flex: 1; min-width: 0; height: 2.2rem; font-size: var(--t-sm); }
-.assistant__note {
-  margin: 0;
-  padding: 0 var(--s-4) var(--s-3);
-  font-size: var(--t-xs);
-  color: var(--cream-800);
+/* Height is set from JS as the text wraps; resize is off so a drag handle
+   does not fight it.
+
+   Double class deliberately: `textarea.input` in global.css sets both
+   min-height: 7rem and resize: vertical, and a single class loses to it. With
+   one class this box sat frozen at 112px and the auto-grow did nothing. */
+.input.assistant__input {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  overflow-y: auto;
+  min-height: 2.4rem;
+  max-height: 8.75rem;
+  padding: var(--s-3) var(--s-4);
+  font-size: var(--t-sm);
   line-height: 1.45;
+  border-radius: 12px;
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.input.assistant__input:focus {
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .16), 0 4px 16px rgba(0,0,0,.28);
+}
+.assistant__form .btn {
+  flex: 0 0 auto;
+  height: 2.4rem;
+  transition: opacity .2s var(--ease), transform .2s var(--ease);
+}
+/* Disabled it recedes; the moment there is something to send it comes
+   forward. The button itself is the prompt to press it. */
+.assistant__form .btn:disabled { opacity: .4; transform: scale(.94); }
+.assistant__form .btn:not(:disabled):active { transform: scale(.96); }
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant,
+  .assistant__msg,
+  .assistant__handoff,
+  .assistant__handoff .btn,
+  .assistant-fab,
+  .assistant-fab__label,
+  .assistant-fab .spark { animation: none; }
+  .assistant-fab:hover { transform: none; }
+  .assistant-fab:hover .spark { animation: none; }
+  .assistant__form .btn:disabled { transform: none; }
+  .assistant__msg--busy i { animation: none; opacity: .6; }
 }
 
 @media (max-width: 520px) {

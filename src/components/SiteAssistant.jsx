@@ -1,5 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 
+/* The mark on the launcher. Four points rather than a robot or a speech
+   bubble: it reads as "something considered happens here" without promising a
+   person, and it sits in the same family as the dot in the wordmark. */
+function Spark({ size = 15 }) {
+  return (
+    <svg className="spark" width={size} height={size} viewBox="0 0 24 24"
+      fill="none" aria-hidden="true" focusable="false">
+      <path d="M12 2.5c.5 4.2 2.8 6.5 7 7-4.2.5-6.5 2.8-7 7-.5-4.2-2.8-6.5-7-7 4.2-.5 6.5-2.8 7-7Z"
+        fill="currentColor" />
+      <path d="M19 14.5c.25 2 1.3 3.05 3.3 3.3-2 .25-3.05 1.3-3.3 3.3-.25-2-1.3-3.05-3.3-3.3 2-.25 3.05-1.3 3.3-3.3Z"
+        fill="currentColor" opacity=".55" />
+    </svg>
+  )
+}
+
 /* The assistant on the public site.
 
    It answers from one file — business/03-website/assistant-knowledge.md,
@@ -38,7 +53,17 @@ export default function SiteAssistant({ onHandoff }) {
   const inputRef = useRef(null)
 
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 120) }, [open])
-  useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }) }, [messages, busy])
+  useEffect(() => { endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }) }, [messages, busy])
+
+  /* Grow the box to fit what has been typed, up to a point. Height is reset to
+     auto first — without that it can only ever get taller, because scrollHeight
+     of an already-tall element includes the space it is already occupying. */
+  function grow(el) {
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`
+  }
+  useEffect(() => { grow(inputRef.current) }, [input])
 
   async function send(e) {
     e?.preventDefault()
@@ -89,16 +114,35 @@ export default function SiteAssistant({ onHandoff }) {
         aria-controls="site-assistant"
         onClick={() => setOpen((v) => !v)}
       >
-        {open ? 'Close' : 'Ask a question'}
+        <Spark />
+        {/* Keyed so React swaps the node rather than the text: the label then
+            replays its entrance and the two words cross-fade instead of
+            snapping. */}
+        <span key={open ? 'close' : 'ask'} className="assistant-fab__label">
+          {open ? 'Close' : 'Ask a question'}
+        </span>
       </button>
 
       {open && (
         <div className="assistant" id="site-assistant" role="dialog" aria-label="Ask n.abl a question">
           <div className="assistant__log">
             {messages.map((m, i) => (
-              <p key={i} className={`assistant__msg assistant__msg--${m.role}`}>{m.content}</p>
+              <p
+                key={i}
+                className={`assistant__msg assistant__msg--${m.role}`}
+                /* Only the first few need staggering — that is the panel
+                   opening. After that there is one new message at a time and
+                   the delay would just be a lag. */
+                style={i < 3 ? { animationDelay: `${0.06 + i * 0.07}s` } : undefined}
+              >
+                {m.content}
+              </p>
             ))}
-            {busy && <p className="assistant__msg assistant__msg--assistant assistant__msg--busy">Thinking…</p>}
+            {busy && (
+              <p className="assistant__msg assistant__msg--assistant assistant__msg--busy">
+                <i /><i /><i />
+              </p>
+            )}
 
             {handoff && (
               <div className="assistant__handoff">
@@ -115,11 +159,17 @@ export default function SiteAssistant({ onHandoff }) {
           </div>
 
           <form className="assistant__form" onSubmit={send}>
-            <input
+            <textarea
               ref={inputRef}
-              className="input"
+              className="input assistant__input"
+              rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              /* Enter sends, shift+Enter breaks the line — what a chat box is
+                 expected to do, and the reason this is a textarea at all. */
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+              }}
               placeholder="What do you do?"
               aria-label="Your question"
               maxLength={1000}
@@ -129,10 +179,6 @@ export default function SiteAssistant({ onHandoff }) {
             </button>
           </form>
 
-          <p className="assistant__note">
-            Answers come from a written summary of what n.abl does. It will say so
-            when it does not know.
-          </p>
         </div>
       )}
     </>
