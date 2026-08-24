@@ -220,11 +220,15 @@ export default {
          from outside — an earlier version swallowed it entirely and left no
          way to tell which had happened without guessing. Nothing here echoes
          the request or the key: Groq's error bodies carry neither. */
-      const detail = String((err as Error).message ?? '').slice(0, 300)
+      /* Logged, not returned. The reason is the difference between a spent
+         allowance, a wrong key and a retired model, and it took three guesses
+         to find the last one when this was swallowed entirely — so it goes to
+         `wrangler tail`, where whoever is debugging can see it and a stranger
+         curling the endpoint cannot. */
+      console.error('assistant upstream failure:', String((err as Error).message ?? '').slice(0, 300))
       return json({
         reply: "I can't answer right now, sorry. Email hello@nabl.agency and someone will come back to you.",
         intent: 'unknown',
-        upstream: detail || 'unknown failure',
       }, 200, origin)
     }
 

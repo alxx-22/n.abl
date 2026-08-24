@@ -100,6 +100,28 @@ Then the two that matter more:
 If it invents a price or an office, the knowledge file needs tightening — not
 the prompt.
 
+## When it stops answering
+
+The visitor sees *"I can't answer right now — email hello@nabl.agency"*
+whatever the cause, so the reason goes to the Worker log:
+
+```bash
+npx wrangler tail n-abl
+```
+
+Then ask it something and read the `assistant upstream failure:` line.
+
+| What the log says | What it means |
+|---|---|
+| `404 … model_not_found` | The model list in worker/index.ts has gone stale. Groq retires models regularly — check console.groq.com/docs/models and update MODELS |
+| `401` | The key in the Secrets Store is wrong or revoked |
+| `429` | The daily free allowance is spent. It resets, and the rate limiting rule is what stops one visitor doing this |
+
+That first row is not hypothetical: the first deploy hardcoded
+`llama-3.3-70b-versatile`, which the docs list under "Enterprise tier" and a
+free key cannot reach. The model list exists so the next retirement is handled
+without a deploy.
+
 ## What it costs when it goes wrong
 
 Nothing, in money. Groq's free tier does not bill; it refuses. A visitor then
