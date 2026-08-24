@@ -40,7 +40,23 @@ interface Env {
    does not apply here. This bot never touches client data. Anonymous visitor
    questions are the only thing it sees. */
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
-const MODEL = 'llama-3.3-70b-versatile'
+
+/* Tried in order until one answers, rather than named once.
+   
+   Two reasons, and the second is the durable one. The first attempt hardcoded
+   llama-3.3-70b-versatile, which the docs list under "Enterprise tier" — the
+   free key gets a 404 model_not_found. And Groq retires models often enough to
+   keep a deprecations page, so any single name here is a future outage that
+   arrives without a deploy.
+   
+   A 404 costs one extra round trip and only on a model that is gone, so the
+   steady state is a single request. Ordered best-first: whichever the key can
+   actually reach is the one that answers. */
+const MODELS = [
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'llama-3.1-8b-instant',
+]
 
 const ALLOWED_ORIGINS = [
   'https://nabl.agency',
@@ -160,30 +176,42 @@ export default {
     }
 
     let raw = ''
+    let lastError = ''
     try {
-      const res = await fetch(GROQ_URL, {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${apiKey}`,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          messages,
-          max_tokens: 400,
-          /* Asked for as a format rather than described in the prompt. A model
-             told to return JSON returns JSON most of the time; one constrained
-             to it returns JSON always, and the fence-stripping below becomes a
-             belt rather than the mechanism. */
-          response_format: { type: 'json_object' },
-        }),
-      })
-      if (!res.ok) {
+      for (const model of MODELS) {
+        const res = await fetch(GROQ_URL, {
+          method: 'POST',
+          headers: {
+            authorization: `Bearer ${apiKey}`,
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            max_tokens: 400,
+            /* Asked for as a format rather than described in the prompt. A
+               model told to return JSON returns JSON most of the time; one
+               constrained to it returns JSON always, and the fence-stripping
+               below becomes a belt rather than the mechanism. */
+            response_format: { type: 'json_object' },
+          }),
+        })
+
+        if (res.ok) {
+          const data = await res.json() as { choices?: { message?: { content?: string } }[] }
+          raw = data?.choices?.[0]?.message?.content ?? ''
+          break
+        }
+
         const body = (await res.text()).slice(0, 300)
-        throw new Error(`${res.status} ${body}`)
+        lastError = `${res.status} ${body}`
+
+        /* Only a missing model is worth trying the next one for. A 401 means
+           the key is wrong and every model will refuse it; a 429 means the
+           allowance is spent and hammering three models spends it faster. */
+        if (res.status !== 404 && res.status !== 400) break
       }
-      const data = await res.json() as { choices?: { message?: { content?: string } }[] }
-      raw = data?.choices?.[0]?.message?.content ?? ''
+      if (!raw) throw new Error(lastError || 'no model answered')
     } catch (err) {
       /* Running out of the daily allowance, a wrong key, a model that is not
          on this tier and a network blip all end up here, and they need
