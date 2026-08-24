@@ -19,6 +19,11 @@ npm-debug.log*
 # local scratch
 *.tmp
 
+# wrangler's local dev state — miniflare's sqlite caches and trace stores,
+# rewritten every time check-worker-routes.mjs boots `wrangler dev --local`.
+# 1.3MB of it went in with a `git add -A` before this line existed.
+.wrangler/
+
 # Lead-sourcing working files: bulk snapshots and candidate lists.
 # Large, regenerable, and they hold third-party business data that has
 # no reason to be in version control.
