@@ -11,10 +11,17 @@ import { useState, useRef, useEffect } from 'react'
    filled in, and they press send. The assistant proposes; the visitor
    confirms; the form that already existed does the work.
 
-   Absent unless VITE_ASSISTANT_URL is set, the same way the summariser and the
-   CRM research action are: the site has to work without it. */
+   The endpoint is a fixed path on this same origin, served by the same Worker
+   that serves this page, so it is a constant rather than a configured value.
+   An earlier version required VITE_ASSISTANT_URL to be set, copying the
+   pattern from the welcome-pack summariser — but that one points at a Supabase
+   function on a different host, and this one cannot point anywhere else. The
+   variable added a build setting to find and get wrong for no gain.
 
-const ASSISTANT_URL = import.meta.env.VITE_ASSISTANT_URL || ''
+   If the key behind it is missing the Worker says so in a sentence a visitor
+   can act on, which is the failure that actually needed handling. */
+
+const ASSISTANT_URL = import.meta.env.VITE_ASSISTANT_URL || '/api/chat/public'
 
 const OPENER = {
   role: 'assistant',
@@ -32,8 +39,6 @@ export default function SiteAssistant({ onHandoff }) {
 
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 120) }, [open])
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }) }, [messages, busy])
-
-  if (!ASSISTANT_URL) return null
 
   async function send(e) {
     e?.preventDefault()

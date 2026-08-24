@@ -592,14 +592,11 @@ async function run() {
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(600)
 
-    const fab = await page.$('.assistant-fab')
-    check('the assistant is absent until VITE_ASSISTANT_URL is set', fab === null)
-
-    /* Configured build: the flag is read at build time, so it is injected the
-       only way a built bundle allows. */
-    await page.addInitScript(() => {
-      window.__ASSISTANT_TEST__ = true
-    })
+    /* The assistant is always present now: its endpoint is a fixed path on the
+       same origin, served by the same Worker as the page. There is no build
+       flag to forget. If the key behind it is missing, the Worker answers with
+       a sentence rather than an error, which is tested in e2e-assistant. */
+    check('the assistant is on the marketing page', Boolean(await page.$('.assistant-fab')))
 
     check('no runtime errors on the marketing page', errors.length === 0, errors.join('; '))
     await page.close()

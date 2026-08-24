@@ -1,9 +1,8 @@
 /* The site assistant, tested against a build that actually has it enabled.
 
-   VITE_ASSISTANT_URL is read at build time, so the main e2e run — built
-   without it — can only prove the assistant is absent. That is worth
-   asserting, but it is not the interesting half. This builds a second bundle
-   with the flag set and tests the claim the whole design rests on:
+   Separate from the main e2e run because it stubs the Worker endpoint and
+   drives a full exchange. What it tests is the claim the whole design rests
+   on:
 
      the assistant hands the visitor to the existing enquiry form,
      it does not submit anything itself.
@@ -24,11 +23,8 @@ const ok = (n) => { pass++; console.log(`  ✓ ${n}`) }
 const bad = (n, d = '') => { fail++; console.log(`  ✗ ${n}${d ? ` — ${d}` : ''}`) }
 const check = (n, cond, d) => (cond ? ok(n) : bad(n, d))
 
-console.log('\n  building with the assistant enabled…')
-execFileSync('npm', ['run', 'build'], {
-  stdio: 'pipe',
-  env: { ...process.env, VITE_ASSISTANT_URL: '/api/chat/public' },
-})
+console.log('\n  building…')
+execFileSync('npm', ['run', 'build'], { stdio: 'pipe' })
 
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT)], { stdio: 'ignore' })
 const browser = await chromium.launch()
@@ -63,11 +59,11 @@ try {
     })
   })
 
-  console.log('\nSITE ASSISTANT (enabled)')
+  console.log('\nSITE ASSISTANT')
   await page.goto(BASE, { waitUntil: 'networkidle' })
   await page.waitForTimeout(500)
 
-  check('the launcher appears when configured', Boolean(await page.$('.assistant-fab')))
+  check('the launcher is present', Boolean(await page.$('.assistant-fab')))
 
   await page.click('.assistant-fab')
   await page.waitForTimeout(400)

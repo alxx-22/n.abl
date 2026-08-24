@@ -52,16 +52,17 @@ applied to it.
 npx wrangler secret put GROQ_API_KEY
 ```
 
-**2. Point the site at it.** In the Cloudflare Pages/Workers build environment:
+That is the only setting. The assistant's endpoint is a fixed path on the same
+origin, served by the same Worker as the page, so there is nothing to point it
+at. An earlier version required a `VITE_ASSISTANT_URL` build variable, which
+added a setting to find and get wrong in exchange for nothing — build-time and
+runtime variables live in different parts of the Cloudflare dashboard, and the
+build one is easy to miss.
 
-```
-VITE_ASSISTANT_URL = /api/chat/public
-```
+If the key is missing the assistant still renders and answers *"I'm not set up
+yet — email hello@nabl.agency"*, which is the failure that needed handling.
 
-Until that is set the assistant does not render at all — the site works
-without it, and there is an assertion that it stays away.
-
-**3. A rate limiting rule.** Cloudflare → Security → WAF → Rate limiting rules.
+**2. A rate limiting rule.** Cloudflare → Security → WAF → Rate limiting rules.
 The free plan includes one, and this is what it is for:
 
 | | |
