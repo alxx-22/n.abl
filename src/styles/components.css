@@ -485,9 +485,14 @@ a:hover > .nabl-logo .nabl-logo__dot {
   from { opacity: 0; transform: translateY(10px) scale(.97); }
   to   { opacity: 1; transform: none; }
 }
+/* A small lift first, then it drops away — the shape of something being put
+   down rather than deleted. The first version was 200ms on an ease curve and
+   was at 4% opacity by 120ms, which reads as no animation at all: the eye
+   needs the panel to still be visibly there partway through. */
 @keyframes assistant-out {
-  from { opacity: 1; transform: none; }
-  to   { opacity: 0; transform: translateY(8px) scale(.96); }
+  from { opacity: 1;   transform: none; }
+  35%  { opacity: .92; transform: translateY(-3px) scale(1.012); }
+  to   { opacity: 0;   transform: translateY(18px) scale(.9); }
 }
 @keyframes msg-in {
   from { opacity: 0; transform: translateY(6px); }
@@ -602,7 +607,7 @@ a:hover > .nabl-logo .nabl-logo__dot {
    holding the final frame is the point. Duration matches CLOSE_MS in
    SiteAssistant.jsx — if one changes the other has to. */
 .assistant--closing {
-  animation: assistant-out .2s var(--ease) forwards;
+  animation: assistant-out .34s cubic-bezier(.34, 0, .2, 1) forwards;
   pointer-events: none;
 }
 

@@ -61,7 +61,7 @@ export default function SiteAssistant({ onHandoff }) {
   /* A timer rather than onAnimationEnd: under prefers-reduced-motion the
      animation is removed entirely and the event would never fire, leaving the
      panel stuck open. CLOSE_MS matches the animation in components.css. */
-  const CLOSE_MS = 200
+  const CLOSE_MS = 340
   function toggle() {
     if (!open) { setOpen(true); return }
     setClosing(true)
