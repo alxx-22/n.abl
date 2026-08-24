@@ -3,6 +3,7 @@ import Nav from '../components/layout/Nav.jsx'
 import Footer from '../components/layout/Footer.jsx'
 import { prefersReducedMotion } from '../components/ui/index.jsx'
 import DiscoveryModal from '../components/DiscoveryModal.jsx'
+import SiteAssistant from '../components/SiteAssistant.jsx'
 import { JourneyRail } from '../components/Journey.jsx'
 import { track, observeDepth } from '../lib/analytics.js'
 
@@ -60,6 +61,7 @@ function Intro() {
    ============================================================ */
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false)
+  const [prefill, setPrefill] = useState('')
 
   // Which CTA opened the modal is the thing worth knowing, so the
   // event name is passed in by the caller rather than inferred here.
@@ -94,7 +96,11 @@ export default function Home() {
       </main>
 
       <Footer />
-      <DiscoveryModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <DiscoveryModal open={modalOpen} onClose={() => setModalOpen(false)} prefill={prefill} />
+
+      {/* The assistant does not submit anything. It hands the visitor to the
+          form above with what they said filled in, and they press send. */}
+      <SiteAssistant onHandoff={(enquiry) => { setPrefill(enquiry); setModalOpen(true) }} />
     </div>
   )
 }

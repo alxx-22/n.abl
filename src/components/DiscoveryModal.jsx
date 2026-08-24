@@ -11,7 +11,11 @@ const BUSINESS_TYPES = [
    key is a public form token by design. */
 const WEB3FORMS_KEY = '2a4cc07f-441a-4bfe-8b85-586418d676ee'
 
-export default function DiscoveryModal({ open, onClose }) {
+/* `prefill` lets the assistant hand a visitor over with what they already
+   said filled in. It is a defaultValue rather than a controlled value on
+   purpose: the visitor must be able to edit or delete it before sending, and
+   the assistant's summary is a starting point, not a submission. */
+export default function DiscoveryModal({ open, onClose, prefill = '' }) {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
@@ -147,6 +151,8 @@ export default function DiscoveryModal({ open, onClose }) {
               </Field>
               <Field label="What's getting in the way?" htmlFor="d-challenge">
                 <textarea id="d-challenge" name="challenge" className="input" rows={4}
+                  key={prefill}
+                  defaultValue={prefill}
                   placeholder="The report that takes all Monday, the inbox nobody owns…" />
               </Field>
 

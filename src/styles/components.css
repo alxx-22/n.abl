@@ -474,3 +474,102 @@ a:hover > .nabl-logo .nabl-logo__dot {
 }
 .packflag--yes { color: var(--cream-600); }
 .packflag--no  { color: var(--accent-400); border-color: var(--accent-400); }
+
+/* ============================================================
+   SITE ASSISTANT
+
+   A chat box, not a product. It sits out of the way until asked
+   for, and it says where its answers come from.
+   ============================================================ */
+.assistant-fab {
+  position: fixed;
+  right: var(--s-5);
+  bottom: var(--s-5);
+  z-index: 60;
+  appearance: none;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--cream-100);
+  font: inherit;
+  font-size: var(--t-sm);
+  padding: var(--s-3) var(--s-5);
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: var(--glow-sm);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.assistant-fab:hover { border-color: var(--accent-400); }
+.assistant-fab--open { background: var(--accent-400); color: #24170A; border-color: var(--accent-400); }
+
+.assistant {
+  position: fixed;
+  right: var(--s-5);
+  bottom: calc(var(--s-5) + 3.5rem);
+  z-index: 60;
+  width: min(24rem, calc(100vw - var(--s-5) * 2));
+  /* Capped so a long conversation scrolls inside the panel rather than
+     growing past the top of the screen. */
+  max-height: min(32rem, 70vh);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 24px 60px rgba(0,0,0,.45);
+  overflow: hidden;
+}
+.assistant__log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--s-4);
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+}
+.assistant__msg {
+  margin: 0;
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  padding: var(--s-3) var(--s-4);
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.assistant__msg--assistant { background: var(--surface-2); color: var(--cream-200); }
+.assistant__msg--user {
+  background: rgba(var(--accent-rgb), .14);
+  color: var(--cream-100);
+  justify-self: end;
+  max-width: 85%;
+}
+.assistant__msg--busy { color: var(--cream-600); }
+
+.assistant__handoff {
+  border-top: 1px solid var(--line-faint);
+  padding-top: var(--s-3);
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+}
+.assistant__handoff p { margin: 0; font-size: var(--t-sm); color: var(--cream-200); }
+
+.assistant__form {
+  display: flex;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-top: 1px solid var(--line-faint);
+}
+.assistant__form .input { flex: 1; min-width: 0; height: 2.2rem; font-size: var(--t-sm); }
+.assistant__note {
+  margin: 0;
+  padding: 0 var(--s-4) var(--s-3);
+  font-size: var(--t-xs);
+  color: var(--cream-800);
+  line-height: 1.45;
+}
+
+@media (max-width: 520px) {
+  .assistant { right: var(--s-3); left: var(--s-3); width: auto; bottom: calc(var(--s-3) + 3.2rem); }
+  .assistant-fab { right: var(--s-3); bottom: var(--s-3); }
+}

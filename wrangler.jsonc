@@ -12,6 +12,15 @@
   // SPA shell.
   "name": "n-abl",
   "compatibility_date": "2026-08-22",
+
+  // The public assistant. Static assets are matched first, so every real file
+  // is served without this script running at all — only /api/* reaches it.
+  "main": "./worker/index.ts",
+
+  // Workers AI. The free allowance is 10,000 Neurons a day, and a turn of the
+  // public assistant costs roughly four.
+  "ai": { "binding": "AI" },
+
   "assets": {
     "directory": "./dist",
 

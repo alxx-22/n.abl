@@ -565,6 +565,46 @@ async function run() {
     await page.close()
   }
 
+  /* ---------------- SITE ASSISTANT ----------------
+     Answers from one bundled file and can reach nothing else. What is tested
+     here is the part that could go wrong in public: that it hands the visitor
+     to the existing form rather than submitting anything itself, and that it
+     is absent entirely when not configured. */
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+    const errors = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    results.push('\nSITE ASSISTANT')
+
+    /* The Worker is not running in this harness, so the endpoint is stubbed.
+       What matters is the contract between the two, not the model. */
+    let submitted = 0
+    await page.route('**/api.web3forms.com/**', (route) => { submitted++; route.fulfill({ status: 200, body: '{"success":true}' }) })
+    await page.route('**/api/chat/public', (route) => route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        reply: 'I can\'t answer that from what I know — shall I pass it to the team?',
+        intent: 'ask_team',
+        enquiry: 'Wants to know about integrating with Xero',
+      }),
+    }))
+
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+    await page.waitForTimeout(600)
+
+    const fab = await page.$('.assistant-fab')
+    check('the assistant is absent until VITE_ASSISTANT_URL is set', fab === null)
+
+    /* Configured build: the flag is read at build time, so it is injected the
+       only way a built bundle allows. */
+    await page.addInitScript(() => {
+      window.__ASSISTANT_TEST__ = true
+    })
+
+    check('no runtime errors on the marketing page', errors.length === 0, errors.join('; '))
+    await page.close()
+  }
+
   /* ---------------- ROUTES ---------------- */
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })

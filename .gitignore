@@ -23,3 +23,4 @@ npm-debug.log*
 # Large, regenerable, and they hold third-party business data that has
 # no reason to be in version control.
 .sourcing/
+worker/knowledge.generated.ts
