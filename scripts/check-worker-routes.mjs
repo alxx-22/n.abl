@@ -40,12 +40,16 @@ dev.stderr.on('data', (d) => { log += d })
 const nav = (path) => fetch(`${BASE}${path}`, {
   redirect: 'follow',
   headers: { 'Sec-Fetch-Mode': 'navigate', accept: 'text/html' },
+  signal: AbortSignal.timeout(10_000),
 })
 
 async function ready() {
   for (let i = 0; i < 40; i++) {
     try {
-      await fetch(`${BASE}/`, { headers: { 'Sec-Fetch-Mode': 'navigate' } })
+      await fetch(`${BASE}/`, {
+        headers: { 'Sec-Fetch-Mode': 'navigate' },
+        signal: AbortSignal.timeout(3_000),
+      })
       return true
     } catch { /* not listening yet */ }
     await new Promise((r) => setTimeout(r, 1000))
@@ -78,11 +82,11 @@ try {
   /* The other half: an unknown API path must stay an error. Handing it the
      shell would turn a broken fetch into a page of HTML the caller then tries
      to parse as JSON. */
-  const badApi = await fetch(`${BASE}/api/not-a-thing`)
+  const badApi = await fetch(`${BASE}/api/not-a-thing`, { signal: AbortSignal.timeout(10_000) })
   check('an unknown /api path is a 404, not the shell', badApi.status === 404,
     `got ${badApi.status}`)
 
-  const wrongMethod = await fetch(`${BASE}/api/chat/public`)
+  const wrongMethod = await fetch(`${BASE}/api/chat/public`, { signal: AbortSignal.timeout(10_000) })
   check('the assistant endpoint rejects GET', wrongMethod.status === 405,
     `got ${wrongMethod.status}`)
 } finally {

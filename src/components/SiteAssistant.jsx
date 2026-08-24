@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 /* The mark on the launcher. Four points rather than a robot or a speech
    bubble: it reads as "something considered happens here" without promising a
    person, and it sits in the same family as the dot in the wordmark. */
-function Spark({ size = 15 }) {
+function Spark({ size = 20 }) {
   return (
     <svg className="spark" width={size} height={size} viewBox="0 0 24 24"
       fill="none" aria-hidden="true" focusable="false">
