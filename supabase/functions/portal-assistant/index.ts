@@ -209,8 +209,33 @@ async function think(messages: { role: string; content: string }[]) {
   throw new Error(last || 'no model answered')
 }
 
+/* Everything below returns JSON. This wrapper is what makes that true.
+
+   The first deployed version returned `Internal Server Error` as text/plain
+   with a 500 when anything threw outside a local try — and the browser, which
+   parses every reply as JSON, turned that into "I can't reach the team",
+   claiming a network failure that had not happened. A handler that can answer
+   in a format its only caller cannot read has no error path at all.
+
+   So the last thing this function does is guarantee the shape of its own
+   failure. The reason goes to the logs; the client gets a sentence. */
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get('origin')
+  try {
+    return await handle(req, origin)
+  } catch (err) {
+    console.error(
+      'portal assistant crashed:',
+      String((err as Error)?.stack ?? (err as Error)?.message ?? err).slice(0, 600),
+    )
+    return json({
+      reply: "I can't answer right now, sorry. Email hello@nabl.agency and someone will come back to you.",
+      intent: 'answer',
+    }, 200, origin)
+  }
+})
+
+async function handle(req: Request, origin: string | null): Promise<Response> {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(origin) })
   if (req.method !== 'POST') return json({ error: 'POST only' }, 405, origin)
 
@@ -351,4 +376,4 @@ Deno.serve(async (req: Request) => {
         }
       : undefined,
   }, 200, origin)
-})
+}
