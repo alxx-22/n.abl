@@ -150,20 +150,49 @@ Reply with ONLY a JSON object, no text around it:
 }
 Omit "request" entirely when intent is "answer".`
 
+/* Every upstream call gets a deadline, and the loop gets one too.
+
+   Without them this function can hang: three models tried in sequence, each
+   waiting indefinitely on a socket, while the browser's fetch eventually gives
+   up with a network error. That is indistinguishable at the client from "the
+   internet is down", and it is the one failure the rest of this file cannot
+   report, because reporting requires returning — and a hung function never
+   returns at all.
+
+   A model that has not answered in twenty seconds is not going to produce a
+   chat reply anyone waits for, and the whole attempt is abandoned at thirty
+   so there is always time left to send the sentence saying so. */
+const CALL_TIMEOUT_MS = 20_000
+const TOTAL_BUDGET_MS = 30_000
+
 async function think(messages: { role: string; content: string }[]) {
   let last = ''
+  const startedAt = Date.now()
   for (const model of MODELS) {
-    const res = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/${model}`,
-      {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${CF_TOKEN}`,
-          'content-type': 'application/json',
+    if (Date.now() - startedAt > TOTAL_BUDGET_MS) {
+      last = last || 'ran out of time before any model answered'
+      break
+    }
+    let res: Response
+    try {
+      res = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/${model}`,
+        {
+          method: 'POST',
+          headers: {
+            authorization: `Bearer ${CF_TOKEN}`,
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({ messages, max_tokens: 500 }),
+          signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
         },
-        body: JSON.stringify({ messages, max_tokens: 500 }),
-      },
-    )
+      )
+    } catch (err) {
+      /* A timeout or a dropped socket. Worth trying the next model — this one
+         is not answering — but never worth hanging for. */
+      last = `${model}: ${(err as Error).name === 'TimeoutError' ? 'timed out' : String((err as Error).message).slice(0, 120)}`
+      continue
+    }
     if (res.ok) {
       const data = await res.json()
       const text = data?.result?.response ?? ''
