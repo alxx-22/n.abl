@@ -165,7 +165,54 @@ Omit "request" entirely when intent is "answer".`
 const CALL_TIMEOUT_MS = 20_000
 const TOTAL_BUDGET_MS = 30_000
 
-async function think(messages: { role: string; content: string }[]) {
+/* Pull the reply text out of whatever Workers AI actually returned.
+
+   This exists because of a real outage. The first version did:
+
+       const text = data?.result?.response ?? ''
+       if (text) return text as string
+
+   `as string` is a compile-time assertion and no runtime check whatever, so
+   the file type-checked clean and then threw `TypeError: raw.trim is not a
+   function` on the first real message in production — outside any try, which
+   the Supabase runtime turned into `Internal Server Error` as text/plain, a
+   shape the portal parses as JSON and cannot read. A cast is not a check, and
+   the one place that mattered was the one place it was used as one.
+
+   So every candidate is tested with typeof before it is trusted. The two
+   shapes are the native endpoint's result.response and the OpenAI-compatible
+   one's choices[0].message.content; a model answering with tool_calls and no
+   text leaves neither, and that is a legitimate empty answer, not a crash.
+
+   The shape of an unexpected value is logged, never its content: what comes
+   back here is derived from a client's own record and does not belong in a
+   log line. */
+function textFrom(data: unknown): string {
+  const d = data as Record<string, any> | null | undefined
+  const candidates: unknown[] = [
+    d?.result?.response,
+    d?.result?.choices?.[0]?.message?.content,
+    d?.choices?.[0]?.message?.content,
+    d?.result,
+  ]
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) return c
+  }
+  const got = d?.result?.response
+  if (got !== undefined && typeof got !== 'string') {
+    console.error(
+      'workers ai returned a non-string result.response:',
+      Array.isArray(got) ? `array[${got.length}]` : typeof got,
+      got && typeof got === 'object' ? `keys=${Object.keys(got).slice(0, 10).join(',')}` : '',
+    )
+  }
+  return ''
+}
+
+/* Declared as Promise<string> on purpose. The bug above got through because
+   nothing in the signature obliged this function to return text, so every
+   caller was free to assume it and the compiler agreed. */
+async function think(messages: { role: string; content: string }[]): Promise<string> {
   let last = ''
   const startedAt = Date.now()
   for (const model of MODELS) {
@@ -195,9 +242,12 @@ async function think(messages: { role: string; content: string }[]) {
     }
     if (res.ok) {
       const data = await res.json()
-      const text = data?.result?.response ?? ''
-      if (text) return text as string
-      last = 'empty response'
+      const text = textFrom(data)
+      if (text) return text
+      /* A 200 carrying no usable text is worth trying the next model for: the
+         call succeeded, so the token and the allowance are both fine, and it
+         is this model that had nothing to say. */
+      last = `${model}: 200 with no text in the response`
       continue
     }
     last = `${res.status} ${(await res.text()).slice(0, 200)}`

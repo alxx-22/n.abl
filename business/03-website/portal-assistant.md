@@ -87,6 +87,57 @@ is unaffected.
 Both are real gaps rather than nice-to-haves: a request nobody sees is worse
 than no request at all, because the client believes it was received.
 
+## The outage of 25 August
+
+The assistant answered nothing between going live and 25 August. Every normal
+message came back as `Internal Server Error`, `text/plain`, in about a second.
+Auth worked, the context loaded, validation worked, and the write path wrote a
+real row — only the inference path failed.
+
+The cause, from the function logs:
+
+```
+TypeError: raw.trim is not a function
+    at Object.handler (.../index.ts:262:23)
+```
+
+`think()` had this:
+
+```ts
+const text = data?.result?.response ?? ''
+if (text) return text as string
+```
+
+Workers AI did not put a string in `result.response`, and `as string` is a
+compile-time assertion that generates no runtime check whatever. So the file
+type-checked clean with `deno check`, and then handed a non-string to
+`raw.trim()` on the first real message. The throw was outside any try, so the
+Supabase runtime answered with its own 500 page — `text/plain`, which the
+portal parses as JSON and cannot read, and which it reported to the client as
+a network failure that had not happened.
+
+Two things were wrong and both are fixed:
+
+1. **A cast was standing in for a check.** `textFrom()` now tests every
+   candidate with `typeof` before trusting it, handles the OpenAI-compatible
+   shape as well as the native one, and treats "no text" as a reason to try the
+   next model rather than as a crash. `think()` is declared `Promise<string>`
+   so the signature obliges what the callers already assumed. When something
+   unexpected does arrive, its *shape* is logged — never its content, which is
+   derived from a client's record.
+
+2. **The deployed copy was not the repo file.** It had been hand-condensed at
+   first deploy and was missing the outer handler wrapper and the upstream
+   timeouts that the repo file already had. Redeploying from source was half
+   the fix; without it a crash is invisible, and with it the same crash returns
+   JSON and a stack in the logs. Deploy from `supabase/functions/portal-assistant/index.ts`
+   and nothing else.
+
+The lesson worth keeping: this file type-checked, passed 18 component tests
+against a stubbed endpoint, and was still completely broken in production. The
+stub returned a string because the person writing the stub assumed one. Nothing
+tested the one thing that was untrue.
+
 ## Tests
 
 `npm run test:portal-assistant` — 18 checks against a stubbed endpoint. The one
