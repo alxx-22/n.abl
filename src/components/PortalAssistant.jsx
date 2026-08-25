@@ -78,13 +78,53 @@ export default function PortalAssistant({ accessKey, clientName }) {
     setTimeout(() => { setOpen(false); setClosing(false) }, CLOSE_MS)
   }
 
+  /* Read the body as text and parse it here rather than calling res.json().
+
+     res.json() throws on anything that is not JSON, and that throw lands in
+     the same catch as a network failure — so a gateway timeout, a function
+     that crashed on boot and a blocked request all produced one identical
+     sentence about not reaching the team. Four faults, one message, no way to
+     tell them apart from the outside.
+
+     The client still sees a plain sentence. The detail goes to the console,
+     where whoever is debugging can see it and the client never looks. */
   async function post(payload) {
-    const res = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ key: accessKey, ...payload }),
-    })
-    return res.json()
+    let res
+    try {
+      res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ key: accessKey, ...payload }),
+      })
+    } catch (err) {
+      console.error('[portal assistant] request never completed:', err?.message || err)
+      return { error: 'NETWORK' }
+    }
+
+    const text = await res.text()
+    try {
+      return JSON.parse(text)
+    } catch {
+      console.error(
+        `[portal assistant] HTTP ${res.status} ${res.statusText} — body was not JSON:`,
+        text.slice(0, 500) || '(empty body)',
+      )
+      return { error: 'BAD_RESPONSE', status: res.status }
+    }
+  }
+
+  /* One place that turns a fault into something a client can act on, so the
+     wording cannot drift between the ask path and the raise path. */
+  function faultMessage(data) {
+    if (data?.error === 'NETWORK') {
+      return 'I can’t reach the assistant right now. Email hello@nabl.agency and someone will come back to you.'
+    }
+    if (data?.error === 'BAD_RESPONSE') {
+      return data.status >= 500
+        ? 'The assistant is having trouble at our end. Email hello@nabl.agency and someone will pick it up.'
+        : 'I can’t answer right now, sorry. Email hello@nabl.agency and someone will come back to you.'
+    }
+    return null
   }
 
   async function send(e) {
@@ -102,7 +142,10 @@ export default function PortalAssistant({ accessKey, clientName }) {
         /* The opener is ours, not the model's, so it is not sent back. */
         history: next.slice(1, -1).slice(-6),
       })
-      if (data.error && !data.reply) {
+      const fault = faultMessage(data)
+      if (fault) {
+        setMessages([...next, { role: 'assistant', content: fault }])
+      } else if (data.error && !data.reply) {
         setMessages([...next, { role: 'assistant', content: data.error }])
       } else {
         setMessages([...next, { role: 'assistant', content: data.reply }])
@@ -127,7 +170,7 @@ export default function PortalAssistant({ accessKey, clientName }) {
         role: 'assistant',
         content: data.raised
           ? 'Raised. Someone will pick it up and come back to you by email.'
-          : (data.error || 'I could not raise that. Email hello@nabl.agency and we will pick it up.'),
+          : (faultMessage(data) || data.error || 'I could not raise that. Email hello@nabl.agency and we will pick it up.'),
       }])
       if (data.raised) setProposal(null)
     } catch {
