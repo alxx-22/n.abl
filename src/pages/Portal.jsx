@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PortalAssistant from '../components/PortalAssistant.jsx'
 import { Link } from 'react-router-dom'
 import { portalClient, signedUrl, friendlyError } from '../lib/supabase.js'
 import { Logo, Reveal, EdgeCard, Badge, Empty, Loading, prefersReducedMotion } from '../components/ui/index.jsx'
@@ -115,6 +116,11 @@ export default function Portal() {
         safe(sb.from('documents').select('*').order('uploaded_at', { ascending: false })),
       ])
       setClient(sb)
+      /* Store the normalised key, not what was typed. Login works either way
+         because it sends `k`, but everything downstream reads this state —
+         and the assistant's edge function matches the key exactly, so a
+         lowercase entry would sign in here and be rejected there. */
+      setKey(k)
       setMe(rows[0])
       setData({ quotes, projects, meetings, documents })
       setLoading(false)
@@ -353,6 +359,11 @@ export default function Portal() {
           )}
         </Section>
       </div>
+
+      {/* The key is passed straight from state and never leaves memory: it is
+          not stored, not logged, and never reaches the model prompt. It is
+          what the edge function resolves to decide whose record to load. */}
+      <PortalAssistant accessKey={key} clientName={me?.business_name} />
     </div>
   )
 }

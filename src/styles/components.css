@@ -721,6 +721,44 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .assistant__form .btn:disabled { opacity: .4; transform: scale(.94); }
 .assistant__form .btn:not(:disabled):active { transform: scale(.96); }
 
+/* The proposal card: what the assistant is about to send, in full, before
+   anything is written. A client should never press a button and find out
+   afterwards what it said on their behalf — so the subject and body are shown
+   verbatim, and "Not now" is as prominent as sending. */
+.assistant__proposal { justify-items: stretch; }
+.assistant__kind {
+  font-size: .68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent-400);
+}
+.assistant__proposal-subject {
+  margin: 0;
+  font-weight: 600;
+  color: var(--cream-100);
+  font-size: var(--t-sm);
+}
+.assistant__proposal-body {
+  margin: 0;
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  color: var(--cream-200);
+  padding: var(--s-3);
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-faint);
+}
+.assistant__proposal-ref {
+  margin: 0;
+  font-size: .72rem;
+  color: var(--cream-300);
+}
+.assistant__proposal-actions { display: flex; gap: var(--s-2); flex-wrap: wrap; }
+
+/* The portal panel sits above a signed-in dashboard rather than a marketing
+   page, so it is allowed a little more room. */
+.assistant--portal { width: min(26rem, calc(100vw - var(--s-5) * 2)); }
+
 @media (prefers-reduced-motion: reduce) {
   .assistant,
   .assistant--closing,
