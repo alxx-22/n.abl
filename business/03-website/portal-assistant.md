@@ -87,6 +87,33 @@ is unaffected.
 Both are real gaps rather than nice-to-haves: a request nobody sees is worse
 than no request at all, because the client believes it was received.
 
+## How dates are said
+
+One format, decided in `portal_assistant_context()` and nowhere else:
+**`02 Jun 2026`**, and with a time, **`02 Jun 2026 at 23:16`**. Europe/London,
+24-hour, matching `dateLong()` and `timeStr()` in `src/pages/Portal.jsx`. The
+assistant and the page a client is reading it on should not disagree about what
+a date looks like.
+
+The model never receives a timestamp. It cannot print one it has not been
+given, which is why this is done in SQL rather than asked for in the prompt.
+
+It also never has to work out what is in the past. The context carries `today`,
+marks every meeting `upcoming` or `past`, and provides `next_meeting`, which is
+`null` when there isn't one. That last field exists because of a specific wrong
+answer:
+
+> **when is my next meeting**
+> Your next meeting is scheduled for 2026-06-02T22:16:12.333029+00:00 for the
+> Kickoff call at Google Meet.
+
+Two faults. It read a raw ISO timestamp aloud, and the meeting it named had
+happened three months earlier — the client had no next meeting at all. Nothing
+in the context distinguished a meeting that had happened from one that had not,
+so the model supplied the tense from the question rather than from the data.
+Comparing dates is not something to ask a small model to do when Postgres is
+already in the call.
+
 ## The outage of 25 August
 
 The assistant answered nothing between going live and 25 August. Every normal
