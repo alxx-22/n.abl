@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { prefersReducedMotion } from './ui/index.jsx'
+import { useReducedMotion } from './ui/index.jsx'
 
 /* ============================================================
    VISUALS — brand-native imagery, drawn not photographed.
@@ -13,14 +13,15 @@ import { prefersReducedMotion } from './ui/index.jsx'
    "disconnected tools becoming one system" without being literal. */
 export function NodeField({ className = '' }) {
   const canvasRef = useRef(null)
+  const reduce = useReducedMotion()
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    const reduce = prefersReducedMotion()
 
     let w = 0, h = 0, raf = 0
+    let onScreen = true
     const DPR = Math.min(window.devicePixelRatio || 1, 2)
     const COUNT = 34
     const nodes = []
@@ -85,13 +86,46 @@ export function NodeField({ className = '' }) {
       raf = requestAnimationFrame(step)
     }
 
+    /* ---------- When the field is allowed to run ----------
+
+       The canvas fills the hero, and the hero is the first of ten sections:
+       for most of a visit it is scrolled well out of sight. The loop used to
+       run regardless — thirty-four nodes is 561 distance measurements and a
+       shadow-blurred fill every frame, forever, for a drawing nobody can
+       see, on whatever battery the visitor happens to be running on. It also
+       kept going in a background tab, where the browser throttles the frames
+       but still hands us the work.
+
+       So the loop is now gated on the two things that decide whether the
+       drawing is worth making: it is on screen, and the tab is in front.
+       Node positions are plain state that simply stops advancing, so coming
+       back resumes the drift where it paused rather than jumping. */
+    const running = () => !reduce && onScreen && !document.hidden
+    const stop = () => { if (raf) { cancelAnimationFrame(raf); raf = 0 } }
+    const sync = () => {
+      if (running()) { if (!raf) raf = requestAnimationFrame(step) }
+      else stop()
+    }
+
+    // Optimistic until the observer's first callback, which is asynchronous:
+    // a hero at the top of the page is on screen, and starting a frame early
+    // is cheaper than a blank canvas on first paint.
+    const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; sync() })
+    io.observe(canvas)
+    document.addEventListener('visibilitychange', sync)
+
     seed(); resize(); draw()
-    if (!reduce) raf = requestAnimationFrame(step)
+    sync()
 
     const ro = new ResizeObserver(() => { resize(); draw() })
     ro.observe(canvas)
-    return () => { cancelAnimationFrame(raf); ro.disconnect() }
-  }, [])
+    return () => {
+      stop()
+      io.disconnect()
+      ro.disconnect()
+      document.removeEventListener('visibilitychange', sync)
+    }
+  }, [reduce])
 
   return <canvas ref={canvasRef} className={`nodefield ${className}`} aria-hidden="true" />
 }

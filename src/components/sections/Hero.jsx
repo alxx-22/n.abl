@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { prefersReducedMotion } from '../ui/index.jsx'
+import { useReducedMotion } from '../ui/index.jsx'
 import { track } from '../../lib/analytics.js'
 import { NodeField } from '../Visuals.jsx'
 
@@ -8,10 +8,18 @@ import { NodeField } from '../Visuals.jsx'
    ============================================================ */
 export default function Hero({ onBook }) {
   const heroRef = useRef(null)
+  const reduced = useReducedMotion()
 
   // Gentle parallax on the hero while it is still on screen.
   useEffect(() => {
-    if (prefersReducedMotion()) return
+    // Put the hero back where the layout says it goes. The drift is only ever
+    // applied within the first viewport, so a visitor who turns the preference
+    // on further down the page would otherwise find the hero still displaced
+    // by a quarter of the scroll distance when they came back to the top.
+    if (reduced) {
+      if (heroRef.current) heroRef.current.style.transform = ''
+      return
+    }
     let ticking = false
     const onScroll = () => {
       if (ticking) return
@@ -26,7 +34,7 @@ export default function Hero({ onBook }) {
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  }, [reduced])
 
   return (
     <section id="hero" className="hero">
