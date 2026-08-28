@@ -30,6 +30,12 @@ import { CategoryGlyph } from '../Visuals.jsx'
    site brings, not the category. Each quote names the class of
    problem and lets the body list the instances.
 
+   And the fix the quote implies has to be the one we would sell.
+   "Two people edited it, nobody knows which number is right" reads
+   as a problem solved by letting fewer people edit the file, so the
+   card argued its way out of the work it was meant to introduce. A
+   problem with a free procedural answer does not need software.
+
    "Fix something" was retired here. It described how we are engaged
    rather than what is wrong, and troubleshooting is already what
    Training & Support is, so it and "Train your team" both landed on
@@ -48,8 +54,8 @@ export const CATEGORIES = [
     quote: 'We lose a morning a week to work that repeats itself.',
     body: 'The steps that repeat between your systems, set up once and then left to run.' },
   { n: '02', title: 'Reduce mistakes', glyph: 'accuracy',
-    quote: 'Two people edited it. Nobody knows which number is right.',
-    body: 'A proper internal tool in place of the spreadsheet: one record, one place, one version.' },
+    quote: "Nothing catches a mistake until it's too late to fix.",
+    body: 'An internal tool that runs the process, with the checks built in rather than remembered.' },
   { n: '03', title: 'Build something new', glyph: 'build',
     quote: 'Our site is a brochure. Everything still happens by phone.',
     body: 'Websites and the workflows that come with them — booking, portals, payments, accounts.' },
