@@ -1,13 +1,28 @@
 import { useEffect, useRef } from 'react'
 import { useReducedMotion } from '../ui/index.jsx'
 
-/* Each scene was composed on a 1440×900 stage, where the browser frame is
-   a little over half the width. In a row 808 units wide that leaves the
-   frame at about 430 and the rest as margin. Cropping the viewBox to the
-   composition — rather than rescaling anything inside it — keeps the
-   negative space the scenes were designed with and drops the part that
-   only existed because the stage was bigger than the subject. */
-export const SCENE_VIEWBOX = '240 138 960 656'
+/* THE CAMERA.
+ *
+ * Every scene draws the same browser frame at x 340..1100, y 210..690 of its
+ * 1440x900 stage. The first crop kept the composition the scenes were laid
+ * out with, but that composition was for a stage wider than its subject: in
+ * a 355px problem card it spent a fifth of the width on margin, which left
+ * the window marooned in the middle of the card.
+ *
+ * This is the frame plus a 20-unit halo across and 64 down — the ratio that
+ * lands the rendered scene on the card's own proportions. The window fills
+ * 95% of the width rather than 79%, and the space above and below it is even
+ * rather than pooling at the foot.
+ *
+ * The halo is not decoration: a cursor arrives from outside the frame in
+ * every scene and the frame carries its own glow, so cropping flush to it
+ * would cut both. Verified against all six scenes at five points across each
+ * timeline — nothing crosses this but a cursor already on its way out of
+ * shot. Re-check the same way before tightening it again.
+ *
+ * Cropped, never rescaled: nothing inside a scene changes size relative to
+ * anything else in it. */
+export const SCENE_VIEWBOX = '320 146 800 608'
 
 /**
  * Build a scene's SVG into `host` and return the handle a timeline drives.

@@ -7,13 +7,14 @@
    only the furniture around them: the frame each sits in, the tabs
    for a row that has two, and the two surfaces the preview uses.
 
-   There are two of those because there are two kinds of pointer. A
-   mouse hovers and the preview follows the card; a finger cannot
-   hover, so the card is pressed and the preview arrives as something
-   it can dismiss. Anchoring to the card is what fails on a phone: a
-   single column leaves no band beside, above or below it wide enough
-   to hold a preview, so the sheet comes up from the bottom edge
-   instead, where it has the whole width.
+   The preview needs no surface of its own: the card is already a
+   frame, so its content wipes away and the animation wipes in behind
+   the same travelling edge. Because nothing new appears on the page
+   there is nothing to place and nothing to dismiss, which is what an
+   anchored popup needed two separate treatments for — a phone column
+   leaves no band beside a card wide enough to hold one. Here a finger
+   gets the same card and the same wipe, and only starts it
+   differently.
    ============================================================ */
 
 /* --- the one addition: a frame for each scene --- */
@@ -78,54 +79,37 @@
 .problem{cursor:default}
 .problem:focus-visible{outline:2px solid var(--accent-400);outline-offset:4px}
 
-/* --- the addition: a preview that rises off the card you are on --- */
-.pop{position:fixed;z-index:60;pointer-events:none;width:min(560px,calc(100vw - 2rem));
-  opacity:0;transform:translate(var(--pop-dx,0px),var(--pop-dy,12px)) scale(.965);
-  transform-origin:50% 100%;
-  transition:opacity .32s var(--ease-out),transform .32s var(--ease-out)}
-.pop.on{opacity:1;transform:none}
-.pop__inner{border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;
-  background:var(--surface-1);box-shadow:0 28px 70px rgba(0,0,0,.65),0 0 48px rgba(var(--cream-rgb),.06)}
-.pop__scene svg{display:block;width:100%;height:auto}
-.pop__foot{display:flex;align-items:center;gap:.7rem;padding:.6rem .95rem;
-  border-top:1px solid var(--line-faint)}
-.pop__label{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--accent-400)}
-.pop__note{font-size:.78rem;color:var(--cream-600);margin-left:auto}
-/* A pointer that cannot hover can never reach the popup, and could never
-   dismiss it if it did. Touch gets the sheet below instead. */
-@media (hover:none),(pointer:coarse){.pop{display:none}}
-@media (prefers-reduced-motion:reduce){.pop{transition:none}}
-
-/* --- touch: nothing to hover with, so the card is pressed instead ---
-   Anchoring to the card is what fails here: a phone column leaves no band
-   wide enough beside, above or below it. So the preview stops chasing the
-   card and comes up from the bottom edge, where it has the whole width. */
-.sheet{position:fixed;inset:0;z-index:70;visibility:hidden;
-  transition:visibility 0s linear .4s}
-.sheet.on{visibility:visible;transition-delay:0s}
-.sheet__scrim{position:absolute;inset:0;background:rgba(8,6,5,.74);
-  opacity:0;transition:opacity .34s var(--ease-out)}
-.sheet.on .sheet__scrim{opacity:1}
-/* the scene is width-driven, so cap the width by the height left over:
-   on a short landscape screen the sheet narrows instead of overflowing */
-.sheet__panel{position:absolute;left:50%;bottom:0;
-  width:min(560px,100%,calc((100vh - 124px) * 1.463));
-  transform:translate(-50%,100%);transition:transform .38s var(--ease-out);
-  background:var(--surface-1);border:1px solid var(--line-strong);border-bottom:0;
-  border-radius:18px 18px 0 0;overflow:hidden;
-  box-shadow:0 -20px 60px rgba(0,0,0,.62);
-  padding-bottom:env(safe-area-inset-bottom,0px)}
-@supports (height:100dvh){
-  .sheet__panel{width:min(560px,100%,calc((100dvh - 124px) * 1.463))}}
-.sheet.on .sheet__panel{transform:translate(-50%,0)}
-/* the grab bar is the close button, so the only affordance is also the
-   control — nothing sits over the animation itself */
-.sheet__handle{display:block;width:100%;padding:.85rem 0 .6rem;background:none;
-  border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.sheet__handle::before{content:"";display:block;width:38px;height:4px;margin:0 auto;
-  border-radius:var(--r-full);background:var(--line-strong)}
-.sheet__handle:focus-visible{outline:2px solid var(--accent-400);outline-offset:-5px}
-.sheet__scene svg{display:block;width:100%;height:auto}
-@media (prefers-reduced-motion:reduce){
-  .sheet,.sheet__scrim,.sheet__panel{transition:none}}
+/* --- the addition: the card becomes the frame ---
+   Rather than open a preview beside the card, the card's own content
+   wipes away and the animation wipes in behind the same travelling
+   edge. One edge, two sides: to the left of it the work, to the right
+   the sentence that asked for it. Nothing new appears on the page and
+   nothing has to be dismissed, so a phone needs no separate treatment
+   — only a different gesture to start it. */
+.problem{cursor:default;--wipe:0}
+.problem__face{position:relative;z-index:1;
+  clip-path:inset(0 0 0 calc(var(--wipe) * 100%))}
+/* No side padding: the crop already carries a halo round the frame, so
+   padding here would only be a second margin on top of the first, and the
+   window is the thing worth the width. */
+.problem__scene{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;
+  background:var(--bg);clip-path:inset(0 calc((1 - var(--wipe)) * 100%) 0 0)}
+.problem__stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.problem__stage svg{display:block;width:100%;height:auto;max-height:100%}
+.problem__tag{display:flex;align-items:center;gap:var(--s-3);
+  padding:.5rem var(--s-4) .6rem;border-top:1px solid var(--line-faint)}
+.problem__cap{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent-400);white-space:nowrap}
+.problem__note{font-size:.7rem;color:var(--cream-600);margin-left:auto;white-space:nowrap}
+/* the edge itself, so the wipe reads as one thing moving rather than
+   two things cross-fading. Amber, because it is a committed choice. */
+.problem__edge{position:absolute;top:0;bottom:0;z-index:3;width:1px;pointer-events:none;
+  left:calc(var(--wipe) * 100%);opacity:var(--edge-o,0);
+  background:linear-gradient(180deg,transparent,var(--accent-400) 16%,
+    var(--accent-400) 84%,transparent);
+  box-shadow:0 0 14px rgba(var(--accent-rgb),.55)}
+/* the cursor bloom sits above everything, so it has to get out of the
+   way as the animation arrives or it tints it */
+.problem.spot:hover::after{opacity:calc(1 - var(--wipe))}
+.problem:focus-visible{outline:2px solid var(--accent-400);outline-offset:4px}
+@media (prefers-reduced-motion:reduce){ .problem__edge{display:none} }

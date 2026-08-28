@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, forwardRef } from 'react'
 
 /* ============================================================
    n.abl UI KIT
@@ -149,11 +149,16 @@ export function Reveal({ children, delay = 0, as: Tag = 'div', className = '', .
   )
 }
 
-/** Card with a gradient edge that lights up, plus optional cursor spotlight. */
-export function EdgeCard({
+/** Card with a gradient edge that lights up, plus optional cursor spotlight.
+ *
+ * Forwards a ref, because the spotlight already wants one internally and a
+ * caller can want the same node for something else — the problem cards drive
+ * a CSS variable on it every frame, which is not something to do through
+ * React state. Both refs are attached; neither has to know about the other. */
+export const EdgeCard = forwardRef(function EdgeCard({
   children, className = '', spotlight = true, lift = true, rotate = false, as: Tag = 'div', ...rest
-}) {
-  const ref = usePointerGlow()
+}, outer) {
+  const glow = usePointerGlow()
   const cls = [
     'edge',
     lift && 'edge--lift',
@@ -161,8 +166,13 @@ export function EdgeCard({
     spotlight && 'spot',
     className,
   ].filter(Boolean).join(' ')
-  return <Tag ref={spotlight ? ref : undefined} className={cls} {...rest}>{children}</Tag>
-}
+  const attach = (node) => {
+    if (spotlight) glow.current = node
+    if (typeof outer === 'function') outer(node)
+    else if (outer) outer.current = node
+  }
+  return <Tag ref={attach} className={cls} {...rest}>{children}</Tag>
+})
 
 /* Brand wordmark — drawn, not set in a typeface.
 
