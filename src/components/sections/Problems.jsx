@@ -1,7 +1,8 @@
+import { useRef, useState } from 'react'
 import { EdgeCard, Reveal } from '../ui/index.jsx'
 import { Chapter } from '../Journey.jsx'
 import { CategoryGlyph } from '../Visuals.jsx'
-import { useScenePreview } from '../scenes/Preview.jsx'
+import { useFinePointer, useWipe } from '../scenes/CardWipe.jsx'
 import { automation, data, software, web, training, ai } from '../scenes/index.js'
 
 /* ============================================================
@@ -78,11 +79,66 @@ export const CATEGORIES = [
     body: 'Sessions built around your actual work, so people leave able to do the thing. Credits for afterwards.' },
 ]
 
+/* One card. Its own words on one side of a travelling edge, what we would
+   build for them on the other. Nothing opens and nothing overlays, so the
+   card can say the thing and then show it without leaving the grid. */
+function ProblemCard({ c, i, open, onOpen, onClose, fine }) {
+  const card = useRef(null)
+  const host = useRef(null)
+  useWipe(card, host, c.scene, open)
+
+  /* Under a mouse the card is not a control — it reveals on hover, and
+     announcing it as a button would promise an activation that does
+     nothing. Under a finger it genuinely is one. */
+  const press = fine ? {} : {
+    role: 'button',
+    tabIndex: 0,
+    'aria-expanded': open,
+    onClick: () => (open ? onClose() : onOpen(i)),
+    onKeyDown: (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return
+      e.preventDefault()
+      return open ? onClose() : onOpen(i)
+    },
+  }
+  const hover = fine ? {
+    tabIndex: 0,
+    onMouseEnter: () => onOpen(i),
+    onMouseLeave: onClose,
+    onFocus: () => onOpen(i),      // keyboard gets the same reveal
+    onBlur: onClose,
+  } : {}
+
+  return (
+    <EdgeCard ref={card} className="card-pad problem" {...hover} {...press}>
+      {/* clipping hides the face from the eye, not from a screen reader, so
+          the card still reads as the sentence it is */}
+      <div className="problem__face">
+        <div className="problem__head">
+          <span className="problem__num">{c.n}</span>
+          <CategoryGlyph kind={c.glyph} />
+        </div>
+        <span className="problem__label">{c.title}</span>
+        <h3 className="problem__quote">&ldquo;{c.quote}&rdquo;</h3>
+        <p className="problem__body">{c.body}</p>
+      </div>
+      <div className="problem__scene" aria-hidden="true">
+        <div className="problem__stage" ref={host} />
+        <div className="problem__tag">
+          <span className="problem__cap">{c.label}</span>
+          <span className="problem__note">what we would build</span>
+        </div>
+      </div>
+      <span className="problem__edge" aria-hidden="true" />
+    </EdgeCard>
+  )
+}
+
 export default function Problems() {
-  /* Hovering a card previews what we would build for it; on a touch screen
-     the same card is pressed instead. The scene is the argument the card is
-     making, shown rather than described. */
-  const { cardProps, overlay } = useScenePreview(CATEGORIES)
+  /* Only ever one card open. Under a mouse that falls out of mouseleave;
+     under a finger it has to be said, or six presses leave six cards open. */
+  const [open, setOpen] = useState(-1)
+  const fine = useFinePointer()
   return (
     <section id="what-we-do" className="section">
       <div className="shell">
@@ -100,19 +156,15 @@ export default function Problems() {
         <div className="grid grid--3 section__body">
           {CATEGORIES.map((c, i) => (
             <Reveal key={c.n} delay={0.06 + i * 0.07}>
-              <EdgeCard className="card-pad problem" {...cardProps(i)}>
-                <div className="problem__head">
-                  <span className="problem__num">{c.n}</span>
-                  <CategoryGlyph kind={c.glyph} />
-                </div>
-                <span className="problem__label">{c.title}</span>
-                <h3 className="problem__quote">&ldquo;{c.quote}&rdquo;</h3>
-                <p className="problem__body">{c.body}</p>
-              </EdgeCard>
+              <ProblemCard
+                c={c} i={i} fine={fine}
+                open={open === i}
+                onOpen={setOpen}
+                onClose={() => setOpen(-1)}
+              />
             </Reveal>
           ))}
         </div>
-        {overlay}
       </div>
     </section>
   )
