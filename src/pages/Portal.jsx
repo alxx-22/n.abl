@@ -372,7 +372,8 @@ export default function Portal() {
                     </div>
                     <div className="doc__right">
                       {doc.uploaded_at && <span className="dim" style={{ fontSize: 'var(--t-sm)' }}>{dateLong(doc.uploaded_at)}</span>}
-                      <FileLink client={client} bucket="documents" path={doc.file_url}>Download →</FileLink>
+                      <FileLink client={client} bucket="documents" path={doc.file_url}
+                          onOpenDoc={setOpenDoc}>Download →</FileLink>
                     </div>
                   </EdgeCard>
                 </Reveal>
