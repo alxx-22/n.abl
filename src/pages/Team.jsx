@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { teamClient, signedUrl, friendlyError } from '../lib/supabase.js'
 import {
-  Logo, Field, Badge, EdgeCard, ConfirmModal, useToast, Loading, Empty, prefersReducedMotion,
+  Logo, Field, Badge, EdgeCard, ConfirmModal, useToast, Loading, Empty, prefersReducedMotion, HtmlDocViewer, isHtmlDoc, fetchHtmlDoc,
 } from '../components/ui/index.jsx'
 import WelcomeDocModal from '../components/WelcomeDocModal.jsx'
 import {
@@ -494,16 +494,25 @@ function Row({ sb, tab, row, clientName, onEdit, onDelete, onCopy, onWelcome, ha
 function ViewFile({ sb, bucket, path, children }) {
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [doc, setDoc] = useState(null)
+  const name = (path || '').split('/').pop() || 'document.html'
   return (
-    <button className="btn btn--ghost btn--sm" disabled={busy} onClick={async () => {
-      setBusy(true); setFailed(false)
-      const url = await signedUrl(sb, bucket, path)
-      setBusy(false)
-      if (url) window.open(url, '_blank', 'noopener')
-      else { setFailed(true); setTimeout(() => setFailed(false), 2500) }
-    }}>
-      {busy ? 'Opening…' : failed ? 'Unable to load' : children}
-    </button>
+    <>
+      <button className="btn btn--ghost btn--sm" disabled={busy} onClick={async () => {
+        setBusy(true); setFailed(false)
+        const url = await signedUrl(sb, bucket, path)
+        // storage will not render HTML, so the app does — see HtmlDocViewer
+        const html = url && isHtmlDoc(path) ? await fetchHtmlDoc(url) : null
+        setBusy(false)
+        if (html) setDoc(html)
+        else if (url && !isHtmlDoc(path)) window.open(url, '_blank', 'noopener')
+        else { setFailed(true); setTimeout(() => setFailed(false), 2500) }
+      }}>
+        {busy ? 'Opening…' : failed ? 'Unable to load' : children}
+      </button>
+      <HtmlDocViewer open={!!doc} html={doc} title="Document" filename={name}
+        onClose={() => setDoc(null)} />
+    </>
   )
 }
 
