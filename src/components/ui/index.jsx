@@ -272,81 +272,62 @@ export function ConfirmModal({ open, title, body, confirmLabel = 'Delete', onCon
    Stored HTML documents
 
    Supabase Storage will not render an uploaded HTML file. It stores the
-   text/html we send — the object metadata says so — but downgrades the
-   type on the object endpoint, because a bucket that served executable
-   HTML would let anyone host a page on *.supabase.co and read another
-   Supabase app's session. That is the right call on their side, and it
-   is why a welcome pack opened straight from a signed URL arrives as
-   source code, in Latin-1, with every em dash as "a€".
+   text/html we send — the object metadata for a saved pack says so — but
+   downgrades the type on the object endpoint, because a bucket that
+   served executable HTML would let anyone host a page on *.supabase.co
+   and read another Supabase app's session. That is the right call on
+   their side, and it is why a pack opened straight from a signed URL
+   arrives as source code, in Latin-1, with every em dash as "a€".
 
-   So the app renders it instead of delegating. Fetched text is decoded
-   as UTF-8 by the Fetch API whatever the response header claims, which
-   removes the mojibake, and srcdoc into a sandboxed frame gives the
-   document a null origin: it cannot reach the portal session, cookies
-   or storage. That is the same protection Supabase was applying, kept
-   rather than worked around.
+   So the document is fetched and re-served from a blob URL on our own
+   origin, which renders it, and opened in its own tab — where the
+   browser's own print and share can turn it into a PDF. The text is
+   decoded as UTF-8 by the Fetch API whatever the response header says,
+   which is what removes the mojibake.
+
+   The tab is opened synchronously on the click and pointed at the blob
+   afterwards. Opening it after the await instead puts it outside the
+   user gesture, and iOS Safari blocks that.
    ============================================================ */
 
-/** True for a stored object we should render ourselves rather than open. */
-export const isHtmlDoc = (path = '') => /\.html?(?:$|\?)/i.test(path)
+/* Only the pack we generate ourselves. The documents bucket also takes
+   arbitrary staff uploads, and re-serving one of those from our own origin
+   would turn "can upload a file" into "can run script on nabl.agency" —
+   which is the very thing Supabase's downgrade exists to prevent. The pack
+   is written by saveWelcomePack under this exact name, and every value in
+   it goes through esc(). */
+export const isGeneratedPack = (path = '') => /-welcome-pack\.html$/i.test(path)
 
-/** Reads a stored HTML document as text. Returns null if it cannot. */
-export async function fetchHtmlDoc(url) {
+/**
+ * Opens the generated pack in its own tab, rendered rather than shown as
+ * source, by re-serving it from a blob on our own origin. Returns false if
+ * it could not be fetched.
+ *
+ * `tab` must be a window opened during the click itself — opening it after
+ * the await puts it outside the user gesture and iOS Safari blocks it. It
+ * must also be opened WITHOUT noopener: that flag makes window.open return
+ * null, so there is no handle left to navigate.
+ */
+export async function openGeneratedPack(url, tab) {
   try {
     const res = await fetch(url)
-    if (!res.ok) return null
-    return await res.text()      // always UTF-8, regardless of the header
-  } catch {
-    return null
-  }
-}
-
-export function HtmlDocViewer({ open, title = 'Document', html, filename = 'document.html', onClose }) {
-  const dialogRef = useRef(null)
-  useEffect(() => {
-    if (!open) return undefined
-    const onKey = (e) => { if (e.key === 'Escape') onClose?.() }
-    document.addEventListener('keydown', onKey)
-    dialogRef.current?.focus()
-    // the page behind must not scroll while a full-height document is open
-    const root = document.documentElement
-    const prev = root.style.overflow
-    root.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      root.style.overflow = prev
-    }
-  }, [open, onClose])
-
-  if (!open) return null
-  const save = () => {
+    if (!res.ok) throw new Error('fetch failed')
+    const html = await res.text()          // always UTF-8, whatever the header says
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = filename
-    document.body.appendChild(a); a.click(); a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    const objectUrl = URL.createObjectURL(blob)
+    if (tab) {
+      // noopener could not be passed, so sever the link by hand instead
+      try { tab.opener = null } catch { /* already severed */ }
+      tab.location.replace(objectUrl)
+    } else {
+      window.open(objectUrl, '_blank', 'noopener')
+    }
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60000)
+    return true
+  } catch {
+    try { tab?.close() } catch { /* nothing to close */ }
+    return false
   }
-  return (
-    <div className="overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose?.() }}>
-      <div className="docview edge" role="dialog" aria-modal="true" aria-label={title}
-        tabIndex={-1} ref={dialogRef}>
-        <div className="docview__bar">
-          <span className="docview__title">{title}</span>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={save}>Save a copy</button>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={onClose}>Close</button>
-        </div>
-        {/* No allow-scripts and no allow-same-origin: the document renders,
-            and can do nothing else. Popups are allowed so its links work. */}
-        <iframe
-          className="docview__frame"
-          title={title}
-          srcDoc={html}
-          sandbox="allow-popups allow-popups-to-escape-sandbox"
-        />
-      </div>
-    </div>
-  )
 }
 
 /** Transient status message. Returns [node, show()]. */

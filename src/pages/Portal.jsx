@@ -2,7 +2,7 @@ import { useState } from 'react'
 import PortalAssistant from '../components/PortalAssistant.jsx'
 import { Link } from 'react-router-dom'
 import { portalClient, signedUrl, friendlyError } from '../lib/supabase.js'
-import { HtmlDocViewer, isHtmlDoc, fetchHtmlDoc } from '../components/ui/index.jsx'
+import { isGeneratedPack, openGeneratedPack } from '../components/ui/index.jsx'
 import { Logo, Reveal, EdgeCard, Badge, Empty, Loading, prefersReducedMotion } from '../components/ui/index.jsx'
 
 /* ============================================================
@@ -30,33 +30,27 @@ const timeStr = (d) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: 
 function FileLink({ client, bucket, path, children, className = 'btn btn--ghost btn--sm' }) {
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
-  const [doc, setDoc] = useState(null)
   if (!path) return null
-  const name = path.split('/').pop() || 'document.html'
   return (
-    <>
-      <button
-        className={className}
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true); setFailed(false)
-          const url = await signedUrl(client, bucket, path)
-          /* An HTML document is rendered here rather than opened on the
-             storage host, which will not run it — see HtmlDocViewer. */
-          const html = url && isHtmlDoc(path) ? await fetchHtmlDoc(url) : null
-          setBusy(false)
-          if (html) setDoc(html)
-          else if (url && !isHtmlDoc(path)) window.open(url, '_blank', 'noopener')
-          else { setFailed(true); setTimeout(() => setFailed(false), 3000) }
-        }}
-      >
-        {busy ? 'Opening…' : failed ? 'Unable to load — try again' : children}
-      </button>
-      <HtmlDocViewer
-        open={!!doc} html={doc} title="Welcome pack" filename={name}
-        onClose={() => setDoc(null)}
-      />
-    </>
+    <button
+      className={className}
+      disabled={busy}
+      onClick={async () => {
+        /* Opened here, inside the click, so iOS Safari does not treat the
+           tab as a popup once the await has run. */
+        const tab = window.open('', '_blank')
+        setBusy(true); setFailed(false)
+        const url = await signedUrl(client, bucket, path)
+        let ok = false
+        if (url && isGeneratedPack(path)) ok = await openGeneratedPack(url, tab)
+        else if (url) { ok = true; if (tab) tab.location.replace(url); else window.open(url, '_blank', 'noopener') }
+        else tab?.close()
+        setBusy(false)
+        if (!ok) { setFailed(true); setTimeout(() => setFailed(false), 3000) }
+      }}
+    >
+      {busy ? 'Opening…' : failed ? 'Unable to load — try again' : children}
+    </button>
   )
 }
 
