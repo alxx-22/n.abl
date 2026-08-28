@@ -421,7 +421,7 @@ function Row({ sb, tab, row, clientName, onEdit, onDelete, onCopy, onWelcome, ha
         </div>
         {row.description && <p className="muted" style={{ fontSize: 'var(--t-sm)', marginTop: 'var(--s-3)' }}>{row.description}</p>}
         <div className="progress" style={{ marginTop: 'var(--s-5)' }}>
-          <div className="progress__fill" style={{ width: `${pct}%` }} />
+          <div className="progress__fill" style={{ '--p': pct / 100 }} />
         </div>
         <div style={{ fontSize: 'var(--t-sm)', marginTop: 'var(--s-2)' }}>{pct}% complete</div>
         {(row.next_milestone || row.next_milestone_date) && (
@@ -688,7 +688,7 @@ function Control({ f, id, value, set, clients, editing, file, onFile, onClearFil
           <input {...common} type="number" min="0" max="100" value={value}
                  onChange={(e) => set(f.name, e.target.value)} />
           <div className="progress" style={{ marginTop: 'var(--s-2)' }}>
-            <div className="progress__fill" style={{ width: `${pct}%` }} />
+            <div className="progress__fill" style={{ '--p': pct / 100 }} />
           </div>
         </>
       )

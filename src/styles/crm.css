@@ -238,7 +238,7 @@
   overscroll-behavior: contain;
   padding-right: 2px;
 }
-.crm-stage__empty { font-size: var(--t-xs); color: var(--cream-800); }
+.crm-stage__empty { font-size: var(--t-xs); color: var(--cream-600); }
 
 .crm-deal {
   display: block;
@@ -369,7 +369,7 @@
 .crm-view:hover { color: var(--cream-100); }
 /* The selected view is filled rather than underlined: an underline competes
    with the tab strip inside the lead detail one level down. */
-.crm-view--on { background: var(--accent-400); color: #24170A; font-weight: 500; }
+.crm-view--on { background: var(--accent-400); color: var(--on-accent); font-weight: 500; }
 .crm-view__count {
   font-size: var(--t-xs);
   padding: 0 .4em;

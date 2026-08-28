@@ -29,7 +29,7 @@ export default function Nav() {
 
   return (
     <header className={`nav ${scrolled ? 'nav--scrolled' : ''}`}>
-      <a href="#hero" aria-label="n.abl home" onClick={() => setOpen(false)}>
+      <a href="#hero" className="brand" aria-label="n.abl home" onClick={() => setOpen(false)}>
         <Logo size={24} />
       </a>
 

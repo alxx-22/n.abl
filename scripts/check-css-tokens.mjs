@@ -43,8 +43,33 @@ for (const [file, css] of all) {
   })
 }
 
+/* --cream-800 is 2.55:1 on --bg — below the 3:1 large-text floor, let alone
+   the 4.5:1 body minimum. tokens.css has said "disabled only" since it was
+   added, and components.css repeats the warning, and it was still being used
+   for a placeholder, a caption, a rail label and an empty state. A rule that
+   lives only in a comment is a rule that drifts, so it is checked here.
+
+   Allowed: a rule whose selector is a disabled state, and the declaration in
+   tokens.css itself. */
+const DISABLED = /(:disabled|\[disabled\]|\[aria-disabled|--disabled|\.is-disabled)/
+for (const [file, css] of all) {
+  if (file === 'tokens.css') continue
+  const lines = css.split('\n')
+  lines.forEach((line, i) => {
+    if (!/var\(\s*--cream-800\s*\)/.test(line)) return
+    // look back for the selector this declaration belongs to
+    let sel = ''
+    for (let k = i; k >= 0 && k > i - 12; k--) {
+      if (lines[k].includes('{')) { sel = lines[k]; break }
+    }
+    if (!DISABLED.test(sel) && !DISABLED.test(line)) {
+      problems.push(`${file}:${i + 1}  --cream-800 (2.55:1) on non-disabled text — use --cream-600`)
+    }
+  })
+}
+
 if (problems.length) {
-  console.log(`\n  ${problems.length} CSS custom propert${problems.length === 1 ? 'y' : 'ies'} used but never declared:\n`)
+  console.log(`\n  ${problems.length} CSS token problem${problems.length === 1 ? '' : 's'}:\n`)
   for (const p of problems) console.log(`    ${p}`)
   console.log(`\n  Declared tokens live in src/styles/tokens.css. Use one of those,`)
   console.log(`  or give the var() a fallback so it cannot silently resolve to nothing.\n`)

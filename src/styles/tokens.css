@@ -24,6 +24,17 @@
   --cream-400:   #C8BBA8;   /* secondary text         */
   --cream-600:   #9A8F80;   /* tertiary / muted (AA on every surface) */
   --cream-800:   #5A5249;   /* disabled only — not for meaningful text */
+  /* The ink that sits on an amber fill. Dark enough to clear AA against
+     accent-400 and warm enough to belong to the palette rather than read
+     as black. Was written out four times in three files before it was a
+     token, which is how a palette decision quietly becomes a magic number. */
+  --on-accent:   #24170A;
+
+  /* Stacking order, named. The scale in use was 1/2/3 for in-flow layering,
+     40 for the sticky header and 60 for overlays; the skip link sat on 9999,
+     which is the number people pick when they are not sure what they are
+     stacking above. It is above everything, so say that. */
+  --z-raise: 3; --z-sticky: 40; --z-overlay: 60; --z-skip: 90;
 
   /* Raw cream channel — used to build glows + hairlines */
   --cream-rgb:   240, 231, 216;

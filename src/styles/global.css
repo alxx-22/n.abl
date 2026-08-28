@@ -231,7 +231,7 @@ p { text-wrap: pretty; }
 
 .btn--accent {
   background: var(--accent-400);
-  color: #24170A;
+  color: var(--on-accent);
   box-shadow: var(--glow-accent);
 }
 .btn--accent:not(:disabled):hover { background: var(--accent-300); }
@@ -279,7 +279,8 @@ p { text-wrap: pretty; }
   padding: 0.8rem 0.95rem;
   transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease);
 }
-.input::placeholder { color: var(--cream-800); }
+/* cream-600, not cream-800: a placeholder is read, and cream-800 is 2.55:1. */
+.input::placeholder { color: var(--cream-600); }
 .input:focus {
   outline: none;
   border-color: rgba(var(--accent-rgb), 0.55);

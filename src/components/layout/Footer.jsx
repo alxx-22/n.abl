@@ -12,7 +12,7 @@ export default function Footer() {
       <div className="shell">
         <div className="footer__grid">
           <div>
-            <a href="#hero" aria-label="n.abl home"><Logo size={22} /></a>
+            <a href="#hero" className="brand" aria-label="n.abl home"><Logo size={22} /></a>
             <p className="footer__tag">
               We make your business work smarter. Technology implementation for
               small businesses.
