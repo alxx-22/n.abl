@@ -40,6 +40,35 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .modal__actions > * { flex: 1; }
 
 .modal--wide { max-width: 34rem; max-height: 88dvh; overflow-y: auto; text-align: left; }
+
+/* A stored document shown as its own page. Fixed and full-bleed rather
+   than an overlay inside the list: .spot sets isolation:isolate, so every
+   card is a stacking context, and anything positioned inside one is
+   trapped there while the cards after it paint over the top. */
+.docpage {
+  position: fixed; inset: 0; z-index: var(--z-modal);
+  display: flex; flex-direction: column; background: var(--bg);
+}
+.docpage__bar {
+  display: flex; align-items: center; gap: var(--s-4); flex: none;
+  padding: var(--s-3) var(--gutter);
+  border-bottom: 1px solid var(--line);
+  padding-top: max(var(--s-3), env(safe-area-inset-top));
+}
+.docpage__back {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  min-height: 44px; padding: 0 var(--s-3) 0 0;
+  background: none; border: 0; cursor: pointer;
+  color: var(--cream-200); font: inherit; font-size: var(--t-sm);
+  transition: color var(--dur-fast) var(--ease);
+}
+.docpage__back:hover { color: var(--accent-400); }
+.docpage__back:focus-visible { outline: 2px solid var(--accent-400); outline-offset: 3px; border-radius: 6px; }
+.docpage__title {
+  font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: .1em;
+  text-transform: uppercase; color: var(--cream-600);
+}
+.docpage__frame { flex: 1; width: 100%; border: 0; background: var(--bg); }
 .modal__close {
   position: absolute; top: var(--s-3); right: var(--s-4);
   font-size: 1.6rem; line-height: 1; color: var(--cream-600);

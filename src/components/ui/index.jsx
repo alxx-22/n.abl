@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, forwardRef } from 'react'
+import { createPortal } from 'react-dom'
 
 /* ============================================================
    n.abl UI KIT
@@ -291,43 +292,74 @@ export function ConfirmModal({ open, title, body, confirmLabel = 'Delete', onCon
    ============================================================ */
 
 /* Only the pack we generate ourselves. The documents bucket also takes
-   arbitrary staff uploads, and re-serving one of those from our own origin
+   arbitrary staff uploads, and rendering one of those inside the portal
    would turn "can upload a file" into "can run script on nabl.agency" —
    which is the very thing Supabase's downgrade exists to prevent. The pack
    is written by saveWelcomePack under this exact name, and every value in
    it goes through esc(). */
 export const isGeneratedPack = (path = '') => /-welcome-pack\.html$/i.test(path)
 
-/**
- * Opens the generated pack in its own tab, rendered rather than shown as
- * source, by re-serving it from a blob on our own origin. Returns false if
- * it could not be fetched.
- *
- * `tab` must be a window opened during the click itself — opening it after
- * the await puts it outside the user gesture and iOS Safari blocks it. It
- * must also be opened WITHOUT noopener: that flag makes window.open return
- * null, so there is no handle left to navigate.
- */
-export async function openGeneratedPack(url, tab) {
+/** Reads a stored document as text, or null. */
+export async function fetchDocHtml(url) {
   try {
     const res = await fetch(url)
-    if (!res.ok) throw new Error('fetch failed')
-    const html = await res.text()          // always UTF-8, whatever the header says
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-    const objectUrl = URL.createObjectURL(blob)
-    if (tab) {
-      // noopener could not be passed, so sever the link by hand instead
-      try { tab.opener = null } catch { /* already severed */ }
-      tab.location.replace(objectUrl)
-    } else {
-      window.open(objectUrl, '_blank', 'noopener')
-    }
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 60000)
-    return true
+    if (!res.ok) return null
+    return await res.text()      // always UTF-8, whatever the header claims
   } catch {
-    try { tab?.close() } catch { /* nothing to close */ }
-    return false
+    return null
   }
+}
+
+/**
+ * The pack, as its own page.
+ *
+ * Not a route: the portal signs in with an access key held only in memory,
+ * so a URL anyone could refresh or deep-link would land on a logged-out
+ * screen. It is a view instead, and it pushes a history entry so the
+ * browser's back button and the phone's back-swipe both close it — the
+ * gestures people actually reach for, alongside the arrow.
+ */
+export function DocPage({ title = 'Document', html, onBack }) {
+  useEffect(() => {
+    const onPop = () => onBack?.()
+    window.history.pushState({ doc: true }, '')
+    window.addEventListener('popstate', onPop)
+    const root = document.documentElement
+    const prev = root.style.overflow
+    root.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('popstate', onPop)
+      root.style.overflow = prev
+    }
+  }, [onBack])
+
+  /* Portalled to <body>. .spot sets isolation:isolate, so every card is its
+     own stacking context and anything fixed inside one is trapped there with
+     later cards painting over it. Rendered as a child of body it escapes that
+     no matter which row the button sits in. */
+  return createPortal(
+    <div className="docpage">
+      <div className="docpage__bar">
+        <button type="button" className="docpage__back" onClick={() => window.history.back()}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Back
+        </button>
+        <span className="docpage__title">{title}</span>
+      </div>
+      {/* Sandboxed with neither allow-scripts nor allow-same-origin: the pack
+          renders and can do nothing else. Popups allowed so its links work. */}
+      <iframe
+        className="docpage__frame"
+        title={title}
+        srcDoc={html}
+        sandbox="allow-popups allow-popups-to-escape-sandbox"
+      />
+    </div>,
+    document.body,
+  )
 }
 
 /** Transient status message. Returns [node, show()]. */

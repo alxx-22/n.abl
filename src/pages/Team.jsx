@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { teamClient, signedUrl, friendlyError } from '../lib/supabase.js'
 import {
-  Logo, Field, Badge, EdgeCard, ConfirmModal, useToast, Loading, Empty, prefersReducedMotion, isGeneratedPack, openGeneratedPack,
+  Logo, Field, Badge, EdgeCard, ConfirmModal, useToast, Loading, Empty, prefersReducedMotion, isGeneratedPack, fetchDocHtml, DocPage,
 } from '../components/ui/index.jsx'
 import WelcomeDocModal from '../components/WelcomeDocModal.jsx'
 import {
@@ -494,22 +494,35 @@ function Row({ sb, tab, row, clientName, onEdit, onDelete, onCopy, onWelcome, ha
 function ViewFile({ sb, bucket, path, children }) {
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [doc, setDoc] = useState(null)
+  const pack = isGeneratedPack(path)
   return (
-    <button className="btn btn--ghost btn--sm" disabled={busy} onClick={async () => {
-      const tab = window.open('', '_blank')   // inside the click, for iOS; no noopener or it is null
-      setBusy(true); setFailed(false)
-      const url = await signedUrl(sb, bucket, path)
-      let ok = false
-      if (url && isGeneratedPack(path)) ok = await openGeneratedPack(url, tab)
-      else if (url) { ok = true; if (tab) tab.location.replace(url); else window.open(url, '_blank', 'noopener') }
-      else tab?.close()
-      setBusy(false)
-      if (!ok) { setFailed(true); setTimeout(() => setFailed(false), 2500) }
-    }}>
-      {busy ? 'Opening…' : failed ? 'Unable to load' : children}
-    </button>
+    <>
+      <button className="btn btn--ghost btn--sm" disabled={busy} onClick={async () => {
+        // only files handed to the browser get a tab; the pack is a page
+        const tab = pack ? null : window.open('', '_blank')
+        setBusy(true); setFailed(false)
+        const url = await signedUrl(sb, bucket, path)
+        let ok = false
+        if (url && pack) {
+          const html = await fetchDocHtml(url)
+          if (html) { setDoc(html); ok = true }
+        } else if (url) {
+          ok = true
+          if (tab) tab.location.replace(url)
+          else window.open(url, '_blank', 'noopener')
+        }
+        if (!ok) tab?.close()
+        setBusy(false)
+        if (!ok) { setFailed(true); setTimeout(() => setFailed(false), 2500) }
+      }}>
+        {busy ? 'Opening…' : failed ? 'Unable to load' : pack ? 'Open →' : children}
+      </button>
+      {doc && <DocPage title="Welcome pack" html={doc} onBack={() => setDoc(null)} />}
+    </>
   )
 }
+
 
 
 function CopyBtn({ value, onCopied }) {

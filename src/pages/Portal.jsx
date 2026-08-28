@@ -2,7 +2,7 @@ import { useState } from 'react'
 import PortalAssistant from '../components/PortalAssistant.jsx'
 import { Link } from 'react-router-dom'
 import { portalClient, signedUrl, friendlyError } from '../lib/supabase.js'
-import { isGeneratedPack, openGeneratedPack } from '../components/ui/index.jsx'
+import { isGeneratedPack, fetchDocHtml, DocPage } from '../components/ui/index.jsx'
 import { Logo, Reveal, EdgeCard, Badge, Empty, Loading, prefersReducedMotion } from '../components/ui/index.jsx'
 
 /* ============================================================
@@ -27,29 +27,36 @@ const timeStr = (d) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: 
 
 /* A file link that mints a fresh signed URL at click time.
    Signed URLs are never cached or persisted. */
-function FileLink({ client, bucket, path, children, className = 'btn btn--ghost btn--sm' }) {
+function FileLink({ client, bucket, path, children, onOpenDoc, className = 'btn btn--ghost btn--sm' }) {
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   if (!path) return null
+  const pack = isGeneratedPack(path)
   return (
     <button
       className={className}
       disabled={busy}
       onClick={async () => {
-        /* Opened here, inside the click, so iOS Safari does not treat the
-           tab as a popup once the await has run. */
-        const tab = window.open('', '_blank')
+        // a tab is only opened for files we hand to the browser; the pack is
+        // shown as a page, so opening one here would leave a blank window
+        const tab = pack ? null : window.open('', '_blank')
         setBusy(true); setFailed(false)
         const url = await signedUrl(client, bucket, path)
         let ok = false
-        if (url && isGeneratedPack(path)) ok = await openGeneratedPack(url, tab)
-        else if (url) { ok = true; if (tab) tab.location.replace(url); else window.open(url, '_blank', 'noopener') }
-        else tab?.close()
+        if (url && pack) {
+          const html = await fetchDocHtml(url)
+          if (html) { onOpenDoc?.(html); ok = true }
+        } else if (url) {
+          ok = true
+          if (tab) tab.location.replace(url)
+          else window.open(url, '_blank', 'noopener')
+        } else tab?.close()
+        if (!ok) tab?.close()
         setBusy(false)
         if (!ok) { setFailed(true); setTimeout(() => setFailed(false), 3000) }
       }}
     >
-      {busy ? 'Opening…' : failed ? 'Unable to load — try again' : children}
+      {busy ? 'Opening…' : failed ? 'Unable to load — try again' : pack ? 'Open →' : children}
     </button>
   )
 }
@@ -76,6 +83,8 @@ export default function Portal() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [shake, setShake] = useState(false)
+  // the generated pack, when it is open as a page of its own
+  const [openDoc, setOpenDoc] = useState(null)
 
   function fail(msg) {
     setError(msg)
@@ -192,6 +201,12 @@ export default function Portal() {
     if (ap !== bp) return ap ? 1 : -1        // past sinks below upcoming
     return ap ? tb - ta : ta - tb
   })
+
+  /* The pack takes over the whole screen when it is open, rather than
+     layering over the dashboard: it is a document to read, not a dialogue. */
+  if (openDoc) {
+    return <DocPage title="Welcome pack" html={openDoc} onBack={() => setOpenDoc(null)} />
+  }
 
   return (
     <div className="grain">
