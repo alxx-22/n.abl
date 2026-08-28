@@ -19,36 +19,49 @@ import { CategoryGlyph } from '../Visuals.jsx'
    business can credibly sell yet. See business/01-positioning.
 
    Each card answers exactly one row of section 06, and the quote is
-   what carries that — not the title. So each one names a situation
-   only one capability answers: a quote that could sit on three cards
+   what carries that — not the title. So each names a situation only
+   one capability answers: a quote that could sit on three cards
    ("this takes longer than it should") tells the visitor nothing
    about which of them is theirs.
 
-   "Fix something" was retired here for the same reason. It described
-   how we are engaged rather than what is wrong, and troubleshooting
-   is already what Training & Support is, so it and "Train your team"
-   both landed on the same row while AI had no card at all. The
-   credits it named now sit in 05, beside the training they follow.
+   The altitude matters as much as the aim. "Customers still have to
+   ring us to book" points at web work, but only a business with a
+   booking problem sees itself in it — booking is one workflow a new
+   site brings, not the category. Each quote names the class of
+   problem and lets the body list the instances.
+
+   "Fix something" was retired here. It described how we are engaged
+   rather than what is wrong, and troubleshooting is already what
+   Training & Support is, so it and "Train your team" both landed on
+   the same row while AI had no card at all. The credits it named now
+   sit with the training they follow.
+
+   Order is the diagnostic, and the two rows of three split on it:
+   the first is what we would build you — the work, the system behind
+   it, the face it shows customers. The second is getting more out of
+   what you already have — your data, what is buried in it, and the
+   people using it. Training closes because it is the one that
+   carries on after everything else is delivered.
    ============================================================ */
 export const CATEGORIES = [
   { n: '01', title: 'Save time', glyph: 'time',
-    quote: 'The same details get typed into three systems.',
-    body: 'The repeated steps between your systems, set up once and then left to run.' },
+    quote: 'We lose a morning a week to work that repeats itself.',
+    body: 'The steps that repeat between your systems, set up once and then left to run.' },
   { n: '02', title: 'Reduce mistakes', glyph: 'accuracy',
     quote: 'Two people edited it. Nobody knows which number is right.',
     body: 'A proper internal tool in place of the spreadsheet: one record, one place, one version.' },
-  { n: '03', title: 'Understand your data', glyph: 'data',
+  { n: '03', title: 'Build something new', glyph: 'build',
+    quote: 'Our site is a brochure. Everything still happens by phone.',
+    body: 'Websites and the workflows that come with them — booking, portals, payments, accounts.' },
+  { n: '04', title: 'Understand your data', glyph: 'data',
     quote: 'We have the data, but not the answers.',
     body: 'The data cleaned up first, then reporting you can actually make a decision from.' },
-  { n: '04', title: 'Build something new', glyph: 'build',
-    quote: 'Customers still have to ring us to book.',
-    body: 'Websites, booking flows, customer portals and payments, so people can do it themselves.' },
-  { n: '05', title: 'Train your team', glyph: 'train',
-    quote: 'We paid for the software. People still work the old way.',
-    body: 'Sessions built around your actual work, so people leave able to do the thing. Credits for afterwards.' },
-  { n: '06', title: 'Find the answer', glyph: 'answer',
+  { n: '05', title: 'Find the answer', glyph: 'answer',
     quote: 'The answer is in there somewhere. Nobody can find it.',
     body: 'An assistant that answers from your own documents, and shows you where it got it.' },
+  { n: '06', title: 'Train your team', glyph: 'train',
+    quote: 'We paid for the software. People still work the old way.',
+    body: 'Sessions built around your actual work, so people leave able to do the thing. Credits for afterwards.' },
 ]
 
 export default function Problems() {
