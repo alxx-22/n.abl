@@ -138,7 +138,7 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .nav__link:hover { color: var(--cream-100); }
 .nav__link:hover::after { transform: scaleX(1); }
 
-.nav__toggle { display: none; width: 2.5rem; height: 2.5rem; align-items: center; justify-content: center; }
+.nav__toggle { display: none; width: 2.75rem; height: 2.75rem; align-items: center; justify-content: center; }
 .nav__toggle span, .nav__toggle span::before, .nav__toggle span::after {
   content: ''; display: block; width: 20px; height: 1.5px; background: var(--cream-200);
   transition: transform var(--dur) var(--ease), opacity var(--dur-fast) var(--ease);
@@ -204,12 +204,37 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .footer__list { display: flex; flex-direction: column; gap: var(--s-2); }
 .footer__list a { color: var(--cream-400); font-size: var(--t-sm); transition: color var(--dur-fast) var(--ease); }
 .footer__list a:hover { color: var(--accent-400); }
+
+/* WCAG 2.5.8 asks 24x24 of every pointer, not just a finger, and these links
+   sit at 22 — two pixels short, in a list, so the "inline in a sentence"
+   exception does not cover them. A min-height clears it without moving
+   anything the eye can see. */
+.footer__list a, .nav__link { min-height: 24px; display: inline-flex; align-items: center; }
+
+/* Targets, on devices that point with a finger.
+   The footer list is nine links stacked 22px tall — comfortably tappable
+   with a mouse, under the 24px WCAG 2.5.8 floor with a thumb, and the nav
+   links and small buttons land two to five pixels short of 44 as well.
+   Gated on pointer:coarse so the desktop footer keeps its rhythm: this is
+   a reach problem, not a layout one, and only touch has it. */
+@media (pointer: coarse) {
+  .footer__list { gap: 0; }
+  .footer__list a { min-height: 44px; display: flex; align-items: center; }
+  .nav__link { min-height: 44px; display: inline-flex; align-items: center; }
+  .btn--sm { min-height: 44px; }
+  /* the wordmark: 84x31 drawn, 44 to the thumb, unchanged to the eye */
+  .brand { position: relative; display: inline-flex; align-items: center; }
+  .brand::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%;
+    height: 44px; transform: translateY(-50%);
+  }
+}
 .footer__base {
   margin-top: var(--s-7); padding-top: var(--s-4);
   border-top: 1px solid var(--line-faint);
   display: flex; justify-content: space-between; align-items: center; gap: var(--s-4);
   flex-wrap: wrap;
-  color: var(--cream-800); font-size: var(--t-xs);
+  color: var(--cream-600); font-size: var(--t-xs);
 }
 /* Hidden team entry #1 — the full stop in the footer wordmark.
    Styled to be indistinguishable from punctuation; only :hover gives it away. */
@@ -324,12 +349,16 @@ a:hover > .nabl-logo .nabl-logo__dot {
 
 /* ---------- Progress ---------- */
 .progress { height: 5px; background: var(--surface-3); border-radius: var(--r-full); overflow: hidden; }
+/* scaleX rather than width, the same way .rail__fill already uses scaleY:
+   width is a layout property and this sits inside a card that does not need
+   reflowing every frame. Driven from --p so the caller sets one number. */
 .progress__fill {
-  height: 100%;
+  height: 100%; width: 100%;
   background: linear-gradient(90deg, var(--accent-500), var(--accent-300));
   box-shadow: var(--glow-accent);
   border-radius: inherit;
-  transition: width var(--dur-slow) var(--ease-out);
+  transform: scaleX(var(--p, 0)); transform-origin: left center;
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 
 /* ---------- File upload zone ---------- */
@@ -581,10 +610,10 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .assistant-fab__label { animation: label-in .28s var(--ease) backwards; }
 .assistant-fab--open {
   background: var(--accent-400);
-  color: #24170A;
+  color: var(--on-accent);
   border-color: var(--accent-400);
 }
-.assistant-fab--open .spark { color: #24170A; }
+.assistant-fab--open .spark { color: var(--on-accent); }
 
 .assistant {
   position: fixed;

@@ -24,7 +24,7 @@
 .scene__tabs{display:flex;gap:var(--s-2);margin-top:var(--s-4)}
 .scene__tab{appearance:none;background:var(--surface-1);border:1px solid var(--line);
   color:var(--cream-400);font:inherit;font-size:var(--t-xs);font-family:var(--font-mono);
-  letter-spacing:.06em;padding:.4rem .8rem;border-radius:var(--r-full);cursor:pointer;
+  letter-spacing:.06em;padding:.65rem .8rem;border-radius:var(--r-full);cursor:pointer;
   transition:border-color var(--dur) var(--ease),color var(--dur) var(--ease),background var(--dur) var(--ease)}
 .scene__tab:hover{color:var(--cream-100);border-color:rgba(var(--accent-rgb),.4)}
 .scene__tab[aria-selected="true"]{color:var(--accent-200);border-color:rgba(var(--accent-rgb),.7);

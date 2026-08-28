@@ -4,7 +4,7 @@
 
 /* ---------- Intro blind ---------- */
 .intro {
-  position: fixed; inset: 0; z-index: 9999;
+  position: fixed; inset: 0; z-index: var(--z-skip);
   background: var(--bg);
   display: grid; place-items: center;
   transform: translateY(0);
@@ -71,6 +71,13 @@
   position: absolute; left: 50%; bottom: 2.5rem; transform: translateX(-50%);
   color: var(--cream-600);
   animation: floaty 2s ease-in-out infinite;
+}
+/* The visible mark stays 20px; the target around it reaches 44. Growing the
+   mark itself would change the composition, and the problem is the target. */
+.hero__scroll { position: relative; }
+.hero__scroll::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: 44px; height: 44px; transform: translate(-50%, -50%);
 }
 .hero__scroll:hover { color: var(--accent-400); }
 @keyframes floaty { 0%,100% { transform: translate(-50%, 0) } 50% { transform: translate(-50%, 7px) } }
@@ -358,6 +365,13 @@
   padding-bottom: 2px;
   transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
+/* An inline link in a sentence, so it cannot grow — but it can reach.
+   Vertical only: a wider box would overlap the text beside it. */
+.contact__email { position: relative; display: inline-block; }
+.contact__email::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  height: 44px; transform: translateY(-50%);
+}
 .contact__email:hover { color: var(--accent-400); border-color: var(--accent-400); }
 /* .contact__note held the four-hour response claim. Both are gone —
    the rule used cream-800, which the palette reserves for disabled
@@ -427,11 +441,11 @@
 @media (min-width: 1600px) { .rail__num, .rail__label { display: block; } }
 .rail__num {
   font-family: var(--font-mono); font-size: 10px;
-  color: var(--cream-800);
+  color: var(--cream-600);
   transition: color var(--dur) var(--ease);
 }
 .rail__label {
-  font-size: var(--t-xs); color: var(--cream-800);
+  font-size: var(--t-xs); color: var(--cream-600);
   opacity: 0; transform: translateX(-6px);
   transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), color var(--dur) var(--ease);
   white-space: nowrap;
@@ -448,11 +462,18 @@
   font-family: var(--font-mono); font-size: var(--t-xs);
   color: var(--accent-400); letter-spacing: .1em;
 }
+/* Drawn with a transform, not a width. Animating width ran layout on every
+   frame and, because the rule is a flex sibling, shoved the label along with
+   it — so the chapter title crept rightwards on every scroll reveal. The rule
+   now occupies its space from the start and draws into it, which is both
+   cheaper and what it always looked like it was doing. */
 .chapter__rule {
-  height: 1px; width: 0; background: linear-gradient(90deg, var(--accent-400), transparent);
-  transition: width 0.9s var(--ease-out);
+  height: 1px; width: clamp(3rem, 12vw, 9rem);
+  background: linear-gradient(90deg, var(--accent-400), transparent);
+  transform: scaleX(0); transform-origin: left center;
+  transition: transform 0.9s var(--ease-out);
 }
-.chapter.in .chapter__rule { width: clamp(3rem, 12vw, 9rem); }
+.chapter.in .chapter__rule { transform: scaleX(1); }
 .chapter__label {
   font-size: var(--t-xs); letter-spacing: var(--track-wide);
   text-transform: uppercase; color: var(--cream-600);
