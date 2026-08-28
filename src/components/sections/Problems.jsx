@@ -42,29 +42,30 @@ import { CategoryGlyph } from '../Visuals.jsx'
    the same row while AI had no card at all. The credits it named now
    sit with the training they follow.
 
-   Order is the diagnostic, and the two rows of three split on it:
-   the first is what we would build you — the work, the system behind
-   it, the face it shows customers. The second is getting more out of
-   what you already have — your data, what is buried in it, and the
-   people using it. Training closes because it is the one that
-   carries on after everything else is delivered.
+   The order is set by hand rather than by how the six were written.
+   It opens on automation, which is what most people arrive asking
+   about, and closes on training, which is the one that carries on
+   after everything else has been delivered. Section 06 lists the
+   same six capabilities in an order of its own; the two need not
+   agree, but if either is reordered, check whether the other should
+   follow.
    ============================================================ */
 export const CATEGORIES = [
   { n: '01', title: 'Save time', glyph: 'time',
     quote: 'We lose a morning a week to work that repeats itself.',
     body: 'The steps that repeat between your systems, set up once and then left to run.' },
-  { n: '02', title: 'Reduce mistakes', glyph: 'accuracy',
-    quote: "Nothing catches a mistake until it's too late to fix.",
-    body: 'An internal tool that runs the process, with the checks built in rather than remembered.' },
+  { n: '02', title: 'Understand your data', glyph: 'data',
+    quote: 'We have the data, but not the answers.',
+    body: 'The data cleaned up first, then reporting you can actually make a decision from.' },
   { n: '03', title: 'Build something new', glyph: 'build',
     quote: 'Our site is a brochure. Everything still happens by phone.',
     body: 'Websites and the workflows that come with them — booking, portals, payments, accounts.' },
-  { n: '04', title: 'Understand your data', glyph: 'data',
-    quote: 'We have the data, but not the answers.',
-    body: 'The data cleaned up first, then reporting you can actually make a decision from.' },
-  { n: '05', title: 'Find the answer', glyph: 'answer',
+  { n: '04', title: 'Find the answer', glyph: 'answer',
     quote: 'The answer is in there somewhere. Nobody can find it.',
     body: 'An assistant that answers from your own documents, and shows you where it got it.' },
+  { n: '05', title: 'Reduce mistakes', glyph: 'accuracy',
+    quote: "Nothing catches a mistake until it's too late to fix.",
+    body: 'An internal tool that runs the process, with the checks built in rather than remembered.' },
   { n: '06', title: 'Train your team', glyph: 'train',
     quote: 'We paid for the software. People still work the old way.',
     body: 'Sessions built around your actual work, so people leave able to do the thing. Credits for afterwards.' },
