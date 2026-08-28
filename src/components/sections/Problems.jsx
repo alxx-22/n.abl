@@ -17,26 +17,38 @@ import { CategoryGlyph } from '../Visuals.jsx'
    "Get more customers" was removed: lead capture, follow-up and
    conversion are internal growth infrastructure, not something the
    business can credibly sell yet. See business/01-positioning.
+
+   Each card answers exactly one row of section 06, and the quote is
+   what carries that — not the title. So each one names a situation
+   only one capability answers: a quote that could sit on three cards
+   ("this takes longer than it should") tells the visitor nothing
+   about which of them is theirs.
+
+   "Fix something" was retired here for the same reason. It described
+   how we are engaged rather than what is wrong, and troubleshooting
+   is already what Training & Support is, so it and "Train your team"
+   both landed on the same row while AI had no card at all. The
+   credits it named now sit in 05, beside the training they follow.
    ============================================================ */
 export const CATEGORIES = [
   { n: '01', title: 'Save time', glyph: 'time',
-    quote: 'This takes longer than it should.',
-    body: 'Give your team hours back by removing repetitive work.' },
+    quote: 'The same details get typed into three systems.',
+    body: 'The repeated steps between your systems, set up once and then left to run.' },
   { n: '02', title: 'Reduce mistakes', glyph: 'accuracy',
-    quote: 'We keep having to check this.',
-    body: 'Replace fragile manual processes with systems that do the job consistently.' },
+    quote: 'Two people edited it. Nobody knows which number is right.',
+    body: 'A proper internal tool in place of the spreadsheet: one record, one place, one version.' },
   { n: '03', title: 'Understand your data', glyph: 'data',
     quote: 'We have the data, but not the answers.',
-    body: 'Turn spreadsheets, systems and reporting into something you can make decisions with.' },
+    body: 'The data cleaned up first, then reporting you can actually make a decision from.' },
   { n: '04', title: 'Build something new', glyph: 'build',
-    quote: "We need something that doesn't exist yet.",
-    body: 'Websites, internal tools, applications, portals and software built for you.' },
+    quote: 'Customers still have to ring us to book.',
+    body: 'Websites, booking flows, customer portals and payments, so people can do it themselves.' },
   { n: '05', title: 'Train your team', glyph: 'train',
-    quote: "We have the tools, but we're not getting enough from them.",
-    body: 'Sessions built around your actual work, so people leave able to do the thing.' },
-  { n: '06', title: 'Fix something', glyph: 'fix',
-    quote: "It works. Until it doesn't.",
-    body: 'Something broke, or was never quite right. Buy credits and spend them when you need us.' },
+    quote: 'We paid for the software. People still work the old way.',
+    body: 'Sessions built around your actual work, so people leave able to do the thing. Credits for afterwards.' },
+  { n: '06', title: 'Find the answer', glyph: 'answer',
+    quote: 'The answer is in there somewhere. Nobody can find it.',
+    body: 'An assistant that answers from your own documents, and shows you where it got it.' },
 ]
 
 export default function Problems() {

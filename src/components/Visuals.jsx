@@ -214,7 +214,26 @@ export function CategoryGlyph({ kind }) {
     )
   }
 
-  // Fix something — a spanner, reduced to a ring and a shaft.
+  // Find the answer — the material you already have, with the one thing
+  // that answers the question picked out of it. The mark is the same
+  // four-pointed spark the assistant uses everywhere else on the site.
+  if (kind === 'answer') {
+    return (
+      <svg {...common}>
+        <path d="M14 8h18l8 8v28a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" strokeOpacity=".45" />
+        <path d="M32 8v8h8" strokeOpacity=".45" />
+        <path d="M17 24h14" strokeOpacity=".55" />
+        <path d="M17 31h10" strokeOpacity=".55" />
+        <path d="M17 38h12" strokeOpacity=".55" />
+        <path d="M48 35c.5 4 2.7 6.2 6.7 6.7-4 .5-6.2 2.7-6.7 6.7-.5-4-2.7-6.2-6.7-6.7 4-.5 6.2-2.7 6.7-6.7z"
+          fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  // Fix something — a spanner, reduced to a ring and a shaft. No card uses
+  // this now, but it is the fallback for an unrecognised kind, and the one
+  // to come back to if the repair card ever returns.
   return (
     <svg {...common}>
       <path d="M40 12a12 12 0 0 0-9.5 19.3L14 47.8a4 4 0 0 0 5.7 5.7l16.5-16.5A12 12 0 1 0 40 12z" strokeOpacity=".45" />
