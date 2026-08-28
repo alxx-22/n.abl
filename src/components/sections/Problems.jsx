@@ -1,6 +1,8 @@
 import { EdgeCard, Reveal } from '../ui/index.jsx'
 import { Chapter } from '../Journey.jsx'
 import { CategoryGlyph } from '../Visuals.jsx'
+import { useScenePreview } from '../scenes/Preview.jsx'
+import { automation, data, software, web, training, ai } from '../scenes/index.js'
 
 /* ============================================================
    03 — WHAT ARE YOU TRYING TO IMPROVE?
@@ -56,27 +58,31 @@ import { CategoryGlyph } from '../Visuals.jsx'
    follow.
    ============================================================ */
 export const CATEGORIES = [
-  { n: '01', title: 'Save time', glyph: 'time',
+  { n: '01', title: 'Save time', glyph: 'time', scene: automation, label: 'Automation',
     quote: 'We lose a morning a week to work that repeats itself.',
     body: 'The steps that repeat between your systems, set up once and then left to run.' },
-  { n: '02', title: 'Understand your data', glyph: 'data',
+  { n: '02', title: 'Understand your data', glyph: 'data', scene: data, label: 'Data & Analytics',
     quote: 'We have the data, but not the answers.',
     body: 'The data cleaned up first, then reporting you can actually make a decision from.' },
-  { n: '03', title: 'Build something new', glyph: 'build',
+  { n: '03', title: 'Build something new', glyph: 'build', scene: web, label: 'Web',
     quote: "Whatever we've got online, it doesn't do anything.",
     body: 'Your first site, or the one that finally does the work — booking, ordering, payments, accounts.' },
-  { n: '04', title: 'Find the answer', glyph: 'answer',
+  { n: '04', title: 'Find the answer', glyph: 'answer', scene: ai[0], label: 'AI — assistant',
     quote: 'The answer is in there somewhere. Nobody can find it.',
     body: 'An assistant that answers from your own documents, and shows you where it got it.' },
-  { n: '05', title: 'Reduce mistakes', glyph: 'accuracy',
+  { n: '05', title: 'Reduce mistakes', glyph: 'accuracy', scene: software, label: 'Software',
     quote: "Nothing catches a mistake until it's too late to fix.",
     body: 'An internal tool that runs the process, with the checks built in rather than remembered.' },
-  { n: '06', title: 'Train your team', glyph: 'train',
+  { n: '06', title: 'Train your team', glyph: 'train', scene: training, label: 'Training & Support',
     quote: 'We paid for the software. People still work the old way.',
     body: 'Sessions built around your actual work, so people leave able to do the thing. Credits for afterwards.' },
 ]
 
 export default function Problems() {
+  /* Hovering a card previews what we would build for it; on a touch screen
+     the same card is pressed instead. The scene is the argument the card is
+     making, shown rather than described. */
+  const { cardProps, overlay } = useScenePreview(CATEGORIES)
   return (
     <section id="what-we-do" className="section">
       <div className="shell">
@@ -94,7 +100,7 @@ export default function Problems() {
         <div className="grid grid--3 section__body">
           {CATEGORIES.map((c, i) => (
             <Reveal key={c.n} delay={0.06 + i * 0.07}>
-              <EdgeCard className="card-pad problem">
+              <EdgeCard className="card-pad problem" {...cardProps(i)}>
                 <div className="problem__head">
                   <span className="problem__num">{c.n}</span>
                   <CategoryGlyph kind={c.glyph} />
@@ -106,6 +112,7 @@ export default function Problems() {
             </Reveal>
           ))}
         </div>
+        {overlay}
       </div>
     </section>
   )

@@ -118,6 +118,30 @@ console.log('\nCLIENT-SIDE HYGIENE')
   if (danger.length === 0) ok('no dangerouslySetInnerHTML anywhere')
   else bad('no dangerouslySetInnerHTML anywhere', danger.join(', '))
 
+  /* Assigning innerHTML is the same risk class, and the check above never
+     looked for it — it matches a React prop name, so a plain DOM write
+     walked straight past. The scene host is the one place that needs it:
+     the animations are SVG strings built from literals in
+     src/components/scenes, with nothing from a user, a URL, a query
+     string or the network anywhere in them, and React has no way to
+     hand a subtree to code that drives it by attribute per frame.
+     Clearing to '' is always fine. Anything else, anywhere else, is a
+     finding — including a second scene host added later. */
+  const SCENE_HOST = join('src', 'components', 'scenes', 'Scene.jsx')
+  /* Read the assigned token rather than a negative lookahead: `\s*` hands a
+     space back on backtracking, so `=\s*(?!'')` matches the very `= ''`
+     it is written to allow. */
+  const writesHtml = files.filter((f) => {
+    if (f.endsWith(SCENE_HOST)) return false
+    const src = readFileSync(f, 'utf8')
+    for (const m of src.matchAll(/\.innerHTML\s*=\s*(\S+)/g)) {
+      if (!/^(''|""|``)/.test(m[1])) return true
+    }
+    return false
+  })
+  if (writesHtml.length === 0) ok('innerHTML written only by the scene host')
+  else bad('innerHTML written only by the scene host', writesHtml.join(', '))
+
   // The access key must never be written to durable storage.
   // Comments are stripped first — the file documents that it avoids
   // localStorage, and matching that sentence is not a finding.
