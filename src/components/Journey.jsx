@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { prefersReducedMotion } from './ui/index.jsx'
+import { useReducedMotion } from './ui/index.jsx'
 
 /* ============================================================
    JOURNEY — scroll as a narrative device
@@ -87,9 +87,14 @@ export function JourneyRail() {
    ------------------------------------------------------------ */
 export function useParallax(speed = 0.12) {
   const ref = useRef(null)
+  const reduced = useReducedMotion()
   useEffect(() => {
     const el = ref.current
-    if (!el || prefersReducedMotion()) return
+    if (!el) return
+    // Drop any drift already applied before parking: leaving the last frame's
+    // transform in place would hold the element off its true position for the
+    // rest of the visit, which is the one thing the preference must not do.
+    if (reduced) { el.style.transform = ''; return }
     let ticking = false
     let visible = false
 
@@ -110,7 +115,7 @@ export function useParallax(speed = 0.12) {
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => { window.removeEventListener('scroll', onScroll); io.disconnect() }
-  }, [speed])
+  }, [reduced, speed])
   return ref
 }
 
@@ -119,16 +124,17 @@ export function useParallax(speed = 0.12) {
    ------------------------------------------------------------ */
 export function Chapter({ index, children }) {
   const ref = useRef(null)
+  const reduced = useReducedMotion()
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    if (prefersReducedMotion()) { el.classList.add('in'); return }
+    if (reduced) { el.classList.add('in'); return }
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { el.classList.add('in'); io.unobserve(el) }
     }, { threshold: 0.4 })
     io.observe(el)
     return () => io.disconnect()
-  }, [])
+  }, [reduced])
   return (
     <div className="chapter" ref={ref}>
       <span className="chapter__num">{String(index).padStart(2, '0')}</span>

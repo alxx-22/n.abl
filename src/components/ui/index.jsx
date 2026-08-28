@@ -10,14 +10,49 @@ export const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+/* ---------- The same preference, but live ----------
+
+   prefersReducedMotion() answers for the instant it is called, and every
+   JS-driven animation on the site called it once inside a mount effect. So
+   the CSS half of the site honoured a visitor who turned the preference on
+   mid-visit — a media query is live, the keyframes stop that moment — while
+   the canvas, the parallax and the reveals carried on moving until a reload.
+   Half the site obeying is worse than neither half, because the visitor has
+   no way to tell which half will.
+
+   This subscribes instead of sampling. Effects that list the returned value
+   as a dependency tear down and rebuild when it flips, so motion stops on
+   the change rather than on the next page load. */
+export function useReducedMotion() {
+  const [reduced, setReduced] = useState(prefersReducedMotion)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = () => setReduced(mq.matches)
+    // Re-read once on mount, to close the gap between the render that
+    // sampled the initial value and this effect committing.
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return reduced
+}
+
 /* ---------- Pointer spotlight ----------
    Writes --mx/--my on the element so CSS can place a radial bloom
    under the cursor. Pointer-events driven, no per-frame React state. */
 export function usePointerGlow() {
   const ref = useRef(null)
+  const reduced = useReducedMotion()
   useEffect(() => {
     const el = ref.current
-    if (!el || prefersReducedMotion()) return
+    if (!el) return
+    // Clear the last position on the way out, or the bloom stays frozen
+    // wherever the cursor happened to be when the preference was turned on.
+    if (reduced) {
+      el.style.removeProperty('--mx')
+      el.style.removeProperty('--my')
+      return
+    }
     const onMove = (e) => {
       const r = el.getBoundingClientRect()
       el.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`)
@@ -25,7 +60,7 @@ export function usePointerGlow() {
     }
     el.addEventListener('pointermove', onMove)
     return () => el.removeEventListener('pointermove', onMove)
-  }, [])
+  }, [reduced])
   return ref
 }
 
@@ -43,10 +78,15 @@ export function usePointerGlow() {
    the viewport; otherwise it left past the bottom. */
 export function useReveal(options = {}) {
   const ref = useRef(null)
+  const reduced = useReducedMotion()
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    if (prefersReducedMotion()) { el.classList.add('in'); return }
+    // Reveal everything and keep the observer torn down: with the preference
+    // on there is no enter or exit state to track, only content that is
+    // simply there. Clearing the exit classes matters because the element may
+    // have been parked in one when the preference flipped.
+    if (reduced) { el.classList.add('in'); el.classList.remove('out-up', 'out-down'); return }
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -88,7 +128,7 @@ export function useReveal(options = {}) {
     )
     obs.observe(el)
     return () => obs.disconnect()
-  }, [options.threshold, options.rootMargin])
+  }, [reduced, options.threshold, options.rootMargin])
   return ref
 }
 

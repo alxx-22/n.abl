@@ -1,6 +1,8 @@
 import { EdgeCard, Reveal } from '../ui/index.jsx'
 import { Chapter } from '../Journey.jsx'
 import { CategoryGlyph } from '../Visuals.jsx'
+import { useScenePreview } from '../scenes/Preview.jsx'
+import { automation, data, software, web, training, ai } from '../scenes/index.js'
 
 /* ============================================================
    03 — WHAT ARE YOU TRYING TO IMPROVE?
@@ -17,29 +19,70 @@ import { CategoryGlyph } from '../Visuals.jsx'
    "Get more customers" was removed: lead capture, follow-up and
    conversion are internal growth infrastructure, not something the
    business can credibly sell yet. See business/01-positioning.
+
+   Each card answers exactly one row of section 06, and the quote is
+   what carries that — not the title. So each names a situation only
+   one capability answers: a quote that could sit on three cards
+   ("this takes longer than it should") tells the visitor nothing
+   about which of them is theirs.
+
+   The altitude matters as much as the aim. "Customers still have to
+   ring us to book" points at web work, but only a business with a
+   booking problem sees itself in it — booking is one workflow a new
+   site brings, not the category. Each quote names the class of
+   problem and lets the body list the instances.
+
+   Nor can a quote assume where the visitor is starting from. The
+   same card has to be recognised by someone with nothing at all and
+   by someone whose version of it cannot do what they need, which
+   rules out any wording that presumes the thing already exists.
+
+   And the fix the quote implies has to be the one we would sell.
+   "Two people edited it, nobody knows which number is right" reads
+   as a problem solved by letting fewer people edit the file, so the
+   card argued its way out of the work it was meant to introduce. A
+   problem with a free procedural answer does not need software.
+
+   "Fix something" was retired here. It described how we are engaged
+   rather than what is wrong, and troubleshooting is already what
+   Training & Support is, so it and "Train your team" both landed on
+   the same row while AI had no card at all. The credits it named now
+   sit with the training they follow.
+
+   The order is set by hand rather than by how the six were written.
+   It opens on automation, which is what most people arrive asking
+   about, and closes on training, which is the one that carries on
+   after everything else has been delivered. Section 06 lists the
+   same six capabilities in an order of its own; the two need not
+   agree, but if either is reordered, check whether the other should
+   follow.
    ============================================================ */
 export const CATEGORIES = [
-  { n: '01', title: 'Save time', glyph: 'time',
-    quote: 'This takes longer than it should.',
-    body: 'Give your team hours back by removing repetitive work.' },
-  { n: '02', title: 'Reduce mistakes', glyph: 'accuracy',
-    quote: 'We keep having to check this.',
-    body: 'Replace fragile manual processes with systems that do the job consistently.' },
-  { n: '03', title: 'Understand your data', glyph: 'data',
+  { n: '01', title: 'Save time', glyph: 'time', scene: automation, label: 'Automation',
+    quote: 'We lose a morning a week to work that repeats itself.',
+    body: 'The steps that repeat between your systems, set up once and then left to run.' },
+  { n: '02', title: 'Understand your data', glyph: 'data', scene: data, label: 'Data & Analytics',
     quote: 'We have the data, but not the answers.',
-    body: 'Turn spreadsheets, systems and reporting into something you can make decisions with.' },
-  { n: '04', title: 'Build something new', glyph: 'build',
-    quote: "We need something that doesn't exist yet.",
-    body: 'Websites, internal tools, applications, portals and software built for you.' },
-  { n: '05', title: 'Train your team', glyph: 'train',
-    quote: "We have the tools, but we're not getting enough from them.",
-    body: 'Sessions built around your actual work, so people leave able to do the thing.' },
-  { n: '06', title: 'Fix something', glyph: 'fix',
-    quote: "It works. Until it doesn't.",
-    body: 'Something broke, or was never quite right. Buy credits and spend them when you need us.' },
+    body: 'The data cleaned up first, then reporting you can actually make a decision from.' },
+  { n: '03', title: 'Build something new', glyph: 'build', scene: web, label: 'Web',
+    quote: "Whatever we've got online, it doesn't do anything.",
+    body: 'Your first site, or the one that finally does the work — booking, ordering, payments, accounts.' },
+  { n: '04', title: 'Find the answer', glyph: 'answer', scene: ai[0], label: 'AI — assistant',
+    quote: 'The answer is in there somewhere. Nobody can find it.',
+    body: 'An assistant that answers from your own documents, and shows you where it got it.' },
+  { n: '05', title: 'Reduce mistakes', glyph: 'accuracy', scene: software, label: 'Software',
+    quote: "Nothing catches a mistake until it's too late to fix.",
+    body: 'An internal tool that runs the process, with the checks built in rather than remembered.' },
+  { n: '06', title: 'Train your team', glyph: 'train', scene: training, label: 'Training & Support',
+    quote: 'We paid for the software. People still work the old way.',
+    body: 'Sessions built around your actual work, so people leave able to do the thing. Credits for afterwards.' },
 ]
 
 export default function Problems() {
+  /* Hovering a card previews what we would build for it; on a touch screen
+     the same card is pressed instead. The scene is the argument the card is
+     making, shown rather than described. */
+  const { cardProps, overlay } = useScenePreview(CATEGORIES)
   return (
     <section id="what-we-do" className="section">
       <div className="shell">
@@ -57,7 +100,7 @@ export default function Problems() {
         <div className="grid grid--3 section__body">
           {CATEGORIES.map((c, i) => (
             <Reveal key={c.n} delay={0.06 + i * 0.07}>
-              <EdgeCard className="card-pad problem">
+              <EdgeCard className="card-pad problem" {...cardProps(i)}>
                 <div className="problem__head">
                   <span className="problem__num">{c.n}</span>
                   <CategoryGlyph kind={c.glyph} />
@@ -69,6 +112,7 @@ export default function Problems() {
             </Reveal>
           ))}
         </div>
+        {overlay}
       </div>
     </section>
   )

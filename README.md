@@ -45,7 +45,12 @@ Contrast is verified: every cream step reads AAA on every surface, and the
 accent reads AAA as text.
 
 Shared components are in `src/components/ui/`. Every animation is neutralised
-under `prefers-reduced-motion`.
+under `prefers-reduced-motion`, and the preference is honoured live: the CSS
+half always was, because a media query is live, and the JS half now subscribes
+through `useReducedMotion()` rather than sampling once at mount. Turning the
+preference on mid-visit stops the motion there and then, without a reload.
+`npm run test:motion` proves both halves agree, and that the hero canvas is
+idle whenever it is scrolled out of sight or its tab is in the background.
 
 ## Supabase
 

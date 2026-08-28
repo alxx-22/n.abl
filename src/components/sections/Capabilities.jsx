@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import { Reveal } from '../ui/index.jsx'
 import { Chapter } from '../Journey.jsx'
+import Scene from '../scenes/Scene.jsx'
+import { automation, data, software, web, training, ai } from '../scenes/index.js'
 
 /* ============================================================
    06 — WHAT WE BUILD
@@ -14,26 +17,58 @@ import { Chapter } from '../Journey.jsx'
    where "no reseller agreements, no migration upsell" already says
    the same thing in the right register.
    ============================================================ */
+/* Each row carries the scene for its own capability. AI carries two,
+   because the two things it is asked for — answering a question and
+   doing a job — are different enough that one animation showing both
+   would show neither. */
 export const TOOLKIT = [
   { cat: 'Automation',
     what: 'Workflow automation, system integration, custom scripts',
-    items: ['n8n', 'Make', 'Zapier', 'Power Automate', 'APIs'] },
+    items: ['n8n', 'Make', 'Zapier', 'Power Automate', 'APIs'],
+    scenes: [automation] },
   { cat: 'Data & Analytics',
     what: 'Data cleaning, dashboards, reporting, decision support',
-    items: ['Power BI', 'SQL', 'Spreadsheets done properly'] },
+    items: ['Power BI', 'SQL', 'Spreadsheets done properly'],
+    scenes: [data] },
   { cat: 'Software',
     what: 'Internal tools, applications, databases',
-    items: ['Python', 'JavaScript', 'React'] },
+    items: ['Python', 'JavaScript', 'React'],
+    scenes: [software] },
   { cat: 'Web',
     what: 'Websites, booking flows, customer portals, payments',
-    items: ['React', 'Payments', 'Calendar sync'] },
+    items: ['React', 'Payments', 'Calendar sync'],
+    scenes: [web] },
   { cat: 'AI',
     what: 'Document handling, classification, assistants, drafting, analysis',
-    items: ['Where it earns its place'] },
+    items: ['Where it earns its place'],
+    scenes: ai, labels: ['Assistant', 'Operating agent'] },
   { cat: 'Training & Support',
     what: 'Staff training, documentation, troubleshooting, improvements',
-    items: ['Assistance credits'] },
+    items: ['Assistance credits'],
+    scenes: [training] },
 ]
+
+/* A row's scene, plus the tabs when it has more than one. Remounting on a
+   tab change is the point: Scene keys off the scene it is given, so the
+   new one is built and started from zero rather than picked up wherever
+   the previous timeline had got to. */
+function CapabilityScene({ row }) {
+  const [idx, setIdx] = useState(0)
+  const scene = row.scenes[idx]
+  return (
+    <>
+      {row.labels && (
+        <div className="scene__tabs" role="tablist" aria-label={`${row.cat} examples`}>
+          {row.labels.map((l, k) => (
+            <button key={l} type="button" role="tab" className="scene__tab"
+              aria-selected={k === idx} onClick={() => setIdx(k)}>{l}</button>
+          ))}
+        </div>
+      )}
+      <Scene key={idx} scene={scene} label={`${row.cat} — an example of what we build`} />
+    </>
+  )
+}
 
 export default function Capabilities() {
   return (
@@ -60,6 +95,7 @@ export default function Capabilities() {
                   <div className="sys__badges">
                     {s.items.map((it) => <span key={it} className="chip">{it}</span>)}
                   </div>
+                  <CapabilityScene row={s} />
                 </div>
               </div>
             </Reveal>

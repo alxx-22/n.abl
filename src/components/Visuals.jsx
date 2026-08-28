@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { prefersReducedMotion } from './ui/index.jsx'
+import { useReducedMotion } from './ui/index.jsx'
 
 /* ============================================================
    VISUALS — brand-native imagery, drawn not photographed.
@@ -13,14 +13,15 @@ import { prefersReducedMotion } from './ui/index.jsx'
    "disconnected tools becoming one system" without being literal. */
 export function NodeField({ className = '' }) {
   const canvasRef = useRef(null)
+  const reduce = useReducedMotion()
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    const reduce = prefersReducedMotion()
 
     let w = 0, h = 0, raf = 0
+    let onScreen = true
     const DPR = Math.min(window.devicePixelRatio || 1, 2)
     const COUNT = 34
     const nodes = []
@@ -85,13 +86,46 @@ export function NodeField({ className = '' }) {
       raf = requestAnimationFrame(step)
     }
 
+    /* ---------- When the field is allowed to run ----------
+
+       The canvas fills the hero, and the hero is the first of ten sections:
+       for most of a visit it is scrolled well out of sight. The loop used to
+       run regardless — thirty-four nodes is 561 distance measurements and a
+       shadow-blurred fill every frame, forever, for a drawing nobody can
+       see, on whatever battery the visitor happens to be running on. It also
+       kept going in a background tab, where the browser throttles the frames
+       but still hands us the work.
+
+       So the loop is now gated on the two things that decide whether the
+       drawing is worth making: it is on screen, and the tab is in front.
+       Node positions are plain state that simply stops advancing, so coming
+       back resumes the drift where it paused rather than jumping. */
+    const running = () => !reduce && onScreen && !document.hidden
+    const stop = () => { if (raf) { cancelAnimationFrame(raf); raf = 0 } }
+    const sync = () => {
+      if (running()) { if (!raf) raf = requestAnimationFrame(step) }
+      else stop()
+    }
+
+    // Optimistic until the observer's first callback, which is asynchronous:
+    // a hero at the top of the page is on screen, and starting a frame early
+    // is cheaper than a blank canvas on first paint.
+    const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; sync() })
+    io.observe(canvas)
+    document.addEventListener('visibilitychange', sync)
+
     seed(); resize(); draw()
-    if (!reduce) raf = requestAnimationFrame(step)
+    sync()
 
     const ro = new ResizeObserver(() => { resize(); draw() })
     ro.observe(canvas)
-    return () => { cancelAnimationFrame(raf); ro.disconnect() }
-  }, [])
+    return () => {
+      stop()
+      io.disconnect()
+      ro.disconnect()
+      document.removeEventListener('visibilitychange', sync)
+    }
+  }, [reduce])
 
   return <canvas ref={canvasRef} className={`nodefield ${className}`} aria-hidden="true" />
 }
@@ -180,7 +214,26 @@ export function CategoryGlyph({ kind }) {
     )
   }
 
-  // Fix something — a spanner, reduced to a ring and a shaft.
+  // Find the answer — the material you already have, with the one thing
+  // that answers the question picked out of it. The mark is the same
+  // four-pointed spark the assistant uses everywhere else on the site.
+  if (kind === 'answer') {
+    return (
+      <svg {...common}>
+        <path d="M14 8h18l8 8v28a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" strokeOpacity=".45" />
+        <path d="M32 8v8h8" strokeOpacity=".45" />
+        <path d="M17 24h14" strokeOpacity=".55" />
+        <path d="M17 31h10" strokeOpacity=".55" />
+        <path d="M17 38h12" strokeOpacity=".55" />
+        <path d="M48 35c.5 4 2.7 6.2 6.7 6.7-4 .5-6.2 2.7-6.7 6.7-.5-4-2.7-6.2-6.7-6.7 4-.5 6.2-2.7 6.7-6.7z"
+          fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  // Fix something — a spanner, reduced to a ring and a shaft. No card uses
+  // this now, but it is the fallback for an unrecognised kind, and the one
+  // to come back to if the repair card ever returns.
   return (
     <svg {...common}>
       <path d="M40 12a12 12 0 0 0-9.5 19.3L14 47.8a4 4 0 0 0 5.7 5.7l16.5-16.5A12 12 0 1 0 40 12z" strokeOpacity=".45" />
