@@ -30,6 +30,11 @@ import { CategoryGlyph } from '../Visuals.jsx'
    site brings, not the category. Each quote names the class of
    problem and lets the body list the instances.
 
+   Nor can a quote assume where the visitor is starting from. The
+   same card has to be recognised by someone with nothing at all and
+   by someone whose version of it cannot do what they need, which
+   rules out any wording that presumes the thing already exists.
+
    And the fix the quote implies has to be the one we would sell.
    "Two people edited it, nobody knows which number is right" reads
    as a problem solved by letting fewer people edit the file, so the
@@ -58,8 +63,8 @@ export const CATEGORIES = [
     quote: 'We have the data, but not the answers.',
     body: 'The data cleaned up first, then reporting you can actually make a decision from.' },
   { n: '03', title: 'Build something new', glyph: 'build',
-    quote: 'Our site is a brochure. Everything still happens by phone.',
-    body: 'Websites and the workflows that come with them — booking, portals, payments, accounts.' },
+    quote: "Whatever we've got online, it doesn't do anything.",
+    body: 'Your first site, or the one that finally does the work — booking, ordering, payments, accounts.' },
   { n: '04', title: 'Find the answer', glyph: 'answer',
     quote: 'The answer is in there somewhere. Nobody can find it.',
     body: 'An assistant that answers from your own documents, and shows you where it got it.' },
