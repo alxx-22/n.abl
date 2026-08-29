@@ -13,102 +13,6 @@
    read as one object resizing rather than two shots spliced.
    ============================================================ */
 
-const STAGE_W = 1080, STAGE_H = 1920
-
-/* Instagram's chrome, as margins. Nothing that carries meaning goes
-   outside this: the profile row and caption stack over the bottom,
-   the like/comment/share rail over the right. */
-const SAFE = { top: 250, bottom: 480, left: 60, right: 120 }
-
-/* Camera framings. Full-bleed horizontally in every case — a webcam
-   inset with margins reads as a video call, not as a film. */
-const FULL   = { x: 0, y: 0,   w: 1080, h: 1920 }
-const HALF_B = { x: 0, y: 880, w: 1080, h: 1040 }
-const HALF_T = { x: 0, y: 0,   w: 1080, h: 880  }
-
-/* Where a scene sits when one is playing. 800x608 at 1000 wide is 760
-   tall, which clears the bottom safe line by 60. */
-const SCENE_RECT = { x: 40, y: 620, w: 1000, h: 760 }
-
-const TRANS = 0.66          // seconds for the camera to travel between framings
-
-/* ------------------------------------------------------------------
-   THE RUN OF SHOW
-
-   Timed for a 50-second read at roughly three words a second. The
-   shape is from what currently works on Reels: a hook that lands
-   inside three seconds, a complete visual change every four at the
-   outside, and the whole thing sitting in the 45-60s band that
-   rewards teaching rather than the 30-40s one that does not.
-
-   `say` is what you say out loud. `head` is what appears on screen.
-   They are deliberately not the same words — reading your own caption
-   aloud is the tell of a video made from a script rather than by a
-   person.
-   ------------------------------------------------------------------ */
-const SHOW = [
-  { id: 'hook', dur: 4.0, cam: FULL, text: 'upper',
-    kicker: null,
-    head: 'A morning a week',
-    say: 'Your team loses a morning a week to work a computer should be doing.' },
-
-  { id: 'problem', dur: 5.2, cam: HALF_B, text: 'upper',
-    kicker: 'WHERE IT GOES',
-    lines: ['The same order, keyed twice.', 'Timesheets, chased.', "Last month's spreadsheet, rebuilt."],
-    say: "Rekeying the same order twice. Chasing timesheets. Rebuilding last month's spreadsheet." },
-
-  { id: 'title', dur: 2.2, cam: null, text: 'centre',
-    kicker: 'n.abl',
-    head: 'Six things we build',
-    say: "Here's what we actually build." },
-
-  { id: 'automation', dur: 3.8, cam: null, scene: 'automation', from: 5.4, text: 'above',
-    kicker: '01 · AUTOMATION',
-    head: 'Set up once, left running',
-    say: 'Work that repeats — set up once, then left to run.' },
-
-  { id: 'data', dur: 3.8, cam: null, scene: 'data', from: 5.6, text: 'above',
-    kicker: '02 · DATA',
-    head: 'Numbers you can decide from',
-    say: 'Your data cleaned up, then reporting you can actually decide from.' },
-
-  { id: 'web', dur: 3.8, cam: null, scene: 'web', from: 5.0, text: 'above',
-    kicker: '03 · WEB',
-    head: 'A site that does the work',
-    say: 'A site that books, sells, and takes the payment.' },
-
-  { id: 'mid', dur: 3.4, cam: HALF_T, text: 'under',
-    kicker: null,
-    head: 'None of it off the shelf',
-    say: "None of it's off the shelf." },
-
-  { id: 'ai', dur: 3.8, cam: null, scene: 'ai', from: 4.8, text: 'above',
-    kicker: '04 · AI',
-    head: 'The answer, and where it came from',
-    say: 'Answers from your own documents — and where they came from.' },
-
-  { id: 'software', dur: 3.8, cam: null, scene: 'software', from: 7.6, text: 'above',
-    kicker: '05 · SOFTWARE',
-    head: 'Checks built in, not remembered',
-    say: 'Checks built into the process, not remembered.' },
-
-  { id: 'training', dur: 3.8, cam: null, scene: 'training', from: 9.8, text: 'above',
-    kicker: '06 · TRAINING',
-    head: 'Your work, not the manual',
-    say: 'Training on your actual work, not the manual.' },
-
-  { id: 'how', dur: 6.0, cam: HALF_B, text: 'upper',
-    kicker: 'HOW IT GOES',
-    lines: ['Built.', 'Handed over.', 'Explained to your team.'],
-    say: "We're in Nottingham. We build it, hand it over, and show your team how to run it." },
-
-  { id: 'cta', dur: 6.4, cam: FULL, text: 'lower',
-    kicker: null,
-    head: 'nabl.agency',
-    sub: "What's the job that shouldn't need a person?",
-    say: "If there's a job in your week that shouldn't need a person — that's the one to send me." },
-]
-
 /* Absolute start times, and the rect the camera holds through a
    section where it is off (it fades in place rather than jumping to
    somewhere it was never going to be). */
@@ -136,6 +40,12 @@ const sceneSlide = $('sceneSlide')
 const sceneGlow = $('sceneGlow')
 const sceneSheen = $('sceneSheen')
 const dotRow  = $('dots')
+const brand   = $('brandLayer')
+const logo    = $('logo')
+const logoDot = $('lg-dot')
+const rule    = $('rule')
+const cardWrap = $('cardWrap')
+const card     = $('card')
 const typeBox  = $('type')
 const guides   = $('guides')
 
@@ -158,6 +68,108 @@ for (const [name, scene] of Object.entries(SCENES)) {
   svg.setAttribute('height', '100%')
   sceneSlide.appendChild(host)
   mounted[name] = { scene, host, els: scene.bind(host) }
+}
+
+/* ------------------------------------------------------------------
+   The morphing card
+
+   Every face is mounted once and stays mounted. What changes is which
+   two are visible and how blurred: the container lerps its width,
+   height and radius between the state it left and the state it is
+   going to, and both contents are blurred by how fast that box is
+   currently changing. Blur peaks halfway through the move and is zero
+   at both ends, which is what makes a settled card look sharp and a
+   moving one look like it is actually moving.
+   ------------------------------------------------------------------ */
+const HAS_CARDS = typeof CARDS !== 'undefined'
+const MORPH = 0.62
+const faces = {}
+
+if (HAS_CARDS) {
+  for (const [name, c] of Object.entries(CARDS)) {
+    if (!c.html) continue
+    const el = document.createElement('div')
+    el.className = 'cardFace'
+    el.innerHTML = c.html
+    el.style.opacity = '0'
+    card.appendChild(el)
+    faces[name] = el
+  }
+}
+
+function drawCard(lt, s, prev) {
+  const a = CARDS[prev.card] || CARDS[s.card]
+  const b = CARDS[s.card]
+  const p = seg(lt, 0, MORPH, EASE)
+
+  card.style.width = `${lerp(a.w, b.w, p).toFixed(1)}px`
+  card.style.height = `${lerp(a.h, b.h, p).toFixed(1)}px`
+  card.style.borderRadius = `${lerp(a.r, b.r, p).toFixed(1)}px`
+
+  /* Zero at rest, peaking mid-move. Tied to the morph's own progress
+     rather than to a fixed window, so a big size change and a small one
+     blur by the same amount at the same point of their travel. */
+  const v = Math.sin(clamp(p, 0, 1) * Math.PI)
+  const blur = (v * 13).toFixed(2)
+
+  for (const [name, el] of Object.entries(faces)) {
+    const o = name === s.card ? p : name === prev.card ? 1 - p : 0
+    el.style.opacity = o.toFixed(3)
+    if (o < 0.004) { el.style.filter = 'none'; continue }
+    el.style.filter = `blur(${blur}px)`
+    /* Content settles a beat after the box does. */
+    el.style.transform = `scale(${(name === s.card ? lerp(0.93, 1, p) : lerp(1, 1.06, p)).toFixed(4)})`
+  }
+
+  cardWrap.style.opacity = seg(lt, 0, 0.24, EASE_OUT).toFixed(3)
+}
+
+/* ------------------------------------------------------------------
+   The wordmark
+
+   It is a monoline construction — one 13-unit stroke throughout, every
+   curve a true circle — which means it can be *written* rather than
+   faded in. Each stroke is dashed to its own length and its offset
+   run to zero, in the order a hand would take: n, the dot, a, b, l.
+   The dot is the signature, so it lands rather than draws.
+   ------------------------------------------------------------------ */
+const STROKES = ['lg-n', 'lg-a1', 'lg-a2', 'lg-b1', 'lg-b2', 'lg-l'].map((id) => {
+  const el = $(id)
+  const len = el.getTotalLength
+    ? el.getTotalLength()
+    : 2 * Math.PI * Number(el.getAttribute('r'))
+  el.style.strokeDasharray = len.toFixed(2)
+  return { el, len }
+})
+
+/* Reading order, with the dot sitting where it is written. Groups the
+   two-part letters so a bowl and its stem arrive together. */
+const LOGO_ORDER = [[0], [1, 2], [3, 4], [5]]
+
+function drawLogo(lt, cfg) {
+  const at = cfg.at || 0.10, step = cfg.step || 0.20, span = cfg.span || 0.58
+
+  LOGO_ORDER.forEach((group, i) => {
+    const a = at + i * step
+    const q = seg(lt, a, a + span, EASE_OUT)
+    for (const k of group) {
+      const st = STROKES[k]
+      st.el.style.strokeDashoffset = (st.len * (1 - q)).toFixed(2)
+    }
+  })
+
+  /* The dot lands after the n and before the a — where it is in the
+     word — and it lands rather than draws, because it is a full stop. */
+  const d = seg(lt, at + step * 0.78, at + step * 0.78 + 0.42, EASE_OUT)
+  logoDot.style.opacity = d.toFixed(3)
+  logoDot.style.transform = `translateY(${lerp(-26, 0, d).toFixed(1)}px) scale(${lerp(0.2, 1, d).toFixed(3)})`
+
+  const hold = seg(lt, 0, 0.30, EASE_OUT)
+  const out = cfg.out ? seg(lt, cfg.out[0], cfg.out[1], EASE) : 0
+  brand.style.opacity = (hold - out).toFixed(3)
+  logo.style.width = `${cfg.w || 620}px`
+  logo.style.transform =
+    `translateY(${((cfg.y || 0) - out * 40).toFixed(1)}px) scale(${lerp(0.97, 1, hold) * (1 - out * 0.05)})`
 }
 
 /* ------------------------------------------------------------------
@@ -200,6 +212,23 @@ function draw(time) {
   camBox.style.width  = `${rect.w.toFixed(1)}px`
   camBox.style.height = `${rect.h.toFixed(1)}px`
   camBox.style.opacity = on.toFixed(3)
+
+  /* ---- the morphing card ---- */
+  if (HAS_CARDS && s.card) drawCard(lt, s, prev)
+  else if (HAS_CARDS) cardWrap.style.opacity = '0'
+
+  /* ---- the mark ---- */
+  if (s.logo) drawLogo(lt, s.logo)
+  else brand.style.opacity = '0'
+
+  /* ---- the rule under a pillar term ---- */
+  if (s.rule) {
+    const g = seg(lt, 0.30, 1.05, EASE_OUT)
+    const o = seg(lt, s.dur - 0.36, s.dur, EASE)
+    rule.style.transform = `scaleX(${g.toFixed(4)})`
+    rule.style.opacity = (g - o).toFixed(3)
+    rule.hidden = false
+  } else rule.hidden = true
 
   /* ---- scene ----
      One conveyor for everything on the stage: a scene rises through its
@@ -285,7 +314,8 @@ function words(host, text) {
 let wordGroups = []
 
 function writeType(s) {
-  typeBox.dataset.at = s.text
+  typeBox.dataset.at = s.text || ''
+  typeBox.hidden = !s.text
   wordGroups = []
 
   elKicker.hidden = !s.kicker

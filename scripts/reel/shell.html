@@ -28,6 +28,17 @@
   --mono:'JetBrains Mono',ui-monospace,'SF Mono',monospace;
 }
 *{box-sizing:border-box}
+/* An author `display` outranks the UA's [hidden] rule, so el.hidden on
+   anything styled display:flex/block/grid silently does nothing. Hit
+   twice — the camera <video>, then the pillar rule. This is what the
+   Artifact wrapper does, so local and published behave identically. */
+[hidden]{display:none!important}
+/* The systemic fix for a bug already hit twice: an author `display`
+   declaration outranks the UA's [hidden] rule, so setting el.hidden on
+   anything styled display:flex/block/grid silently does nothing. This
+   is what the Artifact wrapper does, so local and published behave the
+   same rather than one masking the other. */
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--cream200);font-family:var(--sans);
   font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
 
@@ -99,6 +110,87 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .sceneHost{position:absolute;inset:0}
 .sceneHost svg{display:block;width:100%;height:100%}
 
+/* ---------- the morphing card ---------- */
+#cardWrap{display:grid;place-items:center;opacity:0;pointer-events:none}
+#card{position:relative;overflow:hidden;background:var(--s2);
+  border:1px solid var(--line-strong);will-change:width,height,border-radius;
+  box-shadow:0 48px 140px rgba(0,0,0,.7), 0 0 120px rgba(var(--amber-rgb),.13),
+             inset 0 1px 0 rgba(var(--cream-rgb),.06)}
+.cardFace{position:absolute;inset:0;padding:52px 56px;display:flex;flex-direction:column;
+  gap:30px;will-change:opacity,filter,transform;transform-origin:center}
+
+/* shared furniture */
+.cHead{display:flex;align-items:center;justify-content:space-between;gap:20px;flex:none}
+.cHead span{font-family:var(--display);font-size:42px;font-weight:500;color:var(--cream400);
+  letter-spacing:-.01em}
+.cchip{font-family:var(--mono);font-size:24px;letter-spacing:.08em;padding:.34em .9em;
+  border-radius:999px;background:var(--s3);color:var(--cream600);white-space:nowrap}
+.cchip--on{background:rgba(var(--amber-rgb),.22);color:var(--amber200)}
+.cb{display:block;height:16px;border-radius:99px;background:rgba(var(--cream-rgb),.22);flex:none}
+.cRow{display:flex;align-items:center;gap:16px}
+.cRows{display:flex;flex-direction:column;gap:18px}
+
+/* idle + outro */
+.cIdle,.cOutro{flex:1;display:flex;align-items:center;justify-content:center;gap:22px}
+.cMark{width:66px;color:var(--cream100);flex:none}
+.cMark--lg{width:96px}
+.cIdleTxt{font-family:var(--display);font-size:56px;font-weight:700;color:var(--cream100);
+  letter-spacing:-.02em}
+.cOutroTxt{font-family:var(--display);font-size:70px;font-weight:700;color:var(--cream100);
+  letter-spacing:-.02em}
+
+/* pillar */
+.cPillar{flex:1;display:flex;flex-direction:column;gap:20px;justify-content:center}
+.cTerm{font-family:var(--display);font-size:92px;font-weight:700;color:var(--cream100);
+  letter-spacing:-.03em;line-height:1}
+.cRule{display:block;width:120px;height:3px;background:var(--amber400);border-radius:2px}
+.cDef{font-size:38px;line-height:1.35;color:var(--cream400)}
+
+/* automation */
+.cFlow{display:flex;align-items:center;flex:none}
+.cNode{display:block;width:96px;height:70px;border-radius:12px;background:var(--s3);flex:none}
+.cNode--on{background:rgba(var(--amber-rgb),.20);box-shadow:0 0 0 1px rgba(var(--amber-rgb),.4)}
+.cWire{display:block;height:2px;flex:1;background:rgba(var(--cream-rgb),.18)}
+
+/* data */
+.cBars{flex:1;display:flex;align-items:flex-end;gap:20px}
+.cBars i{display:block;flex:1;height:var(--h);border-radius:8px 8px 3px 3px;
+  background:rgba(var(--cream-rgb),.16)}
+.cBars i.on{background:linear-gradient(180deg,var(--amber400),var(--amber600))}
+
+/* web */
+.cGrid{flex:1;display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.cGrid i{display:block;border-radius:10px;background:var(--s3)}
+.cGrid i.on{background:rgba(var(--amber-rgb),.24);box-shadow:0 0 0 1px rgba(var(--amber-rgb),.5)}
+
+/* assistant */
+.cAsk{padding:20px 24px;border-radius:14px;background:var(--s3);flex:none}
+.cAns{flex:1;display:flex;flex-direction:column;gap:18px;justify-content:center}
+
+/* software */
+.cForm{flex:1;display:flex;flex-direction:column;gap:24px;justify-content:center}
+.cField{display:flex;align-items:center;gap:16px}
+.cInput{display:block;flex:1;height:56px;border-radius:11px;background:var(--s3)}
+.cField--ok .cInput{box-shadow:0 0 0 1px rgba(157,190,151,.45)}
+.cTick{display:block;width:30px;height:30px;border-radius:50%;background:var(--success);flex:none}
+
+/* training */
+.cPeople{flex:1;display:flex;flex-direction:column;gap:20px;justify-content:center}
+.cPerson{display:flex;align-items:center;gap:18px}
+.cAv{display:block;width:58px;height:58px;border-radius:50%;background:var(--s3);flex:none}
+.cPerson .cb{flex:1}
+
+/* ---------- the mark ---------- */
+#brandLayer{display:grid;place-items:center;opacity:0;pointer-events:none}
+#logo{width:620px;height:auto;overflow:visible;will-change:transform,opacity}
+#logo g *{will-change:stroke-dashoffset}
+#lg-dot{transform-box:fill-box;transform-origin:center;will-change:transform,opacity}
+
+/* A rule that grows. Used under a pillar term, where it is the only
+   thing separating a name from its definition. */
+#rule{width:360px;height:3px;background:var(--amber400);transform-origin:0 50%;
+  opacity:0;display:block;border-radius:2px;flex:none}
+
 /* ---------- type on the stage ---------- */
 body.no-text #type{visibility:hidden}
 #type{position:absolute;left:60px;right:120px;display:flex;flex-direction:column;gap:22px;
@@ -108,6 +200,9 @@ body.no-text #type{visibility:hidden}
 #type[data-at="centre"]{top:50%;transform:translateY(calc(-50% + var(--ty)))}
 #type[data-at="under"]{top:960px}
 #type[data-at="lower"]{bottom:520px}
+#type[data-at="pillar"]{top:50%;transform:translateY(calc(-50% + var(--ty)))}
+#type[data-at="pillar"] #tHead{font-size:132px;line-height:1}
+#type[data-at="pillar"] #tSub{font-size:46px;color:var(--cream400);max-width:880px}
 /* Words ride out of their own mask rather than fading. The mask is the
    .w span; the <i> inside it is what moves. Padding plus the matching
    negative margin keeps descenders from being clipped by the mask. */
@@ -213,6 +308,21 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
   <div class="viewport">
     <div id="stage">
 
+      <div class="layer" id="brandLayer">
+        <svg id="logo" viewBox="0 0 273 100" aria-hidden="true">
+          <g fill="none" stroke="var(--cream100)" stroke-width="13" stroke-linecap="butt">
+            <path id="lg-n" d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82"/>
+            <circle id="lg-a1" cx="128.25" cy="51.75" r="23.75"/>
+            <path id="lg-a2" d="M152 21.5 L152 82"/>
+            <path id="lg-b1" d="M178 6 L178 82"/>
+            <circle id="lg-b2" cx="201.75" cy="51.75" r="23.75"/>
+            <path id="lg-l" d="M248.5 6 L248.5 82"/>
+          </g>
+          <rect id="lg-dot" x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
+        </svg>
+      </div>
+      <!-- One container, morphing. Never removed, never replaced. -->
+      <div class="layer" id="cardWrap"><div id="card"></div></div>
       <div id="sceneGlow"></div>
       <div class="layer" id="sceneBox"><div id="sceneSlide"></div><div id="sceneSheen"></div></div>
       <div id="dots"></div>
@@ -225,6 +335,7 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
       <div id="type" data-at="upper">
         <p id="tKicker"></p>
         <h1 id="tHead"></h1>
+        <i id="rule"></i>
         <div id="tLines"></div>
         <p id="tSub"></p>
       </div>

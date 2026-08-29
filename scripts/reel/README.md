@@ -4,6 +4,21 @@ A 9:16 marketing template you talk over, with the six service scenes
 playing inside it and a camera window that moves between framings.
 
     node scripts/build-reel.mjs      # → build/reel.html
+                                     #   build/reel-brand.html
+
+Two cuts off one player:
+
+| | |
+|---|---|
+| `reel.html` | **Talk over it.** 50s, camera moves between full frame, top band, bottom band and absent. The six scenes play in a fixed band. |
+| `reel-brand.html` | **Brand cut.** 25.6s, no camera and no type outside the card. One container morphs through the mark, the three pillars and the six services. |
+
+The brand cut is built after an iOS Live Activity: a compact pill grows
+into a card, the content blurring while the container is in motion and
+sharpening as it settles, and the container never disappears. That
+continuity is the whole idea — six things cutting to each other is a
+slideshow; one thing becoming six things is a product. Card states live
+in `cards.js` as a size and some content; nothing there animates itself.
 
 Open `build/reel.html` in a browser. No server, no build step — the
 person recording with it is holding a webcam, not a terminal.
