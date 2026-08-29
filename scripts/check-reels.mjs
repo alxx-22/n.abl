@@ -61,7 +61,7 @@ for (const cut of cuts) {
         bad.overflow.push(`${s.id} +${face.scrollHeight - box.clientHeight}px`)
       }
     }
-    return { ...bad, total: +reel.TOTAL.toFixed(1), sections: reel.SHOW.length }
+    return { ...bad, total: +reel.TOTAL.toFixed(1), sections: reel.SHOW.length, speed: reel.speed }
   })
 
   /* Then run the rAF loop for real. The walk above already calls draw()
@@ -72,7 +72,10 @@ for (const cut of cuts) {
   await page.evaluate((t) => { reel.seek(t); reel.play() }, from)
   await page.waitForTimeout(6000)
   const landed = await page.evaluate(() => +reel.t.toFixed(1)).catch(() => null)
-  const expected = Math.min(from + 5.5, report.total)
+  /* A cut can open at its own speed — the automation one runs at a half
+     so it can be sped back up in the edit — so how far six seconds of
+     wall clock carries it depends on that, not on an assumed 1x. */
+  const expected = Math.min(from + 5.5 * report.speed, report.total)
 
   const problems = [
     errs.length && `threw: ${errs.slice(0, 2).join('; ')}`,
@@ -85,7 +88,8 @@ for (const cut of cuts) {
   ].filter(Boolean)
 
   if (problems.length) { failed++; console.log(`  ✗ ${cut}\n      ${problems.join('\n      ')}`) }
-  else console.log(`  ✓ ${cut}  ${report.sections} sections, ${report.total}s, ${Math.round(report.total * 60)} frames clean`)
+  else console.log(`  ✓ ${cut}  ${report.sections} sections, ${report.total}s` +
+    `${report.speed !== 1 ? ` at ${report.speed}x` : ''}, ${Math.round(report.total * 60)} frames clean`)
 
   await page.close()
 }

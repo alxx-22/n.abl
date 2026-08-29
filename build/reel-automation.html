@@ -2369,6 +2369,12 @@ const CELL = (cx, cy) => ({ x: cx + CELL_W / 2, y: cy + CELL_H / 2, z: 0.60 })
    where they are going.
    ============================================================ */
 
+/* Opens at half speed. Everything here is a camera move, and a camera
+   move is exactly what benefits from being captured slow and sped back
+   up: 60fps over twice the duration is 120fps of real sampling for the
+   motion blur to blend. ?speed= still overrides. */
+const SHOW_SPEED = 0.5
+
 const SHOW = [
   /* Hold on the number long enough to be read and doubted. */
   { id: 'stat', dur: 3.4, cam: { x: 1050, y: 1495, z: 0.62 },
@@ -3257,7 +3263,8 @@ SHOW.forEach((s, i) => {
 /* A handle on the timeline, for driving this from a test or a capture
    script rather than by hand. Everything here already exists; nothing
    is computed differently because it is exposed. */
-window.reel = { seek, play, pause, draw, SHOW, TOTAL, get t() { return t } }
+window.reel = { seek, play, pause, draw, SHOW, TOTAL,
+  get t() { return t }, get speed() { return SPEED } }
 
 /* ------------------------------------------------------------------
    Opening state from the URL.
@@ -3281,8 +3288,15 @@ const q = new URLSearchParams(location.search)
 const FLUID = q.get('fluid') !== null && q.get('fluid') !== '0'
 const flag = (k) => { const v = q.get(k); return v !== null && v !== '0' && v !== 'false' }
 
+/* The show's own default first, then the URL, which wins. */
+if (typeof SHOW_SPEED !== 'undefined') SPEED = SHOW_SPEED
 const wanted = parseFloat(q.get('speed'))
 if (Number.isFinite(wanted) && wanted > 0.05 && wanted <= 4) SPEED = wanted
+
+/* Reflect it in the control rather than leaving 1x lit while it runs at a half. */
+for (const btn of document.querySelectorAll('[data-speed]')) {
+  btn.setAttribute('aria-pressed', String(+btn.dataset.speed === SPEED))
+}
 $('speedNow').textContent = `${SPEED}x`
 
 if (flag('clean')) document.body.classList.add('is-clean')

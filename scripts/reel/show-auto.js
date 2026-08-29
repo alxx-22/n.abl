@@ -15,6 +15,12 @@
    where they are going.
    ============================================================ */
 
+/* Opens at half speed. Everything here is a camera move, and a camera
+   move is exactly what benefits from being captured slow and sped back
+   up: 60fps over twice the duration is 120fps of real sampling for the
+   motion blur to blend. ?speed= still overrides. */
+const SHOW_SPEED = 0.5
+
 const SHOW = [
   /* Hold on the number long enough to be read and doubted. */
   { id: 'stat', dur: 3.4, cam: { x: 1050, y: 1495, z: 0.62 },
