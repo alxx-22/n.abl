@@ -134,8 +134,9 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
    once and stays cached. Animating a shadow radius is what took the
    renderer down before. */
 #labelWrap{display:grid;place-items:center;z-index:1;pointer-events:none}
-#svcLabel{font-family:var(--display);font-weight:600;font-size:62px;letter-spacing:-.02em;
-  color:var(--cream100);white-space:nowrap;opacity:0;will-change:transform,opacity;
+#svcLabel{display:flex;gap:.28em;font-family:var(--display);font-weight:600;font-size:62px;
+  letter-spacing:-.02em;color:var(--cream100);white-space:nowrap;opacity:0}
+#svcLabel i{display:block;font-style:normal;opacity:0;will-change:transform,opacity;
   text-shadow:0 0 40px rgba(var(--amber-rgb),.45), 0 0 90px rgba(var(--amber-rgb),.20)}
 
 /* ---------- the ending ---------- */
@@ -151,9 +152,13 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 /* ---------- the morphing card ---------- */
 #cardWrap{display:grid;place-items:center;opacity:0;pointer-events:none;z-index:2;
   will-change:transform,opacity}
-#cardEdge{position:absolute;top:0;bottom:0;width:2px;z-index:5;pointer-events:none;opacity:0;
-  background:linear-gradient(180deg,transparent,var(--amber400) 18%,var(--amber400) 82%,transparent);
-  box-shadow:0 0 22px rgba(var(--amber-rgb),.55)}
+/* A hairline with a soft falloff at both ends. The previous version was
+   a hard-edged bar with a 22px bloom, which read as a warning light
+   sweeping rather than as an edge revealing. */
+#cardEdge{position:absolute;top:0;bottom:0;width:1px;z-index:5;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,transparent 0%,rgba(var(--amber-rgb),.55) 26%,
+             rgba(var(--amber-rgb),.75) 50%,rgba(var(--amber-rgb),.55) 74%,transparent 100%);
+  box-shadow:0 0 10px rgba(var(--amber-rgb),.28)}
 #card{position:relative;overflow:hidden;background:var(--s2);
   border:1px solid var(--line-strong);will-change:width,height,border-radius;
   box-shadow:0 48px 140px rgba(0,0,0,.7), 0 0 120px rgba(var(--amber-rgb),.13),
@@ -176,6 +181,7 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .cIdle,.cOutro{flex:1;display:flex;align-items:center;justify-content:center;gap:22px}
 .cMark{width:66px;color:var(--cream100);flex:none}
 .cMark--lg{width:96px}
+.cWordmark{width:440px;height:auto;color:var(--cream100);overflow:visible}
 .cIdleTxt{font-family:var(--display);font-size:56px;font-weight:700;color:var(--cream100);
   letter-spacing:-.02em}
 .cOutroTxt{font-family:var(--display);font-size:70px;font-weight:700;color:var(--cream100);

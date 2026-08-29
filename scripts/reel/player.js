@@ -189,11 +189,15 @@ function drawCard(lt, s, prev, time) {
       : `translateX(${(-14 * travel).toFixed(1)}px)`
   }
 
-  /* The edge rides the wipe and leaves with it. */
+  /* The edge rides the wipe and leaves with it, on a sine so it is zero
+     at both ends and never switches. A hard 0/1 was the strobe. */
   cardEdge.style.left = `${w}%`
-  cardEdge.style.opacity = (p > 0.004 && p < 0.996 ? 1 : 0).toFixed(3)
+  cardEdge.style.opacity = Math.sin(clamp(p, 0, 1) * Math.PI).toFixed(3)
 
-  cardWrap.style.opacity = seg(lt, 0, 0.24, EASE_OUT).toFixed(3)
+  /* Ramped in only when the card first arrives. Doing it every section
+     reset the whole card to zero opacity at each boundary and faded it
+     back — which is the flicker between every card. */
+  cardWrap.style.opacity = prev.card ? '1' : seg(lt, 0, 0.24, EASE_OUT).toFixed(3)
 }
 
 /* ------------------------------------------------------------------
@@ -317,15 +321,32 @@ function draw(time) {
      Emerges from behind the card, alternating below and above so six
      beats do not land in the same place six times. */
   if (s.label) {
-    if (svcLabel.textContent !== s.label) svcLabel.textContent = s.label
-    const out = seg(lt, 0.34, 1.15, EASE_OUT)
-    const gone = seg(lt, s.dur - 0.40, s.dur, EASE)
-    /* Read from the inline height, which is already in stage units — a
-       bounding rect would be in screen pixels and the stage is scaled. */
+    if (svcLabel.dataset.l !== s.label) {
+      svcLabel.dataset.l = s.label
+      svcLabel.replaceChildren(...s.label.split(' ').map((word) => {
+        const i = document.createElement('i')
+        i.textContent = word
+        return i
+      }))
+    }
+    /* Read from the inline height, already in stage units — a bounding
+       rect would be screen pixels and the stage is scaled. */
     const h = parseFloat(card.style.height) || 500
     const reach = (s.above ? -1 : 1) * (h / 2 + 92)
-    svcLabel.style.transform = `translateY(${lerp(0, reach, out).toFixed(1)}px)`
-    svcLabel.style.opacity = (Math.min(out * 1.6, 1) - gone).toFixed(3)
+    /* Retracts the way it came: the same travel, run back to zero. */
+    const back = seg(lt, s.dur - 0.46, s.dur - 0.06, EASE)
+
+    for (let i = 0; i < svcLabel.children.length; i++) {
+      /* Fired in sequence rather than arriving together, each one
+         overshooting its mark and settling. 0.34s of travel, not 0.81. */
+      const a = 0.20 + i * 0.058
+      const raw = seg(lt, a, a + 0.34, LINEAR)
+      const q = backOut(raw, 2.4)
+      const el = svcLabel.children[i]
+      el.style.transform = `translateY(${(lerp(0, reach, q) * (1 - back)).toFixed(1)}px)`
+      el.style.opacity = (Math.min(raw * 2.4, 1) - back).toFixed(3)
+    }
+    svcLabel.style.opacity = '1'
   } else svcLabel.style.opacity = '0'
 
   /* ---- the ending ----

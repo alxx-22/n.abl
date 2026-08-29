@@ -90,16 +90,21 @@ const CARDS = {
         `<div class="cPerson"><i class="cAv"></i>${cBar(130, .5)}<i class="cTick"></i></div>`).join('')}
     </div>` },
 
-  /* The mark on its own. The address is no longer in here — it arrives
-     after the card has shut, so the two do not compete. */
-  outro: { w: 620, h: 300, r: 52, html: `
+  /* The whole wordmark, drawn — not the 'n' glyph with the word set in a
+     typeface beside it, which is two different n.abls in one frame. */
+  outro: { w: 760, h: 300, r: 52, html: `
     <div class="cOutro">
-      <svg class="cMark cMark--lg" viewBox="0 0 104 100" aria-hidden="true">
-        <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82" fill="none"
-              stroke="currentColor" stroke-width="13"/>
+      <svg class="cWordmark" viewBox="0 0 273 100" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="butt">
+          <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82"/>
+          <circle cx="128.25" cy="51.75" r="23.75"/>
+          <path d="M152 21.5 L152 82"/>
+          <path d="M178 6 L178 82"/>
+          <circle cx="201.75" cy="51.75" r="23.75"/>
+          <path d="M248.5 6 L248.5 82"/>
+        </g>
         <rect x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
       </svg>
-      <span class="cOutroTxt">n.abl</span>
     </div>` },
 }
 

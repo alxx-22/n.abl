@@ -134,8 +134,9 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
    once and stays cached. Animating a shadow radius is what took the
    renderer down before. */
 #labelWrap{display:grid;place-items:center;z-index:1;pointer-events:none}
-#svcLabel{font-family:var(--display);font-weight:600;font-size:62px;letter-spacing:-.02em;
-  color:var(--cream100);white-space:nowrap;opacity:0;will-change:transform,opacity;
+#svcLabel{display:flex;gap:.28em;font-family:var(--display);font-weight:600;font-size:62px;
+  letter-spacing:-.02em;color:var(--cream100);white-space:nowrap;opacity:0}
+#svcLabel i{display:block;font-style:normal;opacity:0;will-change:transform,opacity;
   text-shadow:0 0 40px rgba(var(--amber-rgb),.45), 0 0 90px rgba(var(--amber-rgb),.20)}
 
 /* ---------- the ending ---------- */
@@ -151,9 +152,13 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 /* ---------- the morphing card ---------- */
 #cardWrap{display:grid;place-items:center;opacity:0;pointer-events:none;z-index:2;
   will-change:transform,opacity}
-#cardEdge{position:absolute;top:0;bottom:0;width:2px;z-index:5;pointer-events:none;opacity:0;
-  background:linear-gradient(180deg,transparent,var(--amber400) 18%,var(--amber400) 82%,transparent);
-  box-shadow:0 0 22px rgba(var(--amber-rgb),.55)}
+/* A hairline with a soft falloff at both ends. The previous version was
+   a hard-edged bar with a 22px bloom, which read as a warning light
+   sweeping rather than as an edge revealing. */
+#cardEdge{position:absolute;top:0;bottom:0;width:1px;z-index:5;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,transparent 0%,rgba(var(--amber-rgb),.55) 26%,
+             rgba(var(--amber-rgb),.75) 50%,rgba(var(--amber-rgb),.55) 74%,transparent 100%);
+  box-shadow:0 0 10px rgba(var(--amber-rgb),.28)}
 #card{position:relative;overflow:hidden;background:var(--s2);
   border:1px solid var(--line-strong);will-change:width,height,border-radius;
   box-shadow:0 48px 140px rgba(0,0,0,.7), 0 0 120px rgba(var(--amber-rgb),.13),
@@ -176,6 +181,7 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .cIdle,.cOutro{flex:1;display:flex;align-items:center;justify-content:center;gap:22px}
 .cMark{width:66px;color:var(--cream100);flex:none}
 .cMark--lg{width:96px}
+.cWordmark{width:440px;height:auto;color:var(--cream100);overflow:visible}
 .cIdleTxt{font-family:var(--display);font-size:56px;font-weight:700;color:var(--cream100);
   letter-spacing:-.02em}
 .cOutroTxt{font-family:var(--display);font-size:70px;font-weight:700;color:var(--cream100);
@@ -2259,16 +2265,21 @@ const CARDS = {
         `<div class="cPerson"><i class="cAv"></i>${cBar(130, .5)}<i class="cTick"></i></div>`).join('')}
     </div>` },
 
-  /* The mark on its own. The address is no longer in here — it arrives
-     after the card has shut, so the two do not compete. */
-  outro: { w: 620, h: 300, r: 52, html: `
+  /* The whole wordmark, drawn — not the 'n' glyph with the word set in a
+     typeface beside it, which is two different n.abls in one frame. */
+  outro: { w: 760, h: 300, r: 52, html: `
     <div class="cOutro">
-      <svg class="cMark cMark--lg" viewBox="0 0 104 100" aria-hidden="true">
-        <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82" fill="none"
-              stroke="currentColor" stroke-width="13"/>
+      <svg class="cWordmark" viewBox="0 0 273 100" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="butt">
+          <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82"/>
+          <circle cx="128.25" cy="51.75" r="23.75"/>
+          <path d="M152 21.5 L152 82"/>
+          <path d="M178 6 L178 82"/>
+          <circle cx="201.75" cy="51.75" r="23.75"/>
+          <path d="M248.5 6 L248.5 82"/>
+        </g>
         <rect x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
       </svg>
-      <span class="cOutroTxt">n.abl</span>
     </div>` },
 }
 
@@ -2530,11 +2541,15 @@ function drawCard(lt, s, prev, time) {
       : `translateX(${(-14 * travel).toFixed(1)}px)`
   }
 
-  /* The edge rides the wipe and leaves with it. */
+  /* The edge rides the wipe and leaves with it, on a sine so it is zero
+     at both ends and never switches. A hard 0/1 was the strobe. */
   cardEdge.style.left = `${w}%`
-  cardEdge.style.opacity = (p > 0.004 && p < 0.996 ? 1 : 0).toFixed(3)
+  cardEdge.style.opacity = Math.sin(clamp(p, 0, 1) * Math.PI).toFixed(3)
 
-  cardWrap.style.opacity = seg(lt, 0, 0.24, EASE_OUT).toFixed(3)
+  /* Ramped in only when the card first arrives. Doing it every section
+     reset the whole card to zero opacity at each boundary and faded it
+     back — which is the flicker between every card. */
+  cardWrap.style.opacity = prev.card ? '1' : seg(lt, 0, 0.24, EASE_OUT).toFixed(3)
 }
 
 /* ------------------------------------------------------------------
@@ -2658,15 +2673,32 @@ function draw(time) {
      Emerges from behind the card, alternating below and above so six
      beats do not land in the same place six times. */
   if (s.label) {
-    if (svcLabel.textContent !== s.label) svcLabel.textContent = s.label
-    const out = seg(lt, 0.34, 1.15, EASE_OUT)
-    const gone = seg(lt, s.dur - 0.40, s.dur, EASE)
-    /* Read from the inline height, which is already in stage units — a
-       bounding rect would be in screen pixels and the stage is scaled. */
+    if (svcLabel.dataset.l !== s.label) {
+      svcLabel.dataset.l = s.label
+      svcLabel.replaceChildren(...s.label.split(' ').map((word) => {
+        const i = document.createElement('i')
+        i.textContent = word
+        return i
+      }))
+    }
+    /* Read from the inline height, already in stage units — a bounding
+       rect would be screen pixels and the stage is scaled. */
     const h = parseFloat(card.style.height) || 500
     const reach = (s.above ? -1 : 1) * (h / 2 + 92)
-    svcLabel.style.transform = `translateY(${lerp(0, reach, out).toFixed(1)}px)`
-    svcLabel.style.opacity = (Math.min(out * 1.6, 1) - gone).toFixed(3)
+    /* Retracts the way it came: the same travel, run back to zero. */
+    const back = seg(lt, s.dur - 0.46, s.dur - 0.06, EASE)
+
+    for (let i = 0; i < svcLabel.children.length; i++) {
+      /* Fired in sequence rather than arriving together, each one
+         overshooting its mark and settling. 0.34s of travel, not 0.81. */
+      const a = 0.20 + i * 0.058
+      const raw = seg(lt, a, a + 0.34, LINEAR)
+      const q = backOut(raw, 2.4)
+      const el = svcLabel.children[i]
+      el.style.transform = `translateY(${(lerp(0, reach, q) * (1 - back)).toFixed(1)}px)`
+      el.style.opacity = (Math.min(raw * 2.4, 1) - back).toFixed(3)
+    }
+    svcLabel.style.opacity = '1'
   } else svcLabel.style.opacity = '0'
 
   /* ---- the ending ----
