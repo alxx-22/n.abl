@@ -139,6 +139,13 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .cvGrow--mid{gap:90px}
 .cvStack{flex:1;display:flex;flex-direction:column;justify-content:center;gap:0}
 
+/* A word and the slot it rises out of. Padding plus the matching
+   negative margin keeps descenders clear of the mask. */
+.cvW{display:inline-block;overflow:hidden;vertical-align:bottom;
+  padding:0 .26em .16em 0;margin-bottom:-.16em}
+.cvW>i{display:inline-block;font-style:normal;will-change:transform}
+.cvPane,.cvMark{will-change:transform,opacity}
+.cvBar{will-change:width}
 .cvKick{font-family:var(--mono);font-size:44px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--amber400)}
 .cvHuge{font-family:var(--display);font-weight:700;font-size:400px;line-height:.84;
@@ -2276,8 +2283,8 @@ const COL1 = 150, COL2 = 2250
 const ROW1 = 150, ROW2 = 3500, ROW3 = 6850
 const CANVAS_W = COL2 + CELL_W + 150, CANVAS_H = ROW3 + CELL_H + 150
 
-const cell = (x, y, inner, extra = '') => `
-  <div class="cvCell${extra}" style="left:${x}px;top:${y}px;width:${CELL_W}px;height:${CELL_H}px">
+const cell = (id, x, y, inner) => `
+  <div class="cvCell" data-cell="${id}" style="left:${x}px;top:${y}px;width:${CELL_W}px;height:${CELL_H}px">
     ${inner}
   </div>`
 
@@ -2290,7 +2297,7 @@ const cell = (x, y, inner, extra = '') => `
 const CANVAS_AUTO = `
   <div class="cv" style="--w:${CANVAS_W}px;--h:${CANVAS_H}px">
 
-    ${cell(COL1, ROW1, `
+    ${cell('num', COL1, ROW1, `
       <span class="cvKick">FSB, March 2026</span>
       <div class="cvGrow">
         <span class="cvHuge">£36bn</span>
@@ -2298,7 +2305,7 @@ const CANVAS_AUTO = `
       </div>
       <p class="cvFoot">Regulatory compliance, across UK SMEs.</p>`)}
 
-    ${cell(COL2, ROW1, `
+    ${cell('hours', COL2, ROW1, `
       <div class="cvGrow">
         <span class="cvHuge cvHuge--sm">379m</span>
         <p class="cvLine">hours of it.</p>
@@ -2306,7 +2313,7 @@ const CANVAS_AUTO = `
         <p class="cvLine cvLine--amber">The typing is.</p>
       </div>`)}
 
-    ${cell(COL1, ROW2, `
+    ${cell('tuesday', COL1, ROW2, `
       <span class="cvKick">What that looks like on a Tuesday</span>
       <div class="cvStack">
         <div class="cvPane">
@@ -2324,12 +2331,12 @@ const CANVAS_AUTO = `
         </div>
       </div>`)}
 
-    ${cell(COL1, ROW3, `
+    ${cell('fix', COL1, ROW3, `
       <span class="cvKick">01 &middot; Automation</span>
       <p class="cvLine">Set up once. Then left alone.</p>
       <div class="cvScene" id="cvScene"></div>`)}
 
-    ${cell(COL2, ROW3, `
+    ${cell('sign', COL2, ROW3, `
       <div class="cvGrow cvGrow--mid">
         <svg class="cvMark" viewBox="0 0 273 100" aria-hidden="true">
           <g fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="butt">
@@ -2377,36 +2384,36 @@ const SHOW_SPEED = 0.5
 
 const SHOW = [
   /* Hold on the number long enough to be read and doubted. */
-  { id: 'stat', dur: 3.4, cam: { x: 1050, y: 1495, z: 0.62 },
+  { id: 'stat', dur: 3.4, cell: 'num', cam: { x: 1050, y: 1495, z: 0.62 },
     say: 'Thirty-six billion pounds a year. That is what UK small businesses spend keeping up with the rules.' },
 
   /* ACROSS — to the second half of the same sentence. */
-  { id: 'hours', dur: 3.0, cam: { x: 3150, y: 1462, z: 0.62 },
+  { id: 'hours', dur: 3.0, cell: 'hours', cam: { x: 3150, y: 1462, z: 0.62 },
     say: 'Three hundred and seventy-nine million hours of it. The rules are not going anywhere. The typing is.' },
 
   /* DOWN — from the abstraction to a Tuesday. */
-  { id: 'desk', dur: 3.0, cam: { x: 1050, y: 4763, z: 0.62 },
+  { id: 'desk', dur: 3.0, cell: 'tuesday', cam: { x: 1050, y: 4763, z: 0.62 },
     say: 'Here is what that looks like on a Tuesday. An order arrives.' },
 
   /* DOWN again — the same order, being typed a second time. A push-in
      on either pane would overflow the frame: they are 1600 wide and 445
      tall, so the move between them is the shot. */
-  { id: 'twice', dur: 2.8, cam: { x: 1050, y: 5411, z: 0.62 },
+  { id: 'twice', dur: 2.8, cell: 'tuesday', cam: { x: 1050, y: 5411, z: 0.62 },
     say: 'And somebody types it into the second system.' },
 
   /* DOWN — to the thing that stops it. */
-  { id: 'label', dur: 2.2, cam: { x: 1050, y: 7100, z: 0.62 },
+  { id: 'label', dur: 2.2, cell: 'fix', cam: { x: 1050, y: 7100, z: 0.62 },
     say: 'Set up once.' },
 
-  { id: 'build', dur: 4.0, cam: { x: 1050, y: 8553, z: 0.60 }, scene: 'automation', from: 0.6,
+  { id: 'build', dur: 4.0, cell: 'fix', cam: { x: 1050, y: 8553, z: 0.60 }, scene: 'automation', from: 0.6,
     say: 'The steps that repeat between your systems, connected once and then left to run.' },
 
   /* IN — on the part that matters. */
-  { id: 'runs', dur: 3.0, cam: { x: 1050, y: 8100, z: 0.95 }, scene: 'automation', from: 6.4,
+  { id: 'runs', dur: 3.0, cell: 'fix', cam: { x: 1050, y: 8100, z: 0.95 }, scene: 'automation', from: 6.4,
     say: 'Nobody opens it again.' },
 
   /* ACROSS — off the work and onto the name. */
-  { id: 'sign', dur: 3.6, cam: { x: 3150, y: 8500, z: 0.60 },
+  { id: 'sign', dur: 3.6, cell: 'sign', cam: { x: 3150, y: 8500, z: 0.60 },
     say: "What's the job in your week that shouldn't need a person?" },
 ]
 
@@ -2531,8 +2538,88 @@ if (HAS_CANVAS) {
   }
 }
 
-/* Where the camera is, given a section and how far into it we are. */
-function drawCamera(lt, s, prev) {
+/* ------------------------------------------------------------------
+   The canvas, animated
+
+   A camera moving over a dead page is a slideshow with a tripod. Every
+   cell is prepared once — type split into per-word masks, bars and
+   rules told their target size — and then plays against its own clock
+   the first time the camera arrives on it.
+
+   Same grammar as the other cuts: words ride out of a mask on a stagger
+   with a little overshoot, bars and rules wipe rather than fade, and
+   nothing is ever completely still.
+   ------------------------------------------------------------------ */
+const CELLS = new Map()
+
+function prepareCells() {
+  for (const el of canvasEl.querySelectorAll('[data-cell]')) {
+    const movers = []
+
+    for (const line of el.querySelectorAll('.cvKick, .cvHuge, .cvLine, .cvPaneK, .cvFoot')) {
+      const words = String(line.textContent).trim().split(/\s+/)
+      line.replaceChildren(...words.map((w) => {
+        const mask = document.createElement('span')
+        mask.className = 'cvW'
+        const inner = document.createElement('i')
+        inner.textContent = w
+        mask.appendChild(inner)
+        movers.push({ kind: 'word', el: inner })
+        return mask
+      }))
+    }
+
+    for (const bar of el.querySelectorAll('.cvBar')) {
+      movers.push({ kind: 'bar', el: bar, w: bar.style.width || '60%' })
+      bar.style.width = '0%'
+    }
+    for (const d of el.querySelectorAll('.cvDown')) movers.push({ kind: 'draw', el: d })
+    for (const c of el.querySelectorAll('.cvCaret')) movers.push({ kind: 'caret', el: c })
+    for (const pane of el.querySelectorAll('.cvPane, .cvMark')) movers.push({ kind: 'pane', el: pane })
+
+    CELLS.set(el.dataset.cell, { el, movers, seen: -1 })
+  }
+}
+
+/* Called here rather than from the mount block above, which sits before
+   `CELLS` is declared — hoisted, but in the temporal dead zone. */
+if (HAS_CANVAS) prepareCells()
+
+/* One clock per cell, started when the camera first arrives, so a cell
+   held across two sections does not restart its type halfway through. */
+function drawCell(name, time, sectionStart) {
+  const c = CELLS.get(name)
+  if (!c) return
+  if (c.seen < 0 || sectionStart < c.seen) c.seen = sectionStart
+  const lt = time - c.seen
+
+  c.movers.forEach((m, i) => {
+    const at = 0.18 + i * 0.05
+    const raw = seg(lt, at, at + 0.62, LINEAR)
+    const q = backOut(raw, 1.15)
+    const held = Math.min(raw, 1)
+    const ph = i * 1.4
+
+    if (m.kind === 'word') {
+      m.el.style.transform =
+        `translateY(${((1 - q) * 112).toFixed(2)}%) ` +
+        `rotate(${(Math.sin(time * 0.5 + ph) * 0.45 * held).toFixed(2)}deg)`
+    } else if (m.kind === 'bar') {
+      m.el.style.width = `calc(${m.w} * ${Math.min(q, 1).toFixed(3)})`
+    } else if (m.kind === 'draw') {
+      m.el.style.transformOrigin = '50% 0'
+      m.el.style.transform = `scaleY(${Math.min(q, 1).toFixed(3)})`
+    } else if (m.kind === 'caret') {
+      m.el.style.opacity = (raw >= 1 && Math.floor((lt - at) * 2) % 2 === 0 ? 1 : 0).toFixed(2)
+    } else if (m.kind === 'pane') {
+      m.el.style.opacity = held.toFixed(3)
+      m.el.style.transform =
+        `translateY(${(lerp(34, 0, q) + Math.sin(time * 0.42 + ph) * 6 * held).toFixed(1)}px)`
+    }
+  })
+}
+
+function drawCamera(lt, s, prev, time) {
   const a = prev.cam || s.cam
   const b = s.cam
   if (!b) { camWrap.style.opacity = '0'; return }
@@ -2551,6 +2638,7 @@ function drawCamera(lt, s, prev) {
     `translate(${(540 - x * z).toFixed(2)}px, ${(960 - y * z).toFixed(2)}px) scale(${z.toFixed(4)})`
 
   if (canvasScene && s.scene) canvasScene.scene.render(canvasScene.els, (s.from || 0) + lt)
+  if (s.cell) drawCell(s.cell, time, s.t0)
 }
 
 /* ------------------------------------------------------------------
@@ -2790,7 +2878,7 @@ function draw(time) {
   }
 
   /* ---- the camera ---- */
-  if (HAS_CANVAS) drawCamera(lt, s, prev)
+  if (HAS_CANVAS) drawCamera(lt, s, prev, time)
 
   /* ---- the morphing card ---- */
   if (HAS_CARDS && s.card) drawCard(lt, s, prev, time)

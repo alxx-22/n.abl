@@ -26,8 +26,8 @@ const COL1 = 150, COL2 = 2250
 const ROW1 = 150, ROW2 = 3500, ROW3 = 6850
 const CANVAS_W = COL2 + CELL_W + 150, CANVAS_H = ROW3 + CELL_H + 150
 
-const cell = (x, y, inner, extra = '') => `
-  <div class="cvCell${extra}" style="left:${x}px;top:${y}px;width:${CELL_W}px;height:${CELL_H}px">
+const cell = (id, x, y, inner) => `
+  <div class="cvCell" data-cell="${id}" style="left:${x}px;top:${y}px;width:${CELL_W}px;height:${CELL_H}px">
     ${inner}
   </div>`
 
@@ -40,7 +40,7 @@ const cell = (x, y, inner, extra = '') => `
 const CANVAS_AUTO = `
   <div class="cv" style="--w:${CANVAS_W}px;--h:${CANVAS_H}px">
 
-    ${cell(COL1, ROW1, `
+    ${cell('num', COL1, ROW1, `
       <span class="cvKick">FSB, March 2026</span>
       <div class="cvGrow">
         <span class="cvHuge">£36bn</span>
@@ -48,7 +48,7 @@ const CANVAS_AUTO = `
       </div>
       <p class="cvFoot">Regulatory compliance, across UK SMEs.</p>`)}
 
-    ${cell(COL2, ROW1, `
+    ${cell('hours', COL2, ROW1, `
       <div class="cvGrow">
         <span class="cvHuge cvHuge--sm">379m</span>
         <p class="cvLine">hours of it.</p>
@@ -56,7 +56,7 @@ const CANVAS_AUTO = `
         <p class="cvLine cvLine--amber">The typing is.</p>
       </div>`)}
 
-    ${cell(COL1, ROW2, `
+    ${cell('tuesday', COL1, ROW2, `
       <span class="cvKick">What that looks like on a Tuesday</span>
       <div class="cvStack">
         <div class="cvPane">
@@ -74,12 +74,12 @@ const CANVAS_AUTO = `
         </div>
       </div>`)}
 
-    ${cell(COL1, ROW3, `
+    ${cell('fix', COL1, ROW3, `
       <span class="cvKick">01 &middot; Automation</span>
       <p class="cvLine">Set up once. Then left alone.</p>
       <div class="cvScene" id="cvScene"></div>`)}
 
-    ${cell(COL2, ROW3, `
+    ${cell('sign', COL2, ROW3, `
       <div class="cvGrow cvGrow--mid">
         <svg class="cvMark" viewBox="0 0 273 100" aria-hidden="true">
           <g fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="butt">

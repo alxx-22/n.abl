@@ -139,6 +139,13 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .cvGrow--mid{gap:90px}
 .cvStack{flex:1;display:flex;flex-direction:column;justify-content:center;gap:0}
 
+/* A word and the slot it rises out of. Padding plus the matching
+   negative margin keeps descenders clear of the mask. */
+.cvW{display:inline-block;overflow:hidden;vertical-align:bottom;
+  padding:0 .26em .16em 0;margin-bottom:-.16em}
+.cvW>i{display:inline-block;font-style:normal;will-change:transform}
+.cvPane,.cvMark{will-change:transform,opacity}
+.cvBar{will-change:width}
 .cvKick{font-family:var(--mono);font-size:44px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--amber400)}
 .cvHuge{font-family:var(--display);font-weight:700;font-size:400px;line-height:.84;
@@ -2545,8 +2552,88 @@ if (HAS_CANVAS) {
   }
 }
 
-/* Where the camera is, given a section and how far into it we are. */
-function drawCamera(lt, s, prev) {
+/* ------------------------------------------------------------------
+   The canvas, animated
+
+   A camera moving over a dead page is a slideshow with a tripod. Every
+   cell is prepared once — type split into per-word masks, bars and
+   rules told their target size — and then plays against its own clock
+   the first time the camera arrives on it.
+
+   Same grammar as the other cuts: words ride out of a mask on a stagger
+   with a little overshoot, bars and rules wipe rather than fade, and
+   nothing is ever completely still.
+   ------------------------------------------------------------------ */
+const CELLS = new Map()
+
+function prepareCells() {
+  for (const el of canvasEl.querySelectorAll('[data-cell]')) {
+    const movers = []
+
+    for (const line of el.querySelectorAll('.cvKick, .cvHuge, .cvLine, .cvPaneK, .cvFoot')) {
+      const words = String(line.textContent).trim().split(/\s+/)
+      line.replaceChildren(...words.map((w) => {
+        const mask = document.createElement('span')
+        mask.className = 'cvW'
+        const inner = document.createElement('i')
+        inner.textContent = w
+        mask.appendChild(inner)
+        movers.push({ kind: 'word', el: inner })
+        return mask
+      }))
+    }
+
+    for (const bar of el.querySelectorAll('.cvBar')) {
+      movers.push({ kind: 'bar', el: bar, w: bar.style.width || '60%' })
+      bar.style.width = '0%'
+    }
+    for (const d of el.querySelectorAll('.cvDown')) movers.push({ kind: 'draw', el: d })
+    for (const c of el.querySelectorAll('.cvCaret')) movers.push({ kind: 'caret', el: c })
+    for (const pane of el.querySelectorAll('.cvPane, .cvMark')) movers.push({ kind: 'pane', el: pane })
+
+    CELLS.set(el.dataset.cell, { el, movers, seen: -1 })
+  }
+}
+
+/* Called here rather than from the mount block above, which sits before
+   `CELLS` is declared — hoisted, but in the temporal dead zone. */
+if (HAS_CANVAS) prepareCells()
+
+/* One clock per cell, started when the camera first arrives, so a cell
+   held across two sections does not restart its type halfway through. */
+function drawCell(name, time, sectionStart) {
+  const c = CELLS.get(name)
+  if (!c) return
+  if (c.seen < 0 || sectionStart < c.seen) c.seen = sectionStart
+  const lt = time - c.seen
+
+  c.movers.forEach((m, i) => {
+    const at = 0.18 + i * 0.05
+    const raw = seg(lt, at, at + 0.62, LINEAR)
+    const q = backOut(raw, 1.15)
+    const held = Math.min(raw, 1)
+    const ph = i * 1.4
+
+    if (m.kind === 'word') {
+      m.el.style.transform =
+        `translateY(${((1 - q) * 112).toFixed(2)}%) ` +
+        `rotate(${(Math.sin(time * 0.5 + ph) * 0.45 * held).toFixed(2)}deg)`
+    } else if (m.kind === 'bar') {
+      m.el.style.width = `calc(${m.w} * ${Math.min(q, 1).toFixed(3)})`
+    } else if (m.kind === 'draw') {
+      m.el.style.transformOrigin = '50% 0'
+      m.el.style.transform = `scaleY(${Math.min(q, 1).toFixed(3)})`
+    } else if (m.kind === 'caret') {
+      m.el.style.opacity = (raw >= 1 && Math.floor((lt - at) * 2) % 2 === 0 ? 1 : 0).toFixed(2)
+    } else if (m.kind === 'pane') {
+      m.el.style.opacity = held.toFixed(3)
+      m.el.style.transform =
+        `translateY(${(lerp(34, 0, q) + Math.sin(time * 0.42 + ph) * 6 * held).toFixed(1)}px)`
+    }
+  })
+}
+
+function drawCamera(lt, s, prev, time) {
   const a = prev.cam || s.cam
   const b = s.cam
   if (!b) { camWrap.style.opacity = '0'; return }
@@ -2565,6 +2652,7 @@ function drawCamera(lt, s, prev) {
     `translate(${(540 - x * z).toFixed(2)}px, ${(960 - y * z).toFixed(2)}px) scale(${z.toFixed(4)})`
 
   if (canvasScene && s.scene) canvasScene.scene.render(canvasScene.els, (s.from || 0) + lt)
+  if (s.cell) drawCell(s.cell, time, s.t0)
 }
 
 /* ------------------------------------------------------------------
@@ -2804,7 +2892,7 @@ function draw(time) {
   }
 
   /* ---- the camera ---- */
-  if (HAS_CANVAS) drawCamera(lt, s, prev)
+  if (HAS_CANVAS) drawCamera(lt, s, prev, time)
 
   /* ---- the morphing card ---- */
   if (HAS_CARDS && s.card) drawCard(lt, s, prev, time)
