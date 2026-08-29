@@ -1,4 +1,4 @@
-<title>n.abl Punch Cut</title>
+<title>n.abl Data Reel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -2271,250 +2271,159 @@ const TRANS = 0.66          // seconds for the camera to travel between framings
 
 
 /* ============================================================
-   CARDS — one container that morphs.
+   CANVAS — data.
 
-   The reference is an iOS Live Activity: a compact pill grows into a
-   full card, the content blurring while the container is in motion and
-   sharpening as it settles, and the container itself never disappears.
-   That continuity is the whole trick. Six things cutting to each other
-   is a slideshow; one thing becoming six things is a product.
+   Where the automation reel was a column of cells the camera walked
+   down, this one is a single object seen at four distances. The canvas
+   IS the spreadsheet. The camera opens inside one cell, where the
+   number looks fine, and pulls back until you can see how many are not.
 
-   So every state below is a size and some content. The player lerps
-   width, height and radius between whichever two it is between, blurs
-   both contents by how fast the box is currently changing, and
-   cross-dissolves them. Nothing here animates itself.
+   That is the whole argument for the service in one move: nothing is
+   wrong with any number you are looking at. The problem is only visible
+   from further away.
 
-   Content is deliberately structural rather than numeric: bars stand in
-   for text the way the site's own scenes do it, because a card full of
-   invented figures is a claim, and we do not have those figures.
+   The figures are real and attributed on screen. Poon et al., 2024 —
+   94% of business spreadsheets contain errors — replicating Panko's
+   synthesis of thirteen field audits, which also put the cell error
+   rate at 5.2%. The grid below marks exactly 5.2% of its cells, so what
+   the viewer counts is the finding rather than a number chosen to look
+   alarming.
    ============================================================ */
 
-/* Text stand-ins, at a given width. The site's scenes use the same
-   device, so a card reads as the same family as the product shots. */
-const cBar = (w, o = 1) =>
-  `<i class="cb" style="width:${w}px;opacity:${o}"></i>`
+/* Portrait, not landscape. At 22x34 the sheet was 3740 wide and 2516
+   tall — an aspect that can never fill a 9:16 frame, so framing it to
+   the width left 4000 canvas pixels of other cells in shot. 12x60 is
+   roughly the frame's own shape. */
+const COLS = 12, ROWS = 60
+const CW = 170, CH = 74
+const GRID_X = 250, GRID_Y = 700
+const GRID_W = COLS * CW, GRID_H = ROWS * CH
 
-const cChip = (label, on) =>
-  `<span class="cchip${on ? ' cchip--on' : ''}">${label}</span>`
+/* Fixed, so the pattern is identical on every replay — a sheet that
+   reshuffles cannot be matched across takes. */
+const rnd = (n) => Math.abs(Math.sin(n * 12.9898) * 43758.5453) % 1
 
-const CARDS = {
-  /* The idle state. Everything grows out of this and returns to it. */
-  idle: { w: 470, h: 150, r: 75, html: `
-    <div class="cIdle">
-      <svg class="cMark" viewBox="0 0 104 100" aria-hidden="true">
-        <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82" fill="none"
-              stroke="currentColor" stroke-width="13"/>
-        <rect x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
-      </svg>
-      <span class="cIdleTxt">n.abl</span>
-    </div>` },
+const TOTAL_CELLS = COLS * ROWS
+const ERROR_COUNT = Math.round(TOTAL_CELLS * 0.052)
 
-
-  automation: { w: 980, h: 540, r: 52, html: `
-    <div class="cHead"><span>Automation</span>${cChip('Running', true)}</div>
-    <div class="cFlow">
-      <i class="cNode"></i><i class="cWire"></i>
-      <i class="cNode cNode--on"></i><i class="cWire"></i>
-      <i class="cNode"></i><i class="cWire"></i>
-      <i class="cNode"></i>
-    </div>
-    <div class="cRows">
-      <div class="cRow">${cBar(210)}${cBar(64, .4)}</div>
-      <div class="cRow">${cBar(150)}${cBar(64, .4)}</div>
-    </div>` },
-
-  data: { w: 940, h: 640, r: 52, html: `
-    <div class="cHead"><span>Data</span>${cChip('Cleaned', true)}</div>
-    <div class="cBars">
-      <i style="--h:38%"></i><i style="--h:62%"></i><i style="--h:47%"></i>
-      <i style="--h:78%"></i><i style="--h:66%"></i><i class="on" style="--h:94%"></i>
-    </div>
-    <div class="cRow">${cBar(240)}</div>` },
-
-  web: { w: 990, h: 580, r: 52, html: `
-    <div class="cHead"><span>Web</span>${cChip('Booked', true)}</div>
-    <div class="cGrid">
-      ${Array.from({ length: 12 }, (_, i) => `<i${i === 6 ? ' class="on"' : ''}></i>`).join('')}
-    </div>
-    <div class="cRow">${cBar(190)}${cBar(96, .4)}</div>` },
-
-  ai: { w: 960, h: 640, r: 52, html: `
-    <div class="cHead"><span>Assistant</span>${cChip('Sourced', true)}</div>
-    <div class="cAsk">${cBar(300, .5)}</div>
-    <div class="cAns">
-      <div class="cRow">${cBar(360)}</div>
-      <div class="cRow">${cBar(280)}</div>
-      <div class="cRow">${cChip('page 14')}${cChip('policy.pdf')}</div>
-    </div>` },
-
-  software: { w: 900, h: 660, r: 52, html: `
-    <div class="cHead"><span>Software</span>${cChip('Checked', true)}</div>
-    <div class="cForm">
-      <div class="cField">${cBar(150, .45)}<i class="cInput"></i></div>
-      <div class="cField">${cBar(110, .45)}<i class="cInput"></i></div>
-      <div class="cField cField--ok">${cBar(130, .45)}<i class="cInput"></i><i class="cTick"></i></div>
-    </div>` },
-
-  training: { w: 980, h: 620, r: 52, html: `
-    <div class="cHead"><span>Training</span>${cChip('4 of 4', true)}</div>
-    <div class="cPeople">
-      ${Array.from({ length: 4 }, () =>
-        `<div class="cPerson"><i class="cAv"></i>${cBar(130, .5)}<i class="cTick"></i></div>`).join('')}
-    </div>` },
-
-  /* The whole wordmark, drawn — not the 'n' glyph with the word set in a
-     typeface beside it, which is two different n.abls in one frame. */
-  outro: { w: 760, h: 300, r: 52, html: `
-    <div class="cOutro">
-      <svg class="cWordmark" viewBox="0 0 273 100" aria-hidden="true">
-        <g fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="butt">
-          <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82"/>
-          <circle cx="128.25" cy="51.75" r="23.75"/>
-          <path d="M152 21.5 L152 82"/>
-          <path d="M178 6 L178 82"/>
-          <circle cx="201.75" cy="51.75" r="23.75"/>
-          <path d="M248.5 6 L248.5 82"/>
-        </g>
-        <rect x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
-      </svg>
-    </div>` },
+/* Scatter them rather than spreading them evenly: real errors cluster,
+   and an even sprinkle reads as a pattern rather than as a problem. */
+const ERRORS = new Set()
+for (let i = 0; ERRORS.size < ERROR_COUNT; i++) {
+  ERRORS.add(Math.floor(rnd(i + 1) * TOTAL_CELLS))
 }
 
-/* A pillar is the same card three times with different words, so it is
-   built rather than written out. */
-const pillarCard = (n, term, def) => ({
-  w: 960, h: 470, r: 52, html: `
-    <div class="cHead"><span>Pillar ${n} of 3</span></div>
-    <div class="cPillar">
-      <span class="cTerm">${term}</span>
-      <i class="cRule"></i>
-      <span class="cDef">${def}</span>
-    </div>` })
+/* The cell the reel opens inside. Deliberately NOT one of the errors —
+   the point of the first shot is that it looks fine. */
+const HERO = 11 * COLS + 9
+const HERO_X = GRID_X + (HERO % COLS) * CW + CW / 2
+const HERO_Y = GRID_Y + Math.floor(HERO / COLS) * CH + CH / 2
 
-
-/* ============================================================
-   PUNCH — the typewriter opener and the receding word.
-
-   Two moves lifted from the reference, and one deliberately not.
-
-   The typewriter: characters land one at a time behind a blinking
-   caret, and the sentence turns colour partway through so the claim
-   separates itself from the setup without a second line of type.
-
-   The receding word: it starts larger than the frame and shrinks the
-   whole time it is on screen, travelling away from the viewer rather
-   than arriving at them. That direction is the whole effect — a word
-   that scales up reads as emphasis, a word that scales down reads as
-   speed.
-
-   Not lifted: the background. The reference runs saturated light
-   tunnels behind its words. A radial starburst is decorative
-   maximalism whatever colour it is painted, and this studio's whole
-   position is the opposite of that — modern, minimal, anti-corporate.
-   An amber firework was still a firework. The word now recedes on the
-   plain ground, which is both on-brand and one fewer canvas repainting
-   itself sixty times a second.
-   ============================================================ */
-
-/* ------------------------------------------------------------------
-   Typewriter. `head` is the sentence; `turn` is the character index
-   where it changes colour.
-   ------------------------------------------------------------------ */
-function drawTypewriter(el, lt, s) {
-  const chars = s.head.length
-  const start = s.at ?? 0.25
-  const rate = s.rate ?? 0.042            // seconds per character
-  const n = clamp(Math.floor((lt - start) / rate), 0, chars)
-
-  const turn = s.turn ?? chars
-  const lead = s.head.slice(0, Math.min(n, turn))
-  const rest = n > turn ? s.head.slice(turn, n) : ''
-
-  /* Only rewritten when the count changes: this runs every frame. */
-  if (el.dataset.n !== String(n)) {
-    el.dataset.n = String(n)
-    el.querySelector('.twLead').textContent = lead
-    el.querySelector('.twRest').textContent = rest
+const cells = () => {
+  let out = ''
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    const bad = ERRORS.has(i)
+    const v = (rnd(i + 500) * 9000 + 120).toFixed(2)
+    out += `<div class="dCell${bad ? ' dCell--bad' : ''}${i === HERO ? ' dCell--hero' : ''}">` +
+           `<span>${Number(v).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span></div>`
   }
-
-  /* The caret blinks only once typing has stopped — a caret that
-     blinks mid-word looks like a dropped frame. */
-  const done = n >= chars
-  const caret = el.querySelector('.twCaret')
-  caret.style.opacity = done
-    ? (Math.floor((lt - start - chars * rate) * 2) % 2 ? '0' : '1')
-    : '1'
+  return out
 }
 
-/* ------------------------------------------------------------------
-   The receding word. Starts past the frame edge and shrinks the whole
-   time, so the shot reads as travel rather than as emphasis.
-   ------------------------------------------------------------------ */
-function drawWord(el, lt, s) {
-  const p = seg(lt, 0, s.dur, LINEAR)
-  const scale = lerp(s.from ?? 2.35, s.to ?? 0.72, EASE_IO(p))
-  const inP = seg(lt, 0, 0.26, EASE_OUT)
-  const outP = seg(lt, s.dur - 0.42, s.dur, EASE)
+const CANVAS_SCENE = 'data'
+const CANVAS_HTML = `
+  <div class="cv" style="--w:4400px;--h:10800px">
 
-  el.style.transform = `scale(${scale.toFixed(4)})`
-  el.style.opacity = ((inP - outP) * lerp(1, 0.55, p)).toFixed(3)
-  /* Letter-spacing opens as it recedes, which is what stops a shrinking
-     word from reading as a word that is simply getting smaller. */
-  el.style.letterSpacing = `${lerp(-0.02, 0.14, p).toFixed(4)}em`
-}
+    <!-- the sheet, at size -->
+    <div class="dSheet" data-cell="sheet"
+         style="left:${GRID_X}px;top:${GRID_Y}px;width:${GRID_W}px;height:${GRID_H}px;
+                grid-template-columns:repeat(${COLS},${CW}px);
+                grid-auto-rows:${CH}px">${cells()}</div>
+
+    <!-- the finding, under it -->
+    <div class="cvCell" data-cell="stat"
+         style="left:250px;top:${GRID_Y + GRID_H + 260}px;width:1800px;height:2400px">
+      <span class="cvKick">Poon et al., 2024</span>
+      <div class="cvGrow">
+        <span class="cvHuge">94%</span>
+        <p class="cvLine">of business spreadsheets contain errors.</p>
+        <p class="cvLine cvLine--dim">About one cell in twenty.</p>
+      </div>
+      <p class="cvFoot">Replicating Panko&rsquo;s synthesis of thirteen field audits.</p>
+    </div>
+
+    <!-- what we do about it -->
+    <div class="cvCell" data-cell="fix"
+         style="left:2300px;top:${GRID_Y + GRID_H + 260}px;width:1800px;height:2400px">
+      <span class="cvKick">02 &middot; Data</span>
+      <p class="cvLine">Cleaned first. Then reporting you can decide from.</p>
+      <div class="cvScene" id="cvScene"></div>
+    </div>
+
+    <!-- sign off -->
+    <div class="cvCell" data-cell="sign"
+         style="left:250px;top:${GRID_Y + GRID_H + 2960}px;width:1800px;height:2400px">
+      <div class="cvGrow cvGrow--mid">
+        <svg class="cvMark" viewBox="0 0 273 100" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="butt">
+            <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82"/>
+            <circle cx="128.25" cy="51.75" r="23.75"/><path d="M152 21.5 L152 82"/>
+            <path d="M178 6 L178 82"/><circle cx="201.75" cy="51.75" r="23.75"/>
+            <path d="M248.5 6 L248.5 82"/>
+          </g>
+          <rect x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
+        </svg>
+        <p class="cvLine">Which of your numbers has nobody checked?</p>
+        <p class="cvLine cvLine--amber">www.nabl.agency</p>
+      </div>
+    </div>
+  </div>`
 
 
 /* ============================================================
-   SHOW — the punch cut.
+   SHOW — data, shot as one object at four distances.
 
-   A typed opening line, the six services as one card that keeps
-   changing, and an ending that finishes the sentence the opening
-   started.
+   The automation reel walked down a column of cells. This one never
+   leaves the same object: it opens inside a single spreadsheet cell,
+   where the number looks fine, and pulls back until you can see how
+   many are not. Nothing is wrong with any figure you are looking at.
+   The problem is only visible from further away, which is the argument
+   for the service stated as a camera move.
 
-   No pillars. As big single words over a burst they read as a film
-   trailer, which is the opposite register to this business. What the
-   services do is more persuasive than what the values are called.
-
-   The label alternates below the card and above it, so six beats of the
-   same shape never land in the same place twice running.
+   Positions are measured off the built grid, not guessed.
    ============================================================ */
 
-const S = (id, card, label, above) => ({
-  id, dur: 2.2, cam: null, text: null, card, label, above,
-})
+const SHOW_SPEED = 0.5
 
 const SHOW = [
-  /* The opening line lands the same way the closing question does —
-     word by word, drifting — because they are the two ends of the same
-     film and matching them is what closes it. The clock is the only
-     piece of iconography in the cut: it runs away with itself rather
-     than ticking, because the subject is time going, not time kept. */
-  { id: 'open', dur: 5.0, cam: null, text: null, clock: true,
-    words: 'Your team loses a morning a week to work a computer should be doing.',
-    wordsAt: 1.15, wordsStep: 0.075, wordsOut: 0.5,
-    say: 'Your team loses a morning a week to work a computer should be doing.' },
+  /* Inside one cell. Deliberately not one of the marked ones. */
+  { id: 'cell', dur: 3.0, cell: 'sheet', cam: { x: 1865, y: 1551, z: 3.40 },
+    say: 'This number is fine.' },
 
-  S('automation', 'automation', 'Runs itself',        false),
-  S('data',       'data',       'Answers, not rows',  true),
-  S('web',        'web',        'Books itself',       false),
-  S('ai',         'ai',         'Finds the answer',   true),
-  S('software',   'software',   'Catches mistakes',   false),
-  S('training',   'training',   'And it sticks',      true),
+  /* OUT — a row of them. Still fine. */
+  { id: 'row', dur: 2.6, cell: 'sheet', cam: { x: 1270, y: 1551, z: 0.95 },
+    say: 'So is this one. And this one.' },
 
-  /* The mark alone in the card, held long enough to register as a
-     signature rather than as another service. */
-  { id: 'mark', dur: 1.7, cam: null, text: null, card: 'outro',
-    say: '(hold on the mark)' },
+  /* OUT — the sheet, and the ones that are not. */
+  { id: 'sheet', dur: 4.2, cell: 'sheet', reveal: true, cam: { x: 1270, y: 2920, z: 0.42 },
+    say: 'Pull back far enough and you can see the ones that are not.' },
 
-  /* Then the card shuts and the question it was all leading to arrives
-     a word at a time, with the address under it. */
-  { id: 'close', dur: 4.6, cam: null, text: null, card: 'outro', collapse: true,
-    end: "What's the job that shouldn't need a person?",
-    say: "What's the job that shouldn't need a person?" },
+  /* DOWN — the finding. */
+  { id: 'stat', dur: 3.8, cell: 'stat', cam: { x: 1150, y: 6600, z: 0.58 },
+    say: 'Ninety-four per cent of business spreadsheets contain errors. About one cell in twenty.' },
+
+  /* ACROSS — what we do about it. */
+  { id: 'fix', dur: 4.2, cell: 'fix', cam: { x: 3200, y: 6600, z: 0.58 }, scene: 'data', from: 1.2,
+    say: 'The data cleaned up first. Then reporting you can actually decide from.' },
+
+  /* IN — on the answer rather than the rows. */
+  { id: 'answer', dur: 3.0, cell: 'fix', cam: { x: 3200, y: 7150, z: 0.86 }, scene: 'data', from: 7.4,
+    say: 'One set of numbers, current every morning.' },
+
+  /* DOWN and ACROSS — the name. */
+  { id: 'sign', dur: 3.6, cell: 'sign', cam: { x: 1150, y: 9360, z: 0.58 },
+    say: 'Which of your numbers has nobody checked?' },
 ]
-
-const VO = { typed: SHOW[0].say }
-for (const s of SHOW) if (!s.say) s.say = VO[s.id] || ''
 
 
 /* ============================================================

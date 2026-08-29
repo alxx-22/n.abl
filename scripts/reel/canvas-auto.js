@@ -37,7 +37,8 @@ const cell = (id, x, y, inner) => `
    compliance. The rules do not go away — the labour behind them is what
    we are talking about, and the copy says exactly that rather than
    implying we delete anyone's obligations. */
-const CANVAS_AUTO = `
+const CANVAS_SCENE = 'automation'
+const CANVAS_HTML = `
   <div class="cv" style="--w:${CANVAS_W}px;--h:${CANVAS_H}px">
 
     ${cell('num', COL1, ROW1, `

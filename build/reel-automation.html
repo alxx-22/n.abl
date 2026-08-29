@@ -129,7 +129,12 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 
 /* ---------- the canvas the camera moves over ---------- */
 #camWrap{overflow:hidden;z-index:1}
-#canvas{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+/* No will-change here. The canvas is 4200x10100, and promoting it asks
+   the browser to rasterise 162MB into one compositing layer — which
+   desktop absorbs and mobile kills the tab over. The transform still
+   works; it just re-rasterises on demand, and what it is rasterising is
+   mostly empty dark space. Measured: no frame-rate cost. */
+#canvas{position:absolute;left:0;top:0;transform-origin:0 0}
 .cv{position:relative;width:var(--w);height:var(--h)}
 
 /* A cell is the frame's own shape at the working zoom, so a cell framed
@@ -175,6 +180,16 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 
 .cvScene{flex:1;min-height:0}
 .cvScene svg{display:block;width:100%;height:100%}
+
+/* ---------- the sheet ---------- */
+.dSheet{position:absolute;display:grid;gap:2px;background:var(--line-faint)}
+.dCell{background:var(--s1);display:flex;align-items:center;justify-content:flex-end;
+  padding:0 16px;font-family:var(--mono);font-size:26px;color:var(--cream600);
+  font-variant-numeric:tabular-nums;overflow:hidden}
+.dCell--bad{background:rgba(var(--amber-rgb),.10);color:var(--amber300);
+  box-shadow:inset 0 0 0 2px rgba(var(--amber-rgb),.45);will-change:opacity}
+.dCell--hero{background:var(--s3);color:var(--cream100);
+  box-shadow:inset 0 0 0 2px var(--line-strong)}
 
 /* ---------- service label ---------- */
 /* Behind the card (z 1 against the card's 2), so it reads as coming out
@@ -2294,7 +2309,8 @@ const cell = (id, x, y, inner) => `
    compliance. The rules do not go away — the labour behind them is what
    we are talking about, and the copy says exactly that rather than
    implying we delete anyone's obligations. */
-const CANVAS_AUTO = `
+const CANVAS_SCENE = 'automation'
+const CANVAS_HTML = `
   <div class="cv" style="--w:${CANVAS_W}px;--h:${CANVAS_H}px">
 
     ${cell('num', COL1, ROW1, `
@@ -2520,21 +2536,24 @@ for (const [name, scene] of Object.entries(SCENES)) {
    in mind — pans between beats, zoom saved for the two shots where
    getting closer is the point.
    ------------------------------------------------------------------ */
-const HAS_CANVAS = typeof CANVAS_AUTO !== 'undefined'
+/* Any canvas cut defines CANVAS_HTML, and optionally CANVAS_SCENE
+   naming one of the site's scenes to mount inside it. */
+const HAS_CANVAS = typeof CANVAS_HTML !== 'undefined'
 let canvasScene = null
 
 if (HAS_CANVAS) {
-  canvasEl.innerHTML = CANVAS_AUTO
+  canvasEl.innerHTML = CANVAS_HTML
   /* The scene on the canvas is the one the site ships, at canvas size. */
   const host = document.getElementById('cvScene')
-  if (host && typeof SCENES !== 'undefined') {
-    host.innerHTML = SCENES.automation.make()
+  const named = typeof CANVAS_SCENE !== 'undefined' ? SCENES[CANVAS_SCENE] : null
+  if (host && named) {
+    host.innerHTML = named.make()
     const svg = host.querySelector('svg')
     svg.setAttribute('viewBox', SCENE_VIEWBOX)
     svg.setAttribute('width', '100%')
     svg.setAttribute('height', '100%')
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
-    canvasScene = { scene: SCENES.automation, els: SCENES.automation.bind(host) }
+    canvasScene = { scene: named, els: named.bind(host) }
   }
 }
 
@@ -2573,11 +2592,14 @@ function prepareCells() {
       movers.push({ kind: 'bar', el: bar, w: bar.style.width || '60%' })
       bar.style.width = '0%'
     }
+    /* Error cells light one after another as the camera pulls back, so
+       the count is something you watch happen rather than read. */
+    for (const bad of el.querySelectorAll('.dCell--bad')) movers.push({ kind: 'err', el: bad })
     for (const d of el.querySelectorAll('.cvDown')) movers.push({ kind: 'draw', el: d })
     for (const c of el.querySelectorAll('.cvCaret')) movers.push({ kind: 'caret', el: c })
     for (const pane of el.querySelectorAll('.cvPane, .cvMark')) movers.push({ kind: 'pane', el: pane })
 
-    CELLS.set(el.dataset.cell, { el, movers, seen: -1 })
+    CELLS.set(el.dataset.cell, { el, movers, seen: -1, lit: -1 })
   }
 }
 
@@ -2587,11 +2609,18 @@ if (HAS_CANVAS) prepareCells()
 
 /* One clock per cell, started when the camera first arrives, so a cell
    held across two sections does not restart its type halfway through. */
-function drawCell(name, time, sectionStart) {
+function drawCell(name, time, sectionStart, reveal) {
   const c = CELLS.get(name)
   if (!c) return
   if (c.seen < 0 || sectionStart < c.seen) c.seen = sectionStart
   const lt = time - c.seen
+
+  /* A second clock for anything that must wait for a later beat. The
+     sheet is on screen from the first frame, so its errors would
+     otherwise finish lighting two seconds in — long before the camera
+     has pulled back far enough for anyone to see them. */
+  if (reveal && (c.lit < 0 || sectionStart < c.lit)) c.lit = sectionStart
+  const litT = c.lit < 0 ? -99 : time - c.lit
 
   c.movers.forEach((m, i) => {
     const at = 0.18 + i * 0.05
@@ -2609,6 +2638,10 @@ function drawCell(name, time, sectionStart) {
     } else if (m.kind === 'draw') {
       m.el.style.transformOrigin = '50% 0'
       m.el.style.transform = `scaleY(${Math.min(q, 1).toFixed(3)})`
+    } else if (m.kind === 'err') {
+      /* On its own clock, and staggered wide enough that they land one
+         at a time across the pull-back rather than all together. */
+      m.el.style.opacity = seg(litT, 0.25 + i * 0.055, 0.25 + i * 0.055 + 0.5, EASE_OUT).toFixed(3)
     } else if (m.kind === 'caret') {
       m.el.style.opacity = (raw >= 1 && Math.floor((lt - at) * 2) % 2 === 0 ? 1 : 0).toFixed(2)
     } else if (m.kind === 'pane') {
@@ -2638,7 +2671,7 @@ function drawCamera(lt, s, prev, time) {
     `translate(${(540 - x * z).toFixed(2)}px, ${(960 - y * z).toFixed(2)}px) scale(${z.toFixed(4)})`
 
   if (canvasScene && s.scene) canvasScene.scene.render(canvasScene.els, (s.from || 0) + lt)
-  if (s.cell) drawCell(s.cell, time, s.t0)
+  if (s.cell) drawCell(s.cell, time, s.t0, s.reveal)
 }
 
 /* ------------------------------------------------------------------
