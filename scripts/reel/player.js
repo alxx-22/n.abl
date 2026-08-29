@@ -132,6 +132,10 @@ const stage    = $('stage')
 const camBox   = $('cam')
 const camVideo = $('camVideo')
 const sceneBox = $('sceneBox')
+const sceneSlide = $('sceneSlide')
+const sceneGlow = $('sceneGlow')
+const sceneSheen = $('sceneSheen')
+const dotRow  = $('dots')
 const typeBox  = $('type')
 const guides   = $('guides')
 
@@ -152,7 +156,7 @@ for (const [name, scene] of Object.entries(SCENES)) {
   svg.setAttribute('viewBox', '320 146 800 608')
   svg.setAttribute('width', '100%')
   svg.setAttribute('height', '100%')
-  sceneBox.appendChild(host)
+  sceneSlide.appendChild(host)
   mounted[name] = { scene, host, els: scene.bind(host) }
 }
 
@@ -197,51 +201,132 @@ function draw(time) {
   camBox.style.height = `${rect.h.toFixed(1)}px`
   camBox.style.opacity = on.toFixed(3)
 
-  /* ---- scene: only the active one renders ---- */
+  /* ---- scene ----
+     One conveyor for everything on the stage: a scene rises through its
+     own mask, holds, and carries on up and out. Same grammar as the type
+     below it, which is what stops twelve sections reading as twelve
+     unrelated slides. */
   for (const [name, m] of Object.entries(mounted)) {
     const active = s.scene === name
     m.host.style.opacity = active ? '1' : '0'
     if (active) m.scene.render(m.els, (s.from || 0) + lt)
   }
-  /* The scene box itself fades, so a scene arriving does not pop in
-     behind type that is already settled. */
-  sceneBox.style.opacity = s.scene ? seg(lt, 0.06, 0.52, EASE_OUT).toFixed(3) : '0'
+  if (s.scene) {
+    const rise = seg(lt, 0.04, 0.70, EASE_OUT)
+    const leave = seg(lt, s.dur - 0.40, s.dur, EASE)
+    /* Never quite still: a slow drift under the whole band, small enough
+       to read as breathing rather than as movement. */
+    const drift = Math.sin(time * 0.6) * 5
+    /* A few degrees of tilt coming out of the mask, so the band arrives
+       through depth rather than straight up a flat plane. */
+    sceneSlide.style.transform =
+      `translateY(${(lerp(72, 0, rise) - leave * 54 + drift).toFixed(2)}px) ` +
+      `scale(${lerp(0.965, 1, rise).toFixed(4)}) ` +
+      `rotateX(${lerp(5.5, 0, rise).toFixed(2)}deg)`
+    sceneSlide.style.opacity = (rise - leave).toFixed(3)
+    sceneBox.style.opacity = '1'
+    /* The bloom arrives after the scene does, so it reads as the thing
+       lighting up rather than as a backdrop that was always on. */
+    sceneGlow.style.opacity = (seg(lt, 0.34, 1.10, EASE_OUT) * (1 - leave) * 0.9).toFixed(3)
+
+    const sw = seg(lt, 0.40, 1.42, EASE_IO)
+    sceneSheen.style.transform = `translateX(${lerp(-135, 265, sw).toFixed(1)}%) skewX(-12deg)`
+    sceneSheen.style.opacity = (sw > 0.004 && sw < 0.996 ? 1 - leave : 0).toFixed(3)
+  } else {
+    sceneBox.style.opacity = '0'
+    sceneGlow.style.opacity = '0'
+    sceneSheen.style.opacity = '0'
+  }
 
   /* ---- type ---- */
   if (s !== lastSection) { writeType(s); lastSection = s }
-  const inP  = seg(lt, 0.10, 0.72, EASE_OUT)
-  const outP = seg(lt, s.dur - 0.34, s.dur, EASE)
-  typeBox.style.opacity = (inP - outP).toFixed(3)
-  typeBox.style.setProperty('--ty', `${lerp(26, 0, inP).toFixed(1)}px`)
+  const outP = seg(lt, s.dur - 0.42, s.dur - 0.02, EASE)
+  typeBox.style.opacity = (1 - outP).toFixed(3)
+  typeBox.style.setProperty('--ty', '0px')
 
-  /* Cascading lines stagger against their own section clock. */
-  const kids = elLines.children
-  for (let k = 0; k < kids.length; k++) {
-    const a = 0.28 + k * 0.42
-    const q = seg(lt, a, a + 0.62, EASE_OUT)
-    kids[k].style.opacity = (q - outP).toFixed(3)
-    kids[k].style.transform = `translateY(${lerp(18, 0, q).toFixed(1)}px)`
+  /* Every word is a mask with a letter-height slot. It rises in on its
+     own offset and keeps going on the way out — one direction of travel,
+     never a fade. */
+  for (const group of wordGroups) {
+    for (let k = 0; k < group.words.length; k++) {
+      const a = group.at + k * group.step
+      const q = seg(lt, a, a + 0.74, EASE_OUT)
+      const y = (1 - q) * 108 - outP * 112
+      group.words[k].style.transform = `translateY(${y.toFixed(2)}%)`
+    }
   }
+
+  /* ---- the six marks ---- */
+  paintDots(time)
 
   paintTransport(time, i)
 }
 
+/* Split a line into per-word masks and return the movers, so draw() has
+   a flat list to push and never touches the DOM shape again. */
+function words(host, text) {
+  host.replaceChildren()
+  const movers = []
+  for (const w of String(text).split(' ')) {
+    const mask = document.createElement('span')
+    mask.className = 'w'
+    const inner = document.createElement('i')
+    inner.textContent = w
+    mask.appendChild(inner)
+    host.appendChild(mask)
+    movers.push(inner)
+  }
+  return movers
+}
+
+/* Rebuilt only when the section changes. Each group carries its own
+   start and its own step, because a kicker of two words and a headline
+   of six should not arrive at the same rate. */
+let wordGroups = []
+
 function writeType(s) {
   typeBox.dataset.at = s.text
-  elKicker.textContent = s.kicker || ''
+  wordGroups = []
+
   elKicker.hidden = !s.kicker
-  elHead.textContent = s.head || ''
+  if (s.kicker) wordGroups.push({ words: words(elKicker, s.kicker), at: 0.06, step: 0.035 })
+
   elHead.hidden = !s.head
-  elSub.textContent = s.sub || ''
-  elSub.hidden = !s.sub
+  if (s.head) wordGroups.push({ words: words(elHead, s.head), at: 0.16, step: 0.062 })
+
   elLines.replaceChildren()
   elLines.hidden = !s.lines
-  for (const line of s.lines || []) {
+  ;(s.lines || []).forEach((line, i) => {
     const p = document.createElement('p')
     p.className = 'tLine'
-    p.textContent = line
     elLines.appendChild(p)
-  }
+    wordGroups.push({ words: words(p, line), at: 0.24 + i * 0.34, step: 0.05 })
+  })
+
+  elSub.hidden = !s.sub
+  if (s.sub) wordGroups.push({ words: words(elSub, s.sub), at: 0.52, step: 0.028 })
+}
+
+/* ------------------------------------------------------------------
+   Six marks under the band. Not decoration: during a montage of six
+   near-identical beats, "which one is this" is the one thing the frame
+   cannot otherwise say.
+   ------------------------------------------------------------------ */
+const SERVICES = SHOW.filter((s) => s.scene)
+for (const _ of SERVICES) dotRow.appendChild(document.createElement('i'))
+
+function paintDots(time) {
+  let any = 0
+  SERVICES.forEach((s, i) => {
+    const on = seg(time, s.t0 - 0.22, s.t0 + 0.34, EASE) - seg(time, s.t1 - 0.22, s.t1 + 0.34, EASE)
+    any = Math.max(any, on)
+    const d = dotRow.children[i]
+    d.style.width = `${lerp(26, 58, on).toFixed(1)}px`
+    d.style.backgroundColor = on > 0.02
+      ? `rgba(${C.amberRGB},${(0.15 + 0.85 * on).toFixed(3)})`
+      : `rgba(${C.creamRGB},0.15)`
+  })
+  dotRow.style.opacity = any.toFixed(3)
 }
 
 /* ------------------------------------------------------------------

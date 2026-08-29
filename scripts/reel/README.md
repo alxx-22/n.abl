@@ -43,6 +43,31 @@ Everything you'd want to edit is the `SHOW` array at the top of
   words as `head`: reading your own caption aloud is the tell of a
   video made from a script rather than by a person.
 
+## The motion language
+
+One rule, applied to everything: **things travel in one direction through
+a mask.** Nothing fades in place.
+
+- **Type** — every word gets its own mask (`.w`) and rises out of it on
+  its own offset. It keeps going up and out on the way out, so a section
+  change is one continuous move rather than a crossfade. `wordGroups`
+  carries a start and a step per group: a two-word kicker and a six-word
+  headline should not arrive at the same rate.
+- **Scenes** — the band rises through `#sceneBox`, which is the mask,
+  with a few degrees of `rotateX` easing off so it arrives through depth
+  rather than up a flat plane. A slow sine keeps it breathing while it
+  holds.
+- **Light** — `#sceneGlow` blooms *after* the band lands, so it reads as
+  the thing lighting up rather than a backdrop that was always on.
+  `#sceneSheen` is one specular pass across the surface.
+- **The six marks** — not decoration. Through six near-identical beats,
+  "which one is this" is the one thing the frame cannot otherwise say.
+
+All of it runs off the repository's own curves. `EASE_OUT` for arrivals,
+`EASE_IO` for anything travelling across the frame — the sheen included,
+because an arrival curve on a traverse spends its distance early and then
+crawls.
+
 ## Why the numbers are what they are
 
 `SAFE` is Instagram's chrome as margins — 250 top, 480 bottom, 60 left,
