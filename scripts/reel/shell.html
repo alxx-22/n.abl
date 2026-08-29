@@ -1,0 +1,286 @@
+<title>n.abl Reel Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* ------------------------------------------------------------------
+   Palette, faces and curves are src/styles/tokens.css. The recording
+   surface has to match the site it advertises, so nothing here is a
+   new decision — only the sizes, which are for a phone held at arm's
+   length rather than a browser window.
+   ------------------------------------------------------------------ */
+:root{
+  --bg:#0E0C0A; --bg-alt:#13100E;
+  --s1:#1A1613; --s2:#221D18; --s3:#2B241E;
+  --cream100:#FBF6EC; --cream200:#F0E7D8; --cream400:#C8BBA8; --cream600:#9A8F80;
+  --cream-rgb:240,231,216;
+  --amber200:#F8D9A4; --amber300:#F2C57E; --amber400:#E9AC57; --amber600:#B87718;
+  --amber-rgb:233,172,87;
+  --on-accent:#24170A;
+  --danger:#E0796D; --success:#9DBE97;
+  --line-faint:rgba(var(--cream-rgb),.06);
+  --line:rgba(var(--cream-rgb),.11);
+  --line-strong:rgba(var(--cream-rgb),.20);
+  --key:#00B140;
+  --display:'Space Grotesk','Inter Tight',system-ui,sans-serif;
+  --sans:'Inter Tight',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,'SF Mono',monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--cream200);font-family:var(--sans);
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:1fr 400px;height:100vh;height:100dvh}
+.viewport{position:relative;overflow:hidden;background:
+  radial-gradient(120% 80% at 50% 0%, #17120E 0%, var(--bg) 62%)}
+.side{border-left:1px solid var(--line);background:var(--bg-alt);
+  display:flex;flex-direction:column;overflow:hidden}
+body.is-clean .side{display:none}
+body.is-clean .app{grid-template-columns:1fr}
+
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;height:auto}
+  .viewport{height:70vh}
+  .side{border-left:0;border-top:1px solid var(--line)}
+}
+
+/* ---------- the stage ---------- */
+#stage{position:absolute;top:0;left:0;width:1080px;height:1920px;transform-origin:0 0;
+  background:var(--bg);overflow:hidden;
+  /* the site's own bloom, so the reel reads as the same surface */
+  background-image:radial-gradient(90% 55% at 50% 8%, rgba(var(--amber-rgb),.07) 0%, transparent 60%),
+                   radial-gradient(70% 40% at 50% 100%, rgba(var(--cream-rgb),.04) 0%, transparent 70%)}
+.layer{position:absolute;inset:0}
+
+/* camera window — a rectangle that moves, never a swap between layouts */
+#cam{position:absolute;top:0;left:0;overflow:hidden;will-change:transform,width,height,opacity}
+/* Visibility is driven by #cam[data-mode] alone. Setting the hidden
+   attribute here would lose to these display declarations, which is
+   how an empty black <video> ended up painting over the key colour. */
+/* Framed at 30% rather than centred. A bottom-half camera centres its
+   subject at y1400, which is underneath Instagram's caption and profile
+   row — so the face is pulled up into the part of the band that stays
+   visible. Nudge this if you sit high or low in your own frame. */
+#camVideo{width:100%;height:100%;object-fit:cover;object-position:50% 30%;transform:scaleX(-1)}
+#camKey{width:100%;height:100%;background:var(--key);place-items:center}
+#cam[data-mode="live"] #camVideo{display:block}
+#cam[data-mode="live"] #camKey{display:none}
+#cam[data-mode="key"] #camVideo{display:none}
+#cam[data-mode="key"] #camKey{display:grid}
+#cam[data-mode="off"] #camVideo,#cam[data-mode="off"] #camKey{display:none}
+#camKey span{font-family:var(--mono);font-size:26px;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(0,0,0,.42)}
+/* corner ticks, so a keyed region is still findable once the green is gone */
+#camKey::before,#camKey::after{content:'';position:absolute;width:54px;height:54px;
+  border:3px solid rgba(0,0,0,.3)}
+#camKey::before{top:22px;left:22px;border-right:0;border-bottom:0}
+#camKey::after{bottom:22px;right:22px;border-left:0;border-top:0}
+
+/* scene band */
+#sceneBox{position:absolute;left:40px;top:620px;width:1000px;height:760px}
+.sceneHost{position:absolute;inset:0}
+.sceneHost svg{display:block;width:100%;height:100%}
+
+/* ---------- type on the stage ---------- */
+body.no-text #type{visibility:hidden}
+#type{position:absolute;left:60px;right:120px;display:flex;flex-direction:column;gap:22px;
+  will-change:transform,opacity;--ty:0px;transform:translateY(var(--ty))}
+#type[data-at="upper"]{top:300px}
+#type[data-at="above"]{top:300px}
+#type[data-at="centre"]{top:50%;transform:translateY(calc(-50% + var(--ty)))}
+#type[data-at="under"]{top:960px}
+#type[data-at="lower"]{bottom:520px}
+#tKicker{font-family:var(--mono);font-size:30px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--amber400);margin:0}
+#tHead{font-family:var(--display);font-weight:700;font-size:96px;line-height:1.02;
+  letter-spacing:-.03em;color:var(--cream100);margin:0;text-wrap:balance}
+#type[data-at="lower"] #tHead{font-size:104px}
+#tSub{font-size:42px;line-height:1.35;color:var(--cream400);margin:0;max-width:820px}
+#tLines{margin:0;display:flex;flex-direction:column;gap:18px}
+.tLine{font-family:var(--display);font-weight:500;font-size:62px;line-height:1.15;
+  letter-spacing:-.02em;color:var(--cream200);margin:0;will-change:transform,opacity}
+
+/* ---------- guides ---------- */
+#guides{pointer-events:none}
+#guides i{position:absolute;display:block}
+.g-safe{inset:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  border:2px dashed rgba(233,172,87,.42)}
+.g-hook{left:var(--safe-left);right:var(--safe-right);top:200px;height:400px;
+  background:rgba(233,172,87,.07);border-top:1px solid rgba(233,172,87,.3);
+  border-bottom:1px solid rgba(233,172,87,.3)}
+.g-rail{top:0;bottom:0;right:0;width:var(--safe-right);background:rgba(224,121,109,.10)}
+.g-caption{left:0;right:0;bottom:0;height:var(--safe-bottom);background:rgba(224,121,109,.10)}
+.g-tag{position:absolute;font-family:var(--mono);font-size:20px;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(233,172,87,.75)}
+
+/* ---------- side panel ---------- */
+.pane{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.pane--grow{flex:1;overflow-y:auto;border-bottom:0}
+.label{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--cream600);margin:0}
+
+.btn{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--cream200);
+  background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px 14px;
+  cursor:pointer;min-height:36px}
+.btn:hover{background:var(--s3);border-color:var(--line-strong)}
+.btn:focus-visible{outline:2px solid var(--amber400);outline-offset:2px}
+.btn[aria-pressed="true"]{background:var(--amber400);color:var(--on-accent);border-color:var(--amber400)}
+.btn--go{background:var(--amber400);color:var(--on-accent);border-color:var(--amber400);font-weight:600}
+.btn--go:hover{background:var(--amber300)}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* transport */
+#bar{height:8px;background:var(--s2);border-radius:99px;cursor:pointer;overflow:hidden;
+  border:1px solid var(--line-faint)}
+#barFill{height:100%;background:linear-gradient(90deg,var(--amber600),var(--amber400));width:0}
+.tc{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;
+  color:var(--cream600);font-variant-numeric:tabular-nums}
+
+#chips{display:flex;gap:2px}
+.chip{flex:1 1 0;min-width:0;background:var(--s1);border:1px solid var(--line-faint);border-radius:3px;
+  padding:5px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;
+  overflow:hidden;min-height:34px}
+.chip:hover{background:var(--s3)}
+.chip__n{font-family:var(--mono);font-size:9px;color:var(--cream600)}
+.chip__id{font-size:8px;color:var(--cream600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chip.is-on{background:var(--amber400);border-color:var(--amber400)}
+.chip.is-on .chip__n,.chip.is-on .chip__id{color:var(--on-accent);font-weight:600}
+
+/* prompter */
+.prompt{background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px}
+#promptSec{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--amber400);margin:0}
+#promptNow{font-size:21px;line-height:1.35;color:var(--cream100);margin:0;font-weight:500;
+  text-wrap:balance}
+#promptNext{font-size:13px;line-height:1.4;color:var(--cream600);margin:0;
+  border-top:1px solid var(--line-faint);padding-top:9px}
+
+/* script sheet */
+#sheet{display:flex;flex-direction:column;gap:1px}
+.row{display:grid;grid-template-columns:46px 96px 1fr;gap:8px;padding:8px 6px;cursor:pointer;
+  border-radius:4px;align-items:start}
+.row:hover{background:var(--s1)}
+.row__t{font-family:var(--mono);font-size:10px;color:var(--cream600);font-variant-numeric:tabular-nums;
+  padding-top:2px}
+.row__cam{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--cream600);padding-top:3px}
+.row__cam[data-on="true"]{color:var(--success)}
+.row__say{font-size:12.5px;line-height:1.45;color:var(--cream400)}
+
+.how{font-size:12.5px;line-height:1.55;color:var(--cream400);margin:0}
+.how ol{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.how li::marker{color:var(--amber600)}
+kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid var(--line);
+  border-radius:3px;padding:1px 5px;color:var(--cream200)}
+#note{font-size:12px;line-height:1.45;color:var(--danger);background:rgba(224,121,109,.09);
+  border:1px solid rgba(224,121,109,.3);border-radius:6px;padding:9px 11px;margin:0}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+
+  <div class="viewport">
+    <div id="stage">
+
+      <div class="layer" id="sceneBox"></div>
+
+      <div id="cam" data-mode="key">
+        <video id="camVideo" playsinline muted></video>
+        <div id="camKey"><span>camera</span></div>
+      </div>
+
+      <div id="type" data-at="upper">
+        <p id="tKicker"></p>
+        <h1 id="tHead"></h1>
+        <div id="tLines"></div>
+        <p id="tSub"></p>
+      </div>
+
+      <div class="layer" id="guides">
+        <i class="g-caption"></i>
+        <i class="g-rail"></i>
+        <i class="g-hook"></i>
+        <i class="g-safe"></i>
+        <span class="g-tag" style="left:70px;top:214px">hook text zone</span>
+        <span class="g-tag" style="left:70px;bottom:calc(var(--safe-bottom) + 12px)">safe area</span>
+        <span class="g-tag" style="left:70px;bottom:18px">caption &amp; profile</span>
+      </div>
+
+    </div>
+  </div>
+
+  <aside class="side">
+
+    <div class="pane">
+      <p class="label">Transport</p>
+      <div id="bar"><div id="barFill"></div></div>
+      <div class="tc"><span id="tcNow">0:00.0</span><span id="tcTotal">0:00.0</span></div>
+      <div id="chips"></div>
+      <div class="row-btns">
+        <button type="button" class="btn btn--go" id="btnPlay" aria-pressed="false">Play</button>
+        <button type="button" class="btn" id="btnRestart">Restart</button>
+        <button type="button" class="btn" id="btnGuides" aria-pressed="true">Guides</button>
+        <button type="button" class="btn" id="btnFull">Clean view</button>
+      </div>
+    </div>
+
+    <div class="pane">
+      <p class="label">Camera</p>
+      <div class="row-btns">
+        <button type="button" class="btn" data-cam="live" aria-pressed="false">Use my webcam</button>
+        <button type="button" class="btn" data-cam="key" aria-pressed="true">Key colour</button>
+        <button type="button" class="btn" data-cam="off" aria-pressed="false">Hide</button>
+        <button type="button" class="btn" id="btnMirror" aria-pressed="true">Mirror</button>
+        <button type="button" class="btn" id="btnText" aria-pressed="true">Text</button>
+      </div>
+      <p id="note" hidden></p>
+    </div>
+
+    <div class="pane">
+      <p class="label">Say this</p>
+      <div class="prompt">
+        <p id="promptSec"></p>
+        <p id="promptNow"></p>
+        <p id="promptNext"></p>
+      </div>
+    </div>
+
+    <div class="pane pane--grow">
+      <p class="label">Run of show &mdash; click a line to jump</p>
+      <div id="sheet"></div>
+
+      <p class="label" style="margin-top:14px">How to record</p>
+      <p class="how"><strong style="color:var(--cream100)">With your webcam here:</strong> hit
+        <em>Use my webcam</em>, then <em>Clean view</em>, then screen-record the stage. Everything is
+        already composited.</p>
+      <p class="how"><strong style="color:var(--cream100)">Keying it in your editor:</strong></p>
+      <ol class="how">
+        <li>Leave it on <em>Key colour</em> and turn <em>Guides</em> off.</li>
+        <li><em>Clean view</em>, then screen-record the 9:16 stage.</li>
+        <li>Drop that recording over your webcam take in CapCut, Premiere or OBS.</li>
+        <li>Chroma-key the green <span class="how" style="font-family:var(--mono)">#00B140</span> out.
+          Your face lands in the window and moves with it.</li>
+        <li>Two sections put type over a full-frame camera. Keying those would fringe the
+          letters green, so record a second pass with <em>Text</em> off and lay the type
+          back over the top &mdash; or just use the webcam mode, which has no key to fringe.</li>
+      </ol>
+      <p class="how" style="margin-top:10px">
+        <kbd>space</kbd> play · <kbd>&larr;</kbd><kbd>&rarr;</kbd> 1s (<kbd>shift</kbd> 5s) ·
+        <kbd>r</kbd> restart · <kbd>g</kbd> guides · <kbd>f</kbd> clean · <kbd>m</kbd> mirror
+      </p>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+<!--SCENES-->
+</script>
+<script>
+<!--PLAYER-->
+</script>

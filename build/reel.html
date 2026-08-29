@@ -1,0 +1,2383 @@
+<title>n.abl Reel Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* ------------------------------------------------------------------
+   Palette, faces and curves are src/styles/tokens.css. The recording
+   surface has to match the site it advertises, so nothing here is a
+   new decision — only the sizes, which are for a phone held at arm's
+   length rather than a browser window.
+   ------------------------------------------------------------------ */
+:root{
+  --bg:#0E0C0A; --bg-alt:#13100E;
+  --s1:#1A1613; --s2:#221D18; --s3:#2B241E;
+  --cream100:#FBF6EC; --cream200:#F0E7D8; --cream400:#C8BBA8; --cream600:#9A8F80;
+  --cream-rgb:240,231,216;
+  --amber200:#F8D9A4; --amber300:#F2C57E; --amber400:#E9AC57; --amber600:#B87718;
+  --amber-rgb:233,172,87;
+  --on-accent:#24170A;
+  --danger:#E0796D; --success:#9DBE97;
+  --line-faint:rgba(var(--cream-rgb),.06);
+  --line:rgba(var(--cream-rgb),.11);
+  --line-strong:rgba(var(--cream-rgb),.20);
+  --key:#00B140;
+  --display:'Space Grotesk','Inter Tight',system-ui,sans-serif;
+  --sans:'Inter Tight',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,'SF Mono',monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--cream200);font-family:var(--sans);
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:1fr 400px;height:100vh;height:100dvh}
+.viewport{position:relative;overflow:hidden;background:
+  radial-gradient(120% 80% at 50% 0%, #17120E 0%, var(--bg) 62%)}
+.side{border-left:1px solid var(--line);background:var(--bg-alt);
+  display:flex;flex-direction:column;overflow:hidden}
+body.is-clean .side{display:none}
+body.is-clean .app{grid-template-columns:1fr}
+
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;height:auto}
+  .viewport{height:70vh}
+  .side{border-left:0;border-top:1px solid var(--line)}
+}
+
+/* ---------- the stage ---------- */
+#stage{position:absolute;top:0;left:0;width:1080px;height:1920px;transform-origin:0 0;
+  background:var(--bg);overflow:hidden;
+  /* the site's own bloom, so the reel reads as the same surface */
+  background-image:radial-gradient(90% 55% at 50% 8%, rgba(var(--amber-rgb),.07) 0%, transparent 60%),
+                   radial-gradient(70% 40% at 50% 100%, rgba(var(--cream-rgb),.04) 0%, transparent 70%)}
+.layer{position:absolute;inset:0}
+
+/* camera window — a rectangle that moves, never a swap between layouts */
+#cam{position:absolute;top:0;left:0;overflow:hidden;will-change:transform,width,height,opacity}
+/* Visibility is driven by #cam[data-mode] alone. Setting the hidden
+   attribute here would lose to these display declarations, which is
+   how an empty black <video> ended up painting over the key colour. */
+/* Framed at 30% rather than centred. A bottom-half camera centres its
+   subject at y1400, which is underneath Instagram's caption and profile
+   row — so the face is pulled up into the part of the band that stays
+   visible. Nudge this if you sit high or low in your own frame. */
+#camVideo{width:100%;height:100%;object-fit:cover;object-position:50% 30%;transform:scaleX(-1)}
+#camKey{width:100%;height:100%;background:var(--key);place-items:center}
+#cam[data-mode="live"] #camVideo{display:block}
+#cam[data-mode="live"] #camKey{display:none}
+#cam[data-mode="key"] #camVideo{display:none}
+#cam[data-mode="key"] #camKey{display:grid}
+#cam[data-mode="off"] #camVideo,#cam[data-mode="off"] #camKey{display:none}
+#camKey span{font-family:var(--mono);font-size:26px;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(0,0,0,.42)}
+/* corner ticks, so a keyed region is still findable once the green is gone */
+#camKey::before,#camKey::after{content:'';position:absolute;width:54px;height:54px;
+  border:3px solid rgba(0,0,0,.3)}
+#camKey::before{top:22px;left:22px;border-right:0;border-bottom:0}
+#camKey::after{bottom:22px;right:22px;border-left:0;border-top:0}
+
+/* scene band */
+#sceneBox{position:absolute;left:40px;top:620px;width:1000px;height:760px}
+.sceneHost{position:absolute;inset:0}
+.sceneHost svg{display:block;width:100%;height:100%}
+
+/* ---------- type on the stage ---------- */
+body.no-text #type{visibility:hidden}
+#type{position:absolute;left:60px;right:120px;display:flex;flex-direction:column;gap:22px;
+  will-change:transform,opacity;--ty:0px;transform:translateY(var(--ty))}
+#type[data-at="upper"]{top:300px}
+#type[data-at="above"]{top:300px}
+#type[data-at="centre"]{top:50%;transform:translateY(calc(-50% + var(--ty)))}
+#type[data-at="under"]{top:960px}
+#type[data-at="lower"]{bottom:520px}
+#tKicker{font-family:var(--mono);font-size:30px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--amber400);margin:0}
+#tHead{font-family:var(--display);font-weight:700;font-size:96px;line-height:1.02;
+  letter-spacing:-.03em;color:var(--cream100);margin:0;text-wrap:balance}
+#type[data-at="lower"] #tHead{font-size:104px}
+#tSub{font-size:42px;line-height:1.35;color:var(--cream400);margin:0;max-width:820px}
+#tLines{margin:0;display:flex;flex-direction:column;gap:18px}
+.tLine{font-family:var(--display);font-weight:500;font-size:62px;line-height:1.15;
+  letter-spacing:-.02em;color:var(--cream200);margin:0;will-change:transform,opacity}
+
+/* ---------- guides ---------- */
+#guides{pointer-events:none}
+#guides i{position:absolute;display:block}
+.g-safe{inset:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  border:2px dashed rgba(233,172,87,.42)}
+.g-hook{left:var(--safe-left);right:var(--safe-right);top:200px;height:400px;
+  background:rgba(233,172,87,.07);border-top:1px solid rgba(233,172,87,.3);
+  border-bottom:1px solid rgba(233,172,87,.3)}
+.g-rail{top:0;bottom:0;right:0;width:var(--safe-right);background:rgba(224,121,109,.10)}
+.g-caption{left:0;right:0;bottom:0;height:var(--safe-bottom);background:rgba(224,121,109,.10)}
+.g-tag{position:absolute;font-family:var(--mono);font-size:20px;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(233,172,87,.75)}
+
+/* ---------- side panel ---------- */
+.pane{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.pane--grow{flex:1;overflow-y:auto;border-bottom:0}
+.label{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--cream600);margin:0}
+
+.btn{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--cream200);
+  background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px 14px;
+  cursor:pointer;min-height:36px}
+.btn:hover{background:var(--s3);border-color:var(--line-strong)}
+.btn:focus-visible{outline:2px solid var(--amber400);outline-offset:2px}
+.btn[aria-pressed="true"]{background:var(--amber400);color:var(--on-accent);border-color:var(--amber400)}
+.btn--go{background:var(--amber400);color:var(--on-accent);border-color:var(--amber400);font-weight:600}
+.btn--go:hover{background:var(--amber300)}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* transport */
+#bar{height:8px;background:var(--s2);border-radius:99px;cursor:pointer;overflow:hidden;
+  border:1px solid var(--line-faint)}
+#barFill{height:100%;background:linear-gradient(90deg,var(--amber600),var(--amber400));width:0}
+.tc{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;
+  color:var(--cream600);font-variant-numeric:tabular-nums}
+
+#chips{display:flex;gap:2px}
+.chip{flex:1 1 0;min-width:0;background:var(--s1);border:1px solid var(--line-faint);border-radius:3px;
+  padding:5px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;
+  overflow:hidden;min-height:34px}
+.chip:hover{background:var(--s3)}
+.chip__n{font-family:var(--mono);font-size:9px;color:var(--cream600)}
+.chip__id{font-size:8px;color:var(--cream600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chip.is-on{background:var(--amber400);border-color:var(--amber400)}
+.chip.is-on .chip__n,.chip.is-on .chip__id{color:var(--on-accent);font-weight:600}
+
+/* prompter */
+.prompt{background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px}
+#promptSec{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--amber400);margin:0}
+#promptNow{font-size:21px;line-height:1.35;color:var(--cream100);margin:0;font-weight:500;
+  text-wrap:balance}
+#promptNext{font-size:13px;line-height:1.4;color:var(--cream600);margin:0;
+  border-top:1px solid var(--line-faint);padding-top:9px}
+
+/* script sheet */
+#sheet{display:flex;flex-direction:column;gap:1px}
+.row{display:grid;grid-template-columns:46px 96px 1fr;gap:8px;padding:8px 6px;cursor:pointer;
+  border-radius:4px;align-items:start}
+.row:hover{background:var(--s1)}
+.row__t{font-family:var(--mono);font-size:10px;color:var(--cream600);font-variant-numeric:tabular-nums;
+  padding-top:2px}
+.row__cam{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--cream600);padding-top:3px}
+.row__cam[data-on="true"]{color:var(--success)}
+.row__say{font-size:12.5px;line-height:1.45;color:var(--cream400)}
+
+.how{font-size:12.5px;line-height:1.55;color:var(--cream400);margin:0}
+.how ol{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.how li::marker{color:var(--amber600)}
+kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid var(--line);
+  border-radius:3px;padding:1px 5px;color:var(--cream200)}
+#note{font-size:12px;line-height:1.45;color:var(--danger);background:rgba(224,121,109,.09);
+  border:1px solid rgba(224,121,109,.3);border-radius:6px;padding:9px 11px;margin:0}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+
+  <div class="viewport">
+    <div id="stage">
+
+      <div class="layer" id="sceneBox"></div>
+
+      <div id="cam" data-mode="key">
+        <video id="camVideo" playsinline muted></video>
+        <div id="camKey"><span>camera</span></div>
+      </div>
+
+      <div id="type" data-at="upper">
+        <p id="tKicker"></p>
+        <h1 id="tHead"></h1>
+        <div id="tLines"></div>
+        <p id="tSub"></p>
+      </div>
+
+      <div class="layer" id="guides">
+        <i class="g-caption"></i>
+        <i class="g-rail"></i>
+        <i class="g-hook"></i>
+        <i class="g-safe"></i>
+        <span class="g-tag" style="left:70px;top:214px">hook text zone</span>
+        <span class="g-tag" style="left:70px;bottom:calc(var(--safe-bottom) + 12px)">safe area</span>
+        <span class="g-tag" style="left:70px;bottom:18px">caption &amp; profile</span>
+      </div>
+
+    </div>
+  </div>
+
+  <aside class="side">
+
+    <div class="pane">
+      <p class="label">Transport</p>
+      <div id="bar"><div id="barFill"></div></div>
+      <div class="tc"><span id="tcNow">0:00.0</span><span id="tcTotal">0:00.0</span></div>
+      <div id="chips"></div>
+      <div class="row-btns">
+        <button type="button" class="btn btn--go" id="btnPlay" aria-pressed="false">Play</button>
+        <button type="button" class="btn" id="btnRestart">Restart</button>
+        <button type="button" class="btn" id="btnGuides" aria-pressed="true">Guides</button>
+        <button type="button" class="btn" id="btnFull">Clean view</button>
+      </div>
+    </div>
+
+    <div class="pane">
+      <p class="label">Camera</p>
+      <div class="row-btns">
+        <button type="button" class="btn" data-cam="live" aria-pressed="false">Use my webcam</button>
+        <button type="button" class="btn" data-cam="key" aria-pressed="true">Key colour</button>
+        <button type="button" class="btn" data-cam="off" aria-pressed="false">Hide</button>
+        <button type="button" class="btn" id="btnMirror" aria-pressed="true">Mirror</button>
+        <button type="button" class="btn" id="btnText" aria-pressed="true">Text</button>
+      </div>
+      <p id="note" hidden></p>
+    </div>
+
+    <div class="pane">
+      <p class="label">Say this</p>
+      <div class="prompt">
+        <p id="promptSec"></p>
+        <p id="promptNow"></p>
+        <p id="promptNext"></p>
+      </div>
+    </div>
+
+    <div class="pane pane--grow">
+      <p class="label">Run of show &mdash; click a line to jump</p>
+      <div id="sheet"></div>
+
+      <p class="label" style="margin-top:14px">How to record</p>
+      <p class="how"><strong style="color:var(--cream100)">With your webcam here:</strong> hit
+        <em>Use my webcam</em>, then <em>Clean view</em>, then screen-record the stage. Everything is
+        already composited.</p>
+      <p class="how"><strong style="color:var(--cream100)">Keying it in your editor:</strong></p>
+      <ol class="how">
+        <li>Leave it on <em>Key colour</em> and turn <em>Guides</em> off.</li>
+        <li><em>Clean view</em>, then screen-record the 9:16 stage.</li>
+        <li>Drop that recording over your webcam take in CapCut, Premiere or OBS.</li>
+        <li>Chroma-key the green <span class="how" style="font-family:var(--mono)">#00B140</span> out.
+          Your face lands in the window and moves with it.</li>
+        <li>Two sections put type over a full-frame camera. Keying those would fringe the
+          letters green, so record a second pass with <em>Text</em> off and lay the type
+          back over the top &mdash; or just use the webcam mode, which has no key to fringe.</li>
+      </ol>
+      <p class="how" style="margin-top:10px">
+        <kbd>space</kbd> play · <kbd>&larr;</kbd><kbd>&rarr;</kbd> 1s (<kbd>shift</kbd> 5s) ·
+        <kbd>r</kbd> restart · <kbd>g</kbd> guides · <kbd>f</kbd> clean · <kbd>m</kbd> mirror
+      </p>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+/* ---- engine, from src/components/scenes/engine.js ---- */
+/* ============================================================
+   SCENE ENGINE
+
+   The six service scenes are timelines in real seconds, sampled per
+   frame, not CSS keyframes: a keyframe cannot be asked where it is at
+   4.31s, and every one of these scenes needs exactly that to keep a
+   cursor, a payload and a panel agreeing with each other.
+
+   The curves are the repository's own. EASE and EASE_OUT are the
+   literal values of --ease and --ease-out in tokens.css, solved here
+   with Newton-Raphson so JavaScript can evaluate what CSS interpolates.
+   EASE_IO exists because the other two are arrival curves: they spend
+   most of their travel early, which is right for something coming to
+   rest and wrong for anything accumulating. A trend line drawn on
+   EASE_OUT is 68% complete in the first sixth of its window and then
+   crawls, which reads as a stall rather than a rise.
+   ============================================================ */
+
+function bezier(x1,y1,x2,y2){
+  const cx=3*x1,bx=3*(x2-x1)-cx,ax=1-cx-bx, cy=3*y1,by=3*(y2-y1)-cy,ay=1-cy-by;
+  const fx=t=>((ax*t+bx)*t+cx)*t, dfx=t=>(3*ax*t+2*bx)*t+cx;
+  return x=>{ if(x<=0)return 0; if(x>=1)return 1; let t=x;
+    for(let i=0;i<8;i++){const e=fx(t)-x; if(Math.abs(e)<1e-6)break; const d=dfx(t); if(Math.abs(d)<1e-6)break; t-=e/d;}
+    return ((ay*t+by)*t+cy)*t; };
+}
+const EASE=bezier(.22,1,.36,1), EASE_OUT=bezier(.16,1,.3,1), LINEAR=x=>x;
+const EASE_IO=bezier(.5,0,.5,1);   // for accumulation, not arrival
+const seg=(t,a,b,e)=> t<=a?0 : t>=b?1 : (e||LINEAR)((t-a)/(b-a));
+const lerp=(a,b,p)=>a+(b-a)*p;
+const pulse=(t,a,b,c)=>seg(t,a,b)-seg(t,b,c);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function arc(from,to,p,bow){
+  const mx=(from[0]+to[0])/2,my=(from[1]+to[1])/2, dx=to[0]-from[0],dy=to[1]-from[1];
+  const L=Math.hypot(dx,dy)||1, cx=mx-dy/L*bow, cy=my+dx/L*bow, q=1-p;
+  return [q*q*from[0]+2*q*p*cx+p*p*to[0], q*q*from[1]+2*q*p*cy+p*p*to[1]];
+}
+const C={bg:'#0E0C0A',frame:'#16120F',s1:'#1A1613',s2:'#221D18',s3:'#2B241E',s4:'#362D25',
+  cream100:'#FBF6EC',cream200:'#F0E7D8',amber:'#E9AC57',amber200:'#F8D9A4',
+  creamRGB:'240,231,216',amberRGB:'233,172,87'};
+const cr=a=>`rgba(${C.creamRGB},${a})`, am=a=>`rgba(${C.amberRGB},${a})`;
+
+/* Every scene mints ids for its own gradients, filters and clip paths.
+   Two scenes on one page with the same id is one scene borrowing the
+   other's mask, so the counter is shared and never resets. */
+let uid = 0
+const nextUid = () => ++uid
+
+
+/* ---- automation, from src/components/scenes/automation.js ---- */
+/* Automation — a switch is flipped once and a pipeline builds itself. */
+
+
+const SCENE_automation = (function(){
+/* ---- geometry ---------------------------------------------- */
+const F={x:340,y:210,w:760,h:480,r:16,chrome:44};
+const SW={x:434,y:270,w:46,h:24}, SWC=[457,282];
+const BW=92, BH=54;
+const BOX=[ {x:434,y:343}, {x:580,y:343}, {x:726,y:312}, {x:726,y:380}, {x:914,y:343} ];
+const BC=BOX.map(b=>[b.x+BW/2, b.y+BH/2]);
+const CONN=[
+  'M526 370 H580',
+  'M672 370 H691 Q699 370 699 362 V347 Q699 339 707 339 H726',
+  'M672 370 H691 Q699 370 699 378 V399 Q699 407 707 407 H726',
+  'M818 339 H887 Q895 339 895 347 V362 Q895 370 903 370 H914',
+  'M818 407 H887 Q895 407 895 399 V378 Q895 370 903 370 H914',
+];
+const RAIL=[
+  'M480 370 H691 Q699 370 699 362 V347 Q699 339 707 339 H887 Q895 339 895 347 V362 Q895 370 903 370 H960',
+  'M480 370 H691 Q699 370 699 378 V399 Q699 407 707 407 H887 Q895 407 895 399 V378 Q895 370 903 370 H960',
+];
+
+/* The readout is three separate readings, not one dashboard: what
+   happened (a log), what it is worth (a stack), and where it is
+   going (a trend). Three thirds of the same 572 the flow occupies,
+   so the two bands share one measure. */
+const ZA={x:434,w:172}, ZB={x:634,w:172}, ZC={x:834,w:172};
+const HEAD_Y=468, RULE_Y=480;
+const BUL_Y=[494,514,534,554,574,594], BUL_W=[120,96,138,108,126,112];
+/* dealt back to front, each one lower and slightly left, so the ones
+   behind show as edges — a deck, not three tiles in a row */
+const CARDS=[{x:646,y:510},{x:640,y:518},{x:634,y:526}];
+const CARD_W=150, CARD_H=64;
+const GR={x:834,w:172,base:596,h:100};
+const GV=[.22,.34,.28,.48,.42,.62,.70,.88];
+const grX=i=>GR.x + i*(GR.w/(GV.length-1));
+const grY=v=>GR.base - v*GR.h;
+const LINE_D = GV.map((v,i)=>`${i?'L':'M'}${grX(i).toFixed(1)} ${grY(v).toFixed(1)}`).join(' ');
+const AREA_D = LINE_D + ` L${grX(GV.length-1).toFixed(1)} ${GR.base} L${grX(0).toFixed(1)} ${GR.base} Z`;
+
+const HOME=[300,780], EXIT=[232,838];
+const CURSOR_PATH='M1 1 L1 17.6 L5.3 13.7 L7.9 19 L10.9 17.7 L8.2 12.5 L13 12.3 Z';
+const DUR=11.2;
+
+const BUILD=[
+  { box:0, wipe:[1.70,2.02] },
+  { conn:0, draw:[2.05,2.45], box:1, wipe:[2.36,2.68] },
+  { conn:1, draw:[2.74,3.20], box:2, wipe:[3.10,3.42] },
+  { conn:2, draw:[2.74,3.20], box:3, wipe:[3.10,3.42] },
+  { conn:3, draw:[3.48,3.94], box:4, wipe:[3.84,4.18] },
+  { conn:4, draw:[3.48,3.94] },
+];
+const SPAWN=[4.35,4.85,5.35,5.85,6.35,6.85], TRAVEL=1.5;
+
+
+function makeScene(){
+  const u=nextUid(),S=[];
+  S.push(`<svg viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A cursor flips one switch and leaves. A pipeline then draws itself step by step, branching into two paths and converging again. Work flows through it, and three readouts fill in beneath: a log of completed items, a stack of value cards, and a rising trend line.">`);
+  S.push(`<defs>`,
+    `<radialGradient id="bA${u}"><stop offset="0" stop-color="${C.amber}" stop-opacity=".11"/><stop offset="1" stop-color="${C.amber}" stop-opacity="0"/></radialGradient>`,
+    `<radialGradient id="bB${u}"><stop offset="0" stop-color="${C.cream200}" stop-opacity=".075"/><stop offset="1" stop-color="${C.cream200}" stop-opacity="0"/></radialGradient>`,
+    `<filter id="cu${u}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="2" stdDeviation="2.6" flood-color="#000" flood-opacity=".6"/></filter>`,
+    `<filter id="gl${u}" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8"/></filter>`,
+    `<filter id="cs${u}" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#000" flood-opacity=".45"/></filter>`,
+    `<linearGradient id="ar${u}" x1="0" y1="${GR.base-GR.h}" x2="0" y2="${GR.base}" gradientUnits="userSpaceOnUse">`
+    + `<stop offset="0" stop-color="${C.amber}" stop-opacity=".20"/>`
+    + `<stop offset="1" stop-color="${C.amber}" stop-opacity=".015"/></linearGradient>`);
+  BOX.forEach((b,i)=> S.push(
+    `<clipPath id="w${i}_${u}"><rect data-el="clip${i}" x="${b.x-14}" y="${b.y-16}" width="0" height="${BH+32}"/></clipPath>`));
+  S.push(`<clipPath id="area${u}"><rect data-el="areaClip" x="${GR.x}" y="${GR.base-GR.h-8}" width="0" height="${GR.h+10}"/></clipPath>`);
+  S.push(`</defs>`);
+
+  S.push(`<rect width="1440" height="900" fill="${C.bg}"/>`);
+  S.push(`<ellipse cx="380" cy="170" rx="540" ry="380" fill="url(#bA${u})"/>`);
+  S.push(`<ellipse cx="1120" cy="770" rx="500" ry="360" fill="url(#bB${u})"/>`);
+  S.push(`<rect x="${F.x}" y="${F.y}" width="${F.w}" height="${F.h}" rx="${F.r}" fill="${C.frame}" stroke="${cr(.15)}"/>`);
+  S.push(`<path d="M${F.x} ${F.y+F.chrome} H${F.x+F.w}" stroke="${cr(.09)}"/>`);
+  const cy=F.y+F.chrome/2;
+  for(let i=0;i<3;i++) S.push(`<circle cx="${F.x+26+i*15}" cy="${cy}" r="3.4" fill="${cr(.16)}"/>`);
+  S.push(`<rect x="${F.x+F.w/2-120}" y="${cy-6}" width="240" height="12" rx="6" fill="${cr(.07)}"/>`);
+
+  S.push(`<rect x="${SW.x}" y="${SW.y}" width="${SW.w}" height="${SW.h}" rx="12" fill="${C.s1}" stroke="${cr(.16)}"/>`);
+  S.push(`<rect data-el="swOn" x="${SW.x}" y="${SW.y}" width="${SW.w}" height="${SW.h}" rx="12" fill="${am(.22)}" stroke="${am(.75)}" opacity="0"/>`);
+  S.push(`<circle data-el="swKnob" cx="${SW.x+12}" cy="${SWC[1]}" r="8.5" fill="${cr(.42)}"/>`);
+  S.push(`<rect x="${SW.x+SW.w+16}" y="${SWC[1]-3.5}" width="110" height="7" rx="3.5" fill="${cr(.14)}"/>`);
+
+  CONN.forEach((d,i)=>{
+    S.push(`<path data-el="conn${i}" d="${d}" fill="none" stroke="${cr(.20)}" stroke-width="1.4" stroke-linecap="round"/>`);
+    S.push(`<polygon data-el="head${i}" points="0,-4.2 8.5,0 0,4.2" fill="${C.amber}" opacity="0"/>`);
+  });
+  RAIL.forEach((d,i)=> S.push(`<path data-el="rail${i}" d="${d}" fill="none" stroke="none"/>`));
+
+  BOX.forEach((b,i)=> S.push(`<g clip-path="url(#w${i}_${u})">`
+    + `<rect x="${b.x}" y="${b.y}" width="${BW}" height="${BH}" rx="10" fill="${C.s2}" stroke="${cr(.18)}"/>`
+    + `<rect x="${b.x+16}" y="${b.y+18}" width="${BW-32}" height="3" rx="1.5" fill="${cr(.24)}"/>`
+    + `<rect x="${b.x+16}" y="${b.y+30}" width="${BW-48}" height="3" rx="1.5" fill="${cr(.13)}"/>`
+    + `<g data-el="lit${i}" opacity="0">`
+      + `<rect x="${b.x-5}" y="${b.y-5}" width="${BW+10}" height="${BH+10}" rx="14" fill="${am(.10)}" filter="url(#gl${u})"/>`
+      + `<rect x="${b.x}" y="${b.y}" width="${BW}" height="${BH}" rx="10" fill="${C.s4}" stroke="${am(.7)}" stroke-width="1.25"/>`
+      + `<rect x="${b.x+16}" y="${b.y+18}" width="${BW-32}" height="3" rx="1.5" fill="${C.amber}"/>`
+      + `<rect x="${b.x+16}" y="${b.y+30}" width="${BW-48}" height="3" rx="1.5" fill="${am(.5)}"/></g>`
+    + `</g>`));
+
+  SPAWN.forEach((_,k)=> S.push(`<rect data-el="pay${k}" x="0" y="0" width="15" height="6" rx="3" fill="${C.amber}" opacity="0"/>`));
+
+  /* --- readout: three headers on one line, three readings under it --- */
+  [ZA,ZB,ZC].forEach((Z,i)=>{
+    S.push(`<g data-el="zhead${i}" opacity="0">`
+      + `<rect x="${Z.x}" y="${HEAD_Y}" width="44" height="5" rx="2.5" fill="${cr(.20)}"/>`
+      + `<path d="M${Z.x} ${RULE_Y} H${Z.x+Z.w}" stroke="${cr(.10)}"/></g>`);
+  });
+  // A — what happened
+  BUL_Y.forEach((y,k)=> S.push(`<g data-el="bul${k}" opacity="0">`
+    + `<circle cx="${ZA.x+4}" cy="${y+3.5}" r="3.2" fill="${am(.85)}"/>`
+    + `<rect x="${ZA.x+16}" y="${y}" width="${BUL_W[k]}" height="7" rx="3.5" fill="${cr(.28)}"/></g>`));
+  // B — what it is worth, as a deck
+  CARDS.forEach((c,i)=>{
+    const front = i===CARDS.length-1;
+    S.push(`<g data-el="card${i}" opacity="0">`
+      + `<rect x="${c.x}" y="${c.y}" width="${CARD_W}" height="${CARD_H}" rx="10" `
+      + `fill="${front?C.s2:C.s1}" stroke="${front?cr(.20):cr(.12)}"${front?` filter="url(#cs${u})"`:''}/>`
+      + (front
+          ? `<rect x="${c.x+14}" y="${c.y+14}" width="40" height="5" rx="2.5" fill="${cr(.20)}"/>`
+          + `<rect data-el="cardVal" x="${c.x+14}" y="${c.y+28}" width="0" height="11" rx="5.5" fill="${C.amber}"/>`
+          + `<rect x="${c.x+14}" y="${c.y+48}" width="54" height="4" rx="2" fill="${cr(.13)}"/>`
+          + `<rect x="${c.x+78}" y="${c.y+48}" width="30" height="4" rx="2" fill="${cr(.08)}"/>`
+          : `<rect x="${c.x+14}" y="${c.y+14}" width="34" height="4" rx="2" fill="${cr(.10)}"/>`)
+      + `</g>`);
+  });
+  // C — where it is going
+  S.push(`<path data-el="grBase" d="M${GR.x} ${GR.base} H${GR.x+GR.w}" stroke="${cr(.10)}" opacity="0"/>`);
+  S.push(`<g clip-path="url(#area${u})"><path d="${AREA_D}" fill="url(#ar${u})" stroke="none"/></g>`);
+  S.push(`<path data-el="grLine" d="${LINE_D}" fill="none" stroke="${C.amber}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`);
+  S.push(`<circle data-el="grDot" r="3.6" fill="${C.amber200}" opacity="0"/>`);
+
+  S.push(`<circle data-el="rip" cx="${SWC[0]}" cy="${SWC[1]}" r="0" fill="none" stroke="${am(.7)}" stroke-width="1.5" opacity="0"/>`);
+  S.push(`<g data-el="cursor"><g transform="scale(1.5)" filter="url(#cu${u})">`
+    + `<path d="${CURSOR_PATH}" fill="${C.cream100}" stroke="${C.bg}" stroke-width="1.1" stroke-linejoin="round"/></g></g>`);
+  S.push(`</svg>`);
+  return S.join('');
+}
+function bind(r){
+  const q=k=>r.querySelector(`[data-el="${k}"]`);
+  const conn=CONN.map((_,i)=>q('conn'+i)), rail=RAIL.map((_,i)=>q('rail'+i));
+  const grLine=q('grLine');
+  return { swOn:q('swOn'), swKnob:q('swKnob'), rip:q('rip'), cursor:q('cursor'),
+    clip:BOX.map((_,i)=>q('clip'+i)), lit:BOX.map((_,i)=>q('lit'+i)),
+    conn, connLen:conn.map(p=>p.getTotalLength()), head:CONN.map((_,i)=>q('head'+i)),
+    rail, railLen:rail.map(p=>p.getTotalLength()), pay:SPAWN.map((_,k)=>q('pay'+k)),
+    zhead:[0,1,2].map(i=>q('zhead'+i)), bul:BUL_Y.map((_,k)=>q('bul'+k)),
+    card:CARDS.map((_,i)=>q('card'+i)), cardVal:q('cardVal'),
+    grBase:q('grBase'), grLine, grLen:grLine.getTotalLength(),
+    grDot:q('grDot'), areaClip:q('areaClip') };
+}
+function tipOn(path, L, p){
+  const d=clamp(L*p,0.2,L);
+  const a=path.getPointAtLength(d), b=path.getPointAtLength(Math.max(0,d-3));
+  return [a.x,a.y,Math.atan2(a.y-b.y,a.x-b.x)*180/Math.PI];
+}
+
+function render(E,t){
+  let p;
+  if (t < 0.30)      p = HOME;
+  else if (t < 1.05) p = arc(HOME, SWC, seg(t,0.30,1.05,EASE), 70);
+  else if (t < 1.55) p = SWC;
+  else if (t < 2.25) p = arc(SWC, EXIT, seg(t,1.55,2.25,EASE), -70);
+  else if (t < 10.3) p = EXIT;
+  else               p = arc(EXIT, HOME, seg(t,10.3,11.0,EASE), 40);
+  E.cursor.setAttribute('transform',
+    `translate(${p[0].toFixed(2)},${p[1].toFixed(2)}) scale(${(1-0.12*pulse(t,1.24,1.30,1.38)).toFixed(3)})`);
+  const rg=seg(t,1.28,1.88,EASE_OUT);
+  E.rip.setAttribute('r', lerp(6,30,rg).toFixed(2));
+  E.rip.setAttribute('opacity',(rg>0&&rg<1?(1-rg)*0.6:0).toFixed(3));
+
+  const on=seg(t,1.32,1.64,EASE_OUT) - seg(t,10.45,10.8,EASE);
+  E.swOn.setAttribute('opacity', on.toFixed(3));
+  E.swKnob.setAttribute('cx', lerp(SW.x+12, SW.x+SW.w-12, on).toFixed(2));
+  E.swKnob.setAttribute('fill', on>.5 ? C.amber200 : cr(.42));
+
+  const undo = seg(t,10.30,10.95,EASE);
+  BUILD.forEach(step=>{
+    if (step.conn !== undefined){
+      const i=step.conn, L=E.connLen[i], g=seg(t, step.draw[0], step.draw[1], EASE_OUT);
+      E.conn[i].setAttribute('stroke-dasharray', L);
+      E.conn[i].setAttribute('stroke-dashoffset', (L*(1-g) + L*undo).toFixed(2));
+      const [hx,hy,ha]=tipOn(E.conn[i], L, g);
+      E.head[i].setAttribute('transform',`translate(${hx.toFixed(2)},${hy.toFixed(2)}) rotate(${ha.toFixed(1)})`);
+      E.head[i].setAttribute('opacity', ((g>0&&g<1?1:0)*(1-undo)).toFixed(3));
+    }
+    if (step.box !== undefined)
+      E.clip[step.box].setAttribute('width',
+        (seg(t, step.wipe[0], step.wipe[1], EASE_OUT)*(1-undo)*(BW+28)).toFixed(2));
+  });
+
+  const lit=BC.map(()=>0);
+  SPAWN.forEach((s0,k)=>{
+    const g=seg(t, s0, s0+TRAVEL, LINEAR), live=g>0&&g<1;
+    const r=E.rail[k%2], L=E.railLen[k%2];
+    if (live){
+      const pt=r.getPointAtLength(L*g);
+      E.pay[k].setAttribute('x',(pt.x-7.5).toFixed(2));
+      E.pay[k].setAttribute('y',(pt.y-3).toFixed(2));
+      BC.forEach((c,i)=>{ lit[i]=Math.max(lit[i], clamp(1-Math.hypot(pt.x-c[0],pt.y-c[1])/70,0,1)); });
+    }
+    E.pay[k].setAttribute('opacity',(live?clamp(Math.min(g*16,(1-g)*16),0,1)*0.95:0).toFixed(3));
+  });
+  lit.forEach((v,i)=> E.lit[i].setAttribute('opacity',(v*(1-undo)).toFixed(3)));
+
+  /* --- the three readouts --- */
+  E.zhead.forEach((h,i)=>
+    h.setAttribute('opacity',((seg(t,4.90+i*0.12,5.24+i*0.12,EASE_OUT))*(1-undo)).toFixed(3)));
+
+  // A: one line per item that finished, in the order they finished
+  SPAWN.forEach((s0,k)=>{
+    const land=s0+TRAVEL;
+    const g=seg(t, land, land+0.34, EASE_OUT);
+    E.bul[k].setAttribute('opacity',(g*(1-undo)).toFixed(3));
+    E.bul[k].setAttribute('transform',`translate(0,${lerp(6,0,g).toFixed(2)})`);
+  });
+
+  // B: the deck is dealt back to front, then the front card fills
+  CARDS.forEach((_,i)=>{
+    const g=seg(t, 5.05+i*0.18, 5.45+i*0.18, EASE_OUT);
+    E.card[i].setAttribute('opacity',(g*(1-undo)).toFixed(3));
+    E.card[i].setAttribute('transform',`translate(0,${lerp(-10,0,g).toFixed(2)})`);
+  });
+  E.cardVal.setAttribute('width',(92*seg(t,5.90,8.40,EASE_IO)*(1-undo)).toFixed(2));
+
+  // C: the line draws, its fill follows it, and a dot rides the tip
+  const gl=seg(t,5.60,8.60,EASE_IO)*(1-undo);
+  E.grBase.setAttribute('opacity',(seg(t,5.20,5.60,EASE_OUT)*(1-undo)).toFixed(3));
+  E.grLine.setAttribute('stroke-dasharray', E.grLen);
+  E.grLine.setAttribute('stroke-dashoffset',(E.grLen*(1-gl)).toFixed(2));
+  E.areaClip.setAttribute('width',(GR.w*gl).toFixed(2));
+  const [dx,dy]=tipOn(E.grLine, E.grLen, gl);
+  E.grDot.setAttribute('cx',dx.toFixed(2)); E.grDot.setAttribute('cy',dy.toFixed(2));
+  E.grDot.setAttribute('opacity',(gl>0.02?(1-undo):0).toFixed(3));
+}
+
+
+return { make: makeScene, bind, render, dur: DUR };
+})()
+
+
+/* ---- data, from src/components/scenes/data.js ---- */
+/* Data & Analytics — ragged rows are cleaned, then stand up as an answer. */
+
+
+const SCENE_data = (function(){
+/* ---- geometry ----------------------------------------------
+   The table and the chart occupy the same region, because they are
+   the same objects at two moments. */
+const F={x:340,y:210,w:760,h:480,r:16,chrome:44};
+const TX=500, ROW_H=20, ROW_STEP=30, ROW_Y0=320;
+const COLW=[176,112,84], COLX=[500,692,820];        // cleaned columns
+const N=8, DUPE=4;                                   // row 4 duplicates row 3
+const rowY=i=>ROW_Y0 + i*ROW_STEP;
+/* the mess: ragged left edges, inconsistent widths, two holes, and a
+   row that is simply there twice */
+const OFF=[0,16,-10,24,24,8,20,-6];
+const WMUL=[[.86,1.14,.72],[1.12,.78,1.22],[.74,1.20,.88],[1.18,.92,.68],
+            [1.18,.92,.68],[.82,1.08,1.16],[1.06,.84,.94],[.92,1.16,.78]];
+const HOLE=[[1,2],[5,1]];                            // row, column
+const isHole=(r,c)=>HOLE.some(h=>h[0]===r&&h[1]===c);
+/* rows that survive the clean, in order — these become the bars */
+const KEEP=[0,1,2,3,5,6,7];
+const BASE=590, BARW=44, BARX=i=>512+i*64;
+const BARH=[64,101,74,117,90,154,110];
+const PEAK=5;
+const REF_Y=BASE-BARH[PEAK];
+const CARD={x:892,y:398,w:136,h:52};
+const SEL0=[496,312], SEL1=[948,562];
+const HOME=[300,780], PEAKC=[BARX(PEAK)+BARW/2, BASE-BARH[PEAK]+16];
+const CURSOR_PATH='M1 1 L1 17.6 L5.3 13.7 L7.9 19 L10.9 17.7 L8.2 12.5 L13 12.3 Z';
+const DUR=11.0;
+
+
+function makeScene(){
+  const u=nextUid(),S=[];
+  S.push(`<svg viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A cursor drags a selection across a table of ragged, misaligned data. The rows align, missing values fill in, a duplicate row collapses, and then the value column stands up into a bar chart where one reading resolves as the answer.">`);
+  S.push(`<defs>`,
+    `<radialGradient id="bA${u}"><stop offset="0" stop-color="${C.amber}" stop-opacity=".11"/><stop offset="1" stop-color="${C.amber}" stop-opacity="0"/></radialGradient>`,
+    `<radialGradient id="bB${u}"><stop offset="0" stop-color="${C.cream200}" stop-opacity=".075"/><stop offset="1" stop-color="${C.cream200}" stop-opacity="0"/></radialGradient>`,
+    `<filter id="cu${u}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="2" stdDeviation="2.6" flood-color="#000" flood-opacity=".6"/></filter>`,
+    `<filter id="gl${u}" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>`,
+    `<filter id="cs${u}" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#000" flood-opacity=".45"/></filter>`,
+    `</defs>`);
+  S.push(`<rect width="1440" height="900" fill="${C.bg}"/>`);
+  S.push(`<ellipse cx="380" cy="170" rx="540" ry="380" fill="url(#bA${u})"/>`);
+  S.push(`<ellipse cx="1120" cy="770" rx="500" ry="360" fill="url(#bB${u})"/>`);
+  S.push(`<rect x="${F.x}" y="${F.y}" width="${F.w}" height="${F.h}" rx="${F.r}" fill="${C.frame}" stroke="${cr(.15)}"/>`);
+  S.push(`<path d="M${F.x} ${F.y+F.chrome} H${F.x+F.w}" stroke="${cr(.09)}"/>`);
+  const cy=F.y+F.chrome/2;
+  for(let i=0;i<3;i++) S.push(`<circle cx="${F.x+26+i*15}" cy="${cy}" r="3.4" fill="${cr(.16)}"/>`);
+  S.push(`<rect x="${F.x+F.w/2-120}" y="${cy-6}" width="240" height="12" rx="6" fill="${cr(.07)}"/>`);
+  // a page heading, so the table reads as sitting in something
+  S.push(`<rect x="${TX}" y="286" width="132" height="9" rx="4.5" fill="${cr(.22)}"/>`);
+
+  S.push(`<path data-el="base" d="M500 ${BASE} H952" stroke="${cr(.13)}" opacity="0"/>`);
+  S.push(`<path data-el="ref" d="M500 ${REF_Y} H952" stroke="${am(.38)}" stroke-width="1.2" stroke-dasharray="4 5" opacity="0"/>`);
+
+  // every cell of every row — cell 0 is the one that becomes a bar
+  for(let r=0;r<N;r++) for(let c=0;c<3;c++){
+    const hole=isHole(r,c);
+    S.push(`<rect data-el="c${r}_${c}" x="0" y="0" width="0" height="${ROW_H}" rx="5" `
+      + `fill="${C.s3}" stroke="${cr(.16)}"/>`);
+    if (hole) S.push(`<rect data-el="h${r}_${c}" x="0" y="0" width="0" height="${ROW_H}" rx="5" `
+      + `fill="${C.bgAlt||'#13100E'}" stroke="${cr(.28)}" stroke-dasharray="3 3"/>`);
+  }
+  // the peak, lit, drawn over its own base bar
+  S.push(`<g data-el="peak" opacity="0">`
+    + `<rect x="${BARX(PEAK)-5}" y="${BASE-BARH[PEAK]-5}" width="${BARW+10}" height="${BARH[PEAK]+10}" rx="12" fill="${am(.10)}" filter="url(#gl${u})"/>`
+    + `<rect x="${BARX(PEAK)}" y="${BASE-BARH[PEAK]}" width="${BARW}" height="${BARH[PEAK]}" rx="5" fill="${am(.30)}" stroke="${C.amber}" stroke-width="1.25"/></g>`);
+  S.push(`<circle data-el="peakDot" cx="${BARX(PEAK)+BARW/2}" cy="${REF_Y}" r="4" fill="${C.amber200}" opacity="0"/>`);
+
+  // the reading, beside the peak
+  S.push(`<g data-el="card" opacity="0">`
+    + `<rect x="${CARD.x}" y="${CARD.y}" width="${CARD.w}" height="${CARD.h}" rx="10" fill="${C.s2}" stroke="${cr(.18)}" filter="url(#cs${u})"/>`
+    + `<rect x="${CARD.x+14}" y="${CARD.y+13}" width="36" height="4" rx="2" fill="${cr(.20)}"/>`
+    + `<rect data-el="cardVal" x="${CARD.x+14}" y="${CARD.y+27}" width="0" height="10" rx="5" fill="${C.amber}"/></g>`);
+
+  S.push(`<rect data-el="sel" x="0" y="0" width="0" height="0" rx="4" fill="${am(.07)}" stroke="${am(.5)}" stroke-dasharray="4 4" opacity="0"/>`);
+  S.push(`<g data-el="cursor"><g transform="scale(1.5)" filter="url(#cu${u})">`
+    + `<path d="${CURSOR_PATH}" fill="${C.cream100}" stroke="${C.bg}" stroke-width="1.1" stroke-linejoin="round"/></g></g>`);
+  S.push(`</svg>`);
+  return S.join('');
+}
+function bind(r){
+  const q=k=>r.querySelector(`[data-el="${k}"]`);
+  const cell=[],hole=[];
+  for(let i=0;i<N;i++){ cell.push([0,1,2].map(c=>q(`c${i}_${c}`)));
+    hole.push([0,1,2].map(c=>q(`h${i}_${c}`))); }
+  return { cell, hole, base:q('base'), ref:q('ref'), peak:q('peak'), peakDot:q('peakDot'),
+    card:q('card'), cardVal:q('cardVal'), sel:q('sel'), cursor:q('cursor') };
+}
+
+function render(E,t){
+  /* --- the selection gesture: press, drag, release --- */
+  const drag = seg(t,1.15,1.95,EASE);
+  let p;
+  if      (t < 0.30) p = HOME;
+  else if (t < 1.05) p = arc(HOME, SEL0, seg(t,0.30,1.05,EASE), 80);
+  else if (t < 1.15) p = SEL0;
+  else if (t < 2.10) p = [lerp(SEL0[0],SEL1[0],drag), lerp(SEL0[1],SEL1[1],drag)];
+  else if (t < 6.85) p = SEL1;
+  else if (t < 7.55) p = arc(SEL1, PEAKC, seg(t,6.85,7.55,EASE), -60);
+  else if (t < 9.60) p = PEAKC;
+  else               p = arc(PEAKC, HOME, seg(t,9.60,10.5,EASE), 70);
+  // held down for the whole drag, not dipped once
+  const held = seg(t,1.05,1.14) - seg(t,1.98,2.08);
+  E.cursor.setAttribute('transform',
+    `translate(${p[0].toFixed(2)},${p[1].toFixed(2)}) scale(${(1-0.10*held).toFixed(3)})`);
+
+  const selOn = seg(t,1.10,1.22) - seg(t,2.02,2.24);
+  E.sel.setAttribute('opacity', selOn.toFixed(3));
+  E.sel.setAttribute('x', Math.min(SEL0[0],p[0]).toFixed(2));
+  E.sel.setAttribute('y', Math.min(SEL0[1],p[1]).toFixed(2));
+  E.sel.setAttribute('width', Math.abs(p[0]-SEL0[0]).toFixed(2));
+  E.sel.setAttribute('height', Math.abs(p[1]-SEL0[1]).toFixed(2));
+
+  /* --- phases. Each runs forward, then back in reverse order, so the
+         frame unbuilds the way it was built. --- */
+  const fillP = seg(t,2.75,3.30,EASE_OUT) - seg(t,10.05,10.55,EASE);
+  const dupeP = seg(t,3.35,3.90,EASE_OUT) - seg(t,9.95,10.45,EASE);
+  const colsP = seg(t,3.98,4.48,EASE_OUT) - seg(t,9.80,10.30,EASE);
+  const baseP = seg(t,5.30,5.78,EASE_OUT) - seg(t,9.62,10.02,EASE);
+  const insP  = seg(t,6.15,6.72,EASE_OUT) - seg(t,9.34,9.74,EASE);
+  const cardP = seg(t,7.60,7.98,EASE_OUT) - seg(t,9.18,9.52,EASE);
+
+  for (let r=0; r<N; r++){
+    // alignment is staggered top to bottom, so the table tidies as a wave
+    const al = seg(t, 2.25+r*0.05, 2.85+r*0.05, EASE_OUT) - seg(t, 10.15, 10.70, EASE);
+    const j  = KEEP.indexOf(r);
+    const dead = r===DUPE;
+    // rows below the duplicate close the gap it leaves
+    const shift = (r>DUPE ? -ROW_STEP*dupeP : 0);
+    const y = rowY(r) + shift;
+
+    for (let c=0; c<3; c++){
+      const el=E.cell[r][c], ho=E.hole[r][c], hole=isHole(r,c);
+      const mx = COLX[c] + OFF[r], mw = COLW[c]*WMUL[r][c];
+      let x = lerp(mx, COLX[c], al), w = lerp(mw, COLW[c], al), yy = y, h = ROW_H;
+      let op = 1;
+      if (hole) { w *= fillP; op = fillP; }              // the gap fills in
+      if (dead) { h = ROW_H*(1-dupeP); op *= (1-dupeP); } // the duplicate collapses
+      if (c>0)  op *= (1-colsP);                          // metadata leaves before the lift
+
+      // cell 0 of a surviving row stands up into its bar
+      if (c===0 && j>=0){
+        const st = seg(t, 4.55+j*0.07, 5.55+j*0.07, EASE) - seg(t, 9.55+j*0.03, 10.15+j*0.03, EASE);
+        x  = lerp(x, BARX(j), st);
+        yy = lerp(yy, BASE-BARH[j], st);
+        w  = lerp(w, BARW, st);
+        h  = lerp(h, BARH[j], st);
+      }
+      el.setAttribute('x',x.toFixed(2)); el.setAttribute('y',yy.toFixed(2));
+      el.setAttribute('width',Math.max(0,w).toFixed(2)); el.setAttribute('height',Math.max(0,h).toFixed(2));
+      el.setAttribute('opacity',clamp(op,0,1).toFixed(3));
+      if (ho){ // the dashed outline of a hole, shown until it is filled
+        ho.setAttribute('x',lerp(mx,COLX[c],al).toFixed(2)); ho.setAttribute('y',yy.toFixed(2));
+        ho.setAttribute('width',Math.max(0,lerp(mw,COLW[c],al)).toFixed(2));
+        ho.setAttribute('height',h.toFixed(2));
+        ho.setAttribute('opacity',((1-fillP)*(c>0?(1-colsP):1)).toFixed(3));
+      }
+    }
+  }
+
+  E.base.setAttribute('opacity', baseP.toFixed(3));
+  E.ref.setAttribute('opacity', (insP*0.9).toFixed(3));
+  E.ref.setAttribute('stroke-dasharray', `4 5`);
+  E.peak.setAttribute('opacity', insP.toFixed(3));
+  E.peakDot.setAttribute('opacity', insP.toFixed(3));
+  E.card.setAttribute('opacity', cardP.toFixed(3));
+  E.card.setAttribute('transform', `translate(0,${lerp(-8,0,cardP).toFixed(2)})`);
+  E.cardVal.setAttribute('width', (78*(seg(t,7.75,8.60,EASE_IO) - seg(t,9.18,9.50,EASE))).toFixed(2));
+}
+
+
+return { make: makeScene, bind, render, dur: DUR };
+})()
+
+
+/* ---- web, from src/components/scenes/web.js ---- */
+/* Web — a customer books a slot without anyone being asked. */
+
+
+const SCENE_web = (function(){
+/* ---- geometry ---------------------------------------------- */
+const F   = { x:340, y:210, w:760, h:480, r:16, chrome:44 };
+const G   = { x:463, y:312, cw:118, ch:60, gap:14, cols:4, rows:2 };
+const TARGET = 6, OFF = [1, 4];
+const cellXY = i => [ G.x + (i%G.cols)*(G.cw+G.gap), G.y + Math.floor(i/G.cols)*(G.ch+G.gap) ];
+const [TX, TY] = cellXY(TARGET);
+const TC = [TX + G.cw/2, TY + G.ch/2];                       // 786, 416
+const GRID_BOTTOM = G.y + G.rows*G.ch + (G.rows-1)*G.gap;    // 446
+
+const P   = { x:646, y:468, w:280, h:206 };                  // panel
+const PI  = P.x + 20, PIW = P.w - 40;                        // inner x / width
+const DD  = { x:PI, y:522, w:PIW, h:28 };                    // dropdown
+const MENU= { x:PI, y:554, w:PIW, h:78 };
+const OPTH = 22, OPTY = [558, 582, 606];
+const FLD = [ { x:PI, y:562, w:PIW, h:28 }, { x:PI, y:598, w:PIW, h:28 } ];
+const ACT = { x:814, y:636, w:92, h:26 };
+const PC  = [P.x + P.w/2, P.y + P.h/2];                      // 786, 571
+
+const DDC  = [DD.x + DD.w/2, DD.y + DD.h/2];                 // 786, 536
+const OPT2 = [MENU.x + MENU.w/2, OPTY[1] + OPTH/2];          // 786, 593
+const F1C  = [FLD[0].x + FLD[0].w/2, FLD[0].y + FLD[0].h/2]; // 786, 576
+const F2C  = [FLD[1].x + FLD[1].w/2, FLD[1].y + FLD[1].h/2]; // 786, 612
+const ACTC = [ACT.x + ACT.w/2, ACT.y + ACT.h/2];             // 860, 649
+const CHK  = [720, 472];
+const HOME = [300, 740], DRIFT = [930, 706];
+const TETHER = P.y - GRID_BOTTOM;
+
+const TYPED = [118, 86];          // final pill widths — two fields, two lengths
+const VALUE_W = 74;               // the chosen option, echoed in the dropdown
+const OPT_W = [96, 74, 118];      // the three options are visibly different
+
+const CURSOR_PATH = 'M1 1 L1 17.6 L5.3 13.7 L7.9 19 L10.9 17.7 L8.2 12.5 L13 12.3 Z';
+const TICK_PATH   = 'M-11 0 L-3.5 7.5 L11 -8';
+const DUR = 10.6;
+
+const ring = i => Math.abs((i%G.cols) - (TARGET%G.cols))
+                + Math.abs(Math.floor(i/G.cols) - Math.floor(TARGET/G.cols));
+
+/* ---- every click in the sequence, in one table -------------- */
+const CLICKS = [
+  { at:TC,   t:1.25, r1:34 }, { at:DDC,  t:2.64, r1:28 },
+  { at:OPT2, t:3.64, r1:24 }, { at:F1C,  t:4.46, r1:22 },
+  { at:F2C,  t:5.70, r1:22 }, { at:ACTC, t:7.16, r1:26 },
+];
+/* every leg of cursor travel, with the bow each one takes */
+const LEGS = [
+  { a:0.30, b:1.10, from:HOME,  to:TC,    bow: 90 },
+  { a:1.95, b:2.50, from:TC,    to:DDC,   bow:-26 },
+  { a:3.06, b:3.52, from:DDC,   to:OPT2,  bow: 16 },
+  { a:4.02, b:4.42, from:OPT2,  to:F1C,   bow:-30 },
+  { a:5.32, b:5.66, from:F1C,   to:F2C,   bow: 18 },
+  { a:6.46, b:7.00, from:F2C,   to:ACTC,  bow:-24 },
+  { a:7.72, b:8.40, from:ACTC,  to:DRIFT, bow: 20 },
+  { a:9.30, b:10.1, from:DRIFT, to:HOME,  bow: 80 },
+];
+function cursorAt(t){
+  for (let i = 0; i < LEGS.length; i++){
+    const L = LEGS[i];
+    if (t < L.a) return i === 0 ? L.from : LEGS[i-1].to;
+    if (t <= L.b) return arc(L.from, L.to, seg(t, L.a, L.b, EASE), L.bow);
+  }
+  return LEGS[LEGS.length-1].to;
+}
+
+/* ---- scene ------------------------------------------------- */
+
+function makeScene(){
+  const u = nextUid(), S = [];
+  S.push(`<svg viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A cursor books a slot: it picks an available object, a panel opens beneath it, a choice is made from a list, two fields are filled in, and confirming collapses the panel into a single confirmation mark.">`);
+  S.push(`<defs>`,
+    `<radialGradient id="bA${u}"><stop offset="0" stop-color="${C.amber}" stop-opacity=".11"/><stop offset="1" stop-color="${C.amber}" stop-opacity="0"/></radialGradient>`,
+    `<radialGradient id="bB${u}"><stop offset="0" stop-color="${C.cream200}" stop-opacity=".075"/><stop offset="1" stop-color="${C.cream200}" stop-opacity="0"/></radialGradient>`,
+    `<filter id="sh${u}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#000" flood-opacity=".55"/></filter>`,
+    `<filter id="ms${u}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity=".5"/></filter>`,
+    `<filter id="cu${u}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="2" stdDeviation="2.6" flood-color="#000" flood-opacity=".6"/></filter>`,
+    `<filter id="gl${u}" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>`,
+    `</defs>`);
+  S.push(`<rect width="1440" height="900" fill="${C.bg}"/>`);
+  S.push(`<ellipse cx="380" cy="170" rx="540" ry="380" fill="url(#bA${u})"/>`);
+  S.push(`<ellipse cx="1120" cy="770" rx="500" ry="360" fill="url(#bB${u})"/>`);
+  S.push(`<rect x="${F.x}" y="${F.y}" width="${F.w}" height="${F.h}" rx="${F.r}" fill="${C.frame}" stroke="${cr(.15)}"/>`);
+  S.push(`<path d="M${F.x} ${F.y+F.chrome} H${F.x+F.w}" stroke="${cr(.09)}"/>`);
+  const cy = F.y + F.chrome/2;
+  for (let i=0;i<3;i++) S.push(`<circle cx="${F.x+26+i*15}" cy="${cy}" r="3.4" fill="${cr(.16)}"/>`);
+  S.push(`<rect x="${F.x+F.w/2-120}" y="${cy-6}" width="240" height="12" rx="6" fill="${cr(.07)}"/>`);
+
+  S.push(`<g data-recede="5"><rect x="${G.x}" y="272" width="150" height="10" rx="5" fill="${cr(.26)}"/>`
+       + `<rect x="${G.x}" y="290" width="94" height="7" rx="3.5" fill="${cr(.11)}"/></g>`);
+
+  for (let i=0;i<G.cols*G.rows;i++){
+    if (i === TARGET) continue;
+    const [x,y] = cellXY(i), off = OFF.includes(i);
+    S.push(`<g data-recede="${ring(i)}">`
+      + `<rect x="${x}" y="${y}" width="${G.cw}" height="${G.ch}" rx="10" fill="${off?C.s1:C.s3}" stroke="${off?cr(.15):cr(.22)}"/>`
+      + (off ? '' : `<rect x="${x+(G.cw-40)/2}" y="${y+G.ch/2-1.5}" width="40" height="3" rx="1.5" fill="${cr(.34)}"/>`)
+      + `</g>`);
+  }
+  S.push(`<g data-recede="4"><path d="M${G.x} 480 H${G.x + G.cols*G.cw + (G.cols-1)*G.gap}" stroke="${cr(.07)}"/>`
+    + `<rect x="${G.x}" y="500" width="168" height="7" rx="3.5" fill="${cr(.10)}"/>`
+    + `<rect x="${G.x}" y="516" width="112" height="7" rx="3.5" fill="${cr(.07)}"/></g>`);
+  S.push(`<g data-recede="0"><rect x="${TX}" y="${TY}" width="${G.cw}" height="${G.ch}" rx="10" fill="${C.s3}" stroke="${cr(.22)}"/>`
+    + `<rect x="${TX+(G.cw-40)/2}" y="${TY+G.ch/2-1.5}" width="40" height="3" rx="1.5" fill="${cr(.34)}"/></g>`);
+  S.push(`<g data-el="hover" opacity="0"><rect x="${TX}" y="${TY}" width="${G.cw}" height="${G.ch}" rx="10" fill="${C.s4}" stroke="${cr(.34)}"/>`
+    + `<rect x="${TX+(G.cw-40)/2}" y="${TY+G.ch/2-1.5}" width="40" height="3" rx="1.5" fill="${cr(.48)}"/></g>`);
+  S.push(`<g data-el="sel" opacity="0">`
+    + `<rect x="${TX-6}" y="${TY-6}" width="${G.cw+12}" height="${G.ch+12}" rx="15" fill="${am(.10)}" filter="url(#gl${u})"/>`
+    + `<rect x="${TX}" y="${TY}" width="${G.cw}" height="${G.ch}" rx="10" fill="${C.s4}" stroke="${am(.8)}" stroke-width="1.25"/>`
+    + `<rect x="${TX+(G.cw-40)/2}" y="${TY+G.ch/2-1.5}" width="40" height="3" rx="1.5" fill="${C.amber}"/></g>`);
+  S.push(`<path data-el="tether" d="M${TC[0]} ${GRID_BOTTOM} V${P.y}" stroke="${am(.45)}" stroke-width="1.25" stroke-dasharray="${TETHER}" stroke-dashoffset="${TETHER}" opacity="0"/>`);
+
+  /* ---- the panel ---- */
+  const fld = (i, f) =>
+      `<rect x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" rx="7" fill="${C.s1}" stroke="${cr(.10)}"/>`
+    + `<rect data-el="focus${i}" x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" rx="7" fill="none" stroke="${cr(.42)}" stroke-width="1.4" opacity="0"/>`
+    // The typed value starts as a dot and extends into a pill — the same
+    // placeholder grammar as everything else in the frame, just growing.
+    + `<rect data-el="type${i}" x="${f.x+10}" y="${f.y+f.h/2-1.5}" width="3" height="3" rx="1.5" fill="${cr(.44)}"/>`
+    + `<rect data-el="caret${i}" x="${f.x+14}" y="${f.y+7}" width="1.2" height="${f.h-14}" fill="${cr(.55)}" opacity="0"/>`;
+
+  S.push(`<g data-el="panel" opacity="0">`
+    + `<rect x="${P.x}" y="${P.y}" width="${P.w}" height="${P.h}" rx="12" fill="${C.s2}" stroke="${cr(.16)}" filter="url(#sh${u})"/>`
+    + `<rect x="${PI}" y="${P.y+20}" width="76" height="8" rx="4" fill="${cr(.34)}"/>`
+    + `<path d="M${PI} ${P.y+42} H${PI+PIW}" stroke="${cr(.09)}"/>`
+    // dropdown: closed control, its placeholder, and the value it gains
+    + `<rect x="${DD.x}" y="${DD.y}" width="${DD.w}" height="${DD.h}" rx="7" fill="${C.s1}" stroke="${cr(.10)}"/>`
+    + `<rect data-el="ddFocus" x="${DD.x}" y="${DD.y}" width="${DD.w}" height="${DD.h}" rx="7" fill="none" stroke="${cr(.42)}" stroke-width="1.4" opacity="0"/>`
+    + `<rect data-el="ddPlace" x="${DD.x+10}" y="${DD.y+DD.h/2-1.5}" width="52" height="3" rx="1.5" fill="${cr(.13)}"/>`
+    + `<rect data-el="ddValue" x="${DD.x+10}" y="${DD.y+DD.h/2-1.5}" width="0" height="3" rx="1.5" fill="${C.amber}"/>`
+    + `<g data-el="chev" ><path d="M-4.5 -2 L0 2.5 L4.5 -2" fill="none" stroke="${cr(.4)}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></g>`
+    + fld(0, FLD[0]) + fld(1, FLD[1])
+    + `<rect x="${ACT.x}" y="${ACT.y}" width="${ACT.w}" height="${ACT.h}" rx="8" fill="none" stroke="${cr(.24)}"/>`
+    + `<rect x="${ACT.x+ACT.w/2-15}" y="${ACT.y+ACT.h/2-1.5}" width="30" height="3" rx="1.5" fill="${cr(.34)}"/>`
+    + `<g data-el="act" opacity="0">`
+      + `<rect x="${ACT.x}" y="${ACT.y}" width="${ACT.w}" height="${ACT.h}" rx="8" fill="${am(.16)}" stroke="${am(.85)}"/>`
+      + `<rect x="${ACT.x+ACT.w/2-15}" y="${ACT.y+ACT.h/2-1.5}" width="30" height="3" rx="1.5" fill="${C.amber200}"/></g>`
+    // the open list sits above the fields it covers, as a real one does
+    + `<g data-el="menu" opacity="0"><g data-el="menuScale">`
+      + `<rect x="${MENU.x}" y="${MENU.y}" width="${MENU.w}" height="${MENU.h}" rx="9" fill="${C.s3}" stroke="${cr(.18)}" filter="url(#ms${u})"/>`
+      + OPTY.map((oy,k) =>
+          `<rect x="${MENU.x+4}" y="${oy}" width="${MENU.w-8}" height="${OPTH}" rx="6" fill="none"/>`
+        + `<rect x="${MENU.x+12}" y="${oy+OPTH/2-1.5}" width="${OPT_W[k]}" height="3" rx="1.5" fill="${cr(.30)}"/>`).join('')
+      + `<g data-el="optHover" opacity="0"><rect x="${MENU.x+4}" y="${OPTY[1]}" width="${MENU.w-8}" height="${OPTH}" rx="6" fill="${cr(.07)}"/>`
+      + `<rect x="${MENU.x+12}" y="${OPTY[1]+OPTH/2-1.5}" width="${OPT_W[1]}" height="3" rx="1.5" fill="${cr(.55)}"/></g>`
+      + `</g></g>`
+    + `</g>`);
+
+  S.push(`<circle data-el="rip" cx="0" cy="0" r="0" fill="none" stroke="${am(.7)}" stroke-width="1.5" opacity="0"/>`);
+  S.push(`<g data-el="check" opacity="0"><circle r="27" fill="none" stroke="${am(.26)}"/>`
+    + `<path data-el="tick" d="${TICK_PATH}" fill="none" stroke="${C.amber}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="32" stroke-dashoffset="32"/></g>`);
+  S.push(`<g data-el="cursor"><g transform="scale(1.5)" filter="url(#cu${u})">`
+    + `<path d="${CURSOR_PATH}" fill="${C.cream100}" stroke="${C.bg}" stroke-width="1.1" stroke-linejoin="round"/></g></g>`);
+  S.push(`</svg>`);
+  return S.join('');
+}
+function bind(root){
+  const q = k => root.querySelector(`[data-el="${k}"]`);
+  return { recede:[...root.querySelectorAll('[data-recede]')],
+    hover:q('hover'), sel:q('sel'), tether:q('tether'), panel:q('panel'),
+    ddFocus:q('ddFocus'), ddPlace:q('ddPlace'), ddValue:q('ddValue'), chev:q('chev'),
+    menu:q('menu'), menuScale:q('menuScale'), optHover:q('optHover'),
+    focus:[q('focus0'),q('focus1')], type:[q('type0'),q('type1')], caret:[q('caret0'),q('caret1')],
+    act:q('act'), rip:q('rip'), check:q('check'), tick:q('tick'), cursor:q('cursor') };
+}
+
+/* ---- the timeline: every number is a second ----------------- */
+function render(E, t){
+  const p = cursorAt(t);
+  let dip = 1;
+  CLICKS.forEach(c => { dip -= 0.12 * pulse(t, c.t, c.t+0.06, c.t+0.14); });
+  E.cursor.setAttribute('transform', `translate(${p[0].toFixed(2)},${p[1].toFixed(2)}) scale(${dip.toFixed(3)})`);
+
+  // one ripple element, reused: no two clicks overlap in time
+  let rr = 0, ro = 0, rat = CLICKS[0].at;
+  for (const c of CLICKS){
+    const g = seg(t, c.t+0.05, c.t+0.61, EASE_OUT);
+    if (g > 0 && g < 1){ rr = lerp(5, c.r1, g); ro = (1-g)*0.6; rat = c.at; break; }
+  }
+  E.rip.setAttribute('cx', rat[0]); E.rip.setAttribute('cy', rat[1]);
+  E.rip.setAttribute('r', rr.toFixed(2)); E.rip.setAttribute('opacity', ro.toFixed(3));
+
+  E.hover.setAttribute('opacity', (seg(t,1.00,1.25,EASE_OUT) - seg(t,1.35,1.47)).toFixed(3));
+  E.sel.setAttribute('opacity', (seg(t,1.35,1.47,EASE_OUT) - seg(t,7.35,7.75,EASE)).toFixed(3));
+
+  E.recede.forEach(g => {
+    const d = +g.dataset.recede * 0.035;
+    let o = lerp(1, .45, seg(t, 1.40+d, 1.95+d, EASE_OUT));
+    o = lerp(o, .26, seg(t, 7.30+d, 7.85+d, EASE_OUT));
+    o = lerp(o, 1,   seg(t, 9.25+d, 9.95+d, EASE));
+    g.setAttribute('opacity', o.toFixed(3));
+  });
+
+  E.tether.setAttribute('opacity', (seg(t,1.50,1.68) - seg(t,7.25,7.50)).toFixed(3));
+  E.tether.setAttribute('stroke-dashoffset', (TETHER*(1 - seg(t,1.50,1.92,EASE_OUT))).toFixed(2));
+
+  const pIn = seg(t,1.40,1.95,EASE_OUT), pOut = seg(t,7.30,7.98,EASE_IO);
+  E.panel.setAttribute('opacity', (pIn - pOut).toFixed(3));
+  const ps  = lerp(lerp(.92, 1, pIn), .90, pOut);
+  const pdy = lerp(lerp(10, 0, pIn), -5, pOut);
+  E.panel.setAttribute('transform',
+    `translate(${P.x + P.w/2},${(P.y + pdy).toFixed(2)}) scale(${ps.toFixed(4)}) translate(${-(P.x + P.w/2)},${-P.y})`);
+
+  /* dropdown — hover, open, choose, close, and keep the choice */
+  E.ddFocus.setAttribute('opacity', (seg(t,2.42,2.64,EASE_OUT) - seg(t,4.30,4.50)).toFixed(3));
+  const open = seg(t,2.74,3.06,EASE_OUT) - seg(t,3.74,4.00,EASE);
+  E.menu.setAttribute('opacity', open.toFixed(3));
+  // grows downward out of the control it belongs to
+  E.menuScale.setAttribute('transform',
+    `translate(0,${MENU.y}) scale(1,${lerp(.6,1,open).toFixed(4)}) translate(0,${-MENU.y})`);
+  E.optHover.setAttribute('opacity', (seg(t,3.46,3.64,EASE_OUT) - seg(t,3.80,3.96)).toFixed(3));
+  E.chev.setAttribute('transform',
+    `translate(${DD.x+DD.w-18},${DDC[1]}) rotate(${(180*open).toFixed(1)})`);
+  const chosen = seg(t,3.86,4.14,EASE_OUT);
+  E.ddValue.setAttribute('width', (VALUE_W*chosen).toFixed(2));
+  E.ddPlace.setAttribute('opacity', (1 - chosen).toFixed(3));
+
+  /* the two fields: focus, then the dot extends into a pill */
+  const TYPE = [ {f:4.50, fo:5.40, a:4.60, b:5.30}, {f:5.74, fo:7.32, a:5.84, b:6.44} ];
+  TYPE.forEach((k, i) => {
+    E.focus[i].setAttribute('opacity', (seg(t,k.f,k.f+0.18,EASE_OUT) - seg(t,k.fo,k.fo+0.20)).toFixed(3));
+    const g = seg(t, k.a, k.b, EASE_OUT);
+    const w = lerp(3, TYPED[i], g);
+    E.type[i].setAttribute('width', w.toFixed(2));
+    E.caret[i].setAttribute('x', (FLD[i].x + 10 + w + 4).toFixed(2));
+    // solid while typing, gone the moment focus leaves — carets do not
+    // blink while a key is down, and a blinking caret on a loop is noise
+    E.caret[i].setAttribute('opacity', (seg(t,k.f,k.f+0.12) - seg(t,k.fo,k.fo+0.12)).toFixed(3));
+  });
+
+  E.act.setAttribute('opacity', (seg(t,6.92,7.16,EASE_OUT) - seg(t,7.30,7.50)).toFixed(3));
+
+  const ck = seg(t,7.36,8.06,EASE_OUT);
+  E.check.setAttribute('transform',
+    `translate(${lerp(PC[0],CHK[0],ck).toFixed(2)},${lerp(PC[1],CHK[1],ck).toFixed(2)}) scale(${lerp(.75,1.5,ck).toFixed(4)})`);
+  E.check.setAttribute('opacity', (seg(t,7.36,7.66) - seg(t,9.30,9.90,EASE)).toFixed(3));
+  E.tick.setAttribute('stroke-dashoffset', (32*(1 - seg(t,7.46,8.02,EASE_OUT))).toFixed(2));
+}
+
+
+return { make: makeScene, bind, render, dur: DUR };
+})()
+
+
+/* ---- ai, from src/components/scenes/ai.js ---- */
+/* AI — an assistant that answers, and an agent that acts and checks in. */
+
+
+const SCENE_ai = (function(){
+/* ---- shared furniture -------------------------------------- */
+const F={x:340,y:210,w:760,h:480,r:16,chrome:44};
+const CURSOR_PATH='M1 1 L1 17.6 L5.3 13.7 L7.9 19 L10.9 17.7 L8.2 12.5 L13 12.3 Z';
+const OFF=[300,780];
+
+/* The four-point spark. n.abl already uses one on its own assistant
+   launcher, so this is the house mark rather than a borrowed one —
+   and it is the single element that says "this is the AI" without a
+   word, a logo or a robot. */
+const SPARK='M0 -10 C1 -2.5 2.5 -1 10 0 C2.5 1 1 2.5 0 10 C-1 2.5 -2.5 1 -10 0 C-2.5 -1 -1 -2.5 0 -10 Z';
+const spark=(x,y,r,fill,o=1)=>`<path d="${SPARK}" transform="translate(${x},${y}) scale(${r/10})" fill="${fill}" opacity="${o}"/>`;
+const defs=u=>`<defs>`
+  + `<radialGradient id="bA${u}"><stop offset="0" stop-color="${C.amber}" stop-opacity=".11"/><stop offset="1" stop-color="${C.amber}" stop-opacity="0"/></radialGradient>`
+  + `<radialGradient id="bB${u}"><stop offset="0" stop-color="${C.cream200}" stop-opacity=".075"/><stop offset="1" stop-color="${C.cream200}" stop-opacity="0"/></radialGradient>`
+  + `<filter id="cu${u}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="2" stdDeviation="2.6" flood-color="#000" flood-opacity=".6"/></filter>`
+  + `<filter id="gl${u}" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="10"/></filter>`
+  + `</defs>`;
+const backdrop=u=>`<rect width="1440" height="900" fill="${C.bg}"/>`
+  + `<ellipse cx="380" cy="170" rx="540" ry="380" fill="url(#bA${u})"/>`
+  + `<ellipse cx="1120" cy="770" rx="500" ry="360" fill="url(#bB${u})"/>`
+  + `<rect x="${F.x}" y="${F.y}" width="${F.w}" height="${F.h}" rx="${F.r}" fill="#16120F" stroke="${cr(.15)}"/>`
+  + `<path d="M${F.x} ${F.y+F.chrome} H${F.x+F.w}" stroke="${cr(.09)}"/>`
+  + [0,1,2].map(i=>`<circle cx="${F.x+26+i*15}" cy="${F.y+F.chrome/2}" r="3.4" fill="${cr(.16)}"/>`).join('')
+  + `<rect x="${F.x+F.w/2-120}" y="${F.y+F.chrome/2-6}" width="240" height="12" rx="6" fill="${cr(.07)}"/>`;
+/* the identity strip both scenes carry */
+const header=(x,w,right)=>`<g data-el="head" opacity="0">`
+  + `<rect x="${x}" y="264" width="32" height="32" rx="9" fill="${C.s3}" stroke="${am(.35)}"/>`
+  + `<g data-el="mark">${spark(x+16,280,8.5,C.amber)}</g>`
+  + `<rect x="${x+44}" y="271" width="126" height="9" rx="4.5" fill="${cr(.28)}"/>`
+  + `<rect x="${x+44}" y="286" width="78" height="6" rx="3" fill="${cr(.12)}"/>`
+  + `<rect x="${right-64}" y="272" width="64" height="20" rx="10" fill="${am(.12)}" stroke="${am(.45)}"/>`
+  + `<path d="M${x} 314 H${right}" stroke="${cr(.09)}"/></g>`;
+const cursorNode=u=>`<g data-el="cursor"><g transform="scale(1.5)" filter="url(#cu${u})">`
+  + `<path d="${CURSOR_PATH}" fill="${C.cream100}" stroke="${C.bg}" stroke-width="1.1" stroke-linejoin="round"/></g></g>`;
+function legWalk(t, legs){
+  let p=legs[0][2];
+  for (const [a,b,from,to,bow] of legs){ if (t<a) break; p = t<=b ? arc(from,to,seg(t,a,b,EASE),bow) : to; }
+  return p;
+}
+const dipOf=(t,clicks)=>{ let d=1; clicks.forEach(c=>{ d-=0.12*pulse(t,c,c+0.06,c+0.14); }); return d; };
+/* a value that is not there yet must not be a visible dot */
+const written=(t,start,end,w)=> t<start ? {w:0,o:0} : {w:lerp(3,w,seg(t,start,end,EASE_IO)),o:1};
+
+/* ============================================================
+   5a — ASSISTANT
+   ============================================================ */
+const A={
+  x:475, right:937,
+  user:{y:330,w:276,h:54}, bot:{x:517,y:404,w:420,h:148},
+  av:{x:475,y:404},
+  lineY:[428,452,476,500,524], lineW:[344,306,356,262,190],
+  src:{x:517,y:566,w:172,h:28},
+  input:{x:475,y:610,w:406,h:44}, send:{x:891,y:610,w:46,h:44},
+  chips:[{y:408,w:286},{y:446,w:238},{y:484,w:312}],
+  typed:[190,128],
+};
+const A_T={ shell:[0.30,0.75], empty:[0.85,1.30], click:1.86, emptyOut:[1.90,2.25],
+  type0:[1.96,2.66], type1:[2.70,3.40], send:4.02, lift:[4.08,4.52],
+  think:[4.62,5.42], grow:[5.42,5.92], lines:5.86, src:[7.80,8.20], out:[9.30,10.20] };
+const A_DUR=10.5;
+const aInC=[A.input.x+40, A.input.y+A.input.h/2];
+const aSendC=[A.send.x+A.send.w/2, A.send.y+A.send.h/2];
+
+function aMake(){
+  const u=nextUid(),S=[];
+  S.push(`<svg viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An assistant with a spark mark and three suggested prompts. A cursor types a question, the suggestions clear, the typed text lifts out of the input to become the sent message, the assistant thinks and writes an answer, and a source reference appears beneath it.">`);
+  S.push(defs(u), backdrop(u), header(A.x, 0, A.right));
+  /* empty state — a large watermark spark and three suggestions */
+  S.push(`<g data-el="empty" opacity="0">`
+    + A.chips.map((c,i)=>`<rect x="${A.x}" y="${c.y}" width="${c.w}" height="32" rx="16" fill="${C.s1}" stroke="${cr(.11)}"/>`
+      + `${spark(A.x+22,c.y+16,6,am(.5))}`
+      + `<rect x="${A.x+38}" y="${c.y+13}" width="${c.w-62}" height="6" rx="3" fill="${cr(.20)}"/>`).join('')
+    + `</g>`);
+  S.push(`<rect data-el="inBox" x="${A.input.x}" y="${A.input.y}" width="${A.input.w}" height="${A.input.h}" rx="10" fill="${C.s1}" stroke="${cr(.13)}" opacity="0"/>`);
+  S.push(`<rect data-el="inFocus" x="${A.input.x}" y="${A.input.y}" width="${A.input.w}" height="${A.input.h}" rx="10" fill="none" stroke="${cr(.40)}" stroke-width="1.4" opacity="0"/>`);
+  S.push(`<g data-el="sendG" opacity="0"><rect x="${A.send.x}" y="${A.send.y}" width="${A.send.w}" height="${A.send.h}" rx="10" fill="${C.s2}" stroke="${cr(.18)}"/>`
+    + `<path d="M${aSendC[0]-6} ${aSendC[1]} h12 M${aSendC[0]+1} ${aSendC[1]-5} l5 5 l-5 5" fill="none" stroke="${cr(.45)}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></g>`);
+  S.push(`<g data-el="sendOn" opacity="0"><rect x="${A.send.x}" y="${A.send.y}" width="${A.send.w}" height="${A.send.h}" rx="10" fill="${am(.20)}" stroke="${am(.85)}"/>`
+    + `<path d="M${aSendC[0]-6} ${aSendC[1]} h12 M${aSendC[0]+1} ${aSendC[1]-5} l5 5 l-5 5" fill="none" stroke="${C.amber200}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></g>`);
+  // the message bubble is painted first; the typed lines travel over it
+  S.push(`<g data-el="userG" opacity="0"><rect x="${A.right-A.user.w}" y="${A.user.y}" width="${A.user.w}" height="${A.user.h}" rx="12" fill="${C.s3}" stroke="${cr(.16)}"/></g>`);
+  A.typed.forEach((w,i)=> S.push(`<rect data-el="typed${i}" x="${A.input.x+20}" y="${A.input.y+15+i*12}" width="0" height="6" rx="3" fill="${cr(.46)}" opacity="0"/>`));
+  S.push(`<rect data-el="caret" x="${A.input.x+24}" y="${A.input.y+12}" width="1.2" height="20" fill="${cr(.55)}" opacity="0"/>`);
+  // the reply, with the assistant's own mark beside it
+  S.push(`<g data-el="avG" opacity="0"><rect x="${A.av.x}" y="${A.av.y}" width="30" height="30" rx="9" fill="${C.s3}" stroke="${am(.3)}"/>`
+    + `<g data-el="avMark">${spark(A.av.x+15,A.av.y+15,8,C.amber)}</g></g>`);
+  S.push(`<g data-el="botG" opacity="0"><rect data-el="botBox" x="${A.bot.x}" y="${A.bot.y}" width="${A.bot.w}" height="44" rx="12" fill="${C.s2}" stroke="${cr(.14)}"/></g>`);
+  S.push(`<g data-el="thinkG" opacity="0">${[0,1,2].map(i=>
+    `<circle data-el="dot${i}" cx="${A.bot.x+26+i*14}" cy="${A.bot.y+22}" r="3.4" fill="${am(.8)}"/>`).join('')}</g>`);
+  A.lineY.forEach((y,i)=> S.push(`<rect data-el="ln${i}" x="${A.bot.x+24}" y="${y}" width="0" height="7" rx="3.5" fill="${cr(.40)}" opacity="0"/>`));
+  S.push(`<g data-el="srcG" opacity="0">`
+    + `<rect x="${A.src.x}" y="${A.src.y}" width="${A.src.w}" height="${A.src.h}" rx="8" fill="none" stroke="${am(.45)}"/>`
+    + `<rect x="${A.src.x+12}" y="${A.src.y+7}" width="10" height="14" rx="2" fill="none" stroke="${am(.75)}" stroke-width="1.3"/>`
+    + `<path d="M${A.src.x+15} ${A.src.y+12} h4 M${A.src.x+15} ${A.src.y+16} h4" stroke="${am(.6)}" stroke-width="1.1" stroke-linecap="round"/>`
+    + `<rect x="${A.src.x+32}" y="${A.src.y+11}" width="96" height="6" rx="3" fill="${am(.5)}"/></g>`);
+  S.push(cursorNode(u));
+  S.push(`</svg>`);
+  return S.join('');
+}
+function aBind(r){ const q=k=>r.querySelector(`[data-el="${k}"]`);
+  return { head:q('head'), mark:q('mark'), empty:q('empty'),
+    inBox:q('inBox'), inFocus:q('inFocus'), sendG:q('sendG'), sendOn:q('sendOn'),
+    typed:[0,1].map(i=>q('typed'+i)), caret:q('caret'), userG:q('userG'),
+    avG:q('avG'), avMark:q('avMark'), botG:q('botG'), botBox:q('botBox'),
+    thinkG:q('thinkG'), dot:[0,1,2].map(i=>q('dot'+i)),
+    ln:A.lineY.map((_,i)=>q('ln'+i)), srcG:q('srcG'), cursor:q('cursor') }; }
+
+function aRender(E,t){
+  const out=seg(t,A_T.out[0],A_T.out[1],EASE);
+  const shell=seg(t,A_T.shell[0],A_T.shell[1],EASE_OUT)*(1-out);
+  E.head.setAttribute('opacity', shell.toFixed(3));
+  E.inBox.setAttribute('opacity', shell.toFixed(3));
+  E.sendG.setAttribute('opacity', shell.toFixed(3));
+  E.empty.setAttribute('opacity',((seg(t,A_T.empty[0],A_T.empty[1],EASE_OUT)-seg(t,A_T.emptyOut[0],A_T.emptyOut[1],EASE))*(1-out)).toFixed(3));
+  E.inFocus.setAttribute('opacity',((seg(t,A_T.click,A_T.click+0.16,EASE_OUT)-seg(t,A_T.send,A_T.send+0.2))*(1-out)).toFixed(3));
+
+  /* typed lines: nothing at all until typing starts, then the same
+     two objects lift into the message */
+  const lift=seg(t,A_T.lift[0],A_T.lift[1],EASE);
+  const spans=[A_T.type0,A_T.type1];
+  let lastW=0, lastRow=0;
+  A.typed.forEach((w,i)=>{
+    const {w:wid,o}=written(t,spans[i][0],spans[i][1],w);
+    const x0=A.input.x+20, y0=A.input.y+15+i*12;
+    const x1=A.right-A.user.w+22, y1=A.user.y+17+i*14;
+    E.typed[i].setAttribute('width',wid.toFixed(2));
+    E.typed[i].setAttribute('x',lerp(x0,x1,lift).toFixed(2));
+    E.typed[i].setAttribute('y',lerp(y0,y1,lift).toFixed(2));
+    E.typed[i].setAttribute('opacity',(o*(1-out)).toFixed(3));
+    if (o) { lastW=wid; lastRow=i; }
+  });
+  E.caret.setAttribute('x',(A.input.x+20+lastW+5).toFixed(2));
+  E.caret.setAttribute('y',(A.input.y+12+lastRow*12).toFixed(2));
+  E.caret.setAttribute('opacity',(seg(t,A_T.type0[0],A_T.type0[0]+0.08)-seg(t,A_T.type1[1],A_T.type1[1]+0.16)).toFixed(3));
+  E.sendOn.setAttribute('opacity',((seg(t,A_T.send,A_T.send+0.08,EASE_OUT)-seg(t,A_T.send+0.30,A_T.send+0.55))*(1-out)).toFixed(3));
+  E.userG.setAttribute('opacity',(seg(t,A_T.lift[0],A_T.lift[0]+0.26,EASE_OUT)*(1-out)).toFixed(3));
+
+  const think=seg(t,A_T.think[0],A_T.think[0]+0.22,EASE_OUT)-seg(t,A_T.think[1],A_T.think[1]+0.20);
+  E.avG.setAttribute('opacity',(seg(t,A_T.think[0],A_T.think[0]+0.26,EASE_OUT)*(1-out)).toFixed(3));
+  E.botG.setAttribute('opacity',(seg(t,A_T.think[0],A_T.think[0]+0.26,EASE_OUT)*(1-out)).toFixed(3));
+  E.thinkG.setAttribute('opacity',think.toFixed(3));
+  E.dot.forEach((d,i)=>{
+    const ph=((t-A_T.think[0])*1.6-i*0.22)%1;
+    d.setAttribute('opacity',(think*(0.3+0.7*Math.max(0,Math.sin(Math.max(0,ph)*Math.PI)))).toFixed(3));
+  });
+  /* the mark is alive only while it is working */
+  const busy=seg(t,A_T.think[0],A_T.think[0]+0.2)-seg(t,A_T.src[0],A_T.src[0]+0.3);
+  const puls=1+0.14*busy*Math.sin((t-A_T.think[0])*4.4);
+  E.mark.setAttribute('transform',`translate(${A.x+16},280) scale(${puls.toFixed(3)}) translate(${-(A.x+16)},-280)`);
+  E.avMark.setAttribute('transform',`translate(${A.av.x+15},${A.av.y+15}) scale(${puls.toFixed(3)}) translate(${-(A.av.x+15)},${-(A.av.y+15)})`);
+
+  const grow=seg(t,A_T.grow[0],A_T.grow[1],EASE_OUT);
+  E.botBox.setAttribute('height',lerp(44,A.bot.h,grow).toFixed(2));
+  E.ln.forEach((el,i)=>{
+    const s0=A_T.lines+i*0.30;
+    const {w,o}=written(t,s0,s0+0.62,A.lineW[i]);
+    el.setAttribute('width',w.toFixed(2));
+    el.setAttribute('opacity',(o*(1-out)).toFixed(3));
+  });
+  E.srcG.setAttribute('opacity',(seg(t,A_T.src[0],A_T.src[1],EASE_OUT)*(1-out)).toFixed(3));
+
+  const p=legWalk(t,[
+    [1.20,1.80,OFF,        aInC,      80],
+    [3.52,3.94,aInC,       aSendC,   -30],
+    [4.60,5.20,aSendC,     [1010,700],26],
+    [9.40,10.2,[1010,700], OFF,       70],
+  ]);
+  E.cursor.setAttribute('transform',
+    `translate(${p[0].toFixed(2)},${p[1].toFixed(2)}) scale(${dipOf(t,[A_T.click,A_T.send]).toFixed(3)})`);
+}
+
+/* ============================================================
+   5b — OPERATING AGENT
+   ============================================================ */
+const B={
+  x:408, right:1032,
+  bar:{x:408,y:324,w:558,h:42}, run:{x:976,y:324,w:56,h:42},
+  step:{x:408,w:624,h:38}, stepY:[396,444,492,540],
+  labelW:[196,240,168,214], resW:[92,64,110,78],
+  approve:{x:836,y:498,w:112,h:26},
+  art:{x:408,y:600,w:624,h:62},
+  chips:[{y:430,w:320},{y:468,w:268},{y:506,w:356}],
+  typed:230,
+};
+const B_T={ shell:[0.30,0.75], empty:[0.85,1.30], click:1.84, emptyOut:[1.88,2.24],
+  type:[1.94,2.74], run:3.34, plan:3.40,
+  steps:[[3.90,4.55],[4.70,5.35],[5.50,5.85],[7.30,7.90]],
+  pause:[5.90,6.20], approve:6.68, resume:[6.72,7.15],
+  art:[8.05,8.60], out:[9.80,10.75] };
+const B_DUR=11.0;
+const bBarC=[B.bar.x+40,B.bar.y+B.bar.h/2];
+const bRunC=[B.run.x+B.run.w/2,B.run.y+B.run.h/2];
+const bAppC=[B.approve.x+B.approve.w/2,B.approve.y+B.approve.h/2];
+const RING=2*Math.PI*9;
+
+function bMake(){
+  const u=nextUid(),S=[];
+  S.push(`<svg viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An agent with a spark mark and three example instructions. A cursor types one instruction and runs it. The agent lays out a four-step plan and works through it alone, ticking each step off. At the third step it stops and waits for approval; once approved it finishes and produces a summary.">`);
+  S.push(defs(u), backdrop(u), header(B.x, 0, B.right));
+  S.push(`<g data-el="empty" opacity="0">`
+    + B.chips.map(c=>`<rect x="${B.x}" y="${c.y}" width="${c.w}" height="30" rx="15" fill="${C.s1}" stroke="${cr(.11)}"/>`
+      + `${spark(B.x+21,c.y+15,6,am(.5))}`
+      + `<rect x="${B.x+36}" y="${c.y+12}" width="${c.w-58}" height="6" rx="3" fill="${cr(.20)}"/>`).join('')
+    + `</g>`);
+  S.push(`<rect data-el="bar" x="${B.bar.x}" y="${B.bar.y}" width="${B.bar.w}" height="${B.bar.h}" rx="10" fill="${C.s1}" stroke="${cr(.13)}" opacity="0"/>`);
+  S.push(`<rect data-el="barFocus" x="${B.bar.x}" y="${B.bar.y}" width="${B.bar.w}" height="${B.bar.h}" rx="10" fill="none" stroke="${cr(.40)}" stroke-width="1.4" opacity="0"/>`);
+  S.push(`<rect data-el="typed" x="${B.bar.x+20}" y="${B.bar.y+18}" width="0" height="6" rx="3" fill="${cr(.46)}" opacity="0"/>`);
+  S.push(`<rect data-el="caret" x="${B.bar.x+24}" y="${B.bar.y+11}" width="1.2" height="20" fill="${cr(.55)}" opacity="0"/>`);
+  S.push(`<g data-el="runG" opacity="0"><rect x="${B.run.x}" y="${B.run.y}" width="${B.run.w}" height="${B.run.h}" rx="10" fill="${C.s2}" stroke="${cr(.18)}"/>`
+    + `<path d="M${bRunC[0]-5} ${bRunC[1]-7} l11 7 l-11 7 z" fill="${cr(.42)}"/></g>`);
+  S.push(`<g data-el="runOn" opacity="0"><rect x="${B.run.x}" y="${B.run.y}" width="${B.run.w}" height="${B.run.h}" rx="10" fill="${am(.20)}" stroke="${am(.85)}"/>`
+    + `<path d="M${bRunC[0]-5} ${bRunC[1]-7} l11 7 l-11 7 z" fill="${C.amber200}"/></g>`);
+  B.stepY.forEach((y,i)=>{
+    const cxx=B.step.x+30, cyy=y+B.step.h/2;
+    S.push(`<g data-el="st${i}" opacity="0">`
+      + `<rect x="${B.step.x}" y="${y}" width="${B.step.w}" height="${B.step.h}" rx="9" fill="${C.s1}" stroke="${cr(.10)}"/>`
+      + `<circle cx="${cxx}" cy="${cyy}" r="9" fill="none" stroke="${cr(.20)}" stroke-width="1.6"/>`
+      + `<circle data-el="ring${i}" cx="${cxx}" cy="${cyy}" r="9" fill="none" stroke="${C.amber}" stroke-width="1.8" `
+      + `stroke-linecap="round" stroke-dasharray="${RING}" stroke-dashoffset="${RING}" transform="rotate(-90 ${cxx} ${cyy})"/>`
+      + `<path data-el="tick${i}" d="M${cxx-4.2} ${cyy} l3 3.2 l5.6 -6" fill="none" stroke="${C.amber}" stroke-width="1.9" `
+      + `stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="14" stroke-dashoffset="14"/>`
+      + `<rect x="${B.step.x+52}" y="${cyy-3}" width="${B.labelW[i]}" height="6" rx="3" fill="${cr(.26)}"/>`
+      + `<rect data-el="res${i}" x="${B.step.x+B.step.w-24-B.resW[i]}" y="${cyy-3}" width="0" height="6" rx="3" fill="${cr(.42)}"/></g>`);
+  });
+  S.push(`<g data-el="appG" opacity="0">`
+    + `<rect data-el="appHov" x="${B.approve.x-4}" y="${B.approve.y-4}" width="${B.approve.w+8}" height="${B.approve.h+8}" rx="12" fill="${cr(.05)}" opacity="0"/>`
+    + `<rect x="${B.approve.x}" y="${B.approve.y}" width="${B.approve.w}" height="${B.approve.h}" rx="8" fill="${am(.12)}" stroke="${am(.7)}"/>`
+    + `<rect x="${B.approve.x+B.approve.w/2-20}" y="${B.approve.y+B.approve.h/2-1.5}" width="40" height="3" rx="1.5" fill="${am(.85)}"/></g>`);
+  S.push(`<g data-el="appOn" opacity="0"><rect x="${B.approve.x}" y="${B.approve.y}" width="${B.approve.w}" height="${B.approve.h}" rx="8" fill="${am(.3)}" stroke="${C.amber}"/>`
+    + `<rect x="${B.approve.x+B.approve.w/2-20}" y="${B.approve.y+B.approve.h/2-1.5}" width="40" height="3" rx="1.5" fill="${C.amber200}"/></g>`);
+  S.push(`<g data-el="artG" opacity="0">`
+    + `<rect x="${B.art.x}" y="${B.art.y}" width="${B.art.w}" height="${B.art.h}" rx="10" fill="${C.s2}" stroke="${cr(.16)}"/>`
+    + `${spark(B.art.x+30,B.art.y+31,11,am(.8))}`
+    + `<rect x="${B.art.x+52}" y="${B.art.y+15}" width="44" height="5" rx="2.5" fill="${cr(.20)}"/>`
+    + `<rect x="${B.art.x+52}" y="${B.art.y+30}" width="180" height="10" rx="5" fill="${C.amber}"/>`
+    + `<rect x="${B.art.x+254}" y="${B.art.y+32}" width="118" height="6" rx="3" fill="${cr(.22)}"/>`
+    + `<rect x="${B.art.x+390}" y="${B.art.y+32}" width="84" height="6" rx="3" fill="${cr(.14)}"/></g>`);
+  S.push(cursorNode(u));
+  S.push(`</svg>`);
+  return S.join('');
+}
+function bBind(r){ const q=k=>r.querySelector(`[data-el="${k}"]`);
+  return { head:q('head'), mark:q('mark'), empty:q('empty'),
+    bar:q('bar'), barFocus:q('barFocus'), typed:q('typed'), caret:q('caret'),
+    runG:q('runG'), runOn:q('runOn'),
+    st:B.stepY.map((_,i)=>q('st'+i)), ring:B.stepY.map((_,i)=>q('ring'+i)),
+    tick:B.stepY.map((_,i)=>q('tick'+i)), res:B.stepY.map((_,i)=>q('res'+i)),
+    appG:q('appG'), appHov:q('appHov'), appOn:q('appOn'), artG:q('artG'), cursor:q('cursor') }; }
+
+function bRender(E,t){
+  const out=seg(t,B_T.out[0],B_T.out[1],EASE);
+  const shell=seg(t,B_T.shell[0],B_T.shell[1],EASE_OUT)*(1-out);
+  E.head.setAttribute('opacity',shell.toFixed(3));
+  E.bar.setAttribute('opacity',shell.toFixed(3));
+  E.runG.setAttribute('opacity',shell.toFixed(3));
+  E.empty.setAttribute('opacity',((seg(t,B_T.empty[0],B_T.empty[1],EASE_OUT)-seg(t,B_T.emptyOut[0],B_T.emptyOut[1],EASE))*(1-out)).toFixed(3));
+  E.barFocus.setAttribute('opacity',((seg(t,B_T.click,B_T.click+0.16,EASE_OUT)-seg(t,B_T.run,B_T.run+0.2))*(1-out)).toFixed(3));
+
+  const {w:tw,o:to}=written(t,B_T.type[0],B_T.type[1],B.typed);
+  E.typed.setAttribute('width',tw.toFixed(2));
+  E.typed.setAttribute('opacity',(to*(1-out)).toFixed(3));
+  E.caret.setAttribute('x',(B.bar.x+20+tw+5).toFixed(2));
+  E.caret.setAttribute('opacity',(seg(t,B_T.type[0],B_T.type[0]+0.08)-seg(t,B_T.type[1],B_T.type[1]+0.16)).toFixed(3));
+  E.runOn.setAttribute('opacity',((seg(t,B_T.run,B_T.run+0.08,EASE_OUT)-seg(t,B_T.run+0.30,B_T.run+0.55))*(1-out)).toFixed(3));
+
+  /* the mark works while the agent does */
+  const busy=seg(t,B_T.run,B_T.run+0.2)-seg(t,B_T.art[0],B_T.art[0]+0.3);
+  const puls=1+0.14*busy*Math.sin((t-B_T.run)*4.4);
+  E.mark.setAttribute('transform',`translate(${B.x+16},280) scale(${puls.toFixed(3)}) translate(${-(B.x+16)},-280)`);
+
+  B.stepY.forEach((y,i)=>{
+    const inP=seg(t,B_T.plan+i*0.09,B_T.plan+0.38+i*0.09,EASE_OUT)*(1-out);
+    E.st[i].setAttribute('opacity',inP.toFixed(3));
+    E.st[i].setAttribute('transform',`translate(0,${lerp(8,0,inP).toFixed(2)})`);
+    const [a,b]=B_T.steps[i];
+    let ring;
+    if (i===2){
+      ring=lerp(0,.60,seg(t,a,b,EASE_IO));
+      ring=lerp(ring,1,seg(t,B_T.resume[0],B_T.resume[1],EASE_OUT));
+    } else ring=seg(t,a,b,EASE_IO);
+    E.ring[i].setAttribute('stroke-dashoffset',(RING*(1-ring)).toFixed(2));
+    const done=i===2 ? seg(t,B_T.resume[1]-0.06,B_T.resume[1]+0.20,EASE_OUT) : seg(t,b-0.06,b+0.20,EASE_OUT);
+    E.tick[i].setAttribute('stroke-dashoffset',(14*(1-done)).toFixed(2));
+    E.res[i].setAttribute('width',(B.resW[i]*done*(1-out)).toFixed(2));
+  });
+  const paused=seg(t,B_T.pause[0],B_T.pause[1],EASE_OUT)-seg(t,B_T.approve,B_T.approve+0.22);
+  E.appG.setAttribute('opacity',(paused*(1-out)).toFixed(3));
+  E.appHov.setAttribute('opacity',(seg(t,6.48,6.62)-seg(t,B_T.approve+0.02,B_T.approve+0.14)).toFixed(3));
+  E.appOn.setAttribute('opacity',(seg(t,B_T.approve,B_T.approve+0.07,EASE_OUT)-seg(t,B_T.approve+0.22,B_T.approve+0.44)).toFixed(3));
+  const artP=seg(t,B_T.art[0],B_T.art[1],EASE_OUT);
+  E.artG.setAttribute('opacity',(artP*(1-out)).toFixed(3));
+  E.artG.setAttribute('transform',`translate(0,${lerp(10,0,artP).toFixed(2)})`);
+
+  const p=legWalk(t,[
+    [1.20,1.78,OFF,        bBarC,      80],
+    [2.86,3.26,bBarC,      bRunC,     -28],
+    [3.50,4.10,bRunC,      [1120,706], 30],
+    [6.05,6.60,[1120,706], bAppC,     -50],
+    [7.10,7.70,bAppC,      [1120,706], 34],
+    [9.90,10.7,[1120,706], OFF,        70],
+  ]);
+  E.cursor.setAttribute('transform',
+    `translate(${p[0].toFixed(2)},${p[1].toFixed(2)}) scale(${dipOf(t,[B_T.click,B_T.run,B_T.approve]).toFixed(3)})`);
+}
+
+/* ---- scene registry ---------------------------------------- */
+const SCENES=[
+  { id:'5a', dur:A_DUR, make:aMake, bind:aBind, render:aRender,
+    note:'A question is typed, sent, thought about and answered — and the answer arrives attached to the thing it came from. The typed text is not replaced by a message; it lifts out of the input and becomes one.',
+    beats:[
+      ['0.30 – 1.30','01 Empty state','A spark mark, a title, and three suggested prompts centred in the conversation area. The frame is never a blank box with an input at the bottom.','--ease-out'],
+      ['1.20 – 1.86','02 Focus','Cursor arcs to the input and clicks. Cream focus ring, not amber.','--ease'],
+      ['1.90 – 3.40','03 Typing','The suggestions clear, then two lines write themselves from nothing — no dot is visible before the first keystroke. Typing finishes at 3.40; the cursor does not leave for the send control until 3.52.','ease-in-out'],
+      ['4.02 – 4.52','04 Sent','The send control flashes and the two typed lines lift out of the input into the message bubble. Same two objects.','--ease'],
+      ['4.62 – 5.42','05 Thinking','Three dots roll on an offset sine, and the spark marks pulse — the mark is alive only while it is working.','sine'],
+      ['5.42 – 7.68','06 Answering','The reply grows to height, then five lines write in 0.30s apart.','--ease-out / ease-in-out'],
+      ['7.80 – 8.20','07 Sourced','A reference appears beneath the answer. This is the beat the scene exists for.','--ease-out'],
+      ['9.30 – 10.2','08 Out','Everything leaves together.','--ease'],
+    ],
+  },
+  { id:'5b', dur:B_DUR, make:bMake, bind:bBind, render:bRender,
+    note:'One instruction, a four-step plan, and work that runs on its own — until the step with consequences, where it stops and waits. The cursor is out of frame for most of it and comes back only to decide.',
+    beats:[
+      ['0.30 – 1.30','01 Empty state','Spark mark, title, and three example instructions sitting where the plan will later go.','--ease-out'],
+      ['1.88 – 2.74','02 Typing','The examples clear and one line writes itself from nothing.','ease-in-out'],
+      ['3.34 – 4.10','03 Run','The run control flashes and the cursor leaves the frame.','--ease'],
+      ['3.40 – 3.87','04 Plan','Four steps drop in 0.09s apart, each with an empty ring. The agent says what it intends before doing any of it.','--ease-out'],
+      ['3.90 – 5.35','05 Working','Steps one and two fill their rings, tick, and grow a result. The spark mark pulses throughout. No cursor.','ease-in-out'],
+      ['5.50 – 6.20','06 Stopped','The third ring fills to 60% and halts. An approval control appears.','--ease-out'],
+      ['6.05 – 6.68','07 Approved','The cursor returns, for one click, and only for this.','--ease'],
+      ['6.72 – 7.90','08 Finishing','The third ring completes from where it stopped; the fourth runs.','--ease-out'],
+      ['8.05 – 8.60','09 Produced','A summary rises into place, carrying the same spark mark.','--ease-out'],
+    ],
+  },
+];
+const NOTES=[
+  ['The spark is the house mark','n.abl already puts a spark on its own assistant launcher, so this is the studio’s own iconography rather than a borrowed one — the single element that says "this is the AI" with no word, no logo and no robot. It appears where it labels something: the header, the reply avatar, each suggestion, and the agent’s output. A large one floating in the middle of the frame was the one place it was decorating rather than labelling, so it is gone.'],
+  ['The mark is alive only while it works','Both scenes pulse the spark on a slow sine, and only between the moment work starts and the moment it produces something. A mark that pulses permanently is an advert; one that pulses while thinking is a status.'],
+  ['Nothing is visible before it is written','A value that has not been typed yet was rendering as a 3-unit dot from the first frame, so both scenes opened with stray marks sitting in an empty input. Written values now have no width and no opacity until their own start time.'],
+  ['Typing finishes before the cursor leaves','The second line was still being written while the cursor was already travelling to send, which read as the message being sent half-composed. The type window now closes at 3.40 and the cursor does not move until 3.52.'],
+  ['An empty state, not an empty box','Both scenes opened as a large void above a single input. They now open the way real assistants do — a watermark mark and three suggestions — which fills the frame, sets the register, and clears itself the moment someone starts typing.'],
+  ['The agent stops','Three steps run unattended with the cursor off-frame. The third fills to 60% and waits. Building the version that runs the consequential step without asking is the easy one and the wrong one; the checkpoint is the product.'],
+];
+
+
+return SCENES.map(s=>({ make:s.make, bind:s.bind, render:s.render, dur:s.dur, id:s.id }));
+})()
+
+
+/* ---- software, from src/components/scenes/software.js ---- */
+/* Software — an application assembles, and an edit propagates on save. */
+
+
+const SCENE_software = (function(){
+/* ---- geometry ----------------------------------------------
+   Every pane now has symmetric padding. The list previously sat 16
+   from its left edge and 4 from its right, and the detail pane 40
+   and 24 — small enough to look like nothing in particular and
+   large enough to make the whole app read as slightly off. */
+const F={x:340,y:210,w:760,h:480,r:16,chrome:44};
+const APP={x:364,y:278,w:712,h:388};
+const DIV=[440,660];
+const PAD=20;
+const NAV_X=376, NAV_Y=i=>300+i*38, NAV_N=5;
+const LIST={x:DIV[0]+PAD, w:DIV[1]-DIV[0]-PAD*2};          // 460, 180
+const ROW_H=34, ROW_STEP=44, ROW_Y=i=>292+i*ROW_STEP, ROW_N=8;
+const DX=DIV[1]+PAD, DW=APP.x+APP.w-DIV[1]-PAD*2;          // 680, 376
+const FLD_Y=[348,386,424,462], CHIP_Y=506;
+const MINI_Y=[556,578,600], MINI_W=(DW-40)/3, MINI_X=c=>DX+c*(MINI_W+20);
+const CHIP_SLOT=i=>DX+i*((DW-8)/3);
+const SAVE={x:DX+DW-96, y:626, w:96, h:28};
+
+/* the home view — everything right of the rail, before the app
+   splits itself in two */
+const HOME_X=DIV[0]+24, HOME_W=APP.x+APP.w-DIV[0]-48;      // 464, 588
+const CARD_W=(HOME_W-32)/3, CARD_X=i=>HOME_X+i*(CARD_W+16);
+const HB={x:HOME_X, base:616, n:6, w:30, step:46};
+const HB_H=[70,101,81,125,94,135];
+const ACT_X=776, ACT_Y=[484,518,552,586], ACT_W=[168,132,196,150];
+
+const REC=[
+  { title:110, fields:[96,132,74,110],  chips:[.56,.78,.48], mini:[[.68,.46,.86],[.52,.78,.40],[.90,.38,.62]] },
+  { title:86,  fields:[128,88,116,66],  chips:[.72,.50,.66], mini:[[.46,.88,.58],[.80,.42,.70],[.54,.74,.44]] },
+  { title:132, fields:[78,118,96,140],  chips:[.60,.86,.42], mini:[[.84,.52,.66],[.44,.90,.60],[.72,.48,.82]] },
+];
+const RW1=[92,74,110,86,120,68,98,80], RW2=[54,68,44,60,50,72,58,46];
+
+/* the journey */
+const NAV_CLICK=3.88, VIEW_OUT=[3.92,4.28], DIV2=[4.10,4.52], LIST_IN=4.35, DET_IN=4.78;
+const REC_EV=[ {t:6.02, row:4, rec:1, fill:6.08, dur:0.42}, {t:7.06, row:2, rec:2, fill:7.12, dur:0.34} ];
+const CHIP_EV={ t:8.04, idx:1, a:8.10, b:8.40 };
+const RETYPE ={ idx:2, t:9.00, focus:9.04, t0:9.10, t1:9.36, t2:9.95, w:142 };
+const SAVE_EV={ t:10.62, flash:[10.66,11.00], prop:[10.82,11.30], tick:[10.88,11.18], gone:11.70 };
+const PROP_W=126;                                    // what the list row becomes
+const HOVERS=[
+  {k:'nav', i:1, a:3.76, b:3.98}, {k:'row', i:4, a:5.90, b:6.12},
+  {k:'row', i:2, a:6.94, b:7.16}, {k:'chip',i:1, a:7.92, b:8.14},
+  {k:'fld', i:2, a:8.88, b:9.12}, {k:'save',i:0, a:10.50, b:10.74},
+];
+const CLICKS=[NAV_CLICK, REC_EV[0].t, REC_EV[1].t, CHIP_EV.t, RETYPE.t, SAVE_EV.t];
+
+const navC=i=>[NAV_X+22, NAV_Y(i)+5];
+const rowC=r=>[LIST.x+90, ROW_Y(r)+ROW_H/2];
+const chipC=i=>[CHIP_SLOT(i)+30, CHIP_Y+9];
+const fldC=i=>[DX+42, FLD_Y[i]+18];
+const saveC=[SAVE.x+SAVE.w/2, SAVE.y+SAVE.h/2];
+const OFF=[300,780], REST=[620,624];
+const CURSOR_PATH='M1 1 L1 17.6 L5.3 13.7 L7.9 19 L10.9 17.7 L8.2 12.5 L13 12.3 Z';
+const DUR=14.0;
+
+function stateAt(t, ev, key, init){
+  let i=0;
+  for(let k=0;k<ev.length;k++) if (t>=ev[k].fill) i=k+1;
+  if (i===0) return {a:init,b:init,p:1};
+  const e=ev[i-1];
+  return { a: i===1 ? init : ev[i-2][key], b: e[key], p: seg(t,e.fill,e.fill+e.dur,EASE_OUT) };
+}
+const swap=(a,b,p,delay)=>{ const q=clamp((p-delay)/(1-delay||1),0,1);
+  return q<0.5 ? lerp(a,0,q*2) : lerp(0,b,(q-0.5)*2); };
+
+
+function makeScene(){
+  const u=nextUid(),S=[];
+  S.push(`<svg viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An empty panel divides into a navigation rail and a home view of summary cards and a chart. A cursor moves down the rail, which draws a second divider and re-lays the application into a record list and a detail pane. Two records are selected, a chip is toggled, a value is retyped, and a save propagates the change back into the list.">`);
+  S.push(`<defs>`,
+    `<radialGradient id="bA${u}"><stop offset="0" stop-color="${C.amber}" stop-opacity=".11"/><stop offset="1" stop-color="${C.amber}" stop-opacity="0"/></radialGradient>`,
+    `<radialGradient id="bB${u}"><stop offset="0" stop-color="${C.cream200}" stop-opacity=".075"/><stop offset="1" stop-color="${C.cream200}" stop-opacity="0"/></radialGradient>`,
+    `<filter id="cu${u}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="2" stdDeviation="2.6" flood-color="#000" flood-opacity=".6"/></filter>`,
+    `<filter id="gl${u}" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8"/></filter>`,
+    `</defs>`);
+  S.push(`<rect width="1440" height="900" fill="${C.bg}"/>`);
+  S.push(`<ellipse cx="380" cy="170" rx="540" ry="380" fill="url(#bA${u})"/>`);
+  S.push(`<ellipse cx="1120" cy="770" rx="500" ry="360" fill="url(#bB${u})"/>`);
+  S.push(`<rect x="${F.x}" y="${F.y}" width="${F.w}" height="${F.h}" rx="${F.r}" fill="${C.frame}" stroke="${cr(.15)}"/>`);
+  S.push(`<path d="M${F.x} ${F.y+F.chrome} H${F.x+F.w}" stroke="${cr(.09)}"/>`);
+  const cy=F.y+F.chrome/2;
+  for(let i=0;i<3;i++) S.push(`<circle cx="${F.x+26+i*15}" cy="${cy}" r="3.4" fill="${cr(.16)}"/>`);
+  S.push(`<rect x="${F.x+F.w/2-120}" y="${cy-6}" width="240" height="12" rx="6" fill="${cr(.07)}"/>`);
+
+  S.push(`<rect data-el="app" x="${APP.x}" y="${APP.y}" width="${APP.w}" height="${APP.h}" rx="10" fill="${C.s1}" stroke="${cr(.14)}" opacity="0"/>`);
+  DIV.forEach((x,i)=> S.push(`<path data-el="div${i}" d="M${x} ${APP.y} V${APP.y+APP.h}" stroke="${cr(.14)}" stroke-dasharray="${APP.h}" stroke-dashoffset="${APP.h}"/>`));
+
+  for(let i=0;i<NAV_N;i++){
+    S.push(`<g data-el="nav${i}" opacity="0">`
+      + `<rect x="${NAV_X}" y="${NAV_Y(i)}" width="11" height="11" rx="3" fill="${cr(.22)}"/>`
+      + `<rect x="${NAV_X+18}" y="${NAV_Y(i)+3}" width="28" height="5" rx="2.5" fill="${cr(.16)}"/></g>`);
+    S.push(`<rect data-el="navHov${i}" x="${NAV_X-8}" y="${NAV_Y(i)-6}" width="72" height="23" rx="6" fill="${cr(.06)}" opacity="0"/>`);
+    S.push(`<g data-el="navOn${i}" opacity="0">`
+      + `<rect x="${NAV_X}" y="${NAV_Y(i)}" width="11" height="11" rx="3" fill="${am(.8)}"/>`
+      + `<rect x="${NAV_X+18}" y="${NAV_Y(i)+3}" width="34" height="5" rx="2.5" fill="${am(.6)}"/></g>`);
+  }
+
+  /* ---- home view ---- */
+  S.push(`<g data-el="home">`);
+  S.push(`<rect data-el="hp0" x="${HOME_X}" y="300" width="140" height="10" rx="5" fill="${cr(.30)}"/>`);
+  [0,1,2].forEach(i=> S.push(`<g data-el="hp${i+1}">`
+    + `<rect x="${CARD_X(i)}" y="328" width="${CARD_W}" height="84" rx="10" fill="${C.s2}" stroke="${cr(.13)}"/>`
+    + `<rect x="${CARD_X(i)+16}" y="346" width="40" height="5" rx="2.5" fill="${cr(.19)}"/>`
+    + `<rect x="${CARD_X(i)+16}" y="362" width="${[86,64,102][i]}" height="12" rx="6" fill="${i===1?C.amber:cr(.5)}"/>`
+    + `<rect x="${CARD_X(i)+16}" y="386" width="${[56,72,48][i]}" height="4" rx="2" fill="${cr(.12)}"/></g>`));
+  S.push(`<g data-el="hp4"><path d="M${HOME_X} 436 H${HOME_X+HOME_W}" stroke="${cr(.08)}"/>`
+    + `<path d="M${HB.x} ${HB.base} H${HB.x+HB.step*(HB.n-1)+HB.w}" stroke="${cr(.11)}"/>`
+    + HB_H.map((h,i)=>`<rect x="${HB.x+i*HB.step}" y="${HB.base-h}" width="${HB.w}" height="${h}" rx="3" fill="${i===HB.n-1?am(.7):cr(.22)}"/>`).join('')
+    + `</g>`);
+  S.push(`<g data-el="hp5">${ACT_Y.map((y,i)=>
+      `<circle cx="${ACT_X+4}" cy="${y+3.5}" r="3.2" fill="${am(.8)}"/>`
+    + `<rect x="${ACT_X+16}" y="${y}" width="${ACT_W[i]}" height="7" rx="3.5" fill="${cr(.26)}"/>`).join('')}</g>`);
+  S.push(`</g>`);
+
+  /* ---- working view ---- */
+  for(let i=0;i<ROW_N;i++){
+    S.push(`<g data-el="row${i}" opacity="0">`
+      + `<rect x="${LIST.x}" y="${ROW_Y(i)}" width="${LIST.w}" height="${ROW_H}" rx="7" fill="${C.s2}" stroke="${cr(.10)}"/>`
+      + `<rect data-el="rw1_${i}" x="${LIST.x+14}" y="${ROW_Y(i)+9}" width="0" height="6" rx="3" fill="${cr(.30)}"/>`
+      + `<rect data-el="rw2_${i}" x="${LIST.x+14}" y="${ROW_Y(i)+21}" width="0" height="4" rx="2" fill="${cr(.13)}"/></g>`);
+    S.push(`<rect data-el="hov${i}" x="${LIST.x}" y="${ROW_Y(i)}" width="${LIST.w}" height="${ROW_H}" rx="7" fill="${cr(.06)}" stroke="${cr(.20)}" opacity="0"/>`);
+    S.push(`<g data-el="sel${i}" opacity="0">`
+      + `<rect x="${LIST.x-4}" y="${ROW_Y(i)-4}" width="${LIST.w+8}" height="${ROW_H+8}" rx="11" fill="${am(.09)}" filter="url(#gl${u})"/>`
+      + `<rect x="${LIST.x}" y="${ROW_Y(i)}" width="${LIST.w}" height="${ROW_H}" rx="7" fill="${C.s4}" stroke="${am(.75)}" stroke-width="1.2"/>`
+      + `<rect data-el="sw1_${i}" x="${LIST.x+14}" y="${ROW_Y(i)+9}" width="0" height="6" rx="3" fill="${C.amber}"/>`
+      + `<rect data-el="sw2_${i}" x="${LIST.x+14}" y="${ROW_Y(i)+21}" width="0" height="4" rx="2" fill="${am(.45)}"/></g>`);
+  }
+  S.push(`<g data-el="d0" opacity="0"><rect data-el="dTitle" x="${DX}" y="300" width="0" height="10" rx="5" fill="${cr(.34)}"/>`
+    + `<rect x="${DX+DW-38}" y="299" width="38" height="12" rx="6" fill="${am(.18)}" stroke="${am(.5)}"/>`
+    + `<path d="M${DX} 326 H${DX+DW}" stroke="${cr(.10)}"/></g>`);
+  FLD_Y.forEach((y,i)=> S.push(`<g data-el="d${i+1}" opacity="0">`
+    + `<rect x="${DX}" y="${y}" width="52" height="5" rx="2.5" fill="${cr(.17)}"/>`
+    + `<rect data-el="fldBox${i}" x="${DX-10}" y="${y+6}" width="${DW+20}" height="24" rx="6" fill="none" stroke="${cr(.30)}" opacity="0"/>`
+    + `<rect data-el="fld${i}" x="${DX}" y="${y+14}" width="0" height="8" rx="4" fill="${cr(.44)}"/>`
+    + `<rect data-el="caret${i}" x="${DX}" y="${y+9}" width="1.2" height="18" fill="${cr(.55)}" opacity="0"/></g>`));
+  S.push(`<g data-el="d5" opacity="0">${[0,1,2].map(i=>
+      `<rect data-el="chipHov${i}" x="${CHIP_SLOT(i)-4}" y="${CHIP_Y-4}" width="0" height="26" rx="13" fill="${cr(.05)}" opacity="0"/>`
+    + `<rect data-el="chip${i}" x="${CHIP_SLOT(i)}" y="${CHIP_Y}" width="0" height="18" rx="9" fill="none" stroke="${cr(.20)}"/>`
+    + `<rect data-el="chipOn${i}" x="${CHIP_SLOT(i)}" y="${CHIP_Y}" width="0" height="18" rx="9" fill="${am(.18)}" stroke="${am(.8)}" opacity="0"/>`).join('')}</g>`);
+  S.push(`<g data-el="d6" opacity="0"><path d="M${DX} 538 H${DX+DW}" stroke="${cr(.08)}"/>`
+    + MINI_Y.map((y,r)=>[0,1,2].map(c=>
+        `<rect data-el="mini${r}_${c}" x="${MINI_X(c)}" y="${y}" width="0" height="6" rx="3" fill="${cr(.13)}"/>`).join('')).join('')
+    + `<rect data-el="saveHov" x="${SAVE.x-4}" y="${SAVE.y-4}" width="${SAVE.w+8}" height="${SAVE.h+8}" rx="12" fill="${cr(.05)}" opacity="0"/>`
+    + `<rect x="${SAVE.x}" y="${SAVE.y}" width="${SAVE.w}" height="${SAVE.h}" rx="8" fill="none" stroke="${cr(.26)}"/>`
+    + `<rect x="${SAVE.x+SAVE.w/2-16}" y="${SAVE.y+SAVE.h/2-1.5}" width="32" height="3" rx="1.5" fill="${cr(.34)}"/>`
+    + `<g data-el="saveOn" opacity="0"><rect x="${SAVE.x}" y="${SAVE.y}" width="${SAVE.w}" height="${SAVE.h}" rx="8" fill="${am(.2)}" stroke="${am(.85)}"/>`
+    + `<rect x="${SAVE.x+SAVE.w/2-16}" y="${SAVE.y+SAVE.h/2-1.5}" width="32" height="3" rx="1.5" fill="${C.amber200}"/></g>`
+    + `<path data-el="tick" d="M${SAVE.x-38} ${SAVE.y+14} l6 6 l12 -13" fill="none" stroke="${C.amber}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="26" stroke-dashoffset="26" opacity="0"/>`
+    + `</g>`);
+
+  S.push(`<g data-el="cursor"><g transform="scale(1.5)" filter="url(#cu${u})">`
+    + `<path d="${CURSOR_PATH}" fill="${C.cream100}" stroke="${C.bg}" stroke-width="1.1" stroke-linejoin="round"/></g></g>`);
+  S.push(`</svg>`);
+  return S.join('');
+}
+function bind(r){
+  const q=k=>r.querySelector(`[data-el="${k}"]`);
+  const N=n=>[...Array(n)].map((_,k)=>k);
+  const mini=[]; for(let a=0;a<3;a++) mini.push([0,1,2].map(c=>q(`mini${a}_${c}`)));
+  return { app:q('app'), div:[0,1].map(i=>q('div'+i)),
+    nav:N(NAV_N).map(i=>q('nav'+i)), navHov:N(NAV_N).map(i=>q('navHov'+i)), navOn:N(NAV_N).map(i=>q('navOn'+i)),
+    hp:N(6).map(i=>q('hp'+i)),
+    row:N(ROW_N).map(i=>q('row'+i)), hov:N(ROW_N).map(i=>q('hov'+i)), sel:N(ROW_N).map(i=>q('sel'+i)),
+    rw1:N(ROW_N).map(i=>q('rw1_'+i)), rw2:N(ROW_N).map(i=>q('rw2_'+i)),
+    sw1:N(ROW_N).map(i=>q('sw1_'+i)), sw2:N(ROW_N).map(i=>q('sw2_'+i)),
+    d:N(7).map(i=>q('d'+i)), dTitle:q('dTitle'),
+    fld:N(4).map(i=>q('fld'+i)), fldBox:N(4).map(i=>q('fldBox'+i)), caret:N(4).map(i=>q('caret'+i)),
+    chip:N(3).map(i=>q('chip'+i)), chipOn:N(3).map(i=>q('chipOn'+i)), chipHov:N(3).map(i=>q('chipHov'+i)),
+    mini, saveHov:q('saveHov'), saveOn:q('saveOn'), tick:q('tick'), cursor:q('cursor') };
+}
+
+function render(E,t){
+  const undo = seg(t,12.60,13.60,EASE);
+  const appP = seg(t,0.35,0.80,EASE_OUT) - seg(t,13.30,13.75,EASE);
+  const d1P  = seg(t,0.85,1.30,EASE_OUT) - seg(t,13.10,13.55,EASE);
+  const d2P  = seg(t,DIV2[0],DIV2[1],EASE_OUT) - seg(t,13.10,13.55,EASE);
+  E.app.setAttribute('opacity', appP.toFixed(3));
+  E.div[0].setAttribute('stroke-dashoffset',(APP.h*(1-d1P)).toFixed(2));
+  E.div[1].setAttribute('stroke-dashoffset',(APP.h*(1-d2P)).toFixed(2));
+  E.nav.forEach((g,i)=>{
+    const p=seg(t,1.15+i*0.06,1.50+i*0.06,EASE_OUT) - seg(t,12.90+i*0.02,13.25+i*0.02,EASE);
+    g.setAttribute('opacity',p.toFixed(3));
+    g.setAttribute('transform',`translate(${lerp(-8,0,p).toFixed(2)},0)`);
+  });
+
+  /* the rail opens on its first item and moves to the second */
+  const navSw = seg(t, NAV_CLICK, NAV_CLICK+0.20, EASE_OUT);
+  E.navHov.forEach((el,i)=>{ let o=0;
+    HOVERS.forEach(h=>{ if(h.k==='nav'&&h.i===i) o=Math.max(o, seg(t,h.a,h.a+0.14)-seg(t,h.b,h.b+0.12)); });
+    el.setAttribute('opacity',o.toFixed(3)); });
+  E.navOn.forEach((g,i)=>{
+    const o = i===0 ? (1-navSw) : i===1 ? navSw : 0;
+    const inP = seg(t,1.15+i*0.06,1.50+i*0.06,EASE_OUT) - seg(t,12.90,13.25,EASE);
+    g.setAttribute('opacity',(o*inP).toFixed(3));
+  });
+
+  /* home view: builds first, leaves when the rail moves */
+  E.hp.forEach((g,i)=>{
+    const p = seg(t,1.75+i*0.09,2.20+i*0.09,EASE_OUT) - seg(t,VIEW_OUT[0]+i*0.03,VIEW_OUT[1]+i*0.03,EASE);
+    g.setAttribute('opacity',p.toFixed(3));
+    g.setAttribute('transform',`translate(0,${lerp(10,0,Math.min(1,p+ (t>VIEW_OUT[0]?1:0))).toFixed(2)})`);
+  });
+
+  /* working view: arrives when the second divider does */
+  const listIn = i=> seg(t,LIST_IN+i*0.05,LIST_IN+0.40+i*0.05,EASE_OUT) - seg(t,12.35+i*0.03,12.75+i*0.03,EASE);
+  E.row.forEach((g,i)=>{
+    const p=listIn(i);
+    g.setAttribute('opacity',p.toFixed(3));
+    g.setAttribute('transform',`translate(0,${lerp(8,0,p).toFixed(2)})`);
+  });
+  E.d.forEach((g,i)=>{
+    const p=seg(t,DET_IN+i*0.05,DET_IN+0.38+i*0.05,EASE_OUT) - seg(t,12.15+i*0.03,12.55+i*0.03,EASE);
+    g.setAttribute('opacity',p.toFixed(3));
+  });
+
+  /* --- the cursor's journey --- */
+  let p;
+  const legs=[
+    [3.20,3.80,OFF,        navC(1),  80],
+    [5.45,5.95,navC(1),    rowC(4),  40],
+    [6.60,7.00,rowC(4),    rowC(2), -30],
+    [7.55,7.98,rowC(2),    chipC(1), 34],
+    [8.55,8.95,chipC(1),   fldC(2), -28],
+    [10.15,10.55,fldC(2),  saveC,    26],
+    [11.50,11.95,saveC,    REST,     20],
+    [12.55,13.4,REST,      OFF,      70],
+  ];
+  p = legs[0][2];
+  for (const [a,b,from,to,bow] of legs){ if (t < a) break; p = t <= b ? arc(from,to,seg(t,a,b,EASE),bow) : to; }
+  let dip=1; CLICKS.forEach(c=>{ dip -= 0.12*pulse(t,c,c+0.06,c+0.14); });
+  E.cursor.setAttribute('transform',`translate(${p[0].toFixed(2)},${p[1].toFixed(2)}) scale(${dip.toFixed(3)})`);
+
+  const hovOf=(k,i)=>{ let o=0;
+    HOVERS.forEach(h=>{ if(h.k===k&&h.i===i) o=Math.max(o, seg(t,h.a,h.a+0.14)-seg(t,h.b,h.b+0.12)); });
+    return o; };
+
+  /* records */
+  E.hov.forEach((el,r)=> el.setAttribute('opacity',(hovOf('row',r)*listIn(r)).toFixed(3)));
+  const rs = stateAt(t, REC_EV, 'row', 0), rc = stateAt(t, REC_EV, 'rec', 0);
+  E.sel.forEach((g,r)=>{
+    const o = lerp(rs.a===r?1:0, rs.b===r?1:0, rs.p);
+    g.setAttribute('opacity',(clamp(o,0,1)*listIn(r)).toFixed(3));
+  });
+  /* the saved edit lands back on the record it came from */
+  const prop = seg(t, SAVE_EV.prop[0], SAVE_EV.prop[1], EASE_OUT);
+  E.rw1.forEach((el,i)=>{
+    const w = (i===REC_EV[1].row) ? lerp(RW1[i], PROP_W, prop) : RW1[i];
+    el.setAttribute('width', w.toFixed(2));
+    E.sw1[i].setAttribute('width', w.toFixed(2));
+    E.rw2[i].setAttribute('width', RW2[i]);
+    E.sw2[i].setAttribute('width', RW2[i]);
+  });
+
+  /* detail */
+  E.dTitle.setAttribute('width', lerp(REC[rc.a].title, REC[rc.b].title, rc.p).toFixed(2));
+  E.fld.forEach((el,i)=>{
+    let w = swap(REC[rc.a].fields[i], REC[rc.b].fields[i], rc.p, i*0.09);
+    if (i===RETYPE.idx && t>=RETYPE.t0){
+      w = lerp(w, 3, seg(t,RETYPE.t0,RETYPE.t1,EASE_OUT));
+      w = lerp(w, RETYPE.w, seg(t,RETYPE.t1,RETYPE.t2,EASE_IO));
+    }
+    w = Math.max(0,w);
+    el.setAttribute('width', w.toFixed(2));
+    const foc = (i===RETYPE.idx)
+      ? seg(t,RETYPE.focus,RETYPE.focus+0.16,EASE_OUT) - seg(t,SAVE_EV.t,SAVE_EV.t+0.2)
+      : hovOf('fld',i)*0.5;
+    E.fldBox[i].setAttribute('opacity', foc.toFixed(3));
+    E.caret[i].setAttribute('x', (DX + w + 5).toFixed(2));
+    E.caret[i].setAttribute('opacity',(i===RETYPE.idx ? seg(t,RETYPE.t0,RETYPE.t0+0.1)-seg(t,RETYPE.t2,RETYPE.t2+0.14) : 0).toFixed(3));
+  });
+  E.chip.forEach((el,i)=>{
+    const w = Math.max(0, swap(REC[rc.a].chips[i]*88, REC[rc.b].chips[i]*88, rc.p, 0.06+i*0.06));
+    el.setAttribute('width', w.toFixed(2));
+    E.chipOn[i].setAttribute('width', w.toFixed(2));
+    E.chipOn[i].setAttribute('opacity',(i===CHIP_EV.idx ? seg(t,CHIP_EV.a,CHIP_EV.b,EASE_OUT)-seg(t,12.15,12.55,EASE) : 0).toFixed(3));
+    E.chipHov[i].setAttribute('width', (w+8).toFixed(2));
+    E.chipHov[i].setAttribute('opacity', hovOf('chip',i).toFixed(3));
+  });
+  E.mini.forEach((row,r)=> row.forEach((el,c)=>{
+    const a=REC[rc.a].mini[r][c]*MINI_W, b=REC[rc.b].mini[r][c]*MINI_W;
+    el.setAttribute('width', Math.max(0,swap(a,b,rc.p,0.10+r*0.05)).toFixed(2));
+  }));
+
+  /* save, and the confirmation that it went somewhere */
+  E.saveHov.setAttribute('opacity', hovOf('save',0).toFixed(3));
+  E.saveOn.setAttribute('opacity',(seg(t,SAVE_EV.flash[0],SAVE_EV.flash[0]+0.10,EASE_OUT)-seg(t,SAVE_EV.flash[1],SAVE_EV.flash[1]+0.30)).toFixed(3));
+  E.tick.setAttribute('opacity',(seg(t,SAVE_EV.tick[0],SAVE_EV.tick[0]+0.10)-seg(t,SAVE_EV.gone,SAVE_EV.gone+0.25)).toFixed(3));
+  E.tick.setAttribute('stroke-dashoffset',(26*(1-seg(t,SAVE_EV.tick[0],SAVE_EV.tick[1],EASE_OUT))).toFixed(2));
+}
+
+
+return { make: makeScene, bind, render, dur: DUR };
+})()
+
+
+/* ---- training, from src/components/scenes/training.js ---- */
+/* Training & Support — a resource pack is made, then fans out to a team. */
+
+
+const SCENE_training = (function(){
+/* ---- geometry ---------------------------------------------- */
+const F={x:340,y:210,w:760,h:480,r:16,chrome:44};
+const SRC={x:392,y:372,w:156,h:176};
+const SRC_LINES=[[424,108],[442,88],[460,116],[478,74]];
+const CTRL={x:408,y:508,w:124,h:28};
+const SRC_C=[SRC.x+SRC.w/2, SRC.y+SRC.h/2];              // 470, 460
+const PN=4, ROW={x:712,w:196,h:60}, ROW_Y=[336,412,488,564];
+const rowC=i=>ROW_Y[i]+ROW.h/2;
+const OUT_X=930, OUT_W=[104,78,118,92];
+const LINK=i=>`M${SRC.x+SRC.w} 460 C${SRC.x+SRC.w+76} 460, ${ROW.x-76} ${rowC(i)}, ${ROW.x} ${rowC(i)}`;
+
+/* the resource pack — opens out of the card that made it */
+const PK={x:420,y:284,w:610,h:382};
+const PK_BODY={y:336,h:330};                              // below the header
+const CLOSE_C=[996,310];
+const VID={x:444,y:352,w:360,h:202};
+const VID_ROWS=[396,432,468];                             // what the video is showing
+const NAR=[752,453,34];                                   // the narrator, middle-right
+const PLAY_C=[560,453];
+const STEP_X=828, STEP_Y=[360,396,432,468,504], STEP_W=[128,152,110,140,96];
+const SEC2_Y=600, SEC2=[444,636,828], SEC2_W=176;
+const SEC3_Y=[720,748,776,804], SEC3_W=[150,196,124,172];
+const SEC4_Y=[840,872];
+const SCROLL_MAX=210, SCROLL_C=[720,560];
+
+const OFF=[300,780], AWAY=[236,830];
+const CURSOR_PATH='M1 1 L1 17.6 L5.3 13.7 L7.9 19 L10.9 17.7 L8.2 12.5 L13 12.3 Z';
+const DUR=16.8;
+
+const T={
+  card:[0.40,0.90], lines:1.00, cardClick:2.40,
+  pack:[2.44,2.90], inner:[2.85,3.20],
+  play:3.78, playing:[3.84,5.90],
+  scroll:[6.45,7.75], close:8.88, packOut:[8.94,9.40],
+  release:[13.40,14.15], out:[15.40,16.50],
+};
+/* the fan only opens once the pack has been read and closed */
+const FAN=[[9.55,10.05],[9.85,10.35],[10.15,10.65],[10.45,10.95]];
+/* and they work in an order nobody set */
+const WORK=[[11.65,12.10],[12.60,13.05],[11.25,11.70],[12.05,12.50]];
+
+const person=(x,y,stroke,w)=>`<circle cx="${x}" cy="${y-6}" r="6.5" fill="none" stroke="${stroke}" stroke-width="${w}"/>`
+  + `<path d="M${x-11} ${y+12} a 11 11 0 0 1 22 0" fill="none" stroke="${stroke}" stroke-width="${w}"/>`;
+
+
+function makeScene(){
+  const u=nextUid(),S=[];
+  S.push(`<svg viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A document is written, then opened into a training pack containing numbered steps and an instructional video with a presenter in a bubble at its right. The video plays, the pack is scrolled through to reveal further material, and then closed. Four curved links fan out from the document, each bringing a person into the frame, and each of them begins producing work of their own before the links fade and the source dims.">`);
+  S.push(`<defs>`,
+    `<radialGradient id="bA${u}"><stop offset="0" stop-color="${C.amber}" stop-opacity=".11"/><stop offset="1" stop-color="${C.amber}" stop-opacity="0"/></radialGradient>`,
+    `<radialGradient id="bB${u}"><stop offset="0" stop-color="${C.cream200}" stop-opacity=".075"/><stop offset="1" stop-color="${C.cream200}" stop-opacity="0"/></radialGradient>`,
+    `<filter id="cu${u}" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="2" stdDeviation="2.6" flood-color="#000" flood-opacity=".6"/></filter>`,
+    `<filter id="gl${u}" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>`,
+    `<filter id="sh${u}" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000" flood-opacity=".55"/></filter>`,
+    `<clipPath id="body${u}"><rect x="${PK.x}" y="${PK_BODY.y}" width="${PK.w}" height="${PK_BODY.h}"/></clipPath>`,
+    `</defs>`);
+  S.push(`<rect width="1440" height="900" fill="${C.bg}"/>`);
+  S.push(`<ellipse cx="380" cy="170" rx="540" ry="380" fill="url(#bA${u})"/>`);
+  S.push(`<ellipse cx="1120" cy="770" rx="500" ry="360" fill="url(#bB${u})"/>`);
+  S.push(`<rect x="${F.x}" y="${F.y}" width="${F.w}" height="${F.h}" rx="${F.r}" fill="#16120F" stroke="${cr(.15)}"/>`);
+  S.push(`<path d="M${F.x} ${F.y+F.chrome} H${F.x+F.w}" stroke="${cr(.09)}"/>`);
+  const cy=F.y+F.chrome/2;
+  for(let i=0;i<3;i++) S.push(`<circle cx="${F.x+26+i*15}" cy="${cy}" r="3.4" fill="${cr(.16)}"/>`);
+  S.push(`<rect x="${F.x+F.w/2-120}" y="${cy-6}" width="240" height="12" rx="6" fill="${cr(.07)}"/>`);
+
+  for(let i=0;i<PN;i++)
+    S.push(`<path data-el="lk${i}" d="${LINK(i)}" fill="none" stroke="${am(.42)}" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="1"/>`);
+
+  S.push(`<g data-el="srcG" opacity="0">`
+    + `<rect x="${SRC.x}" y="${SRC.y}" width="${SRC.w}" height="${SRC.h}" rx="12" fill="${C.s2}" stroke="${cr(.18)}"/>`
+    + `<rect x="${SRC.x+16}" y="${SRC.y+20}" width="72" height="8" rx="4" fill="${cr(.30)}"/>`
+    + `<path d="M${SRC.x+16} ${SRC.y+42} H${SRC.x+SRC.w-16}" stroke="${cr(.09)}"/>`
+    + SRC_LINES.map((l,i)=>`<rect data-el="sl${i}" x="${SRC.x+16}" y="${l[0]}" width="0" height="6" rx="3" fill="${cr(.34)}"/>`).join('')
+    + `</g>`);
+  S.push(`<g data-el="ctrlG" opacity="0">`
+    + `<rect data-el="ctrlHov" x="${CTRL.x-4}" y="${CTRL.y-4}" width="${CTRL.w+8}" height="${CTRL.h+8}" rx="12" fill="${cr(.05)}" opacity="0"/>`
+    + `<rect x="${CTRL.x}" y="${CTRL.y}" width="${CTRL.w}" height="${CTRL.h}" rx="8" fill="none" stroke="${cr(.26)}"/>`
+    + `<rect x="${CTRL.x+CTRL.w/2-22}" y="${CTRL.y+CTRL.h/2-1.5}" width="44" height="3" rx="1.5" fill="${cr(.34)}"/></g>`);
+  S.push(`<g data-el="ctrlOn" opacity="0"><rect x="${CTRL.x}" y="${CTRL.y}" width="${CTRL.w}" height="${CTRL.h}" rx="8" fill="${am(.2)}" stroke="${am(.85)}"/>`
+    + `<rect x="${CTRL.x+CTRL.w/2-22}" y="${CTRL.y+CTRL.h/2-1.5}" width="44" height="3" rx="1.5" fill="${C.amber200}"/></g>`);
+
+  /* ---------- the resource pack ---------- */
+  S.push(`<g data-el="packG" opacity="0"><g data-el="packS">`);
+  S.push(`<rect x="${PK.x}" y="${PK.y}" width="${PK.w}" height="${PK.h}" rx="14" fill="${C.s2}" stroke="${cr(.18)}" filter="url(#sh${u})"/>`);
+  S.push(`<rect x="${PK.x+24}" y="${PK.y+22}" width="150" height="10" rx="5" fill="${cr(.32)}"/>`);
+  S.push(`<rect x="${PK.x+24}" y="${PK.y+40}" width="94" height="6" rx="3" fill="${cr(.13)}"/>`);
+  S.push(`<g data-el="closeHov" opacity="0"><circle cx="${CLOSE_C[0]}" cy="${CLOSE_C[1]}" r="16" fill="${cr(.06)}"/></g>`);
+  S.push(`<path d="M${CLOSE_C[0]-6} ${CLOSE_C[1]-6} l12 12 M${CLOSE_C[0]+6} ${CLOSE_C[1]-6} l-12 12" stroke="${cr(.40)}" stroke-width="1.6" stroke-linecap="round"/>`);
+  S.push(`<path d="M${PK.x} ${PK_BODY.y} H${PK.x+PK.w}" stroke="${cr(.10)}"/>`);
+
+  // everything below the header scrolls
+  S.push(`<g clip-path="url(#body${u})"><g data-el="scrollG">`);
+  //  the video
+  S.push(`<rect x="${VID.x}" y="${VID.y}" width="${VID.w}" height="${VID.h}" rx="10" fill="${C.bg}" stroke="${cr(.14)}"/>`);
+  //  what it is showing: a process being carried out, step by step
+  VID_ROWS.forEach((y,i)=> S.push(
+      `<rect x="${VID.x+24}" y="${y}" width="212" height="24" rx="6" fill="${C.s1}" stroke="${cr(.10)}"/>`
+    + `<rect x="${VID.x+36}" y="${y+9}" width="${[120,92,146][i]}" height="6" rx="3" fill="${cr(.22)}"/>`
+    + `<g data-el="vh${i}" opacity="0"><rect x="${VID.x+24}" y="${y}" width="212" height="24" rx="6" fill="${am(.13)}" stroke="${am(.6)}"/>`
+    + `<rect x="${VID.x+36}" y="${y+9}" width="${[120,92,146][i]}" height="6" rx="3" fill="${am(.7)}"/></g>`
+    + `<path data-el="vt${i}" d="M${VID.x+248} ${y+12} l4 4.4 l8 -8.4" fill="none" stroke="${C.amber}" stroke-width="2" `
+    + `stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="13" stroke-dashoffset="13"/>`));
+  //  the narrator, in a bubble at the middle right — the way an
+  //  instructional recording actually looks
+  S.push(`<g data-el="narG">`
+    + `<circle cx="${NAR[0]}" cy="${NAR[1]}" r="${NAR[2]}" fill="${C.s3}" stroke="${am(.45)}" stroke-width="1.4"/>`
+    + `<g data-el="narRing"><circle cx="${NAR[0]}" cy="${NAR[1]}" r="${NAR[2]+5}" fill="none" stroke="${am(.35)}" stroke-width="1.2"/></g>`
+    + person(NAR[0], NAR[1]+2, C.amber, 1.8)
+    + [0,1,2].map(i=>`<rect data-el="lvl${i}" x="${NAR[0]-9+i*8}" y="${NAR[1]+26}" width="4" height="4" rx="2" fill="${am(.8)}"/>`).join('')
+    + `</g>`);
+  //  transport
+  S.push(`<path d="M${VID.x+16} ${VID.y+VID.h-16} H${VID.x+VID.w-16}" stroke="${cr(.13)}" stroke-width="3" stroke-linecap="round"/>`);
+  S.push(`<path data-el="prog" d="M${VID.x+16} ${VID.y+VID.h-16} H${VID.x+VID.w-16}" stroke="${C.amber}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${VID.w-32}" stroke-dashoffset="${VID.w-32}"/>`);
+  S.push(`<g data-el="playG"><circle cx="${PLAY_C[0]}" cy="${PLAY_C[1]}" r="24" fill="${am(.16)}" stroke="${am(.7)}"/>`
+    + `<path d="M${PLAY_C[0]-6} ${PLAY_C[1]-9} l15 9 l-15 9 z" fill="${C.amber200}"/></g>`);
+  //  the steps beside it
+  STEP_Y.forEach((y,i)=> S.push(`<circle cx="${STEP_X+12}" cy="${y+6}" r="9" fill="none" stroke="${am(.45)}"/>`
+    + `<rect x="${STEP_X+12-2.5}" y="${y+2}" width="5" height="8" rx="1" fill="${am(.6)}"/>`
+    + `<rect x="${STEP_X+32}" y="${y+3}" width="${STEP_W[i]}" height="6" rx="3" fill="${cr(.24)}"/>`));
+  //  further material, revealed by scrolling
+  S.push(`<path d="M${PK.x+24} 580 H${PK.x+PK.w-24}" stroke="${cr(.08)}"/>`);
+  SEC2.forEach((x,i)=> S.push(`<rect x="${x}" y="${SEC2_Y}" width="${SEC2_W}" height="76" rx="9" fill="${C.s1}" stroke="${cr(.12)}"/>`
+    + `<rect x="${x+16}" y="${SEC2_Y+16}" width="38" height="5" rx="2.5" fill="${cr(.18)}"/>`
+    + `<rect x="${x+16}" y="${SEC2_Y+32}" width="${[92,66,110][i]}" height="9" rx="4.5" fill="${i===1?am(.7):cr(.34)}"/>`
+    + `<rect x="${x+16}" y="${SEC2_Y+52}" width="${[54,72,46][i]}" height="4" rx="2" fill="${cr(.11)}"/>`));
+  S.push(`<path d="M${PK.x+24} 700 H${PK.x+PK.w-24}" stroke="${cr(.08)}"/>`);
+  SEC3_Y.forEach((y,i)=> S.push(`<rect x="${PK.x+24}" y="${y}" width="14" height="14" rx="4" fill="none" stroke="${am(.45)}"/>`
+    + `<path d="M${PK.x+27} ${y+7} l3 3.2 l5.6 -6" fill="none" stroke="${am(.8)}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`
+    + `<rect x="${PK.x+50}" y="${y+4}" width="${SEC3_W[i]}" height="6" rx="3" fill="${cr(.24)}"/>`));
+  SEC4_Y.forEach((y,i)=> S.push(`<rect x="${PK.x+24}" y="${y}" width="${PK.w-48}" height="24" rx="7" fill="${C.s1}" stroke="${cr(.11)}"/>`
+    + `<rect x="${PK.x+38}" y="${y+7}" width="12" height="10" rx="2" fill="none" stroke="${cr(.30)}"/>`
+    + `<rect x="${PK.x+60}" y="${y+9}" width="${[188,142][i]}" height="6" rx="3" fill="${cr(.22)}"/>`));
+  S.push(`</g></g>`);
+  //  scroll indicator
+  S.push(`<rect x="${PK.x+PK.w-8}" y="${PK_BODY.y+8}" width="3" height="${PK_BODY.h-16}" rx="1.5" fill="${cr(.06)}"/>`);
+  S.push(`<rect data-el="bar" x="${PK.x+PK.w-8}" y="${PK_BODY.y+8}" width="3" height="140" rx="1.5" fill="${cr(.22)}"/>`);
+  S.push(`</g></g>`);
+
+  /* ---------- the four people ---------- */
+  for(let i=0;i<PN;i++){
+    const y=rowC(i);
+    S.push(`<g data-el="pg${i}" opacity="0">`
+      + `<rect x="${ROW.x}" y="${ROW_Y[i]}" width="${ROW.w}" height="${ROW.h}" rx="10" fill="${C.s1}" stroke="${cr(.12)}"/>`
+      + person(ROW.x+34, y, cr(.34), 1.6)
+      + `<rect x="${ROW.x+62}" y="${y-9}" width="${[96,74,110,84][i]}" height="6" rx="3" fill="${cr(.26)}"/>`
+      + `<rect x="${ROW.x+62}" y="${y+3}" width="${[62,90,54,72][i]}" height="4" rx="2" fill="${cr(.12)}"/></g>`);
+    S.push(`<g data-el="lit${i}" opacity="0">`
+      + `<rect x="${ROW.x-4}" y="${ROW_Y[i]-4}" width="${ROW.w+8}" height="${ROW.h+8}" rx="14" fill="${am(.09)}" filter="url(#gl${u})"/>`
+      + `<rect x="${ROW.x}" y="${ROW_Y[i]}" width="${ROW.w}" height="${ROW.h}" rx="10" fill="${C.s3}" stroke="${am(.6)}"/>`
+      + person(ROW.x+34, y, C.amber, 1.7)
+      + `<rect x="${ROW.x+62}" y="${y-9}" width="${[96,74,110,84][i]}" height="6" rx="3" fill="${am(.75)}"/>`
+      + `<rect x="${ROW.x+62}" y="${y+3}" width="${[62,90,54,72][i]}" height="4" rx="2" fill="${am(.35)}"/></g>`);
+    S.push(`<g data-el="out${i}" opacity="0">`
+      + `<path d="M${OUT_X} ${y} l4.5 4.8 l8.5 -9" fill="none" stroke="${C.amber}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
+      + `<rect x="${OUT_X+26}" y="${y-3}" width="${OUT_W[i]}" height="6" rx="3" fill="${cr(.28)}"/></g>`);
+  }
+  S.push(`<g data-el="cursor"><g transform="scale(1.5)" filter="url(#cu${u})">`
+    + `<path d="${CURSOR_PATH}" fill="${C.cream100}" stroke="${C.bg}" stroke-width="1.1" stroke-linejoin="round"/></g></g>`);
+  S.push(`</svg>`);
+  return S.join('');
+}
+function bind(r){
+  const q=k=>r.querySelector(`[data-el="${k}"]`);
+  const N=n=>[...Array(n)].map((_,k)=>k);
+  const lk=N(PN).map(i=>q('lk'+i));
+  return { srcG:q('srcG'), sl:SRC_LINES.map((_,i)=>q('sl'+i)),
+    ctrlG:q('ctrlG'), ctrlHov:q('ctrlHov'), ctrlOn:q('ctrlOn'),
+    packG:q('packG'), packS:q('packS'), scrollG:q('scrollG'), bar:q('bar'),
+    closeHov:q('closeHov'), playG:q('playG'), prog:q('prog'),
+    vh:N(3).map(i=>q('vh'+i)), vt:N(3).map(i=>q('vt'+i)),
+    narG:q('narG'), narRing:q('narRing'), lvl:N(3).map(i=>q('lvl'+i)),
+    lk, lkLen:lk.map(p=>p.getTotalLength()),
+    pg:N(PN).map(i=>q('pg'+i)), lit:N(PN).map(i=>q('lit'+i)), out:N(PN).map(i=>q('out'+i)),
+    cursor:q('cursor') };
+}
+
+function render(E,t){
+  const out=seg(t,T.out[0],T.out[1],EASE);
+  const card=seg(t,T.card[0],T.card[1],EASE_OUT)*(1-out);
+  const released=seg(t,T.release[0],T.release[1],EASE);
+  E.srcG.setAttribute('opacity',(card*lerp(1,.34,released)).toFixed(3));
+  E.sl.forEach((el,i)=>{
+    const s0=T.lines+i*0.14;
+    el.setAttribute('width',(t<s0?0:lerp(3,SRC_LINES[i][1],seg(t,s0,s0+0.52,EASE_IO))).toFixed(2));
+    el.setAttribute('opacity',(t<s0?0:1));
+  });
+  E.ctrlG.setAttribute('opacity',(card*(1-released)).toFixed(3));
+  E.ctrlHov.setAttribute('opacity',(seg(t,2.20,2.34)-seg(t,T.cardClick+0.02,T.cardClick+0.14)).toFixed(3));
+  E.ctrlOn.setAttribute('opacity',((seg(t,T.cardClick,T.cardClick+0.08,EASE_OUT)-seg(t,T.cardClick+0.30,T.cardClick+0.58))*(1-out)).toFixed(3));
+
+  /* the pack grows out of the card that produced it, and collapses
+     back into it — it is that document opened, not a new object */
+  const pIn=seg(t,T.pack[0],T.pack[1],EASE_OUT), pOut=seg(t,T.packOut[0],T.packOut[1],EASE);
+  const pk=pIn-pOut;
+  E.packG.setAttribute('opacity',pk.toFixed(3));
+  const sc=lerp(lerp(.22,1,pIn),.30,pOut);
+  E.packS.setAttribute('transform',
+    `translate(${SRC_C[0]},${SRC_C[1]}) scale(${sc.toFixed(4)}) translate(${-SRC_C[0]},${-SRC_C[1]})`);
+
+  /* playback: the recording works through the same three steps the
+     list beside it names, and the presenter's levels move while it runs */
+  const playing=seg(t,T.playing[0],T.playing[1],LINEAR);
+  const live=t>=T.playing[0] && t<=T.playing[1]+0.2;
+  E.playG.setAttribute('opacity',(1-seg(t,T.play,T.play+0.24,EASE_OUT)).toFixed(3));
+  E.prog.setAttribute('stroke-dashoffset',((VID.w-32)*(1-playing)).toFixed(2));
+  VID_ROWS.forEach((_,i)=>{
+    const a=T.playing[0]+i*0.62, b=a+0.50;
+    E.vh[i].setAttribute('opacity',(seg(t,a,a+0.14)-seg(t,b,b+0.16)).toFixed(3));
+    E.vt[i].setAttribute('stroke-dashoffset',(13*(1-seg(t,b-0.10,b+0.22,EASE_OUT))).toFixed(2));
+  });
+  E.lvl.forEach((el,i)=>{
+    const h=live ? 4+9*Math.abs(Math.sin((t-T.playing[0])*7 + i*1.1)) : 4;
+    el.setAttribute('height',h.toFixed(2));
+    el.setAttribute('y',(NAR[1]+30-h).toFixed(2));
+  });
+  E.narRing.setAttribute('opacity',(live?0.35+0.35*Math.abs(Math.sin((t-T.playing[0])*3)):0.18).toFixed(3));
+
+  /* scrolling the pack */
+  const sy=seg(t,T.scroll[0],T.scroll[1],EASE_IO)*SCROLL_MAX;
+  E.scrollG.setAttribute('transform',`translate(0,${(-sy).toFixed(2)})`);
+  E.bar.setAttribute('y',(PK_BODY.y+8 + (PK_BODY.h-16-140)*(sy/SCROLL_MAX)).toFixed(2));
+  E.closeHov.setAttribute('opacity',(seg(t,8.68,8.82)-seg(t,T.close+0.02,T.close+0.14)).toFixed(3));
+
+  /* only now do the links go out */
+  for(let i=0;i<PN;i++){
+    const [a,b]=FAN[i], g=seg(t,a,b,EASE_OUT), L=E.lkLen[i];
+    E.lk[i].setAttribute('stroke-dasharray',L);
+    E.lk[i].setAttribute('stroke-dashoffset',(L*(1-g)).toFixed(2));
+    E.lk[i].setAttribute('opacity',((g>0?1:0)*(1-released)*(1-out)).toFixed(3));
+    const app=seg(t,b-0.22,b+0.18,EASE_OUT)*(1-out);
+    E.pg[i].setAttribute('opacity',app.toFixed(3));
+    E.pg[i].setAttribute('transform',`translate(${lerp(14,0,app).toFixed(2)},0)`);
+    E.lit[i].setAttribute('opacity',((seg(t,b,b+0.34,EASE_OUT)-seg(t,WORK[i][1]+0.30,WORK[i][1]+0.90,EASE)*0.55)*(1-out)).toFixed(3));
+    const [wa,wb]=WORK[i], w=seg(t,wa,wb,EASE_OUT)*(1-out);
+    E.out[i].setAttribute('opacity',w.toFixed(3));
+    E.out[i].setAttribute('transform',`translate(${lerp(-10,0,w).toFixed(2)},0)`);
+  }
+
+  const p=(()=>{
+    const legs=[
+      [1.75,2.25,OFF,        [CTRL.x+CTRL.w/2,CTRL.y+CTRL.h/2], 80],
+      [3.30,3.70,[CTRL.x+CTRL.w/2,CTRL.y+CTRL.h/2], PLAY_C,    -40],
+      [6.05,6.45,PLAY_C,     SCROLL_C,   30],
+      [8.35,8.80,SCROLL_C,   CLOSE_C,   -34],
+      [9.45,10.1,CLOSE_C,    AWAY,       60],
+    ];
+    let q=legs[0][2];
+    for(const [a,b,from,to,bow] of legs){ if(t<a) break; q = t<=b ? arc(from,to,seg(t,a,b,EASE),bow) : to; }
+    return q;
+  })();
+  let dip=1; [T.cardClick,T.play,T.close].forEach(c=>{ dip-=0.12*pulse(t,c,c+0.06,c+0.14); });
+  E.cursor.setAttribute('transform',`translate(${p[0].toFixed(2)},${p[1].toFixed(2)}) scale(${dip.toFixed(3)})`);
+}
+
+
+return { make: makeScene, bind, render, dur: DUR };
+})()
+
+
+const SCENES = {
+  automation: SCENE_automation,
+  data: SCENE_data,
+  web: SCENE_web,
+  ai: SCENE_ai[0],
+  software: SCENE_software,
+  training: SCENE_training,
+}
+</script>
+<script>
+/* ============================================================
+   REEL PLAYER
+
+   A 1080x1920 stage, a run of show in real seconds, and one rAF loop
+   that places the camera window, the scene and the type for whatever
+   second it is asked about. Same contract as the site's scenes: given
+   the same t it draws the same frame, so scrubbing and playing go
+   through identical code and a paused frame is a real frame.
+
+   The camera is a rectangle that moves. It is not three layouts that
+   swap — it eases from one rect to the next on the repository's own
+   --ease curve, which is what makes a cut from full-screen to a band
+   read as one object resizing rather than two shots spliced.
+   ============================================================ */
+
+const STAGE_W = 1080, STAGE_H = 1920
+
+/* Instagram's chrome, as margins. Nothing that carries meaning goes
+   outside this: the profile row and caption stack over the bottom,
+   the like/comment/share rail over the right. */
+const SAFE = { top: 250, bottom: 480, left: 60, right: 120 }
+
+/* Camera framings. Full-bleed horizontally in every case — a webcam
+   inset with margins reads as a video call, not as a film. */
+const FULL   = { x: 0, y: 0,   w: 1080, h: 1920 }
+const HALF_B = { x: 0, y: 880, w: 1080, h: 1040 }
+const HALF_T = { x: 0, y: 0,   w: 1080, h: 880  }
+
+/* Where a scene sits when one is playing. 800x608 at 1000 wide is 760
+   tall, which clears the bottom safe line by 60. */
+const SCENE_RECT = { x: 40, y: 620, w: 1000, h: 760 }
+
+const TRANS = 0.66          // seconds for the camera to travel between framings
+
+/* ------------------------------------------------------------------
+   THE RUN OF SHOW
+
+   Timed for a 50-second read at roughly three words a second. The
+   shape is from what currently works on Reels: a hook that lands
+   inside three seconds, a complete visual change every four at the
+   outside, and the whole thing sitting in the 45-60s band that
+   rewards teaching rather than the 30-40s one that does not.
+
+   `say` is what you say out loud. `head` is what appears on screen.
+   They are deliberately not the same words — reading your own caption
+   aloud is the tell of a video made from a script rather than by a
+   person.
+   ------------------------------------------------------------------ */
+const SHOW = [
+  { id: 'hook', dur: 4.0, cam: FULL, text: 'upper',
+    kicker: null,
+    head: 'A morning a week',
+    say: 'Your team loses a morning a week to work a computer should be doing.' },
+
+  { id: 'problem', dur: 5.2, cam: HALF_B, text: 'upper',
+    kicker: 'WHERE IT GOES',
+    lines: ['The same order, keyed twice.', 'Timesheets, chased.', "Last month's spreadsheet, rebuilt."],
+    say: "Rekeying the same order twice. Chasing timesheets. Rebuilding last month's spreadsheet." },
+
+  { id: 'title', dur: 2.2, cam: null, text: 'centre',
+    kicker: 'n.abl',
+    head: 'Six things we build',
+    say: "Here's what we actually build." },
+
+  { id: 'automation', dur: 3.8, cam: null, scene: 'automation', from: 5.4, text: 'above',
+    kicker: '01 · AUTOMATION',
+    head: 'Set up once, left running',
+    say: 'Work that repeats — set up once, then left to run.' },
+
+  { id: 'data', dur: 3.8, cam: null, scene: 'data', from: 5.6, text: 'above',
+    kicker: '02 · DATA',
+    head: 'Numbers you can decide from',
+    say: 'Your data cleaned up, then reporting you can actually decide from.' },
+
+  { id: 'web', dur: 3.8, cam: null, scene: 'web', from: 5.0, text: 'above',
+    kicker: '03 · WEB',
+    head: 'A site that does the work',
+    say: 'A site that books, sells, and takes the payment.' },
+
+  { id: 'mid', dur: 3.4, cam: HALF_T, text: 'under',
+    kicker: null,
+    head: 'None of it off the shelf',
+    say: "None of it's off the shelf." },
+
+  { id: 'ai', dur: 3.8, cam: null, scene: 'ai', from: 4.8, text: 'above',
+    kicker: '04 · AI',
+    head: 'The answer, and where it came from',
+    say: 'Answers from your own documents — and where they came from.' },
+
+  { id: 'software', dur: 3.8, cam: null, scene: 'software', from: 7.6, text: 'above',
+    kicker: '05 · SOFTWARE',
+    head: 'Checks built in, not remembered',
+    say: 'Checks built into the process, not remembered.' },
+
+  { id: 'training', dur: 3.8, cam: null, scene: 'training', from: 9.8, text: 'above',
+    kicker: '06 · TRAINING',
+    head: 'Your work, not the manual',
+    say: 'Training on your actual work, not the manual.' },
+
+  { id: 'how', dur: 6.0, cam: HALF_B, text: 'upper',
+    kicker: 'HOW IT GOES',
+    lines: ['Built.', 'Handed over.', 'Explained to your team.'],
+    say: "We're in Nottingham. We build it, hand it over, and show your team how to run it." },
+
+  { id: 'cta', dur: 6.4, cam: FULL, text: 'lower',
+    kicker: null,
+    head: 'nabl.agency',
+    sub: "What's the job that shouldn't need a person?",
+    say: "If there's a job in your week that shouldn't need a person — that's the one to send me." },
+]
+
+/* Absolute start times, and the rect the camera holds through a
+   section where it is off (it fades in place rather than jumping to
+   somewhere it was never going to be). */
+let clock = 0
+let lastRect = FULL
+for (const s of SHOW) {
+  s.t0 = clock
+  clock += s.dur
+  s.t1 = clock
+  s.rect = s.cam || lastRect
+  s.on = !!s.cam
+  if (s.cam) lastRect = s.cam
+}
+const TOTAL = clock
+
+/* ------------------------------------------------------------------
+   Elements
+   ------------------------------------------------------------------ */
+const $ = (id) => document.getElementById(id)
+const stage    = $('stage')
+const camBox   = $('cam')
+const camVideo = $('camVideo')
+const sceneBox = $('sceneBox')
+const typeBox  = $('type')
+const guides   = $('guides')
+
+const elKicker = $('tKicker')
+const elHead   = $('tHead')
+const elSub    = $('tSub')
+const elLines  = $('tLines')
+
+/* ------------------------------------------------------------------
+   Scenes — all six mounted once, shown one at a time
+   ------------------------------------------------------------------ */
+const mounted = {}
+for (const [name, scene] of Object.entries(SCENES)) {
+  const host = document.createElement('div')
+  host.className = 'sceneHost'
+  host.innerHTML = scene.make()
+  const svg = host.querySelector('svg')
+  svg.setAttribute('viewBox', '320 146 800 608')
+  svg.setAttribute('width', '100%')
+  svg.setAttribute('height', '100%')
+  sceneBox.appendChild(host)
+  mounted[name] = { scene, host, els: scene.bind(host) }
+}
+
+/* ------------------------------------------------------------------
+   State
+   ------------------------------------------------------------------ */
+let t = 0
+let playing = false
+let raf = 0
+let originAt = 0
+let camMode = 'key'        // live | key | off
+let mirror = true
+let showGuides = true
+let lastSection = null
+
+const sectionAt = (time) => {
+  for (let i = SHOW.length - 1; i >= 0; i--) if (time >= SHOW[i].t0) return i
+  return 0
+}
+
+const lerpRect = (a, b, p) => ({
+  x: lerp(a.x, b.x, p), y: lerp(a.y, b.y, p),
+  w: lerp(a.w, b.w, p), h: lerp(a.h, b.h, p),
+})
+
+/* ------------------------------------------------------------------
+   Draw one frame
+   ------------------------------------------------------------------ */
+function draw(time) {
+  const i = sectionAt(time)
+  const s = SHOW[i]
+  const prev = SHOW[i - 1] || s
+  const lt = time - s.t0
+
+  /* ---- camera: rect eases, opacity crossfades ---- */
+  const p = seg(lt, 0, TRANS, EASE)
+  const rect = lerpRect(prev.rect, s.rect, p)
+  const on = lerp(prev.on ? 1 : 0, s.on ? 1 : 0, seg(lt, 0, TRANS * 0.8, EASE_OUT))
+
+  camBox.style.transform = `translate(${rect.x.toFixed(1)}px, ${rect.y.toFixed(1)}px)`
+  camBox.style.width  = `${rect.w.toFixed(1)}px`
+  camBox.style.height = `${rect.h.toFixed(1)}px`
+  camBox.style.opacity = on.toFixed(3)
+
+  /* ---- scene: only the active one renders ---- */
+  for (const [name, m] of Object.entries(mounted)) {
+    const active = s.scene === name
+    m.host.style.opacity = active ? '1' : '0'
+    if (active) m.scene.render(m.els, (s.from || 0) + lt)
+  }
+  /* The scene box itself fades, so a scene arriving does not pop in
+     behind type that is already settled. */
+  sceneBox.style.opacity = s.scene ? seg(lt, 0.06, 0.52, EASE_OUT).toFixed(3) : '0'
+
+  /* ---- type ---- */
+  if (s !== lastSection) { writeType(s); lastSection = s }
+  const inP  = seg(lt, 0.10, 0.72, EASE_OUT)
+  const outP = seg(lt, s.dur - 0.34, s.dur, EASE)
+  typeBox.style.opacity = (inP - outP).toFixed(3)
+  typeBox.style.setProperty('--ty', `${lerp(26, 0, inP).toFixed(1)}px`)
+
+  /* Cascading lines stagger against their own section clock. */
+  const kids = elLines.children
+  for (let k = 0; k < kids.length; k++) {
+    const a = 0.28 + k * 0.42
+    const q = seg(lt, a, a + 0.62, EASE_OUT)
+    kids[k].style.opacity = (q - outP).toFixed(3)
+    kids[k].style.transform = `translateY(${lerp(18, 0, q).toFixed(1)}px)`
+  }
+
+  paintTransport(time, i)
+}
+
+function writeType(s) {
+  typeBox.dataset.at = s.text
+  elKicker.textContent = s.kicker || ''
+  elKicker.hidden = !s.kicker
+  elHead.textContent = s.head || ''
+  elHead.hidden = !s.head
+  elSub.textContent = s.sub || ''
+  elSub.hidden = !s.sub
+  elLines.replaceChildren()
+  elLines.hidden = !s.lines
+  for (const line of s.lines || []) {
+    const p = document.createElement('p')
+    p.className = 'tLine'
+    p.textContent = line
+    elLines.appendChild(p)
+  }
+}
+
+/* ------------------------------------------------------------------
+   Transport
+   ------------------------------------------------------------------ */
+const bar     = $('barFill')
+const tcNow   = $('tcNow')
+const tcTotal = $('tcTotal')
+const promptNow  = $('promptNow')
+const promptNext = $('promptNext')
+const promptSec  = $('promptSec')
+
+function paintTransport(time, i) {
+  bar.style.width = `${((time / TOTAL) * 100).toFixed(2)}%`
+  tcNow.textContent = fmt(time)
+  const s = SHOW[i]
+  promptSec.textContent = `${String(i + 1).padStart(2, '0')} / ${SHOW.length}  ·  ${s.id}  ·  ${camLabel(s)}`
+  promptNow.textContent = s.say
+  promptNext.textContent = SHOW[i + 1] ? SHOW[i + 1].say : '—'
+  for (const chip of chips) chip.classList.toggle('is-on', +chip.dataset.i === i)
+}
+
+const camLabel = (s) => (!s.cam ? 'no camera' : s.cam === FULL ? 'camera full frame' : s.cam === HALF_T ? 'camera top half' : 'camera bottom half')
+const fmt = (v) => `${Math.floor(v / 60)}:${String(Math.floor(v % 60)).padStart(2, '0')}.${String(Math.floor((v % 1) * 10))}`
+
+tcTotal.textContent = fmt(TOTAL)
+
+/* Section chips, which double as the run of show. */
+const chips = []
+const chipRow = $('chips')
+SHOW.forEach((s, i) => {
+  const b = document.createElement('button')
+  b.type = 'button'
+  b.className = 'chip'
+  b.dataset.i = i
+  b.style.flexGrow = String(s.dur)
+  b.innerHTML = `<span class="chip__n">${String(i + 1).padStart(2, '0')}</span><span class="chip__id">${s.id}</span>`
+  b.setAttribute('aria-label', `${s.id}, ${s.dur} seconds, ${camLabel(s)}`)
+  b.addEventListener('click', () => seek(s.t0 + 0.01))
+  chipRow.appendChild(b)
+  chips.push(b)
+})
+
+function loop(now) {
+  t = (now - originAt) / 1000
+  if (t >= TOTAL) { t = TOTAL; playing = false; raf = 0; draw(t); syncPlay(); return }
+  draw(t)
+  raf = requestAnimationFrame(loop)
+}
+
+function play() {
+  if (playing) return
+  if (t >= TOTAL - 0.01) t = 0
+  originAt = performance.now() - t * 1000
+  playing = true
+  raf = requestAnimationFrame(loop)
+  syncPlay()
+}
+function pause() {
+  playing = false
+  if (raf) cancelAnimationFrame(raf), raf = 0
+  syncPlay()
+}
+function seek(to) {
+  t = clamp(to, 0, TOTAL)
+  originAt = performance.now() - t * 1000
+  draw(t)
+  if (!playing) syncPlay()
+}
+const syncPlay = () => {
+  $('btnPlay').textContent = playing ? 'Pause' : 'Play'
+  $('btnPlay').setAttribute('aria-pressed', String(playing))
+}
+
+/* ------------------------------------------------------------------
+   Camera
+   ------------------------------------------------------------------ */
+async function goLive() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' },
+      audio: false,
+    })
+    camVideo.srcObject = stream
+    await camVideo.play()
+    setCamMode('live')
+    return true
+  } catch (err) {
+    setCamMode('key')
+    note(err && err.name === 'NotAllowedError'
+      ? 'Camera blocked. Staying on key colour — record the page and key it out in your editor.'
+      : 'No camera available here. Staying on key colour.')
+    return false
+  }
+}
+
+function setCamMode(mode) {
+  camMode = mode
+  camBox.dataset.mode = mode   // the stylesheet shows exactly one of the two
+  for (const b of document.querySelectorAll('[data-cam]')) {
+    b.setAttribute('aria-pressed', String(b.dataset.cam === mode))
+  }
+}
+
+function note(msg) {
+  const el = $('note')
+  el.textContent = msg
+  el.hidden = !msg
+}
+
+/* ------------------------------------------------------------------
+   Fit the stage to whatever space it has
+   ------------------------------------------------------------------ */
+function fit() {
+  const box = stage.parentElement.getBoundingClientRect()
+  const scale = Math.min(box.width / STAGE_W, box.height / STAGE_H)
+  const ox = (box.width  - STAGE_W * scale) / 2
+  const oy = (box.height - STAGE_H * scale) / 2
+  stage.style.transform = `translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) scale(${scale})`
+}
+new ResizeObserver(fit).observe(stage.parentElement)
+
+/* ------------------------------------------------------------------
+   Wiring
+   ------------------------------------------------------------------ */
+$('btnPlay').addEventListener('click', () => (playing ? pause() : play()))
+$('btnRestart').addEventListener('click', () => { seek(0); play() })
+$('btnGuides').addEventListener('click', () => {
+  showGuides = !showGuides
+  guides.hidden = !showGuides
+  $('btnGuides').setAttribute('aria-pressed', String(showGuides))
+})
+$('btnMirror').addEventListener('click', () => {
+  mirror = !mirror
+  camVideo.style.transform = mirror ? 'scaleX(-1)' : 'none'
+  $('btnMirror').setAttribute('aria-pressed', String(mirror))
+})
+for (const b of document.querySelectorAll('[data-cam]')) {
+  b.addEventListener('click', () => {
+    if (b.dataset.cam === 'live') goLive()
+    else { note(''); setCamMode(b.dataset.cam) }
+  })
+}
+$('btnText').addEventListener('click', () => {
+  const off = document.body.classList.toggle('no-text')
+  $('btnText').setAttribute('aria-pressed', String(!off))
+})
+$('btnFull').addEventListener('click', () => {
+  document.body.classList.toggle('is-clean')
+  fit()
+})
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea')) return
+  const k = e.key.toLowerCase()
+  if (e.code === 'Space') { e.preventDefault(); playing ? pause() : play() }
+  else if (k === 'arrowleft')  { e.preventDefault(); pause(); seek(t - (e.shiftKey ? 5 : 1)) }
+  else if (k === 'arrowright') { e.preventDefault(); pause(); seek(t + (e.shiftKey ? 5 : 1)) }
+  else if (k === 'r') { seek(0); play() }
+  else if (k === 'g') $('btnGuides').click()
+  else if (k === 'f') $('btnFull').click()
+  else if (k === 'm') $('btnMirror').click()
+})
+
+$('bar').addEventListener('pointerdown', function scrub(e) {
+  const move = (ev) => {
+    const r = this.getBoundingClientRect()
+    seek(((ev.clientX - r.left) / r.width) * TOTAL)
+  }
+  pause(); move(e)
+  const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up) }
+  addEventListener('pointermove', move)
+  addEventListener('pointerup', up)
+})
+
+/* ------------------------------------------------------------------
+   Guides — drawn from SAFE so they cannot drift from the constant
+   ------------------------------------------------------------------ */
+guides.style.setProperty('--safe-top', `${SAFE.top}px`)
+guides.style.setProperty('--safe-bottom', `${SAFE.bottom}px`)
+guides.style.setProperty('--safe-left', `${SAFE.left}px`)
+guides.style.setProperty('--safe-right', `${SAFE.right}px`)
+
+/* ------------------------------------------------------------------
+   Script, written out so it can be read away from the screen
+   ------------------------------------------------------------------ */
+const sheet = $('sheet')
+SHOW.forEach((s, i) => {
+  const row = document.createElement('div')
+  row.className = 'row'
+  row.innerHTML =
+    `<span class="row__t">${fmt(s.t0)}</span>` +
+    `<span class="row__cam" data-on="${s.on}">${camLabel(s)}</span>` +
+    `<span class="row__say"></span>`
+  row.querySelector('.row__say').textContent = s.say
+  row.addEventListener('click', () => seek(s.t0 + 0.01))
+  sheet.appendChild(row)
+})
+
+/* A handle on the timeline, for driving this from a test or a capture
+   script rather than by hand. Everything here already exists; nothing
+   is computed differently because it is exposed. */
+window.reel = { seek, play, pause, draw, SHOW, TOTAL, get t() { return t } }
+
+fit()
+setCamMode('key')
+draw(0)
+syncPlay()
+
+</script>
