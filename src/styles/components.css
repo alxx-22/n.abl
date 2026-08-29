@@ -836,3 +836,65 @@ a:hover > .nabl-logo .nabl-logo__dot {
   .assistant { right: var(--s-3); left: var(--s-3); width: auto; bottom: calc(var(--s-3) + 3.2rem); }
   .assistant-fab { right: var(--s-3); bottom: var(--s-3); }
 }
+
+/* ============================================================
+   ESTIMATOR
+
+   The pricing method as a control rather than a paragraph. Laid out as
+   two columns on desktop — what you turn on the left, what it costs on
+   the right — so cause and effect sit beside each other rather than the
+   answer being below the fold on a phone-shaped card.
+   ============================================================ */
+.est{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.25rem,3vw,2.5rem);align-items:start}
+.est__caveat{grid-column:1/-1;font-size:var(--t-sm);line-height:1.6;color:var(--cream-600);
+  max-width:64ch;margin:0;padding-top:.5rem;border-top:1px solid var(--line-faint)}
+
+.est__controls,.est__out{display:flex;flex-direction:column;gap:1.35rem}
+
+.est__field{display:flex;flex-direction:column;gap:.45rem}
+.est__label{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;
+  font-size:var(--t-sm);color:var(--cream-400)}
+.est__value{font-family:var(--font-mono);font-size:var(--t-sm);color:var(--accent-400);
+  font-variant-numeric:tabular-nums}
+.est__help{font-size:var(--t-xs);color:var(--cream-600);line-height:1.45}
+
+.est__select{width:100%;background:var(--surface-3);color:var(--cream-200);
+  border:1px solid var(--line);border-radius:8px;padding:.7rem .85rem;font:inherit;
+  font-size:var(--t-sm);min-height:44px}
+.est__select:focus-visible{outline:2px solid var(--accent-400);outline-offset:2px}
+
+/* A track the colour of the surface, with the thumb in the accent. The
+   default control is blue in every browser and would be the only blue
+   on the site. */
+.est__range{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:none;
+  cursor:pointer}
+.est__range::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:var(--surface-3);
+  border:1px solid var(--line-faint)}
+.est__range::-moz-range-track{height:6px;border-radius:99px;background:var(--surface-3);
+  border:1px solid var(--line-faint)}
+.est__range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;
+  border-radius:50%;background:var(--accent-400);border:0;margin-top:-9px;
+  box-shadow:0 0 0 4px rgba(var(--accent-rgb),.16)}
+.est__range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--accent-400);
+  border:0;box-shadow:0 0 0 4px rgba(var(--accent-rgb),.16)}
+.est__range:focus-visible{outline:2px solid var(--accent-400);outline-offset:4px;border-radius:99px}
+
+.est__row{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;
+  padding-bottom:.7rem;border-bottom:1px solid var(--line-faint)}
+.est__rowK{font-size:var(--t-sm);color:var(--cream-400)}
+.est__rowV{font-family:var(--font-mono);font-size:var(--t-sm);color:var(--cream-200);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.est__row--strong .est__rowV{color:var(--cream-100);font-size:var(--t-base)}
+
+.est__price{display:flex;flex-direction:column;gap:.4rem;padding:1.15rem 1.25rem;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
+  box-shadow:var(--glow-inset)}
+.est__priceK{font-family:var(--font-mono);font-size:var(--t-xs);letter-spacing:.14em;
+  text-transform:uppercase;color:var(--cream-600)}
+.est__priceV{font-family:var(--font-display);font-size:clamp(1.6rem,1.2rem + 1.6vw,2.2rem);
+  font-weight:700;letter-spacing:-.02em;color:var(--cream-100);font-variant-numeric:tabular-nums}
+.est__note{font-size:var(--t-sm);color:var(--cream-400);margin:0;line-height:1.5}
+
+@media (max-width:760px){
+  .est{grid-template-columns:1fr}
+}
