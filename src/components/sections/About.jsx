@@ -34,7 +34,7 @@ export default function About() {
               you already hold, or an afternoon of training rather than a build, that is
               the answer we give you.
             </p>
-            <p className="about__based">Based in the UK. Working with businesses everywhere.</p>
+            <p className="about__based">Nottingham, Warwickshire and Bristol. Working with businesses beyond them.</p>
           </div>
         </Reveal>
       </div>

@@ -1,4 +1,5 @@
 import { EdgeCard, Reveal } from '../ui/index.jsx'
+import Estimator from './Estimator.jsx'
 import { Chapter } from '../Journey.jsx'
 
 /* ============================================================
@@ -31,6 +32,14 @@ export default function Pricing() {
           <p className="section__sub prose">
             Two ways we price, depending on whether the problem can be counted.
           </p>
+        </Reveal>
+
+        {/* The method, operable. "We show our working" is asserted in the
+            card below; this is where a visitor can actually see it. */}
+        <Reveal delay={0.16}>
+          <EdgeCard className="card-pad section__body">
+            <Estimator />
+          </EdgeCard>
         </Reveal>
 
         <div className="grid grid--2 section__body">
