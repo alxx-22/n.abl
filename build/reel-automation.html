@@ -2425,7 +2425,11 @@ const SHOW = [
     say: 'The steps that repeat between your systems, connected once and then left to run.' },
 
   /* IN — on the part that matters. */
-  { id: 'runs', dur: 3.0, cell: 'fix', cam: { x: 1050, y: 8100, z: 0.95 }, scene: 'automation', from: 6.4,
+  /* Measured: the label ends at canvas y7215 and the drawn scene runs
+     7945-9161. At y8100/z0.95 the frame top landed on 7090 and cut the
+     label mid-word, which reads as an accident rather than as having
+     moved past it. Centred on the flow instead, label cleanly out. */
+  { id: 'runs', dur: 3.0, cell: 'fix', cam: { x: 1050, y: 8290, z: 1.15 }, scene: 'automation', from: 6.4,
     say: 'Nobody opens it again.' },
 
   /* ACROSS — off the work and onto the name. */
