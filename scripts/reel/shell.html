@@ -129,12 +129,15 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 
 /* ---------- the morphing card ---------- */
 #cardWrap{display:grid;place-items:center;opacity:0;pointer-events:none}
+#cardEdge{position:absolute;top:0;bottom:0;width:2px;z-index:5;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,transparent,var(--amber400) 18%,var(--amber400) 82%,transparent);
+  box-shadow:0 0 22px rgba(var(--amber-rgb),.55)}
 #card{position:relative;overflow:hidden;background:var(--s2);
   border:1px solid var(--line-strong);will-change:width,height,border-radius;
   box-shadow:0 48px 140px rgba(0,0,0,.7), 0 0 120px rgba(var(--amber-rgb),.13),
              inset 0 1px 0 rgba(var(--cream-rgb),.06)}
 .cardFace{position:absolute;inset:0;padding:52px 56px;display:flex;flex-direction:column;
-  gap:30px;will-change:opacity,filter,transform;transform-origin:center}
+  gap:30px;will-change:opacity,clip-path,transform;transform-origin:center}
 
 /* shared furniture */
 .cHead{display:flex;align-items:center;justify-content:space-between;gap:20px;flex:none}
@@ -345,7 +348,7 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
       </div>
 
       <!-- One container, morphing. Never removed, never replaced. -->
-      <div class="layer" id="cardWrap"><div id="card"></div></div>
+      <div class="layer" id="cardWrap"><div id="card"><i id="cardEdge"></i></div></div>
       <div id="sceneGlow"></div>
       <div class="layer" id="sceneBox"><div id="sceneSlide"></div><div id="sceneSheen"></div></div>
       <div id="dots"></div>

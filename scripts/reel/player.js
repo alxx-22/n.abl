@@ -46,6 +46,7 @@ const logoDot = $('lg-dot')
 const rule    = $('rule')
 const cardWrap = $('cardWrap')
 const card     = $('card')
+const cardEdge = $('cardEdge')
 const wordWrap = $('wordWrap')
 const wordEl   = $('word')
 const twWrap   = $('twWrap')
@@ -94,36 +95,65 @@ if (HAS_CARDS) {
     if (!c.html) continue
     const el = document.createElement('div')
     el.className = 'cardFace'
+    el.dataset.card = name
     el.innerHTML = c.html
     el.style.opacity = '0'
-    card.appendChild(el)
+    card.insertBefore(el, cardEdge)
     faces[name] = el
   }
 }
 
+/* Overshoots and settles. The animation brief rules out elastic easing;
+   this is here because it was asked for directly, and it is one constant
+   to take back out. */
+const EASE_BACK = bezier(0.34, 1.46, 0.64, 1)
+
 function drawCard(lt, s, prev) {
   const a = CARDS[prev.card] || CARDS[s.card]
   const b = CARDS[s.card]
-  const p = seg(lt, 0, MORPH, EASE)
+  /* Three curves, three jobs. The box overshoots and settles because
+     that was asked for. The radius follows the house arrival curve. The
+     wipe uses EASE_IO because an edge crossing a card is a traverse, not
+     an arrival — on EASE it was 63% across in its first 150ms and then
+     crawled, which reads as a jump rather than a wipe. Same mistake this
+     project already made once, on the site's own card wipe. */
+  const q = seg(lt, 0, MORPH, EASE_BACK)     // box + content: overshoot, settle
+  const r = seg(lt, 0, MORPH, EASE)          // radius: arrival
+  const p = seg(lt, 0, MORPH, EASE_IO)       // the wipe: even travel
 
-  card.style.width = `${lerp(a.w, b.w, p).toFixed(1)}px`
-  card.style.height = `${lerp(a.h, b.h, p).toFixed(1)}px`
-  card.style.borderRadius = `${lerp(a.r, b.r, p).toFixed(1)}px`
+  card.style.width = `${lerp(a.w, b.w, q).toFixed(1)}px`
+  card.style.height = `${lerp(a.h, b.h, q).toFixed(1)}px`
+  card.style.borderRadius = `${lerp(a.r, b.r, r).toFixed(1)}px`
 
-  /* Zero at rest, peaking mid-move. Tied to the morph's own progress
-     rather than to a fixed window, so a big size change and a small one
-     blur by the same amount at the same point of their travel. */
-  const v = Math.sin(clamp(p, 0, 1) * Math.PI)
-  const blur = (v * 13).toFixed(2)
-
+  /* No filter: blur() anywhere near this. Blurring a card-sized subtree
+     at a radius that changes every frame is re-rasterised every frame,
+     and it took the renderer down on a real machine roughly where the
+     card sections start. The wipe below carries the transition instead,
+     and directional motion blur belongs in the edit, where it is a real
+     directional blur rather than a gaussian. */
+  const w = (p * 100).toFixed(2)
   for (const [name, el] of Object.entries(faces)) {
-    const o = name === s.card ? p : name === prev.card ? 1 - p : 0
-    el.style.opacity = o.toFixed(3)
-    if (o < 0.004) { el.style.filter = 'none'; continue }
-    el.style.filter = `blur(${blur}px)`
-    /* Content settles a beat after the box does. */
-    el.style.transform = `scale(${(name === s.card ? lerp(0.93, 1, p) : lerp(1, 1.06, p)).toFixed(4)})`
+    const incoming = name === s.card
+    const outgoing = name === prev.card && !incoming
+    if (!incoming && !outgoing) { el.style.opacity = '0'; continue }
+
+    /* Incoming is revealed left to right; outgoing is consumed the same
+       way, so one edge crosses the card rather than two things fading
+       through each other. Once the edge has passed, the outgoing face is
+       switched off rather than left fully clipped — a clipped element is
+       still a composited one, and leaving it live meant two faces
+       claiming to be visible at the same time. */
+    if (outgoing && p > 0.999) { el.style.opacity = '0'; continue }
+    el.style.opacity = '1'
+    el.style.clipPath = incoming
+      ? `inset(0 ${(100 - p * 100).toFixed(2)}% 0 0)`
+      : `inset(0 0 0 ${w}%)`
+    el.style.transform = `scale(${(incoming ? lerp(0.96, 1, q) : 1).toFixed(4)})`
   }
+
+  /* The edge rides the wipe and leaves with it. */
+  cardEdge.style.left = `${w}%`
+  cardEdge.style.opacity = (p > 0.004 && p < 0.996 ? 1 : 0).toFixed(3)
 
   cardWrap.style.opacity = seg(lt, 0, 0.24, EASE_OUT).toFixed(3)
 }

@@ -51,8 +51,10 @@ for (const cut of cuts) {
 
     for (const s of reel.SHOW) {
       if (!s.card) continue
+      /* Identified by name, not by whichever face happens to be opaque:
+         during a wipe two faces are legitimately visible at once. */
       reel.seek(s.t1 - 0.05)
-      const face = [...document.querySelectorAll('.cardFace')].find((e) => +e.style.opacity > 0.9)
+      const face = document.querySelector(`.cardFace[data-card="${s.card}"]`)
       const box = document.getElementById('card')
       if (face && face.scrollHeight > box.clientHeight + 1) {
         bad.overflow.push(`${s.id} +${face.scrollHeight - box.clientHeight}px`)
