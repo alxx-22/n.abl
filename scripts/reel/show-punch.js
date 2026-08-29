@@ -17,11 +17,11 @@ const SHOW = [
     turn: 32, at: 0.30, rate: 0.041,
     say: 'Your team loses a morning a week to work a computer should be doing.' },
 
-  { id: 'innovate', dur: 2.0, cam: null, text: null, word: 'Innovate', burst: true,
+  { id: 'innovate', dur: 2.0, cam: null, text: null, word: 'Innovate',
     from: 2.4, to: 0.74, say: 'Innovation.' },
-  { id: 'automate', dur: 2.0, cam: null, text: null, word: 'Automate', burst: true,
+  { id: 'automate', dur: 2.0, cam: null, text: null, word: 'Automate',
     from: 2.4, to: 0.74, say: 'Automation.' },
-  { id: 'optimise', dur: 2.2, cam: null, text: null, word: 'Optimise', burst: true,
+  { id: 'optimise', dur: 2.2, cam: null, text: null, word: 'Optimise',
     from: 2.4, to: 0.74, say: 'Optimisation.' },
 
   { id: 'automation', dur: 1.5, cam: null, text: null, card: 'automation', say: 'Work that repeats.' },

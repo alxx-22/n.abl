@@ -117,23 +117,24 @@ bottom-half camera centres its subject at y1400, underneath the caption
 overlay. It pulls the face up into the part of the band that survives.
 
 
-## A note on the punch cut's background
+## Checking a cut
 
-Its reference runs saturated cyan and magenta light tunnels — the one
-thing the animation brief rules out by name (no neon, no SaaS blue, no
-purple gradients). `punch.js` reproduces the *motion* — radial streaks
-rotating and warping outward — in amber on espresso instead. If that
-call is wrong, `BURST_HUES` at the top of the file is the whole change.
+    npm run test:reels
 
-Performance is the reason the burst looks the way it does. Three
-versions were measured at 1080x1920:
+Steps every cut through every frame at 60fps and fails on anything that
+throws, any NaN reaching a style, any card whose content outgrows its
+box, and any stall during real playback from the midpoint.
 
-| | fps |
-|---|---|
-| Streaks + a full-frame radial gradient, redrawn each frame | 29 |
-| Painted once into a 2208 square, moved by CSS transform | 12 |
-| Streaks redrawn into a 600 backing store, core glow in CSS | 57 |
+This exists because a cut shipped that failed halfway through on a real
+machine. It had been "tested" by sampling the frame rate at a single
+timestamp, which proves only that one timestamp renders.
 
-A `text-shadow: 0 0 70px` on the receding word cost a further 18fps on
-its own — a blur re-rasterises at every scale — so the bloom behind the
-word is `#burstCore`, which only changes opacity.
+## Why there is no burst
+
+An earlier punch cut put a radial starburst behind the pillar words,
+after a reference that uses saturated light tunnels. A starburst is
+decorative maximalism whatever colour it is painted, and this studio's
+position is the opposite — modern, minimal, anti-corporate. Recolouring
+a firework amber still leaves a firework. It was also a canvas
+repainting itself sixty times a second, which is the kind of thing that
+falls over on a machine without GPU compositing. Gone on both counts.

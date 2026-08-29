@@ -13,80 +13,14 @@
    that scales up reads as emphasis, a word that scales down reads as
    speed.
 
-   Not lifted: the background. The reference runs saturated cyan and
-   magenta light tunnels, which is the one thing the animation brief
-   rules out by name. The burst below is the same *motion* — radial
-   streaks rotating and warping outward — in the studio's own amber on
-   espresso. Swap BURST_HUES if that call is wrong.
+   Not lifted: the background. The reference runs saturated light
+   tunnels behind its words. A radial starburst is decorative
+   maximalism whatever colour it is painted, and this studio's whole
+   position is the opposite of that — modern, minimal, anti-corporate.
+   An amber firework was still a firework. The word now recedes on the
+   plain ground, which is both on-brand and one fewer canvas repainting
+   itself sixty times a second.
    ============================================================ */
-
-const BURST_HUES = [
-  'rgba(233,172,87,',    // amber-400
-  'rgba(248,217,164,',   // amber-200
-  'rgba(240,231,216,',   // cream
-]
-
-/* Fixed at construction so the pattern is identical on every replay —
-   a burst that reshuffles each time cannot be matched across takes. */
-const STREAKS = Array.from({ length: 76 }, (_, i) => {
-  const r = Math.sin(i * 12.9898) * 43758.5453
-  const rnd = (n) => Math.abs((r * n) % 1)
-  return {
-    ang: (i / 76) * Math.PI * 2 + rnd(3) * 0.32,
-    r0: 0.10 + rnd(7) * 0.34,
-    len: 0.06 + rnd(11) * 0.30,
-    w: 1 + rnd(13) * 3.4,
-    hue: BURST_HUES[i % BURST_HUES.length],
-    a: 0.14 + rnd(17) * 0.5,
-    spin: rnd(19) < 0.5 ? 1 : -1,
-  }
-})
-
-/* Two approaches were measured before this one.
-
-   Redrawing 108 strokes AND a full-frame radial gradient every frame:
-   29fps — the gradient fill over 1080x1920 was the cost, not the
-   strokes. Painting once into a 2208 square and moving it with a CSS
-   transform instead: 12fps, because compositing a rotated multi-megabyte
-   layer every frame is worse than drawing into a small one.
-
-   So: the core glow is a CSS radial-gradient that only changes opacity,
-   and the streaks are drawn per frame into a canvas sized to the width
-   rather than the diagonal, with the rotation baked into the geometry
-   so the element itself never transforms.
-
-   The backing store is then half the displayed size. Soft radial streaks
-   survive that with nothing visible lost, and it quarters the per-frame
-   fill: 33fps at 1200 square, 55+ at 600 shown at 1200. */
-const BURST_SIZE = 600
-
-function drawBurst(ctx, lt, power) {
-  ctx.clearRect(0, 0, BURST_SIZE, BURST_SIZE)
-  if (power <= 0.004) return
-
-  const R = BURST_SIZE / 2
-  const spin = lt * 0.19
-  const warp = 1 + lt * 0.26
-  ctx.lineCap = 'round'
-
-  for (const s of STREAKS) {
-    const a = s.ang + spin * s.spin
-    const r0 = s.r0 * R * warp
-    if (r0 > R * 1.42) continue
-    const r1 = (s.r0 + s.len) * R * warp
-    ctx.strokeStyle = `${s.hue}${(s.a * power).toFixed(3)})`
-    ctx.lineWidth = s.w * 0.5
-    ctx.beginPath()
-    ctx.moveTo(R + Math.cos(a) * r0, R + Math.sin(a) * r0)
-    ctx.lineTo(R + Math.cos(a) * r1, R + Math.sin(a) * r1)
-    ctx.stroke()
-  }
-}
-
-function moveCore(core, lt, power) {
-  core.style.opacity = (power * 0.9).toFixed(3)
-  if (power > 0.004) core.style.transform = `translate(-50%,-50%) scale(${(1 + lt * 0.22).toFixed(4)})`
-}
 
 /* ------------------------------------------------------------------
    Typewriter. `head` is the sentence; `turn` is the character index

@@ -46,9 +46,6 @@ const logoDot = $('lg-dot')
 const rule    = $('rule')
 const cardWrap = $('cardWrap')
 const card     = $('card')
-const burst    = $('burst')
-const bctx     = burst.getContext('2d')
-const burstCore = $('burstCore')
 const wordWrap = $('wordWrap')
 const wordEl   = $('word')
 const twWrap   = $('twWrap')
@@ -220,23 +217,8 @@ function draw(time) {
   camBox.style.height = `${rect.h.toFixed(1)}px`
   camBox.style.opacity = on.toFixed(3)
 
-  /* ---- burst, typewriter, receding word ---- */
-  if (typeof drawBurst === 'function') {
-    /* Backing store from the constant the drawing code uses. Setting it
-       in the markup let the two drift: the canvas stayed 1200 while
-       BURST_SIZE went to 600, and the whole burst drew into the
-       top-left quadrant. */
-    if (burst.width !== BURST_SIZE) { burst.width = BURST_SIZE; burst.height = BURST_SIZE }
-    const power = s.burst ? seg(lt, 0, 0.34, EASE_OUT) - seg(lt, s.dur - 0.40, s.dur, EASE) : 0
-    burst.style.opacity = power.toFixed(3)
-    /* Skipped entirely once dark, but cleared once on the way out so a
-       dead burst is not left painted under the next section. */
-    if (power > 0.004 || burst.dataset.lit === '1') {
-      drawBurst(bctx, lt, power)
-      moveCore(burstCore, lt, power)
-      burst.dataset.lit = power > 0.004 ? '1' : '0'
-    }
-
+  /* ---- typewriter, receding word ---- */
+  if (typeof drawWord === 'function') {
     if (s.word) {
       if (wordEl.textContent !== s.word) wordEl.textContent = s.word
       drawWord(wordEl, lt, s)

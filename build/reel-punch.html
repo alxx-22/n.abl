@@ -110,21 +110,14 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .sceneHost{position:absolute;inset:0}
 .sceneHost svg{display:block;width:100%;height:100%}
 
-/* ---------- burst, typewriter, receding word ---------- */
-#burst{position:absolute;left:50%;top:50%;width:1200px;height:1200px;opacity:0;
-  pointer-events:none;transform:translate(-50%,-50%);will-change:opacity}
-#burstCore{position:absolute;left:50%;top:50%;width:1250px;height:1250px;opacity:0;
-  pointer-events:none;transform:translate(-50%,-50%);border-radius:50%;display:block;
-  will-change:transform,opacity;
-  background:radial-gradient(circle,rgba(233,172,87,.22) 0%,rgba(184,119,24,.07) 42%,transparent 70%)}
+/* ---------- typewriter, receding word ---------- */
 
 #wordWrap{display:grid;place-items:center;pointer-events:none;overflow:hidden}
 #word{font-family:var(--display);font-weight:700;font-size:186px;line-height:1;
   color:var(--cream100);white-space:nowrap;opacity:0;text-transform:uppercase;
   will-change:transform,opacity,letter-spacing}
 /* No text-shadow. A 70px blur on a word that rescales every frame is
-   re-rasterised every frame: it cost 18fps on its own. The bloom behind
-   the word is #burstCore, which only changes opacity and scale. */
+   re-rasterised every frame: it cost 18fps on its own. */
 
 #twWrap{display:grid;place-items:center;padding:0 90px;pointer-events:none;opacity:0}
 #tw{margin:0;font-family:var(--display);font-weight:500;font-size:82px;line-height:1.18;
@@ -345,9 +338,6 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
           <rect id="lg-dot" x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
         </svg>
       </div>
-      <i id="burstCore"></i>
-      <canvas id="burst"></canvas>
-
       <div class="layer" id="wordWrap"><span id="word"></span></div>
 
       <div class="layer" id="twWrap">
@@ -2263,80 +2253,14 @@ const pillarCard = (n, term, def) => ({
    that scales up reads as emphasis, a word that scales down reads as
    speed.
 
-   Not lifted: the background. The reference runs saturated cyan and
-   magenta light tunnels, which is the one thing the animation brief
-   rules out by name. The burst below is the same *motion* — radial
-   streaks rotating and warping outward — in the studio's own amber on
-   espresso. Swap BURST_HUES if that call is wrong.
+   Not lifted: the background. The reference runs saturated light
+   tunnels behind its words. A radial starburst is decorative
+   maximalism whatever colour it is painted, and this studio's whole
+   position is the opposite of that — modern, minimal, anti-corporate.
+   An amber firework was still a firework. The word now recedes on the
+   plain ground, which is both on-brand and one fewer canvas repainting
+   itself sixty times a second.
    ============================================================ */
-
-const BURST_HUES = [
-  'rgba(233,172,87,',    // amber-400
-  'rgba(248,217,164,',   // amber-200
-  'rgba(240,231,216,',   // cream
-]
-
-/* Fixed at construction so the pattern is identical on every replay —
-   a burst that reshuffles each time cannot be matched across takes. */
-const STREAKS = Array.from({ length: 76 }, (_, i) => {
-  const r = Math.sin(i * 12.9898) * 43758.5453
-  const rnd = (n) => Math.abs((r * n) % 1)
-  return {
-    ang: (i / 76) * Math.PI * 2 + rnd(3) * 0.32,
-    r0: 0.10 + rnd(7) * 0.34,
-    len: 0.06 + rnd(11) * 0.30,
-    w: 1 + rnd(13) * 3.4,
-    hue: BURST_HUES[i % BURST_HUES.length],
-    a: 0.14 + rnd(17) * 0.5,
-    spin: rnd(19) < 0.5 ? 1 : -1,
-  }
-})
-
-/* Two approaches were measured before this one.
-
-   Redrawing 108 strokes AND a full-frame radial gradient every frame:
-   29fps — the gradient fill over 1080x1920 was the cost, not the
-   strokes. Painting once into a 2208 square and moving it with a CSS
-   transform instead: 12fps, because compositing a rotated multi-megabyte
-   layer every frame is worse than drawing into a small one.
-
-   So: the core glow is a CSS radial-gradient that only changes opacity,
-   and the streaks are drawn per frame into a canvas sized to the width
-   rather than the diagonal, with the rotation baked into the geometry
-   so the element itself never transforms.
-
-   The backing store is then half the displayed size. Soft radial streaks
-   survive that with nothing visible lost, and it quarters the per-frame
-   fill: 33fps at 1200 square, 55+ at 600 shown at 1200. */
-const BURST_SIZE = 600
-
-function drawBurst(ctx, lt, power) {
-  ctx.clearRect(0, 0, BURST_SIZE, BURST_SIZE)
-  if (power <= 0.004) return
-
-  const R = BURST_SIZE / 2
-  const spin = lt * 0.19
-  const warp = 1 + lt * 0.26
-  ctx.lineCap = 'round'
-
-  for (const s of STREAKS) {
-    const a = s.ang + spin * s.spin
-    const r0 = s.r0 * R * warp
-    if (r0 > R * 1.42) continue
-    const r1 = (s.r0 + s.len) * R * warp
-    ctx.strokeStyle = `${s.hue}${(s.a * power).toFixed(3)})`
-    ctx.lineWidth = s.w * 0.5
-    ctx.beginPath()
-    ctx.moveTo(R + Math.cos(a) * r0, R + Math.sin(a) * r0)
-    ctx.lineTo(R + Math.cos(a) * r1, R + Math.sin(a) * r1)
-    ctx.stroke()
-  }
-}
-
-function moveCore(core, lt, power) {
-  core.style.opacity = (power * 0.9).toFixed(3)
-  if (power > 0.004) core.style.transform = `translate(-50%,-50%) scale(${(1 + lt * 0.22).toFixed(4)})`
-}
 
 /* ------------------------------------------------------------------
    Typewriter. `head` is the sentence; `turn` is the character index
@@ -2405,11 +2329,11 @@ const SHOW = [
     turn: 32, at: 0.30, rate: 0.041,
     say: 'Your team loses a morning a week to work a computer should be doing.' },
 
-  { id: 'innovate', dur: 2.0, cam: null, text: null, word: 'Innovate', burst: true,
+  { id: 'innovate', dur: 2.0, cam: null, text: null, word: 'Innovate',
     from: 2.4, to: 0.74, say: 'Innovation.' },
-  { id: 'automate', dur: 2.0, cam: null, text: null, word: 'Automate', burst: true,
+  { id: 'automate', dur: 2.0, cam: null, text: null, word: 'Automate',
     from: 2.4, to: 0.74, say: 'Automation.' },
-  { id: 'optimise', dur: 2.2, cam: null, text: null, word: 'Optimise', burst: true,
+  { id: 'optimise', dur: 2.2, cam: null, text: null, word: 'Optimise',
     from: 2.4, to: 0.74, say: 'Optimisation.' },
 
   { id: 'automation', dur: 1.5, cam: null, text: null, card: 'automation', say: 'Work that repeats.' },
@@ -2472,9 +2396,6 @@ const logoDot = $('lg-dot')
 const rule    = $('rule')
 const cardWrap = $('cardWrap')
 const card     = $('card')
-const burst    = $('burst')
-const bctx     = burst.getContext('2d')
-const burstCore = $('burstCore')
 const wordWrap = $('wordWrap')
 const wordEl   = $('word')
 const twWrap   = $('twWrap')
@@ -2646,23 +2567,8 @@ function draw(time) {
   camBox.style.height = `${rect.h.toFixed(1)}px`
   camBox.style.opacity = on.toFixed(3)
 
-  /* ---- burst, typewriter, receding word ---- */
-  if (typeof drawBurst === 'function') {
-    /* Backing store from the constant the drawing code uses. Setting it
-       in the markup let the two drift: the canvas stayed 1200 while
-       BURST_SIZE went to 600, and the whole burst drew into the
-       top-left quadrant. */
-    if (burst.width !== BURST_SIZE) { burst.width = BURST_SIZE; burst.height = BURST_SIZE }
-    const power = s.burst ? seg(lt, 0, 0.34, EASE_OUT) - seg(lt, s.dur - 0.40, s.dur, EASE) : 0
-    burst.style.opacity = power.toFixed(3)
-    /* Skipped entirely once dark, but cleared once on the way out so a
-       dead burst is not left painted under the next section. */
-    if (power > 0.004 || burst.dataset.lit === '1') {
-      drawBurst(bctx, lt, power)
-      moveCore(burstCore, lt, power)
-      burst.dataset.lit = power > 0.004 ? '1' : '0'
-    }
-
+  /* ---- typewriter, receding word ---- */
+  if (typeof drawWord === 'function') {
     if (s.word) {
       if (wordEl.textContent !== s.word) wordEl.textContent = s.word
       drawWord(wordEl, lt, s)
