@@ -435,6 +435,19 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
     </div>
 
     <div class="pane">
+      <p class="label">Speed &mdash; <span id="speedNow">1x</span></p>
+      <div class="row-btns">
+        <button type="button" class="btn" data-speed="1" aria-pressed="true">1&times;</button>
+        <button type="button" class="btn" data-speed="0.5" aria-pressed="false">0.5&times;</button>
+        <button type="button" class="btn" data-speed="0.25" aria-pressed="false">0.25&times;</button>
+      </div>
+      <p class="how">Record at 0.5&times;, speed back up 2&times; in the edit. A 60fps capture of a
+        take twice as long carries 120fps of real sampling, which is what motion blur needs to
+        blend. It also doubles the frame budget &mdash; add <span style="font-family:var(--mono)">&amp;skew=1</span>
+        to the URL for the live skew, which is only affordable at half speed.</p>
+    </div>
+
+    <div class="pane">
       <p class="label">Say this</p>
       <div class="prompt">
         <p id="promptSec"></p>

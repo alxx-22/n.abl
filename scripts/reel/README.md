@@ -31,7 +31,8 @@ URL parameters, because an OBS Browser Source cannot press buttons:
     reel.html?clean=1&guides=0&cam=key&play=1
 
 `clean` drops the control panel, `guides` the safe-zone overlay, `cam` is
-`live|key|off`, `play` starts on load. At a 1080x1920 browser source that
+`live|key|off`, `play` starts on load, `speed` scales the timeline and
+`skew=1` turns on the live skew. At a 1080x1920 browser source that
 comes up at exactly 1:1 with nothing on it but the stage.
 
 In OBS: browser source on top, webcam below it, Chroma Key (green) on the
@@ -138,3 +139,26 @@ position is the opposite — modern, minimal, anti-corporate. Recolouring
 a firework amber still leaves a firework. It was also a canvas
 repainting itself sixty times a second, which is the kind of thing that
 falls over on a machine without GPU compositing. Gone on both counts.
+
+
+## Recording slow
+
+    reel-punch.html?clean=1&guides=0&speed=0.5&play=1
+
+Halving the timeline while the renderer draws as fast as it can means a
+60fps capture of a take twice as long carries **120fps of real sampling**
+once it is sped back up 2x in the edit. Motion blur then has genuine
+intermediate frames to blend rather than synthesised ones.
+
+It also doubles the frame budget, which is what makes the skew possible
+again. Measured on the punch cut:
+
+| | render | effective after speed-up |
+|---|---|---|
+| default | 56.6fps | 57fps |
+| `speed=0.5` | 59.9fps | **120fps** |
+| `speed=0.5&skew=1` | 24.3fps | 50fps |
+| `speed=0.25&skew=1` | 22.8fps | **95fps** |
+
+So the live skew needs quarter speed, not half — at half it lands at 50,
+under the 60 you want. Everything else is comfortable at 0.5.

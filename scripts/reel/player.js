@@ -167,7 +167,8 @@ function drawCard(lt, s, prev, time) {
      the whole clip is a two-second job in the edit, where it costs
      nothing. */
   cardWrap.style.transform =
-    `translate(${(Math.sin(time * 0.47) * 7).toFixed(2)}px, ${(Math.sin(time * 0.62) * 6).toFixed(2)}px)`
+    `translate(${(Math.sin(time * 0.47) * 7).toFixed(2)}px, ${(Math.sin(time * 0.62) * 6).toFixed(2)}px)` +
+    (SKEW ? ` skewY(${(Math.sin(time * 0.41) * 0.6).toFixed(3)}deg)` : '')
 
   /* No filter: blur() anywhere near this. Blurring a card-sized subtree
      at a radius that changes every frame is re-rasterised every frame,
@@ -254,6 +255,17 @@ let camMode = 'key'        // live | key | off
 let mirror = true
 let showGuides = true
 let lastSection = null
+
+/* Wall-clock seconds per timeline second. At 0.5 the animation runs at
+   half speed while the renderer still draws as fast as it can, so a
+   60fps capture of a 2x-long take carries 120fps of real sampling once
+   it is sped back up — which is what gives motion blur genuine
+   intermediate frames to blend rather than synthesised ones.
+
+   It also doubles the frame budget. Anything that renders at 30fps
+   wall-clock is a true 60 once halved and sped up, which is why the
+   skew is available again below. */
+let SPEED = 1
 
 const sectionAt = (time) => {
   for (let i = SHOW.length - 1; i >= 0; i--) if (time >= SHOW[i].t0) return i
@@ -522,7 +534,7 @@ SHOW.forEach((s, i) => {
 })
 
 function loop(now) {
-  t = (now - originAt) / 1000
+  t = ((now - originAt) / 1000) * SPEED
   if (t >= TOTAL) { t = TOTAL; playing = false; raf = 0; draw(t); syncPlay(); return }
   draw(t)
   raf = requestAnimationFrame(loop)
@@ -531,7 +543,7 @@ function loop(now) {
 function play() {
   if (playing) return
   if (t >= TOTAL - 0.01) t = 0
-  originAt = performance.now() - t * 1000
+  originAt = performance.now() - (t / SPEED) * 1000
   playing = true
   raf = requestAnimationFrame(loop)
   syncPlay()
@@ -543,7 +555,7 @@ function pause() {
 }
 function seek(to) {
   t = clamp(to, 0, TOTAL)
-  originAt = performance.now() - t * 1000
+  originAt = performance.now() - (t / SPEED) * 1000
   draw(t)
   if (!playing) syncPlay()
 }
@@ -627,6 +639,17 @@ $('btnText').addEventListener('click', () => {
   const off = document.body.classList.toggle('no-text')
   $('btnText').setAttribute('aria-pressed', String(!off))
 })
+for (const b of document.querySelectorAll('[data-speed]')) {
+  b.addEventListener('click', () => {
+    const at = t
+    SPEED = parseFloat(b.dataset.speed)
+    $('speedNow').textContent = `${SPEED}x`
+    for (const o of document.querySelectorAll('[data-speed]')) {
+      o.setAttribute('aria-pressed', String(+o.dataset.speed === SPEED))
+    }
+    seek(at)
+  })
+}
 $('btnFull').addEventListener('click', () => {
   document.body.classList.toggle('is-clean')
   fit()
@@ -696,7 +719,15 @@ window.reel = { seek, play, pause, draw, SHOW, TOTAL, get t() { return t } }
    comes up as nothing but the stage, at exactly 1:1, ready to capture.
    ------------------------------------------------------------------ */
 const q = new URLSearchParams(location.search)
+
+/* ?speed=0.5 halves the timeline; ?skew=1 turns the live skew back on,
+   which is only affordable when the speed is halved. */
+const SKEW = q.get('skew') !== null && q.get('skew') !== '0'
 const flag = (k) => { const v = q.get(k); return v !== null && v !== '0' && v !== 'false' }
+
+const wanted = parseFloat(q.get('speed'))
+if (Number.isFinite(wanted) && wanted > 0.05 && wanted <= 4) SPEED = wanted
+$('speedNow').textContent = `${SPEED}x`
 
 if (flag('clean')) document.body.classList.add('is-clean')
 setGuides(q.get('guides') === null ? true : flag('guides'))
