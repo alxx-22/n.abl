@@ -64,9 +64,9 @@ const FLOOR = 800
    real quotes rather than before them. These are set before, at the
    client's instruction, and should be revisited once three exist. */
 const PACKS = [
-  { name: 'Starter',   credits: 5,  price: 475,  withProject: 380 },
-  { name: 'Standard',  credits: 10, price: 880,  withProject: 700 },
-  { name: 'Team',      credits: 25, price: 2000, withProject: 1600 },
+  { name: 'Starter', credits: 5, price: 475, withProject: 380 },
+  { name: 'Standard', credits: 10, price: 885, withProject: 710 },
+  { name: 'Team', credits: 25, price: 2040, withProject: 1630 },
   { name: 'Programme', credits: 50, price: 3750, withProject: 3000 },
 ]
 
