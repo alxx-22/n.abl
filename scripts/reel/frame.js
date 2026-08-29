@@ -2,6 +2,12 @@
    Frame constants — shared by every show.
    ============================================================ */
 
+/* The camera the site's scenes are framed through — same value as
+   src/components/scenes/Scene.jsx. It was a literal in two places here
+   and a name in neither, which is how the canvas ended up asking for a
+   constant that did not exist. */
+const SCENE_VIEWBOX = '320 146 800 608'
+
 const STAGE_W = 1080, STAGE_H = 1920
 
 /* Instagram's chrome, as margins. Nothing that carries meaning goes

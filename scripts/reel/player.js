@@ -52,6 +52,8 @@ const svcLabel = $('svcLabel')
 const endWrap  = $('endWrap')
 const endQ     = $('endQ')
 const endUrl   = $('endUrl')
+const camWrap  = $('camWrap')
+const canvasEl = $('canvas')
 const clockWrap = $('clockWrap')
 const clockRing = $('clockRing')
 const clockMin  = $('clockMin')
@@ -79,11 +81,63 @@ for (const [name, scene] of Object.entries(SCENES)) {
   host.className = 'sceneHost'
   host.innerHTML = scene.make()
   const svg = host.querySelector('svg')
-  svg.setAttribute('viewBox', '320 146 800 608')
+  svg.setAttribute('viewBox', SCENE_VIEWBOX)
   svg.setAttribute('width', '100%')
   svg.setAttribute('height', '100%')
   sceneSlide.appendChild(host)
   mounted[name] = { scene, host, els: scene.bind(host) }
+}
+
+/* ------------------------------------------------------------------
+   The camera
+
+   The canvas is bigger than the frame and does not move relative to
+   itself. What moves is where we are looking: a section names a canvas
+   point and a zoom, and the player travels between them.
+
+   Translation composites; scale does not, so a move that only pans is
+   free and a move that also zooms costs. Sections are written with that
+   in mind — pans between beats, zoom saved for the two shots where
+   getting closer is the point.
+   ------------------------------------------------------------------ */
+const HAS_CANVAS = typeof CANVAS_AUTO !== 'undefined'
+let canvasScene = null
+
+if (HAS_CANVAS) {
+  canvasEl.innerHTML = CANVAS_AUTO
+  /* The scene on the canvas is the one the site ships, at canvas size. */
+  const host = document.getElementById('cvScene')
+  if (host && typeof SCENES !== 'undefined') {
+    host.innerHTML = SCENES.automation.make()
+    const svg = host.querySelector('svg')
+    svg.setAttribute('viewBox', SCENE_VIEWBOX)
+    svg.setAttribute('width', '100%')
+    svg.setAttribute('height', '100%')
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
+    canvasScene = { scene: SCENES.automation, els: SCENES.automation.bind(host) }
+  }
+}
+
+/* Where the camera is, given a section and how far into it we are. */
+function drawCamera(lt, s, prev) {
+  const a = prev.cam || s.cam
+  const b = s.cam
+  if (!b) { camWrap.style.opacity = '0'; return }
+  camWrap.style.opacity = '1'
+
+  /* One curve for the whole move, so the pan and the zoom arrive
+     together. EASE_IO because a camera crossing a page is travel: an
+     arrival curve makes it lurch off the mark and then creep. */
+  const p = seg(lt, 0, s.travel || 1.15, EASE_IO)
+  const x = lerp(a.x, b.x, p)
+  const y = lerp(a.y, b.y, p)
+  const z = lerp(a.z, b.z, p)
+
+  /* Centre the named point in the 1080x1920 frame. */
+  canvasEl.style.transform =
+    `translate(${(540 - x * z).toFixed(2)}px, ${(960 - y * z).toFixed(2)}px) scale(${z.toFixed(4)})`
+
+  if (canvasScene && s.scene) canvasScene.scene.render(canvasScene.els, (s.from || 0) + lt)
 }
 
 /* ------------------------------------------------------------------
@@ -321,6 +375,9 @@ function draw(time) {
       drawTypewriter(twEl, lt, s)
     } else twWrap.style.opacity = '0'
   }
+
+  /* ---- the camera ---- */
+  if (HAS_CANVAS) drawCamera(lt, s, prev)
 
   /* ---- the morphing card ---- */
   if (HAS_CARDS && s.card) drawCard(lt, s, prev, time)
