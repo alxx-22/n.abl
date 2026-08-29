@@ -187,13 +187,14 @@ buying, and an hour is the only unit that survives being asked about.
 | Pack | Credits | On its own | Per credit | Bought with an implementation | Per credit |
 |---|---|---|---|---|---|
 | Starter | 5 | £475 | £95 | £380 | £76 |
-| Standard | 10 | £880 | £88 | £700 | £70 |
-| Team | 25 | £2,000 | £80 | £1,600 | £64 |
+| Standard | 10 | £885 | £88 | £710 | £71 |
+| Team | 25 | £2,040 | £82 | £1,630 | £65 |
 | Programme | 50 | £3,750 | £75 | £3,000 | £60 |
 
 Two discounts, each for a reason we can say out loud:
 
-- **Size.** £95 down to £75. Larger packs mean fewer conversations about whether
+- **Size.** A straight taper, £95 a credit down to £75 —
+  a rule rather than four hand-picked numbers. Larger packs mean fewer conversations about whether
   something is in scope, and that saving is real.
 - **Bought alongside a project, 20% off.** We are already in the codebase and
   already hold the context. A credit spent six months later costs us the reload.
