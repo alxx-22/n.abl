@@ -50,7 +50,8 @@ for (const cut of cuts) {
     } catch (e) { if (e.message !== 'too many') bad.threw = e.message }
 
     for (const s of reel.SHOW) {
-      if (!s.card) continue
+      /* A collapsing card is meant to end smaller than its content. */
+      if (!s.card || s.collapse) continue
       /* Identified by name, not by whichever face happens to be opaque:
          during a wipe two faces are legitimately visible at once. */
       reel.seek(s.t1 - 0.05)

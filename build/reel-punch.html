@@ -127,8 +127,30 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .twCaret{display:inline-block;width:6px;height:.86em;background:var(--amber400);
   vertical-align:-.08em;margin-left:.1em;border-radius:1px}
 
+/* ---------- service label ---------- */
+/* Behind the card (z 1 against the card's 2), so it reads as coming out
+   from under an edge rather than appearing next to it. Only opacity and
+   translateY animate — the glow is a fixed text-shadow, which rasterises
+   once and stays cached. Animating a shadow radius is what took the
+   renderer down before. */
+#labelWrap{display:grid;place-items:center;z-index:1;pointer-events:none}
+#svcLabel{font-family:var(--display);font-weight:600;font-size:62px;letter-spacing:-.02em;
+  color:var(--cream100);white-space:nowrap;opacity:0;will-change:transform,opacity;
+  text-shadow:0 0 40px rgba(var(--amber-rgb),.45), 0 0 90px rgba(var(--amber-rgb),.20)}
+
+/* ---------- the ending ---------- */
+#endWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;
+  padding:0 80px;z-index:3;pointer-events:none;opacity:0}
+#endQ{margin:0;font-family:var(--display);font-weight:600;font-size:76px;line-height:1.2;
+  letter-spacing:-.025em;text-align:center;color:var(--cream100);text-wrap:balance}
+#endQ b{display:inline-block;font-weight:inherit;opacity:0;will-change:transform,opacity;
+  margin-right:.26em}
+#endUrl{font-family:var(--mono);font-size:44px;letter-spacing:.06em;color:var(--amber400);
+  opacity:0;will-change:transform,opacity}
+
 /* ---------- the morphing card ---------- */
-#cardWrap{display:grid;place-items:center;opacity:0;pointer-events:none}
+#cardWrap{display:grid;place-items:center;opacity:0;pointer-events:none;z-index:2;
+  will-change:transform,opacity}
 #cardEdge{position:absolute;top:0;bottom:0;width:2px;z-index:5;pointer-events:none;opacity:0;
   background:linear-gradient(180deg,transparent,var(--amber400) 18%,var(--amber400) 82%,transparent);
   box-shadow:0 0 22px rgba(var(--amber-rgb),.55)}
@@ -347,8 +369,14 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
         <p id="tw"><span class="twLead"></span><span class="twRest"></span><i class="twCaret"></i></p>
       </div>
 
+      <div class="layer" id="labelWrap"><span id="svcLabel"></span></div>
+
       <!-- One container, morphing. Never removed, never replaced. -->
       <div class="layer" id="cardWrap"><div id="card"><i id="cardEdge"></i></div></div>
+      <div class="layer" id="endWrap">
+        <p id="endQ"></p>
+        <span id="endUrl">www.nabl.agency</span>
+      </div>
       <div id="sceneGlow"></div>
       <div class="layer" id="sceneBox"><div id="sceneSlide"></div><div id="sceneSheen"></div></div>
       <div id="dots"></div>
@@ -2218,14 +2246,16 @@ const CARDS = {
         `<div class="cPerson"><i class="cAv"></i>${cBar(130, .5)}<i class="cTick"></i></div>`).join('')}
     </div>` },
 
-  outro: { w: 820, h: 360, r: 52, html: `
+  /* The mark on its own. The address is no longer in here — it arrives
+     after the card has shut, so the two do not compete. */
+  outro: { w: 620, h: 300, r: 52, html: `
     <div class="cOutro">
       <svg class="cMark cMark--lg" viewBox="0 0 104 100" aria-hidden="true">
         <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82" fill="none"
               stroke="currentColor" stroke-width="13"/>
         <rect x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
       </svg>
-      <span class="cOutroTxt">nabl.agency</span>
+      <span class="cOutroTxt">n.abl</span>
     </div>` },
 }
 
@@ -2314,41 +2344,51 @@ function drawWord(el, lt, s) {
 
 
 /* ============================================================
-   SHOW — the punch cut. A typed opener, the three pillars as words
-   travelling away from you, then the six services as cards.
+   SHOW — the punch cut.
 
-   22.6s. The shortest of the three, because every beat here is one
-   idea and none of them needs explaining.
+   A typed opening line, the six services as one card that keeps
+   changing, and an ending that finishes the sentence the opening
+   started.
+
+   No pillars. As big single words over a burst they read as a film
+   trailer, which is the opposite register to this business. What the
+   services do is more persuasive than what the values are called.
+
+   The label alternates below the card and above it, so six beats of the
+   same shape never land in the same place twice running.
    ============================================================ */
-CARDS.p1 = pillarCard(1, 'Innovation', 'Find better ways to do things.')
-CARDS.p2 = pillarCard(2, 'Automation', "Take repetitive work off people's hands.")
-CARDS.p3 = pillarCard(3, 'Optimisation', 'Get more from what you already have.')
+
+const S = (id, card, label, above) => ({
+  id, dur: 2.2, cam: null, text: null, card, label, above,
+})
 
 const SHOW = [
-  /* `turn` is the character the colour changes at — the setup stays
-     cream, the claim goes amber, without a second line of type. */
-  { id: 'typed', dur: 4.6, cam: null, text: null, type: true,
-    head: "Your team loses a morning a week to work a computer should be doing.",
-    turn: 32, at: 0.30, rate: 0.041,
+  { id: 'typed', dur: 4.4, cam: null, text: null, type: true,
+    head: 'Your team loses a morning a week to work a computer should be doing.',
+    turn: 32, at: 0.30, rate: 0.040,
     say: 'Your team loses a morning a week to work a computer should be doing.' },
 
-  { id: 'innovate', dur: 2.0, cam: null, text: null, word: 'Innovate',
-    from: 2.4, to: 0.74, say: 'Innovation.' },
-  { id: 'automate', dur: 2.0, cam: null, text: null, word: 'Automate',
-    from: 2.4, to: 0.74, say: 'Automation.' },
-  { id: 'optimise', dur: 2.2, cam: null, text: null, word: 'Optimise',
-    from: 2.4, to: 0.74, say: 'Optimisation.' },
+  S('automation', 'automation', 'Runs itself',        false),
+  S('data',       'data',       'Answers, not rows',  true),
+  S('web',        'web',        'Books itself',       false),
+  S('ai',         'ai',         'Finds the answer',   true),
+  S('software',   'software',   'Catches mistakes',   false),
+  S('training',   'training',   'And it sticks',      true),
 
-  { id: 'automation', dur: 1.5, cam: null, text: null, card: 'automation', say: 'Work that repeats.' },
-  { id: 'data',       dur: 1.5, cam: null, text: null, card: 'data',       say: 'Numbers you can decide from.' },
-  { id: 'web',        dur: 1.5, cam: null, text: null, card: 'web',        say: 'A site that does the work.' },
-  { id: 'ai',         dur: 1.5, cam: null, text: null, card: 'ai',         say: 'Answers, with the source.' },
-  { id: 'software',   dur: 1.5, cam: null, text: null, card: 'software',   say: 'Checks built in.' },
-  { id: 'training',   dur: 1.5, cam: null, text: null, card: 'training',   say: 'Your work, not the manual.' },
+  /* The mark alone in the card, held long enough to register as a
+     signature rather than as another service. */
+  { id: 'mark', dur: 1.7, cam: null, text: null, card: 'outro',
+    say: '(hold on the mark)' },
 
-  { id: 'outro', dur: 2.8, cam: null, text: null, card: 'outro',
+  /* Then the card shuts and the question it was all leading to arrives
+     a word at a time, with the address under it. */
+  { id: 'close', dur: 4.6, cam: null, text: null, card: 'outro', collapse: true,
+    end: "What's the job that shouldn't need a person?",
     say: "What's the job that shouldn't need a person?" },
 ]
+
+const VO = { typed: SHOW[0].say }
+for (const s of SHOW) if (!s.say) s.say = VO[s.id] || ''
 
 
 /* ============================================================
@@ -2400,6 +2440,11 @@ const rule    = $('rule')
 const cardWrap = $('cardWrap')
 const card     = $('card')
 const cardEdge = $('cardEdge')
+const labelWrap = $('labelWrap')
+const svcLabel = $('svcLabel')
+const endWrap  = $('endWrap')
+const endQ     = $('endQ')
+const endUrl   = $('endUrl')
 const wordWrap = $('wordWrap')
 const wordEl   = $('word')
 const twWrap   = $('twWrap')
@@ -2478,7 +2523,7 @@ const pop = (x) => {
    travels — it comes in from the right, goes past its mark, corrects. */
 const backOut = (x, s = 1.9) => { const t = clamp(x, 0, 1) - 1; return t * t * ((s + 1) * t + s) + 1 }
 
-function drawCard(lt, s, prev) {
+function drawCard(lt, s, prev, time) {
   const a = CARDS[prev.card] || CARDS[s.card]
   const b = CARDS[s.card]
   const travel = seg(lt, 0, MORPH, EASE_OUT)   // the box gets there
@@ -2491,37 +2536,49 @@ function drawCard(lt, s, prev) {
   const p = seg(lt, 0, MORPH, EASE_IO)         // the wipe: even travel
   const slide = backOut(seg(lt, 0, MORPH * 1.15, LINEAR))
 
-  /* 4.5% of the card, whatever its size. On a 540px card that is 24px
-     of visible overshoot rather than 5. */
-  const swell = 1 + 0.045 * over
-  card.style.width = `${(lerp(a.w, b.w, travel) * swell).toFixed(1)}px`
-  card.style.height = `${(lerp(a.h, b.h, travel) * swell).toFixed(1)}px`
-  card.style.borderRadius = `${lerp(a.r, b.r, travel).toFixed(1)}px`
+  /* 1.2% of the card, not 4.5%. The excursion has to be independent of
+     travel distance to exist at all, but once it exists it needs to be
+     small: at 4.5% a 540px card swelled 24px, which reads as a slam. */
+  const swell = 1 + 0.012 * over
+  /* Collapses to nothing on the closing beat. */
+  const shut = s.collapse ? 1 - seg(lt, 0, 0.44, EASE) : 1
+
+  const set = (prop, value) => { if (card.style[prop] !== value) card.style[prop] = value }
+  set('width', `${(lerp(a.w, b.w, travel) * swell).toFixed(1)}px`)
+  set('height', `${(lerp(a.h, b.h, travel) * swell * shut).toFixed(1)}px`)
+  set('borderRadius', `${lerp(a.r, b.r, travel).toFixed(1)}px`)
+  set('opacity', shut < 0.02 ? '0' : '1')
+
+  /* Never quite still. Drift only, on two periods so it never repeats
+     visibly — translate composites for free.
+
+     No skew, and this was measured rather than assumed. Animating skewY
+     costs 32fps and even a STATIC skew costs 27, because the card
+     resizes every frame and a skewed box that resizes has to be
+     re-rasterised rather than composited. It is the same class of
+     operation as the blur that took the renderer down. A fixed skew on
+     the whole clip is a two-second job in the edit, where it costs
+     nothing. */
+  cardWrap.style.transform =
+    `translate(${(Math.sin(time * 0.47) * 7).toFixed(2)}px, ${(Math.sin(time * 0.62) * 6).toFixed(2)}px)`
 
   /* No filter: blur() anywhere near this. Blurring a card-sized subtree
      at a radius that changes every frame is re-rasterised every frame,
-     and it took the renderer down roughly where the card sections start.
-     Directional motion blur belongs in the edit. */
+     and it took the renderer down. Motion blur belongs in the edit. */
   const w = (p * 100).toFixed(2)
   for (const [name, el] of Object.entries(faces)) {
     const incoming = name === s.card
     const outgoing = name === prev.card && !incoming
     if (!incoming && !outgoing) { el.style.opacity = '0'; continue }
-
-    /* Once the edge has passed, the outgoing face is switched off rather
-       than left fully clipped — a clipped element is still composited. */
     if (outgoing && p > 0.999) { el.style.opacity = '0'; continue }
     el.style.opacity = '1'
     el.style.clipPath = incoming
       ? `inset(0 ${(100 - p * 100).toFixed(2)}% 0 0)`
       : `inset(0 0 0 ${w}%)`
-
-    /* The incoming content flies in from the right, overshoots its mark
-       by about 15px and corrects. The outgoing content is pushed left as
-       it goes, so the two are never simply sitting on top of each other. */
+    /* 40px of entry, not 150. Enough to see it arrive and correct. */
     el.style.transform = incoming
-      ? `translateX(${lerp(150, 0, slide).toFixed(1)}px) scale(${(1 + 0.03 * over).toFixed(4)})`
-      : `translateX(${(-46 * travel).toFixed(1)}px)`
+      ? `translateX(${lerp(40, 0, slide).toFixed(1)}px)`
+      : `translateX(${(-14 * travel).toFixed(1)}px)`
   }
 
   /* The edge rides the wipe and leaves with it. */
@@ -2634,8 +2691,45 @@ function draw(time) {
   }
 
   /* ---- the morphing card ---- */
-  if (HAS_CARDS && s.card) drawCard(lt, s, prev)
+  if (HAS_CARDS && s.card) drawCard(lt, s, prev, time)
   else if (HAS_CARDS) cardWrap.style.opacity = '0'
+
+  /* ---- the service label ----
+     Emerges from behind the card, alternating below and above so six
+     beats do not land in the same place six times. */
+  if (s.label) {
+    if (svcLabel.textContent !== s.label) svcLabel.textContent = s.label
+    const out = seg(lt, 0.34, 1.15, EASE_OUT)
+    const gone = seg(lt, s.dur - 0.40, s.dur, EASE)
+    /* Read from the inline height, which is already in stage units — a
+       bounding rect would be in screen pixels and the stage is scaled. */
+    const h = parseFloat(card.style.height) || 500
+    const reach = (s.above ? -1 : 1) * (h / 2 + 92)
+    svcLabel.style.transform = `translateY(${lerp(0, reach, out).toFixed(1)}px)`
+    svcLabel.style.opacity = (Math.min(out * 1.6, 1) - gone).toFixed(3)
+  } else svcLabel.style.opacity = '0'
+
+  /* ---- the ending ----
+     The card shuts, then the question arrives a word at a time, then the
+     address. Strictly in that order: they are one sentence being
+     finished, not three things fading up together. */
+  if (s.end) {
+    if (endQ.dataset.q !== s.end) {
+      endQ.dataset.q = s.end
+      endQ.replaceChildren(...s.end.split(' ').map((word) => {
+        const b = document.createElement('b'); b.textContent = word; return b
+      }))
+    }
+    endWrap.style.opacity = '1'
+    for (let i = 0; i < endQ.children.length; i++) {
+      const q = seg(lt, 0.52 + i * 0.085, 0.52 + i * 0.085 + 0.42, EASE_OUT)
+      endQ.children[i].style.opacity = q.toFixed(3)
+      endQ.children[i].style.transform = `translateY(${lerp(22, 0, q).toFixed(1)}px) scale(${lerp(0.9, 1, q).toFixed(3)})`
+    }
+    const u = seg(lt, 0.52 + endQ.children.length * 0.085 + 0.30, s.dur - 0.5, EASE_OUT)
+    endUrl.style.opacity = u.toFixed(3)
+    endUrl.style.transform = `translateY(${lerp(26, 0, u).toFixed(1)}px) scale(${lerp(0.88, 1, u).toFixed(3)})`
+  } else endWrap.style.opacity = '0'
 
   /* ---- the mark ---- */
   if (s.logo) drawLogo(lt, s.logo)

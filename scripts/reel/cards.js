@@ -90,14 +90,16 @@ const CARDS = {
         `<div class="cPerson"><i class="cAv"></i>${cBar(130, .5)}<i class="cTick"></i></div>`).join('')}
     </div>` },
 
-  outro: { w: 820, h: 360, r: 52, html: `
+  /* The mark on its own. The address is no longer in here — it arrives
+     after the card has shut, so the two do not compete. */
+  outro: { w: 620, h: 300, r: 52, html: `
     <div class="cOutro">
       <svg class="cMark cMark--lg" viewBox="0 0 104 100" aria-hidden="true">
         <path d="M24.5 82 L24.5 48 A20 20 0 0 1 64.5 48 L64.5 82" fill="none"
               stroke="currentColor" stroke-width="13"/>
         <rect x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
       </svg>
-      <span class="cOutroTxt">nabl.agency</span>
+      <span class="cOutroTxt">n.abl</span>
     </div>` },
 }
 

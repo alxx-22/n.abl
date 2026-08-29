@@ -127,8 +127,30 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .twCaret{display:inline-block;width:6px;height:.86em;background:var(--amber400);
   vertical-align:-.08em;margin-left:.1em;border-radius:1px}
 
+/* ---------- service label ---------- */
+/* Behind the card (z 1 against the card's 2), so it reads as coming out
+   from under an edge rather than appearing next to it. Only opacity and
+   translateY animate — the glow is a fixed text-shadow, which rasterises
+   once and stays cached. Animating a shadow radius is what took the
+   renderer down before. */
+#labelWrap{display:grid;place-items:center;z-index:1;pointer-events:none}
+#svcLabel{font-family:var(--display);font-weight:600;font-size:62px;letter-spacing:-.02em;
+  color:var(--cream100);white-space:nowrap;opacity:0;will-change:transform,opacity;
+  text-shadow:0 0 40px rgba(var(--amber-rgb),.45), 0 0 90px rgba(var(--amber-rgb),.20)}
+
+/* ---------- the ending ---------- */
+#endWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;
+  padding:0 80px;z-index:3;pointer-events:none;opacity:0}
+#endQ{margin:0;font-family:var(--display);font-weight:600;font-size:76px;line-height:1.2;
+  letter-spacing:-.025em;text-align:center;color:var(--cream100);text-wrap:balance}
+#endQ b{display:inline-block;font-weight:inherit;opacity:0;will-change:transform,opacity;
+  margin-right:.26em}
+#endUrl{font-family:var(--mono);font-size:44px;letter-spacing:.06em;color:var(--amber400);
+  opacity:0;will-change:transform,opacity}
+
 /* ---------- the morphing card ---------- */
-#cardWrap{display:grid;place-items:center;opacity:0;pointer-events:none}
+#cardWrap{display:grid;place-items:center;opacity:0;pointer-events:none;z-index:2;
+  will-change:transform,opacity}
 #cardEdge{position:absolute;top:0;bottom:0;width:2px;z-index:5;pointer-events:none;opacity:0;
   background:linear-gradient(180deg,transparent,var(--amber400) 18%,var(--amber400) 82%,transparent);
   box-shadow:0 0 22px rgba(var(--amber-rgb),.55)}
@@ -347,8 +369,14 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
         <p id="tw"><span class="twLead"></span><span class="twRest"></span><i class="twCaret"></i></p>
       </div>
 
+      <div class="layer" id="labelWrap"><span id="svcLabel"></span></div>
+
       <!-- One container, morphing. Never removed, never replaced. -->
       <div class="layer" id="cardWrap"><div id="card"><i id="cardEdge"></i></div></div>
+      <div class="layer" id="endWrap">
+        <p id="endQ"></p>
+        <span id="endUrl">www.nabl.agency</span>
+      </div>
       <div id="sceneGlow"></div>
       <div class="layer" id="sceneBox"><div id="sceneSlide"></div><div id="sceneSheen"></div></div>
       <div id="dots"></div>
