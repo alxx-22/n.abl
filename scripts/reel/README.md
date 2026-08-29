@@ -8,6 +8,24 @@ playing inside it and a camera window that moves between framings.
 Open `build/reel.html` in a browser. No server, no build step — the
 person recording with it is holding a webcam, not a terminal.
 
+## Recording
+
+URL parameters, because an OBS Browser Source cannot press buttons:
+
+    reel.html?clean=1&guides=0&cam=key&play=1
+
+`clean` drops the control panel, `guides` the safe-zone overlay, `cam` is
+`live|key|off`, `play` starts on load. At a 1080x1920 browser source that
+comes up at exactly 1:1 with nothing on it but the stage.
+
+In OBS: browser source on top, webcam below it, Chroma Key (green) on the
+browser source. The reel cuts the window; your face shows through it.
+
+Guides off is the recording state, not just a cleaner preview — the
+"CAMERA" label and corner ticks are dark marks painted *on* the key
+colour and would survive the key as smudges over your face, so they
+leave with the guides.
+
 ## What's in here
 
 | file | |

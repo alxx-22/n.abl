@@ -454,11 +454,13 @@ new ResizeObserver(fit).observe(stage.parentElement)
    ------------------------------------------------------------------ */
 $('btnPlay').addEventListener('click', () => (playing ? pause() : play()))
 $('btnRestart').addEventListener('click', () => { seek(0); play() })
-$('btnGuides').addEventListener('click', () => {
-  showGuides = !showGuides
-  guides.hidden = !showGuides
-  $('btnGuides').setAttribute('aria-pressed', String(showGuides))
-})
+function setGuides(on) {
+  showGuides = on
+  guides.hidden = !on
+  document.body.classList.toggle('no-guides', !on)
+  $('btnGuides').setAttribute('aria-pressed', String(on))
+}
+$('btnGuides').addEventListener('click', () => setGuides(!showGuides))
 $('btnMirror').addEventListener('click', () => {
   mirror = !mirror
   camVideo.style.transform = mirror ? 'scaleX(-1)' : 'none'
@@ -531,7 +533,26 @@ SHOW.forEach((s, i) => {
    is computed differently because it is exposed. */
 window.reel = { seek, play, pause, draw, SHOW, TOTAL, get t() { return t } }
 
+/* ------------------------------------------------------------------
+   Opening state from the URL.
+
+   This exists for OBS. A Browser Source cannot press buttons, and a
+   1080x1920 source that comes up showing the control panel and the
+   safe-zone guides is not a recording surface. So:
+
+     reel.html?clean=1&guides=0&cam=key&play=1
+
+   comes up as nothing but the stage, at exactly 1:1, ready to capture.
+   ------------------------------------------------------------------ */
+const q = new URLSearchParams(location.search)
+const flag = (k) => { const v = q.get(k); return v !== null && v !== '0' && v !== 'false' }
+
+if (flag('clean')) document.body.classList.add('is-clean')
+setGuides(q.get('guides') === null ? true : flag('guides'))
+setCamMode(['live', 'key', 'off'].includes(q.get('cam')) ? q.get('cam') : 'key')
+if (camMode === 'live') goLive()
+
 fit()
-setCamMode('key')
 draw(0)
 syncPlay()
+if (flag('play')) play()

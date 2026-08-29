@@ -73,9 +73,15 @@ body.is-clean .app{grid-template-columns:1fr}
 #cam[data-mode="off"] #camVideo,#cam[data-mode="off"] #camKey{display:none}
 #camKey span{font-family:var(--mono);font-size:26px;letter-spacing:.22em;text-transform:uppercase;
   color:rgba(0,0,0,.42)}
-/* corner ticks, so a keyed region is still findable once the green is gone */
+/* corner ticks, so a keyed region is still findable while you compose */
 #camKey::before,#camKey::after{content:'';position:absolute;width:54px;height:54px;
   border:3px solid rgba(0,0,0,.3)}
+/* Both are dark marks sitting on the key colour: they would survive the
+   chroma key and land as smudges over your face. Guides off is already
+   the "recording now" state, so they leave with the guides and what the
+   camera window records is flat, unbroken green. */
+body.no-guides #camKey span{display:none}
+body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 #camKey::before{top:22px;left:22px;border-right:0;border-bottom:0}
 #camKey::after{bottom:22px;right:22px;border-left:0;border-top:0}
 
@@ -277,20 +283,30 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
       <div id="sheet"></div>
 
       <p class="label" style="margin-top:14px">How to record</p>
-      <p class="how"><strong style="color:var(--cream100)">With your webcam here:</strong> hit
-        <em>Use my webcam</em>, then <em>Clean view</em>, then screen-record the stage. Everything is
-        already composited.</p>
-      <p class="how"><strong style="color:var(--cream100)">Keying it in your editor:</strong></p>
+
+      <p class="how"><strong style="color:var(--cream100)">Quickest &mdash; no keying.</strong>
+        <em>Use my webcam</em>, then <em>Guides</em> off, then <em>Clean view</em>, then
+        screen-record the stage. It is already composited. Good enough to post.</p>
+
+      <p class="how" style="margin-top:10px"><strong style="color:var(--cream100)">Proper
+        &mdash; true 1080&times;1920, in OBS.</strong> No screen recording, no scaling loss:</p>
       <ol class="how">
-        <li>Leave it on <em>Key colour</em> and turn <em>Guides</em> off.</li>
-        <li><em>Clean view</em>, then screen-record the 9:16 stage.</li>
-        <li>Drop that recording over your webcam take in CapCut, Premiere or OBS.</li>
-        <li>Chroma-key the green <span class="how" style="font-family:var(--mono)">#00B140</span> out.
-          Your face lands in the window and moves with it.</li>
-        <li>Two sections put type over a full-frame camera. Keying those would fringe the
-          letters green, so record a second pass with <em>Text</em> off and lay the type
-          back over the top &mdash; or just use the webcam mode, which has no key to fringe.</li>
+        <li>Add a <em>Browser</em> source. Tick <em>Local file</em>, pick this file, set
+          width <strong>1080</strong> and height <strong>1920</strong>.</li>
+        <li>Put <span style="font-family:var(--mono);font-size:11px">?clean=1&amp;guides=0&amp;cam=key&amp;play=1</span>
+          on the end of the URL. It opens with no panel, no guides, at exactly 1:1, playing.</li>
+        <li>Add your <em>Video Capture Device</em> and drag it <strong>below</strong> the
+          browser source in the list. The reel sits on top; your face shows through the
+          window it cuts.</li>
+        <li>On the browser source: <em>Filters &rarr; Chroma Key &rarr; Green</em>.</li>
+        <li>Set the canvas to 1080&times;1920 at 60fps and record. Tick <em>Refresh browser
+          when scene becomes active</em> and every take starts from the top.</li>
       </ol>
+
+      <p class="how" style="margin-top:10px">Two sections put type over a full-frame camera.
+        Keying those fringes the letters green, so either use the webcam mode, or record a
+        second pass with <em>Text</em> off and lay the type back over the top.</p>
+
       <p class="how" style="margin-top:10px">
         <kbd>space</kbd> play · <kbd>&larr;</kbd><kbd>&rarr;</kbd> 1s (<kbd>shift</kbd> 5s) ·
         <kbd>r</kbd> restart · <kbd>g</kbd> guides · <kbd>f</kbd> clean · <kbd>m</kbd> mirror
@@ -2405,11 +2421,13 @@ new ResizeObserver(fit).observe(stage.parentElement)
    ------------------------------------------------------------------ */
 $('btnPlay').addEventListener('click', () => (playing ? pause() : play()))
 $('btnRestart').addEventListener('click', () => { seek(0); play() })
-$('btnGuides').addEventListener('click', () => {
-  showGuides = !showGuides
-  guides.hidden = !showGuides
-  $('btnGuides').setAttribute('aria-pressed', String(showGuides))
-})
+function setGuides(on) {
+  showGuides = on
+  guides.hidden = !on
+  document.body.classList.toggle('no-guides', !on)
+  $('btnGuides').setAttribute('aria-pressed', String(on))
+}
+$('btnGuides').addEventListener('click', () => setGuides(!showGuides))
 $('btnMirror').addEventListener('click', () => {
   mirror = !mirror
   camVideo.style.transform = mirror ? 'scaleX(-1)' : 'none'
@@ -2482,9 +2500,28 @@ SHOW.forEach((s, i) => {
    is computed differently because it is exposed. */
 window.reel = { seek, play, pause, draw, SHOW, TOTAL, get t() { return t } }
 
+/* ------------------------------------------------------------------
+   Opening state from the URL.
+
+   This exists for OBS. A Browser Source cannot press buttons, and a
+   1080x1920 source that comes up showing the control panel and the
+   safe-zone guides is not a recording surface. So:
+
+     reel.html?clean=1&guides=0&cam=key&play=1
+
+   comes up as nothing but the stage, at exactly 1:1, ready to capture.
+   ------------------------------------------------------------------ */
+const q = new URLSearchParams(location.search)
+const flag = (k) => { const v = q.get(k); return v !== null && v !== '0' && v !== 'false' }
+
+if (flag('clean')) document.body.classList.add('is-clean')
+setGuides(q.get('guides') === null ? true : flag('guides'))
+setCamMode(['live', 'key', 'off'].includes(q.get('cam')) ? q.get('cam') : 'key')
+if (camMode === 'live') goLive()
+
 fit()
-setCamMode('key')
 draw(0)
 syncPlay()
+if (flag('play')) play()
 
 </script>
