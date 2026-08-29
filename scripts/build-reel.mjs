@@ -77,6 +77,8 @@ const CUTS = [
     extra: ['canvas-auto.js'] },
   { out: 'reel-data.html', show: 'show-data.js', title: 'n.abl Data Reel',
     extra: ['canvas-data.js'] },
+  { out: 'reel-web.html', show: 'show-web.js', title: 'n.abl Web Reel',
+    extra: ['canvas-web.js'] },
 ]
 
 mkdirSync(join(ROOT, 'build'), { recursive: true })

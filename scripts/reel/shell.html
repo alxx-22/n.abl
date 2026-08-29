@@ -178,7 +178,43 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .cvDown::after{content:'';position:absolute;bottom:0;left:-9px;border-top:22px solid var(--amber400);
   border-left:11px solid transparent;border-right:11px solid transparent}
 
+/* ---------- the enquiry list ---------- */
+/* The rows are .cvPane, so they inherit the grammar every other cut
+   already uses — rise out of nothing, and never sit completely still —
+   and the only new thing here is their layout. Adding a sixth mover
+   kind to the player would have bought the same look and one more
+   place for the cells to fall out of step with each other. */
+.wList{display:flex;flex-direction:column;gap:40px}
+/* Sized to the room there is, not to a comfortable-looking default.
+   The camera holds the cell centred at screen y960 and the band
+   Instagram leaves clear runs 250-1440, so a centred block can be 960
+   screen px — 1600 canvas — before one end of it goes under something.
+   Five rows at 242, the kick and the footnote, comes to 1594. */
+.wRow{flex-direction:row;align-items:center;gap:44px;padding:72px 56px;
+  background:var(--s1);border-color:var(--line-faint);box-shadow:none}
+.wRow--live{background:var(--s2);border-color:var(--line-strong);
+  box-shadow:0 40px 110px rgba(0,0,0,.55)}
+.wRow .cvPaneK{flex:none;width:250px;font-family:var(--mono);font-size:64px;
+  color:var(--cream600);font-variant-numeric:tabular-nums}
+.wRow--live .cvPaneK{color:var(--amber400)}
+.wRow .cvBar{flex:none;height:36px}
+.wRow .cvCaret{flex:none}
+.cvHuge--dim{color:var(--cream600)}
+
 .cvScene{flex:1;min-height:0}
+/* The scene letterboxes to the width it is given, so in a box taller
+   than 800:608 the drawn frame floats in the leftover height. --fit
+   gives it exactly the height it will use. Only the web cut asks for
+   this; automation and data are already framed around flex:1 and are
+   signed off. */
+.cvScene--fit{flex:none;aspect-ratio:800/608}
+
+/* Instagram's like/comment/share rail eats the right 120px of the
+   frame. A cell 1800 wide padded 100 both sides puts its content edge
+   at screen x1020 — 60px under that rail — so on this canvas the right
+   padding is 200 instead. Asymmetric because the thing it is dodging
+   is asymmetric. */
+.cv--rail .cvCell{padding-right:200px}
 .cvScene svg{display:block;width:100%;height:100%}
 
 /* ---------- the sheet ---------- */

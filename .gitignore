@@ -29,3 +29,6 @@ npm-debug.log*
 # no reason to be in version control.
 .sourcing/
 worker/knowledge.generated.ts
+
+# reel contact sheets — regenerate with scripts/reel-sheet.mjs
+build/sheets/

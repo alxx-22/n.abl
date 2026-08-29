@@ -3,16 +3,19 @@
 A 9:16 marketing template you talk over, with the six service scenes
 playing inside it and a camera window that moves between framings.
 
-    node scripts/build-reel.mjs      # → build/reel.html
-                                     #   build/reel-brand.html
+    node scripts/build-reel.mjs      # → build/reel*.html
 
-Two cuts off one player:
+Six cuts off one player. The show — a list of sections with durations,
+framings and copy — is the only difference between them:
 
 | | |
 |---|---|
 | `reel.html` | **Talk over it.** 50s, camera moves between full frame, top band, bottom band and absent. The six scenes play in a fixed band. |
 | `reel-punch.html` | **Punch cut.** 22.6s. A typed opener with a two-tone colour turn, the three pillars as words receding through a burst, then the six services as fast cards. |
 | `reel-brand.html` | **Brand cut.** 25.6s, no camera and no type outside the card. One container morphs through the mark, the three pillars and the six services. |
+| `reel-automation.html` | **Automation, 25s at 0.5x.** One service, laid out across a canvas larger than the frame; the camera walks a staircase down it. |
+| `reel-data.html` | **Data, 24.4s at 0.5x.** One spreadsheet at four distances — opens inside a cell that looks fine and pulls back until you can see how many are not. |
+| `reel-web.html` | **Web, 24.2s at 0.5x.** Five cells on one horizontal track; the camera only goes right, or in. |
 
 The brand cut is built after an iOS Live Activity: a compact pill grows
 into a card, the content blurring while the container is in motion and
@@ -117,6 +120,61 @@ than four seconds.
 bottom-half camera centres its subject at y1400, underneath the caption
 overlay. It pulls the face up into the part of the band that survives.
 
+
+## The canvas cuts
+
+The three service cuts are a different idea from the card cuts. Nothing
+appears or disappears: the whole argument is laid out once on a canvas
+much larger than the frame, and the frame moves over it. A morph says
+"and now, this"; a camera move says "these are in the same place", which
+is the actual claim — the statistic, the situation and the fix are one
+thing seen from three distances.
+
+Each has its own camera language, and only one, so six reels do not all
+move the same way:
+
+| | |
+|---|---|
+| automation | a staircase — down a column of cells, across, down, in |
+| data | one object at four distances — never leaves the spreadsheet |
+| web | a single horizontal track — right, or in, and nothing else |
+
+Cells are 1800x3100, which is the frame's own ratio at the zoom the wide
+shots hold, so a cell framed is a cell filled. An early version laid the
+canvas out like a web page — wide, short blocks — and every shot had a
+void above and below it with the next block leaking in at the edge.
+
+**Every camera position is measured off the built canvas, not chosen by
+eye.** A first pass on the automation cut set them by eye and every one
+was 240 to 260 canvas pixels out, which in a 9:16 frame is the
+difference between a composed shot and a clipped one.
+
+    node scripts/reel-frame.mjs web       # where the content lands
+    node scripts/reel-sheet.mjs web       # → build/sheets/reel-web/
+
+`reel-frame` reports, per beat, where the cell's readable content sits
+in the frame against the margins Instagram covers, and fails if anything
+is outside them. Beats marked `crop: true` in the show are deliberate
+push-ins that frame part of a cell; they are reported, not judged.
+
+It exists because two errors got through review by eye and were only
+visible as arithmetic:
+
+- a footnote pinned to a 3100-tall cell's floor lands at screen y1795 —
+  355px inside the caption zone, on a line that is the *source
+  attribution* for the statistic the reel opens on
+- a cell padded 100 both sides reaches x1020, 60px under the like rail
+
+Both are fixed in the web cut by putting every cell's content — kick,
+body and footnote — inside one centred `.cvGrow`, and by padding the
+cells 200 on the right instead of 100. **The automation and data cuts
+still have both**, because they were signed off before the check
+existed; `reel-frame automation` prints exactly where.
+
+`reel-sheet` shoots every beat twice, once mid-arrival and once settled,
+and tiles them. Fourteen stills side by side is how a clipped label or a
+shot that holds nothing gets caught — none of which the frame-walk test
+below can see, because they all render fine.
 
 ## Checking a cut
 
