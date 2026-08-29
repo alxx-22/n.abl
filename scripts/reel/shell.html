@@ -139,9 +139,18 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 #svcLabel i{display:block;font-style:normal;opacity:0;will-change:transform,opacity;
   text-shadow:0 0 40px rgba(var(--amber-rgb),.45), 0 0 90px rgba(var(--amber-rgb),.20)}
 
+/* ---------- the clock ---------- */
+#clockWrap{display:grid;place-items:center;align-content:center;z-index:3;pointer-events:none;
+  opacity:0;padding-bottom:520px;will-change:transform,opacity}
+#clockWrap svg{width:250px;height:250px;overflow:visible;
+  filter:drop-shadow(0 0 44px rgba(var(--amber-rgb),.18))}
+#clockRing{will-change:stroke-dashoffset}
+
 /* ---------- the ending ---------- */
 #endWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;
   padding:0 80px;z-index:3;pointer-events:none;opacity:0}
+#endWrap[data-at="open"]{justify-content:flex-start;padding-top:1090px}
+#endWrap[data-at="open"] #endQ{font-size:68px}
 #endQ{margin:0;font-family:var(--display);font-weight:600;font-size:76px;line-height:1.2;
   letter-spacing:-.025em;text-align:center;color:var(--cream100);text-wrap:balance}
 #endQ b{display:inline-block;font-weight:inherit;opacity:0;will-change:transform,opacity;
@@ -379,6 +388,21 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
 
       <!-- One container, morphing. Never removed, never replaced. -->
       <div class="layer" id="cardWrap"><div id="card"><i id="cardEdge"></i></div></div>
+      <div class="layer" id="clockWrap">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <!-- The wordmark's construction: one monoline stroke, a true
+               circle, and the house's square full stop at the centre. -->
+          <circle id="clockRing" cx="100" cy="100" r="84" fill="none"
+                  stroke="var(--cream200)" stroke-width="11" stroke-linecap="butt"
+                  transform="rotate(-90 100 100)"/>
+          <line id="clockHour" x1="100" y1="100" x2="100" y2="56"
+                stroke="var(--cream200)" stroke-width="11" stroke-linecap="butt"/>
+          <line id="clockMin" x1="100" y1="100" x2="100" y2="34"
+                stroke="var(--cream400)" stroke-width="9" stroke-linecap="butt"/>
+          <rect x="94" y="94" width="12" height="12" fill="var(--amber400)"/>
+        </svg>
+      </div>
+
       <div class="layer" id="endWrap">
         <p id="endQ"></p>
         <span id="endUrl">www.nabl.agency</span>

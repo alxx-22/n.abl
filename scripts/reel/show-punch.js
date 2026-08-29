@@ -18,9 +18,14 @@ const S = (id, card, label, above) => ({
 })
 
 const SHOW = [
-  { id: 'typed', dur: 4.4, cam: null, text: null, type: true,
-    head: 'Your team loses a morning a week to work a computer should be doing.',
-    turn: 32, at: 0.30, rate: 0.040,
+  /* The opening line lands the same way the closing question does —
+     word by word, drifting — because they are the two ends of the same
+     film and matching them is what closes it. The clock is the only
+     piece of iconography in the cut: it runs away with itself rather
+     than ticking, because the subject is time going, not time kept. */
+  { id: 'open', dur: 5.0, cam: null, text: null, clock: true,
+    words: 'Your team loses a morning a week to work a computer should be doing.',
+    wordsAt: 1.15, wordsStep: 0.075, wordsOut: 0.5,
     say: 'Your team loses a morning a week to work a computer should be doing.' },
 
   S('automation', 'automation', 'Runs itself',        false),

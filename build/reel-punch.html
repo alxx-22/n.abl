@@ -139,9 +139,18 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 #svcLabel i{display:block;font-style:normal;opacity:0;will-change:transform,opacity;
   text-shadow:0 0 40px rgba(var(--amber-rgb),.45), 0 0 90px rgba(var(--amber-rgb),.20)}
 
+/* ---------- the clock ---------- */
+#clockWrap{display:grid;place-items:center;align-content:center;z-index:3;pointer-events:none;
+  opacity:0;padding-bottom:520px;will-change:transform,opacity}
+#clockWrap svg{width:250px;height:250px;overflow:visible;
+  filter:drop-shadow(0 0 44px rgba(var(--amber-rgb),.18))}
+#clockRing{will-change:stroke-dashoffset}
+
 /* ---------- the ending ---------- */
 #endWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;
   padding:0 80px;z-index:3;pointer-events:none;opacity:0}
+#endWrap[data-at="open"]{justify-content:flex-start;padding-top:1090px}
+#endWrap[data-at="open"] #endQ{font-size:68px}
 #endQ{margin:0;font-family:var(--display);font-weight:600;font-size:76px;line-height:1.2;
   letter-spacing:-.025em;text-align:center;color:var(--cream100);text-wrap:balance}
 #endQ b{display:inline-block;font-weight:inherit;opacity:0;will-change:transform,opacity;
@@ -379,6 +388,21 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
 
       <!-- One container, morphing. Never removed, never replaced. -->
       <div class="layer" id="cardWrap"><div id="card"><i id="cardEdge"></i></div></div>
+      <div class="layer" id="clockWrap">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <!-- The wordmark's construction: one monoline stroke, a true
+               circle, and the house's square full stop at the centre. -->
+          <circle id="clockRing" cx="100" cy="100" r="84" fill="none"
+                  stroke="var(--cream200)" stroke-width="11" stroke-linecap="butt"
+                  transform="rotate(-90 100 100)"/>
+          <line id="clockHour" x1="100" y1="100" x2="100" y2="56"
+                stroke="var(--cream200)" stroke-width="11" stroke-linecap="butt"/>
+          <line id="clockMin" x1="100" y1="100" x2="100" y2="34"
+                stroke="var(--cream400)" stroke-width="9" stroke-linecap="butt"/>
+          <rect x="94" y="94" width="12" height="12" fill="var(--amber400)"/>
+        </svg>
+      </div>
+
       <div class="layer" id="endWrap">
         <p id="endQ"></p>
         <span id="endUrl">www.nabl.agency</span>
@@ -2387,9 +2411,14 @@ const S = (id, card, label, above) => ({
 })
 
 const SHOW = [
-  { id: 'typed', dur: 4.4, cam: null, text: null, type: true,
-    head: 'Your team loses a morning a week to work a computer should be doing.',
-    turn: 32, at: 0.30, rate: 0.040,
+  /* The opening line lands the same way the closing question does —
+     word by word, drifting — because they are the two ends of the same
+     film and matching them is what closes it. The clock is the only
+     piece of iconography in the cut: it runs away with itself rather
+     than ticking, because the subject is time going, not time kept. */
+  { id: 'open', dur: 5.0, cam: null, text: null, clock: true,
+    words: 'Your team loses a morning a week to work a computer should be doing.',
+    wordsAt: 1.15, wordsStep: 0.075, wordsOut: 0.5,
     say: 'Your team loses a morning a week to work a computer should be doing.' },
 
   S('automation', 'automation', 'Runs itself',        false),
@@ -2469,6 +2498,12 @@ const svcLabel = $('svcLabel')
 const endWrap  = $('endWrap')
 const endQ     = $('endQ')
 const endUrl   = $('endUrl')
+const clockWrap = $('clockWrap')
+const clockRing = $('clockRing')
+const clockMin  = $('clockMin')
+const clockHour = $('clockHour')
+const RING_LEN  = clockRing.getTotalLength ? clockRing.getTotalLength() : 2 * Math.PI * 84
+clockRing.style.strokeDasharray = RING_LEN.toFixed(2)
 const wordWrap = $('wordWrap')
 const wordEl   = $('word')
 const twWrap   = $('twWrap')
@@ -2585,7 +2620,10 @@ function drawCard(lt, s, prev, time) {
      nothing. */
   cardWrap.style.transform =
     `translate(${(Math.sin(time * 0.47) * 7).toFixed(2)}px, ${(Math.sin(time * 0.62) * 6).toFixed(2)}px)` +
-    (SKEW ? ` skewY(${(Math.sin(time * 0.41) * 0.6).toFixed(3)}deg)` : '')
+    (FLUID
+      ? ` rotate(${(Math.sin(time * 0.33) * 0.6).toFixed(3)}deg)` +
+        ` skewY(${(Math.sin(time * 0.41) * 0.5).toFixed(3)}deg)`
+      : '')
 
   /* No filter: blur() anywhere near this. Blurring a card-sized subtree
      at a radius that changes every frame is re-rasterised every frame,
@@ -2787,27 +2825,64 @@ function draw(time) {
     svcLabel.style.opacity = '1'
   } else svcLabel.style.opacity = '0'
 
-  /* ---- the ending ----
-     The card shuts, then the question arrives a word at a time, then the
-     address. Strictly in that order: they are one sentence being
-     finished, not three things fading up together. */
-  if (s.end) {
-    if (endQ.dataset.q !== s.end) {
-      endQ.dataset.q = s.end
-      endQ.replaceChildren(...s.end.split(' ').map((word) => {
+  /* ---- word-by-word type, for the opening line and the closing one ----
+     One renderer, because they are the same move at two ends of the
+     film and matching them is what makes the reel feel closed. */
+  if (s.words || s.end) {
+    const text = s.words || s.end
+    if (endQ.dataset.q !== text) {
+      endQ.dataset.q = text
+      endQ.replaceChildren(...text.split(' ').map((word) => {
         const b = document.createElement('b'); b.textContent = word; return b
       }))
     }
-    endWrap.style.opacity = '1'
+    endWrap.dataset.at = s.words ? 'open' : 'close'
+    const at = s.wordsAt ?? 0.52
+    const step = s.wordsStep ?? 0.085
+    const fade = s.wordsOut ? seg(lt, s.dur - s.wordsOut, s.dur, EASE) : 0
+
     for (let i = 0; i < endQ.children.length; i++) {
-      const q = seg(lt, 0.52 + i * 0.085, 0.52 + i * 0.085 + 0.42, EASE_OUT)
-      endQ.children[i].style.opacity = q.toFixed(3)
-      endQ.children[i].style.transform = `translateY(${lerp(22, 0, q).toFixed(1)}px) scale(${lerp(0.9, 1, q).toFixed(3)})`
+      const q2 = seg(lt, at + i * step, at + i * step + 0.42, EASE_OUT)
+      /* Same idle drift as the labels, damped in and out. */
+      const held = q2 * (1 - fade)
+      const ph = i * 1.3
+      endQ.children[i].style.opacity = (q2 - fade).toFixed(3)
+      endQ.children[i].style.transform =
+        `translate(${(Math.sin(time * 0.36 + ph) * 3.5 * held).toFixed(2)}px, ` +
+        `${(lerp(22, 0, q2) + Math.sin(time * 0.58 + ph) * 3 * held).toFixed(1)}px) ` +
+        `rotate(${(Math.sin(time * 0.49 + ph) * 0.9 * held).toFixed(2)}deg) ` +
+        `scale(${lerp(0.9, 1, q2).toFixed(3)})`
     }
-    const u = seg(lt, 0.52 + endQ.children.length * 0.085 + 0.30, s.dur - 0.5, EASE_OUT)
-    endUrl.style.opacity = u.toFixed(3)
-    endUrl.style.transform = `translateY(${lerp(26, 0, u).toFixed(1)}px) scale(${lerp(0.88, 1, u).toFixed(3)})`
+    endWrap.style.opacity = '1'
+
+    /* The address only exists on the closing beat. */
+    if (s.end) {
+      const u = seg(lt, at + endQ.children.length * step + 0.30, s.dur - 0.5, EASE_OUT)
+      endUrl.style.opacity = u.toFixed(3)
+      endUrl.style.transform = `translateY(${lerp(26, 0, u).toFixed(1)}px) scale(${lerp(0.88, 1, u).toFixed(3)})`
+    } else endUrl.style.opacity = '0'
   } else endWrap.style.opacity = '0'
+
+  /* ---- the clock ----
+     Drawn in the wordmark's own construction: one monoline stroke, a
+     true circle, and the house's square full stop at the centre. The
+     hands accelerate rather than tick, which is the point — this is
+     time going, not time being kept. */
+  if (s.clock) {
+    const inP = seg(lt, 0.10, 0.85, EASE_OUT)
+    const outP = seg(lt, s.dur - 0.55, s.dur, EASE)
+    clockWrap.style.opacity = (inP - outP).toFixed(3)
+    /* Butt caps leave a hairline seam where the dash meets itself, so
+       the dash is dropped altogether once the ring has closed. */
+    clockRing.style.strokeDasharray = inP >= 1 ? 'none' : RING_LEN.toFixed(2)
+    clockRing.style.strokeDashoffset = (RING_LEN * (1 - inP)).toFixed(2)
+    /* Quadratic, so it visibly runs away with itself. */
+    const spin = lt * lt * 62
+    clockMin.setAttribute('transform', `rotate(${spin.toFixed(1)} 100 100)`)
+    clockHour.setAttribute('transform', `rotate(${(spin / 12).toFixed(1)} 100 100)`)
+    clockWrap.style.transform =
+      `translateY(${(Math.sin(time * 0.5) * 5 * inP).toFixed(2)}px) scale(${lerp(0.86, 1, inP).toFixed(3)})`
+  } else clockWrap.style.opacity = '0'
 
   /* ---- the mark ---- */
   if (s.logo) drawLogo(lt, s.logo)
@@ -3179,9 +3254,13 @@ window.reel = { seek, play, pause, draw, SHOW, TOTAL, get t() { return t } }
    ------------------------------------------------------------------ */
 const q = new URLSearchParams(location.search)
 
-/* ?speed=0.5 halves the timeline; ?skew=1 turns the live skew back on,
-   which is only affordable when the speed is halved. */
-const SKEW = q.get('skew') !== null && q.get('skew') !== '0'
+/* ?speed=0.5 halves the timeline. ?fluid=1 adds live rotation and skew
+   to the card — both cost ~28fps, because rotating or skewing a box that
+   also resizes every frame has to be re-rasterised rather than
+   composited. 22.8fps measured, so it wants ?speed=0.25 (91 effective),
+   not 0.5 (46). The labels rotate unconditionally because they are small
+   enough not to matter. */
+const FLUID = q.get('fluid') !== null && q.get('fluid') !== '0'
 const flag = (k) => { const v = q.get(k); return v !== null && v !== '0' && v !== 'false' }
 
 const wanted = parseFloat(q.get('speed'))
