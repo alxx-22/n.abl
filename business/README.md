@@ -174,8 +174,60 @@ The pitch, in the client's words:
 > "You do not pay us monthly to be on standby. You buy support when you actually
 > need support."
 
-Clients own what is built. Credit pack sizes and prices: [PLACEHOLDER — to be
-set alongside the first three real quotes, not before].
+Clients own what is built.
+
+#### What a credit is
+
+**One credit is one hour of our time.** Not a token with an invented exchange
+rate — the point of the layer is that a client can see exactly what they are
+buying, and an hour is the only unit that survives being asked about.
+
+#### Pack sizes and prices
+
+| Pack | Credits | On its own | Per credit | Bought with an implementation | Per credit |
+|---|---|---|---|---|---|
+| Starter | 5 | £475 | £95 | £380 | £76 |
+| Standard | 10 | £880 | £88 | £700 | £70 |
+| Team | 25 | £2,000 | £80 | £1,600 | £64 |
+| Programme | 50 | £3,750 | £75 | £3,000 | £60 |
+
+Two discounts, each for a reason we can say out loud:
+
+- **Size.** £95 down to £75. Larger packs mean fewer conversations about whether
+  something is in scope, and that saving is real.
+- **Bought alongside a project, 20% off.** We are already in the codebase and
+  already hold the context. A credit spent six months later costs us the reload.
+
+The taper sits deliberately **below** the effective hourly rate the efficiency
+worked example implies. Pre-bought time carries no scoping risk and no quote, so
+it should not cost what scoped project time costs.
+
+#### Expiry
+
+**Twenty-four months.** Long enough that nobody buys under pressure, short enough
+that the liability does not sit on the books forever. Anything shorter turns "buy
+support when you actually need support" back into a retainer with extra steps,
+which is the one thing this layer exists not to be.
+
+#### What things cost in credits
+
+| Work | Credits | Notes |
+|---|---|---|
+| Half-day workshop, up to 6 people | 3 | Preparation, delivery, written follow-up |
+| Each additional 6 people | +1 | A room of eighteen is three rooms |
+| One-hour tool session | 1.5 | |
+| Documenting one process | 2 | |
+| Small build change or integration | 1–3 | Scoped before it is spent |
+| Troubleshooting call-out | 1 | Minimum spend, then by the hour |
+
+#### When to revisit
+
+The version of this document before 29 August 2026 said these should be set
+alongside the first three real quotes, not before. They have been set before, on
+instruction. **That reasoning still holds and the numbers should be checked
+against the first three real quotes when they exist** — particularly the taper,
+which is currently a judgement about how scoping risk should be priced rather
+than an observation of how long the work actually takes.
 
 ---
 
