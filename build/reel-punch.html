@@ -2750,17 +2750,38 @@ function draw(time) {
        rect would be screen pixels and the stage is scaled. */
     const h = parseFloat(card.style.height) || 500
     const reach = (s.above ? -1 : 1) * (h / 2 + 92)
-    /* Retracts the way it came: the same travel, run back to zero. */
-    const back = seg(lt, s.dur - 0.46, s.dur - 0.06, EASE)
+
+    /* Timed to the wipe, and handing off to the next label so the two
+       read as one piece of text passing through the card rather than two
+       labels taking turns. Every label ENTERS from behind the card
+       centre and LEAVES back to it, and because the positions alternate,
+       an "above" label leaving downward is followed by a "below" label
+       continuing downward. The exit therefore has to finish exactly at
+       the boundary the next entry starts on, or the hand-off shows. */
+    const OUT_T = MORPH * 0.92
+    const back = seg(lt, s.dur - OUT_T, s.dur, EASE_IO)
 
     for (let i = 0; i < svcLabel.children.length; i++) {
-      /* Fired in sequence rather than arriving together, each one
-         overshooting its mark and settling. 0.34s of travel, not 0.81. */
-      const a = 0.20 + i * 0.058
-      const raw = seg(lt, a, a + 0.34, LINEAR)
-      const q = backOut(raw, 2.4)
       const el = svcLabel.children[i]
-      el.style.transform = `translateY(${(lerp(0, reach, q) * (1 - back)).toFixed(1)}px)`
+      /* Still fired in sequence, but over the wipe's own duration rather
+         than a third of it, and overshooting by about 25px rather than
+         59 — enough to register as a correction, not as a bounce. */
+      const a0 = 0.06 + i * 0.052
+      const raw = seg(lt, a0, a0 + MORPH * 0.88, LINEAR)
+      const q = backOut(raw, 1.05)
+
+      /* Idle drift while it is just being a label: a degree of rotation
+         and a few pixels, on periods long enough not to read as a loop,
+         phase-offset per word so they never line up. Damped to nothing
+         during the entry and the exit so it never fights the travel. */
+      const held = Math.min(raw, 1) * (1 - back)
+      const ph = i * 1.7
+      const rot = Math.sin(time * 0.53 + ph) * 1.1 * held
+      const dx = Math.sin(time * 0.37 + ph) * 5 * held
+      const dy = Math.sin(time * 0.61 + ph) * 4 * held
+
+      const y = lerp(0, reach, q) * (1 - back) + dy
+      el.style.transform = `translate(${dx.toFixed(2)}px, ${y.toFixed(1)}px) rotate(${rot.toFixed(2)}deg)`
       el.style.opacity = (Math.min(raw * 2.4, 1) - back).toFixed(3)
     }
     svcLabel.style.opacity = '1'
