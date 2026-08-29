@@ -2316,52 +2316,72 @@ if (HAS_CARDS) {
   }
 }
 
-/* Overshoots and settles. The animation brief rules out elastic easing;
-   this is here because it was asked for directly, and it is one constant
-   to take back out. */
-const EASE_BACK = bezier(0.34, 1.46, 0.64, 1)
+/* Overshoot, as an excursion rather than as an easing curve.
+
+   The first attempt put a back-ease on the box size, which cannot work:
+   the overshoot is then a percentage of the distance travelled, and
+   every card here is roughly the same size. A pillar at 470 becoming a
+   service at 540 travels 70px, so a 7% overshoot is 5px. Correct
+   arithmetic, invisible result.
+
+   So the excursion is separate from the travel. `pop` rises late, peaks
+   around 0.72 of the move and returns to exactly zero at the end, and it
+   is applied as a multiplier — which makes the overshoot a fixed
+   fraction of the card, not of how far the card happened to move. */
+const pop = (x) => {
+  const t = clamp(x, 0, 1)
+  return Math.sin(Math.PI * t) * Math.pow(t, 1.6) * 2.1
+}
+
+/* Standard back-out, for the content's travel. The overshoot here IS
+   meant to scale with the distance, because the content genuinely
+   travels — it comes in from the right, goes past its mark, corrects. */
+const backOut = (x, s = 1.9) => { const t = clamp(x, 0, 1) - 1; return t * t * ((s + 1) * t + s) + 1 }
 
 function drawCard(lt, s, prev) {
   const a = CARDS[prev.card] || CARDS[s.card]
   const b = CARDS[s.card]
-  /* Three curves, three jobs. The box overshoots and settles because
-     that was asked for. The radius follows the house arrival curve. The
-     wipe uses EASE_IO because an edge crossing a card is a traverse, not
-     an arrival — on EASE it was 63% across in its first 150ms and then
-     crawled, which reads as a jump rather than a wipe. Same mistake this
-     project already made once, on the site's own card wipe. */
-  const q = seg(lt, 0, MORPH, EASE_BACK)     // box + content: overshoot, settle
-  const r = seg(lt, 0, MORPH, EASE)          // radius: arrival
-  const p = seg(lt, 0, MORPH, EASE_IO)       // the wipe: even travel
+  const travel = seg(lt, 0, MORPH, EASE_OUT)   // the box gets there
+  /* Driven by the clock, not by `travel`. EASE_OUT is front-loaded, so
+     the box has effectively arrived by a third of the way through; a pop
+     keyed to that peaks at the same moment and just makes the card start
+     large and shrink in. Keyed to real time it peaks well after arrival,
+     which is the order the eye needs: get there, go past, come back. */
+  const over = pop(seg(lt, 0, MORPH, LINEAR))
+  const p = seg(lt, 0, MORPH, EASE_IO)         // the wipe: even travel
+  const slide = backOut(seg(lt, 0, MORPH * 1.15, LINEAR))
 
-  card.style.width = `${lerp(a.w, b.w, q).toFixed(1)}px`
-  card.style.height = `${lerp(a.h, b.h, q).toFixed(1)}px`
-  card.style.borderRadius = `${lerp(a.r, b.r, r).toFixed(1)}px`
+  /* 4.5% of the card, whatever its size. On a 540px card that is 24px
+     of visible overshoot rather than 5. */
+  const swell = 1 + 0.045 * over
+  card.style.width = `${(lerp(a.w, b.w, travel) * swell).toFixed(1)}px`
+  card.style.height = `${(lerp(a.h, b.h, travel) * swell).toFixed(1)}px`
+  card.style.borderRadius = `${lerp(a.r, b.r, travel).toFixed(1)}px`
 
   /* No filter: blur() anywhere near this. Blurring a card-sized subtree
      at a radius that changes every frame is re-rasterised every frame,
-     and it took the renderer down on a real machine roughly where the
-     card sections start. The wipe below carries the transition instead,
-     and directional motion blur belongs in the edit, where it is a real
-     directional blur rather than a gaussian. */
+     and it took the renderer down roughly where the card sections start.
+     Directional motion blur belongs in the edit. */
   const w = (p * 100).toFixed(2)
   for (const [name, el] of Object.entries(faces)) {
     const incoming = name === s.card
     const outgoing = name === prev.card && !incoming
     if (!incoming && !outgoing) { el.style.opacity = '0'; continue }
 
-    /* Incoming is revealed left to right; outgoing is consumed the same
-       way, so one edge crosses the card rather than two things fading
-       through each other. Once the edge has passed, the outgoing face is
-       switched off rather than left fully clipped — a clipped element is
-       still a composited one, and leaving it live meant two faces
-       claiming to be visible at the same time. */
+    /* Once the edge has passed, the outgoing face is switched off rather
+       than left fully clipped — a clipped element is still composited. */
     if (outgoing && p > 0.999) { el.style.opacity = '0'; continue }
     el.style.opacity = '1'
     el.style.clipPath = incoming
       ? `inset(0 ${(100 - p * 100).toFixed(2)}% 0 0)`
       : `inset(0 0 0 ${w}%)`
-    el.style.transform = `scale(${(incoming ? lerp(0.96, 1, q) : 1).toFixed(4)})`
+
+    /* The incoming content flies in from the right, overshoots its mark
+       by about 15px and corrects. The outgoing content is pushed left as
+       it goes, so the two are never simply sitting on top of each other. */
+    el.style.transform = incoming
+      ? `translateX(${lerp(150, 0, slide).toFixed(1)}px) scale(${(1 + 0.03 * over).toFixed(4)})`
+      : `translateX(${(-46 * travel).toFixed(1)}px)`
   }
 
   /* The edge rides the wipe and leaves with it. */
