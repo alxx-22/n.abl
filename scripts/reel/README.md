@@ -11,6 +11,7 @@ Two cuts off one player:
 | | |
 |---|---|
 | `reel.html` | **Talk over it.** 50s, camera moves between full frame, top band, bottom band and absent. The six scenes play in a fixed band. |
+| `reel-punch.html` | **Punch cut.** 22.6s. A typed opener with a two-tone colour turn, the three pillars as words receding through a burst, then the six services as fast cards. |
 | `reel-brand.html` | **Brand cut.** 25.6s, no camera and no type outside the card. One container morphs through the mark, the three pillars and the six services. |
 
 The brand cut is built after an iOS Live Activity: a compact pill grows
@@ -114,3 +115,25 @@ than four seconds.
 `object-position: 50% 30%` on the video is not a taste call — a
 bottom-half camera centres its subject at y1400, underneath the caption
 overlay. It pulls the face up into the part of the band that survives.
+
+
+## A note on the punch cut's background
+
+Its reference runs saturated cyan and magenta light tunnels — the one
+thing the animation brief rules out by name (no neon, no SaaS blue, no
+purple gradients). `punch.js` reproduces the *motion* — radial streaks
+rotating and warping outward — in amber on espresso instead. If that
+call is wrong, `BURST_HUES` at the top of the file is the whole change.
+
+Performance is the reason the burst looks the way it does. Three
+versions were measured at 1080x1920:
+
+| | fps |
+|---|---|
+| Streaks + a full-frame radial gradient, redrawn each frame | 29 |
+| Painted once into a 2208 square, moved by CSS transform | 12 |
+| Streaks redrawn into a 600 backing store, core glow in CSS | 57 |
+
+A `text-shadow: 0 0 70px` on the receding word cost a further 18fps on
+its own — a blur re-rasterises at every scale — so the bloom behind the
+word is `#burstCore`, which only changes opacity.

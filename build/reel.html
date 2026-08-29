@@ -110,6 +110,30 @@ body.no-guides #camKey::before,body.no-guides #camKey::after{display:none}
 .sceneHost{position:absolute;inset:0}
 .sceneHost svg{display:block;width:100%;height:100%}
 
+/* ---------- burst, typewriter, receding word ---------- */
+#burst{position:absolute;left:50%;top:50%;width:1200px;height:1200px;opacity:0;
+  pointer-events:none;transform:translate(-50%,-50%);will-change:opacity}
+#burstCore{position:absolute;left:50%;top:50%;width:1250px;height:1250px;opacity:0;
+  pointer-events:none;transform:translate(-50%,-50%);border-radius:50%;display:block;
+  will-change:transform,opacity;
+  background:radial-gradient(circle,rgba(233,172,87,.22) 0%,rgba(184,119,24,.07) 42%,transparent 70%)}
+
+#wordWrap{display:grid;place-items:center;pointer-events:none;overflow:hidden}
+#word{font-family:var(--display);font-weight:700;font-size:186px;line-height:1;
+  color:var(--cream100);white-space:nowrap;opacity:0;text-transform:uppercase;
+  will-change:transform,opacity,letter-spacing}
+/* No text-shadow. A 70px blur on a word that rescales every frame is
+   re-rasterised every frame: it cost 18fps on its own. The bloom behind
+   the word is #burstCore, which only changes opacity and scale. */
+
+#twWrap{display:grid;place-items:center;padding:0 90px;pointer-events:none;opacity:0}
+#tw{margin:0;font-family:var(--display);font-weight:500;font-size:82px;line-height:1.18;
+  letter-spacing:-.02em;text-align:center;text-wrap:balance}
+.twLead{color:var(--cream100)}
+.twRest{color:var(--amber400)}
+.twCaret{display:inline-block;width:6px;height:.86em;background:var(--amber400);
+  vertical-align:-.08em;margin-left:.1em;border-radius:1px}
+
 /* ---------- the morphing card ---------- */
 #cardWrap{display:grid;place-items:center;opacity:0;pointer-events:none}
 #card{position:relative;overflow:hidden;background:var(--s2);
@@ -321,6 +345,15 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid
           <rect id="lg-dot" x="78" y="69" width="13" height="13" fill="var(--amber400)"/>
         </svg>
       </div>
+      <i id="burstCore"></i>
+      <canvas id="burst"></canvas>
+
+      <div class="layer" id="wordWrap"><span id="word"></span></div>
+
+      <div class="layer" id="twWrap">
+        <p id="tw"><span class="twLead"></span><span class="twRest"></span><i class="twCaret"></i></p>
+      </div>
+
       <!-- One container, morphing. Never removed, never replaced. -->
       <div class="layer" id="cardWrap"><div id="card"></div></div>
       <div id="sceneGlow"></div>
@@ -2233,6 +2266,13 @@ const logoDot = $('lg-dot')
 const rule    = $('rule')
 const cardWrap = $('cardWrap')
 const card     = $('card')
+const burst    = $('burst')
+const bctx     = burst.getContext('2d')
+const burstCore = $('burstCore')
+const wordWrap = $('wordWrap')
+const wordEl   = $('word')
+const twWrap   = $('twWrap')
+const twEl     = $('tw')
 const typeBox  = $('type')
 const guides   = $('guides')
 
@@ -2399,6 +2439,34 @@ function draw(time) {
   camBox.style.width  = `${rect.w.toFixed(1)}px`
   camBox.style.height = `${rect.h.toFixed(1)}px`
   camBox.style.opacity = on.toFixed(3)
+
+  /* ---- burst, typewriter, receding word ---- */
+  if (typeof drawBurst === 'function') {
+    /* Backing store from the constant the drawing code uses. Setting it
+       in the markup let the two drift: the canvas stayed 1200 while
+       BURST_SIZE went to 600, and the whole burst drew into the
+       top-left quadrant. */
+    if (burst.width !== BURST_SIZE) { burst.width = BURST_SIZE; burst.height = BURST_SIZE }
+    const power = s.burst ? seg(lt, 0, 0.34, EASE_OUT) - seg(lt, s.dur - 0.40, s.dur, EASE) : 0
+    burst.style.opacity = power.toFixed(3)
+    /* Skipped entirely once dark, but cleared once on the way out so a
+       dead burst is not left painted under the next section. */
+    if (power > 0.004 || burst.dataset.lit === '1') {
+      drawBurst(bctx, lt, power)
+      moveCore(burstCore, lt, power)
+      burst.dataset.lit = power > 0.004 ? '1' : '0'
+    }
+
+    if (s.word) {
+      if (wordEl.textContent !== s.word) wordEl.textContent = s.word
+      drawWord(wordEl, lt, s)
+    } else wordEl.style.opacity = '0'
+
+    if (s.type) {
+      twWrap.style.opacity = (seg(lt, 0, 0.2, EASE_OUT) - seg(lt, s.dur - 0.34, s.dur, EASE)).toFixed(3)
+      drawTypewriter(twEl, lt, s)
+    } else twWrap.style.opacity = '0'
+  }
 
   /* ---- the morphing card ---- */
   if (HAS_CARDS && s.card) drawCard(lt, s, prev)
