@@ -14,8 +14,10 @@ Nothing new is invented here. No new colour, no fourth typeface, no second
 accent, no gradient. The only design tokens the film uses are the colours, the
 fonts and the contrast rules already in this folder.
 
-Status: planned, not built. One input is still missing, and it is named in
-section 2 so nobody starts work assuming it was measured.
+Status: planned, not built, but the mechanic has been prototyped. A working
+animatic runs the whole eight bars against a variable tempo, and section 16
+records the four things building it changed. One input is still missing, and it
+is named in section 2 so nobody starts work assuming it was measured.
 
 Written 2026-08-31.
 
@@ -440,21 +442,28 @@ and it is about to become the instrument.
 
 The pen does not stop for twelve beats. Grounds invert on 2.1, 3.1 and 4.1.
 
-| Segment | Beats | Path | Length | Speed |
-|---|---|---|---|---|
-| Left stem, up | 2.1 to 2.4 | y 82 to 48 | 34 units | 11.33 units per beat |
-| Shoulder | 2.4 to 3.4 | semicircle, r 20 | 62.83 units | 10.47 units per beat |
-| Right stem, down | 3.4 to 4.4 | y 48 to 82 | 34 units | 11.33 units per beat |
+**The pen runs at constant speed for the whole twelve beats.** Its leading edge
+starts one stroke unit onto the left stem, at path length 13, and finishes at the
+end of the right stem, at path length 130.8. That is 117.8 units in twelve beats,
+so 9.82 units per beat throughout.
 
-Three, six and three beats. The `n` divides almost exactly one to two to one by
-arc length, so a 3/6/3 allocation gives a pen speed that varies by 8 per cent
-across the whole move, and the slow part is the turn. That is the right way round.
-It reads as an ease through the corner and it was not designed in, it fell out of
-the letter.
+| Segment | Path | Length | Leading edge crosses at |
+|---|---|---|---|
+| Left stem, up | y 82 to 48 | 34 units | starts at 13, tangent at 34 |
+| Shoulder | semicircle, r 20 | 62.83 units | beat 2.1 of the twelve |
+| Right stem, down | y 48 to 82 | 34 units | beat 8.5 of the twelve |
 
-Do not try to make it exactly constant. Exactly constant needs 5.54 beats on the
-shoulder, and then nothing lands on a downbeat, which costs far more than an 8 per
-cent variation gains.
+The segment boundaries fall at beat 2.1 and beat 8.5, and **they are not meant to
+land on downbeats.** The ground inversions and the pillar words land on the bar
+lines at beats 1, 5 and 9 regardless of where the pen happens to be, which is what
+lets the motion stay continuous while the colour stays percussive. Rule 5.4, doing
+its job.
+
+An earlier version of this file allocated three, six and three beats to the three
+segments so the boundaries would land on bar lines. That is worse twice over: it
+varies the pen speed by 8 per cent and then by nearly 40 per cent once the pen's
+own body is accounted for, and it buys nothing, because nothing needs to happen at
+a boundary.
 
 | Beat | What happens |
 |---|---|
@@ -494,14 +503,19 @@ belongs.
 | 5.3+ | 06 Train your team |
 | 5.4 | Rest. Nothing. This beat is the wind-up for the contraction. |
 
-Six eighths, three beats, then a beat of air. Each item masks in through the
-letter's counter and cuts out on the next eighth. The index number is mono, the
-name is display. The dot pulses on each of the six, scaling 1.0 to 1.12 and back
-inside an eighth, which keeps the amber as the film's metronome.
+Six eighths, three beats, then a beat of air. **The counter carries the index
+number, not the name.** The number is set large in the mono face, in the accent,
+and clipped to the counter so the arch cuts it. The category name lands in the
+type block below, in the display face.
 
-The counter is 27 units wide by about 47.5 tall, so 405 by 713 px at 15 px per
-unit. Two or three lines of type fit. Set them to fit the window rather than
-scaling the window to the type.
+Splitting them is the point. The counter is 27 units wide by about 47.5 tall,
+which is 405 by 713 px at 15 px per unit: a tall, narrow window. Two digits fill
+it. "Understand your data" set to fit it is three lines of small type inside a
+letter, which is unreadable at an eighth of a beat and wastes the window on
+something it is the wrong shape for.
+
+The dot pulses on each of the six, scaling 1.0 to 1.12 and back inside an eighth,
+which keeps the amber as the film's metronome.
 
 ### Bar 6. The rule, and the contraction. Ground: light
 
@@ -525,7 +539,7 @@ size. The mark does not overshoot.
 | Beat | What happens |
 |---|---|
 | 7.1 | Ground inverts to dark, and stays dark to the end. The `a`, `b` and `l` reveal by mask, staggered an eighth apart, a quarter beat each, in reading order. They are revealed rather than drawn: the pen is not available, because the pen is about to be the full stop. |
-| 7.2 | **The dot lands** in the full-stop position, 7 units from the `n` and 7 from the `a`. Hard arrival on the beat. The one permitted amber bloom, `--glow-accent` at 0 0 32px rgba(233,172,87,0.20), rises over half a beat and stays. This is the film's loudest frame and it should carry a single transient in the audio if one can be placed there. |
+| 7.2 | **The dot lands** in the full-stop position, 7 units from the `n` and 7 from the `a`. It gets there by a straight horizontal slide of 20 units: see section 16.3, it is already at the right height. Hard arrival on the beat. The one permitted amber bloom, `--glow-accent` at 0 0 32px rgba(233,172,87,0.20), rises over half a beat and stays. This is the film's loudest frame and it should carry a single transient in the audio if one can be placed there. |
 | 7.3 | "We make your business work smarter" masks in below the wordmark, Space Grotesk 600, cream. |
 | 7.4 | Held. |
 
@@ -679,7 +693,69 @@ Two, and neither blocks a start on section 11 step 2.
 
 ---
 
-## 15. Sources
+## 16. What building the animatic changed
+
+A working animatic runs the whole eight bars in a browser, in SVG, against the
+real geometry and a variable tempo. It exists to find the things that are only
+findable by drawing them, and it found four. All four are already folded into the
+sections above; they are collected here so the reasoning is not lost.
+
+### 16.1 The riding pillar term knocks through the stroke
+
+There is no room beside a 795 px letter for a 96 px word. Setting the term
+beside the pen puts it off the frame, and shrinking it until it fits makes the
+one word the bar exists to deliver the smallest thing in it.
+
+So the term rides at the pen's height across the full frame, always horizontal,
+never rotated, and **inverts where the letter crosses it**: cream on the ground,
+espresso where it passes over the drawn stroke, and espresso over the accent head
+as well, which is the 9.76:1 pair from section 3.2. It is readable at every frame
+and it restates the film's own colour rule at word scale rather than introducing
+a second idea.
+
+Two implementation notes, both of which cost a rebuild to learn:
+
+- **It has to be a mask, not a clip path.** A clip path clips by fill geometry
+  and ignores stroke, so clipping the knocked copy to the letter path knocks out
+  the whole arch instead of the 13-unit stroke.
+- **The mask has to carry the same dash state as the trail.** Otherwise the word
+  inverts over parts of the letter that have not been drawn yet, which looks like
+  a rendering fault rather than a design.
+
+### 16.2 Every frame mints its own ids
+
+Clip paths, masks and gradients are rebuilt each frame, and reusing an id across
+frames means one frame borrowing the previous frame's dead resource: the
+reference silently stops resolving and the effect vanishes with no error.
+
+`src/components/scenes/engine.js` already says this, in the comment above
+`nextUid`. It is worth repeating here because it is invisible until it bites, and
+it bites as "the mask does nothing", which sends you looking at the mask.
+
+### 16.3 The last move is a slide, not a hop
+
+A 13-unit pen whose leading edge stops on the baseline has its centre 6.5 units
+above the baseline. The square full stop occupies y 69 to 82, so its centre is
+also 6.5 units above the baseline.
+
+**They are at exactly the same height.** So the final move is not a hop up onto
+the baseline. It is a straight horizontal slide of 20 units, from the centre of
+the right stem's end to the centre of the full stop, and it lands level because
+it never left the level. Rule 5.1 satisfied without trying.
+
+### 16.4 The lock-up sits above the safe line, not below it
+
+Stacking the promise, the descriptor, the terms and the call to action under the
+wordmark by eye put the URL at y 1819, which is 239 px below the safe line at
+1580 and straight behind the platform's own call-to-action tray.
+
+The lock-up is therefore specified as absolute positions per ratio rather than as
+offsets from the wordmark, and section 13's safe-zone check is the one that
+catches it. Measure it on a handset with the real furniture on screen.
+
+---
+
+## 17. Sources
 
 Brand facts come from this folder and from the repository. The outside reading
 behind sections 2.5, 5 and 8:
