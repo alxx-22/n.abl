@@ -14,6 +14,23 @@ Nothing new is invented here. No new colour, no fourth typeface, no second
 accent, no gradient. The only design tokens the film uses are the colours, the
 fonts and the contrast rules already in this folder.
 
+> **The film concept in this file is superseded.**
+> The reel is now a flowing ribbon on one large map with a 3D camera flying over
+> it, running twelve bars rather than eight. The build brief is
+> [`intro-reel-prompt.md`](intro-reel-prompt.md), which is written to be handed
+> to a fresh After Effects session.
+>
+> What still stands here, unchanged and referenced by that brief: the tempo
+> measurement protocol in section 2, the palette and the inversion rule in
+> section 6, the type in section 7, the safe zones in section 8, the words in
+> section 9, the checks in section 13, and the geometric findings in section 16.
+>
+> What is dead: the eight-bar cut in section 10. It ran at half the pace it
+> needed, roughly ten events in nineteen seconds, and the ribbon version replaces
+> it. The reasoning in sections 3 to 5 is still the reasoning; the ribbon is the
+> same 13-unit stroke, drawn by the same head, with the constraint that every
+> curve is a true circle carried over from the letterform to the flight path.
+
 Status: planned, not built, but the mechanic has been prototyped. A working
 animatic runs the whole eight bars against a variable tempo, and section 16
 records the four things building it changed. One input is still missing, and it
