@@ -115,6 +115,7 @@ After those six, this folder is closed until the identity itself changes.
 | `brand-guidelines.md` | The specification. Palette with measured contrast, the deep-amber light-ground rule, the type stack and why it is self-hosted, the logo's construction, clear space, minimum sizes, misuse. | You are building anything that renders the brand, or reviewing something that does. |
 | `voice-and-tone.md` | How n.abl writes. British English, plain and direct, problem-led not tool-led, the things that must be said correctly, and the things that must never be invented. | You are writing copy, an email, a proposal or a page. |
 | `asset-inventory.md` | What is actually in `public/brand/`, `public/fonts/` and `logos/`, file by file with sizes and dimensions. What is missing, and the fix for each gap. | You need an asset, or you are working through the checklist above. |
+| `intro-reel.md` | The introduction reel: the idea, the beat grid, the motion grammar, the inversion rule and the beat sheet. Planned, not built. | You are making anything that moves with the name on it. |
 
 ---
 
