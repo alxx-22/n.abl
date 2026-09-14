@@ -157,7 +157,37 @@ before more is built on top of the name.
 
 ---
 
-## 6. Re-measuring
+## 6. What was actually verified
+
+Not "should work" — observed. Everything here was run before the work was
+committed.
+
+| Check | Result |
+|---|---|
+| `npm run test:ui` (Playwright, full suite) | **90 passed, 0 failed** |
+| `npm run test:routes` (`wrangler dev --local`) | **17 passed, 0 failed** — `/crm`, `/portal`, `/team` still get the shell |
+| `npm run test:seo` | **29 passed** |
+| All four routes in Chromium | Render, no console errors, nav links intact |
+| Trailing-slash fix, under `wrangler dev` | `/privacy` → **200**; `/privacy/` → 307 → `/privacy`. The reverse of before, and now matching the sitemap |
+| `/privacy` text without JavaScript | **8,777 characters** |
+| JSON-LD against the real CSP (`script-src 'self'`) | **Survives** — parsed from the DOM, no violations, app still boots |
+| Build determinism | Two consecutive builds, identical MD5 |
+| Secrets in prerendered HTML | None. The only match was the word "Web3Forms" in the privacy policy, which is a named processor and meant to be public |
+
+The checks were also verified to be capable of failing, which is the part people
+skip. Reintroducing the original bug — emptying `<div id="root">` — fails
+`check-seo.mjs` with exit 1, and pointing a canonical at the wrong page fails it
+too. A check that has never been seen to fail is a check nobody should trust.
+
+The CSP one was worth doing. JSON-LD is an inline `<script>` and the site's
+policy is `script-src 'self'` with no `'unsafe-inline'`. The spec says a
+non-JavaScript MIME type is a data block and is not blocked, but a silently
+blocked entity block would have undone the structured-data work with no visible
+symptom, so it was tested rather than trusted.
+
+---
+
+## 7. Re-measuring
 
 ```sh
 npm run test:seo        # built output
