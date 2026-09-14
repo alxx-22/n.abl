@@ -1,5 +1,13 @@
 # SEO and metadata
 
+> **Superseded in part, September 2026.** Four of this file's seven checklist
+> items have since shipped, and the judgement that prerendering was not worth
+> it has been revisited: the home page is in the same client-rendered state as
+> the legal pages, and no major AI crawler executes JavaScript. See
+> [`seo-strategy-2026-09.md`](seo-strategy-2026-09.md). Everything below about
+> deliberate decisions — no analytics, self-hosted fonts, strict CSP — still
+> stands.
+
 What the site tells a search engine, a social scraper and a browser today, what
 it does not, and the decisions behind both. Recorded 2026-08-15.
 
