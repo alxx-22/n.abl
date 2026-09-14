@@ -22,6 +22,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { registerHook } from './hooks.mjs'
+
 const arg = (flag, fallback) => {
   const i = process.argv.indexOf(flag)
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : fallback
@@ -29,6 +31,28 @@ const arg = (flag, fallback) => {
 const IN = arg('--in', '.sourcing/promote-batch.json')
 const OUT = arg('--out', '.sourcing/observations.json')
 const CONCURRENCY = Number(arg('--concurrency', 12))
+
+/* Where the page text goes for leads the regexes could not do anything
+   with.
+
+   Only those. A lead that already has a register hook or a real page
+   signal is finished, and keeping a copy of its website would be
+   holding somebody's content for no reason. This cache exists so
+   scan.mjs can read the page without fetching it a second time — their
+   server, not ours, and asking twice for the same thing in one pipeline
+   is rude.
+
+   scan.mjs deletes it when it is done. .gitignore covers .sourcing. */
+const CACHE = arg('--cache', '.sourcing/pages')
+
+/* The signals that mean "nothing specific enough to write from". These
+   are exactly the leads scan.mjs is for: describes_itself produced 68
+   of the August batch's 77 drafts and is the reason any of this
+   happened. */
+const WEAK = new Set(['describes_itself', 'nothing_specific'])
+
+const cacheName = (company) =>
+  company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)
 const UA = 'n.abl-research/1.0 (+https://nabl.agency; hello@nabl.agency)'
 
 async function get(url) {
@@ -143,10 +167,24 @@ function describeFromTitle(title, company) {
 
 async function observe(lead) {
   const out = { company: lead.company, website: lead.website || null, signal: null, observation: null }
+
+  /* Registers before the page, which is the ordering decided in
+     business/11-outreach/personalisation-and-hooks.md.
+
+     A CQC registration or an ICO entry is dated, is what a regulator
+     actually recorded, and already carries its provenance in the
+     pipeline that fetched it. A homepage is what a business's marketing
+     says about itself, read by eight regexes. When both are available
+     the register wins, and it is not close. */
+  const hook = registerHook(lead)
+  if (hook) return Object.assign(out, hook)
+
   if (!lead.website) {
-    /* No site to read. The register still gives one true thing, and saying it
-       plainly is better than inventing something warmer. */
+    /* No register hook and no site to read. Say the one plain true thing
+       rather than inventing something warmer. */
     out.signal = 'register_only'
+    out.source = 'register'
+    out.evidence = 'Companies House bulk register'
     out.observation = lead.trading_years
       ? `you have been trading ${lead.trading_years} years and I could not find a website for you`
       : 'I could not find a website for you'
@@ -165,6 +203,8 @@ async function observe(lead) {
     if (s.test(html, text, title)) {
       out.signal = s.key
       out.observation = s.say(captured)
+      out.source = 'page'
+      out.evidence = lead.website
       return out
     }
   }
@@ -174,10 +214,13 @@ async function observe(lead) {
      Coach Company", "Self-Drive Van Rental" — they wrote that, so quoting it
      back is specific and cannot be wrong. The company name is stripped out so
      the sentence does not just repeat who they are. */
+  out._text = text
   const described = describeFromTitle(title, lead.company)
   if (described) {
     out.signal = 'describes_itself'
     out.observation = `your site describes you as ${described}`
+    out.source = 'page'
+    out.evidence = lead.website
     return out
   }
 
@@ -197,7 +240,14 @@ let done = 0
 async function worker() {
   while (queue.length) {
     const lead = queue.shift()
-    results.push(await observe(lead))
+    const r = await observe(lead)
+    if (WEAK.has(r.signal) && r._text) {
+      fs.mkdirSync(CACHE, { recursive: true })
+      fs.writeFileSync(path.join(CACHE, `${cacheName(r.company)}.txt`), r._text)
+      r.cached = true
+    }
+    delete r._text
+    results.push(r)
     if (++done % 25 === 0) console.log(`  ${done}/${leads.length}`)
   }
 }
@@ -205,9 +255,13 @@ await Promise.all(Array.from({ length: CONCURRENCY }, worker))
 
 const tally = {}
 for (const r of results) tally[r.signal] = (tally[r.signal] || 0) + 1
+const bySource = {}
+for (const r of results) bySource[r.source || 'none'] = (bySource[r.source || 'none'] || 0) + 1
 fs.writeFileSync(OUT, JSON.stringify({ generated_at: new Date().toISOString(), results }, null, 1))
 console.log(`
   ${results.filter((r) => r.observation).length}/${results.length} have something specific to say
+  ${Object.entries(bySource).map(([k, v]) => `${v} from the ${k}`).join(', ')}
+  ${results.filter((r) => r.cached).length} pages cached for scan.mjs to read
 
 ${Object.entries(tally).sort((a, b) => b[1] - a[1]).map(([k, v]) => `  ${String(v).padStart(4)}  ${k}`).join('\n')}
 

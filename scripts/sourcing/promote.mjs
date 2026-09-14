@@ -354,6 +354,24 @@ fs.writeFileSync(OUT.replace(/\.sql$/, '-batch.json'), JSON.stringify(
     phone: l._phone,
     trading_years: (pool[i]?.triage_for || []).find((r) => /^trading \d+ years/.test(r))?.match(/\d+/)?.[0] || null,
     sector: (pool[i]?.triage_for || []).find((r) => r.startsWith('sector hint:'))?.replace('sector hint: ', '') || null,
+
+    /* The register fields, carried through so observe.mjs can say
+       something a homepage cannot.
+
+       merge.mjs has always built these from the five registers, and
+       until September nothing downstream read them: observe.mjs
+       fetched the marketing page and ran regexes over it instead,
+       which is why 68 of the August batch's 77 drafts shared one
+       observation. See scripts/sourcing/hooks.mjs. */
+    cqc_location_id: pool[i]?.cqc_location_id || null,
+    specialisms: pool[i]?.specialisms || null,
+    ico_registration: pool[i]?.ico_registration || null,
+    charity_number: pool[i]?.charity_number || null,
+    fhrs_id: pool[i]?.fhrs_id || null,
+    hygiene_rating: pool[i]?.hygiene_rating || null,
+    trading_address: pool[i]?.trading_address || null,
+    registered_address: pool[i]?.registered_address || null,
+    incorporated: pool[i]?.incorporated || null,
   })), null, 1))
 
 if (DRY) {

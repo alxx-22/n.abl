@@ -3,9 +3,10 @@
 How a first contact gets the one true thing it says, and where that thing comes
 from.
 
-**Status: decided, not built.** This records a design decision taken on
-13 September 2026 and the options rejected on the way to it, so that none of it
-has to be argued twice.
+**Status: decided 13 September, built 14 September.** Steps 1, 2 and 4 of §6 are
+done: [`hooks.md`](hooks.md) and `scripts/sourcing/hooks.mjs` carry the library,
+`observe.mjs` reads the registers first, and `scripts/sourcing/scan.mjs` handles
+the residual and is waiting on an API key. Step 3, the drip, is not started.
 
 **Depends on:** `10-lead-sourcing` (the registers), `approval-gates.md` (gate 2
 is where the copy is checked), `deliverability.md` (the cadence).
@@ -193,21 +194,31 @@ client's problem, not by rebuilding working code.
 
 ## 6. Next actions
 
-1. **Write `hooks.md`** — the library in §3, fleshed out, each hook with an
-   example sentence and its non-applicability rule. No dependency. This is the
-   "sales language" artefact and only Alex can do the final pass, because the
-   point of it is that it sounds like him.
-2. **Wire the registers into `observe.mjs`** — rank hooks per lead from fields
-   `merge.mjs` already produces. No key, no provider, no compliance paperwork.
-   Then count how many leads still have no hook.
+1. ~~Write `hooks.md`~~ — **done.** Seven register hooks in
+   `scripts/sourcing/hooks.mjs`, each with its non-applicability rule, and
+   [`hooks.md`](hooks.md) for the editorial judgement behind them.
+   `npm run test:hooks` covers the ordering and the rules.
+2. ~~Wire the registers into `observe.mjs`~~ — **done.** `promote.mjs` now
+   carries the CQC, ICO, FSA, charity and Companies House fields through, and
+   `observe.mjs` tries a register hook before it fetches anything.
 3. **Build the drip** to the state machine `sequence-design.md` already
-   specifies. It routes the timer as Class 1, £0, and warns against over-tooling
-   it.
-4. **Only then decide on a model**, for the residual from step 2, under the
-   prompt rule in §5.
+   specifies. Class 1, £0, and it warns against over-tooling it. **Not started**
+   — the one piece of §6 still outstanding.
+4. ~~Decide on a model for the residual~~ — **built, waiting on a key.**
+   `scripts/sourcing/scan.mjs`, Gemini Flash-Lite, one call per residual lead.
+   `npm run test:scan` proves the guard rejects a fabricated quote.
 
-Steps 1 and 2 are independent of everything blocking the rest of this folder.
-They can be done before the sending domain, the provider, or the warm-up.
+### What Alex has to do
+
+1. **Read the sentences in `hooks.mjs` and make them sound like you.** They are
+   correct and they are in my voice, not yours, which is the one thing that
+   cannot be delegated. `hooks.md` §4 is the guidance.
+2. **Get a Gemini key** at aistudio.google.com/apikey — free, no card — and
+   check what RPM and RPD your dashboard actually shows. Google no longer
+   publishes those figures, so `scan.mjs` defaults to a conservative guess and
+   takes `GEMINI_RPM` and `GEMINI_RPD` from the environment.
+3. **Run it once with `--dry-run`** before spending a single request. It prints
+   which leads would be sent and how much text, and needs no key.
 
 ---
 
