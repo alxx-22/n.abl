@@ -39,3 +39,9 @@ npm-debug.log*
 # and bundled into the Worker at build time. Generated, so the markdown is
 # the source of truth and this would only ever be a stale copy of it.
 worker/knowledge.generated.ts
+
+# Credentials that belong to a person rather than to the project. Nothing
+# here is required to build or deploy; scripts/seo-report.mjs reads its
+# Google service-account key from GSC_KEY_FILE and explains itself when
+# that is unset, rather than failing.
+.secrets/
