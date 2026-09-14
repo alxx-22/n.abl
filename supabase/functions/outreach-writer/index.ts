@@ -1,41 +1,53 @@
 /* ============================================================
-   THE OUTREACH WRITER
+   THE OUTREACH WRITER: THREE AGENTS, ONE ARGUMENT
 
-   Assesses a lead against the service categories, then writes the one
-   true thing a first contact says about it. A few leads at a time,
-   woken by pg_cron, so it runs with the laptop shut.
+   For each lead, three models negotiate over what a stranger reads
+   first. A few leads at a time, woken by pg_cron, so it runs with the
+   laptop shut.
 
-   WHAT IT DOES NOT DO: send anything. approval-gates.md says both gates
-   are human and both are before sending. This fills the queue up to the
-   gate and stops.
+     scout    Reads the business's own page and the public register
+              facts. Produces the assessment, then ARGUES: several
+              cases for what the opening clause could be, each with
+              its evidence, its reason and its risk.
 
-   TWO STAGES, TWO MODELS
+     editor   Never sees the page. Sees only the cases as argued.
+              Promotes one, says why the others lost, briefs the
+              writer. May promote nothing.
 
-     assess  Flash-Lite, cold. Given the register facts, the sector
-             prior and the page, decide what kind of web presence this
-             is, which service categories plausibly fit, and what would
-             confirm or kill each. Analysis, not prose.
-     write   Flash, hot. Turn the strongest fit into the clause a
-             stranger actually reads.
+     writer   Writes what it was handed, or REFUSES with a reason.
+              A refusal goes back to the editor, which promotes a
+              different case, up to max_rounds.
 
-   THE THING TO UNDERSTAND BEFORE EDITING THIS
+   WHY THE EDITOR IS BLIND
 
-   A website assessment is a HYPOTHESIS, never a qualification. Every
-   disqualifying signal in 01-positioning/service-categories.md is
-   learned in conversation and invisible from outside: "they will not
-   let you watch the task being done", "they can name the person but not
-   the process", "nobody will own the data's accuracy". So every
-   category verdict carries confirm_question and disqualifier. A fit
-   score without those is a guess with a number attached, and that is
-   how a business gets mischaracterised and a first contact wasted.
-   There is one first contact per lead and it does not come back.
+   Not a limitation - the mechanism. A case that needs the page to make
+   sense will not survive the business reading it either, because they
+   are not holding our research, they are holding one sentence. Judging
+   the argument on its own is the same test the recipient applies.
 
-   THE PRIOR IS A STARTING POINT, NOT AN ANSWER
+   It is safe because every quote is checked against the page in code
+   before the editor ever sees it, so the editor can only choose
+   between things already known to be true.
 
-   The sector hint came from a keyword triage and is wrong often enough
-   to matter - a concert hall is currently filed as a professional
-   practice. The assessor may contradict it from the page and says so in
-   sector_correction. A prior that cannot be overruled is a prejudice.
+   WHAT IT DOES NOT DO: send anything. approval-gates.md says both
+   gates are human and both are before sending. This fills the queue up
+   to the gate and stops.
+
+   WHERE THE DECISIONS LIVE
+
+   Almost nothing in this file is a decision. The vocabulary, the model
+   chain, the rate limits, the prompts, the register-fact rules, the
+   page-source patterns and every threshold are rows, fetched in one
+   outreach_config() call per tick. Adding a service category, swapping
+   a deprecated model or retuning a threshold is an INSERT and takes
+   effect within ten minutes.
+
+   What stays here is the guards, in ./guards.mjs, and they name no
+   term: they ask the registry which terms demand evidence rather than
+   knowing that the word is "observed". A guard the registry could edit
+   would not be a guard. The negotiation loop lives there too, for a
+   duller reason - this file needs Deno, guards.mjs does not, and the
+   editor-writer handoff is too important to be tested by deploying it.
 
    WHAT LEAVES THE BUILDING
 
@@ -44,134 +56,26 @@
    from the database.
    ============================================================ */
 
+import {
+  makeVocab, coerce, applyRequirement, validateServices, validateAngles,
+  validatePromotion, validateClause, buildFacts, detectSignals, clampSettings,
+  negotiate,
+} from './guards.mjs'
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? ''
 const GEMINI_BASE = Deno.env.get('GEMINI_BASE_URL') ??
   'https://generativelanguage.googleapis.com'
 
-/* Free-tier limits per model, lower of two third-party trackers read on
-   14 Sep 2026. Google's own page no longer prints a free-tier table, so
-   these are what we TRY. A 429 is what we BELIEVE: outreach_record_call
-   stores the ceiling actually hit and the budget function honours it. */
-const MODELS: Record<string, { rpd: number; gapMs: number }> = {
-  'gemini-3.5-flash-lite': { rpd: 1000, gapMs: 4_000 },
-  'gemini-2.5-flash-lite': { rpd: 1000, gapMs: 4_000 },
-  'gemini-3.8-flash': { rpd: 250, gapMs: 6_000 },
-  'gemini-2.5-flash': { rpd: 250, gapMs: 6_000 },
-}
-const CHAINS: Record<'assess' | 'write', string[]> = {
-  assess: ['gemini-3.5-flash-lite', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
-  write: ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
-}
-
-const BATCH = Number(Deno.env.get('OUTREACH_BATCH') ?? 3)
-const MAX_PAGE_CHARS = 9000
-const UA = 'n.abl-research/1.0 (+https://nabl.agency; hello@nabl.agency)'
-
-const CATEGORIES = [
-  'save_time', 'reduce_mistakes', 'understand_data', 'build_new', 'fix_something',
-]
-const FITS = ['strong', 'possible', 'unlikely', 'ruled_out']
-const CONFIDENCES = ['observed', 'inferred', 'guessed']
-const PRESENCE = ['none', 'social_only', 'placeholder', 'brochure', 'transactional']
-const CAPACITY = ['likely', 'mixed', 'unlikely']
-const VOLUME = ['high', 'moderate', 'low']
-const CREDITS = ['build', 'assist', 'educate']
-
-/* ---------- the prompts live in the database ----------
-
-   public.outreach_prompt holds both, with their temperatures, and the
-   run fetches them at the start of each tick.
-
-   The reason is not tidiness. The worked examples in the write prompt
-   are what every sentence a stranger reads is modelled on, they are not
-   yet in Alex's voice, and rewriting them is the highest-value change
-   anyone can make to this system. Behind `supabase functions deploy`
-   that never happens; behind an UPDATE it takes effect in ten minutes.
-
-   Safe to do because the guards that keep generated prose honest are
-   in THIS FILE, not in the prompt. A mangled prompt produces rejected
-   verdicts and no observation - visible in outreach_status within the
-   hour - and cannot produce a confident falsehood, because every claim
-   is still checked against the page or the fact sheet. */
-type Prompt = { body: string; temperature: number }
-let PROMPTS: Record<string, Prompt> = {}
-
-type Lead = {
-  lead_id: string
-  company: string
-  website: string | null
-  industry: string | null
-  signals: string | null
-  source: string | null
-  trading_years: number | null
-  sector: string | null
-  sector_label: string | null
-  sector_note: string | null
-  needs_booking: boolean | null
-  needs_scheduling: boolean | null
-  record_heavy: boolean | null
-  data_worth_having: boolean | null
-  public_facing: boolean | null
-  prior_technical: string | null
-  prior_inbound: string | null
-}
-type Fact = { key: string; fact: string; angle: string; evidence: string }
-
-/* Register facts. Thinner than the local pipeline's, because sales_leads
-   does not yet carry the CQC, ICO, FSA and Charity Commission columns
-   merge.mjs produces. When those land, add them here. */
-function factsFor(lead: Lead): Fact[] {
-  const out: Fact[] = []
-  const yrs = lead.trading_years ?? 0
-
-  if (yrs >= 10 && !lead.website) {
-    out.push({
-      key: 'long_established_no_website',
-      fact: `Trading ${yrs} years. No website could be found for them.`,
-      angle:
-        'A long track record with no website usually means the work comes from people who already know them - a strength, not a gap. Must not read as criticism.',
-      evidence: 'Companies House incorporation date',
-    })
-  }
-  if (yrs >= 15) {
-    out.push({
-      key: 'long_established',
-      fact: `Trading ${yrs} years.`,
-      angle:
-        'A long-established business usually has processes done the same way since before anyone thought to write them down.',
-      evidence: 'Companies House incorporation date',
-    })
-  }
-  if (lead.industry) {
-    out.push({
-      key: 'registered_activity',
-      fact: `Companies House records their activity as: ${lead.industry}.`,
-      angle: 'Their own filing. Useful only if it says something about how the work runs.',
-      evidence: `Companies House SIC description: ${lead.industry}`,
-    })
-  }
-  return out
-}
-
-function priorBlock(lead: Lead): string {
-  if (!lead.sector_label) {
-    return 'SECTOR PRIOR: none — the triage did not classify this business. Work entirely from the page.'
-  }
-  const yes = (b: boolean | null) => (b ? 'yes' : 'no')
-  return [
-    `SECTOR PRIOR (a keyword triage's guess — contradict it if the page disagrees):`,
-    `  sector: ${lead.sector_label}`,
-    `  ${lead.sector_note}`,
-    `  plausibly needs booking: ${yes(lead.needs_booking)}`,
-    `  plausibly needs scheduling: ${yes(lead.needs_scheduling)}`,
-    `  record-heavy: ${yes(lead.record_heavy)}`,
-    `  data worth analysing: ${yes(lead.data_worth_having)}`,
-    `  public facing: ${yes(lead.public_facing)}`,
-    `  expected technical capacity: ${lead.prior_technical}`,
-    `  expected inbound volume: ${lead.prior_inbound}`,
-  ].join('\n')
+type Cfg = {
+  vocabulary: Record<string, unknown[]>
+  models: Record<string, { model: string; rpd: number; gap_ms: number; temperature: number | null }[]>
+  fact_rules: Record<string, unknown>[]
+  page_signals: { key: string; pattern: string; flags: string; description: string }[]
+  settings: Record<string, unknown>
+  prompts: Record<string, { body: string; temperature: number }>
+  sectors: { sector: string; label: string }[]
 }
 
 /* ---------- database ---------- */
@@ -191,65 +95,69 @@ async function rpc(fn: string, args: Record<string, unknown>) {
   return text ? JSON.parse(text) : null
 }
 
-/* ---------- Gemini ---------- */
-
-const norm = (s: string) => String(s).replace(/\s+/g, ' ').trim().toLowerCase()
+/* ---------- asking a model ---------- */
 
 let lastCallAt = 0
-async function pace(gapMs: number) {
-  const wait = lastCallAt + gapMs - Date.now()
-  if (wait > 0) await new Promise((r) => setTimeout(r, wait))
-  lastCallAt = Date.now()
-}
 
 async function ask(
-  task: 'assess' | 'write',
+  cfg: Cfg,
+  role: string,
   system: string,
   user: string,
   temperature: number,
+  timeoutMs: number,
 ): Promise<{ text: string; model: string }> {
-  let last = ''
-  for (const model of CHAINS[task]) {
-    const spec = MODELS[model]
-    const budget = await rpc('outreach_model_budget', { p_model: model, p_default_rpd: spec.rpd })
-    if (!budget || budget <= 0) { last = `${model}: no budget left today`; continue }
+  const chain = cfg.models[role] ?? []
+  if (!chain.length) throw new Error(`no models registered for "${role}" in public.outreach_model`)
 
-    await pace(spec.gapMs)
+  let last = ''
+  for (const spec of chain) {
+    const budget = await rpc('outreach_model_budget', { p_model: spec.model })
+    if (!budget || budget <= 0) { last = `${spec.model}: no budget left today`; continue }
+
+    const wait = lastCallAt + (spec.gap_ms ?? 4000) - Date.now()
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait))
+    lastCallAt = Date.now()
+
     let res: Response
     try {
-      res = await fetch(`${GEMINI_BASE}/v1beta/models/${model}:generateContent`, {
+      res = await fetch(`${GEMINI_BASE}/v1beta/models/${spec.model}:generateContent`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': GEMINI_KEY },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: system }] },
           contents: [{ role: 'user', parts: [{ text: user }] }],
-          generationConfig: { temperature, topP: 0.95, responseMimeType: 'application/json' },
+          generationConfig: {
+            temperature: spec.temperature ?? temperature,
+            topP: 0.95,
+            responseMimeType: 'application/json',
+          },
         }),
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(timeoutMs),
       })
     } catch (err) {
-      last = `${model}: ${(err as Error).name === 'TimeoutError' ? 'timed out' : (err as Error).message}`
+      last = `${spec.model}: ${(err as Error).name === 'TimeoutError' ? 'timed out' : (err as Error).message}`
       continue
     }
 
-    await rpc('outreach_record_call', { p_model: model, p_rate_limited: res.status === 429 })
+    await rpc('outreach_record_call', { p_model: spec.model, p_rate_limited: res.status === 429 })
 
-    if (res.status === 429) { last = `${model}: rate limited`; continue }
-    if (res.status === 404) { last = `${model}: not available`; continue }
+    if (res.status === 429) { last = `${spec.model}: rate limited`; continue }
+    if (res.status === 404) { last = `${spec.model}: not available`; continue }
     if (res.status === 400) {
       const body = await res.text()
       if (/API key not valid/i.test(body)) throw new Error('GEMINI_API_KEY is set but not valid')
-      last = `${model}: bad request`
+      last = `${spec.model}: bad request`
       continue
     }
-    if (!res.ok) { last = `${model}: HTTP ${res.status}`; continue }
+    if (!res.ok) { last = `${spec.model}: HTTP ${res.status}`; continue }
 
     const data = await res.json()
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
-    if (typeof text !== 'string' || !text.trim()) { last = `${model}: empty answer`; continue }
-    return { text, model }
+    if (typeof text !== 'string' || !text.trim()) { last = `${spec.model}: empty answer`; continue }
+    return { text, model: spec.model }
   }
-  throw new Error(last || 'no model answered')
+  throw new Error(last || `no model answered for ${role}`)
 }
 
 const parseJson = (raw: string) =>
@@ -266,246 +174,301 @@ const strip = (h: string) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-/* A site's own HTML answers questions the visible text does not: whether
-   there is a booking widget, a shop, a form that posts somewhere, a
-   payment provider. Detected here rather than asked of the model,
-   because a script tag is a fact and a model's opinion about one is not. */
-function techSignals(html: string): string[] {
-  const s: string[] = []
-  const has = (re: RegExp) => re.test(html)
-  if (has(/calendly|acuityscheduling|simplybook|bookwhen|resdiary|opentable|setmore|10to8|squarespace-scheduling/i))
-    s.push('a third-party booking tool is embedded')
-  if (has(/shopify|woocommerce|bigcommerce|ecwid|squarespace-commerce|opencart|magento/i))
-    s.push('an e-commerce platform is in use')
-  if (has(/stripe\.com|paypal|worldpay|sumup|gocardless|square(up)?\.com/i))
-    s.push('a payment provider is referenced')
-  if (has(/<form[^>]*>/i)) s.push('the site has at least one form')
-  if (has(/mailto:/i)) s.push('the site publishes a mailto link')
-  if (has(/wp-content|wordpress/i)) s.push('built on WordPress')
-  if (has(/wix\.com|_wixCssImports/i)) s.push('built on Wix')
-  if (has(/facebook\.com\/(?!sharer|plugins)/i)) s.push('links to a Facebook page')
-  if (has(/intercom|tawk\.to|crisp\.chat|livechat|zendesk|drift\.com/i))
-    s.push('a live chat or chatbot widget is already installed')
-  if (has(/\.(pdf)"/i)) s.push('a PDF is offered for download')
-  return s
-}
-
-async function fetchSite(url: string): Promise<{ text: string; tech: string[] } | null> {
+async function fetchSite(cfg: Cfg, url: string, settings: Record<string, number | string>) {
   try {
     const res = await fetch(url, {
       redirect: 'follow',
-      headers: { 'user-agent': UA, accept: 'text/html' },
-      signal: AbortSignal.timeout(12_000),
+      headers: { 'user-agent': String(settings.user_agent), accept: 'text/html' },
+      signal: AbortSignal.timeout(Number(settings.fetch_timeout_ms)),
     })
     if (!res.ok) return null
     if (!(res.headers.get('content-type') ?? '').includes('html')) return null
     const html = (await res.text()).slice(0, 400_000)
-    const text = strip(html)
-    return { text, tech: techSignals(html) }
+    return { text: strip(html), ...detectSignals(cfg.page_signals, html) }
   } catch {
     return null
   }
 }
 
-/* ---------- validation ---------- */
+/* ---------- the scout ---------- */
 
-type Service = {
-  category: string; fit: string; confidence: string; rationale: string
-  evidence: string | null; confirm_question: string; disqualifier: string
-}
+type Vocab = ReturnType<typeof makeVocab>
 
-/* Every category verdict is checked, and a failure DOWNGRADES rather
-   than discards. A claim that says "observed" without a quote that is
-   actually on the page is not worthless - it is an inference that
-   overstated itself, and recording it as an inference is more useful
-   than throwing the analysis away. */
-function validateServices(raw: unknown, pageText: string | null): { services: Service[]; notes: string[] } {
-  const notes: string[] = []
-  const out: Service[] = []
-  const seen = new Set<string>()
+function priorBlock(cfg: Cfg, lead: Record<string, any>, minSample: number): string {
+  const lines: string[] = []
+  const yes = (b: unknown) => (b ? 'yes' : 'no')
 
-  for (const r of Array.isArray(raw) ? raw : []) {
-    const c = String((r as Service)?.category ?? '')
-    if (!CATEGORIES.includes(c)) { notes.push(`unknown category "${c}"`); continue }
-    if (seen.has(c)) { notes.push(`duplicate category ${c}`); continue }
-    seen.add(c)
+  if (!lead.prior) {
+    lines.push('SECTOR PRIOR: none — the triage did not classify this business. Work entirely from the page.')
+  } else {
+    const p = lead.prior
+    lines.push(`SECTOR PRIOR for "${lead.sector}" (a keyword triage's guess — contradict it if the page disagrees):`)
+    lines.push(`  ${p.label}: ${p.note}`)
+    lines.push(`  plausibly needs booking: ${yes(p.needs_booking)}   scheduling: ${yes(p.needs_scheduling)}`)
+    lines.push(`  record-heavy: ${yes(p.record_heavy)}   data worth analysing: ${yes(p.data_worth_having)}   public facing: ${yes(p.public_facing)}`)
+    lines.push(`  expected technical capacity: ${p.technical_capacity}   expected inbound volume: ${p.inbound_volume}`)
+  }
 
-    const s = r as Service
-    let fit = FITS.includes(s.fit) ? s.fit : 'possible'
-    let confidence = CONFIDENCES.includes(s.confidence) ? s.confidence : 'guessed'
-    let evidence = typeof s.evidence === 'string' && s.evidence.trim() ? s.evidence.trim() : null
-
-    if (confidence === 'observed') {
-      if (!evidence || !pageText || !norm(pageText).includes(norm(evidence))) {
-        /* The quote is not on the page. Downgrade rather than trust it. */
-        notes.push(`${c}: evidence not found on the page, downgraded to inferred`)
-        confidence = 'inferred'
-        evidence = null
+  /* The seed prior is somebody's opinion from an afternoon in
+     September. This is what the assessments have actually found, shown
+     beside it once the sample is worth showing, with no blending:
+     averaging the two would hide which one is wrong. */
+  const o = lead.observed
+  if (o && Number(o.n) >= minSample) {
+    lines.push('')
+    lines.push(`WHAT PREVIOUS ASSESSMENTS FOUND IN THIS SECTOR (${o.n} businesses — evidence about the sector, not about this one):`)
+    if (o.by_category) {
+      for (const [cat, counts] of Object.entries(o.by_category as Record<string, Record<string, number>>)) {
+        lines.push(`  ${cat}: ${Object.entries(counts).map(([k, v]) => `${k} ${v}`).join(', ')}`)
       }
     }
-    /* An inference can never be "strong". This is the guard against the
-       single most expensive failure mode: deciding from a sector prior
-       that a business definitely has a problem, writing to them about
-       it, and being wrong in the first sentence. */
-    if (confidence !== 'observed' && fit === 'strong') {
-      notes.push(`${c}: strong fit without observed evidence, downgraded to possible`)
-      fit = 'possible'
+    for (const dim of ['technical_capacity', 'inbound_volume', 'credit_fit']) {
+      if (o[dim]) lines.push(`  ${dim}: ${Object.entries(o[dim] as Record<string, number>).map(([k, v]) => `${k} ${v}`).join(', ')}`)
     }
-
-    const rationale = String(s.rationale ?? '').trim()
-    const confirm = String(s.confirm_question ?? '').trim()
-    const disq = String(s.disqualifier ?? '').trim()
-    if (!rationale || !confirm || !disq) {
-      notes.push(`${c}: missing rationale, question or disqualifier — dropped`)
-      continue
-    }
-    out.push({ category: c, fit, confidence, rationale, evidence, confirm_question: confirm, disqualifier: disq })
   }
-  return { services: out, notes }
+
+  if (cfg.sectors.length) {
+    lines.push('')
+    lines.push(`SECTOR KEYS you may correct to: ${cfg.sectors.map((s) => s.sector).join(', ')}`)
+  }
+  return lines.join('\n')
 }
 
-const pick = (v: unknown, allowed: string[], fallback: string) =>
-  typeof v === 'string' && allowed.includes(v) ? v : fallback
+function registryBlock(vocab: Vocab): string {
+  return [
+    vocab.describe('category', 'SERVICE CATEGORIES — assess each one you have something to say about'),
+    '',
+    vocab.describe('fit', 'FIT'),
+    '',
+    vocab.describe('confidence', 'CONFIDENCE'),
+    '',
+    vocab.describe('web_presence', 'WEB PRESENCE — what they look like from outside'),
+    '',
+    vocab.describe('technical_capacity', 'TECHNICAL CAPACITY — whether anyone inside would maintain what we build'),
+    '',
+    vocab.describe('inbound_volume', 'INBOUND VOLUME — whether answering enquiries is a visible cost'),
+    '',
+    vocab.describe('credit', 'CREDIT FIT — which of the three to lead with after delivery'),
+  ].filter(Boolean).join('\n')
+}
 
-/* ---------- one lead ---------- */
+async function scout(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, settings: any) {
+  const facts = buildFacts(cfg.fact_rules, lead)
+  const site = lead.website ? await fetchSite(cfg, lead.website, settings) : null
 
-async function assess(lead: Lead) {
-  const facts = factsFor(lead)
-  const site = lead.website ? await fetchSite(lead.website) : null
+  const parts: string[] = [registryBlock(vocab), '', priorBlock(cfg, lead, settings.prior_min_sample), '']
 
-  const parts: string[] = []
-  parts.push(priorBlock(lead))
-  parts.push('')
   if (facts.length) {
-    parts.push('REGISTER FACTS (verified):')
-    for (const f of facts) parts.push(`- key: ${f.key}\n  ${f.fact}`)
+    parts.push('REGISTER FACTS (verified — an angle may cite one of these by key):')
+    for (const f of facts) parts.push(`- key: ${f.key}\n  ${f.fact}\n  how to read it: ${f.angle}`)
   } else parts.push('REGISTER FACTS: none beyond the company existing.')
   parts.push('')
+
   if (!lead.website) {
     parts.push('WEBSITE: none was found for this business.')
   } else if (!site) {
-    parts.push(`WEBSITE: ${lead.website} was listed but could not be read (no response, or not HTML).`)
+    parts.push('WEBSITE: one was listed but could not be read (no response, or not HTML).')
   } else {
-    if (site.tech.length) {
+    if (site.found.length) {
       parts.push('DETECTED IN THE PAGE SOURCE (facts, not opinions):')
-      for (const t of site.tech) parts.push(`- ${t}`)
+      for (const t of site.found) parts.push(`- ${t}`)
       parts.push('')
     }
     parts.push('PAGE TEXT:')
-    parts.push(site.text.slice(0, MAX_PAGE_CHARS))
+    parts.push(site.text.slice(0, settings.max_page_chars))
   }
 
-  const pr = PROMPTS.assess
-  if (!pr) throw new Error('no assess prompt in public.outreach_prompt')
-  const { text: raw, model } = await ask('assess', pr.body, parts.join('\n'), pr.temperature)
+  const pr = cfg.prompts.scout
+  if (!pr) throw new Error('no scout prompt in public.outreach_prompt')
+  const { text: raw, model } = await ask(
+    cfg, 'scout', pr.body, parts.join('\n'), pr.temperature, settings.model_timeout_ms)
 
-  let p: Record<string, unknown>
-  try { p = parseJson(raw) } catch { return { ok: false as const, why: 'assessment was not JSON' } }
+  let p: Record<string, any>
+  try { p = parseJson(raw) } catch { return { ok: false as const, why: 'assessment was not JSON', model } }
 
-  const { services, notes } = validateServices(p.services, site?.text ?? null)
-  if (!services.length) return { ok: false as const, why: 'no usable category verdicts' }
+  const page = site?.text ?? null
+  const { services, notes } = validateServices(vocab, p.services, page)
+  if (!services.length) return { ok: false as const, why: 'no usable category verdicts', model }
 
-  /* Findings the letter may be written from, each quote checked against
-     the page once, here, so the write stage can only pick verified
-     material. */
-  const findings = (Array.isArray(p.findings) ? p.findings : [])
-    .filter((f: { quote?: string }) =>
-      f?.quote && site?.text && norm(site.text).includes(norm(f.quote)))
-    .slice(0, 3)
+  const av = validateAngles(vocab, p.angles, { pageText: page, facts, max: settings.max_angles })
+  notes.push(...av.notes, ...(site?.notes ?? []))
 
-  /* web_presence is not taken on trust where we can check it. If no
-     site was readable it is not a brochure, whatever the model says. */
-  let presence = pick(p.web_presence, PRESENCE, 'brochure')
+  /* Not taken on trust where the answer is already known. If no site
+     was readable it is not a brochure, whatever the model says. */
+  let presence = coerce(vocab, 'web_presence', p.web_presence)
   if (!lead.website) presence = 'none'
   else if (!site) presence = 'placeholder'
 
-  const technical = pick(p.technical_capacity, CAPACITY, lead.prior_technical ?? 'mixed')
-  let credit = pick(p.credit_fit, CREDITS, 'assist')
-  /* The rule from 13-credits and service-categories §5: a training day
-     booked for people who will not attend is money burned. Educate is
-     not available where nobody could maintain anything. */
-  if (credit === 'educate' && technical === 'unlikely') {
-    notes.push('educate credits proposed for a business with no technical capacity — changed to assist')
-    credit = 'assist'
+  const assessed: Record<string, string> = {
+    web_presence: presence,
+    technical_capacity: coerce(vocab, 'technical_capacity', p.technical_capacity, lead.prior?.technical_capacity),
+    inbound_volume: coerce(vocab, 'inbound_volume', p.inbound_volume, lead.prior?.inbound_volume),
   }
+  assessed.credit_fit = applyRequirement(
+    vocab, 'credit', coerce(vocab, 'credit', p.credit_fit), assessed, notes)
+
+  const correction = typeof p.sector_correction === 'string' &&
+    cfg.sectors.some((s) => s.sector === p.sector_correction) ? p.sector_correction : null
 
   return {
     ok: true as const,
     model,
-    findings,
     facts,
     services,
+    angles: av.angles,
     notes,
-    web_presence: presence,
-    technical_capacity: technical,
-    inbound_volume: pick(p.inbound_volume, VOLUME, lead.prior_inbound ?? 'low'),
-    credit_fit: credit,
-    credit_reason: String(p.credit_reason ?? '').slice(0, 500),
-    summary: String(p.summary ?? '').slice(0, 800),
-    sector_correction: typeof p.sector_correction === 'string' && p.sector_correction.trim()
-      ? p.sector_correction.trim() : null,
+    assessment: {
+      ...assessed,
+      credit_reason: String(p.credit_reason ?? '').slice(0, 500),
+      summary: String(p.summary ?? '').slice(0, 800),
+      sector_correction: correction,
+      sector_correction_why: correction ? String(p.sector_correction_why ?? '').slice(0, 300) : null,
+    },
   }
 }
 
-async function writeClause(
-  lead: Lead,
-  facts: Fact[],
-  findings: { what: string; quote: string }[],
-  services: Service[],
+/* ---------- the editor ---------- */
+
+async function editor(
+  cfg: Cfg,
+  angles: any[],
+  summary: string,
+  refusals: { key: string; why: string }[],
+  settings: any,
 ) {
-  if (!facts.length && !findings.length) {
-    return { ok: false as const, why: 'nothing true to say about this lead' }
+  const open = angles.filter((a) => !refusals.some((r) => r.key === a.key))
+  if (!open.length) {
+    return { ok: false as const, because: 'every case argued has been refused by the writer', model: null }
   }
 
-  const best = services.find((s) => s.fit === 'strong') ?? services.find((s) => s.fit === 'possible')
-
-  const parts: string[] = []
-  if (best) {
-    parts.push(`BEST FIT: ${best.category} — ${best.rationale}`)
-    parts.push('Let this steer what you notice. Do not name or pitch the service.')
+  const parts: string[] = [`WHAT THE RESEARCHER MADE OF THEM: ${summary || '(nothing said)'}`, '', 'THE CASES:']
+  for (const a of open) {
     parts.push('')
+    parts.push(`key: ${a.key}`)
+    parts.push(`  claim: ${a.claim}`)
+    parts.push(a.basis === 'page' ? `  rests on their own page: "${a.quote}"` : `  rests on a public register: ${a.fact_key}`)
+    parts.push(`  why it: ${a.why}`)
+    parts.push(`  risk:   ${a.risk}`)
   }
-  if (facts.length) {
-    parts.push('FACTS (verified, from public registers):')
-    for (const f of facts) parts.push(`- key: ${f.key}\n  ${f.fact}\n  angle: ${f.angle}`)
-  } else parts.push('FACTS: none beyond the company existing.')
-  parts.push('')
-  if (findings.length) {
-    parts.push('PAGE FINDINGS (quotes already verified against their site):')
-    for (const c of findings) parts.push(`- ${c.what}\n  quote: "${c.quote}"`)
-  } else parts.push('PAGE FINDINGS: none.')
+  if (refusals.length) {
+    parts.push('')
+    parts.push('ALREADY REFUSED BY THE WRITER — do not promote these again:')
+    for (const r of refusals) parts.push(`- ${r.key}: ${r.why}`)
+  }
 
-  const pr = PROMPTS.write
-  if (!pr) throw new Error('no write prompt in public.outreach_prompt')
-  const { text: raw, model } = await ask('write', pr.body, parts.join('\n'), pr.temperature)
+  const pr = cfg.prompts.editor
+  if (!pr) throw new Error('no editor prompt in public.outreach_prompt')
+  const { text: raw, model } = await ask(
+    cfg, 'editor', pr.body, parts.join('\n'), pr.temperature, settings.model_timeout_ms)
 
   let p: Record<string, unknown>
-  try { p = parseJson(raw) } catch { return { ok: false as const, why: 'reply was not JSON' } }
-  if (!p || p.observation == null) return { ok: false as const, why: 'model found nothing' }
+  try { p = parseJson(raw) } catch { return { ok: false as const, because: 'editor did not return JSON', model } }
 
-  const obs = String(p.observation).trim()
-  const words = obs.split(/\s+/).length
-  if (words < 6) return { ok: false as const, why: 'clause too short to be specific' }
-  if (words > 45) return { ok: false as const, why: 'clause too long to be one thing' }
-  if (/^[A-Z]/.test(obs) || /\.$/.test(obs)) return { ok: false as const, why: 'not a lower-case clause' }
-  /* A name moves the record into a lawful basis this programme has not
-     been assessed for. See first-contact-letter.md §1. */
-  if (/\b(mr|mrs|ms|miss|dr)\b\.?\s+[A-Z]/i.test(obs)) return { ok: false as const, why: 'names a person' }
+  const v = validatePromotion(p, open, refusals.map((r) => r.key))
+  return { ...v, model } as { ok: boolean; angle?: any; because: string; brief?: string; model: string }
+}
 
-  if (p.basis === 'page') {
-    const ev = String(p.evidence ?? '').trim()
-    if (!ev) return { ok: false as const, why: 'claimed the page but quoted nothing' }
-    /* The second gate: the quote must be one the assess stage already
-       checked against the page. */
-    if (!findings.some((c) => norm(c.quote) === norm(ev))) {
-      return { ok: false as const, why: 'evidence is not one of the verified quotes' }
-    }
-    return { ok: true as const, observation: obs, basis: 'page', evidence: ev, model }
+/* ---------- the writer ---------- */
+
+async function writer(cfg: Cfg, angle: any, brief: string, facts: any[], settings: any) {
+  const parts: string[] = []
+  parts.push(`THE BRIEF: ${brief || 'write the angle below'}`)
+  parts.push('')
+  parts.push(`THE ANGLE: ${angle.claim}`)
+  if (angle.basis === 'page') {
+    parts.push(`It rests on this, quoted from their own site: "${angle.quote}"`)
+  } else {
+    const f = facts.find((x) => x.key === angle.fact_key)
+    parts.push(`It rests on this public register fact: ${f?.fact}`)
+    if (f?.angle) parts.push(`How to read it: ${f.angle}`)
   }
+  parts.push(`The editor's worry about it: ${angle.risk}`)
+  parts.push('')
+  parts.push('Nothing else about this business is known to you. Anything not above does not exist.')
 
-  const f = facts.find((x) => x.key === String(p.fact_key ?? ''))
-  if (!f) return { ok: false as const, why: 'cited a register fact we did not supply' }
-  return { ok: true as const, observation: obs, basis: 'register', evidence: f.evidence, model }
+  const pr = cfg.prompts.writer
+  if (!pr) throw new Error('no writer prompt in public.outreach_prompt')
+  const { text: raw, model } = await ask(
+    cfg, 'writer', pr.body, parts.join('\n'), pr.temperature, settings.model_timeout_ms)
+
+  let p: Record<string, unknown>
+  try { p = parseJson(raw) } catch { return { ok: false as const, refused: false, why: 'reply was not JSON', model } }
+  return { ...validateClause(p, { angle, facts, settings }), model }
+}
+
+/* ---------- one lead ---------- */
+
+/* By registry rank, not by input order and not by looking for the word
+   "strong". Reported in the run detail so a morning skim shows what the
+   assessment thought each business was about. */
+function strongestOf(vocab: Vocab, services: any[]): string | null {
+  let best: any = null
+  for (const s of services) {
+    const r = (vocab.rank('fit', s.fit) ?? -1) * 10 + (vocab.rank('confidence', s.confidence) ?? 0)
+    if (!best || r > best.r) best = { r, category: s.category }
+  }
+  return best?.category ?? null
+}
+
+async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, settings: any) {
+  const log = (round: number, agent: string, model: string | null, decision: string, key?: string | null, reason?: string | null) =>
+    rpc('outreach_record_round', {
+      p_lead_id: lead.lead_id, p_round: round, p_agent: agent,
+      p_model: model ?? 'none', p_decision: decision,
+      p_angle_key: key ?? null, p_reason: reason ?? null,
+    }).catch(() => {})
+
+  const s = await scout(cfg, vocab, lead, settings)
+  if (!s.ok) {
+    await log(0, 'scout', s.model ?? null, 'failed', null, s.why)
+    return { ok: false as const, why: s.why }
+  }
+  await log(0, 'scout', s.model, 'argued', null,
+    `${s.services.length} verdicts, ${s.angles.length} angles: ${s.angles.map((a: any) => a.key).join(', ')}`)
+
+  /* The assessment is stored whether or not a clause comes out of it. A
+     lead we understand but have not yet phrased is worth far more than
+     one we skipped, and the next tick should not pay to learn it
+     again. */
+  await rpc('outreach_record_fit', {
+    p_lead_id: lead.lead_id,
+    p_assessment: s.assessment,
+    p_services: s.services,
+    p_model: s.model,
+  })
+
+  if (!s.angles.length) return { ok: false as const, why: 'nothing true to say about this lead', assessed: true }
+
+  /* The loop itself is in guards.mjs and is driven by the tests with
+     fakes. What is left here is only the two model calls it needs. */
+  const r = await negotiate({
+    angles: s.angles,
+    summary: s.assessment.summary,
+    maxRounds: settings.max_rounds,
+    callEditor: ({ angles, summary, refusals }) => editor(cfg, angles, summary, refusals, settings),
+    callWriter: ({ angle, brief }) => writer(cfg, angle, brief, s.facts, settings),
+    onRound: (m) => log(m.round, m.agent, m.model, m.decision, m.angle_key, m.reason),
+  })
+
+  if (!r.ok) return { ok: false as const, why: r.why, assessed: true, refusals: r.refusals.length }
+
+  await rpc('outreach_record_observation', {
+    p_lead_id: lead.lead_id,
+    p_observation: r.clause.observation,
+    p_basis: r.clause.basis,
+    p_evidence: r.clause.evidence,
+    p_model: r.clause.model,
+  })
+
+  return {
+    ok: true as const,
+    observation: r.clause.observation,
+    angle: r.angle.key,
+    rounds: r.rounds,
+    assessment: s.assessment,
+    notes: s.notes,
+    strongest: strongestOf(vocab, s.services),
+  }
 }
 
 /* ---------- entry ---------- */
@@ -533,68 +496,35 @@ Deno.serve(async (req) => {
   let attempted = 0, written = 0, rejected = 0
 
   try {
-    /* No page cache to sweep any more. The assess stage fetches and
-       reads within one invocation, so page text never touches disk. */
-    PROMPTS = await rpc('outreach_prompts', {}) ?? {}
-    if (!PROMPTS.assess || !PROMPTS.write) {
-      throw new Error('public.outreach_prompt is missing the assess or write row')
+    const cfg: Cfg = await rpc('outreach_config', {})
+    for (const role of ['scout', 'editor', 'writer']) {
+      if (!cfg?.prompts?.[role]) throw new Error(`public.outreach_prompt has no "${role}" row`)
+      if (!cfg?.models?.[role]?.length) throw new Error(`public.outreach_model has no active "${role}" rows`)
     }
+    const vocab = makeVocab(cfg.vocabulary)
+    const settings = clampSettings(cfg.settings)
 
     const body = await req.json().catch(() => ({}))
-    const limit = Number(body?.limit ?? BATCH)
-    const leads: Lead[] = await rpc('outreach_next_batch', { p_limit: limit })
+    const limit = Math.max(1, Math.min(Number(body?.limit ?? settings.batch_size) || settings.batch_size, 25))
+    const leads: Record<string, any>[] = await rpc('outreach_next_batch', { p_limit: limit })
 
     for (const lead of leads ?? []) {
       attempted++
       try {
-        const a = await assess(lead)
-        if (!a.ok) {
-          await rpc('outreach_record_failure', { p_lead_id: lead.lead_id, p_error: a.why })
-          rejected++
-          detail.push({ company: lead.company, rejected: a.why })
-          continue
-        }
-
-        /* The assessment is stored whether or not a clause comes out of
-           it. A lead we understand but have not yet phrased is worth
-           far more than one we skipped. */
-        await rpc('outreach_record_fit', {
-          p_lead_id: lead.lead_id,
-          p_web_presence: a.web_presence,
-          p_technical: a.technical_capacity,
-          p_inbound: a.inbound_volume,
-          p_credit_fit: a.credit_fit,
-          p_credit_reason: a.credit_reason,
-          p_summary: a.sector_correction
-            ? `[sector correction: ${a.sector_correction}] ${a.summary}`
-            : a.summary,
-          p_services: a.services,
-          p_model: a.model,
-        })
-
-        const w = await writeClause(lead, a.facts, a.findings, a.services)
-        if (w.ok) {
-          await rpc('outreach_record_observation', {
-            p_lead_id: lead.lead_id,
-            p_observation: w.observation,
-            p_basis: w.basis,
-            p_evidence: w.evidence,
-            p_model: w.model,
-          })
+        const r = await handle(cfg, vocab, lead, settings)
+        if (r.ok) {
           written++
           detail.push({
-            company: lead.company,
-            presence: a.web_presence,
-            credit: a.credit_fit,
-            strongest: a.services.find((s) => s.fit === 'strong')?.category ?? null,
-            observation: w.observation,
-            notes: a.notes.length ? a.notes : undefined,
-            sector_correction: a.sector_correction ?? undefined,
+            company: lead.company, angle: r.angle, rounds: r.rounds,
+            presence: r.assessment.web_presence, credit: r.assessment.credit_fit,
+            strongest: r.strongest, observation: r.observation,
+            sector_correction: r.assessment.sector_correction ?? undefined,
+            notes: r.notes.length ? r.notes : undefined,
           })
         } else {
-          await rpc('outreach_record_failure', { p_lead_id: lead.lead_id, p_error: w.why })
+          await rpc('outreach_record_failure', { p_lead_id: lead.lead_id, p_error: r.why })
           rejected++
-          detail.push({ company: lead.company, assessed: true, clause_rejected: w.why, notes: a.notes })
+          detail.push({ company: lead.company, assessed: (r as any).assessed ?? false, rejected: r.why })
         }
       } catch (err) {
         const msg = (err as Error).message
