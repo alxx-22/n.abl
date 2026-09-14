@@ -172,37 +172,41 @@ without them is the mistake this whole step is arranged to prevent.
 3. **Make `[Unsubscribe Link]` resolve.** A real endpoint that writes to the
    suppression list and returns a plain confirmation page. Small piece of work,
    blocks everything, and belongs with the suppression table in `07-crm`.
-4. **Read the three files in this folder end to end** before writing any code.
+4. **Write `hooks.md` and wire the registers into `observe.mjs`.** See
+   `personalisation-and-hooks.md` §6. Neither depends on items 1 to 3, on a
+   sending domain or on a provider, and until they are done every draft this
+   folder gates is built on the weakest observation available.
+5. **Read the four files in this folder end to end** before writing any code.
    `approval-gates.md` first, because it constrains the design of everything
-   else. About an hour for all three.
-5. **Decide the sending domain.** A separate domain for cold outreach, kept off
+   else. About an hour for all four.
+6. **Decide the sending domain.** A separate domain for cold outreach, kept off
    `nabl.agency`, so that a reputation problem cannot stop a client's proposal
    arriving. Register it, point MX at a real inbox, and record the choice in
    `deliverability.md` section 2. Cost: [PLACEHOLDER — domain registration,
    annual].
-6. **Choose a sending provider** and open the account. The master plan puts
+7. **Choose a sending provider** and open the account. The master plan puts
    sending infrastructure fourth in the order of first earnings and says "not
    before v4 exists", so this is the point at which it becomes justifiable.
    Provider and price: [PLACEHOLDER — compare on DKIM key length, one-click
    opt-out header support, bounce webhooks and per-message cost].
-7. **Publish SPF, DKIM and DMARC** on the outreach domain, DMARC at `p=none`
+8. **Publish SPF, DKIM and DMARC** on the outreach domain, DMARC at `p=none`
    with reporting on, and leave it there for at least four weeks while reading
    the reports. `deliverability.md` section 3.
-8. **Run the warm-up** to the schedule in `deliverability.md` section 4, using
+9. **Run the warm-up** to the schedule in `deliverability.md` section 4, using
    real one-to-one mail, before a single shortlisted lead is contacted.
-9. **Build the queue and the two gates**, in that order, with no sending code
+10. **Build the queue and the two gates**, in that order, with no sending code
    attached. A gate that has nothing to release is the safest thing to test.
-10. **Build the sender** against the gate function from `07-crm`. Write the
+11. **Build the sender** against the gate function from `07-crm`. Write the
     `contact_history` row first, then hand the message to the provider, then
     record the provider's message ID. `sequence-design.md` section 6 covers what
     happens when that sequence is interrupted.
-11. **Build the follow-up timer.** Class 1. One table, one scheduled job, no
+12. **Build the follow-up timer.** Class 1. One table, one scheduled job, no
     model. `sequence-design.md` section 7.
-12. **Build the reply intake**, header parsing first (Class 1), classification
+13. **Build the reply intake**, header parsing first (Class 1), classification
     second (Class 2). The classifier is the last thing built, not the first,
     because everything upstream of it has to be safe before there is anything to
     classify.
-13. **Send the first batch of five.** Read every one of the five before and
+14. **Send the first batch of five.** Read every one of the five before and
     after. Do not raise the ceiling until at least twenty have gone out without
     a surprise.
 
@@ -219,6 +223,7 @@ without them is the mistake this whole step is arranged to prevent.
 | [`approval-gates.md`](approval-gates.md) | The two human gates: what each one is actually checking, how approval is bound and recorded, what lapses it, how the send path verifies it, and the patterns that quietly turn a gate into a rubber stamp. | Before designing anything else in this folder, and before anyone proposes a bulk-approve button |
 | [`sequence-design.md`](sequence-design.md) | The pipeline as a state machine: queue tables, stage transitions, the follow-up timer, bounce and auto-reply handling, the local reply classifier and its categories, escalation, idempotency and what happens after a crash. | Building the queue, the sender, the timer or the classifier |
 | [`deliverability.md`](deliverability.md) | Sending domain choice, SPF, DKIM and DMARC, the warm-up schedule, volume ceilings and pacing, complaint and bounce thresholds, and why a burnt domain does not come back cheaply. | Before the first send, and every time someone wants to raise the daily limit |
+| [`personalisation-and-hooks.md`](personalisation-and-hooks.md) | Where a first contact's one true observation comes from: registers before page scraping, the hook library, the drip cadence, and what "personalised" is allowed to mean. Records the options rejected and why. | Before building anything that decides what a message says, and before anyone proposes a model, a merge field or a workflow tool |
 
 ---
 
