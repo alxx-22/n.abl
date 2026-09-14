@@ -50,15 +50,21 @@ If `written` is still 0 an hour after you set the key, the answer is in
 ```
 pg_cron, every 10 minutes
   → outreach-writer edge function, 3 leads
-      → register facts from the lead record          £0
+      → register facts + the sector prior            £0
       → fetch the business's own homepage            £0
-      → READ   Flash-Lite, temp 0.2  → candidate facts + verbatim quotes
-      → VALIDATE quotes against the page             code
-      → WRITE  Flash, temp 0.95      → the clause
+      → ASSESS Flash-Lite, cold  → web presence, five service verdicts,
+                                   credit fit, findings with quotes
+      → VALIDATE every verdict                       code
+      → WRITE  Flash, hot        → the clause
       → VALIDATE the clause                          code
-      → store observation + evidence on the lead
-  → page text deleted
+      → store the assessment and the observation
+  → page text is never persisted at all
 ```
+
+What the assessment contains, and the rule it is built around, is in
+[`service-fit.md`](service-fit.md). The short version: it is a **hypothesis**,
+every verdict carries the question that would confirm it and the answer that
+kills it, and an inference can never be recorded as a strong fit.
 
 **It does not send.** `approval-gates.md` says both gates are human and both are
 before sending, and that *"anyone proposing to move a gate downstream to increase

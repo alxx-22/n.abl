@@ -15,6 +15,7 @@
     "test:seo": "node scripts/check-seo.mjs",
     "test:seo:live": "node scripts/check-seo.mjs --live",
     "seo:report": "node scripts/seo-report.mjs",
+    "test:outreach-guards": "node scripts/check-outreach-guards.mjs",
     "test:hooks": "node scripts/sourcing/hooks-test.mjs",
     "test:scan": "node scripts/sourcing/scan-test.mjs",
     "sourcing:observe": "node --env-file-if-exists=.env.local scripts/sourcing/observe.mjs",

@@ -1,60 +1,47 @@
 /* ============================================================
    THE OUTREACH WRITER
 
-   Writes the one true thing a first contact says about a business, a
-   few leads at a time, woken by pg_cron. It exists here rather than as
-   a Node script because a script on a laptop only runs when the laptop
-   is open, and this is meant to run overnight.
+   Assesses a lead against the service categories, then writes the one
+   true thing a first contact says about it. A few leads at a time,
+   woken by pg_cron, so it runs with the laptop shut.
 
    WHAT IT DOES NOT DO: send anything. approval-gates.md says both gates
-   are human and both are before sending, and that "anyone proposing to
-   move a gate downstream to increase throughput has misunderstood what
-   the gate is for". This fills the queue up to the gate and stops. The
-   drafts are still unapproved when it finishes.
+   are human and both are before sending. This fills the queue up to the
+   gate and stops.
 
    TWO STAGES, TWO MODELS
 
-     read   Flash-Lite, temperature 0.2. Comb the page for candidate
-            facts, each with a verbatim quote. High volume, low
-            judgement, four times Flash's daily headroom.
-     write  Flash, temperature 0.95. Turn the best one into the clause
-            a stranger actually reads. Low volume, all judgement.
+     assess  Flash-Lite, cold. Given the register facts, the sector
+             prior and the page, decide what kind of web presence this
+             is, which service categories plausibly fit, and what would
+             confirm or kill each. Analysis, not prose.
+     write   Flash, hot. Turn the strongest fit into the clause a
+             stranger actually reads.
 
-   Splitting them buys two gates instead of one: read cannot pass
-   through a quote the page does not contain, and write cannot pass
-   through a quote read did not find. A model asked to extract and
-   charm in one breath does both worse, and the failure mode is the
-   charming half inventing something for the extracting half to have
-   found.
+   THE THING TO UNDERSTAND BEFORE EDITING THIS
+
+   A website assessment is a HYPOTHESIS, never a qualification. Every
+   disqualifying signal in 01-positioning/service-categories.md is
+   learned in conversation and invisible from outside: "they will not
+   let you watch the task being done", "they can name the person but not
+   the process", "nobody will own the data's accuracy". So every
+   category verdict carries confirm_question and disqualifier. A fit
+   score without those is a guess with a number attached, and that is
+   how a business gets mischaracterised and a first contact wasted.
+   There is one first contact per lead and it does not come back.
+
+   THE PRIOR IS A STARTING POINT, NOT AN ANSWER
+
+   The sector hint came from a keyword triage and is wrong often enough
+   to matter - a concert hall is currently filed as a professional
+   practice. The assessor may contradict it from the page and says so in
+   sector_correction. A prior that cannot be overruled is a prejudice.
 
    WHAT LEAVES THE BUILDING
 
-   The prompts carry register facts and the business's own public page
-   text. No company name, no contact route, no address, nothing out of
-   our database beyond the facts themselves. That is what makes a free
-   tier which trains on submissions usable at all, and keeping the
-   boundary in the request rather than in a policy means it holds
-   whoever edits this next.
-
-   A SMALL BATCH PER TICK
-
-   Three reasons that happen to agree: an edge function has a wall
-   clock, the daily allowance is spent more safely in bites, and
-   11-outreach/README.md says one person can properly read 20 to 40
-   messages in a sitting anyway.
-
-   ONE SECRET, NOT TWO
-
-   GEMINI_API_KEY is the only thing a person has to set. The shared
-   secret that stops strangers driving this endpoint was generated in
-   the database, lives in Vault, and is verified through
-   outreach_verify_cron_secret -- machine to machine, never typed,
-   never read by anyone. Asking someone to paste a second secret into a
-   dashboard to protect a job that spends a free allowance is ceremony.
-
-   Deploy:
-     supabase secrets set GEMINI_API_KEY=...
-     supabase functions deploy outreach-writer --no-verify-jwt
+   Register facts, the sector prior, and the business's own public page
+   text. No company name, no contact route, no address, nothing else
+   from the database.
    ============================================================ */
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -64,87 +51,53 @@ const GEMINI_BASE = Deno.env.get('GEMINI_BASE_URL') ??
   'https://generativelanguage.googleapis.com'
 
 /* Free-tier limits per model, lower of two third-party trackers read on
-   14 Sep 2026. Google's own page no longer prints a free-tier table —
-   it says to view your limits in AI Studio — so these are what we TRY.
-   A 429 is what we BELIEVE: outreach_record_call records the ceiling we
-   actually hit and the budget function honours it from then on. Being
-   wrong costs one wasted request, not a wrong answer. */
+   14 Sep 2026. Google's own page no longer prints a free-tier table, so
+   these are what we TRY. A 429 is what we BELIEVE: outreach_record_call
+   stores the ceiling actually hit and the budget function honours it. */
 const MODELS: Record<string, { rpd: number; gapMs: number }> = {
   'gemini-3.5-flash-lite': { rpd: 1000, gapMs: 4_000 },
   'gemini-2.5-flash-lite': { rpd: 1000, gapMs: 4_000 },
   'gemini-3.8-flash': { rpd: 250, gapMs: 6_000 },
   'gemini-2.5-flash': { rpd: 250, gapMs: 6_000 },
 }
-const CHAINS: Record<'read' | 'write', string[]> = {
-  read: ['gemini-3.5-flash-lite', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
+const CHAINS: Record<'assess' | 'write', string[]> = {
+  assess: ['gemini-3.5-flash-lite', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
   write: ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
 }
 
 const BATCH = Number(Deno.env.get('OUTREACH_BATCH') ?? 3)
-const MAX_PAGE_CHARS = 6000
+const MAX_PAGE_CHARS = 9000
 const UA = 'n.abl-research/1.0 (+https://nabl.agency; hello@nabl.agency)'
 
-/* ---------- prompts ---------- */
+const CATEGORIES = [
+  'save_time', 'reduce_mistakes', 'understand_data', 'build_new', 'fix_something',
+]
+const FITS = ['strong', 'possible', 'unlikely', 'ruled_out']
+const CONFIDENCES = ['observed', 'inferred', 'guessed']
+const PRESENCE = ['none', 'social_only', 'placeholder', 'brochure', 'transactional']
+const CAPACITY = ['likely', 'mixed', 'unlikely']
+const VOLUME = ['high', 'moderate', 'low']
+const CREDITS = ['build', 'assist', 'educate']
 
-const READ_SYSTEM =
-  `You comb a small UK business's own homepage for concrete facts about HOW THEY OPERATE.
+/* ---------- the prompts live in the database ----------
 
-Return JSON only, no prose, no code fence:
-{"candidates": [{"what": string, "quote": string}]}
+   public.outreach_prompt holds both, with their temperatures, and the
+   run fetches them at the start of each tick.
 
-Up to three candidates, best first. Return {"candidates": []} freely — most pages have nothing, and that is the correct answer.
+   The reason is not tidiness. The worked examples in the write prompt
+   are what every sentence a stranger reads is modelled on, they are not
+   yet in Alex's voice, and rewriting them is the highest-value change
+   anyone can make to this system. Behind `supabase functions deploy`
+   that never happens; behind an UPDATE it takes effect in ten minutes.
 
-"what" is a short factual note, not a sentence to send. "bookings taken by phone only". "price list is a PDF download". "three branches listed".
+   Safe to do because the guards that keep generated prose honest are
+   in THIS FILE, not in the prompt. A mangled prompt produces rejected
+   verdicts and no observation - visible in outreach_status within the
+   hour - and cannot produce a confident falsehood, because every claim
+   is still checked against the page or the fact sheet. */
+type Prompt = { body: string; temperature: number }
+let PROMPTS: Record<string, Prompt> = {}
 
-"quote" must be copied WORD FOR WORD from the page, 4 to 20 words, supporting that note. It is checked against the page automatically and anything that does not match exactly is discarded.
-
-ONLY operational facts. How work comes in, how it is booked, quoted, scheduled, recorded, staffed or delivered.
-NOT what they sell. NOT adjectives about themselves. NOT guesses. NOT anything about a named person.`
-
-const WRITE_SYSTEM =
-  `You write ONE clause for a letter to a small UK business, in the voice of Alex, who runs a small technology implementation business in Nottingham and is writing to them personally.
-
-Return JSON only, no prose, no code fence:
-{"observation": string, "basis": "register"|"page", "fact_key": string|null, "evidence": string|null}
-or
-{"observation": null}
-
-THE CLAUSE
-
-Write what would follow "I'm writing because I noticed that...". Lower case, no full stop, no greeting, 8 to 30 words.
-
-It must read like one person noticing one thing about one business. VARY THE CONSTRUCTION — these go out in batches, and two letters that open the same way both get binned.
-
-Good:
-  "you have been trading nineteen years without a website, so the work clearly comes from people who already know you"
-  "your site asks people to ring the workshop to arrange a quote, so every job starts as a phone call somebody has to write down"
-  "your price list goes out as a PDF, which means it is out of date the day after you change a price"
-
-Bad, and why:
-  "businesses like yours often struggle with admin"  — true of everyone, so it is filler
-  "you offer excellent plumbing services"            — what they sell, not how they work
-  "you probably rekey orders by hand"                — a guess wearing an observation's clothes
-
-RULES
-
-1. Use ONLY the material given. Every fact and quote below is already verified; anything you add is not.
-2. Using a FACT: basis "register", fact_key set to that fact's key, evidence null.
-3. Using a PAGE FINDING: basis "page", evidence set to that finding's quote copied EXACTLY as given. Do not re-word it.
-4. Prefer whichever is more specific about how they work.
-5. Never a person's name. Never a number, price or date that is not in the material.
-6. No flattery. "Your lovely website" is not an observation.
-7. {"observation": null} is a correct and common answer. A weak clause is worse than none, because a weak one gets sent.`
-
-/* ---------- register facts ----------
-
-   Thinner than the local pipeline's, because sales_leads does not yet
-   carry the CQC, ICO, FSA and Charity Commission columns that
-   merge.mjs produces — those live only in the local working files. When
-   those columns land, add them here and the write stage gets richer
-   material with no other change.
-
-   Every fact carries the rule for when it must NOT be used. That half
-   is the one that is easy to skip and it is where the damage lives. */
 type Lead = {
   lead_id: string
   company: string
@@ -154,9 +107,21 @@ type Lead = {
   source: string | null
   trading_years: number | null
   sector: string | null
+  sector_label: string | null
+  sector_note: string | null
+  needs_booking: boolean | null
+  needs_scheduling: boolean | null
+  record_heavy: boolean | null
+  data_worth_having: boolean | null
+  public_facing: boolean | null
+  prior_technical: string | null
+  prior_inbound: string | null
 }
 type Fact = { key: string; fact: string; angle: string; evidence: string }
 
+/* Register facts. Thinner than the local pipeline's, because sales_leads
+   does not yet carry the CQC, ICO, FSA and Charity Commission columns
+   merge.mjs produces. When those land, add them here. */
 function factsFor(lead: Lead): Fact[] {
   const out: Fact[] = []
   const yrs = lead.trading_years ?? 0
@@ -165,11 +130,8 @@ function factsFor(lead: Lead): Fact[] {
     out.push({
       key: 'long_established_no_website',
       fact: `Trading ${yrs} years. No website could be found for them.`,
-      /* Must not read as criticism. A business trading twenty years
-         without a website has usually decided it does not need one and
-         is usually right. The hook is the track record. */
       angle:
-        'A long track record with no website usually means the work comes from people who already know them — a strength, not a gap.',
+        'A long track record with no website usually means the work comes from people who already know them - a strength, not a gap. Must not read as criticism.',
       evidence: 'Companies House incorporation date',
     })
   }
@@ -178,7 +140,7 @@ function factsFor(lead: Lead): Fact[] {
       key: 'long_established',
       fact: `Trading ${yrs} years.`,
       angle:
-        'A long-established business usually has a few processes done the same way since before anyone thought to write them down.',
+        'A long-established business usually has processes done the same way since before anyone thought to write them down.',
       evidence: 'Companies House incorporation date',
     })
   }
@@ -186,12 +148,30 @@ function factsFor(lead: Lead): Fact[] {
     out.push({
       key: 'registered_activity',
       fact: `Companies House records their activity as: ${lead.industry}.`,
-      angle:
-        'What they registered as doing, in their own filing. Useful only if it says something about how the work runs.',
+      angle: 'Their own filing. Useful only if it says something about how the work runs.',
       evidence: `Companies House SIC description: ${lead.industry}`,
     })
   }
   return out
+}
+
+function priorBlock(lead: Lead): string {
+  if (!lead.sector_label) {
+    return 'SECTOR PRIOR: none — the triage did not classify this business. Work entirely from the page.'
+  }
+  const yes = (b: boolean | null) => (b ? 'yes' : 'no')
+  return [
+    `SECTOR PRIOR (a keyword triage's guess — contradict it if the page disagrees):`,
+    `  sector: ${lead.sector_label}`,
+    `  ${lead.sector_note}`,
+    `  plausibly needs booking: ${yes(lead.needs_booking)}`,
+    `  plausibly needs scheduling: ${yes(lead.needs_scheduling)}`,
+    `  record-heavy: ${yes(lead.record_heavy)}`,
+    `  data worth analysing: ${yes(lead.data_worth_having)}`,
+    `  public facing: ${yes(lead.public_facing)}`,
+    `  expected technical capacity: ${lead.prior_technical}`,
+    `  expected inbound volume: ${lead.prior_inbound}`,
+  ].join('\n')
 }
 
 /* ---------- database ---------- */
@@ -223,7 +203,7 @@ async function pace(gapMs: number) {
 }
 
 async function ask(
-  task: 'read' | 'write',
+  task: 'assess' | 'write',
   system: string,
   user: string,
   temperature: number,
@@ -231,14 +211,8 @@ async function ask(
   let last = ''
   for (const model of CHAINS[task]) {
     const spec = MODELS[model]
-    const budget = await rpc('outreach_model_budget', {
-      p_model: model,
-      p_default_rpd: spec.rpd,
-    })
-    if (!budget || budget <= 0) {
-      last = `${model}: no budget left today`
-      continue
-    }
+    const budget = await rpc('outreach_model_budget', { p_model: model, p_default_rpd: spec.rpd })
+    if (!budget || budget <= 0) { last = `${model}: no budget left today`; continue }
 
     await pace(spec.gapMs)
     let res: Response
@@ -249,21 +223,15 @@ async function ask(
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: system }] },
           contents: [{ role: 'user', parts: [{ text: user }] }],
-          generationConfig: {
-            temperature,
-            topP: 0.95,
-            responseMimeType: 'application/json',
-          },
+          generationConfig: { temperature, topP: 0.95, responseMimeType: 'application/json' },
         }),
-        signal: AbortSignal.timeout(25_000),
+        signal: AbortSignal.timeout(30_000),
       })
     } catch (err) {
       last = `${model}: ${(err as Error).name === 'TimeoutError' ? 'timed out' : (err as Error).message}`
       continue
     }
 
-    /* Recorded whatever the outcome — a 429 still consumed an attempt,
-       and a model that answered still consumed a request. */
     await rpc('outreach_record_call', { p_model: model, p_rate_limited: res.status === 429 })
 
     if (res.status === 429) { last = `${model}: rate limited`; continue }
@@ -298,7 +266,31 @@ const strip = (h: string) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-async function fetchPage(url: string): Promise<string | null> {
+/* A site's own HTML answers questions the visible text does not: whether
+   there is a booking widget, a shop, a form that posts somewhere, a
+   payment provider. Detected here rather than asked of the model,
+   because a script tag is a fact and a model's opinion about one is not. */
+function techSignals(html: string): string[] {
+  const s: string[] = []
+  const has = (re: RegExp) => re.test(html)
+  if (has(/calendly|acuityscheduling|simplybook|bookwhen|resdiary|opentable|setmore|10to8|squarespace-scheduling/i))
+    s.push('a third-party booking tool is embedded')
+  if (has(/shopify|woocommerce|bigcommerce|ecwid|squarespace-commerce|opencart|magento/i))
+    s.push('an e-commerce platform is in use')
+  if (has(/stripe\.com|paypal|worldpay|sumup|gocardless|square(up)?\.com/i))
+    s.push('a payment provider is referenced')
+  if (has(/<form[^>]*>/i)) s.push('the site has at least one form')
+  if (has(/mailto:/i)) s.push('the site publishes a mailto link')
+  if (has(/wp-content|wordpress/i)) s.push('built on WordPress')
+  if (has(/wix\.com|_wixCssImports/i)) s.push('built on Wix')
+  if (has(/facebook\.com\/(?!sharer|plugins)/i)) s.push('links to a Facebook page')
+  if (has(/intercom|tawk\.to|crisp\.chat|livechat|zendesk|drift\.com/i))
+    s.push('a live chat or chatbot widget is already installed')
+  if (has(/\.(pdf)"/i)) s.push('a PDF is offered for download')
+  return s
+}
+
+async function fetchSite(url: string): Promise<{ text: string; tech: string[] } | null> {
   try {
     const res = await fetch(url, {
       redirect: 'follow',
@@ -307,43 +299,172 @@ async function fetchPage(url: string): Promise<string | null> {
     })
     if (!res.ok) return null
     if (!(res.headers.get('content-type') ?? '').includes('html')) return null
-    const text = strip((await res.text()).slice(0, 300_000))
-    return text.length > 80 ? text : null
+    const html = (await res.text()).slice(0, 400_000)
+    const text = strip(html)
+    return { text, tech: techSignals(html) }
   } catch {
     return null
   }
 }
 
+/* ---------- validation ---------- */
+
+type Service = {
+  category: string; fit: string; confidence: string; rationale: string
+  evidence: string | null; confirm_question: string; disqualifier: string
+}
+
+/* Every category verdict is checked, and a failure DOWNGRADES rather
+   than discards. A claim that says "observed" without a quote that is
+   actually on the page is not worthless - it is an inference that
+   overstated itself, and recording it as an inference is more useful
+   than throwing the analysis away. */
+function validateServices(raw: unknown, pageText: string | null): { services: Service[]; notes: string[] } {
+  const notes: string[] = []
+  const out: Service[] = []
+  const seen = new Set<string>()
+
+  for (const r of Array.isArray(raw) ? raw : []) {
+    const c = String((r as Service)?.category ?? '')
+    if (!CATEGORIES.includes(c)) { notes.push(`unknown category "${c}"`); continue }
+    if (seen.has(c)) { notes.push(`duplicate category ${c}`); continue }
+    seen.add(c)
+
+    const s = r as Service
+    let fit = FITS.includes(s.fit) ? s.fit : 'possible'
+    let confidence = CONFIDENCES.includes(s.confidence) ? s.confidence : 'guessed'
+    let evidence = typeof s.evidence === 'string' && s.evidence.trim() ? s.evidence.trim() : null
+
+    if (confidence === 'observed') {
+      if (!evidence || !pageText || !norm(pageText).includes(norm(evidence))) {
+        /* The quote is not on the page. Downgrade rather than trust it. */
+        notes.push(`${c}: evidence not found on the page, downgraded to inferred`)
+        confidence = 'inferred'
+        evidence = null
+      }
+    }
+    /* An inference can never be "strong". This is the guard against the
+       single most expensive failure mode: deciding from a sector prior
+       that a business definitely has a problem, writing to them about
+       it, and being wrong in the first sentence. */
+    if (confidence !== 'observed' && fit === 'strong') {
+      notes.push(`${c}: strong fit without observed evidence, downgraded to possible`)
+      fit = 'possible'
+    }
+
+    const rationale = String(s.rationale ?? '').trim()
+    const confirm = String(s.confirm_question ?? '').trim()
+    const disq = String(s.disqualifier ?? '').trim()
+    if (!rationale || !confirm || !disq) {
+      notes.push(`${c}: missing rationale, question or disqualifier — dropped`)
+      continue
+    }
+    out.push({ category: c, fit, confidence, rationale, evidence, confirm_question: confirm, disqualifier: disq })
+  }
+  return { services: out, notes }
+}
+
+const pick = (v: unknown, allowed: string[], fallback: string) =>
+  typeof v === 'string' && allowed.includes(v) ? v : fallback
+
 /* ---------- one lead ---------- */
 
-async function writeFor(lead: Lead) {
+async function assess(lead: Lead) {
   const facts = factsFor(lead)
+  const site = lead.website ? await fetchSite(lead.website) : null
 
-  /* Stage 1 — read. Skipped entirely when there is no page, which saves
-     a call on every register-only lead. */
-  let findings: { what: string; quote: string }[] = []
-  let pageText: string | null = null
-  if (lead.website) {
-    pageText = await fetchPage(lead.website)
-    if (pageText) {
-      const { text } = await ask('read', READ_SYSTEM, `PAGE TEXT:\n${pageText.slice(0, MAX_PAGE_CHARS)}`, 0.2)
-      try {
-        const parsed = parseJson(text)
-        /* Every quote checked against the page HERE, once, so the write
-           stage can only ever pick from verified material. */
-        findings = (parsed.candidates ?? [])
-          .filter((c: { quote?: string }) => c?.quote && norm(pageText!).includes(norm(c.quote)))
-          .slice(0, 3)
-      } catch { /* a read that failed is not fatal; the facts remain */ }
+  const parts: string[] = []
+  parts.push(priorBlock(lead))
+  parts.push('')
+  if (facts.length) {
+    parts.push('REGISTER FACTS (verified):')
+    for (const f of facts) parts.push(`- key: ${f.key}\n  ${f.fact}`)
+  } else parts.push('REGISTER FACTS: none beyond the company existing.')
+  parts.push('')
+  if (!lead.website) {
+    parts.push('WEBSITE: none was found for this business.')
+  } else if (!site) {
+    parts.push(`WEBSITE: ${lead.website} was listed but could not be read (no response, or not HTML).`)
+  } else {
+    if (site.tech.length) {
+      parts.push('DETECTED IN THE PAGE SOURCE (facts, not opinions):')
+      for (const t of site.tech) parts.push(`- ${t}`)
+      parts.push('')
     }
+    parts.push('PAGE TEXT:')
+    parts.push(site.text.slice(0, MAX_PAGE_CHARS))
   }
 
+  const pr = PROMPTS.assess
+  if (!pr) throw new Error('no assess prompt in public.outreach_prompt')
+  const { text: raw, model } = await ask('assess', pr.body, parts.join('\n'), pr.temperature)
+
+  let p: Record<string, unknown>
+  try { p = parseJson(raw) } catch { return { ok: false as const, why: 'assessment was not JSON' } }
+
+  const { services, notes } = validateServices(p.services, site?.text ?? null)
+  if (!services.length) return { ok: false as const, why: 'no usable category verdicts' }
+
+  /* Findings the letter may be written from, each quote checked against
+     the page once, here, so the write stage can only pick verified
+     material. */
+  const findings = (Array.isArray(p.findings) ? p.findings : [])
+    .filter((f: { quote?: string }) =>
+      f?.quote && site?.text && norm(site.text).includes(norm(f.quote)))
+    .slice(0, 3)
+
+  /* web_presence is not taken on trust where we can check it. If no
+     site was readable it is not a brochure, whatever the model says. */
+  let presence = pick(p.web_presence, PRESENCE, 'brochure')
+  if (!lead.website) presence = 'none'
+  else if (!site) presence = 'placeholder'
+
+  const technical = pick(p.technical_capacity, CAPACITY, lead.prior_technical ?? 'mixed')
+  let credit = pick(p.credit_fit, CREDITS, 'assist')
+  /* The rule from 13-credits and service-categories §5: a training day
+     booked for people who will not attend is money burned. Educate is
+     not available where nobody could maintain anything. */
+  if (credit === 'educate' && technical === 'unlikely') {
+    notes.push('educate credits proposed for a business with no technical capacity — changed to assist')
+    credit = 'assist'
+  }
+
+  return {
+    ok: true as const,
+    model,
+    findings,
+    facts,
+    services,
+    notes,
+    web_presence: presence,
+    technical_capacity: technical,
+    inbound_volume: pick(p.inbound_volume, VOLUME, lead.prior_inbound ?? 'low'),
+    credit_fit: credit,
+    credit_reason: String(p.credit_reason ?? '').slice(0, 500),
+    summary: String(p.summary ?? '').slice(0, 800),
+    sector_correction: typeof p.sector_correction === 'string' && p.sector_correction.trim()
+      ? p.sector_correction.trim() : null,
+  }
+}
+
+async function writeClause(
+  lead: Lead,
+  facts: Fact[],
+  findings: { what: string; quote: string }[],
+  services: Service[],
+) {
   if (!facts.length && !findings.length) {
     return { ok: false as const, why: 'nothing true to say about this lead' }
   }
 
-  /* Stage 2 — write. */
+  const best = services.find((s) => s.fit === 'strong') ?? services.find((s) => s.fit === 'possible')
+
   const parts: string[] = []
+  if (best) {
+    parts.push(`BEST FIT: ${best.category} — ${best.rationale}`)
+    parts.push('Let this steer what you notice. Do not name or pitch the service.')
+    parts.push('')
+  }
   if (facts.length) {
     parts.push('FACTS (verified, from public registers):')
     for (const f of facts) parts.push(`- key: ${f.key}\n  ${f.fact}\n  angle: ${f.angle}`)
@@ -354,7 +475,9 @@ async function writeFor(lead: Lead) {
     for (const c of findings) parts.push(`- ${c.what}\n  quote: "${c.quote}"`)
   } else parts.push('PAGE FINDINGS: none.')
 
-  const { text: raw, model } = await ask('write', WRITE_SYSTEM, parts.join('\n'), 0.95)
+  const pr = PROMPTS.write
+  if (!pr) throw new Error('no write prompt in public.outreach_prompt')
+  const { text: raw, model } = await ask('write', pr.body, parts.join('\n'), pr.temperature)
 
   let p: Record<string, unknown>
   try { p = parseJson(raw) } catch { return { ok: false as const, why: 'reply was not JSON' } }
@@ -372,7 +495,7 @@ async function writeFor(lead: Lead) {
   if (p.basis === 'page') {
     const ev = String(p.evidence ?? '').trim()
     if (!ev) return { ok: false as const, why: 'claimed the page but quoted nothing' }
-    /* The second gate. The quote must be one the read stage already
+    /* The second gate: the quote must be one the assess stage already
        checked against the page. */
     if (!findings.some((c) => norm(c.quote) === norm(ev))) {
       return { ok: false as const, why: 'evidence is not one of the verified quotes' }
@@ -380,9 +503,6 @@ async function writeFor(lead: Lead) {
     return { ok: true as const, observation: obs, basis: 'page', evidence: ev, model }
   }
 
-  /* A register claim may only cite a fact we supplied. Without this the
-     model can decide a care-sounding company is CQC-registered, which
-     is the most damaging thing it could invent here. */
   const f = facts.find((x) => x.key === String(p.fact_key ?? ''))
   if (!f) return { ok: false as const, why: 'cited a register fact we did not supply' }
   return { ok: true as const, observation: obs, basis: 'register', evidence: f.evidence, model }
@@ -391,12 +511,6 @@ async function writeFor(lead: Lead) {
 /* ---------- entry ---------- */
 
 Deno.serve(async (req) => {
-  /* verify_jwt is off so pg_cron can call this without a user token,
-     which leaves the URL open to the internet. The secret it checks
-     against lives in Vault rather than in this function's environment,
-     so there is one fewer thing for a person to set up and one fewer
-     place for it to be pasted wrongly. Compared constant-time in the
-     database. */
   const presented = req.headers.get('x-outreach-secret') ?? ''
   let allowed = false
   try {
@@ -404,24 +518,27 @@ Deno.serve(async (req) => {
   } catch { allowed = false }
   if (!allowed) {
     return new Response(JSON.stringify({ error: 'forbidden' }), {
-      status: 403,
-      headers: { 'content-type': 'application/json' },
+      status: 403, headers: { 'content-type': 'application/json' },
     })
   }
   if (!GEMINI_KEY) {
     return new Response(
-      JSON.stringify({ error: 'GEMINI_API_KEY is not set', hint: 'supabase secrets set GEMINI_API_KEY=...' }),
+      JSON.stringify({ error: 'GEMINI_API_KEY is not set', hint: 'Dashboard -> Edge Functions -> Secrets' }),
       { status: 503, headers: { 'content-type': 'application/json' } },
     )
   }
 
   const started = Date.now()
-  let run: { id: number } | null = null
   const detail: unknown[] = []
   let attempted = 0, written = 0, rejected = 0
 
   try {
-    await rpc('outreach_sweep_page_cache', {})
+    /* No page cache to sweep any more. The assess stage fetches and
+       reads within one invocation, so page text never touches disk. */
+    PROMPTS = await rpc('outreach_prompts', {}) ?? {}
+    if (!PROMPTS.assess || !PROMPTS.write) {
+      throw new Error('public.outreach_prompt is missing the assess or write row')
+    }
 
     const body = await req.json().catch(() => ({}))
     const limit = Number(body?.limit ?? BATCH)
@@ -430,25 +547,56 @@ Deno.serve(async (req) => {
     for (const lead of leads ?? []) {
       attempted++
       try {
-        const r = await writeFor(lead)
-        if (r.ok) {
+        const a = await assess(lead)
+        if (!a.ok) {
+          await rpc('outreach_record_failure', { p_lead_id: lead.lead_id, p_error: a.why })
+          rejected++
+          detail.push({ company: lead.company, rejected: a.why })
+          continue
+        }
+
+        /* The assessment is stored whether or not a clause comes out of
+           it. A lead we understand but have not yet phrased is worth
+           far more than one we skipped. */
+        await rpc('outreach_record_fit', {
+          p_lead_id: lead.lead_id,
+          p_web_presence: a.web_presence,
+          p_technical: a.technical_capacity,
+          p_inbound: a.inbound_volume,
+          p_credit_fit: a.credit_fit,
+          p_credit_reason: a.credit_reason,
+          p_summary: a.sector_correction
+            ? `[sector correction: ${a.sector_correction}] ${a.summary}`
+            : a.summary,
+          p_services: a.services,
+          p_model: a.model,
+        })
+
+        const w = await writeClause(lead, a.facts, a.findings, a.services)
+        if (w.ok) {
           await rpc('outreach_record_observation', {
             p_lead_id: lead.lead_id,
-            p_observation: r.observation,
-            p_basis: r.basis,
-            p_evidence: r.evidence,
-            p_model: r.model,
+            p_observation: w.observation,
+            p_basis: w.basis,
+            p_evidence: w.evidence,
+            p_model: w.model,
           })
           written++
-          detail.push({ company: lead.company, basis: r.basis, observation: r.observation })
+          detail.push({
+            company: lead.company,
+            presence: a.web_presence,
+            credit: a.credit_fit,
+            strongest: a.services.find((s) => s.fit === 'strong')?.category ?? null,
+            observation: w.observation,
+            notes: a.notes.length ? a.notes : undefined,
+            sector_correction: a.sector_correction ?? undefined,
+          })
         } else {
-          await rpc('outreach_record_failure', { p_lead_id: lead.lead_id, p_error: r.why })
+          await rpc('outreach_record_failure', { p_lead_id: lead.lead_id, p_error: w.why })
           rejected++
-          detail.push({ company: lead.company, rejected: r.why })
+          detail.push({ company: lead.company, assessed: true, clause_rejected: w.why, notes: a.notes })
         }
       } catch (err) {
-        /* Budget exhaustion ends the tick rather than grinding through
-           the rest of the batch against a closed door. */
         const msg = (err as Error).message
         await rpc('outreach_record_failure', { p_lead_id: lead.lead_id, p_error: msg })
         rejected++
@@ -457,7 +605,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    run = await rpc('outreach_log_run', {
+    await rpc('outreach_log_run', {
       p_attempted: attempted, p_written: written, p_rejected: rejected,
       p_detail: detail, p_error: null,
     })
@@ -473,8 +621,7 @@ Deno.serve(async (req) => {
       p_detail: detail, p_error: msg,
     }).catch(() => {})
     return new Response(JSON.stringify({ error: msg, attempted, written, rejected }), {
-      status: 500,
-      headers: { 'content-type': 'application/json' },
+      status: 500, headers: { 'content-type': 'application/json' },
     })
   }
 })
