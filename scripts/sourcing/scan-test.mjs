@@ -32,26 +32,39 @@ fs.writeFileSync(path.join(pages, 'gamma-lettings-ltd.txt'), PAGE_B)
 fs.writeFileSync(path.join(pages, 'delta-ltd.txt'), PAGE_C)
 fs.writeFileSync(path.join(pages, 'epsilon-services-ltd.txt'), PAGE_D)
 fs.writeFileSync(path.join(pages, 'eta-supplies-ltd.txt'), 'Eta Supplies. Trade counter open weekdays.')
+fs.writeFileSync(path.join(pages, 'iota-works-ltd.txt'), 'Iota Works. Fabrication to order.')
+
+const CQC_FACT = { key: 'cqc_registered', fact: 'Registered with the Care Quality Commission for personal care.', angle: 'rotas and medication records', evidence: 'CQC register, location L-1', service: 'record-keeping' }
+const FSA_WITHHELD = { key: 'food_premises', fact: 'On the FSA food hygiene register. THE RATING IS WITHHELD ON PURPOSE — do not speculate about it.', angle: 'temperature logs', evidence: 'FSA hygiene register', service: 'record-keeping' }
 
 fs.writeFileSync(path.join(dir, 'obs.json'), JSON.stringify({ results: [
-  { company: 'ALPHA JOINERY LTD',   signal: 'describes_itself',  observation: 'your site describes you as Bespoke Joinery', source: 'page', cached: true },
-  { company: 'GAMMA LETTINGS LTD',  signal: 'nothing_specific',  observation: null, cached: true },
-  { company: 'DELTA LTD',           signal: 'nothing_specific',  observation: null, cached: true },
-  { company: 'EPSILON SERVICES LTD',signal: 'nothing_specific',  observation: null, cached: true },
-  { company: 'ETA SUPPLIES LTD',    signal: 'nothing_specific',  observation: null, cached: true },
-  { company: 'ZETA CARE LTD',       signal: 'cqc_registered',    observation: 'you are CQC-registered', source: 'register' },
+  { company: 'ALPHA JOINERY LTD',   signal: 'describes_itself', observation: 'your site describes you as Bespoke Joinery', source: 'page', facts: [], cached: true },
+  { company: 'GAMMA LETTINGS LTD',  signal: 'nothing_specific', observation: null, facts: [], cached: true },
+  { company: 'DELTA LTD',           signal: 'nothing_specific', observation: null, facts: [], cached: true },
+  { company: 'EPSILON SERVICES LTD',signal: 'nothing_specific', observation: null, facts: [], cached: true },
+  { company: 'ETA SUPPLIES LTD',    signal: 'nothing_specific', observation: null, facts: [], cached: true },
+  { company: 'THETA CATERING LTD',  signal: 'food_premises', observation: 'you are on the food hygiene register', source: 'register-template', facts: [FSA_WITHHELD] },
+  { company: 'ZETA CARE LTD',       signal: 'cqc_registered', observation: 'you are CQC-registered', source: 'register-template', facts: [CQC_FACT] },
+  { company: 'IOTA WORKS LTD',      signal: 'nothing_specific', observation: null, facts: [], cached: true },
 ] }))
 
 /* One scripted reply per call, in order. */
 const replies = [
-  // 1. truthful: the quote is on page A word for word
-  { observation: 'quotes start with a phone call to the workshop rather than a form', evidence: 'we do not take bookings online', confidence: 'high' },
-  // 2. FABRICATED: plausible, fluent, and nowhere on page B
-  { observation: 'you run a 24 hour emergency maintenance line', evidence: 'our 24 hour emergency line is always open', confidence: 'high' },
+  // 1. truthful page claim: the quote is on page A word for word
+  { observation: 'quotes start with a phone call to the workshop rather than a form', basis: 'page', evidence: 'we do not take bookings online' },
+  // 2. FABRICATED quote: plausible, fluent, and nowhere on page B
+  { observation: 'you run a 24 hour emergency maintenance line', basis: 'page', evidence: 'our 24 hour emergency line is always open' },
   // 3. PARAPHRASED: close to page C but not a quote
-  { observation: 'you have been trading since the late nineties', evidence: 'quality service since 1998 in Nottingham', confidence: 'low' },
+  { observation: 'you have been trading since the late nineties', basis: 'page', evidence: 'quality service since 1998 in Nottingham' },
   // 4. honest null — the correct answer for a page with nothing on it
   { observation: null },
+  // 5. INVENTED REGISTRATION: a fact key nobody supplied. The single
+  //    most damaging thing this stage could get wrong.
+  { observation: 'you are CQC-registered, which is a lot of evidence to keep', basis: 'register', fact_key: 'cqc_registered' },
+  // 6. WITHHELD SCORE: the fact sheet deliberately did not state it
+  { observation: 'you are rated 2 on the food hygiene register, which must sting', basis: 'register', fact_key: 'food_premises' },
+  // 7. legitimate register claim, matching a supplied key
+  { observation: 'you are CQC-registered for personal care, which is a lot of rotas to keep evidenced', basis: 'register', fact_key: 'cqc_registered' },
 ]
 let n = 0
 const sent = []
@@ -105,22 +118,31 @@ const ok = (name, cond, detail = '') => {
 }
 
 console.log('\nGUARD BEHAVIOUR\n')
-ok('a truthful observation is kept',
-   by['ALPHA JOINERY LTD'].signal === 'scanned' && /phone call to the workshop/.test(by['ALPHA JOINERY LTD'].observation),
+ok('a truthful page claim is kept',
+   by['ALPHA JOINERY LTD'].source === 'written' && /phone call to the workshop/.test(by['ALPHA JOINERY LTD'].observation),
    JSON.stringify(by['ALPHA JOINERY LTD']))
 ok('a FABRICATED quote is rejected',
-   by['GAMMA LETTINGS LTD'].signal !== 'scanned' && rej['GAMMA LETTINGS LTD'] === 'evidence is not on the page',
+   by['GAMMA LETTINGS LTD'].source !== 'written' && rej['GAMMA LETTINGS LTD'] === 'evidence is not on the page',
    rej['GAMMA LETTINGS LTD'])
 ok('  …and the lead keeps what it had (null), not the lie',
    by['GAMMA LETTINGS LTD'].observation == null)
 ok('a PARAPHRASED quote is rejected too',
-   by['DELTA LTD'].signal !== 'scanned' && rej['DELTA LTD'] === 'evidence is not on the page',
+   by['DELTA LTD'].source !== 'written' && rej['DELTA LTD'] === 'evidence is not on the page',
    rej['DELTA LTD'])
 ok('an honest null is accepted as an answer',
-   by['EPSILON SERVICES LTD'].signal !== 'scanned' && rej['EPSILON SERVICES LTD'] === 'model found nothing',
+   by['EPSILON SERVICES LTD'].source !== 'written' && rej['EPSILON SERVICES LTD'] === 'model found nothing',
    rej['EPSILON SERVICES LTD'])
-ok('a lead with a register hook is never sent',
-   by['ZETA CARE LTD'].signal === 'cqc_registered' && !('rejected' in by['ZETA CARE LTD']))
+ok('an INVENTED registration is rejected',
+   by['ETA SUPPLIES LTD'].source !== 'written' && rej['ETA SUPPLIES LTD'] === 'cited a register fact we did not supply',
+   rej['ETA SUPPLIES LTD'])
+ok('a WITHHELD hygiene score is rejected',
+   by['THETA CATERING LTD'].source !== 'written' && rej['THETA CATERING LTD'] === 'quotes a hygiene rating that was withheld',
+   rej['THETA CATERING LTD'])
+ok('  …and that lead keeps its template sentence',
+   by['THETA CATERING LTD'].observation === 'you are on the food hygiene register')
+ok('a legitimate register claim is kept, with the register as evidence',
+   by['ZETA CARE LTD'].source === 'written' && by['ZETA CARE LTD'].evidence === 'CQC register, location L-1',
+   JSON.stringify(by['ZETA CARE LTD']))
 ok('a 429 stops the run rather than hammering the API',
    /Daily budget reached|Stopping/.test(run.stdout), run.stdout.slice(-200))
 ok('the run exits cleanly', run.status === 0, `exit ${run.status} ${run.stderr.slice(0, 200)}`)
@@ -131,8 +153,12 @@ console.log('\nWHAT LEFT THE MACHINE\n')
    about the request body, so it is checked against the request body. */
 const leaked = []
 for (const body of sent) {
+  /* Fact keys ARE sent deliberately — the model has to cite one, and
+     they are category labels derived from public registers. What must
+     never appear is anything identifying: the company's name, a contact
+     route, an address, or a field out of our own database. */
   for (const needle of ['ALPHA JOINERY', 'GAMMA LETTINGS', 'DELTA LTD', 'EPSILON', 'ZETA CARE',
-                        'cqc_registered', 'describes_itself', 'nothing_specific', '@', 'lead_id']) {
+                        'THETA CATERING', 'ETA SUPPLIES', '@', 'lead_id', 'Mill Lane']) {
     if (body.includes(needle)) leaked.push(`${needle} in a request body`)
   }
 }

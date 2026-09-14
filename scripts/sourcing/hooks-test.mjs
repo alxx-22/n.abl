@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 /* The hook library's rules, asserted.
 
-   Most of these check ordering, which matters because the first hook
-   that applies wins and the ranking is the whole editorial judgement.
-   One checks something more important: that a low food hygiene score is
-   never quoted back. business/11-outreach/hooks.md §2 explains why —
-   naming a bad grade in a cold letter is not an observation, it is a
-   poke with a citation attached.
+   hooks.mjs states FACTS; scan.mjs writes the sentence. So these check
+   which facts a lead yields and in what order, because the order is
+   what tells the model which one is strongest.
+
+   The one that matters most is the food hygiene score. A rating below 4
+   must never reach the fact sheet at all — scan.mjs refuses to let a
+   model quote a withheld score, but the safest place to withhold it is
+   before it is sent. business/11-outreach/hooks.md §2 explains why
+   naming a bad grade in a cold letter is a poke with a citation.
 
      node scripts/sourcing/hooks-test.mjs
 */
-import { registerHook, REGISTER_HOOKS } from './hooks.mjs'
+import { leadFacts, templateHook, REGISTER_HOOKS } from './hooks.mjs'
 
 const cases = [
   ['CQC with specialism', { cqc_location_id: 'L-123', specialisms: 'Personal care; Dementia' }, 'cqc_registered'],
@@ -34,23 +37,36 @@ const ok = (name, cond, detail = '') => {
   if (!cond) fail++
 }
 
-console.log('\nWHICH HOOK WINS\n')
+console.log('\nWHICH FACT LEADS\n')
 for (const [name, lead, expect] of cases) {
-  const h = registerHook(lead)
-  const got = h?.signal ?? null
+  const got = leadFacts(lead)[0]?.key ?? null
   ok(`${name.padEnd(20)} → ${got ?? '(none)'}`, got === expect, `expected ${expect ?? '(none)'}`)
 }
+
+console.log('\nALL FACTS, NOT JUST THE BEST ONE\n')
+const both = leadFacts({ cqc_location_id: 'L1', trading_years: '22', website: 'https://x.co.uk' })
+ok('a CQC provider trading 22 years yields more than one fact', both.length >= 2,
+   both.map((f) => f.key).join(', '))
 
 console.log('\nTHE RULES\n')
 
 /* The one that would do real damage if it broke. */
-const low = registerHook({ fhrs_id: '99', hygiene_rating: '1' })
-ok('a low hygiene score is never quoted back',
-   !/rated\s*[0-3]\b/i.test(low.observation) && !low.observation.includes('rated'),
-   low.observation)
+const low = leadFacts({ fhrs_id: '99', hygiene_rating: '1' })[0]
+ok('a low hygiene score never reaches the fact sheet',
+   !/\b[0-3]\b/.test(low.fact) && /WITHHELD/.test(low.fact), low.fact)
+ok('  …and the local fallback does not name it either',
+   !/rated/.test(templateHook({ fhrs_id: '99', hygiene_rating: '1' }).observation))
 
-const high = registerHook({ fhrs_id: '99', hygiene_rating: '5' })
-ok('a good hygiene score is used', /rated 5/.test(high.observation), high.observation)
+const high = leadFacts({ fhrs_id: '99', hygiene_rating: '5' })[0]
+ok('a good hygiene score is stated', /rated 5/.test(high.fact), high.fact)
+
+/* The fact sheet goes to a third party that trains on what it receives.
+   An address on it would be business data for a company and personal
+   data for a sole trader, and there is no way to tell which from here. */
+const addr = leadFacts({ trading_address: '14 Mill Lane, Arnold', registered_address: 'c/o Smith, Derby' })[0]
+ok('no address reaches the fact sheet', !/Mill Lane/.test(addr.fact), addr.fact)
+ok('  …but the local fallback may still name it',
+   /Mill Lane/.test(templateHook({ trading_address: '14 Mill Lane, Arnold', registered_address: 'c/o Smith, Derby' }).observation))
 
 for (const h of REGISTER_HOOKS) {
   ok(`${h.key} carries a real notWhen`, !!h.notWhen && h.notWhen.length >= 40,
@@ -63,6 +79,7 @@ for (const h of REGISTER_HOOKS) {
   const lead = { cqc_location_id: 'L1', ico_registration: 'ZA1', fhrs_id: '9', hygiene_rating: '5',
                  charity_number: '11', trading_address: 'A', registered_address: 'B', trading_years: '20' }
   ok(`${h.key} produces evidence`, typeof h.evidence(lead) === 'string' && h.evidence(lead).length > 5)
+  ok(`${h.key} states an angle for the writer`, typeof h.angle === 'string' && h.angle.length > 20)
 }
 
 console.log(`\n${fail ? fail + ' failed' : 'all hook checks passed'}`)

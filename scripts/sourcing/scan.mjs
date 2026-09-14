@@ -1,18 +1,26 @@
 #!/usr/bin/env node
 /* ============================================================
-   THE RESIDUAL: READING THE PAGES THE REGEXES COULD NOT
+   WRITING THE OBSERVATION, ONE LEAD AT A TIME
 
-   Last in a chain of three, and deliberately the smallest.
+     hooks.mjs    what is TRUE     registers, deterministic, £0
+     observe.mjs  gathers it       facts + page text, £0
+     scan.mjs     writes the line  this file, one call per lead
 
-     hooks.mjs    registers        £0, no key, most leads
-     observe.mjs  page + regexes   £0, no key
-     scan.mjs     a model          this file, only what is left
+   The division is the whole point. Facts must be deterministic, because
+   a made-up fact reaches a stranger's inbox. Phrasing must not be,
+   because 149 leads sharing seven sentences is the same bulk-sender
+   fingerprint the August batch had — near-identical bodies read as a
+   mail merge whatever the facts behind them.
 
-   The 21 August batch produced 77 drafts of which 68 shared an
-   observation, almost all of them `describes_itself` — a line lifted
-   from the page title because eight regexes had found nothing. Those
-   are the leads here. Everything a register or a regex could answer has
-   already been answered by the time this runs.
+   So every lead gets its own call and its own sentence. What the model
+   is given is a fact sheet it may not add to, and a page it may quote
+   from. What it produces is prose, which is the one thing here that
+   should vary.
+
+   This runs on EVERY lead, not a residual. An earlier version only
+   scanned the leads the regexes had failed on, which meant the best
+   leads — the ones with a real register fact — got the most templated
+   sentence. Exactly backwards.
 
      node scripts/sourcing/scan.mjs --in .sourcing/observations.json
 
@@ -33,12 +41,20 @@
 
    HALLUCINATION IS HANDLED BY A STRING COMPARISON, NOT BY TRUST
 
-   Every observation must come with `evidence`: a span the model claims
-   is on the page. If that span is not literally in the text we fetched,
-   the observation is thrown away and the lead keeps whatever it had.
-   So the worst case is the behaviour we already have, not a confident
-   lie in a stranger's inbox. Same fail-closed shape as
-   marketing_send_allowed.
+   Generated prose is only safe because the facts under it are not.
+   Three checks, all in code:
+
+   1. A claim sourced from the page must quote it word for word. If the
+      quote is not literally in the text we fetched, the whole answer is
+      discarded.
+   2. A claim sourced from a register must name one of the fact keys we
+      supplied. The model cannot invent a registration.
+   3. Forbidden content — a food hygiene score we deliberately withheld,
+      a person's name — fails the answer outright.
+
+   A rejected answer falls back to what observe.mjs produced. So the
+   worst case is the templated sentence, not a confident lie. Same
+   fail-closed shape as marketing_send_allowed.
 
    QUOTAS
 
@@ -131,35 +147,80 @@ const pace = async () => {
 
 /* ---------- the prompt ---------- */
 
-/* Written to make "nothing here" an easy answer rather than a failure.
-   A model asked to find something useful about a business will always
-   find something, and what it finds when there is nothing is filler —
-   which is the exact thing 11-outreach/first-contact-letter.md §6 says
-   turns a letter into a leaflet. */
-const SYSTEM = `You read a small business's own homepage and find ONE specific, checkable thing about how they work.
+/* Two things this prompt has to do at once, and they pull against each
+   other: produce a sentence that sounds like it was written for this
+   business specifically, and refuse to say anything that is not on the
+   fact sheet or the page.
+
+   The temperature below is deliberately not zero. A batch of sentences
+   generated at temperature 0 from six fact patterns converges on six
+   sentences, which is the problem this file exists to solve. */
+const SYSTEM = `You write ONE clause for a letter to a small UK business, in the voice of Alex, who runs a small technology implementation business and is writing to them personally.
+
+You are given FACTS (verified, from public registers) and optionally PAGE TEXT (their own website).
 
 Return JSON only, no prose, no code fence:
-{"observation": string, "evidence": string, "confidence": "high"|"low"}
+{"observation": string, "basis": "register"|"page", "fact_key": string|null, "evidence": string|null}
 or
 {"observation": null}
 
-RULES
+THE CLAUSE
 
-1. The observation must be about how the business OPERATES, not what it sells. "Bookings go through a phone call" is an observation. "They offer plumbing services" is a description and is useless.
+Write what would follow "I'm writing because I noticed that...". Lower case, no full stop, no greeting, 8 to 30 words.
 
-2. "evidence" must be copied WORD FOR WORD from the page text, 4 to 20 words. It is checked against the page automatically and the whole answer is discarded if it does not match exactly. Do not paraphrase it. Do not tidy the punctuation.
+It must read like one person noticing one thing about one business. Vary the construction — these letters go out in batches and two that open the same way both go in the bin.
 
-3. Never guess at a difficulty. "You probably rekey orders by hand" is a guess wearing an observation's clothes, and the person reading it can tell.
+Good:
+  "you are CQC-registered for dementia care, which is a lot of rotas and medication records to keep evidenced"
+  "your site asks people to ring the workshop to arrange a quote, which means every one of those starts as a phone call"
+  "you have been trading nineteen years without a website, so the work clearly comes from people who already know you"
 
-4. Return {"observation": null} freely. MOST PAGES HAVE NOTHING SPECIFIC ON THEM, and saying so is the correct answer, not a failure. A weak observation is worse than none, because it gets sent.
+Bad, and why:
+  "businesses like yours often struggle with admin"  — true of everyone, so it is filler
+  "you offer excellent plumbing services"            — that is what they sell, not how they work
+  "you probably rekey orders by hand"                — a guess wearing an observation's clothes
 
-5. Write the observation as a second-person clause that would follow "I noticed that": lower case, no full stop, no greeting. Example: "your booking form goes to a shared inbox rather than a system".
+WHAT YOU MAY SAY
 
-6. Never mention a person's name even if the page has one.`
+1. Only what is in FACTS or literally in PAGE TEXT. Never add a detail because it seems likely.
+2. If you use a FACT, set basis "register" and fact_key to that fact's key. Set evidence to null.
+3. If you use the PAGE, set basis "page" and copy 4 to 20 words from it into evidence WORD FOR WORD. It is checked automatically and the whole answer is discarded if it does not match. Do not paraphrase. Do not tidy the punctuation.
+4. Prefer the strongest fact, which is the first one listed. But if the page shows something more specific about how they actually work, use that instead.
+
+WHAT YOU MAY NEVER SAY
+
+5. Never a person's name, even if the page is full of them.
+6. Never a food hygiene score unless a FACT states it. If the fact sheet says a rating is withheld, it is withheld because it is poor, and naming it would be an insult with a citation.
+7. Never a number, price, date or timescale that is not in FACTS or PAGE TEXT.
+8. Never flattery. "Your beautiful website" is not an observation.
+
+RETURNING NOTHING
+
+9. {"observation": null} is a correct answer and a common one. A weak clause is worse than none, because a weak one gets sent.`
 
 /* ---------- the call ---------- */
 
-async function ask(text, quota) {
+function promptFor(lead, pageText) {
+  const parts = []
+  if (lead.facts?.length) {
+    parts.push('FACTS (verified, from public registers):')
+    for (const f of lead.facts) {
+      parts.push(`- key: ${f.key}`)
+      parts.push(`  ${f.fact}`)
+      parts.push(`  angle: ${f.angle}`)
+    }
+  } else {
+    parts.push('FACTS: none on the public registers beyond the company existing.')
+  }
+  if (pageText) {
+    parts.push('', 'PAGE TEXT (their own website):', pageText.slice(0, MAX_CHARS))
+  } else {
+    parts.push('', 'PAGE TEXT: none — no website could be read.')
+  }
+  return parts.join('\n')
+}
+
+async function ask(prompt, quota) {
   if (quota.used >= RPD) throw new QuotaExhausted()
 
   let last = ''
@@ -174,8 +235,11 @@ async function ask(text, quota) {
           headers: { 'content-type': 'application/json', 'x-goog-api-key': KEY },
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: SYSTEM }] },
-            contents: [{ role: 'user', parts: [{ text: text.slice(0, MAX_CHARS) }] }],
-            generationConfig: { temperature: 0, responseMimeType: 'application/json' },
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            /* Not zero. At temperature 0 a batch built from six fact
+               patterns converges on six sentences, which is the exact
+               thing this file exists to prevent. */
+            generationConfig: { temperature: 0.9, topP: 0.95, responseMimeType: 'application/json' },
           }),
           signal: AbortSignal.timeout(30_000),
         }
@@ -221,7 +285,7 @@ async function ask(text, quota) {
    observations to no purpose. Everything else must match. */
 const norm = (s) => String(s).replace(/\s+/g, ' ').trim().toLowerCase()
 
-function validate(raw, pageText) {
+function validate(raw, lead, pageText) {
   let parsed
   try {
     parsed = JSON.parse(String(raw).replace(/^```(?:json)?\s*|\s*```$/g, '').trim())
@@ -231,100 +295,141 @@ function validate(raw, pageText) {
   if (!parsed || parsed.observation == null) return { ok: false, why: 'model found nothing' }
 
   const obs = String(parsed.observation).trim()
-  if (obs.length < 15) return { ok: false, why: 'observation too short to be specific' }
-  if (obs.length > 220) return { ok: false, why: 'observation too long to be one thing' }
+  const words = obs.split(/\s+/).length
+  if (words < 6) return { ok: false, why: 'clause too short to be specific' }
+  if (words > 45) return { ok: false, why: 'clause too long to be one thing' }
+  if (/^[A-Z]/.test(obs) || /\.$/.test(obs)) return { ok: false, why: 'not a lower-case clause' }
+
+  /* Forbidden regardless of where the claim came from. These are the
+     two that would do real damage: a withheld hygiene score, which is
+     withheld because it is poor, and a person's name, which moves the
+     whole record into a lawful basis this programme has not assessed.
+     See business/11-outreach/hooks.md §2 and first-contact-letter.md §1. */
+  const facts = lead.facts || []
+  const scoreStated = facts.some((f) => /rated \d/i.test(f.fact))
+  if (!scoreStated && /\b(rated|rating|score[ds]?)\b/i.test(obs)) {
+    return { ok: false, why: 'quotes a hygiene rating that was withheld' }
+  }
+  if (/\b(mr|mrs|ms|miss|dr)\b\.?\s+[A-Z]/i.test(obs)) {
+    return { ok: false, why: 'names a person' }
+  }
+
+  const basis = parsed.basis === 'page' ? 'page' : 'register'
+
+  if (basis === 'register') {
+    /* The model may only use a registration we handed it. Without this
+       it can decide a care-sounding company is CQC-registered, which is
+       the single most damaging thing it could invent here. */
+    const key = String(parsed.fact_key || '')
+    const f = facts.find((x) => x.key === key)
+    if (!f) return { ok: false, why: 'cited a register fact we did not supply' }
+    return { ok: true, observation: obs, evidence: f.evidence, basis, fact_key: key, service: f.service }
+  }
 
   const ev = String(parsed.evidence || '').trim()
-  if (!ev) return { ok: false, why: 'no evidence quoted' }
+  if (!ev) return { ok: false, why: 'claimed the page but quoted nothing' }
+  if (!pageText) return { ok: false, why: 'claimed the page when there was no page' }
 
-  /* The whole safety argument, in one comparison. */
+  /* The whole safety argument for page claims, in one comparison.
+     Whitespace is normalised on both sides — a model that collapses a
+     line break inside an otherwise perfect quote has invented nothing,
+     and failing it for that throws away good observations to no
+     purpose. Everything else must match. */
   if (!norm(pageText).includes(norm(ev))) {
     return { ok: false, why: 'evidence is not on the page' }
   }
 
-  return { ok: true, observation: obs, evidence: ev, confidence: parsed.confidence || 'low' }
+  return { ok: true, observation: obs, evidence: ev, basis, fact_key: null, service: null }
 }
 
 /* ---------- run ---------- */
 
 function setupNotice(n) {
   console.log(`
-  ${n} leads have nothing specific to say and would be scanned.
+  ${n} leads are ready to have their observation written.
 
-  GEMINI_API_KEY is not set, so nothing was sent anywhere.
+  GEMINI_API_KEY is not set, so nothing was sent anywhere and nothing
+  was written. The pipeline still works without it — observe.mjs leaves
+  a fallback sentence on every lead it could — but those fall back to
+  one of seven templates, and seven sentences across a batch is the
+  bulk-sender fingerprint this stage exists to remove.
 
   To run it:
     1. Get a key at aistudio.google.com/apikey (free, no card).
-    2. Check the RPM and RPD your dashboard actually shows — Google no
+    2. Check the RPM and RPD your dashboard actually shows. Google no
        longer publishes them, so the defaults here (${RPM}/min, ${RPD}/day)
-       are a guess and probably a conservative one.
+       are a conservative guess.
     3. export GEMINI_API_KEY=...
        export GEMINI_RPM=...  GEMINI_RPD=...
        node scripts/sourcing/scan.mjs
 
-  --dry-run shows which leads would be sent, and what would be sent,
-  without a key and without a request.
+  --dry-run prints the exact prompt for the first few leads, without a
+  key and without a request.
 `)
 }
 
 const doc = JSON.parse(fs.readFileSync(IN, 'utf8'))
 const all = doc.results || doc
-const residual = all.filter((r) => WEAK.has(r.signal) && r.cached)
-
-if (!residual.length) {
-  console.log('\n  Nothing to scan: every lead already has a register hook or a page signal.\n')
-  process.exit(0)
-}
 
 const pageFor = (r) => {
   const f = path.join(CACHE, `${cacheName(r.company)}.txt`)
   return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : null
 }
 
-if (DRY) {
-  console.log(`\n  DRY RUN — ${residual.length} leads would be scanned, nothing sent\n`)
-  for (const r of residual.slice(0, 5)) {
-    const text = pageFor(r)
-    console.log(`  ${r.company}`)
-    console.log(`    currently: ${r.observation || '(nothing)'}`)
-    console.log(`    would send: ${text ? `${Math.min(text.length, MAX_CHARS)} chars of page text` : 'NOTHING — page not cached'}`)
-  }
-  console.log(`\n  …and ${Math.max(residual.length - 5, 0)} more\n`)
+/* Every lead with something to write from. A lead with neither a
+   register fact nor a readable page has nothing to say and is left
+   alone — it gets written by hand or not written to at all. */
+const todoAll = all.filter((r) => (r.facts && r.facts.length) || pageFor(r))
+
+if (!todoAll.length) {
+  console.log('\n  Nothing to write: no lead has a register fact or a readable page.\n')
   process.exit(0)
 }
 
-if (!KEY) { setupNotice(residual.length); process.exit(0) }
+if (DRY) {
+  console.log(`\n  DRY RUN — ${todoAll.length} leads, nothing sent\n`)
+  for (const r of todoAll.slice(0, 3)) {
+    console.log(`  ── ${r.company} ${'─'.repeat(Math.max(0, 50 - r.company.length))}`)
+    console.log(`  currently: ${r.observation || '(nothing)'} [${r.source || 'none'}]`)
+    console.log('  prompt:')
+    console.log(promptFor(r, pageFor(r)).split('\n').map((l) => '    ' + l).join('\n').slice(0, 1200))
+    console.log('')
+  }
+  console.log(`  …and ${Math.max(todoAll.length - 3, 0)} more\n`)
+  process.exit(0)
+}
+
+if (!KEY) { setupNotice(todoAll.length); process.exit(0) }
 
 /* Resume where a previous run stopped. Same idiom as
-   extract-contacts.mjs, and the reason it is here is the same: a run
-   that dies halfway must not start again from the beginning and spend
-   the day's allowance twice. */
+   extract-contacts.mjs, and the reason is the same: a run that dies
+   halfway must not start again from the beginning and spend the day's
+   allowance twice. */
 const seen = new Set()
 if (fs.existsSync(CHECKPOINT)) {
   for (const line of fs.readFileSync(CHECKPOINT, 'utf8').split('\n')) {
     if (!line.trim()) continue
     try { seen.add(JSON.parse(line).company) } catch { /* torn last line */ }
   }
-  console.log(`\n  resuming: ${seen.size} already scanned`)
+  console.log(`\n  resuming: ${seen.size} already written`)
 }
 
 const quota = readQuota()
-const todo = residual.filter((r) => !seen.has(r.company))
-console.log(`\n  ${todo.length} to scan, ${quota.used}/${RPD} of today's budget already spent\n`)
+const todo = todoAll.filter((r) => !seen.has(r.company))
+console.log(`\n  ${todo.length} to write, ${quota.used}/${RPD} of today's budget already spent\n`)
 
 fs.mkdirSync(path.dirname(CHECKPOINT), { recursive: true })
 const sink = fs.createWriteStream(CHECKPOINT, { flags: 'a' })
-const scanned = []
+const written = []
 let kept = 0, rejected = 0, stopped = false
 const why = {}
 
 for (const r of todo) {
   const text = pageFor(r)
-  if (!text) { continue }
 
   let raw
   try {
-    raw = await ask(text, quota)
+    raw = await ask(promptFor(r, text), quota)
   } catch (err) {
     if (err instanceof QuotaExhausted) {
       console.log(`\n  Daily budget reached at ${quota.used} requests. Stopping.`)
@@ -335,38 +440,40 @@ for (const r of todo) {
     throw err
   }
 
-  const v = validate(raw, text)
+  const v = validate(raw, r, text)
   const row = v.ok
-    ? { company: r.company, signal: 'scanned', observation: v.observation, evidence: v.evidence, confidence: v.confidence, source: 'model' }
-    : { company: r.company, signal: r.signal, observation: r.observation, source: r.source || 'page', rejected: v.why }
+    ? { company: r.company, signal: v.basis === 'register' ? v.fact_key : 'page_observation',
+        observation: v.observation, evidence: v.evidence, service: v.service || r.service || null,
+        source: 'written' }
+    : { company: r.company, signal: r.signal, observation: r.observation,
+        source: r.source || null, rejected: v.why }
 
   if (v.ok) { kept++ } else { rejected++; why[v.why] = (why[v.why] || 0) + 1 }
-  scanned.push(row)
+  written.push(row)
   sink.write(JSON.stringify(row) + '\n')
-  if ((kept + rejected) % 10 === 0) console.log(`  ${kept + rejected}/${todo.length}  kept ${kept}`)
+  if ((kept + rejected) % 10 === 0) console.log(`  ${kept + rejected}/${todo.length}  written ${kept}`)
 }
 sink.end()
 
-/* Merge back: a scanned observation replaces the weak one, everything
-   else is left exactly as observe.mjs left it. */
-const byCompany = new Map(scanned.map((r) => [r.company, r]))
+const byCompany = new Map(written.map((r) => [r.company, r]))
 const merged = all.map((r) => {
-  const s = byCompany.get(r.company)
-  return s && s.signal === 'scanned' ? { ...r, ...s, cached: undefined } : r
+  const w = byCompany.get(r.company)
+  return w && w.source === 'written' ? { ...r, ...w, cached: undefined, facts: undefined } : r
 })
 fs.writeFileSync(OUT, JSON.stringify({ generated_at: new Date().toISOString(), results: merged }, null, 1))
 
 /* The cache is other people's website content and it has done its job.
-   Keeping it would be holding more than we need, for longer than we
-   need it, which is the thing UK GDPR minimisation is about — and the
-   evidence quote, which is what we would actually have to produce if
-   someone asked, is persisted in the output. */
-if (!KEEP_CACHE && !stopped) {
-  fs.rmSync(CACHE, { recursive: true, force: true })
-}
+   The evidence quote — the thing we would actually have to produce if
+   someone asked where a claim came from — is in the output. */
+if (!KEEP_CACHE && !stopped) fs.rmSync(CACHE, { recursive: true, force: true })
+
+/* How many distinct sentences came out. This is the number the whole
+   change is for: in August it was 9 across 77 drafts. */
+const distinct = new Set(written.filter((r) => r.source === 'written').map((r) => r.observation)).size
 
 console.log(`
-  ${kept} observations kept, ${rejected} rejected
+  ${kept} written, ${rejected} rejected and left as they were
+  ${distinct} distinct sentences across ${kept} written observations
 ${Object.entries(why).sort((a, b) => b[1] - a[1]).map(([k, v]) => `  ${String(v).padStart(4)}  ${k}`).join('\n')}
 
   ${quota.used}/${RPD} of today's budget spent

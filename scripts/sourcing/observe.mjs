@@ -22,7 +22,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { registerHook } from './hooks.mjs'
+import { leadFacts, templateHook } from './hooks.mjs'
 
 const arg = (flag, fallback) => {
   const i = process.argv.indexOf(flag)
@@ -45,11 +45,11 @@ const CONCURRENCY = Number(arg('--concurrency', 12))
    scan.mjs deletes it when it is done. .gitignore covers .sourcing. */
 const CACHE = arg('--cache', '.sourcing/pages')
 
-/* The signals that mean "nothing specific enough to write from". These
-   are exactly the leads scan.mjs is for: describes_itself produced 68
-   of the August batch's 77 drafts and is the reason any of this
-   happened. */
-const WEAK = new Set(['describes_itself', 'nothing_specific'])
+/* Every lead with a readable page gets cached now, not just the weak
+   ones. scan.mjs writes a bespoke sentence for all of them, and it
+   writes better ones when it can see the page as well as the register
+   facts — a CQC provider whose site says "call the office to arrange a
+   visit" is worth more than either fact alone. */
 
 const cacheName = (company) =>
   company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)
@@ -168,16 +168,24 @@ function describeFromTitle(title, company) {
 async function observe(lead) {
   const out = { company: lead.company, website: lead.website || null, signal: null, observation: null }
 
-  /* Registers before the page, which is the ordering decided in
-     business/11-outreach/personalisation-and-hooks.md.
+  /* Register facts first, and ALL of them rather than the best one.
+     scan.mjs decides which to use and how to say it; a business that is
+     both CQC-registered and twenty years old is more interesting than
+     either fact alone, and only something that can write a sentence can
+     see that.
 
-     A CQC registration or an ICO entry is dated, is what a regulator
-     actually recorded, and already carries its provenance in the
-     pipeline that fetched it. A homepage is what a business's marketing
-     says about itself, read by eight regexes. When both are available
-     the register wins, and it is not close. */
-  const hook = registerHook(lead)
-  if (hook) return Object.assign(out, hook)
+     These are dated, are what a regulator actually recorded, and carry
+     their provenance in the pipeline that fetched them — unlike a
+     homepage, which is a business's marketing talking about itself. */
+  out.facts = leadFacts(lead)
+
+  /* The fallback sentence, used as-is only if there is no API key or
+     the day's quota is gone. Marked source 'register-template' so a
+     batch full of them is legible as a missing key rather than as
+     writing that quietly got worse. */
+  const fallback = templateHook(lead)
+  if (fallback && !lead.website) return Object.assign(out, fallback)
+  if (fallback) Object.assign(out, fallback)
 
   if (!lead.website) {
     /* No register hook and no site to read. Say the one plain true thing
@@ -198,7 +206,9 @@ async function observe(lead) {
     .trim() || ''
   out.title = title.slice(0, 120) || null
 
+  out._text = text
   for (const s of SIGNALS) {
+    if (out.observation) break
     const captured = s.capture ? (text.match(s.capture) || [])[1] : null
     if (s.test(html, text, title)) {
       out.signal = s.key
@@ -214,7 +224,7 @@ async function observe(lead) {
      Coach Company", "Self-Drive Van Rental" — they wrote that, so quoting it
      back is specific and cannot be wrong. The company name is stripped out so
      the sentence does not just repeat who they are. */
-  out._text = text
+  if (out.observation) return out
   const described = describeFromTitle(title, lead.company)
   if (described) {
     out.signal = 'describes_itself'
@@ -241,7 +251,7 @@ async function worker() {
   while (queue.length) {
     const lead = queue.shift()
     const r = await observe(lead)
-    if (WEAK.has(r.signal) && r._text) {
+    if (r._text) {
       fs.mkdirSync(CACHE, { recursive: true })
       fs.writeFileSync(path.join(CACHE, `${cacheName(r.company)}.txt`), r._text)
       r.cached = true

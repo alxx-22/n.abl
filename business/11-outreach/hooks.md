@@ -3,11 +3,17 @@
 The one true thing a first contact says, where it comes from, and when it must
 not be said.
 
-**The sentences themselves live in `scripts/sourcing/hooks.mjs`**, not here. One
-source, so this file cannot drift away from what actually gets sent. What this
-file carries is the editorial judgement behind them — the part only a person can
-settle, and the part that decides whether a letter reads as written or
-generated.
+**Nothing here is a sentence.** `scripts/sourcing/hooks.mjs` states what is
+*true* about a business; `scripts/sourcing/scan.mjs` writes the clause, once per
+lead, so that 149 leads get 149 sentences.
+
+That split is the whole design. Facts have to be deterministic, because a
+made-up fact reaches a stranger's inbox. Phrasing has to *not* be, because
+near-identical bodies are a bulk-sender fingerprint whatever the facts behind
+them — and a recipient spots a template at a glance.
+
+The first version of this library wrote the sentences from seven fixed
+templates. That was the August problem in better clothing.
 
 Decided in [`personalisation-and-hooks.md`](personalisation-and-hooks.md), built
 14 September 2026.
@@ -19,19 +25,44 @@ Decided in [`personalisation-and-hooks.md`](personalisation-and-hooks.md), built
 Three sources, in this order. The first one that produces something wins, and
 nothing further down is consulted.
 
-| | Source | Cost | Covers |
+| | Stage | Produces | Cost |
 |---|---|---|---|
-| 1 | **Registers** — CQC, ICO, FSA, Charity Commission, Companies House | £0, no key | Most leads |
-| 2 | **The page** — eight regexes over the homepage | £0, no key | Some of the rest |
-| 3 | **A model** — one Gemini call per lead | Free tier | Only what is left |
+| 1 | **Registers** (`hooks.mjs`) | Facts. CQC, ICO, FSA, Charity Commission, Companies House | £0, no key |
+| 2 | **The page** (`observe.mjs`) | Page text, cached, plus a template fallback | £0, no key |
+| 3 | **The writer** (`scan.mjs`) | The clause itself, one call per lead | Free tier |
 
-The order is not arbitrary. A register fact is dated, is what a regulator
-recorded rather than what a marketing page claims, and already carries its
-provenance in the pipeline that fetched it. A homepage is a business talking
-about itself. When both are available the register wins and it is not close.
+Stage 3 runs on **every** lead, not a residual. An earlier version only called
+the model where the regexes had failed, which meant the best leads — the ones
+with a real register fact — got the most templated sentence. Exactly backwards.
 
-This ordering is also why the model stage is small enough to be free. It only
-ever sees the residual.
+Order still matters, but as *ranking* rather than as a cut-off: the strongest
+fact is listed first and the model is told so. A register fact is dated, is what
+a regulator recorded rather than what a marketing page claims, and carries its
+provenance in the pipeline that fetched it. But a page that says "ring the
+workshop to arrange a quote" can beat a register fact for specificity, so the
+writer gets both and chooses.
+
+### What the model may and may not do
+
+It may choose which fact to use, and how to say it. It may **not**:
+
+- use a register fact it was not given — a fabricated CQC registration is the
+  most damaging thing this stage could produce, and `scan.mjs` rejects any claim
+  whose `fact_key` was not on the sheet
+- quote the page without quoting it word for word
+- name a hygiene score that was withheld, or a person
+
+A rejected answer falls back to the template. The worst case is a sentence that
+reads like a template, not a lie.
+
+### What is deliberately not sent
+
+The fact sheet goes to a free tier that trains on what it receives, so it
+carries no company name, no contact route and **no address**. The trading-address
+hook states only that the trading and registered addresses differ; the address
+itself stays on this machine and is used only by the local fallback. For a
+limited company an address is business data, for a sole trader it can be a home
+address, and there is no way to tell which from here.
 
 ---
 
@@ -88,11 +119,18 @@ can tell, and it is the fastest way to sound like a mail merge.
 
 ## 4. Editing these
 
-The sentences in `hooks.mjs` are a first draft by someone who is not Alex. They
-are correct and they are not yet in his voice, which is the whole point of the
-exercise.
+Two places, and they do different jobs.
 
-When changing one:
+**`hooks.mjs`** holds the facts, the `angle` (what the fact implies, which is
+what the writer works from), and the `template` fallback. Edit the angle to
+change *what gets noticed*.
+
+**The prompt in `scan.mjs`** holds the voice — the worked good and bad examples
+are what the sentences are modelled on. Edit those to change *how it sounds*.
+They are currently in my voice, not Alex's, and that is the one part that cannot
+be delegated.
+
+When changing either:
 
 - Read it aloud. `first-contact-letter.md` §5 asks for exactly this before a
   first send, because a letter that reads as a mail merge is easier to hear than
