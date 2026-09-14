@@ -23,3 +23,9 @@ npm-debug.log*
 # Large, regenerable, and they hold third-party business data that has
 # no reason to be in version control.
 .sourcing/
+
+# The public assistant's knowledge, compiled from
+# business/03-website/assistant-knowledge.md by scripts/build-knowledge.mjs
+# and bundled into the Worker at build time. Generated, so the markdown is
+# the source of truth and this would only ever be a stale copy of it.
+worker/knowledge.generated.ts
