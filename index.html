@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,7 +23,81 @@
     <meta property="og:image" content="https://nabl.agency/brand/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <!-- Without this the share card shows the bare URL where it could show
+         the name. One line, and the name is the thing being recognised. -->
+    <meta property="og:site_name" content="n.abl" />
+    <!-- The card is an image of the headline, so a reader using a screen
+         reader gets nothing from it unless the text is repeated here. -->
+    <meta property="og:image:alt" content="n.abl — Tell us what's costing you. We build the fix." />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- ============================================================
+         STRUCTURED DATA
+
+         A search engine has no way to tell that "n.abl" is a business in
+         Nottingham rather than nabl.org (bond lawyers), nabl-agency.de (a
+         Berlin marketing agency) or India's National Accreditation Board,
+         all of which outrank us for our own name. This is how the entity
+         gets stated rather than inferred.
+
+         It also matters for being quoted. Pages carrying clean entity
+         markup are cited by assistants at measurably higher rates, because
+         there are facts to lift rather than prose to interpret.
+
+         EVERY CLAIM HERE IS TRUE AND APPEARS ON THE PAGE. Deliberately
+         absent, and each one would be a lie today:
+
+           address        — there is no trading address yet. 04-legal and
+                            16-finance both carry [PLACEHOLDER]. Add
+                            "address" here in the same commit that fills
+                            those in, and open the Google Business Profile
+                            at the same time.
+           telephone      — the site publishes no phone number.
+           priceRange     — there is no price list. "Fixed prices" is a
+                            policy, not a range.
+           aggregateRating / review — there are no clients to review us
+                            yet. Inventing these is both against Google's
+                            guidelines and a misleading commercial
+                            practice under the CPRs.
+           sameAs         — no confirmed social profiles.
+         ============================================================ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "@id": "https://nabl.agency/#business",
+      "name": "n.abl",
+      "url": "https://nabl.agency/",
+      "email": "hello@nabl.agency",
+      "description": "n.abl is a technology implementation business working with owner-run companies in Nottinghamshire and around Alcester in Warwickshire. We take a job that is costing a business time or accuracy and build the right fix for it.",
+      "areaServed": [
+        { "@type": "City", "name": "Nottingham" },
+        { "@type": "AdministrativeArea", "name": "Nottinghamshire" },
+        { "@type": "City", "name": "Alcester" },
+        { "@type": "AdministrativeArea", "name": "Warwickshire" }
+      ],
+      "knowsAbout": [
+        "Workflow automation",
+        "Data and analytics",
+        "Custom software",
+        "Web development",
+        "Applied AI",
+        "Training and support"
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "What we build",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Automation", "description": "Taking repetitive work off people's hands: workflow automation, joining systems that do not talk to each other, custom scripts." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Data and analytics", "description": "Making the numbers a business already has usable: cleaning the data, dashboards, reporting, decision support." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Custom software", "description": "Internal tools, applications and databases built for one job." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Web", "description": "Websites, online shops, booking flows, customer portals and taking payments." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "AI", "description": "Document handling, classification, assistants, drafting and analysis, where it genuinely helps." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Training and support", "description": "Staff training, documentation, troubleshooting and improvements, so the fix survives us leaving." } }
+        ]
+      }
+    }
+    </script>
 
     <!-- Fonts are self-hosted. Loading them from Google would send every
          visitor's IP address to a third party on page load, which is a

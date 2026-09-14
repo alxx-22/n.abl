@@ -55,6 +55,20 @@
     // site, and every client-side route is a 404.
     "binding": "ASSETS",
 
+    // Serve /privacy rather than /privacy/.
+    //
+    // build-routes.mjs writes dist/privacy/index.html — a folder index — and
+    // Workers' default html_handling ("auto-trailing-slash") serves folder
+    // indexes at the slashed form, redirecting /privacy to /privacy/ with a
+    // 307. sitemap.xml and every canonical tag declare the UNslashed form, so
+    // the sitemap pointed at a redirect and the page it landed on named its
+    // canonical as the URL that had just redirected away.
+    //
+    // Netlify served the file directly and the question never arose; this is a
+    // migration regression that survived because nothing checked the redirect
+    // behaviour. scripts/check-seo.mjs checks it now.
+    "html_handling": "drop-trailing-slash",
+
     // React Router owns /crm, /portal, /team and the rest, so a request for a
     // path with no matching file has to return index.html rather than a 404.
     // Pages inferred this from the presence of index.html; Workers makes it

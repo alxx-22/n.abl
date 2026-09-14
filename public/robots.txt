@@ -20,4 +20,29 @@ Disallow: /portal
 # Everything else is public: /, /privacy, /terms, /cookies
 Allow: /
 
+# AI crawlers are deliberately welcome, and deliberately NOT given their own
+# groups.
+#
+# The decision first: GPTBot, ClaudeBot, PerplexityBot and the rest may read
+# this site. Being quoted in an assistant's answer is a discovery channel a new
+# business can actually win, unlike ranking, where nabl.org, nabl-agency.de and
+# India's National Accreditation Board all outrank us for our own name. That is
+# also why the public pages are rendered at build time — see
+# scripts/build-routes.mjs. Blocking the crawlers and prerendering for them
+# would be paying twice for nothing.
+#
+# Now the trap, which is why there is no "User-agent: GPTBot" block below.
+# A crawler obeys the MOST SPECIFIC group that matches it and ignores the rest.
+# So adding
+#
+#     User-agent: GPTBot
+#     Allow: /
+#
+# would not add a permission to the rules above — it would replace them, and
+# /crm, /team and /portal would be crawlable by that one agent. Any named group
+# has to repeat every Disallow above, and the day someone adds a path here and
+# not there is the day the CRM is indexed.
+#
+# One group, no exceptions, and the wildcard already covers them.
+
 Sitemap: https://nabl.agency/sitemap.xml

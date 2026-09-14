@@ -17,13 +17,30 @@
    boots, and the router renders the same page it always did. The
    markup is byte-identical apart from the head.
 
-   Run automatically by `npm run build`.
+   SINCE SEPTEMBER 2026 IT ALSO WRITES THE BODY
+
+   Fixing the head was only half of it. Every shell still shipped an
+   empty <div id="root">, so the live home page answered crawlers with
+   2,583 bytes containing zero characters of readable text. Googlebot
+   runs JavaScript and got there eventually; GPTBot, ClaudeBot and
+   PerplexityBot do not run it and do not return, so the site was
+   invisible to every AI assistant.
+
+   So each shell now carries its route's markup, rendered at build
+   time by src/prerender.jsx. See that file for why it renders the
+   pages directly instead of <App />, and why this is prerendering
+   rather than hydration.
+
+   Run automatically by `npm run build`, after both Vite builds.
    ============================================================ */
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+const DIST = join(ROOT, 'dist')
+const SSR = join(ROOT, 'dist-ssr', 'prerender.js')
 const ORIGIN = 'https://nabl.agency'
 
 const ROUTES = [
@@ -63,8 +80,37 @@ function setMeta(html, attr, value, content) {
 
 const escapeAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
+/* The shell ships <div id="root"></div> and nothing else. Put the
+   route's markup inside it.
+
+   Anchored on the empty div specifically: if a previous run already
+   filled it, or Vite ever changes the mount point, this throws rather
+   than silently shipping an empty body again. Being loud is the whole
+   point — the bug this replaces was invisible for a month because
+   nothing checked. */
+function injectBody(html, markup) {
+  const empty = '<div id="root"></div>'
+  if (!html.includes(empty)) {
+    throw new Error('build-routes: no empty <div id="root"></div> in the shell')
+  }
+  return html.replace(empty, `<div id="root">${markup}</div>`)
+}
+
 async function run() {
   const shell = await readFile(join(DIST, 'index.html'), 'utf8')
+
+  /* The SSR bundle is built by `vite build --ssr` in the line before
+     this script runs. If it is missing the build is misconfigured, and
+     shipping unrendered shells is exactly the failure this script
+     exists to prevent — so stop rather than carry on quietly. */
+  if (!existsSync(SSR)) {
+    throw new Error(
+      'build-routes: dist-ssr/prerender.js is missing. ' +
+      'Run `vite build --ssr src/prerender.jsx --outDir dist-ssr` first, ' +
+      'or use `npm run build`, which does both.'
+    )
+  }
+  const { render } = await import(SSR)
 
   for (const r of ROUTES) {
     let html = shell
@@ -85,18 +131,24 @@ async function run() {
       `  <link rel="canonical" href="${ORIGIN}/${r.path}" />\n  </head>`
     )
 
+    const markup = render(`/${r.path}`)
+    html = injectBody(html, markup)
+
     await mkdir(join(DIST, r.path), { recursive: true })
     await writeFile(join(DIST, r.path, 'index.html'), html)
-    console.log(`  /${r.path} → dist/${r.path}/index.html`)
+    console.log(`  /${r.path} → dist/${r.path}/index.html  (${markup.length.toLocaleString()} chars rendered)`)
   }
 
-  // The home page gets its own canonical too.
+  // The home page gets its own canonical, and its own markup. It is the
+  // page that matters most here and the one that was emptiest.
   let home = shell.replace(
     /<\/head>/i,
     `  <link rel="canonical" href="${ORIGIN}/" />\n  </head>`
   )
+  const homeMarkup = render('/')
+  home = injectBody(home, homeMarkup)
   await writeFile(join(DIST, 'index.html'), home)
-  console.log('  / → canonical added')
+  console.log(`  / → dist/index.html  (${homeMarkup.length.toLocaleString()} chars rendered)`)
 }
 
 run().catch((err) => {

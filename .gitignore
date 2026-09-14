@@ -3,6 +3,11 @@ node_modules/
 
 # build output
 dist/
+
+# The build-time render bundle. Same status as dist/: produced by
+# `vite build --ssr` so scripts/build-routes.mjs can render the public
+# routes into their shells, and rewritten on every build.
+dist-ssr/
 .vite/
 
 # env — never commit real keys
