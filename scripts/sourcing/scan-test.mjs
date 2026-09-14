@@ -48,35 +48,58 @@ fs.writeFileSync(path.join(dir, 'obs.json'), JSON.stringify({ results: [
   { company: 'IOTA WORKS LTD',      signal: 'nothing_specific', observation: null, facts: [], cached: true },
 ] }))
 
-/* One scripted reply per call, in order. */
-const replies = [
-  // 1. truthful page claim: the quote is on page A word for word
-  { observation: 'quotes start with a phone call to the workshop rather than a form', basis: 'page', evidence: 'we do not take bookings online' },
-  // 2. FABRICATED quote: plausible, fluent, and nowhere on page B
+/* The stub now answers per MODEL, because the pipeline makes two calls
+   per lead against two different chains: a read on Flash-Lite and a
+   write on Flash. Answering by order alone stopped being meaningful. */
+const READ_OK = { candidates: [{ what: 'quotes start with a phone call', quote: 'we do not take bookings online' }] }
+/* On GAMMA's page, so it survives the read-stage check. The write
+   stage then quotes something else entirely, which is what the second
+   gate is for. */
+const READ_GAMMA = { candidates: [{ what: 'tenants report faults on a form', quote: 'Tenants report maintenance issues using the form below' }] }
+/* Not on DELTA's page at all — the read stage should drop this before
+   the write stage ever sees it. */
+const READ_LIE = { candidates: [{ what: 'a 24 hour line', quote: 'our 24 hour emergency line is always open' }] }
+const READ_NONE = { candidates: [] }
+
+/* Write-stage replies, in the order the leads are processed. */
+const writes = [
+  // ALPHA — truthful page claim, quoting a verified finding
+  { observation: 'your site asks people to ring the workshop, so every job starts as a phone call somebody writes down', basis: 'page', evidence: 'we do not take bookings online' },
+  // GAMMA — quotes something the READ stage never passed through
   { observation: 'you run a 24 hour emergency maintenance line', basis: 'page', evidence: 'our 24 hour emergency line is always open' },
-  // 3. PARAPHRASED: close to page C but not a quote
+  // DELTA — a paraphrase of a finding rather than the finding
   { observation: 'you have been trading since the late nineties', basis: 'page', evidence: 'quality service since 1998 in Nottingham' },
-  // 4. honest null — the correct answer for a page with nothing on it
+  // EPSILON — honest null
   { observation: null },
-  // 5. INVENTED REGISTRATION: a fact key nobody supplied. The single
-  //    most damaging thing this stage could get wrong.
+  // ETA — INVENTED registration, a fact key nobody supplied
   { observation: 'you are CQC-registered, which is a lot of evidence to keep', basis: 'register', fact_key: 'cqc_registered' },
-  // 6. WITHHELD SCORE: the fact sheet deliberately did not state it
+  // THETA — WITHHELD hygiene score
   { observation: 'you are rated 2 on the food hygiene register, which must sting', basis: 'register', fact_key: 'food_premises' },
-  // 7. legitimate register claim, matching a supplied key
+  // ZETA — legitimate register claim
   { observation: 'you are CQC-registered for personal care, which is a lot of rotas to keep evidenced', basis: 'register', fact_key: 'cqc_registered' },
 ]
-let n = 0
+
+let readN = 0, writeN = 0
 const sent = []
 const server = http.createServer((req, res) => {
   let captured = ''
   req.on('data', (d) => { captured += d })
-  req.on('end', () => { sent.push(captured) })
-  n++
-  if (n > replies.length) { res.writeHead(429); res.end('{}'); return }
-  const body = JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify(replies[n - 1]) }] } }] })
-  res.writeHead(200, { 'content-type': 'application/json' })
-  res.end(body)
+  req.on('end', () => {
+    sent.push({ url: req.url, body: captured })
+    const isRead = /flash-lite/.test(req.url)
+    let payload
+    if (isRead) {
+      readN++
+      payload = readN === 1 ? READ_OK : readN === 2 ? READ_GAMMA : readN === 3 ? READ_LIE : READ_NONE
+    } else {
+      writeN++
+      if (writeN > writes.length) { res.writeHead(429); res.end('{}'); return }
+      payload = writes[writeN - 1]
+    }
+    const body = JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify(payload) }] } }] })
+    res.writeHead(200, { 'content-type': 'application/json' })
+    res.end(body)
+  })
 })
 await new Promise((r) => server.listen(4197, r))
 
@@ -89,9 +112,9 @@ const run = await new Promise((resolve) => {
   '--in', path.join(dir, 'obs.json'),
   '--out', path.join(dir, 'out.json'),
   '--cache', pages,
-  '--quota', path.join(dir, 'quota.json'),
+  '--quota', path.join(dir, 'state.json'),
   '--keep-cache',
-], { env: { ...process.env, GEMINI_API_KEY: 'test', GEMINI_BASE_URL: 'http://localhost:4197', GEMINI_RPM: '600', GEMINI_RPD: '50' } })
+], { env: { ...process.env, GEMINI_API_KEY: 'test', GEMINI_BASE_URL: 'http://localhost:4197' } })
   let stdout = '', stderr = ''
   child.stdout.on('data', (d) => { stdout += d })
   child.stderr.on('data', (d) => { stderr += d })
@@ -119,15 +142,15 @@ const ok = (name, cond, detail = '') => {
 
 console.log('\nGUARD BEHAVIOUR\n')
 ok('a truthful page claim is kept',
-   by['ALPHA JOINERY LTD'].source === 'written' && /phone call to the workshop/.test(by['ALPHA JOINERY LTD'].observation),
+   by['ALPHA JOINERY LTD'].source === 'written' && /ring the workshop/.test(by['ALPHA JOINERY LTD'].observation),
    JSON.stringify(by['ALPHA JOINERY LTD']))
-ok('a FABRICATED quote is rejected',
-   by['GAMMA LETTINGS LTD'].source !== 'written' && rej['GAMMA LETTINGS LTD'] === 'evidence is not on the page',
+ok('a quote the READ stage never verified is rejected',
+   by['GAMMA LETTINGS LTD'].source !== 'written' && rej['GAMMA LETTINGS LTD'] === 'evidence is not one of the verified quotes',
    rej['GAMMA LETTINGS LTD'])
 ok('  …and the lead keeps what it had (null), not the lie',
    by['GAMMA LETTINGS LTD'].observation == null)
-ok('a PARAPHRASED quote is rejected too',
-   by['DELTA LTD'].source !== 'written' && rej['DELTA LTD'] === 'evidence is not on the page',
+ok('a quote the READ stage invented never reaches WRITE',
+   by['DELTA LTD'].source !== 'written' && rej['DELTA LTD'] === 'claimed the page when nothing was found on it',
    rej['DELTA LTD'])
 ok('an honest null is accepted as an answer',
    by['EPSILON SERVICES LTD'].source !== 'written' && rej['EPSILON SERVICES LTD'] === 'model found nothing',
@@ -144,7 +167,20 @@ ok('a legitimate register claim is kept, with the register as evidence',
    by['ZETA CARE LTD'].source === 'written' && by['ZETA CARE LTD'].evidence === 'CQC register, location L-1',
    JSON.stringify(by['ZETA CARE LTD']))
 ok('a 429 stops the run rather than hammering the API',
-   /Daily budget reached|Stopping/.test(run.stdout), run.stdout.slice(-200))
+   /Stopping|exhausted/.test(run.stdout), run.stdout.slice(-300))
+
+console.log('\nSTAGED MODELS\n')
+const readCalls = sent.filter((r) => /flash-lite/.test(r.url))
+const writeCalls = sent.filter((r) => !/flash-lite/.test(r.url))
+ok('reading went to a Flash-Lite model', readCalls.length > 0, `${readCalls.length} read calls`)
+ok('writing went to a different model', writeCalls.length > 0 && writeCalls.every((r) => !/flash-lite/.test(r.url)),
+   writeCalls.map((r) => r.url.split('/').pop()).slice(0, 2).join(', '))
+ok('no read call was made for a lead with no page',
+   readCalls.length < sent.length, `${readCalls.length} reads vs ${sent.length} total`)
+ok('the read stage ran cooler than the write stage',
+   JSON.parse(readCalls[0].body).generationConfig.temperature <
+   JSON.parse(writeCalls[0].body).generationConfig.temperature,
+   `read ${JSON.parse(readCalls[0].body).generationConfig.temperature}, write ${JSON.parse(writeCalls[0].body).generationConfig.temperature}`)
 ok('the run exits cleanly', run.status === 0, `exit ${run.status} ${run.stderr.slice(0, 200)}`)
 
 console.log('\nWHAT LEFT THE MACHINE\n')
@@ -152,7 +188,7 @@ console.log('\nWHAT LEFT THE MACHINE\n')
    is that only the business's own public page is sent. That is a claim
    about the request body, so it is checked against the request body. */
 const leaked = []
-for (const body of sent) {
+for (const { body } of sent) {
   /* Fact keys ARE sent deliberately — the model has to cite one, and
      they are category labels derived from public registers. What must
      never appear is anything identifying: the company's name, a contact
@@ -164,7 +200,7 @@ for (const body of sent) {
 }
 ok(`no company name, signal or lead field in any of the ${sent.length} request bodies`,
    leaked.length === 0, leaked.slice(0, 3).join(', '))
-ok('every request carried page text', sent.length > 0 && sent.every((b) => b.includes('systemInstruction')))
+ok('every request carried a system instruction', sent.length > 0 && sent.every((r) => r.body.includes('systemInstruction')))
 console.log(`\n${fail ? fail + ' failed' : 'all guard checks passed'}`)
 fs.rmSync(dir, { recursive: true, force: true })
 process.exit(fail ? 1 : 0)

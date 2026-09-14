@@ -4,7 +4,22 @@
 
      hooks.mjs    what is TRUE     registers, deterministic, £0
      observe.mjs  gathers it       facts + page text, £0
-     scan.mjs     writes the line  this file, one call per lead
+     scan.mjs     READ then WRITE  this file, two staged calls
+
+   Two stages, two different models, chosen by what the call is for.
+
+     read   Flash-Lite, temperature 0.2. Extraction: comb the page for
+            candidate facts about how the business operates, each with
+            a verbatim quote. High volume, low judgement, and Flash-Lite
+            has four times Flash's daily headroom.
+     write  Flash, temperature 0.95. Prose: turn the best candidate
+            into the clause a stranger actually reads. Low volume, all
+            judgement, worth the better model — and only leads that got
+            something out of `read` ever reach it.
+
+   Splitting them is not ceremony. A model asked to extract and charm in
+   one breath does both worse, and the failure mode is the charming
+   half inventing something for the extracting half to have found.
 
    The division is the whole point. Facts must be deterministic, because
    a made-up fact reaches a stranger's inbox. Phrasing must not be,
@@ -58,18 +73,15 @@
 
    QUOTAS
 
-   Google no longer publishes fixed free-tier RPM/RPD figures — the
-   docs point you at your own AI Studio dashboard. So nothing here is
-   hardcoded from a number somebody half-remembered. The defaults below
-   are deliberately conservative, every one is overridable, and the
-   daily count is persisted so a run that resumes tomorrow does not
-   start the day already over budget.
-
-   Set what your dashboard actually says:
-     GEMINI_RPM=15  GEMINI_RPD=200  node scripts/sourcing/scan.mjs
+   Per model, not per account, and handled in gemini.mjs. Flash-Lite's
+   thousand daily requests and Flash's two hundred and fifty are
+   separate budgets; treating them as one wastes the first or blows the
+   second. A 429 is believed over any published table.
    ============================================================ */
 import fs from 'node:fs'
 import path from 'node:path'
+
+import { createClient, AllModelsExhausted, LIMITS, TASKS } from './gemini.mjs'
 
 const arg = (flag, fallback) => {
   const i = process.argv.indexOf(flag)
@@ -85,24 +97,6 @@ const KEEP_CACHE = process.argv.includes('--keep-cache')
 const DRY = process.argv.includes('--dry-run')
 
 const KEY = process.env.GEMINI_API_KEY || ''
-const RPM = Number(process.env.GEMINI_RPM || arg('--rpm', 15))
-const RPD = Number(process.env.GEMINI_RPD || arg('--rpd', 200))
-
-/* Overridable so the guard below can be tested against a stub that
-   returns a deliberately fabricated quote. There is no way to prove a
-   rejection path works by pointing it at the real API and hoping the
-   model lies. */
-const BASE = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com'
-
-/* A chain rather than one name, for the reason portal-assistant/index.ts
-   learned the hard way: a single hardcoded model is an outage that
-   arrives without a deploy. Cheapest first — this is extraction from
-   supplied text, not reasoning, and the small models are good at it. */
-const MODELS = [
-  'gemini-3.5-flash-lite',
-  'gemini-2.5-flash-lite',
-  'gemini-2.5-flash',
-]
 
 /* Enough of a homepage to find something specific on, and no more.
    Every character here is a token spent and a token counted against a
@@ -115,49 +109,32 @@ const WEAK = new Set(['describes_itself', 'nothing_specific'])
 const cacheName = (company) =>
   company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)
 
-/* ---------- quota ---------- */
+/* ---------- the two prompts ---------- */
 
-const today = () => new Date().toISOString().slice(0, 10)
+/* STAGE 1 — READ. Extraction, low temperature, Flash-Lite.
+   It is not asked to be interesting, only accurate. Everything it
+   returns must be quotable, because stage 2 may only build on what
+   this stage found and what the register already said. */
+const READ_SYSTEM = `You comb a small UK business's own homepage for concrete facts about HOW THEY OPERATE.
 
-function readQuota() {
-  try {
-    const q = JSON.parse(fs.readFileSync(QUOTA_FILE, 'utf8'))
-    if (q.day === today()) return q
-  } catch { /* first run, or a new day */ }
-  return { day: today(), used: 0 }
-}
+Return JSON only, no prose, no code fence:
+{"candidates": [{"what": string, "quote": string}]}
 
-function writeQuota(q) {
-  fs.mkdirSync(path.dirname(QUOTA_FILE), { recursive: true })
-  fs.writeFileSync(QUOTA_FILE, JSON.stringify(q, null, 1))
-}
+Up to three candidates, best first. Return {"candidates": []} freely — most pages have nothing, and that is the correct answer.
 
-class QuotaExhausted extends Error {}
+"what" is a short factual note, not a sentence to send. "bookings taken by phone only". "price list is a PDF download". "three branches listed".
 
-/* Paces requests to RPM. Not a token bucket — a plain interval, because
-   a batch job has nowhere to be and the simplest thing that cannot
-   burst is the right one against somebody else's limit. */
-const MIN_GAP = Math.ceil(60_000 / Math.max(RPM, 1))
-let lastCall = 0
-const pace = async () => {
-  const wait = lastCall + MIN_GAP - Date.now()
-  if (wait > 0) await new Promise((r) => setTimeout(r, wait))
-  lastCall = Date.now()
-}
+"quote" must be copied WORD FOR WORD from the page, 4 to 20 words, supporting that note. It is checked against the page automatically and anything that does not match exactly is discarded.
 
-/* ---------- the prompt ---------- */
+ONLY operational facts. How work comes in, how it is booked, quoted, scheduled, recorded, staffed or delivered.
+NOT what they sell. NOT adjectives about themselves. NOT guesses. NOT anything about a named person.`
 
-/* Two things this prompt has to do at once, and they pull against each
-   other: produce a sentence that sounds like it was written for this
-   business specifically, and refuse to say anything that is not on the
-   fact sheet or the page.
-
-   The temperature below is deliberately not zero. A batch of sentences
-   generated at temperature 0 from six fact patterns converges on six
-   sentences, which is the problem this file exists to solve. */
-const SYSTEM = `You write ONE clause for a letter to a small UK business, in the voice of Alex, who runs a small technology implementation business and is writing to them personally.
-
-You are given FACTS (verified, from public registers) and optionally PAGE TEXT (their own website).
+/* STAGE 2 — WRITE. Prose, high temperature, a better model.
+   It sees only verified material: register facts, and read-stage
+   candidates whose quotes have already been checked against the page.
+   So it cannot invent a fact; the worst it can do is phrase one
+   badly. */
+const WRITE_SYSTEM = `You write ONE clause for a letter to a small UK business, in the voice of Alex, who runs a small technology implementation business in Nottingham and is writing to them personally.
 
 Return JSON only, no prose, no code fence:
 {"observation": string, "basis": "register"|"page", "fact_key": string|null, "evidence": string|null}
@@ -168,39 +145,33 @@ THE CLAUSE
 
 Write what would follow "I'm writing because I noticed that...". Lower case, no full stop, no greeting, 8 to 30 words.
 
-It must read like one person noticing one thing about one business. Vary the construction — these letters go out in batches and two that open the same way both go in the bin.
+It must read like one person noticing one thing about one business. VARY THE CONSTRUCTION — these go out in batches, and two letters that open the same way both get binned.
 
 Good:
   "you are CQC-registered for dementia care, which is a lot of rotas and medication records to keep evidenced"
-  "your site asks people to ring the workshop to arrange a quote, which means every one of those starts as a phone call"
+  "your site asks people to ring the workshop to arrange a quote, so every job starts as a phone call somebody has to write down"
   "you have been trading nineteen years without a website, so the work clearly comes from people who already know you"
 
 Bad, and why:
   "businesses like yours often struggle with admin"  — true of everyone, so it is filler
-  "you offer excellent plumbing services"            — that is what they sell, not how they work
+  "you offer excellent plumbing services"            — what they sell, not how they work
   "you probably rekey orders by hand"                — a guess wearing an observation's clothes
 
-WHAT YOU MAY SAY
+RULES
 
-1. Only what is in FACTS or literally in PAGE TEXT. Never add a detail because it seems likely.
-2. If you use a FACT, set basis "register" and fact_key to that fact's key. Set evidence to null.
-3. If you use the PAGE, set basis "page" and copy 4 to 20 words from it into evidence WORD FOR WORD. It is checked automatically and the whole answer is discarded if it does not match. Do not paraphrase. Do not tidy the punctuation.
-4. Prefer the strongest fact, which is the first one listed. But if the page shows something more specific about how they actually work, use that instead.
+1. Use ONLY the material given. Every fact and every quote below has already been verified; anything you add has not.
+2. Using a FACT: basis "register", fact_key set to that fact's key, evidence null.
+3. Using a PAGE FINDING: basis "page", evidence set to that finding's quote copied EXACTLY as given. Do not re-word it.
+4. Prefer whichever is more specific about how they work. A page finding often beats a register fact; sometimes it does not.
+5. Never a person's name. Never a hygiene score unless a FACT states one. Never a number, price or date that is not in the material.
+6. No flattery. "Your lovely website" is not an observation.
+7. {"observation": null} is a correct and common answer. A weak clause is worse than none, because a weak one gets sent.`
 
-WHAT YOU MAY NEVER SAY
+function readPrompt(pageText) {
+  return `PAGE TEXT:\n${pageText.slice(0, MAX_CHARS)}`
+}
 
-5. Never a person's name, even if the page is full of them.
-6. Never a food hygiene score unless a FACT states it. If the fact sheet says a rating is withheld, it is withheld because it is poor, and naming it would be an insult with a citation.
-7. Never a number, price, date or timescale that is not in FACTS or PAGE TEXT.
-8. Never flattery. "Your beautiful website" is not an observation.
-
-RETURNING NOTHING
-
-9. {"observation": null} is a correct answer and a common one. A weak clause is worse than none, because a weak one gets sent.`
-
-/* ---------- the call ---------- */
-
-function promptFor(lead, pageText) {
+function writePrompt(lead, findings) {
   const parts = []
   if (lead.facts?.length) {
     parts.push('FACTS (verified, from public registers):')
@@ -212,69 +183,14 @@ function promptFor(lead, pageText) {
   } else {
     parts.push('FACTS: none on the public registers beyond the company existing.')
   }
-  if (pageText) {
-    parts.push('', 'PAGE TEXT (their own website):', pageText.slice(0, MAX_CHARS))
+  parts.push('')
+  if (findings?.length) {
+    parts.push('PAGE FINDINGS (quotes already verified against their site):')
+    for (const c of findings) parts.push(`- ${c.what}\n  quote: "${c.quote}"`)
   } else {
-    parts.push('', 'PAGE TEXT: none — no website could be read.')
+    parts.push('PAGE FINDINGS: none.')
   }
   return parts.join('\n')
-}
-
-async function ask(prompt, quota) {
-  if (quota.used >= RPD) throw new QuotaExhausted()
-
-  let last = ''
-  for (const model of MODELS) {
-    await pace()
-    let res
-    try {
-      res = await fetch(
-        `${BASE}/v1beta/models/${model}:generateContent`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-goog-api-key': KEY },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: SYSTEM }] },
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            /* Not zero. At temperature 0 a batch built from six fact
-               patterns converges on six sentences, which is the exact
-               thing this file exists to prevent. */
-            generationConfig: { temperature: 0.9, topP: 0.95, responseMimeType: 'application/json' },
-          }),
-          signal: AbortSignal.timeout(30_000),
-        }
-      )
-    } catch (err) {
-      last = `${model}: ${err.name === 'TimeoutError' ? 'timed out' : err.message}`
-      continue
-    }
-
-    quota.used++
-    writeQuota(quota)
-
-    if (res.status === 429) {
-      /* The daily cap, hit earlier than our own counter expected —
-         which happens whenever the configured RPD is wrong, and it will
-         be, because Google does not publish it. Believe the API over
-         the config and stop for the day. */
-      throw new QuotaExhausted()
-    }
-    if (res.status === 404) { last = `${model}: not available`; continue }
-    if (!res.ok) {
-      const body = await res.text()
-      if (res.status === 400 && /API key not valid/i.test(body)) {
-        throw new Error('GEMINI_API_KEY is set but not valid.')
-      }
-      last = `${model}: HTTP ${res.status}`
-      continue
-    }
-
-    const data = await res.json()
-    const out = data?.candidates?.[0]?.content?.parts?.[0]?.text
-    if (typeof out !== 'string' || !out.trim()) { last = `${model}: empty answer`; continue }
-    return out
-  }
-  throw new Error(last || 'no model answered')
 }
 
 /* ---------- validation ---------- */
@@ -285,7 +201,7 @@ async function ask(prompt, quota) {
    observations to no purpose. Everything else must match. */
 const norm = (s) => String(s).replace(/\s+/g, ' ').trim().toLowerCase()
 
-function validate(raw, lead, pageText) {
+function validate(raw, lead, findings) {
   let parsed
   try {
     parsed = JSON.parse(String(raw).replace(/^```(?:json)?\s*|\s*```$/g, '').trim())
@@ -328,15 +244,14 @@ function validate(raw, lead, pageText) {
 
   const ev = String(parsed.evidence || '').trim()
   if (!ev) return { ok: false, why: 'claimed the page but quoted nothing' }
-  if (!pageText) return { ok: false, why: 'claimed the page when there was no page' }
+  if (!findings?.length) return { ok: false, why: 'claimed the page when nothing was found on it' }
 
-  /* The whole safety argument for page claims, in one comparison.
-     Whitespace is normalised on both sides — a model that collapses a
-     line break inside an otherwise perfect quote has invented nothing,
-     and failing it for that throws away good observations to no
-     purpose. Everything else must match. */
-  if (!norm(pageText).includes(norm(ev))) {
-    return { ok: false, why: 'evidence is not on the page' }
+  /* The quote must be one the READ stage already checked against the
+     page. Two gates rather than one: read cannot pass through a quote
+     the page does not contain, and write cannot pass through a quote
+     read did not find. */
+  if (!findings.some((c) => norm(c.quote) === norm(ev))) {
+    return { ok: false, why: 'evidence is not one of the verified quotes' }
   }
 
   return { ok: true, observation: obs, evidence: ev, basis, fact_key: null, service: null }
@@ -344,27 +259,28 @@ function validate(raw, lead, pageText) {
 
 /* ---------- run ---------- */
 
+
 function setupNotice(n) {
   console.log(`
   ${n} leads are ready to have their observation written.
 
-  GEMINI_API_KEY is not set, so nothing was sent anywhere and nothing
-  was written. The pipeline still works without it — observe.mjs leaves
-  a fallback sentence on every lead it could — but those fall back to
-  one of seven templates, and seven sentences across a batch is the
-  bulk-sender fingerprint this stage exists to remove.
+  GEMINI_API_KEY is not set, so nothing was sent and nothing was
+  written. The pipeline still works without it — observe.mjs leaves a
+  fallback sentence on every lead it can — but those come from seven
+  templates, and seven sentences across a batch is the bulk-sender
+  fingerprint this stage exists to remove.
+
+  Two stages, two models, both on the free tier:
+${Object.entries(TASKS).map(([task, chain]) =>
+  `    ${task.padEnd(6)} ${chain[0]} — ${LIMITS[chain[0]].rpm}/min, ${LIMITS[chain[0]].rpd}/day`).join('\n')}
 
   To run it:
     1. Get a key at aistudio.google.com/apikey (free, no card).
-    2. Check the RPM and RPD your dashboard actually shows. Google no
-       longer publishes them, so the defaults here (${RPM}/min, ${RPD}/day)
-       are a conservative guess.
-    3. export GEMINI_API_KEY=...
-       export GEMINI_RPM=...  GEMINI_RPD=...
-       node scripts/sourcing/scan.mjs
+    2. Put it in .env.local:  GEMINI_API_KEY=...
+    3. npm run sourcing:write
 
-  --dry-run prints the exact prompt for the first few leads, without a
-  key and without a request.
+  --dry-run prints the models, the budgets and the exact prompts,
+  without a key and without a request.
 `)
 }
 
@@ -388,23 +304,37 @@ if (!todoAll.length) {
 
 if (DRY) {
   console.log(`\n  DRY RUN — ${todoAll.length} leads, nothing sent\n`)
-  for (const r of todoAll.slice(0, 3)) {
-    console.log(`  ── ${r.company} ${'─'.repeat(Math.max(0, 50 - r.company.length))}`)
+  console.log('  models by stage:')
+  for (const [task, chain] of Object.entries(TASKS)) {
+    console.log(`    ${task.padEnd(6)} ${chain[0]}  (${LIMITS[chain[0]].rpm}/min, ${LIMITS[chain[0]].rpd}/day${LIMITS[chain[0]].assumed ? ', assumed' : ''})`)
+    console.log(`           falling back to ${chain.slice(1).join(', ')}`)
+  }
+  console.log('')
+  for (const r of todoAll.slice(0, 2)) {
+    const text = pageFor(r)
+    console.log(`  ── ${r.company} ${'─'.repeat(Math.max(0, 46 - r.company.length))}`)
     console.log(`  currently: ${r.observation || '(nothing)'} [${r.source || 'none'}]`)
-    console.log('  prompt:')
-    console.log(promptFor(r, pageFor(r)).split('\n').map((l) => '    ' + l).join('\n').slice(0, 1200))
+    if (text) {
+      console.log('  READ would be sent:')
+      console.log(`    ${text.slice(0, 200).replace(/\n/g, ' ')}…  (${Math.min(text.length, MAX_CHARS)} chars)`)
+    } else {
+      console.log('  READ skipped — no page cached')
+    }
+    console.log('  WRITE would be sent:')
+    console.log(writePrompt(r, []).split('\n').map((l) => '    ' + l).join('\n'))
     console.log('')
   }
-  console.log(`  …and ${Math.max(todoAll.length - 3, 0)} more\n`)
+  console.log(`  …and ${Math.max(todoAll.length - 2, 0)} more\n`)
   process.exit(0)
 }
 
 if (!KEY) { setupNotice(todoAll.length); process.exit(0) }
 
+const client = createClient({ stateFile: QUOTA_FILE, log: (m) => console.log(m) })
+
 /* Resume where a previous run stopped. Same idiom as
-   extract-contacts.mjs, and the reason is the same: a run that dies
-   halfway must not start again from the beginning and spend the day's
-   allowance twice. */
+   extract-contacts.mjs: a run that dies halfway must not start again
+   from the beginning and spend the day's allowance twice. */
 const seen = new Set()
 if (fs.existsSync(CHECKPOINT)) {
   for (const line of fs.readFileSync(CHECKPOINT, 'utf8').split('\n')) {
@@ -414,9 +344,8 @@ if (fs.existsSync(CHECKPOINT)) {
   console.log(`\n  resuming: ${seen.size} already written`)
 }
 
-const quota = readQuota()
 const todo = todoAll.filter((r) => !seen.has(r.company))
-console.log(`\n  ${todo.length} to write, ${quota.used}/${RPD} of today's budget already spent\n`)
+console.log(`\n  ${todo.length} leads to do\n`)
 
 fs.mkdirSync(path.dirname(CHECKPOINT), { recursive: true })
 const sink = fs.createWriteStream(CHECKPOINT, { flags: 'a' })
@@ -427,12 +356,39 @@ const why = {}
 for (const r of todo) {
   const text = pageFor(r)
 
+  /* STAGE 1 — read. Skipped entirely when there is no page, which
+     saves a call on every register-only lead. */
+  let findings = []
+  if (text) {
+    try {
+      const { text: raw } = await client.ask('read', {
+        system: READ_SYSTEM, user: readPrompt(text), temperature: 0.2,
+      })
+      const parsed = JSON.parse(String(raw).replace(/^```(?:json)?\s*|\s*```$/g, '').trim())
+      /* Every quote checked against the page here, once, so the write
+         stage can only ever pick from verified material. */
+      findings = (parsed.candidates || [])
+        .filter((c) => c && c.quote && norm(text).includes(norm(c.quote)))
+        .slice(0, 3)
+    } catch (err) {
+      if (err instanceof AllModelsExhausted) { stopped = true }
+      else if (!(err instanceof SyntaxError)) throw err
+      /* A read that failed is not fatal: the write stage can still work
+         from the register facts alone. */
+    }
+    if (stopped) { console.log('\n  Read budget exhausted across every model. Stopping.'); break }
+  }
+
+  /* STAGE 2 — write. */
   let raw
   try {
-    raw = await ask(promptFor(r, text), quota)
+    const out = await client.ask('write', {
+      system: WRITE_SYSTEM, user: writePrompt(r, findings), temperature: 0.95,
+    })
+    raw = out.text
   } catch (err) {
-    if (err instanceof QuotaExhausted) {
-      console.log(`\n  Daily budget reached at ${quota.used} requests. Stopping.`)
+    if (err instanceof AllModelsExhausted) {
+      console.log('\n  Write budget exhausted across every model. Stopping.')
       console.log('  The checkpoint holds what is done; run again tomorrow to continue.')
       stopped = true
       break
@@ -440,7 +396,7 @@ for (const r of todo) {
     throw err
   }
 
-  const v = validate(raw, r, text)
+  const v = validate(raw, r, findings)
   const row = v.ok
     ? { company: r.company, signal: v.basis === 'register' ? v.fact_key : 'page_observation',
         observation: v.observation, evidence: v.evidence, service: v.service || r.service || null,
@@ -463,12 +419,12 @@ const merged = all.map((r) => {
 fs.writeFileSync(OUT, JSON.stringify({ generated_at: new Date().toISOString(), results: merged }, null, 1))
 
 /* The cache is other people's website content and it has done its job.
-   The evidence quote — the thing we would actually have to produce if
-   someone asked where a claim came from — is in the output. */
+   The evidence quote — the thing we would have to produce if someone
+   asked where a claim came from — is in the output. */
 if (!KEEP_CACHE && !stopped) fs.rmSync(CACHE, { recursive: true, force: true })
 
-/* How many distinct sentences came out. This is the number the whole
-   change is for: in August it was 9 across 77 drafts. */
+/* The number the whole change is for. In August it was 9 distinct
+   observations across 77 drafts. */
 const distinct = new Set(written.filter((r) => r.source === 'written').map((r) => r.observation)).size
 
 console.log(`
@@ -476,7 +432,9 @@ console.log(`
   ${distinct} distinct sentences across ${kept} written observations
 ${Object.entries(why).sort((a, b) => b[1] - a[1]).map(([k, v]) => `  ${String(v).padStart(4)}  ${k}`).join('\n')}
 
-  ${quota.used}/${RPD} of today's budget spent
+  budget used:
+${client.report()}
+
   page cache ${KEEP_CACHE ? 'kept (--keep-cache)' : stopped ? 'kept — the run did not finish' : 'deleted'}
 
   -> ${path.resolve(OUT)}

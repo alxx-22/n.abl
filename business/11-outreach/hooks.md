@@ -29,7 +29,22 @@ nothing further down is consulted.
 |---|---|---|---|
 | 1 | **Registers** (`hooks.mjs`) | Facts. CQC, ICO, FSA, Charity Commission, Companies House | £0, no key |
 | 2 | **The page** (`observe.mjs`) | Page text, cached, plus a template fallback | £0, no key |
-| 3 | **The writer** (`scan.mjs`) | The clause itself, one call per lead | Free tier |
+| 3a | **Read** (`scan.mjs`) | Candidate facts off the page, each with a verbatim quote. Flash-Lite, temperature 0.2 | Free tier |
+| 3b | **Write** (`scan.mjs`) | The clause itself. Flash, temperature 0.95 | Free tier |
+
+Two model stages, two different models, chosen by what the call is for. Reading
+a page for candidates is extraction — high volume, low judgement, and Flash-Lite
+has four times Flash's daily headroom. Writing the clause a stranger actually
+reads is the opposite, and only leads that got something out of the read stage
+ever reach it. A model asked to extract and charm in one breath does both worse,
+and the failure mode is the charming half inventing something for the extracting
+half to have found.
+
+Rate limits are per model and live in `scripts/sourcing/gemini.mjs`. Google's own
+docs no longer print a free-tier table — they say "view your active rate limits
+in AI Studio" — and the third-party trackers disagree with each other, so that
+table is what we *try* and a 429 is what we *believe*: an observed ceiling is
+recorded and honoured from then on.
 
 Stage 3 runs on **every** lead, not a residual. An earlier version only called
 the model where the regexes had failed, which meant the best leads — the ones
@@ -49,7 +64,9 @@ It may choose which fact to use, and how to say it. It may **not**:
 - use a register fact it was not given — a fabricated CQC registration is the
   most damaging thing this stage could produce, and `scan.mjs` rejects any claim
   whose `fact_key` was not on the sheet
-- quote the page without quoting it word for word
+- quote the page without quoting it word for word — and the quote must be one
+  the read stage already checked against the page, so there are two gates rather
+  than one
 - name a hygiene score that was withheld, or a person
 
 A rejected answer falls back to the template. The worst case is a sentence that
