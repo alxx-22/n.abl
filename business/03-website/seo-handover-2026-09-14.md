@@ -53,8 +53,29 @@ the property. Everything anyone says about how the site performs in search,
 including everything in my baseline, is inference from third-party tools in the
 wrong region.
 
-Use a **DNS TXT record**, not an HTML file — it survives a host move, and this
-site has already moved host once.
+**Why I could not do this for you.** Verification proves domain ownership, and
+Google issues the token only to a signed-in account that owns the domain. There
+is no API to verify a property you do not already own — if there were, anyone
+could claim your site. I have no Google credentials and should not have any. I
+also checked whether I could at least add the DNS record: the Cloudflare tools
+available to this session cover Workers, D1, KV and R2, and include no DNS.
+
+So it has been reduced to **one paste**. Two ways, either is fine:
+
+*Fastest.* Search Console → add property → HTML tag. Copy the token out of the
+tag it shows you, then:
+
+```sh
+echo 'GSC_VERIFICATION=paste-the-token-here' >> .env.local
+npm run build && npx wrangler deploy
+```
+
+The build puts the tag on all four public pages and prints whether it did. Press
+Verify.
+
+*Sturdier.* A DNS TXT record on the domain, added in the Cloudflare dashboard. It
+survives a host move, which a tag in the site does not, and this site has already
+moved host once. No code at all. A property can hold both.
 
 Then request indexing for the four public URLs. They have just changed from
 empty to substantial and Google will not know unless asked.

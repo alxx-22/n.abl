@@ -41,6 +41,23 @@ import { fileURLToPath } from 'node:url'
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const DIST = join(ROOT, 'dist')
 const SSR = join(ROOT, 'dist-ssr', 'prerender.js')
+
+/* Google Search Console's ownership token.
+   
+   Verification cannot be automated and that is deliberate: the token is
+   issued by Google to a signed-in account that owns the domain, which is
+   the whole point of it. So this is the smallest possible job for the
+   person who can do it — paste one string, run one build.
+
+     GSC_VERIFICATION=abc123… npm run build
+
+   Or put it in .env.local, which .gitignore already covers.
+
+   A DNS TXT record on the domain is the sturdier method and needs no
+   code at all; this exists because it is faster, and because the site
+   has moved host once already and may again. Either is fine — Search
+   Console accepts both, and a property can hold more than one. */
+const GSC = (process.env.GSC_VERIFICATION || '').trim()
 const ORIGIN = 'https://nabl.agency'
 
 const ROUTES = [
@@ -88,6 +105,18 @@ const escapeAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').repla
    than silently shipping an empty body again. Being loud is the whole
    point — the bug this replaces was invisible for a month because
    nothing checked. */
+/* Injected into every public shell rather than just the home page: a
+   Search Console property can be verified from any URL on the origin,
+   and one of the four is likelier to be fetched than exactly one. */
+function injectVerification(html) {
+  if (!GSC) return html
+  if (html.includes('name="google-site-verification"')) return html
+  return html.replace(
+    /<\/head>/i,
+    `  <meta name="google-site-verification" content="${escapeAttr(GSC)}" />\n  </head>`
+  )
+}
+
 function injectBody(html, markup) {
   const empty = '<div id="root"></div>'
   if (!html.includes(empty)) {
@@ -131,6 +160,7 @@ async function run() {
       `  <link rel="canonical" href="${ORIGIN}/${r.path}" />\n  </head>`
     )
 
+    html = injectVerification(html)
     const markup = render(`/${r.path}`)
     html = injectBody(html, markup)
 
@@ -145,10 +175,15 @@ async function run() {
     /<\/head>/i,
     `  <link rel="canonical" href="${ORIGIN}/" />\n  </head>`
   )
+  home = injectVerification(home)
   const homeMarkup = render('/')
   home = injectBody(home, homeMarkup)
   await writeFile(join(DIST, 'index.html'), home)
   console.log(`  / → dist/index.html  (${homeMarkup.length.toLocaleString()} chars rendered)`)
+
+  console.log(GSC
+    ? '  google-site-verification: present on all four shells'
+    : '  google-site-verification: not set (GSC_VERIFICATION) — Search Console still unverified')
 }
 
 run().catch((err) => {
