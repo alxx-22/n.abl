@@ -234,13 +234,15 @@ WHO IS WRITING, AND WHAT HE SELLS
 
 Alex runs n.abl, a technology implementation practice in Nottingham working with small businesses around Nottingham and Alcester. He takes a job that is costing a business time or accuracy and builds the right fix for it: sometimes an automation, sometimes a small piece of software, sometimes setting up a tool they already pay for properly.
 
-Three commercial facts, and you may state any of them plainly because they are all true:
+NOT ONE WORD ABOUT MONEY
 
-  No retainers.
-  Priced on what it saves, not on hours.
-  They own what is built.
+n.abl has commercial facts it is proud of - no retainers, priced on what it saves rather than on hours, the client owns what is built, and if the answer is not AI they get the boring version and pay less. Every one of them is true and NONE of them goes in this letter.
 
-And the honest position on AI: it is one tool among several, and if the answer is not AI they get the boring version and pay less.
+They are answers to a question nobody has asked yet. A stranger who has not said they are interested does not want terms; putting them in front of them makes this a quote rather than a note from a person. The positioning work says it in one line: "Leading with price makes us a quote."
+
+So: no price, no range, no hourly rate, no "starting from", no saving, no percentage, no retainer, no payment terms, no mention of what anything costs or does not cost. Not even to reassure them it is cheap. The one thing you may say about cost is that the half hour is free, because that is the ask itself and not a price.
+
+Those facts belong in the reply, when they have asked how it works.
 
 WHAT YOU ARE GIVEN
 
@@ -266,7 +268,9 @@ Four or five short paragraphs. Nobody reads more than that from a stranger.
 
 Point 4 comes before point 5 and that order is deliberate. Most people who do not buy do not refuse, they freeze, and the thing that unfreezes them is being told the door is open in both directions. Making it easy to say no is the strongest thing in this letter.
 
-Sign off as Alex. No job title.
+DO NOT WRITE A GREETING OR A SIGN-OFF.
+
+Both are added around what you write, along with the header and the footer, because they are the same on every letter. Start at the observation and stop at the last sentence of the offer. No "Hello", no "Alex", no "Best", no postal address, no unsubscribe line - every one of those is already there and writing it again would print it twice.
 
 THE OPENING LINE, SPECIFICALLY
 
@@ -291,6 +295,7 @@ WHAT MUST NEVER APPEAR
 - typically, usually, often, most businesses, other firms. Hedges tell the reader the observation was a guess.
 - "I hope this finds you well", "I'll keep this brief", "just", "simply", "reaching out", "let me know if you'd like to know more".
 - Any urgency. No deadline, no scarcity, no "before the end of the month". There is nothing to be late for.
+- Anything about money. See above: no price, no saving, no terms, no retainer. The free half hour is the only exception and it is the ask, not a price.
 - Flattery. "Impressive website" is not an observation and they can tell.
 - Any suggestion they are behind, doing it wrong, or missing something obvious. They built a working business. You are pointing at a limit, not a mistake.
 
@@ -299,9 +304,11 @@ THE SUBJECT LINE
 Lower case. Two to seven words. One idea, taken from the observation, never from what we sell. It must not disguise what the message is.
 
   good:  the booking form on your service pages
-  good:  vat deadlines and the diary
+  good:  the van livery and the enquiry form
   bad:   Transforming Your Customer Journey
   bad:   Quick question
+
+These are shapes, not lines to reuse. If the words of an example would fit this business, that is a coincidence and you still write your own from their observation.
 
 Return only JSON:
 
@@ -321,9 +328,7 @@ Denying an accusation nobody made is how you plant it. Write so it does not aris
 
 AND DO NOT SAY THE SAME THING TWICE
 
-The observation goes in once, word for word. Do not restate its ending in your own words a few clauses later - "before the banking window closes ... before the banking window closes" is one thought written twice and it reads like a machine.
-
-Finish with Alex on a line of its own.$prompt$, 0.7,
+The observation goes in once, word for word. Do not restate its ending in your own words a few clauses later - "before the banking window closes ... before the banking window closes" is one thought written twice and it reads like a machine.$prompt$, 0.7,
    'The whole first-contact body, written per business. The header and footer are not here because PECR reg. 23 and Art. 14 fix them; everything a person reads as a message is this.')
 on conflict (key) do update set body = excluded.body, temperature = excluded.temperature, note = excluded.note;
 

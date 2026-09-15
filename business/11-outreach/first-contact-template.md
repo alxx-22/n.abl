@@ -69,6 +69,43 @@ inaction made it *worse* 84% of the time, while taking risk off the table
 worked. Making it easy to say no is the strongest thing in this letter, and it
 has to arrive before the ask rather than after it.
 
+### Not one word about money
+
+n.abl's commercial facts are good ones — no retainers, priced on what it saves
+rather than on hours, the client owns what is built — and none of them belongs
+in a first contact.
+
+[`messaging-spine.md`](../01-positioning/messaging-spine.md) §1 already decided
+this: *"The claim before the question, the question before the categories, the
+categories before the price. **Leading with price makes us a quote.**"* A
+stranger who has not said they are interested is not weighing terms, and
+answering a question nobody asked is what a quote does.
+
+The first draft of the written letter broke that rule in its second paragraph —
+"with no retainers, priced on what it saves, and you own what is built" — which
+is how the rule got written down here rather than only in the spine.
+
+So the letter carries **no price, no range, no rate, no saving, no percentage,
+no retainer, no payment terms**, and not even a reassurance that it is cheap.
+The single exception is that the half hour is free, and that is the ask itself
+rather than a price. The commercial facts belong in the reply, once they have
+asked how it works.
+
+A number in a first email is worse still, and it is a code guard rather than a
+rule: every digit in the letter has to appear in the observation it was built
+on. There are no case studies (`17-proof-and-case-studies` is empty), so any
+figure would be invented, and an invented figure in the first sentence a
+stranger reads is unrecoverable.
+
+### The greeting and the sign-off
+
+Chrome, both of them, like the footer — identical on every letter, so they are
+rendered around the body rather than asked of a model that might forget one.
+
+`Hello,` and `Alex`. No first name, because none is held: the programme is
+assessed for corporate subscribers only. The letter writer is told not to write
+either, and the renderer strips them if it does anyway.
+
 ### The name
 
 The model is never told what the business is called: no company name is sent to

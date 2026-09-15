@@ -160,13 +160,23 @@ Filtered. Each row says what was found and what n.abl actually does about it.
 | What reads as effort is *perceived effort* — evidence of understanding, not evidence of research | *passim* | Never narrate the research. The hook should read as if a person looked, not as if a system scraped |
 | Partner-led outreach outperforms SDR outreach substantially in consultancy | consulting outreach practice | Every message is from Alex, by name, replyable. Already true and worth not losing |
 | Without case studies, credibility comes from a specific, credible problem named before anything is asked for | consulting outreach practice | We have no case studies (`17-proof-and-case-studies` is empty). The hook *is* the credibility |
+| Terms and pricing answer a question the reader has not asked; naming them early reframes a note as a quote | n.abl's own `messaging-spine.md` §1 | No money in a first contact at all — see *What we deliberately reject* |
 
 ### What we deliberately reject
 
-- **Cost-of-inaction arithmetic in a first email.** "This is costing you £X a
-  month" from a stranger who has not asked a single question is a guess with a
-  currency symbol on it. The number belongs in the ROI conversation, after
-  they have told us the hours. See `12-pricing/README.md`.
+- **Money, in any form, in a first contact.** Not a price, not a range, not a
+  rate, not a saving, not terms, not "no retainers". The last one is the
+  interesting case: it is true, it is a genuine differentiator, and it still
+  comes out — because [`messaging-spine.md`](../01-positioning/messaging-spine.md)
+  §1 puts the categories before the price and says plainly that **leading with
+  price makes us a quote**. A stranger who has not said they are interested is
+  not weighing terms. The only thing about cost that may appear is that the
+  half hour is free, and that is the ask rather than a price.
+- **Cost-of-inaction arithmetic.** "This is costing you £X a month" from a
+  stranger who has not asked a single question is a guess with a currency
+  symbol on it. The number belongs in the ROI conversation, after they have
+  told us the hours. See `12-pricing/README.md`. It is also a code guard:
+  every digit in the letter must appear in the observation it was built on.
 - **Third-party validation and name-dropping.** Braun's structure has a proof
   element and we cannot fill it honestly. An empty proof slot is left empty.
 - **Curiosity gaps.** "There's one thing about your booking page I'd flag" is a
@@ -276,6 +286,14 @@ update public.outreach_prompt set body = $$ ... $$ where key = 'strategist';
 — and the next tick picks it up. No deploy. §1, §5 and §7 are reasoning and
 context and do not need to be in the prompt; §8's examples do, because worked
 examples are what a model actually imitates.
+
+**Worked examples get copied, so pick them carefully.** The first batch of
+letters produced the subject line *"vat deadlines and the diary"* — which was
+apt, and was also lifted word for word from the example in the prompt, because
+the lead happened to be a firm of accountants. An example that could plausibly
+fit a real lead will eventually be used as a template rather than read as a
+shape. Both prompts now say so, and the example was changed to something the
+Nottingham list will not produce.
 
 **The examples in §8 are in my voice, not Alex's.** That is the one part of this
 that cannot be delegated, it is an `UPDATE` rather than a release, and it is
