@@ -48,7 +48,7 @@ registry, not a hand-maintained CHECK list that would have rejected it.
 | `outreach_vocabulary` | Every term the assessment may use, its meaning, its rank, whether it demands evidence, what it requires of other dimensions, and what to call it on screen |
 | `outreach_dimension` | Which vocabularies the scout is asked about, under what heading, in what order |
 | `outreach_model` | Which model does which job, in what order to fall back, and the free-tier ceiling we believe |
-| `outreach_prompt` | One system prompt per agent — `scout`, `editor`, `writer` |
+| `outreach_prompt` | One system prompt per stage — `scout`, `editor`, `strategist`, `writer`, `review`, `letter` |
 | `outreach_fact_rule` | Which register facts are worth showing, and **how each should be read** |
 | `outreach_page_signal` | Regexes run against the raw HTML to spot booking tools, shops, live chat |
 | `outreach_setting` | Batch size, page budget, timeouts, rounds, clause length |
@@ -201,9 +201,10 @@ to the business outranks a model that read their homepage.
 
 - **The guards.** All of `guards.mjs` except the term names it does not know.
 - **The clamp envelope.** §4.
-- **The pipeline shape.** Three agents in that order. Everything each agent
-  knows and says is data; that there are three of them is code. A fourth would
-  be a real change, not a row, because nothing could infer what to do with it.
+- **The pipeline shape.** The stages, and their order. Everything each stage
+  knows and says is data; that they exist is code. Adding one is a real change,
+  not a row, because nothing could infer what to do with it — the strategist
+  took a deploy, and so would the next one.
 - **The two axes.** That there are exactly two — how they arrive, and what the
   work is — is a fact about how the practice is organised, not a setting. The
   terms on each axis are rows.

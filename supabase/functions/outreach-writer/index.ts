@@ -671,13 +671,18 @@ async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, setting
          reaches a model. See the header: what leaves the building is
          the page text, the register facts and the sector - not who
          they are. */
-      const body = fillLetter(String(v.body), tradingName(lead.company, lead.trading_name))
+      const name = tradingName(lead.company, lead.trading_name)
+      const body = fillLetter(String(v.body), name)
       await rpc('outreach_record_letter', {
         p_lead_id: lead.lead_id,
         p_subject: subject || r.clause.observation.slice(0, 60),
         p_body: body,
         p_hook: r.hook,
         p_model: lw?.model ?? null,
+        /* Written down so the CRM does not have to derive it again in
+           SQL, and the dashboard a third time in JavaScript. Stored
+           only where nobody has corrected it. */
+        p_trading_name: name,
       })
       letter = { subject, words: body.split(/\s+/).length }
       await log(r.rounds, 'letter', lw?.model ?? null, 'wrote', r.angle.key, subject)

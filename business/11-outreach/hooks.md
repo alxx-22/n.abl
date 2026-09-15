@@ -3,6 +3,15 @@
 The one true thing a first contact says, where it comes from, and when it must
 not be said.
 
+> **This file is about the LOCAL pipeline** — `scripts/sourcing/*.mjs`, which
+> ran on a laptop. The live pipeline now runs in Supabase and is documented in
+> [`supabase-writer.md`](supabase-writer.md).
+>
+> §2 and §3 below are still right, and the Supabase pipeline enforces both. But
+> the craft of turning a true thing into a sentence worth reading has its own
+> file now: [`sales-language.md`](sales-language.md), which is what the
+> `strategist` agent works from. Read that one first.
+
 **Nothing here is a sentence.** `scripts/sourcing/hooks.mjs` states what is
 *true* about a business; `scripts/sourcing/scan.mjs` writes the clause, once per
 lead, so that 149 leads get 149 sentences.

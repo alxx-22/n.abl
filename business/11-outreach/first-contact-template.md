@@ -14,42 +14,81 @@ ICO's own guidance rather than against this table.
 
 ---
 
-## 1. The template
+## 1. There is no template
 
-Square brackets are filled by a human, or drafted by Claude and then approved by
-a human at gate 2. Nothing here sends automatically.
+There was one, and it read like one. Every recipient got the same four
+paragraphs with a single line swapped, opening:
 
-> **Subject:** [the specific thing], at [Company]
->
-> Hi [First name],
->
-> I came across [Company] [where — "on the Companies House register", "through
-> your website"] and noticed [the specific, checkable observation — a job ad for
-> an admin role, a booking process that runs through the phone, a filing that
-> suggests growth].
->
-> I'm Alex. I run n.abl, a small technology implementation business in
-> [Nottingham / Alcester]. We take a job that's costing a business time or
-> accuracy and build the right fix for it — sometimes an automation, sometimes a
-> small piece of software, sometimes just setting up a tool you already pay for
-> properly.
->
-> [One sentence on what that might look like for them specifically, tied to the
-> observation above. No promises, no numbers we cannot stand behind.]
->
-> If that's not useful, no reply needed and I won't chase you.
->
-> If it is, I'm happy to spend half an hour looking at it with you, free, and
-> tell you honestly if it isn't worth doing.
->
-> Alex
-> n.abl — [postal address]
-> hello@nabl.agency · nabl.agency
->
-> ---
-> *You're receiving this because we found [Company] on [source]. Our privacy
-> notice explains what we hold and why: nabl.agency/privacy.
-> [Unsubscribe] — one click, and we won't contact you again.*
+> I came across [Company] on the Companies House register and noticed [the
+> observation].
+
+Three things wrong with that, and only the first is a matter of taste.
+
+1. **"I came across … and noticed"** narrates the research rather than the
+   finding, and it is now the recognised opener of automated mail. See
+   [`sales-language.md`](sales-language.md) §6.
+2. **It says where we found them in the first line.** That disclosure is
+   required by Article 14 — and it is already in the footer, in full, beside
+   the privacy notice. Putting it at the top turns an obligation into a boast
+   about surveillance.
+3. **`ACCOUNTING SOLUTIONS (AS) LTD`.** That is how Companies House files a
+   name, not how anybody writes one.
+
+So the body is **written for each business** by the `letter` stage and checked
+in code. What stays fixed is the chrome, because the law fixes it.
+
+### What is fixed, and why
+
+| Fixed | Required by |
+|---|---|
+| The header — the wordmark, and a real sender identity | PECR reg. 23 |
+| The footer — postal address, `hello@nabl.agency`, the site | PECR reg. 23 |
+| Where we found them, in the footer | UK GDPR Art. 14 |
+| The privacy-notice link | Art. 14 |
+| One-click unsubscribe, no login, no reason, no "are you sure?" | PECR regs. 22–23, Art. 21(2) |
+
+### What is written
+
+Four or five short paragraphs, in this order. The order is the part that is
+not arbitrary.
+
+1. **The observation, and what it means for them.** Not a greeting that says
+   nothing, not who we are. The specific true thing is the entire reason the
+   message is allowed to exist — `LIA-2026-08-v1` §3, the necessity limb.
+2. **Who Alex is and what n.abl does.** Two sentences, no adjectives.
+3. **One sentence on what the fix might look like for them.** A direction, not
+   a promise. Left out entirely if it cannot be said honestly.
+4. **The way out.** No reply needed, and he will not chase.
+5. **The offer.** Half an hour, free, and an honest answer if it is not worth
+   doing.
+
+**Four comes before five deliberately.** The JOLT research found that 40–60% of
+qualified B2B deals die in no-decision, mostly to indecision rather than a real
+preference for standing still — and that pressing harder on the cost of
+inaction made it *worse* 84% of the time, while taking risk off the table
+worked. Making it easy to say no is the strongest thing in this letter, and it
+has to arrive before the ask rather than after it.
+
+### The name
+
+The model is never told what the business is called: no company name is sent to
+a model, which predates this stage and still holds. It writes `{business}` where
+a name belongs, and the substitution happens after every check has passed. It
+does not have to use it — "you" throughout is usually better than a name-drop.
+
+The name substituted in is `sales_leads.trading_name`, or a tidied version of
+the registered one where nobody has set that. The tidying is a heuristic and it
+will be wrong sometimes, which is exactly why the column exists.
+
+### The subject line
+
+Lower case, two to seven words, one idea, taken from the observation and never
+from what we sell. Lower case is not a style preference: across a large
+cold-email corpus, all-lowercase subject lines outperformed Title Case by
+roughly a fifth, because they read as a message from a person rather than
+marketing.
+
+---
 
 ## 2. What must never appear in it
 

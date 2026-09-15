@@ -268,7 +268,7 @@ HOW TO NAME THEM
 
 You are NOT told what this business is called, and that is deliberate: no company name leaves this building. Write {business} wherever the name belongs and it is substituted afterwards, from the register, tidied so it is never in block capitals and never carries Ltd, Limited, PLC or LLP. Nobody refers to their own business that way and a letter that does has announced it came out of a database.
 
-Use {business} at least once. Write it exactly like that, in curly braces, with nothing inside but the word. Never invent a name, an initial or an abbreviation for them.
+Where a name belongs, write {business} exactly like that, in curly braces, with nothing inside but the word. You do not have to use it: addressing them as "you" throughout is often better writing than a name-drop, and a first line that opens on the observation rarely needs one. What you must never do is invent a name, an initial or an abbreviation for them.
 
 You do not know anyone's name there either, so do not use one and do not guess. Greet the business, not a person.
 
@@ -377,3 +377,51 @@ end
 $function$;
 
 revoke all on function public.outreach_next_batch(integer) from anon, authenticated, public;
+
+-- ------------------------------------------------------------
+-- 6. The derived trading name is written down once
+--
+-- If the CRM derived it again in SQL and the dashboard a third time in
+-- JavaScript, the three would disagree the first time one of them was
+-- improved. So the function that wrote the letter also writes down the
+-- name it put in it, and everything else reads the column.
+--
+-- Only where it is null. A correction somebody made by hand is never
+-- overwritten by a heuristic - that is the whole reason the column
+-- exists.
+-- ------------------------------------------------------------
+
+create or replace function public.outreach_record_letter(
+  p_lead_id uuid, p_subject text, p_body text, p_hook jsonb, p_model text,
+  p_trading_name text default null)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $fn$
+begin
+  insert into public.lead_letter
+    (lead_id, subject, body, shape, tension, recognition, must_not_imply, model)
+  values (p_lead_id, p_subject, p_body,
+          nullif(btrim(coalesce(p_hook->>'shape','')), ''),
+          p_hook->>'tension', p_hook->>'recognition',
+          nullif(btrim(coalesce(p_hook->>'must_not_imply','')), ''),
+          p_model)
+  on conflict (lead_id) do update
+    set subject = excluded.subject, body = excluded.body, shape = excluded.shape,
+        tension = excluded.tension, recognition = excluded.recognition,
+        must_not_imply = excluded.must_not_imply, model = excluded.model,
+        written_at = now();
+
+  update public.sales_leads
+     set trading_name = nullif(btrim(p_trading_name), '')
+   where id = p_lead_id
+     and trading_name is null
+     and nullif(btrim(coalesce(p_trading_name, '')), '') is not null;
+end
+$fn$;
+
+drop function if exists public.outreach_record_letter(uuid, text, text, jsonb, text);
+
+revoke all on function public.outreach_record_letter(uuid, text, text, jsonb, text, text)
+  from anon, authenticated, public;

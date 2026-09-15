@@ -529,11 +529,17 @@ export function validateLetter(raw, { clause, settings }) {
 
   /* The model is never told what the business is called - no company
      name leaves this building, and that predates this stage. So it
-     writes a slot and we fill it. Requiring the slot is also the only
-     cheap way to catch a model that invented a name instead. */
-  if (!body.includes(BUSINESS_SLOT)) {
-    return { ok: false, why: `never refers to the business - no ${BUSINESS_SLOT}` }
-  }
+     writes {business} where a name belongs and we fill it in.
+
+     It is OPTIONAL, and that was learned the expensive way: the first
+     version REQUIRED the slot, and threw away a letter that opened
+     "your site promises rental payments will go out the same day they
+     arrive" because it addressed them as "you" throughout. That is
+     better writing than a name-drop, and a guard that refuses better
+     writing is a bad guard.
+
+     What is still refused is any OTHER merge field, which is a
+     template leaking through. */
   const otherSlot = body.match(/\{(?!business\})[^}]{0,40}\}/)
   if (otherSlot) return { ok: false, why: `left a merge field behind: ${otherSlot[0]}` }
 

@@ -543,8 +543,11 @@ ok('  …because that observation is the necessity limb',
   /observation/.test(L(GOOD.replace(CLAUSE, 'you seem busy')).why))
 ok('a letter that says where we found them is refused',
   !L(GOOD.replace('Something stood out', 'I came across you on Companies House and noticed')).ok)
-ok('a letter with no reference to the business at all is refused',
-  !L(GOOD.replace('{business}', 'you')).ok)
+/* Addressing them as "you" throughout is good writing, not a fault.
+   The first version of this guard REQUIRED {business} and threw away a
+   real letter for it. */
+ok('a letter that says "you" rather than naming them is fine',
+  L(GOOD.replace('{business}', 'your business')).ok)
 ok('a letter shouting a registered name is refused',
   !L(GOOD.replace('{business}', 'AEROCOM UK')).ok)
 ok('  \u2026but ordinary initialisms are how people write, and pass',
