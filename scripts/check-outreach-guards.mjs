@@ -44,7 +44,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const {
   makeVocab, coerce, applyRequirement, validateServices, validateAngles,
   validatePromotion, validateClause, buildFacts, detectSignals, clampSettings, ENVELOPE,
-  negotiate, validateReview, chooseDraft, registryBlock,
+  negotiate, validateReview, chooseDraft, registryBlock, quotaScope,
 } = await import(`file://${join(ROOT, 'supabase', 'functions', 'outreach-writer', 'guards.mjs')}`)
 
 let fail = 0
@@ -462,6 +462,28 @@ ok('  \u2026in the order given', block.indexOf('CAPABILITY') < block.indexOf('FI
 ok('a dimension with no terms is skipped rather than left as a bare heading',
   registryBlock(VOCAB, [{ dimension: 'nonexistent', heading: 'GHOST' }]) === '')
 ok('no dimensions at all does not throw', registryBlock(VOCAB, null) === '')
+
+console.log('\nWHICH 429 THIS IS\n')
+
+const DAY_429 = JSON.stringify({ error: { code: 429, status: 'RESOURCE_EXHAUSTED',
+  message: 'You exceeded your current quota',
+  details: [{ '@type': 'type.googleapis.com/google.rpc.QuotaFailure', violations: [{
+    quotaMetric: 'generativelanguage.googleapis.com/generate_content_free_tier_requests',
+    quotaId: 'GenerateRequestsPerDayPerProjectPerModel-FreeTier' }] }] } })
+const MIN_429 = JSON.stringify({ error: { code: 429, status: 'RESOURCE_EXHAUSTED',
+  message: 'You exceeded your current quota',
+  details: [{ '@type': 'type.googleapis.com/google.rpc.QuotaFailure', violations: [{
+    quotaId: 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier' }] }] } })
+
+ok('a daily refusal closes the model', quotaScope(429, DAY_429) === 'day')
+ok('a per-minute refusal does not', quotaScope(429, MIN_429) === 'minute')
+ok('  \u2026and an unreadable 429 is read as the minute, never the day',
+  quotaScope(429, 'something we have never seen') === 'minute')
+ok('  \u2026including an empty body', quotaScope(429, '') === 'minute')
+ok('an object body is read the same as a string',
+  quotaScope(429, JSON.parse(DAY_429)) === 'day')
+ok('nothing else is a quota refusal at all',
+  quotaScope(503, DAY_429) === 'none' && quotaScope(200, '') === 'none')
 
 console.log(`\n${fail ? fail + ' failed' : 'all guard checks passed'}`)
 process.exit(fail ? 1 : 0)

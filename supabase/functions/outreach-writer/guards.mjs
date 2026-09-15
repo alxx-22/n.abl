@@ -135,6 +135,32 @@ export function registryBlock(vocab, dimensions) {
     .join('\n\n')
 }
 
+/* WHICH 429 THIS IS.
+
+   A 429 from Gemini is either "you have used this minute's requests"
+   or "you have used today's". They are the same status code and they
+   mean completely different things: the first is a pause, the second
+   is the end of the day for that model.
+
+   The pipeline used to treat every 429 as the second, so the first
+   time a burst pushed it over the per-minute limit it wrote the
+   model off until midnight - which is exactly what happened the first
+   time the schedule was sped up to re-run the list.
+
+   Google says which in the error's QuotaFailure details, so read them.
+   When the body says nothing recognisable, assume the minute: a wrong
+   "minute" costs a few refused calls that the registry's own daily
+   ceiling still bounds, and a wrong "day" costs the day. */
+export function quotaScope(status, body) {
+  if (status !== 429) return 'none'
+  let hay = typeof body === 'string' ? body : ''
+  if (body && typeof body === 'object') {
+    try { hay = JSON.stringify(body) } catch { hay = '' }
+  }
+  if (/per[-_ ]?day|daily|requests_per_day|PerDayPerProject/i.test(hay)) return 'day'
+  return 'minute'
+}
+
 export function coerce(vocab, dim, value, fallback) {
   if (typeof value === 'string' && vocab.has(dim, value)) return value
   if (fallback && vocab.has(dim, fallback)) return fallback

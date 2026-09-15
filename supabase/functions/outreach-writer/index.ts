@@ -59,7 +59,7 @@
 import {
   makeVocab, coerce, applyRequirement, validateServices, validateAngles,
   validatePromotion, validateClause, buildFacts, detectSignals, clampSettings,
-  negotiate, registryBlock,
+  negotiate, registryBlock, quotaScope,
 } from './guards.mjs'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -141,9 +141,21 @@ async function ask(
       continue
     }
 
-    await rpc('outreach_record_call', { p_model: spec.model, p_rate_limited: res.status === 429 })
+    /* A 429 is read, not assumed. Before this, every one of them wrote
+       the model off until midnight, so a single busy minute cost a day
+       of the best model in the chain. */
+    const body429 = res.status === 429 ? await res.text() : ''
+    const scope = quotaScope(res.status, body429)
+    await rpc('outreach_record_call', {
+      p_model: spec.model,
+      p_rate_limited: scope === 'day',
+      p_minute_limited: scope === 'minute',
+    })
 
-    if (res.status === 429) { last = `${spec.model}: rate limited`; continue }
+    if (res.status === 429) {
+      last = `${spec.model}: ${scope === 'day' ? 'daily quota reached' : 'too many requests this minute'}`
+      continue
+    }
     if (res.status === 404) { last = `${spec.model}: not available`; continue }
     if (res.status === 400) {
       const body = await res.text()
@@ -577,7 +589,10 @@ Deno.serve(async (req) => {
         await rpc('outreach_record_failure', { p_lead_id: lead.lead_id, p_error: msg })
         rejected++
         detail.push({ company: lead.company, error: msg })
-        if (/no budget left|rate limited/i.test(msg)) break
+        /* Out of budget for the day is the end of the batch. A minute's
+           worth of requests is not - the next lead is far enough away
+           in wall-clock time that trying it is right. */
+        if (/no budget left|daily quota reached/i.test(msg)) break
       }
     }
 
