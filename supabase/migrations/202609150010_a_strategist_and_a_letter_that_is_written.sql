@@ -219,7 +219,11 @@ Return only JSON:
   "recognition": "the specific moment they would recognise",
   "must_not_imply": "the criticism this could accidentally read as",
   "brief": "one instruction to the writer about what to lead with"
-}$prompt$, 0.4,
+}
+
+must_not_imply IS A WARNING, NOT A TOPIC
+
+Whatever you put there, the writer is told to avoid it - not to address it and not to deny it. So write it as the misreading itself ("that their system is amateur"), never as an instruction to reassure them about it. Denying an accusation nobody made is how you plant it.$prompt$, 0.4,
    'The step between choosing a true thing and phrasing it: what it MEANS for that business. Source of truth is sales-language.md 2-4 and 6 - edit both in the same sitting.')
 on conflict (key) do update set body = excluded.body, temperature = excluded.temperature, note = excluded.note;
 
@@ -304,7 +308,22 @@ Return only JSON:
 {
   "subject": "lower case, two to seven words",
   "body": "the letter, paragraphs separated by blank lines, no signature block and no footer - those are added afterwards"
-}$prompt$, 0.85,
+}
+
+ONE LAST THING ABOUT "IT MUST NOT READ AS"
+
+That line tells you a misreading to AVOID. It is not a point to address, and it is certainly not something to deny.
+
+  wrong: "This is not an outdated way to handle client funds; it is just a heavy manual dependency."
+  right: (the sentence simply never suggests it was outdated, and the words "outdated" and "inefficient" do not appear)
+
+Denying an accusation nobody made is how you plant it. Write so it does not arise, and then say nothing about it.
+
+AND DO NOT SAY THE SAME THING TWICE
+
+The observation goes in once, word for word. Do not restate its ending in your own words a few clauses later - "before the banking window closes ... before the banking window closes" is one thought written twice and it reads like a machine.
+
+Finish with Alex on a line of its own.$prompt$, 0.7,
    'The whole first-contact body, written per business. The header and footer are not here because PECR reg. 23 and Art. 14 fix them; everything a person reads as a message is this.')
 on conflict (key) do update set body = excluded.body, temperature = excluded.temperature, note = excluded.note;
 
