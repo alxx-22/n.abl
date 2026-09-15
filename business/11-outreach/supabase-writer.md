@@ -54,35 +54,92 @@ If `written` is still 0 an hour after you set the key, the answer is in
 
 ---
 
-## 2. Three agents, one argument
+## 2. An argument, in five stages
 
 ```
-pg_cron, every 10 minutes
-  → outreach-writer edge function, 3 leads
+pg_cron
+  → outreach-writer edge function, a few leads
       → outreach_config()  — vocabulary, models, prompts, thresholds   £0
       → register facts + the sector prior + what that sector has
         actually turned out to look like                              £0
       → fetch the business's own homepage                             £0
 
-      → SCOUT   Flash-Lite, cold
-                  the assessment: five category verdicts, web presence,
-                  technical capacity, inbound volume, credit fit
-                  then ARGUES up to four cases for the opening clause,
-                  each with its evidence, its reason and its risk
-      → VALIDATE every verdict and every case                         code
+      → SCOUT       Flash-Lite, cold
+                      the assessment: category verdicts, the capability
+                      each would be, web presence, technical capacity,
+                      inbound volume, credit fit
+                      then ARGUES up to four cases for the opening
+                      clause, each with its evidence, reason and risk
+      → VALIDATE    every verdict and every case                      code
 
-      → EDITOR  Flash-Lite, cool.  NEVER SEES THE PAGE.
-                  promotes one case, says why the others lost,
-                  writes the writer a one-line brief. May promote none.
+      → EDITOR      Flash-Lite, cool.  NEVER SEES THE PAGE.
+                      promotes one case, says why the others lost,
+                      briefs the writer. May promote none.
 
-      → WRITER  Flash, hot
-                  writes the promoted case — or REFUSES it with a reason,
-                  which goes back to the editor for a different case
-      → VALIDATE the clause                                           code
+      → STRATEGIST  Flash-Lite, cool.  NEVER SEES THE PAGE EITHER.
+                      what the promoted case MEANS for this business:
+                      the tension, the moment they would recognise, and
+                      what it must not be read as implying.
+                      The only stage that sees the sector and the
+                      capability.
+      → VALIDATE    a brief with no tension is refused                code
 
-      → store the assessment, the clause, and the whole argument
+      → WRITER      Flash, hot
+                      writes the clause — or REFUSES it with a reason,
+                      which goes back to the editor for a different case
+      → VALIDATE    the clause, including the hedges                  code
+      → EDITOR      reads the SENTENCE, may ask for one change
+
+      → LETTER      Flash, hot
+                      the whole first-contact body, four or five short
+                      paragraphs, built around the clause
+      → VALIDATE    shape, compliance, and the automation tells       code
+      → the trading name is substituted in HERE, after the checks
+
+      → store the assessment, the clause, the letter, and the argument
   → page text is never persisted at all
 ```
+
+### Why the strategist exists
+
+It was added on 15 September because of one sentence:
+
+> you mention using a unique diary system to ensure VAT deadlines are not
+> missed, which typically relies on someone manually updating those entries to
+> keep them accurate
+
+True, and useless. A quote, a paraphrase, a hedge, and nothing that follows
+from any of it — the shape of an answer to a comprehension question rather than
+a reason to write to somebody.
+
+Nobody owned the step between *choosing* a true thing and *phrasing* it, so the
+writer was doing both in one breath. The strategist owns that step and nothing
+else. On the same observation it now produces:
+
+> **tension** — the compliance diary works until a client sends late records and
+> the entire schedule has to be shifted by hand
+> **they would recognise** — the Tuesday afternoon spent recalculating six other
+> deadlines because one return arrived with missing receipts
+
+Nothing was added. It is a different message.
+
+[`sales-language.md`](sales-language.md) is the full account and the source the
+strategist's prompt is written from.
+
+**A strategist that fails does not cost the lead.** It logs `no_hook` and the
+writer proceeds on the editor's brief. Losing a business because a fourth model
+had a bad minute would be a worse trade than one flatter sentence.
+
+### Why there is no company name in any of this
+
+There never was, and the letter did not change it. The prompt writes
+`{business}` where a name belongs and the substitution happens in the edge
+function after every check has passed. A model that invented a name instead is
+refused rather than quietly corrected.
+
+The slot is optional: the first version required it and threw away a letter
+that addressed them as "you" throughout, which was better writing than a
+name-drop. A guard that refuses better writing is a bad guard.
 
 ### Why the editor is blind
 

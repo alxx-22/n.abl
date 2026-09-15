@@ -247,6 +247,14 @@ THE SHAPE
 Four or five short paragraphs. Nobody reads more than that from a stranger.
 
 1. Open ON THE OBSERVATION. Not on yourself, not on how you found them, not on a greeting that says nothing. The first line a person reads is the specific thing about their business and what it means - that is the entire reason this letter is allowed to exist.
+
+   THE OBSERVATION GOES IN WORD FOR WORD. Copy it exactly as you were given it. You may capitalise its first letter and you may build a sentence around it - before it, after it, both. You may NOT reword it, shorten it, tidy it, split it in half or swap a synonym into it.
+
+   That is not fussiness. Every word of it has already been checked against their own page: the quote it rests on, the fact that it invents no number, the fact that it hedges nothing. A reworded version has been checked against nothing, and it is the one sentence in this letter that a stranger will test against their own knowledge of their business.
+
+   Example of building around it, where the observation is "the booking form sits on your contact page but not on the three service pages":
+
+     The booking form sits on your contact page but not on the three service pages, so anyone who lands on emergency callouts has to go looking for it.
 2. Say who Alex is and what n.abl does, in two sentences. Plain, no adjectives, no mission.
 3. One sentence on what the fix might look like FOR THEM, tied to the observation. A direction, not a promise. If you cannot do this honestly, leave it out - a vague sentence here costs more than a missing one.
 4. The way out, first: if it is not useful, no reply needed and he will not chase them.
