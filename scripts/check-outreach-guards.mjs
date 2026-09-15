@@ -265,6 +265,8 @@ let d = detectSignals([
   { key: 'broken', pattern: '([unclosed', flags: 'i', description: 'never matches' },
 ], '<script src="https://CALENDLY.com/x"></script>')
 ok('a pattern from the table matches case-insensitively', d.found.includes('a booking tool is embedded'))
+ok('  …and reports its key, which is what the score is computed from',
+  d.keys.length === 1 && d.keys[0] === 'booking')
 ok('a pattern that will not compile is skipped, not fatal', d.notes.length === 1 && /will not compile/.test(d.notes[0]))
 
 console.log('\nTHE ENVELOPE THE SETTINGS CANNOT LEAVE\n')

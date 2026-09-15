@@ -384,15 +384,22 @@ export function buildFacts(rules, lead) {
 */
 export function detectSignals(signals, html) {
   const found = []
+  const keys = []
   const notes = []
   for (const s of Array.isArray(signals) ? signals : []) {
     try {
-      if (new RegExp(s.pattern, s.flags || 'i').test(html)) found.push(s.description)
+      if (new RegExp(s.pattern, s.flags || 'i').test(html)) {
+        found.push(s.description)
+        /* The key as well as the prose. The description is what the
+           scout reads; the key is what the score is computed from, and
+           a score has to be able to show what matched. */
+        if (s.key) keys.push(s.key)
+      }
     } catch {
       notes.push(`page signal "${s?.key}" has a pattern that will not compile — skipped`)
     }
   }
-  return { found, notes }
+  return { found, keys, notes }
 }
 
 /* ---------- the editor reading the draft ---------- */

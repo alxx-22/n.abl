@@ -317,6 +317,11 @@ async function scout(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, settings
     services,
     angles: av.angles,
     notes,
+    /* Which patterns matched, not just what they said. The re-score
+       turns these into scoring-model.md catalogue codes, and a signal
+       point that cannot name what matched is a claim we could not
+       stand behind. Absent (rather than empty) when no page was read. */
+    signalKeys: site ? (site.keys ?? []) : null,
     assessment: {
       ...assessed,
       credit_reason: String(p.credit_reason ?? '').slice(0, 500),
@@ -483,6 +488,10 @@ async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, setting
     p_assessment: s.assessment,
     p_services: s.services,
     p_model: s.model,
+    /* null when no page was read, so the re-score can tell "looked and
+       found nothing" from "never looked". Only the first is a
+       measurement, and only a measurement may move the score. */
+    p_page_signals: s.signalKeys,
   })
 
   if (!s.angles.length) return { ok: false as const, why: 'nothing true to say about this lead', assessed: true }
