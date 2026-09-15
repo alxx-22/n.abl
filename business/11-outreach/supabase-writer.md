@@ -192,6 +192,24 @@ produce if someone asked where a claim came from — stays on the lead.
 
 ## 6. Honest limitations
 
+- **No lead can reach a band, and that is a question for the ICP.**
+  `scoring-model.md` §6 puts `shortlist` at 70 out of 100. Two of the five
+  dimensions are worth 35 between them and score zero on every lead we hold, by
+  decisions taken deliberately elsewhere: `size` needs an employee count and
+  §5.2 says it is never estimated, `decision_access` needs a named individual
+  and the lawful basis covers corporate subscribers only. So the denominator
+  tops out at 65, the scorer records `unbanded_incomplete_coverage` rather than
+  pretending, and the CRM says so on the lead. The fix is to decide in the ICP
+  what a shortlist means when two dimensions are structurally uncollectable —
+  not to lower a number here.
+- **Half the signals catalogue has no pattern.** `scoring-model.md` §5.4 lists
+  seven tier 1 codes; a homepage can honestly establish two of them, and until
+  15 September only one had a pattern — which, it turned out, had never matched
+  once in twenty-four page reads, because it demanded the literal words "for a
+  quote". `role_addresses` and `fleet_visible` (tier 2) are visible and
+  unimplemented; `new_director` and `late_filings` (tier 3, five each) are
+  register facts we do not pull. Roughly sixteen more points of headroom, none
+  of it invented.
 - **Nothing has been run against a real page yet.** The guards and the
   negotiation are tested; the plumbing is verified end to end; the *quality* of
   what three models say to each other is unknown until the key is set. Read the
@@ -205,9 +223,11 @@ produce if someone asked where a claim came from — stays on the lead.
   carry the CQC, ICO, FSA and Charity Commission columns that `merge.mjs`
   produces. Landing those columns, and adding a row per register to
   `outreach_fact_rule`, is the biggest single upgrade available.
-- **No robots.txt check.** One homepage per lead, ten minutes apart, identifying
-  user agent. Defensible at this rate; it should match `extract-contacts.mjs`'s
-  politeness before volume goes up.
+- **No robots.txt check.** One homepage per lead, identifying user agent.
+  Defensible at the scheduled rate; it should match `extract-contacts.mjs`'s
+  politeness before volume goes up. The schedule is a `cron.alter_job` away from
+  every minute, and a re-run of the whole list is exactly that — so this is the
+  limitation that binds first when you drain the queue in a hurry.
 - **All 149 leads are `marketing_status = 'do_not_contact'`**, which is
   `promote.mjs`'s default when `--permit` was not passed. That does not block
   the writer — see §2 of `personalisation-and-hooks.md` — but it *does* block
@@ -216,6 +236,32 @@ produce if someone asked where a claim came from — stays on the lead.
   in the writer prompt are what every sentence a stranger reads is modelled on.
   That is the one part that cannot be delegated, it is an `UPDATE` and not a
   deploy, and it is worth an hour. See [`registries.md`](registries.md).
+
+---
+
+### A batch is claimed, so two runs cannot collide
+
+`outreach_next_batch` stamps `observation_claimed_at` on the rows it hands out,
+inside the same statement that selects them, with `SKIP LOCKED`. A second run
+takes the next leads rather than the same ones.
+
+That did not matter while the queue moved three leads every ten minutes; it
+matters the moment you speed it up to re-run the list, because two overlapping
+runs would read the same homepage, spend four model calls each on it, and race
+to overwrite each other's sentence.
+
+The stamp is a **lease**, not a flag: `outreach_setting.claim_ttl_seconds`
+(ten minutes) decides how long a lead stays claimed before another run may take
+it, so a run that dies mid-batch does not strand its leads. A claim is not an
+attempt — a lead handed out and never shown to a model has not been tried, and
+burning one of its three lives for that would discard leads nobody looked at.
+
+### The previous sentence is kept
+
+Re-assessing rewrites the observation, and `lead_observation_history` keeps what
+was there, by trigger, before it goes. Two reasons: a re-run that comes back
+refused three times must not leave a lead worse off than before it started, and
+the only honest test of a prompt change is the same lead before and after.
 
 ---
 

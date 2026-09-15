@@ -44,7 +44,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const {
   makeVocab, coerce, applyRequirement, validateServices, validateAngles,
   validatePromotion, validateClause, buildFacts, detectSignals, clampSettings, ENVELOPE,
-  negotiate, validateReview, chooseDraft,
+  negotiate, validateReview, chooseDraft, registryBlock,
 } = await import(`file://${join(ROOT, 'supabase', 'functions', 'outreach-writer', 'guards.mjs')}`)
 
 let fail = 0
@@ -62,6 +62,10 @@ const VOCAB = makeVocab({
   category: [
     { term: 'save_time', rank: 0, meaning: '' },
     { term: 'understand_data', rank: 0, meaning: '' },
+  ],
+  capability: [
+    { term: 'automation', rank: 0, meaning: 'work happens on its own' },
+    { term: 'web', rank: 0, meaning: 'the public-facing thing' },
   ],
   fit: [
     { term: 'ruled_out', rank: 0, meaning: '' },
@@ -433,6 +437,31 @@ ok('  …and nothing extra is logged',
 const capped = clampSettings({ max_revisions: 99 })
 ok('revisions cannot be set high enough to burn the day allowance',
   capped.max_revisions <= ENVELOPE.max_revisions[1])
+
+console.log('\nCAPABILITY \u2014 WHOSE DESK IT LANDS ON\n')
+
+r = validateServices(VOCAB, [{ ...base, category: 'save_time', capability: 'automation',
+  fit: 'possible', confidence: 'inferred' }], PAGE)
+ok('a real capability is kept', r.services[0].capability === 'automation')
+r = validateServices(VOCAB, [{ ...base, category: 'save_time', capability: 'blockchain',
+  fit: 'possible', confidence: 'inferred' }], PAGE)
+ok('an invented capability becomes null rather than a wrong desk',
+  r.services[0].capability === null)
+r = validateServices(VOCAB, [{ ...base, category: 'save_time', fit: 'possible', confidence: 'inferred' }], PAGE)
+ok('a missing capability is null, never defaulted', r.services[0].capability === null)
+ok('  \u2026and the verdict still stands without one', r.services.length === 1)
+
+console.log('\nTHE PROMPT BLOCK COMES FROM THE REGISTRY\n')
+const block = registryBlock(VOCAB, [
+  { dimension: 'capability', heading: 'CAPABILITY' },
+  { dimension: 'fit', heading: 'FIT' },
+])
+ok('only the dimensions the registry names are described',
+  block.indexOf('CAPABILITY') > -1 && block.indexOf('FIT') > -1 && block.indexOf('CONFIDENCE') === -1)
+ok('  \u2026in the order given', block.indexOf('CAPABILITY') < block.indexOf('FIT'))
+ok('a dimension with no terms is skipped rather than left as a bare heading',
+  registryBlock(VOCAB, [{ dimension: 'nonexistent', heading: 'GHOST' }]) === '')
+ok('no dimensions at all does not throw', registryBlock(VOCAB, null) === '')
 
 console.log(`\n${fail ? fail + ' failed' : 'all guard checks passed'}`)
 process.exit(fail ? 1 : 0)

@@ -124,6 +124,17 @@ export function makeVocab(vocabulary) {
   }
 }
 
+/* The prompt block, built by walking the dimensions the registry says
+   exist. This was a hardcoded array in index.ts, which meant adding a
+   vocabulary still needed a deploy - the exact thing the registries
+   were built to end. */
+export function registryBlock(vocab, dimensions) {
+  return (Array.isArray(dimensions) ? dimensions : [])
+    .map((d) => vocab.describe(d.dimension, d.heading))
+    .filter(Boolean)
+    .join('\n\n')
+}
+
 export function coerce(vocab, dim, value, fallback) {
   if (typeof value === 'string' && vocab.has(dim, value)) return value
   if (fallback && vocab.has(dim, fallback)) return fallback
@@ -212,6 +223,12 @@ export function validateServices(vocab, raw, pageText) {
       evidence: typeof r?.evidence === 'string' && r.evidence.trim() ? r.evidence.trim() : null,
     }, pageText, notes, c)
 
+    /* Which of n.abl's capabilities the work would be - the axis the
+       team is organised along. NOT coerced to a default: "could not
+       tell" is an honest answer, and a defaulted one sends the lead to
+       the wrong specialist, who will not look at it twice. */
+    const capability = vocab.has('capability', r?.capability) ? r.capability : null
+
     const rationale = String(r?.rationale ?? '').trim()
     const confirm = String(r?.confirm_question ?? '').trim()
     const disq = String(r?.disqualifier ?? '').trim()
@@ -224,7 +241,7 @@ export function validateServices(vocab, raw, pageText) {
       continue
     }
 
-    out.push({ category: c, fit, confidence, rationale, evidence, confirm_question: confirm, disqualifier: disq })
+    out.push({ category: c, capability, fit, confidence, rationale, evidence, confirm_question: confirm, disqualifier: disq })
   }
   return { services: out, notes }
 }

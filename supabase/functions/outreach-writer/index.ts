@@ -59,7 +59,7 @@
 import {
   makeVocab, coerce, applyRequirement, validateServices, validateAngles,
   validatePromotion, validateClause, buildFacts, detectSignals, clampSettings,
-  negotiate,
+  negotiate, registryBlock,
 } from './guards.mjs'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -73,6 +73,7 @@ type Cfg = {
   models: Record<string, { model: string; rpd: number; gap_ms: number; temperature: number | null }[]>
   fact_rules: Record<string, unknown>[]
   page_signals: { key: string; pattern: string; flags: string; description: string }[]
+  dimensions: { dimension: string; heading: string }[]
   settings: Record<string, unknown>
   prompts: Record<string, { body: string; temperature: number }>
   sectors: { sector: string; label: string }[]
@@ -234,29 +235,11 @@ function priorBlock(cfg: Cfg, lead: Record<string, any>, minSample: number): str
   return lines.join('\n')
 }
 
-function registryBlock(vocab: Vocab): string {
-  return [
-    vocab.describe('category', 'SERVICE CATEGORIES — assess each one you have something to say about'),
-    '',
-    vocab.describe('fit', 'FIT'),
-    '',
-    vocab.describe('confidence', 'CONFIDENCE'),
-    '',
-    vocab.describe('web_presence', 'WEB PRESENCE — what they look like from outside'),
-    '',
-    vocab.describe('technical_capacity', 'TECHNICAL CAPACITY — whether anyone inside would maintain what we build'),
-    '',
-    vocab.describe('inbound_volume', 'INBOUND VOLUME — whether answering enquiries is a visible cost'),
-    '',
-    vocab.describe('credit', 'CREDIT FIT — which of the three to lead with after delivery'),
-  ].filter(Boolean).join('\n')
-}
-
 async function scout(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, settings: any) {
   const facts = buildFacts(cfg.fact_rules, lead)
   const site = lead.website ? await fetchSite(cfg, lead.website, settings) : null
 
-  const parts: string[] = [registryBlock(vocab), '', priorBlock(cfg, lead, settings.prior_min_sample), '']
+  const parts: string[] = [registryBlock(vocab, cfg.dimensions), '', priorBlock(cfg, lead, settings.prior_min_sample), '']
 
   if (facts.length) {
     parts.push('REGISTER FACTS (verified — an angle may cite one of these by key):')

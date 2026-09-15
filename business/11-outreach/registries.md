@@ -45,7 +45,8 @@ registry, not a hand-maintained CHECK list that would have rejected it.
 
 | Table | What it decides |
 |---|---|
-| `outreach_vocabulary` | Every term the assessment may use, its meaning, its rank, whether it demands evidence, and what it requires of other dimensions |
+| `outreach_vocabulary` | Every term the assessment may use, its meaning, its rank, whether it demands evidence, what it requires of other dimensions, and what to call it on screen |
+| `outreach_dimension` | Which vocabularies the scout is asked about, under what heading, in what order |
 | `outreach_model` | Which model does which job, in what order to fall back, and the free-tier ceiling we believe |
 | `outreach_prompt` | One system prompt per agent — `scout`, `editor`, `writer` |
 | `outreach_fact_rule` | Which register facts are worth showing, and **how each should be read** |
@@ -70,6 +71,12 @@ every dimension: the weakest *fit* is "ruled out", which is a claim about the
 business and not a shrug, whereas the weakest *confidence* genuinely is one. A
 term that needs evidence can never be a default — the database refuses it.
 
+**`label`** is what a person sees where the term is a code. Null for almost
+everything, because underscores-to-spaces already reads correctly; set for the
+six capabilities, because "ai" is AI and "software" is Custom Software and no
+punctuation rule gets there. It is never sent to a model — give one a display
+name and it will eventually answer with it.
+
 ### And one that generalises a business rule
 
 `requires_dimension` / `requires_min_rank`. Today it says training credits need
@@ -77,6 +84,31 @@ at least mixed technical capacity, because a training day booked for people who
 will not attend is money burned and in a small town it is a refund and a lost
 reputation. It is written generically because the next rule of that shape should
 be a row, not a release.
+
+---
+
+### Two axes, and why the CRM filters on the second
+
+`category` is how a business arrives — they want to save time, fix something,
+build something new. `capability` is what the work would actually be —
+automation, data & analytics, web, custom software, AI, training & support. Both
+are in [`01-positioning`](../01-positioning/README.md) §154 and they are
+deliberately different questions: "someone is rekeying bookings by hand" is a
+`save_time` arrival, and the job behind it could be any of three capabilities.
+
+The team specialises along the second, so that is what the CRM's **Service**
+filter offers. A specialist filtering by their own capability is asking "is
+there anything here for me", and a category cannot answer it.
+
+`capability` is the one dimension with **no `is_default` row**, and the guard
+will not invent one. A lead the scout could not place shows up under
+*Unassigned*, which is a queue somebody works. A lead placed on the wrong desk
+is opened once and never again.
+
+Adding a seventh capability is two inserts — one in `outreach_vocabulary`, one
+in `outreach_dimension` if it needs its own prompt heading. No deploy: the
+prompt block is built by walking `outreach_dimension`, which is what that table
+is for.
 
 ---
 
@@ -172,6 +204,9 @@ to the business outranks a model that read their homepage.
 - **The pipeline shape.** Three agents in that order. Everything each agent
   knows and says is data; that there are three of them is code. A fourth would
   be a real change, not a row, because nothing could infer what to do with it.
+- **The two axes.** That there are exactly two — how they arrive, and what the
+  work is — is a fact about how the practice is organised, not a setting. The
+  terms on each axis are rows.
 - **`sales_leads` will not store an observation without evidence**, and a
   trigger refuses any verdict whose confidence term demands evidence and has
   none. Both are constraints rather than conventions, on purpose.
