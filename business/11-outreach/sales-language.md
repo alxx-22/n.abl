@@ -139,6 +139,18 @@ Three corollaries, all of them things that read as criticism and must not appear
 - **Never notice something they cannot change cheaply.** Pointing at a problem
   whose fix is a year of work is not help, it is a burden delivered by a
   stranger.
+- **Never notice neglect.** An out-of-date footer copyright, a site that looks
+  old, a page nobody has touched. The pipeline produced exactly this on 15
+  September — *"your footer copyright date still reads 2018 while the rest of
+  the site is clearly active"* — which is true, checkable, specific, and a
+  stranger writing to say the shop front looks shabby. They know; the fix is
+  worth nothing to them; the whole letter reads as petty.
+
+  The trap is that `stale_copyright` is a legitimate **scoring** signal —
+  tier 2 in `scoring-model.md` §5.4 — so the pipeline has every reason to
+  notice it. Scoring happens in private. An angle is read by the person it is
+  about. Same fact, completely different test, and the rule now sits in both
+  the scout's prompt and the editor's.
 
 And the specific one for us: **noticing a tool they installed is not criticism.**
 Somebody chose that booking widget and it was a good decision. The hook is what
