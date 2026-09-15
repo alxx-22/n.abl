@@ -37,6 +37,7 @@ export const ENVELOPE = {
   fetch_timeout_ms: [2000, 30000],
   model_timeout_ms: [5000, 60000],
   max_rounds: [1, 4],
+  max_revisions: [0, 3],
   min_words: [4, 20],
   max_words: [20, 60],
   max_angles: [1, 8],
@@ -394,6 +395,54 @@ export function detectSignals(signals, html) {
   return { found, notes }
 }
 
+/* ---------- the editor reading the draft ---------- */
+/*
+   The reviewer's ONLY moves are accept and revise. It may not reject.
+
+   That asymmetry is deliberate. By the time a clause reaches review it
+   has already passed every guard: its quote is on the page, its digits
+   came from the material, it names nobody, it is the right shape. A
+   reviewer that could veto that would be re-litigating checks that
+   already ran, and the over-strict editor that refused the first four
+   leads of the day is what happens when a judging agent is handed a
+   veto and no floor.
+
+   So an objection it cannot turn into a better sentence becomes a note
+   on the record instead - visible in the argument log, in front of a
+   person at the gate, which is where "this reads badly to me" belongs.
+*/
+export function validateReview(raw) {
+  if (!raw || typeof raw !== 'object') {
+    /* A reviewer that answered nothing usable must not cost us a draft
+       that already passed. Silence is acceptance. */
+    return { accept: true, note: 'the reviewer did not answer usably, so the draft stands' }
+  }
+  const verdict = String(raw.verdict ?? '').trim().toLowerCase()
+  const change = String(raw.change ?? '').trim()
+  const note = String(raw.because ?? raw.note ?? '').trim()
+
+  if (verdict !== 'revise') return { accept: true, note }
+  if (!change) {
+    return { accept: true, note: note || 'asked for a revision without saying what to change' }
+  }
+  return { accept: false, change, note }
+}
+
+/* Which of the two sentences ships.
+
+   The revision only wins if it passed every guard. A revision that
+   broke one is not a reason to lose the draft we already had - the
+   loop exists to improve output, and a version of it that can reduce
+   output is worse than not having it. */
+export function chooseDraft(original, revised) {
+  if (revised && revised.ok) return { clause: revised, revised: true }
+  return {
+    clause: original,
+    revised: false,
+    why: revised ? (revised.why || 'the revision did not pass') : 'no revision was produced',
+  }
+}
+
 /* ---------- the negotiation ---------- */
 /*
    The loop the three agents argue in, with the model calls injected.
@@ -409,7 +458,10 @@ export function detectSignals(signals, html) {
    So the agents are callbacks, the loop is pure, and scripts/check-outreach-guards.mjs
    drives it with fakes.
 */
-export async function negotiate({ angles, summary, maxRounds, callEditor, callWriter, onRound }) {
+export async function negotiate({
+  angles, summary, maxRounds, maxRevisions,
+  callEditor, callWriter, callReview, onRound,
+}) {
   const refusals = []
   let why = 'no round produced a clause'
 
@@ -427,7 +479,53 @@ export async function negotiate({ angles, summary, maxRounds, callEditor, callWr
     const w = await callWriter({ angle: e.angle, brief: e.brief ?? '', round })
     if (w.ok) {
       await onRound?.({ round, agent: 'writer', model: w.model, decision: 'wrote', angle_key: e.angle.key, reason: w.observation })
-      return { ok: true, clause: w, angle: e.angle, rounds: round, refusals }
+
+      /* ---- refinement: the editor now reads the SENTENCE ---- */
+      let clause = w
+      let revisions = 0
+      while (callReview && revisions < (maxRevisions || 0)) {
+        const rv = await callReview({ angle: e.angle, brief: e.brief ?? '', draft: clause, round })
+        const verdict = validateReview(rv && rv.parsed)
+
+        if (verdict.accept) {
+          await onRound?.({
+            round, agent: 'editor', model: rv && rv.model, decision: 'accepted',
+            angle_key: e.angle.key, reason: verdict.note || 'the sentence does the job',
+          })
+          break
+        }
+
+        await onRound?.({
+          round, agent: 'editor', model: rv && rv.model, decision: 'asked_for_a_change',
+          angle_key: e.angle.key, reason: verdict.change,
+        })
+
+        const rw = await callWriter({
+          angle: e.angle, brief: e.brief ?? '', round,
+          revise: { previous: clause.observation, change: verdict.change },
+        })
+        const picked = chooseDraft(clause, rw)
+        revisions++
+
+        if (picked.revised) {
+          clause = picked.clause
+          await onRound?.({
+            round, agent: 'writer', model: rw.model, decision: 'revised',
+            angle_key: e.angle.key, reason: rw.observation,
+          })
+        } else {
+          /* The objection stands on the record even though the sentence
+             did not change. A person reads it at the gate. */
+          await onRound?.({
+            round, agent: 'writer', model: rw && rw.model, decision: 'revision_failed',
+            angle_key: e.angle.key,
+            reason: `${picked.why} — keeping the earlier draft, which the editor wanted changed: ${verdict.change}`,
+          })
+          break
+        }
+      }
+
+      return { ok: true, clause, angle: e.angle, rounds: round, revisions, refusals }
     }
 
     await onRound?.({

@@ -370,7 +370,7 @@ async function editor(
 
 /* ---------- the writer ---------- */
 
-async function writer(cfg: Cfg, angle: any, brief: string, facts: any[], settings: any) {
+async function writer(cfg: Cfg, angle: any, brief: string, facts: any[], settings: any, revise?: { previous: string; change: string }) {
   const parts: string[] = []
   parts.push(`THE BRIEF: ${brief || 'write the angle below'}`)
   parts.push('')
@@ -386,6 +386,19 @@ async function writer(cfg: Cfg, angle: any, brief: string, facts: any[], setting
   parts.push('')
   parts.push('Nothing else about this business is known to you. Anything not above does not exist.')
 
+  /* A revision is the same job with one instruction added, not a new
+     one. The previous sentence is shown so the writer changes it
+     rather than starting again - starting again loses whatever was
+     already right about it. */
+  if (revise) {
+    parts.push('')
+    parts.push('YOU HAVE ALREADY WRITTEN THIS ONCE:')
+    parts.push(`  ${revise.previous}`)
+    parts.push('')
+    parts.push(`THE EDITOR WANTS ONE CHANGE: ${revise.change}`)
+    parts.push('Make that change and nothing else. Every rule above still applies.')
+  }
+
   const pr = cfg.prompts.writer
   if (!pr) throw new Error('no writer prompt in public.outreach_prompt')
   const { text: raw, model } = await ask(
@@ -394,6 +407,41 @@ async function writer(cfg: Cfg, angle: any, brief: string, facts: any[], setting
   let p: Record<string, unknown>
   try { p = parseJson(raw) } catch { return { ok: false as const, refused: false, why: 'reply was not JSON', model } }
   return { ...validateClause(p, { angle, facts, settings }), model }
+}
+
+/* ---------- the editor, reading the sentence ---------- */
+/*
+   Same agent, same model chain, different job and different prompt.
+   It is deliberately NOT a fourth agent: "oversee the other three" is
+   not a task with an output, and a supervisor with nothing concrete to
+   decide either rubber-stamps or vetoes. This one has exactly one
+   artefact in front of it and two moves.
+*/
+async function reviewer(cfg: Cfg, angle: any, brief: string, draft: any, settings: any) {
+  const pr = cfg.prompts.review
+  if (!pr) return null
+
+  const parts = [
+    `THE BRIEF YOU GAVE: ${brief || '(none)'}`,
+    `THE ANGLE: ${angle.claim}`,
+    angle.basis === 'page'
+      ? `IT RESTS ON, quoted from their own site: "${angle.quote}"`
+      : `IT RESTS ON a public register fact: ${angle.fact_key}`,
+    '',
+    'THE SENTENCE THAT CAME BACK:',
+    `  ${draft.observation}`,
+  ]
+
+  try {
+    const { text: raw, model } = await ask(
+      cfg, 'editor', pr.body, parts.join('\n'), pr.temperature, settings.model_timeout_ms)
+    try { return { parsed: parseJson(raw), model } }
+    catch { return { parsed: null, model } }
+  } catch (err) {
+    /* A reviewer that could not be reached must not cost us a draft
+       that already passed every guard. Absence is acceptance. */
+    return { parsed: null, model: null, error: (err as Error).message }
+  }
 }
 
 /* ---------- one lead ---------- */
@@ -445,8 +493,12 @@ async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, setting
     angles: s.angles,
     summary: s.assessment.summary,
     maxRounds: settings.max_rounds,
+    maxRevisions: settings.max_revisions,
     callEditor: ({ angles, summary, refusals }) => editor(cfg, angles, summary, refusals, settings),
-    callWriter: ({ angle, brief }) => writer(cfg, angle, brief, s.facts, settings),
+    callWriter: ({ angle, brief, revise }) => writer(cfg, angle, brief, s.facts, settings, revise),
+    callReview: cfg.prompts.review
+      ? ({ angle, brief, draft }) => reviewer(cfg, angle, brief, draft, settings)
+      : null,
     onRound: (m) => log(m.round, m.agent, m.model, m.decision, m.angle_key, m.reason),
   })
 
@@ -465,6 +517,7 @@ async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, setting
     observation: r.clause.observation,
     angle: r.angle.key,
     rounds: r.rounds,
+    revisions: r.revisions,
     assessment: s.assessment,
     notes: s.notes,
     strongest: strongestOf(vocab, s.services),
@@ -516,6 +569,7 @@ Deno.serve(async (req) => {
           written++
           detail.push({
             company: lead.company, angle: r.angle, rounds: r.rounds,
+            revisions: r.revisions || undefined,
             presence: r.assessment.web_presence, credit: r.assessment.credit_fit,
             strongest: r.strongest, observation: r.observation,
             sector_correction: r.assessment.sector_correction ?? undefined,

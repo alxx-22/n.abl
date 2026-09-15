@@ -44,7 +44,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const {
   makeVocab, coerce, applyRequirement, validateServices, validateAngles,
   validatePromotion, validateClause, buildFacts, detectSignals, clampSettings, ENVELOPE,
-  negotiate,
+  negotiate, validateReview, chooseDraft,
 } = await import(`file://${join(ROOT, 'supabase', 'functions', 'outreach-writer', 'guards.mjs')}`)
 
 let fail = 0
@@ -349,6 +349,88 @@ n = await run(promoter(['one', 'two']), async () => {
   return { ok: false, refused: true, why: 'no', model: 'fake-writer' }
 }, 4)
 ok('the loop cannot outlast the cases the scout argued', calls === 2 && !n.ok)
+
+console.log('\nTHE REVISION ROUND\n')
+
+/* By the time a clause reaches review it has already passed every
+   guard. So the reviewer may ask for a change and may not veto, and a
+   revision that fails must never cost us the draft we already had. */
+ok('an accepted draft stands', validateReview({ verdict: 'accept' }).accept === true)
+ok('a reviewer that returns junk is treated as acceptance',
+  validateReview(null).accept === true && validateReview('nope').accept === true)
+ok('  …and says so, so the silence is on the record',
+  /did not answer usably/.test(validateReview(null).note))
+ok('"revise" with no instruction is acceptance, not a veto',
+  validateReview({ verdict: 'revise', change: '   ' }).accept === true)
+ok('  …and that is recorded too',
+  /without saying what to change/.test(validateReview({ verdict: 'revise' }).note))
+let rv = validateReview({ verdict: 'revise', change: 'cut the second clause', because: 'two things' })
+ok('a real instruction is passed through', rv.accept === false && rv.change === 'cut the second clause')
+ok('the reviewer has no way to reject outright',
+  validateReview({ verdict: 'reject', change: 'bin it' }).accept === true)
+
+const first = { ok: true, observation: 'first', model: 'm' }
+const better = { ok: true, observation: 'second', model: 'm' }
+ok('a revision that passed is the one that ships',
+  chooseDraft(first, better).clause.observation === 'second')
+ok('a revision that FAILED never loses the original',
+  chooseDraft(first, { ok: false, why: 'names a person' }).clause.observation === 'first')
+ok('  …and the reason survives', /names a person/.test(chooseDraft(first, { ok:false, why:'names a person' }).why))
+ok('no revision at all keeps the original', chooseDraft(first, null).clause.observation === 'first')
+
+const ANG = [{ key: 'one', claim: 'c', basis: 'page', quote: 'q1', risk: 'k' }]
+const editorAlways = async () => ({ ok: true, angle: ANG[0], because: 'b', brief: 'br', model: 'fake-editor' })
+function runRev(callReview, writerFn, maxRevisions = 1) {
+  const log = []
+  return negotiate({
+    angles: ANG, summary: 's', maxRounds: 2, maxRevisions,
+    callEditor: editorAlways, callWriter: writerFn, callReview,
+    onRound: (m) => log.push(`${m.agent}:${m.decision}`),
+  }).then((r) => ({ ...r, log }))
+}
+const writesOnce = async (a) => ({
+  ok: true, model: 'fake-writer',
+  observation: a.revise ? 'the revised clause' : 'the first clause',
+  basis: 'page', evidence: 'q1',
+})
+
+let rr = await runRev(async () => ({ parsed: { verdict: 'accept', because: 'reads well' }, model: 'fake-editor' }), writesOnce)
+ok('an accepted first draft ships unchanged',
+  rr.ok && rr.clause.observation === 'the first clause' && rr.revisions === 0)
+ok('  …and the acceptance is logged', rr.log.join(' ').includes('editor:accepted'))
+
+rr = await runRev(async () => ({ parsed: { verdict: 'revise', change: 'drop the adverb' }, model: 'fake-editor' }), writesOnce)
+ok('a requested change produces a revised clause',
+  rr.ok && rr.clause.observation === 'the revised clause' && rr.revisions === 1)
+ok('  …and the whole exchange is on the record',
+  rr.log.join(' ') === 'editor:promoted writer:wrote editor:asked_for_a_change writer:revised', rr.log.join(' '))
+
+let writerCalls = 0
+rr = await runRev(
+  async () => ({ parsed: { verdict: 'revise', change: 'sharpen it' }, model: 'fake-editor' }),
+  async (a) => { writerCalls++; return a.revise
+    ? { ok: false, why: 'uses a number nobody supplied: 2003', model: 'fake-writer' }
+    : { ok: true, observation: 'the first clause', basis: 'page', evidence: 'q1', model: 'fake-writer' }; })
+ok('a FAILED revision keeps the first draft rather than losing the lead',
+  rr.ok && rr.clause.observation === 'the first clause')
+ok('  …and the editor\'s objection stays on the record for the human gate',
+  rr.log.join(' ').includes('writer:revision_failed'))
+ok('  …and it does not try again', writerCalls === 2)
+
+rr = await runRev(async () => ({ parsed: { verdict: 'revise', change: 'again' }, model: 'fake-editor' }),
+  async (a) => ({ ok: true, model: 'm', basis: 'page', evidence: 'q1',
+                  observation: a.revise ? 'rev' + Math.random() : 'first' }), 1)
+ok('max_revisions of 1 means exactly one revision', rr.revisions === 1)
+
+rr = await runRev(null, writesOnce)
+ok('with no reviewer wired the loop behaves exactly as before',
+  rr.ok && rr.clause.observation === 'the first clause' && rr.revisions === 0)
+ok('  …and nothing extra is logged',
+  rr.log.join(' ') === 'editor:promoted writer:wrote', rr.log.join(' '))
+
+const capped = clampSettings({ max_revisions: 99 })
+ok('revisions cannot be set high enough to burn the day allowance',
+  capped.max_revisions <= ENVELOPE.max_revisions[1])
 
 console.log(`\n${fail ? fail + ' failed' : 'all guard checks passed'}`)
 process.exit(fail ? 1 : 0)
