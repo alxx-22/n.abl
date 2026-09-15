@@ -1,22 +1,30 @@
 /* ============================================================
-   THE OUTREACH WRITER: THREE AGENTS, ONE ARGUMENT
+   THE OUTREACH WRITER: AN ARGUMENT, IN FIVE STAGES
 
-   For each lead, three models negotiate over what a stranger reads
+   For each lead, several models negotiate over what a stranger reads
    first. A few leads at a time, woken by pg_cron, so it runs with the
    laptop shut.
 
-     scout    Reads the business's own page and the public register
-              facts. Produces the assessment, then ARGUES: several
-              cases for what the opening clause could be, each with
-              its evidence, its reason and its risk.
+     scout       Reads the business's own page and the public register
+                 facts. Produces the assessment, then ARGUES: several
+                 cases for what the opening clause could be, each with
+                 its evidence, its reason and its risk.
 
-     editor   Never sees the page. Sees only the cases as argued.
-              Promotes one, says why the others lost, briefs the
-              writer. May promote nothing.
+     editor      Never sees the page. Sees only the cases as argued.
+                 Promotes one, says why the others lost, briefs the
+                 writer. May promote nothing.
 
-     writer   Writes what it was handed, or REFUSES with a reason.
-              A refusal goes back to the editor, which promotes a
-              different case, up to max_rounds.
+     strategist  Takes the promoted case and works out what it MEANS
+                 for this business: the tension, and the moment they
+                 would recognise. The only stage that sees the sector
+                 and the capability.
+
+     writer      Writes the clause, or REFUSES with a reason. A refusal
+                 goes back to the editor, which promotes a different
+                 case, up to max_rounds. The editor then reads the
+                 SENTENCE and may ask for one change.
+
+     letter      Writes the whole first-contact body around the clause.
 
    WHY THE EDITOR IS BLIND
 
@@ -28,6 +36,20 @@
    It is safe because every quote is checked against the page in code
    before the editor ever sees it, so the editor can only choose
    between things already known to be true.
+
+   WHY THE STRATEGIST EXISTS
+
+   Because nobody owned the step between choosing a true thing and
+   phrasing it, the writer was doing both at once, and what came out
+   was a quote followed by a paraphrase with a hedge on it:
+
+     "you mention using a unique diary system to ensure VAT deadlines
+      are not missed, which typically relies on someone manually
+      updating those entries"
+
+   True, and an answer to a comprehension question rather than a reason
+   to write to somebody. business/11-outreach/sales-language.md is the
+   full account.
 
    WHAT IT DOES NOT DO: send anything. approval-gates.md says both
    gates are human and both are before sending. This fills the queue up
@@ -54,12 +76,18 @@
    Register facts, the sector prior, and the business's own public page
    text. No company name, no contact route, no address, nothing else
    from the database.
+
+   That still holds with the letter stage, which obviously needs a name
+   in it: the prompt writes {business} and the substitution happens
+   here, after the letter has passed every check. A model that tried to
+   write a name of its own is refused rather than quietly corrected.
    ============================================================ */
 
 import {
   makeVocab, coerce, applyRequirement, validateServices, validateAngles,
   validatePromotion, validateClause, buildFacts, detectSignals, clampSettings,
   negotiate, registryBlock, quotaScope,
+  validateHook, validateLetter, fillLetter, tradingName,
 } from './guards.mjs'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -370,10 +398,19 @@ async function editor(
 
 /* ---------- the writer ---------- */
 
-async function writer(cfg: Cfg, angle: any, brief: string, facts: any[], settings: any, revise?: { previous: string; change: string }) {
+async function writer(cfg: Cfg, angle: any, brief: string, facts: any[], settings: any, revise?: { previous: string; change: string }, hook?: any) {
   const parts: string[] = []
-  parts.push(`THE BRIEF: ${brief || 'write the angle below'}`)
+  parts.push(`THE BRIEF: ${hook?.brief || brief || 'write the angle below'}`)
   parts.push('')
+  /* The strategist already did the thinking. Handing the writer the
+     tension and the moment, rather than only the fact, is what stops it
+     paraphrasing the quote and calling that an observation. */
+  if (hook) {
+    parts.push(`WHAT THIS MEANS FOR THEM: ${hook.tension}`)
+    parts.push(`THE MOMENT THEY WOULD RECOGNISE: ${hook.recognition}`)
+    if (hook.must_not_imply) parts.push(`IT MUST NOT READ AS: ${hook.must_not_imply}`)
+    parts.push('')
+  }
   parts.push(`THE ANGLE: ${angle.claim}`)
   if (angle.basis === 'page') {
     parts.push(`It rests on this, quoted from their own site: "${angle.quote}"`)
@@ -407,6 +444,90 @@ async function writer(cfg: Cfg, angle: any, brief: string, facts: any[], setting
   let p: Record<string, unknown>
   try { p = parseJson(raw) } catch { return { ok: false as const, refused: false, why: 'reply was not JSON', model } }
   return { ...validateClause(p, { angle, facts, settings }), model }
+}
+
+/* ---------- the strategist ---------- */
+/*
+   What the observation MEANS for this business. It is the only agent
+   that sees the sector and the capability, because those decide whether
+   a tension is plausible or presumptuous - and until now they were
+   collected and then used for nothing but a CRM filter.
+
+   It does not see the page either. It sees one verified thing and is
+   asked what follows from it, which is the whole point: a strategist
+   with the page in front of it would start summarising the page again.
+*/
+async function strategist(
+  cfg: Cfg, vocab: Vocab, angle: any, brief: string,
+  lead: Record<string, any>, capability: string | null, summary: string, settings: any,
+) {
+  const pr = cfg.prompts.strategist
+  if (!pr) return null
+
+  const parts = [
+    `THE VERIFIED OBSERVATION: ${angle.claim}`,
+    angle.basis === 'page'
+      ? `IT RESTS ON, quoted from their own page: "${angle.quote}"`
+      : `IT RESTS ON a public register fact: ${angle.fact_key}`,
+    `THE EDITOR'S WORRY ABOUT IT: ${angle.risk}`,
+    brief ? `THE EDITOR ASKED FOR: ${brief}` : '',
+    '',
+    `WHAT THE RESEARCHER MADE OF THEM: ${summary || '(nothing said)'}`,
+    lead.sector ? `SECTOR: ${lead.sector}${lead.prior?.label ? ` — ${lead.prior.label}` : ''}` : 'SECTOR: not established',
+  ]
+
+  if (capability) {
+    const t = vocab.get('capability', capability)
+    parts.push(`THE WORK THIS WOULD BE: ${capability}${t?.meaning ? ` — ${t.meaning}` : ''}`)
+  } else {
+    parts.push('THE WORK THIS WOULD BE: could not be established. Work from the observation alone and do not guess one.')
+  }
+
+  try {
+    const { text: raw, model } = await ask(
+      cfg, 'strategist', pr.body, parts.filter(Boolean).join('\n'), pr.temperature, settings.model_timeout_ms)
+    try { return { parsed: parseJson(raw), model } }
+    catch { return { parsed: null, model } }
+  } catch (err) {
+    return { parsed: null, model: null, error: (err as Error).message }
+  }
+}
+
+/* ---------- the letter ---------- */
+/*
+   The body, written for this business rather than merged into a slot.
+   The company name is NOT sent: the prompt writes {business} and the
+   substitution happens here, after the checks, which keeps the promise
+   in this file's header that no company name leaves the building.
+*/
+async function letterWriter(
+  cfg: Cfg, vocab: Vocab, clause: any, hook: any, capability: string | null, settings: any,
+) {
+  const pr = cfg.prompts.letter
+  if (!pr) return null
+
+  const parts = [
+    `THE OBSERVATION, WORD FOR WORD — the letter is built on this and must contain it:`,
+    `  ${clause.observation}`,
+    '',
+    hook ? `WHAT IT MEANS FOR THEM: ${hook.tension}` : '',
+    hook ? `THE MOMENT THEY WOULD RECOGNISE: ${hook.recognition}` : '',
+    hook?.must_not_imply ? `IT MUST NOT READ AS: ${hook.must_not_imply}` : '',
+  ]
+  if (capability) {
+    const t = vocab.get('capability', capability)
+    parts.push(`IF THEY BECAME A CLIENT THE WORK WOULD BE: ${capability}${t?.meaning ? ` — ${t.meaning}` : ''}`)
+  }
+  parts.push('', `Between ${settings.letter_min_words} and ${settings.letter_max_words} words.`)
+
+  try {
+    const { text: raw, model } = await ask(
+      cfg, 'letter', pr.body, parts.filter(Boolean).join('\n'), pr.temperature, settings.model_timeout_ms)
+    try { return { parsed: parseJson(raw), model } }
+    catch { return { parsed: null, model } }
+  } catch (err) {
+    return { parsed: null, model: null, error: (err as Error).message }
+  }
 }
 
 /* ---------- the editor, reading the sentence ---------- */
@@ -458,6 +579,19 @@ function strongestOf(vocab: Vocab, services: any[]): string | null {
   return best?.category ?? null
 }
 
+/* The capability of the STRONGEST verdict, not of the first one the
+   model happened to list. Null stays null: sending the strategist a
+   guessed capability is how a plausible tension gets written about the
+   wrong kind of work. */
+function capabilityOf(vocab: Vocab, services: any[]): string | null {
+  let best: any = null
+  for (const s of services) {
+    const r = (vocab.rank('fit', s.fit) ?? -1) * 10 + (vocab.rank('confidence', s.confidence) ?? 0)
+    if (!best || r > best.r) best = { r, capability: s.capability ?? null }
+  }
+  return best?.capability ?? null
+}
+
 async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, settings: any) {
   const log = (round: number, agent: string, model: string | null, decision: string, key?: string | null, reason?: string | null) =>
     rpc('outreach_record_round', {
@@ -491,15 +625,20 @@ async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, setting
 
   if (!s.angles.length) return { ok: false as const, why: 'nothing true to say about this lead', assessed: true }
 
+  const capability = capabilityOf(vocab, s.services)
+
   /* The loop itself is in guards.mjs and is driven by the tests with
-     fakes. What is left here is only the two model calls it needs. */
+     fakes. What is left here is only the model calls it needs. */
   const r = await negotiate({
     angles: s.angles,
     summary: s.assessment.summary,
     maxRounds: settings.max_rounds,
     maxRevisions: settings.max_revisions,
     callEditor: ({ angles, summary, refusals }) => editor(cfg, angles, summary, refusals, settings),
-    callWriter: ({ angle, brief, revise }) => writer(cfg, angle, brief, s.facts, settings, revise),
+    callStrategist: cfg.prompts.strategist
+      ? ({ angle, brief }) => strategist(cfg, vocab, angle, brief, lead, capability, s.assessment.summary, settings)
+      : null,
+    callWriter: ({ angle, brief, hook, revise }) => writer(cfg, angle, brief, s.facts, settings, revise, hook),
     callReview: cfg.prompts.review
       ? ({ angle, brief, draft }) => reviewer(cfg, angle, brief, draft, settings)
       : null,
@@ -516,6 +655,40 @@ async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, setting
     p_model: r.clause.model,
   })
 
+  /* The letter, which is the thing a person actually receives. It needs
+     the hook, so a lead whose strategist failed gets a clause and no
+     letter rather than a letter written from a fact with no meaning
+     attached - and the CRM shows which, instead of quietly filling the
+     gap with a template. */
+  let letter: { subject: string; words: number } | null = null
+  let letterWhy: string | null = null
+  if (cfg.prompts.letter && r.hook) {
+    const lw = await letterWriter(cfg, vocab, r.clause, r.hook, capability, settings)
+    const v: any = validateLetter(lw?.parsed, { clause: r.clause.observation, settings })
+    const subject = String((lw?.parsed as any)?.subject ?? '').trim().slice(0, 200)
+    if (v.ok) {
+      /* The name is put in HERE, after every check has run, and never
+         reaches a model. See the header: what leaves the building is
+         the page text, the register facts and the sector - not who
+         they are. */
+      const body = fillLetter(String(v.body), tradingName(lead.company, lead.trading_name))
+      await rpc('outreach_record_letter', {
+        p_lead_id: lead.lead_id,
+        p_subject: subject || r.clause.observation.slice(0, 60),
+        p_body: body,
+        p_hook: r.hook,
+        p_model: lw?.model ?? null,
+      })
+      letter = { subject, words: body.split(/\s+/).length }
+      await log(r.rounds, 'letter', lw?.model ?? null, 'wrote', r.angle.key, subject)
+    } else {
+      letterWhy = String(v.why ?? 'the letter did not pass')
+      await log(r.rounds, 'letter', lw?.model ?? null, 'failed', r.angle.key, letterWhy)
+    }
+  } else if (!r.hook) {
+    letterWhy = 'no hook, so no letter - the clause stands on its own'
+  }
+
   return {
     ok: true as const,
     observation: r.clause.observation,
@@ -525,6 +698,8 @@ async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, setting
     assessment: s.assessment,
     notes: s.notes,
     strongest: strongestOf(vocab, s.services),
+    letter,
+    letterWhy,
   }
 }
 
@@ -554,6 +729,9 @@ Deno.serve(async (req) => {
 
   try {
     const cfg: Cfg = await rpc('outreach_config', {})
+    /* strategist and letter are NOT required here. They are the newest
+       stages and a project that has not run their migration yet should
+       degrade to the three-agent pipeline rather than refuse to run. */
     for (const role of ['scout', 'editor', 'writer']) {
       if (!cfg?.prompts?.[role]) throw new Error(`public.outreach_prompt has no "${role}" row`)
       if (!cfg?.models?.[role]?.length) throw new Error(`public.outreach_model has no active "${role}" rows`)
@@ -576,6 +754,7 @@ Deno.serve(async (req) => {
             revisions: r.revisions || undefined,
             presence: r.assessment.web_presence, credit: r.assessment.credit_fit,
             strongest: r.strongest, observation: r.observation,
+            letter: r.letter ?? undefined, no_letter: r.letterWhy ?? undefined,
             sector_correction: r.assessment.sector_correction ?? undefined,
             notes: r.notes.length ? r.notes : undefined,
           })

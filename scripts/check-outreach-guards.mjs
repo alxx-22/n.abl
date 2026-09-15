@@ -45,6 +45,7 @@ const {
   makeVocab, coerce, applyRequirement, validateServices, validateAngles,
   validatePromotion, validateClause, buildFacts, detectSignals, clampSettings, ENVELOPE,
   negotiate, validateReview, chooseDraft, registryBlock, quotaScope,
+  tradingName, bannedIn, validateHook, validateLetter, fillLetter,
 } = await import(`file://${join(ROOT, 'supabase', 'functions', 'outreach-writer', 'guards.mjs')}`)
 
 let fail = 0
@@ -219,8 +220,14 @@ console.log('\nTHE CLAUSE\n')
 const SET = { min_words: 6, max_words: 45 }
 const ANGLE = { basis: 'page', quote: 'Places are limited so please call the office to arrange a visit', key: 'one' }
 const cl = (o, angle = ANGLE, facts = FACTS) => validateClause(o, { angle, facts, settings: SET })
+/* This fixture used to read "...which usually means somebody keeps that
+   diary", and it passed. It is the exact shape sales-language.md §1 was
+   written about: a quote, a paraphrase, and a hedge admitting the
+   paraphrase was a guess. The guard now refuses it, and the fixture had
+   to be rewritten to something worth sending - which is the useful kind
+   of test failure. */
 ok('a good clause passes',
-  cl({ observation: 'noticed visits are arranged by ringing the office, which usually means somebody keeps that diary' }).ok)
+  cl({ observation: 'visits are arranged by ringing the office, so the diary is only as current as the last call somebody wrote down' }).ok)
 ok('a refusal is reported as a refusal, not a failure',
   cl({ refuse: 'cannot say this without implying criticism' }).refused === true)
 ok('too short is rejected', cl({ observation: 'you take bookings' }).ok === false)
@@ -241,7 +248,7 @@ ok('an angle carrying no usable evidence is rejected',
      { basis: 'register', fact_key: 'nothing_supplied', key: 'x' }).ok === false)
 ok('an empty reply is rejected', cl({}).ok === false)
 ok('the evidence returned is the quote the editor promoted',
-  cl({ observation: 'noticed visits are arranged by ringing the office, which usually means somebody keeps that diary' })
+  cl({ observation: 'visits are arranged by ringing the office, so the diary is only as current as the last call somebody wrote down' })
     .evidence === ANGLE.quote)
 
 console.log('\nREGISTER FACTS FROM ROWS\n')
@@ -462,6 +469,135 @@ ok('  \u2026in the order given', block.indexOf('CAPABILITY') < block.indexOf('FI
 ok('a dimension with no terms is skipped rather than left as a bare heading',
   registryBlock(VOCAB, [{ dimension: 'nonexistent', heading: 'GHOST' }]) === '')
 ok('no dimensions at all does not throw', registryBlock(VOCAB, null) === '')
+
+console.log('\nHOW A BUSINESS IS NAMED TO ITS FACE\n')
+
+for (const [registered, want] of [
+  ['ACCOUNTING SOLUTIONS (AS) LTD',        'Accounting Solutions'],
+  ['THE ALBERT HALL (NOTTINGHAM) LIMITED', 'The Albert Hall'],
+  ['AEROCOM (UK) LIMITED',                 'Aerocom'],
+  ["AKHTER'S ESTATES LTD",                 "Akhter's Estates"],
+  ['C & M PROPERTY SOLUTIONS LTD',         'C & M Property Solutions'],
+  ['3D LETS LTD',                          '3D Lets'],
+  ['DPR MOTORS AND SERVICE CENTRE LTD',    'DPR Motors and Service Centre'],
+  ['Indus Valley Furniture Limited',       'Indus Valley Furniture'],
+]) ok(`"${registered}" reads as "${want}"`, tradingName(registered) === want)
+
+ok('a name that is only a suffix is left alone rather than emptied',
+  tradingName('LIMITED') === 'LIMITED')
+ok('an override always wins, because a heuristic must be correctable',
+  tradingName('DPR MOTORS MOT AND SERVICE CENTRE LTD', 'DPR Motors MOT') === 'DPR Motors MOT')
+ok('nothing in, nothing out', tradingName(null) === '')
+
+console.log('\nTHE CONSTRUCTIONS THAT GIVE THE SENDER AWAY\n')
+
+for (const [text, what] of [
+  ['I came across your site and noticed the form', 'the automation opener'],
+  ['we found you on Companies House',              'saying where we found them'],
+  ['which typically relies on someone updating it','a hedge'],
+  ['most businesses have moved on from this',      'a comparison to businesses in general'],
+  ['you just need a better form',                  'minimising their work'],
+  ['I hope this finds you well',                   'filler'],
+  ['let me know if you would like to hear more',   'a non-ask'],
+  ['Re: our conversation',                         'a thread that never happened'],
+]) ok(`${what} is caught`, bannedIn(text) !== null)
+
+ok('an honest sentence passes',
+  bannedIn('the booking form sits on your contact page but not on the three service pages') === null)
+ok('  …and "just" as an ordinary adverb is not a false positive',
+  bannedIn('the form was just added last month') === null)
+
+console.log('\nTHE STRATEGIST MUST NAME A TENSION\n')
+
+const HOOK = { tension: 'the diary is only as good as the last update',
+               recognition: 'checking it against HMRC and finding a gap',
+               must_not_imply: 'that their system is amateur', brief: 'lead with the dependency' }
+
+ok('a brief with a tension and a recognition passes', validateHook(HOOK).ok)
+ok('a brief with no tension is refused', !validateHook({ ...HOOK, tension: '' }).ok)
+ok('  …and says why', /description/.test(validateHook({ ...HOOK, tension: '' }).why))
+ok('a brief with nothing recognisable is refused', !validateHook({ ...HOOK, recognition: '' }).ok)
+ok('a brief that hedges is refused, so the writer is never taught to hedge',
+  !validateHook({ ...HOOK, tension: 'which typically relies on manual updating' }).ok)
+ok('nothing at all is refused rather than thrown', !validateHook(null).ok)
+ok('the brief falls back to the tension when none was given',
+  validateHook({ ...HOOK, brief: '' }).brief === HOOK.tension)
+
+console.log('\nTHE LETTER IS WRITTEN, AND CHECKED\n')
+
+const CLAUSE = 'the booking form sits on your contact page but not on the three service pages'
+const GOOD = [
+  'Hi there,',
+  `Something stood out about how {business} takes enquiries: ${CLAUSE}, so anyone landing on emergency callouts has to go looking for it.`,
+  "I'm Alex. I run n.abl, a small technology implementation business in Nottingham. We take a job that is costing a business time or accuracy and build the right fix for it.",
+  'If that is not useful, no reply needed and I will not chase you.',
+  'Alex',
+].join('\n\n')
+const L = (body, over) => validateLetter({ body }, { clause: CLAUSE, ...over })
+
+ok('a letter that does the job passes', L(GOOD).ok)
+ok('two paragraphs is a note, not a letter', !L('Hi there,\n\nAlex').ok)
+ok('a letter that lost the observation is refused',
+  !L(GOOD.replace(CLAUSE, 'you seem busy')).ok)
+ok('  …because that observation is the necessity limb',
+  /observation/.test(L(GOOD.replace(CLAUSE, 'you seem busy')).why))
+ok('a letter that says where we found them is refused',
+  !L(GOOD.replace('Something stood out', 'I came across you on Companies House and noticed')).ok)
+ok('a letter with no reference to the business at all is refused',
+  !L(GOOD.replace('{business}', 'you')).ok)
+ok('a letter shouting a registered name is refused',
+  !L(GOOD.replace('{business}', 'AEROCOM UK')).ok)
+ok('  \u2026but ordinary initialisms are how people write, and pass',
+  L(GOOD.replace('takes enquiries', 'handles HMRC VAT returns')).ok)
+ok('a letter using the legal suffix is refused',
+  !L(GOOD.replace('{business}', 'Aerocom Ltd')).ok)
+ok('an unfilled merge field from anywhere else is refused',
+  !L(GOOD.replace('enquiries', 'enquiries at {first_name}')).ok)
+ok('the slot is filled only after the checks pass',
+  fillLetter('hello {business}, and {business}', 'Aerocom') === 'hello Aerocom, and Aerocom')
+ok('  \u2026and an empty name still leaves readable English',
+  fillLetter('hello {business}', '') === 'hello your business')
+ok('a letter inventing a saving is refused',
+  !L(GOOD.replace('time or accuracy', 'about 12 hours a month')).ok)
+ok('  …and names the number it could not source',
+  /12/.test(L(GOOD.replace('time or accuracy', 'about 12 hours a month')).why))
+ok('a letter naming a person is refused',
+  !L(GOOD.replace('Hi there,', 'Hi Mr Smith,')).ok)
+ok('an empty letter is refused rather than thrown', !L('').ok)
+
+console.log('\nTHE STRATEGIST IN THE LOOP\n')
+
+const fakeAngle = { key: 'one', claim: 'c', basis: 'page', quote: 'q', risk: 'r' }
+async function runLoop({ strategist, writerSees }) {
+  const moves = []
+  const r = await negotiate({
+    angles: [fakeAngle], summary: 's', maxRounds: 2, maxRevisions: 0,
+    callEditor: async () => ({ ok: true, angle: fakeAngle, because: 'b', brief: 'editor brief', model: 'm' }),
+    callStrategist: strategist,
+    callWriter: async (a) => { writerSees.push(a.hook); return { ok: true, observation: 'o', basis: 'page', evidence: 'q', model: 'm' } },
+    callReview: null,
+    onRound: (m) => { moves.push(m) },
+  })
+  return { r, moves }
+}
+
+let seen = []
+let out = await runLoop({ strategist: async () => ({ parsed: { tension: 't', recognition: 'g' }, model: 'm' }), writerSees: seen })
+ok('a good brief reaches the writer', seen[0] && seen[0].tension === 't')
+ok('  …and is recorded as a move in the argument',
+  out.moves.some((m) => m.agent === 'strategist' && m.decision === 'framed'))
+ok('  …and comes back with the clause for the letter to use', out.r.hook.recognition === 'g')
+
+seen = []
+out = await runLoop({ strategist: async () => ({ parsed: { tension: '' }, model: 'm' }), writerSees: seen })
+ok('a strategist that failed does NOT cost the lead', out.r.ok === true)
+ok('  …the writer is told there is no hook rather than given a bad one', seen[0] === null)
+ok('  …and the failure is on the record',
+  out.moves.some((m) => m.decision === 'no_hook'))
+
+seen = []
+out = await runLoop({ strategist: null, writerSees: seen })
+ok('no strategist configured at all still writes', out.r.ok === true && seen[0] === null)
 
 console.log('\nWHICH 429 THIS IS\n')
 

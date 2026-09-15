@@ -42,6 +42,8 @@ export const ENVELOPE = {
   max_words: [20, 60],
   max_angles: [1, 8],
   prior_min_sample: [3, 500],
+  letter_min_words: [50, 140],
+  letter_max_words: [150, 400],
 }
 
 export const norm = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
@@ -57,6 +59,7 @@ export function clampSettings(raw) {
   const ua = typeof raw?.user_agent === 'string' ? raw.user_agent.trim() : ''
   out.user_agent = ua || 'n.abl-research/1.0 (+https://nabl.agency)'
   if (out.min_words >= out.max_words) out.max_words = out.min_words + 10
+  if (out.letter_min_words >= out.letter_max_words) out.letter_max_words = out.letter_min_words + 60
   return out
 }
 
@@ -363,6 +366,12 @@ export function validateClause(raw, { angle, facts, settings }) {
   if (/\b(mr|mrs|ms|miss|dr)\b\.?\s+[A-Z]/i.test(obs)) {
     return { ok: false, refused: false, why: 'names a person' }
   }
+  /* sales-language.md §6. The hedges are the ones that matter: a clause
+     that says "typically" has told the reader it was inferred, and an
+     inference dressed as an observation is the thing the whole pipeline
+     exists to keep out of a stranger's inbox. */
+  const tell = bannedIn(obs)
+  if (tell) return { ok: false, refused: false, why: `clause ${tell}` }
 
   /* Every digit in the clause has to have come from somewhere. This is
      what stops "trading since 2003" appearing for a business whose
@@ -386,6 +395,198 @@ export function validateClause(raw, { angle, facts, settings }) {
   if (!evidence) return { ok: false, refused: false, why: 'the promoted angle carries no evidence' }
 
   return { ok: true, observation: obs, basis, evidence }
+}
+
+/* ---------- how a business is named to its face ---------- */
+/*
+   The register shouts. "ACCOUNTING SOLUTIONS (AS) LTD" is how Companies
+   House files a name, not how anybody writes it, and a letter that
+   opens with block capitals and a legal suffix has told the reader it
+   came out of a database before they have read a word of it.
+
+   This is a display heuristic and it will get some names wrong - MOT
+   and DPR are both three capital letters and only one of them is an
+   acronym. So it is a DEFAULT, not an answer: sales_leads.trading_name
+   overrides it and a person can fix it in the CRM. A name is the one
+   thing that must not be wrong, and a guess with no way to correct it
+   is worse than no guess.
+*/
+const LEGAL_SUFFIX = /\s*(?:,)?\s*\b(?:ltd|limited|plc|llp|llc|c\.?i\.?c|cio|company\s+limited|&\s*co|and\s+co)\b\.?\s*$/i
+const SMALL_WORD = new Set(['and', 'of', 'the', 'for', 'at', 'in', 'on', 'to', 'a'])
+
+export function tradingName(registered, override) {
+  const given = String(override ?? '').trim()
+  if (given) return given
+
+  let n = String(registered ?? '').trim()
+  if (!n) return ''
+
+  /* "(UK)", "(NOTTINGHAM)", "(AS)" - a disambiguator for the register's
+     benefit, never part of how they introduce themselves. */
+  n = n.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
+  /* Twice: "SOMETHING COMPANY LIMITED" leaves "SOMETHING COMPANY". */
+  n = n.replace(LEGAL_SUFFIX, '').replace(LEGAL_SUFFIX, '').trim()
+  if (!n) return String(registered ?? '').trim()
+
+  const words = n.split(/\s+/)
+  return words.map((w, i) => {
+    if (w === '&') return '&'
+    /* Kept as written when it cannot be a word: no vowel, or a digit in
+       it. DPR and 3D survive; EGG and MOT are title-cased, and that is
+       what trading_name is for. */
+    const upper = w === w.toUpperCase()
+    if (upper && w.length <= 4 && (!/[AEIOU]/.test(w) || /\d/.test(w))) return w
+    const lower = w.toLowerCase()
+    if (i > 0 && SMALL_WORD.has(lower)) return lower
+    return lower.replace(/^[a-z]/, (c) => c.toUpperCase())
+             .replace(/-([a-z])/g, (_, c) => '-' + c.toUpperCase())
+  }).join(' ')
+}
+
+/* ---------- the constructions that give the sender away ---------- */
+/*
+   sales-language.md 6. Each of these is here because it appeared in a
+   real draft or because it is a recognised automation tell, and each is
+   checked rather than merely asked for: a prompt rule is a request and
+   a guard is a rule.
+
+   The hedges are the important ones. "Typically", "usually", "often" -
+   every one of them is a word that admits the claim was not observed,
+   which is precisely the difference between a hook and a guess.
+*/
+export const BANNED = [
+  [/\b(?:i\s+(?:came\s+across|noticed|saw|spotted)|having\s+(?:looked|seen))\b/i,
+   'narrates the research, and "I noticed" is the recognised automation opener'],
+  [/\b(?:companies\s+house|the\s+register|your\s+listing|public\s+records?)\b/i,
+   'says where we found them, which belongs in the footer and nowhere else'],
+  [/\b(?:typically|usually|often|generally|commonly|in\s+most\s+cases)\b/i,
+   'hedges, which admits the claim was not observed'],
+  [/\b(?:many|most|other)\s+(?:businesses|companies|firms|practices)\b/i,
+   'compares them to businesses in general, which is a status claim rather than an observation'],
+  [/\b(?:simply|just)\s+(?:need|want|have\s+to)\b/i,
+   'minimises their work'],
+  [/\bhope\s+(?:this|you'?re?)\b|\bkeep\s+this\s+brief\b|\breach(?:ing)?\s+out\b/i,
+   'filler that signals a template'],
+  [/\blet\s+me\s+know\s+if\s+you\b/i,
+   'not an ask - it puts the work on them'],
+  [/^\s*re\s*:/i, 'implies a thread that never happened'],
+]
+
+export function bannedIn(text) {
+  const t = String(text ?? '')
+  for (const [re, why] of BANNED) if (re.test(t)) return why
+  return null
+}
+
+/* ---------- the strategist's brief ---------- */
+/*
+   Between choosing a true thing and writing it there is a step that was
+   missing, and its absence is what produced sentences like "you mention
+   a diary system, which typically relies on someone updating it": a
+   quote, a paraphrase, and nothing that follows from either.
+
+   The strategist's whole output is the middle of
+   observation -> implication -> recognition. It must name what actually
+   goes wrong and the moment they would recognise, or it has not done
+   the job and the writer is better off without it.
+*/
+export function validateHook(raw) {
+  if (!raw || typeof raw !== 'object') return { ok: false, why: 'the strategist did not answer usably' }
+
+  const tension = String(raw.tension ?? '').trim()
+  const recognition = String(raw.recognition ?? '').trim()
+  const avoid = String(raw.must_not_imply ?? '').trim()
+  const brief = String(raw.brief ?? '').trim()
+
+  if (!tension) return { ok: false, why: 'no tension named - the brief is a description' }
+  if (!recognition) return { ok: false, why: 'nothing the reader would recognise' }
+
+  /* A brief carrying a hedge teaches the writer to hedge. It is cheaper
+     to refuse it here than to read it back out of the sentence. */
+  const bad = bannedIn(`${tension} ${recognition} ${brief}`)
+  if (bad) return { ok: false, why: `the brief ${bad}` }
+
+  return { ok: true, tension, recognition, must_not_imply: avoid || null, brief: brief || tension }
+}
+
+/* ---------- the letter ---------- */
+/*
+   The body is written, not merged. What is fixed is the chrome - the
+   header, and the footer that carries the Article 14 disclosure, the
+   postal address and the opt-out - because those are required and
+   identical by law rather than by laziness. Everything a person reads
+   as a message is drafted for that business and checked here.
+
+   These checks are the compliance ones plus sales-language.md 6. They
+   are deliberately shape checks, not taste: taste is the editor's job
+   and it has a model for it.
+*/
+export const BUSINESS_SLOT = '{business}'
+
+export function validateLetter(raw, { clause, settings }) {
+  const body = String(raw?.body ?? '').trim()
+  if (!body) return { ok: false, why: 'the letter writer returned nothing' }
+
+  /* The model is never told what the business is called - no company
+     name leaves this building, and that predates this stage. So it
+     writes a slot and we fill it. Requiring the slot is also the only
+     cheap way to catch a model that invented a name instead. */
+  if (!body.includes(BUSINESS_SLOT)) {
+    return { ok: false, why: `never refers to the business - no ${BUSINESS_SLOT}` }
+  }
+  const otherSlot = body.match(/\{(?!business\})[^}]{0,40}\}/)
+  if (otherSlot) return { ok: false, why: `left a merge field behind: ${otherSlot[0]}` }
+
+  const paras = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
+  if (paras.length < 3) return { ok: false, why: 'fewer than three paragraphs - that is a note, not a letter' }
+  if (paras.length > 6) return { ok: false, why: 'more than six paragraphs - nobody reads that from a stranger' }
+
+  const words = body.split(/\s+/).length
+  const lo = settings?.letter_min_words ?? 70
+  const hi = settings?.letter_max_words ?? 260
+  if (words < lo) return { ok: false, why: `too short to say anything (${words} words)` }
+  if (words > hi) return { ok: false, why: `too long for a first contact (${words} words)` }
+
+  const bad = bannedIn(body)
+  if (bad) return { ok: false, why: `the letter ${bad}` }
+
+  /* The register's own shouting, reaching the reader. */
+  /* A capitalised word followed by a suffix is a registered name being
+     read out. Matched that way round so that "a limited amount of" is
+     not a violation. */
+  const suffixed = body.match(/[A-Z][\w'&.]*(?:\s+[A-Z][\w'&.]*)*\s+(?:Ltd|Limited|PLC|LLP|plc|llp)\b/)
+  if (suffixed) {
+    return { ok: false, why: `uses the legal suffix in "${suffixed[0]}", which nobody calls their own business` }
+  }
+  /* One long shout, or three short ones in a row. Deliberately not
+     "any run of capitals": HMRC, VAT, CQC and MOT are how people
+     actually write, and a guard that refuses "HMRC VAT deadlines"
+     would be refusing good letters to protect against a bad one. */
+  const shouted = body.match(/\b[A-Z]{6,}\b|\b[A-Z]{3,}(?:\s+[A-Z]{3,}){2,}\b/)
+  if (shouted) return { ok: false, why: `shouts "${shouted[0].trim()}" in capitals` }
+
+  /* A name moves the record into a lawful basis this programme has not
+     been assessed for. Same rule as the clause. */
+  if (/\b(mr|mrs|ms|miss|dr)\b\.?\s+[A-Z]/i.test(body)) {
+    return { ok: false, why: 'names a person' }
+  }
+
+  /* Every digit has to have come from somewhere, and in a letter the
+     only somewhere is the clause itself. A first contact that quotes a
+     saving nobody measured is the fastest way to be wrong in writing. */
+  const material = String(clause ?? '')
+  const invented = (body.match(/\d+/g) ?? []).filter((n) => !material.includes(n))
+  if (invented.length) {
+    return { ok: false, why: `uses a number nobody supplied: ${invented.join(', ')}` }
+  }
+
+  /* The observation is the necessity limb of LIA-2026-08-v1 3. A letter
+     that dropped it is a letter we are not assessed to send. */
+  if (clause && !norm(body).includes(norm(clause).slice(0, 40))) {
+    return { ok: false, why: 'the observation the letter was built on is not in it' }
+  }
+
+  return { ok: true, body, paragraphs: paras }
 }
 
 /* ---------- register facts, from rows ---------- */
@@ -493,6 +694,13 @@ export function chooseDraft(original, revised) {
   }
 }
 
+/* Substituted after the checks, never before, so that a model which
+   tried to write a name of its own could not hide behind the one we
+   were going to put there anyway. */
+export function fillLetter(body, name) {
+  return String(body ?? '').split(BUSINESS_SLOT).join(String(name ?? '').trim() || 'your business')
+}
+
 /* ---------- the negotiation ---------- */
 /*
    The loop the three agents argue in, with the model calls injected.
@@ -510,7 +718,7 @@ export function chooseDraft(original, revised) {
 */
 export async function negotiate({
   angles, summary, maxRounds, maxRevisions,
-  callEditor, callWriter, callReview, onRound,
+  callEditor, callStrategist, callWriter, callReview, onRound,
 }) {
   const refusals = []
   let why = 'no round produced a clause'
@@ -526,7 +734,34 @@ export async function negotiate({
       angle_key: e.angle.key, reason: [e.because, e.brief && `brief: ${e.brief}`].filter(Boolean).join(' — '),
     })
 
-    const w = await callWriter({ angle: e.angle, brief: e.brief ?? '', round })
+    /* The step between choosing a true thing and phrasing it. Without
+       it the writer decides what the observation means in the same
+       breath as deciding how it sounds, and what comes out is a
+       paraphrase with a hedge on it - sales-language.md §1.
+
+       A strategist that fails does NOT cost the lead. The clause guards
+       still hold, the editor's brief is still a brief, and losing a
+       business because a fourth model had a bad minute would be a worse
+       trade than one flatter sentence. */
+    let hook = null
+    if (callStrategist) {
+      const raw = await callStrategist({ angle: e.angle, brief: e.brief ?? '', round })
+      const v = validateHook(raw && raw.parsed)
+      if (v.ok) {
+        hook = v
+        await onRound?.({
+          round, agent: 'strategist', model: raw && raw.model, decision: 'framed',
+          angle_key: e.angle.key, reason: `${v.tension} — they would recognise: ${v.recognition}`,
+        })
+      } else {
+        await onRound?.({
+          round, agent: 'strategist', model: raw && raw.model, decision: 'no_hook',
+          angle_key: e.angle.key, reason: v.why,
+        })
+      }
+    }
+
+    const w = await callWriter({ angle: e.angle, brief: e.brief ?? '', hook, round })
     if (w.ok) {
       await onRound?.({ round, agent: 'writer', model: w.model, decision: 'wrote', angle_key: e.angle.key, reason: w.observation })
 
@@ -551,7 +786,7 @@ export async function negotiate({
         })
 
         const rw = await callWriter({
-          angle: e.angle, brief: e.brief ?? '', round,
+          angle: e.angle, brief: e.brief ?? '', hook, round,
           revise: { previous: clause.observation, change: verdict.change },
         })
         const picked = chooseDraft(clause, rw)
@@ -575,7 +810,7 @@ export async function negotiate({
         }
       }
 
-      return { ok: true, clause, angle: e.angle, rounds: round, revisions, refusals }
+      return { ok: true, clause, angle: e.angle, hook, rounds: round, revisions, refusals }
     }
 
     await onRound?.({
