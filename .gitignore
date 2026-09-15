@@ -45,3 +45,9 @@ worker/knowledge.generated.ts
 # Google service-account key from GSC_KEY_FILE and explains itself when
 # that is unset, rather than failing.
 .secrets/
+
+# Obsidian's per-vault state, when business/ is opened as a vault.
+# workspace.json alone rewrites on every pane you drag, which would
+# make the notes folder look permanently modified and bury real edits
+# in the diff. The notes are the vault; the app's view of them is not.
+.obsidian/
