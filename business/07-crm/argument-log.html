@@ -1,0 +1,1645 @@
+<title>Argument Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:ital,wght@0,400..700;1,400..600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* ============================================================
+     n.abl — the tokens from src/styles/tokens.css, not a new palette.
+     Warm espresso base, cream light source, amber accent. The brand is
+     deliberately single-world and dark-first, so this commits to it
+     rather than inventing a light theme it has never had.
+     ============================================================ */
+  :root {
+    --bg:#0E0C0A; --bg-alt:#13100E;
+    --surface-1:#1A1613; --surface-2:#221D18; --surface-3:#2B241E; --surface-4:#362D25;
+    --cream-100:#FBF6EC; --cream-200:#F0E7D8; --cream-300:#DED2C0;
+    --cream-400:#C8BBA8; --cream-600:#9A8F80; --cream-800:#5A5249;
+    --on-accent:#24170A;
+    --cream-rgb:240,231,216;
+    --accent-200:#F8D9A4; --accent-300:#F2C57E; --accent-400:#E9AC57;
+    --accent-500:#D9922F; --accent-600:#B87718; --accent-rgb:233,172,87;
+    --danger:#E0796D; --danger-deep:#8E3128; --danger-soft:rgba(224,121,109,.13);
+    --success:#9DBE97;
+    --line-faint:rgba(var(--cream-rgb),.06);
+    --line:rgba(var(--cream-rgb),.11);
+    --line-strong:rgba(var(--cream-rgb),.20);
+    --glow-sm:0 0 24px rgba(var(--cream-rgb),.07);
+    --font-display:'Space Grotesk','Inter Tight',system-ui,sans-serif;
+    --font-sans:'Inter Tight',system-ui,-apple-system,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',monospace;
+    --r-sm:6px; --r-md:10px; --r-lg:16px; --r-full:999px;
+    --track-tight:-0.03em; --track-snug:-0.015em; --track-wide:0.14em;
+  }
+
+  * { box-sizing:border-box; }
+  html, body { height:100%; }
+  body {
+    margin:0; background:var(--bg); color:var(--cream-200);
+    font-family:var(--font-sans); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column;
+  }
+  button, input, select { font:inherit; color:inherit; }
+  :focus-visible { outline:2px solid var(--accent-400); outline-offset:2px; border-radius:3px; }
+  ::selection { background:rgba(var(--accent-rgb),.3); color:var(--cream-100); }
+
+  /* ---------- header ---------- */
+  header { border-bottom:1px solid var(--line); background:var(--bg-alt);
+           padding-top:env(safe-area-inset-top, 0px); flex:none; }
+  .bar { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; padding:13px 22px; }
+  .wordmark { font-family:var(--font-display); font-size:19px; font-weight:700;
+              letter-spacing:var(--track-tight); color:var(--cream-100); margin:0; }
+  .wordmark b { color:var(--accent-400); font-weight:700; }
+  .sub { color:var(--cream-600); font-size:12px; letter-spacing:var(--track-wide);
+         text-transform:uppercase; }
+  .live { margin-left:auto; display:flex; align-items:center; gap:8px;
+          font-family:var(--font-mono); font-size:11px; color:var(--cream-600); }
+  .dot { width:7px; height:7px; border-radius:50%; background:var(--success); flex:none;
+         box-shadow:0 0 10px rgba(157,190,151,.6); }
+  .dot.stale { background:var(--accent-400); box-shadow:0 0 10px rgba(var(--accent-rgb),.5); }
+  .dot.down { background:var(--danger); box-shadow:0 0 10px rgba(224,121,109,.5); }
+
+  /* ---------- counters ---------- */
+  .counts { display:flex; overflow-x:auto; border-top:1px solid var(--line-faint); }
+  .count { flex:1 0 auto; min-width:104px; padding:10px 22px;
+           border-right:1px solid var(--line-faint); }
+  .count:last-child { border-right:0; }
+  .count b { display:block; font-family:var(--font-mono); font-size:18px; font-weight:500;
+             letter-spacing:var(--track-snug); font-variant-numeric:tabular-nums;
+             line-height:1.3; color:var(--cream-100); }
+  .count span { display:block; font-size:9.5px; color:var(--cream-600);
+                text-transform:uppercase; letter-spacing:var(--track-wide); }
+  .count.key b { color:var(--accent-400); }
+
+  /* ---------- filters ---------- */
+  .filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+             padding:11px 22px; border-top:1px solid var(--line);
+             background:var(--surface-1); }
+  .seg { display:flex; border:1px solid var(--line-strong); border-radius:var(--r-sm);
+         overflow:hidden; }
+  .seg button { border:0; background:transparent; padding:5px 11px; cursor:pointer;
+                font-size:12.5px; color:var(--cream-400);
+                border-right:1px solid var(--line); white-space:nowrap;
+                transition:background .18s, color .18s; }
+  .seg button:last-child { border-right:0; }
+  .seg button:hover { background:var(--surface-3); color:var(--cream-100); }
+  .seg button[aria-pressed="true"] { background:var(--accent-400); color:var(--on-accent); font-weight:500; }
+  select, input[type="search"] {
+    font-size:12.5px; padding:5px 9px; border-radius:var(--r-sm);
+    border:1px solid var(--line-strong); background:var(--surface-2); color:var(--cream-200);
+  }
+  select option { background:var(--surface-2); color:var(--cream-200); }
+  input[type="search"] { min-width:170px; flex:1 1 170px; max-width:270px; }
+  input[type="search"]::placeholder { color:var(--cream-800); }
+  .clear { border:1px solid var(--line-strong); background:transparent; cursor:pointer;
+           border-radius:var(--r-sm); padding:5px 10px; font-size:12.5px; color:var(--cream-600); }
+  .clear:hover { color:var(--accent-400); border-color:var(--accent-600); }
+  .seg button .n { font-family:var(--font-mono); font-size:10.5px; opacity:.7;
+                   margin-left:5px; font-variant-numeric:tabular-nums; }
+
+  /* ---------- the run panel ---------- */
+  .runbtn { margin-left:auto; border:1px solid var(--line-strong); background:var(--surface-2);
+            color:var(--cream-200); border-radius:var(--r-sm); padding:5px 14px;
+            font-size:12.5px; cursor:pointer; }
+  .runbtn:hover { border-color:var(--accent-600); color:var(--accent-300); }
+  .runbtn[aria-expanded="true"] { background:var(--accent-400); color:var(--on-accent);
+                                  border-color:var(--accent-400); font-weight:500; }
+  .live { margin-left:14px; }
+
+  .runpanel { border-top:1px solid var(--line); background:var(--surface-1);
+              padding:18px 22px 20px; display:grid; gap:16px; }
+  .runhead { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .runhead h3 { margin:0; font-family:var(--font-display); font-size:15px; font-weight:600;
+                color:var(--cream-100); letter-spacing:var(--track-snug); }
+  .runhead .reach { font-family:var(--font-mono); font-size:11.5px; color:var(--cream-600); }
+  .runhead .reach b { color:var(--accent-400); font-weight:500; }
+  .runcols { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:16px; }
+  .runcol > u { display:block; text-decoration:none; font-size:9.5px; text-transform:uppercase;
+                letter-spacing:var(--track-wide); color:var(--cream-600); margin-bottom:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:5px; max-height:132px; overflow-y:auto; }
+  .chip { border:1px solid var(--line); background:var(--surface-2); color:var(--cream-400);
+          border-radius:var(--r-full); padding:3px 10px; font-size:11.5px; cursor:pointer;
+          font-family:var(--font-mono); }
+  .chip:hover { border-color:var(--line-strong); color:var(--cream-200); }
+  .chip[aria-pressed="true"] { background:var(--accent-400); color:var(--on-accent);
+                               border-color:var(--accent-400); font-weight:500; }
+  .chip .n { opacity:.6; margin-left:5px; font-size:10px; }
+  .runcol input[type="number"], .runcol input[type="text"] {
+    width:100%; font-size:12.5px; padding:5px 9px; border-radius:var(--r-sm);
+    border:1px solid var(--line-strong); background:var(--surface-2); color:var(--cream-200); }
+  .hint { font-size:11.5px; color:var(--cream-600); margin:7px 0 0; line-height:1.5; }
+
+  .switches { display:grid; gap:11px; border-top:1px solid var(--line-faint); padding-top:15px; }
+  .sw { display:flex; gap:11px; align-items:flex-start; }
+  .sw input { margin-top:3px; width:16px; height:16px; accent-color:var(--accent-400); flex:none; }
+  .sw label { font-size:13.5px; color:var(--cream-200); }
+  .sw label span { display:block; font-size:11.5px; color:var(--cream-600); margin-top:3px;
+                   max-width:70ch; line-height:1.5; }
+  .sw.danger label { color:var(--danger); }
+  .runactions { display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
+  .said { font-size:12px; color:var(--cream-600); font-family:var(--font-mono); }
+
+  /* The blockers were a paragraph of red standing between the person and
+     the switch. They are still every word they were - they have just
+     stopped shouting until asked. */
+  .warn { position:relative; display:inline-flex; align-items:center; justify-content:center;
+          width:21px; height:21px; flex:none; border-radius:var(--r-full);
+          border:1px solid var(--danger); background:var(--danger-soft); color:var(--danger);
+          font-family:var(--font-display); font-size:13px; font-weight:700; line-height:1;
+          cursor:help; padding:0; }
+  .warn:hover, .warn:focus-visible { background:var(--danger); color:var(--espresso, #0E0C0A); }
+  .warn .pop { display:none; position:absolute; bottom:calc(100% + 9px); right:0;
+               width:min(400px, 74vw); text-align:left; cursor:default; z-index:40;
+               background:var(--surface-1); border:1px solid var(--danger);
+               border-radius:var(--r-md); padding:13px 16px;
+               box-shadow:0 10px 30px rgba(0,0,0,.45); }
+  .warn:hover .pop, .warn:focus .pop, .warn:focus-within .pop { display:block; }
+  .warn .pop u { display:block; text-decoration:none; font-size:9.5px; text-transform:uppercase;
+                 letter-spacing:var(--track-wide); color:var(--danger); font-weight:600;
+                 margin-bottom:8px; }
+  .warn .pop ol { margin:0; padding-left:18px; font-size:13px; color:var(--cream-200);
+                  font-family:var(--font-body, inherit); font-weight:400; }
+  .warn .pop li { margin-bottom:6px; }
+  .warn .pop li span { display:block; color:var(--cream-600); font-size:11.5px; margin-top:2px; }
+
+  /* Start and stop. Saving a target is not starting it. */
+  .go { border:1px solid var(--accent-400); background:var(--accent-400); color:var(--on-accent);
+        border-radius:var(--r-sm); padding:6px 16px; font-size:12.5px; font-weight:500;
+        cursor:pointer; }
+  .go:hover { filter:brightness(1.07); }
+  .go[disabled] { opacity:.45; cursor:not-allowed; filter:none; }
+  .stop { border:1px solid var(--danger); background:transparent; color:var(--danger);
+          border-radius:var(--r-sm); padding:6px 16px; font-size:12.5px; cursor:pointer; }
+  .stop:hover { background:var(--danger-soft); }
+  .runstate { font-family:var(--font-mono); font-size:11.5px; color:var(--cream-600);
+              display:inline-flex; align-items:center; gap:6px; }
+  .runstate i { width:7px; height:7px; border-radius:var(--r-full); background:var(--cream-600);
+                font-style:normal; flex:none; }
+  .runstate.on { color:var(--accent-300); }
+  .runstate.on i { background:var(--accent-400); box-shadow:0 0 0 3px rgba(233,172,87,.16); }
+  .sep { flex:1 1 auto; }
+
+  /* ---------- the send confirmation ---------- */
+  .scrim { position:fixed; inset:0; background:rgba(0,0,0,.62); z-index:var(--z-overlay, 60);
+           display:flex; align-items:center; justify-content:center; padding:20px; }
+  .dialog { background:var(--surface-1); border:1px solid var(--line-strong);
+            border-top:3px solid var(--danger); border-radius:var(--r-lg);
+            max-width:520px; width:100%; padding:24px; }
+  .dialog h3 { margin:0 0 12px; font-family:var(--font-display); font-size:18px;
+               color:var(--cream-100); letter-spacing:var(--track-snug); }
+  .dialog p { margin:0 0 12px; font-size:14px; color:var(--cream-300); line-height:1.6; }
+  .dialog ul { margin:0 0 14px; padding-left:19px; font-size:13.5px; color:var(--cream-300); }
+  .dialog li { margin-bottom:5px; }
+  .dialog input { width:100%; font-size:13.5px; padding:7px 10px; border-radius:var(--r-sm);
+                  border:1px solid var(--line-strong); background:var(--surface-3);
+                  color:var(--cream-100); margin-bottom:14px; }
+  .dialog .row { display:flex; gap:9px; justify-content:flex-end; }
+  .danger-btn { border:1px solid var(--danger); background:var(--danger-deep);
+                color:var(--cream-100); border-radius:var(--r-sm); padding:7px 16px;
+                font-size:13px; cursor:pointer; }
+  .danger-btn[disabled] { opacity:.4; cursor:not-allowed; }
+
+  @media (max-width:860px) { .runcols { grid-template-columns:1fr; } }
+
+  /* ---------- panes ---------- */
+  .panes { flex:1 1 auto; display:grid; grid-template-columns:336px 1fr; min-height:0; }
+  .list { border-right:1px solid var(--line); overflow-y:auto; background:var(--bg-alt); }
+  .detail { overflow-y:auto; padding:24px 28px calc(48px + env(safe-area-inset-bottom, 0px)); }
+
+  .listhead { position:sticky; top:0; background:var(--bg-alt); z-index:2;
+              border-bottom:1px solid var(--line); padding:9px 16px;
+              font-size:9.5px; text-transform:uppercase; letter-spacing:var(--track-wide);
+              color:var(--cream-600); display:flex; gap:8px; align-items:center; }
+  .listhead .n { font-family:var(--font-mono); letter-spacing:0; color:var(--cream-300); }
+  .sortsel { margin-left:auto; font-size:11px; padding:2px 6px; }
+
+  .row { width:100%; text-align:left; border:0; cursor:pointer; background:transparent;
+         border-bottom:1px solid var(--line-faint); padding:11px 16px;
+         display:grid; grid-template-columns:8px 1fr; gap:11px; align-items:start;
+         transition:background .18s; }
+  .row:hover { background:var(--surface-1); }
+  .row[aria-current="true"] { background:var(--surface-2);
+                              box-shadow:inset 3px 0 0 var(--accent-400); }
+  .row[aria-current="true"] .rc { color:var(--accent-200); }
+  .pip { width:8px; height:8px; border-radius:50%; margin-top:6px; }
+  .pip.drafted { background:var(--success); }
+  .pip.no_clause { background:var(--accent-500); }
+  .pip.given_up { background:var(--danger); }
+  .pip.waiting { background:var(--cream-800); }
+  .rc { display:block; font-family:var(--font-display); font-size:13.5px; font-weight:500;
+        letter-spacing:var(--track-snug); line-height:1.35; color:var(--cream-100);
+        overflow-wrap:anywhere; }
+  .rm { display:flex; font-size:11.5px; color:var(--cream-600); margin-top:3px;
+        gap:6px; flex-wrap:wrap; align-items:baseline; }
+  .rm .sc { font-family:var(--font-mono); font-size:10.5px; color:var(--accent-400);
+            font-variant-numeric:tabular-nums; }
+  .rm .up { color:var(--success); font-family:var(--font-mono); font-size:10px; }
+  .rq { display:-webkit-box; font-size:12.5px; font-style:italic; color:var(--cream-400);
+        margin-top:5px; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .empty { padding:28px 18px; color:var(--cream-600); font-size:13.5px; }
+
+  /* ---------- detail ---------- */
+  .back { display:none; }
+  .dhead { display:flex; gap:11px; align-items:baseline; flex-wrap:wrap;
+           padding-bottom:15px; border-bottom:1px solid var(--line); }
+  .dco { font-family:var(--font-display); font-size:23px; font-weight:600;
+         letter-spacing:var(--track-tight); margin:0; color:var(--cream-100);
+         text-wrap:balance; }
+  .state { font-family:var(--font-mono); font-size:10px; text-transform:uppercase;
+           letter-spacing:.06em; padding:3px 9px; border-radius:var(--r-full); }
+  .state.drafted { color:var(--success); background:rgba(157,190,151,.13); }
+  .state.no_clause { color:var(--accent-300); background:rgba(var(--accent-rgb),.13); }
+  .state.given_up { color:var(--danger); background:var(--danger-soft); }
+  .state.waiting { color:var(--cream-600); background:var(--surface-2); }
+
+  .tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:13px; }
+  .tag { font-family:var(--font-mono); font-size:10.5px; color:var(--cream-400);
+         border:1px solid var(--line); border-radius:4px; padding:2px 7px;
+         background:var(--surface-1); }
+  .tag a { color:var(--accent-400); text-decoration:none; }
+  .tag a:hover { text-decoration:underline; }
+
+  h2 { font-size:10px; text-transform:uppercase; letter-spacing:var(--track-wide);
+       color:var(--cream-600); font-weight:600; margin:28px 0 11px;
+       display:flex; align-items:center; gap:10px; }
+  h2::after { content:''; flex:1; height:1px; background:var(--line-faint); }
+
+  .clause-box { background:var(--surface-1); border:1px solid var(--line);
+                border-left:3px solid var(--success); border-radius:var(--r-md); padding:19px; }
+  .clause { font-size:21px; line-height:1.45; margin:0; text-wrap:pretty;
+            color:var(--cream-100); letter-spacing:var(--track-snug); }
+  .evidence { margin-top:15px; font-style:italic; font-size:14px; line-height:1.55;
+              color:var(--cream-600); padding-left:13px; border-left:2px solid var(--line-strong); }
+  .evidence em { font-style:normal; font-size:9.5px; text-transform:uppercase;
+                 letter-spacing:var(--track-wide); color:var(--cream-800);
+                 display:block; margin-bottom:5px; }
+  .clause-foot { margin-top:15px; display:flex; gap:10px; align-items:center;
+                 flex-wrap:wrap; font-family:var(--font-mono); font-size:10px;
+                 color:var(--cream-800); }
+  .btn { border:1px solid var(--line-strong); background:var(--surface-2); cursor:pointer;
+         border-radius:var(--r-sm); padding:5px 12px; font-size:11.5px;
+         font-family:var(--font-sans); color:var(--cream-300); }
+  .btn:hover { color:var(--accent-300); border-color:var(--accent-600); }
+  .btn[aria-pressed="true"] { background:var(--accent-400); color:var(--on-accent);
+                              border-color:var(--accent-400); }
+
+  .callout { border-radius:var(--r-md); padding:16px 18px; }
+  .callout.warn { background:rgba(var(--accent-rgb),.08); border-left:3px solid var(--accent-500); }
+  .callout.bad { background:var(--danger-soft); border-left:3px solid var(--danger); }
+  .callout.idle { background:var(--surface-1); border-left:3px solid var(--cream-800); }
+  .callout .lbl { font-size:9.5px; text-transform:uppercase; letter-spacing:var(--track-wide);
+                  font-weight:600; display:block; margin-bottom:7px; }
+  .callout.warn .lbl { color:var(--accent-300); }
+  .callout.bad .lbl { color:var(--danger); }
+  .callout.idle .lbl { color:var(--cream-600); }
+  .callout p { margin:0; font-size:14px; color:var(--cream-300); }
+  .callout p.mono { font-family:var(--font-mono); font-size:12.5px; overflow-wrap:anywhere; }
+
+  .summary { font-size:14.5px; color:var(--cream-300); max-width:64ch; margin:0; }
+
+  /* score movement */
+  .score { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-end;
+           background:var(--surface-1); border:1px solid var(--line);
+           border-radius:var(--r-md); padding:16px 19px; }
+  .score .big { font-family:var(--font-mono); font-size:30px; font-weight:500;
+                color:var(--accent-400); line-height:1; font-variant-numeric:tabular-nums; }
+  .score .was { font-family:var(--font-mono); font-size:14px; color:var(--cream-600);
+                text-decoration:line-through; }
+  .score .lab { font-size:9.5px; text-transform:uppercase; letter-spacing:var(--track-wide);
+                color:var(--cream-600); display:block; margin-bottom:5px; }
+  .dims { margin-top:14px; display:grid; gap:7px; }
+  .dim { display:grid; grid-template-columns:118px 1fr 52px; gap:11px; align-items:center;
+         font-size:12px; }
+  .dim .nm { color:var(--cream-400); font-family:var(--font-mono); font-size:11px; }
+  .dim .track { height:6px; border-radius:var(--r-full); background:var(--surface-3); overflow:hidden; }
+  .dim .fill { height:100%; background:var(--accent-500); border-radius:var(--r-full); }
+  .dim .fill.zero { background:var(--surface-4); }
+  .dim .val { font-family:var(--font-mono); font-size:11px; color:var(--cream-300);
+              text-align:right; font-variant-numeric:tabular-nums; }
+
+  /* thread */
+  .move { display:grid; grid-template-columns:92px 1fr; gap:15px;
+          padding:12px 0; border-top:1px solid var(--line-faint); }
+  .move:first-of-type { border-top:0; }
+  .who { font-family:var(--font-mono); font-size:11px; padding-top:1px; }
+  .who .agent { display:block; font-weight:500; }
+  .who .rnd { color:var(--cream-800); font-size:10px; }
+  .who[data-agent="scout"] .agent { color:var(--cream-300); }
+  .who[data-agent="editor"] .agent { color:var(--accent-300); }
+  .who[data-agent="writer"] .agent { color:var(--success); }
+  .who[data-agent="strategist"] .agent { color:var(--accent-400); }
+  .who[data-agent="letter"] .agent { color:var(--cream-100); }
+  .verdict.framed { color:var(--accent-400); }
+  .verdict.no_hook { color:var(--danger); }
+
+  .hook { background:var(--surface-1); border:1px solid var(--line);
+          border-left:3px solid var(--accent-400); border-radius:var(--r-md);
+          padding:16px 19px; display:grid; gap:10px; max-width:68ch; }
+  .hook div { font-size:14px; color:var(--cream-200); }
+  .hook u { display:block; text-decoration:none; font-size:9.5px; text-transform:uppercase;
+            letter-spacing:var(--track-wide); color:var(--cream-600); margin-bottom:4px; }
+  .hook .avoid { color:var(--cream-400); }
+  .hook .avoid u { color:var(--danger); }
+  .shapetag { font-family:var(--font-mono); font-size:10.5px; color:var(--cream-600); }
+  .said { font-size:13.5px; color:var(--cream-300); min-width:0; overflow-wrap:anywhere; }
+  .verdict { font-family:var(--font-mono); font-size:10px; text-transform:uppercase;
+             margin-right:8px; letter-spacing:.04em; }
+  .verdict.wrote, .verdict.revised, .verdict.accepted { color:var(--success); }
+  .verdict.argued, .verdict.promoted { color:var(--cream-600); }
+  .verdict.promoted_nothing, .verdict.refused, .verdict.asked_for_a_change { color:var(--accent-400); }
+  .verdict.failed, .verdict.rejected, .verdict.revision_failed { color:var(--danger); }
+
+  /* verdicts */
+  .fit { border-top:1px solid var(--line-faint); padding:13px 0; max-width:68ch; }
+  .fit:first-of-type { border-top:0; }
+  .fit-head { display:flex; gap:7px; align-items:baseline; flex-wrap:wrap; }
+  .cat { font-family:var(--font-mono); font-size:12.5px; font-weight:500; color:var(--cream-100); }
+  /* Whose desk this would land on. Given the accent because it is the
+     one field a specialist scans for, and the category beside it is
+     only how the lead arrived. */
+  .caps { display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+  .note { margin:10px 0 0; font-size:12.5px; line-height:1.55; color:var(--cream-600);
+          border-left:2px solid var(--line-strong); padding-left:11px; }
+  .cap { font-size:11px; font-weight:600; letter-spacing:.04em; padding:2px 8px;
+         border-radius:var(--r-full); background:rgba(var(--accent-rgb),.14);
+         color:var(--accent-200); border:1px solid rgba(var(--accent-rgb),.28); }
+  .lvl { font-family:var(--font-mono); font-size:10px; padding:1.5px 7px; border-radius:4px;
+         border:1px solid var(--line); color:var(--cream-600); background:var(--surface-1); }
+  .lvl.strong { color:var(--success); border-color:rgba(157,190,151,.35); background:rgba(157,190,151,.1); }
+  .lvl.observed { color:var(--accent-300); border-color:var(--accent-600); background:rgba(var(--accent-rgb),.1); }
+  .rat { font-size:13.5px; color:var(--cream-600); margin-top:7px; }
+  .ask { font-size:13.5px; color:var(--cream-300); margin-top:9px; }
+  .ask u { text-decoration:none; font-size:9.5px; text-transform:uppercase;
+           letter-spacing:var(--track-wide); color:var(--cream-800); margin-right:8px; }
+
+  /* ---------- email ---------- */
+  .mailwrap { border:1px solid var(--line); border-radius:var(--r-md);
+              background:var(--surface-1); overflow:hidden; }
+  .mailbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+             padding:11px 16px; border-bottom:1px solid var(--line);
+             background:var(--surface-2); font-family:var(--font-mono); font-size:11px;
+             color:var(--cream-600); }
+  .mailbar .subj { color:var(--cream-100); font-family:var(--font-sans); font-size:13px; }
+  .mailbar .spacer { flex:1; }
+  .blockers { margin:0 0 14px; padding:13px 16px; border-radius:var(--r-md);
+              background:var(--danger-soft); border-left:3px solid var(--danger); }
+  .blockers .lbl { font-size:9.5px; text-transform:uppercase; letter-spacing:var(--track-wide);
+                   font-weight:600; color:var(--danger); display:block; margin-bottom:7px; }
+  .blockers ul { margin:0; padding-left:18px; font-size:13.5px; color:var(--cream-300); }
+  .blockers li { margin-bottom:4px; }
+  .blockers code { font-family:var(--font-mono); font-size:12px; color:var(--accent-300); }
+  /* the rendered email is real table markup with inline styles; this
+     only gives it somewhere to sit and stops the page's own rules
+     reaching into it */
+  .mailpaper { padding:20px; background:#0E0C0A; overflow-x:auto; }
+  .mailpaper table { border-collapse:collapse; }
+  .mailsrc { margin:0; padding:14px 16px; border-top:1px solid var(--line);
+             background:var(--bg); font-family:var(--font-mono); font-size:11px;
+             line-height:1.6; color:var(--cream-600); white-space:pre-wrap;
+             overflow-wrap:anywhere; max-height:320px; overflow:auto; }
+
+  /* ---------- tables ---------- */
+  .scroller { overflow-x:auto; border:1px solid var(--line); border-radius:var(--r-md);
+              background:var(--surface-1); max-width:600px; }
+  .scroller table { width:100%; border-collapse:collapse;
+                    font-family:var(--font-mono); font-size:12px; }
+  .scroller th { text-align:left; font-weight:500; color:var(--cream-600); font-size:9.5px;
+                 text-transform:uppercase; letter-spacing:var(--track-wide); padding:9px 14px;
+                 border-bottom:1px solid var(--line); white-space:nowrap; }
+  .scroller td { padding:8px 14px; border-bottom:1px solid var(--line-faint);
+                 color:var(--cream-300); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .scroller tr:last-child td { border-bottom:0; }
+  .scroller td.role { color:var(--cream-800); }
+
+  .msg { padding:28px; }
+  .msg h3 { margin:0 0 7px; font-family:var(--font-display); font-size:17px;
+            font-weight:600; color:var(--cream-100); letter-spacing:var(--track-snug); }
+  .msg p { margin:0; color:var(--cream-600); font-size:14px; max-width:64ch; }
+  .msg code { font-family:var(--font-mono); font-size:12px; color:var(--danger); }
+  pre.raw { margin:15px 0 0; padding:13px; border-radius:var(--r-md);
+            background:var(--surface-1); border:1px solid var(--line);
+            font-family:var(--font-mono); font-size:11px; line-height:1.6;
+            color:var(--cream-400); white-space:pre-wrap; overflow-wrap:anywhere;
+            max-height:300px; overflow:auto; }
+
+  @media (max-width:860px) {
+    .panes { grid-template-columns:1fr; }
+    .list { border-right:0; }
+    body[data-view="detail"] .list { display:none; }
+    body[data-view="detail"] .back { display:inline-flex; }
+    body[data-view="list"] .detail { display:none; }
+    .detail { padding:19px 20px calc(48px + env(safe-area-inset-bottom, 0px)); }
+    .back { align-items:center; gap:6px; border:1px solid var(--line-strong);
+            background:var(--surface-2); border-radius:var(--r-sm); cursor:pointer;
+            padding:5px 12px; font-size:12.5px; color:var(--cream-400); margin-bottom:15px; }
+    .dco { font-size:20px; } .clause { font-size:19px; }
+    .move { grid-template-columns:1fr; gap:3px; }
+    .dim { grid-template-columns:96px 1fr 46px; }
+  }
+</style>
+
+<body data-view="list">
+<header>
+  <div class="bar">
+    <h1 class="wordmark">n<b>.</b>abl</h1>
+    <span class="sub">Argument Log</span>
+    <button class="runbtn" type="button" id="runbtn" aria-expanded="false">Run settings</button>
+    <span class="live"><span class="dot" id="dot"></span><span id="stamp">connecting</span></span>
+  </div>
+  <div class="runpanel" id="runpanel" hidden></div>
+  <div class="counts" id="counts"></div>
+  <div class="filters" id="filters" hidden>
+    <div class="seg" id="states" role="group" aria-label="Filter by state"></div>
+    <select id="service" aria-label="Filter by target service"></select>
+    <select id="sector" aria-label="Filter by sector"></select>
+    <select id="credit" aria-label="Filter by credit fit"></select>
+    <select id="presence" aria-label="Filter by web presence"></select>
+    <input type="search" id="q" placeholder="Search company, clause, notes" aria-label="Search">
+    <button class="clear" id="reset" type="button">Reset</button>
+  </div>
+</header>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="panes">
+  <div class="list" id="list"></div>
+  <div class="detail" id="detail">
+    <div class="msg"><h3>Reading the pipeline&hellip;</h3>
+      <p>Asking Supabase for the current state of every lead.</p></div>
+  </div>
+</div>
+</body>
+
+<script>
+(function () {
+  var PROJECT = 'rrkcoqopcqtowbyismcq';
+  var SERVER  = 'Supabase';
+  var TOOL    = 'execute_sql';
+
+  /* ---------------------------------------------------------------
+     THE QUERY. One statement, one jsonb document, kept whole and
+     separate from everything below it. When this moves into the CRM
+     the same SQL runs through the Supabase client instead of the
+     connector and the rendering does not change.
+     --------------------------------------------------------------- */
+  var SQL = [
+"select jsonb_build_object(",
+"  'status', (select to_jsonb(s) from public.outreach_status s),",
+"  'models', (select jsonb_agg(jsonb_build_object(",
+"               'model', u.model, 'used', u.used, 'exhausted', u.exhausted,",
+"               'observed_rpd', u.observed_rpd) order by u.used desc)",
+"             from public.outreach_model_usage u",
+"             where u.usage_day = public.outreach_quota_day()),",
+"  'targets', (select jsonb_agg(jsonb_build_object(",
+"                'id', t.id, 'name', t.name, 'towns', t.towns,",
+"                'sectors', t.sectors, 'capabilities', t.capabilities,",
+"                'min_score', t.min_score, 'is_default', t.is_default,",
+"                'sending_enabled', t.sending_enabled,",
+"                'reach', public.outreach_target_reach(t.id)) order by t.name)",
+"              from public.outreach_target t where t.active),",
+"  'send_blockers', public.outreach_send_blockers(),",
+"  'towns', (select jsonb_agg(jsonb_build_object('key', d, 'n', n) order by d)",
+"            from (select town as d, count(*) as n",
+"                    from public.sales_leads where town is not null",
+"                     and coalesce(opt_out, false) = false",
+"                   group by 1) z),",
+"  'sectors', (select jsonb_agg(jsonb_build_object('key', sc, 'n', n) order by sc)",
+"              from (select sector as sc, count(*) as n from public.sales_leads",
+"                     where sector is not null group by 1) z),",
+"  'capability_terms', (select jsonb_agg(jsonb_build_object(",
+"                'term', v.term, 'label', coalesce(v.label, replace(v.term, '_', ' ')),",
+"                'meaning', v.meaning) order by v.term)",
+"              from public.outreach_vocabulary v",
+"             where v.dimension = 'capability' and v.active),",
+"  'chains', (select jsonb_object_agg(c.role, c.chain) from (",
+"               select role, jsonb_agg(model order by priority) as chain",
+"               from public.outreach_model where active group by role) c),",
+"  'leads', (select jsonb_agg(q.doc order by q.rank, q.ord desc nulls last) from (",
+"     select",
+"       case when l.observation is not null then 0",
+"            when l.observation_attempts >= 3 then 2",
+"            when l.fit_assessed_at is not null then 1",
+"            else 3 end as rank,",
+"       coalesce(l.observation_at, l.fit_assessed_at, l.created_at) as ord,",
+"       jsonb_build_object(",
+"         'id', l.id,",
+"         'company', coalesce(nullif(btrim(l.trading_name), ''), l.company),",
+"         'registered', l.company,",
+"         'state', case when l.observation is not null then 'drafted'",
+"                       when l.observation_attempts >= 3 then 'given_up'",
+"                       when l.fit_assessed_at is not null then 'no_clause'",
+"                       else 'waiting' end,",
+"         'website', l.website,",
+"         'location', l.location,",
+"         'town', l.town,",
+"         'assessed', (l.fit_assessed_at is not null),",
+"         'suppressed', exists (select 1 from public.marketing_suppression s",
+"                                where s.source_lead_id = l.id),",
+"         'caps_any', (select jsonb_agg(distinct f.capability)",
+"            from public.lead_service_fit f",
+"           where f.lead_id = l.id and f.capability is not null),",
+"         'industry', l.industry,",
+"         'score', l.lead_score,",
+"         'score_was', l.lead_score_initial,",
+"         'band', l.lead_score_band,",
+"         'breakdown', l.lead_score_breakdown,",
+"         'available', l.lead_score_points_available,",
+"         'rescored_at', l.lead_score_rescored_at,",
+"         'sector', l.sector,",
+"         'sector_source', l.sector_source,",
+"         'presence', l.web_presence,",
+"         'technical', l.technical_capacity,",
+"         'inbound', l.inbound_volume,",
+"         'credit', l.credit_fit,",
+"         'credit_why', l.credit_fit_reason,",
+"         'summary', l.fit_summary,",
+"         'clause', l.observation,",
+"         'evidence', l.observation_evidence,",
+"         'basis', l.observation_basis,",
+"         'model', l.observation_model,",
+"         'error', l.observation_error,",
+"         'attempts', l.observation_attempts,",
+"         'source', l.source,",
+"         'top', (select f.category from public.lead_service_fit f",
+"                  left join public.outreach_vocabulary vf",
+"                         on vf.dimension = 'fit' and vf.term = f.fit",
+"                  where f.lead_id = l.id",
+"                  order by vf.rank desc nulls last limit 1),",
+"         'categories', (select jsonb_agg(distinct f.category)",
+"            from public.lead_service_fit f",
+"           where f.lead_id = l.id and f.fit <> 'ruled_out'),",
+"         'capabilities', (select jsonb_agg(distinct f.capability)",
+"            from public.lead_service_fit f",
+"           where f.lead_id = l.id and f.fit <> 'ruled_out'",
+"             and f.capability is not null),",
+"         'signals', (select jsonb_agg(jsonb_build_object(",
+"                'key', ps.key, 'says', ps.description,",
+"                'code', ps.signal_code, 'tier', ps.tier) order by ps.tier nulls last, ps.key)",
+"            from public.lead_page_signal lps",
+"            join public.outreach_page_signal ps on ps.key = lps.key",
+"           where lps.lead_id = l.id),",
+"         'services', (select jsonb_agg(jsonb_build_object(",
+"                'category', f.category, 'capability', f.capability,",
+"                'fit', f.fit, 'confidence', f.confidence,",
+"                'rationale', f.rationale, 'evidence', f.evidence,",
+"                'ask', f.confirm_question, 'walk_away_if', f.disqualifier)",
+"              order by vf.rank desc nulls last)",
+"            from public.lead_service_fit f",
+"            left join public.outreach_vocabulary vf",
+"                   on vf.dimension = 'fit' and vf.term = f.fit",
+"           where f.lead_id = l.id),",
+"         'letter', (select jsonb_build_object(",
+"                'subject', x.subject, 'body', x.body, 'shape', x.shape,",
+"                'tension', x.tension, 'recognition', x.recognition,",
+"                'must_not_imply', x.must_not_imply, 'model', x.model)",
+"            from public.lead_letter x where x.lead_id = l.id),",
+"         'moves', (select jsonb_agg(jsonb_build_object(",
+"                'round', r.round, 'agent', r.agent, 'decision', r.decision,",
+"                'angle', r.angle_key, 'reason', r.reason, 'model', r.model)",
+"              order by r.id)",
+"            from public.outreach_round r where r.lead_id = l.id)",
+"       ) as doc",
+"       from public.sales_leads l",
+"      where coalesce(l.opt_out, false) = false) q)",
+") as dashboard"
+  ].join('\n');
+
+  /* ---------------------------------------------------------------
+     Parsing. The connector wraps rows in a provenance envelope that
+     names its own boundary tag in prose BEFORE the tag opens, so
+     matching on the tag finds the sentence rather than the data --
+     which is exactly how the first version of this broke. Slicing on
+     brackets works because the prose carries none.
+     --------------------------------------------------------------- */
+  var lastRaw = null;
+
+  function rows(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray(payload.rows)) return payload.rows;
+    var text = typeof payload === 'string' ? payload
+             : (payload && typeof payload.result === 'string') ? payload.result : null;
+    if (text == null) { try { text = JSON.stringify(payload); } catch (e) { return null; } }
+    lastRaw = text;
+    var tries = [];
+    var a = text.indexOf('['), b = text.lastIndexOf(']');
+    if (a > -1 && b > a) tries.push(text.slice(a, b + 1));
+    var c = text.indexOf('{'), d = text.lastIndexOf('}');
+    if (c > -1 && d > c) tries.push(text.slice(c, d + 1));
+    tries.push(text);
+    for (var i = 0; i < tries.length; i++) {
+      try { var v = JSON.parse(tries[i]); if (v != null) return Array.isArray(v) ? v : [v]; }
+      catch (e) { /* next strategy */ }
+    }
+    return null;
+  }
+
+  function dashboardOf(r) {
+    if (!r || !r.length || !r[0] || typeof r[0] !== 'object') return null;
+    var row = r[0];
+    if (row.dashboard) return row.dashboard;
+    if (row.status || row.leads) return row;
+    var k = Object.keys(row);
+    if (k.length === 1 && row[k[0]] && typeof row[k[0]] === 'object') return row[k[0]];
+    return null;
+  }
+
+  /* ---------------------------------------------------------------
+     State
+     --------------------------------------------------------------- */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function num(n) { return n == null ? '—' : Number(n).toLocaleString('en-GB'); }
+  function nice(s) { return String(s == null ? '' : s).replace(/_/g, ' '); }
+
+  /* The registry ships each capability's display name, because "ai" is
+     AI and "software" is Custom Software and no punctuation rule gets
+     there. Anything the registry has no name for still reads by rule,
+     so a term added tonight shows up tonight rather than as a blank. */
+  function capName(term) {
+    var reg = (data && Array.isArray(data.capability_terms)) ? data.capability_terms : [];
+    for (var i = 0; i < reg.length; i++) if (reg[i].term === term) return reg[i].label || nice(term);
+    return nice(term);
+  }
+
+  var STATES = [
+    { k: 'all', label: 'All' },
+    { k: 'drafted', label: 'Drafted' },
+    { k: 'no_clause', label: 'No clause' },
+    { k: 'given_up', label: 'Given up' },
+    { k: 'waiting', label: 'Waiting' }
+  ];
+  var AUTHZ = ['needs_reauth', 'server_not_connected', 'blocked_by_policy',
+               'approval_required', 'not_in_manifest', 'consent_required',
+               'not_granted', 'capability_disabled'];
+
+  var data = null;
+  var f = { state: 'all', service: '', sector: '', credit: '', presence: '', q: '', sort: 'recent' };
+  var selected = null;
+  var showSource = false;
+
+  function leads() { return (data && Array.isArray(data.leads)) ? data.leads : []; }
+
+  function matches(l) {
+    if (f.state !== 'all' && l.state !== f.state) return false;
+    /* Target service. The team is organised by capability - what the
+       work would actually be - not by the category a lead arrives
+       under, so this asks "is there anything here for the person who
+       builds the web things". A lead whose capability the scout could
+       not call is in no specialist's list and answers to "Unassigned",
+       which is a queue somebody can work rather than a silent drop. */
+    if (f.service) {
+      var caps = Array.isArray(l.capabilities) ? l.capabilities : [];
+      if (f.service === '~none') { if (caps.length) return false; }
+      else if (caps.indexOf(f.service) === -1) return false;
+    }
+    if (f.sector && l.sector !== f.sector) return false;
+    if (f.credit && l.credit !== f.credit) return false;
+    if (f.presence && l.presence !== f.presence) return false;
+    if (f.q) {
+      var hay = [l.company, l.registered, l.clause, l.summary, l.industry, l.location,
+                 l.error, l.top, l.evidence,
+                 l.letter && l.letter.body, l.letter && l.letter.subject,
+                 l.letter && l.letter.tension].join(' ~ ').toLowerCase();
+      if (hay.indexOf(f.q.toLowerCase()) === -1) return false;
+    }
+    return true;
+  }
+
+  function visible() {
+    var out = leads().filter(matches);
+    if (f.sort === 'score') out.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+    else if (f.sort === 'company') out.sort(function (a, b) {
+      return String(a.company).localeCompare(String(b.company)); });
+    else if (f.sort === 'moved') out.sort(function (a, b) {
+      return ((b.score || 0) - (b.score_was || b.score || 0)) -
+             ((a.score || 0) - (a.score_was || a.score || 0)); });
+    return out;
+  }
+
+  /* ---------------------------------------------------------------
+     The first contact email.
+
+     Built from business/11-outreach/first-contact-template.md, whose
+     every element traces to PECR reg. 23, UK GDPR Art. 14 or the LIA.
+     Three of them cannot be filled from the database, so this does not
+     pretend they are filled: it names them as blockers instead. A
+     template that quietly ships with a missing postal address is a
+     template that gets sent without one.
+     --------------------------------------------------------------- */
+  var BRAND = {
+    espresso: '#0E0C0A', panel: '#1A1613', paper: '#F7F2E8',
+    ink: '#14110E', amber: '#E9AC57', cream: '#FBF6EC', muted: '#6B6259'
+  };
+
+  function emailFor(l) {
+    var w = l.letter || null;
+    var blockers = [];
+
+    /* The body is written per business now, so the only things missing
+       are the ones a model cannot supply. The postal address is the
+       real blocker: PECR reg. 23 requires it and it is still unsettled,
+       so it is shown as a placeholder rather than quietly omitted. */
+    if (!w) {
+      blockers.push('<b>No letter has been written yet.</b> The body is drafted per business from the observation and the hook — there is no template to fall back on, and that is deliberate.');
+    }
+    blockers.push('<b>Postal address</b> &mdash; required by PECR reg. 23 and still unsettled. Shown below as <code>[trading address]</code>.');
+
+    /* Detail the letter furnished that nobody supplied. The pipeline
+       writes a moment the reader would recognise, and the line between
+       "follows from the observation" and "invented about their life" is
+       one a person has to draw — a letter once said someone was taking
+       calls "on a hands-free kit while turning into a gravel driveway",
+       and neither existed anywhere but in the model.
+
+       So this does not reject anything. It puts the words in front of
+       whoever is at the gate, because "Monday morning" after a weekend
+       queue is fair and a driveway is not, and only a person can tell
+       the two apart. */
+    if (w) {
+      var sourced = [l.clause, l.evidence, w.tension, w.recognition, l.summary]
+        .join(' ').toLowerCase();
+      var found = String(w.body).toLowerCase().match(
+        /\b(?:hands-free|driveway|dashboard|windscreen|car park|kitchen|workshop|warehouse|desk drawer|filing cabinet|monday|tuesday|wednesday|thursday|friday|saturday|sunday|morning|afternoon|evening|lunchtime|rush hour)\b/g) || [];
+      var unsourced = [];
+      found.forEach(function (t) {
+        if (sourced.indexOf(t) === -1 && unsourced.indexOf(t) === -1) unsourced.push(t);
+      });
+      if (unsourced.length) {
+        blockers.push('<b>Detail nobody supplied</b> &mdash; ' +
+          unsourced.map(function (t) { return '<code>' + esc(t) + '</code>'; }).join(', ') +
+          '. Fair if it follows from the observation, invented if it does not. Read it before sending.');
+      }
+    }
+
+    var subject = w ? w.subject : (l.clause ? l.clause.slice(0, 60) : 'nothing to say yet');
+    var p = 'margin:0 0 18px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:' + BRAND.ink + ';';
+
+    var paras = w
+      ? String(w.body).split(/\n\s*\n/).map(function (t) { return t.trim(); }).filter(Boolean)
+      : ['[the letter is written once the pipeline has an observation and a hook for this business]'];
+
+    /* The greeting and the sign-off are chrome, like the footer: they
+       are identical on every letter, so they are added here rather than
+       asked of a model that might forget one. The prompt says not to
+       write them - this strips the ones it writes anyway, because a
+       letter that opens "Hello, Hello," is worse than a strict rule. */
+    paras = paras.filter(function (t) {
+      return !/^(?:hi|hello|hey|dear)\b[^.!?]{0,30}[,:]?$/i.test(t) &&
+             !/^(?:alex|best|thanks|regards|kind regards|all the best)[,.]?$/i.test(t);
+    });
+
+    /* The observation is underlined where it appears, so a person at
+       the gate can see the necessity limb without hunting for it. */
+    function para(t) {
+      var body = esc(t);
+      if (l.clause) {
+        var i = t.toLowerCase().indexOf(String(l.clause).toLowerCase());
+        if (i > -1) {
+          body = esc(t.slice(0, i)) +
+            '<span style="border-bottom:2px solid ' + BRAND.amber + ';">' + esc(t.substr(i, l.clause.length)) + '</span>' +
+            esc(t.slice(i + l.clause.length));
+        }
+      }
+      return '<p style="' + p + '">' + body + '</p>';
+    }
+
+    var where = l.source === 'companies_house' ? 'on the Companies House register'
+              : l.website ? 'through your website' : 'in public business information';
+
+    var html = ''
+      + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + BRAND.espresso + '" style="background-color:' + BRAND.espresso + ';">'
+      + '<tr><td align="center" style="padding:16px 8px;">'
+      + '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background-color:' + BRAND.paper + ';">'
+      + '<tr><td height="4" style="height:4px;line-height:4px;font-size:0;background-color:' + BRAND.amber + ';">&nbsp;</td></tr>'
+      /* No wordmark at the top. A letter from a person does not open
+         with a logo - that is a newsletter. The mark goes in the
+         footer, where the identity PECR reg. 23 asks for already is. */
+      + '<tr><td style="padding:32px 30px 6px 30px;">'
+      + '<p style="' + p + '">Hello,</p>'
+      + paras.map(para).join('')
+      + '<p style="' + p + 'margin-bottom:4px;">Alex</p>'
+      + '</td></tr>'
+      /* ---- the chrome. Fixed because the law fixes it, not because
+              writing is hard: identity and a postal address under PECR
+              reg. 23, the source and the notice under Art. 14, and an
+              opt-out that works without a login. ---- */
+      + '<tr><td style="padding:0 30px 26px 30px;">'
+      + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + BRAND.panel + '" style="background-color:' + BRAND.panel + ';">'
+      + '<tr><td style="padding:18px 20px;border-left:4px solid ' + BRAND.amber + ';">'
+      + '<p style="margin:0 0 8px 0;font-family:Arial Black,Gadget,sans-serif;font-size:20px;font-weight:bold;color:' + BRAND.cream + ';letter-spacing:-1px;">'
+      + 'n<span style="color:' + BRAND.amber + ';">.</span>abl</p>'
+      + '<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:' + BRAND.cream + ';">'
+      + '[trading address]<br>'
+      + '<a href="mailto:hello@nabl.agency" style="color:' + BRAND.amber + ';text-decoration:none;">hello@nabl.agency</a> &middot; '
+      + '<a href="https://nabl.agency" style="color:' + BRAND.amber + ';text-decoration:none;">nabl.agency</a></p>'
+      + '</td></tr></table></td></tr>'
+      + '<tr><td style="padding:0 30px 28px 30px;">'
+      + '<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:' + BRAND.muted + ';">'
+      + 'You&rsquo;re receiving this because we found ' + esc(l.company || '[Company]') + ' ' + esc(where) + '. '
+      + 'Our privacy notice explains what we hold and why: '
+      + '<a href="https://nabl.agency/privacy" style="color:' + BRAND.ink + ';">nabl.agency/privacy</a>.<br>'
+      + '<a href="https://nabl.agency/unsubscribe" style="color:' + BRAND.ink + ';"><b>Unsubscribe</b></a> &mdash; one click, and we won&rsquo;t contact you again.'
+      + '</p></td></tr>'
+      + '<tr><td height="4" style="height:4px;line-height:4px;font-size:0;background-color:' + BRAND.amber + ';">&nbsp;</td></tr>'
+      + '</table></td></tr></table>';
+
+    return { subject: subject, html: html, blockers: blockers, written: Boolean(w) };
+  }
+
+  /* ---------------------------------------------------------------
+     THE RUN PANEL
+
+     Who the cron is for, and separately, whether it is running.
+
+     Those were one tickbox and that was wrong. Saving who a run is for
+     is not the same decision as starting it, and a tickbox that did
+     both meant every edit to a filter was also a press of the start
+     button. So the filters save, and Run starts - a target is running
+     only because somebody pressed Run on it, never because it was the
+     last thing edited. Stop clears it, the batch comes back empty and
+     the pipeline does nothing, which is the off switch: safer than
+     stopping the schedule, because an empty batch cannot half-process
+     a lead.
+
+     Nothing here builds SQL out of typed text - the chips come from
+     the data and every write goes through an RPC that re-checks the
+     terms, because a town nobody is in produces a silent empty run and
+     a silent empty run looks exactly like a broken cron.
+
+     The count beside the heading is computed here, from the leads
+     already loaded, against the filters as they are on screen rather
+     than as they were last saved. A filter you cannot see the effect
+     of until after you commit to it is a filter you are guessing at.
+     --------------------------------------------------------------- */
+  var runOpen = false;
+  var draft = null;          // the target being edited
+  var pending = null;        // a write in flight
+
+  function targets() { return (data && Array.isArray(data.targets)) ? data.targets : []; }
+  function defaultTarget() {
+    var t = targets().filter(function (x) { return x.is_default; });
+    return t.length ? t[0] : null;
+  }
+
+  /* Single quotes doubled, and only ever around values that came out of
+     the database in the first place. */
+  function lit(v) { return "'" + String(v).split("'").join("''") + "'"; }
+  function arrLit(a) {
+    return 'ARRAY[' + (a || []).map(lit).join(',') + ']::text[]';
+  }
+
+  function write(sql, then) {
+    pending = 'working';
+    renderRun();
+    mcpCall(sql, function (err, rows) {
+      pending = null;
+      if (err) { pending = 'error: ' + err; renderRun(); return; }
+      then && then(rows);
+    });
+  }
+
+  function startDraft() {
+    var t = defaultTarget() || targets()[0] || null;
+    draft = t
+      ? { id: t.id, name: t.name, towns: (t.towns || []).slice(),
+          sectors: (t.sectors || []).slice(), capabilities: (t.capabilities || []).slice(),
+          min_score: t.min_score, is_default: t.is_default,
+          sending_enabled: t.sending_enabled }
+      : { id: null, name: 'New run', towns: [], sectors: [], capabilities: [],
+          min_score: null, is_default: false, sending_enabled: false };
+  }
+
+  /* The same four tests outreach_target_reach makes, made here so a
+     chip click answers immediately. The database stays the authority -
+     saving re-counts server-side and that number replaces this one. */
+  function matchesDraft(l, d) {
+    if (l.suppressed) return false;
+    if (d.towns.length   && d.towns.indexOf(l.town) < 0) return false;
+    if (d.sectors.length && d.sectors.indexOf(l.sector) < 0) return false;
+    if (d.min_score != null && (l.score || 0) < d.min_score) return false;
+    /* A lead nobody has assessed yet passes the service filter, because
+       the run is what discovers its capability. */
+    if (d.capabilities.length && l.assessed) {
+      var have = l.caps_any || [];
+      var hit = false;
+      for (var i = 0; i < d.capabilities.length; i++) {
+        if (have.indexOf(d.capabilities[i]) > -1) { hit = true; break; }
+      }
+      if (!hit) return false;
+    }
+    return true;
+  }
+
+  function draftReach(d) {
+    var r = { matched: 0, queued: 0, drafted: 0, given_up: 0 };
+    leads().forEach(function (l) {
+      if (!matchesDraft(l, d)) return;
+      r.matched++;
+      if (l.state === 'drafted') r.drafted++;
+      else if (l.state === 'given_up') r.given_up++;
+      else r.queued++;
+    });
+    return r;
+  }
+
+  /* How many a single chip would add or remove, shown on the chip. */
+  function toggle(list, key) {
+    var i = list.indexOf(key);
+    if (i > -1) list.splice(i, 1); else list.push(key);
+    renderRun();
+  }
+
+  function chipRow(field, options, label) {
+    var chosen = draft[field];
+    return '<div class="runcol"><u>' + esc(label) + '</u><div class="chips" data-field="' +
+      field + '">' + options.map(function (o) {
+        return '<button class="chip" type="button" data-key="' + esc(o.key) + '" aria-pressed="' +
+          (chosen.indexOf(o.key) > -1) + '">' + esc(o.label || nice(o.key)) +
+          (o.n != null ? '<span class="n">' + o.n + '</span>' : '') + '</button>';
+      }).join('') + '</div></div>';
+  }
+
+  function renderRun() {
+    var el = $('runpanel');
+    el.hidden = !runOpen;
+    $('runbtn').setAttribute('aria-expanded', String(runOpen));
+    if (!runOpen) return;
+    if (!draft) startDraft();
+
+    var blockers = (data && Array.isArray(data.send_blockers)) ? data.send_blockers : [];
+    var live = defaultTarget();
+    var reach = draftReach(draft);
+    var running = Boolean(live && draft.id && live.id === draft.id);
+
+    var h = '<div class="runhead"><h3>Who the run is for</h3>' +
+      '<span class="reach"><b>' + num(reach.matched) + '</b> selected &middot; ' +
+        num(reach.queued) + ' queued &middot; ' + num(reach.drafted) + ' already drafted' +
+        (reach.given_up ? ' &middot; ' + num(reach.given_up) + ' given up' : '') + '</span>' +
+      '<span class="sep"></span>' +
+      '<span class="runstate' + (running ? ' on' : '') + '"><i></i>' +
+        (running ? 'running every five minutes'
+                 : live ? 'another target is running: ' + esc(live.name)
+                        : 'nothing is running') + '</span>' +
+      '</div>';
+
+    h += '<div class="runcols">';
+    h += chipRow('towns',
+      ((data && data.towns) || []).map(function (d) { return { key: d.key, n: d.n }; }),
+      'Town or city');
+    h += chipRow('sectors',
+      ((data && data.sectors) || []).map(function (d) { return { key: d.key, n: d.n }; }),
+      'Sector');
+    h += chipRow('capabilities',
+      ((data && data.capability_terms) || []).map(function (c) {
+        return { key: c.term, label: c.label }; }),
+      'Service');
+    h += '<div class="runcol"><u>Name, and a floor on the score</u>' +
+      '<input type="text" id="tname" value="' + esc(draft.name) + '" aria-label="Target name">' +
+      '<input type="number" id="tmin" placeholder="no minimum" value="' +
+        (draft.min_score == null ? '' : draft.min_score) + '" aria-label="Minimum lead score">' +
+      '<p class="hint">Nothing selected in a column means no filter on it, never "match nothing".</p>' +
+      '</div>';
+    h += '</div>';
+
+    h += '<p class="hint">Service filters on a capability the assessment has <b>already</b> ' +
+      'established. A lead nobody has assessed yet passes anyway &mdash; the run is what ' +
+      'discovers its capability, so filtering it out first would mean it never got one.</p>';
+
+    h += '<div class="switches">';
+    h += '<div class="sw danger"><input type="checkbox" id="sendon"' +
+      (draft.sending_enabled ? ' checked' : '') + (blockers.length ? ' disabled' : '') + '>' +
+      '<label for="sendon">Actually send these emails' +
+      '<span>Real letters to real businesses that have not heard from us. Both approval gates ' +
+      'are human and both are before this. Changing who the run is for always turns this back ' +
+      'off.</span></label>' +
+      (blockers.length ? warnIcon(blockers) : '') + '</div>';
+    h += '</div>';
+
+    h += '<div class="runactions">' +
+      '<button class="btn" type="button" id="tsave">Save target</button>' +
+      (running
+        ? '<button class="stop" type="button" id="tstop">Stop</button>'
+        : '<button class="go" type="button" id="tstart"' +
+          (draft.id && reach.queued ? '' : ' disabled') + '>Run</button>') +
+      '<span class="said">' + esc(pending || '') + '</span>' +
+      (!running && draft.id && !reach.queued
+        ? '<span class="said">nothing queued &mdash; there is nothing for a run to do</span>'
+        : (!running && !draft.id
+            ? '<span class="said">save the target before starting it</span>' : '')) +
+      '</div>';
+
+    el.innerHTML = h;
+
+    el.querySelectorAll('.chips').forEach(function (box) {
+      box.addEventListener('click', function (e) {
+        var c = e.target.closest('.chip');
+        if (c) toggle(draft[box.dataset.field], c.dataset.key);
+      });
+    });
+    $('tname').addEventListener('input', function () { draft.name = this.value; });
+    $('tmin').addEventListener('input', function () {
+      draft.min_score = this.value === '' ? null : Number(this.value); });
+    $('tsave').addEventListener('click', saveTarget);
+    if ($('tstart')) $('tstart').addEventListener('click', startRun);
+    if ($('tstop'))  $('tstop').addEventListener('click', stopRun);
+
+    var send = $('sendon');
+    if (send) send.addEventListener('change', function () {
+      if (this.checked) { this.checked = false; askToSend(); }
+      else disarmSending();
+    });
+  }
+
+  function saveTarget() {
+    write('select public.outreach_save_target(' +
+      (draft.id ? lit(draft.id) + '::uuid' : 'null') + ', ' + lit(draft.name) + ', ' +
+      arrLit(draft.towns) + ', ' + arrLit(draft.sectors) + ', ' +
+      arrLit(draft.capabilities) + ', ' +
+      (draft.min_score == null ? 'null' : String(Math.round(draft.min_score))) + ', ' +
+      /* Saving carries the run state it already had. It never starts
+         anything, and it never stops what is already going. */
+      (draft.is_default ? 'true' : 'false') + ') as r',
+      function (rows) {
+        var r = (rows && rows[0] && (rows[0].r || rows[0])) || {};
+        pending = r.saved === false ? ('refused: ' + (r.why || 'unknown'))
+                                    : (r.running ? 'saved — the next tick uses it'
+                                                 : 'saved — press Run to start it');
+        draft = null;
+        renderRun();
+      });
+  }
+
+  /* Start and stop are their own verbs. outreach_start_run refuses a
+     target with nothing queued rather than starting a run that would
+     do nothing, and says so. */
+  function startRun() {
+    if (!draft.id) { pending = 'save the target first'; renderRun(); return; }
+    write('select public.outreach_start_run(' + lit(draft.id) + '::uuid) as r',
+      function (rows) {
+        var r = (rows && rows[0] && (rows[0].r || rows[0])) || {};
+        pending = r.running ? 'running — first tick within five minutes'
+                            : 'refused: ' + (r.why || 'unknown');
+        draft = null;
+        renderRun();
+      });
+  }
+
+  function stopRun() {
+    write('select public.outreach_stop_run() as r', function (rows) {
+      var r = (rows && rows[0] && (rows[0].r || rows[0])) || {};
+      pending = 'stopped ' + (r.stopped || '');
+      draft = null;
+      renderRun();
+    });
+  }
+
+  /* Every word the red box had, folded behind the mark that says there
+     is something to read. Focusable, so it opens without a pointer. */
+  function warnIcon(blockers) {
+    return '<span class="warn" tabindex="0" role="button" aria-label="Sending is blocked — ' +
+      blockers.length + (blockers.length === 1 ? ' thing' : ' things') + ' in the way">!' +
+      '<span class="pop"><u>Sending is blocked &mdash; ' + blockers.length +
+      (blockers.length === 1 ? ' thing' : ' things') + ' in the way</u><ol>' +
+      blockers.map(function (b) {
+        return '<li>' + esc(b.what) + '<span>' + esc(b.why) + '</span></li>';
+      }).join('') + '</ol></span></span>';
+  }
+
+  /* The confirmation is deliberately awkward: the target name has to be
+     typed back, exactly. That is the difference between a click and a
+     decision, and the database checks it again regardless. */
+  function askToSend() {
+    var t = draft;
+    var sc = $('scrim');
+    sc.hidden = false;
+    sc.innerHTML = '<div class="dialog" role="alertdialog" aria-labelledby="dlgh">' +
+      '<h3 id="dlgh">This sends real letters</h3>' +
+      '<p>Every business matched by <b>' + esc(t.name) + '</b> is a real company that has not ' +
+      'heard from us. A first contact cannot be taken back, and there is one per business.</p>' +
+      '<ul><li>Both approval gates are human, and both are before this.</li>' +
+      '<li>Every message carries the postal address, the source disclosure and a one-click ' +
+      'unsubscribe, because PECR and Article 14 require them.</li>' +
+      '<li>Changing who the run is for turns this off again.</li></ul>' +
+      '<p>Type the name of the run to confirm:</p>' +
+      '<input type="text" id="confirmname" placeholder="' + esc(t.name) + '" autocomplete="off">' +
+      '<div class="row"><button class="btn" type="button" id="dlgno">Cancel</button>' +
+      '<button class="danger-btn" type="button" id="dlgyes" disabled>Turn sending on</button>' +
+      '</div></div>';
+
+    var input = $('confirmname'), yes = $('dlgyes');
+    input.focus();
+    input.addEventListener('input', function () {
+      yes.disabled = this.value.trim() !== String(t.name).trim();
+    });
+    $('dlgno').addEventListener('click', closeDialog);
+    sc.addEventListener('click', function (e) { if (e.target === sc) closeDialog(); });
+    yes.addEventListener('click', function () {
+      var typed = input.value;
+      closeDialog();
+      write('select public.outreach_arm_sending(' + lit(t.id) + '::uuid, ' + lit(typed) +
+            ', ' + lit('CRM') + ') as r', function (rows) {
+        var r = (rows && rows[0] && (rows[0].r || rows[0])) || {};
+        pending = r.armed ? 'sending is ON for ' + r.target
+                          : 'refused: ' + (r.why || 'unknown');
+        draft = null;
+        renderRun();
+      });
+    });
+  }
+
+  function closeDialog() { var sc = $('scrim'); sc.hidden = true; sc.innerHTML = ''; }
+
+  function disarmSending() {
+    write('select public.outreach_disarm_sending(' +
+      (draft.id ? lit(draft.id) + '::uuid' : 'null') + ') as r', function () {
+      pending = 'sending is off';
+      draft = null;
+      renderRun();
+    });
+  }
+
+  /* ---------------------------------------------------------------
+     Render
+     --------------------------------------------------------------- */
+  function renderCounts() {
+    var s = (data && data.status) || {};
+    var moved = 0;
+    leads().forEach(function (l) { if (l.score_was != null && l.score !== l.score_was) moved++; });
+    var cells = [
+      ['waiting', s.waiting, ''], ['assessed', s.assessed, ''], ['drafted', s.written, ''],
+      ['distinct', s.distinct_sentences, 'key'], ['re-scored', moved, ''],
+      ['given up', s.given_up, ''], ['sectors refiled', s.sectors_corrected, '']
+    ];
+    $('counts').innerHTML = cells.map(function (c) {
+      return '<div class="count ' + c[2] + '"><b>' + num(c[1]) + '</b><span>' + c[0] + '</span></div>';
+    }).join('');
+  }
+
+  function fillSelect(el, label, values, current, name) {
+    var show = name || nice;
+    el.innerHTML = '<option value="">' + label + ': any</option>' +
+      values.map(function (v) {
+        return '<option value="' + esc(v) + '"' + (v === current ? ' selected' : '') +
+               '>' + esc(show(v)) + '</option>';
+      }).join('');
+  }
+
+  function renderFilters() {
+    var all = leads();
+    var tally = {};
+    all.forEach(function (l) { tally[l.state] = (tally[l.state] || 0) + 1; });
+    $('states').innerHTML = STATES.map(function (s) {
+      var n = s.k === 'all' ? all.length : (tally[s.k] || 0);
+      return '<button type="button" data-state="' + s.k + '" aria-pressed="' +
+        (f.state === s.k) + '">' + s.label + '<span class="n">' + n + '</span></button>';
+    }).join('');
+
+    function uniq(key) {
+      var seen = {};
+      all.forEach(function (l) { if (l[key]) seen[l[key]] = 1; });
+      return Object.keys(seen).sort();
+    }
+    /* Every capability the registry holds, whether or not a lead has
+       been filed under it yet. A specialist opening an empty list has
+       been told something true; a specialist whose name is missing from
+       the dropdown assumes the CRM is broken. */
+    var reg = (data && Array.isArray(data.capability_terms)) ? data.capability_terms : [];
+    var capOpts = reg.map(function (c) { return c.term; });
+    var unassigned = all.filter(function (l) {
+      return l.state !== 'waiting' && !(Array.isArray(l.capabilities) && l.capabilities.length);
+    }).length;
+    if (unassigned) capOpts.push('~none');
+    fillSelect($('service'), 'Service', capOpts, f.service, function (t) {
+      return t === '~none' ? 'Unassigned (' + unassigned + ')' : capName(t);
+    });
+    fillSelect($('sector'), 'Sector', uniq('sector'), f.sector);
+    fillSelect($('credit'), 'Credits', uniq('credit'), f.credit);
+    fillSelect($('presence'), 'Presence', uniq('presence'), f.presence);
+    $('filters').hidden = false;
+  }
+
+  function rowHtml(l) {
+    var bits = [];
+    if (l.sector) bits.push(esc(nice(l.sector)) + (l.sector_source === 'assessment' ? ' ↺' : ''));
+    if (l.top) bits.push(esc(nice(l.top)));
+    if (l.credit) bits.push(esc(l.credit));
+    /* On the row rather than only in the detail, because the specialist
+       filtering by their own capability is scanning, not reading. */
+    var caps = (Array.isArray(l.capabilities) ? l.capabilities : [])
+      .map(function (c) { return '<span class="cap">' + esc(capName(c)) + '</span>'; }).join('');
+    var moved = (l.score_was != null && l.score !== l.score_was)
+      ? '<span class="up">' + (l.score > l.score_was ? '↑' : '↓') +
+        Math.abs(l.score - l.score_was) + '</span>' : '';
+    return '<button class="row" type="button" data-id="' + esc(l.id) + '" aria-current="' +
+      (selected === l.id) + '">' +
+      '<span class="pip ' + esc(l.state) + '" aria-hidden="true"></span>' +
+      '<span><span class="rc">' + esc(l.company) + '</span>' +
+      '<span class="rm">' + bits.join(' <span aria-hidden="true">&middot;</span> ') +
+      (l.score != null ? '<span class="sc">' + num(l.score) + '</span>' : '') + moved + '</span>' +
+      (caps ? '<span class="caps">' + caps + '</span>' : '') +
+      (l.clause ? '<span class="rq">' + esc(l.clause) + '</span>' : '') +
+      '</span></button>';
+  }
+
+  function renderList() {
+    var v = visible();
+    var head = '<div class="listhead">Leads <span class="n">' + v.length + '</span>' +
+      '<select class="sortsel" id="sort" aria-label="Sort">' +
+      '<option value="recent"' + (f.sort === 'recent' ? ' selected' : '') + '>Recent</option>' +
+      '<option value="score"' + (f.sort === 'score' ? ' selected' : '') + '>Score</option>' +
+      '<option value="moved"' + (f.sort === 'moved' ? ' selected' : '') + '>Biggest move</option>' +
+      '<option value="company"' + (f.sort === 'company' ? ' selected' : '') + '>A–Z</option>' +
+      '</select></div>';
+    $('list').innerHTML = head + (v.length
+      ? v.map(rowHtml).join('')
+      : '<p class="empty">Nothing matches those filters.</p>');
+    $('sort').addEventListener('change', function () { f.sort = this.value; renderList(); });
+  }
+
+  function moveHtml(m) {
+    var d = String(m.decision || '');
+    return '<div class="move"><div class="who" data-agent="' + esc(m.agent) + '">' +
+      '<span class="agent">' + esc(m.agent) + '</span>' +
+      '<span class="rnd">round ' + esc(m.round) + '</span></div>' +
+      '<div class="said"><span class="verdict ' + esc(d) + '">' + esc(nice(d)) + '</span>' +
+      esc(m.reason) + '</div></div>';
+  }
+
+  function fitHtml(x) {
+    return '<div class="fit"><div class="fit-head">' +
+      '<span class="cat">' + esc(nice(x.category)) + '</span>' +
+      (x.capability ? '<span class="cap">' + esc(capName(x.capability)) + '</span>' : '') +
+      '<span class="lvl ' + esc(x.fit) + '">' + esc(nice(x.fit)) + '</span>' +
+      '<span class="lvl ' + esc(x.confidence) + '">' + esc(x.confidence) + '</span></div>' +
+      (x.rationale ? '<div class="rat">' + esc(x.rationale) + '</div>' : '') +
+      (x.ask ? '<div class="ask"><u>ask</u>' + esc(x.ask) + '</div>' : '') +
+      (x.walk_away_if ? '<div class="ask"><u>walk away if</u>' + esc(x.walk_away_if) + '</div>' : '') +
+      '</div>';
+  }
+
+  function scoreHtml(l) {
+    if (l.score == null) return '';
+    var b = l.breakdown || {};
+    var order = ['geography', 'size', 'sector', 'signals', 'decision_access'];
+    var keys = Object.keys(b).sort(function (a, c) {
+      var i = order.indexOf(a), j = order.indexOf(c);
+      return (i < 0 ? 99 : i) - (j < 0 ? 99 : j);
+    });
+    var dims = keys.map(function (k) {
+      var d = b[k] || {};
+      var of = Number(d.of) || 0, pts = Number(d.points) || 0;
+      var pct = of ? Math.round((pts / of) * 100) : 0;
+      return '<div class="dim"><span class="nm">' + esc(nice(k)) + '</span>' +
+        '<span class="track"><span class="fill' + (pts ? '' : ' zero') +
+          '" style="width:' + pct + '%"></span></span>' +
+        '<span class="val">' + pts + '/' + of + '</span></div>';
+    }).join('');
+
+    var moved = l.score_was != null && l.score !== l.score_was;
+    return '<h2>Score</h2><div class="score">' +
+      '<div><span class="lab">now</span><span class="big">' + num(l.score) + '</span></div>' +
+      (moved ? '<div><span class="lab">on landing</span><span class="was">' + num(l.score_was) + '</span></div>' : '') +
+      '<div><span class="lab">band</span><span style="font-family:var(--font-mono);font-size:13px">' +
+        esc(nice(l.band || 'unbanded')) + '</span></div>' +
+      '<div><span class="lab">measured out of</span><span style="font-family:var(--font-mono);font-size:13px">' +
+        num(l.available) + '</span></div>' +
+      '</div>' +
+      (l.band === 'unbanded_incomplete_coverage'
+        ? '<p class="note">Shortlist starts at 70 and this programme can only ever measure ' +
+          num(l.available) + '. Size needs an employee count, which is never estimated, and ' +
+          'decision access needs a named individual, which the lawful basis does not cover — ' +
+          'so 35 points are unearnable and no lead can band. That is a question for the ICP, ' +
+          'not a threshold to lower here.</p>'
+        : '') +
+      '<div class="dims">' + dims + '</div>' +
+      (Array.isArray(l.signals) && l.signals.length
+        ? '<div class="tags" style="margin-top:12px">' + l.signals.map(function (s) {
+            return '<span class="tag"' + (s.code ? ' style="border-color:var(--accent-600);color:var(--accent-300)"' : '') +
+              '>' + esc(s.code || s.key) + (s.tier ? ' · tier ' + s.tier : '') + '</span>';
+          }).join('') + '</div>'
+        : '');
+  }
+
+  function detailHtml(l) {
+    var tags = [];
+    if (l.sector) tags.push(nice(l.sector) + (l.sector_source === 'assessment' ? ' ↺ refiled' : ''));
+    if (l.presence) tags.push(nice(l.presence));
+    if (l.technical) tags.push('technical: ' + l.technical);
+    if (l.inbound) tags.push('inbound: ' + l.inbound);
+    if (l.credit) tags.push(l.credit + ' credits');
+    if (l.location) tags.push(l.location);
+    /* Shown only when the tidied name differs from the register's, so a
+       bad guess is visible to the person who can correct it rather than
+       arriving in a stranger's inbox. */
+    if (l.registered && l.registered !== l.company) tags.push('registered: ' + l.registered);
+
+    var h = '<button class="back" type="button" id="back">← All leads</button>';
+    h += '<div class="dhead"><h2 class="dco">' + esc(l.company) + '</h2>' +
+         '<span class="state ' + esc(l.state) + '">' + esc(nice(l.state)) + '</span></div>';
+    h += '<div class="tags">' +
+         tags.map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') +
+         (l.website ? '<span class="tag"><a href="' + esc(l.website) +
+            '" target="_blank" rel="noopener noreferrer">website ↗</a></span>' : '') + '</div>';
+
+    if (l.clause) {
+      h += '<h2>The clause</h2><div class="clause-box"><p class="clause">' + esc(l.clause) + '</p>';
+      if (l.evidence) {
+        h += '<div class="evidence"><em>checked word for word against ' +
+             (l.basis === 'register' ? 'the public register' : 'their own page') +
+             '</em>“' + esc(l.evidence) + '”</div>';
+      }
+      h += '<div class="clause-foot"><button class="btn" type="button" id="copy">Copy clause</button>' +
+           '<span id="copied"></span><span>' + esc(l.model || '') + '</span></div></div>';
+    } else if (l.state === 'no_clause') {
+      h += '<h2>The clause</h2><div class="callout warn"><span class="lbl">' +
+           'no clause — the editor would not promote one</span><p>' +
+           esc(l.error || 'Every case argued was too generic to send.') + '</p></div>';
+    } else if (l.state === 'given_up') {
+      h += '<h2>The clause</h2><div class="callout bad"><span class="lbl">stopped after ' +
+           esc(l.attempts) + ' attempts</span><p class="mono">' +
+           esc(l.error || 'No reason recorded.') + '</p></div>';
+    } else {
+      h += '<div class="callout idle"><span class="lbl">not assessed yet</span><p>' +
+           'The cron works down the queue best-scoring first. Its schedule is a row, ' +
+           'so the rate you see depends on whether the list is being drained or ticked over.' +
+           (l.industry ? ' Companies House records their activity as: ' + esc(l.industry) + '.' : '') +
+           '</p></div>';
+    }
+
+    /* the email */
+    var m = emailFor(l);
+    h += '<h2>First contact email</h2>';
+    h += '<div class="blockers"><span class="lbl">not sendable yet — ' +
+         (m.blockers.length === 1 ? 'one thing missing' : m.blockers.length + ' things missing') +
+         '</span><ul>' +
+         m.blockers.map(function (b) { return '<li>' + b + '</li>'; }).join('') + '</ul></div>';
+    h += '<div class="mailwrap"><div class="mailbar"><span>subject</span>' +
+         '<span class="subj">' + esc(m.subject) + '</span><span class="spacer"></span>' +
+         '<button class="btn" type="button" id="src" aria-pressed="' + showSource + '">HTML</button>' +
+         '<button class="btn" type="button" id="copymail">Copy HTML</button>' +
+         '<span id="mailsaid"></span></div>' +
+         '<div class="mailpaper">' + m.html + '</div>' +
+         (showSource ? '<pre class="mailsrc">' + esc(m.html) + '</pre>' : '') +
+         '</div>';
+
+    h += scoreHtml(l);
+
+    if (l.summary) h += '<h2>What the scout made of them</h2><p class="summary">' + esc(l.summary) + '</p>';
+    if (l.credit_why) h += '<h2>Why ' + esc(l.credit) + ' credits</h2><p class="summary">' + esc(l.credit_why) + '</p>';
+
+    /* The hook, which is the step the pipeline used to skip. Shown
+       above the argument because it is what the letter was built on,
+       and because "what it must not read as" is the half a person at
+       the gate most needs to check. */
+    var w = l.letter;
+    if (w && w.tension) {
+      h += '<h2>The hook</h2><div class="hook">' +
+        '<div><u>what goes wrong</u>' + esc(w.tension) + '</div>' +
+        (w.recognition ? '<div><u>they would recognise</u>' + esc(w.recognition) + '</div>' : '') +
+        (w.must_not_imply ? '<div class="avoid"><u>must not read as</u>' + esc(w.must_not_imply) + '</div>' : '') +
+        (w.shape ? '<div class="shapetag">' + esc(nice(w.shape)) + '</div>' : '') +
+        '</div>';
+    }
+
+    var moves = Array.isArray(l.moves) ? l.moves : [];
+    if (moves.length) h += '<h2>The argument</h2>' + moves.map(moveHtml).join('');
+
+    var fits = Array.isArray(l.services) ? l.services : [];
+    if (fits.length) h += '<h2>Service fit — a hypothesis, not a qualification</h2>' +
+      fits.map(fitHtml).join('');
+
+    return h;
+  }
+
+  function overview() {
+    var models = (data && Array.isArray(data.models)) ? data.models : [];
+    var chains = (data && data.chains) || {};
+    var h = '<div class="msg"><h3>Pick a lead</h3><p>Every lead, its score and how the ' +
+      'assessment moved it, the argument the three agents had, the clause that came out, ' +
+      'and the email it would go in. Nothing here has been sent: both approval gates are ' +
+      'human and both are before sending.</p></div><div style="padding:0 28px">';
+    if (models.length) {
+      h += '<h2>Model budget — today, Pacific</h2><div class="scroller"><table>' +
+        '<thead><tr><th>model</th><th>calls</th><th>ceiling reached</th></tr></thead><tbody>' +
+        models.map(function (m) {
+          return '<tr><td>' + esc(m.model) + '</td><td>' + num(m.used) + '</td><td>' +
+            (m.exhausted ? esc(m.observed_rpd == null ? 'yes' : m.observed_rpd) : '—') +
+            '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    var roles = Object.keys(chains);
+    if (roles.length) {
+      h += '<h2>Fallback chain</h2><div class="scroller"><table><tbody>' +
+        roles.map(function (r) {
+          return '<tr><td class="role">' + esc(r) + '</td><td>' +
+            (chains[r] || []).map(esc).join('  →  ') + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    return h + '</div>';
+  }
+
+  function renderDetail() {
+    var l = null;
+    leads().forEach(function (x) { if (x.id === selected) l = x; });
+    if (!l) { $('detail').innerHTML = overview(); return; }
+
+    $('detail').innerHTML = detailHtml(l);
+
+    var back = $('back');
+    if (back) back.addEventListener('click', function () {
+      document.body.dataset.view = 'list'; selected = null; renderList(); renderDetail();
+    });
+
+    function copier(btnId, saidId, text) {
+      var btn = $(btnId);
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        var said = $(saidId);
+        var blocked = function () { said.textContent = 'blocked — select and copy'; };
+        try {
+          navigator.clipboard.writeText(text).then(
+            function () { said.textContent = 'copied'; }, blocked);
+        } catch (e) { blocked(); }
+      });
+    }
+    if (l.clause) copier('copy', 'copied', l.clause);
+    copier('copymail', 'mailsaid', emailFor(l).html);
+
+    var src = $('src');
+    if (src) src.addEventListener('click', function () {
+      showSource = !showSource; renderDetail();
+    });
+  }
+
+  function renderAll() { renderCounts(); renderFilters(); renderList(); renderDetail(); }
+
+  function choose(id) {
+    selected = id;
+    document.body.dataset.view = 'detail';
+    renderList(); renderDetail();
+    $('detail').scrollTop = 0;
+  }
+
+  /* ---------------------------------------------------------------
+     Events. Filters and selection survive every refresh: a page that
+     resets what you were reading every thirty seconds is unusable.
+     --------------------------------------------------------------- */
+  $('states').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-state]');
+    if (!b) return;
+    f.state = b.dataset.state; renderFilters(); renderList();
+  });
+  ['service', 'sector', 'credit', 'presence'].forEach(function (k) {
+    $(k).addEventListener('change', function () { f[k] = this.value; renderList(); });
+  });
+  var typing = null;
+  $('q').addEventListener('input', function () {
+    var v = this.value;
+    clearTimeout(typing);
+    typing = setTimeout(function () { f.q = v; renderList(); }, 140);
+  });
+  $('reset').addEventListener('click', function () {
+    f.state = 'all'; f.service = ''; f.sector = ''; f.credit = ''; f.presence = ''; f.q = '';
+    $('q').value = ''; renderFilters(); renderList();
+  });
+  $('list').addEventListener('click', function (e) {
+    var r = e.target.closest('.row');
+    if (r) choose(r.dataset.id);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.target.matches('input, select, textarea')) return;
+    var down = e.key === 'j' || e.key === 'ArrowDown';
+    var up = e.key === 'k' || e.key === 'ArrowUp';
+    if (!down && !up) return;
+    var v = visible();
+    if (!v.length) return;
+    var i = -1;
+    v.forEach(function (x, n) { if (x.id === selected) i = n; });
+    e.preventDefault();
+    choose(v[down ? Math.min(v.length - 1, i + 1) : Math.max(0, i < 0 ? 0 : i - 1)].id);
+    var el = $('list').querySelector('[aria-current="true"]');
+    if (el) el.scrollIntoView({ block: 'nearest' });
+  });
+
+  /* ---------------------------------------------------------------
+     Failure states. Each code gets the fix that actually applies to
+     it; and when the answer is unreadable the page PRINTS it rather
+     than describing it, because a paraphrased error is how a morning
+     gets lost.
+     --------------------------------------------------------------- */
+  /* One reading per error code, per the capability's own doctrine: a
+     single "something went wrong" hides the one action that would fix
+     the page. This is the one-line form used by writes in the run
+     panel; problem() below is the same set of readings at full length,
+     for when the whole page has no data to show. */
+  function mcpWhy(e) {
+    var c = (e && e.code) || '';
+    if (c === 'server_not_connected') return 'Supabase is not connected — add it in claude.ai Settings → Connectors';
+    if (c === 'needs_reauth') return 'Supabase needs reconnecting in claude.ai Settings → Connectors';
+    if (c === 'selection_required') return 'more than one Supabase connector — choose one when asked, then reload';
+    if (c === 'not_in_manifest' || c === 'consent_required') return 'this page was not allowed to call Supabase';
+    if (c === 'blocked_by_policy' || c === 'approval_required') return 'blocked by your organisation’s policy';
+    if (c === 'not_granted' || c === 'capability_disabled' || c === 'capability_removed')
+      return 'live data is not available in this view — open the artifact on claude.ai';
+    if (c === 'tool_error') return 'the database refused it: ' + ((e && e.message) || 'no reason given');
+    if (c === 'server_unavailable') return 'Supabase did not answer — try once more';
+    if (c === 'cancelled') return 'cancelled — it may or may not have run, so check before repeating it';
+    return (e && e.message) || 'could not reach Supabase';
+  }
+
+  var MCP = null;
+
+  /* Writes. Never cached, and the dashboard read is invalidated
+     afterwards so the panel and the list both show what is now true
+     rather than what was cached a moment ago. */
+  function mcpCall(sql, cb) {
+    if (!MCP) { cb('live data is not available in this view'); return; }
+    MCP.callTool(SERVER, TOOL, { project_id: PROJECT, query: sql }, { cache: false })
+      .then(function (res) {
+        cb(null, rows(res && res.payload) || []);
+        return MCP.invalidate(SERVER, TOOL).catch(function () {});
+      })
+      .catch(function (e) { cb(mcpWhy(e)); });
+  }
+
+  function problem(code, message) {
+    $('dot').className = 'dot down';
+    $('stamp').textContent = 'no data';
+    var head = 'Cannot read the pipeline', note = esc(message || '');
+    if (code === 'server_not_connected') {
+      head = 'Supabase is not connected for this viewer';
+      note = 'Add the Supabase connector in claude.ai Settings → Connectors, then reload.';
+    } else if (code === 'needs_reauth') {
+      head = 'Supabase needs reconnecting';
+      note = 'Reconnect Supabase in claude.ai Settings → Connectors, then reload.';
+    } else if (code === 'selection_required') {
+      head = 'More than one Supabase connector';
+      note = 'Choose which one this page should use when claude.ai asks, then reload.';
+    } else if (code === 'not_in_manifest' || code === 'consent_required') {
+      head = 'This page was not allowed to read Supabase';
+      note = 'It needs the connector to show anything. Reload and allow it when asked.';
+    } else if (code === 'blocked_by_policy' || code === 'approval_required') {
+      head = 'Blocked by policy';
+      note = 'Your organisation does not allow this page to call Supabase.';
+    } else if (code === 'not_granted' || code === 'capability_disabled' ||
+               code === 'capability_removed') {
+      head = 'Live data is not available in this view';
+      note = 'Open the artifact on claude.ai to read the pipeline.';
+    }
+    $('detail').innerHTML = '<div class="msg"><h3>' + esc(head) + '</h3><p>' + note +
+      (code ? ' <code>' + esc(code) + '</code>' : '') + '</p></div>';
+    document.body.dataset.view = 'detail';
+  }
+
+  function unreadable() {
+    $('dot').className = 'dot down';
+    $('stamp').textContent = 'unreadable';
+    var peek = lastRaw == null ? '(nothing)' : String(lastRaw).slice(0, 400);
+    $('detail').innerHTML = '<div class="msg">' +
+      '<h3>The query answered, but not in a shape this page reads</h3>' +
+      '<p>Supabase is connected and the call went through. This is the first 400 ' +
+      'characters of what came back:</p><pre class="raw">' + esc(peek) + '</pre></div>';
+    document.body.dataset.view = 'detail';
+  }
+
+  $('runbtn').addEventListener('click', function () {
+    runOpen = !runOpen;
+    if (runOpen && !draft) startDraft();
+    renderRun();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('scrim').hidden) closeDialog();
+  });
+
+  claude.use('mcp').then(function (mcp) {
+    if (!mcp) { problem('not_granted'); return; }
+    MCP = mcp;
+    var good = false;
+    mcp.watchTool(SERVER, TOOL, { project_id: PROJECT, query: SQL }, function (ev) {
+      if (ev.type === 'error') {
+        var c = ev.error && ev.error.code;
+        if (good && AUTHZ.indexOf(c) === -1) {
+          $('dot').className = 'dot stale';
+          $('stamp').textContent = 'stale';
+          return;
+        }
+        problem(c, ev.error && ev.error.message);
+        return;
+      }
+      var d = dashboardOf(rows(ev.result && ev.result.payload));
+      if (!d) { if (!good) unreadable(); return; }
+      data = d;
+      good = true;
+      renderAll();
+      if (runOpen) renderRun();
+      var when = ev.result.cache ? new Date(ev.result.cache.storedAt) : new Date();
+      $('stamp').textContent = when.toLocaleTimeString('en-GB',
+        { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      $('dot').className = 'dot';
+    }, { refetchInterval: 30000, cache: { staleTime: 15000 } });
+  });
+})();
+</script>

@@ -329,7 +329,7 @@ marked default.
 
 | Filter | Works how |
 |---|---|
-| **Location** | `postcode_district`, derived off the end of the address. NG7, B49. `scoring-model.md` §5.1 already decides territory by district rather than town name, and this is the same handle |
+| **Location** | `sales_leads.town`. Nottingham, Alcester, Newark |
 | **Sector** | The triage's classification, known when the lead lands |
 | **Service** | The **capability** — see the caveat below |
 | **Minimum score** | A floor on `lead_score` |
@@ -338,6 +338,29 @@ marked default.
 with all four empty is the whole list, which is what the pipeline did before
 targets existed — and that is what the seeded `Everything` target is, so applying
 the migration changed nothing.
+
+### Location is a town, because that is what a person filters by
+
+It was the postcode district first, because that is what falls out of the address
+string most cleanly, and because `scoring-model.md` §5.1 decides *territory* by
+district for a good reason: matching "Beeston" against free text will match an
+address in Leeds.
+
+That reason does not carry over. Territory classification runs offline against
+every company in the country; this filter runs against 148 leads that are already
+in the list, and nobody asked to run outreach on NG7 — they asked to run it on
+Nottingham. Two different jobs, two different handles.
+
+`lead_town(text)` derives it: strip the postcode, strip the county, take what is
+left after the last comma, and fall back one comma when that turns out to be a
+street or a unit rather than a place. It is right for almost all of them and
+wrong for a few, because a free-text address is not a structured one — "Market
+Place, NG17 1AQ" contains no town at all.
+
+So `town` is a **plain, editable column filled by a trigger on insert**, not a
+generated one. A generated column would re-derive the same mistake on every write
+and refuse to be corrected. Derive what can be derived, then let a person fix the
+rest; a corrected town survives every later write.
 
 ### The capability filter cannot work the obvious way
 
@@ -350,14 +373,40 @@ specialist's leads and useless for aiming a first pass at one — which is the
 honest behaviour, and the CRM says so on the panel rather than leaving it to be
 discovered.
 
+### Saving a target is not starting it
+
+These were one tickbox, and that was wrong. "This is the target the cron uses"
+and "start running now" are different decisions, and a tickbox that did both
+meant every edit to a filter was also a press of the start button.
+
+So starting is its own verb:
+
+- `outreach_start_run(target)` makes that target the default. It **refuses a
+  target with nothing queued** — starting a run with no work is not a run, it is
+  a silent no-op, and a silent no-op looks exactly like a broken cron.
+- `outreach_stop_run()` clears the default and names what it stopped.
+- `outreach_save_target(...)` carries whatever run state the target already had.
+  It never starts anything and never stops what is already going.
+
+**Nothing runs by default.** A target is running because somebody pressed Run on
+it, never because it was the last thing edited.
+
 ### The off switch is an empty batch, not a stopped schedule
 
-Untick **default run** and `outreach_next_batch` returns nothing. The schedule
-keeps ticking and does nothing.
+With no default target, `outreach_next_batch` returns nothing. The schedule keeps
+ticking and does nothing.
 
 That is deliberately not `cron.alter_job`. An empty batch cannot leave a lead
 half-processed, and a schedule that never stopped is a schedule nobody has to
 remember to restart.
+
+### The count reacts before you commit to it
+
+The CRM counts the reach of the filters **as they are on screen**, from the leads
+it has already loaded, re-running the same four tests `outreach_target_reach`
+makes. A filter whose effect you cannot see until after you save is a filter you
+are guessing at. The database stays the authority: saving re-counts server-side
+and that number replaces the local one.
 
 ---
 
