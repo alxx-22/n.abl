@@ -408,6 +408,35 @@ makes. A filter whose effect you cannot see until after you save is a filter you
 are guessing at. The database stays the authority: saving re-counts server-side
 and that number replaces the local one.
 
+### Which project a model is called with
+
+Gemini's free-tier quota is per project, and per model within it. On 16
+September, before eleven in the morning, four of the five registered models were
+exhausted on the single key and the pipeline stopped with 97 leads queued. A
+second project is a second pool.
+
+`outreach_model.key_secret` names the environment variable holding that row's
+key, so which project a role uses is a row and not a branch — adding a third is
+an INSERT and a secret, not a deploy. `outreach_model_usage` is keyed
+`(usage_day, model, key_secret)`, because otherwise the same model on a second
+key would spend the first key's recorded budget and the second pool would be
+invisible.
+
+Two guards, one in each layer, because a registry row that could name any
+environment variable could name `SUPABASE_SERVICE_ROLE_KEY`:
+
+- a check constraint, `key_secret ~ '^GEMINI_[A-Z0-9_]*$'`
+- the same test in the edge function, which reads env through one accessor and
+  nowhere else
+
+The value never enters the database. `outreach_config()` hands over the **name**;
+the function looks it up. A model whose secret is not set is skipped with a
+reason, not fatal — registering a role against a project whose key nobody has
+added yet should cost that role its turn in the chain, not the whole run.
+
+`business/10-lead-sourcing/ai-discovery.md` is what the second key is for, and
+why the obvious way to use it is ruled out.
+
 ---
 
 ## 8. The send switch

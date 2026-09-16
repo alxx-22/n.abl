@@ -486,7 +486,8 @@
 "  'status', (select to_jsonb(s) from public.outreach_status s),",
 "  'models', (select jsonb_agg(jsonb_build_object(",
 "               'model', u.model, 'used', u.used, 'exhausted', u.exhausted,",
-"               'observed_rpd', u.observed_rpd) order by u.used desc)",
+"               'observed_rpd', u.observed_rpd, 'key_secret', u.key_secret)",
+"               order by u.used desc)",
 "             from public.outreach_model_usage u",
 "             where u.usage_day = public.outreach_quota_day()),",
 "  'targets', (select jsonb_agg(jsonb_build_object(",
@@ -1423,9 +1424,17 @@
       'human and both are before sending.</p></div><div style="padding:0 28px">';
     if (models.length) {
       h += '<h2>Model budget — today, Pacific</h2><div class="scroller"><table>' +
-        '<thead><tr><th>model</th><th>calls</th><th>ceiling reached</th></tr></thead><tbody>' +
+        '<thead><tr><th>model</th><th>pool</th><th>calls</th>' +
+        '<th>ceiling reached</th></tr></thead><tbody>' +
         models.map(function (m) {
-          return '<tr><td>' + esc(m.model) + '</td><td>' + num(m.used) + '</td><td>' +
+          /* The quota is per project and per model within it, so the
+             same model on a second key is a second pool. Naming the
+             secret rather than the project because that is the only
+             handle this side has - and it is a name, never a key. */
+          return '<tr><td>' + esc(m.model) + '</td><td>' +
+            esc(String(m.key_secret || 'GEMINI_API_KEY')
+                  .replace(/^GEMINI_/, '').replace(/_?API_KEY$/, '').toLowerCase() || 'main') +
+            '</td><td>' + num(m.used) + '</td><td>' +
             (m.exhausted ? esc(m.observed_rpd == null ? 'yes' : m.observed_rpd) : '—') +
             '</td></tr>';
         }).join('') + '</tbody></table></div>';

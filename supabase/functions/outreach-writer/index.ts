@@ -92,13 +92,40 @@ import {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY') ?? ''
 const GEMINI_BASE = Deno.env.get('GEMINI_BASE_URL') ??
   'https://generativelanguage.googleapis.com'
 
+/* WHICH KEY A MODEL IS CALLED WITH
+   -------------------------------
+   Gemini's free-tier quota is per project and per model within it, so a
+   second project is a second daily pool of the same model. Which project
+   a role uses is a registry decision - outreach_model.key_secret names
+   the environment variable - and not a branch in here, so adding a third
+   is a row and a secret rather than a deploy.
+
+   The registry names the secret. This decides whether it may be read.
+   A row that could name any environment variable could name
+   SUPABASE_SERVICE_ROLE_KEY, so the name is tested against the same
+   shape the check constraint enforces, and read from nowhere else. The
+   schema says it and the code says it: a prompt rule is a request, a
+   guard is a rule. */
+const KEY_SECRET = /^GEMINI_[A-Z0-9_]*$/
+const DEFAULT_KEY_SECRET = 'GEMINI_API_KEY'
+
+function keyFor(name: string | null | undefined): string {
+  const secret = name || DEFAULT_KEY_SECRET
+  if (!KEY_SECRET.test(secret)) return ''
+  return Deno.env.get(secret) ?? ''
+}
+
+const GEMINI_KEY = keyFor(DEFAULT_KEY_SECRET)
+
 type Cfg = {
   vocabulary: Record<string, unknown[]>
-  models: Record<string, { model: string; rpd: number; gap_ms: number; temperature: number | null }[]>
+  models: Record<string, {
+    model: string; rpd: number; gap_ms: number
+    temperature: number | null; key_secret?: string | null
+  }[]>
   fact_rules: Record<string, unknown>[]
   page_signals: { key: string; pattern: string; flags: string; description: string }[]
   dimensions: { dimension: string; heading: string }[]
@@ -141,7 +168,20 @@ async function ask(
 
   let last = ''
   for (const spec of chain) {
-    const budget = await rpc('outreach_model_budget', { p_model: spec.model })
+    /* A model whose key is not set is skipped, not fatal. Registering a
+       role against a project whose secret has not been added yet should
+       cost that role its turn in the chain, not the whole run. */
+    const secret = spec.key_secret || DEFAULT_KEY_SECRET
+    const key = keyFor(secret)
+    if (!key) {
+      last = KEY_SECRET.test(secret)
+        ? `${spec.model}: ${secret} is not set`
+        : `${spec.model}: ${secret} is not a name this function may read`
+      continue
+    }
+
+    const budget = await rpc('outreach_model_budget',
+      { p_model: spec.model, p_key_secret: secret })
     if (!budget || budget <= 0) { last = `${spec.model}: no budget left today`; continue }
 
     const wait = lastCallAt + (spec.gap_ms ?? 4000) - Date.now()
@@ -152,7 +192,7 @@ async function ask(
     try {
       res = await fetch(`${GEMINI_BASE}/v1beta/models/${spec.model}:generateContent`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-goog-api-key': GEMINI_KEY },
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: system }] },
           contents: [{ role: 'user', parts: [{ text: user }] }],
@@ -178,6 +218,7 @@ async function ask(
       p_model: spec.model,
       p_rate_limited: scope === 'day',
       p_minute_limited: scope === 'minute',
+      p_key_secret: secret,
     })
 
     if (res.status === 429) {
@@ -187,7 +228,7 @@ async function ask(
     if (res.status === 404) { last = `${spec.model}: not available`; continue }
     if (res.status === 400) {
       const body = await res.text()
-      if (/API key not valid/i.test(body)) throw new Error('GEMINI_API_KEY is set but not valid')
+      if (/API key not valid/i.test(body)) throw new Error(`${secret} is set but not valid`)
       last = `${spec.model}: bad request`
       continue
     }
