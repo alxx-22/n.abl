@@ -223,7 +223,21 @@ Return only JSON:
 
 must_not_imply IS A WARNING, NOT A TOPIC
 
-Whatever you put there, the writer is told to avoid it - not to address it and not to deny it. So write it as the misreading itself ("that their system is amateur"), never as an instruction to reassure them about it. Denying an accusation nobody made is how you plant it.$prompt$, 0.4,
+Whatever you put there, the writer is told to avoid it - not to address it and not to deny it. So write it as the misreading itself ("that their system is amateur"), never as an instruction to reassure them about it. Denying an accusation nobody made is how you plant it.
+
+THE RECOGNITION IS NOT A SCENE YOU INVENT
+
+Write a moment that FOLLOWS from the observation. Not one you furnished.
+
+  observation: a two-person team, both out at viewings
+  fine:        enquiries wait until one of them is back at a desk
+  NOT fine:    taking tenant calls on a hands-free kit while turning into a gravel driveway
+
+Nobody told you about the hands-free kit or the driveway. They are invented, and the person reading it knows their own driveway. One invented detail turns a letter that understood them into a letter that guessed about them, and it is the kind of guess they notice before anything else.
+
+So: no equipment, no rooms, no vehicles, no weather, no days of the week, no times of day, unless the observation itself implies them. "The Monday after a weekend of enquiries" is fair when the promise is a twenty-four-hour turnaround, because the weekend follows from the promise. A gravel driveway follows from nothing.
+
+Ask of every detail: could I point at the thing that told me this? If not, cut it.$prompt$, 0.4,
    'The step between choosing a true thing and phrasing it: what it MEANS for that business. Source of truth is sales-language.md 2-4 and 6 - edit both in the same sitting.')
 on conflict (key) do update set body = excluded.body, temperature = excluded.temperature, note = excluded.note;
 
@@ -328,7 +342,13 @@ Denying an accusation nobody made is how you plant it. Write so it does not aris
 
 AND DO NOT SAY THE SAME THING TWICE
 
-The observation goes in once, word for word. Do not restate its ending in your own words a few clauses later - "before the banking window closes ... before the banking window closes" is one thought written twice and it reads like a machine.$prompt$, 0.7,
+The observation goes in once, word for word. Do not restate its ending in your own words a few clauses later - "before the banking window closes ... before the banking window closes" is one thought written twice and it reads like a machine.
+
+DO NOT FURNISH THE SCENE
+
+You are given a moment they would recognise. Use it as given. Do not add detail to make it vivid - no equipment, no rooms, no vehicles, no weather, no days of the week, no times of day that you were not given. A letter that invents one small detail about their life has told them it is guessing, and that is the thing they notice first.
+
+And do not tell them what their own work is worth. No "higher-value tasks", no "more strategic work", no "what you should be focusing on". You do not know, and ranking their work for them is the tone this letter exists to avoid.$prompt$, 0.7,
    'The whole first-contact body, written per business. The header and footer are not here because PECR reg. 23 and Art. 14 fix them; everything a person reads as a message is this.')
 on conflict (key) do update set body = excluded.body, temperature = excluded.temperature, note = excluded.note;
 

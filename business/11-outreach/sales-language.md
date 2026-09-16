@@ -62,6 +62,31 @@ Applied to the accountants:
 The working version says nothing the weak one did not, and it is a different
 message, because it names a moment they have lived through.
 
+### The recognition has to follow, not be furnished
+
+The moment they would recognise is the payload of §2, and it has a failure mode
+of its own that only appeared once real letters existed:
+
+> Operating as a two-person team means that when you are both out at separate
+> viewings, client enquiries have to wait until you are back behind a desk.
+> **That leaves you taking tenant calls on a hands-free kit while turning into a
+> gravel driveway.**
+
+The first sentence follows from the observation. The second is fiction — nobody
+supplied a hands-free kit or a driveway, and the recipient knows their own
+driveway. It is the mirror image of the hedge: instead of admitting an inference,
+it asserts an invention.
+
+The test is the same one the numbers already get from a code guard: **could you
+point at the thing that told you this?** "The Monday after a weekend of enquiries"
+passes when the promise is a twenty-four-hour turnaround, because the weekend
+follows from the promise. A driveway follows from nothing.
+
+Prose cannot be checked in code the way a digit can, so this lives in the
+strategist's and the writer's prompts, and the CRM flags scene words that appear
+in a letter but not in the observation it was built on — a prompt for the person
+at the gate, not a rejection.
+
 ### The "so what" test, run twice
 
 Write the sentence. Ask "so what?" If there is an answer, the sentence is not
