@@ -247,6 +247,24 @@ held to these, and the ones that can be checked in code are checked in code.
 
 ---
 
+### Two more, found on 16 September
+
+**Their own address, read back to them.** Harry's Home Improvements got a letter
+opening *"When someone walks into 8 Market Place asking about a specific
+composite door style…"*. It came off their own page, so every guard passed. It
+still reads as a mail merge, because a street number proves only that we can
+read. Their address is never the observation, however it was obtained.
+
+**A clause that opens a subordinate clause and never lands.** The writer prompt
+already forbade a clause that *ends* unfinished — "which", "and", "so". The
+mirror image was not covered: one that *starts* with "when" or "after" and never
+reaches a main clause. Capitalised and given a full stop by the letter writer, it
+becomes a sentence with no verb phrase, and a fragment in the first line is the
+first thing a reader notices. The test is one line: read it back with a capital
+on the front and a full stop on the end, and see whether that is a sentence.
+
+---
+
 ## 7. How sector and capability change the hook
 
 This is what the strategist has that the writer does not: it knows which of the
@@ -331,6 +349,29 @@ the lead happened to be a firm of accountants. An example that could plausibly
 fit a real lead will eventually be used as a template rather than read as a
 shape. Both prompts now say so, and the example was changed to something the
 Nottingham list will not produce.
+
+**A rule in this file and in the wrong prompt is a rule that is not running.**
+This has now happened three times and the shape is always the same. §4 forbade
+dating their technology, the rule went into no prompt, and a letter opened on a
+2018 copyright date. "Do not furnish the scene" went into the strategist and the
+letter at 08:50 on 16 September and not into the **writer** — so the writer kept
+doing it, and FHP Living's clause had maintenance queries absorbed "into the same
+afternoon" with no afternoon anywhere in the evidence. The check is mechanical
+and takes a minute:
+
+```sql
+select key, (body ~* 'DO NOT FURNISH THE SCENE') from public.outreach_prompt;
+```
+
+**Worse: a prompt can teach the thing its guard refuses.** The writer's first
+GOOD example read *"noticed you take bookings through a form that emails you,
+which usually means somebody is typing them into a diary afterwards"*. Both
+"noticed you" and "usually" are things the model is refused for — and
+`clause hedges, which admits the claim was not observed` is the **single most
+common reason a lead is given up**, three of fourteen. The model was doing
+exactly what it was shown. An example is not illustration, it is instruction, so
+every example has to pass the same guards the output does. Worth running the
+banned list over the prompts themselves, not only over what they produce.
 
 **The examples in §8 are in my voice, not Alex's.** That is the one part of this
 that cannot be delegated, it is an `UPDATE` rather than a release, and it is
