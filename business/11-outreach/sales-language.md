@@ -339,7 +339,104 @@ still true.
 
 ---
 
-## 10. Sources
+## 10. What the practitioners say, and where we have to depart from them
+
+Second pass, 16 September, against founder- and operator-led sources rather than
+outreach-tool content marketing. Three things land straight, one has to be
+adapted, and one we reject on positioning grounds.
+
+### Name the problem, not the business
+
+The complaint that started this file was a sentence that described what a
+business *does*. There is a number on how badly that performs: Gong's corpus
+puts **problem language at a 16% success rate against 5.5% for buzzwords** —
+about three to one. The advice that follows from it, from 30MPC, is blunter than
+anything in §3: *"People act on problems more than benefits."*
+
+So the test is not "is this specific to them" — a description can be perfectly
+specific and still say nothing. The test is **does this name something that goes
+wrong.** "You run a roster of independent experts" is specific, accurate, and
+not a hook. "Matching a brief to the right expert means somebody reads six
+profiles before answering" is the same fact with the problem in it.
+
+### The ratio is wrong in our letter
+
+30MPC: *"If you spend 80% of the time on the problem, you barely have to explain
+the solution."*
+
+Our letter currently spends one paragraph on the observation and two on
+ourselves — who Alex is, and what the fix might look like. That is roughly
+inverted. The fix is not to pad the observation but to cut our half: the
+introduction is one sentence, not two, and it comes after the problem has
+landed.
+
+### Ban the buzzwords by name
+
+30MPC names them: *"single source of truth"*, *"all-in-one platform"*, *"leading
+provider"*. Ours would be *"streamline"*, *"seamless"*, *"solution"*,
+*"leverage"*, *"digital transformation"*, *"efficiency gains"*. Every one is a
+word that survives find-and-replace across every business in the batch, which is
+the §3 test failing in a different costume.
+
+### Where we depart: the vivid scene
+
+This is the one that matters, and it contradicts §4 of this file, so it is worth
+being precise rather than picking a side.
+
+30MPC tells sellers to paint a **triggering scene**: *"I should be able to
+visualize the problem... and it should be damn triggering."* Who, where, the
+challenge, the emotion. That is the opposite of the rule added on 16 September
+after a letter invented a hands-free kit and a gravel driveway.
+
+Both are right, for different businesses. **Their sellers have earned the
+scene.** An enterprise rep has run the same discovery call with the same persona
+fifty times; when they describe the Tuesday the data team gets asked for a
+number nobody can produce, they are reporting, not imagining. The vividness is
+downstream of evidence they actually hold.
+
+We hold one homepage and no conversations. Identical words, completely different
+epistemic position — and the recipient can tell, because it is *their* Tuesday
+and they know whether we got it right.
+
+**So: as vivid as the observation licenses, and not one detail further.** Which
+puts the weight back on the observation. If the scene is thin, the answer is a
+better-observed fact, never a better-imagined one. That is a harder discipline
+than 30MPC's and it is the correct one for a first contact from a stranger with
+no proof.
+
+### Where we depart: the free diagnosis
+
+Blair Enns, *The Win Without Pitching Manifesto*: the pitch is *"the attempt to
+sell or win approval for one's idea by giving them away for free"*, and
+**expertise alone is what gives you a position of power** over a prospective
+client.
+
+By that standard our third paragraph — *"For you, that could mean an automation
+that matches the incoming brief against specialist records"* — is a small free
+pitch. Enns would cut it: naming the fix before they have engaged spends the
+only leverage an expert has.
+
+We keep it, deliberately, and the reason is `17-proof-and-case-studies` being
+empty. Enns's position assumes proof exists; *"the more proof we have the less we
+need to pitch"* is his own formulation. With none, a letter that names a problem
+and offers a meeting without any indication of what we would do is asking for
+thirty minutes on trust we have not earned.
+
+So the sentence stays, and it stays **one sentence, a direction, never a plan**.
+It is a stated exception rather than an oversight, and it should be revisited the
+moment there is a case study — at which point cutting it makes us stronger, not
+weaker.
+
+### What we were already doing right
+
+30MPC's *"sell the test drive, not the product"* is the half hour, free, with an
+honest answer if it is not worth doing. That was arrived at from the JOLT
+research in §5 and it is the same conclusion from a different direction, which
+is the most reassuring kind of agreement.
+
+---
+
+## 11. Sources
 
 Practitioner and research material reviewed 15 September 2026. Listed so the
 claims in §5 can be checked rather than taken on trust.
@@ -366,6 +463,20 @@ claims in §5 can be checked rather than taken on trust.
 - SME buyer psychology — the identity rule in §4:
   [kevinharrington.com](https://www.kevinharrington.com/2023/07/solving-pains-and-gaining-trust-the-nuances-of-the-sme-sales-process/),
   [smartsimplemarketing](https://smartsimplemarketing.com/selling-to-small-businesses/)
+
+Second pass, 16 September, practitioner and operator sources:
+
+- Armand Farrokh and Nick Cegelski, *30 Minutes to President's Club* / *Cold
+  Calling Sucks (And That's Why It Works)* — the problem proposition, the
+  triggering scene, the buzzword list, sell the test drive:
+  [the framework](https://www.30mpc.com/newsletter/the-ultimate-30mpc-cold-calling-framework),
+  [the pitch](https://www.30mpc.com/newsletter/how-to-build-the-perfect-cold-call-pitch)
+- Gong's corpus on problem language versus buzzwords (16% against 5.5%), via the
+  same
+- Blair Enns, *The Win Without Pitching Manifesto* — expertise as the position of
+  power, the pitch as giving your thinking away:
+  [summary](https://www.blinkist.com/en/books/the-win-without-pitching-manifesto-en),
+  [Goodreads](https://www.goodreads.com/en/book/show/8576838-the-win-without-pitching-manifesto)
 
 **On the sources.** Most of the cold-outreach material online is content
 marketing for outreach tooling, and its numbers are unaudited. The two book

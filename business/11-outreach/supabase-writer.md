@@ -322,7 +322,76 @@ the only honest test of a prompt change is the same lead before and after.
 
 ---
 
-## 7. Turning it off
+## 7. Who the run is for
+
+A run has a **target** — a row in `outreach_target` — and the cron uses the one
+marked default.
+
+| Filter | Works how |
+|---|---|
+| **Location** | `postcode_district`, derived off the end of the address. NG7, B49. `scoring-model.md` §5.1 already decides territory by district rather than town name, and this is the same handle |
+| **Sector** | The triage's classification, known when the lead lands |
+| **Service** | The **capability** — see the caveat below |
+| **Minimum score** | A floor on `lead_score` |
+
+**An empty list means no filter on that column**, never "match nothing". A target
+with all four empty is the whole list, which is what the pipeline did before
+targets existed — and that is what the seeded `Everything` target is, so applying
+the migration changed nothing.
+
+### The capability filter cannot work the obvious way
+
+Capability is what the run **discovers**. A lead nobody has assessed has no
+capability yet, so filtering it out would guarantee it never got one.
+
+So the rule is: a lead that has been assessed must match, and a lead that has not
+been assessed passes anyway. That makes the filter useful for *re-running* a
+specialist's leads and useless for aiming a first pass at one — which is the
+honest behaviour, and the CRM says so on the panel rather than leaving it to be
+discovered.
+
+### The off switch is an empty batch, not a stopped schedule
+
+Untick **default run** and `outreach_next_batch` returns nothing. The schedule
+keeps ticking and does nothing.
+
+That is deliberately not `cron.alter_job`. An empty batch cannot leave a lead
+half-processed, and a schedule that never stopped is a schedule nobody has to
+remember to restart.
+
+---
+
+## 8. The send switch
+
+**Nothing sends today, and the switch says why.**
+
+`outreach_send_blockers()` returns what is actually in the way. As of 16
+September that is four things, all true:
+
+1. **No postal address.** PECR reg. 23 requires a real one; the letter renders
+   `[trading address]`.
+2. **No mail transport.** Nothing in this project can send an email.
+3. **149 leads are `do_not_contact`** — `promote.mjs`'s default. Lifting it is a
+   decision per business, not something a switch may override.
+4. **No letter has been approved.** Gate 2 has never been used.
+
+Arming is deliberately awkward: the target's name has to be typed back exactly,
+and the database checks it again regardless of what the CRM did. Disarming asks
+for nothing, because stopping should always be easier than starting. Saving a
+target always disarms it — changing who a run is for is exactly the moment an
+armed switch becomes dangerous.
+
+The switch exists now, blocked and with the reasons written down, rather than
+not existing and being added in a hurry on the day somebody wants to send.
+
+### Gate 2 has a column now
+
+`lead_letter.approved_at` / `approved_by`. A person reads the letter and sets it.
+No pipeline writes it, and the blocker list counts it.
+
+---
+
+## 9. Turning it off
 
 ```sql
 select cron.unschedule('outreach-writer');
