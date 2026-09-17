@@ -394,8 +394,24 @@
   align-self: end;
 }
 
+/* The ribbon ran off the side of the screen between 721px and about
+   1000px: it only wrapped at 720, and above that the views, the search
+   field, "+ Lead" and "Team" do not fit on one row. Measured by
+   scripts/check-crm-usability.mjs at 128px past the edge on iPad
+   portrait and 76px on an iPad Air — a sideways scrollbar on the two
+   commonest tablet widths, which nothing had looked at because the e2e
+   suite runs at 1500x1000.
+
+   Wrapping and hiding were one rule and are now two. Wrap as soon as
+   the row is full; only drop the Team link on an actual phone, where
+   the whole right-hand group takes a line of its own. */
+@media (max-width: 1000px) {
+  .crm-ribbon { flex-wrap: wrap; gap: var(--s-3); }
+  .crm-ribbon__right { margin-left: auto; }
+}
+
 @media (max-width: 720px) {
-  .crm-ribbon { flex-wrap: wrap; gap: var(--s-3); padding: var(--s-3) var(--s-4); }
+  .crm-ribbon { padding: var(--s-3) var(--s-4); }
   .crm-ribbon__right { width: 100%; margin-left: 0; }
   .crm-ribbon__search { flex: 1; width: auto; max-width: none; }
   .crm-ribbon__team { display: none; }
@@ -615,7 +631,17 @@
   border-top: 1px solid var(--line-faint);
   padding-top: var(--s-4);
 }
-.ol-switch input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent-400); flex: none; }
+/* 24px, not 16. WCAG 2.2 SC 2.5.8 Target Size (Minimum) sets 24x24 as
+   the floor and this control qualifies for none of its exceptions — and
+   of everything on the page, the one that turns real outreach on is the
+   worst possible thing to make hard to hit deliberately and easy to hit
+   by accident. */
+.ol-switch input {
+  margin-top: 1px;
+  width: 24px; height: 24px;
+  accent-color: var(--accent-400);
+  flex: none;
+}
 .ol-switch label { font-size: var(--t-sm); color: var(--danger); }
 .ol-switch label span {
   display: block;
@@ -632,7 +658,7 @@
 .ol-warn {
   position: relative;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 21px; height: 21px; flex: none;
+  width: 24px; height: 24px; flex: none;   /* SC 2.5.8 again: it is a role=button */
   border-radius: 999px;
   border: 1px solid var(--danger);
   background: var(--danger-soft);
