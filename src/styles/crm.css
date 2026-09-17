@@ -773,3 +773,79 @@
   border-top: 1px solid var(--line-faint);
   padding: var(--s-2) var(--s-3) var(--s-2) 0;
 }
+
+/* ============================================================
+   LEAD GEN — the placeholder
+
+   Reads as a status board, not as a disabled feature. Prefixed .lg-
+   for the same reason the argument log is prefixed .ol-: these share a
+   page with the hand-entered CRM and nothing else.
+   ============================================================ */
+
+.lg { display: grid; gap: var(--s-5); padding-top: var(--s-5); max-width: var(--maxw-prose); }
+.lg-head h2 {
+  margin: 0 0 var(--s-2);
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  color: var(--cream-100);
+  letter-spacing: var(--track-tight);
+}
+.lg-head p { margin: 0; color: var(--cream-400); font-size: var(--t-sm); line-height: 1.7; }
+
+/* The thing most likely to be got wrong, said first. */
+.lg-ruled {
+  border-left: 3px solid var(--danger);
+  background: var(--danger-soft);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: var(--s-4);
+  display: grid; gap: var(--s-2);
+}
+.lg-ruled > u {
+  display: block; text-decoration: none;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  color: var(--danger);
+  font-weight: 600;
+}
+.lg-ruled p { margin: 0; font-size: var(--t-sm); color: var(--cream-200); line-height: 1.7; }
+.lg-ruled p.lg-ruled__note { color: var(--cream-600); font-size: var(--t-xs); }
+
+.lg-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-4); }
+.lg-steps li { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); gap: var(--s-3); }
+.lg-steps__n {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  color: var(--cream-600);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  width: 1.75rem; height: 1.75rem;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.lg-steps li.is-done .lg-steps__n { border-color: var(--accent-400); color: var(--accent-400); }
+.lg-steps h3 {
+  margin: 0 0 var(--s-1);
+  font-size: var(--t-base);
+  color: var(--cream-100);
+  font-weight: 500;
+}
+.lg-steps h3 em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  color: var(--cream-600);
+  margin-left: var(--s-2);
+}
+.lg-steps p { margin: 0; font-size: var(--t-sm); color: var(--cream-400); line-height: 1.7; }
+
+.lg-never { border-top: 1px solid var(--line-faint); padding-top: var(--s-4); display: grid; gap: var(--s-3); }
+.lg-never > u {
+  display: block; text-decoration: none;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  color: var(--cream-600);
+}
+.lg-never dl { margin: 0; display: grid; gap: var(--s-3); }
+.lg-never dt { color: var(--cream-200); font-size: var(--t-sm); }
+.lg-never dd { margin: var(--s-1) 0 0; color: var(--cream-600); font-size: var(--t-xs); line-height: 1.6; }
