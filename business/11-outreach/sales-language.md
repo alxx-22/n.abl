@@ -247,6 +247,33 @@ held to these, and the ones that can be checked in code are checked in code.
 
 ---
 
+### A quote can be true and still say nothing
+
+Found 17 September. The quote rule asks one question — is this span literally in
+the page text — and that question is what makes the editor's blindness safe. It
+is also satisfied by the menu.
+
+Approach Personnel's angle rested on this, and passed every check:
+
+> Candidate Registration Links Home Hiring talent Who we are Live jobs Work for
+> us News Client Enquiry Candidate Registration
+
+From which the pipeline concluded that *"registrations land in a general queue
+where someone has to read the details before deciding which sector desk needs to
+work them"*. Nobody said that. It was inferred from the existence of two menu
+items — and inferring from navigation is indistinguishable from guessing, which
+is the one thing the quote rule exists to stop.
+
+The page text handed to the scout includes the nav, the footer, the cookie
+banner and the button labels. All of it is literally on the page. None of it is
+a thing the business said. The test that separates them: **could this span have
+been written by somebody who has never seen the business, working from a list of
+standard website sections?** If yes, it is furniture.
+
+One of forty-four, so a rule and not a purge — and the scout is the only stage
+that can catch it. The editor never sees the page; by the writer's turn the
+quote has already been certified true.
+
 ### Two more, found on 16 September
 
 **Their own address, read back to them.** Harry's Home Improvements got a letter
