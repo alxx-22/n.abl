@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { teamClient, friendlyError } from '../lib/supabase.js'
 import PipelineHandoff from '../components/PipelineHandoff.jsx'
+import OutreachLog from '../components/OutreachLog.jsx'
 import {
   Logo, Field, Badge, EdgeCard, Reveal, ConfirmModal, useToast, Loading, Empty,
 } from '../components/ui/index.jsx'
@@ -54,6 +55,15 @@ const VIEWS = [
   { id: 'insights', label: 'Insights' },
   { id: 'leads', label: 'Leads' },
   { id: 'board', label: 'Board' },
+  /* The writer's own record. Everything above this line is hand-entered
+     by the team; everything under it was argued by models and is read
+     through one function, because the outreach tables are closed.
+
+     NOT called "Outreach": the lead detail already has a tab by that
+     name, and it is a different thing - a draft a person writes and
+     sends by hand. Two controls with one name on one page is how
+     somebody arms a send switch believing they are editing a draft. */
+  { id: 'argument', label: 'Argument log' },
 ]
 
 const TABS = [
@@ -822,6 +832,8 @@ function Workspace({ sb, user, onSignedOut }) {
             onJump={(fn, label) => { setStatusFilter(''); setSearch(''); setView('leads'); setFocus({ fn, label }) }}
           />
         )}
+
+        {view === 'argument' && <OutreachLog />}
 
         {view === 'board' && (
           <section aria-label="Pipeline board">

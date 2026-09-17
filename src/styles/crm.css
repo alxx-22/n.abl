@@ -516,3 +516,260 @@
 .crm-findings li { overflow-wrap: anywhere; }
 .crm-findings em { font-style: normal; color: var(--cream-600); font-size: var(--t-xs); }
 .crm-findings p { margin: 0; }
+
+/* ============================================================
+   THE ARGUMENT LOG
+
+   The outreach view: what the writer did, and who the next run is for.
+   Prefixed .ol- so nothing here can collide with the hand-entered CRM
+   above it — the two share a page and nothing else.
+   ============================================================ */
+
+.ol { display: grid; gap: var(--s-5); padding-top: var(--s-5); }
+
+/* ---------- the counts, and the run state ---------- */
+.ol-counts {
+  display: flex; flex-wrap: wrap; gap: var(--s-5);
+  align-items: center;
+  border-bottom: 1px solid var(--line-faint);
+  padding-bottom: var(--s-4);
+}
+.ol-count { display: grid; gap: 1px; }
+.ol-count b {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  color: var(--cream-100);
+  font-weight: 600;
+  letter-spacing: var(--track-snug);
+}
+.ol-count span {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  color: var(--cream-600);
+}
+.ol-count--state b { font-size: var(--t-base); color: var(--cream-600); }
+.ol-count--state.is-on b { color: var(--accent-400); }
+.ol-counts__btn { margin-left: auto; }
+
+/* ---------- who the run is for ---------- */
+.ol-panel {
+  display: grid; gap: var(--s-5);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: var(--s-5);
+}
+.ol-panel__head { display: flex; align-items: baseline; gap: var(--s-4); flex-wrap: wrap; }
+.ol-panel__head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  color: var(--cream-100);
+  letter-spacing: var(--track-snug);
+}
+.ol-reach { font-family: var(--font-mono); font-size: var(--t-xs); color: var(--cream-600); }
+.ol-reach b { color: var(--accent-400); font-weight: 500; }
+
+.ol-cols { display: grid; gap: var(--s-5); grid-template-columns: 1fr; }
+@media (min-width: 720px) {
+  .ol-cols { grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+}
+.ol-col { display: grid; gap: var(--s-2); align-content: start; }
+.ol-col > u {
+  display: block; text-decoration: none;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  color: var(--cream-600);
+}
+.ol-hint { margin-top: var(--s-1); }
+
+/* No height cap. A capped list clipped a row of chips in half, which
+   reads as a rendering fault rather than as something to scroll — and
+   there are fifteen towns, not five hundred. */
+.ol-chips { display: flex; flex-wrap: wrap; gap: 5px; align-content: start; }
+.ol-chip {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--cream-400);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: var(--t-xs);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.ol-chip:hover { border-color: var(--line-strong); color: var(--cream-200); }
+.ol-chip[aria-pressed="true"] {
+  background: var(--accent-400);
+  color: var(--on-accent);
+  border-color: var(--accent-400);
+  font-weight: 500;
+}
+.ol-chip__n { opacity: .6; margin-left: 5px; }
+
+/* ---------- the send switch ---------- */
+.ol-switch {
+  display: flex; gap: var(--s-3); align-items: flex-start;
+  border-top: 1px solid var(--line-faint);
+  padding-top: var(--s-4);
+}
+.ol-switch input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent-400); flex: none; }
+.ol-switch label { font-size: var(--t-sm); color: var(--danger); }
+.ol-switch label span {
+  display: block;
+  font-size: var(--t-xs);
+  color: var(--cream-600);
+  margin-top: 3px;
+  max-width: 70ch;
+  line-height: 1.5;
+}
+
+/* The blockers were a wall of red standing between a person and the
+   switch. Still every word they were — they have just stopped shouting
+   until asked. */
+.ol-warn {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 21px; height: 21px; flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+}
+.ol-warn:hover, .ol-warn:focus-visible { background: var(--danger); color: var(--bg); }
+.ol-warn__pop {
+  display: none;
+  position: absolute; bottom: calc(100% + 9px); right: 0;
+  width: min(25rem, 74vw);
+  text-align: left;
+  cursor: default;
+  z-index: var(--z-raise);
+  background: var(--surface-1);
+  border: 1px solid var(--danger);
+  border-radius: var(--r-sm);
+  padding: var(--s-3) var(--s-4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+}
+.ol-warn:hover .ol-warn__pop,
+.ol-warn:focus .ol-warn__pop,
+.ol-warn:focus-within .ol-warn__pop { display: block; }
+.ol-warn__pop u {
+  display: block; text-decoration: none;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  color: var(--danger);
+  font-weight: 600;
+  margin-bottom: var(--s-2);
+}
+.ol-warn__pop ol {
+  margin: 0; padding-left: 18px;
+  font-size: var(--t-sm);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  color: var(--cream-200);
+}
+.ol-warn__pop li { margin-bottom: var(--s-2); }
+.ol-warn__pop li span { display: block; color: var(--cream-600); font-size: var(--t-xs); margin-top: 2px; }
+
+.ol-actions { display: flex; gap: var(--s-3); align-items: center; flex-wrap: wrap; }
+.ol-said { font-size: var(--t-xs); color: var(--cream-600); font-family: var(--font-mono); }
+.ol-stop { border-color: var(--danger); color: var(--danger); }
+.ol-stop:hover:not(:disabled) { background: var(--danger-soft); }
+
+.ol-dialog { text-align: left; }
+.ol-dialog p, .ol-dialog ul { color: var(--cream-300); font-size: var(--t-sm); line-height: 1.6; }
+.ol-dialog ul { margin: 0 0 var(--s-4); padding-left: 19px; }
+.ol-dialog li { margin-bottom: var(--s-1); }
+.ol-dialog .input { margin: var(--s-2) 0 var(--s-4); }
+.ol-dialog__row > * { flex: 0 0 auto; }
+
+/* ---------- the log ---------- */
+.ol-filters { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+
+.ol-split { display: grid; gap: var(--s-5); grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .ol-split { grid-template-columns: 19rem minmax(0, 1fr); } }
+
+.ol-list { display: grid; gap: var(--s-2); max-height: 42rem; overflow-y: auto; }
+.ol-list__name { display: block; color: var(--cream-100); }
+.ol-list__meta { display: block; font-size: var(--t-xs); color: var(--cream-600); }
+.ol-tag {
+  display: inline-block; margin-top: 3px;
+  font-size: var(--t-xs);
+  font-family: var(--font-mono);
+  color: var(--cream-600);
+}
+.ol-tag--drafted { color: var(--accent-400); }
+.ol-tag--given_up { color: var(--danger); }
+
+.ol-detail { min-width: 0; display: grid; gap: var(--s-4); align-content: start; }
+.ol-detail__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  color: var(--cream-100);
+  letter-spacing: var(--track-tight);
+}
+.ol-detail__sub { margin: 0; font-size: var(--t-sm); color: var(--cream-600); }
+.ol-summary { color: var(--cream-300); font-size: var(--t-sm); line-height: 1.7; margin: 0; }
+
+.ol-clause, .ol-letter, .ol-why, .ol-moves, .ol-models {
+  border-top: 1px solid var(--line-faint);
+  padding-top: var(--s-4);
+  display: grid; gap: var(--s-2);
+}
+.ol-clause > u, .ol-letter > u, .ol-why > u, .ol-moves > u, .ol-models > u {
+  display: block; text-decoration: none;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  color: var(--cream-600);
+}
+.ol-clause p { margin: 0; font-size: var(--t-lg); color: var(--cream-100); line-height: 1.6; }
+.ol-evidence { font-size: var(--t-xs); color: var(--cream-600); line-height: 1.6; margin: 0; }
+.ol-evidence em { font-style: normal; color: var(--cream-400); }
+.ol-letter p { margin: 0; color: var(--cream-300); font-size: var(--t-sm); line-height: 1.7; }
+.ol-letter__subject { color: var(--cream-100); font-weight: 500; }
+
+/* The strategist's note. Deliberately unlike the letter above it — dimmer,
+   smaller, set off — because the one thing it must never be mistaken for
+   is a paragraph somebody is about to send. */
+.ol-why { border-left: 2px solid var(--line-strong); border-top: 0; padding: 0 0 0 var(--s-3); margin-top: var(--s-2); }
+.ol-why p { margin: 0; font-size: var(--t-xs); color: var(--cream-600); line-height: 1.6; }
+.ol-why em { font-style: normal; color: var(--cream-400); }
+
+.ol-move {
+  display: grid; gap: var(--s-2);
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  font-size: var(--t-xs);
+  border-top: 1px solid var(--line-faint);
+  padding-top: var(--s-2);
+}
+.ol-move__who { font-family: var(--font-mono); color: var(--accent-400); }
+.ol-move__what { color: var(--cream-300); min-width: 0; }
+.ol-move__what b { color: var(--cream-100); font-weight: 500; }
+.ol-move__what span { display: block; color: var(--cream-600); margin-top: 2px; line-height: 1.5; }
+.ol-move__model { font-family: var(--font-mono); color: var(--cream-600); }
+
+.ol-models table { width: 100%; border-collapse: collapse; font-size: var(--t-xs); }
+.ol-models th {
+  text-align: left;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  color: var(--cream-600);
+  padding-bottom: var(--s-2);
+}
+.ol-models td {
+  font-family: var(--font-mono);
+  color: var(--cream-300);
+  border-top: 1px solid var(--line-faint);
+  padding: var(--s-2) var(--s-3) var(--s-2) 0;
+}

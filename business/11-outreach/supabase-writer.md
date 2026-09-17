@@ -437,6 +437,47 @@ added yet should cost that role its turn in the chain, not the whole run.
 `business/10-lead-sourcing/ai-discovery.md` is what the second key is for, and
 why the obvious way to use it is ruled out.
 
+### Where it is read: the CRM, through one function
+
+The argument log lives at **/crm → Argument log**, beside Insights, Leads and
+Board. It is deliberately not called "Outreach": the lead detail already has a
+tab by that name and it is a different thing — a draft a person writes and sends
+by hand. Two controls with one name on one page is how somebody arms a send
+switch believing they are editing a draft.
+
+Every outreach table is RLS-on with no policies and no grant to `authenticated`.
+That stays true. The page reads through exactly one function,
+`outreach_dashboard()`, which returns the whole view as a single jsonb document
+and is the only thing granted:
+
+| | |
+|---|---|
+| `authenticated` | may execute `outreach_dashboard`, `outreach_save_target`, `outreach_start_run`, `outreach_stop_run`, `outreach_arm_sending`, `outreach_disarm_sending` |
+| `authenticated` | may **not** select from `outreach_prompt`, `lead_letter`, `outreach_round` or any other outreach table |
+| `anon` | may execute none of them |
+
+Granting select on ten tables would have been the quick way and the wrong one:
+it opens the prompts, the quota counters and every round of every argument as
+separate surfaces, each of which then has to be kept shut against writes by
+policy. One function is one audited shape.
+
+`authenticated` is the team here — there is no `signUp` anywhere in `src/`,
+accounts are created out of band, and `sales_leads` has carried "team can manage
+sales leads" to `authenticated` since the original schema. Same trust boundary,
+not a wider one.
+
+The reach beside the heading is counted **in the browser**, from the leads
+already loaded, running the same four tests `outreach_target_reach` runs in SQL.
+A filter whose effect you cannot see until after you save is a filter you are
+guessing at. The database stays the authority: saving re-counts server-side and
+that number replaces the local one.
+
+One thing the page is careful about: the strategist's tension and recognition
+are shown **below** the letter, in their own block, labelled "not part of the
+letter". They were rendering as the last two paragraphs of the body, which is
+exactly the wrong thing to be unclear about when the next control on the page
+arms sending.
+
 ---
 
 ## 8. The send switch
