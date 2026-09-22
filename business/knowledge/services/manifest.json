@@ -1,0 +1,12 @@
+{
+  "migration": "202609222030_service_knowledge_080948c9.sql",
+  "files": {
+    "_shared/scoring.md": "3715aca34af5017eeb8e46deef30ce1a3e47f95a3b26526a32b8e5f12c727af8",
+    "_shared/who-we-sell-to.md": "462792dbc2d73bb92c1b469423993fd3407345bcfd0b20a7ab5cd7bc83bcb159",
+    "ai/service.md": "55f58d748f084a7558825818b901b82790eb192d19f3efeaca7a4ad16b47d143",
+    "automation/service.md": "19321202ff130dd2278159a0e403ed9d188b6ed1b3925ed52938d00d26308c86",
+    "data_analytics/service.md": "551a8a14bd6a2450ecebfb9230f8f895179230f55ae1ebfcaac49be9cfb0e1ea",
+    "software/service.md": "e3046844155fa7d83d7d8d4657ce8af2aea5dcc00163e15c7c01af18ddab4a79",
+    "web/service.md": "80b41ae7529ab02d569a6df1aac3a030af7c32b5944c33df005fe9f8db98f535"
+  }
+}
