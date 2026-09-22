@@ -71,10 +71,14 @@ export const LIMITS = {
 export const TASKS = {
   read:  ['gemini-3.5-flash-lite', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
   write: ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+  /* The lead puller's prospector: a verdict and one sentence per company,
+     twenty to a call. Extraction-shaped rather than writing-shaped, so it
+     takes the read chain's generous models. Its own entry so it can be
+     retuned without touching the stage that writes observations. */
+  judge: ['gemini-3.5-flash-lite', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
 }
 
 const BASE = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com'
-const KEY = () => process.env.GEMINI_API_KEY || ''
 
 /* RPD resets at midnight Pacific, not UTC and not local. Getting this
    wrong means either losing most of a day's allowance or thinking there
@@ -87,7 +91,19 @@ export class QuotaExhausted extends Error {
 }
 export class AllModelsExhausted extends Error {}
 
-export function createClient({ stateFile = '.sourcing/gemini-state.json', log = () => {} } = {}) {
+/* keyEnv names the environment variable holding the key, so a second
+   Google project is a second client rather than a second copy of this
+   file. Quota is per project and per model, so each key keeps its own
+   state file — sharing one would let the prospector's calls count against
+   the writer's ceiling, which is the thing the second project exists to
+   prevent. The defaults are exactly what they were before this option
+   existed, so every existing caller is unchanged. */
+export function createClient({
+  stateFile = '.sourcing/gemini-state.json',
+  keyEnv = 'GEMINI_API_KEY',
+  log = () => {},
+} = {}) {
+  const KEY = () => process.env[keyEnv] || ''
   let state = { day: quotaDay(), models: {} }
   try {
     const saved = JSON.parse(fs.readFileSync(stateFile, 'utf8'))
@@ -176,7 +192,7 @@ export function createClient({ stateFile = '.sourcing/gemini-state.json', log = 
       if (res.status === 400) {
         const body = await res.text()
         save()
-        if (/API key not valid/i.test(body)) throw new Error('GEMINI_API_KEY is set but not valid.')
+        if (/API key not valid/i.test(body)) throw new Error(`${keyEnv} is set but not valid.`)
         last = `${model}: bad request`
         continue
       }

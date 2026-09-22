@@ -146,13 +146,103 @@ change, but because "we did not re-read it" is the finding, not the outcome.
 - The edge function reads the named secret through one allowlisted accessor, and
   skips a model whose secret is not set rather than failing the run.
 
-**Not built:** the prospector itself — the role rows, the prompt, the candidate
-store and the edge function. It needs the second key to exist first, because a
-discovery stage registered against a secret nobody has set would sit in the chain
-being skipped, which is tidy but useless.
+**Built, 22 September — the lead puller, as a local script, with both keys as
+placeholders:**
+
+| file | what it is |
+|---|---|
+| `scripts/sourcing/puller.mjs` | the logic, pure: no network, no filesystem, no `process.env`. Same rule as `guards.mjs` |
+| `scripts/sourcing/pull.mjs` | the runner — the only part that reads the environment, calls the network, writes a file |
+| `scripts/sourcing/pull-test.mjs` | 117 checks, no key, no network. `npm run test:pull` |
+| `scripts/sourcing/sic-2007.mjs` | the 731 SIC codes, vendored from Companies House's published list |
+
+It is **a new source, not a new pipeline.** It writes
+`.sourcing/candidates-<date>-api-<tag>.json` in exactly the bulk fetcher's
+envelope and field names, so `merge.mjs` picks it up as a Companies House
+source and `triage → find-websites → extract-contacts → promote` run on it
+unchanged. Proven end to end against a stand-in Companies House and Gemini:
+merge accepted the file and triage classified the sector correctly.
+
+```
+npm run sourcing:pull:dry -- --location Nottingham --sic 432,433   # no request; shows the URL and which keys are set
+npm run sourcing:pull     -- --location Nottingham --sic 432 --since 2016-01-01
+npm run sourcing:pull     -- --location Alcester --judge --only strong,possible
+```
+
+**The placeholders.** `COMPANIES_HOUSE_API_KEY` and `GEMINI_DISCOVERY_API_KEY`
+are empty lines in `.env.local.example`, and `set-keys.sh` / `set-keys.ps1`
+prompt for both — `./scripts/set-keys.sh --companies-house` asks for just the
+one. Neither is a string to paste over in a tracked file; that is the rule both
+scripts already state. Until they are filled, the dry run works and reports them
+missing, and the real run refuses before any request.
+
+**What the tests prove, and how.** Six critical rules were each deliberately
+broken in turn to confirm the suite catches them: contact routes stripped from
+the checks (six tests went red), the discovery key falling back to the writer's,
+verdict fields leaking onto a candidate, SIC left bare, the same company kept
+twice in one pull, and invented ids accepted. All six were caught.
+
+**Guards, in code rather than in the prompt:**
+
+- The model is shown opaque ids (`p1`, `p2`), never company numbers, and any id
+  it was not given is refused — so an invented company cannot look plausible.
+- It is never shown a company number, postcode or street. It sees the name, the
+  register activity, years trading, the kind of company and the town.
+- A verdict carrying an email address, web address, phone number or real UK
+  postcode is **refused whole**, not redacted — including one smuggled in an extra
+  field. The postcode check uses the real list of UK postcode areas, so
+  `GQ1 2AB`-shaped noise is not a false positive.
+- `applyVerdicts` copies exactly three named fields. No `email`, `phone` or
+  `website` can reach a candidate from a model.
+- The prospector **refuses** to run on `GEMINI_API_KEY`. It is the writer's quota.
+  `set-keys` refuses to write the same value to both.
+- Dormant (99999), non-trading (74990), residents' management (98000) and
+  private-household (98100, 98200) companies are refused at source.
+- Every pulled company still arrives `do_not_contact` through `promote.mjs`.
+
+**Two things not yet verified against the live API,** because nobody has a key
+yet. `--dump-first` prints the first raw item on the first real run so both can be
+checked in one go:
+
+1. The response field names. Taken from Companies House's documented examples,
+   not a live response. `normaliseItem` tolerates any of them being absent.
+2. Whether list parameters (`sic_codes`, `company_type`) are comma-joined or
+   repeated. Comma-joined is the Companies House convention; the dry run prints
+   the exact URL.
+
+### A bug this surfaced, which the puller works around but does not fix
+
+**`sales_leads` has no unique constraint except its primary key.** So the
+`on conflict do nothing` in `promote.mjs` never has anything to conflict on, and
+loading the same company twice creates two leads — which means two first letters.
+`build-load-sql.mjs` describes the load as idempotent; for leads, it is not.
+
+The puller deduplicates before anything reaches the load: by company number first
+(including the number the CRM stores inside `subscriber_type_evidence`), then by
+name and postcode or a distinctive name, but only against records that have no
+number — two different numbers are two different companies. A second identical
+pull finds everything already known and writes nothing.
+
+It can only dedupe against what it can see locally. To include the leads already
+in the CRM, save them to `.sourcing/existing-leads.json` (gitignored) before a
+pull:
+
+```sql
+select company, location, subscriber_type_evidence from public.sales_leads;
+```
+
+The proper fix is a column and a unique index on the company number. Not done
+here: it is a schema change, and `sales_leads` has 149 rows to backfill first.
+
+**Still to come:** the same prospector as a Supabase edge function, so a pull can
+be started from the Lead gen tab rather than a terminal. `puller.mjs` was written
+pure so it can move there unmodified.
 
 **What is needed from a person**, once, and never through a chat transcript:
 
-1. A new project in Google AI Studio, and an API key in it.
-2. Supabase Dashboard → Edge Functions → Secrets → add `GEMINI_DISCOVERY_API_KEY`.
-3. Say it is done. The key itself is never pasted anywhere but that box.
+1. A Companies House REST key — developer.company-information.service.gov.uk →
+   Your applications → Create an application (Live) → Add a new key → REST.
+2. A new project in Google AI Studio, and an API key in it.
+3. `./scripts/set-keys.sh` (or `set-keys.ps1`) to put both in `.env.local`.
+   For the edge function later, the discovery key also goes in Supabase →
+   Edge Functions → Secrets as `GEMINI_DISCOVERY_API_KEY`.

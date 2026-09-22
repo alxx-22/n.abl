@@ -40,6 +40,15 @@ param(
     # Search Console → add property → HTML tag. Copy only the content value.
     [string]$GscVerification,
 
+    # developer.company-information.service.gov.uk → Your applications →
+    # a REST key, Live environment. For the lead puller.
+    [string]$CompaniesHouseApiKey,
+
+    # A SECOND Google AI Studio project's key, for the puller's prospector.
+    # Must not be the same key as GeminiApiKey: a separate project is a
+    # separate quota pool, and that is the only reason it exists.
+    [string]$GeminiDiscoveryApiKey,
+
     # Skip the prompts for anything not passed as a parameter.
     [switch]$NonInteractive
 )
@@ -83,10 +92,24 @@ if (-not $GscVerification -and -not $NonInteractive) {
     $GscVerification = ReadSecret "  GSC_VERIFICATION"
     Write-Host ""
 }
+if (-not $CompaniesHouseApiKey -and -not $NonInteractive) {
+    Write-Host "  Companies House REST key — the lead puller. Leave blank to skip."
+    Write-Host "  developer.company-information.service.gov.uk → Your applications → a REST key, Live."
+    $CompaniesHouseApiKey = ReadSecret "  COMPANIES_HOUSE_API_KEY"
+    Write-Host ""
+}
+if (-not $GeminiDiscoveryApiKey -and -not $NonInteractive) {
+    Write-Host "  A SECOND Google project's key — the puller's prospector only. Blank to skip."
+    Write-Host "  Not your GEMINI_API_KEY: a separate project is a separate quota pool."
+    $GeminiDiscoveryApiKey = ReadSecret "  GEMINI_DISCOVERY_API_KEY"
+    Write-Host ""
+}
 
 $pending = [ordered]@{}
 if ($GeminiApiKey)    { $pending["GEMINI_API_KEY"]   = $GeminiApiKey.Trim() }
 if ($GscVerification) { $pending["GSC_VERIFICATION"] = $GscVerification.Trim() }
+if ($CompaniesHouseApiKey)  { $pending["COMPANIES_HOUSE_API_KEY"]  = $CompaniesHouseApiKey.Trim() }
+if ($GeminiDiscoveryApiKey) { $pending["GEMINI_DISCOVERY_API_KEY"] = $GeminiDiscoveryApiKey.Trim() }
 
 if ($pending.Count -eq 0) {
     Write-Host "  Nothing given, nothing written." -ForegroundColor Yellow
@@ -96,14 +119,34 @@ if ($pending.Count -eq 0) {
 
 # --- A Google key has a recognisable shape. Say so now rather than let
 # --- a typo surface as a 400 three minutes into a run. ----------------
-if ($pending.Contains("GEMINI_API_KEY") -and $pending["GEMINI_API_KEY"] -notmatch '^AIza[0-9A-Za-z_\-]{30,}$') {
-    Write-Host "  WARNING: that does not look like a Google API key." -ForegroundColor Yellow
-    Write-Host "           They normally begin 'AIza' and run about 39 characters."
-    if ($NonInteractive) {
-        Write-Host "           Continuing because -NonInteractive was passed."
-    } else {
-        $answer = Read-Host "           Write it anyway? (y/N)"
-        if ($answer -ne "y") { Write-Host "  Stopped, nothing written."; exit 1 }
+foreach ($g in @("GEMINI_API_KEY", "GEMINI_DISCOVERY_API_KEY")) {
+    if ($pending.Contains($g) -and $pending[$g] -notmatch '^AIza[0-9A-Za-z_\-]{30,}$') {
+        Write-Host "  WARNING: $g does not look like a Google API key." -ForegroundColor Yellow
+        Write-Host "           They normally begin 'AIza' and run about 39 characters."
+        if ($NonInteractive) {
+            Write-Host "           Continuing because -NonInteractive was passed."
+        } else {
+            $answer = Read-Host "           Write it anyway? (y/N)"
+            if ($answer -ne "y") { Write-Host "  Stopped, nothing written."; exit 1 }
+        }
+    }
+}
+
+# --- The same key twice defeats the point of the second project: both
+# --- would spend one quota pool. Refuse rather than write it. ---------
+# Companies House keys have no published shape, so none is enforced — a
+# guessed format that rejected a real key would be worse than no check.
+if ($pending.Contains("GEMINI_DISCOVERY_API_KEY")) {
+    $writer = $pending["GEMINI_API_KEY"]
+    if (-not $writer -and (Test-Path $envFile)) {
+        $line = @([System.IO.File]::ReadAllLines($envFile)) | Where-Object { $_ -match '^\s*GEMINI_API_KEY\s*=' } | Select-Object -Last 1
+        if ($line) { $writer = ($line -split '=', 2)[1].Trim() }
+    }
+    if ($writer -and $writer -eq $pending["GEMINI_DISCOVERY_API_KEY"]) {
+        Write-Host "  STOP: GEMINI_DISCOVERY_API_KEY is the same key as GEMINI_API_KEY." -ForegroundColor Red
+        Write-Host "        It has to come from a different Google project, or it shares the writer's quota."
+        Write-Host ""
+        exit 1
     }
 }
 
@@ -131,7 +174,7 @@ try {
             }
         }
         if (-not $found) { $lines += $line }
-        Write-Host ("  {0,-18} {1}  {2}" -f $name, (Mask $pending[$name]), $(if ($found) { "updated" } else { "added" }))
+        Write-Host ("  {0,-24} {1}  {2}" -f $name, (Mask $pending[$name]), $(if ($found) { "updated" } else { "added" }))
     }
 
     # UTF-8 with no BOM. A BOM on line one makes the first key name
@@ -144,10 +187,12 @@ try {
     Write-Host "  Written to .env.local." -ForegroundColor Green
     Write-Host ""
     Write-Host "  Confirm it is picked up, without spending a request:"
-    Write-Host "    npm run sourcing:write:dry"
+    Write-Host "    npm run sourcing:write:dry                              (the writer)"
+    Write-Host "    npm run sourcing:pull:dry -- --location Nottingham      (the lead puller)"
     Write-Host ""
     Write-Host "  Then the real run:"
     Write-Host "    npm run sourcing:write"
+    Write-Host "    npm run sourcing:pull -- --location Nottingham --sic 432"
     Write-Host ""
     Write-Host "  If a key ever leaks, revoke it at aistudio.google.com/apikey and run"
     Write-Host "  this again. Nothing in the repo depends on the old value."
