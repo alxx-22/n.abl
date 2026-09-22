@@ -77,6 +77,7 @@ type Cfg = {
   models: Record<string, Chain>
   prompts: Record<string, { body: string; temperature: number }>
   settings: Record<string, unknown>
+  running: boolean
   knowledge: { key: string; kind: string; label: string; body: string; summary: string | null; signals: string | null }[]
 }
 type Reply = { raw: string | null; parsed: any; model: string | null }
@@ -481,17 +482,24 @@ Deno.serve(async (req) => {
   let pulled = 0, stages = 0, finished = 0
 
   try {
-    /* Cheapest possible no-op: nothing is running, so nothing is logged
-       either - otherwise the runs table would fill with 288 empty ticks a
-       day. */
-    const plan = await rpc('prospect_pull_plan', {})
+    /* Cheapest possible no-op: nothing is running, so nothing is checked
+       and nothing is logged - otherwise the runs table would fill with 288
+       empty ticks a day, and a key nobody has added yet would read as an
+       error before anybody asked for a run. */
     const cfg: Cfg = await rpc('prospect_config', {})
+    if (!cfg.running) return reply({ idle: true })
     const settings = clampSettings(cfg.settings)
 
+    /* Somebody pressed Run. From here a missing key is a real fault, so it
+       goes in the run log where the Lead gen tab shows it. */
     const discoveryKeys = [...new Set(Object.values(cfg.models).flat().map((m) => m.key_secret))]
     if (!discoveryKeys.some((k) => keyFor(k))) {
-      return reply({ error: 'GEMINI_DISCOVERY_API_KEY is not set', hint: 'Supabase -> Edge Functions -> Secrets' }, 503)
+      const msg = 'GEMINI_DISCOVERY_API_KEY is not set (Supabase -> Edge Functions -> Secrets)'
+      await rpc('prospect_log_run', { p_pulled: 0, p_stages: 0, p_finished: 0, p_detail: null, p_error: msg })
+      return reply({ error: msg }, 503)
     }
+
+    const plan = await rpc('prospect_pull_plan', {})
 
     if (plan) {
       if (!CH_KEY) detail.push({ pull: 'skipped: COMPANIES_HOUSE_API_KEY is not set' })

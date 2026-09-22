@@ -195,17 +195,17 @@ alter table public.outreach_model add constraint outreach_model_prospect_uses_it
 insert into public.outreach_model (role, model, priority, rpd, gap_ms, temperature, active, note, key_secret)
 values
   ('prospect_research',   'gemini-3.5-flash-lite',    10, 1000, 4500, null, true, 'lead gen: reads register + site', 'GEMINI_DISCOVERY_API_KEY'),
-  ('prospect_research',   'gemini-flash-lite-latest', 20, 1000, 4500, null, true, null, 'GEMINI_DISCOVERY_API_KEY'),
-  ('prospect_research',   'gemini-3.1-flash-lite',    30, 1000, 4500, null, true, null, 'GEMINI_DISCOVERY_API_KEY'),
+  ('prospect_research',   'gemini-flash-lite-latest', 20, 1000, 4500, null, true, 'lead gen: second in the chain', 'GEMINI_DISCOVERY_API_KEY'),
+  ('prospect_research',   'gemini-3.1-flash-lite',    30, 1000, 4500, null, true, 'lead gen: last in the chain', 'GEMINI_DISCOVERY_API_KEY'),
   ('prospect_signals',    'gemini-3.5-flash-lite',    10, 1000, 4500, null, true, 'lead gen: facts to signals', 'GEMINI_DISCOVERY_API_KEY'),
-  ('prospect_signals',    'gemini-flash-lite-latest', 20, 1000, 4500, null, true, null, 'GEMINI_DISCOVERY_API_KEY'),
-  ('prospect_signals',    'gemini-3.1-flash-lite',    30, 1000, 4500, null, true, null, 'GEMINI_DISCOVERY_API_KEY'),
+  ('prospect_signals',    'gemini-flash-lite-latest', 20, 1000, 4500, null, true, 'lead gen: second in the chain', 'GEMINI_DISCOVERY_API_KEY'),
+  ('prospect_signals',    'gemini-3.1-flash-lite',    30, 1000, 4500, null, true, 'lead gen: last in the chain', 'GEMINI_DISCOVERY_API_KEY'),
   ('prospect_sales',      'gemini-3.5-flash',         10,  250, 6500, null, true, 'lead gen: the generalist; the fewest calls, so the best model', 'GEMINI_DISCOVERY_API_KEY'),
-  ('prospect_sales',      'gemini-flash-latest',      20,  250, 6500, null, true, null, 'GEMINI_DISCOVERY_API_KEY'),
-  ('prospect_sales',      'gemini-3.5-flash-lite',    30, 1000, 4500, null, true, null, 'GEMINI_DISCOVERY_API_KEY'),
+  ('prospect_sales',      'gemini-flash-latest',      20,  250, 6500, null, true, 'lead gen: second in the chain', 'GEMINI_DISCOVERY_API_KEY'),
+  ('prospect_sales',      'gemini-3.5-flash-lite',    30, 1000, 4500, null, true, 'lead gen: last in the chain', 'GEMINI_DISCOVERY_API_KEY'),
   ('prospect_specialist', 'gemini-3.5-flash-lite',    10, 1000, 4500, null, true, 'lead gen: one per service', 'GEMINI_DISCOVERY_API_KEY'),
-  ('prospect_specialist', 'gemini-flash-lite-latest', 20, 1000, 4500, null, true, null, 'GEMINI_DISCOVERY_API_KEY'),
-  ('prospect_specialist', 'gemini-3.1-flash-lite',    30, 1000, 4500, null, true, null, 'GEMINI_DISCOVERY_API_KEY')
+  ('prospect_specialist', 'gemini-flash-lite-latest', 20, 1000, 4500, null, true, 'lead gen: second in the chain', 'GEMINI_DISCOVERY_API_KEY'),
+  ('prospect_specialist', 'gemini-3.1-flash-lite',    30, 1000, 4500, null, true, 'lead gen: last in the chain', 'GEMINI_DISCOVERY_API_KEY')
 on conflict (role, model) do nothing;
 
 -- ---------- the dials ----------
@@ -376,6 +376,7 @@ set search_path = public, pg_catalog as $fn$
         from public.prospect_prompt), '{}'::jsonb),
     'settings', coalesce((
       select jsonb_object_agg(key, value) from public.prospect_setting), '{}'::jsonb),
+    'running', exists (select 1 from public.prospect_target where running and active),
     'knowledge', coalesce((
       select jsonb_agg(jsonb_build_object(
                'key', k.key, 'kind', k.kind, 'label', k.label, 'body', k.body,
