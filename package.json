@@ -19,6 +19,8 @@
     "test:hooks": "node scripts/sourcing/hooks-test.mjs",
     "test:scan": "node scripts/sourcing/scan-test.mjs",
     "test:pull": "node scripts/sourcing/pull-test.mjs",
+    "test:prospector": "node scripts/check-prospector.mjs",
+    "test:service-knowledge": "node scripts/build-service-knowledge.mjs --check",
     "sourcing:observe": "node --env-file-if-exists=.env.local scripts/sourcing/observe.mjs",
     "sourcing:write": "node --env-file-if-exists=.env.local scripts/sourcing/scan.mjs",
     "sourcing:write:dry": "node --env-file-if-exists=.env.local scripts/sourcing/scan.mjs --dry-run",
@@ -30,7 +32,8 @@
     "test:headers": "node scripts/check-headers.mjs",
     "verify:deploy": "node scripts/verify-deploy.mjs",
     "test:routes": "node scripts/check-worker-routes.mjs",
-    "test:portal-assistant": "node scripts/e2e-portal-assistant.mjs"
+    "test:portal-assistant": "node scripts/e2e-portal-assistant.mjs",
+    "knowledge:services": "node scripts/build-service-knowledge.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.106.2",

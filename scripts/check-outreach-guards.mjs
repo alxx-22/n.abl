@@ -602,6 +602,55 @@ seen = []
 out = await runLoop({ strategist: null, writerSees: seen })
 ok('no strategist configured at all still writes', out.r.ok === true && seen[0] === null)
 
+console.log('\nTHE LOG IS WHAT THEY SAID\n')
+
+/* The argument log is read by a person who wants the agents' own words,
+   not this file's summary of them. Every move carries the reply exactly as
+   the model sent it, and `reason` is kept for the guard's verdict alone. */
+{
+  const moves = []
+  const EDITOR_RAW = '{"promote":"one","because":"the only case with a quote","brief":"say it plainly"}'
+  const WRITER_RAW = '{"observation":"o","basis":"page"}'
+  const r = await negotiate({
+    angles: [fakeAngle], summary: 's', maxRounds: 2, maxRevisions: 1,
+    callEditor: async () => ({ ok: true, angle: fakeAngle, because: 'b', brief: 'br', model: 'm', raw: EDITOR_RAW }),
+    callStrategist: async () => ({ parsed: { tension: 't', recognition: 'g' }, model: 'm', raw: '{"tension":"t","recognition":"g"}' }),
+    callWriter: async () => ({ ok: true, observation: 'o', basis: 'page', evidence: 'q', model: 'm', raw: WRITER_RAW }),
+    callReview: async () => ({ parsed: { verdict: 'accept' }, model: 'm', raw: '{"verdict":"accept"}' }),
+    onRound: (m) => { moves.push(m) },
+  })
+  const by = (a, d) => moves.find((m) => m.agent === a && m.decision === d)
+  ok('the editor\'s reply is logged word for word', r.ok && by('editor', 'promoted').said === EDITOR_RAW)
+  ok('  …with no summary beside it', by('editor', 'promoted').reason === null)
+  ok('  …and addressed to the agent that hears it next', by('editor', 'promoted').to === 'strategist')
+  ok('the writer\'s reply is logged word for word', by('writer', 'wrote').said === WRITER_RAW && by('writer', 'wrote').to === 'editor')
+  ok('the strategist speaks to the writer', by('strategist', 'framed').to === 'writer' && by('strategist', 'framed').reason === null)
+  ok('an accepted sentence goes to the letter', by('editor', 'accepted').to === 'letter')
+}
+{
+  const moves = []
+  await negotiate({
+    angles: [fakeAngle], summary: 's', maxRounds: 1,
+    callEditor: async () => ({ ok: true, angle: fakeAngle, because: 'b', brief: 'br', model: 'm', raw: '{}' }),
+    callWriter: async () => ({ ok: false, refused: false, why: 'not a lower-case clause', model: 'm', raw: '{"observation":"Loud"}' }),
+    onRound: (m) => { moves.push(m) },
+  })
+  const rej = moves.find((m) => m.decision === 'rejected')
+  ok('a guard overruling the writer keeps the guard\'s reason', rej && rej.reason === 'not a lower-case clause')
+  ok('  …beside what the writer actually said', rej && rej.said === '{"observation":"Loud"}')
+}
+{
+  const moves = []
+  await negotiate({
+    angles: [fakeAngle], summary: 's', maxRounds: 1,
+    callEditor: async () => ({ ok: true, angle: fakeAngle, because: 'b', brief: 'br', model: 'm' }),
+    callWriter: async () => ({ ok: true, observation: 'o', basis: 'page', evidence: 'q', model: 'm' }),
+    onRound: (m) => { moves.push(m) },
+  })
+  ok('a caller that has no raw reply still gets a readable reason',
+    moves[0].said === null && /b/.test(moves[0].reason) && moves[1].reason === 'o')
+}
+
 console.log('\nWHICH 429 THIS IS\n')
 
 const DAY_429 = JSON.stringify({ error: { code: 429, status: 'RESOURCE_EXHAUSTED',

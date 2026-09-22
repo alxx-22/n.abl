@@ -348,11 +348,11 @@ async function scout(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, settings
     cfg, 'scout', pr.body, parts.join('\n'), pr.temperature, settings.model_timeout_ms)
 
   let p: Record<string, any>
-  try { p = parseJson(raw) } catch { return { ok: false as const, why: 'assessment was not JSON', model } }
+  try { p = parseJson(raw) } catch { return { ok: false as const, why: 'assessment was not JSON', model, raw } }
 
   const page = site?.text ?? null
   const { services, notes } = validateServices(vocab, p.services, page)
-  if (!services.length) return { ok: false as const, why: 'no usable category verdicts', model }
+  if (!services.length) return { ok: false as const, why: 'no usable category verdicts', model, raw }
 
   const av = validateAngles(vocab, p.angles, { pageText: page, facts, max: settings.max_angles })
   notes.push(...av.notes, ...(site?.notes ?? []))
@@ -377,6 +377,7 @@ async function scout(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, settings
   return {
     ok: true as const,
     model,
+    raw,
     facts,
     services,
     angles: av.angles,
@@ -431,10 +432,10 @@ async function editor(
     cfg, 'editor', pr.body, parts.join('\n'), pr.temperature, settings.model_timeout_ms)
 
   let p: Record<string, unknown>
-  try { p = parseJson(raw) } catch { return { ok: false as const, because: 'editor did not return JSON', model } }
+  try { p = parseJson(raw) } catch { return { ok: false as const, because: 'editor did not return JSON', model, raw } }
 
   const v = validatePromotion(p, open, refusals.map((r) => r.key))
-  return { ...v, model } as { ok: boolean; angle?: any; because: string; brief?: string; model: string }
+  return { ...v, model, raw } as { ok: boolean; angle?: any; because: string; brief?: string; model: string; raw: string }
 }
 
 /* ---------- the writer ---------- */
@@ -483,8 +484,8 @@ async function writer(cfg: Cfg, angle: any, brief: string, facts: any[], setting
     cfg, 'writer', pr.body, parts.join('\n'), pr.temperature, settings.model_timeout_ms)
 
   let p: Record<string, unknown>
-  try { p = parseJson(raw) } catch { return { ok: false as const, refused: false, why: 'reply was not JSON', model } }
-  return { ...validateClause(p, { angle, facts, settings }), model }
+  try { p = parseJson(raw) } catch { return { ok: false as const, refused: false, why: 'reply was not JSON', model, raw } }
+  return { ...validateClause(p, { angle, facts, settings }), model, raw }
 }
 
 /* ---------- the strategist ---------- */
@@ -527,8 +528,8 @@ async function strategist(
   try {
     const { text: raw, model } = await ask(
       cfg, 'strategist', pr.body, parts.filter(Boolean).join('\n'), pr.temperature, settings.model_timeout_ms)
-    try { return { parsed: parseJson(raw), model } }
-    catch { return { parsed: null, model } }
+    try { return { parsed: parseJson(raw), model, raw } }
+    catch { return { parsed: null, model, raw } }
   } catch (err) {
     return { parsed: null, model: null, error: (err as Error).message }
   }
@@ -564,8 +565,8 @@ async function letterWriter(
   try {
     const { text: raw, model } = await ask(
       cfg, 'letter', pr.body, parts.filter(Boolean).join('\n'), pr.temperature, settings.model_timeout_ms)
-    try { return { parsed: parseJson(raw), model } }
-    catch { return { parsed: null, model } }
+    try { return { parsed: parseJson(raw), model, raw } }
+    catch { return { parsed: null, model, raw } }
   } catch (err) {
     return { parsed: null, model: null, error: (err as Error).message }
   }
@@ -597,8 +598,8 @@ async function reviewer(cfg: Cfg, angle: any, brief: string, draft: any, setting
   try {
     const { text: raw, model } = await ask(
       cfg, 'editor', pr.body, parts.join('\n'), pr.temperature, settings.model_timeout_ms)
-    try { return { parsed: parseJson(raw), model } }
-    catch { return { parsed: null, model } }
+    try { return { parsed: parseJson(raw), model, raw } }
+    catch { return { parsed: null, model, raw } }
   } catch (err) {
     /* A reviewer that could not be reached must not cost us a draft
        that already passed every guard. Absence is acceptance. */
@@ -634,20 +635,25 @@ function capabilityOf(vocab: Vocab, services: any[]): string | null {
 }
 
 async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, settings: any) {
-  const log = (round: number, agent: string, model: string | null, decision: string, key?: string | null, reason?: string | null) =>
+  /* `said` is the model's reply as it came back, word for word; `reason`
+     is only ever a guard's verdict. See negotiate() in guards.mjs. */
+  const log = (round: number, agent: string, model: string | null, decision: string,
+    key?: string | null, reason?: string | null, said?: string | null, to?: string | null) =>
     rpc('outreach_record_round', {
       p_lead_id: lead.lead_id, p_round: round, p_agent: agent,
       p_model: model ?? 'none', p_decision: decision,
       p_angle_key: key ?? null, p_reason: reason ?? null,
+      p_said: said ?? null, p_to: to ?? null,
     }).catch(() => {})
 
   const s = await scout(cfg, vocab, lead, settings)
   if (!s.ok) {
-    await log(0, 'scout', s.model ?? null, 'failed', null, s.why)
+    await log(0, 'scout', s.model ?? null, 'failed', null, s.why, (s as any).raw ?? null, 'editor')
     return { ok: false as const, why: s.why }
   }
-  await log(0, 'scout', s.model, 'argued', null,
-    `${s.services.length} verdicts, ${s.angles.length} angles: ${s.angles.map((a: any) => a.key).join(', ')}`)
+  /* The scout's whole reply, not a count of it. What the guards struck
+     from it goes in `reason`, because that is this file speaking. */
+  await log(0, 'scout', s.model, 'argued', null, s.notes.length ? s.notes.join('; ') : null, s.raw, 'editor')
 
   /* The assessment is stored whether or not a clause comes out of it. A
      lead we understand but have not yet phrased is worth far more than
@@ -683,7 +689,7 @@ async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, setting
     callReview: cfg.prompts.review
       ? ({ angle, brief, draft }) => reviewer(cfg, angle, brief, draft, settings)
       : null,
-    onRound: (m) => log(m.round, m.agent, m.model, m.decision, m.angle_key, m.reason),
+    onRound: (m) => log(m.round, m.agent, m.model, m.decision, m.angle_key, m.reason, m.said, m.to),
   })
 
   if (!r.ok) return { ok: false as const, why: r.why, assessed: true, refusals: r.refusals.length }
@@ -726,10 +732,10 @@ async function handle(cfg: Cfg, vocab: Vocab, lead: Record<string, any>, setting
         p_trading_name: name,
       })
       letter = { subject, words: body.split(/\s+/).length }
-      await log(r.rounds, 'letter', lw?.model ?? null, 'wrote', r.angle.key, subject)
+      await log(r.rounds, 'letter', lw?.model ?? null, 'wrote', r.angle.key, null, lw?.raw ?? null, 'gate')
     } else {
       letterWhy = String(v.why ?? 'the letter did not pass')
-      await log(r.rounds, 'letter', lw?.model ?? null, 'failed', r.angle.key, letterWhy)
+      await log(r.rounds, 'letter', lw?.model ?? null, 'failed', r.angle.key, letterWhy, lw?.raw ?? null, 'gate')
     }
   } else if (!r.hook) {
     letterWhy = 'no hook, so no letter - the clause stands on its own'

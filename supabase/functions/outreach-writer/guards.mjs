@@ -729,15 +729,36 @@ export async function negotiate({
   const refusals = []
   let why = 'no round produced a clause'
 
+  /* WHAT GOES ON THE RECORD
+
+     `said` is the model's reply exactly as it came back - not a summary of
+     it, not the fields we kept. The argument log is for a person reading
+     what the agents actually said to each other, and a paraphrase written
+     by this file would be one more voice in the room pretending to be
+     theirs.
+
+     `reason` is only ever this file's own verdict: a guard that refused
+     something, a fallback that kicked in. It is null whenever the move is
+     simply the agent speaking, because then the words are already in
+     `said` and repeating them is the summary we are trying not to write.
+
+     `to` is who the message goes to next, so the log reads as a
+     conversation rather than a list. */
+  const said = (x) => (x && typeof x.raw === 'string' ? x.raw : null)
+  const afterEditor = callStrategist ? 'strategist' : 'writer'
+  const afterWriter = callReview ? 'editor' : 'letter'
+
   for (let round = 1; round <= maxRounds; round++) {
     const e = await callEditor({ angles, summary, refusals, round })
     if (!e.ok) {
-      await onRound?.({ round, agent: 'editor', model: e.model, decision: 'promoted_nothing', reason: e.because })
+      await onRound?.({ round, agent: 'editor', to: 'scout', model: e.model, decision: 'promoted_nothing',
+        said: said(e), reason: e.because })
       return { ok: false, why: e.because || 'the editor promoted nothing', rounds: round, refusals }
     }
     await onRound?.({
-      round, agent: 'editor', model: e.model, decision: 'promoted',
-      angle_key: e.angle.key, reason: [e.because, e.brief && `brief: ${e.brief}`].filter(Boolean).join(' — '),
+      round, agent: 'editor', to: afterEditor, model: e.model, decision: 'promoted',
+      angle_key: e.angle.key, said: said(e),
+      reason: said(e) ? null : [e.because, e.brief && `brief: ${e.brief}`].filter(Boolean).join(' — '),
     })
 
     /* The step between choosing a true thing and phrasing it. Without
@@ -756,20 +777,22 @@ export async function negotiate({
       if (v.ok) {
         hook = v
         await onRound?.({
-          round, agent: 'strategist', model: raw && raw.model, decision: 'framed',
-          angle_key: e.angle.key, reason: `${v.tension} — they would recognise: ${v.recognition}`,
+          round, agent: 'strategist', to: 'writer', model: raw && raw.model, decision: 'framed',
+          angle_key: e.angle.key, said: said(raw),
+          reason: said(raw) ? null : `${v.tension} — they would recognise: ${v.recognition}`,
         })
       } else {
         await onRound?.({
-          round, agent: 'strategist', model: raw && raw.model, decision: 'no_hook',
-          angle_key: e.angle.key, reason: v.why,
+          round, agent: 'strategist', to: 'writer', model: raw && raw.model, decision: 'no_hook',
+          angle_key: e.angle.key, said: said(raw), reason: v.why,
         })
       }
     }
 
     const w = await callWriter({ angle: e.angle, brief: e.brief ?? '', hook, round })
     if (w.ok) {
-      await onRound?.({ round, agent: 'writer', model: w.model, decision: 'wrote', angle_key: e.angle.key, reason: w.observation })
+      await onRound?.({ round, agent: 'writer', to: afterWriter, model: w.model, decision: 'wrote',
+        angle_key: e.angle.key, said: said(w), reason: said(w) ? null : w.observation })
 
       /* ---- refinement: the editor now reads the SENTENCE ---- */
       let clause = w
@@ -780,15 +803,16 @@ export async function negotiate({
 
         if (verdict.accept) {
           await onRound?.({
-            round, agent: 'editor', model: rv && rv.model, decision: 'accepted',
-            angle_key: e.angle.key, reason: verdict.note || 'the sentence does the job',
+            round, agent: 'editor', to: 'letter', model: rv && rv.model, decision: 'accepted',
+            angle_key: e.angle.key, said: said(rv),
+            reason: said(rv) && rv.parsed ? null : (verdict.note || 'the sentence does the job'),
           })
           break
         }
 
         await onRound?.({
-          round, agent: 'editor', model: rv && rv.model, decision: 'asked_for_a_change',
-          angle_key: e.angle.key, reason: verdict.change,
+          round, agent: 'editor', to: 'writer', model: rv && rv.model, decision: 'asked_for_a_change',
+          angle_key: e.angle.key, said: said(rv), reason: said(rv) ? null : verdict.change,
         })
 
         const rw = await callWriter({
@@ -801,15 +825,15 @@ export async function negotiate({
         if (picked.revised) {
           clause = picked.clause
           await onRound?.({
-            round, agent: 'writer', model: rw.model, decision: 'revised',
-            angle_key: e.angle.key, reason: rw.observation,
+            round, agent: 'writer', to: 'editor', model: rw.model, decision: 'revised',
+            angle_key: e.angle.key, said: said(rw), reason: said(rw) ? null : rw.observation,
           })
         } else {
           /* The objection stands on the record even though the sentence
              did not change. A person reads it at the gate. */
           await onRound?.({
-            round, agent: 'writer', model: rw && rw.model, decision: 'revision_failed',
-            angle_key: e.angle.key,
+            round, agent: 'writer', to: 'editor', model: rw && rw.model, decision: 'revision_failed',
+            angle_key: e.angle.key, said: said(rw),
             reason: `${picked.why} — keeping the earlier draft, which the editor wanted changed: ${verdict.change}`,
           })
           break
@@ -819,9 +843,13 @@ export async function negotiate({
       return { ok: true, clause, angle: e.angle, hook, rounds: round, revisions, refusals }
     }
 
+    /* A refusal is the writer speaking, so its words are the record. A
+       rejection is a guard overruling the writer, so the guard's reason
+       is. */
     await onRound?.({
-      round, agent: 'writer', model: w.model,
-      decision: w.refused ? 'refused' : 'rejected', angle_key: e.angle.key, reason: w.why,
+      round, agent: 'writer', to: 'editor', model: w.model,
+      decision: w.refused ? 'refused' : 'rejected', angle_key: e.angle.key,
+      said: said(w), reason: w.refused && said(w) ? null : w.why,
     })
     why = w.why ?? 'the writer produced nothing usable'
 
