@@ -1,108 +1,463 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { teamClient, friendlyError } from '../lib/supabase.js'
+import { Loading, Empty } from './ui/index.jsx'
+import ArgumentTranscript from './ArgumentTranscript.jsx'
+
 /* ============================================================
-   LEAD GEN — a placeholder that tells the truth
+   LEAD GEN
 
-   Not built yet. It is here because the navigation should not
-   rearrange itself the week it arrives, and because an empty tab that
-   says what is coming is worth more than no tab at all.
+   New businesses into the list, argued for by agents rather than
+   scraped. A Companies House search pulls register rows for the towns
+   and SIC codes below; for each one, in turn:
 
-   What it deliberately is NOT: a disabled button, or "coming soon".
-   Somebody opening this in three weeks needs to know why it is empty
-   and what has to happen first, and both of those are decided and
-   written down rather than vague.
+     research    reads the register row and the business's own site
+     signals     turns those facts into signals, and research reviews them
+     sales       sets the signals against the service portfolio and picks
+     specialists the specialist for each picked service argues the score
+                 with sales until one accepts the other's exact number
 
-   The design, the guards and the compliance position live in
-   business/10-lead-sourcing/ai-discovery.md. The short version is
-   below, and the two are meant to agree — if you change one, change
-   the other.
+   A service has a score only when both sides named the same number. No
+   agreement is "disputed", and a disputed service scores nothing.
+
+   Every table is RLS-on and closed; this reads through prospect_dashboard
+   and prospect_transcript and writes through six RPCs that re-check what
+   they were sent. The work itself is done by the lead-prospector edge
+   function, woken every five minutes - and doing nothing until a target
+   is running. NOTHING HERE SENDS ANYTHING, and a promoted lead arrives
+   do_not_contact: finding a business is not permission to write to it.
    ============================================================ */
 
-/* The one thing a reader here is most likely to get wrong, so it is
-   said first and said plainly. */
-const RULED_OUT = {
-  what: 'Search grounding is not the route',
-  why: 'Asking a model to search the web for businesses and writing down what comes back breaches the Gemini API terms — Google’s own example of a violation is "using programmatic or automated means to collect Links, using Links to build an index". Grounded results also may not be stored or analysed, and must be shown to the person who submitted the prompt. A scheduled job has no such person and stores everything.',
+const STATUSES = [
+  { id: '', label: 'All' },
+  { id: 'scored', label: 'Scored' },
+  { id: 'disputed', label: 'Disputed' },
+  { id: 'working', label: 'Working' },
+  { id: 'queued', label: 'Queued' },
+  { id: 'no_fit', label: 'No fit' },
+  { id: 'failed', label: 'Failed' },
+  { id: 'promoted', label: 'Promoted' },
+]
+
+const STAGE_LABEL = {
+  research: 'research',
+  signals: 'signals and review',
+  sales: 'sales picking services',
+  specialists: 'sales and specialists agreeing a score',
+  done: 'done',
 }
 
-const STEPS = [
-  {
-    n: 1,
-    what: 'A second Google project, and its key',
-    who: 'waiting on a person',
-    why: 'Gemini’s free quota is per project and per model within it. On 16 September four of five models were exhausted before eleven in the morning with 97 leads still queued, so discovery sharing the writer’s key would be dead on arrival and would take the writer down with it. The key goes in Supabase → Edge Functions → Secrets as GEMINI_DISCOVERY_API_KEY, and nowhere else.',
-    done: false,
-  },
-  {
-    n: 2,
-    what: 'The prospector',
-    who: 'blocked on step 1',
-    why: 'Reads register rows we already hold a lawful basis for — Companies House, ICO, FSA, CQC, the charity register — and argues for the ones worth writing to. That is the half a model is actually good at. Finding that a business exists was never the search engine’s job; a register does it lawfully.',
-    done: false,
-  },
-  {
-    n: 3,
-    what: 'Source disclosure per lead',
-    who: 'not started',
-    why: 'Every letter’s footer currently says Companies House, because every lead came from there. Article 14 requires that sentence to be true for that lead, so a lead found through a different register needs its own branch. The mechanism exists — the footer already reads sales_leads.source — the branches do not.',
-    done: false,
-  },
-]
+const num = (n) => (n == null ? '—' : Number(n).toLocaleString('en-GB'))
+const nice = (s) => String(s || '').replace(/_/g, ' ')
+const list = (s) => String(s || '').split(/[,\n]/).map((x) => x.trim()).filter(Boolean)
+const when = (t) => (t ? new Date(t).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—')
 
-/* Guards worth stating before anything is built, because the failure
-   mode here is not an awkward sentence. */
-const NEVER = [
-  ['No contact route from a model. Ever.',
-    'Not an email, not a phone number, not a domain. A model may say a business is worth looking at; it may not say how to reach them. An invented email address is the worst thing this system could produce and it is exactly what a model produces confidently.'],
-  ['A company must resolve to a register row.',
-    'The prospector selects from candidates. It does not conjure them.'],
-  ['A website must be fetched and must mention the business.',
-    'And directory domains are rejected outright — a Yell or Facebook page is not the business’s own site, and the scout would read the wrong thing off it.'],
-  ['Nothing arrives contactable.',
-    'marketing_status is do_not_contact, as the existing promotion script already does. Discovery is not approval.'],
-]
+const blankDraft = (t) => ({
+  id: t ? t.id : null,
+  name: t ? t.name : '',
+  towns: t ? (t.towns || []).join(', ') : '',
+  sic: t ? (t.sic_codes || []).join(', ') : '',
+  from: (t && t.incorporated_from) || '',
+  to: (t && t.incorporated_to) || '',
+})
+
+/* The same three tests prospect_save_target makes, so a bad draft says so
+   before the round trip. The database stays the authority. */
+function problemWith(d) {
+  if (!d.name.trim()) return 'Give the target a name'
+  const towns = list(d.towns)
+  if (!towns.length) return 'Add at least one town or city'
+  if (towns.some((t) => /[0-9]/.test(t))) return 'A town, not a postcode'
+  if (list(d.sic).some((s) => !/^[0-9]{2,5}$/.test(s))) return 'SIC codes are two to five digits'
+  if (d.from && d.to && d.from > d.to) return 'Incorporated from is after incorporated to'
+  return ''
+}
+
+/* The argument, word for word, fetched when somebody asks for it. */
+function Transcript({ id, count }) {
+  const [open, setOpen] = useState(false)
+  const [moves, setMoves] = useState(null)
+  const [err, setErr] = useState('')
+
+  const show = async () => {
+    if (open) { setOpen(false); return }
+    setOpen(true)
+    try {
+      const { data, error } = await teamClient().rpc('prospect_transcript', { p_id: id })
+      if (error) throw error
+      setMoves(Array.isArray(data) ? data : [])
+      setErr('')
+    } catch (e) {
+      setErr(friendlyError(e, 'Could not read the argument.'))
+    }
+  }
+
+  return (
+    <div className="ol-moves">
+      <button type="button" className="btn btn--ghost btn--sm" aria-expanded={open} onClick={show}>
+        {open ? 'Hide argument log' : `View argument log${count ? ` (${count})` : ''}`}
+      </button>
+      {open && err && <p className="crm-warn">{err}</p>}
+      {open && !err && !moves && <Loading label="Reading the argument" />}
+      {open && moves && <ArgumentTranscript moves={moves} empty="Nobody has said anything about this business yet." />}
+    </div>
+  )
+}
+
+function Services({ rows, labels }) {
+  if (!Array.isArray(rows) || rows.length === 0) return null
+  return (
+    <div className="lg-services">
+      <u>Services, and whether sales and the specialist agreed</u>
+      {rows.map((s) => (
+        <div className={`lg-service lg-service--${s.status}`} key={s.service}>
+          <div className="lg-service__head">
+            <b>{labels[s.service] || nice(s.service)}</b>
+            <span>
+              {s.status === 'agreed'
+                ? <>agreed at <strong>{num(s.score)}</strong></>
+                : <>disputed · sales {num(s.sales_last)}, specialist {num(s.specialist_last)} · no score</>}
+              {' '}· {num(s.turns)} turns
+            </span>
+          </div>
+          {s.confirm_question && <p><em>the question that settles it:</em> {s.confirm_question}</p>}
+          {s.walk_away_if && <p><em>walk away if:</em> {s.walk_away_if}</p>}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function LeadGen() {
+  const [data, setData] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [draft, setDraft] = useState(null)
+  const [runOpen, setRunOpen] = useState(false)
+  const [busy, setBusy] = useState('')
+  const [said, setSaid] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [selected, setSelected] = useState(null)
+
+  const load = useCallback(async () => {
+    try {
+      const { data: doc, error: err } = await teamClient().rpc('prospect_dashboard')
+      if (err) throw err
+      setData(doc || {})
+      setError('')
+    } catch (err) {
+      setError(friendlyError(err, 'Could not read lead gen.'))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const targets = useMemo(() => (data && Array.isArray(data.targets) ? data.targets : []), [data])
+  const candidates = useMemo(() => (data && Array.isArray(data.candidates) ? data.candidates : []), [data])
+  const live = useMemo(() => targets.find((t) => t.running) || null, [targets])
+  const labels = useMemo(() => Object.fromEntries(
+    ((data && data.services) || []).map((s) => [s.key, s.label]),
+  ), [data])
+
+  useEffect(() => {
+    if (!data || draft) return
+    setDraft(blankDraft(live || targets[0] || null))
+  }, [data, draft, live, targets])
+
+  const shown = useMemo(
+    () => (statusFilter ? candidates.filter((c) => c.status === statusFilter) : candidates),
+    [candidates, statusFilter],
+  )
+  const cand = useMemo(() => candidates.find((c) => c.id === selected) || null, [candidates, selected])
+
+  /* Every write is an RPC; this reports what the database answered. */
+  const call = useCallback(async (label, fn, whenDone, keepDraft = true) => {
+    setBusy(label)
+    setSaid('')
+    try {
+      const { data: r, error: err } = await fn()
+      if (err) throw err
+      setSaid(whenDone(r))
+      if (!keepDraft) setDraft(null)
+      await load()
+    } catch (err) {
+      setSaid(friendlyError(err, 'That did not go through.'))
+    } finally {
+      setBusy('')
+    }
+  }, [load])
+
+  const problem = draft ? problemWith(draft) : ''
+  const running = Boolean(live && draft && live.id === draft.id)
+
+  const save = () => call('Saving', () => teamClient().rpc('prospect_save_target', {
+    p_id: draft.id,
+    p_name: draft.name.trim(),
+    p_towns: list(draft.towns),
+    p_sic_codes: list(draft.sic),
+    p_incorporated_from: draft.from || null,
+    p_incorporated_to: draft.to || null,
+  }), (id) => {
+    setDraft((d) => ({ ...d, id: id || d.id }))
+    return running ? 'Saved — the next tick uses it' : 'Saved — press Run to start it'
+  })
+
+  const start = () => call('Starting', () => teamClient().rpc('prospect_start', { p_id: draft.id }),
+    () => 'Running — the first tick is within five minutes')
+  const stop = () => call('Stopping', () => teamClient().rpc('prospect_stop', {}), () => 'Stopped')
+
+  const promote = (c) => call('Promoting', () => teamClient().rpc('prospect_promote', { p_id: c.id }),
+    () => `${c.company} is in Leads, marked do not contact`)
+  const dismiss = (c) => call('Dismissing', () => teamClient().rpc('prospect_dismiss', { p_id: c.id }),
+    () => `${c.company} dismissed`)
+  const retry = (c) => call('Queuing', () => teamClient().rpc('prospect_retry', { p_id: c.id }),
+    () => `${c.company} goes back to research; its old argument is gone`)
+
+  if (loading) return <Loading label="Reading lead gen" />
+  if (error) {
+    return (
+      <Empty>
+        {error === 'SESSION_EXPIRED' ? 'Your session expired — sign in again from the team space.' : error}
+      </Empty>
+    )
+  }
+
+  const counts = (data && data.counts) || {}
+  const lastRun = data && data.last_run
+  const models = (data && Array.isArray(data.models)) ? data.models : []
+  const chains = (data && data.chains) || {}
+
   return (
-    <section className="lg" aria-label="Lead generation">
-      <header className="lg-head">
-        <h2>Lead gen</h2>
-        <p>
-          Pulling new businesses into the list, rather than working the 149 already in it.
-          Not built yet — here is where it stands.
-        </p>
-      </header>
-
-      <div className="lg-ruled">
-        <u>{RULED_OUT.what}</u>
-        <p>{RULED_OUT.why}</p>
-        <p className="lg-ruled__note">
-          Same ruling as the Google Maps correction already at the top of the sourcing
-          notes, reached from the other end of the pipeline.
-        </p>
-      </div>
-
-      <ol className="lg-steps">
-        {STEPS.map((s) => (
-          <li key={s.n} className={s.done ? 'is-done' : ''}>
-            <span className="lg-steps__n" aria-hidden="true">{s.n}</span>
-            <div>
-              <h3>{s.what} <em>{s.who}</em></h3>
-              <p>{s.why}</p>
-            </div>
-          </li>
+    <section className="ol lg" aria-label="Lead generation">
+      <div className="ol-counts">
+        {[
+          ['queued', counts.queued], ['working', counts.working], ['scored', counts.scored],
+          ['disputed', counts.disputed], ['promoted', counts.promoted],
+        ].map(([label, n]) => (
+          <div className="ol-count" key={label}><b>{num(n || 0)}</b><span>{label}</span></div>
         ))}
-      </ol>
-
-      <div className="lg-never">
-        <u>Settled before a line of it is written</u>
-        <dl>
-          {NEVER.map(([what, why]) => (
-            <div key={what}>
-              <dt>{what}</dt>
-              <dd>{why}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className={`ol-count ol-count--state ${live ? 'is-on' : ''}`}>
+          <b>{live ? 'Running' : 'Stopped'}</b>
+          <span>{live ? live.name : 'nothing runs until you press Run'}</span>
+        </div>
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm ol-counts__btn"
+          aria-expanded={runOpen}
+          onClick={() => setRunOpen((v) => !v)}
+        >
+          Run settings
+        </button>
       </div>
+
+      {lastRun && (
+        <p className={`lg-lastrun ${lastRun.error ? 'is-bad' : ''}`}>
+          Last tick {when(lastRun.finished_at || lastRun.started_at)} · pulled {num(lastRun.pulled)} ·{' '}
+          {num(lastRun.stages)} stages · {num(lastRun.finished)} finished
+          {lastRun.error && <><br /><em>went wrong:</em> {lastRun.error}</>}
+        </p>
+      )}
+
+      {runOpen && draft && (
+        <div className="ol-panel">
+          <div className="ol-panel__head">
+            <h3>Who to look for</h3>
+            {targets.length > 1 && (
+              <select
+                className="input lg-pick"
+                aria-label="Saved targets"
+                value={draft.id || ''}
+                onChange={(e) => setDraft(blankDraft(targets.find((t) => t.id === e.target.value) || null))}
+              >
+                <option value="">New target</option>
+                {targets.map((t) => <option key={t.id} value={t.id}>{t.name}{t.running ? ' (running)' : ''}</option>)}
+              </select>
+            )}
+          </div>
+
+          <div className="lg-form">
+            <label>
+              <span>Name</span>
+              <input className="input" type="text" value={draft.name}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+            </label>
+            <label>
+              <span>Towns or cities, comma separated</span>
+              <input className="input" type="text" value={draft.towns} placeholder="Nottingham, Derby"
+                onChange={(e) => setDraft({ ...draft, towns: e.target.value })} />
+            </label>
+            <label>
+              <span>SIC codes or prefixes, comma separated — blank for any</span>
+              <input className="input" type="text" inputMode="numeric" value={draft.sic} placeholder="62, 7022"
+                onChange={(e) => setDraft({ ...draft, sic: e.target.value })} />
+            </label>
+            <div className="lg-form__dates">
+              <label>
+                <span>Incorporated from</span>
+                <input className="input" type="date" value={draft.from}
+                  onChange={(e) => setDraft({ ...draft, from: e.target.value })} />
+              </label>
+              <label>
+                <span>to</span>
+                <input className="input" type="date" value={draft.to}
+                  onChange={(e) => setDraft({ ...draft, to: e.target.value })} />
+              </label>
+            </div>
+          </div>
+
+          <div className="ol-actions">
+            <button type="button" className="btn btn--sm" disabled={Boolean(busy) || Boolean(problem)} onClick={save}>
+              Save target
+            </button>
+            {running ? (
+              <button type="button" className="btn btn--sm ol-stop" disabled={Boolean(busy)} onClick={stop}>Stop</button>
+            ) : (
+              <button type="button" className="btn btn--accent btn--sm" disabled={Boolean(busy) || !draft.id} onClick={start}>
+                Run
+              </button>
+            )}
+            <span className="ol-said">
+              {busy ? `${busy}…` : (said || problem || (!draft.id ? 'Save the target before starting it' : ''))}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {!runOpen && said && <p className="ol-said">{said}</p>}
+
+      <div className="ol-filters" role="group" aria-label="Filter by status">
+        {STATUSES.map((st) => (
+          <button
+            key={st.id || 'all'}
+            type="button"
+            className={`crm-view ${statusFilter === st.id ? 'crm-view--on' : ''}`}
+            aria-pressed={statusFilter === st.id}
+            onClick={() => setStatusFilter(st.id)}
+          >
+            {st.label}
+            <span className="crm-view__count">
+              {st.id ? (counts[st.id] || 0) : candidates.length}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="ol-split">
+        <div className="ol-list">
+          {shown.length === 0 && <Empty>Nothing in this state.</Empty>}
+          {shown.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`crm-leadbtn ${selected === c.id ? 'crm-leadbtn--active' : ''}`}
+              onClick={() => setSelected(c.id)}
+            >
+              <span className="ol-list__name">{c.company}</span>
+              <span className="ol-list__meta">
+                {c.town || '—'} · {c.activity || 'activity unknown'}{c.score != null ? ` · ${c.score}` : ''}
+              </span>
+              <span className={`ol-tag lg-tag--${c.status}`}>{nice(c.status)}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="ol-detail">
+          {!cand && (
+            <div className="crm-hint">
+              <p>
+                Pick a business to see what the agents found, which services sales picked, whether
+                each specialist agreed a score, and every word they said to each other.
+              </p>
+            </div>
+          )}
+
+          {cand && (
+            <>
+              <h3 className="ol-detail__name">{cand.company}</h3>
+              <p className="ol-detail__sub">
+                {cand.town || 'location unknown'} · {cand.activity || 'activity unknown'}
+                {cand.number && (
+                  <> · <a className="crm-link" target="_blank" rel="noreferrer noopener"
+                    href={`https://find-and-update.company-information.service.gov.uk/company/${encodeURIComponent(cand.number)}`}>
+                    Companies House {cand.number}</a></>
+                )}
+              </p>
+
+              <dl className="crm-kv">
+                <div><dt>Score</dt><dd>{cand.score != null ? num(cand.score) : (cand.status === 'disputed' ? 'none — disputed' : '—')}</dd></div>
+                <div><dt>Status</dt><dd>{nice(cand.status)}{cand.status === 'working' || cand.status === 'queued' ? ` · ${STAGE_LABEL[cand.stage] || cand.stage}` : ''}</dd></div>
+                <div><dt>Incorporated</dt><dd>{cand.incorporated_on || '—'}{cand.company_type ? ` · ${nice(cand.company_type)}` : ''}</dd></div>
+                <div>
+                  <dt>Website</dt>
+                  <dd>
+                    {cand.website
+                      ? <><a className="crm-link" href={cand.website} target="_blank" rel="noreferrer noopener">{cand.website.replace(/^https?:\/\//, '')}</a>
+                        {Array.isArray(cand.website_confirmed_by) && cand.website_confirmed_by.length > 0 && ` · confirmed by ${cand.website_confirmed_by.join(' + ')}`}</>
+                      : nice(cand.website_outcome) || '—'}
+                  </dd>
+                </div>
+              </dl>
+
+              <Services rows={cand.services} labels={labels} />
+
+              {cand.error && (
+                <p className="crm-warn">
+                  {cand.status === 'failed' ? `Failed after ${cand.attempts} attempts. ` : ''}{cand.error}
+                </p>
+              )}
+
+              <div className="ol-actions">
+                {['scored', 'disputed', 'no_fit'].includes(cand.status) && (
+                  <button type="button" className="btn btn--accent btn--sm" disabled={Boolean(busy)} onClick={() => promote(cand)}>
+                    Promote to Leads
+                  </button>
+                )}
+                {cand.status !== 'promoted' && (
+                  <button type="button" className="btn btn--ghost btn--sm" disabled={Boolean(busy)} onClick={() => dismiss(cand)}>
+                    Dismiss
+                  </button>
+                )}
+                {['failed', 'no_fit', 'disputed', 'scored'].includes(cand.status) && (
+                  <button type="button" className="btn btn--ghost btn--sm" disabled={Boolean(busy)} onClick={() => retry(cand)}>
+                    Argue it again
+                  </button>
+                )}
+                {cand.status === 'promoted' && <span className="ol-said">In Leads, marked do not contact.</span>}
+              </div>
+
+              <Transcript key={cand.id} id={cand.id} count={cand.moves} />
+            </>
+          )}
+        </div>
+      </div>
+
+      {(models.length > 0 || Object.keys(chains).length > 0) && (
+        <div className="ol-models">
+          <u>Discovery project — today, Pacific. Its own key, never the writer&rsquo;s.</u>
+          {Object.keys(chains).length > 0 && (
+            <dl className="lg-chains">
+              {Object.entries(chains).map(([role, chain]) => (
+                <div key={role}><dt>{nice(role.replace(/^prospect_/, ''))}</dt><dd>{(chain || []).join(' → ')}</dd></div>
+              ))}
+            </dl>
+          )}
+          {models.length > 0 && (
+            <table>
+              <thead><tr><th>model</th><th>calls</th><th>ceiling reached</th></tr></thead>
+              <tbody>
+                {models.map((m) => (
+                  <tr key={m.model}>
+                    <td>{m.model}</td>
+                    <td>{num(m.used)}</td>
+                    <td>{m.exhausted ? (m.observed_rpd == null ? 'yes' : num(m.observed_rpd)) : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </section>
   )
 }

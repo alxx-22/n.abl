@@ -12,6 +12,7 @@ import {
   argueSignals, validateSales, readMove, argueService, outcome, parseJson, conversationBlock,
 } from '../supabase/functions/lead-prospector/prospect.mjs'
 import { quotaScope as outreachQuotaScope } from '../supabase/functions/outreach-writer/guards.mjs'
+import { redactContactRoutes } from '../supabase/functions/lead-prospector/puller.mjs'
 
 let fail = 0
 const ok = (label, cond, detail) => {
@@ -308,6 +309,19 @@ console.log('\nTHE BUSINESS\'S SCORE\n')
     && outcome([{ service: 'web', status: 'disputed', score: null }]).lead_score === null)
   ok('only agreed zeros means no fit', outcome([{ service: 'ai', status: 'agreed', score: 0 }]).status === 'no_fit')
   ok('no services at all means no fit', outcome([]).status === 'no_fit')
+}
+
+console.log('\nNO AGENT READS A WAY TO REACH THEM\n')
+{
+  const page = 'We fit kitchens across the county. Call 0115 496 0000 or email hello@example.co.uk, ' +
+    'see www.example.co.uk/contact, visit us at NG1 5FS. Established 2004, 12 staff.'
+  const r = redactContactRoutes(page)
+  ok('an email address is removed from the page', !/@/.test(r), r)
+  ok('  …and a phone number', !/0115/.test(r), r)
+  ok('  …and a web address', !/example\.co\.uk/.test(r), r)
+  ok('  …and a real UK postcode', !/NG1 5FS/.test(r), r)
+  ok('  …and what the business does is left to read', /fit kitchens/.test(r) && /12 staff/.test(r), r)
+  ok('  …and a postcode-shaped word that is no UK area is left alone', redactContactRoutes('model GQ1 2AB') === 'model GQ1 2AB')
 }
 
 console.log(`\n${fail ? fail + ' failed' : 'all prospector checks passed'}`)

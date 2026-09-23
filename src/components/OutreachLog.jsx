@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { teamClient, friendlyError } from '../lib/supabase.js'
 import { Loading, Empty } from './ui/index.jsx'
+import ArgumentTranscript from './ArgumentTranscript.jsx'
 
 /* ============================================================
    THE ARGUMENT LOG
@@ -198,6 +199,41 @@ function ArmDialog({ target, onCancel, onArm }) {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/* The whole argument, word for word, fetched only when somebody asks for
+   it: every reply exactly as each agent sent it, in order, with who it was
+   addressed to. The dashboard carries a count, not the words - a page of
+   leads does not need every transcript loaded to be read. */
+function ArgumentLog({ leadId, count }) {
+  const [open, setOpen] = useState(false)
+  const [moves, setMoves] = useState(null)
+  const [err, setErr] = useState('')
+
+  const show = async () => {
+    if (open) { setOpen(false); return }
+    setOpen(true)
+    if (moves) return
+    try {
+      const { data: rows, error } = await teamClient().rpc('outreach_argument', { p_lead_id: leadId })
+      if (error) throw error
+      setMoves(Array.isArray(rows) ? rows : [])
+      setErr('')
+    } catch (e) {
+      setErr(friendlyError(e, 'Could not read the argument.'))
+    }
+  }
+
+  return (
+    <div className="ol-moves">
+      <button type="button" className="btn btn--ghost btn--sm" aria-expanded={open} onClick={show}>
+        {open ? 'Hide argument log' : `View argument log${count ? ` (${count})` : ''}`}
+      </button>
+      {open && err && <p className="crm-warn">{err}</p>}
+      {open && !err && !moves && <Loading label="Reading the argument" />}
+      {open && moves && <ArgumentTranscript moves={moves} empty="The agents have not argued over this lead yet." />}
     </div>
   )
 }
@@ -596,22 +632,7 @@ export default function OutreachLog() {
                 </div>
               )}
 
-              {Array.isArray(lead.moves) && lead.moves.length > 0 && (
-                <div className="ol-moves">
-                  <u>The argument</u>
-                  {lead.moves.map((m, i) => (
-                    <div className="ol-move" key={i}>
-                      <span className="ol-move__who">{m.agent}</span>
-                      <span className="ol-move__what">
-                        <b>{nice(m.decision)}</b>
-                        {m.angle ? ` · ${m.angle}` : ''}
-                        {m.reason && <span>{m.reason}</span>}
-                      </span>
-                      <span className="ol-move__model">{m.model}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ArgumentLog key={lead.id} leadId={lead.id} count={Array.isArray(lead.moves) ? lead.moves.length : 0} />
             </>
           )}
         </div>

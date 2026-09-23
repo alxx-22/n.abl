@@ -234,15 +234,78 @@ select company, location, subscriber_type_evidence from public.sales_leads;
 The proper fix is a column and a unique index on the company number. Not done
 here: it is a schema change, and `sales_leads` has 149 rows to backfill first.
 
-**Still to come:** the same prospector as a Supabase edge function, so a pull can
-be started from the Lead gen tab rather than a terminal. `puller.mjs` was written
-pure so it can move there unmodified.
+## 7. Built, 23 September — the agents, live in Supabase and in the CRM
+
+The prospector now runs as the `lead-prospector` edge function, in the same
+frame as the outreach writer: agents, prompts, models and settings are rows, not
+code; the model registry is the same `outreach_model` table with the same
+per-model daily budget and 429 handling, switching down each role's chain when a
+model runs out; and a `pg_cron` job wakes it every five minutes with the same
+vault-held cron secret the writer uses. **It does nothing until somebody presses
+Run** on a target in the Lead gen tab.
+
+**Who does what, per business, one stage per tick and resumable:**
+
+1. **Research** reads the Companies House row and up to three pages of the
+   business's own site, and lists facts, each with a quote. A quote that is not
+   on the page is struck by code. The page text has contact routes and the
+   company number removed before any agent reads it.
+2. **Signals** turns those facts into signals, each resting on named facts.
+   Research reviews them and can send them back — up to `signal_reviews` rounds.
+3. **Sales** sets the signals against the service portfolio and picks up to
+   `max_services` services, each resting on named signals.
+4. **Specialists** — one per picked service (AI, automation, data and analytics,
+   software, web) — each argue the score with sales. A specialist can also bring
+   in another specialist it thinks fits better.
+5. **Agreement.** A service is scored only when one side accepts the other's
+   *exact* number. "Agree" with a different number is a counter, not agreement.
+   No agreement in `agreement_turns` turns is **disputed**, and a disputed
+   service scores nothing. The business's score is its best agreed score.
+
+**Each specialist knows its service** from `business/knowledge/services/<service>/service.md`
+— what the service is, the signals that point to it and away from it, what kills
+it, how that specialist scores and the one question that settles it.
+`npm run knowledge:services` turns the folders into a migration;
+`npm run test:service-knowledge` fails if the folders and the migration drift.
+
+**The log is what they said.** Every reply is stored exactly as the model
+returned it, with who it was from and who it was addressed to. Nothing
+summarises it. Where code overruled a reply (a struck quote, an "agree" with the
+wrong number) that is stored separately and shown as code, not as an agent. The
+outreach writer's log was changed to the same rule. Both are read in the CRM
+through **View argument log**.
+
+**In the CRM, Lead gen tab:** a target (towns, SIC codes or prefixes,
+incorporated between), Save / Run / Stop, the last tick including anything that
+went wrong (a missing key shows here), every candidate with its agreed and
+disputed services, the question to ask and when to walk away, and **Promote**,
+**Dismiss** and **Argue it again**. A promoted lead arrives `do_not_contact`.
+
+**Two secrets, and only two** — Supabase → Edge Functions → Secrets:
+
+| secret | what |
+|---|---|
+| `COMPANIES_HOUSE_API_KEY` | the Companies House REST key |
+| `GEMINI_DISCOVERY_API_KEY` | the key from the new Google project |
+
+The cron secret already exists in the vault and is shared with the writer. The
+function refuses `GEMINI_API_KEY` outright.
+
+**Deploying.** The Supabase CLI deploys `supabase/functions/lead-prospector` as
+it is. Through a channel that takes one payload, `npm run bundle:edge -- lead-prospector`
+builds a deterministic single file whose sha256 can be checked against the
+deployed copy.
+
+**Tests:** `npm run test:prospector` (the agents' guards: quotes, agreement,
+page redaction), `npm run test:pull` (the writer's key is never used for discovery), `npm run test:outreach-guards` (the log is
+verbatim), `node scripts/check-crm-usability.mjs --harness --component leadgen`
+(the tab on phones, tablets and desktops).
 
 **What is needed from a person**, once, and never through a chat transcript:
 
 1. A Companies House REST key — developer.company-information.service.gov.uk →
    Your applications → Create an application (Live) → Add a new key → REST.
 2. A new project in Google AI Studio, and an API key in it.
-3. `./scripts/set-keys.sh` (or `set-keys.ps1`) to put both in `.env.local`.
-   For the edge function later, the discovery key also goes in Supabase →
-   Edge Functions → Secrets as `GEMINI_DISCOVERY_API_KEY`.
+3. Both into Supabase → Edge Functions → Secrets under the names above. For the
+   local script, `./scripts/set-keys.sh` (or `set-keys.ps1`) puts them in
+   `.env.local`.

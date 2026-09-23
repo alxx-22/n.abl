@@ -35,6 +35,7 @@
      node scripts/check-crm-usability.mjs --harness
      node scripts/check-crm-usability.mjs --harness --fixture ./outreach.json
      node scripts/check-crm-usability.mjs --harness --expand
+     node scripts/check-crm-usability.mjs --harness --component leadgen --expand
      node scripts/check-crm-usability.mjs --harness --screenshots ./shots --json
 
    Exits non-zero when a threshold below is breached, like every other
@@ -139,13 +140,24 @@ const PRIMARY = value('--primary', '.ol-counts__btn, .btn--accent, button[type="
    actually working has the run panel open and a lead selected, and that is
    the state the complaint was made about, so it is worth measuring too. */
 const EXPAND = flag('--expand')
+/* Which CRM tab the harness renders. Both lay out on the same .ol- classes
+   and both have been measured on the same phones. */
+const COMPONENTS = {
+  argument: { file: 'OutreachLog.jsx', name: 'OutreachLog', tab: 'Argument log' },
+  leadgen: { file: 'LeadGen.jsx', name: 'LeadGen', tab: 'Lead gen' },
+}
+const COMPONENT = COMPONENTS[value('--component', 'argument')]
+if (!COMPONENT) {
+  console.error(`--component is one of: ${Object.keys(COMPONENTS).join(', ')}`)
+  process.exit(2)
+}
 
 if (!MODE_URL && !MODE_HARNESS) {
   console.error(`
   Usage: node scripts/check-crm-usability.mjs --harness
          node scripts/check-crm-usability.mjs --url http://localhost:4173 [--route /crm]
 
-  Options: --fixture <f.json>  --screenshots <dir>  --primary <selector>  --expand  --json
+  Options: --component argument|leadgen  --fixture <f.json>  --screenshots <dir>  --primary <selector>  --expand  --json
 `)
   process.exit(2)
 }
@@ -216,6 +228,63 @@ const BUILTIN_FIXTURE = {
       { agent: 'strategist', decision: 'draft', angle: 'double entry', reason: 'One clause, one piece of evidence.', model: 'gemini-2.5-pro' },
     ],
   })),
+}
+
+/* One reply as a model sends it: JSON with a "say" field. Long on
+   purpose - the transcript is the part of these screens most likely to
+   push a phone off its width. */
+const reply = (say, extra = {}) => JSON.stringify({ say, ...extra })
+
+/* Shaped like public.outreach_argument(p_lead_id). */
+BUILTIN_FIXTURE.outreach_argument = [
+  { round: 1, agent: 'scout', to: 'strategist', decision: 'accept', angle: 'operations', model: 'gemini-2.5-flash',
+    said: reply('Their own page says scheduling runs on a whiteboard and a spreadsheet, and three people re-key the same job numbers. That is the hook: https://example.invalid/about-us/our-long-history-of-making-things-by-hand', { verdict: 'accept' }), reason: null },
+  { round: 2, agent: 'strategist', to: 'writer', decision: 'draft', angle: 'double entry', model: 'gemini-2.5-pro',
+    said: reply('One clause, one piece of evidence. Do not tell them the whiteboard is wrong.'), reason: null },
+  { round: 3, agent: 'gate', to: null, decision: 'rejected', angle: null, model: 'none', said: null, reason: 'quote was not on the page' },
+]
+
+/* Shaped like public.prospect_dashboard() and prospect_transcript(id),
+   keyed by RPC name because the lead-gen tab calls both. */
+const LEADGEN_FIXTURE = {
+  prospect_dashboard: {
+    targets: [{ id: 'pt-1', name: 'Nottingham software', towns: ['Nottingham', 'Derby'], sic_codes: ['62', '7022'],
+      incorporated_from: '2015-01-01', incorporated_to: null, running: true, pulled: 40, cursor: {}, exhausted_towns: [] }],
+    counts: { queued: 22, working: 1, scored: 9, disputed: 3, no_fit: 4, failed: 1, promoted: 2 },
+    services: [{ key: 'ai', label: 'AI' }, { key: 'automation', label: 'Automation' },
+      { key: 'data_analytics', label: 'Data and analytics' }, { key: 'software', label: 'Software' }, { key: 'web', label: 'Web' }],
+    models: [{ model: 'gemini-2.5-flash', used: 212, exhausted: false, observed_rpd: null },
+      { model: 'gemini-2.5-pro', used: 100, exhausted: true, observed_rpd: 100 }],
+    chains: { prospect_research: ['gemini-2.5-flash', 'gemini-2.5-flash-lite'], prospect_specialist: ['gemini-2.5-pro', 'gemini-2.5-flash'] },
+    last_run: { id: 7, started_at: '2026-09-23T09:00:00Z', finished_at: '2026-09-23T09:02:00Z', pulled: 0, stages: 4, finished: 1,
+      error: 'GEMINI_DISCOVERY_API_KEY is not set: add it in Supabase, Edge Functions, Secrets' },
+    candidates: Array.from({ length: 24 }, (_, i) => ({
+      id: `cand-${i}`, company: `Example Systems ${i + 1} Limited`, number: String(10000000 + i),
+      town: ['Nottingham', 'Derby'][i % 2], activity: 'Business and domestic software development',
+      incorporated_on: '2018-04-02', company_type: 'ltd', website: `https://example-systems-${i}.invalid`,
+      website_confirmed_by: ['name', 'town'], website_outcome: 'confirmed',
+      status: ['scored', 'disputed', 'working', 'queued', 'no_fit', 'promoted'][i % 6], stage: 'specialists',
+      score: i % 6 === 0 ? 70 + (i % 20) : null,
+      services: i % 6 < 2 ? [
+        { service: 'automation', status: 'agreed', score: 72, sales_last: 72, specialist_last: 72, turns: 3,
+          confirm_question: 'How many hours a week go on re-keying orders from email into the stock system?',
+          walk_away_if: 'They already run an integration platform someone maintains.' },
+        { service: 'data_analytics', status: 'disputed', score: null, sales_last: 60, specialist_last: 35, turns: 6,
+          confirm_question: 'Who builds the monthly numbers, and how long does it take?', walk_away_if: null },
+      ] : null,
+      error: i % 6 === 4 ? 'No service fits the signals.' : null, attempts: 1, promoted_lead_id: null, moves: 14,
+    })),
+  },
+  prospect_transcript: [
+    { seq: 1, stage: 'research', from: 'research', to: 'signals', model: 'gemini-2.5-flash', decision: 'facts',
+      said: reply('Found five facts on their own site. F1: they quote by email and re-key orders into a separate stock system. https://example.invalid/services/bespoke-integration-and-order-processing', { facts: [{ id: 'F1' }] }), guard: 'struck F4: quote not on the page' },
+    { seq: 2, stage: 'signals', from: 'signals', to: 'research', model: 'gemini-2.5-flash', decision: 'signals',
+      said: reply('S1 (strong): manual order re-keying between two systems, rests on F1.'), guard: null },
+    { seq: 3, stage: 'specialists', from: 'specialist:automation', to: 'sales', model: 'gemini-2.5-pro', decision: 'counter',
+      said: reply('I would put this at 72, not 80: they have one system to connect, not four.', { score: 72 }), guard: null },
+    { seq: 4, stage: 'specialists', from: 'sales', to: 'specialist:automation', model: 'gemini-2.5-flash', decision: 'agree',
+      said: reply('72 then. Agreed.', { score: 72 }), guard: null },
+  ],
 }
 
 /* ============================================================
@@ -412,7 +481,7 @@ export const friendlyError = (err, fallback) => fallback
 import { createRoot } from 'react-dom/client'
 import '../src/styles/global.css'
 import '../src/styles/crm.css'
-import OutreachLog from '../src/components/OutreachLog.jsx'
+import ${COMPONENT.name} from '../src/components/${COMPONENT.file}'
 import { Logo } from '../src/components/ui/index.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -424,7 +493,7 @@ createRoot(document.getElementById('root')).render(
           <button type="button" role="tab" aria-selected="false" className="crm-view">Insights</button>
           <button type="button" role="tab" aria-selected="false" className="crm-view">Leads<span className="crm-view__count">24</span></button>
           <button type="button" role="tab" aria-selected="false" className="crm-view">Board</button>
-          <button type="button" role="tab" aria-selected="true" className="crm-view crm-view--on">Argument log</button>
+${['Argument log', 'Lead gen'].map((t) => `<button type="button" role="tab" aria-selected="${t === COMPONENT.tab}" className="crm-view${t === COMPONENT.tab ? ' crm-view--on' : ''}">${t}</button>`).join('\n          ')}
         </nav>
         <div className="crm-ribbon__right">
           <input className="input crm-ribbon__search" type="search" aria-label="Search leads" placeholder="Search leads" />
@@ -433,7 +502,7 @@ createRoot(document.getElementById('root')).render(
         </div>
       </div>
       <div className="shell crm-shell">
-        <OutreachLog />
+        <${COMPONENT.name} />
       </div>
     </div>
   </StrictMode>,
@@ -498,7 +567,7 @@ for (const sig of ['SIGINT', 'SIGTERM']) {
 async function startHarness() {
   const fixture = FIXTURE
     ? JSON.parse(readFileSync(resolve(FIXTURE), 'utf8'))
-    : BUILTIN_FIXTURE
+    : (COMPONENT.name === 'LeadGen' ? LEADGEN_FIXTURE : BUILTIN_FIXTURE)
 
   /* Inside the repo, or vite resolves neither react nor the plugin. */
   const dir = mkdtempSync(join(ROOT, '.crm-usability-'))
@@ -540,7 +609,7 @@ async function run() {
   if (MODE_HARNESS) {
     const h = await startHarness()
     origin = h.origin; path = h.path
-    label = `harness · src/components/OutreachLog.jsx${FIXTURE ? ` · ${FIXTURE}` : ' · built-in fixture'}${EXPAND ? ' · expanded' : ' · as it lands'}`
+    label = `harness · src/components/${COMPONENT.file}${FIXTURE ? ` · ${FIXTURE}` : ' · built-in fixture'}${EXPAND ? ' · expanded' : ' · as it lands'}`
   } else {
     origin = MODE_URL.replace(/\/$/, ''); path = ROUTE
     label = `${origin}${path}`
@@ -548,7 +617,9 @@ async function run() {
 
   if (SHOT_DIR) mkdirSync(resolve(SHOT_DIR), { recursive: true })
 
-  const browser = await chromium.launch()
+  /* CHROMIUM_PATH: for a machine whose installed browser is not the build
+     this playwright expects (a CI image, a cloud sandbox). */
+  const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {})
   cleanups.push(() => { try { browser.close() } catch { /* already gone */ } })
 
   const rows = []

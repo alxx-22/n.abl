@@ -415,7 +415,17 @@
   .crm-ribbon__right { width: 100%; margin-left: 0; }
   .crm-ribbon__search { flex: 1; width: auto; max-width: none; }
   .crm-ribbon__team { display: none; }
-  .crm-view { padding: var(--s-2) var(--s-3); }
+  .crm-view { padding: var(--s-2) var(--s-3); flex: 0 0 auto; }
+  /* Five views do not fit beside the logo on a 360px phone (31px over,
+     measured, when Lead gen arrived). The strip scrolls on its own, the
+     page does not, and the one cut off at the edge says there is more. */
+  .crm-views {
+    flex: 1 1 0; min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .crm-views::-webkit-scrollbar { display: none; }
 }
 
 /* ============================================================
@@ -750,6 +760,7 @@
   padding-top: var(--s-4);
   display: grid; gap: var(--s-2);
 }
+.ol-moves > .btn { justify-self: start; }
 .ol-clause > u, .ol-letter > u, .ol-why > u, .ol-moves > u, .ol-models > u {
   display: block; text-decoration: none;
   font-size: var(--t-xs);
@@ -770,20 +781,6 @@
 .ol-why p { margin: 0; font-size: var(--t-xs); color: var(--cream-600); line-height: 1.6; }
 .ol-why em { font-style: normal; color: var(--cream-400); }
 
-.ol-move {
-  display: grid; gap: var(--s-2);
-  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
-  align-items: baseline;
-  font-size: var(--t-xs);
-  border-top: 1px solid var(--line-faint);
-  padding-top: var(--s-2);
-}
-.ol-move__who { font-family: var(--font-mono); color: var(--accent-400); }
-.ol-move__what { color: var(--cream-300); min-width: 0; }
-.ol-move__what b { color: var(--cream-100); font-weight: 500; }
-.ol-move__what span { display: block; color: var(--cream-600); margin-top: 2px; line-height: 1.5; }
-.ol-move__model { font-family: var(--font-mono); color: var(--cream-600); }
-
 .ol-models table { width: 100%; border-collapse: collapse; font-size: var(--t-xs); }
 .ol-models th {
   text-align: left;
@@ -801,77 +798,111 @@
 }
 
 /* ============================================================
-   LEAD GEN — the placeholder
+   THE ARGUMENT, WORD FOR WORD — .at-
 
-   Reads as a status board, not as a disabled feature. Prefixed .lg-
-   for the same reason the argument log is prefixed .ol-: these share a
-   page with the hand-entered CRM and nothing else.
+   Shared by the outreach log and lead gen. The agent's own message
+   reads as the message; the whole reply sits under it in mono, as
+   sent; code overruling a reply is set apart and says it is code.
    ============================================================ */
 
-.lg { display: grid; gap: var(--s-5); padding-top: var(--s-5); max-width: var(--maxw-prose); }
-.lg-head h2 {
-  margin: 0 0 var(--s-2);
-  font-family: var(--font-display);
-  font-size: var(--t-2xl);
-  color: var(--cream-100);
-  letter-spacing: var(--track-tight);
+.at { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+.at-stage {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  color: var(--cream-600);
+  padding-top: var(--s-2);
 }
-.lg-head p { margin: 0; color: var(--cream-400); font-size: var(--t-sm); line-height: 1.7; }
-
-/* The thing most likely to be got wrong, said first. */
-.lg-ruled {
-  border-left: 3px solid var(--danger);
-  background: var(--danger-soft);
-  border-radius: 0 var(--r-sm) var(--r-sm) 0;
-  padding: var(--s-4);
+.at-move {
+  border-left: 2px solid var(--line-strong);
+  padding: 0 0 0 var(--s-3);
   display: grid; gap: var(--s-2);
+  min-width: 0;
 }
-.lg-ruled > u {
+.at-move__head {
+  display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-2); align-items: baseline;
+  font-size: var(--t-xs);
+}
+.at-move__from { font-family: var(--font-mono); color: var(--accent-400); }
+.at-move__to { font-family: var(--font-mono); color: var(--cream-400); }
+.at-move__what { color: var(--cream-100); font-weight: 500; }
+.at-move__angle { color: var(--cream-400); }
+.at-move__model { font-family: var(--font-mono); color: var(--cream-600); margin-left: auto; }
+.at-move__say { margin: 0; color: var(--cream-200); font-size: var(--t-sm); line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.at-move__toggle {
+  appearance: none; border: 0; background: transparent; padding: 0;
+  font: inherit; font-size: var(--t-xs);
+  color: var(--cream-400);
+  text-decoration: underline; text-underline-offset: 3px;
+  justify-self: start;
+  min-height: 24px;
+  cursor: pointer;
+}
+.at-move__toggle:hover { color: var(--cream-100); }
+.at-move__raw {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  line-height: 1.55;
+  color: var(--cream-300);
+  background: var(--surface-1);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--r-sm);
+  padding: var(--s-3);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+.at-move__code, .at-move__legacy { margin: 0; font-size: var(--t-xs); line-height: 1.55; }
+.at-move__code { color: var(--danger); }
+.at-move__legacy { color: var(--cream-600); }
+.at-move__code em, .at-move__legacy em { font-style: normal; color: var(--cream-400); }
+.at-empty { margin: 0; font-size: var(--t-sm); color: var(--cream-600); }
+
+/* ============================================================
+   LEAD GEN — .lg-
+
+   Lays out on the argument log's .ol- classes, so the two tabs read
+   as one tool; only what lead gen has and the writer does not is here.
+   ============================================================ */
+
+.lg-lastrun { margin: 0; font-size: var(--t-xs); color: var(--cream-600); font-family: var(--font-mono); line-height: 1.6; }
+.lg-lastrun.is-bad { color: var(--danger); }
+.lg-lastrun em { font-style: normal; color: var(--cream-400); }
+.lg-pick { max-width: 18rem; }
+
+.lg-form { display: grid; gap: var(--s-3); }
+.lg-form label { display: grid; gap: var(--s-1); min-width: 0; }
+.lg-form label > span { font-size: var(--t-xs); color: var(--cream-600); }
+.lg-form__dates { display: grid; gap: var(--s-3); grid-template-columns: 1fr 1fr; }
+
+.lg-services { border-top: 1px solid var(--line-faint); padding-top: var(--s-4); display: grid; gap: var(--s-3); }
+.lg-services > u {
   display: block; text-decoration: none;
   font-size: var(--t-xs);
   text-transform: uppercase;
   letter-spacing: var(--track-wide);
-  color: var(--danger);
-  font-weight: 600;
+  color: var(--cream-600);
 }
-.lg-ruled p { margin: 0; font-size: var(--t-sm); color: var(--cream-200); line-height: 1.7; }
-.lg-ruled p.lg-ruled__note { color: var(--cream-600); font-size: var(--t-xs); }
+.lg-service { display: grid; gap: var(--s-1); border-left: 2px solid var(--line-strong); padding-left: var(--s-3); }
+.lg-service--agreed { border-left-color: var(--accent-400); }
+.lg-service--disputed { border-left-color: var(--danger); }
+.lg-service__head { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); align-items: baseline; }
+.lg-service__head b { color: var(--cream-100); font-weight: 500; font-size: var(--t-sm); }
+.lg-service__head span { color: var(--cream-400); font-size: var(--t-xs); }
+.lg-service__head strong { color: var(--accent-400); font-weight: 600; }
+.lg-service p { margin: 0; font-size: var(--t-xs); color: var(--cream-300); line-height: 1.6; }
+.lg-service em { font-style: normal; color: var(--cream-600); }
 
-.lg-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-4); }
-.lg-steps li { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); gap: var(--s-3); }
-.lg-steps__n {
-  font-family: var(--font-mono);
-  font-size: var(--t-xs);
-  color: var(--cream-600);
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  width: 1.75rem; height: 1.75rem;
-  display: inline-flex; align-items: center; justify-content: center;
-}
-.lg-steps li.is-done .lg-steps__n { border-color: var(--accent-400); color: var(--accent-400); }
-.lg-steps h3 {
-  margin: 0 0 var(--s-1);
-  font-size: var(--t-base);
-  color: var(--cream-100);
-  font-weight: 500;
-}
-.lg-steps h3 em {
-  font-style: normal;
-  font-family: var(--font-mono);
-  font-size: var(--t-xs);
-  color: var(--cream-600);
-  margin-left: var(--s-2);
-}
-.lg-steps p { margin: 0; font-size: var(--t-sm); color: var(--cream-400); line-height: 1.7; }
+.lg-tag--scored, .lg-tag--promoted { color: var(--accent-400); }
+.lg-tag--disputed, .lg-tag--failed { color: var(--danger); }
 
-.lg-never { border-top: 1px solid var(--line-faint); padding-top: var(--s-4); display: grid; gap: var(--s-3); }
-.lg-never > u {
-  display: block; text-decoration: none;
-  font-size: var(--t-xs);
-  text-transform: uppercase;
-  letter-spacing: var(--track-wide);
-  color: var(--cream-600);
+.lg-chains { margin: 0; display: grid; gap: var(--s-1); font-size: var(--t-xs); }
+.lg-chains div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: var(--s-2); }
+.lg-chains dt { color: var(--cream-600); }
+.lg-chains dd { margin: 0; font-family: var(--font-mono); color: var(--cream-300); overflow-wrap: anywhere; }
+
+@media (min-width: 720px) {
+  .lg-form { grid-template-columns: 1fr 1fr; }
 }
-.lg-never dl { margin: 0; display: grid; gap: var(--s-3); }
-.lg-never dt { color: var(--cream-200); font-size: var(--t-sm); }
-.lg-never dd { margin: var(--s-1) 0 0; color: var(--cream-600); font-size: var(--t-xs); line-height: 1.6; }

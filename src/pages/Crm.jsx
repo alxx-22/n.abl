@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { teamClient, friendlyError } from '../lib/supabase.js'
 import PipelineHandoff from '../components/PipelineHandoff.jsx'
 import OutreachLog from '../components/OutreachLog.jsx'
+import LeadGen from '../components/LeadGen.jsx'
 import {
   Logo, Field, Badge, EdgeCard, Reveal, ConfirmModal, useToast, Loading, Empty,
 } from '../components/ui/index.jsx'
@@ -64,6 +65,9 @@ const VIEWS = [
      sends by hand. Two controls with one name on one page is how
      somebody arms a send switch believing they are editing a draft. */
   { id: 'argument', label: 'Argument log' },
+  /* New businesses, argued for by the lead-gen agents before anybody
+     sees them. Nothing in it sends; a promoted lead is do_not_contact. */
+  { id: 'leadgen', label: 'Lead gen' },
 ]
 
 const TABS = [
@@ -834,6 +838,8 @@ function Workspace({ sb, user, onSignedOut }) {
         )}
 
         {view === 'argument' && <OutreachLog />}
+
+        {view === 'leadgen' && <LeadGen />}
 
         {view === 'board' && (
           <section aria-label="Pipeline board">
