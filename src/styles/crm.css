@@ -906,3 +906,225 @@
 @media (min-width: 720px) {
   .lg-form { grid-template-columns: 1fr 1fr; }
 }
+
+/* ============================================================
+   THE LIST AND THE RECORD — .ws- (src/components/ui/Workspace.jsx)
+
+   You scroll to read the thing you are looking at, never to travel
+   between parts of the screen. Measured by check-crm-usability.mjs.
+
+   Below 900px the list and the record take turns: .is-picked hides the
+   list and shows the record under a sticky bar (back, title, sections).
+   From 900px they sit side by side at the height of the window, each
+   with its own scroller, and the page does not scroll at all.
+
+   --crm-ribbon-h is the main ribbon's measured height, set by Crm.jsx;
+   the sticky record bar sits directly under it.
+   ============================================================ */
+
+.ws { display: grid; gap: var(--s-4); grid-template-columns: minmax(0, 1fr); align-items: start; }
+.ws__list, .ws__detail { min-width: 0; }
+
+/* Inside a split the list is not a scroller of its own on a phone - the
+   page is - and on a desktop its column is. Either way no inner cap. */
+.ws .ol-list, .ws .crm-leadlist { max-height: none; overflow: visible; padding-right: 0; }
+
+.ws-bar { display: flex; align-items: flex-start; gap: var(--s-3); min-width: 0; padding-bottom: var(--s-2); }
+.ws-bar__title { min-width: 0; flex: 1 1 12rem; }
+.ws-bar__title h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  color: var(--cream-100);
+  letter-spacing: var(--track-tight);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.ws-bar__sub { margin: 2px 0 0; font-size: var(--t-xs); color: var(--cream-600); }
+.ws-bar__sub .ol-tag { margin-top: 0; }
+.ws-bar__actions { display: flex; flex-wrap: wrap; gap: var(--s-2); justify-content: flex-end; flex: 0 1 auto; }
+
+/* Back and the sections, one row, the part that stays. */
+.ws-nav {
+  display: flex; align-items: center; gap: var(--s-2);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  z-index: 5;
+  min-width: 0;
+}
+.ws-nav .tabs { border-bottom: 0; flex: 1 1 auto; min-width: 0; }
+
+.ws-back {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  color: var(--cream-200);
+  font: inherit;
+  font-size: var(--t-base);
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+.ws-back:hover { color: var(--cream-100); border-color: var(--line-strong); }
+
+.ws-tabs .tab { padding: var(--s-3) var(--s-3) calc(var(--s-3) - 2px); font-size: var(--t-xs); display: inline-flex; gap: var(--s-2); align-items: center; }
+.ws-tabs__count {
+  font-size: var(--t-xs);
+  letter-spacing: 0;
+  padding: 0 .45em;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
+.ws-panel {
+  display: grid; gap: var(--s-4); padding-top: var(--s-4); min-width: 0; align-content: start;
+  /* Where scrollIntoView lands it: under the sticky ribbon and tabs. */
+  scroll-margin-top: calc(var(--crm-ribbon-h, 0px) + 52px);
+}
+@media (min-width: 900px) { .ws-panel { scroll-margin-top: 52px; } }
+.ws-hint { margin: 0; }
+
+/* The chips and the counts are one row that slides, not rows that wrap:
+   on a phone a wrapped row of eight filters was a screen of its own. */
+.ws-page .ol-filters { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.ws-page .ol-filters::-webkit-scrollbar { display: none; }
+.ws-page .ol-filters > * { flex: 0 0 auto; }
+
+@media (max-width: 899px) {
+  .ws.is-picked > .ws__list { display: none; }
+  .ws:not(.is-picked) > .ws__detail { display: none; }
+  .ws-nav {
+    position: sticky;
+    top: var(--crm-ribbon-h, 0px);
+    margin: 0 calc(-1 * var(--s-4));
+    padding: 0 var(--s-4);
+  }
+  .ws-bar { flex-wrap: wrap; }
+  .ws-bar__title h3 { font-size: var(--t-lg); }
+
+  /* With a record open, the list's counts and filters have nothing to
+     say about it; they come back with the list. */
+  .ws-page:has(> .ws.is-picked) > :not(.ws):not(.overlay) { display: none; }
+
+  /* Denser list cards: the list is the one thing on the screen. */
+  .ws .crm-leadbtn { padding: var(--s-3) var(--s-4); position: relative; }
+  .ws .crm-leadbtn__meta { font-size: var(--t-xs); }
+  .ws .crm-leadlist .crm-leadbtn {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--s-3); align-items: center;
+  }
+  .ws .crm-leadlist .crm-leadbtn__name { grid-column: 1; }
+  .ws .crm-leadlist .crm-leadbtn__meta { grid-column: 1; }
+  .ws .crm-leadlist .crm-leadbtn__tags {
+    grid-column: 2; grid-row: 1 / span 2;
+    margin: 0; flex-direction: column; align-items: flex-end; gap: var(--s-1);
+  }
+  .ws .ol-list .crm-leadbtn { padding-right: 6.5rem; }
+  .ws .ol-list .ol-tag { position: absolute; top: var(--s-3); right: var(--s-4); margin: 0; }
+  .ws-panel .crm-kv { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
+
+  .ws-page { gap: var(--s-3); padding-top: var(--s-3); }
+  .ws-page .ol-counts { flex-wrap: nowrap; overflow-x: auto; gap: var(--s-4); scrollbar-width: none; padding-bottom: var(--s-3); }
+  .ws-page .ol-counts::-webkit-scrollbar { display: none; }
+  .ws-page .ol-count { flex: 0 0 auto; }
+  .ws-page .ol-count b { font-size: var(--t-lg); }
+  .ws-page .ol-counts__btn { position: sticky; right: 0; flex: 0 0 auto; background: var(--bg); }
+}
+
+@media (min-width: 900px) {
+  .ws-back { display: none; }
+  /* The view fills the window below the ribbon; the split takes what the
+     counts and filters leave, and scrolls inside itself. */
+  .ws-page {
+    display: flex; flex-direction: column;
+    height: calc(100dvh - var(--crm-ribbon-h, 64px) - var(--s-5));
+    min-height: 32rem;
+    padding-top: var(--s-4);
+    gap: var(--s-4);
+  }
+  .ws-page > .ws { flex: 1 1 auto; min-height: 0; }
+  .ws {
+    grid-template-columns: 19rem minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    height: 100%;
+  }
+  .ws__list, .ws__detail {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
+    scrollbar-gutter: stable;
+  }
+  .ws__list { padding-right: var(--s-2); }
+  .ws__detail { padding-right: var(--s-3); }
+  .ws-nav { position: sticky; top: 0; }
+}
+
+/* Settings over the page, not above the list. */
+.ws-sheet__backdrop { place-items: stretch end; padding: 0; }
+.ws-sheet {
+  width: min(40rem, 100vw);
+  height: 100dvh;
+  background: var(--surface-1);
+  border-left: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  box-shadow: var(--glow-lg), 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+.ws-sheet:focus { outline: none; }
+.ws-sheet__head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border-bottom: 1px solid var(--line);
+}
+.ws-sheet__head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  color: var(--cream-100);
+}
+.ws-sheet__body {
+  flex: 1 1 auto; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: var(--s-5);
+  display: grid; gap: var(--s-5); align-content: start;
+}
+.ws-sheet__actions {
+  position: sticky; bottom: 0;
+  background: var(--surface-1);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--line-faint);
+  z-index: 1;
+}
+@media (max-width: 640px) {
+  .ws-sheet { border-left: 0; }
+  .ws-sheet__body { padding: var(--s-4); }
+  .ws-sheet__head { padding: var(--s-3) var(--s-4); }
+}
+
+/* ---------- the Leads view on the same layout ---------- */
+.crm-score--sm .crm-score__box { width: 2.75rem; height: 2.75rem; font-size: var(--t-lg); }
+.ws-bar__sub .crm-detail__facts { display: flex; margin-top: var(--s-1); gap: var(--s-1) var(--s-3); font-size: var(--t-xs); }
+/* A link alone in a field is a tap target of its own, not inline text. */
+.crm-kv dd > a, .crm-kv dd > .crm-link { display: inline-block; min-height: 24px; line-height: 24px; }
+.crm-danger-row { margin-top: var(--s-6); padding-top: var(--s-4); border-top: 1px solid var(--line-faint); }
+.crm-leads .crm-filters { margin: 0; }
+.crm-leads > section { flex: 0 0 auto; }
+
+/* Three filters in one row on a phone rather than three rows: the
+   labels are short and the controls are native selects, which open
+   full-screen pickers on a phone however narrow they are drawn. */
+@media (max-width: 899px) {
+  .crm-leads .crm-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-2); }
+  .crm-leads .crm-filters .crm-focus { grid-column: 1 / -1; justify-self: start; }
+  .crm-leads .crm-filter .label { font-size: var(--t-xs); }
+  .crm-leads .crm-filter .input { padding-left: var(--s-2); padding-right: var(--s-2); min-width: 0; }
+}
+
+/* The split views fill the window, so the shell stops adding height of
+   its own under them. */
+@media (min-width: 900px) {
+  .crm-shell--fit { padding-top: 0; padding-bottom: var(--s-5); }
+}
+@media (max-width: 899px) {
+  .crm-shell--fit { padding-top: 0; }
+}

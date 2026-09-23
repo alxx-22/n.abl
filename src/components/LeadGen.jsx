@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { teamClient, friendlyError } from '../lib/supabase.js'
 import { Loading, Empty } from './ui/index.jsx'
 import ArgumentTranscript from './ArgumentTranscript.jsx'
+import { SplitView, RecordBar, SectionTabs, SectionPanel, Sheet, usePickScroll } from './ui/Workspace.jsx'
 
 /* ============================================================
    LEAD GEN
@@ -72,36 +73,34 @@ function problemWith(d) {
   return ''
 }
 
-/* The argument, word for word, fetched when somebody asks for it. */
-function Transcript({ id, count }) {
-  const [open, setOpen] = useState(false)
+/* The argument, word for word, fetched when its section is opened. */
+function Transcript({ id }) {
   const [moves, setMoves] = useState(null)
   const [err, setErr] = useState('')
 
-  const show = async () => {
-    if (open) { setOpen(false); return }
-    setOpen(true)
-    try {
-      const { data, error } = await teamClient().rpc('prospect_transcript', { p_id: id })
-      if (error) throw error
-      setMoves(Array.isArray(data) ? data : [])
-      setErr('')
-    } catch (e) {
-      setErr(friendlyError(e, 'Could not read the argument.'))
-    }
-  }
+  useEffect(() => {
+    let alive = true
+    teamClient().rpc('prospect_transcript', { p_id: id })
+      .then(({ data, error }) => {
+        if (!alive) return
+        if (error) throw error
+        setMoves(Array.isArray(data) ? data : [])
+      })
+      .catch((e) => { if (alive) setErr(friendlyError(e, 'Could not read the argument.')) })
+    return () => { alive = false }
+  }, [id])
 
-  return (
-    <div className="ol-moves">
-      <button type="button" className="btn btn--ghost btn--sm" aria-expanded={open} onClick={show}>
-        {open ? 'Hide argument log' : `View argument log${count ? ` (${count})` : ''}`}
-      </button>
-      {open && err && <p className="crm-warn">{err}</p>}
-      {open && !err && !moves && <Loading label="Reading the argument" />}
-      {open && moves && <ArgumentTranscript moves={moves} empty="Nobody has said anything about this business yet." />}
-    </div>
-  )
+  if (err) return <p className="crm-warn">{err}</p>
+  if (!moves) return <Loading label="Reading the argument" />
+  return <ArgumentTranscript moves={moves} empty="Nobody has said anything about this business yet." />
 }
+
+const SECTIONS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'fit', label: 'Service fit' },
+  { id: 'outreach', label: 'Outreach' },
+  { id: 'argument', label: 'Argument log' },
+]
 
 function Services({ rows, labels }) {
   if (!Array.isArray(rows) || rows.length === 0) return null
@@ -119,11 +118,116 @@ function Services({ rows, labels }) {
               {' '}· {num(s.turns)} turns
             </span>
           </div>
-          {s.confirm_question && <p><em>the question that settles it:</em> {s.confirm_question}</p>}
-          {s.walk_away_if && <p><em>walk away if:</em> {s.walk_away_if}</p>}
         </div>
       ))}
     </div>
+  )
+}
+
+/* One business, in sections, with the three decisions a person makes
+   about it kept in the bar so they are reachable from every section. */
+function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPromote, onDismiss, onRetry }) {
+  const services = Array.isArray(cand.services) ? cand.services : []
+  const asks = services.filter((s) => s.confirm_question || s.walk_away_if)
+  const tabs = SECTIONS.map((t) => ({
+    ...t,
+    count: t.id === 'argument' ? cand.moves : t.id === 'fit' ? services.length : null,
+  }))
+
+  const actions = (
+    <>
+      {['scored', 'disputed', 'no_fit'].includes(cand.status) && (
+        <button type="button" className="btn btn--accent btn--sm" disabled={Boolean(busy)} onClick={() => onPromote(cand)}>
+          Promote
+        </button>
+      )}
+      {cand.status !== 'promoted' && (
+        <button type="button" className="btn btn--ghost btn--sm" disabled={Boolean(busy)} onClick={() => onDismiss(cand)}>
+          Dismiss
+        </button>
+      )}
+      {['failed', 'no_fit', 'disputed', 'scored'].includes(cand.status) && (
+        <button type="button" className="btn btn--ghost btn--sm" disabled={Boolean(busy)} onClick={() => onRetry(cand)}>
+          Argue again
+        </button>
+      )}
+    </>
+  )
+
+  return (
+    <>
+      <RecordBar
+        title={cand.company}
+        sub={<>{cand.town || 'location unknown'}{cand.score != null ? ` · ${cand.score}` : ''}
+          {' '}· <span className={`ol-tag lg-tag--${cand.status}`}>{nice(cand.status)}</span></>}
+        backLabel="All businesses"
+        onBack={onBack}
+        actions={actions}
+        tabs={<SectionTabs tabs={tabs} active={section} onChange={onSection} label="Business sections" idPrefix="lg" />}
+      />
+      <SectionPanel idPrefix="lg" active={section}>
+        {section === 'overview' && (
+          <>
+            <p className="ol-detail__sub">
+              {cand.activity || 'activity unknown'}
+              {cand.number && (
+                <> · <a className="crm-link" target="_blank" rel="noreferrer noopener"
+                  href={`https://find-and-update.company-information.service.gov.uk/company/${encodeURIComponent(cand.number)}`}>
+                  Companies House {cand.number}</a></>
+              )}
+            </p>
+            <dl className="crm-kv">
+              <div><dt>Score</dt><dd>{cand.score != null ? num(cand.score) : (cand.status === 'disputed' ? 'none — disputed' : '—')}</dd></div>
+              <div><dt>Status</dt><dd>{nice(cand.status)}{cand.status === 'working' || cand.status === 'queued' ? ` · ${STAGE_LABEL[cand.stage] || cand.stage}` : ''}</dd></div>
+              <div><dt>Incorporated</dt><dd>{cand.incorporated_on || '—'}{cand.company_type ? ` · ${nice(cand.company_type)}` : ''}</dd></div>
+              <div>
+                <dt>Website</dt>
+                <dd>
+                  {cand.website
+                    ? <><a className="crm-link" href={cand.website} target="_blank" rel="noreferrer noopener">{cand.website.replace(/^https?:\/\//, '')}</a>
+                      {Array.isArray(cand.website_confirmed_by) && cand.website_confirmed_by.length > 0 && ` · confirmed by ${cand.website_confirmed_by.join(' + ')}`}</>
+                    : nice(cand.website_outcome) || '—'}
+                </dd>
+              </div>
+            </dl>
+            {cand.error && (
+              <p className="crm-warn">
+                {cand.status === 'failed' ? `Failed after ${cand.attempts} attempts. ` : ''}{cand.error}
+              </p>
+            )}
+          </>
+        )}
+
+        {section === 'fit' && (services.length
+          ? <Services rows={services} labels={labels} />
+          : <p className="at-empty">{cand.status === 'queued' || cand.status === 'working'
+            ? `Not there yet — ${STAGE_LABEL[cand.stage] || cand.stage}.`
+            : 'Sales found no service to put to a specialist.'}</p>)}
+
+        {section === 'outreach' && (
+          <>
+            {cand.status === 'promoted'
+              ? <p className="ol-summary">In Leads, marked do not contact. Writing to them is a decision made there, by a person.</p>
+              : <p className="ol-summary">Not a lead yet. Promoting it adds it to Leads marked do not contact — finding a business is not permission to write to it.</p>}
+            {asks.length === 0 && <p className="at-empty">No call questions yet — they come from the specialists.</p>}
+            {asks.length > 0 && (
+              <div className="lg-services">
+                <u>Before anyone writes: what to ask, and when to walk away</u>
+                {asks.map((s) => (
+                  <div className={`lg-service lg-service--${s.status}`} key={s.service}>
+                    <div className="lg-service__head"><b>{labels[s.service] || nice(s.service)}</b></div>
+                    {s.confirm_question && <p><em>the question that settles it:</em> {s.confirm_question}</p>}
+                    {s.walk_away_if && <p><em>walk away if:</em> {s.walk_away_if}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {section === 'argument' && <Transcript key={cand.id} id={cand.id} />}
+      </SectionPanel>
+    </>
   )
 }
 
@@ -137,6 +241,9 @@ export default function LeadGen() {
   const [said, setSaid] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [selected, setSelected] = useState(null)
+  const [section, setSection] = useState('overview')
+  const nav = usePickScroll(setSelected)
+  const closeRun = useCallback(() => setRunOpen(false), [])
 
   const load = useCallback(async () => {
     try {
@@ -229,7 +336,7 @@ export default function LeadGen() {
   const chains = (data && data.chains) || {}
 
   return (
-    <section className="ol lg" aria-label="Lead generation">
+    <section className="ol lg ws-page" aria-label="Lead generation">
       <div className="ol-counts">
         {[
           ['queued', counts.queued], ['working', counts.working], ['scored', counts.scored],
@@ -244,25 +351,22 @@ export default function LeadGen() {
         <button
           type="button"
           className="btn btn--ghost btn--sm ol-counts__btn"
-          aria-expanded={runOpen}
-          onClick={() => setRunOpen((v) => !v)}
+          aria-haspopup="dialog"
+          onClick={() => setRunOpen(true)}
         >
           Run settings
         </button>
       </div>
 
-      {lastRun && (
-        <p className={`lg-lastrun ${lastRun.error ? 'is-bad' : ''}`}>
-          Last tick {when(lastRun.finished_at || lastRun.started_at)} · pulled {num(lastRun.pulled)} ·{' '}
-          {num(lastRun.stages)} stages · {num(lastRun.finished)} finished
-          {lastRun.error && <><br /><em>went wrong:</em> {lastRun.error}</>}
+      {(lastRun && lastRun.error) || said ? (
+        <p className={`lg-lastrun ${lastRun && lastRun.error && !said ? 'is-bad' : ''}`} role="status">
+          {said || <><em>last tick went wrong:</em> {lastRun.error}</>}
         </p>
-      )}
+      ) : null}
 
-      {runOpen && draft && (
-        <div className="ol-panel">
-          <div className="ol-panel__head">
-            <h3>Who to look for</h3>
+      <Sheet open={runOpen && Boolean(draft)} title="Who to look for" onClose={closeRun}>
+        {draft && (
+          <>
             {targets.length > 1 && (
               <select
                 className="input lg-pick"
@@ -274,57 +378,90 @@ export default function LeadGen() {
                 {targets.map((t) => <option key={t.id} value={t.id}>{t.name}{t.running ? ' (running)' : ''}</option>)}
               </select>
             )}
-          </div>
 
-          <div className="lg-form">
-            <label>
-              <span>Name</span>
-              <input className="input" type="text" value={draft.name}
-                onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
-            </label>
-            <label>
-              <span>Towns or cities, comma separated</span>
-              <input className="input" type="text" value={draft.towns} placeholder="Nottingham, Derby"
-                onChange={(e) => setDraft({ ...draft, towns: e.target.value })} />
-            </label>
-            <label>
-              <span>SIC codes or prefixes, comma separated — blank for any</span>
-              <input className="input" type="text" inputMode="numeric" value={draft.sic} placeholder="62, 7022"
-                onChange={(e) => setDraft({ ...draft, sic: e.target.value })} />
-            </label>
-            <div className="lg-form__dates">
+            <div className="lg-form">
               <label>
-                <span>Incorporated from</span>
-                <input className="input" type="date" value={draft.from}
-                  onChange={(e) => setDraft({ ...draft, from: e.target.value })} />
+                <span>Name</span>
+                <input className="input" type="text" value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
               </label>
               <label>
-                <span>to</span>
-                <input className="input" type="date" value={draft.to}
-                  onChange={(e) => setDraft({ ...draft, to: e.target.value })} />
+                <span>Towns or cities, comma separated</span>
+                <input className="input" type="text" value={draft.towns} placeholder="Nottingham, Derby"
+                  onChange={(e) => setDraft({ ...draft, towns: e.target.value })} />
               </label>
+              <label>
+                <span>SIC codes or prefixes, comma separated — blank for any</span>
+                <input className="input" type="text" inputMode="numeric" value={draft.sic} placeholder="62, 7022"
+                  onChange={(e) => setDraft({ ...draft, sic: e.target.value })} />
+              </label>
+              <div className="lg-form__dates">
+                <label>
+                  <span>Incorporated from</span>
+                  <input className="input" type="date" value={draft.from}
+                    onChange={(e) => setDraft({ ...draft, from: e.target.value })} />
+                </label>
+                <label>
+                  <span>to</span>
+                  <input className="input" type="date" value={draft.to}
+                    onChange={(e) => setDraft({ ...draft, to: e.target.value })} />
+                </label>
+              </div>
             </div>
-          </div>
 
-          <div className="ol-actions">
-            <button type="button" className="btn btn--sm" disabled={Boolean(busy) || Boolean(problem)} onClick={save}>
-              Save target
-            </button>
-            {running ? (
-              <button type="button" className="btn btn--sm ol-stop" disabled={Boolean(busy)} onClick={stop}>Stop</button>
-            ) : (
-              <button type="button" className="btn btn--accent btn--sm" disabled={Boolean(busy) || !draft.id} onClick={start}>
-                Run
+            <div className="ol-actions ws-sheet__actions">
+              <button type="button" className="btn btn--sm" disabled={Boolean(busy) || Boolean(problem)} onClick={save}>
+                Save target
               </button>
-            )}
-            <span className="ol-said">
-              {busy ? `${busy}…` : (said || problem || (!draft.id ? 'Save the target before starting it' : ''))}
-            </span>
-          </div>
-        </div>
-      )}
+              {running ? (
+                <button type="button" className="btn btn--sm ol-stop" disabled={Boolean(busy)} onClick={stop}>Stop</button>
+              ) : (
+                <button type="button" className="btn btn--accent btn--sm" disabled={Boolean(busy) || !draft.id} onClick={start}>
+                  Run
+                </button>
+              )}
+              <span className="ol-said" role="status">
+                {busy ? `${busy}…` : (said || problem || (!draft.id ? 'Save the target before starting it' : ''))}
+              </span>
+            </div>
 
-      {!runOpen && said && <p className="ol-said">{said}</p>}
+            {lastRun && (
+              <p className={`lg-lastrun ${lastRun.error ? 'is-bad' : ''}`}>
+                Last tick {when(lastRun.finished_at || lastRun.started_at)} · pulled {num(lastRun.pulled)} ·{' '}
+                {num(lastRun.stages)} stages · {num(lastRun.finished)} finished
+                {lastRun.error && <><br /><em>went wrong:</em> {lastRun.error}</>}
+              </p>
+            )}
+
+            {(models.length > 0 || Object.keys(chains).length > 0) && (
+              <div className="ol-models">
+                <u>Discovery project — today, Pacific. Its own key, never the writer&rsquo;s.</u>
+                {Object.keys(chains).length > 0 && (
+                  <dl className="lg-chains">
+                    {Object.entries(chains).map(([role, chain]) => (
+                      <div key={role}><dt>{nice(role.replace(/^prospect_/, ''))}</dt><dd>{(chain || []).join(' → ')}</dd></div>
+                    ))}
+                  </dl>
+                )}
+                {models.length > 0 && (
+                  <table>
+                    <thead><tr><th>model</th><th>calls</th><th>ceiling</th></tr></thead>
+                    <tbody>
+                      {models.map((m) => (
+                        <tr key={m.model}>
+                          <td>{m.model}</td>
+                          <td>{num(m.used)}</td>
+                          <td>{m.exhausted ? (m.observed_rpd == null ? 'yes' : num(m.observed_rpd)) : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </Sheet>
 
       <div className="ol-filters" role="group" aria-label="Filter by status">
         {STATUSES.map((st) => (
@@ -343,121 +480,51 @@ export default function LeadGen() {
         ))}
       </div>
 
-      <div className="ol-split">
-        <div className="ol-list">
-          {shown.length === 0 && <Empty>Nothing in this state.</Empty>}
-          {shown.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className={`crm-leadbtn ${selected === c.id ? 'crm-leadbtn--active' : ''}`}
-              onClick={() => setSelected(c.id)}
-            >
-              <span className="ol-list__name">{c.company}</span>
-              <span className="ol-list__meta">
-                {c.town || '—'} · {c.activity || 'activity unknown'}{c.score != null ? ` · ${c.score}` : ''}
-              </span>
-              <span className={`ol-tag lg-tag--${c.status}`}>{nice(c.status)}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="ol-detail">
-          {!cand && (
-            <div className="crm-hint">
-              <p>
-                Pick a business to see what the agents found, which services sales picked, whether
-                each specialist agreed a score, and every word they said to each other.
-              </p>
-            </div>
-          )}
-
-          {cand && (
-            <>
-              <h3 className="ol-detail__name">{cand.company}</h3>
-              <p className="ol-detail__sub">
-                {cand.town || 'location unknown'} · {cand.activity || 'activity unknown'}
-                {cand.number && (
-                  <> · <a className="crm-link" target="_blank" rel="noreferrer noopener"
-                    href={`https://find-and-update.company-information.service.gov.uk/company/${encodeURIComponent(cand.number)}`}>
-                    Companies House {cand.number}</a></>
-                )}
-              </p>
-
-              <dl className="crm-kv">
-                <div><dt>Score</dt><dd>{cand.score != null ? num(cand.score) : (cand.status === 'disputed' ? 'none — disputed' : '—')}</dd></div>
-                <div><dt>Status</dt><dd>{nice(cand.status)}{cand.status === 'working' || cand.status === 'queued' ? ` · ${STAGE_LABEL[cand.stage] || cand.stage}` : ''}</dd></div>
-                <div><dt>Incorporated</dt><dd>{cand.incorporated_on || '—'}{cand.company_type ? ` · ${nice(cand.company_type)}` : ''}</dd></div>
-                <div>
-                  <dt>Website</dt>
-                  <dd>
-                    {cand.website
-                      ? <><a className="crm-link" href={cand.website} target="_blank" rel="noreferrer noopener">{cand.website.replace(/^https?:\/\//, '')}</a>
-                        {Array.isArray(cand.website_confirmed_by) && cand.website_confirmed_by.length > 0 && ` · confirmed by ${cand.website_confirmed_by.join(' + ')}`}</>
-                      : nice(cand.website_outcome) || '—'}
-                  </dd>
-                </div>
-              </dl>
-
-              <Services rows={cand.services} labels={labels} />
-
-              {cand.error && (
-                <p className="crm-warn">
-                  {cand.status === 'failed' ? `Failed after ${cand.attempts} attempts. ` : ''}{cand.error}
-                </p>
-              )}
-
-              <div className="ol-actions">
-                {['scored', 'disputed', 'no_fit'].includes(cand.status) && (
-                  <button type="button" className="btn btn--accent btn--sm" disabled={Boolean(busy)} onClick={() => promote(cand)}>
-                    Promote to Leads
-                  </button>
-                )}
-                {cand.status !== 'promoted' && (
-                  <button type="button" className="btn btn--ghost btn--sm" disabled={Boolean(busy)} onClick={() => dismiss(cand)}>
-                    Dismiss
-                  </button>
-                )}
-                {['failed', 'no_fit', 'disputed', 'scored'].includes(cand.status) && (
-                  <button type="button" className="btn btn--ghost btn--sm" disabled={Boolean(busy)} onClick={() => retry(cand)}>
-                    Argue it again
-                  </button>
-                )}
-                {cand.status === 'promoted' && <span className="ol-said">In Leads, marked do not contact.</span>}
-              </div>
-
-              <Transcript key={cand.id} id={cand.id} count={cand.moves} />
-            </>
-          )}
-        </div>
-      </div>
-
-      {(models.length > 0 || Object.keys(chains).length > 0) && (
-        <div className="ol-models">
-          <u>Discovery project — today, Pacific. Its own key, never the writer&rsquo;s.</u>
-          {Object.keys(chains).length > 0 && (
-            <dl className="lg-chains">
-              {Object.entries(chains).map(([role, chain]) => (
-                <div key={role}><dt>{nice(role.replace(/^prospect_/, ''))}</dt><dd>{(chain || []).join(' → ')}</dd></div>
-              ))}
-            </dl>
-          )}
-          {models.length > 0 && (
-            <table>
-              <thead><tr><th>model</th><th>calls</th><th>ceiling reached</th></tr></thead>
-              <tbody>
-                {models.map((m) => (
-                  <tr key={m.model}>
-                    <td>{m.model}</td>
-                    <td>{num(m.used)}</td>
-                    <td>{m.exhausted ? (m.observed_rpd == null ? 'yes' : num(m.observed_rpd)) : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+      <SplitView
+        picked={Boolean(cand)}
+        innerRef={nav.ref}
+        label="Businesses"
+        list={(
+          <div className="ol-list">
+            {shown.length === 0 && <Empty>Nothing in this state.</Empty>}
+            {shown.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`crm-leadbtn ${selected === c.id ? 'crm-leadbtn--active' : ''}`}
+                aria-current={selected === c.id ? 'true' : undefined}
+                onClick={() => nav.pick(c.id)}
+              >
+                <span className="ol-list__name">{c.company}</span>
+                <span className="ol-list__meta">
+                  {c.town || '—'} · {c.activity || 'activity unknown'}{c.score != null ? ` · ${c.score}` : ''}
+                </span>
+                <span className={`ol-tag lg-tag--${c.status}`}>{nice(c.status)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        detail={cand ? (
+          <CandidateRecord
+            cand={cand}
+            labels={labels}
+            section={section}
+            onSection={setSection}
+            onBack={nav.back}
+            busy={busy}
+            onPromote={promote}
+            onDismiss={dismiss}
+            onRetry={retry}
+          />
+        ) : (
+          <div className="crm-hint ws-hint">
+            <p>
+              Pick a business to see what the agents found, which services sales picked, whether
+              each specialist agreed a score, and every word they said to each other — each a tab away.
+            </p>
+          </div>
+        )}
+      />
     </section>
   )
 }

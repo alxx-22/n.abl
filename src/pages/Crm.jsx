@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { teamClient, friendlyError } from '../lib/supabase.js'
 import PipelineHandoff from '../components/PipelineHandoff.jsx'
-import OutreachLog from '../components/OutreachLog.jsx'
+import OutreachLog, { ArgumentLog, ServiceFit, useOutreachLead } from '../components/OutreachLog.jsx'
+import { SplitView, RecordBar, SectionTabs, SectionPanel, usePickScroll, useRibbonHeight } from '../components/ui/Workspace.jsx'
 import LeadGen from '../components/LeadGen.jsx'
 import {
   Logo, Field, Badge, EdgeCard, Reveal, ConfirmModal, useToast, Loading, Empty,
@@ -70,10 +71,15 @@ const VIEWS = [
   { id: 'leadgen', label: 'Lead gen' },
 ]
 
+/* A lead's sections, in the order they are reached for: what it is,
+   which service fits, what we would say, what the agents argued. The
+   record keeping comes after. */
 const TABS = [
   { id: 'overview', label: 'Overview' },
-  { id: 'contacts', label: 'Contacts' },
+  { id: 'fit', label: 'Service fit' },
   { id: 'outreach', label: 'Outreach' },
+  { id: 'argument', label: 'Argument log' },
+  { id: 'contacts', label: 'Contacts' },
   { id: 'notes', label: 'Notes' },
   { id: 'compliance', label: 'Compliance' },
   { id: 'activity', label: 'Activity' },
@@ -757,6 +763,12 @@ function Workspace({ sb, user, onSignedOut }) {
   ]), [leads])
 
   function selectLead(id) { setSelectedId(id); setTab('overview') }
+  /* On a phone the record replaces the list only once somebody has picked
+     one; on a desktop the first lead fills the empty pane anyway. */
+  const picked = Boolean(selectedId && selected && selected.id === selectedId)
+  const nav = usePickScroll(selectLead)
+  const ribbonRef = useRibbonHeight()
+  const fits = view === 'leads' || view === 'argument' || view === 'leadgen'
 
   if (expired) {
     return (
@@ -792,7 +804,7 @@ function Workspace({ sb, user, onSignedOut }) {
           action worth having always to hand. It replaces a header, a metrics
           strip and a filter block that together took most of a screen before
           any lead was visible. */}
-      <div className="crm-ribbon">
+      <div className="crm-ribbon" ref={ribbonRef}>
         <Link to="/" className="crm-ribbon__brand" aria-label="n.abl home"><Logo size={20} /></Link>
 
         <nav className="crm-views" role="tablist" aria-label="Workspace">
@@ -820,7 +832,7 @@ function Workspace({ sb, user, onSignedOut }) {
             value={search}
             aria-label="Search leads"
             placeholder="Search leads"
-            onChange={(e) => { setSearch(e.target.value); if (view === 'insights') setView('leads') }}
+            onChange={(e) => { setSearch(e.target.value); setSelectedId(null); if (view === 'insights') setView('leads') }}
           />
           <button type="button" className="btn btn--accent btn--sm" onClick={() => setAddOpen(true)}>
             + Lead
@@ -829,7 +841,7 @@ function Workspace({ sb, user, onSignedOut }) {
         </div>
       </div>
 
-      <div className="shell crm-shell">
+      <div className={`shell crm-shell ${fits ? 'crm-shell--fit' : ''}`}>
         {view === 'insights' && (
           <Insights
             leads={leads}
@@ -852,7 +864,7 @@ function Workspace({ sb, user, onSignedOut }) {
         )}
 
         {view === 'leads' && (
-        <>
+        <div className="ws-page crm-leads">
         {/* ---------- Filters ---------- */}
         <section aria-label="Lead filters">
           <div className="crm-filters">
@@ -883,7 +895,7 @@ function Workspace({ sb, user, onSignedOut }) {
               </select>
             </div>
             <div className="crm-filter">
-              <label className="label" htmlFor="crm-score">Minimum score</label>
+              <label className="label" htmlFor="crm-score">Min. score</label>
               <input
                 id="crm-score" className="input" type="number" min="0" max="100" value={minScore}
                 onChange={(e) => setMinScore(e.target.value)}
@@ -894,59 +906,62 @@ function Workspace({ sb, user, onSignedOut }) {
 
         {/* ---------- Leads ---------- */}
         {loading ? <Loading label="Loading pipeline" /> : (
-          <div className="crm-workspace">
-            <aside className="crm-leadlist" aria-label="Leads">
-              {visible.length === 0 ? (
-                <Empty>
-                  {leads.length === 0
-                    ? 'No leads yet. Add your first one above.'
-                    : 'No leads match the current filters.'}
-                </Empty>
-              ) : visible.map((lead) => (
-                <button
-                  key={lead.id}
-                  type="button"
-                  className={`crm-leadbtn ${selected?.id === lead.id ? 'crm-leadbtn--active' : ''}`}
-                  aria-current={selected?.id === lead.id ? 'true' : undefined}
-                  onClick={() => selectLead(lead.id)}
-                >
-                  <span className="crm-leadbtn__name">{lead.company}</span>
-                  <span className="crm-leadbtn__meta">
-                    {[lead.industry, lead.location, lead.owner].filter(Boolean).join(' · ') || 'No details yet'}
-                  </span>
-                  <span className="crm-leadbtn__tags">
-                    <Badge status="score">{lead.score}</Badge>
-                    <Badge status={lead.status}>{lead.status}</Badge>
-                  </span>
-                </button>
-              ))}
-            </aside>
-
-            <EdgeCard className="crm-detail" spotlight={false} lift={false}>
-              {selected ? (
-                <LeadDetail
-                  key={selected.id}
-                  lead={selected}
-                  tab={tab}
-                  onTab={setTab}
-                  onSave={saveLead}
-                  onMove={moveLead}
-                  onRecordSend={recordSend}
-                  onResearch={researchLead}
-                  onDelete={() => setConfirm({
-                    title: `Delete ${selected.company}?`,
-                    body: 'This removes the lead and everything attached to it — contacts, activity and drafts. This cannot be undone.',
-                    run: () => { setConfirm(null); removeLead(selected) },
-                  })}
-                />
-              ) : (
-                <Empty>Select a lead to see its record.</Empty>
-              )}
-            </EdgeCard>
-          </div>
+          <SplitView
+            picked={picked}
+            innerRef={nav.ref}
+            label="Leads"
+            list={visible.length === 0 ? (
+              <Empty>
+                {leads.length === 0
+                  ? 'No leads yet. Add your first one above.'
+                  : 'No leads match the current filters.'}
+              </Empty>
+            ) : (
+              <div className="crm-leadlist">
+                {visible.map((lead) => (
+                  <button
+                    key={lead.id}
+                    type="button"
+                    className={`crm-leadbtn ${selected?.id === lead.id ? 'crm-leadbtn--active' : ''}`}
+                    aria-current={selected?.id === lead.id ? 'true' : undefined}
+                    onClick={() => nav.pick(lead.id)}
+                  >
+                    <span className="crm-leadbtn__name">{lead.company}</span>
+                    <span className="crm-leadbtn__meta">
+                      {[lead.industry, lead.location, lead.owner].filter(Boolean).join(' · ') || 'No details yet'}
+                    </span>
+                    <span className="crm-leadbtn__tags">
+                      <Badge status="score">{lead.score}</Badge>
+                      <Badge status={lead.status}>{lead.status}</Badge>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+            detail={selected ? (
+              <LeadDetail
+                key={selected.id}
+                lead={selected}
+                tab={tab}
+                onTab={setTab}
+                onBack={nav.back}
+                onSave={saveLead}
+                onMove={moveLead}
+                onRecordSend={recordSend}
+                onResearch={researchLead}
+                onDelete={() => setConfirm({
+                  title: `Delete ${selected.company}?`,
+                  body: 'This removes the lead and everything attached to it — contacts, activity and drafts. This cannot be undone.',
+                  run: () => { setConfirm(null); removeLead(selected) },
+                })}
+              />
+            ) : (
+              <Empty>Select a lead to see its record.</Empty>
+            )}
+          />
         )}
 
-        </>
+        </div>
         )}
       </div>
 
@@ -988,89 +1003,56 @@ function Workspace({ sb, user, onSignedOut }) {
    Lead detail
    ============================================================ */
 
-function LeadDetail({ lead, tab, onTab, onSave, onMove, onDelete, onRecordSend, onResearch }) {
-  const tabRefs = useRef({})
-
-  function onTabKey(e) {
-    const i = TABS.findIndex((t) => t.id === tab)
-    let next = null
-    if (e.key === 'ArrowRight') next = TABS[(i + 1) % TABS.length]
-    if (e.key === 'ArrowLeft') next = TABS[(i - 1 + TABS.length) % TABS.length]
-    if (e.key === 'Home') next = TABS[0]
-    if (e.key === 'End') next = TABS[TABS.length - 1]
-    if (!next) return
-    e.preventDefault()
-    onTab(next.id)
-    tabRefs.current[next.id]?.focus()
-  }
-
+function LeadDetail({ lead, tab, onTab, onBack, onSave, onMove, onDelete, onRecordSend, onResearch }) {
   return (
     <>
-      <div className="crm-detail__head">
-        <div style={{ minWidth: 0 }}>
-          <span className="eyebrow">Lead record</span>
-          <h2 className="crm-detail__title">{lead.company}<span className="dot" /></h2>
-          <div className="crm-detail__facts">
+      <RecordBar
+        title={lead.company}
+        sub={(
+          <span className="crm-detail__facts">
             <Badge status={lead.status}>{lead.status}</Badge>
             {lead.industry && <span>{lead.industry}</span>}
             {lead.location && <span>{lead.location}</span>}
             {lead.size && <span>{lead.size} people</span>}
-            {lead.website && <Ext url={lead.website}>Website</Ext>}
-          </div>
-          <div className="card-actions">
-            <button type="button" className="btn btn--ghost btn--sm danger-text" onClick={onDelete}>
-              Delete lead
-            </button>
-          </div>
-        </div>
-        <div className="crm-score">
-          <div className="crm-score__box" role="img" aria-label={`Priority score ${lead.score} out of 100`}>
-            <span aria-hidden="true">{lead.score}</span>
-          </div>
-          <span className="crm-score__label" aria-hidden="true">Priority</span>
-        </div>
-      </div>
+          </span>
+        )}
+        backLabel="All leads"
+        onBack={onBack}
+        actions={(
+          <span className="crm-score crm-score--sm" role="img" aria-label={`Priority score ${lead.score} out of 100`}>
+            <span className="crm-score__box" aria-hidden="true">{lead.score}</span>
+          </span>
+        )}
+        tabs={<SectionTabs tabs={TABS} active={tab} onChange={onTab} label="Lead sections" idPrefix="crm" />}
+      />
 
-      <div className="tabs" role="tablist" aria-label="Lead sections" onKeyDown={onTabKey}>
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            id={`crm-tab-${t.id}`}
-            ref={(el) => { tabRefs.current[t.id] = el }}
-            aria-selected={t.id === tab}
-            aria-controls={`crm-panel-${t.id}`}
-            tabIndex={t.id === tab ? 0 : -1}
-            className={`tab ${t.id === tab ? 'tab--active' : ''}`}
-            onClick={() => onTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <div
-        className="crm-panel"
-        role="tabpanel"
-        id={`crm-panel-${tab}`}
-        aria-labelledby={`crm-tab-${tab}`}
-      >
-        {tab === 'overview' && <OverviewPanel lead={lead} onSave={onSave} onMove={onMove} />}
+      <SectionPanel idPrefix="crm" active={tab}>
+        {tab === 'overview' && <OverviewPanel lead={lead} onSave={onSave} onMove={onMove} onDelete={onDelete} />}
+        {tab === 'fit' && <LeadFit leadId={lead.id} />}
         {tab === 'contacts' && <ContactsPanel lead={lead} onSave={onSave} />}
         {tab === 'outreach' && (
           <OutreachPanel lead={lead} onSave={onSave} onRecordSend={onRecordSend} onResearch={onResearch} />
         )}
+        {tab === 'argument' && <ArgumentLog key={lead.id} leadId={lead.id} />}
         {tab === 'notes' && <NotesPanel lead={lead} onSave={onSave} />}
         {tab === 'compliance' && <CompliancePanel lead={lead} onSave={onSave} />}
         {tab === 'activity' && <ActivityPanel lead={lead} />}
-      </div>
+      </SectionPanel>
     </>
   )
 }
 
-/* ---------------- Overview ---------------- */
-function OverviewPanel({ lead, onSave, onMove }) {
+/* The outreach writer's assessment of this lead: which service fits and
+   why. Read from the same place the argument log reads it. */
+function LeadFit({ leadId }) {
+  const { doc, terms, err, done } = useOutreachLead(leadId)
+  if (!done) return <Loading label="Reading the assessment" />
+  if (err) return <p className="crm-warn">{err}</p>
+  if (!doc) return <p className="at-empty">The outreach writer has no record of this lead.</p>
+  return <ServiceFit lead={doc} capLabel={(k) => (terms.find((t) => t.term === k) || {}).label} />
+}
+
+function OverviewPanel({ lead, onSave, onMove, onDelete }) {
   const [signals, setSignals] = useState(lead.signals || '')
   const dirty = signals.trim() !== String(lead.signals || '').trim()
 
@@ -1126,6 +1108,12 @@ function OverviewPanel({ lead, onSave, onMove }) {
           <button type="submit" className="btn btn--accent btn--sm" disabled={!dirty}>Save signals</button>
         </div>
       </form>
+
+      <div className="card-actions crm-danger-row">
+        <button type="button" className="btn btn--ghost btn--sm danger-text" onClick={onDelete}>
+          Delete lead
+        </button>
+      </div>
     </>
   )
 }

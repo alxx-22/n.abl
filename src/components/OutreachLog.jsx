@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { teamClient, friendlyError } from '../lib/supabase.js'
 import { Loading, Empty } from './ui/index.jsx'
 import ArgumentTranscript from './ArgumentTranscript.jsx'
+import { SplitView, RecordBar, SectionTabs, SectionPanel, Sheet, usePickScroll } from './ui/Workspace.jsx'
 
 /* ============================================================
    THE ARGUMENT LOG
@@ -203,38 +204,193 @@ function ArmDialog({ target, onCancel, onArm }) {
   )
 }
 
-/* The whole argument, word for word, fetched only when somebody asks for
-   it: every reply exactly as each agent sent it, in order, with who it was
-   addressed to. The dashboard carries a count, not the words - a page of
-   leads does not need every transcript loaded to be read. */
-function ArgumentLog({ leadId, count }) {
-  const [open, setOpen] = useState(false)
+/* The whole argument, word for word: every reply exactly as each agent
+   sent it, in order, with who it was addressed to. Fetched when its
+   section is opened - the dashboard carries a count, not the words, so a
+   page of leads does not load every transcript to be read. */
+export function ArgumentLog({ leadId }) {
   const [moves, setMoves] = useState(null)
   const [err, setErr] = useState('')
 
-  const show = async () => {
-    if (open) { setOpen(false); return }
-    setOpen(true)
-    if (moves) return
-    try {
-      const { data: rows, error } = await teamClient().rpc('outreach_argument', { p_lead_id: leadId })
-      if (error) throw error
-      setMoves(Array.isArray(rows) ? rows : [])
-      setErr('')
-    } catch (e) {
-      setErr(friendlyError(e, 'Could not read the argument.'))
+  useEffect(() => {
+    let alive = true
+    teamClient().rpc('outreach_argument', { p_lead_id: leadId })
+      .then(({ data: rows, error }) => {
+        if (!alive) return
+        if (error) throw error
+        setMoves(Array.isArray(rows) ? rows : [])
+      })
+      .catch((e) => { if (alive) setErr(friendlyError(e, 'Could not read the argument.')) })
+    return () => { alive = false }
+  }, [leadId])
+
+  if (err) return <p className="crm-warn">{err}</p>
+  if (!moves) return <Loading label="Reading the argument" />
+  return <ArgumentTranscript moves={moves} empty="The agents have not argued over this lead yet." />
+}
+
+/* Which service fits this lead, as the assessment found it, and what
+   its own pages show. Shared with the lead record in Leads. */
+export function ServiceFit({ lead, capLabel = () => null }) {
+  const services = Array.isArray(lead.services) ? lead.services : []
+  const signals = Array.isArray(lead.signals) ? lead.signals : []
+  return (
+    <>
+      {services.length === 0 && signals.length === 0 && (
+        <p className="at-empty">
+          {lead.assessed ? 'Assessed, and no service was found to fit.' : 'Not assessed yet — the next run does that.'}
+        </p>
+      )}
+      {services.length > 0 && (
+        <div className="lg-services">
+          <u>Which service fits, and why</u>
+          {services.map((f, i) => (
+            <div className={`lg-service ${f.fit === 'ruled_out' ? 'lg-service--disputed' : 'lg-service--agreed'}`} key={i}>
+              <div className="lg-service__head">
+                <b>{capLabel(f.capability) || nice(f.category)}</b>
+                <span>{nice(f.fit)}{f.confidence != null ? ` · confidence ${f.confidence}` : ''}</span>
+              </div>
+              {f.rationale && <p>{f.rationale}</p>}
+              {f.evidence && <p><em>rests on:</em> &ldquo;{f.evidence}&rdquo;</p>}
+              {f.ask && <p><em>the question that settles it:</em> {f.ask}</p>}
+              {f.walk_away_if && <p><em>walk away if:</em> {f.walk_away_if}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+      {signals.length > 0 && (
+        <div className="lg-services">
+          <u>What their own pages show</u>
+          {signals.map((g) => (
+            <p className="ol-summary" key={g.key}>{g.says}</p>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+/* One lead's outreach record, for the lead record in Leads. The dashboard
+   is the only door into the outreach tables, so this reads it - once, and
+   shares the answer for a minute across every lead opened in that time. */
+let dashboardCache = null
+export function useOutreachLead(leadId) {
+  const [state, setState] = useState({ doc: null, terms: [], err: '', done: false })
+  useEffect(() => {
+    let alive = true
+    if (!dashboardCache || Date.now() - dashboardCache.at > 60000) {
+      dashboardCache = { at: Date.now(), p: teamClient().rpc('outreach_dashboard') }
     }
-  }
+    dashboardCache.p
+      .then(({ data, error }) => {
+        if (error) throw error
+        if (!alive) return
+        const doc = ((data && data.leads) || []).find((l) => l.id === leadId) || null
+        setState({ doc, terms: (data && data.capability_terms) || [], err: '', done: true })
+      })
+      .catch((e) => {
+        dashboardCache = null
+        if (alive) setState({ doc: null, terms: [], err: friendlyError(e, 'Could not read the outreach record.'), done: true })
+      })
+    return () => { alive = false }
+  }, [leadId])
+  return state
+}
+
+const SECTIONS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'fit', label: 'Service fit' },
+  { id: 'outreach', label: 'Outreach' },
+  { id: 'argument', label: 'Argument log' },
+]
+
+/* One lead, in sections. Nothing laid end to end: the sub-ribbon is how
+   you get from the summary to the letter to the argument. */
+function OutreachRecord({ lead, section, onSection, onBack, capLabel }) {
+  const services = Array.isArray(lead.services) ? lead.services : []
+  const tabs = SECTIONS.map((t) => ({
+    ...t,
+    count: t.id === 'argument' ? (Array.isArray(lead.moves) ? lead.moves.length : 0)
+      : t.id === 'fit' ? services.length : null,
+  }))
 
   return (
-    <div className="ol-moves">
-      <button type="button" className="btn btn--ghost btn--sm" aria-expanded={open} onClick={show}>
-        {open ? 'Hide argument log' : `View argument log${count ? ` (${count})` : ''}`}
-      </button>
-      {open && err && <p className="crm-warn">{err}</p>}
-      {open && !err && !moves && <Loading label="Reading the argument" />}
-      {open && moves && <ArgumentTranscript moves={moves} empty="The agents have not argued over this lead yet." />}
-    </div>
+    <>
+      <RecordBar
+        title={lead.company}
+        sub={<>{lead.town || 'location unknown'} · {nice(lead.sector) || 'unclassified'} · {num(lead.score)}
+          {' '}· <span className={`ol-tag ol-tag--${lead.state}`}>{STATE_LABEL[lead.state]}</span></>}
+        backLabel="All leads"
+        onBack={onBack}
+        tabs={<SectionTabs tabs={tabs} active={section} onChange={onSection} label="Lead sections" idPrefix="ol" />}
+      />
+      <SectionPanel idPrefix="ol" active={section}>
+        {section === 'overview' && (
+          <>
+            <p className="ol-detail__sub">
+              {lead.registered !== lead.company && <>registered as {lead.registered} · </>}
+              {lead.town || 'location unknown'} · {nice(lead.sector) || 'unclassified'}
+              {lead.website && (
+                <> · <a className="crm-link" href={lead.website} target="_blank" rel="noreferrer noopener">website</a></>
+              )}
+            </p>
+            <dl className="crm-kv">
+              <div><dt>Score</dt><dd>{num(lead.score)}{lead.band ? ` · ${nice(lead.band)}` : ''}</dd></div>
+              <div><dt>Web presence</dt><dd>{nice(lead.presence) || '—'}</dd></div>
+              <div><dt>Credit fit</dt><dd>{nice(lead.credit) || '—'}</dd></div>
+              <div><dt>State</dt><dd>{STATE_LABEL[lead.state]}</dd></div>
+            </dl>
+            {lead.summary && <p className="ol-summary">{lead.summary}</p>}
+            {lead.error && !lead.clause && (
+              <p className="crm-warn">
+                {lead.attempts >= 3 ? 'Given up after three attempts. ' : ''}{lead.error}
+              </p>
+            )}
+          </>
+        )}
+
+        {section === 'fit' && <ServiceFit lead={lead} capLabel={capLabel} />}
+
+        {section === 'outreach' && (
+          <>
+            {!lead.clause && !lead.letter && (
+              <p className="at-empty">No clause and no letter yet — {STATE_LABEL[lead.state]}.</p>
+            )}
+            {lead.clause && (
+              <div className="ol-clause">
+                <u>The clause a stranger reads first</u>
+                <p>{lead.clause}</p>
+                {lead.evidence && (
+                  <p className="ol-evidence">
+                    <em>rests on {lead.basis === 'register' ? 'a public register' : 'their own page'}:</em>{' '}
+                    &ldquo;{lead.evidence}&rdquo;
+                  </p>
+                )}
+              </div>
+            )}
+            {lead.letter && (
+              <div className="ol-letter">
+                <u>The letter{lead.letter.approved_at ? ' · approved' : ' · not approved'}</u>
+                <p className="ol-letter__subject">{lead.letter.subject}</p>
+                {String(lead.letter.body || '').split(/\n\s*\n/).map((para, i) => <p key={i}>{para}</p>)}
+              </div>
+            )}
+            {/* The strategist's reasoning is NOT part of the letter and must
+                never look like it: below the body, in its own block. */}
+            {lead.letter && (lead.letter.tension || lead.letter.recognition) && (
+              <div className="ol-why">
+                <u>Why this angle — the strategist&rsquo;s note, not part of the letter</u>
+                {lead.letter.tension && <p><em>the tension:</em> {lead.letter.tension}</p>}
+                {lead.letter.recognition && <p><em>they would recognise:</em> {lead.letter.recognition}</p>}
+                {lead.letter.must_not_imply && <p><em>it must not read as:</em> {lead.letter.must_not_imply}</p>}
+              </div>
+            )}
+          </>
+        )}
+
+        {section === 'argument' && <ArgumentLog key={lead.id} leadId={lead.id} />}
+      </SectionPanel>
+    </>
   )
 }
 
@@ -249,6 +405,9 @@ export default function OutreachLog() {
   const [arming, setArming] = useState(false)
   const [stateFilter, setStateFilter] = useState('')
   const [selected, setSelected] = useState(null)
+  const [section, setSection] = useState('overview')
+  const nav = usePickScroll(setSelected)
+  const closeRun = useCallback(() => setRunOpen(false), [])
 
   const load = useCallback(async () => {
     try {
@@ -366,8 +525,10 @@ export default function OutreachLog() {
   const s = (data && data.status) || {}
   const models = (data && Array.isArray(data.models)) ? data.models : []
 
+  const capLabel = (key) => (((data && data.capability_terms) || []).find((c) => c.term === key) || {}).label
+
   return (
-    <section className="ol" aria-label="Outreach argument log">
+    <section className="ol ws-page" aria-label="Outreach argument log">
       {/* ---------- what the pipeline has done ---------- */}
       <div className="ol-counts">
         {[
@@ -385,129 +546,141 @@ export default function OutreachLog() {
         <button
           type="button"
           className="btn btn--ghost btn--sm ol-counts__btn"
-          aria-expanded={runOpen}
-          onClick={() => setRunOpen((v) => !v)}
+          aria-haspopup="dialog"
+          onClick={() => setRunOpen(true)}
         >
           Run settings
         </button>
       </div>
 
-      {/* ---------- who the run is for ---------- */}
-      {runOpen && draft && (
-        <div className="ol-panel">
-          <div className="ol-panel__head">
-            <h3>Who the run is for</h3>
-            <span className="ol-reach">
+      {/* ---------- who the run is for: over the page, not above the list ---------- */}
+      <Sheet open={runOpen && Boolean(draft)} title="Who the run is for" onClose={closeRun}>
+        {draft && (
+          <>
+            <p className="ol-reach">
               <b>{num(reach.matched)}</b> selected · {num(reach.queued)} queued ·{' '}
               {num(reach.drafted)} already drafted
               {reach.given_up ? ` · ${num(reach.given_up)} given up` : ''}
-            </span>
-          </div>
+            </p>
 
-          <div className="ol-cols">
-            <ChipRow
-              label="Town or city"
-              options={((data && data.towns) || [])}
-              chosen={draft.towns}
-              onToggle={(k) => toggle('towns', k)}
-            />
-            <ChipRow
-              label="Sector"
-              options={((data && data.sectors) || [])}
-              chosen={draft.sectors}
-              onToggle={(k) => toggle('sectors', k)}
-            />
-            <ChipRow
-              label="Service"
-              options={((data && data.capability_terms) || []).map((c) => ({
-                key: c.term, label: c.label,
-              }))}
-              chosen={draft.capabilities}
-              onToggle={(k) => toggle('capabilities', k)}
-              hint="Filters on a capability the assessment has already established. A lead nobody has assessed yet passes anyway — the run is what discovers its capability."
-            />
-            <div className="ol-col">
-              <u>Name, and a floor on the score</u>
-              <input
-                className="input"
-                type="text"
-                value={draft.name}
-                aria-label="Target name"
-                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            <div className="ol-cols">
+              <ChipRow
+                label="Town or city"
+                options={((data && data.towns) || [])}
+                chosen={draft.towns}
+                onToggle={(k) => toggle('towns', k)}
               />
-              <input
-                className="input"
-                type="number"
-                placeholder="no minimum"
-                value={draft.min_score == null ? '' : draft.min_score}
-                aria-label="Minimum lead score"
-                onChange={(e) => setDraft({
-                  ...draft, min_score: e.target.value === '' ? null : Number(e.target.value),
-                })}
+              <ChipRow
+                label="Sector"
+                options={((data && data.sectors) || [])}
+                chosen={draft.sectors}
+                onToggle={(k) => toggle('sectors', k)}
               />
-              <p className="crm-hint ol-hint">
-                Nothing selected in a column means no filter on it, never &ldquo;match nothing&rdquo;.
-              </p>
+              <ChipRow
+                label="Service"
+                options={((data && data.capability_terms) || []).map((c) => ({
+                  key: c.term, label: c.label,
+                }))}
+                chosen={draft.capabilities}
+                onToggle={(k) => toggle('capabilities', k)}
+                hint="Filters on a capability the assessment has already established. A lead nobody has assessed yet passes anyway — the run is what discovers its capability."
+              />
+              <div className="ol-col">
+                <u>Name, and a floor on the score</u>
+                <input
+                  className="input"
+                  type="text"
+                  value={draft.name}
+                  aria-label="Target name"
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                />
+                <input
+                  className="input"
+                  type="number"
+                  placeholder="no minimum"
+                  value={draft.min_score == null ? '' : draft.min_score}
+                  aria-label="Minimum lead score"
+                  onChange={(e) => setDraft({
+                    ...draft, min_score: e.target.value === '' ? null : Number(e.target.value),
+                  })}
+                />
+                <p className="crm-hint ol-hint">
+                  Nothing selected in a column means no filter on it, never &ldquo;match nothing&rdquo;.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* ---------- the send switch ---------- */}
-          <div className="ol-switch">
-            <input
-              type="checkbox"
-              id="ol-send"
-              checked={Boolean(draft.sending_enabled)}
-              disabled={blockers.length > 0 || !draft.id}
-              onChange={(e) => (e.target.checked ? setArming(true) : disarm())}
-            />
-            <label htmlFor="ol-send">
-              Actually send these emails
-              <span>
-                Real letters to real businesses that have not heard from us. Both approval
-                gates are human and both are before this. Changing who the run is for always
-                turns this back off.
+            {/* ---------- the send switch ---------- */}
+            <div className="ol-switch">
+              <input
+                type="checkbox"
+                id="ol-send"
+                checked={Boolean(draft.sending_enabled)}
+                disabled={blockers.length > 0 || !draft.id}
+                onChange={(e) => (e.target.checked ? setArming(true) : disarm())}
+              />
+              <label htmlFor="ol-send">
+                Actually send these emails
+                <span>
+                  Real letters to real businesses that have not heard from us. Both approval
+                  gates are human and both are before this. Changing who the run is for always
+                  turns this back off.
+                </span>
+              </label>
+              <Blockers list={blockers} />
+            </div>
+
+            <div className="ol-actions ws-sheet__actions">
+              <button type="button" className="btn btn--sm" disabled={Boolean(busy)} onClick={saveTarget}>
+                Save target
+              </button>
+              {running ? (
+                <button type="button" className="btn btn--sm ol-stop" disabled={Boolean(busy)} onClick={stopRun}>
+                  Stop
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn--accent btn--sm"
+                  disabled={Boolean(busy) || !draft.id || !reach.queued}
+                  onClick={startRun}
+                >
+                  Run
+                </button>
+              )}
+              <span className="ol-said" role="status">
+                {busy ? `${busy}…` : said}
+                {!busy && !said && !running && draft.id && !reach.queued
+                  && 'Nothing queued — there is nothing for a run to do'}
+                {!busy && !said && !draft.id && 'Save the target before starting it'}
               </span>
-            </label>
-            <Blockers list={blockers} />
-          </div>
+            </div>
 
-          <div className="ol-actions">
-            <button
-              type="button"
-              className="btn btn--sm"
-              disabled={Boolean(busy)}
-              onClick={saveTarget}
-            >
-              Save target
-            </button>
-            {running ? (
-              <button
-                type="button"
-                className="btn btn--sm ol-stop"
-                disabled={Boolean(busy)}
-                onClick={stopRun}
-              >
-                Stop
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn btn--accent btn--sm"
-                disabled={Boolean(busy) || !draft.id || !reach.queued}
-                onClick={startRun}
-              >
-                Run
-              </button>
+            {/* What the day cost. The quota is per project and per model
+                within it, so the same model on a second key is a second pool. */}
+            {models.length > 0 && (
+              <div className="ol-models">
+                <u>Model budget — today, Pacific</u>
+                <table>
+                  <thead>
+                    <tr><th>model</th><th>pool</th><th>calls</th><th>ceiling</th></tr>
+                  </thead>
+                  <tbody>
+                    {models.map((m) => (
+                      <tr key={`${m.model}:${m.key_secret}`}>
+                        <td>{m.model}</td>
+                        <td>{poolName(m.key_secret)}</td>
+                        <td>{num(m.used)}</td>
+                        <td>{m.exhausted ? (m.observed_rpd == null ? 'yes' : num(m.observed_rpd)) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
-            <span className="ol-said">
-              {busy ? `${busy}…` : said}
-              {!busy && !said && !running && draft.id && !reach.queued
-                && 'Nothing queued — there is nothing for a run to do'}
-              {!busy && !said && !draft.id && 'Save the target before starting it'}
-            </span>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Sheet>
 
       {arming && draft && (
         <ArmDialog target={draft} onCancel={() => setArming(false)} onArm={armSending} />
@@ -531,136 +704,48 @@ export default function OutreachLog() {
         ))}
       </div>
 
-      <div className="ol-split">
-        <div className="ol-list">
-          {shown.length === 0 && <Empty>Nothing in this state.</Empty>}
-          {shown.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              className={`crm-leadbtn ${selected === l.id ? 'crm-leadbtn--active' : ''}`}
-              onClick={() => setSelected(l.id)}
-            >
-              <span className="ol-list__name">{l.company}</span>
-              <span className="ol-list__meta">
-                {l.town || '—'} · {nice(l.sector) || 'unclassified'} · {num(l.score)}
-              </span>
-              <span className={`ol-tag ol-tag--${l.state}`}>{STATE_LABEL[l.state]}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="ol-detail">
-          {!lead && (
-            <div className="crm-hint">
-              <p>
-                Pick a business. Every lead, its score, the argument the agents had, the clause
-                that came out and the letter it would go in. Nothing here has been sent: both
-                approval gates are human and both are before sending.
-              </p>
-            </div>
-          )}
-
-          {lead && (
-            <>
-              <h3 className="ol-detail__name">{lead.company}</h3>
-              <p className="ol-detail__sub">
-                {lead.registered !== lead.company && <>registered as {lead.registered} · </>}
-                {lead.town || 'location unknown'} · {nice(lead.sector) || 'unclassified'}
-                {lead.website && (
-                  <> · <a className="crm-link" href={lead.website} target="_blank" rel="noreferrer noopener">website</a></>
-                )}
-              </p>
-
-              <dl className="crm-kv">
-                <div><dt>Score</dt><dd>{num(lead.score)}{lead.band ? ` · ${nice(lead.band)}` : ''}</dd></div>
-                <div><dt>Web presence</dt><dd>{nice(lead.presence) || '—'}</dd></div>
-                <div><dt>Credit fit</dt><dd>{nice(lead.credit) || '—'}</dd></div>
-                <div><dt>State</dt><dd>{STATE_LABEL[lead.state]}</dd></div>
-              </dl>
-
-              {lead.summary && <p className="ol-summary">{lead.summary}</p>}
-
-              {lead.clause && (
-                <div className="ol-clause">
-                  <u>The clause a stranger reads first</u>
-                  <p>{lead.clause}</p>
-                  {lead.evidence && (
-                    <p className="ol-evidence">
-                      <em>rests on {lead.basis === 'register' ? 'a public register' : 'their own page'}:</em>{' '}
-                      &ldquo;{lead.evidence}&rdquo;
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {lead.error && !lead.clause && (
-                <p className="crm-warn">
-                  {lead.attempts >= 3 ? 'Given up after three attempts. ' : ''}{lead.error}
-                </p>
-              )}
-
-              {lead.letter && (
-                <div className="ol-letter">
-                  <u>
-                    The letter
-                    {lead.letter.approved_at ? ' · approved' : ' · not approved'}
-                  </u>
-                  <p className="ol-letter__subject">{lead.letter.subject}</p>
-                  {String(lead.letter.body || '').split(/\n\s*\n/).map((p, i) => (
-                    <p key={i}>{p}</p>
-                  ))}
-                </div>
-              )}
-
-              {/* The strategist's reasoning is NOT part of the letter and must
-                  never look like it. Set below the body, in its own block, so
-                  nobody reads the tension as a closing paragraph somebody is
-                  about to send. */}
-              {lead.letter && (lead.letter.tension || lead.letter.recognition) && (
-                <div className="ol-why">
-                  <u>Why this angle — the strategist&rsquo;s note, not part of the letter</u>
-                  {lead.letter.tension && (
-                    <p><em>the tension:</em> {lead.letter.tension}</p>
-                  )}
-                  {lead.letter.recognition && (
-                    <p><em>they would recognise:</em> {lead.letter.recognition}</p>
-                  )}
-                  {lead.letter.must_not_imply && (
-                    <p><em>it must not read as:</em> {lead.letter.must_not_imply}</p>
-                  )}
-                </div>
-              )}
-
-              <ArgumentLog key={lead.id} leadId={lead.id} count={Array.isArray(lead.moves) ? lead.moves.length : 0} />
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* ---------- what the day cost ----------
-          The quota is per project and per model within it, so the same
-          model on a second key is a second pool. */}
-      {models.length > 0 && (
-        <div className="ol-models">
-          <u>Model budget — today, Pacific</u>
-          <table>
-            <thead>
-              <tr><th>model</th><th>pool</th><th>calls</th><th>ceiling reached</th></tr>
-            </thead>
-            <tbody>
-              {models.map((m) => (
-                <tr key={`${m.model}:${m.key_secret}`}>
-                  <td>{m.model}</td>
-                  <td>{poolName(m.key_secret)}</td>
-                  <td>{num(m.used)}</td>
-                  <td>{m.exhausted ? (m.observed_rpd == null ? 'yes' : num(m.observed_rpd)) : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <SplitView
+        picked={Boolean(lead)}
+        innerRef={nav.ref}
+        label="Leads"
+        list={(
+          <div className="ol-list">
+            {shown.length === 0 && <Empty>Nothing in this state.</Empty>}
+            {shown.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                className={`crm-leadbtn ${selected === l.id ? 'crm-leadbtn--active' : ''}`}
+                aria-current={selected === l.id ? 'true' : undefined}
+                onClick={() => nav.pick(l.id)}
+              >
+                <span className="ol-list__name">{l.company}</span>
+                <span className="ol-list__meta">
+                  {l.town || '—'} · {nice(l.sector) || 'unclassified'} · {num(l.score)}
+                </span>
+                <span className={`ol-tag ol-tag--${l.state}`}>{STATE_LABEL[l.state]}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        detail={lead ? (
+          <OutreachRecord
+            lead={lead}
+            section={section}
+            onSection={setSection}
+            onBack={nav.back}
+            capLabel={capLabel}
+          />
+        ) : (
+          <div className="crm-hint ws-hint">
+            <p>
+              Pick a business. Its score, which service fits, the clause and the letter, and every
+              word the agents said to each other — each a tab away. Nothing here has been sent:
+              both approval gates are human and both are before sending.
+            </p>
+          </div>
+        )}
+      />
     </section>
   )
 }

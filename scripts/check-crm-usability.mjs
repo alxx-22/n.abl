@@ -36,6 +36,8 @@
      node scripts/check-crm-usability.mjs --harness --fixture ./outreach.json
      node scripts/check-crm-usability.mjs --harness --expand
      node scripts/check-crm-usability.mjs --harness --component leadgen --expand
+     node scripts/check-crm-usability.mjs --harness --component leads --expand
+     node scripts/check-crm-usability.mjs --harness --component argument --sheet
      node scripts/check-crm-usability.mjs --harness --screenshots ./shots --json
 
    Exits non-zero when a threshold below is breached, like every other
@@ -143,8 +145,12 @@ const EXPAND = flag('--expand')
 /* Which CRM tab the harness renders. Both lay out on the same .ol- classes
    and both have been measured on the same phones. */
 const COMPONENTS = {
-  argument: { file: 'OutreachLog.jsx', name: 'OutreachLog', tab: 'Argument log' },
-  leadgen: { file: 'LeadGen.jsx', name: 'LeadGen', tab: 'Lead gen' },
+  argument: { file: 'components/OutreachLog.jsx', name: 'OutreachLog', tab: 'Argument log' },
+  leadgen: { file: 'components/LeadGen.jsx', name: 'LeadGen', tab: 'Lead gen' },
+  /* The whole CRM page, real ribbon and all, switched to its Leads view.
+     Its tables are read through the stub's from(), which answers from
+     the fixture's "tables". */
+  leads: { file: 'pages/Crm.jsx', name: 'Crm', tab: 'Leads', page: true },
 }
 const COMPONENT = COMPONENTS[value('--component', 'argument')]
 if (!COMPONENT) {
@@ -157,7 +163,7 @@ if (!MODE_URL && !MODE_HARNESS) {
   Usage: node scripts/check-crm-usability.mjs --harness
          node scripts/check-crm-usability.mjs --url http://localhost:4173 [--route /crm]
 
-  Options: --component argument|leadgen  --fixture <f.json>  --screenshots <dir>  --primary <selector>  --expand  --json
+  Options: --component argument|leadgen|leads  --sheet  --fixture <f.json>  --screenshots <dir>  --primary <selector>  --expand  --json
 `)
   process.exit(2)
 }
@@ -286,6 +292,34 @@ const LEADGEN_FIXTURE = {
       said: reply('72 then. Agreed.', { score: 72 }), guard: null },
   ],
 }
+
+/* The Leads view reads sales_leads and friends through from(); the
+   Service fit and Argument log sections read the outreach dashboard and
+   outreach_argument, so both are here too, keyed to the same ids. */
+const LEADS_FIXTURE = {
+  tables: {
+    sales_leads: BUILTIN_FIXTURE.leads.map((l, i) => ({
+      id: l.id, company: l.company, website: 'https://example.invalid', industry: nice(l.sector),
+      location: l.town, estimated_size: '11-50', business_type: 'SME', lead_score: l.score,
+      status: ['New Lead', 'Researching', 'Contacted', 'Replied'][i % 4], owner_name: 'Harness',
+      signals: 'Scheduling on a whiteboard.', notes: '', subscriber_type: 'corporate',
+      created_at: '2026-09-01T09:00:00Z', updated_at: '2026-09-20T09:00:00Z',
+    })),
+    sales_contacts: [], sales_activities: [], sales_email_drafts: [],
+  },
+  outreach_dashboard: {
+    ...BUILTIN_FIXTURE,
+    leads: BUILTIN_FIXTURE.leads.map((l) => ({
+      ...l,
+      services: [{ category: 'operations', capability: 'automation', fit: 'strong', confidence: 70,
+        rationale: 'Orders are re-keyed from email into the stock system by hand.',
+        evidence: 'we still do our scheduling on a whiteboard and a spreadsheet',
+        ask: 'How many hours a week go on re-keying?', walk_away_if: 'They already run an integration platform.' }],
+    })),
+  },
+  outreach_argument: BUILTIN_FIXTURE.outreach_argument,
+}
+function nice(s) { return String(s || '').replace(/_/g, ' ') }
 
 /* ============================================================
    THE MEASUREMENT
@@ -460,13 +494,29 @@ const doc = JSON.parse(document.getElementById('crm-fixture').textContent)
 const reply = (name) => Promise.resolve({
   data: name in doc ? doc[name] : doc, error: null,
 })
+/* from(table).anything().anything() - every call returns the chain, and
+   awaiting it answers with the fixture's rows for that table. */
+const table = (name) => {
+  const result = { data: (doc.tables && doc.tables[name]) || [], error: null }
+  const chain = new Proxy(function chain() {}, {
+    get: (_, prop) => (prop === 'then'
+      ? (ok, bad) => Promise.resolve(result).then(ok, bad)
+      : () => chain),
+  })
+  return chain
+}
+const session = { user: { id: 'harness', email: 'harness@local', user_metadata: { full_name: 'Harness' } } }
 export const SUPABASE_URL = 'http://harness.invalid'
 export const SUPABASE_ANON_KEY = 'harness'
 export function teamClient() {
   return {
     rpc: (name) => reply(name),
-    from: () => ({ select: () => reply('rows'), insert: () => reply('rows'), update: () => reply('rows') }),
-    auth: { getSession: async () => ({ data: { session: { user: { email: 'harness@local' } } }, error: null }) },
+    from: (name) => table(name),
+    auth: {
+      getSession: async () => ({ data: { session }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+      signOut: async () => ({ error: null }),
+    },
   }
 }
 export const portalClient = () => teamClient()
@@ -477,23 +527,37 @@ export const friendlyError = (err, fallback) => fallback
   /* The ribbon is copied as static markup rather than imported, because the
      real one needs a router and a live lead count. It carries the same
      classes, so it is the same sticky height the CRM really has. */
-  const entry = `import { StrictMode } from 'react'
+  const entry = COMPONENT.page ? `import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { MemoryRouter } from 'react-router-dom'
 import '../src/styles/global.css'
-import '../src/styles/crm.css'
-import ${COMPONENT.name} from '../src/components/${COMPONENT.file}'
-import { Logo } from '../src/components/ui/index.jsx'
+import ${COMPONENT.name} from '../src/${COMPONENT.file}'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <div className="grain">
-      <div className="crm-ribbon">
+    <MemoryRouter initialEntries={['/crm']}>
+      <${COMPONENT.name} />
+    </MemoryRouter>
+  </StrictMode>,
+)
+` : `import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import '../src/styles/global.css'
+import '../src/styles/crm.css'
+import ${COMPONENT.name} from '../src/${COMPONENT.file}'
+import { Logo } from '../src/components/ui/index.jsx'
+import { useRibbonHeight } from '../src/components/ui/Workspace.jsx'
+
+function Ribbon() {
+  const ref = useRibbonHeight()
+  return (
+      <div className="crm-ribbon" ref={ref}>
         <a className="crm-ribbon__brand" href="/" aria-label="n.abl home"><Logo size={20} /></a>
         <nav className="crm-views" role="tablist" aria-label="Workspace">
           <button type="button" role="tab" aria-selected="false" className="crm-view">Insights</button>
           <button type="button" role="tab" aria-selected="false" className="crm-view">Leads<span className="crm-view__count">24</span></button>
           <button type="button" role="tab" aria-selected="false" className="crm-view">Board</button>
-${['Argument log', 'Lead gen'].map((t) => `<button type="button" role="tab" aria-selected="${t === COMPONENT.tab}" className="crm-view${t === COMPONENT.tab ? ' crm-view--on' : ''}">${t}</button>`).join('\n          ')}
+${['Argument log', 'Lead gen'].map((t) => `          <button type="button" role="tab" aria-selected="${t === COMPONENT.tab}" className="crm-view${t === COMPONENT.tab ? ' crm-view--on' : ''}">${t}</button>`).join('\n')}
         </nav>
         <div className="crm-ribbon__right">
           <input className="input crm-ribbon__search" type="search" aria-label="Search leads" placeholder="Search leads" />
@@ -501,7 +565,14 @@ ${['Argument log', 'Lead gen'].map((t) => `<button type="button" role="tab" aria
           <a className="btn btn--ghost btn--sm crm-ribbon__team" href="/team">Team</a>
         </div>
       </div>
-      <div className="shell crm-shell">
+  )
+}
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <div className="grain">
+      <Ribbon />
+      <div className="shell crm-shell crm-shell--fit">
         <${COMPONENT.name} />
       </div>
     </div>
@@ -549,6 +620,11 @@ export default defineConfig({
   writeFileSync(join(dir, 'vite.harness.config.mjs'), config)
 }
 
+/* THE SHEET. With --sheet the run settings are opened too, and what is
+   measured is the sheet: it covers the page, so its own width and tap
+   targets are what matter, not the height of what is under it. */
+const SHEET = flag('--sheet')
+
 /* Everything the harness leaves on disk or in the process table goes here,
    and this runs on success, on failure and on Ctrl-C. A checker that leaves
    a vite server holding port 5199 is a checker nobody runs twice. */
@@ -567,7 +643,7 @@ for (const sig of ['SIGINT', 'SIGTERM']) {
 async function startHarness() {
   const fixture = FIXTURE
     ? JSON.parse(readFileSync(resolve(FIXTURE), 'utf8'))
-    : (COMPONENT.name === 'LeadGen' ? LEADGEN_FIXTURE : BUILTIN_FIXTURE)
+    : ({ LeadGen: LEADGEN_FIXTURE, Crm: LEADS_FIXTURE }[COMPONENT.name] || BUILTIN_FIXTURE)
 
   /* Inside the repo, or vite resolves neither react nor the plugin. */
   const dir = mkdtempSync(join(ROOT, '.crm-usability-'))
@@ -609,7 +685,7 @@ async function run() {
   if (MODE_HARNESS) {
     const h = await startHarness()
     origin = h.origin; path = h.path
-    label = `harness · src/components/${COMPONENT.file}${FIXTURE ? ` · ${FIXTURE}` : ' · built-in fixture'}${EXPAND ? ' · expanded' : ' · as it lands'}`
+    label = `harness · src/${COMPONENT.file}${FIXTURE ? ` · ${FIXTURE}` : ' · built-in fixture'}${EXPAND ? ' · a record open' : ' · as it lands'}${SHEET ? ' · settings open' : ''}`
   } else {
     origin = MODE_URL.replace(/\/$/, ''); path = ROUTE
     label = `${origin}${path}`
@@ -633,6 +709,11 @@ async function run() {
     await page.evaluate(() => document.fonts && document.fonts.ready)
     await page.waitForTimeout(250)
 
+    if (COMPONENT.page) {
+      await page.locator('.crm-view', { hasText: COMPONENT.tab }).first().click({ timeout: 5000 })
+      await page.waitForTimeout(400)
+    }
+
     if (EXPAND) {
       /* One pass only — opening a disclosure that opens another is a
          different screen, not a longer version of this one. */
@@ -642,6 +723,12 @@ async function run() {
       const lead = await page.$('.crm-leadbtn, .ol-list button')
       if (lead) await lead.click({ timeout: 2000 }).catch(() => { /* nothing selectable */ })
       await page.waitForTimeout(400)
+    }
+
+    if (SHEET) {
+      const opener = await page.$('[aria-haspopup="dialog"]')
+      if (opener) await opener.click({ timeout: 2000 }).catch(() => { /* nothing to open */ })
+      await page.waitForTimeout(300)
     }
 
     const m = await measure(page, PRIMARY)
