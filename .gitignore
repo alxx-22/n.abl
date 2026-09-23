@@ -51,3 +51,4 @@ worker/knowledge.generated.ts
 # make the notes folder look permanently modified and bury real edits
 # in the diff. The notes are the vault; the app's view of them is not.
 .obsidian/
+.edge-bundles/

@@ -33,7 +33,8 @@
     "verify:deploy": "node scripts/verify-deploy.mjs",
     "test:routes": "node scripts/check-worker-routes.mjs",
     "test:portal-assistant": "node scripts/e2e-portal-assistant.mjs",
-    "knowledge:services": "node scripts/build-service-knowledge.mjs"
+    "knowledge:services": "node scripts/build-service-knowledge.mjs",
+    "bundle:edge": "node scripts/bundle-edge.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.106.2",
