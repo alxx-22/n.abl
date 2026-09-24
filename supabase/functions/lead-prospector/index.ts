@@ -50,10 +50,14 @@
 
 import {
   clampSettings, quotaScope, parseJson, domainGuesses, frontPageUrls, noSiteLine, pageKind, parseRobots,
-  confirms, stripHtml, sameSiteLinks, contactPageLink, siteLines, registerLines, registerRefusal, registerCautions, validateResearch,
+  confirms, stripHtml, sameSiteLinks, contactPageLink, siteLines, registerLines, controllingCompanies, accountsFacts, lateFilings, sizeVerdict, tradesOutside, registerRefusal, registerCautions, validateResearch,
   argueSignals, validateSales, argueService, outcome, knowledgeOf, serviceKeys, factLines, signalLines,
   portfolioBlock, conversationBlock,
 } from './prospect.mjs'
+import {
+  runLookup, investigatorBody, readChecker, domainsInOutcome, linkedDomains, parseAvailability, archivedUrl, readArchivedUrl,
+  pageVerdict, isDirectory,
+} from './lookup.mjs'
 import { buildSearchUrl, chAuthHeader, normaliseItem, admit, expandSic, unknownSic, DEFAULT_TYPES, CH_BASE, redactContactRoutes } from './puller.mjs'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -99,9 +103,17 @@ async function rpc(fn: string, args: Record<string, unknown>) {
 
 let lastCallAt = 0
 
-async function ask(cfg: Cfg, role: string, system: string, user: string, temperature: number, timeoutMs: number) {
-  const chain = cfg.models[role] ?? []
-  if (!chain.length) throw new Error(`no models registered for "${role}" in public.outreach_model`)
+/* One call down a role's chain: the registry's models in order, each
+   spending its own project's budget, paced, and skipped on a 429, a 404
+   or a missing key. `body` builds the request for the model it is sent
+   to. `pin` holds a many-turn conversation to the model that began it:
+   another model is not handed a transcript it did not write. */
+async function generate(
+  cfg: Cfg, role: string, body: (spec: any) => unknown, timeoutMs: number,
+  { pin = null, usable = () => true }: { pin?: string | null; usable?: (content: any) => boolean } = {},
+) {
+  const chain = (cfg.models[role] ?? []).filter((s: any) => !pin || s.model === pin)
+  if (!chain.length) throw new Error(pin ? `${pin} is no longer in the "${role}" chain` : `no models registered for "${role}" in public.outreach_model`)
   let last = ''
   for (const spec of chain) {
     const secret = spec.key_secret
@@ -123,11 +135,7 @@ async function ask(cfg: Cfg, role: string, system: string, user: string, tempera
       res = await fetch(`${GEMINI_BASE}/v1beta/models/${spec.model}:generateContent`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: system }] },
-          contents: [{ role: 'user', parts: [{ text: user }] }],
-          generationConfig: { temperature: spec.temperature ?? temperature, topP: 0.95, responseMimeType: 'application/json' },
-        }),
+        body: JSON.stringify(body(spec)),
         signal: AbortSignal.timeout(timeoutMs),
       })
     } catch (err) {
@@ -149,11 +157,22 @@ async function ask(cfg: Cfg, role: string, system: string, user: string, tempera
     }
     if (!res.ok) { last = `${spec.model}: HTTP ${res.status}`; continue }
     const data = await res.json()
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
-    if (typeof text !== 'string' || !text.trim()) { last = `${spec.model}: empty answer`; continue }
-    return { text, model: spec.model }
+    const content = data?.candidates?.[0]?.content
+    if (!content || !Array.isArray(content.parts) || !content.parts.length || !usable(content)) { last = `${spec.model}: empty answer`; continue }
+    return { content, model: spec.model as string }
   }
   throw new Error(last || `no model answered for ${role}`)
+}
+
+const textOf = (content: any) => (content?.parts ?? []).map((p: any) => (typeof p?.text === 'string' ? p.text : '')).join('')
+
+async function ask(cfg: Cfg, role: string, system: string, user: string, temperature: number, timeoutMs: number) {
+  const { content, model } = await generate(cfg, role, (spec) => ({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: 'user', parts: [{ text: user }] }],
+    generationConfig: { temperature: spec.temperature ?? temperature, topP: 0.95, responseMimeType: 'application/json' },
+  }), timeoutMs, { usable: (c) => Boolean(textOf(c).trim()) })
+  return { text: textOf(content), model }
 }
 
 /* One agent speaking: the prompt from the registry, the reply kept whole. */
@@ -185,6 +204,56 @@ async function chGet(path: string) {
   if (res.status === 404) return null
   if (!res.ok) throw new Error(`Companies House ${res.status} for ${path}`)
   return await res.json()
+}
+
+/* The filed accounts live on the Document API, a second Companies House
+   host with the same key. Its content answer is a redirect to a signed
+   storage address that must not be sent the key, so the redirect is
+   followed by hand. Only Companies House hosts are ever asked. */
+const DOC_HOSTS = /(^|\.)company-information\.service\.gov\.uk$/
+function chHostOk(u: URL) {
+  try { return DOC_HOSTS.test(u.hostname) || u.host === new URL(CH_URL).host } catch { return false }
+}
+async function chDocument(metaUrl: string) {
+  let meta: URL
+  try { meta = new URL(metaUrl) } catch { return null }
+  if (!CH_KEY || !chHostOk(meta)) return null
+  const auth = { authorization: chAuthHeader(CH_KEY) }
+  const m = await fetch(meta, { headers: { ...auth, accept: 'application/json' }, signal: AbortSignal.timeout(15000) })
+  if (!m.ok) return null
+  const info = await m.json()
+  if (!info?.resources?.['application/xhtml+xml']) return null
+  const first = await fetch(new URL(`${meta.pathname.replace(/\/$/, '')}/content`, meta), {
+    headers: { ...auth, accept: 'application/xhtml+xml' }, redirect: 'manual', signal: AbortSignal.timeout(20000),
+  })
+  let res = first
+  if (first.status >= 300 && first.status < 400) {
+    const to = first.headers.get('location')
+    if (!to) return null
+    res = await fetch(new URL(to, meta), { headers: { accept: 'application/xhtml+xml' }, signal: AbortSignal.timeout(20000) })
+  }
+  if (!res.ok) return null
+  return (await res.text()).slice(0, 3_000_000)
+}
+
+/* What the register says beyond the profile: group control, the filing
+   record, and the latest accounts' numbers. Never fatal - a business is
+   researched without them if Companies House is slow or says no. */
+async function registerExtras(cand: any, profile: any) {
+  const n = cand.company_number
+  const soft = async <T>(f: () => Promise<T>) => { try { return await f() } catch { return null } }
+  const [psc, history] = await Promise.all([
+    soft(() => chGet(`/company/${n}/persons-with-significant-control`)),
+    soft(() => chGet(`/company/${n}/filing-history?category=accounts&items_per_page=12`)),
+  ])
+  const items = Array.isArray(history?.items) ? history.items : []
+  const metaUrl = items.find((i: any) => i?.links?.document_metadata)?.links?.document_metadata
+  const xhtml = metaUrl ? await soft(() => chDocument(metaUrl)) : null
+  return {
+    psc,
+    filings: lateFilings(items, { incorporated: cand.incorporated_on || profile?.date_of_creation }),
+    accounts: xhtml ? accountsFacts(xhtml) : null,
+  }
 }
 
 async function pull(plan: any, settings: any) {
@@ -309,18 +378,30 @@ async function frontPage(host: string, settings: any, until = Infinity) {
 
 /* A site a person typed in is trusted as theirs - a person looked - but
    it still has to load, and robots.txt still has the last word. */
+/* A site already known to be theirs: added by a person, or found and
+   proved by the research loop - live, or as the Internet Archive's copy
+   when the live site turns automated readers away. */
 async function givenWebsite(cand: any, settings: any) {
+  const who = cand.website_confirmed_by.includes('a person') ? 'a person added' : 'the research loop found'
+  const by = cand.website_confirmed_by as string[]
+  const archived = readArchivedUrl(cand.website)
+  if (archived) {
+    const page = await get(cand.website, settings)
+    if (!page.ok || pageKind(page.body) !== 'live') return { url: null, confirmed_by: [], outcome: `the archived copy ${who} did not load`, html: null, archived: null }
+    return { url: cand.website, confirmed_by: by, outcome: `an archived copy from ${archived.date}`, html: page.body, archived }
+  }
   let host = ''
   try { host = new URL(cand.website).host } catch { /* checked below */ }
-  if (!host) return { url: null, confirmed_by: [], outcome: 'the address a person added is not a web address', html: null }
+  if (!host) return { url: null, confirmed_by: [], outcome: `the address ${who} is not a web address`, html: null, archived: null }
   const page = await frontPage(host, settings, Date.now() + Math.max(15000, settings.fetch_timeout_ms * 3))
-  if (!page.ok) return { url: null, confirmed_by: [], outcome: `the site a person added did not load: ${page.why}`, html: null }
-  if (pageKind(page.body) !== 'live') return { url: null, confirmed_by: [], outcome: 'the site a person added is parked or empty', html: null }
-  return { url: page.url, confirmed_by: ['a person'], outcome: 'added by a person', html: page.body }
+  if (!page.ok) return { url: null, confirmed_by: [], outcome: `the site ${who} did not load: ${page.why}`, html: null, archived: null }
+  if (pageKind(page.body) !== 'live') return { url: null, confirmed_by: [], outcome: `the site ${who} is parked or empty`, html: null, archived: null }
+  return { url: page.url, confirmed_by: by, outcome: who === 'a person added' ? 'added by a person' : 'found by the research loop', html: page.body, archived: null }
 }
 
-async function findWebsite(cand: any, settings: any) {
-  if (cand.website && Array.isArray(cand.website_confirmed_by) && cand.website_confirmed_by.includes('a person')) {
+const KNOWN_SITE = ['a person', 'found by the research loop']
+async function findWebsite(cand: any, settings: any): Promise<{ url: string | null; confirmed_by: string[]; outcome: string; html: string | null; archived?: any }> {
+  if (cand.website && Array.isArray(cand.website_confirmed_by) && cand.website_confirmed_by.some((b: string) => KNOWN_SITE.includes(b))) {
     return givenWebsite(cand, settings)
   }
   const guesses = domainGuesses(cand.company_name, cand.town)
@@ -372,17 +453,21 @@ function readable(html: string, cand: any) {
 /* The pages an agent reads, and the raw HTML code measures (siteLines):
    the same pages plus the contact page, whose words no agent sees. The
    raw HTML is not kept. */
-async function readSite(home: { url: string; html: string }, cand: any, settings: any) {
-  const pages = [{ url: home.url, text: readable(home.html, cand), html: home.html }]
-  for (const link of sameSiteLinks(home.html, home.url, settings.pages_per_site - 1)) {
-    const p = await get(link, settings)
-    if (p.ok) pages.push({ url: p.url || link, text: readable(p.body, cand), html: p.body })
+async function readSite(home: { url: string; html: string }, cand: any, settings: any, archived: any = null) {
+  /* An archived site's links point at the original; each is read from the
+     archive at the same date, and shown by its original address. */
+  const base = archived ? archived.original : home.url
+  const via = (u: string) => (archived ? archivedUrl(archived.timestamp, u) : u)
+  const pages = [{ url: base, text: readable(home.html, cand), html: home.html }]
+  for (const link of sameSiteLinks(home.html, base, settings.pages_per_site - 1)) {
+    const p = await get(via(link), settings)
+    if (p.ok) pages.push({ url: archived ? link : (p.url || link), text: readable(p.body, cand), html: p.body })
   }
   const raw: { url: string; html: string; contact?: boolean }[] = pages.map((p) => ({ url: p.url, html: p.html }))
-  const contact = contactPageLink(home.html, home.url)
+  const contact = contactPageLink(home.html, base)
   if (contact && !pages.some((p) => p.url === contact)) {
-    const c = await get(contact, settings)
-    if (c.ok) raw.push({ url: c.url || contact, html: c.body, contact: true })
+    const c = await get(via(contact), settings)
+    if (c.ok) raw.push({ url: archived ? contact : (c.url || contact), html: c.body, contact: true })
   }
   let left = settings.max_page_chars
   const out: { url: string; text: string }[] = []
@@ -391,7 +476,7 @@ async function readSite(home: { url: string; html: string }, cand: any, settings
     out.push({ url: p.url, text: p.text.slice(0, left) })
     left -= Math.min(p.text.length, left)
   }
-  return { pages: out, measured: siteLines(raw) }
+  return { pages: out, measured: siteLines(raw), htmls: raw.map((r) => r.html) }
 }
 
 const pathOf = (u: string) => { try { return new URL(u).pathname } catch { return u } }
@@ -419,12 +504,13 @@ async function research(ctx: Ctx): Promise<StageResult> {
     chGet(`/company/${cand.company_number}`),
     chGet(`/company/${cand.company_number}/officers?items_per_page=50`),
   ])
-  const register = registerLines(cand, { profile, officers })
-  const registerText = ['REGISTER', ...register.map((r) => `${r.key}: ${r.text}`)]
-
   /* Not trading, or cannot be trusted to pay: ended here, before a
      single model call or a single fetch of their site. */
-  const refusal = registerRefusal(profile)
+  const extras = registerRefusal(profile) ? {} : await registerExtras(cand, profile)
+  const size = sizeVerdict((extras as any).accounts, cand.sic_codes)
+  const refusal = registerRefusal(profile) ?? size.refuse
+  const register = registerLines(cand, { profile, officers, ...extras })
+  const registerText = ['REGISTER', ...register.map((r) => `${r.key}: ${r.text}`)]
   if (refusal) {
     await ctx.move({
       stage: 'research', from: 'register', to: null, decision: 'refused',
@@ -432,10 +518,12 @@ async function research(ctx: Ctx): Promise<StageResult> {
     })
     return { next: 'done', extra: { p_register: { lines: register } }, finish: { status: 'refused', note: `Refused before any agent: ${refusal}.` } }
   }
-  const cautions = registerCautions(profile)
+  const cautions = [...registerCautions(profile), ...(size.caution ? [size.caution] : [])]
 
   const site = await findWebsite(cand, settings)
-  const { pages, measured } = site.html ? await readSite({ url: site.url!, html: site.html }, cand, settings) : { pages: [], measured: [] }
+  const { pages, measured, htmls } = site.html
+    ? await readSite({ url: site.url!, html: site.html }, cand, settings, site.archived)
+    : { pages: [], measured: [], htmls: [] as string[] }
   const pageText = pages.map((p) => p.text).join('\n')
   const siteExtra = { p_register: { lines: register, measured }, p_website: site.url, p_confirmed_by: site.confirmed_by, p_website_outcome: site.outcome }
   const measuredText = measured.length
@@ -448,7 +536,7 @@ async function research(ctx: Ctx): Promise<StageResult> {
     ...registerText,
     ...(cautions.length ? [`CAUTION: ${cautions.join('; ')} — no service may score above ${settings.caution_ceiling}`] : []),
     '',
-    site.url ? `WEBSITE: ${site.url} (confirmed by ${site.confirmed_by.join(' + ')}); read ${pages.length} page${pages.length === 1 ? '' : 's'}: ${pages.map((p) => pathOf(p.url)).join(', ')}`
+    site.url ? `WEBSITE: ${site.archived ? `${site.archived.original} as the Internet Archive kept it on ${site.archived.date} (the live site turns automated readers away, so this may be out of date)` : site.url} (confirmed by ${site.confirmed_by.join(' + ')}); read ${pages.length} page${pages.length === 1 ? '' : 's'}: ${pages.map((p) => pathOf(p.url)).join(', ')}`
       : noSiteLine(site.outcome),
     ...(measuredText.length ? ['', ...measuredText] : []),
   ].join('\n')
@@ -458,9 +546,28 @@ async function research(ctx: Ctx): Promise<StageResult> {
      so by default the business is parked instead - no model is asked -
      and a person who knows the site can add it and send it back. */
   if (!site.url && settings.require_website) {
-    await ctx.move({ stage: 'research', from: 'sources', to: null, decision: 'parked', said: material,
-      guard: 'parked before any agent: no website to read. Add it in Lead gen to send this business back to research.' })
-    return { next: 'done', extra: siteExtra, finish: { status: 'no_site', note: `No website found (${site.outcome}). Add it to have the agents read it.` } }
+    /* Cached for the research loop, which works on its own key and in its
+       own time; a person can still add the site at any point. */
+    const known = Boolean(cand.website) && (cand.website_confirmed_by ?? []).some((x: string) => KNOWN_SITE.includes(x))
+    const lookup = settings.lookup_enabled && !known
+    await ctx.move({ stage: 'research', from: 'sources', to: lookup ? 'lookup' : null, decision: 'parked', said: material,
+      guard: lookup ? 'parked before any agent: no website to read. Sent to the research loop to look further.'
+        : 'parked before any agent: no website to read. Add it in Lead gen to send this business back to research.' })
+    return {
+      next: 'done', extra: siteExtra,
+      finish: lookup
+        ? { status: 'researching', note: `No website found by guessing (${site.outcome}). With the research loop; you can still add it.` }
+        : { status: 'no_site', note: `No website found (${site.outcome}). Add it to have the agents read it.` },
+    }
+  }
+
+  /* Registered here, trading elsewhere: their own pages give addresses,
+     and every one is outside the territory. */
+  const away = site.url ? tradesOutside(htmls, settings.territory_areas) : null
+  if (away) {
+    await ctx.move({ stage: 'research', from: 'sources', to: null, decision: 'refused', said: material,
+      guard: `refused before any agent: every address on its own site is in ${away.join(', ')}, outside the territory` })
+    return { next: 'done', extra: siteExtra, finish: { status: 'refused', note: `Refused before any agent: its own site trades from ${away.join(', ')}, outside the territory; the registered office is not where it works.` } }
   }
   await ctx.move({ stage: 'research', from: 'sources', to: 'research', decision: 'material', said: material })
 
@@ -611,6 +718,182 @@ const STAGE_FN: Record<string, (ctx: Ctx) => Promise<StageResult>> = {
   research, signals, sales, specialists: specialist,
 }
 
+/* ---------- the research loop ----------
+
+   For a business whose site the guesser could not find. Its models spend
+   GEMINI_RESEARCH_API_KEY, a project of its own (a constraint in the
+   registry keeps the lookup roles on it and every other role off it), on
+   its own cron, one business at a time. What it may do, and what code
+   holds it to, is in lookup.mjs. */
+
+const LOOKUP_ROLES = ['prospect_lookup', 'prospect_lookup_check']
+
+async function directorsElsewhere(cand: any) {
+  const officers = await chGet(`/company/${cand.company_number}/officers?items_per_page=50`)
+  const active = (officers?.items ?? []).filter((o: any) => !o.resigned_on && /director|member/i.test(String(o.officer_role ?? '')))
+  const names: { company: string; status: string }[] = []
+  for (const o of active.slice(0, 4)) {
+    const path = o?.links?.officer?.appointments
+    if (typeof path !== 'string' || !path.startsWith('/officers/')) continue
+    const a = await chGet(`${path}?items_per_page=30`)
+    for (const it of a?.items ?? []) {
+      const to = it?.appointed_to
+      if (!to?.company_name || to.company_number === cand.company_number) continue
+      if (!names.some((n) => n.company === to.company_name)) names.push({ company: String(to.company_name), status: String(to.company_status ?? '') })
+    }
+  }
+  return names.slice(0, 15)
+}
+
+function lookupTools(cand: any, settings: any, until: () => number) {
+  const readPage = (html: string, host: string) => {
+    const c = confirms(html, cand)
+    const title = ((html.match(/<title[^>]*>([^<]*)/i) || [])[1] || '').trim().slice(0, 120)
+    const links = linkedDomains(html, host)
+    return {
+      verdict: pageVerdict(c.reasons, c.conflict ?? null), reasons: c.reasons, conflict: c.conflict ?? null,
+      title: redactContactRoutes(title), excerpt: readable(html, cand).slice(0, 1200), links, offer: links,
+    }
+  }
+  return {
+    register_history: async () => {
+      const [profile, psc, elsewhere] = await Promise.all([
+        chGet(`/company/${cand.company_number}`),
+        chGet(`/company/${cand.company_number}/persons-with-significant-control`).catch(() => null),
+        directorsElsewhere(cand).catch(() => []),
+      ])
+      return {
+        previous_names: (profile?.previous_company_names ?? []).map((p: any) => ({ name: p?.name, until: p?.ceased_on })).slice(0, 6),
+        directors_other_companies: elsewhere,
+        controlled_by: controllingCompanies(psc),
+      }
+    },
+    guess_domains: async ({ name }: any) => {
+      const guesses = domainGuesses(name, cand.town).filter((d) => !isDirectory(d))
+      const exist = (await Promise.all(guesses.map(async (h) => (await resolves(h)) ? h : null))).filter(Boolean) as string[]
+      return { name, tried: guesses.length, exist, offer: exist }
+    },
+    check_domain: async ({ domain }: any) => {
+      const page = await frontPage(domain, settings, until())
+      if (!page.ok) return { verdict: /\(40[13]\)/.test(page.why) ? 'turned_us_away' : 'unreachable', why: page.why, reasons: [] }
+      const kind = pageKind(page.body)
+      if (kind !== 'live') return { verdict: 'not_theirs', why: kind === 'parked' ? 'parked or for sale' : 'a placeholder page', reasons: [] }
+      return { url: page.url, ...readPage(page.body, domain) }
+    },
+    archived_copy: async ({ domain }: any) => {
+      let snap = null
+      try {
+        const res = await fetch(`https://archive.org/wayback/available?url=${encodeURIComponent(domain)}`, {
+          headers: { 'user-agent': settings.user_agent, accept: 'application/json' }, signal: AbortSignal.timeout(15000),
+        })
+        snap = res.ok ? parseAvailability(await res.json()) : null
+      } catch { snap = null }
+      if (!snap) return { verdict: 'none', why: 'the Internet Archive has no copy of it', reasons: [] }
+      const url = archivedUrl(snap.timestamp, snap.original)
+      const page = await get(url, settings)
+      if (!page.ok) return { verdict: 'unreachable', why: `the archived copy did not load (${page.error ?? page.status})`, reasons: [], date: snap.date }
+      const kind = pageKind(page.body)
+      if (kind !== 'live') return { verdict: 'not_theirs', why: `the archived copy is ${kind === 'parked' ? 'a parked domain' : 'a placeholder'}`, reasons: [], date: snap.date }
+      return { url, date: snap.date, ...readPage(page.body, domain) }
+    },
+  }
+}
+
+async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], deadline: number) {
+  const prompt = cfg.prompts.lookup
+  if (!prompt) throw new Error('public.prospect_prompt has no "lookup" row')
+  const register = Array.isArray(cand.register?.lines) ? cand.register.lines : registerLines(cand)
+  const opening = [
+    'THE BUSINESS (from the company register; no address, number or person is given to you):',
+    ...register.map((r: any) => `${r.key}: ${r.text}`),
+    '',
+    `WHAT THE GUESSER TRIED: ${cand.website_outcome || 'nothing recorded'}`,
+    '',
+    `You have ${settings.lookup_max_steps} turns. Find their own website, or conclude that you cannot.`,
+  ].join('\n')
+  const lookupMove = (m: any) => move({ stage: 'lookup', ...m })
+  const r = await runLookup({
+    system: prompt.body, opening, offered: domainsInOutcome(cand.website_outcome), maxSteps: settings.lookup_max_steps, deadline,
+    tools: lookupTools(cand, settings, () => deadline),
+    callInvestigator: ({ system, contents, pin }: any) => generate(cfg, 'prospect_lookup',
+      (spec) => investigatorBody({ system, contents, temperature: spec.temperature ?? Number(prompt.temperature ?? 0.3) }),
+      settings.model_timeout_ms, { pin, usable: (c) => c.parts.some((p: any) => p?.functionCall || p?.text) }),
+    callChecker: async ({ domain, how, verdict, why }: any) => {
+      const reply = await talk(cfg, settings, 'prospect_lookup_check', 'lookup_check', [
+        'THE BUSINESS (from the company register):', ...register.map((r: any) => `${r.key}: ${r.text}`), '',
+        `THE PAGE: ${domain}, ${how === 'archived' ? `the Internet Archive's copy from ${verdict.date}` : 'read live'}`,
+        `Title: ${verdict.title || '(none)'}`,
+        `Code found on it: ${verdict.reasons.join(', ') || 'nothing'} - the name, but not the registered postcode or company number.`,
+        `What it says (contact details removed):\n${verdict.excerpt || '(nothing readable)'}`, '',
+        `THE INVESTIGATOR SAYS: ${redactContactRoutes(why || '(nothing)')}`,
+      ].join('\n'))
+      return { ...readChecker(reply.parsed), raw: reply.raw, model: reply.model }
+    },
+    onMove: lookupMove,
+  })
+  return r
+}
+
+async function lookupTick(cfg: Cfg, settings: any, started: number) {
+  const keys = [...new Set(LOOKUP_ROLES.flatMap((role) => (cfg.models[role] ?? []).map((m: any) => m.key_secret)))]
+  if (!keys.length) return { idle: true, why: 'no lookup models are registered' }
+  if (!keys.some((k) => keyFor(k))) return { idle: true, why: `${keys.join(' / ')} is not set; businesses wait in the research queue` }
+  if (!settings.lookup_enabled) return { idle: true, why: 'the research loop is switched off (lookup_enabled)' }
+  const detail: unknown[] = []
+  let done = 0
+  /* A business gets what is left of the tick, up to lookup_seconds, and
+     is only started with enough left to be worth it. One that runs out of
+     time goes back to the queue, not to "nothing found". */
+  const end = started + settings.tick_budget_ms - 8000
+  while (end - Date.now() > 45000) {
+    const [cand] = await rpc('prospect_lookup_next', {}) ?? []
+    if (!cand) break
+    let seq = Number(cand.next_seq) || 0
+    const move: Ctx['move'] = async (m) => {
+      seq++
+      await rpc('prospect_record_round', {
+        p_candidate_id: cand.id, p_seq: seq, p_stage: m.stage, p_from: m.from, p_to: m.to ?? null,
+        p_model: m.model ?? null, p_decision: m.decision, p_said: m.said ?? null, p_guard: m.guard ?? null,
+      })
+    }
+    try {
+      const r = await lookupOne(cfg, settings, cand, move, Math.min(end, Date.now() + settings.lookup_seconds * 1000))
+      if (r.timedOut) {
+        await rpc('prospect_lookup_fail', { p_id: cand.id, p_error: 'out of time in this tick; it will be picked up again' })
+        detail.push({ company: cand.company_name, paused: 'out of time', steps: r.steps })
+        break
+      }
+      if (r.found) {
+        const url = r.found.url
+        await rpc('prospect_lookup_finish', {
+          p_id: cand.id, p_url: url, p_confirmed_by: r.found.confirmed_by,
+          p_outcome: `found by the research loop: ${r.found.domain}${r.found.how === 'archived' ? `, read from the Internet Archive's copy of ${r.found.date}` : ''}`,
+          p_note: null,
+        })
+        detail.push({ company: cand.company_name, found: r.found.domain, how: r.found.how, steps: r.steps })
+      } else {
+        const why = redactContactRoutes(r.why || 'nothing found')
+        await rpc('prospect_lookup_finish', {
+          p_id: cand.id, p_url: null, p_confirmed_by: null, p_outcome: `research loop: ${why}`,
+          p_note: `No website found by guessing or by the research loop: ${why}. Add it if you know it.`,
+        })
+        detail.push({ company: cand.company_name, found: null, why, steps: r.steps })
+      }
+      done++
+    } catch (err) {
+      const msg = (err as Error).message
+      await move({ stage: 'lookup', from: 'system', decision: 'failed', guard: msg }).catch(() => {})
+      await rpc('prospect_lookup_fail', { p_id: cand.id, p_error: msg })
+      detail.push({ company: cand.company_name, failed: msg })
+      if (err instanceof ChBusy || err instanceof ChKeyRejected || /no budget left|daily quota reached|is not set|not valid|writer's key|no longer in the/i.test(msg)) break
+    }
+  }
+  if (detail.length) {
+    await rpc('prospect_log_run', { p_pulled: 0, p_stages: 0, p_finished: done, p_detail: { mode: 'lookup', businesses: detail }, p_error: null })
+  }
+  return { mode: 'lookup', finished: done, ms: Date.now() - started, detail }
+}
+
 /* ---------- entry ---------- */
 
 const reply = (body: unknown, status = 200) =>
@@ -633,12 +916,17 @@ Deno.serve(async (req) => {
        empty ticks a day, and a key nobody has added yet would read as an
        error before anybody asked for a run. */
     const cfg: Cfg = await rpc('prospect_config', {})
+    /* The research loop has its own cron: POST {"mode": "lookup"}. It
+       works the queue whether or not a target is running. */
+    const mode = await req.json().then((b) => b?.mode).catch(() => null)
+    if (mode === 'lookup') return reply(await lookupTick(cfg, clampSettings(cfg.settings), started))
     if (!cfg.running) return reply({ idle: true })
     const settings = clampSettings(cfg.settings)
 
     /* Somebody pressed Run. From here a missing key is a real fault, so it
        goes in the run log where the Lead gen tab shows it. */
-    const discoveryKeys = [...new Set(Object.values(cfg.models).flat().map((m) => m.key_secret))]
+    const discoveryKeys = [...new Set(Object.entries(cfg.models)
+      .filter(([role]) => !LOOKUP_ROLES.includes(role)).flatMap(([, chain]) => chain.map((m) => m.key_secret)))]
     if (!discoveryKeys.some((k) => keyFor(k))) {
       const msg = 'GEMINI_DISCOVERY_API_KEY is not set (Supabase -> Edge Functions -> Secrets)'
       await rpc('prospect_log_run', { p_pulled: 0, p_stages: 0, p_finished: 0, p_detail: null, p_error: msg })

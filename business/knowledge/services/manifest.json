@@ -1,8 +1,8 @@
 {
-  "migration": "202609232137_service_knowledge_4eb2503f.sql",
+  "migration": "202609240810_service_knowledge_96b8bc8a.sql",
   "files": {
     "_shared/scoring.md": "76209f86194eecb875ec1170fdf5cee05cc07e0ffe3dfa6ba381c2c236198911",
-    "_shared/who-we-sell-to.md": "4f97fbde18d155c086c17ef51e3c2410a880721a366acb2da2edf9bd9aee7682",
+    "_shared/who-we-sell-to.md": "d40d1477310fa63501a5975b75d4889eb1ed3aeb33033e0ba7b66f1d61ffe174",
     "ai/service.md": "8d5334b20c6fd73d6d9b45a6b1ea01a23a16d716bd1630c77edce251d4debe59",
     "automation/service.md": "6c5a65a535db0cc26c6580783aac210e1e4eacb49127885dcc275b38411973d7",
     "data_analytics/service.md": "e27260fd609d3bcee7d5f2ce3e19ce77daadae334f71ad3827da795862eb1839",

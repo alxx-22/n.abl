@@ -12,7 +12,12 @@ import {
   argueSignals, validateSales, readMove, argueService, outcome, parseJson, conversationBlock,
   frontPageUrls, noSiteLine, registerRefusal, registerCautions, validatePick, signalLines,
   siteLines, contactPageLink, ceilingFor, factLines,
+  accountsFacts, lateFilings, controllingCompanies, sizeVerdict, tradesOutside,
 } from '../supabase/functions/lead-prospector/prospect.mjs'
+import {
+  normaliseDomain, isDirectory, domainsInOutcome, linkedDomains, parseAvailability, archivedUrl, readArchivedUrl,
+  checkCall, pageVerdict, runLookup, readChecker, investigatorBody,
+} from '../supabase/functions/lead-prospector/lookup.mjs'
 import { quotaScope as outreachQuotaScope } from '../supabase/functions/outreach-writer/guards.mjs'
 import { redactContactRoutes, admit, unknownSic, expandSic } from '../supabase/functions/lead-prospector/puller.mjs'
 
@@ -481,6 +486,134 @@ console.log('\nWHAT THE NOTTS RUN TAUGHT: A SECTOR IS NOT A SIGNAL, AND THE CODE
   })
   ok('  …so two agents who both want 70 on the sector agree at 30', r.status === 'agreed' && r.score === 30, r)
   ok('with no setting, the sector ceiling is 30, as scoring.md says', clampSettings({}).sector_ceiling === 30 && clampSettings({ sector_ceiling: 40 }).sector_ceiling === 40)
+}
+
+
+console.log('\nTHE REGISTER, READ FURTHER: HEADCOUNT, LATE FILINGS, GROUPS, SIZE\n')
+{
+  const ctx = (id, end) => `<xbrli:context id="${id}"><xbrli:entity>x</xbrli:entity><xbrli:period><xbrli:startDate>2000-01-01</xbrli:startDate><xbrli:endDate>${end}</xbrli:endDate></xbrli:period></xbrli:context>`
+  const ix = (ref, name, v, extra = '') => `<ix:nonFraction contextRef="${ref}" name="${name}" unitRef="u"${extra}>${v}</ix:nonFraction>`
+  const doc = `<html>${ctx('prev', '2024-03-31')}${ctx('now', '2025-03-31')}` +
+    `${ix('prev', 'core:AverageNumberEmployeesDuringPeriod', '9')}${ix('now', 'uk-core:AverageNumberEmployeesDuringPeriod', '12')}` +
+    `${ix('now', 'core:TurnoverRevenue', '1,250', ' scale="3"')}${ix('now', 'core:Creditors', '<span>n/a</span>')}</html>`
+  const a = accountsFacts(doc)
+  ok('the filed headcount is this year\'s, whatever order the tags come in', a.employees === 12 && a.prior === 9 && a.period_end === '2025-03-31', a)
+  ok('  …turnover is read at its scale', a.turnover === 1250000, a)
+  ok('  …a page with no inline XBRL gives nothing, not zero', accountsFacts('<html>12 employees</html>') === null)
+  const f = lateFilings([
+    { category: 'accounts', date: '2025-12-20', description_values: { made_up_date: '2025-03-31' } },
+    { category: 'accounts', date: '2024-11-05', description_values: { made_up_date: '2024-01-31' } },
+    { category: 'accounts', date: '2023-12-01', description_values: { made_up_date: '2023-01-31' } },
+    { category: 'accounts', date: '2016-12-01', description_values: { made_up_date: '2015-12-31' } },
+    { category: 'confirmation-statement', date: '2025-01-01', description_values: { made_up_date: '2020-01-01' } },
+  ], { incorporated: '2015-01-01', today: new Date('2026-09-24') })
+  ok('late filings are counted against nine months, in the last six years, first accounts aside', f.late === 2 && f.of === 3, f)
+  ok('  …and the first accounts, which have longer, are never counted late',
+    lateFilings([{ category: 'accounts', date: '2021-06-01', description_values: { made_up_date: '2020-06-30' } }],
+      { incorporated: '2019-07-01', today: new Date('2026-09-24') }).of === 0)
+  const psc = { items: [
+    { kind: 'corporate-entity-person-with-significant-control', name: 'PARENT HOLDINGS LTD' },
+    { kind: 'individual-person-with-significant-control', name: 'Mr Private Person' },
+    { kind: 'corporate-entity-person-with-significant-control', name: 'OLD PARENT LTD', ceased_on: '2020-01-01' },
+  ] }
+  ok('a controlling company is named; a person with control never is', controllingCompanies(psc).join() === 'PARENT HOLDINGS LTD')
+  const lines = registerLines({ company_name: 'X LTD', incorporated_on: '2015-01-01' }, {
+    profile: { previous_company_names: [{ name: 'X PLUMBING LTD' }] }, accounts: a, filings: f, psc, today: new Date('2026-09-24'),
+  })
+  const L = Object.fromEntries(lines.map((l) => [l.key, l.text]))
+  ok('the headcount reaches the agents as a register line', /average of 12 employees in the year to 2025-03-31 \(9 the year before\)/.test(L.r_employees ?? ''), L)
+  ok('  …late filing twice or more is a timing note, never a need', /2 of the last 3 times/.test(L.r_late_filings ?? '') && /never a need/.test(L.r_late_filings))
+  ok('  …the group and the previous name are there', /PARENT HOLDINGS LTD/.test(L.r_parent ?? '') && /X PLUMBING LTD/.test(L.r_previous_names ?? ''))
+  ok('  …and no person\'s name is anywhere in them', !/Private Person/.test(JSON.stringify(lines)))
+  ok('one late filing is not a pattern', !registerLines({ company_name: 'X' }, { filings: { late: 1, of: 4 } }).some((l) => l.key === 'r_late_filings'))
+  ok('over 50 filed employees is refused, as the ICP says', /over the 50/.test(sizeVerdict({ employees: 64 }, ['43210']).refuse ?? ''))
+  ok('  …one or two is a caution for a trade', /below the size/.test(sizeVerdict({ employees: 1 }, ['43210']).caution ?? ''))
+  ok('  …but not for a professional practice, whose own time is the bottleneck', !sizeVerdict({ employees: 1 }, ['69201']).caution)
+  ok('  …and no headcount says nothing either way', !sizeVerdict(null, []).refuse && !sizeVerdict({ employees: null }).caution)
+  ok('every address on its own site outside the territory is out of area — Wakefield Driveways traded from WF',
+    tradesOutside(['<p>Unit 3, Wakefield WF2 7AB</p>'], ['NG', 'DE']).join() === 'WF2')
+  ok('  …one address inside keeps it in, and no address says nothing',
+    tradesOutside(['<p>WF2 7AB and NG7 2RD</p>'], ['NG']) === null && tradesOutside(['<p>none</p>'], ['NG']) === null)
+  const s = clampSettings({})
+  ok('the research loop is on by default, eight turns and up to 150 seconds a business',
+    s.lookup_enabled === true && s.lookup_max_steps === 8 && s.lookup_seconds === 150 && clampSettings({ lookup_enabled: false }).lookup_enabled === false)
+}
+
+console.log('\nTHE RESEARCH LOOP: NO SEARCH ENGINE, AND NOTHING A MODEL SAYS IS TRUSTED\n')
+{
+  ok('a domain is normalised from whatever shape it came in', normaliseDomain('HTTPS://www.Fresh.co.uk/about?x=1') === 'fresh.co.uk' && normaliseDomain('not a domain') === null)
+  ok('directories and social sites are never their site', isDirectory('m.facebook.com') && isDirectory('checkatrade.com') && !isDirectory('fresh.co.uk'))
+  ok('the guesser\'s outcome offers its domains',
+    domainsInOutcome('3 of 14 guessed domains exist, none confirmed as theirs — bwplumbing.com: exists but turned us away (403); rbramley.co.uk: does not mention them').join() === 'bwplumbing.com,rbramley.co.uk')
+  ok('a page\'s links to other sites are offered, not its own or a directory\'s',
+    linkedDomains('<a href="https://sister-co.co.uk/x">s</a><a href="https://www.fresh.co.uk/a">o</a><a href="https://facebook.com/f">f</a>', 'fresh.co.uk').join() === 'sister-co.co.uk')
+  const snap = parseAvailability({ archived_snapshots: { closest: { status: '200', available: true, url: 'http://web.archive.org/web/20240524181032/https://woodfloor.co.uk/', timestamp: '20240524181032' } } })
+  ok('the Internet Archive\'s answer is read', snap?.date === '2024-05-24' && snap.original === 'https://woodfloor.co.uk/', snap)
+  ok('  …and no snapshot is null', parseAvailability({ archived_snapshots: {} }) === null)
+  const au = archivedUrl(snap.timestamp, snap.original)
+  ok('an archived page is read raw, without the archive\'s toolbar, and can be taken apart again',
+    au === 'https://web.archive.org/web/20240524181032id_/https://woodfloor.co.uk/' && readArchivedUrl(au)?.date === '2024-05-24' && readArchivedUrl('https://woodfloor.co.uk') === null)
+  const offered = new Set(['fresh.co.uk'])
+  ok('a domain nobody offered cannot be checked: no domain comes from a model', !checkCall({ name: 'check_domain', args: { domain: 'invented.co.uk' } }, offered).ok)
+  ok('  …a directory cannot, even if offered', !checkCall({ name: 'archived_copy', args: { domain: 'yell.com' } }, new Set(['yell.com'])).ok)
+  ok('  …a name carrying a contact route is refused', !checkCall({ name: 'guess_domains', args: { name: 'call 0115 496 0000' } }, offered).ok)
+  ok('  …an offered one can', checkCall({ name: 'check_domain', args: { domain: 'www.fresh.co.uk' } }, offered).ok)
+  ok('a page is theirs on a postcode or number, name-only on the name, not theirs on a conflict',
+    pageVerdict(['postcode', 'company name']) === 'theirs' && pageVerdict(['company name']) === 'name_only' && pageVerdict(['company name'], 'addresses in WF') === 'not_theirs')
+  ok('the checker must say "theirs": anything else is no', readChecker({ verdict: 'theirs' }).verdict === 'theirs' && readChecker({ verdict: 'probably' }).verdict === 'unsure')
+  const body = investigatorBody({ system: 's', contents: [] })
+  ok('the investigator must call a tool every turn, and has no search tool', body.toolConfig.functionCallingConfig.mode === 'ANY'
+    && !JSON.stringify(body).includes('googleSearch') && body.tools[0].functionDeclarations.map((t) => t.name).join() === 'register_history,guess_domains,check_domain,archived_copy,conclude')
+
+  const agentSays = (calls) => { let i = 0; const seen = []; return { seen, fn: async (ctx) => { seen.push(ctx); const c = calls[i++] ?? { name: 'conclude', args: { domain: null, why: 'ran out' } }; return { model: 'fake-lite', content: { role: 'model', parts: (Array.isArray(c) ? c : [c]).map((x) => ({ functionCall: x })) } } } } }
+  const toolsFor = (pages) => ({
+    register_history: async () => ({ previous_names: [{ name: 'BRAMLEY HEATING LTD' }], directors_other_companies: [], controlled_by: [] }),
+    guess_domains: async ({ name }) => ({ name, exist: ['bramleyheating.co.uk'], offer: ['bramleyheating.co.uk'] }),
+    check_domain: async ({ domain }) => pages[`live:${domain}`] ?? { verdict: 'unreachable', reasons: [] },
+    archived_copy: async ({ domain }) => pages[`archived:${domain}`] ?? { verdict: 'none', reasons: [] },
+  })
+  const moves = []
+  const inv = agentSays([
+    { name: 'register_history', args: {} },
+    { name: 'check_domain', args: { domain: 'bramleyheating.co.uk' } },
+    { name: 'guess_domains', args: { name: 'Bramley Heating' } },
+    { name: 'conclude', args: { domain: 'bramleyheating.co.uk', how: 'live', why: 'postcode on it' } },
+    { name: 'check_domain', args: { domain: 'bramleyheating.co.uk' } },
+    { name: 'conclude', args: { domain: 'bramleyheating.co.uk', how: 'live', why: 'postcode on it' } },
+  ])
+  const r1 = await runLookup({ system: 's', opening: 'THE BUSINESS', offered: ['rbramley.co.uk'], maxSteps: 10, callInvestigator: inv.fn,
+    callChecker: async () => ({ verdict: 'theirs' }), onMove: async (m) => moves.push(m),
+    tools: toolsFor({ 'live:bramleyheating.co.uk': { verdict: 'theirs', reasons: ['postcode'], url: 'https://bramleyheating.co.uk/', excerpt: 'Heating engineers' } }) })
+  ok('the previous name leads to the site, proved by its postcode', r1.found?.domain === 'bramleyheating.co.uk' && r1.found.confirmed_by.join() === 'postcode,found by the research loop', r1)
+  ok('  …a domain not yet offered could not be checked, and said so', /has not been offered/.test(moves.find((m) => m.from === 'code' && m.guard)?.guard ?? ''))
+  ok('  …a conclusion before the page was read was refused', moves.some((m) => /read live yet: check it before concluding/.test(m.guard ?? '')))
+  ok('  …every turn after the first stays with the model that began it', inv.seen.slice(1).every((c) => c.pin === 'fake-lite') && inv.seen[0].pin === null)
+  ok('  …the model\'s own parts go back to it verbatim, answered by code', inv.seen[2].contents.some((c) => c.role === 'model' && c.parts[0].functionCall?.name === 'check_domain')
+    && inv.seen[2].contents.some((c) => c.parts?.[0]?.functionResponse?.name === 'check_domain'))
+  ok('  …and every move is logged, the investigator\'s word for word', moves.filter((m) => m.from === 'investigator').every((m) => /functionCall/.test(m.said)))
+
+  const nameOnly = { verdict: 'name_only', reasons: ['company name'], url: 'https://web.archive.org/web/20240524181032id_/https://rbramley.co.uk/', date: '2024-05-24', excerpt: 'R Bramley & Son, plumbers' }
+  const conclude = { name: 'conclude', args: { domain: 'rbramley.co.uk', how: 'archived', why: 'their name, their trade' } }
+  const checks = []
+  const r2 = await runLookup({ system: 's', opening: 'x', offered: ['rbramley.co.uk'], maxSteps: 8,
+    callInvestigator: agentSays([{ name: 'archived_copy', args: { domain: 'rbramley.co.uk' } }, conclude]).fn,
+    callChecker: async (a) => { checks.push(a); return { verdict: 'theirs', raw: '{"verdict":"theirs"}', model: 'fake-lite' } },
+    onMove: async () => {}, tools: toolsFor({ 'archived:rbramley.co.uk': nameOnly }) })
+  ok('a name-only archived match is accepted only when the checker agrees', r2.found?.how === 'archived' && r2.found.confirmed_by.includes('checker agreed') && checks[0]?.verdict === nameOnly)
+  const r3 = await runLookup({ system: 's', opening: 'x', offered: ['rbramley.co.uk'], maxSteps: 8,
+    callInvestigator: agentSays([{ name: 'archived_copy', args: { domain: 'rbramley.co.uk' } }, conclude, conclude]).fn,
+    callChecker: async () => ({ verdict: 'unsure', why: 'no town on the page' }), onMove: async () => {}, tools: toolsFor({ 'archived:rbramley.co.uk': nameOnly }) })
+  ok('  …and refused twice by the checker, nothing is found', r3.found === null && /checker twice refused/.test(r3.why), r3)
+  const r4 = await runLookup({ system: 's', opening: 'x', maxSteps: 8, callInvestigator: agentSays([{ name: 'conclude', args: { domain: 'guessed.co.uk', how: 'live', why: 'surely' } }, { name: 'conclude', args: { domain: null, why: 'tried the register and two guesses' } }]).fn,
+    callChecker: async () => ({ verdict: 'theirs' }), onMove: async () => {}, tools: toolsFor({}) })
+  ok('a conclusion naming a domain code never read is refused; "none found" is an answer', r4.found === null && /tried the register/.test(r4.why), r4)
+  const r5 = await runLookup({ system: 's', opening: 'x', maxSteps: 3, callInvestigator: agentSays([{ name: 'register_history', args: {} }, { name: 'register_history', args: {} }, { name: 'register_history', args: {} }]).fn,
+    callChecker: async () => ({}), onMove: async () => {}, tools: toolsFor({}) })
+  ok('the loop ends when its turns do', r5.found === null && /no conclusion in 3 steps/.test(r5.why))
+  let t = 0
+  const r6 = await runLookup({ system: 's', opening: 'x', maxSteps: 9, deadline: 5, now: () => t++, callInvestigator: agentSays(Array(9).fill({ name: 'register_history', args: {} })).fn,
+    callChecker: async () => ({}), onMove: async () => {}, tools: toolsFor({}) })
+  ok('  …or its time does, and says so, so the business goes back to the queue', r6.timedOut === true && /out of time/.test(r6.why), r6)
 }
 
 console.log('\nTHE BUSINESS\'S SCORE\n')

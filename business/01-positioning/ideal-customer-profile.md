@@ -80,6 +80,11 @@ a starting point for research, not a verified dataset.
 
 ---
 
+**Where they trade, not where they are registered.** The register gives the
+registered office, which is often an accountant's. A business is in territory if
+it works here; one whose own website gives addresses only elsewhere is out,
+whatever its registered postcode (the lead finder checks this in code).
+
 ## 3. Size
 
 Measured by employee count, because it is the best available proxy for both the
@@ -237,7 +242,11 @@ prospect than a signal-free business in a strong-fit one.
 - **A first-ever job advert for a supervisor, manager or coordinator.** The owner
   has stopped being able to hold it all personally.
 - **Accounts filed late, or filed on the final day, more than once.** Modest
-  evidence of administrative strain. Note it, do not mention it.
+  evidence of administrative strain. Note it, do not mention it. This is the
+  *history*: the lead finder counts it from the filing record. Accounts or a
+  confirmation statement overdue *right now* is different - often the step
+  before a strike-off - and is a caution that caps every score, not a timing
+  signal.
 - **A visible price increase or a new service line.** Something is being
   reorganised and the reorganisation needs support.
 

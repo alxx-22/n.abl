@@ -77,7 +77,8 @@ a proposal. They may become a service later. That decision has not been made.
 
 ## 2. Who it is for
 
-**The ideal client** is a small UK business, roughly 2 to 50 people, that:
+**The ideal client** is a small UK business of 5 to 25 people (3 to 4 or 26 to
+50 only on a strong signal; see `01-positioning/ideal-customer-profile.md` §3), that:
 
 - has at least one process that is clearly costing real money in wasted hours or
   repeated errors, and can point to it

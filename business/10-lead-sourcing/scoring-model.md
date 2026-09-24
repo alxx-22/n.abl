@@ -7,7 +7,28 @@ means it. There is no model call anywhere in this document. Scoring a lead is
 Class 1 work: a pure function from a facts record to an integer and a breakdown,
 with no network access, no API key and no cost.
 
-**Status: not written.** No scorer exists. No lead has been scored by it. The
+**Superseded for lead generation, 24 September 2026.** The lead finder
+(`supabase/functions/lead-prospector`, `business/knowledge/services`) scores with
+agents: a sales agent and a service specialist each propose a number and it only
+stands when they agree. That breaks the letter of §11 ("a model producing the
+score itself"), and the decision is deliberate. What §11 protects is kept, in
+code rather than in a prompt:
+
+- **No model decides a disqualifier.** Dormant, strike-off, insolvency, over 50
+  filed employees, trading outside the territory: all refused by code, before any
+  model is asked.
+- **No model estimates employee count, turnover or territory.** They are read
+  from the filed accounts (inline XBRL), the register and the business's own
+  pages.
+- **A model's number is bounded by evidence.** It must cite signals that point to
+  the service; sector-only evidence caps at 30, register cautions at 35; a
+  disputed score counts for nothing.
+
+The deterministic scorer below remains the specification for a Class 1 score if
+one is ever wanted alongside; §11's warning about two scores still applies, so
+it would replace the agents' number, not sit beside it.
+
+**Status (of the deterministic scorer): not written.** No scorer exists. No lead has been scored by it. The
 rules below are the specification, and the honest first version of them is a
 person applying this page to thirty businesses by hand, as in the README's next
 actions.

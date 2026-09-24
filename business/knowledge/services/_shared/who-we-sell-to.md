@@ -23,8 +23,10 @@ have not done or from "businesses like this usually".
 - 5 to 25 is the target. 3 to 4, or 26 to 50: only on a strong signal.
 - 1 to 2 people: no, unless a professional whose own time is the bottleneck.
 - Over 50, an IT manager, its own developers, or a procurement process: no.
-- Take a headcount only from their own words ("a team of twelve engineers").
-  Never guess one.
+- Take a headcount only from their own words ("a team of twelve engineers") or
+  from the filed accounts (r_employees, the average over the year, directors
+  included). Never guess one. Over 50 filed employees is refused before you see
+  it; one or two is a caution unless a professional practice.
 
 **Sector** counts for less than what the page shows. Strong: trades and
 installers with field teams, light manufacturing and engineering, wholesale
@@ -58,6 +60,11 @@ is never a sales opportunity.
 - One director, micro-entity, nothing about staff: probably one person.
 - Charges: common (a bank loan), neutral on their own.
 - A new director in an older company: a timing note, not a need.
+- Accounts filed late twice or more (r_late_filings): a timing note from the
+  history, never a need, never mentioned. Overdue right now is the caution above.
+- Controlled by another company (r_parent), or a previous name
+  (r_previous_names): part of a group, or a business that has changed; the
+  decision may sit elsewhere.
 - The town is the registered office, often the accountant's. The SIC code is
   self-chosen and often stale.
 
@@ -67,6 +74,9 @@ is never a sales opportunity.
   we did not find theirs. Unknown, never evidence.
 - We read the home page and at most two about, services, booking or pricing
   pages, never the contact page. What we did not read, we do not know.
+- A site "found by the research loop" was proved theirs by code (postcode or
+  company number) or, on the name alone, by a checker. One read "as the Internet
+  Archive kept it" on a date is their site as it was then: it may have changed.
 - Menus, footers, cookie banners and button labels are furniture. A menu item
   called "Book" is not a booking system.
 - Some things are measured on their pages by code, before contact details

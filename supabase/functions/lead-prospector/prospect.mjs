@@ -37,7 +37,7 @@
    ============================================================ */
 
 import { contactRouteIn, redactContactRoutes } from './puller.mjs'
-import { nameKey, isPostcodeArea } from './lib.mjs'
+import { nameKey, isPostcodeArea, makeTerritoryFilter } from './lib.mjs'
 
 /* ---------- the dials, and their stops ---------- */
 
@@ -70,6 +70,9 @@ export const ENVELOPE = {
      most. The first Notts run scored two businesses 60 and 70 on exactly
      that. */
   sector_ceiling: [0, 100],
+  /* The research loop: tool calls allowed per business, and seconds. */
+  lookup_max_steps: [3, 20],
+  lookup_seconds: [60, 300],
 }
 
 export const STAGES = ['research', 'signals', 'sales', 'specialists']
@@ -93,6 +96,11 @@ export function clampSettings(raw) {
      argue from the register alone, which the first live test showed is
      mostly argument about nothing. */
   out.require_website = raw?.require_website !== false
+  /* A business with no site found goes to the research loop, which spends
+     its own project's key (GEMINI_RESEARCH_API_KEY), unless switched off. */
+  out.lookup_enabled = raw?.lookup_enabled !== false
+  if (!Number.isFinite(Number(raw?.lookup_max_steps)) || raw?.lookup_max_steps === null) out.lookup_max_steps = 8
+  if (!Number.isFinite(Number(raw?.lookup_seconds)) || raw?.lookup_seconds === null) out.lookup_seconds = 150
   /* Postcode areas or districts a pulled company's registered office must
      be in (NG, B49...). The advanced search matches town names as text,
      and "Beeston" is in Leeds as well as Nottingham. Empty means no check. */
@@ -469,6 +477,25 @@ export function siteLines(pages, { today = new Date() } = {}) {
   return lines
 }
 
+/** Where a business actually trades, when its own pages say. The
+    territory is checked at the pull against the registered office, which
+    is often an accountant's; a site whose every address is elsewhere
+    (a Nottingham-registered firm trading from Wakefield) is out of area.
+    No postcode on the pages, or any one inside, and it stays in. */
+export function tradesOutside(htmls, areas) {
+  if (!Array.isArray(areas) || !areas.length) return null
+  const inside = makeTerritoryFilter(areas)
+  const found = []
+  for (const html of Array.isArray(htmls) ? htmls : []) {
+    const text = String(html ?? '').replace(/<[^>]+>/g, ' ').toUpperCase()
+    for (const m of text.matchAll(/\b([A-Z]{1,2}\d{1,2}[A-Z]?)\s?(\d[A-Z]{2})\b/g)) {
+      if (isPostcodeArea(m[1].match(/^[A-Z]+/)[0])) found.push(`${m[1]} ${m[2]}`)
+    }
+  }
+  if (!found.length || found.some((pc) => inside(pc))) return null
+  return [...new Set(found.map((pc) => pc.split(' ')[0]))].slice(0, 4)
+}
+
 /* ---------- the register, as lines an agent may cite ----------
 
    Each line has a key, and a register fact must name its key. Built from
@@ -498,7 +525,7 @@ const ACCOUNTS = {
   'no-accounts-type-available': null,
 }
 
-export function registerLines(c, { profile = null, officers = null, today = new Date() } = {}) {
+export function registerLines(c, { profile = null, officers = null, accounts = null, filings = null, psc = null, today = new Date() } = {}) {
   const lines = []
   const add = (key, text) => { if (text) lines.push({ key, text }) }
   add('r_name', `Registered name: ${c.company_name}`)
@@ -538,7 +565,98 @@ export function registerLines(c, { profile = null, officers = null, today = new 
     const corporate = active.filter((o) => /corporate/i.test(String(o.officer_role ?? ''))).length
     if (corporate) add('r_corporate_officer', `${corporate} of its officers ${corporate === 1 ? 'is a company' : 'are companies'}, not people`)
   }
+
+  /* Read from the filed accounts and filing history, not the profile. The
+     first is the only headcount the register has; the ICP asks for its
+     people "from their own words", and a filed average is that. */
+  if (accounts?.employees !== null && accounts?.employees !== undefined) {
+    add('r_employees', `Its filed accounts give an average of ${accounts.employees} employee${accounts.employees === 1 ? '' : 's'}` +
+      `${accounts.period_end ? ` in the year to ${accounts.period_end}` : ''}` +
+      `${accounts.prior !== null && accounts.prior !== undefined ? ` (${accounts.prior} the year before)` : ''}`)
+  }
+  if (accounts?.turnover) add('r_turnover', `Its filed accounts give turnover of £${accounts.turnover.toLocaleString('en-GB')}`)
+  if (filings && filings.of >= 2 && filings.late >= 2) {
+    add('r_late_filings', `Filed its accounts after the deadline ${filings.late} of the last ${filings.of} times. A timing note from the ICP, never a need, and never mentioned to them`)
+  }
+  const parents = controllingCompanies(psc)
+  if (parents.length) add('r_parent', `Controlled by ${parents.length === 1 ? 'another company' : 'other companies'} (${parents.slice(0, 2).join(', ')}), so part of a group; the decision may sit there`)
+  const before = (Array.isArray(profile?.previous_company_names) ? profile.previous_company_names : [])
+    .map((p) => String(p?.name ?? '').trim()).filter(Boolean)
+  if (before.length) add('r_previous_names', `Previously registered as ${before.slice(0, 3).join('; ')}`)
   return lines
+}
+
+/* ---------- what the filings say ----------
+
+   The latest accounts, if filed as inline XBRL (most are since 2016), carry
+   tagged numbers. Only two are wanted: the average number of employees,
+   which even micro-entity accounts must state, and turnover when a
+   company chose to file it. Each value belongs to a context; the one
+   whose period ends latest is this year's. */
+
+const IX_VALUE = /<ix:nonFraction\b([^>]*)>([\s\S]*?)<\/ix:nonFraction>/gi
+const attr = (attrs, name) => (attrs.match(new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, 'i')) || [])[1] ?? null
+
+export function accountsFacts(xhtml) {
+  const doc = String(xhtml ?? '')
+  if (!/<ix:/i.test(doc)) return null
+  const ends = new Map()
+  for (const m of doc.matchAll(/<xbrli:context\b[^>]*\bid\s*=\s*"([^"]+)"[^>]*>([\s\S]*?)<\/xbrli:context>/gi)) {
+    const end = (m[2].match(/<xbrli:(?:endDate|instant)>\s*([\d-]{10})\s*</i) || [])[1]
+    if (end) ends.set(m[1], end)
+  }
+  const values = (concept) => {
+    const out = []
+    for (const m of doc.matchAll(IX_VALUE)) {
+      const name = attr(m[1], 'name') ?? ''
+      if (!new RegExp(`:${concept}$`).test(name)) continue
+      const raw = m[2].replace(/<[^>]+>/g, '').replace(/[,\s]/g, '')
+      if (!/^\d+(\.\d+)?$/.test(raw)) continue
+      const scale = Number(attr(m[1], 'scale') ?? 0)
+      const n = Math.round(Number(raw) * 10 ** (Number.isFinite(scale) ? scale : 0))
+      out.push({ n, end: ends.get(attr(m[1], 'contextRef') ?? '') ?? null })
+    }
+    return out.sort((a, b) => String(b.end ?? '').localeCompare(String(a.end ?? '')))
+  }
+  const staff = values('AverageNumberEmployeesDuringPeriod')
+  const sales = values('TurnoverRevenue')
+  const periodEnd = staff[0]?.end ?? sales[0]?.end ?? null
+  const earlier = staff.find((v) => v.end && periodEnd && v.end < periodEnd)
+  return {
+    employees: staff.length ? staff[0].n : null,
+    prior: earlier ? earlier.n : null,
+    turnover: sales.length && sales[0].end === periodEnd ? sales[0].n : null,
+    period_end: periodEnd,
+  }
+}
+
+/** How often the accounts went in late. A private company has nine months
+    from the end of its year; its first accounts have longer, so a filing
+    for a year ending within two years of incorporation is not counted. */
+export function lateFilings(items, { incorporated = null, years = 6, today = new Date() } = {}) {
+  const born = incorporated ? Date.parse(incorporated) : NaN
+  const since = new Date(today); since.setUTCFullYear(since.getUTCFullYear() - years)
+  let late = 0
+  let of = 0
+  for (const f of Array.isArray(items) ? items : []) {
+    if (String(f?.category ?? '') !== 'accounts') continue
+    const madeUp = Date.parse(f?.description_values?.made_up_date ?? '')
+    const filed = Date.parse(f?.date ?? '')
+    if (!Number.isFinite(madeUp) || !Number.isFinite(filed) || filed < since.getTime()) continue
+    if (Number.isFinite(born) && madeUp - born < 730 * 864e5) continue
+    const due = new Date(madeUp); due.setUTCMonth(due.getUTCMonth() + 9)
+    of++
+    if (filed > due.getTime() + 864e5) late++
+  }
+  return { late, of }
+}
+
+/** Companies, not people, with significant control: the business is part
+    of a group. Only company names come back; a person's never does. */
+export function controllingCompanies(psc) {
+  return (Array.isArray(psc?.items) ? psc.items : [])
+    .filter((p) => !p?.ceased_on && /corporate-entity|legal-person/.test(String(p?.kind ?? '')))
+    .map((p) => String(p?.name ?? '').trim()).filter(Boolean)
 }
 
 /* ---------- the register's red flags ----------
@@ -565,6 +683,20 @@ export function registerCautions(profile) {
   if (profile.accounts?.overdue === true) out.push('its accounts are overdue')
   if (profile.confirmation_statement?.overdue === true) out.push('its confirmation statement is overdue')
   return out
+}
+
+/** The ICP's size rules, applied to the filed average headcount - the
+    only number the register has. Over 50: not for us. One or two: not
+    for us unless a professional practice, whose own time is the thing we
+    would save (ICP section 3), so a caution rather than a refusal. */
+const PROFESSIONAL_SIC = /^(66220|69\d{3}|70229|71\d{3}|74\d{3}|78109)$/
+export function sizeVerdict(accounts, sicCodes = []) {
+  const n = accounts?.employees
+  if (n === null || n === undefined || !Number.isFinite(n)) return { refuse: null, caution: null }
+  if (n > 50) return { refuse: `its filed accounts give ${n} employees, over the 50 we serve`, caution: null }
+  const professional = (Array.isArray(sicCodes) ? sicCodes : []).some((c) => PROFESSIONAL_SIC.test(String(c)))
+  if (n <= 2 && !professional) return { refuse: null, caution: `its filed accounts give ${n === 0 ? 'no employees beyond its directors' : `${n} employee${n === 1 ? '' : 's'}`}, below the size we serve` }
+  return { refuse: null, caution: null }
 }
 
 /* ---------- quotes ---------- */

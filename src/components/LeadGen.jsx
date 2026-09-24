@@ -38,6 +38,7 @@ const STATUSES = [
   { id: 'working', label: 'Working' },
   { id: 'queued', label: 'Queued' },
   { id: 'no_fit', label: 'No fit' },
+  { id: 'researching', label: 'Researching' },
   { id: 'no_site', label: 'No website' },
   { id: 'refused', label: 'Refused' },
   { id: 'failed', label: 'Failed' },
@@ -49,6 +50,7 @@ const STAGE_LABEL = {
   signals: 'signals and review',
   sales: 'sales picking services',
   specialists: 'sales and specialists agreeing a score',
+  lookup: 'the research loop, looking for their website',
   done: 'done',
 }
 
@@ -202,7 +204,7 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
           Dismiss
         </button>
       )}
-      {['failed', 'no_fit', 'disputed', 'scored', 'refused'].includes(cand.status) && (
+      {['failed', 'no_fit', 'disputed', 'scored', 'refused', 'no_site'].includes(cand.status) && (
         <button type="button" className="btn btn--ghost btn--sm" disabled={Boolean(busy)} onClick={() => onRetry(cand)}>
           Argue again
         </button>
@@ -252,7 +254,15 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
                 <em>The register flags:</em> {cautions.join('; ')}. No service could score above the caution ceiling.
               </p>
             )}
-            {cand.status === 'no_site' && likelySites(cand.website_outcome).length > 0 && (
+            {cand.status === 'researching' && (
+              <p className="lg-note">
+                No website found by guessing, so it is with the research loop: the register&rsquo;s history,
+                sister companies, and the Internet Archive for sites that turn automated readers away. It runs on its
+                own key, GEMINI_RESEARCH_API_KEY, and waits here until that is set.
+                {cand.lookup_attempts > 0 && ` Tried ${cand.lookup_attempts} time${cand.lookup_attempts === 1 ? '' : 's'} so far.`}
+              </p>
+            )}
+            {(cand.status === 'no_site' || cand.status === 'researching') && likelySites(cand.website_outcome).length > 0 && (
               <div className="lg-likely">
                 <u>Might be theirs — look, and if it is, one tap sends it to the agents</u>
                 {likelySites(cand.website_outcome).map((l) => (
@@ -266,11 +276,11 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
                 ))}
               </div>
             )}
-            {cand.status === 'no_site' && (
+            {(cand.status === 'no_site' || cand.status === 'researching') && (
               <WebsiteForm cand={cand} busy={busy} onSetWebsite={onSetWebsite}
                 lead="Know their website? Give it and the agents will read it" />
             )}
-            {cand.status !== 'no_site' && cand.status !== 'promoted' && cand.status !== 'refused' && (
+            {!['no_site', 'researching', 'promoted', 'refused'].includes(cand.status) && (
               fixSite
                 ? <WebsiteForm cand={cand} busy={busy} onSetWebsite={onSetWebsite} lead="The right website — the argument starts again from it" />
                 : <button type="button" className="lg-textbtn" onClick={() => setFixSite(true)}>Wrong website, or none found? Give the right one</button>
@@ -419,6 +429,7 @@ export default function LeadGen() {
 
   const counts = (data && data.counts) || {}
   const lastRun = data && data.last_run
+  const lastLookup = data && data.last_lookup
   const models = (data && Array.isArray(data.models)) ? data.models : []
   const chains = (data && data.chains) || {}
 
@@ -427,7 +438,7 @@ export default function LeadGen() {
       <div className="ol-counts">
         {[
           ['queued', counts.queued], ['working', counts.working], ['scored', counts.scored],
-          ['disputed', counts.disputed], ['promoted', counts.promoted],
+          ['disputed', counts.disputed], ['researching', counts.researching], ['promoted', counts.promoted],
         ].map(([label, n]) => (
           <div className="ol-count" key={label}><b>{num(n || 0)}</b><span>{label}</span></div>
         ))}
@@ -525,9 +536,18 @@ export default function LeadGen() {
               </p>
             )}
 
+            {(counts.researching > 0 || lastLookup) && (
+              <p className={`lg-lastrun ${lastLookup && lastLookup.error ? 'is-bad' : ''}`}>
+                Research loop: {num(counts.researching || 0)} waiting
+                {lastLookup
+                  ? <> · last worked {when(lastLookup.finished_at || lastLookup.started_at)}, {num(lastLookup.finished)} finished</>
+                  : <> · it starts once GEMINI_RESEARCH_API_KEY is set in Supabase → Edge Functions → Secrets</>}
+              </p>
+            )}
+
             {(models.length > 0 || Object.keys(chains).length > 0) && (
               <div className="ol-models">
-                <u>Discovery project — today, Pacific. Its own key, never the writer&rsquo;s.</u>
+                <u>Discovery and research projects — today, Pacific. Their own keys, never the writer&rsquo;s.</u>
                 {Object.keys(chains).length > 0 && (
                   <dl className="lg-chains">
                     {Object.entries(chains).map(([role, chain]) => (
@@ -540,8 +560,8 @@ export default function LeadGen() {
                     <thead><tr><th>model</th><th>calls</th><th>ceiling</th></tr></thead>
                     <tbody>
                       {models.map((m) => (
-                        <tr key={m.model}>
-                          <td>{m.model}</td>
+                        <tr key={`${m.project}-${m.model}`}>
+                          <td>{m.project === 'research' ? `${m.model} (research)` : m.model}</td>
                           <td>{num(m.used)}</td>
                           <td>{m.exhausted ? (m.observed_rpd == null ? 'yes' : num(m.observed_rpd)) : '—'}</td>
                         </tr>

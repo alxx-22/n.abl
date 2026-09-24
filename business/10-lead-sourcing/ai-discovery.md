@@ -309,3 +309,65 @@ verbatim), `node scripts/check-crm-usability.mjs --harness --component leadgen`
 3. Both into Supabase → Edge Functions → Secrets under the names above. For the
    local script, `./scripts/set-keys.sh` (or `set-keys.ps1`) puts them in
    `.env.local`.
+
+## 8. Built, 24 September — the research loop, on a third project
+
+**The problem it answers.** The first Notts run pulled 194 businesses and parked
+118 of them because no guessed domain proved to be theirs. Many have a site: under
+a previous name, a sister company's, or behind a firewall that turns automated
+readers away (a 403 we will not get past by pretending to be a browser).
+
+**What it is.** A business with no site found is now `researching`, not
+`no_site`: cached in a queue that a second loop works through on its own Gemini
+project, `GEMINI_RESEARCH_API_KEY`, on its own cron (`lead-lookup`, every five
+minutes, offset from the prospector's). Until that key is set the queue waits and
+the Lead gen tab says so. It is a third project for a third job, with its own
+prompts, schedule and pool — the §3 test still passes — and a constraint in
+`outreach_model` keeps the lookup roles on that key and every other role off it.
+
+**How it works** (`supabase/functions/lead-prospector/lookup.mjs`): an
+investigator with tools, not a search engine.
+
+| tool | what code does |
+|---|---|
+| `register_history` | Companies House: previous names, the other companies its directors run (company names only), companies that control it |
+| `guess_domains` | domain guesses from a name the investigator chooses, and which resolve |
+| `check_domain` | reads the live front page politely (robots first) and runs the same proof as the guesser |
+| `archived_copy` | the Internet Archive's latest copy, for a site that turned us away or has gone |
+| `conclude` | the answer |
+
+The rules are code, not prompt:
+
+- The investigator may only check a domain **code has offered it** — a guess that
+  resolved, one the guesser already found, a site linked from a page it read. No
+  domain, and so no contact route, comes from a model (§4.1).
+- A page is theirs when code finds the **registered postcode or company number**
+  on it. A name-only match needs a **second agent, the checker**, to agree; unsure
+  is no. Two refusals end the search.
+- Directories and social sites are never their site (§4.3).
+- What the investigator reads has contact routes and the company number removed.
+  It is never told the number, the address or any person's name.
+
+A site found goes back to the ordinary agents as a known site, marked
+`found by the research loop`; an archived one is read from the archive at its
+date, and the agents are told it may be out of date. Nothing found ends as
+`no_site`, with what was tried.
+
+**Why there is still no web search.** Re-read on 24 September: the Gemini API
+terms (last modified 28 April 2026) still say grounded results may not be cached,
+stored or analysed, and grounding may not be used "to extract or collect" links for
+another purpose. A loop that searches Google and stores what it finds about a
+company is that. **crt.sh**, the certificate-transparency search that would find
+domains by name, disallows every path in its robots.txt. The Internet Archive's
+availability API and `web.archive.org` are open to automated readers.
+
+**Also added for every business, not just the parked ones:** the filed average
+headcount and turnover (inline XBRL from the Document API, whose storage redirect
+is followed without the key), the late-filing record, group control (companies
+only), previous names; over 50 filed employees is refused, one or two is a caution
+unless a professional practice; and a business whose own site trades only outside
+the territory is refused, whatever its registered office.
+
+**To switch it on:** a new project in Google AI Studio, called research, an API
+key in it, and that key in Supabase → Edge Functions → Secrets as
+`GEMINI_RESEARCH_API_KEY`. Nothing else.

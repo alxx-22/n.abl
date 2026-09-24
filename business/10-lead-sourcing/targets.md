@@ -14,7 +14,7 @@ ICP §1: owner-run, 5–25 people, runs on spreadsheets and email, one process c
 | Engineering, fabrication, auto/aero supply | automation, data, software | Whiteboard scheduling, stock counts, delivery notes against invoices (ICP §4; data_analytics) |
 | Wholesale, trade supply | automation, data, AI | Price lists reissued, POs retyped (ICP §4); supplier documents (ai service.md) |
 | Small professional practices | AI, automation | Documents, onboarding, chasing clients; "reading and summarising" (ICP §4; ai). Advice boundary: saying-no §3.5 |
-| Property, lettings, FM | automation, software, web | Inspections, certificate expiries, landlord statements (ICP §4); portals |
+| Property, lettings, FM | automation, software, web | Inspections, certificate expiries, landlord statements (ICP §4); a portal where landlords or tenants log in is **software**, the public site **web** (service-categories §4) |
 | Venues and events near Stratford | web, automation, AI | Availability, deposits and follow-up done by hand (ICP §4); booking with no online route (web) |
 
 Leave out: retail, salons, restaurants, pubs and takeaways (weak fit, ICP §4); care (special-category data, ICP §6); IT and web firms, holding companies and property vehicles (who-we-sell-to.md).
@@ -76,6 +76,11 @@ A company may file a fuller format than it needs, so the type sets an upper limi
 **How the agents should use it:** as a ceiling on size and on build-price services, never as a headcount (scoring-model §5.2). The service docs already do this: software needs accounts beyond micro to score 80+, and data_analytics prefers small to micro. Filed accounts state average employees, which the Document API could supply. The pipeline does not fetch it (**check**).
 
 ## 5. Pipeline changes, in order
+
+**Done, 23–24 September:** items 1–5 below; the filed headcount (§4's "Document
+API" check) is now read for every business, and a business with no site found goes
+to the research loop (`lookup.mjs`, `ai-discovery.md` §7).
+
 
 Already in the uncommitted working tree (`index.ts` `research()`, migration `202609230001`): refusal via `registerRefusal` before any model call or site fetch, `no_site` parking, and a caution ceiling. Still to do:
 
