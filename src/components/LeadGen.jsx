@@ -3,6 +3,9 @@ import { teamClient, friendlyError } from '../lib/supabase.js'
 import { Loading, Empty } from './ui/index.jsx'
 import ArgumentTranscript from './ArgumentTranscript.jsx'
 import { SplitView, RecordBar, SectionTabs, SectionPanel, Sheet, usePickScroll } from './ui/Workspace.jsx'
+/* The same SIC table and checks the edge function pulls with, so what the
+   form says a code covers is exactly what will be asked for. */
+import { expandSic, unknownSic, describeSic } from '../../supabase/functions/lead-prospector/puller.mjs'
 
 /* ============================================================
    LEAD GEN
@@ -35,6 +38,8 @@ const STATUSES = [
   { id: 'working', label: 'Working' },
   { id: 'queued', label: 'Queued' },
   { id: 'no_fit', label: 'No fit' },
+  { id: 'no_site', label: 'No website' },
+  { id: 'refused', label: 'Refused' },
   { id: 'failed', label: 'Failed' },
   { id: 'promoted', label: 'Promoted' },
 ]
@@ -51,6 +56,13 @@ const num = (n) => (n == null ? '—' : Number(n).toLocaleString('en-GB'))
 const nice = (s) => String(s || '').replace(/_/g, ' ')
 const list = (s) => String(s || '').split(/[,\n]/).map((x) => x.trim()).filter(Boolean)
 const when = (t) => (t ? new Date(t).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—')
+
+/* Why companies were turned away at the pull, from the last tick's detail. */
+const pullWhy = (run) => {
+  const p = ((Array.isArray(run?.detail) ? run.detail : []).find((d) => d && d.pull) || {}).pull
+  const why = p && p.refused_why ? Object.entries(p.refused_why) : []
+  return why.length ? why.map(([k, n]) => `${n} ${k}`).join('; ') : ''
+}
 
 const blankDraft = (t) => ({
   id: t ? t.id : null,
@@ -69,8 +81,50 @@ function problemWith(d) {
   if (!towns.length) return 'Add at least one town or city'
   if (towns.some((t) => /[0-9]/.test(t))) return 'A town, not a postcode'
   if (list(d.sic).some((s) => !/^[0-9]{2,5}$/.test(s))) return 'SIC codes are two to five digits'
+  const unknown = unknownSic(list(d.sic))
+  if (unknown.length) return `SIC 2007 has no ${unknown.join(', ')}`
   if (d.from && d.to && d.from > d.to) return 'Incorporated from is after incorporated to'
   return ''
+}
+
+/* What the SIC box will actually ask Companies House for, in words. */
+function SicCovers({ value }) {
+  const codes = list(value)
+  if (!codes.length) return <span className="lg-covers">Any industry — the register search is then by town alone.</span>
+  if (unknownSic(codes).length) return null
+  const all = expandSic(codes)
+  const shown = all.slice(0, 6).map((c) => describeSic(c))
+  return (
+    <span className="lg-covers">
+      Covers {all.length} code{all.length === 1 ? '' : 's'}: {shown.join('; ')}{all.length > shown.length ? `; and ${all.length - shown.length} more` : ''}
+    </span>
+  )
+}
+
+/* The guessed domains worth a person's look: they exist, and either
+   turned our reader away or were live but never named the business -
+   which is also what a site with its name only in an image looks like. */
+const likelySites = (outcome) => [...String(outcome || '').matchAll(
+  /([a-z0-9-]+(?:\.[a-z0-9-]+)+): (exists but turned us away|does not mention them|unreachable \((?:40[13]|timeout)\))/g,
+)].map((m) => ({ host: m[1], why: m[2] }))
+
+/* A person who knows the business's site gives it; the agents then read
+   it. The check that it is a web address is the database's. */
+function WebsiteForm({ cand, busy, onSetWebsite, lead }) {
+  const [url, setUrl] = useState('')
+  return (
+    <form
+      className="lg-site"
+      onSubmit={(e) => { e.preventDefault(); if (url.trim()) onSetWebsite(cand, url.trim()) }}
+    >
+      <label>
+        <span>{lead}</span>
+        <input className="input" type="url" inputMode="url" placeholder="example.co.uk" value={url}
+          onChange={(e) => setUrl(e.target.value)} />
+      </label>
+      <button type="submit" className="btn btn--sm" disabled={Boolean(busy) || !url.trim()}>Read this site</button>
+    </form>
+  )
 }
 
 /* The argument, word for word, fetched when its section is opened. */
@@ -126,7 +180,9 @@ function Services({ rows, labels }) {
 
 /* One business, in sections, with the three decisions a person makes
    about it kept in the bar so they are reachable from every section. */
-function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPromote, onDismiss, onRetry }) {
+function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPromote, onDismiss, onRetry, onSetWebsite }) {
+  const [fixSite, setFixSite] = useState(false)
+  const cautions = Array.isArray(cand.cautions) ? cand.cautions : []
   const services = Array.isArray(cand.services) ? cand.services : []
   const asks = services.filter((s) => s.confirm_question || s.walk_away_if)
   const tabs = SECTIONS.map((t) => ({
@@ -146,7 +202,7 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
           Dismiss
         </button>
       )}
-      {['failed', 'no_fit', 'disputed', 'scored'].includes(cand.status) && (
+      {['failed', 'no_fit', 'disputed', 'scored', 'refused'].includes(cand.status) && (
         <button type="button" className="btn btn--ghost btn--sm" disabled={Boolean(busy)} onClick={() => onRetry(cand)}>
           Argue again
         </button>
@@ -190,6 +246,35 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
                 </dd>
               </div>
             </dl>
+            {cand.note && <p className={`lg-note lg-note--${cand.status}`}>{cand.note}</p>}
+            {cautions.length > 0 && (
+              <p className="lg-note lg-note--caution">
+                <em>The register flags:</em> {cautions.join('; ')}. No service could score above the caution ceiling.
+              </p>
+            )}
+            {cand.status === 'no_site' && likelySites(cand.website_outcome).length > 0 && (
+              <div className="lg-likely">
+                <u>Might be theirs — look, and if it is, one tap sends it to the agents</u>
+                {likelySites(cand.website_outcome).map((l) => (
+                  <div className="lg-likely__row" key={l.host}>
+                    <a className="crm-link" href={`https://${l.host}`} target="_blank" rel="noreferrer noopener">{l.host}</a>
+                    <span>{l.why}</span>
+                    <button type="button" className="btn btn--sm" disabled={Boolean(busy)} onClick={() => onSetWebsite(cand, l.host)}>
+                      It&rsquo;s theirs
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {cand.status === 'no_site' && (
+              <WebsiteForm cand={cand} busy={busy} onSetWebsite={onSetWebsite}
+                lead="Know their website? Give it and the agents will read it" />
+            )}
+            {cand.status !== 'no_site' && cand.status !== 'promoted' && cand.status !== 'refused' && (
+              fixSite
+                ? <WebsiteForm cand={cand} busy={busy} onSetWebsite={onSetWebsite} lead="The right website — the argument starts again from it" />
+                : <button type="button" className="lg-textbtn" onClick={() => setFixSite(true)}>Wrong website, or none found? Give the right one</button>
+            )}
             {cand.error && (
               <p className="crm-warn">
                 {cand.status === 'failed' ? `Failed after ${cand.attempts} attempts. ` : ''}{cand.error}
@@ -320,6 +405,8 @@ export default function LeadGen() {
     () => `${c.company} dismissed`)
   const retry = (c) => call('Queuing', () => teamClient().rpc('prospect_retry', { p_id: c.id }),
     () => `${c.company} goes back to research; its old argument is gone`)
+  const setWebsite = (c, url) => call('Saving the site', () => teamClient().rpc('prospect_set_website', { p_id: c.id, p_url: url }),
+    () => `${c.company} goes back to research with that site; the next tick reads it`)
 
   if (loading) return <Loading label="Reading lead gen" />
   if (error) {
@@ -378,6 +465,9 @@ export default function LeadGen() {
                 {targets.map((t) => <option key={t.id} value={t.id}>{t.name}{t.running ? ' (running)' : ''}</option>)}
               </select>
             )}
+            {draft.id && (targets.find((t) => t.id === draft.id) || {}).note && (
+              <p className="lg-covers">{targets.find((t) => t.id === draft.id).note}</p>
+            )}
 
             <div className="lg-form">
               <label>
@@ -392,8 +482,9 @@ export default function LeadGen() {
               </label>
               <label>
                 <span>SIC codes or prefixes, comma separated — blank for any</span>
-                <input className="input" type="text" inputMode="numeric" value={draft.sic} placeholder="62, 7022"
+                <input className="input" type="text" inputMode="numeric" value={draft.sic} placeholder="432, 43991"
                   onChange={(e) => setDraft({ ...draft, sic: e.target.value })} />
+                <SicCovers value={draft.sic} />
               </label>
               <div className="lg-form__dates">
                 <label>
@@ -430,6 +521,7 @@ export default function LeadGen() {
                 Last tick {when(lastRun.finished_at || lastRun.started_at)} · pulled {num(lastRun.pulled)} ·{' '}
                 {num(lastRun.stages)} stages · {num(lastRun.finished)} finished
                 {lastRun.error && <><br /><em>went wrong:</em> {lastRun.error}</>}
+                {pullWhy(lastRun) && <><br /><em>refused at the register:</em> {pullWhy(lastRun)}</>}
               </p>
             )}
 
@@ -515,6 +607,7 @@ export default function LeadGen() {
             onPromote={promote}
             onDismiss={dismiss}
             onRetry={retry}
+            onSetWebsite={setWebsite}
           />
         ) : (
           <div className="crm-hint ws-hint">

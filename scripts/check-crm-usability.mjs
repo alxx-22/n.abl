@@ -268,8 +268,12 @@ const LEADGEN_FIXTURE = {
       id: `cand-${i}`, company: `Example Systems ${i + 1} Limited`, number: String(10000000 + i),
       town: ['Nottingham', 'Derby'][i % 2], activity: 'Business and domestic software development',
       incorporated_on: '2018-04-02', company_type: 'ltd', website: `https://example-systems-${i}.invalid`,
-      website_confirmed_by: ['name', 'town'], website_outcome: 'confirmed',
-      status: ['scored', 'disputed', 'working', 'queued', 'no_fit', 'promoted'][i % 6], stage: 'specialists',
+      website_confirmed_by: ['name', 'town'],
+      website_outcome: i % 8 === 6 ? `3 of 12 guessed domains exist, none confirmed as theirs — example-systems-${i}ltd.co.uk: exists but turned us away (403); example.com: a placeholder page` : 'confirmed',
+      status: ['scored', 'disputed', 'working', 'queued', 'no_fit', 'promoted', 'no_site', 'refused'][i % 8], stage: 'specialists',
+      note: i % 8 === 6 ? 'No website found (none of 12 guessed domains exists). Add it to have the agents read it.'
+        : i % 8 === 7 ? 'Refused before any agent: its last accounts were filed as dormant, so it is not trading.' : null,
+      cautions: i % 8 === 1 ? ['its accounts are overdue'] : null,
       score: i % 6 === 0 ? 70 + (i % 20) : null,
       services: i % 6 < 2 ? [
         { service: 'automation', status: 'agreed', score: 72, sales_last: 72, specialist_last: 72, turns: 3,

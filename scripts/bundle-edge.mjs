@@ -48,6 +48,11 @@ await build({
   /* Whitespace only: names stay as written, so the deployed file can still
      be read, and searched for the function a stack trace names. */
   minifyWhitespace: true,
+  /* Wrapped at 300 characters, which esbuild does without changing what
+     the code means. Unwrapped, the SIC table is one 70 KB line, and a
+     line that long cannot be read back reliably through the tools a
+     deploy goes through - so it cannot be checked either. */
+  lineLimit: 300,
   legalComments: 'none',
   charset: 'utf8',
   logLevel: 'warning',

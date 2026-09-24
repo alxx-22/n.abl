@@ -104,6 +104,23 @@ export const NON_TRADING_SIC = Object.freeze({
   '98200': 'private household, not a business',
 })
 
+/* SIC codes that mean "not somebody we sell to" - business/10-lead-sourcing/
+   targets.md, from who-we-sell-to.md. An IT, software or web firm would be
+   buying from a competitor, so any one of these codes refuses it. */
+export const COMPETITOR_SIC = Object.freeze({
+  '62011': 'publishes software', '62012': 'develops software', '62020': 'IT consultancy',
+  '62030': 'manages computer facilities', '62090': 'IT services', '63110': 'data processing and hosting',
+  '63120': 'web portals',
+})
+
+/* A holding company or a vehicle that only owns property has no staff and
+   no process to improve. Refused only when these are its ONLY codes: a
+   builder that also lists 68100 is still a builder. */
+export const VEHICLE_SIC = Object.freeze({
+  '64205': 'financial services holding company', '64209': 'holding company', '70100': 'head office of a group',
+  '68100': 'buys and sells its own property',
+})
+
 /* ---------- SIC ---------- */
 
 /** "43210" -> "43210 - Electrical installation", the bulk file's form.
@@ -113,6 +130,17 @@ export function describeSic(code, table = SIC_2007) {
   const c = String(code || '').trim()
   const text = table[c]
   return text ? `${c} - ${text}` : c
+}
+
+/** The codes in a list that SIC 2007 does not have, prefixes included (a
+    prefix nothing starts with is unknown too). An unknown code sent to the
+    advanced search makes it answer 404, which reads as "no companies here"
+    and would mark the town as done - so the edge function refuses these
+    before asking. */
+export function unknownSic(inputs, table = SIC_2007) {
+  const codes = Object.keys(table)
+  return inputs.map((raw) => String(raw || '').replace(/\D/g, '')).filter(Boolean)
+    .filter((p) => (p.length === 5 ? !table[p] : !codes.some((c) => c.startsWith(p))))
 }
 
 /** Prefixes to full codes: "432" -> every 432xx in the table. A full
@@ -293,6 +321,11 @@ export function admit(c, { types = DEFAULT_TYPES, areas = null } = {}) {
   const codes = (c.sic || []).map((s) => String(s).replace(/\D.*$/, ''))
   const dead = codes.find((code) => NON_TRADING_SIC[code])
   if (dead) return { ok: false, why: `SIC ${dead}: ${NON_TRADING_SIC[dead]}` }
+  const rival = codes.find((code) => COMPETITOR_SIC[code])
+  if (rival) return { ok: false, why: `SIC ${rival}: ${COMPETITOR_SIC[rival]}, so it is in our line of work` }
+  if (codes.length && codes.every((code) => VEHICLE_SIC[code])) {
+    return { ok: false, why: `SIC ${codes.join(', ')}: ${VEHICLE_SIC[codes[0]]}, with no trading activity listed` }
+  }
   if (areas && areas.length && !makeTerritoryFilter(areas)(c.postcode)) {
     return { ok: false, why: `postcode ${c.postcode} is outside ${areas.join(',')}` }
   }

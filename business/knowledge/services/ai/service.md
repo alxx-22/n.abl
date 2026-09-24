@@ -1,65 +1,79 @@
 # AI
 
-Grounded in `business/01-positioning/positioning-statement.md` (AI is one tool
-among several) and `saying-no.md` §3.1.
-
 ## In one paragraph
 
-A model doing a job a person was doing: reading, drafting, classifying,
-answering. Only where the work is genuinely language or judgement, never as
-decoration. Document handling (pulling what matters out of forms, letters and
-PDFs), classifying incoming work, assistants that answer the same questions
-customers ask every day, drafting from records the business already holds. If
-ordinary code can do it, it is not an AI job, and we say so.
+Reading, sorting or drafting done by someone whose time is worth more. A model
+earns its place only where the work is genuinely language: pulling what
+matters out of documents that arrive in many shapes, sorting messages by what
+they mean, drafting the same kind of report or reply from records the business
+holds, answering the same customer questions. AI is one tool among several and
+the one most often proposed for the wrong reason. If rules can do it, it is
+automation, and we say so. Checking things is always code.
 
 ## Signals that point here
 
-- High inbound volume of written enquiries that ask the same few things:
-  public-facing businesses with FAQs, opening times, pricing questions,
-  eligibility questions.
-- Documents arriving in volume that a person reads and rekeys: applications,
-  claims, referrals, CVs, delivery notes, supplier invoices in many formats.
-- Drafting that repeats: reports, letters, proposals, care notes, inspection
-  write-ups assembled from notes.
-- A professional practice (legal, accounting, recruitment, property) whose work
-  is reading and summarising.
+Seen on their own pages, in their own words:
+- Documents arriving in volume that someone reads and retypes: applications,
+  referrals, claims, CVs, supplier invoices or orders in many layouts.
+- The same written questions over and over: a long FAQ, "we receive a high
+  volume of enquiries", eligibility or availability questions answered by
+  email.
+- Drafting that repeats: inspection or survey write-ups, reports, proposals or
+  letters assembled from notes.
+- Enquiries sorted by what they say, across several services or teams: "tell
+  us about your project and we will pass it to the right person".
+- A practice whose work is reading and summarising (lettings, surveying,
+  recruitment, bookkeeping), with volume stated, not implied.
 
 ## Signals that point somewhere else
 
-- The task is moving fields from one system to another in a fixed shape →
-  **automation**. Code, not a model. Checking things is always code.
-- The question is about the business's own figures → **data_analytics**.
-- They want "an AI strategy" → not a job we take; `saying-no.md` §3.1.
+- Moving fields in a fixed shape, or routing on a fixed rule → **automation**.
+- Validating, comparing or checking anything → **automation**. A model that is
+  usually right is worse than code that is always right.
+- Questions about their own figures → **data_analytics**.
+- Staff already using a chatbot, or "we are exploring AI" → training, not
+  scored here. Say so.
+- "An AI strategy" as the ask → not a job we take.
+- A signal about the register → no service.
 
 ## What we would build
 
-Document extraction into structured records; classification and routing of
-incoming email or forms; a customer-facing assistant grounded in their own
-information, with a person behind it; drafting tools that start from records
-the business holds; internal search across their own documents. Always with a
-person checking anything that leaves the building.
+Extraction from documents into structured records, with low-confidence cases
+flagged to a person; classification and routing of incoming email or forms; a
+customer-facing assistant grounded in their own information, with a person
+behind it; drafting tools that start from records they already hold; search
+across their own documents. Small models on our own machines where the data
+must not leave; a hosted model only once they have agreed exactly what is
+sent. A person checks anything that leaves the building.
 
 ## What kills it
 
-- The job is really deterministic — a rule, a lookup, a comparison. A model
-  that is usually right is worse than code that is always right.
-- The documents are personal or special-category data they have no lawful
-  basis to put through a third-party model.
+Visible now, so score low:
+- The job is really deterministic: a lookup, a rule, a date check.
+- Care records, clinical, occupational health or other special-category data
+  at the centre. Workable later, not an early job.
+- The output would be legal, medical or financial advice to a customer. We
+  build the system, not the advice inside it.
+- Volume too low for a model to earn its keep: a handful a week.
+- Register distress: see the ceilings in the scale.
+
+Learned on a call, so use for walk_away_if:
 - Nobody inside will check the output.
+- They want it unattended on something where a wrong answer causes harm.
+- A chatbot they already pay for would do it, with an afternoon's training.
 
 ## How this specialist scores
 
-Be the sceptic in the room. AI is the service most likely to be proposed for
-the wrong reason. A sector that "could use a chatbot" is 30 at most. 60 or more
-needs observed volume of language work: many enquiries, many documents, their
-own words about reading, answering or writing the same things repeatedly. 80
-or more needs that plus a task where a wrong answer is caught before it causes
-harm.
-
-If the signals would be better served by automation, say so to the sales agent
-and hand the lead on rather than scoring it here.
+Be the sceptic in the room.
+- A sector that "could use a chatbot": 30 at most. An FAQ heading or a menu
+  item alone: 30 at most.
+- 60 or more needs observed volume of language work in their own words: many
+  enquiries, many documents, the same writing repeated.
+- 80 or more needs that, plus a task where a person catches a wrong answer
+  before it does harm, plus a business with staff to do the checking.
+- If rules would do it, redirect to automation rather than scoring here.
 
 ## The question that settles it
 
-"What do people in your business read or write every day that follows the same
-pattern each time?"
+"What do people in your business read or write every day that follows the
+same pattern each time?"

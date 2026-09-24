@@ -1,12 +1,12 @@
 {
-  "migration": "202609222030_service_knowledge_080948c9.sql",
+  "migration": "202609232137_service_knowledge_4eb2503f.sql",
   "files": {
-    "_shared/scoring.md": "3715aca34af5017eeb8e46deef30ce1a3e47f95a3b26526a32b8e5f12c727af8",
-    "_shared/who-we-sell-to.md": "462792dbc2d73bb92c1b469423993fd3407345bcfd0b20a7ab5cd7bc83bcb159",
-    "ai/service.md": "55f58d748f084a7558825818b901b82790eb192d19f3efeaca7a4ad16b47d143",
-    "automation/service.md": "19321202ff130dd2278159a0e403ed9d188b6ed1b3925ed52938d00d26308c86",
-    "data_analytics/service.md": "551a8a14bd6a2450ecebfb9230f8f895179230f55ae1ebfcaac49be9cfb0e1ea",
-    "software/service.md": "e3046844155fa7d83d7d8d4657ce8af2aea5dcc00163e15c7c01af18ddab4a79",
-    "web/service.md": "80b41ae7529ab02d569a6df1aac3a030af7c32b5944c33df005fe9f8db98f535"
+    "_shared/scoring.md": "76209f86194eecb875ec1170fdf5cee05cc07e0ffe3dfa6ba381c2c236198911",
+    "_shared/who-we-sell-to.md": "4f97fbde18d155c086c17ef51e3c2410a880721a366acb2da2edf9bd9aee7682",
+    "ai/service.md": "8d5334b20c6fd73d6d9b45a6b1ea01a23a16d716bd1630c77edce251d4debe59",
+    "automation/service.md": "6c5a65a535db0cc26c6580783aac210e1e4eacb49127885dcc275b38411973d7",
+    "data_analytics/service.md": "e27260fd609d3bcee7d5f2ce3e19ce77daadae334f71ad3827da795862eb1839",
+    "software/service.md": "dbd2a2002471c29997ce330f6803ac810e13011b787c927cb28ed4d9c37d2efa",
+    "web/service.md": "58b11b63c0d0fe851499484dbeb4ebd72aac39eb3b3424fc0e6bb12f8f14436f"
   }
 }

@@ -1,64 +1,87 @@
 # Web
 
-Grounded in `business/01-positioning/service-categories.md` §4 (websites,
-booking, portals) and the site's own "What we build" section.
-
 ## In one paragraph
 
-The public-facing thing: a site, a booking flow, a portal, a payment, a form
-that reaches the right person. What a customer touches. Not a brochure for the
-sake of one — a website is worth building when it takes work off the business:
-the booking that no longer needs a phone call, the enquiry that arrives with
-everything needed to answer it, the payment taken up front.
+Something a customer has to do the hard way. The public-facing part: the
+site, the booking flow, the enquiry form that reaches the right person with
+everything needed to answer it, the payment taken up front. A site is worth
+building when it takes work off the business, not as a brochure for its own
+sake. Web needs positive evidence: a site confirmed as theirs and read, whose
+own words show customers booking, ordering or enquiring by phone, email or
+paper. "No website found" only means our domain guesses missed. It is not
+evidence of anything.
 
 ## Signals that point here
 
-- No website at all, or a social page doing the job of one, for a business
-  whose customers plainly look them up first.
-- A brochure site where the only call to action is "call us" or "email us",
-  for a business that takes bookings, appointments or orders.
-- A placeholder, parked or broken site under a domain that is clearly theirs.
-- Visible age: copyright years long past, no mobile layout, "under
-  construction".
-- Booking, appointment, order or quote language on the page with no way to do
-  any of it online.
+Only from a site confirmed as theirs and read:
+- Booking or ordering language with no way to do it online: "call to book",
+  "ring to check availability", "email us to reserve your date", "phone your
+  order through".
+- A booking or enquiry form to download, fill in and email back. The
+  customer's side is web; the retyping behind it is automation.
+- Deposits or payment by bank transfer after a call: "pay a deposit to secure
+  your date".
+- A booking widget on one page but not on the service pages people land on.
+- "Call us to discuss your requirements" for work that needs sizes, photos or
+  dates before anyone can answer.
+- Customers who plainly look them up first (venues, hire, courses,
+  appointments) and a site whose only next step is a phone call.
 
 ## Signals that point somewhere else
 
-- Online booking already exists and the problem is behind it (rekeying into
-  the diary, chasing confirmations) → **automation**.
-- They need customers to log in to their own records → **software** (a portal
-  is a build, even when it lives on the website).
-- The page is fine; the question is what the traffic or sales figures mean →
-  **data_analytics**.
+- Online booking or payment already works and the pain is behind it
+  (retyping into a diary, chasing confirmations) → **automation**.
+- Customers logging in to see their own records → **software**.
+- The site is fine; the question is what their sales or enquiry figures
+  mean → **data_analytics**.
+- Any register signal (an overdue filing, company age, accounts) → no
+  service, and never web.
 
 ## What we would build
 
 Websites where the site is the actual requirement; booking flows with payment
-and calendar sync; enquiry forms that route to the right person with the right
-information; customer portals where customers see their own documents; payment
-pages; document delivery that replaces email attachments.
+and calendar sync; enquiry forms that route to the right person with the
+right information; payment pages; document delivery that replaces email
+attachments.
 
 ## What kills it
 
-- The business gets all its work through referral and does not want more
-  enquiries — a better site solves nothing they have.
+Visible now, so score low:
+- No confirmed site. "None found", parked, placeholder, unreachable or "a
+  different company with the same name" all mean we did not find theirs. They
+  may trade under another domain, a social page or a platform we cannot see.
+- A working site that already takes bookings, orders or payment.
+- A sector already served by cheap booking or ordering platforms: salons,
+  beauty, restaurants, pubs, takeaways.
+- Long established with no site: they have usually decided they do not need
+  one, and are usually right.
+- A franchise whose site is run by the franchisor.
+- Register distress: see the ceilings in the scale.
+
+Learned on a call, so use for walk_away_if:
+- Work comes by referral and they do not want more enquiries.
 - They have just paid someone else for a new site.
-- The request is a redesign for its own sake, with no job attached to it.
+- A redesign for its own sake, with no job attached.
 
 ## How this specialist scores
 
-The web is the one service where the evidence is almost always observable, so
-hold it to that. No site at all, for a customer-facing business, is 50–65: the
-need is plausible but we cannot see whether they want more work. A site that
-shows booking or ordering language with no way to transact is 65–80. A site
-that is broken, parked or obviously abandoned under their own name, with a
-business clearly still trading, is 75 or more.
-
-A working transactional site is under 25 for web — look for what sits behind
-it instead and hand on.
+When a site has been read, the evidence for web is on the page. Hold it to
+that, and refuse to score what nobody saw.
+- No site found and nothing else: 20 at most, whatever the sector.
+- Signals that are not about web (a filing, company age, accounts): not
+  evidence here. Pass, or redirect if they point elsewhere.
+- Confirmed site, customer-facing business, one quoted "call to book" or
+  "email to order" line for something customers book: 60–70.
+- That, plus volume or size (a team, many dates or services, small-company
+  accounts) and no way at all to transact online: 70–85.
+- A site that already takes bookings or payment: under 20 for web. Hand on to
+  automation for what sits behind it.
+- Weak-fit sector: 30 at most unless the page shows a gap the usual platform
+  leaves.
+- An old copyright year or a dated look, alone: 25 at most. It says the site
+  is not updated, not that it loses work, and it never goes in a letter.
 
 ## The question that settles it
 
-"When a new customer finds you, what do they have to do before you can help
-them — and which part of that do you do by hand?"
+"What happens when an enquiry or booking arrives — and which part of it is
+done by phone or by hand?"

@@ -1,76 +1,93 @@
 # Automation
 
-Grounded in `business/01-positioning/service-categories.md` §1 (Save time) and
-§2 (Reduce mistakes), which is where most automation work comes from.
-
 ## In one paragraph
 
-Take repetitive work off people's hands. Something happens on its own that a
-person was doing by hand: a form that files itself, a report that arrives, two
-systems that start talking, a reminder that goes out before a renewal lapses.
-The problem is nearly always a person moving information from one place to
-another — between two systems, between an email and a spreadsheet, between
-paper and all three — or assembling the same document by hand from parts that
-already exist.
+A person moving information that could move itself. Nearly always someone
+carrying data by hand between an email, a spreadsheet, a form and a system, or
+assembling the same document from parts that already exist, or remembering a
+deadline nobody else tracks. We build the thing that does it on its own and
+tells a person only when something fails. Mostly ordinary code; a model only
+where messy text has to be read. The client says "this takes us ages" or "we
+keep getting this wrong".
 
 ## Signals that point here
 
-- A process described on their own page that plainly involves a person doing it
-  by hand: "email us your form and we will add you", "download, fill in and
-  return", "we will call you back to confirm".
-- A PDF form, a Word document to download, or "print and post" where the
-  business then has to rekey what comes back.
-- Recurring deadlines they manage for customers or themselves: renewals,
-  certificates, inspections, MOTs, service intervals, compliance dates.
-- Several systems named on the page (an accounts package, a booking tool, a
-  shop) with nothing suggesting they talk to each other.
-- Volume that repeats: many small jobs, many invoices, many bookings a week.
-- Accounts filed as a small or micro company, with several directors or an
-  obvious team: big enough to have admin, too small for an IT department.
+Seen on their own pages, in their own words:
+- A form to download, print, fill in and email or post back: credit account
+  application, booking form, job request, data sheet.
+- "Call us for a quote" or "allow 48 hours for a quote" on plainly standard
+  work.
+- A price list published as a dated PDF.
+- "Email us your order" or "send your purchase order": someone retypes it.
+- Two named tools with nothing joining them: a booking widget from one vendor,
+  an accounts or invoicing package named elsewhere.
+- Deadlines they track for customers or themselves: certificates,
+  inspections, servicing, renewals, calibration, MOTs.
+- A promise somebody keeps by hand: "same-day quotes", "we will confirm within
+  24 hours", "we remind you when your service is due".
+- Volume that repeats: hundreds of jobs or orders a year, several vans, many
+  small jobs.
+- A vacancy on their own site for an administrator, data entry, or an
+  operations role asking for "advanced Excel".
 
 ## Signals that point somewhere else
 
-- The problem is a customer who cannot book or pay online → **web**.
-- They hold figures they cannot answer questions with, and the question is
-  about the business rather than a task → **data_analytics**.
-- Nothing off the shelf fits the way they work and the job is a new tool, not a
-  faster old one → **software**.
-- The task is reading, sorting or drafting free text at volume → **ai**, but
-  only if code cannot do it; say so if it can.
+- Customers cannot book, order or pay online at all → **web**. The retyping
+  behind an online form is still ours.
+- The question is what their own figures mean (which jobs pay, how last month
+  went) → **data_analytics**.
+- There is no record to move yet and the job is a new tool (a portal, a field
+  app, a register) → **software**.
+- Free text read and sorted by meaning, at volume → **ai**, but only if rules
+  cannot do it.
+- Slow only because nobody was shown the software → training, which this
+  pipeline does not score. Say so and score low.
+- A signal about the register (an overdue filing, company age) → no service.
 
 ## What we would build
 
-Quote and estimate generators; documents generated from a template and filed
-automatically; scheduled data movement between systems with failures reported
-to a person; spreadsheet-to-database moves where a spreadsheet has become the
-operating system; recurring reports produced on a schedule; email triage and
-routing from a shared inbox; job sheet and timesheet capture from a phone;
-expiry and renewal tracking; cross-checks (invoice against delivery note, order
-against despatch) that flag only the exceptions.
+Quote and estimate generators from a price list plus rules; documents and
+certificates from a template, filed automatically; scheduled data movement
+between systems, logged, failures reported to a person; spreadsheet to
+database where a spreadsheet has become the system; recurring reports built
+on a schedule; shared-inbox triage and routing; job sheets and timesheets from
+a phone, with the invoice raised from the same data; expiry and renewal
+registers that warn early; cross-checks (invoice against delivery note, order
+against despatch) that flag only the exceptions; validation at the point of
+entry so bad data never gets in.
 
 ## What kills it
 
-Learned on a call, never from a website — write it down so the call asks:
+Visible now, so score low:
+- The page shows it already done: an online form that lands in a system, a
+  customer portal, named integrations.
+- One person, or no sign of staff: nobody to give the time back to.
+- A franchise or branch whose systems are set elsewhere.
+- Register distress: see the ceilings in the scale.
 
-- They will not let us watch the task being done.
-- The measured saving comes out under about £1,000 a year.
-- They are mid-migration to a new system that replaces the process anyway.
-- They can name the person who makes the mistakes but not the process that
-  allows them.
+Learned on a call, so use for walk_away_if:
+- They will not let us watch the task done once, with the real files open.
+- It is an hour or two a month. There is no job in it.
+- They are mid-migration to a system that replaces the process anyway.
+- They can name who makes the mistakes but not the process that allows them,
+  or want the system to prove who was at fault.
 
 ## How this specialist scores
 
-Start from what the page shows a person doing by hand, not from the sector. A
-sector that "usually" has admin is a 40 at most on its own. A quoted manual step
-on their own page ("send us the completed form by email") with a business big
-enough for it to repeat is 60 or more. A quoted manual step that plainly repeats
-many times a week, in a business with staff, is 80 or more.
+Start from what the page shows a person doing by hand, not from the sector.
+- Sector alone ("trades always have admin"): 30 at most.
+- One quoted manual step from the list above, in a business with staff: 60–70.
+- A quoted manual step that plainly repeats many times a week (volume, several
+  vans, many orders), in a business of 5 to 25 or with small-company accounts:
+  75–85.
+- Two or more separate manual steps quoted, plus size: up to 90.
+- One director, micro-entity accounts and no sign of staff: 35 at most.
+- Mark down when the page shows the process already automated.
 
-Mark down when the page shows the process is already automated (an online form
-that clearly lands in a system, a customer portal, integrations named). Mark
-down hard for a sole trader: there is nobody to give the time back to.
+The test is time. A day a week is the target. An hour a month is not a job,
+however irritating it is.
 
 ## The question that settles it
 
-"Which job takes somebody a day or more every month, and can I watch it being
+"How many hours a month does it take, who does it, and can I watch it being
 done once?"

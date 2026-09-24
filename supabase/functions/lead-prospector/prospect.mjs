@@ -42,7 +42,10 @@ import { nameKey, isPostcodeArea } from './lib.mjs'
 /* ---------- the dials, and their stops ---------- */
 
 export const ENVELOPE = {
-  batch_size: [1, 5],
+  /* Most a tick will take on. It claims them one at a time and stops
+     when the time is gone, so a run of parked businesses (a DNS lookup
+     each, no model) moves ten times faster than a run of arguments. */
+  batch_size: [1, 25],
   tick_budget_ms: [30000, 380000],
   queue_low_water: [1, 50],
   pull_page_size: [10, 200],
@@ -57,6 +60,16 @@ export const ENVELOPE = {
   pages_per_site: [1, 5],
   fetch_timeout_ms: [2000, 30000],
   model_timeout_ms: [5000, 60000],
+  /* The highest score any service may reach on a business the register
+     shows is behind on its filings. The agents still have to agree; they
+     just cannot agree above this. */
+  caution_ceiling: [0, 100],
+  /* The highest score a service may reach when every signal it is argued
+     on is true of nearly every business of its kind ("electricians issue
+     test certificates"). scoring.md: evidence resting on sector, 30 at
+     most. The first Notts run scored two businesses 60 and 70 on exactly
+     that. */
+  sector_ceiling: [0, 100],
 }
 
 export const STAGES = ['research', 'signals', 'sales', 'specialists']
@@ -67,12 +80,24 @@ export function clampSettings(raw) {
     const n = Number(raw?.[key])
     out[key] = Number.isFinite(n) ? Math.min(hi, Math.max(lo, Math.round(n))) : lo
   }
+  if (!Number.isFinite(Number(raw?.caution_ceiling)) || raw?.caution_ceiling === null) out.caution_ceiling = 35
+  if (!Number.isFinite(Number(raw?.sector_ceiling)) || raw?.sector_ceiling === null) out.sector_ceiling = 30
   const reserve = raw?.stage_reserve_ms && typeof raw.stage_reserve_ms === 'object' ? raw.stage_reserve_ms : {}
   out.stage_reserve_ms = {}
   for (const s of STAGES) {
     const n = Number(reserve[s])
     out.stage_reserve_ms[s] = Number.isFinite(n) ? Math.min(out.tick_budget_ms, Math.max(5000, n)) : 30000
   }
+  /* A business with no website we can find is parked before any model is
+     asked about it, unless this is switched off. Off means the agents
+     argue from the register alone, which the first live test showed is
+     mostly argument about nothing. */
+  out.require_website = raw?.require_website !== false
+  /* Postcode areas or districts a pulled company's registered office must
+     be in (NG, B49...). The advanced search matches town names as text,
+     and "Beeston" is in Leeds as well as Nottingham. Empty means no check. */
+  out.territory_areas = (Array.isArray(raw?.territory_areas) ? raw.territory_areas : [])
+    .map((a) => String(a ?? '').trim().toUpperCase()).filter((a) => /^[A-Z]{1,2}(\d{1,2}[A-Z]?)?$/.test(a))
   const ua = typeof raw?.user_agent === 'string' ? raw.user_agent.trim() : ''
   out.user_agent = ua || 'n.abl-research/1.0 (+https://nabl.agency)'
   return out
@@ -102,18 +127,86 @@ export const parseJson = (raw) =>
 
 const NOISE = new Set(['THE', 'AND', 'OF', 'GROUP', 'HOLDINGS', 'UK', 'SERVICES', 'SERVICE'])
 
-export function domainGuesses(name) {
+/* Words too common to be a business's whole domain on their own. */
+const GENERIC = new Set([
+  'NORTH', 'SOUTH', 'EAST', 'WEST', 'CENTRAL', 'NATIONAL', 'GLOBAL', 'INTERNATIONAL', 'BRITISH', 'ENGLISH',
+  'BUILDING', 'BUILDERS', 'CONSTRUCTION', 'PROPERTY', 'PROPERTIES', 'HOMES', 'DESIGN', 'DESIGNS', 'SOLUTIONS',
+  'SYSTEMS', 'TECHNOLOGY', 'TECHNOLOGIES', 'CONSULTING', 'CONSULTANCY', 'MANAGEMENT', 'ENTERPRISES', 'TRADING',
+  'VENTURES', 'INVESTMENTS', 'CAPITAL', 'PARTNERS', 'ASSOCIATES', 'CONTRACTORS', 'ENGINEERING', 'ELECTRICAL',
+  'PLUMBING', 'HEATING', 'CLEANING', 'MOTORS', 'CARE', 'HEALTH', 'TRAVEL', 'FOOD', 'TAKEAWAY', 'CAFE', 'BAR',
+  'STUDIO', 'MEDIA', 'MARKETING', 'LOGISTICS', 'TRANSPORT', 'SUPPLIES', 'PRODUCTS', 'DIGITAL', 'CREATIVE',
+  'ELECTRO', 'ELECTRIC', 'ELECTRICS', 'TECHNICAL', 'GENERAL', 'PREMIER', 'ELITE', 'QUALITY', 'SMART', 'EXPRESS',
+  'CITY', 'COUNTY', 'ROYAL', 'FIRST', 'PRIME', 'SUPREME', 'ULTIMATE', 'TOTAL', 'UNITED', 'ADVANCED', 'MODERN',
+  'MIDLANDS', 'MIDLAND', 'EASTMIDLANDS', 'NOTTS', 'NOTTINGHAM', 'DERBY', 'DERBYSHIRE', 'LEICESTER', 'BIRMINGHAM',
+  'WARWICKSHIRE', 'WORCESTERSHIRE', 'COTSWOLD', 'COTSWOLDS', 'TRENT', 'SHERWOOD', 'HEART', 'ENGLAND',
+])
+
+/* Last words a business's own domain often leaves off. */
+const TAIL = new Set([
+  'SOLUTIONS', 'CONTRACTORS', 'CONTRACTING', 'SYSTEMS', 'ENTERPRISES', 'TRADING', 'SPECIALISTS', 'INSTALLATIONS',
+  'COMPANY', 'CO', 'SUPPLIES', 'TECHNOLOGIES', 'INDUSTRIES', 'LTD', 'LIMITED',
+])
+
+/** Domains a small UK business is likely to have, from its registered
+    name (and town, when given). Guesses only: each has to resolve, load,
+    and then prove it is theirs by naming them. More guesses than a person
+    would try, because the first live test parked two businesses in three
+    as "no website" on six guesses each. */
+export function domainGuesses(name, town = null) {
   const key = nameKey(name)
-  const words = key.split(' ').filter((w) => w && !NOISE.has(w))
+  const all = key.split(' ').filter(Boolean)
+  const words = all.filter((w) => !NOISE.has(w))
   if (!words.length) return []
-  const joined = words.join('').toLowerCase().replace(/[^a-z0-9]/g, '')
-  const hyphen = words.join('-').toLowerCase().replace(/[^a-z0-9-]/g, '')
-  const short = words.slice(0, 2).join('').toLowerCase().replace(/[^a-z0-9]/g, '')
-  const ok = (s) => s.length >= 4 && s.length <= 63
-  const stems = [joined, hyphen, short].filter(ok)
+  const low = (ws, sep = '') => ws.join(sep).toLowerCase().replace(sep ? /[^a-z0-9-]/g : /[^a-z0-9]/g, '')
+  const joined = low(words)
+  const hyphen = low(words, '-')
+  const short = low(words.slice(0, 2))
+  const ok = (x) => x.length >= 4 && x.length <= 63 && !/^-|-$/.test(x)
+  const main = [joined, hyphen, short]
+  /* "M & H NETWORK & CABLING" is as likely to be mandhnetworkcabling as
+     mhnetworkcabling. */
+  const initials = all.filter((w, i) => w !== 'AND' || (all[i - 1]?.length === 1 && all[i + 1]?.length === 1))
+    .filter((w) => !NOISE.has(w) || w === 'AND')
+  if (initials.length !== words.length) main.push(low(initials))
+  /* "BW PLUMBING & HEATING SOLUTIONS" trades as bwplumbingandheating: the
+     live Notts run parked it on bwplumbing.com while that domain was there.
+     So the "and" is kept, and a generic last word is dropped. */
+  const withAnd = all.filter((w) => !NOISE.has(w) || w === 'AND')
+  const tail = (ws) => {
+    const out = [...ws]
+    while (out.filter((w) => w !== 'AND').length > 2 && TAIL.has(out[out.length - 1])) out.pop()
+    while (out[out.length - 1] === 'AND') out.pop()
+    return out
+  }
+  main.splice(1, 0, low(withAnd), low(tail(withAnd)), low(tail(words)))
+  const extra = [`${joined}ltd`]
+  const t = String(town ?? '').toLowerCase().replace(/[^a-z]/g, '')
+  /* The first word alone, or with the town, only when it is distinctive:
+     not generic, and not the town itself (alcester.co.uk is the town's). */
+  const first = low([words[0]])
+  const distinctive = !GENERIC.has(words[0]) && first !== t
+  if (distinctive && first.length >= 6) extra.push(first)
+  if (distinctive && t.length >= 3 && first.length >= 4) extra.push(`${first}${t}`)
+  /* Most likely first, and .uk last: the cap cuts from the end. */
+  const stems = [...new Set([...main, ...extra])].filter(ok)
   const out = []
-  for (const tld of ['co.uk', 'com', 'uk']) for (const stem of stems) out.push(`${stem}.${tld}`)
-  return [...new Set(out)]
+  for (const tld of ['co.uk', 'com']) for (const stem of stems) out.push(`${stem}.${tld}`)
+  for (const stem of [...new Set(main)].filter(ok)) out.push(`${stem}.uk`)
+  return [...new Set(out)].slice(0, 24)
+}
+
+/** How to ask for a host's front page: the bare domain over HTTPS, then
+    www, then plain HTTP on www - a sole trader's site from 2012 is often
+    only the last. */
+export function frontPageUrls(host) {
+  const h = String(host ?? '').replace(/^www\./, '')
+  return [`https://${h}/`, `https://www.${h}/`, `http://www.${h}/`]
+}
+
+/** What the agents are told when no site was found. Never "none": the
+    finder only guesses, and not finding a guess is not knowing. */
+export function noSiteLine(outcome) {
+  return `WEBSITE: not found by guessing its domain (${outcome}). That is not the same as having none: it may have a site we did not guess, or trade through a directory or app.`
 }
 
 const PARKED = /domain (may be|is) (available|for sale)|buy this domain|parked (free )?(at|by)|protected domain holder|this domain is for sale|domain parking/i
@@ -216,6 +309,166 @@ export function sameSiteLinks(html, baseUrl, max = 2) {
   return out
 }
 
+/** The contact page, found only to be measured. Its text is never given
+    to an agent: it is where the routes are. */
+export function contactPageLink(html, baseUrl) {
+  let base
+  try { base = new URL(baseUrl) } catch { return null }
+  for (const m of String(html ?? '').matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"'#]+)["']/gi)) {
+    let u
+    try { u = new URL(m[1], base) } catch { continue }
+    if (u.host !== base.host || !/^https?:$/.test(u.protocol)) continue
+    if (/\/(contact|contact-us|contactus|get-in-touch|enquiries|enquire|enquiry)(\/|$|\.html?$|\.php$)/i.test(u.pathname)) {
+      u.search = ''
+      return u.toString()
+    }
+  }
+  return null
+}
+
+/* ---------- measured on their site, by code ----------
+
+   Most of the tier 2 signals in the ICP (section 5) are in what the
+   agents never see. The email address is removed before any agent reads a
+   page, and a link to a PDF booking form is just its words once the
+   markup is stripped. So code measures them first, from the raw pages,
+   and gives the agents lines they cite by key, as they cite the register.
+   Each line says what was measured and where. None carries a contact
+   route, and a line that somehow would is dropped. */
+
+const WEBMAIL = [
+  [/@(?:gmail|googlemail)\.com\b/i, 'Gmail'], [/@(?:hotmail|outlook|live|msn)\.(?:com|co\.uk)\b/i, 'Hotmail or Outlook'],
+  [/@(?:yahoo|ymail)\.(?:com|co\.uk)\b/i, 'Yahoo'], [/@btinternet\.com\b/i, 'BT Internet'], [/@btconnect\.com\b/i, 'BT Connect'],
+  [/@aol\.(?:com|co\.uk)\b/i, 'AOL'], [/@(?:icloud|me|mac)\.com\b/i, 'iCloud'], [/@sky\.com\b/i, 'Sky'],
+  [/@talktalk\.net\b/i, 'TalkTalk'], [/@(?:virginmedia|ntlworld|blueyonder)\.(?:com|co\.uk)\b/i, 'Virgin Media'],
+  [/@(?:plus|tiscali)\.(?:net|co\.uk)\b/i, 'an internet provider'],
+]
+const ROLE_LOCALS = new Set(['info', 'sales', 'accounts', 'admin', 'office', 'enquiries', 'enquiry', 'bookings', 'booking',
+  'service', 'support', 'hello', 'contact', 'orders', 'jobs', 'careers', 'quotes', 'estimates', 'hr', 'reception', 'lettings'])
+
+/* Written as their makers write them; none may look like a web address,
+   or the contact-route check would rightly drop the line. */
+const TOOLS = [
+  ['booking', 'Calendly', /calendly\.com/i], ['booking', 'Acuity', /acuityscheduling\.com/i],
+  ['booking', 'SimplyBook', /simplybook\.(?:me|it|net)/i], ['booking', 'Setmore', /setmore\.com/i],
+  ['booking', 'Fresha', /fresha\.com/i], ['booking', 'Bookwhen', /bookwhen\.com/i], ['booking', 'Checkfront', /checkfront\.com/i],
+  ['booking', 'ResDiary', /resdiary\.com/i], ['booking', 'OpenTable', /opentable\.(?:com|co\.uk)/i],
+  ['booking', 'YouCanBookMe', /youcanbook\.me/i], ['booking', 'Timely', /gettimely\.com/i], ['booking', 'Square Appointments', /squareup\.com\/appointments|square\.site/i],
+  ['forms', 'Jotform', /jotform\.com/i], ['forms', 'Typeform', /typeform\.com/i], ['forms', 'Google Forms', /docs\.google\.com\/forms|forms\.gle/i],
+  ['forms', 'Formstack', /formstack\.com/i], ['forms', 'Cognito Forms', /cognitoforms\.com/i], ['forms', 'Microsoft Forms', /forms\.office\.com/i],
+  ['payments', 'Stripe', /js\.stripe\.com|buy\.stripe\.com|checkout\.stripe\.com/i], ['payments', 'PayPal', /paypal\.com|paypalobjects\.com/i],
+  ['payments', 'SumUp', /sumup\.(?:com|co\.uk)/i], ['payments', 'GoCardless', /gocardless\.com/i],
+  ['shop', 'Shopify', /cdn\.shopify\.com|myshopify\.com/i], ['shop', 'WooCommerce', /woocommerce/i],
+  ['site builder', 'Wix', /wixstatic\.com|static\.parastorage\.com/i], ['site builder', 'Squarespace', /squarespace(?:-cdn)?\.com/i],
+  ['site builder', 'WordPress', /\/wp-content\/|\/wp-includes\//i], ['site builder', 'GoDaddy', /img1\.wsimg\.com/i],
+  ['site builder', 'Weebly', /weebly\.com/i], ['site builder', 'Webflow', /webflow\.(?:com|io)/i], ['site builder', 'Jimdo', /jimdo/i],
+  ['chat or CRM', 'Tawk', /tawk\.to/i], ['chat or CRM', 'Intercom', /widget\.intercom\.io|js\.intercomcdn\.com/i],
+  ['chat or CRM', 'LiveChat', /livechatinc\.com/i], ['chat or CRM', 'HubSpot', /js\.hs-scripts\.com|js\.hsforms\.net/i],
+  ['chat or CRM', 'Tidio', /tidio\.co/i], ['chat or CRM', 'Zendesk', /zdassets\.com|zendesk\.com/i],
+  ['job management', 'ServiceM8', /servicem8\.com/i], ['job management', 'Tradify', /tradifyhq\.com/i],
+  ['job management', 'simPRO', /simprogroup\.com|simprosuite\.com/i], ['job management', 'Commusoft', /commusoft\.(?:com|co\.uk)/i],
+  ['job management', 'Joblogic', /joblogic\.com/i], ['job management', 'Jobber', /getjobber\.com/i],
+  ['job management', 'BigChange', /bigchange\.com/i], ['job management', 'Fergus', /fergus\.com/i],
+]
+const TRADE = [
+  ['NICEIC', /\bniceic\b/i], ['NAPIT', /\bnapit\b/i], ['Gas Safe Register', /gas\s*safe|gassaferegister/i],
+  ['TrustMark', /\btrustmark\b/i], ['Checkatrade', /checkatrade/i], ['TrustATrader', /trustatrader/i],
+  ['Rated People', /ratedpeople/i], ['MyBuilder', /\bmybuilder\b/i], ['Trustpilot', /trustpilot/i],
+  ['Federation of Master Builders', /fmb\.org\.uk|federation of master builders/i],
+  ['Which? Trusted Traders', /trustedtraders|which\?\s*trusted trader/i], ['SafeContractor', /safecontractor/i],
+  ['CHAS', /\bchas\.co\.uk\b|\bchas accredited\b/i], ['Constructionline', /constructionline/i], ['ECA', /\beca\.co\.uk\b/i],
+  ['OFTEC', /\boftec\b/i], ['HETAS', /\bhetas\b/i], ['FENSA', /\bfensa\b/i], ['ARLA Propertymark', /propertymark|\barla\b/i],
+]
+const DOC = /<a\b[^>]*\bhref\s*=\s*["']([^"']+\.(pdf|docx?|xlsx?))(?:[?#][^"']*)?["'][^>]*>([\s\S]*?)<\/a>/gi
+const DOC_KIND = { pdf: 'PDF', doc: 'Word', docx: 'Word', xls: 'Excel', xlsx: 'Excel' }
+const TO_FILL = /\b(form|application|apply|booking|order|request|enquiry|registration|credit account|account opening|instruction|questionnaire|checklist|job sheet|timesheet)s?\b/i
+const PRICE_DOC = /\b(price|prices|pricing|price ?list|tariff|rates|rate card)s?\b/i
+const CAREERS = /\b(careers|vacancies|current vacancies|job opportunities|we'?re hiring|join (?:our|the) team|work (?:for|with) us)\b/i
+
+const plainWords = (s) => stripHtml(s).replace(/\s+/g, ' ').trim()
+
+/** Lines measured on a business's own pages. `pages` is [{ url, html, contact }],
+    raw HTML, the contact page (if read) marked. Keys start m_. */
+export function siteLines(pages, { today = new Date() } = {}) {
+  const list = (Array.isArray(pages) ? pages : []).filter((p) => p && typeof p.html === 'string')
+  if (!list.length) return []
+  const lines = []
+  const add = (key, text) => { if (text && !contactRouteIn(text)) lines.push({ key, text }) }
+  const all = list.map((p) => p.html).join('\n')
+
+  /* How a customer reaches them. */
+  const emails = [...new Set([...all.matchAll(/(?:mailto:)?([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi)].map((m) => m[1].toLowerCase()))]
+    .filter((e) => !/\.(png|jpe?g|gif|webp|svg)$/.test(e) && !/@(?:sentry|example|domain|email)\./.test(e))
+  const webmail = [...new Set(emails.map((e) => WEBMAIL.find(([re]) => re.test(e))?.[1]).filter(Boolean))]
+  if (webmail.length) {
+    add('m_webmail', `The email address the site gives is on a free webmail service (${webmail.join(', ')}), not a domain of the business's own`)
+  }
+  const roles = [...new Set(emails.map((e) => e.split('@')[0]).filter((l) => ROLE_LOCALS.has(l)))]
+  if (roles.length >= 3) add('m_roles', `The site gives ${roles.length} different role email addresses (${roles.slice(0, 5).map((r) => `${r}@`).join(', ')})`)
+
+  const contact = list.find((p) => p.contact)
+  const formIn = (html) => /<form\b[\s\S]*?(<textarea\b|type\s*=\s*["']?email)[\s\S]*?<\/form>/i.test(html)
+  /* "No form" is only said of a page code can see whole: not one a
+     builder draws in the browser, or with a frame that may hold a form. */
+  const drawn = (html) => /<iframe\b/i.test(html) || /wixstatic\.com|static\.parastorage\.com|squarespace|webflow/i.test(html)
+    || plainWords(html.replace(/<script[\s\S]*?<\/script>/gi, ' ')).length < 400
+  if (contact) {
+    const mailto = /href\s*=\s*["']mailto:/i.test(contact.html)
+    const hosted = TOOLS.filter(([kind, , re]) => kind === 'forms' && re.test(contact.html)).map(([, name]) => name)
+    if (formIn(contact.html) || hosted.length) add('m_contact', `Their contact page has an enquiry form${hosted.length ? ` (from ${hosted.join(', ')})` : ''}`)
+    else if (drawn(contact.html)) { /* cannot tell */ }
+    else if (mailto) add('m_contact', 'Their contact page gives an email link and has no enquiry form')
+    else add('m_contact', 'Their contact page has no enquiry form and no email link')
+  }
+
+  /* How old the site is. A year the page's own script writes is not in
+     the HTML, so a missing line means nothing. */
+  const bare = all.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<[^>]+>/g, ' ')
+  const years = [...bare.matchAll(/(?:©|&copy;|&#169;|&#xa9;|\(c\)|copyright)\s*(?:&nbsp;|\s)*(?:(?:19|20)\d{2}\s*(?:[-–—]|&ndash;|&#8211;|to)\s*)?((?:19|20)\d{2})/gi)]
+    .map((m) => Number(m[1])).filter((y) => y >= 1995 && y <= today.getUTCFullYear())
+  if (years.length) {
+    const y = Math.max(...years)
+    const ago = today.getUTCFullYear() - y
+    if (ago >= 2) add('m_copyright', `The copyright line on the site says ${y}, ${ago} years ago`)
+  }
+
+  /* Documents to download: forms to fill in and send back, and price
+     lists (ICP tier 1, both). */
+  const forms = []
+  const prices = []
+  for (const p of list) {
+    for (const m of p.html.matchAll(DOC)) {
+      const file = decodeURIComponent(m[1].split('/').pop() || '').replace(/\.[a-z]+$/i, '').replace(/[-_+]+/g, ' ').trim()
+      let label = plainWords(m[3])
+      if (label.length < 4 || /^(click here|here|download|view|read more|pdf|open)$/i.test(label)) label = file
+      label = label.slice(0, 70)
+      if (!label || contactRouteIn(label)) continue
+      const kind = DOC_KIND[m[2].toLowerCase()]
+      const hay = `${label} ${file}`
+      const item = `${label}" (${kind}`
+      if (PRICE_DOC.test(hay)) prices.push(item)
+      else if (TO_FILL.test(hay)) forms.push(item)
+    }
+  }
+  const docs = (xs) => [...new Set(xs)].slice(0, 3).map((x) => `"${x})`).join(', ')
+  if (forms.length) add('m_forms', `The site links to ${[...new Set(forms)].length === 1 ? 'a document' : 'documents'} to download, fill in and send back: ${docs(forms)}`)
+  if (prices.length) add('m_prices', `The site links to a price list as a document: ${docs(prices)}`)
+
+  /* Other companies' products in the pages' code. Two that plainly do not
+     talk to each other is tier 1; a booking or payment product already in
+     use argues against web. */
+  const found = new Map()
+  for (const [kind, name, re] of TOOLS) if (re.test(all)) found.set(kind, [...(found.get(kind) ?? []), name])
+  if (found.size) add('m_tools', `Other companies' products in the site's code: ${[...found].map(([k, ns]) => `${ns.join(', ')} (${k})`).join('; ')}`)
+  const trade = TRADE.filter(([, re]) => re.test(bare) || re.test(all)).map(([n]) => n)
+  if (trade.length) add('m_trade', `Trade bodies, schemes or review sites the site shows or links to: ${trade.slice(0, 6).join(', ')}`)
+
+  const careers = [...all.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/gi)].map((m) => plainWords(m[1])).find((t) => t.length < 40 && CAREERS.test(t))
+  if (careers) add('m_jobs', `The site has a link to jobs or careers ("${careers}")`)
+
+  return lines
+}
+
 /* ---------- the register, as lines an agent may cite ----------
 
    Each line has a key, and a register fact must name its key. Built from
@@ -237,6 +490,12 @@ const ACCOUNTS = {
   group: 'group accounts',
   dormant: 'dormant company accounts',
   'unaudited-abridged': 'abridged small company accounts',
+  'audited-abridged': 'abridged small company accounts, audited',
+  'filing-exemption-subsidiary': 'no accounts filed: exempt as a subsidiary, so part of a group',
+  'partial-exemption': 'partially exempt accounts',
+  initial: 'initial accounts (a newly formed company)',
+  interim: 'interim accounts',
+  'no-accounts-type-available': null,
 }
 
 export function registerLines(c, { profile = null, officers = null, today = new Date() } = {}) {
@@ -255,7 +514,7 @@ export function registerLines(c, { profile = null, officers = null, today = new 
   if (c.town) add('r_town', `Registered office town: ${c.town}`)
 
   const acc = profile?.accounts?.last_accounts
-  if (acc?.type && acc.type !== 'null') {
+  if (acc?.type && acc.type !== 'null' && ACCOUNTS[acc.type] !== null) {
     add('r_accounts', `Last accounts filed as ${ACCOUNTS[acc.type] ?? acc.type}${acc.made_up_to ? `, made up to ${acc.made_up_to}` : ''}`)
   }
   if (profile?.accounts?.overdue === true || profile?.confirmation_statement?.overdue === true) {
@@ -280,6 +539,32 @@ export function registerLines(c, { profile = null, officers = null, today = new 
     if (corporate) add('r_corporate_officer', `${corporate} of its officers ${corporate === 1 ? 'is a company' : 'are companies'}, not people`)
   }
   return lines
+}
+
+/* ---------- the register's red flags ----------
+
+   Two kinds. A REFUSAL ends the business before any model is asked: it
+   is not trading, or cannot be trusted to pay. A CAUTION lets the
+   argument go ahead with a ceiling on the score. Both are read from the
+   company profile, which the research stage fetches anyway. */
+
+export function registerRefusal(profile) {
+  if (!profile || typeof profile !== 'object') return null
+  const status = String(profile.company_status ?? '')
+  if (status && status !== 'active') return `the register shows it as ${status.replace(/-/g, ' ')}`
+  if (profile.company_status_detail) return `the register shows ${String(profile.company_status_detail).replace(/-/g, ' ')}`
+  if (profile.has_insolvency_history === true) return 'it has insolvency history on the register'
+  if (profile.has_been_liquidated === true) return 'it has been liquidated before'
+  if (String(profile.accounts?.last_accounts?.type ?? '') === 'dormant') return 'its last accounts were filed as dormant, so it is not trading'
+  return null
+}
+
+export function registerCautions(profile) {
+  const out = []
+  if (!profile || typeof profile !== 'object') return out
+  if (profile.accounts?.overdue === true) out.push('its accounts are overdue')
+  if (profile.confirmation_statement?.overdue === true) out.push('its confirmation statement is overdue')
+  return out
 }
 
 /* ---------- quotes ---------- */
@@ -309,7 +594,7 @@ export function sayOf(parsed) {
 
 /* ---------- research ---------- */
 
-export function validateResearch(parsed, { pageText, registerKeys, max = 12 }) {
+export function validateResearch(parsed, { pageText, registerKeys, measuredKeys = [], max = 12 }) {
   const facts = []
   const struck = []
   const list = Array.isArray(parsed?.facts) ? parsed.facts : []
@@ -327,12 +612,15 @@ export function validateResearch(parsed, { pageText, registerKeys, max = 12 }) {
       if (!pageText) { struck.push(`${id}: cites the page, and no page was read`); continue }
       if (!quoteOnPage(f?.quote, pageText)) { struck.push(`${id}: its quote is not on the page`); continue }
       facts.push({ id, fact, source, quote: str(f.quote, 400) })
-    } else if (source === 'register') {
-      const key = str(f?.register_key, 40)
-      if (!registerKeys.includes(key)) { struck.push(`${id}: names register line "${key}", which it was not given`); continue }
-      facts.push({ id, fact, source, register_key: key })
+    } else if (source === 'register' || source === 'measured') {
+      /* The key says which it is: a measured line cited as "register",
+         or the other way round, is the same line either way. */
+      const key = str(f?.register_key ?? f?.key, 40)
+      if (registerKeys.includes(key)) facts.push({ id, fact, source: 'register', register_key: key })
+      else if (measuredKeys.includes(key)) facts.push({ id, fact, source: 'measured', register_key: key })
+      else { struck.push(`${id}: names ${source} line "${key}", which it was not given`); continue }
     } else {
-      struck.push(`${id}: source must be page or register`)
+      struck.push(`${id}: source must be page, register or measured`)
       continue
     }
     seen.add(id)
@@ -347,7 +635,13 @@ export function validateResearch(parsed, { pageText, registerKeys, max = 12 }) {
 
 export const STRENGTHS = ['strong', 'possible', 'weak']
 
-export function validateSignals(parsed, { facts, max = 8 }) {
+/** A signal says which services it points to, by key. That is what lets
+    code refuse a pitch that rests on a signal about something else - the
+    first live test pitched web on an overdue filing. A caution is a
+    signal against the business itself (behind on filings, barely
+    trading): it may be put forward, so every agent sees it, and it points
+    to nothing, so nothing can be sold on it. */
+export function validateSignals(parsed, { facts, max = 8, services = null }) {
   const factIds = new Set(facts.map((f) => f.id))
   const signals = []
   const struck = []
@@ -362,9 +656,19 @@ export function validateSignals(parsed, { facts, max = 8 }) {
     if (route) { struck.push(`${id}: carries ${route}`); continue }
     const cited = (Array.isArray(s?.facts) ? s.facts : []).map((x) => str(x, 8)).filter((x) => factIds.has(x))
     if (!cited.length) { struck.push(`${id}: cites no fact the research agent promoted`); continue }
-    const strength = STRENGTHS.includes(str(s?.strength, 12).toLowerCase()) ? str(s.strength, 12).toLowerCase() : 'weak'
+    let strength = STRENGTHS.includes(str(s?.strength, 12).toLowerCase()) ? str(s.strength, 12).toLowerCase() : 'weak'
+    const caution = s?.caution === true
+    /* True of nearly every business of its kind: the sector talking, not
+       this business. Weak by definition, whatever it claimed. */
+    const sector = s?.sector === true && !caution
+    if (sector && strength !== 'weak') { struck.push(`${id}: true of the whole sector, so weak, not ${strength}`); strength = 'weak' }
+    const named = (Array.isArray(s?.points_to) ? s.points_to : []).map((x) => str(x, 40).toLowerCase()).filter(Boolean)
+    const unknown = services ? named.filter((x) => !services.includes(x)) : []
+    if (unknown.length) struck.push(`${id}: points to ${unknown.map((x) => `"${x}"`).join(', ')}, not ${unknown.length === 1 ? 'a service' : 'services'} we sell; ignored`)
+    let points = [...new Set(services ? named.filter((x) => services.includes(x)) : named)]
+    if (caution && points.length) { struck.push(`${id}: a caution points to no service; ${points.join(', ')} ignored`); points = [] }
     seen.add(id)
-    signals.push({ id, signal: text, facts: [...new Set(cited)], strength })
+    signals.push({ id, signal: text, facts: [...new Set(cited)], strength, points_to: points, caution, sector })
     if (signals.length >= max) break
   }
   const ids = new Set(signals.map((s) => s.id))
@@ -402,12 +706,12 @@ export function validateSignalReview(parsed, signals) {
     The first of the review loops. `reviews` is how many times the
     research agent reviews; there is one revision between each. What
     survives the last review is what sales sees. */
-export async function argueSignals({ facts, researchSay, reviews = 2, max = 8, callSignals, callReview, onMove }) {
+export async function argueSignals({ facts, researchSay, reviews = 2, max = 8, services = null, callSignals, callReview, onMove }) {
   let current = null
   let lastReview = null
   for (let r = 1; r <= reviews; r++) {
     const reply = await callSignals({ facts, researchSay, previous: current, review: lastReview, round: r })
-    const v = validateSignals(reply?.parsed, { facts, max })
+    const v = validateSignals(reply?.parsed, { facts, max, services })
     const usable = v.signals.filter((s) => v.promoted.includes(s.id))
     await onMove({
       from: 'signals', to: 'research', model: reply?.model, said: reply?.raw,
@@ -455,26 +759,68 @@ const scoreOf = (v) => {
   return Number.isFinite(n) && n >= 0 && n <= 100 ? Math.round(n) : null
 }
 
-export function validatePick(p, { signals, services }) {
+/** Which of the cited signals point to this service. A signal with no
+    points_to list at all (an older reply shape) is trusted as pointing
+    anywhere, so a missing field cannot silently zero a business; a signal
+    that names services and not this one, or is a caution, does not. */
+export function pointingAt(service, cited, signals) {
+  return cited.filter((id) => {
+    const sig = signals.find((x) => x.id === id)
+    if (!sig || sig.caution) return false
+    if (!Array.isArray(sig.points_to)) return true
+    return sig.points_to.includes(service)
+  })
+}
+
+/** A score over the register's ceiling is read as the ceiling. */
+export function capped(score, ceiling) {
+  return ceiling !== null && ceiling !== undefined && score !== null && score > ceiling ? ceiling : score
+}
+
+/** The ceiling on one proposal, and why: the register's, or the sector
+    ceiling when every cited signal that points to this service is one
+    true of the whole sector. A proposal that also cites a signal about
+    this business in particular is free of the second. */
+export function ceilingFor(service, cited, signals, { ceiling = null, sectorCeiling = null } = {}) {
+  const pointing = pointingAt(service, cited, signals).map((id) => signals.find((s) => s.id === id))
+  const sectorOnly = sectorCeiling !== null && sectorCeiling !== undefined && pointing.length > 0 && pointing.every((s) => s?.sector === true)
+  const caps = []
+  if (ceiling !== null && ceiling !== undefined) caps.push({ at: ceiling, why: 'the ceiling the register sets' })
+  if (sectorOnly) caps.push({ at: sectorCeiling, why: 'it rests only on signals true of the whole sector' })
+  if (!caps.length) return { at: null, why: null }
+  return caps.reduce((a, b) => (b.at < a.at ? b : a))
+}
+
+export function validatePick(p, { signals, services, ceiling = null, sectorCeiling = null }) {
   const ids = new Set(signals.map((s) => s.id))
   const service = str(p?.service, 40).toLowerCase()
   if (!services.includes(service)) return { ok: false, why: `"${service || '?'}" is not a service in the portfolio` }
   const cited = (Array.isArray(p?.signals) ? p.signals : []).map((x) => str(x, 8)).filter((x) => ids.has(x))
   if (!cited.length) return { ok: false, why: `${service}: cites no agreed signal` }
-  const score = scoreOf(p?.score)
-  if (score === null) return { ok: false, why: `${service}: no opening score on the 0-100 scale` }
+  if (!pointingAt(service, cited, signals).length) {
+    return { ok: false, why: `${service}: rests on ${cited.join(', ')}, and none of ${cited.length === 1 ? 'it points' : 'them point'} to ${service}` }
+  }
+  const asked = scoreOf(p?.score)
+  if (asked === null) return { ok: false, why: `${service}: no opening score on the 0-100 scale` }
+  const cap = ceilingFor(service, cited, signals, { ceiling, sectorCeiling })
+  const score = capped(asked, cap.at)
   const pitch = str(p?.pitch, 2000)
   const route = contactRouteIn(pitch)
   if (route) return { ok: false, why: `${service}: the pitch carries ${route}` }
-  return { ok: true, pick: { service, pitch: redactContactRoutes(pitch), signals: [...new Set(cited)], score } }
+  return {
+    ok: true,
+    pick: { service, pitch: redactContactRoutes(pitch), signals: [...new Set(cited)], score },
+    note: score !== asked ? `${service}: opened at ${asked}, read as ${score}: ${cap.why}` : null,
+  }
 }
 
-export function validateSales(parsed, { signals, services, max = 3 }) {
+export function validateSales(parsed, { signals, services, max = 3, ceiling = null, sectorCeiling = null }) {
   const picks = []
   const struck = []
   for (const p of Array.isArray(parsed?.services) ? parsed.services : []) {
-    const v = validatePick(p, { signals, services })
+    const v = validatePick(p, { signals, services, ceiling, sectorCeiling })
     if (!v.ok) { struck.push(v.why); continue }
+    if (v.note) struck.push(v.note)
     if (picks.some((x) => x.service === v.pick.service)) { struck.push(`${v.pick.service} was brought in twice`); continue }
     if (picks.length >= max) { struck.push(`${v.pick.service}: over the limit of ${max} services`); continue }
     picks.push(v.pick)
@@ -495,7 +841,7 @@ const MOVES = { specialist: ['agree', 'counter', 'pass', 'redirect'], sales: ['a
     an "agree" with a different number is read as the counter it is, and
     a counter that happens to name their number is read as agreement,
     because the number is the point. */
-export function readMove(parsed, { who, theirs, signals, services, current }) {
+export function readMove(parsed, { who, theirs, signals, services, current, ceiling = null, sectorCeiling = null, fallbackCited = [] }) {
   const guard = []
   if (!parsed || typeof parsed !== 'object') return { kind: 'none', score: null, guard: ['the reply was not JSON'] }
   const route = contactRouteIn(JSON.stringify({ ...parsed, say: undefined }))
@@ -506,13 +852,24 @@ export function readMove(parsed, { who, theirs, signals, services, current }) {
     guard.push(`"${verdict || '?'}" is not a move a ${who} agent can make; read as a counter`)
     verdict = 'counter'
   }
+  const ids = new Set(signals.map((s) => s.id))
+  const cited = (Array.isArray(parsed.signals) ? parsed.signals : []).map((x) => str(x, 8)).filter((x) => ids.has(x))
+  /* An agreement that cites nothing rests on what the pitch rested on. */
+  const cap = current
+    ? ceilingFor(current, cited.length ? cited : fallbackCited, signals, { ceiling, sectorCeiling })
+    : { at: ceiling, why: 'the ceiling the register sets' }
   let score = scoreOf(parsed.score)
+  const over = capped(score, cap.at)
+  if (over !== score) {
+    guard.push(cap.at === ceiling && cap.why === 'the ceiling the register sets'
+      ? `named ${score}; the register caps this business at ${ceiling}, so read as ${ceiling}`
+      : `named ${score}; ${cap.why}, so read as ${cap.at}`)
+    score = over
+  }
   if (verdict === 'pass') {
     if (score !== 0 && score !== null) guard.push(`passed but named ${score}; a pass is 0`)
     score = 0
   }
-  const ids = new Set(signals.map((s) => s.id))
-  const cited = (Array.isArray(parsed.signals) ? parsed.signals : []).map((x) => str(x, 8)).filter((x) => ids.has(x))
 
   if (verdict === 'agree') {
     if (theirs === null || theirs === undefined) {
@@ -533,6 +890,12 @@ export function readMove(parsed, { who, theirs, signals, services, current }) {
   if ((verdict === 'counter' || verdict === 'redirect') && score > 0 && !cited.length) {
     return { kind: 'none', score: null, guard: [...guard, `proposed ${score} citing no agreed signal, so it does not count`] }
   }
+  if ((verdict === 'counter' || verdict === 'redirect') && score > 0 && current && !pointingAt(current, cited, signals).length) {
+    return {
+      kind: 'none', score: null,
+      guard: [...guard, `proposed ${score} for ${current} on ${cited.join(', ')}, which ${cited.length === 1 ? 'does' : 'do'} not point to ${current}, so it does not count`],
+    }
+  }
 
   const move = { kind: verdict, score, signals: cited, guard }
   if (who === 'specialist') {
@@ -549,8 +912,8 @@ export function readMove(parsed, { who, theirs, signals, services, current }) {
     if (w && !contactRouteIn(w)) move.walk_away_if = w
   }
   if (who === 'sales' && parsed.bring_in && typeof parsed.bring_in === 'object') {
-    const b = validatePick(parsed.bring_in, { signals, services })
-    if (b.ok) move.bring_in = b.pick
+    const b = validatePick(parsed.bring_in, { signals, services, ceiling, sectorCeiling })
+    if (b.ok) { move.bring_in = b.pick; if (b.note) guard.push(b.note) }
     else guard.push(`could not bring in: ${b.why}`)
   }
   return move
@@ -563,7 +926,7 @@ export function readMove(parsed, { who, theirs, signals, services, current }) {
     messages after that. The history handed to each agent is the agents'
     own `say` text, in order - the conversation, not our précis of it. */
 export async function argueService({
-  pick, turns = 6, signals, services, callSpecialist, callSales, onMove, canBringIn = () => true,
+  pick, turns = 6, signals, services, callSpecialist, callSales, onMove, canBringIn = () => true, ceiling = null, sectorCeiling = null,
 }) {
   const history = [{ from: 'sales', say: pick.pitch, score: pick.score }]
   let sales = pick.score
@@ -578,7 +941,7 @@ export async function argueService({
     const reply = who === 'specialist'
       ? await callSpecialist({ service: pick.service, pick, history, sales, specialist, turn: t })
       : await callSales({ service: pick.service, pick, history, sales, specialist, turn: t })
-    const m = readMove(reply?.parsed, { who, theirs, signals, services, current: pick.service })
+    const m = readMove(reply?.parsed, { who, theirs, signals, services, current: pick.service, ceiling, sectorCeiling, fallbackCited: pick.signals })
     const say = sayOf(reply?.parsed)
     if (m.confirm_question) ask = m.confirm_question
     if (m.walk_away_if) walk = m.walk_away_if
@@ -642,14 +1005,18 @@ export function outcome(results) {
 export const knowledgeOf = (cfg, key) => (cfg.knowledge || []).find((k) => k.key === key)
 export const serviceKeys = (cfg) => (cfg.knowledge || []).filter((k) => k.kind === 'service').map((k) => k.key)
 
-export function factLines(facts, register) {
-  return facts.map((f) => f.source === 'page'
-    ? `${f.id}: ${f.fact}\n    from their own website: "${f.quote}"`
-    : `${f.id}: ${f.fact}\n    from the register: ${register.find((r) => r.key === f.register_key)?.text ?? f.register_key}`).join('\n')
+export function factLines(facts, register, measured = []) {
+  return facts.map((f) => {
+    if (f.source === 'page') return `${f.id}: ${f.fact}\n    from their own website: "${f.quote}"`
+    if (f.source === 'measured') return `${f.id}: ${f.fact}\n    measured on their website by code: ${measured.find((r) => r.key === f.register_key)?.text ?? f.register_key}`
+    return `${f.id}: ${f.fact}\n    from the register: ${register.find((r) => r.key === f.register_key)?.text ?? f.register_key}`
+  }).join('\n')
 }
 
 export function signalLines(signals, facts) {
-  return signals.map((s) => `${s.id} (${s.strength}): ${s.signal}\n    rests on: ${s.facts.map((id) => {
+  const where = (s) => (s.caution ? 'CAUTION, points to no service'
+    : Array.isArray(s.points_to) ? (s.points_to.length ? `points to ${s.points_to.join(', ')}` : 'points to no service') : 'direction not given')
+  return signals.map((s) => `${s.id} (${s.strength}${s.sector ? ', true of the whole sector' : ''}; ${where(s)}): ${s.signal}\n    rests on: ${s.facts.map((id) => {
     const f = facts.find((x) => x.id === id)
     return f ? `${id} "${f.fact}"` : id
   }).join('; ')}`).join('\n')

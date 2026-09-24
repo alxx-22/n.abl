@@ -1,45 +1,77 @@
 # Who we sell to
 
-Condensed from `business/01-positioning/ideal-customer-profile.md` and
-`positioning-statement.md`. Those are the authority; this is what the agents
-carry.
+n.abl is a technology implementation partner for small businesses around
+Nottingham and Alcester. We find the part of a business that costs the most
+time, causes the most mistakes or breaks most often, and build the most
+appropriate fix. AI is one tool among several. If the right answer is ordinary
+code, a spreadsheet done properly or training on a tool they already pay for,
+that is the answer.
 
-n.abl is a small technology consultancy with people in Nottingham and Alcester.
-We diagnose one expensive, specific problem in a small business and build the
-most appropriate fix: automation, data and reporting, custom software, web, and
-AI where it genuinely earns its place. AI is one tool among several. If the
-answer is not AI, the client gets the boring version and pays less.
+We are not IT support, not a software house pricing someone else's spec, and
+not an AI agency. We have no client case studies yet: never argue from work we
+have not done or from "businesses like this usually".
 
-## The business we are looking for
+**The business we want**
+- Owner-run, 5 to 25 people, running on spreadsheets, email and
+  off-the-shelf tools.
+- At least one process that visibly costs a day a week, or keeps going wrong.
+- A director who can say yes alone.
+- Sound and trading: able to pay for a one-off build without it being a crisis.
+- Around Nottingham or Alcester. Edge towns only on a strong fit.
 
-An owner-run business of roughly 5 to 25 people, running on spreadsheets and
-email, with at least one process that visibly costs it a day a week or more,
-and a director who can say yes on their own.
+**Size**
+- 5 to 25 is the target. 3 to 4, or 26 to 50: only on a strong signal.
+- 1 to 2 people: no, unless a professional whose own time is the bottleneck.
+- Over 50, an IT manager, its own developers, or a procurement process: no.
+- Take a headcount only from their own words ("a team of twelve engineers").
+  Never guess one.
 
-## Where
+**Sector** counts for less than what the page shows. Strong: trades and
+installers with field teams, light manufacturing and engineering, wholesale
+and trade supply, small professional practices, property and facilities
+management. Also logistics, training, care (mind the data), print and hire
+around Nottingham; rural, motor and aerospace supply, and venues around
+Alcester. Weak: salons, restaurants, pubs, takeaways and walk-in retail, which
+already have cheap, adequate software.
 
-Core: Nottingham and the towns around it (Beeston, West Bridgford, Arnold,
-Carlton, Hucknall, Long Eaton, Ilkeston and so on), and Alcester and the towns
-around it (Studley, Redditch, Bidford-on-Avon, Henley-in-Arden,
-Stratford-upon-Avon). Edge towns are worth a letter only when the fit is
-otherwise strong.
+**Not for us, whatever else is true**
+- Itself an IT, software or web business, or employing its own developers.
+- A holding company, or one that only owns property, with no staff.
+- A franchisee or a branch whose systems are decided elsewhere.
+- Not trading or not viable: dormant accounts, insolvency history.
+- Caution, not a no: care records, clinical or other special-category data at
+  the centre of the work.
 
-## What we can and cannot see from outside
+**Reading the register.** It tells you whether they can buy, never what they
+need. No register line, on its own, points at any service. Register distress
+is never a sales opportunity.
+- Accounts type is your best budget clue. Micro-entity: the smallest category,
+  usually ten staff or fewer; size unknown. Small, abridged or audit-exempt: a
+  real small company, our range. Medium, full or group: may be over our size or
+  have its own IT; look for it. Subsidiary exemption, or a company as an
+  officer: part of a group, and the decision may sit elsewhere.
+- Dormant accounts or insolvency history: not trading or not sound. Stop.
+- A filing overdue: strain or winding down. A caution, never a need, and never
+  mentioned to them.
+- Incorporated in the last year or so with nothing showing trade: probably not
+  trading yet.
+- One director, micro-entity, nothing about staff: probably one person.
+- Charges: common (a bank loan), neutral on their own.
+- A new director in an older company: a timing note, not a need.
+- The town is the registered office, often the accountant's. The SIC code is
+  self-chosen and often stale.
 
-Everything an agent knows about a business comes from two places: the public
-register (what kind of company, how old, what it says it does, how it files its
-accounts, how many directors it has) and the business's own website, if one was
-found and confirmed to be theirs.
-
-Neither tells you whether anyone inside will actually want the thing. That is
-learned on a call. So every judgement here is a **hypothesis about where a
-conversation would start**, never a qualification.
-
-## Honest signs a business is not for us
-
-- It is dormant, a holding company, or a property-owning vehicle with no staff.
-- It is one person working alone with nothing to automate but their own diary.
-- It is large enough to have an IT department — they will not hire two people
-  from Alcester, and should not.
-- It is itself a software, web or IT business. We would be selling to a
-  competitor.
+**Reading the website**
+- We find a site only by guessing domains from the company name. "No website
+  found", parked, placeholder, unreachable or "a different company" all mean
+  we did not find theirs. Unknown, never evidence.
+- We read the home page and at most two about, services, booking or pricing
+  pages, never the contact page. What we did not read, we do not know.
+- Menus, footers, cookie banners and button labels are furniture. A menu item
+  called "Book" is not a booking system.
+- Some things are measured on their pages by code, before contact details
+  are removed: a free webmail address, several role addresses, a form or
+  price list to download, an old copyright year, other companies' booking,
+  form, payment or job software in the page's code, trade bodies, and
+  whether the contact page has a form. They arrive as lines starting m_.
+  Each is a fact about this business, not about its sector.

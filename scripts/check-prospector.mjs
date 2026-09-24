@@ -10,9 +10,11 @@ import {
   clampSettings, quotaScope, domainGuesses, pageKind, parseRobots, confirms, sameSiteLinks,
   stripHtml, registerLines, quoteOnPage, validateResearch, validateSignals, validateSignalReview,
   argueSignals, validateSales, readMove, argueService, outcome, parseJson, conversationBlock,
+  frontPageUrls, noSiteLine, registerRefusal, registerCautions, validatePick, signalLines,
+  siteLines, contactPageLink, ceilingFor, factLines,
 } from '../supabase/functions/lead-prospector/prospect.mjs'
 import { quotaScope as outreachQuotaScope } from '../supabase/functions/outreach-writer/guards.mjs'
-import { redactContactRoutes } from '../supabase/functions/lead-prospector/puller.mjs'
+import { redactContactRoutes, admit, unknownSic, expandSic } from '../supabase/functions/lead-prospector/puller.mjs'
 
 let fail = 0
 const ok = (label, cond, detail) => {
@@ -295,6 +297,191 @@ const script = (lines) => {
 ok('the conversation handed on is the agents\' own words',
   conversationBlock([{ from: 'sales', say: 'hello', score: 55 }, { from: 'specialist', say: 'no', score: 70 }], 'web')
     === '1. SALES (number: 55):\nhello\n\n2. WEB SPECIALIST (number: 70):\nno')
+
+console.log('\nWHAT THE FIRST LIVE TEST TAUGHT\n')
+{
+  /* Alcester, 23 September: a dormant company went to the models, a
+     takeaway scored 55 for web because no guessed domain existed, and web
+     was pitched on an overdue filing. Each rule below is one of those. */
+
+  const s = clampSettings({})
+  ok('with no setting, the caution ceiling is 35, not the bottom of its range', s.caution_ceiling === 35, s.caution_ceiling)
+  ok('  …a set ceiling is used', clampSettings({ caution_ceiling: 20 }).caution_ceiling === 20)
+  ok('  …and a business with no site is parked unless someone switches that off',
+    s.require_website === true && clampSettings({ require_website: false }).require_website === false)
+  ok('territory areas are read, and anything not shaped like one dropped',
+    clampSettings({ territory_areas: ['ng', 'B49', 'nonsense area', 42] }).territory_areas.join() === 'NG,B49')
+
+  const g = domainGuesses('M & H NETWORK & CABLING LTD', 'Alcester')
+  ok('"M & H" is guessed as mandh as well as mh', g.includes('mandhnetworkcabling.co.uk') && g.includes('mhnetworkcabling.co.uk'), g)
+  ok('  …the "ltd" form is guessed', g.includes('mhnetworkcablingltd.co.uk'))
+  ok('  …a one-letter first word is never a domain of its own, or joined to the town', !g.some((d) => /^m(alcester)?\./.test(d)), g)
+  const t = domainGuesses('KEBANGING TAKEAWAY LTD', 'Alcester')
+  ok('a distinctive first word is guessed alone and with the town', t.includes('kebanging.co.uk') && t.includes('kebangingalcester.co.uk'), t)
+  const town = domainGuesses('THE ALCESTER BUILDING SERVICES LTD', 'Alcester')
+  ok('  …but never when the first word is the town itself', !town.includes('alcester.co.uk') && !town.some((d) => /alcesteralcester/.test(d)), town)
+  ok('  …or a generic word', !domainGuesses('BUILDING WORKS LTD').includes('building.co.uk'))
+  ok('  …or a word half the county uses — the live test guessed electro.com for Electro Technical Midlands',
+    !domainGuesses('ELECTRO TECHNICAL MIDLANDS LTD', 'Nottingham').some((d) => /^electro(nottingham)?\./.test(d)))
+  const bw = domainGuesses('BW PLUMBING & HEATING SOLUTIONS LTD', 'Nottingham')
+  ok('the "and" is kept and a generic last word dropped — the live run parked BW Plumbing & Heating Solutions while bwplumbingandheating.co.uk was there',
+    bw.includes('bwplumbingandheating.co.uk') && bw.includes('bwplumbingheating.co.uk') && bw.includes('bwplumbingandheatingsolutions.co.uk'), bw)
+  ok('  …the .co.uk and .com forms come before any .uk one, so the cap cuts .uk first',
+    bw.findIndex((d) => d.endsWith('.uk') && !d.endsWith('.co.uk')) > bw.findLastIndex((d) => d.endsWith('.com')), bw)
+  ok('  …but a two-word name keeps its last word: smithcontractors, never smith',
+    !domainGuesses('SMITH CONTRACTORS LTD', 'Nottingham').some((d) => /^smith\./.test(d)))
+  ok('  …and "& SON" is guessed as andson', domainGuesses('R BRAMLEY & SON LIMITED').includes('rbramleyandson.co.uk'))
+  ok('no more than 24 guesses, however long the name',domainGuesses('ALPHA BRAVO AND CHARLIE DELTA ECHO FOXTROT LTD', 'Nottingham').length <= 24)
+  ok('a front page is tried bare, then www, then plain http',
+    frontPageUrls('www.fresh.co.uk').join() === 'https://fresh.co.uk/,https://www.fresh.co.uk/,http://www.fresh.co.uk/')
+  const line = noSiteLine('none of 12 guessed domains exists')
+  ok('not finding a site is said as not finding it, never as "none"', /not found by guessing/.test(line) && !/WEBSITE: none/.test(line) && /may have a site/.test(line))
+
+  ok('dormant accounts are refused', /dormant/.test(registerRefusal({ company_status: 'active', accounts: { last_accounts: { type: 'dormant' } } }) ?? ''))
+  ok('insolvency history is refused', /insolvency/.test(registerRefusal({ has_insolvency_history: true }) ?? ''))
+  ok('a company being struck off is refused', /strike off/.test(registerRefusal({ company_status: 'active', company_status_detail: 'active-proposal-to-strike-off' }) ?? ''))
+  ok('a company in liquidation is refused', /liquidation/.test(registerRefusal({ company_status: 'liquidation' }) ?? ''))
+  ok('a sound, micro company is not', registerRefusal({ company_status: 'active', accounts: { last_accounts: { type: 'micro-entity' } } }) === null)
+  ok('  …and a profile we could not read decides nothing', registerRefusal(null) === null)
+  ok('overdue accounts and confirmation statement are cautions', registerCautions({ accounts: { overdue: true }, confirmation_statement: { overdue: true } }).length === 2)
+  ok('  …and up to date is none', registerCautions({ accounts: { overdue: false } }).length === 0)
+  ok('an accounts type with no meaning is left out of the register lines',
+    !registerLines({ company_name: 'X' }, { profile: { accounts: { last_accounts: { type: 'no-accounts-type-available' } } } }).some((l) => l.key === 'r_accounts'))
+  ok('  …and a subsidiary filing says so',
+    /part of a group/.test(registerLines({ company_name: 'X' }, { profile: { accounts: { last_accounts: { type: 'filing-exemption-subsidiary' } } } }).find((l) => l.key === 'r_accounts')?.text ?? ''))
+
+  const FX = [{ id: 'f1' }, { id: 'f2' }]
+  const sv = validateSignals({ signals: [
+    { id: 's1', signal: 'Bookings are taken by phone', facts: ['f1'], strength: 'strong', points_to: ['web', 'automation', 'seo'] },
+    { id: 's2', signal: 'A filing is overdue', facts: ['f2'], strength: 'strong', caution: true, points_to: ['web'] },
+    { id: 's3', signal: 'Something', facts: ['f1'], strength: 'weak' },
+  ] }, { facts: FX, services: SERVICES })
+  const [s1, s2, s3] = sv.signals
+  ok('a signal keeps the services it points to that we sell', s1.points_to.join() === 'web,automation', s1)
+  ok('  …and a service we do not sell is struck from it, and said', sv.struck.some((x) => /"seo", not a service we sell/.test(x)))
+  ok('a caution points to nothing, whatever it claimed', s2.caution && s2.points_to.length === 0 && sv.struck.some((x) => /s2: a caution points to no service/.test(x)))
+  ok('a signal that names no service points to none', Array.isArray(s3.points_to) && s3.points_to.length === 0)
+  ok('where a signal points is shown to every agent', /s1 \(strong; points to web, automation\)/.test(signalLines([s1], [])) && /CAUTION/.test(signalLines([s2], [])))
+
+  const DIR = sv.signals
+  const web = validatePick({ service: 'web', pitch: 'p', signals: ['s2'], score: 55 }, { signals: DIR, services: SERVICES })
+  ok('web pitched on an overdue filing is refused — the first live test', !web.ok && /none of it points to web/.test(web.why), web)
+  ok('  …and pitched on a signal that points to web, it stands', validatePick({ service: 'web', pitch: 'p', signals: ['s1', 's2'], score: 55 }, { signals: DIR, services: SERVICES }).ok)
+  ok('data pitched on a signal that points elsewhere is refused', !validatePick({ service: 'data_analytics', pitch: 'p', signals: ['s1'], score: 40 }, { signals: DIR, services: SERVICES }).ok)
+  const cap = validatePick({ service: 'web', pitch: 'p', signals: ['s1'], score: 55 }, { signals: DIR, services: SERVICES, ceiling: 35 })
+  ok('under a caution, an opening score above the ceiling is read as the ceiling, and said', cap.ok && cap.pick.score === 35 && /opened at 55, read as 35/.test(cap.note), cap)
+
+  const R = (parsed, extra = {}) => readMove(parsed, { who: 'specialist', theirs: 35, signals: DIR, services: SERVICES, current: 'web', ...extra })
+  ok('a counter for web resting on a signal that does not point to web does not count',
+    R({ verdict: 'counter', score: 50, signals: ['s2'] }).kind === 'none')
+  ok('  …a counter on a signal that does point there does', R({ verdict: 'counter', score: 30, signals: ['s1'] }).kind === 'counter')
+  const clamped = R({ verdict: 'counter', score: 70, signals: ['s1'] }, { ceiling: 35 })
+  ok('above the ceiling, a number is read as the ceiling — which here is their number, so agreement',
+    clamped.kind === 'agree' && clamped.guard.some((x) => /caps this business at 35/.test(x)), clamped)
+  const agreeHigh = R({ verdict: 'agree', score: 90 }, { ceiling: 35 })
+  ok('  …"agree" at a number over the ceiling agrees at the ceiling', agreeHigh.kind === 'agree', agreeHigh)
+  ok('a pass needs no pointing signal', R({ verdict: 'pass', score: 0 }).kind === 'pass')
+  const bring = readMove({ verdict: 'agree', score: 35, bring_in: { service: 'data_analytics', pitch: 'p', signals: ['s1'], score: 40 } },
+    { who: 'sales', theirs: 35, signals: DIR, services: SERVICES, current: 'web' })
+  ok('sales cannot bring in a service on a signal that does not point to it', !bring.bring_in && bring.guard.some((x) => /could not bring in/.test(x)), bring)
+
+  const one = (sic, extra = {}) => admit({ company: 'X LTD', company_status: 'active', company_type: 'ltd', postcode: 'NG1 1AA', sic: sic.map((c) => `${c} - x`), ...extra })
+  ok('a software house is refused: it is in our line of work', /line of work/.test(one(['62012']).why ?? ''))
+  ok('  …even when it lists another code first', !one(['43210', '62020']).ok)
+  ok('a holding company with nothing else is refused', /holding company/.test(one(['64209']).why ?? ''))
+  ok('  …but a builder that also owns its yard is not', one(['41202', '68100']).ok)
+  ok('a pull outside the territory is refused by postcode', !admit({ company: 'X', company_status: 'active', company_type: 'ltd', postcode: 'LS9 8AA', sic: [] }, { areas: ['NG', 'B49'] }).ok)
+  ok('  …and inside it, let in', admit({ company: 'X', company_status: 'active', company_type: 'ltd', postcode: 'B49 5AA', sic: [] }, { areas: ['NG', 'B49'] }).ok)
+  ok('an unknown SIC code is caught before it is sent, where a 404 would end the town', unknownSic(['01620', '0162', '43210', '04']).join() === '01620,04', unknownSic(['01620', '0162', '43210', '04']))
+  ok('  …and a real prefix is not', unknownSic(['432']).length === 0 && expandSic(['432']).length > 1)
+}
+
+
+console.log('\nWHAT THE NOTTS RUN TAUGHT: A SECTOR IS NOT A SIGNAL, AND THE CODE SEES WHAT THE AGENTS CANNOT\n')
+{
+  const today = new Date('2026-09-23T12:00:00Z')
+  const home = '<html><head><script src="https://assets.calendly.com/assets/external/widget.js"></script>' +
+    '<link rel="stylesheet" href="/wp-content/themes/x/style.css"></head><body>' +
+    '<a href="/about-us/">About</a> <a href="/contact-us/">Contact</a> <a href="/careers">Join our team</a>' +
+    '<a href="/docs/Credit-Account-Application.pdf">Download</a> <a href="/files/prices_2023.pdf">Price list 2023</a>' +
+    '<a href="/files/brochure.pdf">Our brochure</a> <img alt="NICEIC approved contractor" src="/img/niceic.png">' +
+    '<p>Email sales@fixture.test, accounts@fixture.test or service@fixture.test, or the owner at fixtureowner@gmail.com</p>' +
+    '<footer>&copy; 2019 Fixture Electrical Ltd. Call 0115 496 0000. NG1 5FS</footer></body></html>'
+  const words = 'We are a family firm of electricians working across the county on homes and small commercial sites. '.repeat(6)
+  const contactBare = `<html><body><h1>Contact</h1><p>${words}</p><a href="mailto:info@fixture.test">Email us</a></body></html>`
+  const lines = siteLines([{ url: 'https://fixture.test/', html: home }, { url: 'https://fixture.test/contact-us/', html: contactBare, contact: true }], { today })
+  const L = Object.fromEntries(lines.map((l) => [l.key, l.text]))
+  ok('a webmail address is measured, though no agent may read the address itself', /free webmail service \(Gmail\)/.test(L.m_webmail ?? ''), L)
+  ok('  …three or more role addresses are counted', /4 different role email addresses/.test(L.m_roles ?? ''), L.m_roles)
+  ok('  …a form to download and send back is named by its file when its link says only "Download"', /"Credit Account Application" \(PDF\)/.test(L.m_forms ?? ''), L.m_forms)
+  ok('  …a price list published as a document, with its year', /"Price list 2023" \(PDF\)/.test(L.m_prices ?? ''), L.m_prices)
+  ok('  …a brochure is neither', !/brochure/i.test(`${L.m_forms} ${L.m_prices}`))
+  ok('  …an old copyright year, and how old', /says 2019, 7 years ago/.test(L.m_copyright ?? ''), L.m_copyright)
+  ok('  …other companies\' products in the code', /Calendly \(booking\)/.test(L.m_tools ?? '') && /WordPress \(site builder\)/.test(L.m_tools ?? ''), L.m_tools)
+  ok('  …a trade body shown only as a logo', /NICEIC/.test(L.m_trade ?? ''), L.m_trade)
+  ok('  …a careers link', /Join our team/.test(L.m_jobs ?? ''), L.m_jobs)
+  ok('  …a contact page with an email link and no form', /email link and has no enquiry form/.test(L.m_contact ?? ''), L.m_contact)
+  ok('no measured line carries an email address, phone number, web address or postcode',
+    lines.every((l) => !/@[a-z]|0115|fixture\.test|NG1/.test(l.text)), lines)
+  const fresh = siteLines([{ url: 'https://f.test/', html: '<footer>© 2025 Fresh Ltd</footer>' }], { today })
+  ok('a copyright year a year old is not stale', !fresh.some((l) => l.key === 'm_copyright'), fresh)
+  const withForm = siteLines([{ url: 'https://f.test/', html: '<p>x</p>' },
+    { url: 'https://f.test/contact', contact: true, html: '<form action="/send"><input type="email" name="e"><textarea name="m"></textarea></form>' }], { today })
+  ok('a contact page with a real form says so', withForm.find((l) => l.key === 'm_contact')?.text === 'Their contact page has an enquiry form', withForm)
+  const drawn = siteLines([{ url: 'https://f.test/', html: '<p>x</p>' },
+    { url: 'https://f.test/contact', contact: true, html: '<div id="root"></div><script src="https://static.parastorage.com/x.js"></script><a href="mailto:a@b.test">e</a>' }], { today })
+  ok('  …but "no form" is never said of a page a builder draws in the browser', !drawn.some((l) => l.key === 'm_contact'), drawn)
+  ok('nothing read, nothing measured', siteLines([], { today }).length === 0)
+  ok('the contact page is found to be measured, on the same host only',
+    contactPageLink('<a href="https://other.test/contact">x</a><a href="/Contact-Us/">c</a>', 'https://f.test/') === 'https://f.test/Contact-Us/')
+
+  const v = validateResearch({ facts: [
+    { id: 'f1', fact: 'Customers send back a credit account form', source: 'measured', register_key: 'm_forms' },
+    { id: 'f2', fact: 'Uses Gmail', source: 'register', register_key: 'm_webmail' },
+    { id: 'f3', fact: 'Invented', source: 'measured', register_key: 'm_nonsense' },
+  ] }, { pageText: '', registerKeys: ['r_age'], measuredKeys: ['m_forms', 'm_webmail'] })
+  ok('a measured line is cited by its key', v.facts[0]?.source === 'measured' && v.facts[0].register_key === 'm_forms', v)
+  ok('  …and a measured line cited as "register" is still the measured line', v.facts[1]?.source === 'measured', v)
+  ok('  …and a key it was never given is struck', v.facts.length === 2 && v.struck.some((x) => /m_nonsense/.test(x)), v.struck)
+  ok('  …and the next agent is told where it came from',
+    /measured on their website by code: A form/.test(factLines(v.facts, [], [{ key: 'm_forms', text: 'A form' }])))
+
+  const sv = validateSignals({ signals: [
+    { id: 's1', signal: 'They issue test certificates', facts: ['f1'], strength: 'strong', points_to: ['software'], sector: true },
+    { id: 's2', signal: 'A credit form comes back by email', facts: ['f1'], strength: 'strong', points_to: ['automation'] },
+    { id: 's3', signal: 'Accounts overdue', facts: ['f1'], strength: 'strong', points_to: [], caution: true, sector: true },
+  ] }, { facts: [{ id: 'f1' }], services: SERVICES })
+  ok('a signal true of the whole sector is weak, whatever it claimed — the live run called "they issue certificates" strong',
+    sv.signals[0].sector === true && sv.signals[0].strength === 'weak' && sv.struck.some((x) => /s1: true of the whole sector, so weak, not strong/.test(x)), sv)
+  ok('  …a signal about this business is not', sv.signals[1].sector === false && sv.signals[1].strength === 'strong')
+  ok('  …a caution is a caution, not a sector', sv.signals[2].sector === false && sv.signals[2].caution === true)
+  ok('  …and every agent that argues sees it marked', /s1 \(weak, true of the whole sector; points to software\)/.test(signalLines(sv.signals, [{ id: 'f1', fact: 'x' }])))
+
+  const sigs = [
+    { id: 's1', signal: 'Certificates', facts: ['f1'], strength: 'weak', points_to: ['software'], sector: true },
+    { id: 's2', signal: 'Engineers on site', facts: ['f1'], strength: 'weak', points_to: ['software'], sector: true },
+    { id: 's3', signal: 'Names ServiceM8 and a paper job sheet', facts: ['f1'], strength: 'strong', points_to: ['software'], sector: false },
+  ]
+  const onlySector = validatePick({ service: 'software', pitch: 'field work', signals: ['s1', 's2'], score: 70 }, { signals: sigs, services: SERVICES, sectorCeiling: 30 })
+  ok('a pitch argued only on the sector opens at 30, not the 70 the live run agreed',
+    onlySector.ok && onlySector.pick.score === 30 && /opened at 70, read as 30: it rests only on signals true of the whole sector/.test(onlySector.note), onlySector)
+  const mixed = validatePick({ service: 'software', pitch: 'x', signals: ['s1', 's3'], score: 70 }, { signals: sigs, services: SERVICES, sectorCeiling: 30 })
+  ok('  …one signal about this business in particular lifts the cap', mixed.ok && mixed.pick.score === 70 && !mixed.note, mixed)
+  ok('  …the lower of the register\'s and the sector\'s ceilings wins',
+    ceilingFor('software', ['s1'], sigs, { ceiling: 35, sectorCeiling: 30 }).at === 30 && ceilingFor('software', ['s1'], sigs, { ceiling: 20, sectorCeiling: 30 }).at === 20)
+  const mv = readMove({ verdict: 'counter', score: 65, signals: ['s2'] }, { who: 'specialist', theirs: 30, signals: sigs, services: SERVICES, current: 'software', sectorCeiling: 30 })
+  ok('a counter on the sector alone is read at the sector ceiling', mv.score === 30 && mv.kind === 'agree' && mv.guard.some((g) => /true of the whole sector, so read as 30/.test(g)), mv)
+  const ag = readMove({ verdict: 'agree', score: 70 }, { who: 'specialist', theirs: 30, signals: sigs, services: SERVICES, current: 'software', sectorCeiling: 30, fallbackCited: ['s1'] })
+  ok('  …and an "agree" citing nothing rests on what the pitch rested on', ag.kind === 'agree' && ag.score === 30, ag)
+  const r = await argueService({
+    pick: { service: 'software', pitch: 'engineers on site', signals: ['s1', 's2'], score: 30 }, turns: 4, signals: sigs, services: SERVICES, sectorCeiling: 30,
+    callSpecialist: script([{ verdict: 'counter', score: 70, signals: ['s1'] }]),
+    callSales: script([]),
+    onMove: async () => {},
+  })
+  ok('  …so two agents who both want 70 on the sector agree at 30', r.status === 'agreed' && r.score === 30, r)
+  ok('with no setting, the sector ceiling is 30, as scoring.md says', clampSettings({}).sector_ceiling === 30 && clampSettings({ sector_ceiling: 40 }).sector_ceiling === 40)
+}
 
 console.log('\nTHE BUSINESS\'S SCORE\n')
 {

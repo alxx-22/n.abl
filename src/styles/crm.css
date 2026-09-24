@@ -896,7 +896,39 @@
 .lg-service em { font-style: normal; color: var(--cream-600); }
 
 .lg-tag--scored, .lg-tag--promoted { color: var(--accent-400); }
-.lg-tag--disputed, .lg-tag--failed { color: var(--danger); }
+.lg-tag--disputed, .lg-tag--failed, .lg-tag--refused { color: var(--danger); }
+
+/* Why code ended a business, set apart from anything an agent said. */
+.lg-note {
+  margin: 0;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  color: var(--cream-300);
+  border-left: 2px solid var(--line-strong);
+  padding-left: var(--s-3);
+}
+.lg-note--refused, .lg-note--caution { border-left-color: var(--danger); }
+.lg-note em { font-style: normal; color: var(--cream-600); }
+.lg-likely { display: grid; gap: var(--s-2); }
+.lg-likely > u {
+  display: block; text-decoration: none;
+  font-size: var(--t-xs); text-transform: uppercase; letter-spacing: var(--track-wide);
+  color: var(--cream-600);
+}
+.lg-likely__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); }
+.lg-likely__row a { min-height: 24px; line-height: 24px; overflow-wrap: anywhere; }
+.lg-likely__row span { font-size: var(--t-xs); color: var(--cream-600); flex: 1 1 8rem; }
+.lg-covers { display: block; font-size: var(--t-xs); color: var(--cream-600); line-height: 1.55; margin-top: var(--s-1); }
+.lg-site { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: flex-end; }
+.lg-site label { display: grid; gap: var(--s-1); flex: 1 1 16rem; min-width: 0; }
+.lg-site label > span { font-size: var(--t-xs); color: var(--cream-600); }
+.lg-textbtn {
+  appearance: none; border: 0; background: transparent; padding: 0;
+  font: inherit; font-size: var(--t-xs); color: var(--cream-400);
+  text-decoration: underline; text-underline-offset: 3px;
+  justify-self: start; min-height: 24px; cursor: pointer;
+}
+.lg-textbtn:hover { color: var(--cream-100); }
 
 .lg-chains { margin: 0; display: grid; gap: var(--s-1); font-size: var(--t-xs); }
 .lg-chains div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: var(--s-2); }
