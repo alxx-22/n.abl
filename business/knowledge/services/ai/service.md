@@ -24,6 +24,17 @@ Seen on their own pages, in their own words:
   us about your project and we will pass it to the right person".
 - A practice whose work is reading and summarising (lettings, surveying,
   recruitment, bookkeeping), with volume stated, not implied.
+- A report sold as the product - an inspection, test, survey, assessment or
+  condition report - with a turnaround promised on the page ("reports within
+  five working days", "certificates the same day") or a volume stated. The
+  writing is the bottleneck, and it is this business's own promise.
+- Quotes built from what customers send in: "send us photos for a quote",
+  "tell us about your project", a free-text quote form across several
+  services. Each one is read and answered by hand.
+- m_faq: six or more questions answered in writing on their own site, and an
+  enquiry route that takes free text. The same questions still arrive.
+- A job advert for someone to write reports, quotes or tenders, or to answer
+  enquiries.
 
 ## Signals that point somewhere else
 
@@ -67,8 +78,13 @@ Learned on a call, so use for walk_away_if:
 Be the sceptic in the room.
 - A sector that "could use a chatbot": 30 at most. An FAQ heading or a menu
   item alone: 30 at most.
-- 60 or more needs observed volume of language work in their own words: many
-  enquiries, many documents, the same writing repeated.
+- An FAQ of six or more questions with free-text enquiries: 40–50. The
+  answers exist; the question is how many enquiries still need a reply.
+- A report sold as the product, with a turnaround or volume on their own
+  page: 50–65. Add a named report app, a hiring advert for report writing, or
+  several engineers or surveyors: 65–75.
+- 60 or more otherwise needs observed volume of language work in their own
+  words: many enquiries, many documents, the same writing repeated.
 - 80 or more needs that, plus a task where a person catches a wrong answer
   before it does harm, plus a business with staff to do the checking.
 - If rules would do it, redirect to automation rather than scoring here.

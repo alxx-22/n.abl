@@ -42,6 +42,92 @@
      company number taken out first. */
 
 import { contactRouteIn } from './puller.mjs'
+import { nameKey } from './lib.mjs'
+import { domainGuesses } from './prospect.mjs'
+
+/* ---------- the wide guess: what the sweep tries before any model ---------- */
+
+/* Words that say what a business does rather than who it is. In a name,
+   whatever comes before the first of them is the part people shorten:
+   "PURPLE GIRAFFE JOINERY" trades as pgjoinery, "PFS FIRE & SECURITY" as
+   pfs-security. */
+const TRADE_WORDS = new Set([
+  'ELECTRICAL', 'ELECTRICS', 'ELECTRIC', 'ELECTRICIANS', 'PLUMBING', 'HEATING', 'GAS', 'JOINERY', 'CARPENTRY', 'ROOFING',
+  'SCAFFOLDING', 'FLOORING', 'FLOORS', 'CARPETS', 'BUILDING', 'BUILDERS', 'BUILD', 'CONSTRUCTION', 'SECURITY', 'FIRE',
+  'INSTALLATIONS', 'CONTRACTING', 'CONTRACTORS', 'ENGINEERING', 'ENGINEERS', 'KITCHENS', 'KITCHEN', 'BATHROOMS', 'BRICKWORK',
+  'PLASTERING', 'DECORATING', 'GLAZING', 'WINDOWS', 'DRIVEWAYS', 'LANDSCAPES', 'LANDSCAPING', 'FENCING', 'DRAINAGE',
+  'AIR', 'CONDITIONING', 'VENTILATING', 'VENTILATION', 'REFRIGERATION', 'SOLAR', 'RENEWABLES', 'SURVEYING', 'SURVEYORS',
+  'CLEANING', 'MAINTENANCE', 'SYSTEMS', 'SOLUTIONS', 'SERVICES', 'PROJECTS', 'TECHNOLOGIES', 'INSPECTIONS', 'TESTING',
+])
+/* Dropped from every variant; everything else is kept somewhere. */
+const LEGAL = new Set(['LTD', 'LIMITED', 'PLC', 'LLP', 'CO', 'COMPANY', 'THE'])
+
+/** Name variants a small business really trades under, beyond what the
+    guesser tries: the whole name kept whole ("railwayelectricalservices"),
+    its initials ("artiltd", "iss-ltd"), the part before the trade shortened
+    ("pgjoinery", "pfs-security"), a leading initial dropped
+    ("wolversonelectrical"), "& son" as sons, the name with the town.
+    Stems only, most likely first; see wideGuesses for domains. */
+export function nameStems(name, town = null) {
+  const raw = String(name ?? '')
+  /* "(NOTTINGHAM)", "(UK)", "(INTERNATIONAL)": tried with and without. */
+  const bare = raw.replace(/\([^)]*\)/g, ' ')
+  const out = []
+  const push = (x) => { const s = String(x ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, ''); if (s.length >= 3 && s.length <= 63 && !out.includes(s)) out.push(s) }
+  for (const form of bare === raw ? [raw] : [bare, raw]) {
+    const words = nameKey(form).split(' ').filter((w) => w && !LEGAL.has(w))
+    if (!words.length) continue
+    const noAnd = words.filter((w) => w !== 'AND')
+    push(words.join(''))
+    push(noAnd.join(''))
+    push(noAnd.join('-'))
+    if (noAnd.length >= 2) { push(noAnd.slice(0, 2).join('')); push(noAnd.slice(0, 2).join('-')) }
+    /* Initials: of the words before the trade, then of all of them. */
+    const cut = noAnd.findIndex((w, i) => i > 0 && TRADE_WORDS.has(w))
+    const head = cut > 0 ? noAnd.slice(0, cut) : []
+    const trade = cut > 0 ? noAnd.slice(cut) : []
+    const initials = (ws) => ws.map((w) => (w.length === 1 || /\d/.test(w) ? w : w[0])).join('')
+    if (head.length) {
+      /* "ALECT ELECTRICAL SERVICES" trades as Alect. */
+      if (head.join('').length >= 4) push(head.join(''))
+      const h = head.length >= 2 ? initials(head) : head[0]
+      for (const t of trade.slice(0, 2)) { push(`${h}${t}`); push(`${h}-${t}`) }
+      if (head.length >= 2) push(`${h}${trade.join('')}`)
+    }
+    if (noAnd.length >= 3 || (noAnd.length === 2 && noAnd.some((w) => /\d/.test(w)))) {
+      const all = initials(noAnd)
+      push(all); push(`${all}ltd`); push(`${all}-ltd`); push(`${all}uk`)
+    }
+    /* "K. WOLVERSON ELECTRICAL", "J BARSBY ELECTRICAL": the initial is often not in the domain. */
+    let lead = 0
+    while (lead < noAnd.length - 1 && noAnd[lead].length === 1) lead++
+    if (lead > 0 && noAnd.length - lead >= 1) { push(noAnd.slice(lead).join('')); push(noAnd.slice(lead).join('-')) }
+    /* "& SON" is as often "and sons", or "sons" alone. */
+    const son = words.findIndex((w) => w === 'SON' || w === 'SONS')
+    if (son > 0) {
+      const before = words.slice(lead, son).filter((w) => w !== 'AND')
+      if (before.length) { push(`${before.join('')}andsons`); push(`${before.join('')}andson`); push(`${before.join('')}sons`) }
+    }
+    const t = String(town ?? '').toLowerCase().replace(/[^a-z]/g, '')
+    if (t.length >= 3 && noAnd.length) push(`${noAnd.join('')}${t}`)
+  }
+  return out
+}
+
+/** Every domain worth asking the DNS about for a business, from all the
+    names it has used: the guesser's own list first (it is what the
+    live runs were tuned on), then the stems above on .co.uk and .com. */
+export function wideGuesses(names, town = null, max = 80) {
+  const out = []
+  const list = (Array.isArray(names) ? names : [names]).map((n) => String(n ?? '').trim()).filter(Boolean)
+  for (const n of list) for (const d of domainGuesses(n, town)) if (!out.includes(d)) out.push(d)
+  for (const n of list) {
+    for (const s of nameStems(n, town)) {
+      for (const tld of ['co.uk', 'com']) { const d = `${s}.${tld}`; if (!out.includes(d)) out.push(d) }
+    }
+  }
+  return out.filter((d) => !isDirectory(d)).slice(0, max)
+}
 
 export const DIRECTORIES = new Set([
   'facebook.com', 'instagram.com', 'linkedin.com', 'twitter.com', 'x.com', 'youtube.com', 'tiktok.com', 'pinterest.com',
@@ -51,7 +137,34 @@ export const DIRECTORIES = new Set([
   'companycheck.co.uk', 'duedil.com', 'gov.uk', 'wix.com', 'wordpress.com', 'squarespace.com', 'godaddy.com',
   'bark.com', 'houzz.co.uk', 'houzz.com', 'which.co.uk', 'freeindex.co.uk', 'hotfrog.co.uk', 'tripadvisor.co.uk',
   'tripadvisor.com', 'booking.com', 'airbnb.co.uk', 'airbnb.com', 'wa.me', 'whatsapp.com', 'archive.org',
+  /* Company-data aggregators and listings: what a search for a small
+     company's name mostly returns, and never its own site. */
+  'companiesintheuk.co.uk', 'company-information.service.gov.uk', 'thegazette.co.uk', 'dnb.com', 'zoominfo.com',
+  'bizstats.co.uk', 'checkcompany.co.uk', 'companieslist.co.uk', 'ukcompanieslist.com', 'companydatashop.com',
+  'find-open.co.uk', 'opengovuk.com', 'endole.com', 'creditsafe.com', 'rocketreach.co', 'crunchbase.com', 'glassdoor.co.uk',
+  'indeed.com', 'indeed.co.uk', 'reed.co.uk', 'totaljobs.com', '192.com', 'ukphonebook.com', 'misterwhat.co.uk',
+  'yably.co.uk', 'brownbook.net', 'nicelocal.co.uk', 'starofservice.co.uk', 'locallife.co.uk', 'thebestof.co.uk',
+  'trustmark.org.uk', 'niceic.com', 'napit.org.uk', 'gassaferegister.co.uk', 'fmb.org.uk', 'mapquest.com', 'waze.com',
+  'wikipedia.org', 'reddit.com', 'gumtree.com', 'nextdoor.co.uk', 'threads.net', 'apple.com', 'bing.co.uk',
 ])
+
+/** Hosts the guesser already read and put aside for good: they named
+    someone else, or nothing, or were parked. Not worth a second fetch. A
+    host that turned it away or did not answer is not here: the archive
+    may still have it. */
+export function settledInOutcome(outcome) {
+  const out = new Set()
+  for (const m of String(outcome ?? '').matchAll(/([a-z0-9-]+(?:\.[a-z0-9-]+)+):\s*([^;—]+)/gi)) {
+    const d = normaliseDomain(m[1])
+    if (d && /does not mention|different company|parked|placeholder/i.test(m[2])) out.add(d)
+  }
+  /* "ftplumbing.com is a placeholder page": the older one-domain form. */
+  for (const m of String(outcome ?? '').matchAll(/([a-z0-9-]+(?:\.[a-z0-9-]+)+) (?:is a placeholder|is a different company|is parked|does not mention)/gi)) {
+    const d = normaliseDomain(m[1])
+    if (d) out.add(d)
+  }
+  return out
+}
 
 /** A bare, lower-case host from whatever was given: no scheme, path, port
     or leading www. Null for anything that is not shaped like a domain. */
@@ -217,11 +330,14 @@ const partsOf = (content) => (Array.isArray(content?.parts) ? content.parts : []
     may only name a domain a tool has already shown to be theirs.
     `callChecker` is asked about a name-only match and must say "theirs". */
 export async function runLookup({
-  system, opening, offered: first = [], maxSteps = 10, deadline = Infinity,
+  system, opening, offered: first = [], known = [], maxSteps = 10, deadline = Infinity,
   callInvestigator, callChecker, tools, onMove, now = () => Date.now(),
 }) {
   const offered = new Set(first.map(normaliseDomain).filter(Boolean))
-  const seen = new Map()
+  /* Pages the sweep already read: the investigator may conclude on them
+     without reading them again. */
+  const seen = new Map(known.map((k) => [`${k.how}:${k.domain}`, k.result]))
+  for (const k of known) offered.add(k.domain)
   const contents = [{ role: 'user', parts: [{ text: `${opening}\n\nDOMAINS OFFERED SO FAR: ${[...offered].join(', ') || 'none'}` }] }]
   let model = null
   let refusals = 0
@@ -300,4 +416,14 @@ export async function runLookup({
 export function readChecker(parsed) {
   const v = String(parsed?.verdict ?? '').toLowerCase()
   return { verdict: v === 'theirs' ? 'theirs' : v === 'not_theirs' ? 'not_theirs' : 'unsure', why: String(parsed?.why ?? '').slice(0, 600) }
+}
+
+/** What the sweep's reads add up to, in the order they were guessed
+    (most likely first): a page with their postcode or company number is
+    the answer; pages with the name alone go to the checker, best first. */
+export function sweepVerdict(checked) {
+  const list = Array.isArray(checked) ? checked.filter((c) => c && c.result) : []
+  const theirs = list.find((c) => c.result.verdict === 'theirs')
+  if (theirs) return { found: theirs, nameOnly: [] }
+  return { found: null, nameOnly: list.filter((c) => c.result.verdict === 'name_only') }
 }

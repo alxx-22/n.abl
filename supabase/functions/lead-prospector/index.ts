@@ -52,11 +52,11 @@ import {
   clampSettings, quotaScope, parseJson, domainGuesses, frontPageUrls, noSiteLine, pageKind, parseRobots,
   confirms, stripHtml, sameSiteLinks, contactPageLink, siteLines, registerLines, controllingCompanies, accountsFacts, lateFilings, sizeVerdict, tradesOutside, registerRefusal, registerCautions, validateResearch,
   argueSignals, validateSales, argueService, outcome, knowledgeOf, serviceKeys, factLines, signalLines,
-  portfolioBlock, conversationBlock,
+  portfolioBlock, conversationBlock, focusLine,
 } from './prospect.mjs'
 import {
   runLookup, investigatorBody, readChecker, domainsInOutcome, linkedDomains, parseAvailability, archivedUrl, readArchivedUrl,
-  pageVerdict, isDirectory,
+  pageVerdict, isDirectory, normaliseDomain, wideGuesses, settledInOutcome, sweepVerdict,
 } from './lookup.mjs'
 import { buildSearchUrl, chAuthHeader, normaliseItem, admit, expandSic, unknownSic, DEFAULT_TYPES, CH_BASE, redactContactRoutes } from './puller.mjs'
 
@@ -65,6 +65,9 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const GEMINI_BASE = Deno.env.get('GEMINI_BASE_URL') ?? 'https://generativelanguage.googleapis.com'
 const CH_URL = Deno.env.get('COMPANIES_HOUSE_BASE_URL') ?? CH_BASE
 const CH_KEY = (Deno.env.get('COMPANIES_HOUSE_API_KEY') ?? '').trim()
+/* Optional: a web search the research loop may use (Brave Search API).
+   Without it the loop guesses and reads, as before. */
+const SEARCH_KEY = (Deno.env.get('BRAVE_SEARCH_API_KEY') ?? '').trim()
 
 /* Which environment variable a registry row may name. The writer's key is
    refused by name: discovery spending the writer's pool is the one failure
@@ -115,12 +118,19 @@ async function generate(
   const chain = (cfg.models[role] ?? []).filter((s: any) => !pin || s.model === pin)
   if (!chain.length) throw new Error(pin ? `${pin} is no longer in the "${role}" chain` : `no models registered for "${role}" in public.outreach_model`)
   let last = ''
+  /* Whether every model that failed failed for a reason that passes on
+     its own: Google overloaded (5xx), a timeout, the network, a quota. If
+     so the business did nothing wrong and goes back in the queue
+     uncounted (ModelsBusy); on 24 September 95 businesses were failed for
+     three 503s in a row. */
+  let passing = true
   for (const spec of chain) {
     const secret = spec.key_secret
     const key = keyFor(secret)
     if (!key) {
       last = secret === WRITERS_KEY ? `${spec.model}: refuses to spend the writer's key`
         : KEY_SECRET.test(secret ?? '') ? `${spec.model}: ${secret} is not set` : `${spec.model}: ${secret} is not a name this function may read`
+      passing = false
       continue
     }
     const budget = await rpc('outreach_model_budget', { p_model: spec.model, p_key_secret: secret })
@@ -148,19 +158,21 @@ async function generate(
       p_model: spec.model, p_rate_limited: scope === 'day', p_minute_limited: scope === 'minute', p_key_secret: secret,
     })
     if (res.status === 429) { last = `${spec.model}: ${scope === 'day' ? 'daily quota reached' : 'too many requests this minute'}`; continue }
-    if (res.status === 404) { last = `${spec.model}: not available`; continue }
+    if (res.status === 404) { last = `${spec.model}: not available`; passing = false; continue }
     if (res.status === 400) {
       const b = await res.text()
       if (/API key not valid/i.test(b)) throw new Error(`${secret} is set but not valid`)
       last = `${spec.model}: bad request`
+      passing = false
       continue
     }
-    if (!res.ok) { last = `${spec.model}: HTTP ${res.status}`; continue }
-    const data = await res.json()
+    if (!res.ok) { last = `${spec.model}: HTTP ${res.status}`; if (res.status < 500) passing = false; continue }
+    const data = await res.json().catch(() => null)
     const content = data?.candidates?.[0]?.content
-    if (!content || !Array.isArray(content.parts) || !content.parts.length || !usable(content)) { last = `${spec.model}: empty answer`; continue }
+    if (!content || !Array.isArray(content.parts) || !content.parts.length || !usable(content)) { last = `${spec.model}: empty answer`; passing = false; continue }
     return { content, model: spec.model as string }
   }
+  if (passing && last) throw new ModelsBusy(`models busy: ${last}`)
   throw new Error(last || `no model answered for ${role}`)
 }
 
@@ -192,6 +204,8 @@ class ChKeyRejected extends Error {}
    a failure: it is released, unread, for a later tick. Deciding a refusal
    on a profile we did not get to read would let a dormant company through. */
 class ChBusy extends Error {}
+/* Every model in a chain failed for a reason that passes on its own. */
+class ModelsBusy extends Error {}
 
 async function chGet(path: string) {
   if (!CH_KEY) return null
@@ -476,7 +490,7 @@ async function readSite(home: { url: string; html: string }, cand: any, settings
     out.push({ url: p.url, text: p.text.slice(0, left) })
     left -= Math.min(p.text.length, left)
   }
-  return { pages: out, measured: siteLines(raw), htmls: raw.map((r) => r.html) }
+  return { pages: out, measured: siteLines(raw, { archived: Boolean(archived) }), htmls: raw.map((r) => r.html) }
 }
 
 const pathOf = (u: string) => { try { return new URL(u).pathname } catch { return u } }
@@ -616,7 +630,7 @@ async function signals(ctx: Ctx): Promise<StageResult> {
     callSignals: ({ previous, review }: any) => {
       const parts = [
         'WHO WE SELL TO:', who, '',
-        'WHAT WE SELL (tag each signal with the keys of the services it points to, from this list only):', portfolioBlock(cfg), '',
+        'WHAT WE SELL (tag each signal with the keys of the services it points to, from this list only):', portfolioBlock(cfg, settings.service_focus), '',
         ...cautionBlock(state),
         `THE RESEARCH AGENT SAYS:\n${state.research_say || '(nothing)'}`, '',
         'THE FACTS IT PROMOTED TO YOU:', factLines(facts, state.register ?? [], state.measured ?? []),
@@ -648,11 +662,12 @@ async function sales(ctx: Ctx): Promise<StageResult> {
   const services = serviceKeys(cfg)
   const reply = await talk(cfg, settings, 'prospect_sales', 'sales', [
     'WHO WE SELL TO:', who, '', 'THE SCALE:', scoring, '',
-    'THE PORTFOLIO:', portfolioBlock(cfg), '',
+    'THE PORTFOLIO:', portfolioBlock(cfg, settings.service_focus), '',
     ...cautionBlock(state),
     `THE SIGNALS AGENT SAYS:\n${state.signals_say || '(nothing)'}`, '',
     'THE SIGNALS THE RESEARCH AGENT LET STAND:', signalLines(state.signals, state.facts), '',
     `Bring in at most ${settings.max_services} specialists. Service keys: ${services.join(', ')}.`,
+    focusLine(settings.service_focus),
     'A service may only be pitched on signals that point to it; a pitch resting on signals that point elsewhere is refused.',
     sectorLine(settings),
   ].join('\n'))
@@ -692,7 +707,7 @@ async function specialist(ctx: Ctx): Promise<StageResult> {
     ].join('\n')),
     callSales: ({ history, sales: s, specialist: theirs }: any) => talk(cfg, settings, 'prospect_sales', 'sales_reply', [
       `YOU ARE TALKING TO THE ${pick.service.toUpperCase()} SPECIALIST.`, '',
-      'THE SCALE:', scoring, '', 'THE PORTFOLIO:', portfolioBlock(cfg), '',
+      'THE SCALE:', scoring, '', 'THE PORTFOLIO:', portfolioBlock(cfg, settings.service_focus), '',
       ...cautionBlock(state),
       'THE SIGNALS THE RESEARCH AGENT LET STAND:', signalLines(state.signals, state.facts), sectorLine(settings), '',
       'THE CONVERSATION SO FAR:', conversationBlock(history, pick.service), '',
@@ -760,6 +775,19 @@ async function directorsElsewhere(cand: any) {
   return names.slice(0, 15)
 }
 
+async function registerHistory(cand: any) {
+  const [profile, psc, elsewhere] = await Promise.all([
+    chGet(`/company/${cand.company_number}`),
+    chGet(`/company/${cand.company_number}/persons-with-significant-control`).catch(() => null),
+    directorsElsewhere(cand).catch(() => []),
+  ])
+  return {
+    previous_names: (profile?.previous_company_names ?? []).map((p: any) => ({ name: p?.name, until: p?.ceased_on })).slice(0, 6),
+    directors_other_companies: elsewhere,
+    controlled_by: controllingCompanies(psc),
+  }
+}
+
 function lookupTools(cand: any, settings: any, until: () => number) {
   const readPage = (html: string, host: string) => {
     const c = confirms(html, cand)
@@ -771,18 +799,7 @@ function lookupTools(cand: any, settings: any, until: () => number) {
     }
   }
   return {
-    register_history: async () => {
-      const [profile, psc, elsewhere] = await Promise.all([
-        chGet(`/company/${cand.company_number}`),
-        chGet(`/company/${cand.company_number}/persons-with-significant-control`).catch(() => null),
-        directorsElsewhere(cand).catch(() => []),
-      ])
-      return {
-        previous_names: (profile?.previous_company_names ?? []).map((p: any) => ({ name: p?.name, until: p?.ceased_on })).slice(0, 6),
-        directors_other_companies: elsewhere,
-        controlled_by: controllingCompanies(psc),
-      }
-    },
+    register_history: () => registerHistory(cand),
     guess_domains: async ({ name }: any) => {
       const guesses = domainGuesses(name, cand.town).filter((d) => !isDirectory(d))
       const exist = (await Promise.all(guesses.map(async (h) => (await resolves(h)) ? h : null))).filter(Boolean) as string[]
@@ -814,39 +831,172 @@ function lookupTools(cand: any, settings: any, until: () => number) {
   }
 }
 
+/* ---------- the sweep: code's legwork, before any model ---------- */
+
+/* Bounded concurrency, results in the order given. */
+async function inPool<T, R>(items: T[], n: number, f: (x: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length)
+  let next = 0
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (next < items.length) { const k = next++; out[k] = await f(items[k]) }
+  }))
+  return out
+}
+
+/* The optional web search. Brave's terms (1 September 2026) let results be
+   held only while they are in use: the result list is never logged or
+   stored. What is kept is a site code went on to read and prove is theirs,
+   exactly as for a guessed domain. */
+async function searchDomains(query: string) {
+  if (!SEARCH_KEY) return []
+  try {
+    const res = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&country=gb&count=10`, {
+      headers: { accept: 'application/json', 'x-subscription-token': SEARCH_KEY }, signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) return []
+    const d = await res.json()
+    const out: string[] = []
+    for (const r of d?.web?.results ?? []) {
+      const h = normaliseDomain(r?.url)
+      if (h && !isDirectory(h) && !out.includes(h)) out.push(h)
+    }
+    return out.slice(0, 8)
+  } catch { return [] }
+}
+
+/* Everything code can do without a model, in parallel: every name the
+   company has used, on every domain shape small businesses really use
+   (wideGuesses, tested against the sites found by hand for the 24
+   September sample), the DNS for all of them, the front page of every one
+   that exists, and the Internet Archive for the ones that turn us away or
+   have gone. A found site needs no model at all. */
+async function lookupSweep(cand: any, settings: any, tools: any, hist: any, deadline: number) {
+  const names = [cand.company_name, ...(hist?.previous_names ?? []).map((p: any) => p?.name).filter(Boolean).slice(0, 3)]
+  const settled = settledInOutcome(cand.website_outcome)
+  const bare = String(cand.company_name ?? '').replace(/\b(limited|ltd|plc|llp)\b\.?/gi, '').replace(/\s+/g, ' ').trim()
+  const searched = await searchDomains(`"${bare}" ${cand.town ?? ''}`.trim())
+  /* Sister companies run by the same directors, and parents: on 24
+     September the investigator found Heatpro that way (the company is
+     "Heating & Process Engineering Services"; its sister is Heatpro
+     Engineering). Their domains come after the company's own, and a page
+     still has to name this business to count. */
+  const kin = [
+    ...(hist?.directors_other_companies ?? []).filter((x: any) => /active/i.test(String(x?.status ?? ''))).map((x: any) => x.company).slice(0, 3),
+    ...(hist?.controlled_by ?? []).slice(0, 2),
+  ].filter(Boolean)
+  const guesses = [...new Set([...searched, ...wideGuesses(names, cand.town), ...(kin.length ? wideGuesses(kin, cand.town, 30) : [])])].filter((d) => !settled.has(d))
+  /* Out of time part-way is not "nothing found": the business goes back
+     to the queue and the next tick starts it again. */
+  let short = false
+  const inTime = (margin: number) => { if (Date.now() < deadline - margin) return true; short = true; return false }
+  const resolved = await inPool(guesses, 16, async (d) => (inTime(30000) && await resolves(d)) ? d : null)
+  const live = resolved.filter(Boolean).slice(0, 14) as string[]
+  const read = async (d: string, how: 'live' | 'archived') => ({
+    domain: d, how, searched: searched.includes(d),
+    result: inTime(20000) ? await (how === 'live' ? tools.check_domain({ domain: d }) : tools.archived_copy({ domain: d })) : null,
+  })
+  const checked = await inPool(live, 4, (d) => read(d, 'live'))
+  /* The archive: for a site that turned us away, and for the likeliest
+     names that no longer exist - a site that has gone is still theirs. */
+  const gone = domainGuesses(cand.company_name, cand.town).filter((d) => !resolved.includes(d) && !settled.has(d)).slice(0, 2)
+  const away = checked.filter((c) => c.result && ['turned_us_away', 'unreachable'].includes(c.result.verdict)).map((c) => c.domain)
+  const settledLive = checked.some((c) => c.result?.verdict === 'theirs')
+  const archived = settledLive ? [] : await inPool([...away, ...gone].slice(0, 4), 2, (d) => read(d, 'archived'))
+  const all = [...checked, ...archived].filter((c) => c.result)
+  return { names: [...names, ...kin], guessed: guesses.length, searched: searched.length, exist: live.length, all, short, ...sweepVerdict(all) }
+}
+
 async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], deadline: number) {
+  const lookupMove = (m: any) => move({ stage: 'lookup', ...m })
+  /* Worth looking for at all? The register first: a business that is
+     closing, or whose filed accounts put it below the size we serve, is
+     not worth a model call (the 24 September sample: 6 of its first 10
+     were one-person companies). */
+  const profile = await chGet(`/company/${cand.company_number}`).catch(() => null)
+  if (profile) {
+    const refusal = registerRefusal(profile)
+    if (refusal) return { found: null, why: refusal, steps: 0, model: null, skip: { status: 'refused', note: `Not looked for: ${refusal}.` } }
+    const extras: any = await registerExtras(cand, profile).catch(() => ({}))
+    const size = sizeVerdict(extras?.accounts ?? null, cand.sic_codes)
+    const small = size.refuse || size.caution
+    if (small) return { found: null, why: small, steps: 0, model: null, skip: { status: 'no_fit', note: `Not looked for: ${small}.` } }
+  }
+
+  const tools = lookupTools(cand, settings, () => deadline)
+  const hist = await registerHistory(cand).catch(() => ({ previous_names: [], directors_other_companies: [], controlled_by: [] }))
+  const sweep = await lookupSweep(cand, settings, tools, hist, deadline)
+  /* The log names what was guessed and read; a domain that came only
+     from the search is named only if it proved to be theirs (Brave's
+     terms: results are not stored). */
+  const shown = sweep.all.filter((c: any) => !c.searched || c.result.verdict === 'theirs' || c.result.verdict === 'name_only')
+  await lookupMove({ from: 'code', to: null, decision: 'sweep', said: JSON.stringify({
+    names: sweep.names.length, guessed: sweep.guessed, searched: sweep.searched, exist: sweep.exist,
+    read: shown.map((c: any) => ({ domain: c.domain, how: c.how, verdict: c.result.verdict, why: c.result.why ?? null, reasons: c.result.reasons ?? [] })),
+  }) })
+  if (sweep.found) {
+    const f: any = sweep.found
+    return { found: { ...f.result, domain: f.domain, how: f.how, confirmed_by: [...(f.result.reasons ?? []), 'found by the research loop'] }, why: 'the sweep read their postcode or company number on the page', steps: 0, model: null }
+  }
+
+  if (sweep.short) return { found: null, why: 'out of time for this business', steps: 0, model: null, timedOut: true }
+
+  const register = Array.isArray(cand.register?.lines) ? cand.register.lines : registerLines(cand)
+  const callChecker = async ({ domain, how, verdict, why }: any) => {
+    const reply = await talk(cfg, settings, 'prospect_lookup_check', 'lookup_check', [
+      'THE BUSINESS (from the company register):', ...register.map((r: any) => `${r.key}: ${r.text}`), '',
+      `THE PAGE: ${domain}, ${how === 'archived' ? `the Internet Archive's copy from ${verdict.date}` : 'read live'}`,
+      `Title: ${verdict.title || '(none)'}`,
+      `Code found on it: ${verdict.reasons.join(', ') || 'nothing'} - the name, but not the registered postcode or company number.`,
+      `What it says (contact details removed):\n${verdict.excerpt || '(nothing readable)'}`, '',
+      `WHY IT MIGHT BE THEIRS: ${redactContactRoutes(why || '(nothing)')}`,
+    ].join('\n'))
+    return { ...readChecker(reply.parsed), raw: reply.raw, model: reply.model }
+  }
+  /* A page with their name and nothing against it: the checker decides,
+     the likeliest first, two at most. */
+  for (const c of sweep.nameOnly.slice(0, 2) as any[]) {
+    if (Date.now() > deadline - 15000) return { found: null, why: 'out of time for this business', steps: 0, model: null, timedOut: true }
+    const check = await callChecker({ domain: c.domain, how: c.how, verdict: c.result, why: 'the page carries the business\'s name; code found no postcode or company number on it' })
+    const agreed = check.verdict === 'theirs'
+    await lookupMove({ from: 'checker', to: null, model: check.model ?? null, said: check.raw ?? null, decision: agreed ? 'agreed' : 'disagreed',
+      guard: agreed ? null : `${c.domain}: a name-only match needs the checker to agree; it did not` })
+    if (agreed) return { found: { ...c.result, domain: c.domain, how: c.how, confirmed_by: [...(c.result.reasons ?? []), 'checker agreed', 'found by the research loop'] }, why: check.why, steps: 1, model: check.model }
+  }
+
+  /* What is left for a model to do: follow what the pages and the register
+     point at - a sister company, a site a page links to. Nothing to follow
+     is an answer, and costs nothing. */
+  const links = [...new Set(sweep.all.flatMap((c: any) => c.result.links ?? []))].filter((d: any) => !sweep.all.some((c: any) => c.domain === d)) as string[]
+  /* Sisters beyond the three the sweep tried are left to the investigator. */
+  const sisters = Math.max(0, (hist.directors_other_companies ?? []).filter((x: any) => /active/i.test(x.status)).length - 3)
+  if (!links.length && !sisters) {
+    const why = `${sweep.exist} of ${sweep.guessed} guessed domains exist${sweep.searched ? ` (${sweep.searched} of them from a web search)` : ''}, from ${sweep.names.length} name(s) the company and its sister companies have used; none shows this business`
+    return { found: null, why, steps: 0, model: null }
+  }
   const prompt = cfg.prompts.lookup
   if (!prompt) throw new Error('public.prospect_prompt has no "lookup" row')
-  const register = Array.isArray(cand.register?.lines) ? cand.register.lines : registerLines(cand)
+  const readLines = sweep.all.map((c: any) => `- ${c.searched ? '(from the search)' : c.domain} ${c.how}: ${c.result.verdict}${c.result.why ? ` (${c.result.why})` : ''}`)
   const opening = [
     'THE BUSINESS (from the company register; no address, number or person is given to you):',
     ...register.map((r: any) => `${r.key}: ${r.text}`),
     '',
-    `WHAT THE GUESSER TRIED: ${cand.website_outcome || 'nothing recorded'}`,
+    `WHAT CODE HAS ALREADY DONE: guessed ${sweep.guessed} domains from ${sweep.names.length} name(s) the company has used, found ${sweep.exist} that exist, and read these:`,
+    ...(readLines.length ? readLines : ['- none']),
     '',
-    `You have ${settings.lookup_max_steps} turns. Find their own website, or conclude that you cannot.`,
+    `REGISTER: ${JSON.stringify(hist)}`,
+    '',
+    `Do not repeat that work. Follow what is left: a sister company or parent whose site may be theirs, a site these pages link to. You have ${Math.min(4, settings.lookup_max_steps)} turns.`,
   ].join('\n')
-  const lookupMove = (m: any) => move({ stage: 'lookup', ...m })
-  const r = await runLookup({
-    system: prompt.body, opening, offered: domainsInOutcome(cand.website_outcome), maxSteps: settings.lookup_max_steps, deadline,
-    tools: lookupTools(cand, settings, () => deadline),
+  const offered = [...links, ...sweep.all.filter((c: any) => !c.searched).map((c: any) => c.domain)]
+  return runLookup({
+    system: prompt.body, opening, offered, known: sweep.all.filter((c: any) => !c.searched), maxSteps: Math.min(4, settings.lookup_max_steps), deadline,
+    tools,
     callInvestigator: ({ system, contents, pin }: any) => generate(cfg, 'prospect_lookup',
       (spec) => investigatorBody({ system, contents, temperature: spec.temperature ?? Number(prompt.temperature ?? 0.3) }),
       settings.model_timeout_ms, { pin, usable: (c) => c.parts.some((p: any) => p?.functionCall || p?.text) }),
-    callChecker: async ({ domain, how, verdict, why }: any) => {
-      const reply = await talk(cfg, settings, 'prospect_lookup_check', 'lookup_check', [
-        'THE BUSINESS (from the company register):', ...register.map((r: any) => `${r.key}: ${r.text}`), '',
-        `THE PAGE: ${domain}, ${how === 'archived' ? `the Internet Archive's copy from ${verdict.date}` : 'read live'}`,
-        `Title: ${verdict.title || '(none)'}`,
-        `Code found on it: ${verdict.reasons.join(', ') || 'nothing'} - the name, but not the registered postcode or company number.`,
-        `What it says (contact details removed):\n${verdict.excerpt || '(nothing readable)'}`, '',
-        `THE INVESTIGATOR SAYS: ${redactContactRoutes(why || '(nothing)')}`,
-      ].join('\n'))
-      return { ...readChecker(reply.parsed), raw: reply.raw, model: reply.model }
-    },
+    callChecker,
     onMove: lookupMove,
   })
-  return r
 }
 
 async function lookupTick(cfg: Cfg, settings: any, started: number) {
@@ -879,7 +1029,10 @@ async function lookupTick(cfg: Cfg, settings: any, started: number) {
         detail.push({ company: cand.company_name, paused: 'out of time', steps: r.steps })
         break
       }
-      if (r.found) {
+      if ((r as any).skip) {
+        await rpc('prospect_lookup_skip', { p_id: cand.id, p_status: (r as any).skip.status, p_note: (r as any).skip.note })
+        detail.push({ company: cand.company_name, skipped: (r as any).skip.status, why: r.why })
+      } else if (r.found) {
         const url = r.found.url
         await rpc('prospect_lookup_finish', {
           p_id: cand.id, p_url: url, p_confirmed_by: r.found.confirmed_by,
@@ -898,7 +1051,7 @@ async function lookupTick(cfg: Cfg, settings: any, started: number) {
       done++
     } catch (err) {
       const msg = (err as Error).message
-      if (QUOTA.test(msg)) {
+      if (err instanceof ModelsBusy || QUOTA.test(msg)) {
         await rpc('prospect_lookup_release', { p_id: cand.id })
         detail.push({ company: cand.company_name, paused: msg })
         break
@@ -1026,7 +1179,7 @@ Deno.serve(async (req) => {
         if (stage !== 'done') detail.push({ company: cand.company_name, paused_at: stage, stages: done })
       } catch (err) {
         const msg = (err as Error).message
-        if (err instanceof ChBusy || QUOTA.test(msg)) {
+        if (err instanceof ChBusy || err instanceof ModelsBusy || QUOTA.test(msg)) {
           await rpc('prospect_release', { p_id: cand.id })
           detail.push({ company: cand.company_name, paused_at: stage, why: msg })
           stop = true

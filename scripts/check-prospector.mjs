@@ -13,10 +13,12 @@ import {
   frontPageUrls, noSiteLine, registerRefusal, registerCautions, validatePick, signalLines,
   siteLines, contactPageLink, ceilingFor, factLines,
   accountsFacts, lateFilings, controllingCompanies, sizeVerdict, tradesOutside,
+  generatorOf, staleGenerator, portfolioBlock, focusLine,
 } from '../supabase/functions/lead-prospector/prospect.mjs'
 import {
   normaliseDomain, isDirectory, domainsInOutcome, linkedDomains, parseAvailability, archivedUrl, readArchivedUrl,
   checkCall, pageVerdict, runLookup, readChecker, investigatorBody,
+  nameStems, wideGuesses, settledInOutcome, sweepVerdict,
 } from '../supabase/functions/lead-prospector/lookup.mjs'
 import { quotaScope as outreachQuotaScope } from '../supabase/functions/outreach-writer/guards.mjs'
 import { redactContactRoutes, admit, unknownSic, expandSic } from '../supabase/functions/lead-prospector/puller.mjs'
@@ -614,6 +616,69 @@ console.log('\nTHE RESEARCH LOOP: NO SEARCH ENGINE, AND NOTHING A MODEL SAYS IS 
   const r6 = await runLookup({ system: 's', opening: 'x', maxSteps: 9, deadline: 5, now: () => t++, callInvestigator: agentSays(Array(9).fill({ name: 'register_history', args: {} })).fn,
     callChecker: async () => ({}), onMove: async () => {}, tools: toolsFor({}) })
   ok('  …or its time does, and says so, so the business goes back to the queue', r6.timedOut === true && /out of time/.test(r6.why), r6)
+}
+
+console.log('\nWHAT THE 24 SEPTEMBER SAMPLE TAUGHT: CODE SWEEPS, MODELS JUDGE, AI AND WEB FIRST\n')
+{
+  /* The sites a person found by hand for the sample, that the guesser
+     missed. Each must be among the wide guesses for its registered name. */
+  const found = [
+    ['PURPLE GIRAFFE JOINERY AND INSTALLATIONS LTD', 'Ilkeston', 'pgjoinery.co.uk'],
+    ['ADVANCED RESIN TECHNOLOGIES (INTERNATIONAL) LTD', 'Ilkeston', 'artiltd.co.uk'],
+    ['ENVO GROUP MEP LTD', 'Ilkeston', 'envogroup.co.uk'],
+    ['RAILWAY ELECTRICAL SERVICES LIMITED', 'Ilkeston', 'railwayelectricalservices.co.uk'],
+    ['CENTRAL ELECTRICS & SECURITY LIMITED', 'Ilkeston', 'centralelectricsandsecurity.co.uk'],
+    ['PFS FIRE & SECURITY LIMITED', 'Nottingham', 'pfs-security.co.uk'],
+    ['INFRASTRUCTURE SUPPORT SOLUTIONS LIMITED', 'Nottingham', 'iss-ltd.co.uk'],
+    ['ALECT ELECTRICAL SERVICES LIMITED', 'Ilkeston', 'alect.co.uk'],
+    ['CARTERS FLOORING (LEISURE) LIMITED', 'Ilkeston', 'carters-flooring.co.uk'],
+    ['T4 SUSTAINABILITY LIMITED', 'Ilkeston', 't4sltd.co.uk'],
+    ['SOUTH NOTTS (BUILDERS) LTD', 'Ilkeston', 'southnottsbuilders.co.uk'],
+    ['FARADAY CHAPMAN LIGHTNING PROTECTION CONSULTANTS LIMITED', 'Nottingham', 'faraday-chapman.com'],
+    ['J BARSBY ELECTRICAL LTD', 'Mansfield', 'jb-electrical.co.uk'],
+    ['NDL ELECTRICAL INSTALLATIONS LTD', 'Ilkeston', 'ndl-electrical.com'],
+  ]
+  const missed = found.filter(([n, t, d]) => !wideGuesses([n], t).includes(d))
+  ok(`the wide guess reaches all ${found.length} sites found by hand that a name can reach`, !missed.length, missed)
+  ok('  …the old guess reached only a few of them', found.filter(([n, t, d]) => domainGuesses(n, t).includes(d)).length <= 3)
+  ok('  …and stays a size the DNS can answer in seconds', found.every(([n, t]) => wideGuesses([n], t).length <= 80))
+  ok('a previous name is guessed as well', wideGuesses(['ENVO GROUP MEP LTD', 'ENVO ELECTRICAL LTD'], 'Ilkeston').includes('envoelectrical.co.uk'))
+  ok('"& son" is tried as "and sons"', nameStems('R BRAMLEY & SON LIMITED').includes('bramleyandsons'))
+  ok('no guess is a directory', wideGuesses(['FACEBOOK LTD']).every((d) => !isDirectory(d)))
+
+  const settled = settledInOutcome('4 of 15 guessed domains exist, none confirmed as theirs — diverse.co.uk: a placeholder page; diverseelectricalsolutions.com: unreachable (dns); diverse.com: does not mention them; x.com: exists but turned us away (403)')
+  ok('what the guesser already read and put aside is not read again', settled.has('diverse.co.uk') && settled.has('diverse.com'))
+  ok('  …but a site that turned it away or did not answer is left for the archive', !settled.has('x.com') && !settled.has('diverseelectricalsolutions.com'))
+
+  const v = sweepVerdict([
+    { domain: 'a.co.uk', how: 'live', result: { verdict: 'name_only' } },
+    { domain: 'b.co.uk', how: 'live', result: { verdict: 'theirs' } },
+    { domain: 'c.co.uk', how: 'live', result: null },
+  ])
+  ok('a page with their postcode or number is the answer, whatever else was read', v.found?.domain === 'b.co.uk')
+  const w = sweepVerdict([{ domain: 'a.co.uk', how: 'live', result: { verdict: 'name_only' } }, { domain: 'd.co.uk', how: 'archived', result: { verdict: 'name_only' } }])
+  ok('  …the name alone goes to the checker, most likely first', !w.found && w.nameOnly.map((c) => c.domain).join() === 'a.co.uk,d.co.uk')
+
+  const body = '<p>' + 'We are electricians. '.repeat(20) + '</p>'
+  const keys = (pages, o) => siteLines(pages, o).map((l) => l.key)
+  ok('a front page with no viewport tag is measured as not made for phones', keys([{ url: 'https://x.co.uk/', html: body }]).includes('m_mobile'))
+  ok('  …and one with it is not', !keys([{ url: 'https://x.co.uk/', html: `<meta name="viewport" content="width=device-width">${body}` }]).includes('m_mobile'))
+  ok('a site served only over plain HTTP is measured', keys([{ url: 'http://www.x.co.uk/', html: body }]).includes('m_https'))
+  ok('WordPress 4 is out of date, WordPress 6 is not', Boolean(staleGenerator('WordPress 4.5.2')) && !staleGenerator('WordPress 6.6'))
+  ok('the generator tag is read in either attribute order', generatorOf('<meta content="Joomla! 1.5 - Open Source" name="generator">') === 'Joomla! 1.5 - Open Source')
+  ok('a site builder is named', siteLines([{ url: 'https://x.co.uk/', html: `<img src="https://static.wixstatic.com/a.png">${body}` }]).some((l) => l.key === 'm_builder' && /Wix/.test(l.text)))
+  ok('none of it is said of an archived copy: that is how the site was, not is', !keys([{ url: 'http://www.x.co.uk/', html: `<meta name="generator" content="WordPress 4.1">${body}` }], { archived: true }).some((k) => ['m_mobile', 'm_https', 'm_stale'].includes(k)))
+  const faq = ['How long does a rewire take?', 'Do you give free quotes?', 'Are you NICEIC registered?', 'Can you test a rental?', 'What areas do you cover?', 'Do you do emergency callouts?']
+  ok('six questions answered in writing are measured as an FAQ', keys([{ url: 'https://x.co.uk/', html: body + faq.map((q) => `<h3>${q}</h3>`).join('') }]).includes('m_faq'))
+  ok('  …five are not', !keys([{ url: 'https://x.co.uk/', html: body + faq.slice(0, 5).map((q) => `<h3>${q}</h3>`).join('') }]).includes('m_faq'))
+
+  ok('AI and web are what we lead with, by default', clampSettings({}).service_focus.join() === 'ai,web')
+  ok('  …a service key that is not a key is dropped', clampSettings({ service_focus: ['web', 'DROP TABLE', 'ai'] }).service_focus.join() === 'web,ai')
+  const cfg = { knowledge: [{ key: 'automation', kind: 'service', label: 'Automation' }, { key: 'web', kind: 'service', label: 'Web' }, { key: 'ai', kind: 'service', label: 'AI' }] }
+  const pb = portfolioBlock(cfg, ['ai', 'web'])
+  ok('every agent sees the services we lead with first, and marked', pb.indexOf('SERVICE ai') < pb.indexOf('SERVICE web') && pb.indexOf('SERVICE web') < pb.indexOf('SERVICE automation') && /SERVICE ai — AI \(we lead with this\)/.test(pb))
+  ok('sales is told to lead with them, and that it may not stretch a signal to', /WE LEAD WITH AI AND WEB/.test(focusLine(['ai', 'web'])) && /refused/.test(focusLine(['ai', 'web'])))
+  ok('  …and with no focus set, nothing is said', focusLine([]) === '')
 }
 
 console.log('\nTHE BUSINESS\'S SCORE\n')

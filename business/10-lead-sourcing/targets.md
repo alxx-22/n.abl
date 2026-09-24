@@ -35,7 +35,11 @@ Leave out: retail, salons, restaurants, pubs and takeaways (weak fit, ICP §4); 
 | 4 | Alcester-side trades | Alcester, Redditch, Studley, Stratford-upon-Avon, Henley-in-Arden | as #1 | Same sector, second territory |
 | 5 | Professional practices | Nottingham, Stratford-upon-Avon, Redditch, Alcester | 69102, 69201, 69202, 71111, 74902, 66220, 78109 | Document-heavy, nearly always has a site; the 1–2 person exception applies (ICP §3) |
 | 6 | Notts wholesale | Nottingham, Ilkeston | 46690, 46730, 46740, 46900 | Price lists and retyped orders |
-| 7 | Stratford venues | Stratford-upon-Avon, Alcester, Henley-in-Arden | 55100, 55209, 56210, 82301, 82302 | Manual bookings visible from outside. Not pubs or restaurants |
+| 7 | Stratford venues | Stratford-upon-Avon, Alcester, Henley-in-Arden, Studley, Redditch, Evesham, Nottingham, Newark, Southwell | 55100, 55209, 56210, 93290 | Independent wedding and event venues: availability, prices and show-rounds by email (the second AI + web niche). Not pubs, restaurants or hotel groups |
+
+| 8 | Report practices | Nottingham, Ilkeston, Stratford-upon-Avon, Alcester, Redditch, Studley, Henley-in-Arden, Evesham | 71129, 71122, 74909, 74902 | **The AI + web niche** (`niche-ai-web.md`): the report is the product and the bottleneck; quotes by phone while national firms quote online. 74909 is broad: the site qualifies it |
+
+Preset 7 was re-aimed on 24 September at independent venues (`niche-ai-web.md` §5 P2): SIC 55100, 55209, 56210, 93290, both territories. SIC finds venues poorly; the councils' approved-premises registers are the better source, not yet wired in.
 
 Lower yield: Notts haulage & hire (49410, 52103, 52290, 77320, 77390); Alcester rural (01610, 0162, 46210, 46610, 77310). Many of these are sole traders, so they are not on the register (ICP §8).
 

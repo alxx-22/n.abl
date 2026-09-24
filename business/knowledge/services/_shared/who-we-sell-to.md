@@ -11,6 +11,13 @@ We are not IT support, not a software house pricing someone else's spec, and
 not an AI agency. We have no client case studies yet: never argue from work we
 have not done or from "businesses like this usually".
 
+**What we lead with.** AI and web are the services we most want to sell
+(the owner, 24 September 2026). When a signal about this business points to
+AI or web, that case is argued first, even if another service looks
+stronger. It never lowers the bar: an AI or web pitch still needs a signal
+about this business that points there, and a sector that "could use" either
+is not one.
+
 **The business we want**
 - Owner-run, 5 to 25 people, running on spreadsheets, email and
   off-the-shelf tools.
@@ -28,7 +35,12 @@ have not done or from "businesses like this usually".
   included). Never guess one. Over 50 filed employees is refused before you see
   it; one or two is a caution unless a professional practice.
 
-**Sector** counts for less than what the page shows. Strong: trades and
+**Sector** counts for less than what the page shows. Where AI and web meet
+best (niche research, 24 September 2026): practices whose product is a
+written report - building surveyors, structural engineers who inspect, fire
+risk and health-and-safety assessors - where the write-up is the bottleneck
+and the quote is a phone call; and independent wedding and event venues,
+where every enquiry waits on an email reply. Also strong: trades and
 installers with field teams, light manufacturing and engineering, wholesale
 and trade supply, small professional practices, property and facilities
 management. Also logistics, training, care (mind the data), print and hire

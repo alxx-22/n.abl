@@ -27,6 +27,19 @@ Only from a site confirmed as theirs and read:
 - Customers who plainly look them up first (venues, hire, courses,
   appointments) and a site whose only next step is a phone call.
 
+Measured on their own site by code (lines starting m_), each a fact about
+this business's site, not its sector:
+- m_mobile: no viewport tag, so a phone shows a shrunken desktop page. Most
+  people find a trade, a venue or a practice on a phone.
+- m_https: served only over plain HTTP, which browsers mark "Not secure" -
+  on the page where a customer is asked for their details.
+- m_stale or m_oldhtml: a platform long out of support, or techniques from
+  before phones browsed the web.
+- m_contact saying there is no enquiry form, on a business customers enquire
+  with: every enquiry is a phone call or a bare email.
+- A site read from the Internet Archive because their own domain has gone:
+  a business still trading that once had a site and now has none.
+
 ## Signals that point somewhere else
 
 - Online booking or payment already works and the pain is behind it
@@ -80,6 +93,14 @@ that, and refuse to score what nobody saw.
   leaves.
 - An old copyright year or a dated look, alone: 25 at most. It says the site
   is not updated, not that it loses work, and it never goes in a letter.
+- A measured defect on a customer-facing business (m_mobile, m_https,
+  m_stale, m_oldhtml): 40–55. It is a fact about their site that costs
+  enquiries, it can be checked by anyone, and it can be said politely.
+- Two or more measured defects, plus enquiries by phone or bare email only:
+  55–70. Add volume or size (a team, many services, small-company accounts):
+  up to 75.
+- Their own site has gone and only the archive has it, on a business still
+  trading: 50–60. The question is whether they noticed.
 
 ## The question that settles it
 

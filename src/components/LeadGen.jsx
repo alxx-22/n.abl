@@ -31,8 +31,18 @@ import { expandSic, unknownSic, describeSic } from '../../supabase/functions/lea
    do_not_contact: finding a business is not permission to write to it.
    ============================================================ */
 
+/* The services n.abl leads with (lead gen's service_focus setting). */
+const FOCUS = ['ai', 'web']
+/* A business's best agreed AI or web score, or null. */
+const focusScore = (c) => {
+  const s = (Array.isArray(c.services) ? c.services : [])
+    .filter((x) => FOCUS.includes(x.service) && Number.isFinite(x.score) && x.score > 0).map((x) => x.score)
+  return s.length ? Math.max(...s) : null
+}
+
 const STATUSES = [
   { id: '', label: 'All' },
+  { id: 'focus', label: 'AI & web' },
   { id: 'scored', label: 'Scored' },
   { id: 'disputed', label: 'Disputed' },
   { id: 'working', label: 'Working' },
@@ -367,10 +377,13 @@ export default function LeadGen() {
     setDraft(blankDraft(live || targets[0] || null))
   }, [data, draft, live, targets])
 
-  const shown = useMemo(
-    () => (statusFilter ? candidates.filter((c) => c.status === statusFilter) : candidates),
-    [candidates, statusFilter],
-  )
+  const shown = useMemo(() => {
+    if (statusFilter === 'focus') {
+      return candidates.filter((c) => focusScore(c) !== null).sort((a, b) => focusScore(b) - focusScore(a))
+    }
+    return statusFilter ? candidates.filter((c) => c.status === statusFilter) : candidates
+  }, [candidates, statusFilter])
+  const focusCount = useMemo(() => candidates.filter((c) => focusScore(c) !== null).length, [candidates])
   const cand = useMemo(() => candidates.find((c) => c.id === selected) || null, [candidates, selected])
 
   /* Every write is an RPC; this reports what the database answered. */
@@ -586,7 +599,7 @@ export default function LeadGen() {
           >
             {st.label}
             <span className="crm-view__count">
-              {st.id ? (counts[st.id] || 0) : candidates.length}
+              {st.id === 'focus' ? focusCount : st.id ? (counts[st.id] || 0) : candidates.length}
             </span>
           </button>
         ))}

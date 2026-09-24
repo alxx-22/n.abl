@@ -106,6 +106,12 @@ export function clampSettings(raw) {
      and "Beeston" is in Leeds as well as Nottingham. Empty means no check. */
   out.territory_areas = (Array.isArray(raw?.territory_areas) ? raw.territory_areas : [])
     .map((a) => String(a ?? '').trim().toUpperCase()).filter((a) => /^[A-Z]{1,2}(\d{1,2}[A-Z]?)?$/.test(a))
+  /* The services n.abl leads with (the owner, 24 September: "AI and web
+     above all else"). Listed first to every agent, and sales is told to
+     bring their specialists in whenever a signal points there. It never
+     lets a service be pitched on a signal that does not point to it. */
+  const focus = Array.isArray(raw?.service_focus) ? raw.service_focus : ['ai', 'web']
+  out.service_focus = [...new Set(focus.map((k) => String(k ?? '').trim()).filter((k) => /^[a-z_]{2,30}$/.test(k)))].slice(0, 3)
   const ua = typeof raw?.user_agent === 'string' ? raw.user_agent.trim() : ''
   out.user_agent = ua || 'n.abl-research/1.0 (+https://nabl.agency)'
   return out
@@ -397,7 +403,7 @@ const plainWords = (s) => stripHtml(s).replace(/\s+/g, ' ').trim()
 
 /** Lines measured on a business's own pages. `pages` is [{ url, html, contact }],
     raw HTML, the contact page (if read) marked. Keys start m_. */
-export function siteLines(pages, { today = new Date() } = {}) {
+export function siteLines(pages, { today = new Date(), archived = false } = {}) {
   const list = (Array.isArray(pages) ? pages : []).filter((p) => p && typeof p.html === 'string')
   if (!list.length) return []
   const lines = []
@@ -474,7 +480,67 @@ export function siteLines(pages, { today = new Date() } = {}) {
   const careers = [...all.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/gi)].map((m) => plainWords(m[1])).find((t) => t.length < 40 && CAREERS.test(t))
   if (careers) add('m_jobs', `The site has a link to jobs or careers ("${careers}")`)
 
+  /* The site itself, as a customer meets it: on a phone, in a browser
+     that warns, built with what and how long ago. Web signals about this
+     business's own site, not its sector. The front page is the first one
+     given. An archived copy is how the site was, not how it is, so none of
+     this is said of one. */
+  const home = list[0]
+  if (!archived && home) {
+    if (!/<meta\b[^>]*\bname\s*=\s*["']?viewport/i.test(home.html) && plainWords(home.html).length >= 50) {
+      add('m_mobile', 'The front page has no viewport tag, so a phone shows it as a shrunken desktop page')
+    }
+    if (/^http:\/\//i.test(String(home.url ?? ''))) add('m_https', 'The site answered only over plain HTTP, which browsers mark "Not secure"')
+    const built = BUILDERS.filter(([, re]) => re.test(all)).map(([n]) => n)
+    const gen = generatorOf(all)
+    const stale = gen && staleGenerator(gen)
+    if (stale) add('m_stale', `The site's generator tag says ${gen}: ${stale}`)
+    else if (built.length) add('m_builder', `The site is built with ${built.slice(0, 2).join(' and ')}`)
+    if (/<frameset\b|\.swf["'?]|<font\b[^>]*\bface\s*=|<marquee\b/i.test(all)) {
+      add('m_oldhtml', 'The site uses web techniques from before phones browsed the web (frames, Flash or font tags)')
+    }
+  }
+
+  /* The same written questions again and again (AI's signal, and the
+     knowledge pack's): questions set as headings or FAQ toggles. */
+  const questions = new Set([...all.matchAll(/<(h[2-6]|summary|dt|button|strong)\b[^>]*>([^<]{12,160}\?)\s*<\/\1>/gi)]
+    .map((m) => plainWords(m[2]).toLowerCase()))
+  if (questions.size >= 6) add('m_faq', `The site answers ${questions.size} common questions in writing (an FAQ)`)
+
   return lines
+}
+
+/* Site builders and platforms, by what they leave in a page's code. */
+const BUILDERS = [
+  ['Wix (a do-it-yourself site builder)', /static\.wixstatic\.com|static\.parastorage\.com/i],
+  ['Squarespace (a do-it-yourself site builder)', /static1\.squarespace\.com|squarespace-cdn\.com/i],
+  ["GoDaddy's website builder", /img1\.wsimg\.com|Go Daddy Website Builder/i],
+  ['Weebly (a do-it-yourself site builder)', /editmysite\.com|weebly\.com\/uploads/i],
+  ['Jimdo (a do-it-yourself site builder)', /jimdo(?:cdn|free)?\.com/i],
+  ['Duda (the builder behind many sites sold with directory listings)', /irp\.cdn-website\.com|multiscreensite\.com/i],
+  ['Mr Site (a do-it-yourself site builder)', /mrsite\.com/i],
+  ['Shopify (an online shop platform)', /cdn\.shopify\.com/i],
+  ['WordPress', /\/wp-content\/|\/wp-includes\//i],
+]
+
+/** The page's own generator tag, when it names one. */
+export function generatorOf(html) {
+  const s = String(html ?? '')
+  const m = s.match(/<meta\b[^>]*\bname\s*=\s*["']generator["'][^>]*\bcontent\s*=\s*["']([^"']{2,80})["']/i)
+    || s.match(/<meta\b[^>]*\bcontent\s*=\s*["']([^"']{2,80})["'][^>]*\bname\s*=\s*["']generator["']/i)
+  return m ? m[1].trim() : null
+}
+
+/** Why a generator is out of date, or null. Only versions long out of
+    support are named: a site on them has not been looked after. */
+export function staleGenerator(gen) {
+  const g = String(gen ?? '')
+  let m
+  if ((m = g.match(/^WordPress\s+(\d+)\.(\d+)/i)) && Number(m[1]) < 5) return `a version of WordPress from before 2018, no longer updated`
+  if ((m = g.match(/^Joomla!?\s+(\d+)(?:\.(\d+))?/i)) && Number(m[1]) < 4) return `a version of Joomla out of support since 2023 or earlier`
+  if ((m = g.match(/^Drupal\s+(\d+)/i)) && Number(m[1]) < 8) return `a version of Drupal out of support since January 2025 or earlier`
+  if (/Microsoft FrontPage|Adobe Dreamweaver|iWeb|NetObjects/i.test(g)) return 'a desktop web editor from the 2000s'
+  return null
 }
 
 /** Where a business actually trades, when its own pages say. The
@@ -1154,9 +1220,17 @@ export function signalLines(signals, facts) {
   }).join('; ')}`).join('\n')
 }
 
-export function portfolioBlock(cfg) {
-  return (cfg.knowledge || []).filter((k) => k.kind === 'service').map((k) =>
-    `SERVICE ${k.key} — ${k.label}\n${k.summary ?? ''}\nSignals that point here:\n${k.signals ?? ''}`).join('\n\n')
+export function portfolioBlock(cfg, focus = []) {
+  const rank = (k) => { const i = focus.indexOf(k.key); return i < 0 ? focus.length : i }
+  return (cfg.knowledge || []).filter((k) => k.kind === 'service')
+    .map((k, i) => ({ k, i })).sort((a, b) => rank(a.k) - rank(b.k) || a.i - b.i).map(({ k }) =>
+      `SERVICE ${k.key} — ${k.label}${focus.includes(k.key) ? ' (we lead with this)' : ''}\n${k.summary ?? ''}\nSignals that point here:\n${k.signals ?? ''}`).join('\n\n')
+}
+
+/** Said to sales: the services we lead with, and the limit on it. */
+export function focusLine(focus = []) {
+  if (!focus.length) return ''
+  return `WE LEAD WITH ${focus.join(' AND ').toUpperCase()}. Whenever a signal about this business points to ${focus.length > 1 ? 'one of them' : 'it'}, bring that specialist in, even if another service looks stronger. Never stretch a signal to reach them: a pitch on a signal that does not point there is refused.`
 }
 
 export function conversationBlock(history, service) {
