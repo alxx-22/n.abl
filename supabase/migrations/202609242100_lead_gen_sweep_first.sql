@@ -14,9 +14,9 @@
 -- the trading name alone (alect). The edge function now sweeps all of them
 -- in code - every name the company has used, the DNS for all of them, the
 -- front page of every one that exists, the Internet Archive for the ones
--- that turn us away - before any model is asked. A postcode or company
--- number on a page settles it with no model at all; a page with the name
--- alone goes to the checker; the investigator only follows what is left
+-- that turn us away - before any model is asked. The company number, or
+-- the postcode with the name, on a page settles it with no model at all;
+-- the name alone, or the postcode alone, goes to the checker; the investigator only follows what is left
 -- (a sister company, a site a page links to), in four turns.
 --
 -- And a business is only looked for if it is worth finding: six of the
@@ -67,7 +67,7 @@ You have tools, and nothing else. You cannot search the web.
 - conclude: your answer.
 
 How to judge a page:
-- The registered postcode or company number on the page is proof: conclude.
+- The company number on the page is proof, and so is the registered postcode together with their name: conclude. The postcode alone is not: the registered office is often an accountant's, shared with other businesses.
 - The name alone is not proof. It is theirs only if the trade matches the register and nothing suggests a different company with the same name. The registered office is often an accountant's: a trading address elsewhere in the same area is normal. A checker will read the page and has to agree.
 - A directory, a social page, a franchise head office or a namesake is never their own site.
 

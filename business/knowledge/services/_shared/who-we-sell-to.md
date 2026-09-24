@@ -81,19 +81,22 @@ is never a sales opportunity.
   self-chosen and often stale.
 
 **Reading the website**
-- We find a site only by guessing domains from the company name. "No website
-  found", parked, placeholder, unreachable or "a different company" all mean
-  we did not find theirs. Unknown, never evidence.
+- We find a site by guessing domains from every name the company, its sister
+  companies and its parent have used (and by a web search, when one is set
+  up). "No website found", parked, placeholder, unreachable or "a different
+  company" all mean we did not find theirs. Unknown, never evidence.
 - We read the home page and at most two about, services, booking or pricing
   pages, never the contact page. What we did not read, we do not know.
-- A site "found by the research loop" was proved theirs by code (postcode or
-  company number) or, on the name alone, by a checker. One read "as the Internet
+- A site "found by the research loop" was proved theirs by code (the company
+  number, or the registered postcode with the name) or, on less, by a checker. One read "as the Internet
   Archive kept it" on a date is their site as it was then: it may have changed.
 - Menus, footers, cookie banners and button labels are furniture. A menu item
   called "Book" is not a booking system.
 - Some things are measured on their pages by code, before contact details
   are removed: a free webmail address, several role addresses, a form or
   price list to download, an old copyright year, other companies' booking,
-  form, payment or job software in the page's code, trade bodies, and
-  whether the contact page has a form. They arrive as lines starting m_.
+  form, payment or job software in the page's code, trade bodies, whether
+  the contact page has a form, whether the site is made for phones or served
+  securely, what it is built with, and a written FAQ. They arrive as lines
+  starting m_.
   Each is a fact about this business, not about its sector.
