@@ -728,6 +728,21 @@ const STAGE_FN: Record<string, (ctx: Ctx) => Promise<StageResult>> = {
 
 const LOOKUP_ROLES = ['prospect_lookup', 'prospect_lookup_check']
 
+/* A project out of quota is nobody's fault. The first night's run failed
+   twenty businesses for it - three ticks each of "no budget left", each
+   counted as an attempt. Now a tick checks there is budget before it
+   claims anyone, and a quota error mid-business hands it back without
+   costing it an attempt. */
+const QUOTA = /no budget left|daily quota reached|too many requests this minute/
+async function hasBudget(cfg: Cfg, role: string) {
+  for (const spec of cfg.models[role] ?? []) {
+    if (!keyFor(spec.key_secret)) continue
+    const left = await rpc('outreach_model_budget', { p_model: spec.model, p_key_secret: spec.key_secret })
+    if (left && left > 0) return true
+  }
+  return false
+}
+
 async function directorsElsewhere(cand: any) {
   const officers = await chGet(`/company/${cand.company_number}/officers?items_per_page=50`)
   const active = (officers?.items ?? []).filter((o: any) => !o.resigned_on && /director|member/i.test(String(o.officer_role ?? '')))
@@ -839,6 +854,7 @@ async function lookupTick(cfg: Cfg, settings: any, started: number) {
   if (!keys.length) return { idle: true, why: 'no lookup models are registered' }
   if (!keys.some((k) => keyFor(k))) return { idle: true, why: `${keys.join(' / ')} is not set; businesses wait in the research queue` }
   if (!settings.lookup_enabled) return { idle: true, why: 'the research loop is switched off (lookup_enabled)' }
+  if (!(await hasBudget(cfg, 'prospect_lookup'))) return { idle: true, why: 'the research project has no budget left today' }
   const detail: unknown[] = []
   let done = 0
   /* A business gets what is left of the tick, up to lookup_seconds, and
@@ -882,6 +898,11 @@ async function lookupTick(cfg: Cfg, settings: any, started: number) {
       done++
     } catch (err) {
       const msg = (err as Error).message
+      if (QUOTA.test(msg)) {
+        await rpc('prospect_lookup_release', { p_id: cand.id })
+        detail.push({ company: cand.company_name, paused: msg })
+        break
+      }
       await move({ stage: 'lookup', from: 'system', decision: 'failed', guard: msg }).catch(() => {})
       await rpc('prospect_lookup_fail', { p_id: cand.id, p_error: msg })
       detail.push({ company: cand.company_name, failed: msg })
@@ -951,6 +972,12 @@ Deno.serve(async (req) => {
        not reach. */
     let stop = false
     let claimed = 0
+    let paused: string | null = null
+    if (!(await hasBudget(cfg, 'prospect_research'))) {
+      paused = 'the discovery project has no budget left today; nothing claimed'
+      detail.push({ paused })
+      stop = true
+    }
     while (!stop && claimed < settings.batch_size) {
       if (settings.tick_budget_ms - (Date.now() - started) < settings.stage_reserve_ms.research) break
       const [cand] = ((await rpc('prospect_next_batch', { p_limit: 1 })) ?? []) as any[]
@@ -999,7 +1026,7 @@ Deno.serve(async (req) => {
         if (stage !== 'done') detail.push({ company: cand.company_name, paused_at: stage, stages: done })
       } catch (err) {
         const msg = (err as Error).message
-        if (err instanceof ChBusy) {
+        if (err instanceof ChBusy || QUOTA.test(msg)) {
           await rpc('prospect_release', { p_id: cand.id })
           detail.push({ company: cand.company_name, paused_at: stage, why: msg })
           stop = true
@@ -1013,7 +1040,7 @@ Deno.serve(async (req) => {
         if (err instanceof ChKeyRejected || /no budget left|daily quota reached|is not set|not valid|writer's key/i.test(msg)) stop = true
       }
     }
-    if (!claimed && !plan) return reply({ idle: true })
+    if (!claimed && !plan) return reply({ idle: true, ...(paused ? { paused } : {}) })
 
     await rpc('prospect_log_run', { p_pulled: pulled, p_stages: stages, p_finished: finished, p_detail: detail, p_error: null })
     return reply({ pulled, stages, finished, ms: Date.now() - started, detail })
