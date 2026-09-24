@@ -913,6 +913,7 @@ async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], 
      not worth a model call (the 24 September sample: 6 of its first 10
      were one-person companies). */
   const profile = await chGet(`/company/${cand.company_number}`).catch(() => null)
+  let staff: number | null = null
   if (profile) {
     const refusal = registerRefusal(profile)
     if (refusal) return { found: null, why: refusal, steps: 0, model: null, skip: { status: 'refused', note: `Not looked for: ${refusal}.` } }
@@ -920,6 +921,7 @@ async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], 
     const size = sizeVerdict(extras?.accounts ?? null, cand.sic_codes)
     const small = size.refuse || size.caution
     if (small) return { found: null, why: small, steps: 0, model: null, skip: { status: 'no_fit', note: `Not looked for: ${small}.` } }
+    staff = Number.isFinite(extras?.accounts?.employees) ? extras.accounts.employees : null
   }
 
   const tools = lookupTools(cand, settings, () => deadline)
@@ -971,7 +973,7 @@ async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], 
   const sisters = Math.max(0, (hist.directors_other_companies ?? []).filter((x: any) => /active/i.test(x.status)).length - 3)
   if (!links.length && !sisters) {
     const why = `${sweep.exist} of ${sweep.guessed} guessed domains exist${sweep.searched ? ` (${sweep.searched} of them from a web search)` : ''}, from ${sweep.names.length} name(s) the company and its sister companies have used; none shows this business`
-    return { found: null, why, steps: 0, model: null }
+    return { found: null, why, steps: 0, model: null, staff }
   }
   const prompt = cfg.prompts.lookup
   if (!prompt) throw new Error('public.prospect_prompt has no "lookup" row')
@@ -988,7 +990,7 @@ async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], 
     `Do not repeat that work. Follow what is left: a sister company or parent whose site may be theirs, a site these pages link to. You have ${Math.min(4, settings.lookup_max_steps)} turns.`,
   ].join('\n')
   const offered = [...links, ...sweep.all.filter((c: any) => !c.searched).map((c: any) => c.domain)]
-  return runLookup({
+  const r = await runLookup({
     system: prompt.body, opening, offered, known: sweep.all.filter((c: any) => !c.searched), maxSteps: Math.min(4, settings.lookup_max_steps), deadline,
     tools,
     callInvestigator: ({ system, contents, pin }: any) => generate(cfg, 'prospect_lookup',
@@ -997,6 +999,7 @@ async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], 
     callChecker,
     onMove: lookupMove,
   })
+  return { ...r, staff }
 }
 
 async function lookupTick(cfg: Cfg, settings: any, started: number) {
@@ -1042,9 +1045,14 @@ async function lookupTick(cfg: Cfg, settings: any, started: number) {
         detail.push({ company: cand.company_name, found: r.found.domain, how: r.found.how, steps: r.steps })
       } else {
         const why = redactContactRoutes(r.why || 'nothing found')
+        /* A business with staff and no site we could find is worth a
+           person's look for web - never a claim that it has none. */
+        const staff = (r as any).staff
+        const size = Number.isFinite(staff) && staff >= 3
+          ? ` Its filed accounts give ${staff} employees: a business of some size with no site we could find, worth checking by hand for web.` : ''
         await rpc('prospect_lookup_finish', {
           p_id: cand.id, p_url: null, p_confirmed_by: null, p_outcome: `research loop: ${why}`,
-          p_note: `No website found by guessing or by the research loop: ${why}. Add it if you know it.`,
+          p_note: `No website found by guessing or by the research loop: ${why}.${size} Add it if you know it.`,
         })
         detail.push({ company: cand.company_name, found: null, why, steps: r.steps })
       }
