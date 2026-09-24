@@ -444,9 +444,10 @@ async function findWebsite(cand: any, settings: any): Promise<{ url: string | nu
     }
     const kind = pageKind(page.body)
     if (kind !== 'live') { tried.push(`${host}: ${kind === 'parked' ? 'parked or for sale' : 'a placeholder page'}`); continue }
-    const c = confirms(page.body, cand)
+    const c: any = confirms(page.body, cand)
     if (c.reasons.length) return { url: page.url, confirmed_by: c.reasons, outcome: 'confirmed', html: page.body }
-    tried.push(c.conflict ? `${host}: a different company with the same name, ${c.conflict}` : `${host}: does not mention them`)
+    tried.push(c.conflict ? `${host}: a different company with the same name, ${c.conflict}`
+      : c.sharedAddress ? `${host}: shares their registered postcode but not their name` : `${host}: does not mention them`)
   }
   return {
     url: null, confirmed_by: [], html: null,
@@ -790,9 +791,15 @@ async function registerHistory(cand: any) {
 
 function lookupTools(cand: any, settings: any, until: () => number) {
   const readPage = (html: string, host: string) => {
-    const c = confirms(html, cand)
+    const c: any = confirms(html, cand)
     const title = ((html.match(/<title[^>]*>([^<]*)/i) || [])[1] || '').trim().slice(0, 120)
     const links = linkedDomains(html, host)
+    /* Their postcode but not their name: another business at the same
+       address, or theirs under a name we do not know. The checker reads it. */
+    if (c.sharedAddress) {
+      return { verdict: 'name_only', reasons: ['their registered postcode, but not their name'], conflict: null,
+        title: redactContactRoutes(title), excerpt: readable(html, cand).slice(0, 1200), links, offer: links }
+    }
     return {
       verdict: pageVerdict(c.reasons, c.conflict ?? null), reasons: c.reasons, conflict: c.conflict ?? null,
       title: redactContactRoutes(title), excerpt: readable(html, cand).slice(0, 1200), links, offer: links,
@@ -948,7 +955,7 @@ async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], 
       'THE BUSINESS (from the company register):', ...register.map((r: any) => `${r.key}: ${r.text}`), '',
       `THE PAGE: ${domain}, ${how === 'archived' ? `the Internet Archive's copy from ${verdict.date}` : 'read live'}`,
       `Title: ${verdict.title || '(none)'}`,
-      `Code found on it: ${verdict.reasons.join(', ') || 'nothing'} - the name, but not the registered postcode or company number.`,
+      `Code found on it: ${verdict.reasons.join(', ') || 'nothing'}. Not enough on its own: decide whether this page is this business.`,
       `What it says (contact details removed):\n${verdict.excerpt || '(nothing readable)'}`, '',
       `WHY IT MIGHT BE THEIRS: ${redactContactRoutes(why || '(nothing)')}`,
     ].join('\n'))
@@ -958,7 +965,7 @@ async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], 
      the likeliest first, two at most. */
   for (const c of sweep.nameOnly.slice(0, 2) as any[]) {
     if (Date.now() > deadline - 15000) return { found: null, why: 'out of time for this business', steps: 0, model: null, timedOut: true }
-    const check = await callChecker({ domain: c.domain, how: c.how, verdict: c.result, why: 'the page carries the business\'s name; code found no postcode or company number on it' })
+    const check = await callChecker({ domain: c.domain, how: c.how, verdict: c.result, why: `code found ${c.result.reasons.join(', ') || 'the name'} on the page, and nothing that proves it on its own` })
     const agreed = check.verdict === 'theirs'
     await lookupMove({ from: 'checker', to: null, model: check.model ?? null, said: check.raw ?? null, decision: agreed ? 'agreed' : 'disagreed',
       guard: agreed ? null : `${c.domain}: a name-only match needs the checker to agree; it did not` })

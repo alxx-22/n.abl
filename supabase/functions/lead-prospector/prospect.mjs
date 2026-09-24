@@ -282,7 +282,17 @@ export function confirms(html, candidate) {
   if (candidate.company_number && page.includes(squash(candidate.company_number))) strong.push('company number')
   if (key.length >= 6 && page.includes(squash(key))) weak.push('company name')
   else if (words.length >= 2 && words.every((w) => page.includes(squash(w)))) weak.push('every word of the name')
-  if (strong.length) return { reasons: [...strong, ...weak] }
+  if (strong.includes('company number')) return { reasons: [...strong, ...weak] }
+  /* The registered postcode alone is not proof: it is often an
+     accountant's office or a shared building, and every business there
+     carries it. On 24 September the loop took an IT firm's site for an
+     electrical contractor registered in the same Long Eaton building. The
+     postcode counts with the name, or a distinctive word of it. */
+  if (strong.length) {
+    const partial = words.filter((w) => !GENERIC.has(w)).some((w) => page.includes(squash(w)))
+    if (weak.length || partial) return { reasons: [...strong, ...(weak.length ? weak : ['part of the name'])] }
+    return { reasons: [], sharedAddress: true }
+  }
   if (!weak.length) return { reasons: [] }
   const conflict = contradicts(html, candidate)
   return conflict ? { reasons: [], conflict } : { reasons: weak }

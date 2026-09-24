@@ -672,6 +672,12 @@ console.log('\nWHAT THE 24 SEPTEMBER SAMPLE TAUGHT: CODE SWEEPS, MODELS JUDGE, A
   ok('six questions answered in writing are measured as an FAQ', keys([{ url: 'https://x.co.uk/', html: body + faq.map((q) => `<h3>${q}</h3>`).join('') }]).includes('m_faq'))
   ok('  …five are not', !keys([{ url: 'https://x.co.uk/', html: body + faq.slice(0, 5).map((q) => `<h3>${q}</h3>`).join('') }]).includes('m_faq'))
 
+  const inBuilding = { company_name: 'CAPITAL CITY SOLUTIONS LIMITED', postcode: 'NG10 1NJ', company_number: '06602984' }
+  const it = confirms(`<p>${'Managed IT support and cabling. '.repeat(10)}</p><p>Lyndhurst, 1 Cranmer Street, Long Eaton NG10 1NJ</p>`, inBuilding)
+  ok('their postcode alone is not proof: another business in the same building (the Long Eaton accountant\'s)', !it.reasons.length && it.sharedAddress === true, it)
+  const pg = confirms(`<h1>PG Joinery</h1><p>Purple Giraffe fire doors, Ilkeston DE7 4HD</p>`, { company_name: 'PURPLE GIRAFFE JOINERY AND INSTALLATIONS LTD', postcode: 'DE7 4HD' })
+  ok('  …with a distinctive word of the name, it is', pg.reasons.includes('postcode'), pg)
+  ok('  …and the company number still settles it on its own', confirms('<p>Registered in England 06602984</p>', inBuilding).reasons.includes('company number'))
   ok('AI and web are what we lead with, by default', clampSettings({}).service_focus.join() === 'ai,web')
   ok('  …a service key that is not a key is dropped', clampSettings({ service_focus: ['web', 'DROP TABLE', 'ai'] }).service_focus.join() === 'web,ai')
   const cfg = { knowledge: [{ key: 'automation', kind: 'service', label: 'Automation' }, { key: 'web', kind: 'service', label: 'Web' }, { key: 'ai', kind: 'service', label: 'AI' }] }

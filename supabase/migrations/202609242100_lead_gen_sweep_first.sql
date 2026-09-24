@@ -75,7 +75,9 @@ You have a few turns. Do not repeat what code has done. You may only check domai
 
 Never write an email address, phone number or postcode.$p$),
 
-('lookup_check', 0.2, $p$You are the checker for n.abl's lead finder. Code found this business's name on the web page below, but not its registered postcode or company number. Decide whether the page is this business's own website.
+('lookup_check', 0.2, $p$You are the checker for n.abl's lead finder. Code found something on the web page below that ties it to this business - its name, or its registered postcode - but not enough to prove it. Decide whether the page is this business's own website.
+
+A registered postcode with none of the name is often another business in the same building: the registered office is frequently an accountant's. Only call that theirs if the page plainly describes this business's trade under a name that could be theirs.
 
 It is theirs only if all of these hold:
 - what the page says the business does matches what the register says it does (the register's activity code is self-chosen and often broad: an electrician registered as "electrical installation" that also does fire alarms is the same trade);
