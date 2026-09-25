@@ -43,22 +43,10 @@
 
 import { contactRouteIn } from './puller.mjs'
 import { nameKey } from './lib.mjs'
-import { domainGuesses } from './prospect.mjs'
+import { domainGuesses, TRADE_WORDS } from './prospect.mjs'
 
 /* ---------- the wide guess: what the sweep tries before any model ---------- */
 
-/* Words that say what a business does rather than who it is. In a name,
-   whatever comes before the first of them is the part people shorten:
-   "PURPLE GIRAFFE JOINERY" trades as pgjoinery, "PFS FIRE & SECURITY" as
-   pfs-security. */
-const TRADE_WORDS = new Set([
-  'ELECTRICAL', 'ELECTRICS', 'ELECTRIC', 'ELECTRICIANS', 'PLUMBING', 'HEATING', 'GAS', 'JOINERY', 'CARPENTRY', 'ROOFING',
-  'SCAFFOLDING', 'FLOORING', 'FLOORS', 'CARPETS', 'BUILDING', 'BUILDERS', 'BUILD', 'CONSTRUCTION', 'SECURITY', 'FIRE',
-  'INSTALLATIONS', 'CONTRACTING', 'CONTRACTORS', 'ENGINEERING', 'ENGINEERS', 'KITCHENS', 'KITCHEN', 'BATHROOMS', 'BRICKWORK',
-  'PLASTERING', 'DECORATING', 'GLAZING', 'WINDOWS', 'DRIVEWAYS', 'LANDSCAPES', 'LANDSCAPING', 'FENCING', 'DRAINAGE',
-  'AIR', 'CONDITIONING', 'VENTILATING', 'VENTILATION', 'REFRIGERATION', 'SOLAR', 'RENEWABLES', 'SURVEYING', 'SURVEYORS',
-  'CLEANING', 'MAINTENANCE', 'SYSTEMS', 'SOLUTIONS', 'SERVICES', 'PROJECTS', 'TECHNOLOGIES', 'INSPECTIONS', 'TESTING',
-])
 /* Dropped from every variant; everything else is kept somewhere. */
 const LEGAL = new Set(['LTD', 'LIMITED', 'PLC', 'LLP', 'CO', 'COMPANY', 'THE'])
 

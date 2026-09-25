@@ -678,6 +678,13 @@ console.log('\nWHAT THE 24 SEPTEMBER SAMPLE TAUGHT: CODE SWEEPS, MODELS JUDGE, A
   const pg = confirms(`<h1>PG Joinery</h1><p>Purple Giraffe fire doors, Ilkeston DE7 4HD</p>`, { company_name: 'PURPLE GIRAFFE JOINERY AND INSTALLATIONS LTD', postcode: 'DE7 4HD' })
   ok('  …with a distinctive word of the name, it is', pg.reasons.includes('postcode'), pg)
   ok('  …and the company number still settles it on its own', confirms('<p>Registered in England 06602984</p>', inBuilding).reasons.includes('company number'))
+  /* 25 September: a trade word is not a distinctive word. */
+  const dl = confirms(`<h1>Midsco</h1><p>Commercial air conditioning and mechanical services. Unit 4, Nottingham NG6 0BJ</p>`, { company_name: 'D L MECHANICAL NOTTM LTD', postcode: 'NG6 0BJ', town: 'Nottingham' })
+  ok('their postcode and a trade word of the name ("mechanical") is not proof', !dl.reasons.length && dl.sharedAddress === true, dl)
+  const px = confirms(`<title>TrueTech Integrated</title><p>Security installations and integrated specialists. Gedling NG4 1ES</p>`, { company_name: 'PHOENIX SECURITY INSTALLATIONS LTD', postcode: 'NG4 1ES', town: 'Nottingham' })
+  ok('  …nor two ("security installations", on a sister company\'s site)', !px.reasons.length && px.sharedAddress === true, px)
+  const tv = confirms(`<p>Trent Valley Accountants, Nottingham NG2 1AB</p>`, { company_name: 'TRENT VALLEY PLUMBING & BUILDING LIMITED', postcode: 'NG2 1AB', town: 'Nottingham' })
+  ok('  …nor a place in it ("valley")', !tv.reasons.length && tv.sharedAddress === true, tv)
   ok('AI and web are what we lead with, by default', clampSettings({}).service_focus.join() === 'ai,web')
   ok('  …a service key that is not a key is dropped', clampSettings({ service_focus: ['web', 'DROP TABLE', 'ai'] }).service_focus.join() === 'web,ai')
   const cfg = { knowledge: [{ key: 'automation', kind: 'service', label: 'Automation' }, { key: 'web', kind: 'service', label: 'Web' }, { key: 'ai', kind: 'service', label: 'AI' }] }

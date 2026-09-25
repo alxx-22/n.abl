@@ -28,6 +28,15 @@ Seen on their own pages, in their own words:
   condition report - with a turnaround promised on the page ("reports within
   five working days", "certificates the same day") or a volume stated. The
   writing is the bottleneck, and it is this business's own promise.
+- Testing or inspection as a main line of work, where every visit ends in
+  a written report and the faults found become a quote: EICRs and landlord
+  certificates, fire alarm, emergency lighting or fire door inspections,
+  lightning protection testing, PPM service visits, fire risk or asbestos
+  surveys. The certificate itself is usually done in certification
+  software already; the writing around it is not - the covering report,
+  the remedial quote built from the fault codes, the summary a landlord or
+  facilities manager asks for. Named on their own services page, not
+  inferred from the trade.
 - Quotes built from what customers send in: "send us photos for a quote",
   "tell us about your project", a free-text quote form across several
   services. Each one is read and answered by hand.
@@ -80,6 +89,12 @@ Be the sceptic in the room.
   item alone: 30 at most.
 - An FAQ of six or more questions with free-text enquiries: 40–50. The
   answers exist; the question is how many enquiries still need a reply.
+- Testing or inspection named as a main service (several of EICRs, PPM,
+  fire alarm, emergency lighting, fire doors, lightning protection) with
+  engineers to do it: 40–55. Add a stated volume (social housing
+  contracts, "over 2,000 inspections a year"), office or admin staff, or
+  hiring for testers: 55–65. Say which writing it is - the covering report
+  or the remedial quote - not "compliance paperwork".
 - A report sold as the product, with a turnaround or volume on their own
   page: 50–65. Add a named report app, a hiring advert for report writing, or
   several engineers or surveyors: 65–75.

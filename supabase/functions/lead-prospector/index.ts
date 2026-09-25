@@ -793,15 +793,22 @@ function lookupTools(cand: any, settings: any, until: () => number) {
   const readPage = (html: string, host: string) => {
     const c: any = confirms(html, cand)
     const title = ((html.match(/<title[^>]*>([^<]*)/i) || [])[1] || '').trim().slice(0, 120)
-    const links = linkedDomains(html, host)
+    /* Only a page with something of theirs on it - the name, the
+       postcode - is worth following. On 25 September the investigator was
+       started for 137 businesses on links from namesakes' and strangers'
+       pages, spent about 500 calls, and found one site: the wrong one. */
+    const linksOf = (tied: boolean) => (tied ? linkedDomains(html, host) : [])
     /* Their postcode but not their name: another business at the same
        address, or theirs under a name we do not know. The checker reads it. */
     if (c.sharedAddress) {
+      const links = linksOf(true)
       return { verdict: 'name_only', reasons: ['their registered postcode, but not their name'], conflict: null,
         title: redactContactRoutes(title), excerpt: readable(html, cand).slice(0, 1200), links, offer: links }
     }
+    const verdict = pageVerdict(c.reasons, c.conflict ?? null)
+    const links = linksOf(verdict === 'theirs' || verdict === 'name_only')
     return {
-      verdict: pageVerdict(c.reasons, c.conflict ?? null), reasons: c.reasons, conflict: c.conflict ?? null,
+      verdict, reasons: c.reasons, conflict: c.conflict ?? null,
       title: redactContactRoutes(title), excerpt: readable(html, cand).slice(0, 1200), links, offer: links,
     }
   }

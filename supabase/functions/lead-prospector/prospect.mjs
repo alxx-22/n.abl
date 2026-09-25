@@ -141,6 +141,25 @@ export const parseJson = (raw) =>
 
 const NOISE = new Set(['THE', 'AND', 'OF', 'GROUP', 'HOLDINGS', 'UK', 'SERVICES', 'SERVICE'])
 
+/* Words that say what a business does rather than who it is. In a name,
+   whatever comes before the first of them is the part people shorten:
+   "PURPLE GIRAFFE JOINERY" trades as pgjoinery, "PFS FIRE & SECURITY" as
+   pfs-security. And a page that shares a business's postcode and one of
+   these words has not named it: on 25 September "mechanical" put an
+   air-conditioning firm's site on D L Mechanical, and "security
+   installations" a sister company's on Phoenix Security Installations. */
+export const TRADE_WORDS = new Set([
+  'ELECTRICAL', 'ELECTRICS', 'ELECTRIC', 'ELECTRICIANS', 'PLUMBING', 'PLUMBERS', 'HEATING', 'GAS', 'BOILERS', 'JOINERY',
+  'JOINERS', 'CARPENTRY', 'ROOFING', 'SCAFFOLDING', 'FLOORING', 'FLOORS', 'CARPETS', 'BUILDING', 'BUILDERS', 'BUILD',
+  'CONSTRUCTION', 'SECURITY', 'FIRE', 'ALARMS', 'ALARM', 'SURVEILLANCE', 'CCTV', 'INSTALLATIONS', 'INSTALLATION', 'INSTALL',
+  'INSTALLERS', 'CONTRACTING', 'CONTRACTORS', 'CONTRACTS', 'ENGINEERING', 'ENGINEERS', 'MECHANICAL', 'KITCHENS', 'KITCHEN',
+  'BATHROOMS', 'BRICKWORK', 'PLASTERING', 'DECORATING', 'PAINTING', 'TILING', 'GLAZING', 'WINDOWS', 'WINDOW', 'DOORS',
+  'INTERIORS', 'DRIVEWAYS', 'LANDSCAPES', 'LANDSCAPING', 'FENCING', 'DRAINAGE', 'GROUNDWORKS', 'DEMOLITION', 'INSULATION',
+  'AIR', 'CONDITIONING', 'VENTILATING', 'VENTILATION', 'REFRIGERATION', 'COOLING', 'SOLAR', 'RENEWABLES', 'ENERGY', 'POWER',
+  'LIFTS', 'RAIL', 'NETWORK', 'NETWORKS', 'SURVEYING', 'SURVEYORS', 'CLEANING', 'MAINTENANCE', 'FACILITIES',
+  'ENVIRONMENTAL', 'SYSTEMS', 'SOLUTIONS', 'SERVICES', 'PROJECTS', 'TECHNOLOGIES', 'INSPECTIONS', 'TESTING',
+])
+
 /* Words too common to be a business's whole domain on their own. */
 const GENERIC = new Set([
   'NORTH', 'SOUTH', 'EAST', 'WEST', 'CENTRAL', 'NATIONAL', 'GLOBAL', 'INTERNATIONAL', 'BRITISH', 'ENGLISH',
@@ -153,6 +172,13 @@ const GENERIC = new Set([
   'CITY', 'COUNTY', 'ROYAL', 'FIRST', 'PRIME', 'SUPREME', 'ULTIMATE', 'TOTAL', 'UNITED', 'ADVANCED', 'MODERN',
   'MIDLANDS', 'MIDLAND', 'EASTMIDLANDS', 'NOTTS', 'NOTTINGHAM', 'DERBY', 'DERBYSHIRE', 'LEICESTER', 'BIRMINGHAM',
   'WARWICKSHIRE', 'WORCESTERSHIRE', 'COTSWOLD', 'COTSWOLDS', 'TRENT', 'SHERWOOD', 'HEART', 'ENGLAND',
+])
+
+/* Places a name carries that say where, not who. */
+const PLACES = new Set([
+  'NOTTM', 'NOTTS', 'ILKESTON', 'BEESTON', 'ARNOLD', 'CARLTON', 'HUCKNALL', 'MANSFIELD', 'NEWARK', 'BULWELL', 'WOLLATON',
+  'RUDDINGTON', 'BINGHAM', 'COTGRAVE', 'EASTWOOD', 'KIMBERLEY', 'STAPLEFORD', 'LONG', 'EATON', 'RUSHCLIFFE', 'GEDLING',
+  'BROXTOWE', 'EREWASH', 'ALCESTER', 'STRATFORD', 'REDDITCH', 'STUDLEY', 'EVESHAM', 'WARWICK', 'VALLEY',
 ])
 
 /* Last words a business's own domain often leaves off. */
@@ -287,9 +313,22 @@ export function confirms(html, candidate) {
      accountant's office or a shared building, and every business there
      carries it. On 24 September the loop took an IT firm's site for an
      electrical contractor registered in the same Long Eaton building. The
-     postcode counts with the name, or a distinctive word of it. */
+     postcode counts with the name, or the part of it that says who they
+     are: a word that is not a trade or a place, five letters or more (a
+     shorter one turns up inside other words), or the words before the
+     trade, together. */
   if (strong.length) {
-    const partial = words.filter((w) => !GENERIC.has(w)).some((w) => page.includes(squash(w)))
+    const town = new Set(nameKey(candidate.town ?? '').split(' '))
+    const says = (w) => !GENERIC.has(w) && !TRADE_WORDS.has(w) && !PLACES.has(w) && !town.has(w)
+    /* The words before the first trade or generic one, as a phrase:
+       "Park Valley" of Park Valley Management, "JM Dale" of J M Dale
+       Plumbing. */
+    const all = key.split(' ').filter((w) => w && !NOISE.has(w))
+    const cut = all.findIndex((w, i) => i > 0 && (TRADE_WORDS.has(w) || GENERIC.has(w)))
+    const head = cut > 0 ? all.slice(0, cut) : all
+    const phrase = head.join('')
+    const partial = words.some((w) => w.length >= 5 && says(w) && page.includes(squash(w)))
+      || (phrase.length >= 6 && head.some(says) && page.includes(squash(phrase)))
     if (weak.length || partial) return { reasons: [...strong, ...(weak.length ? weak : ['part of the name'])] }
     return { reasons: [], sharedAddress: true }
   }
