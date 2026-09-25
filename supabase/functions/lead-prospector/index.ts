@@ -56,7 +56,7 @@ import {
 } from './prospect.mjs'
 import {
   runLookup, investigatorBody, readChecker, domainsInOutcome, linkedDomains, parseAvailability, archivedUrl, readArchivedUrl,
-  pageVerdict, isDirectory, normaliseDomain, wideGuesses, settledInOutcome, sweepVerdict,
+  pageVerdict, isDirectory, normaliseDomain, wideGuesses, settledInOutcome, sweepVerdict, readOrder,
 } from './lookup.mjs'
 import { buildSearchUrl, chAuthHeader, normaliseItem, admit, expandSic, unknownSic, DEFAULT_TYPES, CH_BASE, redactContactRoutes } from './puller.mjs'
 
@@ -791,7 +791,7 @@ async function registerHistory(cand: any) {
 
 function lookupTools(cand: any, settings: any, until: () => number) {
   const readPage = (html: string, host: string) => {
-    const c: any = confirms(html, cand)
+    const c: any = confirms(html, cand, { near: true })
     const title = ((html.match(/<title[^>]*>([^<]*)/i) || [])[1] || '').trim().slice(0, 120)
     /* Only a page with something of theirs on it - the name, the
        postcode - is worth following. On 25 September the investigator was
@@ -904,7 +904,8 @@ async function lookupSweep(cand: any, settings: any, tools: any, hist: any, dead
   let short = false
   const inTime = (margin: number) => { if (Date.now() < deadline - margin) return true; short = true; return false }
   const resolved = await inPool(guesses, 16, async (d) => (inTime(30000) && await resolves(d)) ? d : null)
-  const live = resolved.filter(Boolean).slice(0, 14) as string[]
+  const exist = resolved.filter(Boolean) as string[]
+  const live = readOrder(exist).slice(0, 14)
   const read = async (d: string, how: 'live' | 'archived') => ({
     domain: d, how, searched: searched.includes(d),
     result: inTime(20000) ? await (how === 'live' ? tools.check_domain({ domain: d }) : tools.archived_copy({ domain: d })) : null,
@@ -917,7 +918,7 @@ async function lookupSweep(cand: any, settings: any, tools: any, hist: any, dead
   const settledLive = checked.some((c) => c.result?.verdict === 'theirs')
   const archived = settledLive ? [] : await inPool([...away, ...gone].slice(0, 4), 2, (d) => read(d, 'archived'))
   const all = [...checked, ...archived].filter((c) => c.result)
-  return { names: [...names, ...kin], guessed: guesses.length, searched: searched.length, exist: live.length, all, short, ...sweepVerdict(all) }
+  return { names: [...names, ...kin], guessed: guesses.length, searched: searched.length, exist: exist.length, all, short, ...sweepVerdict(all) }
 }
 
 async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], deadline: number) {
@@ -1028,9 +1029,11 @@ async function lookupTick(cfg: Cfg, settings: any, started: number) {
      is only started with enough left to be worth it. One that runs out of
      time goes back to the queue, not to "nothing found". */
   const end = started + settings.tick_budget_ms - 8000
+  let claimed = 0
   while (end - Date.now() > 45000) {
     const [cand] = await rpc('prospect_lookup_next', {}) ?? []
     if (!cand) break
+    claimed++
     let seq = Number(cand.next_seq) || 0
     const move: Ctx['move'] = async (m) => {
       seq++
@@ -1042,8 +1045,13 @@ async function lookupTick(cfg: Cfg, settings: any, started: number) {
     try {
       const r = await lookupOne(cfg, settings, cand, move, Math.min(end, Date.now() + settings.lookup_seconds * 1000))
       if (r.timedOut) {
-        await rpc('prospect_lookup_fail', { p_id: cand.id, p_error: 'out of time in this tick; it will be picked up again' })
-        detail.push({ company: cand.company_name, paused: 'out of time', steps: r.steps })
+        /* Only a business that had the tick to itself has used a turn. One
+           started after others gets what was left, and on 25 September a
+           slow sweep (fourteen live sites to read) ran out of it three
+           times running and was written off. */
+        if (claimed === 1) await rpc('prospect_lookup_fail', { p_id: cand.id, p_error: 'out of time with a whole tick to itself; it will be picked up again' })
+        else await rpc('prospect_lookup_defer', { p_id: cand.id })
+        detail.push({ company: cand.company_name, paused: claimed === 1 ? 'out of time' : 'out of time, not counted: the next tick starts with it', steps: r.steps })
         break
       }
       if ((r as any).skip) {

@@ -284,12 +284,30 @@ const areaOf = (pc) => (String(pc ?? '').toUpperCase().match(/^[A-Z]{1,2}/) || [
 /* A name match alone is not identity: the first sample found two in
    thirteen were a different firm with the same name. So a name-only
    match has to survive a contradiction test. */
-export function contradicts(html, candidate) {
+/* Postcode areas that border each other, around the two territories. A
+   registered office is often an accountant's in the next town: on 25
+   September South Notts (Builders) was registered in DE and its own site
+   gave only NG addresses, and code threw it out as a namesake before the
+   checker, who is told a neighbouring town is normal, ever saw it. Only
+   where a checker reads the page next (the research loop, `near`): the
+   guesser has no checker, and takes a name match that nothing
+   contradicts, so for it the page still has to share the area. */
+const BORDERS = [
+  ['NG', 'DE'], ['NG', 'LE'], ['NG', 'LN'], ['NG', 'DN'], ['NG', 'S'],
+  ['DE', 'LE'], ['DE', 'ST'], ['DE', 'S'], ['DE', 'SK'], ['DE', 'B'], ['DE', 'WS'],
+  ['LE', 'CV'], ['LE', 'NN'], ['LE', 'PE'], ['LE', 'LN'], ['LE', 'B'],
+  ['B', 'CV'], ['B', 'WS'], ['B', 'WV'], ['B', 'DY'], ['B', 'WR'],
+  ['CV', 'WR'], ['CV', 'NN'], ['CV', 'OX'], ['CV', 'GL'],
+  ['WR', 'GL'], ['WR', 'DY'], ['WR', 'HR'], ['GL', 'OX'], ['GL', 'HR'],
+]
+const nextTo = (a, b) => a === b || BORDERS.some(([x, y]) => (x === a && y === b) || (x === b && y === a))
+
+export function contradicts(html, candidate, { near = false } = {}) {
   const ours = areaOf(candidate.postcode)
   if (!ours) return null
   const onPage = [...String(html).toUpperCase().matchAll(PAGE_POSTCODE)]
     .map((m) => areaOf(m[1])).filter(isPostcodeArea)
-  if (onPage.length && !onPage.includes(ours)) {
+  if (onPage.length && !onPage.some((a) => (near ? nextTo(a, ours) : a === ours))) {
     return `the page's addresses are all in ${[...new Set(onPage)].slice(0, 3).join('/')}, not ${ours}`
   }
   const uk = /(\+44|\b0[12378]\d{8,9}\b|\b0\d{4}\s?\d{6}\b)/.test(html)
@@ -298,7 +316,27 @@ export function contradicts(html, candidate) {
   return null
 }
 
-export function confirms(html, candidate) {
+/* The name a business trades under is often its registered name with the
+   end left off: NDL Electrical Installations Ltd is "NDL Electrical" on
+   its own site (25 September), Carters Flooring (Leisure) Ltd is "Carters
+   Flooring". The registered name with trailing trade and filler words
+   taken off, two words at least, one of them saying who they are - a match
+   is only ever the name, and the checker still has to agree. */
+export function tradingName(name, town = null) {
+  const full = squash(nameKey(name))
+  const bare = String(name ?? '').replace(/\([^)]*\)/g, ' ')
+  const trimmed = nameKey(bare).split(' ').filter(Boolean)
+  const filler = (w) => TRADE_WORDS.has(w) || GENERIC.has(w) || NOISE.has(w)
+  while (trimmed.filter((w) => w !== 'AND').length > 2 && filler(trimmed[trimmed.length - 1])) trimmed.pop()
+  while (trimmed[trimmed.length - 1] === 'AND') trimmed.pop()
+  const core = trimmed.filter((w) => w !== 'AND')
+  const townWords = new Set(nameKey(town ?? '').split(' '))
+  if (core.length < 2) return []
+  if (!core.some((w) => !GENERIC.has(w) && !TRADE_WORDS.has(w) && !PLACES.has(w) && !townWords.has(w))) return []
+  return [...new Set([squash(trimmed.join('')), squash(core.join(''))])].filter((f) => f.length >= 6 && f !== full)
+}
+
+export function confirms(html, candidate, { near = false } = {}) {
   const page = squash(html)
   const strong = []
   const weak = []
@@ -306,8 +344,10 @@ export function confirms(html, candidate) {
   const words = key.split(' ').filter((w) => w.length > 3 && !NOISE.has(w))
   if (candidate.postcode && squash(candidate.postcode).length >= 5 && page.includes(squash(candidate.postcode))) strong.push('postcode')
   if (candidate.company_number && page.includes(squash(candidate.company_number))) strong.push('company number')
+  const trading = tradingName(candidate.company_name, candidate.town)
   if (key.length >= 6 && page.includes(squash(key))) weak.push('company name')
   else if (words.length >= 2 && words.every((w) => page.includes(squash(w)))) weak.push('every word of the name')
+  else if (trading.some((t) => page.includes(t))) weak.push('their trading name')
   if (strong.includes('company number')) return { reasons: [...strong, ...weak] }
   /* The registered postcode alone is not proof: it is often an
      accountant's office or a shared building, and every business there
@@ -333,7 +373,7 @@ export function confirms(html, candidate) {
     return { reasons: [], sharedAddress: true }
   }
   if (!weak.length) return { reasons: [] }
-  const conflict = contradicts(html, candidate)
+  const conflict = contradicts(html, candidate, { near })
   return conflict ? { reasons: [], conflict } : { reasons: weak }
 }
 

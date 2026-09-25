@@ -7,7 +7,7 @@
      npm run test:prospector */
 
 import {
-  clampSettings, quotaScope, domainGuesses, pageKind, parseRobots, confirms, sameSiteLinks,
+  clampSettings, quotaScope, domainGuesses, pageKind, parseRobots, confirms, tradingName, sameSiteLinks,
   stripHtml, registerLines, quoteOnPage, validateResearch, validateSignals, validateSignalReview,
   argueSignals, validateSales, readMove, argueService, outcome, parseJson, conversationBlock,
   frontPageUrls, noSiteLine, registerRefusal, registerCautions, validatePick, signalLines,
@@ -17,7 +17,7 @@ import {
 } from '../supabase/functions/lead-prospector/prospect.mjs'
 import {
   normaliseDomain, isDirectory, domainsInOutcome, linkedDomains, parseAvailability, archivedUrl, readArchivedUrl,
-  checkCall, pageVerdict, runLookup, readChecker, investigatorBody,
+  checkCall, pageVerdict, readOrder, runLookup, readChecker, investigatorBody,
   nameStems, wideGuesses, settledInOutcome, sweepVerdict,
 } from '../supabase/functions/lead-prospector/lookup.mjs'
 import { quotaScope as outreachQuotaScope } from '../supabase/functions/outreach-writer/guards.mjs'
@@ -685,6 +685,27 @@ console.log('\nWHAT THE 24 SEPTEMBER SAMPLE TAUGHT: CODE SWEEPS, MODELS JUDGE, A
   ok('  …nor two ("security installations", on a sister company\'s site)', !px.reasons.length && px.sharedAddress === true, px)
   const tv = confirms(`<p>Trent Valley Accountants, Nottingham NG2 1AB</p>`, { company_name: 'TRENT VALLEY PLUMBING & BUILDING LIMITED', postcode: 'NG2 1AB', town: 'Nottingham' })
   ok('  …nor a place in it ("valley")', !tv.reasons.length && tv.sharedAddress === true, tv)
+  /* 25 September: NDL Electrical Installations Ltd is "NDL Electrical" on
+     its own site, which the sweep read and put down as not theirs. */
+  const ndl = { company_name: 'NDL ELECTRICAL INSTALLATIONS LTD', postcode: 'DE7 8AA', town: 'Ilkeston' }
+  ok('the name they trade under, the registered one with its end left off, is a name match', confirms(`<h1>NDL Electrical</h1><p>${'Domestic and commercial electricians, NICEIC approved. '.repeat(6)}</p>`, ndl).reasons.join() === 'their trading name')
+  ok('  …only a name match: the checker still decides', pageVerdict(confirms(`<h1>NDL Electrical</h1>`, ndl).reasons) === 'name_only')
+  ok('  …a namesake far away is still not theirs', confirms(`<h1>NDL Electrical</h1><p>Unit 2, Glasgow G1 1AA</p>`, ndl).conflict)
+  ok('  …with their postcode, it is proof', pageVerdict(confirms(`<h1>NDL Electrical</h1><p>Ilkeston DE7 8AA</p>`, ndl).reasons) === 'theirs')
+  ok('  …the part in brackets is left off too ("Carters Flooring")', tradingName('CARTERS FLOORING (LEISURE) LIMITED').includes('cartersflooring'))
+  ok('  …but never down to trade and place words alone', tradingName('CENTRAL ELECTRICS & SECURITY LIMITED').length === 0 && tradingName('TRENT VALLEY PLUMBING & BUILDING LIMITED', 'Nottingham').length === 0)
+  /* 25 September: registered in DE, trading from NG. */
+  const snPage = `<h1>South Notts (Builders) Ltd</h1><p>${'Extensions and renovations across Nottingham. '.repeat(6)}</p><p>Unit 3, West Bridgford NG2 7AA</p>`
+  const snCand = { company_name: 'SOUTH NOTTS (BUILDERS) LTD', postcode: 'DE7 5AA', town: 'Ilkeston' }
+  const sn = confirms(snPage, snCand, { near: true })
+  ok('in the research loop, a trading address in the next postcode area over is not a different company: the checker decides', !sn.conflict && sn.reasons.length > 0 && pageVerdict(sn.reasons) === 'name_only', sn)
+  ok('  …the guesser, which has no checker, still wants the same area before it takes a name alone', Boolean(confirms(snPage, snCand).conflict))
+  ok('  …one a long way off is a different company to both', Boolean(confirms(`<h1>South Notts (Builders) Ltd</h1><p>Unit 3, Plymouth PL1 2AA</p>`, snCand, { near: true }).conflict))
+  const reread = settledInOutcome('3 of 11 guessed domains exist, none confirmed as theirs — southnottsbuilders.co.uk: a different company with the same name, the page\'s addresses are all in NG, not DE; southnotts.com: a different company with the same name, the only phone numbers on the page are North American')
+  ok('  …and the loop reads again what the guesser put aside only for its address', !reread.has('southnottsbuilders.co.uk') && reread.has('southnotts.com'))
+  /* 25 September: fourteen short, taken domains read before artiltd.co.uk. */
+  const order = readOrder(['art.co.uk', 'art.com', 'advancedresintechnologies.com', 'artuk.co.uk', 'nei.com', 'artiltd.co.uk'])
+  ok('longer, name-shaped domains are read before short ones, which are almost always taken', order.join() === 'advancedresintechnologies.com,artiltd.co.uk,art.co.uk,art.com,artuk.co.uk,nei.com', order)
   ok('AI and web are what we lead with, by default', clampSettings({}).service_focus.join() === 'ai,web')
   ok('  …a service key that is not a key is dropped', clampSettings({ service_focus: ['web', 'DROP TABLE', 'ai'] }).service_focus.join() === 'web,ai')
   const cfg = { knowledge: [{ key: 'automation', kind: 'service', label: 'Automation' }, { key: 'web', kind: 'service', label: 'Web' }, { key: 'ai', kind: 'service', label: 'AI' }] }

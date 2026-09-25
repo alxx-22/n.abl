@@ -144,7 +144,9 @@ export function settledInOutcome(outcome) {
   const out = new Set()
   for (const m of String(outcome ?? '').matchAll(/([a-z0-9-]+(?:\.[a-z0-9-]+)+):\s*([^;—]+)/gi)) {
     const d = normaliseDomain(m[1])
-    if (d && /does not mention|different company|parked|placeholder/i.test(m[2])) out.add(d)
+    /* Put aside by the guesser for an address in another area: the loop,
+       with its checker, allows the next area over, so it reads it again. */
+    if (d && /does not mention|different company|parked|placeholder/i.test(m[2]) && !/addresses are all in/i.test(m[2])) out.add(d)
   }
   /* "ftplumbing.com is a placeholder page": the older one-domain form. */
   for (const m of String(outcome ?? '').matchAll(/([a-z0-9-]+(?:\.[a-z0-9-]+)+) (?:is a placeholder|is a different company|is parked|does not mention)/gi)) {
@@ -309,6 +311,19 @@ export function pageVerdict(reasons = [], conflict = null) {
 }
 
 const partsOf = (content) => (Array.isArray(content?.parts) ? content.parts : [])
+
+/** Which of the domains that exist to read first, when there are more than
+    there is time for. A short stem - art.co.uk, nei.com, ces.co.uk - is
+    almost always someone else's: short domains were taken long ago. On 25
+    September fourteen such reads used up the sweep for Advanced Resin
+    Technologies before it reached artiltd.co.uk, their site. Longer stems
+    first, the order of the guesses kept otherwise. */
+export function readOrder(domains) {
+  const stem = (d) => String(d).replace(/\.(co\.uk|org\.uk|com|uk)$/i, '').replace(/[^a-z0-9]/gi, '')
+  return domains.map((d, i) => ({ d, i, short: stem(d).length < 6 }))
+    .sort((a, b) => Number(a.short) - Number(b.short) || a.i - b.i)
+    .map((x) => x.d)
+}
 
 /** The investigator's loop, to a conclusion or out of steps.
 
