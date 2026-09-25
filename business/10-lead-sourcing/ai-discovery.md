@@ -325,41 +325,72 @@ the Lead gen tab says so. It is a third project for a third job, with its own
 prompts, schedule and pool — the §3 test still passes — and a constraint in
 `outreach_model` keeps the lookup roles on that key and every other role off it.
 
-**How it works** (`supabase/functions/lead-prospector/lookup.mjs`): an
-investigator with tools, not a search engine.
+**How it works** (`lookup.mjs`, `lookupOne` in the edge function): code sweeps
+first, models judge. Rebuilt on 24–25 September after a 50-business sample was
+researched by hand alongside it (the report: *Lead research, 50-business test*).
+
+1. **Worth looking for?** The register first: a business that is closing, or
+   whose filed accounts give one or two employees (over 50, or none beyond its
+   directors), is set aside as `no_fit` with the reason, before any model call.
+2. **The sweep, all code.** Every name the company has used, and those of up to
+   three active sister companies and two parents, on every domain shape small
+   businesses use (`wideGuesses`: the whole name, initials, the part before the
+   trade shortened, "& son" forms, the name with the town). All of them are
+   resolved; the fourteen most name-shaped that exist are read (short stems such
+   as `art.co.uk` last: they are almost always taken); the Internet Archive is
+   asked for the ones that turn us away or have gone.
+3. **Proof.** The company number on a page settles it; so does the registered
+   postcode with the name, or with the part of it that says who they are (not a
+   trade word, not a place). A name match alone — the registered name, every word
+   of it, or **the name they trade under** (the registered one with its trade and
+   filler words left off: "NDL Electrical") — goes to **the checker**, two pages at
+   most; unsure is no. The postcode alone also goes to the checker: the registered
+   office is often an accountant's, shared with other businesses. In the loop an
+   address in the next postcode area over is not taken for a namesake; the
+   guesser, which has no checker, still wants the same area.
+4. **The investigator**, only if something is left to follow: a site linked
+   from a page with the business's name or postcode on it, or sister companies
+   beyond the three the sweep tried. Four turns, and it may only check domains a
+   tool has offered it.
 
 | tool | what code does |
 |---|---|
 | `register_history` | Companies House: previous names, the other companies its directors run (company names only), companies that control it |
 | `guess_domains` | domain guesses from a name the investigator chooses, and which resolve |
-| `check_domain` | reads the live front page politely (robots first) and runs the same proof as the guesser |
+| `check_domain` | reads the live front page politely (robots first) and runs the same proof as the sweep |
 | `archived_copy` | the Internet Archive's latest copy, for a site that turned us away or has gone |
 | `conclude` | the answer |
 
 The rules are code, not prompt:
 
-- The investigator may only check a domain **code has offered it** — a guess that
-  resolved, one the guesser already found, a site linked from a page it read. No
-  domain, and so no contact route, comes from a model (§4.1).
-- A page is theirs when code finds the **registered postcode or company number**
-  on it. A name-only match needs a **second agent, the checker**, to agree; unsure
-  is no. Two refusals end the search.
+- No domain, and so no contact route, comes from a model (§4.1).
 - Directories and social sites are never their site (§4.3).
-- What the investigator reads has contact routes and the company number removed.
-  It is never told the number, the address or any person's name.
+- What the checker and investigator read has contact routes and the company
+  number removed. They are never told the number, the address or any person's name.
+- Google overloaded, or a model out of quota, is nobody's fault: the business is
+  handed back uncounted. So is one that runs out of time after others in the same
+  two-minute tick; the next tick starts with it. Only running out of a whole tick
+  counts as a turn.
 
 A site found goes back to the ordinary agents as a known site, marked
 `found by the research loop`; an archived one is read from the archive at its
 date, and the agents are told it may be out of date. Nothing found ends as
 `no_site`, with what was tried.
 
-**Why there is still no web search.** Re-read on 24 September: the Gemini API
+**Why there is no Google search.** Re-read on 24 September: the Gemini API
 terms (last modified 28 April 2026) still say grounded results may not be cached,
 stored or analysed, and grounding may not be used "to extract or collect" links for
 another purpose. A loop that searches Google and stores what it finds about a
 company is that. **crt.sh**, the certificate-transparency search that would find
 domains by name, disallows every path in its robots.txt. The Internet Archive's
 availability API and `web.archive.org` are open to automated readers.
+
+**Optional: Brave Search.** With `BRAVE_SEARCH_API_KEY` set, the sweep adds the
+domains of one search for the business's name and town to its guesses. Brave's
+terms allow transient use but not a database of results, so a searched domain is
+never stored or logged unless it proves to be theirs (or a name match the checker
+reads). It is the largest gap left: in the 50-business test most of the sites the
+loop could not reach were found by hand with a search engine.
 
 **Also added for every business, not just the parked ones:** the filed average
 headcount and turnover (inline XBRL from the Document API, whose storage redirect
