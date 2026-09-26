@@ -33,8 +33,8 @@ The MP4s are committed so they can be downloaded straight from the repository
 
 ## How it is made
 
-Nothing is stock. Every part is generated here, except the web film's hand
-drums, toms and shaker, which are played from the free
+Nothing is stock. Every part is generated here, except the Rhodes in the web
+film's music, which is played from the free
 [GeneralUser GS](https://www.schristiancollins.com/generaluser) SoundFont:
 
 1. **`vo.py`** reads a film's script (`films/<film>/film.py`) with
@@ -62,10 +62,10 @@ drums, toms and shaker, which are played from the free
 4. **`audio.py`** makes the music with the film's own tempo, chords and
    sections from its `film.py`. For the AI films it synthesises supersaw
    pads, offbeat stabs, plucked sixteenths and sub bass over
-   four-on-the-floor in D. For the web film it is percussion only: kick,
-   layered claps and snaps, hats with rolls, congas, bongos, shaker, rims and
-   tom fills, with a deep 808 boom as the one tonal sound, at a steady level
-   under the voice. It synthesises every effect from the cue list, with
+   four-on-the-floor in D. For the web film it is warm
+   French-touch electronica, drum-led: clean punchy drums, a Moog-style
+   bass, Rhodes chords, a filtered analog arpeggio and a soft pad, behind a
+   filter that opens into the drop, at a steady level under the voice. It synthesises every effect from the cue list, with
    per-film trims.
    It processes the voice, ducks the music under it from the script's own
    timings, limits and normalises the result.
@@ -121,9 +121,10 @@ Copy `films/web` to `films/<name>` and change:
   `bf_isabella`, `bm_george` and `bm_lewis`; `bf_emma` is the calmest.
 - **Pace.** `SPEED` in `film.py`. Everything downstream follows the new timings.
 - **Music.** `BPM`, `PROG` and `sections()` in `film.py`, and `MUSIC`: leave
-  it out for the synth arrangement (the AI films) or set `MUSIC = "perc"` for
-  percussion only (the web film). Earlier web film arrangements are still
-  there to try: `"drums"`, `"garage"` and `"band"`. `"perc"` and `"band"`
+  it out for the synth arrangement (the AI films) or set
+  `MUSIC = "electronica"` for French-touch electronica (the web film).
+  Earlier web film arrangements are still there to try: `"perc"`,
+  `"drums"`, `"garage"` and `"band"`. `"electronica"`, `"perc"` and `"band"`
   play the SoundFont: `pip install --no-deps tinysoundfont` and put
   [GeneralUser GS](https://www.schristiancollins.com/generaluser) at
   `build/models/soundfont/GeneralUser-GS.sf2`. `SFX_TRIM` turns effects down

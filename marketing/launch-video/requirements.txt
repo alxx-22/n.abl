@@ -4,4 +4,4 @@ soundfile
 pyloudnorm
 kokoro-onnx
 sherpa-onnx
-# and tinysoundfont, installed with --no-deps, for the web film's percussion (see README.md)
+# and tinysoundfont, installed with --no-deps, for the web film's Rhodes (see README.md)

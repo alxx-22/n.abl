@@ -37,10 +37,10 @@ SCENES = [
 ]
 
 # ---- music ---------------------------------------------------------------
-# Percussion only: kick, claps and snaps, hats, congas and bongos, shaker,
-# rims, tom fills, and a deep 808 boom as the one tonal sound
-# (audio.py, build_music_perc). The AI film uses the synth arrangement.
-MUSIC = "perc"
+# Warm French-touch electronica, drum-led: clean punchy drums, a Moog-style
+# bass, Rhodes chords, a filtered analog arpeggio and a soft pad
+# (audio.py, build_music_electronica). The AI film uses the synth arrangement.
+MUSIC = "electronica"
 # The biggest effects, turned down for this film so nothing jumps out (dB).
 SFX_TRIM = {"impact": -7, "implode": -6, "riser": -5, "shimmer": -7, "thud": -6, "whoosh": -3, "scan": -3, "wipe": -3}
 

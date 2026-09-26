@@ -2,7 +2,8 @@
 Music, sound effects and the final mix.
 
 Everything is synthesised here, on the film's own timeline, so nothing needs a
-licence (the "perc" and "band" arrangements play a free SoundFont). The music is written against build/<id>/timeline.json (scenes start
+licence (the "electronica", "perc" and "band" arrangements play a free
+SoundFont). The music is written against build/<id>/timeline.json (scenes start
 on beats) in the shape films/<id>/film.py gives it, and the effects are placed
 from build/<id>/cues.json, which the film itself emits, so a sound lands on
 the frame that makes it.
@@ -12,6 +13,8 @@ the frame that makes it.
   music   by the film's MUSIC setting, with its sections and chords:
           (default) supersaw pads, offbeat stabs, plucked arpeggio, sub
                     bass and a kit, in D major
+          electronica  French-touch electronica: clean drums, Moog-style bass,
+                    Rhodes chords, filtered analog arpeggio, soft pad
           perc      percussion only: kick, claps, hats, hand drums, toms and
                     an 808 boom, at a steady level under the voice
           garage    UK garage and tech house: swung drums, sliding sub,
@@ -1267,6 +1270,183 @@ def build_music_perc():
     perc = reverb(hand_b, IR_ROOM, 0.12) + shake_b
     return buf(), hp(boom_b, 28), perc, hp(kit, 30)
 
+# -------------------------------------------------------- music: electronica
+# For films whose film.py sets MUSIC = "electronica": warm French-touch
+# electronica, drum-led. Clean, punchy drums (kick, clap and snare, hats; no
+# hand drums or toms), a Moog-style bass pulsing on the offbeats, Fender
+# Rhodes chords from the SoundFont, a filtered analog arpeggio with echo as
+# the hook, and a soft two-oscillator pad. The opening sits behind a closed
+# filter that opens into the drop, the French-touch move. Steady level.
+E_LOOP = ["Bm9", "Gmaj7", "Dmaj7", "Aadd9"]
+E_RH = {"Bm9": [62, 66, 69, 73], "Gmaj7": [62, 66, 67, 71], "Dmaj7": [62, 66, 69, 73], "Aadd9": [61, 64, 69, 71]}
+E_LH = {"Bm9": 47, "Gmaj7": 43, "Dmaj7": 50, "Aadd9": 45}
+E_ROOT = {"Bm9": 35, "Gmaj7": 31, "Dmaj7": 38, "Aadd9": 33}
+E_ARP = {"Bm9": [59, 62, 66, 69, 73], "Gmaj7": [55, 59, 62, 66, 71], "Dmaj7": [62, 66, 69, 73, 74], "Aadd9": [57, 61, 64, 71, 69]}
+E_ARP_ORDER = [0, 2, 1, 3, 2, 4, 3, 1, 0, 2, 4, 3, 1, 2, 3, 4]
+
+def moog(m, d, v=1.0):
+    """Mono bass: saw and a square an octave down through a low-pass that snaps shut."""
+    x = tt(d + 0.02); f = mtof(m)
+    y = saw(f, d + 0.02) * 0.7 + np.sign(np.sin(np.pi * f * x)) * 0.5
+    y = sweep_lp(y, 170 + 1400 * np.exp(-x / 0.05), block=64, q=1.2)
+    return np.tanh(1.8 * y) * env_adsr(len(x), 0.003, 0.09, 0.7, 0.03) * v
+
+def arp_note(m, d, cut, v=1.0):
+    """The analog arpeggio: saw and pulse, a plucky filter opened by `cut`."""
+    x = tt(d + 0.15); f = mtof(m)
+    y = saw(f, d + 0.15) * 0.6 + np.sign(np.sin(2 * np.pi * f * x) + 0.3) * 0.35
+    y = sweep_lp(y, cut * (1 + 2.2 * np.exp(-x / 0.035)), block=64, q=1.0)
+    return y * np.minimum(1, x / 0.002) * np.exp(-x / 0.14) * v
+
+def soft_pad(notes, d, cut=1400, v=1.0):
+    x = tt(d + 0.8); out = np.zeros((len(x), 2))
+    for m in notes:
+        for det, pan in ((-0.07, -0.6), (0.07, 0.6)):
+            sgl = saw(mtof(m) * 2 ** (det / 12), d + 0.8)
+            out[:, 0] += sgl * np.cos((pan + 1) * np.pi / 4); out[:, 1] += sgl * np.sin((pan + 1) * np.pi / 4)
+    out = lp(out, cut) * env_adsr(len(x), 0.35, 0.3, 0.85, 0.8)[:, None] / len(notes)
+    return out * v
+
+def build_music_electronica():
+    hr = np.random.default_rng(128)
+    jit = lambda: hr.normal(0, 0.002)
+    hv = lambda v: v + hr.integers(-5, 6)
+    kick_b, clap_b, hat_b, bass_b, arp_b, pad_b = buf(), buf(), buf(), buf(), buf(), buf()
+    room = buf()                                   # everything under the opening, behind the filter
+    rhodes, snares = [], []
+    SEC = sections()
+    groove = next(s for s, e, k, c in SEC if k == "main")
+    lift0 = next(s for s, e, k, c in SEC if k == "lift")
+    dot = next(s for s, e, k, c in SEC if k == "resolve")
+    button = np.ceil((TL["lines"][-1]["end"] + 0.35) / BEAT - 1e-6) * BEAT
+    kind_at = lambda t: next((k for s, e, k, c in SEC if s - 1e-3 <= t < e - 1e-3), "resolve")
+    SW = 0.1 * S16
+    r = np.random.default_rng(99)
+    claps = [stereo(clap_layer(r), clap_layer(r)) for _ in range(4)]
+    warm_kick = lambda v: lp(kick_punch(v), 5000)
+    kicks = []
+    g0, g1 = -int(np.floor(groove / S16 + 1e-6)), int((DUR - groove) / S16)
+    for g in range(g0, g1 + 1):
+        t0 = groove + g * S16
+        if t0 < -1e-6:
+            continue
+        st, bar = g % 16, g // 16
+        ts = t0 + (SW if st % 2 else 0)
+        kind = kind_at(t0)
+        if kind in ("intro", "build"):
+            name = {-1: "Aadd9", -2: "Dmaj7", -3: "Gmaj7"}.get(bar, "Bm9")
+        elif kind in ("main", "main2"):
+            name = E_LOOP[bar % 4]
+        else:
+            name = {"lift": "Gmaj7" if t0 < (lift0 + dot) / 2 else "Aadd9"}.get(kind, "Bm9")
+        acc = [.5, .22, .85, .3][st % 4]
+        if kind in ("intro", "build"):
+            # the loop behind a closed filter: kick, clap, offbeat hat, Rhodes, pulsing bass, the arp
+            if st % 4 == 0:
+                add(room, warm_kick(0.9), t0, 0.5)
+            if st in (4, 12):
+                add(room, claps[g % 4], t0, 0.4)
+            if st % 4 == 2:
+                add(room, hat(0.05), t0, 0.08, pan=0.25)
+            if st in (0, 7, 10):
+                for k_ in E_RH[name]:
+                    rhodes.append((t0 + jit(), k_, hv(78), .35 if st == 0 else .18))
+            if st % 4 == 2:
+                add(room, moog(E_ROOT[name] + 12, S16 * 1.8), t0, 0.5)
+            add(room, arp_note(E_ARP[name][E_ARP_ORDER[st]] + 12, S16 * 0.9, 900), ts, 0.3)
+            if kind == "build":
+                k = int(round((t0 - (groove - 2 * BEAT)) / S16))
+                if k < 7:
+                    snares.append((t0, 0.3 + 0.1 * k))
+        elif kind in ("main", "main2") or (kind == "resolve" and dot - 1e-3 <= t0 < button - 1e-3):
+            m2 = kind != "main"
+            v = 0.9 if kind == "resolve" else 1.0
+            if st % 4 == 0:
+                add(kick_b, warm_kick(1.0), t0, 0.62 * v); kicks.append(t0)
+            if st in (4, 12):
+                add(clap_b, claps[g % 4], t0 + jit(), 0.6 * v)
+                snares.append((t0 + 0.003, 0.35 * v))
+            # hats: an open one on every offbeat, closed sixteenths around it
+            if st % 4 == 2:
+                add(hat_b, hat(0.09 if m2 else 0.06), ts, 0.13 * v, pan=0.2)
+            else:
+                add(hat_b, hat(0.02), ts + jit(), 0.09 * acc * v, pan=-0.15)
+            if bar % 4 == 3 and st >= 13 and kind != "resolve":   # a clap run into each phrase
+                add(clap_b, claps[(g + 1) % 4], t0, 0.18 + 0.1 * (st - 13))
+            # bass: pulsing on the offbeats, with sixteenth pick-ups in the second half
+            if st % 4 == 2:
+                add(bass_b, moog(E_ROOT[name] + 12 + (12 if st == 14 and bar % 2 else 0), S16 * 1.8), t0, 0.5 * v)
+            if m2 and st % 4 == 3:
+                add(bass_b, moog(E_ROOT[name] + 12, S16 * 0.8, 0.6), ts, 0.5 * v)
+            # Rhodes: a chord on the one, pushed stabs after it
+            if st in (0, 7, 10):
+                for k_ in E_RH[name]:
+                    rhodes.append((t0 + jit() + (0.012 * E_RH[name].index(k_)), k_, hv(88 if st == 0 else 76), .4 if st == 0 else .18))
+                if st == 0:
+                    rhodes.append((t0, E_LH[name], hv(80), .45))
+            # the arp, opening up over each four-bar phrase, brighter in the second half
+            cut = (1100 if not m2 else 1700) + 1500 * ((bar % 4) * 16 + st) / 64
+            add(arp_b, arp_note(E_ARP[name][E_ARP_ORDER[st]] + 12, S16 * 0.9, cut, 0.9 + 0.2 * (st % 4 == 0)), ts, 0.3 * v)
+            if st == 0:
+                add(pad_b, soft_pad(E_RH[name], 4 * BEAT * 0.95, 1300), t0, 0.35 * v)
+            if st == 0 and bar % 4 == 0 and kind != "resolve":
+                add(hat_b, crash(), t0, 0.06)
+        elif kind == "lift":
+            left = int(round((dot - t0) / S16))
+            if (left > 8 and st % 4 == 0) or (4 < left <= 8 and st % 2 == 0) or left <= 4:
+                add(clap_b, claps[g % 4], t0, 0.25 + 0.3 * (1 - min(1, left / 16)))
+            if st % 4 == 2:
+                add(hat_b, hat(0.05), t0, 0.08, pan=0.2)
+            if st == 0 or t0 < lift0 + 1e-3:
+                d_ = min(4 * BEAT, dot - t0)
+                add(pad_b, soft_pad(E_RH[name], d_ * 0.95, 1000), t0, 0.5)
+                for k_ in E_RH[name]:
+                    rhodes.append((t0 + jit(), k_, hv(80), d_ * 0.9))
+            add(arp_b, arp_note(E_ARP[name][E_ARP_ORDER[st]] + 12, S16 * 0.9, 700 + 1200 * (1 - left / 16)), ts, 0.25)
+    # snare rolls into the drop and into the dot
+    for (a_, b_) in [(t - 0.6, t) for t in cue_t("impact")] + [(dot - 2 * BEAT, dot)]:
+        n = int(round((b_ - a_) / (S16 / 2)))
+        for k in range(n):
+            snares.append((a_ + k * S16 / 2, 0.25 * (0.3 + 0.7 * k / n)))
+    # the drop, the dot, the last chord
+    for t, v in ((groove, 1.0), (dot, 0.9), (button, 0.8)):
+        add(kick_b, warm_kick(1.0), t, 0.7 * v); add(clap_b, claps[0], t, 0.6 * v); add(hat_b, crash(), t, 0.12 * v)
+    for k_ in E_RH["Bm9"] + [E_LH["Bm9"]]:
+        rhodes.append((button, k_, 96, 2.0))
+    add(pad_b, soft_pad(E_RH["Bm9"], 1.6, 1500), button, 0.45)
+    tail = moog(E_ROOT["Bm9"] + 12, 1.6); tail = tail * np.exp(-np.arange(len(tail)) / SR / 0.45)
+    add(bass_b, tail, button, 0.5)
+    for t, v in snares:
+        add(clap_b, snare(), t, v * 0.5, pan=0.05)
+    # the opening behind the filter, opening into the drop
+    tax = np.arange(N) / SR
+    ws = SC["work"]["start"]
+    cutc = np.where(tax < ws, 500.0, 500.0 * (15000 / 500) ** np.clip((tax - ws) / max(0.05, groove - ws), 0, 1))
+    cutc[tax >= groove] = 16000
+    rh_b = sf_part(rhodes, 0, 4)
+    room_rh = buf(); i_g = at(groove)
+    room_rh[:i_g] = rh_b[:i_g]; rh_b[:i_g] = 0
+    room += room_rh
+    end = at(groove + 0.6)
+    for c in range(2):
+        room[:end, c] = sweep_lp(room[:end, c], cutc[:end], block=128, q=1.2)
+    # a gentle pump: the bass, the Rhodes, the arp and the pad lean back from the kick
+    duck = np.ones(N)
+    for k in kicks:
+        i = at(k); xx = np.arange(int(0.2 * SR)) / SR
+        gg = 1 - 0.35 * np.exp(-xx / 0.07)
+        j = min(N, i + len(gg)); duck[i:j] = np.minimum(duck[i:j], gg[: j - i])
+    for b_ in (bass_b, arp_b, pad_b, rh_b):
+        b_ *= duck[:, None]
+    arp_b = reverb(delay(arp_b, BEAT * 0.75, fb=0.35, mix=0.3, lpf=3800), IR_HALL, 0.25)
+    rh_b = reverb(peak_eq(hp(rh_b, 120), 2600, -3.0, 0.8), IR_HALL, 0.18)
+    pad_b = reverb(pad_b, IR_HALL, 0.3)
+    UP = 4.0
+    lv = [(kick_b, -20.0), (clap_b, -23.5), (hat_b, -28.0), (bass_b, -22.5), (rh_b, -27.0), (arp_b, -28.5), (pad_b, -31.0), (room, -24.0)]
+    kick_b, clap_b, hat_b, bass_b, rh_b, arp_b, pad_b, room = [to_lufs(x_, l + UP) for x_, l in lv]
+    drums = hp(kick_b + reverb(clap_b, IR_ROOM, 0.12) + hat_b + room, 30)
+    return pad_b + rh_b, hp(bass_b, 30), arp_b, drums
+
 def build_sfx():
     out = buf()
     trims = getattr(F, "SFX_TRIM", {})             # per film, in dB, by cue type
@@ -1389,8 +1569,9 @@ def limiter(x, ceiling_db=-1.2, look=0.004, release=0.08):
 def main():
     os.makedirs(os.path.join(BUILD, "stems"), exist_ok=True)
     style = getattr(F, "MUSIC", "synth")
-    drum_led = style in ("drums", "band", "garage", "perc")
-    pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band, "garage": build_music_garage, "perc": build_music_perc}.get(style, build_music)()
+    drum_led = style in ("drums", "band", "garage", "perc", "electronica")
+    pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band, "garage": build_music_garage, "perc": build_music_perc,
+                               "electronica": build_music_electronica}.get(style, build_music)()
     music = pads * 1.0 + bass * 1.0 + keys * 1.0 + drums * (1.0 if drum_led else 0.9)
     music = peak_eq(music, 2800, 3.0, 0.6)
     music = peak_eq(music, 90, -2.0, 0.8)
@@ -1400,10 +1581,10 @@ def main():
     for l in TL["lines"]:
         speaking[at(l["start"] - 0.12):at(l["end"] + 0.25)] = 1
     # percussion only: a small, slow dip, so the level never jumps between lines
-    rel = np.exp(-1 / ((0.45 if style == "perc" else 0.12) * SR))
+    rel = np.exp(-1 / ((0.45 if style in ("perc", "electronica") else 0.12) * SR))
     speaking = signal.lfilter([1 - rel], [1, -rel], speaking)
     # drums and a band sit further down under the voice: claps and chords share its range
-    duck_db = {"perc": -3.5, "band": -9.0, "garage": -8.0, "drums": -7.5}.get(style, -6.0) * np.clip(speaking, 0, 1)
+    duck_db = {"perc": -3.5, "electronica": -3.5, "band": -9.0, "garage": -8.0, "drums": -7.5}.get(style, -6.0) * np.clip(speaking, 0, 1)
     music *= 10 ** (duck_db / 20)[:, None]
     # the last seconds breathe out
     fade = np.clip((DUR - np.arange(N) / SR) / 1.4, 0, 1) ** 1.5
