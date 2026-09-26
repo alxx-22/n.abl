@@ -1,14 +1,17 @@
 """
 Joins each rendered picture to the mix and writes the captions.
 
-  out/nabl-ai-launch-<ratio>.mp4  H.264 High, 60 fps, ~3.7 Mbps two-pass, AAC 192k, faststart
-  out/nabl-ai-launch.srt          sentence captions from the voiceover timings
+  python3 package.py [--film ai] [16x9 1x1 4x5 9x16]
+
+  out/<id>/nabl-<id>-<ratio>.mp4  H.264 High, 60 fps, ~3.7 Mbps two-pass, AAC 192k, faststart
+  out/<id>/nabl-<id>.srt          sentence captions from the voiceover timings
 """
 
 import json, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BUILD, OUT = os.path.join(HERE, "build"), os.path.join(HERE, "out")
+FILM = sys.argv[sys.argv.index("--film") + 1] if "--film" in sys.argv else "ai"
+BUILD, OUT = os.path.join(HERE, "build", FILM), os.path.join(HERE, "out", FILM)
 RATIOS = ["16x9", "1x1", "4x5", "9x16"]
 
 
@@ -98,7 +101,7 @@ def audio():
 def main():
     os.makedirs(OUT, exist_ok=True)
     tl = json.load(open(os.path.join(BUILD, "timeline.json")))
-    with open(os.path.join(OUT, "nabl-ai-launch.srt"), "w") as f:
+    with open(os.path.join(OUT, f"nabl-{FILM}.srt"), "w") as f:
         f.write(captions(tl))
     aac = audio()
     only = [a for a in sys.argv[1:] if a in RATIOS]
@@ -120,10 +123,10 @@ def main():
                       "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709"]
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *common, "-pass", "1", "-f", "mp4", os.devnull], check=True)
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *common, "-pass", "2", pic], check=True)
-        dst = os.path.join(OUT, f"nabl-ai-launch-{r}.mp4")
+        dst = os.path.join(OUT, f"nabl-{FILM}-{r}.mp4")
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", pic, "-i", aac, "-map", "0:v", "-map", "1:a",
                         "-c", "copy", "-shortest", "-movflags", "+faststart",
-                        "-metadata", "title=n.abl · AI, where it earns its place", dst], check=True)
+                        "-metadata", f"title={tl['title']}", dst], check=True)
         print(f"{dst}  {os.path.getsize(dst) / 2**20:.1f} MiB")
 
 

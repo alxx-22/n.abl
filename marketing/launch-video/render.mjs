@@ -1,12 +1,14 @@
-/* Renders the film to video, frame by frame, in headless Chromium.
+/* Renders a film to video, frame by frame, in headless Chromium.
 
-   node render.mjs --stills 1.2,8,15.5 [--ratio 16x9]   PNG stills for review
-   node render.mjs --cues                                writes build/cues.json
-   node render.mjs --video [--ratio 9x16] [--jobs 3]     build/video_<ratio>.mp4
+   node render.mjs --film ai --stills 1.2,8,15.5 [--ratio 16x9]   PNG stills for review
+   node render.mjs --film ai --cues                             build/<id>/cues.json
+   node render.mjs --film ai --video [--ratio 9x16] [--jobs 4]  build/<id>/video_<ratio>.mp4
+   node render.mjs --film ai --covers                           out/<id>/nabl-<id>-cover-<ratio>.jpg
 
-   The page is served from the repository root so the film can use the
-   site's own fonts and easing curves. Each frame is an explicit seek, so
-   frames can be split across several browser pages and joined afterwards. */
+   --film defaults to ai. The page is served from the repository root so the
+   film can use the site's own fonts and easing curves. Each frame is an
+   explicit seek, so frames can be split across several browser pages and
+   joined afterwards. */
 
 import http from 'node:http'
 import fs from 'node:fs'
@@ -17,7 +19,7 @@ import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(HERE, '../..')
-const BUILD = path.join(HERE, 'build')
+let BUILD
 const require = createRequire(import.meta.url)
 let chromium
 try { ({ chromium } = require('playwright')) } catch { ({ chromium } = require('/opt/node22/lib/node_modules/playwright')) }
@@ -27,6 +29,8 @@ const args = process.argv.slice(2)
 const opt = k => { const i = args.indexOf('--' + k); return i < 0 ? null : (args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : true) }
 const ratios = (opt('ratio') && opt('ratio') !== 'all') ? String(opt('ratio')).split(',') : Object.keys(RATIOS)
 const FPS = +(opt('fps') || 60)
+const FILM = opt('film') && opt('film') !== true ? String(opt('film')) : 'ai'
+BUILD = path.join(HERE, 'build', FILM)
 const LAUNCH = ['--force-color-profile=srgb', '--disable-lcd-text', '--font-render-hinting=none', '--hide-scrollbars']
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png' }
@@ -44,7 +48,7 @@ async function openPage(browser, port, [w, h]) {
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 })
   page.on('pageerror', e => console.error('pageerror', e.message))
   page.on('console', m => { if (m.type() === 'error') console.error('console', m.text()) })
-  await page.goto(`http://127.0.0.1:${port}/marketing/launch-video/film/index.html?w=${w}&h=${h}`)
+  await page.goto(`http://127.0.0.1:${port}/marketing/launch-video/film/index.html?film=${FILM}&w=${w}&h=${h}`)
   await page.waitForFunction(() => window.READY || window.ERROR, null, { timeout: 60000 })
   const err = await page.evaluate(() => window.ERROR)
   if (err) throw new Error(err)
@@ -79,13 +83,14 @@ async function main() {
     }
     if (opt('covers')) {
       // a still for each format, for platforms that ask for a cover image
-      const at = +(opt('covers') === true ? 3.97 : opt('covers'))
-      const out = path.join(HERE, 'out'); fs.mkdirSync(out, { recursive: true })
+      const tl = JSON.parse(fs.readFileSync(path.join(BUILD, 'timeline.json')))
+      const at = +(opt('covers') === true ? tl.cover : opt('covers'))
+      const out = path.join(HERE, 'out', FILM); fs.mkdirSync(out, { recursive: true })
       for (const r of ratios) {
         const { page, cdp } = await openPage(browser, port, RATIOS[r])
         await page.evaluate(t => window.seek(t), at)
         const jpg = (await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 92 })).data
-        fs.writeFileSync(path.join(out, `nabl-ai-launch-cover-${r}.jpg`), Buffer.from(jpg, 'base64'))
+        fs.writeFileSync(path.join(out, `nabl-${FILM}-cover-${r}.jpg`), Buffer.from(jpg, 'base64'))
         await page.close()
       }
       console.log(`covers at ${at}s`)

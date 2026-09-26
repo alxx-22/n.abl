@@ -2,27 +2,33 @@
 Music, sound effects and the final mix.
 
 Everything is synthesised here, on the film's own timeline, so nothing needs a
-licence. The music is written against build/timeline.json (110 BPM, scenes
-start on beats) and the effects are placed from build/cues.json, which the
-film itself emits, so a sound lands on the frame that makes it.
+licence. The music is written against build/<id>/timeline.json (scenes start
+on beats) in the shape films/<id>/film.py gives it, and the effects are placed
+from build/<id>/cues.json, which the film itself emits, so a sound lands on
+the frame that makes it.
 
-  music   warm supersaw pads, plucked arpeggio, sub bass and a soft kit,
-          vi-IV-I-V in D major, resolving to D on the logo
+  python3 audio.py [--film ai]
+
+  music   supersaw pads and offbeat stabs, plucked arpeggio, sub bass and a
+          kit, in D major, sections and chords from the film
   effects typing, paper, whooshes, scan, UI ticks and clicks, risers, impacts
   voice   high-passed, gently compressed, a little presence and room
   master  music ducked under the voice, limited, -14 LUFS integrated
 
-Writes build/mix.wav (48 kHz, stereo, 24-bit) and build/stems/*.wav.
+Writes build/<id>/mix.wav (48 kHz, stereo, 24-bit) and build/<id>/stems/*.wav.
 """
 
-import json, os
+import importlib.util, json, os, sys
 import numpy as np
 import soundfile as sf
 from scipy import signal
 import pyloudnorm as pyln
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BUILD = os.path.join(HERE, "build")
+FILM_ID = sys.argv[sys.argv.index("--film") + 1] if "--film" in sys.argv else "ai"
+BUILD = os.path.join(HERE, "build", FILM_ID)
+_spec = importlib.util.spec_from_file_location("film", os.path.join(HERE, "films", FILM_ID, "film.py"))
+F = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(F)
 SR = 48000
 rng = np.random.default_rng(7)
 
@@ -34,9 +40,6 @@ BEAT = TL["beat"]
 S16 = BEAT / 4
 SC = {s["id"]: s for s in TL["scenes"]}
 cue_t = lambda kind: [c["t"] for c in CUES if c["type"] == kind]
-T_BOOM = cue_t("impact")[0]                       # "AI!": the drop
-T_GROOVE = np.ceil(T_BOOM / BEAT - 1e-6) * BEAT   # the groove starts on the next beat
-T_DOT = cue_t("thud")[0]                          # the logo's dot lands
 
 
 # ---------------------------------------------------------------- helpers
@@ -147,19 +150,9 @@ def delay(x, dt, fb=0.35, mix=0.3, lpf=3500):
 # ------------------------------------------------------------------ music
 BARS = {"Bm": (35, [59, 62, 66, 73]), "G": (31, [55, 59, 62, 66]),
         "D": (38, [57, 62, 64, 66]), "A": (33, [57, 61, 64, 71]), "Asus": (33, [57, 62, 64, 69])}
-PROG = ["Bm", "G", "D", "A"]
-
 def sections():
-    """(start, end, kind, chords) on the beat grid."""
-    return [
-        (0.0, SC["ai"]["start"], "pulse", ["Bm", "G"]),
-        (SC["ai"]["start"], T_GROOVE, "build", ["A"]),
-        (T_GROOVE, SC["wall"]["start"], "main", PROG),
-        (SC["wall"]["start"], SC["yours"]["start"], "main2", PROG),
-        (SC["yours"]["start"], SC["end"]["start"], "break", ["G", "A"]),
-        (SC["end"]["start"], T_DOT, "lift", ["A"]),
-        (T_DOT, DUR, "resolve", ["D", "D", "D", "D"]),
-    ]
+    """(start, end, kind, chords) on the beat grid, from the film."""
+    return F.sections(SC, cue_t, BEAT, DUR)
 
 def pad_note(m, d, cutoff, voices=5, spread=0.14, attack=0.35, release=0.9):
     """Supersaw note, stereo, with its own filter envelope."""
@@ -276,7 +269,9 @@ def build_music():
     for k in kicks:
         add(drums, kick(1.0), k, 0.6)
     # the build to the drop: snare roll in the break's last beat and in the lift
-    for (a, b_, lvl) in [(T_BOOM - 0.6, T_BOOM, .15), (T_DOT - 2 * BEAT, T_DOT, .15)]:
+    # a snare roll into every drop and into the dot landing on the logo
+    rolls = [(t - 0.6, t, .15) for t in cue_t("impact")] + [(t - 2 * BEAT, t, .15) for t in cue_t("thud")]
+    for (a, b_, lvl) in rolls:
         n = int(round((b_ - a) / (S16 / 2)))
         for k in range(n):
             add(drums, snare(), a + k * S16 / 2, lvl * (0.3 + 0.7 * k / n), pan=0.1)

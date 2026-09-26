@@ -1,14 +1,18 @@
 """
 Voiceover and timeline.
 
-Synthesises every sentence of the script with Kokoro (bm_fable, British
-English), trims each clip to its speech, and lays the clips out scene by scene.
+Synthesises every sentence of a film's script with Kokoro, trims each clip to
+its speech, and lays the clips out scene by scene.
 Every scene starts on a beat of the music grid, so the cuts land on the beat
 and the music can be written to the same timeline afterwards.
 
+The script, the voice and the tempo come from films/<id>/film.py.
+
+  python3 vo.py [--film ai]
+
 Writes:
-  build/vo/NN_M.wav   one clip per sentence, 24 kHz mono, trimmed
-  build/timeline.json scenes, lines, sentences and word timings, in seconds
+  build/<id>/vo/NN_M.wav   one clip per sentence, 24 kHz mono, trimmed
+  build/<id>/timeline.json scenes, lines, sentences and word timings, in seconds
 
 Word timings are measured. The TTS model does not report durations, so each
 clip is run through a speech recogniser that does (NVIDIA Parakeet TDT, via
@@ -24,7 +28,7 @@ to half a second late, which is why the recogniser is here.
                default build/models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
 """
 
-import json, os, re, sys
+import importlib.util, json, os, re, sys
 import numpy as np
 import soundfile as sf
 from kokoro_onnx import Kokoro
@@ -32,39 +36,18 @@ from kokoro_onnx import Kokoro
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUILD = os.path.join(HERE, "build")
 MODELS = os.environ.get("KOKORO_DIR", os.path.join(BUILD, "models"))
-# bm_fable has about twice the pitch movement of the other British voices
-# (interquartile range 7.5 semitones against 3.4 for bf_emma), which is what
-# makes a read sound lively rather than level.
-VOICE, LANG, SPEED = "bm_fable", "en-gb", 1.2
-# Short sentences come out drawn out at the normal rate, so they are read
-# faster: the model lengthens a phrase's last word, and in a short phrase
-# that is most of it.
-SHORT_SPEED = 1.36
 SR = 24000
 
-BPM = 124
+# The film: its script, voice and tempo live in films/<id>/film.py.
+#   python3 vo.py [--film ai]
+FILM_ID = sys.argv[sys.argv.index("--film") + 1] if "--film" in sys.argv else "ai"
+_spec = importlib.util.spec_from_file_location("film", os.path.join(HERE, "films", FILM_ID, "film.py"))
+F = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(F)
+VOICE, LANG, SPEED, SHORT_SPEED = F.VOICE, F.LANG, F.SPEED, F.SHORT_SPEED
+BPM = F.BPM
 BEAT = 60 / BPM
-
-# The name is spoken, not spelled. Everything else is read as written.
-SAY = {"n.abl": "enable"}
-
-# lead: time from the scene's first frame to its first word.
-# gap:  pause between two lines inside the scene.
-# tail: minimum hold after the last word before the next scene may start.
-# snap: lines whose start is pushed onto the next beat, for a hit to land on.
-# q:    the grid the scene's end snaps to, in beats. Half beats keep it moving.
-SCENES = [
-    dict(id="boot",  lead=0.30, tail=0.10, q=1, lines=["The world just got a new operating system."]),
-    dict(id="ai",    lead=0.12, tail=0.30, q=1, lines=["It's called AI!"]),
-    dict(id="into",  lead=0.10, tail=0.12, q=0.5, lines=["And n.abl builds it into your business."]),
-    dict(id="book",  lead=0.18, tail=0.05, q=0.5, lines=["Customer agents that book appointments,"]),
-    dict(id="faq",   lead=0.10, tail=0.05, q=0.5, lines=["answer questions, day or night,"]),
-    dict(id="care",  lead=0.10, tail=0.15, q=0.5, lines=["and handle complaints before they escalate."]),
-    dict(id="wall",  lead=0.20, tail=0.15, q=0.5, lines=["Plus AI that reads your paperwork, sorts your inbox, drafts your replies, and chases every lead."]),
-    dict(id="gains", lead=0.12, tail=0.15, q=0.5, lines=["Less admin. Faster answers. Happier customers."]),
-    dict(id="yours", lead=0.10, tail=0.15, q=0.5, lines=["Built for your business. Yours to keep."]),
-    dict(id="end",   lead=1.20, tail=2.60, q=1, snap=[0], lines=["n.abl. Put AI to work!"]),
-]
+SAY, SCENES = F.SAY, F.SCENES
+OUT = os.path.join(BUILD, FILM_ID)
 
 # Silence between sentences inside a line, by the mark that ends the first.
 AFTER = {"…": 0.35, ".": 0.18, "?": 0.22, "!": 0.2}
@@ -214,7 +197,7 @@ def word_times_measured(kok, text, clip):
 
 
 def main():
-    os.makedirs(os.path.join(BUILD, "vo"), exist_ok=True)
+    os.makedirs(os.path.join(OUT, "vo"), exist_ok=True)
     kok = Kokoro(os.path.join(MODELS, "kokoro-v1.0.onnx"), os.path.join(MODELS, "voices-v1.0.bin"))
 
     t = 0.0
@@ -239,7 +222,7 @@ def main():
                 assert sr == SR
                 clip = trim(audio)
                 name = f"{n:02d}_{si}.wav"
-                sf.write(os.path.join(BUILD, "vo", name), clip, SR)
+                sf.write(os.path.join(OUT, "vo", name), clip, SR)
                 d = len(clip) / SR
                 words = word_times_measured(kok, s, clip)
                 for w in words:
@@ -259,9 +242,9 @@ def main():
         t = end
         print(f"{sc['id']:7s} {start:6.2f} → {end:6.2f}  ({end - start:5.2f}s)  vo ends {cursor:6.2f}")
 
-    timeline = dict(bpm=BPM, beat=BEAT, fps=60, duration=round(scenes[-1]["end"], 4),
+    timeline = dict(film=FILM_ID, title=F.TITLE, cover=F.COVER, bpm=BPM, beat=BEAT, fps=60, duration=round(scenes[-1]["end"], 4),
                     voice=VOICE, scenes=scenes, lines=lines_out, clips=clips)
-    with open(os.path.join(BUILD, "timeline.json"), "w") as f:
+    with open(os.path.join(OUT, "timeline.json"), "w") as f:
         json.dump(timeline, f, indent=1, ensure_ascii=False)
     print(f"total {timeline['duration']:.2f}s")
 
