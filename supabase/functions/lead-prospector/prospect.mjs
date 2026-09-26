@@ -984,10 +984,24 @@ export function validateSignals(parsed, { facts, max = 8, services = null }) {
   const signals = []
   const struck = []
   const seen = new Set()
-  for (const s of Array.isArray(parsed?.signals) ? parsed.signals : []) {
-    const id = str(s?.id, 8)
+  const list = Array.isArray(parsed?.signals) ? parsed.signals : []
+  /* An id not shaped like s1 is given the next free one, and the promote
+     list follows it. On 26 September T4 Sustainability's one strong web
+     signal came back as "sig_web_insecure_placeholder" and was thrown
+     away, and the business with it. */
+  const taken = new Set(list.map((x) => str(x?.id, 80)).filter(idOk))
+  const renamed = new Map()
+  let next = 0
+  const fresh = () => { do next++; while (taken.has(`s${next}`)); taken.add(`s${next}`); return `s${next}` }
+  for (const s of list) {
+    const raw = str(s?.id, 80)
+    let id = raw
     const text = str(s?.signal, 400)
-    if (!idOk(id)) { struck.push(`a signal with id "${id || '?'}" — ids look like s1`); continue }
+    if (!idOk(raw)) {
+      id = fresh()
+      if (raw) renamed.set(raw, id)
+      struck.push(`a signal with id "${raw.slice(0, 40) || '?'}", not shaped like s1: read as ${id}`)
+    }
     if (seen.has(id)) { struck.push(`${id}: the id was used twice`); continue }
     if (!text) { struck.push(`${id}: says nothing`); continue }
     const route = contactRouteIn(text)
@@ -1010,7 +1024,7 @@ export function validateSignals(parsed, { facts, max = 8, services = null }) {
     if (signals.length >= max) break
   }
   const ids = new Set(signals.map((s) => s.id))
-  const asked = Array.isArray(parsed?.promote) ? parsed.promote.map((x) => str(x, 8)) : null
+  const asked = Array.isArray(parsed?.promote) ? parsed.promote.map((x) => renamed.get(str(x, 80)) ?? str(x, 8)) : null
   /* No promote list means every surviving signal is put forward. A list
      that names nothing real is the agent promoting nothing, and says so. */
   const promoted = asked ? [...new Set(asked.filter((x) => ids.has(x)))] : [...ids]

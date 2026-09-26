@@ -140,6 +140,12 @@ console.log('\nSIGNALS: EVERY ONE RESTS ON A FACT\n')
   ok('promoting a signal that does not exist is noted', v.struck.some((s) => /s7/.test(s)) && v.promoted.join() === 's1,s3')
   ok('no promote list means every surviving signal goes forward',
     validateSignals({ signals: [{ id: 's1', signal: 'x', facts: ['f1'] }] }, { facts: FACTS }).promoted.join() === 's1')
+  const odd = validateSignals({ signals: [
+    { id: 'sig_web_insecure_placeholder', signal: 'Served over plain HTTP', facts: ['f1'], strength: 'strong', points_to: ['web'] },
+    { id: 's1', signal: 'Bookings are rekeyed by hand', facts: ['f1'] },
+  ], promote: ['sig_web_insecure_placeholder', 's1'] }, { facts: FACTS })
+  ok('a signal with an id not shaped like s1 is numbered, not thrown away (T4)',
+    odd.signals.map((s) => s.id).join() === 's2,s1' && odd.promoted.join() === 's2,s1' && odd.struck.some((x) => /read as s2/.test(x)), odd)
 
   const r = validateSignalReview({ verdicts: [{ signal: 's1', verdict: 'overreach', why: 'it says emailed, not rekeyed' }] },
     [{ id: 's1' }, { id: 's3' }])
