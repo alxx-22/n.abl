@@ -1,7 +1,7 @@
 """
 Voiceover and timeline.
 
-Synthesises every sentence of the script with Kokoro (bf_emma, British
+Synthesises every sentence of the script with Kokoro (bm_fable, British
 English), trims each clip to its speech, and lays the clips out scene by scene.
 Every scene starts on a beat of the music grid, so the cuts land on the beat
 and the music can be written to the same timeline afterwards.
@@ -10,9 +10,18 @@ Writes:
   build/vo/NN_M.wav   one clip per sentence, 24 kHz mono, trimmed
   build/timeline.json scenes, lines, sentences and word timings, in seconds
 
-Word timings are estimated: the model does not report durations, so each
-sentence's speech is shared between its words by phoneme count, with the
-pauses the model left at commas found in the audio and used as anchors.
+Word timings are measured. The TTS model does not report durations, so each
+clip is run through a speech recogniser that does (NVIDIA Parakeet TDT, via
+sherpa-onnx), and its word starts are used. A sentence's first word starts
+where its clip does: the recogniser puts its first token early, in the
+silence before the speech. If the recogniser is not installed, or does not
+hear the same number of words as the script has, the sentence falls back to
+an estimate: its speech shared between its words by phoneme count, with the
+pauses at commas found in the audio and used as anchors. That estimate ran up
+to half a second late, which is why the recogniser is here.
+
+  ALIGNER_DIR  the unpacked sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8 model,
+               default build/models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
 """
 
 import json, os, re, sys
@@ -153,6 +162,57 @@ def word_times(kok, text, clip):
     return out
 
 
+ALIGNER = os.environ.get("ALIGNER_DIR", os.path.join(MODELS, "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8"))
+_rec = None
+
+
+def recogniser():
+    global _rec
+    if _rec is None:
+        if not os.path.exists(os.path.join(ALIGNER, "encoder.int8.onnx")):
+            _rec = False
+        else:
+            import sherpa_onnx
+            _rec = sherpa_onnx.OfflineRecognizer.from_transducer(
+                encoder=os.path.join(ALIGNER, "encoder.int8.onnx"), decoder=os.path.join(ALIGNER, "decoder.int8.onnx"),
+                joiner=os.path.join(ALIGNER, "joiner.int8.onnx"), tokens=os.path.join(ALIGNER, "tokens.txt"),
+                model_type="nemo_transducer", num_threads=4)
+    return _rec
+
+
+def measured_starts(clip):
+    """Word start times in a clip, from the recogniser, or None."""
+    rec = recogniser()
+    if not rec:
+        return None
+    from scipy.signal import resample_poly
+    pad = 0.4
+    a = resample_poly(clip, 16000, SR).astype(np.float32)
+    a = np.concatenate([np.zeros(int(pad * 16000), np.float32), a, np.zeros(int(0.4 * 16000), np.float32)])
+    st = rec.create_stream(); st.accept_waveform(16000, a); rec.decode_stream(st)
+    starts = []
+    for tok, ts in zip(st.result.tokens, st.result.timestamps):
+        if tok.startswith(" ") or not starts:
+            starts.append(ts - pad)
+    return starts
+
+
+def word_times_measured(kok, text, clip):
+    est = word_times(kok, text, clip)
+    got = measured_starts(clip)
+    if not got or len(got) != len(est):
+        if got is not None:
+            print(f"  aligner heard {len(got)} words in {text!r}, script has {len(est)}: estimating")
+        return est
+    dur = len(clip) / SR
+    starts = [0.012] + [max(0.012, min(dur - 0.05, g)) for g in got[1:]]
+    # never out of order, never on top of each other
+    for i in range(1, len(starts)):
+        starts[i] = max(starts[i], starts[i - 1] + 0.06)
+    ends = starts[1:] + [dur]
+    return [dict(w=e["w"], start=round(s, 3), end=round(n, 3)) for e, s, n in zip(est, starts, ends)]
+
+
 def main():
     os.makedirs(os.path.join(BUILD, "vo"), exist_ok=True)
     kok = Kokoro(os.path.join(MODELS, "kokoro-v1.0.onnx"), os.path.join(MODELS, "voices-v1.0.bin"))
@@ -181,7 +241,7 @@ def main():
                 name = f"{n:02d}_{si}.wav"
                 sf.write(os.path.join(BUILD, "vo", name), clip, SR)
                 d = len(clip) / SR
-                words = word_times(kok, s, clip)
+                words = word_times_measured(kok, s, clip)
                 for w in words:
                     w["start"] = round(cursor + w["start"], 3)
                     w["end"] = round(cursor + w["end"], 3)

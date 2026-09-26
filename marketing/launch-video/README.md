@@ -29,7 +29,9 @@ Nothing is stock and nothing is licensed. Every part is generated here:
 1. **`vo.py`** reads the script with [Kokoro](https://github.com/hexgrad/kokoro)
    (Apache-2.0), voice `bm_fable`, British English, at 1.2× speed. Each
    sentence is trimmed and laid out shot by shot, and every shot starts on a
-   beat, or half a beat, of the 124 BPM music grid. Writes
+   beat, or half a beat, of the 124 BPM music grid. Every clip is then run
+   through a speech recogniser with word timestamps (NVIDIA Parakeet TDT, via
+   sherpa-onnx) so the words on screen land when they are spoken. Writes
    `build/timeline.json` with the start and end of every word.
 2. **`film/`** is the animation: one HTML page, sampled by time.
    `window.seek(t)` draws the frame at `t` seconds. It uses the site's own
@@ -62,6 +64,7 @@ pip install -r requirements.txt
 mkdir -p build/models && cd build/models \
   && curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx \
   && curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin \
+  && curl -L https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2 | tar xj \
   && cd ../..
 
 python3 vo.py                       # voice and timeline

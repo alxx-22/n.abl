@@ -803,7 +803,8 @@ function buildEnd(s) {
     vis(s.rig, 1 - P(t, s.t1 - .5, s.t1, E.in2))
     const hitK = bell(t, tN, tN + .05, tN + .4)
     put(mark, { y: L.y + hitK * 5 })
-    strokes.forEach((e, i) => { const p = P(t, draw[i][0], draw[i][1], E.io); e.style.strokeDasharray = '1 1'; e.style.strokeDashoffset = (1 - p).toFixed(4); e.style.opacity = p > 0 ? 1 : 0 })
+    // a finished stroke drops its dash: a dash ending where it began leaves a hairline seam on the bowls
+    strokes.forEach((e, i) => { const p = P(t, draw[i][0], draw[i][1], E.io); e.style.strokeDasharray = p >= 1 ? 'none' : '1 1'; e.style.strokeDashoffset = p >= 1 ? '0' : (1 - p).toFixed(4); e.style.opacity = p > 0 ? 1 : 0 })
     const mv = P(t, s.t0 + .1, tN - .05, E.io)
     const land = bell(t, tN - .02, tN + .06, tN + .35, E.out)
     put(dot, { x: lerp(0, dotC[0], mv), y: lerp(0, dotC[1], mv), s: lerp(startS, 1, mv) * (1 + .5 * land) })

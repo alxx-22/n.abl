@@ -3,3 +3,4 @@ scipy
 soundfile
 pyloudnorm
 kokoro-onnx
+sherpa-onnx
