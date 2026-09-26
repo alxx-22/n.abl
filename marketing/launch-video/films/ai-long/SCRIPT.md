@@ -3,7 +3,9 @@
 > **The long cut.** This is the first version of the AI film, as delivered
 > before the shorter, faster [`Put AI to work`](../ai/SCRIPT.md). It was made
 > before the stage was shared between films, so its scripts are the versions
-> in commit `95ec345`: check that commit out to rebuild it (see
+> in commit `95ec345`, with one fix from the short film: each stroke of the
+> end-card wordmark drops its dash once drawn, so the bowls close without a
+> hairline seam. Check that commit out to rebuild it (see
 > [`README.md`](../../README.md)). The finished films are in `out/ai-long/`.
 
 A short launch film for the n.abl AI service, 58 seconds, cut for every

@@ -91,8 +91,9 @@ python3 package.py --film $F                 # final MP4s and captions
 The long cut (`ai-long`) is the first version of the AI film, made before the
 stage was shared between films. Its scripts are the ones in commit `95ec345`;
 to rebuild it, check that commit out in a worktree
-(`git worktree add ../ai-long 95ec345`) and run the same six steps there
-without `--film`.
+(`git worktree add ../ai-long 95ec345`), apply the end-card seam fix from
+`endCard()` in `film/stage.js` to the same line in its `film/film.js`, and run
+the same six steps there without `--film`.
 
 To preview a film live, serve the repository root (for example
 `npx serve .`) and open
