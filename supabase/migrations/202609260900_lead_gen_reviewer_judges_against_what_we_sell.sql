@@ -27,3 +27,10 @@ Answer with JSON only:
   "verdicts": [{"signal": "s1", "verdict": "stands|overreach", "why": "one sentence"}]
 }$p$
 where key = 'research_review';
+
+-- The page reader changed with it (prospect.mjs sameSiteLinks and
+-- sharePageText): the notes on its two settings say what they now mean.
+update public.prospect_setting set note = 'the front page plus this many minus one of its own pages: what they do, then their work (testing, inspection, servicing and the like), then who they are'
+ where key = 'pages_per_site';
+update public.prospect_setting set note = 'website text the research agent reads, shared evenly between the pages read; a short page leaves its share to the others'
+ where key = 'max_page_chars';
