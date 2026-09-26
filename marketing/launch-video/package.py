@@ -5,7 +5,7 @@ Joins each rendered picture to the mix and writes the captions.
   out/nabl-ai-launch.srt          sentence captions from the voiceover timings
 """
 
-import json, os, re, subprocess
+import json, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUILD, OUT = os.path.join(HERE, "build"), os.path.join(HERE, "out")
@@ -101,7 +101,8 @@ def main():
     with open(os.path.join(OUT, "nabl-ai-launch.srt"), "w") as f:
         f.write(captions(tl))
     aac = audio()
-    for r in RATIOS:
+    only = [a for a in sys.argv[1:] if a in RATIOS]
+    for r in only or RATIOS:
         master = os.path.join(BUILD, f"video_{r}.mp4")
         if not os.path.exists(master):
             print(f"skip {r}: no picture yet")

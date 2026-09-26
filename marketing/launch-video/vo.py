@@ -23,12 +23,17 @@ from kokoro_onnx import Kokoro
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUILD = os.path.join(HERE, "build")
 MODELS = os.environ.get("KOKORO_DIR", os.path.join(BUILD, "models"))
-VOICE, LANG, SPEED = "bf_emma", "en-gb", 1.08
-# One-word sentences come out drawn out at the normal rate.
-LIST_SPEED = 1.22
+# bm_fable has about twice the pitch movement of the other British voices
+# (interquartile range 7.5 semitones against 3.4 for bf_emma), which is what
+# makes a read sound lively rather than level.
+VOICE, LANG, SPEED = "bm_fable", "en-gb", 1.2
+# Short sentences come out drawn out at the normal rate, so they are read
+# faster: the model lengthens a phrase's last word, and in a short phrase
+# that is most of it.
+SHORT_SPEED = 1.36
 SR = 24000
 
-BPM = 110
+BPM = 124
 BEAT = 60 / BPM
 
 # The name is spoken, not spelled. Everything else is read as written.
@@ -38,42 +43,33 @@ SAY = {"n.abl": "enable"}
 # gap:  pause between two lines inside the scene.
 # tail: minimum hold after the last word before the next scene may start.
 # snap: lines whose start is pushed onto the next beat, for a hit to land on.
+# q:    the grid the scene's end snaps to, in beats. Half beats keep it moving.
 SCENES = [
-    dict(id="hook",   lead=0.55, tail=0.30, lines=[
-        "Somewhere in your business, someone reads a document… then types it all out again."]),
-    dict(id="pile",   lead=0.20, tail=0.25, lines=[
-        "Invoices. Referrals. Applications. A different layout every time. The same hours, every week."]),
-    dict(id="turn",   lead=0.45, tail=0.55, lines=[
-        "That's language work. And it's exactly where AI earns its place."]),
-    dict(id="read",   lead=0.75, tail=0.40, gap=0.40, lines=[
-        "We build AI that reads them, pulls out what matters, and fills in your records.",
-        "Anything it isn't sure of goes to a person."]),
-    dict(id="sort",   lead=0.50, tail=0.45, lines=[
-        "It sorts your inbox by what each message means, and passes it to the right desk."]),
-    dict(id="draft",  lead=0.50, tail=0.55, lines=[
-        "It drafts replies from the records you already hold, and shows where every answer came from."]),
-    dict(id="boring", lead=0.35, tail=0.35, gap=0.30, snap=[1], lines=[
-        "And if the job doesn't need AI, we'll tell you, and build the boring version.",
-        "It's cheaper, and it breaks less often."]),
-    dict(id="terms",  lead=0.25, tail=0.35, lines=[
-        "No retainer. A price before we start. You own what we build."]),
-    dict(id="end",    lead=1.50, tail=3.10, snap=[0], lines=[
-        "n.abl. AI, where it earns its place."]),
+    dict(id="boot",  lead=0.30, tail=0.10, q=1, lines=["The world just got a new operating system."]),
+    dict(id="ai",    lead=0.12, tail=0.30, q=1, lines=["It's called AI!"]),
+    dict(id="into",  lead=0.10, tail=0.12, q=0.5, lines=["And n.abl builds it into your business."]),
+    dict(id="book",  lead=0.18, tail=0.05, q=0.5, lines=["Customer agents that book appointments,"]),
+    dict(id="faq",   lead=0.10, tail=0.05, q=0.5, lines=["answer questions, day or night,"]),
+    dict(id="care",  lead=0.10, tail=0.15, q=0.5, lines=["and handle complaints before they escalate."]),
+    dict(id="wall",  lead=0.20, tail=0.15, q=0.5, lines=["Plus AI that reads your paperwork, sorts your inbox, drafts your replies, and chases every lead."]),
+    dict(id="gains", lead=0.12, tail=0.15, q=0.5, lines=["Less admin. Faster answers. Happier customers."]),
+    dict(id="yours", lead=0.10, tail=0.15, q=0.5, lines=["Built for your business. Yours to keep."]),
+    dict(id="end",   lead=1.20, tail=2.60, q=1, snap=[0], lines=["n.abl. Put AI to work!"]),
 ]
 
 # Silence between sentences inside a line, by the mark that ends the first.
-AFTER = {"…": 0.42, ".": 0.24, "?": 0.28}
+AFTER = {"…": 0.35, ".": 0.18, "?": 0.22, "!": 0.2}
 # A run of one-word sentences is a list and is read quickly.
 LIST_GAP = 0.14
 
 
-def beat_ceil(t):
-    return np.ceil(t / BEAT - 1e-6) * BEAT
+def beat_ceil(t, q=1):
+    return np.ceil(t / (BEAT * q) - 1e-6) * BEAT * q
 
 
 def sentences(line):
-    """Split a line after . … ? while keeping the mark on its sentence."""
-    parts = re.findall(r"[^.…?]+[.…?]+|[^.…?]+$", line)
+    """Split a line after . … ? ! while keeping the mark on its sentence."""
+    parts = re.findall(r"[^.…?!]+[.…?!]+|[^.…?!]+$", line)
     out = []
     for p in parts:
         p = p.strip()
@@ -91,7 +87,7 @@ def spoken(text):
     return text
 
 
-def trim(a, thr_db=-42, pre=0.015, post=0.07):
+def trim(a, thr_db=-36, pre=0.012, post=0.05):
     env = np.abs(a)
     thr = env.max() * 10 ** (thr_db / 20)
     idx = np.where(env > thr)[0]
@@ -165,7 +161,7 @@ def main():
     scenes, lines_out, clips = [], [], []
     n = 0
     for sc in SCENES:
-        start = beat_ceil(t)
+        start = t
         cursor = start + sc["lead"]
         sc_lines = []
         for li, line in enumerate(sc["lines"]):
@@ -178,7 +174,7 @@ def main():
             sents = sentences(line)
             s_out = []
             for si, s in enumerate(sents):
-                rate = LIST_SPEED if len(s.split()) == 1 and len(sents) > 2 else SPEED
+                rate = SHORT_SPEED if len(s.split()) <= 4 else SPEED
                 audio, sr = kok.create(spoken(s), voice=VOICE, speed=rate, lang=LANG)
                 assert sr == SR
                 clip = trim(audio)
@@ -198,7 +194,7 @@ def main():
             lo = dict(n=n, text=line, start=round(line_start, 3), end=round(cursor, 3), sentences=s_out)
             lines_out.append(lo)
             sc_lines.append(n)
-        end = beat_ceil(cursor + sc["tail"])
+        end = beat_ceil(cursor + sc["tail"], sc.get("q", 1))
         scenes.append(dict(id=sc["id"], start=round(start, 4), end=round(end, 4), lines=sc_lines))
         t = end
         print(f"{sc['id']:7s} {start:6.2f} → {end:6.2f}  ({end - start:5.2f}s)  vo ends {cursor:6.2f}")

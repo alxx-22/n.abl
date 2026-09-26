@@ -79,7 +79,7 @@ async function main() {
     }
     if (opt('covers')) {
       // a still for each format, for platforms that ask for a cover image
-      const at = +(opt('covers') === true ? 17.72 : opt('covers'))
+      const at = +(opt('covers') === true ? 3.97 : opt('covers'))
       const out = path.join(HERE, 'out'); fs.mkdirSync(out, { recursive: true })
       for (const r of ratios) {
         const { page, cdp } = await openPage(browser, port, RATIOS[r])

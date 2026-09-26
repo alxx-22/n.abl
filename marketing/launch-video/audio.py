@@ -34,9 +34,9 @@ BEAT = TL["beat"]
 S16 = BEAT / 4
 SC = {s["id"]: s for s in TL["scenes"]}
 cue_t = lambda kind: [c["t"] for c in CUES if c["type"] == kind]
-T_BOOM = cue_t("impact")[0]
-T_DOT = cue_t("thud")[0]
-T_BACK = TL["lines"][8]["start"]  # "It's cheaper": the groove returns
+T_BOOM = cue_t("impact")[0]                       # "AI!": the drop
+T_GROOVE = np.ceil(T_BOOM / BEAT - 1e-6) * BEAT   # the groove starts on the next beat
+T_DOT = cue_t("thud")[0]                          # the logo's dot lands
 
 
 # ---------------------------------------------------------------- helpers
@@ -152,12 +152,11 @@ PROG = ["Bm", "G", "D", "A"]
 def sections():
     """(start, end, kind, chords) on the beat grid."""
     return [
-        (0.0, SC["pile"]["start"], "intro", ["Bm", "Bm", "G"]),
-        (SC["pile"]["start"], SC["turn"]["start"], "pulse", ["Bm", "G", "Bm", "G"]),
-        (SC["turn"]["start"], T_BOOM, "build", ["A"]),
-        (T_BOOM, SC["boring"]["start"], "main", PROG),
-        (SC["boring"]["start"], T_BACK, "break", ["G", "A", "G"]),
-        (T_BACK, SC["end"]["start"], "main2", PROG),
+        (0.0, SC["ai"]["start"], "pulse", ["Bm", "G"]),
+        (SC["ai"]["start"], T_GROOVE, "build", ["A"]),
+        (T_GROOVE, SC["wall"]["start"], "main", PROG),
+        (SC["wall"]["start"], SC["yours"]["start"], "main2", PROG),
+        (SC["yours"]["start"], SC["end"]["start"], "break", ["G", "A"]),
         (SC["end"]["start"], T_DOT, "lift", ["A"]),
         (T_DOT, DUR, "resolve", ["D", "D", "D", "D"]),
     ]
@@ -183,7 +182,7 @@ def build_music():
         nb = int(round((e - s) / BEAT))
         # ---- pads: one chord per bar
         cut = {"intro": 900, "pulse": 1500, "build": 2200, "main": 4200, "break": 2400, "main2": 5000, "lift": 3200, "resolve": 5500}[kind]
-        gain = {"intro": .9, "pulse": .7, "build": .7, "main": .62, "break": .7, "main2": .66, "lift": .75, "resolve": .95}[kind]
+        gain = {"intro": .9, "pulse": .7, "build": .7, "main": .62, "break": .7, "main2": .66, "lift": .75, "resolve": .55}[kind]
         b = 0
         while b < nb:
             name = ch[min(b // 4, len(ch) - 1)] if kind not in ("main", "main2") else ch[(b // 4) % len(ch)]
@@ -195,7 +194,7 @@ def build_music():
                 add(pads, p, s + b * BEAT, gain * 0.2)
             if kind == "resolve":
                 for m in [n + 12 for n in notes[1:]]:
-                    add(pads, pad_note(m, d, 4200, release=3.0), s + b * BEAT, 0.07)
+                    add(pads, pad_note(m, d, 4200, release=3.0), s + b * BEAT, 0.04)
             # ---- bass
             if kind in ("main", "main2", "pulse", "lift", "resolve", "break"):
                 f0 = mtof(root + 12) if kind != "pulse" else mtof(root + 12)
@@ -237,6 +236,15 @@ def build_music():
                         y = lp(y, 700 + 3000 * (t0 - s) / (e - s))
                     add(keys, y * acc, t0, lvl, pan=0.35 * np.sin(k * 1.3))
             b += 4
+        # ---- offbeat chord stabs, the lift that makes it a launch
+        if kind in ("main", "main2"):
+            for k in range(nb):
+                name = ch[(k // 4) % len(ch)]
+                for m in BARS[name][1][:3]:
+                    add(keys, pad_note(m + 12, 0.09, 5200, voices=4, attack=0.004, release=0.09), s + (k + .5) * BEAT, 0.07, pan=0)
+            add(drums, crash(), s, 0.22)
+        if kind in ("resolve",):
+            add(drums, crash(), s, 0.14)
         # ---- drums
         if kind in ("main", "main2"):
             for k in range(nb):
@@ -254,6 +262,9 @@ def build_music():
         elif kind == "intro":
             for k in range(nb):  # a clock
                 add(drums, tick_hat(), s + k * BEAT, 0.07 if k % 2 == 0 else 0.045, pan=0.4 if k % 2 else -0.4)
+        elif kind == "break":
+            for k in range(nb * 2):
+                add(drums, hat(0.03), s + k * BEAT / 2, 0.07 if k % 2 else 0.04, pan=0.2)
         elif kind == "pulse":
             for k in range(nb):
                 add(drums, tick_hat(), s + k * BEAT, 0.06, pan=0.3)
@@ -265,7 +276,7 @@ def build_music():
     for k in kicks:
         add(drums, kick(1.0), k, 0.6)
     # the build to the drop: snare roll in the break's last beat and in the lift
-    for (a, b_, lvl) in [(T_BACK - BEAT, T_BACK, .16), (T_DOT - 2 * BEAT, T_DOT, .14)]:
+    for (a, b_, lvl) in [(T_BOOM - 0.6, T_BOOM, .15), (T_DOT - 2 * BEAT, T_DOT, .15)]:
         n = int(round((b_ - a) / (S16 / 2)))
         for k in range(n):
             add(drums, snare(), a + k * S16 / 2, lvl * (0.3 + 0.7 * k / n), pan=0.1)
@@ -297,6 +308,10 @@ def clap():
         i = at(dt); nz = bp(noise(0.35), 900, 3200)[: len(x) - i]
         out[i:] += nz * np.exp(-x[: len(x) - i] / (0.012 if k < 2 else 0.09))
     return out * 0.8
+
+def crash():
+    d = 2.2; x = tt(d)
+    return (hp(noise(d), 4500, 2) * np.exp(-x / 0.7) + bp(noise(d), 2500, 6000) * np.exp(-x / 0.12) * 0.5) * 0.7
 
 def snare():
     x = tt(0.18)
@@ -438,6 +453,38 @@ def sfx_thud(v):
     air = hp(noise(d), 3000) * np.exp(-x / 0.9) * 0.18
     return np.tanh(1.4 * (sub * 1.2 + k * 0.6 + air)) * v
 
+def sfx_boot():
+    out = np.zeros(int(1.4 * SR))
+    for k, m in enumerate([69, 73, 76, 81]):
+        x = tt(1.0); f = mtof(m)
+        b = (np.sin(2 * np.pi * f * x) + .25 * np.sin(4 * np.pi * f * x)) * np.exp(-x / 0.35) * np.minimum(1, x / 0.004)
+        i = at(k * 0.07); out[i:i + len(b)] += b
+    return out * 0.25
+
+def sfx_send():
+    x = tt(0.22); p = x / 0.22
+    chirp = np.sin(2 * np.pi * np.cumsum(600 + 900 * p) / SR) * np.exp(-x / 0.05) * 0.4
+    air = sweep_lp(hp(noise(0.22), 800), 1500 + 6000 * p, q=1.2) * np.sin(np.pi * p) * 0.5
+    return chirp + air
+
+def sfx_recv():
+    out = np.zeros(int(0.3 * SR))
+    for dt, f in [(0, 988), (0.06, 1319)]:
+        x = tt(0.2); b = np.sin(2 * np.pi * f * x) * np.exp(-x / 0.05) * np.minimum(1, x / 0.003)
+        i = at(dt); out[i:i + len(b)] += b
+    return out * 0.45
+
+def sfx_whip():
+    return sfx_whoosh(0.3, 1.2, up=True)
+
+def sfx_flip():
+    x = tt(0.06)
+    return (bp(noise(0.06), 1500, 6000) * np.exp(-x / 0.008) + np.sin(2 * np.pi * 300 * x) * np.exp(-x / 0.01) * .4) * .6
+
+def sfx_star(v):
+    x = tt(0.4); f = 1568 * (1 + .12 * (v - .6) / .32)
+    return (np.sin(2 * np.pi * f * x) + .4 * np.sin(2 * np.pi * f * 1.5 * x)) * np.exp(-x / 0.09) * np.minimum(1, x / 0.003) * 0.35
+
 def build_sfx():
     out = buf()
     for c in CUES:
@@ -487,8 +534,25 @@ def build_sfx():
             add(out, sfx_draw(c["d"]), t, 0.5)
         elif k == "fall":
             add(out, sfx_fall(c["d"]), t, 0.5)
+        elif k == "boot":
+            add(out, reverb(sfx_boot(), IR_HALL, 0.3), t, 0.5)
+        elif k == "send":
+            add(out, sfx_send(), t - 0.05, 0.3, pan=0.3)
+        elif k == "recv":
+            add(out, sfx_recv(), t, 0.28 * v if v != 1.0 else 0.28, pan=-0.25)
+        elif k == "whip":
+            add(out, sfx_whip(), t - 0.15, 0.3)
+        elif k == "wipe":
+            add(out, sfx_whoosh(0.3, 1.0, up=True), t - 0.28, 0.28)
+            add(out, reverb(kick(0.8), IR_ROOM, 0.3), t, 0.3)
+        elif k == "flip":
+            add(out, sfx_flip(), t, 0.25 * v / .35, pan=rng.uniform(-.4, .4))
+        elif k == "star":
+            add(out, reverb(sfx_star(v), IR_HALL, 0.3), t, 0.35)
         elif k == "thud":
-            add(out, reverb(sfx_thud(v), IR_HALL, 0.4), t, 0.5)
+            # the hit is the moment, but the tagline follows it within a second
+            th = sfx_thud(v); th *= np.exp(-np.arange(len(th)) / SR / 0.5)
+            add(out, reverb(th, IR_ROOM, 0.3), t, 0.45)
         else:
             raise ValueError(k)
     return out
@@ -550,14 +614,14 @@ def main():
         speaking[at(l["start"] - 0.12):at(l["end"] + 0.25)] = 1
     rel = np.exp(-1 / (0.12 * SR))
     speaking = signal.lfilter([1 - rel], [1, -rel], speaking)
-    duck_db = -8.0 * np.clip(speaking, 0, 1)
+    duck_db = -6.0 * np.clip(speaking, 0, 1)
     music *= 10 ** (duck_db / 20)[:, None]
     # the last seconds breathe out
     fade = np.clip((DUR - np.arange(N) / SR) / 1.4, 0, 1) ** 1.5
     fade_in = np.clip(np.arange(N) / SR / 0.05, 0, 1)
-    mix = (music * 0.42 + sfx * 0.55 + vo * 1.0) * (fade * fade_in)[:, None]
+    mix = (music * 0.46 + sfx * 0.45 + vo * 1.0) * (fade * fade_in)[:, None]
     mix = mix[: int(DUR * SR)]
-    for name, st in [("music", music * 0.42), ("sfx", sfx * 0.55), ("vo", vo)]:
+    for name, st in [("music", music * 0.46), ("sfx", sfx * 0.45), ("vo", vo)]:
         sf.write(os.path.join(BUILD, "stems", name + ".wav"), st[: int(DUR * SR)], SR, subtype="PCM_24")
     meter = pyln.Meter(SR)
     # a little over -14: package.py trims the AAC by about this much to hold its true peak

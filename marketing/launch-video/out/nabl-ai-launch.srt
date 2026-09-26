@@ -1,89 +1,61 @@
 1
-00:00:00,550 --> 00:00:03,346
-Somewhere in your business,
-someone reads a document…
+00:00:00,300 --> 00:00:03,003
+The world just got a new operating system.
 
 2
-00:00:03,416 --> 00:00:05,301
-then types it all out again.
+00:00:03,023 --> 00:00:04,391
+It's called AI!
 
 3
-00:00:05,655 --> 00:00:09,021
-Invoices. Referrals. Applications.
+00:00:04,455 --> 00:00:07,157
+And n.abl builds it into your business.
 
 4
-00:00:09,041 --> 00:00:10,922
-A different layout every time.
+00:00:07,196 --> 00:00:09,999
+Customer agents that book appointments,
 
 5
-00:00:10,942 --> 00:00:12,864
-The same hours, every week.
+00:00:10,019 --> 00:00:12,177
+answer questions, day or night,
 
 6
-00:00:13,541 --> 00:00:15,084
-That's language work.
+00:00:12,197 --> 00:00:15,063
+and handle complaints
+before they escalate.
 
 7
-00:00:15,104 --> 00:00:17,729
-And it's exactly where AI earns its place.
+00:00:15,200 --> 00:00:18,887
+Plus AI that reads your paperwork,
+sorts your inbox, drafts your replies,
 
 8
-00:00:18,750 --> 00:00:21,554
-We build AI that reads them,
-pulls out what matters,
+00:00:18,907 --> 00:00:20,385
+and chases every lead.
 
 9
-00:00:21,574 --> 00:00:23,246
-and fills in your records.
+00:00:20,443 --> 00:00:21,512
+Less admin.
 
 10
-00:00:23,296 --> 00:00:25,893
-Anything it isn't sure
-of goes to a person.
+00:00:21,532 --> 00:00:22,674
+Faster answers.
 
 11
-00:00:26,682 --> 00:00:29,363
-It sorts your inbox by
-what each message means,
+00:00:22,694 --> 00:00:24,032
+Happier customers.
 
 12
-00:00:29,383 --> 00:00:31,329
-and passes it to the right desk.
+00:00:24,052 --> 00:00:25,472
+Built for your business.
 
 13
-00:00:32,136 --> 00:00:34,956
-It drafts replies from the
-records you already hold,
+00:00:25,492 --> 00:00:26,832
+Yours to keep.
 
 14
-00:00:34,996 --> 00:00:37,204
-and shows where every answer came from.
-
-15
-00:00:37,986 --> 00:00:41,961
-And if the job doesn't need AI, we'll
-tell you, and build the boring version.
-
-16
-00:00:42,000 --> 00:00:44,248
-It's cheaper, and it breaks less often.
-
-17
-00:00:44,977 --> 00:00:46,204
-No retainer.
-
-18
-00:00:46,224 --> 00:00:47,952
-A price before we start.
-
-19
-00:00:47,972 --> 00:00:49,642
-You own what we build.
-
-20
-00:00:51,818 --> 00:00:53,019
+00:00:28,065 --> 00:00:28,898
 n.abl
 
-21
-00:00:53,039 --> 00:00:55,045
-AI, where it earns its place.
+15
+00:00:28,918 --> 00:00:30,546
+Put AI to work!
