@@ -251,11 +251,21 @@ export function noSiteLine(outcome) {
 
 const PARKED = /domain (may be|is) (available|for sale)|buy this domain|parked (free )?(at|by)|protected domain holder|this domain is for sale|domain parking/i
 
+/* A holding page: the name, "coming soon", perhaps an email address, and
+   nothing that says which business it is. On 25 September the checker took
+   one for BW Plumbing & Heating on its name alone - one of four domains
+   with that name. Only when the page says it is not built yet and there is
+   little else on it: a site built in script can carry little readable text
+   and still be a real site. */
+const HOLDING = /coming soon|under construction|be here (very )?soon|please (re)?visit|launching soon|site is (being|currently being) (built|updated|developed)|new website is on its way/i
+
 export function pageKind(html) {
   const body = String(html ?? '')
   if (body.length < 400) return 'stub'
   const title = (body.match(/<title[^>]*>([^<]*)/i) || [])[1] || ''
   if (PARKED.test(title)) return 'parked'
+  const text = stripHtml(body)
+  if (text.length < 600 && HOLDING.test(text)) return 'stub'
   return 'live'
 }
 

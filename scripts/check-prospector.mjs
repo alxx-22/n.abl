@@ -50,6 +50,9 @@ console.log('\nTHE WEBSITE HAS TO PROVE IT IS THEIRS\n')
   ok('  …and never include the noise words', !g.some((d) => d.includes('services')))
   ok('a parking page is recognised by its title', pageKind(`<title>This domain is for sale</title>${'x'.repeat(500)}`) === 'parked')
   ok('  …and a "hosted by" footer is not', pageKind(`<title>Park Valley</title>${'x'.repeat(500)} parked at GoDaddy`) === 'live')
+  const holding = `<html><head><title>BW Plumbing and Heating</title><style>${'body{margin:0}'.repeat(40)}</style></head><body><h1>Welcome to BW Plumbing and Heating</h1><p>Please revisit - we'll be here very soon. For enquiries simply e-mail us.</p></body></html>`
+  ok('a holding page - the name and "coming soon" - is a placeholder, not a site to prove (25 September, BW Plumbing & Heating)', pageKind(holding) === 'stub')
+  ok('  …a real site that says a new page is coming soon is still a site', pageKind(`<title>Fresh Co</title><p>${'Electricians for homes and small businesses across Beeston. '.repeat(15)} New blog posts coming soon.</p>`) === 'live')
   ok('robots Disallow: / is respected', parseRobots('User-agent: *\nDisallow: /').allowed === false)
   ok('  …and a crawl delay is read, and capped', parseRobots('User-agent: *\nCrawl-delay: 60').delay === 10000)
 
