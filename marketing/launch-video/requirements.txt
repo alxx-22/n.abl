@@ -4,4 +4,4 @@ soundfile
 pyloudnorm
 kokoro-onnx
 sherpa-onnx
-# for the optional "band" arrangement only: tinysoundfont, installed with --no-deps (see README.md)
+# and tinysoundfont, installed with --no-deps, for the web film's percussion (see README.md)

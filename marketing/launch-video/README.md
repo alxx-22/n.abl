@@ -33,9 +33,9 @@ The MP4s are committed so they can be downloaded straight from the repository
 
 ## How it is made
 
-Nothing is stock and nothing is licensed. Every part is generated here,
-including the vocal chops in the web film's music, which are sung one
-syllable at a time by the same TTS model as the voiceover:
+Nothing is stock. Every part is generated here, except the web film's hand
+drums, toms and shaker, which are played from the free
+[GeneralUser GS](https://www.schristiancollins.com/generaluser) SoundFont:
 
 1. **`vo.py`** reads a film's script (`films/<film>/film.py`) with
    [Kokoro](https://github.com/hexgrad/kokoro) (Apache-2.0), voice `bm_fable`,
@@ -62,12 +62,11 @@ syllable at a time by the same TTS model as the voiceover:
 4. **`audio.py`** makes the music with the film's own tempo, chords and
    sections from its `film.py`. For the AI films it synthesises supersaw
    pads, offbeat stabs, plucked sixteenths and sub bass over
-   four-on-the-floor in D. For the web film it is minimal UK garage and tech
-   house in B minor, the sound of current tech launch films: swung two-step
-   drums that go four to the floor for the second half, a sliding sub bass,
-   house organ stabs on minor-ninth chords, and a hook of hard-tuned vocal
-   chops that answers the voice between lines. It synthesises every effect
-   from the cue list.
+   four-on-the-floor in D. For the web film it is percussion only: kick,
+   layered claps and snaps, hats with rolls, congas, bongos, shaker, rims and
+   tom fills, with a deep 808 boom as the one tonal sound, at a steady level
+   under the voice. It synthesises every effect from the cue list, with
+   per-film trims.
    It processes the voice, ducks the music under it from the script's own
    timings, limits and normalises the result.
 5. **`package.py`** makes the delivered picture (a two-pass encode of the
@@ -81,7 +80,9 @@ Playwright. From this folder:
 
 ```bash
 pip install -r requirements.txt
-mkdir -p build/models && cd build/models \
+pip install --no-deps tinysoundfont          # offline rendering only; skips its audio-playback dependency
+mkdir -p build/models/soundfont && cd build/models \
+  && curl -L -o soundfont/GeneralUser-GS.sf2 https://raw.githubusercontent.com/mrbumpy409/GeneralUser-GS/main/GeneralUser-GS.sf2 \
   && curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx \
   && curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin \
   && curl -L https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2 | tar xj \
@@ -120,13 +121,12 @@ Copy `films/web` to `films/<name>` and change:
   `bf_isabella`, `bm_george` and `bm_lewis`; `bf_emma` is the calmest.
 - **Pace.** `SPEED` in `film.py`. Everything downstream follows the new timings.
 - **Music.** `BPM`, `PROG` and `sections()` in `film.py`, and `MUSIC`: leave
-  it out for the synth arrangement (the AI films) or set `MUSIC = "garage"`
-  for the garage and tech house one (the web film). Two earlier web film
-  arrangements are still there to try: `"drums"`, a synthesised drum-led
-  groove, and `"band"`, an upbeat pop band on sampled instruments, which
-  needs `pip install --no-deps tinysoundfont` and the
-  [GeneralUser GS](https://www.schristiancollins.com/generaluser) SoundFont at
-  `build/models/soundfont/GeneralUser-GS.sf2`. The parts are written in
-  `audio.py`.
+  it out for the synth arrangement (the AI films) or set `MUSIC = "perc"` for
+  percussion only (the web film). Earlier web film arrangements are still
+  there to try: `"drums"`, `"garage"` and `"band"`. `"perc"` and `"band"`
+  play the SoundFont: `pip install --no-deps tinysoundfont` and put
+  [GeneralUser GS](https://www.schristiancollins.com/generaluser) at
+  `build/models/soundfont/GeneralUser-GS.sf2`. `SFX_TRIM` turns effects down
+  by type for one film. The parts are written in `audio.py`.
 - **Pictures.** One builder per shot in `scenes.js`, registered in its
   `setup()`, which also returns the background's colour keyframes.

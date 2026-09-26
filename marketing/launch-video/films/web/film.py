@@ -37,11 +37,12 @@ SCENES = [
 ]
 
 # ---- music ---------------------------------------------------------------
-# Minimal UK garage and tech house, the sound of current tech launch films:
-# swung two-step drums, sub bass, organ stabs on minor-ninth chords and a
-# pitched vocal-chop hook (audio.py, build_music_garage). The AI film uses
-# the synth arrangement.
-MUSIC = "garage"
+# Percussion only: kick, claps and snaps, hats, congas and bongos, shaker,
+# rims, tom fills, and a deep 808 boom as the one tonal sound
+# (audio.py, build_music_perc). The AI film uses the synth arrangement.
+MUSIC = "perc"
+# The biggest effects, turned down for this film so nothing jumps out (dB).
+SFX_TRIM = {"impact": -7, "implode": -6, "riser": -5, "shimmer": -7, "thud": -6, "whoosh": -3, "scan": -3, "wipe": -3}
 
 # Chords by bar, from audio.py's BARS. I-V-vi-IV in D: brighter than the AI
 # film's vi-IV-I-V, the same key so the two sit together.

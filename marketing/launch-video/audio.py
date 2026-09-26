@@ -2,7 +2,7 @@
 Music, sound effects and the final mix.
 
 Everything is synthesised here, on the film's own timeline, so nothing needs a
-licence (the optional "band" arrangement plays a free SoundFont). The music is written against build/<id>/timeline.json (scenes start
+licence (the "perc" and "band" arrangements play a free SoundFont). The music is written against build/<id>/timeline.json (scenes start
 on beats) in the shape films/<id>/film.py gives it, and the effects are placed
 from build/<id>/cues.json, which the film itself emits, so a sound lands on
 the frame that makes it.
@@ -12,6 +12,8 @@ the frame that makes it.
   music   by the film's MUSIC setting, with its sections and chords:
           (default) supersaw pads, offbeat stabs, plucked arpeggio, sub
                     bass and a kit, in D major
+          perc      percussion only: kick, claps, hats, hand drums, toms and
+                    an 808 boom, at a steady level under the voice
           garage    UK garage and tech house: swung drums, sliding sub,
                     organ stabs, hard-tuned vocal chops sung by the TTS model
           drums     a drum-led groove of stomps, layered claps and fills
@@ -69,6 +71,8 @@ def add(dst, x, t, gain=1.0, pan=0.0):
     if i < 0:
         x, i = x[-i:], 0
     dst[i:j] += x[: j - i] * gain
+
+add_ = add
 
 def tt(d):
     return np.arange(int(d * SR)) / SR
@@ -1137,11 +1141,140 @@ def build_music_garage():
     chops = to_lufs(chops, -25.0 + UP)
     return stabs, bass, chops, drums
 
+# --------------------------------------------------------- music: percussion
+# For films whose film.py sets MUSIC = "perc": a percussion track and almost
+# nothing else. Kick, wide claps with a snap and a snare under them, crisp
+# sixteenth hats with rolls, congas and bongos, a shaker, rim clicks and tom
+# fills from the SoundFont kit, and one tonal sound: a deep 808 boom on B that
+# marks the bars and the big moments. No chords, no melody, no vocals. It
+# sits at a steady level: the voice gets a small, slow dip, not a pump.
+
+def boom(m, d=0.8, v=1.0):
+    x = tt(d)
+    f = mtof(m) * (1 + 0.9 * np.exp(-x / 0.025))
+    y = np.sin(2 * np.pi * np.cumsum(f) / SR)
+    return np.tanh(1.8 * y) * np.exp(-x / 0.32) * np.minimum(1, x / 0.002) * v
+
+def build_music_perc():
+    hr = np.random.default_rng(90)
+    jit = lambda: hr.normal(0, 0.002)
+    hv = lambda v: v + hr.integers(-5, 6)
+    kick_b, clap_b, hat_b, boom_b = buf(), buf(), buf(), buf()
+    skins, hand, shake = [], [], []
+    SEC = sections()
+    groove = next(s for s, e, k, c in SEC if k == "main")
+    lift0 = next(s for s, e, k, c in SEC if k == "lift")
+    dot = next(s for s, e, k, c in SEC if k == "resolve")
+    button = np.ceil((TL["lines"][-1]["end"] + 0.35) / BEAT - 1e-6) * BEAT
+    kind_at = lambda t: next((k for s, e, k, c in SEC if s - 1e-3 <= t < e - 1e-3), "resolve")
+    SW = 0.12 * S16                                     # a light swing on the off-sixteenths
+    r = np.random.default_rng(99)
+    claps = [stereo(clap_layer(r), clap_layer(r)) for _ in range(4)]
+    B = 35                                              # the boom's note: B1
+    def backbeat(t, g, v=1.0):
+        add(clap_b, claps[g % 4], t + jit(), 0.6 * v)
+        add(clap_b, snap(1.0), t + 0.004, 0.2 * v, pan=-0.1)
+        skins.append((t + jit(), 38, hv(92 * v), .2))
+    def fill(t, st):
+        skins.append((t + jit(), [50, 48, 45, 41][st - 12], hv(104), .3))
+    g0, g1 = -int(np.floor(groove / S16 + 1e-6)), int((DUR - groove) / S16)
+    for g in range(g0, g1 + 1):
+        t0 = groove + g * S16
+        if t0 < -1e-6:
+            continue
+        st, bar = g % 16, g // 16
+        ts = t0 + (SW if st % 2 else 0)
+        kind = kind_at(t0)
+        acc = [.55, .25, .8, .3][st % 4]
+        if kind == "intro":                             # sparse and clean: a heartbeat, a rim, a shaker
+            if st == 0:
+                add(kick_b, kick_punch(0.7), t0, 0.6)
+            if st in (4, 12):
+                skins.append((t0 + jit(), 37, hv(84), .1))
+            if st % 2 == 0:
+                shake.append((t0 + jit(), 70, hv(58 + 20 * (st % 4 == 2)), .1))
+            if st in (2, 6, 10, 14):
+                add(hat_b, hat(0.02), t0, 0.07, pan=0.25)
+        elif kind == "build":                           # a snare and tom run into the drop, then a beat of air
+            k = int(round((t0 - (groove - 2 * BEAT)) / S16))
+            if k < 7:
+                skins.append((t0 + jit(), 38, 55 + 9 * k, .1))
+                if k >= 3:
+                    skins.append((t0 + jit(), [50, 48, 45, 41][k - 3], 80 + 8 * k, .3))
+                add(hat_b, hat(0.02), t0, 0.08, pan=0.25)
+        elif kind in ("main", "main2") or (kind == "resolve" and dot - 1e-3 <= t0 < button - 1e-3):
+            four = kind != "main"
+            v = 0.9 if kind == "resolve" else 1.0
+            # kick
+            if (not four and st in (0, 6, 8)) or (four and st % 4 == 0):
+                add(kick_b, kick_punch(1.0 if st != 6 else 0.85), t0, 0.62 * v)
+            if st == 14 and bar % 2 == 1:
+                add(kick_b, kick_punch(0.6), t0, 0.5 * v)
+            # claps, snap and snare
+            if st in (4, 12):
+                backbeat(t0, g, v)
+            # hats: sixteenths, open on the offbeats when it goes four to the floor, a roll every other bar
+            if st == 14 and bar % 2 == 1:
+                for i in range(3):
+                    add(hat_b, hat(0.018), t0 + i * S16 * 2 / 3, 0.09 * (0.6 + 0.2 * i), pan=0.25)
+            elif not (st == 15 and bar % 2 == 1):
+                add(hat_b, hat(0.022), ts + jit(), 0.12 * acc, pan=0.25)
+            if four and st % 4 == 2:
+                add(hat_b, hat(0.13), ts, 0.06, pan=-0.2)
+            # hand drums
+            for s_, k_, vv in [(2, 63, 92), (3, 62, 70), (6, 62, 74), (7, 64, 86), (10, 64, 82), (11, 63, 90), (14, 62, 72), (15, 64, 78)]:
+                if st == s_:
+                    hand.append((ts + jit(), k_, hv(vv * v), .2))
+            if st in (5, 13):
+                hand.append((ts + jit(), 60 if st == 5 else 61, hv(84 * v), .2))
+            if four and st in (1, 9):
+                hand.append((ts + jit(), 62, hv(60 * v), .2))
+            # shaker
+            shake.append((ts + jit(), 70 if st % 2 == 0 else 69, hv(50 + 40 * acc), .1))
+            # rim and floor tom
+            if st == 15 and bar % 2 == 0:
+                skins.append((ts + jit(), 37, hv(88), .1))
+            if four and st in (6, 14):
+                skins.append((t0 + jit(), 41, hv(78), .3))
+            # fills into each four-bar phrase
+            if bar % 4 == 3 and st >= 12 and kind != "resolve":
+                fill(t0, st)
+            # the boom marks every other bar, every bar once it goes four to the floor
+            if st == 0 and (four or bar % 2 == 0):
+                add(boom_b, boom(B, 0.9), t0, 0.5 * v)
+        elif kind == "lift":                            # claps speeding up, toms rolling in, no kick
+            left = int(round((dot - t0) / S16))
+            if (left > 8 and st % 4 == 0) or (4 < left <= 8 and st % 2 == 0) or left <= 4:
+                add(clap_b, claps[g % 4], t0, 0.3 + 0.3 * (1 - min(1, left / 16)))
+            if left <= 8:
+                skins.append((t0 + jit(), [50, 48, 47, 45, 43, 41, 41, 41][8 - left] if left > 0 else 41, 70 + 5 * (8 - left), .3))
+            if st % 2 == 0:
+                shake.append((t0 + jit(), 70, hv(62), .1))
+                add(hat_b, hat(0.02), t0, 0.07, pan=0.25)
+    # the three hits: the drop, the dot and the button
+    for t, v in ((groove, 1.0), (dot, 0.9), (button, 0.75)):
+        add(kick_b, kick_punch(1.0), t, 0.7 * v)
+        add(clap_b, claps[0], t, 0.7 * v)
+        add(boom_b, boom(B, 1.4 if t == button else 1.0), t, 0.6 * v)
+        skins.append((t, 57, int(86 * v), 2.0)); skins.append((t, 41, int(104 * v), .4))
+    # render the kit's parts, set the balance, a little room on the skins and hands
+    SFP = lambda notes: sf_part(notes, 128, 16, True) if notes else buf()
+    skins_b, hand_b, shake_b = SFP(skins), SFP(hand), SFP(shake)
+    UP = 4.0
+    parts = [(kick_b, -20.0), (clap_b, -23.0), (hat_b, -28.0), (skins_b, -25.0), (hand_b, -25.5), (shake_b, -31.0), (boom_b, -24.0)]
+    kick_b, clap_b, hat_b, skins_b, hand_b, shake_b, boom_b = [to_lufs(x, l + UP) for x, l in parts]
+    kit = kick_b + reverb(clap_b + skins_b, IR_ROOM, 0.14) + hat_b
+    perc = reverb(hand_b, IR_ROOM, 0.12) + shake_b
+    return buf(), hp(boom_b, 28), perc, hp(kit, 30)
+
 def build_sfx():
     out = buf()
+    trims = getattr(F, "SFX_TRIM", {})             # per film, in dB, by cue type
     for c in CUES:
         t, v = c["t"], c.get("v", 1.0)
         k = c["type"]
+        tg = 10 ** (trims.get(k, 0.0) / 20)
+        add = lambda dst, x, t_, gain=1.0, pan=0.0: add_(dst, x, t_, gain * tg, pan)
         if k == "key":
             add(out, sfx_key(v), t, 0.22, pan=rng.uniform(-.15, .15))
         elif k == "space":
@@ -1256,8 +1389,8 @@ def limiter(x, ceiling_db=-1.2, look=0.004, release=0.08):
 def main():
     os.makedirs(os.path.join(BUILD, "stems"), exist_ok=True)
     style = getattr(F, "MUSIC", "synth")
-    drum_led = style in ("drums", "band", "garage")
-    pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band, "garage": build_music_garage}.get(style, build_music)()
+    drum_led = style in ("drums", "band", "garage", "perc")
+    pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band, "garage": build_music_garage, "perc": build_music_perc}.get(style, build_music)()
     music = pads * 1.0 + bass * 1.0 + keys * 1.0 + drums * (1.0 if drum_led else 0.9)
     music = peak_eq(music, 2800, 3.0, 0.6)
     music = peak_eq(music, 90, -2.0, 0.8)
@@ -1266,10 +1399,11 @@ def main():
     speaking = np.zeros(N)
     for l in TL["lines"]:
         speaking[at(l["start"] - 0.12):at(l["end"] + 0.25)] = 1
-    rel = np.exp(-1 / (0.12 * SR))
+    # percussion only: a small, slow dip, so the level never jumps between lines
+    rel = np.exp(-1 / ((0.45 if style == "perc" else 0.12) * SR))
     speaking = signal.lfilter([1 - rel], [1, -rel], speaking)
     # drums and a band sit further down under the voice: claps and chords share its range
-    duck_db = {"band": -9.0, "garage": -8.0, "drums": -7.5}.get(style, -6.0) * np.clip(speaking, 0, 1)
+    duck_db = {"perc": -3.5, "band": -9.0, "garage": -8.0, "drums": -7.5}.get(style, -6.0) * np.clip(speaking, 0, 1)
     music *= 10 ** (duck_db / 20)[:, None]
     # the last seconds breathe out
     fade = np.clip((DUR - np.arange(N) / SR) / 1.4, 0, 1) ** 1.5
