@@ -49,7 +49,7 @@
    ============================================================ */
 
 import {
-  clampSettings, quotaScope, parseJson, domainGuesses, frontPageUrls, noSiteLine, pageKind, parseRobots,
+  clampSettings, quotaScope, parseJson, sharePageText, domainGuesses, frontPageUrls, noSiteLine, pageKind, parseRobots,
   confirms, stripHtml, sameSiteLinks, contactPageLink, siteLines, registerLines, controllingCompanies, accountsFacts, lateFilings, sizeVerdict, tradesOutside, registerRefusal, registerCautions, validateResearch,
   argueSignals, validateSales, argueService, outcome, knowledgeOf, serviceKeys, factLines, signalLines,
   portfolioBlock, conversationBlock, focusLine,
@@ -191,9 +191,18 @@ async function ask(cfg: Cfg, role: string, system: string, user: string, tempera
 async function talk(cfg: Cfg, settings: any, role: string, promptKey: string, user: string): Promise<Reply> {
   const pr = cfg.prompts[promptKey]
   if (!pr) throw new Error(`public.prospect_prompt has no "${promptKey}" row`)
-  const { text, model } = await ask(cfg, role, pr.body, user, Number(pr.temperature ?? 0.4), settings.model_timeout_ms)
-  let parsed: any = null
-  try { parsed = parseJson(text) } catch { parsed = null }
+  const read = (t: string) => { try { return parseJson(t) } catch { return null } }
+  let { text, model } = await ask(cfg, role, pr.body, user, Number(pr.temperature ?? 0.4), settings.model_timeout_ms)
+  let parsed: any = read(text)
+  /* One more try when the reply is not JSON. On 25 September a single
+     unquoted key in the signals agent's revision ended Advanced Resin
+     Technologies with nothing to score. The broken reply is what is kept
+     if the second is broken too. */
+  if (parsed == null) {
+    const again = await ask(cfg, role, pr.body, user, Number(pr.temperature ?? 0.4), settings.model_timeout_ms)
+    const second = read(again.text)
+    if (second != null) ({ text, model, parsed } = { ...again, parsed: second })
+  }
   return { raw: text, parsed, model }
 }
 
@@ -484,13 +493,8 @@ async function readSite(home: { url: string; html: string }, cand: any, settings
     const c = await get(via(contact), settings)
     if (c.ok) raw.push({ url: archived ? contact : (c.url || contact), html: c.body, contact: true })
   }
-  let left = settings.max_page_chars
-  const out: { url: string; text: string }[] = []
-  for (const p of pages) {
-    if (left <= 200) break
-    out.push({ url: p.url, text: p.text.slice(0, left) })
-    left -= Math.min(p.text.length, left)
-  }
+  const texts = sharePageText(pages.map((p) => p.text), settings.max_page_chars)
+  const out = pages.map((p, i) => ({ url: p.url, text: texts[i] })).filter((p) => p.text.length)
   return { pages: out, measured: siteLines(raw, { archived: Boolean(archived) }), htmls: raw.map((r) => r.html) }
 }
 
@@ -647,6 +651,7 @@ async function signals(ctx: Ctx): Promise<StageResult> {
       return talk(cfg, settings, 'prospect_signals', 'signals', parts.join('\n'))
     },
     callReview: ({ signals: sigs, signalsSay }: any) => talk(cfg, settings, 'prospect_research', 'research_review', [
+      'WHAT WE SELL (what each service is pitched on; points_to is judged against this):', portfolioBlock(cfg, settings.service_focus), '',
       'THE FACTS YOU PROMOTED:', factLines(facts, state.register ?? [], state.measured ?? []), '',
       `THE SIGNALS AGENT SAYS:\n${signalsSay || '(nothing)'}`, '',
       'ITS SIGNALS:', signalLines(sigs, facts),

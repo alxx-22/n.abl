@@ -401,23 +401,64 @@ export function stripHtml(html) {
 
 /* The pages most likely to say what a business does and how it works,
    on the same host only. Never a contact page: that is where the routes
-   are, and nothing here needs one. */
-const WORTH_READING = /\/(about|about-us|who-we-are|services|our-services|what-we-do|how-it-works|work|our-work|products|booking|book|pricing|prices)(\/|$|\.html?$)/i
+   are, and nothing here needs one.
+
+   What they do comes first; then the pages about the work itself -
+   testing, inspection, servicing - which are where the paperwork the AI
+   service is pitched on shows up, and which a lightning-protection or
+   fire firm keeps on a page of its own; then who they are. On 25
+   September Faraday Chapman's /testing page was never read because only
+   about, services and pricing pages were. */
+const WORTH_READING = [
+  /\/(services|our-services|what-we-do|how-it-works|products|booking|book|pricing|prices)(\/|$|\.html?$)/i,
+  /\/(testing|inspections?|servicing|maintenance|compliance|certification|surveys?|reports?|installations?|work|our-work|sectors|industries)(\/|$|\.html?$|-)/i,
+  /\/(about|about-us|who-we-are)(\/|$|\.html?$)/i,
+]
 
 export function sameSiteLinks(html, baseUrl, max = 2) {
   let base
   try { base = new URL(baseUrl) } catch { return [] }
-  const out = []
+  const found = WORTH_READING.map(() => [])
   for (const m of String(html ?? '').matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"'#]+)["']/gi)) {
     let u
     try { u = new URL(m[1], base) } catch { continue }
     if (u.host !== base.host || !/^https?:$/.test(u.protocol)) continue
-    if (!WORTH_READING.test(u.pathname)) continue
+    const rank = WORTH_READING.findIndex((re) => re.test(u.pathname))
+    if (rank < 0) continue
     u.search = ''
     const href = u.toString()
-    if (href === base.toString() || out.includes(href)) continue
-    out.push(href)
-    if (out.length >= max) break
+    if (href === base.toString() || found.some((f) => f.includes(href))) continue
+    found[rank].push(href)
+  }
+  /* One of each kind before a second of any, so a site with ten service
+     pages still has its testing page read. */
+  const out = []
+  for (let i = 0; out.length < max && found.some((f) => i < f.length); i++) {
+    for (const f of found) if (i < f.length && out.length < max) out.push(f[i])
+  }
+  return out
+}
+
+/** Page text within one budget, shared: each page gets an even share,
+    and what a short page leaves goes to the others. A long front page no
+    longer crowds out the service pages read after it (Faraday Chapman's
+    front page alone filled the 9,000 characters). */
+export function sharePageText(texts, budget) {
+  const out = texts.map(() => '')
+  let left = budget
+  let open = texts.map((t, i) => i).filter((i) => texts[i].length)
+  while (left > 0 && open.length) {
+    const share = Math.floor(left / open.length)
+    if (share < 1) break
+    const next = []
+    for (const i of open) {
+      const want = texts[i].length - out[i].length
+      const take = Math.min(want, share)
+      out[i] = texts[i].slice(0, out[i].length + take)
+      left -= take
+      if (texts[i].length > out[i].length) next.push(i)
+    }
+    open = next
   }
   return out
 }

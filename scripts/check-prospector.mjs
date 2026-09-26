@@ -7,7 +7,7 @@
      npm run test:prospector */
 
 import {
-  clampSettings, quotaScope, domainGuesses, pageKind, parseRobots, confirms, tradingName, sameSiteLinks,
+  clampSettings, quotaScope, domainGuesses, pageKind, parseRobots, confirms, tradingName, sameSiteLinks, sharePageText,
   stripHtml, registerLines, quoteOnPage, validateResearch, validateSignals, validateSignalReview,
   argueSignals, validateSales, readMove, argueService, outcome, parseJson, conversationBlock,
   frontPageUrls, noSiteLine, registerRefusal, registerCautions, validatePick, signalLines,
@@ -65,8 +65,16 @@ console.log('\nTHE WEBSITE HAS TO PROVE IT IS THEIRS\n')
   ok('a page that never mentions them is no match', !confirms('<p>Something else entirely</p>', cand).reasons.length)
 
   const links = sameSiteLinks('<a href="/about-us">a</a><a href="/contact">c</a><a href="https://other.com/services">x</a><a href="/services?x=1">s</a><a href="/about-us">dup</a>', 'https://parkvalley.co.uk/', 5)
-  ok('only same-site about/services pages are followed', links.join() === 'https://parkvalley.co.uk/about-us,https://parkvalley.co.uk/services', links)
+  ok('only same-site about/services pages are followed, what they do first', links.join() === 'https://parkvalley.co.uk/services,https://parkvalley.co.uk/about-us', links)
   ok('  …and never the contact page', !links.some((l) => /contact/.test(l)))
+  const fc = sameSiteLinks(['/nationwide', '/our-services', '/lightning-protection', '/surge-protection', '/testing', '/faq', '/about'].map((h) => `<a href="${h}">x</a>`).join(''), 'https://www.faraday-chapman.com/', 2)
+  ok('a testing page is read beside the services page (Faraday Chapman)', fc.join() === 'https://www.faraday-chapman.com/our-services,https://www.faraday-chapman.com/testing', fc)
+  const many = sameSiteLinks(['/services/a', '/services/b', '/services/c', '/about-us'].map((h) => `<a href="${h}">x</a>`).join(''), 'https://x.co.uk/', 2)
+  ok('  …and ten service pages do not crowd out the about page', many.join() === 'https://x.co.uk/services/a,https://x.co.uk/about-us', many)
+  const shared = sharePageText(['a'.repeat(20000), 'b'.repeat(3000), 'c'.repeat(500)], 9000)
+  ok('a long front page leaves room for the pages after it', shared[0].length === 5500 && shared[1].length === 3000 && shared[2].length === 500, shared.map((x) => x.length))
+  const short = sharePageText(['a'.repeat(100), 'b'.repeat(200)], 9000)
+  ok('  …and short pages are read whole', short[0].length === 100 && short[1].length === 200, short.map((x) => x.length))
   ok('html becomes text, scripts and all removed', stripHtml('<script>var a=1</script><p>Hello&nbsp;<b>there</b></p>') === 'Hello there')
 }
 
