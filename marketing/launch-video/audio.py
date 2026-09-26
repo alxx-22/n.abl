@@ -2,17 +2,20 @@
 Music, sound effects and the final mix.
 
 Everything is synthesised here, on the film's own timeline, so nothing needs a
-licence. The music is written against build/<id>/timeline.json (scenes start
+licence (the optional "band" arrangement plays a free SoundFont). The music is written against build/<id>/timeline.json (scenes start
 on beats) in the shape films/<id>/film.py gives it, and the effects are placed
 from build/<id>/cues.json, which the film itself emits, so a sound lands on
 the frame that makes it.
 
   python3 audio.py [--film ai]
 
-  music   supersaw pads and offbeat stabs, plucked arpeggio, sub bass and a
-          kit, in D major, sections and chords from the film; or, when the
-          film sets MUSIC = "drums", a drum-led groove of stomps, layered
-          claps, hats, percussion and fills with bass, stabs and a hook
+  music   by the film's MUSIC setting, with its sections and chords:
+          (default) supersaw pads, offbeat stabs, plucked arpeggio, sub
+                    bass and a kit, in D major
+          garage    UK garage and tech house: swung drums, sliding sub,
+                    organ stabs, hard-tuned vocal chops sung by the TTS model
+          drums     a drum-led groove of stomps, layered claps and fills
+          band      an upbeat pop band on sampled instruments (SoundFont)
   effects typing, paper, whooshes, scan, UI ticks and clicks, risers, impacts
   voice   high-passed, gently compressed, a little presence and room
   master  music ducked under the voice, limited, -14 LUFS integrated
@@ -890,6 +893,250 @@ def build_music_band():
     pads = piano + brs
     return pads, bass, keys, drums
 
+# ------------------------------------------------------------ music: garage
+# For films whose film.py sets MUSIC = "garage": the sound of current tech
+# launch films rather than stock "uplifting" music. A minimal UK garage and
+# tech house groove in B minor: swung two-step drums that go four to the
+# floor for the second half, crisp claps and snaps, a deep sub bass that
+# slides, house organ stabs on minor-ninth chords, and a hook of pitched,
+# chopped vocal syllables that answers the voice in the gaps between lines.
+# The chops are sung by the film's own TTS model, one syllable at a time.
+G_STAB = {"Bm9": [62, 66, 69, 73], "Gmaj9": [59, 62, 66, 69], "Em9": [62, 66, 67, 71], "F#m7": [57, 61, 64, 66]}
+G_ROOT = {"Bm9": 35, "Gmaj9": 31, "Em9": 40, "F#m7": 30}
+G_LOOP = ["Bm9", "Gmaj9", "Em9", "F#m7"]
+# the hook, two bars: (sixteenth, syllable, note, length in sixteenths)
+G_HOOK = [(0, "oh", 66, 2), (3, "oh", 64, 1), (4, "yeah", 62, 2), (6, "oh", 59, 2), (10, "ay", 62, 2), (12, "oh", 64, 3),
+          (16, "ooh", 66, 2), (19, "oh", 69, 1), (20, "oh", 66, 2), (23, "yeah", 64, 2), (26, "hey", 62, 2), (30, "oh", 59, 2)]
+CHOP_VOICE = "af_bella"
+_CHOPS = {}
+
+def chop_source(syl):
+    """One sung syllable from the TTS model: its voiced part and its pitch through time."""
+    if syl in _CHOPS:
+        return _CHOPS[syl]
+    path = os.path.join(BUILD, "chops", f"{syl}.wav")
+    if not os.path.exists(path):
+        from kokoro_onnx import Kokoro
+        models = os.environ.get("KOKORO_DIR", os.path.join(HERE, "build", "models"))
+        k = Kokoro(os.path.join(models, "kokoro-v1.0.onnx"), os.path.join(models, "voices-v1.0.bin"))
+        a, sr = k.create(syl.capitalize() + "!", voice=CHOP_VOICE, speed=1.0, lang="en-us")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        sf.write(path, a, sr)
+    a, sr = sf.read(path, dtype="float64")
+    a = signal.resample_poly(a, SR, sr)
+    env = np.abs(a); on = np.argmax(env > env.max() * 0.08)
+    a = a[on:]
+    # pitch every 5 ms, from the autocorrelation, held through unvoiced frames
+    fr, hop = int(0.03 * SR), int(0.005 * SR)
+    lo, hi = int(SR / 600), int(SR / 120)
+    ts, fs = [], []
+    for i in range(0, len(a) - fr, hop):
+        w = a[i:i + fr] * np.hanning(fr); ac = np.correlate(w, w, "full")[fr - 1:]
+        j = lo + np.argmax(ac[lo:hi])
+        if ac[0] > 0 and ac[j] > 0.35 * ac[0]:
+            ts.append(i + fr / 2); fs.append(SR / j)
+    fs = signal.medfilt(np.array(fs), 5) if len(fs) >= 5 else np.array(fs or [220.0])
+    ts = np.array(ts or [0.0])
+    f0 = np.interp(np.arange(len(a)), ts, fs)
+    a = a / (np.sqrt((a[: int(0.2 * SR)] ** 2).mean()) + 1e-9) * 0.1
+    _CHOPS[syl] = (a, f0)
+    return _CHOPS[syl]
+
+def chop(syl, note, d):
+    """The syllable hard-tuned to a note: read at whatever rate holds its pitch on it."""
+    a, f0 = chop_source(syl)
+    target = mtof(note)
+    n = int(d * SR)
+    pos = np.zeros(n); p_ = 0.0
+    for i in range(n):
+        pos[i] = p_
+        p_ += target / f0[min(int(p_), len(f0) - 1)]
+        if p_ >= len(a) - 1:
+            pos = pos[: i + 1]
+            break
+    y = np.interp(pos, np.arange(len(a)), a)
+    e = np.ones(len(y)); f = min(len(y), int(0.004 * SR)); e[:f] = np.linspace(0, 1, f)
+    g = min(len(y), int(0.03 * SR)); e[-g:] *= np.linspace(1, 0, g)
+    return hp(y * e, 180)
+
+def organ(notes, d, v=1.0):
+    """A house organ stab: a few sine partials each, a percussive envelope, a key click."""
+    x = tt(d + 0.25); out = np.zeros(len(x))
+    for m in notes:
+        f = mtof(m)
+        for h, a in zip([1, 2, 3, 4, 6, 8], [1, .55, .38, .22, .1, .06]):
+            out += a * np.sin(2 * np.pi * f * h * x * (1 + 0.0007 * (h - 1))) * np.exp(-x / (0.16 / (1 + 0.35 * h)))
+    env = np.minimum(1, x / 0.002) * np.where(x < d, 1, np.exp(-(x - d) / 0.05))
+    click = bp(noise(d + 0.25), 1500, 6000) * np.exp(-x / 0.003) * 0.15
+    return lp((out / np.sqrt(len(notes)) * 0.35 + click) * env, 5200) * v
+
+def sub(m, d, v=1.0, from_m=None, glide=0.05):
+    """Sine sub with a saturated octave so phones still hear it, sliding in from the last note."""
+    x = tt(d)
+    f = np.full(len(x), mtof(m))
+    if from_m is not None:
+        f = mtof(m) + (mtof(from_m) - mtof(m)) * np.exp(-x / glide * 3)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    y = np.sin(ph) + 0.18 * np.sin(2 * ph)
+    y = np.tanh(1.6 * y) * 0.75 + 0.12 * np.tanh(4 * np.sin(2 * ph))
+    return y * env_adsr(len(x), 0.003, 0.08, 0.85, 0.03) * v
+
+def reese(m, d, v=1.0):
+    x = tt(d)
+    y = saw(mtof(m) * 2 ** (0.1 / 12), d) + saw(mtof(m) * 2 ** (-0.1 / 12), d)
+    y = np.tanh(2.2 * sweep_lp(y, 420 + 380 * np.exp(-x / 0.08), block=128))
+    return y * env_adsr(len(x), 0.005, 0.1, 0.8, 0.04) * v
+
+def snap(v=1.0):
+    x = tt(0.12)
+    return (bp(noise(0.12), 1300, 5200) * np.exp(-x / 0.011) + np.sin(2 * np.pi * 2300 * x) * np.exp(-x / 0.006) * 0.3) * v
+
+def build_music_garage():
+    hr = np.random.default_rng(136)
+    jit = lambda: hr.normal(0, 0.002)
+    drums, bass, stabs, chops = buf(), buf(), buf(), buf()
+    room = buf()
+    SEC = sections()
+    groove = next(s for s, e, k, c in SEC if k == "main")
+    lift0 = next(s for s, e, k, c in SEC if k == "lift")
+    dot = next(s for s, e, k, c in SEC if k == "resolve")
+    button = np.ceil((TL["lines"][-1]["end"] + 0.35) / BEAT - 1e-6) * BEAT
+    kind_at = lambda t: next((k for s, e, k, c in SEC if s - 1e-3 <= t < e - 1e-3), "resolve")
+    SW = 0.2 * S16                                      # the swing on every other sixteenth
+    r = np.random.default_rng(99)
+    claps = [stereo(clap_layer(r), clap_layer(r)) for _ in range(4)]
+    kicks = []
+    last_bass = [None]
+    def kick(dst, t, v):
+        add(dst, kick_punch(v), t, 0.6); kicks.append(t)
+    def bassn(t, m, d, v=1.0):
+        add(bass, sub(m, d, v, last_bass[0]), t, 0.5); last_bass[0] = m
+    g0, g1 = -int(np.floor(groove / S16 + 1e-6)), int((DUR - groove) / S16)
+    for g in range(g0, g1 + 1):
+        t0 = groove + g * S16
+        if t0 < -1e-6:
+            continue
+        st, bar = g % 16, g // 16
+        ts = t0 + (SW if st % 2 else 0)                 # swung position
+        kind = kind_at(t0)
+        name = G_LOOP[bar % 4] if kind in ("main", "main2") else {"intro": ["Bm9", "Gmaj9", "F#m7"][min(2, max(0, bar + 3))], "build": "F#m7", "lift": "Gmaj9" if t0 < (lift0 + dot) / 2 else "F#m7"}.get(kind, "Bm9")
+        root, chordn = G_ROOT[name], G_STAB[name]
+        hv = [.5, .22, .85, .3][st % 4]
+        if kind == "intro":
+            if st in (0, 10):
+                kick(room, t0, 0.8)
+            if st in (4, 12):
+                add(room, claps[g % 4], t0, 0.45)
+            if st % 2 == 0:
+                add(room, hat(0.03), ts, 0.1 * hv, pan=0.25)
+            if st in (3, 11):
+                add(room, organ(chordn, 0.12), ts, 0.5)
+            if st == 0:
+                add(room, sub(root, 4 * BEAT * 0.9, 0.9), t0, 0.5)
+        elif kind == "build":
+            k = int(round((t0 - (groove - 2 * BEAT)) / S16))
+            if k < 7:                                   # the last sixteenth before the drop is silent
+                add(chops, chop("oh", 59 + [0, 2, 3, 5, 7, 9, 10][k], S16 * 0.9), t0, 0.5 + 0.08 * k)
+                add(drums, hat(0.025), t0, 0.08, pan=0.25)
+        elif kind in ("main", "main2") or (kind == "resolve" and dot - 1e-3 <= t0 < button - 1e-3):
+            four = kind != "main"
+            fin = kind == "resolve"
+            # drums
+            if four and st % 4 == 0:
+                kick(drums, t0, 1.0)
+            if not four and (st in (0, 10) or (st == 7 and bar % 2 == 1)):
+                kick(drums, ts, 1.0 if st != 7 else 0.7)
+            if st in (4, 12):
+                add(drums, claps[g % 4], t0 + jit(), 0.6)
+                add(drums, snap(1.0), t0 + 0.004, 0.18, pan=-0.1)
+            if st == 15 and bar % 2 == 1:
+                add(drums, rim(0.8), ts, 0.14, pan=0.35)
+            add(drums, hat(0.022), ts + jit(), 0.12 * hv, pan=0.25)
+            if four and st % 4 == 2:
+                add(drums, hat(0.11), ts, 0.07, pan=-0.2)
+            add(drums, shaker([.3, .8, .5, .9][st % 4]), ts, 0.05, pan=-0.45)
+            if st == 0 and bar % 4 == 0 and not fin:
+                add(drums, crash(), t0, 0.1)
+            # bass: bouncing two-step, rolling offbeats when it goes four to the floor
+            if not four:
+                for s_, o_, l_ in [(0, 0, 3), (3, 12, 2), (6, 0, 3), (10, 0, 2), (12, 7, 2), (14, 12, 2)]:
+                    if st == s_:
+                        bassn(t0 + (SW if s_ % 2 else 0), root + o_, l_ * S16 * 0.92)
+            else:
+                if st in (0, 2, 6, 10, 14) or (st == 11 and bar % 2 == 1):
+                    bassn(ts, root + (12 if st in (6, 14) else 0), (2 if st else 3) * S16 * 0.9)
+                if st == 14 and bar % 2 == 1:
+                    add(bass, reese(root + 12, 2 * S16 * 0.9), ts, 0.12)
+            # stabs
+            for s_, v_ in ([(3, .8), (6, .7), (11, .9)] if not four else [(2, .7), (6, .75), (10, .7), (14, .85)]):
+                if st == s_:
+                    add(stabs, organ(chordn, 0.11, v_), t0 + (SW if s_ % 2 else 0), 0.55)
+            # the hook
+            if not fin:
+                ph = g % 32
+                for hs, syl, note, ln in G_HOOK:
+                    if hs == ph:
+                        add(chops, chop(syl, note, ln * S16 * 0.95), t0 + (SW if hs % 2 else 0), 0.8, pan=0.15 * np.sin(g))
+        elif kind == "lift":
+            left = int(round((dot - t0) / S16))
+            if (left > 8 and st % 4 == 0) or (4 < left <= 8 and st % 2 == 0) or left <= 4:
+                add(drums, claps[g % 4], t0, 0.25 + 0.3 * (1 - min(1, left / 16)))
+            if st % 2 == 0 and left > 1:
+                add(drums, hat(0.03), ts, 0.07, pan=0.25)
+            if t0 < lift0 + 1e-3 or (st == 0 and left > 8):
+                add(stabs, organ(chordn, min(4 * BEAT, dot - t0) * 0.95, 0.8), t0, 0.45)
+            if st in (0, 8) and left > 4:
+                add(chops, chop("ooh", [66, 64][(st // 8)], 3 * S16), t0, 0.7)
+    # snare rolls into the drop and into the dot
+    for (a_, b_) in [(t - 0.6, t) for t in cue_t("impact")] + [(dot - 2 * BEAT, dot)]:
+        n = int(round((b_ - a_) / (S16 / 2)))
+        for k in range(n):
+            add(drums, snare(), a_ + k * S16 / 2, 0.14 * (0.3 + 0.7 * k / n), pan=0.1)
+    # the drop, the dot and the button
+    for t, v in ((groove, 1.0), (dot, 1.0)):
+        add(drums, crash(), t, 0.2); kick(drums, t, 1.0)
+    add(chops, chop("hey", 66, 0.2), dot + 4 * S16, 0.7)
+    kick(drums, button, 1.0); add(drums, claps[0], button, 0.8); add(drums, crash(), button, 0.22)
+    add(stabs, organ(G_STAB["Bm9"], 0.3, 1.0), button, 0.7)
+    tail = sub(G_ROOT["Bm9"], 1.6, 1.0); tail *= np.exp(-np.arange(len(tail)) / SR / 0.4)
+    add(bass, tail, button, 0.5)
+    add(chops, chop("oh", 66, 0.35), button, 0.8)
+    # the opening, through a wall: shut until "work", then open into the drop
+    t = np.arange(N) / SR
+    ws = SC["work"]["start"]
+    cut = np.where(t < ws, 600.0, 600.0 * (15000 / 600) ** np.clip((t - ws) / max(0.05, groove - ws), 0, 1))
+    cut[t >= groove] = 16000
+    end = at(groove + 0.6)
+    for c in range(2):
+        room[:end, c] = sweep_lp(room[:end, c], cut[:end], block=128, q=1.1)
+    drums += room * 1.1
+    # the house pump: bass and stabs breathe with the kick
+    duck = np.ones(N)
+    for k in kicks:
+        i = at(k); x = np.arange(int(0.22 * SR)) / SR
+        gg = 1 - 0.55 * np.exp(-x / 0.07)
+        j = min(N, i + len(gg)); duck[i:j] = np.minimum(duck[i:j], gg[: j - i])
+    stabs *= duck[:, None]; bass *= (0.35 + 0.65 * duck)[:, None]
+    # the hook answers the voice: full in the gaps, well back while anyone speaks
+    talk = np.zeros(N)
+    for l in TL["lines"]:
+        talk[at(l["start"] - 0.08):at(l["end"] + 0.12)] = 1
+    rel = np.exp(-1 / (0.08 * SR))
+    talk = signal.lfilter([1 - rel], [1, -rel], talk)
+    chops *= 10 ** (-13.0 * np.clip(talk, 0, 1) / 20)[:, None]
+    stabs *= 10 ** (-4.0 * np.clip(talk, 0, 1) / 20)[:, None]
+    chops = delay(chops, BEAT * 0.75, fb=0.3, mix=0.28, lpf=4500)
+    chops = reverb(peak_eq(chops, 3200, 2.0, 0.8), IR_HALL, 0.28)
+    stabs = reverb(peak_eq(stabs, 2400, -3.0, 0.8), IR_HALL, 0.2)
+    drums = hp(reverb(drums, IR_ROOM, 0.1), 30)
+    bass = hp(bass, 28)
+    UP = 5.0
+    drums = to_lufs(drums, -18.5 + UP)
+    bass = to_lufs(bass, -20.0 + UP)
+    stabs = to_lufs(stabs, -25.0 + UP)
+    chops = to_lufs(chops, -25.0 + UP)
+    return stabs, bass, chops, drums
+
 def build_sfx():
     out = buf()
     for c in CUES:
@@ -1009,8 +1256,8 @@ def limiter(x, ceiling_db=-1.2, look=0.004, release=0.08):
 def main():
     os.makedirs(os.path.join(BUILD, "stems"), exist_ok=True)
     style = getattr(F, "MUSIC", "synth")
-    drum_led = style in ("drums", "band")
-    pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band}.get(style, build_music)()
+    drum_led = style in ("drums", "band", "garage")
+    pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band, "garage": build_music_garage}.get(style, build_music)()
     music = pads * 1.0 + bass * 1.0 + keys * 1.0 + drums * (1.0 if drum_led else 0.9)
     music = peak_eq(music, 2800, 3.0, 0.6)
     music = peak_eq(music, 90, -2.0, 0.8)
@@ -1022,7 +1269,7 @@ def main():
     rel = np.exp(-1 / (0.12 * SR))
     speaking = signal.lfilter([1 - rel], [1, -rel], speaking)
     # drums and a band sit further down under the voice: claps and chords share its range
-    duck_db = {"band": -9.0, "drums": -7.5}.get(style, -6.0) * np.clip(speaking, 0, 1)
+    duck_db = {"band": -9.0, "garage": -8.0, "drums": -7.5}.get(style, -6.0) * np.clip(speaking, 0, 1)
     music *= 10 ** (duck_db / 20)[:, None]
     # the last seconds breathe out
     fade = np.clip((DUR - np.arange(N) / SR) / 1.4, 0, 1) ** 1.5

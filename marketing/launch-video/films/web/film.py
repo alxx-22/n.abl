@@ -37,10 +37,11 @@ SCENES = [
 ]
 
 # ---- music ---------------------------------------------------------------
-# An upbeat pop band from sampled acoustic instruments: strummed guitar,
-# piano, bass, a live kit with claps and tambourine, a whistled hook
-# (audio.py, build_music_band). The AI film uses the synth arrangement.
-MUSIC = "band"
+# Minimal UK garage and tech house, the sound of current tech launch films:
+# swung two-step drums, sub bass, organ stabs on minor-ninth chords and a
+# pitched vocal-chop hook (audio.py, build_music_garage). The AI film uses
+# the synth arrangement.
+MUSIC = "garage"
 
 # Chords by bar, from audio.py's BARS. I-V-vi-IV in D: brighter than the AI
 # film's vi-IV-I-V, the same key so the two sit together.

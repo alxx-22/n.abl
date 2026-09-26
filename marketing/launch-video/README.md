@@ -33,11 +33,9 @@ The MP4s are committed so they can be downloaded straight from the repository
 
 ## How it is made
 
-Nothing is stock. The voice, the picture, the effects and the AI films' music
-are generated here; the web film's music is composed here and played on
-sampled acoustic instruments from the
-[GeneralUser GS](https://www.schristiancollins.com/generaluser) SoundFont,
-which is free for commercial music:
+Nothing is stock and nothing is licensed. Every part is generated here,
+including the vocal chops in the web film's music, which are sung one
+syllable at a time by the same TTS model as the voiceover:
 
 1. **`vo.py`** reads a film's script (`films/<film>/film.py`) with
    [Kokoro](https://github.com/hexgrad/kokoro) (Apache-2.0), voice `bm_fable`,
@@ -61,15 +59,15 @@ which is free for commercial music:
    the frames piped to ffmpeg, `--covers` for the cover images. The light film
    grain is added by ffmpeg at encode, where it also dithers the dark gradients
    against banding; drawing it in the page cost a third of every frame.
-4. **`audio.py`** makes the music, in D with the film's own tempo, chords
-   and sections from its `film.py`: for the AI films it synthesises supersaw
+4. **`audio.py`** makes the music with the film's own tempo, chords and
+   sections from its `film.py`. For the AI films it synthesises supersaw
    pads, offbeat stabs, plucked sixteenths and sub bass over
-   four-on-the-floor; for the web film it writes an upbeat pop band part by
-   part (strummed steel-string guitar, piano, picked bass, a live kit with
-   hand claps and tambourine, a whistled hook, brass hits) and plays it
-   through the SoundFont with
-   [TinySoundFont](https://github.com/schellingb/TinySoundFont). It
-   synthesises every effect from the cue list.
+   four-on-the-floor in D. For the web film it is minimal UK garage and tech
+   house in B minor, the sound of current tech launch films: swung two-step
+   drums that go four to the floor for the second half, a sliding sub bass,
+   house organ stabs on minor-ninth chords, and a hook of hard-tuned vocal
+   chops that answers the voice between lines. It synthesises every effect
+   from the cue list.
    It processes the voice, ducks the music under it from the script's own
    timings, limits and normalises the result.
 5. **`package.py`** makes the delivered picture (a two-pass encode of the
@@ -83,9 +81,7 @@ Playwright. From this folder:
 
 ```bash
 pip install -r requirements.txt
-pip install --no-deps tinysoundfont          # offline rendering only; skips its audio-playback dependency
-mkdir -p build/models/soundfont && cd build/models \
-  && curl -L -o soundfont/GeneralUser-GS.sf2 https://raw.githubusercontent.com/mrbumpy409/GeneralUser-GS/main/GeneralUser-GS.sf2 \
+mkdir -p build/models && cd build/models \
   && curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx \
   && curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin \
   && curl -L https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2 | tar xj \
@@ -124,8 +120,13 @@ Copy `films/web` to `films/<name>` and change:
   `bf_isabella`, `bm_george` and `bm_lewis`; `bf_emma` is the calmest.
 - **Pace.** `SPEED` in `film.py`. Everything downstream follows the new timings.
 - **Music.** `BPM`, `PROG` and `sections()` in `film.py`, and `MUSIC`: leave
-  it out for the synth arrangement (the AI films), set `MUSIC = "band"` for
-  the sampled pop band (the web film), or `MUSIC = "drums"` for a synthesised
-  drum-led groove. The parts are written in `audio.py`.
+  it out for the synth arrangement (the AI films) or set `MUSIC = "garage"`
+  for the garage and tech house one (the web film). Two earlier web film
+  arrangements are still there to try: `"drums"`, a synthesised drum-led
+  groove, and `"band"`, an upbeat pop band on sampled instruments, which
+  needs `pip install --no-deps tinysoundfont` and the
+  [GeneralUser GS](https://www.schristiancollins.com/generaluser) SoundFont at
+  `build/models/soundfont/GeneralUser-GS.sf2`. The parts are written in
+  `audio.py`.
 - **Pictures.** One builder per shot in `scenes.js`, registered in its
   `setup()`, which also returns the background's colour keyframes.

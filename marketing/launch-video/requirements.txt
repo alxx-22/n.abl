@@ -4,4 +4,4 @@ soundfile
 pyloudnorm
 kokoro-onnx
 sherpa-onnx
-# and tinysoundfont, installed with --no-deps (see README.md)
+# for the optional "band" arrangement only: tinysoundfont, installed with --no-deps (see README.md)
