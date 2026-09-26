@@ -37,6 +37,10 @@ SCENES = [
 ]
 
 # ---- music ---------------------------------------------------------------
+# Drum-led: stomps, claps and fills carry it, with bass, stabs and a hook on
+# top (audio.py, build_music_drums). The AI film uses the synth arrangement.
+MUSIC = "drums"
+
 # Chords by bar, from audio.py's BARS. I-V-vi-IV in D: brighter than the AI
 # film's vi-IV-I-V, the same key so the two sit together.
 PROG = ["D", "A", "Bm", "G"]

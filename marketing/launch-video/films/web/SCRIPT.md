@@ -12,11 +12,11 @@ licensed voice is involved. See [`README.md`](../../README.md) to rebuild it.
 
 ## 1. The idea
 
-Most small-business websites are a brochure: a page that sits there while
-visitors come and go. The film opens on exactly that, a grey site with a
-counter reading *Enquiries this week: 0*, and then on "work" the site repaints
-itself and starts earning: an enquiry, a booking, a deposit, a reminder, one
-after another.
+Most small-business websites are a brochure: a page that sits there. The
+film opens on exactly that, a wall of grey look-alike websites, all still,
+and *0 enquiries this week*. On "Yours" one of them lights up and the camera
+dives into it, and on "work" it repaints itself and starts earning: an
+enquiry, a booking, a deposit, a reminder, one after another.
 
 Then it names the three things n.abl builds and gives each one a few seconds
 of doing its job:
@@ -36,8 +36,8 @@ key, same brand system, so the two can run back to back.
 
 - Warm espresso ground, cream light, amber as the accent. The websites in the
   film are cream with amber calls to action, so they read as the thing being
-  sold against the dark stage. The site that "just sits there" is the only
-  grey thing in it.
+  sold against the dark stage. The sites that "just sit there" are the only
+  grey things in it.
 - Space Grotesk for display, Inter Tight for interface, JetBrains Mono for
   labels and figures. The self-hosted files from `public/fonts/`.
 - The square dot again: the square wipe, and the three devices gathering into
@@ -72,15 +72,18 @@ the same read as the AI film.
 Each shot starts on a beat; the words on screen carry the story for anyone
 watching muted.
 
-**01 · Sit.** A dated website in a browser, tilted away and dimmed: an image
-placeholder, *Welcome to our website*, *© 2014*, *Enquiries this week: 0*.
-Visitors' cursors drift in, look around and leave. "Most websites just sit
-there" writes itself beside it.
+**01 · Sit.** A wall of dated websites, dimmed and all alike (image
+placeholders, grey headings, grey lines), drifting slowly past the camera.
+Nothing on it moves. "Most websites just sit there" writes itself in the
+middle, and a tag drops in under it: *0 enquiries this week*. Everything in
+the shot is flat and still, so the only motion is the camera's.
 
-**02 · Work.** On "work" an amber scan line runs down the page and repaints it
-as a modern site (*Book in seconds*, *Book now*, *Next free slot · Today
-2:00pm*) while the browser turns to face the camera, a bloom and three rings
-go off on the drop, and *work* lands in amber with an underline. Four
+**02 · Work.** On "Yours" one site on the wall gets an amber outline, the
+line swaps out, and the camera dives into that one until it fills the
+browser, while the rest of the wall rushes past and falls away. On "work" an
+amber scan line runs down the page and repaints it as a modern site (*Book
+in seconds*, *Book now*, *Next free slot · Today 2:00pm*), a bloom and three
+rings go off on the drop, and *work* lands in amber with an underline. Four
 notifications stack up beside it: *New enquiry*, *Booking confirmed*,
 *Deposit paid*, *Reminder sent*. The camera flies through.
 
@@ -121,16 +124,24 @@ wordmark draws itself around it, and lands on "n.abl" with a hit and a ring.
 
 ## 5. Sound
 
-- **Music.** Synthesised for this film at 124 BPM in D major, the AI film's
-  tempo and key with a brighter I–V–vi–IV progression: a ticking, filtered
-  pulse under the grey site; a one-bar build; the drop on "work";
-  four-on-the-floor with offbeat chord stabs, plucked sixteenths and sub bass
-  through the three builds, opening up for the web apps and the devices; a
-  snare roll into the logo and a resolve on D.
-- **Effects.** A riser, scan and impact on "work", notification chimes, whip
+- **Music.** Drum-led, synthesised for this film at 124 BPM in D major
+  (the AI film's tempo and key, with a brighter I–V–vi–IV progression). The
+  groove is the track: a punchy four-on-the-floor kick with a pushed kick
+  every other bar, wide layered claps on two and four, sixteenth hats and a
+  shaker, a 3-3-2 rim figure, and clap runs or tom runs into each new phrase,
+  with a syncopated bass, offbeat chord stabs and a five-note plucked hook on
+  top. Under the grey wall the same groove plays muffled, as if through a
+  wall; as the line turns to "Yours" the filter opens and the claps double up, and it drops
+  in full on "work". Open hats and tom fills lift it for the web apps and
+  the devices. Before the logo it strips back to accelerating claps, lands
+  on the dot with a kick, clap and crash, plays out under "Let's build
+  yours" and stops on one last hit.
+- **Effects.** A tick for *0 enquiries*, the dive into "Yours", a riser,
+  scan and impact on "work", notification chimes, whip
   pans, card flips, the load zip and tick, blips as visitors convert, taps,
   the deposit hit, the reminder chime, the carousel swishes, the square wipe,
   the gather into the dot, the drawing of the wordmark and the hit when the
   dot lands.
-- **Mix.** Music ducks under the voice from the script's own timings. Master
+- **Mix.** Music ducks 7.5 dB under the voice from the script's own timings
+  (the claps share the voice's range). Master
   at −14 LUFS integrated, true peak below −1 dBTP on the delivered AAC.

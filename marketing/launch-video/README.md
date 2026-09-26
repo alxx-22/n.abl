@@ -57,9 +57,11 @@ Nothing is stock and nothing is licensed. Every part is generated here:
    the frames piped to ffmpeg, `--covers` for the cover images. The light film
    grain is added by ffmpeg at encode, where it also dithers the dark gradients
    against banding; drawing it in the page cost a third of every frame.
-4. **`audio.py`** synthesises the music (124 BPM, four-on-the-floor, offbeat
-   supersaw stabs, plucked sixteenths, sub bass, in D, with the film's own
-   chords and sections from its `film.py`) and every effect from the cue list.
+4. **`audio.py`** synthesises the music (124 BPM in D, with the film's own
+   chords and sections from its `film.py`: supersaw pads, offbeat stabs,
+   plucked sixteenths and sub bass over four-on-the-floor for the AI films; a
+   drum-led groove of stomps, layered claps, hats, percussion and fills for
+   the web film) and every effect from the cue list.
    It processes the voice, ducks the music under it from the script's own
    timings, limits and normalises the result.
 5. **`package.py`** makes the delivered picture (a two-pass encode of the
@@ -111,7 +113,8 @@ Copy `films/web` to `films/<name>` and change:
 - **Voice.** `VOICE` in `film.py`. Other British voices are `bf_emma`,
   `bf_isabella`, `bm_george` and `bm_lewis`; `bf_emma` is the calmest.
 - **Pace.** `SPEED` in `film.py`. Everything downstream follows the new timings.
-- **Music.** `PROG` and `sections()` in `film.py`; the instruments are in
-  `audio.py`.
+- **Music.** `PROG` and `sections()` in `film.py`, and `MUSIC`: leave it out
+  for the synth arrangement (the AI films) or set `MUSIC = "drums"` for the
+  drum-led one (the web film). The instruments are in `audio.py`.
 - **Pictures.** One builder per shot in `scenes.js`, registered in its
   `setup()`, which also returns the background's colour keyframes.

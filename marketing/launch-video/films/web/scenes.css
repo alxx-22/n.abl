@@ -15,17 +15,22 @@
 .bview > * { position: absolute; inset: 0; }
 
 /* ---------- the site that sits there ---------- */
-.oldsite { background: #A7A29B; color: #6E6962; font-family: Georgia, 'DejaVu Serif', serif; padding: 26px 34px; display: flex; flex-direction: column; gap: 18px; }
+.oldsite { background: #A7A29B; padding: 26px 34px; display: flex; flex-direction: column; gap: 18px; }
 .oldsite .onav { display: flex; gap: 16px; align-items: center; }
-.oldsite .onav b { font-weight: 400; font-size: 26px; color: #5E5953; margin-right: auto; }
 .oldsite .onav i { display: block; width: 64px; height: 12px; border-radius: 2px; background: #8E8982; }
-.oldsite .ohero { height: 190px; border: 2px solid #8E8982; background: #9C978F; position: relative; }
-.oldsite .ohero:before, .oldsite .ohero:after { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 2px; background: #8E8982; transform: rotate(14deg); }
-.oldsite .ohero:after { transform: rotate(-14deg); }
-.oldsite h4 { font-weight: 400; font-size: 32px; color: #5E5953; text-align: center; }
+.oldsite .onav i.lg { width: 130px; height: 24px; margin-right: auto; background: #7F7A73; }
+.oldsite .ohero { height: 200px; border: 2px solid #8E8982; background-color: #9C978F; background-size: 100% 100%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><path d='M0 0L100 100M100 0L0 100' stroke='%238E8982' stroke-width='2' vector-effect='non-scaling-stroke'/></svg>"); }
+.oldsite .oh { height: 28px; width: 56%; margin: 2px auto 0; border-radius: 3px; background: #857F78; }
 .oldsite .ol { height: 12px; border-radius: 2px; background: #938E87; }
-.oldsite .ofoot { margin-top: auto; display: flex; justify-content: space-between; font: 400 16px Georgia, 'DejaVu Serif', serif; color: #6E6962; }
-.oldsite .ofoot span b { font-weight: 400; color: #4E4A45; }
+.oldsite .ofoot { margin-top: auto; display: flex; justify-content: space-between; }
+.oldsite .ofoot i { display: block; width: 110px; height: 12px; border-radius: 2px; background: #938E87; }
+.browser.thumb { box-shadow: 0 24px 50px -16px rgba(0, 0, 0, .7); }
+.browser.thumb .addr { width: 34%; }
+.zero { display: flex; align-items: center; gap: 14px; font: 500 30px var(--mono); color: var(--c400); letter-spacing: .02em; padding: 14px 24px; border-radius: 999px;
+  border: 1px solid var(--line-strong); background: rgba(14, 12, 10, .8); white-space: nowrap; width: max-content; }
+.zero i { width: 13px; height: 13px; border-radius: 50%; background: #6E665D; display: block; }
+.zero b { color: var(--c100); font-weight: 600; }
 
 /* ---------- the site that works ---------- */
 .site { background: #FBF6EC; color: #1A1512; padding: 22px 32px; display: flex; flex-direction: column; gap: 20px; font-family: var(--sans); }

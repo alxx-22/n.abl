@@ -14,7 +14,6 @@ import {
 
 /* ---------- pieces ---------- */
 const LOCK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>'
-const CURSOR = '<svg viewBox="0 0 34 46" width="100%" height="100%"><path d="M3 3 L3 36 L12 28 L18 42 L24 39 L18 26 L30 26 Z" fill="#FBF6EC" stroke="#1A1512" stroke-width="2.5" stroke-linejoin="round"/></svg>'
 const BELL = '<svg viewBox="0 0 32 32" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22V14a8 8 0 0116 0v8l3 3H5z"/><path d="M13 27a3 3 0 006 0"/></svg>'
 
 function browser(parent, { w, ht, url = 'yourbusiness.co.uk' }) {
@@ -27,8 +26,12 @@ function browser(parent, { w, ht, url = 'yourbusiness.co.uk' }) {
 const blocks = spec => spec.map(([c, l, t, w, ht, x = '']) => `<div class="b ${c}" style="left:${l}%;top:${t}%;width:${w}%;height:${ht}%;${x}"></div>`).join('')
 const ART = 'border-radius:12px;background:linear-gradient(145deg,#F2C57E,#E9AC57 45%,#D9922F)'
 
-const OLD = `<div class="onav"><b>Our Company</b><i></i><i></i><i></i><i></i></div><div class="ohero"></div><h4>Welcome to our website</h4>
-  <div class="ol"></div><div class="ol" style="width:80%;margin:0 auto"></div><div class="ofoot"><span>© 2014</span><span>Enquiries this week: <b>0</b></span></div>`
+/* the site that sits there, in three dated layouts: blocks only, no words */
+const OLDV = [
+  `<div class="onav"><i class="lg"></i><i></i><i></i><i></i><i></i></div><div class="ohero"></div><div class="oh"></div><div class="ol"></div><div class="ol" style="width:78%;margin:0 auto"></div><div class="ofoot"><i></i><i></i></div>`,
+  `<div class="onav"><i class="lg"></i><i></i><i></i><i></i></div><div style="display:flex;gap:18px"><div class="ohero" style="flex:1;height:250px"></div><div style="flex:1;display:flex;flex-direction:column;gap:16px;padding-top:10px"><div class="oh" style="width:90%;margin:0"></div><div class="ol"></div><div class="ol"></div><div class="ol" style="width:60%"></div></div></div><div class="ofoot"><i></i><i></i></div>`,
+  `<div class="onav"><i class="lg"></i><i></i><i></i><i></i><i></i></div><div class="oh" style="margin-top:12px"></div><div class="ol" style="width:70%;margin:0 auto"></div><div style="display:flex;gap:16px"><div class="ohero" style="flex:1;height:170px"></div><div class="ohero" style="flex:1;height:170px"></div><div class="ohero" style="flex:1;height:170px"></div></div><div class="ofoot"><i></i><i></i></div>`,
+]
 const NAV = `<div class="snav"><div class="logo"><i></i>Your business</div><span>Services</span><span>Prices</span><span>Contact</span><span class="nbtn">Book now</span></div>`
 const SITE = `${NAV}
   <div class="hero"><div><span class="eb"><i></i>Open 24/7</span><h3>Book in seconds.</h3><div class="sub">Bookings, quotes and payments, all online.</div>
@@ -37,48 +40,59 @@ const SITE = `${NAV}
   <div class="feats"><div class="feat"><b>Book online</b><i></i><i style="width:60%"></i></div><div class="feat"><b>Pay a deposit</b><i></i><i style="width:70%"></i></div><div class="feat"><b>Get reminders</b><i></i><i style="width:50%"></i></div></div>`
 
 /* ============================================================
-   01 + 02 · SIT, THEN WORK: the site that sits there comes alive
+   01 + 02 · SIT, THEN WORK: a wall of websites that sit there, and
+   the camera dives into yours as it comes alive
    ============================================================ */
 function buildSite(s) {
   const L = M({
-    land: { b: [390, 10], bs: 1, tx: [-860, 0], fs: 88, ry0: -14, rx0: 4, toast: [640, -150], ts: 1, from: 'below' },
-    port: { b: [0, -350], bs: 1.08, tx: [0, 330], fs: 92, ry0: 0, rx0: 16, toast: [150, -200], ts: 1, from: 'left' },
-    sq:   { b: [0, -170], bs: .8, tx: [0, 330], fs: 74, ry0: 0, rx0: 14, toast: [170, -250], ts: .8, from: 'left' },
-    tall: { b: [0, -260], bs: .92, tx: [0, 400], fs: 82, ry0: 0, rx0: 14, toast: [170, -330], ts: .88, from: 'left' },
+    land: { b: [390, 10], bs: 1, tx: [-860, 0], fs: 88, toast: [640, -150], ts: 1, cols: 7, rows: 5, yc: [4, 2], w0: 1, t1: 0, f1: 112, sc: [1500, 560] },
+    port: { b: [0, -350], bs: 1.08, tx: [0, 330], fs: 92, toast: [150, -200], ts: 1, cols: 5, rows: 9, yc: [2, 3], w0: 1.1, t1: 170, f1: 100, sc: [1150, 620] },
+    sq:   { b: [0, -170], bs: .8, tx: [0, 330], fs: 74, toast: [170, -250], ts: .8, cols: 5, rows: 5, yc: [2, 1], w0: .9, t1: 170, f1: 86, sc: [1150, 560] },
+    tall: { b: [0, -260], bs: .92, tx: [0, 400], fs: 82, toast: [170, -330], ts: .88, cols: 5, rows: 7, yc: [2, 2], w0: 1, t1: 170, f1: 92, sc: [1150, 600] },
   })
-  const BW = 820, BH = 560
+  const BW = 820, BH = 560, TS = .4, GX = 370, GY = 262
+  // the wall: every other website, all alike, all still
+  const cellAt = (c, r) => [(c - (L.cols - 1) / 2) * GX, (r - (L.rows - 1) / 2) * GY]
+  const thumbs = []
+  for (let r = 0; r < L.rows; r++) for (let c = 0; c < L.cols; c++) {
+    if (c === L.yc[0] && r === L.yc[1]) continue
+    const e = h('div', 'browser thumb', s.cam, `<div class="bbar"><i></i><i></i><i></i><div class="addr"></div></div><div class="bview"><div class="oldsite">${OLDV[(c * 2 + r) % 3]}</div></div>`)
+    e.style.width = BW + 'px'; e.style.height = BH + 'px'
+    e._p = cellAt(c, r)
+    thumbs.push(e)
+  }
+  const C = cellAt(L.yc[0], L.yc[1])
+  // yours: one of them, until it is singled out
   const { b: br, view, load } = browser(s.cam, { w: BW, ht: BH })
   load.style.opacity = 0
-  h('div', 'oldsite', view, OLD)
+  h('div', 'oldsite', view, OLDV[0])
   const site = h('div', 'site', view, SITE)
   const scan = h('div', '', view)
   scan.style.cssText = 'inset:auto;left:0;right:0;top:0;height:4px;background:#E9AC57;box-shadow:0 0 26px 6px rgba(233,172,87,.8)'
-  // the words
-  const mk = (a, b) => {
-    const e = h('div', 'abs display', s.cam); e.style.fontSize = L.fs + 'px'; e.style.textAlign = LAND ? 'left' : 'center'; e.style.width = 'max-content'
-    const l1 = h('div', 'nowrap', e), l2 = h('div', 'nowrap', e)
-    return { e, w: [...words(l1, a), ...words(l2, b)] }
-  }
-  const g1 = mk('Most websites', 'just sit there.')
-  const g2 = mk('Yours should', 'work for a living!')
-  const wWork = g2.w[2]; wWork.style.color = '#E9AC57'; wWork.style.position = 'relative'
+  // the first line, over the wall
+  const scrim = h('div', 'abs', s.cam)
+  Object.assign(scrim.style, { width: L.sc[0] + 'px', height: L.sc[1] + 'px', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(14,12,10,.88), rgba(14,12,10,.6) 50%, rgba(14,12,10,0))' })
+  const g1 = h('div', 'abs display', s.cam); g1.style.fontSize = L.f1 + 'px'; g1.style.textAlign = 'center'; g1.style.width = 'max-content'
+  const g1w = [...words(h('div', 'nowrap', g1), 'Most websites'), ...words(h('div', 'nowrap', g1), 'just sit there.')]
+  const zero = h('div', 'abs zero', s.cam, '<i></i><b>0</b>&nbsp;enquiries this week')
+  // the second line
+  const g2 = h('div', 'abs display', s.cam); g2.style.fontSize = L.fs + 'px'; g2.style.textAlign = LAND ? 'left' : 'center'; g2.style.width = 'max-content'
+  const g2w = [...words(h('div', 'nowrap', g2), 'Yours should'), ...words(h('div', 'nowrap', g2), 'work for a living!')]
+  const wWork = g2w[2]; wWork.style.color = '#E9AC57'; wWork.style.position = 'relative'
   const ul = h('span', 'uline', wWork)
   const t1 = ['most', 'websites', 'just', 'sit', 'there'].map(k => wt(1, k))
   const t2 = ['yours', 'should', 'work', 'for', 'a', 'living'].map(k => wt(2, k))
-  const tW = wt(2, 'work'), tSwap = lineStart(2) - .18
-  // visitors who wander in and leave
-  const r = rng(7)
-  const visitors = Array.from({ length: 6 }, (_, i) => {
-    const e = h('div', 'abs', s.cam, CURSOR); e.style.width = '32px'; e.style.height = '44px'
-    e._t = .1 + i * .4; e._px = (r() - .5) * 560; e._py = (r() - .3) * 300; e._y0 = (r() - .5) * 300; e._y1 = (r() - .5) * 400
-    return e
-  })
-  visitors.forEach(e => { cue('blip', e._t + .5, { v: .18 }) })
+  const tY = wt(2, 'yours'), tW = wt(2, 'work'), tSwap = lineStart(2) - .18
+  const tZero = we(1, 'there') - .15
+  const tZ0 = tY - .25, tZ1 = tW - .1
   // what a working site does
   const TOASTS = [['lead', 'New enquiry', 'Quote request'], ['cal', 'Booking confirmed', 'Fri · 2:00pm'], ['card', 'Deposit paid', '£20.00'], ['bell', 'Reminder sent', 'Tomorrow · 10:30am']]
   const tT = TOASTS.map((_, i) => tW + .34 + i * .3)
   const toasts = TOASTS.map(([ic, a, b]) => h('div', 'toast', s.cam, `<div class="ti">${icon(ic)}</div><div><div class="tt">${a}</div><div class="ts">${b}</div></div><div class="now">now</div>`))
   const rings = [0, 1, 2].map(() => { const e = h('div', 'ring', s.cam); e.style.width = e.style.height = '200px'; return e })
+  cue('tick', tZero + .02, { v: .6 })
+  cue('pop', tY - .1, { v: .45 })
+  cue('whoosh', tZ1 - .05, { d: tZ1 - tZ0, v: .7 })
   cue('riser', tW, { d: tW - s.cuts[1].start + .2 })
   cue('implode', tW - .02, { d: .45 })
   cue('impact', tW, { v: 1.1 })
@@ -88,43 +102,49 @@ function buildSite(s) {
   cue('whoosh', s.t1 - .25, { d: .5, v: .9 })
 
   return t => {
-    camera(s, t, { inT: 'none', outT: 'through', outDur: .3, push: .03 })
+    camera(s, t, { inT: 'none', outT: 'through', outDur: .3, push: 0 })
     const alive = P(t, tW - .05, tW + .4, E.out)
     const bump = bell(t, tW - .02, tW + .08, tW + .55)
-    const bx = L.b[0], by = L.b[1]
-    put(br, { x: bx, y: by, s: L.bs * lerp(.94, 1, P(t, 0, 3, E.io)) * (1 + .05 * bump), ry: lerp(L.ry0, L.ry0 * .35, alive), rx: lerp(L.rx0, 0, alive), bright: lerp(.7, 1, alive), o: P(t, 0, .25) })
-    br.style.boxShadow = `0 60px 120px -24px rgba(0,0,0,.75), 0 0 ${(80 * alive).toFixed(0)}px rgba(233,172,87,${(.28 * alive).toFixed(3)}), 0 0 0 1px rgba(233,172,87,${(.5 * bump).toFixed(3)})`
+    // the wall drifts, slowly; then the camera dives into yours until it is the whole browser
+    const drift = P(t, 0, tZ1, E.lin)
+    const Sp = L.w0 * lerp(1.05, 1, drift), Tp = [lerp(36, -36, drift), lerp(-10, 10, drift)]
+    const zz = P(t, tZ0, tZ1, E.io)
+    const S = Math.exp(lerp(Math.log(Sp), Math.log(L.bs / TS), zz))
+    const pc = [lerp(Tp[0] + Sp * C[0], L.b[0], zz), lerp(Tp[1] + Sp * C[1], L.b[1], zz)]
+    const T = [pc[0] - S * C[0], pc[1] - S * C[1]]
+    const wo = .42 * (1 - P(zz, .45, .95, E.lin))
+    thumbs.forEach(e => put(e, { x: T[0] + S * e._p[0], y: T[1] + S * e._p[1], s: S * TS, o: wo }))
+    const pick = P(t, tY - .15, tY + .1)
+    put(br, { x: pc[0], y: pc[1], s: S * TS * (1 + .05 * bump), o: lerp(.42, 1, pick) })
+    const ring = pick * (1 - alive)
+    br.style.boxShadow = `0 40px 90px -20px rgba(0,0,0,.7), 0 0 0 ${lerp(8, 2, zz).toFixed(2)}px rgba(233,172,87,${(.9 * ring).toFixed(3)}), 0 0 ${(80 * alive).toFixed(0)}px rgba(233,172,87,${(.28 * alive).toFixed(3)}), 0 0 0 1px rgba(233,172,87,${(.5 * bump).toFixed(3)})`
     // the new site paints itself over the old, top to bottom
     const rv = P(t, tW - .04, tW + .3, E.io)
     site.style.clipPath = `inset(0 0 ${((1 - rv) * 100).toFixed(2)}% 0)`
     scan.style.transform = `translateY(${(rv * (BH - 52)).toFixed(1)}px)`
     vis(scan, rv > 0 && rv < 1 ? 1 : 0)
     // words
-    const lx = e => LAND ? L.tx[0] + e.offsetWidth / 2 : L.tx[0]
     const o1 = P(t, tSwap, tSwap + .22, E.in2)
-    put(g1.e, { x: lx(g1.e), y: L.tx[1] - o1 * 60, o: 1 - o1, blur: o1 * 16 })
-    g1.w.forEach((w, i) => rise(w, t, t1[i] - .06, { dur: .34, dy: 34 }))
-    put(g2.e, { x: lx(g2.e), y: L.tx[1], s: 1 + .05 * bump })
-    g2.w.forEach((w, i) => rise(w, t, t2[i] - .06, { dur: i === 2 ? .26 : .34, dy: i === 2 ? 60 : 34, s0: i === 2 ? 1.4 : 1 }))
+    put(scrim, { y: L.t1 + 40, o: P(t, t1[0] - .3, t1[0] + .3, E.io) * (1 - P(t, tSwap, tSwap + .3)) })
+    put(g1, { y: L.t1 - o1 * 50, o: 1 - o1, blur: o1 * 14 })
+    g1w.forEach((w, i) => rise(w, t, t1[i] - .06, { dur: .34, dy: 34 }))
+    const zp = P(t, tZero, tZero + .3, E.snap)
+    put(zero, { y: L.t1 + g1.offsetHeight / 2 + 70 - o1 * 50, s: lerp(.8, 1, zp), o: P(t, tZero, tZero + .08) * (1 - o1) })
+    const lx = LAND ? L.tx[0] + g2.offsetWidth / 2 : L.tx[0]
+    put(g2, { x: lx, y: L.tx[1], s: 1 + .05 * bump })
+    g2w.forEach((w, i) => rise(w, t, t2[i] - .06, { dur: i === 2 ? .26 : .34, dy: i === 2 ? 60 : 34, s0: i === 2 ? 1.4 : 1 }))
     wWork.style.textShadow = `0 0 ${(50 * bump).toFixed(0)}px rgba(233,172,87,.8)`
     ul.style.transform = `scaleX(${P(t, tW + .05, tW + .4, E.ease).toFixed(4)})`
-    // visitors come, look, and go
-    visitors.forEach(e => {
-      const a = P(t, e._t, e._t + .55, E.io), b = P(t, e._t + .9, e._t + 1.4, E.in2)
-      const [sx, sy] = L.from === 'below' ? [e._px * .6, 420] : [-620, e._y0]
-      const x = lerp(lerp(sx, e._px, a), 640, b), y = lerp(lerp(sy, e._py, a), e._y1, b)
-      put(e, { x: bx + x * L.bs, y: by + y * L.bs, o: P(t, e._t, e._t + .15) * (1 - P(b, .6, 1, E.lin)) * (1 - P(t, tW - .3, tW)) })
-    })
     // rings off the page as it comes alive
     rings.forEach((e, k) => {
       const p = P(t, tW + k * .08, tW + .9 + k * .15, E.out)
-      put(e, { x: bx, y: by, s: lerp(.4, 7 + k * 2, p), o: t >= tW + k * .08 ? (1 - p) * (k ? .45 : .8) : 0 })
+      put(e, { x: L.b[0], y: L.b[1], s: lerp(.4, 7 + k * 2, p), o: t >= tW + k * .08 ? (1 - p) * (k ? .45 : .8) : 0 })
     })
     // notifications stack up, newest on top
     toasts.forEach((e, k) => {
       const pin = P(t, tT[k], tT[k] + .32, E.snap)
       let slotN = 0; for (let j = k + 1; j < toasts.length; j++) slotN += P(t, tT[j], tT[j] + .3, E.out)
-      put(e, { x: L.toast[0], y: L.toast[1] + slotN * 92 * L.ts - (1 - Math.min(1, pin)) * 50, z: 160, s: L.ts * lerp(.8, 1, pin), o: P(t, tT[k], tT[k] + .08) })
+      put(e, { x: L.toast[0], y: L.toast[1] + slotN * 92 * L.ts - (1 - Math.min(1, pin)) * 50, s: L.ts * lerp(.8, 1, pin), o: P(t, tT[k], tT[k] + .08) })
     })
   }
 }
