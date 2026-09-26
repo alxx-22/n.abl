@@ -14,7 +14,7 @@ COVER = 5.3           # seconds: the frame the cover images are taken from
 VOICE, LANG, SPEED = "bm_fable", "en-gb", 1.2
 SHORT_SPEED = 1.36
 
-BPM = 124
+BPM = 144           # an upbeat pop tempo, faster than the AI film's 124
 BEAT = 60 / BPM
 
 # The name is spoken, not spelled. Everything else is read as written.
@@ -27,7 +27,7 @@ SAY = {"n.abl": "enable"}
 # q:    the grid the scene's end snaps to, in beats.
 SCENES = [
     dict(id="sit",     lead=0.35, tail=0.15, q=1, lines=["Most websites just sit there."]),
-    dict(id="work",    lead=0.35, tail=0.45, q=1, lines=["Yours should work for a living!"]),
+    dict(id="work",    lead=0.21, tail=0.45, q=1, lines=["Yours should work for a living!"]),
     dict(id="builds",  lead=0.12, tail=0.20, q=0.5, lines=["n.abl builds smart web apps, landing pages, and booking systems."]),
     dict(id="landing", lead=0.20, tail=0.20, q=0.5, lines=["Landing pages that load fast and turn visitors into enquiries."]),
     dict(id="booking", lead=0.20, tail=0.20, q=0.5, lines=["Booking systems that fill your diary, take the deposit, and send the reminders."]),
@@ -37,9 +37,10 @@ SCENES = [
 ]
 
 # ---- music ---------------------------------------------------------------
-# Drum-led: stomps, claps and fills carry it, with bass, stabs and a hook on
-# top (audio.py, build_music_drums). The AI film uses the synth arrangement.
-MUSIC = "drums"
+# An upbeat pop band from sampled acoustic instruments: strummed guitar,
+# piano, bass, a live kit with claps and tambourine, a whistled hook
+# (audio.py, build_music_band). The AI film uses the synth arrangement.
+MUSIC = "band"
 
 # Chords by bar, from audio.py's BARS. I-V-vi-IV in D: brighter than the AI
 # film's vi-IV-I-V, the same key so the two sit together.

@@ -7,7 +7,7 @@ and its brief and shot list (`SCRIPT.md`). The finished films are in `out/`.
 
 | Film | Length | What it is for | Brief |
 |---|---|---|---|
-| `web` · Websites that work | 33 s | Smart web apps, landing pages and booking systems | [`films/web/SCRIPT.md`](films/web/SCRIPT.md) |
+| `web` · Websites that work | 32 s | Smart web apps, landing pages and booking systems | [`films/web/SCRIPT.md`](films/web/SCRIPT.md) |
 | `ai` · Put AI to work | 33 s | The AI service: customer agents and everything else AI takes on | [`films/ai/SCRIPT.md`](films/ai/SCRIPT.md) |
 | `ai-long` · AI, where it earns its place | 58 s | The first, longer cut of the AI film: three jobs in depth | [`films/ai-long/SCRIPT.md`](films/ai-long/SCRIPT.md) |
 
@@ -33,13 +33,17 @@ The MP4s are committed so they can be downloaded straight from the repository
 
 ## How it is made
 
-Nothing is stock and nothing is licensed. Every part is generated here:
+Nothing is stock. The voice, the picture, the effects and the AI films' music
+are generated here; the web film's music is composed here and played on
+sampled acoustic instruments from the
+[GeneralUser GS](https://www.schristiancollins.com/generaluser) SoundFont,
+which is free for commercial music:
 
 1. **`vo.py`** reads a film's script (`films/<film>/film.py`) with
    [Kokoro](https://github.com/hexgrad/kokoro) (Apache-2.0), voice `bm_fable`,
    British English, at 1.2× speed. Each sentence is trimmed and laid out shot
-   by shot, and every shot starts on a beat, or half a beat, of the 124 BPM
-   music grid. Every clip is then run through a speech recogniser with word
+   by shot, and every shot starts on a beat, or half a beat, of the film's
+   music grid (124 BPM for the AI films, 144 for the web film). Every clip is then run through a speech recogniser with word
    timestamps (NVIDIA Parakeet TDT, via sherpa-onnx) so the words on screen
    land when they are spoken. Writes `build/<film>/timeline.json` with the
    start and end of every word.
@@ -57,11 +61,15 @@ Nothing is stock and nothing is licensed. Every part is generated here:
    the frames piped to ffmpeg, `--covers` for the cover images. The light film
    grain is added by ffmpeg at encode, where it also dithers the dark gradients
    against banding; drawing it in the page cost a third of every frame.
-4. **`audio.py`** synthesises the music (124 BPM in D, with the film's own
-   chords and sections from its `film.py`: supersaw pads, offbeat stabs,
-   plucked sixteenths and sub bass over four-on-the-floor for the AI films; a
-   drum-led groove of stomps, layered claps, hats, percussion and fills for
-   the web film) and every effect from the cue list.
+4. **`audio.py`** makes the music, in D with the film's own tempo, chords
+   and sections from its `film.py`: for the AI films it synthesises supersaw
+   pads, offbeat stabs, plucked sixteenths and sub bass over
+   four-on-the-floor; for the web film it writes an upbeat pop band part by
+   part (strummed steel-string guitar, piano, picked bass, a live kit with
+   hand claps and tambourine, a whistled hook, brass hits) and plays it
+   through the SoundFont with
+   [TinySoundFont](https://github.com/schellingb/TinySoundFont). It
+   synthesises every effect from the cue list.
    It processes the voice, ducks the music under it from the script's own
    timings, limits and normalises the result.
 5. **`package.py`** makes the delivered picture (a two-pass encode of the
@@ -75,7 +83,9 @@ Playwright. From this folder:
 
 ```bash
 pip install -r requirements.txt
-mkdir -p build/models && cd build/models \
+pip install --no-deps tinysoundfont          # offline rendering only; skips its audio-playback dependency
+mkdir -p build/models/soundfont && cd build/models \
+  && curl -L -o soundfont/GeneralUser-GS.sf2 https://raw.githubusercontent.com/mrbumpy409/GeneralUser-GS/main/GeneralUser-GS.sf2 \
   && curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx \
   && curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin \
   && curl -L https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2 | tar xj \
@@ -113,8 +123,9 @@ Copy `films/web` to `films/<name>` and change:
 - **Voice.** `VOICE` in `film.py`. Other British voices are `bf_emma`,
   `bf_isabella`, `bm_george` and `bm_lewis`; `bf_emma` is the calmest.
 - **Pace.** `SPEED` in `film.py`. Everything downstream follows the new timings.
-- **Music.** `PROG` and `sections()` in `film.py`, and `MUSIC`: leave it out
-  for the synth arrangement (the AI films) or set `MUSIC = "drums"` for the
-  drum-led one (the web film). The instruments are in `audio.py`.
+- **Music.** `BPM`, `PROG` and `sections()` in `film.py`, and `MUSIC`: leave
+  it out for the synth arrangement (the AI films), set `MUSIC = "band"` for
+  the sampled pop band (the web film), or `MUSIC = "drums"` for a synthesised
+  drum-led groove. The parts are written in `audio.py`.
 - **Pictures.** One builder per shot in `scenes.js`, registered in its
   `setup()`, which also returns the background's colour keyframes.

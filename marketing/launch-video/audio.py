@@ -676,6 +676,220 @@ def build_music_drums():
     drums = hp(drums, 30)
     return pads, bass, keys, drums
 
+# ------------------------------------------------------------ music: the band
+# For films whose film.py sets MUSIC = "band": an upbeat pop band played by
+# sampled acoustic instruments from a General MIDI SoundFont (GeneralUser GS,
+# free for commercial music) instead of synthesised ones. Steel-string guitar
+# strumming sixteenths, a bouncing piano on the offbeats, picked bass, a live
+# kit stomping four to the floor with hand claps and a tambourine, a whistled
+# hook doubled on glockenspiel, and brass hits on the drop, the dot and the
+# last beat. Nothing is hit on the cuts: a line starts right after each one.
+SOUNDFONT = os.environ.get("SOUNDFONT", os.path.join(HERE, "build", "models", "soundfont", "GeneralUser-GS.sf2"))
+
+def sf_part(notes, bank, preset, drums=False):
+    """Render (time, key, velocity, duration) notes with one SoundFont preset."""
+    import tinysoundfont
+    syn = tinysoundfont.Synth(samplerate=SR)
+    sid = syn.sfload(SOUNDFONT)
+    ch = 9 if drums else 0
+    syn.program_select(ch, sid, bank, preset, drums)
+    ev = sorted([(t, 1, k, v) for t, k, v, d in notes] + [(t + d, 0, k, 0) for t, k, v, d in notes], key=lambda e: (e[0], e[1]))
+    out = np.zeros((N, 2)); pos = 0
+    def run(i):
+        nonlocal pos
+        while pos < i:
+            n = min(i - pos, SR)
+            out[pos:pos + n] = np.frombuffer(syn.generate(n), np.float32).reshape(-1, 2)
+            pos += n
+    for t, on, k, v in ev:
+        run(min(N, max(pos, at(t))))
+        if on:
+            syn.noteon(ch, int(k), int(np.clip(round(v), 1, 127)))
+        else:
+            syn.noteoff(ch, int(k))
+    run(N)
+    return out
+
+def to_lufs(x, target):
+    loud = pyln.Meter(SR).integrated_loudness(x)
+    return x * 10 ** ((target - loud) / 20) if np.isfinite(loud) else x
+
+# open-position guitar chords, low string to high; piano right hand; bass roots
+GTR = {"D": [50, 57, 62, 66], "A": [45, 52, 57, 61, 64], "Bm": [47, 54, 59, 62, 66], "G": [43, 47, 50, 55, 59, 67]}
+PNO = {"D": [62, 66, 69], "A": [61, 64, 69], "Bm": [62, 66, 71], "G": [62, 67, 71]}
+ROOT = {"D": 38, "A": 33, "Bm": 35, "G": 31}
+# the hook, four bars over D A Bm G: (sixteenth, note, length in sixteenths)
+HOOK = [(0, 78, 2), (3, 81, 1), (4, 81, 2), (6, 83, 2), (8, 81, 4), (12, 78, 2), (14, 74, 2),
+        (16, 76, 2), (19, 78, 1), (20, 76, 2), (22, 73, 2), (24, 76, 6),
+        (32, 74, 2), (35, 78, 1), (36, 78, 2), (38, 81, 2), (40, 83, 4), (44, 81, 2), (46, 78, 2),
+        (48, 79, 2), (51, 78, 1), (52, 76, 2), (54, 74, 2), (56, 76, 6)]
+# the strum: sixteenth, direction, weight
+STRUM = [(0, 1, 1.0), (3, -1, .5), (4, 1, .75), (6, -1, .65), (8, 1, .9), (10, -1, .6), (11, -1, .42), (12, 1, .8), (14, -1, .62)]
+K_KICK, K_SNARE, K_CLAP, K_OHAT, K_CRASH, K_TAMB, K_SHAKE = 36, 38, 39, 46, 49, 54, 70
+TOMS = [50, 48, 47, 45]
+
+def build_music_band():
+    hr = np.random.default_rng(144)
+    jit = lambda: hr.normal(0, 0.004)
+    hv = lambda v: v + hr.integers(-6, 7)
+    kit, gtr, mute, pno, bas, whis, glock, brass = [], [], [], [], [], [], [], []
+    claps = []                                # a layer of synthesised claps under the kit's, for width
+    kicks = []                                # and a little weight under the kit's kick
+    SEC = sections()
+    groove = next(s for s, e, k, c in SEC if k == "main")
+    lift0 = next(s for s, e, k, c in SEC if k == "lift")
+    dot = next(s for s, e, k, c in SEC if k == "resolve")
+    button = np.ceil((TL["lines"][-1]["end"] + 0.35) / BEAT - 1e-6) * BEAT
+    kind_at = lambda t: next((k for s, e, k, c in SEC if s - 1e-3 <= t < e - 1e-3), "resolve")
+    def strum(t, name, w, direction, dur, vel=104):
+        ns = GTR[name] if direction > 0 else GTR[name][-4:][::-1]
+        for i, k in enumerate(ns):
+            gtr.append((t + i * 0.011 + jit(), k, hv(vel * w), dur))
+    def chord(lst, t, notes, vel, dur):
+        for k in notes:
+            lst.append((t + jit(), k, hv(vel), dur))
+    g0, g1 = -int(np.floor(groove / S16 + 1e-6)), int((DUR - groove) / S16)
+    for g in range(g0, g1 + 1):
+        t0 = groove + g * S16
+        if t0 < -1e-6:
+            continue
+        st, bar = g % 16, g // 16
+        kind = kind_at(t0)
+        if kind in ("intro", "build"):
+            name = {-1: "A", -2: "G"}.get(bar, "Bm")
+        elif kind in ("main", "main2"):
+            name = ["D", "A", "Bm", "G"][bar % 4]
+        else:
+            name = "A" if kind == "lift" else "D"
+        if kind == "intro":
+            if st in (0, 8):
+                kit.append((t0, K_KICK, hv(84), .2))
+            if st in (4, 12):
+                kit.append((t0 + jit(), K_CLAP, hv(96), .2)); claps.append((t0, .22))
+            if st % 4 == 2:
+                kit.append((t0 + jit(), K_TAMB, hv(72), .1))
+            if st % 2 == 0:
+                r = ROOT[name] + 12
+                for k in (r, r + 7, r + 12):
+                    mute.append((t0 + jit(), k, hv(92 if st % 4 == 0 else 78), .1))
+            if st in (0, 8):
+                bas.append((t0 + jit(), ROOT[name] + 12, hv(88), .32))
+        elif kind == "build":
+            k = int(round((t0 - (groove - 2 * BEAT)) / S16))
+            if k % 2 == 0 or k >= 4:
+                kit.append((t0 + jit(), K_SNARE, 50 + 60 * k / 8, .1))
+                kit.append((t0 + jit(), K_CLAP, 60 + 50 * k / 8, .1)); claps.append((t0, .1 + .2 * k / 8))
+            if k % 2 == 0:
+                strum(t0, "A", .55 + .45 * k / 8, 1, S16 * 1.8)
+                bas.append((t0 + jit(), ROOT["A"] + 12, hv(92), S16 * 1.8))
+            if k == 0:
+                kit.append((t0, K_KICK, 100, .2))
+        elif kind in ("main", "main2") or (kind == "resolve" and dot - 1e-3 <= t0 < button - 1e-3):
+            m2 = kind == "main2"
+            fin = kind == "resolve"
+            if st % 4 == 0:
+                kit.append((t0, K_KICK, hv(120), .2)); kicks.append(t0)
+            if st in (4, 12):
+                kit.append((t0 + jit(), K_SNARE, hv(96), .2))
+                kit.append((t0 + jit(), K_CLAP, hv(116), .2)); claps.append((t0, .34))
+            if st % 2 == 0:
+                kit.append((t0 + jit(), K_TAMB, hv(106 if st % 4 == 2 else 74), .1))
+            else:
+                kit.append((t0 + jit(), K_SHAKE, hv(62), .1))
+            if m2 and st % 4 == 2:
+                kit.append((t0 + jit(), K_OHAT, hv(70), .2))
+            if st == 0 and (bar % 4 == 0 or fin and t0 < dot + S16):
+                kit.append((t0, K_CRASH, hv(96), 1.0))
+            if not fin and bar % 4 == 3 and st >= 12:          # fills into each four-bar phrase
+                if m2 and bar % 8 == 7:
+                    kit.append((t0, TOMS[st - 12], hv(100), .2))
+                else:
+                    kit.append((t0 + jit(), K_SNARE, 70 + 13 * (st - 12), .1))
+            for s_, d_, w in STRUM:
+                if st == s_:
+                    strum(t0, name, w, d_, S16 * (1.9 if w > .7 else .9))
+            if st % 4 == 2:
+                chord(pno, t0, PNO[name], 90 if m2 else 84, .12)
+            if m2 and st == 0:
+                chord(pno, t0, [n - 12 for n in PNO[name]], 76, .3)
+            if st % 2 == 0:
+                bas.append((t0 + jit(), ROOT[name] + (24 if st == 14 else 12), hv(104 if st % 4 == 0 else 90), .19))
+            if not fin:
+                ph = g % 64
+                for (hs, note, ln) in HOOK:
+                    if hs == ph:
+                        whis.append((t0 + jit(), note, hv(98), ln * S16 * 0.92))
+                        if m2:
+                            glock.append((t0, note + 12, hv(92), ln * S16))
+        elif kind == "lift":
+            left = int(round((dot - t0) / S16))
+            if (left > 8 and st % 4 == 0) or (4 < left <= 8 and st % 2 == 0) or left <= 4:
+                kit.append((t0 + jit(), K_CLAP, 84 + 36 * (1 - min(1, left / 16)), .1)); claps.append((t0, .2 + .15 * (1 - min(1, left / 16))))
+            if left <= 8:
+                kit.append((t0 + jit(), K_SNARE, 55 + 55 * (1 - left / 8), .1))
+            if st % 2 == 0:
+                kit.append((t0 + jit(), K_TAMB, hv(64), .1))
+            if st % 4 == 0:
+                strum(t0, "A", .8, 1, BEAT * .9, vel=96)
+    # hits: the drop, the dot and the button
+    root_chord = lambda name: [n + 12 for n in PNO[name]] + [PNO[name][0]]
+    chord(brass, groove, root_chord("D"), 116, .32)
+    kit.append((groove, K_CRASH, 112, 1.5))
+    bas.append((lift0, ROOT["A"] + 12, 96, dot - lift0 - .02))
+    chord(pno, lift0, [57, 61, 64, 69], 70, dot - lift0)
+    chord(brass, dot, root_chord("D"), 116, .3)
+    kit.append((dot, K_KICK, 118, .2)); kit.append((dot, K_CRASH, 110, 1.5)); claps.append((dot, .4))
+    strum(dot, "D", 1.0, 1, .5, vel=112)
+    chord(brass, button, root_chord("D"), 118, 1.1)
+    kit += [(button, K_KICK, 120, .2), (button, K_CRASH, 116, 2), (button, K_CLAP, 120, .2), (button, K_SNARE, 110, .2)]
+    claps.append((button, .45))
+    strum(button, "D", 1.0, 1, 2.2, vel=118)
+    bas.append((button, ROOT["D"] + 12, 110, 1.3))
+    chord(pno, button, [50, 57, 62, 66, 69, 74], 96, 1.8)
+    glock.append((button, 86, 100, 1.2)); glock.append((button, 90, 90, 1.2))
+    # render
+    UP = 5.0                                  # the band sits this much above the targets below
+    P_ = lambda notes, bank, pre, lufs, drums=False: to_lufs(sf_part(notes, bank, pre, drums), lufs + UP) if notes else buf()
+    drums = P_(kit, 128, 0, -19.0, True)
+    thump = buf()
+    for t in kicks + [groove, dot, button]:
+        add(thump, lp(kick_punch(1.0), 180), t, 1.0)
+    drums += to_lufs(thump, -24.0 + UP)
+    r = np.random.default_rng(99)
+    cl = [stereo(clap_layer(r), clap_layer(r)) for _ in range(4)]
+    for i, (t, v) in enumerate(claps):
+        add(drums, cl[i % 4], t, v * 0.5)
+    guitar = P_(gtr, 0, 25, -21.5)
+    muted = P_(mute, 0, 28, -25.0)
+    piano = P_(pno, 0, 0, -26.5)
+    bass = P_(bas, 0, 34, -21.0)
+    whistle = P_(whis, 11, 78, -25.5)
+    glk = P_(glock, 0, 9, -30.0)
+    brs = P_(brass, 0, 61, -27.0)
+    # a little air on everything, a room on the kit; the guitar and piano
+    # step out of the voice's consonants, and the hook, which sits right in
+    # the voice's range, steps back while anyone is speaking
+    guitar = reverb(peak_eq(peak_eq(hp(guitar, 90), 2400, -4.5, 0.7), 1100, -2.0, 0.9), IR_HALL, 0.14)
+    muted = hp(muted, 90)
+    piano = reverb(peak_eq(peak_eq(hp(piano, 120), 2400, -4.5, 0.7), 1100, -2.0, 0.9), IR_HALL, 0.18)
+    whistle = reverb(whistle, IR_HALL, 0.24)
+    glk = reverb(glk, IR_HALL, 0.3)
+    talk = np.zeros(N)
+    for l in TL["lines"]:
+        talk[at(l["start"] - 0.1):at(l["end"] + 0.15)] = 1
+    rel = np.exp(-1 / (0.1 * SR))
+    talk = signal.lfilter([1 - rel], [1, -rel], talk)
+    lead_duck = 10 ** (-10.0 * np.clip(talk, 0, 1) / 20)[:, None]
+    whistle *= lead_duck; glk *= lead_duck
+    chord_duck = 10 ** (-6.0 * np.clip(talk, 0, 1) / 20)[:, None]   # the strumming and piano make room too
+    guitar *= chord_duck; muted *= chord_duck; piano *= chord_duck; brs *= chord_duck
+    brs = reverb(brs, IR_HALL, 0.22)
+    drums = hp(reverb(drums, IR_ROOM, 0.12), 30)
+    bass = hp(bass, 34)
+    keys = guitar + muted + whistle + glk
+    pads = piano + brs
+    return pads, bass, keys, drums
+
 def build_sfx():
     out = buf()
     for c in CUES:
@@ -794,8 +1008,9 @@ def limiter(x, ceiling_db=-1.2, look=0.004, release=0.08):
 
 def main():
     os.makedirs(os.path.join(BUILD, "stems"), exist_ok=True)
-    drum_led = getattr(F, "MUSIC", "synth") == "drums"
-    pads, bass, keys, drums = (build_music_drums if drum_led else build_music)()
+    style = getattr(F, "MUSIC", "synth")
+    drum_led = style in ("drums", "band")
+    pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band}.get(style, build_music)()
     music = pads * 1.0 + bass * 1.0 + keys * 1.0 + drums * (1.0 if drum_led else 0.9)
     music = peak_eq(music, 2800, 3.0, 0.6)
     music = peak_eq(music, 90, -2.0, 0.8)
@@ -806,8 +1021,8 @@ def main():
         speaking[at(l["start"] - 0.12):at(l["end"] + 0.25)] = 1
     rel = np.exp(-1 / (0.12 * SR))
     speaking = signal.lfilter([1 - rel], [1, -rel], speaking)
-    # a drum-led track sits a little further down under the voice: claps share its range
-    duck_db = (-7.5 if drum_led else -6.0) * np.clip(speaking, 0, 1)
+    # drums and a band sit further down under the voice: claps and chords share its range
+    duck_db = {"band": -9.0, "drums": -7.5}.get(style, -6.0) * np.clip(speaking, 0, 1)
     music *= 10 ** (duck_db / 20)[:, None]
     # the last seconds breathe out
     fade = np.clip((DUR - np.arange(N) / SR) / 1.4, 0, 1) ** 1.5

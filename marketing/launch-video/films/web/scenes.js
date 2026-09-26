@@ -454,7 +454,8 @@ function buildApps(s) {
   const partT = (w, p) => tBuilt - .15 + p._d * (tWork - tBuilt + .1)
   wins.forEach(w => w._parts.forEach((p, k) => { if (k % 2 === 0) cue('blip', partT(w, p) + .3, { v: .2 }) }))
   cue('whoosh', tBuilt - .1, { d: .6, v: .5 })
-  tF.forEach((x, i) => { cue('swish', x - .1, { v: .6 }); cue('flip', x - .05, { v: .5 }) })
+  // the carousel turns just ahead of each word, so its sound clears the word's first consonant
+  tF.forEach((x, i) => { cue('swish', x - .22, { v: .4 }); cue('flip', x - .2, { v: .35 }) })
   cue('hit', tF[1] + .3, { v: .5 }); cue('tick', tF[1] + .32, { v: .8 })
   WIPES.push({ t: s.t1 })
   cue('wipe', s.t1)
