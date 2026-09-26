@@ -47,9 +47,11 @@ The line it ends on: **Put AI to work.**
 
 ## 3. Voiceover
 
-Voice: Kokoro `bm_fable` (British English, Apache-2.0 model) at 1.2× speed.
-Chosen because it has about twice the pitch movement of the other British
-voices, which is what makes a read sound lively rather than level.
+Voice: Gemini TTS (`Puck`), directed line by line by the notes below, when a
+`GEMINI_API_KEY` is set. Otherwise Kokoro `bm_fable` (British English,
+Apache-2.0 model) at 1.2× speed, chosen because it has about twice the pitch
+movement of the other British voices, which is what makes a read sound
+lively rather than level.
 
 | # | Shot | Line |
 |---|---|---|
@@ -63,6 +65,31 @@ voices, which is what makes a read sound lively rather than level.
 | 8 | Gains | Less admin. Faster answers. Happier customers. |
 | 9 | Yours | Built for your business. Yours to keep. |
 | 10 | End | n.abl *(beat)* Put AI to work! |
+
+### Voice direction
+
+Kokoro cannot be directed, so these notes only take effect with Gemini TTS
+(set a `GEMINI_API_KEY`; see [`README.md`](../../README.md)). `vo.py` sends
+every line with the profile, the scene and the line's own note, the way a
+director briefs a voice actor. They live in `film.py` (`PROFILE`, `SCENE` and
+each scene's `tone`), voiced by Gemini's `Puck`.
+
+**Who is speaking.** A British man in his thirties from the south of England: the founder of a small studio that builds AI into businesses. Warm, quick and genuinely excited about what AI can now do, like a friend telling you something big, not an announcer. A smile in the voice. Natural and conversational, never shouty, never salesy.
+
+**The scene.** A 33-second launch film for social media about the AI service, cut fast to a driving electronic track. He is talking to small-business owners. Brisk and energetic, with real pauses where the punctuation is.
+
+| # | Line | Direction |
+|---|---|---|
+| 1 | The world just got a new operating system. | Big news, a little awed, like telling a friend something huge. Build through the line and lean into 'new operating system'. |
+| 2 | It's called AI! | The reveal. Excited and punchy, with a grin. Hit 'AI' hard. |
+| 3 | And n.abl builds it into your business. | Proud and confident. The name, 'enable', clear, then 'into your business' warm and direct, to the listener. |
+| 4 | Customer agents that book appointments, | Upbeat and practical, the start of a list: quick, with the list still going at the end. |
+| 5 | answer questions, day or night, | Keep the list moving, light and easy. 'Day or night' with a little smile. |
+| 6 | and handle complaints before they escalate. | Reassuring and a touch knowing. 'Before they escalate' calm and in control. |
+| 7 | Plus AI that reads your paperwork, sorts your inbox, drafts your replies, and chases every lead. | Fast and fun, rattling off four jobs with growing delight, each a little brighter, landing 'chases every lead' with a grin. |
+| 8 | Less admin. Faster answers. Happier customers. | Three crisp, punchy hits, each with its own beat. Satisfied. |
+| 9 | Built for your business. Yours to keep. | Sincere and warm. 'Built for your business' steady; 'Yours to keep' softer and reassuring. |
+| 10 | n.abl. Put AI to work! | The name, 'enable', warm and proud, with a beat after it. Then 'Put AI to work!' with energy and a big smile, lifting at the end. |
 
 ## 4. Animation script
 

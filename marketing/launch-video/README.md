@@ -37,9 +37,15 @@ Nothing is stock. Every part is generated here, except the Rhodes in the web
 film's music, which is played from the free
 [GeneralUser GS](https://www.schristiancollins.com/generaluser) SoundFont:
 
-1. **`vo.py`** reads a film's script (`films/<film>/film.py`) with
-   [Kokoro](https://github.com/hexgrad/kokoro) (Apache-2.0), voice `bm_fable`,
-   British English, at 1.2× speed. Each sentence is trimmed and laid out shot
+1. **`vo.py`** reads a film's script (`films/<film>/film.py`). With a
+   `GEMINI_API_KEY` in the environment it uses Google's Gemini TTS, which is
+   directed like a voice actor: every line goes with the film's voice
+   profile, the scene and its own note on tone, pace and emphasis (`PROFILE`,
+   `SCENE` and each scene's `tone` in `film.py`), and each clip is cached in
+   `build/<film>/tts_cache` so a rebuild costs no requests. Without a key it
+   falls back to [Kokoro](https://github.com/hexgrad/kokoro) (Apache-2.0,
+   local), voice `bm_fable`, British English, at 1.2× speed, which reads the
+   words well but cannot be directed. Each sentence is trimmed and laid out shot
    by shot, and every shot starts on a beat, or half a beat, of the film's
    music grid (124 BPM for the AI films, 144 for the web film). Every clip is then run through a speech recogniser with word
    timestamps (NVIDIA Parakeet TDT, via sherpa-onnx) so the words on screen
@@ -117,7 +123,15 @@ Copy `films/web` to `films/<name>` and change:
 - **Words.** The lines in `film.py`, and keep `SCRIPT.md` in step. The
   animation finds its cues by word (`wt(line, 'deposit')`), so a changed word
   that the film keys off needs the same change in `scenes.js`.
-- **Voice.** `VOICE` in `film.py`. Other British voices are `bf_emma`,
+- **Voice.** For an expressive read, get a free API key from Google AI
+  Studio (aistudio.google.com, "Get API key") and set it as the environment
+  variable `GEMINI_API_KEY`; `vo.py` then reads every line with Gemini TTS
+  to the notes in `film.py`. The free tier limits requests per day; clips
+  are cached, so if it stops on a rate limit, run it again later and it
+  carries on. `GEMINI_VOICE` picks the voice (`Puck` is upbeat; also try
+  `Sadachbia`, `Achird`, `Fenrir`), `GEMINI_TTS_MODEL` the model, and
+  `VOICE_PROVIDER=kokoro` forces the local voice. For Kokoro, `VOICE` in
+  `film.py`. Other British voices are `bf_emma`,
   `bf_isabella`, `bm_george` and `bm_lewis`; `bf_emma` is the calmest.
 - **Pace.** `SPEED` in `film.py`. Everything downstream follows the new timings.
 - **Music.** `BPM`, `PROG` and `sections()` in `film.py`, and `MUSIC`: leave

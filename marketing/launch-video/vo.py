@@ -26,9 +26,22 @@ to half a second late, which is why the recogniser is here.
 
   ALIGNER_DIR  the unpacked sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8 model,
                default build/models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
+
+Two voices. Kokoro (local, free, no setup) reads the words well but cannot be
+directed: it has no control over emotion. Gemini TTS (Google's API, free tier)
+takes written direction, so every line is read to the film's director's
+notes: PROFILE and SCENE in film.py, and each scene's `tone`. Set in film.py
+by VOICE_PROVIDER, or overridden by the environment:
+
+  VOICE_PROVIDER   auto (Gemini when a key is set, else Kokoro), gemini, kokoro
+  GEMINI_API_KEY   a Google AI Studio key (free tier), for Gemini TTS
+  GEMINI_TTS_MODEL the model, default gemini-2.5-flash-preview-tts
+
+Gemini clips are cached in build/<id>/tts_cache by their exact prompt, so a
+rebuild costs no requests unless a line or its direction changes.
 """
 
-import importlib.util, json, os, re, sys
+import base64, hashlib, importlib.util, json, os, re, sys, time, urllib.error, urllib.request
 import numpy as np
 import soundfile as sf
 from kokoro_onnx import Kokoro
@@ -48,6 +61,14 @@ BPM = F.BPM
 BEAT = 60 / BPM
 SAY, SCENES = F.SAY, F.SCENES
 OUT = os.path.join(BUILD, FILM_ID)
+
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+PROVIDER = os.environ.get("VOICE_PROVIDER") or getattr(F, "VOICE_PROVIDER", "kokoro")
+if PROVIDER == "auto":
+    PROVIDER = "gemini" if GEMINI_KEY else "kokoro"
+GEMINI_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
+GEMINI_FALLBACK_MODELS = ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts", "gemini-2.5-flash-tts", "gemini-2.5-pro-tts"]
+GEMINI_VOICE = getattr(F, "GEMINI_VOICE", "Puck")
 
 # Silence between sentences inside a line, by the mark that ends the first.
 AFTER = {"…": 0.35, ".": 0.18, "?": 0.22, "!": 0.2}
@@ -196,8 +217,78 @@ def word_times_measured(kok, text, clip):
     return [dict(w=e["w"], start=round(s, 3), end=round(n, 3)) for e, s, n in zip(est, starts, ends)]
 
 
+def gemini_prompt(text, tone):
+    """The director's notes and the line, in the shape Gemini TTS is prompted with."""
+    return (f"# AUDIO PROFILE\n{F.PROFILE}\n\n## THE SCENE\n{F.SCENE}\n\n"
+            f"### DIRECTOR'S NOTES\n{tone}\nRead only the transcript, exactly as written, nothing else.\n\n"
+            f"#### TRANSCRIPT\n{text}")
+
+
+def gemini_request(model, prompt):
+    body = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"responseModalities": ["AUDIO"],
+                             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": GEMINI_VOICE}}}},
+    }).encode()
+    req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                                 data=body, headers={"Content-Type": "application/json", "x-goog-api-key": GEMINI_KEY})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        data = json.load(r)
+    part = data["candidates"][0]["content"]["parts"][0]["inlineData"]
+    rate = int(re.search(r"rate=(\d+)", part.get("mimeType", "")).group(1)) if "rate=" in part.get("mimeType", "") else 24000
+    pcm = np.frombuffer(base64.b64decode(part["data"]), dtype="<i2").astype(np.float32) / 32768
+    if rate != SR:
+        from scipy.signal import resample_poly
+        pcm = resample_poly(pcm, SR, rate).astype(np.float32)
+    return pcm
+
+
+_model = [None]
+def gemini_tts(text, tone):
+    """One sentence from Gemini TTS, read to its direction; cached by prompt."""
+    prompt = gemini_prompt(text, tone)
+    key = hashlib.sha1(f"{GEMINI_VOICE}|{prompt}".encode()).hexdigest()[:16]
+    path = os.path.join(OUT, "tts_cache", key + ".wav")
+    if os.path.exists(path):
+        return sf.read(path, dtype="float32")[0]
+    models = [_model[0]] if _model[0] else [GEMINI_MODEL] + [m for m in GEMINI_FALLBACK_MODELS if m != GEMINI_MODEL]
+    last = None
+    for model in models:
+        for attempt in range(6):
+            try:
+                pcm = gemini_request(model, prompt)
+                _model[0] = model
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                sf.write(path, pcm, SR)
+                return pcm
+            except urllib.error.HTTPError as e:
+                last = f"{model}: HTTP {e.code} {e.read()[:300]!r}"
+                if e.code == 404:
+                    break                                   # no such model: try the next one
+                if e.code in (429, 500, 503):
+                    wait = min(60, 5 * 2 ** attempt)        # the free tier's rate limit: back off and retry
+                    print(f"  gemini {e.code}, retrying in {wait}s")
+                    time.sleep(wait)
+                    continue
+                raise SystemExit(f"Gemini TTS failed: {last}")
+    raise SystemExit(f"Gemini TTS failed: {last}")
+
+
+def synth(kok, s, tone, rate):
+    if PROVIDER == "gemini":
+        a = gemini_tts(spoken(s), tone)
+        # a read that says more than the line (the notes read aloud) is retried once, more plainly
+        got = measured_starts(trim(a))
+        if got is not None and len(got) > 1.5 * len(s.split()) + 2:
+            print(f"  gemini read extra words for {s!r}; retrying with a plain prompt")
+            a = gemini_tts(spoken(s), f"{tone} (Say only these words.)")
+        return a, SR
+    return kok.create(spoken(s), voice=VOICE, speed=rate, lang=LANG)
+
+
 def main():
     os.makedirs(os.path.join(OUT, "vo"), exist_ok=True)
+    print(f"voice: {PROVIDER}" + (f" ({GEMINI_MODEL}, {GEMINI_VOICE})" if PROVIDER == "gemini" else f" ({VOICE})"))
     kok = Kokoro(os.path.join(MODELS, "kokoro-v1.0.onnx"), os.path.join(MODELS, "voices-v1.0.bin"))
 
     t = 0.0
@@ -218,7 +309,7 @@ def main():
             s_out = []
             for si, s in enumerate(sents):
                 rate = SHORT_SPEED if len(s.split()) <= 4 else SPEED
-                audio, sr = kok.create(spoken(s), voice=VOICE, speed=rate, lang=LANG)
+                audio, sr = synth(kok, s, sc.get("tone", ""), rate)
                 assert sr == SR
                 clip = trim(audio)
                 name = f"{n:02d}_{si}.wav"
@@ -243,7 +334,8 @@ def main():
         print(f"{sc['id']:7s} {start:6.2f} → {end:6.2f}  ({end - start:5.2f}s)  vo ends {cursor:6.2f}")
 
     timeline = dict(film=FILM_ID, title=F.TITLE, cover=F.COVER, bpm=BPM, beat=BEAT, fps=60, duration=round(scenes[-1]["end"], 4),
-                    voice=VOICE, scenes=scenes, lines=lines_out, clips=clips)
+                    voice=(f"gemini:{_model[0] or GEMINI_MODEL}:{GEMINI_VOICE}" if PROVIDER == "gemini" else VOICE),
+                    scenes=scenes, lines=lines_out, clips=clips)
     with open(os.path.join(OUT, "timeline.json"), "w") as f:
         json.dump(timeline, f, indent=1, ensure_ascii=False)
     print(f"total {timeline['duration']:.2f}s")
