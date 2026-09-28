@@ -83,7 +83,13 @@ def gemini_reachable():
 
 
 GEMINI_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
-GEMINI_FALLBACK_MODELS = ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts", "gemini-2.5-flash-tts", "gemini-2.5-pro-tts"]
+# a fallback only for a model name the API does not know (404), never for a quota:
+# one film is read by one model, so the voice stays the same throughout
+GEMINI_FALLBACK_MODELS = ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"]
+
+
+class QuotaExhausted(Exception):
+    pass
 GEMINI_VOICE = getattr(F, "GEMINI_VOICE", "Puck")
 
 # Silence between sentences inside a line, by the mark that ends the first.
@@ -277,7 +283,7 @@ def gemini_tts(text, tone, voice=None):
     models = [_model[0]] if _model[0] else [GEMINI_MODEL] + [m for m in GEMINI_FALLBACK_MODELS if m != GEMINI_MODEL]
     last = None
     for model in models:
-        for attempt in range(6):
+        for attempt in range(4):
             try:
                 pcm = gemini_request(model, prompt, voice)
                 _model[0] = model
@@ -285,15 +291,26 @@ def gemini_tts(text, tone, voice=None):
                 sf.write(path, pcm, SR)
                 return pcm
             except urllib.error.HTTPError as e:
-                last = f"{model}: HTTP {e.code} {e.read()[:300]!r}"
+                body = e.read().decode("utf-8", "replace")
+                last = f"{model}: HTTP {e.code} {body[:300]}"
                 if e.code == 404:
-                    break                                   # no such model: try the next one
-                if e.code in (429, 500, 503):
-                    wait = min(60, 5 * 2 ** attempt)        # the free tier's rate limit: back off and retry
-                    print(f"  gemini {e.code}, retrying in {wait}s")
+                    break                                   # no such model: try the next name
+                if e.code == 429:
+                    # the free tier counts requests per minute and per day; a day's quota
+                    # does not come back by waiting, so stop at once and keep what is fetched
+                    if "PerDay" in body or "per day" in body.lower():
+                        raise QuotaExhausted(f"{model}: the free tier's daily quota is used up")
+                    m = re.search(r'"retryDelay":\s*"(\d+)', body)
+                    wait = int(m.group(1)) + 2 if m else 30
+                    print(f"  gemini per-minute limit, waiting {wait}s")
                     time.sleep(wait)
                     continue
+                if e.code in (500, 503):
+                    time.sleep(10 * (attempt + 1))
+                    continue
                 raise SystemExit(f"Gemini TTS failed: {last}")
+        else:
+            raise QuotaExhausted(f"{model}: still rate limited after retries ({last})")
     raise SystemExit(f"Gemini TTS failed: {last}")
 
 
@@ -303,9 +320,9 @@ def read_path(text, tone, voice):
 
 
 def all_kept():
-    """True when Gemini's read of every sentence is already kept with the film."""
-    return all(os.path.exists(read_path(spoken(s), sc.get("tone", ""), GEMINI_VOICE))
-               for sc in SCENES for line in sc["lines"] for s in sentences(line))
+    """True when Gemini's read of every line is already kept with the film."""
+    return all(os.path.exists(read_path(spoken(line), sc.get("tone", ""), GEMINI_VOICE))
+               for sc in SCENES for line in sc["lines"])
 
 
 PROVIDER = os.environ.get("VOICE_PROVIDER") or getattr(F, "VOICE_PROVIDER", "kokoro")
@@ -318,29 +335,33 @@ def synth(kok, s, tone, rate):
         a = gemini_tts(spoken(s), tone)
         # a read that says more than the line (the notes read aloud) is retried once, more plainly
         got = measured_starts(trim(a))
-        if got is not None and len(got) > 1.5 * len(s.split()) + 2:
-            print(f"  gemini read extra words for {s!r}; retrying with a plain prompt")
+        if got is not None and len(got) > len(s.split()):
+            print(f"  gemini read {len(got)} words for the {len(s.split())} in {s!r}; retrying with a plain prompt")
             a = gemini_tts(spoken(s), f"{tone} (Say only these words.)")
         return a, SR
     return kok.create(spoken(s), voice=VOICE, speed=rate, lang=LANG)
 
 
 def fetch():
-    """Fetch and cache Gemini's read of every sentence, without building the timeline.
+    """Fetch and keep Gemini's read of every line, without building the timeline.
     For a machine that has the key but not the models: the reads land in
     films/<id>/voice, and vo.py builds the timeline from them anywhere."""
-    todo = [(s, sc.get("tone", "")) for sc in SCENES for line in sc["lines"] for s in sentences(line)]
-    done = 0
-    for s, tone in todo:
+    todo = [(line, sc.get("tone", "")) for sc in SCENES for line in sc["lines"]]
+    kept = sum(os.path.exists(read_path(spoken(l), t, GEMINI_VOICE)) for l, t in todo)
+    print(f"{FILM_ID}: {kept} of {len(todo)} lines already kept for {GEMINI_VOICE}")
+    for line, tone in todo:
+        if os.path.exists(read_path(spoken(line), tone, GEMINI_VOICE)):
+            continue
         try:
-            a = gemini_tts(spoken(s), tone)
-            done += 1
-            print(f"  ok   {len(a) / SR:5.2f}s  {s}")
-        except SystemExit as e:
-            print(f"  stop {s}: {e}")
+            a = gemini_tts(spoken(line), tone)
+            kept += 1
+            print(f"  ok   {len(a) / SR:5.2f}s  {line}")
+        except QuotaExhausted as e:
+            print(f"  stop: {e}")
             break
-    print(f"{FILM_ID}: {done} of {len(todo)} sentences read by Gemini ({_model[0] or GEMINI_MODEL}, {GEMINI_VOICE})")
-    return done == len(todo)
+    print(f"{FILM_ID}: {kept} of {len(todo)} lines read by Gemini ({_model[0] or GEMINI_MODEL}, {GEMINI_VOICE})"
+          + ("" if kept == len(todo) else "; run again once the daily quota resets (midnight Pacific) to fetch the rest"))
+    return kept == len(todo)
 
 
 def audition(voices):
@@ -351,8 +372,8 @@ def audition(voices):
     for v in voices:
         clips = []
         for sc in picks:
-            for s in sentences(sc["lines"][0]):
-                clips += [gemini_tts(spoken(s), sc.get("tone", ""), voice=v), np.zeros(int(0.35 * SR), np.float32)]
+            line = sc["lines"][0]
+            clips += [gemini_tts(spoken(line), sc.get("tone", ""), voice=v), np.zeros(int(0.35 * SR), np.float32)]
         sf.write(os.path.join(out, f"{v}.wav"), np.concatenate(clips), SR)
         print(f"  audition {v}: ok")
 
@@ -377,7 +398,8 @@ def main():
                 cursor = beat_ceil(cursor)
             n += 1
             line_start = cursor
-            sents = sentences(line)
+            # Gemini reads a whole line at once, so its direction always matches its words
+            sents = [line] if PROVIDER == "gemini" else sentences(line)
             s_out = []
             for si, s in enumerate(sents):
                 rate = SHORT_SPEED if len(s.split()) <= 4 else SPEED
@@ -427,6 +449,6 @@ if __name__ == "__main__":
     if "--audition" in sys.argv:
         audition(sys.argv[sys.argv.index("--audition") + 1].split(","))
     elif "--fetch-only" in sys.argv:
-        sys.exit(0 if fetch() else 1)
+        sys.exit(0 if fetch() else 2)
     else:
         main()
