@@ -6,10 +6,10 @@
    scan.mjs got all three wrong.
 
    1. THE LIMITS ARE PER MODEL, NOT PER ACCOUNT.
-      Flash-Lite and Pro do not share a budget. A single GEMINI_RPD
+      Flash-Lite and Flash do not share a budget. A single GEMINI_RPD
       env var treats them as if they do, which means either wasting
-      Flash-Lite's thousand daily requests or blowing through Pro's
-      hundred. The table below is keyed by model and the counters
+      Flash-Lite's 500 daily requests or blowing through Flash's
+      20. The table below is keyed by model and the counters
       below are keyed by model.
 
    2. THE MODEL SHOULD SUIT THE TASK.
@@ -34,48 +34,46 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-/* Free-tier limits, per model.
-
-   Sources, both read 14 Sep 2026 and disagreeing on Flash-Lite's RPM:
-     aipromptshub.co/limits/gemini-rate-limits-2026
-     aifreeapi.com/en/posts/gemini-api-free-tier-rate-limits
-   The lower figure is taken wherever they differ. Overshooting costs a
-   429 and a wasted request; undershooting costs nothing but time, and
-   this is a batch job with nowhere to be.
+/* Free-tier limits, per model, as AI Studio showed them for this
+   account on 28 Sep 2026. The third-party trackers this table first
+   came from (14 Sep) had Flash at 250 a day and Lite at 1,000; the real
+   figures are 20 and 500, and 2.5 Pro is not on the free tier at all.
 
    Check these against AI Studio when something looks wrong, and update
-   `checked` when you do. */
+   `checked` when you do. The same figures are in public.outreach_model,
+   which the edge functions read. */
 export const LIMITS = {
-  'gemini-2.5-flash-lite': { rpm: 15, rpd: 1000, tpm: 250_000, checked: '2026-09-14' },
-  'gemini-2.5-flash':      { rpm: 10, rpd: 250,  tpm: 250_000, checked: '2026-09-14' },
-  'gemini-2.5-pro':        { rpm: 5,  rpd: 100,  tpm: 250_000, checked: '2026-09-14' },
+  'gemini-3.5-flash-lite': { rpm: 15, rpd: 500, tpm: 250_000, checked: '2026-09-28' },
+  'gemini-3.1-flash-lite': { rpm: 15, rpd: 500, tpm: 250_000, checked: '2026-09-28' },
+  'gemini-2.5-flash-lite': { rpm: 10, rpd: 20,  tpm: 250_000, checked: '2026-09-28' },
 
-  /* The 3.x models are not in either tracker's free-tier table yet.
-     Given 2.5's shape, Lite is the generous one and Flash the middling
-     one, so they inherit those numbers until something better exists.
-     If one of these turns out not to be free-tier eligible at all it
-     answers 404 or 429 and the chain below moves on. */
-  'gemini-3.5-flash-lite': { rpm: 15, rpd: 1000, tpm: 250_000, checked: '2026-09-14', assumed: true },
-  'gemini-3.8-flash':      { rpm: 10, rpd: 250,  tpm: 250_000, checked: '2026-09-14', assumed: true },
+  /* Every Flash model is its own allowance of 20 a day: four of them
+     are 80 good sentences a day where one was 20. */
+  'gemini-3.8-flash':      { rpm: 5, rpd: 20, tpm: 250_000, checked: '2026-09-28' },
+  'gemini-3.7-flash':      { rpm: 5, rpd: 20, tpm: 250_000, checked: '2026-09-28' },
+  'gemini-3.6-flash':      { rpm: 5, rpd: 20, tpm: 250_000, checked: '2026-09-28' },
+  'gemini-3.5-flash':      { rpm: 5, rpd: 20, tpm: 250_000, checked: '2026-09-28' },
+  'gemini-2.5-flash':      { rpm: 5, rpd: 20, tpm: 250_000, checked: '2026-09-28' },
 }
 
 /* What each stage of the pipeline asks for, cheapest-capable first.
 
    `read` is extraction from supplied text at one call per lead — it
-   wants the model with the most daily headroom, and Flash-Lite has
-   four times Flash's.
+   wants the models with the most daily headroom: the two Flash-Lites,
+   500 a day each, twenty-five times any Flash.
 
    `write` produces the sentence a stranger reads. It is worth a better
    model and there are far fewer of them, because only leads that got
-   something out of `read` reach it. */
+   something out of `read` reach it. Flash never appears in read or
+   judge: spending a 20-a-day model on extraction is the waste. */
 export const TASKS = {
-  read:  ['gemini-3.5-flash-lite', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
-  write: ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+  read:  ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'],
+  write: ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite'],
   /* The lead puller's prospector: a verdict and one sentence per company,
      twenty to a call. Extraction-shaped rather than writing-shaped, so it
      takes the read chain's generous models. Its own entry so it can be
      retuned without touching the stage that writes observations. */
-  judge: ['gemini-3.5-flash-lite', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
+  judge: ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'],
 }
 
 const BASE = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com'

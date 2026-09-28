@@ -25,7 +25,8 @@
 
    Model chains, daily budgets, pacing and 429 handling come from
    public.outreach_model and outreach_model_budget / outreach_record_call,
-   the same functions the writer spends through. The prospect_* rows name
+   the same functions the writer spends through; prospect_model_budget
+   adds whether a model is resting (outreach_model_rest). The prospect_* rows name
    GEMINI_DISCOVERY_API_KEY; this file refuses to read GEMINI_API_KEY at
    all, and a database constraint refuses to let a prospect row name it.
 
@@ -49,7 +50,7 @@
    ============================================================ */
 
 import {
-  clampSettings, quotaScope, parseJson, sharePageText, domainGuesses, frontPageUrls, noSiteLine, pageKind, parseRobots,
+  clampSettings, quotaScope, parseJson, thinkingFor, roleOr, sharePageText, domainGuesses, frontPageUrls, noSiteLine, pageKind, parseRobots,
   confirms, stripHtml, sameSiteLinks, contactPageLink, siteLines, registerLines, controllingCompanies, accountsFacts, lateFilings, sizeVerdict, tradesOutside, registerRefusal, registerCautions, validateResearch,
   argueSignals, validateSales, argueService, outcome, knowledgeOf, serviceKeys, factLines, signalLines,
   portfolioBlock, conversationBlock, focusLine,
@@ -86,6 +87,9 @@ type Cfg = {
   settings: Record<string, unknown>
   running: boolean
   knowledge: { key: string; kind: string; label: string; body: string; summary: string | null; signals: string | null }[]
+  /* When this request must have finished its last model call: set per
+     request, since one isolate can serve a tick and a lookup at once. */
+  deadline?: number
 }
 type Reply = { raw: string | null; parsed: any; model: string | null }
 
@@ -104,13 +108,32 @@ async function rpc(fn: string, args: Record<string, unknown>) {
 
 /* ---------- asking a model: the outreach chain, on the discovery key ---------- */
 
-let lastCallAt = 0
+/* When each model was last asked, by project and model. Each model's
+   per-minute allowance is its own, so a call to one never waits out
+   another's gap: before, one clock paced them all, and a 20-second
+   Gemma gap would have held up every Flash Lite call behind it. */
+const lastCallAt = new Map<string, number>()
+
+/* The platform stops a request at 150 s. On 28 September a sales pick
+   walked six Flash models, the first silent for its full 30 s, and the
+   tick was stopped mid-stage: nothing logged, the business left claimed
+   for ten minutes. No call now starts that could not end by 140 s. */
+const WALL_MS = 140_000
+
+/* How long a model Google could not serve sits out, in seconds. On the
+   evening of 28 September a sales pick spent 40 s walking six Flash
+   models that were all turning work away, and the next business walked
+   the same six. A failed rest is no reason to fail the call. */
+const REST_S = 600
+const rest = (model: string, secret: string) =>
+  rpc('outreach_model_rest', { p_model: model, p_key_secret: secret, p_seconds: REST_S }).catch(() => null)
 
 /* One call down a role's chain: the registry's models in order, each
-   spending its own project's budget, paced, and skipped on a 429, a 404
-   or a missing key. `body` builds the request for the model it is sent
-   to. `pin` holds a many-turn conversation to the model that began it:
-   another model is not handed a transcript it did not write. */
+   spending its own project's budget, paced, and skipped on a 429, a 404,
+   a missing key, or while it rests after a 5xx. `body` builds the
+   request for the model it is sent to. `pin` holds a many-turn
+   conversation to the model that began it: another model is not handed
+   a transcript it did not write. */
 async function generate(
   cfg: Cfg, role: string, body: (spec: any) => unknown, timeoutMs: number,
   { pin = null, usable = () => true }: { pin?: string | null; usable?: (content: any) => boolean } = {},
@@ -133,23 +156,40 @@ async function generate(
       passing = false
       continue
     }
-    const budget = await rpc('outreach_model_budget', { p_model: spec.model, p_key_secret: secret })
-    if (!budget || budget <= 0) { last = `${spec.model}: no budget left today`; continue }
+    const budget = await rpc('prospect_model_budget', { p_model: spec.model, p_key_secret: secret })
+    if (budget?.resting_until) { last = `${spec.model}: resting after Google could not serve it, until ${String(budget.resting_until).slice(11, 16)}`; continue }
+    if (!budget?.left || budget.left <= 0) { last = `${spec.model}: no budget left today`; continue }
 
-    const wait = lastCallAt + (spec.gap_ms ?? 4000) - Date.now()
+    const paced = `${secret}:${spec.model}`
+    const wait = (lastCallAt.get(paced) ?? 0) + (spec.gap_ms ?? 4000) - Date.now()
+    /* Out of time is nobody's fault: the business goes back uncounted. */
+    const left = (cfg.deadline ?? Infinity) - Date.now() - Math.max(wait, 0)
+    if (left < 8000) throw new ModelsBusy(`models busy: out of time in this tick${last ? `; ${last}` : ''}`)
     if (wait > 0) await new Promise((r) => setTimeout(r, wait))
-    lastCallAt = Date.now()
+    lastCallAt.set(paced, Date.now())
 
+    const limit = Math.min(timeoutMs, left - 2000)
     let res: Response
     try {
       res = await fetch(`${GEMINI_BASE}/v1beta/models/${spec.model}:generateContent`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify(body(spec)),
-        signal: AbortSignal.timeout(timeoutMs),
+        signal: AbortSignal.timeout(limit),
       })
     } catch (err) {
-      last = `${spec.model}: ${(err as Error).name === 'TimeoutError' ? 'timed out' : (err as Error).message}`
+      /* Silent for the whole wait is Google's trouble, as a 5xx is, so it
+         rests. Cut short by the tick's own deadline is not the model's. */
+      const silent = (err as Error).name === 'TimeoutError' && limit === timeoutMs
+      if (silent) await rest(spec.model, secret)
+      last = `${spec.model}: ${silent ? `timed out, resting ${REST_S / 60} minutes` : (err as Error).name === 'TimeoutError' ? 'timed out' : (err as Error).message}`
+      continue
+    }
+    /* Google had no capacity for it (503 "high demand", 500). Nothing was
+       served, so nothing is counted against the day, and it rests. */
+    if (res.status >= 500) {
+      await rest(spec.model, secret)
+      last = `${spec.model}: HTTP ${res.status}, resting ${REST_S / 60} minutes`
       continue
     }
     const body429 = res.status === 429 ? await res.text() : ''
@@ -166,7 +206,7 @@ async function generate(
       passing = false
       continue
     }
-    if (!res.ok) { last = `${spec.model}: HTTP ${res.status}`; if (res.status < 500) passing = false; continue }
+    if (!res.ok) { last = `${spec.model}: HTTP ${res.status}`; passing = false; continue }
     const data = await res.json().catch(() => null)
     const content = data?.candidates?.[0]?.content
     if (!content || !Array.isArray(content.parts) || !content.parts.length || !usable(content)) { last = `${spec.model}: empty answer`; passing = false; continue }
@@ -176,13 +216,20 @@ async function generate(
   throw new Error(last || `no model answered for ${role}`)
 }
 
-const textOf = (content: any) => (content?.parts ?? []).map((p: any) => (typeof p?.text === 'string' ? p.text : '')).join('')
+/* The answer, without the model's thinking: Gemma 4 returns its thoughts
+   as parts marked thought: true, ahead of the JSON, even when asked not
+   to include them. */
+const textOf = (content: any) => (content?.parts ?? []).filter((p: any) => p?.thought !== true)
+  .map((p: any) => (typeof p?.text === 'string' ? p.text : '')).join('')
 
 async function ask(cfg: Cfg, role: string, system: string, user: string, temperature: number, timeoutMs: number) {
   const { content, model } = await generate(cfg, role, (spec) => ({
     systemInstruction: { parts: [{ text: system }] },
     contents: [{ role: 'user', parts: [{ text: user }] }],
-    generationConfig: { temperature: spec.temperature ?? temperature, topP: 0.95, responseMimeType: 'application/json' },
+    generationConfig: {
+      temperature: spec.temperature ?? temperature, topP: 0.95, responseMimeType: 'application/json',
+      ...thinkingFor(spec.model),
+    },
   }), timeoutMs, { usable: (c) => Boolean(textOf(c).trim()) })
   return { text: textOf(content), model }
 }
@@ -711,7 +758,7 @@ async function specialist(ctx: Ctx): Promise<StageResult> {
       'THE CONVERSATION SO FAR:', conversationBlock(history, pick.service), '',
       `Sales's number is ${s}.${mine === null ? '' : ` Yours was ${mine}.`}`,
     ].join('\n')),
-    callSales: ({ history, sales: s, specialist: theirs }: any) => talk(cfg, settings, 'prospect_sales', 'sales_reply', [
+    callSales: ({ history, sales: s, specialist: theirs }: any) => talk(cfg, settings, roleOr(cfg, 'prospect_sales_reply', 'prospect_sales'), 'sales_reply', [
       `YOU ARE TALKING TO THE ${pick.service.toUpperCase()} SPECIALIST.`, '',
       'THE SCALE:', scoring, '', 'THE PORTFOLIO:', portfolioBlock(cfg, settings.service_focus), '',
       ...cautionBlock(state),
@@ -1125,6 +1172,7 @@ Deno.serve(async (req) => {
        empty ticks a day, and a key nobody has added yet would read as an
        error before anybody asked for a run. */
     const cfg: Cfg = await rpc('prospect_config', {})
+    cfg.deadline = started + WALL_MS
     /* The research loop has its own cron: POST {"mode": "lookup"}. It
        works the queue whether or not a target is running. */
     const mode = await req.json().then((b) => b?.mode).catch(() => null)

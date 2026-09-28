@@ -198,6 +198,7 @@ decide whether the rest is worth building.
 | [`sources.md`](sources.md) | The ranked source register. The Google correction in full, what each source gives, how it is accessed, the licence position, what it maps to in the CRM, the collection rules, and what must never be a source. | Before fetching anything, and before any argument about where a record came from |
 | [`scoring-model.md`](scoring-model.md) | The deterministic Class 1 scoring rules. Inputs, hard disqualifiers, the five weighted dimensions, missing-data handling, thresholds, versioning, and the test cases. It is arithmetic, not a model call. | Writing or changing the scorer, or explaining a number on a shortlist |
 | [`build-plan.md`](build-plan.md) | How v3 actually gets built. The six stages, where the code lives, the file formats, what runs at which cost class, verification for each stage, and what stays out of scope. | Doing the work |
+| [`ai-model-map.md`](ai-model-map.md) | Every AI process in the system, the model chain each one uses and why, the free-tier allowances they are fitted to, and how to probe a model before adding it. | Changing a model, or when a project runs out of quota |
 
 ---
 

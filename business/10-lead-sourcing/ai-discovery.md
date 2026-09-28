@@ -240,7 +240,8 @@ The prospector now runs as the `lead-prospector` edge function, in the same
 frame as the outreach writer: agents, prompts, models and settings are rows, not
 code; the model registry is the same `outreach_model` table with the same
 per-model daily budget and 429 handling, switching down each role's chain when a
-model runs out; and a `pg_cron` job wakes it every five minutes with the same
+model runs out (which model serves which role, and why, is in
+[`ai-model-map.md`](ai-model-map.md)); and a `pg_cron` job wakes it every five minutes with the same
 vault-held cron secret the writer uses. **It does nothing until somebody presses
 Run** on a target in the Lead gen tab.
 

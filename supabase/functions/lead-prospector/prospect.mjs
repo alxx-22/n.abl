@@ -133,6 +133,18 @@ export function quotaScope(status, body) {
 export const parseJson = (raw) =>
   JSON.parse(String(raw ?? '').replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, '').trim())
 
+/** What a model is told about thinking. Gemma 4 thinks by default: 8 to
+    12 seconds and hundreds of tokens of its 16,000-a-minute allowance on
+    a one-line answer. At "minimal" it answered in 1.3 seconds with none
+    (probed 28 September). It refuses a thinking budget or any other
+    level, and the Gemini models need nothing. */
+export const thinkingFor = (model) =>
+  /^gemma-4/.test(String(model ?? '')) ? { thinkingConfig: { thinkingLevel: 'minimal' } } : {}
+
+/** A role with no chain of its own borrows another's, so code that asks
+    for a new role still runs against a registry that predates it. */
+export const roleOr = (cfg, role, fallback) => (cfg?.models?.[role]?.length ? role : fallback)
+
 /* ---------- the website: guessing, and proving ----------
 
    Ported from scripts/sourcing/find-websites.mjs, which learned each of

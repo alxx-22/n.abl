@@ -13,7 +13,7 @@ import {
   frontPageUrls, noSiteLine, registerRefusal, registerCautions, validatePick, signalLines,
   siteLines, contactPageLink, ceilingFor, factLines,
   accountsFacts, lateFilings, controllingCompanies, sizeVerdict, tradesOutside,
-  generatorOf, staleGenerator, portfolioBlock, focusLine,
+  generatorOf, staleGenerator, portfolioBlock, focusLine, thinkingFor, roleOr,
 } from '../supabase/functions/lead-prospector/prospect.mjs'
 import {
   normaliseDomain, isDirectory, domainsInOutcome, linkedDomains, parseAvailability, archivedUrl, readArchivedUrl,
@@ -42,6 +42,17 @@ for (const body of ['GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'PerMin
   ok(`  ${JSON.stringify(body).slice(0, 40)}`, quotaScope(429, body) === outreachQuotaScope(429, body))
 }
 ok('  and a 200 is not a quota refusal to either', quotaScope(200, 'daily') === outreachQuotaScope(200, 'daily'))
+
+console.log('\nWHICH MODEL, AND HOW IT IS ASKED\n')
+ok('Gemma 4 is asked for minimal thinking (the only level it accepts)',
+  thinkingFor('gemma-4-26b-a4b-it')?.thinkingConfig?.thinkingLevel === 'minimal', thinkingFor('gemma-4-26b-a4b-it'))
+ok('  …and a Gemini model is asked nothing about thinking', Object.keys(thinkingFor('gemini-3.5-flash-lite')).length === 0)
+{
+  const cfg = { models: { prospect_sales: [{ model: 'x' }], prospect_sales_reply: [] } }
+  ok('a role with a chain of its own uses it', roleOr({ models: { a: [{ model: 'x' }] } }, 'a', 'b') === 'a')
+  ok('  …and one with none (or an empty one) borrows the fallback\'s',
+    roleOr(cfg, 'prospect_sales_reply', 'prospect_sales') === 'prospect_sales' && roleOr({}, 'a', 'b') === 'b')
+}
 
 console.log('\nTHE WEBSITE HAS TO PROVE IT IS THEIRS\n')
 {
