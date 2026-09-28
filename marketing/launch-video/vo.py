@@ -30,21 +30,26 @@ to half a second late, which is why the recogniser is here.
 Two voices. Kokoro (local, free, no setup) reads the words well but cannot be
 directed: it has no control over emotion. Gemini TTS (Google's API, free tier)
 takes written direction, so every line is read to the film's director's
-notes: PROFILE and SCENE in film.py, and each scene's `tone`. Set in film.py
-by VOICE_PROVIDER, or overridden by the environment:
+notes: PROFILE and SCENE in film.py, each scene's `tone`, and NAME_NOTE on
+the lines that say the name. Gemini 3.8 Flash TTS reads the text strictly as
+a transcript and takes that direction in the text part's
+speechMetadata.style; a scene's `read` can add inline expression tags such as
+<short pause>, which shape the read and are not spoken. Set in film.py by
+VOICE_PROVIDER, GEMINI_TTS_MODEL and GEMINI_VOICE, or overridden by the
+environment:
 
   VOICE_PROVIDER   auto (Gemini when it answers, else Kokoro), gemini, kokoro
   GEMINI_API_KEY   a Google AI Studio key (free tier), for Gemini TTS; or leave
                    it unset and store the key as an API credential on the
                    cloud environment, which attaches it to Gemini's requests
-  GEMINI_TTS_MODEL the model, default gemini-2.5-flash-preview-tts
+  GEMINI_TTS_MODEL the model, default gemini-3.8-flash-tts
 
-Gemini's reads are kept in films/<id>/voice, named by a hash of the exact
-prompt and voice, so a rebuild costs no requests (and needs no key) unless a
-line or its direction changes.
+Gemini's reads are kept in films/<id>/voice, one per whole line, named by a
+hash of the model, voice, direction and words, so a rebuild costs no requests
+(and needs no key) unless one of those changes.
 
-  python3 vo.py --film web --fetch-only           fetch and keep Gemini's reads only
-  python3 vo.py --film web --audition Puck,Achird two lines in each voice, to choose
+  python3 vo.py --film web --fetch-only             fetch and keep Gemini's reads only
+  python3 vo.py --film web --audition Achird,Puck   two lines in each voice, to choose
 """
 
 import base64, hashlib, importlib.util, json, os, re, sys, time, urllib.error, urllib.request
@@ -82,14 +87,25 @@ def gemini_reachable():
 
 
 
-GEMINI_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
+GEMINI_MODEL = os.environ.get("GEMINI_TTS_MODEL") or getattr(F, "GEMINI_TTS_MODEL", "gemini-3.8-flash-tts")
 # a fallback only for a model name the API does not know (404), never for a quota:
-# one film is read by one model, so the voice stays the same throughout
-GEMINI_FALLBACK_MODELS = ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"]
+# one film is read by one model, so the voice stays the same throughout.
+# All four are in the API's model list (tts-models.md).
+GEMINI_FALLBACK_MODELS = ["gemini-3.8-flash-tts", "gemini-3.1-flash-tts-preview",
+                          "gemini-2.5-pro-preview-tts", "gemini-2.5-flash-preview-tts"]
+
+
+def structured(model):
+    """Gemini 3.8 TTS and later read the text strictly as a transcript and take
+    the direction in the part's speech_metadata; earlier models take one prompt."""
+    m = re.match(r"gemini-(\d+)\.(\d+)", model)
+    return bool(m) and (int(m.group(1)), int(m.group(2))) >= (3, 8)
 
 
 class QuotaExhausted(Exception):
     pass
+
+
 GEMINI_VOICE = getattr(F, "GEMINI_VOICE", "Puck")
 
 # Silence between sentences inside a line, by the mark that ends the first.
@@ -240,19 +256,40 @@ def word_times_measured(kok, text, clip):
     return [dict(w=e["w"], start=round(s, 3), end=round(n, 3)) for e, s, n in zip(est, starts, ends)]
 
 
-def gemini_prompt(text, tone):
-    """The director's notes and the line, in the shape Gemini TTS is prompted with."""
-    return (f"# AUDIO PROFILE\n{F.PROFILE}\n\n## THE SCENE\n{F.SCENE}\n\n"
-            f"### DIRECTOR'S NOTES\n{tone}\nRead only the transcript, exactly as written, nothing else.\n\n"
-            f"#### TRANSCRIPT\n{text}")
+def gemini_line(sc, li):
+    """The words Gemini reads for a scene's line: the script, the name as it is
+    said (GEMINI_SAY), and any inline expression tags from the scene's `read`,
+    such as <short pause>. Tags shape the delivery and are not spoken."""
+    return spoken(sc.get("read", sc["lines"])[li], True)
 
 
-def gemini_request(model, prompt, voice):
-    body = json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"responseModalities": ["AUDIO"],
-                             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}},
-    }).encode()
+def gemini_style(sc, li, extra=""):
+    """The direction for a line: who is speaking, the scene, and the line's own note."""
+    note = sc.get("tone", "")
+    if "n.abl" in sc["lines"][li] and getattr(F, "NAME_NOTE", ""):
+        note = f"{note} {F.NAME_NOTE}"
+    return (f"{F.PROFILE}\n\nThe scene: {F.SCENE}\n\nThis line: {note} {extra}").strip()
+
+
+def gemini_body(model, text, style, voice):
+    if structured(model):
+        # the text is the verbatim transcript; the direction rides alongside it
+        parts = [{"text": text, "speechMetadata": {"speaker": "Narrator", "style": style}}]
+        voice_config = {"voice": voice}
+    else:
+        # older models take the direction in the prompt, with tags in [brackets]
+        # (3.1) or none (2.5)
+        text = re.sub(r"<([^<>]+)>", r"[\1]" if model.startswith("gemini-3") else "", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        parts = [{"text": f"# DIRECTOR'S NOTES\n{style}\nRead only the transcript, exactly as written, "
+                          f"nothing else.\n\n## TRANSCRIPT\n{text}"}]
+        voice_config = {"prebuiltVoiceConfig": {"voiceName": voice}}
+    return {"contents": [{"parts": parts}],
+            "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": voice_config}}}
+
+
+def gemini_request(model, text, style, voice):
+    body = json.dumps(gemini_body(model, text, style, voice)).encode()
     headers = {"Content-Type": "application/json"}
     if GEMINI_KEY:                                          # otherwise the environment's proxy adds it
         headers["x-goog-api-key"] = GEMINI_KEY
@@ -260,8 +297,16 @@ def gemini_request(model, prompt, voice):
     with urllib.request.urlopen(req, timeout=120) as r:
         data = json.load(r)
     part = data["candidates"][0]["content"]["parts"][0]["inlineData"]
-    rate = int(re.search(r"rate=(\d+)", part.get("mimeType", "")).group(1)) if "rate=" in part.get("mimeType", "") else 24000
-    pcm = np.frombuffer(base64.b64decode(part["data"]), dtype="<i2").astype(np.float32) / 32768
+    raw = base64.b64decode(part["data"])
+    if raw[:4] == b"RIFF":                                  # 3.8 answers with a WAV file
+        import io
+        pcm, rate = sf.read(io.BytesIO(raw), dtype="float32")
+        if pcm.ndim > 1:
+            pcm = pcm.mean(1)
+    else:                                                   # earlier models with raw 16-bit PCM
+        m = re.search(r"rate=(\d+)", part.get("mimeType", ""))
+        rate = int(m.group(1)) if m else 24000
+        pcm = np.frombuffer(raw, dtype="<i2").astype(np.float32) / 32768
     if rate != SR:
         from scipy.signal import resample_poly
         pcm = resample_poly(pcm, SR, rate).astype(np.float32)
@@ -271,25 +316,41 @@ def gemini_request(model, prompt, voice):
 # Gemini's reads are kept with the film, so the film rebuilds without a key.
 VOICE_DIR = os.path.join(HERE, "films", FILM_ID, "voice")
 
+
+def read_path(model, text, style, voice):
+    """A read is named by everything that shapes it: model, voice, direction and words."""
+    key = hashlib.sha1(f"{model}|{voice}|{style}|{text}".encode()).hexdigest()[:16]
+    return os.path.join(VOICE_DIR, key + ".wav")
+
+
+def kept_read(text, style, voice):
+    """The kept read of a line, from the film's model or, if it was ever used, a fallback."""
+    for model in [GEMINI_MODEL] + GEMINI_FALLBACK_MODELS:
+        path = read_path(model, text, style, voice)
+        if os.path.exists(path):
+            return path
+    return None
+
+
 _model = [None]
-def gemini_tts(text, tone, voice=None):
-    """One sentence from Gemini TTS, read to its direction; cached by prompt."""
+def gemini_tts(sc, li, voice=None, extra=""):
+    """One whole line from Gemini TTS, read to its direction; kept once fetched."""
     voice = voice or GEMINI_VOICE
-    prompt = gemini_prompt(text, tone)
-    path = read_path(text, tone, voice)
-    if os.path.exists(path):
+    text, style = gemini_line(sc, li), gemini_style(sc, li, extra)
+    path = kept_read(text, style, voice)
+    if path:
         return sf.read(path, dtype="float32")[0]
     if not GEMINI_KEY and not gemini_reachable():
-        raise SystemExit(f"no Gemini read cached for {text!r} and no GEMINI_API_KEY to fetch one")
+        raise SystemExit(f"no Gemini read kept for {text!r} and no GEMINI_API_KEY to fetch one")
     models = [_model[0]] if _model[0] else [GEMINI_MODEL] + [m for m in GEMINI_FALLBACK_MODELS if m != GEMINI_MODEL]
     last = None
     for model in models:
         for attempt in range(4):
             try:
-                pcm = gemini_request(model, prompt, voice)
+                pcm = gemini_request(model, text, style, voice)
                 _model[0] = model
-                os.makedirs(os.path.dirname(path), exist_ok=True)
-                sf.write(path, pcm, SR)
+                os.makedirs(VOICE_DIR, exist_ok=True)
+                sf.write(read_path(model, text, style, voice), pcm, SR)
                 return pcm
             except urllib.error.HTTPError as e:
                 body = e.read().decode("utf-8", "replace")
@@ -315,15 +376,10 @@ def gemini_tts(text, tone, voice=None):
     raise SystemExit(f"Gemini TTS failed: {last}")
 
 
-def read_path(text, tone, voice):
-    prompt = gemini_prompt(text, tone)
-    return os.path.join(HERE, "films", FILM_ID, "voice", hashlib.sha1(f"{voice}|{prompt}".encode()).hexdigest()[:16] + ".wav")
-
-
 def all_kept():
     """True when Gemini's read of every line is already kept with the film."""
-    return all(os.path.exists(read_path(spoken(line, True), sc.get("tone", ""), GEMINI_VOICE))
-               for sc in SCENES for line in sc["lines"])
+    return all(kept_read(gemini_line(sc, li), gemini_style(sc, li), GEMINI_VOICE)
+               for sc in SCENES for li in range(len(sc["lines"])))
 
 
 PROVIDER = os.environ.get("VOICE_PROVIDER") or getattr(F, "VOICE_PROVIDER", "kokoro")
@@ -331,14 +387,14 @@ if PROVIDER == "auto":
     PROVIDER = "gemini" if all_kept() or GEMINI_KEY or gemini_reachable() else "kokoro"
 
 
-def synth(kok, s, tone, rate):
+def synth(kok, sc, li, s, rate):
     if PROVIDER == "gemini":
-        a = gemini_tts(spoken(s, True), tone)
+        a = gemini_tts(sc, li)
         # a read that says more than the line (the notes read aloud) is retried once, more plainly
         got = measured_starts(trim(a))
         if got is not None and len(got) > len(s.split()):
-            print(f"  gemini read {len(got)} words for the {len(s.split())} in {s!r}; retrying with a plain prompt")
-            a = gemini_tts(spoken(s, True), f"{tone} (Say only these words.)")
+            print(f"  gemini read {len(got)} words for the {len(s.split())} in {s!r}; retrying")
+            a = gemini_tts(sc, li, extra="(Say only these words.)")
         return a, SR
     return kok.create(spoken(s), voice=VOICE, speed=rate, lang=LANG)
 
@@ -347,16 +403,17 @@ def fetch():
     """Fetch and keep Gemini's read of every line, without building the timeline.
     For a machine that has the key but not the models: the reads land in
     films/<id>/voice, and vo.py builds the timeline from them anywhere."""
-    todo = [(line, sc.get("tone", "")) for sc in SCENES for line in sc["lines"]]
-    kept = sum(os.path.exists(read_path(spoken(l, True), t, GEMINI_VOICE)) for l, t in todo)
-    print(f"{FILM_ID}: {kept} of {len(todo)} lines already kept for {GEMINI_VOICE}")
-    for line, tone in todo:
-        if os.path.exists(read_path(spoken(line, True), tone, GEMINI_VOICE)):
+    todo = [(sc, li) for sc in SCENES for li in range(len(sc["lines"]))]
+    is_kept = lambda sc, li: kept_read(gemini_line(sc, li), gemini_style(sc, li), GEMINI_VOICE)
+    kept = sum(bool(is_kept(sc, li)) for sc, li in todo)
+    print(f"{FILM_ID}: {kept} of {len(todo)} lines already kept for {GEMINI_MODEL}, {GEMINI_VOICE}")
+    for sc, li in todo:
+        if is_kept(sc, li):
             continue
         try:
-            a = gemini_tts(spoken(line, True), tone)
+            a = gemini_tts(sc, li)
             kept += 1
-            print(f"  ok   {len(a) / SR:5.2f}s  {line}")
+            print(f"  ok   {len(a) / SR:5.2f}s  {gemini_line(sc, li)}")
         except QuotaExhausted as e:
             print(f"  stop: {e}")
             break
@@ -366,15 +423,19 @@ def fetch():
 
 
 def audition(voices):
-    """The same two lines in several of Gemini's voices, to choose one by ear."""
+    """The same two lines in several of Gemini's voices, to choose one by ear.
+    The film's own voice reuses (and keeps) its reads of those lines."""
     picks = [SCENES[1], SCENES[-1]]
-    out = os.path.join(VOICE_DIR, "audition")
+    out = os.path.join(VOICE_DIR, "audition", GEMINI_MODEL)
     os.makedirs(out, exist_ok=True)
     for v in voices:
         clips = []
-        for sc in picks:
-            line = sc["lines"][0]
-            clips += [gemini_tts(spoken(line, True), sc.get("tone", ""), voice=v), np.zeros(int(0.35 * SR), np.float32)]
+        try:
+            for sc in picks:
+                clips += [gemini_tts(sc, 0, voice=v), np.zeros(int(0.35 * SR), np.float32)]
+        except QuotaExhausted as e:
+            print(f"  stop: {e}")
+            break
         sf.write(os.path.join(out, f"{v}.wav"), np.concatenate(clips), SR)
         print(f"  audition {v}: ok")
 
@@ -404,7 +465,7 @@ def main():
             s_out = []
             for si, s in enumerate(sents):
                 rate = SHORT_SPEED if len(s.split()) <= 4 else SPEED
-                audio, sr = synth(kok, s, sc.get("tone", ""), rate)
+                audio, sr = synth(kok, sc, li, s, rate)
                 assert sr == SR
                 clip = trim(audio)
                 name = f"{n:02d}_{si}.wav"

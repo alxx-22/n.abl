@@ -31,7 +31,11 @@ GEMINI_SAY = {"n.abl.": "Enable!", "n.abl": "Enable"}
 # Gemini TTS reads every line to these notes when a GEMINI_API_KEY is set
 # (vo.py); Kokoro, the fallback, cannot be directed and reads them plainly.
 VOICE_PROVIDER = "auto"
-GEMINI_VOICE = "Achird"        # Google's "friendly" male voice, chosen by ear from Puck, Sadachbia, Achird, Fenrir
+GEMINI_TTS_MODEL = "gemini-3.8-flash-tts"   # Google's most expressive TTS model (see tts-models.md)
+GEMINI_VOICE = "Achird"        # "friendly, approachable, and warm", chosen by ear from Puck, Sadachbia, Achird, Fenrir
+# PROFILE, SCENE, the line's tone and, on lines with the name, NAME_NOTE make
+# up the direction Gemini reads each line to; the words themselves are read
+# verbatim.
 PROFILE = ("A British man in his thirties from the south of England: the founder of a small studio that "
            "builds AI into businesses. Warm, quick and genuinely excited about what AI can now do, like a "
            "friend telling you something big, not an announcer. A smile in the voice. Natural and "
@@ -39,6 +43,9 @@ PROFILE = ("A British man in his thirties from the south of England: the founder
 SCENE = ("A 33-second launch film for social media about the AI service, cut fast to a driving electronic "
          "track. He is talking to small-business owners. Brisk and energetic, with real pauses where the "
          "punctuation is.")
+NAME_NOTE = ("The name 'Enable' is the company's name and the hero of the line: say it with lift and energy, "
+             "bright, rising through the word with a smile, the stress on 'NAY', never flat and never dropping "
+             "at the end like the end of a sentence.")
 
 # lead: time from the scene's first frame to its first word.
 # gap:  pause between two lines inside the scene.
@@ -46,6 +53,8 @@ SCENE = ("A 33-second launch film for social media about the AI service, cut fas
 # snap: lines whose start is pushed onto the next beat, for a hit to land on.
 # q:    the grid the scene's end snaps to, in beats. Half beats keep it moving.
 # tone: the director's note for the line, for Gemini TTS.
+# read: the lines as Gemini reads them, with inline expression tags such as
+#       <short pause>, which shape the read and are not spoken (Gemini only).
 # land: a word of the line to put on the nearest beat, for the drop to land on.
 SCENES = [
     dict(id="boot",  lead=0.30, tail=0.10, q=1, tone="Big news, a little awed, like telling a friend something huge. Build through the line and lean into 'new operating system'.",
@@ -67,7 +76,8 @@ SCENES = [
     dict(id="yours", lead=0.10, tail=0.15, q=0.5, tone="Sincere and warm. 'Built for your business' steady; 'Yours to keep' softer and reassuring.",
          lines=["Built for your business. Yours to keep."]),
     dict(id="end",   lead=1.20, tail=2.60, q=1, snap=[0], tone="Announce the name, 'Enable!', like a reveal: bright, lifted and rising through the word, with a smile, never dropping at the end. A short beat. Then 'Put AI to work!' with energy and a big smile, lifting at the end.",
-         lines=["n.abl. Put AI to work!"]),
+         lines=["n.abl. Put AI to work!"],
+         read=["n.abl. <short pause> Put AI to work!"]),
 ]
 
 

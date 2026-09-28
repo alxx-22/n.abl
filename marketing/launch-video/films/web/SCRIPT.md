@@ -75,12 +75,22 @@ Apache-2.0 model) at 1.2× speed, the same read as the AI film.
 ### Voice direction
 
 Kokoro cannot be directed, so these notes only take effect with Gemini TTS
-(see [`README.md`](../../README.md)). `vo.py` sends each line whole, with the
-profile, the scene and the line's own note, the way a director briefs a voice
-actor. They live in `film.py` (`PROFILE`, `SCENE` and each scene's `tone`),
-voiced by Gemini's `Achird`, chosen by ear from four. For Gemini the
-name is written "Enable!" or "Enable" (`GEMINI_SAY`), so it lifts instead of
-landing flat like the end of a sentence.
+(see [`README.md`](../../README.md)). `vo.py` reads each line whole with
+Google's Gemini 3.8 Flash TTS (`gemini-3.8-flash-tts`), in the voice
+`Achird` ("friendly, approachable, and warm"), chosen by ear from four. The
+model reads the text strictly as a transcript, word for word, and takes the
+direction separately, the way a director briefs a voice actor: the profile,
+the scene and the line's own note below (`PROFILE`, `SCENE` and each scene's
+`tone` in `film.py`) go in the request's style field, never in the words.
+
+The name gets the most care, so it lifts instead of landing flat like the
+end of a sentence. It is written "Enable!" or "Enable" for Gemini
+(`GEMINI_SAY`); every line that says it also carries the name note
+(`NAME_NOTE`): *the hero of the line, said with lift and energy, bright,
+rising through the word with a smile, the stress on 'NAY', never flat and
+never dropping at the end*. The last line is read as `Enable! <short pause> Let's build yours!`
+(the scene's `read`): the inline tag gives the short beat after the name and
+is not spoken.
 
 **Who is speaking.** A British man in his thirties from the south of England: the founder of a small studio that builds websites. Warm, quick and genuinely excited about what he makes, like a friend showing you something great, not an announcer. A smile in the voice. Natural and conversational, never shouty, never salesy.
 

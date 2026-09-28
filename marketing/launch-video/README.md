@@ -38,13 +38,19 @@ film's music, which is played from the free
 [GeneralUser GS](https://www.schristiancollins.com/generaluser) SoundFont:
 
 1. **`vo.py`** reads a film's script (`films/<film>/film.py`). With a
-   `GEMINI_API_KEY` in the environment it uses Google's Gemini TTS, which is
-   directed like a voice actor: every line goes with the film's voice
-   profile, the scene and its own note on tone, pace and emphasis (`PROFILE`,
-   `SCENE` and each scene's `tone` in `film.py`), and Gemini's reads are kept
-   in `films/<film>/voice`, so the film rebuilds without a key or any
-   requests (`vo.py --fetch-only` fetches them; `--audition` compares
-   voices). Without a key it
+   `GEMINI_API_KEY` in the environment it uses Google's Gemini 3.8 Flash TTS
+   (`gemini-3.8-flash-tts`, the most expressive of the TTS models the API
+   offers; all of them are listed in [`tts-models.md`](tts-models.md)), in
+   the voice `Achird`. It is directed like a voice actor: each whole line is
+   sent as a verbatim transcript, and the film's voice profile, the scene and
+   the line's own note on tone, pace and emphasis (`PROFILE`, `SCENE` and
+   each scene's `tone` in `film.py`, plus `NAME_NOTE` on the lines with the
+   name) go separately in the request's style field. A scene's `read` can add
+   inline expression tags such as `<short pause>`, which shape the read and
+   are not spoken. Gemini's reads are kept in `films/<film>/voice`, named by
+   the model, voice, direction and words, so the film rebuilds without a key
+   or any requests (`vo.py --fetch-only` fetches them; `--audition` compares
+   voices, into `voice/audition/<model>/`). Without a key it
    falls back to [Kokoro](https://github.com/hexgrad/kokoro) (Apache-2.0,
    local), voice `bm_fable`, British English, at 1.2× speed, which reads the
    words well but cannot be directed. Each sentence is trimmed and laid out shot
@@ -131,10 +137,14 @@ Copy `films/web` to `films/<name>` and change:
   environment on a Pro or Max plan, store it as an API credential for
   `generativelanguage.googleapis.com` with the header `x-goog-api-key` (no
   prefix), which keeps the key out of the session. `vo.py` then reads every
-  line with Gemini TTS to the notes in `film.py`. The free tier limits requests per day; clips
-  are cached, so if it stops on a rate limit, run it again later and it
-  carries on. `GEMINI_VOICE` picks the voice (`Puck` is upbeat; also try
-  `Sadachbia`, `Achird`, `Fenrir`), `GEMINI_TTS_MODEL` the model, and
+  line with Gemini TTS to the notes in `film.py`. The free tier limits
+  requests per day, per model (about ten a day for `gemini-3.8-flash-tts`);
+  reads are kept, so if it stops at the daily quota, run it again after
+  midnight Pacific and it carries on. `GEMINI_TTS_MODEL` picks the model and
+  `GEMINI_VOICE` the voice: `Achird` is warm and friendly; Gemini 3.8 also
+  takes the 1,000 voices of its extended library by id (`GET
+  /v1beta/voices`), such as `en-gb-assistant-10` or `en-gb-commercial-7`,
+  southern English men (see [`tts-models.md`](tts-models.md)).
   `VOICE_PROVIDER=kokoro` forces the local voice. For Kokoro, `VOICE` in
   `film.py`. Other British voices are `bf_emma`,
   `bf_isabella`, `bm_george` and `bm_lewis`; `bf_emma` is the calmest.
