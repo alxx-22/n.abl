@@ -81,9 +81,7 @@ def gemini_reachable():
         return False
 
 
-PROVIDER = os.environ.get("VOICE_PROVIDER") or getattr(F, "VOICE_PROVIDER", "kokoro")
-if PROVIDER == "auto":
-    PROVIDER = "gemini" if GEMINI_KEY or gemini_reachable() else "kokoro"
+
 GEMINI_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 GEMINI_FALLBACK_MODELS = ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts", "gemini-2.5-flash-tts", "gemini-2.5-pro-tts"]
 GEMINI_VOICE = getattr(F, "GEMINI_VOICE", "Puck")
@@ -271,8 +269,7 @@ def gemini_tts(text, tone, voice=None):
     """One sentence from Gemini TTS, read to its direction; cached by prompt."""
     voice = voice or GEMINI_VOICE
     prompt = gemini_prompt(text, tone)
-    key = hashlib.sha1(f"{voice}|{prompt}".encode()).hexdigest()[:16]
-    path = os.path.join(VOICE_DIR, key + ".wav")
+    path = read_path(text, tone, voice)
     if os.path.exists(path):
         return sf.read(path, dtype="float32")[0]
     if not GEMINI_KEY and not gemini_reachable():
@@ -298,6 +295,22 @@ def gemini_tts(text, tone, voice=None):
                     continue
                 raise SystemExit(f"Gemini TTS failed: {last}")
     raise SystemExit(f"Gemini TTS failed: {last}")
+
+
+def read_path(text, tone, voice):
+    prompt = gemini_prompt(text, tone)
+    return os.path.join(HERE, "films", FILM_ID, "voice", hashlib.sha1(f"{voice}|{prompt}".encode()).hexdigest()[:16] + ".wav")
+
+
+def all_kept():
+    """True when Gemini's read of every sentence is already kept with the film."""
+    return all(os.path.exists(read_path(spoken(s), sc.get("tone", ""), GEMINI_VOICE))
+               for sc in SCENES for line in sc["lines"] for s in sentences(line))
+
+
+PROVIDER = os.environ.get("VOICE_PROVIDER") or getattr(F, "VOICE_PROVIDER", "kokoro")
+if PROVIDER == "auto":
+    PROVIDER = "gemini" if all_kept() or GEMINI_KEY or gemini_reachable() else "kokoro"
 
 
 def synth(kok, s, tone, rate):
@@ -375,6 +388,16 @@ def main():
                 sf.write(os.path.join(OUT, "vo", name), clip, SR)
                 d = len(clip) / SR
                 words = word_times_measured(kok, s, clip)
+                # land: push the line so this word starts on a beat (the drop lands on it)
+                land = sc.get("land")
+                if land and si == 0 and li == 0:
+                    hit = next((w["start"] for w in words if re.sub(r"[^\w']", "", w["w"].lower()) == land), None)
+                    if hit is not None:
+                        target = round((cursor + hit) / BEAT) * BEAT
+                        if target - hit < start + 0.08:        # never before the scene starts
+                            target += BEAT
+                        cursor = target - hit
+                        line_start = cursor
                 for w in words:
                     w["start"] = round(cursor + w["start"], 3)
                     w["end"] = round(cursor + w["end"], 3)

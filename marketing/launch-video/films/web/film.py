@@ -39,10 +39,11 @@ SCENE = ("A 32-second launch film for social media, cut fast to an upbeat electr
 # snap: lines whose start is pushed onto the next beat, for a hit to land on.
 # q:    the grid the scene's end snaps to, in beats.
 # tone: the director's note for the line, for Gemini TTS.
+# land: a word of the line to put on the nearest beat, for the drop to land on.
 SCENES = [
     dict(id="sit",     lead=0.35, tail=0.15, q=1, tone="Dry and a little amused, almost a shrug. Unhurried. Let 'just sit there' land flat, on purpose.",
          lines=["Most websites just sit there."]),
-    dict(id="work",    lead=0.21, tail=0.45, q=1, tone="The turn. The energy lifts, a grin in the voice. Hit 'work' hard, then 'for a living' with a confident smile.",
+    dict(id="work",    lead=0.21, tail=0.45, q=1, land="work", tone="The turn. The energy lifts, a grin in the voice. Hit 'work' hard, then 'for a living' with a confident smile.",
          lines=["Yours should work for a living!"]),
     dict(id="builds",  lead=0.12, tail=0.20, q=0.5, tone="Proud and upbeat, introducing what he makes. The name, 'enable', clear, with a tiny beat after it. Then the three things with rising momentum, each a little brighter than the last.",
          lines=["n.abl builds smart web apps, landing pages, and booking systems."]),

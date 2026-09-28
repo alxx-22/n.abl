@@ -43,10 +43,11 @@ SCENE = ("A 33-second launch film for social media about the AI service, cut fas
 # snap: lines whose start is pushed onto the next beat, for a hit to land on.
 # q:    the grid the scene's end snaps to, in beats. Half beats keep it moving.
 # tone: the director's note for the line, for Gemini TTS.
+# land: a word of the line to put on the nearest beat, for the drop to land on.
 SCENES = [
     dict(id="boot",  lead=0.30, tail=0.10, q=1, tone="Big news, a little awed, like telling a friend something huge. Build through the line and lean into 'new operating system'.",
          lines=["The world just got a new operating system."]),
-    dict(id="ai",    lead=0.12, tail=0.30, q=1, tone="The reveal. Excited and punchy, with a grin. Hit 'AI' hard.",
+    dict(id="ai",    lead=0.12, tail=0.30, q=1, land="ai", tone="The reveal. Excited and punchy, with a grin. Hit 'AI' hard.",
          lines=["It's called AI!"]),
     dict(id="into",  lead=0.10, tail=0.12, q=0.5, tone="Proud and confident. The name, 'enable', clear, then 'into your business' warm and direct, to the listener.",
          lines=["And n.abl builds it into your business."]),
