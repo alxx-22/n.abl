@@ -78,24 +78,49 @@ Kokoro cannot be directed, so these notes only take effect with Gemini TTS
 Google's Gemini 3.8 Flash TTS (`gemini-3.8-flash-tts`), in the voice
 `Achird` ("friendly, approachable, and warm"), chosen by ear from four. The
 model reads the text strictly as a transcript, word for word, and takes the
-direction separately, the way a director briefs a voice actor: the profile,
-the scene and the line's own note below (`PROFILE`, `SCENE` and each scene's
-`tone` in `film.py`) go in the request's style field, never in the words.
+direction separately, as Google's guide for it asks
+([`tts-models.md`](../../tts-models.md)): who is speaking is the voice
+itself, and each line carries only a few words of delivery (its `style` in
+`film.py`). Stress is written in capitals: the words marked in bold below.
+Google names long profiles and director's notes as the commonest cause of
+voice drift on this model, so they are not sent to it.
+
+**Who is speaking**, for voice design (`VOICE_DESIGN`, `vo.py --design`),
+the same man as the web film: A warm, quick-witted British man in his early
+thirties from the south of England, with a bright, friendly voice that
+always has a smile in it and a natural, conversational delivery.
 
 The name gets the most care, so it lifts instead of landing flat like the
-end of a sentence. It is written "Enable!" or "Enable" for Gemini
-(`GEMINI_SAY`); every line that says it also carries the name note
-(`NAME_NOTE`): *the hero of the line, said with lift and energy, bright,
-rising through the word with a smile, the stress on 'NAY', never flat and
-never dropping at the end*. The last line is read as `Enable! <short pause> Put AI to work!`
-(the scene's `read`): the inline tag gives the short beat after the name and
-is not spoken.
+end of a sentence: it is written ENABLE, in capitals, for stress. The last
+line is read as `ENABLE! <short pause> Put AI to work!` (the scene's
+`read`): the inline tag gives the short beat after the name and is not
+spoken. Lines 4 to 6 are read as one sentence, their styles joined with
+"then".
+
+| # | Line, as read | Style (Gemini 3.8) |
+|---|---|---|
+| 1 | The world just got a new operating system. | big news, a little awed, building |
+| 2 | It's called AI! | excited and punchy, grinning |
+| 3 | And **n.abl** builds it into your business. | proud and confident, warm |
+| 4 | Customer agents that book appointments, | upbeat and practical |
+| 5 | answer questions, day or night, | light and easy, with a little smile |
+| 6 | and handle complaints before they escalate. | calm, reassuring and in control |
+| 7 | Plus AI that reads your paperwork, sorts your inbox, drafts your replies, and chases every lead. | fast and fun, with growing delight |
+| 8 | Less admin. Faster answers. Happier customers. | crisp and punchy, satisfied |
+| 9 | Built for your business. Yours to keep. | sincere and warm, then soft and reassuring |
+| 10 | **n.abl.** *(short pause)* Put AI to work! | a bright, excited reveal, with a big, genuine smile |
+
+The earlier models (3.1, 2.5) were built for a director's brief instead, and
+get this one: the profile, the scene, and the line's note, plus, on lines
+with the name, the name note (`NAME_NOTE`): *the hero of the line, said with
+lift and energy, bright, rising through the word with a smile, the stress on
+'NAY', never flat and never dropping at the end*.
 
 **Who is speaking.** A British man in his thirties from the south of England: the founder of a small studio that builds AI into businesses. Warm, quick and genuinely excited about what AI can now do, like a friend telling you something big, not an announcer. A smile in the voice. Natural and conversational, never shouty, never salesy.
 
-**The scene.** A 33-second launch film for social media about the AI service, cut fast to a driving electronic track. He is talking to small-business owners. Brisk and energetic, with real pauses where the punctuation is.
+**The scene.** A 37-second launch film for social media about the AI service, cut fast to a driving electronic track. He is talking to small-business owners. Brisk and energetic, with real pauses where the punctuation is.
 
-| # | Line | Direction |
+| # | Line | Direction (earlier models) |
 |---|---|---|
 | 1 | The world just got a new operating system. | Big news, a little awed, like telling a friend something huge. Build through the line and lean into 'new operating system'. |
 | 2 | It's called AI! | The reveal. Excited and punchy, with a grin. Hit 'AI' hard. |

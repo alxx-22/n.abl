@@ -29,14 +29,25 @@ to half a second late, which is why the recogniser is here.
 
 Two voices. Kokoro (local, free, no setup) reads the words well but cannot be
 directed: it has no control over emotion. Gemini TTS (Google's API, free tier)
-takes written direction, so every line is read to the film's director's
-notes: PROFILE and SCENE in film.py, each scene's `tone`, and NAME_NOTE on
-the lines that say the name. Gemini 3.8 Flash TTS reads the text strictly as
-a transcript and takes that direction in the text part's
-speechMetadata.style; a scene's `read` can add inline expression tags such as
-<short pause>, which shape the read and are not spoken. Set in film.py by
-VOICE_PROVIDER, GEMINI_TTS_MODEL and GEMINI_VOICE, or overridden by the
-environment:
+takes written direction, each model the way Google's guide asks for it
+(tts-models.md):
+
+  Gemini 3.8 (Flash, Flash-Lite) reads the text strictly as a transcript. Who
+  is speaking is the voice itself (a prebuilt voice, or one made from
+  VOICE_DESIGN with --design); each line carries only a few words of
+  delivery, its scene's `style`, in the text part's speechMetadata.style.
+  Long profiles and director's notes are, in Google's words, "the most
+  common cause of voice drift" on 3.8, so they are not sent to it. A word
+  marked *like this* in a scene's `read` is written in capitals, which is
+  how 3.8 is told to stress it; inline tags such as <short pause> shape the
+  read and are not spoken.
+
+  Earlier models (3.1, 2.5) take one prompt: PROFILE and SCENE in film.py,
+  the scene's `tone`, and NAME_NOTE on the lines that say the name, then the
+  words, with tags in [brackets] (3.1) or none (2.5) and no capitals.
+
+Set in film.py by VOICE_PROVIDER, GEMINI_TTS_MODEL and GEMINI_VOICE, or
+overridden by the environment:
 
   VOICE_PROVIDER   auto (Gemini when it answers, else Kokoro), gemini, kokoro
   GEMINI_API_KEY   a Google AI Studio key (free tier), for Gemini TTS; or leave
@@ -53,6 +64,14 @@ hash of the model, voice, direction and words, so a rebuild costs no requests
   python3 vo.py --film web --stand-in gemini-3.8-flash-lite-tts
                                                     read the lines still missing with another
                                                     model, until the film's own has quota again
+  python3 vo.py --film web --design "n.abl founder" make a voice from VOICE_DESIGN (3.8 only),
+                                                    and keep its sample to audition
+  python3 vo.py --film web --quota                  the requests each model has used today
+
+The free tier's limits are per project, per model and per day, and Google
+no longer publishes them; the API states them when one is reached. vo.py
+notes every limit it is told in quota-seen.json, and counts the requests
+it makes in build/gemini-usage.json, by Pacific day, when they reset.
 
 Scenes that share a `joint` name in film.py (a sentence that runs across
 several shots) are read by Gemini in one request, as one sentence, and cut
@@ -273,18 +292,25 @@ def joint(sc):
     return group or [sc]
 
 
-def gemini_line(sc, li):
+def gemini_line(sc, li, model=None):
     """The words Gemini reads for a scene's line: the script, the name as it is
     said (GEMINI_SAY), and any inline expression tags from the scene's `read`,
-    such as <short pause>. Tags shape the delivery and are not spoken. For
-    scenes read jointly, the whole sentence."""
-    return " ".join(spoken(s.get("read", s["lines"])[li], True) for s in joint(sc))
+    such as <short pause>. Tags shape the delivery and are not spoken. A word
+    marked *like this* is written in capitals for 3.8, which stresses it, and
+    plainly for earlier models. For scenes read jointly, the whole sentence."""
+    text = " ".join(spoken(s.get("read", s["lines"])[li], True) for s in joint(sc))
+    upper = structured(model or GEMINI_MODEL)
+    return re.sub(r"\*([^*]+)\*", lambda m: m.group(1).upper() if upper else m.group(1), text)
 
 
-def gemini_style(sc, li, extra=""):
-    """The direction for a line: who is speaking, the scene, and the line's own
-    note; for scenes read jointly, each part's note on its own words."""
+def gemini_style(sc, li, model=None, extra=""):
+    """The direction for a line. For 3.8, the scene's `style`: a few words of
+    delivery, the voice being the speaker. For earlier models, who is
+    speaking, the scene, and the line's own note; for scenes read jointly,
+    each part's note on its own words."""
     group = joint(sc)
+    if structured(model or GEMINI_MODEL):
+        return ", then ".join(s.get("style") or s.get("tone", "") for s in group)
     if len(group) > 1:
         note = "One sentence, read in one flowing run with natural pauses at the commas. " + " ".join(
             f"On '{spoken(s['lines'][0], True).strip(' ,.')}': {s.get('tone', '')}" for s in group)
@@ -347,39 +373,118 @@ def read_path(model, text, style, voice):
     return os.path.join(VOICE_DIR, key + ".wav")
 
 
-def kept_by(text, style, voice):
+def line_path(sc, li, model, voice, extra=""):
+    """Where a model's read of a scene's line is kept: each model is sent the
+    words and direction in its own form, so each has its own name for a line."""
+    return read_path(model, gemini_line(sc, li, model), gemini_style(sc, li, model, extra), voice)
+
+
+def kept_by(sc, li, voice, extra=""):
     """The model whose kept read of a line is used: the film's own, else a
     fallback's or a stand-in's."""
     for model in [GEMINI_MODEL] + GEMINI_FALLBACK_MODELS:
-        if os.path.exists(read_path(model, text, style, voice)):
+        if os.path.exists(line_path(sc, li, model, voice, extra)):
             return model
     return None
 
 
-def kept_read(text, style, voice):
+def kept_read(sc, li, voice):
     """The kept read of a line, from the film's model or, if it was ever used, a fallback."""
-    model = kept_by(text, style, voice)
-    return read_path(model, text, style, voice) if model else None
+    model = kept_by(sc, li, voice)
+    return line_path(sc, li, model, voice) if model else None
+
+
+# ---- the free tier's quota -------------------------------------------------
+# Limits are per project, per model and per day (reset at midnight Pacific),
+# and Google shows them only in AI Studio. A 429 names the limit it hit
+# (a QuotaFailure with quotaId and quotaValue): those are kept here, with the
+# day they were seen, so tts-models.md can give the measured numbers.
+QUOTA_SEEN = os.path.join(HERE, "quota-seen.json")
+USAGE = os.path.join(BUILD, "gemini-usage.json")
+
+
+def pacific_day():
+    """Today in California, where the free tier's day starts and ends."""
+    try:
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
+    except Exception:                                       # no time zone data: Pacific daylight time
+        return time.strftime("%Y-%m-%d", time.gmtime(time.time() - 7 * 3600))
+
+
+def _load(path):
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def count_request(model, outcome):
+    """Count a request against today's quota: 'ok', or the HTTP status it failed
+    with. Failed 500 and 503 answers are counted too: users report that they use
+    the day's quota (tts-models.md)."""
+    usage = _load(USAGE)
+    day = usage.setdefault(pacific_day(), {}).setdefault(model, {})
+    day[str(outcome)] = day.get(str(outcome), 0) + 1
+    os.makedirs(BUILD, exist_ok=True)
+    with open(USAGE, "w") as f:
+        json.dump(usage, f, indent=1, sort_keys=True)
+
+
+def note_quota(model, body):
+    """Keep the limits a 429 names, and print them."""
+    try:
+        details = json.loads(body)["error"].get("details", [])
+    except (ValueError, KeyError, AttributeError):
+        return
+    seen = _load(QUOTA_SEEN)
+    for d in details:
+        for v in d.get("violations", []):
+            if "quotaId" not in v:
+                continue
+            m = v.get("quotaDimensions", {}).get("model", model)
+            seen.setdefault(m, {})[v["quotaId"]] = dict(value=int(v.get("quotaValue", 0)), seen=pacific_day())
+            print(f"  quota: {m} {v['quotaId']} = {v.get('quotaValue')}")
+    with open(QUOTA_SEEN, "w") as f:
+        json.dump(seen, f, indent=1, sort_keys=True)
+
+
+def quota_report():
+    """The requests each model has made today, against the limits seen."""
+    today = _load(USAGE).get(pacific_day(), {})
+    seen = _load(QUOTA_SEEN)
+    print(f"Gemini requests on {pacific_day()} (Pacific), against the free tier's limits as seen:")
+    for model in sorted(set(today) | set(seen) | set(GEMINI_FALLBACK_MODELS)):
+        used = today.get(model, {})
+        per_day = {k: v["value"] for k, v in seen.get(model, {}).items() if "PerDay" in k}
+        print(f"  {model:32s} {sum(used.values()):3d} made ({', '.join(f'{k} {n}' for k, n in sorted(used.items())) or 'none'})"
+              + (f"; limit {', '.join(f'{v}/day' for v in per_day.values())}" if per_day else "; limit not seen yet"))
 
 
 _model = [None]
 _used = set()                                               # the models whose reads the film uses
-def gemini_read(text, style, voice, fresh=False, models=None):
-    """One read from Gemini TTS; kept once fetched. fresh: fetch the film's own
-    model's read even when another model's is kept. models: the models to try."""
-    have = kept_by(text, style, voice)
+def gemini_read(sc, li, voice, fresh=False, models=None, extra=""):
+    """One read of a line from Gemini TTS; kept once fetched. fresh: fetch the
+    film's own model's read even when another model's is kept. models: the
+    models to try. extra: a note added to an earlier model's direction."""
+    have = kept_by(sc, li, voice, extra)
     if have and (have == GEMINI_MODEL or not fresh):
         _used.add(have)
-        return sf.read(read_path(have, text, style, voice), dtype="float32")[0]
+        return sf.read(line_path(sc, li, have, voice, extra), dtype="float32")[0]
     if not GEMINI_KEY and not gemini_reachable():
-        raise SystemExit(f"no Gemini read kept for {text!r} and no GEMINI_API_KEY to fetch one")
+        raise SystemExit(f"no Gemini read kept for {gemini_line(sc, li)!r} and no GEMINI_API_KEY to fetch one")
     models = models or ([_model[0]] if _model[0] else
                         [GEMINI_MODEL] + [m for m in GEMINI_FALLBACK_MODELS if m != GEMINI_MODEL])
     last = None
     for model in models:
+        text, style = gemini_line(sc, li, model), gemini_style(sc, li, model, extra)
+        busy = 0
         for attempt in range(4):
             try:
                 pcm = gemini_request(model, text, style, voice)
+                count_request(model, "ok")
                 _model[0] = model
                 _used.add(model)
                 os.makedirs(VOICE_DIR, exist_ok=True)
@@ -390,7 +495,9 @@ def gemini_read(text, style, voice, fresh=False, models=None):
                 last = f"{model}: HTTP {e.code} {body[:300]}"
                 if e.code == 404:
                     break                                   # no such model: try the next name
+                count_request(model, e.code)
                 if e.code == 429:
+                    note_quota(model, body)
                     # the free tier counts requests per minute and per day; a day's quota
                     # does not come back by waiting, so stop at once and keep what is fetched
                     if "PerDay" in body or "per day" in body.lower():
@@ -400,8 +507,11 @@ def gemini_read(text, style, voice, fresh=False, models=None):
                     print(f"  gemini per-minute limit, waiting {wait}s")
                     time.sleep(wait)
                     continue
-                if e.code in (500, 503):
-                    time.sleep(10 * (attempt + 1))
+                if e.code in (500, 503) and busy < 1:
+                    # one retry only: a failed answer may still use a request of the day's quota
+                    busy += 1
+                    print(f"  gemini HTTP {e.code}, retrying once in 30s")
+                    time.sleep(30)
                     continue
                 raise SystemExit(f"Gemini TTS failed: {last}")
         else:
@@ -444,15 +554,14 @@ def gemini_tts(sc, li, voice=None, extra="", **kw):
     """One whole line from Gemini TTS, read to its direction; kept once fetched.
     Scenes read jointly are fetched as one read, then cut into their scenes."""
     voice = voice or GEMINI_VOICE
-    pcm = gemini_read(gemini_line(sc, li), gemini_style(sc, li, extra), voice, **kw)
+    pcm = gemini_read(sc, li, voice, extra=extra, **kw)
     group = joint(sc)
     return split_read(pcm, group)[group.index(sc)] if len(group) > 1 else pcm
 
 
 def all_kept():
     """True when Gemini's read of every line is already kept with the film."""
-    return all(kept_read(gemini_line(sc, li), gemini_style(sc, li), GEMINI_VOICE)
-               for sc in SCENES for li in range(len(sc["lines"])))
+    return all(kept_read(sc, li, GEMINI_VOICE) for sc in SCENES for li in range(len(sc["lines"])))
 
 
 PROVIDER = os.environ.get("VOICE_PROVIDER") or getattr(F, "VOICE_PROVIDER", "kokoro")
@@ -463,9 +572,10 @@ if PROVIDER == "auto":
 def synth(kok, sc, li, s, rate):
     if PROVIDER == "gemini":
         a = gemini_tts(sc, li)
-        # a read that says more than the line (the notes read aloud) is retried once, more plainly
+        # a read that says more than the line (the notes read aloud) is retried once, more
+        # plainly; only earlier models take notes in the prompt, 3.8 reads the words alone
         got = measured_starts(trim(a))
-        if got is not None and len(got) > len(s.split()):
+        if got is not None and len(got) > len(s.split()) and not structured(kept_by(sc, li, GEMINI_VOICE) or GEMINI_MODEL):
             print(f"  gemini read {len(got)} words for the {len(s.split())} in {s!r}; retrying")
             a = gemini_tts(sc, li, extra="(Say only these words.)")
         return a, SR
@@ -485,12 +595,11 @@ def fetch(stand_in=None):
     todo, seen = [], set()
     for sc in SCENES:
         for li in range(len(sc["lines"])):
-            key = (gemini_line(sc, li), gemini_style(sc, li))
+            key = line_path(sc, li, GEMINI_MODEL, GEMINI_VOICE)     # scenes read jointly share one
             if key not in seen:
                 seen.add(key)
-                todo.append((sc, li, *key))
-    by = lambda t: kept_by(t[2], t[3], GEMINI_VOICE)
-    model = stand_in or GEMINI_MODEL
+                todo.append((sc, li))
+    by = lambda t: kept_by(*t, GEMINI_VOICE)
     assert not stand_in or stand_in in GEMINI_FALLBACK_MODELS, "a stand-in must be one of GEMINI_FALLBACK_MODELS"
     print(f"{FILM_ID}: {sum(by(t) == GEMINI_MODEL for t in todo)} of {len(todo)} reads kept from "
           f"{GEMINI_MODEL}, {GEMINI_VOICE}" + (f"; standing in with {stand_in}" if stand_in else ""))
@@ -499,8 +608,8 @@ def fetch(stand_in=None):
         if have == GEMINI_MODEL or (stand_in and have):
             continue
         try:
-            a = gemini_read(t[2], t[3], GEMINI_VOICE, fresh=True, models=[stand_in] if stand_in else None)
-            print(f"  ok   {len(a) / SR:5.2f}s  {t[2]}")
+            a = gemini_read(*t, GEMINI_VOICE, fresh=True, models=[stand_in] if stand_in else None)
+            print(f"  ok   {len(a) / SR:5.2f}s  {gemini_line(*t, stand_in)}")
         except QuotaExhausted as e:
             print(f"  stop: {e}")
             break
@@ -528,6 +637,51 @@ def audition(voices):
             break
         sf.write(os.path.join(out, f"{v}.wav"), np.concatenate(clips), SR)
         print(f"  audition {v}: ok")
+
+
+# Voices made with voice design, shared by the films: a voice belongs to the
+# project, not to one film, and lasts a year.
+DESIGN_DIR = os.path.join(HERE, "voice-design")
+
+
+def design_voice(name):
+    """Make a voice from film.py's VOICE_DESIGN with Gemini 3.8's voice design,
+    and keep its id and the sample the API returns with it, to audition. To
+    use it, set GEMINI_VOICE in film.py to the id it prints."""
+    d = F.VOICE_DESIGN
+    model = GEMINI_MODEL if structured(GEMINI_MODEL) else "gemini-3.8-flash-tts"
+    body = {"store": True, "voice": {"model": model, "type": "prompted", "displayName": name,
+                                     "gender": d["gender"], "languageCode": d["language"],
+                                     "prompted": {"input": d["description"]}}}
+    headers = {"Content-Type": "application/json"}
+    if GEMINI_KEY:
+        headers["x-goog-api-key"] = GEMINI_KEY
+    req = urllib.request.Request(f"{GEMINI_API}/voices", data=json.dumps(body).encode(), headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            voice = json.load(r)
+    except urllib.error.HTTPError as e:
+        err = e.read().decode("utf-8", "replace")
+        count_request(f"voices:{model}", e.code)
+        if e.code == 429:
+            note_quota(f"voices:{model}", err)
+        raise SystemExit(f"voice design failed: HTTP {e.code} {err[:500]}")
+    count_request(f"voices:{model}", "ok")
+    voice = voice.get("voice", voice)
+    vid = voice.get("id") or voice.get("name", "").split("/")[-1]
+    sample = voice.pop("sampleAudio", None) or voice.pop("sample_audio", None)
+    os.makedirs(DESIGN_DIR, exist_ok=True)
+    with open(os.path.join(DESIGN_DIR, f"{vid}.json"), "w") as f:
+        json.dump(dict(voice, description=d["description"], film=FILM_ID), f, indent=1)
+    if sample:
+        raw = base64.b64decode(sample.get("data", "") if isinstance(sample, dict) else sample)
+        if raw[:4] == b"RIFF":
+            with open(os.path.join(DESIGN_DIR, f"{vid}.wav"), "wb") as f:
+                f.write(raw)
+        else:                                               # raw 16-bit PCM at 24 kHz
+            sf.write(os.path.join(DESIGN_DIR, f"{vid}.wav"), np.frombuffer(raw, dtype="<i2"), 24000, subtype="PCM_16")
+    print(f"designed voice {vid!r} ({name}); sample {'kept' if sample else 'not returned'} in voice-design/")
+    return vid
 
 
 def main():
@@ -605,5 +759,9 @@ if __name__ == "__main__":
         sys.exit(0 if fetch() else 2)
     elif "--stand-in" in sys.argv:
         sys.exit(0 if fetch(stand_in=sys.argv[sys.argv.index("--stand-in") + 1]) else 2)
+    elif "--design" in sys.argv:
+        design_voice(sys.argv[sys.argv.index("--design") + 1])
+    elif "--quota" in sys.argv:
+        quota_report()
     else:
         main()

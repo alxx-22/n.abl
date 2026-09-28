@@ -1,9 +1,16 @@
 # Speech models on the Gemini API
 
-What the project's Gemini API key can use for speech, from the live API on
-2026-09-28 (`GET /v1beta/models`, all pages: 61 models; `GET /v1beta/voices`).
-Google's documentation sites were not reachable from the build environment,
-so everything here was checked against the API itself.
+What the project's Gemini API key can use for speech, what each model is,
+what it costs, and how much the free tier allows. The model and voice lists
+come from the live API on 2026-09-28 (`GET /v1beta/models`, all pages: 61
+models; `GET /v1beta/voices`). The rest is from Google's documentation, read
+the same day: [speech generation](https://ai.google.dev/gemini-api/docs/speech-generation),
+[voice design](https://ai.google.dev/gemini-api/docs/voice-design),
+[models](https://ai.google.dev/gemini-api/docs/models),
+[pricing](https://ai.google.dev/gemini-api/docs/pricing),
+[rate limits](https://ai.google.dev/gemini-api/docs/rate-limits) and the
+[changelog](https://ai.google.dev/gemini-api/docs/changelog), with the
+limits the API itself reported (below).
 
 ## Text-to-speech models
 
@@ -17,21 +24,130 @@ These take text and return speech through `generateContent`.
 | `gemini-3.8-flash-tts` | Gemini 3.8 Flash TTS | Gemini 3.8 Flash TTS | generateContent, countTokens, batchGenerateContent | 8192 | 16384 |
 | `gemini-3.8-flash-lite-tts` | Gemini 3.8 Flash Lite TTS | Gemini 3.8 Flash Lite TTS | generateContent, countTokens, batchGenerateContent | 8192 | 16384 |
 
-`gemini-3.8-flash-tts` is the one the films use: the newest generation
-(launched 2026-09-23, according to search results; the model list only gives
-names), described by Google as its most expressive TTS, and it takes the
-direction apart from the words (verified below). `gemini-3.8-flash-lite-tts`
-is its lighter sibling, the same voices at a lower cost, which `vo.py` uses as
-a stand-in (`--stand-in`) for lines the film's model has not read yet;
-`gemini-3.1-flash-tts-preview` and the two 2.5 previews are the older
-generation, kept in `vo.py` only as fallbacks for a model name the API stops
-knowing (a 404). The free tier's quota is per model and per day, 10 requests
-for each model (the 429 names it: `GenerateRequestsPerDayPerProjectPerModel-FreeTier`,
-`quotaValue` 10), and it resets at midnight Pacific. So a film of eight to ten
-lines takes most of a day's quota for one model; `vo.py` reads a sentence that
-runs across several shots in one request (`joint` in `film.py`) to save
-requests. Each model has its own quota, so the lite model can stand in on the
-same day.
+### What each one is
+
+From Google's models, pricing and changelog pages. Prices are per million
+tokens, text in / audio out; audio is 25 tokens a second.
+
+| Model | Status | Released | Google's description | Voice design | Free tier | Paid | Batch (paid only) |
+|---|---|---|---|---|---|---|---|
+| `gemini-3.8-flash-tts` | stable | 2026-09-22 | "Flagship creative text-to-speech model for studio-grade voice fidelity, expressive acting", 130+ languages | yes, and voice replication | yes | $0.50 / $9.00 to 2026-12-31, then $1.00 / $18.00 | $0.25 / $4.50 |
+| `gemini-3.8-flash-lite-tts` | stable | 2026-09-22 | "Fast, cost-efficient text-to-speech model built for high-throughput production workloads", 100+ languages | yes, and voice replication | yes | $0.50 / $6.00 to 2026-12-31, then $1.00 / $12.00 | $0.25 / $3.00 |
+| `gemini-3.1-flash-tts-preview` | preview, marked legacy: Google recommends moving to 3.8 | 2026-04-15 | "cost-efficient, expressive, and steerable" | no | yes | $1.00 / $20.00 | $0.50 / $10.00 |
+| `gemini-2.5-flash-preview-tts` | preview | 2025-05-20, improved 2025-12-10 | "Fast and controllable text-to-speech for low-latency, cost-efficient applications" | no | yes | $0.50 / $10.00 | $0.25 / $5.00 |
+| `gemini-2.5-pro-preview-tts` | preview | 2025-05-20, improved 2025-12-10 | "High-fidelity speech synthesis optimized for quality in structured workflows like podcasts and audiobooks" | no | **no** ("Not available") | $1.00 / $20.00 | $0.50 / $10.00 |
+
+There is one 3.1 speech model, `gemini-3.1-flash-tts-preview` ("3.1 Flash
+TTS"); neither the key's model list nor Google's docs have a 3.1 Pro TTS.
+It is the generation before 3.8: directed the old way (the notes and the
+words in one prompt, tags in square brackets), no voice design, and dearer
+than 3.8 Flash once paid for. What it adds is its own free quota: a second
+opinion by ear, or a stand-in. 2.5 Pro has no free tier at all, so on this
+key it can only ever answer 429.
+
+`gemini-3.8-flash-tts` is the one the films use, and
+`gemini-3.8-flash-lite-tts` stands in (`vo.py --stand-in`) for lines Flash
+has not read yet; the others are fallbacks for a model name the API stops
+knowing (a 404) and a way to audition (`GEMINI_TTS_MODEL=… vo.py --audition`).
+
+What a paid read costs: a 36-second film is 900 audio tokens, so reading the
+whole film once on 3.8 Flash is under a cent ($0.0081), and both films with
+a retake of every line under 4 cents.
+
+## The free tier
+
+How it works, from Google's rate-limits page:
+
+- Three limits, each checked on its own: requests per minute (RPM), input
+  tokens per minute (TPM) and requests per day (RPD).
+- "Rate limits are applied per project, not per API key": a second key in
+  the same project adds nothing. Each model has its own limits, so one
+  model's quota being spent leaves the others untouched.
+- The day resets at midnight Pacific time: 07:00 UTC while California is on
+  daylight time (until 1 November), 08:00 UTC after.
+- "Rate limits are more restricted for experimental and preview models."
+- Google no longer publishes the numbers: "View your active rate limits in
+  AI Studio" ([ai.dev/rate-limit](https://ai.dev/rate-limit), signed in as
+  the key's owner). Third-party pages quote old tables (for example 3 RPM,
+  10,000 TPM and 15 RPD for 2.5 Flash TTS); they are not this project's.
+- The Batch API has no free tier. Moving to a paid tier means setting up
+  billing in AI Studio; Tier 1 "typically activates instantly".
+- On the free tier Google uses the content to improve its products; on the
+  paid tier it does not.
+
+What the API itself said. A 429 carries a `google.rpc.QuotaFailure` naming
+the limit it hit (`quotaId`) and its value (`quotaValue`), which is the only
+exact source there is. `vo.py` keeps every one it is sent in
+`quota-seen.json`, and counts the requests it makes, by Pacific day, in
+`build/gemini-usage.json` (`vo.py --quota` prints both).
+
+| Model | Per day | Per minute | Seen |
+|---|---|---|---|
+| `gemini-3.8-flash-tts` | **10** (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`) | not reached | 2026-09-28 |
+| `gemini-3.8-flash-lite-tts` | not reached after 9 requests | reached after 6 requests in quick succession; the value was not recorded then | 2026-09-28 |
+| `gemini-3.1-flash-tts-preview` | not yet used | not yet used | |
+| `gemini-2.5-flash-preview-tts` | reached on 2026-09-27; the value was not recorded then | | |
+| `gemini-2.5-pro-preview-tts` | none: no free tier | | pricing page |
+
+One more thing counts against the day: users report (Google's developer
+forum, 2026-09-24, no reply from Google yet) that requests answered with a
+503 still use the day's quota. `vo.py` retries a 500 or 503 once, not
+several times, and counts it.
+
+What that means for the films: a film is eight reads (the AI film's list is
+one joint read), so 3.8 Flash reads one film a day with two to spare. The
+other models' quotas are separate, so on the same day Flash-Lite can stand in
+for the other film, and 3.1 and 2.5 Flash can audition. Reads are named by
+model, voice, direction and words, so changing any of them for a line means
+reading that line again; nothing else is re-read.
+
+## Directing Gemini 3.8
+
+From Google's [speech generation](https://ai.google.dev/gemini-api/docs/speech-generation)
+and [voice design](https://ai.google.dev/gemini-api/docs/voice-design) guides.
+
+- **The words are a verbatim transcript.** Nothing in `text` is taken as an
+  instruction.
+- **`style` is for sustained delivery**: emotion, pace, prosody, in a few
+  words, and only on the lines that need it. Google's examples: "angry tone",
+  "speaking rapidly", "out of breath", "whispers", "sarcastic", "casual,
+  friendly", "muttering, then reassuring"; for pitch, "high pitch, cheerful
+  and excited inflection".
+- **Not in `style`:** age, gender, names or accent ("Do not try to change
+  immutable speaker traits in style"), and no instructions to hold the voice
+  steady ("extra prompt text increases drift"). Above all: "Long-form 'Audio
+  Profile' paragraphs and multi-bullet 'Director's Notes' carried over from
+  earlier models are the most common cause of voice drift."
+- **Who is speaking belongs to the voice.** Voice design makes a voice from
+  "a clear 1–2 sentence description" of permanent traits (age, gender,
+  timbre, texture, accent): `POST /v1beta/voices` with `{"store": true,
+  "voice": {"model": "gemini-3.8-flash-tts", "type": "prompted",
+  "display_name": …, "gender": …, "language_code": "en-GB", "prompted":
+  {"input": "<the description>"}}}`. It answers with an id (`voice_…`),
+  used as the voice in any 3.8 request, and a `sample_audio` WAV to
+  audition. Stored voices last a year, 200 per project. (Voice replication
+  makes a voice from a recording instead; not used here.)
+- **Stress a word by writing it in capitals** ("This is a VERY important
+  point!"), with punctuation and tags.
+- **Pauses and sounds go inline**, in angle brackets: `<short pause>`,
+  `<long pause>`, `<breath>`, `<heavy breath>`, `<exhales>`, `<sigh>`,
+  `<laugh>`, `<chuckle>`, `<giggle>`, `<snicker>`, `<cackle>`, `<cheer>`,
+  `<gasp>`, `<whispers>`, `<shout>`, `<scream>`, `<shriek>`, `<cough>`,
+  `<sneeze>`, `<throat-clearing>`, `<tsk>`, `<pff>`, `<argh>`, `<groan>`,
+  `<growl>`, `<grr>`, `<grunt>`, `<hiss>`, `<moan>`, `<pant>`, `<snort>`,
+  `<sob>`, `<cry>`, `<whimper>`, `<yawn>`.
+- **The API.** Google's guide now shows the Interactions API
+  (`POST /v1beta/interactions`, `annotations[{type: "speech_metadata",
+  style}]`); `generateContent` with `speechMetadata` on the text part, below,
+  does the same and is what `vo.py` uses.
+
+How `vo.py` follows it: 3.8 gets only the scene's `style` (a few words);
+PROFILE, SCENE, `tone` and NAME_NOTE go only to the earlier models, which
+were built for them; `*word*` in a scene's `read` becomes capitals for 3.8;
+and VOICE_DESIGN in `film.py` is the one-sentence description for
+`vo.py --design`. The reads made on 2026-09-28 were sent the long direction,
+which is the likeliest reason the web film's first line sounds like a
+different man (higher, breathier) from the rest.
 
 ## Other models with audio output
 
@@ -67,10 +183,10 @@ On `gemini-3.8-flash-tts` (`POST /v1beta/models/gemini-3.8-flash-tts:generateCon
     {
       "parts": [
         {
-          "text": "Enable! <short pause> Let's build yours!",
+          "text": "ENABLE! <short pause> Let's build yours!",
           "speechMetadata": {
             "speaker": "Narrator",
-            "style": "A British man in his thirties … This line: Announce the name, 'Enable!', like a reveal …"
+            "style": "a bright, excited reveal, with a big, genuine smile"
           }
         }
       ]
@@ -93,9 +209,10 @@ On `gemini-3.8-flash-tts` (`POST /v1beta/models/gemini-3.8-flash-tts:generateCon
   direction is never put in it: it would be read aloud.
 - **The direction.** `speechMetadata` (on the same part) has exactly two
   fields, `speaker` and `style`; the API rejects any other name
-  (`emotion`, `pace`, `accent`, `persona` and so on were tried). Persona,
-  scene, emotion, pace and accent all go in `style` as prose. Its tokens are
-  not counted as prompt tokens.
+  (`emotion`, `pace`, `accent`, `persona` and so on were tried). Its tokens
+  are not counted as prompt tokens. The first reads, on 2026-09-28, put the
+  persona, the scene and a long note in `style`; Google's guide (above) says
+  to keep it to a few words of delivery, and `vo.py` now does.
 - **The voice.** `speechConfig.voiceConfig.voice` is a string: a prebuilt
   voice's name (`Achird`) or any id from the extended library
   (`en-gb-assistant-10`). The older `voiceConfig.prebuiltVoiceConfig.voiceName`

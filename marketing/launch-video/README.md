@@ -41,13 +41,15 @@ film's music, which is played from the free
    `GEMINI_API_KEY` in the environment it uses Google's Gemini 3.8 Flash TTS
    (`gemini-3.8-flash-tts`, the most expressive of the TTS models the API
    offers; all of them are listed in [`tts-models.md`](tts-models.md)), in
-   the voice `Achird`. It is directed like a voice actor: each whole line is
-   sent as a verbatim transcript, and the film's voice profile, the scene and
-   the line's own note on tone, pace and emphasis (`PROFILE`, `SCENE` and
-   each scene's `tone` in `film.py`, plus `NAME_NOTE` on the lines with the
-   name) go separately in the request's style field. A scene's `read` can add
-   inline expression tags such as `<short pause>`, which shape the read and
-   are not spoken. Gemini's reads are kept in `films/<film>/voice`, named by
+   the voice `Achird`. It is directed the way Google's guide asks: each whole
+   line is sent as a verbatim transcript, with a few words of delivery (each
+   scene's `style` in `film.py`) in the request's style field. Who is
+   speaking is the voice itself, a prebuilt one or one made with voice design
+   from `VOICE_DESIGN` (`vo.py --design`). A scene's `read` can add inline
+   expression tags such as `<short pause>`, which shape the read and are not
+   spoken, and `*stress*` on a word, sent in capitals. The earlier models
+   (3.1, 2.5) are sent the long notes they were built for instead (`PROFILE`,
+   `SCENE`, each scene's `tone`, `NAME_NOTE`). Gemini's reads are kept in `films/<film>/voice`, named by
    the model, voice, direction and words, so the film rebuilds without a key
    or any requests (`vo.py --fetch-only` fetches them; `--audition` compares
    voices, into `voice/audition/<model>/`). Without a key it
@@ -138,8 +140,11 @@ Copy `films/web` to `films/<name>` and change:
   `generativelanguage.googleapis.com` with the header `x-goog-api-key` (no
   prefix), which keeps the key out of the session. `vo.py` then reads every
   line with Gemini TTS to the notes in `film.py`. The free tier limits
-  requests per day, per model (ten a day for `gemini-3.8-flash-tts`);
-  reads are kept, so if it stops at the daily quota, run it again after
+  requests per day, per model and per project (ten a day for
+  `gemini-3.8-flash-tts`; Google shows the limits only in AI Studio, so
+  `vo.py` keeps the ones the API reports in `quota-seen.json`, and
+  `vo.py --quota` shows what each model has used today; everything known is
+  in [`tts-models.md`](tts-models.md)); reads are kept, so if it stops at the daily quota, run it again after
   midnight Pacific and it carries on. Meanwhile `vo.py --stand-in
   gemini-3.8-flash-lite-tts` reads the missing lines with the lighter model,
   on its own quota, in the same voice, so the whole film can be heard;
@@ -149,7 +154,9 @@ Copy `films/web` to `films/<name>` and change:
   `GEMINI_VOICE` the voice: `Achird` is warm and friendly; Gemini 3.8 also
   takes the 1,000 voices of its extended library by id (`GET
   /v1beta/voices`), such as `en-gb-assistant-10` or `en-gb-commercial-7`,
-  southern English men (see [`tts-models.md`](tts-models.md)).
+  southern English men (see [`tts-models.md`](tts-models.md)), and a
+  designed voice by its `voice_…` id (`vo.py --design NAME` makes one from
+  `VOICE_DESIGN` and keeps its sample in `voice-design/`).
   `VOICE_PROVIDER=kokoro` forces the local voice. For Kokoro, `VOICE` in
   `film.py`. Other British voices are `bf_emma`,
   `bf_isabella`, `bm_george` and `bm_lewis`; `bf_emma` is the calmest.

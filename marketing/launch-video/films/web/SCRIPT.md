@@ -82,24 +82,47 @@ Kokoro cannot be directed, so these notes only take effect with Gemini TTS
 Google's Gemini 3.8 Flash TTS (`gemini-3.8-flash-tts`), in the voice
 `Achird` ("friendly, approachable, and warm"), chosen by ear from four. The
 model reads the text strictly as a transcript, word for word, and takes the
-direction separately, the way a director briefs a voice actor: the profile,
-the scene and the line's own note below (`PROFILE`, `SCENE` and each scene's
-`tone` in `film.py`) go in the request's style field, never in the words.
+direction separately, as Google's guide for it asks
+([`tts-models.md`](../../tts-models.md)): who is speaking is the voice
+itself, and each line carries only a few words of delivery (its `style` in
+`film.py`). Stress is written in capitals: the words marked in bold below.
+Google names long profiles and director's notes as the commonest cause of
+voice drift on this model, so they are not sent to it.
+
+**Who is speaking**, for voice design (`VOICE_DESIGN`, `vo.py --design`): A
+warm, quick-witted British man in his early thirties from the south of
+England, with a bright, friendly voice that always has a smile in it and a
+natural, conversational delivery.
 
 The name gets the most care, so it lifts instead of landing flat like the
-end of a sentence. It is written "Enable!" or "Enable" for Gemini
-(`GEMINI_SAY`); every line that says it also carries the name note
-(`NAME_NOTE`): *the hero of the line, said with lift and energy, bright,
-rising through the word with a smile, the stress on 'NAY', never flat and
-never dropping at the end*. The last line is read as `Enable! <short pause> Let's build yours!`
-(the scene's `read`): the inline tag gives the short beat after the name and
-is not spoken.
+end of a sentence: it is written ENABLE, in capitals, for stress. The last
+line is read as `ENABLE! <short pause> Let's build yours!` (the scene's
+`read`): the inline tag gives the short beat after the name and is not
+spoken.
+
+| # | Line, as read | Style (Gemini 3.8) |
+|---|---|---|
+| 1 | Most websites just sit there. | dry and wry, a little amused, unhurried |
+| 2 | Yours should **work** for a living! | energy lifting, grinning, confident |
+| 3 | **n.abl** builds smart web apps, landing pages, and booking systems. | proud and upbeat, with rising momentum |
+| 4 | Landing pages that load **fast** and turn visitors into enquiries. | quick, knowing and confident |
+| 5 | Booking systems that fill your diary, take the deposit, and send the reminders. | rhythmic, with growing delight |
+| 6 | And web apps built around how you work: portals, quotes, dashboards. | warm and sincere, then quick and crisp |
+| 7 | Fast, sharp on every screen, and yours to keep. | crisp and punchy, then soft and reassuring |
+| 8 | **n.abl.** *(short pause)* Let's build yours! | a bright, excited reveal, with a big, genuine smile |
+
+The earlier models (3.1, 2.5) were built for a director's brief instead, and
+get this one: the profile, the scene, and the line's note.
 
 **Who is speaking.** A British man in his thirties from the south of England: the founder of a small studio that builds websites. Warm, quick and genuinely excited about what he makes, like a friend showing you something great, not an announcer. A smile in the voice. Natural and conversational, never shouty, never salesy.
 
-**The scene.** A 32-second launch film for social media, cut fast to an upbeat electronic track. He is talking to small-business owners whose websites do nothing for them. The pace is brisk and the energy lifts from line to line, with real pauses where the punctuation is.
+**The scene.** A 36-second launch film for social media, cut fast to an upbeat electronic track. He is talking to small-business owners whose websites do nothing for them. The pace is brisk and the energy lifts from line to line, with real pauses where the punctuation is.
 
-| # | Line | Direction |
+On lines with the name, the name note (`NAME_NOTE`): *the hero of the line,
+said with lift and energy, bright, rising through the word with a smile, the
+stress on 'NAY', never flat and never dropping at the end*.
+
+| # | Line | Direction (earlier models) |
 |---|---|---|
 | 1 | Most websites just sit there. | Dry and a little amused, almost a shrug. Unhurried. Let 'just sit there' land flat, on purpose. |
 | 2 | Yours should work for a living! | The turn. The energy lifts, a grin in the voice. Hit 'work' hard, then 'for a living' with a confident smile. |
