@@ -1,43 +1,39 @@
 1
-00:00:00,362 --> 00:00:02,832
+00:00:00,362 --> 00:00:02,936
 Most websites just sit there.
 
 2
-00:00:03,139 --> 00:00:05,387
+00:00:03,379 --> 00:00:05,462
 Yours should work for a living!
 
 3
-00:00:05,965 --> 00:00:10,131
+00:00:05,965 --> 00:00:10,627
 n.abl builds smart web apps,
 landing pages, and booking systems.
 
 4
-00:00:10,212 --> 00:00:14,051
+00:00:10,837 --> 00:00:15,268
 Landing pages that load fast and
 turn visitors into enquiries.
 
 5
-00:00:14,170 --> 00:00:15,818
+00:00:15,420 --> 00:00:17,468
 Booking systems that fill your diary,
 
 6
-00:00:15,838 --> 00:00:18,578
+00:00:17,488 --> 00:00:20,327
 take the deposit, and send the reminders.
 
 7
-00:00:18,754 --> 00:00:22,790
+00:00:20,420 --> 00:00:25,353
 And web apps built around how you
 work: portals, quotes, dashboards.
 
 8
-00:00:22,840 --> 00:00:25,936
+00:00:25,549 --> 00:00:29,571
 Fast, sharp on every screen,
 and yours to keep.
 
 9
-00:00:27,512 --> 00:00:28,345
-n.abl
-
-10
-00:00:28,365 --> 00:00:29,813
-Let's build yours!
+00:00:30,845 --> 00:00:33,895
+n.abl Let's build yours!

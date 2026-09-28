@@ -1,61 +1,46 @@
 1
-00:00:00,312 --> 00:00:03,015
+00:00:00,312 --> 00:00:03,370
 The world just got a new operating system.
 
 2
-00:00:03,035 --> 00:00:04,391
+00:00:03,647 --> 00:00:05,459
 It's called AI!
 
 3
-00:00:04,467 --> 00:00:07,157
+00:00:05,918 --> 00:00:08,865
 And n.abl builds it into your business.
 
 4
-00:00:07,208 --> 00:00:10,009
+00:00:08,902 --> 00:00:11,705
 Customer agents that book appointments,
 
 5
-00:00:10,031 --> 00:00:12,189
+00:00:11,725 --> 00:00:13,882
 answer questions, day or night,
 
 6
-00:00:12,209 --> 00:00:15,063
+00:00:13,902 --> 00:00:16,923
 and handle complaints
 before they escalate.
 
 7
-00:00:15,212 --> 00:00:18,860
+00:00:17,147 --> 00:00:21,595
 Plus AI that reads your paperwork,
 sorts your inbox, drafts your replies,
 
 8
-00:00:18,880 --> 00:00:20,385
+00:00:21,615 --> 00:00:23,535
 and chases every lead.
 
 9
-00:00:20,455 --> 00:00:21,524
-Less admin.
+00:00:23,600 --> 00:00:27,309
+Less admin. Faster
+answers. Happier customers.
 
 10
-00:00:21,544 --> 00:00:22,686
-Faster answers.
+00:00:27,451 --> 00:00:30,403
+Built for your business. Yours to keep.
 
 11
-00:00:22,706 --> 00:00:24,044
-Happier customers.
-
-12
-00:00:24,064 --> 00:00:25,484
-Built for your business.
-
-13
-00:00:25,504 --> 00:00:26,832
-Yours to keep.
-
-14
-00:00:28,077 --> 00:00:28,910
-n.abl
-
-15
-00:00:28,930 --> 00:00:30,546
-Put AI to work!
+00:00:31,464 --> 00:00:34,862
+n.abl Put AI to work!
