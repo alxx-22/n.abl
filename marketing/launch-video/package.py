@@ -101,8 +101,12 @@ def audio():
 def main():
     os.makedirs(OUT, exist_ok=True)
     tl = json.load(open(os.path.join(BUILD, "timeline.json")))
-    with open(os.path.join(OUT, f"nabl-{FILM}.srt"), "w") as f:
-        f.write(captions(tl))
+    srt = os.path.join(OUT, f"nabl-{FILM}.srt")
+    if tl["lines"]:
+        with open(srt, "w") as f:
+            f.write(captions(tl))
+    elif os.path.exists(srt):                  # a film with no voice has no captions
+        os.remove(srt)
     aac = audio()
     only = [a for a in sys.argv[1:] if a in RATIOS]
     for r in only or RATIOS:

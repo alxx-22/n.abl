@@ -686,16 +686,20 @@ def design_voice(name):
 
 def main():
     os.makedirs(os.path.join(OUT, "vo"), exist_ok=True)
-    print(f"voice: {PROVIDER}" + (f" ({GEMINI_MODEL}, {GEMINI_VOICE})" if PROVIDER == "gemini" else f" ({VOICE})"))
-    from kokoro_onnx import Kokoro
-    kok = Kokoro(os.path.join(MODELS, "kokoro-v1.0.onnx"), os.path.join(MODELS, "voices-v1.0.bin"))
+    voiced = any(sc["lines"] for sc in SCENES)
+    print(f"voice: {PROVIDER}" + (f" ({GEMINI_MODEL}, {GEMINI_VOICE})" if PROVIDER == "gemini" else f" ({VOICE})")
+          if voiced else "no voice: scenes of fixed length on the beat grid")
+    kok = None
+    if voiced:
+        from kokoro_onnx import Kokoro
+        kok = Kokoro(os.path.join(MODELS, "kokoro-v1.0.onnx"), os.path.join(MODELS, "voices-v1.0.bin"))
 
     t = 0.0
     scenes, lines_out, clips = [], [], []
     n = 0
     for sc in SCENES:
         start = t
-        cursor = start + sc["lead"]
+        cursor = start + sc.get("lead", 0)
         sc_lines = []
         for li, line in enumerate(sc["lines"]):
             if li:
@@ -738,13 +742,15 @@ def main():
             lo = dict(n=n, text=line, start=round(line_start, 3), end=round(cursor, 3), sentences=s_out)
             lines_out.append(lo)
             sc_lines.append(n)
-        end = beat_ceil(cursor + sc["tail"], sc.get("q", 1))
+        # beats: a scene of fixed length, for a film cut to music with no voice
+        end = start + sc["beats"] * BEAT if "beats" in sc else beat_ceil(cursor + sc["tail"], sc.get("q", 1))
         scenes.append(dict(id=sc["id"], start=round(start, 4), end=round(end, 4), lines=sc_lines))
         t = end
         print(f"{sc['id']:7s} {start:6.2f} → {end:6.2f}  ({end - start:5.2f}s)  vo ends {cursor:6.2f}")
 
     timeline = dict(film=FILM_ID, title=F.TITLE, cover=F.COVER, bpm=BPM, beat=BEAT, fps=60, duration=round(scenes[-1]["end"], 4),
-                    voice=(f"gemini:{'+'.join(sorted(_used, key=lambda m: m != GEMINI_MODEL)) or GEMINI_MODEL}:{GEMINI_VOICE}"
+                    voice=("none" if not voiced else
+                           f"gemini:{'+'.join(sorted(_used, key=lambda m: m != GEMINI_MODEL)) or GEMINI_MODEL}:{GEMINI_VOICE}"
                            if PROVIDER == "gemini" else VOICE),
                     scenes=scenes, lines=lines_out, clips=clips)
     with open(os.path.join(OUT, "timeline.json"), "w") as f:

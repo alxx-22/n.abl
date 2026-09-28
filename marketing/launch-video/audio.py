@@ -1447,12 +1447,151 @@ def build_music_electronica():
     drums = hp(kick_b + reverb(clap_b, IR_ROOM, 0.12) + hat_b + room, 30)
     return pad_b + rh_b, hp(bass_b, 30), arp_b, drums
 
+# ------------------------------------------------------------------ reel
+# The AI reel's track: after the reference reel's (Opal, by mc-visuals),
+# a bright 132 BPM four-on-the-floor with a long pitched "boom" kick on
+# every beat, claps on two and four, open hats on the offbeats, a rolling
+# bass, house stabs and a plucked hook, under a closed filter until the
+# drop. The animation marks the drop (m_drop), the moment everything goes
+# muffled (m_lpf) and the silence before the name (m_gap).
+REEL_CH = {"Dm9": (38, [62, 65, 69, 72, 76]), "Bbmaj7": (34, [58, 62, 65, 69, 74]),
+           "Fmaj7": (41, [60, 64, 65, 69, 72]), "C6": (36, [60, 64, 67, 69, 76])}
+
+
+def boom_kick(v=1.0):
+    """The reference's kick: a click, then a long body falling from high up to the sub."""
+    x = tt(0.55)
+    f = 44 + 650 * np.exp(-x / 0.008) + 95 * np.exp(-x / 0.05)
+    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-x / 0.27)
+    click = hp(noise(0.55), 3000) * np.exp(-x / 0.003) * 0.45
+    return np.tanh(2.3 * (body + click)) * v
+
+
+def stab(notes, d, cut, v=1.0):
+    y = sum(arp_note(m, d, cut) for m in notes) / len(notes)
+    return y * v
+
+
+def sfx_glitch(d):
+    """Data breaking up: square blips, noise and bit-crushed tones in 6 to 30 ms slices."""
+    r = np.random.default_rng(3); n = at(d); out = np.zeros(n); i = 0
+    while i < n:
+        L = min(int(r.uniform(0.006, 0.03) * SR), n - i); x = np.arange(L) / SR; kind = r.integers(0, 3)
+        if kind == 0:
+            seg = np.sign(np.sin(2 * np.pi * r.uniform(300, 2600) * x))
+        elif kind == 1:
+            seg = r.standard_normal(L)
+        else:
+            seg = np.round(np.sin(2 * np.pi * r.uniform(90, 700) * x) * 3) / 3
+        out[i:i + L] = seg * r.uniform(0.2, 1.0) * (r.random() > 0.22); i += L
+    env = np.sin(np.pi * np.linspace(0, 1, n)) ** 0.6
+    return bp(out, 350, 9000) * env * 0.6
+
+
+def build_music_reel():
+    pads, bass, keys, drums = buf(), buf(), buf(), buf()
+    mk = lambda k: [c for c in CUES if c["type"] == k]
+    drop = mk("m_drop")[0]["t"]
+    gap = mk("m_gap")[0]; g0, g1 = gap["t"], gap["t"] + gap["d"]
+    bar = 4 * BEAT
+    prog = getattr(F, "PROG", ["Dm9", "Bbmaj7", "Fmaj7", "C6"])
+    fills = [SC[k]["start"] for k in ("call", "docs", "cta") if k in SC]
+    rr = np.random.default_rng(11)
+    kicks = []
+
+    # the intro: the first chord behind a closed filter, hats creeping in
+    d = drop
+    intro = soft_pad(REEL_CH["Dm9"][1], d, cut=2200, v=0.9)
+    cut = 250 + 2600 * np.clip(np.arange(len(intro)) / (d * SR), 0, 1) ** 2
+    intro = np.stack([sweep_lp(intro[:, 0], cut, q=1.3), sweep_lp(intro[:, 1], cut, q=1.3)], 1)
+    add(pads, intro, 0, 0.55)
+    drone = sub(26, d, 0.5); add(bass, drone * np.linspace(0.2, 1, len(drone)) ** 2, 0, 0.35)
+    k = 0
+    while k * BEAT / 4 < d:
+        t = k * BEAT / 4; p = t / d
+        add(drums, hp(tick_hat(), 6000), t, 0.05 + 0.2 * p ** 2 * (1.3 if k % 2 else 0.8), pan=0.25)
+        k += 1
+    rc = hp(noise(0.9), 3500); rc = rc * np.linspace(0, 1, len(rc)) ** 3
+    add(drums, rc, drop - 0.9, 0.35)
+
+    def groove(a, z, fill_at=()):
+        """Drums, bass and harmony from beat a to beat z, on the drop's grid."""
+        n = int(round((z - a) / BEAT))
+        for j in range(n):
+            t = a + j * BEAT
+            bi = int(round((t - drop) / BEAT))            # beat index from the drop
+            bb = bi % 4
+            kicks.append(t)
+            add(drums, boom_kick(1.0 if bb == 0 else 0.9), t, 0.9)
+            if bb in (1, 3):
+                add(drums, stereo(clap_layer(rr), clap_layer(rr)), t, 0.5)
+                add(drums, reverb(clap(), IR_ROOM, 0.5), t + 0.004, 0.18)
+            add(drums, hat(0.07), t + BEAT / 2, 0.24, pan=0.2)
+            for q in (0.25, 0.75):
+                add(drums, tick_hat(), t + q * BEAT, 0.12 + 0.05 * rr.random(), pan=-0.2)
+            if bb == 3 and bi % 8 == 7:
+                add(drums, rim(0.8), t + 0.75 * BEAT, 0.3, pan=0.35)
+            # a snare run into each new chapter
+            for f in fill_at:
+                if f - BEAT - 1e-6 <= t < f - 1e-6:
+                    for q in range(4):
+                        add(drums, snare(), t + q * BEAT / 4, 0.12 + 0.06 * q)
+            # harmony by the bar
+            ch = prog[(bi // 4) % len(prog)]
+            root, notes = REEL_CH[ch]
+            if bb == 0:
+                add(pads, soft_pad(notes, min(bar, z - t), cut=2600, v=1.0), t, 0.42)
+            # rolling bass on the sixteenths between the kicks
+            for q, vv in ((0.25, 0.6), (0.5, 1.0), (0.75, 0.75)):
+                add(bass, sub(root, BEAT / 4 * 0.9, vv), t + q * BEAT, 0.5)
+                add(bass, moog(root + 12, BEAT / 4 * 0.8, vv), t + q * BEAT, 0.12)
+            # house stabs: the and of one and three, and a push into the next bar
+            for q in ((0.5,) if bb in (0, 2) else ()) + ((0.75,) if bb == 3 else ()):
+                add(keys, stab(notes, 0.16, 1500 + 600 * (bb == 3)), t + q * BEAT, 0.3, pan=0.1)
+            # the hook: a plucked line an octave up, with an echo
+            line = [notes[0] + 12, notes[2] + 12, notes[1] + 12, notes[3] + 12]
+            hk = arp_note(line[bb], 0.2, 2400, 0.9)
+            add(keys, hk, t + (0.0 if bb % 2 else 0.5) * BEAT, 0.14, pan=-0.3)
+            add(keys, hk * 0.4, t + (0.0 if bb % 2 else 0.5) * BEAT + 0.75 * BEAT, 0.14, pan=0.35)
+
+    add(drums, crash(), drop, 0.4)
+    groove(drop, g0, fills)
+    # the silence, then the name: one big hit and the groove again under it, winding down
+    add(drums, crash(), g1, 0.5)
+    groove(g1, DUR)
+    add(pads, soft_pad(REEL_CH["Dm9"][1], DUR - g1 + 0.5, cut=3000, v=1.0), g1, 0.4)
+    # the kick pumps everything harmonic
+    pump = np.ones(N)
+    for t in kicks:
+        i = at(t); m = min(N - i, at(0.3))
+        if m > 0:
+            pump[i:i + m] = np.minimum(pump[i:i + m], 1 - 0.55 * np.exp(-np.arange(m) / SR / 0.07))
+    pads *= pump[:, None]; bass *= pump[:, None] ** 0.6; keys *= pump[:, None] ** 0.5
+    # the gap before the name: nothing but tails
+    gate = np.ones(N)
+    gate[at(g0):at(g1)] = 0
+    ramp = at(0.012); gate[at(g0):at(g0) + ramp] = np.linspace(1, 0, ramp); gate[at(g1) - ramp:at(g1)] = np.linspace(0, 1, ramp)
+    # the drums thin out over the last seconds
+    tail = np.clip((DUR - 0.6 - np.arange(N) / SR) / 2.2, 0, 1) ** 0.8
+    for b_, gg in ((pads, gate), (bass, gate * tail), (keys, gate * tail), (drums, gate * np.maximum(tail, 0.0))):
+        b_ *= gg[:, None]
+    # muffled while the objection hangs in the air: everything through a low-pass
+    for c in mk("m_lpf"):
+        a, z = c["t"], c["t"] + c["d"]
+        w = np.clip(np.minimum((np.arange(N) / SR - a) / 0.08, (z - np.arange(N) / SR) / 0.12), 0, 1)
+        for b_ in (pads, bass, keys, drums):
+            b_[:] = b_ * (1 - w)[:, None] + lp(b_, 520, 4) * w[:, None]
+    return pads, bass, keys, drums
+
+
 def build_sfx():
     out = buf()
     trims = getattr(F, "SFX_TRIM", {})             # per film, in dB, by cue type
     for c in CUES:
         t, v = c["t"], c.get("v", 1.0)
         k = c["type"]
+        if k.startswith("m_"):                  # marks for the music, not sounds
+            continue
         tg = 10 ** (trims.get(k, 0.0) / 20)
         add = lambda dst, x, t_, gain=1.0, pan=0.0: add_(dst, x, t_, gain * tg, pan)
         if k == "key":
@@ -1514,6 +1653,8 @@ def build_sfx():
             add(out, sfx_flip(), t, 0.25 * v / .35, pan=rng.uniform(-.4, .4))
         elif k == "star":
             add(out, reverb(sfx_star(v), IR_HALL, 0.3), t, 0.35)
+        elif k == "glitch":
+            add(out, sfx_glitch(c["d"]), t, 0.3)
         elif k == "thud":
             # the hit is the moment, but the tagline follows it within a second
             th = sfx_thud(v); th *= np.exp(-np.arange(len(th)) / SR / 0.5)
@@ -1526,6 +1667,8 @@ def build_sfx():
 # ------------------------------------------------------------------ voice
 def build_vo():
     vo = np.zeros(N)
+    if not TL["clips"]:                         # a film with no voice
+        return np.zeros((N, 2)), np.zeros(N)
     for c in TL["clips"]:
         a, sr = sf.read(os.path.join(BUILD, c["file"]), dtype="float64")
         a = signal.resample_poly(a, SR, sr)
@@ -1569,9 +1712,9 @@ def limiter(x, ceiling_db=-1.2, look=0.004, release=0.08):
 def main():
     os.makedirs(os.path.join(BUILD, "stems"), exist_ok=True)
     style = getattr(F, "MUSIC", "synth")
-    drum_led = style in ("drums", "band", "garage", "perc", "electronica")
+    drum_led = style in ("drums", "band", "garage", "perc", "electronica", "reel")
     pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band, "garage": build_music_garage, "perc": build_music_perc,
-                               "electronica": build_music_electronica}.get(style, build_music)()
+                               "electronica": build_music_electronica, "reel": build_music_reel}.get(style, build_music)()
     music = pads * 1.0 + bass * 1.0 + keys * 1.0 + drums * (1.0 if drum_led else 0.9)
     music = peak_eq(music, 2800, 3.0, 0.6)
     music = peak_eq(music, 90, -2.0, 0.8)
