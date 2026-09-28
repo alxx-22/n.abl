@@ -50,6 +50,13 @@ hash of the model, voice, direction and words, so a rebuild costs no requests
 
   python3 vo.py --film web --fetch-only             fetch and keep Gemini's reads only
   python3 vo.py --film web --audition Achird,Puck   two lines in each voice, to choose
+  python3 vo.py --film web --stand-in gemini-3.8-flash-lite-tts
+                                                    read the lines still missing with another
+                                                    model, until the film's own has quota again
+
+Scenes that share a `joint` name in film.py (a sentence that runs across
+several shots) are read by Gemini in one request, as one sentence, and cut
+into their shots where the recogniser hears one shot's words end.
 """
 
 import base64, hashlib, importlib.util, json, os, re, sys, time, urllib.error, urllib.request
@@ -90,8 +97,9 @@ def gemini_reachable():
 GEMINI_MODEL = os.environ.get("GEMINI_TTS_MODEL") or getattr(F, "GEMINI_TTS_MODEL", "gemini-3.8-flash-tts")
 # a fallback only for a model name the API does not know (404), never for a quota:
 # one film is read by one model, so the voice stays the same throughout.
-# All four are in the API's model list (tts-models.md).
-GEMINI_FALLBACK_MODELS = ["gemini-3.8-flash-tts", "gemini-3.1-flash-tts-preview",
+# All five are in the API's model list (tts-models.md). A read by one of them
+# can also stand in for a line the film's model has not read yet (--stand-in).
+GEMINI_FALLBACK_MODELS = ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts", "gemini-3.1-flash-tts-preview",
                           "gemini-2.5-pro-preview-tts", "gemini-2.5-flash-preview-tts"]
 
 
@@ -256,17 +264,33 @@ def word_times_measured(kok, text, clip):
     return [dict(w=e["w"], start=round(s, 3), end=round(n, 3)) for e, s, n in zip(est, starts, ends)]
 
 
+def joint(sc):
+    """The scenes read with this one in a single request: the scenes that share
+    its `joint` name, in order, each of one line. A sentence that runs across
+    several shots is read as one sentence, then cut into its shots."""
+    group = [s for s in SCENES if sc.get("joint") and s.get("joint") == sc["joint"]]
+    assert all(len(s["lines"]) == 1 for s in group), "a joint scene has one line"
+    return group or [sc]
+
+
 def gemini_line(sc, li):
     """The words Gemini reads for a scene's line: the script, the name as it is
     said (GEMINI_SAY), and any inline expression tags from the scene's `read`,
-    such as <short pause>. Tags shape the delivery and are not spoken."""
-    return spoken(sc.get("read", sc["lines"])[li], True)
+    such as <short pause>. Tags shape the delivery and are not spoken. For
+    scenes read jointly, the whole sentence."""
+    return " ".join(spoken(s.get("read", s["lines"])[li], True) for s in joint(sc))
 
 
 def gemini_style(sc, li, extra=""):
-    """The direction for a line: who is speaking, the scene, and the line's own note."""
-    note = sc.get("tone", "")
-    if "n.abl" in sc["lines"][li] and getattr(F, "NAME_NOTE", ""):
+    """The direction for a line: who is speaking, the scene, and the line's own
+    note; for scenes read jointly, each part's note on its own words."""
+    group = joint(sc)
+    if len(group) > 1:
+        note = "One sentence, read in one flowing run with natural pauses at the commas. " + " ".join(
+            f"On '{spoken(s['lines'][0], True).strip(' ,.')}': {s.get('tone', '')}" for s in group)
+    else:
+        note = sc.get("tone", "")
+    if any("n.abl" in s["lines"][li] for s in group) and getattr(F, "NAME_NOTE", ""):
         note = f"{note} {F.NAME_NOTE}"
     return (f"{F.PROFILE}\n\nThe scene: {F.SCENE}\n\nThis line: {note} {extra}").strip()
 
@@ -323,32 +347,41 @@ def read_path(model, text, style, voice):
     return os.path.join(VOICE_DIR, key + ".wav")
 
 
-def kept_read(text, style, voice):
-    """The kept read of a line, from the film's model or, if it was ever used, a fallback."""
+def kept_by(text, style, voice):
+    """The model whose kept read of a line is used: the film's own, else a
+    fallback's or a stand-in's."""
     for model in [GEMINI_MODEL] + GEMINI_FALLBACK_MODELS:
-        path = read_path(model, text, style, voice)
-        if os.path.exists(path):
-            return path
+        if os.path.exists(read_path(model, text, style, voice)):
+            return model
     return None
 
 
+def kept_read(text, style, voice):
+    """The kept read of a line, from the film's model or, if it was ever used, a fallback."""
+    model = kept_by(text, style, voice)
+    return read_path(model, text, style, voice) if model else None
+
+
 _model = [None]
-def gemini_tts(sc, li, voice=None, extra=""):
-    """One whole line from Gemini TTS, read to its direction; kept once fetched."""
-    voice = voice or GEMINI_VOICE
-    text, style = gemini_line(sc, li), gemini_style(sc, li, extra)
-    path = kept_read(text, style, voice)
-    if path:
-        return sf.read(path, dtype="float32")[0]
+_used = set()                                               # the models whose reads the film uses
+def gemini_read(text, style, voice, fresh=False, models=None):
+    """One read from Gemini TTS; kept once fetched. fresh: fetch the film's own
+    model's read even when another model's is kept. models: the models to try."""
+    have = kept_by(text, style, voice)
+    if have and (have == GEMINI_MODEL or not fresh):
+        _used.add(have)
+        return sf.read(read_path(have, text, style, voice), dtype="float32")[0]
     if not GEMINI_KEY and not gemini_reachable():
         raise SystemExit(f"no Gemini read kept for {text!r} and no GEMINI_API_KEY to fetch one")
-    models = [_model[0]] if _model[0] else [GEMINI_MODEL] + [m for m in GEMINI_FALLBACK_MODELS if m != GEMINI_MODEL]
+    models = models or ([_model[0]] if _model[0] else
+                        [GEMINI_MODEL] + [m for m in GEMINI_FALLBACK_MODELS if m != GEMINI_MODEL])
     last = None
     for model in models:
         for attempt in range(4):
             try:
                 pcm = gemini_request(model, text, style, voice)
                 _model[0] = model
+                _used.add(model)
                 os.makedirs(VOICE_DIR, exist_ok=True)
                 sf.write(read_path(model, text, style, voice), pcm, SR)
                 return pcm
@@ -376,6 +409,46 @@ def gemini_tts(sc, li, voice=None, extra=""):
     raise SystemExit(f"Gemini TTS failed: {last}")
 
 
+def quietest(a, lo, hi, win=0.02):
+    """The middle of the quietest stretch of `win` seconds between lo and hi."""
+    fr, hop = int(win * SR), int(0.005 * SR)
+    s0 = max(0, int(lo * SR))
+    s1 = max(s0 + fr + hop, int(hi * SR))
+    best = min(range(s0, min(s1, len(a)) - fr, hop), key=lambda s: float(np.sum(a[s:s + fr] ** 2)))
+    return (best + fr / 2) / SR
+
+
+def split_read(a, group):
+    """A joint read cut into one clip per scene, in the quietest moment between
+    the last word of one scene's words and the first of the next's."""
+    counts = [len(s["lines"][0].split()) for s in group]
+    got = measured_starts(a)
+    if got and len(got) == sum(counts):
+        cuts, i = [], 0
+        for c in counts[:-1]:
+            i += c
+            lo, hi = got[i - 1] + 0.12, got[i] - 0.01
+            cuts.append(quietest(a, *((lo, hi) if hi - lo > 0.03 else (got[i - 1], got[i]))))
+    else:
+        # the recogniser did not hear the words one for one: cut at the longest pauses
+        runs = sorted(quiet_runs(a), key=lambda r: r[0] - r[1])[:len(group) - 1]
+        if len(runs) < len(group) - 1:
+            raise SystemExit(f"cannot cut the joint read of {[s['id'] for s in group]} into its scenes")
+        print(f"  aligner heard {len(got or [])} words in the joint read, script has {sum(counts)}: cutting at its pauses")
+        cuts = sorted((s + e) / 2 for s, e in runs)
+    edges = [0] + [int(c * SR) for c in cuts] + [len(a)]
+    return [a[edges[k]:edges[k + 1]] for k in range(len(group))]
+
+
+def gemini_tts(sc, li, voice=None, extra="", **kw):
+    """One whole line from Gemini TTS, read to its direction; kept once fetched.
+    Scenes read jointly are fetched as one read, then cut into their scenes."""
+    voice = voice or GEMINI_VOICE
+    pcm = gemini_read(gemini_line(sc, li), gemini_style(sc, li, extra), voice, **kw)
+    group = joint(sc)
+    return split_read(pcm, group)[group.index(sc)] if len(group) > 1 else pcm
+
+
 def all_kept():
     """True when Gemini's read of every line is already kept with the film."""
     return all(kept_read(gemini_line(sc, li), gemini_style(sc, li), GEMINI_VOICE)
@@ -399,27 +472,44 @@ def synth(kok, sc, li, s, rate):
     return kok.create(spoken(s), voice=VOICE, speed=rate, lang=LANG)
 
 
-def fetch():
+def fetch(stand_in=None):
     """Fetch and keep Gemini's read of every line, without building the timeline.
     For a machine that has the key but not the models: the reads land in
-    films/<id>/voice, and vo.py builds the timeline from them anywhere."""
-    todo = [(sc, li) for sc in SCENES for li in range(len(sc["lines"]))]
-    is_kept = lambda sc, li: kept_read(gemini_line(sc, li), gemini_style(sc, li), GEMINI_VOICE)
-    kept = sum(bool(is_kept(sc, li)) for sc, li in todo)
-    print(f"{FILM_ID}: {kept} of {len(todo)} lines already kept for {GEMINI_MODEL}, {GEMINI_VOICE}")
-    for sc, li in todo:
-        if is_kept(sc, li):
+    films/<id>/voice, and vo.py builds the timeline from them anywhere. One
+    request per line, or per group of scenes read jointly. A line with only a
+    stand-in's read is fetched again from the film's model.
+
+    stand_in: a model from GEMINI_FALLBACK_MODELS that reads, for now, only the
+    lines no model has read yet, for a whole film while the film's own model is
+    out of quota. Its reads give way to the film's model's once those are kept."""
+    todo, seen = [], set()
+    for sc in SCENES:
+        for li in range(len(sc["lines"])):
+            key = (gemini_line(sc, li), gemini_style(sc, li))
+            if key not in seen:
+                seen.add(key)
+                todo.append((sc, li, *key))
+    by = lambda t: kept_by(t[2], t[3], GEMINI_VOICE)
+    model = stand_in or GEMINI_MODEL
+    assert not stand_in or stand_in in GEMINI_FALLBACK_MODELS, "a stand-in must be one of GEMINI_FALLBACK_MODELS"
+    print(f"{FILM_ID}: {sum(by(t) == GEMINI_MODEL for t in todo)} of {len(todo)} reads kept from "
+          f"{GEMINI_MODEL}, {GEMINI_VOICE}" + (f"; standing in with {stand_in}" if stand_in else ""))
+    for t in todo:
+        have = by(t)
+        if have == GEMINI_MODEL or (stand_in and have):
             continue
         try:
-            a = gemini_tts(sc, li)
-            kept += 1
-            print(f"  ok   {len(a) / SR:5.2f}s  {gemini_line(sc, li)}")
+            a = gemini_read(t[2], t[3], GEMINI_VOICE, fresh=True, models=[stand_in] if stand_in else None)
+            print(f"  ok   {len(a) / SR:5.2f}s  {t[2]}")
         except QuotaExhausted as e:
             print(f"  stop: {e}")
             break
-    print(f"{FILM_ID}: {kept} of {len(todo)} lines read by Gemini ({_model[0] or GEMINI_MODEL}, {GEMINI_VOICE})"
-          + ("" if kept == len(todo) else "; run again once the daily quota resets (midnight Pacific) to fetch the rest"))
-    return kept == len(todo)
+    own = sum(by(t) == GEMINI_MODEL for t in todo)
+    other = sum(bool(by(t)) and by(t) != GEMINI_MODEL for t in todo)
+    print(f"{FILM_ID}: {own} of {len(todo)} reads by {GEMINI_MODEL}, {GEMINI_VOICE}"
+          + (f", {other} by a stand-in" if other else "")
+          + ("" if own == len(todo) else "; run again once the daily quota resets (midnight Pacific) to fetch the rest"))
+    return own == len(todo) if not stand_in else own + other == len(todo)
 
 
 def audition(voices):
@@ -500,7 +590,8 @@ def main():
         print(f"{sc['id']:7s} {start:6.2f} → {end:6.2f}  ({end - start:5.2f}s)  vo ends {cursor:6.2f}")
 
     timeline = dict(film=FILM_ID, title=F.TITLE, cover=F.COVER, bpm=BPM, beat=BEAT, fps=60, duration=round(scenes[-1]["end"], 4),
-                    voice=(f"gemini:{_model[0] or GEMINI_MODEL}:{GEMINI_VOICE}" if PROVIDER == "gemini" else VOICE),
+                    voice=(f"gemini:{'+'.join(sorted(_used, key=lambda m: m != GEMINI_MODEL)) or GEMINI_MODEL}:{GEMINI_VOICE}"
+                           if PROVIDER == "gemini" else VOICE),
                     scenes=scenes, lines=lines_out, clips=clips)
     with open(os.path.join(OUT, "timeline.json"), "w") as f:
         json.dump(timeline, f, indent=1, ensure_ascii=False)
@@ -512,5 +603,7 @@ if __name__ == "__main__":
         audition(sys.argv[sys.argv.index("--audition") + 1].split(","))
     elif "--fetch-only" in sys.argv:
         sys.exit(0 if fetch() else 2)
+    elif "--stand-in" in sys.argv:
+        sys.exit(0 if fetch(stand_in=sys.argv[sys.argv.index("--stand-in") + 1]) else 2)
     else:
         main()

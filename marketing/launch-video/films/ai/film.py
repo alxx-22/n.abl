@@ -56,6 +56,9 @@ NAME_NOTE = ("The name 'Enable' is the company's name and the hero of the line: 
 # read: the lines as Gemini reads them, with inline expression tags such as
 #       <short pause>, which shape the read and are not spoken (Gemini only).
 # land: a word of the line to put on the nearest beat, for the drop to land on.
+# joint: scenes that share one are a single sentence across several shots;
+#       Gemini reads it in one go, as one sentence, and vo.py cuts it into
+#       its shots (Gemini only).
 SCENES = [
     dict(id="boot",  lead=0.30, tail=0.10, q=1, tone="Big news, a little awed, like telling a friend something huge. Build through the line and lean into 'new operating system'.",
          lines=["The world just got a new operating system."]),
@@ -63,11 +66,11 @@ SCENES = [
          lines=["It's called AI!"]),
     dict(id="into",  lead=0.10, tail=0.12, q=0.5, tone="Proud and confident. Lift on the name, 'Enable': bright and rising through the word, with a smile. Then 'into your business' warm and direct, to the listener.",
          lines=["And n.abl builds it into your business."]),
-    dict(id="book",  lead=0.18, tail=0.05, q=0.5, tone="Upbeat and practical, the start of a list: quick, with the list still going at the end.",
+    dict(id="book",  lead=0.18, tail=0.05, q=0.5, joint="agents", tone="Upbeat and practical, the start of a list: quick, with the list still going at the end.",
          lines=["Customer agents that book appointments,"]),
-    dict(id="faq",   lead=0.10, tail=0.05, q=0.5, tone="Keep the list moving, light and easy. 'Day or night' with a little smile.",
+    dict(id="faq",   lead=0.10, tail=0.05, q=0.5, joint="agents", tone="Keep the list moving, light and easy. 'Day or night' with a little smile.",
          lines=["answer questions, day or night,"]),
-    dict(id="care",  lead=0.10, tail=0.15, q=0.5, tone="Reassuring and a touch knowing. 'Before they escalate' calm and in control.",
+    dict(id="care",  lead=0.10, tail=0.15, q=0.5, joint="agents", tone="Reassuring and a touch knowing. 'Before they escalate' calm and in control.",
          lines=["and handle complaints before they escalate."]),
     dict(id="wall",  lead=0.20, tail=0.15, q=0.5, tone="Fast and fun, rattling off four jobs with growing delight, each a little brighter, landing 'chases every lead' with a grin.",
          lines=["Plus AI that reads your paperwork, sorts your inbox, drafts your replies, and chases every lead."]),
