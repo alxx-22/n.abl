@@ -1,6 +1,6 @@
 # Put AI to work
 
-A 33-second launch film for the n.abl AI service, cut for every social format
+A 37-second launch film for the n.abl AI service, cut for every social format
 from one timeline: 16:9, 1:1, 4:5 and 9:16.
 
 Everything in it (the voice, the music, the sound effects and every frame) is
@@ -16,7 +16,7 @@ that idea as a system update for the whole world, lands on one word, **AI**,
 and then moves fast: three customer-facing agents in quick succession, then a
 wall of everything else AI can take on, then what the business gets out of it.
 
-- **Pace.** Ten shots in 33 seconds, every cut on the beat of a 124 BPM track.
+- **Pace.** Ten shots in 37 seconds, every cut on the beat of a 124 BPM track.
   No shot holds longer than the line that goes with it.
 - **Breadth over depth.** The agents get a few seconds each: booking,
   answering questions around the clock, handling complaints and queries. The
@@ -51,7 +51,12 @@ Voice: Gemini TTS (`Achird`), directed line by line by the notes below, when a
 `GEMINI_API_KEY` is set. Otherwise Kokoro `bm_fable` (British English,
 Apache-2.0 model) at 1.2× speed, chosen because it has about twice the pitch
 movement of the other British voices, which is what makes a read sound
-lively rather than level.
+lively rather than level. Gemini reads at a natural pace, so the film runs 37
+seconds against Kokoro's 33. Lines 4 to 6 are one sentence across three shots:
+Gemini reads them in one go (`joint` in `film.py`), so the list flows as one
+sentence, and `vo.py` cuts the read into the three shots. For now every line
+is read by `gemini-3.8-flash-lite-tts` standing in, in the same voice, until
+the free quota lets `gemini-3.8-flash-tts` read them.
 
 | # | Shot | Line |
 |---|---|---|

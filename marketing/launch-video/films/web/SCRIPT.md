@@ -1,6 +1,6 @@
 # Websites that work
 
-A 32-second launch film for n.abl's web builds (smart web apps, landing
+A 36-second launch film for n.abl's web builds (smart web apps, landing
 pages and booking systems), cut for every social format from one timeline:
 16:9, 1:1, 4:5 and 9:16.
 
@@ -57,7 +57,10 @@ the AI film's 124, on warm French-touch electronica rather than an EDM build.
 
 Voice: Gemini TTS (`Achird`), directed line by line by the notes below, when a
 `GEMINI_API_KEY` is set; otherwise Kokoro `bm_fable` (British English,
-Apache-2.0 model) at 1.2× speed, the same read as the AI film.
+Apache-2.0 model) at 1.2× speed, the same read as the AI film. Gemini reads at
+a natural pace, so the film runs 36 seconds against Kokoro's 32. For now line 7
+is read by `gemini-3.8-flash-lite-tts` standing in, in the same voice, until
+the free quota lets `gemini-3.8-flash-tts` read it.
 
 | # | Shot | Line |
 |---|---|---|

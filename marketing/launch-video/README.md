@@ -7,8 +7,8 @@ and its brief and shot list (`SCRIPT.md`). The finished films are in `out/`.
 
 | Film | Length | What it is for | Brief |
 |---|---|---|---|
-| `web` · Websites that work | 32 s | Smart web apps, landing pages and booking systems | [`films/web/SCRIPT.md`](films/web/SCRIPT.md) |
-| `ai` · Put AI to work | 33 s | The AI service: customer agents and everything else AI takes on | [`films/ai/SCRIPT.md`](films/ai/SCRIPT.md) |
+| `web` · Websites that work | 36 s | Smart web apps, landing pages and booking systems | [`films/web/SCRIPT.md`](films/web/SCRIPT.md) |
+| `ai` · Put AI to work | 37 s | The AI service: customer agents and everything else AI takes on | [`films/ai/SCRIPT.md`](films/ai/SCRIPT.md) |
 | `ai-long` · AI, where it earns its place | 58 s | The first, longer cut of the AI film: three jobs in depth | [`films/ai-long/SCRIPT.md`](films/ai-long/SCRIPT.md) |
 
 Every film comes in four formats:
@@ -138,9 +138,14 @@ Copy `films/web` to `films/<name>` and change:
   `generativelanguage.googleapis.com` with the header `x-goog-api-key` (no
   prefix), which keeps the key out of the session. `vo.py` then reads every
   line with Gemini TTS to the notes in `film.py`. The free tier limits
-  requests per day, per model (about ten a day for `gemini-3.8-flash-tts`);
+  requests per day, per model (ten a day for `gemini-3.8-flash-tts`);
   reads are kept, so if it stops at the daily quota, run it again after
-  midnight Pacific and it carries on. `GEMINI_TTS_MODEL` picks the model and
+  midnight Pacific and it carries on. Meanwhile `vo.py --stand-in
+  gemini-3.8-flash-lite-tts` reads the missing lines with the lighter model,
+  on its own quota, in the same voice, so the whole film can be heard;
+  `--fetch-only` later replaces those reads with the film's model's.
+  Scenes that share a `joint` name are one sentence across several shots,
+  read in one request and cut into the shots. `GEMINI_TTS_MODEL` picks the model and
   `GEMINI_VOICE` the voice: `Achird` is warm and friendly; Gemini 3.8 also
   takes the 1,000 voices of its extended library by id (`GET
   /v1beta/voices`), such as `en-gb-assistant-10` or `en-gb-commercial-7`,

@@ -21,11 +21,17 @@ These take text and return speech through `generateContent`.
 (launched 2026-09-23, according to search results; the model list only gives
 names), described by Google as its most expressive TTS, and it takes the
 direction apart from the words (verified below). `gemini-3.8-flash-lite-tts`
-is its lighter sibling (not tried); `gemini-3.1-flash-tts-preview` and the
-two 2.5 previews are the older generation, kept in `vo.py` only as fallbacks for a model name the
-API stops knowing (a 404). The free tier's quota is per model and per day:
-`gemini-3.8-flash-tts` stopped at a daily limit (HTTP 429, a `PerDay` quota)
-after 11 requests on 2026-09-28; it resets at midnight Pacific.
+is its lighter sibling, the same voices at a lower cost, which `vo.py` uses as
+a stand-in (`--stand-in`) for lines the film's model has not read yet;
+`gemini-3.1-flash-tts-preview` and the two 2.5 previews are the older
+generation, kept in `vo.py` only as fallbacks for a model name the API stops
+knowing (a 404). The free tier's quota is per model and per day, 10 requests
+for each model (the 429 names it: `GenerateRequestsPerDayPerProjectPerModel-FreeTier`,
+`quotaValue` 10), and it resets at midnight Pacific. So a film of eight to ten
+lines takes most of a day's quota for one model; `vo.py` reads a sentence that
+runs across several shots in one request (`joint` in `film.py`) to save
+requests. Each model has its own quota, so the lite model can stand in on the
+same day.
 
 ## Other models with audio output
 
