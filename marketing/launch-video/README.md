@@ -124,9 +124,12 @@ Copy `films/web` to `films/<name>` and change:
   animation finds its cues by word (`wt(line, 'deposit')`), so a changed word
   that the film keys off needs the same change in `scenes.js`.
 - **Voice.** For an expressive read, get a free API key from Google AI
-  Studio (aistudio.google.com, "Get API key") and set it as the environment
-  variable `GEMINI_API_KEY`; `vo.py` then reads every line with Gemini TTS
-  to the notes in `film.py`. The free tier limits requests per day; clips
+  Studio (aistudio.google.com, "Get API key") and either set it as the
+  environment variable `GEMINI_API_KEY`, or, in a Claude Code cloud
+  environment on a Pro or Max plan, store it as an API credential for
+  `generativelanguage.googleapis.com` with the header `x-goog-api-key` (no
+  prefix), which keeps the key out of the session. `vo.py` then reads every
+  line with Gemini TTS to the notes in `film.py`. The free tier limits requests per day; clips
   are cached, so if it stops on a rate limit, run it again later and it
   carries on. `GEMINI_VOICE` picks the voice (`Puck` is upbeat; also try
   `Sadachbia`, `Achird`, `Fenrir`), `GEMINI_TTS_MODEL` the model, and

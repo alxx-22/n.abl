@@ -33,8 +33,10 @@ takes written direction, so every line is read to the film's director's
 notes: PROFILE and SCENE in film.py, and each scene's `tone`. Set in film.py
 by VOICE_PROVIDER, or overridden by the environment:
 
-  VOICE_PROVIDER   auto (Gemini when a key is set, else Kokoro), gemini, kokoro
-  GEMINI_API_KEY   a Google AI Studio key (free tier), for Gemini TTS
+  VOICE_PROVIDER   auto (Gemini when it answers, else Kokoro), gemini, kokoro
+  GEMINI_API_KEY   a Google AI Studio key (free tier), for Gemini TTS; or leave
+                   it unset and store the key as an API credential on the
+                   cloud environment, which attaches it to Gemini's requests
   GEMINI_TTS_MODEL the model, default gemini-2.5-flash-preview-tts
 
 Gemini clips are cached in build/<id>/tts_cache by their exact prompt, so a
@@ -63,9 +65,22 @@ SAY, SCENES = F.SAY, F.SCENES
 OUT = os.path.join(BUILD, FILM_ID)
 
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+GEMINI_API = "https://generativelanguage.googleapis.com/v1beta"
+
+
+def gemini_reachable():
+    """True when Gemini answers without a key in this process: the key is an API
+    credential on the cloud environment, which its proxy adds to the request."""
+    try:
+        with urllib.request.urlopen(f"{GEMINI_API}/models?pageSize=1", timeout=10) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
 PROVIDER = os.environ.get("VOICE_PROVIDER") or getattr(F, "VOICE_PROVIDER", "kokoro")
 if PROVIDER == "auto":
-    PROVIDER = "gemini" if GEMINI_KEY else "kokoro"
+    PROVIDER = "gemini" if GEMINI_KEY or gemini_reachable() else "kokoro"
 GEMINI_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 GEMINI_FALLBACK_MODELS = ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts", "gemini-2.5-flash-tts", "gemini-2.5-pro-tts"]
 GEMINI_VOICE = getattr(F, "GEMINI_VOICE", "Puck")
@@ -230,8 +245,10 @@ def gemini_request(model, prompt):
         "generationConfig": {"responseModalities": ["AUDIO"],
                              "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": GEMINI_VOICE}}}},
     }).encode()
-    req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                                 data=body, headers={"Content-Type": "application/json", "x-goog-api-key": GEMINI_KEY})
+    headers = {"Content-Type": "application/json"}
+    if GEMINI_KEY:                                          # otherwise the environment's proxy adds it
+        headers["x-goog-api-key"] = GEMINI_KEY
+    req = urllib.request.Request(f"{GEMINI_API}/models/{model}:generateContent", data=body, headers=headers)
     with urllib.request.urlopen(req, timeout=120) as r:
         data = json.load(r)
     part = data["candidates"][0]["content"]["parts"][0]["inlineData"]
