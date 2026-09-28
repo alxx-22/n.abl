@@ -39,14 +39,17 @@ by VOICE_PROVIDER, or overridden by the environment:
                    cloud environment, which attaches it to Gemini's requests
   GEMINI_TTS_MODEL the model, default gemini-2.5-flash-preview-tts
 
-Gemini clips are cached in build/<id>/tts_cache by their exact prompt, so a
-rebuild costs no requests unless a line or its direction changes.
+Gemini's reads are kept in films/<id>/voice, named by a hash of the exact
+prompt and voice, so a rebuild costs no requests (and needs no key) unless a
+line or its direction changes.
+
+  python3 vo.py --film web --fetch-only           fetch and keep Gemini's reads only
+  python3 vo.py --film web --audition Puck,Achird two lines in each voice, to choose
 """
 
 import base64, hashlib, importlib.util, json, os, re, sys, time, urllib.error, urllib.request
 import numpy as np
 import soundfile as sf
-from kokoro_onnx import Kokoro
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUILD = os.path.join(HERE, "build")
@@ -239,11 +242,11 @@ def gemini_prompt(text, tone):
             f"#### TRANSCRIPT\n{text}")
 
 
-def gemini_request(model, prompt):
+def gemini_request(model, prompt, voice):
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"responseModalities": ["AUDIO"],
-                             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": GEMINI_VOICE}}}},
+                             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}},
     }).encode()
     headers = {"Content-Type": "application/json"}
     if GEMINI_KEY:                                          # otherwise the environment's proxy adds it
@@ -260,20 +263,26 @@ def gemini_request(model, prompt):
     return pcm
 
 
+# Gemini's reads are kept with the film, so the film rebuilds without a key.
+VOICE_DIR = os.path.join(HERE, "films", FILM_ID, "voice")
+
 _model = [None]
-def gemini_tts(text, tone):
+def gemini_tts(text, tone, voice=None):
     """One sentence from Gemini TTS, read to its direction; cached by prompt."""
+    voice = voice or GEMINI_VOICE
     prompt = gemini_prompt(text, tone)
-    key = hashlib.sha1(f"{GEMINI_VOICE}|{prompt}".encode()).hexdigest()[:16]
-    path = os.path.join(OUT, "tts_cache", key + ".wav")
+    key = hashlib.sha1(f"{voice}|{prompt}".encode()).hexdigest()[:16]
+    path = os.path.join(VOICE_DIR, key + ".wav")
     if os.path.exists(path):
         return sf.read(path, dtype="float32")[0]
+    if not GEMINI_KEY and not gemini_reachable():
+        raise SystemExit(f"no Gemini read cached for {text!r} and no GEMINI_API_KEY to fetch one")
     models = [_model[0]] if _model[0] else [GEMINI_MODEL] + [m for m in GEMINI_FALLBACK_MODELS if m != GEMINI_MODEL]
     last = None
     for model in models:
         for attempt in range(6):
             try:
-                pcm = gemini_request(model, prompt)
+                pcm = gemini_request(model, prompt, voice)
                 _model[0] = model
                 os.makedirs(os.path.dirname(path), exist_ok=True)
                 sf.write(path, pcm, SR)
@@ -303,9 +312,42 @@ def synth(kok, s, tone, rate):
     return kok.create(spoken(s), voice=VOICE, speed=rate, lang=LANG)
 
 
+def fetch():
+    """Fetch and cache Gemini's read of every sentence, without building the timeline.
+    For a machine that has the key but not the models: the reads land in
+    films/<id>/voice, and vo.py builds the timeline from them anywhere."""
+    todo = [(s, sc.get("tone", "")) for sc in SCENES for line in sc["lines"] for s in sentences(line)]
+    done = 0
+    for s, tone in todo:
+        try:
+            a = gemini_tts(spoken(s), tone)
+            done += 1
+            print(f"  ok   {len(a) / SR:5.2f}s  {s}")
+        except SystemExit as e:
+            print(f"  stop {s}: {e}")
+            break
+    print(f"{FILM_ID}: {done} of {len(todo)} sentences read by Gemini ({_model[0] or GEMINI_MODEL}, {GEMINI_VOICE})")
+    return done == len(todo)
+
+
+def audition(voices):
+    """The same two lines in several of Gemini's voices, to choose one by ear."""
+    picks = [SCENES[1], SCENES[-1]]
+    out = os.path.join(VOICE_DIR, "audition")
+    os.makedirs(out, exist_ok=True)
+    for v in voices:
+        clips = []
+        for sc in picks:
+            for s in sentences(sc["lines"][0]):
+                clips += [gemini_tts(spoken(s), sc.get("tone", ""), voice=v), np.zeros(int(0.35 * SR), np.float32)]
+        sf.write(os.path.join(out, f"{v}.wav"), np.concatenate(clips), SR)
+        print(f"  audition {v}: ok")
+
+
 def main():
     os.makedirs(os.path.join(OUT, "vo"), exist_ok=True)
     print(f"voice: {PROVIDER}" + (f" ({GEMINI_MODEL}, {GEMINI_VOICE})" if PROVIDER == "gemini" else f" ({VOICE})"))
+    from kokoro_onnx import Kokoro
     kok = Kokoro(os.path.join(MODELS, "kokoro-v1.0.onnx"), os.path.join(MODELS, "voices-v1.0.bin"))
 
     t = 0.0
@@ -359,4 +401,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--audition" in sys.argv:
+        audition(sys.argv[sys.argv.index("--audition") + 1].split(","))
+    elif "--fetch-only" in sys.argv:
+        sys.exit(0 if fetch() else 1)
+    else:
+        main()

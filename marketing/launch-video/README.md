@@ -41,8 +41,10 @@ film's music, which is played from the free
    `GEMINI_API_KEY` in the environment it uses Google's Gemini TTS, which is
    directed like a voice actor: every line goes with the film's voice
    profile, the scene and its own note on tone, pace and emphasis (`PROFILE`,
-   `SCENE` and each scene's `tone` in `film.py`), and each clip is cached in
-   `build/<film>/tts_cache` so a rebuild costs no requests. Without a key it
+   `SCENE` and each scene's `tone` in `film.py`), and Gemini's reads are kept
+   in `films/<film>/voice`, so the film rebuilds without a key or any
+   requests (`vo.py --fetch-only` fetches them; `--audition` compares
+   voices). Without a key it
    falls back to [Kokoro](https://github.com/hexgrad/kokoro) (Apache-2.0,
    local), voice `bm_fable`, British English, at 1.2× speed, which reads the
    words well but cannot be directed. Each sentence is trimmed and laid out shot
