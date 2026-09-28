@@ -19,12 +19,15 @@ BEAT = 60 / BPM
 
 # The name is spoken, not spelled. Everything else is read as written.
 SAY = {"n.abl": "enable"}
+# For Gemini the name is written with life in it, so it lifts instead of
+# landing flat like the end of a sentence.
+GEMINI_SAY = {"n.abl.": "Enable!", "n.abl": "Enable"}
 
 # ---- the read ------------------------------------------------------------
 # Gemini TTS reads every line to these notes when a GEMINI_API_KEY is set
 # (vo.py); Kokoro, the fallback, cannot be directed and reads them plainly.
 VOICE_PROVIDER = "auto"
-GEMINI_VOICE = "Puck"          # Google's "upbeat" male voice; also try Sadachbia, Achird, Fenrir
+GEMINI_VOICE = "Achird"        # Google's "friendly" male voice, chosen by ear from Puck, Sadachbia, Achird, Fenrir
 PROFILE = ("A British man in his thirties from the south of England: the founder of a small studio that "
            "builds websites. Warm, quick and genuinely excited about what he makes, like a friend showing "
            "you something great, not an announcer. A smile in the voice. Natural and conversational, never "
@@ -45,7 +48,7 @@ SCENES = [
          lines=["Most websites just sit there."]),
     dict(id="work",    lead=0.21, tail=0.45, q=1, land="work", tone="The turn. The energy lifts, a grin in the voice. Hit 'work' hard, then 'for a living' with a confident smile.",
          lines=["Yours should work for a living!"]),
-    dict(id="builds",  lead=0.12, tail=0.20, q=0.5, tone="Proud and upbeat, introducing what he makes. The name, 'enable', clear, with a tiny beat after it. Then the three things with rising momentum, each a little brighter than the last.",
+    dict(id="builds",  lead=0.12, tail=0.20, q=0.5, tone="Proud and upbeat, introducing what he makes. Lift on the name, 'Enable': bright and rising through the word, with a smile, like the name of something you love. Then the three things with rising momentum, each a little brighter than the last.",
          lines=["n.abl builds smart web apps, landing pages, and booking systems."]),
     dict(id="landing", lead=0.20, tail=0.20, q=0.5, tone="Quick, knowing and confident. Lean into 'fast'. Let 'enquiries' land with satisfaction.",
          lines=["Landing pages that load fast and turn visitors into enquiries."]),
@@ -55,7 +58,7 @@ SCENES = [
          lines=["And web apps built around how you work: portals, quotes, dashboards."]),
     dict(id="screens", lead=0.12, tail=0.30, q=0.5, tone="Three crisp, punchy hits: 'fast', 'sharp', 'on every screen'. Then soften, sincere and reassuring, on 'and yours to keep'.",
          lines=["Fast, sharp on every screen, and yours to keep."]),
-    dict(id="end",     lead=1.20, tail=2.60, q=1, snap=[0], tone="The name, 'enable', warm and proud, with a beat after it. Then 'Let's build yours!' with a big, genuine smile: an invitation, lifting at the end.",
+    dict(id="end",     lead=1.20, tail=2.60, q=1, snap=[0], tone="Announce the name, 'Enable!', like a reveal: bright, lifted and rising through the word, with a smile, never dropping at the end. A short beat. Then 'Let's build yours!' with a big, genuine smile: an invitation, lifting at the end.",
          lines=["n.abl. Let's build yours!"]),
 ]
 

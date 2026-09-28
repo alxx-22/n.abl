@@ -116,8 +116,9 @@ def sentences(line):
     return [p for p in out if p]
 
 
-def spoken(text):
-    for k, v in SAY.items():
+def spoken(text, gemini=False):
+    say = getattr(F, "GEMINI_SAY", SAY) if gemini else SAY
+    for k, v in say.items():
         text = text.replace(k, v)
     return text
 
@@ -321,7 +322,7 @@ def read_path(text, tone, voice):
 
 def all_kept():
     """True when Gemini's read of every line is already kept with the film."""
-    return all(os.path.exists(read_path(spoken(line), sc.get("tone", ""), GEMINI_VOICE))
+    return all(os.path.exists(read_path(spoken(line, True), sc.get("tone", ""), GEMINI_VOICE))
                for sc in SCENES for line in sc["lines"])
 
 
@@ -332,12 +333,12 @@ if PROVIDER == "auto":
 
 def synth(kok, s, tone, rate):
     if PROVIDER == "gemini":
-        a = gemini_tts(spoken(s), tone)
+        a = gemini_tts(spoken(s, True), tone)
         # a read that says more than the line (the notes read aloud) is retried once, more plainly
         got = measured_starts(trim(a))
         if got is not None and len(got) > len(s.split()):
             print(f"  gemini read {len(got)} words for the {len(s.split())} in {s!r}; retrying with a plain prompt")
-            a = gemini_tts(spoken(s), f"{tone} (Say only these words.)")
+            a = gemini_tts(spoken(s, True), f"{tone} (Say only these words.)")
         return a, SR
     return kok.create(spoken(s), voice=VOICE, speed=rate, lang=LANG)
 
@@ -347,13 +348,13 @@ def fetch():
     For a machine that has the key but not the models: the reads land in
     films/<id>/voice, and vo.py builds the timeline from them anywhere."""
     todo = [(line, sc.get("tone", "")) for sc in SCENES for line in sc["lines"]]
-    kept = sum(os.path.exists(read_path(spoken(l), t, GEMINI_VOICE)) for l, t in todo)
+    kept = sum(os.path.exists(read_path(spoken(l, True), t, GEMINI_VOICE)) for l, t in todo)
     print(f"{FILM_ID}: {kept} of {len(todo)} lines already kept for {GEMINI_VOICE}")
     for line, tone in todo:
-        if os.path.exists(read_path(spoken(line), tone, GEMINI_VOICE)):
+        if os.path.exists(read_path(spoken(line, True), tone, GEMINI_VOICE)):
             continue
         try:
-            a = gemini_tts(spoken(line), tone)
+            a = gemini_tts(spoken(line, True), tone)
             kept += 1
             print(f"  ok   {len(a) / SR:5.2f}s  {line}")
         except QuotaExhausted as e:
@@ -373,7 +374,7 @@ def audition(voices):
         clips = []
         for sc in picks:
             line = sc["lines"][0]
-            clips += [gemini_tts(spoken(line), sc.get("tone", ""), voice=v), np.zeros(int(0.35 * SR), np.float32)]
+            clips += [gemini_tts(spoken(line, True), sc.get("tone", ""), voice=v), np.zeros(int(0.35 * SR), np.float32)]
         sf.write(os.path.join(out, f"{v}.wav"), np.concatenate(clips), SR)
         print(f"  audition {v}: ok")
 

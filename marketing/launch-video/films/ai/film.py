@@ -23,12 +23,15 @@ BEAT = 60 / BPM
 
 # The name is spoken, not spelled. Everything else is read as written.
 SAY = {"n.abl": "enable"}
+# For Gemini the name is written with life in it, so it lifts instead of
+# landing flat like the end of a sentence.
+GEMINI_SAY = {"n.abl.": "Enable!", "n.abl": "Enable"}
 
 # ---- the read ------------------------------------------------------------
 # Gemini TTS reads every line to these notes when a GEMINI_API_KEY is set
 # (vo.py); Kokoro, the fallback, cannot be directed and reads them plainly.
 VOICE_PROVIDER = "auto"
-GEMINI_VOICE = "Puck"          # Google's "upbeat" male voice; also try Sadachbia, Achird, Fenrir
+GEMINI_VOICE = "Achird"        # Google's "friendly" male voice, chosen by ear from Puck, Sadachbia, Achird, Fenrir
 PROFILE = ("A British man in his thirties from the south of England: the founder of a small studio that "
            "builds AI into businesses. Warm, quick and genuinely excited about what AI can now do, like a "
            "friend telling you something big, not an announcer. A smile in the voice. Natural and "
@@ -49,7 +52,7 @@ SCENES = [
          lines=["The world just got a new operating system."]),
     dict(id="ai",    lead=0.12, tail=0.30, q=1, land="ai", tone="The reveal. Excited and punchy, with a grin. Hit 'AI' hard.",
          lines=["It's called AI!"]),
-    dict(id="into",  lead=0.10, tail=0.12, q=0.5, tone="Proud and confident. The name, 'enable', clear, then 'into your business' warm and direct, to the listener.",
+    dict(id="into",  lead=0.10, tail=0.12, q=0.5, tone="Proud and confident. Lift on the name, 'Enable': bright and rising through the word, with a smile. Then 'into your business' warm and direct, to the listener.",
          lines=["And n.abl builds it into your business."]),
     dict(id="book",  lead=0.18, tail=0.05, q=0.5, tone="Upbeat and practical, the start of a list: quick, with the list still going at the end.",
          lines=["Customer agents that book appointments,"]),
@@ -63,7 +66,7 @@ SCENES = [
          lines=["Less admin. Faster answers. Happier customers."]),
     dict(id="yours", lead=0.10, tail=0.15, q=0.5, tone="Sincere and warm. 'Built for your business' steady; 'Yours to keep' softer and reassuring.",
          lines=["Built for your business. Yours to keep."]),
-    dict(id="end",   lead=1.20, tail=2.60, q=1, snap=[0], tone="The name, 'enable', warm and proud, with a beat after it. Then 'Put AI to work!' with energy and a big smile, lifting at the end.",
+    dict(id="end",   lead=1.20, tail=2.60, q=1, snap=[0], tone="Announce the name, 'Enable!', like a reveal: bright, lifted and rising through the word, with a smile, never dropping at the end. A short beat. Then 'Put AI to work!' with energy and a big smile, lifting at the end.",
          lines=["n.abl. Put AI to work!"]),
 ]
 

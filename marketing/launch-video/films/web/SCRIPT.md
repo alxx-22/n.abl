@@ -55,7 +55,7 @@ the AI film's 124, on warm French-touch electronica rather than an EDM build.
 
 ## 3. Voiceover
 
-Voice: Gemini TTS (`Puck`), directed line by line by the notes below, when a
+Voice: Gemini TTS (`Achird`), directed line by line by the notes below, when a
 `GEMINI_API_KEY` is set; otherwise Kokoro `bm_fable` (British English,
 Apache-2.0 model) at 1.2× speed, the same read as the AI film.
 
@@ -75,10 +75,12 @@ Apache-2.0 model) at 1.2× speed, the same read as the AI film.
 ### Voice direction
 
 Kokoro cannot be directed, so these notes only take effect with Gemini TTS
-(set a `GEMINI_API_KEY`; see [`README.md`](../../README.md)). `vo.py` sends
-every line with the profile, the scene and the line's own note, the way a
-director briefs a voice actor. They live in `film.py` (`PROFILE`, `SCENE` and
-each scene's `tone`), voiced by Gemini's `Puck`.
+(see [`README.md`](../../README.md)). `vo.py` sends each line whole, with the
+profile, the scene and the line's own note, the way a director briefs a voice
+actor. They live in `film.py` (`PROFILE`, `SCENE` and each scene's `tone`),
+voiced by Gemini's `Achird`, chosen by ear from four. For Gemini the
+name is written "Enable!" or "Enable" (`GEMINI_SAY`), so it lifts instead of
+landing flat like the end of a sentence.
 
 **Who is speaking.** A British man in his thirties from the south of England: the founder of a small studio that builds websites. Warm, quick and genuinely excited about what he makes, like a friend showing you something great, not an announcer. A smile in the voice. Natural and conversational, never shouty, never salesy.
 
@@ -88,12 +90,12 @@ each scene's `tone`), voiced by Gemini's `Puck`.
 |---|---|---|
 | 1 | Most websites just sit there. | Dry and a little amused, almost a shrug. Unhurried. Let 'just sit there' land flat, on purpose. |
 | 2 | Yours should work for a living! | The turn. The energy lifts, a grin in the voice. Hit 'work' hard, then 'for a living' with a confident smile. |
-| 3 | n.abl builds smart web apps, landing pages, and booking systems. | Proud and upbeat, introducing what he makes. The name, 'enable', clear, with a tiny beat after it. Then the three things with rising momentum, each a little brighter than the last. |
+| 3 | n.abl builds smart web apps, landing pages, and booking systems. | Proud and upbeat, introducing what he makes. Lift on the name, 'Enable': bright and rising through the word, with a smile, like the name of something you love. Then the three things with rising momentum, each a little brighter than the last. |
 | 4 | Landing pages that load fast and turn visitors into enquiries. | Quick, knowing and confident. Lean into 'fast'. Let 'enquiries' land with satisfaction. |
 | 5 | Booking systems that fill your diary, take the deposit, and send the reminders. | Rhythmic, ticking off three things with growing delight: fill your diary, take the deposit, send the reminders. |
 | 6 | And web apps built around how you work: portals, quotes, dashboards. | Warm and sincere on 'built around how you work', then quick and crisp on 'portals, quotes, dashboards', like snapping your fingers. |
 | 7 | Fast, sharp on every screen, and yours to keep. | Three crisp, punchy hits: 'fast', 'sharp', 'on every screen'. Then soften, sincere and reassuring, on 'and yours to keep'. |
-| 8 | n.abl. Let's build yours! | The name, 'enable', warm and proud, with a beat after it. Then 'Let's build yours!' with a big, genuine smile: an invitation, lifting at the end. |
+| 8 | n.abl. Let's build yours! | Announce the name, 'Enable!', like a reveal: bright, lifted and rising through the word, with a smile, never dropping at the end. A short beat. Then 'Let's build yours!' with a big, genuine smile: an invitation, lifting at the end. |
 
 ## 4. Animation script
 
