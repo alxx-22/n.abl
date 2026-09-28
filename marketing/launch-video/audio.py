@@ -1488,100 +1488,190 @@ def sfx_glitch(d):
     return bp(out, 350, 9000) * env * 0.6
 
 
+def cowbell(m, d=0.22, v=1.0, cut=None):
+    """The hook's voice: an 808-style cowbell, two square waves a near-fifth
+    apart (the 808's 540 and 800 Hz), band-passed, a sharp first decay into
+    a ringing tail, a little drive. Pitched to the note m."""
+    x = tt(d + 0.25); f = mtof(m)
+    sq = lambda fr: np.sign(np.sin(2 * np.pi * fr * x))
+    y = sq(f) * 0.6 + sq(f * 1.4815) * 0.55
+    y = bp(y, f * 0.9, min(f * 6, 16000), 2)
+    env = 0.65 * np.exp(-x / 0.012) + 0.45 * np.exp(-x / (0.09 + 0.12 * d))
+    y = np.tanh(1.6 * y * env) * v
+    if cut:
+        y = lp(y, cut, 2)
+    return y
+
+
+def supersaw(notes, d, cut=5000, v=1.0, voices=7, spread=0.22, attack=0.01, release=0.25):
+    out = None
+    for m in notes:
+        pn = pad_note(m, d, cut, voices=voices, spread=spread, attack=attack, release=release)
+        out = pn if out is None else out[: len(pn)] + pn[: len(out)]
+    return out / len(notes) * v
+
+
+def glide808(m, d, v=1.0, from_m=None):
+    """A long 808: sine and a driven octave, sliding in from the last note."""
+    x = tt(d); f0 = mtof(m)
+    f = np.full(len(x), f0) if from_m is None else f0 + (mtof(from_m) - f0) * np.exp(-x / 0.045)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    y = np.tanh(2.2 * (np.sin(ph) + 0.25 * np.sin(2 * ph)))
+    return y * env_adsr(len(x), 0.004, 0.2, 0.75, 0.06) * v
+
+
+# the hook, bar by bar: (sixteenth step, MIDI note); steps 0, 4, 8 and 12 are the kick's
+HOOK = {
+    "Dm": [(2, 69), (3, 74), (6, 77), (7, 74), (10, 69), (11, 74), (13, 77), (14, 76), (15, 72)],
+    "Bb": [(2, 70), (3, 74), (6, 77), (7, 74), (10, 70), (11, 74), (13, 77), (14, 79), (15, 81)],
+    "F":  [(2, 69), (3, 72), (6, 77), (7, 72), (10, 69), (11, 72), (13, 76), (14, 77), (15, 79)],
+    "C":  [(2, 67), (3, 72), (6, 76), (7, 72), (10, 67), (11, 72), (13, 79), (14, 77), (15, 76)],
+    "A":  [(2, 69), (3, 73), (6, 76), (7, 73), (10, 69), (11, 73), (13, 76), (14, 79), (15, 81)],
+}
+REEL_CH2 = {"Dm": (38, [62, 65, 69, 72]), "Bb": (34, [58, 62, 65, 69]), "F": (41, [60, 65, 69, 72]),
+            "C": (36, [60, 64, 67, 72]), "A": (33, [61, 64, 69, 73])}
+REEL_PROG = ["Dm", "Bb", "F", "C", "Dm", "Bb", "C", "A"]
+
+
 def build_music_reel():
+    """The reel's track: 132 BPM, D minor. A cowbell hook between the kicks
+    over supersaw chords and a gliding 808, a long pitched boom kick on
+    every beat, and the drums kept low. It builds with the film: the hook
+    alone and muffled before the drop; hook, chords and 808 for the
+    receptionist; stabs join for the co-pilot; everything, the hook doubled
+    an octave up, for the documents; silence for the press; the hook once
+    more under the name."""
     pads, bass, keys, drums = buf(), buf(), buf(), buf()
     mk = lambda k: [c for c in CUES if c["type"] == k]
     drop = mk("m_drop")[0]["t"]
     gap = mk("m_gap")[0]; g0, g1 = gap["t"], gap["t"] + gap["d"]
-    bar = 4 * BEAT
-    prog = getattr(F, "PROG", ["Dm9", "Bbmaj7", "Fmaj7", "C6"])
-    fills = [SC[k]["start"] for k in ("call", "docs", "cta") if k in SC]
+    bar, s16 = 4 * BEAT, BEAT / 4
+    secB = SC["call"]["start"] if "call" in SC else drop + 4 * bar
+    secC = SC["docs"]["start"] if "docs" in SC else secB + 4 * bar
+    fills = [SC[k]["start"] for k in ("book", "call", "docs", "cta") if k in SC]
     rr = np.random.default_rng(11)
     kicks = []
 
-    # the intro: the first chord behind a closed filter, hats creeping in
+    # the intro: the first chord and the hook, both behind a closed filter
     d = drop
-    intro = soft_pad(REEL_CH["Dm9"][1], d, cut=2200, v=0.9)
-    cut = 250 + 2600 * np.clip(np.arange(len(intro)) / (d * SR), 0, 1) ** 2
-    intro = np.stack([sweep_lp(intro[:, 0], cut, q=1.3), sweep_lp(intro[:, 1], cut, q=1.3)], 1)
-    add(pads, intro, 0, 0.55)
-    drone = sub(26, d, 0.5); add(bass, drone * np.linspace(0.2, 1, len(drone)) ** 2, 0, 0.35)
+    intro = supersaw(REEL_CH2["Dm"][1], d + 0.1, cut=900, v=1.0, attack=0.3)
+    cut = 300 + 2400 * np.clip(np.arange(len(intro)) / (d * SR), 0, 1) ** 2
+    intro = np.stack([sweep_lp(intro[:, 0], cut, q=1.4), sweep_lp(intro[:, 1], cut, q=1.4)], 1)
+    add(pads, intro, 0, 0.5)
+    for st, m in HOOK["Dm"]:                       # the bar before the drop, as far as it fits
+        t = drop + (st - 16) * s16
+        if t >= 0.05:
+            p = t / drop
+            add(keys, cowbell(m, 0.18, 0.8, cut=700 + 3000 * p ** 2), t, 0.22 + 0.2 * p)
     k = 0
-    while k * BEAT / 4 < d:
-        t = k * BEAT / 4; p = t / d
-        add(drums, hp(tick_hat(), 6000), t, 0.05 + 0.2 * p ** 2 * (1.3 if k % 2 else 0.8), pan=0.25)
+    while k * s16 < d:
+        t = k * s16; p = t / d
+        add(drums, hp(tick_hat(), 6500), t, 0.03 + 0.12 * p ** 2 * (1.3 if k % 2 else 0.8), pan=0.25)
         k += 1
-    rc = hp(noise(0.9), 3500); rc = rc * np.linspace(0, 1, len(rc)) ** 3
-    add(drums, rc, drop - 0.9, 0.35)
+    rc = hp(noise(1.1), 3000); rc = rc * np.linspace(0, 1, len(rc)) ** 3
+    add(drums, rc, drop - 1.1, 0.3)
 
-    def groove(a, z, fill_at=()):
-        """Drums, bass and harmony from beat a to beat z, on the drop's grid."""
+    def section(t):
+        return 0 if t < secB else 1 if t < secC else 2
+
+    def groove(a, z, fill_at=(), outro=False):
         n = int(round((z - a) / BEAT))
+        prev_root = None
         for j in range(n):
             t = a + j * BEAT
-            bi = int(round((t - drop) / BEAT))            # beat index from the drop
+            bi = int(round((t - drop) / BEAT))
             bb = bi % 4
+            barno = bi // 4
+            ch = REEL_PROG[barno % len(REEL_PROG)]
+            root, notes = REEL_CH2[ch]
+            sec = 2 if outro else section(t)
             kicks.append(t)
-            add(drums, boom_kick(1.0 if bb == 0 else 0.9), t, 0.9)
+            # drums, kept low: the boom kick, claps on two and four, hats
+            add(drums, boom_kick(1.0 if bb == 0 else 0.9), t, 0.62)
             if bb in (1, 3):
-                add(drums, stereo(clap_layer(rr), clap_layer(rr)), t, 0.5)
-                add(drums, reverb(clap(), IR_ROOM, 0.5), t + 0.004, 0.18)
-            add(drums, hat(0.07), t + BEAT / 2, 0.24, pan=0.2)
-            for q in (0.25, 0.75):
-                add(drums, tick_hat(), t + q * BEAT, 0.12 + 0.05 * rr.random(), pan=-0.2)
-            if bb == 3 and bi % 8 == 7:
-                add(drums, rim(0.8), t + 0.75 * BEAT, 0.3, pan=0.35)
-            # a snare run into each new chapter
+                add(drums, stereo(clap_layer(rr), clap_layer(rr)), t, 0.22)
+            add(drums, hat(0.05 if sec < 2 else 0.08), t + BEAT / 2, 0.1 + 0.04 * sec, pan=0.2)
+            if sec >= 1:
+                for q in (0.25, 0.75):
+                    add(drums, tick_hat(), t + q * BEAT, 0.05 + 0.03 * rr.random(), pan=-0.2)
             for f in fill_at:
                 if f - BEAT - 1e-6 <= t < f - 1e-6:
                     for q in range(4):
-                        add(drums, snare(), t + q * BEAT / 4, 0.12 + 0.06 * q)
-            # harmony by the bar
-            ch = prog[(bi // 4) % len(prog)]
-            root, notes = REEL_CH[ch]
+                        add(drums, snare(), t + q * s16, 0.06 + 0.04 * q)
+                    add(drums, sfx_riser(BEAT * 2), t - BEAT, 0.12)
+            # the harmony, by the bar: wide supersaw chords, pumped
             if bb == 0:
-                add(pads, soft_pad(notes, min(bar, z - t), cut=2600, v=1.0), t, 0.42)
-            # rolling bass on the sixteenths between the kicks
-            for q, vv in ((0.25, 0.6), (0.5, 1.0), (0.75, 0.75)):
-                add(bass, sub(root, BEAT / 4 * 0.9, vv), t + q * BEAT, 0.5)
-                add(bass, moog(root + 12, BEAT / 4 * 0.8, vv), t + q * BEAT, 0.12)
-            # house stabs: the and of one and three, and a push into the next bar
-            for q in ((0.5,) if bb in (0, 2) else ()) + ((0.75,) if bb == 3 else ()):
-                add(keys, stab(notes, 0.16, 1500 + 600 * (bb == 3)), t + q * BEAT, 0.3, pan=0.1)
-            # the hook: a plucked line an octave up, with an echo
-            line = [notes[0] + 12, notes[2] + 12, notes[1] + 12, notes[3] + 12]
-            hk = arp_note(line[bb], 0.2, 2400, 0.9)
-            add(keys, hk, t + (0.0 if bb % 2 else 0.5) * BEAT, 0.14, pan=-0.3)
-            add(keys, hk * 0.4, t + (0.0 if bb % 2 else 0.5) * BEAT + 0.75 * BEAT, 0.14, pan=0.35)
+                L = min(bar, z - t)
+                add(pads, supersaw(notes, L, cut=2600 + 1400 * sec, v=1.0, attack=0.01, release=0.3), t, 0.3 + 0.06 * sec)
+                add(bass, glide808(root, L * 0.98, 1.0, from_m=prev_root), t, 0.42)
+                prev_root = root
+            # stabs on the offbeats once the co-pilot is on
+            if sec >= 1:
+                add(pads, supersaw([n + 12 for n in notes[:3]], 0.12, cut=4200, v=1.0, release=0.08), t + BEAT / 2, 0.16 + 0.05 * sec)
+            # the hook: the cowbell between the kicks
+            for st, m in HOOK[ch]:
+                if st // 4 == bb:
+                    tt_ = t + (st % 4) * s16
+                    add(keys, cowbell(m, 0.2, 1.0), tt_, 0.62, pan=-0.08)
+                    if sec == 2:
+                        add(keys, cowbell(m + 12, 0.14, 0.7), tt_, 0.2, pan=0.3)
+                    # its echo, an eighth later, softer and wider
+                    add(keys, cowbell(m, 0.12, 0.5, cut=3000), tt_ + BEAT / 2, 0.12, pan=0.45)
 
-    add(drums, crash(), drop, 0.4)
+    add(drums, crash(), drop, 0.28)
     groove(drop, g0, fills)
-    # the silence, then the name: one big hit and the groove again under it, winding down
-    add(drums, crash(), g1, 0.5)
-    groove(g1, DUR)
-    add(pads, soft_pad(REEL_CH["Dm9"][1], DUR - g1 + 0.5, cut=3000, v=1.0), g1, 0.4)
-    # the kick pumps everything harmonic
+    add(drums, crash(), g1, 0.32)
+    groove(g1, DUR, outro=True)
+    # the kick pumps the harmony hard: the EDM breath
     pump = np.ones(N)
     for t in kicks:
-        i = at(t); m = min(N - i, at(0.3))
+        i = at(t); m = min(N - i, at(0.34))
         if m > 0:
-            pump[i:i + m] = np.minimum(pump[i:i + m], 1 - 0.55 * np.exp(-np.arange(m) / SR / 0.07))
-    pads *= pump[:, None]; bass *= pump[:, None] ** 0.6; keys *= pump[:, None] ** 0.5
-    # the gap before the name: nothing but tails
+            pump[i:i + m] = np.minimum(pump[i:i + m], 1 - 0.7 * np.exp(-np.arange(m) / SR / 0.085))
+    pads *= pump[:, None]; bass *= pump[:, None] ** 0.8; keys *= pump[:, None] ** 0.25
+    # the hook rings in a small room
+    keys = reverb(keys, IR_ROOM, 0.22)[: N]
+    # the balance: the hook leads, chords and 808 under it, the drums low
+    keys *= 1.15; pads *= 4.0; bass *= 0.75; drums *= 0.4
     gate = np.ones(N)
     gate[at(g0):at(g1)] = 0
     ramp = at(0.012); gate[at(g0):at(g0) + ramp] = np.linspace(1, 0, ramp); gate[at(g1) - ramp:at(g1)] = np.linspace(0, 1, ramp)
-    # the drums thin out over the last seconds
-    tail = np.clip((DUR - 0.6 - np.arange(N) / SR) / 2.2, 0, 1) ** 0.8
-    for b_, gg in ((pads, gate), (bass, gate * tail), (keys, gate * tail), (drums, gate * np.maximum(tail, 0.0))):
+    tail = np.clip((DUR - 0.5 - np.arange(N) / SR) / 2.0, 0, 1) ** 0.8
+    for b_, gg in ((pads, gate), (bass, gate * tail), (keys, gate * np.maximum(tail, 0.25)), (drums, gate * tail)):
         b_ *= gg[:, None]
-    # muffled while the objection hangs in the air: everything through a low-pass
     for c in mk("m_lpf"):
         a, z = c["t"], c["t"] + c["d"]
         w = np.clip(np.minimum((np.arange(N) / SR - a) / 0.08, (z - np.arange(N) / SR) / 0.12), 0, 1)
         for b_ in (pads, bass, keys, drums):
             b_[:] = b_ * (1 - w)[:, None] + lp(b_, 520, 4) * w[:, None]
     return pads, bass, keys, drums
+
+
+IR_POOL = make_ir(1.1, 0.22, 2600)      # a short, dark space for drops under water
+DROP_SCALE = [62, 65, 67, 69, 72, 74, 77, 79, 81, 84, 86, 89, 91, 93]   # D minor pentatonic, D4 up
+
+
+def sfx_drop(deg, n=1, step=2, gap=0.045, wet=0.3, v=0.6, seed=0):
+    """Water drops: each a sine whose pitch rises as the bubble closes, a
+    click at the start, a glassy partial when dry. wet pulls it under water:
+    lower, duller, further away in the reverb."""
+    r = np.random.default_rng(seed)
+    d = gap * (n - 1) + 0.9
+    out = np.zeros((at(d), 2))
+    for i in range(n):
+        m = DROP_SCALE[int(np.clip(deg + i * step, 0, len(DROP_SCALE) - 1))] - 5 * wet
+        f0 = mtof(m); L = 0.16; x = tt(L)
+        f = f0 * (0.62 + 0.38 * (1 - np.exp(-x / 0.009))) * (1 + 0.12 * x / L)
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        y = np.sin(ph) * np.exp(-x / (0.035 + 0.03 * wet)) * np.minimum(1, x / 0.0015)
+        y += (1 - wet) * 0.18 * np.sin(2.1 * ph) * np.exp(-x / 0.02)
+        y += hp(noise(L), 3000) * np.exp(-x / 0.0015) * 0.12 * (1 - wet)
+        y = lp(y, 9000 - 7800 * wet, 2)
+        pan = r.uniform(-0.45, 0.45)
+        st = np.stack([y * np.cos((pan + 1) * np.pi / 4), y * np.sin((pan + 1) * np.pi / 4)], 1) * np.sqrt(2)
+        j = at(i * gap); out[j:j + len(st)] += st[: len(out) - j]
+    out = reverb(out, IR_POOL if wet > 0.5 else IR_ROOM, 0.15 + 0.45 * wet)
+    return out * v
 
 
 def build_sfx():
@@ -1653,6 +1743,8 @@ def build_sfx():
             add(out, sfx_flip(), t, 0.25 * v / .35, pan=rng.uniform(-.4, .4))
         elif k == "star":
             add(out, reverb(sfx_star(v), IR_HALL, 0.3), t, 0.35)
+        elif k == "drop":
+            add(out, sfx_drop(c["deg"], c.get("n", 1), c.get("step", 2), c.get("gap", 0.045), c.get("wet", 0.3), v, seed=int(t * 1000)), t, 0.5)
         elif k == "glitch":
             add(out, sfx_glitch(c["d"]), t, 0.3)
         elif k == "thud":
@@ -1732,9 +1824,10 @@ def main():
     # the last seconds breathe out
     fade = np.clip((DUR - np.arange(N) / SR) / 1.4, 0, 1) ** 1.5
     fade_in = np.clip(np.arange(N) / SR / 0.05, 0, 1)
-    mix = (music * 0.46 + sfx * 0.45 + vo * 1.0) * (fade * fade_in)[:, None]
+    mg, sg = getattr(F, "MUSIC_GAIN", 0.46), getattr(F, "SFX_GAIN", 0.45)
+    mix = (music * mg + sfx * sg + vo * 1.0) * (fade * fade_in)[:, None]
     mix = mix[: int(DUR * SR)]
-    for name, st in [("music", music * 0.46), ("sfx", sfx * 0.45), ("vo", vo)]:
+    for name, st in [("music", music * mg), ("sfx", sfx * sg), ("vo", vo)]:
         sf.write(os.path.join(BUILD, "stems", name + ".wav"), st[: int(DUR * SR)], SR, subtype="PCM_24")
     meter = pyln.Meter(SR)
     # a little over -14: package.py trims the AAC by about this much to hold its true peak
