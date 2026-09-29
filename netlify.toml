@@ -15,6 +15,12 @@
   command = "npm run build"
   publish = "dist"
 
+  # Build main only. `dev` is where work is built and tested before it is
+  # merged to main, and a build of it here would only spend deploy credits.
+  # Netlify skips the build when this command exits 0, so it exits 0 for
+  # every branch except main.
+  ignore = "[ \"$BRANCH\" != \"main\" ]"
+
 [build.environment]
   NODE_VERSION = "22"
 
