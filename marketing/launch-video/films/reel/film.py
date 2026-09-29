@@ -36,11 +36,15 @@ SCENES = [
 ]
 
 MUSIC = "file"
-# dark-melodic-minor-2 from Lyria RealTime (lyria.py), re-cut by musicedit.py:
-# melodic techno in D minor, measured at 117.465 BPM, bars from 0.032 s. Its
-# drop bar at 4.118 s lands on the reel's drop; the drums drop out from 6.2 s
-# and come back on the bar at 8.205 s with the riff from 4.1 s, a second drop
-MUSIC_FILE, MUSIC_AT = "dark-melodic-minor-2-edit.wav", 4.1183
+# dark-melodic-reel: the melodic techno take from Lyria RealTime (lyria.py), in
+# D minor at 117.465 BPM, bars from 0.032 s. Its first 8.2 s as made (the drop
+# bar at 4.118 s lands on the reel's drop; the drums drop out from 6.2 s),
+# then the riff bar again as a second drop on the bar at 8.205 s, then the
+# same take made again from the same seed with the same instruments, arranged
+# to the reel (musicedit.py; plans/melodic-reel-v1.json): the groove under
+# the call, a lift for the coaching, the peak for the documents and the
+# intro's pads under the name.
+MUSIC_FILE, MUSIC_AT = "dark-melodic-reel.wav", 4.1183
 MUSIC_DROPS = [8.2047]
 SFX_TRIM = {}
 # the effects sit under the music, drowned: SFX_DROWN is the low-pass, the

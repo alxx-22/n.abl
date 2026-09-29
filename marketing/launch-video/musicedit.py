@@ -1,12 +1,13 @@
 """
-Re-cut a generated take at its bar lines: play parts of it in a new order.
+Re-cut generated takes at their bar lines: play parts of them in a new order.
 
   python3 musicedit.py --film reel --src dark-melodic-minor-2 --out dark-melodic-minor-2-edit \\
       --parts 0-8.205,4.118-6.162,16.378-
 
 Each part is start-end in seconds of the source (an open end runs to the
-end of the take); give them on the take's own bar lines so the beat never
-slips. Each join is crossfaded over the 20 ms just before it, so the
+end of the take), or take:start-end to draw on another take made in the
+same session and tempo; give them on the takes' own bar lines so the beat
+never slips. Each join is crossfaded over the 20 ms just before it, so the
 downbeat of the part coming in lands whole. Writes films/<film>/music/
 <out>.wav with a .json of the recipe beside it, and an MP3 in
 out/<film>/music-options/.
@@ -27,15 +28,23 @@ def main():
     ap.add_argument("--parts", required=True)
     a = ap.parse_args()
     d = os.path.join(HERE, "films", a.film, "music")
-    y, sr = sf.read(os.path.join(d, a.src + ".wav"), always_2d=True)
+    takes = {}
+    def take(name):
+        if name not in takes:
+            takes[name] = sf.read(os.path.join(d, name + ".wav"), always_2d=True)
+        return takes[name]
+    sr = take(a.src)[1]
     xf = int(XF * sr)
     fade = np.sqrt(np.linspace(0, 1, xf))[:, None]
     parts = []
     for p in a.parts.split(","):
-        s, e = p.split("-")
-        parts.append((int(round(float(s) * sr)), int(round(float(e) * sr)) if e else len(y)))
-    out = y[parts[0][0]:parts[0][1]].copy()
-    for s, e in parts[1:]:
+        name, span = p.split(":") if ":" in p else (a.src, p)
+        y = take(name)[0]
+        s, e = span.split("-")
+        parts.append((y, int(round(float(s) * sr)), int(round(float(e) * sr)) if e else len(y)))
+    y, s, e = parts[0]
+    out = y[s:e].copy()
+    for y, s, e in parts[1:]:
         pre = y[max(0, s - xf):s]
         pre = np.pad(pre, ((xf - len(pre), 0), (0, 0)))
         out[-xf:] = out[-xf:] * fade[::-1] + pre * fade
