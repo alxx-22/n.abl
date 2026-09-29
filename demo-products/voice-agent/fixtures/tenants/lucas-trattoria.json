@@ -1,0 +1,195 @@
+{
+  "slug": "lucas-trattoria",
+  "name": "Luca's Trattoria",
+  "business_type": "restaurant",
+  "timezone": "Europe/London",
+  "status": "demo",
+  "demo_pin": "1001",
+  "voice": "Kore",
+  "greeting": "Hello, Luca's Trattoria. I'm the AI assistant, and this is a demo line. How can I help?",
+  "summary": "A family-run Italian restaurant in Nottingham city centre: wood-fired pizza, fresh pasta, tables and takeaway.",
+  "address": "18 Bridlesmith Walk, Nottingham NG1 2GQ",
+  "phone_display": "0115 496 0321",
+  "handoff_number": null,
+  "owner_sms_number": null,
+  "website": "https://example.com/lucas-trattoria",
+  "brand": { "accent": "#B5452B" },
+  "core_facts": [
+    "Open Tuesday to Sunday; closed Mondays.",
+    "Tuesday to Saturday: lunch 12 till half two, dinner half five till ten. Sunday: 12 till 9.",
+    "Takeaway for collection or delivery, evenings from 5 till half nine, Tuesday to Sunday.",
+    "Nearest parking is Broad Marsh car park, four minutes' walk.",
+    "Step-free entrance and an accessible toilet. Children welcome; high chairs available."
+  ],
+  "opening_hours": [
+    { "days": [2, 3, 4, 5, 6], "open": "12:00", "close": "14:30", "label": "lunch" },
+    { "days": [2, 3, 4, 5, 6], "open": "17:30", "close": "22:00", "label": "dinner" },
+    { "days": [0], "open": "12:00", "close": "21:00", "label": "all day" }
+  ],
+  "closures": [
+    { "date": "2026-12-25", "note": "Christmas Day" },
+    { "date": "2026-12-26", "note": "Boxing Day" }
+  ],
+  "booking": {
+    "services": [
+      {
+        "key": "table",
+        "label": "table",
+        "kind": "table",
+        "slot_minutes": 15,
+        "duration_rules": [
+          { "max_party": 2, "minutes": 75 },
+          { "max_party": 4, "minutes": 90 },
+          { "max_party": 10, "minutes": 120 }
+        ],
+        "windows": [
+          { "days": [2, 3, 4, 5, 6], "first": "12:00", "last": "13:45" },
+          { "days": [2, 3, 4, 5, 6], "first": "17:30", "last": "21:15" },
+          { "days": [0], "first": "12:00", "last": "14:30" },
+          { "days": [0], "first": "17:00", "last": "19:45" }
+        ],
+        "max_party": 10,
+        "large_party_note": "For more than 10 people, take their name, number and preferred date, and the manager will call back.",
+        "lead_minutes": 30,
+        "horizon_days": 60,
+        "deposit": { "min_party": 7, "per_person_pence": 1000 }
+      }
+    ],
+    "resources": [
+      { "key": "T1", "label": "Table 1", "capacity": 2, "services": ["table"] },
+      { "key": "T2", "label": "Table 2", "capacity": 2, "services": ["table"] },
+      { "key": "T3", "label": "Table 3", "capacity": 2, "services": ["table"] },
+      { "key": "T4", "label": "Table 4", "capacity": 4, "services": ["table"] },
+      { "key": "T5", "label": "Table 5", "capacity": 4, "services": ["table"] },
+      { "key": "T6", "label": "Table 6", "capacity": 4, "services": ["table"] },
+      { "key": "T7", "label": "Table 7", "capacity": 4, "services": ["table"] },
+      { "key": "T8", "label": "Table 8 (window booth)", "capacity": 6, "min": 3, "services": ["table"] },
+      { "key": "T9", "label": "Table 9", "capacity": 6, "min": 3, "services": ["table"] },
+      { "key": "T4+T5", "label": "Tables 4 and 5 together", "capacity": 8, "min": 5, "combines": ["T4", "T5"], "services": ["table"] },
+      { "key": "T8+T9", "label": "Tables 8 and 9 together", "capacity": 10, "min": 7, "combines": ["T8", "T9"], "services": ["table"] }
+    ]
+  },
+  "menu": {
+    "allergen_statement": "Our kitchen handles all 14 major allergens, including nuts, so we can't guarantee any dish is completely free from traces. For a severe allergy, we'll note it on the order and the kitchen will take extra care.",
+    "modifier_groups": {
+      "pizza_extras": {
+        "label": "Extras",
+        "min": 0,
+        "max": 4,
+        "options": [
+          { "key": "extra_mozzarella", "name": "extra mozzarella", "price_pence": 150, "allergens": ["milk"] },
+          { "key": "nduja", "name": "nduja", "price_pence": 200 },
+          { "key": "olives", "name": "olives", "price_pence": 100 },
+          { "key": "rocket", "name": "rocket", "price_pence": 100 },
+          { "key": "chilli", "name": "fresh chilli", "price_pence": 50 }
+        ]
+      },
+      "pizza_remove": {
+        "label": "Leave off",
+        "min": 0,
+        "max": 3,
+        "options": [
+          { "key": "no_basil", "name": "no basil", "price_pence": 0 },
+          { "key": "no_cheese", "name": "no cheese", "price_pence": 0 },
+          { "key": "no_garlic", "name": "no garlic", "price_pence": 0 }
+        ]
+      },
+      "pizza_base": {
+        "label": "Base",
+        "min": 0,
+        "max": 1,
+        "options": [
+          { "key": "gluten_free_base", "name": "gluten-free base", "price_pence": 200 }
+        ]
+      },
+      "pasta_extras": {
+        "label": "Extras",
+        "min": 0,
+        "max": 2,
+        "options": [
+          { "key": "parmesan", "name": "extra parmesan", "price_pence": 100, "allergens": ["milk"] },
+          { "key": "chilli_flakes", "name": "chilli flakes", "price_pence": 0 }
+        ]
+      }
+    },
+    "categories": [
+      {
+        "key": "starters",
+        "label": "Starters",
+        "items": [
+          { "key": "garlic_bread", "name": "Garlic bread", "price_pence": 550, "allergens": ["gluten", "milk"], "dietary": ["vegetarian"] },
+          { "key": "bruschetta", "name": "Bruschetta", "price_pence": 650, "description": "Tomato, basil and garlic on toasted sourdough.", "allergens": ["gluten"], "dietary": ["vegan"] },
+          { "key": "arancini", "name": "Arancini", "price_pence": 700, "description": "Fried risotto balls with mozzarella.", "allergens": ["gluten", "milk", "eggs"], "dietary": ["vegetarian"] }
+        ]
+      },
+      {
+        "key": "pizza",
+        "label": "Pizzas",
+        "items": [
+          { "key": "margherita", "name": "Margherita", "price_pence": 1150, "description": "Tomato, mozzarella and basil.", "allergens": ["gluten", "milk"], "dietary": ["vegetarian"], "modifier_groups": ["pizza_extras", "pizza_remove", "pizza_base"] },
+          { "key": "diavola", "name": "Diavola", "price_pence": 1350, "description": "Spicy salami, chilli, mozzarella.", "allergens": ["gluten", "milk", "mustard"], "modifier_groups": ["pizza_extras", "pizza_remove", "pizza_base"], "aliases": ["pepperoni", "spicy salami pizza"] },
+          { "key": "funghi", "name": "Funghi", "price_pence": 1250, "description": "Mushrooms, mozzarella, thyme.", "allergens": ["gluten", "milk"], "dietary": ["vegetarian"], "modifier_groups": ["pizza_extras", "pizza_remove", "pizza_base"], "aliases": ["mushroom pizza"] },
+          { "key": "verdure", "name": "Vegan Verdure", "price_pence": 1200, "description": "Roast vegetables and tomato, no cheese.", "allergens": ["gluten"], "dietary": ["vegan"], "modifier_groups": ["pizza_extras", "pizza_remove", "pizza_base"], "aliases": ["vegan pizza", "vegetable pizza"] }
+        ]
+      },
+      {
+        "key": "pasta",
+        "label": "Pasta",
+        "items": [
+          { "key": "carbonara", "name": "Spaghetti Carbonara", "price_pence": 1300, "allergens": ["gluten", "eggs", "milk"], "modifier_groups": ["pasta_extras"] },
+          { "key": "arrabbiata", "name": "Penne Arrabbiata", "price_pence": 1100, "description": "Spicy tomato sauce.", "allergens": ["gluten"], "dietary": ["vegan"], "modifier_groups": ["pasta_extras"] },
+          { "key": "lasagne", "name": "Lasagne", "price_pence": 1400, "allergens": ["gluten", "milk", "eggs", "celery"], "modifier_groups": ["pasta_extras"] },
+          { "key": "pesto", "name": "Trofie al Pesto", "price_pence": 1250, "description": "Basil pesto with pine nuts and cashews.", "allergens": ["gluten", "milk", "nuts"], "dietary": ["vegetarian"], "modifier_groups": ["pasta_extras"], "aliases": ["pesto pasta"] }
+        ]
+      },
+      {
+        "key": "desserts",
+        "label": "Desserts",
+        "items": [
+          { "key": "tiramisu", "name": "Tiramisu", "price_pence": 650, "allergens": ["gluten", "eggs", "milk"], "may_contain": ["nuts"], "dietary": ["vegetarian"] },
+          { "key": "panna_cotta", "name": "Panna cotta", "price_pence": 600, "allergens": ["milk"], "dietary": ["vegetarian"] },
+          { "key": "affogato", "name": "Affogato", "price_pence": 500, "description": "Vanilla gelato with a shot of espresso.", "allergens": ["milk"], "may_contain": ["nuts", "eggs"], "dietary": ["vegetarian"] }
+        ]
+      },
+      {
+        "key": "drinks",
+        "label": "Soft drinks",
+        "items": [
+          { "key": "san_pellegrino", "name": "San Pellegrino", "price_pence": 280, "allergens": [], "aliases": ["sparkling water", "lemonade"] },
+          { "key": "coke", "name": "Coca-Cola", "price_pence": 250, "allergens": [], "aliases": ["coke", "cola", "diet coke"] }
+        ]
+      }
+    ]
+  },
+  "ordering": {
+    "collection": true,
+    "delivery": { "districts": ["NG1", "NG2", "NG3", "NG5", "NG7"], "fee_pence": 250, "min_order_pence": 1500, "extra_minutes": 20 },
+    "prep_minutes": 20,
+    "hours": [
+      { "days": [0, 2, 3, 4, 5, 6], "open": "17:00", "close": "21:30", "label": "takeaway" }
+    ]
+  },
+  "policies": {
+    "deposit": "Tables of seven or more pay a £10 a head deposit when booking, taken off the bill on the night.",
+    "cancellation": "Please give 24 hours' notice to cancel. Deposits are refunded with 24 hours' notice.",
+    "late": "We hold tables for 15 minutes."
+  },
+  "knowledge": [
+    { "q": "Is there parking?", "a": "There's no car park at the restaurant. Broad Marsh car park is four minutes' walk, and there's on-street pay-and-display on Middle Pavement after 6pm.", "tags": ["parking", "car", "park"] },
+    { "q": "Is it accessible for wheelchairs?", "a": "Yes: a step-free entrance, level floor throughout the ground floor, and an accessible toilet.", "tags": ["wheelchair", "accessible", "disabled", "step free", "accessibility"] },
+    { "q": "Are dogs allowed?", "a": "Well-behaved dogs are welcome in the front bar area, and we'll bring a water bowl. Assistance dogs are welcome everywhere.", "tags": ["dog", "pet"] },
+    { "q": "Are children welcome?", "a": "Yes. We have high chairs and a children's menu of half-size pizzas and pasta for £6.50.", "tags": ["kids", "children", "high chair", "baby", "family"] },
+    { "q": "Do you have vegan and vegetarian options?", "a": "Yes: the Vegan Verdure pizza, Penne Arrabbiata and Bruschetta are vegan, and several more dishes are vegetarian.", "tags": ["vegan", "vegetarian", "plant based"] },
+    { "q": "Do you do gluten-free?", "a": "We do a gluten-free pizza base for £2 extra. It's cooked in the same oven as our other pizzas, so it isn't suitable for coeliacs.", "tags": ["gluten", "coeliac", "gluten free"] },
+    { "q": "Can we bring a birthday cake?", "a": "Yes, you're welcome to bring a cake. There's no charge, and we'll bring it out with candles if you let us know when you book.", "tags": ["birthday", "cake", "celebration"] },
+    { "q": "Can we bring our own wine?", "a": "Sorry, we're fully licensed and don't allow bring-your-own.", "tags": ["byo", "corkage", "wine", "alcohol"] },
+    { "q": "Do you do private hire?", "a": "The upstairs room seats up to 30 for private parties. The manager handles those, so take the caller's details for a call back.", "tags": ["private", "party", "function", "hire", "upstairs"] },
+    { "q": "Do you sell gift vouchers?", "a": "Yes, gift vouchers in any amount, bought in the restaurant.", "tags": ["voucher", "gift"] },
+    { "q": "Is there a dress code?", "a": "No dress code. Come as you are.", "tags": ["dress", "clothes"] },
+    { "q": "What payment methods do you take?", "a": "All major cards and contactless, Apple Pay and Google Pay. We don't take cheques.", "tags": ["pay", "card", "cash", "contactless"] },
+    { "q": "Do you have outdoor seating?", "a": "A small terrace with four tables, weather permitting. Those can't be booked; they're first come, first served.", "tags": ["outside", "outdoor", "terrace", "garden"] },
+    { "q": "How do I contact you by email?", "a": "ciao@lucas-trattoria.example", "tags": ["email", "contact"] },
+    { "q": "Do you have wifi?", "a": "Yes, free wifi. The password is on the menus.", "tags": ["wifi", "internet"] },
+    { "q": "How long do we have the table for?", "a": "Tables are yours for 75 minutes for two, 90 minutes for three or four, and two hours for larger groups.", "tags": ["time limit", "how long", "sitting"] }
+  ]
+}

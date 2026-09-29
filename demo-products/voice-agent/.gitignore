@@ -1,0 +1,7 @@
+node_modules/
+.env.local
+.data/
+eval-results/
+spike-output/
+*.wav
+*.log

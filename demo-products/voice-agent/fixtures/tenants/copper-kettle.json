@@ -1,0 +1,126 @@
+{
+  "slug": "copper-kettle",
+  "name": "The Copper Kettle",
+  "business_type": "cafe",
+  "timezone": "Europe/London",
+  "status": "demo",
+  "demo_pin": "1002",
+  "voice": "Leda",
+  "greeting": "Hiya, you're through to the Copper Kettle. I'm the AI assistant, and this is a demo line. What can I get you?",
+  "summary": "A neighbourhood café and takeaway in Beeston: breakfasts, sandwiches, jacket potatoes and proper coffee, for collection or delivery.",
+  "address": "7 Station Parade, Beeston, Nottingham NG9 2AB",
+  "phone_display": "0115 496 0457",
+  "brand": { "accent": "#B87333" },
+  "core_facts": [
+    "Open Monday to Saturday half seven till four, Sunday nine till three.",
+    "Orders for collection, or delivery to NG9 and NG7 for £1.50, minimum order £10.",
+    "Breakfast is served until half eleven.",
+    "No table bookings: seating is first come, first served.",
+    "Free parking for customers behind the parade."
+  ],
+  "opening_hours": [
+    { "days": [1, 2, 3, 4, 5, 6], "open": "07:30", "close": "16:00" },
+    { "days": [0], "open": "09:00", "close": "15:00" }
+  ],
+  "menu": {
+    "allergen_statement": "We prepare everything in one small kitchen that handles all 14 major allergens, so we can't rule out traces in anything. For a severe allergy we'll flag the order for extra care.",
+    "modifier_groups": {
+      "bread": {
+        "label": "Bread",
+        "min": 1,
+        "max": 1,
+        "options": [
+          { "key": "white", "name": "white bread", "price_pence": 0, "allergens": ["gluten"] },
+          { "key": "brown", "name": "brown bread", "price_pence": 0, "allergens": ["gluten"] },
+          { "key": "gf", "name": "gluten-free bread", "price_pence": 80 }
+        ]
+      },
+      "milk": {
+        "label": "Milk",
+        "min": 0,
+        "max": 1,
+        "options": [
+          { "key": "oat", "name": "oat milk", "price_pence": 40 },
+          { "key": "soya", "name": "soya milk", "price_pence": 40, "allergens": ["soya"] }
+        ]
+      },
+      "coffee_size": {
+        "label": "Size",
+        "min": 1,
+        "max": 1,
+        "options": [
+          { "key": "regular", "name": "regular", "price_pence": 0 },
+          { "key": "large", "name": "large", "price_pence": 50 }
+        ]
+      },
+      "jacket_fillings": {
+        "label": "Fillings",
+        "min": 1,
+        "max": 2,
+        "options": [
+          { "key": "cheese", "name": "cheese", "price_pence": 0, "allergens": ["milk"] },
+          { "key": "beans", "name": "beans", "price_pence": 0 },
+          { "key": "tuna_mayo", "name": "tuna mayo", "price_pence": 100, "allergens": ["fish", "eggs"] },
+          { "key": "chilli", "name": "chilli con carne", "price_pence": 150, "allergens": ["celery"] }
+        ]
+      }
+    },
+    "categories": [
+      {
+        "key": "breakfast",
+        "label": "Breakfast (until 11:30)",
+        "items": [
+          { "key": "full_english", "name": "Full English", "price_pence": 950, "description": "Bacon, sausage, egg, beans, mushrooms, tomato, toast.", "allergens": ["gluten", "eggs", "sulphites"], "modifier_groups": ["bread"] },
+          { "key": "veggie_breakfast", "name": "Veggie breakfast", "price_pence": 900, "allergens": ["gluten", "eggs", "soya"], "dietary": ["vegetarian"], "modifier_groups": ["bread"] },
+          { "key": "bacon_cob", "name": "Bacon cob", "price_pence": 450, "allergens": ["gluten"], "aliases": ["bacon roll", "bacon bap", "bacon sandwich"] }
+        ]
+      },
+      {
+        "key": "lunch",
+        "label": "Lunch",
+        "items": [
+          { "key": "blt", "name": "BLT sandwich", "price_pence": 650, "allergens": ["gluten", "eggs"], "modifier_groups": ["bread"] },
+          { "key": "cheese_pickle", "name": "Cheese and pickle sandwich", "price_pence": 550, "allergens": ["gluten", "milk", "mustard"], "dietary": ["vegetarian"], "modifier_groups": ["bread"] },
+          { "key": "jacket", "name": "Jacket potato", "price_pence": 600, "description": "With up to two fillings.", "allergens": [], "modifier_groups": ["jacket_fillings"], "aliases": ["jacket spud", "baked potato"] },
+          { "key": "soup", "name": "Soup of the day with bread", "price_pence": 550, "description": "Today: tomato and red pepper.", "allergens": ["gluten", "celery"], "dietary": ["vegan"] }
+        ]
+      },
+      {
+        "key": "drinks",
+        "label": "Drinks",
+        "items": [
+          { "key": "latte", "name": "Latte", "price_pence": 330, "allergens": ["milk"], "modifier_groups": ["coffee_size", "milk"] },
+          { "key": "cappuccino", "name": "Cappuccino", "price_pence": 330, "allergens": ["milk"], "modifier_groups": ["coffee_size", "milk"] },
+          { "key": "americano", "name": "Americano", "price_pence": 280, "allergens": [], "modifier_groups": ["coffee_size", "milk"] },
+          { "key": "tea", "name": "Pot of tea", "price_pence": 250, "allergens": [], "aliases": ["tea", "cup of tea"] }
+        ]
+      },
+      {
+        "key": "cakes",
+        "label": "Cakes",
+        "items": [
+          { "key": "carrot_cake", "name": "Carrot cake", "price_pence": 380, "allergens": ["gluten", "eggs", "milk", "nuts"], "dietary": ["vegetarian"] },
+          { "key": "brownie", "name": "Chocolate brownie", "price_pence": 320, "allergens": ["eggs", "milk", "soya"], "may_contain": ["nuts"], "dietary": ["vegetarian"] }
+        ]
+      }
+    ]
+  },
+  "ordering": {
+    "collection": true,
+    "delivery": { "districts": ["NG9", "NG7"], "fee_pence": 150, "min_order_pence": 1000, "extra_minutes": 25 },
+    "prep_minutes": 15,
+    "hours": [
+      { "days": [1, 2, 3, 4, 5, 6], "open": "07:30", "close": "15:30" },
+      { "days": [0], "open": "09:00", "close": "14:30" }
+    ]
+  },
+  "knowledge": [
+    { "q": "Can I book a table?", "a": "We don't take bookings; seating is first come, first served, and it's rarely full before twelve.", "tags": ["book", "booking", "table", "reserve"] },
+    { "q": "Is there parking?", "a": "Free customer parking behind the parade, entrance on Mill Road.", "tags": ["parking", "car"] },
+    { "q": "Are dogs allowed?", "a": "Dogs are very welcome inside, and we have dog treats on the counter.", "tags": ["dog", "pet"] },
+    { "q": "Do you have oat milk?", "a": "Yes, oat and soya milk for 40p extra.", "tags": ["oat", "plant milk", "dairy free", "vegan"] },
+    { "q": "Do you do gluten-free?", "a": "Gluten-free bread is 80p extra on any sandwich or breakfast. It's toasted in a shared toaster, so not suitable for coeliacs.", "tags": ["gluten", "coeliac"] },
+    { "q": "Do you do catering?", "a": "Yes, sandwich platters for offices with a day's notice. The owner handles those, so take the caller's details.", "tags": ["catering", "platter", "office", "buffet"] },
+    { "q": "Do you take cards?", "a": "Cards and contactless only, no cash.", "tags": ["cash", "card", "pay", "payment"] }
+  ]
+}

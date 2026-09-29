@@ -1,0 +1,19 @@
+{
+  // Node runs these files directly (type stripping, Node 22.18+), so only
+  // syntax that can be erased is allowed: no enums, no namespaces, no
+  // parameter properties. tsc is a checker here, never a compiler.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "test-e2e/**/*.ts"]
+}

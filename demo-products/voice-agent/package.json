@@ -1,0 +1,37 @@
+{
+  "name": "nabl-voice-agent",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "n.abl Reception: an AI phone receptionist for hospitality businesses. A demo product.",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env.local src/server/main.ts",
+    "start": "node src/server/main.ts",
+    "test": "node --test --test-reporter=spec \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p .",
+    "check": "npm run typecheck && npm test",
+    "db:migrate": "node --env-file-if-exists=.env.local src/db/cli.ts migrate",
+    "db:seed": "node --env-file-if-exists=.env.local src/db/cli.ts seed",
+    "spike:probe": "node --env-file-if-exists=.env.local src/spike/probe.ts",
+    "spike:audio": "node --env-file-if-exists=.env.local src/spike/audio.ts",
+    "spike:voices": "node --env-file-if-exists=.env.local src/spike/voices.ts",
+    "eval": "node --env-file-if-exists=.env.local src/eval/run.ts",
+    "e2e:browser": "node --env-file-if-exists=.env.local test-e2e/browser.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.0",
+    "https-proxy-agent": "^7.0.6",
+    "pg": "^8.13.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.0",
+    "@types/ws": "^8.5.13",
+    "playwright-core": "1.56",
+    "typescript": "^5.9.0"
+  }
+}
