@@ -1,6 +1,6 @@
 # AI that works: the reel
 
-A 21-second reel for n.abl's AI services, cut to music with no voice, in
+A 27-second reel for n.abl's AI services, cut to music with no voice, in
 every social format from one timeline: 16:9, 1:1, 4:5 and 9:16. It shows
 three services: a chat and voice booking agent, a sales co-pilot that
 joins calls, and a document analyser. It is made in the style of a
@@ -115,7 +115,9 @@ Same grammar, n.abl's palette:
 
 The site's own typefaces: Inter Tight for interface, JetBrains Mono for
 labels. There is no voice, so each service gets a chapter title for its
-first two seconds, then gets out of the way.
+first three seconds, then gets out of the way. Each step is held long
+enough to read: the answer, the translation, the objection, the suggestion,
+the tags and the score each stay up for a second or more.
 
 **The camera** is a real 3D camera, not a flat pan:
 - It swings, orbits, tilts, pans and dollies on a smooth path through
@@ -126,13 +128,13 @@ first two seconds, then gets out of the way.
 
 | Time | Shot | What happens | Camera |
 |---|---|---|---|
-| 0.00 | **Chat** | The receptionist's chat: a customer's voice note plays (*"Can I book in for Friday at 2?"*, transcribed underneath). On the drop (1.36 s) the agent answers: *Friday at 2pm is free. Shall I book it?* Then *Yes please!*, then *✓ Booked · Fri 2:00 pm*. | Starts on the voice note from a low three-quarter angle. Dollies in through the build, swings round to face the answer on the drop, drifts down the thread, pushes into the booking. |
-| 3.18 | **Book** | The booking flares white. The chat falls away behind it. The point opens into *Fri 2:00 pm · Booked*, a rim drawing round it; *£20 paid* (Deposit) counts up; *Thu 6 pm* (Reminder sent). | Runs along the three as each arrives, turning as it goes. Pulls back and round to see them together, then cranes up into a grey wash. |
-| 6.36 | **Call** | A video call drops in, its colours split. A point of light falls and becomes *n.abl co-pilot joined*. The client's Spanish is transcribed, then pixel-dissolves into English (*It's a bit pricey for us…*). *Objection · price*: the call glows red, its rim turns coral, the music goes muffled. | Rises from below as the call settles, bumps as the point lands. Tilts down and pushes in on the caption for the translation. Pulls back with a dutch tilt and leans into the red. |
-| 10.00 | **Coach** | The co-pilot's sidebar: the transcript; the playbook card (*Pricing objection: reframe on value, offer a pilot*); *Say next*, typed in (*"Most teams start with a 30-day pilot, so you only pay once it's working."*); *Pivot → ROI*. | Pulls out and orbits round to the sidebar, then reads down it block by block, closest on *Say next*. |
-| 12.73 | **Docs** | A riffle of documents flies past the camera (a contract, a staff handbook, a board pack, a CV) and leaves a tender pack. A line of light scans it and marks a deadline, a risk and a requirement, each tagged beside the page. The page falls back. The tags drop into three pills counting up (42 requirements, 3 risks, 2 deadlines). A bracket draws them into *Bid fit 86 ▲*. | Orbits the fan of pages. Rides down the page with the scan. Pulls back and runs along the pills, then cranes up the bracket to the score. |
-| 17.73 | **Button** | *Put AI to work* flies in out of focus, a light sweeps across it, pressed on the beat; the music stops dead. | Swings in to face it. |
-| 18.64 | **Name** | The wordmark blurs into focus on the hit: *AI, built into your business.* Then *Book a free discovery call · nabl.agency*, and out. | Eases back and round as it settles. |
+| 0.00 | **Chat** | The receptionist's chat: a customer's voice note plays (*"Can I book in for Friday at 2?"*, transcribed underneath). On the drop (1.45 s) the agent answers: *Friday at 2pm is free. Shall I book it?* Then *Yes please!*, then *✓ Booked · Fri 2:00 pm*. | Starts on the voice note from a low three-quarter angle. Dollies in through the build, swings round to face the answer on the drop, drifts down the thread, pushes into the booking. |
+| 4.35 | **Book** | The booking flares white. The chat falls away behind it. The point opens into *Fri 2:00 pm · Booked*, a rim drawing round it; *£20 paid* (Deposit) counts up; *Thu 6 pm* (Reminder sent). | Runs along the three as each arrives, turning as it goes. Pulls back and round to see them together, then cranes up into a grey wash. |
+| 7.74 | **Call** | A video call drops in, its colours split. A point of light falls and becomes *n.abl co-pilot joined*. The client's Spanish is transcribed, then pixel-dissolves into English (*It's a bit pricey for us…*). *Objection · price*: the call glows red, its rim turns coral, the music goes muffled. | Rises from below as the call settles, bumps as the point lands. Tilts down and pushes in on the caption for the translation. Pulls back with a dutch tilt and leans into the red. |
+| 12.58 | **Coach** | The co-pilot's sidebar: the transcript; the playbook card (*Pricing objection: reframe on value, offer a pilot*); *Say next*, typed in (*"Most teams start with a 30-day pilot, so you only pay once it's working."*); *Pivot → ROI*. | Pulls out and orbits round to the sidebar, then reads down it block by block, closest on *Say next*. |
+| 15.97 | **Docs** | A riffle of documents flies past the camera (a contract, a staff handbook, a board pack, a CV) and leaves a tender pack. A line of light scans it and marks a deadline, a risk and a requirement, each tagged beside the page. The page falls back. The tags drop into three pills counting up (42 requirements, 3 risks, 2 deadlines). A bracket draws them into *Bid fit 86 ▲*. | Orbits the fan of pages. Rides down the page with the scan. Pulls back and runs along the pills, then cranes up the bracket to the score. |
+| 22.26 | **Button** | *Put AI to work* flies in out of focus, a light sweeps across it, pressed on the beat; the music stops dead. | Swings in to face it. |
+| 23.71 | **Name** | The wordmark blurs into focus on the hit: *AI, built into your business.* Then *Book a free discovery call · nabl.agency*, and out. | Eases back and round as it settles. |
 
 The document example is a tender pack, not an invoice. The riffle before
 it says "any document".
@@ -142,54 +144,65 @@ All names, figures and scores are props in an interface, not claims:
 
 ## 3. Sound
 
-**Music** (`audio.py`, style `reel`): 132 BPM in D minor.
-- **The lead** is an original cowbell hook, the reference's instrument: an
-  808-style cowbell (two square waves a near-fifth apart, band-passed,
-  with a sharp decay into a ring). It plays on the sixteenths between the
-  kicks, never on them, with a softer echo an eighth later.
-- **Under it:**
-  - wide supersaw chords pumped hard by the kick;
-  - a gliding 808 on the roots;
-  - the long pitched boom kick;
-  - claps on two and four, and hats, all kept low.
-- **Chords**, a bar each from the drop: Dm, B♭, F, C, then Dm, B♭, C and A
+**Music** (`audio.py`, style `reel`): house at 124 BPM in D minor.
+- **The groove:**
+  - a punchy house kick on every beat;
+  - claps on two and four in a small room;
+  - an open hat on every offbeat, shakers on the sixteenths between;
+  - a ride in the last section.
+- **The bass** rolls on the offbeat eighths, with sixteenth pick-ups once
+  the co-pilot is on.
+- **The harmony:**
+  - saw chord stabs, detuned, with a filter that snaps shut, on the
+    syncopated sixteenths between the kicks;
+  - a supersaw pad under the last section;
+  - everything harmonic pumped by the kick.
+- **The hook** is a plucked lead (saw, pulse and a soft sine) with a
+  dotted-eighth echo. It is doubled an octave up for the documents.
+- **The cowbell** is left only as a faint nod to the reference, once every
+  two bars.
+- **Chords,** a bar each from the drop: Dm, B♭, F, C, then Dm, B♭, C and A
   to turn round.
 - **It builds with the film:**
-  - before the drop, the hook alone behind a closed filter, over a
-    filtered chord and a riser;
-  - the receptionist: hook, chords and 808;
-  - the co-pilot: supersaw stabs on the offbeats and sixteenth hats; the
-    track goes muffled while the objection glows;
-  - the documents: everything, with the hook doubled an octave up;
-  - a snare run and a riser into each new chapter;
+  - before the drop: the chord as a pad and the hook, behind a closed
+    filter;
+  - the receptionist: groove, bass and stabs;
+  - the co-pilot: the lead joins; everything goes muffled while the
+    objection glows;
+  - the documents: everything;
+  - a snare run and a riser into each chapter;
   - silence for the press;
-  - the hook once more under the name, thinning out to the end.
+  - the groove once more under the name, thinning out to the end.
 
-**Effects** sit above the music (the music is mixed well under them).
-Most are water drops, as in the reference:
-- Each drop is a sine whose pitch rises as the bubble closes, with a tiny
-  click, and a glassy partial when dry.
-- They are pitched on D minor pentatonic, so they sit in the track. They
-  come singly, in pairs and in rising or falling runs.
-- Each is set somewhere between dry and close, and "drowned": lower,
-  duller, further back in a dark space.
+**Effects** sit under the music and are drowned. Every one goes through
+the same chain (`SFX_DROWN` in `film.py`):
+- a steep low-pass at 1.4 kHz;
+- a slow waver in pitch, as under water (a delay line swept a few
+  milliseconds);
+- a short, dark room.
 
-Drops mark:
-- the voice note, each transcribed word and the typing dots;
-- the answer, "Yes please", the booking (a rising three-note run) and the
-  flare into a point;
-- each pill and its count;
-- the call arriving (deep and drowned), the co-pilot landing (a bright
-  falling run) and each Spanish word;
-- a scatter through the pixel dissolve and the translation arriving;
-- a deep drowned pair on the objection;
-- each sidebar block and the typed suggestion;
-- the riffle, the scan, the pills and the score (a four-note run);
-- the button and the name.
+The drops are an octave lower than in the last cut, eased in with no click.
+The effects follow what each moment is, rather than a drop for everything:
+- **Chat:** a soft two-note arrival for the voice note, muffled typing as
+  it is transcribed, bubbles under the typing dots, the arrival again for
+  the answer, a lifting swish for "Yes please", and a warm chime for
+  Booked. A deep bubble as the booking flares into a point.
+- **Booking:** soft bubbles as each pill lands, muffled ticks as the
+  deposit counts, a small chime for the reminder.
+- **Call:** a two-tone connect as the call opens, a falling tone and a
+  bubble as the co-pilot drops in, muffled typing for the transcript, a
+  glitch under the pixel dissolve, a shimmer as the English arrives.
+- **Objection:** a low swell with a flutter while the music goes muffled
+  (no alarm).
+- **Sidebar:** soft slides for each block, typing for the suggestion, a
+  small chime for the pivot.
+- **Documents:** paper for the riffle, a low hum riding down the page with
+  the scan, bubbles as things are marked, ticks as the pills count, the
+  bracket drawn, and a three-note chime for the score.
+- **Button and name:** a click for the press, an impact and a soft
+  shimmer for the name.
+- Whooshes for the camera's big moves, soft.
 
-Around them: whooshes for the camera's big moves, the riser into the drop,
-a shimmer, the glitch, the alert, paper, the scan, the drawn bracket, the
-click and the impact.
-
-**Mix.** Master at −14 LUFS integrated, true peak below −1 dBTP on the
-delivered AAC.
+**Mix.** The effects sit about 5 dB under the music, with their energy
+centred around 440 Hz. Master at −14 LUFS integrated, true peak below
+−1 dBTP on the delivered AAC.

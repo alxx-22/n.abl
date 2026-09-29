@@ -1533,14 +1533,58 @@ REEL_CH2 = {"Dm": (38, [62, 65, 69, 72]), "Bb": (34, [58, 62, 65, 69]), "F": (41
 REEL_PROG = ["Dm", "Bb", "F", "C", "Dm", "Bb", "C", "A"]
 
 
+def house_kick(v=1.0):
+    """A house kick: a tight click, a body falling to about 50 Hz, a short round tail."""
+    x = tt(0.4)
+    f = 48 + 120 * np.exp(-x / 0.03) + 300 * np.exp(-x / 0.004)
+    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-x / 0.22)
+    click = hp(noise(0.4), 2500) * np.exp(-x / 0.002) * 0.3
+    return np.tanh(2.0 * (body + click)) * v
+
+
+def saw_stab(notes, d=0.2, cut=2200, v=1.0):
+    """The house chord stab: detuned saws per note through a low-pass that closes fast."""
+    x = tt(d + 0.1); y = np.zeros((len(x), 2))
+    for m in notes:
+        for det, pan in ((-0.12, -0.5), (0.0, 0.0), (0.12, 0.5)):
+            sgl = saw(mtof(m) * 2 ** (det / 12), d + 0.1)
+            y[:, 0] += sgl * np.cos((pan + 1) * np.pi / 4); y[:, 1] += sgl * np.sin((pan + 1) * np.pi / 4)
+    env_c = cut * (0.35 + 1.4 * np.exp(-x / 0.06))
+    y = np.stack([sweep_lp(y[:, 0], env_c, block=64, q=1.1), sweep_lp(y[:, 1], env_c, block=64, q=1.1)], 1)
+    return y * env_adsr(len(x), 0.004, 0.08, 0.55, 0.07)[:, None] / (3 * len(notes)) * v
+
+
+def pluck(m, d=0.22, cut=2600, v=1.0):
+    """The lead: a saw and a pulse an octave apart, a plucked filter, a soft sine underneath."""
+    x = tt(d + 0.2); f = mtof(m)
+    y = saw(f, d + 0.2) * 0.55 + np.sign(np.sin(2 * np.pi * f * 0.5 * x) + 0.2) * 0.25 + np.sin(2 * np.pi * f * x) * 0.35
+    y = sweep_lp(y, cut * (0.5 + 2.5 * np.exp(-x / 0.05)), block=64, q=1.3)
+    return y * np.minimum(1, x / 0.003) * np.exp(-x / 0.22) * v
+
+
+# the lead's hook, bar by bar: (sixteenth step, MIDI note), over the chord of that bar
+LEAD = {
+    "Dm": [(0, 69), (3, 72), (6, 74), (8, 72), (10, 69), (12, 67), (14, 69)],
+    "Bb": [(0, 65), (3, 69), (6, 74), (8, 72), (10, 70), (12, 69), (14, 65)],
+    "F":  [(0, 69), (3, 72), (6, 72), (8, 69), (10, 67), (12, 65), (14, 67)],
+    "C":  [(0, 67), (3, 64), (6, 67), (8, 72), (10, 67), (12, 64), (14, 65)],
+    "A":  [(0, 64), (3, 69), (6, 73), (8, 76), (10, 73), (12, 69), (14, 67)],
+}
+STAB = {"Dm": [62, 65, 69, 72], "Bb": [58, 62, 65, 69], "F": [60, 65, 69, 72], "C": [60, 64, 67, 72], "A": [61, 64, 69, 73]}
+ROOT = {"Dm": 38, "Bb": 34, "F": 41, "C": 36, "A": 33}
+REEL_PROG = ["Dm", "Bb", "F", "C", "Dm", "Bb", "C", "A"]
+STAB_STEPS = [2, 6, 10, 13]          # syncopated, between the kicks
+
+
 def build_music_reel():
-    """The reel's track: 132 BPM, D minor. A cowbell hook between the kicks
-    over supersaw chords and a gliding 808, a long pitched boom kick on
-    every beat, and the drums kept low. It builds with the film: the hook
-    alone and muffled before the drop; hook, chords and 808 for the
-    receptionist; stabs join for the co-pilot; everything, the hook doubled
-    an octave up, for the documents; silence for the press; the hook once
-    more under the name."""
+    """The reel's track: house at the film's tempo, D minor. A punchy kick, claps
+    on two and four, open hats on the offbeats; a rolling offbeat bass; saw
+    chord stabs between the kicks; a plucked lead playing the hook with a
+    dotted echo; a supersaw pad for the last section; a faint cowbell for a
+    nod to the reference. It builds with the film: filtered before the drop,
+    groove and stabs for the receptionist, the lead joins for the co-pilot,
+    everything for the documents; muffled on the objection, silent for the
+    press, and one bar more under the name."""
     pads, bass, keys, drums = buf(), buf(), buf(), buf()
     mk = lambda k: [c for c in CUES if c["type"] == k]
     drop = mk("m_drop")[0]["t"]
@@ -1552,92 +1596,97 @@ def build_music_reel():
     rr = np.random.default_rng(11)
     kicks = []
 
-    # the intro: the first chord and the hook, both behind a closed filter
+    # before the drop: the first chord as a pad and the hook, behind a closed filter
     d = drop
-    intro = supersaw(REEL_CH2["Dm"][1], d + 0.1, cut=900, v=1.0, attack=0.3)
-    cut = 300 + 2400 * np.clip(np.arange(len(intro)) / (d * SR), 0, 1) ** 2
+    intro = supersaw(STAB["Dm"], d + 0.1, cut=1000, v=1.0, attack=0.25)
+    cut = 250 + 2600 * np.clip(np.arange(len(intro)) / (d * SR), 0, 1) ** 2
     intro = np.stack([sweep_lp(intro[:, 0], cut, q=1.4), sweep_lp(intro[:, 1], cut, q=1.4)], 1)
-    add(pads, intro, 0, 0.5)
-    for st, m in HOOK["Dm"]:                       # the bar before the drop, as far as it fits
+    add(pads, intro, 0, 0.6)
+    for st, m in LEAD["Dm"]:
         t = drop + (st - 16) * s16
         if t >= 0.05:
             p = t / drop
-            add(keys, cowbell(m, 0.18, 0.8, cut=700 + 3000 * p ** 2), t, 0.22 + 0.2 * p)
+            add(keys, lp(pluck(m, 0.2, 1200 + 1500 * p, 0.8), 600 + 2500 * p ** 2, 2), t, 0.3 + 0.25 * p)
     k = 0
     while k * s16 < d:
         t = k * s16; p = t / d
-        add(drums, hp(tick_hat(), 6500), t, 0.03 + 0.12 * p ** 2 * (1.3 if k % 2 else 0.8), pan=0.25)
+        add(drums, hp(tick_hat(), 6500), t, 0.02 + 0.08 * p ** 2, pan=0.25)
         k += 1
-    rc = hp(noise(1.1), 3000); rc = rc * np.linspace(0, 1, len(rc)) ** 3
-    add(drums, rc, drop - 1.1, 0.3)
+    rc = hp(noise(1.2), 2500); rc = rc * np.linspace(0, 1, len(rc)) ** 3
+    add(drums, rc, drop - 1.2, 0.22)
 
     def section(t):
         return 0 if t < secB else 1 if t < secC else 2
 
     def groove(a, z, fill_at=(), outro=False):
         n = int(round((z - a) / BEAT))
-        prev_root = None
         for j in range(n):
             t = a + j * BEAT
             bi = int(round((t - drop) / BEAT))
             bb = bi % 4
-            barno = bi // 4
-            ch = REEL_PROG[barno % len(REEL_PROG)]
-            root, notes = REEL_CH2[ch]
+            ch = REEL_PROG[(bi // 4) % len(REEL_PROG)]
             sec = 2 if outro else section(t)
             kicks.append(t)
-            # drums, kept low: the boom kick, claps on two and four, hats
-            add(drums, boom_kick(1.0 if bb == 0 else 0.9), t, 0.62)
+            add(drums, house_kick(1.0), t, 0.55)
             if bb in (1, 3):
-                add(drums, stereo(clap_layer(rr), clap_layer(rr)), t, 0.22)
-            add(drums, hat(0.05 if sec < 2 else 0.08), t + BEAT / 2, 0.1 + 0.04 * sec, pan=0.2)
-            if sec >= 1:
-                for q in (0.25, 0.75):
-                    add(drums, tick_hat(), t + q * BEAT, 0.05 + 0.03 * rr.random(), pan=-0.2)
+                add(drums, reverb(stereo(clap_layer(rr), clap_layer(rr)), IR_ROOM, 0.35)[: at(0.45)], t, 0.26)
+            add(drums, hat(0.09), t + BEAT / 2, 0.16, pan=0.15)                       # the open hat, off the beat
+            for q in (0.25, 0.75):
+                add(drums, shaker(0.8), t + q * BEAT, 0.07 + 0.03 * rr.random() + 0.03 * sec, pan=-0.25)
+            if sec == 2 and bb in (1, 3):
+                add(drums, hp(noise(0.3), 6000) * np.exp(-tt(0.3) / 0.12), t, 0.05, pan=0.3)   # a ride in the last section
+            if bb == 3 and bi % 8 == 7:                                              # the cowbell's nod
+                add(keys, lp(cowbell(74, 0.12, 0.6), 2400, 2), t + 0.75 * BEAT, 0.07, pan=0.4)
             for f in fill_at:
                 if f - BEAT - 1e-6 <= t < f - 1e-6:
                     for q in range(4):
-                        add(drums, snare(), t + q * s16, 0.06 + 0.04 * q)
-                    add(drums, sfx_riser(BEAT * 2), t - BEAT, 0.12)
-            # the harmony, by the bar: wide supersaw chords, pumped
-            if bb == 0:
-                L = min(bar, z - t)
-                add(pads, supersaw(notes, L, cut=2600 + 1400 * sec, v=1.0, attack=0.01, release=0.3), t, 0.3 + 0.06 * sec)
-                add(bass, glide808(root, L * 0.98, 1.0, from_m=prev_root), t, 0.42)
-                prev_root = root
-            # stabs on the offbeats once the co-pilot is on
-            if sec >= 1:
-                add(pads, supersaw([n + 12 for n in notes[:3]], 0.12, cut=4200, v=1.0, release=0.08), t + BEAT / 2, 0.16 + 0.05 * sec)
-            # the hook: the cowbell between the kicks
-            for st, m in HOOK[ch]:
+                        add(drums, snare(), t + q * s16, 0.05 + 0.03 * q)
+                    add(drums, sfx_riser(BEAT * 2), t - BEAT, 0.1)
+            # the rolling bass: the offbeat eighth, with sixteenth pick-ups later on
+            root = ROOT[ch]
+            add(bass, sub(root, BEAT * 0.42, 1.0), t + BEAT / 2, 0.5)
+            add(bass, moog(root + 12, BEAT * 0.4, 0.8), t + BEAT / 2, 0.14)
+            if sec >= 1 and bb in (1, 3):
+                add(bass, sub(root + 12 if bb == 3 else root, BEAT * 0.2, 0.7), t + 0.75 * BEAT, 0.35)
+            # the stabs, between the kicks
+            for st in STAB_STEPS:
                 if st // 4 == bb:
-                    tt_ = t + (st % 4) * s16
-                    add(keys, cowbell(m, 0.2, 1.0), tt_, 0.62, pan=-0.08)
-                    if sec == 2:
-                        add(keys, cowbell(m + 12, 0.14, 0.7), tt_, 0.2, pan=0.3)
-                    # its echo, an eighth later, softer and wider
-                    add(keys, cowbell(m, 0.12, 0.5, cut=3000), tt_ + BEAT / 2, 0.12, pan=0.45)
+                    add(pads, saw_stab(STAB[ch], 0.18, 1800 + 900 * sec, 1.0), t + (st % 4) * s16, 0.55)
+            # the pad, for the last section
+            if bb == 0 and sec == 2 and not outro:
+                add(pads, supersaw(STAB[ch], min(bar, z - t), cut=3200, v=1.0, attack=0.05, release=0.3), t, 0.22)
+            # the lead, from the co-pilot on, with a dotted-eighth echo
+            if sec >= 1:
+                for st, m in LEAD[ch]:
+                    if st // 4 == bb:
+                        tt_ = t + (st % 4) * s16
+                        pl = pluck(m, 0.2, 2400 + 600 * sec, 1.0)
+                        add(keys, pl, tt_, 0.5, pan=-0.1)
+                        add(keys, lp(pl, 2000, 2) * 0.35, tt_ + 0.75 * BEAT, 0.5, pan=0.4)
+                        if sec == 2:
+                            add(keys, pluck(m + 12, 0.14, 3000, 0.5), tt_, 0.14, pan=0.25)
 
-    add(drums, crash(), drop, 0.28)
+    add(drums, crash(), drop, 0.22)
     groove(drop, g0, fills)
-    add(drums, crash(), g1, 0.32)
+    add(drums, crash(), g1, 0.26)
     groove(g1, DUR, outro=True)
-    # the kick pumps the harmony hard: the EDM breath
+    add(pads, supersaw(STAB["Dm"], DUR - g1, cut=2600, v=1.0, attack=0.02, release=0.6), g1, 0.3)
+    # the kick pumps the harmony: the house breath
     pump = np.ones(N)
     for t in kicks:
-        i = at(t); m = min(N - i, at(0.34))
+        i = at(t); m = min(N - i, at(0.3))
         if m > 0:
-            pump[i:i + m] = np.minimum(pump[i:i + m], 1 - 0.7 * np.exp(-np.arange(m) / SR / 0.085))
-    pads *= pump[:, None]; bass *= pump[:, None] ** 0.8; keys *= pump[:, None] ** 0.25
-    # the hook rings in a small room
-    keys = reverb(keys, IR_ROOM, 0.22)[: N]
-    # the balance: the hook leads, chords and 808 under it, the drums low
-    keys *= 1.15; pads *= 4.0; bass *= 0.75; drums *= 0.4
+            pump[i:i + m] = np.minimum(pump[i:i + m], 1 - 0.6 * np.exp(-np.arange(m) / SR / 0.08))
+    pads *= pump[:, None]; bass *= pump[:, None] ** 0.8; keys *= pump[:, None] ** 0.4
+    keys = reverb(keys, IR_ROOM, 0.3)[: N]
+    pads = reverb(pads, IR_ROOM, 0.2)[: N]
+    # the balance: lead and stabs on top, bass under them, the drums below
+    keys *= 0.9; pads *= 3.6; bass *= 0.9; drums = lp(drums, 11000, 2) * 0.6
     gate = np.ones(N)
     gate[at(g0):at(g1)] = 0
     ramp = at(0.012); gate[at(g0):at(g0) + ramp] = np.linspace(1, 0, ramp); gate[at(g1) - ramp:at(g1)] = np.linspace(0, 1, ramp)
     tail = np.clip((DUR - 0.5 - np.arange(N) / SR) / 2.0, 0, 1) ** 0.8
-    for b_, gg in ((pads, gate), (bass, gate * tail), (keys, gate * np.maximum(tail, 0.25)), (drums, gate * tail)):
+    for b_, gg in ((pads, gate), (bass, gate * tail), (keys, gate * np.maximum(tail, 0.2)), (drums, gate * tail)):
         b_ *= gg[:, None]
     for c in mk("m_lpf"):
         a, z = c["t"], c["t"] + c["d"]
@@ -1648,30 +1697,96 @@ def build_music_reel():
 
 
 IR_POOL = make_ir(1.1, 0.22, 2600)      # a short, dark space for drops under water
-DROP_SCALE = [62, 65, 67, 69, 72, 74, 77, 79, 81, 84, 86, 89, 91, 93]   # D minor pentatonic, D4 up
+DROP_SCALE = [50, 53, 55, 57, 60, 62, 65, 67, 69, 72, 74, 77, 79, 81]   # D minor pentatonic, from D3
 
 
-def sfx_drop(deg, n=1, step=2, gap=0.045, wet=0.3, v=0.6, seed=0):
-    """Water drops: each a sine whose pitch rises as the bubble closes, a
-    click at the start, a glassy partial when dry. wet pulls it under water:
-    lower, duller, further away in the reverb."""
+def soft_tone(m, d=0.5, attack=0.01, decay=0.2, bright=0.15):
+    """A warm tone: a sine with a little of its octave, a soft start and an easy fade."""
+    x = tt(d); f = mtof(m)
+    y = np.sin(2 * np.pi * f * x) + bright * np.sin(4 * np.pi * f * x)
+    return y * np.minimum(1, x / attack) * np.exp(-x / decay)
+
+
+def sfx_drop(deg, n=1, step=2, gap=0.05, wet=0.6, v=0.6, seed=0):
+    """Drops heard from under water: a low sine whose pitch rises as the bubble
+    closes, eased in, with no click. wet takes it lower, duller and further off."""
     r = np.random.default_rng(seed)
-    d = gap * (n - 1) + 0.9
+    d = gap * (n - 1) + 0.6
     out = np.zeros((at(d), 2))
     for i in range(n):
-        m = DROP_SCALE[int(np.clip(deg + i * step, 0, len(DROP_SCALE) - 1))] - 5 * wet
-        f0 = mtof(m); L = 0.16; x = tt(L)
-        f = f0 * (0.62 + 0.38 * (1 - np.exp(-x / 0.009))) * (1 + 0.12 * x / L)
-        ph = 2 * np.pi * np.cumsum(f) / SR
-        y = np.sin(ph) * np.exp(-x / (0.035 + 0.03 * wet)) * np.minimum(1, x / 0.0015)
-        y += (1 - wet) * 0.18 * np.sin(2.1 * ph) * np.exp(-x / 0.02)
-        y += hp(noise(L), 3000) * np.exp(-x / 0.0015) * 0.12 * (1 - wet)
-        y = lp(y, 9000 - 7800 * wet, 2)
-        pan = r.uniform(-0.45, 0.45)
+        m = DROP_SCALE[int(np.clip(deg + i * step, 0, len(DROP_SCALE) - 1))] - 3 * wet
+        f0 = mtof(m); L = 0.26; x = tt(L)
+        f = f0 * (0.7 + 0.3 * (1 - np.exp(-x / 0.02))) * (1 + 0.08 * x / L)
+        y = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.minimum(1, x / 0.006) * np.exp(-x / (0.07 + 0.06 * wet))
+        y = lp(y, 2400 - 1600 * wet, 2)
+        pan = r.uniform(-0.35, 0.35)
         st = np.stack([y * np.cos((pan + 1) * np.pi / 4), y * np.sin((pan + 1) * np.pi / 4)], 1) * np.sqrt(2)
         j = at(i * gap); out[j:j + len(st)] += st[: len(out) - j]
-    out = reverb(out, IR_POOL if wet > 0.5 else IR_ROOM, 0.15 + 0.45 * wet)
     return out * v
+
+
+def sfx_msgin(v=1.0):
+    """A message arrives: two soft notes, a fifth up."""
+    y = np.zeros(at(0.6))
+    for k, m in enumerate((62, 69)):
+        tn = soft_tone(m, 0.5, 0.008, 0.16, 0.2); j = at(k * 0.085); y[j:j + len(tn)] += tn[: len(y) - j] * (0.8 if k else 1)
+    return y * v
+
+
+def sfx_msgout(v=1.0):
+    """A message goes: a soft swish and a note that lifts."""
+    x = tt(0.4)
+    swish = bp(noise(0.4), 400, 1800) * np.sin(np.pi * np.clip(x / 0.2, 0, 1)) ** 2 * 0.35
+    f = mtof(64) * (1 + 0.25 * (1 - np.exp(-x / 0.05)))
+    tone = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.minimum(1, x / 0.01) * np.exp(-x / 0.12)
+    return (swish + tone) * v
+
+
+def sfx_confirm(n=2, deg=3, v=1.0):
+    """Done: a warm chime, a few notes up the scale."""
+    y = np.zeros(at(1.2))
+    for i in range(n):
+        m = DROP_SCALE[int(np.clip(deg + 2 * i, 0, len(DROP_SCALE) - 1))] + 12
+        tn = soft_tone(m, 1.0, 0.012, 0.45, 0.25); j = at(i * 0.09); y[j:j + len(tn)] += tn[: len(y) - j] * (0.85 ** i)
+    return y * v
+
+
+def sfx_connect(v=1.0):
+    """The call connects: two short, round tones."""
+    y = np.zeros(at(0.6))
+    for k, m in enumerate((62, 69)):
+        tn = soft_tone(m, 0.3, 0.006, 0.07, 0.3); j = at(k * 0.13); y[j:j + len(tn)] += tn[: len(y) - j]
+    return y * v
+
+
+def sfx_tension(d, v=1.0):
+    """Unease: a low swell with a slow flutter, and air rising under it."""
+    x = tt(d); p = x / d
+    env = np.sin(np.pi * np.clip(p * 1.15, 0, 1)) ** 1.5
+    sub_ = np.sin(2 * np.pi * np.cumsum(55 + 6 * p) / SR) * 0.8 + np.sin(2 * np.pi * 82.4 * x) * 0.35
+    air = sweep_lp(bp(noise(d), 150, 1200), 300 + 500 * p, q=1.2) * 0.5
+    flutter = 1 - 0.35 * (0.5 + 0.5 * np.sin(2 * np.pi * 5.5 * x))
+    return np.tanh(1.3 * (sub_ + air)) * env * flutter * v
+
+
+def sfx_hum(d, v=1.0):
+    """The scan: a low hum and a band of air moving down the page."""
+    x = tt(d); p = x / d
+    hum = (np.sin(2 * np.pi * 110 * x) * 0.5 + np.sin(2 * np.pi * 220 * x) * 0.2) * (0.8 + 0.2 * np.sin(2 * np.pi * 7 * x))
+    band = sweep_lp(bp(noise(d), 300, 2500), 1200 - 700 * p, q=2.0) * 0.6
+    env = np.minimum(1, x / 0.08) * np.minimum(1, (d - x) / 0.12)
+    return (hum + band) * env * v
+
+
+def drown(x, cut=1400, wobble=0.0035, room=0.45):
+    """Under water: a steep low-pass, a slow wavering of pitch (a delay line
+    swept a few milliseconds), and a short, dark room."""
+    y = lp(x, cut, 4)
+    n = np.arange(len(y)); ts = n / SR
+    for c, ph in ((0, 0.0), (1, 1.9)):
+        dl = (0.012 + wobble * np.sin(2 * np.pi * 0.6 * ts + ph)) * SR
+        y[:, c] = np.interp(n - dl, n, y[:, c])
+    return reverb(y, IR_POOL, room)
 
 
 def build_sfx():
@@ -1744,7 +1859,19 @@ def build_sfx():
         elif k == "star":
             add(out, reverb(sfx_star(v), IR_HALL, 0.3), t, 0.35)
         elif k == "drop":
-            add(out, sfx_drop(c["deg"], c.get("n", 1), c.get("step", 2), c.get("gap", 0.045), c.get("wet", 0.3), v, seed=int(t * 1000)), t, 0.5)
+            add(out, sfx_drop(c["deg"], c.get("n", 1), c.get("step", 2), c.get("gap", 0.05), c.get("wet", 0.6), v, seed=int(t * 1000)), t, 0.5)
+        elif k == "msgin":
+            add(out, sfx_msgin(v), t, 0.35, pan=-0.2)
+        elif k == "msgout":
+            add(out, sfx_msgout(v), t - 0.05, 0.35, pan=0.2)
+        elif k == "confirm":
+            add(out, sfx_confirm(c.get("n", 2), c.get("deg", 3), v), t, 0.3)
+        elif k == "connect":
+            add(out, sfx_connect(v), t, 0.35)
+        elif k == "tension":
+            add(out, sfx_tension(c["d"], v), t, 0.45)
+        elif k == "hum":
+            add(out, sfx_hum(c["d"], v), t, 0.3)
         elif k == "glitch":
             add(out, sfx_glitch(c["d"]), t, 0.3)
         elif k == "thud":
@@ -1753,6 +1880,9 @@ def build_sfx():
             add(out, reverb(th, IR_ROOM, 0.3), t, 0.45)
         else:
             raise ValueError(k)
+    dr = getattr(F, "SFX_DROWN", None)
+    if dr:
+        out = drown(out, **dr)
     return out
 
 

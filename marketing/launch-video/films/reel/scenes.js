@@ -174,28 +174,27 @@ function buildReception(s) {
   const l1 = h('div', 'r-lab', s.cam, 'Booked'), l2 = h('div', 'r-lab', s.cam, 'Deposit'), l3 = h('div', 'r-lab', s.cam, 'Reminder sent')
   const wash = h('div', 'r-wash', s.root)
 
-  const tVoice = t0 + .12, tPlay = [t0 + .35, tDrop - .08], tTx = t0 + .72
-  const tDots = tDrop + .02, tAi = tDrop + .36, tYes = b(5), tCard = b(6), tFlare = tB - .12
-  const tP2 = tB + 2 * B, tP3 = tB + 3 * B, tBack = tB + 4 * B
-  // sound
-  cue('riser', tDrop, { d: 1.3 })
+  const tVoice = t0 + .15, tPlay = [t0 + .4, tDrop - .1], tTx = t0 + .82
+  const tDots = tDrop + .02, tAi = tDrop + .45, tYes = b(6), tCard = b(7.5), tFlare = tB - .12
+  const tP2 = tB + 2 * B, tP3 = tB + 3.5 * B, tBack = tB + 5 * B
+  // sound: what each moment is, heard through water
+  cue('riser', tDrop, { d: 1.4 })
   cue('m_drop', tDrop)
-  drop(tVoice, 7, { n: 2, step: 3, wet: .35, v: .7 })
-  txW.forEach((_, i) => drop(tTx + i * .06, 5 + (i % 4), { wet: .75, v: .28 }))
-  cue('whoosh', tDrop - .04, { d: .42, v: .9 })
-  ;[0, 1, 2].forEach(i => drop(tDots + i * .1, 8 + i, { wet: .55, v: .3 }))
-  drop(tAi, 9, { n: 2, step: 2, wet: .25, v: .6 })
-  drop(tYes, 6, { wet: .3, v: .6 })
-  drop(tCard, 7, { n: 3, step: 2, gap: .06, wet: .2, v: .7 })
-  cue('shimmer', tCard + .15, { d: 1, v: .35 })
-  cue('implode', tB, { d: .28 })
-  drop(tB, 4, { n: 2, step: 5, gap: .02, wet: .1, v: .9 })
-  cue('draw', tB + .12, { d: .5 })
-  drop(tP2, 8, { wet: .2, v: .65 }); drop(tP2 + .42, 10, { n: 2, step: 2, wet: .15, v: .5 })
-  drop(tP3, 9, { wet: .2, v: .65 }); drop(tP3 + .3, 11, { wet: .5, v: .4 })
-  cue('whoosh', tBack + .1, { d: .5, v: .6 })
-  cue('whoosh', t1, { d: .45, v: .5 })
-  drop(t1 - .2, 3, { wet: .9, v: .6 })
+  cue('msgin', tVoice, { v: .6 })                          // a voice note arrives
+  cue('type', tTx, { d: .5, v: .25 })                      // and is transcribed
+  cue('whoosh', tDrop - .04, { d: .45, v: .6 })            // the camera swings round
+  ;[0, 1, 2].forEach(i => drop(tDots + .08 + i * .12, 1 + i, { wet: .9, v: .25 }))
+  cue('msgin', tAi, { v: .7 })                             // the agent answers
+  cue('msgout', tYes, { v: .65 })                          // "Yes please!"
+  cue('confirm', tCard, { n: 2, v: .7 })                   // Booked
+  cue('implode', tB, { d: .32 })                           // the booking flares into a point
+  drop(tB, 0, { n: 2, step: 3, gap: .05, wet: .85, v: .8 })
+  cue('draw', tB + .28, { d: .5, v: .5 })
+  drop(tP2, 2, { wet: .8, v: .6 })
+  ;[0, 1, 2, 3].forEach(i => cue('tick', tP2 + .1 + i * .08, { v: .35 }))
+  drop(tP3, 3, { wet: .8, v: .6 }); cue('confirm', tP3 + .2, { n: 1, deg: 5, v: .45 })
+  cue('whoosh', tBack + .1, { d: .55, v: .45 })
+  cue('whoosh', t1, { d: .5, v: .45 })
 
   let cam = null, lay = null
   function layout() {
@@ -315,25 +314,25 @@ function buildCall(s) {
   const blks = [...side.children]
   const say = side.querySelector('.say')
   const sayW = words(say, '“Most teams start with a 30-day pilot, so you only pay once it’s working.”')
-  const tDot = b(2), tCap = b(3), tGl = b(5), tSwap = tGl + .2, tObj = b(6), tOut = tC
-  const tBl = [tOut + .2, tOut + .45, tOut + 2 * B, tOut + 2 * B + .15, tOut + 4 * B]
+  const tDot = b(2), tCap = b(3), tGl = b(5), tSwap = tGl + .2, tObj = b(7), tOut = tC
+  const tBl = [tOut + .2, tOut + .5, tOut + 2 * B, tOut + 2 * B + .15, tOut + 5 * B]
   const tSay = tBl[3] + .12
 
-  cue('whoosh', t0 + .05, { d: .35, v: .5 })
-  drop(t0 + .3, 2, { wet: .85, v: .7 })
-  cue('fall', tDot - .38, { d: .38 })
-  drop(tDot, 10, { n: 3, step: -2, gap: .03, wet: .15, v: .9 })
-  drop(tDot + .12, 5, { wet: .8, v: .5 })
-  es.forEach((_, i) => drop(tCap + i * .07, 6 + ((i * 3) % 5), { wet: .6, v: .3 }))
-  cue('glitch', tGl, { d: .42 })
-  ;[0, 1, 2, 3, 4].forEach(i => drop(tGl + .04 + i * .075, 12 - i * 2, { wet: .35, v: .28 }))
-  drop(tSwap + .12, 7, { n: 2, step: 3, wet: .2, v: .55 })
-  cue('alert', tObj, { v: .5 })
-  drop(tObj, 1, { n: 2, step: 1, gap: .09, wet: .95, v: .9 })
+  cue('whoosh', t0 + .05, { d: .45, v: .45 })              // out of the grey
+  cue('connect', b(1), { v: .6 })                          // the call connects
+  cue('fall', tDot - .4, { d: .4, v: .6 })                 // a point of light falls
+  drop(tDot, 1, { n: 2, step: 3, gap: .06, wet: .85, v: .75 })
+  cue('shimmer', tDot + .05, { d: 1.1, v: .25 })           // the co-pilot has joined
+  cue('type', tCap, { d: es.length * .07 + .1, v: .3 })    // the client's words, transcribed
+  cue('glitch', tGl, { d: .42 })                           // Spanish breaks up
+  cue('shimmer', tSwap + .1, { d: .9, v: .3 })             // and comes back English
+  drop(tSwap + .12, 4, { wet: .8, v: .45 })
+  cue('tension', tObj, { d: tOut - tObj + .2, v: .8 })     // an objection: the room goes tense
   cue('m_lpf', tObj + .1, { d: tOut - tObj - .1 })
-  cue('whoosh', tOut + .02, { d: .4, v: 1 })
-  tBl.forEach((x, i) => drop(x, 5 + i * 2, { wet: .3, v: .5 }))
-  sayW.forEach((_, i) => i % 2 === 0 && drop(tSay + i * .035, 8 + (i % 5), { wet: .7, v: .22 }))
+  cue('whoosh', tOut + .02, { d: .45, v: .7 })             // pull out to the sidebar
+  tBl.forEach((x, i) => cue('swish', x + .05, { v: .35 }))  // each block slides in
+  cue('type', tSay, { d: sayW.length * .035 + .1, v: .3 }) // what to say next, typed
+  cue('confirm', tBl[4] + .05, { n: 1, deg: 4, v: .4 })    // the pivot
 
   let cam = null
   function layout() {
@@ -475,18 +474,19 @@ function buildDocs(s) {
   const sv = score.querySelector('.v span')
   const treeY = L.py - 62 - TH / 2, scoreY = treeY - TH / 2 - 92
 
-  const tFl = [t0 + .24, t0 + .4, t0 + .56, t0 + .72]
-  const tScan = [b(2), b(4) - .05]
-  const tBreak = b(4), tPills = b(5), tTree = b(8)
-  cue('whoosh', t0 + .02, { d: .35, v: .6 })
-  tFl.forEach((x, i) => { cue('paper', x, { v: .7, pan: (i % 2 ? .4 : -.4) }); drop(x + .02, 9 - i, { wet: .5, v: .35 }) })
-  drop(b(2) - .02, 4, { n: 2, step: 4, wet: .3, v: .6 })
-  cue('scan', tScan[0], { d: tScan[1] - tScan[0] })
-  cue('whoosh', tBreak + .02, { d: .35, v: .6 })
-  ;[0, 1, 2].forEach(i => { drop(tPills + i * .15, 5 + i * 2, { wet: .2, v: .65 }); drop(tPills + i * .15 + .4, 9 + i, { n: 2, step: 2, wet: .4, v: .35 }) })
-  cue('draw', tTree, { d: .45 })
-  drop(tTree + .4, 7, { n: 4, step: 2, gap: .05, wet: .25, v: .6 })
-  cue('shimmer', tTree + .45, { d: 1.3, v: .35 })
+  const tFl = [t0 + .3, t0 + .52, t0 + .74, t0 + .96]
+  const tSet = b(2.5)                                     // the tender pack settles
+  const tScan = [tSet, b(5.5)]
+  const tBreak = b(7), tPills = b(8), tTree = b(10)
+  cue('whoosh', t0 + .02, { d: .45, v: .45 })              // into focus
+  tFl.forEach((x, i) => cue('paper', x, { v: .55, pan: (i % 2 ? .4 : -.4) }))   // pages riffle past
+  cue('paper', tSet - .1, { v: .4 })
+  cue('hum', tScan[0], { d: tScan[1] - tScan[0] + .15, v: .7 })                // the scan reads down the page
+  ;[0, 1, 2].forEach(i => drop(tScan[0] + (tScan[1] - tScan[0]) * [.3, .55, .8][i], 2 + i, { wet: .85, v: .45 }))
+  cue('whoosh', tBreak + .02, { d: .45, v: .45 })          // the page falls away
+  ;[0, 1, 2].forEach(i => { drop(tPills + i * .15, 1 + i, { wet: .85, v: .55 }); [0, 1, 2].forEach(k => cue('tick', tPills + i * .15 + .12 + k * .1, { v: .25 })) })
+  cue('draw', tTree, { d: .45, v: .5 })                    // the bracket
+  cue('confirm', tTree + .3, { n: 3, deg: 2, v: .6 })       // and the score
 
   let cam = null, TY = null
   function layout() {
@@ -494,12 +494,13 @@ function buildDocs(s) {
     const D = L.doc, land = LAND
     cam = path([
       [t0, D[0] - 60, D[1], 120, 6, -30, 0, 1],
-      [b(2) - .1, D[0], D[1] - 40, 60, 4, -10, 0, 1],
-      [b(2) + .1, D[0] + (land ? 110 : 60), -90 * L.ds, 70, 16, -6, 0, 1],
+      [tSet - .1, D[0], D[1] - 40, 60, 4, -10, 0, 1],
+      [tSet + .15, D[0] + (land ? 110 : 60), -90 * L.ds, 70, 16, -6, 0, 1],
       [tScan[1], D[0] + (land ? 170 : 80), 120 * L.ds, 90, 14, -12, 0, 1],
       [tBreak + .35, 0, L.py - 30, 60, 18, 0, 0, 1],
       [tPills + .3, L.pills[0] * (land ? 1 : .45), L.py, land ? 260 : 90, 10, 14, 0, 1],
-      [tPills + 1.0, L.pills[2] * (land ? 1 : .45), L.py, land ? 260 : 90, 8, -14, 0, 1],
+      [tPills + .95, L.pills[2] * (land ? 1 : .45), L.py, land ? 260 : 90, 8, -14, 0, 1],
+      [tTree - .25, 0, L.py - 20, land ? 120 : 60, 12, -4, 0, 1],
       [tTree + .05, 0, L.py - 60, 20, 16, 0, 0, 1],
       [tTree + .7, 0, scoreY + 60, 80, -6, 0, 0, 1],
       [t1, 0, scoreY + 40, 150, -8, 4, 0, 1],
@@ -518,7 +519,7 @@ function buildDocs(s) {
         const go = P(t, tFl[i], tFl[i] + .2, E.in2)
         put(e, { x: L.doc[0] + i * 34 + go * 900, y: L.doc[1] - i * 10, z: -d0 + go * 520, ry: -18 - go * 50, s: L.ds * lerp(1.4, 1, rf), o: Math.min(1, rf * 1.5) * (1 - P(t, tFl[i] + .1, tFl[i] + .22)), blur: (1 - rf) * 26 + go * 14 })
       } else {
-        const come = P(t, tFl[3], b(2), E.out)
+        const come = P(t, tFl[3], tSet, E.out)
         put(e, { x: L.doc[0] + lerp(4 * 34, 0, come), y: L.doc[1] - lerp(40, 0, come) - brk * 200, z: lerp(-d0, 0, come) - brk * 520, rx: brk * 62, ry: lerp(-18, 0, come), s: L.ds * lerp(1.4, 1, rf), o: Math.min(1, rf * 1.5) * (1 - P(t, tBreak + .15, tBreak + .45)), blur: (1 - rf) * 26 + brk * 10 })
       }
     })
@@ -565,16 +566,16 @@ function buildDocs(s) {
    ============================================================ */
 function buildCta(s) {
   widen(s)
-  const t0 = s.t0, t1 = s.t1, tPress = t0 + 1.5 * B
+  const t0 = s.t0, t1 = s.t1, tPress = t0 + 2.5 * B
   const specks = bokeh(s, 12)
   const btn = h('div', 'r-btn', s.cam, `<div class="sheen"></div><span style="width:34px;height:34px;display:inline-flex">${spark(34)}</span><span>Put AI to work</span>`)
   btn.style.width = M({ land: '760px', def: '720px' })
   const sheen = btn.querySelector('.sheen')
   const cam = path([[t0, 0, 0, -120, 8, 16, 0, 1], [tPress, 0, 0, 40, 0, 0, 0, 1], [t1, 0, 0, 120, 0, 0, 0, 1]])
-  cue('whoosh', t0 + .04, { d: .35, v: .6 })
-  cue('shimmer', t0 + .22, { d: .9, v: .35 })
-  cue('click', tPress)
-  drop(tPress, 3, { n: 2, step: 7, gap: .015, wet: .15, v: .9 })
+  cue('whoosh', t0 + .04, { d: .5, v: .5 })                // the button flies in
+  cue('shimmer', t0 + .3, { d: 1, v: .25 })                // light across it
+  cue('click', tPress, { v: .8 })                          // pressed
+  drop(tPress, 0, { wet: .9, v: .7 })
   cue('m_gap', tPress, { d: t1 - tPress })
   return t => {
     const p = P(t, t0 - .25, t0 + .35, E.out)
@@ -601,13 +602,12 @@ function buildLogo(s) {
   const mark = h('div', 'r-mark', s.cam, WORDMARK()); mark.firstChild.setAttribute('width', MW)
   const tag = h('div', 'r-tagl', s.cam, 'AI, built into your business.')
   const url = h('div', 'r-url', s.cam, 'Book a free discovery call · <b>nabl.agency</b>')
-  const tTag = t0 + B, tUrl = t0 + 3 * B
+  const tTag = t0 + B, tUrl = t0 + 4 * B
   const cam = path([[t0, 0, -20, 220, 0, -10, 0, 1], [tUrl, 0, -20, 0, 0, 0, 0, 1], [t1, 0, 0, -80, 0, 4, 0, 1]])
-  cue('impact', t0 + .01, { v: .8 })
-  drop(t0 + .01, 0, { n: 3, step: 4, gap: .03, wet: .6, v: .8 })
-  cue('shimmer', t0 + .03, { d: 2.4, v: .6 })
-  drop(tTag, 7, { wet: .5, v: .4 })
-  drop(tUrl, 9, { n: 2, step: 3, wet: .6, v: .4 })
+  cue('impact', t0 + .01, { v: .7 })                       // the name lands
+  cue('shimmer', t0 + .03, { d: 2.4, v: .4 })
+  drop(tTag, 2, { wet: .9, v: .35 })
+  cue('confirm', tUrl, { n: 2, deg: 1, v: .35 })
   return t => {
     const p = P(t, t0, t0 + .3, E.out)
     const gone = P(t, tUrl - .15, tUrl + .15, E.in2)
@@ -625,9 +625,9 @@ function buildLogo(s) {
 /* the chapter names, over everything */
 function buildChapters(s) {
   const CH = [
-    ['01', 'AI receptionist', 'Chats and calls, answered and booked.', 'chat', .3, 2.6],
-    ['02', 'Sales co-pilot', 'On your calls. Tells you what to say next.', 'call', .5, 2.6],
-    ['03', 'Document analyser', 'Any document in. What matters out.', 'docs', .3, 2.4],
+    ['01', 'AI receptionist', 'Chats and calls, answered and booked.', 'chat', .3, 3.2],
+    ['02', 'Sales co-pilot', 'On your calls. Tells you what to say next.', 'call', .5, 3.0],
+    ['03', 'Document analyser', 'Any document in. What matters out.', 'docs', .3, 3.0],
   ]
   const pos = M({ land: [-960 + 96, -540 + 118], port: [0, -760], sq: [0, -450], tall: [0, -570] })
   const els = CH.map(([no, name, ln]) => h('div', 'abs r-chap', s.root, `<div class="eb">${spark(18)}<span>${name}</span><span style="color:#8B8175">${no}</span></div><div class="ln">${ln}</div>`))
