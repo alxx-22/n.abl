@@ -99,10 +99,10 @@ SCENES = [
     dict(id="yours", lead=0.10, tail=0.15, q=0.5, style="sincere and warm, then soft and reassuring",
          tone="Sincere and warm. 'Built for your business' steady; 'Yours to keep' softer and reassuring.",
          lines=["Built for your business. Yours to keep."]),
-    dict(id="end",   lead=1.20, tail=2.60, q=1, snap=[0], style="a bright, excited reveal, with a big, genuine smile",
+    dict(id="end",   lead=1.20, tail=2.60, q=1, snap=[0], style="warm and proud, a clear 'Enable', then energy and a big smile",
          tone="Announce the name, 'Enable!', like a reveal: bright, lifted and rising through the word, with a smile, never dropping at the end. A short beat. Then 'Put AI to work!' with energy and a big smile, lifting at the end.",
          lines=["n.abl. Put AI to work!"],
-         read=["*n.abl.* <short pause> Put AI to work!"]),
+         read=["n.abl, <short pause> put AI to work!"]),
 ]
 
 

@@ -7,7 +7,7 @@ and the shot list are in SCRIPT.md; the animation is scenes.js.
 """
 
 TITLE = "n.abl · Websites that work"
-COVER = 5.3           # seconds: the frame the cover images are taken from
+COVER = 6.5           # seconds: the frame the cover images are taken from
 
 # The same voice as the AI film: British English, and the liveliest read of
 # the British voices (about twice their pitch movement).
@@ -87,10 +87,10 @@ SCENES = [
     dict(id="screens", lead=0.12, tail=0.30, q=0.5, style="crisp and punchy, then soft and reassuring",
          tone="Three crisp, punchy hits: 'fast', 'sharp', 'on every screen'. Then soften, sincere and reassuring, on 'and yours to keep'.",
          lines=["Fast, sharp on every screen, and yours to keep."]),
-    dict(id="end",     lead=1.20, tail=2.60, q=1, snap=[0], style="a bright, excited reveal, with a big, genuine smile",
+    dict(id="end",     lead=1.20, tail=2.60, q=1, snap=[0], style="warm and proud, a clear 'Enable', then a big, genuine smile",
          tone="Announce the name, 'Enable!', like a reveal: bright, lifted and rising through the word, with a smile, never dropping at the end. A short beat. Then 'Let's build yours!' with a big, genuine smile: an invitation, lifting at the end.",
          lines=["n.abl. Let's build yours!"],
-         read=["*n.abl.* <short pause> Let's build yours!"]),
+         read=["n.abl, <short pause> let's build yours!"]),
 ]
 
 # ---- music ---------------------------------------------------------------

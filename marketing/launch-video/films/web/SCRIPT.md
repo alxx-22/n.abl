@@ -1,6 +1,6 @@
 # Websites that work
 
-A 36-second launch film for n.abl's web builds (smart web apps, landing
+A 38-second launch film for n.abl's web builds (smart web apps, landing
 pages and booking systems), cut for every social format from one timeline:
 16:9, 1:1, 4:5 and 9:16.
 
@@ -58,9 +58,8 @@ the AI film's 124, on warm French-touch electronica rather than an EDM build.
 Voice: Gemini TTS (`Achird`), directed line by line by the notes below, when a
 `GEMINI_API_KEY` is set; otherwise Kokoro `bm_fable` (British English,
 Apache-2.0 model) at 1.2× speed, the same read as the AI film. Gemini reads at
-a natural pace, so the film runs 36 seconds against Kokoro's 32. For now line 7
-is read by `gemini-3.8-flash-lite-tts` standing in, in the same voice, until
-the free quota lets `gemini-3.8-flash-tts` read it.
+a natural pace, so the film runs 38 seconds against Kokoro's 32. Every line is
+read by `gemini-3.8-flash-tts`.
 
 | # | Shot | Line |
 |---|---|---|
@@ -95,9 +94,11 @@ England, with a bright, friendly voice that always has a smile in it and a
 natural, conversational delivery.
 
 The name gets the most care, so it lifts instead of landing flat like the
-end of a sentence: it is written ENABLE, in capitals, for stress. The last
-line is read as `ENABLE! <short pause> Let's build yours!` (the scene's
-`read`): the inline tag gives the short beat after the name and is not
+end of a sentence: inside a line it is written ENABLE, in capitals, for
+stress. On its own at the end, shouted in capitals (`ENABLE!`), the model
+said something closer to "Anibal", twice, so the last line is read calmly:
+`Enable, <short pause> let's build yours!` (the scene's `read`), warm and
+proud. The inline tag gives the short beat after the name and is not
 spoken.
 
 | # | Line, as read | Style (Gemini 3.8) |
@@ -109,7 +110,7 @@ spoken.
 | 5 | Booking systems that fill your diary, take the deposit, and send the reminders. | rhythmic, with growing delight |
 | 6 | And web apps built around how you work: portals, quotes, dashboards. | warm and sincere, then quick and crisp |
 | 7 | Fast, sharp on every screen, and yours to keep. | crisp and punchy, then soft and reassuring |
-| 8 | **n.abl.** *(short pause)* Let's build yours! | a bright, excited reveal, with a big, genuine smile |
+| 8 | n.abl, *(short pause)* let's build yours! | warm and proud, a clear 'Enable', then a big, genuine smile |
 
 The earlier models (3.1, 2.5) were built for a director's brief instead, and
 get this one: the profile, the scene, and the line's note.

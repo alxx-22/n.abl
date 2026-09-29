@@ -1580,7 +1580,8 @@ def reel_style():
     """The reel's track, by REEL_STYLE (film.py or the environment)."""
     st = os.environ.get("REEL_STYLE") or getattr(F, "REEL_STYLE", "house")
     return {"house": build_music_reel, "techno": build_reel_techno, "minimal": build_reel_minimal,
-            "deep": build_reel_deep, "cinema": build_reel_cinema}[st]
+            "deep": build_reel_deep, "cinema": build_reel_cinema,
+            "dark": lambda: build_reel_dark("d2"), "tension": lambda: build_reel_dark("d3")}[st]
 
 
 def build_music_reel():
@@ -2111,6 +2112,78 @@ def build_reel_cinema():
     add(drums, crash(), drop, 0.25); add(drums, crash(), g1, 0.3)
     out = reel_finish((pads, bass, keys, drums), kicks, 0.45, g0, g1, lpfs, rel=0.14)
     return out[0] * 1.2, out[1] * 1.0, out[2] * 1.2, out[3] * 0.75
+
+
+
+DARK_KEYS = {
+    "Dm": (38, [50, 57, 62, 65]), "Bb": (34, [46, 53, 58, 62]), "Gm": (43, [43, 50, 55, 58]),
+    "Am": (45, [45, 52, 57, 60]), "Eb": (39, [51, 55, 58, 63]), "C": (36, [48, 55, 60, 64]),
+}
+
+
+def build_reel_dark(variant="d2"):
+    """Cinematic and dark. d2: 100 BPM feel, Dm Bb Gm Am, half-time drums with a
+    big snare, a low pulsing bass, a slow dark arpeggio, low strings over a
+    drone. d3: tension, Dm Eb Gm Dm (a Phrygian turn), a heartbeat sub, a
+    ticking hat, sparse high piano in a long reverb, low strings, big hits
+    into each chapter."""
+    pads, bass, keys, drums = buf(), buf(), buf(), buf()
+    drop, g0, g1, secB, secC, fills, lpfs = reel_markers()
+    prog = ["Dm", "Bb", "Gm", "Am"] if variant == "d2" else ["Dm", "Eb", "Gm", "Dm"]
+    rr = np.random.default_rng(13); s16 = BEAT / 4
+    # the drone and the build before the drop
+    dr = lp(blsaw(mtof(26), DUR + 0.5) + blsaw(mtof(26) * 1.003, DUR + 0.5), 220, 2) * 0.35
+    dr *= np.clip(np.arange(len(dr)) / SR / drop, 0, 1) ** 1.5
+    add(pads, np.stack([dr, dr * 0.9], 1), 0, 0.5)
+    intro = wide_saws(DARK_KEYS["Dm"][1], drop + 0.1, cut=900, attack=0.5, release=0.2)
+    add(pads, intro, 0, 0.8)
+    rc = hp(noise(1.4), 2000); rc = rc * np.linspace(0, 1, len(rc)) ** 3
+    add(drums, rc, drop - 1.4, 0.14)
+    kicks, sfd, strings, piano = [], [], [], []
+    for t, bi, bb, bar, sec in reel_beats(drop, g0, g1, secB, secC):
+        ch = prog[bar % len(prog)]; root, notes = DARK_KEYS[ch]
+        if variant == "d2":
+            if bb == 0 or (bb == 2 and sec >= 2):
+                kicks.append(t); add(drums, tech_kick(1.0, 0.5, 40), t, 0.6)
+            if bb == 2:
+                cl = np.pad(stereo(clap_layer(rr), clap_layer(rr)), ((0, at(1.2)), (0, 0)))
+                add(drums, reverb(cl, IR_HALL, 0.8), t, 0.26)
+            if sec >= 1:
+                sfd += [(t + 0.5 * BEAT, 42, 30 + rr.integers(0, 15), 0.05)]
+            for q in (0.0, 0.5):                                             # the low pulse
+                y = lp(blsaw(mtof(root - 12), BEAT * 0.45), 420 + 120 * min(sec, 2), 2) * env_adsr(int((BEAT * 0.45) * SR), 0.004, 0.15, 0.5, 0.06)
+                add(bass, y, t + q * BEAT, 0.34); add(bass, sub(root - 12, BEAT * 0.4, 0.8), t + q * BEAT, 0.3)
+            for q in (0.0, 0.5):                                             # a slow, dark arpeggio in eighths
+                k = (bi * 2 + int(q * 2)) % 8
+                n = [notes[0], notes[2], notes[3], notes[2], notes[1] + 12, notes[2], notes[3], notes[1]][k] + 12
+                y = lp(blsquare(mtof(n), BEAT * 0.4, 0.35) * env_adsr(int((BEAT * 0.4) * SR), 0.006, 0.12, 0.3, 0.05), 900 + 300 * min(sec, 2), 2)
+                add(keys, y, t + q * BEAT, 0.13 + 0.03 * min(sec, 2))
+        else:
+            if bb == 0:                                                      # the heartbeat
+                kicks.append(t); add(drums, tech_kick(1.0, 0.5, 38), t, 0.55); add(drums, tech_kick(0.7, 0.4, 38), t + 0.25 * BEAT, 0.35)
+            if bb == 2 and sec >= 1:
+                cl = np.pad(stereo(clap_layer(rr), clap_layer(rr)), ((0, at(1.2)), (0, 0)))
+                add(drums, reverb(cl, IR_HALL, 0.9), t, 0.2)
+            sfd += [(t + q * BEAT, 42, 22 + rr.integers(0, 12) + 8 * (sec >= 2), 0.04) for q in ((0, .5) if sec < 2 else (0, .25, .5, .75))]
+            add(bass, sub(root - 12, BEAT * 1.8, 0.9), t, 0.3) if bb in (0, 2) else None
+            if bb in (0, 2):                                                 # sparse piano, high and far
+                n = notes[[3, 2, 3, 1][(bi // 2) % 4]] + 24
+                piano.append((t + (0 if bb == 0 else 0.5 * BEAT), n, 55 + 10 * (sec >= 1), 1.5 * BEAT))
+        if bb == 0:
+            strings += [(t, n, 50 + 12 * min(sec, 2), 4 * BEAT) for n in notes]
+            add(pads, wide_saws(notes, 4 * BEAT, cut=700 + 250 * min(sec, 2), attack=0.6, release=0.8), t, 0.5)
+        for f in fills:                                                      # a hit into each chapter
+            if f - BEAT / 2 - 1e-6 <= t < f + BEAT / 2 - 1e-6 and bb == 0 and abs(t - f) < 1e-3:
+                add(drums, sfx_thud(0.8)[: at(2.5)], t, 0.25)
+    pads += sf_notes(strings, 0, 49, gain=1.1)
+    drums += sf_notes(sfd, 128, 25, True, 0.8)
+    if piano:
+        pk = sf_notes(piano, 0, 0, gain=0.9)
+        keys += ping_pong(pk, 0.75 * BEAT, 0.45, 0.4, 2400)
+    keys = reverb(keys, IR_HALL, 0.45)[: N]; pads = reverb(pads, IR_HALL, 0.4)[: N]
+    add(drums, sfx_thud(0.9)[: at(3)], drop, 0.3); add(drums, sfx_thud(0.9)[: at(3)], g1, 0.3)
+    out = reel_finish((pads, bass, keys, drums), kicks, 0.35, g0, g1, lpfs, rel=0.16)
+    return out[0] * 1.3, out[1] * 1.0, out[2] * 1.3, out[3] * 0.75
 
 
 def build_sfx():

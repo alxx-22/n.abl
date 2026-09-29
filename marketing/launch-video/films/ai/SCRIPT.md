@@ -91,10 +91,11 @@ thirties from the south of England, with a bright, friendly voice that
 always has a smile in it and a natural, conversational delivery.
 
 The name gets the most care, so it lifts instead of landing flat like the
-end of a sentence: it is written ENABLE, in capitals, for stress. The last
-line is read as `ENABLE! <short pause> Put AI to work!` (the scene's
-`read`): the inline tag gives the short beat after the name and is not
-spoken. Lines 4 to 6 are read as one sentence, their styles joined with
+end of a sentence: inside a line it is written ENABLE, in capitals, for
+stress. On its own at the end, shouted in capitals, the model said something
+closer to "Anibal" in the web film, so the last line is read calmly:
+`Enable, <short pause> put AI to work!` (the scene's `read`), warm and proud.
+The inline tag gives the short beat after the name and is not spoken. Lines 4 to 6 are read as one sentence, their styles joined with
 "then".
 
 | # | Line, as read | Style (Gemini 3.8) |
@@ -108,7 +109,7 @@ spoken. Lines 4 to 6 are read as one sentence, their styles joined with
 | 7 | Plus AI that reads your paperwork, sorts your inbox, drafts your replies, and chases every lead. | fast and fun, with growing delight |
 | 8 | Less admin. Faster answers. Happier customers. | crisp and punchy, satisfied |
 | 9 | Built for your business. Yours to keep. | sincere and warm, then soft and reassuring |
-| 10 | **n.abl.** *(short pause)* Put AI to work! | a bright, excited reveal, with a big, genuine smile |
+| 10 | n.abl, *(short pause)* put AI to work! | warm and proud, a clear 'Enable', then energy and a big smile |
 
 The earlier models (3.1, 2.5) were built for a director's brief instead, and
 get this one: the profile, the scene, and the line's note, plus, on lines
