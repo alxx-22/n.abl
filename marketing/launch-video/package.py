@@ -96,9 +96,9 @@ def size(path):
     return tuple(int(v) for v in r.strip().split(","))
 
 
-def encode(master, pic, log, rate, peak, level, vf=None):
+def encode(master, pic, log, rate, peak, level, vf=None, preset="slow"):
     """Two-pass H.264 High at an average rate, peaks capped (k bits/s)."""
-    common = ["-i", master, "-an", *(["-vf", vf] if vf else []), "-c:v", "libx264", "-preset", "slow", "-tune", "film",
+    common = ["-i", master, "-an", *(["-vf", vf] if vf else []), "-c:v", "libx264", "-preset", preset, "-tune", "film",
               "-profile:v", "high", "-level", level, "-b:v", f"{rate}k", "-maxrate", f"{peak}k", "-bufsize", f"{peak * 3 // 2}k",
               "-pix_fmt", "yuv420p", "-g", "120", "-passlogfile", log,
               "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709"]
@@ -152,7 +152,7 @@ def main():
                  dict(rate=12000, peak=18000, level="4.2", vf="scale={}:{}:flags=lanczos".format(*SIZE[r])) if big else
                  dict(rate=3700, peak=6000, level="4.2"))]
         if big:
-            outs.append((f"deliver_{r}_4k.mp4", f"nabl-{FILM}-{r}-4k.mp4", dict(rate=22000, peak=30000, level="5.2")))
+            outs.append((f"deliver_{r}_4k.mp4", f"nabl-{FILM}-{r}-4k.mp4", dict(rate=22000, peak=30000, level="5.2", preset="medium")))
         for pic, name, enc in outs:
             pic = os.path.join(BUILD, pic)
             if not os.path.exists(pic) or os.path.getmtime(pic) < os.path.getmtime(master):
