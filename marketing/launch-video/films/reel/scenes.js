@@ -33,10 +33,10 @@ import { E, LAND, M, P, TL, WORDMARK, bell, cue, h, icon, lerp, offs, put, rise,
 
 const B = TL.beat
 // q(k): k beats of the grid the reel was choreographed on (GRID_BPM in
-// film.py) as the nearest half-beat of the track's own tempo, so every hit
-// stays on the music whatever its tempo
+// film.py) as the nearest half-beat of the track's own tempo (or the nearest
+// `step` of a beat), so every hit stays on the music whatever its tempo
 const G = TL.grid_beat || B
-const q = k => Math.round(k * G / B * 2) / 2 * B
+const q = (k, step = .5) => Math.round(k * G / B / step) * step * B
 const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87', CORAL = '240,122,106'
 const Z0 = M({ land: 1, sq: 1, tall: 1.1, port: 1.22 })
 
@@ -147,7 +147,7 @@ function buildReception(s) {
   widen(s)
   const [chat, book] = s.cuts
   const t0 = s.t0, tB = book.start, t1 = s.t1, b = k => t0 + q(k)
-  const tDrop = b(3)
+  const tDrop = t0 + q(3, 1)                              // the drop, on a whole beat
   const specks = bokeh(s, 3, { cx: 200 })
   const panel = h('div', 'r-panel', s.cam, `
     <div class="r-ph"><span class="av">${spark(26)}</span><div><div class="t">Your business</div><div class="s">AI receptionist · chat and voice</div></div><span class="on">● ONLINE</span></div>
@@ -655,7 +655,7 @@ export default function setup() {
   scene(['chat', 'logo'], buildChapters)
   const sc = sceneById
   // [time, ax, ay, aStrength, cx, cy, cStrength, grid]: amber low in the middle, the light from above
-  const tDrop = sc('chat').start + q(3)
+  const tDrop = sc('chat').start + q(3, 1)
   const ground = [
     [0, .5, .6, .15, .5, -.08, .6, 0],
     [tDrop, .5, .6, .3, .5, -.06, .9, 0],
