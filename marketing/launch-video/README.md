@@ -9,7 +9,7 @@ and its brief and shot list (`SCRIPT.md`). The finished films are in `out/`.
 |---|---|---|---|
 | `web` · Websites that work | 38 s | Smart web apps, landing pages and booking systems | [`films/web/SCRIPT.md`](films/web/SCRIPT.md) |
 | `ai` · Put AI to work | 37 s | The AI service: customer agents and everything else AI takes on | [`films/ai/SCRIPT.md`](films/ai/SCRIPT.md) |
-| `reel` · AI that works | 27 s | Three AI services, cut to music with no voice, in the style of a reference reel | [`films/reel/SCRIPT.md`](films/reel/SCRIPT.md) |
+| `reel` · AI that works | 32 s | Two AI services (the receptionist and the sales co-pilot), cut to music with no voice, in the style of a reference reel | [`films/reel/SCRIPT.md`](films/reel/SCRIPT.md) |
 | `ai-long` · AI, where it earns its place | 58 s | The first, longer cut of the AI film: three jobs in depth | [`films/ai-long/SCRIPT.md`](films/ai-long/SCRIPT.md) |
 
 Every film comes in four formats:
@@ -24,7 +24,11 @@ Every film comes in four formats:
 | `nabl-<film>.srt` | | captions, for platforms that take a sidecar file |
 
 All are H.264 High at 60 fps (two-pass, under 30 MB each) with AAC stereo at
-48 kHz, mastered to about −14 LUFS with true peak below −1 dBTP. That is what
+48 kHz, mastered to about −14 LUFS with true peak below −1 dBTP. The reel is
+rendered at twice the size and delivered at high quality: each format at the
+size above, scaled down from the large frames at about 12 Mbps (about 45 MB),
+and again as `nabl-reel-<ratio>-4k.mp4` at twice the size (3840 × 2160 for
+16:9) at about 22 Mbps, under 100 MB. That is what
 X, LinkedIn, Instagram, TikTok and YouTube all normalise towards, so none of
 them will turn it down. In 9:16 the content sits clear of the caption and
 button overlays.
@@ -73,7 +77,8 @@ film's music, which is played from the free
    sound its animation makes.
 3. **`render.mjs`** drives headless Chromium through Playwright:
    `--stills` for review frames, `--cues` for the sound cue list, `--video` for
-   the frames piped to ffmpeg, `--covers` for the cover images. The light film
+   the frames piped to ffmpeg, `--covers` for the cover images. `--scale 2`
+   renders at twice the size, for sharper type and edges. The light film
    grain is added by ffmpeg at encode, where it also dithers the dark gradients
    against banding; drawing it in the page cost a third of every frame.
 4. **`audio.py`** makes the music with the film's own tempo, chords and
@@ -87,8 +92,9 @@ film's music, which is played from the free
    It processes the voice, ducks the music under it from the script's own
    timings, limits and normalises the result.
 5. **`package.py`** makes the delivered picture (a two-pass encode of the
-   render), encodes the audio with its true peak held at −1 dBTP after AAC,
-   muxes them and writes the captions.
+   render; both sizes at high quality when it was rendered large), encodes
+   the audio with its true peak held at −1 dBTP after AAC, muxes them and
+   writes the captions.
 
 ## Rebuilding
 
@@ -113,6 +119,12 @@ node render.mjs --film $F --video --jobs 4   # picture, all four formats
 node render.mjs --film $F --covers           # cover images
 python3 package.py --film $F                 # final MP4s and captions
 ```
+
+The reel is rendered large: `F=reel`, and add `--scale 2` to the `--video`
+and `--covers` steps. Its music is a take from Lyria RealTime, the Gemini
+API's live music model, kept in `films/reel/music`, so a rebuild needs no
+model; `lyria.py` makes takes from a plan of sections (with `GEMINI_API_KEY`)
+and `musicedit.py` cuts them together at their bar lines.
 
 The long cut (`ai-long`) is the first version of the AI film, made before the
 stage was shared between films. Its scripts are the ones in commit `95ec345`;
@@ -167,8 +179,11 @@ Copy `films/web` to `films/<name>` and change:
 - **Music.** `BPM`, `PROG` and `sections()` in `film.py`, and `MUSIC`: leave
   it out for the synth arrangement (the AI films) or set
   `MUSIC = "electronica"` for French-touch electronica (the web film).
-  `MUSIC = "reel"` is the reel's house track, cued by marks the animation
-  leaves (the drop, the muffled stretch, the silence before the name);
+  `MUSIC = "reel"` is the reel's earlier synthesised house track, cued by
+  marks the animation leaves (the drop, the muffled stretch, the silence
+  before the name); `MUSIC = "file"` plays a generated take instead
+  (`MUSIC_FILE`, with `MUSIC_AT` the downbeat that lands on the drop), fitted
+  to the same marks, and `BPM` is set to the take's own tempo;
   `SFX_DROWN` puts every effect under water. Earlier web film arrangements are still there to try: `"perc"`,
   `"drums"`, `"garage"` and `"band"`. `"electronica"`, `"perc"` and `"band"`
   play the SoundFont: `pip install --no-deps tinysoundfont` and put
