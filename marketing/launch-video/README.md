@@ -9,7 +9,7 @@ and its brief and shot list (`SCRIPT.md`). The finished films are in `out/`.
 |---|---|---|---|
 | `web` · Websites that work | 38 s | Smart web apps, landing pages and booking systems | [`films/web/SCRIPT.md`](films/web/SCRIPT.md) |
 | `ai` · Put AI to work | 37 s | The AI service: customer agents and everything else AI takes on | [`films/ai/SCRIPT.md`](films/ai/SCRIPT.md) |
-| `reel` · AI that works | 32 s | Two AI services (the receptionist and the sales co-pilot), cut to music with no voice, in the style of a reference reel | [`films/reel/SCRIPT.md`](films/reel/SCRIPT.md) |
+| `reel` · AI that works | 36 s | Two AI services (the receptionist and the sales co-pilot), cut to music with no voice, in the style of a reference reel | [`films/reel/SCRIPT.md`](films/reel/SCRIPT.md) |
 | `ai-long` · AI, where it earns its place | 58 s | The first, longer cut of the AI film: three jobs in depth | [`films/ai-long/SCRIPT.md`](films/ai-long/SCRIPT.md) |
 
 Every film comes in four formats:

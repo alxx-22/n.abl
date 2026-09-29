@@ -379,7 +379,8 @@ function buildPhone(s) {
   const sts = [...trk.querySelectorAll('.r-st')], fill = trk.querySelector('.fill'), eta = trk.querySelector('.r-eta')
   const trkKids = [...trk.children]
 
-  const tRing = t0 + .08, tAns = b(1.5), tQ = b(2.5), tDots = b(4.5), tA = tDots + .3, tTrk = b(6.5), tEta = b(8.5)
+  // the answer and the order's status each held long enough to read
+  const tRing = t0 + .08, tAns = b(1.5), tQ = b(2.5), tDots = b(4.5), tA = tDots + .3, tTrk = b(11.6), tEta = b(14.8)
   const tSt = [0, 1, 2].map(i => tTrk + .25 + i * .2)
   cue('whoosh', t0 + .04, { d: .45, v: .45 })              // in from the phone
   cue('ring', tRing, { v: .7 })                            // a customer rings
@@ -399,15 +400,19 @@ function buildPhone(s) {
     const C = L.card, T = L.trk, land = LAND
     const H = centreOf(head, card, C[0], C[1]), Q = centreOf(mQ, card, C[0], C[1]), A = centreOf(mA, card, C[0], C[1])
     const E_ = centreOf(eta, trk, T[0], T[1]), S2 = centreOf(sts[2], trk, T[0], T[1])
-    const mid = [(C[0] + T[0]) / 2, (C[1] + T[1]) / 2]
+    // the pull-out to see both: halfway across in a wide frame; nearer the order in a tall one,
+    // so it never slides under the caption
+    const k = land ? .5 : .68, mid = [C[0] + (T[0] - C[0]) * k, C[1] + (T[1] - C[1]) * k]
     cam = path([
       [t0, H[0] + (land ? 160 : 60), H[1] + 80, -340, 18, land ? -24 : -14, -2, 1],
       [tAns + .1, H[0], H[1] + 40, 140, 6, land ? -8 : -4, 0, 1],
       [tQ + .35, Q[0], Q[1], 190, 4, 4, 0, 1],
       [tA + .7, A[0], A[1], 200, 2, -3, 0, 1],
-      [tTrk + .3, mid[0], mid[1], land ? -40 : -120, land ? 4 : 8, land ? -12 : 0, 0, 1],
+      [tTrk - .5, A[0], A[1] + 10, 250, 1, -1, 0, 1],               // a slow push while it is read
+      [tTrk + .3, mid[0], mid[1], land ? -40 : -60, land ? 4 : 8, land ? -12 : 0, 0, 1],
       [tSt[2] + .3, S2[0], S2[1], 170, 3, land ? -6 : 4, 0, 1],
       [tEta + .3, E_[0], E_[1] - 20, 230, 2, land ? 6 : -4, 0, 1],
+      [t1 - .55, E_[0], E_[1] - 30, 270, 1, land ? 4 : -2, 0, 1],    // held on the arrival time
       [t1, E_[0], E_[1] - 260, -140, 24, land ? 8 : -6, 0, 1],
     ])
   }
