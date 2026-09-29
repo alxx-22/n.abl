@@ -103,3 +103,15 @@ allowance). `gemini-2.5-flash-preview-tts` works, and is the default
   Live: **6.9 s** from the end of the caller's speech to the reply with
   Google's defaults, **1.2 to 1.5 s** with 600 ms of silence and 200 ms of
   prefix padding.
+
+## Later the same day: a model that goes deaf
+
+After the evaluation suite had run twice, 3 Flash Live stopped hearing audio
+on this key while still answering text prompts. The same recording it had
+heard in four out of four trials earlier went unheard in five out of five,
+with or without background noise and whatever the silence before it; 3.8 Live
+heard it at once and replied in 0.66 s. It recovered on its own later. The
+likeliest cause is a free-tier limit, but that is inference. The call now
+carries a watchdog that hands over to the other model (`src/core/call.ts`),
+and the phone test booked a table with the primary deliberately deafened.
+

@@ -39,7 +39,7 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
 | 2. Data and bookings | **done** | `voice_` schema applied to the shared project, four demo tenants loaded there, booking engine with the tenant-row lock, caller recognition |
 | 3. Orders and demo payments | **done** | Menu matching, server-side basket, delivery areas, allergen wording, mock card processor, deposits |
 | 4. Evaluation suite | **done** | 18 simulated-caller scenarios with database checks; first run 11 of 18; after the fixes below, 16 of 18 with no guardrail flags and a median reply of 0.85 s; the two failures were the simulated caller (silent once, hanging up early once), and with the harness fixed both pass. Text and audio bridges |
-| 5. Telephony | **built, not yet on a real line** | TwiML, PIN router, μ-law media bridge, barge-in, hang-up marks, warm transfer with whisper, signature checks (verified against Twilio's documented example), SMS. `npm run e2e:phone` plays Twilio against the real server. `Dockerfile` and `fly.toml` ready. **Waiting on the Twilio account and UK number** |
+| 5. Telephony | **built, not yet on a real line** | TwiML, PIN router, μ-law media bridge, barge-in, hang-up marks, warm transfer with whisper, signature checks (verified against Twilio's documented example), SMS. `npm run e2e:phone` plays Twilio against the real server and books a table (see below), including with the primary model failing mid-call. `Dockerfile` and `fly.toml` ready. **Waiting on the Twilio account and UK number** |
 | 6. Demo platform | **in part** | Console, setup wizard (website to draft profile, tested on a local fake site), live board, one-click reset, four seeded businesses. Not yet: console sign-in through Supabase Auth (a password for now), number pool admin, the owner's weekly report |
 | 7. Sales-floor readiness | **in part** | Fallback chain, session resumption, context compression, concurrency cap, Supabase keep-alive. Not yet: kill switch, alerts, retention job, privacy notice page, demo-day runbook |
 
@@ -63,11 +63,18 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
   real server (`npm run e2e:phone`) booked a table and hung up cleanly, with
   replies in 1.3 to 2.0 s. It also exposed two things. The test script raced a
   slow server start and sent its first line before the call had connected
-  (fixed). And on some runs the Gemini session stopped responding altogether
-  without closing, even to text prompts. A watchdog now replaces a session
-  that has heard the caller but shown no sign of life for 7 seconds: it
-  resumes the session if it can, otherwise hands the call to the other model
-  with the transcript so far, and asks the caller to repeat themselves.
+  (fixed). And after a day of heavy testing, 3 Flash Live intermittently
+  stopped hearing audio on this free-tier key while still answering text:
+  the same recording that it had heard four times out of four earlier went
+  unheard, and 3.8 Live heard it at once. A watchdog now hands the call to
+  the other model, with the transcript so far, when the caller has spoken
+  and the model has shown no sign of life for 7 seconds; the new model
+  apologises and asks the caller to repeat themselves. Resuming the same
+  model was tried first and brought back the same deaf model.
+- **The phone path, verified three ways** on 29 September: 3.8 Live as
+  primary (booked, replies 0.8 to 1.7 s); 3 Flash Live as primary (booked,
+  1.3 to 2.1 s); and 3 Flash Live forced deaf (the watchdog handed over after
+  about 9 s, and the call still booked). No guardrail flags in any of them.
 - **VAD tuning matters.** With Google's default end-of-speech detection the
   reply to a phone caller took 6.9 s; with 600 ms of silence it took 1.4 s.
 

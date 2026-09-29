@@ -87,8 +87,11 @@ const SPEECH_RMS = 700;
  * If the caller has spoken and the model shows no sign of life (no
  * transcription, audio, tool call or turn) for this long, the session is
  * treated as dead and replaced. On the free tier a session occasionally stops
- * responding without closing: 3.8 Live did in the spike, and 3 Flash Live did
- * in the phone end-to-end runs on 29 September.
+ * responding without closing: 3.8 Live did in the spike, and on 29 September
+ * 3 Flash Live stopped hearing audio altogether (it still answered text)
+ * after a day of heavy testing, while 3.8 Live heard the same audio at once.
+ * Resuming the same model brings back the same problem, so recovery hands
+ * the call to the next model, with the transcript so far.
  */
 const WATCHDOG_MS = 7000;
 const MAX_RECOVERIES = 2;
@@ -273,7 +276,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.record('system', { event: 'resumed', with_handle: Boolean(this.resumeHandle) });
   }
 
-  /** Replace a session that has stopped responding: resume it if we can, otherwise hand over to the next model with the story so far. */
+  /** Replace a session that has stopped responding: hand the call to the next model, with the story so far. */
   private async recover(): Promise<void> {
     if (this.recovering || this.ended) return;
     this.recovering = true;
@@ -281,24 +284,22 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.record('system', { event: 'watchdog', model: this.model, recovery: this.recoveries });
     const sorry = '[There was a brief problem on the line and you may have missed what the caller just said. Apologise briefly and ask them to repeat it.]';
     try {
-      try {
-        await this.reconnect(this.prompt);
-        this.session?.sendText(sorry);
-      } catch {
-        const models = this.opts.models ?? this.opts.config.liveModels;
-        const next = models.find((m) => m !== this.model) ?? this.model;
-        this.resumeHandle = undefined;
-        const old = this.session;
-        const fresh = await LiveSession.connect(this.setupFor(next, this.prompt), this.opts.config.geminiApiKey);
-        this.session = fresh;
-        this.model = next;
-        this.attach(fresh, this.prompt);
-        old?.removeAllListeners();
-        old?.close();
-        const story = this.transcript.slice(-8).map((l) => `${l.role === 'agent' ? 'You' : 'Caller'}: ${l.text}`).join(' / ');
-        fresh.sendText(`[You are taking over this call part-way through. So far: ${story || 'you have greeted the caller.'} ${sorry.slice(1)}`);
-        this.record('system', { event: 'handed_over', model: next });
-      }
+      const models = this.opts.models ?? this.opts.config.liveModels;
+      const next = models.find((m) => m !== this.model) ?? this.model;
+      this.resumeHandle = undefined;
+      const old = this.session;
+      const fresh = await LiveSession.connect(this.setupFor(next, this.prompt), this.opts.config.geminiApiKey);
+      this.session = fresh;
+      const from = this.model;
+      this.model = next;
+      this.attach(fresh, this.prompt);
+      old?.removeAllListeners();
+      old?.close();
+      const story = this.transcript.slice(-8).map((l) => `${l.role === 'agent' ? 'You' : 'Caller'}: ${l.text}`).join(' / ');
+      fresh.sendText(`[You are taking over this call part-way through. So far: ${story || 'you have greeted the caller.'} ${sorry.slice(1)}`);
+      this.fallbacks.push({ model: from, error: 'stopped responding mid-call' });
+      this.record('system', { event: 'handed_over', from, to: next });
+      void this.opts.repo.updateCall(this.callId, { model: next, fallbacks: this.fallbacks }).catch(() => {});
     } catch (err) {
       this.fail(err as Error);
     } finally {
