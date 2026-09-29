@@ -5,15 +5,16 @@ books tables and appointments, takes orders and takes a demo payment, live on
 the call.
 
 It is a **product n.abl demos and sells**. It is not part of n.abl's own site,
-CRM or Supabase project. It shares nothing with them except this repository,
-for now (see decision D1).
+CRM or Supabase project. It lives in `demo-products/voice-agent/` and shares
+nothing with the rest of this repository.
 
 ```
-Status:       draft, for review and amendment
+Status:       building. Phases 0-4 done; Phase 5 built and waiting on a Twilio account; Phases 6-7 in part
 Owner:        Alex
-Next review:  when this plan has been amended and approved; then at the end of every phase
-Evidence:     the model probe of 29 September 2026 (§2), and the Supabase project checked the
-              same day (empty, free plan, eu-central-1, Postgres 17). Nothing is built yet
+Next review:  when the Twilio account and UK number exist (Phase 5 on a real phone)
+Evidence:     docs/spike-results.md; 65 tests (npm test); the evaluation suite (npm run eval: 11 of 18 on the first full run, fixes since, re-run pending);
+              a browser end-to-end call that booked a table with no guardrail flags; the voice_ schema live
+              in auivrancfnrdwyiqoakt
 ```
 
 **Amended 29 September after review:**
@@ -27,6 +28,55 @@ Evidence:     the model probe of 29 September 2026 (§2), and the Supabase proje
   a text-chatbot demo being built by the other project member. Every object
   this product creates is prefixed `voice_`, and nothing else in the project
   is touched (§7.1).
+
+**Progress, 29 September (first build session).** What exists, what changed
+from the plan and why, and what is left. Run it with the steps in `README.md`.
+
+| Phase | State | What exists |
+|---|---|---|
+| 0. Foundations and spike | **done** | Codecs with tests, the Live client, the audio spike. Results and decisions in `docs/spike-results.md`. Eight voice samples (`npm run spike:voices`) |
+| 1. Agent core and browser channel | **done** | Call orchestrator, prompt compiler, tools, guardrails that flag *and* correct on the call, browser "Talk to it" |
+| 2. Data and bookings | **done** | `voice_` schema applied to the shared project, four demo tenants loaded there, booking engine with the tenant-row lock, caller recognition |
+| 3. Orders and demo payments | **done** | Menu matching, server-side basket, delivery areas, allergen wording, mock card processor, deposits |
+| 4. Evaluation suite | **done** | 18 simulated-caller scenarios with database checks; first full run 11 of 18; the fixes below followed, and the re-run result goes here. Text and audio bridges |
+| 5. Telephony | **built, not yet on a real line** | TwiML, PIN router, μ-law media bridge, barge-in, hang-up marks, warm transfer with whisper, signature checks (verified against Twilio's documented example), SMS. `npm run e2e:phone` plays Twilio against the real server. `Dockerfile` and `fly.toml` ready. **Waiting on the Twilio account and UK number** |
+| 6. Demo platform | **in part** | Console, setup wizard (website to draft profile, tested on a local fake site), live board, one-click reset, four seeded businesses. Not yet: console sign-in through Supabase Auth (a password for now), number pool admin, the owner's weekly report |
+| 7. Sales-floor readiness | **in part** | Fallback chain, session resumption, context compression, concurrency cap, Supabase keep-alive. Not yet: kill switch, alerts, retention job, privacy notice page, demo-day runbook |
+
+**What testing found, and what changed because of it:**
+
+- **The false confirmation came back on the production prompt.** In the first
+  browser end-to-end call, 3 Flash Live said "That's booked for you" without
+  calling `create_booking`. The guardrail caught it. Three changes followed:
+  the prompt spells out the booking and ordering steps, a flagged claim sends
+  an immediate correction into the call, and the tool text was trimmed. The
+  re-run booked properly with no flags.
+- **A read-back loop.** The first full evaluation (11 of 18) showed the agent
+  stuck re-reading orders because `confirm_order` compared a version counter
+  that any repeated `set_fulfilment` bumped. It now compares what the order
+  contains, and hands back the new read-back if the order really did change.
+- **Split options.** "Two margheritas, one with no basil" was entered as
+  three pizzas. The read-back is now in plain words and the prompt says how to
+  split lines. The database check caught it, not the conversation.
+- **Deposits** are asked for after booking, not as a condition of it.
+
+**Where the build departs from the plan, deliberately:**
+
+| Plan said | Built | Why |
+|---|---|---|
+| D7: 3.8 Live primary | **3 Flash Live primary**, 3.8 Live fallback | Same behaviour in every spike run; 3.8 Live went silent once. One setting (`LIVE_MODEL_PRIMARY`) |
+| npm workspaces; Fastify; React + Vite dashboard | One package; plain `node:http` + `ws`; plain HTML/JS pages | No build step at all (Node runs the TypeScript), fewer moving parts, nothing to compile on Fly |
+| Supabase Realtime for the live board | Server-sent events from the server | Works identically on PGlite, and avoids changing the shared `supabase_realtime` publication at all |
+| Menu, knowledge, hours as tables | One JSON profile per tenant (`voice_tenants.profile`); transactional records are tables | The wizard produces a profile in one go and the console edits it in one go; demo menus are small |
+| Transcribe Live as a backup transcript | Not used | Built-in transcription was word-perfect on phone audio in the spike |
+| `gemini-3.8-flash` for offline text | `gemini-3.5-flash`, then 3.5 Flash Lite, then 3.8 Flash | 3.8 Flash answered 503 "high demand" on the free tier; 2.5 Flash has been withdrawn |
+| Keypad card entry | Spoken demo card only | Payments are demo-only (review, 29 September) |
+
+**Capacity on the free tier, measured:** a busy call uses about 30K tokens a
+minute on the receptionist model (the prompt and tools are about 3.3K tokens,
+and every turn re-counts the call so far). Against the 65K cap that is **about
+two busy calls at once per model**. `MAX_CONCURRENT_CALLS` is 3 on Fly. A
+billed key lifts this.
 
 **How to use this document.** Read §1 and §3 first. §3 lists the decisions
 that are yours to make, each with a recommendation. Change anything, strike
@@ -123,17 +173,17 @@ D1–D4 are settled. D5, D6 and the Gemini tier were settled in review on
 
 | # | Decision | Options | Recommendation, and why |
 |---|---|---|---|
-| D1 | Where the code lives | (a) `voice-agent/` in this repo (b) a new repository | **(a) for now.** This session can only push to this repo, and the folder shares no code with the site. It can be split out later with its history (`git subtree split`). Nothing in `src/`, `supabase/` or `worker/` is touched |
+| D1 | Where the code lives | (a) a folder in this repo (b) a new repository | **Settled: `demo-products/voice-agent/`.** This session can only push to this repo, and the folder shares no code with the site. It can be split out later with its history (`git subtree split`). Nothing in `src/`, `supabase/` or `worker/` is touched |
 | D2 | Product name | — | Working name **"n.abl Reception"**. Yours to choose. It appears in the console and in "powered by" lines |
 | D3 | Telephony | Twilio · Telnyx · Vonage | **Twilio.** Bidirectional Media Streams, UK numbers and SMS, plus `<Pay>` for real card capture if a pilot ever needs it (§19). Telnyx is cheaper and could be added later behind the same adapter |
 | D4 | Hosting | Fly.io · Railway · Render · a VPS | **Fly.io, London region.** A call is a long-lived WebSocket, which rules out Netlify functions. Fly runs a Docker image close to UK callers and scales by adding machines. Cloudflare Workers with Durable Objects could do it, but the audio work and session lifetimes make that the harder road for v1. The Supabase project is in Frankfurt, which adds roughly 15–20 ms to each database round trip from London. That is negligible next to model latency, and Fly's `fra` region is the alternative if it ever is not |
 | D5 | Database | — | **Settled:** Supabase project `auivrancfnrdwyiqoakt`, shared with the text-chatbot demo. Every table and every other object is prefixed `voice_` (§7.1). Tests run on PGlite (Postgres in-process), so test runs never write into the shared project |
 | D6 | Payments | — | **Settled: demo only.** A mock processor accepts placeholder cards read out on the call. There is no Stripe and no real card data (§10) |
-| D7 | Primary model | 3.8 Live · 3 Flash Live · Extended Thinking | **3.8 Live**, pending Phase 0's real-audio latency. 3 Flash Live if 3.8 is noticeably slower on phone audio |
+| D7 | Primary model | 3.8 Live · 3 Flash Live · Extended Thinking | **Settled by the spike: 3 Flash Live, with 3.8 Live as fallback** (`docs/spike-results.md`) |
 | D8 | Demo tenants to seed | — | **Four:** an Italian restaurant (tables and takeaway), a café-takeaway (orders and payment), a hotel (room enquiries and spa appointments), a barber or salon (appointments and deposits). The salons fit the lead-gen targets already saved |
 | D9 | Call recording | off · on | **Off by default.** Transcripts only, with 30-day retention for demo tenants. Recording adds consent wording and storage for little demo value |
 | D10 | Console branding | n.abl brand · neutral | **n.abl brand in the console. The prospect's name and colours on their own board.** The brand tokens can be copied, and no code is shared |
-| D11 | Voice | Gemini's prebuilt voices | Choose in Phase 0 from a shortlist rendered with British-English prompting. A female and a male option per tenant |
+| D11 | Voice | Gemini's prebuilt voices | Eight samples rendered (`spike-output/voices/`). Set for now: Kore (Luca's), Leda (Copper Kettle), Aoede (Linden House), Charon (Fade & Co). **Yours to change**: one field per tenant |
 
 ---
 
