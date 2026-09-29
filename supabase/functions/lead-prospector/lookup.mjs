@@ -134,6 +134,11 @@ export const DIRECTORIES = new Set([
   'yably.co.uk', 'brownbook.net', 'nicelocal.co.uk', 'starofservice.co.uk', 'locallife.co.uk', 'thebestof.co.uk',
   'trustmark.org.uk', 'niceic.com', 'napit.org.uk', 'gassaferegister.co.uk', 'fmb.org.uk', 'mapquest.com', 'waze.com',
   'wikipedia.org', 'reddit.com', 'gumtree.com', 'nextdoor.co.uk', 'threads.net', 'apple.com', 'bing.co.uk',
+  /* Booking and ordering platforms: a salon's page on one is its diary, a
+     takeaway's is its menu, and neither is a site of its own. */
+  'fresha.com', 'booksy.com', 'treatwell.co.uk', 'phorest.com', 'vagaro.com', 'setmore.com', 'simplybook.me',
+  'opentable.co.uk', 'opentable.com', 'resdiary.com', 'thefork.co.uk', 'designmynight.com', 'sevenrooms.com',
+  'just-eat.co.uk', 'deliveroo.co.uk', 'ubereats.com', 'foodhub.co.uk', 'linktr.ee',
 ])
 
 /** Hosts the guesser already read and put aside for good: they named

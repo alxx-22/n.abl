@@ -467,6 +467,10 @@ console.log('\nWHAT THE NOTTS RUN TAUGHT: A SECTOR IS NOT A SIGNAL, AND THE CODE
     { url: 'https://f.test/contact', contact: true, html: '<div id="root"></div><script src="https://static.parastorage.com/x.js"></script><a href="mailto:a@b.test">e</a>' }], { today })
   ok('  …but "no form" is never said of a page a builder draws in the browser', !drawn.some((l) => l.key === 'm_contact'), drawn)
   ok('nothing read, nothing measured', siteLines([], { today }).length === 0)
+  const salon = siteLines([{ url: 'https://s.test/', html: '<a href="https://booksy.com/en-gb/1_s">Book</a><a href="https://www.just-eat.co.uk/restaurants-s">Order</a>' }], { today })
+  const salonTools = salon.find((l) => l.key === 'm_tools')?.text ?? ''
+  ok('a salon\'s booking platform and a takeaway\'s ordering platform are named',
+    /Booksy \(booking\)/.test(salonTools) && /Just Eat \(ordering\)/.test(salonTools), salon)
   ok('the contact page is found to be measured, on the same host only',
     contactPageLink('<a href="https://other.test/contact">x</a><a href="/Contact-Us/">c</a>', 'https://f.test/') === 'https://f.test/Contact-Us/')
 
@@ -573,6 +577,7 @@ console.log('\nTHE RESEARCH LOOP: NO SEARCH ENGINE, AND NOTHING A MODEL SAYS IS 
 {
   ok('a domain is normalised from whatever shape it came in', normaliseDomain('HTTPS://www.Fresh.co.uk/about?x=1') === 'fresh.co.uk' && normaliseDomain('not a domain') === null)
   ok('directories and social sites are never their site', isDirectory('m.facebook.com') && isDirectory('checkatrade.com') && !isDirectory('fresh.co.uk'))
+  ok('  …nor a booking or ordering platform', isDirectory('fresha.com') && isDirectory('www.just-eat.co.uk') && isDirectory('salon.setmore.com') && !isDirectory('freshcuts.co.uk'))
   ok('the guesser\'s outcome offers its domains',
     domainsInOutcome('3 of 14 guessed domains exist, none confirmed as theirs — bwplumbing.com: exists but turned us away (403); rbramley.co.uk: does not mention them').join() === 'bwplumbing.com,rbramley.co.uk')
   ok('a page\'s links to other sites are offered, not its own or a directory\'s',

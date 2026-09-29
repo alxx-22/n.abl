@@ -31,8 +31,10 @@ pass or redirect. Do not score on them.
 - No website found and nothing else pointing here: 20 at most. Not finding a
   site is unknown, not a need.
 - Evidence resting on sector, a menu item or other page furniture: 30 at most.
-- Weak-fit sectors (salons, restaurants, pubs, takeaways, walk-in retail): 30
-  at most unless their page shows a gap the usual software leaves.
+- Weak-fit sectors for web and software (salons, restaurants, pubs,
+  takeaways, walk-in retail): 30 at most unless their page shows a gap the
+  usual software leaves. Customers sent to the phone to book or order is that
+  gap, and it points to the AI call agent (ai), not to a new site.
 
 ## The rules every agent is held to in code
 

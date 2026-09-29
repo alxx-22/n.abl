@@ -520,6 +520,14 @@ const TOOLS = [
   ['booking', 'Fresha', /fresha\.com/i], ['booking', 'Bookwhen', /bookwhen\.com/i], ['booking', 'Checkfront', /checkfront\.com/i],
   ['booking', 'ResDiary', /resdiary\.com/i], ['booking', 'OpenTable', /opentable\.(?:com|co\.uk)/i],
   ['booking', 'YouCanBookMe', /youcanbook\.me/i], ['booking', 'Timely', /gettimely\.com/i], ['booking', 'Square Appointments', /squareup\.com\/appointments|square\.site/i],
+  /* What salons, restaurants and takeaways use (28 September): the call
+     agent's pitch turns on whether the diary exists and who still phones. */
+  ['booking', 'Booksy', /booksy\.com/i], ['booking', 'Treatwell', /treatwell\.(?:co\.uk|com)/i], ['booking', 'Phorest', /phorest\.com/i],
+  ['booking', 'Salonized', /salonized\.com/i], ['booking', 'Vagaro', /vagaro\.com/i], ['booking', 'SevenRooms', /sevenrooms\.com/i],
+  ['booking', 'DesignMyNight', /designmynight\.com/i], ['booking', 'TheFork', /thefork\.(?:com|co\.uk)/i],
+  ['ordering', 'Just Eat', /just-eat\.co\.uk|justeat\.(?:com|co\.uk)/i], ['ordering', 'Deliveroo', /deliveroo\.(?:co\.uk|com)/i],
+  ['ordering', 'Uber Eats', /ubereats\.com/i], ['ordering', 'Foodhub', /foodhub\.(?:co\.uk|com)/i],
+  ['ordering', 'Flipdish', /flipdish\.(?:com|ie)/i], ['ordering', 'Slerp', /slerp\.com/i],
   ['forms', 'Jotform', /jotform\.com/i], ['forms', 'Typeform', /typeform\.com/i], ['forms', 'Google Forms', /docs\.google\.com\/forms|forms\.gle/i],
   ['forms', 'Formstack', /formstack\.com/i], ['forms', 'Cognito Forms', /cognitoforms\.com/i], ['forms', 'Microsoft Forms', /forms\.office\.com/i],
   ['payments', 'Stripe', /js\.stripe\.com|buy\.stripe\.com|checkout\.stripe\.com/i], ['payments', 'PayPal', /paypal\.com|paypalobjects\.com/i],

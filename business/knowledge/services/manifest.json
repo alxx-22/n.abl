@@ -1,12 +1,12 @@
 {
-  "migration": "202609252130_service_knowledge_5d88965e.sql",
+  "migration": "202609282218_service_knowledge_f24c0287.sql",
   "files": {
-    "_shared/scoring.md": "76209f86194eecb875ec1170fdf5cee05cc07e0ffe3dfa6ba381c2c236198911",
-    "_shared/who-we-sell-to.md": "dc47d5b2ee5e6fa9618e538be8f66c8b3f1467b8c91723b1ff9fe1f15517fb65",
-    "ai/service.md": "1a0b82811f13e530ba38d12dbf3d0e41c1cb6595988a5a7a0d21272fec474c6f",
+    "_shared/scoring.md": "19914b5998d36309f9df08b86064df68cc090c295f80f213a547bbaa1bf6bef5",
+    "_shared/who-we-sell-to.md": "c694d5bf105479db38cba74b5b3b625c59929aaf1851c86e5b4b80d6a9da66f2",
+    "ai/service.md": "a29bf1c2a88d706369e0d9ed485ece990d410b9e0816ee648730eec41d2b336b",
     "automation/service.md": "6c5a65a535db0cc26c6580783aac210e1e4eacb49127885dcc275b38411973d7",
     "data_analytics/service.md": "e27260fd609d3bcee7d5f2ce3e19ce77daadae334f71ad3827da795862eb1839",
     "software/service.md": "dbd2a2002471c29997ce330f6803ac810e13011b787c927cb28ed4d9c37d2efa",
-    "web/service.md": "17b99c0d61a20562754865c88c7e6b327e3b3eedfa91b948c0a34770d7e27548"
+    "web/service.md": "0a8091359005a43596d850112c8b76fb283284dcc8e8390a19f503b817c797e7"
   }
 }

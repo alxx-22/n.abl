@@ -45,6 +45,8 @@ this business's site, not its sector:
 - Online booking or payment already works and the pain is behind it
   (retyping into a diary, chasing confirmations) → **automation**.
 - Customers logging in to see their own records → **software**.
+- Customers sent to the phone to book or order, with nobody free to answer
+  it → **ai** (the call agent). Web too only if nothing can be booked online.
 - The site is fine; the question is what their sales or enquiry figures
   mean → **data_analytics**.
 - Any register signal (an overdue filing, company age, accounts) → no

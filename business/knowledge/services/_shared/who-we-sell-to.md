@@ -12,11 +12,14 @@ not an AI agency. We have no client case studies yet: never argue from work we
 have not done or from "businesses like this usually".
 
 **What we lead with.** AI and web are the services we most want to sell
-(the owner, 24 September 2026). When a signal about this business points to
-AI or web, that case is argued first, even if another service looks
-stronger. It never lowers the bar: an AI or web pitch still needs a signal
-about this business that points there, and a sector that "could use" either
-is not one.
+(the owner, 24 September 2026). Since 28 September AI includes an **AI call
+agent**: it answers the phone when nobody can, books appointments or tables
+into the diary the business already uses, takes orders and messages, and
+answers the questions callers ask every day. When a signal about this
+business points to AI or web, that case is argued first, even if another
+service looks stronger. It never lowers the bar: an AI or web pitch still
+needs a signal about this business that points there, and a sector that
+"could use" either is not one.
 
 **The business we want**
 - Owner-run, 5 to 25 people, running on spreadsheets, email and
@@ -45,8 +48,18 @@ installers with field teams, light manufacturing and engineering, wholesale
 and trade supply, small professional practices, property and facilities
 management. Also logistics, training, care (mind the data), print and hire
 around Nottingham; rural, motor and aerospace supply, and venues around
-Alcester. Weak: salons, restaurants, pubs, takeaways and walk-in retail, which
-already have cheap, adequate software.
+Alcester.
+
+**Booking-led businesses** (the owner, 28 September 2026): hair and beauty
+salons and barbers, restaurants and takeaways, garages, vets, driving schools,
+gyms and groomers. Customers book or order by phone, and the phone rings while
+everyone is busy with a customer. Their booking and ordering software is cheap
+and adequate, so a custom site or system is a weak pitch. The phone is the gap
+that software leaves, and the AI call agent fills it. It still needs their own
+page to show it: customers told to call to book or order, bookings by phone
+only, opening hours that leave calls unanswered. A café that only serves
+walk-ins takes no bookings; one that takes table, cake or catering orders by
+phone is booking-led. Walk-in retail stays weak for everything.
 
 **Not for us, whatever else is true**
 - Itself an IT, software or web business, or employing its own developers.

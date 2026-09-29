@@ -17,7 +17,9 @@ ICP §1: owner-run, 5–25 people, runs on spreadsheets and email, one process c
 | Property, lettings, FM | automation, software, web | Inspections, certificate expiries, landlord statements (ICP §4); a portal where landlords or tenants log in is **software**, the public site **web** (service-categories §4) |
 | Venues and events near Stratford | web, automation, AI | Availability, deposits and follow-up done by hand (ICP §4); booking with no online route (web) |
 
-Leave out: retail, salons, restaurants, pubs and takeaways (weak fit, ICP §4); care (special-category data, ICP §6); IT and web firms, holding companies and property vehicles (who-we-sell-to.md).
+| Booking-led: salons, food, garages, vets, driving schools, gyms | AI (the call agent), web | Customers book or order by phone while everyone is busy with a customer (the owner, 28 September 2026; `who-we-sell-to.md`). Their booking software is cheap and adequate, so the gap is the phone, not a new system |
+
+Leave out: walk-in retail and pubs (weak fit, ICP §4); care and clinics (special-category data, ICP §6); IT and web firms, holding companies and property vehicles (who-we-sell-to.md). Salons, restaurants and takeaways were left out until 28 September as weak for web and software; they are in now for the AI call agent.
 
 ## 2. Target presets
 
@@ -38,6 +40,11 @@ Leave out: retail, salons, restaurants, pubs and takeaways (weak fit, ICP §4); 
 | 7 | Stratford venues | Stratford-upon-Avon, Alcester, Henley-in-Arden, Studley, Redditch, Evesham, Nottingham, Newark, Southwell | 55100, 55209, 56210, 93290 | Independent wedding and event venues: availability, prices and show-rounds by email (the second AI + web niche). Not pubs, restaurants or hotel groups |
 
 | 8 | Report practices | Nottingham, Ilkeston, Stratford-upon-Avon, Alcester, Redditch, Studley, Henley-in-Arden, Evesham | 71129, 71122, 74909, 74902 | **The AI + web niche** (`niche-ai-web.md`): the report is the product and the bottleneck; quotes by phone while national firms quote online. 74909 is broad: the site qualifies it |
+| 9 | Salons and barbers | as #8 | 96020, 96040 | **The AI call agent** (28 September): appointments all day, phone answered between clients |
+| 10 | Takeaways, cafés and restaurants | as #8 | 56101, 56102, 56103 | Phone orders and table bookings; web where nothing can be ordered online. Walk-in-only cafés fall out on their own pages |
+| 11 | Booked by phone | as #8 | 45200, 75000, 85530, 93130, 96090 | Garages, vets, driving schools, gyms, groomers. 96090 is broad: the site qualifies it |
+
+Presets 9–11 came from migration `202609282230_lead_gen_booking_led_targets.sql`. Many salons, cafés and takeaways are sole traders and so are not on the register at all (ICP §8).
 
 Preset 7 was re-aimed on 24 September at independent venues (`niche-ai-web.md` §5 P2): SIC 55100, 55209, 56210, 93290, both territories. SIC finds venues poorly; the councils' approved-premises registers are the better source, not yet wired in.
 
@@ -62,7 +69,7 @@ Lower yield: Notts haulage & hire (49410, 52103, 52290, 77320, 77390); Alcester 
 | Too big? | `last_accounts.type` `medium`, `group` | profile | Caution | ICP 51+ |
 | Too new | `date_of_creation` | search | Exclude with the window | triage.mjs |
 | Post fails | `undeliverable_registered_office_address` | profile | Caution | Post is the main channel (maximum-volume-plan §3) |
-| Weak sector | SIC 47xxx, 56101–56103, 56302, 96020 | search | Keep out of targets | ICP §4 (the takeaway was 56103) |
+| Weak sector | SIC 47xxx, 56302 | search | Keep out of targets | ICP §4. 56101–56103 and 96020 were here until 28 September; they are targets for the call agent now |
 
 ## 4. Budget proxies
 

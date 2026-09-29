@@ -6,9 +6,12 @@ Reading, sorting or drafting done by someone whose time is worth more. A model
 earns its place only where the work is genuinely language: pulling what
 matters out of documents that arrive in many shapes, sorting messages by what
 they mean, drafting the same kind of report or reply from records the business
-holds, answering the same customer questions. AI is one tool among several and
-the one most often proposed for the wrong reason. If rules can do it, it is
-automation, and we say so. Checking things is always code.
+holds, answering the same customer questions. It also answers the phone: an
+AI call agent that picks up when nobody can, books appointments or tables into
+the diary the business already uses, takes orders and messages, and hands
+anything else to a person. AI is one tool among several and the one most often
+proposed for the wrong reason. If rules can do it, it is automation, and we say
+so. Checking things is always code.
 
 ## Signals that point here
 
@@ -45,6 +48,19 @@ Seen on their own pages, in their own words:
 - A job advert for someone to write reports, quotes or tenders, or to answer
   enquiries.
 
+For the AI call agent, from their own pages:
+- Booking or ordering sent to the phone: "call to book", "ring for an
+  appointment", "phone your order through", "telephone bookings only".
+- People busy with customers when it rings, named on the page: chairs,
+  bays, a kitchen, a consulting room, lessons on the road.
+- Opening hours that leave evenings, early mornings or a whole day with
+  nobody answering a business customers book.
+- "Leave a message and we will call you back", or a mobile as the only line.
+- Several stylists, bays, vets or instructors, or branches, booked through
+  one number.
+- m_tools naming a booking or ordering product: the diary exists and some
+  customers book online; the rest still phone.
+
 ## Signals that point somewhere else
 
 - Moving fields in a fixed shape, or routing on a fixed rule → **automation**.
@@ -55,6 +71,7 @@ Seen on their own pages, in their own words:
   scored here. Say so.
 - "An AI strategy" as the ask → not a job we take.
 - A signal about the register → no service.
+- No way to book or order online at all → **web** as well as the call agent.
 
 ## What we would build
 
@@ -62,9 +79,12 @@ Extraction from documents into structured records, with low-confidence cases
 flagged to a person; classification and routing of incoming email or forms; a
 customer-facing assistant grounded in their own information, with a person
 behind it; drafting tools that start from records they already hold; search
-across their own documents. Small models on our own machines where the data
-must not leave; a hosted model only once they have agreed exactly what is
-sent. A person checks anything that leaves the building.
+across their own documents. An AI call agent on a hosted voice platform that
+says it is an assistant, writes bookings into their diary where the diary
+allows it and otherwise texts the details to a person, and hands over on
+request. Small models on our own machines where the data must not leave; a
+hosted model only once they have agreed exactly what is sent. A person checks
+anything that leaves the building.
 
 ## What kills it
 
@@ -76,11 +96,16 @@ Visible now, so score low:
   build the system, not the advice inside it.
 - Volume too low for a model to earn its keep: a handful a week.
 - Register distress: see the ceilings in the scale.
+- For the call agent: a receptionist already answers every call; a franchise
+  or chain whose phones are run centrally; calls that need clinical triage
+  (dentists, physios, clinics).
 
 Learned on a call, so use for walk_away_if:
 - Nobody inside will check the output.
 - They want it unattended on something where a wrong answer causes harm.
 - A chatbot they already pay for would do it, with an afternoon's training.
+- The phone rings a few times a day, or they want the agent to take card
+  details.
 
 ## How this specialist scores
 
@@ -104,7 +129,18 @@ Be the sceptic in the room.
   before it does harm, plus a business with staff to do the checking.
 - If rules would do it, redirect to automation rather than scoring here.
 
+For the call agent:
+- A booking-led business and nothing else: 30 at most. That is the sector.
+- Their own page sends customers to the phone to book or order, quoted: 50–60.
+- That, plus people busy with customers, hours that leave calls unanswered,
+  or a "leave a message" line: 60–70.
+- That, plus volume (several staff, bays or branches on one number) and a
+  team on the page or small-company accounts: 70–80.
+- Online booking or ordering covers everything and nothing sends customers
+  to the phone: 20 at most.
+
 ## The question that settles it
 
 "What do people in your business read or write every day that follows the
-same pattern each time?"
+same pattern each time?" For the call agent: "How many calls go unanswered in
+a busy week, and where does a booking go once someone takes it?"
