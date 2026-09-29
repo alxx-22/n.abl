@@ -129,6 +129,10 @@ export interface TenantProfile {
   voice: string;
   /** BCP-47, default en-GB. Unset it (null) to let the model follow the caller's language. */
   language_code?: string | null;
+  /** How long a pause ends the caller's turn; see REPLY_SPEEDS. Default normal. */
+  reply_speed?: 'snappy' | 'normal' | 'patient';
+  /** Pin this business to one Live model (the others stay as fallbacks). */
+  live_model?: string | null;
   greeting: string;
   /** How the business describes itself, in a sentence. */
   summary: string;

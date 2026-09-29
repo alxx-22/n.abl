@@ -20,6 +20,7 @@ import { checkUtterance, type Flag } from './guardrails.ts';
 import { redactCardNumbers } from './redact.ts';
 import { rms } from './audio.ts';
 import { generateText } from './gemini.ts';
+import { REPLY_SPEEDS } from '../domain/voices.ts';
 
 export type Channel = 'phone' | 'browser' | 'eval';
 
@@ -45,6 +46,8 @@ export interface CallEvents {
   flag: [flag: Flag];
   agentTurn: [text: string];
   hangup: [reason: string];
+  /** How long the caller waited for the start of a reply, from the end of their speech. */
+  latency: [ms: number];
   /** The agent finished a turn: channels flush any part-filled audio frame. */
   turnFlush: [];
   ended: [summary: CallSummary];
@@ -164,7 +167,10 @@ export class CallSession extends EventEmitter<CallEvents> {
       languageCode: p.language_code === null ? undefined : p.language_code || 'en-GB',
       transcribeInput: true,
       transcribeOutput: true,
-      vad: { silenceDurationMs: this.opts.config.vadSilenceMs, prefixPaddingMs: 200 },
+      vad: {
+        silenceDurationMs: p.reply_speed && p.reply_speed !== 'normal' ? REPLY_SPEEDS[p.reply_speed].silence_ms : this.opts.config.vadSilenceMs,
+        prefixPaddingMs: 200,
+      },
       resumption: { handle: this.resumeHandle },
       compression: { triggerTokens: this.opts.config.compressAt, targetTokens: this.opts.config.compressTo },
     };
@@ -189,7 +195,8 @@ export class CallSession extends EventEmitter<CallEvents> {
       channel: this.opts.channel,
     });
     this.prompt = prompt;
-    const models = this.opts.models ?? config.liveModels;
+    const pinned = tenant.profile.live_model;
+    const models = this.opts.models ?? (pinned ? [pinned, ...config.liveModels.filter((m) => m !== pinned)] : config.liveModels);
     this.session = await connectWithFallback(models, (m) => this.setupFor(m, prompt), config.geminiApiKey, (m, err) => {
       this.fallbacks.push({ model: m, error: err.message.slice(0, 200) });
     });
@@ -216,7 +223,10 @@ export class CallSession extends EventEmitter<CallEvents> {
       const now = Date.now();
       if (this.awaitingReply) {
         this.awaitingReply = false;
-        if (this.lastCallerSound) this.latencies.push(now - this.lastCallerSound);
+        if (this.lastCallerSound) {
+          this.latencies.push(now - this.lastCallerSound);
+          this.emit('latency', now - this.lastCallerSound);
+        }
       }
       this.lastActivity = now;
       this.agentSpeakingUntil = Math.max(this.agentSpeakingUntil, now) + (pcm.length / 24000) * 1000;
@@ -284,7 +294,8 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.record('system', { event: 'watchdog', model: this.model, recovery: this.recoveries });
     const sorry = '[There was a brief problem on the line and you may have missed what the caller just said. Apologise briefly and ask them to repeat it.]';
     try {
-      const models = this.opts.models ?? this.opts.config.liveModels;
+      const pinned = this.opts.tenant.profile.live_model;
+      const models = this.opts.models ?? (pinned ? [pinned, ...this.opts.config.liveModels.filter((m) => m !== pinned)] : this.opts.config.liveModels);
       const next = models.find((m) => m !== this.model) ?? this.model;
       this.resumeHandle = undefined;
       const old = this.session;

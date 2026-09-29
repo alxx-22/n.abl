@@ -1,15 +1,19 @@
-// n.abl Reception: the server. One process holds every call.
+// n.abl Reception: the server. One process holds every call, the API and
+// the React app.
 //
-//   npm run dev      PGlite in .data/, seeded on first run, http://localhost:8787
-//   npm start        production (DATABASE_URL, PUBLIC_BASE_URL, CONSOLE_PASSWORD)
+//   npm run dev      PGlite in .data/, seeded on first run, the React app with
+//                    hot reload, all on http://localhost:8787
+//   npm run build    builds the React app into web/dist
+//   npm start        production: serves web/dist (DATABASE_URL, PUBLIC_BASE_URL, CONSOLE_PASSWORD)
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
+import type { ViteDevServer } from 'vite';
 import { loadConfig, type Config } from '../config.ts';
 import { migrate, openDb } from '../db/db.ts';
 import { Repo } from '../db/repo.ts';
@@ -24,11 +28,17 @@ import { toLocal, spokenDate, spokenTime, addDays, zonedToUtc } from '../domain/
 import { pounds, type TenantProfile } from '../domain/types.ts';
 import { displayUkPhone } from '../domain/phone.ts';
 import { ingestWebsite } from '../ingest/ingest.ts';
+import { applySettings } from '../domain/settings.ts';
+import { LIVE_MODELS, REPLY_SPEEDS, VOICES, VOICE_NAMES } from '../domain/voices.ts';
+import { previewVoice } from '../core/preview.ts';
 
-const PUBLIC = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'public');
+const WEB = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'web');
+const DIST = join(WEB, 'dist');
+const HMR_PATH = '/__vite_hmr';
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml', '.json': 'application/json', '.ico': 'image/x-icon', '.png': 'image/png',
+  '.svg': 'image/svg+xml', '.json': 'application/json', '.map': 'application/json', '.ico': 'image/x-icon', '.png': 'image/png',
+  '.woff2': 'font/woff2', '.webp': 'image/webp',
 };
 const SECURITY_HEADERS = {
   'content-security-policy':
@@ -37,6 +47,16 @@ const SECURITY_HEADERS = {
   'referrer-policy': 'no-referrer',
   'permissions-policy': 'microphone=(self), camera=(), geolocation=()',
 };
+// Vite's development server injects inline scripts and styles for hot reload.
+const DEV_HEADERS = {
+  ...SECURITY_HEADERS,
+  'content-security-policy': SECURITY_HEADERS['content-security-policy'].replace("script-src 'self'; style-src 'self'", "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"),
+};
+
+export interface ServerOptions {
+  /** 'dev' runs Vite inside the server; 'dist' serves the built app. */
+  web?: 'dev' | 'dist';
+}
 
 export interface App {
   config: Config;
@@ -131,7 +151,7 @@ async function tenantState(repo: Repo, slug: string, bus: Bus) {
   };
 }
 
-export async function startServer(config: Config = loadConfig()): Promise<App> {
+export async function startServer(config: Config = loadConfig(), opts: ServerOptions = {}): Promise<App> {
   const db = await openDb({ databaseUrl: config.databaseUrl, pgliteDir: config.pgliteDir });
   await migrate(db);
   const repo = new Repo(db);
@@ -203,7 +223,29 @@ export async function startServer(config: Config = loadConfig()): Promise<App> {
       }
       if (path.startsWith('/api/')) {
         if (!authed(req, config)) return json(res, 401, { error: 'sign in' });
-        const m = /^\/api\/tenants(?:\/([a-z0-9-]+))?(?:\/(state|reset|events))?$/.exec(path);
+        const m = /^\/api\/tenants(?:\/([a-z0-9-]+))?(?:\/(state|reset|events|settings|voice-preview))?$/.exec(path);
+        if (path === '/api/voices') {
+          return json(res, 200, { voices: VOICES, reply_speeds: REPLY_SPEEDS, models: LIVE_MODELS, default_models: config.liveModels });
+        }
+        if (m && m[1] && m[2] === 'settings' && req.method === 'PATCH') {
+          const t = await repo.getTenant(m[1]);
+          if (!t) return json(res, 404, { error: 'no such tenant' });
+          const r = applySettings(t.profile, JSON.parse((await body(req)) || '{}'));
+          if (!r.ok) return json(res, 400, { error: r.error });
+          await repo.upsertTenant(r.profile);
+          return json(res, 200, { ok: true, profile: r.profile });
+        }
+        if (m && m[1] && m[2] === 'voice-preview' && req.method === 'POST') {
+          const t = await repo.getTenant(m[1]);
+          if (!t) return json(res, 404, { error: 'no such tenant' });
+          const { voice, greeting, language_code } = JSON.parse((await body(req)) || '{}');
+          if (typeof voice !== 'string' || !VOICE_NAMES.has(voice)) return json(res, 400, { error: 'unknown voice' });
+          const text = typeof greeting === 'string' && greeting.trim() ? greeting.trim().slice(0, 300) : t.profile.greeting;
+          const lang = language_code === null || language_code === '' ? undefined : typeof language_code === 'string' ? language_code : t.profile.language_code ?? 'en-GB';
+          const wav = await previewVoice(voice, text, config, lang ?? undefined);
+          res.writeHead(200, { 'content-type': 'audio/wav', 'cache-control': 'no-store', ...SECURITY_HEADERS });
+          return res.end(wav);
+        }
         if (path === '/api/config') {
           return json(res, 200, {
             models: config.liveModels, demo_cards: config.demoCards.map((c) => ({ ...c, spoken: c.number.replace(/(\d{4})(?=\d)/g, '$1 ') })),
@@ -257,21 +299,46 @@ export async function startServer(config: Config = loadConfig()): Promise<App> {
         return json(res, 404, { error: 'not found' });
       }
 
-      // ── Static console and board ────────────────────────────────────
+      // ── The React app ───────────────────────────────────────────────
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'method not allowed' });
-      let file = path === '/' ? '/index.html' : /^\/board\/[a-z0-9-]+\/?$/.test(path) ? '/board.html' : path;
-      file = normalize(file).replace(/^(\.\.[/\\])+/, '');
-      const full = join(PUBLIC, file);
-      if (!full.startsWith(PUBLIC) || !existsSync(full)) return json(res, 404, { error: 'not found' });
+      if (vite) {
+        for (const [k, v] of Object.entries(DEV_HEADERS)) res.setHeader(k, v);
+        return vite.middlewares(req, res, () => json(res, 404, { error: 'not found' }));
+      }
+      if (!existsSync(join(DIST, 'index.html'))) {
+        res.writeHead(503, { 'content-type': 'text/plain; charset=utf-8' });
+        return res.end('The web app has not been built. Run `npm run dev` to develop, or `npm run build` and then `npm start`.');
+      }
+      const file = normalize(path).replace(/^(\.\.[/\\])+/, '');
+      let full = join(DIST, file);
+      const isFile = full.startsWith(DIST) && (await stat(full).then((s) => s.isFile(), () => false));
+      if (!isFile) {
+        if (path.startsWith('/assets/') || extname(path)) return json(res, 404, { error: 'not found' });
+        full = join(DIST, 'index.html'); // client-side routes: /board/<slug>
+      }
       const data = await readFile(full);
-      res.writeHead(200, { 'content-type': TYPES[extname(full)] ?? 'application/octet-stream', 'cache-control': 'no-cache', ...SECURITY_HEADERS });
-      res.end(data);
+      res.writeHead(200, {
+        'content-type': TYPES[extname(full)] ?? 'application/octet-stream',
+        'cache-control': full.includes(`${join(DIST, 'assets')}`) ? 'public, max-age=31536000, immutable' : 'no-cache',
+        ...SECURITY_HEADERS,
+      });
+      res.end(req.method === 'HEAD' ? undefined : data);
     } catch (err) {
       console.error(`${req.method} ${path}: ${(err as Error).message}`);
       if (!res.headersSent) json(res, 500, { error: (err as Error).message.slice(0, 200) });
       else res.end();
     }
   });
+
+  let vite: ViteDevServer | null = null;
+  if (opts.web === 'dev') {
+    const { createServer: createVite } = await import('vite');
+    vite = await createVite({
+      configFile: join(WEB, 'vite.config.ts'),
+      server: { middlewareMode: true, hmr: { server, path: HMR_PATH } },
+      appType: 'spa',
+    });
+  }
 
   const wss = new WebSocketServer({ noServer: true, maxPayload: 1024 * 1024 });
   server.on('upgrade', async (req, socket, head) => {
@@ -297,6 +364,7 @@ export async function startServer(config: Config = loadConfig()): Promise<App> {
       });
       return;
     }
+    if (vite && url.pathname === HMR_PATH) return; // Vite's own listener takes it
     socket.destroy();
   });
 
@@ -311,6 +379,8 @@ export async function startServer(config: Config = loadConfig()): Promise<App> {
     close: async () => {
       clearInterval(keepAlive);
       for (const c of wss.clients) c.terminate();
+      await vite?.close();
+      server.closeAllConnections();
       await new Promise<void>((r) => server.close(() => r()));
       await db.close();
     },
@@ -321,7 +391,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const config = loadConfig();
   if (!config.geminiApiKey) console.warn('GEMINI_API_KEY is not set: calls will fail to connect.');
   if (!config.consolePassword) console.warn('CONSOLE_PASSWORD is not set: the console is open to anyone who can reach it.');
-  const app = await startServer(config);
+  const app = await startServer(config, { web: process.argv.includes('--dev') ? 'dev' : 'dist' });
   console.log(`n.abl Reception on http://localhost:${app.port} · ${config.databaseUrl ? 'Supabase' : `PGlite (${config.pgliteDir})`} · models ${config.liveModels.join(' → ')}`);
   const stop = async () => {
     await app.close();

@@ -1,6 +1,7 @@
 // End to end through a real browser: headless Chromium, a fake microphone
-// playing a recorded caller, the live board, the server and a live Gemini
-// session. Needs GEMINI_API_KEY and network; not part of `npm test`.
+// playing a recorded caller, the React app (served by Vite inside the
+// server, as `npm run dev` does), the server and a live Gemini session.
+// Needs GEMINI_API_KEY and network; not part of `npm test`.
 //
 //   npm run e2e:browser
 //
@@ -47,7 +48,7 @@ const wav = join(OUT, 'caller.wav');
 writeFileSync(wav, wavFromPcm16(concatPcm16(parts), 24000));
 
 const dir = join(tmpdir(), `va-e2e-${Date.now()}`);
-const app = await startServer({ ...config, port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: undefined });
+const app = await startServer({ ...config, port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: undefined }, { web: 'dev' });
 const base = `http://localhost:${app.port}`;
 const browser = await chromium.launch({
   executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
@@ -81,6 +82,7 @@ try {
   // Let the scripted caller finish (or the agent hang up).
   await page.waitForFunction(() => /Call ended/.test(document.getElementById('call-text')?.textContent ?? ''), null, { timeout: 90000 }).catch(() => {});
   await page.waitForTimeout(1500);
+  console.log('reply times on screen:', (await page.textContent('.replies'))?.replace(/\s+/g, ' '));
   await page.screenshot({ path: join(OUT, '4-board-after-call.png'), fullPage: true });
   const transcript = await page.$$eval('#stream > *', (els) => els.map((e) => e.textContent?.replace(/\s+/g, ' ').trim()));
   writeFileSync(join(OUT, 'transcript.txt'), transcript.join('\n'));

@@ -5,3 +5,4 @@ eval-results/
 spike-output/
 *.wav
 *.log
+web/dist/
