@@ -56,10 +56,16 @@ def main():
                      audio_end_in_s=a.seconds, num_waveforms_per_prompt=1, guidance_scale=a.cfg,
                      generator=g).audios[0]
         y = audio.T.float().cpu().numpy()                       # (samples, channels)
+        # the model's output can run past full scale: bring its peak to -1 dBFS
+        # and keep it as float, or a 16-bit file clips it hard
+        peak = float(np.abs(y).max())
+        if peak > 0:
+            y = y / peak * 10 ** (-1 / 20)
         name = f"{a.take}-{seed}.wav"
-        sf.write(os.path.join(out_dir, name), y, pipe.vae.sampling_rate)
+        sf.write(os.path.join(out_dir, name), y, pipe.vae.sampling_rate, subtype="FLOAT")
+        log = [e for e in log if e["file"] != name]
         log.append(dict(file=name, model=MODEL, prompt=a.prompt, negative=a.negative, seconds=a.seconds,
-                        steps=a.steps, cfg=a.cfg, seed=seed))
+                        steps=a.steps, cfg=a.cfg, seed=seed, raw_peak=round(peak, 3)))
         json.dump(log, open(log_path, "w"), indent=1)
         print(f"{name}: {len(y) / pipe.vae.sampling_rate:.1f}s in {time.time() - t0:.0f}s", flush=True)
 
