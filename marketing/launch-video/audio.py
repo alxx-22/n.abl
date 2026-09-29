@@ -2196,7 +2196,9 @@ def build_music_file():
     cut still falls on a beat. Before the drop its low end is held back and a
     filter opens, so it all lands on the drop; it goes muffled for each m_lpf cue and stops dead for the press
     (m_gap), running on underneath, so it comes back on the beat under the
-    name. If the file runs out, it loops back whole bars (MUSIC_LOOP, 4)."""
+    name. If the file runs out, it loops back whole bars (MUSIC_LOOP, 4).
+    MUSIC_DROPS lists more drops inside the take (file seconds), each given a
+    rush of air into it and a low hit."""
     y, sr = sf.read(os.path.join(HERE, "films", FILM_ID, "music", F.MUSIC_FILE), dtype="float64", always_2d=True)
     y = np.repeat(y, 2, 1) if y.shape[1] == 1 else y[:, :2]
     g = np.gcd(SR, sr)
@@ -2230,10 +2232,18 @@ def build_music_file():
     ramp = at(0.012); gate[at(g0):at(g0) + ramp] = np.linspace(1, 0, ramp); gate[at(g1) - ramp:at(g1)] = np.linspace(0, 1, ramp)
     tail = np.clip((DUR - 0.4 - np.arange(N) / SR) / 2.2, 0, 1) ** 0.8
     music *= (gate * tail)[:, None]
+    # every take at the same loudness, so MUSIC_GAIN sets the same balance
+    # with the effects whichever take it is
+    music *= 10 ** ((-12.7 - pyln.Meter(SR).integrated_loudness(music)) / 20)
     hits = buf()
     add(hits, rc, 0, 0.12)
     for t in (drop, g1):                                      # a low hit on the drop and under the name
         add(hits, sfx_thud(0.9)[: at(3)], t, 0.22)
+    for ft in getattr(F, "MUSIC_DROPS", []):                  # more drops inside the take (file seconds): a rush of air into each, a hit on it
+        t = ft - getattr(F, "MUSIC_AT", 0.0) + drop
+        if 2 * BEAT < t < DUR:
+            r = hp(noise(2 * BEAT), 1800); r = r * np.linspace(0, 1, len(r)) ** 3
+            add(hits, r, t - 2 * BEAT, 0.12); add(hits, sfx_thud(0.9)[: at(3)], t, 0.18)
     return music, buf(), buf(), hits
 
 
