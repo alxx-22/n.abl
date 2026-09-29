@@ -1576,6 +1576,13 @@ REEL_PROG = ["Dm", "Bb", "F", "C", "Dm", "Bb", "C", "A"]
 STAB_STEPS = [2, 6, 10, 13]          # syncopated, between the kicks
 
 
+def reel_style():
+    """The reel's track, by REEL_STYLE (film.py or the environment)."""
+    st = os.environ.get("REEL_STYLE") or getattr(F, "REEL_STYLE", "house")
+    return {"house": build_music_reel, "techno": build_reel_techno, "minimal": build_reel_minimal,
+            "deep": build_reel_deep, "cinema": build_reel_cinema}[st]
+
+
 def build_music_reel():
     """The reel's track: house at the film's tempo, D minor. A punchy kick, claps
     on two and four, open hats on the offbeats; a rolling offbeat bass; saw
@@ -1718,7 +1725,7 @@ def sfx_drop(deg, n=1, step=2, gap=0.05, wet=0.6, v=0.6, seed=0):
         f0 = mtof(m); L = 0.26; x = tt(L)
         f = f0 * (0.7 + 0.3 * (1 - np.exp(-x / 0.02))) * (1 + 0.08 * x / L)
         y = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.minimum(1, x / 0.006) * np.exp(-x / (0.07 + 0.06 * wet))
-        y = lp(y, 2400 - 1600 * wet, 2)
+        y = lp(y, 3400 - 1800 * wet, 2)
         pan = r.uniform(-0.35, 0.35)
         st = np.stack([y * np.cos((pan + 1) * np.pi / 4), y * np.sin((pan + 1) * np.pi / 4)], 1) * np.sqrt(2)
         j = at(i * gap); out[j:j + len(st)] += st[: len(out) - j]
@@ -1787,6 +1794,323 @@ def drown(x, cut=1400, wobble=0.0035, room=0.45):
         dl = (0.012 + wobble * np.sin(2 * np.pi * 0.6 * ts + ph)) * SR
         y[:, c] = np.interp(n - dl, n, y[:, c])
     return reverb(y, IR_POOL, room)
+
+
+
+# ------------------------------------------------------------------ reel: four directions
+# Four other tracks for the reel, on its own timeline, to choose a direction
+# by ear (REEL_STYLE in film.py or the environment): melodic techno, dark
+# minimal tech house, melodic deep house and cinematic electronic. They use
+# band-limited oscillators (no aliasing, which is what made the raw ones
+# sound 8-bit) and the SoundFont's pads, piano, strings, choir and 909 kit.
+
+def blsaw(f, d, phase=None):
+    """A band-limited saw (PolyBLEP): the saw without the aliasing fizz."""
+    n = int(d * SR)
+    f = np.full(n, float(f)) if np.ndim(f) == 0 else np.asarray(f, float)[:n]
+    dt = f / SR
+    ph = ((rng.random() if phase is None else phase) + np.cumsum(dt)) % 1.0
+    y = 2 * ph - 1
+    m = ph < dt; x = ph[m] / dt[m]; y[m] -= x + x - x * x - 1
+    m = ph > 1 - dt; x = (ph[m] - 1) / dt[m]; y[m] -= x * x + x + x + 1
+    return y
+
+
+def blsquare(f, d, pw=0.5):
+    ph = rng.random()
+    return (blsaw(f, d, ph) - blsaw(f, d, (ph + pw) % 1.0)) * 0.5
+
+
+def wide_saws(notes, d, cut=3000, voices=5, detune=0.16, attack=0.02, release=0.4, q=0.8):
+    """Detuned band-limited saws per note, spread across the stereo field."""
+    n = int((d + release) * SR); out = np.zeros((n, 2))
+    for m in notes:
+        for v in range(voices):
+            k = (v - (voices - 1) / 2) / max(1, (voices - 1) / 2)
+            sgl = blsaw(mtof(m) * 2 ** (k * detune / 12), d + release)
+            pan = k * 0.85
+            out[:, 0] += sgl * np.cos((pan + 1) * np.pi / 4); out[:, 1] += sgl * np.sin((pan + 1) * np.pi / 4)
+    out = lp(out, cut, 2) * env_adsr(n, attack, 0.3, 0.8, release)[:, None] / (voices * len(notes))
+    return out
+
+
+def acid(m, d, cut, res=0.2, v=1.0):
+    x = tt(d + 0.05); y = blsaw(mtof(m), d + 0.05)
+    y = sweep_lp(y, cut * (0.4 + 1.6 * np.exp(-x / 0.07)), block=32, q=1.0 + res * 6)
+    return np.tanh(1.5 * y) * env_adsr(len(x), 0.003, 0.1, 0.6, 0.03) * v
+
+
+def tech_kick(v=1.0, tail=0.32, low=45):
+    x = tt(0.6)
+    f = low + 110 * np.exp(-x / 0.028) + 380 * np.exp(-x / 0.003)
+    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-x / tail)
+    click = hp(noise(0.6), 3000) * np.exp(-x / 0.0018) * 0.25
+    return np.tanh(2.2 * (body + click)) * v
+
+
+def ping_pong(x, dt, fb=0.45, mix=0.35, lpf=3000):
+    """A stereo delay bouncing left and right, darker on each repeat."""
+    if x.ndim == 1:
+        x = np.stack([x, x], 1)
+    out = x.copy(); rep = x.copy(); step = at(dt)
+    for k in range(1, 7):
+        rep = lp(rep, lpf, 1) * fb
+        sh = np.zeros_like(x); sh[step * k:] = rep[: len(x) - step * k] if step * k < len(x) else 0
+        ch = k % 2
+        out[:, ch] += sh[:, ch] * mix * 1.6; out[:, 1 - ch] += sh[:, 1 - ch] * mix * 0.3
+    return out
+
+
+REEL_KEYS = {
+    "Dm": (38, [62, 65, 69, 72, 76]),   # Dm9: D F A C E
+    "Gm": (43, [62, 65, 67, 70, 74]),   # Gm/D colour: D F G Bb D
+    "Bb": (46, [62, 65, 69, 70, 74]),   # Bbmaj7
+    "A":  (45, [61, 64, 67, 69, 73]),   # A7: C# E G A C#
+    "F":  (41, [60, 64, 65, 69, 72]),   # Fmaj7
+    "C":  (48, [60, 64, 67, 69, 74]),   # C6/9
+}
+
+
+def reel_markers():
+    mk = lambda k: [c for c in CUES if c["type"] == k]
+    drop = mk("m_drop")[0]["t"]; gap = mk("m_gap")[0]
+    secB = SC["call"]["start"] if "call" in SC else drop + 16 * BEAT
+    secC = SC["docs"]["start"] if "docs" in SC else secB + 16 * BEAT
+    fills = [SC[k]["start"] for k in ("book", "call", "docs", "cta") if k in SC]
+    return drop, gap["t"], gap["t"] + gap["d"], secB, secC, fills, mk("m_lpf")
+
+
+def reel_beats(drop, g0, g1, secB, secC):
+    """Every beat of the track: (time, beat from the drop, beat in bar, bar, section); outro is section 3."""
+    out = []
+    for a, z, outro in ((drop, g0, False), (g1, DUR, True)):
+        for j in range(int(round((z - a) / BEAT))):
+            t = a + j * BEAT; bi = int(round((t - drop) / BEAT))
+            sec = 3 if outro else (0 if t < secB else 1 if t < secC else 2)
+            out.append((t, bi, bi % 4, bi // 4, sec))
+    return out
+
+
+def reel_finish(parts, kicks, depth, g0, g1, lpfs, rel=0.09, room=None):
+    pads, bass, keys, drums = parts
+    pump = np.ones(N)
+    for t in kicks:
+        i = at(t); m = min(N - i, at(0.35))
+        if m > 0:
+            pump[i:i + m] = np.minimum(pump[i:i + m], 1 - depth * np.exp(-np.arange(m) / SR / rel))
+    pads *= pump[:, None]; bass *= pump[:, None] ** 0.8; keys *= pump[:, None] ** 0.5
+    gate = np.ones(N); gate[at(g0):at(g1)] = 0
+    ramp = at(0.012); gate[at(g0):at(g0) + ramp] = np.linspace(1, 0, ramp); gate[at(g1) - ramp:at(g1)] = np.linspace(0, 1, ramp)
+    tail = np.clip((DUR - 0.4 - np.arange(N) / SR) / 2.2, 0, 1) ** 0.8
+    for b_, gg in ((pads, gate * np.maximum(tail, 0.35)), (bass, gate * tail), (keys, gate * np.maximum(tail, 0.2)), (drums, gate * tail)):
+        b_ *= gg[:, None]
+    for c in lpfs:
+        a, z = c["t"], c["t"] + c["d"]
+        w = np.clip(np.minimum((np.arange(N) / SR - a) / 0.08, (z - np.arange(N) / SR) / 0.12), 0, 1)
+        for b_ in (pads, bass, keys, drums):
+            b_[:] = b_ * (1 - w)[:, None] + lp(b_, 520, 4) * w[:, None]
+    return pads, bass, keys, drums
+
+
+def sf_notes(notes, bank, preset, drums=False, gain=1.0):
+    return sf_part(notes, bank, preset, drums) * gain if notes else buf()
+
+
+def fill_and_rise(drums, t, fills, rr, v=1.0):
+    for f in fills:
+        if f - BEAT - 1e-6 <= t < f - 1e-6:
+            for q in range(4):
+                add(drums, snare(), t + q * BEAT / 4, (0.04 + 0.03 * q) * v)
+            add(drums, sfx_riser(BEAT * 2), t - BEAT, 0.09 * v)
+
+
+def reel_intro(pads, keys, drums, drop, chord_notes, arp=None):
+    """Before the drop: the first chord behind a filter that opens, and a rising noise."""
+    d = drop
+    intro = wide_saws(chord_notes, d + 0.1, cut=1600, attack=0.3, release=0.2)
+    cut = 220 + 2400 * np.clip(np.arange(len(intro)) / (d * SR), 0, 1) ** 2
+    intro = np.stack([sweep_lp(intro[:, 0], cut, q=1.3), sweep_lp(intro[:, 1], cut, q=1.3)], 1)
+    add(pads, intro, 0, 1.0)
+    if arp:
+        s16 = BEAT / 4; k = 0
+        while k * s16 < d - 0.02:
+            t = k * s16; p = t / d
+            add(keys, lp(arp(k, p), 400 + 2600 * p ** 2, 2), t, 0.25 + 0.35 * p)
+            k += 1
+    rc = hp(noise(1.2), 2500); rc = rc * np.linspace(0, 1, len(rc)) ** 3
+    add(drums, rc, drop - 1.2, 0.18)
+
+
+def build_reel_techno():
+    """Melodic techno: a deep kick, a rolling sixteenth bass, a hypnotic arpeggio
+    through a resonant filter that opens over the film, a dark wide pad, and a
+    long saw lead for the last section. Dm, Gm, Bb, A."""
+    pads, bass, keys, drums = buf(), buf(), buf(), buf()
+    drop, g0, g1, secB, secC, fills, lpfs = reel_markers()
+    prog = ["Dm", "Dm", "Gm", "A", "Dm", "Dm", "Bb", "A"]
+    rr = np.random.default_rng(3); s16 = BEAT / 4
+    ARP = [0, 2, 1, 2, 3, 2, 1, 2, 0, 2, 1, 4, 3, 2, 1, 2]
+    reel_intro(pads, keys, drums, drop, REEL_KEYS["Dm"][1][:4],
+               arp=lambda k, p: acid(REEL_KEYS["Dm"][1][ARP[k % 16]] - 12, s16 * 0.9, 900 + 1500 * p, 0.3, 0.7))
+    kicks, sf_hat = [], []
+    beats = reel_beats(drop, g0, g1, secB, secC)
+    for t, bi, bb, bar, sec in beats:
+        ch = prog[bar % len(prog)]; root, notes = REEL_KEYS[ch]
+        kicks.append(t)
+        add(drums, tech_kick(1.0, 0.36, 44), t, 0.6)
+        sf_hat += [(t + BEAT / 2, 46, 70 + 10 * (sec >= 1), 0.2)]
+        if sec >= 1:
+            sf_hat += [(t + q * BEAT, 42, 40 + rr.integers(0, 20), 0.05) for q in (0.25, 0.75)]
+        if bb in (1, 3):
+            sf_hat += [(t, 39, 60 if sec < 2 else 75, 0.3)]
+        fill_and_rise(drums, t, fills, rr, 0.8)
+        for q in (0.25, 0.5, 0.75):                                           # the rolling bass
+            add(bass, acid(root - 12 + (12 if q == 0.5 and bb % 2 else 0), s16 * 0.85, 300 + 150 * sec, 0.1, 0.9), t + q * BEAT, 0.28)
+            add(bass, sub(root - 12, s16 * 0.8, 0.8), t + q * BEAT, 0.3)
+        if bb == 0:
+            add(pads, wide_saws(notes[:4], 4 * BEAT, cut=1400 + 700 * min(sec, 2), attack=0.2, release=0.5), t, 0.9)
+        # the arpeggio: sixteenths through a filter that opens section by section
+        for q in range(4):
+            k = (bi * 4 + q) % 16
+            cut = [1100, 1700, 2600, 1500][sec] + 500 * np.sin(2 * np.pi * (bi % 16) / 16)
+            add(keys, acid(notes[ARP[k] % len(notes)] - (12 if sec < 2 else 0), s16 * 0.9, cut, 0.35, 0.7), t + q * s16, 0.3)
+        # the lead: long notes over the last section
+        if sec == 2 and bb == 0:
+            mel = {"Dm": 81, "Gm": 79, "A": 76, "Bb": 77}[ch]
+            add(keys, wide_saws([mel, mel - 12], 3.6 * BEAT, cut=3200, voices=5, attack=0.08, release=0.4) * 1.4, t, 0.9)
+    pads += sf_notes([(t, n, 60, 4 * BEAT) for t, bi, bb, bar, sec in beats if bb == 0 for n in REEL_KEYS[prog[bar % len(prog)]][1][:3]], 0, 99, gain=0.6)
+    drums += sf_notes(sf_hat, 128, 25, True, 0.9)
+    keys = ping_pong(keys, 0.75 * BEAT, 0.4, 0.3, 2600); keys = reverb(keys, IR_HALL, 0.25)[: N]
+    pads = reverb(pads, IR_HALL, 0.35)[: N]
+    add(drums, crash(), drop, 0.2); add(drums, crash(), g1, 0.25)
+    out = reel_finish((pads, bass, keys, drums), kicks, 0.65, g0, g1, lpfs)
+    return out[0] * 1.3, out[1] * 1.0, out[2] * 1.2, out[3] * 0.7
+
+
+def build_reel_minimal():
+    """Dark minimal tech house: swung hats, a rubbery syncopated bass, dub chord
+    stabs with echoes, a low choir, no melody. Tension from filters."""
+    pads, bass, keys, drums = buf(), buf(), buf(), buf()
+    drop, g0, g1, secB, secC, fills, lpfs = reel_markers()
+    prog = ["Dm", "Dm", "Dm", "Gm"]
+    rr = np.random.default_rng(5); s16 = BEAT / 4; sw = 0.18 * s16
+    BASS = [(2, 0), (3, 12), (6, 0), (7, 7), (10, 0), (11, 12), (13, 3), (14, 0)]    # (step, semitones from the root)
+    reel_intro(pads, keys, drums, drop, REEL_KEYS["Dm"][1][:3])
+    kicks, sfd = [], []
+    beats = reel_beats(drop, g0, g1, secB, secC)
+    for t, bi, bb, bar, sec in beats:
+        ch = prog[bar % len(prog)]; root, notes = REEL_KEYS[ch]
+        kicks.append(t)
+        add(drums, tech_kick(1.0, 0.26, 50), t, 0.6)
+        sfd += [(t + BEAT / 2, 46, 55 + 10 * (sec >= 1), 0.15)]
+        for q in (1, 3):
+            sfd += [(t + q * s16 + sw, 42, 35 + rr.integers(0, 25), 0.05)]
+        if bb in (1, 3):
+            sfd += [(t, 39, 70, 0.3)]
+        if bb == 2 and sec >= 1:
+            sfd += [(t + 3 * s16 + sw, 37, 60, 0.1)]
+        fill_and_rise(drums, t, fills, rr, 0.6)
+        for st, semi in BASS:
+            if st // 4 == bb:
+                add(bass, acid(root - 12 + semi, s16 * 0.8, 380 + 200 * (sec >= 1), 0.45, 1.0), t + (st % 4) * s16 + (sw if st % 2 else 0), 0.34)
+                add(bass, sub(root - 12, s16 * 0.7, 0.8), t + (st % 4) * s16, 0.26)
+        if bb in (0, 2) and (bar % 2 == 1 or bb == 0):                        # the dub stab, echoing
+            stab = wide_saws(notes[:4], 0.14, cut=1300 + 500 * (sec >= 2), voices=3, attack=0.004, release=0.1)
+            add(keys, stab, t + 3 * s16 if bb == 0 else t + 2 * s16, 0.9)
+        if bb == 0:
+            add(pads, wide_saws(notes[:3], 4 * BEAT, cut=900, attack=0.4, release=0.5), t, 0.5)
+    pads += sf_notes([(t, n, 50, 4 * BEAT) for t, bi, bb, bar, sec in beats if bb == 0 and sec >= 1 for n in REEL_KEYS[prog[bar % len(prog)]][1][:3]], 0, 53, gain=0.45)
+    drums += sf_notes(sfd, 128, 25, True, 0.95)
+    keys = ping_pong(keys, 0.75 * BEAT, 0.55, 0.45, 1800); keys = reverb(keys, IR_HALL, 0.3)[: N]
+    pads = reverb(pads, IR_HALL, 0.4)[: N]
+    out = reel_finish((pads, bass, keys, drums), kicks, 0.5, g0, g1, lpfs)
+    return out[0] * 1.2, out[1] * 1.05, out[2] * 1.1, out[3] * 0.8
+
+
+def build_reel_deep():
+    """Melodic deep house: a softer kick, a rolling offbeat bass, warm Rhodes
+    minor-ninth chords, a lush pad and a soft pluck melody. Dm9, Bbmaj7, Gm9, A7."""
+    pads, bass, keys, drums = buf(), buf(), buf(), buf()
+    drop, g0, g1, secB, secC, fills, lpfs = reel_markers()
+    prog = ["Dm", "Bb", "Gm", "A"]
+    rr = np.random.default_rng(7); s16 = BEAT / 4
+    reel_intro(pads, keys, drums, drop, REEL_KEYS["Dm"][1][:4])
+    kicks, sfd, ep, mel = [], [], [], []
+    MEL = {"Dm": [(0, 76), (6, 74), (10, 72), (14, 69)], "Bb": [(0, 74), (6, 72), (10, 70), (14, 69)],
+           "Gm": [(0, 70), (6, 72), (10, 74), (14, 77)], "A": [(0, 76), (6, 73), (10, 69), (14, 67)]}
+    beats = reel_beats(drop, g0, g1, secB, secC)
+    for t, bi, bb, bar, sec in beats:
+        ch = prog[bar % len(prog)]; root, notes = REEL_KEYS[ch]
+        kicks.append(t)
+        add(drums, tech_kick(0.9, 0.22, 52), t, 0.5)
+        sfd += [(t + BEAT / 2, 46, 50 + 12 * (sec >= 1), 0.15)]
+        sfd += [(t + q * BEAT, 70, 40 + rr.integers(0, 20), 0.05) for q in (0.25, 0.75)]
+        if bb in (1, 3):
+            sfd += [(t, 39, 55, 0.3)]
+        fill_and_rise(drums, t, fills, rr, 0.6)
+        add(bass, sub(root - 12, BEAT * 0.4, 1.0), t + BEAT / 2, 0.42)
+        add(bass, lp(blsaw(mtof(root - 12), BEAT * 0.4), 380, 2) * env_adsr(int((BEAT * 0.4) * SR), 0.004, 0.1, 0.6, 0.04), t + BEAT / 2, 0.12)
+        if sec >= 1 and bb == 3:
+            add(bass, sub(root, BEAT * 0.2, 0.7), t + 0.75 * BEAT, 0.3)
+        # the Rhodes, on the one and pushed after the three
+        if bb == 0:
+            ep += [(t, n, 70, 1.6 * BEAT) for n in notes[:5]]
+        if bb == 2:
+            ep += [(t + 2 * s16, n, 58, 1.2 * BEAT) for n in notes[1:5]]
+        if bb == 0:
+            add(pads, wide_saws(notes[:4], 4 * BEAT, cut=2000, attack=0.35, release=0.6), t, 0.45)
+        if sec >= 1:
+            for st, m in MEL[ch]:
+                if st // 4 == bb:
+                    mel.append((t + (st % 4) * s16, m, 70 + 10 * (sec == 2), 0.5 * BEAT))
+    keys += sf_notes(ep, 8, 4, gain=1.1)
+    mk = sf_notes(mel, 1, 98, gain=0.9)                      # a soft mallet-pluck melody
+    keys += ping_pong(mk, 0.75 * BEAT, 0.4, 0.35, 3000)
+    pads += sf_notes([(t, n, 55, 4 * BEAT) for t, bi, bb, bar, sec in beats if bb == 0 for n in REEL_KEYS[prog[bar % len(prog)]][1][:3]], 0, 89, gain=0.6)
+    drums += sf_notes(sfd, 128, 25, True, 0.85)
+    keys = reverb(keys, IR_HALL, 0.28)[: N]; pads = reverb(pads, IR_HALL, 0.35)[: N]
+    out = reel_finish((pads, bass, keys, drums), kicks, 0.45, g0, g1, lpfs)
+    return out[0] * 1.2, out[1] * 1.0, out[2] * 1.15, out[3] * 0.75
+
+
+def build_reel_cinema():
+    """Cinematic electronic: big half-time drums, a pulsing eighth-note bass, an
+    arpeggio in a ping-pong delay, slow strings and a choir. Dm, Bb, Gm, A."""
+    pads, bass, keys, drums = buf(), buf(), buf(), buf()
+    drop, g0, g1, secB, secC, fills, lpfs = reel_markers()
+    prog = ["Dm", "Bb", "Gm", "A"]
+    rr = np.random.default_rng(9); s16 = BEAT / 4
+    reel_intro(pads, keys, drums, drop, REEL_KEYS["Dm"][1][:4])
+    kicks, sfd, strings = [], [], []
+    beats = reel_beats(drop, g0, g1, secB, secC)
+    for t, bi, bb, bar, sec in beats:
+        ch = prog[bar % len(prog)]; root, notes = REEL_KEYS[ch]
+        if bb in (0,) or (bb == 2 and sec >= 1 and bar % 2):
+            kicks.append(t); add(drums, tech_kick(1.0, 0.45, 42), t, 0.62)
+        if bb == 2:
+            cl = np.pad(stereo(clap_layer(rr), clap_layer(rr)), ((0, at(0.8)), (0, 0)))
+            add(drums, reverb(cl, IR_HALL, 0.6), t, 0.3)
+        sfd += [(t + q * BEAT, 42, 35 + rr.integers(0, 25) + 10 * (sec >= 1), 0.05) for q in ((0.0, 0.25, 0.5, 0.75) if sec >= 1 else (0.5,))]
+        fill_and_rise(drums, t, fills, rr, 0.9)
+        for q in (0.0, 0.5):                                                 # the pulse
+            add(bass, lp(blsaw(mtof(root - 12), BEAT * 0.45), 700 + 300 * sec, 2) * env_adsr(int((BEAT * 0.45) * SR), 0.004, 0.12, 0.5, 0.05), t + q * BEAT, 0.3)
+            add(bass, sub(root - 12, BEAT * 0.4, 0.8), t + q * BEAT, 0.3)
+        for q in range(4):                                                   # the arpeggio
+            k = (bi * 4 + q) % 8
+            n = [notes[0], notes[2], notes[4], notes[2], notes[1] + 12, notes[2], notes[4], notes[3]][k]
+            y = lp(blsquare(mtof(n), s16 * 0.9, 0.3) * env_adsr(int((s16 * 0.9) * SR), 0.003, 0.08, 0.3, 0.03), 1800 + 900 * sec, 2)
+            add(keys, y, t + q * s16, 0.16 + 0.05 * sec)
+        if bb == 0:
+            strings += [(t, n, 55 + 15 * sec, 4 * BEAT) for n in (notes[0] - 12, notes[0], notes[2], notes[4])]
+            add(pads, wide_saws(notes[:4], 4 * BEAT, cut=1800 + 600 * sec, attack=0.5, release=0.8), t, 0.4)
+    pads += sf_notes(strings, 0, 49, gain=1.0)
+    pads += sf_notes([(t, n, 50, 4 * BEAT) for t, bi, bb, bar, sec in beats if bb == 0 and sec >= 1 for n in REEL_KEYS[prog[bar % len(prog)]][1][:3]], 0, 52, gain=0.5)
+    drums += sf_notes(sfd, 128, 25, True, 0.8)
+    keys = ping_pong(keys, 0.75 * BEAT, 0.5, 0.5, 2800); keys = reverb(keys, IR_HALL, 0.3)[: N]
+    pads = reverb(pads, IR_HALL, 0.4)[: N]
+    add(drums, crash(), drop, 0.25); add(drums, crash(), g1, 0.3)
+    out = reel_finish((pads, bass, keys, drums), kicks, 0.45, g0, g1, lpfs, rel=0.14)
+    return out[0] * 1.2, out[1] * 1.0, out[2] * 1.2, out[3] * 0.75
 
 
 def build_sfx():
@@ -1936,7 +2260,7 @@ def main():
     style = getattr(F, "MUSIC", "synth")
     drum_led = style in ("drums", "band", "garage", "perc", "electronica", "reel")
     pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band, "garage": build_music_garage, "perc": build_music_perc,
-                               "electronica": build_music_electronica, "reel": build_music_reel}.get(style, build_music)()
+                               "electronica": build_music_electronica, "reel": reel_style()}.get(style, build_music)()
     music = pads * 1.0 + bass * 1.0 + keys * 1.0 + drums * (1.0 if drum_led else 0.9)
     music = peak_eq(music, 2800, 3.0, 0.6)
     music = peak_eq(music, 90, -2.0, 0.8)

@@ -37,5 +37,5 @@ MUSIC = "reel"
 SFX_TRIM = {}
 # the effects sit under the music, drowned: SFX_DROWN is the low-pass, the
 # wobble and the dark room every effect goes through
-MUSIC_GAIN, SFX_GAIN = 0.42, 0.5
-SFX_DROWN = dict(cut=1400, wobble=0.0035, room=0.45)
+MUSIC_GAIN, SFX_GAIN = 0.42, 0.62
+SFX_DROWN = dict(cut=2200, wobble=0.003, room=0.35)
