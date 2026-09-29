@@ -1,0 +1,73 @@
+[
+ {
+  "beat": 0,
+  "prompts": {
+   "Dark Melodic Techno, minor key": 1.0,
+   "Ominous Drone": 0.7,
+   "Cinematic Synth Pads": 0.8,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "intro",
+  "density": 0.2,
+  "brightness": 0.15,
+  "mute_drums": true
+ },
+ {
+  "beat": 7,
+  "prompts": {
+   "Dark Melodic Techno, minor key": 1.0,
+   "Tight Groove": 0.9,
+   "Deep Rolling Bassline": 0.8,
+   "Brooding Minor Chords": 0.7,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "a",
+  "density": 0.55,
+  "brightness": 0.3
+ },
+ {
+  "beat": 20,
+  "prompts": {
+   "Dark Melodic Techno, minor key": 1.0,
+   "Tight Groove": 0.8,
+   "Deep Rolling Bassline": 0.7,
+   "Arpeggiated Synth Lead Hook": 1.0,
+   "Brooding Minor Chords": 0.6,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "b",
+  "density": 0.65,
+  "brightness": 0.4
+ },
+ {
+  "beat": 37,
+  "prompts": {
+   "Dark Melodic Techno, minor key": 1.0,
+   "Huge Drop": 0.9,
+   "Big Supersaw Minor Chords": 0.9,
+   "Arpeggiated Synth Lead Hook": 0.8,
+   "Deep Rolling Bassline": 0.7,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "c",
+  "density": 0.8,
+  "brightness": 0.5
+ },
+ {
+  "beat": 52,
+  "prompts": {
+   "Dark Melodic Techno, minor key": 1.0,
+   "Echoes": 0.8,
+   "Cinematic Synth Pads": 0.8,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "out",
+  "density": 0.4,
+  "brightness": 0.3
+ }
+]

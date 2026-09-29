@@ -1,0 +1,69 @@
+{
+ "file": "dark-melodic-1.wav",
+ "model": "models/lyria-realtime-exp",
+ "bpm": 118,
+ "scale": "F_MAJOR_D_MINOR",
+ "seconds": 34.0,
+ "seed": 1,
+ "temperature": 1.1,
+ "guidance": 4.0,
+ "lead": 2.0,
+ "plan": [
+  {
+   "beat": 0,
+   "prompts": {
+    "Dark Melodic Techno": 1.0,
+    "Ominous Drone": 0.7,
+    "Cinematic Synth Pads": 0.8
+   },
+   "density": 0.2,
+   "brightness": 0.3,
+   "mute_drums": true
+  },
+  {
+   "beat": 3,
+   "prompts": {
+    "Dark Melodic Techno": 1.0,
+    "Tight Groove": 0.9,
+    "Deep Rolling Bassline": 0.8,
+    "Cinematic Synth Pads": 0.5
+   },
+   "density": 0.55,
+   "brightness": 0.45
+  },
+  {
+   "beat": 16,
+   "prompts": {
+    "Dark Melodic Techno": 1.0,
+    "Tight Groove": 0.8,
+    "Deep Rolling Bassline": 0.7,
+    "Arpeggiated Synth Lead Hook": 1.0
+   },
+   "density": 0.65,
+   "brightness": 0.55
+  },
+  {
+   "beat": 33,
+   "prompts": {
+    "Dark Melodic Techno": 1.0,
+    "Huge Drop": 0.9,
+    "Big Supersaw Chords": 0.9,
+    "Arpeggiated Synth Lead Hook": 0.8,
+    "Deep Rolling Bassline": 0.7
+   },
+   "density": 0.8,
+   "brightness": 0.65
+  },
+  {
+   "beat": 48,
+   "prompts": {
+    "Dark Melodic Techno": 1.0,
+    "Echoes": 0.8,
+    "Cinematic Synth Pads": 0.8
+   },
+   "density": 0.4,
+   "brightness": 0.45
+  }
+ ],
+ "raw_peak": 0.896
+}
