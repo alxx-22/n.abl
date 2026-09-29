@@ -1,0 +1,51 @@
+{
+  "slug": "linden-house",
+  "name": "Linden House Hotel",
+  "business_type": "hotel",
+  "timezone": "Europe/London",
+  "status": "demo",
+  "demo_pin": "1003",
+  "voice": "Aoede",
+  "greeting": "Good afternoon, Linden House Hotel. I'm the AI assistant, and this is a demo line. How may I help?",
+  "summary": "An 18-room country-house hotel near Southwell with a small spa, a restaurant, and gardens.",
+  "address": "Linden House, Halam Road, Southwell NG25 0AZ",
+  "phone_display": "01632 960182",
+  "brand": { "accent": "#4F6B4A" },
+  "core_facts": [
+    "Check-in from 3pm, check-out by 11am.",
+    "Rooms from £129 a night including breakfast, subject to availability; room bookings are made by the reservations team.",
+    "The spa is open to hotel guests and day visitors, 9am to 7pm every day.",
+    "Free parking for 30 cars. Electric car charging available.",
+    "Dogs welcome in two garden rooms, £20 a night."
+  ],
+  "opening_hours": [
+    { "days": [0, 1, 2, 3, 4, 5, 6], "open": "00:00", "close": "23:59", "label": "reception, 24 hours" },
+    { "days": [0, 1, 2, 3, 4, 5, 6], "open": "09:00", "close": "19:00", "label": "spa" }
+  ],
+  "booking": {
+    "services": [
+      { "key": "massage_60", "label": "60-minute massage", "kind": "appointment", "slot_minutes": 30, "duration_minutes": 60, "buffer_minutes": 15, "price_pence": 6500, "description": "Full-body Swedish massage.", "windows": [{ "days": [0, 1, 2, 3, 4, 5, 6], "first": "09:00", "last": "18:00" }], "lead_minutes": 60, "horizon_days": 90 },
+      { "key": "facial_45", "label": "45-minute facial", "kind": "appointment", "slot_minutes": 15, "duration_minutes": 45, "buffer_minutes": 15, "price_pence": 5000, "windows": [{ "days": [0, 1, 2, 3, 4, 5, 6], "first": "09:00", "last": "18:15" }], "lead_minutes": 60, "horizon_days": 90 },
+      { "key": "back_massage_30", "label": "30-minute back, neck and shoulder massage", "kind": "appointment", "slot_minutes": 15, "duration_minutes": 30, "buffer_minutes": 15, "price_pence": 3800, "windows": [{ "days": [0, 1, 2, 3, 4, 5, 6], "first": "09:00", "last": "18:30" }], "lead_minutes": 60, "horizon_days": 90 }
+    ],
+    "resources": [
+      { "key": "priya", "label": "Priya", "services": ["massage_60", "facial_45", "back_massage_30"] },
+      { "key": "tom", "label": "Tom", "services": ["massage_60", "back_massage_30"] }
+    ]
+  },
+  "policies": {
+    "spa_cancellation": "Spa treatments can be moved or cancelled free with 24 hours' notice.",
+    "rooms": "Room bookings, changes and prices are handled by the reservations team, not by phone with the assistant: take the caller's name, number, dates and number of guests for a call back."
+  },
+  "knowledge": [
+    { "q": "What time is check-in and check-out?", "a": "Check-in is from 3pm and check-out by 11am. Late check-out until 1pm is £25, subject to availability.", "tags": ["check in", "check out", "arrival", "departure"] },
+    { "q": "How much is a room?", "a": "Rooms start at £129 a night including breakfast for two, rising at weekends and in summer. The reservations team will confirm the exact price for the dates.", "tags": ["price", "rate", "cost", "room", "night"] },
+    { "q": "Is breakfast included?", "a": "Yes, full English or continental breakfast is included, served 7 till 10, 8 till 10:30 at weekends.", "tags": ["breakfast"] },
+    { "q": "Is there parking?", "a": "Free parking for 30 cars, with two electric car chargers.", "tags": ["parking", "car", "ev", "charging", "electric"] },
+    { "q": "Are dogs allowed?", "a": "Dogs are welcome in our two garden rooms at £20 a night, and in the bar. Not in the restaurant or spa.", "tags": ["dog", "pet"] },
+    { "q": "Can non-residents use the spa?", "a": "Yes, day visitors are welcome for treatments. The pool and sauna are for hotel guests and treatment customers.", "tags": ["spa", "day visitor", "pool", "sauna", "non resident"] },
+    { "q": "Do you host weddings?", "a": "Yes, weddings for up to 80 in the garden room. The events team handles them, so take the caller's details for a call back.", "tags": ["wedding", "event", "function", "party"] },
+    { "q": "Is the restaurant open to non-residents?", "a": "Yes, dinner is served 6 till 9 every evening, and non-residents are welcome.", "tags": ["restaurant", "dinner", "eat"] },
+    { "q": "Is the hotel accessible?", "a": "Two ground-floor rooms are fully accessible with wet rooms. The spa is on the ground floor.", "tags": ["wheelchair", "accessible", "disabled"] }
+  ]
+}

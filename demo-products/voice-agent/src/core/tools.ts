@@ -1,0 +1,813 @@
+// The receptionist's tools. The model can only act through these.
+//
+// Every argument is validated here and anything unexpected is ignored. The
+// database is the truth for every slot, price and reference; the model's job
+// is the conversation. Each tool can also raise an "action" — the friendly
+// card the live board shows ("Table booked, Fri 19:30, 4 people").
+
+import type { FunctionDeclaration } from './live.ts';
+import type { Repo } from '../db/repo.ts';
+import { spokenReference } from '../db/repo.ts';
+import type { Order, OrderLine, Tenant } from '../domain/types.ts';
+import { pounds } from '../domain/types.ts';
+import { checkAvailability, findService } from '../domain/availability.ts';
+import {
+  addDays, isIsoDate, minutesOf, normaliseTime, spokenDate, spokenTime, toLocal, weekdayOf, zonedToUtc,
+} from '../domain/time.ts';
+import { searchKnowledge } from '../domain/knowledge.ts';
+import {
+  allergenAnswer, allergensOf, describeLine, lineTotal, optionsFor, resolveItem, resolveModifiers,
+} from '../domain/menu.ts';
+import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
+import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
+import { capabilities } from './prompt.ts';
+
+export interface Action {
+  kind:
+    | 'booking_created' | 'booking_changed' | 'booking_cancelled' | 'order_updated' | 'order_placed'
+    | 'payment' | 'message_taken' | 'sms' | 'transfer' | 'call_ending';
+  title: string;
+  detail?: string;
+  data?: Record<string, unknown>;
+}
+
+export interface SmsSender {
+  send(to: string, body: string): Promise<'sent' | 'simulated' | 'failed'>;
+}
+
+export interface Telephony {
+  transfer(to: string, whisper: string): Promise<boolean>;
+}
+
+export interface CallState {
+  lines: OrderLine[];
+  nextLine: number;
+  basketVersion: number;
+  reviewedVersion: number;
+  fulfilment: { type: 'collection' | 'delivery'; due_at: Date; postcode: string | null; address: string | null } | null;
+  /** References created or changed by this call: the guardrail's evidence. */
+  committed: string[];
+  /** Existing bookings looked up in this call (talking about them is not a false claim). */
+  found: string[];
+  lastOrder: Order | null;
+  lastBookingRef: string | null;
+  paid: string[];
+  ending: boolean;
+  transferRequested: boolean;
+}
+
+export function newCallState(): CallState {
+  return {
+    lines: [], nextLine: 1, basketVersion: 0, reviewedVersion: -1, fulfilment: null,
+    committed: [], found: [], lastOrder: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
+  };
+}
+
+export interface ToolContext {
+  tenant: Tenant;
+  repo: Repo;
+  now: () => Date;
+  callId: string;
+  channel: 'phone' | 'browser' | 'eval';
+  callerPhone: string | null;
+  state: CallState;
+  demoCards: DemoCard[];
+  sms: SmsSender;
+  telephony: Telephony | null;
+  action: (a: Action) => void;
+}
+
+type Args = Record<string, unknown>;
+type Handler = (args: Args, ctx: ToolContext) => Promise<Record<string, unknown>>;
+
+interface Tool {
+  decl: FunctionDeclaration;
+  handler: Handler;
+  when?: (t: Tenant) => boolean;
+}
+
+const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
+const int = (v: unknown): number | undefined => {
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
+  return Number.isFinite(n) ? Math.round(n) : undefined;
+};
+const strList = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x) => typeof x === 'string' && x.trim()).map((x) => (x as string).trim()) : typeof v === 'string' && v.trim() ? v.split(/,| and /).map((x) => x.trim()).filter(Boolean) : [];
+
+const S = (description: string) => ({ type: 'STRING', description });
+const I = (description: string) => ({ type: 'INTEGER', description });
+const obj = (properties: Record<string, unknown>, required: string[] = []) => ({
+  type: 'OBJECT', properties, ...(required.length ? { required } : {}),
+});
+
+function hoursFor(t: Tenant, date: string): string[] {
+  const p = t.profile;
+  const wd = weekdayOf(date);
+  const closure = p.closures?.find((c) => c.date === date);
+  if (closure) return [`closed${closure.note ? ` (${closure.note})` : ''}`];
+  const open = p.opening_hours.filter((h) => h.days.includes(wd));
+  if (!open.length) return ['closed'];
+  return open.map((h) => `${h.label ? `${h.label} ` : ''}${spokenTime(h.open)} to ${spokenTime(h.close)}`);
+}
+
+async function smsTo(ctx: ToolContext, to: string | null, body: string): Promise<string | null> {
+  if (!to) return null;
+  const status = await ctx.sms.send(to, body);
+  await ctx.repo.addMessage({ tenant_id: ctx.tenant.id, call_id: ctx.callId, kind: 'sms', to_number: to, body, status });
+  ctx.action({ kind: 'sms', title: status === 'sent' ? 'SMS sent' : 'SMS (simulated)', detail: body, data: { to: displayUkPhone(to), status } });
+  return status;
+}
+
+function bookingSummary(t: Tenant, b: { reference: string; starts_at: Date; party_size: number; name: string; service_key: string; resource_key: string }) {
+  const local = toLocal(b.starts_at, t.profile.timezone);
+  const service = findService(t.profile, b.service_key);
+  const resource = t.profile.booking?.resources.find((r) => r.key === b.resource_key);
+  return {
+    reference: b.reference,
+    spoken_reference: spokenReference(b.reference),
+    service: service?.label ?? b.service_key,
+    date: local.date,
+    spoken_date: spokenDate(local.date),
+    time: local.time,
+    spoken_time: spokenTime(local.time),
+    party_size: b.party_size,
+    name: b.name,
+    with: service?.kind === 'appointment' ? resource?.label : undefined,
+  };
+}
+
+function basketSummary(ctx: ToolContext) {
+  const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
+  return {
+    lines: ctx.state.lines.map((l) => ({ line: l.line, text: describeLine(l) })),
+    subtotal: pounds(subtotal),
+    subtotal_pence: subtotal,
+  };
+}
+
+function orderAction(ctx: ToolContext, title: string) {
+  const b = basketSummary(ctx);
+  ctx.action({ kind: 'order_updated', title, detail: b.lines.map((l) => l.text).join('\n'), data: { lines: ctx.state.lines, subtotal: b.subtotal } });
+}
+
+function changed(ctx: ToolContext) {
+  ctx.state.basketVersion++;
+}
+
+function earliestDue(ctx: ToolContext, type: 'collection' | 'delivery'): Date {
+  const o = ctx.tenant.profile.ordering!;
+  const mins = o.prep_minutes + (type === 'delivery' ? o.delivery?.extra_minutes ?? 0 : 0);
+  const t = ctx.now().getTime() + mins * 60000;
+  return new Date(Math.ceil(t / 300000) * 300000);
+}
+
+function withinOrderingHours(ctx: ToolContext, due: Date): boolean {
+  const o = ctx.tenant.profile.ordering!;
+  const local = toLocal(due, ctx.tenant.profile.timezone);
+  const m = minutesOf(local.time);
+  return o.hours.some((h) => h.days.includes(local.weekday) && m >= minutesOf(h.open) && m <= minutesOf(h.close));
+}
+
+function postcodeOf(input: unknown): { full: string; district: string } | null {
+  const s = str(input)?.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!s) return null;
+  const m = /^([A-Z]{1,2}[0-9][A-Z0-9]?)([0-9][A-Z]{2})$/.exec(s);
+  if (m) return { full: `${m[1]} ${m[2]}`, district: m[1] };
+  const d = /^([A-Z]{1,2}[0-9][A-Z0-9]?)$/.exec(s);
+  return d ? { full: d[1], district: d[1] } : null;
+}
+
+const TOOLS: Record<string, Tool> = {
+  get_opening_hours: {
+    decl: {
+      name: 'get_opening_hours',
+      description: 'Opening hours for a date, or for the next seven days if no date is given. Includes booking and takeaway times.',
+      parameters: obj({ date: S('YYYY-MM-DD') }),
+    },
+    async handler(args, ctx) {
+      const p = ctx.tenant.profile;
+      const today = toLocal(ctx.now(), p.timezone).date;
+      const date = str(args.date);
+      const days = date && isIsoDate(date) ? [date] : Array.from({ length: 7 }, (_, i) => addDays(today, i));
+      return {
+        days: days.map((d) => {
+          const out: Record<string, unknown> = { date: d, spoken_date: spokenDate(d), open: hoursFor(ctx.tenant, d) };
+          const wd = weekdayOf(d);
+          const svc = p.booking?.services[0];
+          if (svc?.kind === 'table') {
+            const ws = svc.windows.filter((w) => w.days.includes(wd));
+            if (ws.length) out.last_booking_times = ws.map((w) => spokenTime(w.last));
+          }
+          const take = p.ordering?.hours.filter((h) => h.days.includes(wd));
+          if (take?.length) out.orders = take.map((h) => `${spokenTime(h.open)} to ${spokenTime(h.close)}`);
+          return out;
+        }),
+      };
+    },
+  },
+
+  search_knowledge: {
+    decl: {
+      name: 'search_knowledge',
+      description: "Look up the business's own answers: parking, access, dogs, children, dietary needs, policies, events, anything not in the facts.",
+      parameters: obj({ question: S("The caller's question, in a few words") }, ['question']),
+    },
+    async handler(args, ctx) {
+      const q = str(args.question) ?? '';
+      const p = ctx.tenant.profile;
+      const entries = [
+        ...p.knowledge,
+        ...Object.entries(p.policies ?? {}).map(([k, v]) => ({ q: `${k.replace(/_/g, ' ')} policy`, a: v, tags: [k.replace(/_/g, ' ')] })),
+      ];
+      const hits = searchKnowledge(entries, q);
+      if (!hits.length) {
+        return { answers: [], note: "Nothing on file for that. Say you're not sure, and offer to take a message so the team can call back." };
+      }
+      return { answers: hits.map((h) => ({ about: h.q, answer: h.a })) };
+    },
+  },
+
+  check_availability: {
+    when: (t) => capabilities(t.profile).booking,
+    decl: {
+      name: 'check_availability',
+      description: 'Check free times for a table or appointment. Without a time, returns the free times that day. If the time is taken, returns the nearest alternatives.',
+      parameters: obj(
+        {
+          service: S('Which service (for example "table", or a treatment or haircut name). Optional if there is only one.'),
+          date: S('YYYY-MM-DD'),
+          time: S('HH:MM, 24-hour. Optional.'),
+          party_size: I('Number of people (tables). Default 1.'),
+          staff: S('A named staff member, if the caller asked for one.'),
+        },
+        ['date'],
+      ),
+    },
+    async handler(args, ctx) {
+      const p = ctx.tenant.profile;
+      const service = findService(p, str(args.service));
+      if (!service) {
+        return { available: false, message: `Not a bookable service. Services: ${p.booking!.services.map((s) => s.label).join(', ')}.` };
+      }
+      const date = str(args.date) ?? '';
+      const existing = isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [];
+      const r = checkAvailability({
+        profile: p, serviceKey: service.key, date, time: str(args.time), partySize: int(args.party_size) ?? 1,
+        staff: str(args.staff), now: ctx.now(), existing,
+      });
+      const out: Record<string, unknown> = { ...r, service: service.label };
+      if (r.slot && service.kind === 'appointment') out.with = r.slot.resource_label;
+      if (r.slot) delete (out.slot as Record<string, unknown>).resource_key;
+      if (service.price_pence) out.price = pounds(service.price_pence);
+      return out;
+    },
+  },
+
+  create_booking: {
+    when: (t) => capabilities(t.profile).booking,
+    decl: {
+      name: 'create_booking',
+      description: 'Make the booking. Only after reading the details back and the caller saying yes. Returns a reference.',
+      parameters: obj(
+        {
+          service: S('Which service. Optional if there is only one.'),
+          date: S('YYYY-MM-DD'),
+          time: S('HH:MM, 24-hour'),
+          party_size: I('Number of people. 1 for an appointment.'),
+          name: S("The caller's name"),
+          phone: S('Contact number, if different from the number they are calling from'),
+          staff: S('A named staff member, if requested'),
+          notes: S('Occasion, high chair, allergy, accessibility: anything the team should know'),
+        },
+        ['date', 'time', 'name'],
+      ),
+    },
+    async handler(args, ctx) {
+      const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+      const r = await ctx.repo.createBooking(
+        ctx.tenant,
+        {
+          service: str(args.service), date: str(args.date) ?? '', time: str(args.time) ?? '',
+          party_size: int(args.party_size) ?? 1, name: str(args.name) ?? '', phone, notes: str(args.notes) ?? null,
+          staff: str(args.staff), source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
+        },
+        ctx.now(),
+      );
+      if (!r.ok) return { booked: false, reason: r.reason, message: r.message, next: 'Offer another time with check_availability.' };
+      const b = r.booking;
+      ctx.state.committed.push(b.reference);
+      ctx.state.lastBookingRef = b.reference;
+      const s = bookingSummary(ctx.tenant, b);
+      ctx.action({
+        kind: 'booking_created',
+        title: `${s.service === 'table' ? 'Table' : s.service} booked`,
+        detail: `${s.spoken_date}, ${s.spoken_time} · ${b.party_size} ${b.party_size === 1 ? 'person' : 'people'} · ${b.name}${s.with ? ` with ${s.with}` : ''} · ref ${b.reference}`,
+        data: { reference: b.reference },
+      });
+      const smsStatus = await smsTo(
+        ctx, phone,
+        `${ctx.tenant.profile.name}: ${s.service} for ${b.party_size} on ${s.spoken_date} at ${s.spoken_time}${s.with ? ` with ${s.with}` : ''}. Ref ${b.reference}.${b.deposit_pence ? ` Deposit due: ${pounds(b.deposit_pence)}.` : ''} (Demo booking)`,
+      );
+      return {
+        booked: true,
+        ...s,
+        deposit_due: b.deposit_pence ? pounds(b.deposit_pence) : undefined,
+        next: b.deposit_pence
+          ? `A ${pounds(b.deposit_pence)} deposit secures this booking. Offer to take it now with take_demo_payment (for "deposit").`
+          : undefined,
+        confirmation_text: smsStatus ? 'sent by text' : 'no number to text',
+      };
+    },
+  },
+
+  find_bookings: {
+    when: (t) => capabilities(t.profile).booking,
+    decl: {
+      name: 'find_bookings',
+      description: "Find the caller's upcoming bookings by reference, phone number or name. With nothing given, uses the number they are calling from.",
+      parameters: obj({ reference: S('Booking reference'), phone: S('Phone number'), name: S('Name on the booking') }),
+    },
+    async handler(args, ctx) {
+      const reference = str(args.reference);
+      const phone = normaliseUkPhone(str(args.phone)) ?? (reference || str(args.name) ? undefined : ctx.callerPhone ?? undefined);
+      const found = await ctx.repo.findBookings(ctx.tenant.id, { reference, phone, name: reference || phone ? undefined : str(args.name) }, ctx.now());
+      for (const b of found) ctx.state.found.push(b.reference);
+      if (!found.length) return { bookings: [], note: 'No upcoming bookings found. Ask for the reference or the name it was booked under.' };
+      return { bookings: found.map((b) => bookingSummary(ctx.tenant, b)) };
+    },
+  },
+
+  modify_booking: {
+    when: (t) => capabilities(t.profile).booking,
+    decl: {
+      name: 'modify_booking',
+      description: 'Move a booking or change the party size or notes. Read the change back and get a yes first.',
+      parameters: obj(
+        { reference: S('Booking reference'), date: S('New date, YYYY-MM-DD'), time: S('New time, HH:MM'), party_size: I('New number of people'), notes: S('New notes') },
+        ['reference'],
+      ),
+    },
+    async handler(args, ctx) {
+      const ref = str(args.reference) ?? '';
+      const r = await ctx.repo.modifyBooking(
+        ctx.tenant, ref,
+        { date: str(args.date), time: str(args.time), party_size: int(args.party_size), notes: str(args.notes) },
+        ctx.now(),
+      );
+      if (!r.ok) return { changed: false, message: r.message };
+      ctx.state.committed.push(r.booking.reference);
+      const s = bookingSummary(ctx.tenant, r.booking);
+      ctx.action({ kind: 'booking_changed', title: 'Booking changed', detail: `${s.spoken_date}, ${s.spoken_time} · ${r.booking.party_size} people · ref ${r.booking.reference}` });
+      await smsTo(ctx, r.booking.phone, `${ctx.tenant.profile.name}: your booking ${r.booking.reference} is now ${s.spoken_date} at ${s.spoken_time} for ${r.booking.party_size}. (Demo)`);
+      return { changed: true, ...s };
+    },
+  },
+
+  cancel_booking: {
+    when: (t) => capabilities(t.profile).booking,
+    decl: {
+      name: 'cancel_booking',
+      description: 'Cancel a booking. Confirm with the caller first.',
+      parameters: obj({ reference: S('Booking reference') }, ['reference']),
+    },
+    async handler(args, ctx) {
+      const b = await ctx.repo.cancelBooking(ctx.tenant.id, str(args.reference) ?? '');
+      if (!b) return { cancelled: false, message: 'No confirmed booking with that reference.' };
+      ctx.state.committed.push(b.reference);
+      const s = bookingSummary(ctx.tenant, b);
+      ctx.action({ kind: 'booking_cancelled', title: 'Booking cancelled', detail: `${s.spoken_date}, ${s.spoken_time} · ${b.name} · ref ${b.reference}` });
+      await smsTo(ctx, b.phone, `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled. (Demo)`);
+      return { cancelled: true, ...s, policy: ctx.tenant.profile.policies?.cancellation };
+    },
+  },
+
+  get_menu: {
+    when: (t) => Boolean(t.profile.menu),
+    decl: {
+      name: 'get_menu',
+      description: 'The menu. Without a category, lists the categories and dishes by name; with one, gives prices and descriptions.',
+      parameters: obj({ category: S('A category, such as pizzas or desserts') }),
+    },
+    async handler(args, ctx) {
+      const menu = ctx.tenant.profile.menu!;
+      const c = str(args.category)?.toLowerCase();
+      const cats = c
+        ? menu.categories.filter((x) => x.label.toLowerCase().includes(c) || x.key.includes(c) || c.includes(x.key))
+        : [];
+      if (c && cats.length) {
+        return {
+          categories: cats.map((x) => ({
+            category: x.label,
+            items: x.items.map((i) => ({
+              name: i.name, price: pounds(i.price_pence), description: i.description, dietary: i.dietary,
+              available: i.available === false ? 'not today' : undefined,
+            })),
+          })),
+        };
+      }
+      return { categories: menu.categories.map((x) => ({ category: x.label, items: x.items.map((i) => i.name) })) };
+    },
+  },
+
+  get_item_details: {
+    when: (t) => Boolean(t.profile.menu),
+    decl: {
+      name: 'get_item_details',
+      description: 'Price, description, options and allergens for one dish. Use for every allergy question, and repeat its allergen wording.',
+      parameters: obj({ item: S('The dish, as the caller said it') }, ['item']),
+    },
+    async handler(args, ctx) {
+      const menu = ctx.tenant.profile.menu!;
+      const r = resolveItem(menu, str(args.item) ?? '');
+      if (!r.ok) return { found: false, question: r.question, options: 'options' in r ? r.options : undefined };
+      const item = r.value;
+      return {
+        found: true,
+        name: item.name,
+        price: pounds(item.price_pence),
+        description: item.description,
+        dietary: item.dietary,
+        available: item.available === false ? 'not available today' : 'yes',
+        options: optionsFor(menu, item).map((o) => `${o.option.name}${o.option.price_pence ? ` (+${pounds(o.option.price_pence)})` : ''}`),
+        allergens: allergensOf(menu, item),
+        allergen_answer: allergenAnswer(menu, item),
+      };
+    },
+  },
+
+  add_to_order: {
+    when: (t) => capabilities(t.profile).ordering,
+    decl: {
+      name: 'add_to_order',
+      description: 'Add a dish to the order. Options are things like "no basil" or "extra mozzarella". Returns the line and the running total.',
+      parameters: obj(
+        {
+          item: S('The dish'),
+          quantity: I('How many. Default 1.'),
+          options: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Options for this line, each as the caller said it' },
+          notes: S('A special request for the kitchen that is not an option'),
+        },
+        ['item'],
+      ),
+    },
+    async handler(args, ctx) {
+      const menu = ctx.tenant.profile.menu!;
+      const r = resolveItem(menu, str(args.item) ?? '');
+      if (!r.ok) return { added: false, question: r.question };
+      const item = r.value;
+      if (item.available === false) return { added: false, message: `${item.name} is not available today.` };
+      const mods = resolveModifiers(menu, item, strList(args.options));
+      if (!mods.ok) return { added: false, question: mods.question };
+      const quantity = Math.min(Math.max(int(args.quantity) ?? 1, 1), 20);
+      const line: OrderLine = {
+        line: ctx.state.nextLine++,
+        item_key: item.key,
+        name: item.name,
+        quantity,
+        unit_pence: item.price_pence,
+        modifiers: mods.value.map((m) => ({ key: m.key, name: m.name, price_pence: m.price_pence })),
+        notes: str(args.notes),
+      };
+      ctx.state.lines.push(line);
+      changed(ctx);
+      orderAction(ctx, 'Order in progress');
+      const b = basketSummary(ctx);
+      return { added: describeLine(line), line: line.line, order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal };
+    },
+  },
+
+  update_order_line: {
+    when: (t) => capabilities(t.profile).ordering,
+    decl: {
+      name: 'update_order_line',
+      description: 'Change the quantity, options or notes on a line already in the order.',
+      parameters: obj(
+        {
+          line: I('Line number from the order'),
+          quantity: I('New quantity'),
+          options: { type: 'ARRAY', items: { type: 'STRING' }, description: 'The full new set of options' },
+          notes: S('New kitchen note'),
+        },
+        ['line'],
+      ),
+    },
+    async handler(args, ctx) {
+      const menu = ctx.tenant.profile.menu!;
+      const line = ctx.state.lines.find((l) => l.line === int(args.line));
+      if (!line) return { updated: false, message: 'No such line.', order: basketSummary(ctx).lines };
+      if (args.options !== undefined) {
+        const item = menu.categories.flatMap((c) => c.items).find((i) => i.key === line.item_key)!;
+        const mods = resolveModifiers(menu, item, strList(args.options));
+        if (!mods.ok) return { updated: false, question: mods.question };
+        line.modifiers = mods.value.map((m) => ({ key: m.key, name: m.name, price_pence: m.price_pence }));
+      }
+      const q = int(args.quantity);
+      if (q !== undefined) line.quantity = Math.min(Math.max(q, 1), 20);
+      if (args.notes !== undefined) line.notes = str(args.notes);
+      changed(ctx);
+      orderAction(ctx, 'Order in progress');
+      const b = basketSummary(ctx);
+      return { updated: describeLine(line), order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal };
+    },
+  },
+
+  remove_from_order: {
+    when: (t) => capabilities(t.profile).ordering,
+    decl: {
+      name: 'remove_from_order',
+      description: 'Take a line out of the order.',
+      parameters: obj({ line: I('Line number from the order') }, ['line']),
+    },
+    async handler(args, ctx) {
+      const i = ctx.state.lines.findIndex((l) => l.line === int(args.line));
+      if (i < 0) return { removed: false, message: 'No such line.', order: basketSummary(ctx).lines };
+      const [gone] = ctx.state.lines.splice(i, 1);
+      changed(ctx);
+      orderAction(ctx, 'Order in progress');
+      const b = basketSummary(ctx);
+      return { removed: describeLine(gone), order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal };
+    },
+  },
+
+  set_fulfilment: {
+    when: (t) => capabilities(t.profile).ordering,
+    decl: {
+      name: 'set_fulfilment',
+      description: 'Collection or delivery, and when. Delivery needs the postcode and the first line of the address.',
+      parameters: obj(
+        {
+          type: S('"collection" or "delivery"'),
+          time: S('HH:MM today, or "asap"'),
+          postcode: S('Delivery postcode'),
+          address: S('Delivery address, first line'),
+        },
+        ['type'],
+      ),
+    },
+    async handler(args, ctx) {
+      const p = ctx.tenant.profile;
+      const o = p.ordering!;
+      const type = str(args.type)?.toLowerCase().startsWith('deliv') ? 'delivery' : 'collection';
+      if (type === 'delivery' && !o.delivery) return { ok: false, message: 'Delivery is not offered; collection only.' };
+      if (type === 'collection' && !o.collection) return { ok: false, message: 'Collection is not offered.' };
+      let postcode: string | null = null;
+      let address: string | null = null;
+      if (type === 'delivery') {
+        const pc = postcodeOf(args.postcode);
+        if (!pc) return { ok: false, message: 'Need a valid UK postcode for delivery.' };
+        if (!o.delivery!.districts.includes(pc.district)) {
+          return { ok: false, message: `Sorry, ${pc.district} is outside the delivery area (${o.delivery!.districts.join(', ')}). Collection is available.` };
+        }
+        address = str(args.address) ?? null;
+        if (!address) return { ok: false, message: 'Need the first line of the address.' };
+        postcode = pc.full;
+      }
+      const earliest = earliestDue(ctx, type);
+      const t = str(args.time);
+      let due = earliest;
+      if (t && !/asap|soon|now/i.test(t)) {
+        const hhmm = normaliseTime(t);
+        if (!hhmm) return { ok: false, message: 'Time must be HH:MM, or "asap".' };
+        const today = toLocal(ctx.now(), p.timezone).date;
+        due = zonedToUtc(today, hhmm, p.timezone);
+        if (due.getTime() < earliest.getTime()) {
+          const e = toLocal(earliest, p.timezone).time;
+          return { ok: false, message: `The earliest ${type} time is ${spokenTime(e)}.` };
+        }
+      }
+      if (!withinOrderingHours(ctx, due)) {
+        const today = weekdayOf(toLocal(ctx.now(), p.timezone).date);
+        const hours = o.hours.filter((h) => h.days.includes(today)).map((h) => `${spokenTime(h.open)} to ${spokenTime(h.close)}`);
+        return { ok: false, message: `Orders are only taken for ${hours.length ? hours.join(' and ') : 'other days'} today.` };
+      }
+      ctx.state.fulfilment = { type, due_at: due, postcode, address };
+      changed(ctx);
+      const local = toLocal(due, p.timezone);
+      return {
+        ok: true, type, time: local.time, spoken_time: spokenTime(local.time),
+        address: address ? `${address}, ${postcode}` : undefined,
+        delivery_fee: type === 'delivery' ? pounds(o.delivery!.fee_pence) : undefined,
+      };
+    },
+  },
+
+  review_order: {
+    when: (t) => capabilities(t.profile).ordering,
+    decl: {
+      name: 'review_order',
+      description: 'The full order and total to read back, exactly as returned, before confirm_order.',
+      parameters: obj({}),
+    },
+    async handler(_args, ctx) {
+      const o = ctx.tenant.profile.ordering!;
+      if (!ctx.state.lines.length) return { ok: false, message: 'The order is empty.' };
+      if (!ctx.state.fulfilment) return { ok: false, message: 'Ask collection or delivery first, then call set_fulfilment.' };
+      const b = basketSummary(ctx);
+      const f = ctx.state.fulfilment;
+      const fee = f.type === 'delivery' ? o.delivery!.fee_pence : 0;
+      if (f.type === 'delivery' && b.subtotal_pence < o.delivery!.min_order_pence) {
+        return { ok: false, message: `Delivery needs a minimum order of ${pounds(o.delivery!.min_order_pence)}; it is ${b.subtotal} so far.` };
+      }
+      ctx.state.reviewedVersion = ctx.state.basketVersion;
+      const local = toLocal(f.due_at, ctx.tenant.profile.timezone);
+      const when = `${f.type} at ${spokenTime(local.time)}${f.address ? ` to ${f.address}, ${f.postcode}` : ''}`;
+      const total = b.subtotal_pence + fee;
+      return {
+        ok: true,
+        read_back: `${b.lines.map((l) => l.text.replace(/ — .*$/, '')).join('; ')}. ${fee ? `Delivery ${pounds(fee)}. ` : ''}Total ${pounds(total)}, for ${when}.`,
+        lines: b.lines,
+        subtotal: b.subtotal,
+        delivery_fee: fee ? pounds(fee) : undefined,
+        total: pounds(total),
+        fulfilment: when,
+        next: 'Read this back and ask if it is all correct. Then ask for the name (and number if unknown), and any allergies, before confirm_order.',
+      };
+    },
+  },
+
+  confirm_order: {
+    when: (t) => capabilities(t.profile).ordering,
+    decl: {
+      name: 'confirm_order',
+      description: 'Place the order. Only after review_order was read back and the caller said yes. Returns the order number.',
+      parameters: obj(
+        { name: S("The caller's name"), phone: S('Contact number if different from the calling number'), allergy_notes: S('Any allergy the kitchen must know about') },
+        ['name'],
+      ),
+    },
+    async handler(args, ctx) {
+      const o = ctx.tenant.profile.ordering!;
+      if (!ctx.state.lines.length || !ctx.state.fulfilment) return { placed: false, message: 'Nothing to place yet.' };
+      if (ctx.state.reviewedVersion !== ctx.state.basketVersion) {
+        return { placed: false, message: 'The order changed since it was read back. Call review_order and read it back again first.' };
+      }
+      const name = str(args.name);
+      if (!name) return { placed: false, message: 'Need a name for the order.' };
+      const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+      if (!phone && ctx.channel === 'phone') return { placed: false, message: 'Need a contact number.' };
+      const f = ctx.state.fulfilment;
+      const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
+      const fee = f.type === 'delivery' ? o.delivery!.fee_pence : 0;
+      const order = await ctx.repo.createOrder(ctx.tenant, {
+        name, phone, fulfilment: f.type, due_at: f.due_at, address: f.address, postcode: f.postcode,
+        lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,
+        allergy_notes: str(args.allergy_notes) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
+      });
+      ctx.state.committed.push(order.reference);
+      ctx.state.lastOrder = order;
+      ctx.state.lines = [];
+      ctx.state.fulfilment = null;
+      changed(ctx);
+      const local = toLocal(order.due_at, ctx.tenant.profile.timezone);
+      ctx.action({
+        kind: 'order_placed',
+        title: `Order ${order.reference} · ${pounds(order.total_pence)}`,
+        detail: `${order.fulfilment} ${spokenTime(local.time)} · ${order.name}${order.allergy_notes ? ` · ALLERGY: ${order.allergy_notes}` : ''}`,
+        data: { reference: order.reference },
+      });
+      await smsTo(ctx, phone, `${ctx.tenant.profile.name}: order ${order.reference}, ${pounds(order.total_pence)}, ${order.fulfilment} at ${spokenTime(local.time)}. (Demo order)`);
+      return {
+        placed: true,
+        order_number: order.reference,
+        spoken_order_number: order.reference.split('').join(' '),
+        total: pounds(order.total_pence),
+        ready: `${order.fulfilment} at ${spokenTime(local.time)}`,
+        payment: 'Unpaid. Offer to take payment now with the demo card, or they can pay on ' + (order.fulfilment === 'delivery' ? 'delivery.' : 'collection.'),
+      };
+    },
+  },
+
+  take_demo_payment: {
+    when: (t) => capabilities(t.profile).payments,
+    decl: {
+      name: 'take_demo_payment',
+      description: 'Take a DEMO card payment for the order just placed or a booking deposit. Say the demo card details first. Only demo cards work.',
+      parameters: obj(
+        {
+          for: S('"order" or "deposit"'),
+          reference: S('Order number or booking reference; defaults to the one from this call'),
+          card_number: S('The card number as the caller read it'),
+          expiry: S('MM/YY'),
+          security_code: S('The three digits on the back'),
+        },
+        ['card_number'],
+      ),
+    },
+    async handler(args, ctx) {
+      const kind = str(args.for)?.toLowerCase().startsWith('dep') ? 'deposit' : ctx.state.lastOrder || !ctx.state.lastBookingRef ? 'order' : 'deposit';
+      let amount = 0;
+      let orderId: string | null = null;
+      let bookingId: string | null = null;
+      let target = '';
+      if (kind === 'order') {
+        const ref = str(args.reference);
+        const order = ref ? await ctx.repo.getOrder(ctx.tenant.id, ref) : ctx.state.lastOrder;
+        if (!order) return { result: 'no_order', message: 'Place the order with confirm_order before taking payment.' };
+        if (order.payment_status === 'paid') return { result: 'already_paid', message: 'That order is already paid.' };
+        amount = order.total_pence;
+        orderId = order.id;
+        target = `order ${order.reference}`;
+      } else {
+        const ref = str(args.reference) ?? ctx.state.lastBookingRef;
+        const b = ref ? await ctx.repo.getBookingByReference(ctx.tenant.id, ref) : null;
+        if (!b) return { result: 'no_booking', message: 'No booking to take a deposit for.' };
+        if (!b.deposit_pence) return { result: 'no_deposit_due', message: 'That booking does not need a deposit.' };
+        if (b.deposit_paid) return { result: 'already_paid', message: 'The deposit is already paid.' };
+        amount = b.deposit_pence;
+        bookingId = b.id;
+        target = `deposit for ${b.reference}`;
+      }
+      const outcome = processDemoPayment(args.card_number, ctx.demoCards);
+      if (outcome.result === 'refused') return { result: 'refused', message: outcome.message };
+      // A realistic pause, as a real card terminal would take.
+      await new Promise((r) => setTimeout(r, ctx.channel === 'eval' ? 50 : 900));
+      await ctx.repo.recordPayment({
+        tenant_id: ctx.tenant.id, order_id: orderId, booking_id: bookingId, amount_pence: amount, card_last4: outcome.last4,
+        auth_code: outcome.result === 'approved' ? outcome.auth_code : null, result: outcome.result, call_id: ctx.callId,
+      });
+      if (outcome.result === 'declined') {
+        ctx.action({ kind: 'payment', title: `Declined (demo) · ${pounds(amount)}`, detail: `${target} · card ending ${outcome.last4}` });
+        return { result: 'declined', amount: pounds(amount), message: 'Declined. Ask if they would like to try again with the demo card.' };
+      }
+      if (orderId) await ctx.repo.markOrderPaid(orderId);
+      if (bookingId) await ctx.repo.markDepositPaid(bookingId);
+      ctx.state.paid.push(target);
+      ctx.action({ kind: 'payment', title: `Paid (demo) · ${pounds(amount)}`, detail: `${target} · card ending ${outcome.last4} · ${outcome.auth_code}` });
+      await smsTo(ctx, ctx.callerPhone, `${ctx.tenant.profile.name}: ${pounds(amount)} received for ${target}. DEMO: no money has been taken.`);
+      return { result: 'approved', amount: pounds(amount), for: target, card_ending: outcome.last4, auth_code: outcome.auth_code };
+    },
+  },
+
+  take_message: {
+    decl: {
+      name: 'take_message',
+      description: 'Take a message for the team, with a name and number for the call back.',
+      parameters: obj({ name: S("Caller's name"), phone: S('Number to call back'), message: S('The message, in a sentence or two') }, ['name', 'message']),
+    },
+    async handler(args, ctx) {
+      const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+      const body = str(args.message) ?? '';
+      const name = str(args.name) ?? 'Unknown';
+      await ctx.repo.addMessage({ tenant_id: ctx.tenant.id, call_id: ctx.callId, kind: 'message', from_name: name, from_phone: phone, body, status: 'new' });
+      ctx.action({ kind: 'message_taken', title: `Message from ${name}`, detail: `${body}${phone ? ` · ${displayUkPhone(phone)}` : ''}` });
+      const owner = ctx.tenant.profile.owner_sms_number;
+      if (owner) await smsTo(ctx, owner, `Message from ${name} (${displayUkPhone(phone)}): ${body}`);
+      return { taken: true, note: 'Tell them the team will call back.' };
+    },
+  },
+
+  transfer_to_staff: {
+    decl: {
+      name: 'transfer_to_staff',
+      description: 'Put the caller through to a member of the team.',
+      parameters: obj({ reason: S('A one-line summary for the staff member') }, ['reason']),
+    },
+    async handler(args, ctx) {
+      const to = ctx.tenant.profile.handoff_number;
+      if (!to || !ctx.telephony) {
+        return { transferred: false, message: 'Nobody can take the call right now. Offer to take a message instead.' };
+      }
+      ctx.state.transferRequested = true;
+      ctx.action({ kind: 'transfer', title: 'Transferring to staff', detail: str(args.reason) });
+      const ok = await ctx.telephony.transfer(to, str(args.reason) ?? 'A caller');
+      return ok ? { transferred: true, note: 'Say you are putting them through now.' } : { transferred: false, message: 'Transfer failed. Offer to take a message.' };
+    },
+  },
+
+  end_call: {
+    decl: {
+      name: 'end_call',
+      description: 'Hang up. Only after saying goodbye.',
+      parameters: obj({ outcome: S('booked, ordered, answered, message, or other') }),
+    },
+    async handler(args, ctx) {
+      ctx.state.ending = true;
+      ctx.action({ kind: 'call_ending', title: 'Call ending', detail: str(args.outcome) });
+      return { ok: true };
+    },
+  },
+};
+
+export function toolDeclarations(t: Tenant): FunctionDeclaration[] {
+  return Object.values(TOOLS)
+    .filter((x) => !x.when || x.when(t))
+    .map((x) => x.decl);
+}
+
+export async function runTool(name: string, args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const tool = TOOLS[name];
+  if (!tool || (tool.when && !tool.when(ctx.tenant))) return { error: `No tool called ${name}.` };
+  try {
+    return await tool.handler(args ?? {}, ctx);
+  } catch (err) {
+    return { error: 'That did not work. Apologise briefly and offer to take a message.', detail: (err as Error).message };
+  }
+}
+
+/** Card numbers never reach the logs: only the last four of anything passed as a card. */
+export function loggableArgs(name: string, args: Args): Args {
+  if (name !== 'take_demo_payment') return args;
+  const digits = String(args.card_number ?? '').replace(/\D/g, '');
+  return { ...args, card_number: digits ? `…${digits.slice(-4)}` : undefined, security_code: args.security_code ? '•••' : undefined };
+}
+
