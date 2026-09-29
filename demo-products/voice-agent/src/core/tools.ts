@@ -43,8 +43,9 @@ export interface CallState {
   lines: OrderLine[];
   nextLine: number;
   basketVersion: number;
-  reviewedVersion: number;
-  fulfilment: { type: 'collection' | 'delivery'; due_at: Date; postcode: string | null; address: string | null } | null;
+  /** What the caller agreed to at the last read-back; confirm_order compares content, not a counter. */
+  reviewedKey: string | null;
+  fulfilment: { type: 'collection' | 'delivery'; requested: string; due_at: Date; postcode: string | null; address: string | null } | null;
   /** References created or changed by this call: the guardrail's evidence. */
   committed: string[];
   /** Existing bookings looked up in this call (talking about them is not a false claim). */
@@ -58,7 +59,7 @@ export interface CallState {
 
 export function newCallState(): CallState {
   return {
-    lines: [], nextLine: 1, basketVersion: 0, reviewedVersion: -1, fulfilment: null,
+    lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
     committed: [], found: [], lastOrder: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
   };
 }
@@ -149,6 +150,16 @@ function basketSummary(ctx: ToolContext) {
   };
 }
 
+const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+
+/** "one Margherita with no basil": the words the agent reads back. */
+function spokenLine(l: OrderLine): string {
+  const n = NUMBER_WORDS[l.quantity] ?? String(l.quantity);
+  const mods = l.modifiers.map((m) => m.name);
+  if (l.notes) mods.push(l.notes);
+  return `${n} ${l.name}${mods.length ? ` with ${mods.join(' and ')}` : ''}`;
+}
+
 function orderAction(ctx: ToolContext, title: string) {
   const b = basketSummary(ctx);
   ctx.action({ kind: 'order_updated', title, detail: b.lines.map((l) => l.text).join('\n'), data: { lines: ctx.state.lines, subtotal: b.subtotal } });
@@ -156,6 +167,20 @@ function orderAction(ctx: ToolContext, title: string) {
 
 function changed(ctx: ToolContext) {
   ctx.state.basketVersion++;
+}
+
+/**
+ * The order's content: dishes, options, notes, and how and when it is
+ * fulfilled as the caller asked for it. Calling set_fulfilment again with the
+ * same answer, or "asap" a minute later, is not a change the caller must
+ * re-approve. (A version counter treated it as one, and on 29 September sent
+ * the agent round a read-back loop until the caller gave up.)
+ */
+export function basketKey(s: CallState): string {
+  return JSON.stringify({
+    lines: s.lines.map((l) => [l.item_key, l.quantity, l.modifiers.map((m) => m.key).sort(), l.notes ?? '']),
+    f: s.fulfilment ? [s.fulfilment.type, s.fulfilment.requested, s.fulfilment.postcode, s.fulfilment.address] : null,
+  });
 }
 
 function earliestDue(ctx: ToolContext, type: 'collection' | 'delivery'): Date {
@@ -558,7 +583,10 @@ const TOOLS: Record<string, Tool> = {
       }
       const earliest = earliestDue(ctx, type);
       const t = str(args.time);
-      let due = earliest;
+      const requested = t && !/asap|soon|now/i.test(t) ? normaliseTime(t) ?? t : 'asap';
+      const prev = ctx.state.fulfilment;
+      // The same answer again keeps the time already given to the caller.
+      let due = prev && requested === 'asap' && prev.requested === 'asap' && prev.type === type ? prev.due_at : earliest;
       if (t && !/asap|soon|now/i.test(t)) {
         const hhmm = normaliseTime(t);
         if (!hhmm) return { ok: false, message: 'Time must be HH:MM, or "asap".' };
@@ -574,7 +602,7 @@ const TOOLS: Record<string, Tool> = {
         const hours = o.hours.filter((h) => h.days.includes(today)).map((h) => `${spokenTime(h.open)} to ${spokenTime(h.close)}`);
         return { ok: false, message: `Orders are only taken for ${hours.length ? hours.join(' and ') : 'other days'} today.` };
       }
-      ctx.state.fulfilment = { type, due_at: due, postcode, address };
+      ctx.state.fulfilment = { type, requested, due_at: due, postcode, address };
       changed(ctx);
       const local = toLocal(due, p.timezone);
       return {
@@ -602,13 +630,14 @@ const TOOLS: Record<string, Tool> = {
       if (f.type === 'delivery' && b.subtotal_pence < o.delivery!.min_order_pence) {
         return { ok: false, message: `Delivery needs a minimum order of ${pounds(o.delivery!.min_order_pence)}; it is ${b.subtotal} so far.` };
       }
-      ctx.state.reviewedVersion = ctx.state.basketVersion;
+      ctx.state.reviewedKey = basketKey(ctx.state);
       const local = toLocal(f.due_at, ctx.tenant.profile.timezone);
       const when = `${f.type} at ${spokenTime(local.time)}${f.address ? ` to ${f.address}, ${f.postcode}` : ''}`;
       const total = b.subtotal_pence + fee;
       return {
         ok: true,
-        read_back: `${b.lines.map((l) => l.text.replace(/ — .*$/, '')).join('; ')}. ${fee ? `Delivery ${pounds(fee)}. ` : ''}Total ${pounds(total)}, for ${when}.`,
+        read_back: `${ctx.state.lines.map(spokenLine).join(', ')}. ${fee ? `Delivery ${pounds(fee)}. ` : ''}That's ${pounds(total)} altogether, for ${when}.`,
+        item_count: ctx.state.lines.reduce((n, l) => n + l.quantity, 0),
         lines: b.lines,
         subtotal: b.subtotal,
         delivery_fee: fee ? pounds(fee) : undefined,
@@ -632,8 +661,15 @@ const TOOLS: Record<string, Tool> = {
     async handler(args, ctx) {
       const o = ctx.tenant.profile.ordering!;
       if (!ctx.state.lines.length || !ctx.state.fulfilment) return { placed: false, message: 'Nothing to place yet.' };
-      if (ctx.state.reviewedVersion !== ctx.state.basketVersion) {
-        return { placed: false, message: 'The order changed since it was read back. Call review_order and read it back again first.' };
+      if (ctx.state.reviewedKey !== basketKey(ctx.state)) {
+        // Hand back the new read-back directly, so there is no loop: read it,
+        // hear yes, confirm.
+        const again = await TOOLS.review_order.handler({}, ctx);
+        return {
+          placed: false,
+          message: 'The order is different from what was read back. Read this back, ask if it is right, and on yes call confirm_order again.',
+          read_back: again.read_back,
+        };
       }
       const name = str(args.name);
       if (!name) return { placed: false, message: 'Need a name for the order.' };

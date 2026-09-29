@@ -59,6 +59,7 @@ export interface CallSummary {
   tokens: number;
   latency_ms: number[];
   transcript: { role: string; text: string }[];
+  tools: { name: string; args: unknown; result: unknown }[];
 }
 
 export interface CallOptions {
@@ -103,6 +104,7 @@ export class CallSession extends EventEmitter<CallEvents> {
   private agentBuf = '';
   private transcript: { role: string; text: string }[] = [];
   private flags: Flag[] = [];
+  private toolTrace: { name: string; args: unknown; result: unknown }[] = [];
   private usage = { total: 0, prompt_first: 0, prompt_max: 0, responses: 0 };
   private latencies: number[] = [];
   private startedAt = Date.now();
@@ -320,6 +322,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       const t0 = Date.now();
       const result = await runTool(c.name, c.args, ctx);
       this.record('tool_result', { name: c.name, ms: Date.now() - t0, result });
+      this.toolTrace.push({ name: c.name, args: loggableArgs(c.name, c.args), result });
       responses.push({ id: c.id, name: c.name, response: result });
     }
     this.lastActivity = Date.now();
@@ -412,6 +415,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       tokens: this.usage.total,
       latency_ms: this.latencies,
       transcript: this.transcript,
+      tools: this.toolTrace,
     };
     const sorted = [...this.latencies].sort((a, b) => a - b);
     const pct = (p: number) => (sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] : null);

@@ -1,0 +1,40 @@
+# Fly.io, London. One always-on machine: a phone call cannot wait for a cold
+# start, and one process holds every call's two WebSockets.
+#
+#   fly launch --no-deploy --copy-config      (first time; pick the app name)
+#   fly secrets set GEMINI_API_KEY=… DATABASE_URL=… CONSOLE_PASSWORD=… SESSION_SECRET=… PUBLIC_BASE_URL=https://<app>.fly.dev
+#   fly deploy
+#
+# Twilio settings are added as secrets once the account and UK number exist.
+
+app = "nabl-reception"
+primary_region = "lhr"
+
+[env]
+  PORT = "8787"
+  LIVE_MODEL_PRIMARY = "gemini-3.1-flash-live-preview"
+  LIVE_MODEL_FALLBACKS = "gemini-3.8-live"
+  MAX_CONCURRENT_CALLS = "3"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 60
+    hard_limit = 120
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/healthz"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

@@ -10,42 +10,284 @@
   "summary": "A three-chair barbershop in Sneinton: fades, classic cuts and beard work, by appointment.",
   "address": "31 Carlton Row, Sneinton, Nottingham NG2 4AA",
   "phone_display": "0115 496 0888",
-  "brand": { "accent": "#2E6FB0" },
+  "brand": {
+    "accent": "#2E6FB0"
+  },
   "core_facts": [
     "Open Tuesday to Saturday, 9 till 6, and late till 8 on Thursdays. Closed Sunday and Monday.",
     "Appointments only, with Dan, Kaz or Reece.",
-    "A £5 deposit secures every booking and comes off the price.",
+    "A £5 deposit is taken when booking if the customer can, and comes off the price. If not, they pay in the shop.",
     "Cash or card.",
     "Parking on Carlton Row, free for 30 minutes."
   ],
   "opening_hours": [
-    { "days": [2, 3, 5, 6], "open": "09:00", "close": "18:00" },
-    { "days": [4], "open": "09:00", "close": "20:00" }
+    {
+      "days": [
+        2,
+        3,
+        5,
+        6
+      ],
+      "open": "09:00",
+      "close": "18:00"
+    },
+    {
+      "days": [
+        4
+      ],
+      "open": "09:00",
+      "close": "20:00"
+    }
   ],
   "booking": {
     "services": [
-      { "key": "skin_fade", "label": "skin fade", "kind": "appointment", "slot_minutes": 15, "duration_minutes": 45, "price_pence": 2200, "windows": [{ "days": [2, 3, 5, 6], "first": "09:00", "last": "17:15" }, { "days": [4], "first": "09:00", "last": "19:15" }], "lead_minutes": 30, "horizon_days": 28, "deposit": { "flat_pence": 500 } },
-      { "key": "classic_cut", "label": "classic cut", "kind": "appointment", "slot_minutes": 15, "duration_minutes": 30, "price_pence": 1800, "windows": [{ "days": [2, 3, 5, 6], "first": "09:00", "last": "17:30" }, { "days": [4], "first": "09:00", "last": "19:30" }], "lead_minutes": 30, "horizon_days": 28, "deposit": { "flat_pence": 500 } },
-      { "key": "beard_trim", "label": "beard trim", "kind": "appointment", "slot_minutes": 15, "duration_minutes": 20, "price_pence": 1200, "windows": [{ "days": [2, 3, 5, 6], "first": "09:00", "last": "17:30" }, { "days": [4], "first": "09:00", "last": "19:30" }], "lead_minutes": 30, "horizon_days": 28, "deposit": { "flat_pence": 500 } },
-      { "key": "cut_and_beard", "label": "cut and beard", "kind": "appointment", "slot_minutes": 15, "duration_minutes": 50, "price_pence": 2800, "windows": [{ "days": [2, 3, 5, 6], "first": "09:00", "last": "17:00" }, { "days": [4], "first": "09:00", "last": "19:00" }], "lead_minutes": 30, "horizon_days": 28, "deposit": { "flat_pence": 500 } },
-      { "key": "kids_cut", "label": "kids' cut (under 12)", "kind": "appointment", "slot_minutes": 15, "duration_minutes": 30, "price_pence": 1300, "windows": [{ "days": [2, 3, 5, 6], "first": "09:00", "last": "17:30" }, { "days": [4], "first": "09:00", "last": "19:30" }], "lead_minutes": 30, "horizon_days": 28, "deposit": { "flat_pence": 500 } }
+      {
+        "key": "skin_fade",
+        "label": "skin fade",
+        "kind": "appointment",
+        "slot_minutes": 15,
+        "duration_minutes": 45,
+        "price_pence": 2200,
+        "windows": [
+          {
+            "days": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "first": "09:00",
+            "last": "17:15"
+          },
+          {
+            "days": [
+              4
+            ],
+            "first": "09:00",
+            "last": "19:15"
+          }
+        ],
+        "lead_minutes": 30,
+        "horizon_days": 28,
+        "deposit": {
+          "flat_pence": 500
+        }
+      },
+      {
+        "key": "classic_cut",
+        "label": "classic cut",
+        "kind": "appointment",
+        "slot_minutes": 15,
+        "duration_minutes": 30,
+        "price_pence": 1800,
+        "windows": [
+          {
+            "days": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "first": "09:00",
+            "last": "17:30"
+          },
+          {
+            "days": [
+              4
+            ],
+            "first": "09:00",
+            "last": "19:30"
+          }
+        ],
+        "lead_minutes": 30,
+        "horizon_days": 28,
+        "deposit": {
+          "flat_pence": 500
+        }
+      },
+      {
+        "key": "beard_trim",
+        "label": "beard trim",
+        "kind": "appointment",
+        "slot_minutes": 15,
+        "duration_minutes": 20,
+        "price_pence": 1200,
+        "windows": [
+          {
+            "days": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "first": "09:00",
+            "last": "17:30"
+          },
+          {
+            "days": [
+              4
+            ],
+            "first": "09:00",
+            "last": "19:30"
+          }
+        ],
+        "lead_minutes": 30,
+        "horizon_days": 28,
+        "deposit": {
+          "flat_pence": 500
+        }
+      },
+      {
+        "key": "cut_and_beard",
+        "label": "cut and beard",
+        "kind": "appointment",
+        "slot_minutes": 15,
+        "duration_minutes": 50,
+        "price_pence": 2800,
+        "windows": [
+          {
+            "days": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "first": "09:00",
+            "last": "17:00"
+          },
+          {
+            "days": [
+              4
+            ],
+            "first": "09:00",
+            "last": "19:00"
+          }
+        ],
+        "lead_minutes": 30,
+        "horizon_days": 28,
+        "deposit": {
+          "flat_pence": 500
+        }
+      },
+      {
+        "key": "kids_cut",
+        "label": "kids' cut (under 12)",
+        "kind": "appointment",
+        "slot_minutes": 15,
+        "duration_minutes": 30,
+        "price_pence": 1300,
+        "windows": [
+          {
+            "days": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "first": "09:00",
+            "last": "17:30"
+          },
+          {
+            "days": [
+              4
+            ],
+            "first": "09:00",
+            "last": "19:30"
+          }
+        ],
+        "lead_minutes": 30,
+        "horizon_days": 28,
+        "deposit": {
+          "flat_pence": 500
+        }
+      }
     ],
     "resources": [
-      { "key": "dan", "label": "Dan", "services": ["skin_fade", "classic_cut", "beard_trim", "cut_and_beard", "kids_cut"] },
-      { "key": "kaz", "label": "Kaz", "services": ["skin_fade", "classic_cut", "beard_trim", "cut_and_beard"] },
-      { "key": "reece", "label": "Reece", "services": ["skin_fade", "classic_cut", "kids_cut"] }
+      {
+        "key": "dan",
+        "label": "Dan",
+        "services": [
+          "skin_fade",
+          "classic_cut",
+          "beard_trim",
+          "cut_and_beard",
+          "kids_cut"
+        ]
+      },
+      {
+        "key": "kaz",
+        "label": "Kaz",
+        "services": [
+          "skin_fade",
+          "classic_cut",
+          "beard_trim",
+          "cut_and_beard"
+        ]
+      },
+      {
+        "key": "reece",
+        "label": "Reece",
+        "services": [
+          "skin_fade",
+          "classic_cut",
+          "kids_cut"
+        ]
+      }
     ]
   },
   "policies": {
-    "deposit": "A £5 deposit, taken when booking, secures the appointment and comes off the price.",
+    "deposit": "Book first, then ask for the £5 deposit, which comes off the price. If the customer would rather pay in the shop, the booking still stands.",
     "cancellation": "Cancel or move free with 24 hours' notice; later than that the deposit is kept.",
     "late": "More than 10 minutes late and we may need to rebook."
   },
   "knowledge": [
-    { "q": "How much is a skin fade?", "a": "A skin fade is £22, a classic cut £18, beard trim £12, cut and beard £28, kids' cut £13.", "tags": ["price", "cost", "how much", "fade", "cut", "beard"] },
-    { "q": "Do you take walk-ins?", "a": "Appointments only, but if there's a gap we'll squeeze you in; it's worth ringing first.", "tags": ["walk in", "walk-in", "drop in"] },
-    { "q": "Is there parking?", "a": "On-street parking on Carlton Row, free for 30 minutes, and the Sneinton Market car park round the corner.", "tags": ["parking", "car"] },
-    { "q": "Do you cut kids' hair?", "a": "Yes, kids' cuts for under-12s are £13 with Dan or Reece.", "tags": ["kids", "children", "child", "son"] },
-    { "q": "Do you do hot towel shaves?", "a": "Not at the moment, just beard trims and shaping.", "tags": ["shave", "hot towel", "wet shave"] }
+    {
+      "q": "How much is a skin fade?",
+      "a": "A skin fade is £22, a classic cut £18, beard trim £12, cut and beard £28, kids' cut £13.",
+      "tags": [
+        "price",
+        "cost",
+        "how much",
+        "fade",
+        "cut",
+        "beard"
+      ]
+    },
+    {
+      "q": "Do you take walk-ins?",
+      "a": "Appointments only, but if there's a gap we'll squeeze you in; it's worth ringing first.",
+      "tags": [
+        "walk in",
+        "walk-in",
+        "drop in"
+      ]
+    },
+    {
+      "q": "Is there parking?",
+      "a": "On-street parking on Carlton Row, free for 30 minutes, and the Sneinton Market car park round the corner.",
+      "tags": [
+        "parking",
+        "car"
+      ]
+    },
+    {
+      "q": "Do you cut kids' hair?",
+      "a": "Yes, kids' cuts for under-12s are £13 with Dan or Reece.",
+      "tags": [
+        "kids",
+        "children",
+        "child",
+        "son"
+      ]
+    },
+    {
+      "q": "Do you do hot towel shaves?",
+      "a": "Not at the moment, just beard trims and shaping.",
+      "tags": [
+        "shave",
+        "hot towel",
+        "wet shave"
+      ]
+    }
   ]
 }

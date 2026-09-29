@@ -13,7 +13,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { WebSocket } from 'ws';
 import type { Config } from '../config.ts';
 import type { Repo } from '../db/repo.ts';
-import { CallSession } from '../core/call.ts';
+import { CallSession, type CallOptions } from '../core/call.ts';
 import { Resampler, mulawDecode, mulawEncode } from '../core/audio.ts';
 import type { SmsSender, Telephony } from '../core/tools.ts';
 import type { Bus } from '../server/bus.ts';
@@ -117,8 +117,9 @@ export interface StreamDeps {
   config: Config;
   bus: Bus;
   sms: SmsSender;
-  /** Tests replace the REST hangup. */
+  /** Tests replace the REST hangup, and the call itself. */
   hangup?: (callSid: string) => Promise<void>;
+  createCall?: (opts: CallOptions) => CallSession;
 }
 
 export function handleTwilioStream(ws: WebSocket, deps: StreamDeps): void {
@@ -156,7 +157,7 @@ export function handleTwilioStream(ws: WebSocket, deps: StreamDeps): void {
           ws.close(1008, 'unauthorised stream');
           return;
         }
-        call = new CallSession({
+        call = (deps.createCall ?? ((o: CallOptions) => new CallSession(o)))({
           tenant,
           repo: deps.repo,
           config: deps.config,

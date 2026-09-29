@@ -19,7 +19,9 @@
     "spike:audio": "node --env-file-if-exists=.env.local src/spike/audio.ts",
     "spike:voices": "node --env-file-if-exists=.env.local src/spike/voices.ts",
     "eval": "node --env-file-if-exists=.env.local src/eval/run.ts",
-    "e2e:browser": "node --env-file-if-exists=.env.local test-e2e/browser.ts"
+    "e2e:browser": "node --env-file-if-exists=.env.local test-e2e/browser.ts",
+    "e2e:phone": "node --env-file-if-exists=.env.local test-e2e/phone.ts",
+    "e2e:ingest": "node --env-file-if-exists=.env.local test-e2e/ingest.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.0",

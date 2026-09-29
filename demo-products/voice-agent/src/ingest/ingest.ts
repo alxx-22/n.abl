@@ -27,19 +27,22 @@ function privateAddress(ip: string): boolean {
 }
 
 /** Only public http(s) sites: the wizard must not become a way to probe the server's own network. */
-export async function assertPublicUrl(raw: string): Promise<URL> {
+export async function assertPublicUrl(raw: string, allowPrivate = false): Promise<URL> {
   let u: URL;
   try {
     u = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
   } catch {
     throw new Error('That is not a web address.');
   }
+  if (allowPrivate) return u;
   if (!['http:', 'https:'].includes(u.protocol) || (u.port && !['80', '443'].includes(u.port))) throw new Error('Only ordinary http(s) websites.');
   if (/^(localhost|.*\.local|.*\.internal)$/i.test(u.hostname)) throw new Error('Not a public website.');
   const addrs = isIP(u.hostname) ? [{ address: u.hostname }] : await lookup(u.hostname, { all: true });
   if (addrs.some((a) => privateAddress(a.address))) throw new Error('Not a public website.');
   return u;
 }
+
+let ALLOW_PRIVATE = false;
 
 async function fetchLimited(u: URL, accept = 'text/html'): Promise<{ type: string; body: Buffer } | null> {
   try {
@@ -50,7 +53,7 @@ async function fetchLimited(u: URL, accept = 'text/html'): Promise<{ type: strin
     });
     if (!res.ok || !res.body) return null;
     const final = new URL(res.url);
-    await assertPublicUrl(final.href);
+    await assertPublicUrl(final.href, ALLOW_PRIVATE);
     const chunks: Buffer[] = [];
     let size = 0;
     for await (const c of res.body as unknown as AsyncIterable<Uint8Array>) {
@@ -134,7 +137,7 @@ const SCHEMA = {
     },
     takes_table_bookings: { type: 'BOOLEAN' },
     takes_appointments: { type: 'BOOLEAN' },
-    takes_food_orders: { type: 'BOOLEAN' },
+    takes_food_orders: { type: 'BOOLEAN', description: 'True if the site mentions takeaway, collection, delivery or phone orders.' },
     offers_delivery: { type: 'BOOLEAN' },
     appointment_services: {
       type: 'ARRAY',
@@ -156,7 +159,8 @@ const SCHEMA = {
                 description: { type: 'STRING' },
                 price_pence: { type: 'INTEGER' },
                 allergens_stated: { type: 'BOOLEAN', description: 'True only if the site states this dish’s allergens.' },
-                allergens: { type: 'ARRAY', items: { type: 'STRING', enum: [...ALLERGENS] } },
+                allergens: { type: 'ARRAY', items: { type: 'STRING', enum: [...ALLERGENS] }, description: 'What the dish contains.' },
+                may_contain: { type: 'ARRAY', items: { type: 'STRING', enum: [...ALLERGENS] }, description: 'Only "may contain" or trace warnings.' },
                 dietary: { type: 'ARRAY', items: { type: 'STRING' } },
               },
               required: ['name', 'price_pence', 'allergens_stated'],
@@ -190,12 +194,14 @@ interface Extracted {
   offers_delivery?: boolean;
   appointment_services?: { name: string; duration_minutes?: number; price_pence?: number }[];
   staff_names?: string[];
-  menu?: { category: string; items: { name: string; description?: string; price_pence: number; allergens_stated: boolean; allergens?: string[]; dietary?: string[] }[] }[];
+  menu?: { category: string; items: { name: string; description?: string; price_pence: number; allergens_stated: boolean; allergens?: string[]; may_contain?: string[]; dietary?: string[] }[] }[];
   faqs: { q: string; a: string; source_url?: string }[];
   policies?: { topic: string; text: string }[];
   core_facts: string[];
   missing_or_unclear?: string[];
 }
+
+const isAllergen = (a: string): a is (typeof ALLERGENS)[number] => (ALLERGENS as readonly string[]).includes(a);
 
 const slugify = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'new-business';
 const key = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
@@ -231,7 +237,10 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
     opening_hours: opening,
     knowledge: [
       ...x.faqs.map((f) => ({ q: f.q, a: f.a, source: f.source_url })),
-      ...(x.policies ?? []).map((p) => ({ q: `${p.topic}?`, a: p.text, tags: [p.topic] })),
+      // A policy the FAQs already state is not repeated.
+      ...(x.policies ?? [])
+        .filter((p) => !x.faqs.some((f) => f.a.trim().toLowerCase() === p.text.trim().toLowerCase()))
+        .map((p) => ({ q: `${p.topic}?`, a: p.text, tags: [p.topic] })),
     ],
     review_notes: notes,
   };
@@ -268,7 +277,9 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
     profile.booking = { services, resources: staff.map((n) => ({ key: key(n), label: n, services: services.map((s) => s.key) })) };
   }
 
-  if (x.takes_food_orders && x.menu?.length) {
+  // The menu is kept whenever dishes were found: it answers questions even
+  // where the business takes no orders. Ordering needs both.
+  if (x.menu?.some((c) => c.items.length)) {
     const noAllergens = x.menu.flatMap((c) => c.items).filter((i) => !i.allergens_stated).length;
     if (noAllergens) notes.push(`${noAllergens} dishes have no published allergens: the agent will say it cannot confirm allergens for them. Add the business's allergen matrix before any real use.`);
     profile.menu = {
@@ -278,25 +289,34 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
         key: key(c.category), label: c.category,
         items: c.items.filter((i) => i.name && i.price_pence > 0).map((i) => ({
           key: key(i.name), name: i.name, price_pence: i.price_pence, description: i.description,
-          allergens: i.allergens_stated ? (i.allergens ?? []).filter((a): a is (typeof ALLERGENS)[number] => (ALLERGENS as readonly string[]).includes(a)) : [],
+          allergens: i.allergens_stated ? (i.allergens ?? []).filter(isAllergen).filter((a) => !(i.may_contain ?? []).includes(a)) : [],
+          may_contain: i.allergens_stated && i.may_contain?.length ? i.may_contain.filter(isAllergen) : undefined,
           allergens_unknown: !i.allergens_stated,
           dietary: i.dietary,
         })),
       })),
     };
-    profile.ordering = {
-      collection: true,
-      delivery: x.offers_delivery ? { districts: [], fee_pence: 250, min_order_pence: 1500, extra_minutes: 20 } : undefined,
-      prep_minutes: 20,
-      hours: opening,
-    };
-    if (x.offers_delivery) notes.push('Delivery postcodes, fee and minimum order are not set. Add the postcode districts before publishing.');
+    if (x.takes_food_orders) {
+      profile.ordering = {
+        collection: true,
+        delivery: x.offers_delivery ? { districts: [], fee_pence: 250, min_order_pence: 1500, extra_minutes: 20 } : undefined,
+        prep_minutes: 20,
+        hours: opening,
+      };
+      if (x.offers_delivery) notes.push('Delivery postcodes, fee and minimum order are not set. Add the postcode districts before publishing.');
+    }
   }
   return profile;
 }
 
-export async function ingestWebsite(raw: string, config: Config): Promise<TenantProfile & { review_notes: string[]; pages: string[] }> {
-  const start = await assertPublicUrl(raw);
+export async function ingestWebsite(
+  raw: string,
+  config: Config,
+  opts: { allowPrivate?: boolean } = {},
+): Promise<TenantProfile & { review_notes: string[]; pages: string[] }> {
+  // Only the local end-to-end test reads a private address.
+  ALLOW_PRIVATE = Boolean(opts.allowPrivate);
+  const start = await assertPublicUrl(raw, ALLOW_PRIVATE);
   const disallow = await robotsDisallows(start);
   const allowed = (u: URL) => !disallow.some((d) => u.pathname.startsWith(d));
   const home = await fetchLimited(start);

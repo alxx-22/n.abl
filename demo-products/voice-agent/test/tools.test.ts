@@ -94,13 +94,14 @@ test('an order with options: review, confirm, pay', async () => {
   assert.equal(f.time, '17:50');
   const review = await runTool('review_order', {}, ctx);
   assert.equal(review.total, '£29.50');
-  assert.match(String(review.read_back), /2 × Margherita \(no basil\); 1 × Tiramisu\. Total £29\.50, for collection at 5:50pm\./);
+  assert.equal(review.read_back, "two Margherita with no basil, one Tiramisu. That's £29.50 altogether, for collection at 5:50pm.");
 
+  // Asking for "asap" again is not a change the caller has to re-approve.
+  await runTool('set_fulfilment', { type: 'collection', time: 'asap' }, ctx);
   await runTool('add_to_order', { item: 'coke' }, ctx);
   const stale = await runTool('confirm_order', { name: 'Sam' }, ctx);
   assert.equal(stale.placed, false, 'the order changed after it was read back');
-  const review2 = await runTool('review_order', {}, ctx);
-  assert.equal(review2.total, '£32.00');
+  assert.match(String(stale.read_back), /one Coca-Cola\. That's £32\.00 altogether, for collection at 5:50pm/);
 
   const placed = await runTool('confirm_order', { name: 'Sam', allergy_notes: 'nut allergy' }, ctx);
   assert.equal(placed.placed, true);
