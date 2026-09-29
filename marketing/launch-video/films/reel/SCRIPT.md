@@ -1,6 +1,6 @@
 # AI that works: the reel
 
-A 32-second reel for n.abl's AI services, cut to music with no voice, in
+A 36-second reel for n.abl's AI services, cut to music with no voice, in
 every social format from one timeline: 16:9, 1:1, 4:5 and 9:16. It shows
 two services in depth: the AI receptionist (chat and voice bookings, the
 owner told at once, the phone answered) and a sales co-pilot that joins
@@ -135,11 +135,11 @@ co-pilot and the name each start on a bar.
 | 0.00 | **Chat** | The receptionist's chat: a customer's voice note plays (*"Can I book in for Friday at 2?"*, transcribed underneath). On the drop (1.53 s) the agent answers: *Friday at 2pm is free. Shall I book it?* Then *Yes please!*, then *✓ Booked · Fri 2:00 pm*. | Starts on the voice note from a low three-quarter angle. Dollies in through the build, swings round to face the answer on the drop, drifts down the thread, pushes into the booking. |
 | 4.60 | **Book** | The booking flares white. The chat falls away behind it. The point opens into *Fri 2:00 pm · Booked*, a rim drawing round it; *£20 paid* (Deposit) counts up on the second drop (5.62 s); *Thu 6 pm* (Reminder sent). | Runs along the three as each arrives, turning as it goes. Pulls back and round to see them together, then cranes up into a grey wash. |
 | 8.17 | **Notify** | Out of the grey, the owner's phone. On its lock screen, *New booking: Sarah M. · Fri 2:00 pm · £20 deposit paid* drops in, then *Added to your calendar*. | Swings down from above to face the phone, pushes in on the first notification, drifts to the second, whips away. |
-| 10.73 | **Phone** | A customer rings; the agent picks up (*n.abl answered*). *"Hi, has my order shipped yet?"* is transcribed; the agent answers: *It has! Order #4821 is out for delivery. It'll be with you today by 5 pm.* Beside the call, the order's status draws in: Ordered, Packed, Out for delivery; *Arriving today, by 5 pm*. | Swings in to the ringing call, pushes in as it is answered, reads down the question and the answer, pulls out to see the order beside it, reads along its steps to the arrival time, cranes up into the grey. |
-| 15.83 | **Call** | A video call drops in, its colours split. A point of light falls and becomes *n.abl co-pilot joined*. The client's Spanish is transcribed, then pixel-dissolves into English (*It's a bit pricey for us…*). *Objection · price* (20.2 s): the call glows red, its rim turns coral, the music goes muffled. | Rises from below as the call settles, bumps as the point lands. Tilts down and pushes in on the caption for the translation. Pulls back with a dutch tilt and leans into the red. |
-| 21.96 | **Coach** | The co-pilot's sidebar: the transcript; the playbook card (*Pricing objection: reframe on value, offer a pilot*); *Say next*, typed in (*"Most teams start with a 30-day pilot, so you only pay once it's working."*); *Pivot → ROI*. | Pulls out and orbits round to the sidebar, then reads down it block by block, closest on *Say next*. |
-| 26.56 | **Button** | *Put AI to work* flies in out of focus, a light sweeps across it, pressed on the beat; the music stops dead. | Swings in to face it. |
-| 28.09 | **Name** | The wordmark blurs into focus on the hit: *AI, built into your business.* Then *Book a free discovery call · nabl.agency*, and out. | Eases back and round as it settles. |
+| 10.73 | **Phone** | A customer rings; the agent picks up (*n.abl answered*). *"Hi, has my order shipped yet?"* is transcribed; the agent answers (13.3 s): *It has! Order #4821 is out for delivery. It'll be with you today by 5 pm.*, held three seconds to read. Beside the call, the order's status draws in (16.4 s): Ordered, Packed, Out for delivery; *Arriving today, by 5 pm* (17.9 s), held to the end. | Swings in to the ringing call, pushes in as it is answered, reads down the question, pushes in slowly on the answer while it is read, pulls out to see the order beside it, reads along its steps to the arrival time and holds there, cranes up into the grey. |
+| 19.92 | **Call** | A video call drops in, its colours split. A point of light falls and becomes *n.abl co-pilot joined*. The client's Spanish is transcribed, then pixel-dissolves into English (*It's a bit pricey for us…*). *Objection · price* (24.3 s): the call glows red, its rim turns coral, the music goes muffled. | Rises from below as the call settles, bumps as the point lands. Tilts down and pushes in on the caption for the translation. Pulls back with a dutch tilt and leans into the red. |
+| 26.05 | **Coach** | The co-pilot's sidebar: the transcript; the playbook card (*Pricing objection: reframe on value, offer a pilot*); *Say next*, typed in (*"Most teams start with a 30-day pilot, so you only pay once it's working."*); *Pivot → ROI*. | Pulls out and orbits round to the sidebar, then reads down it block by block, closest on *Say next*. |
+| 30.65 | **Button** | *Put AI to work* flies in out of focus, a light sweeps across it, pressed on the beat; the music stops dead. | Swings in to face it. |
+| 32.18 | **Name** | The wordmark blurs into focus on the hit: *AI, built into your business.* Then *Book a free discovery call · nabl.agency*, and out. | Eases back and round as it settles. |
 
 All names, figures and numbers are props in an interface, not claims:
 *Sarah M.*, *£20*, *Order #4821*, *Client · Madrid*.
@@ -156,12 +156,12 @@ a rolling bassline and brooding minor chords, and no lead.
 - **The drop** (1.53 s): the groove and the riff.
 - **A second drop** (5.62 s): the drums fall away under the booking's flare
   and come back in with the riff as the deposit lands.
-- **The notification and the order call:** the groove carries on.
-- **The co-pilot** (15.8 s): darker chords come forward; a tense bar for the
-  objection, when everything also goes muffled.
-- **What to say next** (22.0 s): the peak.
+- **The notification, the order call and the co-pilot joining:** the groove
+  carries on, lifting as the order is answered.
+- **The objection** (24.3 s): a tense bar, and everything goes muffled.
+- **What to say next** (26.1 s): the peak.
 - **The button:** a breath, then silence for the press.
-- **The name** (28.1 s): the intro's pads, with a low hit.
+- **The name** (32.2 s): the intro's pads, with a low hit.
 
 The takes, their plans and settings are in `films/reel/music`; a rebuild
 plays them and needs no model.
