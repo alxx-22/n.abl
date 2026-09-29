@@ -27,6 +27,12 @@ import film, { BEAT, LIST, CHAPTERS } from '../film/reel.js'
    covers more ground, so it gets less per second. */
 const PX_DESK = 115, PX_TOUCH = 95
 
+/* The film's length is known before anything is built, so the section can
+   take its height on the first render. Setting it only once the stage is
+   built moved everything below it down after the page had laid out, and a
+   link straight to #pricing landed thousands of pixels short. */
+const DUR = LIST.reduce((n, s) => n + s.beats, 0) * BEAT + 0.6
+
 function Words({ className }) {
   return (
     <ol className={className}>
@@ -85,7 +91,7 @@ function Film() {
       film(ctx)
       ctx.prime()
       el.style.transform = `scale(${(R >= 1 ? vh : vw) / 1080})`
-      dur = ctx.TL.duration + 0.6
+      dur = DUR
       sec.style.height = `${Math.round(dur * px + vh)}px`
       measure()
       t = target
@@ -158,12 +164,11 @@ function Film() {
       clearTimeout(rt)
       if (raf) cancelAnimationFrame(raf)
       if (ctx) ctx.destroy()
-      sec.style.height = ''
     }
   }, [])
 
   return (
-    <div className="film" ref={section}>
+    <div className="film" ref={section} style={{ height: `calc(${Math.round(DUR * PX_DESK)}px + 100svh)` }}>
       <div className="film__pin" ref={pin} aria-hidden="true">
         <div className="film__host" ref={host} />
         <span className="film__hint" ref={hint}>Scroll to play</span>

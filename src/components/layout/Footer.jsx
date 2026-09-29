@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Logo } from '../ui/index.jsx'
-import { toSection } from './Nav.jsx'
+import { SectionLink } from './Nav.jsx'
 
 /* Two deliberately unlabelled routes into /team survive from the old site:
    1. the full stop inside "© 2026 n.abl." — styled to read as punctuation
@@ -13,7 +13,7 @@ export default function Footer({ home = true }) {
       <div className="shell">
         <div className="footer__grid">
           <div>
-            <a href={toSection('hero', home)} className="brand" aria-label="n.abl home"><Logo size={22} /></a>
+            <SectionLink id="hero" home={home} className="brand" aria-label="n.abl home"><Logo size={22} /></SectionLink>
             <p className="footer__tag">
               AI, built into your business. AI implementation for small and
               mid-sized businesses.
@@ -27,11 +27,11 @@ export default function Footer({ home = true }) {
           <div>
             <h4 className="footer__head">Company</h4>
             <div className="footer__list">
-              <a href={toSection('see-it-work', home)}>See It Work</a>
-              <a href={toSection('what-we-do', home)}>What We Do</a>
-              <a href={toSection('pricing', home)}>Pricing</a>
+              <SectionLink id="see-it-work" home={home}>See It Work</SectionLink>
+              <SectionLink id="what-we-do" home={home}>What We Do</SectionLink>
+              <SectionLink id="pricing" home={home}>Pricing</SectionLink>
               <Link to="/services">Other Services</Link>
-              <a href={toSection('about', home)}>About</a>
+              <SectionLink id="about" home={home}>About</SectionLink>
               <a href="mailto:hello@nabl.agency">hello@nabl.agency</a>
             </div>
           </div>

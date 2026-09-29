@@ -23,7 +23,9 @@ function ScrollToTop() {
     let tries = 0, timer = 0
     const go = () => {
       const el = document.getElementById(decodeURIComponent(hash.slice(1)))
-      if (el) { el.scrollIntoView(); return }
+      // once more after the page settles: fonts and lazy sections can still
+      // move it a little after the first frame
+      if (el) { el.scrollIntoView(); timer = setTimeout(() => el.scrollIntoView(), 450); return }
       if (tries++ < 20) timer = setTimeout(go, 50)
     }
     go()
