@@ -1,5 +1,5 @@
 """
-The AI reel: three AI services in 27 seconds, cut to music with no voice.
+The AI reel: two AI services in 32 seconds, cut to music with no voice.
 
 Made in the style of a product reel for Opal (by mc-visuals): one continuous
 virtual camera over a dark stage, a soft light from above, glowing
@@ -24,15 +24,17 @@ VOICE, LANG, SPEED, SHORT_SPEED = "bm_fable", "en-gb", 1.2, 1.36
 SAY = {"n.abl": "enable"}
 
 # beats: the shot's length on the grid. The drop lands 3 beats in, as the
-# camera swings round to the agent's answer.
+# camera swings round to the agent's answer. The co-pilot and the name each
+# start on a bar of the music.
 SCENES = [
-    dict(id="chat",  beats=n(9),    lines=[]),   # a voice note asks for Friday at 2; the agent answers and books it
-    dict(id="book",  beats=n(7),    lines=[]),   # the booking becomes a point of light, then the booking, deposit and reminder
-    dict(id="call",  beats=n(10),   lines=[]),   # the co-pilot drops into a call, transcribes, translates, flags an objection
-    dict(id="coach", beats=n(7),    lines=[]),   # pull out to its sidebar: the playbook and what to say next
-    dict(id="docs",  beats=n(13),   lines=[]),   # any document riffled, scanned, broken into what matters and scored
-    dict(id="cta",   beats=n(3, 3), lines=[]),   # the button, pressed on the beat
-    dict(id="logo",  beats=n(7),    lines=[]),   # the wordmark blurs in; the address; out
+    dict(id="chat",   beats=n(9),    lines=[]),   # a voice note asks for Friday at 2; the agent answers and books it
+    dict(id="book",   beats=n(7),    lines=[]),   # the booking becomes a point of light, then the booking, deposit and reminder
+    dict(id="notify", beats=n(5),    lines=[]),   # the owner's phone: the new booking lands, and the calendar
+    dict(id="phone",  beats=n(11),   lines=[]),   # a customer rings about an order; the agent answers, with its status
+    dict(id="call",   beats=n(13),   lines=[]),   # the co-pilot drops into a call, transcribes, translates, flags an objection
+    dict(id="coach",  beats=n(9),    lines=[]),   # pull out to its sidebar: the playbook and what to say next
+    dict(id="cta",    beats=n(3, 3), lines=[]),   # the button, pressed on the beat
+    dict(id="logo",   beats=n(7),    lines=[]),   # the wordmark blurs in; the address; out
 ]
 
 MUSIC = "file"
@@ -41,8 +43,9 @@ MUSIC = "file"
 # bar at 4.118 s lands on the reel's drop; the drums drop out from 6.2 s),
 # then the riff bar again as a second drop on the bar at 8.205 s, then the
 # same take made again from the same seed with the same instruments, arranged
-# to the reel (musicedit.py; plans/melodic-reel-v1.json): the groove under
-# the call, a lift for the coaching, the peak for the documents and the
+# to the reel (musicedit.py; plans/melodic-reel-v4.json): the groove through
+# the notification and the order call, darker chords for the co-pilot, a
+# tense bar for the objection, the peak for what to say next, and the
 # intro's pads under the name.
 MUSIC_FILE, MUSIC_AT = "dark-melodic-reel.wav", 4.1183
 MUSIC_DROPS = [8.2047]

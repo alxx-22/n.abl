@@ -1,35 +1,34 @@
 /* ============================================================
-   THE AI REEL: three AI services in 21 seconds, cut to music
+   THE AI REEL: two AI services in 32 seconds, cut to music
 
    In the style of a product reel for Opal (by mc-visuals): a dark stage lit
    softly from above; glowing interface pieces that turn into each other
    through light (a booking flares into a point, the point opens into a
    pill); blur-in, rack focus, a pixel dissolve, a colour split; every
-   move lands on a kick. The camera is a real 3D camera: it swings, orbits,
+   move lands on a beat. The camera is a real 3D camera: it swings, orbits,
    tilts, pans and dollies along a smooth path, following what happens,
    with motion blur from its own speed and specks of light at every depth
-   so the space reads.
+   so the space reads. A short caption names each step as it happens.
 
    01 AI receptionist   a voice note asks for Friday at 2; the camera
                         swings round on the drop to the agent's answer;
                         "Yes please"; Booked. The booking flares into a
                         point and opens into the booking, the deposit and
-                        the reminder, the camera running along them.
+                        the reminder. The owner's phone: the new booking
+                        lands, then the calendar. A customer rings about an
+                        order; the agent answers with where it is, and its
+                        status draws in.
    02 Sales co-pilot    a point of light drops into a call; the client's
                         words are transcribed, pixel-dissolve into English;
                         an objection glows red; the camera pulls out and
                         round to the co-pilot's sidebar and reads down it:
                         the playbook, what to say next, where to pivot.
-   03 Document analyser any document riffled past the camera; a tender pack
-                        scanned with the camera riding the scan; what
-                        matters falls into pills that count up, and the
-                        camera cranes up the tree to the score.
    Then the button, pressed on the beat, and the name.
    The script is films/reel/film.py; the analysis of the reference and the
    shot list are films/reel/SCRIPT.md.
    ============================================================ */
 
-import { E, LAND, M, P, TL, WORDMARK, bell, cue, h, icon, lerp, offs, put, rise, rng, scene, sceneById, spark, vis, words } from '../../film/stage.js'
+import { CHECK, E, LAND, M, P, TL, WORDMARK, bell, cue, h, icon, lerp, offs, put, rise, rng, scene, sceneById, spark, vis, words } from '../../film/stage.js'
 
 const B = TL.beat
 // q(k): k beats of the grid the reel was choreographed on (GRID_BPM in
@@ -43,6 +42,10 @@ const Z0 = M({ land: 1, sq: 1, tall: 1.1, port: 1.22 })
 /* ---------- sound: water drops, pitched on D minor pentatonic ---------- */
 // deg: step of the scale from D4 up; wet 0 is dry and close, 1 is under water
 const drop = (t, deg, { n = 1, step = 2, gap = .045, wet = .3, v = .6 } = {}) => cue('drop', t, { deg, n, step, gap, wet, v })
+
+/* ---------- captions: a few words naming each step as it happens ---------- */
+const STEPS = []
+const step = (t, txt) => STEPS.push([t, txt])
 
 /* ---------- the lens and the camera ---------- */
 function widen(s) {
@@ -62,6 +65,10 @@ function lens(s, { o = 1, blur = 0, mbX = 0, mbY = 0, bright = 1 } = {}) {
 /* a smooth path through keys [t, x, y, z, rx, ry, rz, sc]: cubic Hermite with
    Catmull-Rom tangents, so the camera never stops dead between keys */
 function path(K) {
+  // keys timed from different beats can cross at another tempo, and a key
+  // behind the one before it throws the camera: say so, and put them in order
+  K.forEach((k, i) => { if (i && k[0] <= K[i - 1][0]) console.error(`camera keys out of order at ${k[0].toFixed(3)}s`) })
+  K = K.slice().sort((a, b) => a[0] - b[0]).filter((k, i, a) => !i || k[0] > a[i - 1][0])
   const n = K.length
   return t => {
     if (t <= K[0][0]) return K[0].slice(1)
@@ -200,6 +207,8 @@ function buildReception(s) {
   drop(tP3, 3, { wet: .8, v: .6 }); cue('confirm', tP3 + .2, { n: 1, deg: 5, v: .45 })
   cue('whoosh', tBack + .1, { d: .55, v: .45 })
   cue('whoosh', t1, { d: .5, v: .45 })
+  step(t0 + .35, 'Understands voice notes'); step(tAi, 'Answers in seconds'); step(tCard, 'Books it in')
+  step(tP2, 'Takes the deposit'); step(tP3, 'Sends the reminder')
 
   let cam = null, lay = null
   function layout() {
@@ -276,6 +285,177 @@ function buildReception(s) {
 }
 
 /* ============================================================
+   01 · NOTIFY: out of the grey, the owner's phone. The new booking lands
+   on the lock screen, then the calendar entry; the camera swings down to
+   face it and pushes in on each.
+   ============================================================ */
+function buildNotify(s) {
+  widen(s)
+  const t0 = s.t0, t1 = s.t1
+  const specks = bokeh(s, 6, { hgt: 2400 })
+  const wash = h('div', 'r-wash', s.root)
+  const phone = h('div', 'r-phone', s.cam, `
+    <div class="isl"></div>
+    <div class="clk">9:41</div><div class="dt">Tuesday 14 October</div>
+    <div class="r-notes"></div>`)
+  const list = phone.querySelector('.r-notes')
+  const notes = [
+    [`<span class="app">${spark(28)}</span>`, 'n.abl', 'New booking', 'Sarah M. · Fri 2:00 pm<br>£20 deposit paid'],
+    [`<span class="app cal">${icon('cal')}</span>`, 'Calendar', 'Added to your calendar', 'Fri 2:00 – 3:00 pm · Sarah M.'],
+  ].map(([ic, app, ttl, body]) => h('div', 'r-note', list, `${ic}<div class="tx"><div class="hd"><span>${app}</span><span>now</span></div><div class="t">${ttl}</div><div class="b">${body}</div></div>`))
+  const tN = [t0 + q(1), t0 + q(2.5)]
+  cue('whoosh', t0 + .04, { d: .5, v: .45 })               // out of the grey
+  tN.forEach((x, i) => { cue('msgin', x, { v: .65 - i * .15 }); drop(x + .05, 3 + i, { wet: .75, v: .45 }) })   // each lands
+  cue('whoosh', t1 - .12, { d: .4, v: .45 })
+  step(tN[0], 'Tells you straight away')
+
+  let cam = null
+  function layout() {
+    const N = notes.map(e => centreOf(e, phone, 0, 0))
+    cam = path([
+      [t0, 0, -260, -360, 36, -6, 0, 1],
+      [tN[0] - .08, N[0][0], N[0][1] + 30, 60, 12, -6, 0, 1],
+      [tN[0] + .45, N[0][0], N[0][1], 250, 5, -3, 0, 1],
+      [tN[1] + .35, N[1][0], N[1][1] - 20, 260, 3, 5, 0, 1],
+      [t1, N[1][0], N[1][1] - 60, 140, -4, 12, 0, 1],
+    ])
+  }
+
+  return t => {
+    if (!cam) layout()
+    specks(t)
+    vis(wash, 1 - P(t, t0, t0 + .42, E.io))
+    put(phone, { o: 1 })
+    // each notification drops in from the top of the screen, the newest on top of the stack
+    notes.forEach((e, i) => {
+      const p = P(t, tN[i], tN[i] + .34, E.snap)
+      e.style.opacity = Math.min(1, P(t, tN[i], tN[i] + .12)).toFixed(3)
+      e.style.transform = `translateY(${((1 - Math.min(1, p)) * -70).toFixed(1)}px) scale(${lerp(.92, 1, Math.min(1.03, p)).toFixed(4)})`
+      const bl = (1 - P(t, tN[i], tN[i] + .24)) * 14
+      e.style.filter = bl > .05 ? `blur(${bl.toFixed(1)}px)` : 'none'
+      e.style.boxShadow = `0 20px 50px rgba(0,0,0,.45), 0 0 ${(50 * bell(t, tN[i], tN[i] + .1, tN[i] + .9)).toFixed(0)}px rgba(${AMB},.35)`
+    })
+    const mb = shoot(s, cam, t)
+    const rf = P(t, t1 - .12, t1 + .26, E.in2)
+    lens(s, { mbX: mb.mbX, mbY: mb.mbY, blur: rf * 26, o: 1 - P(t, t1 + .04, t1 + .26) })
+  }
+}
+
+/* ============================================================
+   01 · PHONE: a customer rings about an order; the agent picks up,
+   hears "has my order shipped?" and answers with where it is, and the
+   order's status draws in beside the call. Up into the grey.
+   ============================================================ */
+function buildPhone(s) {
+  widen(s)
+  const t0 = s.t0, t1 = s.t1, b = k => t0 + q(k)
+  const L = M({
+    land: { card: [-330, 0], trk: [390, 20] },
+    def: { card: [0, -300], trk: [0, 330] },
+  })
+  const specks = bokeh(s, 7, { cx: LAND ? 200 : 0, cy: LAND ? 0 : 100, hgt: LAND ? 1800 : 2600 })
+  const wash = h('div', 'r-wash', s.root)
+  const card = h('div', 'r-panel', s.cam, `
+    <div class="r-ph"><span class="av ph">${icon('phone')}<i></i><i></i></span><div><div class="t">Customer call</div><div class="s">+44 7700 900318 · mobile</div></div><span class="on st">● RINGING</span></div>
+    <div class="r-thread">
+      <div class="r-tx"><span class="mic">CALLER</span><span class="q"></span></div>
+      <div class="r-m ai a1"><span class="r-dots"><i></i><i></i><i></i></span><span class="txt"></span></div>
+    </div>`)
+  if (!LAND) card.style.width = '760px'
+  const [head] = card.children
+  const av = head.querySelector('.av'), rings = [...av.querySelectorAll('i')], st = head.querySelector('.st')
+  const [mQ, mA] = card.querySelector('.r-thread').children
+  const qW = words(mQ.querySelector('.q'), '“Hi, has my order shipped yet?”')
+  const dots = mA.querySelector('.r-dots'), aW = words(mA.querySelector('.txt'), 'It has! Order #4821 is out for delivery. It’ll be with you today by 5 pm.')
+  const trk = h('div', 'r-track', s.cam, `
+    <div class="hd"><span class="ic">${icon('box')}</span><div><div class="t">Order #4821</div><div class="s">Checked live, mid-call</div></div><span class="live">● LIVE</span></div>
+    <div class="r-steps"><div class="ln"></div><div class="fill"></div>
+      <div class="r-st"><div class="d">${CHECK('#1A1612', 18)}</div><span>Ordered</span></div>
+      <div class="r-st"><div class="d">${CHECK('#1A1612', 18)}</div><span>Packed</span></div>
+      <div class="r-st"><div class="d"></div><span>Out for delivery</span></div>
+      <div class="r-st"><div class="d"></div><span>Delivered</span></div>
+    </div>
+    <div class="r-eta">${icon('clock')}<span>Arriving today, by 5 pm</span></div>`)
+  const sts = [...trk.querySelectorAll('.r-st')], fill = trk.querySelector('.fill'), eta = trk.querySelector('.r-eta')
+  const trkKids = [...trk.children]
+
+  const tRing = t0 + .08, tAns = b(1.5), tQ = b(2.5), tDots = b(4.5), tA = tDots + .3, tTrk = b(6.5), tEta = b(8.5)
+  const tSt = [0, 1, 2].map(i => tTrk + .25 + i * .2)
+  cue('whoosh', t0 + .04, { d: .45, v: .45 })              // in from the phone
+  cue('ring', tRing, { v: .7 })                            // a customer rings
+  cue('connect', tAns, { v: .6 })                          // and the agent picks up
+  cue('type', tQ, { d: qW.length * .06 + .1, v: .25 })     // what they ask, transcribed
+  ;[0, 1, 2].forEach(i => drop(tDots + .06 + i * .1, 1 + i, { wet: .9, v: .22 }))
+  cue('msgin', tA, { v: .7 })                              // the answer
+  cue('whoosh', tTrk - .1, { d: .45, v: .5 })              // pull out to the order
+  cue('draw', tTrk + .2, { d: .7, v: .45 })
+  tSt.forEach((x, i) => drop(x, 2 + i, { wet: .8, v: .45 }))
+  cue('confirm', tEta, { n: 2, deg: 2, v: .5 })            // today, by 5
+  cue('whoosh', t1, { d: .5, v: .45 })
+  step(t0 + .2, 'Answers your phone'); step(tA, 'Knows every order'); step(tTrk + .2, 'Checks it live, mid-call')
+
+  let cam = null
+  function layout() {
+    const C = L.card, T = L.trk, land = LAND
+    const H = centreOf(head, card, C[0], C[1]), Q = centreOf(mQ, card, C[0], C[1]), A = centreOf(mA, card, C[0], C[1])
+    const E_ = centreOf(eta, trk, T[0], T[1]), S2 = centreOf(sts[2], trk, T[0], T[1])
+    const mid = [(C[0] + T[0]) / 2, (C[1] + T[1]) / 2]
+    cam = path([
+      [t0, H[0] + (land ? 160 : 60), H[1] + 80, -340, 18, land ? -24 : -14, -2, 1],
+      [tAns + .1, H[0], H[1] + 40, 140, 6, land ? -8 : -4, 0, 1],
+      [tQ + .35, Q[0], Q[1], 190, 4, 4, 0, 1],
+      [tA + .7, A[0], A[1], 200, 2, -3, 0, 1],
+      [tTrk + .3, mid[0], mid[1], land ? -40 : -120, land ? 4 : 8, land ? -12 : 0, 0, 1],
+      [tSt[2] + .3, S2[0], S2[1], 170, 3, land ? -6 : 4, 0, 1],
+      [tEta + .3, E_[0], E_[1] - 20, 230, 2, land ? 6 : -4, 0, 1],
+      [t1, E_[0], E_[1] - 260, -140, 24, land ? 8 : -6, 0, 1],
+    ])
+  }
+
+  return t => {
+    if (!cam) layout()
+    specks(t)
+    put(card, { x: L.card[0], y: L.card[1], o: P(t, t0, t0 + .25) })
+    vis(head, P(t, t0, t0 + .3))
+    // ringing, then answered
+    const on = t >= tAns
+    rings.forEach((e, i) => {
+      const ph = ((t - tRing) / .9 + i * .5) % 1
+      e.style.transform = `scale(${(1 + ph * 1.1).toFixed(3)})`
+      e.style.opacity = (t < tRing || on ? 0 : (1 - ph) * .7).toFixed(3)
+    })
+    av.style.transform = `rotate(${(on ? 0 : 9 * Math.sin(t * 42) * (P(t, tRing, tRing + .1) - P(t, tRing + .3, tRing + .42) + P(t, tRing + .42, tRing + .52) - P(t, tRing + .72, tRing + .84))).toFixed(2)}deg)`
+    st.textContent = on ? '● n.abl ANSWERED' : '● RINGING'
+    st.classList.toggle('ans', on)
+    // what they ask, and the answer
+    vis(mQ, P(t, tQ - .05, tQ + .1))
+    qW.forEach((e, i) => rise(e, t, tQ + i * .06, { dur: .25, dy: 10, blur: 10 }))
+    pop(mA, t, tDots)
+    dots.style.display = t < tA ? 'inline-flex' : 'none'
+    dots.querySelectorAll('i').forEach((d, k) => { d.style.opacity = (.35 + .65 * Math.max(0, Math.sin((t * 3 - k * .22) * Math.PI))).toFixed(3) })
+    mA.querySelector('.txt').style.display = t < tA ? 'none' : 'inline'
+    aW.forEach((e, i) => rise(e, t, tA + i * .035, { dur: .24, dy: 8, blur: 8 }))
+    // the order's status, drawn in step by step
+    blurIn(trk, t, tTrk, { x: L.trk[0], y: L.trk[1], dz: 240, s0: .92, blur: 20 })
+    trkKids.forEach((e, i) => { e.style.opacity = P(t, tTrk + .05 + i * .06, tTrk + .25 + i * .06).toFixed(3) })
+    sts.forEach((e, i) => {
+      const lit = i < 3 && t >= tSt[i]
+      e.classList.toggle('on', lit); e.classList.toggle('now', i === 2 && lit)
+      e.querySelector('.d').style.transform = `scale(${(1 + .25 * bell(t, tSt[i] || 0, (tSt[i] || 0) + .06, (tSt[i] || 0) + .3)).toFixed(3)})`
+    })
+    fill.style.width = `calc((100% - 120px) * ${(2 / 3 * P(t, tTrk + .2, tSt[2], E.io)).toFixed(4)})`
+    const eg = bell(t, tEta, tEta + .08, tEta + 1.2)
+    eta.style.boxShadow = `0 0 ${(30 + 50 * eg).toFixed(0)}px rgba(${AMB},${(.15 + .35 * eg).toFixed(2)})`
+    eta.style.transform = `scale(${(1 + .04 * bell(t, tEta, tEta + .06, tEta + .35)).toFixed(4)})`
+    // the camera, and up and away into grey
+    const mb = shoot(s, cam, t)
+    const up = P(t, t1 - .45, t1 + .05, E.in2)
+    lens(s, { mbX: mb.mbX, mbY: mb.mbY, blur: up * 16, o: 1 - up * .5 })
+    vis(wash, Math.max(1 - P(t, t0, t0 + .42, E.io), P(t, t1 - .4, t1, E.in2)))
+  }
+}
+
+/* ============================================================
    02 · CALL + COACH: a point of light drops into a call and becomes the
    co-pilot; the client's Spanish is transcribed and dissolves into
    English; the objection glows red; the camera pulls out and round to the
@@ -319,9 +499,13 @@ function buildCall(s) {
   const blks = [...side.children]
   const say = side.querySelector('.say')
   const sayW = words(say, '“Most teams start with a 30-day pilot, so you only pay once it’s working.”')
-  const tDot = b(2), tCap = b(3), tGl = b(5), tSwap = tGl + .2, tObj = b(7), tOut = tC
-  const tBl = [tOut + .2, tOut + .5, tOut + q(2), tOut + q(2) + .15, tOut + q(5)]
+  // each step held long enough to read
+  const tDot = b(2), tCap = b(3.5), tGl = b(6), tSwap = tGl + .2, tObj = b(9), tOut = tC
+  const tBl = [tOut + .2, tOut + .5, tOut + q(2), tOut + q(3.5), tOut + q(6.5)]
   const tSay = tBl[3] + .12
+  step(tDot, 'Joins your calls'); step(tCap, 'Transcribes live'); step(tSwap, 'Translates as they talk')
+  step(tObj, 'Spots the objection'); step(tBl[2], 'Checks your playbook'); step(tSay, 'Tells you what to say')
+  step(tBl[4], 'Shows where to pivot')
 
   cue('whoosh', t0 + .05, { d: .45, v: .45 })              // out of the grey
   cue('connect', b(1), { v: .6 })                          // the call connects
@@ -429,143 +613,6 @@ function buildCall(s) {
 }
 
 /* ============================================================
-   03 · DOCS: any document, riffled past the camera; a tender pack scanned
-   with the camera riding the line of light; what matters falls into
-   pills that count up; the camera cranes up the tree to the score.
-   ============================================================ */
-function buildDocs(s) {
-  widen(s)
-  const t0 = s.t0, t1 = s.t1, b = k => t0 + q(k)
-  const L = M({
-    land: { doc: [0, 0], tags: 470, pills: [-400, 0, 400], py: 190, ds: 1 },
-    def: { doc: [-130, 0], tags: 250, pills: [-310, 0, 310], py: 190, ds: .92 },
-  })
-  const specks = bokeh(s, 8, { hgt: 2400 })
-  const DOCS = [['Contract', 'Service agreement'], ['Policy', 'Staff handbook'], ['Report', 'Board pack · Q3'], ['CV', 'Operations lead'], ['Tender', 'Tender pack · 64 pages']]
-  const HL = { 4: `rgba(${ICE},.5)`, 9: `rgba(${CORAL},.5)`, 14: `rgba(${AMB},.55)` }
-  const docs = DOCS.map(([k, tt], i) => {
-    const e = h('div', 'r-doc', s.cam, `<div class="kind">${k}</div><div class="dt">${tt}</div>`)
-    for (let j = 0; j < 20; j++) {
-      const ln = h('div', 'ln' + (i === 4 && HL[j] ? ' hl' : ''), e)
-      ln.style.width = (j % 5 === 4 ? 55 : 88 + ((j * 37) % 12)) + '%'
-      if (i === 4 && HL[j]) ln.style.setProperty('--hl', HL[j])
-    }
-    return e
-  })
-  docs.slice().reverse().forEach(e => s.cam.appendChild(e))   // the first to go is drawn on top
-  const doc = docs[4], hls = [...doc.querySelectorAll('.ln.hl')], lns = [...doc.querySelectorAll('.ln')]
-  const beam = h('div', 'r-beam', s.cam), trail = h('div', 'r-trail', s.cam)
-  beam.style.width = '600px'; trail.style.width = '520px'
-  const TAGS = [
-    { html: `<span style="color:#7CCBFF">${icon('clock')}</span><span><span class="k">Deadline</span><br>14 Nov, 12:00</span>`, line: 4 },
-    { html: `<span style="color:#F07A6A">${icon('alert')}</span><span><span class="k">Risk</span><br>Uncapped liability</span>`, line: 9 },
-    { html: `<span style="color:#E9AC57">${icon('survey')}</span><span><span class="k">Requirement</span><br>ISO 27001</span>`, line: 14 },
-  ]
-  const tags = TAGS.map(o => h('div', 'r-tag', s.cam, o.html))
-  const lineY = j => lns[j].offsetTop + 6 - 345
-  const PILLS = [['doc', 42, 'Requirements'], ['alert', 3, 'Risks'], ['clock', 2, 'Deadlines']]
-  const pills = PILLS.map(([ic]) => ringPill(s.cam, M({ land: 230, def: 210 }), 100, `<span class="ic">${icon(ic)}</span><span class="txt">0</span>`))
-  const labs = PILLS.map(([, , l]) => h('div', 'r-lab', s.cam, l))
-  const ns = 'http://www.w3.org/2000/svg'
-  const tree = document.createElementNS(ns, 'svg'); tree.setAttribute('class', 'r-tree')
-  const TW = Math.abs(L.pills[2] - L.pills[0]) + 20, TH = 150
-  tree.setAttribute('width', TW); tree.setAttribute('height', TH); tree.setAttribute('viewBox', `${-TW / 2} 0 ${TW} ${TH}`)
-  const x0 = L.pills[0], x2 = L.pills[2]
-  const pth = document.createElementNS(ns, 'path')
-  pth.setAttribute('d', `M${x0} ${TH} L${x0} 72 Q${x0} 60 ${x0 + 12} 60 L${x2 - 12} 60 Q${x2} 60 ${x2} 72 L${x2} ${TH} M0 ${TH} L0 60 L0 0`)
-  pth.setAttribute('pathLength', 1); tree.appendChild(pth); s.cam.appendChild(tree)
-  tree.style.position = 'absolute'; tree.style.left = '50%'; tree.style.top = '50%'
-  const score = h('div', 'r-score', s.cam, `<div class="k">Bid fit</div><div class="v"><span>0</span><i>▲</i></div>`)
-  const sv = score.querySelector('.v span')
-  const treeY = L.py - 62 - TH / 2, scoreY = treeY - TH / 2 - 92
-
-  const tFl = [t0 + .3, t0 + .52, t0 + .74, t0 + .96]
-  const tSet = b(2.5)                                     // the tender pack settles
-  const tScan = [tSet, b(5.5)]
-  const tBreak = b(7), tPills = b(8), tTree = b(10)
-  cue('whoosh', t0 + .02, { d: .45, v: .45 })              // into focus
-  tFl.forEach((x, i) => cue('paper', x, { v: .55, pan: (i % 2 ? .4 : -.4) }))   // pages riffle past
-  cue('paper', tSet - .1, { v: .4 })
-  cue('hum', tScan[0], { d: tScan[1] - tScan[0] + .15, v: .7 })                // the scan reads down the page
-  ;[0, 1, 2].forEach(i => drop(tScan[0] + (tScan[1] - tScan[0]) * [.3, .55, .8][i], 2 + i, { wet: .85, v: .45 }))
-  cue('whoosh', tBreak + .02, { d: .45, v: .45 })          // the page falls away
-  ;[0, 1, 2].forEach(i => { drop(tPills + i * .15, 1 + i, { wet: .85, v: .55 }); [0, 1, 2].forEach(k => cue('tick', tPills + i * .15 + .12 + k * .1, { v: .25 })) })
-  cue('draw', tTree, { d: .45, v: .5 })                    // the bracket
-  cue('confirm', tTree + .3, { n: 3, deg: 2, v: .6 })       // and the score
-
-  let cam = null, TY = null
-  function layout() {
-    TY = TAGS.map(o => L.doc[1] + lineY(o.line) * L.ds)
-    const D = L.doc, land = LAND
-    cam = path([
-      [t0, D[0] - 60, D[1], 120, 6, -30, 0, 1],
-      [tSet - .1, D[0], D[1] - 40, 60, 4, -10, 0, 1],
-      [tSet + .15, D[0] + (land ? 110 : 60), -90 * L.ds, 70, 16, -6, 0, 1],
-      [tScan[1], D[0] + (land ? 170 : 80), 120 * L.ds, 90, 14, -12, 0, 1],
-      [tBreak + .35, 0, L.py - 30, 60, 18, 0, 0, 1],
-      [tPills + .3, L.pills[0] * (land ? 1 : .45), L.py, land ? 260 : 90, 10, 14, 0, 1],
-      [tPills + .95, L.pills[2] * (land ? 1 : .45), L.py, land ? 260 : 90, 8, -14, 0, 1],
-      [tTree - .25, 0, L.py - 20, land ? 120 : 60, 12, -4, 0, 1],
-      [tTree + .05, 0, L.py - 60, 20, 16, 0, 0, 1],
-      [tTree + .7, 0, scoreY + 60, 80, -6, 0, 0, 1],
-      [t1, 0, scoreY + 40, 150, -8, 4, 0, 1],
-    ])
-  }
-
-  return t => {
-    if (!cam) layout()
-    specks(t)
-    // the riffle: documents fly past the camera, the last one ours
-    const rf = P(t, t0 - .3, t0 + .3, E.out)
-    const brk = P(t, tBreak - .05, tBreak + .4, E.io)
-    docs.forEach((e, i) => {
-      const d0 = i * 70
-      if (i < 4) {
-        const go = P(t, tFl[i], tFl[i] + .2, E.in2)
-        put(e, { x: L.doc[0] + i * 34 + go * 900, y: L.doc[1] - i * 10, z: -d0 + go * 520, ry: -18 - go * 50, s: L.ds * lerp(1.4, 1, rf), o: Math.min(1, rf * 1.5) * (1 - P(t, tFl[i] + .1, tFl[i] + .22)), blur: (1 - rf) * 26 + go * 14 })
-      } else {
-        const come = P(t, tFl[3], tSet, E.out)
-        put(e, { x: L.doc[0] + lerp(4 * 34, 0, come), y: L.doc[1] - lerp(40, 0, come) - brk * 200, z: lerp(-d0, 0, come) - brk * 520, rx: brk * 62, ry: lerp(-18, 0, come), s: L.ds * lerp(1.4, 1, rf), o: Math.min(1, rf * 1.5) * (1 - P(t, tBreak + .15, tBreak + .45)), blur: (1 - rf) * 26 + brk * 10 })
-      }
-    })
-    // the scan
-    const sp = P(t, tScan[0], tScan[1], E.io)
-    const by = lerp(-345, 345, sp) * L.ds
-    const so = bell(t, tScan[0], tScan[0] + .06, tScan[1] + .05)
-    put(beam, { x: L.doc[0], y: L.doc[1] + by, z: 2, o: so })
-    const trH = Math.max(1, 160 * Math.min(1, sp * 4))
-    trail.style.height = trH.toFixed(0) + 'px'
-    put(trail, { x: L.doc[0], y: L.doc[1] + by - trH / 2, z: 1, o: so * .8 })
-    hls.forEach((e, i) => {
-      const at = lerp(tScan[0], tScan[1], (lineY(TAGS[i].line) + 345) / 690)
-      e.style.setProperty('--p', P(t, at, at + .15, E.out).toFixed(3))
-    })
-    tags.forEach((e, i) => {
-      const at = lerp(tScan[0], tScan[1], (lineY(TAGS[i].line) + 345) / 690) + .03
-      const p = P(t, at, at + .3, E.out)
-      const fx = lerp(L.doc[0] + L.tags, L.pills[i], brk), fy = lerp(TY[i], L.py, brk)
-      put(e, { x: fx - (1 - p) * 60, y: fy, z: lerp(140, 0, brk), s: lerp(.8, 1, p) * lerp(1, .6, brk), o: Math.min(1, p * 1.6) * (1 - P(t, tPills - .1, tPills + .1)), blur: (1 - p) * 14 + brk * 8 })
-    })
-    // what matters, counted
-    pills.forEach((e, i) => {
-      const a = tPills + i * .15
-      blurIn(e, t, a, { x: L.pills[i], y: L.py, dur: .3, s0: .7, blur: 16 })
-      drawRim(e, P(t, a + .05, a + .55, E.io))
-      count(e.querySelector('.txt'), t, a + .05, a + .55, PILLS[i][1])
-      blurIn(labs[i], t, a + .15, { x: L.pills[i], y: L.py + 92, dur: .3, s0: 1, blur: 10, dy: 10 })
-    })
-    // and added up
-    put(tree, { x: 0, y: treeY, o: P(t, tTree - .01, tTree + .05) })
-    pth.style.strokeDasharray = '1 1'; pth.style.strokeDashoffset = (1 - P(t, tTree, tTree + .4, E.io)).toFixed(4)
-    blurIn(score, t, tTree + .2, { x: 0, y: scoreY, dur: .35, s0: .9, blur: 18, dy: 30 })
-    count(sv, t, tTree + .2, tTree + .8, 86)
-    const mb = shoot(s, cam, t)
-    const out = P(t, t1 - .08, t1 + .3, E.in2)
-    lens(s, { mbX: mb.mbX, mbY: mb.mbY, blur: out * 28, o: 1 - P(t, t1 + .06, t1 + .3) })
-  }
-}
-
-/* ============================================================
    CTA: the button flies in out of focus, a light across it, pressed on
    the beat. Then the name.
    ============================================================ */
@@ -631,8 +678,7 @@ function buildLogo(s) {
 function buildChapters(s) {
   const CH = [
     ['01', 'AI receptionist', 'Chats and calls, answered and booked.', 'chat', .3, 3.2],
-    ['02', 'Sales co-pilot', 'On your calls. Tells you what to say next.', 'call', .5, 3.0],
-    ['03', 'Document analyser', 'Any document in. What matters out.', 'docs', .3, 3.0],
+    ['02', 'Sales co-pilot', 'On your calls. Tells you what to say next.', 'call', .5, 2.3],
   ]
   const pos = M({ land: [-960 + 96, -540 + 118], port: [0, -760], sq: [0, -450], tall: [0, -570] })
   const els = CH.map(([no, name, ln]) => h('div', 'abs r-chap', s.root, `<div class="eb">${spark(18)}<span>${name}</span><span style="color:#8B8175">${no}</span></div><div class="ln">${ln}</div>`))
@@ -646,13 +692,31 @@ function buildChapters(s) {
   }
 }
 
+/* the step captions, low and steady, over everything: each until the next */
+function buildSteps(s) {
+  // clear of where the apps put their own captions and buttons
+  const at = M({ land: [0, 420], sq: [0, 430], tall: [0, 520], port: [0, 500] })
+  const list = STEPS.slice().sort((a, b) => a[0] - b[0])
+  const els = list.map(([, txt]) => h('div', 'abs r-step', s.root, `<span class="dot"></span><span>${txt}</span>`))
+  const end = sceneById('coach').end - .15
+  return t => {
+    list.forEach(([ta], i) => {
+      const tz = i + 1 < list.length ? list[i + 1][0] : end
+      const pi = P(t, ta, ta + .22, E.out), po = P(t, tz - .02, tz + .14, E.in2)
+      put(els[i], { x: at[0], y: at[1] + (1 - pi) * 12, o: pi * (1 - po), blur: (1 - pi) * 10 + po * 8 })
+    })
+  }
+}
+
 export default function setup() {
   scene(['chat', 'book'], buildReception)
+  scene(['notify'], buildNotify, { hold: .28 })
+  scene(['phone'], buildPhone)
   scene(['call', 'coach'], buildCall, { hold: .34 })
-  scene(['docs'], buildDocs, { hold: .32 })
   scene(['cta'], buildCta)
   scene(['logo'], buildLogo)
   scene(['chat', 'logo'], buildChapters)
+  scene(['chat', 'coach'], buildSteps)
   const sc = sceneById
   // [time, ax, ay, aStrength, cx, cy, cStrength, grid]: amber low in the middle, the light from above
   const tDrop = sc('chat').start + q(3, 1)
@@ -661,9 +725,10 @@ export default function setup() {
     [tDrop, .5, .6, .3, .5, -.06, .9, 0],
     [sc('book').start - .1, .5, .55, .6, .5, -.06, .95, 0],
     [sc('book').start + .25, .5, .55, .35, .5, -.06, .9, 0],
+    [sc('notify').start, .5, .55, .3, .5, -.08, .9, 0],
+    [sc('phone').start, .45, .55, .25, .5, -.08, .9, 0],
     [sc('call').start, .5, .55, .2, .5, -.08, .9, 0],
     [sc('coach').start, .6, .55, .3, .5, -.08, .9, 0],
-    [sc('docs').start, .5, .55, .25, .5, -.08, .9, 0],
     [sc('cta').start, .5, .55, .35, .5, -.08, .95, 0],
     [sc('logo').start - .02, .5, .5, .6, .5, -.06, 1, 0],
     [sc('logo').start + .1, .5, .5, 1.25, .5, -.06, 1, 0],

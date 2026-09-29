@@ -1770,6 +1770,18 @@ def sfx_connect(v=1.0):
     return y * v
 
 
+def sfx_ring(v=1.0):
+    """A phone ringing, softly: two short trills, a UK double ring."""
+    y = np.zeros(at(1.0))
+    for j0 in (0.0, 0.42):
+        d = 0.3; x = tt(d)
+        tr = 0.5 + 0.5 * np.sign(np.sin(2 * np.pi * 22 * x))                 # the trill between two tones
+        f = np.where(tr > 0, mtof(81), mtof(84))
+        tn = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.minimum(1, x / 0.01) * np.minimum(1, (d - x) / 0.04)
+        j = at(j0); y[j:j + len(tn)] += tn[: len(y) - j] * 0.5
+    return y * v
+
+
 def sfx_tension(d, v=1.0):
     """Unease: a low swell with a slow flutter, and air rising under it."""
     x = tt(d); p = x / d
@@ -2326,6 +2338,8 @@ def build_sfx():
             add(out, sfx_confirm(c.get("n", 2), c.get("deg", 3), v), t, 0.3)
         elif k == "connect":
             add(out, sfx_connect(v), t, 0.35)
+        elif k == "ring":
+            add(out, sfx_ring(v), t, 0.3, c.get("pan", 0.0))
         elif k == "tension":
             add(out, sfx_tension(c["d"], v), t, 0.45)
         elif k == "hum":
