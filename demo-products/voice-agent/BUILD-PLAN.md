@@ -12,7 +12,7 @@ nothing with the rest of this repository.
 Status:       building. Phases 0-4 done; Phase 5 built and waiting on a Twilio account; Phases 6-7 in part
 Owner:        Alex
 Next review:  when the Twilio account and UK number exist (Phase 5 on a real phone)
-Evidence:     docs/spike-results.md; 65 tests (npm test); the evaluation suite (npm run eval: 11 of 18 on the first full run, fixes since, re-run pending);
+Evidence:     docs/spike-results.md; 65 tests (npm test); the evaluation suite (npm run eval: 18 of 18 after fixes, no guardrail flags, median reply 0.85 s);
               a browser end-to-end call that booked a table with no guardrail flags; the voice_ schema live
               in auivrancfnrdwyiqoakt
 ```
@@ -38,7 +38,7 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
 | 1. Agent core and browser channel | **done** | Call orchestrator, prompt compiler, tools, guardrails that flag *and* correct on the call, browser "Talk to it" |
 | 2. Data and bookings | **done** | `voice_` schema applied to the shared project, four demo tenants loaded there, booking engine with the tenant-row lock, caller recognition |
 | 3. Orders and demo payments | **done** | Menu matching, server-side basket, delivery areas, allergen wording, mock card processor, deposits |
-| 4. Evaluation suite | **done** | 18 simulated-caller scenarios with database checks; first full run 11 of 18; the fixes below followed, and the re-run result goes here. Text and audio bridges |
+| 4. Evaluation suite | **done** | 18 simulated-caller scenarios with database checks; first run 11 of 18; after the fixes below, 16 of 18 with no guardrail flags and a median reply of 0.85 s; the two failures were the simulated caller (silent once, hanging up early once), and with the harness fixed both pass. Text and audio bridges |
 | 5. Telephony | **built, not yet on a real line** | TwiML, PIN router, μ-law media bridge, barge-in, hang-up marks, warm transfer with whisper, signature checks (verified against Twilio's documented example), SMS. `npm run e2e:phone` plays Twilio against the real server. `Dockerfile` and `fly.toml` ready. **Waiting on the Twilio account and UK number** |
 | 6. Demo platform | **in part** | Console, setup wizard (website to draft profile, tested on a local fake site), live board, one-click reset, four seeded businesses. Not yet: console sign-in through Supabase Auth (a password for now), number pool admin, the owner's weekly report |
 | 7. Sales-floor readiness | **in part** | Fallback chain, session resumption, context compression, concurrency cap, Supabase keep-alive. Not yet: kill switch, alerts, retention job, privacy notice page, demo-day runbook |
@@ -59,6 +59,17 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
   three pizzas. The read-back is now in plain words and the prompt says how to
   split lines. The database check caught it, not the conversation.
 - **Deposits** are asked for after booking, not as a condition of it.
+- **The phone path, and a model that goes quiet.** Playing Twilio against the
+  real server (`npm run e2e:phone`) booked a table and hung up cleanly, with
+  replies in 1.3 to 2.0 s. It also exposed two things. The test script raced a
+  slow server start and sent its first line before the call had connected
+  (fixed). And on some runs the Gemini session stopped responding altogether
+  without closing, even to text prompts. A watchdog now replaces a session
+  that has heard the caller but shown no sign of life for 7 seconds: it
+  resumes the session if it can, otherwise hands the call to the other model
+  with the transcript so far, and asks the caller to repeat themselves.
+- **VAD tuning matters.** With Google's default end-of-speech detection the
+  reply to a phone caller took 6.9 s; with 600 ms of silence it took 1.4 s.
 
 **Where the build departs from the plan, deliberately:**
 

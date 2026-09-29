@@ -38,6 +38,9 @@ const only = opt('only')?.split(',');
 const audio = flag('audio');
 const receptionistModels = opt('receptionist') ? [opt('receptionist')!] : config.liveModels;
 const callerModel = opt('caller') ?? config.callerModel;
+// If the simulated caller goes silent (3.8 Live did, in the spike and in run 2),
+// the scenario is re-run once with the other Live model playing the caller.
+const callerFallback = callerModel === 'gemini-3.1-flash-live-preview' ? 'gemini-3.8-live' : 'gemini-3.1-flash-live-preview';
 const MAX_SECONDS = Number(opt('max-seconds') ?? 240);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -57,7 +60,8 @@ function callerPrompt(s: Scenario, businessName: string, now: Date): string {
     s.persona,
     'Speak like a real person on the phone: short, natural sentences, one thing at a time. Answer the question you are asked.',
     'Say only what the caller would say. Never describe actions, never narrate, never speak as the receptionist.',
-    'When you have what you called for (or clearly cannot get it) and the receptionist has finished, say a short goodbye and call hang_up.',
+    'Answer every question the receptionist asks, including your name, number and allergies, before you say goodbye.',
+    'Only hang up once the receptionist has said the booking is made, the order is placed, or they cannot help. Then say a short goodbye and call hang_up.',
   ].join('\n');
 }
 
@@ -75,7 +79,7 @@ interface Result {
   tools: { name: string; args: unknown; result: unknown }[];
 }
 
-async function runOne(s: Scenario, repo: Repo, db: Awaited<ReturnType<typeof openPglite>>): Promise<Result> {
+async function runOne(s: Scenario, repo: Repo, db: Awaited<ReturnType<typeof openPglite>>, caller_model = callerModel): Promise<Result> {
   const tenant = (await repo.getTenant(s.tenant))!;
   const now0 = s.now ?? FRIDAY_EVENING;
   await repo.resetTenantData(tenant.id);
@@ -90,7 +94,7 @@ async function runOne(s: Scenario, repo: Repo, db: Awaited<ReturnType<typeof ope
   });
   const caller = await LiveSession.connect(
     {
-      model: callerModel,
+      model: caller_model,
       systemInstruction: callerPrompt(s, tenant.profile.name, now0),
       tools: [{ name: 'hang_up', description: 'End the call after saying goodbye.', parameters: { type: 'OBJECT', properties: {} } }],
       transcribeOutput: true,
@@ -170,6 +174,11 @@ async function runOne(s: Scenario, repo: Repo, db: Awaited<ReturnType<typeof ope
       callerComplete = false;
       caller.sendText(`The receptionist says: "${said}"`);
       await waitFor(() => callerHung || (callerComplete && Date.now() - callerActive > 700 && callerText.trim().length > 0), 30000);
+      if (!callerText.trim() && !callerHung) {
+        // A silent caller gets one nudge before the turn is given up.
+        caller.sendText(`The receptionist says: "${said}" (Please reply as the caller.)`);
+        await waitFor(() => callerHung || (callerComplete && Date.now() - callerActive > 700 && callerText.trim().length > 0), 20000);
+      }
       const words = callerText.trim();
       if (words) call.sendText(words);
       if (callerHung) {
@@ -215,6 +224,10 @@ for (const s of chosen) {
   let r: Result;
   try {
     r = await runOne(s, repo, db);
+    if (r.failures.includes('the caller never spoke')) {
+      process.stdout.write(`(caller silent on ${callerModel}; retrying with ${callerFallback}) `);
+      r = await runOne(s, repo, db, callerFallback);
+    }
   } catch (err) {
     r = { id: s.id, title: s.title, kind: s.kind, pass: false, failures: [`run failed: ${(err as Error).message}`], seconds: 0, model: '', tokens: 0, latency_ms: [], transcript: [], tools: [] };
   }

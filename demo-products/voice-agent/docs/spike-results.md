@@ -98,5 +98,8 @@ allowance). `gemini-2.5-flash-preview-tts` works, and is the default
   Fly's London region). Phase 5.
 - Behaviour with background noise and strong accents. The evaluation suite's
   noise fixtures.
-- How much the 600 ms VAD setting saves over the default. The first spike ran
-  on defaults.
+- ~~How much the 600 ms VAD setting saves over the default.~~ Measured on 29
+  September with the production prompt and phone-quality audio on 3 Flash
+  Live: **6.9 s** from the end of the caller's speech to the reply with
+  Google's defaults, **1.2 to 1.5 s** with 600 ms of silence and 200 ms of
+  prefix padding.

@@ -22,11 +22,15 @@ import { streamToken } from '../src/channels/twilio.ts';
 const OUT = 'eval-results/phone';
 mkdirSync(OUT, { recursive: true });
 const config = loadConfig();
+// The caller is scripted audio, so it cannot react: these are the spike's
+// cached lines (TTS has a small free-tier allowance), and the diary is
+// cleared below so the request is always free.
 const LINES = [
-  'Hello, could I book a table for two tomorrow evening at eight?',
-  "It's Alex Turner. This number's fine.",
-  'Yes please, go ahead.',
-  "No, that's it. Thanks, bye.",
+  'Hiya, are you open on Sunday evening?',
+  'Oh lovely. Could I book a table for four on Sunday at seven, please?',
+  "It's Sarah Collins. My number is oh seven seven double oh, nine double oh, one two three.",
+  "Yes, that's perfect, thank you.",
+  "No, that's everything. Thanks, bye!",
 ];
 
 async function lineAudio(line: string): Promise<Int16Array> {
@@ -47,6 +51,7 @@ for (const l of LINES) ulawLines.push(mulawEncode(new Resampler(24000, 8000).pro
 const dir = join(tmpdir(), `va-phone-${Date.now()}`);
 const app = await startServer({ ...config, port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: undefined, sessionSecret: 'phone-e2e' });
 const tenant = (await app.repo.getTenant('lucas-trattoria'))!;
+await app.repo.db.query(`delete from public.voice_bookings where tenant_id = $1 and source = 'seed'`, [tenant.id]);
 const callSid = `CA${Date.now()}`;
 const ws = new WebSocket(`ws://localhost:${app.port}/twilio/stream`);
 await new Promise((r) => ws.on('open', r));
@@ -105,9 +110,12 @@ const pump = setInterval(() => {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const quietFor = (ms: number) => Date.now() - lastAgentFrame > ms && Date.now() > playbackEndsAt;
 
-// Wait for the greeting to finish, then say each line once the agent has finished speaking.
-await sleep(1500);
-while (!quietFor(1200) && Date.now() - t0 < 20000) await sleep(100);
+// Wait for the greeting to start and then finish, then say each line once the
+// agent has finished speaking. (A fixed wait here raced a slow server start:
+// line one went out before the call had connected, and every later line was
+// out of step.)
+while (agentFrames.length === 0 && Date.now() - t0 < 20000) await sleep(50);
+while (!quietFor(1200) && Date.now() - t0 < 30000) await sleep(100);
 for (const line of ulawLines) {
   sending = line;
   sendPos = 0;

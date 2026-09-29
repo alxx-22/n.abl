@@ -83,6 +83,16 @@ export interface CallOptions {
 
 const SPEECH_RMS = 700;
 
+/**
+ * If the caller has spoken and the model shows no sign of life (no
+ * transcription, audio, tool call or turn) for this long, the session is
+ * treated as dead and replaced. On the free tier a session occasionally stops
+ * responding without closing: 3.8 Live did in the spike, and 3 Flash Live did
+ * in the phone end-to-end runs on 29 September.
+ */
+const WATCHDOG_MS = 7000;
+const MAX_RECOVERIES = 2;
+
 const CORRECTIONS: Record<Flag['rule'], string> = {
   unconfirmed_claim:
     '[Correction from the system: nothing has been booked or ordered yet. No create_booking, modify_booking or confirm_order has succeeded in this call. Tell the caller you just need to finalise it, read the details back, and call the tool now. Only then give the reference.]',
@@ -112,6 +122,10 @@ export class CallSession extends EventEmitter<CallEvents> {
   private lastActivity = Date.now();
   private agentSpeakingUntil = 0;
   private awaitingReply = false;
+  private lastModelSign = Date.now();
+  private recoveries = 0;
+  private recovering = false;
+  private prompt = '';
   private silencePrompts = 0;
   private wrapUpSent = false;
   private timer: NodeJS.Timeout | null = null;
@@ -171,6 +185,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       canTransfer: Boolean(this.opts.telephony && tenant.profile.handoff_number),
       channel: this.opts.channel,
     });
+    this.prompt = prompt;
     const models = this.opts.models ?? config.liveModels;
     this.session = await connectWithFallback(models, (m) => this.setupFor(m, prompt), config.geminiApiKey, (m, err) => {
       this.fallbacks.push({ model: m, error: err.message.slice(0, 200) });
@@ -192,6 +207,8 @@ export class CallSession extends EventEmitter<CallEvents> {
   }
 
   private attach(s: LiveSession, prompt: string): void {
+    const sign = () => (this.lastModelSign = Date.now());
+    for (const ev of ['audio', 'inputTranscript', 'outputTranscript', 'toolCall', 'turnComplete', 'usage'] as const) s.on(ev, sign);
     s.on('audio', (pcm) => {
       const now = Date.now();
       if (this.awaitingReply) {
@@ -254,6 +271,41 @@ export class CallSession extends EventEmitter<CallEvents> {
     old?.removeAllListeners();
     old?.close();
     this.record('system', { event: 'resumed', with_handle: Boolean(this.resumeHandle) });
+  }
+
+  /** Replace a session that has stopped responding: resume it if we can, otherwise hand over to the next model with the story so far. */
+  private async recover(): Promise<void> {
+    if (this.recovering || this.ended) return;
+    this.recovering = true;
+    this.recoveries++;
+    this.record('system', { event: 'watchdog', model: this.model, recovery: this.recoveries });
+    const sorry = '[There was a brief problem on the line and you may have missed what the caller just said. Apologise briefly and ask them to repeat it.]';
+    try {
+      try {
+        await this.reconnect(this.prompt);
+        this.session?.sendText(sorry);
+      } catch {
+        const models = this.opts.models ?? this.opts.config.liveModels;
+        const next = models.find((m) => m !== this.model) ?? this.model;
+        this.resumeHandle = undefined;
+        const old = this.session;
+        const fresh = await LiveSession.connect(this.setupFor(next, this.prompt), this.opts.config.geminiApiKey);
+        this.session = fresh;
+        this.model = next;
+        this.attach(fresh, this.prompt);
+        old?.removeAllListeners();
+        old?.close();
+        const story = this.transcript.slice(-8).map((l) => `${l.role === 'agent' ? 'You' : 'Caller'}: ${l.text}`).join(' / ');
+        fresh.sendText(`[You are taking over this call part-way through. So far: ${story || 'you have greeted the caller.'} ${sorry.slice(1)}`);
+        this.record('system', { event: 'handed_over', model: next });
+      }
+    } catch (err) {
+      this.fail(err as Error);
+    } finally {
+      this.lastModelSign = Date.now();
+      this.lastCallerSound = Date.now();
+      this.recovering = false;
+    }
   }
 
   private fail(err: Error): void {
@@ -381,6 +433,14 @@ export class CallSession extends EventEmitter<CallEvents> {
       }, 60000);
       return;
     }
+    if (
+      this.awaitingReply && !this.recovering && !this.state.ending && this.recoveries < MAX_RECOVERIES &&
+      now - this.lastCallerSound > WATCHDOG_MS && this.lastModelSign < this.lastCallerSound
+    ) {
+      void this.recover();
+      return;
+    }
+    if (this.recovering) return;
     const quietFor = now - Math.max(this.lastActivity, this.agentSpeakingUntil);
     if (quietFor > 10000 && !this.state.ending) {
       this.silencePrompts++;
