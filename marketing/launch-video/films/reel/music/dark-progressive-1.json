@@ -1,0 +1,76 @@
+{
+ "file": "dark-progressive-1.wav",
+ "model": "models/lyria-realtime-exp",
+ "bpm": 114,
+ "scale": "F_MAJOR_D_MINOR",
+ "seconds": 36.0,
+ "seed": 1,
+ "temperature": 1.1,
+ "guidance": 4.0,
+ "lead": 2.0,
+ "plan": [
+  {
+   "beat": 0,
+   "prompts": {
+    "Dark Progressive House, minor key": 1.0,
+    "Filtered Synth Chords": 0.8,
+    "Atmospheric Pads": 0.7
+   },
+   "section": "intro",
+   "density": 0.2,
+   "brightness": 0.3,
+   "mute_drums": true
+  },
+  {
+   "beat": 7,
+   "prompts": {
+    "Dark Progressive House, minor key": 1.0,
+    "Driving Four On The Floor": 0.9,
+    "Rolling Offbeat Bass": 0.8,
+    "Filtered Synth Chords": 0.7
+   },
+   "section": "a",
+   "density": 0.55,
+   "brightness": 0.45
+  },
+  {
+   "beat": 20,
+   "prompts": {
+    "Dark Progressive House, minor key": 1.0,
+    "Driving Four On The Floor": 0.8,
+    "Rolling Offbeat Bass": 0.7,
+    "Pluck Arpeggio Hook": 1.0,
+    "Emotional Minor Chords": 0.7
+   },
+   "section": "b",
+   "density": 0.65,
+   "brightness": 0.55
+  },
+  {
+   "beat": 37,
+   "prompts": {
+    "Dark Progressive House, minor key": 1.0,
+    "Huge Drop": 0.9,
+    "Driving Four On The Floor": 0.9,
+    "Pluck Arpeggio Hook": 0.9,
+    "Emotional Minor Chords": 0.9,
+    "Wide Supersaw": 0.7
+   },
+   "section": "c",
+   "density": 0.8,
+   "brightness": 0.65
+  },
+  {
+   "beat": 52,
+   "prompts": {
+    "Dark Progressive House, minor key": 1.0,
+    "Atmospheric Pads": 0.8,
+    "Echoes": 0.7
+   },
+   "section": "out",
+   "density": 0.4,
+   "brightness": 0.45
+  }
+ ],
+ "raw_peak": 0.998
+}

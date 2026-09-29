@@ -1,0 +1,118 @@
+{
+ "file": "melodic-reel-v2-2.wav",
+ "model": "models/lyria-realtime-exp",
+ "bpm": 118,
+ "scale": "F_MAJOR_D_MINOR",
+ "seconds": 32.0,
+ "seed": 2,
+ "temperature": 1.1,
+ "guidance": 4.0,
+ "lead": 2.0,
+ "plan": [
+  {
+   "beat": 0,
+   "prompts": {
+    "Dark Melodic Techno, minor key": 1.0,
+    "Ominous Drone": 0.7,
+    "Cinematic Synth Pads": 0.8,
+    "Melancholic": 0.7,
+    "Dark Minor Key": 0.9
+   },
+   "section": "intro",
+   "density": 0.2,
+   "brightness": 0.15,
+   "mute_drums": true
+  },
+  {
+   "beat": 7,
+   "prompts": {
+    "Dark Melodic Techno, minor key": 1.0,
+    "Tight Groove": 0.9,
+    "Deep Rolling Bassline": 0.8,
+    "Brooding Minor Chords": 0.7,
+    "Melancholic": 0.7,
+    "Dark Minor Key": 0.9
+   },
+   "section": "a",
+   "density": 0.55,
+   "brightness": 0.3
+  },
+  {
+   "at": 6.162,
+   "section": "groove",
+   "prompts": {
+    "Dark Melodic Techno, minor key": 1.0,
+    "Tight Groove": 1.0,
+    "Deep Rolling Bassline": 0.8,
+    "Brooding Minor Chords": 0.7,
+    "Melancholic": 0.7,
+    "Dark Minor Key": 0.9,
+    "Driving Drums": 0.6
+   },
+   "density": 0.62,
+   "brightness": 0.3
+  },
+  {
+   "at": 14.334,
+   "section": "objection",
+   "prompts": {
+    "Dark Melodic Techno, minor key": 1.0,
+    "Ominous Drone": 0.7,
+    "Cinematic Synth Pads": 0.8,
+    "Melancholic": 0.7,
+    "Dark Minor Key": 0.9,
+    "Deep Rolling Bassline": 0.6
+   },
+   "density": 0.3,
+   "brightness": 0.2,
+   "mute_drums": true
+  },
+  {
+   "at": 16.378,
+   "section": "coach",
+   "prompts": {
+    "Dark Melodic Techno, minor key": 1.0,
+    "Tight Groove": 1.0,
+    "Deep Rolling Bassline": 0.8,
+    "Brooding Minor Chords": 0.7,
+    "Melancholic": 0.7,
+    "Dark Minor Key": 0.9,
+    "Driving Drums": 0.6
+   },
+   "density": 0.65,
+   "brightness": 0.35
+  },
+  {
+   "at": 18.421,
+   "section": "docs",
+   "prompts": {
+    "Dark Melodic Techno, minor key": 1.0,
+    "Tight Groove": 1.0,
+    "Deep Rolling Bassline": 0.8,
+    "Brooding Minor Chords": 0.7,
+    "Melancholic": 0.7,
+    "Dark Minor Key": 0.9,
+    "Driving Drums": 0.6,
+    "Cinematic Synth Pads": 0.6
+   },
+   "density": 0.75,
+   "brightness": 0.45
+  },
+  {
+   "at": 26.594,
+   "section": "name",
+   "prompts": {
+    "Dark Melodic Techno, minor key": 1.0,
+    "Ominous Drone": 0.7,
+    "Cinematic Synth Pads": 0.8,
+    "Melancholic": 0.7,
+    "Dark Minor Key": 0.9,
+    "Tight Groove": 0.5,
+    "Deep Rolling Bassline": 0.5
+   },
+   "density": 0.35,
+   "brightness": 0.2
+  }
+ ],
+ "raw_peak": 0.885
+}

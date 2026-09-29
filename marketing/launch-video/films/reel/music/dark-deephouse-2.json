@@ -1,0 +1,77 @@
+{
+ "file": "dark-deephouse-2.wav",
+ "model": "models/lyria-realtime-exp",
+ "bpm": 116,
+ "scale": "F_MAJOR_D_MINOR",
+ "seconds": 36.0,
+ "seed": 2,
+ "temperature": 1.1,
+ "guidance": 4.0,
+ "lead": 2.0,
+ "plan": [
+  {
+   "beat": 0,
+   "prompts": {
+    "Dark Deep House, minor key": 1.0,
+    "Moody Minor Chords": 0.8,
+    "Warm Analog Pads": 0.7
+   },
+   "section": "intro",
+   "density": 0.2,
+   "brightness": 0.3,
+   "mute_drums": true
+  },
+  {
+   "beat": 7,
+   "prompts": {
+    "Dark Deep House, minor key": 1.0,
+    "Four On The Floor Kick": 0.9,
+    "Warm Sub Bass": 0.8,
+    "Moody Minor Chords": 0.8,
+    "Shuffled Hi-Hats": 0.6
+   },
+   "section": "a",
+   "density": 0.55,
+   "brightness": 0.45
+  },
+  {
+   "beat": 20,
+   "prompts": {
+    "Dark Deep House, minor key": 1.0,
+    "Four On The Floor Kick": 0.8,
+    "Warm Sub Bass": 0.7,
+    "Plucked Synth Hook": 1.0,
+    "Moody Minor Chords": 0.7
+   },
+   "section": "b",
+   "density": 0.65,
+   "brightness": 0.55
+  },
+  {
+   "beat": 37,
+   "prompts": {
+    "Dark Deep House, minor key": 1.0,
+    "Four On The Floor Kick": 0.9,
+    "Plucked Synth Hook": 0.9,
+    "Lush Stab Chords": 0.9,
+    "Warm Sub Bass": 0.8,
+    "Driving": 0.7
+   },
+   "section": "c",
+   "density": 0.8,
+   "brightness": 0.65
+  },
+  {
+   "beat": 52,
+   "prompts": {
+    "Dark Deep House, minor key": 1.0,
+    "Moody Minor Chords": 0.8,
+    "Echoes": 0.7
+   },
+   "section": "out",
+   "density": 0.4,
+   "brightness": 0.45
+  }
+ ],
+ "raw_peak": 1.0
+}
