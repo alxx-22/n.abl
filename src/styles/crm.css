@@ -876,6 +876,18 @@
 .lg-form label { display: grid; gap: var(--s-1); min-width: 0; }
 .lg-form label > span { font-size: var(--t-xs); color: var(--cream-600); }
 .lg-form__dates { display: grid; gap: var(--s-3); grid-template-columns: 1fr 1fr; }
+/* Where a target looks. Wraps rather than scrolls, and never shrinks in
+   the sheet's column. */
+.lg-sources { display: flex; flex-wrap: wrap; gap: var(--s-2); flex: none; }
+/* Councils, kinds and places to tick, for the food register and the map. */
+.lg-picks {
+  margin: 0; padding: 0; border: 0; min-width: 0; grid-column: 1 / -1;
+  display: grid; gap: 0 var(--s-3); grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr));
+}
+.lg-picks legend { padding: 0; margin-bottom: var(--s-1); font-size: var(--t-xs); color: var(--cream-600); }
+.lg-form .lg-picks label { display: flex; align-items: center; gap: var(--s-2); min-height: 32px; cursor: pointer; }
+.lg-form .lg-picks label > span { font-size: var(--t-sm); color: var(--cream-300); }
+.lg-picks input { accent-color: var(--accent-400); margin: 0; }
 
 .lg-services { border-top: 1px solid var(--line-faint); padding-top: var(--s-4); display: grid; gap: var(--s-3); }
 .lg-services > u {

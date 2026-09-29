@@ -38,6 +38,7 @@
 
 import { contactRouteIn, redactContactRoutes } from './puller.mjs'
 import { nameKey, isPostcodeArea, makeTerritoryFilter } from './lib.mjs'
+import { sourceLine } from './local.mjs'
 
 /* ---------- the dials, and their stops ---------- */
 
@@ -754,8 +755,13 @@ const ACCOUNTS = {
 export function registerLines(c, { profile = null, officers = null, accounts = null, filings = null, psc = null, today = new Date() } = {}) {
   const lines = []
   const add = (key, text) => { if (text) lines.push({ key, text }) }
-  add('r_name', `Registered name: ${c.company_name}`)
-  if (c.activity) add('r_activity', `What it says it does (SIC): ${c.activity}`)
+  /* A business from the food hygiene register or OpenStreetMap: what
+     that source says, and that its legal form is unknown. Its phone
+     number is in the record and never in a line. */
+  const listed = c.source && c.source !== 'companies_house'
+  add('r_name', listed ? `Trading name: ${c.company_name}` : `Registered name: ${c.company_name}`)
+  if (c.activity) add('r_activity', listed ? `What it does, as listed: ${c.activity}` : `What it says it does (SIC): ${c.activity}`)
+  if (listed) add('r_source', sourceLine(c.source_detail))
   const born = c.incorporated_on || profile?.date_of_creation
   if (born) {
     const y = Number(String(born).slice(0, 4))
@@ -764,7 +770,7 @@ export function registerLines(c, { profile = null, officers = null, accounts = n
   }
   const type = c.company_type || profile?.type
   if (type) add('r_type', `Legal form: ${PLAIN_TYPE[type] ?? type}`)
-  if (c.town) add('r_town', `Registered office town: ${c.town}`)
+  if (c.town) add('r_town', listed ? `Town: ${c.town}` : `Registered office town: ${c.town}`)
 
   const acc = profile?.accounts?.last_accounts
   if (acc?.type && acc.type !== 'null' && ACCOUNTS[acc.type] !== null) {
