@@ -2,7 +2,7 @@
 --
 -- This Supabase project is shared with a text-chatbot demo. Every object here
 -- is prefixed voice_, nothing unprefixed is created, altered or dropped, and
--- test/migrations.test.ts refuses any migration that breaks that rule.
+-- test/db.test.ts refuses any migration that breaks that rule.
 --
 -- Row-level security is on for every table with no policies, so the shared
 -- anon and authenticated roles can read and write nothing. The server connects

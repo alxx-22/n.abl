@@ -45,6 +45,8 @@ export interface CallEvents {
   flag: [flag: Flag];
   agentTurn: [text: string];
   hangup: [reason: string];
+  /** The agent finished a turn: channels flush any part-filled audio frame. */
+  turnFlush: [];
   ended: [summary: CallSummary];
 }
 
@@ -74,9 +76,20 @@ export interface CallOptions {
   publish?: (e: BoardEvent) => void;
   /** Eval text mode: no silence prompts, no audio-based timing. */
   textMode?: boolean;
+  /** Instead of the greeting, e.g. after an unanswered transfer. */
+  openingCue?: string;
 }
 
 const SPEECH_RMS = 700;
+
+const CORRECTIONS: Record<Flag['rule'], string> = {
+  unconfirmed_claim:
+    '[Correction from the system: nothing has been booked or ordered yet. No create_booking, modify_booking or confirm_order has succeeded in this call. Tell the caller you just need to finalise it, read the details back, and call the tool now. Only then give the reference.]',
+  unpaid_claim:
+    '[Correction from the system: no payment has gone through in this call. Tell the caller, and take it with take_demo_payment if they want to pay.]',
+  said_safe_for_allergy:
+    '[Correction from the system: never say a dish is safe for an allergy. Correct yourself now, using the allergen wording from get_item_details, including its caveat.]',
+};
 
 export class CallSession extends EventEmitter<CallEvents> {
   readonly opts: CallOptions;
@@ -90,7 +103,7 @@ export class CallSession extends EventEmitter<CallEvents> {
   private agentBuf = '';
   private transcript: { role: string; text: string }[] = [];
   private flags: Flag[] = [];
-  private usage = { total: 0, prompt_max: 0, responses: 0 };
+  private usage = { total: 0, prompt_first: 0, prompt_max: 0, responses: 0 };
   private latencies: number[] = [];
   private startedAt = Date.now();
   private lastCallerSound = 0;
@@ -127,13 +140,14 @@ export class CallSession extends EventEmitter<CallEvents> {
     return {
       model,
       systemInstruction: prompt,
-      tools: toolDeclarations(this.opts.tenant),
+      tools: toolDeclarations(this.opts.tenant, { canTransfer: Boolean(this.opts.telephony) }),
       voiceName: p.voice || 'Kore',
+      languageCode: p.language_code === null ? undefined : p.language_code || 'en-GB',
       transcribeInput: true,
       transcribeOutput: true,
       vad: { silenceDurationMs: this.opts.config.vadSilenceMs, prefixPaddingMs: 200 },
       resumption: { handle: this.resumeHandle },
-      compression: true,
+      compression: { triggerTokens: this.opts.config.compressAt, targetTokens: this.opts.config.compressTo },
     };
   }
 
@@ -160,11 +174,16 @@ export class CallSession extends EventEmitter<CallEvents> {
       this.fallbacks.push({ model: m, error: err.message.slice(0, 200) });
     });
     this.model = this.session.model;
+    if (this.ended) {
+      // The caller hung up while the session was opening.
+      this.session.close();
+      return;
+    }
     this.attach(this.session, prompt);
     await repo.updateCall(this.callId, { model: this.model, fallbacks: this.fallbacks });
     this.publish('call_started', { channel: this.opts.channel, model: this.model, caller: this.opts.callerPhone ? `…${this.opts.callerPhone.slice(-4)}` : null });
     this.record('system', { event: 'started', model: this.model, fallbacks: this.fallbacks });
-    this.session.sendText('[The call has just connected. Greet the caller now.]');
+    this.session.sendText(this.opts.openingCue ?? '[The call has just connected. Greet the caller now.]');
     this.awaitingReply = true;
     this.lastCallerSound = Date.now();
     if (!this.opts.textMode) this.timer = setInterval(() => this.tick(), 1000);
@@ -199,6 +218,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     s.on('turnComplete', () => {
       if (this.callerBuf.trim() && !this.agentBuf.trim()) this.flushCaller();
       this.flushAgent(false);
+      this.emit('turnFlush');
       if (this.state.ending) this.scheduleHangup('agent said goodbye', 900);
     });
     s.on('toolCall', (calls) => {
@@ -207,6 +227,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     s.on('usage', (u: UsageMetadata) => {
       this.usage.total += Number(u.totalTokenCount ?? 0);
       this.usage.prompt_max = Math.max(this.usage.prompt_max, Number(u.promptTokenCount ?? 0));
+      if (!this.usage.prompt_first) this.usage.prompt_first = Number(u.promptTokenCount ?? 0);
       this.usage.responses++;
     });
     s.on('resumption', (h) => (this.resumeHandle = h));
@@ -268,6 +289,9 @@ export class CallSession extends EventEmitter<CallEvents> {
       this.emit('flag', f);
       this.publish('flag', { rule: f.rule, text: f.text });
       this.record('guardrail', f);
+      // Correct it on the call, not just in the log: the next thing the
+      // agent does is put it right.
+      this.session?.sendText(CORRECTIONS[f.rule]);
     }
     this.emit('agentTurn', clean);
   }

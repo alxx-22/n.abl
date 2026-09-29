@@ -80,6 +80,8 @@ export interface MenuItem {
   price_pence: number;
   description?: string;
   allergens: Allergen[];
+  /** The business has not published this dish's allergens: the agent must not say it has none. */
+  allergens_unknown?: boolean;
   may_contain?: Allergen[];
   dietary?: string[];
   modifier_groups?: string[];
@@ -125,6 +127,8 @@ export interface TenantProfile {
   timezone: string;
   status: 'demo' | 'pilot' | 'live';
   voice: string;
+  /** BCP-47, default en-GB. Unset it (null) to let the model follow the caller's language. */
+  language_code?: string | null;
   greeting: string;
   /** How the business describes itself, in a sentence. */
   summary: string;

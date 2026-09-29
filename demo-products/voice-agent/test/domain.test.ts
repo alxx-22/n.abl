@@ -200,3 +200,11 @@ test('prompt: discloses the AI and the demo, names the demo card, stays small', 
   assert.doesNotMatch(hotel, /review_order/, 'no ordering rules for a hotel with no menu');
   assert.match(hotel, /Ask for a contact number/);
 });
+
+test('menu: a dish with unpublished allergens is never described as allergen-free', () => {
+  const menu = structuredClone(lucas.menu!);
+  const item = { ...menu.categories[0].items[0], allergens: [], allergens_unknown: true };
+  const a = allergenAnswer(menu, item);
+  assert.match(a, /don't have allergen information/);
+  assert.doesNotMatch(a, /none of the 14/);
+});

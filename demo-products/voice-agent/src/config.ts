@@ -7,7 +7,8 @@ export interface Config {
   geminiApiKey: string;
   /** Primary first; the rest are fallbacks, tried in order if a session will not open. */
   liveModels: string[];
-  textModel: string;
+  /** Tried in order; see generateText(). */
+  textModel: string[];
   callerModel: string;
   ttsModel: string;
   databaseUrl: string | undefined;
@@ -19,6 +20,8 @@ export interface Config {
   demoCards: DemoCard[];
   maxCallSeconds: number;
   vadSilenceMs: number;
+  compressAt: number;
+  compressTo: number;
   summaries: boolean;
   twilio:
     | { accountSid: string; authToken: string; apiKey?: string; apiSecret?: string; smsFrom?: string }
@@ -40,7 +43,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     geminiApiKey: env.GEMINI_API_KEY ?? '',
     liveModels: [primary, ...fallbacks.filter((m) => m !== primary)],
-    textModel: env.TEXT_MODEL?.trim() || 'gemini-3.8-flash',
+    textModel: list(env.TEXT_MODELS ?? env.TEXT_MODEL, ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash']),
     // The simulated caller in evaluation runs on the other model's quota, so test
     // calls never use up the receptionist's 65K tokens a minute.
     callerModel: env.CALLER_MODEL?.trim() || 'gemini-3.8-live',
@@ -54,6 +57,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     demoCards: parseDemoCards(env.DEMO_CARDS),
     maxCallSeconds: Number(env.MAX_CALL_SECONDS ?? 720),
     vadSilenceMs: Number(env.VAD_SILENCE_MS ?? 600),
+    compressAt: Number(env.COMPRESS_AT_TOKENS ?? 12000),
+    compressTo: Number(env.COMPRESS_TO_TOKENS ?? 7000),
     summaries: env.CALL_SUMMARIES !== 'off',
     twilio: sid && token
       ? {

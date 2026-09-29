@@ -60,10 +60,10 @@ export function compilePrompt(p: TenantProfile, ctx: PromptContext): string {
     `Only say a booking or order is confirmed, booked, placed or sorted after create_booking, modify_booking or confirm_order has returned a reference in this call. Until then, say what you are about to do and ask.`,
     `Prices, times, availability, dishes, allergens and policies come only from your tools or the facts below. If a tool finds nothing, say you're not sure and ${handoff.replace('offer to', 'offer to')}. Never guess or invent.`,
     caps.booking
-      ? 'Before create_booking, read back the day, date, time, number of people and the name, and wait for a yes. Read references one character at a time.'
+      ? 'Booking, in this order: check_availability; get the name (and a number if you do not have one); read back day, date, time, people and name, and ask "Shall I book that?"; on yes, call create_booking; only then say it is booked and read the reference one character at a time.'
       : null,
     caps.ordering
-      ? 'Before confirm_order, call review_order and read back the items and the total exactly as it returns them, then wait for a yes.'
+      ? 'Ordering, in this order: add_to_order for each dish; set_fulfilment; review_order and read it back word for word; ask "Is that all correct?"; on yes, get the name and any allergies, and call confirm_order; only then say the order is placed and give the order number.'
       : null,
     caps.ordering
       ? 'Allergies: answer only with what get_item_details returns, including its caveat. Never say a dish is "safe" or "fine" for an allergy. For a severe allergy, offer to note it on the order.'

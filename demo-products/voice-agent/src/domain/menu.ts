@@ -151,6 +151,9 @@ export function allergensOf(menu: Menu, item: MenuItem, modifiers: ModifierOptio
 
 /** The approved allergen wording: data first, then the kitchen caveat, never "safe". */
 export function allergenAnswer(menu: Menu, item: MenuItem): string {
+  if (item.allergens_unknown) {
+    return `I don't have allergen information for the ${item.name}, so I can't confirm what's in it. The team can check with the kitchen: offer to take a message or note the allergy on the order. ${menu.allergen_statement}`;
+  }
   const contains = item.allergens.length ? `contains ${item.allergens.join(', ')}` : 'has none of the 14 major allergens as ingredients';
   const may = item.may_contain?.length ? ` It may contain traces of ${item.may_contain.join(', ')}.` : '';
   return `${item.name} ${contains}.${may} ${menu.allergen_statement}`;

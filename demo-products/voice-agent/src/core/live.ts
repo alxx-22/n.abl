@@ -38,8 +38,12 @@ export interface LiveSetup {
   };
   /** Ask for resumption handles (and resume from one, if given). */
   resumption?: { handle?: string } | false;
-  /** Sliding-window context compression, so long calls do not hit the context limit. */
-  compression?: boolean;
+  /**
+   * Sliding-window context compression. Every turn re-counts the whole
+   * context against the tokens-per-minute quota, so a trigger well below the
+   * model's context limit keeps long calls cheap.
+   */
+  compression?: boolean | { triggerTokens: number; targetTokens: number };
 }
 
 export interface FunctionCall {
@@ -122,7 +126,13 @@ export function buildSetupMessage(setup: LiveSetup): Record<string, unknown> {
     msg.realtimeInputConfig = { automaticActivityDetection: aad };
   }
   if (setup.resumption) msg.sessionResumption = setup.resumption.handle ? { handle: setup.resumption.handle } : {};
-  if (setup.compression) msg.contextWindowCompression = { slidingWindow: {} };
+  if (setup.compression === true) msg.contextWindowCompression = { slidingWindow: {} };
+  else if (setup.compression) {
+    msg.contextWindowCompression = {
+      triggerTokens: String(setup.compression.triggerTokens),
+      slidingWindow: { targetTokens: String(setup.compression.targetTokens) },
+    };
+  }
   return { setup: msg };
 }
 

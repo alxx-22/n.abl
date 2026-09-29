@@ -36,11 +36,36 @@ export interface GenerateOptions {
   thinkingLevel?: string;
 }
 
+/**
+ * Free-tier text models come and go: on 29 September gemini-3.8-flash was
+ * answering 503 "high demand" and gemini-2.5-flash had been withdrawn. Pass a
+ * list and the next model is tried on 404, 429 and 5xx.
+ */
 export async function generateText(
-  model: string,
+  model: string | string[],
   prompt: string | { text?: string; inlineData?: { mimeType: string; data: string } }[],
   apiKey: string,
   opts: GenerateOptions = {},
+): Promise<string> {
+  const models = Array.isArray(model) ? model : [model];
+  let last: Error | undefined;
+  for (const m of models) {
+    try {
+      return await generateOnce(m, prompt, apiKey, opts);
+    } catch (err) {
+      last = err as Error;
+      const status = err instanceof GeminiHttpError ? err.status : 0;
+      if (status && status !== 404 && status !== 429 && status < 500) throw err;
+    }
+  }
+  throw last ?? new Error('no text model configured');
+}
+
+async function generateOnce(
+  model: string,
+  prompt: string | { text?: string; inlineData?: { mimeType: string; data: string } }[],
+  apiKey: string,
+  opts: GenerateOptions,
 ): Promise<string> {
   const parts = typeof prompt === 'string' ? [{ text: prompt }] : prompt;
   const generationConfig: Record<string, unknown> = {};
@@ -62,7 +87,7 @@ export async function generateText(
 }
 
 export async function generateJson<T>(
-  model: string,
+  model: string | string[],
   prompt: Parameters<typeof generateText>[1],
   apiKey: string,
   schema: Record<string, unknown>,

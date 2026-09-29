@@ -80,10 +80,14 @@ export interface ToolContext {
 type Args = Record<string, unknown>;
 type Handler = (args: Args, ctx: ToolContext) => Promise<Record<string, unknown>>;
 
+export interface ToolOptions {
+  canTransfer: boolean;
+}
+
 interface Tool {
   decl: FunctionDeclaration;
   handler: Handler;
-  when?: (t: Tenant) => boolean;
+  when?: (t: Tenant, o: ToolOptions) => boolean;
 }
 
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
@@ -181,7 +185,7 @@ const TOOLS: Record<string, Tool> = {
   get_opening_hours: {
     decl: {
       name: 'get_opening_hours',
-      description: 'Opening hours for a date, or for the next seven days if no date is given. Includes booking and takeaway times.',
+      description: 'Opening, last-booking and takeaway times for a date, or the next 7 days.',
       parameters: obj({ date: S('YYYY-MM-DD') }),
     },
     async handler(args, ctx) {
@@ -209,7 +213,7 @@ const TOOLS: Record<string, Tool> = {
   search_knowledge: {
     decl: {
       name: 'search_knowledge',
-      description: "Look up the business's own answers: parking, access, dogs, children, dietary needs, policies, events, anything not in the facts.",
+      description: "The business's own answers to anything not in the facts: parking, access, dogs, children, diets, policies, events.",
       parameters: obj({ question: S("The caller's question, in a few words") }, ['question']),
     },
     async handler(args, ctx) {
@@ -231,14 +235,14 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).booking,
     decl: {
       name: 'check_availability',
-      description: 'Check free times for a table or appointment. Without a time, returns the free times that day. If the time is taken, returns the nearest alternatives.',
+      description: 'Free times for a table or appointment. Without a time, the whole day. If taken, the nearest alternatives.',
       parameters: obj(
         {
-          service: S('Which service (for example "table", or a treatment or haircut name). Optional if there is only one.'),
+          service: S('e.g. "table" or a treatment; optional if only one'),
           date: S('YYYY-MM-DD'),
-          time: S('HH:MM, 24-hour. Optional.'),
-          party_size: I('Number of people (tables). Default 1.'),
-          staff: S('A named staff member, if the caller asked for one.'),
+          time: S('HH:MM'),
+          party_size: I('People; default 1'),
+          staff: S('Named staff member, if asked for'),
         },
         ['date'],
       ),
@@ -267,17 +271,17 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).booking,
     decl: {
       name: 'create_booking',
-      description: 'Make the booking. Only after reading the details back and the caller saying yes. Returns a reference.',
+      description: 'Make the booking, after reading it back and hearing yes. The only way a booking exists. Returns the reference.',
       parameters: obj(
         {
-          service: S('Which service. Optional if there is only one.'),
+          service: S('Optional if only one'),
           date: S('YYYY-MM-DD'),
-          time: S('HH:MM, 24-hour'),
-          party_size: I('Number of people. 1 for an appointment.'),
-          name: S("The caller's name"),
-          phone: S('Contact number, if different from the number they are calling from'),
-          staff: S('A named staff member, if requested'),
-          notes: S('Occasion, high chair, allergy, accessibility: anything the team should know'),
+          time: S('HH:MM'),
+          party_size: I('People; 1 for an appointment'),
+          name: S("Caller's name"),
+          phone: S('Only if not the calling number'),
+          staff: S('Named staff member, if asked for'),
+          notes: S('Occasion, high chair, allergy, access needs'),
         },
         ['date', 'time', 'name'],
       ),
@@ -324,7 +328,7 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).booking,
     decl: {
       name: 'find_bookings',
-      description: "Find the caller's upcoming bookings by reference, phone number or name. With nothing given, uses the number they are calling from.",
+      description: "The caller's upcoming bookings, by reference, phone or name; by default the calling number.",
       parameters: obj({ reference: S('Booking reference'), phone: S('Phone number'), name: S('Name on the booking') }),
     },
     async handler(args, ctx) {
@@ -341,9 +345,9 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).booking,
     decl: {
       name: 'modify_booking',
-      description: 'Move a booking or change the party size or notes. Read the change back and get a yes first.',
+      description: 'Move a booking or change its size or notes, after reading the change back and hearing yes.',
       parameters: obj(
-        { reference: S('Booking reference'), date: S('New date, YYYY-MM-DD'), time: S('New time, HH:MM'), party_size: I('New number of people'), notes: S('New notes') },
+        { reference: S('Booking reference'), date: S('YYYY-MM-DD'), time: S('HH:MM'), party_size: I('People'), notes: S('Notes') },
         ['reference'],
       ),
     },
@@ -385,8 +389,8 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => Boolean(t.profile.menu),
     decl: {
       name: 'get_menu',
-      description: 'The menu. Without a category, lists the categories and dishes by name; with one, gives prices and descriptions.',
-      parameters: obj({ category: S('A category, such as pizzas or desserts') }),
+      description: 'Menu categories and dish names; with a category, prices and descriptions.',
+      parameters: obj({ category: S('e.g. pizzas, desserts') }),
     },
     async handler(args, ctx) {
       const menu = ctx.tenant.profile.menu!;
@@ -413,8 +417,8 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => Boolean(t.profile.menu),
     decl: {
       name: 'get_item_details',
-      description: 'Price, description, options and allergens for one dish. Use for every allergy question, and repeat its allergen wording.',
-      parameters: obj({ item: S('The dish, as the caller said it') }, ['item']),
+      description: 'Price, options and allergens for one dish. Use for every allergy question and repeat its allergen wording.',
+      parameters: obj({ item: S('The dish') }, ['item']),
     },
     async handler(args, ctx) {
       const menu = ctx.tenant.profile.menu!;
@@ -439,13 +443,13 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).ordering,
     decl: {
       name: 'add_to_order',
-      description: 'Add a dish to the order. Options are things like "no basil" or "extra mozzarella". Returns the line and the running total.',
+      description: 'Add a dish. Options such as "no basil" or "large". Returns the running total.',
       parameters: obj(
         {
           item: S('The dish'),
-          quantity: I('How many. Default 1.'),
-          options: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Options for this line, each as the caller said it' },
-          notes: S('A special request for the kitchen that is not an option'),
+          quantity: I('Default 1'),
+          options: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Options as the caller said them' },
+          notes: S('Kitchen note that is not an option'),
         },
         ['item'],
       ),
@@ -476,15 +480,15 @@ const TOOLS: Record<string, Tool> = {
     },
   },
 
-  update_order_line: {
+  change_order_line: {
     when: (t) => capabilities(t.profile).ordering,
     decl: {
-      name: 'update_order_line',
-      description: 'Change the quantity, options or notes on a line already in the order.',
+      name: 'change_order_line',
+      description: 'Change a line already in the order. Quantity 0 removes it.',
       parameters: obj(
         {
-          line: I('Line number from the order'),
-          quantity: I('New quantity'),
+          line: I('Line number'),
+          quantity: I('New quantity; 0 removes the line'),
           options: { type: 'ARRAY', items: { type: 'STRING' }, description: 'The full new set of options' },
           notes: S('New kitchen note'),
         },
@@ -493,15 +497,23 @@ const TOOLS: Record<string, Tool> = {
     },
     async handler(args, ctx) {
       const menu = ctx.tenant.profile.menu!;
-      const line = ctx.state.lines.find((l) => l.line === int(args.line));
-      if (!line) return { updated: false, message: 'No such line.', order: basketSummary(ctx).lines };
+      const i = ctx.state.lines.findIndex((l) => l.line === int(args.line));
+      if (i < 0) return { ok: false, message: 'No such line.', order: basketSummary(ctx).lines };
+      const line = ctx.state.lines[i];
+      const q = int(args.quantity);
+      if (q === 0) {
+        ctx.state.lines.splice(i, 1);
+        changed(ctx);
+        orderAction(ctx, 'Order in progress');
+        const b = basketSummary(ctx);
+        return { removed: describeLine(line), order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal };
+      }
       if (args.options !== undefined) {
-        const item = menu.categories.flatMap((c) => c.items).find((i) => i.key === line.item_key)!;
+        const item = menu.categories.flatMap((c) => c.items).find((x) => x.key === line.item_key)!;
         const mods = resolveModifiers(menu, item, strList(args.options));
-        if (!mods.ok) return { updated: false, question: mods.question };
+        if (!mods.ok) return { ok: false, question: mods.question };
         line.modifiers = mods.value.map((m) => ({ key: m.key, name: m.name, price_pence: m.price_pence }));
       }
-      const q = int(args.quantity);
       if (q !== undefined) line.quantity = Math.min(Math.max(q, 1), 20);
       if (args.notes !== undefined) line.notes = str(args.notes);
       changed(ctx);
@@ -511,35 +523,17 @@ const TOOLS: Record<string, Tool> = {
     },
   },
 
-  remove_from_order: {
-    when: (t) => capabilities(t.profile).ordering,
-    decl: {
-      name: 'remove_from_order',
-      description: 'Take a line out of the order.',
-      parameters: obj({ line: I('Line number from the order') }, ['line']),
-    },
-    async handler(args, ctx) {
-      const i = ctx.state.lines.findIndex((l) => l.line === int(args.line));
-      if (i < 0) return { removed: false, message: 'No such line.', order: basketSummary(ctx).lines };
-      const [gone] = ctx.state.lines.splice(i, 1);
-      changed(ctx);
-      orderAction(ctx, 'Order in progress');
-      const b = basketSummary(ctx);
-      return { removed: describeLine(gone), order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal };
-    },
-  },
-
   set_fulfilment: {
     when: (t) => capabilities(t.profile).ordering,
     decl: {
       name: 'set_fulfilment',
-      description: 'Collection or delivery, and when. Delivery needs the postcode and the first line of the address.',
+      description: 'Collection or delivery, and when. Delivery needs postcode and first line of address.',
       parameters: obj(
         {
-          type: S('"collection" or "delivery"'),
-          time: S('HH:MM today, or "asap"'),
+          type: S('collection or delivery'),
+          time: S('HH:MM today, or asap'),
           postcode: S('Delivery postcode'),
-          address: S('Delivery address, first line'),
+          address: S('First line of address'),
         },
         ['type'],
       ),
@@ -595,7 +589,7 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).ordering,
     decl: {
       name: 'review_order',
-      description: 'The full order and total to read back, exactly as returned, before confirm_order.',
+      description: 'The order and total, to read back word for word before confirm_order.',
       parameters: obj({}),
     },
     async handler(_args, ctx) {
@@ -629,9 +623,9 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).ordering,
     decl: {
       name: 'confirm_order',
-      description: 'Place the order. Only after review_order was read back and the caller said yes. Returns the order number.',
+      description: 'Place the order, after review_order was read back and the caller said yes. The only way an order exists.',
       parameters: obj(
-        { name: S("The caller's name"), phone: S('Contact number if different from the calling number'), allergy_notes: S('Any allergy the kitchen must know about') },
+        { name: S("Caller's name"), phone: S('Only if not the calling number'), allergy_notes: S('Allergy the kitchen must know') },
         ['name'],
       ),
     },
@@ -681,14 +675,14 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).payments,
     decl: {
       name: 'take_demo_payment',
-      description: 'Take a DEMO card payment for the order just placed or a booking deposit. Say the demo card details first. Only demo cards work.',
+      description: 'DEMO card payment for the order or a deposit. Say the demo card first; only demo cards work.',
       parameters: obj(
         {
-          for: S('"order" or "deposit"'),
-          reference: S('Order number or booking reference; defaults to the one from this call'),
-          card_number: S('The card number as the caller read it'),
+          for: S('order or deposit'),
+          reference: S('Defaults to this call'),
+          card_number: S('As the caller read it'),
           expiry: S('MM/YY'),
-          security_code: S('The three digits on the back'),
+          security_code: S('3 digits'),
         },
         ['card_number'],
       ),
@@ -700,8 +694,9 @@ const TOOLS: Record<string, Tool> = {
       let bookingId: string | null = null;
       let target = '';
       if (kind === 'order') {
-        const ref = str(args.reference);
-        const order = ref ? await ctx.repo.getOrder(ctx.tenant.id, ref) : ctx.state.lastOrder;
+        // Always re-read: the copy held in call state does not know it was paid.
+        const ref = str(args.reference) ?? ctx.state.lastOrder?.reference;
+        const order = ref ? await ctx.repo.getOrder(ctx.tenant.id, ref) : null;
         if (!order) return { result: 'no_order', message: 'Place the order with confirm_order before taking payment.' };
         if (order.payment_status === 'paid') return { result: 'already_paid', message: 'That order is already paid.' };
         amount = order.total_pence;
@@ -741,8 +736,8 @@ const TOOLS: Record<string, Tool> = {
   take_message: {
     decl: {
       name: 'take_message',
-      description: 'Take a message for the team, with a name and number for the call back.',
-      parameters: obj({ name: S("Caller's name"), phone: S('Number to call back'), message: S('The message, in a sentence or two') }, ['name', 'message']),
+      description: 'A message for the team, with a name and call-back number.',
+      parameters: obj({ name: S("Caller's name"), phone: S('Call-back number'), message: S('One or two sentences') }, ['name', 'message']),
     },
     async handler(args, ctx) {
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
@@ -757,6 +752,7 @@ const TOOLS: Record<string, Tool> = {
   },
 
   transfer_to_staff: {
+    when: (t, o) => o.canTransfer && Boolean(t.profile.handoff_number),
     decl: {
       name: 'transfer_to_staff',
       description: 'Put the caller through to a member of the team.',
@@ -777,8 +773,8 @@ const TOOLS: Record<string, Tool> = {
   end_call: {
     decl: {
       name: 'end_call',
-      description: 'Hang up. Only after saying goodbye.',
-      parameters: obj({ outcome: S('booked, ordered, answered, message, or other') }),
+      description: 'Hang up, after saying goodbye.',
+      parameters: obj({ outcome: S('booked, ordered, answered, message or other') }),
     },
     async handler(args, ctx) {
       ctx.state.ending = true;
@@ -788,15 +784,15 @@ const TOOLS: Record<string, Tool> = {
   },
 };
 
-export function toolDeclarations(t: Tenant): FunctionDeclaration[] {
+export function toolDeclarations(t: Tenant, o: ToolOptions = { canTransfer: false }): FunctionDeclaration[] {
   return Object.values(TOOLS)
-    .filter((x) => !x.when || x.when(t))
+    .filter((x) => !x.when || x.when(t, o))
     .map((x) => x.decl);
 }
 
 export async function runTool(name: string, args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const tool = TOOLS[name];
-  if (!tool || (tool.when && !tool.when(ctx.tenant))) return { error: `No tool called ${name}.` };
+  if (!tool || (tool.when && !tool.when(ctx.tenant, { canTransfer: Boolean(ctx.telephony) }))) return { error: `No tool called ${name}.` };
   try {
     return await tool.handler(args ?? {}, ctx);
   } catch (err) {
