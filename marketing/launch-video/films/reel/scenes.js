@@ -447,11 +447,11 @@ function buildPhone(s) {
     const eg = bell(t, tEta, tEta + .08, tEta + 1.2)
     eta.style.boxShadow = `0 0 ${(30 + 50 * eg).toFixed(0)}px rgba(${AMB},${(.15 + .35 * eg).toFixed(2)})`
     eta.style.transform = `scale(${(1 + .04 * bell(t, tEta, tEta + .06, tEta + .35)).toFixed(4)})`
-    // the camera, and up and away into grey
+    // the camera: in out of focus as the phone blurs away, then up and away into grey
     const mb = shoot(s, cam, t)
-    const up = P(t, t1 - .45, t1 + .05, E.in2)
-    lens(s, { mbX: mb.mbX, mbY: mb.mbY, blur: up * 16, o: 1 - up * .5 })
-    vis(wash, Math.max(1 - P(t, t0, t0 + .42, E.io), P(t, t1 - .4, t1, E.in2)))
+    const up = P(t, t1 - .45, t1 + .05, E.in2), come = 1 - P(t, t0, t0 + .32, E.out)
+    lens(s, { mbX: mb.mbX, mbY: mb.mbY, blur: up * 16 + come * 22, o: 1 - up * .5 })
+    vis(wash, P(t, t1 - .4, t1, E.in2))
   }
 }
 
