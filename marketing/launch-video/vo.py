@@ -748,7 +748,7 @@ def main():
         t = end
         print(f"{sc['id']:7s} {start:6.2f} → {end:6.2f}  ({end - start:5.2f}s)  vo ends {cursor:6.2f}")
 
-    timeline = dict(film=FILM_ID, title=F.TITLE, cover=F.COVER, bpm=BPM, beat=BEAT, fps=60, duration=round(scenes[-1]["end"], 4),
+    timeline = dict(film=FILM_ID, title=F.TITLE, cover=F.COVER, bpm=BPM, beat=BEAT, grid_beat=60 / getattr(F, "GRID_BPM", BPM), fps=60, duration=round(scenes[-1]["end"], 4),
                     voice=("none" if not voiced else
                            f"gemini:{'+'.join(sorted(_used, key=lambda m: m != GEMINI_MODEL)) or GEMINI_MODEL}:{GEMINI_VOICE}"
                            if PROVIDER == "gemini" else VOICE),

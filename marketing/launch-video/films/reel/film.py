@@ -11,8 +11,12 @@ SCRIPT.md; the animation is scenes.js; the music is audio.py's "reel".
 TITLE = "n.abl · AI that works"
 COVER = 11.9          # seconds: the frame the cover images are taken from
 
-BPM = 124             # a house tempo, a little under the reference's 132.5
+BPM = 124             # the music's tempo: every cut lands on its beat
+GRID_BPM = 124        # the tempo the reel was choreographed on
 BEAT = 60 / BPM
+# a scene of k beats at GRID_BPM, as whole beats at BPM, so the reel keeps its
+# length and pace at any tempo (scenes.js's q() does the same inside a scene)
+n = lambda k, least=2: max(least, round(k * BPM / GRID_BPM))
 
 # No voice: every shot is a fixed number of beats. The lines stay empty.
 VOICE_PROVIDER = "none"
@@ -22,13 +26,13 @@ SAY = {"n.abl": "enable"}
 # beats: the shot's length on the grid. The drop lands 3 beats in, as the
 # camera swings round to the agent's answer.
 SCENES = [
-    dict(id="chat",  beats=9, lines=[]),   # a voice note asks for Friday at 2; the agent answers and books it
-    dict(id="book",  beats=7, lines=[]),   # the booking becomes a point of light, then the booking, deposit and reminder
-    dict(id="call",  beats=10, lines=[]),   # the co-pilot drops into a call, transcribes, translates, flags an objection
-    dict(id="coach", beats=7, lines=[]),   # pull out to its sidebar: the playbook and what to say next
-    dict(id="docs",  beats=13, lines=[]),  # any document riffled, scanned, broken into what matters and scored
-    dict(id="cta",   beats=3, lines=[]),   # the button, pressed on the beat
-    dict(id="logo",  beats=7, lines=[]),   # the wordmark blurs in; the address; out
+    dict(id="chat",  beats=n(9),    lines=[]),   # a voice note asks for Friday at 2; the agent answers and books it
+    dict(id="book",  beats=n(7),    lines=[]),   # the booking becomes a point of light, then the booking, deposit and reminder
+    dict(id="call",  beats=n(10),   lines=[]),   # the co-pilot drops into a call, transcribes, translates, flags an objection
+    dict(id="coach", beats=n(7),    lines=[]),   # pull out to its sidebar: the playbook and what to say next
+    dict(id="docs",  beats=n(13),   lines=[]),   # any document riffled, scanned, broken into what matters and scored
+    dict(id="cta",   beats=n(3, 3), lines=[]),   # the button, pressed on the beat
+    dict(id="logo",  beats=n(7),    lines=[]),   # the wordmark blurs in; the address; out
 ]
 
 MUSIC = "reel"

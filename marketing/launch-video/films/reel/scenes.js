@@ -32,6 +32,11 @@
 import { E, LAND, M, P, TL, WORDMARK, bell, cue, h, icon, lerp, offs, put, rise, rng, scene, sceneById, spark, vis, words } from '../../film/stage.js'
 
 const B = TL.beat
+// q(k): k beats of the grid the reel was choreographed on (GRID_BPM in
+// film.py) as the nearest half-beat of the track's own tempo, so every hit
+// stays on the music whatever its tempo
+const G = TL.grid_beat || B
+const q = k => Math.round(k * G / B * 2) / 2 * B
 const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87', CORAL = '240,122,106'
 const Z0 = M({ land: 1, sq: 1, tall: 1.1, port: 1.22 })
 
@@ -141,7 +146,7 @@ function centreOf(e, box, bx, by) {
 function buildReception(s) {
   widen(s)
   const [chat, book] = s.cuts
-  const t0 = s.t0, tB = book.start, t1 = s.t1, b = k => t0 + k * B
+  const t0 = s.t0, tB = book.start, t1 = s.t1, b = k => t0 + q(k)
   const tDrop = b(3)
   const specks = bokeh(s, 3, { cx: 200 })
   const panel = h('div', 'r-panel', s.cam, `
@@ -176,7 +181,7 @@ function buildReception(s) {
 
   const tVoice = t0 + .15, tPlay = [t0 + .4, tDrop - .1], tTx = t0 + .82
   const tDots = tDrop + .02, tAi = tDrop + .45, tYes = b(6), tCard = b(7.5), tFlare = tB - .12
-  const tP2 = tB + 2 * B, tP3 = tB + 3.5 * B, tBack = tB + 5 * B
+  const tP2 = tB + q(2), tP3 = tB + q(3.5), tBack = tB + q(5)
   // sound: what each moment is, heard through water
   cue('riser', tDrop, { d: 1.4 })
   cue('m_drop', tDrop)
@@ -279,7 +284,7 @@ function buildReception(s) {
 function buildCall(s) {
   widen(s)
   const [call, coach] = s.cuts
-  const t0 = s.t0, t1 = s.t1, b = k => t0 + k * B, tC = coach.start
+  const t0 = s.t0, t1 = s.t1, b = k => t0 + q(k), tC = coach.start
   const L = M({
     land: { win: [0, -70], cap: [0, 200], flag: [0, 292], side: [780, -10], badge: [0, -318] },
     def: { win: [0, -120], cap: [0, 160], flag: [0, 250], side: [0, 700], badge: [0, -368] },
@@ -315,7 +320,7 @@ function buildCall(s) {
   const say = side.querySelector('.say')
   const sayW = words(say, '“Most teams start with a 30-day pilot, so you only pay once it’s working.”')
   const tDot = b(2), tCap = b(3), tGl = b(5), tSwap = tGl + .2, tObj = b(7), tOut = tC
-  const tBl = [tOut + .2, tOut + .5, tOut + 2 * B, tOut + 2 * B + .15, tOut + 5 * B]
+  const tBl = [tOut + .2, tOut + .5, tOut + q(2), tOut + q(2) + .15, tOut + q(5)]
   const tSay = tBl[3] + .12
 
   cue('whoosh', t0 + .05, { d: .45, v: .45 })              // out of the grey
@@ -430,7 +435,7 @@ function buildCall(s) {
    ============================================================ */
 function buildDocs(s) {
   widen(s)
-  const t0 = s.t0, t1 = s.t1, b = k => t0 + k * B
+  const t0 = s.t0, t1 = s.t1, b = k => t0 + q(k)
   const L = M({
     land: { doc: [0, 0], tags: 470, pills: [-400, 0, 400], py: 190, ds: 1 },
     def: { doc: [-130, 0], tags: 250, pills: [-310, 0, 310], py: 190, ds: .92 },
@@ -566,7 +571,7 @@ function buildDocs(s) {
    ============================================================ */
 function buildCta(s) {
   widen(s)
-  const t0 = s.t0, t1 = s.t1, tPress = t0 + 2.5 * B
+  const t0 = s.t0, t1 = s.t1, tPress = t1 - q(.5)
   const specks = bokeh(s, 12)
   const btn = h('div', 'r-btn', s.cam, `<div class="sheen"></div><span style="width:34px;height:34px;display:inline-flex">${spark(34)}</span><span>Put AI to work</span>`)
   btn.style.width = M({ land: '760px', def: '720px' })
@@ -602,7 +607,7 @@ function buildLogo(s) {
   const mark = h('div', 'r-mark', s.cam, WORDMARK()); mark.firstChild.setAttribute('width', MW)
   const tag = h('div', 'r-tagl', s.cam, 'AI, built into your business.')
   const url = h('div', 'r-url', s.cam, 'Book a free discovery call · <b>nabl.agency</b>')
-  const tTag = t0 + B, tUrl = t0 + 4 * B
+  const tTag = t0 + q(1), tUrl = t0 + q(4)
   const cam = path([[t0, 0, -20, 220, 0, -10, 0, 1], [tUrl, 0, -20, 0, 0, 0, 0, 1], [t1, 0, 0, -80, 0, 4, 0, 1]])
   cue('impact', t0 + .01, { v: .7 })                       // the name lands
   cue('shimmer', t0 + .03, { d: 2.4, v: .4 })
@@ -650,7 +655,7 @@ export default function setup() {
   scene(['chat', 'logo'], buildChapters)
   const sc = sceneById
   // [time, ax, ay, aStrength, cx, cy, cStrength, grid]: amber low in the middle, the light from above
-  const tDrop = sc('chat').start + 3 * B
+  const tDrop = sc('chat').start + q(3)
   const ground = [
     [0, .5, .6, .15, .5, -.08, .6, 0],
     [tDrop, .5, .6, .3, .5, -.06, .9, 0],
