@@ -1,0 +1,10 @@
+{
+ "file": "moody-2.wav",
+ "model": "stabilityai/stable-audio-open-1.0",
+ "prompt": "moody minimal electronic, 95 BPM, D minor, hypnotic muted synth arpeggio, warm analog pads, soft deep kick, brooding and elegant, sleek technology commercial underscore, instrumental",
+ "negative": "low quality, distorted, vocals, singing, speech, cheerful, happy, jolly, chiptune, 8-bit, kids, ukulele, whistling",
+ "seconds": 30.0,
+ "steps": 60,
+ "cfg": 7.0,
+ "seed": 2
+}
