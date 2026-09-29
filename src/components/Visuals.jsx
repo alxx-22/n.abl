@@ -231,6 +231,82 @@ export function CategoryGlyph({ kind }) {
     )
   }
 
+  /* The AI solutions. Same frame, same stroke, same single accent. */
+
+  // Voice receptionist — a handset, and the call it is answering.
+  if (kind === 'voice') {
+    return (
+      <svg {...common}>
+        <path d="M20 12h8l3 10-5 3c2 5 6 9 11 11l3-5 10 3v8c0 2-2 4-4 4C28 46 14 32 14 16c0-2 2-4 4-4z" />
+        <path d="M40 12a12 12 0 0 1 12 12" strokeOpacity=".45" />
+        <path d="M40 19a5 5 0 0 1 5 5" strokeOpacity=".55" />
+        <circle cx="52" cy="12" r="2.6" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  // Chat agent — two messages, the answer the one that glows.
+  if (kind === 'chat') {
+    return (
+      <svg {...common}>
+        <path d="M10 14h26a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H20l-8 6v-6h-2" strokeOpacity=".45" />
+        <path d="M54 30H30a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h14l8 6v-6h2" />
+        <circle cx="40" cy="39" r="2.6" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  // Document AI — a page with a line of light passing down it.
+  if (kind === 'document') {
+    return (
+      <svg {...common}>
+        <path d="M16 8h20l10 10v34a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" strokeOpacity=".45" />
+        <path d="M36 8v10h10" strokeOpacity=".45" />
+        <path d="M18 24h12M18 44h16" strokeOpacity=".55" />
+        <path d="M6 34h52" />
+        <circle cx="52" cy="34" r="2.6" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  // Back-office agent — a list worked through, one tick waiting on you.
+  if (kind === 'agent') {
+    return (
+      <svg {...common}>
+        <path d="M12 16l3 3 6-6M12 32l3 3 6-6" />
+        <path d="M28 16h24M28 32h24M28 48h16" strokeOpacity=".55" />
+        <circle cx="16" cy="48" r="5" strokeOpacity=".45" />
+        <circle cx="16" cy="48" r="2.4" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  // Sales co-pilot — two voices, and the prompt between them.
+  if (kind === 'copilot') {
+    return (
+      <svg {...common}>
+        <circle cx="18" cy="22" r="7" strokeOpacity=".55" />
+        <circle cx="46" cy="22" r="7" strokeOpacity=".55" />
+        <path d="M8 44a10 10 0 0 1 20 0M36 44a10 10 0 0 1 20 0" strokeOpacity=".45" />
+        <path d="M32 30c.5 4 2.7 6.2 6.7 6.7-4 .5-6.2 2.7-6.7 6.7-.5-4-2.7-6.2-6.7-6.7 4-.5 6.2-2.7 6.7-6.7z"
+          fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  // Built for you — parts joined into one process, one of them ours.
+  if (kind === 'bespoke') {
+    return (
+      <svg {...common}>
+        <rect x="8" y="26" width="12" height="12" rx="3" strokeOpacity=".55" />
+        <rect x="44" y="12" width="12" height="12" rx="3" strokeOpacity=".55" />
+        <rect x="44" y="40" width="12" height="12" rx="3" strokeOpacity=".55" />
+        <path d="M20 32h8M36 32c4 0 4-14 8-14M36 32c4 0 4 14 8 14" strokeOpacity=".45" />
+        <circle cx="32" cy="32" r="4" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
   // Fix something — a spanner, reduced to a ring and a shaft. No card uses
   // this now, but it is the fallback for an unrecognised kind, and the one
   // to come back to if the repair card ever returns.

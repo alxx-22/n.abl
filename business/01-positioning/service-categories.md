@@ -1,5 +1,9 @@
 # Service categories
 
+> **Superseded in part, 29 September 2026.** n.abl is now an AI implementation
+> business with a monthly retainer, and credits and "no retainers" are gone.
+> Where this file disagrees, [`01-positioning/ai-implementation-2026-09.md`](ai-implementation-2026-09.md) wins.
+
 The six problem-led categories, and what n.abl actually builds for each.
 
 This replaces the old three-pillar structure of Innovation / Automation /

@@ -41,29 +41,29 @@ export default function Hero({ onBook }) {
       <div className="hero__glow" aria-hidden="true" />
       <NodeField />
       <div className="shell hero__inner" ref={heroRef}>
-        {/* The descriptor is the eyebrow, not the headline. "Technology
-            implementation partner" is accurate and nobody remembers it;
-            the promise is what they leave with. */}
-        <span className="eyebrow hero__eyebrow">Technology implementation for small businesses</span>
+        {/* The descriptor is the eyebrow, not the headline. It names the
+            category, so a visitor knows what kind of business this is in the
+            first second; the promise is what they leave with. The headline
+            is the reel's end card, so the film and the site say the same
+            thing in the same words. */}
+        <span className="eyebrow hero__eyebrow">AI implementation for small and mid-sized businesses</span>
         <h1 className="hero__title">
-          We make your business work smarter<span className="dot" />
+          AI, built into your business<span className="dot" />
         </h1>
         <p className="hero__sub">
-          We listen to what isn&rsquo;t working, understand how your business actually
-          operates, and build the right improvement — whether that&rsquo;s automation,
-          analytics, software, a better website, AI or training.
+          We build AI around the way your business already works. It answers the calls and
+          messages, reads the paperwork and handles the admin, and we keep it running and
+          improving, month after month.
         </p>
         <div className="hero__cta">
           <button className="btn btn--primary" onClick={onBook}>
             Book a free discovery call
           </button>
-          <a className="btn btn--ghost" href="#why-nabl" onClick={() => track('cta_secondary')}>See how we help</a>
+          <a className="btn btn--ghost" href="#see-it-work" onClick={() => track('cta_secondary')}>See it work</a>
         </div>
-        {/* Stronger differentiator than any technology list: it tells an
-            owner these people understand business, not just software. */}
-        <p className="hero__note">No retainer. No technology for technology&rsquo;s sake.</p>
+        <p className="hero__note">Built around you. Looked after every month.</p>
       </div>
-      <a href="#pillars" className="hero__scroll" aria-label="Scroll to content">
+      <a href="#see-it-work" className="hero__scroll" aria-label="Scroll to content">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M6 9l6 6 6-6" />
         </svg>

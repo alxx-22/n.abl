@@ -62,6 +62,12 @@ const ORIGIN = 'https://nabl.agency'
 
 const ROUTES = [
   {
+    path: 'services',
+    title: 'Other services: automation, data and web — n.abl',
+    description:
+      'Not everything needs AI. n.abl also builds automation, data and analytics, and websites that do the work, for small and mid-sized UK businesses.',
+  },
+  {
     path: 'privacy',
     title: 'Privacy Policy — n.abl',
     description:
@@ -71,7 +77,7 @@ const ROUTES = [
     path: 'terms',
     title: 'Terms of Service — n.abl',
     description:
-      'The terms on which n.abl provides technology implementation services to small businesses: engagement, quotes, ownership, confidentiality and liability.',
+      'The terms on which n.abl provides AI implementation and related services to businesses: engagement, quotes, ownership, confidentiality and liability.',
   },
   {
     path: 'cookies',
@@ -182,7 +188,7 @@ async function run() {
   console.log(`  / → dist/index.html  (${homeMarkup.length.toLocaleString()} chars rendered)`)
 
   console.log(GSC
-    ? '  google-site-verification: present on all four shells'
+    ? '  google-site-verification: present on every shell'
     : '  google-site-verification: not set (GSC_VERIFICATION) — Search Console still unverified')
 }
 

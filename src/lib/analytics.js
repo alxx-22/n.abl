@@ -98,8 +98,8 @@ export function track(name, section = null) {
    Depth is by document order rather than by scroll position, so it
    stays correct if the section order changes again. */
 const ORDER = [
-  'hero', 'pillars', 'what-we-do', 'why-nabl', 'how-we-work',
-  'toolkit', 'cases', 'pricing', 'credits', 'about', 'contact',
+  'hero', 'see-it-work', 'what-we-do', 'how-we-work',
+  'cases', 'pricing', 'other-services', 'about', 'contact',
 ]
 
 export function observeDepth() {

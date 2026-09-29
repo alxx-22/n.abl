@@ -8,14 +8,12 @@ import { JourneyRail } from '../components/Journey.jsx'
 import { track, observeDepth } from '../lib/analytics.js'
 
 import Hero from '../components/sections/Hero.jsx'
-import Pillars from '../components/sections/Pillars.jsx'
-import Problems from '../components/sections/Problems.jsx'
-import HowWeHelp from '../components/sections/HowWeHelp.jsx'
-import Capabilities from '../components/sections/Capabilities.jsx'
+import FilmSection from '../components/sections/FilmSection.jsx'
+import Solutions from '../components/sections/Solutions.jsx'
 import Process from '../components/sections/Process.jsx'
-import Pricing from '../components/sections/Pricing.jsx'
-import Credits from '../components/sections/Credits.jsx'
 import Examples from '../components/sections/Examples.jsx'
+import Pricing from '../components/sections/Pricing.jsx'
+import OtherServices from '../components/sections/OtherServices.jsx'
 import About from '../components/sections/About.jsx'
 import Contact from '../components/sections/Contact.jsx'
 
@@ -74,6 +72,9 @@ export default function Home() {
   // Deepest section reached, sent once when the visitor leaves.
   useEffect(() => observeDepth(), [])
 
+  // Coming back from another page, the tab should say this page again.
+  useEffect(() => { document.title = 'n.abl — AI implementation for small and mid-sized businesses' }, [])
+
   return (
     <div className="grain">
       <Intro />
@@ -83,14 +84,12 @@ export default function Home() {
 
       <main>
         <Hero onBook={() => book('cta_primary')} />
-        <Pillars />
-        <Problems />
-        <HowWeHelp />
+        <FilmSection />
+        <Solutions />
         <Process />
-        <Capabilities />
         <Examples />
         <Pricing />
-        <Credits />
+        <OtherServices />
         <About />
         <Contact onBook={() => book('cta_final')} />
       </main>

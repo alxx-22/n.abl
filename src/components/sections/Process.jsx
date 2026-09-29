@@ -2,41 +2,40 @@ import { EdgeCard, Reveal } from '../ui/index.jsx'
 import { Chapter } from '../Journey.jsx'
 
 /* ============================================================
-   05 — HOW WE WORK
+   04 — HOW WE WORK
 
-   Five steps, not three. The old set started at "Understand", which
-   quietly assumed the customer had already explained the problem and
-   made the first move ours. Listening is the first step, and it is the
-   one the whole positioning rests on.
-
-   The economic measurement lives inside Recommend, phrased as
-   something worked out together and shown — never as a gate the
-   customer's problem has to pass before we will take it seriously.
+   Listening is still the first step: the positioning rests on it, and it
+   is the one that means the visitor never has to arrive knowing what
+   they need. What changed is the end. The old last step was "hand over,
+   then get out of the way"; AI is not something you hand over and leave.
+   Models change, the business changes, and the work should keep getting
+   better, so the last step is the monthly partnership the pricing
+   section below describes.
    ============================================================ */
 export const STEPS = [
   { n: '01', title: 'Listen',
-    body: "Tell us what's getting in the way." },
-  { n: '02', title: 'Understand',
-    body: 'We look at how the work actually happens today, and the systems around it.' },
-  { n: '03', title: 'Recommend',
-    body: 'We explain what we think would help, what it involves, and what it should be worth to you. We show our working.' },
-  { n: '04', title: 'Build',
-    body: 'We choose whatever technology solves it properly, at the price agreed before we start.' },
-  { n: '05', title: 'Hand over',
-    body: "You own it. We train your team, and we're there when you need us." },
+    body: 'Tell us where the time goes, and what slips through the cracks.' },
+  { n: '02', title: 'Map',
+    body: 'We look at how the work happens today: the calls, the inbox, the paperwork and the systems around them.' },
+  { n: '03', title: 'Build around you',
+    body: 'We design the AI to fit your process and your tone, test it on your real cases, and agree the checks it has to pass.' },
+  { n: '04', title: 'Launch',
+    body: 'It goes live alongside your team, with a person in the loop until you trust it.' },
+  { n: '05', title: 'Run and improve',
+    body: 'Every month we look after it, tune it and add to it. You get a report, and time with us.' },
 ]
 
 export default function Process() {
   return (
-    <section id="how-we-work" className="section">
+    <section id="how-we-work" className="section section--alt">
       <div className="shell">
         <Chapter index={3}>How we work</Chapter>
         <Reveal delay={0.06}>
-          <h2 className="section__title">Five steps, and then we get out of the way<span className="dot" /></h2>
+          <h2 className="section__title">Built around you, then kept running<span className="dot" /></h2>
         </Reveal>
         <Reveal delay={0.12}>
           <p className="section__sub prose">
-            You never have to arrive knowing what you need. That part is our job.
+            You never have to arrive knowing what you need, or what AI can do. That part is our job.
           </p>
         </Reveal>
 

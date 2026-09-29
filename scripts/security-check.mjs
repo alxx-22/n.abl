@@ -126,21 +126,30 @@ console.log('\nCLIENT-SIDE HYGIENE')
      string or the network anywhere in them, and React has no way to
      hand a subtree to code that drives it by attribute per frame.
      Clearing to '' is always fine. Anything else, anywhere else, is a
-     finding — including a second scene host added later. */
-  const SCENE_HOST = join('src', 'components', 'scenes', 'Scene.jsx')
+     finding — including a second scene host added later.
+
+     The film stage is the second, added deliberately: the scroll film
+     (src/components/film) is the launch reel run live, and its pieces
+     are markup strings composed from literals in that folder, written by
+     the one h() helper in stage.js. Same reasoning, same limits: nothing
+     from a user, a URL or the network reaches it. */
+  const SCENE_HOSTS = [
+    join('src', 'components', 'scenes', 'Scene.jsx'),
+    join('src', 'components', 'film', 'stage.js'),
+  ]
   /* Read the assigned token rather than a negative lookahead: `\s*` hands a
      space back on backtracking, so `=\s*(?!'')` matches the very `= ''`
      it is written to allow. */
   const writesHtml = files.filter((f) => {
-    if (f.endsWith(SCENE_HOST)) return false
+    if (SCENE_HOSTS.some((h) => f.endsWith(h))) return false
     const src = readFileSync(f, 'utf8')
     for (const m of src.matchAll(/\.innerHTML\s*=\s*(\S+)/g)) {
       if (!/^(''|""|``)/.test(m[1])) return true
     }
     return false
   })
-  if (writesHtml.length === 0) ok('innerHTML written only by the scene host')
-  else bad('innerHTML written only by the scene host', writesHtml.join(', '))
+  if (writesHtml.length === 0) ok('innerHTML written only by the scene hosts')
+  else bad('innerHTML written only by the scene hosts', writesHtml.join(', '))
 
   // The access key must never be written to durable storage.
   // Comments are stripped first — the file documents that it avoids

@@ -10,10 +10,25 @@ const Portal = lazy(() => import('./pages/Portal.jsx'))
 const Team = lazy(() => import('./pages/Team.jsx'))
 const Crm = lazy(() => import('./pages/Crm.jsx'))
 const Legal = lazy(() => import('./pages/Legal.jsx'))
+const Services = lazy(() => import('./pages/Services.jsx'))
 
+/* A new page starts at the top, unless the link named a section of it:
+   /#pricing from the services page lands on the pricing section. The
+   section may not exist on the first frame, since the page can still be
+   loading, so it is looked for briefly before giving up. */
 function ScrollToTop() {
-  const { pathname } = useLocation()
-  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  const { pathname, hash } = useLocation()
+  useEffect(() => {
+    if (!hash) { window.scrollTo(0, 0); return }
+    let tries = 0, timer = 0
+    const go = () => {
+      const el = document.getElementById(decodeURIComponent(hash.slice(1)))
+      if (el) { el.scrollIntoView(); return }
+      if (tries++ < 20) timer = setTimeout(go, 50)
+    }
+    go()
+    return () => clearTimeout(timer)
+  }, [pathname, hash])
   return null
 }
 
@@ -40,6 +55,7 @@ export default function App() {
               path still resolves so any saved link keeps working. */}
           <Route path="/crm" element={<Crm />} />
           <Route path="/sales-intelligence" element={<Navigate to="/crm" replace />} />
+          <Route path="/services" element={<Services />} />
           <Route path="/privacy" element={<Legal doc="privacy" />} />
           <Route path="/terms" element={<Legal doc="terms" />} />
           <Route path="/cookies" element={<Legal doc="cookies" />} />

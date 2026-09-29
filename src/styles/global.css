@@ -1,6 +1,7 @@
 @import './tokens.css';
 @import './components.css';
 @import './scenes.css';
+@import './film.css';
 
 /* ============================================================
    RESET
@@ -97,6 +98,12 @@ p { text-wrap: pretty; }
   vertical-align: baseline;
   margin-left: 0.08em;
   box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.45);
+}
+
+/* Read by a screen reader and a crawler, not drawn. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
 }
 
 .muted { color: var(--cream-400); }
@@ -334,26 +341,33 @@ select.input { appearance: none; cursor: pointer;
    reverse into the direction you are scrolling. */
 .reveal {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(22px) scale(1.015);
+  filter: blur(10px);
   transition:
     opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
+    transform var(--dur-slow) var(--ease-out),
+    filter var(--dur-slow) var(--ease-out);
   transition-delay: 0s;
-  will-change: opacity, transform;
+  will-change: opacity, transform, filter;
 }
+/* The launch film's entrance, carried onto the page: everything arrives
+   through a blur, soft and a touch large, settling to sharp as it rises.
+   The filter is dropped to none once in, so a revealed card is not a
+   filtered layer and nothing inside it is re-rasterised on hover. */
 .reveal.in {
   opacity: 1;
   transform: none;
+  filter: none;
   transition-delay: var(--reveal-delay, 0s);
 }
-/* Left past the top: lift away upward. */
-.reveal.out-up   { opacity: 0; transform: translateY(-14px); }
+/* Left past the top: lift away upward, softening as it goes. */
+.reveal.out-up   { opacity: 0; transform: translateY(-16px) scale(1.01); filter: blur(8px); }
 /* Left past the bottom, or not yet reached: waiting below. */
-.reveal.out-down { opacity: 0; transform: translateY(18px); }
+.reveal.out-down { opacity: 0; transform: translateY(22px) scale(1.015); filter: blur(10px); }
 
 @media (prefers-reduced-motion: reduce) {
   .reveal, .reveal.out-up, .reveal.out-down {
-    opacity: 1 !important; transform: none !important;
+    opacity: 1 !important; transform: none !important; filter: none !important;
   }
   .edge--rotate::before { animation: none !important; }
   .grain::before { display: none; }

@@ -42,12 +42,13 @@
 .foot strong{color:var(--cream-200);font-weight:500}
 .foot ul{margin-top:.8rem;padding-left:1.1rem;display:flex;flex-direction:column;gap:.5rem}
 .foot li::marker{color:var(--accent-400)}
-@media (prefers-reduced-motion:reduce){ .reveal{opacity:1!important;transform:none!important} }
+@media (prefers-reduced-motion:reduce){ .reveal{opacity:1!important;transform:none!important;filter:none!important} }
 
-/* --- components.css / global.css: the card grid --- */
-.grid{display:grid;gap:var(--s-4);grid-template-columns:1fr}
-@media (min-width:780px){.grid--2{grid-template-columns:repeat(2,1fr)}}
-@media (min-width:1180px){.grid--3{grid-template-columns:repeat(3,1fr)}}
+/* --- components.css / global.css: the card grid ---
+   The .grid column rules themselves live in components.css only. A copy
+   here loaded after it and put every .grid back to one column, which
+   overrode .grid--steps: the five process steps stacked in a single
+   column on a desktop. */
 .card-pad{padding:var(--s-5)}
 .grid > .reveal{display:flex}
 .grid > .reveal > .edge{flex:1}
@@ -94,7 +95,7 @@
    window is the thing worth the width. */
 .problem__scene{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;
   background:var(--bg);clip-path:inset(0 calc((1 - var(--wipe)) * 100%) 0 0)}
-.problem__stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.problem__stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .problem__stage svg{display:block;width:100%;height:auto;max-height:100%}
 .problem__tag{display:flex;align-items:center;gap:var(--s-3);
   padding:.5rem var(--s-4) .6rem;border-top:1px solid var(--line-faint)}
@@ -113,3 +114,9 @@
 .problem.spot:hover::after{opacity:calc(1 - var(--wipe))}
 .problem:focus-visible{outline:2px solid var(--accent-400);outline-offset:4px}
 @media (prefers-reduced-motion:reduce){ .problem__edge{display:none} }
+
+/* The solution cards' scenes are small film stages (src/components/film/cards.js),
+   fitted by their own transform; the seventh card spans the row. */
+.grid__wide{grid-column:1/-1}
+.problem--wide .problem__face{max-width:70ch}
+@media (min-width:1180px){ .problem--wide{min-height:18rem} }

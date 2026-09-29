@@ -3,6 +3,34 @@
 What has changed on the public site, newest first. Commit hashes are from this
 repository, so any entry can be read in full with `git show <hash>`.
 
+## 2026-09-29 · AI implementation (on the `dev` branch)
+
+The site repositioned as an AI implementation business for small and mid-sized
+businesses. See `../01-positioning/ai-implementation-2026-09.md` for the
+decision.
+
+- **Hero:** *AI, built into your business.*, the reel's end card.
+- **See it work (new):** the launch reel, run live in the page and scrubbed
+  by scroll (`src/components/film`). The reel's receptionist chapter as it is,
+  plus two new chapters, document AI and a back-office agent. Reduced motion
+  gets the same chapters as cards.
+- **What it can do:** seven solution cards replace the six problem cards. Same
+  hover wipe; what they wipe to is now a small reel-style scene
+  (`src/components/film/cards.js`).
+- **How we work:** ends on *Run and improve*, the monthly partnership.
+- **What it costs:** a fixed setup price, then Essentials, Growth and Partner
+  retainers with no prices shown. Credits, the estimator and the worked example
+  are gone.
+- **Other services (new page, `/services`):** automation, data and analytics,
+  and web, with their original cards, scenes and illustrative examples.
+  Software and training are off the site.
+- **Motion:** every reveal now enters through a blur, as the film's pieces do,
+  and the hero arrives the same way.
+- **Fix:** a duplicated `.grid` rule in `scenes.css` had been stacking the
+  process steps in one column on desktop.
+- **Consistency:** the assistant's knowledge, meta and structured data, the
+  Terms' services line, the welcome-doc prompt and the Worker's prompt.
+
 This covers the marketing site only: the home page, its copy, the nav and
 footer, the legal pages, the shared metadata and the deployment configuration.
 Portal, team space and CRM changes belong to `05-portal`, `06-team-space` and

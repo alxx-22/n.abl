@@ -25,29 +25,29 @@ export const CASES = [
   {
     provenance: 'illustrative',
     client: null,
-    capability: 'Automation',
-    problem: '12 hours of manual reporting every month.',
-    fix: 'An automated reporting pipeline.',
-    result: '10 hours returned to the business every month.',
-    tools: ['Power Automate', 'Excel', 'Power BI'],
+    capability: 'Voice AI',
+    problem: 'Calls go unanswered whenever everyone is with a client.',
+    fix: 'An AI receptionist that answers, books the appointment and takes the deposit.',
+    result: 'Every call answered, and the booking in the diary with the deposit paid.',
+    tools: ['Voice AI', 'Booking system', 'Payments'],
   },
   {
     provenance: 'illustrative',
     client: null,
-    capability: 'Data & Analytics',
-    problem: 'Sales, stock and hours sit in three systems that never agree.',
-    fix: 'One cleaned dataset, and a dashboard built on top of it.',
-    result: 'One set of numbers, current every morning.',
-    tools: ['Power BI', 'SQL'],
+    capability: 'Document AI',
+    problem: 'Supplier invoices are keyed in by hand every Friday.',
+    fix: 'AI reads each invoice, matches it to the order and drafts the entry.',
+    result: 'Friday’s keying becomes a short check of the ones it flagged.',
+    tools: ['Document AI', 'Accounts software'],
   },
   {
     provenance: 'illustrative',
     client: null,
-    capability: 'Web',
-    problem: 'Every booking needs a phone call, always at the worst moment.',
-    fix: 'A booking flow with payment, on the website.',
-    result: 'The straightforward bookings take themselves.',
-    tools: ['Web', 'Payments', 'Calendar sync'],
+    capability: 'AI agent',
+    problem: 'Overdue invoices get chased when someone remembers.',
+    fix: 'An agent that checks the ledger every morning and drafts reminders for approval.',
+    result: 'Nothing overdue slips through, and the owner approves in one tap.',
+    tools: ['AI agent', 'Accounts', 'Email'],
   },
 ]
 
@@ -64,14 +64,14 @@ export default function Examples() {
   return (
     <section id="cases" className="section">
       <div className="shell">
-        <Chapter index={5}>In practice</Chapter>
+        <Chapter index={4}>In practice</Chapter>
         <Reveal delay={0.06}>
-          <h2 className="section__title">From problem to solution<span className="dot" /></h2>
+          <h2 className="section__title">From problem to working AI<span className="dot" /></h2>
         </Reveal>
         {anyIllustrative && (
           <Reveal delay={0.12}>
             <p className="section__sub prose">
-              The kind of problem we take on, and what gets built to solve it. Cards
+              The kind of job we take on, and what gets built to take it off your hands. Cards
               marked <em>illustrative</em> are examples rather than client work — we
               name clients only with written permission, and not before there is
               something worth naming.
