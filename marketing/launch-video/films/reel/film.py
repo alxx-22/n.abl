@@ -9,7 +9,7 @@ SCRIPT.md; the animation is scenes.js; the music is audio.py's "reel".
 """
 
 TITLE = "n.abl · AI that works"
-COVER = 11.9          # seconds: the frame the cover images are taken from
+COVER = 20.9          # seconds: the frame the cover images are taken from (the objection)
 
 BPM = 117.465         # the music's tempo: every cut lands on its beat
 GRID_BPM = 124        # the tempo the reel was choreographed on

@@ -5,6 +5,15 @@ Joins each rendered picture to the mix and writes the captions.
 
   out/<id>/nabl-<id>-<ratio>.mp4  H.264 High, 60 fps, ~3.7 Mbps two-pass, AAC 192k, faststart
   out/<id>/nabl-<id>.srt          sentence captions from the voiceover timings
+
+A film rendered at twice the size (render.mjs --scale 2) is delivered at high
+quality instead, in two sizes from the same frames:
+
+  out/<id>/nabl-<id>-<ratio>.mp4     the usual size, scaled down from the
+                                     large frames (sharper edges and type),
+                                     ~12 Mbps two-pass, AAC 256k
+  out/<id>/nabl-<id>-<ratio>-4k.mp4  the large frames (3840 x 2160 for 16:9),
+                                     ~22 Mbps two-pass, under 100 MB
 """
 
 import json, os, re, subprocess, sys
@@ -13,6 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FILM = sys.argv[sys.argv.index("--film") + 1] if "--film" in sys.argv else "ai"
 BUILD, OUT = os.path.join(HERE, "build", FILM), os.path.join(HERE, "out", FILM)
 RATIOS = ["16x9", "1x1", "4x5", "9x16"]
+SIZE = {"16x9": (1920, 1080), "1x1": (1080, 1080), "4x5": (1080, 1350), "9x16": (1080, 1920)}
 
 
 def ts(t):
@@ -80,7 +90,23 @@ def true_peak(path):
     return float(re.findall(r"Peak:\s+(-?[\d.]+) dBFS", r)[-1])
 
 
-def audio():
+def size(path):
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
+                        "-of", "csv=p=0", path], capture_output=True, text=True).stdout
+    return tuple(int(v) for v in r.strip().split(","))
+
+
+def encode(master, pic, log, rate, peak, level, vf=None):
+    """Two-pass H.264 High at an average rate, peaks capped (k bits/s)."""
+    common = ["-i", master, "-an", *(["-vf", vf] if vf else []), "-c:v", "libx264", "-preset", "slow", "-tune", "film",
+              "-profile:v", "high", "-level", level, "-b:v", f"{rate}k", "-maxrate", f"{peak}k", "-bufsize", f"{peak * 3 // 2}k",
+              "-pix_fmt", "yuv420p", "-g", "120", "-passlogfile", log,
+              "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709"]
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *common, "-pass", "1", "-f", "mp4", os.devnull], check=True)
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *common, "-pass", "2", pic], check=True)
+
+
+def audio(rate=192):
     """The mix as AAC, with its decoded true peak held at or below -1 dBTP.
 
     The encoder overshoots sharp transients by up to about a decibel, and by a
@@ -89,7 +115,7 @@ def audio():
     dst, gain = os.path.join(BUILD, "audio.m4a"), 0.0
     for _ in range(6):
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", os.path.join(BUILD, "mix.wav"),
-                        "-af", f"volume={gain:.2f}dB", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", dst], check=True)
+                        "-af", f"volume={gain:.2f}dB", "-c:a", "aac", "-b:a", f"{rate}k", "-ar", "48000", dst], check=True)
         tp = true_peak(dst)
         if tp <= -1.0:
             break
@@ -107,31 +133,35 @@ def main():
             f.write(captions(tl))
     elif os.path.exists(srt):                  # a film with no voice has no captions
         os.remove(srt)
-    aac = audio()
     only = [a for a in sys.argv[1:] if a in RATIOS]
-    for r in only or RATIOS:
+    todo = [r for r in only or RATIOS if os.path.exists(os.path.join(BUILD, f"video_{r}.mp4"))]
+    for r in set(only or RATIOS) - set(todo):
+        print(f"skip {r}: no picture yet")
+    hq = any(size(os.path.join(BUILD, f"video_{r}.mp4"))[0] > SIZE[r][0] for r in todo)
+    aac = audio(256 if hq else 192)
+    for r in todo:
         master = os.path.join(BUILD, f"video_{r}.mp4")
-        if not os.path.exists(master):
-            print(f"skip {r}: no picture yet")
-            continue
-        # The render is a ~10 Mbps master. The delivered picture is a two-pass
-        # encode at about 3.7 Mbps: side by side it is indistinguishable, it
-        # sits inside every platform's upload spec, and the file stays under
-        # 30 MB. It is only re-encoded when the master is newer.
-        pic = os.path.join(BUILD, f"deliver_{r}.mp4")
-        if not os.path.exists(pic) or os.path.getmtime(pic) < os.path.getmtime(master):
-            log = os.path.join(BUILD, f"pass_{r}")
-            common = ["-i", master, "-an", "-c:v", "libx264", "-preset", "slow", "-tune", "film",
-                      "-profile:v", "high", "-level", "4.2", "-b:v", "3700k", "-maxrate", "6000k", "-bufsize", "9000k",
-                      "-pix_fmt", "yuv420p", "-g", "120", "-passlogfile", log,
-                      "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709"]
-            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *common, "-pass", "1", "-f", "mp4", os.devnull], check=True)
-            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *common, "-pass", "2", pic], check=True)
-        dst = os.path.join(OUT, f"nabl-{FILM}-{r}.mp4")
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", pic, "-i", aac, "-map", "0:v", "-map", "1:a",
-                        "-c", "copy", "-shortest", "-movflags", "+faststart",
-                        "-metadata", f"title={tl['title']}", dst], check=True)
-        print(f"{dst}  {os.path.getsize(dst) / 2**20:.1f} MiB")
+        big = size(master)[0] > SIZE[r][0]
+        # Each delivered picture is only re-encoded when the master is newer.
+        # At the usual size the render is a ~10 Mbps master and the delivered
+        # picture a two-pass encode at about 3.7 Mbps: inside every platform's
+        # upload spec, and under 30 MB. Rendered large, the usual size is
+        # scaled down from the large frames and given about 12 Mbps, and the
+        # large frames are delivered too, at about 22 Mbps.
+        outs = [(f"deliver_{r}.mp4", f"nabl-{FILM}-{r}.mp4",
+                 dict(rate=12000, peak=18000, level="4.2", vf="scale={}:{}:flags=lanczos".format(*SIZE[r])) if big else
+                 dict(rate=3700, peak=6000, level="4.2"))]
+        if big:
+            outs.append((f"deliver_{r}_4k.mp4", f"nabl-{FILM}-{r}-4k.mp4", dict(rate=22000, peak=30000, level="5.2")))
+        for pic, name, enc in outs:
+            pic = os.path.join(BUILD, pic)
+            if not os.path.exists(pic) or os.path.getmtime(pic) < os.path.getmtime(master):
+                encode(master, pic, os.path.join(BUILD, f"pass_{r}"), **enc)
+            dst = os.path.join(OUT, name)
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", pic, "-i", aac, "-map", "0:v", "-map", "1:a",
+                            "-c", "copy", "-shortest", "-movflags", "+faststart",
+                            "-metadata", f"title={tl['title']}", dst], check=True)
+            print(f"{dst}  {os.path.getsize(dst) / 2**20:.1f} MiB")
 
 
 if __name__ == "__main__":

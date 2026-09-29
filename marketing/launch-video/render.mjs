@@ -29,6 +29,9 @@ const args = process.argv.slice(2)
 const opt = k => { const i = args.indexOf('--' + k); return i < 0 ? null : (args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : true) }
 const ratios = (opt('ratio') && opt('ratio') !== 'all') ? String(opt('ratio')).split(',') : Object.keys(RATIOS)
 const FPS = +(opt('fps') || 60)
+// --scale 2 renders every frame at twice the size (3840 x 2160 for 16:9): sharper
+// type and edges, delivered by package.py at both sizes
+const SCALE = +(opt('scale') || 1)
 const FILM = opt('film') && opt('film') !== true ? String(opt('film')) : 'ai'
 BUILD = path.join(HERE, 'build', FILM)
 const LAUNCH = ['--force-color-profile=srgb', '--disable-lcd-text', '--font-render-hinting=none', '--hide-scrollbars']
@@ -45,7 +48,7 @@ function serve() {
 }
 
 async function openPage(browser, port, [w, h]) {
-  const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 })
+  const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: SCALE })
   page.on('pageerror', e => console.error('pageerror', e.message))
   page.on('console', m => { if (m.type() === 'error') console.error('console', m.text()) })
   await page.goto(`http://127.0.0.1:${port}/marketing/launch-video/film/index.html?film=${FILM}&w=${w}&h=${h}`)
@@ -55,7 +58,9 @@ async function openPage(browser, port, [w, h]) {
   const cdp = await page.context().newCDPSession(page)
   return { page, cdp }
 }
-const shot = async (cdp) => Buffer.from((await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true })).data, 'base64')
+// the screenshot is asked for at SCALE: the page's own scale alone does not reach it
+const clip = page => { const v = page.viewportSize(); return { x: 0, y: 0, width: v.width, height: v.height, scale: SCALE } }
+const shot = async (cdp, page) => Buffer.from((await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, ...(SCALE > 1 ? { clip: clip(page) } : {}) })).data, 'base64')
 
 async function main() {
   const srv = await serve()
@@ -75,7 +80,7 @@ async function main() {
         const { page, cdp } = await openPage(browser, port, RATIOS[r])
         for (const t of times) {
           await page.evaluate(t => window.seek(t), t)
-          fs.writeFileSync(path.join(dir, `${t.toFixed(2).padStart(6, '0')}.png`), await shot(cdp))
+          fs.writeFileSync(path.join(dir, `${t.toFixed(2).padStart(6, '0')}.png`), await shot(cdp, page))
         }
         await page.close()
         console.log(`stills ${r}: ${times.length}`)
@@ -89,7 +94,7 @@ async function main() {
       for (const r of ratios) {
         const { page, cdp } = await openPage(browser, port, RATIOS[r])
         await page.evaluate(t => window.seek(t), at)
-        const jpg = (await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 92 })).data
+        const jpg = (await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 92, ...(SCALE > 1 ? { clip: clip(page) } : {}) })).data
         fs.writeFileSync(path.join(out, `nabl-${FILM}-cover-${r}.jpg`), Buffer.from(jpg, 'base64'))
         await page.close()
       }
@@ -113,12 +118,12 @@ async function main() {
           // light temporal grain, seeded per job so a rebuild is identical
           const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-',
             '-vf', `noise=c0s=5:c0f=t+u:c1s=2:c1f=t+u:c2s=2:c2f=t+u:c0_seed=${101 + j}:c1_seed=${201 + j}:c2_seed=${301 + j}`,
-            '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', '-tune', 'film', '-pix_fmt', 'yuv420p', '-g', String(FPS * 2),
+            '-c:v', 'libx264', '-preset', 'medium', '-crf', SCALE > 1 ? '14' : '16', '-tune', 'film', '-pix_fmt', 'yuv420p', '-g', String(FPS * 2),
             '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', out], { stdio: ['pipe', 'inherit', 'inherit'] })
           const done = new Promise((res, rej) => ff.on('close', c => c ? rej(new Error('ffmpeg ' + c)) : res()))
           for (let f = a; f < b; f++) {
             await page.evaluate(t => window.seek(t), f / FPS)
-            const buf = await shot(cdp)
+            const buf = await shot(cdp, page)
             if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r))
             if (j === 0 && (f - a) % 300 === 0) console.log(`  ${r} ${Math.round(100 * (f - a) / (b - a))}%`)
           }
