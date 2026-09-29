@@ -172,6 +172,20 @@
 .crm-contacts { display: grid; gap: var(--s-4); grid-template-columns: 1fr; }
 @media (min-width: 760px) { .crm-contacts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
+/* A number on a contact, and whether it may be called (PhoneLine.jsx). */
+.crm-phone { margin-top: var(--s-4); padding-left: var(--s-3); border-left: 2px solid var(--line-strong); display: grid; gap: var(--s-2); }
+.crm-phone.is-clear { border-left-color: var(--accent-400); }
+.crm-phone.is-blocked { border-left-color: var(--danger); }
+.crm-phone__state { margin: 0; font-size: var(--t-sm); color: var(--cream-300); line-height: 1.5; }
+.crm-phone__state strong { color: var(--cream-100); font-weight: 500; }
+.crm-phone__state span { color: var(--cream-600); font-size: var(--t-xs); }
+.crm-phone__script, .crm-phone__said { margin: 0; font-size: var(--t-xs); color: var(--cream-600); line-height: 1.55; }
+.crm-phone__form { display: grid; gap: var(--s-2) var(--s-3); grid-template-columns: repeat(auto-fill, minmax(min(11rem, 100%), 1fr)); align-items: end; }
+.crm-phone__form label, .crm-phone__form fieldset { display: grid; gap: var(--s-1); min-width: 0; margin: 0; padding: 0; border: 0; font-size: var(--t-xs); color: var(--cream-600); }
+.crm-phone__form fieldset label { display: inline-flex; gap: var(--s-1); align-items: center; color: var(--cream-300); min-height: 28px; }
+.crm-phone__form legend { padding: 0; margin-bottom: var(--s-1); }
+.crm-phone__wide { grid-column: 1 / -1; }
+
 /* ---------- Outreach ---------- */
 .crm-outreach { display: grid; gap: var(--s-4); grid-template-columns: 1fr; align-items: start; }
 @media (min-width: 940px) { .crm-outreach { grid-template-columns: minmax(0, 1fr) 17rem; } }

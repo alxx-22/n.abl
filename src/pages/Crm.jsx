@@ -5,6 +5,7 @@ import PipelineHandoff from '../components/PipelineHandoff.jsx'
 import OutreachLog, { ArgumentLog, ServiceFit, useOutreachLead } from '../components/OutreachLog.jsx'
 import { SplitView, RecordBar, SectionTabs, SectionPanel, usePickScroll, useRibbonHeight } from '../components/ui/Workspace.jsx'
 import LeadGen from '../components/LeadGen.jsx'
+import PhoneLine from '../components/PhoneLine.jsx'
 import {
   Logo, Field, Badge, EdgeCard, Reveal, ConfirmModal, useToast, Loading, Empty,
 } from '../components/ui/index.jsx'
@@ -92,14 +93,14 @@ const TABS = [
 const SUBSCRIBER_TYPES = [
   ['unknown', 'Unknown — cannot be marketed to at all'],
   ['corporate', 'Limited company, LLP, PLC — email is lawful without consent'],
-  ['sole_trader', 'Sole trader — an individual subscriber; post only, unless they consented'],
+  ['sole_trader', 'Sole trader — an individual subscriber; post, or a call to a screened number; email only with consent'],
   ['partnership', 'Partnership, not an LLP — same as a sole trader'],
   ['individual', 'A private person — same as a sole trader'],
 ]
 const LAWFUL_BASES = [
   ['unassessed', 'Unassessed — blocks every channel'],
   ['not_personal_data', 'No personal data held — nothing to have a basis for'],
-  ['legitimate_interests', 'Legitimate interests — needs an assessment on file'],
+  ['legitimate_interests', 'Legitimate interests — needs an assessment on file (PHA-2026-09 for calls)'],
   ['consent', 'They asked to hear from us'],
   ['contract', 'Necessary to deliver something agreed'],
 ]
@@ -497,13 +498,15 @@ function Workspace({ sb, user, onSignedOut }) {
       channel,
       recipient,
       subject: subject || null,
-      sender_identity: `n.abl <hello@nabl.agency>`,
+      /* A live call must say who is calling (PECR reg 24); the caller does,
+         by name, and the record says who that was. */
+      sender_identity: channel === 'phone' ? `n.abl, called by ${user?.email || 'a named member of the team'}` : `n.abl <hello@nabl.agency>`,
       // The template carries an opt-out route in every channel; the column
       // exists so that claim is recorded rather than assumed.
       opt_out_included: true,
       approved_by: user?.id || null,
       approved_at: new Date().toISOString(),
-      send_provider: channel === 'post' ? 'royal mail, by hand' : 'mail client',
+      send_provider: channel === 'post' ? 'royal mail, by hand' : channel === 'phone' ? 'live call, by a person' : 'mail client',
     })
     if (!error) return { ok: true }
     /* The gate raises check_violation with a sentence explaining itself.
@@ -1029,7 +1032,7 @@ function LeadDetail({ lead, tab, onTab, onBack, onSave, onMove, onDelete, onReco
       <SectionPanel idPrefix="crm" active={tab}>
         {tab === 'overview' && <OverviewPanel lead={lead} onSave={onSave} onMove={onMove} onDelete={onDelete} />}
         {tab === 'fit' && <LeadFit leadId={lead.id} />}
-        {tab === 'contacts' && <ContactsPanel lead={lead} onSave={onSave} />}
+        {tab === 'contacts' && <ContactsPanel lead={lead} onSave={onSave} onRecordSend={onRecordSend} />}
         {tab === 'outreach' && (
           <OutreachPanel lead={lead} onSave={onSave} onRecordSend={onRecordSend} onResearch={onResearch} />
         )}
@@ -1119,7 +1122,7 @@ function OverviewPanel({ lead, onSave, onMove, onDelete }) {
 }
 
 /* ---------------- Contacts ---------------- */
-function ContactsPanel({ lead, onSave }) {
+function ContactsPanel({ lead, onSave, onRecordSend }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -1173,6 +1176,15 @@ function ContactsPanel({ lead, onSave }) {
                 <div><dt>Reliability</dt><dd>{contact.confidence}%</dd></div>
                 <div><dt>Allowed use</dt><dd>Public business contact only</dd></div>
               </dl>
+              {contact.phone && (
+                <PhoneLine
+                  lead={lead}
+                  raw={contact.phone}
+                  onRecordSend={onRecordSend}
+                  onCalled={(n) => onSave(withActivity({ ...lead, status: lead.status === 'New Lead' ? 'Contacted' : lead.status },
+                    'Call', `Sales call recorded, then dialled — ${n}`), { pipelineFrom: lead.status, okMsg: 'Call recorded' })}
+                />
+              )}
               <div className="card-actions">
                 <button
                   type="button"
@@ -1441,8 +1453,8 @@ function CompliancePanel({ lead, onSave }) {
     if (!form.source) blockers.push('a source')
     if (!form.sourceDate) blockers.push('a source date')
     if (form.subscriberType !== 'corporate'
-        && !['consent', 'not_personal_data'].includes(form.lawfulBasis)) {
-      blockers.push('either consent or "no personal data held", because this is an individual subscriber')
+        && !['consent', 'not_personal_data', 'legitimate_interests'].includes(form.lawfulBasis)) {
+      blockers.push('consent, legitimate interests or "no personal data held", because this is an individual subscriber')
     }
   }
   if (form.lawfulBasis === 'legitimate_interests' && !form.liaRef) {
@@ -1454,6 +1466,9 @@ function CompliancePanel({ lead, onSave }) {
   const permitted = form.marketingStatus === 'permitted' && !blockers.length && !lead.optOut
   const canEmail = permitted && form.subscriberType === 'corporate'
     && form.noticeStatus !== 'not_given'
+  const canPhone = permitted && form.noticeStatus !== 'not_given'
+    && (['legitimate_interests', 'consent', 'contract'].includes(form.lawfulBasis)
+      || (form.lawfulBasis === 'not_personal_data' && form.subscriberType === 'corporate'))
   const canPost = permitted && form.noticeStatus !== 'not_given'
     && ['not_personal_data', 'legitimate_interests', 'consent', 'contract'].includes(form.lawfulBasis)
 
@@ -1484,7 +1499,7 @@ function CompliancePanel({ lead, onSave }) {
         </div>
         <div>
           <dt>Phone</dt>
-          <dd>Blocked — needs TPS and CTPS screening we do not hold</dd>
+          <dd>{canPhone ? 'Permitted to a number checked clear on the TPS and CTPS in the last 28 days (Contacts tab)' : 'Blocked'}</dd>
         </div>
       </dl>
 
@@ -1824,7 +1839,7 @@ function Insights({ leads, onJump }) {
         <ul className="crm-reach">
           {[
             ['Email', m.withEmail, 'free, and capped at 2,400 a month'],
-            ['Phone only', m.withPhone, 'needs TPS screening before any call'],
+            ['Phone only', m.withPhone, 'each number checked on the TPS and CTPS first'],
             ['Post only', m.postOnly, 'costs a stamp, capped at 1,000 a month'],
             ['No route yet', m.unreachable, 'needs an address or a website first'],
           ].map(([label, set, note]) => (

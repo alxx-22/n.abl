@@ -31,9 +31,11 @@ import { fileURLToPath } from 'node:url'
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const MIGRATION = join(ROOT, 'supabase/migrations/202608210001_marketing_tier_ceilings.sql')
 const POSTAL = join(ROOT, 'supabase/migrations/202608210003_postal_channel.sql')
+const PHONE = join(ROOT, 'supabase/migrations/202609292100_calls_only_after_tps_and_ctps_screening.sql')
 const CHECKER = join(ROOT, 'scripts/check-compliance-schema.mjs')
 const ORIGINAL = readFileSync(MIGRATION, 'utf8')
 const POSTAL_ORIGINAL = readFileSync(POSTAL, 'utf8')
+const PHONE_ORIGINAL = readFileSync(PHONE, 'utf8')
 
 /** Replace exactly once, and throw rather than no-op if the anchor moved. */
 const sub = (old, replacement) => (s) => {
@@ -58,18 +60,20 @@ const CEILING_TEST = 'if coalesce(v_spent, 0) >= coalesce(v_ceiling, 0) then'
    and prove nothing. Anything the postal migration redefines must be mutated
    there. */
 const MUTATIONS = [
-  [POSTAL, 'the ceiling check removed entirely',
+  /* marketing_send_allowed and marketing_ceiling_guard were redefined again by
+     the phone migration, so their mutations go there. */
+  [PHONE, 'the ceiling check removed entirely',
    'the 401st tier B first contact is refused',
    sub(`    ${CEILING_TEST}`, '    if false then')],
 
-  [POSTAL, 'post treated as if PECR reached it',
+  [PHONE, 'post treated as if PECR reached it',
    'but the same sole trader can be sent a letter',
    sub("            when 'post' then\n              l.lawful_basis in ('not_personal_data', 'legitimate_interests', 'consent', 'contract')",
        "            when 'post' then\n              l.subscriber_type = 'corporate'")],
 
-  [POSTAL, 'not_personal_data trusted even with a person named',
+  [PHONE, 'not_personal_data trusted even with a person named',
    'once a person is named, not_personal_data no longer opens the door',
-   sub("        and not (l.lawful_basis = 'not_personal_data'\n                 and public.has_named_individual(l.id))",
+   sub("        and not (l.lawful_basis = 'not_personal_data' and public.has_named_individual(l.id))",
        '        and true')],
 
   [POSTAL, 'a generic route counted as a named person',
@@ -77,25 +81,21 @@ const MUTATIONS = [
    sub("      and lower(btrim(c.name)) not in ('public contact route', 'general enquiries', 'enquiries', 'reception')",
        '')],
 
-  [POSTAL, 'phone opened without any TPS screening',
-   'phone is refused outright while there is no TPS screening',
-   sub("            when 'phone' then false", "            when 'phone' then true")],
-
-  [POSTAL, 'a postal objection no longer suppresses',
+  [PHONE, 'a postal objection no longer suppresses',
    'a postal suppression stops a letter to a still-permitted lead',
-   sub("        (s.scope = 'address'         and lower(btrim(s.identifier)) = t.addr)",
-       "        (s.scope = 'address'         and s.channel = 'email' and lower(btrim(s.identifier)) = t.addr)")],
+   sub("      and ((s.scope = 'address'         and (lower(btrim(s.identifier)) = t.addr",
+       "      and ((s.scope = 'address'         and s.channel = 'email' and (lower(btrim(s.identifier)) = t.addr")],
 
   [POSTAL, 'channels share one allowance',
    'letters spend none of the email allowance',
    sub("  where s.channel = p_channel\n    and s.tier is not distinct from p_tier",
        '  where s.tier is not distinct from p_tier')],
 
-  [POSTAL, 'off-by-one: >= relaxed to >',
+  [PHONE, 'off-by-one: >= relaxed to >',
    'the 401st tier B first contact is refused',
    sub(CEILING_TEST, 'if coalesce(v_spent, 0) > coalesce(v_ceiling, 0) then')],
 
-  [POSTAL, 'a multi-row INSERT no longer counted row by row',
+  [PHONE, 'a multi-row INSERT no longer counted row by row',
    'a multi-row INSERT is stopped on the row that crosses the ceiling',
    sub(`    ${CEILING_TEST}`, `    ${CEILING_TEST.replace('coalesce(v_ceiling, 0)', 'coalesce(v_ceiling, 0) + 100')}`)],
 
@@ -113,19 +113,58 @@ const MUTATIONS = [
    sub("    and s.sent_at >= date_trunc('month', now())\n" +
        "    and s.sent_at < date_trunc('month', now()) + interval '1 month'", '    and true')],
 
-  [POSTAL, 'a missing lead silently defaulted instead of refused',
+  [PHONE, 'a missing lead silently defaulted instead of refused',
    'a send against a lead that does not exist is refused, not defaulted',
-   sub("raise exception 'no such lead: %', new.lead_id\n      using errcode = 'check_violation';",
+   sub("raise exception 'no such lead: %', new.lead_id using errcode = 'check_violation';",
        "v_tier := 'A';")],
 
-  [POSTAL, 'consented sends counted against the ceiling anyway',
+  [PHONE, 'consented sends counted against the ceiling anyway',
    'and it spends none of the tier B allowance',
    sub("  if v_basis = 'consent' then\n    new.counts_toward_ceiling := false;",
        "  if v_basis = 'consent' then\n    new.counts_toward_ceiling := v_first;")],
 
-  [POSTAL, 'the consent exemption removed',
+  [PHONE, 'the consent exemption removed',
    'but consent is exempt from the ceiling, so it sends with tier B full',
    cut("  if v_basis = 'consent' then", '  -- Tier C on email without consent')],
+
+  /* ---- the phone rules themselves ---- */
+  [PHONE, 'phone opened without checking the screening',
+   'a sole trader permitted on legitimate interests cannot be called unscreened',
+   sub("              and public.phone_screen_clear(p_recipient)\n", '')],
+
+  [PHONE, 'the CTPS answer ignored',
+   'a number on the CTPS alone is not clear',
+   sub('    select not s.tps and not s.ctps', '    select not s.tps')],
+
+  [PHONE, 'a screening older than 28 days still trusted',
+   'a clear check 29 days old no longer opens the line',
+   sub("       and s.checked_at > now() - interval '28 days'\n", '')],
+
+  [PHONE, 'a registered number not written to the suppression list',
+   'a number found on a register is written to the suppression list',
+   sub('  if v_hit then', '  if false then')],
+
+  [PHONE, 'a sole trader treated as having no personal data',
+   'a sole trader on "no personal data" cannot be called, screened or not',
+   sub("or (l.lawful_basis = 'not_personal_data' and l.subscriber_type = 'corporate'))",
+       "or l.lawful_basis = 'not_personal_data')")],
+
+  [PHONE, 'the phone ceiling removed',
+   'the 51st first call in a month is refused',
+   sub('      if v_spent >= v_ceiling then', '      if false then')],
+
+  [PHONE, 'a check by hand recorded with nobody signed in',
+   'a check by hand needs a signed-in person to put their name to it',
+   sub("  if auth.uid() is null then raise exception 'a check made by hand is recorded by the person who made it'; end if;\n", '')],
+
+  [PHONE, 'the screening record made editable',
+   'a check cannot be edited afterwards',
+   sub("before update or delete on public.phone_screening", "before delete on public.phone_screening")],
+
+  [PHONE, 'email opened to sole traders on legitimate interests',
+   'but permitted on legitimate interests, a sole trader still cannot be emailed',
+   sub("              and (l.subscriber_type = 'corporate' or l.lawful_basis = 'consent')",
+       "              and (l.subscriber_type = 'corporate' or l.lawful_basis in ('consent', 'legitimate_interests'))")],
 ]
 
 const runChecker = () => {
@@ -142,7 +181,7 @@ let missed = 0
 
 try {
   for (const [file, name, expect, mutate] of MUTATIONS) {
-    const base = file === POSTAL ? POSTAL_ORIGINAL : ORIGINAL
+    const base = file === POSTAL ? POSTAL_ORIGINAL : file === PHONE ? PHONE_ORIGINAL : ORIGINAL
     let mutated
     try { mutated = mutate(base) } catch (e) {
       console.log(`  HARNESS  | ${name} — ${e.message}`)
@@ -150,6 +189,7 @@ try {
       continue
     }
     writeFileSync(file, mutated)
+    // A mutation is written to one file; the others must be their originals.
     const reds = runChecker().split('\n').map((l) => l.trim()).filter((l) => l.startsWith('✗'))
     if (reds.some((r) => r.includes(expect))) {
       console.log(`  caught   | ${name}`)
@@ -163,6 +203,7 @@ try {
 } finally {
   writeFileSync(MIGRATION, ORIGINAL)
   writeFileSync(POSTAL, POSTAL_ORIGINAL)
+  writeFileSync(PHONE, PHONE_ORIGINAL)
 }
 
 const restored = runChecker().trim().split('\n').pop()
