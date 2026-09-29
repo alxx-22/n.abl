@@ -11,7 +11,7 @@ SCRIPT.md; the animation is scenes.js; the music is audio.py's "reel".
 TITLE = "n.abl · AI that works"
 COVER = 11.9          # seconds: the frame the cover images are taken from
 
-BPM = 115.995         # the music's tempo: every cut lands on its beat
+BPM = 117.465         # the music's tempo: every cut lands on its beat
 GRID_BPM = 124        # the tempo the reel was choreographed on
 BEAT = 60 / BPM
 # a scene of k beats at GRID_BPM, as whole beats at BPM, so the reel keeps its
@@ -36,11 +36,12 @@ SCENES = [
 ]
 
 MUSIC = "file"
-# dark-deephouse-minor-2 from Lyria RealTime (lyria.py): 116.0 BPM, dark deep
-# house in D minor. Its chords land on bars from 0.299 s; the drums are in
-# by the bar at 4.437 s, which lands on the drop
-MUSIC_FILE, MUSIC_AT = "dark-deephouse-minor-2.wav", 4.437
-MUSIC_DROPS = []
+# dark-melodic-minor-2 from Lyria RealTime (lyria.py), re-cut by musicedit.py:
+# melodic techno in D minor, measured at 117.465 BPM, bars from 0.032 s. Its
+# drop bar at 4.118 s lands on the reel's drop; the drums drop out from 6.2 s
+# and come back on the bar at 8.205 s with the riff from 4.1 s, a second drop
+MUSIC_FILE, MUSIC_AT = "dark-melodic-minor-2-edit.wav", 4.1183
+MUSIC_DROPS = [8.2047]
 SFX_TRIM = {}
 # the effects sit under the music, drowned: SFX_DROWN is the low-pass, the
 # wobble and the dark room every effect goes through
