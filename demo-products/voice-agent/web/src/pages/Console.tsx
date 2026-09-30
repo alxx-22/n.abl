@@ -4,6 +4,7 @@ import { MicIcon } from '../components/Icons.tsx';
 import { toast } from '../components/Toaster.tsx';
 import { Link, navigate } from '../router.tsx';
 import type { AppConfig, Profile } from '../types.ts';
+import { DemoKeys } from './DemoKeys.tsx';
 
 const TYPE: Record<string, string> = {
   restaurant: 'Restaurant', cafe: 'Café and takeaway', takeaway: 'Takeaway', pub: 'Pub',
@@ -76,6 +77,8 @@ export function Console() {
             </article>
           ))}
         </div>
+
+        <DemoKeys />
 
         <Wizard />
       </main>

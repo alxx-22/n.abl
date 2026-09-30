@@ -14,7 +14,6 @@ import { join } from 'node:path';
 import { chromium, type Page } from 'playwright-core';
 import { loadConfig } from '../src/config.ts';
 import { startServer } from '../src/server/main.ts';
-import { generateKey, hashKey, normaliseKey, prefixOf } from '../src/demo/access.ts';
 
 const OUT = 'eval-results/demo-ui';
 mkdirSync(OUT, { recursive: true });
@@ -55,9 +54,6 @@ const app = await startServer(
   { web: 'dist', scoutTest: { allowPrivate: true, paceMs: 0, model } },
 );
 const base = `http://localhost:${app.port}`;
-const raw = generateKey();
-const n = normaliseKey(raw)!;
-await app.demo.createKey({ hash: hashKey(n), prefix: prefixOf(n), person_name: 'Sam Price', company: 'Olive & Ember', expires_at: new Date(Date.now() + 7 * 86400000) });
 
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const errors: string[] = [];
@@ -69,6 +65,20 @@ try {
   const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => m.type() === 'error' && !/40[14]|scout/.test(m.text()) && errors.push(`console: ${m.text()}`));
+
+  // The team issues a key from the console.
+  await page.goto(`${base}/`);
+  await page.waitForSelector('#password');
+  await page.fill('#password', 'team');
+  await page.click('.signin button[type=submit]');
+  await page.waitForSelector('#k-name');
+  await page.fill('#k-name', 'Sam Price');
+  await page.fill('#k-company', 'Olive & Ember');
+  await page.click('text=Issue a key');
+  await page.waitForSelector('.issued code');
+  const raw = (await page.textContent('.issued code'))!.trim();
+  if (!/^DEMO-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(raw)) throw new Error(`odd key: ${raw}`);
+  await shot(page, 'console-key-issued');
 
   // The door, with a wrong key, then the one-click link.
   await page.goto(`${base}/demo/`);
