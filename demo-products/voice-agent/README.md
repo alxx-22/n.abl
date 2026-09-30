@@ -111,7 +111,7 @@ Google.
 |---|---|---|
 | `npm run dev` | The server and the React app (hot reload), with PGlite, on one port | Gemini key |
 | `npm run build` then `npm start` | Production: the built app from `web/dist` | Gemini key |
-| `npm test` | 85 unit and integration tests, no network | nothing |
+| `npm test` | 89 unit and integration tests, no network | nothing |
 | `npm run typecheck` | `tsc` as a checker, for the server and the app | nothing |
 | `npm run eval` | 18 simulated callers against the receptionist; report in `eval-results/` | Gemini key |
 | `npm run eval -- --audio` | The same, voices crossing as audio through a simulated phone line | Gemini key |

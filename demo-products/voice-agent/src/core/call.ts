@@ -486,9 +486,13 @@ export class CallSession extends EventEmitter<CallEvents> {
     }
     this.lastActivity = Date.now();
     if (calls.some((c) => READ_BACK_TOOLS.has(c.name))) this.turns?.protect();
-    this.turns?.agentWillSpeak();
-    if (s.isOpen) s.sendToolResponses(responses);
-    if (this.state.ending) this.scheduleHangup('end_call', 4000);
+    // end_call gets no answer: the goodbye has been said, and an answer only
+    // invites the model to carry on (on 30 September it recited a summary of
+    // the whole call into the transcript after its goodbye).
+    const answers = responses.filter((r) => r.name !== 'end_call');
+    if (answers.length) this.turns?.agentWillSpeak();
+    if (s.isOpen && answers.length) s.sendToolResponses(answers);
+    if (this.state.ending) this.scheduleHangup('end_call', answers.length ? 4000 : 600);
     if (this.state.transferRequested) this.scheduleHangup('transferred', 100);
   }
 
