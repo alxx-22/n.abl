@@ -1,5 +1,5 @@
 # n.abl Reception. Node runs the server's TypeScript directly (type
-# stripping, 22.18+); only the React app has a build step.
+# stripping); only the React app has a build step.
 
 FROM node:22-slim AS web
 WORKDIR /app

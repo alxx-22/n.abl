@@ -13,7 +13,7 @@ loud, and the board shows the conversation, the bookings and the orders as
 they happen. Replies start about a second after you stop talking, and you
 can interrupt.
 
-**On your own machine** (Node 22.18 or later):
+**On your own machine** (Node 22.12 or later):
 
 ```bash
 git clone https://github.com/alxx-22/n.abl.git
