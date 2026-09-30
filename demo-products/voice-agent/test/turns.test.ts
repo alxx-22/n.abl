@@ -214,6 +214,44 @@ test('turns: a read-back takes longer speech to interrupt', () => {
   assert.equal(c.starts().length, 1);
 });
 
+test('turns: an open question closes at 0.7 s, then reopens when the words show they were still thinking', () => {
+  const c = caller();
+  c.speak(1500); // "Hi, can I get a margherita and, um..."
+  c.words('Hi, can I get a margherita and um');
+  c.quiet(1000);
+  assert.deepEqual(c.events.map((e) => e.ev), ['start', 'end:normal'], 'closed on time, before the words came');
+  c.quiet(400); // the words arrive; the receptionist has not made a sound
+  assert.deepEqual(c.events.map((e) => e.ev), ['start', 'end:normal', 'start'], 'taken back');
+  assert.ok(c.statuses.includes('waiting:thinking'));
+  c.speak(1200); // "...and a garlic bread, please."
+  c.words('And a garlic bread, please.');
+  c.quiet(2000);
+  assert.deepEqual(c.events.map((e) => e.ev), ['start', 'end:normal', 'start', 'end:normal']);
+});
+
+test('turns: no reopening once the receptionist has started talking or called a tool', () => {
+  for (const acted of ['audio', 'tool'] as const) {
+    const c = caller();
+    c.speak(1500);
+    c.words('Can I get a margherita and um');
+    c.quiet(900);
+    if (acted === 'audio') c.m.agentAudio();
+    else c.m.agentToolCall();
+    c.quiet(600);
+    assert.equal(c.starts().length, 1, `${acted}: not reopened`);
+  }
+});
+
+test('turns: right after a tool returns, the receptionist is about to talk, so a short sound does not cut in', () => {
+  const c = caller();
+  c.speak(800);
+  c.quiet(1000);
+  c.m.agentWillSpeak(); // e.g. review_order came back; the read-back is on its way
+  c.speak(300);
+  c.quiet(400);
+  assert.equal(c.starts().length, 1, 'only the first turn');
+});
+
 test('turns: a click does not open a turn; a word does', () => {
   const c = caller();
   c.speak(80);

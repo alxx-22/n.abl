@@ -16,6 +16,11 @@
 //     behind): trailing off ("and, um"), half a phone number, "hang on",
 //     "Jack, what do you want?", "sorry about that", "that's everything".
 //
+// After an open question the turn ends at 0.7 s, before the words arrive.
+// If they then show the caller trailing off, and the receptionist has not
+// started speaking or called a tool, the turn is reopened: its half-made
+// reply is cancelled before a sound of it plays, and we keep listening.
+//
 // And who may interrupt: while the receptionist talks, a short burst
 // ("mm-hm", "yeah", a cough) is dropped; speech that keeps going interrupts.
 // While it reads back an order, a reference or the demo card, it takes
@@ -126,6 +131,8 @@ export interface TurnIO {
   agentSpeaking(): boolean;
   onStatus?(s: TurnStatus): void;
   onVoice?(): void;
+  /** A closed turn was taken back before the reply could play. */
+  onReopen?(reason: string): void;
 }
 
 interface Frame {
@@ -154,6 +161,8 @@ export class TurnManager {
   private lastEndAt = 0;
   private awaitingAgent = false;
   private awaitingSince = 0;
+  /** Since the last turn closed: has the receptionist made a sound, or called a tool? */
+  private agentActedSinceClose = false;
   private protectedReply = false;
   private status: TurnStatus = { state: 'listening', expect: 'open' };
   /** Set by the call when the parallel transcriber is connected. */
@@ -294,6 +303,7 @@ export class TurnManager {
     this.open = false;
     this.hold = false;
     this.lastEndAt = now;
+    this.agentActedSinceClose = false;
     this.awaitingAgent = true;
     this.awaitingSince = now;
     const base = this.t.endAfter[this.expect.expect] * this.t.scale;
@@ -324,8 +334,42 @@ export class TurnManager {
       if (this.open) this.decide(now);
       return;
     }
-    // Words for a turn that has just closed: a hold or side talk carries over.
-    if (now - this.lastEndAt < 3000 && (seg.hold || seg.sideTalk)) this.holdNext = true;
+    // Words for a turn that has just closed.
+    if (now - this.lastEndAt > 3000) return;
+    this.words = `${this.words} ${text}`.trim();
+    this.signs = readWords(this.words);
+    this.lastWordsAt = now;
+    const shortNumber = this.expect.expect === 'digits' && (this.expect.digits ?? 0) > 0 && this.signs.digits > 0 && this.signs.digits < this.expect.digits!;
+    if (!this.agentActedSinceClose && !this.signs.done && (seg.sideTalk || this.signs.unfinished || shortNumber)) {
+      // Too soon: they were thinking, or talking to someone else. Nothing has played yet, so take it back.
+      this.reopen(now, seg.sideTalk, seg.sideTalk ? 'side_talk' : shortNumber ? 'number' : 'thinking');
+    } else if (seg.hold || seg.sideTalk) this.holdNext = true;
+  }
+
+  private reopen(now: number, hold: boolean, reason: string): void {
+    this.open = true;
+    this.hold = hold;
+    this.awaitingAgent = false;
+    this.io.startTurn(false);
+    this.io.onReopen?.(reason);
+    this.setStatus(hold ? { state: 'hold', reason } : { state: 'waiting', reason });
+    this.decide(now);
+  }
+
+  /** The receptionist made a sound (its first audio after a turn closed). */
+  agentAudio(): void {
+    this.agentActedSinceClose = true;
+  }
+
+  /** The receptionist called a tool: its reply is under way, so the turn stays closed. */
+  agentToolCall(): void {
+    this.agentActedSinceClose = true;
+  }
+
+  /** A tool result has gone back: the receptionist is about to speak, so treat it as talking. */
+  agentWillSpeak(): void {
+    this.awaitingAgent = true;
+    this.awaitingSince = this.io.now();
   }
 
   /** The receptionist's words, each time it finishes saying something. */

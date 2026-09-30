@@ -162,7 +162,14 @@ async function agentQuiet(max = 20000): Promise<void> {
   while (Date.now() < end && !hungUp) {
     const heard = agentAudio.some((t) => t > start);
     const last = agentAudio[agentAudio.length - 1] ?? 0;
-    if (heard && now() > speakingUntil + 400 && now() - last > 900) return;
+    if (heard && now() > speakingUntil + 400 && now() - last > 900) {
+      // "Let me review the order with you." is not the end of its turn: a
+      // caller would wait for the question.
+      if (lastAgentLine.includes('?') || /bye|take your time/i.test(lastAgentLine)) return;
+      const more = Date.now() + 5000;
+      while (Date.now() < more && agentAudio[agentAudio.length - 1] === last) await sleep(50);
+      if (agentAudio[agentAudio.length - 1] === last) return;
+    }
     await sleep(50);
   }
 }
@@ -243,7 +250,7 @@ try {
       numberChecked = true;
     } else if (/allerg/.test(q)) await say(L.allergy, 'no allergies');
     else if (/\bname\b/.test(q)) await say(L.name, 'name');
-    else if (/anything else/.test(q)) await say(L.done, "that's everything");
+    else if (/anything else|what else|anything more|add to (your|the) order/.test(q)) await say(L.done, "that's everything");
     else if (/collection or delivery|collect or/.test(q)) await say(L.collection, 'collection');
     else if (/\b(when|what time)\b/.test(q)) await say(L.asap, 'as soon as possible');
     else if (/\bpay\b/.test(q)) await say(L.pay, 'pay on collection');
@@ -263,9 +270,9 @@ try {
   const has = (re: RegExp, qty?: number) => (qty === undefined ? count(re) > 0 : count(re) === qty);
   check('F. the order is right', Boolean(o) && has(/margherita/i, 2) && has(/garlic/i) && has(/carbonara/i), o ? `#${o.reference}: ${lines}` : 'no order placed');
   const turnEvents = await repo.listEvents(summary?.call_id ?? call.callId);
-  const turns = turnEvents.filter((e: any) => e.kind === 'system' && e.data?.event === 'turn_end').map((e: any) => e.data);
+  const turns = turnEvents.filter((e: any) => e.kind === 'system' && (e.data?.event === 'turn_end' || e.data?.event === 'turn_reopened' || e.data?.event === 'watchdog' || e.data?.event === 'handed_over')).map((e: any) => e.data);
   writeFileSync(join(OUT, 'report.json'), JSON.stringify({ at: new Date().toISOString(), model: call.model, checks, turns, latency_ms: summary?.latency_ms, log }, null, 2));
-  console.log('\nturn endings:', turns.map((t: any) => `${t.reason}${t.extra_ms ? `(+${t.extra_ms})` : ''}`).join(' '));
+  console.log('\nturns:', turns.map((t: any) => (t.event === 'turn_end' ? `${t.reason}${t.extra_ms ? `(+${t.extra_ms})` : ''}` : t.event === 'turn_reopened' ? `REOPENED(${t.reason})` : t.event.toUpperCase())).join(' '));
   console.log(`\n${checks.filter((c) => c.pass).length} of ${checks.length} checks passed`);
   for (const c of checks) console.log(`  ${c.pass ? 'PASS' : 'FAIL'}  ${c.name}: ${c.detail}`);
   await db.close();

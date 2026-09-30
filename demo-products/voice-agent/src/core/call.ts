@@ -105,6 +105,12 @@ const WATCHDOG_MS = 7000;
 /** After these, the receptionist reads back something that matters: harder to interrupt by accident. */
 const READ_BACK_TOOLS = new Set(['review_order', 'confirm_order', 'create_booking', 'modify_booking', 'cancel_booking', 'take_demo_payment']);
 const MAX_RECOVERIES = 2;
+/**
+ * With contextual turn-taking the server knows the moment a turn ended, and a
+ * working model transcribes it within about 0.4 s (spike, 30 September), so
+ * four seconds of nothing means it is not listening.
+ */
+const CONTEXTUAL_WATCHDOG_MS = 4000;
 
 const CORRECTIONS: Record<Flag['rule'], string> = {
   unconfirmed_claim:
@@ -242,7 +248,11 @@ export class CallSession extends EventEmitter<CallEvents> {
     const turns = new TurnManager(
       {
         now: () => Date.now(),
-        startTurn: () => this.session?.sendActivityStart(),
+        startTurn: () => {
+          this.awaitingReply = false;
+          this.session?.sendActivityStart();
+        },
+        onReopen: (reason) => this.record('system', { event: 'turn_reopened', reason }),
         sendAudio: (pcm, rate) => this.session?.sendAudio(pcm, rate),
         endTurn: (e) => {
           this.session?.sendActivityEnd();
@@ -285,6 +295,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     for (const ev of ['audio', 'inputTranscript', 'outputTranscript', 'toolCall', 'turnComplete', 'usage'] as const) s.on(ev, sign);
     s.on('audio', (pcm) => {
       const now = Date.now();
+      this.turns?.agentAudio();
       if (this.awaitingReply) {
         this.awaitingReply = false;
         const from = this.replyFrom || this.lastCallerSound;
@@ -322,6 +333,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       if (this.state.ending) this.scheduleHangup('agent said goodbye', 900);
     });
     s.on('toolCall', (calls) => {
+      this.turns?.agentToolCall();
       this.toolQueue = this.toolQueue.then(() => this.handleTools(s, calls));
     });
     s.on('usage', (u: UsageMetadata) => {
@@ -462,6 +474,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     }
     this.lastActivity = Date.now();
     if (calls.some((c) => READ_BACK_TOOLS.has(c.name))) this.turns?.protect();
+    this.turns?.agentWillSpeak();
     if (s.isOpen) s.sendToolResponses(responses);
     if (this.state.ending) this.scheduleHangup('end_call', 4000);
     if (this.state.transferRequested) this.scheduleHangup('transferred', 100);
@@ -525,7 +538,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     }
     if (
       this.awaitingReply && !this.recovering && !this.state.ending && this.recoveries < MAX_RECOVERIES &&
-      now - this.lastCallerSound > WATCHDOG_MS && this.lastModelSign < this.lastCallerSound
+      now - this.lastCallerSound > (this.turns ? CONTEXTUAL_WATCHDOG_MS : WATCHDOG_MS) && this.lastModelSign < this.lastCallerSound
     ) {
       void this.recover();
       return;

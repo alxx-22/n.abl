@@ -70,7 +70,7 @@ things:
 
 | The caller | The receptionist |
 |---|---|
-| "Can I get a margherita and, um..." | waits up to 2.6 s for the rest |
+| "Can I get a margherita and, um..." | waits up to 2.6 s for the rest. After an open question the turn has usually closed (0.7 s) before these words arrive; if the receptionist has not started speaking, the turn is reopened and its half-made reply cancelled before any of it plays |
 | "It's oh seven seven double oh..." (when asked for a number) | waits for all eleven digits |
 | "No, that's everything, thanks." | answers straight away |
 | "Hang on, let me ask what the kids want." | says "Of course, take your time", then stays quiet through the family chat until "sorry about that" or 3.5 s of quiet |
@@ -78,6 +78,7 @@ things:
 | "Mm-hm", "yeah", a cough, while it talks | keeps talking |
 | "No, wait, make that two", while it talks | stops (after 0.6 s of speech) |
 | Anything, while it reads back an order, a booking or the demo card | stops only for 1 s or more of speech |
+| Anything, just as a lookup finishes | treated as talking over it: the reply is on its way |
 
 The board shows what it is doing ("Waiting: sounds like you're still
 deciding", "On hold while you talk to someone else") and marks replies it
