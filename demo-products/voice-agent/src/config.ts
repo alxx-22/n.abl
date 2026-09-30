@@ -3,8 +3,19 @@
 import { randomBytes } from 'node:crypto';
 import { parseDemoCards, type DemoCard } from './domain/payments.ts';
 
+/** The jobs that call Gemini. Each can have its own key (and so its own project and quota). */
+export type GeminiJob = 'calls' | 'scout' | 'text';
+
 export interface Config {
+  /** The main key: every job uses it unless it has its own. */
   geminiApiKey: string;
+  /**
+   * A key per job: GEMINI_API_KEY_CALLS (live calls, voice previews, the
+   * turn-taking listener), GEMINI_API_KEY_SCOUT (reading prospects' websites),
+   * GEMINI_API_KEY_TEXT (summaries, menu and FAQ drafts). Each falls back to
+   * GEMINI_API_KEY, so one key is enough until a job needs its own quota.
+   */
+  keys: Record<GeminiJob, string>;
   /** Primary first; the rest are fallbacks, tried in order if a session will not open. */
   liveModels: string[];
   /** Tried in order; see generateText(). */
@@ -44,6 +55,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const token = env.TWILIO_AUTH_TOKEN?.trim();
   return {
     geminiApiKey: env.GEMINI_API_KEY ?? '',
+    keys: {
+      calls: env.GEMINI_API_KEY_CALLS?.trim() || env.GEMINI_API_KEY || '',
+      scout: env.GEMINI_API_KEY_SCOUT?.trim() || env.GEMINI_API_KEY || '',
+      text: env.GEMINI_API_KEY_TEXT?.trim() || env.GEMINI_API_KEY || '',
+    },
     liveModels: [primary, ...fallbacks.filter((m) => m !== primary)],
     textModel: list(env.TEXT_MODELS ?? env.TEXT_MODEL, ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash']),
     // The simulated caller in evaluation runs on the other model's quota, so test

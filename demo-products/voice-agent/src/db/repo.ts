@@ -7,7 +7,7 @@
 import { randomInt } from 'node:crypto';
 import type { Db, Queryable } from './db.ts';
 import type { Booking, Order, OrderLine, Tenant, TenantProfile } from '../domain/types.ts';
-import { checkSlot, findService, depositFor, type BusyInterval, type Unavailable } from '../domain/availability.ts';
+import { checkSlot, findService, depositFor, resourceFree, type BusyInterval, type Unavailable } from '../domain/availability.ts';
 import { addDays, normaliseTime, toLocal, zonedToUtc, isIsoDate } from '../domain/time.ts';
 
 export interface TenantSummary {
@@ -48,8 +48,17 @@ function mapBooking(r: any): Booking {
     source: r.source,
     deposit_pence: Number(r.deposit_pence),
     deposit_paid: Boolean(r.deposit_paid),
+    visit_status: r.visit_status ?? 'expected',
+    allergies: r.allergies ?? null,
+    tags: r.tags ?? [],
+    area_key: r.area_key ?? null,
+    history: r.history ?? [],
   };
 }
+
+const labelOf = (resources: { key: string; label: string }[], key: string) => resources.find((r) => r.key === key)?.label ?? key;
+
+const historyEntry = (by: string, what: string) => JSON.stringify([{ at: new Date().toISOString(), by, what }]);
 
 function mapOrder(r: any): Order {
   return {
@@ -203,6 +212,11 @@ export class Repo {
     input: {
       service?: string; date: string; time: string; party_size: number; name: string;
       phone?: string | null; notes?: string | null; staff?: string; source: string; call_id?: string | null;
+      /** Tables: a seating area, step-free access, and features the caller would like. */
+      area?: string; accessible?: boolean; prefer?: string[];
+      allergies?: string | null; tags?: string[];
+      /** Seeding only: skip the notice period, so today's earlier bookings can exist. */
+      ignoreLead?: boolean;
     },
     now: Date,
   ): Promise<{ ok: true; booking: Booking } | { ok: false; reason: Unavailable | 'bad_input'; message: string }> {
@@ -219,11 +233,15 @@ export class Repo {
       await q.query('select id from public.voice_tenants where id = $1 for update', [tenant.id]);
       const existing = await this.busyForDate(tenant, input.date, q);
       const slot = checkSlot(
-        { profile: tenant.profile, serviceKey: service.key, date: input.date, time, partySize: input.party_size, staff: input.staff, now, existing },
-        service,
+        {
+          profile: tenant.profile, serviceKey: service.key, date: input.date, time, partySize: input.party_size, staff: input.staff,
+          now: input.ignoreLead ? new Date(0) : now, existing, area: input.area, accessible: input.accessible, prefer: input.prefer,
+        },
+        input.ignoreLead ? { ...service, lead_minutes: 0 } : service,
         time,
       );
       if (!slot) return { ok: false as const, reason: 'fully_booked' as const, message: 'That time has just gone, or is not bookable.' };
+      const area = tenant.profile.booking?.resources.find((r) => r.key === slot.resource_key)?.area ?? null;
       const customerId = await this.upsertCustomer(q, tenant.id, input.phone ?? null, input.name.trim());
       const deposit = depositFor(service, input.party_size);
       for (let attempt = 0; attempt < 5; attempt++) {
@@ -233,12 +251,13 @@ export class Repo {
         const rows = await q.query<any>(
           `insert into public.voice_bookings
              (tenant_id, reference, service_key, resource_key, starts_at, ends_at, buffer_minutes, party_size,
-              customer_id, name, phone, notes, source, deposit_pence, call_id)
-           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) returning *`,
+              customer_id, name, phone, notes, source, deposit_pence, call_id, area_key, allergies, tags, history)
+           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19::jsonb) returning *`,
           [
             tenant.id, reference, service.key, slot.resource_key, slot.starts_at, slot.ends_at, service.buffer_minutes ?? 0,
             input.party_size, customerId, input.name.trim(), input.phone ?? null, input.notes ?? null, input.source,
-            deposit, input.call_id ?? null,
+            deposit, input.call_id ?? null, area, input.allergies?.trim() || null, input.tags ?? [],
+            historyEntry(input.source === 'seed' ? 'seed' : input.source === 'console' ? 'staff' : 'receptionist', 'booked'),
           ],
         );
         return { ok: true as const, booking: mapBooking(rows[0]) };
@@ -272,8 +291,9 @@ export class Repo {
   async modifyBooking(
     tenant: Tenant,
     reference: string,
-    changes: { date?: string; time?: string; party_size?: number; notes?: string },
+    changes: { date?: string; time?: string; party_size?: number; notes?: string; area?: string; accessible?: boolean; allergies?: string; tags?: string[] },
     now: Date,
+    by = 'receptionist',
   ): Promise<{ ok: true; booking: Booking } | { ok: false; message: string }> {
     return this.db.tx(async (q) => {
       await q.query('select id from public.voice_tenants where id = $1 for update', [tenant.id]);
@@ -293,26 +313,87 @@ export class Repo {
         return { ok: false as const, message: service.large_party_note ?? 'That party is too large to book by phone.' };
       }
       const existing = await this.busyForDate(tenant, date, q);
-      const slot = checkSlot(
-        { profile: tenant.profile, serviceKey: service.key, date, time, partySize: party, now, existing, excludeBookingId: b.id },
-        service,
-        time,
-      );
-      if (!slot) return { ok: false as const, message: 'That change does not fit: the time is taken or not bookable.' };
+      // Keep the same table and area if they still fit; otherwise find another.
+      const area = changes.area ?? b.area_key ?? undefined;
+      const req = { profile: tenant.profile, serviceKey: service.key, date, time, partySize: party, now, existing, excludeBookingId: b.id, area, accessible: changes.accessible };
+      const slot = checkSlot(req, service, time);
+      if (!slot) {
+        const where = area ? tenant.profile.booking?.areas?.find((x) => x.key === area)?.label.toLowerCase() : undefined;
+        return { ok: false as const, message: `That change does not fit${where ? ` in the ${where}` : ''}: the time is taken or not bookable.` };
+      }
+      const what = [
+        changes.date || changes.time ? `moved to ${date} ${time}` : null,
+        changes.party_size && changes.party_size !== b.party_size ? `party ${b.party_size} → ${party}` : null,
+        slot.resource_key !== b.resource_key ? `table ${b.resource_key} → ${slot.resource_key}` : null,
+        changes.notes ? 'notes changed' : null,
+        changes.allergies ? 'allergies noted' : null,
+      ].filter(Boolean).join(', ') || 'changed';
+      const newArea = tenant.profile.booking?.resources.find((r) => r.key === slot.resource_key)?.area ?? b.area_key ?? null;
       const updated = await q.query<any>(
         `update public.voice_bookings set starts_at = $2, ends_at = $3, resource_key = $4, party_size = $5,
-           notes = coalesce($6, notes), deposit_pence = $7, updated_at = now() where id = $1 returning *`,
-        [b.id, slot.starts_at, slot.ends_at, slot.resource_key, party, changes.notes ?? null, depositFor(service, party)],
+           notes = coalesce($6, notes), deposit_pence = $7, area_key = $8, allergies = coalesce($9, allergies),
+           tags = coalesce($10, tags), history = history || $11::jsonb, updated_at = now() where id = $1 returning *`,
+        [b.id, slot.starts_at, slot.ends_at, slot.resource_key, party, changes.notes ?? null, depositFor(service, party), newArea,
+          changes.allergies ?? null, changes.tags ?? null, historyEntry(by, what)],
       );
       return { ok: true as const, booking: mapBooking(updated[0]) };
     });
   }
 
-  async cancelBooking(tenantId: string, reference: string): Promise<Booking | null> {
+  async cancelBooking(tenantId: string, reference: string, by = 'receptionist'): Promise<Booking | null> {
     const rows = await this.db.query<any>(
-      `update public.voice_bookings set status = 'cancelled', updated_at = now()
+      `update public.voice_bookings set status = 'cancelled', history = history || $3::jsonb, updated_at = now()
        where tenant_id = $1 and reference = $2 and status = 'confirmed' returning *`,
-      [tenantId, reference.replace(/[^a-z0-9]/gi, '').toUpperCase()],
+      [tenantId, reference.replace(/[^a-z0-9]/gi, '').toUpperCase(), historyEntry(by, 'cancelled')],
+    );
+    return rows[0] ? mapBooking(rows[0]) : null;
+  }
+
+  // ── Staff actions from the back office ─────────────────────────────────
+
+  /** Put a booking on another table (or a pushed-together pair), keeping its time. */
+  async moveBookingToTable(tenant: Tenant, reference: string, resourceKey: string): Promise<{ ok: true; booking: Booking } | { ok: false; message: string }> {
+    return this.db.tx(async (q) => {
+      await q.query('select id from public.voice_tenants where id = $1 for update', [tenant.id]);
+      const rows = await q.query<any>(`select * from public.voice_bookings where tenant_id = $1 and reference = $2 and status = 'confirmed'`, [
+        tenant.id, reference.toUpperCase(),
+      ]);
+      if (!rows[0]) return { ok: false as const, message: 'That booking is not in the diary any more.' };
+      const b = mapBooking(rows[0]);
+      const resources = tenant.profile.booking?.resources ?? [];
+      const r = resources.find((x) => x.key === resourceKey);
+      if (!r) return { ok: false as const, message: 'There is no such table.' };
+      if (r.key === b.resource_key) return { ok: true as const, booking: b };
+      if ((r.capacity ?? 0) < b.party_size) return { ok: false as const, message: `${r.label} seats ${r.capacity}; this booking is for ${b.party_size}.` };
+      const date = toLocal(b.starts_at, tenant.profile.timezone).date;
+      const existing = await this.busyForDate(tenant, date, q);
+      if (!resourceFree(r.key, b.starts_at, b.ends_at, Number(rows[0].buffer_minutes ?? 0), existing, resources, b.id)) {
+        return { ok: false as const, message: `${r.label} is taken at that time.` };
+      }
+      const updated = await q.query<any>(
+        `update public.voice_bookings set resource_key = $2, area_key = $3, history = history || $4::jsonb, updated_at = now() where id = $1 returning *`,
+        [b.id, r.key, r.area ?? b.area_key ?? null, historyEntry('staff', `moved from ${labelOf(resources, b.resource_key)} to ${r.label}`)],
+      );
+      return { ok: true as const, booking: mapBooking(updated[0]) };
+    });
+  }
+
+  async setVisitStatus(tenantId: string, reference: string, status: NonNullable<Booking['visit_status']>): Promise<Booking | null> {
+    const rows = await this.db.query<any>(
+      `update public.voice_bookings set visit_status = $3, history = history || $4::jsonb, updated_at = now()
+       where tenant_id = $1 and reference = $2 and status = 'confirmed' returning *`,
+      [tenantId, reference.toUpperCase(), status, historyEntry('staff', `marked ${status.replace('_', '-')}`)],
+    );
+    return rows[0] ? mapBooking(rows[0]) : null;
+  }
+
+  async updateBookingDetails(tenantId: string, reference: string, d: { notes?: string | null; allergies?: string | null; tags?: string[] }): Promise<Booking | null> {
+    const rows = await this.db.query<any>(
+      `update public.voice_bookings set notes = case when $3 then $4 else notes end, allergies = case when $5 then $6 else allergies end,
+         tags = coalesce($7, tags), history = history || $8::jsonb, updated_at = now()
+       where tenant_id = $1 and reference = $2 returning *`,
+      [tenantId, reference.toUpperCase(), d.notes !== undefined, d.notes ?? null, d.allergies !== undefined, d.allergies ?? null, d.tags ?? null,
+        historyEntry('staff', 'details edited')],
     );
     return rows[0] ? mapBooking(rows[0]) : null;
   }

@@ -344,6 +344,6 @@ export async function ingestWebsite(
     const r = await fetchLimited(pdf, 'application/pdf');
     if (r && r.type.includes('pdf')) parts.push({ inlineData: { mimeType: 'application/pdf', data: r.body.toString('base64') } });
   }
-  const extracted = await generateJson<Extracted>(config.textModel, parts, config.geminiApiKey, SCHEMA, { temperature: 0.1 });
+  const extracted = await generateJson<Extracted>(config.textModel, parts, config.keys.scout, SCHEMA, { temperature: 0.1 });
   return { ...toProfile(extracted, start.href), pages: pages.map((p) => p.url) };
 }

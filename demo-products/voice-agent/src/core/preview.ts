@@ -25,7 +25,7 @@ export function previewVoice(voice: string, text: string, config: Config, langua
         languageCode,
         systemInstruction: 'You are a warm, natural receptionist answering the phone. When asked, say the given line exactly, with nothing added.',
       }),
-      config.geminiApiKey,
+      config.keys.calls,
     );
     const chunks: Int16Array[] = [];
     try {

@@ -224,7 +224,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (this.contextual) this.startTurnTaking();
     const pinned = tenant.profile.live_model;
     const models = this.opts.models ?? (pinned ? [pinned, ...config.liveModels.filter((m) => m !== pinned)] : config.liveModels);
-    this.session = await connectWithFallback(models, (m) => this.setupFor(m, prompt), config.geminiApiKey, (m, err) => {
+    this.session = await connectWithFallback(models, (m) => this.setupFor(m, prompt), config.keys.calls, (m, err) => {
       this.fallbacks.push({ model: m, error: err.message.slice(0, 200) });
     });
     this.model = this.session.model;
@@ -358,7 +358,7 @@ export class CallSession extends EventEmitter<CallEvents> {
   private async reconnect(prompt: string): Promise<void> {
     if (this.closing || this.ended) return;
     const old = this.session;
-    const next = await LiveSession.connect(this.setupFor(this.model, prompt), this.opts.config.geminiApiKey);
+    const next = await LiveSession.connect(this.setupFor(this.model, prompt), this.opts.config.keys.calls);
     this.session = next;
     this.attach(next, prompt);
     if (this.turns?.isOpen) next.sendActivityStart();
@@ -380,7 +380,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       const next = models.find((m) => m !== this.model) ?? this.model;
       this.resumeHandle = undefined;
       const old = this.session;
-      const fresh = await LiveSession.connect(this.setupFor(next, this.prompt), this.opts.config.geminiApiKey);
+      const fresh = await LiveSession.connect(this.setupFor(next, this.prompt), this.opts.config.keys.calls);
       this.session = fresh;
       const from = this.model;
       this.model = next;
@@ -633,7 +633,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     const summary = await generateText(
       this.opts.config.textModel,
       `Summarise this phone call to ${this.opts.tenant.profile.name} for the owner in one or two plain sentences: who called, what they wanted, and what happened.\n\n${text}`,
-      this.opts.config.geminiApiKey,
+      this.opts.config.keys.text,
       { temperature: 0.2 },
     );
     await this.opts.repo.updateCall(this.callId, { summary: summary.trim() });

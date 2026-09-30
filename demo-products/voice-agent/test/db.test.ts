@@ -13,7 +13,7 @@ let fade: Tenant;
 
 before(async () => {
   db = await openPglite();
-  assert.deepEqual(await migrate(db), ['voice_0001_core']);
+  assert.deepEqual(await migrate(db), ['voice_0001_core', 'voice_0002_demo']);
   repo = new Repo(db);
   const tenants = await seedAll(repo, NOW, { diary: false });
   lucas = tenants.find((t) => t.slug === 'lucas-trattoria')!;
@@ -27,7 +27,7 @@ after(async () => {
 test('migrations are idempotent and recorded', async () => {
   assert.deepEqual(await migrate(db), []);
   const rows = await db.query<{ name: string }>('select name from public.voice_schema_migrations');
-  assert.deepEqual(rows.map((r) => r.name), ['voice_0001_core']);
+  assert.deepEqual(rows.map((r) => r.name).sort(), ['voice_0001_core', 'voice_0002_demo']);
 });
 
 test('every migration only touches voice_ objects', () => {

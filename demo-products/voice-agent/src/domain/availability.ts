@@ -29,6 +29,12 @@ export interface SlotRequest {
   existing: BusyInterval[];
   /** When moving a booking, its own interval does not block it. */
   excludeBookingId?: string;
+  /** Tables: only this seating area (inside, terrace). */
+  area?: string;
+  /** Tables: step-free with room for a wheelchair. A hard requirement. */
+  accessible?: boolean;
+  /** Tables: nice to have (window, booth, quiet); tables with more of them are tried first. */
+  prefer?: string[];
 }
 
 export interface Slot {
@@ -58,7 +64,14 @@ export interface AvailabilityResult {
   spoken_date: string;
   party_size: number;
   requested_time?: string;
-  slot?: { time: string; spoken: string; resource_key: string; resource_label: string; duration_minutes: number };
+  slot?: {
+    time: string; spoken: string; resource_key: string; resource_label: string; duration_minutes: number;
+    /** Tables in a business with seating areas. */
+    area?: string;
+    weather_note?: string;
+    accessible?: boolean;
+    features?: string[];
+  };
   alternatives: { time: string; spoken: string }[];
   available_ranges?: string[];
   reason?: Unavailable;
@@ -110,6 +123,13 @@ function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): b
   return aStart < bEnd && bStart < aEnd;
 }
 
+/** Staff moves: is this table free for this interval (pushed-together pairs and their parts count)? */
+export function resourceFree(
+  key: string, start: Date, end: Date, buffer: number, existing: BusyInterval[], resources: Resource[], excludeId?: string,
+): boolean {
+  return isFree(key, start, end, buffer, existing, resources, excludeId);
+}
+
 function isFree(
   key: string,
   start: Date,
@@ -136,11 +156,16 @@ export function suitableResources(
   resources: Resource[],
   party: number,
   staff?: string,
+  needs: { area?: string; accessible?: boolean; prefer?: string[] } = {},
 ): Resource[] | 'unknown_staff' {
   let list = resources.filter((r) => r.services.includes(service.key));
   if (service.kind === 'table') {
     list = list.filter((r) => (r.capacity ?? 0) >= party && (r.min ?? 1) <= party);
-    list.sort((a, b) => (a.capacity ?? 0) - (b.capacity ?? 0));
+    if (needs.area) list = list.filter((r) => r.area === needs.area);
+    if (needs.accessible) list = list.filter((r) => r.accessible);
+    const liked = (r: Resource) => (needs.prefer ?? []).filter((f) => r.features?.includes(f)).length;
+    // Most wanted features first, then the smallest table that fits, then single tables before pushed-together pairs.
+    list.sort((a, b) => liked(b) - liked(a) || (a.capacity ?? 0) - (b.capacity ?? 0) || (a.combines ? 1 : 0) - (b.combines ? 1 : 0));
   } else if (staff && !/^any/i.test(staff.trim())) {
     const s = staff.trim().toLowerCase();
     const named = list.filter((r) => r.key.toLowerCase() === s || r.label.toLowerCase().startsWith(s));
@@ -154,7 +179,7 @@ export function suitableResources(
 export function checkSlot(req: SlotRequest, service: BookableService, time: string): Slot | null {
   const { profile } = req;
   const resources = profile.booking?.resources ?? [];
-  const res = suitableResources(service, resources, req.partySize, req.staff);
+  const res = suitableResources(service, resources, req.partySize, req.staff, req);
   if (res === 'unknown_staff') return null;
   const starts = zonedToUtc(req.date, time, profile.timezone);
   const minutes = durationFor(service, req.partySize);
@@ -214,9 +239,13 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   if (service.max_party && req.partySize > service.max_party) {
     return no('party_too_large', service.large_party_note ?? `Phone bookings are for up to ${service.max_party}.`);
   }
-  const res = suitableResources(service, profile.booking?.resources ?? [], req.partySize, req.staff);
+  const res = suitableResources(service, profile.booking?.resources ?? [], req.partySize, req.staff, req);
   if (res === 'unknown_staff') return no('unknown_staff', `Nobody called "${req.staff}" does ${service.label}.`);
-  if (!res.length) return no('no_suitable_resource', `Nothing suits a party of ${req.partySize}.`);
+  if (!res.length) {
+    const where = req.area ? profile.booking?.areas?.find((a) => a.key === req.area)?.label.toLowerCase() : undefined;
+    const what = [req.accessible ? 'a step-free table' : null, where ? `the ${where}` : null].filter(Boolean).join(' in ');
+    return no('no_suitable_resource', what ? `There is no ${what} for a party of ${req.partySize}.` : `Nothing suits a party of ${req.partySize}.`);
+  }
 
   const times = candidateTimes(service, req.date);
   if (!times.length) return no('closed', `No ${service.label} bookings on ${base.spoken_date}.`);
@@ -238,6 +267,7 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   const slot = times.includes(requested) ? checkSlot(req, service, requested) : null;
   if (slot) {
     const r = profile.booking!.resources.find((x) => x.key === slot.resource_key)!;
+    const area = r.area ? profile.booking?.areas?.find((a) => a.key === r.area) : undefined;
     result.available = true;
     result.slot = {
       time: requested,
@@ -245,6 +275,10 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
       resource_key: r.key,
       resource_label: r.label,
       duration_minutes: durationFor(service, req.partySize),
+      area: area?.label,
+      weather_note: area?.weather_note,
+      accessible: r.accessible || undefined,
+      features: r.features?.length ? r.features : undefined,
     };
     return result;
   }

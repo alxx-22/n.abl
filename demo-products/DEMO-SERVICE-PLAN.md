@@ -1,7 +1,7 @@
 # n.abl Demo Service: build plan
 
-**Status: plan for review, 30 September 2026.** Nothing in this file is built
-yet except what section 0 lists as already existing. Branch: `voice-agent-DEV`.
+**Status: approved 30 September 2026, build under way.** Decisions D1 to D13
+as recommended, except D12 and D13 as amended below. Branch: `voice-agent-DEV`.
 
 The short version: a prospect gets a private link and a key. They pick their
 kind of business, build a believable version of it in about ten minutes
@@ -112,8 +112,8 @@ Each has a recommendation; the plan assumes it unless you say otherwise.
 | D8 | Capacity | The free tier holds about two busy calls per model at once, and on 30 September it slowed badly after heavy use. Cap concurrent demo calls at 4 with a friendly "all lines busy" message, and cost the paid tier before sending demos in volume | A prospect's first impression must not be a slow receptionist |
 | D9 | Order of presets | Restaurant (with click and collect) → takeaway and fast food → barber → hair salon → estate agent → café → pub → the rest | Restaurant exercises everything; takeaway reuses most of it; barber and salon introduce staff diaries; estate agent introduces a new domain |
 | D11 | Build from your website | A **scout** that reads the site with code first and a model second: plain fetching and parsing for facts, a headless browser for colours and fonts, and small Gemini Flash calls only for the menu and the gaps (section 4.7). No generated website or layout | Measured on ten real sites: a home page is 400 to 2,400 tokens, so the model part is cheap when it only sees what matters |
-| D12 | When the scout runs | When the team issues a key for a lead with a website, so the prospect opens a demo already built from their site, checked by us first. Prospects can also run it themselves from the builder | The first impression is their own restaurant, and nobody sees a bad scan we have not looked at |
-| D13 | API keys | One Gemini key per job, each from its own project: calls, scout, CRM writer. The scout never eats the receptionist's quota. Using several free projects just to multiply one job's quota may breach Google's terms: check before relying on it | Isolation is the benefit; extra quota is not a plan |
+| D12 | When the scout runs | **Decided: only when the prospect asks.** After choosing a preset, an optional "Your website" field; the scout fetches branding and menu only if it is filled in. Nothing is fetched at key issue | The prospect chooses what we read |
+| D13 | API keys | **Decided: one key for now** (`GEMINI_API_KEY`), with a key per job ready to switch on: `GEMINI_API_KEY_CALLS`, `GEMINI_API_KEY_SCOUT`, `GEMINI_API_KEY_TEXT`, each falling back to the main key. Using several free projects just to multiply one job's quota may breach Google's terms: check before relying on it | Isolation when needed, no extra setup now |
 | D10 | How real the back office is | Demo-grade but genuine: persisted, validated, live-updating, and staff actions work. Not a production reservations system: no staff logins, no emails, no real payments | It must survive being poked at by a restaurateur. A workspace can later be promoted into a real pilot (section 9.4) |
 
 ---

@@ -27,7 +27,7 @@ export class CallerListener extends EventEmitter<{ text: [text: string]; closed:
   }
 
   static async open(config: Config, languageCode?: string): Promise<CallerListener | null> {
-    if (!config.transcribeModel || !config.geminiApiKey) return null;
+    if (!config.transcribeModel || !config.keys.calls) return null;
     try {
       const s = await LiveSession.connect(
         {
@@ -37,7 +37,7 @@ export class CallerListener extends EventEmitter<{ text: [text: string]; closed:
           transcribeInput: true,
           vad: { silenceDurationMs: 300, prefixPaddingMs: 100 },
         },
-        config.geminiApiKey,
+        config.keys.calls,
         8000,
       );
       return new CallerListener(s);

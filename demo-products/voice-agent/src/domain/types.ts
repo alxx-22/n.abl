@@ -58,6 +58,35 @@ export interface Resource {
   min?: number;
   /** A combined resource (two pushed-together tables) blocks its parts, and vice versa. */
   combines?: string[];
+  /** Tables: which seating area it is in (see booking.areas). */
+  area?: string;
+  /** Step-free, with room for a wheelchair. */
+  accessible?: boolean;
+  /** window, booth, quiet, heated, covered, dog_friendly... */
+  features?: string[];
+  /** Where it sits on the floor plan (tables only; combined tables have none). */
+  layout?: TableLayout;
+}
+
+export interface TableLayout {
+  x: number;
+  y: number;
+  shape: 'round' | 'square' | 'rect';
+  seats: number;
+  rotation?: number;
+}
+
+/** A seating area: indoor, a terrace, the bar, a private room. */
+export interface SeatingArea {
+  key: string;
+  label: string;
+  kind: 'indoor' | 'outdoor' | 'bar' | 'private' | 'other';
+  /** Bookable by phone. Unbookable areas are walk-in only. */
+  reservable: boolean;
+  /** Take details for a callback instead of booking (a private room). */
+  enquiry_only?: boolean;
+  /** Outdoor areas: what happens when it rains, said once to callers who choose it. */
+  weather_note?: string;
 }
 
 export interface ModifierOption {
@@ -103,6 +132,12 @@ export interface Menu {
 
 export interface Ordering {
   collection: boolean;
+  /** Collection times are offered on this grid (default 15 minutes)... */
+  slot_minutes?: number;
+  /** ...with room for this many orders in each (unset: no limit). */
+  slot_capacity?: number;
+  /** Takeaway payment: card on the phone, pay on collection, or the caller's choice. Default either. */
+  payment?: 'phone' | 'collection' | 'either';
   delivery?: {
     districts: string[];
     fee_pence: number;
@@ -149,16 +184,33 @@ export interface TenantProfile {
   handoff_number?: string | null;
   owner_sms_number?: string | null;
   website?: string;
-  brand?: { accent?: string };
+  brand?: Brand;
   /** The five or so most-asked answers; the only knowledge in the prompt. */
   core_facts: string[];
   opening_hours: OpeningHours[];
   closures?: { date: string; note?: string }[];
   knowledge: KnowledgeEntry[];
-  booking?: { services: BookableService[]; resources: Resource[] };
+  booking?: {
+    services: BookableService[];
+    resources: Resource[];
+    /** Seating areas, for businesses with more than one (indoor, terrace, bar). */
+    areas?: SeatingArea[];
+    /** Highchairs available. */
+    highchairs?: number;
+  };
   menu?: Menu;
   ordering?: Ordering;
   policies?: Record<string, string>;
+}
+
+export interface Brand {
+  accent?: string;
+  primary?: string;
+  background?: string;
+  font_heading?: string;
+  font_body?: string;
+  /** A data: URL or a path this server serves; never hotlinked. */
+  logo?: string | null;
 }
 
 export interface Tenant {
@@ -183,6 +235,11 @@ export interface Booking {
   source: string;
   deposit_pence: number;
   deposit_paid: boolean;
+  visit_status?: 'expected' | 'arrived' | 'seated' | 'finished' | 'no_show';
+  allergies?: string | null;
+  tags?: string[];
+  area_key?: string | null;
+  history?: { at: string; by: string; what: string }[];
 }
 
 export interface OrderLine {
