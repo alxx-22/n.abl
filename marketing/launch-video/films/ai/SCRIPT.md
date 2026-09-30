@@ -54,9 +54,12 @@ movement of the other British voices, which is what makes a read sound
 lively rather than level. Gemini reads at a natural pace, so the film runs 37
 seconds against Kokoro's 33. Lines 4 to 6 are one sentence across three shots:
 Gemini reads them in one go (`joint` in `film.py`), so the list flows as one
-sentence, and `vo.py` cuts the read into the three shots. For now every line
-is read by `gemini-3.8-flash-lite-tts` standing in, in the same voice, until
-the free quota lets `gemini-3.8-flash-tts` read them.
+sentence, and `vo.py` cuts the read into the three shots. Every line is
+read by `gemini-3.8-flash-tts`. The end line is read calmly, "Enable, <short
+pause> put AI to work!": shouted on its own, "ENABLE!" came out closer to
+"Anibal" in the web film. Checked by two speech recognisers: every read word
+for word, "Enable" heard on lines 3 and 10, and in the final mix under the
+music 67 of 68 words (one heard "lead" as "leap").
 
 | # | Shot | Line |
 |---|---|---|
