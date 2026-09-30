@@ -29,6 +29,12 @@ Evidence:     docs/spike-results.md; 65 tests (npm test); the evaluation suite (
   this product creates is prefixed `voice_`, and nothing else in the project
   is touched (§7.1).
 
+**Next (30 September): the demo service.** Private links and keys, a builder
+with presets (restaurant with click and collect first), seeded workspaces,
+a floor plan back office and the customer's phone, hosted under
+`nabl.agency/demo/`, linked to the CRM. Planned in
+[`../DEMO-SERVICE-PLAN.md`](../DEMO-SERVICE-PLAN.md), for review.
+
 **Progress, 29 September (first build session).** What exists, what changed
 from the plan and why, and what is left. Run it with the steps in `README.md`.
 
