@@ -109,6 +109,7 @@ export interface AppConfig {
   sms: boolean;
   active_calls: number;
   max_calls: number;
+  gemini_key: 'checking' | 'ok' | 'missing' | 'rejected' | 'unreachable';
 }
 
 export interface VoiceMeta {

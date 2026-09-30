@@ -27,8 +27,13 @@ npm run dev                       # then open http://localhost:8787
 page choose **Code → Codespaces → ⋯ → New with options**, pick the
 **n.abl Reception (voice agent demo)** configuration, and paste your Gemini
 key when asked (or add `GEMINI_API_KEY` as a Codespaces secret first). The
-app starts by itself and opens in a new tab. Allow the microphone when the
-browser asks.
+app starts by itself, in the terminal tab named "Codespaces", and opens in a
+new tab. Allow the microphone when the browser asks. To change the key
+later, put `GEMINI_API_KEY=<your key>` in `.env.local`, then press Ctrl+C in
+that terminal tab and run `npm run dev` again.
+
+On start the terminal says whether Google accepted the key, and the app
+shows a red banner if it did not.
 
 Then pick a business, press **Start a live call** and speak. Headphones work
 best: on laptop speakers the agent can hear itself. The first run creates a

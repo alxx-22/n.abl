@@ -28,6 +28,22 @@ async function post(model: string, body: unknown, apiKey: string, timeoutMs = 60
   return JSON.parse(text);
 }
 
+export type KeyStatus = 'checking' | 'ok' | 'missing' | 'rejected' | 'unreachable';
+
+/** Asks Google whether the API key works, by listing one model (no tokens spent). */
+export async function checkApiKey(apiKey: string | undefined): Promise<{ status: KeyStatus; detail?: string }> {
+  if (!apiKey) return { status: 'missing' };
+  try {
+    const res = await fetch(`${BASE}?pageSize=1`, { headers: { 'x-goog-api-key': apiKey }, signal: AbortSignal.timeout(10000) });
+    if (res.ok) return { status: 'ok' };
+    const body = await res.json().catch(() => ({}));
+    const detail = String(body?.error?.message ?? `HTTP ${res.status}`);
+    return { status: res.status === 400 || res.status === 401 || res.status === 403 ? 'rejected' : 'unreachable', detail };
+  } catch (err) {
+    return { status: 'unreachable', detail: (err as Error).message };
+  }
+}
+
 export interface GenerateOptions {
   system?: string;
   /** A JSON schema (OpenAPI subset) for structured output. */

@@ -7,6 +7,7 @@
 //   npm start        production: serves web/dist (DATABASE_URL, PUBLIC_BASE_URL, CONSOLE_PASSWORD)
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { createServer as createNetServer } from 'node:net';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -31,6 +32,7 @@ import { ingestWebsite } from '../ingest/ingest.ts';
 import { applySettings } from '../domain/settings.ts';
 import { LIVE_MODELS, REPLY_SPEEDS, VOICES, VOICE_NAMES } from '../domain/voices.ts';
 import { previewVoice } from '../core/preview.ts';
+import { checkApiKey, type KeyStatus } from '../core/gemini.ts';
 
 const WEB = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'web');
 const DIST = join(WEB, 'dist');
@@ -56,12 +58,16 @@ const DEV_HEADERS = {
 export interface ServerOptions {
   /** 'dev' runs Vite inside the server; 'dist' serves the built app. */
   web?: 'dev' | 'dist';
+  /** Ask Google whether GEMINI_API_KEY works, and tell the console. */
+  checkKey?: boolean;
 }
 
 export interface App {
   config: Config;
   repo: Repo;
   bus: Bus;
+  /** Settles once Google has answered, when started with checkKey. */
+  keyChecked: Promise<{ status: KeyStatus; detail?: string }>;
   close: () => Promise<void>;
   port: number;
 }
@@ -159,6 +165,10 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
   const bus = new Bus();
   const sms = smsSender(config);
   const maxCalls = Number(process.env.MAX_CONCURRENT_CALLS ?? 6);
+  let keyStatus: KeyStatus = opts.checkKey ? 'checking' : config.geminiApiKey ? 'ok' : 'missing';
+  const keyChecked = opts.checkKey
+    ? checkApiKey(config.geminiApiKey).then((r) => ((keyStatus = r.status), r))
+    : Promise.resolve({ status: keyStatus });
 
   const twilioOk = (req: IncomingMessage, path: string, params: Record<string, string>) => {
     if (!config.twilio) return false;
@@ -250,7 +260,7 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
           return json(res, 200, {
             models: config.liveModels, demo_cards: config.demoCards.map((c) => ({ ...c, spoken: c.number.replace(/(\d{4})(?=\d)/g, '$1 ') })),
             telephony: Boolean(config.twilio), sms: Boolean(config.twilio?.smsFrom), numbers: await repo.listNumbers(),
-            active_calls: bus.activeCalls(), max_calls: maxCalls,
+            active_calls: bus.activeCalls(), max_calls: maxCalls, gemini_key: keyStatus,
           });
         }
         if (path === '/api/ingest' && req.method === 'POST') {
@@ -372,11 +382,11 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
   // Free Supabase projects pause after a week idle; a query every six hours keeps it awake.
   const keepAlive = setInterval(() => void repo.ping().catch(() => {}), 6 * 3600000);
 
-  await new Promise<void>((resolve) => server.listen(config.port, resolve));
+  await new Promise<void>((resolve, reject) => server.once('error', reject).listen(config.port, resolve));
   const address = server.address();
   const port = typeof address === 'object' && address ? address.port : config.port;
   return {
-    config, repo, bus, port,
+    config, repo, bus, port, keyChecked,
     close: async () => {
       clearInterval(keepAlive);
       for (const c of wss.clients) c.terminate();
@@ -388,12 +398,35 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
   };
 }
 
+function portFree(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const probe = createNetServer();
+    probe.once('error', () => resolve(false));
+    probe.once('listening', () => probe.close(() => resolve(true)));
+    probe.listen(port);
+  });
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const config = loadConfig();
-  if (!config.geminiApiKey) console.warn('GEMINI_API_KEY is not set: calls will fail to connect.');
+  // Checked before the database opens: two servers must never share one PGlite folder.
+  if (!(await portFree(config.port))) {
+    console.error(
+      `Port ${config.port} is already in use, most likely by n.abl Reception running in another terminal ` +
+        `(in a Codespace it starts by itself, in the "Codespaces" terminal tab).\n` +
+        `Use that one, or stop it first: press Ctrl+C in its terminal, or run  pkill -f server/main.ts  and then start again.`,
+    );
+    process.exit(1);
+  }
   if (!config.consolePassword) console.warn('CONSOLE_PASSWORD is not set: the console is open to anyone who can reach it.');
-  const app = await startServer(config, { web: process.argv.includes('--dev') ? 'dev' : 'dist' });
+  const app = await startServer(config, { web: process.argv.includes('--dev') ? 'dev' : 'dist', checkKey: true });
   console.log(`n.abl Reception on http://localhost:${app.port} · ${config.databaseUrl ? 'Supabase' : `PGlite (${config.pgliteDir})`} · models ${config.liveModels.join(' → ')}`);
+  void app.keyChecked.then(({ status, detail }) => {
+    if (status === 'ok') console.log('Gemini API key: accepted by Google. Open the app and press Start a live call.');
+    else if (status === 'missing') console.warn('GEMINI_API_KEY is not set, so calls cannot connect. Put GEMINI_API_KEY=<your key> in .env.local, then restart.');
+    else if (status === 'rejected') console.warn(`Google rejected GEMINI_API_KEY (${detail}). Fix it in .env.local (a Codespaces secret of the same name takes priority), then restart.`);
+    else console.warn(`Could not reach Google to check GEMINI_API_KEY (${detail}). Calls may fail.`);
+  });
   const stop = async () => {
     await app.close();
     process.exit(0);
