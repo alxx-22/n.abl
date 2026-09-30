@@ -80,6 +80,8 @@ export function LivePanel(props: {
   card: { spoken: string; expiry: string; cvc: string } | null;
   onStart: () => void;
   onStop: () => void;
+  /** What to try saying; defaults to lines for the business type. */
+  suggestions?: string[];
 }) {
   const { tenant, phase, latencies, stream, call } = props;
   const speaking = useSpeaking(call, phase === 'live');
@@ -174,7 +176,7 @@ export function LivePanel(props: {
         <div className="try">
           <span className="muted">Try saying</span>
           <ul>
-            {suggestions(tenant).map((s) => (
+            {(props.suggestions ?? suggestions(tenant)).map((s) => (
               <li key={s}>“{s}”</li>
             ))}
           </ul>

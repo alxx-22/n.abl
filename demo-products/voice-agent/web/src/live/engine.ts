@@ -31,7 +31,8 @@ export interface LiveCall {
 const ECHO_GATE_RMS = 2000;
 
 export async function startLiveCall(opts: {
-  slug: string;
+  /** One of our own demo businesses (team console), or a prospect's workspace. */
+  target: { tenant: string } | { workspace: string };
   phone?: string | null;
   onMessage: (m: LiveMessage) => void;
   onEnd: () => void;
@@ -43,7 +44,7 @@ export async function startLiveCall(opts: {
   const ctx = new AudioContext();
   let ws: WebSocket | null = null;
   try {
-    await ctx.audioWorklet.addModule('/mic-worklet.js');
+    await ctx.audioWorklet.addModule(`${import.meta.env.BASE_URL}mic-worklet.js`);
   } catch (err) {
     stream.getTracks().forEach((t) => t.stop());
     void ctx.close();
@@ -62,9 +63,9 @@ export async function startLiveCall(opts: {
   const scratch = new Float32Array(analyser.fftSize);
 
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  const q = new URLSearchParams({ tenant: opts.slug });
+  const q = new URLSearchParams(opts.target);
   if (opts.phone) q.set('phone', opts.phone);
-  ws = new WebSocket(`${proto}://${location.host}/ws/talk?${q}`);
+  ws = new WebSocket(`${proto}://${location.host}${import.meta.env.BASE_URL}ws/talk?${q}`);
   ws.binaryType = 'arraybuffer';
 
   let playhead = 0;

@@ -13,7 +13,15 @@ export interface Turn {
   expect: string;
 }
 
-export function useLiveCall(slug: string, onError: (message: string) => void) {
+export function useLiveCall(
+  target: { tenant: string } | { workspace: string },
+  onError: (message: string) => void,
+  /** The caller's number for this call (the customer's phone on a workspace). */
+  phone?: () => string | null,
+) {
+  const targetKey = JSON.stringify(target);
+  const phoneRef = useRef(phone);
+  phoneRef.current = phone;
   const [phase, setPhase] = useState<Phase>('idle');
   const [model, setModel] = useState<string | null>(null);
   const [latencies, setLatencies] = useState<Reply[]>([]);
@@ -30,8 +38,8 @@ export function useLiveCall(slug: string, onError: (message: string) => void) {
     setModel(null);
     try {
       call.current = await startLiveCall({
-        slug,
-        phone: new URLSearchParams(location.search).get('phone'),
+        target: JSON.parse(targetKey),
+        phone: phoneRef.current ? phoneRef.current() : new URLSearchParams(location.search).get('phone'),
         onMessage: (m: LiveMessage) => {
           if (m.type === 'ready') {
             setModel(m.model);
@@ -59,7 +67,7 @@ export function useLiveCall(slug: string, onError: (message: string) => void) {
             : e.message,
       );
     }
-  }, [slug]);
+  }, [targetKey]);
 
   const stop = useCallback(() => {
     if (!call.current) return;

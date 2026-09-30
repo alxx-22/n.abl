@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api.ts';
+import { ADMIN_API, api } from '../api.ts';
 import type { AppConfig } from '../types.ts';
 
 // Says so plainly when the Gemini key is missing or wrong: otherwise the
@@ -10,7 +10,7 @@ export function KeyBanner() {
     let tries = 0;
     let timer: ReturnType<typeof setTimeout>;
     const load = () =>
-      api<AppConfig>('/api/config')
+      api<AppConfig>(`${ADMIN_API}/config`)
         .then((c) => {
           setStatus(c.gemini_key);
           if (c.gemini_key === 'checking' && tries++ < 10) timer = setTimeout(load, 1500);

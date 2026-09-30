@@ -1,0 +1,471 @@
+// The prospect's side: everything under /demo/api that a key opens. A key
+// becomes a signed session cookie; every route below resolves that cookie to
+// a key and only ever touches workspaces the key owns. The team (signed in to
+// the console) can open any workspace, for support.
+//
+// Routes are listed in DEMO-SERVICE-PLAN.md §6.
+
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { randomBytes } from 'node:crypto';
+import type { Ctx } from './context.ts';
+import { BASE, HttpError, clientIp, cookie, eventStream, json, readJson, sameOrigin, setCookie } from './http.ts';
+import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
+import { tenantState } from './state.ts';
+import type { DemoKey, Workspace } from '../db/demo-repo.ts';
+import { THROTTLE, hashKey, ipHash, normaliseKey, prefixOf, readSession, signSession } from '../demo/access.ts';
+import { PRESETS, getPreset, type Preset } from '../presets/index.ts';
+import { seedFrom } from '../presets/restaurant/seed.ts';
+import { cleanBrief, draftFaqs, draftMenu } from '../presets/restaurant/drafts.ts';
+import { hoursSentence } from '../presets/restaurant/compile.ts';
+import type { RestaurantAnswers } from '../presets/restaurant/answers.ts';
+import { applySettings, type SettingsPatch } from '../domain/settings.ts';
+import type { TenantProfile } from '../domain/types.ts';
+import { spokenDate, spokenTime, toLocal } from '../domain/time.ts';
+import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
+import { SimulatedSms } from '../channels/sms.ts';
+
+export const API = `${BASE}/api`;
+export const SESSION_COOKIE = 'demo_s';
+/** A session lasts a week at most, and never beyond the key. */
+const SESSION_DAYS = 7;
+/** Concurrent demo calls on the whole server, and per key (plan §3.4). */
+export const DEMO_CALLS_TOTAL = Number(process.env.DEMO_MAX_CALLS ?? 4);
+export const DEMO_CALLS_PER_KEY = 1;
+
+/** Prospects' calls never text a real phone: the demo's phone mockup shows them instead. */
+export const demoSms = new SimulatedSms();
+
+// ── What a workspace stores ───────────────────────────────────────────────
+
+/** voice_tenants.config for a workspace. */
+export interface WorkspaceConfig {
+  preset: string;
+  version: 1;
+  answers: unknown;
+  /** Call settings the builder does not ask about: language, reply speed, model, turn-taking. */
+  settings?: SettingsPatch;
+}
+
+function configOf(w: Workspace): WorkspaceConfig {
+  const c = (w.config ?? {}) as Partial<WorkspaceConfig>;
+  return { preset: c.preset ?? w.preset ?? 'restaurant', version: 1, answers: c.answers ?? {}, settings: c.settings };
+}
+
+/** The profile the receptionist runs on: the preset's compile, then the call settings. */
+export function buildProfile(preset: Preset, answers: unknown, slug: string, settings?: SettingsPatch): TenantProfile {
+  const profile = preset.compile(answers, { slug });
+  if (!settings) return profile;
+  const r = applySettings(profile, settings);
+  return r.ok ? r.profile : profile;
+}
+
+const slugPart = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24);
+
+// ── Sessions ──────────────────────────────────────────────────────────────
+
+const usable = (k: DemoKey | null, now = Date.now()): k is DemoKey => Boolean(k && !k.revoked_at && k.expires_at.getTime() > now);
+
+/** The key behind this request's session cookie, if it is still good. */
+export async function sessionKey(ctx: Ctx, req: IncomingMessage): Promise<DemoKey | null> {
+  const s = readSession(cookie(req, SESSION_COOKIE), ctx.config.sessionSecret);
+  if (!s) return null;
+  const k = await ctx.demo.keyById(s.keyId);
+  return usable(k) ? k : null;
+}
+
+const secureCookies = (ctx: Ctx, req: IncomingMessage) =>
+  Boolean(ctx.config.publicBaseUrl?.startsWith('https')) || req.headers['x-forwarded-proto'] === 'https';
+
+// ── Limits ────────────────────────────────────────────────────────────────
+
+async function usedToday(ctx: Ctx, k: DemoKey) {
+  const [callSeconds, drafts, scans, workspaces] = await Promise.all([
+    ctx.demo.callSeconds24h(k.id),
+    ctx.demo.countUsage(k.id, ['menu_draft', 'faq_draft'], 24),
+    ctx.demo.countUsage(k.id, ['scouted'], 24),
+    ctx.demo.listWorkspaces(k.id),
+  ]);
+  return { call_seconds: callSeconds, drafts, scans, workspaces: workspaces.length };
+}
+
+/** Seconds of calling left for this key today. */
+export async function callSecondsLeft(ctx: Ctx, k: DemoKey): Promise<number> {
+  return Math.max(0, k.limits.call_minutes_per_day * 60 - (await ctx.demo.callSeconds24h(k.id)));
+}
+
+/** Live demo calls per key, held while the socket is open. */
+export const callsByKey = new Map<string, number>();
+
+// Per-workspace pacing for saves (plan: one a second) and for usage rows.
+const lastSave = new Map<string, number>();
+const lastSaveLogged = new Map<string, number>();
+const lastPreview = new Map<string, number>();
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+function mePayload(k: DemoKey, used: Awaited<ReturnType<typeof usedToday>>) {
+  return {
+    person_name: k.person_name,
+    company: k.company,
+    products: k.products,
+    expires_at: k.expires_at.toISOString(),
+    limits: k.limits,
+    used: { call_minutes: Math.ceil(used.call_seconds / 60), drafts: used.drafts, scans: used.scans, workspaces: used.workspaces },
+  };
+}
+
+function workspaceSummary(w: Workspace) {
+  const p = w.tenant.profile;
+  return {
+    id: w.tenant.id, slug: w.tenant.slug, preset: w.preset, name: p.name, accent: p.brand?.accent ?? null,
+    started_at: w.started_at?.toISOString() ?? null, updated_at: w.updated_at.toISOString(),
+  };
+}
+
+/** What the builder's preview pane shows: what the receptionist will actually say. */
+function preview(w: Workspace, profile: TenantProfile, answers: unknown) {
+  const a = answers as RestaurantAnswers;
+  const tables = profile.booking?.resources.filter((r) => r.layout) ?? [];
+  const covers: Record<string, number> = {};
+  for (const t of tables) covers[t.area ?? ''] = (covers[t.area ?? ''] ?? 0) + (t.layout?.seats ?? 0);
+  return {
+    greeting: profile.greeting,
+    core_facts: profile.core_facts,
+    hours: w.preset === 'restaurant' ? hoursSentence(a) : null,
+    covers: (profile.booking?.areas ?? []).map((ar) => ({ area: ar.key, label: ar.label, covers: covers[ar.key] ?? 0 })),
+    bookable_tables: tables.filter((t) => t.services.length).length,
+    pairs: profile.booking?.resources.filter((r) => r.combines).map((r) => r.label) ?? [],
+    dishes: profile.menu?.categories.reduce((n, c) => n + c.items.length, 0) ?? 0,
+  };
+}
+
+function workspacePayload(w: Workspace) {
+  const cfg = configOf(w);
+  const preset = getPreset(cfg.preset);
+  const answers = preset ? preset.sanitise(cfg.answers) : cfg.answers;
+  return {
+    ...workspaceSummary(w),
+    answers,
+    settings: cfg.settings ?? {},
+    issues: preset ? preset.validate(answers) : [],
+    preview: preset ? preview(w, w.tenant.profile, answers) : null,
+    profile: {
+      voice: w.tenant.profile.voice, greeting: w.tenant.profile.greeting, language_code: w.tenant.profile.language_code,
+      reply_speed: w.tenant.profile.reply_speed, live_model: w.tenant.profile.live_model, turn_taking: w.tenant.profile.turn_taking,
+      demo_pin: w.tenant.profile.demo_pin, phone_display: w.tenant.profile.phone_display,
+    },
+  };
+}
+
+// ── The routes ────────────────────────────────────────────────────────────
+
+/** Returns false if the path is not a prospect route. */
+export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResponse, path: string, url: URL): Promise<boolean> {
+  if (!path.startsWith(`${API}/`) || path.startsWith(`${API}/admin`)) return false;
+  const p = path.slice(API.length);
+  const { demo, repo, config, bus } = ctx;
+  if (req.method !== 'GET' && req.method !== 'HEAD' && !sameOrigin(req)) throw new HttpError(403, 'Cross-site request refused.');
+
+  // ── Entering with a key (the only open route) ─────────────────────────
+  if (p === '/session' && req.method === 'POST') {
+    const { key: raw } = await readJson(req, 10_000);
+    const ip = ipHash(clientIp(req), config.sessionSecret);
+    const n = normaliseKey(String(raw ?? ''));
+    const prefix = n ? prefixOf(n) : '----';
+    const misses = await demo.recentMisses(ip, prefix, THROTTLE.windowMinutes);
+    // Too many wrong keys from one address: stop checking altogether for a while.
+    if (misses.ip >= THROTTLE.perIp) throw new HttpError(429, 'Too many tries. Wait fifteen minutes, or ask us for a fresh link.');
+    const k = n ? await demo.keyByHash(hashKey(n)) : null;
+    if (!k || k.revoked_at || k.expires_at.getTime() <= Date.now()) {
+      await demo.recordAttempt(ip, prefix, false);
+      if (k?.revoked_at) throw new HttpError(401, 'That key has been switched off. Ask us for a new one.');
+      if (k) throw new HttpError(401, `That key expired on ${k.expires_at.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}. Ask us to extend it.`);
+      if (misses.prefix + 1 >= THROTTLE.perPrefix) throw new HttpError(429, 'Too many tries. Wait fifteen minutes, or ask us for a fresh link.');
+      throw new HttpError(401, 'That key did not work. Check it against the email, or ask us for a fresh link.');
+    }
+    await demo.recordAttempt(ip, prefix, true);
+    await demo.touchKey(k.id);
+    await demo.recordUsage(k.id, null, 'opened', {});
+    if (Math.random() < 0.05) void demo.pruneAttempts().catch(() => {});
+    const exp = Math.min(k.expires_at.getTime(), Date.now() + SESSION_DAYS * 86400000);
+    setCookie(res, SESSION_COOKIE, signSession({ keyId: k.id, exp }, config.sessionSecret), { maxAge: (exp - Date.now()) / 1000, secure: secureCookies(ctx, req) });
+    return json(res, 200, mePayload(k, await usedToday(ctx, k))), true;
+  }
+  if (p === '/session' && req.method === 'DELETE') {
+    setCookie(res, SESSION_COOKIE, '', { maxAge: 0, secure: secureCookies(ctx, req) });
+    return json(res, 200, { ok: true }), true;
+  }
+
+  // ── Everything else needs a session (or the team) ─────────────────────
+  const key = await sessionKey(ctx, req);
+  const admin = !key && isAdmin(req, ctx);
+  if (!key && !admin) throw new HttpError(401, 'Your session has ended. Enter your key again.');
+
+  if (p === '/me') {
+    if (!key) throw new HttpError(401, 'Enter your key.');
+    const ws = await demo.listWorkspaces(key.id);
+    return json(res, 200, { ...mePayload(key, await usedToday(ctx, key)), workspaces: ws.map(workspaceSummary) }), true;
+  }
+  if (p === '/presets') return json(res, 200, { presets: PRESETS }), true;
+  if (p === '/voices') return json(res, 200, voiceMeta(ctx)), true;
+  if (p === '/config') {
+    return json(res, 200, {
+      demo_cards: config.demoCards.map((d) => ({ ...d, spoken: d.number.replace(/(\d{4})(?=\d)/g, '$1 ') })),
+      gemini_key: ctx.keyStatus(),
+      lines_busy: bus.activeCalls() >= ctx.maxCalls,
+    }), true;
+  }
+
+  if (p === '/workspaces' && req.method === 'GET') {
+    if (!key) throw new HttpError(400, 'The team opens workspaces from the console.');
+    return json(res, 200, { workspaces: (await demo.listWorkspaces(key.id)).map(workspaceSummary) }), true;
+  }
+  if (p === '/workspaces' && req.method === 'POST') {
+    if (!key) throw new HttpError(400, 'Workspaces belong to a key.');
+    const b = await readJson(req, 10_000);
+    const preset = getPreset(String(b.preset ?? ''));
+    if (!preset) throw new HttpError(400, 'That kind of business is not ready yet.');
+    const existing = await demo.listWorkspaces(key.id);
+    if (existing.length >= key.limits.workspaces) {
+      throw new HttpError(403, `You have ${existing.length} demo businesses, the most this key allows. Delete one to start another.`);
+    }
+    const answers = preset.defaults() as RestaurantAnswers;
+    answers.basics.name = String(b.name ?? key.company ?? '').trim().slice(0, 60);
+    if (typeof b.website === 'string' && b.website.trim()) answers.basics.website = b.website.trim().slice(0, 200);
+    const clean = preset.sanitise(answers);
+    const slug = `demo-${key.key_prefix.toLowerCase()}-${slugPart(answers.basics.name) || preset.info.key}-${randomBytes(2).toString('hex')}`;
+    const profile = buildProfile(preset, clean, slug);
+    const w = await demo.createWorkspace(key.id, preset.info.key, profile, { preset: preset.info.key, version: 1, answers: clean } satisfies WorkspaceConfig);
+    await demo.recordUsage(key.id, w.tenant.id, 'workspace_created', { preset: preset.info.key, website: Boolean(answers.basics.website) });
+    return json(res, 201, workspacePayload(w)), true;
+  }
+
+  const m = /^\/workspaces\/([0-9a-f-]{36})(?:\/([a-z-]+)(?:\/([A-Za-z0-9+]{1,12}|[0-9a-f-]{36}))?)?$/.exec(p);
+  if (!m) throw new HttpError(404, 'Not found.');
+  const w = await demo.getWorkspace(m[1]);
+  // Someone else's workspace looks exactly like a missing one.
+  if (!w || (!admin && w.owner_key_id !== key!.id)) throw new HttpError(404, 'No such demo business.');
+  const t = w.tenant;
+  const cfg = configOf(w);
+  const preset = getPreset(cfg.preset);
+  if (!preset) throw new HttpError(409, 'This demo was made with a preset that is no longer available.');
+  const ownerId = w.owner_key_id ?? key?.id ?? null;
+  const usage = (kind: Parameters<typeof demo.recordUsage>[2], data: Record<string, unknown> = {}) =>
+    ownerId && !admin ? demo.recordUsage(ownerId, t.id, kind, data).catch(() => {}) : Promise.resolve();
+  const refresh = (data: Record<string, unknown> = {}) => bus.publish({ type: 'refresh', tenant_id: t.id, call_id: '', at: new Date().toISOString(), ...data });
+  const [, , sub, ref] = m;
+
+  if (!sub && req.method === 'GET') return json(res, 200, workspacePayload(w)), true;
+  if (!sub && req.method === 'DELETE') {
+    if (bus.activeFor(t.id).length) throw new HttpError(409, 'Hang up the call first.');
+    await demo.deleteWorkspace(t.id);
+    return json(res, 200, { ok: true }), true;
+  }
+
+  // ── The builder ───────────────────────────────────────────────────────
+  if (sub === 'answers' && req.method === 'PUT') {
+    const now = Date.now();
+    if (now - (lastSave.get(t.id) ?? 0) < 800) throw new HttpError(429, 'Saving too fast; try again in a moment.');
+    lastSave.set(t.id, now);
+    const answers = preset.sanitise(await readJson(req, 1_500_000));
+    const profile = buildProfile(preset, answers, t.slug, cfg.settings);
+    // Keep the demo line's PIN and anything else set outside the builder.
+    if (t.profile.demo_pin) profile.demo_pin = t.profile.demo_pin;
+    const saved = await demo.saveWorkspace(t.id, profile, { ...cfg, answers } satisfies WorkspaceConfig);
+    if (now - (lastSaveLogged.get(t.id) ?? 0) > 10 * 60000) {
+      lastSaveLogged.set(t.id, now);
+      void usage('config_saved');
+    }
+    if (w.started_at) refresh({ reason: 'config' });
+    return json(res, 200, workspacePayload(saved)), true;
+  }
+  if (sub === 'menu-draft' && req.method === 'POST') {
+    await spendDraft(ctx, key, admin);
+    const current = preset.sanitise(cfg.answers) as RestaurantAnswers;
+    const brief = cleanBrief(await readJson(req, 20_000), current.basics.style);
+    if (!brief.description && !brief.style) throw new HttpError(400, 'Describe the food first.');
+    try {
+      const menu = await draftMenu(brief, config);
+      void usage('menu_draft', { dishes: menu.categories.reduce((n, c) => n + c.items.length, 0) });
+      return json(res, 200, { menu }), true;
+    } catch (err) {
+      throw new HttpError(502, draftError(err));
+    }
+  }
+  if (sub === 'faq-draft' && req.method === 'POST') {
+    await spendDraft(ctx, key, admin);
+    const body = await readJson(req, 1_500_000);
+    const answers = preset.sanitise(body?.answers ?? cfg.answers) as RestaurantAnswers;
+    try {
+      const faqs = await draftFaqs(answers, config);
+      void usage('faq_draft', { faqs: faqs.length });
+      return json(res, 200, { faqs }), true;
+    } catch (err) {
+      throw new HttpError(502, draftError(err));
+    }
+  }
+
+  // ── Start and reset: compile, then fill the diary ─────────────────────
+  if ((sub === 'start' || sub === 'reset') && req.method === 'POST') {
+    if (bus.activeFor(t.id).length) throw new HttpError(409, 'Hang up the call first.');
+    const answers = preset.sanitise(cfg.answers);
+    const errors = preset.validate(answers).filter((i) => i.level === 'error');
+    if (errors.length) return json(res, 400, { error: errors[0].message, issues: errors }), true;
+    const profile = buildProfile(preset, answers, t.slug, cfg.settings);
+    profile.demo_pin = t.profile.demo_pin ?? String(1000 + Math.floor(Math.random() * 9000));
+    await demo.saveWorkspace(t.id, profile, { ...cfg, answers });
+    await repo.resetTenantData(t.id);
+    // A fresh seed each time: Reset shows a different week, still believable.
+    const plan = preset.seed(profile, new Date(), seedFrom(`${t.id}:${Date.now()}`));
+    await repo.insertSeed(t.id, plan);
+    await demo.markStarted(t.id);
+    void usage(sub === 'start' ? 'started' : 'reset', { bookings: plan.bookings.length, orders: plan.orders.length });
+    refresh({ reason: sub });
+    return json(res, 200, { ok: true, bookings: plan.bookings.length, orders: plan.orders.length, workspace: workspacePayload((await demo.getWorkspace(t.id))!) }), true;
+  }
+
+  // ── The live workspace ────────────────────────────────────────────────
+  if (sub === 'state' && req.method === 'GET') {
+    return json(res, 200, { ...(await tenantState(repo, t, bus)), started_at: w.started_at?.toISOString() ?? null }), true;
+  }
+  if (sub === 'events' && req.method === 'GET') return eventStream(req, res, bus, t.id), true;
+  if (sub === 'settings' && req.method === 'PATCH') {
+    const patch = (await readJson(req, 10_000)) as SettingsPatch;
+    const r = applySettings(t.profile, patch);
+    if (!r.ok) throw new HttpError(400, r.error);
+    // Voice and greeting are builder answers too; the rest are call settings.
+    const answers = preset.sanitise(cfg.answers) as RestaurantAnswers;
+    if (patch.voice !== undefined) answers.basics.voice = r.profile.voice;
+    if (patch.greeting !== undefined) answers.basics.greeting = r.profile.greeting;
+    const { voice: _v, greeting: _g, ...rest } = patch;
+    const settings = { ...(cfg.settings ?? {}), ...rest };
+    const profile = buildProfile(preset, answers, t.slug, settings);
+    if (t.profile.demo_pin) profile.demo_pin = t.profile.demo_pin;
+    const saved = await demo.saveWorkspace(t.id, profile, { ...cfg, answers, settings });
+    return json(res, 200, workspacePayload(saved)), true;
+  }
+  if (sub === 'voice-preview' && req.method === 'POST') {
+    const now = Date.now();
+    if (now - (lastPreview.get(t.id) ?? 0) < 2500) throw new HttpError(429, 'One preview at a time.');
+    lastPreview.set(t.id, now);
+    return await voicePreview(ctx, res, t.profile, await readJson(req, 10_000)), true;
+  }
+  if (sub === 'phone' && req.method === 'GET') {
+    const number = normaliseUkPhone(url.searchParams.get('number') ?? '');
+    if (!number) return json(res, 200, { number: null, messages: [] }), true;
+    const msgs = await repo.listTexts(t.id, number);
+    return json(res, 200, { number: displayUkPhone(number), sender: t.profile.name, messages: msgs }), true;
+  }
+
+  // ── Staff actions from the back office ────────────────────────────────
+  if (sub === 'bookings' && ref && req.method === 'PATCH') {
+    const b = await readJson(req, 20_000);
+    const booking = await repo.getBookingByReference(t.id, ref);
+    if (!booking) throw new HttpError(404, 'That booking is not in the diary.');
+    let message = '';
+    if (b.action === 'move') {
+      const r = await repo.moveBookingToTable(t, ref, String(b.table ?? ''));
+      if (!r.ok) throw new HttpError(409, r.message);
+      message = `Moved to ${t.profile.booking?.resources.find((x) => x.key === r.booking.resource_key)?.label ?? r.booking.resource_key}.`;
+    } else if (b.action === 'combine') {
+      // Push two tables together for this booking: the pair if it exists, or
+      // join them in the setup (same area, both real) and then use the pair.
+      const pair = await combineTables(ctx, w, preset, cfg, String(b.tables?.[0] ?? ''), String(b.tables?.[1] ?? ''));
+      const fresh = (await demo.getWorkspace(t.id))!.tenant;
+      const r = await repo.moveBookingToTable(fresh, ref, pair);
+      if (!r.ok) throw new HttpError(409, r.message);
+      message = `Now on ${fresh.profile.booking?.resources.find((x) => x.key === pair)?.label ?? pair}.`;
+    } else if (b.action === 'visit') {
+      const status = String(b.status ?? '');
+      if (!['expected', 'arrived', 'seated', 'finished', 'no_show'].includes(status)) throw new HttpError(400, 'Unknown visit state.');
+      if (booking.status !== 'confirmed') throw new HttpError(409, 'That booking was cancelled.');
+      await repo.setVisitStatus(t.id, ref, status as 'expected');
+      message = `Marked ${status.replace('_', '-')}.`;
+    } else if (b.action === 'details') {
+      const d: { notes?: string | null; allergies?: string | null; tags?: string[] } = {};
+      if (b.notes !== undefined) d.notes = String(b.notes ?? '').trim().slice(0, 500) || null;
+      if (b.allergies !== undefined) d.allergies = String(b.allergies ?? '').trim().slice(0, 200) || null;
+      if (Array.isArray(b.tags)) d.tags = b.tags.filter((x: unknown) => typeof x === 'string').map((x: string) => x.trim().slice(0, 30)).filter(Boolean).slice(0, 8);
+      await repo.updateBookingDetails(t.id, ref, d);
+      message = 'Saved.';
+    } else if (b.action === 'cancel') {
+      const c = await repo.cancelBooking(t.id, ref, 'staff');
+      if (!c) throw new HttpError(409, 'That booking is already cancelled.');
+      const l = toLocal(c.starts_at, t.profile.timezone);
+      if (b.notify !== false) await textCustomer(ctx, t.id, c.phone, `${t.profile.name}: we've had to cancel your booking ${c.reference} for ${spokenDate(l.date)} at ${spokenTime(l.time)}. Sorry for the trouble; call us to rebook. (Demo)`);
+      message = 'Cancelled.';
+    } else {
+      throw new HttpError(400, 'Unknown action.');
+    }
+    void usage('staff_action', { action: b.action });
+    refresh({ reason: 'staff', reference: booking.reference, what: message });
+    return json(res, 200, { ok: true, message }), true;
+  }
+  if (sub === 'orders' && ref && req.method === 'PATCH') {
+    const { status } = await readJson(req, 10_000);
+    if (!['confirmed', 'in_kitchen', 'ready', 'completed', 'cancelled'].includes(status)) throw new HttpError(400, 'Unknown order state.');
+    const o = await repo.getOrder(t.id, ref);
+    if (!o) throw new HttpError(404, 'No such order.');
+    await repo.setOrderStatus(t.id, o.reference, status);
+    if (status === 'ready' && o.status !== 'ready') {
+      await textCustomer(ctx, t.id, o.phone, o.fulfilment === 'delivery'
+        ? `${t.profile.name}: order ${o.reference} is on its way. (Demo)`
+        : `${t.profile.name}: order ${o.reference} is ready to collect. See you soon! (Demo)`);
+    }
+    void usage('staff_action', { action: `order_${status}` });
+    refresh({ reason: 'staff', reference: o.reference, what: `Order ${o.reference}: ${status.replace('_', ' ')}` });
+    return json(res, 200, { ok: true }), true;
+  }
+  if (sub === 'messages' && ref && req.method === 'PATCH') {
+    const { status } = await readJson(req, 1000);
+    if (status !== 'read' && status !== 'new') throw new HttpError(400, 'Unknown state.');
+    await repo.setMessageStatus(t.id, ref, status);
+    refresh({ reason: 'staff' });
+    return json(res, 200, { ok: true }), true;
+  }
+  throw new HttpError(404, 'Not found.');
+}
+
+async function spendDraft(ctx: Ctx, key: DemoKey | null, admin: boolean): Promise<void> {
+  if (admin || !key) return;
+  const n = await ctx.demo.countUsage(key.id, ['menu_draft', 'faq_draft'], 24);
+  if (n >= key.limits.drafts_per_day) throw new HttpError(429, `That's the ${key.limits.drafts_per_day} drafts this key has for today. Edit by hand, or try again tomorrow.`);
+}
+
+function draftError(err: unknown): string {
+  const m = (err as Error).message ?? '';
+  if (/429|quota|exhausted/i.test(m)) return 'The drafting model is busy (free-tier limit). Try again in a minute, or edit by hand.';
+  if (/503|overloaded|high demand/i.test(m)) return 'The drafting model is overloaded right now. Try again in a minute.';
+  return m.startsWith('The draft') ? m : 'The draft did not work this time. Try again, or edit by hand.';
+}
+
+/** A text to the customer from the back office: stored, shown on the phone mockup, never sent. */
+async function textCustomer(ctx: Ctx, tenantId: string, to: string | null, body: string): Promise<void> {
+  if (!to) return;
+  await ctx.repo.addMessage({ tenant_id: tenantId, kind: 'sms', to_number: to, body, status: await demoSms.send() });
+}
+
+/** The key of the pushed-together pair for two tables, joining them in the setup if need be. */
+async function combineTables(ctx: Ctx, w: Workspace, preset: Preset, cfg: WorkspaceConfig, a: string, b: string): Promise<string> {
+  const resources = w.tenant.profile.booking?.resources ?? [];
+  const existing = resources.find((r) => r.combines && r.combines.length === 2 && r.combines.includes(a) && r.combines.includes(b));
+  if (existing) {
+    if (!existing.services.length) throw new HttpError(409, `${existing.label} is not bookable.`);
+    return existing.key;
+  }
+  const answers = preset.sanitise(cfg.answers) as RestaurantAnswers;
+  const ta = answers.seating.tables.find((t) => t.key === a);
+  const tb = answers.seating.tables.find((t) => t.key === b);
+  if (!ta || !tb || a === b) throw new HttpError(400, 'Pick two different tables.');
+  if (ta.area !== tb.area) throw new HttpError(409, `${ta.label} and ${tb.label} are in different areas.`);
+  if (ta.walk_in || tb.walk_in) throw new HttpError(409, 'One of those tables is kept for walk-ins.');
+  ta.joins = [...new Set([...ta.joins, b])];
+  tb.joins = [...new Set([...tb.joins, a])];
+  const clean = preset.sanitise(answers);
+  const profile = buildProfile(preset, clean, w.tenant.slug, cfg.settings);
+  if (w.tenant.profile.demo_pin) profile.demo_pin = w.tenant.profile.demo_pin;
+  await ctx.demo.saveWorkspace(w.tenant.id, profile, { ...cfg, answers: clean });
+  const pair = profile.booking?.resources.find((r) => r.combines?.includes(a) && r.combines.includes(b));
+  if (!pair) throw new HttpError(409, 'Those tables cannot be pushed together.');
+  return pair.key;
+}

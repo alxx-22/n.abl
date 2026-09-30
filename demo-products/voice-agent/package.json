@@ -24,7 +24,9 @@
     "e2e:phone": "node --env-file-if-exists=.env.local test-e2e/phone.ts",
     "e2e:ingest": "node --env-file-if-exists=.env.local test-e2e/ingest.ts",
     "e2e:turns": "node --env-file-if-exists=.env.local test-e2e/turns.ts",
-    "spike:turns": "node --env-file-if-exists=.env.local src/spike/turns.ts"
+    "spike:turns": "node --env-file-if-exists=.env.local src/spike/turns.ts",
+    "demo:key": "node --env-file-if-exists=.env.local src/demo/cli.ts",
+    "e2e:demo": "npm run build && node --env-file-if-exists=.env.local test-e2e/demo-ui.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.0",

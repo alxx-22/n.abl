@@ -540,6 +540,65 @@ export class Repo {
     );
   }
 
+  /** The texts one number has had from this business, oldest first: the customer's phone. */
+  async listTexts(tenantId: string, to: string, limit = 50): Promise<{ id: string; body: string; status: string; created_at: Date }[]> {
+    const rows = await this.db.query<any>(
+      `select id, body, status, created_at from public.voice_messages
+       where tenant_id = $1 and kind = 'sms' and to_number = $2 order by created_at desc limit $3`,
+      [tenantId, to, limit],
+    );
+    return rows.reverse();
+  }
+
+  async setMessageStatus(tenantId: string, id: string, status: 'new' | 'read'): Promise<void> {
+    await this.db.query(`update public.voice_messages set status = $3 where tenant_id = $1 and id = $2 and kind = 'message'`, [tenantId, id, status]);
+  }
+
+  // ── Seeding a workspace ────────────────────────────────────────────────
+
+  /** Writes a planned week in a few statements (see presets/restaurant/seed.ts). */
+  async insertSeed(tenantId: string, plan: {
+    bookings: { reference: string; resource_key: string; area_key: string | null; starts_at: Date; ends_at: Date; party_size: number; name: string;
+      phone: string; notes: string | null; allergies: string | null; tags: string[]; deposit_pence: number; deposit_paid: boolean;
+      visit_status: string; booked_via: string }[];
+    orders: { reference: string; name: string; phone: string; due_at: Date; lines: OrderLine[]; subtotal_pence: number; total_pence: number;
+      allergy_notes: string | null; status: string; payment_status: string }[];
+    messages: { from_name: string; from_phone: string; body: string }[];
+  }): Promise<void> {
+    await this.db.tx(async (q) => {
+      for (let i = 0; i < plan.bookings.length; i += 40) {
+        const chunk = plan.bookings.slice(i, i + 40);
+        const params: unknown[] = [];
+        const rows = chunk.map((b) => {
+          const at = new Date(b.starts_at.getTime() - (2 + (b.party_size % 5)) * 86400000).toISOString();
+          params.push(tenantId, b.reference, b.resource_key, b.area_key, b.starts_at, b.ends_at, b.party_size, b.name, b.phone, b.notes,
+            b.allergies, b.tags, b.deposit_pence, b.deposit_paid, b.visit_status, JSON.stringify([{ at, by: b.booked_via, what: 'booked' }]));
+          const n = params.length - 16;
+          return `($${n + 1}, $${n + 2}, 'table', $${n + 3}, $${n + 4}, $${n + 5}, $${n + 6}, 0, $${n + 7}, $${n + 8}, $${n + 9}, $${n + 10}, $${n + 11}, $${n + 12}::text[], 'seed', $${n + 13}, $${n + 14}, $${n + 15}, $${n + 16}::jsonb)`;
+        });
+        await q.query(
+          `insert into public.voice_bookings (tenant_id, reference, service_key, resource_key, area_key, starts_at, ends_at, buffer_minutes, party_size,
+             name, phone, notes, allergies, tags, source, deposit_pence, deposit_paid, visit_status, history) values ${rows.join(', ')}`,
+          params,
+        );
+      }
+      for (const o of plan.orders) {
+        await q.query(
+          `insert into public.voice_orders (tenant_id, reference, name, phone, fulfilment, due_at, lines, subtotal_pence, delivery_fee_pence,
+             total_pence, allergy_notes, status, payment_status, source, created_at)
+           values ($1, $2, $3, $4, 'collection', $5, $6::jsonb, $7, 0, $8, $9, $10, $11, 'seed', $12)`,
+          [tenantId, o.reference, o.name, o.phone, o.due_at, JSON.stringify(o.lines), o.subtotal_pence, o.total_pence, o.allergy_notes, o.status,
+            o.payment_status, new Date(o.due_at.getTime() - 50 * 60000)],
+        );
+      }
+      for (const m of plan.messages) {
+        await q.query(`insert into public.voice_messages (tenant_id, kind, from_name, from_phone, body, status) values ($1, 'message', $2, $3, $4, 'new')`, [
+          tenantId, m.from_name, m.from_phone, m.body,
+        ]);
+      }
+    });
+  }
+
   // ── Demo reset ─────────────────────────────────────────────────────────
 
   async resetTenantData(tenantId: string): Promise<void> {

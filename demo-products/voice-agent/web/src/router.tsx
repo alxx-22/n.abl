@@ -1,11 +1,12 @@
-// Two pages, so a few lines of history handling instead of a router library.
+// A handful of pages, so a few lines of history handling instead of a router library.
 
 import { useEffect, useState, type AnchorHTMLAttributes, type MouseEvent } from 'react';
 
 const listeners = new Set<() => void>();
 
-export function navigate(to: string): void {
-  history.pushState(null, '', to);
+export function navigate(to: string, replace = false): void {
+  if (replace) history.replaceState(null, '', to);
+  else history.pushState(null, '', to);
   window.scrollTo(0, 0);
   for (const fn of listeners) fn();
 }

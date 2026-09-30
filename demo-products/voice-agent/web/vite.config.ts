@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
+  // Everything lives under /demo, the path the site's Worker forwards (nabl.agency/demo/*).
+  base: '/demo/',
   plugins: [react()],
   build: { outDir: 'dist', emptyOutDir: true, target: 'es2022', sourcemap: true },
 });

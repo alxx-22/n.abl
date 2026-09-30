@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState, type CSSProperties } from 'react';
-import { api } from '../api.ts';
+import { ADMIN_API, BASE, api } from '../api.ts';
 import { Calls, Diary, Messages, Orders } from '../components/BoardPanels.tsx';
 import { ResetIcon, SlidersIcon } from '../components/Icons.tsx';
 import { LivePanel } from '../components/LivePanel.tsx';
@@ -18,11 +18,11 @@ export function Board({ slug }: { slug: string }) {
   const [day, setDay] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [stream, dispatch] = useReducer(streamReducer, initialStream);
-  const live = useLiveCall(slug, toast);
+  const live = useLiveCall({ tenant: slug }, toast);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const refresh = useCallback(async () => {
-    const s = await api<TenantState>(`/api/tenants/${slug}/state`);
+    const s = await api<TenantState>(`${ADMIN_API}/tenants/${slug}/state`);
     setState(s);
     setDay((d) => d ?? s.today);
   }, [slug]);
@@ -33,9 +33,9 @@ export function Board({ slug }: { slug: string }) {
   }, [refresh]);
 
   useEffect(() => {
-    api<AppConfig>('/api/config').then(setConfig).catch((e: Error) => toast(e.message));
+    api<AppConfig>(`${ADMIN_API}/config`).then(setConfig).catch((e: Error) => toast(e.message));
     refresh().catch((e: Error) => toast(e.message));
-    const es = new EventSource(`/api/tenants/${slug}/events`);
+    const es = new EventSource(`${ADMIN_API}/tenants/${slug}/events`);
     es.onmessage = (m) => {
       const e = JSON.parse(m.data) as BoardEvent;
       dispatch({ type: 'event', event: e });
@@ -65,7 +65,7 @@ export function Board({ slug }: { slug: string }) {
   const reset = async () => {
     if (!confirm('Clear every booking, order, call and message for this demo, and refill the diary with sample bookings?')) return;
     try {
-      const r = await api<{ bookings: number }>(`/api/tenants/${slug}/reset`, { method: 'POST' });
+      const r = await api<{ bookings: number }>(`${ADMIN_API}/tenants/${slug}/reset`, { method: 'POST' });
       dispatch({ type: 'note', text: 'Demo reset.' });
       await refresh();
       toast(`Reset. ${r.bookings} sample bookings in the diary.`);
@@ -90,7 +90,7 @@ export function Board({ slug }: { slug: string }) {
     <div className="board-page" style={style}>
       <div className="accent-bar" />
       <div className="top">
-        <Link to="/" className="brand" aria-label="Back to all demo businesses">
+        <Link to={`${BASE}/admin`} className="brand" aria-label="Back to all demo businesses">
           n.abl <b>Reception</b>
         </Link>
         <h1>{t.name}</h1>
@@ -134,7 +134,7 @@ export function Board({ slug }: { slug: string }) {
         <Calls state={state} />
       </main>
 
-      <SettingsDialog slug={slug} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => refreshSoon()} />
+      <SettingsDialog target={{ tenant: slug }} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => refreshSoon()} />
     </div>
   );
 }

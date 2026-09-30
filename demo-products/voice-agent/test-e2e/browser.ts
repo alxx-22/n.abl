@@ -65,10 +65,10 @@ try {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/demo/admin`);
   await page.waitForSelector('.tenant-card');
   await page.screenshot({ path: join(OUT, '1-console.png') });
-  await page.goto(`${base}/board/lucas-trattoria?phone=07700900123`);
+  await page.goto(`${base}/demo/admin/board/lucas-trattoria?phone=07700900123`);
   await page.waitForSelector('.slot');
   await page.screenshot({ path: join(OUT, '2-board-idle.png') });
 

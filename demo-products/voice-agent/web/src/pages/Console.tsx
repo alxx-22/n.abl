@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type FormEvent } from 'react';
-import { api } from '../api.ts';
+import { ADMIN_API, BASE, api } from '../api.ts';
 import { MicIcon } from '../components/Icons.tsx';
 import { toast } from '../components/Toaster.tsx';
 import { Link, navigate } from '../router.tsx';
@@ -17,9 +17,9 @@ export function Console() {
   useEffect(() => {
     document.title = 'n.abl Reception';
     (async () => {
-      const [cfg, { tenants }] = await Promise.all([api<AppConfig>('/api/config'), api<{ tenants: { slug: string }[] }>('/api/tenants')]);
+      const [cfg, { tenants }] = await Promise.all([api<AppConfig>(`${ADMIN_API}/config`), api<{ tenants: { slug: string }[] }>(`${ADMIN_API}/tenants`)]);
       setConfig(cfg);
-      setProfiles(await Promise.all(tenants.map((t) => api<{ profile: Profile }>(`/api/tenants/${t.slug}`).then((d) => d.profile))));
+      setProfiles(await Promise.all(tenants.map((t) => api<{ profile: Profile }>(`${ADMIN_API}/tenants/${t.slug}`).then((d) => d.profile))));
     })().catch((e: Error) => toast(e.message));
   }, []);
 
@@ -69,7 +69,7 @@ export function Console() {
                 {p.demo_pin ? <span className="badge info">PIN {p.demo_pin}</span> : null}
               </div>
               <div className="row">
-                <Link to={`/board/${p.slug}`} className="button primary">
+                <Link to={`${BASE}/admin/board/${p.slug}`} className="button primary">
                   <MicIcon /> Start a live call
                 </Link>
               </div>
@@ -93,7 +93,7 @@ function Wizard() {
     e.preventDefault();
     setBusy(true);
     try {
-      const { profile } = await api<{ profile: Profile & { review_notes?: string[]; pages?: string[] } }>('/api/ingest', { method: 'POST', body: JSON.stringify({ url }) });
+      const { profile } = await api<{ profile: Profile & { review_notes?: string[]; pages?: string[] } }>(`${ADMIN_API}/ingest`, { method: 'POST', body: JSON.stringify({ url }) });
       const { review_notes = [], pages = [], ...clean } = profile;
       setNotes([`Read ${pages.length} page${pages.length === 1 ? '' : 's'}.`, ...review_notes]);
       setJson(JSON.stringify(clean, null, 2));
@@ -112,9 +112,9 @@ function Wizard() {
       return toast('The profile is not valid JSON. Check the last edit.');
     }
     try {
-      await api(`/api/tenants/${profile.slug}`, { method: 'PUT', body: JSON.stringify(profile) });
-      await api(`/api/tenants/${profile.slug}/reset`, { method: 'POST' });
-      navigate(`/board/${profile.slug}`);
+      await api(`${ADMIN_API}/tenants/${profile.slug}`, { method: 'PUT', body: JSON.stringify(profile) });
+      await api(`${ADMIN_API}/tenants/${profile.slug}/reset`, { method: 'POST' });
+      navigate(`${BASE}/admin/board/${profile.slug}`);
     } catch (err) {
       toast((err as Error).message);
     }

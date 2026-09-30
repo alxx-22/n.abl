@@ -1,8 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { api, audioBlob } from '../api.ts';
+import { ADMIN_API, DEMO_API, api, audioBlob, demoApi } from '../api.ts';
 import type { Profile, VoiceMeta } from '../types.ts';
 import { PlayIcon } from './Icons.tsx';
 import { toast } from './Toaster.tsx';
+
+/** Where the dialog loads and saves: one of our own businesses, or a prospect's workspace. */
+export type SettingsTarget = { tenant: string } | { workspace: string };
+
+function endpoints(target: SettingsTarget) {
+  if ('tenant' in target) {
+    return { base: `${ADMIN_API}/tenants/${target.tenant}`, voices: `${ADMIN_API}/voices`, call: api, team: true };
+  }
+  const call = <T,>(path: string, opts?: RequestInit) => demoApi<T>(path.slice(DEMO_API.length), opts);
+  return { base: `${DEMO_API}/workspaces/${target.workspace}`, voices: `${DEMO_API}/voices`, call, team: false };
+}
 
 interface Form {
   voice: string;
@@ -13,7 +24,9 @@ interface Form {
   turn_taking: 'contextual' | 'standard';
 }
 
-export function SettingsDialog({ slug, open, onClose, onSaved }: { slug: string; open: boolean; onClose: () => void; onSaved: (p: Profile) => void }) {
+export function SettingsDialog({ target, open, onClose, onSaved }: { target: SettingsTarget; open: boolean; onClose: () => void; onSaved: (p: Profile) => void }) {
+  const ep = endpoints(target);
+  const slug = JSON.stringify(target);
   const dialog = useRef<HTMLDialogElement>(null);
   const [meta, setMeta] = useState<VoiceMeta | null>(null);
   const [form, setForm] = useState<Form | null>(null);
@@ -32,7 +45,7 @@ export function SettingsDialog({ slug, open, onClose, onSaved }: { slug: string;
   useEffect(() => {
     if (!open) return;
     setError(null);
-    Promise.all([meta ? Promise.resolve(meta) : api<VoiceMeta>('/api/voices'), api<{ profile: Profile }>(`/api/tenants/${slug}`)])
+    Promise.all([meta ? Promise.resolve(meta) : ep.call<VoiceMeta>(ep.voices), ep.call<{ profile: Profile }>(ep.base)])
       .then(([m, { profile }]) => {
         setMeta(m);
         setForm({
@@ -55,7 +68,7 @@ export function SettingsDialog({ slug, open, onClose, onSaved }: { slug: string;
     if (!form) return;
     setPreviewing(true);
     try {
-      const blob = await audioBlob(`/api/tenants/${slug}/voice-preview`, { voice: form.voice, greeting: form.greeting, language_code: form.language_code || null });
+      const blob = await audioBlob(`${ep.base}/voice-preview`, { voice: form.voice, greeting: form.greeting, language_code: form.language_code || null }, ep.team);
       audio.current?.pause();
       audio.current = new Audio(URL.createObjectURL(blob));
       await audio.current.play();
@@ -71,7 +84,7 @@ export function SettingsDialog({ slug, open, onClose, onSaved }: { slug: string;
     setSaving(true);
     setError(null);
     try {
-      const { profile } = await api<{ profile: Profile }>(`/api/tenants/${slug}/settings`, {
+      const { profile } = await ep.call<{ profile: Profile }>(`${ep.base}/settings`, {
         method: 'PATCH',
         body: JSON.stringify({ ...form, language_code: form.language_code || null, live_model: form.live_model || null }),
       });

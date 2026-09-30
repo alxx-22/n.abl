@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { onSignInNeeded, signedIn } from '../api.ts';
+import { ADMIN_API, onSignInNeeded, signedIn } from '../api.ts';
 import { toast } from './Toaster.tsx';
 
 // Shown only when the server has CONSOLE_PASSWORD set.
@@ -11,7 +11,7 @@ export function SignIn() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const res = await fetch('/api/login', {
+    const res = await fetch(`${ADMIN_API}/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ password }),

@@ -1,5 +1,5 @@
 // The phone path without the phone: this script plays Twilio. It opens the
-// server's /twilio/stream socket with a valid token, streams a recorded caller
+// server's /demo/twilio/stream socket with a valid token, streams a recorded caller
 // as 8 kHz μ-law in real time, plays back the agent's frames, echoes marks
 // when they would have finished playing, and checks the booking landed.
 //
@@ -17,7 +17,7 @@ import { loadConfig } from '../src/config.ts';
 import { startServer } from '../src/server/main.ts';
 import { Resampler, concatPcm16, mulawDecode, mulawEncode, wavFromPcm16 } from '../src/core/audio.ts';
 import { speak } from '../src/core/gemini.ts';
-import { streamToken } from '../src/channels/twilio.ts';
+import { TWILIO_BASE, streamToken } from '../src/channels/twilio.ts';
 
 const OUT = 'eval-results/phone';
 mkdirSync(OUT, { recursive: true });
@@ -53,7 +53,7 @@ const app = await startServer({ ...config, port: 0, pgliteDir: dir, databaseUrl:
 const tenant = (await app.repo.getTenant('lucas-trattoria'))!;
 await app.repo.db.query(`delete from public.voice_bookings where tenant_id = $1 and source = 'seed'`, [tenant.id]);
 const callSid = `CA${Date.now()}`;
-const ws = new WebSocket(`ws://localhost:${app.port}/twilio/stream`);
+const ws = new WebSocket(`ws://localhost:${app.port}${TWILIO_BASE}/stream`);
 await new Promise((r) => ws.on('open', r));
 
 const agentFrames: Int16Array[] = [];

@@ -86,6 +86,8 @@ export interface CallOptions {
   textMode?: boolean;
   /** Instead of the greeting, e.g. after an unanswered transfer. */
   openingCue?: string;
+  /** Wrap up after this long instead of config.maxCallSeconds: a demo key's minutes left today. */
+  maxSeconds?: number;
 }
 
 const SPEECH_RMS = 700;
@@ -541,7 +543,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (this.ended || !this.session) return;
     const now = Date.now();
     const elapsed = (now - this.startedAt) / 1000;
-    if (!this.wrapUpSent && elapsed > this.opts.config.maxCallSeconds) {
+    if (!this.wrapUpSent && elapsed > Math.min(this.opts.maxSeconds ?? Infinity, this.opts.config.maxCallSeconds)) {
       this.wrapUpSent = true;
       this.session.sendText('[The call has reached its time limit. Politely wrap up: offer to take a message, then say goodbye and call end_call.]');
       setTimeout(() => {

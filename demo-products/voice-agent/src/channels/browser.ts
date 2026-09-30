@@ -9,14 +9,20 @@ import type { WebSocket } from 'ws';
 import type { Config } from '../config.ts';
 import type { Repo } from '../db/repo.ts';
 import type { Tenant } from '../domain/types.ts';
-import { CallSession } from '../core/call.ts';
+import { CallSession, type CallSummary } from '../core/call.ts';
 import type { SmsSender } from '../core/tools.ts';
 import type { Bus } from '../server/bus.ts';
 import { normaliseUkPhone } from '../domain/phone.ts';
 
 export async function handleBrowserCall(
   ws: WebSocket,
-  deps: { tenant: Tenant; repo: Repo; config: Config; bus: Bus; sms: SmsSender; callerPhone?: string | null },
+  deps: {
+    tenant: Tenant; repo: Repo; config: Config; bus: Bus; sms: SmsSender; callerPhone?: string | null;
+    /** Seconds before the receptionist wraps up (a demo key's minutes left). */
+    maxSeconds?: number;
+    /** Told when the call ends, e.g. to record a demo key's usage. */
+    onEnded?: (summary: CallSummary) => void;
+  },
 ): Promise<void> {
   const send = (m: Record<string, unknown>) => {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(m));
@@ -31,7 +37,9 @@ export async function handleBrowserCall(
     sms: deps.sms,
     telephony: null,
     publish: deps.bus.publish,
+    maxSeconds: deps.maxSeconds,
   });
+  if (deps.onEnded) call.once('ended', deps.onEnded);
 
   call.on('audio', (pcm) => {
     if (ws.readyState === ws.OPEN) ws.send(Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength), { binary: true });
