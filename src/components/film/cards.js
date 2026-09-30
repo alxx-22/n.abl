@@ -418,37 +418,48 @@ export const bespoke = cardScene(8, (s, { dur, compact }) => {
 const STEP = { W: 540, H: 540 }
 const pillW = (txt, px = 28) => Math.ceil(textWidth(txt, `600 ${px}px "Inter Tight", sans-serif`)) + 32 + 12 + 56
 
-/* ---------- 01 listen: a discovery call, heard, and where the time goes written down ---------- */
-export const listen = cardScene(7, (s, { dur }) => {
-  const sp = specks(s, 31, 10, 900, 700)
-  const panel = h('div', 'c-step', s.cam, `
-    <div class="hd"><span class="ic ice">${icon('phone')}</span><span class="t">Discovery call</span><span class="st ice">● LISTENING</span></div>
-    <div class="c-wave ice"></div>
-    <div class="notes">
-      <div class="note"><i></i><span>Missed calls after 5 pm</span></div>
-      <div class="note"><i></i><span>Invoices typed by hand</span></div>
-      <div class="note"><i></i><span>Chasing late payments</span></div>
+/* ---------- 01 listen: a discovery call on video, and n.abl's notes on where the time goes ----------
+   A meeting window with both of you on camera, tilted in space; you talk
+   (the ring and the level on your tile), and n.abl's notes float in front
+   of the call, one line at a time. */
+export const listen = cardScene(7.5, (s, { dur }) => {
+  const sp = specks(s, 31, 12, 900, 760)
+  const meet = h('div', 'c-meet', s.cam, `
+    <div class="bar"><span class="rec"></span><span class="t">Discovery call</span><span class="time">00:00</span></div>
+    <div class="tiles">
+      <div class="tile you"><div class="av" style="background:linear-gradient(140deg,#E9AC57,#B87718)">Y</div><div class="nm">You</div><div class="lv"><i></i><i></i><i></i><i></i></div></div>
+      <div class="tile nabl"><div class="av sp">${spark(40)}</div><div class="nm">n.abl</div><div class="lv"><i></i><i></i><i></i><i></i></div></div>
     </div>
-    <div class="sum">${spark(22)}<span>3 places the time goes</span></div>`)
-  const wave = panel.querySelector('.c-wave'), wr = rng(7)
-  const bars = Array.from({ length: 30 }, () => { const e = h('i', '', wave); e._h = 10 + 36 * wr(); return e })
-  const notes = [...panel.querySelectorAll('.note')], sum = panel.querySelector('.sum')
-  const T = [1.2, 2.1, 3], tSum = 4.2
-  const cam = drift(s, [[0, 0, -18, -30, 8, -6], [dur, 0, 14, 16, 2, 4]])
+    <div class="ctl"><span>${icon('mic')}</span><span>${icon('cam')}</span><span class="end">${icon('phone')}</span></div>`)
+  const time = meet.querySelector('.time'), you = meet.querySelector('.tile.you'), nb = meet.querySelector('.tile.nabl')
+  const lvY = [...you.querySelectorAll('.lv i')], lvN = [...nb.querySelectorAll('.lv i')]
+  const notes = h('div', 'c-notes', s.cam, `
+    <div class="hd">${spark(20)}<span>n.abl notes</span></div>
+    <div class="note"><i></i><span>Missed calls after 5 pm</span></div>
+    <div class="note"><i></i><span>Invoices typed by hand</span></div>
+    <div class="note"><i></i><span>Chasing late payments</span></div>
+    <div class="sum">3 places the time goes</div>`)
+  const lines = [...notes.querySelectorAll('.note')], sum = notes.querySelector('.sum')
+  const T = [1.9, 2.8, 3.7], tNotes = 1.5, tSum = 4.6
+  // you talk, n.abl asks now and then
+  const youTalk = t => (t > .5 && t < 1.6) || (t > 2 && t < 3.3) || (t > 3.5 && t < 4.4)
+  const nbTalk = t => (t > 1.6 && t < 2) || (t > 3.3 && t < 3.5)
+  const cam = drift(s, [[0, -10, -30, -40, 10, 12], [tNotes, 0, 0, -10, 6, 4], [dur, 10, 16, 16, 4, -6]])
   return t => {
     sp(t); cam(t); loopLens(s, t, dur)
-    put(panel, { o: 1 })
-    const talking = t > .3 && t < 4
-    bars.forEach((e, i) => {
-      const k = talking ? .3 + .7 * Math.abs(Math.sin(t * 8 + i * .6) * Math.sin(t * 2.7 + i * .2)) : .1
-      e.style.height = (e._h * k + 4).toFixed(1) + 'px'
-    })
-    notes.forEach((e, i) => pop(e, t, T[i]))
+    put(meet, { x: -20, y: -84, rx: 6, ry: 10, o: 1 })
+    time.textContent = `00:${String(12 + Math.floor(t * 2)).padStart(2, '0')}`
+    const talkY = youTalk(t), talkN = nbTalk(t)
+    you.classList.toggle('talk', talkY); nb.classList.toggle('talk', talkN)
+    const lv = (els, on, ph) => els.forEach((e, i) => { e.style.transform = `scaleY(${(on ? .3 + .7 * Math.abs(Math.sin(t * 11 + i * 1.3 + ph)) : .15).toFixed(3)})` })
+    lv(lvY, talkY, 0); lv(lvN, talkN, 2)
+    blurIn(notes, t, tNotes, { x: 62, y: 146, z: 90, ry: -10, rx: 4, dz: 200, s0: .92, blur: 16 })
+    lines.forEach((e, i) => pop(e, t, T[i]))
     pop(sum, t, tSum)
     const g = bell(t, tSum, tSum + .1, tSum + 1.3)
     sum.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(${AMB},${(.15 + .4 * g).toFixed(2)})`
   }
-}, STEP)
+}, { W: 620, H: 600 })
 
 /* ---------- 02 map: how the work flows today, traced, and where it sticks ---------- */
 export const map = cardScene(7, (s, { dur }) => {
@@ -569,39 +580,63 @@ export const launch = cardScene(7.5, (s, { dur }) => {
   }
 }, STEP)
 
-/* ---------- 05 run and improve: the monthly report, the new thing, the session ---------- */
-export const improve = cardScene(7.5, (s, { dur }) => {
-  const sp = specks(s, 35, 10, 900, 700)
+/* ---------- 05 run and improve: the month's report, talked through on a call ----------
+   The report is a screen being shared, tilted in space with its line
+   standing off it; n.abl's tile sits in front, speaking over it, with the
+   words captioned, and what comes next lands in front of both. */
+export const improve = cardScene(8, (s, { dur }) => {
+  const sp = specks(s, 35, 14, 900, 760)
   const MONTHS = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct'], VALS = [86, 89, 91, 94, 97]
-  const CW = 400, CH = 150, lo = 82, hi = 100
+  const CW = 380, CH = 150, lo = 82, hi = 100
   const px = k => (k / (MONTHS.length - 1)) * CW, py = v => CH - ((v - lo) / (hi - lo)) * CH
   const pts = VALS.map((v, k) => [px(k), py(v)])
   const line = pts.map(([x, y], k) => `${k ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
-  const panel = h('div', 'c-step c-month', s.cam, `
-    <div class="hd"><span class="ic amb">${icon('chart')}</span><span class="t">Monthly report</span><span class="when">OCT</span></div>
+  const share = h('div', 'c-share', s.cam, `
+    <div class="hd"><span class="live">● SHARING</span><span class="t">Monthly report</span></div>
     <div class="k">Calls answered</div>
-    <svg class="chart" viewBox="-14 -24 ${CW + 28} ${CH + 58}" style="width:${CW + 28}px;height:${CH + 58}px;display:block;overflow:visible">
+    <svg class="chart" viewBox="-14 -14 ${CW + 28} ${CH + 48}" style="width:${CW + 28}px;height:${CH + 48}px;display:block;overflow:visible">
+      ${[0, 1, 2, 3].map(g => `<line class="grid" x1="0" x2="${CW}" y1="${(CH * g / 3).toFixed(1)}" y2="${(CH * g / 3).toFixed(1)}"/>`).join('')}
       <path class="area" d="${line} L${CW} ${CH} L0 ${CH} Z"/>
       <path class="ln" d="${line}"/>
       ${pts.map(([x, y]) => `<circle class="pt" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/>`).join('')}
       ${MONTHS.map((m, k) => `<text class="mo" x="${px(k).toFixed(1)}" y="${CH + 30}">${m}</text>`).join('')}
-      <text class="val" x="${pts[4][0]}" y="${(pts[4][1] - 18).toFixed(1)}">97%</text>
     </svg>`)
-  const ln = panel.querySelector('.ln'), area = panel.querySelector('.area'), dots = [...panel.querySelectorAll('.pt')], val = panel.querySelector('.val')
+  const ln = share.querySelector('.ln'), area = share.querySelector('.area'), dots = [...share.querySelectorAll('.pt')]
   const L = ln.getTotalLength() || 1
-  const added = h('div', 'c-chip amb', s.cam, `${spark(20)}<span>New this month: after-hours bookings</span>`)
-  const meet = h('div', 'c-chip', s.cam, `${icon('cal')}<span>Session with us · Thu 10:00</span>`)
-  const tLine = [.6, 2.4], tAdd = 3, tMeet = 3.7
-  const cam = drift(s, [[0, 0, -24, -30, 8, 6], [tAdd, 0, 0, 0, 3, 0], [dur, 0, 16, 10, 2, -4]])
+  // the latest figure stands off the screen, in front of it
+  const tag = h('div', 'c-tag', s.cam, `<b>97%</b><span>up from 86%</span>`)
+  const pres = h('div', 'c-pres', s.cam, `<div class="av">${spark(46)}</div><div class="nm">n.abl</div><div class="lv"><i></i><i></i><i></i><i></i></div>`)
+  const lvP = [...pres.querySelectorAll('.lv i')]
+  const cc = h('div', 'c-cc', s.cam, `<span class="a"></span><span class="b"></span>`)
+  const ccA = words(cc.querySelector('.a'), '“Calls answered are up to 97% this month.”')
+  const ccB = words(cc.querySelector('.b'), '“Next, we add after-hours bookings.”')
+  const next = h('div', 'c-chip amb', s.cam, `${spark(20)}<span>Next: after-hours bookings</span>`)
+  const meet = h('div', 'c-chip', s.cam, `${icon('cal')}<span>Next session · Thu 10:00</span>`)
+  const tLine = [.6, 2.2], tTag = 2.3, tA = 1.1, tB = 3.4, tNext = 3.9, tMeet = 4.6
+  const talking = t => (t > 1 && t < 3) || (t > 3.3 && t < 4.6)
+  const cam = drift(s, [[0, -20, -20, -60, 12, 16], [tTag, 0, 0, -10, 7, 4], [dur, 16, 14, 10, 5, -10]])
   return t => {
     sp(t); cam(t); loopLens(s, t, dur)
-    put(panel, { y: -74, o: 1 })
+    blurIn(share, t, .1, { x: 24, y: -96, rx: 8, ry: -16, dz: 200, s0: .95, blur: 16 })
     const q = P(t, tLine[0], tLine[1], E.io)
     ln.style.strokeDasharray = `${L} ${L}`; ln.style.strokeDashoffset = (L * (1 - q)).toFixed(1)
     area.style.opacity = (.9 * q).toFixed(3)
     dots.forEach((e, k) => { e.style.opacity = q * (MONTHS.length - 1) >= k - .01 ? 1 : 0 })
-    val.style.opacity = P(t, tLine[1] - .1, tLine[1] + .2).toFixed(3)
-    blurIn(added, t, tAdd, { y: 140, dz: 160, s0: .92, blur: 14 })
-    blurIn(meet, t, tMeet, { y: 200, dz: 160, s0: .92, blur: 14 })
+    blurIn(tag, t, tTag, { x: 170, y: -170, z: 100, ry: -16, dz: 160, s0: .8, blur: 12 })
+    const tg = bell(t, tTag, tTag + .1, tTag + 1.4)
+    tag.style.boxShadow = `0 20px 60px rgba(0,0,0,.5), 0 0 ${(30 + 50 * tg).toFixed(0)}px rgba(${AMB},${(.25 + .35 * tg).toFixed(2)})`
+    blurIn(pres, t, .5, { x: -150, y: 104, z: 120, ry: 12, dz: 200, s0: .9, blur: 14 })
+    const on = talking(t)
+    pres.classList.toggle('talk', on)
+    lvP.forEach((e, i) => { e.style.transform = `scaleY(${(on ? .3 + .7 * Math.abs(Math.sin(t * 11 + i * 1.3)) : .15).toFixed(3)})` })
+    // the caption: the first line, then the second in its place
+    const swap = t >= tB
+    put(cc, { x: 70, y: 104, z: 100, o: P(t, tA - .05, tA + .1) })
+    cc.querySelector('.a').style.display = swap ? 'none' : 'inline'
+    cc.querySelector('.b').style.display = swap ? 'inline' : 'none'
+    ccA.forEach((e, i) => rise(e, t, tA + i * .07, { dur: .22, dy: 8, blur: 8 }))
+    ccB.forEach((e, i) => rise(e, t, tB + i * .07, { dur: .22, dy: 8, blur: 8 }))
+    blurIn(next, t, tNext, { x: 60, y: 172, z: 110, dz: 160, s0: .92, blur: 14 })
+    blurIn(meet, t, tMeet, { x: 60, y: 228, z: 110, dz: 160, s0: .92, blur: 14 })
   }
-}, STEP)
+}, { W: 660, H: 640 })

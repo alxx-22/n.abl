@@ -155,6 +155,8 @@ const I = {
   mail: '<rect x="4" y="7" width="24" height="18" rx="3"/><path d="M5 9l11 8 11-8"/>',
   sheet: '<rect x="5" y="4" width="22" height="24" rx="3"/><path d="M5 11h22M5 18h22M13 4v24"/>',
   scan: '<path d="M4 11V6a2 2 0 012-2h5M21 4h5a2 2 0 012 2v5M28 21v5a2 2 0 01-2 2h-5M11 28H6a2 2 0 01-2-2v-5"/><path d="M8 16h16"/>',
+  mic: '<rect x="12" y="4" width="8" height="15" rx="4"/><path d="M7 15a9 9 0 0018 0M16 24v4"/>',
+  cam: '<rect x="3" y="9" width="18" height="14" rx="3"/><path d="M21 14l8-4v12l-8-4z"/>',
   link: '<path d="M13 19l6-6"/><path d="M11 14l-3 3a4 4 0 006 6l3-3M21 18l3-3a4 4 0 00-6-6l-3 3"/>',
 }
 export const icon = k => `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${I[k]}</svg>`

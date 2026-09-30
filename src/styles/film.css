@@ -472,3 +472,53 @@
   background: rgba(21, 18, 15, .95); border: 1.5px solid rgba(240, 231, 216, .2); font: 600 23px var(--sans); color: rgba(247, 242, 234, .9); }
 .c-chip svg { width: 22px; height: 22px; color: var(--a300); }
 .c-chip.amb { border-color: rgba(233, 172, 87, .6); background: rgba(40, 30, 18, .95); color: #FBEBD2; }
+
+/* ---- Listen: the discovery call on video, and the notes in front of it ---- */
+.c-meet { position: absolute; left: 50%; top: 50%; width: 460px; border-radius: 30px; background: #16130F; border: 1px solid rgba(255, 255, 255, .09);
+  box-shadow: 0 50px 140px rgba(0, 0, 0, .65); padding: 14px; }
+.c-meet .bar { display: flex; align-items: center; gap: 10px; padding: 4px 8px 12px; }
+.c-meet .rec { width: 12px; height: 12px; border-radius: 50%; background: #F07A6A; box-shadow: 0 0 10px rgba(240, 122, 106, .9); }
+.c-meet .bar .t { font: 600 22px var(--sans); color: var(--white); }
+.c-meet .time { margin-left: auto; font: 500 17px var(--mono); color: rgba(240, 231, 216, .55); font-variant-numeric: tabular-nums; }
+.c-meet .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.c-meet .tile { position: relative; height: 190px; border-radius: 20px; background: linear-gradient(160deg, #26211B, #1A1612); display: flex; align-items: center; justify-content: center;
+  border: 2px solid transparent; transition: border-color .15s, box-shadow .15s; }
+.c-meet .tile.talk { border-color: rgba(var(--ice-rgb), .85); box-shadow: 0 0 30px rgba(var(--ice-rgb), .35); }
+.c-meet .av { width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 600 34px var(--sans); color: #fff; }
+.c-meet .av.sp { background: #1B1714; border: 1px solid rgba(233, 172, 87, .5); }
+.c-meet .nm, .c-pres .nm { position: absolute; left: 12px; bottom: 10px; font: 500 17px var(--sans); color: rgba(247, 242, 234, .8); background: rgba(0, 0, 0, .4); padding: 4px 10px; border-radius: 10px; }
+.c-meet .lv, .c-pres .lv { position: absolute; right: 12px; bottom: 12px; display: flex; align-items: flex-end; gap: 3px; height: 22px; }
+.c-meet .lv i, .c-pres .lv i { width: 4px; height: 100%; border-radius: 2px; background: var(--ice); transform-origin: 50% 100%; }
+.c-meet .ctl { display: flex; justify-content: center; gap: 12px; padding-top: 12px; }
+.c-meet .ctl span { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(240, 231, 216, .08); color: rgba(247, 242, 234, .85); }
+.c-meet .ctl span svg { width: 22px; height: 22px; }
+.c-meet .ctl .end { background: #C8503F; color: #fff; }
+.c-notes { position: absolute; left: 50%; top: 50%; width: 350px; border-radius: 24px; padding: 18px 20px; background: rgba(27, 24, 21, .96); border: 1px solid rgba(233, 172, 87, .35);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, .7), 0 0 40px rgba(233, 172, 87, .12); }
+.c-notes .hd { display: flex; align-items: center; gap: 10px; font: 500 16px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--a300); margin-bottom: 10px; }
+.c-notes .note { display: flex; align-items: center; gap: 12px; font: 500 24px var(--sans); color: rgba(247, 242, 234, .92); padding: 5px 0; opacity: 0; }
+.c-notes .note i { width: 9px; height: 9px; border-radius: 50%; background: var(--a400); box-shadow: 0 0 10px rgba(233, 172, 87, .8); flex: none; }
+.c-notes .sum { margin-top: 10px; padding: 10px 14px; border-radius: 14px; background: rgba(233, 172, 87, .12); border: 1.5px solid rgba(233, 172, 87, .55); font: 600 22px var(--sans); color: #FBEBD2; opacity: 0; }
+
+/* ---- Run and improve: the report shared on a call, in depth ---- */
+.c-share { position: absolute; left: 50%; top: 50%; width: 440px; border-radius: 26px; padding: 18px 20px 14px; background: linear-gradient(180deg, #1C1915, #13110E);
+  border: 1px solid rgba(255, 255, 255, .09); box-shadow: 0 60px 140px rgba(0, 0, 0, .7), 0 0 0 1px rgba(0, 0, 0, .4); }
+.c-share .hd { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.c-share .live { font: 500 14px var(--mono); letter-spacing: .08em; color: #F7B2A8; border: 1px solid rgba(var(--coral-rgb), .5); padding: 4px 9px; border-radius: 999px; }
+.c-share .t { font: 600 21px var(--sans); color: var(--white); white-space: nowrap; }
+.c-share .k { font: 500 15px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: rgba(240, 231, 216, .45); margin-bottom: 4px; }
+.c-share .chart .grid { stroke: rgba(240, 231, 216, .07); stroke-width: 1.5; }
+.c-share .chart .area { fill: rgba(233, 172, 87, .14); }
+.c-share .chart .ln { fill: none; stroke: #E9AC57; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 8px rgba(233, 172, 87, .6)); }
+.c-share .chart .pt { fill: #15120F; stroke: #E9AC57; stroke-width: 3; }
+.c-share .chart .mo { font: 500 16px var(--mono); fill: rgba(240, 231, 216, .45); text-anchor: middle; }
+.c-tag { position: absolute; left: 50%; top: 50%; display: flex; flex-direction: column; align-items: center; padding: 12px 18px; border-radius: 18px; background: rgba(40, 30, 18, .96);
+  border: 1.5px solid rgba(233, 172, 87, .7); }
+.c-tag b { font: 700 40px var(--display); color: #FBEBD2; letter-spacing: -.02em; line-height: 1; }
+.c-tag span { font: 500 15px var(--mono); color: var(--a300); margin-top: 6px; white-space: nowrap; }
+.c-pres { position: absolute; left: 50%; top: 50%; width: 190px; height: 140px; border-radius: 20px; background: linear-gradient(160deg, #2A241D, #1A1612); border: 2px solid rgba(255, 255, 255, .1);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, .7); display: flex; align-items: center; justify-content: center; transition: border-color .15s, box-shadow .15s; }
+.c-pres.talk { border-color: rgba(var(--ice-rgb), .85); box-shadow: 0 40px 100px rgba(0, 0, 0, .7), 0 0 30px rgba(var(--ice-rgb), .35); }
+.c-pres .av { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #1B1714; border: 1px solid rgba(233, 172, 87, .5); }
+.c-cc { position: absolute; left: 50%; top: 50%; width: 300px; padding: 12px 16px; border-radius: 16px; background: rgba(8, 7, 6, .82); border: 1px solid rgba(240, 231, 216, .12);
+  font: 500 22px var(--sans); color: rgba(247, 242, 234, .95); line-height: 1.3; }
