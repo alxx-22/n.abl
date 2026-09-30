@@ -111,6 +111,9 @@ Each has a recommendation; the plan assumes it unless you say otherwise.
 | D7 | The customer's phone | Simulated texts on an on-screen phone. Optional later: send the real text to the prospect's own mobile, off by default | No SMS cost, no consent question, and it shows just as well |
 | D8 | Capacity | The free tier holds about two busy calls per model at once, and on 30 September it slowed badly after heavy use. Cap concurrent demo calls at 4 with a friendly "all lines busy" message, and cost the paid tier before sending demos in volume | A prospect's first impression must not be a slow receptionist |
 | D9 | Order of presets | Restaurant (with click and collect) → takeaway and fast food → barber → hair salon → estate agent → café → pub → the rest | Restaurant exercises everything; takeaway reuses most of it; barber and salon introduce staff diaries; estate agent introduces a new domain |
+| D11 | Build from your website | A **scout** that reads the site with code first and a model second: plain fetching and parsing for facts, a headless browser for colours and fonts, and small Gemini Flash calls only for the menu and the gaps (section 4.7). No generated website or layout | Measured on ten real sites: a home page is 400 to 2,400 tokens, so the model part is cheap when it only sees what matters |
+| D12 | When the scout runs | When the team issues a key for a lead with a website, so the prospect opens a demo already built from their site, checked by us first. Prospects can also run it themselves from the builder | The first impression is their own restaurant, and nobody sees a bad scan we have not looked at |
+| D13 | API keys | One Gemini key per job, each from its own project: calls, scout, CRM writer. The scout never eats the receptionist's quota. Using several free projects just to multiply one job's quota may breach Google's terms: check before relying on it | Isolation is the benefit; extra quota is not a plan |
 | D10 | How real the back office is | Demo-grade but genuine: persisted, validated, live-updating, and staff actions work. Not a production reservations system: no staff logins, no emails, no real payments | It must survive being poked at by a restaurateur. A workspace can later be promoted into a real pilot (section 9.4) |
 
 ---
@@ -424,7 +427,86 @@ Generated from the config, so every workspace looks like its own business.
 - Stored with `source = 'seed'`, so it can be told apart and reset. Every seeded
   row passes the same validation as a real booking.
 
-### 4.7 Definition of done for the restaurant
+### 4.7 Build from your website: the scout
+
+*Start from my website* is the builder's first choice beside *Start from
+scratch*. It fills the builder, not the demo: every field it sets is marked
+"from your website" or "we guessed, please check", and the prospect still
+presses Start.
+
+**What ten real restaurant sites looked like** (measured 30 September; token
+counts from Gemini's count endpoint, which uses no quota):
+
+| Finding | Detail | What the scout does about it |
+|---|---|---|
+| 2 in 10 could not be read | one answered with a bot check, one refused (403) | says so plainly and offers *Start from scratch*, pre-filled with whatever the CRM knows |
+| 2 in 10 were a different business | `hawksmoor.com` is a guest house; `iberico.co.uk` sells fruit | always asks "Is this you?" with the name, logo and address it found. The CRM's verified website avoids most of this |
+| Pages are small | home page 370 to 2,433 tokens, menu page 76 to 3,409 | the model sees a digest and the menu, never the whole site |
+| Business details in structured data are rare | 3 in 8 named the business; only one (WordPress, with an SEO plugin) gave phone, address and hours | reads structured data first, then patterns (UK phone, postcode, hours), then asks the model only for what is still missing |
+| Menus rarely carry prices as text | 1 in 6 menu pages had £ prices; the rest keep them in PDFs, images or scripts | reads PDFs (the model takes PDFs directly), renders script-built pages, and leaves prices blank with a clear "add your prices" rather than inventing them |
+| Colours from the raw code are unreliable | right on 4 sites; on Wix and WordPress themes the loudest colours belonged to the site builder, not the brand | reads the colours the rendered page actually uses (section below) |
+| Fonts are often licensed | Futura, Gotham, bespoke brand fonts; Google Fonts on 3 sites | uses the same Google Font where it is one, otherwise the nearest free match (a small lookup table), never their font files |
+| Providers are easy to spot | SevenRooms twice, OpenTable, Deliveroo | switches services on (reservations, delivery apps) and says who they use |
+
+**The stages**
+
+1. **Fetch** (no model). A polite crawler: `robots.txt` respected, an honest
+   user agent, one request a second, the home page plus up to twelve pages
+   picked from the sitemap and links (menu, food, drink, book, visit, contact,
+   about, FAQ, allergens, takeaway, private dining), PDFs linked as menus, a
+   5 MB cap. The existing `assertPublicUrl` guard stays, so it cannot be
+   pointed at our own network.
+2. **Render** (no model). The home page and any script-built menu page open in
+   headless Chromium (already on the server image for testing). From the
+   rendered page it reads computed styles: header, navigation and footer
+   backgrounds, the main button's fill and text, link colour, heading and
+   body fonts; the logo element (cropped from a screenshot, or its image);
+   and the text of script-built pages. One render at a time, in a queue, about
+   five seconds each.
+3. **Extract** (no model). Structured data (Restaurant, LocalBusiness,
+   openingHoursSpecification, servesCuisine, hasMenu, acceptsReservations),
+   meta tags, UK phone numbers and postcodes, hours in common written forms,
+   booking and ordering providers (OpenTable, ResDiary, SevenRooms,
+   DesignMyNight, Tablein, Deliveroo, Uber Eats, Just Eat, Slerp, Flipdish and
+   others), and seating and policy signals ("terrace", "beer garden",
+   "private dining", "dog friendly", "step-free", "gluten free", "vegan").
+   Menu pages are ranked by price density, URL and title.
+4. **Model** (small, targeted, Gemini 3.5 Flash or Flash-Lite, structured
+   output):
+   - *Facts*: a digest of at most about 4,000 tokens (structured data, the
+     signals and the sentences around them) → style or cuisine line, summary,
+     policies, and FAQs, filling only fields stages 1 to 3 left empty.
+   - *Menu*: the best menu page's text (split if over about 8,000 tokens) or
+     its PDF → categories, dishes, descriptions, dietary tags, prices only
+     where stated, allergens only where stated (otherwise "not on your site,
+     please tick").
+   - *Optional*, off by default: one screenshot to the model to name the look
+     ("deep green and cream, hand-drawn type"), only if the computed colours
+     are ambiguous.
+5. **Map** to the restaurant builder's answers, each with its source, and to a
+   **theme**: primary, accent and background colours from the computed styles,
+   corrected for contrast (WCAG AA), the font pair, the logo, and the social
+   sharing image as the workspace header. The workspace, the floor plan's
+   accents and the texts' sender name take on their brand. Nothing more
+   generative than that: no rebuilt pages, no invented imagery.
+6. **Cache**. Pages and results are kept per site for 14 days
+   (`voice_site_pages`, `voice_site_scans`: text and extracted signals, not raw
+   HTML; logos as small images). A second scan in that window costs nothing,
+   so the team can scan before issuing a key and the prospect's builder opens
+   instantly.
+
+**Cost per website, free tier**: 2 to 4 model requests and roughly 8,000 to
+20,000 tokens (a digest and a menu; more if the menu is a long PDF). The
+limit that bites on the free tier is requests per day, not tokens: divide the
+daily request limit for Flash or Flash-Lite shown in AI Studio by about four
+to get websites per day per key. Rendering costs server time, not quota.
+
+**What it will not do**: get past bot protection, read prices that are only in
+photographs unless the optional image step is on, or guess table counts (sites
+almost never state them; the builder's defaults stand, and "covers" mentions
+set the total where given).
+
+### 4.8 Definition of done for the restaurant
 
 A prospect with a key can, from an empty workspace and in under ten minutes:
 build their restaurant using the defaults or their own answers; press Start
@@ -449,6 +531,8 @@ server connects as the owner).
 | `voice_demo_keys` (new) | id, key_hash (unique), key_prefix, person_name, company, email, products (text[]), crm_lead_id (text, the other project's id), issued_by, created_at, expires_at, revoked_at, last_used_at, limits (jsonb), notes |
 | `voice_demo_usage` (new) | id, key_id, tenant_id, at, kind (opened, preset_chosen, config_saved, started, call, booking, order, menu_draft), data (jsonb) |
 | `voice_demo_attempts` (new) | the throttle: at, ip_hash, key_prefix, ok |
+| `voice_site_pages` (new) | the scout's page cache: url, site, fetched_at, status, kind (html, pdf, rendered), text, signals (jsonb), content hash |
+| `voice_site_scans` (new) | one per site and run: site, started_at, finished_at, result (jsonb: facts, menu, theme, sources), tokens used, requests, errors, reviewed_by |
 | `voice_tenants` | add owner_key_id (null for our own demo businesses), config (jsonb), preset (text), expires_at |
 | `voice_bookings` | add visit_status (expected, arrived, seated, finished, no_show), allergies (text), tags (text[]), history (jsonb). The status check stays as it is |
 | `voice_orders` | add collect_slot (timestamptz); kitchen columns use the existing status values (confirmed, in_kitchen, ready, completed) |
@@ -600,12 +684,13 @@ a commit to `voice-agent-DEV`, and the plan's status updated.
 |---|---|---|---|
 | **1. Access and workspaces** | migration `voice_0002_demo`; keys (issue, hash, revoke, throttle); sessions; workspace ownership and scoping; base path `/demo/`; noindex; admin key page | a key opens its own empty workspace list and nothing else; a bad key is throttled; admin can issue and revoke | unit tests on keys and scoping; e2e: key entry, wrong key, expired key, revoked mid-session |
 | **2. Restaurant builder** | preset framework; the seven steps; floor plan editor; menu drafting and editor; money; policies and FAQ drafting; compiler to profile; review | the defaults alone produce a valid restaurant, and every field changes what it claims to | compiler unit tests (every field); menu draft schema validation; builder e2e in Chromium |
+| **2b. The scout** | fetch, render, extract, model, map, cache (4.7); "Is this you?"; per-field sources; theme from brand | on a fixed set of 20 real restaurant sites: readable ones yield name, contact and hours where stated, a menu where one exists, and a theme a person judges on-brand; unreadable ones fail politely | extractor unit tests on saved pages; a scored run over the 20 sites, repeated when prompts change |
 | **3. Seeder** | seven days of bookings, today's orders, customers, messages, from the config | 20 random configs each seed with no clashes, within hours and areas, near target occupancy | property-style tests over generated configs |
 | **4. Back office and phone** | floor plan board, time slider, drawer and actions, timeline, kitchen board, messages, calls, customer's phone | a restaurateur can do every action in 4.3 and see it persist and propagate | API tests for every action and its validation; e2e: drag a booking, push tables together, move a ticket to Ready and see the text |
 | **5. Receptionist behaviours** | areas and preferences, accessibility, allergies, occasions, deposits by policy, amend by reference with area, collection slots with capacity, takeaway payment rule, texts with reference | the walk-through in section 1 works end to end by voice | 8 new evaluation scenarios (terrace booking, full terrace offers inside, wheelchair, allergy recorded, amend by reference, cancel by reference, collection slot full, pay on collection); `e2e:turns`-style live run |
 | **6. Hosting** | Fly deploy on Supabase; Worker forwarding `/demo/*` including WebSockets; headers; robots; retention job | `nabl.agency/demo/reception` works from a phone and a laptop with a real key | live smoke test script; `test:routes`; header checks |
 | **7. CRM link** | `Demo Sent` stage (four edits); *Send demo*; edge functions; usage feedback; lead panel | issuing, sending, opening and usage all show on the lead | CRM tests; compliance gate refusal test |
-| **8. Next presets** | takeaway and fast food, then barber, hair salon, estate agent, and on through section 8 | each preset meets its own version of 4.7 | per preset: compiler, seeder and evaluation scenarios |
+| **8. Next presets** | takeaway and fast food, then barber, hair salon, estate agent, and on through section 8 | each preset meets its own version of 4.8 | per preset: compiler, seeder and evaluation scenarios |
 
 ---
 
@@ -615,6 +700,8 @@ a commit to `voice-agent-DEV`, and the plan's status updated.
 |---|---|
 | Free-tier Gemini is slow or stops listening under load (seen on 30 September) | cap concurrent calls; the watchdog and turn replay already recover; cost the paid tier before volume |
 | A forwarded link burns quota | per-key daily minutes, expiry, revocation, concurrency of one |
+| The scout reads the wrong business, or misreads a menu | "Is this you?" before anything is used; every field shows its source; scans for issued keys are checked by the team first |
+| Scraping a prospect's site | only public pages, `robots.txt` respected, identified user agent, one request a second, cached so it is read once |
 | Generated menus carry wrong allergens | labelled as examples; the agent's allergy wording always carries the caveat; editable |
 | The Worker does not forward WebSockets as expected | test in phase 6 first thing; fallback `demo.nabl.agency` |
 | The site's microphone ban applies to forwarded pages | check in phase 6; the Worker can rewrite that one header for `/demo/*` |
