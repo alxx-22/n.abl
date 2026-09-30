@@ -1,7 +1,8 @@
 # n.abl Demo Service: build plan
 
-**Status: approved 30 September 2026, build under way.** Decisions D1 to D13
-as recommended, except D12 and D13 as amended below. Branch: `voice-agent-DEV`.
+**Status: phases 1 to 6 built and tested (30 September 2026); not yet
+deployed.** Decisions D1 to D13 as recommended, except D12 and D13 as amended
+below. Branch: `voice-agent-DEV`. Where each phase stands is in section 10.
 
 The short version: a prospect gets a private link and a key. They pick their
 kind of business, build a believable version of it in about ten minutes
@@ -679,6 +680,20 @@ column).
 
 Each phase ends with its tests passing, a live check where it touches Gemini,
 a commit to `voice-agent-DEV`, and the plan's status updated.
+
+Where it stands (30 September 2026):
+
+| Phase | State | Notes |
+|---|---|---|
+| 1 | **Done** | Keys hashed, throttle trusts the Worker's address only with its shared secret; migration `voice_0002_demo` applied to `auivrancfnrdwyiqoakt`. 11 HTTP tests. `npm run demo:key` issues keys. |
+| 2 | **Done** | Nine steps (the seven, plus the floor plan and review), autosave, live preview, SVG floor plan editor (drag, keys, no overlaps), AI menu and FAQ drafts on the text key. |
+| 2b | **Done** | Tested on a local fake site (politeness, private addresses, bot wall, cache, "Is this you?", apply) and on one real site with the real model: 48 priced dishes from its menu page in 32 s, two requests. Not yet the scored 20-site run. Render works; in the build sandbox Chromium cannot pass the TLS proxy, so live renders were checked locally only, and the stylesheet fallback on the real site. |
+| 3 | **Done** | Property tests over the defaults and 20 varied configs. |
+| 4 | **Done** | Floor plan board with time slider and states, drag a booking between tables, drawer (visit states, move, push together, details, cancel with a text), timeline with drag, kitchen board with the ready text, messages, calls, the customer's phone. Chromium walkthrough (`npm run e2e:demo`). |
+| 5 | **Done** | Areas ("inside or on the terrace?"), weather rule, step-free tables, preferences, allergies (with a once-per-call safety net if the caller mentioned one), occasions, highchairs, change by reference keeping the table, collection slots with kitchen capacity, the takeaway payment rule, texts that end "quote your reference". 7 tool tests; 5 new evaluation scenarios on a builder-made restaurant, all passing against the live model (cancel by reference, full terrace and full slot are covered by tool tests rather than scenarios). |
+| 6 | **Built, not deployed** | Worker forwards `/demo/*` including WebSockets (27/27 in `test:routes` against the real Workers runtime); robots; Dockerfile with Chromium; fly.toml at 1 GB. Needs: the Fly app deployed with its secrets, `DEMO_PROXY_SECRET` set on both sides, then a live smoke test from a phone. The retention job is not built yet. |
+| 7 | Not started | |
+| 8 | Not started | |
 
 | Phase | Builds | Done when | Tested by |
 |---|---|---|---|

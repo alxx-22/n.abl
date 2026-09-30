@@ -6,6 +6,12 @@ orders, and takes (demo) payments, live on the call. A demo product: see
 [`BUILD-PLAN.md`](BUILD-PLAN.md) for the plan and where it stands, and
 [`docs/spike-results.md`](docs/spike-results.md) for what the models actually do.
 
+It is also the **demo service**: a private page at `nabl.agency/demo` where a
+prospect with a key builds the receptionist for their own restaurant (from our
+defaults or from their website), rings it, and works a real back office and a
+customer's phone. See [`../DEMO-SERVICE-PLAN.md`](../DEMO-SERVICE-PLAN.md) and
+[The demo service](#the-demo-service) below.
+
 ## Try it: a live conversation in your browser
 
 No phone needed. You talk into your microphone, the receptionist answers out
@@ -20,7 +26,7 @@ git clone https://github.com/alxx-22/n.abl.git
 cd n.abl/demo-products/voice-agent
 cp .env.example .env.local        # add GEMINI_API_KEY; nothing else is required
 npm install
-npm run dev                       # then open http://localhost:8787
+npm run dev                       # then open http://localhost:8787/demo/admin
 ```
 
 **Without installing anything**, in a GitHub Codespace: on the repository
@@ -49,11 +55,52 @@ It cannot run as a claude.ai artifact: artifact pages are not allowed the
 microphone or connections to Google, and the Gemini key must stay on a
 server.
 
+Everything is under `/demo`, the path the site's Worker forwards on
+nabl.agency.
+
 | Page | What it is |
 |---|---|
-| `/` | The console: demo businesses, and **New demo from a website** |
-| `/board/<slug>` | The live board: the live call, the diary, orders, texts, recent calls, and **Settings** |
-| `/board/<slug>?phone=07700900123` | The same, with the browser call pretending to come from that number (caller ID) |
+| `/demo/admin` | The team console: our demo businesses, and **New demo from a website** |
+| `/demo/admin/board/<slug>` | The live board: the live call, the diary, orders, texts, recent calls, and **Settings** |
+| `/demo/admin/board/<slug>?phone=07700900123` | The same, with the browser call pretending to come from that number (caller ID) |
+| `/demo/reception` | The prospect's side: key entry, their demos, the builder and the workspace (below) |
+
+## The demo service
+
+A prospect gets a link like `nabl.agency/demo/reception#key=DEMO-K7QX-M3RD-9WTF`
+(the key after the `#` never reaches a server log), and then:
+
+1. **Picks a kind of business.** Restaurant is live; the others show as coming soon.
+2. **Optionally gives their website.** The scout (`src/scout/`) reads it in the
+   background, politely (robots.txt, one request a second, public addresses
+   only), with no model for structured data, hours, phones, providers and
+   signals, one headless render for colours, fonts and logo, and two small
+   model calls for the menu and the facts still missing. It then asks "Is this
+   you?"; only what the prospect ticks is used, and every field it fills is
+   marked. Cached for 14 days.
+3. **Builds it** in nine short steps with a live preview: basics, hours, how
+   they serve (tables, walk-ins, click and collect, delivery), seating areas,
+   the floor plan (drag the tables), the menu ("describe your food" and the AI
+   drafts it), money (deposits, takeaway payment), policies and questions, review.
+4. **Presses Start.** The answers compile into the receptionist's profile and a
+   believable week of bookings and today's orders is written to the database,
+   shaped by their own tables, hours and menu.
+5. **Uses the workspace**: the live call; the back office (a floor plan with a
+   time slider, a timeline, the kitchen board, messages, calls), where a
+   booking can be opened, moved by dragging, pushed onto two tables, seated or
+   cancelled; and the customer's phone, which shows every text the caller gets.
+
+**Issuing keys**: in the console (`POST /demo/api/admin/keys`), or from a terminal:
+
+```bash
+npm run demo:key -- issue "Sam Price" --company "Sam's Kitchen" --days 14
+npm run demo:key -- list
+npm run demo:key -- revoke K7QX
+```
+
+Keys are stored only as a hash. Each key has limits (14 days, 30 call minutes
+a day, 3 demos, 20 AI drafts and 5 website reads a day by default), prospects'
+texts are simulated (never sent), and every workspace is private to its key.
 
 ## How it takes turns
 
@@ -113,10 +160,13 @@ Google.
 | `npm run build` then `npm start` | Production: the built app from `web/dist` | Gemini key |
 | `npm test` | 89 unit and integration tests, no network | nothing |
 | `npm run typecheck` | `tsc` as a checker, for the server and the app | nothing |
-| `npm run eval` | 18 simulated callers against the receptionist; report in `eval-results/` | Gemini key |
+| `npm run eval` | 23 simulated callers against the receptionist (5 on a restaurant made in the builder); report in `eval-results/` | Gemini key |
 | `npm run eval -- --audio` | The same, voices crossing as audio through a simulated phone line | Gemini key |
 | `npm run e2e:browser` | Headless Chromium with a fake microphone: a live call through the React app | Gemini key, Chromium |
-| `npm run e2e:phone` | Plays Twilio: μ-law frames into `/twilio/stream`, a real booking out | Gemini key |
+| `npm run e2e:phone` | Plays Twilio: μ-law frames into `/demo/twilio/stream`, a real booking out | Gemini key |
+| `npm run e2e:demo` | The prospect's journey in Chromium, no model: key link, builder, Start, floor plan, moving a booking, kitchen, website read | Chromium |
+| `npm run e2e:scout -- <url>` | The website scout against a real site, with the real model | Gemini key |
+| `npm run demo:key` | Issue, list, revoke and extend prospects' keys | — |
 | `npm run e2e:ingest` | The setup wizard against a fake local website | Gemini key |
 | `npm run e2e:turns` | A scripted caller who pauses, interrupts, asks the kids and says "mm-hm", against live Gemini | Gemini key |
 | `npm run spike:turns` | Whether a Live model takes turns marked by the server | Gemini key |
@@ -130,13 +180,17 @@ In the build sandbox (not on a normal machine) Node's `fetch` needs
 ## How it fits together
 
 ```
- phone ── Twilio ──► /twilio/voice → <Connect><Stream> ─┐
-                     /twilio/stream  (μ-law 8 kHz) ─────┤
- browser mic ──────► /ws/talk        (PCM 16 kHz) ──────┼─► CallSession ──► Gemini Live
- npm run eval ─────► in-process bridge ─────────────────┘      │  tools (the only way to act)
-                                                               │  guardrails (flag + correct)
- board ◄── /api/tenants/<slug>/events (SSE) ◄── bus ◄──────────┤  transcript (card numbers redacted)
-                                                               └─► Postgres: voice_* tables
+ nabl.agency/demo/* ── the site's Worker ──► this server (everything under /demo)
+
+ phone ── Twilio ──► /demo/twilio/voice → <Connect><Stream> ─┐
+                     /demo/twilio/stream  (μ-law 8 kHz) ─────┤
+ browser mic ──────► /demo/ws/talk        (PCM 16 kHz) ──────┼─► CallSession ──► Gemini Live
+ npm run eval ─────► in-process bridge ──────────────────────┘      │  tools (the only way to act)
+                                                                    │  guardrails (flag + correct)
+ boards ◄── …/events (SSE) ◄── bus ◄────────────────────────────────┤  transcript (card numbers redacted)
+                                                                    └─► Postgres: voice_* tables
+ prospects ──► /demo/api (session cookie from a key) ──► builder, workspaces, back office, scout
+ team ───────► /demo/api/admin (CONSOLE_PASSWORD) ──► console, keys, pre-scans
 ```
 
 | Folder | Holds |
@@ -145,10 +199,13 @@ In the build sandbox (not on a normal machine) Node's `fetch` needs
 | `src/domain/` | Pure logic: availability, time zones, menu matching and pricing, knowledge search, demo payments, phone numbers |
 | `src/db/` | The `voice_` schema, one query layer for PGlite and Postgres, seeding |
 | `src/channels/` | Browser, Twilio and SMS |
-| `src/server/` | HTTP, WebSockets, server-sent events |
-| `src/ingest/` | The setup wizard: website to draft profile |
+| `src/server/` | HTTP, WebSockets, server-sent events: `main.ts`, the prospect API (`demo.ts`), the team's (`admin.ts`) |
+| `src/demo/` | Keys, sessions and the throttle; the key CLI |
+| `src/presets/` | The kinds of business a prospect can build; the restaurant's answers, compiler, validator, seeder and AI drafts |
+| `src/scout/` | Build from your website: fetch, render, extract, two model calls, map into the builder |
+| `src/ingest/` | The team console's setup wizard: website to draft profile |
 | `src/eval/` | Scenarios and the simulated-caller harness |
-| `web/` | The React app (Vite, TypeScript): console, live board, live-call audio engine, settings |
+| `web/` | The React app (Vite, TypeScript): console, live board, live-call audio engine, settings; `web/src/reception/` is the prospect's side |
 | `fixtures/tenants/` | The four demo businesses, one JSON profile each |
 
 ## The shared Supabase project
@@ -163,8 +220,17 @@ through the Supabase connector and recorded in `voice_schema_migrations`.
 
 ## Deploying
 
-`Dockerfile` and `fly.toml` (London, one always-on machine). Set
-`GEMINI_API_KEY`, `DATABASE_URL`, `CONSOLE_PASSWORD`, `SESSION_SECRET` and
-`PUBLIC_BASE_URL` as secrets. For the phone line, add the Twilio variables in
+`Dockerfile` and `fly.toml` (London, one always-on machine with 1 GB, with
+Chromium for the scout's render). Set as secrets: `GEMINI_API_KEY` (and
+optionally `GEMINI_API_KEY_CALLS`, `_SCOUT`, `_TEXT` to split quota by job),
+`DATABASE_URL`, `CONSOLE_PASSWORD`, `SESSION_SECRET`,
+`PUBLIC_BASE_URL=https://nabl.agency` and `DEMO_PROXY_SECRET`. The server
+refuses to start publicly without `CONSOLE_PASSWORD`.
+
+Visitors reach it through the site: `worker/index.ts` forwards `/demo/*`,
+WebSockets included, to `DEMO_ORIGIN` (in `wrangler.jsonc`), and passes the
+visitor's address with `DEMO_PROXY_SECRET` (a Worker secret with the same
+value) so the key throttle sees real addresses. `npm run test:routes` in the
+site checks the forwarding. For the phone line, add the Twilio variables in
 `.env.example` and point the number's voice webhook at
-`https://<host>/twilio/voice`.
+`https://nabl.agency/demo/twilio/voice`.

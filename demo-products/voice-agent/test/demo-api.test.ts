@@ -17,7 +17,7 @@ let origin: string;
 
 before(async () => {
   dir = mkdtempSync(join(tmpdir(), 'va-demo-api-'));
-  app = await startServer({ ...loadConfig(), port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: 'team-pass', sessionSecret: 'demo-api-test', twilio: undefined });
+  app = await startServer({ ...loadConfig(), port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: 'team-pass', sessionSecret: 'demo-api-test', demoProxySecret: 'proxy-secret', twilio: undefined });
   origin = `http://localhost:${app.port}`;
 });
 
@@ -33,7 +33,8 @@ function client(ip: string) {
     const res = await fetch(`${origin}${path}`, {
       method,
       headers: {
-        'content-type': 'application/json', origin, 'x-forwarded-for': ip,
+        // As the site's Worker sends them: the visitor's address, vouched for by the shared secret.
+        'content-type': 'application/json', origin, 'x-nabl-client-ip': ip, 'x-nabl-proxy': 'proxy-secret',
         cookie: [...jar].map(([k, v]) => `${k}=${v}`).join('; '),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -56,10 +57,11 @@ const sam = client('10.0.0.2');
 let rawKey = '';
 let ws = '';
 
-test('demo: the root leads to /demo/, which is never indexed', async () => {
+test('demo: the root leads to the console, and nothing under /demo is indexed', async () => {
   const r = await fetch(`${origin}/`, { redirect: 'manual' });
   assert.equal(r.status, 302);
-  assert.equal(r.headers.get('location'), '/demo/');
+  assert.equal(r.headers.get('location'), '/demo/admin');
+  assert.equal((await fetch(`${origin}/demo`, { redirect: 'manual' })).headers.get('location'), '/demo/');
   const robots = await fetch(`${origin}/demo/robots.txt`);
   assert.match(await robots.text(), /Disallow: \//);
   assert.equal(robots.headers.get('x-robots-tag'), 'noindex, nofollow');
@@ -90,6 +92,17 @@ test('demo: a wrong key is refused, and the throttle stops an address guessing',
   }
   const blocked = await guesser.call('POST', '/demo/api/session', { key: rawKey });
   assert.equal(blocked.status, 429, 'even the right key, from an address that has been guessing');
+});
+
+test('demo: an address claimed without the proxy secret is not believed', async () => {
+  // Straight to the server, pretending to be many visitors: all one address to the throttle.
+  const spoof = (n: number) => fetch(`${origin}/demo/api/session`, {
+    method: 'POST', headers: { 'content-type': 'application/json', origin, 'x-nabl-client-ip': `203.0.113.${n}`, 'x-forwarded-for': `198.51.100.${n}`, 'cf-connecting-ip': `192.0.2.${n}` },
+    body: JSON.stringify({ key: 'DEMO-BBBB-BBBB-BBBB' }),
+  });
+  const statuses: number[] = [];
+  for (let i = 0; i < 11; i++) statuses.push((await spoof(i)).status);
+  assert.equal(statuses.at(-1), 429, `statuses ${statuses.join(',')}`);
 });
 
 test('demo: the right key opens a session, forgiving case and spaces', async () => {
@@ -199,9 +212,18 @@ test('demo: pushing two tables together that were never joined', async () => {
 });
 
 test('demo: the kitchen board sends the ready text', async () => {
+  // Which of today's seeded orders are still in the kitchen depends on the clock; put one back first.
   const state = (await sam.call('GET', `/demo/api/workspaces/${ws}/state`)).data;
-  const o = state.orders.find((x: any) => x.status !== 'ready' && x.status !== 'completed');
-  assert.ok(o, 'an order still in the kitchen');
+  let o = state.orders.find((x: any) => x.phone);
+  if (!o) {
+    const t = (await app.repo.getTenantById(ws))!;
+    await app.repo.createOrder(t, {
+      name: 'Test Order', phone: '+447700900555', fulfilment: 'collection', due_at: new Date(Date.now() + 3600000), address: null, postcode: null,
+      lines: [], subtotal_pence: 1000, delivery_fee_pence: 0, total_pence: 1000, allergy_notes: null, source: 'test', call_id: null,
+    });
+    o = (await sam.call('GET', `/demo/api/workspaces/${ws}/state`)).data.orders[0];
+  }
+  assert.equal((await sam.call('PATCH', `/demo/api/workspaces/${ws}/orders/${o.reference}`, { status: 'in_kitchen' })).status, 200);
   assert.equal((await sam.call('PATCH', `/demo/api/workspaces/${ws}/orders/${o.reference}`, { status: 'ready' })).status, 200);
   const phone = await sam.call('GET', `/demo/api/workspaces/${ws}/phone?number=${encodeURIComponent(o.phone)}`);
   assert.match(phone.data.messages.at(-1).body, /ready to collect/);

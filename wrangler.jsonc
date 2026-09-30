@@ -47,8 +47,21 @@
     }
   ],
 
+  // The private demos: /demo/* is forwarded to the demo server (see
+  // forwardToDemo in worker/index.ts). An empty origin switches the demo off
+  // (503) without touching anything else. The proxy secret is a Worker
+  // secret: wrangler secret put DEMO_PROXY_SECRET
+  "vars": {
+    "DEMO_ORIGIN": "https://nabl-reception.fly.dev"
+  },
+
   "assets": {
     "directory": "./dist",
+
+    // No run_worker_first for /demo: paths with no file already reach the
+    // script, navigations included (check-worker-routes.mjs proves it), and
+    // listing routes there changed how every other unmatched path was handled
+    // (/api/* began getting the SPA shell).
 
     // Named so the Worker can call env.ASSETS.fetch(). Without this binding
     // there is no way for the script to hand a non-API request back to the

@@ -16,9 +16,39 @@
 */
 
 import { spawn } from 'node:child_process'
+import { createServer } from 'node:http'
+import { createHash } from 'node:crypto'
 
 const PORT = 8791
 const BASE = `http://localhost:${PORT}`
+
+/* A stand-in for the demo server (demo-products/voice-agent), so the /demo
+   forwarding can be checked without it: it echoes what it received, answers
+   /demo with a redirect, and speaks just enough WebSocket to echo a frame. */
+const DEMO_PORT = 8792
+const seenByDemo = []
+const demo = createServer((req, res) => {
+  let body = ''
+  req.on('data', (c) => { body += c })
+  req.on('end', () => {
+    seenByDemo.push({ method: req.method, url: req.url, headers: req.headers, body })
+    if (req.url === '/demo') { res.writeHead(302, { location: '/demo/' }); return res.end() }
+    res.writeHead(200, { 'content-type': 'application/json', 'x-robots-tag': 'noindex, nofollow', 'permissions-policy': 'microphone=(self)' })
+    res.end(JSON.stringify({ stub: 'demo', method: req.method, url: req.url, body }))
+  })
+})
+demo.on('upgrade', (req, socket) => {
+  const accept = createHash('sha1').update(req.headers['sec-websocket-key'] + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64')
+  socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`)
+  socket.on('data', (buf) => {
+    // One short masked text frame in; the same text back, unmasked.
+    const len = buf[1] & 0x7f
+    const mask = buf.subarray(2, 6)
+    const text = Buffer.from(buf.subarray(6, 6 + len).map((b, i) => b ^ mask[i % 4]))
+    socket.write(Buffer.concat([Buffer.from([0x81, text.length]), text]))
+  })
+})
+await new Promise((r) => demo.listen(DEMO_PORT, r))
 
 let pass = 0
 let fail = 0
@@ -27,7 +57,8 @@ function check(label, ok, detail = '') {
   else { fail++; console.log(`  ✗ ${label}${detail ? ` — ${detail}` : ''}`) }
 }
 
-const dev = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--local'], {
+const dev = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--local',
+  '--var', `DEMO_ORIGIN:http://localhost:${DEMO_PORT}`, '--var', 'DEMO_PROXY_SECRET:route-check-secret'], {
   stdio: ['ignore', 'pipe', 'pipe'],
 })
 let log = ''
@@ -89,8 +120,47 @@ try {
   const wrongMethod = await fetch(`${BASE}/api/chat/public`, { signal: AbortSignal.timeout(10_000) })
   check('the assistant endpoint rejects GET', wrongMethod.status === 405,
     `got ${wrongMethod.status}`)
+
+  /* The private demos: /demo/* belongs to the demo server, not the site. A
+     navigation must reach it rather than the SPA shell, its own headers must
+     come back (the microphone is allowed there and nowhere else), and the
+     call's WebSocket must pass through. */
+  console.log('\nDEMO FORWARDING\n')
+  const page = await nav('/demo/reception/live/abc?x=1')
+  const pageBody = await page.text()
+  check('/demo/reception is forwarded, not given the site shell', page.status === 200 && pageBody.includes('"stub":"demo"') && !/<div id="root">/.test(pageBody),
+    `got ${page.status}: ${pageBody.slice(0, 80)}`)
+  check('the path and query arrive unchanged', pageBody.includes('/demo/reception/live/abc?x=1'))
+  check('the demo server\'s own headers come back', page.headers.get('permissions-policy') === 'microphone=(self)' && page.headers.get('x-robots-tag') === 'noindex, nofollow',
+    `permissions-policy ${page.headers.get('permissions-policy')}`)
+  const last = seenByDemo.at(-1)
+  check('the demo server is told the site\'s host', last?.headers['x-forwarded-host'] === `localhost:${PORT}`, `got ${last?.headers['x-forwarded-host']}`)
+  check('the proxy secret travels with the visitor address', last?.headers['x-nabl-proxy'] === 'route-check-secret')
+
+  const spoofed = await fetch(`${BASE}/demo/api/me`, { headers: { 'x-nabl-proxy': 'guess', 'x-nabl-client-ip': '203.0.113.9' }, signal: AbortSignal.timeout(10_000) })
+  await spoofed.text()
+  check('a visitor cannot supply their own proxy secret', seenByDemo.at(-1)?.headers['x-nabl-proxy'] === 'route-check-secret')
+
+  const post = await fetch(`${BASE}/demo/api/session`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"key":"DEMO-TEST"}', signal: AbortSignal.timeout(10_000) })
+  check('a POST and its body are forwarded', (await post.text()).includes('DEMO-TEST'))
+
+  const bare = await fetch(`${BASE}/demo`, { redirect: 'manual', signal: AbortSignal.timeout(10_000) })
+  check('/demo\'s redirect comes back to the browser as it is', bare.status === 302 && bare.headers.get('location') === '/demo/', `got ${bare.status} ${bare.headers.get('location')}`)
+
+  const echoed = await new Promise((resolve) => {
+    const ws = new WebSocket(`ws://localhost:${PORT}/demo/ws/talk?workspace=x`)
+    const t = setTimeout(() => resolve('timeout'), 8000)
+    ws.onopen = () => ws.send('hello demo')
+    ws.onmessage = (m) => { clearTimeout(t); resolve(String(m.data)); ws.close() }
+    ws.onerror = () => { clearTimeout(t); resolve('error') }
+  })
+  check('the call\'s WebSocket passes through', echoed === 'hello demo', `got ${echoed}`)
+
+  const outside = await nav('/demonstration')
+  check('/demonstration is still the site (only /demo and /demo/* are forwarded)', /<div id="root">/.test(await outside.text()))
 } finally {
   dev.kill()
+  demo.close()
 }
 
 console.log(`\n  ${pass} passed, ${fail} failed\n`)

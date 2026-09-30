@@ -173,7 +173,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   // ── Entering with a key (the only open route) ─────────────────────────
   if (p === '/session' && req.method === 'POST') {
     const { key: raw } = await readJson(req, 10_000);
-    const ip = ipHash(clientIp(req), config.sessionSecret);
+    const ip = ipHash(clientIp(req, config.demoProxySecret), config.sessionSecret);
     const n = normaliseKey(String(raw ?? ''));
     const prefix = n ? prefixOf(n) : '----';
     const misses = await demo.recentMisses(ip, prefix, THROTTLE.windowMinutes);

@@ -8,7 +8,7 @@
 import type { FunctionDeclaration } from './live.ts';
 import type { Repo } from '../db/repo.ts';
 import { spokenReference } from '../db/repo.ts';
-import type { Order, OrderLine, Tenant } from '../domain/types.ts';
+import type { Booking, Order, OrderLine, Tenant } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { checkAvailability, findService } from '../domain/availability.ts';
 import {
@@ -55,14 +55,51 @@ export interface CallState {
   paid: string[];
   ending: boolean;
   transferRequested: boolean;
+  /** What the caller has said so far, line by line (card numbers already redacted). */
+  heard: string[];
+  /** The allergy check below asks once per call, never in a loop. */
+  allergyAsked: boolean;
 }
 
 export function newCallState(): CallState {
   return {
     lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
     committed: [], found: [], lastOrder: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
+    heard: [], allergyAsked: false,
   };
 }
+
+const ALLERGY_WORDS = /\b(allerg\w*|coeliac|celiac|intoleran\w*|anaphyla\w*|epi-?pen|nuts?|peanuts?|tree nuts?|shellfish|gluten|dairy|lactose|sesame)\b/i;
+const NO_ALLERGY = /\b(no|not any|none|without|nothing)\b[^.?!]{0,20}\b(allerg|dietary|intoleran)|\bno,? (?:that's|thats) (?:all|fine)|^no\.?$/i;
+
+/** The caller's own words about an allergy, if they mentioned one (and did not just say they have none). */
+export function mentionedAllergy(heard: string[]): string | null {
+  for (const line of [...heard].reverse()) {
+    if (NO_ALLERGY.test(line)) continue;
+    const m = ALLERGY_WORDS.exec(line);
+    if (!m) continue;
+    const sentence = line.split(/(?<=[.!?])\s+/).find((x) => ALLERGY_WORDS.test(x)) ?? line;
+    return sentence.trim().slice(0, 160);
+  }
+  return null;
+}
+
+/**
+ * A safety net for the kitchen: the caller mentioned an allergy but the
+ * booking or order is about to go through without one. Asked once per call.
+ */
+function allergyCheck(ctx: ToolContext, given: string | undefined, tool: string, field: string): Record<string, unknown> | null {
+  if (given || ctx.state.allergyAsked) return null;
+  const said = mentionedAllergy(ctx.state.heard);
+  if (!said) return null;
+  ctx.state.allergyAsked = true;
+  return {
+    done: false,
+    message: `Not done yet. Earlier the caller said: "${said}". If that is an allergy or dietary need for this ${tool === 'create_booking' ? 'booking' : 'order'}, call ${tool} again with it as ${field}; if not, call it again with ${field} "none". Do not mention this check to the caller.`,
+  };
+}
+
+const noneToNull = (v: string | undefined) => (v && /^(none|no|n\/a|nothing)\.?$/i.test(v.trim()) ? undefined : v);
 
 export interface ToolContext {
   tenant: Tenant;
@@ -89,6 +126,8 @@ interface Tool {
   decl: FunctionDeclaration;
   handler: Handler;
   when?: (t: Tenant, o: ToolOptions) => boolean;
+  /** Adds the parameters only some businesses need (seating areas, access, allergies). */
+  tailor?: (decl: FunctionDeclaration, t: Tenant) => FunctionDeclaration;
 }
 
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
@@ -104,6 +143,68 @@ const I = (description: string) => ({ type: 'INTEGER', description });
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({
   type: 'OBJECT', properties, ...(required.length ? { required } : {}),
 });
+const B = (description: string) => ({ type: 'BOOLEAN', description });
+const bool = (v: unknown): boolean | undefined => (v === true || v === 'true' ? true : v === false || v === 'false' ? false : undefined);
+
+// ── Tables: areas, access, features, allergies ────────────────────────────
+
+const isTables = (t: Tenant) => t.profile.booking?.services.some((s) => s.kind === 'table') ?? false;
+const bookableAreas = (t: Tenant) => (t.profile.booking?.areas ?? []).filter((a) => a.reservable && !a.enquiry_only);
+const FEATURE_WORDS: [RegExp, string][] = [
+  [/window/, 'window'], [/booth/, 'booth'], [/quiet|private|romantic|corner/, 'quiet'], [/heat/, 'heated'], [/cover|shelter|shade/, 'covered'],
+  [/dog/, 'dog_friendly'], [/high/, 'high_table'], [/sofa|couch/, 'sofa'], [/view/, 'view'],
+];
+
+function preferences(v: unknown): string[] {
+  return [...new Set(strList(v).flatMap((w) => FEATURE_WORDS.filter(([re]) => re.test(w.toLowerCase())).map(([, f]) => f)))];
+}
+
+/** "outside", "the terrace", "in the garden" to an area key; or why it cannot be booked. */
+function resolveArea(t: Tenant, input: string | undefined): { key?: string; enquiry?: string; walkIn?: string; unknown?: string } {
+  const areas = t.profile.booking?.areas ?? [];
+  const s = input?.toLowerCase().trim();
+  if (!s || areas.length < 2 || /^(any|either|anywhere|no preference|don'?t mind|whatever)/.test(s)) return {};
+  let a = areas.find((x) => x.key === s || x.label.toLowerCase() === s) ?? areas.find((x) => s.includes(x.label.toLowerCase()) || x.label.toLowerCase().includes(s));
+  if (!a && /out|terrace|garden|patio|fresco|courtyard|decking/.test(s)) a = areas.find((x) => x.kind === 'outdoor');
+  if (!a && /\bin(side|doors)?\b|restaurant|dining room|main room/.test(s)) a = areas.find((x) => x.kind === 'indoor');
+  if (!a && /bar|counter/.test(s)) a = areas.find((x) => x.kind === 'bar');
+  if (!a && /private|function|upstairs|room for/.test(s)) a = areas.find((x) => x.kind === 'private');
+  if (!a) return { unknown: `There is no area called "${input}". Areas: ${areas.map((x) => x.label).join(', ')}.` };
+  if (a.enquiry_only) return { enquiry: `The ${a.label.toLowerCase()} is booked by enquiry. Take their name, number, date, party size and what they have in mind with take_message, and say the team will call back.` };
+  if (!a.reservable) return { walkIn: `The ${a.label.toLowerCase()} is first come, first served; it cannot be booked. Offer ${bookableAreas(t).map((x) => x.label.toLowerCase()).join(' or ')} instead.` };
+  return { key: a.key };
+}
+
+/** The table parameters, only for businesses that book tables. */
+function tableParams(decl: FunctionDeclaration, t: Tenant, extra: 'check' | 'book' | 'change'): FunctionDeclaration {
+  if (!isTables(t)) return decl;
+  const p = { ...(decl.parameters as { properties: Record<string, unknown> }).properties };
+  const areas = bookableAreas(t);
+  if (areas.length > 1) p.area = S(`Seating area if the caller has a preference: ${areas.map((a) => a.label).join(' or ')}`);
+  if (t.profile.booking?.resources.some((r) => r.accessible)) p.accessible = B('Wheelchair, step-free or pram access needed');
+  const features = [...new Set(t.profile.booking?.resources.flatMap((r) => r.features ?? []) ?? [])];
+  if (features.length && extra !== 'change') p.prefer = S(`Table wishes, e.g. ${features.slice(0, 4).map((f) => f.replace('_', ' ')).join(', ')}`);
+  if (extra !== 'check') {
+    p.allergies = S('Allergies or dietary needs, with how severe');
+    if (extra === 'book') {
+      p.occasion = S('Birthday, anniversary or other celebration');
+      if (t.profile.booking?.highchairs) p.highchairs = I('Highchairs needed');
+    }
+  }
+  return { ...decl, parameters: { ...(decl.parameters as object), properties: p } } as FunctionDeclaration;
+}
+
+/** The text a caller gets: what, when, where, the reference, and how to change it. */
+function bookingText(t: Tenant, b: Booking, verb: string): string {
+  const local = toLocal(b.starts_at, t.profile.timezone);
+  const r = t.profile.booking?.resources.find((x) => x.key === b.resource_key);
+  const area = b.area_key ? t.profile.booking?.areas?.find((a) => a.key === b.area_key) : undefined;
+  const service = findService(t.profile, b.service_key);
+  const where = service?.kind === 'table' ? ((t.profile.booking?.areas?.length ?? 0) > 1 && area ? `, ${area.label.toLowerCase()}` : '') : r ? ` with ${r.label}` : '';
+  const who = service?.kind === 'table' ? `${b.party_size} ${b.party_size === 1 ? 'person' : 'people'}` : service?.label ?? '';
+  const deposit = b.deposit_pence && !b.deposit_paid ? ` Deposit ${pounds(b.deposit_pence)} due.` : '';
+  return `${t.profile.name}: ${verb} ${spokenDate(local.date)} ${spokenTime(local.time)}, ${who}${where}. Ref ${b.reference}.${deposit} To change it, call us and quote your reference. (Demo)`;
+}
 
 function hoursFor(t: Tenant, date: string): string[] {
   const p = t.profile;
@@ -123,10 +224,11 @@ async function smsTo(ctx: ToolContext, to: string | null, body: string): Promise
   return status;
 }
 
-function bookingSummary(t: Tenant, b: { reference: string; starts_at: Date; party_size: number; name: string; service_key: string; resource_key: string }) {
+function bookingSummary(t: Tenant, b: { reference: string; starts_at: Date; party_size: number; name: string; service_key: string; resource_key: string; area_key?: string | null; allergies?: string | null; notes?: string | null }) {
   const local = toLocal(b.starts_at, t.profile.timezone);
   const service = findService(t.profile, b.service_key);
   const resource = t.profile.booking?.resources.find((r) => r.key === b.resource_key);
+  const area = b.area_key ? t.profile.booking?.areas?.find((a) => a.key === b.area_key) : undefined;
   return {
     reference: b.reference,
     spoken_reference: spokenReference(b.reference),
@@ -138,6 +240,10 @@ function bookingSummary(t: Tenant, b: { reference: string; starts_at: Date; part
     party_size: b.party_size,
     name: b.name,
     with: service?.kind === 'appointment' ? resource?.label : undefined,
+    area: area && (t.profile.booking?.areas?.length ?? 0) > 1 ? area.label : undefined,
+    table: service?.kind === 'table' ? resource?.label : undefined,
+    allergies: b.allergies ?? undefined,
+    notes: b.notes ?? undefined,
   };
 }
 
@@ -206,6 +312,13 @@ function postcodeOf(input: unknown): { full: string; district: string } | null {
   return d ? { full: d[1], district: d[1] } : null;
 }
 
+/** What to tell the caller about paying for takeaway, by the business's rule. */
+function paymentRule(rule: 'phone' | 'collection' | 'either', fulfilment: 'collection' | 'delivery'): string {
+  if (rule === 'phone') return 'Payment is taken on the phone: take it now with take_demo_payment, reading out the demo card if they need it.';
+  if (rule === 'collection') return `Payment is on ${fulfilment}: do not take a card. Tell them to pay when ${fulfilment === 'delivery' ? 'it arrives' : 'they collect'}.`;
+  return `Unpaid. Ask if they would like to pay now with the demo card, or pay on ${fulfilment}.`;
+}
+
 const TOOLS: Record<string, Tool> = {
   get_opening_hours: {
     decl: {
@@ -272,21 +385,34 @@ const TOOLS: Record<string, Tool> = {
         ['date'],
       ),
     },
+    tailor: (d, t) => tableParams(d, t, 'check'),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const service = findService(p, str(args.service));
       if (!service) {
         return { available: false, message: `Not a bookable service. Services: ${p.booking!.services.map((s) => s.label).join(', ')}.` };
       }
+      const area = resolveArea(ctx.tenant, str(args.area));
+      if (area.enquiry || area.walkIn || area.unknown) return { available: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
       const date = str(args.date) ?? '';
       const existing = isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [];
       const r = checkAvailability({
         profile: p, serviceKey: service.key, date, time: str(args.time), partySize: int(args.party_size) ?? 1,
-        staff: str(args.staff), now: ctx.now(), existing,
+        staff: str(args.staff), now: ctx.now(), existing, area: area.key, accessible: bool(args.accessible), prefer: preferences(args.prefer),
       });
       const out: Record<string, unknown> = { ...r, service: service.label };
       if (r.slot && service.kind === 'appointment') out.with = r.slot.resource_label;
-      if (r.slot) delete (out.slot as Record<string, unknown>).resource_key;
+      if (r.slot) {
+        const slot = out.slot as Record<string, unknown>;
+        delete slot.resource_key;
+        // The table number is for staff; callers hear the area and what the table is like.
+        if (service.kind === 'table') delete slot.resource_label;
+        const wanted = preferences(args.prefer);
+        const missing = wanted.filter((f) => !(r.slot!.features ?? []).includes(f));
+        if (missing.length) out.note = `No ${missing.map((f) => f.replace('_', ' ')).join(' or ')} table free then; it can be noted as a request.`;
+      }
+      if (r.areas_free) out.next = `Both are free: ask whether they would like ${r.areas_free.map((a) => a.toLowerCase()).join(' or ')}.`;
+      if (r.other_areas_free) out.next = `The ${p.booking?.areas?.find((a) => a.key === area.key)?.label.toLowerCase()} is full then, but ${r.other_areas_free.map((a) => a.toLowerCase()).join(' and ')} ${r.other_areas_free.length > 1 ? 'are' : 'is'} free at that time. Offer that first, then other times.`;
       if (service.price_pence) out.price = pounds(service.price_pence);
       return out;
     },
@@ -306,45 +432,88 @@ const TOOLS: Record<string, Tool> = {
           name: S("Caller's name"),
           phone: S('Only if not the calling number'),
           staff: S('Named staff member, if asked for'),
-          notes: S('Occasion, high chair, allergy, access needs'),
+          notes: S('Anything else the staff should know'),
         },
         ['date', 'time', 'name'],
       ),
     },
+    tailor: (d, t) => tableParams(d, t, 'book'),
     async handler(args, ctx) {
+      const p = ctx.tenant.profile;
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+      const area = resolveArea(ctx.tenant, str(args.area));
+      if (area.enquiry || area.walkIn || area.unknown) return { booked: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
+      if (isTables(ctx.tenant)) {
+        const nudge = allergyCheck(ctx, str(args.allergies), 'create_booking', 'allergies');
+        if (nudge) return { booked: false, ...nudge };
+      }
+      const allergies = noneToNull(str(args.allergies));
+      const accessible = bool(args.accessible);
+      const prefer = preferences(args.prefer);
+      const highchairs = int(args.highchairs) ?? 0;
+      const occasion = str(args.occasion);
+      const tags: string[] = [];
+      if (occasion) tags.push(/anniv/i.test(occasion) ? 'anniversary' : /birthday|bday/i.test(occasion) ? 'birthday' : 'celebration');
+      if (accessible) tags.push('wheelchair');
+      if (highchairs) tags.push('highchair');
+      const notes = [
+        str(args.notes),
+        occasion ? occasion.charAt(0).toUpperCase() + occasion.slice(1) : null,
+        highchairs ? `${highchairs} highchair${highchairs > 1 ? 's' : ''}` : null,
+        accessible ? 'Step-free table needed' : null,
+      ].filter(Boolean).join('. ') || null;
       const r = await ctx.repo.createBooking(
         ctx.tenant,
         {
           service: str(args.service), date: str(args.date) ?? '', time: str(args.time) ?? '',
-          party_size: int(args.party_size) ?? 1, name: str(args.name) ?? '', phone, notes: str(args.notes) ?? null,
+          party_size: int(args.party_size) ?? 1, name: str(args.name) ?? '', phone, notes,
           staff: str(args.staff), source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
+          area: area.key, accessible, prefer, allergies: allergies ?? null, tags,
         },
         ctx.now(),
       );
-      if (!r.ok) return { booked: false, reason: r.reason, message: r.message, next: 'Offer another time with check_availability.' };
+      if (!r.ok) {
+        // Say exactly why, with what is free instead, so the caller hears the real choice at once.
+        if (r.reason !== 'fully_booked') return { booked: false, reason: r.reason, message: r.message, next: 'Offer another time (or area) with check_availability.' };
+        const date = str(args.date) ?? '';
+        const a2 = checkAvailability({
+          profile: p, serviceKey: str(args.service), date, time: str(args.time), partySize: int(args.party_size) ?? 1, staff: str(args.staff),
+          now: ctx.now(), existing: isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [], area: area.key, accessible, prefer,
+        });
+        return {
+          booked: false, reason: 'fully_booked', message: a2.message ?? r.message, alternatives: a2.alternatives,
+          other_areas_free: a2.other_areas_free,
+          next: a2.alternatives.length || a2.other_areas_free ? 'Offer these, then book the one they choose.' : 'Nothing close is free: offer another day, or take a message for the team.',
+        };
+      }
       const b = r.booking;
       ctx.state.committed.push(b.reference);
       ctx.state.lastBookingRef = b.reference;
       const s = bookingSummary(ctx.tenant, b);
+      const areaInfo = b.area_key ? p.booking?.areas?.find((a) => a.key === b.area_key) : undefined;
       ctx.action({
         kind: 'booking_created',
         title: `${s.service === 'table' ? 'Table' : s.service} booked`,
-        detail: `${s.spoken_date}, ${s.spoken_time} · ${b.party_size} ${b.party_size === 1 ? 'person' : 'people'} · ${b.name}${s.with ? ` with ${s.with}` : ''} · ref ${b.reference}`,
+        detail: `${s.spoken_date}, ${s.spoken_time} · ${b.party_size} ${b.party_size === 1 ? 'person' : 'people'} · ${b.name}${s.table ? ` · ${s.table}${s.area ? `, ${s.area.toLowerCase()}` : ''}` : s.with ? ` with ${s.with}` : ''}${b.allergies ? ` · ALLERGY: ${b.allergies}` : ''} · ref ${b.reference}`,
         data: { reference: b.reference },
       });
-      const smsStatus = await smsTo(
-        ctx, phone,
-        `${ctx.tenant.profile.name}: ${s.service} for ${b.party_size} on ${s.spoken_date} at ${s.spoken_time}${s.with ? ` with ${s.with}` : ''}. Ref ${b.reference}.${b.deposit_pence ? ` Deposit due: ${pounds(b.deposit_pence)}.` : ''} (Demo booking)`,
-      );
+      const smsStatus = await smsTo(ctx, phone, bookingText(ctx.tenant, b, 'Booked:'));
+      const chairs = p.booking?.highchairs ?? 0;
+      const got = ctx.tenant.profile.booking?.resources.find((x) => x.key === b.resource_key)?.features ?? [];
+      const unmet = prefer.filter((f) => !got.includes(f));
       return {
         booked: true,
         ...s,
+        weather_note: areaInfo?.kind === 'outdoor' ? areaInfo.weather_note : undefined,
         deposit_due: b.deposit_pence ? pounds(b.deposit_pence) : undefined,
+        note: [
+          highchairs > chairs ? `We only have ${chairs} highchair${chairs === 1 ? '' : 's'}; say so.` : null,
+          unmet.length ? `No ${unmet.map((f) => f.replace('_', ' ')).join(' or ')} table was free; say it is noted as a request.` : null,
+        ].filter(Boolean).join(' ') || undefined,
         next: b.deposit_pence
-          ? `A ${pounds(b.deposit_pence)} deposit secures this booking. Offer to take it now with take_demo_payment (for "deposit").`
+          ? `A ${pounds(b.deposit_pence)} deposit secures this booking. Offer to take it now with take_demo_payment (for "deposit"), or say a payment link will be texted.`
           : undefined,
-        confirmation_text: smsStatus ? 'sent by text' : 'no number to text',
+        confirmation_text: smsStatus ? 'sent by text, with the reference' : 'no number to text',
       };
     },
   },
@@ -370,25 +539,37 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).booking,
     decl: {
       name: 'modify_booking',
-      description: 'Move a booking or change its size or notes, after reading the change back and hearing yes.',
+      description: 'Change a booking (date, time, party size, notes), after reading the change back and hearing yes. Keeps the same table when it still fits.',
       parameters: obj(
         { reference: S('Booking reference'), date: S('YYYY-MM-DD'), time: S('HH:MM'), party_size: I('People'), notes: S('Notes') },
         ['reference'],
       ),
     },
+    tailor: (d, t) => tableParams(d, t, 'change'),
     async handler(args, ctx) {
       const ref = str(args.reference) ?? '';
+      const area = resolveArea(ctx.tenant, str(args.area));
+      if (area.enquiry || area.walkIn || area.unknown) return { changed: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
       const r = await ctx.repo.modifyBooking(
         ctx.tenant, ref,
-        { date: str(args.date), time: str(args.time), party_size: int(args.party_size), notes: str(args.notes) },
+        { date: str(args.date), time: str(args.time), party_size: int(args.party_size), notes: str(args.notes), area: area.key, accessible: bool(args.accessible), allergies: str(args.allergies) },
         ctx.now(),
       );
-      if (!r.ok) return { changed: false, message: r.message };
+      if (!r.ok) return { changed: false, message: r.message, next: 'Check other times with check_availability, then offer them.' };
       ctx.state.committed.push(r.booking.reference);
+      ctx.state.lastBookingRef = r.booking.reference;
       const s = bookingSummary(ctx.tenant, r.booking);
-      ctx.action({ kind: 'booking_changed', title: 'Booking changed', detail: `${s.spoken_date}, ${s.spoken_time} · ${r.booking.party_size} people · ref ${r.booking.reference}` });
-      await smsTo(ctx, r.booking.phone, `${ctx.tenant.profile.name}: your booking ${r.booking.reference} is now ${s.spoken_date} at ${s.spoken_time} for ${r.booking.party_size}. (Demo)`);
-      return { changed: true, ...s };
+      ctx.action({
+        kind: 'booking_changed', title: 'Booking changed',
+        detail: `${s.spoken_date}, ${s.spoken_time} · ${r.booking.party_size} people${s.table ? ` · ${s.table}` : ''} · ref ${r.booking.reference}`,
+        data: { reference: r.booking.reference },
+      });
+      await smsTo(ctx, r.booking.phone, bookingText(ctx.tenant, r.booking, 'Changed:'));
+      return {
+        changed: true, ...s,
+        deposit_due: r.booking.deposit_pence && !r.booking.deposit_paid ? pounds(r.booking.deposit_pence) : undefined,
+        confirmation_text: r.booking.phone ? 'a new text is on its way' : undefined,
+      };
     },
   },
 
@@ -405,7 +586,7 @@ const TOOLS: Record<string, Tool> = {
       ctx.state.committed.push(b.reference);
       const s = bookingSummary(ctx.tenant, b);
       ctx.action({ kind: 'booking_cancelled', title: 'Booking cancelled', detail: `${s.spoken_date}, ${s.spoken_time} · ${b.name} · ref ${b.reference}` });
-      await smsTo(ctx, b.phone, `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled. (Demo)`);
+      await smsTo(ctx, b.phone, `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled. To book again, just call us. (Demo)`);
       return { cancelled: true, ...s, policy: ctx.tenant.profile.policies?.cancellation };
     },
   },
@@ -597,6 +778,27 @@ const TOOLS: Record<string, Tool> = {
           return { ok: false, message: `The earliest ${type} time is ${spokenTime(e)}.` };
         }
       }
+      // Collection slots: times on the kitchen's grid, and only slots with room.
+      if (type === 'collection' && o.slot_minutes) {
+        const step = o.slot_minutes * 60000;
+        due = new Date(Math.ceil(due.getTime() / step) * step);
+        if (o.slot_capacity) {
+          const asked = due;
+          const free: Date[] = [];
+          for (let i = 0, at = due; i < 24 && free.length < 3; i++, at = new Date(at.getTime() + step)) {
+            if (!withinOrderingHours(ctx, at)) continue;
+            if ((await ctx.repo.ordersDueBetween(ctx.tenant.id, at, new Date(at.getTime() + step))) < o.slot_capacity) free.push(at);
+          }
+          if (!free.length) return { ok: false, message: 'The kitchen is full for collection for the rest of today.' };
+          if (free[0].getTime() !== asked.getTime()) {
+            const spoken = free.map((d) => spokenTime(toLocal(d, p.timezone).time));
+            if (requested !== 'asap') {
+              return { ok: false, message: `The kitchen is full at ${spokenTime(toLocal(asked, p.timezone).time)}. ${spoken.join(', ')} ${spoken.length > 1 ? 'have' : 'has'} room.`, slots_with_room: spoken };
+            }
+            due = free[0];
+          }
+        }
+      }
       if (!withinOrderingHours(ctx, due)) {
         const today = weekdayOf(toLocal(ctx.now(), p.timezone).date);
         const hours = o.hours.filter((h) => h.days.includes(today)).map((h) => `${spokenTime(h.open)} to ${spokenTime(h.close)}`);
@@ -643,6 +845,7 @@ const TOOLS: Record<string, Tool> = {
         delivery_fee: fee ? pounds(fee) : undefined,
         total: pounds(total),
         fulfilment: when,
+        payment: paymentRule(o.payment ?? 'either', f.type),
         next: 'Read this back and ask if it is all correct. Then ask for the name (and number if unknown), and any allergies, before confirm_order.',
       };
     },
@@ -673,6 +876,8 @@ const TOOLS: Record<string, Tool> = {
       }
       const name = str(args.name);
       if (!name) return { placed: false, message: 'Need a name for the order.' };
+      const nudge = allergyCheck(ctx, str(args.allergy_notes), 'confirm_order', 'allergy_notes');
+      if (nudge) return { placed: false, ...nudge };
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
       if (!phone && ctx.channel === 'phone') return { placed: false, message: 'Need a contact number.' };
       const f = ctx.state.fulfilment;
@@ -681,7 +886,7 @@ const TOOLS: Record<string, Tool> = {
       const order = await ctx.repo.createOrder(ctx.tenant, {
         name, phone, fulfilment: f.type, due_at: f.due_at, address: f.address, postcode: f.postcode,
         lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,
-        allergy_notes: str(args.allergy_notes) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
+        allergy_notes: noneToNull(str(args.allergy_notes)) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
       });
       ctx.state.committed.push(order.reference);
       ctx.state.lastOrder = order;
@@ -695,14 +900,16 @@ const TOOLS: Record<string, Tool> = {
         detail: `${order.fulfilment} ${spokenTime(local.time)} · ${order.name}${order.allergy_notes ? ` · ALLERGY: ${order.allergy_notes}` : ''}`,
         data: { reference: order.reference },
       });
-      await smsTo(ctx, phone, `${ctx.tenant.profile.name}: order ${order.reference}, ${pounds(order.total_pence)}, ${order.fulfilment} at ${spokenTime(local.time)}. (Demo order)`);
+      const rule = o.payment ?? 'either';
+      const payLine = rule === 'collection' ? (order.fulfilment === 'delivery' ? ' Pay on delivery.' : ' Pay when you collect.') : '';
+      await smsTo(ctx, phone, `${ctx.tenant.profile.name}: order ${order.reference}, ${pounds(order.total_pence)}, ${order.fulfilment} at ${spokenTime(local.time)}.${payLine} Quote ${order.reference} if you call us. (Demo order)`);
       return {
         placed: true,
         order_number: order.reference,
         spoken_order_number: order.reference.split('').join(' '),
         total: pounds(order.total_pence),
         ready: `${order.fulfilment} at ${spokenTime(local.time)}`,
-        payment: 'Unpaid. Offer to take payment now with the demo card, or they can pay on ' + (order.fulfilment === 'delivery' ? 'delivery.' : 'collection.'),
+        payment: paymentRule(rule, order.fulfilment),
       };
     },
   },
@@ -729,6 +936,9 @@ const TOOLS: Record<string, Tool> = {
       let orderId: string | null = null;
       let bookingId: string | null = null;
       let target = '';
+      if (kind === 'order' && ctx.tenant.profile.ordering?.payment === 'collection') {
+        return { result: 'not_needed', message: 'This restaurant takes payment on collection. No card is needed on the phone: tell them to pay when they collect.' };
+      }
       if (kind === 'order') {
         // Always re-read: the copy held in call state does not know it was paid.
         const ref = str(args.reference) ?? ctx.state.lastOrder?.reference;
@@ -823,7 +1033,7 @@ const TOOLS: Record<string, Tool> = {
 export function toolDeclarations(t: Tenant, o: ToolOptions = { canTransfer: false }): FunctionDeclaration[] {
   return Object.values(TOOLS)
     .filter((x) => !x.when || x.when(t, o))
-    .map((x) => x.decl);
+    .map((x) => (x.tailor ? x.tailor(x.decl, t) : x.decl));
 }
 
 export async function runTool(name: string, args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {

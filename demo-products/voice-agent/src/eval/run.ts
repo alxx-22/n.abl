@@ -19,6 +19,9 @@ import { loadConfig } from '../config.ts';
 import { openPglite, migrate } from '../db/db.ts';
 import { Repo } from '../db/repo.ts';
 import { seedAll, seedDiary } from '../db/seed.ts';
+import { defaultAnswers } from '../presets/restaurant/answers.ts';
+import { compileRestaurant } from '../presets/restaurant/compile.ts';
+import { planRestaurantSeed, seedFrom } from '../presets/restaurant/seed.ts';
 import { CallSession, type CallSummary } from '../core/call.ts';
 import { LiveSession } from '../core/live.ts';
 import { Resampler, mulawDecode, mulawEncode } from '../core/audio.ts';
@@ -83,7 +86,9 @@ async function runOne(s: Scenario, repo: Repo, db: Awaited<ReturnType<typeof ope
   const tenant = (await repo.getTenant(s.tenant))!;
   const now0 = s.now ?? FRIDAY_EVENING;
   await repo.resetTenantData(tenant.id);
-  await seedDiary(repo, tenant, now0);
+  // Restaurants from the demo builder get the builder's own week, as a prospect's workspace does.
+  if (tenant.profile.booking?.areas?.length) await repo.insertSeed(tenant.id, planRestaurantSeed(tenant.profile, now0, seedFrom(s.id)));
+  else await seedDiary(repo, tenant, now0);
   await s.setup?.(repo, tenant, now0);
   const started = Date.now();
   const clock = () => new Date(now0.getTime() + (Date.now() - started));
@@ -212,6 +217,16 @@ const db = await openPglite(dir);
 await migrate(db);
 const repo = new Repo(db);
 await seedAll(repo, FRIDAY_EVENING, { diary: false });
+// Two restaurants made in the demo builder, from its defaults: one as it comes, one that takes payment on collection.
+{
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  await repo.upsertTenant(compileRestaurant(a, { slug: 'olive-ember' }));
+  const b = defaultAnswers();
+  b.basics.name = 'Olive & Ember Kitchen';
+  b.money.takeaway_payment = 'collection';
+  await repo.upsertTenant(compileRestaurant(b, { slug: 'olive-collect' }));
+}
 
 const chosen = SCENARIOS.filter((s) => !only || only.includes(s.id));
 const results: Result[] = [];

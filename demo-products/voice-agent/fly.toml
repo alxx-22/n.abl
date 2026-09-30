@@ -1,8 +1,13 @@
 # Fly.io, London. One always-on machine: a phone call cannot wait for a cold
 # start, and one process holds every call's two WebSockets.
 #
+# Visitors reach it as nabl.agency/demo/*, forwarded by the site's Worker
+# (worker/index.ts, DEMO_ORIGIN in wrangler.jsonc); it also answers directly on
+# https://<app>.fly.dev/demo/ for testing.
+#
 #   fly launch --no-deploy --copy-config      (first time; pick the app name)
-#   fly secrets set GEMINI_API_KEY=… DATABASE_URL=… CONSOLE_PASSWORD=… SESSION_SECRET=… PUBLIC_BASE_URL=https://<app>.fly.dev
+#   fly secrets set GEMINI_API_KEY=… DATABASE_URL=… CONSOLE_PASSWORD=… SESSION_SECRET=… \
+#     PUBLIC_BASE_URL=https://nabl.agency DEMO_PROXY_SECRET=…   (the same value as the Worker's secret)
 #   fly deploy
 #
 # Twilio settings are added as secrets once the account and UK number exist.
@@ -30,11 +35,12 @@ primary_region = "lhr"
 
   [[http_service.checks]]
     method = "GET"
-    path = "/healthz"
+    path = "/demo/healthz"
     interval = "30s"
     timeout = "5s"
     grace_period = "20s"
 
+# 1 GB: a call's two WebSockets are light, but the scout's Chromium render is not.
 [[vm]]
   size = "shared-cpu-1x"
-  memory = "512mb"
+  memory = "1024mb"

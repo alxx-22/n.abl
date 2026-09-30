@@ -434,6 +434,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (!text) return;
     const clean = redactCardNumbers(text, this.opts.config.demoCards).text;
     this.transcript.push({ role: 'caller', text: clean });
+    this.state.heard.push(clean);
     this.emitLine('caller', text, true);
     this.record('caller', { text: clean });
   }

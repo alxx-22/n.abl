@@ -431,4 +431,118 @@ export const SCENARIOS: Scenario[] = [
       return f;
     },
   },
+
+  // ── Olive & Ember: a restaurant made in the demo builder, from its defaults ─
+  {
+    id: 'ws-terrace-allergy',
+    tenant: 'olive-ember',
+    title: 'Terrace table for four with a coeliac child: area, allergy, weather rule, reference text',
+    kind: 'happy',
+    callerPhone: '+447700900131',
+    setup: (repo, tenant) => clearDay(repo, tenant, '2026-10-10'),
+    persona: "You are Sam Price. You want a table for four tomorrow (Saturday) at half past seven, outside on the terrace if possible. Your son is coeliac (a severe gluten allergy): mention it when asked about allergies, or before the booking is confirmed if nobody asks. Your number is the one you are calling from. Confirm when the details are read back.",
+    async check(c) {
+      const f: string[] = [];
+      const b = await c.db.query<any>(`select * from public.voice_bookings where tenant_id = $1 and source = 'eval' and status = 'confirmed'`, [c.tenant.id]);
+      expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
+      if (b[0]) {
+        expect(f, new Date(b[0].starts_at).getTime() === at('2026-10-10', '19:30').getTime(), `booked for ${new Date(b[0].starts_at).toISOString()}`);
+        expect(f, b[0].area_key === 'terrace', `area ${b[0].area_key}`);
+        expect(f, /coeliac|gluten/i.test(`${b[0].allergies ?? ''} ${b[0].notes ?? ''}`), `allergy not recorded (allergies: ${b[0].allergies}, notes: ${b[0].notes})`);
+        expect(f, Boolean(b[0].allergies), 'the allergy is in notes, not the allergy field the floor plan flags');
+        expect(f, c.agentText.replace(/[^A-Z0-9]/gi, '').toUpperCase().includes(b[0].reference), 'reference never given to the caller');
+        const texts = await c.db.query<any>(`select body from public.voice_messages where call_id = $1 and kind = 'sms'`, [c.callId]);
+        expect(f, texts.some((t: any) => /quote your reference/.test(t.body) && t.body.includes(b[0].reference)), 'no text with the reference');
+      }
+      expect(f, /inside|rain|weather/i.test(c.agentText), 'never mentioned the terrace weather rule');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'ws-inside-or-out',
+    tenant: 'olive-ember',
+    title: 'No preference given: asks inside or on the terrace',
+    kind: 'happy',
+    callerPhone: '+447700900132',
+    persona: 'You are Tom Wright. You want a table for two on Sunday (11 October) at 1pm. Do not say where you want to sit unless asked; if asked inside or outside, say inside please. No allergies. Confirm when the details are read back.',
+    async check(c) {
+      const f: string[] = [];
+      const b = await c.db.query<any>(`select * from public.voice_bookings where tenant_id = $1 and source = 'eval' and status = 'confirmed' and name ilike '%wright%'`, [c.tenant.id]);
+      expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
+      if (b[0]) expect(f, b[0].area_key === 'indoor', `area ${b[0].area_key}`);
+      expect(f, /terrace|outside|inside/i.test(c.agentText), 'never asked where they would like to sit');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'ws-wheelchair',
+    tenant: 'olive-ember',
+    title: 'Wheelchair user: a step-free table',
+    kind: 'happy',
+    callerPhone: '+447700900133',
+    setup: (repo, tenant) => clearDay(repo, tenant, '2026-10-10'),
+    persona: 'You are Aisha Khan. Your first sentence is exactly: "Hi, I\'d like a table for three tomorrow at 6pm inside, and my mother uses a wheelchair so we need step-free access." You want that table for three tomorrow (Saturday) evening, ideally at 6pm, inside, step-free. If 6pm is not possible, take the nearest step-free time they offer that evening. No allergies. Confirm when the details are read back.',
+    async check(c) {
+      const f: string[] = [];
+      const b = await c.db.query<any>(`select * from public.voice_bookings where tenant_id = $1 and source = 'eval' and status = 'confirmed' and name ilike '%khan%'`, [c.tenant.id]);
+      expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
+      if (b[0]) {
+        const r = c.tenant.profile.booking!.resources.find((x) => x.key === b[0].resource_key);
+        expect(f, Boolean(r?.accessible), `table ${b[0].resource_key} is not step-free`);
+        expect(f, (b[0].tags ?? []).includes('wheelchair'), `tags ${JSON.stringify(b[0].tags)}`);
+      }
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'ws-amend-by-ref',
+    tenant: 'olive-ember',
+    title: 'Changes a booking by its reference: four to five, same time',
+    kind: 'happy',
+    callerPhone: '+447700900134',
+    persona: "You are Grace Okafor. You have a table booked for Saturday (tomorrow) at 7pm for four; the reference on your text is K X 4 Q 7. You want to make it five people instead, same time. Give the reference when asked, one character at a time. Confirm the change when it is read back.",
+    async setup(repo, tenant) {
+      await existingBooking(repo, tenant, 'KX4Q7', '2026-10-10', '19:00', 4, '+447700900134');
+      await repo.db.query(`update public.voice_bookings set resource_key = 'T5', area_key = 'indoor' where tenant_id = $1 and reference = 'KX4Q7'`, [tenant.id]);
+    },
+    async check(c) {
+      const f: string[] = [];
+      const b = await c.db.query<any>(`select * from public.voice_bookings where tenant_id = $1 and reference = 'KX4Q7'`, [c.tenant.id]);
+      expect(f, b[0]?.status === 'confirmed', 'the booking is no longer confirmed');
+      expect(f, b[0]?.party_size === 5, `party ${b[0]?.party_size}`);
+      expect(f, new Date(b[0]?.starts_at).getTime() === at('2026-10-10', '19:00').getTime(), 'the time changed');
+      const others = await c.db.query<any>(`select 1 from public.voice_bookings where tenant_id = $1 and source = 'eval' and reference <> 'KX4Q7' and status = 'confirmed'`, [c.tenant.id]);
+      expect(f, others.length === 0, 'a second booking was made instead of changing the first');
+      const texts = await c.db.query<any>(`select body from public.voice_messages where call_id = $1 and kind = 'sms'`, [c.callId]);
+      expect(f, texts.some((t: any) => /Changed:.*KX4Q7/.test(t.body)), 'no new text for the change');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'ws-collect-pay-later',
+    tenant: 'olive-collect',
+    title: 'Click and collect at a chosen slot, paying on collection: no card taken',
+    kind: 'happy',
+    callerPhone: '+447700900135',
+    persona: 'You are Ben Walker. You want two Margherita pizzas to collect at quarter past seven this evening. You will pay when you collect. Your number is the one you are calling from. No allergies. Confirm when the order is read back.',
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        expect(f, new Date(o[0].due_at).getTime() === at('2026-10-09', '19:15').getTime(), `due ${new Date(o[0].due_at).toISOString()}`);
+        expect(f, o[0].payment_status === 'unpaid', 'the order was paid on the phone');
+        const lines = o[0].lines as { name: string; quantity: number }[];
+        expect(f, lines.reduce((n, l) => n + (/margherita/i.test(l.name) ? l.quantity : 0), 0) === 2, `lines ${JSON.stringify(lines)}`);
+      }
+      expect(f, (await payments(c)).length === 0, 'a card payment was attempted');
+      expect(f, !/demo card|card number/i.test(c.agentText), 'asked for a card although payment is on collection');
+      noFlags(c, f);
+      return f;
+    },
+  },
 ];

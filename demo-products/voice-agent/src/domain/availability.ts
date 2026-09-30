@@ -35,6 +35,8 @@ export interface SlotRequest {
   accessible?: boolean;
   /** Tables: nice to have (window, booth, quiet); tables with more of them are tried first. */
   prefer?: string[];
+  /** When changing a booking: its current table, kept if it still fits. */
+  keep?: string;
 }
 
 export interface Slot {
@@ -74,6 +76,10 @@ export interface AvailabilityResult {
   };
   alternatives: { time: string; spoken: string }[];
   available_ranges?: string[];
+  /** More than one area has a table free at that time: ask which the caller would like. */
+  areas_free?: string[];
+  /** The asked-for area is full then, but these are not. */
+  other_areas_free?: string[];
   reason?: Unavailable;
   message?: string;
 }
@@ -186,12 +192,20 @@ export function checkSlot(req: SlotRequest, service: BookableService, time: stri
   const ends = new Date(starts.getTime() + minutes * 60000);
   const lead = (service.lead_minutes ?? 0) * 60000;
   if (starts.getTime() < req.now.getTime() + lead) return null;
-  for (const r of res) {
+  const order = req.keep ? [...res.filter((r) => r.key === req.keep), ...res.filter((r) => r.key !== req.keep)] : res;
+  for (const r of order) {
     if (isFree(r.key, starts, ends, service.buffer_minutes ?? 0, req.existing, resources, req.excludeBookingId)) {
       return { time, resource_key: r.key, starts_at: starts, ends_at: ends };
     }
   }
   return null;
+}
+
+/** Bookable areas with a table free at that time, when a business has more than one ("inside or on the terrace?"). */
+export function areasFreeAt(req: SlotRequest, service: BookableService, time: string): string[] {
+  const areas = (req.profile.booking?.areas ?? []).filter((a) => a.reservable && !a.enquiry_only);
+  if (areas.length < 2) return [];
+  return areas.filter((a) => checkSlot({ ...req, area: a.key }, service, time)).map((a) => a.label);
 }
 
 function ranges(times: string[], step: number): string[] {
@@ -280,19 +294,31 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
       accessible: r.accessible || undefined,
       features: r.features?.length ? r.features : undefined,
     };
+    if (!req.area) {
+      const free = areasFreeAt(req, service, requested);
+      if (free.length > 1) result.areas_free = free;
+    }
     return result;
   }
 
+  // The asked-for area is full at that time: say which other areas are free then, before other times.
+  if (req.area && times.includes(requested)) {
+    const others = areasFreeAt({ ...req, area: undefined }, service, requested);
+    if (others.length) result.other_areas_free = others;
+  }
   // Two nearest free times either side, never a list of ten.
   // Within three hours of the request: lunch is not an alternative to dinner.
   const target = minutesOf(requested);
-  const near = free.filter((t) => Math.abs(minutesOf(t) - target) <= 180);
+  const near = free.filter((t) => Math.abs(minutesOf(t) - target) <= (req.accessible ? 360 : 180));
   const before = near.filter((t) => minutesOf(t) < target).slice(-2);
   const after = near.filter((t) => minutesOf(t) > target).slice(0, 2);
   result.alternatives = [...before, ...after].map((t) => ({ time: t, spoken: spokenTime(t) }));
   result.reason = times.includes(requested) ? 'fully_booked' : 'outside_hours';
+  const kind = [req.accessible ? 'step-free' : null].filter(Boolean).join(' ');
+  const areaInfo = req.area ? profile.booking?.areas?.find((a) => a.key === req.area) : undefined;
+  const where = !areaInfo ? '' : areaInfo.kind === 'indoor' ? ' inside' : areaInfo.kind === 'outdoor' ? ` on the ${areaInfo.label.toLowerCase()}` : ` in the ${areaInfo.label.toLowerCase()}`;
   result.message = times.includes(requested)
-    ? `${spokenTime(requested)} is taken.`
+    ? `${spokenTime(requested)} is taken${kind || where ? ` for a ${kind ? `${kind} ` : ''}table${where}` : ''}.`
     : `${spokenTime(requested)} is not a bookable time for ${service.label} on ${base.spoken_date}.`;
   if (!free.length) result.message += ` Nothing else is free that day either.`;
   return result;

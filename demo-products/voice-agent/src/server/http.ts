@@ -1,6 +1,7 @@
 // Small HTTP helpers shared by the server's route files.
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { timingSafeEqual } from 'node:crypto';
 import type { Bus } from './bus.ts';
 
 export const BASE = '/demo';
@@ -75,10 +76,21 @@ export function setCookie(res: ServerResponse, name: string, value: string, opts
   res.setHeader('set-cookie', [...(Array.isArray(prev) ? prev : prev ? [String(prev)] : []), parts.join('; ')]);
 }
 
-/** The caller's address: the first X-Forwarded-For hop when behind the site's Worker or Fly's proxy. */
-export function clientIp(req: IncomingMessage): string {
-  const fwd = String(req.headers['cf-connecting-ip'] ?? req.headers['fly-client-ip'] ?? req.headers['x-forwarded-for'] ?? '').split(',')[0].trim();
-  return fwd || req.socket.remoteAddress || 'unknown';
+/**
+ * The visitor's address, for the key throttle. Behind the site's Worker it is
+ * the X-Nabl-Client-Ip header, believed only when the shared secret comes
+ * with it; otherwise Fly's own Fly-Client-Ip (which a client cannot set), or
+ * the socket. X-Forwarded-For and CF-Connecting-IP are never trusted: anyone
+ * reaching the server directly could write them.
+ */
+export function clientIp(req: IncomingMessage, proxySecret?: string): string {
+  const h = (n: string) => String(req.headers[n] ?? '').split(',')[0].trim();
+  if (proxySecret) {
+    const given = Buffer.from(h('x-nabl-proxy'));
+    const want = Buffer.from(proxySecret);
+    if (given.length === want.length && timingSafeEqual(given, want) && h('x-nabl-client-ip')) return h('x-nabl-client-ip');
+  }
+  return h('fly-client-ip') || req.socket.remoteAddress || 'unknown';
 }
 
 /** Same-origin check for WebSocket upgrades and state-changing requests. */

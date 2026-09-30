@@ -315,7 +315,7 @@ export class Repo {
       const existing = await this.busyForDate(tenant, date, q);
       // Keep the same table and area if they still fit; otherwise find another.
       const area = changes.area ?? b.area_key ?? undefined;
-      const req = { profile: tenant.profile, serviceKey: service.key, date, time, partySize: party, now, existing, excludeBookingId: b.id, area, accessible: changes.accessible };
+      const req = { profile: tenant.profile, serviceKey: service.key, date, time, partySize: party, now, existing, excludeBookingId: b.id, area, accessible: changes.accessible, keep: b.resource_key };
       const slot = checkSlot(req, service, time);
       if (!slot) {
         const where = area ? tenant.profile.booking?.areas?.find((x) => x.key === area)?.label.toLowerCase() : undefined;
@@ -452,6 +452,15 @@ export class Repo {
       [tenantId, since],
     );
     return rows.map(mapOrder);
+  }
+
+  /** Orders due in [from, to), for collection-slot capacity. */
+  async ordersDueBetween(tenantId: string, from: Date, to: Date): Promise<number> {
+    const rows = await this.db.query<any>(
+      `select count(*)::int as n from public.voice_orders where tenant_id = $1 and status <> 'cancelled' and due_at >= $2 and due_at < $3`,
+      [tenantId, from, to],
+    );
+    return Number(rows[0]?.n ?? 0);
   }
 
   async setOrderStatus(tenantId: string, reference: string, status: string): Promise<void> {

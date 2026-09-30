@@ -30,6 +30,8 @@ export interface Config {
   publicBaseUrl: string | undefined;
   consolePassword: string | undefined;
   sessionSecret: string;
+  /** Shared with the site's Worker: its X-Nabl-Client-Ip header is believed only with this beside it. */
+  demoProxySecret: string | undefined;
   demoCards: DemoCard[];
   maxCallSeconds: number;
   vadSilenceMs: number;
@@ -73,6 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     publicBaseUrl: env.PUBLIC_BASE_URL?.trim().replace(/\/$/, '') || undefined,
     consolePassword: env.CONSOLE_PASSWORD?.trim() || undefined,
     sessionSecret: env.SESSION_SECRET?.trim() || randomBytes(32).toString('hex'),
+    demoProxySecret: env.DEMO_PROXY_SECRET?.trim() || undefined,
     demoCards: parseDemoCards(env.DEMO_CARDS),
     maxCallSeconds: Number(env.MAX_CALL_SECONDS ?? 720),
     vadSilenceMs: Number(env.VAD_SILENCE_MS ?? 600),

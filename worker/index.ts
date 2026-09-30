@@ -27,6 +27,50 @@ interface Env {
   /* The static assets, so this script can hand anything that is not an API
      call back to them. See the fetch handler for why that is not optional. */
   ASSETS: { fetch: (request: Request) => Promise<Response> }
+
+  /* Where the private demos run (demo-products/voice-agent, on Fly.io).
+     Unset, /demo answers 503 and nothing else changes. */
+  DEMO_ORIGIN?: string
+
+  /* Shared with the demo server (its DEMO_PROXY_SECRET), so it can trust the
+     visitor address this script passes on. A Worker secret, not a var. */
+  DEMO_PROXY_SECRET?: string
+}
+
+/* nabl.agency/demo/* belongs to the demo server: the key entry, the builder,
+   the workspace, its API, and the call's WebSocket. Everything is forwarded
+   unchanged, upgrades included (returning the upstream response is how a
+   Worker passes a WebSocket through), and the demo server's own headers come
+   back with it: its CSP, and the one place on the site that allows the
+   microphone. The site's _headers file applies to static assets only, so it
+   neither adds to nor overrides a forwarded response.
+
+   The visitor's address goes in a header the demo server believes only with
+   the shared secret beside it; anyone reaching the demo server directly
+   cannot claim to be someone else to get round its key throttle. */
+async function forwardToDemo(request: Request, url: URL, env: Env): Promise<Response> {
+  const quiet = { 'X-Robots-Tag': 'noindex, nofollow', 'Cache-Control': 'no-store', 'Content-Type': 'text/plain; charset=utf-8' }
+  if (!env.DEMO_ORIGIN) return new Response('The demo is not switched on.', { status: 503, headers: quiet })
+  const target = new URL(url.pathname + url.search, env.DEMO_ORIGIN)
+  const headers = new Headers(request.headers)
+  headers.delete('host')
+  headers.set('X-Forwarded-Host', url.host)
+  headers.set('X-Forwarded-Proto', url.protocol.replace(':', ''))
+  const ip = request.headers.get('cf-connecting-ip')
+  if (ip) headers.set('X-Nabl-Client-Ip', ip)
+  else headers.delete('X-Nabl-Client-Ip')
+  if (env.DEMO_PROXY_SECRET) headers.set('X-Nabl-Proxy', env.DEMO_PROXY_SECRET)
+  else headers.delete('X-Nabl-Proxy')
+  try {
+    return await fetch(target.toString(), {
+      method: request.method,
+      headers,
+      body: request.method === 'GET' || request.method === 'HEAD' ? undefined : request.body,
+      redirect: 'manual',
+    })
+  } catch {
+    return new Response('The demo server is not answering. Try again in a minute.', { status: 502, headers: quiet })
+  }
 }
 
 /* Groq rather than Workers AI, and the reason is capacity against an audience
@@ -195,6 +239,8 @@ export default {
 
        /api/* stays a 404 rather than falling through: an unknown API path is
        a mistake, and answering it with an HTML page hides that. */
+    if (url.pathname === '/demo' || url.pathname.startsWith('/demo/')) return forwardToDemo(request, url, env)
+
     if (url.pathname.startsWith('/api/')) {
       if (url.pathname !== '/api/chat/public') return new Response('Not found', { status: 404 })
     } else {

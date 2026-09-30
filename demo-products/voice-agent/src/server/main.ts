@@ -155,8 +155,10 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
 
       // ── The React app ───────────────────────────────────────────────
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'method not allowed' });
-      // Behind the site's Worker only /demo/* arrives; run directly, the root leads there.
-      if (path === '/' || path === BASE) return redirect(res, `${BASE}/`);
+      // Behind the site's Worker only /demo/* arrives. Run directly (locally, a
+      // Codespace, the Fly address), the root is the team's console.
+      if (path === '/') return redirect(res, `${BASE}/admin`);
+      if (path === BASE) return redirect(res, `${BASE}/`);
       if (!path.startsWith(`${BASE}/`)) return json(res, 404, { error: 'not found' });
       if (path === `${BASE}/robots.txt`) {
         res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', ...SECURITY_HEADERS });
@@ -330,6 +332,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       process.exit(1);
     }
     console.warn('CONSOLE_PASSWORD is not set: the team console is open to anyone who can reach it.');
+  }
+  if (!config.demoProxySecret && config.publicBaseUrl?.startsWith('https://nabl.agency')) {
+    console.warn('DEMO_PROXY_SECRET is not set: behind the site\'s Worker every visitor looks like one address to the key throttle.');
   }
   if (!process.env.SESSION_SECRET && !dev) console.warn('SESSION_SECRET is not set: sessions and demo keys\' cookies end whenever the server restarts.');
   const app = await startServer(config, { web: dev ? 'dev' : 'dist', checkKey: true });
