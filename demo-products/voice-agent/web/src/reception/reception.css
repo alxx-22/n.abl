@@ -4,6 +4,8 @@
 .rx { min-height: 100vh; }
 .rx-main { padding: 24px; max-width: 1560px; margin: 0 auto; }
 .rx-top .crumb { display: inline-flex; align-items: center; gap: 8px; color: var(--heading); }
+.workspace-page .rx-top .crumb b, .builder-page .rx-top .crumb b, .phone-head b, .step > header h1 { font-family: var(--brand-heading, inherit); }
+.warn-line { margin: 0; color: var(--amber-light); font-size: 13px; }
 .rx-top .small { font-size: 13px; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .spacer { flex: 1; }

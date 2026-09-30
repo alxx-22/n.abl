@@ -2,11 +2,12 @@
 // itself (debounced) and comes back validated, so the preview and the list
 // of what is still missing are always the server's view, not a guess.
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import { Link, navigate } from '../../router.tsx';
 import { R, RxTop } from '../Reception.tsx';
+import { brandStyle } from '../brand.ts';
 import type { Issue, Me, RestaurantAnswers, WorkspacePayload } from '../types.ts';
 import { ScoutCard } from './Scout.tsx';
 import { StepBasics, StepHours, StepMenu, StepMoney, StepPolicies, StepReview, StepSeating, StepServe } from './steps.tsx';
@@ -125,7 +126,7 @@ export function Builder({ id, me }: { id: string; me: Me }) {
     window.scrollTo(0, 0);
   };
   const props: StepProps = { a: answers, set, ws, me, issues: ws.issues, go };
-  const style = { '--accent': answers.theme.accent } as CSSProperties;
+  const style = brandStyle(answers.theme);
 
   return (
     <div className="builder-page" style={style}>

@@ -220,4 +220,58 @@ export class DemoRepo {
   async deleteWorkspace(id: string): Promise<void> {
     await this.db.query('delete from public.voice_tenants where id = $1 and owner_key_id is not null', [id]);
   }
+
+  // ── The website scout's cache ───────────────────────────────────────────
+
+  async cachedPage(url: string, kind: 'html' | 'pdf' | 'rendered', maxAgeDays: number): Promise<{ status: number; text: string | null; signals: any; fetched_at: Date } | null> {
+    const rows = await this.db.query<any>(
+      `select status, text, signals, fetched_at from public.voice_site_pages
+       where url = $1 and kind = $2 and fetched_at > now() - make_interval(days => $3::int)`,
+      [url, kind, maxAgeDays],
+    );
+    return rows[0] ? { ...rows[0], fetched_at: new Date(rows[0].fetched_at) } : null;
+  }
+
+  async cachePage(p: { site: string; url: string; kind: 'html' | 'pdf' | 'rendered'; status: number; text: string | null; signals: unknown; hash: string | null }): Promise<void> {
+    await this.db.query(
+      `insert into public.voice_site_pages (site, url, kind, status, text, signals, content_hash)
+       values ($1, $2, $3, $4, $5, $6::jsonb, $7)
+       on conflict (url, kind) do update set fetched_at = now(), status = excluded.status, text = excluded.text,
+         signals = excluded.signals, content_hash = excluded.content_hash`,
+      [p.site, p.url, p.kind, p.status, p.text, JSON.stringify(p.signals ?? {}), p.hash],
+    );
+  }
+
+  async createScan(site: string, keyId: string | null): Promise<string> {
+    const rows = await this.db.query(`insert into public.voice_site_scans (site, key_id) values ($1, $2) returning id`, [site, keyId]);
+    return rows[0].id;
+  }
+
+  async finishScan(id: string, r: { status: 'done' | 'failed'; result?: unknown; requests: number; tokens: number; error?: string | null }): Promise<void> {
+    await this.db.query(
+      `update public.voice_site_scans set finished_at = now(), status = $2, result = $3::jsonb, requests = $4, tokens = $5, error = $6 where id = $1`,
+      [id, r.status, JSON.stringify(r.result ?? {}), r.requests, r.tokens, r.error ?? null],
+    );
+  }
+
+  async getScan(id: string): Promise<{ id: string; site: string; status: 'running' | 'done' | 'failed'; result: any; error: string | null; started_at: Date } | null> {
+    if (!/^[0-9a-f-]{36}$/.test(id)) return null;
+    const rows = await this.db.query<any>('select id, site, status, result, error, started_at from public.voice_site_scans where id = $1', [id]);
+    return rows[0] ? { ...rows[0], started_at: new Date(rows[0].started_at) } : null;
+  }
+
+  /** A finished scan of this site young enough to reuse. */
+  async recentScan(site: string, maxAgeDays: number): Promise<string | null> {
+    const rows = await this.db.query(
+      `select id from public.voice_site_scans where site = $1 and status = 'done' and finished_at > now() - make_interval(days => $2::int)
+       order by finished_at desc limit 1`,
+      [site, maxAgeDays],
+    );
+    return rows[0]?.id ?? null;
+  }
+
+  /** Scans left running by a restart are marked failed at start-up. */
+  async failStaleScans(): Promise<void> {
+    await this.db.query(`update public.voice_site_scans set status = 'failed', finished_at = now(), error = 'The server restarted during the scan.' where status = 'running'`);
+  }
 }

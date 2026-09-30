@@ -23,6 +23,8 @@ import type { TenantProfile } from '../domain/types.ts';
 import { spokenDate, spokenTime, toLocal } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { SimulatedSms } from '../channels/sms.ts';
+import { ScoutError, scanProgress, startScan, type ScanResult } from '../scout/scan.ts';
+import { applyScan, scanView, type ScanPart } from '../scout/map.ts';
 
 export const API = `${BASE}/api`;
 export const SESSION_COOKIE = 'demo_s';
@@ -44,11 +46,13 @@ export interface WorkspaceConfig {
   answers: unknown;
   /** Call settings the builder does not ask about: language, reply speed, model, turn-taking. */
   settings?: SettingsPatch;
+  /** The website read for this workspace, if the prospect gave one. */
+  scan?: { id: string; url: string };
 }
 
 function configOf(w: Workspace): WorkspaceConfig {
   const c = (w.config ?? {}) as Partial<WorkspaceConfig>;
-  return { preset: c.preset ?? w.preset ?? 'restaurant', version: 1, answers: c.answers ?? {}, settings: c.settings };
+  return { preset: c.preset ?? w.preset ?? 'restaurant', version: 1, answers: c.answers ?? {}, settings: c.settings, scan: c.scan };
 }
 
 /** The profile the receptionist runs on: the preset's compile, then the call settings. */
@@ -303,6 +307,44 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     } catch (err) {
       throw new HttpError(502, draftError(err));
     }
+  }
+
+  // ── Build from the website: the scout ─────────────────────────────────
+  if (sub === 'scout' && !ref && req.method === 'GET') {
+    const scan = cfg.scan ? await demo.getScan(cfg.scan.id) : null;
+    return json(res, 200, { scan: scan ? scanView(scan, scanProgress(scan.id)) : null }), true;
+  }
+  if (sub === 'scout' && !ref && req.method === 'POST') {
+    const { url: site } = await readJson(req, 10_000);
+    if (typeof site !== 'string' || !site.trim()) throw new HttpError(400, 'Which website?');
+    if (!admin && key) {
+      const n = await demo.countUsage(key.id, ['scouted'], 24);
+      if (n >= key.limits.scans_per_day) throw new HttpError(429, `That's the ${key.limits.scans_per_day} website reads this key has for today. Fill in the steps by hand, or try tomorrow.`);
+    }
+    let id: string;
+    try {
+      id = await startScan({ demo, config, ...ctx.scoutTest }, site, ownerId);
+    } catch (err) {
+      if (err instanceof ScoutError) throw new HttpError(400, err.message);
+      throw err;
+    }
+    await demo.saveWorkspace(t.id, t.profile, { ...cfg, scan: { id, url: site.trim().slice(0, 200) } } satisfies WorkspaceConfig);
+    void usage('scouted', { site: site.trim().slice(0, 200) });
+    const scan = (await demo.getScan(id))!;
+    return json(res, 200, { scan: scanView(scan, scanProgress(id)) }), true;
+  }
+  if (sub === 'scout' && ref === 'apply' && req.method === 'POST') {
+    const body = await readJson(req, 10_000);
+    const scan = cfg.scan && cfg.scan.id === body.scan ? await demo.getScan(cfg.scan.id) : null;
+    if (!scan || scan.status !== 'done') throw new HttpError(409, 'That website read has not finished.');
+    const use = Object.fromEntries(['identity', 'hours', 'menu', 'theme', 'services', 'policies'].map((k) => [k, body.use?.[k] === true])) as Record<ScanPart, boolean>;
+    const current = preset.sanitise(cfg.answers) as RestaurantAnswers;
+    const answers = preset.sanitise(applyScan(current, scan.result as ScanResult, use));
+    const profile = buildProfile(preset, answers, t.slug, cfg.settings);
+    if (t.profile.demo_pin) profile.demo_pin = t.profile.demo_pin;
+    const saved = await demo.saveWorkspace(t.id, profile, { ...cfg, answers } satisfies WorkspaceConfig);
+    if (w.started_at) refresh({ reason: 'config' });
+    return json(res, 200, workspacePayload(saved)), true;
   }
 
   // ── Start and reset: compile, then fill the diary ─────────────────────

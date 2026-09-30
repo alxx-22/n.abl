@@ -26,7 +26,8 @@
     "e2e:turns": "node --env-file-if-exists=.env.local test-e2e/turns.ts",
     "spike:turns": "node --env-file-if-exists=.env.local src/spike/turns.ts",
     "demo:key": "node --env-file-if-exists=.env.local src/demo/cli.ts",
-    "e2e:demo": "npm run build && node --env-file-if-exists=.env.local test-e2e/demo-ui.ts"
+    "e2e:demo": "npm run build && node --env-file-if-exists=.env.local test-e2e/demo-ui.ts",
+    "e2e:scout": "node --env-file-if-exists=.env.local test-e2e/scout.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.0",

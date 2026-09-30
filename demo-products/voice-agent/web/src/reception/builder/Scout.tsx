@@ -14,6 +14,7 @@ export interface ScanView {
   stage: string;
   pages: number;
   error: string | null;
+  notes: string[];
   found: {
     identity: { name: string | null; address: string | null; phone: string | null; town: string | null; logo: string | null; description: string | null };
     hours: { days: number; sentence: string } | null;
@@ -24,6 +25,8 @@ export interface ScanView {
     faqs: number;
   } | null;
 }
+
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 type Part = 'identity' | 'hours' | 'menu' | 'theme' | 'services' | 'policies';
 
@@ -46,7 +49,7 @@ export function ScoutCard({ id, website, onApplied }: { id: string; website: str
         } else setScan(r.scan);
         if (!r.scan || r.scan.status === 'running') timer.current = setTimeout(poll, 1500);
       } catch (e) {
-        if (!stop) setScan({ id: '', status: 'failed', stage: '', pages: 0, error: (e as Error).message, found: null });
+        if (!stop) setScan({ id: '', status: 'failed', stage: '', pages: 0, error: (e as Error).message, notes: [], found: null });
       }
     };
     void poll();
@@ -105,7 +108,7 @@ export function ScoutCard({ id, website, onApplied }: { id: string; website: str
   const rows: { part: Part; label: string; detail: React.ReactNode; show: boolean }[] = [
     { part: 'identity', label: 'Name and contact', detail: [f.identity.name, f.identity.address, f.identity.phone].filter(Boolean).join(' · ') || 'nothing clear', show: Boolean(f.identity.name || f.identity.address || f.identity.phone) },
     { part: 'hours', label: 'Opening hours', detail: f.hours?.sentence, show: Boolean(f.hours) },
-    { part: 'menu', label: 'Menu', detail: f.menu ? `${f.menu.dishes} dishes in ${f.menu.sections.length} sections${f.menu.priced < f.menu.dishes ? `; ${f.menu.dishes - f.menu.priced} without a price on the site` : ''}` : null, show: Boolean(f.menu?.dishes) },
+    { part: 'menu', label: 'Menu', detail: f.menu ? `${plural(f.menu.dishes, 'dish', 'dishes')} in ${plural(f.menu.sections.length, 'section')}${f.menu.priced < f.menu.dishes ? `; ${f.menu.dishes - f.menu.priced} without a price on the site` : ''}` : null, show: Boolean(f.menu?.dishes) },
     {
       part: 'theme', label: 'Colours and fonts', show: Boolean(f.theme),
       detail: f.theme ? (
@@ -116,7 +119,7 @@ export function ScoutCard({ id, website, onApplied }: { id: string; website: str
       ) : null,
     },
     { part: 'services', label: 'How you serve', detail: f.services.join(', '), show: f.services.length > 0 },
-    { part: 'policies', label: 'Policies and questions', detail: `${[...f.policies, f.faqs ? `${f.faqs} questions` : ''].filter(Boolean).join(', ')}`, show: f.policies.length > 0 || f.faqs > 0 },
+    { part: 'policies', label: 'Policies and questions', detail: `${[...f.policies, f.faqs ? plural(f.faqs, 'question') : ''].filter(Boolean).join(', ')}`, show: f.policies.length > 0 || f.faqs > 0 },
   ];
 
   return (
@@ -131,6 +134,7 @@ export function ScoutCard({ id, website, onApplied }: { id: string; website: str
           </p>
         </div>
       </div>
+      {scan.error ? <p className="warn-line" role="alert">{scan.error}</p> : null}
       <p className="muted small">From {scan.pages} pages of {host}. Tick what to use; everything is marked in the steps below so you can check it.</p>
       <ul className="found">
         {rows.filter((r) => r.show).map((r) => (
@@ -143,6 +147,8 @@ export function ScoutCard({ id, website, onApplied }: { id: string; website: str
           </li>
         ))}
       </ul>
+      {scan.notes.length ? <ul className="notes">{scan.notes.map((n, i) => <li key={i}>{n}</li>)}</ul> : null}
+      {f.theme ? <p className="hint">Fonts are matched by name: if your visitors’ devices have them they show, otherwise the nearest standard font does. We never copy your font files.</p> : null}
       <div className="row-tools">
         <button type="button" className="primary" onClick={apply} disabled={busy || !Object.values(use).some(Boolean)}>{busy ? 'Filling in…' : 'Yes, use these'}</button>
         <button type="button" onClick={dismiss}>Not us: keep the preset</button>

@@ -2,7 +2,7 @@
 // office in the middle, and the customer's phone on the right. Everything a
 // call does arrives over the event stream and lands on all three at once.
 
-import { useCallback, useEffect, useReducer, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { DEMO_API, demoApi } from '../../api.ts';
 import { Calls } from '../../components/BoardPanels.tsx';
 import { ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
@@ -14,6 +14,7 @@ import { useLiveCall } from '../../live/useLiveCall.ts';
 import { Link } from '../../router.tsx';
 import type { BoardEvent, TenantState } from '../../types.ts';
 import { R, RxTop } from '../Reception.tsx';
+import { brandStyle } from '../brand.ts';
 import type { LiveBooking, LiveState, Me } from '../types.ts';
 import { BookingDrawer } from './BookingDrawer.tsx';
 import { FloorBoard, type View } from './FloorBoard.tsx';
@@ -132,7 +133,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   const now = localNow(state.tenant.timezone, new Date(clock));
   const t = state.tenant;
   const brand = t.brand ?? {};
-  const style = { '--accent': brand.accent ?? t.accent ?? undefined } as CSSProperties;
+  const style = brandStyle({ accent: brand.accent ?? t.accent, font_heading: brand.font_heading, font_body: brand.font_body });
   const booking: LiveBooking | null = selected ? state.bookings.find((b) => b.reference === selected.ref) ?? null : null;
   const minutesLeft = Math.max(0, me.limits.call_minutes_per_day - me.used.call_minutes);
   const newMessages = state.messages.filter((m) => m.kind === 'message' && m.status === 'new').length;

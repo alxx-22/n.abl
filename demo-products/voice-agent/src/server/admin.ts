@@ -14,6 +14,8 @@ import { previewVoice } from '../core/preview.ts';
 import { ingestWebsite } from '../ingest/ingest.ts';
 import type { TenantProfile } from '../domain/types.ts';
 import { generateKey, hashKey, limitsFor, normaliseKey, prefixOf, type Limits } from '../demo/access.ts';
+import { ScoutError, scanProgress, startScan } from '../scout/scan.ts';
+import { scanView } from '../scout/map.ts';
 
 export const ADMIN = `${BASE}/api/admin`;
 
@@ -83,6 +85,23 @@ export async function handleAdmin(ctx: Ctx, req: IncomingMessage, res: ServerRes
   if (p === '/ingest' && req.method === 'POST') {
     const { url: site } = await readJson(req);
     return json(res, 200, { profile: await ingestWebsite(String(site ?? ''), config) }), true;
+  }
+  // Read a prospect's website before issuing their key, so their builder opens instantly (the result is cached).
+  if (p === '/scout' && req.method === 'POST') {
+    const { url: site } = await readJson(req);
+    try {
+      const id = await startScan({ demo, config }, String(site ?? ''), null);
+      return json(res, 200, { scan: scanView((await demo.getScan(id))!, scanProgress(id)) }), true;
+    } catch (err) {
+      if (err instanceof ScoutError) throw new HttpError(400, err.message);
+      throw err;
+    }
+  }
+  const scoutView = /^\/scout\/([0-9a-f-]{36})$/.exec(p);
+  if (scoutView) {
+    const scan = await demo.getScan(scoutView[1]);
+    if (!scan) throw new HttpError(404, 'No such scan.');
+    return json(res, 200, { scan: scanView(scan, scanProgress(scan.id)), result: scan.result }), true;
   }
   const call = /^\/calls\/([0-9a-f-]{36})\/events$/.exec(p);
   if (call) return json(res, 200, { events: await repo.listEvents(call[1]) }), true;

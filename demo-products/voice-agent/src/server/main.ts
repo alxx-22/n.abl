@@ -52,6 +52,8 @@ export interface ServerOptions {
   web?: 'dev' | 'dist';
   /** Ask Google whether GEMINI_API_KEY works, and tell the console. */
   checkKey?: boolean;
+  /** Tests only: the scout reads a local site with a stand-in model. */
+  scoutTest?: Ctx['scoutTest'];
 }
 
 export interface App {
@@ -76,6 +78,7 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
   await migrate(db);
   const repo = new Repo(db);
   const demo = new DemoRepo(db);
+  await demo.failStaleScans();
   if (!(await repo.listTenants()).length) await seedAll(repo);
   const bus = new Bus();
   const sms = smsSender(config);
@@ -84,7 +87,7 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
   const keyChecked = opts.checkKey
     ? checkApiKey(config.geminiApiKey).then((r) => ((keyStatus = r.status), r))
     : Promise.resolve({ status: keyStatus });
-  const ctx: Ctx = { config, repo, demo, bus, sms, maxCalls, keyStatus: () => keyStatus };
+  const ctx: Ctx = { config, repo, demo, bus, sms, maxCalls, keyStatus: () => keyStatus, scoutTest: opts.scoutTest };
 
   const twilioOk = (req: IncomingMessage, path: string, params: Record<string, string>) => {
     if (!config.twilio) return false;

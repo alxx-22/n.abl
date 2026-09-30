@@ -8,6 +8,7 @@
 // Writes screenshots to eval-results/demo-ui/.
 
 import { mkdirSync, rmSync } from 'node:fs';
+import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Page } from 'playwright-core';
@@ -17,8 +18,42 @@ import { generateKey, hashKey, normaliseKey, prefixOf } from '../src/demo/access
 
 const OUT = 'eval-results/demo-ui';
 mkdirSync(OUT, { recursive: true });
+// A fake restaurant website for "Build from my website", read with a stand-in model.
+const SITE: Record<string, string> = {
+  '/': `<html><head><title>Bella Vista</title><meta name="theme-color" content="#1f5c3a"><style>h1{font-family:'Playfair Display',serif}</style>
+    <script type="application/ld+json">{"@type":"Restaurant","name":"Bella Vista","telephone":"0115 496 0999","address":{"streetAddress":"212 Mansfield Road","addressLocality":"Nottingham","postalCode":"NG5 2BU"}}</script></head>
+    <body><h1>Bella Vista</h1><p>Sit on our terrace.</p><a href="/menu">Menu</a> <a href="/find-us">Find us</a></body></html>`,
+  '/menu': '<html><body><p>Margherita £10.50. Diavola £12.50. Carbonara £12.00. Tiramisu £6.00. Garlic bread £4.50.</p></body></html>',
+  '/find-us': '<html><body><p>Opening hours: Tuesday to Saturday 5pm to 10pm. Sunday 12pm to 8pm. Closed Mondays.</p></body></html>',
+};
+const site = createServer((req, res) => {
+  const body = SITE[(req.url ?? '/').split('?')[0]];
+  res.writeHead(body ? 200 : 404, { 'content-type': 'text/html; charset=utf-8' });
+  res.end(body ?? 'not found');
+});
+await new Promise<void>((r) => site.listen(0, r));
+const siteUrl = `http://localhost:${(site.address() as { port: number }).port}/`;
+const model = {
+  facts: async () => ({
+    is_hospitality: true, name: 'Bella Vista', style: 'Wood-fired pizza and fresh pasta', summary: 'A family Italian kitchen.', town: 'Nottingham', address: '', phone: '',
+    hours: [], takes_reservations: true, takeaway: true, own_delivery: false,
+    policies: { children: '', dogs: 'outside_only' as const, accessibility: '', parking: 'Free parking after 6pm.', dress_code: '', corkage: '', cakes: '', vouchers: '', dietary: '' },
+    faqs: [{ q: 'Is there parking?', a: 'Free parking after 6pm.' }],
+  }),
+  menu: async () => ({
+    categories: [{ label: 'Pizza', items: [
+      { name: 'Margherita', description: '', price_pence: 1050, allergens_stated: false, allergens: [], dietary: [] },
+      { name: 'Diavola', description: '', price_pence: 1250, allergens_stated: false, allergens: [], dietary: [] },
+    ] }],
+    allergen_statement: '',
+  }),
+};
+
 const dir = join(tmpdir(), `va-demo-ui-${Date.now()}`);
-const app = await startServer({ ...loadConfig(), port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: 'team', sessionSecret: 'demo-ui' }, { web: 'dist' });
+const app = await startServer(
+  { ...loadConfig(), port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: 'team', sessionSecret: 'demo-ui' },
+  { web: 'dist', scoutTest: { allowPrivate: true, paceMs: 0, model } },
+);
 const base = `http://localhost:${app.port}`;
 const raw = generateKey();
 const n = normaliseKey(raw)!;
@@ -126,6 +161,22 @@ try {
   await page.click('.tabs button:has-text("Floor plan")');
   await shot(page, 'workspace-mobile');
 
+  // Build from a website: the scout card, "Is this you?", then the builder filled in.
+  await page.setViewportSize({ width: 1500, height: 1000 });
+  await page.goto(`${base}/demo/reception/new`);
+  await page.click('.preset:has-text("Restaurant")');
+  await page.fill('#new-name', 'My place');
+  await page.fill('#new-site', siteUrl);
+  await page.click('text=Build from my website');
+  await page.waitForSelector('.scout.done', { timeout: 60000 });
+  await shot(page, 'scout-found');
+  await page.click('text=Yes, use these');
+  await page.waitForSelector('.toast:has-text("Filled in from your website")');
+  const name = await page.inputValue('.field input[maxlength="60"]');
+  if (name !== 'Bella Vista') throw new Error(`the name was not filled in from the website (${name})`);
+  if (!(await page.locator('.source.website').count())) throw new Error('fields from the website are not marked');
+  await shot(page, 'scout-applied');
+
   if (errors.length) throw new Error(errors.join('\n'));
   console.log(`demo UI: all steps passed. Screenshots in ${OUT}/`);
 } catch (err) {
@@ -135,6 +186,7 @@ try {
 } finally {
   await browser.close();
   await app.close();
+  site.close();
   rmSync(dir, { recursive: true, force: true });
   process.exit(failed ? 1 : 0);
 }
