@@ -7,7 +7,7 @@ animation is scenes.js.
 """
 
 TITLE = "n.abl · Put AI to work"
-COVER = 4.8           # seconds: the frame the cover images are taken from
+COVER = 5.4           # seconds: the frame the cover images are taken from ("AI", settled)
 
 # bm_fable has about twice the pitch movement of the other British voices
 # (interquartile range 7.5 semitones against 3.4 for bf_emma), which is what
