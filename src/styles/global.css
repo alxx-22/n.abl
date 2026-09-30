@@ -348,7 +348,14 @@ select.input { appearance: none; cursor: pointer;
     transform var(--dur-slow) var(--ease-out),
     filter var(--dur-slow) var(--ease-out);
   transition-delay: 0s;
-  will-change: opacity, transform, filter;
+}
+/* No will-change here. It kept a compositing layer alive for every
+   revealed block on the page for as long as the page was open, which a
+   phone pays for in memory; the transition promotes each block only while
+   it is moving. On a touch screen the blur is left out as well: filtering
+   a card-sized layer as it scrolls in is where a phone drops frames. */
+@media (pointer: coarse) {
+  .reveal, .reveal.out-up, .reveal.out-down { filter: none; }
 }
 /* The launch film's entrance, carried onto the page: everything arrives
    through a blur, soft and a touch large, settling to sharp as it rises.

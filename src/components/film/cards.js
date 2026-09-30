@@ -20,26 +20,45 @@ import { CHECK, E, P, bell, blurIn, count, createStage, dotsPulse, drawRim, h, i
 
 const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87', CORAL = '240,122,106'
 
-/* A card scene: a stage of W x H units, fitted inside the card and looped. */
+/* A card scene, looped inside a card.
+
+   W x H is the area the scene is composed in, and it always fits. The
+   stage itself is then widened or heightened to the card's own shape, so
+   it fills the card edge to edge: the scene's light and specks reach every
+   side, and there are no bars where a fixed-shape stage met a card of a
+   different shape. It is drawn with zoom rather than a transform, for the
+   same reason as the film (see FilmSection.jsx): drawn at the size shown,
+   not drawn large and shrunk. If the card changes shape while open, the
+   stage is rebuilt to match and carries on from the same moment. */
+let LITE = false
 function cardScene(dur, build, { W = 800, H = 560 } = {}) {
   return {
     dur,
     mount(host) {
+      LITE = window.matchMedia('(pointer: coarse)').matches
       const box = h('div', 'f-card', host)
-      const ctx = createStage(box, { W, H, beat: dur, list: [{ id: 's', beats: 1 }] })
-      ctx.setGround([[0, .5, .75, .45, .5, -.1, .85], [dur, .5, .75, .45, .5, -.1, .85]])
-      ctx.scene(['s'], s => build(s, { W, H, dur }))
-      ctx.prime()
-      const fit = () => {
-        const k = Math.min(host.clientWidth / W, host.clientHeight / H) || 0
-        box.style.transform = `translate(-50%,-50%) scale(${k.toFixed(4)})`
+      let ctx = null, shape = '', last = 0
+      const make = () => {
+        const hw = host.clientWidth, hh = host.clientHeight
+        if (!hw || !hh) return
+        const k = Math.min(hw / W, hh / H)
+        const w = Math.ceil(hw / k), hgt = Math.ceil(hh / k)
+        box.style.zoom = String(k)
+        if (`${w}x${hgt}` === shape) return
+        shape = `${w}x${hgt}`
+        if (ctx) ctx.destroy()
+        ctx = createStage(box, { W: w, H: hgt, beat: dur, list: [{ id: 's', beats: 1 }] })
+        ctx.setGround([[0, .5, .75, .45, .5, -.1, .85], [dur, .5, .75, .45, .5, -.1, .85]])
+        ctx.scene(['s'], s => build(s, { W: w, H: hgt, dur }))
+        ctx.prime()
+        ctx.seek(last)
       }
-      fit()
-      const ro = new ResizeObserver(fit)
+      make()
+      const ro = new ResizeObserver(make)
       ro.observe(host)
       return {
-        render: t => ctx.seek(((t % dur) + dur) % dur),
-        destroy: () => { ro.disconnect(); ctx.destroy(); box.remove() },
+        render: t => { last = ((t % dur) + dur) % dur; if (ctx) ctx.seek(last) },
+        destroy: () => { ro.disconnect(); if (ctx) ctx.destroy(); box.remove() },
       }
     },
   }
@@ -58,6 +77,7 @@ function drift(s, keys) {
 function loopLens(s, t, dur) {
   const i = P(t, 0, .35, E.out), o = P(t, dur - .45, dur, E.in2)
   s.rig.style.opacity = (i * (1 - o)).toFixed(3)
+  if (LITE) { s.rig.style.filter = 'none'; return }
   const b = (1 - i) * 14 + o * 14
   s.rig.style.filter = b > .05 ? `blur(${b.toFixed(1)}px)` : 'none'
 }
@@ -335,7 +355,9 @@ export const bespoke = cardScene(8, (s, { dur }) => {
   })
   const at = [.4, 1.1, 2.1, 2.3, 2.5, 3.6]
   const wireAt = [.75, 1.6, 1.75, 1.9, 3, 3.1, 3.2]
-  const cam = drift(s, [[0, -300, 0, -40, 6, 14], [2.2, 0, 0, -120, 4, 0], [dur, 120, 0, -80, 2, -8]])
+  // a short pan: on a narrow card the stage is only as wide as the process,
+  // so a long one carried the ends of it out of frame
+  const cam = drift(s, [[0, -70, 0, -60, 6, 10], [2.2, 0, 0, -120, 4, 0], [dur, 60, 0, -100, 2, -6]])
   return t => {
     sp(t); cam(t); loopLens(s, t, dur)
     pills.forEach((e, i) => {
@@ -352,4 +374,4 @@ export const bespoke = cardScene(8, (s, { dur }) => {
     const done = bell(t, 4.1, 4.3, 5.8)
     pills[5].style.boxShadow = `0 0 ${(20 + 60 * done).toFixed(0)}px rgba(${AMB},${(.15 + .45 * done).toFixed(2)})`
   }
-}, { W: 1300, H: 430 })
+}, { W: 1420, H: 430 })

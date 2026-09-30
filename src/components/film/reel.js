@@ -61,6 +61,49 @@ export const CHAPTERS = [
     steps: ['Runs the admin every morning', "Chases what's overdue", 'Asks before it sends', 'Reports back every week'] },
 ]
 
+/* ============================================================
+   WHERE THE SCROLL SLOWS DOWN
+
+   Scrolled at one steady rate, the film moves through its important
+   moments as fast as its transitions, and a visitor scrolling at a
+   natural pace reads neither. So scroll distance is not spread evenly
+   over time: at each moment worth reading (the answer, the booking, the
+   record filled in, the question it asks before sending, the report),
+   time passes several times slower for the same scroll, so it takes more
+   scrolling to move on. FilmSection turns this list into its scroll map.
+
+   The windows are computed from the same expressions the scenes below
+   time themselves with (q() on the beat, each scene's start), so a scene
+   retimed there moves its window with it if the expression is kept in
+   step here. [start, end] in film seconds, and how many times slower.
+   ============================================================ */
+const qs = (k, step = .5) => Math.round(k / step) * step * BEAT
+const startOf = id => { let t = 0; for (const s of LIST) { if (s.id === id) return t; t += s.beats * BEAT } return t }
+const SLOW = 4.5
+export const HOLDS = (() => {
+  const chat = 0, book = startOf('book'), notify = startOf('notify'), phone = startOf('phone')
+  const docs = startOf('docs'), office = startOf('office')
+  const tAi = chat + qs(3, 1) + .45, tCard = chat + qs(7.5)
+  const tP3 = book + qs(3.5), tN1 = notify + qs(2.5)
+  const tA = phone + qs(4.5) + .3, tEta = phone + qs(8.5)
+  const tPost = docs + qs(9), tAsk = office + qs(4.3), tPress = office + qs(5.5), tRep = office + qs(8)
+  return [
+    [chat + .35, chat + .9, SLOW],          // 01 AI receptionist, the chapter's title
+    [tAi + .5, tAi + 1, SLOW],              // "Friday at 2pm is free. Shall I book it?"
+    [tCard + .15, tCard + .6, SLOW],        // ✓ Booked
+    [tP3 + .45, tP3 + .85, SLOW],           // booked, deposit paid, reminder sent
+    [tN1 + .4, tN1 + .85, SLOW],            // the owner's phone: new booking, calendar
+    [tA + .55, tA + .95, SLOW],             // "It has! Order #4821 is out for delivery…"
+    [tEta + .1, tEta + .35, SLOW],          // arriving today, by 5 pm
+    [docs + .35, docs + .85, SLOW],         // 02 Document AI, the chapter's title
+    [docs + qs(5) + .55, docs + qs(5) + 1.05, SLOW],   // every field in the record
+    [tPost + .3, tPost + .8, SLOW],         // posted to your accounts
+    [office + .35, office + .85, SLOW],     // 03 Back-office agent, the chapter's title
+    [tAsk + .25, tPress, 7],                // "3 reminders ready to send. Send them?"
+    [tRep + .9, tRep + 1.4, SLOW],          // the week, reported
+  ]
+})()
+
 const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87'
 
 export default function film(ctx) {
@@ -85,6 +128,11 @@ export default function film(ctx) {
     // a frame the visitor has stopped on is held still, so it is held sharp
     const k = Math.min(1, ctx.speed)
     mbX *= k; mbY *= k
+    /* On a phone the lens does no filtering at all. A blur or a motion
+       smear over the whole frame is re-rendered every frame the camera
+       moves, which a phone's graphics chip pays for in dropped frames and
+       memory; the grey wash and the fades carry the transitions alone. */
+    if (lite) { mbX = mbY = 0; blur = 0; bright = 1 }
     s.blurEl.setAttribute('stdDeviation', `${mbX.toFixed(1)} ${mbY.toFixed(1)}`)
     let f = ''
     if (mbX > .6 || mbY > .6) f += `url(#${s.mb}) `

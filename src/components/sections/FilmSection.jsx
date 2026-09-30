@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Reveal, useReducedMotion } from '../ui/index.jsx'
 import { Chapter } from '../Journey.jsx'
 import { createStage } from '../film/stage.js'
-import film, { BEAT, LIST, CHAPTERS } from '../film/reel.js'
+import film, { BEAT, LIST, CHAPTERS, HOLDS } from '../film/reel.js'
 
 /* ============================================================
    02 — SEE IT WORK
@@ -22,16 +22,32 @@ import film, { BEAT, LIST, CHAPTERS } from '../film/reel.js'
    and gets the chapters as cards instead of a film.
    ============================================================ */
 
-/* Scroll distance per second of film. A wheel notch is about 100px, so
-   roughly one notch a second, which is the reel's pace. A phone swipe
-   covers more ground, so it gets less per second. */
-const PX_DESK = 115, PX_TOUCH = 95
+/* Scroll distance per second of film, between the important moments. A
+   wheel notch is about 100px, so roughly one notch a second, which is the
+   reel's pace. A phone swipe covers more ground, so it gets less. At the
+   moments in HOLDS (reel.js) the same scroll moves time several times
+   slower, so those take more scrolling to get past. */
+const PX_DESK = 105, PX_TOUCH = 90
 
 /* The film's length is known before anything is built, so the section can
    take its height on the first render. Setting it only once the stage is
    built moved everything below it down after the page had laid out, and a
    link straight to #pricing landed thousands of pixels short. */
 const DUR = LIST.reduce((n, s) => n + s.beats, 0) * BEAT + 0.6
+
+/* Film time to scroll distance, and back. Monotonic, so the way back is a
+   bisection: thirty halvings of a thirty-second film is far finer than a
+   frame. */
+function pxAt(t, px) {
+  let p = t * px
+  for (const [a, b, k] of HOLDS) p += Math.max(0, Math.min(t, b) - a) * (k - 1) * px
+  return p
+}
+function tAt(p, px) {
+  let lo = 0, hi = DUR
+  for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; if (pxAt(m, px) < p) lo = m; else hi = m }
+  return (lo + hi) / 2
+}
 
 function Words({ className }) {
   return (
@@ -87,12 +103,18 @@ function Film() {
       if (ctx) ctx.destroy()
       const touch = window.matchMedia('(pointer: coarse)').matches
       px = touch ? PX_TOUCH : PX_DESK
-      ctx = createStage(el, { W, H, beat: BEAT, list: LIST, lite: Math.min(vw, vh) < 700 })
+      ctx = createStage(el, { W, H, beat: BEAT, list: LIST, lite: touch || Math.min(vw, vh) < 700 })
       film(ctx)
       ctx.prime()
-      el.style.transform = `scale(${(R >= 1 ? vh : vw) / 1080})`
+      /* zoom, not transform: scale(). A scaled-down stage is still laid out
+         and rasterised at its full 1080-unit size and then shrunk, so on a
+         phone at 3x every full-frame layer of the film (the stage, the
+         rig, the camera, the wash) cost about 90 MB, and together they
+         were enough for mobile Safari to kill the tab. Zoomed, the same
+         stage is drawn at the size it is shown: about 12 MB a layer. */
+      el.style.zoom = String((R >= 1 ? vh : vw) / 1080)
       dur = DUR
-      sec.style.height = `${Math.round(dur * px + vh)}px`
+      sec.style.height = `${Math.round(pxAt(DUR, px) + vh)}px`
       measure()
       t = target
       ctx.seek(t)
@@ -102,12 +124,17 @@ function Film() {
     function measure() {
       const r = sec.getBoundingClientRect()
       const span = r.height - box.clientHeight
-      const p = span > 0 ? Math.min(1, Math.max(0, -r.top / span)) : 0
-      target = p * dur
+      const scrolled = span > 0 ? Math.min(span, Math.max(0, -r.top)) : 0
+      target = tAt(scrolled * pxAt(DUR, px) / (span || 1), px)
     }
 
     function paint() {
-      if (bar.current) bar.current.style.transform = `scaleX(${(t / dur).toFixed(4)})`
+      if (bar.current) {
+        bar.current.style.transform = `scaleX(${(t / dur).toFixed(4)})`
+        // only while the film is playing: finished, it would ride up the
+        // screen as a stray amber rule when the section scrolls away
+        bar.current.parentNode.style.opacity = t > 0.2 && t < dur - 0.9 ? '1' : '0'
+      }
       if (hint.current) hint.current.style.opacity = t < 0.4 ? '1' : '0'
     }
 
@@ -168,7 +195,7 @@ function Film() {
   }, [])
 
   return (
-    <div className="film" ref={section} style={{ height: `calc(${Math.round(DUR * PX_DESK)}px + 100svh)` }}>
+    <div className="film" ref={section} style={{ height: `calc(${Math.round(pxAt(DUR, PX_DESK))}px + 100svh)` }}>
       <div className="film__pin" ref={pin} aria-hidden="true">
         <div className="film__host" ref={host} />
         <span className="film__hint" ref={hint}>Scroll to play</span>

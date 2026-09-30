@@ -26,9 +26,21 @@
   position: sticky; top: 0;
   height: 100vh; height: 100svh;
   overflow: hidden;
-  background: #0A0908;
 }
-.film__host { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.film__host { position: absolute; left: 0; top: 0; }
+
+/* On the page the film has no ground of its own: it plays over the same
+   page background as the hero above it, so there is no box where one
+   ends and the other starts. Its light from above and its amber bloom
+   fade out towards the top and bottom edges, which are the edges that
+   show while the film scrolls into place and out again. The reel's dark
+   vignette would draw a frame round it, so it is not used here. */
+.film .f-stage { background: transparent; }
+.film .f-vignette { display: none; }
+.film .f-ground {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
+}
 .film__intro {
   position: absolute; left: 0; right: 0; top: 0;
   padding: calc(var(--s-9) + var(--s-4)) var(--gutter) 0;
@@ -51,6 +63,7 @@
   position: absolute; left: var(--gutter); right: var(--gutter); bottom: var(--s-4);
   height: 2px; border-radius: 1px; background: var(--line-faint); overflow: hidden;
   z-index: var(--z-raise); pointer-events: none;
+  transition: opacity var(--dur-slow) var(--ease);
 }
 .film__bar i { display: block; height: 100%; width: 100%; background: var(--accent-400); transform-origin: 0 50%; transform: scaleX(0); }
 
@@ -332,7 +345,7 @@
    A small stage fitted inside a solution card's "what we would build"
    side. Larger type than the film, because the stage is drawn small.
    ============================================================ */
-.f-card { position: absolute; left: 50%; top: 50%; transform-origin: 50% 50%; }
+.f-card { position: absolute; left: 0; top: 0; }
 .f-card .f-stage { background: transparent; }
 .f-card .f-vignette { background: radial-gradient(ellipse 85% 80% at 50% 45%, transparent 55%, rgba(3, 2, 2, .55) 100%); }
 .c-panel { width: 660px; padding: 24px 28px 26px; }

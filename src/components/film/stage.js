@@ -180,7 +180,7 @@ export function createStage(host, { W, H, beat, list, lite = false }) {
 
   const stage = h('div', `f-stage m-${MODE}`, host)
   stage.style.width = W + 'px'; stage.style.height = H + 'px'
-  const ground = h('div', 'f-layer', stage)
+  const ground = h('div', 'f-layer f-ground', stage)
   const bloomA = h('div', 'f-bloom f-bloom--a', ground)
   const bloomC = h('div', 'f-bloom f-bloom--c', ground)
   const scenesEl = h('div', 'f-layer', stage)
