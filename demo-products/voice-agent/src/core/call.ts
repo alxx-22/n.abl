@@ -21,6 +21,8 @@ import { redactCardNumbers } from './redact.ts';
 import { rms } from './audio.ts';
 import { generateText } from './gemini.ts';
 import { REPLY_SPEEDS } from '../domain/voices.ts';
+import { SPEED_SCALE, TurnManager, type TurnStatus } from './turns.ts';
+import { CallerListener } from './listener.ts';
 
 export type Channel = 'phone' | 'browser' | 'eval';
 
@@ -31,7 +33,7 @@ export interface TranscriptLine {
 }
 
 export interface BoardEvent {
-  type: 'call_started' | 'transcript' | 'action' | 'flag' | 'call_ended' | 'refresh';
+  type: 'call_started' | 'transcript' | 'action' | 'flag' | 'call_ended' | 'refresh' | 'turn';
   tenant_id: string;
   call_id: string;
   at: string;
@@ -47,7 +49,9 @@ export interface CallEvents {
   agentTurn: [text: string];
   hangup: [reason: string];
   /** How long the caller waited for the start of a reply, from the end of their speech. */
-  latency: [ms: number];
+  latency: [ms: number, extraMs: number];
+  /** Contextual turn-taking: listening, waiting for the caller to go on, on hold... */
+  turn: [status: TurnStatus];
   /** The agent finished a turn: channels flush any part-filled audio frame. */
   turnFlush: [];
   ended: [summary: CallSummary];
@@ -97,6 +101,9 @@ const SPEECH_RMS = 700;
  * the call to the next model, with the transcript so far.
  */
 const WATCHDOG_MS = 7000;
+
+/** After these, the receptionist reads back something that matters: harder to interrupt by accident. */
+const READ_BACK_TOOLS = new Set(['review_order', 'confirm_order', 'create_booking', 'modify_booking', 'cancel_booking', 'take_demo_payment']);
 const MAX_RECOVERIES = 2;
 
 const CORRECTIONS: Record<Flag['rule'], string> = {
@@ -139,6 +146,12 @@ export class CallSession extends EventEmitter<CallEvents> {
   private closing = false;
   private hangupTimer: NodeJS.Timeout | null = null;
   private toolQueue: Promise<void> = Promise.resolve();
+  private turns: TurnManager | null = null;
+  private listener: CallerListener | null = null;
+  private turnTimer: NodeJS.Timeout | null = null;
+  /** Contextual turn-taking: when the caller stopped talking, and how long past the usual pause we waited. */
+  private replyFrom = 0;
+  private replyExtra = 0;
 
   constructor(opts: CallOptions) {
     super();
@@ -157,6 +170,11 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.opts.repo.addEvent(this.callId, this.opts.tenant.id, kind, data).catch(() => {});
   }
 
+  /** Our server decides when the caller has finished (see turns.ts), unless the business chose Gemini's fixed pause. */
+  private get contextual(): boolean {
+    return !this.opts.textMode && this.opts.tenant.profile.turn_taking !== 'standard';
+  }
+
   private setupFor(model: string, prompt: string): LiveSetup {
     const p = this.opts.tenant.profile;
     return {
@@ -167,10 +185,12 @@ export class CallSession extends EventEmitter<CallEvents> {
       languageCode: p.language_code === null ? undefined : p.language_code || 'en-GB',
       transcribeInput: true,
       transcribeOutput: true,
-      vad: {
-        silenceDurationMs: p.reply_speed && p.reply_speed !== 'normal' ? REPLY_SPEEDS[p.reply_speed].silence_ms : this.opts.config.vadSilenceMs,
-        prefixPaddingMs: 200,
-      },
+      vad: this.contextual
+        ? { disabled: true }
+        : {
+            silenceDurationMs: p.reply_speed && p.reply_speed !== 'normal' ? REPLY_SPEEDS[p.reply_speed].silence_ms : this.opts.config.vadSilenceMs,
+            prefixPaddingMs: 200,
+          },
       resumption: { handle: this.resumeHandle },
       compression: { triggerTokens: this.opts.config.compressAt, targetTokens: this.opts.config.compressTo },
     };
@@ -195,6 +215,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       channel: this.opts.channel,
     });
     this.prompt = prompt;
+    if (this.contextual) this.startTurnTaking();
     const pinned = tenant.profile.live_model;
     const models = this.opts.models ?? (pinned ? [pinned, ...config.liveModels.filter((m) => m !== pinned)] : config.liveModels);
     this.session = await connectWithFallback(models, (m) => this.setupFor(m, prompt), config.geminiApiKey, (m, err) => {
@@ -216,6 +237,49 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (!this.opts.textMode) this.timer = setInterval(() => this.tick(), 1000);
   }
 
+  private startTurnTaking(): void {
+    const p = this.opts.tenant.profile;
+    const turns = new TurnManager(
+      {
+        now: () => Date.now(),
+        startTurn: () => this.session?.sendActivityStart(),
+        sendAudio: (pcm, rate) => this.session?.sendAudio(pcm, rate),
+        endTurn: (e) => {
+          this.session?.sendActivityEnd();
+          // The watchdog times the model from here; the reply time runs from the caller's last sound.
+          this.lastCallerSound = Date.now();
+          this.replyFrom = e.lastVoiceAt;
+          this.replyExtra = e.extraMs;
+          this.awaitingReply = true;
+          this.record('turn', { reason: e.reason, extra_ms: e.extraMs, expect: turns.expecting.expect });
+        },
+        agentSpeaking: () => Date.now() < this.agentSpeakingUntil,
+        onStatus: (st) => {
+          this.emit('turn', st);
+          this.publish('turn', { ...st });
+        },
+        onVoice: () => {
+          this.lastActivity = Date.now();
+          this.silencePrompts = 0;
+        },
+      },
+      { scale: SPEED_SCALE[p.reply_speed ?? 'normal'] },
+    );
+    this.turns = turns;
+    this.turnTimer = setInterval(() => turns.tick(), 100);
+    void CallerListener.open(this.opts.config, p.language_code ?? 'en-GB').then((l) => {
+      if (!l) return this.record('system', { event: 'no_listener' });
+      if (this.ended) return l.close();
+      this.listener = l;
+      turns.wordsAvailable = true;
+      l.on('text', (t) => {
+        this.record('heard', { text: redactCardNumbers(t, this.opts.config.demoCards).text });
+        turns.callerWords(t);
+      });
+      l.on('closed', () => (turns.wordsAvailable = false));
+    });
+  }
+
   private attach(s: LiveSession, prompt: string): void {
     const sign = () => (this.lastModelSign = Date.now());
     for (const ev of ['audio', 'inputTranscript', 'outputTranscript', 'toolCall', 'turnComplete', 'usage'] as const) s.on(ev, sign);
@@ -223,10 +287,13 @@ export class CallSession extends EventEmitter<CallEvents> {
       const now = Date.now();
       if (this.awaitingReply) {
         this.awaitingReply = false;
-        if (this.lastCallerSound) {
-          this.latencies.push(now - this.lastCallerSound);
-          this.emit('latency', now - this.lastCallerSound);
+        const from = this.replyFrom || this.lastCallerSound;
+        if (from) {
+          this.latencies.push(now - from);
+          this.emit('latency', now - from, this.replyFrom ? this.replyExtra : 0);
         }
+        this.replyFrom = 0;
+        this.replyExtra = 0;
       }
       this.lastActivity = now;
       this.agentSpeakingUntil = Math.max(this.agentSpeakingUntil, now) + (pcm.length / 24000) * 1000;
@@ -250,6 +317,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     s.on('turnComplete', () => {
       if (this.callerBuf.trim() && !this.agentBuf.trim()) this.flushCaller();
       this.flushAgent(false);
+      this.turns?.agentTurnDone();
       this.emit('turnFlush');
       if (this.state.ending) this.scheduleHangup('agent said goodbye', 900);
     });
@@ -281,6 +349,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     const next = await LiveSession.connect(this.setupFor(this.model, prompt), this.opts.config.geminiApiKey);
     this.session = next;
     this.attach(next, prompt);
+    if (this.turns?.isOpen) next.sendActivityStart();
     old?.removeAllListeners();
     old?.close();
     this.record('system', { event: 'resumed', with_handle: Boolean(this.resumeHandle) });
@@ -304,6 +373,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       const from = this.model;
       this.model = next;
       this.attach(fresh, this.prompt);
+      if (this.turns?.isOpen) fresh.sendActivityStart();
       old?.removeAllListeners();
       old?.close();
       const story = this.transcript.slice(-8).map((l) => `${l.role === 'agent' ? 'You' : 'Caller'}: ${l.text}`).join(' / ');
@@ -350,6 +420,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.transcript.push({ role: 'agent', text: clean + (interrupted ? ' —' : '') });
     this.emitLine('agent', text, true);
     this.record('agent', { text: clean, interrupted });
+    this.turns?.agentSaid(clean);
     for (const f of checkUtterance(text, this.state)) {
       this.flags.push(f);
       this.emit('flag', f);
@@ -390,6 +461,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       responses.push({ id: c.id, name: c.name, response: result });
     }
     this.lastActivity = Date.now();
+    if (calls.some((c) => READ_BACK_TOOLS.has(c.name))) this.turns?.protect();
     if (s.isOpen) s.sendToolResponses(responses);
     if (this.state.ending) this.scheduleHangup('end_call', 4000);
     if (this.state.transferRequested) this.scheduleHangup('transferred', 100);
@@ -409,6 +481,12 @@ export class CallSession extends EventEmitter<CallEvents> {
   /** Caller audio, PCM16 mono. Browser: 16 kHz. Twilio: 8 kHz decoded μ-law. */
   sendAudio(pcm: Int16Array, rate = 16000): void {
     if (!this.session?.isOpen) return;
+    this.listener?.send(pcm, rate);
+    if (this.turns) {
+      // The turn manager decides what reaches the model, and when the turn ends.
+      this.turns.push(pcm, rate);
+      return;
+    }
     if (rms(pcm) > SPEECH_RMS) {
       this.lastCallerSound = Date.now();
       this.lastActivity = this.lastCallerSound;
@@ -453,6 +531,8 @@ export class CallSession extends EventEmitter<CallEvents> {
       return;
     }
     if (this.recovering) return;
+    // Mid-turn (a thinking pause, or on hold while they ask the family): not silence.
+    if (this.turns?.isOpen) return;
     const quietFor = now - Math.max(this.lastActivity, this.agentSpeakingUntil);
     if (quietFor > 10000 && !this.state.ending) {
       this.silencePrompts++;
@@ -471,6 +551,8 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.ended = true;
     this.closing = true;
     if (this.timer) clearInterval(this.timer);
+    if (this.turnTimer) clearInterval(this.turnTimer);
+    this.listener?.close();
     if (this.hangupTimer) clearTimeout(this.hangupTimer);
     await this.toolQueue.catch(() => {});
     this.flushCaller();

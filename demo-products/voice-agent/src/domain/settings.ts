@@ -11,6 +11,7 @@ export interface SettingsPatch {
   language_code?: unknown;
   reply_speed?: unknown;
   live_model?: unknown;
+  turn_taking?: unknown;
 }
 
 export function applySettings(profile: TenantProfile, patch: SettingsPatch): { ok: true; profile: TenantProfile } | { ok: false; error: string } {
@@ -40,6 +41,10 @@ export function applySettings(profile: TenantProfile, patch: SettingsPatch): { o
     if (patch.live_model === null || patch.live_model === '') next.live_model = null;
     else if (typeof patch.live_model === 'string' && LIVE_MODELS.some((m) => m.id === patch.live_model)) next.live_model = patch.live_model;
     else return { ok: false, error: 'Unknown voice model.' };
+  }
+  if (patch.turn_taking !== undefined) {
+    if (patch.turn_taking !== 'contextual' && patch.turn_taking !== 'standard') return { ok: false, error: 'Turn-taking must be contextual or standard.' };
+    next.turn_taking = patch.turn_taking;
   }
   return { ok: true, profile: next };
 }

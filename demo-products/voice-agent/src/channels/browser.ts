@@ -41,7 +41,8 @@ export async function handleBrowserCall(
   call.on('action', (a) => send({ type: 'action', action: a }));
   call.on('flag', (f) => send({ type: 'flag', flag: f }));
   call.on('hangup', (reason) => send({ type: 'hangup', reason }));
-  call.on('latency', (ms) => send({ type: 'latency', ms }));
+  call.on('latency', (ms, extraMs) => send({ type: 'latency', ms, waited_ms: extraMs }));
+  call.on('turn', (st) => send({ type: 'turn', ...st }));
 
   ws.on('message', (data, isBinary) => {
     if (isBinary) {

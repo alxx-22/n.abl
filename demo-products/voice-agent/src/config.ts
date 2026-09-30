@@ -11,6 +11,8 @@ export interface Config {
   textModel: string[];
   callerModel: string;
   ttsModel: string;
+  /** The parallel listener that gives the turn manager the caller's words; '' turns it off. */
+  transcribeModel: string;
   databaseUrl: string | undefined;
   pgliteDir: string;
   port: number;
@@ -48,6 +50,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     // calls never use up the receptionist's 65K tokens a minute.
     callerModel: env.CALLER_MODEL?.trim() || 'gemini-3.8-live',
     ttsModel: env.TTS_MODEL?.trim() || 'gemini-2.5-flash-preview-tts',
+    transcribeModel: env.TRANSCRIBE_MODEL === undefined ? 'gemini-3.5-transcribe-live' : env.TRANSCRIBE_MODEL.trim() === 'off' ? '' : env.TRANSCRIBE_MODEL.trim(),
     databaseUrl: env.DATABASE_URL?.trim() || undefined,
     pgliteDir: env.PGLITE_DIR?.trim() || '.data/pglite',
     port: Number(env.PORT ?? 8787),

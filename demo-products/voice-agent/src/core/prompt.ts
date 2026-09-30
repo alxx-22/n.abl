@@ -93,6 +93,7 @@ export function compilePrompt(p: TenantProfile, ctx: PromptContext): string {
     '- Before a tool call that might take a moment, say a very short holding phrase, such as "Let me check."',
     '- If you did not catch something, ask again. Read back names, phone numbers and postcodes.',
     '- Never say the name of a tool or that you are calling one ("calls end_call", "check_availability"). The caller hears everything you say.',
+    '- Callers pause to think, read numbers out in chunks, and talk to people in the room. If they ask you to hold on, say only "Of course, take your time" and wait. When they come back, carry on where you left off and take in whatever they decided meanwhile. Never answer what they said to someone else.',
     '',
     `You can: ${can.join('; ')}.`,
     caller,

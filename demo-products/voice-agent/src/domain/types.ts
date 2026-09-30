@@ -133,6 +133,12 @@ export interface TenantProfile {
   reply_speed?: 'snappy' | 'normal' | 'patient';
   /** Pin this business to one Live model (the others stay as fallbacks). */
   live_model?: string | null;
+  /**
+   * Who decides the caller has finished. contextual (the default): this
+   * server, from what was asked and what the caller is saying; see
+   * src/core/turns.ts. standard: Gemini, after a fixed pause.
+   */
+  turn_taking?: 'contextual' | 'standard';
   greeting: string;
   /** How the business describes itself, in a sentence. */
   summary: string;
