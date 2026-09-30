@@ -85,6 +85,9 @@ deciding", "On hold while you talk to someone else") and marks replies it
 held back on purpose. Reply speed in **Settings** scales every wait, and
 **Turn-taking: Standard** hands the decision back to Gemini's fixed pause.
 If the second listener cannot connect, it works from the question alone.
+If a model stops responding (the free tier does this after heavy use), the
+call moves to the other model within 4 s and replays the caller's last turn
+to it, so it answers rather than asking them to repeat.
 
 ## The demo businesses
 

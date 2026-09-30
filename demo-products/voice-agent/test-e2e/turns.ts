@@ -198,11 +198,14 @@ try {
   // B. Interrupt the reply to correct the order.
   const replyAt = await agentStarts(pauseTo);
   if (replyAt !== null) {
-    await sleep(Math.max(0, replyAt + 1200 - now()));
+    await sleep(Math.max(0, replyAt + 500 - now()));
     const cutAt = now();
     const saying = say(L.wait, '"No, wait, sorry, make that two margheritas." (over the receptionist)');
     await sleep(1500);
-    check('B. a real correction interrupts', clears.some((t) => t >= cutAt && t <= cutAt + 1500), clears.filter((t) => t >= cutAt).map((t) => `cut off ${t - cutAt} ms after the caller started`).join(', ') || 'not interrupted');
+    const cut = clears.find((t) => t >= cutAt && t <= cutAt + 1500);
+    // If its reply ended before 0.6 s of the correction, there was nothing to interrupt: fine.
+    const finished = !agentAudio.some((t) => t > cutAt + 700) && speakingUntil < cutAt + 700;
+    check('B. a real correction interrupts', cut !== undefined || finished, cut !== undefined ? `cut off ${cut - cutAt} ms after the caller started` : finished ? 'its reply had already finished; the correction was heard as the next turn' : 'talked over the caller');
     await saying;
   } else check('B. a real correction interrupts', false, 'no reply to interrupt');
   await agentQuiet();
@@ -250,8 +253,9 @@ try {
       numberChecked = true;
     } else if (/allerg/.test(q)) await say(L.allergy, 'no allergies');
     else if (/\bname\b/.test(q)) await say(L.name, 'name');
-    else if (/anything else|what else|anything more|add to (your|the) order/.test(q)) await say(L.done, "that's everything");
-    else if (/collection or delivery|collect or/.test(q)) await say(L.collection, 'collection');
+    else if (/\bcorrect\b|sound right|is that right|all good/.test(q)) await say(L.yes, "yes, that's right");
+    else if (/anything else|what else|something else|anything more|add to (your|the) order|finished with (your|the) order|is that all|is that everything/.test(q)) await say(L.done, "that's everything");
+    else if (/collection|collect|deliver/.test(q)) await say(L.collection, 'collection');
     else if (/\b(when|what time)\b/.test(q)) await say(L.asap, 'as soon as possible');
     else if (/\bpay\b/.test(q)) await say(L.pay, 'pay on collection');
     else await say(L.yes, "yes, that's right");

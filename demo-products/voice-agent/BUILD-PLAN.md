@@ -35,7 +35,7 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
 | Phase | State | What exists |
 |---|---|---|
 | 0. Foundations and spike | **done** | Codecs with tests, the Live client, the audio spike. Results and decisions in `docs/spike-results.md`. Eight voice samples (`npm run spike:voices`) |
-| 1. Agent core and browser channel | **done** | Call orchestrator, prompt compiler, tools, guardrails that flag *and* correct on the call, browser "Talk to it" |
+| 1. Agent core and browser channel | **done** | Call orchestrator, prompt compiler, tools, guardrails that flag *and* correct on the call, browser "Talk to it". **Contextual turn-taking** (30 September, below) |
 | 2. Data and bookings | **done** | `voice_` schema applied to the shared project, four demo tenants loaded there, booking engine with the tenant-row lock, caller recognition |
 | 3. Orders and demo payments | **done** | Menu matching, server-side basket, delivery areas, allergen wording, mock card processor, deposits |
 | 4. Evaluation suite | **done** | 18 simulated-caller scenarios with database checks; first run 11 of 18; after the fixes below, 16 of 18 with no guardrail flags and a median reply of 0.85 s; the two failures were the simulated caller (silent once, hanging up early once), and with the harness fixed both pass. Text and audio bridges |
@@ -89,6 +89,23 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
 | Transcribe Live as a backup transcript | Not used | Built-in transcription was word-perfect on phone audio in the spike |
 | `gemini-3.8-flash` for offline text | `gemini-3.5-flash`, then 3.5 Flash Lite, then 3.8 Flash | 3.8 Flash answered 503 "high demand" on the free tier; 2.5 Flash has been withdrawn |
 | Keypad card entry | Spoken demo card only | Payments are demo-only (review, 29 September) |
+
+**Contextual turn-taking (30 September).** Gemini's own detection ended
+every turn after a fixed 0.6 s, so callers were answered mid-thought and
+their asides to the family were answered too. The server now marks turns
+itself (`activityStart`/`activityEnd`, spike in `docs/spike-results.md`) and
+decides from what the receptionist asked and the caller's words, which a
+parallel Transcribe Live listener supplies about a second behind. It waits
+through thinking pauses and chunked phone numbers, says "take your time"
+and stays quiet through a side conversation, ignores "mm-hm", and needs
+longer speech to interrupt a read-back. A turn closed too early is reopened
+if the words show the caller was still going and nothing has played yet.
+`README.md` has the rules; `src/core/turns.ts` the code; 19 tests drive it
+frame by frame. `npm run e2e:turns` runs a scripted caller against live
+Gemini: across four runs every behaviour passed at least once, and the
+fourth passed all four; the order itself was spoiled in later runs by the
+free tier slowing to 6-14 s replies and the primary model going deaf after
+hours of testing (the watchdog handed over each time).
 
 **Capacity on the free tier, measured:** a busy call uses about 30K tokens a
 minute on the receptionist model (the prompt and tools are about 3.3K tokens,

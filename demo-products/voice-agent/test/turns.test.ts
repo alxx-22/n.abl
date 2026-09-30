@@ -252,6 +252,19 @@ test('turns: right after a tool returns, the receptionist is about to talk, so a
   assert.equal(c.starts().length, 1, 'only the first turn');
 });
 
+test('turns: the latest turn\'s audio is kept, first syllable included, for a replacement model', () => {
+  const c = caller();
+  c.speak(1000);
+  c.quiet(1000);
+  const audio = c.m.lastTurnAudio();
+  const ms = audio.reduce((n, f) => n + (f.pcm.length / f.rate) * 1000, 0);
+  assert.ok(ms >= 1000 && ms <= 2400, `kept ${ms} ms: the speech, the pre-roll and the closing silence`);
+  assert.equal(ms, c.sent() * 20, 'exactly what the model was sent');
+  c.m.agentTurnDone();
+  c.speak(500);
+  assert.ok(c.m.lastTurnAudio().length < audio.length, 'a new turn starts a new recording');
+});
+
 test('turns: a click does not open a turn; a word does', () => {
   const c = caller();
   c.speak(80);

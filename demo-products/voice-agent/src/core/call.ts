@@ -389,7 +389,19 @@ export class CallSession extends EventEmitter<CallEvents> {
       old?.removeAllListeners();
       old?.close();
       const story = this.transcript.slice(-8).map((l) => `${l.role === 'agent' ? 'You' : 'Caller'}: ${l.text}`).join(' / ');
-      fresh.sendText(`[You are taking over this call part-way through. So far: ${story || 'you have greeted the caller.'} ${sorry.slice(1)}`);
+      const missed = this.turns && !this.turns.isOpen ? this.turns.lastTurnAudio() : [];
+      if (missed.length) {
+        // We still have the turn it missed: play it to the new model, which
+        // answers it. The caller hears a slower reply, not an apology.
+        fresh.sendText(`[You are taking over this call part-way through. So far: ${story || 'you have greeted the caller.'} The caller's latest words follow as audio. Answer them naturally, without mentioning any problem.]`);
+        fresh.sendActivityStart();
+        for (const f of missed) fresh.sendAudio(f.pcm, f.rate);
+        fresh.sendActivityEnd();
+        this.awaitingReply = true;
+        this.record('system', { event: 'replayed_turn', ms: Math.round(missed.reduce((n, f) => n + (f.pcm.length / f.rate) * 1000, 0)) });
+      } else {
+        fresh.sendText(`[You are taking over this call part-way through. So far: ${story || 'you have greeted the caller.'} ${sorry.slice(1)}`);
+      }
       this.fallbacks.push({ model: from, error: 'stopped responding mid-call' });
       this.record('system', { event: 'handed_over', from, to: next });
       void this.opts.repo.updateCall(this.callId, { model: next, fallbacks: this.fallbacks }).catch(() => {});

@@ -165,6 +165,9 @@ export class TurnManager {
   private agentActedSinceClose = false;
   private protectedReply = false;
   private status: TurnStatus = { state: 'listening', expect: 'open' };
+  /** The latest turn's audio, kept so a replacement model can hear what a deaf one missed. */
+  private turnAudio: Frame[] = [];
+  private turnAudioMs = 0;
   /** Set by the call when the parallel transcriber is connected. */
   wordsAvailable = false;
 
@@ -223,11 +226,23 @@ export class TurnManager {
     }
 
     this.io.sendAudio(pcm, rate);
+    this.keep(frame);
     if (voiced && this.voicedRun >= 2) {
       this.lastVoiceAt = now;
       this.io.onVoice?.();
     }
     this.decide(now);
+  }
+
+  private keep(f: Frame): void {
+    if (this.turnAudioMs > 30000) return;
+    this.turnAudio.push(f);
+    this.turnAudioMs += f.ms;
+  }
+
+  /** The caller's audio for the latest turn (up to 30 s), for replaying to a replacement model. */
+  lastTurnAudio(): { pcm: Int16Array; rate: number }[] {
+    return this.turnAudio.map((f) => ({ pcm: f.pcm, rate: f.rate }));
   }
 
   /** Called on a timer too, so a turn ends on time even if no audio arrives. */
@@ -253,7 +268,12 @@ export class TurnManager {
     this.awaitingAgent = false;
     this.protectedReply = false;
     this.io.startTurn(interrupting);
-    for (const f of frames) this.io.sendAudio(f.pcm, f.rate);
+    this.turnAudio = [];
+    this.turnAudioMs = 0;
+    for (const f of frames) {
+      this.io.sendAudio(f.pcm, f.rate);
+      this.keep(f);
+    }
     this.io.onVoice?.();
     this.setStatus({ state: interrupting ? 'interrupted' : this.hold ? 'hold' : 'hearing', reason: this.hold ? 'hold' : undefined });
   }

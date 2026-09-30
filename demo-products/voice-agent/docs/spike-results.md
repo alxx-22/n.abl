@@ -146,3 +146,12 @@ turn, fast enough for the longer waits that matter.
 What was built from this is described in `README.md` ("How it takes turns")
 and `src/core/turns.ts`. `npm run e2e:turns` plays a scripted caller through
 the real call against live Gemini and checks each behaviour.
+
+After a morning of back-to-back test calls, the free tier slowed to 6 to 14 s
+per reply and 3 Flash Live repeatedly gave no sign of hearing a turn (four
+runs out of five, usually the first caller turn); 3.8 Live did the same
+once. The watchdog handed over each time. In contextual mode it now does so
+after 4 s (a listening model transcribes a closed turn within 0.4 s), and
+because the server has the audio of the turn that was missed, it plays that
+turn to the replacement model, which answers it, instead of asking the
+caller to repeat themselves.
