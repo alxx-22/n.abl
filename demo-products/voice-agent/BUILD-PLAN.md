@@ -40,7 +40,7 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
 | 3. Orders and demo payments | **done** | Menu matching, server-side basket, delivery areas, allergen wording, mock card processor, deposits |
 | 4. Evaluation suite | **done** | 18 simulated-caller scenarios with database checks; first run 11 of 18; after the fixes below, 16 of 18 with no guardrail flags and a median reply of 0.85 s; the two failures were the simulated caller (silent once, hanging up early once), and with the harness fixed both pass. Text and audio bridges |
 | 5. Telephony | **built, not yet on a real line** | TwiML, PIN router, μ-law media bridge, barge-in, hang-up marks, warm transfer with whisper, signature checks (verified against Twilio's documented example), SMS. `npm run e2e:phone` plays Twilio against the real server and books a table (see below), including with the primary model failing mid-call. `Dockerfile` and `fly.toml` ready. **Waiting on the Twilio account and UK number** |
-| 6. Demo platform | **in part** | Console, setup wizard (website to draft profile, tested on a local fake site), live board, one-click reset, four seeded businesses. Not yet: console sign-in through Supabase Auth (a password for now), number pool admin, the owner's weekly report |
+| 6. Demo platform | **in part** | React app: console, setup wizard (website to draft profile, tested on a local fake site), live board built around the live call (level meters, reply times as they happen), receptionist settings (voice with spoken preview, greeting, language, reply speed, model), one-click reset, four seeded businesses. A Codespaces configuration runs it with no install. Not yet: console sign-in through Supabase Auth (a password for now), number pool admin, the owner's weekly report |
 | 7. Sales-floor readiness | **in part** | Fallback chain, session resumption, context compression, concurrency cap, Supabase keep-alive. Not yet: kill switch, alerts, retention job, privacy notice page, demo-day runbook |
 
 **What testing found, and what changed because of it:**
@@ -83,7 +83,7 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
 | Plan said | Built | Why |
 |---|---|---|
 | D7: 3.8 Live primary | **3 Flash Live primary**, 3.8 Live fallback | Same behaviour in every spike run; 3.8 Live went silent once. One setting (`LIVE_MODEL_PRIMARY`) |
-| npm workspaces; Fastify; React + Vite dashboard | One package; plain `node:http` + `ws`; plain HTML/JS pages | No build step at all (Node runs the TypeScript), fewer moving parts, nothing to compile on Fly |
+| npm workspaces; Fastify; React + Vite dashboard | One package; plain `node:http` + `ws`; the React + Vite app in `web/`, run by Vite inside the server in development | One process and one port for the app, the API and the live-call socket, so `npm run dev` is the whole setup. The first build used plain HTML pages; the React app replaced them on review (29 September) |
 | Supabase Realtime for the live board | Server-sent events from the server | Works identically on PGlite, and avoids changing the shared `supabase_realtime` publication at all |
 | Menu, knowledge, hours as tables | One JSON profile per tenant (`voice_tenants.profile`); transactional records are tables | The wizard produces a profile in one go and the console edits it in one go; demo menus are small |
 | Transcribe Live as a backup transcript | Not used | Built-in transcription was word-perfect on phone audio in the spike |

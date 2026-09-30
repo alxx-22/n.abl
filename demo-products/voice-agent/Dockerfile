@@ -1,7 +1,14 @@
-# n.abl Reception. Node runs the TypeScript directly (type stripping, 22.18+),
-# so there is no build stage: the image is the source plus production deps.
-FROM node:22-slim
+# n.abl Reception. Node runs the server's TypeScript directly (type
+# stripping, 22.18+); only the React app has a build step.
 
+FROM node:22-slim AS web
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY web ./web
+RUN npm run build
+
+FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8787
@@ -10,8 +17,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY src ./src
-COPY public ./public
 COPY fixtures ./fixtures
+COPY --from=web /app/web/dist ./web/dist
 
 USER node
 EXPOSE 8787

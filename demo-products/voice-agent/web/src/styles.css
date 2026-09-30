@@ -147,7 +147,7 @@ main { padding: 24px; max-width: 1500px; margin: 0 auto; }
 .days button { padding: 4px 10px; font-size: 12px; gap: 6px; }
 .days button[aria-pressed='true'] { background: var(--amber); color: var(--ink); border-color: var(--amber); }
 .days .count { font-family: var(--mono); opacity: 0.8; }
-.slots { display: flex; flex-direction: column; gap: 6px; max-height: 62vh; overflow-y: auto; }
+.slots { position: relative; display: flex; flex-direction: column; gap: 6px; max-height: 62vh; overflow-y: auto; }
 .slot { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: baseline; padding: 6px 8px; border-radius: 8px; background: var(--surface-2); font-size: 13px; }
 .slot .time { font-family: var(--mono); color: var(--amber-light); }
 .slot .who { color: var(--heading); }

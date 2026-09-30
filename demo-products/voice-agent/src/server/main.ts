@@ -335,7 +335,8 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
     const { createServer: createVite } = await import('vite');
     vite = await createVite({
       configFile: join(WEB, 'vite.config.ts'),
-      server: { middlewareMode: true, hmr: { server, path: HMR_PATH } },
+      // localhost is always allowed; GitHub Codespaces forwards the port under app.github.dev.
+      server: { middlewareMode: true, hmr: { server, path: HMR_PATH }, allowedHosts: ['.app.github.dev'] },
       appType: 'spa',
     });
   }
@@ -351,8 +352,8 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
     if (url.pathname === '/ws/talk') {
       const slug = url.searchParams.get('tenant') ?? '';
       const origin = req.headers.origin;
-      const host = req.headers.host;
-      const sameOrigin = !origin || new URL(origin).host === host;
+      const hosts = [req.headers.host, req.headers['x-forwarded-host']].flat().filter(Boolean);
+      const sameOrigin = !origin || hosts.includes(new URL(origin).host);
       const tenant = await repo.getTenant(slug).catch(() => null);
       if (!authed(req, config) || !sameOrigin || !tenant || bus.activeCalls() >= maxCalls) {
         socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');

@@ -1,0 +1,21 @@
+{
+  // n.abl Reception, the voice agent demo, in a GitHub Codespace: no local
+  // install. Add GEMINI_API_KEY as a Codespaces secret (or paste it when the
+  // Codespace asks), start the Codespace, and the app opens in a browser tab.
+  "name": "n.abl Reception (voice agent demo)",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/demo-products/voice-agent",
+  "postCreateCommand": "npm ci",
+  "postAttachCommand": { "app": "npm run dev" },
+  "forwardPorts": [8787],
+  "portsAttributes": {
+    "8787": { "label": "n.abl Reception", "onAutoForward": "openBrowser" }
+  },
+  "secrets": {
+    "GEMINI_API_KEY": {
+      "description": "A Google AI Studio API key. The free tier is enough for the demo.",
+      "documentationUrl": "https://aistudio.google.com/apikey"
+    }
+  },
+  "hostRequirements": { "cpus": 2 }
+}

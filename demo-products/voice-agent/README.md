@@ -6,25 +6,48 @@ orders, and takes (demo) payments, live on the call. A demo product: see
 [`BUILD-PLAN.md`](BUILD-PLAN.md) for the plan and where it stands, and
 [`docs/spike-results.md`](docs/spike-results.md) for what the models actually do.
 
-## Run it
+## Try it: a live conversation in your browser
 
-Node 22.18 or later. There is no build step: Node runs the TypeScript directly.
+No phone needed. You talk into your microphone, the receptionist answers out
+loud, and the board shows the conversation, the bookings and the orders as
+they happen. Replies start about a second after you stop talking, and you
+can interrupt.
+
+**On your own machine** (Node 22.18 or later):
 
 ```bash
+git clone https://github.com/alxx-22/n.abl.git
+cd n.abl/demo-products/voice-agent
 cp .env.example .env.local        # add GEMINI_API_KEY; nothing else is required
 npm install
-npm run dev                       # http://localhost:8787
+npm run dev                       # then open http://localhost:8787
 ```
 
-The first run creates a local database (PGlite, in `.data/`), loads the four
-demo businesses and fills a believable week of bookings. Open the console,
-pick a business, and press **Talk to it** on its board. Headphones work best:
-on laptop speakers the agent can hear itself.
+**Without installing anything**, in a GitHub Codespace: on the repository
+page choose **Code → Codespaces → ⋯ → New with options**, pick the
+**n.abl Reception (voice agent demo)** configuration, and paste your Gemini
+key when asked (or add `GEMINI_API_KEY` as a Codespaces secret first). The
+app starts by itself and opens in a new tab. Allow the microphone when the
+browser asks.
+
+Then pick a business, press **Start a live call** and speak. Headphones work
+best: on laptop speakers the agent can hear itself. The first run creates a
+local database (PGlite, in `.data/`), loads the four demo businesses and
+fills a believable week of bookings.
+
+**Settings** on each board change the receptionist's voice (all 30 Gemini
+voices, with a spoken preview of the greeting), the greeting, the language,
+the reply speed (how long a pause ends your turn) and the voice model. They
+apply from the next call.
+
+It cannot run as a claude.ai artifact: artifact pages are not allowed the
+microphone or connections to Google, and the Gemini key must stay on a
+server.
 
 | Page | What it is |
 |---|---|
 | `/` | The console: demo businesses, and **New demo from a website** |
-| `/board/<slug>` | The live board: the call as it happens, the diary, orders, texts, recent calls |
+| `/board/<slug>` | The live board: the live call, the diary, orders, texts, recent calls, and **Settings** |
 | `/board/<slug>?phone=07700900123` | The same, with the browser call pretending to come from that number (caller ID) |
 
 ## The demo businesses
@@ -47,12 +70,13 @@ Google.
 
 | Command | What it does | Needs |
 |---|---|---|
-| `npm run dev` | The server, with PGlite | Gemini key |
-| `npm test` | 65 unit and integration tests, no network | nothing |
-| `npm run typecheck` | `tsc` as a checker | nothing |
+| `npm run dev` | The server and the React app (hot reload), with PGlite, on one port | Gemini key |
+| `npm run build` then `npm start` | Production: the built app from `web/dist` | Gemini key |
+| `npm test` | 69 unit and integration tests, no network | nothing |
+| `npm run typecheck` | `tsc` as a checker, for the server and the app | nothing |
 | `npm run eval` | 18 simulated callers against the receptionist; report in `eval-results/` | Gemini key |
 | `npm run eval -- --audio` | The same, voices crossing as audio through a simulated phone line | Gemini key |
-| `npm run e2e:browser` | Headless Chromium with a fake microphone, through the live board | Gemini key, Chromium |
+| `npm run e2e:browser` | Headless Chromium with a fake microphone: a live call through the React app | Gemini key, Chromium |
 | `npm run e2e:phone` | Plays Twilio: μ-law frames into `/twilio/stream`, a real booking out | Gemini key |
 | `npm run e2e:ingest` | The setup wizard against a fake local website | Gemini key |
 | `npm run spike:audio` | Phase 0: latency, tokens and transcription per Live model | Gemini key |
@@ -83,7 +107,7 @@ In the build sandbox (not on a normal machine) Node's `fetch` needs
 | `src/server/` | HTTP, WebSockets, server-sent events |
 | `src/ingest/` | The setup wizard: website to draft profile |
 | `src/eval/` | Scenarios and the simulated-caller harness |
-| `public/` | Console and live board: plain HTML, CSS and JS, no framework |
+| `web/` | The React app (Vite, TypeScript): console, live board, live-call audio engine, settings |
 | `fixtures/tenants/` | The four demo businesses, one JSON profile each |
 
 ## The shared Supabase project

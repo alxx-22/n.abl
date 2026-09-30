@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { when } from '../api.ts';
 import type { TenantState } from '../types.ts';
 
@@ -34,6 +34,14 @@ export function Diary({ state, day, setDay }: { state: TenantState; day: string;
   const list = state.bookings.filter((b) => b.date === day);
   const isNew = useFresh(state.bookings.map((b) => `${b.reference}:${b.status}:${b.time}:${b.party_size}`));
   const table = state.tenant.business_type === 'restaurant' || state.tenant.business_type === 'pub';
+  const slots = useRef<HTMLDivElement>(null);
+
+  // Bring a booking that just arrived into view inside the diary's own scroll.
+  useEffect(() => {
+    const box = slots.current;
+    const fresh = box?.querySelector<HTMLElement>('.slot.new');
+    if (box && fresh) box.scrollTop = fresh.offsetTop - box.clientHeight / 3;
+  }, [state, day]);
 
   return (
     <section className="panel" aria-labelledby="diary-title">
@@ -52,7 +60,7 @@ export function Diary({ state, day, setDay }: { state: TenantState; day: string;
           );
         })}
       </div>
-      <div className="slots">
+      <div className="slots" ref={slots}>
         {list.length ? (
           list.map((b) => (
             <div key={b.reference} className={`slot ${b.status === 'cancelled' ? 'cancelled' : ''} ${isNew(`${b.reference}:${b.status}:${b.time}:${b.party_size}`) ? 'new' : ''}`}>
