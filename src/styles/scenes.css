@@ -31,17 +31,10 @@
   background:rgba(var(--accent-rgb),.10)}
 .scene__tab:focus-visible{outline:2px solid var(--accent-400);outline-offset:3px}
 
-/* --- the note above the preview, not part of the site --- */
-.note{border-bottom:1px solid var(--line-faint);padding:5rem 0 3rem}
-.note h1{font-size:clamp(1.9rem,1.5rem + 2vw,2.8rem);line-height:1.1;margin:.9rem 0 .8rem}
-.note p{color:var(--cream-400);max-width:64ch}
-.note .meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.5rem}
-.note .meta span{font-family:var(--font-mono);font-size:.76rem;color:var(--cream-400);
-  border:1px solid var(--line);border-radius:999px;padding:.3rem .7rem;background:var(--surface-1)}
-.foot{padding:4rem 0 7rem;color:var(--cream-600);font-size:.88rem}
-.foot strong{color:var(--cream-200);font-weight:500}
-.foot ul{margin-top:.8rem;padding-left:1.1rem;display:flex;flex-direction:column;gap:.5rem}
-.foot li::marker{color:var(--accent-400)}
+/* The standalone preview's own note and footer rules lived here. They
+   were written for that page, but this file is loaded site-wide, so
+   `.note` and `.foot` reached into anything else with those class names,
+   the film's cards included. Removed; the preview page is gone. */
 @media (prefers-reduced-motion:reduce){ .reveal{opacity:1!important;transform:none!important;filter:none!important} }
 
 /* --- components.css / global.css: the card grid ---
@@ -120,3 +113,7 @@
 .grid__wide{grid-column:1/-1}
 .problem--wide .problem__face{max-width:70ch}
 @media (min-width:1180px){ .problem--wide{min-height:18rem} }
+
+/* The process steps are wipe cards too. They are the narrowest cards on
+   the page, so they are given enough height for their scene to be read. */
+.problem.step{min-height:15rem;display:flex;flex-direction:column}

@@ -585,7 +585,7 @@ export default function film(ctx) {
       <div class="hd">${icon('chart')}<span>This week</span><span class="when">Monday report</span></div>
       <div class="big"><span class="num">£0</span><span class="lbl">collected</span></div>
       <div class="bars">${[.35, .55, .42, .8, 1].map(v => `<i style="--v:${v}"></i>`).join('')}</div>
-      <div class="foot">3 reminders sent · 2 already paid</div>`)
+      <div class="rft">3 reminders sent · 2 already paid</div>`)
     const num = rep.querySelector('.num'), bars = [...rep.querySelectorAll('.bars i')]
 
     // each task: running from a[0], done at a[1]
@@ -687,6 +687,7 @@ export default function film(ctx) {
     const specks = bokeh(s, 14)
     const MW = M({ land: 640, def: 600 })
     const mark = h('div', 'r-mark', s.cam, WORDMARK()); mark.firstChild.setAttribute('width', MW)
+    Object.assign(mark.firstChild.style, { width: MW + 'px', height: (MW * 100 / 273).toFixed(1) + 'px' })
     const tag = h('div', 'r-tagl', s.cam, 'AI, built into your business.')
     const tTag = t0 + q(1)
     const cam = path([[t0, 0, -20, 220, 0, -10, 0, 1], [t0 + q(4), 0, 10, 0, 0, 0, 0, 1], [t1, 0, 10, -40, 0, 3, 0, 1]])
@@ -726,7 +727,7 @@ export default function film(ctx) {
       // they have been laid out, so the list is read on the first frame
       if (!list) {
         list = STEPS.slice().sort((a, b) => a[0] - b[0])
-        els = list.map(([, txt]) => h('div', 'f-abs r-step', s.root, `<span class="dot"></span><span>${txt}</span>`))
+        els = list.map(([, txt]) => h('div', 'f-abs r-step', s.root, `<span class="pip"></span><span>${txt}</span>`))
       }
       list.forEach(([ta], i) => {
         const tz = i + 1 < list.length ? list[i + 1][0] : end

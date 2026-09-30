@@ -44,13 +44,17 @@ export function WipeCard({ c, i, open, onOpen, onClose, fine, className = '' }) 
       {/* clipping hides the face from the eye, not from a screen reader, so
           the card still reads as the sentence it is */}
       <div className="problem__face">
-        <div className="problem__head">
-          <span className="problem__num">{c.n}</span>
-          <CategoryGlyph kind={c.glyph} />
-        </div>
-        <span className="problem__label">{c.title}</span>
-        <h3 className="problem__quote">&ldquo;{c.quote}&rdquo;</h3>
-        <p className="problem__body">{c.body}</p>
+        {c.face || (
+          <>
+            <div className="problem__head">
+              <span className="problem__num">{c.n}</span>
+              <CategoryGlyph kind={c.glyph} />
+            </div>
+            <span className="problem__label">{c.title}</span>
+            <h3 className="problem__quote">&ldquo;{c.quote}&rdquo;</h3>
+            <p className="problem__body">{c.body}</p>
+          </>
+        )}
       </div>
       <div className="problem__scene" aria-hidden="true">
         <div className="problem__stage" ref={host} />
@@ -66,8 +70,9 @@ export function WipeCard({ c, i, open, onOpen, onClose, fine, className = '' }) 
 
 /* A set of cards, only ever one open. Under a mouse that falls out of
    mouseleave; under a finger it has to be said, or six presses leave six
-   cards open. `wide` names cards that span the row. */
-export function WipeGrid({ items, className = 'grid grid--3', wide = [] }) {
+   cards open. `wide` names cards that span the row; `cardClass` is added to
+   every card, and an item's `face` replaces the problem-card front. */
+export function WipeGrid({ items, className = 'grid grid--3', wide = [], cardClass = '' }) {
   const [open, setOpen] = useState(-1)
   const fine = useFinePointer()
   return (
@@ -76,7 +81,7 @@ export function WipeGrid({ items, className = 'grid grid--3', wide = [] }) {
         <Reveal key={c.n} delay={0.06 + i * 0.07} className={wide.includes(c.n) ? 'grid__wide' : ''}>
           <WipeCard
             c={c} i={i} fine={fine}
-            className={wide.includes(c.n) ? 'problem--wide' : ''}
+            className={`${cardClass} ${wide.includes(c.n) ? 'problem--wide' : ''}`}
             open={open === i}
             onOpen={setOpen}
             onClose={() => setOpen(-1)}

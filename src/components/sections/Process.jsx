@@ -1,4 +1,6 @@
-import { EdgeCard, Reveal } from '../ui/index.jsx'
+import { Reveal } from '../ui/index.jsx'
+import { WipeGrid } from '../WipeCard.jsx'
+import { listen, map, buildIt, launch, improve } from '../film/cards.js'
 import { Chapter } from '../Journey.jsx'
 
 /* ============================================================
@@ -13,17 +15,28 @@ import { Chapter } from '../Journey.jsx'
    section below describes.
    ============================================================ */
 export const STEPS = [
-  { n: '01', title: 'Listen',
+  { n: '01', title: 'Listen', scene: listen, label: 'Discovery call',
     body: 'Tell us where the time goes, and what slips through the cracks.' },
-  { n: '02', title: 'Map',
+  { n: '02', title: 'Map', scene: map, label: 'Process map',
     body: 'We look at how the work happens today: the calls, the inbox, the paperwork and the systems around them.' },
-  { n: '03', title: 'Build around you',
+  { n: '03', title: 'Build around you', scene: buildIt, label: 'Build and test',
     body: 'We design the AI to fit your process and your tone, test it on your real cases, and agree the checks it has to pass.' },
-  { n: '04', title: 'Launch',
+  { n: '04', title: 'Launch', scene: launch, label: 'Go live',
     body: 'It goes live alongside your team, with a person in the loop until you trust it.' },
-  { n: '05', title: 'Run and improve',
+  { n: '05', title: 'Run and improve', scene: improve, label: 'Every month',
     body: 'Every month we look after it, tune it and add to it. You get a report, and time with us.' },
-]
+].map((s) => ({
+  ...s,
+  note: 'what happens',
+  // the step card's own front: number, title, what happens; the wipe shows it
+  face: (
+    <>
+      <span className="step__num">{s.n}</span>
+      <h3 className="step__title">{s.title}</h3>
+      <p className="step__body">{s.body}</p>
+    </>
+  ),
+}))
 
 export default function Process() {
   return (
@@ -39,17 +52,8 @@ export default function Process() {
           </p>
         </Reveal>
 
-        <div className="grid grid--steps section__body">
-          {STEPS.map((s, i) => (
-            <Reveal key={s.n} delay={0.08 + i * 0.08}>
-              <EdgeCard className="card-pad step">
-                <span className="step__num">{s.n}</span>
-                <h3 className="step__title">{s.title}</h3>
-                <p className="step__body">{s.body}</p>
-              </EdgeCard>
-            </Reveal>
-          ))}
-        </div>
+        {/* Each step wipes across to what it looks like, like the cards above. */}
+        <WipeGrid items={STEPS} className="grid grid--steps" cardClass="step" />
       </div>
     </section>
   )

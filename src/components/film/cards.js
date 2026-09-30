@@ -29,9 +29,13 @@ const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87', CORAL = '2
    different shape. It is drawn with zoom rather than a transform, for the
    same reason as the film (see FilmSection.jsx): drawn at the size shown,
    not drawn large and shrunk. If the card changes shape while open, the
-   stage is rebuilt to match and carries on from the same moment. */
+   stage is rebuilt to match and carries on from the same moment.
+
+   A scene with more than one composition passes `design`, which is given
+   the card's aspect and returns the area to fit ({ W, H }) and anything
+   the builder needs to choose its layout (`compact`). */
 let LITE = false
-function cardScene(dur, build, { W = 800, H = 560 } = {}) {
+function cardScene(dur, build, { W = 800, H = 600, design = null } = {}) {
   return {
     dur,
     mount(host) {
@@ -41,7 +45,8 @@ function cardScene(dur, build, { W = 800, H = 560 } = {}) {
       const make = () => {
         const hw = host.clientWidth, hh = host.clientHeight
         if (!hw || !hh) return
-        const k = Math.min(hw / W, hh / H)
+        const d = design ? design(hw / hh) : { W, H }
+        const k = Math.min(hw / d.W, hh / d.H)
         const w = Math.ceil(hw / k), hgt = Math.ceil(hh / k)
         box.style.zoom = String(k)
         if (`${w}x${hgt}` === shape) return
@@ -49,7 +54,7 @@ function cardScene(dur, build, { W = 800, H = 560 } = {}) {
         if (ctx) ctx.destroy()
         ctx = createStage(box, { W: w, H: hgt, beat: dur, list: [{ id: 's', beats: 1 }] })
         ctx.setGround([[0, .5, .75, .45, .5, -.1, .85], [dur, .5, .75, .45, .5, -.1, .85]])
-        ctx.scene(['s'], s => build(s, { W: w, H: hgt, dur }))
+        ctx.scene(['s'], s => build(s, { ...d, W: w, H: hgt, dur }))
         ctx.prime()
         ctx.seek(last)
       }
@@ -91,6 +96,15 @@ function specks(s, seed, n = 12, w = 1100, hgt = 800) {
   }
   return t => dots.forEach(d => put(d.e, { x: d.x + Math.sin(t * .6 + d.ph) * 22, y: d.y + Math.cos(t * .45 + d.ph) * 16, z: d.z, o: d.o }))
 }
+/* A pill as wide as its words. Estimated widths ran short on some fonts
+   and "Replies in your tone" spilled out of its rim; the text is measured
+   in the face and size the pill draws it in. */
+let measurer = null
+function textWidth(text, font) {
+  measurer = measurer || document.createElement('canvas').getContext('2d')
+  measurer.font = font
+  return measurer.measureText(text).width
+}
 function typeIn(e, text, t, a, b) {
   const n = Math.round(text.length * P(t, a, b, E.lin))
   e.textContent = text.slice(0, n)
@@ -114,7 +128,7 @@ export const voice = cardScene(7, (s, { dur }) => {
   const qW = words(mQ.querySelector('.q'), '“Can I move my appointment to Thursday?”')
   const dots = mA.querySelector('.r-dots'), aW = words(mA.querySelector('.txt'), 'Thursday at 10 is free. I’ve moved you over.')
   const tAns = 1, tQ = 1.4, tDots = 3, tA = 3.4, tDone = 5
-  const cam = drift(s, [[0, 30, -40, -40, 12, -10], [tA, 0, 10, 20, 4, -2], [dur, 0, 40, 50, 2, 3]])
+  const cam = drift(s, [[0, 24, -24, -30, 10, -8], [tA, 0, 6, 10, 4, -2], [dur, 0, 20, 24, 2, 3]])
   return t => {
     sp(t); cam(t); loopLens(s, t, dur)
     put(card, { o: 1 })
@@ -229,7 +243,7 @@ export const office = cardScene(7.5, (s, { dur }) => {
   const st = run.querySelector('.st'), tasks = [...run.querySelectorAll('.task')]
   const ask = run.querySelector('.ask'), yes = ask.querySelector('.yes')
   const T = [[.5, 1.5], [1.5, 2.6], [4.3, 5.2]], tAsk = 2.8, tPress = 3.9
-  const cam = drift(s, [[0, 0, -60, -40, 10, -8], [tAsk, 0, 10, 10, 4, -2], [dur, 0, 30, 30, 2, 4]])
+  const cam = drift(s, [[0, 0, -24, -30, 8, -6], [tAsk, 0, 4, 0, 4, -2], [dur, 0, 16, 14, 2, 3]])
   return t => {
     sp(t); cam(t); loopLens(s, t, dur)
     put(run, { o: 1 })
@@ -251,13 +265,16 @@ export const office = cardScene(7.5, (s, { dur }) => {
     st.textContent = t >= T[2][1] ? '● DONE' : wait ? '● WAITING FOR YOU' : '● RUNNING'
     st.classList.toggle('wait', wait); st.classList.toggle('ok', t >= T[2][1])
   }
-})
+}, { W: 800, H: 640 })
 
-/* ---------- 05 co-pilot: on the call, translated, the objection caught ---------- */
+/* ---------- 05 co-pilot: on the call, translated, the objection caught ----------
+   Stacked to fit a card of any shape: the call and its badge, what the
+   client said, the objection, and then what to say next, which takes the
+   objection's place rather than landing on top of it. */
 export const copilot = cardScene(7.5, (s, { dur }) => {
   const sp = specks(s, 25)
   const glow = h('div', 'f-abs', s.cam)
-  Object.assign(glow.style, { width: '760px', height: '520px', borderRadius: '50%', background: `radial-gradient(closest-side, rgba(${CORAL},.6), rgba(${CORAL},.18) 45%, transparent)` })
+  Object.assign(glow.style, { width: '620px', height: '420px', borderRadius: '50%', background: `radial-gradient(closest-side, rgba(${CORAL},.6), rgba(${CORAL},.18) 45%, transparent)` })
   const win = h('div', 'r-call c-call', s.cam, `
     <div class="r-tl"><div class="av" style="background:linear-gradient(140deg,#E9AC57,#B87718)">Y</div><div class="r-nm">You</div><div class="mic"></div></div>
     <div class="r-tl"><div class="av" style="background:linear-gradient(140deg,#7CCBFF,#3B78B8)">M</div><div class="r-nm">Client · Madrid</div><div class="mic"></div></div>`)
@@ -269,26 +286,26 @@ export const copilot = cardScene(7.5, (s, { dur }) => {
   const flag = h('div', 'r-flag', s.cam, `<span style="color:#F07A6A">${icon('alert')}</span><span>Objection · price</span>`)
   const say = h('div', 'c-say', s.cam, `<div class="sec">Say next</div><div class="txt"></div>`)
   const sayW = words(say.querySelector('.txt'), '“Most teams start with a 30-day pilot, so you only pay once it’s working.”')
-  const tCap = .7, tSwap = 2.1, tObj = 3, tSay = 4.2
-  const cam = drift(s, [[0, 0, -60, -40, 8, 6], [tObj, 0, 0, 0, 2, -2], [dur, 0, 70, 20, 4, 2]])
+  const tCap = .7, tSwap = 2.1, tObj = 3, tSay = 4.3
+  const cam = drift(s, [[0, 0, -24, -30, 6, 4], [tObj, 0, 0, 0, 2, -2], [dur, 0, 18, 10, 3, 2]])
   return t => {
     sp(t); cam(t); loopLens(s, t, dur)
-    put(win, { y: -110, s: .78 })
-    put(badge, { y: -262, o: 1 })
+    put(win, { y: -122, s: .66 })
+    put(badge, { y: -244, o: 1 })
     const swap = t >= tSwap
     line.style.display = swap ? 'none' : 'inline-block'; en.style.display = swap ? 'inline-block' : 'none'
     lang.textContent = swap ? 'ES → EN' : 'ES'
     es.forEach((e, i) => rise(e, t, tCap + i * .07, { dur: .24, dy: 14, blur: 12 }))
     const sw = bell(t, tSwap - .12, tSwap, tSwap + .25)
-    put(cap, { y: 70, o: P(t, tCap - .05, tCap + .1), blur: sw * 8 })
-    const ob = P(t, tObj, tObj + .3, E.out)
-    blurIn(flag, t, tObj, { y: 140, dur: .28, s0: .7, blur: 12 })
-    put(glow, { y: -110, z: -40, s: lerp(.6, 1, ob), o: ob * (.8 + .2 * Math.sin(t * 9)) * (1 - P(t, tSay + .6, tSay + 1.2)) })
-    win.style.borderColor = `rgba(${CORAL},${(.09 + .8 * ob).toFixed(3)})`
-    blurIn(say, t, tSay, { y: 225, dz: 160, s0: .94, blur: 14 })
+    put(cap, { y: 52, o: P(t, tCap - .05, tCap + .1), blur: sw * 8 })
+    const ob = P(t, tObj, tObj + .3, E.out), gone = P(t, tSay - .2, tSay + .1)
+    blurIn(flag, t, tObj, { y: 122, dur: .28, s0: .7, blur: 12, o: 1 - gone })
+    put(glow, { y: -122, z: -40, s: lerp(.6, 1, ob), o: ob * (.8 + .2 * Math.sin(t * 9)) * (1 - P(t, tSay + .6, tSay + 1.2)) })
+    win.style.borderColor = `rgba(${CORAL},${(.09 + .8 * ob * (1 - P(t, tSay + .6, tSay + 1.2))).toFixed(3)})`
+    blurIn(say, t, tSay, { y: 186, dz: 160, s0: .94, blur: 14 })
     sayW.forEach((e, i) => rise(e, t, tSay + .2 + i * .04, { dur: .2, dy: 8, blur: 8 }))
   }
-})
+}, { W: 760, H: 600 })
 
 /* ---------- 06 knowledge: asked in plain words, answered from your own documents, sourced ---------- */
 export const knowledge = cardScene(7.5, (s, { dur }) => {
@@ -298,8 +315,8 @@ export const knowledge = cardScene(7.5, (s, { dur }) => {
   const q = ask.querySelector('.q'), caret = ask.querySelector('.caret')
   const ans = h('div', 'c-ans', s.cam, `
     <div class="txt">Deposits are refunded in full if the booking is cancelled <mark>at least 48 hours before</mark>. Inside 48 hours they are kept.</div>
-    <div class="src"><span class="chip">${icon('doc')}<span>Staff handbook · p.12</span></span><span class="chip">${icon('doc')}<span>Booking terms · §4</span></span></div>`)
-  const mark = ans.querySelector('mark'), srcs = [...ans.querySelectorAll('.chip')]
+    <div class="src"><span class="srcchip">${icon('doc')}<span>Staff handbook · p.12</span></span><span class="srcchip">${icon('doc')}<span>Booking terms · §4</span></span></div>`)
+  const mark = ans.querySelector('mark'), srcs = [...ans.querySelectorAll('.srcchip')]
   const page = h('div', 'c-page', s.cam, `<div class="ttl">Staff handbook</div><i style="width:86%"></i><i style="width:72%"></i><div class="hl">Refunds: deposits are returned in full up to 48 hours before the booking.</div><i style="width:80%"></i><i style="width:64%"></i>`)
   const hl = page.querySelector('.hl')
   const tQ = [.3, 1.9], tAns = 2.4, tSrc = 3.6, tPage = 4.3
@@ -321,43 +338,58 @@ export const knowledge = cardScene(7.5, (s, { dur }) => {
   }
 }, { W: 960, H: 600 })
 
-/* ---------- 07 built for you: a process of yours, joined up, with n.abl in the middle ---------- */
-export const bespoke = cardScene(8, (s, { dur }) => {
-  const sp = specks(s, 27, 16, 1500, 600)
-  const NODES = [
-    ['inbox', 'New enquiry', -470, 0],
-    ['spark', 'n.abl', -170, 0],
-    ['cal', 'Checks the diary', 170, -115],
-    ['invoice', 'Prices the job', 170, 0],
-    ['mail', 'Replies in your tone', 170, 115],
-    ['bell', 'You approve', 500, 0],
-  ]
+/* ---------- 07 built for you: a process of yours, joined up, with n.abl in the middle ----------
+   Across the card when it spans the row; top to bottom when it is a card
+   like the others, on a phone, where across would leave a thin strip. */
+export const bespoke = cardScene(8, (s, { dur, compact }) => {
+  const sp = specks(s, 27, 16, compact ? 900 : 1500, compact ? 900 : 600)
+  const NAMES = [['inbox', 'New enquiry'], ['spark', 'n.abl'], ['cal', 'Checks the diary'], ['invoice', 'Prices the job'], ['mail', 'Replies in your tone'], ['bell', 'You approve']]
+  const HGT = 74
+  const width = ([, txt]) => Math.ceil(textWidth(txt, '600 26px "Inter Tight", sans-serif')) + 30 + 12 + 60
+  const Wd = NAMES.map(width)
+  const POS = compact
+    ? [[0, -300], [0, -185], [0, -62], [0, 38], [0, 138], [0, 272]]
+    : [[-470, 0], [-170, 0], [170, -115], [170, 0], [170, 115], [500, 0]]
   const NS = 'http://www.w3.org/2000/svg'
   const svg = document.createElementNS(NS, 'svg')
-  svg.setAttribute('class', 'c-wires'); svg.setAttribute('width', 1300); svg.setAttribute('height', 500); svg.setAttribute('viewBox', '-650 -250 1300 500')
+  const VW = compact ? 800 : 1300, VH = compact ? 720 : 500
+  svg.setAttribute('class', 'c-wires'); svg.setAttribute('width', VW); svg.setAttribute('height', VH)
+  svg.setAttribute('viewBox', `${-VW / 2} ${-VH / 2} ${VW} ${VH}`)
+  Object.assign(svg.style, { width: VW + 'px', height: VH + 'px' })
   s.cam.appendChild(svg)
-  const LINKS = [[0, 1], [1, 2], [1, 3], [1, 4], [2, 5], [3, 5], [4, 5]]
-  const wires = LINKS.map(([a, b]) => {
-    const [, , x1, y1] = NODES[a], [, , x2, y2] = NODES[b]
+  const half = i => Wd[i] / 2, [x, y] = [i => POS[i][0], i => POS[i][1]]
+  const D = compact ? [
+    // straight down the spine, and out round the sides for the jobs that run alongside
+    `M0 ${y(0) + HGT / 2} L0 ${y(1) - HGT / 2}`,
+    `M0 ${y(1) + HGT / 2} L0 ${y(2) - HGT / 2}`,
+    `M${-half(1)} ${y(1)} C-300 ${y(1)} -300 ${y(3)} ${-half(3)} ${y(3)}`,
+    `M${-half(1)} ${y(1)} C-360 ${y(1)} -360 ${y(4)} ${-half(4)} ${y(4)}`,
+    `M${half(2)} ${y(2)} C340 ${y(2)} 340 ${y(5)} ${half(5)} ${y(5)}`,
+    `M${half(3)} ${y(3)} C290 ${y(3)} 290 ${y(5)} ${half(5)} ${y(5)}`,
+    `M0 ${y(4) + HGT / 2} L0 ${y(5) - HGT / 2}`,
+  ] : [[0, 1], [1, 2], [1, 3], [1, 4], [2, 5], [3, 5], [4, 5]].map(([a, b]) => {
+    const mx = (x(a) + x(b)) / 2
+    return `M${x(a)} ${y(a)} C${mx} ${y(a)} ${mx} ${y(b)} ${x(b)} ${y(b)}`
+  })
+  const wires = D.map(d => {
     const p = document.createElementNS(NS, 'path')
-    const mx = (x1 + x2) / 2
-    p.setAttribute('d', `M${x1} ${y1} C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`)
-    p.setAttribute('pathLength', 1)
+    p.setAttribute('d', d); p.setAttribute('pathLength', 1)
     svg.appendChild(p)
     return p
   })
-  const pills = NODES.map(([ic, txt, x, y], i) => {
-    const w = i === 1 ? 190 : 250
-    const e = ringPill(s.cam, w, 74, `<span class="ic">${ic === 'spark' ? spark(30) : icon(ic)}</span><span class="txt">${txt}</span>`)
+  const pills = NAMES.map(([ic, txt], i) => {
+    const e = ringPill(s.cam, Wd[i], HGT, `<span class="ic">${ic === 'spark' ? spark(30) : icon(ic)}</span><span class="txt">${txt}</span>`)
     e.classList.add('c-node'); if (i === 1) e.classList.add('c-core')
-    e._x = x; e._y = y
+    e._x = POS[i][0]; e._y = POS[i][1]
     return e
   })
   const at = [.4, 1.1, 2.1, 2.3, 2.5, 3.6]
   const wireAt = [.75, 1.6, 1.75, 1.9, 3, 3.1, 3.2]
-  // a short pan: on a narrow card the stage is only as wide as the process,
-  // so a long one carried the ends of it out of frame
-  const cam = drift(s, [[0, -70, 0, -60, 6, 10], [2.2, 0, 0, -120, 4, 0], [dur, 60, 0, -100, 2, -6]])
+  // a short move: the stage is only as big as the process around it, so a
+  // long one carried the ends of it out of frame
+  const cam = compact
+    ? drift(s, [[0, 0, -30, -40, 6, 4], [2.2, 0, 0, -70, 3, 0], [dur, 0, 20, -60, 2, -3]])
+    : drift(s, [[0, -70, 0, -60, 6, 10], [2.2, 0, 0, -120, 4, 0], [dur, 60, 0, -100, 2, -6]])
   return t => {
     sp(t); cam(t); loopLens(s, t, dur)
     pills.forEach((e, i) => {
@@ -374,4 +406,202 @@ export const bespoke = cardScene(8, (s, { dur }) => {
     const done = bell(t, 4.1, 4.3, 5.8)
     pills[5].style.boxShadow = `0 0 ${(20 + 60 * done).toFixed(0)}px rgba(${AMB},${(.15 + .45 * done).toFixed(2)})`
   }
-}, { W: 1420, H: 430 })
+}, { design: a => (a >= 1.9 ? { W: 1420, H: 430, compact: false } : { W: 800, H: 720, compact: true }) })
+
+/* ============================================================
+   HOW WE WORK: one scene for each step, in the same grammar
+
+   The step cards are the narrowest on the page (five to a row on a
+   desk), so these are composed in a small, near-square area with big
+   type and few words, and fill the card around it like the others.
+   ============================================================ */
+const STEP = { W: 540, H: 540 }
+const pillW = (txt, px = 28) => Math.ceil(textWidth(txt, `600 ${px}px "Inter Tight", sans-serif`)) + 32 + 12 + 56
+
+/* ---------- 01 listen: a discovery call, heard, and where the time goes written down ---------- */
+export const listen = cardScene(7, (s, { dur }) => {
+  const sp = specks(s, 31, 10, 900, 700)
+  const panel = h('div', 'c-step', s.cam, `
+    <div class="hd"><span class="ic ice">${icon('phone')}</span><span class="t">Discovery call</span><span class="st ice">● LISTENING</span></div>
+    <div class="c-wave ice"></div>
+    <div class="notes">
+      <div class="note"><i></i><span>Missed calls after 5 pm</span></div>
+      <div class="note"><i></i><span>Invoices typed by hand</span></div>
+      <div class="note"><i></i><span>Chasing late payments</span></div>
+    </div>
+    <div class="sum">${spark(22)}<span>3 places the time goes</span></div>`)
+  const wave = panel.querySelector('.c-wave'), wr = rng(7)
+  const bars = Array.from({ length: 30 }, () => { const e = h('i', '', wave); e._h = 10 + 36 * wr(); return e })
+  const notes = [...panel.querySelectorAll('.note')], sum = panel.querySelector('.sum')
+  const T = [1.2, 2.1, 3], tSum = 4.2
+  const cam = drift(s, [[0, 0, -18, -30, 8, -6], [dur, 0, 14, 16, 2, 4]])
+  return t => {
+    sp(t); cam(t); loopLens(s, t, dur)
+    put(panel, { o: 1 })
+    const talking = t > .3 && t < 4
+    bars.forEach((e, i) => {
+      const k = talking ? .3 + .7 * Math.abs(Math.sin(t * 8 + i * .6) * Math.sin(t * 2.7 + i * .2)) : .1
+      e.style.height = (e._h * k + 4).toFixed(1) + 'px'
+    })
+    notes.forEach((e, i) => pop(e, t, T[i]))
+    pop(sum, t, tSum)
+    const g = bell(t, tSum, tSum + .1, tSum + 1.3)
+    sum.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(${AMB},${(.15 + .4 * g).toFixed(2)})`
+  }
+}, STEP)
+
+/* ---------- 02 map: how the work flows today, traced, and where it sticks ---------- */
+export const map = cardScene(7, (s, { dur }) => {
+  const sp = specks(s, 32, 10, 900, 700)
+  const NODES = [['phone', 'Calls', -130, -120], ['inbox', 'Inbox', 130, -120], ['doc', 'Paperwork', -130, 50], ['sheet', 'Accounts', 130, 50]]
+  const HGT = 76, Wd = NODES.map(([, txt]) => pillW(txt))
+  const NS = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(NS, 'svg')
+  svg.setAttribute('class', 'c-wires'); svg.setAttribute('width', 600); svg.setAttribute('height', 500)
+  svg.setAttribute('viewBox', '-300 -250 600 500')
+  Object.assign(svg.style, { width: '600px', height: '500px' })
+  s.cam.appendChild(svg)
+  const [c, i, d, a] = NODES
+  const D = [
+    `M${c[2] + Wd[0] / 2} ${c[3]} L${i[2] - Wd[1] / 2} ${i[3]}`,
+    `M${i[2]} ${i[3] + HGT / 2} C${i[2]} ${i[3] + 90} ${d[2]} ${d[3] - 90} ${d[2]} ${d[3] - HGT / 2}`,
+    `M${d[2] + Wd[2] / 2} ${d[3]} L${a[2] - Wd[3] / 2} ${a[3]}`,
+  ]
+  const wires = D.map(dd => { const p = document.createElementNS(NS, 'path'); p.setAttribute('d', dd); svg.appendChild(p); return p })
+  const lens = wires.map(p => p.getTotalLength() || 1)
+  const pills = NODES.map(([ic, txt, x, y], k) => {
+    const e = ringPill(s.cam, Wd[k], HGT, `<span class="ic">${icon(ic)}</span><span class="txt">${txt}</span>`)
+    e.classList.add('c-node', 'c-mapnode'); e._x = x; e._y = y
+    return e
+  })
+  const dot = h('div', 'r-dot', s.cam)
+  const flag = h('div', 'r-flag c-flag', s.cam, `<span style="color:#F07A6A">${icon('clock')}</span><span>4 h a week, by hand</span>`)
+  const at = [.4, .8, 1.2, 1.6], wireAt = [1, 1.4, 1.8], tRun = [2.3, 3.5], tStuck = 3.6
+  const cam = drift(s, [[0, 0, -20, -40, 8, 6], [tStuck, 0, 10, 0, 3, 0], [dur, 0, 20, 10, 2, -4]])
+  return t => {
+    sp(t); cam(t); loopLens(s, t, dur)
+    pills.forEach((e, k) => {
+      blurIn(e, t, at[k], { x: e._x, y: e._y, dz: 180, s0: .9, blur: 16 })
+      drawRim(e, P(t, at[k] + .05, at[k] + .5, E.io))
+    })
+    wires.forEach((p, k) => {
+      const q = P(t, wireAt[k], wireAt[k] + .4, E.io)
+      p.style.strokeDasharray = `${lens[k]} ${lens[k]}`; p.style.strokeDashoffset = (lens[k] * (1 - q)).toFixed(1)
+      p.style.opacity = q > 0 ? 1 : 0
+    })
+    // a light traces the work from the first call to the accounts, and stops where it sticks
+    const run = P(t, tRun[0], tRun[1], E.io) * 3, seg = Math.min(2, Math.floor(run))
+    const pt = wires[seg].getPointAtLength(lens[seg] * Math.min(1, run - seg))
+    const onP = t >= tRun[0] && t < tStuck + .1
+    put(dot, { x: pt.x, y: pt.y, o: onP ? 1 : 0 })
+    const stuck = P(t, tStuck, tStuck + .3, E.out)
+    const paper = pills[2]
+    paper.classList.toggle('stuck', t >= tStuck)
+    paper.style.boxShadow = `0 0 ${(50 * stuck * (.75 + .25 * Math.sin(t * 8))).toFixed(0)}px rgba(${CORAL},${(.5 * stuck).toFixed(2)})`
+    blurIn(flag, t, tStuck + .2, { x: d[2] + 90, y: d[3] + 88, dur: .28, s0: .7, blur: 12 })
+  }
+}, STEP)
+
+/* ---------- 03 build around you: its tone set, tested on real cases, checked ---------- */
+export const buildIt = cardScene(7.5, (s, { dur }) => {
+  const sp = specks(s, 33, 10, 900, 700)
+  const TESTS = ['Table for 4, Sat 7 pm', 'Move me to Thursday', 'Can I get a refund?']
+  const panel = h('div', 'c-step', s.cam, `
+    <div class="hd"><span class="ic amb">${spark(26)}</span><span class="t">Your AI</span><span class="st amb">● TESTING</span></div>
+    <div class="tone"><span class="k">Tone</span><span class="ch">Warm</span><span class="ch">Brief</span><span class="ch off">Formal</span></div>
+    <div class="tests">${TESTS.map(txt => `<div class="test"><span class="tx">${txt}</span><span class="stt"><i class="ring"></i><i class="spin"></i><i class="ok">${CHECK('#1A1612', 16)}</i></span></div>`).join('')}</div>
+    <div class="pass"><span>Checks passed</span><b>0 / 24</b></div>`)
+  const st = panel.querySelector('.st'), chips = [...panel.querySelectorAll('.tone .ch')]
+  const tests = [...panel.querySelectorAll('.test')], pass = panel.querySelector('.pass'), num = pass.querySelector('b')
+  const tTone = [.5, .8], T = [[1.5, 2.2], [2.2, 2.9], [2.9, 3.6]], tPass = 3.9
+  const cam = drift(s, [[0, 0, -24, -30, 8, 6], [tPass, 0, 6, 0, 3, 0], [dur, 0, 18, 12, 2, -4]])
+  return t => {
+    sp(t); cam(t); loopLens(s, t, dur)
+    put(panel, { o: 1 })
+    chips.slice(0, 2).forEach((e, k) => e.classList.toggle('on', t >= tTone[k]))
+    tests.forEach((e, k) => {
+      const [a, z] = T[k]
+      e.style.opacity = (.35 + .65 * P(t, a - .2, a)).toFixed(3)
+      e.classList.toggle('run', t >= a && t < z); e.classList.toggle('done', t >= z)
+      e.querySelector('.spin').style.transform = `rotate(${((t - a) * 540).toFixed(1)}deg)`
+    })
+    pop(pass, t, tPass)
+    count(num, t, tPass + .1, tPass + .9, 24, v => `${v} / 24`)
+    const done = t >= tPass + .9
+    st.textContent = done ? '● READY' : '● TESTING'
+    st.classList.toggle('ok', done)
+    const g = bell(t, tPass + .9, tPass + 1, tPass + 2)
+    pass.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(157,190,151,${(.15 + .35 * g).toFixed(2)})`
+  }
+}, STEP)
+
+/* ---------- 04 launch: switched on beside your team, with a person in the loop ---------- */
+export const launch = cardScene(7.5, (s, { dur }) => {
+  const sp = specks(s, 34, 10, 900, 700)
+  const live = h('div', 'c-step c-live', s.cam, `
+    <div class="row"><span class="t">AI receptionist</span><span class="sw"><i></i></span></div>
+    <div class="state"><span class="led"></span><span class="lbl">Off</span></div>`)
+  const sw = live.querySelector('.sw'), lbl = live.querySelector('.lbl'), stDot = live.querySelector('.led')
+  const ask = h('div', 'c-step c-review', s.cam, `
+    <div class="hd"><span class="ic coral">${icon('bell')}</span><span class="t">Needs your OK</span></div>
+    <div class="msg">Refund of £60 requested</div>
+    <div class="btns"><span class="no">Not yet</span><span class="yes">Approve</span></div>`)
+  const yes = ask.querySelector('.yes')
+  const loop = h('div', 'r-badge c-loop', s.cam, `${spark(18)}<span>Person in the loop</span>`)
+  const tOn = 1, tAsk = 2.3, tPress = 3.7, tLoop = 4.4
+  const cam = drift(s, [[0, 0, -28, -30, 8, -6], [tAsk, 0, 0, 0, 4, 0], [dur, 0, 20, 10, 2, 4]])
+  return t => {
+    sp(t); cam(t); loopLens(s, t, dur)
+    put(live, { y: -140, o: 1 })
+    const on = P(t, tOn, tOn + .35, E.snap)
+    sw.style.setProperty('--on', Math.min(1, on).toFixed(3))
+    sw.classList.toggle('is-on', t >= tOn)
+    lbl.textContent = t >= tOn + .2 ? 'Live, alongside your team' : 'Off'
+    stDot.classList.toggle('is-on', t >= tOn + .2)
+    const g = bell(t, tOn, tOn + .15, tOn + 1.2)
+    live.style.boxShadow = `0 40px 120px rgba(0,0,0,.6), 0 0 ${(70 * g).toFixed(0)}px rgba(${AMB},${(.35 * g).toFixed(2)})`
+    blurIn(ask, t, tAsk, { y: 58, dz: 180, s0: .94, blur: 16 })
+    const press = bell(t, tPress, tPress + .06, tPress + .3)
+    yes.style.transform = `scale(${(1 - .06 * press).toFixed(4)})`
+    yes.classList.toggle('pressed', t >= tPress)
+    yes.textContent = t >= tPress ? '✓ Approved by you' : 'Approve'
+    blurIn(loop, t, tLoop, { y: 196, dur: .3, s0: .7, blur: 12 })
+  }
+}, STEP)
+
+/* ---------- 05 run and improve: the monthly report, the new thing, the session ---------- */
+export const improve = cardScene(7.5, (s, { dur }) => {
+  const sp = specks(s, 35, 10, 900, 700)
+  const MONTHS = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct'], VALS = [86, 89, 91, 94, 97]
+  const CW = 400, CH = 150, lo = 82, hi = 100
+  const px = k => (k / (MONTHS.length - 1)) * CW, py = v => CH - ((v - lo) / (hi - lo)) * CH
+  const pts = VALS.map((v, k) => [px(k), py(v)])
+  const line = pts.map(([x, y], k) => `${k ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
+  const panel = h('div', 'c-step c-month', s.cam, `
+    <div class="hd"><span class="ic amb">${icon('chart')}</span><span class="t">Monthly report</span><span class="when">OCT</span></div>
+    <div class="k">Calls answered</div>
+    <svg class="chart" viewBox="-14 -24 ${CW + 28} ${CH + 58}" style="width:${CW + 28}px;height:${CH + 58}px;display:block;overflow:visible">
+      <path class="area" d="${line} L${CW} ${CH} L0 ${CH} Z"/>
+      <path class="ln" d="${line}"/>
+      ${pts.map(([x, y]) => `<circle class="pt" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/>`).join('')}
+      ${MONTHS.map((m, k) => `<text class="mo" x="${px(k).toFixed(1)}" y="${CH + 30}">${m}</text>`).join('')}
+      <text class="val" x="${pts[4][0]}" y="${(pts[4][1] - 18).toFixed(1)}">97%</text>
+    </svg>`)
+  const ln = panel.querySelector('.ln'), area = panel.querySelector('.area'), dots = [...panel.querySelectorAll('.pt')], val = panel.querySelector('.val')
+  const L = ln.getTotalLength() || 1
+  const added = h('div', 'c-chip amb', s.cam, `${spark(20)}<span>New this month: after-hours bookings</span>`)
+  const meet = h('div', 'c-chip', s.cam, `${icon('cal')}<span>Session with us · Thu 10:00</span>`)
+  const tLine = [.6, 2.4], tAdd = 3, tMeet = 3.7
+  const cam = drift(s, [[0, 0, -24, -30, 8, 6], [tAdd, 0, 0, 0, 3, 0], [dur, 0, 16, 10, 2, -4]])
+  return t => {
+    sp(t); cam(t); loopLens(s, t, dur)
+    put(panel, { y: -74, o: 1 })
+    const q = P(t, tLine[0], tLine[1], E.io)
+    ln.style.strokeDasharray = `${L} ${L}`; ln.style.strokeDashoffset = (L * (1 - q)).toFixed(1)
+    area.style.opacity = (.9 * q).toFixed(3)
+    dots.forEach((e, k) => { e.style.opacity = q * (MONTHS.length - 1) >= k - .01 ? 1 : 0 })
+    val.style.opacity = P(t, tLine[1] - .1, tLine[1] + .2).toFixed(3)
+    blurIn(added, t, tAdd, { y: 140, dz: 160, s0: .92, blur: 14 })
+    blurIn(meet, t, tMeet, { y: 200, dz: 160, s0: .92, blur: 14 })
+  }
+}, STEP)
