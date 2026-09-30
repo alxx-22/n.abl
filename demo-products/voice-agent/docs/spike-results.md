@@ -115,3 +115,34 @@ likeliest cause is a free-tier limit, but that is inference. The call now
 carries a watchdog that hands over to the other model (`src/core/call.ts`),
 and the phone test booked a table with the primary deliberately deafened.
 
+
+## 30 September: taking turns ourselves
+
+Google's detection ends a caller's turn after a fixed silence (0.6 s here).
+A caller who pauses mid-order ("a margherita and, um...") was answered
+mid-sentence, and one who asked the family what they wanted got a reply to
+that too. `npm run spike:turns` checked whether the server can take over:
+automatic activity detection off, each turn marked with `activityStart` and
+`activityEnd`.
+
+| Question | 3 Flash Live | 3.8 Live |
+|---|---|---|
+| Replies to a text cue (the greeting) with detection off | yes | yes |
+| Audio sent outside a turn | ignored: not transcribed, no reply | same |
+| Caller transcribed while the turn is still open | **no**: all of it arrives about 0.4 s after `activityEnd` | same |
+| `activityStart` while the agent talks | interrupts it in 48 ms | 78 ms |
+| Reply after `activityEnd` | 1.0 to 1.2 s | 1.0 s |
+| One turn holding a 1.5 s pause, "hang on, let me ask the kids", the family's answer and the real request | correct reply: "two margheritas, a garlic bread and a spaghetti carbonara" | correct, though its transcript dropped two of the phrases |
+| "Mm-hm" sent outside a turn while the agent talks | ignored; it kept talking | same |
+
+Because the receptionist only transcribes a turn after it closes, deciding
+"they said um, wait" needs the words from somewhere else.
+`src/spike/transcriber.ts` fed the same audio to **Transcribe Live**
+(`gemini-3.5-transcribe-live`, automatic detection, 300 ms silence): each
+phrase came back whole, 1.0 to 1.2 s after it ended ("Can I get a margarita
+and um", "Jack, do you want pizza or pasta?"). Too slow to decide every
+turn, fast enough for the longer waits that matter.
+
+What was built from this is described in `README.md` ("How it takes turns")
+and `src/core/turns.ts`. `npm run e2e:turns` plays a scripted caller through
+the real call against live Gemini and checks each behaviour.

@@ -1,12 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { startLiveCall, type LiveCall, type LiveMessage } from './engine.ts';
+import { startLiveCall, type LiveCall, type LiveMessage, type TurnState } from './engine.ts';
 
 export type Phase = 'idle' | 'connecting' | 'live' | 'ending';
+export interface Reply {
+  ms: number;
+  /** How much of it was the receptionist deliberately waiting (a thinking pause, a hold). */
+  waited: number;
+}
+export interface Turn {
+  state: TurnState;
+  reason?: string;
+  expect: string;
+}
 
 export function useLiveCall(slug: string, onError: (message: string) => void) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [model, setModel] = useState<string | null>(null);
-  const [latencies, setLatencies] = useState<number[]>([]);
+  const [latencies, setLatencies] = useState<Reply[]>([]);
+  const [turn, setTurn] = useState<Turn | null>(null);
   const call = useRef<LiveCall | null>(null);
   const errorRef = useRef(onError);
   errorRef.current = onError;
@@ -15,6 +26,7 @@ export function useLiveCall(slug: string, onError: (message: string) => void) {
     if (call.current) return;
     setPhase('connecting');
     setLatencies([]);
+    setTurn(null);
     setModel(null);
     try {
       call.current = await startLiveCall({
@@ -24,12 +36,14 @@ export function useLiveCall(slug: string, onError: (message: string) => void) {
           if (m.type === 'ready') {
             setModel(m.model);
             setPhase('live');
-          } else if (m.type === 'latency') setLatencies((l) => [...l, m.ms]);
+          } else if (m.type === 'latency') setLatencies((l) => [...l, { ms: m.ms, waited: m.waited_ms ?? 0 }]);
+          else if (m.type === 'turn') setTurn({ state: m.state, reason: m.reason, expect: m.expect });
           else if (m.type === 'hangup') setPhase('ending');
           else if (m.type === 'error') errorRef.current(m.message);
         },
         onEnd: () => {
           call.current = null;
+          setTurn(null);
           setPhase('idle');
         },
       });
@@ -55,5 +69,5 @@ export function useLiveCall(slug: string, onError: (message: string) => void) {
 
   useEffect(() => () => call.current?.hangup(), []);
 
-  return { phase, model, latencies, start, stop, call };
+  return { phase, model, latencies, turn, start, stop, call };
 }

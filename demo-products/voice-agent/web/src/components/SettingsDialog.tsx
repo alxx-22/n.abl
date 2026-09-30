@@ -10,6 +10,7 @@ interface Form {
   language_code: string;
   reply_speed: string;
   live_model: string;
+  turn_taking: 'contextual' | 'standard';
 }
 
 export function SettingsDialog({ slug, open, onClose, onSaved }: { slug: string; open: boolean; onClose: () => void; onSaved: (p: Profile) => void }) {
@@ -40,6 +41,7 @@ export function SettingsDialog({ slug, open, onClose, onSaved }: { slug: string;
           language_code: profile.language_code === null ? '' : profile.language_code || 'en-GB',
           reply_speed: profile.reply_speed || 'normal',
           live_model: profile.live_model || '',
+          turn_taking: profile.turn_taking ?? 'contextual',
         });
       })
       .catch((e: Error) => toast(e.message));
@@ -121,6 +123,22 @@ export function SettingsDialog({ slug, open, onClose, onSaved }: { slug: string;
               <option value="en-GB">English (UK)</option>
               <option value="">Match the caller's language</option>
             </select>
+
+            <fieldset id="set-turns">
+              <legend>Turn-taking</legend>
+              <label>
+                <input type="radio" name="turns" value="contextual" checked={form.turn_taking === 'contextual'} onChange={() => set('turn_taking', 'contextual')} />
+                <span>
+                  <b>Contextual.</b> Waits while callers think, read out a number or ask someone in the room, and ignores a quick “mm-hm”.
+                </span>
+              </label>
+              <label>
+                <input type="radio" name="turns" value="standard" checked={form.turn_taking === 'standard'} onChange={() => set('turn_taking', 'standard')} />
+                <span>
+                  <b>Standard.</b> Gemini replies after a fixed pause.
+                </span>
+              </label>
+            </fieldset>
 
             <fieldset>
               <legend>Reply speed</legend>

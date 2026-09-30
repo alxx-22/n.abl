@@ -10,13 +10,16 @@ import type { Action } from '../types.ts';
 
 export type LiveMessage =
   | { type: 'ready'; call_id: string; model: string }
-  | { type: 'latency'; ms: number }
+  | { type: 'latency'; ms: number; waited_ms?: number }
+  | { type: 'turn'; state: TurnState; reason?: string; expect: string }
   | { type: 'hangup'; reason: string }
   | { type: 'error'; message: string }
   | { type: 'clear' }
   | { type: 'transcript'; role: 'caller' | 'agent'; text: string; final: boolean }
   | { type: 'action'; action: Action }
   | { type: 'flag'; flag: { rule: string; text: string } };
+
+export type TurnState = 'listening' | 'hearing' | 'waiting' | 'hold' | 'replying' | 'interrupted' | 'backchannel';
 
 export interface LiveCall {
   hangup(): void;

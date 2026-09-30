@@ -33,6 +33,8 @@ export function expectFromAgent(text: string): Expectation {
   if (/\bpost ?code\b/.test(q)) return { expect: 'digits', digits: 0 };
   if (/\b(anything else|what (can|could) i get|what would you like|what do you fancy|what are you after|what'?ll it be|like to order|what else|which (one|dish|pizza|pasta)s?|any sides|any drinks)\b/.test(q)) return { expect: 'list' };
   if (/\b(name (for|on|is)|your name|what name|who'?s the booking for|who is the booking for|spell)\b/.test(q)) return { expect: 'name' };
+  // "Could you repeat that?" and "Can you spell it?" are requests, answered with content, not a yes.
+  if (/^(can|could|would|will) you (please |just )?(repeat|say|spell|give|tell|read|confirm|let me know|share|go through|run me through)\b/.test(q)) return { expect: 'open' };
   if (/^(shall|should|would|do|does|did|is|are|was|were|can|could|will|have|has|may|is that|are you)\b/.test(q) && !/\bor\b/.test(q)) {
     return { expect: 'yes_no' };
   }

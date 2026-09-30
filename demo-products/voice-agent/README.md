@@ -55,6 +55,36 @@ server.
 | `/board/<slug>` | The live board: the live call, the diary, orders, texts, recent calls, and **Settings** |
 | `/board/<slug>?phone=07700900123` | The same, with the browser call pretending to come from that number (caller ID) |
 
+## How it takes turns
+
+People on the phone pause to think, read numbers out in chunks, ask someone
+in the room, and say "mm-hm" while you talk. So the server, not Gemini,
+decides when the caller has finished (`src/core/turns.ts`). It looks at two
+things:
+
+- **What the receptionist just asked.** A yes-or-no question ends after
+  0.5 s of silence, an open question 0.7 s, a name 0.9 s, and "what would
+  you like?" or "what's your number?" 1.3 s, because people pause mid-list.
+- **What the caller has said so far**, from a second listener
+  (Transcribe Live) about a second behind:
+
+| The caller | The receptionist |
+|---|---|
+| "Can I get a margherita and, um..." | waits up to 2.6 s for the rest |
+| "It's oh seven seven double oh..." (when asked for a number) | waits for all eleven digits |
+| "No, that's everything, thanks." | answers straight away |
+| "Hang on, let me ask what the kids want." | says "Of course, take your time", then stays quiet through the family chat until "sorry about that" or 3.5 s of quiet |
+| "Jack, what do you want?" (mid-order) | goes on hold on the spot |
+| "Mm-hm", "yeah", a cough, while it talks | keeps talking |
+| "No, wait, make that two", while it talks | stops (after 0.6 s of speech) |
+| Anything, while it reads back an order, a booking or the demo card | stops only for 1 s or more of speech |
+
+The board shows what it is doing ("Waiting: sounds like you're still
+deciding", "On hold while you talk to someone else") and marks replies it
+held back on purpose. Reply speed in **Settings** scales every wait, and
+**Turn-taking: Standard** hands the decision back to Gemini's fixed pause.
+If the second listener cannot connect, it works from the question alone.
+
 ## The demo businesses
 
 | Business | Slug | PIN | Shows |
@@ -77,13 +107,15 @@ Google.
 |---|---|---|
 | `npm run dev` | The server and the React app (hot reload), with PGlite, on one port | Gemini key |
 | `npm run build` then `npm start` | Production: the built app from `web/dist` | Gemini key |
-| `npm test` | 69 unit and integration tests, no network | nothing |
+| `npm test` | 85 unit and integration tests, no network | nothing |
 | `npm run typecheck` | `tsc` as a checker, for the server and the app | nothing |
 | `npm run eval` | 18 simulated callers against the receptionist; report in `eval-results/` | Gemini key |
 | `npm run eval -- --audio` | The same, voices crossing as audio through a simulated phone line | Gemini key |
 | `npm run e2e:browser` | Headless Chromium with a fake microphone: a live call through the React app | Gemini key, Chromium |
 | `npm run e2e:phone` | Plays Twilio: μ-law frames into `/twilio/stream`, a real booking out | Gemini key |
 | `npm run e2e:ingest` | The setup wizard against a fake local website | Gemini key |
+| `npm run e2e:turns` | A scripted caller who pauses, interrupts, asks the kids and says "mm-hm", against live Gemini | Gemini key |
+| `npm run spike:turns` | Whether a Live model takes turns marked by the server | Gemini key |
 | `npm run spike:audio` | Phase 0: latency, tokens and transcription per Live model | Gemini key |
 | `npm run spike:voices` | A greeting in several voices, as WAV files | Gemini key |
 | `npm run db:migrate` / `db:seed` | Migrations and demo data, against PGlite or `DATABASE_URL` | — |
@@ -105,7 +137,7 @@ In the build sandbox (not on a normal machine) Node's `fetch` needs
 
 | Folder | Holds |
 |---|---|
-| `src/core/` | Gemini Live client, audio codecs, the call orchestrator, prompt compiler, tools, guardrails, redaction |
+| `src/core/` | Gemini Live client, audio codecs, the call orchestrator, turn-taking and the parallel listener, prompt compiler, tools, guardrails, redaction |
 | `src/domain/` | Pure logic: availability, time zones, menu matching and pricing, knowledge search, demo payments, phone numbers |
 | `src/db/` | The `voice_` schema, one query layer for PGlite and Postgres, seeding |
 | `src/channels/` | Browser, Twilio and SMS |

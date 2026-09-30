@@ -251,7 +251,7 @@ export class CallSession extends EventEmitter<CallEvents> {
           this.replyFrom = e.lastVoiceAt;
           this.replyExtra = e.extraMs;
           this.awaitingReply = true;
-          this.record('turn', { reason: e.reason, extra_ms: e.extraMs, expect: turns.expecting.expect });
+          this.record('system', { event: 'turn_end', reason: e.reason, extra_ms: e.extraMs, expect: turns.expecting.expect });
         },
         agentSpeaking: () => Date.now() < this.agentSpeakingUntil,
         onStatus: (st) => {
@@ -273,7 +273,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       this.listener = l;
       turns.wordsAvailable = true;
       l.on('text', (t) => {
-        this.record('heard', { text: redactCardNumbers(t, this.opts.config.demoCards).text });
+        this.record('system', { event: 'heard', text: redactCardNumbers(t, this.opts.config.demoCards).text });
         turns.callerWords(t);
       });
       l.on('closed', () => (turns.wordsAvailable = false));

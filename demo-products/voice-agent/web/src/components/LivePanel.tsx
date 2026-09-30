@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { LiveCall } from '../live/engine.ts';
-import type { Phase } from '../live/useLiveCall.ts';
+import type { Phase, Reply, Turn } from '../live/useLiveCall.ts';
 import type { StreamState } from '../live/stream.ts';
 import type { TenantSummary } from '../types.ts';
 import { MicIcon, StopIcon } from './Icons.tsx';
@@ -30,6 +30,29 @@ function seconds(ms: number): string {
   return `${(ms / 1000).toFixed(1)} s`;
 }
 
+const EXPECTING: Record<string, string> = {
+  yes_no: 'a yes or no',
+  list: 'a list, so pauses are fine',
+  digits: 'a number, read in chunks',
+  name: 'a name',
+  open: 'anything',
+};
+
+// What contextual turn-taking is doing, in words a caller would use.
+function turnText(t: Turn | null): string | null {
+  if (!t) return null;
+  if (t.state === 'hold') return 'On hold while you talk to someone else. Say "sorry about that" or just carry on when you\'re back.';
+  if (t.state === 'waiting') {
+    if (t.reason === 'thinking') return 'Waiting: sounds like you\'re still deciding.';
+    if (t.reason === 'number') return 'Waiting for the rest of the number.';
+    return 'Giving you a moment to add more…';
+  }
+  if (t.state === 'hearing') return 'Listening…';
+  if (t.state === 'replying') return 'Thinking…';
+  if (t.state === 'interrupted') return 'You cut in, so it stopped. Listening.';
+  return null;
+}
+
 function median(xs: number[]): number {
   const s = [...xs].sort((a, b) => a - b);
   return s[Math.floor(s.length / 2)];
@@ -50,7 +73,8 @@ export function LivePanel(props: {
   tenant: TenantSummary;
   phase: Phase;
   model: string | null;
-  latencies: number[];
+  latencies: Reply[];
+  turn: Turn | null;
   call: React.RefObject<LiveCall | null>;
   stream: StreamState;
   card: { spoken: string; expiry: string; cvc: string } | null;
@@ -74,8 +98,11 @@ export function LivePanel(props: {
     status = 'Connecting to the receptionist…';
     dot = 'connecting';
   } else if (phase === 'live') {
-    status = speaking ? 'Receptionist speaking. Talk over it to interrupt.' : 'Listening. Go ahead and speak.';
-    dot = speaking ? 'speaking' : 'live';
+    const t = turnText(props.turn);
+    status = speaking
+      ? 'Receptionist speaking. Talk over it to interrupt; a quick "mm-hm" won\'t.'
+      : t ?? 'Listening. Go ahead and speak.';
+    dot = speaking ? 'speaking' : props.turn?.state === 'hold' ? 'hold' : props.turn?.state === 'waiting' ? 'waiting' : 'live';
   } else if (phase === 'ending') {
     status = 'Ending the call…';
     dot = 'connecting';
@@ -118,14 +145,23 @@ export function LivePanel(props: {
           </div>
           <Meter label="You" tone="caller" read={() => (phase === 'live' ? (call.current?.levels().mic ?? 0) : 0)} />
           <Meter label="Receptionist" tone="agent" read={() => (phase === 'live' ? (call.current?.levels().agent ?? 0) : 0)} />
+          {phase === 'live' && props.turn ? (
+            <div className="expecting muted">Expecting {EXPECTING[props.turn.expect] ?? 'anything'}</div>
+          ) : null}
           <div className="replies" aria-label="Reply times">
             {latencies.length ? (
               <>
                 <span className="muted">Replied in</span>
-                {latencies.slice(-6).map((ms, i) => (
-                  <span className={`chip ${ms < 1500 ? 'good' : ms < 2500 ? '' : 'slow'}`} key={latencies.length - 6 + i}>{seconds(ms)}</span>
-                ))}
-                <span className="muted">median {seconds(median(latencies))}</span>
+                {latencies.slice(-6).map((r, i) =>
+                  r.waited > 300 ? (
+                    <span className="chip waited" key={latencies.length - 6 + i} title={`Waited ${seconds(r.waited)} longer on purpose, because you seemed to be thinking or on hold`}>
+                      {seconds(r.ms)} · waited
+                    </span>
+                  ) : (
+                    <span className={`chip ${r.ms < 1500 ? 'good' : r.ms < 2500 ? '' : 'slow'}`} key={latencies.length - 6 + i}>{seconds(r.ms)}</span>
+                  ),
+                )}
+                <span className="muted">median {seconds(median(latencies.filter((r) => r.waited <= 300).map((r) => r.ms)) || 0)}</span>
               </>
             ) : (
               <span className="muted">Reply times appear here: how long after you stop talking the receptionist starts.</span>

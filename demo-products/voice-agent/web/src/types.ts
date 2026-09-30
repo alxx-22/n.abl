@@ -98,6 +98,7 @@ export interface Profile {
   language_code?: string | null;
   reply_speed?: 'snappy' | 'normal' | 'patient';
   live_model?: string | null;
+  turn_taking?: 'contextual' | 'standard';
   brand?: { accent?: string };
   [k: string]: unknown;
 }
@@ -132,4 +133,5 @@ export type BoardEvent =
   | { type: 'action'; action: Action }
   | { type: 'flag'; rule: string; text: string }
   | { type: 'call_ended'; outcome?: string }
-  | { type: 'refresh' };
+  | { type: 'refresh' }
+  | { type: 'turn'; state: string; reason?: string; expect: string };

@@ -69,8 +69,11 @@ export const DEFAULT_TIMINGS: TurnTimings = {
   holdMaxMs: 60000,
   maxTurnMs: 45000,
   onsetMs: 140,
-  bargeInMs: 450,
-  protectedBargeInMs: 900,
+  // Backchannels ("mm-hm", "yeah", "okay") run 0.2 to 0.6 s; a real
+  // interruption keeps going. A 0.5 s "mm-hm" cut the receptionist off at
+  // 0.45 s in the first live run, so 0.6 s.
+  bargeInMs: 600,
+  protectedBargeInMs: 1000,
   gapMs: 250,
   preRollMs: 300,
   scale: 1,
@@ -255,7 +258,8 @@ export class TurnManager {
       return { ms: t.holdQuietMs, reason: 'hold' };
     }
     const stale = this.lastVoiceAt > this.lastWordsAt;
-    const patient = this.expect.expect === 'list' || this.expect.expect === 'digits' || this.expect.expect === 'name';
+    // Pauses mid-list and mid-number are common, so there it is worth waiting for the words.
+    const patient = this.expect.expect === 'list' || this.expect.expect === 'digits';
     if (stale) {
       // Words for the latest speech are still on their way from the transcriber.
       if (patient && this.wordsAvailable) return { ms: base + t.wordsGraceMs * t.scale, reason: 'words' };

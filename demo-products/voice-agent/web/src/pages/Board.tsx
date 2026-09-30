@@ -112,6 +112,7 @@ export function Board({ slug }: { slug: string }) {
             phase={live.phase}
             model={live.model}
             latencies={live.latencies}
+            turn={live.turn}
             call={live.call}
             stream={stream}
             card={card}

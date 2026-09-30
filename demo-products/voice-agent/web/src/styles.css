@@ -112,6 +112,10 @@ main { padding: 24px; max-width: 1500px; margin: 0 auto; }
 .dot.live { background: var(--ok); box-shadow: 0 0 0 4px rgba(140, 197, 138, 0.18); animation: pulse 1.6s infinite; }
 .dot.speaking { background: var(--amber); box-shadow: 0 0 0 4px rgba(233, 172, 87, 0.2); animation: pulse 0.8s infinite; }
 .dot.connecting { background: var(--amber); }
+.dot.waiting { background: var(--info); box-shadow: 0 0 0 4px rgba(143, 184, 224, 0.2); }
+.dot.hold { background: var(--info); animation: pulse 2.4s infinite; }
+.expecting { font-size: 12px; }
+.chip.waited { color: var(--info); border-color: #2f4760; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(140, 197, 138, 0.05); } }
 
 .meter { display: grid; grid-template-columns: 116px 1fr; align-items: center; gap: 10px; font-size: 12px; }

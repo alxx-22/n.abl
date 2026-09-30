@@ -193,24 +193,24 @@ test('turns: on hold, a long silence ends the turn anyway', () => {
 test('turns: "mm-hm" while the receptionist talks does not interrupt; real speech does', () => {
   const c = caller();
   c.agentTalks(10000);
-  c.speak(300);
+  c.speak(500); // a long "mm-hm"
   c.quiet(400);
   assert.equal(c.starts().length, 0, 'a backchannel is dropped');
   assert.ok(c.statuses.includes('backchannel'));
   c.speak(700);
   assert.equal(c.starts().length, 1);
   assert.equal(c.starts()[0].ev, 'interrupt');
-  assert.ok(c.sent() >= 450 / 20, 'the words before the interruption reach the model too');
+  assert.ok(c.sent() >= 600 / 20, 'the words before the interruption reach the model too');
 });
 
 test('turns: a read-back takes longer speech to interrupt', () => {
   const c = caller();
   c.agentTalks(10000);
   c.m.protect();
-  c.speak(700);
+  c.speak(900);
   c.quiet(400);
   assert.equal(c.starts().length, 0);
-  c.speak(1100);
+  c.speak(1200);
   assert.equal(c.starts().length, 1);
 });
 
@@ -251,6 +251,8 @@ test('words: what the receptionist asked', () => {
   assert.equal(expectFromAgent('Shall I book that?').expect, 'yes_no');
   assert.equal(expectFromAgent('Is that all correct?').expect, 'yes_no');
   assert.equal(expectFromAgent('Would you like collection or delivery?').expect, 'open');
+  assert.equal(expectFromAgent("I'm so sorry, we had a brief issue on the line. Could you please repeat that?").expect, 'open', 'a request, not a yes or no');
+  assert.equal(expectFromAgent('Can you spell the surname for me?').expect, 'name');
   assert.deepEqual(expectFromAgent("And what's the best number to reach you on?"), { expect: 'digits', digits: 11 });
   assert.deepEqual(expectFromAgent("What's the long number on the card?"), { expect: 'digits', digits: 16 });
   assert.equal(expectFromAgent('Could I take a name for the booking?').expect, 'name');

@@ -17,9 +17,10 @@ export interface StreamState {
   nextId: number;
   /** Set when an action should make the diary jump to a booking. */
   focusRef: string | null;
+  onHold: boolean;
 }
 
-export const initialStream: StreamState = { items: [], partial: { caller: null, agent: null }, call: null, nextId: 1, focusRef: null };
+export const initialStream: StreamState = { items: [], partial: { caller: null, agent: null }, call: null, nextId: 1, focusRef: null, onHold: false };
 
 export type StreamAction = { type: 'event'; event: BoardEvent } | { type: 'note'; text: string } | { type: 'focused' };
 
@@ -56,6 +57,18 @@ export function streamReducer(s: StreamState, a: StreamAction): StreamState {
     }
     case 'flag':
       return { ...s, items: [...s.items, { id: s.nextId, kind: 'flag', text: `${e.rule.replace(/_/g, ' ')}: "${e.text}"` }], nextId: s.nextId + 1 };
+    case 'turn': {
+      const hold = e.state === 'hold';
+      if (hold === s.onHold) return s;
+      if (!hold) return { ...s, onHold: false };
+      const why = e.reason === 'side_talk' ? 'The caller is talking to someone in the room' : 'The caller asked to hold on';
+      return {
+        ...s,
+        onHold: true,
+        items: [...s.items, { id: s.nextId, kind: 'note', text: `${why}: the receptionist waits quietly until they come back.` }],
+        nextId: s.nextId + 1,
+      };
+    }
     case 'call_ended':
       return { ...s, partial: { caller: null, agent: null }, call: { ...(s.call ?? {}), live: false, outcome: e.outcome } };
     default:
