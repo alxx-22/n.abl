@@ -244,6 +244,7 @@ export function StepSeating({ a, set }: StepProps) {
       {a.seating.areas.map((ar, i) => {
         const mine = a.seating.tables.filter((t) => t.area === ar.key);
         const covers = mine.reduce((n, t) => n + t.seats, 0);
+        const walkIns = mine.filter((t) => t.walk_in).length;
         return (
           <div className="group on area-card" key={ar.key}>
             <div className="area-head">
@@ -255,7 +256,7 @@ export function StepSeating({ a, set }: StepProps) {
               })}>
                 {KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
               </select>
-              <span className="muted small">{mine.length} tables · {covers} covers</span>
+              <span className="muted small">{mine.length} tables · {covers} covers{walkIns && ar.reservable ? ` · ${walkIns} kept for walk-ins` : ''}</span>
               <button type="button" className="ghost small" onClick={() => {
                 if (mine.length && !confirm(`Remove ${ar.label} and its ${mine.length} tables?`)) return;
                 set((d) => {
@@ -282,6 +283,20 @@ export function StepSeating({ a, set }: StepProps) {
                 );
               })}
             </div>
+            {ar.reservable && !ar.enquiry_only && mine.length ? (
+              <fieldset className="chips walk-ins">
+                <legend>Kept for walk-ins <span className="muted">(never booked by phone, so they stay free for people who turn up)</span></legend>
+                {mine.map((t) => (
+                  <label key={t.key} className={t.walk_in ? 'on walk' : ''}>
+                    <input type="checkbox" checked={t.walk_in} onChange={(e) => set((d) => {
+                      const tb = d.seating.tables.find((x) => x.key === t.key);
+                      if (tb) tb.walk_in = e.target.checked;
+                    })} />
+                    {t.label.replace(/^Table /, 'T')} · {t.seats}
+                  </label>
+                ))}
+              </fieldset>
+            ) : !ar.reservable ? <p className="hint">Every table here is walk-in only.</p> : null}
             <div className="three">
               <Toggle label="Takes bookings" checked={ar.reservable} onChange={(v) => set((d) => void (d.seating.areas[i].reservable = v))} />
               {ar.kind === 'private' || ar.enquiry_only ? (

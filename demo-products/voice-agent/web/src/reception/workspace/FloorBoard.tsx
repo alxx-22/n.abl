@@ -1,7 +1,7 @@
 // The floor plan board, the back office's centrepiece: tonight's service at
 // a glance, every table coloured by what it is doing at the chosen minute.
 
-import { FloorPlan } from '../FloorPlan.tsx';
+import { FloorPlan, unbookableTag } from '../FloorPlan.tsx';
 import type { LiveState } from '../types.ts';
 import { addDays, bookingOn, dayLabel, hhmm, looksAt, servicesOn, span } from './model.ts';
 
@@ -92,7 +92,7 @@ export function FloorBoard(props: {
         <FloorPlan
           mode="live"
           label={`Floor plan at ${hhmm(view.minute)}, ${dayLabel(view.date, today)}`}
-          tables={plan.tables}
+          tables={plan.tables.map((t) => ({ ...t, tag: unbookableTag(t, plan.areas.find((a) => a.key === t.area)) }))}
           areas={plan.areas}
           looks={looks}
           selected={props.selected}
@@ -107,7 +107,7 @@ export function FloorBoard(props: {
         <span><i className="l-booked" /> Booked now</span>
         <span><i className="l-seated" /> Seated</span>
         <span><i className="l-late" /> Late</span>
-        {plan.tables.some((t) => !t.bookable) ? <span><i className="l-walkin" /> Walk-ins only</span> : null}
+        {plan.tables.some((t) => !t.bookable) ? <span><i className="l-walkin">Walk-in</i> Kept for walk-ins: never booked by phone</span> : null}
         <span className="muted">Drag a booked table onto a free one to move the booking.</span>
       </div>
     </div>

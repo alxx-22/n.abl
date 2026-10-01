@@ -18,8 +18,17 @@ export interface PlanTableLike {
   accessible?: boolean;
   walk_in?: boolean;
   bookable?: boolean;
+  /** Why it can't be booked by phone, printed on the table: "Walk-in", "Enquiries". */
+  tag?: string | null;
   features?: string[];
   joins?: string[];
+}
+
+/** The tag for a table nobody can book by phone: kept for walk-ins, or in an area that is walk-in or enquiry only. */
+export function unbookableTag(t: { walk_in?: boolean; bookable?: boolean }, area?: { reservable?: boolean; enquiry_only?: boolean } | null): string | null {
+  if (t.walk_in) return 'Walk-in';
+  if (t.bookable !== false) return null;
+  return area?.enquiry_only ? 'Enquiries' : 'Walk-in';
 }
 
 export interface PlanArea {
@@ -239,12 +248,14 @@ export function FloorPlan(props: {
         const dragging = drag?.key === t.key;
         const pos = dragging && mode === 'edit' ? { x: drag.x, y: drag.y } : t;
         const look = looks[t.key];
+        const tag = t.tag ?? (t.walk_in ? 'Walk-in' : null);
         const cls = [
           'table', t.shape, look?.state ?? '', props.selected === t.key ? 'selected' : '', t.walk_in ? 'walk-in' : '',
-          t.bookable === false ? 'unbookable' : '', over === t.key ? (props.canDrop && drag && !props.canDrop(drag.key, t.key) ? 'no-drop' : 'drop') : '',
+          t.bookable === false || tag ? 'unbookable' : '', over === t.key ? (props.canDrop && drag && !props.canDrop(drag.key, t.key) ? 'no-drop' : 'drop') : '',
           look?.flash ? 'flash' : '', dragging ? 'lifted' : '',
         ].filter(Boolean).join(' ');
-        const title = `${t.label}, ${t.seats} seats${t.accessible ? ', step-free' : ''}${t.walk_in ? ', kept for walk-ins' : ''}${t.features?.length ? `, ${t.features.join(', ')}` : ''}`;
+        const why = tag === 'Walk-in' ? ', kept for walk-ins, not bookable by phone' : tag ? `, ${tag.toLowerCase()} only, not bookable by phone` : '';
+        const title = `${t.label}, ${t.seats} seats${t.accessible ? ', step-free' : ''}${why}${t.features?.length ? `, ${t.features.join(', ')}` : ''}`;
         return (
           <g
             key={t.key}
@@ -269,6 +280,13 @@ export function FloorPlan(props: {
             </g>
             <text className="num" x={w / 2} y={h / 2 + (look?.caption ? -2 : 5)}>{t.label.replace(/^Table\s+/i, '')}</text>
             {look?.caption ? <text className="cap" x={w / 2} y={h / 2 + 13}>{look.caption}</text> : <text className="cap seats" x={w / 2} y={h / 2 + 19}>{t.seats}</text>}
+            {tag ? (
+              // On the table's bottom edge, where no badge sits: says at a glance why it stays free.
+              <g className="walk-tag" transform={`translate(${w / 2} ${h})`} aria-hidden="true">
+                <rect x={-tag.length * 4.6 - 9} y={-12} width={tag.length * 9.2 + 18} height={24} rx={12} />
+                <text y={5}>{tag}</text>
+              </g>
+            ) : null}
             {(look?.badges ?? []).slice(0, 4).map((b, i) => (
               <g key={b} className={`badge-dot ${BADGE[b].cls}`} transform={`translate(${w - 4 - i * 17} -4)`}>
                 <title>{BADGE[b].title}</title>

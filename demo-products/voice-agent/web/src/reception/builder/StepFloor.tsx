@@ -3,7 +3,7 @@
 // for walk-ins, and link the tables that push together.
 
 import { useState } from 'react';
-import { FloorPlan } from '../FloorPlan.tsx';
+import { FloorPlan, unbookableTag } from '../FloorPlan.tsx';
 import { toast } from '../../components/Toaster.tsx';
 import { autoLayout } from '../../../../src/presets/restaurant/layout.ts';
 import type { StepProps } from './Builder.tsx';
@@ -19,14 +19,18 @@ export function StepFloor({ a, set }: StepProps) {
     <div className="floor-step">
       <p className="lead">
         Drag the tables to match your room. Click one to edit it. Tables that push together are joined with a dashed line; the receptionist uses the pair for groups too big
-        for either table.
+        for either table. Tables tagged <b>Walk-in</b> are kept free for people who turn up: the receptionist never books them.
       </p>
       <div className="floor-edit">
         <div className="floor-wrap">
           <FloorPlan
             mode="edit"
             label="Your floor plan: drag tables to arrange them"
-            tables={a.seating.tables.map((x) => ({ ...x, bookable: !x.walk_in }))}
+            tables={a.seating.tables.map((x) => {
+              const ar = a.seating.areas.find((z) => z.key === x.area);
+              const bookable = a.serve.reservations && !x.walk_in && Boolean(ar?.reservable) && !ar?.enquiry_only && ar?.weather_rule !== 'walk_in_only';
+              return { ...x, bookable, tag: unbookableTag({ walk_in: x.walk_in, bookable }, ar) };
+            })}
             areas={a.seating.areas}
             selected={sel}
             onSelect={setSel}
@@ -91,7 +95,7 @@ export function StepFloor({ a, set }: StepProps) {
               </div>
               <div className="checks">
                 <label><input type="checkbox" checked={t.accessible} onChange={(e) => set((d) => void (d.seating.tables[idx].accessible = e.target.checked))} /> Step-free, room for a wheelchair</label>
-                <label><input type="checkbox" checked={t.walk_in} onChange={(e) => set((d) => void (d.seating.tables[idx].walk_in = e.target.checked))} /> Kept for walk-ins (never booked by phone)</label>
+                <label><input type="checkbox" checked={t.walk_in} onChange={(e) => set((d) => void (d.seating.tables[idx].walk_in = e.target.checked))} /> Kept for walk-ins: never booked by phone, so it stays free in the diary</label>
                 <label><input type="checkbox" checked={t.rotation === 90} onChange={(e) => set((d) => void (d.seating.tables[idx].rotation = e.target.checked ? 90 : 0))} /> Turned sideways</label>
               </div>
               <fieldset className="chips">
