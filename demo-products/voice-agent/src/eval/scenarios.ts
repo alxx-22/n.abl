@@ -10,6 +10,7 @@ import type { Db } from '../db/db.ts';
 import type { Tenant } from '../domain/types.ts';
 import type { CallSummary } from '../core/call.ts';
 import { zonedToUtc } from '../domain/time.ts';
+import { allergensNamed } from '../domain/menu.ts';
 
 export const FRIDAY_EVENING = new Date('2026-10-09T16:30:00Z'); // Fri 9 Oct, 17:30 BST
 export const SATURDAY_MORNING = new Date('2026-10-10T09:15:00Z'); // Sat 10 Oct, 10:15 BST
@@ -547,6 +548,15 @@ export const SCENARIOS: Scenario[] = [
       expect(f, /walk-?in|(isn'?t|not) (available|possible|able) to (be )?book|can'?t (be )?book|not bookable/i.test(c.agentText), 'never said table 4 cannot be booked');
       expect(f, !/(not|aren'?t) open (for|at) lunch|closed (for|at) lunch/i.test(c.agentText), 'said lunch was closed');
       expect(f, !/couldn'?t find .{0,12}dairy|dairy.{0,20}(on|in) (our|the) menu/i.test(c.agentText), 'looked dairy up as a dish');
+      // A booking records the allergy as said. The caller never asks what
+      // they can eat, so any menu lookup by allergen is one nobody wanted.
+      const lookups = c.summary.tools.filter(({ name, args }) => {
+        const a = (args ?? {}) as Record<string, unknown>;
+        if (name === 'get_item_details') return allergensNamed(String(a.item ?? '')).length > 0;
+        if (name === 'get_menu') return Boolean(a.free_from) || allergensNamed(String(a.category ?? '')).length > 0;
+        return false;
+      });
+      expect(f, !lookups.length, `looked the allergy up on the menu: ${lookups.map((t) => `${t.name}(${JSON.stringify(t.args)})`).join(', ')}`);
       noFlags(c, f);
       return f;
     },

@@ -693,7 +693,7 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => Boolean(t.profile.menu),
     decl: {
       name: 'get_item_details',
-      description: 'Price, options and allergens for one dish. Use for every allergy question and repeat its allergen wording.',
+      description: 'Price, options and allergens for one dish on the menu. Use when the caller asks about a dish, including whether it suits an allergy, and repeat its allergen wording. Not for an allergy itself: a booking just records it.',
       parameters: obj({ item: S('The dish') }, ['item']),
     },
     async handler(args, ctx) {

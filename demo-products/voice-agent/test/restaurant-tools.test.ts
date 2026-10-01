@@ -58,6 +58,7 @@ test('restaurant tools: only a restaurant is asked about areas, access, allergie
   const prompt = compilePrompt(t.profile, { now: NOW, callerPhone: null, knownCustomer: null, demoCards: DEFAULT_DEMO_CARDS, canTransfer: false } as never);
   assert.match(prompt, /inside or terrace/i);
   assert.match(prompt, /allergies or dietary needs/);
+  assert.match(prompt, /do not look the allergy up on the menu/, 'a booking records an allergy without a menu lookup');
   assert.match(prompt, /quote it/);
 });
 
