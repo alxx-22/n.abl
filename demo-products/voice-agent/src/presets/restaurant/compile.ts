@@ -221,7 +221,8 @@ function seatingSentence(a: RestaurantAnswers): string | null {
     .filter((c) => c.n > 0)
     .map(({ x, n }) => `${x.label.toLowerCase()} (${n} tables${x.enquiry_only ? ', private hire by enquiry' : !x.reservable || x.weather_rule === 'walk_in_only' ? ', walk-in only' : ''})`);
   const outdoor = a.seating.areas.find((x) => x.kind === 'outdoor' && x.weather_rule);
-  const walk = a.serve.walk_ins ? ' We keep some tables back for walk-ins.' : '';
+  const kept = a.seating.tables.some((t) => t.walk_in);
+  const walk = a.serve.walk_ins ? (kept ? ' We keep some tables back for walk-ins.' : ' Walk-ins are welcome when a table is free.') : '';
   return `Seating: ${counts.join(' and ')}.${outdoor ? ` ${weatherSentence(outdoor)}` : ''}${walk}`;
 }
 
@@ -240,7 +241,7 @@ function knowledge(a: RestaurantAnswers): KnowledgeEntry[] {
     e('Are children welcome?', `${p.children}${a.seating.highchairs ? ` We have ${a.seating.highchairs} highchairs.` : ''}`, ['children', 'kids', 'child', 'highchair', 'baby']),
     e('Is there a service charge?', a.money.service_charge, ['service', 'charge', 'tip', 'gratuity']),
     e('What is your cancellation policy?', a.money.cancellation_policy, ['cancel', 'cancellation', 'refund', 'deposit']),
-    e('Do you take walk-ins?', a.serve.walk_ins ? 'Yes, we keep some tables for walk-ins, though booking is safest at busy times.' : 'We’re bookings only, I’m afraid.', ['walk', 'walk-in', 'without booking', 'turn up']),
+    e('Do you take walk-ins?', a.serve.walk_ins ? (a.seating.tables.some((t) => t.walk_in) ? 'Yes, we keep some tables for walk-ins, though booking is safest at busy times.' : 'Yes, if there’s a table free, though booking is safest at busy times.') : 'We’re bookings only, I’m afraid.', ['walk', 'walk-in', 'without booking', 'turn up']),
     a.serve.delivery_apps.length
       ? e('Are you on the delivery apps?', `Yes, you can order from us on ${a.serve.delivery_apps.join(' and ')}.`, ['deliveroo', 'uber', 'just eat', 'app', 'delivery'])
       : null,

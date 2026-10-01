@@ -27,8 +27,8 @@ test('restaurant: the defaults compile to a working restaurant', () => {
   const res = p.booking!.resources;
   assert.equal(res.filter((r) => !r.combines).length, 15);
   assert.deepEqual(res.filter((r) => r.combines).map((r) => r.key), ['T1+T2', 'T3+T4', 'T7+T8', 'T13+T14']);
-  assert.deepEqual(res.find((r) => r.key === 'T4')!.services, [], 'the walk-in table is never booked by phone');
-  assert.deepEqual(res.find((r) => r.key === 'T3+T4')!.services, [], 'nor is a pair that includes it');
+  assert.ok(res.every((r) => r.services.length), 'no table is kept for walk-ins unless the owner says so');
+  assert.match(p.core_facts.join(' '), /Walk-ins are welcome when a table is free/);
   assert.equal(res.find((r) => r.key === 'T5')!.accessible, true);
   assert.deepEqual(p.booking!.areas!.map((a) => a.key), ['indoor', 'terrace']);
   assert.match(p.booking!.areas![1].weather_note!, /move you inside/);
@@ -220,7 +220,9 @@ test('seed: a week that obeys the rules, for the defaults and twenty varied rest
   assert.ok(plan.bookings.some((b) => b.tags.includes('birthday') || b.tags.includes('anniversary')));
   assert.ok(plan.bookings.some((b) => b.resource_key.includes('+')), 'a pushed-together table');
   assert.ok(plan.bookings.some((b) => b.area_key === 'terrace'));
-  assert.ok(plan.bookings.every((b) => b.resource_key !== 'T4'), 'the walk-in table stays free');
+  const kept = named();
+  kept.seating.tables.find((t) => t.key === 'T4')!.walk_in = true;
+  assert.ok(checkPlan(kept, 42).plan.bookings.every((b) => !['T4', 'T3+T4'].includes(b.resource_key)), 'a walk-in table stays free');
   const today = plan.bookings.filter((b) => toLocal(b.starts_at, p.timezone).date === '2026-10-02');
   assert.ok(today.some((b) => b.visit_status === 'finished') && today.some((b) => b.visit_status === 'seated'), 'tonight is under way');
   assert.ok(plan.orders.length >= 6 && plan.orders.some((o) => o.status === 'completed') && plan.orders.some((o) => o.status === 'confirmed'));

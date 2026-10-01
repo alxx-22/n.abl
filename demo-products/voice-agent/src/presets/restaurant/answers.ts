@@ -195,8 +195,8 @@ export function defaultTables(areas = defaultAreas()): TableAnswer[] {
   for (const k of ['T12', 'T13', 'T14', 'T15']) t(k).features.push('heated');
   t('T13').joins.push('T14');
   t('T14').joins.push('T13');
-  // One table kept for walk-ins.
-  t('T4').walk_in = true;
+  // No table is kept for walk-ins unless the owner marks one: a table that is
+  // never booked looked like a bug to a prospect (Alex, 1 October).
   return tables;
 }
 

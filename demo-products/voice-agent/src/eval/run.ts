@@ -221,6 +221,8 @@ await seedAll(repo, FRIDAY_EVENING, { diary: false });
 {
   const a = defaultAnswers();
   a.basics.name = 'Olive & Ember';
+  // Table 4 kept for walk-ins, as in Alex's first call (ws-sunday-lunch-table4 asks for it).
+  a.seating.tables.find((t) => t.key === 'T4')!.walk_in = true;
   await repo.upsertTenant(compileRestaurant(a, { slug: 'olive-ember' }));
   const b = defaultAnswers();
   b.basics.name = 'Olive & Ember Kitchen';

@@ -232,7 +232,7 @@ test('restaurant tools: a booking needs a real name, and the name and number can
 });
 
 test('restaurant tools: a particular table by number, and the one kept for walk-ins', async () => {
-  const t = await restaurant('tools-table');
+  const t = await restaurant('tools-table', (a) => void (a.seating.tables.find((x) => x.key === 'T4')!.walk_in = true));
   const { ctx } = await call(t);
   const walkIn = await runTool('check_availability', { date: SAT, time: '13:00', party_size: 2, table: 'table four' }, ctx);
   assert.equal(walkIn.available, false);
