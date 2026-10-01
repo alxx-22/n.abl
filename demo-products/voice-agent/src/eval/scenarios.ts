@@ -505,6 +505,8 @@ export const SCENARIOS: Scenario[] = [
     callerPhone: '+447700900134',
     persona: "You are Grace Okafor. You have a table booked for Saturday (tomorrow) at 7pm for four; the reference on your text is K X 4 Q 7. You want to make it five people instead, same time. Give the reference when asked, one character at a time. Confirm the change when it is read back.",
     async setup(repo, tenant) {
+      // A known Saturday: 7 to 8pm may be full in the seeded week, and this is about the change, not the room.
+      await clearDay(repo, tenant, '2026-10-10');
       await existingBooking(repo, tenant, 'KX4Q7', '2026-10-10', '19:00', 4, '+447700900134');
       await repo.db.query(`update public.voice_bookings set resource_key = 'T5', area_key = 'indoor' where tenant_id = $1 and reference = 'KX4Q7'`, [tenant.id]);
     },
