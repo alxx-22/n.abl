@@ -28,6 +28,8 @@ interface Issued {
   record: { person_name: string; company: string | null; expires_at: string; kind: 'private' | 'shared' };
 }
 
+/** The server sends relative links unless it knows its public address. */
+const full = (link: string) => new URL(link, location.origin).href;
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
 export function DemoKeys() {
@@ -116,9 +118,9 @@ export function DemoKeys() {
           <div className="field-row">
             <code className="mono">{issued.key}</code>
             <button type="button" className="small" onClick={() => copy(issued.key, 'Key')}>Copy key</button>
-            <button type="button" className="small primary" onClick={() => copy(issued.magic_link, 'One-click link')}>Copy one-click link</button>
+            <button type="button" className="small primary" onClick={() => copy(full(issued.magic_link), 'One-click link')}>Copy one-click link</button>
           </div>
-          <span className="muted small">Page: {issued.link}</span>
+          <span className="muted small">Page: {full(issued.link)}</span>
         </div>
       ) : null}
 

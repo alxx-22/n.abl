@@ -129,7 +129,9 @@ export async function handleAdmin(ctx: Ctx, req: IncomingMessage, res: ServerRes
       crm_lead_id: String(b.crm_lead_id ?? '').trim().slice(0, 80) || null, issued_by: String(b.issued_by ?? 'console').slice(0, 60),
       notes: String(b.notes ?? '').trim().slice(0, 500) || null, limits, expires_at: new Date(Date.now() + days * 86400000),
     });
-    const origin = config.publicBaseUrl ?? `http://${req.headers.host}`;
+    // Without PUBLIC_BASE_URL the links are relative, and the console makes
+    // them absolute with the address it was opened on (a Codespace, a laptop).
+    const origin = config.publicBaseUrl ?? '';
     // The key rides after the #, which never reaches a server log or another site.
     return json(res, 201, { key: raw, link: `${origin}${BASE}/reception`, magic_link: `${origin}${BASE}/reception#key=${raw}`, record: { ...key, limits: limitsFor(key.limits, key.kind) } }), true;
   }
