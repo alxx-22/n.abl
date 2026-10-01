@@ -41,6 +41,17 @@ that terminal tab and run `npm run dev` again.
 On start the terminal says whether Google accepted the key, and the app
 shows a red banner if it did not.
 
+**Running the tests** (in the Codespace, open a second terminal with **+**):
+
+```bash
+npm run check:all     # typecheck, 130 tests, then the browser walkthrough (no key needed)
+npm run e2e:browser   # a real call through Chromium with a recorded caller (uses the Gemini key)
+```
+
+The walkthrough's screenshots land in `eval-results/demo-ui/`. A Codespace
+made before 1 October 2026 has no Chromium: make a new one, or run
+**Codespaces: Rebuild Container** from the command palette.
+
 Then pick a business, press **Start a live call** and speak. Headphones work
 best: on laptop speakers the agent can hear itself. The first run creates a
 local database (PGlite, in `.data/`), loads the four demo businesses and

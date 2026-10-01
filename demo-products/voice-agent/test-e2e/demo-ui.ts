@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { chromium, type Page } from 'playwright-core';
 import { loadConfig } from '../src/config.ts';
 import { startServer } from '../src/server/main.ts';
+import { chromiumPath } from '../src/scout/render.ts';
 
 const OUT = 'eval-results/demo-ui';
 mkdirSync(OUT, { recursive: true });
@@ -57,7 +58,9 @@ const app = await startServer(
 );
 const base = `http://localhost:${app.port}`;
 
-const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const exe = chromiumPath();
+if (!exe) throw new Error('No Chromium found: install it (sudo apt-get install chromium) or set CHROME_PATH.');
+const browser = await chromium.launch({ executablePath: exe });
 const errors: string[] = [];
 let step = 0;
 const shot = async (page: Page, name: string) => page.screenshot({ path: join(OUT, `${String(++step).padStart(2, '0')}-${name}.png`), fullPage: true });

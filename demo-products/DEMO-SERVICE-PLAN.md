@@ -744,6 +744,7 @@ Where it stands (1 October 2026):
 | Prospects enter real customers' details | notice on the call panel; retention job; no audio stored |
 | A preset feels generic | the builder's cuisine or style text drives menu, greeting and FAQs; the accent colour and floor plan are theirs |
 | Sending demos breaks outreach compliance | the CRM action runs through the same gates; no automated sending |
+| The scout's Chromium renders a hostile page | Playwright launches Chromium without its own sandbox by default, so the container is the only wall: scans need a key and are limited per day, the container cannot reach the cloud metadata service, and only public addresses are fetched. Hardening to do: `chromiumSandbox: true` with a seccomp profile that allows Chromium's namespaces |
 
 ## 12. Not in this plan
 

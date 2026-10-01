@@ -196,7 +196,7 @@ run_image() {
   docker rm -f "$NAME" >/dev/null 2>&1 || true
   docker run -d --name "$NAME" --restart unless-stopped \
     --env-file "$DIR/app.env" -e "APP_VERSION=$2" \
-    -p "127.0.0.1:$PORT:$PORT" --memory 8g \
+    -p "127.0.0.1:$PORT:$PORT" --memory 8g --shm-size 512m \
     --log-opt max-size=20m --log-opt max-file=5 \
     "$1" >/dev/null
 }

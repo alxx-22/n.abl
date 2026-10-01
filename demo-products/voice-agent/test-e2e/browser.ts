@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 import { loadConfig } from '../src/config.ts';
 import { startServer } from '../src/server/main.ts';
+import { chromiumPath } from '../src/scout/render.ts';
 import { concatPcm16, wavFromPcm16 } from '../src/core/audio.ts';
 import { speak } from '../src/core/gemini.ts';
 
@@ -51,7 +52,7 @@ const dir = join(tmpdir(), `va-e2e-${Date.now()}`);
 const app = await startServer({ ...config, port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: undefined }, { web: 'dev' });
 const base = `http://localhost:${app.port}`;
 const browser = await chromium.launch({
-  executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+  executablePath: chromiumPath() ?? '/usr/bin/chromium',
   args: [
     '--use-fake-ui-for-media-stream',
     '--use-fake-device-for-media-stream',

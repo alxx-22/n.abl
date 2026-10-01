@@ -2,10 +2,12 @@
   // n.abl Reception, the voice agent demo, in a GitHub Codespace: no local
   // install. Add GEMINI_API_KEY as a Codespaces secret (or paste it when the
   // Codespace asks), start the Codespace, and the app opens in a browser tab.
+  // Chromium is installed for the browser tests (npm run check:all) and for
+  // the website scout's render.
   "name": "n.abl Reception (voice agent demo)",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/demo-products/voice-agent",
-  "postCreateCommand": "npm ci",
+  "postCreateCommand": "sudo apt-get update -q && sudo apt-get install -y -q chromium fonts-liberation && npm ci",
   "postAttachCommand": { "app": "npm run dev" },
   "forwardPorts": [8787],
   "portsAttributes": {

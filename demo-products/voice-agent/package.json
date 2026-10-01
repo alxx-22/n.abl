@@ -14,6 +14,7 @@
     "test": "node --test --test-reporter=spec \"test/**/*.test.ts\"",
     "typecheck": "tsc -p . && tsc -p web",
     "check": "npm run typecheck && npm test",
+    "check:all": "npm run check && npm run e2e:demo",
     "db:migrate": "node --env-file-if-exists=.env.local src/db/cli.ts migrate",
     "db:seed": "node --env-file-if-exists=.env.local src/db/cli.ts seed",
     "spike:probe": "node --env-file-if-exists=.env.local src/spike/probe.ts",
