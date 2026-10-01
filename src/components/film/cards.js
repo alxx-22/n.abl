@@ -617,26 +617,26 @@ export const improve = cardScene(8, (s, { dur }) => {
   const cam = drift(s, [[0, -20, -20, -60, 12, 16], [tTag, 0, 0, -10, 7, 4], [dur, 16, 14, 10, 5, -10]])
   return t => {
     sp(t); cam(t); loopLens(s, t, dur)
-    blurIn(share, t, .1, { x: 24, y: -96, rx: 8, ry: -16, dz: 200, s0: .95, blur: 16 })
+    blurIn(share, t, .1, { x: 20, y: -124, rx: 8, ry: -14, dz: 200, s0: .95, blur: 16 })
     const q = P(t, tLine[0], tLine[1], E.io)
     ln.style.strokeDasharray = `${L} ${L}`; ln.style.strokeDashoffset = (L * (1 - q)).toFixed(1)
     area.style.opacity = (.9 * q).toFixed(3)
     dots.forEach((e, k) => { e.style.opacity = q * (MONTHS.length - 1) >= k - .01 ? 1 : 0 })
-    blurIn(tag, t, tTag, { x: 170, y: -170, z: 100, ry: -16, dz: 160, s0: .8, blur: 12 })
+    blurIn(tag, t, tTag, { x: 172, y: -196, z: 90, ry: -14, dz: 160, s0: .8, blur: 12 })
     const tg = bell(t, tTag, tTag + .1, tTag + 1.4)
     tag.style.boxShadow = `0 20px 60px rgba(0,0,0,.5), 0 0 ${(30 + 50 * tg).toFixed(0)}px rgba(${AMB},${(.25 + .35 * tg).toFixed(2)})`
-    blurIn(pres, t, .5, { x: -150, y: 104, z: 120, ry: 12, dz: 200, s0: .9, blur: 14 })
+    blurIn(pres, t, .5, { x: -180, y: 120, z: 80, ry: 8, dz: 200, s0: .9, blur: 14 })
     const on = talking(t)
     pres.classList.toggle('talk', on)
     lvP.forEach((e, i) => { e.style.transform = `scaleY(${(on ? .3 + .7 * Math.abs(Math.sin(t * 11 + i * 1.3)) : .15).toFixed(3)})` })
     // the caption: the first line, then the second in its place
     const swap = t >= tB
-    put(cc, { x: 70, y: 104, z: 100, o: P(t, tA - .05, tA + .1) })
+    put(cc, { x: 108, y: 92, z: 80, o: P(t, tA - .05, tA + .1) })
     cc.querySelector('.a').style.display = swap ? 'none' : 'inline'
     cc.querySelector('.b').style.display = swap ? 'inline' : 'none'
     ccA.forEach((e, i) => rise(e, t, tA + i * .07, { dur: .22, dy: 8, blur: 8 }))
     ccB.forEach((e, i) => rise(e, t, tB + i * .07, { dur: .22, dy: 8, blur: 8 }))
-    blurIn(next, t, tNext, { x: 60, y: 172, z: 110, dz: 160, s0: .92, blur: 14 })
-    blurIn(meet, t, tMeet, { x: 60, y: 228, z: 110, dz: 160, s0: .92, blur: 14 })
+    blurIn(next, t, tNext, { x: 108, y: 168, z: 80, dz: 160, s0: .92, blur: 14 })
+    blurIn(meet, t, tMeet, { x: 108, y: 222, z: 80, dz: 160, s0: .92, blur: 14 })
   }
 }, { W: 660, H: 640 })
