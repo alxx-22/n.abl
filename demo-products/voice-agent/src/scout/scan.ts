@@ -318,6 +318,8 @@ async function runScan(deps: ScanDeps, id: string, start: URL, counter: { reques
       if (items.length) menu = { categories: clean.categories, allergen_statement: out.allergen_statement || null, source_url: menuSource.url, dishes: items.length, priced: items.filter((i) => i.price_pence > 0).length };
     } catch (err) {
       counter.requests++;
+      // The prospect sees only the note; the reason goes to the server log.
+      console.warn(`scout ${menuSource.url}: menu: ${(err as Error).message.slice(0, 300)}`);
       notes.push(/429|quota/i.test((err as Error).message) ? 'The menu could not be read this time (the free model limit was reached).' : 'The menu could not be read.');
     }
   } else notes.push('No menu found on the site.');
@@ -330,6 +332,7 @@ async function runScan(deps: ScanDeps, id: string, start: URL, counter: { reques
     counter.requests++;
   } catch (err) {
     counter.requests++;
+    console.warn(`scout ${home.url}: details: ${(err as Error).message.slice(0, 300)}`);
     notes.push(/429|quota/i.test((err as Error).message) ? 'Some details could not be read this time (the free model limit was reached).' : 'Some details could not be read.');
   }
 

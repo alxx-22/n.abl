@@ -45,7 +45,10 @@ export interface PageSignals {
 }
 
 const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-const DAY_RE = '(sun|mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat)(?:day|s|sday|nesday|rsday|urday)?';
+const DAY_WORD = '(?:sun|mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat)(?:day|s|sday|nesday|rsday|urday)?';
+const DAY_RANGE = '-|\\bto\\b|\\buntil\\b|\\btill\\b|\\bthrough\\b';
+/** Days as sites write them: "Tuesday to Saturday", "wed, thur", "Fri & Sat", "Mon-Wed, Fri". */
+const DAY_LIST = `\\b${DAY_WORD}\\b(?:\\s*(?:${DAY_RANGE}|,|&|\\band\\b|\\/|\\+)\\s*\\b${DAY_WORD}\\b)*`;
 
 // ── Structured data ──────────────────────────────────────────────────────
 
@@ -142,6 +145,26 @@ function dayIndex(word: string): number {
   return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].indexOf(w);
 }
 
+/** The days a phrase like "Mon-Wed, Fri" names, as day numbers (Sunday 0). */
+function daysIn(phrase: string): number[] {
+  const out = new Set<number>();
+  let prev = -1;
+  let range = false;
+  for (const m of phrase.matchAll(new RegExp(`\\b(${DAY_WORD})\\b|(${DAY_RANGE})`, 'gi'))) {
+    if (m[2]) {
+      range = true;
+      continue;
+    }
+    const d = dayIndex(m[1]);
+    if (d < 0) continue;
+    if (range && prev >= 0) for (let x = prev; x !== d; x = (x + 1) % 7) out.add(x);
+    out.add(d);
+    prev = d;
+    range = false;
+  }
+  return [...out];
+}
+
 /** "5pm", "5.30pm", "17:30", "12 noon", "midnight" → HH:MM. */
 export function parseClock(s: string): string | null {
   const t = s.trim().toLowerCase().replace(/\s+/g, '');
@@ -168,12 +191,11 @@ export function hoursFromWords(text: string): DayHoursFound[] | null {
   const days: DayHoursFound[] = DAYS.map(() => ({ open: false, services: [] }));
   let any = false;
   const t = text.replace(/[–—]/g, '-').replace(/ /g, ' ');
-  const range = new RegExp(`\\b${DAY_RE}\\b(?:\\s*(?:-|to|until|till|through)\\s*\\b${DAY_RE}\\b)?\\s*:?\\s*((?:${CLOCK}\\s*(?:-|to|till|until)\\s*${CLOCK}(?:\\s*(?:,|&|and)\\s*)?)+)`, 'gi');
+  const range = new RegExp(`(${DAY_LIST})\\s*:?\\s*((?:${CLOCK}\\s*(?:-|to|till|until)\\s*${CLOCK}(?:\\s*(?:,|&|and)\\s*)?)+)`, 'gi');
   for (const m of t.matchAll(range)) {
-    const a = dayIndex(m[1]);
-    const b = m[2] ? dayIndex(m[2]) : a;
-    if (a < 0 || b < 0) continue;
-    const spans = [...m[3].matchAll(new RegExp(`${CLOCK}\\s*(?:-|to|till|until)\\s*${CLOCK}`, 'gi'))];
+    const named = daysIn(m[1]);
+    if (!named.length) continue;
+    const spans = [...m[2].matchAll(new RegExp(`${CLOCK}\\s*(?:-|to|till|until)\\s*${CLOCK}`, 'gi'))];
     const services = spans.map((s) => {
       const open = parseClock(s[1]);
       let close = parseClock(s[2]);
@@ -183,17 +205,15 @@ export function hoursFromWords(text: string): DayHoursFound[] | null {
       return { label: '', open, close };
     }).filter((s): s is { label: string; open: string; close: string } => Boolean(s.open && s.close && s.open < s.close));
     if (!services.length) continue;
-    for (let d = a; ; d = (d + 1) % 7) {
+    for (const d of named) {
       days[d].open = true;
       days[d].services.push(...services.map((s) => ({ ...s })));
       any = true;
-      if (d === b) break;
     }
   }
   if (!any) return null;
-  for (const m of t.matchAll(new RegExp(`closed\\s+(?:on\\s+)?${DAY_RE}`, 'gi'))) {
-    const d = dayIndex(m[1]);
-    if (d >= 0 && !days[d].services.length) days[d].open = false;
+  for (const m of t.matchAll(new RegExp(`closed\\s+(?:on\\s+)?(${DAY_LIST})`, 'gi'))) {
+    for (const d of daysIn(m[1])) if (!days[d].services.length) days[d].open = false;
   }
   return labelServices(days);
 }

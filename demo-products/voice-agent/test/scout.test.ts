@@ -111,6 +111,13 @@ test('scout: opening hours in the ways sites write them', () => {
   const c = hoursFromWords('Wednesday - Sunday 5 - 10')!;
   assert.deepEqual(c[3].services.map((s) => `${s.open}-${s.close}`), ['17:00-22:00'], '"5 - 10" is an evening');
   assert.equal(hoursFromWords('Established in 1998. Call 0115 496 0999.'), null);
+  // Pici lists days rather than ranging them; only the last of each pair was read, so Wednesday and Friday looked closed.
+  const pici = hoursFromWords('mon closed\ntue 5-10pm\nwed, thur 12-10pm\nfri, sat 12-11pm\nsun 12-8pm')!;
+  assert.deepEqual(pici.map((d) => d.services.map((s) => `${s.open}-${s.close}`).join(' ') || 'closed'),
+    ['12:00-20:00', 'closed', '17:00-22:00', '12:00-22:00', '12:00-22:00', '12:00-23:00', '12:00-23:00']);
+  const d = hoursFromWords('Mon-Wed, Fri 12-10pm. Saturday and Sunday 10am - 11pm. Closed Thursdays')!;
+  assert.deepEqual(d.map((x) => x.open), [true, true, true, true, false, true, true]);
+  assert.equal(hoursFromWords('Fri & Sat: 5pm to midnight')![5].services[0].close, '23:59');
   assert.equal(parseClock('5.30pm'), '17:30');
   assert.equal(parseClock('noon'), '12:00');
   assert.equal(parseClock('12am'), '00:00');
@@ -323,6 +330,8 @@ test('scout: Pici, read from a saved copy, gives the menu page with its prices',
     assert.deepEqual(r.menu!.categories.flatMap((c) => c.items.map((i) => i.price_pence)), [500, 1150, 1650], '"11.5" is £11.50');
     assert.equal(r.menu!.priced, 3);
     assert.deepEqual(r.menu!.categories.map((c) => c.label), ['snacks', 'pasta']);
+    // "wed, thur 12-10pm" and "fri, sat 12-11pm": open all week but Monday.
+    assert.deepEqual(r.hours!.map((d) => d.open), [true, false, true, true, true, true, true]);
   } finally {
     pici.close();
   }
