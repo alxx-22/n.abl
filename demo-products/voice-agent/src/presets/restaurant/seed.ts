@@ -78,7 +78,7 @@ const REF_LETTERS = 'AHJKLQRWXY';
 
 /** How full each service gets, by day and time of day. */
 function targetFor(weekday: number, evening: boolean, allDay: boolean): number {
-  if (allDay) return weekday === 0 ? 0.62 : 0.4;
+  if (allDay) return weekday === 0 ? 0.5 : 0.4;
   if (!evening) return weekday === 6 ? 0.5 : weekday === 5 ? 0.38 : 0.28;
   return { 0: 0.45, 1: 0.35, 2: 0.4, 3: 0.48, 4: 0.6, 5: 0.82, 6: 0.85 }[weekday] ?? 0.5;
 }
@@ -135,6 +135,16 @@ export function planRestaurantSeed(profile: TenantProfile, now: Date, seed: numb
         let tries = 0;
         // Peak times first: half seven for dinner, one o'clock for lunch.
         const peak = evening ? minutesOf('19:30') : minutesOf('13:00');
+        // A prospect's first call ("a table for two for Sunday lunch?") should
+        // work: every time keeps a table for two and one for four, except Friday
+        // and Saturday between seven and eight, where "that's taken, I can do a
+        // quarter to seven" is the true and better demo.
+        const mayFill = (t: string) => evening && (weekday === 5 || weekday === 6) && t >= '19:00' && t <= '20:00';
+        // Inside, where most callers want to sit, when there is an inside table that size.
+        const inside = areas.find((a) => a.kind === 'indoor' && a.reservable)?.key;
+        const roomFor = (n: number) => (inside && bookable.some((r) => r.area === inside && (r.capacity ?? 0) >= n && (r.min ?? 1) <= n) ? inside : undefined);
+        const roomAt = (t: string) =>
+          mayFill(t) || [2, 4].every((n) => n > maxParty || checkSlot({ profile, serviceKey: service.key, date, time: t, partySize: n, now: new Date(0), existing, area: roomFor(n) }, { ...service, lead_minutes: 0 }, t));
         while (filled < target * capacity && tries < 400) {
           tries++;
           // Busiest round the peak, but the whole service fills: early tables at half five are normal.
@@ -155,6 +165,13 @@ export function planRestaurantSeed(profile: TenantProfile, now: Date, seed: numb
           const r = resources.find((x) => x.key === slot.resource_key)!;
           const minutes = durationFor(service, party);
           existing.push({ id: `seed-${bookings.length}`, resource_key: r.key, starts_at: slot.starts_at, ends_at: slot.ends_at });
+          // Every time this booking overlaps must still have room (see roomAt).
+          const reach = minutesOf(t) - 150;
+          const until = minutesOf(t) + minutes + (service.buffer_minutes ?? 0);
+          if (!times.filter((x) => minutesOf(x) > reach && minutesOf(x) < until).every(roomAt)) {
+            existing.pop();
+            continue;
+          }
           filled += minutes * (r.combines?.length ?? 1);
 
           const extras = random();

@@ -214,6 +214,8 @@ export class Repo {
       phone?: string | null; notes?: string | null; staff?: string; source: string; call_id?: string | null;
       /** Tables: a seating area, step-free access, and features the caller would like. */
       area?: string; accessible?: boolean; prefer?: string[];
+      /** Tables: the one the caller asked for by number. */
+      table?: string;
       allergies?: string | null; tags?: string[];
       /** Seeding only: skip the notice period, so today's earlier bookings can exist. */
       ignoreLead?: boolean;
@@ -235,7 +237,7 @@ export class Repo {
       const slot = checkSlot(
         {
           profile: tenant.profile, serviceKey: service.key, date: input.date, time, partySize: input.party_size, staff: input.staff,
-          now: input.ignoreLead ? new Date(0) : now, existing, area: input.area, accessible: input.accessible, prefer: input.prefer,
+          now: input.ignoreLead ? new Date(0) : now, existing, area: input.area, accessible: input.accessible, prefer: input.prefer, only: input.table,
         },
         input.ignoreLead ? { ...service, lead_minutes: 0 } : service,
         time,
@@ -291,7 +293,7 @@ export class Repo {
   async modifyBooking(
     tenant: Tenant,
     reference: string,
-    changes: { date?: string; time?: string; party_size?: number; notes?: string; area?: string; accessible?: boolean; allergies?: string; tags?: string[] },
+    changes: { date?: string; time?: string; party_size?: number; notes?: string; area?: string; accessible?: boolean; allergies?: string; tags?: string[]; name?: string; phone?: string },
     now: Date,
     by = 'receptionist',
   ): Promise<{ ok: true; booking: Booking } | { ok: false; message: string }> {
@@ -316,7 +318,9 @@ export class Repo {
       // Keep the same table and area if they still fit; otherwise find another.
       const area = changes.area ?? b.area_key ?? undefined;
       const req = { profile: tenant.profile, serviceKey: service.key, date, time, partySize: party, now, existing, excludeBookingId: b.id, area, accessible: changes.accessible, keep: b.resource_key };
-      const slot = checkSlot(req, service, time);
+      // A new name, number or note does not move the booking, even one starting soon.
+      const moves = date !== local.date || time !== local.time || party !== b.party_size || (changes.area !== undefined && changes.area !== b.area_key) || changes.accessible !== undefined;
+      const slot = moves ? checkSlot(req, service, time) : { time, resource_key: b.resource_key, starts_at: b.starts_at, ends_at: b.ends_at };
       if (!slot) {
         const where = area ? tenant.profile.booking?.areas?.find((x) => x.key === area)?.label.toLowerCase() : undefined;
         return { ok: false as const, message: `That change does not fit${where ? ` in the ${where}` : ''}: the time is taken or not bookable.` };
@@ -325,6 +329,8 @@ export class Repo {
         changes.date || changes.time ? `moved to ${date} ${time}` : null,
         changes.party_size && changes.party_size !== b.party_size ? `party ${b.party_size} → ${party}` : null,
         slot.resource_key !== b.resource_key ? `table ${b.resource_key} → ${slot.resource_key}` : null,
+        changes.name && changes.name !== b.name ? `name ${b.name} → ${changes.name}` : null,
+        changes.phone && changes.phone !== b.phone ? 'phone changed' : null,
         changes.notes ? 'notes changed' : null,
         changes.allergies ? 'allergies noted' : null,
       ].filter(Boolean).join(', ') || 'changed';
@@ -332,9 +338,10 @@ export class Repo {
       const updated = await q.query<any>(
         `update public.voice_bookings set starts_at = $2, ends_at = $3, resource_key = $4, party_size = $5,
            notes = coalesce($6, notes), deposit_pence = $7, area_key = $8, allergies = coalesce($9, allergies),
-           tags = coalesce($10, tags), history = history || $11::jsonb, updated_at = now() where id = $1 returning *`,
+           tags = coalesce($10, tags), history = history || $11::jsonb, name = coalesce($12, name), phone = coalesce($13, phone),
+           updated_at = now() where id = $1 returning *`,
         [b.id, slot.starts_at, slot.ends_at, slot.resource_key, party, changes.notes ?? null, depositFor(service, party), newArea,
-          changes.allergies ?? null, changes.tags ?? null, historyEntry(by, what)],
+          changes.allergies ?? null, changes.tags ?? null, historyEntry(by, what), changes.name ?? null, changes.phone ?? null],
       );
       return { ok: true as const, booking: mapBooking(updated[0]) };
     });

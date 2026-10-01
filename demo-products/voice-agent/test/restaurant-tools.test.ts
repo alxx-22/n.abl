@@ -7,13 +7,14 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
-import { mentionedAllergy, newCallState, runTool, toolDeclarations, type Action, type ToolContext } from '../src/core/tools.ts';
+import { mentionedAllergy, namedAllergy, newCallState, runTool, toolDeclarations, type Action, type ToolContext } from '../src/core/tools.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
 import { DEFAULT_DEMO_CARDS } from '../src/domain/payments.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { defaultAnswers, type RestaurantAnswers } from '../src/presets/restaurant/answers.ts';
 import { compileRestaurant } from '../src/presets/restaurant/compile.ts';
 import { seedAll } from '../src/db/seed.ts';
+import { minutesOf } from '../src/domain/time.ts';
 
 // Friday 2 October 2026, 4pm BST.
 const NOW = new Date('2026-10-02T15:00:00Z');
@@ -195,4 +196,108 @@ test('restaurant tools: an allergy the caller mentioned is never dropped', async
   const none = await runTool('create_booking', { date: SAT, time: '20:00', party_size: 2, name: 'Amy Hall', allergies: 'none' }, other.ctx);
   assert.equal(none.booked, true);
   assert.equal((await repo.getBookingByReference(t.id, String(none.reference)))!.allergies, null);
+});
+
+// From a call on 1 October: no name was taken, the name could not be changed,
+// "table 4" could not be checked, and "dairy" was looked up as a dish.
+
+test('restaurant tools: a booking needs a real name, and the name and number can be changed later', async () => {
+  const t = await restaurant('tools-names');
+  const { ctx, sent } = await call(t);
+  for (const stand_in of ['Caller', 'the caller', 'guest', 'N/A', '']) {
+    const r = await runTool('create_booking', { date: SAT, time: '12:30', party_size: 2, name: stand_in, allergies: 'none' }, ctx);
+    assert.equal(r.booked, false, stand_in);
+    assert.match(String(r.message), /caller's name/);
+  }
+  const booked = await runTool('create_booking', { date: SAT, time: '12:30', party_size: 2, name: 'Pat', allergies: 'none' }, ctx);
+  assert.equal(booked.booked, true, JSON.stringify(booked));
+
+  // Today, twenty minutes from now: inside the notice period, so a move would be refused, but a new name is not a move.
+  const soon = await repo.createBooking(t, { date: '2026-10-02', time: '16:15', party_size: 2, name: 'Caller', phone: '+447700900123', source: 'eval', ignoreLead: true, allergies: null }, NOW);
+  assert.ok(soon.ok);
+  const renamed = await runTool('modify_booking', { reference: soon.ok ? soon.booking.reference : '', name: 'Alex Cohen' }, ctx);
+  assert.equal(renamed.changed, true, JSON.stringify(renamed));
+  assert.equal(renamed.name, 'Alex Cohen');
+  const b = (await repo.getBookingByReference(t.id, soon.ok ? soon.booking.reference : ''))!;
+  assert.equal(b.name, 'Alex Cohen');
+  assert.match(b.history?.at(-1)?.what ?? '', /name Caller → Alex Cohen/);
+  assert.match(sent.at(-1)!.body, /^Olive & Ember: Changed:/);
+
+  const renumbered = await runTool('modify_booking', { reference: b.reference, phone: '07700 900456' }, ctx);
+  assert.equal(renumbered.changed, true);
+  assert.equal((await repo.getBookingByReference(t.id, b.reference))!.phone, '+447700900456');
+  assert.equal((await runTool('modify_booking', { reference: b.reference, phone: 'twelve' }, ctx)).changed, false);
+  assert.equal((await runTool('modify_booking', { reference: b.reference, name: 'caller' }, ctx)).changed, false);
+});
+
+test('restaurant tools: a particular table by number, and the one kept for walk-ins', async () => {
+  const t = await restaurant('tools-table');
+  const { ctx } = await call(t);
+  const walkIn = await runTool('check_availability', { date: SAT, time: '13:00', party_size: 2, table: 'table four' }, ctx);
+  assert.equal(walkIn.available, false);
+  assert.match(String(walkIn.message), /Table 4 is kept for walk-ins/);
+  const small = await runTool('check_availability', { date: SAT, time: '13:00', party_size: 5, table: '2' }, ctx);
+  assert.match(String(small.message), /Table 2 seats 2, not 5/);
+  assert.match(String((await runTool('check_availability', { date: SAT, party_size: 2, table: '99' }, ctx)).message), /no table "99"/);
+
+  const five = await runTool('check_availability', { date: SAT, party_size: 2, table: 'T5' }, ctx);
+  assert.equal(five.table, 'Table 5');
+  assert.ok((five.available_ranges as string[]).length, 'how busy that table is: its free times that day');
+  const at = await runTool('check_availability', { date: SAT, time: '13:00', party_size: 2, table: 'five' }, ctx);
+  assert.equal(at.available, true);
+  assert.equal((at.slot as any).resource_label, 'Table 5', 'they asked for it by number, so they hear it');
+  assert.equal(at.next, undefined, 'no "inside or terrace?" once they have chosen a table');
+  const booked = await runTool('create_booking', { date: SAT, time: '13:00', party_size: 2, name: 'Pat', table: '5', allergies: 'none' }, ctx);
+  assert.equal(booked.booked, true);
+  assert.equal(booked.table, 'Table 5');
+  const again = await runTool('create_booking', { date: SAT, time: '13:00', party_size: 2, name: 'Sam', table: '5', allergies: 'none' }, ctx);
+  assert.equal(again.booked, false, 'that table is now taken at 1pm');
+});
+
+test('restaurant tools: a saved allergy always says what it is', () => {
+  const heard = ['A table for two on Sunday, please.', 'Yes, one of us has a dairy allergy.'];
+  assert.equal(namedAllergy('Intolerance, not anaphylactic.', heard), 'Dairy: intolerance, not anaphylactic.');
+  assert.equal(namedAllergy('Severe nut allergy', heard), 'Severe nut allergy', 'already says what it is');
+  assert.equal(namedAllergy('Vegan', heard), 'Vegan');
+  assert.equal(namedAllergy('Quite severe', ['No allergies here.']), 'Quite severe', 'nothing to add from');
+  assert.equal(namedAllergy(undefined, heard), undefined);
+});
+
+test('restaurant tools: dairy is milk, and the menu can say which dishes are made without it', async () => {
+  const t = await restaurant('tools-dairy');
+  const { ctx } = await call(t);
+  const asDish = await runTool('get_item_details', { item: 'dairy' }, ctx);
+  assert.equal(asDish.found, false);
+  assert.match(String(asDish.message), /allergy \(milk\), not a dish.*record it as the allergy/);
+  const free = await runTool('get_menu', { free_from: 'dairy' }, ctx);
+  assert.deepEqual(free.free_from, ['milk']);
+  const menu = t.profile.menu!;
+  const withMilk = menu.categories.flatMap((c) => c.items).filter((i) => i.allergens.includes('milk')).map((i) => i.name);
+  assert.ok(withMilk.length, 'the default menu has dishes with milk');
+  const listed = (free.dishes as { name: string }[]).map((d) => d.name);
+  assert.ok(listed.length && listed.every((n) => !withMilk.includes(n)), 'no dish with milk is listed');
+  assert.match(String(free.say), /Never say a dish is safe/);
+  assert.match(String((await runTool('get_menu', { free_from: 'kiwi' }, ctx)).message), /not one of the 14 allergens/);
+});
+
+test('restaurant tools: a full lunch is fully booked, not closed', async () => {
+  const t = await restaurant('tools-full-lunch');
+  const { ctx } = await call(t);
+  // Fill Saturday lunch for two: every start time, until nothing more fits.
+  const svc = t.profile.booking!.services[0];
+  const lunch = svc.windows.find((w) => w.days.includes(6) && w.first < '15:00')!;
+  for (let m = minutesOf(lunch.first); m <= minutesOf(lunch.last); m += svc.slot_minutes) {
+    const time = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    for (let i = 0; i < 30; i++) {
+      const r = await repo.createBooking(t, { date: SAT, time, party_size: 2, name: 'Lunch filler', source: 'eval', allergies: null }, NOW);
+      if (!r.ok) break;
+    }
+  }
+  const day = await runTool('check_availability', { date: SAT, party_size: 2 }, ctx);
+  assert.equal(day.available, true, 'dinner is still free');
+  assert.deepEqual(day.fully_booked, ['lunch']);
+  assert.match(String(day.fully_booked_note), /Fully booked, not closed: lunch\. .*never that you are closed/);
+  const later = await runTool('check_availability', { date: SAT, time: lunch.first, party_size: 2 }, ctx);
+  assert.equal(later.available, false);
+  assert.ok((later.alternatives as unknown[]).length || (later.available_ranges as string[]).length, 'something to offer instead');
 });

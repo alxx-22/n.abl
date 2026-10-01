@@ -228,7 +228,7 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
     status: 'demo',
     demo_pin: String(1000 + Math.floor(Math.random() * 9000)),
     voice: x.business_type === 'barber' ? 'Charon' : 'Kore',
-    greeting: `Hello, ${x.name}. I'm the AI assistant, and this is a demo line. How can I help?`,
+    greeting: `Hello, you're through to ${x.name}. I'm the AI assistant, and this is a demo line. How can I help?`,
     summary: x.summary,
     address: x.address ?? '',
     phone_display: x.phone,

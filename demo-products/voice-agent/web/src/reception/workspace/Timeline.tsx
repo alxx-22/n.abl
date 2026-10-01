@@ -67,12 +67,13 @@ export function Timeline(props: {
         {rows.map((t, i) => {
           const newArea = i === 0 || rows[i - 1].area !== t.area;
           return (
-            <div key={t.key} className={`tl-row ${drag?.row === t.key ? 'drop' : ''} ${newArea ? 'area-start' : ''}`} data-row={t.key}>
+            <div key={t.key} className={`tl-row ${drag?.row === t.key ? 'drop' : ''} ${newArea ? 'area-start' : ''} ${t.bookable ? '' : 'walk-in'}`} data-row={t.key}>
               <span className="tl-label">
                 {newArea ? <span className="tl-area">{areas.get(t.area ?? '') ?? ''}</span> : null}
                 {t.label.replace(/^Table /, 'T')} <span className="muted">({t.seats})</span>
               </span>
               <div className="tl-track">
+                {t.bookable ? null : <span className="tl-walkin">Walk-ins only: not bookable</span>}
                 {services.map((s) => <span key={s.label} className="tl-open" style={{ left: pct(s.open), width: `calc(${pct(s.close)} - ${pct(s.open)})` }} />)}
                 {day.filter((b) => b.tables.includes(t.key)).map((b) => {
                   const [s, e] = span(b);

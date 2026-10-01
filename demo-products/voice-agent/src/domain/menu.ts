@@ -149,6 +149,30 @@ export function allergensOf(menu: Menu, item: MenuItem, modifiers: ModifierOptio
   return [...set].sort();
 }
 
+const ALLERGEN_WORDS: [RegExp, Allergen[]][] = [
+  [/dairy|lactose|milk|cheese|cream|butter/, ['milk']],
+  [/gluten|coeliac|celiac|wheat|barley|\brye\b/, ['gluten']],
+  [/peanut/, ['peanuts']],
+  [/(?<!pea)nut|almond|walnut|hazelnut|cashew|pistachio|pecan/, ['nuts']],
+  [/shellfish/, ['crustaceans', 'molluscs']],
+  [/crustacean|prawn|shrimp|crab|lobster|langoustine/, ['crustaceans']],
+  [/mollusc|mussel|oyster|squid|clam|scallop|octopus/, ['molluscs']],
+  [/\beggs?\b/, ['eggs']],
+  [/\bfish\b/, ['fish']],
+  [/\bsoy|soya/, ['soya']],
+  [/sesame/, ['sesame']],
+  [/celery|celeriac/, ['celery']],
+  [/mustard/, ['mustard']],
+  [/lupin/, ['lupin']],
+  [/sulph|sulfite/, ['sulphites']],
+];
+
+/** The 14 allergens a caller's words name: "dairy" is milk, "shellfish" is crustaceans and molluscs. */
+export function allergensNamed(text: string): Allergen[] {
+  const s = text.toLowerCase();
+  return [...new Set(ALLERGEN_WORDS.filter(([re]) => re.test(s)).flatMap(([, a]) => a))];
+}
+
 /** The approved allergen wording: data first, then the kitchen caveat, never "safe". */
 export function allergenAnswer(menu: Menu, item: MenuItem): string {
   if (item.allergens_unknown) {

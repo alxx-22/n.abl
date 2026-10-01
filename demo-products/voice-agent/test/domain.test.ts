@@ -179,6 +179,17 @@ test('guardrail: payment and allergy claims', () => {
   assert.equal(checkUtterance("It's safe for your son with his nut allergy.", s)[0]?.rule, 'said_safe_for_allergy');
 });
 
+test('guardrail: reading out a note about the caller instead of talking to them', () => {
+  const s = newCallState();
+  // What a receptionist said aloud on 1 October.
+  assert.equal(checkUtterance('user said to person in room "five past seven" and said to you "what about for four people?"', s)[0]?.rule, 'narrated');
+  assert.equal(checkUtterance('The caller wants a table for four.', s)[0]?.rule, 'narrated');
+  assert.equal(checkUtterance('[thinking] they asked about Tuesday', s)[0]?.rule, 'narrated');
+  for (const fine of ['Did you say five past seven?', 'Was that for four people?', "Sorry, I misheard you there. What would you like?", 'Of course, take your time.', 'I said 7pm, sorry if that was unclear.']) {
+    assert.equal(checkUtterance(fine, s).length, 0, fine);
+  }
+});
+
 test('phone numbers as callers say them', () => {
   assert.equal(normaliseUkPhone('07700 900123'), '+447700900123');
   assert.equal(normaliseUkPhone('oh seven seven double oh nine double oh one two three'), '+447700900123');

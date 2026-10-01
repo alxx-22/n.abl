@@ -37,6 +37,8 @@ export interface SlotRequest {
   prefer?: string[];
   /** When changing a booking: its current table, kept if it still fits. */
   keep?: string;
+  /** Tables: only this one (the caller asked for "table 4"). */
+  only?: string;
 }
 
 export interface Slot {
@@ -80,6 +82,8 @@ export interface AvailabilityResult {
   areas_free?: string[];
   /** The asked-for area is full then, but these are not. */
   other_areas_free?: string[];
+  /** Sittings that day with nothing left ("lunch"): full, not closed. */
+  fully_booked?: string[];
   reason?: Unavailable;
   message?: string;
 }
@@ -162,10 +166,11 @@ export function suitableResources(
   resources: Resource[],
   party: number,
   staff?: string,
-  needs: { area?: string; accessible?: boolean; prefer?: string[] } = {},
+  needs: { area?: string; accessible?: boolean; prefer?: string[]; only?: string } = {},
 ): Resource[] | 'unknown_staff' {
   let list = resources.filter((r) => r.services.includes(service.key));
   if (service.kind === 'table') {
+    if (needs.only) list = list.filter((r) => r.key === needs.only);
     list = list.filter((r) => (r.capacity ?? 0) >= party && (r.min ?? 1) <= party);
     if (needs.area) list = list.filter((r) => r.area === needs.area);
     if (needs.accessible) list = list.filter((r) => r.accessible);
@@ -267,12 +272,23 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   const free = times.filter((t) => checkSlot(req, service, t) !== null);
   const result: AvailabilityResult = { ...base, available: false, alternatives: [] };
 
+  // Each sitting that has nothing left, by its name ("lunch"), so a full lunch is never mistaken for a closed one.
+  const wd = weekdayOf(req.date);
+  const full = service.windows
+    .filter((w) => w.days.includes(wd))
+    .filter((w) => !free.some((t) => t >= w.first && t <= w.last))
+    .map((w) => {
+      const h = profile.opening_hours.find((x) => x.days.includes(wd) && x.open <= w.first && w.first < x.close);
+      return h?.label && !/all day/i.test(h.label) ? h.label.toLowerCase() : `${spokenTime(w.first)} to ${spokenTime(w.last)}`;
+    });
+  if (full.length && free.length) result.fully_booked = full;
+
   if (!requested) {
     result.available = free.length > 0;
     result.available_ranges = ranges(free, service.slot_minutes);
     if (!free.length) {
       result.reason = 'fully_booked';
-      result.message = `Nothing left on ${base.spoken_date}.`;
+      result.message = `Fully booked on ${base.spoken_date} (open, but nothing left).`;
     }
     return result;
   }
@@ -313,6 +329,8 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   const before = near.filter((t) => minutesOf(t) < target).slice(-2);
   const after = near.filter((t) => minutesOf(t) > target).slice(0, 2);
   result.alternatives = [...before, ...after].map((t) => ({ time: t, spoken: spokenTime(t) }));
+  // Nothing close: say what is free that day, rather than nothing.
+  if (!result.alternatives.length && free.length) result.available_ranges = ranges(free, service.slot_minutes);
   result.reason = times.includes(requested) ? 'fully_booked' : 'outside_hours';
   const kind = [req.accessible ? 'step-free' : null].filter(Boolean).join(' ');
   const areaInfo = req.area ? profile.booking?.areas?.find((a) => a.key === req.area) : undefined;

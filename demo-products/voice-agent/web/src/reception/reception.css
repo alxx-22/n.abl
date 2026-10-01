@@ -184,7 +184,8 @@ svg.floor { width: 100%; height: auto; display: block; touch-action: none; user-
 .table .cap.seats { fill: var(--muted); }
 .table:hover .top, .table:focus-visible .top { stroke: var(--amber); }
 .table.selected .top { stroke: var(--accent); stroke-width: 4; }
-.table.walk-in .top { stroke-dasharray: 5 4; }
+.table.walk-in .top, .table.unbookable .top { stroke-dasharray: 5 4; }
+.legend .l-walkin { border: 1.5px dashed var(--muted); background: transparent; }
 .table.unbookable { opacity: 0.8; }
 .table.later .top { fill: #2b241d; }
 .table.arriving .top { fill: #3d3020; stroke: var(--amber); stroke-width: 3; }
@@ -257,6 +258,8 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .tl-label { font-size: 12px; position: relative; }
 .tl-area { position: absolute; top: -15px; left: 0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
 .tl-track { position: relative; height: 30px; background: var(--surface-2); border-radius: 6px; }
+.tl-row.walk-in .tl-track { background: repeating-linear-gradient(135deg, var(--surface-2) 0 8px, transparent 8px 16px); }
+.tl-walkin { position: absolute; inset: 0; display: flex; align-items: center; padding-left: 10px; font-size: 12px; color: var(--muted); pointer-events: none; }
 .tl-row.drop .tl-track { outline: 2px solid var(--ok); }
 .tl-open { position: absolute; top: 0; bottom: 0; background: rgba(255, 255, 255, 0.03); border-left: 1px dashed var(--line); border-right: 1px dashed var(--line); }
 .tl-bar {

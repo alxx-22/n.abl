@@ -252,7 +252,8 @@ export function greetingFor(a: RestaurantAnswers): string {
   const g = a.basics.greeting.trim();
   if (g) return g;
   const name = a.basics.name.trim() || 'the restaurant';
-  return `Hello, ${name}. I'm the AI assistant on this demo line. How can I help?`;
+  // "Hello, Pici." sounded like greeting someone called Pici: say where they have rung.
+  return `Hello, you're through to ${name}. I'm the AI assistant on this demo line. How can I help?`;
 }
 
 export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }): TenantProfile {

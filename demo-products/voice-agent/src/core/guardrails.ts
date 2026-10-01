@@ -8,7 +8,7 @@
 import type { CallState } from './tools.ts';
 
 export interface Flag {
-  rule: 'unconfirmed_claim' | 'unpaid_claim' | 'said_safe_for_allergy';
+  rule: 'unconfirmed_claim' | 'unpaid_claim' | 'said_safe_for_allergy' | 'narrated';
   text: string;
 }
 
@@ -16,6 +16,10 @@ const CLAIM =
   /\b(you'?re (all )?(booked|set|sorted|confirmed)|(that'?s|it'?s|is|are|has been|have been|i'?ve|we'?ve) (now |all )?(booked|confirmed|reserved|placed|sorted)( in| for you)?|booking is (now )?(confirmed|made)|order (is|has been) (placed|confirmed|in|through)|all booked)\b/i;
 const NEGATED = /\b(not|isn'?t|aren'?t|haven'?t|hasn'?t|no|once|before|until|when|if|shall|should|can|could|would|will)\b[^.?!]{0,25}$/i;
 const PAID = /\b(payment(?:'s| has)? (?:gone|went) through|that'?s (?:gone through|been paid|paid)|payment (?:is |was |has been )?(?:approved|successful|complete|received|taken)|paid in full)\b/i;
+// Reading out its own notes about the caller instead of speaking to them. On
+// 1 October a receptionist said aloud: 'user said to person in room "five past
+// seven" and said to you "what about for four people?"'.
+const NARRATED = /\b(?:the )?(?:user|caller) (?:said|says|is saying|asked|wants|told)\b|\bsaid to (?:the )?(?:person|someone|people)\b|\bsaid to you\b|\bto (?:a |the )?person in (?:the )?room\b|^\s*[\[(]/i;
 const SAFE = /\b(it'?s|is|that'?s|will be|would be|should be|totally|completely|perfectly) (safe|fine|okay|ok) (for|with) (you|your|him|her|them|someone|a) [^.?!]*(allerg|coeliac|nut|gluten)/i;
 
 function negated(text: string, index: number): boolean {
@@ -33,5 +37,7 @@ export function checkUtterance(text: string, state: CallState): Flag[] {
   if (paid && !negated(text, paid.index) && state.paid.length === 0) flags.push({ rule: 'unpaid_claim', text: paid[0] });
   const safe = SAFE.exec(text);
   if (safe) flags.push({ rule: 'said_safe_for_allergy', text: safe[0] });
+  const narrated = NARRATED.exec(text);
+  if (narrated) flags.push({ rule: 'narrated', text: narrated[0] });
   return flags;
 }

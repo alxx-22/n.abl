@@ -5,8 +5,8 @@ import { areaBounds, autoLayout, tableSize } from '../src/presets/restaurant/lay
 import { compileRestaurant, dayRange, hoursSentence } from '../src/presets/restaurant/compile.ts';
 import { sanitiseRestaurant, validateRestaurant } from '../src/presets/restaurant/validate.ts';
 import { planRestaurantSeed, seedFrom } from '../src/presets/restaurant/seed.ts';
-import { blockingKeys } from '../src/domain/availability.ts';
-import { toLocal, weekdayOf } from '../src/domain/time.ts';
+import { blockingKeys, candidateTimes, checkSlot } from '../src/domain/availability.ts';
+import { addDays, toLocal, weekdayOf } from '../src/domain/time.ts';
 import { openPglite, migrate } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { DemoRepo } from '../src/db/demo-repo.ts';
@@ -186,6 +186,26 @@ function checkPlan(a: RestaurantAnswers, seed: number) {
     }
   }
   assert.equal(new Set(plan.bookings.map((b) => b.reference)).size, plan.bookings.length, 'references are unique');
+  // A prospect's first call works: every bookable time keeps a table for two
+  // and one for four, inside where it has one that size, except Friday and
+  // Saturday from seven till eight.
+  if (svc) {
+    const inside = (p.booking?.areas ?? []).find((x) => x.kind === 'indoor' && x.reservable)?.key;
+    const roomFor = (n: number) => (inside && res.some((r) => r.services.includes(svc.key) && r.area === inside && (r.capacity ?? 0) >= n && (r.min ?? 1) <= n) ? inside : undefined);
+    const existing = plan.bookings.map((b, i) => ({ id: `b${i}`, resource_key: b.resource_key, starts_at: b.starts_at, ends_at: b.ends_at }));
+    const biggest = Math.max(...res.filter((r) => r.services.includes(svc.key)).map((r) => r.capacity ?? 0));
+    for (let d = 0; d < 7; d++) {
+      const date = addDays(toLocal(NOW, p.timezone).date, d);
+      const wd = weekdayOf(date);
+      for (const t of candidateTimes(svc, date)) {
+        if ((wd === 5 || wd === 6) && t >= '19:00' && t <= '20:00') continue;
+        for (const n of [2, 4].filter((x) => x <= biggest)) {
+          const ok = checkSlot({ profile: p, serviceKey: svc.key, date, time: t, partySize: n, now: new Date(0), existing, area: roomFor(n) }, { ...svc, lead_minutes: 0 }, t);
+          assert.ok(ok, `no table for ${n}${roomFor(n) ? ' inside' : ''} left at ${date} ${t}`);
+        }
+      }
+    }
+  }
   const cap = p.ordering?.slot_capacity;
   if (cap) {
     const per = new Map<number, number>();

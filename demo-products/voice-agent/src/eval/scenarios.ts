@@ -522,6 +522,56 @@ export const SCENARIOS: Scenario[] = [
       return f;
     },
   },
+  // From a call on 1 October: lunch looked closed, table 4 could not be
+  // checked, no name was taken, and "dairy" was looked up as a dish.
+  {
+    id: 'ws-sunday-lunch-table4',
+    tenant: 'olive-ember',
+    title: 'Sunday lunch for two, asks for table 4 (kept for walk-ins), dairy allergy, never volunteers a name',
+    kind: 'edge',
+    callerPhone: '+447700900136',
+    persona: 'You are Pat Morgan. You want a table for two this Sunday (11 October) at 1pm, inside. Early on, ask: "Could we have table four?" If you are told it cannot be booked, accept another table inside. Do not give your name unless you are asked for it; when asked, say "Pat Morgan". When asked about allergies, or before the booking is confirmed if nobody asks, say "one of us has a dairy allergy". Confirm when the details are read back.',
+    async check(c) {
+      const f: string[] = [];
+      const b = await c.db.query<any>(`select * from public.voice_bookings where tenant_id = $1 and source = 'eval' and status = 'confirmed'`, [c.tenant.id]);
+      expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
+      if (b[0]) {
+        expect(f, new Date(b[0].starts_at).getTime() === at('2026-10-11', '13:00').getTime(), `booked for ${new Date(b[0].starts_at).toISOString()}`);
+        expect(f, /pat/i.test(b[0].name), `name on the booking: "${b[0].name}"`);
+        expect(f, b[0].area_key === 'indoor', `area ${b[0].area_key}`);
+        expect(f, b[0].resource_key !== 'T4', 'booked onto the walk-in table');
+        expect(f, /dairy|milk|lactose/i.test(b[0].allergies ?? ''), `allergy not recorded (allergies: ${b[0].allergies})`);
+      }
+      expect(f, /walk-?in/i.test(c.agentText), 'never said table 4 is kept for walk-ins');
+      expect(f, !/(not|aren'?t) open (for|at) lunch|closed (for|at) lunch/i.test(c.agentText), 'said lunch was closed');
+      expect(f, !/couldn'?t find .{0,12}dairy|dairy.{0,20}(on|in) (our|the) menu/i.test(c.agentText), 'looked dairy up as a dish');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'ws-rename-by-ref',
+    tenant: 'olive-ember',
+    title: 'Changes the name on a booking by its reference',
+    kind: 'happy',
+    callerPhone: '+447700900137',
+    persona: 'You are Alex Cohen. You booked a table for two for Tuesday (13 October) at 6pm, but the name on it is wrong. The reference on your text is A Y H 5 4 3. You want the booking under the name Alex Cohen; nothing else changes. Give the reference when asked, one character at a time. Confirm the change when it is read back.',
+    async setup(repo, tenant) {
+      await existingBooking(repo, tenant, 'AYH543', '2026-10-13', '18:00', 2, '+447700900137');
+      await repo.db.query(`update public.voice_bookings set name = 'Caller', resource_key = 'T2', area_key = 'indoor' where tenant_id = $1 and reference = 'AYH543'`, [tenant.id]);
+    },
+    async check(c) {
+      const f: string[] = [];
+      const b = await c.db.query<any>(`select * from public.voice_bookings where tenant_id = $1 and reference = 'AYH543'`, [c.tenant.id]);
+      expect(f, b[0]?.status === 'confirmed', 'the booking is no longer confirmed');
+      expect(f, /alex cohen/i.test(b[0]?.name ?? ''), `name "${b[0]?.name}"`);
+      expect(f, new Date(b[0]?.starts_at).getTime() === at('2026-10-13', '18:00').getTime(), 'the time changed');
+      const others = await c.db.query<any>(`select 1 from public.voice_bookings where tenant_id = $1 and source = 'eval' and reference <> 'AYH543' and status = 'confirmed'`, [c.tenant.id]);
+      expect(f, others.length === 0, 'a second booking was made instead of changing the first');
+      noFlags(c, f);
+      return f;
+    },
+  },
   {
     id: 'ws-collect-pay-later',
     tenant: 'olive-collect',

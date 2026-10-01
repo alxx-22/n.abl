@@ -121,6 +121,8 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
     '[Correction from the system: no payment has gone through in this call. Tell the caller, and take it with take_demo_payment if they want to pay.]',
   said_safe_for_allergy:
     '[Correction from the system: never say a dish is safe for an allergy. Correct yourself now, using the allergen wording from get_item_details, including its caveat.]',
+  narrated:
+    '[Correction from the system: you just read out a note about the caller instead of talking to them. Never describe what the caller or anyone in the room said. Say "Sorry, I misheard you there", ask them what they would like, and carry on talking to them directly.]',
 };
 
 export class CallSession extends EventEmitter<CallEvents> {

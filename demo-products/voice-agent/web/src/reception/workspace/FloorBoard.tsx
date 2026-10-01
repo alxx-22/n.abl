@@ -107,6 +107,7 @@ export function FloorBoard(props: {
         <span><i className="l-booked" /> Booked now</span>
         <span><i className="l-seated" /> Seated</span>
         <span><i className="l-late" /> Late</span>
+        {plan.tables.some((t) => !t.bookable) ? <span><i className="l-walkin" /> Walk-ins only</span> : null}
         <span className="muted">Drag a booked table onto a free one to move the booking.</span>
       </div>
     </div>

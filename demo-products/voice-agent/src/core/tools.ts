@@ -16,7 +16,7 @@ import {
 } from '../domain/time.ts';
 import { searchKnowledge } from '../domain/knowledge.ts';
 import {
-  allergenAnswer, allergensOf, describeLine, lineTotal, optionsFor, resolveItem, resolveModifiers,
+  allergenAnswer, allergensNamed, allergensOf, describeLine, lineTotal, optionsFor, resolveItem, resolveModifiers,
 } from '../domain/menu.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
@@ -101,6 +101,31 @@ function allergyCheck(ctx: ToolContext, given: string | undefined, tool: string,
 
 const noneToNull = (v: string | undefined) => (v && /^(none|no|n\/a|nothing)\.?$/i.test(v.trim()) ? undefined : v);
 
+const DIET_WORDS = /\b(vegan|vegetarian|coeliac|celiac|halal|kosher|pescatarian)\b/i;
+
+/**
+ * The allergy as the kitchen needs it: what it is, then how bad. On 1 October
+ * the receptionist said "dairy intolerance" aloud but saved "Intolerance, not
+ * anaphylactic". When the saved words name nothing, the caller's own word is
+ * put in front ("Dairy: intolerance, not anaphylactic").
+ */
+export function namedAllergy(given: string | undefined, heard: string[]): string | undefined {
+  if (!given || allergensNamed(given).length || DIET_WORDS.test(given)) return given;
+  for (const line of [...heard].reverse()) {
+    const m = /\b(dairy|lactose|milk|gluten|wheat|coeliac|celiac|peanuts?|tree nuts?|nuts?|shellfish|prawns?|crab|fish|eggs?|soya?|sesame|celery|mustard|lupin|sulphites?|vegan|vegetarian)\b/i.exec(line);
+    if (m) return `${m[1].charAt(0).toUpperCase()}${m[1].slice(1).toLowerCase()}: ${given.charAt(0).toLowerCase()}${given.slice(1)}`;
+  }
+  return given;
+}
+
+/** A name the caller actually gave, not a stand-in. On 1 October a booking went through as "Caller". */
+function realName(v: unknown): string | undefined {
+  const n = str(v);
+  if (!n || !/\p{L}{2}/u.test(n)) return undefined;
+  return /^(the )?(caller|customer|guest|user|client|unknown|anonymous|name|no name|n\/?a|none|test|sir|madam)$/i.test(n) ? undefined : n;
+}
+const ASK_NAME = "Not done: you don't have the caller's name yet. Ask for it (a first name is fine), read it back, then call this again with it.";
+
 export interface ToolContext {
   tenant: Tenant;
   repo: Repo;
@@ -175,6 +200,18 @@ function resolveArea(t: Tenant, input: string | undefined): { key?: string; enqu
   return { key: a.key };
 }
 
+/** "4", "table four", "T4" to a table; or why it cannot be booked. */
+function resolveTable(t: Tenant, input: string | undefined): { key?: string; label?: string; seats?: number; walkIn?: string; unknown?: string } {
+  if (!input) return {};
+  const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+  const s = input.toLowerCase().replace(/\btable\b|\bnumber\b|\bt(?=\d)|[^a-z0-9 ]/g, ' ').trim();
+  const n = /\d+/.exec(s)?.[0] ?? String(words.indexOf(s.split(/\s+/).pop() ?? ''));
+  const r = (t.profile.booking?.resources ?? []).find((x) => !x.combines && (x.key.toLowerCase() === `t${n}` || x.label.toLowerCase() === `table ${n}`));
+  if (!r || n === '-1') return { unknown: `There is no table "${input}".` };
+  if (!r.services.length) return { walkIn: `${r.label} is kept for walk-ins: it cannot be booked. Say so kindly, and offer another table.` };
+  return { key: r.key, label: r.label, seats: r.capacity };
+}
+
 /** The table parameters, only for businesses that book tables. */
 function tableParams(decl: FunctionDeclaration, t: Tenant, extra: 'check' | 'book' | 'change'): FunctionDeclaration {
   if (!isTables(t)) return decl;
@@ -184,6 +221,7 @@ function tableParams(decl: FunctionDeclaration, t: Tenant, extra: 'check' | 'boo
   if (t.profile.booking?.resources.some((r) => r.accessible)) p.accessible = B('Wheelchair, step-free or pram access needed');
   const features = [...new Set(t.profile.booking?.resources.flatMap((r) => r.features ?? []) ?? [])];
   if (features.length && extra !== 'change') p.prefer = S(`Table wishes, e.g. ${features.slice(0, 4).map((f) => f.replace('_', ' ')).join(', ')}`);
+  if (extra !== 'change') p.table = S('A particular table, only if the caller asks for one by number ("table 4")');
   if (extra !== 'check') {
     p.allergies = S('Allergies or dietary needs, with how severe');
     if (extra === 'book') {
@@ -394,24 +432,30 @@ const TOOLS: Record<string, Tool> = {
       }
       const area = resolveArea(ctx.tenant, str(args.area));
       if (area.enquiry || area.walkIn || area.unknown) return { available: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
+      const table = service.kind === 'table' ? resolveTable(ctx.tenant, str(args.table)) : {};
+      if (table.walkIn || table.unknown) return { available: false, message: table.walkIn ?? table.unknown };
+      const party = int(args.party_size) ?? 1;
+      if (table.key && party > (table.seats ?? 0)) return { available: false, message: `${table.label} seats ${table.seats}, not ${party}.` };
       const date = str(args.date) ?? '';
       const existing = isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [];
       const r = checkAvailability({
-        profile: p, serviceKey: service.key, date, time: str(args.time), partySize: int(args.party_size) ?? 1,
-        staff: str(args.staff), now: ctx.now(), existing, area: area.key, accessible: bool(args.accessible), prefer: preferences(args.prefer),
+        profile: p, serviceKey: service.key, date, time: str(args.time), partySize: party,
+        staff: str(args.staff), now: ctx.now(), existing, area: area.key, accessible: bool(args.accessible), prefer: preferences(args.prefer), only: table.key,
       });
       const out: Record<string, unknown> = { ...r, service: service.label };
+      if (table.key) out.table = table.label;
+      if (r.fully_booked) out.fully_booked_note = `Fully booked, not closed: ${r.fully_booked.join(' and ')}. Say it is fully booked, never that you are closed.`;
       if (r.slot && service.kind === 'appointment') out.with = r.slot.resource_label;
       if (r.slot) {
         const slot = out.slot as Record<string, unknown>;
         delete slot.resource_key;
-        // The table number is for staff; callers hear the area and what the table is like.
-        if (service.kind === 'table') delete slot.resource_label;
+        // The table number is for staff; callers hear the area and what the table is like (unless they asked for that table).
+        if (service.kind === 'table' && !table.key) delete slot.resource_label;
         const wanted = preferences(args.prefer);
         const missing = wanted.filter((f) => !(r.slot!.features ?? []).includes(f));
         if (missing.length) out.note = `No ${missing.map((f) => f.replace('_', ' ')).join(' or ')} table free then; it can be noted as a request.`;
       }
-      if (r.areas_free) out.next = `Both are free: ask whether they would like ${r.areas_free.map((a) => a.toLowerCase()).join(' or ')}.`;
+      if (r.areas_free && !table.key) out.next = `Both are free: ask whether they would like ${r.areas_free.map((a) => a.toLowerCase()).join(' or ')}.`;
       if (r.other_areas_free) out.next = `The ${p.booking?.areas?.find((a) => a.key === area.key)?.label.toLowerCase()} is full then, but ${r.other_areas_free.map((a) => a.toLowerCase()).join(' and ')} ${r.other_areas_free.length > 1 ? 'are' : 'is'} free at that time. Offer that first, then other times.`;
       if (service.price_pence) out.price = pounds(service.price_pence);
       return out;
@@ -443,11 +487,15 @@ const TOOLS: Record<string, Tool> = {
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
       const area = resolveArea(ctx.tenant, str(args.area));
       if (area.enquiry || area.walkIn || area.unknown) return { booked: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
+      const table = isTables(ctx.tenant) ? resolveTable(ctx.tenant, str(args.table)) : {};
+      if (table.walkIn || table.unknown) return { booked: false, message: table.walkIn ?? table.unknown };
+      const name = realName(args.name);
+      if (!name) return { booked: false, message: ASK_NAME };
       if (isTables(ctx.tenant)) {
         const nudge = allergyCheck(ctx, str(args.allergies), 'create_booking', 'allergies');
         if (nudge) return { booked: false, ...nudge };
       }
-      const allergies = noneToNull(str(args.allergies));
+      const allergies = namedAllergy(noneToNull(str(args.allergies)), ctx.state.heard);
       const accessible = bool(args.accessible);
       const prefer = preferences(args.prefer);
       const highchairs = int(args.highchairs) ?? 0;
@@ -466,9 +514,9 @@ const TOOLS: Record<string, Tool> = {
         ctx.tenant,
         {
           service: str(args.service), date: str(args.date) ?? '', time: str(args.time) ?? '',
-          party_size: int(args.party_size) ?? 1, name: str(args.name) ?? '', phone, notes,
+          party_size: int(args.party_size) ?? 1, name, phone, notes,
           staff: str(args.staff), source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
-          area: area.key, accessible, prefer, allergies: allergies ?? null, tags,
+          area: area.key, accessible, prefer, allergies: allergies ?? null, tags, table: table.key,
         },
         ctx.now(),
       );
@@ -478,7 +526,7 @@ const TOOLS: Record<string, Tool> = {
         const date = str(args.date) ?? '';
         const a2 = checkAvailability({
           profile: p, serviceKey: str(args.service), date, time: str(args.time), partySize: int(args.party_size) ?? 1, staff: str(args.staff),
-          now: ctx.now(), existing: isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [], area: area.key, accessible, prefer,
+          now: ctx.now(), existing: isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [], area: area.key, accessible, prefer, only: table.key,
         });
         return {
           booked: false, reason: 'fully_booked', message: a2.message ?? r.message, alternatives: a2.alternatives,
@@ -539,9 +587,12 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).booking,
     decl: {
       name: 'modify_booking',
-      description: 'Change a booking (date, time, party size, notes), after reading the change back and hearing yes. Keeps the same table when it still fits.',
+      description: 'Change a booking (date, time, party size, the name on it, the phone number, notes), after reading the change back and hearing yes. Keeps the same table when it still fits.',
       parameters: obj(
-        { reference: S('Booking reference'), date: S('YYYY-MM-DD'), time: S('HH:MM'), party_size: I('People'), notes: S('Notes') },
+        {
+          reference: S('Booking reference'), date: S('YYYY-MM-DD'), time: S('HH:MM'), party_size: I('People'),
+          name: S('New name for the booking'), phone: S('New phone number for the booking'), notes: S('Notes'),
+        },
         ['reference'],
       ),
     },
@@ -550,9 +601,15 @@ const TOOLS: Record<string, Tool> = {
       const ref = str(args.reference) ?? '';
       const area = resolveArea(ctx.tenant, str(args.area));
       if (area.enquiry || area.walkIn || area.unknown) return { changed: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
+      const phone = str(args.phone) ? normaliseUkPhone(str(args.phone)) : undefined;
+      if (str(args.phone) && !phone) return { changed: false, message: 'That is not a UK phone number. Ask for it again, digit by digit.' };
+      if (str(args.name) && !realName(args.name)) return { changed: false, message: ASK_NAME };
       const r = await ctx.repo.modifyBooking(
         ctx.tenant, ref,
-        { date: str(args.date), time: str(args.time), party_size: int(args.party_size), notes: str(args.notes), area: area.key, accessible: bool(args.accessible), allergies: str(args.allergies) },
+        {
+          date: str(args.date), time: str(args.time), party_size: int(args.party_size), notes: str(args.notes), area: area.key,
+          accessible: bool(args.accessible), allergies: namedAllergy(noneToNull(str(args.allergies)), ctx.state.heard), name: realName(args.name), phone: phone ?? undefined,
+        },
         ctx.now(),
       );
       if (!r.ok) return { changed: false, message: r.message, next: 'Check other times with check_availability, then offer them.' };
@@ -595,11 +652,24 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => Boolean(t.profile.menu),
     decl: {
       name: 'get_menu',
-      description: 'Menu categories and dish names; with a category, prices and descriptions.',
-      parameters: obj({ category: S('e.g. pizzas, desserts') }),
+      description: 'Menu categories and dish names; with a category, prices and descriptions; with free_from, the dishes without an allergen.',
+      parameters: obj({ category: S('e.g. pizzas, desserts'), free_from: S('An allergy, e.g. dairy, gluten, nuts: lists the dishes made without it') }),
     },
     async handler(args, ctx) {
       const menu = ctx.tenant.profile.menu!;
+      const avoid = allergensNamed(str(args.free_from) ?? '');
+      if (str(args.free_from) && !avoid.length) return { message: `"${str(args.free_from)}" is not one of the 14 allergens the menu records. Say you will note it for the kitchen.` };
+      if (avoid.length) {
+        const items = menu.categories.flatMap((x) => x.items.map((i) => ({ i, category: x.label })));
+        return {
+          free_from: avoid,
+          dishes: items.filter(({ i }) => !i.allergens_unknown && !avoid.some((a) => i.allergens.includes(a))).map(({ i, category }) => ({
+            name: i.name, category, may_contain: i.may_contain?.filter((a) => avoid.includes(a)).length ? `may contain traces of ${avoid.join(', ')}` : undefined,
+          })),
+          unknown: items.filter(({ i }) => i.allergens_unknown).map(({ i }) => i.name),
+          say: `These are made without ${avoid.join(' or ')} as an ingredient. ${menu.allergen_statement} Never say a dish is safe.`,
+        };
+      }
       const c = str(args.category)?.toLowerCase();
       const cats = c
         ? menu.categories.filter((x) => x.label.toLowerCase().includes(c) || x.key.includes(c) || c.includes(x.key))
@@ -629,7 +699,13 @@ const TOOLS: Record<string, Tool> = {
     async handler(args, ctx) {
       const menu = ctx.tenant.profile.menu!;
       const r = resolveItem(menu, str(args.item) ?? '');
-      if (!r.ok) return { found: false, question: r.question, options: 'options' in r ? r.options : undefined };
+      if (!r.ok) {
+        const allergy = allergensNamed(str(args.item) ?? '');
+        if (allergy.length) {
+          return { found: false, message: `"${str(args.item)}" is an allergy (${allergy.join(', ')}), not a dish. For a booking or order, just record it as the allergy. To say which dishes are made without it, use get_menu with free_from.` };
+        }
+        return { found: false, question: r.question, options: 'options' in r ? r.options : undefined };
+      }
       const item = r.value;
       return {
         found: true,
@@ -886,7 +962,7 @@ const TOOLS: Record<string, Tool> = {
       const order = await ctx.repo.createOrder(ctx.tenant, {
         name, phone, fulfilment: f.type, due_at: f.due_at, address: f.address, postcode: f.postcode,
         lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,
-        allergy_notes: noneToNull(str(args.allergy_notes)) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
+        allergy_notes: namedAllergy(noneToNull(str(args.allergy_notes)), ctx.state.heard) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
       });
       ctx.state.committed.push(order.reference);
       ctx.state.lastOrder = order;
