@@ -48,4 +48,8 @@ The AI receptionist (`voice-agent/`) and its demo service at
 - Reproduce a bug from Alex's call before fixing it (make a restaurant with
   `defaultAnswers()` and `compileRestaurant`, seed it, call `runTool`).
 - Comments say why, not what. Copy is British English, plain and short.
+- The demo wears the site's design. When the site's `src/styles/tokens.css`
+  changes, copy it into `voice-agent/web/src/tokens.css` (a test checks).
+- For UI work, send Alex screenshots from the Chromium walkthrough
+  (`eval-results/demo-ui/`).
 - Commit messages say what changed for the user, and why.

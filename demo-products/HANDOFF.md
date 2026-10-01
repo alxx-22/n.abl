@@ -1,4 +1,4 @@
-# Handover: the receptionist demo service (1 October 2026)
+# Handover: the receptionist demo service (1 October 2026, second session)
 
 For the next session. Read `CLAUDE.md` (rules and commands) first.
 
@@ -38,146 +38,57 @@ demo service at `nabl.agency/demo`. All on the `voice-agent-DEV` branch.
 | Website scout | `src/scout/{scan,extract,render,model,map}.ts` |
 | Prospect web app | `web/src/reception/`: `Reception.tsx`, `builder/`, `workspace/`, shared `FloorPlan.tsx`, `reception.css` |
 | Console web app | `web/src/pages/`, `web/src/styles.css` |
+| The site's design in the demo | `web/src/tokens.css` (a copy of the site's), `web/src/fonts.css` and `fonts/`, `components/Logo.tsx` |
+| Floor plan geometry (rooms, snapping, free spots) | `src/presets/restaurant/layout.ts` |
 | Site Worker forwarding `/demo/*` | repo root `worker/index.ts`, `wrangler.jsonc` (`DEMO_ORIGIN`) |
 | Evals | `src/eval/scenarios.ts` (`ws-*` = builder-made restaurant) |
 
-Tests: 136 unit and HTTP tests plus the Chromium walkthrough, all passing.
-All seven `ws-*` live scenarios pass.
+Tests: 142 unit and HTTP tests plus the Chromium walkthrough, all passing.
+`test/design-tokens.test.ts` fails if `web/src/tokens.css` drifts from the
+site's `src/styles/tokens.css`: change the site's file, then copy it over.
 
-## Alex's feedback to act on, in order
+## Alex's feedback: done on 1 October (second session)
 
-Alex tested a restaurant called "Pici" in a Codespace and rang it. The fixes
-already made for that call are in commit `c51033f` and noted in the plan's
-phase 5 row. What follows is what is still to do.
+All six points from Alex's first test call are built, tested and pushed.
 
-### 1. The seeded week must look like a real business
+1. **The seeded week** looks like a busy neighbourhood restaurant that can
+   always be booked: quiet early week, busy weekend, never full. A table for
+   two and for four stays free inside at every time, every day (the
+   Friday/Saturday 7–8pm exception is gone). Alex chose to keep this level.
+2. **Walk-in tables** carry a "Walk-in" tag on both floor plans and are
+   chosen per area in Seating. Alex asked for them to be **off by default**,
+   so the default restaurant has none. The evaluation restaurant still keeps
+   table 4 for walk-ins, so `ws-sunday-lunch-table4` tests that case.
+3. **Allergies during a booking** are recorded as said, with no menu lookup
+   unless the caller asks what they can eat. `ws-sunday-lunch-table4` fails
+   on a lookup by allergen.
+4. **The scout on Pici**: the menu page (Webflow tabs, prices without £) is
+   now read instead of the festive set menu's PDF, with its prices and its
+   own sections. A saved copy is a regression test.
+5. **The floor plan**: each area is its own tab and room; line-up guides and
+   a grid while dragging; a drop on another table slides to the nearest
+   clear space; touching tables are offered as a pair; bar, door, window and
+   wall shapes; zoom. Alex picked these from a list. Not picked, for later:
+   a tray to drag new tables from, buttons on the selected table, moving
+   several at once.
+6. **The restyle**: `origin/main` merged in (no conflicts; the site builds
+   and the Worker's `/demo/*` check passes 27/27). Every `/demo` screen uses
+   the site's tokens, fonts, wordmark, buttons, cards and eyebrows.
 
-> "it shouldn't do that as that is not realistic for a business"
+## To do next
 
-This is about the seeded week. Right now it:
-- keeps an inside table for two and for four free at every time, **except
-  Friday and Saturday 7–8pm**, which may fill completely;
-- pushes extra bookings into that peak, so it fills for every party size.
+- **Run the live scenarios.** The session had no Gemini key, so none ran.
+  Run all of them: the seeded week, the walk-in default and the booking
+  prompt all changed.
+  `npm run eval -- --only ws-terrace-allergy,ws-inside-or-out,ws-wheelchair,ws-amend-by-ref,ws-sunday-lunch-table4,ws-rename-by-ref,ws-collect-pay-later`
+- **Run the scout on Pici with the model**:
+  `npm run e2e:scout -- https://www.picinottingham.co.uk/`. Check the
+  sections (snacks, small plates, pizzettes, pasta, mains, dessert) and the
+  prices (e.g. pici cacio e pepe £11.50).
+- **A key for cloud sessions**: Alex was asked to add `GEMINI_API_KEY` to
+  the cloud environment's settings, so the next session can run both.
 
-Alex says that isn't realistic. To do:
-- Remove the Friday/Saturday exception: `mayFill` in
-  `src/presets/restaurant/seed.ts`, and the matching skip in `checkPlan` in
-  `test/restaurant.test.ts`.
-- Spread the bookings so the week looks like a busy but bookable restaurant.
-  The targets are in `targetFor()`.
-- Confirm with Alex how busy it should look.
-
-The `ws-amend-by-ref` scenario clears Saturday first, so it doesn't depend
-on the seeded week.
-
-### 2. "How was it reading the data correctly when table 4 had no bookings at all that day?"
-
-Table 4 is a **walk-in table** in the builder's defaults
-(`defaultTables()` in `src/presets/restaurant/answers.ts`).
-- It compiles to a resource with no bookable services, so the receptionist
-  can't book it and the seeding never uses it.
-- The board showed it as free, which looked like a bug. The timeline and the
-  floor plan's legend now mark it, but that isn't enough.
-
-To do:
-- Make walk-in tables obvious in the builder (the Seating and Floor plan
-  steps) and on the workspace floor plan (a label, not just a dashed
-  outline).
-- Ask Alex whether the default restaurant should have a walk-in table at all.
-- Explain it to Alex in one line.
-
-### 3. Dairy: "half correct"
-
-> "it added the dairy allergy but also tried to search it in the menu"
-
-During a booking, the model looked "dairy" up as a dish (`get_item_details`).
-- That tool now replies "it's an allergy, not a dish; record it as the
-  allergy", and `get_menu` has a `free_from` option. The model may still
-  make the lookup, though.
-
-To do:
-- Add a line to the booking flow in `compilePrompt` (`src/core/prompt.ts`):
-  for a booking, record the allergy as the caller said it; look dishes up
-  only if they ask what they can eat.
-- Make `ws-sunday-lunch-table4` fail if `get_item_details` or `get_menu` is
-  called with an allergen during a booking. The tool calls are in
-  `c.summary.tools`.
-
-### 4. The scout on https://www.picinottingham.co.uk/
-
-It missed the prices and grouped the menu into sections badly.
-
-To do:
-- Run `npm run e2e:scout -- https://www.picinottingham.co.uk/`. It writes to
-  `eval-results/scout/`.
-- Find where the menu actually lives: a PDF, an image, a page built in the
-  browser, or a booking-platform embed.
-- Fix the parts responsible: choosing the menu page (`scan.ts`), extraction
-  (`extract.ts`), the menu prompt and schema (`model.ts` `askMenu`), and
-  mapping into the builder's categories (`map.ts`).
-- Add the site, or a saved copy of it, as a regression case in
-  `test/scout.test.ts`.
-
-In the cloud sandbox, Chromium can't get through the TLS-intercepting proxy,
-so renders only work on a normal machine or in a Codespace. Plain fetches
-work everywhere.
-
-### 5. The floor plan "needs mega work"
-
-Alex wants:
-- much better moving of tables;
-- each seating area (Inside, Terrace…) as its own sub-tab.
-
-This applies in both the builder's Floor plan step and the workspace board.
-
-Files:
-- `web/src/reception/FloorPlan.tsx` (the shared SVG editor and board)
-- `builder/StepFloor.tsx`
-- `workspace/FloorBoard.tsx`
-- `src/presets/restaurant/layout.ts` (`autoLayout`)
-
-Ideas to put to Alex before building:
-- drag with snapping and alignment guides;
-- rotate and resize handles;
-- multi-select;
-- keyboard nudges;
-- add, duplicate and delete;
-- areas as tabs, each with its own canvas;
-- zoom;
-- joining tables by dragging one onto another.
-
-Show Alex screenshots as you go: the Chromium walkthrough saves them to
-`eval-results/demo-ui/`.
-
-### 6. A UI overhaul of everything under /demo, to match the new website
-
-This covers every screen:
-- the door (key entry) and the prospect's home;
-- the preset picker;
-- the builder;
-- the workspace;
-- the console at `/demo/admin`.
-
-It should follow the website's new design on `main`.
-
-**`main` has moved on a lot.** It has "Reposition the site as AI
-implementation, with a scroll-driven film" (`b47e384`), the release
-`a76740d`, new components in `src/components/` (`layout/Nav.jsx`,
-`sections/*`, `film/*`), and a `dev` branch. It is about 337 files ahead of
-`voice-agent-DEV`.
-
-1. First, `git fetch origin main` (slow: the repository is large, so give it
-   a long timeout or run it in the background). Merge `origin/main` into
-   `voice-agent-DEV`. Watch for conflicts in `worker/index.ts` and
-   `wrangler.jsonc`: `main` changed `worker/index.ts`, and this branch has the
-   `/demo/*` forwarding and `DEMO_ORIGIN`.
-2. Study the new site's look: colours, type, spacing, components and motion.
-3. Build a shared set of design tokens for `web/src/styles.css` and
-   `web/src/reception/reception.css`, then restyle every `/demo` screen.
-4. Keep the existing demo behaviour: microphone permission, accessibility,
-   and a 390px phone width.
-
-## Still outstanding (not from today's feedback)
+## Still outstanding (not from Alex's feedback)
 
 - **Hosting**: Alex to create the Oracle account and server following
   `voice-agent/deploy/oracle/README.md`, then add the DNS record
