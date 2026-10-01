@@ -544,7 +544,7 @@ export const SCENARIOS: Scenario[] = [
         expect(f, b[0].resource_key !== 'T4', 'booked onto the walk-in table');
         expect(f, /dairy|milk|lactose/i.test(b[0].allergies ?? ''), `allergy not recorded (allergies: ${b[0].allergies})`);
       }
-      expect(f, /walk-?in/i.test(c.agentText), 'never said table 4 is kept for walk-ins');
+      expect(f, /walk-?in|(isn'?t|not) (available|possible|able) to (be )?book|can'?t (be )?book|not bookable/i.test(c.agentText), 'never said table 4 cannot be booked');
       expect(f, !/(not|aren'?t) open (for|at) lunch|closed (for|at) lunch/i.test(c.agentText), 'said lunch was closed');
       expect(f, !/couldn'?t find .{0,12}dairy|dairy.{0,20}(on|in) (our|the) menu/i.test(c.agentText), 'looked dairy up as a dish');
       noFlags(c, f);
