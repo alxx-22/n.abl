@@ -6,13 +6,20 @@ import { SplitView, RecordBar, SectionTabs, SectionPanel, Sheet, usePickScroll }
 /* The same SIC table and checks the edge function pulls with, so what the
    form says a code covers is exactly what will be asked for. */
 import { expandSic, unknownSic, describeSic } from '../../supabase/functions/lead-prospector/puller.mjs'
+/* And the same councils, food types, kinds and places the other two
+   sources are pulled with. */
+import { FSA_AUTHORITIES, FSA_TYPES, OSM_KINDS, OSM_AREAS, checkSourceQuery } from '../../supabase/functions/lead-prospector/local.mjs'
 
 /* ============================================================
    LEAD GEN
 
    New businesses into the list, argued for by agents rather than
-   scraped. A Companies House search pulls register rows for the towns
-   and SIC codes below; for each one, in turn:
+   scraped. A target reads one of three sources: a Companies House search
+   by town and SIC code; the Food Standards Agency's food hygiene register
+   by council and kind of food business; or OpenStreetMap by kind of
+   business and place. The last two find the sole traders and partnerships
+   Companies House never lists, so their legal form is unknown. For each
+   business, in turn:
 
      research    reads the register row and the business's own site
      signals     turns those facts into signals, and research reviews them
@@ -29,6 +36,9 @@ import { expandSic, unknownSic, describeSic } from '../../supabase/functions/lea
    function, woken every five minutes - and doing nothing until a target
    is running. NOTHING HERE SENDS ANYTHING, and a promoted lead arrives
    do_not_contact: finding a business is not permission to write to it.
+   A business from the food register or the map may be a sole trader, so
+   it arrives unknown and unassessed as well, and its published number is
+   never shown to an agent.
    ============================================================ */
 
 /* The services n.abl leads with (lead gen's service_focus setting). */
@@ -76,19 +86,44 @@ const pullWhy = (run) => {
   return why.length ? why.map(([k, n]) => `${n} ${k}`).join('; ') : ''
 }
 
-const blankDraft = (t) => ({
-  id: t ? t.id : null,
-  name: t ? t.name : '',
-  towns: t ? (t.towns || []).join(', ') : '',
-  sic: t ? (t.sic_codes || []).join(', ') : '',
-  from: (t && t.incorporated_from) || '',
-  to: (t && t.incorporated_to) || '',
-})
+/* Where a target looks. */
+const SOURCES = [
+  { id: 'companies_house', label: 'Companies House', lead: 'Limited companies and LLPs on the register, by town and SIC code.' },
+  { id: 'fsa', label: 'Food hygiene register', lead: 'Cafés, takeaways, pubs and caterers the councils inspect — sole traders and partnerships included. Food Standards Agency data, Open Government Licence.' },
+  { id: 'osm', label: 'OpenStreetMap', lead: 'Salons, garages, gyms and other high-street businesses people have mapped — sole traders included. © OpenStreetMap contributors, ODbL.' },
+]
+const SOURCE_SHORT = { fsa: 'food register', osm: 'OpenStreetMap' }
 
-/* The same three tests prospect_save_target makes, so a bad draft says so
+const blankDraft = (t) => {
+  const q = (t && t.source_query) || {}
+  return {
+    id: t ? t.id : null,
+    name: t ? t.name : '',
+    source: (t && t.source) || 'companies_house',
+    towns: t && (!t.source || t.source === 'companies_house') ? (t.towns || []).join(', ') : '',
+    sic: t ? (t.sic_codes || []).join(', ') : '',
+    from: (t && t.incorporated_from) || '',
+    to: (t && t.incorporated_to) || '',
+    authorities: Array.isArray(q.authorities) ? q.authorities.map(Number) : [],
+    types: Array.isArray(q.business_types) ? q.business_types.map(Number) : [],
+    kinds: Array.isArray(q.kinds) ? q.kinds : [],
+    areas: Array.isArray(q.areas) ? q.areas : [],
+  }
+}
+
+/* What a draft asks the source it reads for. */
+const sourceQuery = (d) => (d.source === 'fsa'
+  ? { authorities: d.authorities, business_types: d.types }
+  : d.source === 'osm' ? { kinds: d.kinds, areas: d.areas } : null)
+
+/* The same tests prospect_save_target makes, so a bad draft says so
    before the round trip. The database stays the authority. */
 function problemWith(d) {
   if (!d.name.trim()) return 'Give the target a name'
+  if (d.source !== 'companies_house') {
+    const c = checkSourceQuery(d.source, sourceQuery(d))
+    return c.ok ? '' : c.why[0].toUpperCase() + c.why.slice(1)
+  }
   const towns = list(d.towns)
   if (!towns.length) return 'Add at least one town or city'
   if (towns.some((t) => /[0-9]/.test(t))) return 'A town, not a postcode'
@@ -111,6 +146,38 @@ function SicCovers({ value }) {
       Covers {all.length} code{all.length === 1 ? '' : 's'}: {shown.join('; ')}{all.length > shown.length ? `; and ${all.length - shown.length} more` : ''}
     </span>
   )
+}
+
+/* A set of boxes to tick, for the food register and the map. */
+function Picks({ legend, options, value, onChange }) {
+  const on = new Set(value)
+  return (
+    <fieldset className="lg-picks">
+      <legend>{legend}</legend>
+      {options.map((o) => (
+        <label key={o.id}>
+          <input type="checkbox" checked={on.has(o.id)}
+            onChange={(e) => onChange(e.target.checked ? [...value, o.id] : value.filter((v) => v !== o.id))} />
+          <span>{o.label}</span>
+        </label>
+      ))}
+    </fieldset>
+  )
+}
+
+const FSA_COUNCILS = FSA_AUTHORITIES.map((a) => ({ id: a.id, label: `${a.name} (${a.town})` }))
+const FSA_KINDS = FSA_TYPES.map((t) => ({ id: t.id, label: t.label }))
+const MAP_KINDS = Object.entries(OSM_KINDS).map(([id, k]) => ({ id, label: k.label }))
+const MAP_AREAS = Object.keys(OSM_AREAS).map((id) => ({ id, label: id }))
+
+/* Where a business from the food register or the map is listed, as a
+   link a person can check. */
+function listingLink(c) {
+  const d = c.source_detail || {}
+  if (c.source === 'fsa' && d.id) return { href: `https://ratings.food.gov.uk/business/${encodeURIComponent(d.id)}`, label: 'Food hygiene rating' }
+  const m = c.source === 'osm' && /^osm:(node|way|relation)\/(\d+)$/.exec(c.source_ref || '')
+  if (m) return { href: `https://www.openstreetmap.org/${m[1]}/${m[2]}`, label: 'OpenStreetMap' }
+  return null
 }
 
 /* The guessed domains worth a person's look: they exist, and either
@@ -197,6 +264,8 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
   const cautions = Array.isArray(cand.cautions) ? cand.cautions : []
   const services = Array.isArray(cand.services) ? cand.services : []
   const asks = services.filter((s) => s.confirm_question || s.walk_away_if)
+  const listed = Boolean(cand.source) && cand.source !== 'companies_house'
+  const link = listed ? listingLink(cand) : null
   const tabs = SECTIONS.map((t) => ({
     ...t,
     count: t.id === 'argument' ? cand.moves : t.id === 'fit' ? services.length : null,
@@ -243,11 +312,21 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
                   href={`https://find-and-update.company-information.service.gov.uk/company/${encodeURIComponent(cand.number)}`}>
                   Companies House {cand.number}</a></>
               )}
+              {listed && link && (
+                <> · <a className="crm-link" target="_blank" rel="noreferrer noopener" href={link.href}>{link.label}</a></>
+              )}
             </p>
             <dl className="crm-kv">
               <div><dt>Score</dt><dd>{cand.score != null ? num(cand.score) : (cand.status === 'disputed' ? 'none — disputed' : '—')}</dd></div>
               <div><dt>Status</dt><dd>{nice(cand.status)}{cand.status === 'working' || cand.status === 'queued' ? ` · ${STAGE_LABEL[cand.stage] || cand.stage}` : ''}</dd></div>
-              <div><dt>Incorporated</dt><dd>{cand.incorporated_on || '—'}{cand.company_type ? ` · ${nice(cand.company_type)}` : ''}</dd></div>
+              {listed ? (
+                <>
+                  <div><dt>Found on</dt><dd>{cand.source === 'osm' ? 'OpenStreetMap — © OpenStreetMap contributors' : 'the Food Standards Agency\u2019s food hygiene register'}</dd></div>
+                  <div><dt>Legal form</dt><dd>unknown — not on Companies House, so possibly a sole trader or partnership</dd></div>
+                </>
+              ) : (
+                <div><dt>Incorporated</dt><dd>{cand.incorporated_on || '—'}{cand.company_type ? ` · ${nice(cand.company_type)}` : ''}</dd></div>
+              )}
               <div>
                 <dt>Website</dt>
                 <dd>
@@ -255,6 +334,14 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
                     ? <><a className="crm-link" href={cand.website} target="_blank" rel="noreferrer noopener">{cand.website.replace(/^https?:\/\//, '')}</a>
                       {Array.isArray(cand.website_confirmed_by) && cand.website_confirmed_by.length > 0 && ` · confirmed by ${cand.website_confirmed_by.join(' + ')}`}</>
                     : nice(cand.website_outcome) || '—'}
+                </dd>
+              </div>
+              <div>
+                <dt>Phone number</dt>
+                <dd>
+                  {cand.has_phone
+                    ? `on record, from ${cand.phone_source || 'its listing'} — never shown to the agents, and not to be called until screened against the TPS and CTPS`
+                    : 'none found yet'}
                 </dd>
               </div>
             </dl>
@@ -266,8 +353,8 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
             )}
             {cand.status === 'researching' && (
               <p className="lg-note">
-                No website found by guessing, so it is with the research loop: the register&rsquo;s history,
-                sister companies, and the Internet Archive for sites that turn automated readers away. It runs on its
+                No website found by guessing, so it is with the research loop: {listed ? 'its listing, ' : 'the register\u2019s history, sister companies, '}and
+                the Internet Archive for sites that turn automated readers away. It runs on its
                 own key, GEMINI_RESEARCH_API_KEY, and waits here until that is set.
                 {cand.lookup_attempts > 0 && ` Tried ${cand.lookup_attempts} time${cand.lookup_attempts === 1 ? '' : 's'} so far.`}
               </p>
@@ -314,6 +401,13 @@ function CandidateRecord({ cand, labels, section, onSection, onBack, busy, onPro
             {cand.status === 'promoted'
               ? <p className="ol-summary">In Leads, marked do not contact. Writing to them is a decision made there, by a person.</p>
               : <p className="ol-summary">Not a lead yet. Promoting it adds it to Leads marked do not contact — finding a business is not permission to write to it.</p>}
+            {listed && (
+              <p className="lg-note">
+                Its legal form is unknown, so it arrives in Leads as a possible sole trader: no marketing email
+                without their consent, and no sales call until its number has been screened against the
+                Telephone Preference Service.
+              </p>
+            )}
             {asks.length === 0 && <p className="at-empty">No call questions yet — they come from the specialists.</p>}
             {asks.length > 0 && (
               <div className="lg-services">
@@ -406,13 +500,16 @@ export default function LeadGen() {
   const problem = draft ? problemWith(draft) : ''
   const running = Boolean(live && draft && live.id === draft.id)
 
+  const ch = draft ? draft.source === 'companies_house' : true
   const save = () => call('Saving', () => teamClient().rpc('prospect_save_target', {
     p_id: draft.id,
     p_name: draft.name.trim(),
-    p_towns: list(draft.towns),
-    p_sic_codes: list(draft.sic),
-    p_incorporated_from: draft.from || null,
-    p_incorporated_to: draft.to || null,
+    p_towns: ch ? list(draft.towns) : [],
+    p_sic_codes: ch ? list(draft.sic) : [],
+    p_incorporated_from: (ch && draft.from) || null,
+    p_incorporated_to: (ch && draft.to) || null,
+    p_source: draft.source,
+    p_source_query: sourceQuery(draft),
   }), (id) => {
     setDraft((d) => ({ ...d, id: id || d.id }))
     return running ? 'Saved — the next tick uses it' : 'Saved — press Run to start it'
@@ -493,12 +590,41 @@ export default function LeadGen() {
               <p className="lg-covers">{targets.find((t) => t.id === draft.id).note}</p>
             )}
 
+            <div className="lg-sources" role="group" aria-label="Where to look">
+              {SOURCES.map((src) => (
+                <button key={src.id} type="button"
+                  className={`crm-view ${draft.source === src.id ? 'crm-view--on' : ''}`}
+                  aria-pressed={draft.source === src.id}
+                  onClick={() => setDraft({ ...draft, source: src.id })}>
+                  {src.label}
+                </button>
+              ))}
+            </div>
+            <p className="lg-covers">{(SOURCES.find((x) => x.id === draft.source) || SOURCES[0]).lead}</p>
+
             <div className="lg-form">
               <label>
                 <span>Name</span>
                 <input className="input" type="text" value={draft.name}
                   onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
               </label>
+              {draft.source === 'fsa' && (
+                <>
+                  <Picks legend="Councils" options={FSA_COUNCILS} value={draft.authorities}
+                    onChange={(v) => setDraft({ ...draft, authorities: v })} />
+                  <Picks legend="Kinds of food business" options={FSA_KINDS} value={draft.types}
+                    onChange={(v) => setDraft({ ...draft, types: v })} />
+                </>
+              )}
+              {draft.source === 'osm' && (
+                <>
+                  <Picks legend="Kinds of business" options={MAP_KINDS} value={draft.kinds}
+                    onChange={(v) => setDraft({ ...draft, kinds: v })} />
+                  <Picks legend="Places" options={MAP_AREAS} value={draft.areas}
+                    onChange={(v) => setDraft({ ...draft, areas: v })} />
+                </>
+              )}
+              {ch && (<>
               <label>
                 <span>Towns or cities, comma separated</span>
                 <input className="input" type="text" value={draft.towns} placeholder="Nottingham, Derby"
@@ -522,6 +648,7 @@ export default function LeadGen() {
                     onChange={(e) => setDraft({ ...draft, to: e.target.value })} />
                 </label>
               </div>
+              </>)}
             </div>
 
             <div className="ol-actions ws-sheet__actions">
@@ -623,6 +750,7 @@ export default function LeadGen() {
                 <span className="ol-list__name">{c.company}</span>
                 <span className="ol-list__meta">
                   {c.town || '—'} · {c.activity || 'activity unknown'}{c.score != null ? ` · ${c.score}` : ''}
+                  {SOURCE_SHORT[c.source] ? ` · ${SOURCE_SHORT[c.source]}` : ''}
                 </span>
                 <span className={`ol-tag lg-tag--${c.status}`}>{nice(c.status)}</span>
               </button>

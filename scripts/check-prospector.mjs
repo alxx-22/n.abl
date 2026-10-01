@@ -22,6 +22,10 @@ import {
 } from '../supabase/functions/lead-prospector/lookup.mjs'
 import { quotaScope as outreachQuotaScope } from '../supabase/functions/outreach-writer/guards.mjs'
 import { redactContactRoutes, admit, unknownSic, expandSic } from '../supabase/functions/lead-prospector/puller.mjs'
+import {
+  fsaUrl, fsaRow, osmRow, overpassQuery, normalisePhone, sitePhone, isChainOrInstitution, checkSourceQuery, sourceUnits, sourceLine,
+  OSM_AREAS, FSA_AUTHORITIES,
+} from '../supabase/functions/lead-prospector/local.mjs'
 
 let fail = 0
 const ok = (label, cond, detail) => {
@@ -761,6 +765,75 @@ console.log('\nTHE BUSINESS\'S SCORE\n')
     && outcome([{ service: 'web', status: 'disputed', score: null }]).lead_score === null)
   ok('only agreed zeros means no fit', outcome([{ service: 'ai', status: 'agreed', score: 0 }]).status === 'no_fit')
   ok('no services at all means no fit', outcome([]).status === 'no_fit')
+}
+
+console.log('\nBUSINESSES NOT ON COMPANIES HOUSE: THE FOOD HYGIENE REGISTER AND OPENSTREETMAP\n')
+{
+  const u = new URL(fsaUrl({ authority: 87, businessType: 7844, page: 3, pageSize: 500 }))
+  ok('an FSA page asks for one council, one business type, one page', u.pathname === '/Establishments'
+    && u.searchParams.get('localAuthorityId') === '87' && u.searchParams.get('businessTypeId') === '7844'
+    && u.searchParams.get('pageNumber') === '3' && u.searchParams.get('pageSize') === '200', u.toString())
+
+  const est = {
+    FHRSID: 1846692, BusinessName: "0115 Patty Co", BusinessType: 'Takeaway/sandwich shop', BusinessTypeID: 7844,
+    AddressLine1: '12 Alfreton Road', AddressLine2: 'Radford', AddressLine3: 'Nottingham', AddressLine4: 'Nottinghamshire',
+    PostCode: 'NG7 3HG', Phone: '', RatingValue: '5', RatingDate: '2025-09-10T00:00:00', LocalAuthorityName: 'Nottingham City', LocalAuthorityCode: '87',
+  }
+  const r = fsaRow(est)
+  ok('an FSA listing becomes a candidate with its own reference', r && r.source === 'fsa' && r.source_ref === 'fsa:1846692' && r.company_name === '0115 Patty Co', r)
+  ok('  …in its town, not its county', r.town === 'Nottingham', r.town)
+  ok('  …with no phone when the register gives none', r.phone === null)
+  ok('  …and the rating and date it was inspected', r.source_detail.rating === '5' && r.source_detail.rated_on === '2025-09-10', r.source_detail)
+  ok('a chain branch is skipped', fsaRow({ ...est, BusinessName: 'Greggs' }) === null && fsaRow({ ...est, BusinessName: "McDonald's Restaurant" }) === null)
+  ok('  …and a school kitchen', fsaRow({ ...est, BusinessName: 'Fernwood Primary School' }) === null)
+  ok('  …but not an independent whose name begins like one', isChainOrInstitution('Pretty Nails') === false
+    && isChainOrInstitution("Leonardo's Pizza") === false && isChainOrInstitution('Coopers Barbers') === false
+    && isChainOrInstitution('Pret A Manger') === true && isChainOrInstitution('Co-op Food') === true)
+
+  const el = { type: 'node', id: 123, tags: { name: 'Fade Lab', shop: 'hairdresser', hairdresser: 'barber', phone: '0115 947 1234',
+    website: 'fadelab.co.uk', 'addr:postcode': 'ng1 5ab', 'addr:street': 'Mansfield Road', 'addr:housenumber': '9', opening_hours: 'Mo-Sa 09:00-18:00' } }
+  const o = osmRow(el, 'Nottingham')
+  ok('an OpenStreetMap shop becomes a candidate', o && o.source_ref === 'osm:node/123' && o.activity === 'Hairdresser or barber', o)
+  ok('  …with its published number in E.164, kept apart', o.phone === '+441159471234', o.phone)
+  ok('  …its site as a hint to check, not a fact', o.website_hint === 'https://fadelab.co.uk', o.website_hint)
+  ok('  …and its postcode tidied', o.postcode === 'NG1 5AB')
+  ok('a branded shop is a chain branch and skipped', osmRow({ ...el, tags: { ...el.tags, brand: 'Toni & Guy' } }, 'Nottingham') === null)
+  ok('  …and a shop with no name', osmRow({ ...el, tags: { shop: 'hairdresser' } }, 'Nottingham') === null)
+
+  const q = overpassQuery(['hair', 'vet'], 'Alcester')
+  ok('an Overpass query asks for named shops of each kind inside the place', q.includes('nwr["shop"~"^(hairdresser|barber)$"]["name"](52.2,-1.9,52.23,-1.85);')
+    && q.includes('["amenity"="veterinary"]') && q.startsWith('[out:json]'), q)
+  ok('  …and nothing for a place it does not know', overpassQuery(['hair'], 'Atlantis') === null)
+  ok('every place is a box inside the territories', Object.values(OSM_AREAS).every(([s, w, n, e]) => s < n && w < e && s > 52 && n < 53.2 && w > -2.1 && e < -1))
+
+  ok('a UK number is kept in E.164', normalisePhone('0044 (0)115 947 1234') === '+441159471234' && normalisePhone('+44 7700 900123') === '+447700900123')
+  ok('  …a premium or foreign number is not', normalisePhone('09011 234567') === null && normalisePhone('+1 212 555 0100') === null)
+  ok('  …and two numbers in one tag keep the first', normalisePhone('0115 947 1234; 07700 900123') === '+441159471234')
+  ok('their own site: the number its tel: links repeat most is theirs', sitePhone([
+    '<a href="tel:+441159471234">Call</a> <a href="tel:0115%20947%201234">0115 947 1234</a>',
+    '<footer><a href="tel:01159470000">Web design by Webby</a></footer>']) === '+441159471234')
+  ok('  …with no tel: link, the only number in the text', sitePhone(['<p>Ring 01789 400 123 to book</p>']) === '+441789400123')
+  ok('  …but two different numbers in the text could be anyone\'s: none', sitePhone(['<p>Ring 01789 400 123</p><footer>Site by Webby 0115 947 0000</footer>']) === null)
+  ok('  …the same number twice is still one', sitePhone(['<p>01789 400123</p><p>Call 01789 400 123</p>']) === '+441789400123')
+  ok('  …and numbers inside scripts, a premium line or nothing at all are not', sitePhone(['<script>var t="01159471234"</script><p>09011 234567</p>']) === null && sitePhone([]) === null && sitePhone(null) === null)
+  ok('  …a malformed tel: link does not throw', sitePhone(['<a href="tel:%E0%A4%A">x</a><p>0115 947 1234</p>']) === '+441159471234')
+
+  const fq = checkSourceQuery('fsa', { authorities: [87, 999, '79'], business_types: [7844, 12] })
+  ok('an FSA target keeps only councils and types we know', fq.ok && fq.query.authorities.join() === '87,79' && fq.query.business_types.join() === '7844', fq)
+  ok('  …and says what is missing', checkSourceQuery('fsa', { authorities: [87], business_types: [] }).why === 'pick at least one kind of food business')
+  ok('an OSM target keeps only kinds and places we know', checkSourceQuery('osm', { kinds: ['hair', 'x'], areas: ['Alcester', 'Mars'] }).query.areas.join() === 'Alcester')
+  ok('an FSA target is pulled council by type', sourceUnits('fsa', { authorities: [87, 79], business_types: [1, 7844] }).join() === '87:1,87:7844,79:1,79:7844')
+  ok('every council the form offers is in a territory', FSA_AUTHORITIES.length === 9)
+
+  const lines = registerLines({ source: 'fsa', company_name: '0115 Patty Co', activity: 'Takeaway/sandwich shop', town: 'Nottingham', phone: '+441159471234', source_detail: r.source_detail })
+  const text = lines.map((l) => `${l.key}: ${l.text}`).join('\n')
+  ok('the agents are told it is a listed business whose legal form is unknown', /r_name: Trading name: 0115 Patty Co/.test(text)
+    && /r_source: Listed on the Food Standards Agency's food hygiene register/.test(text) && /legal form is unknown/.test(text), text)
+  ok('  …and are never shown its phone number', !/947|\+44/.test(text), text)
+  ok('  …nor told it has a registered office', !/Registered office/.test(text))
+  ok('a Companies House business reads as before', registerLines({ company_name: 'X LTD', activity: '43210 - Electrical installation', town: 'Ilkeston' })
+    .map((l) => l.text).join('|') === 'Registered name: X LTD|What it says it does (SIC): 43210 - Electrical installation|Registered office town: Ilkeston')
+  ok('an OSM line names the kind and hours', /Mapped on OpenStreetMap among hairdressers and barbers, with opening hours "Mo-Sa 09:00-18:00"/.test(sourceLine(o.source_detail)), sourceLine(o.source_detail))
 }
 
 console.log('\nNO AGENT READS A WAY TO REACH THEM\n')

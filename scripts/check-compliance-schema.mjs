@@ -176,7 +176,8 @@ create table if not exists public.documents (
                       '202608210002_pin_search_path_on_ceiling_lookup.sql',
                       '202608210003_postal_channel.sql',
                       '202608230001_research_endpoints.sql',
-                      '202608230002_portal_assistant.sql']
+                      '202608230002_portal_assistant.sql',
+                      '202609292100_calls_only_after_tps_and_ctps_screening.sql']
   for (const f of MIGRATIONS) {
     const p = join(DIR, f)
     writeFileSync(p, sh('cat', [join(ROOT, 'supabase/migrations', f)]))
@@ -249,17 +250,22 @@ create table if not exists public.documents (
     `update public.sales_leads set lawful_basis='legitimate_interests' where id='${L_DEFAULT}';`,
     /li_needs_assessment/)
 
-  // PECR: an individual subscriber is not unlocked by legitimate interests.
+  // A sole trader may be permitted on legitimate interests (a screened call,
+  // a letter), but PECR reg 22 still keeps email closed to them: that rule
+  // lives in the email branch of the gate, not on the lead.
   const L_SOLE = lead('Sole Trader Joe')
-  refuses('a sole trader cannot be permitted on legitimate interests',
+  allows('a sole trader can be permitted on legitimate interests',
     `update public.sales_leads set
        subscriber_type='sole_trader', lawful_basis='legitimate_interests',
        lia_ref='LIA-1', lia_completed_at=now(),
        source='companies_house', source_date=current_date,
        privacy_notice_status='given_at_first_contact',
        marketing_status='permitted'
-     where id='${L_SOLE}';`,
-    /permitted_needs_a_basis/)
+     where id='${L_SOLE}';`)
+  refuses('but permitted on legitimate interests, a sole trader still cannot be emailed',
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${L_SOLE}','email','joe@joesplumbing.example','hello','n.abl <hello@nabl.agency>', true, now());`,
+    /compliance gate/)
 
   allows('the same sole trader can be permitted with consent',
     `update public.sales_leads set
@@ -519,8 +525,9 @@ create table if not exists public.documents (
      against this one. UPDATE does not fire a BEFORE INSERT trigger, which is
      what makes backdating possible here at all. */
   psql(`update public.marketing_sends set sent_at = date_trunc('month', now()) - interval '1 day'
-        where lead_id in (select lead_id from public.marketing_sends where tier='B'
-                          and counts_toward_ceiling limit 50);`)
+        where lead_id in (select lead_id from (select distinct lead_id from public.marketing_sends
+                                                where tier='B' and counts_toward_ceiling) d
+                          order by lead_id limit 50);`)
   const afterBackdate = val(`select public.marketing_first_contacts_this_month('email','B');`)
   afterBackdate === '350'
     ? ok('last month\'s first contacts do not count against this month')
@@ -634,9 +641,9 @@ from public.sales_leads where company like 'Bulk %';
      values ('${T_ROUTE}','post','The Owner, 2 High Street','hello','n.abl, Nottingham', true, now());`)
 
   /* Phone is lawful to businesses under reg 21 but only after screening
-     against both the CTPS and the TPS, and we hold no screening data. The
-     honest answer with nothing to check is no. */
-  refuses('phone is refused outright while there is no TPS screening',
+     against both the CTPS and the TPS. This number has never been checked,
+     so the answer is no; the PHONE section below opens it properly. */
+  refuses('a call to a number never screened is refused',
     `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
      values ('${T_ROUTE}','phone','01159000000','hello','n.abl, Nottingham', true, now());`,
     /compliance gate/)
@@ -677,10 +684,11 @@ from public.sales_leads where company like 'Bulk %';
 
   const postCeiling = val(`select public.marketing_monthly_ceiling('post','A')||'|'||
                            public.marketing_monthly_ceiling('post','C')||'|'||
-                           public.marketing_monthly_ceiling('phone','A');`)
-  postCeiling === '1000|1000|0'
-    ? ok('post is capped at 1000 whatever the tier, and phone at 0')
-    : bad('post is capped at 1000 whatever the tier, and phone at 0', postCeiling)
+                           public.marketing_monthly_ceiling('phone','A')||'|'||
+                           public.marketing_monthly_ceiling('phone','C');`)
+  postCeiling === '1000|1000|50|50'
+    ? ok('post is capped at 1000 whatever the tier, and first calls at 50')
+    : bad('post is capped at 1000 whatever the tier, and first calls at 50', postCeiling)
 
   /* Channels do not share an allowance: a letter must not spend email's
      ceiling, and the two are counted separately. */
@@ -688,6 +696,146 @@ from public.sales_leads where company like 'Bulk %';
   emailSpent === '0'
     ? ok('letters spend none of the email allowance')
     : bad('letters spend none of the email allowance', emailSpent)
+
+
+  /* ---- phone ------------------------------------------------------
+
+     PECR reg 21: a live sales call only to a number checked against both the
+     TPS and the CTPS within 28 days, and never to one on either. The check
+     is recorded (by hand, under the caller's name, or by the tps-check edge
+     function); the gate reads the newest one. Every assertion here was run
+     against the rule it covers removed (mutate-compliance-checks.mjs). */
+
+  line('\nPHONE — a call only to a number screened against the TPS and the CTPS')
+  const e164 = val(`select concat_ws('|', coalesce(public.phone_e164('0115 496 0999'),'-'),
+                      coalesce(public.phone_e164('+44 (0)115 496 0999'),'-'),
+                      coalesce(public.phone_e164('0044 7700 900123'),'-'),
+                      coalesce(public.phone_e164('09011 234567'),'-'),
+                      coalesce(public.phone_e164('0115 496 0999; 07700 900123'),'-'));`)
+  e164 === '+441154960999|+441154960999|+447700900123|-|+441154960999'
+    ? ok('a UK number reads the same however it is typed, and a premium line is not one')
+    : bad('a UK number reads the same however it is typed, and a premium line is not one', e164)
+
+  const callable = (company, type, basis) => {
+    const id = lead(company)
+    psql(`update public.sales_leads set subscriber_type='${type}',
+            subscriber_type_evidence='checked', subscriber_type_checked_at=now(),
+            lawful_basis='${basis}', lia_ref='PHA-2026-09', lia_completed_at=now(),
+            source='public_company_information', source_detail='food hygiene register',
+            source_date=current_date, privacy_notice_status='given_at_first_contact',
+            marketing_status='permitted'
+          where id='${id}';`)
+    return id
+  }
+  const call = (id, number) =>
+    `insert into public.marketing_sends (lead_id, channel, recipient, subject, sender_identity, opt_out_included, approved_at)
+     values ('${id}','phone','${number}','sales call','n.abl, the caller by name', true, now());`
+
+  const P_SOLE = callable('Beeston Bites', 'sole_trader', 'legitimate_interests')
+  refuses('a sole trader permitted on legitimate interests cannot be called unscreened',
+    call(P_SOLE, '0115 496 0999'), /compliance gate/)
+
+  refuses('a check by hand needs a signed-in person to put their name to it',
+    `select public.phone_screening_record_by_hand('01154960999', false, false, 'TPS Checker');`,
+    /recorded by the person who made it/)
+  const CALLER = val(`insert into auth.users (email) values ('caller@nabl.example') returning id;`)
+  const asCaller = (sql) => `select set_config('request.jwt.claim.sub','${CALLER}',false); ${sql}`
+  refuses('only one register checked is not a check',
+    asCaller(`select public.phone_screening_record_by_hand('01154960999', false, null, 'TPS Checker');`),
+    /both registers/)
+  refuses('a check more than 28 days old cannot be recorded',
+    asCaller(`select public.phone_screening_record_by_hand('01154960999', false, false, 'TPS Checker', now() - interval '29 days');`),
+    /28 days/)
+  refuses('nor one dated in the future',
+    asCaller(`select public.phone_screening_record_by_hand('01154960999', false, false, 'TPS Checker', now() + interval '1 day');`),
+    /future/)
+  allows('a clear check of both registers is recorded',
+    asCaller(`select public.phone_screening_record_by_hand('0115 496 0999', false, false, 'TPS Checker', now(), 'looked up by hand', '${P_SOLE}');`))
+  val(`select recorded_by::text||'|'||method from public.phone_screening where phone='+441154960999';`) === `${CALLER}|by_hand`
+    ? ok('  ...under the name of the person who made it')
+    : bad('  ...under the name of the person who made it')
+  allows('then the call can be recorded, however the number is typed',
+    call(P_SOLE, '+44 115 496 0999'))
+
+  const P_NPD = callable('Chippy With No Person', 'sole_trader', 'not_personal_data')
+  psql(asCaller(`select public.phone_screening_record_by_hand('01154960888', false, false, 'TPS Checker');`))
+  refuses('a sole trader on "no personal data" cannot be called, screened or not',
+    call(P_NPD, '01154960888'), /compliance gate/)
+  const P_CORP = callable('Screened Ltd', 'corporate', 'not_personal_data')
+  psql(asCaller(`select public.phone_screening_record_by_hand('01154960555', false, false, 'TPS Checker');`))
+  allows('a company with nobody named can be called once screened', call(P_CORP, '01154960555'))
+
+  const P_CTPS = callable('On The Corporate List', 'sole_trader', 'legitimate_interests')
+  psql(asCaller(`select public.phone_screening_record_by_hand('01154960777', false, true, 'TPS Checker', now(), null, '${P_CTPS}');`))
+  /* Read from the screening itself: the suppression row written alongside
+     would refuse the call anyway and hide a gate that ignored the CTPS. */
+  val(`select public.phone_screen_clear('01154960777')::text;`) === 'false'
+    ? ok('a number on the CTPS alone is not clear')
+    : bad('a number on the CTPS alone is not clear')
+  refuses('  ...and the call to it is refused', call(P_CTPS, '01154960777'), /compliance gate/)
+  val(`select reason||'|'||coalesce(source_lead_id::text,'-') from public.marketing_suppression
+        where channel='phone' and identifier='+441154960777';`) === `tps_ctps|${P_CTPS}`
+    ? ok('a number found on a register is written to the suppression list')
+    : bad('a number found on a register is written to the suppression list')
+  psql(asCaller(`select public.phone_screening_record_by_hand('01154960777', false, false, 'Another checker');`))
+  refuses('and a later clear check does not lift the suppression', call(P_CTPS, '01154960777'), /compliance gate/)
+
+  const P_STALE = callable('Checked Too Long Ago', 'sole_trader', 'legitimate_interests')
+  psql(`insert into public.phone_screening (phone, tps, ctps, checked_at, provider, method)
+        values ('+441154960666', false, false, now() - interval '29 days', 'TPS Checker', 'by_hand');`)
+  refuses('a clear check 29 days old no longer opens the line', call(P_STALE, '01154960666'), /compliance gate/)
+
+  refuses('a check cannot be edited afterwards', `update public.phone_screening set tps = true;`, /append-only/)
+  refuses('or deleted', `delete from public.phone_screening;`, /append-only/)
+
+  const privs = val(`select concat_ws('|',
+      has_function_privilege('authenticated','public.phone_screening_record_api(text, boolean, boolean, text, text, uuid, uuid)','execute'),
+      has_function_privilege('authenticated','public.phone_screening_write(text, boolean, boolean, text, text, timestamptz, text, uuid, uuid)','execute'),
+      has_function_privilege('anon','public.phone_screening_record_by_hand(text, boolean, boolean, text, timestamptz, text, uuid)','execute'),
+      has_function_privilege('authenticated','public.phone_screening_record_by_hand(text, boolean, boolean, text, timestamptz, text, uuid)','execute'),
+      has_table_privilege('authenticated','public.phone_screening','select'),
+      has_function_privilege('authenticated','public.phone_screening_status(text[])','execute'));`)
+  privs === 'f|f|f|t|f|t'
+    ? ok('a signed-in person records checks by hand and reads status; only the edge function records a provider\'s answer')
+    : bad('a signed-in person records checks by hand and reads status; only the edge function records a provider\'s answer', privs)
+
+  const status = val(`select (s->>'clear')||'|'||(s->>'suppressed')||'|'||(s->>'phone')
+                      from jsonb_array_elements(public.phone_screening_status(array['0115 496 0999','01154960777'])) s;`)
+  status === 'true|false|+441154960999\nfalse|true|+441154960777'
+    ? ok('the CRM is told which numbers are clear and which are suppressed')
+    : bad('the CRM is told which numbers are clear and which are suppressed', status.replace(/\n/g, ' / '))
+
+  /* Fill the month's first calls to the ceiling with real rows. Written to a
+     file for the same reason as the email filler: bash would expand $$. */
+  const CALLFILL = join(DIR, 'fill-calls.sql')
+  writeFileSync(CALLFILL, `do $$
+    declare v_id uuid; v_left integer;
+    begin
+      select 50 - count(distinct lead_id) into v_left from public.marketing_sends
+       where channel = 'phone' and counts_toward_ceiling;
+      for i in 1..v_left loop
+        insert into public.sales_leads (company, subscriber_type, subscriber_type_evidence,
+          subscriber_type_checked_at, lawful_basis, lia_ref, lia_completed_at, source,
+          source_detail, source_date, privacy_notice_status, marketing_status)
+        values ('Caller filler '||i, 'sole_trader', 'checked', now(), 'legitimate_interests',
+          'PHA-2026-09', now(), 'public_company_information', 'food hygiene register', current_date,
+          'given_at_first_contact', 'permitted') returning id into v_id;
+        insert into public.phone_screening (phone, tps, ctps, checked_at, provider, method)
+        values ('+441155' || lpad(i::text, 6, '0'), false, false, now(), 'TPS Checker', 'by_hand');
+        insert into public.marketing_sends (lead_id, channel, recipient, subject,
+          sender_identity, opt_out_included, approved_at)
+        values (v_id, 'phone', '+441155' || lpad(i::text, 6, '0'), 'sales call',
+          'n.abl, the caller by name', true, now());
+      end loop;
+    end $$;`)
+  chmodSync(CALLFILL, 0o644)
+  psql(CALLFILL, { file: true })
+  const P_LAST = callable('One Call Too Many', 'sole_trader', 'legitimate_interests')
+  psql(asCaller(`select public.phone_screening_record_by_hand('01154960444', false, false, 'TPS Checker');`))
+  refuses('the 51st first call in a month is refused', call(P_LAST, '01154960444'),
+    /monthly ceiling reached: phone allows 50/)
+  allows('but a second call to a business already called is a follow-up, not a first call',
+    call(P_SOLE, '01154960999'))
 
   /* ---- research endpoints ------------------------------------------
 
@@ -885,6 +1033,14 @@ from public.sales_leads where company like 'Bulk %';
     ['has_named_individual', 'uuid'],
     ['marketing_ceiling_guard', ''],
     ['research_run_guard', ''],
+    ['phone_e164', 'text'],
+    ['phone_screen_clear', 'text'],
+    ['phone_screening_write', 'text, boolean, boolean, text, text, timestamptz, text, uuid, uuid'],
+    ['phone_screening_record_by_hand', 'text, boolean, boolean, text, timestamptz, text, uuid'],
+    ['phone_screening_record_api', 'text, boolean, boolean, text, text, uuid, uuid'],
+    ['phone_screening_api_used', 'text'],
+    ['phone_screening_status', 'text[]'],
+    ['phone_screening_append_only', ''],
   ]) {
     const anon = val(`select has_function_privilege('anon','public.${fn}(${sig})','execute')::text;`)
     anon === 'false' ? ok(`anon cannot execute ${fn}`) : bad(`anon cannot execute ${fn}`, 'anon has EXECUTE')
@@ -893,7 +1049,10 @@ from public.sales_leads where company like 'Bulk %';
   for (const fn of ['marketing_tier', 'marketing_monthly_ceiling',
                     'marketing_first_contacts_this_month', 'marketing_ceiling_guard',
                     'has_named_individual',
-                    'marketing_send_allowed', 'apply_opt_out']) {
+                    'marketing_send_allowed', 'apply_opt_out',
+                    'phone_e164', 'phone_screen_clear', 'phone_screening_write',
+                    'phone_screening_record_by_hand', 'phone_screening_record_api',
+                    'phone_screening_api_used', 'phone_screening_status']) {
     const cfg = val(`select coalesce(array_to_string(p.proconfig, ','), '')
                      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                      where n.nspname = 'public' and p.proname = '${fn}';`)

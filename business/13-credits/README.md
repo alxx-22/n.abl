@@ -1,5 +1,9 @@
 # 13 — Credits
 
+> **Retired, 29 September 2026.** Credits are gone: support, training and small
+> changes are part of the monthly retainer. See
+> [`01-positioning/ai-implementation-2026-09.md`](../01-positioning/ai-implementation-2026-09.md).
+
 ```
 Status:       not started
 Owner:        Alex

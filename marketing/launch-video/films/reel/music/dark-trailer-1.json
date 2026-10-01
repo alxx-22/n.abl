@@ -1,0 +1,11 @@
+{
+ "file": "dark-trailer-1.wav",
+ "model": "stabilityai/stable-audio-open-1.0",
+ "prompt": "Dark cinematic electronic trailer music, 100 BPM, D minor, pulsing synth bass, staccato string ostinato, big dark synth chords, deep punchy drums, tense, driving, epic, premium technology, instrumental",
+ "negative": "low quality, distorted, vocals, singing, speech, cheerful, happy, jolly, chiptune, 8-bit, kids, ukulele, whistling",
+ "seconds": 34.0,
+ "steps": 100,
+ "cfg": 7.0,
+ "seed": 1,
+ "raw_peak": 1.849
+}

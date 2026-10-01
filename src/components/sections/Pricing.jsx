@@ -1,84 +1,124 @@
 import { EdgeCard, Reveal } from '../ui/index.jsx'
-import Estimator from './Estimator.jsx'
 import { Chapter } from '../Journey.jsx'
 
 /* ============================================================
-   08 — PRICING
+   07 — WHAT IT COSTS
 
-   This slot used to hold four counters: businesses transformed,
-   client savings unlocked, average efficiency improvement. Every
-   number was invented. A prospect can act on a number, so an
-   invented one is not decoration — it is a false claim, and it is
-   the first thing that falls apart in a room with a real client.
-   The honest version of "impact" for a business at this stage is
-   being straight about what it charges.
+   A build, then a monthly retainer. This replaced "no retainers, buy
+   credits when you need us", deliberately: a retainer is steadier for a
+   small business to run on than a stream of new clients, and AI is not
+   something you install and leave. Models change, the business changes,
+   and the work should keep getting better, so looking after it is part
+   of what is sold.
 
-   The worked example survives because it is checkable arithmetic and
-   it shows how we think. It is now three lines rather than four
-   animated counters and a paragraph: it was taking a third of the
-   section, which made the pricing method look like the main sales
-   pitch. The figures match business/README.md §3 exactly.
+   Training, support and small changes are inside the retainer. There are
+   no credits and no invoice for a question.
+
+   NO PRICES ON THE PAGE, ON PURPOSE. No retainer price has been set, and
+   the old credit packs were placeholders; a number invented for the
+   website would be the first thing to fall apart in front of a client.
+   The tiers say what each includes and how much time with us comes with
+   it, and the price is set on the discovery call. When real prices exist,
+   they go in TIERS and nowhere else.
+
+   The face-to-face lines are the owner's to confirm: "limited time with
+   us, more of it the more you spend" is the rule, and these are its first
+   wording. See business/12-pricing.
    ============================================================ */
+export const TIERS = [
+  {
+    name: 'Essentials',
+    for: 'One AI solution, looked after.',
+    f2f: 'A review with us every quarter',
+    items: [
+      'Hosting, monitoring and fixes',
+      'Updates as the underlying models change',
+      'Tuning from real conversations',
+      'A monthly report on what it did',
+      'Support by email',
+    ],
+  },
+  {
+    name: 'Growth',
+    for: 'Several solutions, improved every month.',
+    f2f: 'A session with us every month',
+    featured: true,
+    items: [
+      'Everything in Essentials',
+      'Improvements and new automations each month',
+      'Onboarding and training for your team',
+      'Support by phone and email',
+    ],
+  },
+  {
+    name: 'Partner',
+    for: 'AI across the business, with us as your AI team.',
+    f2f: 'Regular sessions, planned around you',
+    items: [
+      'Everything in Growth',
+      'A roadmap we plan together',
+      'New builds within an agreed allowance',
+      'Training whenever your team changes',
+    ],
+  },
+]
 
 export default function Pricing() {
   return (
     <section id="pricing" className="section section--impact">
       <div className="shell">
-        <Chapter index={6}>What it costs</Chapter>
+        <Chapter index={5}>What it costs</Chapter>
         <Reveal delay={0.06}>
-          <h2 className="section__title">No retainers. A price before we start<span className="dot" /></h2>
+          <h2 className="section__title">One build, then a monthly partnership<span className="dot" /></h2>
         </Reveal>
         <Reveal delay={0.12}>
           <p className="section__sub prose">
-            Two ways we price, depending on whether the problem can be counted.
+            AI isn&rsquo;t set-and-forget. So every build comes with a retainer: we run it, look
+            after it and keep improving it, and you get time with us. The more we do together,
+            the more of that time you get.
           </p>
         </Reveal>
 
-        {/* The method, operable. "We show our working" is asserted in the
-            card below; this is where a visitor can actually see it. */}
         <Reveal delay={0.16}>
-          <EdgeCard className="card-pad section__body">
-            <Estimator />
+          <EdgeCard className="card-pad setup section__body">
+            <span className="price__kind">To start</span>
+            <div className="setup__row">
+              <h3 className="price__title">A fixed price to design, build and launch it</h3>
+              <p className="price__body">
+                Scoped in writing and agreed before any work starts. It covers mapping the job,
+                building the AI around it, testing it on your real cases and going live.
+              </p>
+            </div>
           </EdgeCard>
         </Reveal>
 
-        <div className="grid grid--2 section__body">
-          <Reveal delay={0.1}>
-            <EdgeCard className="card-pad price">
-              <span className="price__kind">Efficiency improvements</span>
-              <h3 className="price__title">Priced around the value they create</h3>
-              <p className="price__body">
-                When a process already costs you money, we work out what it costs now,
-                what it will cost afterwards, and price against the difference. We show
-                our working, and you can check the arithmetic before you agree to
-                anything.
-              </p>
-            </EdgeCard>
-          </Reveal>
-          <Reveal delay={0.18}>
-            <EdgeCard className="card-pad price">
-              <span className="price__kind">New capabilities</span>
-              <h3 className="price__title">Fixed price, agreed before work starts</h3>
-              <p className="price__body">
-                A portal, an app, a website — there is no before-and-after to measure,
-                and a savings figure would be guesswork. So the scope is written down
-                and the price is stated. Changes go through credits or a new quote.
-              </p>
-            </EdgeCard>
-          </Reveal>
+        <div className="tiers">
+          {TIERS.map((t, i) => (
+            <Reveal key={t.name} delay={0.1 + i * 0.08}>
+              <EdgeCard className={`card-pad tier ${t.featured ? 'tier--featured' : ''}`}>
+                <span className="price__kind">Monthly</span>
+                <h3 className="tier__name">{t.name}</h3>
+                <p className="tier__for">{t.for}</p>
+                <p className="tier__f2f">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+                    <circle cx="8" cy="8" r="3.2" /><circle cx="16.5" cy="9" r="2.6" />
+                    <path d="M2.5 19c.6-3.4 2.8-5.4 5.5-5.4s4.9 2 5.5 5.4M14 14.2c3 0 5.2 1.6 5.8 4.6" />
+                  </svg>
+                  <span><b>Face to face:</b> {t.f2f}</span>
+                </p>
+                <ul className="tier__list">
+                  {t.items.map((it) => <li key={it}>{it}</li>)}
+                </ul>
+              </EdgeCard>
+            </Reveal>
+          ))}
         </div>
 
         <Reveal delay={0.1}>
-          <div className="worked">
-            <span className="eyebrow">A worked example</span>
-            <p className="worked__line">A 12-hour monthly process becomes a 2-hour process.</p>
-            <p className="worked__line worked__line--figures">
-              £240 → £40 per month. Around £2,400 a year.
-            </p>
-            <p className="worked__note">
-              Your numbers are calculated from your business, not ours.
-            </p>
-          </div>
+          <p className="tiers__note">
+            Support, training and small changes are all part of the retainer. No credits, and no
+            invoice for a question. Prices are set on the discovery call, once we know what you need.
+          </p>
         </Reveal>
       </div>
     </section>

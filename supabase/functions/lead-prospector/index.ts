@@ -60,12 +60,20 @@ import {
   pageVerdict, isDirectory, normaliseDomain, wideGuesses, settledInOutcome, sweepVerdict, readOrder,
 } from './lookup.mjs'
 import { buildSearchUrl, chAuthHeader, normaliseItem, admit, expandSic, unknownSic, DEFAULT_TYPES, CH_BASE, redactContactRoutes } from './puller.mjs'
+import { FSA_BASE, fsaUrl, fsaRow, osmRow, overpassQuery, sitePhone } from './local.mjs'
+import { makeTerritoryFilter } from './lib.mjs'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const GEMINI_BASE = Deno.env.get('GEMINI_BASE_URL') ?? 'https://generativelanguage.googleapis.com'
 const CH_URL = Deno.env.get('COMPANIES_HOUSE_BASE_URL') ?? CH_BASE
 const CH_KEY = (Deno.env.get('COMPANIES_HOUSE_API_KEY') ?? '').trim()
+/* The two open sources for businesses not on Companies House (local.mjs).
+   Overpass servers are volunteer-run and often busy: a second one is tried,
+   and a busy answer waits for the next tick rather than failing anything. */
+const FSA_URL = Deno.env.get('FSA_BASE_URL') ?? FSA_BASE
+const OVERPASS_URLS = (Deno.env.get('OVERPASS_URLS') ?? 'https://overpass-api.de/api/interpreter,https://overpass.private.coffee/api/interpreter')
+  .split(',').map((s) => s.trim()).filter(Boolean)
 /* Optional: a web search the research loop may use (Brave Search API).
    Without it the loop guesses and reads, as before. */
 const SEARCH_KEY = (Deno.env.get('BRAVE_SEARCH_API_KEY') ?? '').trim()
@@ -378,6 +386,85 @@ async function pull(plan: any, settings: any) {
   return { inserted, seen: items.length, refused, refused_why: why, town: plan.town, exhausted }
 }
 
+/* A page of businesses from a source that is not Companies House: one
+   council and business type from the food hygiene register, or one place
+   from OpenStreetMap. Kept to the territory by postcode where one is given
+   (a place's box is the territory already). The phone number a listing
+   publishes is kept on the candidate for a person to call after
+   screening; it goes nowhere near an agent. */
+async function pullLocal(plan: any, settings: any) {
+  const areas = settings.territory_areas?.length ? settings.territory_areas : null
+  const inside = areas ? makeTerritoryFilter(areas) : null
+  const keep = (r: any) => r && !(inside && r.postcode && !inside(r.postcode))
+  const rows: any[] = []
+  let seen = 0
+  let refused = 0
+  let next = Number(plan.page) || 1
+  let exhausted = false
+
+  if (plan.source === 'fsa') {
+    const [authority, businessType] = String(plan.unit).split(':').map(Number)
+    let res: Response
+    try {
+      res = await fetch(fsaUrl({ authority, businessType, page: next, pageSize: settings.pull_page_size }, FSA_URL), {
+        headers: { 'x-api-version': '2', accept: 'application/json', 'user-agent': settings.user_agent },
+        signal: AbortSignal.timeout(20000),
+      })
+    } catch (e) {
+      return { inserted: 0, seen: 0, source: 'fsa', unit: plan.unit, note: `food hygiene register unreachable (${(e as Error).name === 'TimeoutError' ? 'timed out' : (e as Error).message}); next tick` }
+    }
+    if (res.status === 429 || res.status >= 500) return { inserted: 0, seen: 0, source: 'fsa', unit: plan.unit, note: `food hygiene register busy (${res.status}); next tick` }
+    if (!res.ok) throw new Error(`food hygiene register ${res.status} for council and type ${plan.unit}`)
+    const data = await res.json()
+    const items: any[] = Array.isArray(data?.establishments) ? data.establishments : []
+    seen = items.length
+    for (const e of items) {
+      const r = fsaRow(e)
+      if (keep(r)) rows.push(r)
+      else refused++
+    }
+    next += 1
+    exhausted = !items.length || next > (Number(data?.meta?.totalPages) || 0)
+  } else if (plan.source === 'osm') {
+    const q = overpassQuery(plan.query?.kinds ?? [], plan.unit)
+    if (!q) exhausted = true
+    else {
+      let data: any = null
+      let busy = ''
+      for (const [i, base] of OVERPASS_URLS.entries()) {
+        try {
+          const res = await fetch(base, {
+            method: 'POST',
+            headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json', 'user-agent': settings.user_agent },
+            body: 'data=' + encodeURIComponent(q),
+            signal: AbortSignal.timeout(i === 0 ? 30000 : 20000),
+          })
+          if (res.ok) { data = await res.json(); break }
+          busy = `${new URL(base).host} ${res.status}`
+        } catch (e) {
+          busy = `${new URL(base).host} ${(e as Error).name === 'TimeoutError' ? 'timed out' : (e as Error).message}`
+        }
+      }
+      if (!data) return { inserted: 0, seen: 0, source: 'osm', unit: plan.unit, note: `OpenStreetMap busy (${busy}); next tick` }
+      const items: any[] = Array.isArray(data.elements) ? data.elements : []
+      seen = items.length
+      for (const el of items) {
+        const r = osmRow(el, plan.unit)
+        if (keep(r)) rows.push(r)
+        else refused++
+      }
+      exhausted = true
+    }
+  } else {
+    throw new Error(`the running target has a source this function does not know: ${plan.source}`)
+  }
+
+  const inserted = await rpc('prospect_insert_local', {
+    p_target_id: plan.target_id, p_unit: plan.unit, p_next_page: next, p_exhausted: exhausted, p_rows: rows,
+  })
+  return { inserted, seen, refused, source: plan.source, unit: plan.unit, exhausted }
+}
+
 /* ---------- the website ---------- */
 
 async function get(url: string, settings: any, accept = 'text/html,application/xhtml+xml') {
@@ -474,6 +561,22 @@ async function findWebsite(cand: any, settings: any): Promise<{ url: string | nu
   if (cand.website && Array.isArray(cand.website_confirmed_by) && cand.website_confirmed_by.some((b: string) => KNOWN_SITE.includes(b))) {
     return givenWebsite(cand, settings)
   }
+  /* A listing that names a site (an OpenStreetMap website tag) is tried
+     first, and still has to name the business before it is theirs: a
+     mapper's typo or a franchise's head-office site proves nothing. */
+  if (cand.website_hint && !cand.website) {
+    let host = ''
+    try { host = new URL(cand.website_hint).host } catch { /* no hint then */ }
+    if (host && !isDirectory(host)) {
+      const page = await frontPage(host, settings, Date.now() + Math.max(15000, settings.fetch_timeout_ms * 3))
+      if (page.ok && pageKind(page.body) === 'live') {
+        const c = confirms(page.body, cand)
+        if (c.reasons.length) {
+          return { url: page.url, confirmed_by: [...c.reasons, `named in its ${cand.source === 'osm' ? 'OpenStreetMap' : 'register'} listing`], outcome: 'confirmed', html: page.body }
+        }
+      }
+    }
+  }
   const guesses = domainGuesses(cand.company_name, cand.town)
   if (!guesses.length) return { url: null, confirmed_by: [], outcome: 'the name gave no usable domain to guess', html: null }
   const live = (await Promise.all(guesses.map(async (h) => (await resolves(h)) ? h : null))).filter(Boolean) as string[]
@@ -566,13 +669,19 @@ type StageResult = { next: string; extra?: Record<string, unknown>; finish?: { s
 
 async function research(ctx: Ctx): Promise<StageResult> {
   const { cfg, settings, cand } = ctx
-  const [profile, officers] = await Promise.all([
-    chGet(`/company/${cand.company_number}`),
-    chGet(`/company/${cand.company_number}/officers?items_per_page=50`),
-  ])
+  /* A business from the food hygiene register or OpenStreetMap has no
+     company number and nothing at Companies House to read: its register
+     lines are the source's, and nothing is refused for its filings. */
+  const onRegister = Boolean(cand.company_number)
+  const [profile, officers] = onRegister
+    ? await Promise.all([
+      chGet(`/company/${cand.company_number}`),
+      chGet(`/company/${cand.company_number}/officers?items_per_page=50`),
+    ])
+    : [null, null]
   /* Not trading, or cannot be trusted to pay: ended here, before a
      single model call or a single fetch of their site. */
-  const extras = registerRefusal(profile) ? {} : await registerExtras(cand, profile)
+  const extras = !onRegister || registerRefusal(profile) ? {} : await registerExtras(cand, profile)
   const size = sizeVerdict((extras as any).accounts, cand.sic_codes)
   const refusal = registerRefusal(profile) ?? size.refuse
   const register = registerLines(cand, { profile, officers, ...extras })
@@ -591,7 +700,14 @@ async function research(ctx: Ctx): Promise<StageResult> {
     ? await readSite({ url: site.url!, html: site.html }, cand, settings, site.archived)
     : { pages: [], measured: [], htmls: [] as string[] }
   const pageText = pages.map((p) => p.text).join('\n')
-  const siteExtra = { p_register: { lines: register, measured }, p_website: site.url, p_confirmed_by: site.confirmed_by, p_website_outcome: site.outcome }
+  /* The number their own confirmed site gives, for a person to call once it
+     has been screened against the TPS. Not from an archived copy, which may
+     be years old, and never shown to an agent: readable() took it out. */
+  const phone = site.url && !site.archived ? sitePhone(htmls) : null
+  const siteExtra = {
+    p_register: { lines: register, measured }, p_website: site.url, p_confirmed_by: site.confirmed_by, p_website_outcome: site.outcome,
+    ...(phone ? { p_phone: phone } : {}),
+  }
   const measuredText = measured.length
     ? ['MEASURED ON THEIR SITE BY CODE (the pages above plus their contact page, before contact details were taken out):', ...measured.map((r) => `${r.key}: ${r.text}`)]
     : []
@@ -812,6 +928,7 @@ async function hasBudget(cfg: Cfg, role: string) {
 }
 
 async function directorsElsewhere(cand: any) {
+  if (!cand.company_number) return []
   const officers = await chGet(`/company/${cand.company_number}/officers?items_per_page=50`)
   const active = (officers?.items ?? []).filter((o: any) => !o.resigned_on && /director|member/i.test(String(o.officer_role ?? '')))
   const names: { company: string; status: string }[] = []
@@ -829,6 +946,7 @@ async function directorsElsewhere(cand: any) {
 }
 
 async function registerHistory(cand: any) {
+  if (!cand.company_number) return { previous_names: [], directors_other_companies: [], controlled_by: [] }
   const [profile, psc, elsewhere] = await Promise.all([
     chGet(`/company/${cand.company_number}`),
     chGet(`/company/${cand.company_number}/persons-with-significant-control`).catch(() => null),
@@ -979,7 +1097,7 @@ async function lookupOne(cfg: Cfg, settings: any, cand: any, move: Ctx['move'], 
      closing, or whose filed accounts put it below the size we serve, is
      not worth a model call (the 24 September sample: 6 of its first 10
      were one-person companies). */
-  const profile = await chGet(`/company/${cand.company_number}`).catch(() => null)
+  const profile = cand.company_number ? await chGet(`/company/${cand.company_number}`).catch(() => null) : null
   let staff: number | null = null
   if (profile) {
     const refusal = registerRefusal(profile)
@@ -1192,7 +1310,11 @@ Deno.serve(async (req) => {
 
     const plan = await rpc('prospect_pull_plan', {})
 
-    if (plan) {
+    if (plan && plan.source && plan.source !== 'companies_house') {
+      const p = await pullLocal(plan, settings)
+      pulled = Number(p.inserted) || 0
+      detail.push({ pull: p })
+    } else if (plan) {
       if (!CH_KEY) detail.push({ pull: 'skipped: COMPANIES_HOUSE_API_KEY is not set' })
       else {
         const p = await pull(plan, settings)

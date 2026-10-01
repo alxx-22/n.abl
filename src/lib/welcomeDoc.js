@@ -91,7 +91,7 @@ export async function summarise(transcript, opts = {}) {
 
 /** The prompt to hand a model, whether that is an endpoint or a chat window. */
 export function transcriptPrompt(client, transcript) {
-  return `You are writing the project-goals section of a welcome document for a new client of n.abl, a UK technology implementation partner for small businesses. n.abl starts with the client's problem rather than the technology, and builds whatever solves it properly — automation, data and analytics, software, web, AI or training.
+  return `You are writing the project-goals section of a welcome document for a new client of n.abl, a UK AI implementation business for small and mid-sized companies. n.abl starts with the client's problem, builds AI around the way the business already works (answering calls and messages, reading paperwork, handling admin), and looks after it every month; it also builds automation, data and analytics, and web work where that is the better answer.
 
 Client: ${client?.business_name || '[business]'}
 
@@ -234,15 +234,15 @@ export function buildWelcomeDoc({ client, goals = null, owner = null, nextSteps 
       <div><div class="role">Anything at all</div><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></div>
       ${client?.contact_email ? `<div><div class="role">We'll reach you at</div>${esc(client.contact_email)}</div>` : ''}
     </div>
-    <!-- No response-time promise. Nothing measures one, and credits buy
-         work rather than standby — see business/13-credits. A client
+    <!-- No response-time promise. Nothing measures one yet, and the
+         retainer tiers say what is included, not how fast. A client
          document is the worst place to state a service level we have
          not agreed and cannot evidence. -->
     <p class="muted" style="margin-top:16px;font-size:14px">Email us whenever something needs doing — no ticket, no portal, no queue.</p>
   </section>
 
   <footer>
-    <span>n.abl · Technology implementation for small business</span>
+    <span>n.abl · AI, built into your business</span>
     <span>nabl.agency</span>
   </footer>
 

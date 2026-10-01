@@ -4,7 +4,7 @@ Website, client portal, team space and sales CRM for n.abl — a UK automation s
 
 ## Stack
 
-React 18 + Vite + React Router, deployed to Netlify. Supabase for auth, data and
+React 18 + Vite + React Router, served by a Cloudflare Worker (`wrangler.jsonc`). Supabase for auth, data and
 private file storage. No CSS framework — the design system is hand-rolled in
 `src/styles/`.
 
@@ -16,6 +16,43 @@ npm run dev      # local dev server
 npm run build    # production build to dist/
 npm run preview  # serve the built output
 ```
+
+## Branches and releasing
+
+| Branch | What it is |
+|---|---|
+| `main` | Production. Every push to it builds and deploys nabl.agency. |
+| `dev` | Where work is built and tested. Pushing to it deploys nothing. |
+
+Work goes to `dev`. When a batch is ready, it goes to `main` in one merge,
+so a day of commits costs one deploy rather than one each:
+
+```bash
+git checkout dev && git pull
+# ...work, commit, push to dev as often as you like...
+npm run build && npm run preview   # the production build, served locally
+npm run test:compliance            # and whichever checks the change touches
+
+git checkout main && git pull
+git merge --no-ff dev              # one release, one deploy
+git push origin main
+git checkout dev && git merge main && git push origin dev   # keep dev level with main
+```
+
+A hotfix can go straight to `main`; merge `main` back into `dev` afterwards.
+
+What keeps `dev` from deploying:
+
+- **Cloudflare (the live site).** Workers Builds, *Settings → Build → Branch
+  control*: production branch `main`, and **non-production branch builds
+  off**. With them on, every push to `dev` runs a preview build, which is the
+  cost this branch exists to avoid.
+- **Netlify (the old host, still connected).** `netlify.toml` skips every
+  branch but `main`.
+
+`dev` does not have its own database. Migrations and edge functions still go
+to the one live Supabase project when they are applied, whichever branch the
+code is on.
 
 ## Routes
 

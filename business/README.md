@@ -1,5 +1,9 @@
 # n.abl — the business plan
 
+> **Superseded in part, 29 September 2026.** n.abl is now an AI implementation
+> business with a monthly retainer, and credits and "no retainers" are gone.
+> Where this file disagrees, [`01-positioning/ai-implementation-2026-09.md`](01-positioning/ai-implementation-2026-09.md) wins.
+
 This is the master document. It replaces the old business pack and the separate
 outreach plan. If those still exist anywhere, they are out of date and this file
 wins.

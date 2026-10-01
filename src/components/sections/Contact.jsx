@@ -21,13 +21,13 @@ export default function Contact({ onBook }) {
       <div className="shell contact__inner">
         <Reveal>
           <h2 className="contact__title">
-            Tell us what&rsquo;s getting in the way<span className="dot" />
+            Tell us where the time goes<span className="dot" />
           </h2>
         </Reveal>
         <Reveal delay={0.08}>
           <p className="contact__sub">
-            A free 30-minute conversation about what&rsquo;s working, what&rsquo;s
-            frustrating, and what you&rsquo;d like to improve.
+            A free 30-minute conversation about the calls, the paperwork and the admin,
+            and whether AI can take some of it off your hands.
           </p>
         </Reveal>
         <Reveal delay={0.16}>

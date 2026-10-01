@@ -171,18 +171,32 @@ constraint that refuses to record a send where `opt_out_included` is false. A
 send with no opt-out route cannot be written to the log, which means it cannot be
 sent through any path that logs, which is every path.
 
-### 2.4 Telephone, briefly
+### 2.4 Telephone
 
 The schema carries a `channel` because the CRM already stores phone numbers and
 contact-form URLs, and the rules differ.
 
 Live marketing calls must be screened against the TPS for individual subscribers
 and the CTPS for corporate subscribers, as well as against our own suppression
-list, and must not be made to anyone who has told us not to call. The schema
-supports this by making `channel` part of the suppression key and by allowing a
-`tps_ctps` suppression reason. It does not implement screening. If phone outreach
-is ever actually done, screening is a separate piece of work and this document
-does not cover it.
+list, and must not be made to anyone who has told us not to call.
+
+Since 29 September 2026 (`202609292100_calls_only_after_tps_and_ctps_screening.sql`,
+assessed in `phone-marketing-assessment-2026-09.md`) this is implemented.
+
+- Every number is checked against **both** registers, because a business's legal
+  form is not always known. The check is recorded, append-only, in
+  `phone_screening`, either by the `tps-check` edge function or by a person who
+  checked it by hand.
+- A number on either register is written to the suppression list (`tps_ctps`).
+- The phone branch of `marketing_send_allowed` opens only for a number whose
+  newest check is under 28 days old and clear, and only for a lead with a lawful
+  basis. "No personal data" is accepted only for a company.
+- Calls have their own ceiling of 50 first calls a month.
+
+The same migration relaxed `sales_leads_permitted_needs_a_basis`, so a sole trader
+may be `permitted` on legitimate interests. PECR regulation 22 still keeps email
+closed to them: that rule is in the email branch of the gate, which the
+compliance harness proves.
 
 ### 2.5 The suppression list, and why it is never deleted from
 
@@ -722,8 +736,9 @@ Stated plainly so nobody assumes coverage that is not there.
 
 - **It does not send anything.** There is no sender in this design. The gate
   guards the record of a send, and the sender is v4 work in `11-outreach`.
-- **It does not do TPS or CTPS screening.** It records that a suppression came
-  from one. Screening is a separate integration and is not in scope.
+- **It does not screen numbers itself.** Screening comes from an outside checker
+  (section 2.4). Whether that checker uses current, licensed register data is a
+  question for the owner to confirm in writing (PHA-2026-09 section 5).
 - **It does not handle data subject access requests.** There is no export path
   and no deletion workflow for a person who asks. That is a gap and it belongs in
   `04-legal` alongside the privacy policy work.

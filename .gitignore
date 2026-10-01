@@ -52,3 +52,6 @@ worker/knowledge.generated.ts
 # in the diff. The notes are the vault; the app's view of them is not.
 .obsidian/
 .edge-bundles/
+
+# reel contact sheets — regenerate with scripts/reel-sheet.mjs
+build/sheets/

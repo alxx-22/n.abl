@@ -1,0 +1,74 @@
+[
+ {
+  "beat": 0,
+  "prompts": {
+   "Cinematic EDM, dark, minor key": 1.0,
+   "Rich Orchestration": 0.6,
+   "Tension Risers": 0.8,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "intro",
+  "density": 0.2,
+  "brightness": 0.15,
+  "mute_drums": true
+ },
+ {
+  "beat": 7,
+  "prompts": {
+   "Cinematic EDM, dark, minor key": 1.0,
+   "Big Drums": 0.8,
+   "Pulsing Synth Bass": 0.8,
+   "Epic Minor Chords": 0.8,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "a",
+  "density": 0.55,
+  "brightness": 0.3
+ },
+ {
+  "beat": 20,
+  "prompts": {
+   "Cinematic EDM, dark, minor key": 1.0,
+   "Big Drums": 0.8,
+   "Pulsing Synth Bass": 0.7,
+   "Synth Lead Melody": 1.0,
+   "Epic Minor Chords": 0.7,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "b",
+  "density": 0.65,
+  "brightness": 0.4
+ },
+ {
+  "beat": 37,
+  "prompts": {
+   "Cinematic EDM, dark, minor key": 1.0,
+   "Huge Drop": 1.0,
+   "Big Drums": 0.9,
+   "Synth Lead Melody": 0.9,
+   "Epic Minor Chords": 0.9,
+   "Rich Orchestration": 0.5,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "c",
+  "density": 0.8,
+  "brightness": 0.5
+ },
+ {
+  "beat": 52,
+  "prompts": {
+   "Cinematic EDM, dark, minor key": 1.0,
+   "Rich Orchestration": 0.6,
+   "Echoes": 0.7,
+   "Melancholic": 0.7,
+   "Dark Minor Key": 0.9
+  },
+  "section": "out",
+  "density": 0.4,
+  "brightness": 0.3
+ }
+]

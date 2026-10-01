@@ -1,0 +1,11 @@
+{
+ "file": "dark-techno-2.wav",
+ "model": "stabilityai/stable-audio-open-1.0",
+ "prompt": "Dark melodic techno, 105 BPM, D minor, rolling bassline, hypnotic arpeggiated synth hook, deep minor chords, wide atmospheric pads, four on the floor kick, claps, crisp hi-hats, driving and serious, instrumental",
+ "negative": "low quality, distorted, vocals, singing, speech, cheerful, happy, jolly, chiptune, 8-bit, kids, ukulele, whistling",
+ "seconds": 34.0,
+ "steps": 100,
+ "cfg": 7.0,
+ "seed": 2,
+ "raw_peak": 1.556
+}

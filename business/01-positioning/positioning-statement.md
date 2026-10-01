@@ -1,5 +1,9 @@
 # Positioning statement
 
+> **Superseded in part, 29 September 2026.** n.abl is now an AI implementation
+> business with a monthly retainer, and credits and "no retainers" are gone.
+> Where this file disagrees, [`01-positioning/ai-implementation-2026-09.md`](ai-implementation-2026-09.md) wins.
+
 The words n.abl uses to describe itself. Everything client-facing derives from
 this file: the website, the outreach templates, the proposal covers, the way a
 call is opened.
