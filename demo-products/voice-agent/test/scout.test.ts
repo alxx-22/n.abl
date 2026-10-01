@@ -4,10 +4,10 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer, type Server } from 'node:http';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fontCategory, fontsOf, hoursFromWords, linkScore, parseClock, readPage } from '../src/scout/extract.ts';
+import { fontCategory, fontsOf, hoursFromWords, linkScore, menuPdf, pageText, parseClock, pencePrice, priceCount, readPage } from '../src/scout/extract.ts';
 import { contrast, hex, readableAccent, themeFrom } from '../src/scout/render.ts';
 import { startScan, digest, type ScanResult } from '../src/scout/scan.ts';
 import { applyScan, scanView } from '../src/scout/map.ts';
@@ -243,4 +243,87 @@ test('scout: refuses private addresses, and a site behind a bot wall says so', a
   assert.equal(scan?.status, 'failed');
   assert.match(scan!.error ?? '', /bot protection/);
   assert.ok(digest([{ url: 'x', text: 'a'.repeat(100000), signals: readPage('', 'https://x.example') }]).length <= 16000);
+});
+
+// Pici, Nottingham (https://www.picinottingham.co.uk/), from Alex's test: a
+// Webflow site whose menu is on /pici-menus as tabs, with prices as bare
+// numbers ("11.5"). The scout took the festive set menu's PDF from the home
+// page instead, so it found no prices and the wrong sections.
+const PICI = (f: string) => readFileSync(join(import.meta.dirname, '..', 'fixtures', 'scout', f), 'utf8');
+
+test('scout: prices without a £ sign, tab names as headings, and the everyday menu over a festive one', () => {
+  const menus = PICI('pici-menus.html');
+  const text = pageText(menus);
+  assert.ok(priceCount(text) >= 60, `only ${priceCount(text)} prices`);
+  assert.equal(priceCount('Opening hours\n12\nTuesday'), 1, 'one bare number under a word');
+  assert.equal(priceCount('Est. 1998\n2\n3\n4'), 1, 'a run of numbers is not a run of prices');
+  assert.ok(readPage(menus, 'https://www.picinottingham.co.uk/pici-menus').prices >= 60);
+  // Each drinks tab's panel starts with its own name, not one line of every tab.
+  assert.match(text, /\naperitivo\nSpumante/);
+  assert.match(text, /\nsofts\ncoca-cola/);
+  assert.match(text, /\nsnacks\nnocellara olives/);
+  assert.match(pageText('<div role="tablist"><button role="tab" id="t1">Lunch</button></div><div role="tabpanel" aria-labelledby="t1"><p>Soup 6</p></div>'), /Lunch\s+Lunch\s+Soup/);
+
+  assert.equal(pencePrice('11.5'), 1150);
+  assert.equal(pencePrice('5'), 500);
+  assert.equal(pencePrice('£12.50'), 1250);
+  assert.equal(pencePrice('6 / 30'), 600, 'a glass, then a bottle: the glass');
+  assert.equal(pencePrice('– / – / 47'), 4700, 'bottle only');
+  assert.equal(pencePrice('95p'), 95);
+  assert.equal(pencePrice('from £12'), 1200);
+  assert.equal(pencePrice(''), 0);
+  assert.equal(pencePrice('2-3 to share'), 0);
+
+  const cdn = 'https://cdn.example/67d7';
+  assert.equal(menuPdf([`${cdn}/Festive%20Feasting%20Menu%20.pdf`]), null, 'a festive menu is not the everyday one');
+  assert.equal(menuPdf([`${cdn}/Christmas-Party-Menu.pdf`, `${cdn}/Dinner-Menu.pdf`, `${cdn}/Wine-List.pdf`]), `${cdn}/Dinner-Menu.pdf`);
+  assert.equal(menuPdf([`${cdn}/jobs.pdf`]), null);
+});
+
+test('scout: Pici, read from a saved copy, gives the menu page with its prices', async () => {
+  const pdfHits: string[] = [];
+  const pici = createServer((req, res) => {
+    const path = (req.url ?? '/').split('?')[0];
+    const host = `localhost:${(pici.address() as { port: number }).port}`;
+    // The festive PDF lives on Webflow's CDN; here it is served locally, so a regression shows as a fetch.
+    const page = (f: string) => PICI(f).replaceAll('https://cdn.prod.website-files.com/', `http://${host}/cdn/`);
+    if (path === '/') return res.writeHead(200, { 'content-type': 'text/html' }), res.end(page('pici-home.html'));
+    if (path === '/pici-menus') return res.writeHead(200, { 'content-type': 'text/html' }), res.end(page('pici-menus.html'));
+    if (path.startsWith('/cdn/')) return pdfHits.push(path), res.writeHead(200, { 'content-type': 'application/pdf' }), res.end('%PDF-1.4 festive');
+    res.writeHead(404, { 'content-type': 'text/html' }).end('not found');
+  });
+  await new Promise<void>((r) => pici.listen(0, r));
+  const at = `http://localhost:${(pici.address() as { port: number }).port}`;
+  let seen: { text?: string; pdf?: Buffer; url: string } | null = null;
+  const MENU_OUT: MenuOut = {
+    categories: [
+      { label: 'snacks', items: [{ name: 'Nocellara olives', description: '', price: '5', allergens_stated: false, allergens: [], dietary: ['vegan'] }] },
+      { label: 'pasta', items: [
+        { name: 'Pici cacio e pepe', description: '', price: '11.5', allergens_stated: false, allergens: [], dietary: [] },
+        { name: 'Pappardelle', description: 'mutton ragu, crispy capers, mint, 24-month parmigiano-reggiano', price: '16.5', allergens_stated: false, allergens: [], dietary: [] },
+      ] },
+    ],
+    allergen_statement: '',
+  };
+  try {
+    const deps = { demo, config: loadConfig(), allowPrivate: true, paceMs: 0, model: { facts: async () => FACTS, menu: async (src: { text?: string; pdf?: Buffer; url: string }) => ((seen = src), MENU_OUT) } };
+    const id = await startScan(deps, `${at}/`, null);
+    let scan = await demo.getScan(id);
+    for (let i = 0; i < 200 && scan?.status === 'running'; i++) {
+      await new Promise((r) => setTimeout(r, 100));
+      scan = await demo.getScan(id);
+    }
+    assert.equal(scan?.status, 'done', scan?.error ?? '');
+    const r = scan!.result as ScanResult;
+    assert.equal(seen!.url, `${at}/pici-menus`, 'the menus page, not the festive PDF');
+    assert.equal(seen!.pdf, undefined);
+    assert.deepEqual(pdfHits, [], 'the festive PDF was not even fetched');
+    assert.match(seen!.text ?? '', /pici cacio e pepe\*\n11\.5/);
+    assert.match(seen!.text ?? '', /\naperitivo\nSpumante/);
+    assert.deepEqual(r.menu!.categories.flatMap((c) => c.items.map((i) => i.price_pence)), [500, 1150, 1650], '"11.5" is £11.50');
+    assert.equal(r.menu!.priced, 3);
+    assert.deepEqual(r.menu!.categories.map((c) => c.label), ['snacks', 'pasta']);
+  } finally {
+    pici.close();
+  }
 });

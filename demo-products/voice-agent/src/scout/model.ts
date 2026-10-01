@@ -24,7 +24,8 @@ export interface FactsOut {
 }
 
 export interface MenuOut {
-  categories: { label: string; items: { name: string; description: string; price_pence: number; allergens_stated: boolean; allergens: string[]; dietary: string[] }[] }[];
+  /** price: as the menu writes it ("11.5", "£9.50", "6 / 30"), turned into pence by pencePrice; price_pence from older callers. */
+  categories: { label: string; items: { name: string; description: string; price?: string; price_pence?: number; allergens_stated: boolean; allergens: string[]; dietary: string[] }[] }[];
   allergen_statement: string;
 }
 
@@ -73,12 +74,13 @@ const MENU_SCHEMA = {
               properties: {
                 name: S,
                 description: S,
-                price_pence: { type: 'INTEGER', description: '0 if the menu gives no price.' },
+                // As written, not converted: the model read "11.5" as 115 pence. pencePrice does the sums.
+                price: { type: 'STRING', description: 'The price exactly as the menu writes it, e.g. "11.5", "£9.50", "6 / 30". Empty if none.' },
                 allergens_stated: { type: 'BOOLEAN', description: 'True only if the menu lists this dish’s allergens.' },
                 allergens: { type: 'ARRAY', items: { type: 'STRING', enum: [...ALLERGENS] } },
                 dietary: { type: 'ARRAY', items: { type: 'STRING', enum: ['vegetarian', 'vegan', 'gluten-free', 'gluten-free option', 'spicy'] } },
               },
-              required: ['name', 'price_pence', 'allergens_stated'],
+              required: ['name', 'price', 'allergens_stated'],
             },
           },
         },
@@ -97,7 +99,13 @@ export async function askFacts(digest: string, config: Config): Promise<FactsOut
 }
 
 export async function askMenu(source: { text?: string; pdf?: Buffer; url: string }, config: Config): Promise<MenuOut> {
-  const intro = `The menu of a UK restaurant, from ${source.url}. ${RULES} Keep their section names and dish names. At most 80 dishes; skip drinks lists longer than 15 lines.`;
+  const intro = [
+    `The menu of a UK restaurant, from ${source.url}. ${RULES}`,
+    'Sections: use the menu\'s own headings (snacks, small plates, pasta, mains, dessert…), in order. Every dish belongs to the heading above it, until the next heading. A tab such as "food" or "drink" that holds headed sections is not a section itself.',
+    'Prices: many menus write them without a £ sign, as a bare number after each dish ("11.5" is £11.50). Copy each price exactly as written. A dish with no price of its own (a set menu) has an empty price.',
+    'Names: keep their dish names and wording. When a dish is a list of ingredients ("rigatoni, nduja, mascarpone, lemon"), the first part is the name and the rest the description. Marks like (v), (vg), (n), * and ** are not part of the name: use the menu\'s key for dietary.',
+    'Skip set menus for groups or seasons when the everyday menu is there too. At most 80 dishes; skip drinks lists longer than 15 lines.',
+  ].join('\n');
   const parts = source.pdf
     ? [{ text: intro }, { inlineData: { mimeType: 'application/pdf', data: source.pdf.toString('base64') } }]
     : [{ text: `${intro}\n\n${(source.text ?? '').slice(0, 32000)}` }];

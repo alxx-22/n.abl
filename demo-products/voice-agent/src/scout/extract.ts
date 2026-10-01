@@ -11,7 +11,15 @@ export interface DayHoursFound {
   services: { label: string; open: string; close: string }[];
 }
 
+/**
+ * How pages are read. Bumped when reading changes, so pages and scans cached
+ * the old way are read again rather than reused for the fortnight.
+ * 2: tabbed menus keep their tab names; prices without a £ sign count.
+ */
+export const READER = 2;
+
 export interface PageSignals {
+  reader?: number;
   title: string | null;
   site_name: string | null;
   description: string | null;
@@ -190,6 +198,78 @@ export function hoursFromWords(text: string): DayHoursFound[] | null {
   return labelServices(days);
 }
 
+// ── Menus ────────────────────────────────────────────────────────────────
+
+/**
+ * A page's text, with each tab panel headed by its tab's name. Site builders
+ * (Webflow, and anything using ARIA tabs) list the tab names together above
+ * the panels, so as plain text a drinks menu's "aperitivo", "wine", "softs"
+ * all sat in one line and the panels below had no headings.
+ */
+export function pageText(html: string): string {
+  const labels = new Map<string, string>();
+  for (const m of html.matchAll(/<[a-z]+\b[^>]*\brole=["']tab["'][^>]*>([\s\S]*?)<\/(?:a|button|li|div)>/gi)) {
+    const id = /\bid=["']([^"']+)["']/i.exec(m[0])?.[1];
+    const label = htmlToText(m[1]).trim();
+    if (id && label) labels.set(id, label);
+  }
+  const headed = html.replace(/<(div|section)\b[^>]*>/gi, (tag) => {
+    const webflow = /\bw-tab-pane\b/.test(tag) ? /\bdata-w-tab=["']([^"']+)["']/i.exec(tag)?.[1] : null;
+    const aria = /\brole=["']tabpanel["']/i.test(tag)
+      ? /\baria-label=["']([^"']+)["']/i.exec(tag)?.[1] ?? labels.get(/\baria-labelledby=["']([^"']+)["']/i.exec(tag)?.[1] ?? '')
+      : null;
+    const name = webflow ?? aria;
+    return name ? `${tag}<h3>${name}</h3>` : tag;
+  });
+  return htmlToText(headed);
+}
+
+/** A price as written: "£12.50", "12.5", "95p". */
+const PRICE_WORD = /^£?\s?\d{1,3}(?:[.,]\d{1,2})?p?$/i;
+const BARE_PRICE_LINE = /^£?\s?\d{1,3}(?:[.,]\d{1,2})?(?:\s*\/\s*(?:£?\s?\d{1,3}(?:[.,]\d{1,2})?|[–-]))*$/;
+
+/**
+ * How many prices a page shows: every "£12.50", plus lines that are only a
+ * price under a line that isn't, the way many menus set a price beside each
+ * dish with no £ sign ("pici cacio e pepe" then "11.5").
+ */
+export function priceCount(text: string): number {
+  const pounds = (text.match(/£\s?\d{1,3}(?:[.,]\d{2})?/g) ?? []).length;
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  let bare = 0;
+  for (let i = 1; i < lines.length; i++) {
+    if (BARE_PRICE_LINE.test(lines[i]) && !lines[i].includes('£') && !BARE_PRICE_LINE.test(lines[i - 1]) && /[a-z]{3}/i.test(lines[i - 1])) bare++;
+  }
+  return pounds + bare;
+}
+
+/** Pence from a price as the menu writes it; 0 when there is none. */
+export function pencePrice(written: string): number {
+  // "– / – / 47": only by the bottle, so the first price given.
+  const first = written.trim().split(/\s*\/\s*/).map((x) => x.replace(/\s+/g, '')).find((x) => /\d/.test(x)) ?? '';
+  if (!PRICE_WORD.test(first)) {
+    const m = /£\s?(\d{1,3})(?:[.,](\d{1,2}))?/.exec(written);
+    return m ? Number(m[1]) * 100 + Number((m[2] ?? '0').padEnd(2, '0')) : 0;
+  }
+  if (/p$/i.test(first) && !first.startsWith('£')) return Number(first.replace(/\D/g, ''));
+  const m = /(\d{1,3})(?:[.,](\d{1,2}))?/.exec(first)!;
+  return Number(m[1]) * 100 + Number((m[2] ?? '0').padEnd(2, '0'));
+}
+
+/** Seasonal and one-off menus: a Christmas set menu is not what a caller orders from in March. */
+const ONE_OFF = /festive|christmas|xmas|valentine|mother'?s|father'?s|easter|new.?year|\bnye\b|halloween|bonfire|party|parties|group|event|function|private|wedding|gift|voucher|jobs?\b|careers|wine.?list|drinks?|cocktail/i;
+
+/** The PDF most likely to be the everyday menu, or null. */
+export function menuPdf(pdfs: string[]): string | null {
+  const name = (u: string) => decodeURIComponent(u.split('/').pop() ?? '').toLowerCase();
+  const scored = pdfs
+    .filter((u) => !ONE_OFF.test(name(u)))
+    .map((u) => ({ u, n: (/a.?la.?carte|main|dinner|evening|food/.test(name(u)) ? 3 : 0) + (/menu/.test(name(u)) ? 2 : 0) + (/lunch|brunch|breakfast/.test(name(u)) ? 1 : 0) }))
+    .filter((x) => x.n > 0)
+    .sort((a, b) => b.n - a.n);
+  return scored[0]?.u ?? null;
+}
+
 // ── Everything else ──────────────────────────────────────────────────────
 
 const PROVIDERS: [RegExp, string][] = [
@@ -270,7 +350,7 @@ export function isGrey(hex: string): boolean {
 
 export function readPage(html: string, url: string): PageSignals {
   const base = new URL(url);
-  const text = htmlToText(html);
+  const text = pageText(html);
   const ld = jsonLd(html);
   const biz = ld.find((x) => BUSINESS_TYPES.test(String([x['@type']].flat().join(' '))) && (x.name || x.address)) ?? {};
   const addr = Array.isArray(biz.address) ? biz.address[0] : biz.address;
@@ -325,6 +405,7 @@ export function readPage(html: string, url: string): PageSignals {
   const postcodes = [...new Set([...text.toUpperCase().matchAll(POSTCODE)].map((m) => `${m[1]} ${m[2]}`))].slice(0, 4);
 
   return {
+    reader: READER,
     title: htmlToText(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? '') || null,
     site_name: meta(html, 'og:site_name') ?? meta(html, 'application-name'),
     description: meta(html, 'description') ?? meta(html, 'og:description'),
@@ -336,7 +417,7 @@ export function readPage(html: string, url: string): PageSignals {
     postcodes,
     providers,
     signals,
-    prices: (text.match(/£\s?\d{1,3}(?:[.,]\d{2})?/g) ?? []).length,
+    prices: priceCount(text),
     fonts: fontsOf(html),
     colours: coloursOf(html),
     links,

@@ -19,10 +19,10 @@
 import { createHash } from 'node:crypto';
 import type { Config } from '../config.ts';
 import type { DemoRepo } from '../db/demo-repo.ts';
-import { assertPublicUrl, htmlToText } from '../ingest/ingest.ts';
+import { assertPublicUrl } from '../ingest/ingest.ts';
 import type { MenuCategory } from '../domain/types.ts';
 import { sanitiseRestaurant } from '../presets/restaurant/validate.ts';
-import { coloursOf, fontsOf, labelServices, linkScore, readPage, type DayHoursFound, type PageSignals } from './extract.ts';
+import { READER, coloursOf, fontsOf, labelServices, linkScore, menuPdf, pageText, pencePrice, readPage, type DayHoursFound, type PageSignals } from './extract.ts';
 import { askFacts, askMenu, type FactsOut, type MenuOut } from './model.ts';
 import { imageAsDataUrl, renderPage, themeFrom, type Rendered, type Theme } from './render.ts';
 
@@ -35,6 +35,8 @@ const PACE_MS = 1000;
 const UA = 'nabl-demo-scout/1.0 (+https://nabl.agency; reads a few public pages once, for a demo the owner asked for)';
 
 export interface ScanResult {
+  /** The reader that made it (extract.ts READER): older scans are not reused. */
+  reader?: number;
   site: string;
   url: string;
   pages: string[];
@@ -83,7 +85,7 @@ export async function startScan(deps: ScanDeps, raw: string, keyId: string | nul
   }
   const site = siteOf(start);
   const reuse = await deps.demo.recentScan(site, CACHE_DAYS);
-  if (reuse) return reuse;
+  if (reuse && ((await deps.demo.getScan(reuse))?.result as ScanResult | null)?.reader === READER) return reuse;
   const id = await deps.demo.createScan(site, keyId);
   progress.set(id, { stage: 'Reading your home page', pages: 0 });
   const counter = { requests: 0 };
@@ -178,7 +180,7 @@ async function runScan(deps: ScanDeps, id: string, start: URL, counter: { reques
 
   const getHtml = async (url: string): Promise<{ url: string; signals: PageSignals; text: string } | null> => {
     const cached = await demo.cachedPage(url, 'html', CACHE_DAYS);
-    if (cached?.text && cached.status < 400) return { url, signals: cached.signals as PageSignals, text: cached.text };
+    if (cached?.text && cached.status < 400 && (cached.signals as PageSignals)?.reader === READER) return { url, signals: cached.signals as PageSignals, text: cached.text };
     await politely();
     const r = await fetchChecked(url, 'text/html,application/xhtml+xml', MAX_HTML, allowPrivate);
     if (!r) return null;
@@ -186,7 +188,7 @@ async function runScan(deps: ScanDeps, id: string, start: URL, counter: { reques
     if (r.status >= 400 || !/html/i.test(r.type)) return r.status >= 400 ? { url: r.url, signals: readPage('', r.url), text: `HTTP ${r.status}` } : null;
     const html = r.body.toString('utf8');
     const signals = readPage(html, r.url);
-    const text = htmlToText(html).slice(0, 60000);
+    const text = pageText(html).slice(0, 60000);
     await demo.cachePage({ site: siteOf(start), url: r.url, kind: 'html', status: r.status, text, signals, hash: createHash('sha1').update(text).digest('hex') }).catch(() => {});
     return { url: r.url, signals, text };
   };
@@ -230,7 +232,6 @@ async function runScan(deps: ScanDeps, id: string, start: URL, counter: { reques
       if (candidates.size > 300) break;
     }
   }
-  const pdfMenu = [...home.signals.pdfs].find((p) => /menu|food|dinner|lunch/i.test(p) && allowed(p)) ?? null;
   const picks = [...candidates.entries()].filter(([u]) => u !== home.url.replace(/\/$/, '') && !/\.pdf(\?|$)/i.test(u) && allowed(u))
     .sort((a, b) => b[1] - a[1]).slice(0, MAX_PAGES).map(([u]) => u);
   for (const u of picks) {
@@ -275,6 +276,8 @@ async function runScan(deps: ScanDeps, id: string, start: URL, counter: { reques
   const byPrices = pages.filter((p) => p.signals.prices >= 5).sort((a, b) => menuScore(b) - menuScore(a));
   const menuish = pages.filter((p) => /menu|food|eat|dish/i.test(new URL(p.url).pathname)).sort((a, b) => menuScore(b) - menuScore(a));
   let menuSource: { text?: string; pdf?: Buffer; url: string } | null = null;
+  // An everyday menu's PDF from any page read, never a seasonal or set one (a festive menu was taken for Pici's).
+  const pdfMenu = menuPdf([...new Set(pages.flatMap((p) => p.signals.pdfs))].filter(allowed));
   if (byPrices[0] && byPrices[0].signals.prices >= 5) menuSource = { text: byPrices[0].text, url: byPrices[0].url };
   else if (pdfMenu) {
     await politely();
@@ -301,7 +304,7 @@ async function runScan(deps: ScanDeps, id: string, start: URL, counter: { reques
           categories: out.categories.map((c) => ({
             label: c.label,
             items: c.items.map((i) => ({
-              name: i.name, description: i.description || undefined, price_pence: Math.max(0, i.price_pence || 0),
+              name: i.name, description: i.description || undefined, price_pence: i.price ? pencePrice(i.price) : Math.max(0, i.price_pence || 0),
               allergens: i.allergens_stated ? i.allergens : [], allergens_unknown: !i.allergens_stated, dietary: i.dietary,
             })),
           })),
@@ -366,6 +369,7 @@ async function runScan(deps: ScanDeps, id: string, start: URL, counter: { reques
   }
   const bookingProviders = providers.filter((p) => !['Deliveroo', 'Uber Eats', 'Just Eat', 'Slerp', 'Flipdish'].includes(p));
   return {
+    reader: READER,
     site: siteOf(start),
     url: home.url,
     pages: pages.map((p) => p.url),
