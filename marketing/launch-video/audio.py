@@ -2211,7 +2211,9 @@ def build_music_file():
     name. If the file runs out, it loops back whole bars (MUSIC_LOOP, 4).
     MUSIC_DROPS lists more drops inside the take (file seconds), each given a
     rush of air into it and a low hit."""
-    y, sr = sf.read(os.path.join(HERE, "films", FILM_ID, "music", F.MUSIC_FILE), dtype="float64", always_2d=True)
+    # a take kept with another film is named from films/ ("reel/music/...")
+    src = F.MUSIC_FILE if "/" in F.MUSIC_FILE else os.path.join(FILM_ID, "music", F.MUSIC_FILE)
+    y, sr = sf.read(os.path.join(HERE, "films", src), dtype="float64", always_2d=True)
     y = np.repeat(y, 2, 1) if y.shape[1] == 1 else y[:, :2]
     g = np.gcd(SR, sr)
     y = signal.resample_poly(y, SR // g, sr // g, axis=0)

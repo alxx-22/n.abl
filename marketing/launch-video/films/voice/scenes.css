@@ -1,0 +1,37 @@
+/* The voice reel: the AI reel's dark stage and pieces (its stylesheet, below),
+   with tonight's floor plan, the guest's text and the offer. */
+
+@import url('../reel/scenes.css');
+
+/* tonight's floor plan, lying almost flat: cream lines on the dark, the terrace dashed in amber */
+.v-plan { position: absolute; left: 50%; top: 50%; width: 1300px; height: 820px; }
+.v-plan svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.v-plan .room { fill: rgba(240, 231, 216, .025); stroke: rgba(240, 231, 216, .24); stroke-width: 3; }
+.v-plan .terr { fill: rgba(233, 172, 87, .04); stroke: rgba(233, 172, 87, .55); stroke-width: 3; stroke-dasharray: 16 12; }
+.v-plan .bar { fill: rgba(240, 231, 216, .07); stroke: rgba(240, 231, 216, .26); stroke-width: 2; }
+.v-plan .win { stroke: rgba(var(--ice-rgb), .55); stroke-width: 5; stroke-linecap: round; }
+.v-plan .lbl { font: 500 22px var(--mono); letter-spacing: .18em; text-transform: uppercase; fill: rgba(240, 231, 216, .55); }
+.v-plan .lbl.dim { fill: rgba(240, 231, 216, .35); font-size: 18px; }
+.v-tb { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 18px; border: 2px solid rgba(240, 231, 216, .42);
+  background: rgba(240, 231, 216, .03); font: 600 26px var(--sans); color: rgba(247, 242, 234, .75); }
+.v-tb.rnd { border-radius: 50%; }
+.v-tb.bk { background: rgba(240, 231, 216, .12); border-color: rgba(240, 231, 216, .16); color: rgba(247, 242, 234, .38); }
+.v-tb.hot { background: #E9AC57; border-color: #F6CF94; color: #1A1612; box-shadow: 0 0 50px rgba(233, 172, 87, .75), 0 0 0 8px rgba(233, 172, 87, .18); }
+.v-when { position: absolute; left: 50%; top: -84px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 10px 20px 10px 16px; border-radius: 999px;
+  background: rgba(22, 19, 16, .9); border: 1px solid rgba(240, 231, 216, .16); font: 500 24px var(--mono); letter-spacing: .06em; color: rgba(247, 242, 234, .85); white-space: nowrap; }
+.v-when svg { width: 26px; height: 26px; color: var(--a300); }
+.v-tag { position: absolute; left: 50%; top: 50%; padding: 18px 22px; border-radius: 22px; background: rgba(22, 19, 16, .95); border: 1px solid rgba(240, 231, 216, .16);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55); white-space: nowrap; text-align: center; }
+.v-tag .t { font: 600 28px var(--sans); color: var(--white); letter-spacing: -.01em; }
+.v-tag .by { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 7px 14px 7px 10px; border-radius: 999px; background: rgba(233, 172, 87, .14);
+  border: 1px solid rgba(233, 172, 87, .55); font: 500 20px var(--mono); letter-spacing: .04em; color: var(--a300); }
+
+/* the guest's text */
+.r-note .app.msg { background: #3FAE5A; border: none; color: #fff; }
+.r-note .app.msg svg { width: 30px; height: 30px; }
+
+/* the offer */
+.v-cta { position: absolute; left: 50%; top: 50%; height: 104px; padding: 0 44px; border-radius: 52px; display: flex; align-items: center; justify-content: center; gap: 16px;
+  font: 600 38px var(--sans); color: var(--white); letter-spacing: -.02em; white-space: nowrap; overflow: hidden; background: #1E1A16; border: 1px solid rgba(233, 172, 87, .45); }
+.v-cta .sheen { position: absolute; top: 0; bottom: 0; width: 70%; background: linear-gradient(90deg, transparent, rgba(233, 172, 87, .38) 40%, rgba(214, 196, 255, .28) 65%, transparent); }
+.v-cta span { position: relative; }

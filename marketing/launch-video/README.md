@@ -10,6 +10,7 @@ and its brief and shot list (`SCRIPT.md`). The finished films are in `out/`.
 | `web` · Websites that work | 38 s | Smart web apps, landing pages and booking systems | [`films/web/SCRIPT.md`](films/web/SCRIPT.md) |
 | `ai` · Put AI to work | 37 s | The AI service: customer agents and everything else AI takes on | [`films/ai/SCRIPT.md`](films/ai/SCRIPT.md) |
 | `reel` · AI that works | 36 s | Two AI services (the receptionist and the sales co-pilot), cut to music with no voice, in the style of a reference reel | [`films/reel/SCRIPT.md`](films/reel/SCRIPT.md) |
+| `voice` · Your AI receptionist | 11 s | The AI receptionist taking a booking, ending on a personalised demo; the AI reel's grammar and music | [`films/voice/SCRIPT.md`](films/voice/SCRIPT.md) |
 | `ai-long` · AI, where it earns its place | 58 s | The first, longer cut of the AI film: three jobs in depth | [`films/ai-long/SCRIPT.md`](films/ai-long/SCRIPT.md) |
 
 Every film comes in four formats:
@@ -120,8 +121,10 @@ node render.mjs --film $F --covers           # cover images
 python3 package.py --film $F                 # final MP4s and captions
 ```
 
-The reel is rendered large: `F=reel`, and add `--scale 2` to the `--video`
-and `--covers` steps. Its music is a take from Lyria RealTime, the Gemini
+The reels are rendered large: `F=reel` or `F=voice`, and add `--scale 2` to
+the `--video` and `--covers` steps. Both are built from `film/kit.js` (the
+camera, the lens and the pieces), and the voice reel plays the opening of
+the AI reel's track. Its music is a take from Lyria RealTime, the Gemini
 API's live music model, kept in `films/reel/music`, so a rebuild needs no
 model; `lyria.py` makes takes from a plan of sections (with `GEMINI_API_KEY`)
 and `musicedit.py` cuts them together at their bar lines.
@@ -182,7 +185,8 @@ Copy `films/web` to `films/<name>` and change:
   `MUSIC = "reel"` is the reel's earlier synthesised house track, cued by
   marks the animation leaves (the drop, the muffled stretch, the silence
   before the name); `MUSIC = "file"` plays a generated take instead
-  (`MUSIC_FILE`, with `MUSIC_AT` the downbeat that lands on the drop), fitted
+  (`MUSIC_FILE`, or `<film>/music/...` for one kept with another film, with
+  `MUSIC_AT` the downbeat that lands on the drop), fitted
   to the same marks, and `BPM` is set to the take's own tempo;
   `SFX_DROWN` puts every effect under water. Earlier web film arrangements are still there to try: `"perc"`,
   `"drums"`, `"garage"` and `"band"`. `"electronica"`, `"perc"` and `"band"`
