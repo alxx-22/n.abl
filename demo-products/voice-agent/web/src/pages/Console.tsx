@@ -5,6 +5,7 @@ import { toast } from '../components/Toaster.tsx';
 import { Link, navigate } from '../router.tsx';
 import type { AppConfig, Profile } from '../types.ts';
 import { DemoKeys } from './DemoKeys.tsx';
+import { Logo } from '../components/Logo.tsx';
 
 const TYPE: Record<string, string> = {
   restaurant: 'Restaurant', cafe: 'Café and takeaway', takeaway: 'Takeaway', pub: 'Pub',
@@ -28,7 +29,7 @@ export function Console() {
     <>
       <div className="top">
         <span className="brand">
-          n.abl <b>Reception</b>
+          <Logo /> <span className="product">Reception</span>
         </span>
         <span className="badge warn">Demo console</span>
         <span className="spacer" />
@@ -41,6 +42,7 @@ export function Console() {
       </div>
       <main>
         <section className="intro">
+          <p className="eyebrow">For the n.abl team</p>
           <h1>Talk to an AI receptionist</h1>
           <p>
             Pick a business, press <b>Start a live call</b> and speak. It answers questions, books tables and appointments, and takes orders and

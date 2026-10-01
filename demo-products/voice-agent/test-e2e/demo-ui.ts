@@ -63,7 +63,11 @@ if (!exe) throw new Error('No Chromium found: install it (sudo apt-get install c
 const browser = await chromium.launch({ executablePath: exe });
 const errors: string[] = [];
 let step = 0;
-const shot = async (page: Page, name: string) => page.screenshot({ path: join(OUT, `${String(++step).padStart(2, '0')}-${name}.png`), fullPage: true });
+const shot = async (page: Page, name: string) => {
+  // Entrances (a blur, rising) finish first; endless ones (a pulse, a spinner) are left running.
+  await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => null))));
+  return page.screenshot({ path: join(OUT, `${String(++step).padStart(2, '0')}-${name}.png`), fullPage: true });
+};
 let failed = false;
 
 try {
@@ -84,6 +88,10 @@ try {
   const raw = (await page.textContent('.issued code'))!.trim();
   if (!/^DEMO-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(raw)) throw new Error(`odd key: ${raw}`);
   await shot(page, 'console-key-issued');
+  // The team's own demo business, on its live board.
+  await page.goto(`${base}/demo/admin/board/lucas-trattoria`);
+  await page.waitForSelector('.board .talk');
+  await shot(page, 'console-board');
 
   // The door, with a wrong key, then the one-click link.
   await page.goto(`${base}/demo/`);

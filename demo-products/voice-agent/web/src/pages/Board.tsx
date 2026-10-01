@@ -9,6 +9,7 @@ import { initialStream, streamReducer } from '../live/stream.ts';
 import { useLiveCall } from '../live/useLiveCall.ts';
 import type { AppConfig, BoardEvent, TenantState } from '../types.ts';
 import { Link } from '../router.tsx';
+import { Logo } from '../components/Logo.tsx';
 
 const REFRESH_ON = new Set(['booking_created', 'booking_changed', 'booking_cancelled', 'order_placed', 'order_updated', 'payment', 'message_taken', 'sms']);
 
@@ -91,7 +92,7 @@ export function Board({ slug }: { slug: string }) {
       <div className="accent-bar" />
       <div className="top">
         <Link to={`${BASE}/admin`} className="brand" aria-label="Back to all demo businesses">
-          n.abl <b>Reception</b>
+          <Logo /> <span className="product">Reception</span>
         </Link>
         <h1>{t.name}</h1>
         <span className="badge warn">Demo</span>

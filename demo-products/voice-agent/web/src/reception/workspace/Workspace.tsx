@@ -207,7 +207,6 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
           {brand.logo ? <img src={brand.logo} alt="" className="logo-mini" /> : null}
           <b>{t.name}</b>
         </span>
-        <span className="badge warn">Demo</span>
         <span className={`badge ${minutesLeft > 5 ? 'info' : 'bad'}`}>{minutesLeft} call min left today</span>
         {state.expires_at ? (
           <span className={`badge ${new Date(state.expires_at).getTime() - clock < 10 * 60000 ? 'bad' : 'warn'}`} title="Shared demos are deleted an hour after Start, with everything in them.">

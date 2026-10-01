@@ -12,6 +12,7 @@ import { Link, navigate } from '../router.tsx';
 import { Builder } from './builder/Builder.tsx';
 import { Workspace } from './workspace/Workspace.tsx';
 import type { Me, PresetInfo, WorkspacePayload, WorkspaceSummary } from './types.ts';
+import { Logo } from '../components/Logo.tsx';
 import './reception.css';
 
 export const R = `${BASE}/reception`;
@@ -91,8 +92,8 @@ export function RxTop({ me, children }: { me: Me | null; children?: React.ReactN
   };
   return (
     <div className="top rx-top">
-      <Link to={R} className="brand">
-        n.abl <b>Demo</b>
+      <Link to={R} className="brand" aria-label="n.abl demo: home">
+        <Logo /> <span className="product">Demo</span>
       </Link>
       {children}
       <span className="spacer" />
@@ -158,11 +159,14 @@ function Door({ onIn }: { onIn: (me: Me) => void }) {
     <>
       <RxTop me={null} />
       <main className="rx-main rx-door">
-        <section className="panel door">
-          <h1>Your private demo</h1>
-          <p className="muted">
+        <section className="door-hero enter">
+          <p className="eyebrow">AI receptionist demo</p>
+          <h1>Your private demo<span className="full-stop" aria-hidden="true" /></h1>
+          <p className="lead">
             Build an AI receptionist for your own business in a few minutes, then ring it. Enter the key from our email to begin.
           </p>
+        </section>
+        <section className="panel door enter" style={{ '--enter-delay': '0.08s' } as React.CSSProperties}>
           <form onSubmit={submit}>
             <label htmlFor="demo-key">Demo key</label>
             <input
@@ -203,7 +207,8 @@ function Home({ me, onChange }: { me: Me; onChange: () => void }) {
     <>
       <RxTop me={me} />
       <main className="rx-main">
-        <section className="intro">
+        <section className="intro enter">
+          <p className="eyebrow">{me.kind === 'shared' ? 'Shared demo' : 'Your private demo'}</p>
           {me.kind === 'shared' ? (
             <>
               <h1>Welcome.</h1>
@@ -229,8 +234,8 @@ function Home({ me, onChange }: { me: Me; onChange: () => void }) {
         </div>
 
         <div className="tenants">
-          {workspaces.map((w) => (
-            <article key={w.id} className="panel tenant-card" style={w.accent ? ({ '--accent': w.accent } as React.CSSProperties) : undefined}>
+          {workspaces.map((w, i) => (
+            <article key={w.id} className="panel tenant-card lift enter" style={{ ...(w.accent ? { '--accent': w.accent } : {}), '--enter-delay': `${0.06 * i}s` } as React.CSSProperties}>
               <h3>{w.name || 'Untitled restaurant'}</h3>
               <p>{w.started_at ? 'Live: ring it, and watch the back office.' : 'Being set up. Finish the steps, then press Start.'}</p>
               {expiryLine(w, now) ? <p className="expiry">{expiryLine(w, now)}</p> : null}
@@ -248,7 +253,7 @@ function Home({ me, onChange }: { me: Me; onChange: () => void }) {
               </div>
             </article>
           ))}
-          <Link to={`${R}/new`} className="panel tenant-card new-card">
+          <Link to={`${R}/new`} className="panel tenant-card new-card lift enter" style={{ '--enter-delay': `${0.06 * workspaces.length}s` } as React.CSSProperties}>
             <span className="plus" aria-hidden="true">+</span>
             <h3>{atLimit ? 'Try a different demo' : 'Build a new demo'}</h3>
             <p>
@@ -310,15 +315,17 @@ function NewDemo({ me }: { me: Me }) {
     <>
       <RxTop me={me} />
       <main className="rx-main">
-        <section className="intro">
+        <section className="intro enter">
+          <p className="eyebrow">New demo</p>
           <h1>What kind of business?</h1>
           <p>Each one sets up the receptionist, the booking system and the back office the way that business works.</p>
         </section>
         <div className="presets" role="radiogroup" aria-label="Kind of business">
-          {presets?.map((p) => (
+          {presets?.map((p, i) => (
             <button
               type="button" role="radio" aria-checked={chosen?.key === p.key} key={p.key} disabled={p.status !== 'live'}
-              className={`panel preset ${chosen?.key === p.key ? 'chosen' : ''}`} onClick={() => setChosen(p)}
+              className={`panel preset enter ${p.status === 'live' ? 'lift' : ''} ${chosen?.key === p.key ? 'chosen' : ''}`} onClick={() => setChosen(p)}
+              style={{ '--enter-delay': `${0.04 * i}s` } as React.CSSProperties}
             >
               <span className="preset-head">
                 <b>{p.label}</b>
@@ -331,7 +338,7 @@ function NewDemo({ me }: { me: Me }) {
         </div>
 
         {chosen ? (
-          <form className="panel new-form" onSubmit={create}>
+          <form className="panel new-form enter" onSubmit={create}>
             <h2>Your {chosen.label.toLowerCase()}</h2>
             <label htmlFor="new-name">Name</label>
             <input id="new-name" required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} placeholder="Lucas Kitchen" />
