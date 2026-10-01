@@ -10,6 +10,8 @@ import { join } from 'node:path';
 import WebSocket from 'ws';
 import { loadConfig } from '../src/config.ts';
 import { startServer, type App } from '../src/server/main.ts';
+import { sweep } from '../src/demo/sweeper.ts';
+import { signSession } from '../src/demo/access.ts';
 
 let app: App;
 let dir: string;
@@ -17,7 +19,7 @@ let origin: string;
 
 before(async () => {
   dir = mkdtempSync(join(tmpdir(), 'va-demo-api-'));
-  app = await startServer({ ...loadConfig(), port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: 'team-pass', sessionSecret: 'demo-api-test', demoProxySecret: 'proxy-secret', twilio: undefined });
+  app = await startServer({ ...loadConfig(), port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: 'team-pass', sessionSecret: 'demo-api-test', demoProxySecret: 'proxy-secret', twilio: undefined }, { sweep: false });
   origin = `http://localhost:${app.port}`;
 });
 
@@ -247,20 +249,105 @@ test('demo: another key cannot see this workspace; the team can', async () => {
   assert.ok(!tenants.some((t: any) => t.slug.startsWith('demo-')));
 });
 
-test('demo: limits and revoking', async () => {
+test('demo: private keys: another demo beyond the limit replaces one, with its data', async () => {
   assert.equal((await sam.call('POST', '/demo/api/workspaces', { preset: 'restaurant' })).status, 201);
-  const third = await sam.call('POST', '/demo/api/workspaces', { preset: 'restaurant' });
-  assert.equal(third.status, 403, 'this key allows two');
+  const third = await sam.call('POST', '/demo/api/workspaces', { preset: 'restaurant', name: 'Third Place' });
+  assert.equal(third.status, 409, 'this key allows two at once');
+  assert.equal(third.data.code, 'replace');
+  assert.equal(third.data.workspaces.length, 2);
   const me = await sam.call('GET', '/demo/api/me');
+  assert.equal(me.data.kind, 'private');
   assert.equal(me.data.used.workspaces, 2);
+  assert.equal(me.data.workspaces.find((w: any) => w.id === ws).expires_at, null, 'a private demo is kept');
 
+  // Replace the started one: it goes, bookings and all.
+  const before = await app.repo.db.query<any>('select count(*)::int as n from public.voice_bookings where tenant_id = $1', [ws]);
+  assert.ok(before[0].n > 0);
+  const replaced = await sam.call('POST', '/demo/api/workspaces', { preset: 'restaurant', name: 'Third Place', replace: ws });
+  assert.equal(replaced.status, 201, JSON.stringify(replaced.data));
+  assert.equal((await sam.call('GET', `/demo/api/workspaces/${ws}`)).status, 404);
+  const after = await app.repo.db.query<any>('select count(*)::int as n from public.voice_bookings where tenant_id = $1', [ws]);
+  assert.equal(after[0].n, 0, 'its bookings went with it');
+  assert.equal((await sam.call('GET', '/demo/api/me')).data.workspaces.length, 2);
+});
+
+test('demo: usage, and revoking', async () => {
   const keys = (await team.call('GET', '/demo/api/admin/keys')).data.keys;
   const samKey = keys.find((k: any) => k.person_name === 'Sam Price');
+  assert.equal(samKey.kind, 'private');
   const usage = await team.call('GET', `/demo/api/admin/keys/${samKey.id}/usage`);
   const kinds = new Set(usage.data.usage.map((u: any) => u.kind));
-  for (const k of ['opened', 'workspace_created', 'started', 'staff_action']) assert.ok(kinds.has(k), `usage has ${k}`);
+  for (const k of ['opened', 'workspace_created', 'started', 'staff_action', 'reset']) assert.ok(kinds.has(k), `usage has ${k}`);
 
   assert.equal((await team.call('POST', `/demo/api/admin/keys/${samKey.id}/revoke`)).status, 200);
   assert.equal((await sam.call('GET', '/demo/api/me')).status, 401, 'a revoked key ends the session at once');
   assert.equal((await sam.call('POST', '/demo/api/session', { key: rawKey })).status, 401);
+});
+
+test('demo: a shared key gives each person their own demo, deleted an hour after Start', async () => {
+  const issued = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Hospitality expo', kind: 'shared' });
+  assert.equal(issued.status, 201);
+  assert.equal(issued.data.record.kind, 'shared');
+  assert.equal(issued.data.record.limits.workspaces, 1);
+  const shared = issued.data.key;
+  const ann = client('10.0.1.1');
+  const ben = client('10.0.1.2');
+  assert.equal((await ann.call('POST', '/demo/api/session', { key: shared })).status, 200);
+  const meBen = await ben.call('POST', '/demo/api/session', { key: shared });
+  assert.equal(meBen.data.kind, 'shared');
+  assert.equal(meBen.data.shared.demo_minutes, 60);
+
+  // Ann builds and starts; Ben sees none of it.
+  const a = await ann.call('POST', '/demo/api/workspaces', { preset: 'restaurant', name: "Ann's Bistro" });
+  assert.equal(a.status, 201);
+  const draftLeft = new Date(a.data.expires_at).getTime() - Date.now();
+  assert.ok(draftLeft > 110 * 60000 && draftLeft <= 120 * 60000, 'a draft is kept two hours');
+  assert.deepEqual((await ben.call('GET', '/demo/api/me')).data.workspaces, []);
+  assert.equal((await ben.call('GET', `/demo/api/workspaces/${a.data.id}`)).status, 404);
+  const started = await ann.call('POST', `/demo/api/workspaces/${a.data.id}/start`);
+  assert.equal(started.status, 200);
+  const left = new Date(started.data.workspace.expires_at).getTime() - Date.now();
+  assert.ok(left > 58 * 60000 && left <= 60 * 60000, `deleted an hour after Start (${Math.round(left / 60000)} min)`);
+  // Reset makes new data but does not extend the hour.
+  const reset = await ann.call('POST', `/demo/api/workspaces/${a.data.id}/reset`);
+  assert.equal(reset.data.workspace.expires_at, started.data.workspace.expires_at);
+
+  // Entering the key again in the same browser keeps the same demo.
+  assert.equal((await ann.call('POST', '/demo/api/session', { key: shared })).status, 200);
+  assert.equal((await ann.call('GET', '/demo/api/me')).data.workspaces.length, 1);
+
+  // Ben has his own, and the key's list shows two people.
+  assert.equal((await ben.call('POST', '/demo/api/workspaces', { preset: 'restaurant', name: "Ben's Grill" })).status, 201);
+  const row = (await team.call('GET', '/demo/api/admin/keys')).data.keys.find((k: any) => k.kind === 'shared');
+  assert.equal(row.people, 2);
+  assert.equal(row.workspaces, 2);
+
+  // An hour later (moved on in the database): the demo has ended, and the sweeper deletes it and everything it made.
+  await app.repo.db.query(`update public.voice_tenants set expires_at = now() - interval '1 second' where id = $1`, [a.data.id]);
+  assert.equal((await ann.call('GET', `/demo/api/workspaces/${a.data.id}/state`)).status, 410);
+  const counts = async () => (await app.repo.db.query<any>(
+    `select (select count(*) from public.voice_bookings where tenant_id = $1)::int as b, (select count(*) from public.voice_orders where tenant_id = $1)::int as o,
+            (select count(*) from public.voice_tenants where id = $1)::int as t`, [a.data.id]))[0];
+  assert.ok((await counts()).b > 0);
+  const gone = await sweep({ demo: app.demo, bus: app.bus });
+  assert.deepEqual(gone, [a.data.id]);
+  assert.deepEqual(await counts(), { b: 0, o: 0, t: 0 });
+  assert.deepEqual((await ann.call('GET', '/demo/api/me')).data.workspaces, []);
+  assert.equal((await ben.call('GET', '/demo/api/me')).data.workspaces.length, 1, "Ben's is untouched");
+
+  // A forged session for the shared key without a person opens nothing.
+  const forged = signSession({ keyId: row.id, exp: Date.now() + 60000 }, 'demo-api-test');
+  const f = await fetch(`${origin}/demo/api/me`, { headers: { cookie: `demo_s=${forged}` } });
+  assert.equal(f.status, 401);
+});
+
+test('demo: private demos are deleted 30 days after their key ends, not before', async () => {
+  const k = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Old Prospect' });
+  const old = client('10.0.2.1');
+  assert.equal((await old.call('POST', '/demo/api/session', { key: k.data.key })).status, 200);
+  const w = (await old.call('POST', '/demo/api/workspaces', { preset: 'restaurant' })).data;
+  await app.repo.db.query(`update public.voice_demo_keys set expires_at = now() - interval '29 days' where id = $1`, [k.data.record.id]);
+  assert.ok(!(await sweep({ demo: app.demo, bus: app.bus })).includes(w.id), 'kept for 30 days after the key expires');
+  await app.repo.db.query(`update public.voice_demo_keys set expires_at = now() - interval '31 days' where id = $1`, [k.data.record.id]);
+  assert.ok((await sweep({ demo: app.demo, bus: app.bus })).includes(w.id));
 });

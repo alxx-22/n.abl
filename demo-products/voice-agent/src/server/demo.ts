@@ -12,7 +12,7 @@ import { BASE, HttpError, clientIp, cookie, eventStream, json, readJson, sameOri
 import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
 import { tenantState } from './state.ts';
 import type { DemoKey, Workspace } from '../db/demo-repo.ts';
-import { THROTTLE, hashKey, ipHash, normaliseKey, prefixOf, readSession, signSession } from '../demo/access.ts';
+import { SHARED_DEMO_MINUTES, SHARED_DRAFT_MINUTES, THROTTLE, hashKey, ipHash, newVisitor, normaliseKey, prefixOf, readSession, signSession } from '../demo/access.ts';
 import { PRESETS, getPreset, type Preset } from '../presets/index.ts';
 import { seedFrom } from '../presets/restaurant/seed.ts';
 import { cleanBrief, draftFaqs, draftMenu } from '../presets/restaurant/drafts.ts';
@@ -69,36 +69,58 @@ const slugPart = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z
 
 const usable = (k: DemoKey | null, now = Date.now()): k is DemoKey => Boolean(k && !k.revoked_at && k.expires_at.getTime() > now);
 
-/** The key behind this request's session cookie, if it is still good. */
-export async function sessionKey(ctx: Ctx, req: IncomingMessage): Promise<DemoKey | null> {
+/** Who is asking: the key, and on a shared key which person (browser) it is. */
+export interface Who {
+  key: DemoKey;
+  visitor: string | null;
+}
+
+/** The key (and visitor) behind this request's session cookie, if it is still good. */
+export async function sessionWho(ctx: Ctx, req: IncomingMessage): Promise<Who | null> {
   const s = readSession(cookie(req, SESSION_COOKIE), ctx.config.sessionSecret);
   if (!s) return null;
   const k = await ctx.demo.keyById(s.keyId);
-  return usable(k) ? k : null;
+  if (!usable(k)) return null;
+  // A shared key's session always names its person; without one it opens nothing.
+  if (k.kind === 'shared' && !s.visitor) return null;
+  return { key: k, visitor: k.kind === 'shared' ? s.visitor! : null };
 }
+
+/** A workspace belongs to its key, and on a shared key to the one person who made it. */
+export const owns = (w: Workspace, who: Who) =>
+  w.owner_key_id === who.key.id && (who.key.kind !== 'shared' || w.owner_visitor === who.visitor);
+
+/** A shared demo past its hour is gone, even before the sweeper has deleted it. */
+export const ended = (w: Workspace, now = Date.now()) => Boolean(w.expires_at && w.expires_at.getTime() <= now);
 
 const secureCookies = (ctx: Ctx, req: IncomingMessage) =>
   Boolean(ctx.config.publicBaseUrl?.startsWith('https')) || req.headers['x-forwarded-proto'] === 'https';
 
 // ── Limits ────────────────────────────────────────────────────────────────
 
-async function usedToday(ctx: Ctx, k: DemoKey) {
+async function usedToday(ctx: Ctx, who: Who) {
+  const { key, visitor } = who;
   const [callSeconds, drafts, scans, workspaces] = await Promise.all([
-    ctx.demo.callSeconds24h(k.id),
-    ctx.demo.countUsage(k.id, ['menu_draft', 'faq_draft'], 24),
-    ctx.demo.countUsage(k.id, ['scouted'], 24),
-    ctx.demo.listWorkspaces(k.id),
+    ctx.demo.callSeconds24h(key.id, visitor),
+    ctx.demo.countUsage(key.id, ['menu_draft', 'faq_draft'], 24, visitor),
+    ctx.demo.countUsage(key.id, ['scouted'], 24, visitor),
+    ctx.demo.listWorkspaces(key.id, visitor),
   ]);
   return { call_seconds: callSeconds, drafts, scans, workspaces: workspaces.length };
 }
 
-/** Seconds of calling left for this key today. */
-export async function callSecondsLeft(ctx: Ctx, k: DemoKey): Promise<number> {
-  return Math.max(0, k.limits.call_minutes_per_day * 60 - (await ctx.demo.callSeconds24h(k.id)));
+/** Seconds of calling left today: per person, and on a shared key within everyone's total too. */
+/** Call seconds left today, and whose allowance runs out first: this person's, or (shared keys) the whole link's. */
+export async function callSecondsLeft(ctx: Ctx, who: Who): Promise<{ seconds: number; by: 'person' | 'link' }> {
+  const mine = who.key.limits.call_minutes_per_day * 60 - (await ctx.demo.callSeconds24h(who.key.id, who.visitor));
+  if (who.key.kind !== 'shared') return { seconds: Math.max(0, mine), by: 'person' };
+  const all = who.key.limits.total_call_minutes_per_day * 60 - (await ctx.demo.callSeconds24h(who.key.id));
+  return { seconds: Math.max(0, Math.min(mine, all)), by: all < mine ? 'link' : 'person' };
 }
 
-/** Live demo calls per key, held while the socket is open. */
+/** Live demo calls per person (key, and visitor on a shared key), held while the socket is open. */
 export const callsByKey = new Map<string, number>();
+export const callerId = (who: Who) => `${who.key.id}:${who.visitor ?? ''}`;
 
 // Per-workspace pacing for saves (plan: one a second) and for usage rows.
 const lastSave = new Map<string, number>();
@@ -109,11 +131,14 @@ const lastPreview = new Map<string, number>();
 
 function mePayload(k: DemoKey, used: Awaited<ReturnType<typeof usedToday>>) {
   return {
+    kind: k.kind,
     person_name: k.person_name,
     company: k.company,
     products: k.products,
     expires_at: k.expires_at.toISOString(),
     limits: k.limits,
+    // How long a shared demo lives: after Start, and as a draft before it.
+    shared: k.kind === 'shared' ? { demo_minutes: SHARED_DEMO_MINUTES, draft_minutes: SHARED_DRAFT_MINUTES } : null,
     used: { call_minutes: Math.ceil(used.call_seconds / 60), drafts: used.drafts, scans: used.scans, workspaces: used.workspaces },
   };
 }
@@ -123,6 +148,7 @@ function workspaceSummary(w: Workspace) {
   return {
     id: w.tenant.id, slug: w.tenant.slug, preset: w.preset, name: p.name, accent: p.brand?.accent ?? null,
     started_at: w.started_at?.toISOString() ?? null, updated_at: w.updated_at.toISOString(),
+    expires_at: w.expires_at?.toISOString() ?? null,
   };
 }
 
@@ -189,11 +215,17 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     }
     await demo.recordAttempt(ip, prefix, true);
     await demo.touchKey(k.id);
-    await demo.recordUsage(k.id, null, 'opened', {});
+    // A shared key: each browser is its own person. Entering the key again keeps the same one.
+    let visitor: string | null = null;
+    if (k.kind === 'shared') {
+      const prev = readSession(cookie(req, SESSION_COOKIE), config.sessionSecret);
+      visitor = prev && prev.keyId === k.id && prev.visitor ? prev.visitor : newVisitor();
+    }
+    await demo.recordUsage(k.id, null, 'opened', {}, visitor);
     if (Math.random() < 0.05) void demo.pruneAttempts().catch(() => {});
     const exp = Math.min(k.expires_at.getTime(), Date.now() + SESSION_DAYS * 86400000);
-    setCookie(res, SESSION_COOKIE, signSession({ keyId: k.id, exp }, config.sessionSecret), { maxAge: (exp - Date.now()) / 1000, secure: secureCookies(ctx, req) });
-    return json(res, 200, mePayload(k, await usedToday(ctx, k))), true;
+    setCookie(res, SESSION_COOKIE, signSession({ keyId: k.id, exp, visitor }, config.sessionSecret), { maxAge: (exp - Date.now()) / 1000, secure: secureCookies(ctx, req) });
+    return json(res, 200, mePayload(k, await usedToday(ctx, { key: k, visitor }))), true;
   }
   if (p === '/session' && req.method === 'DELETE') {
     setCookie(res, SESSION_COOKIE, '', { maxAge: 0, secure: secureCookies(ctx, req) });
@@ -201,14 +233,15 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   }
 
   // ── Everything else needs a session (or the team) ─────────────────────
-  const key = await sessionKey(ctx, req);
-  const admin = !key && isAdmin(req, ctx);
-  if (!key && !admin) throw new HttpError(401, 'Your session has ended. Enter your key again.');
+  const who = await sessionWho(ctx, req);
+  const key = who?.key ?? null;
+  const admin = !who && isAdmin(req, ctx);
+  if (!who && !admin) throw new HttpError(401, 'Your session has ended. Enter your key again.');
 
   if (p === '/me') {
-    if (!key) throw new HttpError(401, 'Enter your key.');
-    const ws = await demo.listWorkspaces(key.id);
-    return json(res, 200, { ...mePayload(key, await usedToday(ctx, key)), workspaces: ws.map(workspaceSummary) }), true;
+    if (!who) throw new HttpError(401, 'Enter your key.');
+    const ws = await demo.listWorkspaces(who.key.id, who.visitor);
+    return json(res, 200, { ...mePayload(who.key, await usedToday(ctx, who)), workspaces: ws.map(workspaceSummary) }), true;
   }
   if (p === '/presets') return json(res, 200, { presets: PRESETS }), true;
   if (p === '/voices') return json(res, 200, voiceMeta(ctx)), true;
@@ -221,17 +254,29 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   }
 
   if (p === '/workspaces' && req.method === 'GET') {
-    if (!key) throw new HttpError(400, 'The team opens workspaces from the console.');
-    return json(res, 200, { workspaces: (await demo.listWorkspaces(key.id)).map(workspaceSummary) }), true;
+    if (!who) throw new HttpError(400, 'The team opens workspaces from the console.');
+    return json(res, 200, { workspaces: (await demo.listWorkspaces(who.key.id, who.visitor)).map(workspaceSummary) }), true;
   }
   if (p === '/workspaces' && req.method === 'POST') {
-    if (!key) throw new HttpError(400, 'Workspaces belong to a key.');
+    if (!who || !key) throw new HttpError(400, 'Workspaces belong to a key.');
     const b = await readJson(req, 10_000);
     const preset = getPreset(String(b.preset ?? ''));
     if (!preset) throw new HttpError(400, 'That kind of business is not ready yet.');
-    const existing = await demo.listWorkspaces(key.id);
+    const existing = await demo.listWorkspaces(key.id, who.visitor);
     if (existing.length >= key.limits.workspaces) {
-      throw new HttpError(403, `You have ${existing.length} demo businesses, the most this key allows. Delete one to start another.`);
+      // Trying a different demo is a reset: the one it replaces goes, with everything it made.
+      const replace = typeof b.replace === 'string' ? existing.find((x) => x.tenant.id === b.replace) : undefined;
+      if (!replace) {
+        return json(res, 409, {
+          error: `Starting another demo replaces ${existing.length === 1 ? 'your current one' : 'one of yours'}, with its bookings, orders and calls.`,
+          code: 'replace',
+          workspaces: existing.map(workspaceSummary),
+        }), true;
+      }
+      if (bus.activeFor(replace.tenant.id).length) throw new HttpError(409, 'Hang up the call first.');
+      await demo.deleteWorkspace(replace.tenant.id);
+      bus.publish({ type: 'refresh', tenant_id: replace.tenant.id, call_id: '', at: new Date().toISOString(), reason: 'deleted' });
+      await demo.recordUsage(key.id, null, 'reset', { replaced: replace.tenant.id }, who.visitor);
     }
     const answers = preset.defaults() as RestaurantAnswers;
     answers.basics.name = String(b.name ?? key.company ?? '').trim().slice(0, 60);
@@ -239,8 +284,12 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     const clean = preset.sanitise(answers);
     const slug = `demo-${key.key_prefix.toLowerCase()}-${slugPart(answers.basics.name) || preset.info.key}-${randomBytes(2).toString('hex')}`;
     const profile = buildProfile(preset, clean, slug);
-    const w = await demo.createWorkspace(key.id, preset.info.key, profile, { preset: preset.info.key, version: 1, answers: clean } satisfies WorkspaceConfig);
-    await demo.recordUsage(key.id, w.tenant.id, 'workspace_created', { preset: preset.info.key, website: Boolean(answers.basics.website) });
+    const w = await demo.createWorkspace(key.id, preset.info.key, profile, { preset: preset.info.key, version: 1, answers: clean } satisfies WorkspaceConfig, {
+      visitor: who.visitor,
+      // A shared demo's draft is kept a while; pressing Start sets its hour.
+      expiresAt: key.kind === 'shared' ? new Date(Date.now() + SHARED_DRAFT_MINUTES * 60000) : null,
+    });
+    await demo.recordUsage(key.id, w.tenant.id, 'workspace_created', { preset: preset.info.key, website: Boolean(answers.basics.website) }, who.visitor);
     return json(res, 201, workspacePayload(w)), true;
   }
 
@@ -248,14 +297,15 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   if (!m) throw new HttpError(404, 'Not found.');
   const w = await demo.getWorkspace(m[1]);
   // Someone else's workspace looks exactly like a missing one.
-  if (!w || (!admin && w.owner_key_id !== key!.id)) throw new HttpError(404, 'No such demo business.');
+  if (!w || (!admin && !owns(w, who!))) throw new HttpError(404, 'No such demo business.');
+  if (ended(w)) throw new HttpError(410, 'This demo has ended: shared demos are deleted an hour after Start. You can build another.');
   const t = w.tenant;
   const cfg = configOf(w);
   const preset = getPreset(cfg.preset);
   if (!preset) throw new HttpError(409, 'This demo was made with a preset that is no longer available.');
   const ownerId = w.owner_key_id ?? key?.id ?? null;
   const usage = (kind: Parameters<typeof demo.recordUsage>[2], data: Record<string, unknown> = {}) =>
-    ownerId && !admin ? demo.recordUsage(ownerId, t.id, kind, data).catch(() => {}) : Promise.resolve();
+    ownerId && !admin ? demo.recordUsage(ownerId, t.id, kind, data, w.owner_visitor).catch(() => {}) : Promise.resolve();
   const refresh = (data: Record<string, unknown> = {}) => bus.publish({ type: 'refresh', tenant_id: t.id, call_id: '', at: new Date().toISOString(), ...data });
   const [, , sub, ref] = m;
 
@@ -284,7 +334,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     return json(res, 200, workspacePayload(saved)), true;
   }
   if (sub === 'menu-draft' && req.method === 'POST') {
-    await spendDraft(ctx, key, admin);
+    await spendDraft(ctx, who, admin);
     const current = preset.sanitise(cfg.answers) as RestaurantAnswers;
     const brief = cleanBrief(await readJson(req, 20_000), current.basics.style);
     if (!brief.description && !brief.style) throw new HttpError(400, 'Describe the food first.');
@@ -297,7 +347,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     }
   }
   if (sub === 'faq-draft' && req.method === 'POST') {
-    await spendDraft(ctx, key, admin);
+    await spendDraft(ctx, who, admin);
     const body = await readJson(req, 1_500_000);
     const answers = preset.sanitise(body?.answers ?? cfg.answers) as RestaurantAnswers;
     try {
@@ -318,7 +368,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     const { url: site } = await readJson(req, 10_000);
     if (typeof site !== 'string' || !site.trim()) throw new HttpError(400, 'Which website?');
     if (!admin && key) {
-      const n = await demo.countUsage(key.id, ['scouted'], 24);
+      const n = await demo.countUsage(key.id, ['scouted'], 24, who?.visitor ?? null);
       if (n >= key.limits.scans_per_day) throw new HttpError(429, `That's the ${key.limits.scans_per_day} website reads this key has for today. Fill in the steps by hand, or try tomorrow.`);
     }
     let id: string;
@@ -361,6 +411,8 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     const plan = preset.seed(profile, new Date(), seedFrom(`${t.id}:${Date.now()}`));
     await repo.insertSeed(t.id, plan);
     await demo.markStarted(t.id);
+    // A shared demo's hour starts the first time its data is made; Reset does not extend it.
+    if (w.owner_visitor && !w.started_at) await demo.setExpiry(t.id, new Date(Date.now() + SHARED_DEMO_MINUTES * 60000));
     void usage(sub === 'start' ? 'started' : 'reset', { bookings: plan.bookings.length, orders: plan.orders.length });
     refresh({ reason: sub });
     return json(res, 200, { ok: true, bookings: plan.bookings.length, orders: plan.orders.length, workspace: workspacePayload((await demo.getWorkspace(t.id))!) }), true;
@@ -368,7 +420,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
 
   // ── The live workspace ────────────────────────────────────────────────
   if (sub === 'state' && req.method === 'GET') {
-    return json(res, 200, { ...(await tenantState(repo, t, bus)), started_at: w.started_at?.toISOString() ?? null }), true;
+    return json(res, 200, { ...(await tenantState(repo, t, bus)), started_at: w.started_at?.toISOString() ?? null, expires_at: w.expires_at?.toISOString() ?? null }), true;
   }
   if (sub === 'events' && req.method === 'GET') return eventStream(req, res, bus, t.id), true;
   if (sub === 'settings' && req.method === 'PATCH') {
@@ -468,10 +520,10 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   throw new HttpError(404, 'Not found.');
 }
 
-async function spendDraft(ctx: Ctx, key: DemoKey | null, admin: boolean): Promise<void> {
-  if (admin || !key) return;
-  const n = await ctx.demo.countUsage(key.id, ['menu_draft', 'faq_draft'], 24);
-  if (n >= key.limits.drafts_per_day) throw new HttpError(429, `That's the ${key.limits.drafts_per_day} drafts this key has for today. Edit by hand, or try again tomorrow.`);
+async function spendDraft(ctx: Ctx, who: Who | null, admin: boolean): Promise<void> {
+  if (admin || !who) return;
+  const n = await ctx.demo.countUsage(who.key.id, ['menu_draft', 'faq_draft'], 24, who.visitor);
+  if (n >= who.key.limits.drafts_per_day) throw new HttpError(429, `That's the ${who.key.limits.drafts_per_day} AI drafts you have for today. Edit by hand, or try again tomorrow.`);
 }
 
 function draftError(err: unknown): string {

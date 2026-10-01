@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import { Link, navigate } from '../../router.tsx';
-import { R, RxTop } from '../Reception.tsx';
+import { R, RxTop, expiryLine } from '../Reception.tsx';
 import { brandStyle } from '../brand.ts';
 import type { Issue, Me, RestaurantAnswers, WorkspacePayload } from '../types.ts';
 import { ScoutCard } from './Scout.tsx';
@@ -135,6 +135,7 @@ export function Builder({ id, me }: { id: string; me: Me }) {
         <span className="crumb">
           <b>{answers.basics.name || 'New restaurant'}</b> <span className="muted">· setup</span>
         </span>
+        {ws.expires_at ? <span className="expiry small">{expiryLine(ws)}</span> : null}
         <span className={`save-state ${saving}`} aria-live="polite">
           {saving === 'saving' ? 'Saving…' : saving === 'pending' ? 'Unsaved changes' : saving === 'saved' ? 'All changes saved' : saving === 'error' ? 'Not saved' : ''}
         </span>

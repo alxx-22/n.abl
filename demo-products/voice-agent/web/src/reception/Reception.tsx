@@ -17,6 +17,32 @@ import './reception.css';
 export const R = `${BASE}/reception`;
 
 const longDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+const clock = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+/** "in 42 min", "in 1 h 5 min", "now", for a shared demo's deletion time. */
+export function minutesUntil(iso: string, now = Date.now()): string {
+  const m = Math.ceil((new Date(iso).getTime() - now) / 60000);
+  if (m <= 0) return 'now';
+  return m < 60 ? `in ${m} min` : `in ${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`;
+}
+
+/** What happens to a shared demo, in one line. */
+export function expiryLine(w: { started_at: string | null; expires_at: string | null }, now = Date.now()): string | null {
+  if (!w.expires_at) return null;
+  return w.started_at
+    ? `Deleted at ${clock(w.expires_at)} (${minutesUntil(w.expires_at, now)}), with everything in it.`
+    : `A draft: deleted at ${clock(w.expires_at)} unless you press Start.`;
+}
+
+/** Re-renders every half minute, for countdowns. */
+export function useNow(everyMs = 30000): number {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), everyMs);
+    return () => clearInterval(t);
+  }, [everyMs]);
+  return now;
+}
 
 export function Reception({ path }: { path: string }) {
   const [me, setMe] = useState<Me | null | undefined>(undefined);
@@ -171,16 +197,30 @@ function Home({ me, onChange }: { me: Me; onChange: () => void }) {
     }
   };
   const first = me.person_name.split(/\s+/)[0];
+  const now = useNow();
+  const atLimit = workspaces.length >= me.limits.workspaces;
   return (
     <>
       <RxTop me={me} />
       <main className="rx-main">
         <section className="intro">
-          <h1>Welcome, {first}.</h1>
-          <p>
-            Your private demo{me.company ? ` for ${me.company}` : ''}. Nothing you set up here is shared. Your key works until{' '}
-            <b>{longDate(me.expires_at)}</b>.
-          </p>
+          {me.kind === 'shared' ? (
+            <>
+              <h1>Welcome.</h1>
+              <p>
+                Build an AI receptionist for your own restaurant and ring it. This is a shared demo link: your demo is <b>private to this browser</b>, and
+                everything in it (the setup, bookings, orders, calls and texts) is <b>deleted an hour after you press Start</b>.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1>Welcome, {first}.</h1>
+              <p>
+                Your private demo{me.company ? ` for ${me.company}` : ''}. Nothing you set up here is shared, and it stays until you reset it or start a
+                different one. Your key works until <b>{longDate(me.expires_at)}</b>.
+              </p>
+            </>
+          )}
         </section>
 
         <div className="rx-usage">
@@ -193,6 +233,7 @@ function Home({ me, onChange }: { me: Me; onChange: () => void }) {
             <article key={w.id} className="panel tenant-card" style={w.accent ? ({ '--accent': w.accent } as React.CSSProperties) : undefined}>
               <h3>{w.name || 'Untitled restaurant'}</h3>
               <p>{w.started_at ? 'Live: ring it, and watch the back office.' : 'Being set up. Finish the steps, then press Start.'}</p>
+              {expiryLine(w, now) ? <p className="expiry">{expiryLine(w, now)}</p> : null}
               <div className="row">
                 {w.started_at ? (
                   <Link to={`${R}/live/${w.id}`} className="button primary">Open</Link>
@@ -207,13 +248,15 @@ function Home({ me, onChange }: { me: Me; onChange: () => void }) {
               </div>
             </article>
           ))}
-          {workspaces.length < me.limits.workspaces ? (
-            <Link to={`${R}/new`} className="panel tenant-card new-card">
-              <span className="plus" aria-hidden="true">+</span>
-              <h3>Build a new demo</h3>
-              <p>Pick your kind of business. Start from our defaults, or from your own website.</p>
-            </Link>
-          ) : null}
+          <Link to={`${R}/new`} className="panel tenant-card new-card">
+            <span className="plus" aria-hidden="true">+</span>
+            <h3>{atLimit ? 'Try a different demo' : 'Build a new demo'}</h3>
+            <p>
+              {atLimit
+                ? `Starts afresh: it replaces ${workspaces.length === 1 ? 'your current demo' : 'one of yours'}, with its bookings, orders and calls.`
+                : 'Pick your kind of business. Start from our defaults, or from your own website.'}
+            </p>
+          </Link>
         </div>
       </main>
     </>
@@ -228,20 +271,37 @@ function NewDemo({ me }: { me: Me }) {
   const [name, setName] = useState(me.company ?? '');
   const [website, setWebsite] = useState('');
   const [busy, setBusy] = useState(false);
+  /** At the limit: which demo the new one replaces. */
+  const [replaceable, setReplaceable] = useState<WorkspaceSummary[] | null>(null);
+  const [replace, setReplace] = useState<string | null>(null);
 
   useEffect(() => {
     demoApi<{ presets: PresetInfo[] }>('/presets').then((r) => setPresets(r.presets)).catch((e: Error) => toast(e.message));
-  }, []);
+    // Already at the limit: say up front that a new demo replaces one.
+    demoApi<{ workspaces: WorkspaceSummary[] }>('/workspaces')
+      .then((r) => {
+        if (r.workspaces.length < me.limits.workspaces) return;
+        setReplaceable(r.workspaces);
+        setReplace(r.workspaces[0]?.id ?? null);
+      })
+      .catch(() => undefined);
+  }, [me.limits.workspaces]);
 
   const create = async (e: FormEvent) => {
     e.preventDefault();
     if (!chosen) return;
     setBusy(true);
     try {
-      const w = await demoApi<WorkspacePayload>('/workspaces', { method: 'POST', json: { preset: chosen.key, name, website: website.trim() || undefined } });
+      const w = await demoApi<WorkspacePayload>('/workspaces', {
+        method: 'POST', json: { preset: chosen.key, name, website: website.trim() || undefined, replace: replace ?? undefined },
+      });
       navigate(`${R}/build/${w.id}${website.trim() ? '?scan=1' : ''}`);
     } catch (err) {
-      toast((err as Error).message);
+      // At the limit: say what would be replaced, and let them choose.
+      if (err instanceof ApiError && err.data?.code === 'replace') {
+        setReplaceable(err.data.workspaces);
+        setReplace(err.data.workspaces[0]?.id ?? null);
+      } else toast((err as Error).message);
       setBusy(false);
     }
   };
@@ -281,10 +341,25 @@ function NewDemo({ me }: { me: Me }) {
               With a website, we read its public pages to fill in your menu, hours, colours and fonts, and mark everything we found so you can check it.
               Without one, you start from sensible defaults.
             </p>
+            {replaceable ? (
+              <fieldset className="replace-box" role="alert">
+                <legend>This starts afresh</legend>
+                <p className="small">
+                  {me.kind === 'shared' ? 'You can have one demo at a time on this link.' : 'Your key has room for ' + me.limits.workspaces + ' demo' + (me.limits.workspaces > 1 ? 's' : '') + ' at a time.'}{' '}
+                  The new one replaces {replaceable.length === 1 ? <b>{replaceable[0].name || 'your current demo'}</b> : 'the one you pick'}, and its setup, bookings, orders, calls and texts are deleted.
+                </p>
+                {replaceable.length > 1 ? replaceable.map((w) => (
+                  <label key={w.id}>
+                    <input type="radio" name="replace" checked={replace === w.id} onChange={() => setReplace(w.id)} /> {w.name || 'Untitled restaurant'}
+                  </label>
+                )) : null}
+              </fieldset>
+            ) : null}
             <div className="row">
               <button className="primary" type="submit" disabled={busy}>
-                {busy ? 'Creating…' : website.trim() ? 'Build from my website' : 'Build from the preset'}
+                {busy ? 'Creating…' : replaceable ? 'Replace it and build' : website.trim() ? 'Build from my website' : 'Build from the preset'}
               </button>
+              {replaceable ? <Link to={R} className="button">Keep my current demo</Link> : null}
             </div>
           </form>
         ) : null}

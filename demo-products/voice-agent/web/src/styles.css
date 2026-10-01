@@ -91,6 +91,10 @@ main { padding: 24px; max-width: 1500px; margin: 0 auto; }
 .notes { margin: 0; padding-left: 18px; color: var(--amber-light); font-size: 13px; }
 .keys-panel code { font-family: var(--mono); }
 .key-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.key-kind { border: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.key-kind label { display: flex; gap: 8px; align-items: baseline; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-size: 14px; }
+.key-kind label.on { border-color: var(--amber); }
+.key-kind input { width: auto; accent-color: var(--amber); }
 .key-form input { flex: 1 1 180px; width: auto; }
 .key-form select { width: auto; }
 .issued { display: grid; gap: 6px; padding: 12px; border-radius: 10px; background: var(--surface-2); border: 1px dashed var(--amber); }
@@ -101,7 +105,7 @@ table.keys th { text-align: left; color: var(--muted); font-weight: 600; padding
 table.keys td { padding: 6px 8px; border-bottom: 1px solid var(--line); }
 table.keys tr.off td { opacity: 0.5; }
 table.keys .actions { text-align: right; white-space: nowrap; }
-@media (max-width: 700px) { table.keys th:nth-child(5), table.keys td:nth-child(5), table.keys th:nth-child(6), table.keys td:nth-child(6) { display: none; } }
+@media (max-width: 700px) { table.keys th:nth-child(6), table.keys td:nth-child(6), table.keys th:nth-child(7), table.keys td:nth-child(7) { display: none; } }
 
 /* ── Board ──────────────────────────────────────────────────────────── */
 .board { display: grid; grid-template-columns: minmax(340px, 1.35fr) minmax(280px, 1fr) minmax(280px, 1fr); gap: var(--gap); align-items: start; }

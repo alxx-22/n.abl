@@ -90,17 +90,28 @@ A prospect gets a link like `nabl.agency/demo/reception#key=DEMO-K7QX-M3RD-9WTF`
    booking can be opened, moved by dragging, pushed onto two tables, seated or
    cancelled; and the customer's phone, which shows every text the caller gets.
 
-**Issuing keys**: in the console (`POST /demo/api/admin/keys`), or from a terminal:
+**Two kinds of key**, issued in the console (`POST /demo/api/admin/keys`) or from a terminal:
+
+| | Private | Shared |
+|---|---|---|
+| For | One prospect | Many people from one link (an event, a post, a group email) |
+| Demos | One at a time. Building a different one replaces it, after saying so | One per person: each browser gets its own, invisible to everyone else on the link |
+| Data kept | Until they reset it or replace it; deleted 30 days after the key expires or is switched off | Deleted, with every booking, order, call, transcript and text, **an hour after Start**. A draft never started goes after two hours. Reset does not buy more time |
+| Limits (default) | 14 days, 30 call minutes a day, 20 AI drafts and 5 website reads a day | 30 days; per person 15 call minutes, 5 AI drafts and 2 website reads a day; 300 call minutes a day across the whole key |
 
 ```bash
 npm run demo:key -- issue "Sam Price" --company "Sam's Kitchen" --days 14
+npm run demo:key -- issue "Hospitality expo" --shared --days 30
 npm run demo:key -- list
 npm run demo:key -- revoke K7QX
 ```
 
-Keys are stored only as a hash. Each key has limits (14 days, 30 call minutes
-a day, 3 demos, 20 AI drafts and 5 website reads a day by default), prospects'
-texts are simulated (never sent), and every workspace is private to its key.
+Keys are stored only as a hash. A shared key tells people apart by a random
+id in their signed session cookie, so the same person keeps their demo when
+they come back in the same browser. A sweeper in the server deletes what is
+due once a minute (`src/demo/sweeper.ts`); a call still in progress ends by
+the demo's deletion time, and any page still open on a deleted demo says so
+and offers to build another. Prospects' texts are simulated (never sent).
 
 ## How it takes turns
 

@@ -9,6 +9,7 @@ export type { AreaAnswer, RestaurantAnswers, TableAnswer };
 export interface Limits {
   days: number;
   call_minutes_per_day: number;
+  total_call_minutes_per_day: number;
   workspaces: number;
   drafts_per_day: number;
   scans_per_day: number;
@@ -22,9 +23,14 @@ export interface WorkspaceSummary {
   accent: string | null;
   started_at: string | null;
   updated_at: string;
+  /** Shared keys: when this demo and everything in it is deleted. */
+  expires_at: string | null;
 }
 
 export interface Me {
+  kind: 'private' | 'shared';
+  /** Shared keys: how long a demo lives after Start, and a draft before it. */
+  shared: { demo_minutes: number; draft_minutes: number } | null;
   person_name: string;
   company: string | null;
   products: string[];
@@ -126,6 +132,8 @@ export interface LiveOrder {
 export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   now: string;
   started_at: string | null;
+  /** Shared keys: when this demo is deleted. */
+  expires_at: string | null;
   tenant: TenantState['tenant'] & { brand: Partial<RestaurantAnswers['theme']>; timezone: string };
   plan: {
     areas: { key: string; label: string; kind: string; reservable: boolean; enquiry_only?: boolean; weather_note?: string }[];

@@ -1,7 +1,9 @@
 // The prospect's journey through a real browser, without calling a model:
 // a key from the team, the one-click link, a restaurant from the preset, the
 // builder's steps, Start, then the back office (floor plan, moving a booking,
-// the timeline, the kitchen's ready text, the phone). Fails on any page error.
+// the timeline, the kitchen's ready text, the phone); a second demo from a
+// website, replacing the first; then a shared key used by two people, each
+// with their own demo and its deletion time. Fails on any page error.
 //
 //   npm run e2e:demo            (builds the app first: npm run build)
 //
@@ -74,7 +76,7 @@ try {
   await page.waitForSelector('#k-name');
   await page.fill('#k-name', 'Sam Price');
   await page.fill('#k-company', 'Olive & Ember');
-  await page.click('text=Issue a key');
+  await page.click('button:has-text("Issue a private key")');
   await page.waitForSelector('.issued code');
   const raw = (await page.textContent('.issued code'))!.trim();
   if (!/^DEMO-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(raw)) throw new Error(`odd key: ${raw}`);
@@ -104,9 +106,9 @@ try {
   await page.waitForSelector('.save-state.saved', { timeout: 10000 });
   await shot(page, 'builder-basics');
 
-  const next = async (title: string) => {
-    await page.click('.step-nav button.primary');
-    await page.waitForSelector(`#step-title:has-text("${title}")`);
+  const next = async (title: string, p = page) => {
+    await p.click('.step-nav button.primary');
+    await p.waitForSelector(`#step-title:has-text("${title}")`);
   };
   await next('Opening hours');
   await shot(page, 'builder-hours');
@@ -171,13 +173,18 @@ try {
   await page.click('.tabs button:has-text("Floor plan")');
   await shot(page, 'workspace-mobile');
 
-  // Build from a website: the scout card, "Is this you?", then the builder filled in.
+  // Build from a website: a private key holds one demo, so this one replaces
+  // the first (after saying so); then the scout card, "Is this you?", and the
+  // builder filled in.
   await page.setViewportSize({ width: 1500, height: 1000 });
-  await page.goto(`${base}/demo/reception/new`);
+  await page.goto(`${base}/demo/reception`);
+  await page.click('text=Try a different demo');
   await page.click('.preset:has-text("Restaurant")');
   await page.fill('#new-name', 'My place');
   await page.fill('#new-site', siteUrl);
-  await page.click('text=Build from my website');
+  await page.waitForSelector('.replace-box:has-text("Olive & Ember")');
+  await shot(page, 'replace-asked');
+  await page.click('text=Replace it and build');
   await page.waitForSelector('.scout.done', { timeout: 60000 });
   await shot(page, 'scout-found');
   await page.click('text=Yes, use these');
@@ -186,6 +193,55 @@ try {
   if (name !== 'Bella Vista') throw new Error(`the name was not filled in from the website (${name})`);
   if (!(await page.locator('.source.website').count())) throw new Error('fields from the website are not marked');
   await shot(page, 'scout-applied');
+  await page.goto(`${base}/demo/reception`);
+  await page.waitForSelector('.tenant-card h3');
+  if ((await page.locator('.tenant-card:not(.new-card)').count()) !== 1) throw new Error('the replaced demo is still listed');
+
+  // A shared key: one link for many people. Each gets a demo of their own,
+  // deleted with everything in it an hour after Start.
+  await page.goto(`${base}/`);
+  await page.waitForSelector('#k-name');
+  await page.click('.key-kind label:has-text("Shared")');
+  await page.fill('#k-name', 'Hospitality expo');
+  await page.click('button:has-text("Issue a shared key")');
+  await page.waitForSelector('.issued:has-text("Shared key")');
+  const shared = (await page.textContent('.issued code'))!.trim();
+  await page.waitForSelector('table.keys td:has-text("Hospitality expo")');
+  await shot(page, 'console-shared-key');
+
+  const visitor = async (label: string) => {
+    const ctx = await browser.newContext({ viewport: { width: 1500, height: 1000 } });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errors.push(`pageerror (${label}): ${e.message}`));
+    await p.goto(`${base}/demo/reception#key=${shared}`);
+    await p.waitForSelector('text=deleted an hour after you press Start');
+    if (await p.locator('.tenant-card:not(.new-card)').count()) throw new Error(`${label} can see someone else's demo`);
+    await p.click('text=Build a new demo');
+    await p.click('.preset:has-text("Restaurant")');
+    await p.fill('#new-name', `Expo ${label}`);
+    await p.click('text=Build from the preset');
+    await p.waitForSelector('#step-title:has-text("Basics")');
+    await p.waitForSelector('.expiry:has-text("A draft")');
+    return p;
+  };
+  const first = await visitor('first visitor');
+  await shot(first, 'shared-draft');
+  await first.fill('input[maxlength="160"][placeholder="Neapolitan pizza and fresh pasta"]', 'Pizza and pasta');
+  await first.waitForSelector('.save-state.saved', { timeout: 10000 });
+  for (const title of ['Opening hours', 'How you serve', 'Seating', 'Floor plan', 'Menu', 'Money', 'Policies and questions', 'Review and start']) await next(title, first);
+  await first.click('button:has-text("Start my demo")');
+  await first.waitForSelector('.workspace svg.floor g.table', { timeout: 20000 });
+  await first.waitForSelector('.badge:has-text("Deleted in 1 h")');
+  await shot(first, 'shared-workspace');
+  await first.goto(`${base}/demo/reception`);
+  await first.waitForSelector('.tenant-card .expiry:has-text("with everything in it")');
+  await shot(first, 'shared-home');
+  // Someone else on the same link starts with nothing of the first person's.
+  const second = await visitor('second visitor');
+  await second.context().close();
+  await first.context().close();
+  await page.goto(`${base}/`);
+  await page.waitForSelector('table.keys td:has-text("2 people")');
 
   if (errors.length) throw new Error(errors.join('\n'));
   console.log(`demo UI: all steps passed. Screenshots in ${OUT}/`);

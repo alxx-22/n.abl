@@ -13,7 +13,7 @@ import { LIVE_MODELS, REPLY_SPEEDS, VOICES, VOICE_NAMES } from '../domain/voices
 import { previewVoice } from '../core/preview.ts';
 import { ingestWebsite } from '../ingest/ingest.ts';
 import type { TenantProfile } from '../domain/types.ts';
-import { generateKey, hashKey, limitsFor, normaliseKey, prefixOf, type Limits } from '../demo/access.ts';
+import { DEFAULT_LIMITS, generateKey, hashKey, limitsFor, normaliseKey, prefixOf, type KeyKind, type Limits } from '../demo/access.ts';
 import { ScoutError, scanProgress, startScan } from '../scout/scan.ts';
 import { scanView } from '../scout/map.ts';
 
@@ -114,23 +114,24 @@ export async function handleAdmin(ctx: Ctx, req: IncomingMessage, res: ServerRes
   if (p === '/keys' && req.method === 'POST') {
     const b = await readJson(req);
     const person = String(b.person_name ?? '').trim().slice(0, 80);
-    if (!person) throw new HttpError(400, 'Who is the key for? Give a name.');
-    const days = Math.min(90, Math.max(1, Number(b.days ?? 14)));
+    if (!person) throw new HttpError(400, b.kind === 'shared' ? 'Name the shared key (who or what it is for, e.g. "Hospitality expo, October").' : 'Who is the key for? Give a name.');
+    const kind: KeyKind = b.kind === 'shared' ? 'shared' : 'private';
+    const days = Math.min(90, Math.max(1, Number(b.days ?? DEFAULT_LIMITS[kind].days)));
     const limits: Partial<Limits> = {};
-    for (const k of ['call_minutes_per_day', 'workspaces', 'drafts_per_day', 'scans_per_day'] as const) {
+    for (const k of ['call_minutes_per_day', 'total_call_minutes_per_day', 'workspaces', 'drafts_per_day', 'scans_per_day'] as const) {
       if (b.limits?.[k] !== undefined) limits[k] = Math.min(1000, Math.max(0, Number(b.limits[k])));
     }
     const raw = generateKey();
     const n = normaliseKey(raw)!;
     const key = await demo.createKey({
-      hash: hashKey(n), prefix: prefixOf(n), person_name: person,
+      hash: hashKey(n), prefix: prefixOf(n), person_name: person, kind,
       company: String(b.company ?? '').trim().slice(0, 80) || null, email: String(b.email ?? '').trim().slice(0, 120) || null,
       crm_lead_id: String(b.crm_lead_id ?? '').trim().slice(0, 80) || null, issued_by: String(b.issued_by ?? 'console').slice(0, 60),
       notes: String(b.notes ?? '').trim().slice(0, 500) || null, limits, expires_at: new Date(Date.now() + days * 86400000),
     });
     const origin = config.publicBaseUrl ?? `http://${req.headers.host}`;
     // The key rides after the #, which never reaches a server log or another site.
-    return json(res, 201, { key: raw, link: `${origin}${BASE}/reception`, magic_link: `${origin}${BASE}/reception#key=${raw}`, record: { ...key, limits: limitsFor(key.limits) } }), true;
+    return json(res, 201, { key: raw, link: `${origin}${BASE}/reception`, magic_link: `${origin}${BASE}/reception#key=${raw}`, record: { ...key, limits: limitsFor(key.limits, key.kind) } }), true;
   }
   const keyAction = /^\/keys\/([0-9a-f-]{36})(?:\/(revoke|extend|usage))?$/.exec(p);
   if (keyAction) {

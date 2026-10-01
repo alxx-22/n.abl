@@ -36,7 +36,8 @@ import { checkApiKey, type KeyStatus } from '../core/gemini.ts';
 import type { Ctx } from './context.ts';
 import { BASE, DEV_HEADERS, HttpError, SECURITY_HEADERS, json, readBody, sameOrigin, xmlReply } from './http.ts';
 import { handleAdmin, isAdmin } from './admin.ts';
-import { DEMO_CALLS_PER_KEY, DEMO_CALLS_TOTAL, callSecondsLeft, callsByKey, demoSms, handleDemo, sessionKey } from './demo.ts';
+import { DEMO_CALLS_PER_KEY, DEMO_CALLS_TOTAL, callSecondsLeft, callerId, callsByKey, demoSms, ended, handleDemo, owns, sessionWho } from './demo.ts';
+import { startSweeper } from '../demo/sweeper.ts';
 
 const WEB = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'web');
 const DIST = join(WEB, 'dist');
@@ -54,6 +55,8 @@ export interface ServerOptions {
   checkKey?: boolean;
   /** Tests only: the scout reads a local site with a stand-in model. */
   scoutTest?: Ctx['scoutTest'];
+  /** Run the clean-up of expired demos every minute (default on). */
+  sweep?: boolean;
 }
 
 export interface App {
@@ -244,42 +247,54 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
 
   /** A prospect ringing their own demo: their session, their workspace, their minutes. */
   async function talkToWorkspace(req: IncomingMessage, socket: import('node:stream').Duplex, head: Buffer, id: string, phone: string | null) {
-    const key = await sessionKey(ctx, req);
+    const who = await sessionWho(ctx, req);
     const w = await demo.getWorkspace(id);
-    const team = !key && isAdmin(req, ctx);
-    if (!w || (!team && (!key || w.owner_key_id !== key.id))) return reject(socket);
-    const keyId = key?.id ?? null;
+    const team = !who && isAdmin(req, ctx);
+    if (!w || (!team && (!who || !owns(w, who)))) return reject(socket);
+    const caller = who ? callerId(who) : null;
     let refusal = '';
     let maxSeconds: number | undefined;
-    if (!w.started_at) refusal = 'Press Start first, so the receptionist has your setup and a diary to work with.';
+    if (ended(w)) refusal = 'This demo has ended: shared demos are deleted an hour after Start.';
+    else if (!w.started_at) refusal = 'Press Start first, so the receptionist has your setup and a diary to work with.';
     else if (bus.activeCalls() >= maxCalls || [...callsByKey.values()].reduce((a, b) => a + b, 0) >= DEMO_CALLS_TOTAL) {
       refusal = 'Every demo line is busy right now. Try again in a minute.';
-    } else if (key) {
-      if ((callsByKey.get(key.id) ?? 0) >= DEMO_CALLS_PER_KEY) refusal = 'You already have a call open. Hang that one up first.';
+    } else if (who && caller) {
+      if ((callsByKey.get(caller) ?? 0) >= DEMO_CALLS_PER_KEY) refusal = 'You already have a call open. Hang that one up first.';
       else {
-        maxSeconds = await callSecondsLeft(ctx, key);
-        if (maxSeconds < 20) refusal = `That's the ${key.limits.call_minutes_per_day} minutes of calls this key has for today. Come back tomorrow, or ask us for more.`;
+        const left = await callSecondsLeft(ctx, who);
+        maxSeconds = left.seconds;
+        if (maxSeconds < 20) {
+          refusal = left.by === 'link'
+            ? 'This demo link has used all its call time for today. Come back tomorrow, or ask us for a link of your own.'
+            : `That's the ${who.key.limits.call_minutes_per_day} minutes of calls you have for today. Come back tomorrow, or ask us for more.`;
+        }
       }
+    }
+    // A shared demo's call ends in time for the demo's deletion.
+    if (!refusal && w.expires_at) {
+      const left = Math.floor((w.expires_at.getTime() - Date.now()) / 1000);
+      if (left < 30) refusal = 'This demo is about to be deleted. Build another to keep trying.';
+      maxSeconds = Math.min(maxSeconds ?? Infinity, Math.max(0, left - 75));
     }
     wss.handleUpgrade(req, socket, head, (ws) => {
       if (refusal) return refuseCall(ws, refusal);
-      if (keyId) {
-        callsByKey.set(keyId, (callsByKey.get(keyId) ?? 0) + 1);
+      if (caller) {
+        callsByKey.set(caller, (callsByKey.get(caller) ?? 0) + 1);
         ws.once('close', () => {
-          const n = (callsByKey.get(keyId) ?? 1) - 1;
-          if (n > 0) callsByKey.set(keyId, n);
-          else callsByKey.delete(keyId);
+          const n = (callsByKey.get(caller) ?? 1) - 1;
+          if (n > 0) callsByKey.set(caller, n);
+          else callsByKey.delete(caller);
         });
       }
       void handleBrowserCall(ws, {
         tenant: w.tenant, repo, config, bus, sms: demoSms, callerPhone: phone, maxSeconds,
         onEnded: (s) => {
-          if (!keyId) return;
+          if (!who) return;
           const made = (name: string) => s.tools.filter((t) => t.name === name && (t.result as any)?.ok !== false && !(t.result as any)?.error).length;
-          void demo.recordUsage(keyId, w.tenant.id, 'call', {
+          void demo.recordUsage(who.key.id, w.tenant.id, 'call', {
             seconds: s.duration_s, outcome: s.outcome, model: s.model,
             bookings: made('create_booking'), changes: made('modify_booking'), orders: made('confirm_order'),
-          }).catch(() => {});
+          }, who.visitor).catch(() => {});
         },
       });
     });
@@ -287,6 +302,8 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
 
   // Free Supabase projects pause after a week idle; a query every six hours keeps it awake.
   const keepAlive = setInterval(() => void repo.ping().catch(() => {}), 6 * 3600000);
+  // Shared demos go an hour after Start; private ones 30 days after their key ends.
+  const stopSweeper = opts.sweep === false ? () => {} : startSweeper({ demo, bus });
 
   await new Promise<void>((resolve, reject) => server.once('error', reject).listen(config.port, resolve));
   const address = server.address();
@@ -295,6 +312,7 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
     config, repo, demo, bus, port, keyChecked,
     close: async () => {
       clearInterval(keepAlive);
+      stopSweeper();
       for (const c of wss.clients) c.terminate();
       await vite?.close();
       server.closeAllConnections();

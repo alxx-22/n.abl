@@ -3,7 +3,7 @@
 // call does arrives over the event stream and lands on all three at once.
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { DEMO_API, demoApi } from '../../api.ts';
+import { ApiError, DEMO_API, demoApi } from '../../api.ts';
 import { Calls } from '../../components/BoardPanels.tsx';
 import { ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
 import { LivePanel } from '../../components/LivePanel.tsx';
@@ -13,7 +13,7 @@ import { initialStream, streamReducer } from '../../live/stream.ts';
 import { useLiveCall } from '../../live/useLiveCall.ts';
 import { Link } from '../../router.tsx';
 import type { BoardEvent, TenantState } from '../../types.ts';
-import { R, RxTop } from '../Reception.tsx';
+import { R, RxTop, minutesUntil } from '../Reception.tsx';
 import { brandStyle } from '../brand.ts';
 import type { LiveBooking, LiveState, Me } from '../types.ts';
 import { BookingDrawer } from './BookingDrawer.tsx';
@@ -54,6 +54,12 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   numberRef.current = number;
   const live = useLiveCall({ workspace: id }, toast, () => numberRef.current);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  /** Set when the demo has been deleted (a shared demo's hour is up, or it was replaced). */
+  const [gone, setGone] = useState<string | null>(null);
+  const failed = useCallback((e: Error) => {
+    if (e instanceof ApiError && (e.status === 410 || e.status === 404)) setGone(e.message);
+    else toast(e.message);
+  }, []);
 
   const refresh = useCallback(async () => {
     const s = await demoApi<LiveState>(`/workspaces/${id}/state`);
@@ -70,17 +76,22 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
 
   const refreshSoon = useCallback(() => {
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => refresh().catch((e: Error) => toast(e.message)), 250);
-  }, [refresh]);
+    timer.current = setTimeout(() => refresh().catch(failed), 250);
+  }, [refresh, failed]);
 
   useEffect(() => {
     demoApi<{ demo_cards: { spoken: string; expiry: string; cvc: string; result: string }[] }>('/config')
       .then((c) => setCard(c.demo_cards.find((d) => d.result === 'approve') ?? null))
       .catch(() => {});
-    refresh().catch((e: Error) => toast(e.message));
+    refresh().catch(failed);
     const es = new EventSource(`${DEMO_API}/workspaces/${id}/events`);
     es.onmessage = (m) => {
       const e = JSON.parse(m.data) as BoardEvent;
+      if (e.type === 'refresh' && (e as { reason?: string }).reason === 'deleted') {
+        setGone('This demo has been deleted, with everything in it.');
+        es.close();
+        return;
+      }
       dispatch({ type: 'event', event: e });
       if ((e.type === 'action' && REFRESH_ON.has(e.action.kind)) || e.type === 'call_ended' || e.type === 'refresh' || e.type === 'call_started') refreshSoon();
       if (e.type === 'call_ended') onUsage();
@@ -92,7 +103,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
       clearTimeout(timer.current);
       clearInterval(clockTimer);
     };
-  }, [id, refresh, refreshSoon, onUsage]);
+  }, [id, refresh, refreshSoon, onUsage, failed]);
 
   // A booking made or changed on the call: jump to its day and time, and flash its table.
   useEffect(() => {
@@ -111,6 +122,20 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
     if (state) document.title = `${state.tenant.name} · your demo · n.abl`;
   }, [state?.tenant.name]);
 
+  if (gone) {
+    return (
+      <>
+        <RxTop me={me} />
+        <main className="rx-main">
+          <section className="panel ended">
+            <h1>This demo has ended</h1>
+            <p className="muted">{gone}</p>
+            <Link to={`${R}/new`} className="button primary">Build another</Link>
+          </section>
+        </main>
+      </>
+    );
+  }
   if (!state || !view) {
     return (
       <>
@@ -184,6 +209,11 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
         </span>
         <span className="badge warn">Demo</span>
         <span className={`badge ${minutesLeft > 5 ? 'info' : 'bad'}`}>{minutesLeft} call min left today</span>
+        {state.expires_at ? (
+          <span className={`badge ${new Date(state.expires_at).getTime() - clock < 10 * 60000 ? 'bad' : 'warn'}`} title="Shared demos are deleted an hour after Start, with everything in them.">
+            Deleted {minutesUntil(state.expires_at, clock)}
+          </span>
+        ) : null}
         <button type="button" onClick={() => setSettingsOpen(true)}><SlidersIcon /> Voice</button>
         <Link to={`${R}/build/${id}`} className="button">Edit setup</Link>
         <button type="button" onClick={reset} disabled={live.phase !== 'idle'}><ResetIcon /> Reset</button>

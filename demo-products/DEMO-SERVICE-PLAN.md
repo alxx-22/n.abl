@@ -174,6 +174,17 @@ Each has a recommendation; the plan assumes it unless you say otherwise.
   admin routes move under `/demo/admin` behind the team password.
 - **Revoking**: set `revoked_at`; the next request fails and any live call is
   ended politely.
+- **Two kinds of key** (`voice_demo_keys.kind`, migration `voice_0003_key_kinds`):
+  - **Private**: one prospect. One demo at a time by default; building a
+    different one replaces it (the page says so first) and deletes the old
+    one's data. Otherwise their demo stays until they reset it.
+  - **Shared**: one link for many people (an event, a post). The session
+    carries a random visitor id, so each browser gets its own demo, invisible
+    to everyone else on the link (`voice_tenants.owner_visitor`). Everything a
+    demo generates is deleted **an hour after Start** (`voice_tenants.expires_at`);
+    a draft never started goes two hours after it was begun. Reset reseeds but
+    does not move the deadline. Limits apply per person, with a cap on call
+    minutes across the whole key.
 
 ### 3.3 Workspaces: config, profile and data
 
@@ -199,8 +210,9 @@ A **workspace** is one demo business: a `voice_tenants` row owned by a key.
 | Live call minutes per key per day | 30 | call start and a running meter; the call ends politely at the limit |
 | Concurrent calls per key | 1 | `/demo/ws/talk` upgrade |
 | Concurrent demo calls in total | 4 | same; "all lines busy" message |
-| Workspaces per key | 3 | create |
-| Menu drafts per key per day | 20 | `/demo/api/menu/draft` |
+| Workspaces per key (per person on a shared key) | 1; a new one replaces it | create |
+| Shared keys: call minutes per person / per key per day | 15 / 300 | call start, as above |
+| Menu drafts per key per day | 20 (5 per person on a shared key) | `/demo/api/menu/draft` |
 | Builder saves | 1 a second | API |
 
 Usage is written to `voice_demo_usage` (key opened, preset chosen, config saved,
@@ -217,8 +229,12 @@ CRM (section 9) and our own view of what prospects try.
   information. What they say on calls goes to Gemini's free tier, which may use
   it; the workspace says so on the call panel ("Don't use real customers'
   details").
-- Retention: workspaces and usage deleted 30 days after the key expires, by a
-  scheduled job. Call audio is never stored.
+- Retention: a sweeper in the server, once a minute (`src/demo/sweeper.ts`),
+  deletes shared keys' demos an hour after Start and private keys' demos 30
+  days after the key expires or is switched off, with their bookings, orders,
+  payments, calls, transcripts, texts and customers (by cascade). A demo with
+  a call on waits for the call, whose time limit is set to end it by the
+  deadline. Call audio is never stored.
 
 ---
 
@@ -681,7 +697,7 @@ column).
 Each phase ends with its tests passing, a live check where it touches Gemini,
 a commit to `voice-agent-DEV`, and the plan's status updated.
 
-Where it stands (30 September 2026):
+Where it stands (1 October 2026):
 
 | Phase | State | Notes |
 |---|---|---|
@@ -691,7 +707,7 @@ Where it stands (30 September 2026):
 | 3 | **Done** | Property tests over the defaults and 20 varied configs. |
 | 4 | **Done** | Floor plan board with time slider and states, drag a booking between tables, drawer (visit states, move, push together, details, cancel with a text), timeline with drag, kitchen board with the ready text, messages, calls, the customer's phone. Chromium walkthrough (`npm run e2e:demo`). |
 | 5 | **Done** | Areas ("inside or on the terrace?"), weather rule, step-free tables, preferences, allergies (with a once-per-call safety net if the caller mentioned one), occasions, highchairs, change by reference keeping the table, collection slots with kitchen capacity, the takeaway payment rule, texts that end "quote your reference". 7 tool tests; 5 new evaluation scenarios on a builder-made restaurant, all passing against the live model (cancel by reference, full terrace and full slot are covered by tool tests rather than scenarios). |
-| 6 | **Built, not deployed** | Worker forwards `/demo/*` including WebSockets (27/27 in `test:routes` against the real Workers runtime); robots; Dockerfile with Chromium; fly.toml at 1 GB. Needs: the Fly app deployed with its secrets, `DEMO_PROXY_SECRET` set on both sides, then a live smoke test from a phone. The retention job is not built yet. |
+| 6 | **Built, not deployed** | Worker forwards `/demo/*` including WebSockets (27/27 in `test:routes` against the real Workers runtime); robots; Dockerfile with Chromium; fly.toml at 1 GB. Needs: the Fly app deployed with its secrets, `DEMO_PROXY_SECRET` set on both sides, then a live smoke test from a phone. Private and shared keys, with the retention sweeper, built and applied (`voice_0003_key_kinds`); 4 HTTP tests and the Chromium walkthrough cover both kinds. |
 | 7 | Not started | |
 | 8 | Not started | |
 
