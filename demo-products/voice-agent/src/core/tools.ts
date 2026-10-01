@@ -575,6 +575,11 @@ const TOOLS: Record<string, Tool> = {
     },
     async handler(args, ctx) {
       const reference = str(args.reference);
+      // Callers read references a character or two at a time. Every reference is five
+      // characters, so a shorter one is unfinished: "not found" would have the receptionist apologise after each letter.
+      if (reference && reference.replace(/[^a-z0-9]/gi, '').length < 5) {
+        return { bookings: [], note: 'That is only part of a reference: they are five letters and numbers, like HK482. Let them finish, then search with all of it.' };
+      }
       const phone = normaliseUkPhone(str(args.phone)) ?? (reference || str(args.name) ? undefined : ctx.callerPhone ?? undefined);
       const found = await ctx.repo.findBookings(ctx.tenant.id, { reference, phone, name: reference || phone ? undefined : str(args.name) }, ctx.now());
       for (const b of found) ctx.state.found.push(b.reference);

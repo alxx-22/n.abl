@@ -143,6 +143,11 @@ test('restaurant tools: changes by reference keep the table when it fits, with a
   const found = await runTool('find_bookings', { reference: String(r.reference) }, ctx);
   assert.equal((found.bookings as any[])[0].party_size, 5);
   assert.equal((found.bookings as any[])[0].allergies, 'Nut allergy');
+  // A caller reading the reference a character at a time: the first ones are part of it, not a booking that is missing.
+  const part = await runTool('find_bookings', { reference: String(r.reference).slice(0, 2).toLowerCase() }, ctx);
+  assert.deepEqual(part.bookings, []);
+  assert.match(String(part.note), /only part of a reference/);
+  assert.doesNotMatch(String(part.note), /No upcoming bookings/);
 });
 
 test('restaurant tools: collection slots the kitchen can handle, and pay on collection', async () => {

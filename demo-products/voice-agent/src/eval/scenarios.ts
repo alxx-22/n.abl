@@ -466,13 +466,15 @@ export const SCENARIOS: Scenario[] = [
     title: 'No preference given: asks inside or on the terrace',
     kind: 'happy',
     callerPhone: '+447700900132',
+    // Both areas must be free for the question to arise: in the seeded week the terrace can be full at Sunday lunch.
+    setup: (repo, tenant) => clearDay(repo, tenant, '2026-10-11'),
     persona: 'You are Tom Wright. You want a table for two on Sunday (11 October) at 1pm. Do not say where you want to sit unless asked; if asked inside or outside, say inside please. No allergies. Confirm when the details are read back.',
     async check(c) {
       const f: string[] = [];
       const b = await c.db.query<any>(`select * from public.voice_bookings where tenant_id = $1 and source = 'eval' and status = 'confirmed' and name ilike '%wright%'`, [c.tenant.id]);
       expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
       if (b[0]) expect(f, b[0].area_key === 'indoor', `area ${b[0].area_key}`);
-      expect(f, /terrace|outside|inside/i.test(c.agentText), 'never asked where they would like to sit');
+      expect(f, /terrace|outside/i.test(c.agentText), 'never offered the terrace');
       noFlags(c, f);
       return f;
     },
