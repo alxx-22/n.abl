@@ -32,6 +32,8 @@ export interface Config {
   sessionSecret: string;
   /** Shared with the site's Worker: its X-Nabl-Client-Ip header is believed only with this beside it. */
   demoProxySecret: string | undefined;
+  /** A header the server's own front proxy sets and a client cannot (x-real-ip behind the Oracle deploy's Caddy). Unset: the socket address. */
+  clientIpHeader: string | undefined;
   demoCards: DemoCard[];
   maxCallSeconds: number;
   vadSilenceMs: number;
@@ -76,6 +78,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     consolePassword: env.CONSOLE_PASSWORD?.trim() || undefined,
     sessionSecret: env.SESSION_SECRET?.trim() || randomBytes(32).toString('hex'),
     demoProxySecret: env.DEMO_PROXY_SECRET?.trim() || undefined,
+    clientIpHeader: env.CLIENT_IP_HEADER?.trim().toLowerCase() || undefined,
     demoCards: parseDemoCards(env.DEMO_CARDS),
     maxCallSeconds: Number(env.MAX_CALL_SECONDS ?? 720),
     vadSilenceMs: Number(env.VAD_SILENCE_MS ?? 600),

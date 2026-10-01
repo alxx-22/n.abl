@@ -12,6 +12,8 @@ import { loadConfig } from '../src/config.ts';
 import { startServer, type App } from '../src/server/main.ts';
 import { sweep } from '../src/demo/sweeper.ts';
 import { signSession } from '../src/demo/access.ts';
+import { clientIp } from '../src/server/http.ts';
+import type { IncomingMessage } from 'node:http';
 
 let app: App;
 let dir: string;
@@ -99,12 +101,22 @@ test('demo: a wrong key is refused, and the throttle stops an address guessing',
 test('demo: an address claimed without the proxy secret is not believed', async () => {
   // Straight to the server, pretending to be many visitors: all one address to the throttle.
   const spoof = (n: number) => fetch(`${origin}/demo/api/session`, {
-    method: 'POST', headers: { 'content-type': 'application/json', origin, 'x-nabl-client-ip': `203.0.113.${n}`, 'x-forwarded-for': `198.51.100.${n}`, 'cf-connecting-ip': `192.0.2.${n}` },
+    method: 'POST', headers: { 'content-type': 'application/json', origin, 'x-nabl-client-ip': `203.0.113.${n}`, 'x-forwarded-for': `198.51.100.${n}`, 'cf-connecting-ip': `192.0.2.${n}`, 'x-real-ip': `192.0.2.${n + 50}`, 'fly-client-ip': `192.0.2.${n + 100}` },
     body: JSON.stringify({ key: 'DEMO-BBBB-BBBB-BBBB' }),
   });
   const statuses: number[] = [];
   for (let i = 0; i < 11; i++) statuses.push((await spoof(i)).status);
   assert.equal(statuses.at(-1), 429, `statuses ${statuses.join(',')}`);
+});
+
+test('demo: the visitor address comes from the Worker with its secret, else the front proxy\'s own header, else the socket', () => {
+  const req = (headers: Record<string, string>) => ({ headers, socket: { remoteAddress: '172.18.0.3' } }) as unknown as IncomingMessage;
+  const viaWorker = { 'x-nabl-proxy': 'proxy-secret', 'x-nabl-client-ip': '203.0.113.7', 'x-real-ip': '104.16.0.1' };
+  assert.equal(clientIp(req(viaWorker), 'proxy-secret', 'x-real-ip'), '203.0.113.7');
+  assert.equal(clientIp(req({ ...viaWorker, 'x-nabl-proxy': 'wrong-secret' }), 'proxy-secret', 'x-real-ip'), '104.16.0.1');
+  assert.equal(clientIp(req({ 'x-real-ip': '198.51.100.9' }), 'proxy-secret', 'x-real-ip'), '198.51.100.9');
+  // Without a front proxy, nothing a client writes counts.
+  assert.equal(clientIp(req({ 'x-real-ip': '198.51.100.9', 'fly-client-ip': '198.51.100.10', 'x-forwarded-for': '198.51.100.11' }), 'proxy-secret'), '172.18.0.3');
 });
 
 test('demo: the right key opens a session, forgiving case and spaces', async () => {

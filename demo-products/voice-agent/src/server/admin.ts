@@ -5,7 +5,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Ctx } from './context.ts';
-import { BASE, HttpError, cookie, eventStream, json, readJson, setCookie, SECURITY_HEADERS } from './http.ts';
+import { BASE, HttpError, cookie, eventStream, json, overHttps, readJson, setCookie, SECURITY_HEADERS } from './http.ts';
 import { tenantState } from './state.ts';
 import { seedDiary } from '../db/seed.ts';
 import { applySettings } from '../domain/settings.ts';
@@ -74,7 +74,7 @@ export async function handleAdmin(ctx: Ctx, req: IncomingMessage, res: ServerRes
     const want = Buffer.from(config.consolePassword ?? '');
     const got = Buffer.from(String(password ?? ''));
     if (config.consolePassword && (want.length !== got.length || !timingSafeEqual(want, got))) throw new HttpError(401, 'That password did not work.');
-    setCookie(res, 'va_session', adminToken(config.sessionSecret), { maxAge: 30 * 86400, secure: Boolean(config.publicBaseUrl?.startsWith('https')) });
+    setCookie(res, 'va_session', adminToken(config.sessionSecret), { maxAge: 30 * 86400, secure: overHttps(config, req) });
     json(res, 200, { ok: true });
     return true;
   }

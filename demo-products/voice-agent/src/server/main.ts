@@ -146,7 +146,7 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
     const path = url.pathname;
     try {
       // ── Health ──────────────────────────────────────────────────────
-      if (path === '/healthz' || path === `${BASE}/healthz`) return json(res, 200, { ok: await repo.ping(), calls: bus.activeCalls() });
+      if (path === '/healthz' || path === `${BASE}/healthz`) return json(res, 200, { ok: await repo.ping(), calls: bus.activeCalls(), version: process.env.APP_VERSION ?? null });
 
       // ── Twilio webhooks ─────────────────────────────────────────────
       if (path.startsWith(`${TWILIO_BASE}/`) && req.method === 'POST') return await twilio(req, res, path, url);
@@ -159,7 +159,7 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
       // ── The React app ───────────────────────────────────────────────
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'method not allowed' });
       // Behind the site's Worker only /demo/* arrives. Run directly (locally, a
-      // Codespace, the Fly address), the root is the team's console.
+      // Codespace, the demo server's own address), the root is the team's console.
       if (path === '/') return redirect(res, `${BASE}/admin`);
       if (path === BASE) return redirect(res, `${BASE}/`);
       if (!path.startsWith(`${BASE}/`)) return json(res, 404, { error: 'not found' });

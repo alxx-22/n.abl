@@ -79,18 +79,24 @@ export function setCookie(res: ServerResponse, name: string, value: string, opts
 /**
  * The visitor's address, for the key throttle. Behind the site's Worker it is
  * the X-Nabl-Client-Ip header, believed only when the shared secret comes
- * with it; otherwise Fly's own Fly-Client-Ip (which a client cannot set), or
- * the socket. X-Forwarded-For and CF-Connecting-IP are never trusted: anyone
- * reaching the server directly could write them.
+ * with it; otherwise the header named by CLIENT_IP_HEADER, which the server's
+ * own front proxy overwrites on every request (X-Real-IP from the Oracle
+ * deploy's Caddy), or the socket. Nothing else a client sends is trusted:
+ * anyone reaching the server directly could write it.
  */
-export function clientIp(req: IncomingMessage, proxySecret?: string): string {
+export function clientIp(req: IncomingMessage, proxySecret?: string, trustedHeader?: string): string {
   const h = (n: string) => String(req.headers[n] ?? '').split(',')[0].trim();
   if (proxySecret) {
     const given = Buffer.from(h('x-nabl-proxy'));
     const want = Buffer.from(proxySecret);
     if (given.length === want.length && timingSafeEqual(given, want) && h('x-nabl-client-ip')) return h('x-nabl-client-ip');
   }
-  return h('fly-client-ip') || req.socket.remoteAddress || 'unknown';
+  return (trustedHeader && h(trustedHeader)) || req.socket.remoteAddress || 'unknown';
+}
+
+/** Whether the visitor reached us over HTTPS (directly, or through the Worker or the front proxy), so cookies can be Secure. */
+export function overHttps(config: { publicBaseUrl?: string }, req: IncomingMessage): boolean {
+  return Boolean(config.publicBaseUrl?.startsWith('https')) || String(req.headers['x-forwarded-proto'] ?? '').split(',')[0].trim() === 'https';
 }
 
 /** Same-origin check for WebSocket upgrades and state-changing requests. */

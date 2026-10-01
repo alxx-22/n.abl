@@ -103,7 +103,7 @@ Each has a recommendation; the plan assumes it unless you say otherwise.
 
 | # | Decision | Recommendation | Why |
 |---|---|---|---|
-| D1 | Where the demo lives | `nabl.agency/demo/reception`, served by the site's Cloudflare Worker forwarding `/demo/*` (web pages and the call's WebSocket) to the demo server on Fly.io | Matches "a sub-page of the main site". The call needs a long-running server, which Workers and Netlify are not; the Worker only forwards. Fallback if forwarding WebSockets gives trouble: `demo.nabl.agency` pointed straight at Fly |
+| D1 | Where the demo lives | `nabl.agency/demo/reception`, served by the site's Cloudflare Worker forwarding `/demo/*` (web pages and the call's WebSocket) to the demo server on Oracle Cloud's Always Free tier (was Fly.io; changed 1 October 2026 so hosting costs nothing) | Matches "a sub-page of the main site". The call needs a long-running server, which Workers and Netlify are not; the Worker only forwards. Fallback if forwarding WebSockets gives trouble: link to `demo-origin.nabl.agency` directly |
 | D2 | Key format | The portal's: 12 characters from its 31-glyph alphabet, shown as `XXXX-XXXX-XXXX` (59.5 bits). Stored **hashed**, unlike the portal, because only our server checks them | One format across n.abl; hashing because we can |
 | D3 | Key lifetime and limits | 14 days; 30 minutes of live calls a day; 3 workspaces; 20 menu drafts a day; extendable from the CRM | Protects the free-tier quota from a forwarded link; generous for a real evaluation |
 | D4 | Where demo data lives | The voice demo Supabase project (`auivrancfnrdwyiqoakt`), `voice_` tables. The CRM stores only the key's first four characters and a usage summary | Keeps prospects' sandboxes away from client and CRM data |
@@ -132,7 +132,9 @@ Each has a recommendation; the plan assumes it unless you say otherwise.
    │  /demo/*  → forwarded, unchanged, to the demo server
    │  anything else → the site, exactly as today
    ▼
- Demo server on Fly.io (London, always on)       demo-products/voice-agent
+ Demo server: Oracle Cloud Always Free, Frankfurt  demo-products/voice-agent
+   │  (Arm, 2 OCPU, 12 GB; Caddy for HTTPS at demo-origin.nabl.agency;
+   │   deploy/oracle: redeploys itself from voice-agent-DEV)
    │  serves the React app under /demo/, the API under /demo/api,
    │  the call WebSocket under /demo/ws
    ├──► Gemini Live (calls), Transcribe Live (turn-taking), Gemini Flash (menus)
@@ -149,7 +151,7 @@ Each has a recommendation; the plan assumes it unless you say otherwise.
   (`microphone=(self)`), with its own strict CSP. To confirm in phase 6: that
   the site's `_headers` rules do not also apply to Worker-forwarded responses.
 - **Base path**: the React app builds with `base: '/demo/'`, so it works both
-  behind the Worker and directly on Fly (for testing).
+  behind the Worker and directly at `demo-origin.nabl.agency` (for testing).
 - **Search engines**: `X-Robots-Tag: noindex, nofollow` on every `/demo`
   response, `Disallow: /demo` in `robots.txt`, not in the sitemap.
 
@@ -226,9 +228,12 @@ CRM (section 9) and our own view of what prospects try.
   the privacy policy's section for people we approach already covers it. To
   check with `04-legal` before the first key goes out.
 - What prospects type into the builder is their business's public-facing
-  information. What they say on calls goes to Gemini's free tier, which may use
-  it; the workspace says so on the call panel ("Don't use real customers'
-  details").
+  information. What they say on calls goes to Gemini; the call panel says to
+  use made-up names, never a real customer's. Google's Gemini API terms
+  (23 March 2026) allow only its paid service for apps made available to
+  people in the UK, the EEA or Switzerland, so the key goes on billing before
+  keys go to prospects (paid-service data terms: not used to improve Google's
+  products). The free tier is for the team's own testing.
 - Retention: a sweeper in the server, once a minute (`src/demo/sweeper.ts`),
   deletes shared keys' demos an hour after Start and private keys' demos 30
   days after the key expires or is switched off, with their bookings, orders,
@@ -707,7 +712,7 @@ Where it stands (1 October 2026):
 | 3 | **Done** | Property tests over the defaults and 20 varied configs. |
 | 4 | **Done** | Floor plan board with time slider and states, drag a booking between tables, drawer (visit states, move, push together, details, cancel with a text), timeline with drag, kitchen board with the ready text, messages, calls, the customer's phone. Chromium walkthrough (`npm run e2e:demo`). |
 | 5 | **Done** | Areas ("inside or on the terrace?"), weather rule, step-free tables, preferences, allergies (with a once-per-call safety net if the caller mentioned one), occasions, highchairs, change by reference keeping the table, collection slots with kitchen capacity, the takeaway payment rule, texts that end "quote your reference". 7 tool tests; 5 new evaluation scenarios on a builder-made restaurant, all passing against the live model (cancel by reference, full terrace and full slot are covered by tool tests rather than scenarios). |
-| 6 | **Built, not deployed** | Worker forwards `/demo/*` including WebSockets (27/27 in `test:routes` against the real Workers runtime); robots; Dockerfile with Chromium; fly.toml at 1 GB. Needs: the Fly app deployed with its secrets, `DEMO_PROXY_SECRET` set on both sides, then a live smoke test from a phone. Private and shared keys, with the retention sweeper, built and applied (`voice_0003_key_kinds`); 4 HTTP tests and the Chromium walkthrough cover both kinds. |
+| 6 | **Built, not deployed** | Worker forwards `/demo/*` including WebSockets (27/27 in `test:routes` against the real Workers runtime); robots; Dockerfile with Chromium. Hosting moved from Fly to Oracle Cloud's Always Free tier (no cost): `deploy/oracle` (cloud-init, `nabl.sh`: Docker, Caddy HTTPS, firewall, metadata guard, five-minute self-update that waits for calls and keeps the old build if the new one fails); checked behind a real Caddy (forwarded host, throttle, Secure cookies, call WebSocket). Needs: the Oracle account and instance, the DNS record and the Worker secret (guide in `deploy/oracle/README.md`), `voice-agent-DEV` merged to `main` for `nabl.agency/demo`, then a live smoke test from a phone. Before prospects: billing on the Gemini key (Google's terms allow only paid services for apps offered in the UK). Private and shared keys, with the retention sweeper, built and applied (`voice_0003_key_kinds`); 4 HTTP tests and the Chromium walkthrough cover both kinds. |
 | 7 | Not started | |
 | 8 | Not started | |
 
@@ -719,7 +724,7 @@ Where it stands (1 October 2026):
 | **3. Seeder** | seven days of bookings, today's orders, customers, messages, from the config | 20 random configs each seed with no clashes, within hours and areas, near target occupancy | property-style tests over generated configs |
 | **4. Back office and phone** | floor plan board, time slider, drawer and actions, timeline, kitchen board, messages, calls, customer's phone | a restaurateur can do every action in 4.3 and see it persist and propagate | API tests for every action and its validation; e2e: drag a booking, push tables together, move a ticket to Ready and see the text |
 | **5. Receptionist behaviours** | areas and preferences, accessibility, allergies, occasions, deposits by policy, amend by reference with area, collection slots with capacity, takeaway payment rule, texts with reference | the walk-through in section 1 works end to end by voice | 8 new evaluation scenarios (terrace booking, full terrace offers inside, wheelchair, allergy recorded, amend by reference, cancel by reference, collection slot full, pay on collection); `e2e:turns`-style live run |
-| **6. Hosting** | Fly deploy on Supabase; Worker forwarding `/demo/*` including WebSockets; headers; robots; retention job | `nabl.agency/demo/reception` works from a phone and a laptop with a real key | live smoke test script; `test:routes`; header checks |
+| **6. Hosting** | Oracle Always Free deploy on Supabase; Worker forwarding `/demo/*` including WebSockets; headers; robots; retention job | `nabl.agency/demo/reception` works from a phone and a laptop with a real key | live smoke test script; `test:routes`; header checks |
 | **7. CRM link** | `Demo Sent` stage (four edits); *Send demo*; edge functions; usage feedback; lead panel | issuing, sending, opening and usage all show on the lead | CRM tests; compliance gate refusal test |
 | **8. Next presets** | takeaway and fast food, then barber, hair salon, estate agent, and on through section 8 | each preset meets its own version of 4.8 | per preset: compiler, seeder and evaluation scenarios |
 

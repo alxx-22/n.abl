@@ -8,7 +8,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomBytes } from 'node:crypto';
 import type { Ctx } from './context.ts';
-import { BASE, HttpError, clientIp, cookie, eventStream, json, readJson, sameOrigin, setCookie } from './http.ts';
+import { BASE, HttpError, clientIp, cookie, eventStream, json, overHttps, readJson, sameOrigin, setCookie } from './http.ts';
 import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
 import { tenantState } from './state.ts';
 import type { DemoKey, Workspace } from '../db/demo-repo.ts';
@@ -93,8 +93,7 @@ export const owns = (w: Workspace, who: Who) =>
 /** A shared demo past its hour is gone, even before the sweeper has deleted it. */
 export const ended = (w: Workspace, now = Date.now()) => Boolean(w.expires_at && w.expires_at.getTime() <= now);
 
-const secureCookies = (ctx: Ctx, req: IncomingMessage) =>
-  Boolean(ctx.config.publicBaseUrl?.startsWith('https')) || req.headers['x-forwarded-proto'] === 'https';
+const secureCookies = (ctx: Ctx, req: IncomingMessage) => overHttps(ctx.config, req);
 
 // ── Limits ────────────────────────────────────────────────────────────────
 
@@ -199,7 +198,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   // ── Entering with a key (the only open route) ─────────────────────────
   if (p === '/session' && req.method === 'POST') {
     const { key: raw } = await readJson(req, 10_000);
-    const ip = ipHash(clientIp(req, config.demoProxySecret), config.sessionSecret);
+    const ip = ipHash(clientIp(req, config.demoProxySecret, config.clientIpHeader), config.sessionSecret);
     const n = normaliseKey(String(raw ?? ''));
     const prefix = n ? prefixOf(n) : '----';
     const misses = await demo.recentMisses(ip, prefix, THROTTLE.windowMinutes);

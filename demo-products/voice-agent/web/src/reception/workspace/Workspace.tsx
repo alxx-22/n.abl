@@ -225,7 +225,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
             tenant={t} phase={live.phase} model={live.model} latencies={live.latencies} turn={live.turn} call={live.call}
             stream={stream} card={card} onStart={live.start} onStop={live.stop} suggestions={suggestions(state)}
           />
-          <p className="hint privacy">Calls go through Google’s Gemini free tier, which may use them to improve its models. Use made-up names and details, never a real customer’s.</p>
+          <p className="hint privacy">Calls go through Google’s Gemini. Use made-up names and details, never a real customer’s.</p>
         </div>
 
         <section className="ws-office panel" aria-label="Back office">

@@ -28,7 +28,8 @@ interface Env {
      call back to them. See the fetch handler for why that is not optional. */
   ASSETS: { fetch: (request: Request) => Promise<Response> }
 
-  /* Where the private demos run (demo-products/voice-agent, on Fly.io).
+  /* Where the private demos run (demo-products/voice-agent, on an Oracle Cloud
+     Always Free server behind Caddy: demo-products/voice-agent/deploy/oracle).
      Unset, /demo answers 503 and nothing else changes. */
   DEMO_ORIGIN?: string
 

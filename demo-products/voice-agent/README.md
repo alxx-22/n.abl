@@ -231,17 +231,31 @@ through the Supabase connector and recorded in `voice_schema_migrations`.
 
 ## Deploying
 
-`Dockerfile` and `fly.toml` (London, one always-on machine with 1 GB, with
-Chromium for the scout's render). Set as secrets: `GEMINI_API_KEY` (and
+On an Oracle Cloud **Always Free** server (Arm, 2 processors, 12 GB, in
+Frankfurt beside the Supabase project), at no cost: follow
+[`deploy/oracle/README.md`](deploy/oracle/README.md). The server builds the
+`Dockerfile` (Chromium included, for the scout's render), runs it behind Caddy
+for HTTPS at `demo-origin.nabl.agency`, and checks GitHub every five minutes:
+a push to `voice-agent-DEV` is live a few minutes later, after any call in
+progress has ended. A build that fails, or does not come up healthy, leaves
+the previous one running. `/demo/healthz` says which commit is running.
+
+Settings (`/opt/nabl/secrets.env` on the server): `GEMINI_API_KEY` (and
 optionally `GEMINI_API_KEY_CALLS`, `_SCOUT`, `_TEXT` to split quota by job),
-`DATABASE_URL`, `CONSOLE_PASSWORD`, `SESSION_SECRET`,
-`PUBLIC_BASE_URL=https://nabl.agency` and `DEMO_PROXY_SECRET`. The server
-refuses to start publicly without `CONSOLE_PASSWORD`.
+`DATABASE_URL` (Supabase's session pooler: the server has IPv4 only),
+`CONSOLE_PASSWORD` and `DEMO_PROXY_SECRET`. The script adds a lasting
+`SESSION_SECRET` and `CLIENT_IP_HEADER=x-real-ip` (Caddy writes that header
+on every request, so the key throttle sees real addresses).
 
 Visitors reach it through the site: `worker/index.ts` forwards `/demo/*`,
 WebSockets included, to `DEMO_ORIGIN` (in `wrangler.jsonc`), and passes the
 visitor's address with `DEMO_PROXY_SECRET` (a Worker secret with the same
-value) so the key throttle sees real addresses. `npm run test:routes` in the
-site checks the forwarding. For the phone line, add the Twilio variables in
-`.env.example` and point the number's voice webhook at
-`https://nabl.agency/demo/twilio/voice`.
+value). `npm run test:routes` in the site checks the forwarding. For the phone
+line, add the Twilio variables in `.env.example` and `PUBLIC_BASE_URL`, and
+point the number's voice webhook at `https://nabl.agency/demo/twilio/voice`.
+
+**Gemini's terms**: Google allows only its paid service for apps made
+available to people in the UK, the EEA or Switzerland. The free tier is for
+the team's own testing; before keys go to prospects, turn on billing for the
+key's Google Cloud project (about 2p a call minute at published prices; the
+demo's per-key limits cap the minutes).

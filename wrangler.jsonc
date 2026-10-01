@@ -52,7 +52,7 @@
   // (503) without touching anything else. The proxy secret is a Worker
   // secret: wrangler secret put DEMO_PROXY_SECRET
   "vars": {
-    "DEMO_ORIGIN": "https://nabl-reception.fly.dev"
+    "DEMO_ORIGIN": "https://demo-origin.nabl.agency"
   },
 
   "assets": {
