@@ -186,9 +186,9 @@ function checkPlan(a: RestaurantAnswers, seed: number) {
     }
   }
   assert.equal(new Set(plan.bookings.map((b) => b.reference)).size, plan.bookings.length, 'references are unique');
-  // A prospect's first call works: every bookable time keeps a table for two
-  // and one for four, inside where it has one that size, except Friday and
-  // Saturday from seven till eight.
+  // A prospect's first call works: every bookable time on every day, the
+  // weekend included, keeps a table for two and one for four, inside where it
+  // has one that size.
   if (svc) {
     const inside = (p.booking?.areas ?? []).find((x) => x.kind === 'indoor' && x.reservable)?.key;
     const roomFor = (n: number) => (inside && res.some((r) => r.services.includes(svc.key) && r.area === inside && (r.capacity ?? 0) >= n && (r.min ?? 1) <= n) ? inside : undefined);
@@ -196,9 +196,7 @@ function checkPlan(a: RestaurantAnswers, seed: number) {
     const biggest = Math.max(...res.filter((r) => r.services.includes(svc.key)).map((r) => r.capacity ?? 0));
     for (let d = 0; d < 7; d++) {
       const date = addDays(toLocal(NOW, p.timezone).date, d);
-      const wd = weekdayOf(date);
       for (const t of candidateTimes(svc, date)) {
-        if ((wd === 5 || wd === 6) && t >= '19:00' && t <= '20:00') continue;
         for (const n of [2, 4].filter((x) => x <= biggest)) {
           const ok = checkSlot({ profile: p, serviceKey: svc.key, date, time: t, partySize: n, now: new Date(0), existing, area: roomFor(n) }, { ...svc, lead_minutes: 0 }, t);
           assert.ok(ok, `no table for ${n}${roomFor(n) ? ' inside' : ''} left at ${date} ${t}`);
@@ -238,6 +236,40 @@ test('seed: a week that obeys the rules, for the defaults and twenty varied rest
     if (i % 5 === 2) a.money.takeaway_payment = 'phone';
     if (i % 6 === 3) a.serve.collection.per_slot = 2;
     checkPlan(a, seedFrom(`seed${i}`));
+  }
+});
+
+test('seed: the defaults look like a busy neighbourhood restaurant, not a full one', () => {
+  for (const seed of [42, 7, 1234]) {
+    const { plan, p } = checkPlan(named(), seed);
+    const res = p.booking!.resources;
+    const tables = res.filter((r) => !r.combines && r.services.length).length;
+    const day = (date: string) => plan.bookings.filter((b) => toLocal(b.starts_at, p.timezone).date === date);
+    // Tables in use at a moment, counting a pushed-together pair as two.
+    const inUse = (date: string, time: string) =>
+      day(date)
+        .filter((b) => toLocal(b.starts_at, p.timezone).time <= time && toLocal(b.ends_at, p.timezone).time > time)
+        .reduce((n, b) => n + (res.find((r) => r.key === b.resource_key)!.combines?.length ?? 1), 0);
+    const busiest = (date: string, from: string, to: string) =>
+      Math.max(...candidateTimes(p.booking!.services[0], date).filter((t) => t >= from && t <= to).map((t) => inUse(date, t)));
+    // NOW is a Friday: Saturday is the busiest evening, Tuesday the quietest.
+    const sat = busiest('2026-10-03', '18:00', '21:00');
+    const tue = busiest('2026-10-06', '18:00', '21:00');
+    assert.ok(sat >= tables * 0.7, `seed ${seed}: Saturday evening only reaches ${sat} of ${tables} tables`);
+    assert.ok(sat < tables, `seed ${seed}: Saturday evening is full`);
+    assert.ok(tue < sat, `seed ${seed}: Tuesday (${tue}) is as busy as Saturday (${sat})`);
+    assert.ok(day('2026-10-06').length < day('2026-10-03').length, `seed ${seed}: more bookings on Tuesday than Saturday`);
+    assert.equal(day('2026-10-05').length, 0, 'closed on Monday');
+    // No lumps: no more than four tables arrive at once (a kitchen paces them), and the opening time
+    // is not where draws that missed the service were piled up.
+    for (const b of plan.bookings) {
+      const l = toLocal(b.starts_at, p.timezone);
+      const same = plan.bookings.filter((o) => o.starts_at.getTime() === b.starts_at.getTime()).length;
+      assert.ok(same <= 4, `seed ${seed}: ${same} bookings arrive at ${l.date} ${l.time}`);
+    }
+    // Most people book on the hour or the half hour.
+    const round = plan.bookings.filter((b) => toLocal(b.starts_at, p.timezone).time.endsWith(':00') || toLocal(b.starts_at, p.timezone).time.endsWith(':30'));
+    assert.ok(round.length > plan.bookings.length * 0.6, `seed ${seed}: only ${round.length} of ${plan.bookings.length} on the hour or half hour`);
   }
 });
 

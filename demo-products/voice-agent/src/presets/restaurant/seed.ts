@@ -76,11 +76,31 @@ const LAST = [
 const ALLERGIES = ['Coeliac', 'Severe nut allergy', 'Dairy-free', 'Shellfish allergy', 'Vegan', 'Gluten intolerant', 'Sesame allergy'];
 const REF_LETTERS = 'AHJKLQRWXY';
 
-/** How full each service gets, by day and time of day. */
+/**
+ * How full each service gets, as a share of its table time: a neighbourhood
+ * restaurant with a quiet start to the week and a busy weekend. A table for
+ * two and one for four always stay free (see roomAt), so even the busiest
+ * evening stops short of full.
+ */
 function targetFor(weekday: number, evening: boolean, allDay: boolean): number {
-  if (allDay) return weekday === 0 ? 0.5 : 0.4;
-  if (!evening) return weekday === 6 ? 0.5 : weekday === 5 ? 0.38 : 0.28;
-  return { 0: 0.45, 1: 0.35, 2: 0.4, 3: 0.48, 4: 0.6, 5: 0.82, 6: 0.85 }[weekday] ?? 0.5;
+  if (allDay) return weekday === 0 ? 0.4 : 0.32;
+  if (!evening) return weekday === 6 || weekday === 0 ? 0.45 : weekday === 5 ? 0.32 : 0.22;
+  return { 0: 0.35, 1: 0.3, 2: 0.32, 3: 0.4, 4: 0.5, 5: 0.7, 6: 0.75 }[weekday] ?? 0.4;
+}
+
+/**
+ * When people ask to come, as humps over a service: dinner round half seven,
+ * lunch round a quarter to one, and an all-day Sunday with a big lunch and a smaller early
+ * evening. Each hump is a centre and how far either side it reaches.
+ */
+function humpsFor(first: number, last: number, evening: boolean, allDay: boolean): { at: number; reach: number; weight: number }[] {
+  const within = (m: number) => Math.min(last, Math.max(first, m));
+  if (evening) return [{ at: within(19 * 60 + 30), reach: Math.max(90, (last - first) * 0.6), weight: 1 }];
+  const lunch = first <= 12 * 60 + 45 && 12 * 60 + 45 <= last ? 12 * 60 + 45 : (first + last) / 2;
+  if (!allDay) return [{ at: within(lunch), reach: Math.max(75, (last - first) * 0.6), weight: 1 }];
+  const humps = [{ at: within(lunch + 30), reach: 105, weight: 0.75 }];
+  if (last >= 17 * 60 + 30) humps.push({ at: within(18 * 60), reach: 75, weight: 0.25 });
+  return humps;
 }
 
 export function planRestaurantSeed(profile: TenantProfile, now: Date, seed: number, days = 7): SeedPlan {
@@ -122,36 +142,50 @@ export function planRestaurantSeed(profile: TenantProfile, now: Date, seed: numb
       if (profile.closures?.some((c) => c.date === date)) continue;
       const windows = service.windows.filter((w) => w.days.includes(weekday));
       for (const w of windows) {
-        const allDay = minutesOf(w.last) - minutesOf(w.first) > 5 * 60;
-        const evening = minutesOf(w.first) >= minutesOf('16:00');
+        const first = minutesOf(w.first);
+        const last = minutesOf(w.last);
+        const allDay = last - first > 5 * 60;
+        const evening = first >= minutesOf('16:00');
         const target = targetFor(weekday, evening, allDay);
         const times = candidateTimes(service, date).filter((t) => t >= w.first && t <= w.last);
         if (!times.length) continue;
         // Table-minutes on offer in this service, and how many to fill.
-        const span = minutesOf(w.last) - minutesOf(w.first) + 90;
+        const span = last - first + 90;
         const singles = bookable.filter((r) => !r.combines);
         const capacity = singles.length * span;
         let filled = 0;
         let tries = 0;
-        // Peak times first: half seven for dinner, one o'clock for lunch.
-        const peak = evening ? minutesOf('19:30') : minutesOf('13:00');
-        // A prospect's first call ("a table for two for Sunday lunch?") should
-        // work: every time keeps a table for two and one for four, except Friday
-        // and Saturday between seven and eight, where "that's taken, I can do a
-        // quarter to seven" is the true and better demo.
-        const mayFill = (t: string) => evening && (weekday === 5 || weekday === 6) && t >= '19:00' && t <= '20:00';
-        // Inside, where most callers want to sit, when there is an inside table that size.
+        const humps = humpsFor(first, last, evening, allDay);
+        // A caller should always be able to book a table for two or for four,
+        // inside where there is one that size, at any time on any day: a
+        // restaurant that is full for everyone at half seven on a Saturday
+        // isn't one a prospect recognises, and "that's taken" for a couple
+        // makes the demo look broken.
         const inside = areas.find((a) => a.kind === 'indoor' && a.reservable)?.key;
         const roomFor = (n: number) => (inside && bookable.some((r) => r.area === inside && (r.capacity ?? 0) >= n && (r.min ?? 1) <= n) ? inside : undefined);
         const roomAt = (t: string) =>
-          mayFill(t) || [2, 4].every((n) => n > maxParty || checkSlot({ profile, serviceKey: service.key, date, time: t, partySize: n, now: new Date(0), existing, area: roomFor(n) }, { ...service, lead_minutes: 0 }, t));
+          [2, 4].every((n) => n > maxParty || checkSlot({ profile, serviceKey: service.key, date, time: t, partySize: n, now: new Date(0), existing, area: roomFor(n) }, { ...service, lead_minutes: 0 }, t));
+        // A time from the humps. Draws that fall outside the service are drawn
+        // again rather than pinned to its edge, which piled bookings up at the
+        // opening time. Most people book on the hour or the half hour.
+        const draw = (): string | null => {
+          for (let i = 0; i < 20; i++) {
+            const h = humps.length > 1 && random() > humps[0].weight ? humps[1] : humps[0];
+            // Two draws averaged: a gentle hump rather than a flat spread.
+            const want = h.at + ((random() + random()) / 2 - 0.5) * 2 * h.reach;
+            if (want < first - 7 || want > last + 7) continue;
+            const step = random() < 0.7 ? 30 : service.slot_minutes;
+            const m = Math.min(last, Math.max(first, Math.round(want / step) * step));
+            return times.reduce((best, x) => (Math.abs(minutesOf(x) - m) < Math.abs(minutesOf(best) - m) ? x : best), times[0]);
+          }
+          return null;
+        };
+        // A kitchen paces its arrivals: no more than four tables sit down at once.
+        const arriving = new Map<string, number>();
         while (filled < target * capacity && tries < 400) {
           tries++;
-          // Busiest round the peak, but the whole service fills: early tables at half five are normal.
-          const spread = allDay ? 240 : Math.max(90, (minutesOf(w.last) - minutesOf(w.first)) * 0.6);
-          // Two draws averaged: a gentle hump round the peak rather than a flat spread.
-          const want = peak + ((random() + random()) / 2 - 0.5) * 2 * spread;
-          const t = times.reduce((best, x) => (Math.abs(minutesOf(x) - want) < Math.abs(minutesOf(best) - want) ? x : best), times[0]);
+          const t = draw();
+          if (!t || (arriving.get(t) ?? 0) >= 4) continue;
           const party = pick(parties);
           const roll = random();
           const accessible = roll < 0.03;
@@ -173,6 +207,7 @@ export function planRestaurantSeed(profile: TenantProfile, now: Date, seed: numb
             continue;
           }
           filled += minutes * (r.combines?.length ?? 1);
+          arriving.set(t, (arriving.get(t) ?? 0) + 1);
 
           const extras = random();
           const tags: string[] = [];
