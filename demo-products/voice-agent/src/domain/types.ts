@@ -76,6 +76,16 @@ export interface TableLayout {
   rotation?: number;
 }
 
+export interface PlanFixture {
+  key: string;
+  area: string;
+  kind: 'bar' | 'door' | 'window' | 'wall';
+  x: number;
+  y: number;
+  length: number;
+  rotation: number;
+}
+
 /** A seating area: indoor, a terrace, the bar, a private room. */
 export interface SeatingArea {
   key: string;
@@ -197,6 +207,8 @@ export interface TenantProfile {
     areas?: SeatingArea[];
     /** Highchairs available. */
     highchairs?: number;
+    /** Room shapes drawn on the floor plan (bar, door, window, wall): looks only. */
+    fixtures?: PlanFixture[];
   };
   menu?: Menu;
   ordering?: Ordering;

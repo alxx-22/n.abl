@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { MenuCategory, ModifierGroup } from '../../domain/types.ts';
-import { autoLayout } from './layout.ts';
+import { FIXTURE_LENGTH, autoLayout, footprint } from './layout.ts';
 
 export interface ServicePeriod {
   label: string;
@@ -48,6 +48,19 @@ export interface TableAnswer {
   joins: string[];
 }
 
+/** A room shape on the floor plan, for looks only: a bar counter, a door, a window, a wall. */
+export interface FixtureAnswer {
+  key: string;
+  area: string;
+  kind: 'bar' | 'door' | 'window' | 'wall';
+  x: number;
+  y: number;
+  /** Along its run, in plan units (a door: its width). */
+  length: number;
+  /** 0, 90, 180 or 270: which way it runs, and which way a door opens. */
+  rotation: number;
+}
+
 export interface RestaurantAnswers {
   version: 1;
   basics: {
@@ -79,6 +92,9 @@ export interface RestaurantAnswers {
   seating: {
     areas: AreaAnswer[];
     tables: TableAnswer[];
+    fixtures: FixtureAnswer[];
+    /** 2: each area is its own room, and positions are within it (layout.ts). 1: one canvas for every area. */
+    plan: number;
     /** Minutes a table is held, by party size. */
     sittings: { up_to_2: number; up_to_4: number; up_to_8: number; larger: number };
     max_party: number;
@@ -200,8 +216,27 @@ export function defaultTables(areas = defaultAreas()): TableAnswer[] {
   return tables;
 }
 
+/** A bar, a door and the window by the window tables, so the sample room looks like a room. */
+export function defaultFixtures(tables: TableAnswer[]): FixtureAnswer[] {
+  const inside = tables.filter((t) => t.area === 'indoor');
+  const windowTables = inside.filter((t) => t.features.includes('window'));
+  if (!inside.length) return [];
+  const right = Math.max(...inside.map((t) => t.x + footprint(t).w));
+  const bottom = Math.max(...inside.map((t) => t.y + footprint(t).h));
+  const out: FixtureAnswer[] = [];
+  if (windowTables.length) {
+    const x0 = Math.min(...windowTables.map((t) => t.x));
+    const x1 = Math.max(...windowTables.map((t) => t.x + footprint(t).w));
+    out.push({ key: 'F1', area: 'indoor', kind: 'window', x: Math.max(10, x0 - 10), y: 10, length: Math.max(80, x1 - x0 + 20), rotation: 0 });
+  }
+  out.push({ key: 'F2', area: 'indoor', kind: 'bar', x: Math.max(40, right - FIXTURE_LENGTH.bar.start), y: bottom + 50, length: FIXTURE_LENGTH.bar.start, rotation: 0 });
+  out.push({ key: 'F3', area: 'indoor', kind: 'door', x: 40, y: bottom + 40, length: FIXTURE_LENGTH.door.start, rotation: 0 });
+  return out;
+}
+
 export function defaultAnswers(): RestaurantAnswers {
   const areas = defaultAreas();
+  const tables = defaultTables(areas);
   return {
     version: 1,
     basics: {
@@ -233,7 +268,9 @@ export function defaultAnswers(): RestaurantAnswers {
     },
     seating: {
       areas,
-      tables: defaultTables(areas),
+      tables,
+      fixtures: defaultFixtures(tables),
+      plan: 2,
       sittings: { up_to_2: 75, up_to_4: 90, up_to_8: 120, larger: 150 },
       max_party: 10,
       notice_minutes: 30,

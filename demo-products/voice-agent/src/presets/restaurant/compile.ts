@@ -307,7 +307,9 @@ export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }):
     opening_hours: openingHours(a),
     closures: a.hours.closures.filter((c) => /^\d{4}-\d{2}-\d{2}$/.test(c.date)).map((c) => ({ date: c.date, note: c.note || undefined })),
     knowledge: knowledge(a),
-    booking: bookable ? { services: [service(a)], resources: resources(a), areas: areas(a), highchairs: a.seating.highchairs } : undefined,
+    booking: bookable
+      ? { services: [service(a)], resources: resources(a), areas: areas(a), highchairs: a.seating.highchairs, fixtures: a.seating.fixtures.length ? a.seating.fixtures : undefined }
+      : undefined,
     menu: hasMenu ? { categories: a.menu.categories, modifier_groups: a.menu.modifier_groups, allergen_statement: a.menu.allergen_statement } : undefined,
     ordering: hasMenu ? ordering(a) : undefined,
     policies,

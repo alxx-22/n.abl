@@ -144,7 +144,7 @@ export function Builder({ id, me }: { id: string; me: Me }) {
         ) : null}
       </RxTop>
 
-      <main className="rx-main builder">
+      <main className={`rx-main builder ${current.key === 'floor' ? 'wide-step' : ''}`}>
         <nav className="steps" aria-label="Setup steps">
           <ol>
             {steps.map((s, n) => {

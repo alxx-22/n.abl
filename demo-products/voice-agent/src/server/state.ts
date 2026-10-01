@@ -37,6 +37,7 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus) {
             rotation: r.layout!.rotation ?? 0, accessible: Boolean(r.accessible), features: r.features ?? [], bookable: r.services.length > 0,
           })),
           pairs: t.profile.booking.resources.filter((r) => r.combines).map((r) => ({ key: r.key, label: r.label, combines: r.combines!, capacity: r.capacity ?? 0, bookable: r.services.length > 0 })),
+          fixtures: t.profile.booking.fixtures ?? [],
         }
       : null,
     opening_hours: t.profile.opening_hours,

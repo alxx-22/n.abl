@@ -1,10 +1,10 @@
 // What the prospect API (src/server/demo.ts) sends. The restaurant's answers
 // are the server's own type: one definition, checked on both sides.
 
-import type { AreaAnswer, RestaurantAnswers, TableAnswer } from '../../../src/presets/restaurant/answers.ts';
+import type { AreaAnswer, FixtureAnswer, RestaurantAnswers, TableAnswer } from '../../../src/presets/restaurant/answers.ts';
 import type { TenantState } from '../types.ts';
 
-export type { AreaAnswer, RestaurantAnswers, TableAnswer };
+export type { AreaAnswer, FixtureAnswer, RestaurantAnswers, TableAnswer };
 
 export interface Limits {
   days: number;
@@ -139,6 +139,7 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
     areas: { key: string; label: string; kind: string; reservable: boolean; enquiry_only?: boolean; weather_note?: string }[];
     tables: PlanTable[];
     pairs: { key: string; label: string; combines: string[]; capacity: number; bookable: boolean }[];
+    fixtures: { key: string; area: string; kind: 'bar' | 'door' | 'window' | 'wall'; x: number; y: number; length: number; rotation: number }[];
   } | null;
   opening_hours: { days: number[]; open: string; close: string; label?: string }[];
   bookings: LiveBooking[];

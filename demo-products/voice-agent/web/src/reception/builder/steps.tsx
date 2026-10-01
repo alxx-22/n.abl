@@ -206,12 +206,12 @@ export function StepServe({ a, set }: StepProps) {
 
 // ── 4. Seating ──────────────────────────────────────────────────────────
 
-const KINDS: { value: AreaAnswer['kind']; label: string }[] = [
+export const KINDS: { value: AreaAnswer['kind']; label: string }[] = [
   { value: 'indoor', label: 'Inside' }, { value: 'outdoor', label: 'Outdoor' }, { value: 'bar', label: 'Bar or counter' },
   { value: 'private', label: 'Private room' }, { value: 'other', label: 'Other' },
 ];
 
-function nextTableKey(tables: TableAnswer[]): number {
+export function nextTableKey(tables: TableAnswer[]): number {
   return Math.max(0, ...tables.map((t) => Number(/^T(\d+)$/.exec(t.key)?.[1] ?? 0))) + 1;
 }
 
@@ -229,15 +229,27 @@ export function removeTable(d: RestaurantAnswers, key: string): void {
   for (const t of d.seating.tables) t.joins = t.joins.filter((j) => j !== key);
 }
 
+const AREA_LABEL: Record<AreaAnswer['kind'], string> = { indoor: 'Inside', outdoor: 'Terrace', bar: 'Bar', private: 'Private dining room', other: 'Upstairs' };
+
+/** The key a new area of this kind will get. */
+export function nextAreaKey(areas: AreaAnswer[], kind: AreaAnswer['kind']): string {
+  let key = AREA_LABEL[kind].toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  while (areas.some((x) => x.key === key)) key += '_2';
+  return key;
+}
+
+/** A new area with one table in it; returns its key. */
+export function addArea(d: RestaurantAnswers, kind: AreaAnswer['kind']): string {
+  const label = AREA_LABEL[kind];
+  const key = nextAreaKey(d.seating.areas, kind);
+  d.seating.areas.push({ key, label, kind, reservable: kind !== 'bar', enquiry_only: kind === 'private', weather_rule: kind === 'outdoor' ? 'move_inside' : null });
+  addTable(d, key, kind === 'private' ? 8 : 4);
+  return key;
+}
+
 export function StepSeating({ a, set }: StepProps) {
   const sizes = [2, 4, 6, 8];
-  const addArea = (kind: AreaAnswer['kind']) => set((d) => {
-    const label = { indoor: 'Inside', outdoor: 'Terrace', bar: 'Bar', private: 'Private dining room', other: 'Upstairs' }[kind];
-    let key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    while (d.seating.areas.some((x) => x.key === key)) key += '_2';
-    d.seating.areas.push({ key, label, kind, reservable: kind !== 'bar', enquiry_only: kind === 'private', weather_rule: kind === 'outdoor' ? 'move_inside' : null });
-    addTable(d, key, kind === 'private' ? 8 : 4);
-  });
+  const addArea_ = (kind: AreaAnswer['kind']) => set((d) => void addArea(d, kind));
   return (
     <div className="fields">
       <p className="lead">Your areas and how many tables of each size. You arrange them on the floor plan next.</p>
@@ -261,6 +273,7 @@ export function StepSeating({ a, set }: StepProps) {
                 if (mine.length && !confirm(`Remove ${ar.label} and its ${mine.length} tables?`)) return;
                 set((d) => {
                   for (const t of d.seating.tables.filter((x) => x.area === ar.key)) removeTable(d, t.key);
+                  d.seating.fixtures = d.seating.fixtures.filter((f) => f.area !== ar.key);
                   d.seating.areas.splice(i, 1);
                 });
               }}>Remove</button>
@@ -319,7 +332,7 @@ export function StepSeating({ a, set }: StepProps) {
       })}
       <div className="row-tools">
         <span className="muted small">Add an area:</span>
-        {KINDS.map((k) => <button type="button" className="small" key={k.value} onClick={() => addArea(k.value)}>+ {k.label}</button>)}
+        {KINDS.map((k) => <button type="button" className="small" key={k.value} onClick={() => addArea_(k.value)}>+ {k.label}</button>)}
       </div>
 
       <h3 className="sub">Sittings and limits</h3>

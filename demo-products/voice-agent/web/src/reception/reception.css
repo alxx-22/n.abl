@@ -56,6 +56,9 @@ h3.sub { margin-top: 12px; font-size: 1rem; }
 .issues li.error { border-color: var(--danger); background: #2a1512; }
 .step-nav { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line); }
 .preview { position: sticky; top: 16px; display: grid; gap: 8px; }
+/* The floor plan needs the room more than the spoken preview does. */
+.builder.wide-step { grid-template-columns: 210px minmax(0, 1fr); }
+.builder.wide-step .preview { display: none; }
 .preview p { margin: 0; }
 .preview .say { font-size: 15px; color: var(--heading); border-left: 3px solid var(--accent); padding-left: 10px; }
 .facts { margin: 0; padding-left: 18px; font-size: 13px; color: var(--cream); display: grid; gap: 4px; }
@@ -172,6 +175,39 @@ textarea.prose { font-family: var(--font); font-size: 14px; min-height: 0; resiz
 .chips label:focus-within { outline: 2px solid var(--amber); outline-offset: 1px; }
 
 svg.floor { width: 100%; height: auto; display: block; touch-action: none; user-select: none; }
+.plan-scroll { overflow: auto; max-height: 75vh; border-radius: 10px; }
+.plan-scroll svg.floor { min-width: 100%; }
+.grid-dot { fill: rgba(255, 255, 255, 0.09); }
+.guide { stroke: var(--info); stroke-width: 1.5; stroke-dasharray: 4 4; pointer-events: none; }
+.area-tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.area-tabs [role='tab'] { border-radius: 999px; padding: 6px 14px; font-weight: 600; }
+.area-tabs [role='tab'] .count { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 4px; }
+.area-tabs [role='tab'][aria-selected='true'] { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+.area-tabs [role='tab'][aria-selected='true'] .count { color: var(--ink); opacity: 0.75; }
+.area-tabs .add-area { width: auto; padding: 6px 12px; border-radius: 999px; font-size: 13px; }
+.plan-tools { flex-wrap: wrap; }
+.tool-group { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.zoom { display: inline-flex; gap: 2px; }
+.zoom button { min-width: 34px; }
+.join-offer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, var(--info) 14%, var(--surface-2)); border: 1px solid color-mix(in srgb, var(--info) 45%, transparent); font-size: 13px; }
+.join-offer span { flex: 1; min-width: 200px; }
+/* Room shapes: muted, so the tables stay the point. */
+.fixture { outline: none; }
+.edit .fixture { cursor: grab; }
+.fixture .hit { fill: transparent; }
+.fixture .shape { fill: #3a3027; stroke: #6b5a48; stroke-width: 2; }
+.f-bar .shape { fill: #4a3a2a; }
+.f-bar .stool { fill: #3a322b; stroke: #5a4b3c; stroke-width: 1.5; }
+.f-wall .shape { fill: #6b5a48; stroke: none; }
+.f-window .shape { fill: rgba(143, 184, 224, 0.25); stroke: #8fb8e0; stroke-width: 1.5; }
+.f-window .pane { stroke: #8fb8e0; stroke-width: 1; }
+.f-door .swing { fill: none; stroke: #8a7a68; stroke-width: 1.5; stroke-dasharray: 4 4; }
+.f-door .leaf { stroke: #c9b79f; stroke-width: 4; stroke-linecap: round; }
+.f-door .sill { stroke: var(--ground); stroke-width: 8; }
+.f-label { fill: var(--cream); font-size: 13px; font-weight: 700; text-anchor: middle; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; opacity: 0.8; }
+.fixture.selected .shape, .fixture:focus-visible .shape { stroke: var(--accent); stroke-width: 3; }
+.fixture.selected .leaf, .fixture:focus-visible .leaf { stroke: var(--accent); }
+.fixture.lifted { opacity: 0.7; }
 .zone rect { fill: rgba(255, 255, 255, 0.025); stroke: var(--line); stroke-width: 1.5; }
 .zone.outdoor rect { fill: rgba(140, 197, 138, 0.05); stroke: #3d5a3c; stroke-dasharray: 8 6; }
 .zone.private rect { fill: rgba(143, 184, 224, 0.05); stroke: #2f4760; }
@@ -200,7 +236,9 @@ svg.floor { width: 100%; height: auto; display: block; touch-action: none; user-
 .table.late .top { fill: #4a2019; stroke: var(--danger); stroke-width: 3; }
 .table.drop .top { stroke: var(--ok); stroke-width: 5; }
 .table.no-drop .top { stroke: var(--danger); stroke-width: 5; }
-.table.lifted { opacity: 0.6; }
+.table.lifted { opacity: 0.85; }
+.table.lifted .top { stroke: var(--info); stroke-width: 3; }
+.table.clash .top { stroke: var(--danger); stroke-width: 4; fill: var(--danger-ground); }
 .table.flash .top { animation: tableflash 1.2s ease-in-out 3; }
 @keyframes tableflash { 50% { fill: var(--amber-light); } }
 .badge-dot circle { stroke: #15120f; stroke-width: 2; }

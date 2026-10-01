@@ -5,7 +5,8 @@
 
 import { ALLERGENS, type Allergen, type MenuCategory, type MenuItem, type ModifierGroup } from '../../domain/types.ts';
 import { VOICE_NAMES } from '../../domain/voices.ts';
-import { defaultAnswers, type AreaAnswer, type DayHours, type RestaurantAnswers, type TableAnswer } from './answers.ts';
+import { defaultAnswers, type AreaAnswer, type DayHours, type FixtureAnswer, type RestaurantAnswers, type TableAnswer } from './answers.ts';
+import { FIXTURE_LENGTH, intoRooms } from './layout.ts';
 import { tableBookable } from './compile.ts';
 
 const str = (v: unknown, max: number, fallback = ''): string => (typeof v === 'string' ? v.trim().slice(0, max) : fallback);
@@ -81,6 +82,24 @@ function tables(v: unknown, areaKeys: Set<string>, d: TableAnswer[]): TableAnswe
     if (!u.joins.includes(t.key)) u.joins.push(t.key);
   }
   return unique;
+}
+
+function fixtures(v: unknown, areaKeys: Set<string>, d: FixtureAnswer[]): FixtureAnswer[] {
+  if (v === undefined) return d;
+  const seen = new Set<string>();
+  return arr(v).slice(0, 60).flatMap((x: any, i): FixtureAnswer[] => {
+    const kind = oneOf(x?.kind, ['bar', 'door', 'window', 'wall'] as const, 'wall');
+    const k = typeof x?.key === 'string' && /^[A-Za-z0-9]{1,8}$/.test(x.key) ? x.key : `F${i + 1}`;
+    if (seen.has(k) || typeof x?.area !== 'string' || !areaKeys.has(x.area)) return [];
+    seen.add(k);
+    const L = FIXTURE_LENGTH[kind];
+    return [{
+      key: k, area: x.area, kind,
+      x: int(x?.x, 0, 2000, 40), y: int(x?.y, 0, 4000, 40),
+      length: int(x?.length, L.min, L.max, L.start),
+      rotation: (int(x?.rotation, 0, 359, 0) / 90 | 0) * 90 % 360,
+    }];
+  });
 }
 
 const allergens = (v: unknown): Allergen[] => [...new Set(arr(v).filter((a): a is Allergen => ALLERGENS.includes(a as Allergen)))];
@@ -190,7 +209,10 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
     },
     seating: {
       areas: ar,
-      tables: tables(st.tables, areaKeys, d.seating.tables),
+      // A plan from before areas had their own rooms moves into them, once.
+      tables: st.tables !== undefined && st.plan !== 2 ? intoRooms(ar, tables(st.tables, areaKeys, d.seating.tables)) : tables(st.tables, areaKeys, d.seating.tables),
+      fixtures: fixtures(st.fixtures, areaKeys, st.tables !== undefined && st.fixtures === undefined ? [] : d.seating.fixtures),
+      plan: 2,
       sittings: {
         up_to_2: int(st.sittings?.up_to_2, 30, 300, d.seating.sittings.up_to_2),
         up_to_4: int(st.sittings?.up_to_4, 30, 300, d.seating.sittings.up_to_4),

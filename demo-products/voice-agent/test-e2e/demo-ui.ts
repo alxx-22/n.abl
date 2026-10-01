@@ -130,7 +130,42 @@ try {
   await page.mouse.up();
   await page.waitForSelector('#tb-label');
   await page.waitForSelector('.save-state.saved', { timeout: 10000 });
+  // Plan units to screen pixels, from the drawing's width.
+  const scale = (await page.locator('svg.floor').boundingBox())!.width / 1000;
+  const dragBy = async (label: string, to: { x: number; y: number } | string) => {
+    const b = (await page.locator(`svg.floor g.table[aria-label^="${label},"]`).boundingBox())!;
+    const target = typeof to === 'string' ? (await page.locator(`svg.floor g.table[aria-label^="${to},"]`).boundingBox())! : null;
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    await page.mouse.down();
+    const end = target ? { x: target.x + target.width / 2, y: target.y + target.height / 2 } : { x: b.x + b.width / 2 + (to as { x: number }).x * scale, y: b.y + b.height / 2 + (to as { y: number }).y * scale };
+    await page.mouse.move(end.x, end.y, { steps: 8 });
+    await page.mouse.up();
+  };
+  // Dropped on another table, it slides to the nearest clear space.
+  await dragBy('Table 5', 'Table 6');
+  await page.waitForSelector('.toast:has-text("nearest clear space")', { timeout: 5000 });
+  // Dropped next to another, the builder offers to push them together.
+  await dragBy('Table 9', { x: -24, y: 0 });
+  await page.waitForSelector('.join-offer:has-text("Table 9 is next to Table 8")', { timeout: 5000 });
   await shot(page, 'builder-floor');
+  // Mid-drag: the guides show what it lines up with.
+  const b16 = (await page.locator('svg.floor g.table[aria-label^="Table 16,"]').boundingBox())!;
+  await page.mouse.move(b16.x + b16.width / 2, b16.y + b16.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b16.x + b16.width / 2 + 60 * scale, b16.y + b16.height / 2 + 4 * scale, { steps: 6 });
+  await page.waitForSelector('svg.floor line.guide', { state: 'attached' });
+  await shot(page, 'builder-floor-guides');
+  await page.mouse.move(b16.x + b16.width / 2, b16.y + b16.height / 2, { steps: 4 });
+  await page.mouse.up();
+  await page.click('.join-offer button:has-text("Join them")');
+  await page.waitForSelector('.join-offer', { state: 'detached' });
+  // Each area is its own tab; a bar goes on the terrace.
+  await page.click('.area-tabs [role=tab]:has-text("Terrace")');
+  await page.click('.plan-tools button:has-text("+ Bar")');
+  await page.waitForSelector('svg.floor g.fixture.f-bar.selected');
+  await page.waitForSelector('#fx-length');
+  await page.waitForSelector('.save-state.saved', { timeout: 10000 });
+  await shot(page, 'builder-floor-terrace');
   await next('Menu');
   await shot(page, 'builder-menu');
   await next('Money');
@@ -143,6 +178,10 @@ try {
   await page.waitForSelector('.workspace svg.floor g.table', { timeout: 20000 });
   await page.waitForSelector('.phone');
   await shot(page, 'workspace-floor');
+  await page.click('.area-tabs [role=tab]:has-text("Inside")');
+  await page.waitForSelector('svg.floor[aria-label*="Inside"]');
+  await shot(page, 'workspace-floor-inside');
+  await page.click('.area-tabs [role=tab]:has-text("All areas")');
 
   // Open a booked table on the timeline, then move it with the drawer.
   await page.click('.tabs button:has-text("Timeline")');

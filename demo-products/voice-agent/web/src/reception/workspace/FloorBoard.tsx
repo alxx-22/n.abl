@@ -1,7 +1,8 @@
 // The floor plan board, the back office's centrepiece: tonight's service at
 // a glance, every table coloured by what it is doing at the chosen minute.
 
-import { FloorPlan, unbookableTag } from '../FloorPlan.tsx';
+import { useState } from 'react';
+import { FloorPlan, ZoomControls, unbookableTag } from '../FloorPlan.tsx';
 import type { LiveState } from '../types.ts';
 import { addDays, bookingOn, dayLabel, hhmm, looksAt, servicesOn, span } from './model.ts';
 
@@ -41,6 +42,9 @@ export function FloorBoard(props: {
 }) {
   const { state, view, setView, today } = props;
   const plan = state.plan;
+  // null: every area, one under another.
+  const [area, setArea] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
   if (!plan) return <p className="empty">This business takes no table bookings.</p>;
   const services = servicesOn(state, view.date);
   const isToday = view.date === today;
@@ -55,6 +59,10 @@ export function FloorBoard(props: {
   const arriving = inService.filter((b) => b.visit_status === 'expected' && span(b)[0] >= view.minute && span(b)[0] - view.minute <= 30).length;
   const free = Object.entries(looks).filter(([k, l]) => (l.state === 'free' || l.state === 'later') && plan.tables.find((t) => t.key === k)?.bookable).length;
   const due = state.orders.filter((o) => o.status !== 'completed' && o.status !== 'cancelled').length;
+
+  const areasWithTables = plan.areas.filter((a) => plan.tables.some((t) => t.area === a.key));
+  // One area only: no "All areas" tab, that area is the view.
+  const shownArea = areasWithTables.length === 1 ? areasWithTables[0].key : area && areasWithTables.some((a) => a.key === area) ? area : null;
 
   const canDrop = (from: string, to: string) => {
     const b = bookingOn(state, from, view.date, view.minute);
@@ -88,11 +96,29 @@ export function FloorBoard(props: {
         <span><b>{arriving}</b> arriving in the next half hour</span>
         {state.tenant.has_ordering ? <span><b>{due}</b> takeaway orders open</span> : null}
       </div>
-      <div className="floor-wrap live">
+      <div className="area-tabs" role="tablist" aria-label="Seating areas">
+        {areasWithTables.length > 1 ? (
+          <button type="button" role="tab" aria-selected={!shownArea} onClick={() => setArea(null)}>All areas</button>
+        ) : null}
+        {areasWithTables.map((a) => {
+          const free = Object.entries(looks).filter(([k, l]) => (l.state === 'free' || l.state === 'later') && plan.tables.find((t) => t.key === k && t.area === a.key)?.bookable).length;
+          return (
+            <button type="button" role="tab" key={a.key} aria-selected={shownArea === a.key} onClick={() => setArea(a.key)}>
+              {a.label} <span className="count">{free} free</span>
+            </button>
+          );
+        })}
+        <span className="spacer" />
+        <ZoomControls zoom={zoom} setZoom={setZoom} />
+      </div>
+      <div className="floor-wrap live plan-scroll">
         <FloorPlan
           mode="live"
-          label={`Floor plan at ${hhmm(view.minute)}, ${dayLabel(view.date, today)}`}
+          area={shownArea}
+          zoom={zoom}
+          label={`Floor plan${shownArea ? `, ${plan.areas.find((a) => a.key === shownArea)?.label}` : ''}, at ${hhmm(view.minute)}, ${dayLabel(view.date, today)}`}
           tables={plan.tables.map((t) => ({ ...t, tag: unbookableTag(t, plan.areas.find((a) => a.key === t.area)) }))}
+          fixtures={plan.fixtures ?? []}
           areas={plan.areas}
           looks={looks}
           selected={props.selected}

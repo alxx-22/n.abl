@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultAnswers, tablesFromCounts, defaultAreas, defaultTables, type RestaurantAnswers } from '../src/presets/restaurant/answers.ts';
-import { areaBounds, autoLayout, tableSize } from '../src/presets/restaurant/layout.ts';
+import { autoLayout, fixtureRect, footprint, freeSpot, intoRooms, overlaps, roomBounds, snap, tableRect } from '../src/presets/restaurant/layout.ts';
 import { compileRestaurant, dayRange, hoursSentence } from '../src/presets/restaurant/compile.ts';
 import { sanitiseRestaurant, validateRestaurant } from '../src/presets/restaurant/validate.ts';
 import { planRestaurantSeed, seedFrom } from '../src/presets/restaurant/seed.ts';
@@ -146,25 +146,70 @@ test('restaurant: validation says what is missing', () => {
 test('restaurant: tables from counts are laid out without overlapping', () => {
   const t = tablesFromCounts(defaultAreas(), { indoor: { 2: 6, 4: 8, 6: 3, 8: 1 }, terrace: { 2: 2, 4: 6, 6: 0, 8: 0 } });
   assert.equal(t.length, 26);
-  for (const x of t) for (const y of t) if (x !== y) assert.ok(Math.abs(x.x - y.x) >= 30 || Math.abs(x.y - y.y) >= 30, `${x.key} overlaps ${y.key}`);
-  assert.ok(t.every((x) => x.x > 0 && x.y > 0 && x.x < 1000));
+  for (const x of t) for (const y of t) if (x !== y && x.area === y.area) assert.ok(!overlaps(tableRect(x), tableRect(y), 20), `${x.key} overlaps ${y.key}`);
+  assert.ok(t.every((x) => x.x > 0 && x.y > 0 && x.x + footprint(x).w <= 1000));
 });
 
-test('restaurant: a table added to a laid-out room never lands in another area', () => {
+test('floor plan: each area is its own room, and a table added to one leaves the others alone', () => {
   const areas = defaultAreas();
   let tables = defaultTables(areas);
-  const rect = (x: (typeof tables)[number]) => ({ ...tableSize(x), x: x.x, y: x.y });
-  const clash = (p: { x: number; y: number; w: number; h: number }, q: typeof p) => p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h && q.y < p.y + p.h;
-  // Twelve more inside, a few at a time, as the builder's + button does.
+  const terrace = JSON.stringify(tables.filter((x) => x.area === 'terrace'));
+  assert.deepEqual(roomBounds('terrace', tables)!.x, 40, 'the terrace starts at the top left of its own room');
+  // Twelve more inside, one at a time, as the builder's + button does.
   for (let n = 0; n < 12; n++) {
     const k = 16 + n;
-    tables.push({ key: `T${k}`, label: `Table ${k}`, area: 'indoor', seats: n % 3 === 0 ? 6 : 4, shape: n % 3 === 0 ? 'rect' : 'square', x: 0, y: 0, rotation: 0, accessible: false, walk_in: false, features: [], joins: [] });
+    tables.push({ key: `T${k}`, label: `Table ${k}`, area: 'indoor', seats: n % 3 === 0 ? 6 : 4, shape: n % 3 === 0 ? 'rect' : 'square', x: 0, y: 0, rotation: n % 4 === 0 ? 90 : 0, accessible: false, walk_in: false, features: [], joins: [] });
     tables = autoLayout(areas, tables);
-    for (const x of tables) for (const y of tables) if (x !== y) assert.ok(!clash(rect(x), rect(y)), `${x.key} overlaps ${y.key} after adding T${k}`);
-    const inside = areaBounds('indoor', tables)!;
-    for (const t of tables.filter((x) => x.area === 'terrace')) assert.ok(!clash(rect(t), inside), `${t.key} is inside the indoor zone after adding T${k}`);
+    const inside = tables.filter((x) => x.area === 'indoor');
+    for (const x of inside) for (const y of inside) if (x !== y) assert.ok(!overlaps(tableRect(x), tableRect(y), 0), `${x.key} overlaps ${y.key} after adding T${k}`);
   }
-  assert.ok(tables.every((x) => x.x + tableSize(x).w <= 1000));
+  assert.equal(JSON.stringify(tables.filter((x) => x.area === 'terrace')), terrace, 'the terrace did not move');
+  assert.ok(tables.every((x) => x.x + footprint(x).w <= 1000));
+  assert.deepEqual(footprint({ seats: 6, shape: 'rect', rotation: 90 }), { w: 70, h: 162 }, 'a long table turned sideways is tall');
+});
+
+test('floor plan: lining up, the nearest clear space, and plans from before areas had rooms', () => {
+  // Within eight units of a neighbour's top and left: lined up exactly, with the guides to draw.
+  const s = snap({ x: 205, y: 43, w: 76, h: 76 }, [{ x: 100, y: 40, w: 76, h: 76 }, { x: 200, y: 200, w: 76, h: 76 }]);
+  assert.deepEqual([s.x, s.y], [200, 40]);
+  assert.deepEqual(s.guides, [{ x: 200 }, { y: 40 }]);
+  // Nowhere near: the grid.
+  const g = snap({ x: 503, y: 617, w: 56, h: 56 }, [{ x: 100, y: 40, w: 76, h: 76 }]);
+  assert.deepEqual([g.x, g.y, g.guides.length], [500, 620, 0]);
+  // Dropped on top of another table: the closest spot clear of it.
+  const others = [{ x: 100, y: 100, w: 76, h: 76 }];
+  const spot = freeSpot({ w: 76, h: 76 }, { x: 110, y: 110 }, others);
+  assert.ok(!overlaps({ ...spot, w: 76, h: 76 }, others[0], 4));
+  assert.ok(Math.hypot(spot.x - 110, spot.y - 110) <= 90, `went far: ${JSON.stringify(spot)}`);
+  assert.deepEqual(freeSpot({ w: 76, h: 76 }, { x: 400, y: 400 }, others), { x: 400, y: 400 }, 'a clear drop stays put');
+
+  // A plan saved with every area on one canvas (the terrace in a band below):
+  // each area moves to the top left of its own room, keeping its shape.
+  const old: any = named();
+  const terrace = old.seating.tables.filter((t: any) => t.area === 'terrace');
+  terrace.forEach((t: any, i: number) => Object.assign(t, { x: 60 + i * 110, y: 420 }));
+  delete old.seating.plan;
+  delete old.seating.fixtures;
+  const moved = sanitiseRestaurant(old);
+  assert.equal(moved.seating.plan, 2);
+  assert.deepEqual(moved.seating.tables.filter((t) => t.area === 'terrace').map((t) => [t.x, t.y]), [[40, 40], [150, 40], [260, 40], [370, 40]]);
+  assert.deepEqual(moved.seating.fixtures, [], 'no room shapes are invented for a plan that had none');
+  assert.equal(JSON.stringify(sanitiseRestaurant(moved)), JSON.stringify(moved), 'moved once only');
+  assert.deepEqual(intoRooms(defaultAreas(), defaultTables()).map((t) => [t.x, t.y]), defaultTables().map((t) => [t.x, t.y]), 'a plan already in rooms stays put');
+
+  // Room shapes: kept to their area, their kinds and sensible sizes.
+  const f: any = named();
+  f.seating.fixtures = [
+    { key: 'F1', area: 'indoor', kind: 'bar', x: 100, y: 300, length: 99999, rotation: 95 },
+    { key: 'F2', area: 'nowhere', kind: 'door', x: 1, y: 1, length: 70, rotation: 0 },
+    { key: 'F3', area: 'terrace', kind: 'trapdoor', x: 1, y: 1, length: 70, rotation: 180 },
+  ];
+  const fx = sanitiseRestaurant(f).seating.fixtures;
+  assert.deepEqual(fx.map((x) => [x.key, x.kind, x.length, x.rotation]), [['F1', 'bar', 700, 90], ['F3', 'wall', 70, 180]]);
+  assert.deepEqual(fixtureRect(fx[0]), { x: 100, y: 300, w: 46, h: 700 }, 'a bar turned sideways runs down the room');
+  // The sample room has a bar, a door and a window, and they compile into the profile for the board.
+  assert.deepEqual(named().seating.fixtures.map((x) => x.kind).sort(), ['bar', 'door', 'window']);
+  assert.equal(compile(named()).booking!.fixtures!.length, 3);
 });
 
 function checkPlan(a: RestaurantAnswers, seed: number) {

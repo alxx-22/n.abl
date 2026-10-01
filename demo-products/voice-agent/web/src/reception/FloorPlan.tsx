@@ -1,10 +1,15 @@
-// The floor plan, drawn as SVG from the builder's layout. One component for
-// both places it appears: the builder, where tables are dragged into place,
-// and the back office, where each table shows its state and a booking is
-// dragged from one table to another.
+// The floor plan, drawn as SVG. One component for both places it appears:
+// the builder, where tables and room shapes are dragged into place one area
+// at a time, and the back office, where each table shows its state and a
+// booking is dragged from one table to another.
+//
+// Each area is its own room (layout.ts): drawn alone, or, in the back
+// office's "All areas", stacked one under another.
 
-import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
-import { CANVAS_WIDTH, areaBounds, tableSize } from '../../../src/presets/restaurant/layout.ts';
+import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import {
+  CANVAS_WIDTH, GRID, TOUCHING, fixtureRect, fixtureSize, footprint, freeSpot, overlaps, roomBounds, snap, tableRect, tableSize, type Rect,
+} from '../../../src/presets/restaurant/layout.ts';
 
 export interface PlanTableLike {
   key: string;
@@ -22,6 +27,16 @@ export interface PlanTableLike {
   tag?: string | null;
   features?: string[];
   joins?: string[];
+}
+
+export interface PlanFixtureLike {
+  key: string;
+  area: string;
+  kind: 'bar' | 'door' | 'window' | 'wall';
+  x: number;
+  y: number;
+  length: number;
+  rotation: number;
 }
 
 /** The tag for a table nobody can book by phone: kept for walk-ins, or in an area that is walk-in or enquiry only. */
@@ -59,7 +74,7 @@ const BADGE: Record<NonNullable<TableLook['badges']>[number], { text: string; cl
   highchair: { text: 'H', cls: 'b-highchair', title: 'Highchair' },
 };
 
-const SNAP = 10;
+export const FIXTURE_LABEL: Record<PlanFixtureLike['kind'], string> = { bar: 'Bar counter', door: 'Door', window: 'Window', wall: 'Wall' };
 
 function chairs(t: PlanTableLike, w: number, h: number): { x: number; y: number }[] {
   const out: { x: number; y: number }[] = [];
@@ -84,20 +99,77 @@ function chairs(t: PlanTableLike, w: number, h: number): { x: number; y: number 
   return out;
 }
 
-export function planHeight(tables: PlanTableLike[]): number {
-  return Math.max(320, ...tables.map((t) => t.y + tableSize(t).h + 60));
+/** Turns content drawn w by h about the centre of its footprint (fw by fh), so the footprint's top left stays at 0, 0. */
+const turn = (rotation: number, w: number, h: number, fw: number, fh: number) =>
+  rotation ? `translate(${fw / 2} ${fh / 2}) rotate(${rotation}) translate(${-w / 2} ${-h / 2})` : undefined;
+
+/** Where each area sits on the drawing, and what the drawing shows. */
+export function planLayout(
+  tables: PlanTableLike[], fixtures: PlanFixtureLike[], areas: PlanArea[], area: string | null, mode: 'edit' | 'live',
+): { view: Rect; offsets: Map<string, { x: number; y: number }>; zones: { area: PlanArea; rect: Rect }[] } {
+  const offsets = new Map<string, { x: number; y: number }>();
+  const asAnswers = tables.map((t) => ({ ...t, area: t.area ?? '' }));
+  if (area) {
+    offsets.set(area, { x: 0, y: 0 });
+    const b = roomBounds(area, asAnswers, fixtures);
+    if (mode === 'edit') {
+      // Room to drag into: the canvas grows as tables move down.
+      return { view: { x: 0, y: 0, w: CANVAS_WIDTH, h: Math.max(440, (b ? b.y + b.h : 0) + 160) }, offsets, zones: [] };
+    }
+    const r = b ?? { x: 40, y: 40, w: 400, h: 160 };
+    return { view: { x: r.x - 40, y: r.y - 40, w: Math.max(r.w + 80, 640), h: r.h + 80 }, offsets, zones: [] };
+  }
+  // Every area, one under another, each in a labelled zone.
+  const zones: { area: PlanArea; rect: Rect }[] = [];
+  let top = 0;
+  let width = 640;
+  for (const a of areas) {
+    const b = roomBounds(a.key, asAnswers, fixtures);
+    if (!b) continue;
+    offsets.set(a.key, { x: 40 - b.x, y: top + 64 - b.y });
+    zones.push({ area: a, rect: { x: 16, y: top + 16, w: b.w + 48, h: b.h + 72 } });
+    width = Math.max(width, b.w + 80);
+    top += b.h + 96;
+  }
+  return { view: { x: 0, y: 0, w: width, h: Math.max(top, 200) }, offsets, zones };
 }
+
+type Drag = {
+  kind: 'table' | 'fixture';
+  key: string;
+  /** Pointer to the item's top left, in plan units. */
+  dx: number;
+  dy: number;
+  /** The item's position within its area (edit), or the pointer on the drawing (live). */
+  x: number;
+  y: number;
+  /** Where the pointer went down, on the drawing: a click that wobbles is not a move. */
+  sx: number;
+  sy: number;
+  moved: boolean;
+  guides: { x?: number; y?: number }[];
+  clash: boolean;
+};
 
 export function FloorPlan(props: {
   tables: PlanTableLike[];
+  fixtures?: PlanFixtureLike[];
   areas: PlanArea[];
+  /** One area's room, or null for every area stacked (the back office's "All areas"). */
+  area: string | null;
   mode: 'edit' | 'live';
+  /** 1 fits the width; larger scrolls. */
+  zoom?: number;
+  /** A table's key or a room shape's key. */
   selected?: string | null;
   onSelect?: (key: string | null) => void;
-  /** Edit mode: a table was dropped at a new position. */
+  /** Edit mode: a table was dropped at a new position within its area. */
   onMove?: (key: string, x: number, y: number) => void;
-  /** Edit mode: a drop was refused (it would overlap another table). */
-  onRefuse?: (why: string) => void;
+  onMoveFixture?: (key: string, x: number, y: number) => void;
+  /** Edit mode: a table was dropped touching another it does not push together with yet. */
+  onTouch?: (key: string, other: string) => void;
+  /** Edit mode: something to tell the prospect about a move. */
+  onNote?: (message: string) => void;
   /** Live mode: the booking on one table was dropped on another. */
   onDropOn?: (from: string, to: string) => void;
   looks?: Record<string, TableLook>;
@@ -106,11 +178,16 @@ export function FloorPlan(props: {
   label?: string;
   children?: ReactNode;
 }) {
-  const { tables, areas, mode, looks = {} } = props;
+  const { areas, mode, looks = {}, area } = props;
+  const fixtures = props.fixtures ?? [];
   const svg = useRef<SVGSVGElement>(null);
-  const [drag, setDrag] = useState<{ key: string; dx: number; dy: number; x: number; y: number; moved: boolean } | null>(null);
+  const [drag, setDrag] = useState<Drag | null>(null);
   const [over, setOver] = useState<string | null>(null);
-  const height = planHeight(tables);
+  const layout = planLayout(props.tables, fixtures, areas, area, mode);
+  const shown = (a: string | null) => layout.offsets.has(a ?? '');
+  const tables = props.tables.filter((t) => shown(t.area));
+  const shapes = fixtures.filter((f) => shown(f.area));
+  const off = (a: string | null) => layout.offsets.get(a ?? '') ?? { x: 0, y: 0 };
 
   const toPlan = (e: { clientX: number; clientY: number }) => {
     const s = svg.current!;
@@ -120,48 +197,79 @@ export function FloorPlan(props: {
     return pt.matrixTransform(s.getScreenCTM()!.inverse());
   };
 
+  /** A table's box on the drawing. */
+  const drawn = (t: PlanTableLike): Rect => {
+    const o = off(t.area);
+    return { ...tableRect(t), x: t.x + o.x, y: t.y + o.y };
+  };
   const hitTable = (x: number, y: number, except: string): string | null => {
     for (const t of tables) {
       if (t.key === except) continue;
-      const { w, h } = tableSize(t);
-      if (x >= t.x - 6 && x <= t.x + w + 6 && y >= t.y - 6 && y <= t.y + h + 6) return t.key;
+      const r = drawn(t);
+      if (x >= r.x - 6 && x <= r.x + r.w + 6 && y >= r.y - 6 && y <= r.y + r.h + 6) return t.key;
     }
     return null;
   };
 
-  const down = (e: ReactPointerEvent<SVGGElement>, t: PlanTableLike) => {
+  // Everything else in the same area, for snapping and overlaps.
+  const neighbours = (kind: Drag['kind'], key: string, a: string | null) => ({
+    tables: tables.filter((t) => t.area === a && !(kind === 'table' && t.key === key)),
+    shapes: shapes.filter((f) => f.area === a && !(kind === 'fixture' && f.key === key)),
+  });
+  const sizeOf = (kind: Drag['kind'], key: string) => {
+    if (kind === 'table') return footprint(tables.find((t) => t.key === key)!);
+    return fixtureSize(shapes.find((f) => f.key === key)!);
+  };
+  const areaOf = (kind: Drag['kind'], key: string) => (kind === 'table' ? tables.find((t) => t.key === key)?.area ?? null : shapes.find((f) => f.key === key)?.area ?? null);
+
+  const down = (e: ReactPointerEvent<SVGGElement>, kind: Drag['kind'], item: { key: string; x: number; y: number; area: string | null }) => {
     if (e.button !== 0) return;
-    const draggable = mode === 'edit' || looks[t.key]?.draggable;
-    props.onSelect?.(t.key);
+    e.stopPropagation();
+    props.onSelect?.(item.key);
+    const draggable = mode === 'edit' || (kind === 'table' && looks[item.key]?.draggable);
     if (!draggable) return;
     const p = toPlan(e);
+    const o = off(item.area);
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
-    setDrag({ key: t.key, dx: p.x - t.x, dy: p.y - t.y, x: t.x, y: t.y, moved: false });
+    setDrag({ kind, key: item.key, dx: p.x - (item.x + o.x), dy: p.y - (item.y + o.y), x: mode === 'edit' ? item.x : p.x, y: mode === 'edit' ? item.y : p.y, sx: p.x, sy: p.y, moved: false, guides: [], clash: false });
   };
 
   const move = (e: ReactPointerEvent<SVGGElement>) => {
     if (!drag) return;
     const p = toPlan(e);
-    const x = Math.max(0, Math.min(CANVAS_WIDTH - 40, p.x - drag.dx));
-    const y = Math.max(0, p.y - drag.dy);
-    const moved = drag.moved || Math.abs(x - drag.x) + Math.abs(y - drag.y) > 4;
-    setDrag({ ...drag, x, y, moved });
-    if (mode === 'live') setOver(hitTable(p.x, p.y, drag.key));
+    if (mode === 'live') {
+      setDrag({ ...drag, x: p.x, y: p.y, moved: drag.moved || Math.abs(p.x - drag.sx) + Math.abs(p.y - drag.sy) > 4 });
+      setOver(hitTable(p.x, p.y, drag.key));
+      return;
+    }
+    const a = areaOf(drag.kind, drag.key);
+    const o = off(a);
+    const size = sizeOf(drag.kind, drag.key);
+    const raw = { x: Math.max(0, Math.min(CANVAS_WIDTH - size.w, p.x - o.x - drag.dx)), y: Math.max(0, p.y - o.y - drag.dy), ...size };
+    const n = neighbours(drag.kind, drag.key, a);
+    const s = snap(raw, [...n.tables.map(tableRect), ...n.shapes.map(fixtureRect)]);
+    const at = { ...raw, x: Math.min(CANVAS_WIDTH - size.w, s.x), y: s.y };
+    const moved = drag.moved || Math.abs(p.x - drag.sx) + Math.abs(p.y - drag.sy) > 4;
+    // Room shapes are for looks: only tables are kept apart.
+    const clash = drag.kind === 'table' && n.tables.some((t) => overlaps(at, tableRect(t), 4));
+    setDrag({ ...drag, x: at.x, y: at.y, moved, guides: s.guides, clash });
   };
 
-  /** Would this table, at (x, y), sit on top of another? */
-  const clashes = (key: string, x: number, y: number) => {
+  /** Puts a table down: where it was dropped, or the nearest clear space; then offers to join it to a table it now touches. */
+  const placeTable = (key: string, x: number, y: number, slide: boolean) => {
     const t = tables.find((u) => u.key === key)!;
-    const { w, h } = tableSize(t);
-    return tables.some((u) => {
-      if (u.key === key) return false;
-      const s = tableSize(u);
-      return x < u.x + s.w + 4 && u.x < x + w + 4 && y < u.y + s.h + 4 && u.y < y + h + 4;
-    });
-  };
-  const place = (key: string, x: number, y: number) => {
-    if (clashes(key, x, y)) props.onRefuse?.('Tables cannot overlap: drop it in a clear space.');
-    else props.onMove?.(key, x, y);
+    const size = footprint(t);
+    const others = tables.filter((u) => u.area === t.area && u.key !== key);
+    let at = { x, y };
+    if (others.some((u) => overlaps({ x, y, ...size }, tableRect(u), 4))) {
+      if (!slide) return props.onNote?.('Tables cannot overlap: that space is taken.');
+      // A gap wider than "touching", so a table that slid off another isn't offered as its pair.
+      at = freeSpot(size, { x, y }, others.map(tableRect), TOUCHING + 4);
+      props.onNote?.(`${t.label} would have sat on another table, so it went to the nearest clear space.`);
+    }
+    props.onMove?.(key, at.x, at.y);
+    const touching = others.find((u) => !(t.joins ?? []).includes(u.key) && overlaps({ ...at, ...size }, tableRect(u), TOUCHING));
+    if (touching) props.onTouch?.(key, touching.key);
   };
 
   const up = (e: ReactPointerEvent<SVGGElement>) => {
@@ -170,29 +278,41 @@ export function FloorPlan(props: {
     setDrag(null);
     setOver(null);
     if (!d.moved) return;
-    if (mode === 'edit') place(d.key, Math.round(d.x / SNAP) * SNAP, Math.round(d.y / SNAP) * SNAP);
-    else {
-      const p = toPlan(e);
-      const target = hitTable(p.x, p.y, d.key);
+    if (mode === 'live') {
+      const target = hitTable(toPlan(e).x, toPlan(e).y, d.key);
       if (target) props.onDropOn?.(d.key, target);
-    }
-  };
-
-  const keyboard = (e: React.KeyboardEvent<SVGGElement>, t: PlanTableLike) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      props.onSelect?.(t.key);
       return;
     }
-    if (mode !== 'edit' || !props.onMove) return;
-    const step = e.shiftKey ? 50 : SNAP;
+    if (d.kind === 'table') placeTable(d.key, Math.round(d.x), Math.round(d.y), true);
+    else props.onMoveFixture?.(d.key, Math.round(d.x), Math.round(d.y));
+  };
+
+  const keyboard = (e: ReactKeyboardEvent<SVGGElement>, kind: Drag['kind'], item: { key: string; x: number; y: number }) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      props.onSelect?.(item.key);
+      return;
+    }
+    if (mode !== 'edit') return;
+    const step = e.shiftKey ? 50 : GRID;
     const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
     if (!d) return;
     e.preventDefault();
-    place(t.key, Math.max(10, t.x + d[0]), Math.max(10, t.y + d[1]));
+    const size = sizeOf(kind, item.key);
+    const x = Math.max(GRID, Math.min(CANVAS_WIDTH - size.w, item.x + d[0]));
+    const y = Math.max(GRID, item.y + d[1]);
+    if (kind === 'table') placeTable(item.key, x, y, false);
+    else props.onMoveFixture?.(item.key, x, y);
   };
 
   const byKey = new Map(tables.map((t) => [t.key, t]));
+  const posOf = (t: PlanTableLike) => (drag?.kind === 'table' && drag.key === t.key && mode === 'edit' ? { x: drag.x, y: drag.y } : t);
+  const centre = (t: PlanTableLike) => {
+    const p = posOf(t);
+    const o = off(t.area);
+    const { w, h } = footprint(t);
+    return { x: p.x + o.x + w / 2, y: p.y + o.y + h / 2 };
+  };
   const joins: [PlanTableLike, PlanTableLike, boolean][] = [];
   const seen = new Set<string>();
   for (const t of tables) {
@@ -209,30 +329,85 @@ export function FloorPlan(props: {
       joins.push([t, byKey.get(p)!, true]);
     }
   }
-  const centre = (t: PlanTableLike) => {
-    const pos = drag?.key === t.key && mode === 'edit' ? { x: drag.x, y: drag.y } : t;
-    const { w, h } = tableSize(t);
-    return { x: pos.x + w / 2, y: pos.y + h / 2 };
-  };
+  const dragArea = drag ? off(areaOf(drag.kind, drag.key)) : { x: 0, y: 0 };
+  const v = layout.view;
 
   return (
     <svg
       ref={svg}
       className={`floor ${mode} ${drag ? 'dragging' : ''}`}
-      viewBox={`0 0 ${CANVAS_WIDTH} ${height}`}
+      viewBox={`${v.x} ${v.y} ${v.w} ${v.h}`}
+      style={{ width: `${(props.zoom ?? 1) * 100}%` }}
       role="group"
       aria-label={props.label ?? 'Floor plan'}
       onPointerDown={(e) => {
-        if (e.target === svg.current) props.onSelect?.(null);
+        if (e.target === svg.current || (e.target as Element).classList?.contains('grid-bg')) props.onSelect?.(null);
       }}
     >
-      {areas.map((a) => {
-        const b = areaBounds(a.key, tables as never);
-        if (!b) return null;
+      {mode === 'edit' ? (
+        <>
+          <defs>
+            <pattern id="plan-grid" width={GRID * 4} height={GRID * 4} patternUnits="userSpaceOnUse">
+              <circle cx={1} cy={1} r={1.4} className="grid-dot" />
+            </pattern>
+          </defs>
+          <rect className="grid-bg" x={v.x} y={v.y} width={v.w} height={v.h} fill="url(#plan-grid)" />
+        </>
+      ) : null}
+
+      {layout.zones.map(({ area: a, rect }) => (
+        <g key={a.key} className={`zone ${a.kind ?? ''}`}>
+          <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx={18} />
+          <text x={rect.x + 16} y={rect.y + 26}>{a.label}</text>
+        </g>
+      ))}
+
+      {shapes.map((f) => {
+        const dragging = drag?.kind === 'fixture' && drag.key === f.key;
+        const pos = dragging ? { x: drag.x, y: drag.y } : f;
+        const o = off(f.area);
+        const { w: fw, h: fh } = fixtureSize(f);
+        const L = f.length;
+        const T = f.kind === 'door' ? L : f.kind === 'bar' ? 46 : 12;
+        const stools = f.kind === 'bar' ? Math.max(1, Math.floor((L - 20) / 44)) : 0;
         return (
-          <g key={a.key} className={`zone ${a.kind ?? ''}`}>
-            <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={18} />
-            <text x={b.x + 14} y={b.y + 20}>{a.label}</text>
+          <g
+            key={f.key}
+            className={`fixture f-${f.kind} ${props.selected === f.key ? 'selected' : ''} ${dragging ? 'lifted' : ''}`}
+            transform={`translate(${pos.x + o.x} ${pos.y + o.y})`}
+            onPointerDown={(e) => down(e, 'fixture', f)}
+            onPointerMove={move}
+            onPointerUp={up}
+            onPointerCancel={() => setDrag(null)}
+            onKeyDown={(e) => keyboard(e, 'fixture', f)}
+            tabIndex={mode === 'edit' ? 0 : -1}
+            role={mode === 'edit' ? 'button' : undefined}
+            aria-label={mode === 'edit' ? `${FIXTURE_LABEL[f.kind]}, for looks only` : undefined}
+            aria-hidden={mode === 'edit' ? undefined : true}
+          >
+            {mode === 'edit' ? <rect className="hit" width={fw} height={fh} /> : null}
+            <g transform={turn(f.rotation, L, T, fw, fh)}>
+              {f.kind === 'bar' ? (
+                <>
+                  {Array.from({ length: stools }, (_, i) => <circle key={i} className="stool" cx={((i + 1) * L) / (stools + 1)} cy={T + 11} r={7} />)}
+                  <rect className="shape" width={L} height={T} rx={8} />
+                </>
+              ) : f.kind === 'door' ? (
+                <>
+                  <path className="swing" d={`M 0 0 A ${L} ${L} 0 0 1 ${L} ${L}`} />
+                  <line className="leaf" x1={0} y1={L} x2={0} y2={0} />
+                  <line className="sill" x1={0} y1={L} x2={L} y2={L} />
+                </>
+              ) : f.kind === 'window' ? (
+                <>
+                  <rect className="shape" width={L} height={T} rx={2} />
+                  <line className="pane" x1={0} y1={T / 2} x2={L} y2={T / 2} />
+                </>
+              ) : (
+                <rect className="shape" width={L} height={T} rx={3} />
+              )}
+            </g>
+            {f.kind === 'bar' ? <text className="f-label" x={fw / 2} y={fh / 2 + 5}>Bar</text> : null}
           </g>
         );
       })}
@@ -243,16 +418,25 @@ export function FloorPlan(props: {
         return <line key={`${p.key}-${q.key}-${live}`} className={`join ${live ? 'live' : ''}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
       })}
 
+      {/* Guides: the lines a dragged item has lined up on. */}
+      {drag && mode === 'edit' && drag.moved
+        ? drag.guides.map((g, i) => (g.x !== undefined
+          ? <line key={i} className="guide" x1={g.x + dragArea.x} y1={v.y} x2={g.x + dragArea.x} y2={v.y + v.h} />
+          : <line key={i} className="guide" x1={v.x} y1={g.y! + dragArea.y} x2={v.x + v.w} y2={g.y! + dragArea.y} />))
+        : null}
+
       {tables.map((t) => {
         const { w, h } = tableSize(t);
-        const dragging = drag?.key === t.key;
-        const pos = dragging && mode === 'edit' ? { x: drag.x, y: drag.y } : t;
+        const { w: fw, h: fh } = footprint(t);
+        const dragging = drag?.kind === 'table' && drag.key === t.key;
+        const pos = posOf(t);
+        const o = off(t.area);
         const look = looks[t.key];
         const tag = t.tag ?? (t.walk_in ? 'Walk-in' : null);
         const cls = [
           'table', t.shape, look?.state ?? '', props.selected === t.key ? 'selected' : '', t.walk_in ? 'walk-in' : '',
           t.bookable === false || tag ? 'unbookable' : '', over === t.key ? (props.canDrop && drag && !props.canDrop(drag.key, t.key) ? 'no-drop' : 'drop') : '',
-          look?.flash ? 'flash' : '', dragging ? 'lifted' : '',
+          look?.flash ? 'flash' : '', dragging ? 'lifted' : '', dragging && drag.clash ? 'clash' : '',
         ].filter(Boolean).join(' ');
         const why = tag === 'Walk-in' ? ', kept for walk-ins, not bookable by phone' : tag ? `, ${tag.toLowerCase()} only, not bookable by phone` : '';
         const title = `${t.label}, ${t.seats} seats${t.accessible ? ', step-free' : ''}${why}${t.features?.length ? `, ${t.features.join(', ')}` : ''}`;
@@ -260,42 +444,42 @@ export function FloorPlan(props: {
           <g
             key={t.key}
             className={cls}
-            transform={`translate(${pos.x} ${pos.y})`}
-            onPointerDown={(e) => down(e, t)}
+            transform={`translate(${pos.x + o.x} ${pos.y + o.y})`}
+            onPointerDown={(e) => down(e, 'table', t)}
             onPointerMove={move}
             onPointerUp={up}
             onPointerCancel={() => setDrag(null)}
-            onKeyDown={(e) => keyboard(e, t)}
+            onKeyDown={(e) => keyboard(e, 'table', t)}
             tabIndex={0}
             role="button"
             aria-label={`${title}${look?.caption ? `. ${look.caption}` : ''}`}
             aria-pressed={props.selected === t.key}
           >
             <title>{title}</title>
-            <g transform={t.rotation ? `rotate(${t.rotation} ${w / 2} ${h / 2})` : undefined}>
+            <g transform={turn(t.rotation, w, h, fw, fh)}>
               {chairs(t, w, h).map((c, i) => (
                 <circle key={i} className="chair" cx={c.x} cy={c.y} r={6} />
               ))}
               {t.shape === 'round' ? <circle className="top" cx={w / 2} cy={h / 2} r={w / 2} /> : <rect className="top" width={w} height={h} rx={10} />}
             </g>
-            <text className="num" x={w / 2} y={h / 2 + (look?.caption ? -2 : 5)}>{t.label.replace(/^Table\s+/i, '')}</text>
-            {look?.caption ? <text className="cap" x={w / 2} y={h / 2 + 13}>{look.caption}</text> : <text className="cap seats" x={w / 2} y={h / 2 + 19}>{t.seats}</text>}
+            <text className="num" x={fw / 2} y={fh / 2 + (look?.caption ? -2 : 5)}>{t.label.replace(/^Table\s+/i, '')}</text>
+            {look?.caption ? <text className="cap" x={fw / 2} y={fh / 2 + 13}>{look.caption}</text> : <text className="cap seats" x={fw / 2} y={fh / 2 + 19}>{t.seats}</text>}
             {tag ? (
               // On the table's bottom edge, where no badge sits: says at a glance why it stays free.
-              <g className="walk-tag" transform={`translate(${w / 2} ${h})`} aria-hidden="true">
+              <g className="walk-tag" transform={`translate(${fw / 2} ${fh})`} aria-hidden="true">
                 <rect x={-tag.length * 4.6 - 9} y={-12} width={tag.length * 9.2 + 18} height={24} rx={12} />
                 <text y={5}>{tag}</text>
               </g>
             ) : null}
             {(look?.badges ?? []).slice(0, 4).map((b, i) => (
-              <g key={b} className={`badge-dot ${BADGE[b].cls}`} transform={`translate(${w - 4 - i * 17} -4)`}>
+              <g key={b} className={`badge-dot ${BADGE[b].cls}`} transform={`translate(${fw - 4 - i * 17} -4)`}>
                 <title>{BADGE[b].title}</title>
                 <circle r={8} />
                 <text y={4}>{BADGE[b].text}</text>
               </g>
             ))}
             {t.accessible && mode === 'edit' ? (
-              <g className="badge-dot b-access" transform={`translate(${w - 4} -4)`}>
+              <g className="badge-dot b-access" transform={`translate(${fw - 4} -4)`}>
                 <circle r={8} />
                 <text y={4}>♿</text>
               </g>
@@ -307,10 +491,23 @@ export function FloorPlan(props: {
       {/* In live mode, a ghost follows the pointer while a booking is dragged. */}
       {drag && mode === 'live' && drag.moved ? (() => {
         const t = byKey.get(drag.key)!;
-        const { w, h } = tableSize(t);
-        return <rect className="ghost" x={drag.x} y={drag.y} width={w} height={h} rx={10} />;
+        const { w, h } = footprint(t);
+        return <rect className="ghost" x={drag.x - drag.dx} y={drag.y - drag.dy} width={w} height={h} rx={10} />;
       })() : null}
       {props.children}
     </svg>
+  );
+}
+
+/** Zoom out, a percentage that resets to fit, zoom in. */
+export function ZoomControls({ zoom, setZoom }: { zoom: number; setZoom: (z: number) => void }) {
+  const steps = [1, 1.25, 1.5, 2, 2.5];
+  const i = steps.findIndex((s) => s >= zoom - 0.01);
+  return (
+    <span className="zoom" role="group" aria-label="Zoom">
+      <button type="button" className="small" aria-label="Zoom out" disabled={i <= 0} onClick={() => setZoom(steps[Math.max(0, i - 1)])}>−</button>
+      <button type="button" className="small" aria-label="Fit to the width" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>
+      <button type="button" className="small" aria-label="Zoom in" disabled={i >= steps.length - 1} onClick={() => setZoom(steps[Math.min(steps.length - 1, i + 1)])}>+</button>
+    </span>
   );
 }
