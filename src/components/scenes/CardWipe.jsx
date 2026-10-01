@@ -31,6 +31,17 @@ const WIPE_OUT = 0.40   // leaving should not be laboured
    than as one thing moving. */
 const WIPE_EASE = EASE_IO
 
+/* Two kinds of scene can sit behind a card. The SVG scenes in this folder
+   are strings mounted by the scene host. The film's card scenes
+   (src/components/film/cards.js) build themselves: they carry mount(), and
+   hand back a render and a destroy. Both are driven by the same shared
+   loop, which only ever calls scene.render(els, t). */
+function mount(host, scene) {
+  if (!scene.mount) return mountScene(host, scene)
+  const handle = scene.mount(host)
+  return { scene: { dur: scene.dur, render: (_, t) => handle.render(t) }, els: null, t0: 0, handle }
+}
+
 /**
  * Drives one card's wipe. The card's own content is clipped away from the
  * left while the scene is clipped in behind the same edge, both off a single
@@ -66,15 +77,16 @@ export function useWipe(cardRef, hostRef, scene, open) {
     }
     const build = () => {
       if (m) return
-      m = mountScene(host, scene)
+      m = mount(host, scene)
       // reduced motion gets a still of the outcome, not the journey to it
-      scene.render(m.els, reduced ? still(scene) : 0)
+      m.scene.render(m.els, reduced ? still(scene) : 0)
       if (!reduced) play(m)
     }
     const teardown = () => {
       if (!m) return
       stop(m)
-      host.innerHTML = ''
+      if (m.handle) m.handle.destroy()
+      else host.innerHTML = ''
       m = null
     }
 

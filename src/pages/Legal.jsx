@@ -4,7 +4,7 @@ import '../styles/legal.css'
 
 /* Drafts only. Every document renders the review notice — these have not
    been reviewed by a solicitor and must not be relied on as-is. */
-const LAST_UPDATED = '24 August 2026'
+const LAST_UPDATED = '29 September 2026'
 
 const DOCS = {
   privacy: {
@@ -14,7 +14,7 @@ const DOCS = {
       'How n.abl collects, uses and protects personal data, and the rights you have over it.',
     body: [
       ['Who we are', [
-        'n.abl is a technology implementation partner for small businesses, based in the United Kingdom. For the purposes of UK GDPR we are the data controller for the personal data described in this policy.',
+        'n.abl is an AI implementation business for small and mid-sized businesses, based in the United Kingdom. For the purposes of UK GDPR we are the data controller for the personal data described in this policy.',
         'You can reach us at hello@nabl.agency for any privacy question, including to exercise the rights set out below.',
       ]],
       ['What we collect and why', [
@@ -75,10 +75,10 @@ const DOCS = {
   terms: {
     label: 'Terms',
     title: 'Terms of Service',
-    intro: 'The terms on which n.abl provides technology implementation services.',
+    intro: 'The terms on which n.abl provides AI implementation and related services.',
     body: [
       ['Services', [
-        'We implement technology for small businesses: automation, data and analytics, custom software, web, AI and training, chosen according to the problem rather than fixed in advance. Work is generally delivered within software platforms you already license. The specific scope of any engagement is set out in the quote or statement of work we agree with you.',
+        'We build AI into small and mid-sized businesses, and we also provide automation, data and analytics, and web services, chosen according to the problem rather than fixed in advance. Work is generally delivered within, or connected to, software platforms you already license. The specific scope of any engagement is set out in the quote or statement of work we agree with you.',
         'Nothing on this website is an offer capable of acceptance; it is an invitation to discuss work.',
       ]],
       ['Engagement and quotes', [
@@ -90,7 +90,7 @@ const DOCS = {
         'You are responsible for maintaining your own backups of business-critical data.',
       ]],
       ['Fees and payment', [
-        'Fees are as stated in the accepted quote. Unless agreed otherwise, invoices are payable within 30 days. We may suspend work on overdue accounts.',
+        'Fees are as stated in the accepted quote. Where you take a monthly retainer, what it includes, its monthly fee and its notice period are set out in the quote. Unless agreed otherwise, invoices are payable within 30 days. We may suspend work on overdue accounts.',
         'Prices exclude VAT unless expressly stated.',
       ]],
       ['Intellectual property', [

@@ -74,6 +74,19 @@ const missing = cats.filter((cat) => {
   const key = cat.split(/\s*&\s*/)[0].trim()
   return !new RegExp(`\\b${key}\\b`, 'i').test(knowledge)
 })
+
+/* Since the move to AI implementation the offer itself is the solution
+   cards on the home page, and those are what a visitor will ask about
+   first. Their titles are short and specific, so they are compared whole. */
+const solutions = readFileSync(new URL('../src/components/sections/Solutions.jsx', import.meta.url), 'utf8')
+const titles = [...solutions.matchAll(/title:\s*'([^']+)'/g)].map((m) => m[1])
+if (titles.length < 3) {
+  console.error('\n  Could not read the solution titles out of Solutions.jsx — the check that\n  keeps them in step with the assistant is now blind. Fix the pattern.\n')
+  process.exit(1)
+}
+for (const t of titles) {
+  if (!new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(knowledge)) missing.push(t)
+}
 if (missing.length) {
   console.error(`
   The site advertises capabilities the assistant has never heard of.
@@ -81,7 +94,7 @@ if (missing.length) {
     missing from assistant-knowledge.md: ${missing.join(', ')}
 
   A visitor asking about one of these gets "I don't know" from the assistant
-  while the home page offers it. Add them to "What we do".
+  while the site offers it. Add them to "What we build".
 `)
   process.exit(1)
 }

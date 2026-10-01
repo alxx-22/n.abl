@@ -56,12 +56,14 @@ import { StaticRouter } from 'react-router-dom/server'
 
 import Home from './pages/Home.jsx'
 import Legal from './pages/Legal.jsx'
+import Services from './pages/Services.jsx'
 import './styles/global.css'
 
-/* The four public URLs, and the same four that are in sitemap.xml.
+/* The five public URLs, and the same five that are in sitemap.xml.
    If a page is ever added, it goes in both, in the same commit. */
 const PAGES = {
   '/': () => <Home />,
+  '/services': () => <Services />,
   '/privacy': () => <Legal doc="privacy" />,
   '/terms': () => <Legal doc="terms" />,
   '/cookies': () => <Legal doc="cookies" />,

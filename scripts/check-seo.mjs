@@ -39,10 +39,11 @@ const arg = (flag, fallback) => {
 const LIVE = process.argv.includes('--live')
 const ORIGIN = arg('--origin', 'https://nabl.agency')
 
-/* The four public URLs. Same list as sitemap.xml and src/prerender.jsx;
+/* The five public URLs. Same list as sitemap.xml and src/prerender.jsx;
    if a page is added it goes in all three, in the same commit. */
 const ROUTES = [
-  { path: '/', file: 'index.html', title: /Technology implementation/i },
+  { path: '/', file: 'index.html', title: /AI implementation/i },
+  { path: '/services', file: 'services/index.html', title: /Other services/i },
   { path: '/privacy', file: 'privacy/index.html', title: /Privacy Policy/i },
   { path: '/terms', file: 'terms/index.html', title: /Terms of Service/i },
   { path: '/cookies', file: 'cookies/index.html', title: /Cookie Policy/i },
