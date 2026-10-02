@@ -7,9 +7,9 @@ import { applyScan } from '../../scout/map.ts';
 import { PresetError } from '../common/errors.ts';
 import { hoursSentence } from '../common/hours.ts';
 import { cleanBrief } from '../food/drafts.ts';
-import { menuItems } from '../food/menu.ts';
+import { menuItems, type MenuAnswer } from '../food/menu.ts';
 import { joinTables } from '../seating/tables.ts';
-import type { Preset, WorkspaceSpec } from '../index.ts';
+import type { CatalogueDraft, Preset, WorkspaceSpec } from '../index.ts';
 import { VERSION, defaultAnswers, type RestaurantAnswers } from './answers.ts';
 import { compileRestaurant } from './compile.ts';
 import { RESTAURANT_HANDLES, draftMenu, factSheet } from './drafts.ts';
@@ -67,6 +67,17 @@ export function restaurantWorkspace(profile: TenantProfile): WorkspaceSpec {
   };
 }
 
+/** "Describe your food": a brief with no style takes the restaurant's own. */
+const menuDraft: CatalogueDraft<RestaurantAnswers, MenuAnswer> = {
+  label: 'menu',
+  async run(body, a, config) {
+    const brief = cleanBrief(body, a.basics.style);
+    if (!brief.description && !brief.style) throw new PresetError(400, 'Describe the food first.');
+    return draftMenu(brief, config);
+  },
+  counts: (menu) => ({ dishes: menuItems(menu).length }),
+};
+
 export const restaurant: Omit<Preset<RestaurantAnswers>, 'info'> = {
   VERSION,
   defaults: defaultAnswers,
@@ -77,15 +88,7 @@ export const restaurant: Omit<Preset<RestaurantAnswers>, 'info'> = {
   preview: restaurantPreview,
   factSheet,
   handles: RESTAURANT_HANDLES,
-  draft: {
-    label: 'menu',
-    async run(body, a, config) {
-      const brief = cleanBrief(body, a.basics.style);
-      if (!brief.description && !brief.style) throw new PresetError(400, 'Describe the food first.');
-      return { ...a, menu: await draftMenu(brief, config) };
-    },
-    counts: (a) => ({ dishes: menuItems(a.menu).length }),
-  },
+  draft: menuDraft,
   scan: { parts: ['identity', 'hours', 'menu', 'theme', 'services', 'policies'], apply: applyScan },
   workspace: restaurantWorkspace,
   combineTables: (a, x, y) => ({ ...a, seating: { ...a.seating, tables: joinTables(a.seating.tables, x, y) } }),

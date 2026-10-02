@@ -127,7 +127,7 @@ test('presets: the menu draft needs something to go on before it asks the model'
   a.basics.style = '';
   await assert.rejects(restaurant.draft!.run({}, a, loadConfig()), (e: unknown) => e instanceof PresetError && e.status === 400 && e.message === 'Describe the food first.');
   assert.equal(restaurant.draft!.label, 'menu');
-  assert.deepEqual(restaurant.draft!.counts(a), { dishes: a.menu.categories.reduce((n, c) => n + c.items.length, 0) });
+  assert.deepEqual(restaurant.draft!.counts(a.menu), { dishes: a.menu.categories.reduce((n, c) => n + c.items.length, 0) });
 });
 
 test('presets: the shared ordering keeps a takeaway\'s zones, drivers and timed orders, and gives the restaurant none of them', () => {

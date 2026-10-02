@@ -141,7 +141,9 @@ interface Preset<A extends BaseAnswers = BaseAnswers> {
   seed(profile, now, seed): SeedPlan;
   preview(a: A, profile): Record<string, unknown>;  // restaurant: today's fields; others: { lines }
   factSheet(a: A): string;                // what the FAQ draft is told
-  draft?: { label: string; run(brief, a: A, config): Promise<A> };  // catalogue draft (menu, price list)
+  draft?: { label: string;                // catalogue draft (menu, price list)
+            run(brief, a: A, config): Promise<A[label]>;  // that section only
+            counts(section): Record<string, number> };
   scan: { parts: ScanPart[]; apply(a: A, result: ScanResult, use): A };  // accepts today's ScanResults
   workspace(profile): WorkspaceSpec;
   combineTables?(a: A, x: string, y: string): A;
@@ -150,8 +152,11 @@ interface Preset<A extends BaseAnswers = BaseAnswers> {
 
 `demo.ts` loses every `RestaurantAnswers` cast and uses `BaseAnswers` and the
 hooks. The menu-draft route stays `POST /workspaces/:id/menu-draft` (usage
-kind `menu_draft`, `data.catalogue`) and calls `preset.draft` or returns 404;
-`combine` calls `preset.combineTables` or returns 400. Moving a booking is a
+kind `menu_draft`, `data.catalogue`) and calls `preset.draft` or returns 404.
+A draft returns only its section, because the browser puts back only that
+section and may hold edits the server has not saved yet; anything that must
+follow a new section happens in `sanitise`, on the next save. `combine`
+calls `preset.combineTables` or returns 400. Moving a booking is a
 generic staff action: the target must offer the booking's service, be free,
 and for a table seat the party. One `rebuild(w, answers, settings)` helper
 recompiles and always keeps `demo_pin` and the call settings. The workspace
@@ -282,9 +287,10 @@ quotes honest wait times when it is busy.
 - `deals: DealAnswer[]` (own section, so a menu draft never deletes them):
   `{ key, name, price_pence, description, includes?: item_key[], parts: [{
   label, category_key, item_keys?: string[], choose, upcharge_pence?:
-  Record<item_key, pence> }] }`. Parts point at a section; after a menu
-  draft they are re-linked by label; validate warns when a part's section is
-  gone, and compile drops that deal.
+  Record<item_key, pence> }] }`. Parts point at a section. A menu draft
+  returns only the menu (§2.2), so `sanitise` re-links the parts by label on
+  the next save; validate warns when a part's section is still gone, and
+  compile drops that deal.
 - `money`: `payment: 'phone' | 'collection' | 'either'`, `pay_driver: 'no' |
   'cash' | 'cash_or_card'`.
 - `policies`: `halal: 'all' | 'chicken' | 'none'`, `allergens` (statement),

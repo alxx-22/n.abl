@@ -37,18 +37,21 @@ export interface WorkspaceSpec {
   resetLine: string;
 }
 
-/** A catalogue the builder drafts from a description: the restaurant's menu, later a price list. */
-export interface CatalogueDraft<A extends BaseAnswers> {
+/** A catalogue the builder drafts from a description: the restaurant's menu, later a price list. S is that section's type. */
+export interface CatalogueDraft<A extends BaseAnswers, S = unknown> {
   /** The answers section a draft fills, and the key the route sends it back under: { menu }. */
   label: string;
   /**
-   * The request's brief and the current answers: the answers with that
-   * section drafted. Throws PresetError (400) when the brief gives nothing to
-   * go on.
+   * The request's brief and the saved answers: the drafted section, and
+   * nothing else. The browser puts back only that section, and its answers
+   * may be ahead of the saved ones, so a draft cannot change another section
+   * here. Whatever must follow a new section (the takeaway's deals re-linked
+   * to the new menu) happens in sanitise, on the next save. Throws
+   * PresetError (400) when the brief gives nothing to go on.
    */
-  run(brief: unknown, a: A, config: Config): Promise<A>;
+  run(brief: unknown, a: A, config: Config): Promise<S>;
   /** Recorded with the usage row: { dishes: 18 }. */
-  counts(a: A): Record<string, number>;
+  counts(section: S): Record<string, number>;
 }
 
 export interface Preset<A extends BaseAnswers = BaseAnswers> {

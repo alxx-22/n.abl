@@ -337,15 +337,15 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     await spendDraft(ctx, who, admin);
     const current = answersOf(preset, cfg.answers);
     const brief = await readJson(req, 20_000);
-    let next: BaseAnswers;
+    let section: unknown;
     try {
-      next = await draft.run(brief, current, config);
+      section = await draft.run(brief, current, config);
     } catch (err) {
       if (err instanceof PresetError) throw new HttpError(err.status, err.message);
       throw new HttpError(502, draftError(err));
     }
-    void usage('menu_draft', { catalogue: draft.label, ...draft.counts(next) });
-    return json(res, 200, { [draft.label]: (next as unknown as Record<string, unknown>)[draft.label] }), true;
+    void usage('menu_draft', { catalogue: draft.label, ...draft.counts(section) });
+    return json(res, 200, { [draft.label]: section }), true;
   }
   if (sub === 'faq-draft' && req.method === 'POST') {
     await spendDraft(ctx, who, admin);

@@ -5,7 +5,7 @@
 
 import { test, after, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as wait } from 'node:timers/promises';
@@ -120,4 +120,23 @@ test('presets over HTTP: the PIN and call settings survive every rebuild', async
   const empty = await kim('POST', `${path}/menu-draft`, {});
   assert.equal(empty.status, 400);
   assert.equal(empty.data.error, 'Describe the food first.');
+
+  // A draft sends back the menu and nothing else, and saves nothing: the
+  // builder puts it in place and its next autosave keeps it. The model's
+  // reply is the canned one the restaurant's goldens use.
+  const reply = readFileSync(new URL('./fixtures/restaurant/menu-draft-reply.json', import.meta.url), 'utf8');
+  const real = globalThis.fetch;
+  globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) =>
+    String(input).startsWith('https://generativelanguage.googleapis.com/')
+      ? new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: reply }] } }] }), { headers: { 'content-type': 'application/json' } })
+      : real(input, init)) as typeof fetch;
+  try {
+    const drafted = await kim('POST', `${path}/menu-draft`, { description: 'Pizza, pasta and a few starters' });
+    assert.equal(drafted.status, 200, JSON.stringify(drafted.data));
+    assert.deepEqual(Object.keys(drafted.data), ['menu']);
+    assert.deepEqual(drafted.data.menu, JSON.parse(readFileSync(new URL('./fixtures/restaurant/golden/menu-draft/menu.json', import.meta.url), 'utf8')));
+  } finally {
+    globalThis.fetch = real;
+  }
+  assert.deepEqual((await kim('GET', path)).data.answers.menu, named.menu, 'the saved menu is untouched');
 });
