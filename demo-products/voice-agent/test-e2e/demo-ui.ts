@@ -1,6 +1,7 @@
 // The prospect's journey through a real browser, without calling a model:
 // a key from the team, the one-click link, a restaurant from the preset, the
-// builder's steps, Start, then the back office (floor plan, moving a booking,
+// builder's steps (an edit on each, all still there after a reload), Start,
+// then the back office (floor plan, moving a booking,
 // the timeline, the kitchen's ready text, the phone); a second demo from a
 // website, replacing the first; then a shared key used by two people, each
 // with their own demo and its deletion time. Fails on any page error.
@@ -63,6 +64,22 @@ if (!exe) throw new Error('No Chromium found: install it (sudo apt-get install c
 const browser = await chromium.launch({ executablePath: exe });
 const errors: string[] = [];
 let step = 0;
+/** The builder's floor plan as drawn, area by area: where every table and room shape sits, and how many joins. */
+const floorPlan = async (page: Page) => {
+  const out: Record<string, unknown> = {};
+  const areas = await page.locator('.area-tabs [role=tab]').evaluateAll((tabs) => tabs.map((t) => t.childNodes[0].textContent!.trim()));
+  for (const area of areas) {
+    await page.click(`.area-tabs [role=tab]:has-text("${area}")`);
+    await page.waitForSelector(`svg.floor[aria-label^="${area}:"]`);
+    out[area] = await page.locator('svg.floor').evaluate((svg) => ({
+      tables: [...svg.querySelectorAll('g.table')].map((g) => `${g.getAttribute('aria-label')} at ${g.getAttribute('transform')}`),
+      // The kind only: whichever shape was selected before the reload is not selected after it.
+      shapes: [...svg.querySelectorAll('g.fixture')].map((g) => `${[...g.classList].find((c) => c.startsWith('f-'))} at ${g.getAttribute('transform')}`),
+      joins: svg.querySelectorAll('line.join').length,
+    }));
+  }
+  return out;
+};
 const shot = async (page: Page, name: string) => {
   // Entrances (a blur, rising) finish first; endless ones (a pulse, a spinner) are left running.
   await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => null))));
@@ -123,7 +140,11 @@ try {
   };
   await next('Opening hours');
   await shot(page, 'builder-hours');
+  await page.fill('input[aria-label="Tuesday Dinner closes"]', '22:30');
+  await page.waitForSelector('.save-state.saved', { timeout: 10000 });
   await next('How you serve');
+  await page.getByRole('checkbox', { name: 'Deliveroo' }).check();
+  await page.waitForSelector('.save-state.saved', { timeout: 10000 });
   await next('Seating');
   // One more 6-seat table inside.
   await page.click('button[aria-label="One more 6-seat table in Inside"]');
@@ -174,12 +195,45 @@ try {
   await page.waitForSelector('#fx-length');
   await page.waitForSelector('.save-state.saved', { timeout: 10000 });
   await shot(page, 'builder-floor-terrace');
+  const floorBefore = await floorPlan(page);
   await next('Menu');
   await shot(page, 'builder-menu');
+  await page.locator('input.dish-name').first().fill('Garlic bread with rosemary');
+  await page.waitForSelector('.save-state.saved', { timeout: 10000 });
   await next('Money');
+  await page.getByRole('radio', { name: 'Pay on collection' }).check();
+  await page.waitForSelector('.save-state.saved', { timeout: 10000 });
   await next('Policies and questions');
+  await page.getByLabel('Parking', { exact: true }).fill('Free parking behind the restaurant after 6pm.');
+  await page.waitForSelector('.save-state.saved', { timeout: 10000 });
   await next('Review and start');
   await shot(page, 'builder-review');
+
+  // Reloaded, the builder shows every edit above: autosave kept them all, and
+  // the server's cleaning of the answers dropped none.
+  await page.waitForSelector('.save-state.saved', { timeout: 10000 });
+  await page.reload();
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  const kept = (what: string, ok: boolean) => {
+    if (!ok) throw new Error(`after a reload, the builder lost ${what}`);
+  };
+  kept('the style', (await page.inputValue('input[maxlength="160"][placeholder="Neapolitan pizza and fresh pasta"]')) === 'Wood-fired Neapolitan pizza and small plates');
+  await next('Opening hours');
+  kept("Tuesday dinner's closing time", (await page.inputValue('input[aria-label="Tuesday Dinner closes"]')) === '22:30');
+  await next('How you serve');
+  kept('Deliveroo', await page.getByRole('checkbox', { name: 'Deliveroo' }).isChecked());
+  await next('Seating');
+  kept('the extra 6-seat table', (await page.locator('.area-card').first().locator('.size-count', { hasText: '6-seat tables' }).locator('b').textContent()) === '3');
+  await next('Floor plan');
+  const floorAfter = await floorPlan(page);
+  kept(`the floor plan (${JSON.stringify(floorBefore)} became ${JSON.stringify(floorAfter)})`, JSON.stringify(floorAfter) === JSON.stringify(floorBefore));
+  await next('Menu');
+  kept("the dish's new name", (await page.locator('input.dish-name').first().inputValue()) === 'Garlic bread with rosemary');
+  await next('Money');
+  kept('paying for takeaway on collection', await page.getByRole('radio', { name: 'Pay on collection' }).isChecked());
+  await next('Policies and questions');
+  kept('the parking answer', (await page.getByLabel('Parking', { exact: true }).inputValue()) === 'Free parking behind the restaurant after 6pm.');
+  await next('Review and start');
   await page.click('button:has-text("Start my demo")');
 
   // The workspace.
