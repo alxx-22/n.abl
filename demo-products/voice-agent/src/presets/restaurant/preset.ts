@@ -14,6 +14,7 @@ import { VERSION, defaultAnswers, type RestaurantAnswers } from './answers.ts';
 import { compileRestaurant } from './compile.ts';
 import { RESTAURANT_HANDLES, draftMenu, factSheet } from './drafts.ts';
 import { planRestaurantSeed } from './seed.ts';
+import { STEPS } from './steps.ts';
 import { sanitiseRestaurant, validateRestaurant } from './validate.ts';
 
 /** The builder's preview pane: what the receptionist will actually say, and what it can book. */
@@ -82,6 +83,7 @@ export const restaurant: Omit<Preset<RestaurantAnswers>, 'info'> = {
   VERSION,
   defaults: defaultAnswers,
   sanitise: sanitiseRestaurant,
+  steps: STEPS,
   validate: validateRestaurant,
   compile: compileRestaurant,
   seed: (profile, now, seed) => planRestaurantSeed(profile, now, seed),

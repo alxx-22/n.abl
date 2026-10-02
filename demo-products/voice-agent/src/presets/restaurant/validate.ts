@@ -10,6 +10,7 @@ import { sanitiseMenu, validateMenu } from '../food/menu.ts';
 import { ORDER_PAYMENTS, sanitiseOrdering, takesOrders, validateOrdering } from '../food/ordering.ts';
 import { sanitiseDeposit, sanitiseSeating, validateDeposit, validateSeating } from '../seating/floor.ts';
 import { VERSION, defaultAnswers, type RestaurantAnswers } from './answers.ts';
+import type { RestaurantStep } from './steps.ts';
 
 export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
   const d = defaultAnswers();
@@ -56,8 +57,7 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
   };
 }
 
-/** The builder steps an issue can point at. */
-export type RestaurantStep = 'basics' | 'hours' | 'serve' | 'seating' | 'floor' | 'menu' | 'money' | 'policies';
+export type { RestaurantStep };
 export type Issue = BaseIssue<RestaurantStep>;
 
 export function validateRestaurant(a: RestaurantAnswers): Issue[] {

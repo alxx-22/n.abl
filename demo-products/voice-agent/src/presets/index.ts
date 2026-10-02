@@ -63,6 +63,8 @@ export interface Preset<A extends BaseAnswers = BaseAnswers> {
   defaults(): A;
   /** Rebuild answers from untrusted JSON. Writes VERSION. */
   sanitise(input: unknown): A;
+  /** The builder's steps in order, the shared Review aside; every issue points at one of their keys. */
+  steps: readonly { key: string; label: string }[];
   validate(a: A): Issue[];
   compile(a: A, meta: { slug: string }): TenantProfile;
   /** A believable week of data for the compiled profile, deterministic for a seed. */

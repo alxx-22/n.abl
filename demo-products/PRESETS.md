@@ -38,9 +38,13 @@ walkthrough can reach it; nothing is deployed until the demo is fully built
 2. **Pure move**: `common/`, `food/`, `seating/` and the registry, restaurant
    only. No golden file changes. `npm run check:all` green. Pushed on its own.
 3. **Shared changes**, one commit each, each naming any golden it changes:
-   the `days()` sanitiser fix; seed and `insertSeed` columns; closing at
-   midnight; the builder and workspace registries (web); additive payloads;
-   PIN uniqueness; migration `voice_0004_orders`.
+   the `days()` sanitiser fix; the sample menu cleaned once when it is read
+   (nine of its options have no `allergens` and gain `[]`, so the
+   restaurant's `sanitise` is stable from the first pass and passes §4;
+   changes `defaults.json`, the `{}` and null goldens and the olive
+   tenants' profiles); seed and `insertSeed` columns; closing at midnight;
+   the builder and workspace registries (web); additive payloads; PIN
+   uniqueness; migration `voice_0004_orders`.
 4. **Gate before the first preset**: check:all green; goldens unchanged except
    the named Phase 3 commits; the restaurant's live scenarios (12 Luca's,
    7 `ws-*`, `cafe-delivery`, `cafe-closed`) re-run once and passing.
@@ -107,6 +111,7 @@ src/presets/
     seed.ts         planOrders(): the restaurant's path keeps its random() call order
   seating/          restaurant, pub, café: areas, tables, fixtures, layout.ts, floor compile, table seeding
   restaurant/       composes common + food + seating; files keep their names and exports
+    steps.ts        STEPS: today's builder steps and titles, Review aside
   takeaway/         composes common + food
     steps.ts        STEPS = [{ key, label }] as const; StepKey
 ```
@@ -136,6 +141,7 @@ interface Preset<A extends BaseAnswers = BaseAnswers> {
   migrate?(raw: unknown, from: number): unknown;
   defaults(): A;                          // a fresh object every call
   sanitise(input: unknown): A;
+  steps: readonly { key; label }[];      // the preset's STEPS
   validate(a: A): Issue[];                // steps from the preset's STEPS
   compile(a: A, meta: { slug }): TenantProfile;
   seed(profile, now, seed): SeedPlan;
@@ -236,13 +242,20 @@ combining only where the spec says. Refresh on every action except
 - `test/presets.test.ts`, looping over every built preset: catalogue and
   registry agree; `sanitise(defaults())` deep-equals `defaults()`; defaults
   plus a name validate with no errors; sanitise is stable; junk never throws;
-  validate on junk and on an emptied config emits only keys in `STEPS`; the
-  compiled profile is sane (AI and demo greeting, windows in order, modifier
-  groups exist, at most six core facts); `compilePrompt` of a maximal config
-  is under 7,000 characters; the seed **replays**: sorted by start, each
-  booking is what `checkSlot` gives with the earlier ones booked; each order
-  slot stays within capacity, every due time falls in ordering hours, every
-  delivery postcode is in the districts; `insertSeed` reads back as planned.
+  validate on junk and on an emptied config emits only keys in `STEPS`
+  (`Preset.steps`); the compiled profile is sane (AI and demo greeting,
+  windows in order, modifier groups exist, at most six core facts);
+  `compilePrompt` of a maximal config is under 7,000 characters; the seed
+  **replays**: sorted by start, each booking is what `checkSlot` gives with
+  the earlier ones booked; each order slot stays within capacity, every due
+  time falls in ordering hours, every delivery postcode is in the
+  districts; `insertSeed` reads back as planned.
+  Two of these the restaurant does not meet, and its goldens hold it
+  instead: until the §0.3 sample-menu commit, `sanitise(defaults())` adds
+  `allergens: []` to nine options (so it is checked as stable from the
+  second pass), and its prompt is 7,574 characters as created and 10,476 at
+  its maximum. Shortening the restaurant's prompt is a named change with its
+  evals re-run; the 7,000 limit is for each new preset.
 - Its golden corpus (`test/fixtures/<preset>/`), created when it ships.
 - `test/<preset>.test.ts` (compiler field table, validation, seed shape) and
   `test/<preset>-tools.test.ts` (signature moments through `runTool`).
