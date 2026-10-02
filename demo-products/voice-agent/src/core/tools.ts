@@ -623,7 +623,10 @@ const TOOLS: Record<string, Tool> = {
         return { bookings: [], note: 'That is only part of a reference: they are five letters and numbers, like HK482. Let them finish, then search with all of it.' };
       }
       const phone = normaliseUkPhone(str(args.phone)) ?? (reference || str(args.name) ? undefined : ctx.callerPhone ?? undefined);
-      const found = await ctx.repo.findBookings(ctx.tenant.id, { reference, phone, name: reference || phone ? undefined : str(args.name) }, ctx.now());
+      const name = str(args.name);
+      let found = await ctx.repo.findBookings(ctx.tenant.id, { reference, phone, name: reference || phone ? undefined : name }, ctx.now());
+      // Callers quote a number other than the one they booked with: in a live test the right name was never searched.
+      if (!found.length && !reference && phone && name) found = await ctx.repo.findBookings(ctx.tenant.id, { name }, ctx.now());
       for (const b of found) ctx.state.found.push(b.reference);
       if (!found.length) return { bookings: [], note: 'No upcoming bookings found. Ask for the reference or the name it was booked under.' };
       return { bookings: found.map((b) => bookingSummary(ctx.tenant, b)) };

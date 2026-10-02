@@ -165,6 +165,9 @@ test('restaurant tools: changes by reference keep the table when it fits, with a
   const found = await runTool('find_bookings', { reference: String(r.reference) }, ctx);
   assert.equal((found.bookings as any[])[0].party_size, 5);
   assert.equal((found.bookings as any[])[0].allergies, 'Nut allergy');
+  // Booked from one phone, quoting another: the name still finds it.
+  const byName = await runTool('find_bookings', { name: 'Grace Wood', phone: '07700 900999' }, ctx);
+  assert.equal((byName.bookings as any[])[0]?.reference, r.reference, JSON.stringify(byName));
   // A caller reading the reference a character at a time: the first ones are part of it, not a booking that is missing.
   const part = await runTool('find_bookings', { reference: String(r.reference).slice(0, 2).toLowerCase() }, ctx);
   assert.deepEqual(part.bookings, []);
