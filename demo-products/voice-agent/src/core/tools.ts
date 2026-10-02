@@ -1155,7 +1155,7 @@ const TOOLS: Record<string, Tool> = {
       // In a live test the receptionist said "I'll pass those details on" and hung up with no message taken: nobody would have called back.
       if (/message/i.test(str(args.outcome) ?? '') && !ctx.state.messageTaken && !ctx.state.messageChecked) {
         ctx.state.messageChecked = true;
-        return { ok: false, message: 'No message has been taken, so nobody would call them back. Use take_message now with their name, number and what they want, then say goodbye and use end_call.' };
+        return { ok: false, message: 'No message has been taken, so nobody would call them back. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then say goodbye and use end_call.' };
       }
       ctx.state.ending = true;
       ctx.action({ kind: 'call_ending', title: 'Call ending', detail: str(args.outcome) });

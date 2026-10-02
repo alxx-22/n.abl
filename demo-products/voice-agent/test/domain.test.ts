@@ -6,7 +6,7 @@ import { resolveItem, resolveModifiers, allergenAnswer, lineTotal } from '../src
 import { searchKnowledge } from '../src/domain/knowledge.ts';
 import { processDemoPayment, parseDemoCards, DEFAULT_DEMO_CARDS, digitsOf } from '../src/domain/payments.ts';
 import { redactCardNumbers, REDACTED } from '../src/core/redact.ts';
-import { checkUtterance } from '../src/core/guardrails.ts';
+import { PROMISED_MESSAGE, checkUtterance } from '../src/core/guardrails.ts';
 import { newCallState } from '../src/core/tools.ts';
 import { normaliseUkPhone, displayUkPhone } from '../src/domain/phone.ts';
 import { zonedToUtc } from '../src/domain/time.ts';
@@ -170,6 +170,10 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
   assert.equal(checkUtterance("Once it's confirmed I'll text you.", s).length, 0);
   assert.equal(checkUtterance("Lovely, I've passed that on to the reservations team for you.", s)[0]?.rule, 'untaken_message');
   assert.equal(checkUtterance("I'll pass that on to the team.", s).length, 0, 'a promise, not a claim');
+  // ...but a promise the call follows up, so the message is taken while the caller is still there.
+  assert.ok(PROMISED_MESSAGE.test("Got that. I'll pass your details on to the reservations team and ask them to give you a call."));
+  assert.ok(PROMISED_MESSAGE.test("I'll let the manager know."));
+  assert.ok(!PROMISED_MESSAGE.test('If you give me your name and number, I can ask them to call you back.'), 'an offer, before the details');
   assert.equal(checkUtterance("I haven't passed that on yet.", s).length, 0);
   assert.equal(checkUtterance("I've passed that on.", { ...s, messageTaken: true }).length, 0);
   assert.equal(checkUtterance("It isn't booked yet.", s).length, 0);

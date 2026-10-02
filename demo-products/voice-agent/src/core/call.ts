@@ -16,7 +16,7 @@ import {
   loggableArgs, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type CallState, type SmsSender, type Telephony,
   type ToolContext,
 } from './tools.ts';
-import { checkUtterance, type Flag } from './guardrails.ts';
+import { PROMISED_MESSAGE, checkUtterance, type Flag } from './guardrails.ts';
 import { redactCardNumbers } from './redact.ts';
 import { rms } from './audio.ts';
 import { generateText } from './gemini.ts';
@@ -467,6 +467,14 @@ export class CallSession extends EventEmitter<CallEvents> {
       // Correct it on the call, not just in the log: the next thing the
       // agent does is put it right.
       this.session?.sendText(CORRECTIONS[f.rule]);
+    }
+    if (!this.state.messageTaken && !this.state.messageChecked && PROMISED_MESSAGE.test(clean)) {
+      // Once the turn's tool calls have run: the message may be on its way already.
+      void this.toolQueue.then(() => {
+        if (this.state.messageTaken || this.state.messageChecked || this.ended) return;
+        this.state.messageChecked = true;
+        this.session?.sendText('[From the system: you told the caller you would pass this on, but no message has been taken. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then tell them it has been passed on.]');
+      });
     }
     this.emit('agentTurn', clean);
   }

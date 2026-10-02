@@ -22,6 +22,10 @@ const PAID = /\b(payment(?:'s| has)? (?:gone|went) through|that'?s (?:gone throu
 const NARRATED = /\b(?:the )?(?:user|caller) (?:said|says|is saying|asked|wants|told)\b|\bsaid to (?:the )?(?:person|someone|people)\b|\bsaid to you\b|\bto (?:a |the )?person in (?:the )?room\b|^\s*[\[(]/i;
 // On 2 October a hotel's receptionist said "I've passed that on to the reservations team" with no message taken.
 const PASSED_ON = /\b(?:i'?ve|i have|we'?ve|we have|that'?s|it'?s|has been|have been) (?:now |just |already )?(?:passed (?:that|it|this|those|these|your [a-z]+)(?: details)? on|let (?:the|our) [a-z ]{0,20}know|(?:taken|left|sent) (?:a|the|your) message)\b/i;
+// A call-back promised but not yet taken: not a false claim, so not a flag, but the call nudges the
+// receptionist to take it. In three live runs the hotel's receptionist said "I'll pass your details on"
+// and never took the message; by the time it tried to hang up, the caller had gone.
+export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:that|it|this|those|these|your [a-z]+)(?: details)? (?:on|along)|let (?:the|our) [a-z ]{0,20}know|ask (?:them|the [a-z ]{0,20}) to (?:call|ring|give you a (?:call|ring)))/i;
 const SAFE = /\b(it'?s|is|that'?s|will be|would be|should be|totally|completely|perfectly) (safe|fine|okay|ok) (for|with) (you|your|him|her|them|someone|a) [^.?!]*(allerg|coeliac|nut|gluten)/i;
 
 function negated(text: string, index: number): boolean {
