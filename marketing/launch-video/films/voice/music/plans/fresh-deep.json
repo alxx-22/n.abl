@@ -1,0 +1,68 @@
+[
+ {
+  "beat": 0,
+  "section": "intro",
+  "prompts": {
+   "Deep Tech, dark, minor key": 1.0,
+   "Atmospheric Pads": 0.8,
+   "Ominous Drone": 0.5
+  },
+  "density": 0.2,
+  "brightness": 0.3,
+  "mute_drums": true
+ },
+ {
+  "beat": 7,
+  "section": "drop",
+  "prompts": {
+   "Deep Tech, dark, minor key": 1.0,
+   "Clicky Rimshots": 0.8,
+   "Tight Groove": 0.8,
+   "Pulsing Synth Bass": 0.8,
+   "Dark Minor Chords": 0.6
+  },
+  "density": 0.6,
+  "brightness": 0.4
+ },
+ {
+  "beat": 11,
+  "section": "fall",
+  "prompts": {
+   "Deep Tech, dark, minor key": 1.0,
+   "Clicky Rimshots": 0.8,
+   "Tight Groove": 0.8,
+   "Pulsing Synth Bass": 0.8,
+   "Dark Minor Chords": 0.6,
+   "Atmospheric Pads": 0.7
+  },
+  "density": 0.35,
+  "brightness": 0.3,
+  "mute_drums": true
+ },
+ {
+  "beat": 15,
+  "section": "drop2",
+  "prompts": {
+   "Deep Tech, dark, minor key": 1.0,
+   "Clicky Rimshots": 0.8,
+   "Tight Groove": 0.8,
+   "Pulsing Synth Bass": 0.8,
+   "Dark Minor Chords": 0.6,
+   "Huge Drop": 0.6
+  },
+  "density": 0.7,
+  "brightness": 0.45
+ },
+ {
+  "beat": 21,
+  "section": "name",
+  "prompts": {
+   "Deep Tech, dark, minor key": 1.0,
+   "Atmospheric Pads": 0.8,
+   "Ominous Drone": 0.5,
+   "Deep Rolling Bassline": 0.4
+  },
+  "density": 0.35,
+  "brightness": 0.3
+ }
+]

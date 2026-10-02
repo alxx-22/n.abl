@@ -1736,6 +1736,15 @@ def sfx_drop(deg, n=1, step=2, gap=0.05, wet=0.6, v=0.6, seed=0):
     return out * v
 
 
+def sfx_drop_click(m, v=1.0):
+    """The front of a drop, kept dry and bright: a click a few milliseconds
+    long and a tiny ping three octaves up, for a crisper, clickier drop."""
+    nz = noise(0.03); x = np.arange(len(nz)) / SR
+    click = bp(nz, 2500, 9000) * np.exp(-x / 0.0015)
+    ping = np.sin(2 * np.pi * mtof(m + 36) * x) * np.exp(-x / 0.006) * 0.5
+    return (click + ping) * v
+
+
 def sfx_msgin(v=1.0):
     """A message arrives: two soft notes, a fifth up."""
     y = np.zeros(at(0.6))
@@ -2262,7 +2271,8 @@ def build_music_file():
 
 
 def build_sfx():
-    out = buf()
+    out, clicks = buf(), buf()
+    clicky = getattr(F, "DROP_CLICK", 0)            # per film: how loud the dry click on each drop is
     trims = getattr(F, "SFX_TRIM", {})             # per film, in dB, by cue type
     for c in CUES:
         t, v = c["t"], c.get("v", 1.0)
@@ -2332,6 +2342,9 @@ def build_sfx():
             add(out, reverb(sfx_star(v), IR_HALL, 0.3), t, 0.35)
         elif k == "drop":
             add(out, sfx_drop(c["deg"], c.get("n", 1), c.get("step", 2), c.get("gap", 0.05), c.get("wet", 0.6), v, seed=int(t * 1000)), t, 0.5)
+            for i in range(c.get("n", 1) if clicky else 0):         # DROP_CLICK: a dry click on the front of each drop
+                m = DROP_SCALE[int(np.clip(c["deg"] + i * c.get("step", 2), 0, len(DROP_SCALE) - 1))]
+                add(clicks, sfx_drop_click(m, v * clicky), t + i * c.get("gap", 0.05), 0.5, pan=0.3 * np.sin(t * 7 + i))
         elif k == "msgin":
             add(out, sfx_msgin(v), t, 0.35, pan=-0.2)
         elif k == "msgout":
@@ -2357,7 +2370,7 @@ def build_sfx():
     dr = getattr(F, "SFX_DROWN", None)
     if dr:
         out = drown(out, **dr)
-    return out
+    return out + reverb(np.pad(clicks, ((0, at(0.4)), (0, 0))), IR_ROOM, 0.15)[:N]
 
 
 # ------------------------------------------------------------------ voice
