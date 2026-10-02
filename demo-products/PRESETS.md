@@ -44,7 +44,11 @@ walkthrough can reach it; nothing is deployed until the demo is fully built
    changes `defaults.json`, the `{}` and null goldens and the olive
    tenants' profiles); seed and `insertSeed` columns; closing at midnight;
    the builder and workspace registries (web); additive payloads; PIN
-   uniqueness; migration `voice_0004_orders`.
+   uniqueness; migration `voice_0004_orders`; moving a booking made generic
+   (§2.2), before the barber. That last one changes the restaurant: staff
+   can move a booking onto a table kept for walk-ins today, which offers no
+   booking service, and the generic rule refuses it, so its commit says so
+   and its HTTP test covers it.
 4. **Gate before the first preset**: check:all green; goldens unchanged except
    the named Phase 3 commits; the restaurant's live scenarios (12 Luca's,
    7 `ws-*`, `cafe-delivery`, `cafe-closed`) re-run once and passing.
@@ -164,7 +168,9 @@ section and may hold edits the server has not saved yet; anything that must
 follow a new section happens in `sanitise`, on the next save. `combine`
 calls `preset.combineTables` or returns 400. Moving a booking is a
 generic staff action: the target must offer the booking's service, be free,
-and for a table seat the party. One `rebuild(w, answers, settings)` helper
+and for a table seat the party (§0.3; until then `repo.moveBookingToTable`
+checks only seats and time, so a chair or a member of staff cannot be a
+target). One `rebuild(w, answers, settings)` helper
 recompiles and always keeps `demo_pin` and the call settings. The workspace
 slug falls back to a slug of the preset key.
 
