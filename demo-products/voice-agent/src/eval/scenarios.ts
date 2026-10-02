@@ -7,15 +7,56 @@
 
 import type { Repo } from '../db/repo.ts';
 import type { Db } from '../db/db.ts';
-import type { Tenant } from '../domain/types.ts';
+import type { Tenant, TenantProfile } from '../domain/types.ts';
 import type { CallSummary } from '../core/call.ts';
 import { zonedToUtc } from '../domain/time.ts';
 import { allergensNamed } from '../domain/menu.ts';
+import { answersOf, builtPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
+import type { RestaurantAnswers } from '../presets/restaurant/answers.ts';
 
 export const FRIDAY_EVENING = new Date('2026-10-09T16:30:00Z'); // Fri 9 Oct, 17:30 BST
 export const SATURDAY_MORNING = new Date('2026-10-10T09:15:00Z'); // Sat 10 Oct, 10:15 BST
 
 export const DEMO_CARD_SPOKEN = '1234 5678 9012 3456, expiry 12 34, security code 123';
+
+// ── Businesses made in the demo builder ──────────────────────────────────
+
+/** A business made in the demo builder: a preset's defaults with an edit, as a prospect would make it. */
+export interface BuilderTenant {
+  slug: string;
+  preset: string;
+  edit(a: BaseAnswers): void;
+}
+
+const restaurant = (slug: string, edit: (a: RestaurantAnswers) => void): BuilderTenant => ({ slug, preset: 'restaurant', edit: edit as (a: BaseAnswers) => void });
+
+/**
+ * The eval's builder businesses. Each is compiled through the preset
+ * registry and seeded by its own preset, as a prospect's workspace is, so a
+ * new preset's scenarios need only an entry here. The restaurant's two are
+ * recorded in its goldens (tenants/olive-*), which hold them as they are.
+ */
+export const BUILDER_TENANTS: BuilderTenant[] = [
+  // As it comes, with table 4 kept for walk-ins, as in Alex's first call (ws-sunday-lunch-table4 asks for it).
+  restaurant('olive-ember', (a) => {
+    a.basics.name = 'Olive & Ember';
+    a.seating.tables.find((t) => t.key === 'T4')!.walk_in = true;
+  }),
+  // Takeaway paid on collection.
+  restaurant('olive-collect', (a) => {
+    a.basics.name = 'Olive & Ember Kitchen';
+    a.money.takeaway_payment = 'collection';
+  }),
+];
+
+/** A builder business's preset, and its profile: the defaults, the edit, then cleaned and compiled as Start does. */
+export function builderTenant(b: BuilderTenant): { preset: Preset; profile: TenantProfile } {
+  const preset = builtPreset(b.preset);
+  if (!preset) throw new Error(`${b.slug}: no preset called ${b.preset} is built`);
+  const a = preset.defaults();
+  b.edit(a);
+  return { preset, profile: preset.compile(answersOf(preset, a), { slug: b.slug }) };
+}
 
 export interface CheckContext {
   repo: Repo;

@@ -17,6 +17,8 @@ import { bookingWindows, hoursSentence } from '../src/presets/common/hours.ts';
 import { planRestaurantSeed } from '../src/presets/restaurant/seed.ts';
 import { candidateTimes } from '../src/domain/availability.ts';
 import { toLocal } from '../src/domain/time.ts';
+import { BUILDER_TENANTS, FRIDAY_EVENING, SCENARIOS, builderTenant } from '../src/eval/scenarios.ts';
+import { loadFixtures } from '../src/db/seed.ts';
 
 const corpus = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/restaurant/corpus/${name}.json`, import.meta.url), 'utf8'));
 const restaurant = builtPreset('restaurant') as unknown as Preset<RestaurantAnswers>;
@@ -255,4 +257,22 @@ test('presets: every built preset passes the checks of PRESETS.md §4 that apply
     assert.deepEqual(preset.sanitise(preset.defaults()), preset.defaults(), `${p.key}: the defaults are already clean`);
   }
   assert.deepEqual(restaurant.steps.map((s) => s.label), ['Basics', 'Opening hours', 'How you serve', 'Seating', 'Floor plan', 'Menu', 'Money', 'Policies and questions'], 'today\'s titles');
+});
+
+test('presets: the eval\'s builder businesses are made through the registry and seeded by their preset', () => {
+  const fixtures = new Set(loadFixtures().map((f) => f.slug));
+  const built = new Set(BUILDER_TENANTS.map((b) => b.slug));
+  for (const sc of SCENARIOS) assert.ok(fixtures.has(sc.tenant) || built.has(sc.tenant), `${sc.id}: no business called ${sc.tenant}`);
+  for (const b of BUILDER_TENANTS) {
+    const { preset, profile } = builderTenant(b);
+    assert.equal(preset.info.key, b.preset);
+    assert.equal(profile.slug, b.slug);
+    assert.ok(profile.name, `${b.slug} has a name`);
+    const plan = preset.seed(profile, FRIDAY_EVENING, 7);
+    assert.ok(plan.bookings.length || plan.orders.length, `${b.slug}: a seeded week`);
+    if (b.preset === 'restaurant') assert.deepEqual(plan, planRestaurantSeed(profile, FRIDAY_EVENING, 7), 'the restaurant\'s week, as before');
+  }
+  const ember = builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'olive-ember')!).profile;
+  assert.deepEqual(ember.booking!.resources.find((r) => r.key === 'T4')!.services, [], 'table 4 kept for walk-ins');
+  assert.equal(builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'olive-collect')!).profile.ordering!.payment, 'collection');
 });

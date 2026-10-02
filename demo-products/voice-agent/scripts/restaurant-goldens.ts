@@ -25,7 +25,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defaultAnswers, type RestaurantAnswers } from '../src/presets/restaurant/answers.ts';
+import { defaultAnswers } from '../src/presets/restaurant/answers.ts';
 import { compileRestaurant } from '../src/presets/restaurant/compile.ts';
 import { sanitiseRestaurant, validateRestaurant } from '../src/presets/restaurant/validate.ts';
 import { planRestaurantSeed } from '../src/presets/restaurant/seed.ts';
@@ -37,6 +37,7 @@ import { applyScan, scanView, type ScanPart } from '../src/scout/map.ts';
 import type { ScanResult } from '../src/scout/scan.ts';
 import { loadFixtures } from '../src/db/seed.ts';
 import { DEFAULT_DEMO_CARDS } from '../src/domain/payments.ts';
+import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
 import { ALLERGENS, type TenantProfile } from '../src/domain/types.ts';
 import type { Workspace } from '../src/db/demo-repo.ts';
 import type { Config } from '../src/config.ts';
@@ -659,22 +660,16 @@ export function computeGoldens(corpus = readCorpus(), scan = readJson(SCAN_FILE)
       put(`drafts/faq-${name}.json`, requestOf(() => draftFaqs(sanitiseRestaurant(structuredClone(corpus[name])), DRAFT_CONFIG)));
     }
 
-    // The fixture tenants as they are loaded, and the eval's builder tenants as src/eval/run.ts compiles them.
+    // The fixture tenants as they are loaded, and the eval's builder tenants as the eval makes them (BUILDER_TENANTS, through the preset registry).
     for (const p of loadFixtures().filter((f) => f.slug === 'lucas-trattoria' || f.slug === 'copper-kettle')) {
       put(`tenants/${p.slug}/prompt.json`, prompts(p));
       put(`tenants/${p.slug}/tools.json`, tools(p));
     }
-    const ember = defaultAnswers();
-    ember.basics.name = 'Olive & Ember';
-    ember.seating.tables.find((t) => t.key === 'T4')!.walk_in = true;
-    const collect = defaultAnswers();
-    collect.basics.name = 'Olive & Ember Kitchen';
-    collect.money.takeaway_payment = 'collection';
-    for (const [slug, a] of [['olive-ember', ember], ['olive-collect', collect]] as [string, RestaurantAnswers][]) {
-      const p = compileRestaurant(a, { slug });
-      put(`tenants/${slug}/profile.json`, p);
-      put(`tenants/${slug}/prompt.json`, prompts(p));
-      put(`tenants/${slug}/tools.json`, tools(p));
+    for (const b of BUILDER_TENANTS.filter((x) => x.preset === 'restaurant')) {
+      const p = builderTenant(b).profile;
+      put(`tenants/${b.slug}/profile.json`, p);
+      put(`tenants/${b.slug}/prompt.json`, prompts(p));
+      put(`tenants/${b.slug}/tools.json`, tools(p));
     }
     return out;
   });
