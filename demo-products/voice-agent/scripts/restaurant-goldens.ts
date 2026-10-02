@@ -16,6 +16,11 @@
 // jsonb reorders keys; array order does, because it reaches the prompt.
 // Prompts and the FAQ fact sheet are stored as lines, so a diff shows the
 // line that changed.
+//
+// The draft requests, the every-issue and all-off inputs and the Friday 19:07
+// seeds were added after the move (review findings); they were recorded by
+// running this script on the code from before it (6bdd42f), which gives the
+// same files.
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -24,7 +29,7 @@ import { defaultAnswers, type RestaurantAnswers } from '../src/presets/restauran
 import { compileRestaurant } from '../src/presets/restaurant/compile.ts';
 import { sanitiseRestaurant, validateRestaurant } from '../src/presets/restaurant/validate.ts';
 import { planRestaurantSeed } from '../src/presets/restaurant/seed.ts';
-import { factSheet, menuFromDraft } from '../src/presets/restaurant/drafts.ts';
+import { cleanBrief, draftFaqs, draftMenu, factSheet, menuFromDraft } from '../src/presets/restaurant/drafts.ts';
 import { preview } from '../src/server/demo.ts';
 import { compilePrompt, type PromptContext } from '../src/core/prompt.ts';
 import { toolDeclarations } from '../src/core/tools.ts';
@@ -34,6 +39,7 @@ import { loadFixtures } from '../src/db/seed.ts';
 import { DEFAULT_DEMO_CARDS } from '../src/domain/payments.ts';
 import { ALLERGENS, type TenantProfile } from '../src/domain/types.ts';
 import type { Workspace } from '../src/db/demo-repo.ts';
+import type { Config } from '../src/config.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', 'test', 'fixtures', 'restaurant');
 const CORPUS_DIR = join(ROOT, 'corpus');
@@ -46,14 +52,23 @@ const REPLY_FILE = join(ROOT, 'menu-draft-reply.json');
 // Start seeds a workspace from its id and the clock, and every call stamps
 // the time into its prompt; the goldens pass these instead. Europe/London is
 // on summer time until 25 October 2026, so they are UTC+1: Tuesday lunch,
-// Friday evening, and a Sunday before opening.
+// Friday evening, and a Sunday before opening. Those three fall on the
+// 15-minute booking grid, so no booking ever starts a few minutes after now;
+// Friday 19:07 does, which is the only time the seed marks a party as
+// arrived, and that draw moves the dice for everything seeded after it.
 const NOWS = {
   'tuesday-1230': new Date('2026-10-06T11:30:00Z'),
   'friday-1900': new Date('2026-10-09T18:00:00Z'),
+  'friday-1907': new Date('2026-10-09T18:07:00Z'),
   'sunday-1000': new Date('2026-10-11T09:00:00Z'),
 } as const;
 const SEEDS = [1, 42, 9001] as const;
-/** The inputs whose seeded week is recorded: what a new workspace starts with, and the one that reaches every branch. */
+/**
+ * The inputs whose seeded week is recorded: what a new workspace starts
+ * with, and the one with bookings, walk-ins, collection and delivery all on.
+ * Between them and the four nows, every visit status and both kinds of order
+ * are seeded.
+ */
 const SEEDED = ['as-created', 'full'];
 
 const PROMPTS: Record<string, PromptContext> = {
@@ -66,9 +81,30 @@ const PROMPTS: Record<string, PromptContext> = {
 
 const ALL_PARTS: Record<ScanPart, boolean> = { identity: true, hours: true, menu: true, theme: true, services: true, policies: true };
 
+// The drafts never reach the model here: the request is caught as it leaves
+// (see requestOf), so the model and key are placeholders that never appear
+// in a golden.
+const DRAFT_CONFIG = { textModel: 'text-model', keys: { text: 'golden-key' } } as unknown as Config;
+
+/**
+ * Menu briefs as the builder's Menu step sends them, between them reaching
+ * every line of the draft prompt that can change: takeaway off and on, a
+ * description or none, the owner's style, the restaurant's style or the
+ * wording's own, each price band, and a dish count past its cap.
+ */
+const BRIEFS: Record<string, unknown> = {
+  'budget-no-takeaway': {
+    description: 'Fish and chips, battered sausages, mushy peas, homemade pies and a few puddings.',
+    style: 'A seaside chippy with a sit-down room', price_level: 'budget', dishes: 12, takeaway: false,
+  },
+  'description-only': { description: 'Wood-fired Neapolitan pizza, about ten, fresh pasta, a few starters and two desserts.' },
+  'style-only': { style: 'A Sunday roast pub with a carvery', price_level: 'mid', dishes: 6 },
+  'high-no-style': { description: 'Seasonal tasting plates, local game and a cheese trolley.', style: '', price_level: 'high', dishes: 99, takeaway: true },
+};
+
 // ── The corpus ───────────────────────────────────────────────────────────
 
-export const CORPUS = ['full', 'max', 'legacy', 'fallbacks', 'as-created', 'empty', 'null', 'junk'] as const;
+export const CORPUS = ['full', 'max', 'legacy', 'fallbacks', 'as-created', 'every-issue', 'all-off', 'empty', 'null', 'junk'] as const;
 
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
@@ -421,6 +457,38 @@ function asCreated(): unknown {
   return a;
 }
 
+/**
+ * Something wrong on every step at once, so the golden records the messages
+ * no other input reaches (the greeting, a service that closes before it
+ * opens, delivery with no districts) and the order the steps report in:
+ * basics, hours, seating, floor plan, menu, takeaway, money.
+ */
+function everyIssue(): unknown {
+  const a = defaultAnswers() as any;
+  a.basics.name = '';
+  a.basics.greeting = 'Hello, thanks for calling. How can I help?';
+  a.hours.days[2] = { open: true, services: [{ label: 'Lunch', open: '12:00', close: '15:00' }, { label: 'Dinner', open: '22:00', close: '18:00' }] };
+  a.seating.max_party = 1;
+  const [first, second] = a.seating.tables;
+  Object.assign(second, { area: first.area, x: first.x + 10, y: first.y + 10 });
+  delete a.menu.categories[0].items[0].price_pence;
+  a.serve.collection.enabled = true;
+  a.serve.delivery.enabled = true;
+  a.serve.delivery.districts = ['Nottingham', 'NG 1 2AB', 'city centre'];
+  a.money.deposit = { mode: 'per_person', amount_pence: 0, min_party: 6 };
+  return a;
+}
+
+/** No bookings and no takeaway: the receptionist only answers questions. */
+function allOff(): unknown {
+  const a = defaultAnswers() as any;
+  a.basics.name = 'The Quiet Room';
+  a.serve.reservations = false;
+  a.serve.collection.enabled = false;
+  a.serve.delivery.enabled = false;
+  return a;
+}
+
 function junk(): unknown {
   return {
     version: 'one', basics: 'Pizza Palace', hours: [1, 2, 3], serve: 42,
@@ -431,7 +499,10 @@ function junk(): unknown {
 }
 
 function buildCorpus(): Record<(typeof CORPUS)[number], unknown> {
-  return { full: full(), max: max(), legacy: legacy(), fallbacks: fallbacks(), 'as-created': asCreated(), empty: {}, null: null, junk: junk() };
+  return {
+    full: full(), max: max(), legacy: legacy(), fallbacks: fallbacks(), 'as-created': asCreated(),
+    'every-issue': everyIssue(), 'all-off': allOff(), empty: {}, null: null, junk: junk(),
+  };
 }
 
 // ── Reading and writing ──────────────────────────────────────────────────
@@ -518,6 +589,29 @@ const prompts = (profile: TenantProfile) => Object.fromEntries(Object.entries(PR
 const tools = (profile: TenantProfile) => toolDeclarations(tenantOf(profile)).map((d) => d.name);
 const RESTAURANT = { preset: 'restaurant' } as Workspace;
 
+/**
+ * The request a draft sends the text model, caught as it is sent: every
+ * draft builds its prompt and calls fetch before its first await, so this is
+ * synchronous. The reply never comes, so nothing after it runs. Prompt text
+ * is stored as lines; the model and key are in the URL and headers, which
+ * are left out.
+ */
+function requestOf(send: () => Promise<unknown>): unknown {
+  const real = globalThis.fetch;
+  let body: any = null;
+  globalThis.fetch = ((_url: unknown, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body));
+    return new Promise<Response>(() => {});
+  }) as typeof fetch;
+  try {
+    send().catch(() => {});
+  } finally {
+    globalThis.fetch = real;
+  }
+  if (!body) throw new Error('The draft did not ask the model before its first await: requestOf cannot catch it.');
+  return { ...body, contents: body.contents.map((c: any) => ({ ...c, parts: c.parts.map((p: any) => ({ ...p, text: lines(p.text) })) })) };
+}
+
 /** Every golden, by its path under golden/, in stored form. */
 export function computeGoldens(corpus = readCorpus(), scan = readJson(SCAN_FILE) as ScanResult, reply = readJson(REPLY_FILE)): Map<string, unknown> {
   return withoutClock(() => {
@@ -552,6 +646,18 @@ export function computeGoldens(corpus = readCorpus(), scan = readJson(SCAN_FILE)
     put('scan/view.json', scanView({ id: 'golden', status: 'done', result: structuredClone(scan), error: null }, null));
 
     put('menu-draft/menu.json', menuFromDraft(structuredClone(reply) as Parameters<typeof menuFromDraft>[0]));
+
+    // What the two drafts ask the model. The restaurant's wording is put
+    // together by shared code that fills in the kind of business, so this is
+    // where a later preset could change it unseen. The brief is cleaned with
+    // the new workspace's style, as POST .../menu-draft does.
+    const style = created.basics.style;
+    for (const [name, brief] of Object.entries(BRIEFS)) {
+      put(`drafts/menu-${name}.json`, requestOf(() => draftMenu(cleanBrief(structuredClone(brief), style), DRAFT_CONFIG)));
+    }
+    for (const name of ['as-created', 'full']) {
+      put(`drafts/faq-${name}.json`, requestOf(() => draftFaqs(sanitiseRestaurant(structuredClone(corpus[name])), DRAFT_CONFIG)));
+    }
 
     // The fixture tenants as they are loaded, and the eval's builder tenants as src/eval/run.ts compiles them.
     for (const p of loadFixtures().filter((f) => f.slug === 'lucas-trattoria' || f.slug === 'copper-kettle')) {

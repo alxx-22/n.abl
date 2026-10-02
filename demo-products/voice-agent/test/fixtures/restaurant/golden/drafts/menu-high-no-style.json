@@ -1,0 +1,137 @@
+{
+ "contents": [
+  {
+   "role": "user",
+   "parts": [
+    {
+     "text": [
+      "Write a realistic menu for a UK restaurant, for a demo of an AI phone receptionist.",
+      "The restaurant: a neighbourhood restaurant.",
+      "The owner describes their food: \"Seasonal tasting plates, local game and a cheese trolley.\"",
+      "About 40 dishes in all, in the sections a menu like this would have. Upmarket: mains about £22 to £38, starters £10 to £16, desserts £9 to £12.",
+      "Prices in pence, ending in 0 or 5. Dish names as the menu would print them; no emoji.",
+      "Allergens: list what a typical recipe contains, from the UK 14 only. They are illustrations the owner will check.",
+      "Mark takeaway false only for dishes that do not travel.",
+      "Add option groups only where they are natural (pizza extras, a size, a sauce), at most three."
+     ]
+    }
+   ]
+  }
+ ],
+ "generationConfig": {
+  "temperature": 0.7,
+  "responseMimeType": "application/json",
+  "responseSchema": {
+   "type": "OBJECT",
+   "properties": {
+    "categories": {
+     "type": "ARRAY",
+     "items": {
+      "type": "OBJECT",
+      "properties": {
+       "label": {
+        "type": "STRING",
+        "description": "Section name as a menu would print it: Starters, Pizza, Pasta, Desserts."
+       },
+       "items": {
+        "type": "ARRAY",
+        "items": {
+         "type": "OBJECT",
+         "properties": {
+          "name": {
+           "type": "STRING"
+          },
+          "description": {
+           "type": "STRING",
+           "description": "One short line, under 15 words."
+          },
+          "price_pence": {
+           "type": "INTEGER"
+          },
+          "allergens": {
+           "type": "ARRAY",
+           "items": {
+            "type": "STRING",
+            "enum": ["celery","gluten","crustaceans","eggs","fish","lupin","milk","molluscs","mustard","nuts","peanuts","sesame","soya","sulphites"]
+           },
+           "description": "What a typical recipe for this dish contains, from the UK 14."
+          },
+          "dietary": {
+           "type": "ARRAY",
+           "items": {
+            "type": "STRING",
+            "enum": ["vegetarian","vegan","gluten-free option","spicy"]
+           }
+          },
+          "modifier_groups": {
+           "type": "ARRAY",
+           "items": {
+            "type": "STRING"
+           },
+           "description": "Keys of option groups this dish offers."
+          },
+          "takeaway": {
+           "type": "BOOLEAN",
+           "description": "False for dishes that do not travel."
+          }
+         },
+         "required": ["name","price_pence","allergens"]
+        }
+       }
+      },
+      "required": ["label","items"]
+     }
+    },
+    "modifier_groups": {
+     "type": "ARRAY",
+     "description": "At most three option groups, such as pizza extras or a size choice.",
+     "items": {
+      "type": "OBJECT",
+      "properties": {
+       "key": {
+        "type": "STRING"
+       },
+       "label": {
+        "type": "STRING"
+       },
+       "min": {
+        "type": "INTEGER"
+       },
+       "max": {
+        "type": "INTEGER"
+       },
+       "options": {
+        "type": "ARRAY",
+        "items": {
+         "type": "OBJECT",
+         "properties": {
+          "name": {
+           "type": "STRING"
+          },
+          "price_pence": {
+           "type": "INTEGER"
+          },
+          "allergens": {
+           "type": "ARRAY",
+           "items": {
+            "type": "STRING",
+            "enum": ["celery","gluten","crustaceans","eggs","fish","lupin","milk","molluscs","mustard","nuts","peanuts","sesame","soya","sulphites"]
+           }
+          }
+         },
+         "required": ["name","price_pence"]
+        }
+       }
+      },
+      "required": ["key","label","min","max","options"]
+     }
+    },
+    "allergen_statement": {
+     "type": "STRING",
+     "description": "Two sentences a UK restaurant would print about allergens and cross-contamination."
+    }
+   },
+   "required": ["categories","allergen_statement"]
+  }
+ }
+}

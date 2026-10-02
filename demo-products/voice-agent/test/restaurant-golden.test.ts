@@ -70,6 +70,7 @@ for (const name of CORPUS) {
 
 test('restaurant golden: a frozen website scan applied to a new workspace, and the scout card', () => check('scan'));
 test('restaurant golden: a canned menu draft into builder answers', () => check('menu-draft'));
+test('restaurant golden: what the menu and FAQ drafts ask the model', () => check('drafts'));
 
 for (const slug of ['lucas-trattoria', 'copper-kettle', 'olive-ember', 'olive-collect']) {
   test(`restaurant golden: ${slug}: prompt and tools`, () => check(`tenants/${slug}`));

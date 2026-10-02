@@ -1,0 +1,47 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the restaurant a name."
+ },
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "The greeting must say it is an AI assistant and that this is a demo line."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Tuesday: Dinner closes before it opens."
+ },
+ {
+  "step": "seating",
+  "level": "error",
+  "message": "Allow bookings for at least two people."
+ },
+ {
+  "step": "floor",
+  "level": "warning",
+  "message": "Table 1 and Table 2 overlap on the floor plan."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "Some dishes have no price yet."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ },
+ {
+  "step": "serve",
+  "level": "error",
+  "message": "List the postcode districts you deliver to, like NG1."
+ },
+ {
+  "step": "money",
+  "level": "error",
+  "message": "Set the deposit amount."
+ }
+]
