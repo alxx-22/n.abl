@@ -3,89 +3,19 @@
 // anything odd into a profile. validate(): what the builder shows as still
 // missing or wrong before Start.
 
-import { arr, bool, int, key, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseFaqs, sanitiseSources, sanitiseTheme, str } from '../common/sanitise.ts';
+import { bool, int, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseFaqs, sanitiseSources, sanitiseTheme, str } from '../common/sanitise.ts';
 import type { Issue as BaseIssue } from '../common/types.ts';
 import { validateBase } from '../common/validate.ts';
 import { sanitiseMenu, validateMenu } from '../food/menu.ts';
 import { ORDER_PAYMENTS, sanitiseOrdering, takesOrders, validateOrdering } from '../food/ordering.ts';
-import { defaultAnswers, type AreaAnswer, type FixtureAnswer, type RestaurantAnswers, type TableAnswer } from './answers.ts';
-import { FIXTURE_LENGTH, intoRooms } from './layout.ts';
-import { tableBookable } from './compile.ts';
-
-const FEATURES = ['window', 'booth', 'quiet', 'heated', 'covered', 'dog_friendly', 'high_table', 'sofa', 'view'] as const;
-
-function areas(v: unknown, d: AreaAnswer[]): AreaAnswer[] {
-  const list = arr(v).slice(0, 8).map((x: any, i): AreaAnswer => ({
-    key: key(x?.key, `area_${i + 1}`),
-    label: str(x?.label, 30, `Area ${i + 1}`) || `Area ${i + 1}`,
-    kind: oneOf(x?.kind, ['indoor', 'outdoor', 'bar', 'private', 'other'] as const, 'indoor'),
-    reservable: bool(x?.reservable, true),
-    enquiry_only: bool(x?.enquiry_only, false),
-    weather_rule: x?.kind === 'outdoor' ? oneOf(x?.weather_rule, ['move_inside', 'own_risk', 'walk_in_only'] as const, 'move_inside') : null,
-  }));
-  const seen = new Set<string>();
-  const unique = list.filter((a) => (seen.has(a.key) ? false : (seen.add(a.key), true)));
-  return v === undefined ? d : unique;
-}
-
-function tables(v: unknown, areaKeys: Set<string>, d: TableAnswer[]): TableAnswer[] {
-  if (v === undefined) return d;
-  const list = arr(v).slice(0, 80).map((x: any, i): TableAnswer => {
-    const seats = int(x?.seats, 1, 20, 4);
-    const k = typeof x?.key === 'string' && /^[A-Za-z0-9]{1,8}$/.test(x.key) ? x.key : `T${i + 1}`;
-    return {
-      key: k,
-      label: str(x?.label, 30, `Table ${i + 1}`) || `Table ${i + 1}`,
-      area: typeof x?.area === 'string' && areaKeys.has(x.area) ? x.area : [...areaKeys][0] ?? 'indoor',
-      seats,
-      shape: oneOf(x?.shape, ['round', 'square', 'rect'] as const, seats <= 2 ? 'round' : seats <= 4 ? 'square' : 'rect'),
-      x: int(x?.x, 0, 2000, 0),
-      y: int(x?.y, 0, 4000, 0),
-      rotation: int(x?.rotation, 0, 359, 0),
-      accessible: bool(x?.accessible, false),
-      walk_in: bool(x?.walk_in, false),
-      features: arr(x?.features).filter((f): f is (typeof FEATURES)[number] => FEATURES.includes(f as never)),
-      joins: arr(x?.joins).filter((j): j is string => typeof j === 'string').slice(0, 4),
-    };
-  });
-  const seen = new Set<string>();
-  const unique = list.filter((t) => (seen.has(t.key) ? false : (seen.add(t.key), true)));
-  // Joins must point at real tables, both ways.
-  const keys = new Set(unique.map((t) => t.key));
-  for (const t of unique) t.joins = [...new Set(t.joins.filter((j) => j !== t.key && keys.has(j)))];
-  for (const t of unique) for (const j of t.joins) {
-    const u = unique.find((x) => x.key === j)!;
-    if (!u.joins.includes(t.key)) u.joins.push(t.key);
-  }
-  return unique;
-}
-
-function fixtures(v: unknown, areaKeys: Set<string>, d: FixtureAnswer[]): FixtureAnswer[] {
-  if (v === undefined) return d;
-  const seen = new Set<string>();
-  return arr(v).slice(0, 60).flatMap((x: any, i): FixtureAnswer[] => {
-    const kind = oneOf(x?.kind, ['bar', 'door', 'window', 'wall'] as const, 'wall');
-    const k = typeof x?.key === 'string' && /^[A-Za-z0-9]{1,8}$/.test(x.key) ? x.key : `F${i + 1}`;
-    if (seen.has(k) || typeof x?.area !== 'string' || !areaKeys.has(x.area)) return [];
-    seen.add(k);
-    const L = FIXTURE_LENGTH[kind];
-    return [{
-      key: k, area: x.area, kind,
-      x: int(x?.x, 0, 2000, 40), y: int(x?.y, 0, 4000, 40),
-      length: int(x?.length, L.min, L.max, L.start),
-      rotation: (int(x?.rotation, 0, 359, 0) / 90 | 0) * 90 % 360,
-    }];
-  });
-}
+import { sanitiseDeposit, sanitiseSeating, validateDeposit, validateSeating } from '../seating/floor.ts';
+import { defaultAnswers, type RestaurantAnswers } from './answers.ts';
 
 export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
   const d = defaultAnswers();
   const x = (input ?? {}) as any;
-  const ar = areas(x.seating?.areas, d.seating.areas);
-  const areaKeys = new Set(ar.map((a) => a.key));
   const h = x.hours ?? {};
   const s = x.serve ?? {};
-  const st = x.seating ?? {};
   const m = x.money ?? {};
   const p = x.policies ?? {};
   return {
@@ -101,31 +31,10 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
       walk_ins: bool(s.walk_ins, d.serve.walk_ins),
       ...sanitiseOrdering(s, d.serve),
     },
-    seating: {
-      areas: ar,
-      // A plan from before areas had their own rooms moves into them, once.
-      tables: st.tables !== undefined && st.plan !== 2 ? intoRooms(ar, tables(st.tables, areaKeys, d.seating.tables)) : tables(st.tables, areaKeys, d.seating.tables),
-      fixtures: fixtures(st.fixtures, areaKeys, st.tables !== undefined && st.fixtures === undefined ? [] : d.seating.fixtures),
-      plan: 2,
-      sittings: {
-        up_to_2: int(st.sittings?.up_to_2, 30, 300, d.seating.sittings.up_to_2),
-        up_to_4: int(st.sittings?.up_to_4, 30, 300, d.seating.sittings.up_to_4),
-        up_to_8: int(st.sittings?.up_to_8, 30, 360, d.seating.sittings.up_to_8),
-        larger: int(st.sittings?.larger, 30, 480, d.seating.sittings.larger),
-      },
-      max_party: int(st.max_party, 1, 60, d.seating.max_party),
-      notice_minutes: int(st.notice_minutes, 0, 1440, d.seating.notice_minutes),
-      horizon_days: int(st.horizon_days, 1, 365, d.seating.horizon_days),
-      highchairs: int(st.highchairs, 0, 30, d.seating.highchairs),
-      buffer_minutes: int(st.buffer_minutes, 0, 60, d.seating.buffer_minutes),
-    },
+    seating: sanitiseSeating(x.seating, d.seating),
     menu: sanitiseMenu(x.menu, d.menu),
     money: {
-      deposit: {
-        mode: oneOf(m.deposit?.mode, ['none', 'per_person', 'per_booking', 'card_hold'] as const, d.money.deposit.mode),
-        amount_pence: int(m.deposit?.amount_pence, 0, 50000, d.money.deposit.amount_pence),
-        min_party: int(m.deposit?.min_party, 1, 60, d.money.deposit.min_party),
-      },
+      deposit: sanitiseDeposit(m.deposit, d.money.deposit),
       cancellation_policy: str(m.cancellation_policy, 300, d.money.cancellation_policy),
       takeaway_payment: oneOf(m.takeaway_payment, ORDER_PAYMENTS, d.money.takeaway_payment),
       service_charge: str(m.service_charge, 200, d.money.service_charge),
@@ -153,28 +62,12 @@ export type Issue = BaseIssue<RestaurantStep>;
 
 export function validateRestaurant(a: RestaurantAnswers): Issue[] {
   const out: Issue[] = validateBase(a, 'restaurant');
-  const err = (step: Issue['step'], message: string) => out.push({ step, level: 'error', message });
-  const warn = (step: Issue['step'], message: string) => out.push({ step, level: 'warning', message });
-
   if (!a.serve.reservations && !takesOrders(a.serve)) {
-    warn('serve', 'With no bookings and no takeaway, the receptionist can only answer questions.');
+    out.push({ step: 'serve', level: 'warning', message: 'With no bookings and no takeaway, the receptionist can only answer questions.' });
   }
-  if (a.serve.reservations) {
-    if (!a.seating.areas.length) err('seating', 'Add at least one seating area.');
-    if (!a.seating.tables.some((t) => tableBookable(a, t))) err('seating', 'Nothing is bookable: add tables to an area that takes bookings.');
-    if (a.seating.max_party < 2) err('seating', 'Allow bookings for at least two people.');
-    const biggest = Math.max(0, ...a.seating.tables.filter((t) => tableBookable(a, t)).map((t) => t.seats));
-    const pair = Math.max(0, ...a.seating.tables.flatMap((t) => t.joins.map((j) => t.seats + (a.seating.tables.find((u) => u.key === j)?.seats ?? 0))));
-    if (Math.max(biggest, pair) < Math.min(a.seating.max_party, 8)) {
-      warn('seating', `No table or pair of tables seats ${Math.min(a.seating.max_party, 8)}; bigger parties will be offered a callback.`);
-    }
-    for (const t of a.seating.tables) {
-      const clash = a.seating.tables.find((u) => u !== t && u.area === t.area && Math.abs(u.x - t.x) < 30 && Math.abs(u.y - t.y) < 30);
-      if (clash && t.key < clash.key) warn('floor', `${t.label} and ${clash.label} overlap on the floor plan.`);
-    }
-  }
+  if (a.serve.reservations) out.push(...validateSeating(a.seating, { seating: 'seating', floor: 'floor' }));
   out.push(...validateMenu(a.menu, 'menu', { orderable: takesOrders(a.serve) }));
   out.push(...validateOrdering(a.serve, 'serve'));
-  if (a.money.deposit.mode !== 'none' && a.money.deposit.mode !== 'card_hold' && a.money.deposit.amount_pence <= 0) err('money', 'Set the deposit amount.');
+  out.push(...validateDeposit(a.money.deposit, 'money'));
   return out;
 }

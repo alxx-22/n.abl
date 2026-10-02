@@ -6,50 +6,16 @@
 import type { BaseAnswers, BasicsAnswer, ClosureAnswer, DayHours, FaqAnswer, Sources, ThemeAnswer } from '../common/types.ts';
 import { sampleMenu, type MenuAnswer } from '../food/menu.ts';
 import type { CollectionAnswer, DeliveryAnswer, OrderPayment } from '../food/ordering.ts';
-import { FIXTURE_LENGTH, autoLayout, footprint } from './layout.ts';
+import { defaultAreas } from '../seating/areas.ts';
+import { defaultFixtures } from '../seating/fixtures.ts';
+import { tablesFromCounts } from '../seating/tables.ts';
+import type { DepositAnswer, SeatingAnswer, TableAnswer } from '../seating/types.ts';
 
 export type { DayHours, ServicePeriod } from '../common/types.ts';
-
-export interface AreaAnswer {
-  key: string;
-  label: string;
-  kind: 'indoor' | 'outdoor' | 'bar' | 'private' | 'other';
-  reservable: boolean;
-  /** A private room: take details for a callback rather than book. */
-  enquiry_only: boolean;
-  /** Outdoor only. */
-  weather_rule: 'move_inside' | 'own_risk' | 'walk_in_only' | null;
-}
-
-export interface TableAnswer {
-  key: string;
-  label: string;
-  area: string;
-  seats: number;
-  shape: 'round' | 'square' | 'rect';
-  x: number;
-  y: number;
-  rotation: number;
-  accessible: boolean;
-  /** Kept back for walk-ins: shown on the plan, never booked by phone. */
-  walk_in: boolean;
-  features: string[];
-  /** Tables this one pushes together with (both ways). */
-  joins: string[];
-}
-
-/** A room shape on the floor plan, for looks only: a bar counter, a door, a window, a wall. */
-export interface FixtureAnswer {
-  key: string;
-  area: string;
-  kind: 'bar' | 'door' | 'window' | 'wall';
-  x: number;
-  y: number;
-  /** Along its run, in plan units (a door: its width). */
-  length: number;
-  /** 0, 90, 180 or 270: which way it runs, and which way a door opens. */
-  rotation: number;
-}
+export type { AreaAnswer, FixtureAnswer, TableAnswer } from '../seating/types.ts';
+export { defaultAreas } from '../seating/areas.ts';
+export { defaultFixtures } from '../seating/fixtures.ts';
+export { tablesFromCounts, type TableCounts } from '../seating/tables.ts';
 
 export interface RestaurantAnswers extends BaseAnswers {
   version: 1;
@@ -68,23 +34,10 @@ export interface RestaurantAnswers extends BaseAnswers {
     /** Named for the FAQ only: "you'll find us on Deliveroo". */
     delivery_apps: string[];
   };
-  seating: {
-    areas: AreaAnswer[];
-    tables: TableAnswer[];
-    fixtures: FixtureAnswer[];
-    /** 2: each area is its own room, and positions are within it (layout.ts). 1: one canvas for every area. */
-    plan: number;
-    /** Minutes a table is held, by party size. */
-    sittings: { up_to_2: number; up_to_4: number; up_to_8: number; larger: number };
-    max_party: number;
-    notice_minutes: number;
-    horizon_days: number;
-    highchairs: number;
-    buffer_minutes: number;
-  };
+  seating: SeatingAnswer;
   menu: MenuAnswer;
   money: {
-    deposit: { mode: 'none' | 'per_person' | 'per_booking' | 'card_hold'; amount_pence: number; min_party: number };
+    deposit: DepositAnswer;
     cancellation_policy: string;
     takeaway_payment: OrderPayment;
     service_charge: string;
@@ -113,35 +66,6 @@ const lunchDinner = (): DayHours => ({
   ],
 });
 
-export function defaultAreas(): AreaAnswer[] {
-  return [
-    { key: 'indoor', label: 'Inside', kind: 'indoor', reservable: true, enquiry_only: false, weather_rule: null },
-    { key: 'terrace', label: 'Terrace', kind: 'outdoor', reservable: true, enquiry_only: false, weather_rule: 'move_inside' },
-  ];
-}
-
-/** Table counts by size, per area: the builder's "how many tables" step. */
-export type TableCounts = Record<string, { 2: number; 4: number; 6: number; 8: number }>;
-
-export function tablesFromCounts(areas: AreaAnswer[], counts: TableCounts): TableAnswer[] {
-  const tables: TableAnswer[] = [];
-  let n = 1;
-  for (const a of areas) {
-    const c = counts[a.key] ?? { 2: 0, 4: 0, 6: 0, 8: 0 };
-    for (const seats of [2, 4, 6, 8] as const) {
-      for (let i = 0; i < c[seats]; i++) {
-        tables.push({
-          key: `T${n}`, label: `Table ${n}`, area: a.key, seats,
-          shape: seats === 2 ? 'round' : seats === 4 ? 'square' : 'rect',
-          x: 0, y: 0, rotation: 0, accessible: false, walk_in: false, features: [], joins: [],
-        });
-        n++;
-      }
-    }
-  }
-  return autoLayout(areas, tables);
-}
-
 export function defaultTables(areas = defaultAreas()): TableAnswer[] {
   const tables = tablesFromCounts(areas, { indoor: { 2: 4, 4: 5, 6: 2, 8: 0 }, terrace: { 2: 0, 4: 4, 6: 0, 8: 0 } });
   const t = (k: string) => tables.find((x) => x.key === k)!;
@@ -164,24 +88,6 @@ export function defaultTables(areas = defaultAreas()): TableAnswer[] {
   // No table is kept for walk-ins unless the owner marks one: a table that is
   // never booked looked like a bug to a prospect (Alex, 1 October).
   return tables;
-}
-
-/** A bar, a door and the window by the window tables, so the sample room looks like a room. */
-export function defaultFixtures(tables: TableAnswer[]): FixtureAnswer[] {
-  const inside = tables.filter((t) => t.area === 'indoor');
-  const windowTables = inside.filter((t) => t.features.includes('window'));
-  if (!inside.length) return [];
-  const right = Math.max(...inside.map((t) => t.x + footprint(t).w));
-  const bottom = Math.max(...inside.map((t) => t.y + footprint(t).h));
-  const out: FixtureAnswer[] = [];
-  if (windowTables.length) {
-    const x0 = Math.min(...windowTables.map((t) => t.x));
-    const x1 = Math.max(...windowTables.map((t) => t.x + footprint(t).w));
-    out.push({ key: 'F1', area: 'indoor', kind: 'window', x: Math.max(10, x0 - 10), y: 10, length: Math.max(80, x1 - x0 + 20), rotation: 0 });
-  }
-  out.push({ key: 'F2', area: 'indoor', kind: 'bar', x: Math.max(40, right - FIXTURE_LENGTH.bar.start), y: bottom + 50, length: FIXTURE_LENGTH.bar.start, rotation: 0 });
-  out.push({ key: 'F3', area: 'indoor', kind: 'door', x: 40, y: bottom + 40, length: FIXTURE_LENGTH.door.start, rotation: 0 });
-  return out;
 }
 
 export function defaultAnswers(): RestaurantAnswers {

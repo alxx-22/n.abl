@@ -2,110 +2,21 @@
 // always make the same profile, and every field the builder offers changes
 // something here (test/restaurant.test.ts checks each one).
 
-import type { BookableService, KnowledgeEntry, Resource, SeatingArea, TenantProfile } from '../../domain/types.ts';
-import { pounds } from '../../domain/types.ts';
+import type { KnowledgeEntry, TenantProfile } from '../../domain/types.ts';
 import { bookingWindows, hoursSentence as sayHours } from '../common/hours.ts';
 import { baseProfile, entry, greetingFor as greetingOf, mergeFaqs } from '../common/profile.ts';
 import type { DayHours } from '../common/types.ts';
 import { compileMenu, hasMenu } from '../food/menu.ts';
 import { compileOrdering, deliveryAppsEntry, takeawaySentence } from '../food/ordering.ts';
-import type { AreaAnswer, RestaurantAnswers, TableAnswer } from './answers.ts';
+import { compileBooking, depositSentence, seatingSentence, takesBookings, walkInsAnswer } from '../seating/floor.ts';
+import { tableBookable as seatingTableBookable } from '../seating/tables.ts';
+import type { RestaurantAnswers, TableAnswer } from './answers.ts';
 
 export { dayRange } from '../common/hours.ts';
 
 export const hoursSentence = (a: { hours: { days: DayHours[] } }): string => sayHours(a.hours);
 
-const WEATHER: Record<NonNullable<AreaAnswer['weather_rule']>, string> = {
-  move_inside: 'is bookable; if the weather turns, we move you inside',
-  own_risk: 'is bookable, but in bad weather we cannot promise a table inside',
-  walk_in_only: 'is first come, first served, not bookable',
-};
-const weatherSentence = (x: AreaAnswer) => `The ${x.label.toLowerCase()} ${WEATHER[x.weather_rule!]}.`;
-
-function areas(a: RestaurantAnswers): SeatingArea[] {
-  return a.seating.areas.map((x) => ({
-    key: x.key,
-    label: x.label,
-    kind: x.kind,
-    reservable: x.reservable && !x.enquiry_only && x.weather_rule !== 'walk_in_only',
-    enquiry_only: x.enquiry_only || undefined,
-    weather_note: x.kind === 'outdoor' && x.weather_rule ? weatherSentence(x) : undefined,
-  }));
-}
-
-const bookableArea = (a: RestaurantAnswers, key: string) => {
-  const x = a.seating.areas.find((y) => y.key === key);
-  return Boolean(x && x.reservable && !x.enquiry_only && x.weather_rule !== 'walk_in_only');
-};
-
-export const tableBookable = (a: RestaurantAnswers, t: TableAnswer) => a.serve.reservations && !t.walk_in && bookableArea(a, t.area);
-
-function resources(a: RestaurantAnswers): Resource[] {
-  const tables: Resource[] = a.seating.tables.map((t) => ({
-    key: t.key,
-    label: t.label,
-    // Walk-in tables and unbookable areas are on the plan but never booked by phone.
-    services: tableBookable(a, t) ? ['table'] : [],
-    capacity: t.seats,
-    min: t.seats >= 6 ? 3 : 1,
-    area: t.area,
-    accessible: t.accessible || undefined,
-    features: t.features.length ? t.features : undefined,
-    layout: { x: t.x, y: t.y, shape: t.shape, seats: t.seats, rotation: t.rotation || undefined },
-  }));
-  // Pushed-together pairs: only for parties too big for either table alone.
-  const byKey = new Map(a.seating.tables.map((t) => [t.key, t]));
-  const pairs: Resource[] = [];
-  const seen = new Set<string>();
-  for (const t of a.seating.tables) {
-    for (const j of t.joins) {
-      const u = byKey.get(j);
-      if (!u || u.area !== t.area) continue;
-      const [p, q] = [t, u].sort((x, y) => Number(x.key.slice(1)) - Number(y.key.slice(1)) || x.key.localeCompare(y.key));
-      const key = `${p.key}+${q.key}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      pairs.push({
-        key,
-        label: `${p.label} and ${q.label.replace(/^Table /, '')}`,
-        services: tableBookable(a, p) && tableBookable(a, q) ? ['table'] : [],
-        capacity: p.seats + q.seats,
-        min: Math.max(p.seats, q.seats) + 1,
-        combines: [p.key, q.key],
-        area: p.area,
-        accessible: p.accessible || q.accessible || undefined,
-        features: [...new Set([...p.features, ...q.features])].filter(Boolean),
-      });
-    }
-  }
-  return [...tables, ...pairs];
-}
-
-function service(a: RestaurantAnswers): BookableService {
-  const d = a.money.deposit;
-  return {
-    key: 'table',
-    label: 'table',
-    kind: 'table',
-    slot_minutes: 15,
-    duration_rules: [
-      { max_party: 2, minutes: a.seating.sittings.up_to_2 },
-      { max_party: 4, minutes: a.seating.sittings.up_to_4 },
-      { max_party: 8, minutes: a.seating.sittings.up_to_8 },
-      { max_party: 100, minutes: a.seating.sittings.larger },
-    ],
-    windows: bookingWindows(a.hours, a.hours.last_booking_before_close),
-    max_party: a.seating.max_party,
-    large_party_note: `For more than ${a.seating.max_party} people, take their name, number, preferred date and time, and say the manager will call back.`,
-    lead_minutes: a.seating.notice_minutes,
-    horizon_days: a.seating.horizon_days,
-    buffer_minutes: a.seating.buffer_minutes || undefined,
-    deposit:
-      d.mode === 'per_person' ? { min_party: d.min_party, per_person_pence: d.amount_pence }
-      : d.mode === 'per_booking' ? { min_party: d.min_party, flat_pence: d.amount_pence }
-      : undefined,
-  };
-}
+export const tableBookable = (a: RestaurantAnswers, t: TableAnswer) => a.serve.reservations && seatingTableBookable(a.seating, t);
 
 function dogsAnswer(a: RestaurantAnswers): string {
   const outside = a.seating.areas.find((x) => x.kind === 'outdoor');
@@ -114,26 +25,6 @@ function dogsAnswer(a: RestaurantAnswers): string {
     return outside ? `Dogs are welcome on the ${outside.label.toLowerCase()}, but not inside, apart from assistance dogs.` : 'Only assistance dogs inside, I’m afraid.';
   }
   return 'Only assistance dogs, I’m afraid.';
-}
-
-function depositSentence(a: RestaurantAnswers): string | null {
-  const d = a.money.deposit;
-  if (d.mode === 'per_person') return `Tables of ${d.min_party} or more pay a ${pounds(d.amount_pence)} a head deposit when booking, taken off the bill on the night.`;
-  if (d.mode === 'per_booking') return `Bookings for ${d.min_party} or more pay a ${pounds(d.amount_pence)} deposit when booking, taken off the bill on the night.`;
-  if (d.mode === 'card_hold') return 'We take card details to hold larger bookings; nothing is charged unless it is a no-show.';
-  return null;
-}
-
-function seatingSentence(a: RestaurantAnswers): string | null {
-  if (!a.serve.reservations) return a.serve.walk_ins ? 'We don’t take bookings; it’s walk-in only.' : null;
-  const counts = a.seating.areas
-    .map((x) => ({ x, n: a.seating.tables.filter((t) => t.area === x.key).length }))
-    .filter((c) => c.n > 0)
-    .map(({ x, n }) => `${x.label.toLowerCase()} (${n} tables${x.enquiry_only ? ', private hire by enquiry' : !x.reservable || x.weather_rule === 'walk_in_only' ? ', walk-in only' : ''})`);
-  const outdoor = a.seating.areas.find((x) => x.kind === 'outdoor' && x.weather_rule);
-  const kept = a.seating.tables.some((t) => t.walk_in);
-  const walk = a.serve.walk_ins ? (kept ? ' We keep some tables back for walk-ins.' : ' Walk-ins are welcome when a table is free.') : '';
-  return `Seating: ${counts.join(' and ')}.${outdoor ? ` ${weatherSentence(outdoor)}` : ''}${walk}`;
 }
 
 function knowledge(a: RestaurantAnswers): KnowledgeEntry[] {
@@ -150,7 +41,7 @@ function knowledge(a: RestaurantAnswers): KnowledgeEntry[] {
     entry('Are children welcome?', `${p.children}${a.seating.highchairs ? ` We have ${a.seating.highchairs} highchairs.` : ''}`, ['children', 'kids', 'child', 'highchair', 'baby']),
     entry('Is there a service charge?', a.money.service_charge, ['service', 'charge', 'tip', 'gratuity']),
     entry('What is your cancellation policy?', a.money.cancellation_policy, ['cancel', 'cancellation', 'refund', 'deposit']),
-    entry('Do you take walk-ins?', a.serve.walk_ins ? (a.seating.tables.some((t) => t.walk_in) ? 'Yes, we keep some tables for walk-ins, though booking is safest at busy times.' : 'Yes, if there’s a table free, though booking is safest at busy times.') : 'We’re bookings only, I’m afraid.', ['walk', 'walk-in', 'without booking', 'turn up']),
+    entry('Do you take walk-ins?', walkInsAnswer(a.seating, a.serve.walk_ins), ['walk', 'walk-in', 'without booking', 'turn up']),
     deliveryAppsEntry(a.serve),
   ], p.faqs);
 }
@@ -159,7 +50,7 @@ export const greetingFor = (a: RestaurantAnswers): string => greetingOf(a.basics
 
 export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }): TenantProfile {
   const policies: Record<string, string> = {};
-  const dep = depositSentence(a);
+  const dep = depositSentence(a.money.deposit);
   if (dep) policies.deposit = dep;
   if (a.money.cancellation_policy.trim()) policies.cancellation = a.money.cancellation_policy.trim();
   if (a.money.service_charge.trim()) policies.service_charge = a.money.service_charge.trim();
@@ -167,7 +58,6 @@ export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }):
   if (tk) policies.takeaway = tk;
   policies.dogs = dogsAnswer(a);
 
-  const bookable = a.serve.reservations && a.seating.tables.some((t) => tableBookable(a, t));
   const menu = hasMenu(a.menu);
 
   return {
@@ -175,15 +65,15 @@ export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }):
       businessType: 'restaurant',
       noun: 'restaurant',
       facts: [
-        seatingSentence(a),
+        seatingSentence(a.seating, a.serve),
         tk,
         [a.policies.accessibility, a.policies.children, a.seating.highchairs ? `${a.seating.highchairs} highchairs.` : ''].filter(Boolean).join(' '),
         a.policies.parking,
       ],
     }),
     knowledge: knowledge(a),
-    booking: bookable
-      ? { services: [service(a)], resources: resources(a), areas: areas(a), highchairs: a.seating.highchairs, fixtures: a.seating.fixtures.length ? a.seating.fixtures : undefined }
+    booking: takesBookings(a.seating, a.serve)
+      ? compileBooking(a.seating, { reservations: a.serve.reservations, windows: bookingWindows(a.hours, a.hours.last_booking_before_close), deposit: a.money.deposit })
       : undefined,
     menu: menu ? compileMenu(a.menu) : undefined,
     ordering: menu ? compileOrdering(a.serve, a.hours, a.money.takeaway_payment) : undefined,
