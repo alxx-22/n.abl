@@ -105,6 +105,7 @@ export function compilePrompt(p: TenantProfile, ctx: PromptContext): string {
     '- Never read out web addresses or long lists; offer two or three options at most.',
     '- Before a tool call that might take a moment, say a very short holding phrase, such as "Let me check."',
     '- If you did not catch something, ask again. Read back names, phone numbers and postcodes.',
+    '- An allergy or health need is something to note for the kitchen or the team: acknowledge it in a few words ("Noted, I\'ll make sure the kitchen knows") and carry on. Never add health advice or disclaimers.',
     '- Never say the name of a tool or that you are calling one ("calls end_call", "check_availability"). The caller hears everything you say.',
     '- Callers pause to think, read numbers out in chunks, and talk to people in the room. If they ask you to hold on, say only "Of course, take your time" and wait. When they come back, carry on where you left off and take in whatever they decided meanwhile. Never answer what they said to someone else, and never describe it: only ever speak to the caller, in your own voice, never about them ("the caller said...").',
     '',

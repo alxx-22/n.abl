@@ -168,6 +168,10 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
   assert.equal(checkUtterance("Great, you're all booked in.", s)[0]?.rule, 'unconfirmed_claim');
   assert.equal(checkUtterance('Shall I go ahead and book that for you?', s).length, 0);
   assert.equal(checkUtterance("Once it's confirmed I'll text you.", s).length, 0);
+  assert.equal(checkUtterance("Lovely, I've passed that on to the reservations team for you.", s)[0]?.rule, 'untaken_message');
+  assert.equal(checkUtterance("I'll pass that on to the team.", s).length, 0, 'a promise, not a claim');
+  assert.equal(checkUtterance("I haven't passed that on yet.", s).length, 0);
+  assert.equal(checkUtterance("I've passed that on.", { ...s, messageTaken: true }).length, 0);
   assert.equal(checkUtterance("It isn't booked yet.", s).length, 0);
   s.committed.push('HK482');
   assert.equal(checkUtterance("That's booked, reference H K four eight two.", s).length, 0);

@@ -90,12 +90,15 @@ export function unsaidReference(state: CallState, agentWords: string): string | 
 const DIGIT_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'oh'];
 
 const ALLERGY_WORDS = /\b(allerg\w*|coeliac|celiac|intoleran\w*|anaphyla\w*|epi-?pen|nuts?|peanuts?|tree nuts?|shellfish|gluten|dairy|lactose|sesame)\b/i;
-const NO_ALLERGY = /\b(no|not any|none|without|nothing)\b[^.?!]{0,20}\b(allerg|dietary|intoleran)|\bno,? (?:that's|thats) (?:all|fine)|^no\.?$/i;
+// "We don't have any allergies" was read as an allergy, and held a booking back.
+const NO_ALLERGY = /\b(no|not any|none|without|nothing|(?:do|does|have|has|are|is)(?:n['’]t| not))\b[^.?!]{0,20}\b(allerg|dietary|intoleran)|\bno,? (?:that's|thats) (?:all|fine)|^no\.?$/i;
+/** Named allergens: "no allergies, but my son is coeliac" still mentions one. */
+const NAMED_ALLERGEN = /\b(coeliac|celiac|anaphyla\w*|epi-?pen|nuts?|peanuts?|shellfish|gluten|dairy|lactose|sesame)\b/i;
 
 /** The caller's own words about an allergy, if they mentioned one (and did not just say they have none). */
 export function mentionedAllergy(heard: string[]): string | null {
   for (const line of [...heard].reverse()) {
-    if (NO_ALLERGY.test(line)) continue;
+    if (NO_ALLERGY.test(line) && !NAMED_ALLERGEN.test(line)) continue;
     const m = ALLERGY_WORDS.exec(line);
     if (!m) continue;
     const sentence = line.split(/(?<=[.!?])\s+/).find((x) => ALLERGY_WORDS.test(x)) ?? line;

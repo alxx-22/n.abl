@@ -8,7 +8,7 @@
 import type { CallState } from './tools.ts';
 
 export interface Flag {
-  rule: 'unconfirmed_claim' | 'unpaid_claim' | 'said_safe_for_allergy' | 'narrated';
+  rule: 'unconfirmed_claim' | 'unpaid_claim' | 'said_safe_for_allergy' | 'narrated' | 'untaken_message';
   text: string;
 }
 
@@ -20,6 +20,8 @@ const PAID = /\b(payment(?:'s| has)? (?:gone|went) through|that'?s (?:gone throu
 // 1 October a receptionist said aloud: 'user said to person in room "five past
 // seven" and said to you "what about for four people?"'.
 const NARRATED = /\b(?:the )?(?:user|caller) (?:said|says|is saying|asked|wants|told)\b|\bsaid to (?:the )?(?:person|someone|people)\b|\bsaid to you\b|\bto (?:a |the )?person in (?:the )?room\b|^\s*[\[(]/i;
+// On 2 October a hotel's receptionist said "I've passed that on to the reservations team" with no message taken.
+const PASSED_ON = /\b(?:i'?ve|i have|we'?ve|we have|that'?s|it'?s|has been|have been) (?:now |just |already )?(?:passed (?:that|it|this|those|these|your [a-z]+)(?: details)? on|let (?:the|our) [a-z ]{0,20}know|(?:taken|left|sent) (?:a|the|your) message)\b/i;
 const SAFE = /\b(it'?s|is|that'?s|will be|would be|should be|totally|completely|perfectly) (safe|fine|okay|ok) (for|with) (you|your|him|her|them|someone|a) [^.?!]*(allerg|coeliac|nut|gluten)/i;
 
 function negated(text: string, index: number): boolean {
@@ -37,6 +39,8 @@ export function checkUtterance(text: string, state: CallState): Flag[] {
   if (paid && !negated(text, paid.index) && state.paid.length === 0) flags.push({ rule: 'unpaid_claim', text: paid[0] });
   const safe = SAFE.exec(text);
   if (safe) flags.push({ rule: 'said_safe_for_allergy', text: safe[0] });
+  const passed = PASSED_ON.exec(text);
+  if (passed && !negated(text, passed.index) && !state.messageTaken) flags.push({ rule: 'untaken_message', text: passed[0] });
   const narrated = NARRATED.exec(text);
   if (narrated) flags.push({ rule: 'narrated', text: narrated[0] });
   return flags;

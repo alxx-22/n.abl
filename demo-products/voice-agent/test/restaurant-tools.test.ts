@@ -238,6 +238,9 @@ test('restaurant tools: collection slots the kitchen can handle, and pay on coll
 test('restaurant tools: an allergy the caller mentioned is never dropped', async () => {
   assert.equal(mentionedAllergy(['Table for four please.', 'My son is coeliac, so no gluten at all.']), 'My son is coeliac, so no gluten at all.');
   assert.equal(mentionedAllergy(['No allergies, thanks.']), null);
+  assert.equal(mentionedAllergy(["My name is Dan Hughes, and we don't have any allergies."]), null, 'from a live test');
+  assert.equal(mentionedAllergy(['She doesn’t have any allergies or dietary needs.']), null);
+  assert.equal(mentionedAllergy(['No allergies, but my son is coeliac.']), 'No allergies, but my son is coeliac.');
   assert.equal(mentionedAllergy(['Saturday at seven, please.']), null);
   const t = await restaurant('tools-allergy');
   const { ctx } = await call(t);
