@@ -61,13 +61,16 @@ export interface CallState {
   allergyAsked: boolean;
   /** The reference or order number just made, until the call has checked the caller heard it (see unsaidReference). */
   owed: string | null;
+  messageTaken: boolean;
+  /** end_call refuses once to end a "message" call with no message taken, never in a loop. */
+  messageChecked: boolean;
 }
 
 export function newCallState(): CallState {
   return {
     lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
     committed: [], found: [], lastOrder: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
-    heard: [], allergyAsked: false, owed: null,
+    heard: [], allergyAsked: false, owed: null, messageTaken: false, messageChecked: false,
   };
 }
 
@@ -1108,6 +1111,7 @@ const TOOLS: Record<string, Tool> = {
       const body = str(args.message) ?? '';
       const name = str(args.name) ?? 'Unknown';
       await ctx.repo.addMessage({ tenant_id: ctx.tenant.id, call_id: ctx.callId, kind: 'message', from_name: name, from_phone: phone, body, status: 'new' });
+      ctx.state.messageTaken = true;
       ctx.action({ kind: 'message_taken', title: `Message from ${name}`, detail: `${body}${phone ? ` · ${displayUkPhone(phone)}` : ''}` });
       const owner = ctx.tenant.profile.owner_sms_number;
       if (owner) await smsTo(ctx, owner, `Message from ${name} (${displayUkPhone(phone)}): ${body}`);
@@ -1141,6 +1145,11 @@ const TOOLS: Record<string, Tool> = {
       parameters: obj({ outcome: S('booked, ordered, answered, message or other') }),
     },
     async handler(args, ctx) {
+      // In a live test the receptionist said "I'll pass those details on" and hung up with no message taken: nobody would have called back.
+      if (/message/i.test(str(args.outcome) ?? '') && !ctx.state.messageTaken && !ctx.state.messageChecked) {
+        ctx.state.messageChecked = true;
+        return { ok: false, message: 'No message has been taken, so nobody would call them back. Use take_message now with their name, number and what they want, then say goodbye and use end_call.' };
+      }
       ctx.state.ending = true;
       ctx.action({ kind: 'call_ending', title: 'Call ending', detail: str(args.outcome) });
       return { ok: true };

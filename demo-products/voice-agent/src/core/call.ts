@@ -493,8 +493,9 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (calls.some((c) => READ_BACK_TOOLS.has(c.name))) this.turns?.protect();
     // end_call gets no answer: the goodbye has been said, and an answer only
     // invites the model to carry on (on 30 September it recited a summary of
-    // the whole call into the transcript after its goodbye).
-    const answers = responses.filter((r) => r.name !== 'end_call');
+    // the whole call into the transcript after its goodbye). A refusal is
+    // answered, because then carrying on is the point.
+    const answers = responses.filter((r) => r.name !== 'end_call' || r.response.ok === false);
     if (answers.length) this.turns?.agentWillSpeak();
     if (s.isOpen && answers.length) s.sendToolResponses(answers);
     if (this.state.ending) this.scheduleHangup('end_call', answers.length ? 4000 : 600);
