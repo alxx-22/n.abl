@@ -234,6 +234,12 @@ export class DemoRepo {
     return mapWorkspace(rows[0]);
   }
 
+  /** Whether any business holds this demo line PIN, an ended demo not yet deleted included: the unique index counts it too. */
+  async pinTaken(pin: string): Promise<boolean> {
+    const rows = await this.db.query(`select 1 from public.voice_tenants where profile->>'demo_pin' = $1 limit 1`, [pin]);
+    return rows.length > 0;
+  }
+
   async markStarted(id: string): Promise<void> {
     await this.db.query('update public.voice_tenants set started_at = coalesce(started_at, now()) where id = $1', [id]);
   }

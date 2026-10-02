@@ -130,3 +130,10 @@ export function ipHash(ip: string, secret: string): string {
 
 /** The throttle's rule: 10 misses per address, or 25 per key prefix, in 15 minutes. */
 export const THROTTLE = { windowMinutes: 15, perIp: 10, perPrefix: 25 };
+
+/**
+ * A four-digit PIN for the shared demo line, 1100 to 9999: 1000 to 1099 are
+ * kept for our own demo businesses (fixtures/tenants), so a prospect's
+ * workspace can never take one of theirs. Start checks it is free.
+ */
+export const drawPin = (random: () => number = Math.random): string => String(1100 + Math.floor(random() * 8900));

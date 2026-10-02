@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { setTimeout as wait } from 'node:timers/promises';
 import { loadConfig } from '../src/config.ts';
 import { startServer, type App } from '../src/server/main.ts';
+import { drawPin } from '../src/demo/access.ts';
 
 let app: App;
 let dir: string;
@@ -189,4 +190,34 @@ test('presets over HTTP: the back office says what to show, in the business\'s o
   const kettle = await board('copper-kettle');
   assert.deepEqual(kettle.views.map((v: any) => v.id), ['orders', 'messages', 'calls'], 'a café that takes no bookings has no diary');
   assert.equal(kettle.bookings, undefined);
+});
+
+test('presets over HTTP: Start draws again until the PIN is free, and never takes one of ours', async () => {
+  assert.equal(drawPin(() => 0), '1100', '1000 to 1099 are kept for our own businesses');
+  assert.equal(drawPin(() => 0.999999), '9999');
+  const team = client('10.1.2.1');
+  assert.equal((await team('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const start = async (who: string, dice: number[]) => {
+    const c = client(`10.1.2.${dice.length + who.length}`);
+    const key = await team('POST', '/demo/api/admin/keys', { person_name: who, company: who, days: 7 });
+    assert.equal((await c('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+    const made = await c('POST', '/demo/api/workspaces', { preset: 'restaurant', name: who });
+    const real = Math.random;
+    const rolls = [...dice];
+    Math.random = () => rolls.shift() ?? real();
+    try {
+      const started = await c('POST', `/demo/api/workspaces/${made.data.id}/start`);
+      assert.equal(started.status, 200, JSON.stringify(started.data));
+      assert.equal(rolls.length, 0, 'every planned roll was used');
+      return started.data.workspace.profile.demo_pin;
+    } finally {
+      Math.random = real;
+    }
+  };
+  const first = await start('Pia', [0.5]);
+  assert.equal(first, '5550');
+  // The same first roll again: that PIN is taken, so Start rolls once more.
+  assert.equal(await start('Quin', [0.5, 0.25]), '3325');
+  const lucas = (await team('GET', '/demo/api/admin/tenants/lucas-trattoria')).data.profile;
+  assert.equal(lucas.demo_pin, '1001', 'our businesses keep theirs');
 });

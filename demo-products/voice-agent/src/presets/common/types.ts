@@ -113,6 +113,11 @@ export interface SeedOrder {
   postcode?: string | null;
   delivery_fee_pence?: number;
   due_at: Date;
+  /**
+   * When the kitchen must have it ready; a collection's defaults to its due
+   * time. The seed plans a delivery's, since it knows the delivery minutes.
+   */
+  ready_at?: Date;
   lines: OrderLine[];
   subtotal_pence: number;
   total_pence: number;
@@ -120,7 +125,7 @@ export interface SeedOrder {
   /** When the caller rang; default 50 minutes before it is due. */
   created_at?: Date;
   /** Default confirmed and unpaid, as a new order is. */
-  status?: 'confirmed' | 'in_kitchen' | 'ready' | 'completed';
+  status?: 'confirmed' | 'in_kitchen' | 'ready' | 'out_for_delivery' | 'completed';
   payment_status?: 'unpaid' | 'paid';
   /** Who took a delivery out, and when. */
   driver?: string | null;

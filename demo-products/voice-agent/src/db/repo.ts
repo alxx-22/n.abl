@@ -83,6 +83,16 @@ function mapOrder(r: any): Order {
   };
 }
 
+/**
+ * When the kitchen must have an order ready: when it is due for a
+ * collection, and the delivery minutes before that for a delivery, which
+ * spends them on the road. Written with every order; nothing reads it yet.
+ */
+export function readyAt(profile: TenantProfile, fulfilment: 'collection' | 'delivery', due: Date): Date {
+  const road = fulfilment === 'delivery' ? profile.ordering?.delivery?.extra_minutes ?? 0 : 0;
+  return new Date(due.getTime() - road * 60000);
+}
+
 export class Repo {
   readonly db: Db;
   constructor(db: Db) {
@@ -134,9 +144,10 @@ export class Repo {
     return rows[0] ?? null;
   }
 
+  /** The business a demo line caller reaches with this PIN; a shared demo past its hour is gone, even before the sweeper deletes it. */
   async tenantForPin(pin: string): Promise<string | null> {
     const rows = await this.db.query<any>(
-      `select id from public.voice_tenants where profile->>'demo_pin' = $1 limit 1`,
+      `select id from public.voice_tenants where profile->>'demo_pin' = $1 and (expires_at is null or expires_at > now()) limit 1`,
       [pin],
     );
     return rows[0]?.id ?? null;
@@ -434,11 +445,11 @@ export class Repo {
       const reference = String(101 + Number(count[0].n));
       const customerId = await this.upsertCustomer(q, tenant.id, o.phone, o.name);
       const rows = await q.query<any>(
-        `insert into public.voice_orders (tenant_id, reference, customer_id, name, phone, fulfilment, due_at, address, postcode,
+        `insert into public.voice_orders (tenant_id, reference, customer_id, name, phone, fulfilment, due_at, ready_at, address, postcode,
            lines, subtotal_pence, delivery_fee_pence, total_pence, allergy_notes, source, call_id)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12,$13,$14,$15,$16) returning *`,
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,$14,$15,$16,$17) returning *`,
         [
-          tenant.id, reference, customerId, o.name, o.phone, o.fulfilment, o.due_at, o.address, o.postcode,
+          tenant.id, reference, customerId, o.name, o.phone, o.fulfilment, o.due_at, readyAt(tenant.profile, o.fulfilment, o.due_at), o.address, o.postcode,
           JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence, o.total_pence, o.allergy_notes, o.source, o.call_id,
         ],
       );
@@ -612,13 +623,15 @@ export class Repo {
         );
       }
       for (const o of plan.orders) {
+        const fulfilment = o.fulfilment ?? 'collection';
         await q.query(
-          `insert into public.voice_orders (tenant_id, reference, name, phone, fulfilment, due_at, address, postcode, lines, subtotal_pence,
-             delivery_fee_pence, total_pence, allergy_notes, status, payment_status, source, created_at)
-           values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13, $14, $15, 'seed', $16)`,
-          [tenantId, o.reference, o.name, o.phone, o.fulfilment ?? 'collection', o.due_at, o.address ?? null, o.postcode ?? null,
-            JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence ?? 0, o.total_pence, o.allergy_notes, o.status ?? 'confirmed',
-            o.payment_status ?? 'unpaid', o.created_at ?? new Date(o.due_at.getTime() - 50 * 60000)],
+          `insert into public.voice_orders (tenant_id, reference, name, phone, fulfilment, due_at, ready_at, address, postcode, lines, subtotal_pence,
+             delivery_fee_pence, total_pence, allergy_notes, status, payment_status, source, created_at, driver, out_at)
+           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13, $14, $15, $16, 'seed', $17, $18, $19)`,
+          [tenantId, o.reference, o.name, o.phone, fulfilment, o.due_at, o.ready_at ?? (fulfilment === 'collection' ? o.due_at : null),
+            o.address ?? null, o.postcode ?? null, JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence ?? 0, o.total_pence,
+            o.allergy_notes, o.status ?? 'confirmed', o.payment_status ?? 'unpaid', o.created_at ?? new Date(o.due_at.getTime() - 50 * 60000),
+            o.driver ?? null, o.out_at ?? null],
         );
       }
       for (const m of plan.messages) {

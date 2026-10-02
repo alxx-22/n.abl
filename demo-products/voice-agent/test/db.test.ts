@@ -13,7 +13,7 @@ let fade: Tenant;
 
 before(async () => {
   db = await openPglite();
-  assert.deepEqual(await migrate(db), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds']);
+  assert.deepEqual(await migrate(db), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders']);
   repo = new Repo(db);
   const tenants = await seedAll(repo, NOW, { diary: false });
   lucas = tenants.find((t) => t.slug === 'lucas-trattoria')!;
@@ -24,10 +24,16 @@ after(async () => {
   await db.close();
 });
 
+/** Another business made from Luca's, without its demo line PIN: no two businesses may share one. */
+function copyOfLucas(slug: string) {
+  const { demo_pin: _pin, ...profile } = lucas.profile;
+  return repo.upsertTenant({ ...profile, slug, name: slug });
+}
+
 test('migrations are idempotent and recorded', async () => {
   assert.deepEqual(await migrate(db), []);
   const rows = await db.query<{ name: string }>('select name from public.voice_schema_migrations');
-  assert.deepEqual(rows.map((r) => r.name).sort(), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds']);
+  assert.deepEqual(rows.map((r) => r.name).sort(), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders']);
 });
 
 test('every migration only touches voice_ objects', () => {
@@ -120,7 +126,7 @@ test('orders are numbered, stored and paid', async () => {
 });
 
 test('a seeded plan is written as planned, and what it leaves out gets the restaurant\'s literals', async () => {
-  const t = await repo.upsertTenant({ ...lucas.profile, slug: 'seed-columns', name: 'Seed columns' });
+  const t = await copyOfLucas('seed-columns');
   const at = (iso: string) => new Date(iso);
   const booking = {
     reference: 'AA101', resource_key: 'T1', area_key: 'indoor', starts_at: at('2026-10-02T18:00:00Z'), ends_at: at('2026-10-02T19:30:00Z'),
@@ -137,6 +143,10 @@ test('a seeded plan is written as planned, and what it leaves out gets the resta
         ...order, reference: '102', fulfilment: 'delivery', address: '1 High Street', postcode: 'NG1 1AA', delivery_fee_pence: 250, total_pence: 1400,
         created_at: at('2026-10-02T17:20:00Z'), status: 'in_kitchen', payment_status: 'paid',
       },
+      {
+        ...order, reference: '103', fulfilment: 'delivery', address: '2 High Street', postcode: 'NG1 1AB', ready_at: at('2026-10-02T17:35:00Z'),
+        status: 'out_for_delivery', driver: 'Kai', out_at: at('2026-10-02T17:40:00Z'),
+      },
     ],
     messages: [],
   });
@@ -144,7 +154,8 @@ test('a seeded plan is written as planned, and what it leaves out gets the resta
   const b = await db.query<any>('select reference, service_key, buffer_minutes, source from public.voice_bookings where tenant_id = $1 order by reference', [t.id]);
   assert.deepEqual(b.map((r) => [r.reference, r.service_key, r.buffer_minutes, r.source]), [['AA101', 'table', 0, 'seed'], ['AA102', 'skin_fade', 10, 'seed']]);
 
-  const [plain, delivery] = await repo.listOrdersDue(t.id, at('2026-10-02T00:00:00Z'), at('2026-10-03T00:00:00Z'));
+  const due = await repo.listOrdersDue(t.id, at('2026-10-02T00:00:00Z'), at('2026-10-03T00:00:00Z'));
+  const [plain, delivery] = ['101', '102'].map((ref) => due.find((o) => o.reference === ref)!);
   assert.deepEqual(
     [plain.fulfilment, plain.address, plain.postcode, plain.delivery_fee_pence, plain.status, plain.payment_status, plain.created_at.toISOString()],
     ['collection', null, null, 0, 'confirmed', 'unpaid', '2026-10-02T17:10:00.000Z'],
@@ -154,11 +165,21 @@ test('a seeded plan is written as planned, and what it leaves out gets the resta
     [delivery.fulfilment, delivery.address, delivery.postcode, delivery.delivery_fee_pence, delivery.total_pence, delivery.status, delivery.payment_status, delivery.created_at.toISOString()],
     ['delivery', '1 High Street', 'NG1 1AA', 250, 1400, 'in_kitchen', 'paid', '2026-10-02T17:20:00.000Z'],
   );
+  const extra = await db.query<any>('select reference, status, ready_at, driver, out_at from public.voice_orders where tenant_id = $1 order by reference', [t.id]);
+  assert.deepEqual(
+    extra.map((r) => [r.reference, r.status, r.ready_at && new Date(r.ready_at).toISOString(), r.driver, r.out_at && new Date(r.out_at).toISOString()]),
+    [
+      ['101', 'confirmed', '2026-10-02T18:00:00.000Z', null, null],
+      ['102', 'in_kitchen', null, null, null],
+      ['103', 'out_for_delivery', '2026-10-02T17:35:00.000Z', 'Kai', '2026-10-02T17:40:00.000Z'],
+    ],
+    'a collection is ready when it is due; a delivery when its plan says; out with a driver since when',
+  );
   await repo.deleteTenant('seed-columns');
 });
 
 test('orders due in a window: all of them, soonest first, where the latest-taken list stops at 50', async () => {
-  const t = await repo.upsertTenant({ ...lucas.profile, slug: 'orders-due', name: 'Orders due' });
+  const t = await copyOfLucas('orders-due');
   const start = new Date('2026-10-02T11:00:00Z').getTime();
   const lines = [{ line: 1, item_key: 'margherita', name: 'Margherita', quantity: 1, unit_pence: 1150, modifiers: [] }];
   // Sixty orders five minutes apart, taken in the reverse order of when they are due.
@@ -174,6 +195,36 @@ test('orders due in a window: all of them, soonest first, where the latest-taken
   assert.deepEqual(window.map((o) => o.reference), ['103', '104', '105', '106'], 'from inclusive, to exclusive');
   assert.equal((await repo.listOrders(t.id, new Date(0))).length, 50, 'listOrders is unchanged');
   await repo.deleteTenant('orders-due');
+});
+
+test('an order records when the kitchen must have it ready: due, less the road for a delivery', async () => {
+  const base = {
+    name: 'Ola', phone: '+447700900457', address: null, postcode: null, subtotal_pence: 1150, delivery_fee_pence: 0, total_pence: 1150,
+    lines: [{ line: 1, item_key: 'margherita', name: 'Margherita', quantity: 1, unit_pence: 1150, modifiers: [] }],
+    allergy_notes: null, source: 'eval', call_id: null,
+  };
+  const due = new Date('2026-09-29T18:00:00Z');
+  const collect = await repo.createOrder(lucas, { ...base, fulfilment: 'collection', due_at: due });
+  const deliver = await repo.createOrder(lucas, { ...base, fulfilment: 'delivery', due_at: due, address: '5 Lenton Rd', postcode: 'NG7 2RD', delivery_fee_pence: 250, total_pence: 1400 });
+  const ready = async (id: string) => new Date((await db.query<any>('select ready_at from public.voice_orders where id = $1', [id]))[0].ready_at).toISOString();
+  assert.equal(await ready(collect.id), '2026-09-29T18:00:00.000Z');
+  assert.equal(lucas.profile.ordering?.delivery?.extra_minutes, 20);
+  assert.equal(await ready(deliver.id), '2026-09-29T17:40:00.000Z', '20 minutes on the road');
+});
+
+test('a demo line PIN belongs to one business, and an ended demo answers none', async () => {
+  const t = await copyOfLucas('pin-holder');
+  await repo.upsertTenant({ ...t.profile, demo_pin: '4321' });
+  assert.equal(await repo.tenantForPin('4321'), t.id);
+  await assert.rejects(repo.upsertTenant({ ...t.profile, slug: 'pin-thief', demo_pin: '4321' }), (e: any) => e.code === '23505', 'a second business cannot take it');
+  await copyOfLucas('pin-less');
+  await copyOfLucas('pin-less-too');
+  // A shared demo past its hour, not yet swept: its PIN reaches nobody, but stays taken until it is deleted.
+  await db.query(`update public.voice_tenants set expires_at = now() - interval '1 minute' where id = $1`, [t.id]);
+  assert.equal(await repo.tenantForPin('4321'), null);
+  await db.query(`update public.voice_tenants set expires_at = now() + interval '1 hour' where id = $1`, [t.id]);
+  assert.equal(await repo.tenantForPin('4321'), t.id, 'one still running answers');
+  for (const slug of ['pin-holder', 'pin-less', 'pin-less-too']) await repo.deleteTenant(slug);
 });
 
 test('a demo reset clears one tenant and leaves the others alone', async () => {
