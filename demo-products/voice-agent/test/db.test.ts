@@ -119,6 +119,63 @@ test('orders are numbered, stored and paid', async () => {
   assert.equal((await repo.getOrder(lucas.id, '101'))?.payment_status, 'paid');
 });
 
+test('a seeded plan is written as planned, and what it leaves out gets the restaurant\'s literals', async () => {
+  const t = await repo.upsertTenant({ ...lucas.profile, slug: 'seed-columns', name: 'Seed columns' });
+  const at = (iso: string) => new Date(iso);
+  const booking = {
+    reference: 'AA101', resource_key: 'T1', area_key: 'indoor', starts_at: at('2026-10-02T18:00:00Z'), ends_at: at('2026-10-02T19:30:00Z'),
+    party_size: 2, name: 'Ann', phone: '+447700900001', notes: null, allergies: null, tags: [], deposit_pence: 0, deposit_paid: false,
+    visit_status: 'expected' as const, booked_via: 'receptionist' as const,
+  };
+  const lines = [{ line: 1, item_key: 'margherita', name: 'Margherita', quantity: 1, unit_pence: 1150, modifiers: [] }];
+  const order = { reference: '101', name: 'Bo', phone: '+447700900002', due_at: at('2026-10-02T18:00:00Z'), lines, subtotal_pence: 1150, total_pence: 1150, allergy_notes: null };
+  await repo.insertSeed(t.id, {
+    bookings: [booking, { ...booking, reference: 'AA102', resource_key: 'kaz', area_key: null, service_key: 'skin_fade', buffer_minutes: 10 }],
+    orders: [
+      order,
+      {
+        ...order, reference: '102', fulfilment: 'delivery', address: '1 High Street', postcode: 'NG1 1AA', delivery_fee_pence: 250, total_pence: 1400,
+        created_at: at('2026-10-02T17:20:00Z'), status: 'in_kitchen', payment_status: 'paid',
+      },
+    ],
+    messages: [],
+  });
+
+  const b = await db.query<any>('select reference, service_key, buffer_minutes, source from public.voice_bookings where tenant_id = $1 order by reference', [t.id]);
+  assert.deepEqual(b.map((r) => [r.reference, r.service_key, r.buffer_minutes, r.source]), [['AA101', 'table', 0, 'seed'], ['AA102', 'skin_fade', 10, 'seed']]);
+
+  const [plain, delivery] = await repo.listOrdersDue(t.id, at('2026-10-02T00:00:00Z'), at('2026-10-03T00:00:00Z'));
+  assert.deepEqual(
+    [plain.fulfilment, plain.address, plain.postcode, plain.delivery_fee_pence, plain.status, plain.payment_status, plain.created_at.toISOString()],
+    ['collection', null, null, 0, 'confirmed', 'unpaid', '2026-10-02T17:10:00.000Z'],
+    'a plan that says nothing more gets a collection, confirmed and unpaid, taken 50 minutes before it is due',
+  );
+  assert.deepEqual(
+    [delivery.fulfilment, delivery.address, delivery.postcode, delivery.delivery_fee_pence, delivery.total_pence, delivery.status, delivery.payment_status, delivery.created_at.toISOString()],
+    ['delivery', '1 High Street', 'NG1 1AA', 250, 1400, 'in_kitchen', 'paid', '2026-10-02T17:20:00.000Z'],
+  );
+  await repo.deleteTenant('seed-columns');
+});
+
+test('orders due in a window: all of them, soonest first, where the latest-taken list stops at 50', async () => {
+  const t = await repo.upsertTenant({ ...lucas.profile, slug: 'orders-due', name: 'Orders due' });
+  const start = new Date('2026-10-02T11:00:00Z').getTime();
+  const lines = [{ line: 1, item_key: 'margherita', name: 'Margherita', quantity: 1, unit_pence: 1150, modifiers: [] }];
+  // Sixty orders five minutes apart, taken in the reverse order of when they are due.
+  const orders = Array.from({ length: 60 }, (_, i) => ({
+    reference: String(101 + i), name: `Guest ${i}`, phone: '+447700900003', due_at: new Date(start + i * 5 * 60000),
+    created_at: new Date(start - i * 60000), lines, subtotal_pence: 1150, total_pence: 1150, allergy_notes: null,
+  }));
+  await repo.insertSeed(t.id, { bookings: [], orders, messages: [] });
+  const all = await repo.listOrdersDue(t.id, new Date(start), new Date(start + 300 * 60000));
+  assert.equal(all.length, 60, 'no cap');
+  assert.deepEqual(all.map((o) => o.reference), orders.map((o) => o.reference), 'by due time, not by when they were taken');
+  const window = await repo.listOrdersDue(t.id, new Date(start + 10 * 60000), new Date(start + 30 * 60000));
+  assert.deepEqual(window.map((o) => o.reference), ['103', '104', '105', '106'], 'from inclusive, to exclusive');
+  assert.equal((await repo.listOrders(t.id, new Date(0))).length, 50, 'listOrders is unchanged');
+  await repo.deleteTenant('orders-due');
+});
+
 test('a demo reset clears one tenant and leaves the others alone', async () => {
   const before = (await repo.listBookings(fade.id, new Date('2026-09-01'), new Date('2026-12-01'))).length;
   assert.ok(before > 0);

@@ -9,6 +9,7 @@ import type { Db, Queryable } from './db.ts';
 import type { Booking, Order, OrderLine, Tenant, TenantProfile } from '../domain/types.ts';
 import { checkSlot, findService, depositFor, resourceFree, type BusyInterval, type Unavailable } from '../domain/availability.ts';
 import { addDays, normaliseTime, toLocal, zonedToUtc, isIsoDate } from '../domain/time.ts';
+import type { SeedPlan } from '../presets/common/types.ts';
 
 export interface TenantSummary {
   id: string;
@@ -461,6 +462,19 @@ export class Repo {
     return rows.map(mapOrder);
   }
 
+  /**
+   * Every order due in [from, to), soonest first, cancelled ones included:
+   * a board that shows a whole day (the takeaway's) needs all of them, where
+   * listOrders gives the latest 50 taken.
+   */
+  async listOrdersDue(tenantId: string, from: Date, to: Date): Promise<Order[]> {
+    const rows = await this.db.query<any>(
+      'select * from public.voice_orders where tenant_id = $1 and due_at >= $2 and due_at < $3 order by due_at, created_at',
+      [tenantId, from, to],
+    );
+    return rows.map(mapOrder);
+  }
+
   /** Orders due in [from, to), for collection-slot capacity. */
   async ordersDueBetween(tenantId: string, from: Date, to: Date): Promise<number> {
     const rows = await this.db.query<any>(
@@ -572,25 +586,24 @@ export class Repo {
 
   // ── Seeding a workspace ────────────────────────────────────────────────
 
-  /** Writes a planned week in a few statements (see presets/restaurant/seed.ts). */
-  async insertSeed(tenantId: string, plan: {
-    bookings: { reference: string; resource_key: string; area_key: string | null; starts_at: Date; ends_at: Date; party_size: number; name: string;
-      phone: string; notes: string | null; allergies: string | null; tags: string[]; deposit_pence: number; deposit_paid: boolean;
-      visit_status: string; booked_via: string }[];
-    orders: { reference: string; name: string; phone: string; due_at: Date; lines: OrderLine[]; subtotal_pence: number; total_pence: number;
-      allergy_notes: string | null; status: string; payment_status: string }[];
-    messages: { from_name: string; from_phone: string; body: string }[];
-  }): Promise<void> {
+  /**
+   * Writes a planned week in a few statements (see presets/restaurant/seed.ts).
+   * A field a plan leaves out gets the literal the restaurant's rows have
+   * always had, so its seeded weeks are unchanged.
+   */
+  async insertSeed(tenantId: string, plan: SeedPlan): Promise<void> {
     await this.db.tx(async (q) => {
       for (let i = 0; i < plan.bookings.length; i += 40) {
         const chunk = plan.bookings.slice(i, i + 40);
         const params: unknown[] = [];
         const rows = chunk.map((b) => {
           const at = new Date(b.starts_at.getTime() - (2 + (b.party_size % 5)) * 86400000).toISOString();
-          params.push(tenantId, b.reference, b.resource_key, b.area_key, b.starts_at, b.ends_at, b.party_size, b.name, b.phone, b.notes,
-            b.allergies, b.tags, b.deposit_pence, b.deposit_paid, b.visit_status, JSON.stringify([{ at, by: b.booked_via, what: 'booked' }]));
-          const n = params.length - 16;
-          return `($${n + 1}, $${n + 2}, 'table', $${n + 3}, $${n + 4}, $${n + 5}, $${n + 6}, 0, $${n + 7}, $${n + 8}, $${n + 9}, $${n + 10}, $${n + 11}, $${n + 12}::text[], 'seed', $${n + 13}, $${n + 14}, $${n + 15}, $${n + 16}::jsonb)`;
+          params.push(tenantId, b.reference, b.service_key ?? 'table', b.resource_key, b.area_key, b.starts_at, b.ends_at, b.buffer_minutes ?? 0,
+            b.party_size, b.name, b.phone, b.notes, b.allergies, b.tags, b.deposit_pence, b.deposit_paid, b.visit_status,
+            JSON.stringify([{ at, by: b.booked_via, what: 'booked' }]));
+          const n = params.length - 18;
+          const p = (k: number) => `$${n + k}`;
+          return `(${p(1)}, ${p(2)}, ${p(3)}, ${p(4)}, ${p(5)}, ${p(6)}, ${p(7)}, ${p(8)}, ${p(9)}, ${p(10)}, ${p(11)}, ${p(12)}, ${p(13)}, ${p(14)}::text[], 'seed', ${p(15)}, ${p(16)}, ${p(17)}, ${p(18)}::jsonb)`;
         });
         await q.query(
           `insert into public.voice_bookings (tenant_id, reference, service_key, resource_key, area_key, starts_at, ends_at, buffer_minutes, party_size,
@@ -600,11 +613,12 @@ export class Repo {
       }
       for (const o of plan.orders) {
         await q.query(
-          `insert into public.voice_orders (tenant_id, reference, name, phone, fulfilment, due_at, lines, subtotal_pence, delivery_fee_pence,
-             total_pence, allergy_notes, status, payment_status, source, created_at)
-           values ($1, $2, $3, $4, 'collection', $5, $6::jsonb, $7, 0, $8, $9, $10, $11, 'seed', $12)`,
-          [tenantId, o.reference, o.name, o.phone, o.due_at, JSON.stringify(o.lines), o.subtotal_pence, o.total_pence, o.allergy_notes, o.status,
-            o.payment_status, new Date(o.due_at.getTime() - 50 * 60000)],
+          `insert into public.voice_orders (tenant_id, reference, name, phone, fulfilment, due_at, address, postcode, lines, subtotal_pence,
+             delivery_fee_pence, total_pence, allergy_notes, status, payment_status, source, created_at)
+           values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13, $14, $15, 'seed', $16)`,
+          [tenantId, o.reference, o.name, o.phone, o.fulfilment ?? 'collection', o.due_at, o.address ?? null, o.postcode ?? null,
+            JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence ?? 0, o.total_pence, o.allergy_notes, o.status ?? 'confirmed',
+            o.payment_status ?? 'unpaid', o.created_at ?? new Date(o.due_at.getTime() - 50 * 60000)],
         );
       }
       for (const m of plan.messages) {

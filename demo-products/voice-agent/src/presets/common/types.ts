@@ -78,9 +78,15 @@ export interface Issue<StepKey extends string = string> {
 export type VisitStatus = NonNullable<Booking['visit_status']>;
 
 // ── A seeded week: planned in memory, then written by repo.insertSeed ────
+// The optional fields are for businesses that are not a restaurant; a plan
+// that leaves one out gets what the restaurant's rows have always had.
 
 export interface SeedBooking {
   reference: string;
+  /** The booked service; default 'table'. */
+  service_key?: string;
+  /** Minutes kept clear after it; default 0. */
+  buffer_minutes?: number;
   resource_key: string;
   area_key: string | null;
   starts_at: Date;
@@ -101,13 +107,24 @@ export interface SeedOrder {
   reference: string;
   name: string;
   phone: string;
+  /** Default collection, with no address, postcode or delivery fee. */
+  fulfilment?: 'collection' | 'delivery';
+  address?: string | null;
+  postcode?: string | null;
+  delivery_fee_pence?: number;
   due_at: Date;
   lines: OrderLine[];
   subtotal_pence: number;
   total_pence: number;
   allergy_notes: string | null;
-  status: 'confirmed' | 'in_kitchen' | 'ready' | 'completed';
-  payment_status: 'unpaid' | 'paid';
+  /** When the caller rang; default 50 minutes before it is due. */
+  created_at?: Date;
+  /** Default confirmed and unpaid, as a new order is. */
+  status?: 'confirmed' | 'in_kitchen' | 'ready' | 'completed';
+  payment_status?: 'unpaid' | 'paid';
+  /** Who took a delivery out, and when. */
+  driver?: string | null;
+  out_at?: Date | null;
 }
 
 export interface SeedMessage {
