@@ -3,11 +3,9 @@
 // Compiled into a TenantProfile by compile.ts; the receptionist never reads
 // these directly. Field by field in DEMO-SERVICE-PLAN.md §4.1.
 
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import type { MenuCategory, ModifierGroup } from '../../domain/types.ts';
 import type { BaseAnswers, BasicsAnswer, ClosureAnswer, DayHours, FaqAnswer, Sources, ThemeAnswer } from '../common/types.ts';
+import { sampleMenu, type MenuAnswer } from '../food/menu.ts';
+import type { CollectionAnswer, DeliveryAnswer, OrderPayment } from '../food/ordering.ts';
 import { FIXTURE_LENGTH, autoLayout, footprint } from './layout.ts';
 
 export type { DayHours, ServicePeriod } from '../common/types.ts';
@@ -65,8 +63,8 @@ export interface RestaurantAnswers extends BaseAnswers {
   serve: {
     reservations: boolean;
     walk_ins: boolean;
-    collection: { enabled: boolean; prep_minutes: number; slot_minutes: number; per_slot: number; evenings_only: boolean };
-    delivery: { enabled: boolean; districts: string[]; fee_pence: number; min_order_pence: number; extra_minutes: number };
+    collection: CollectionAnswer;
+    delivery: DeliveryAnswer;
     /** Named for the FAQ only: "you'll find us on Deliveroo". */
     delivery_apps: string[];
   };
@@ -84,18 +82,11 @@ export interface RestaurantAnswers extends BaseAnswers {
     highchairs: number;
     buffer_minutes: number;
   };
-  menu: {
-    categories: MenuCategory[];
-    modifier_groups: Record<string, ModifierGroup>;
-    allergen_statement: string;
-    source: 'sample' | 'draft' | 'website' | 'manual';
-    /** Drafted allergens are illustrations until the owner checks them. */
-    allergens_are_examples: boolean;
-  };
+  menu: MenuAnswer;
   money: {
     deposit: { mode: 'none' | 'per_person' | 'per_booking' | 'card_hold'; amount_pence: number; min_party: number };
     cancellation_policy: string;
-    takeaway_payment: 'phone' | 'collection' | 'either';
+    takeaway_payment: OrderPayment;
     service_charge: string;
   };
   policies: {
@@ -112,20 +103,6 @@ export interface RestaurantAnswers extends BaseAnswers {
   };
   theme: ThemeAnswer;
   sources: Sources;
-}
-
-const HERE = dirname(fileURLToPath(import.meta.url));
-
-/** The sample menu: Luca's Trattoria, the demo restaurant, complete with allergens and options. */
-function sampleMenu(): RestaurantAnswers['menu'] {
-  const p = JSON.parse(readFileSync(join(HERE, '..', '..', '..', 'fixtures', 'tenants', 'lucas-trattoria.json'), 'utf8'));
-  return {
-    categories: p.menu.categories,
-    modifier_groups: p.menu.modifier_groups,
-    allergen_statement: p.menu.allergen_statement,
-    source: 'sample',
-    allergens_are_examples: true,
-  };
 }
 
 const lunchDinner = (): DayHours => ({
@@ -251,7 +228,8 @@ export function defaultAnswers(): RestaurantAnswers {
       highchairs: 3,
       buffer_minutes: 0,
     },
-    menu: sampleMenu(),
+    // Luca's Trattoria, the demo restaurant, complete with allergens and options.
+    menu: sampleMenu('tenants/lucas-trattoria.json'),
     money: {
       deposit: { mode: 'per_person', amount_pence: 1000, min_party: 7 },
       cancellation_policy: "Please give 48 hours' notice to cancel or change. Deposits are refunded with 48 hours' notice.",

@@ -3,10 +3,11 @@
 // anything odd into a profile. validate(): what the builder shows as still
 // missing or wrong before Start.
 
-import { ALLERGENS, type Allergen, type MenuCategory, type MenuItem, type ModifierGroup } from '../../domain/types.ts';
 import { arr, bool, int, key, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseFaqs, sanitiseSources, sanitiseTheme, str } from '../common/sanitise.ts';
 import type { Issue as BaseIssue } from '../common/types.ts';
 import { validateBase } from '../common/validate.ts';
+import { sanitiseMenu, validateMenu } from '../food/menu.ts';
+import { ORDER_PAYMENTS, sanitiseOrdering, takesOrders, validateOrdering } from '../food/ordering.ts';
 import { defaultAnswers, type AreaAnswer, type FixtureAnswer, type RestaurantAnswers, type TableAnswer } from './answers.ts';
 import { FIXTURE_LENGTH, intoRooms } from './layout.ts';
 import { tableBookable } from './compile.ts';
@@ -77,60 +78,6 @@ function fixtures(v: unknown, areaKeys: Set<string>, d: FixtureAnswer[]): Fixtur
   });
 }
 
-const allergens = (v: unknown): Allergen[] => [...new Set(arr(v).filter((a): a is Allergen => ALLERGENS.includes(a as Allergen)))];
-
-function menu(v: any, d: RestaurantAnswers['menu']): RestaurantAnswers['menu'] {
-  if (!v || typeof v !== 'object') return d;
-  const groups: Record<string, ModifierGroup> = {};
-  for (const [k, g] of Object.entries((v.modifier_groups ?? {}) as Record<string, any>).slice(0, 30)) {
-    const gk = key(k, 'options');
-    groups[gk] = {
-      label: str(g?.label, 40, 'Options'),
-      min: int(g?.min, 0, 5, 0),
-      max: int(g?.max, 1, 10, 1),
-      options: arr(g?.options).slice(0, 20).map((o: any, i) => ({
-        key: key(o?.key ?? o?.name, `opt_${i + 1}`),
-        name: str(o?.name, 50, `Option ${i + 1}`),
-        price_pence: int(o?.price_pence, 0, 100000, 0),
-        allergens: allergens(o?.allergens),
-      })),
-    };
-  }
-  const itemKeys = new Set<string>();
-  const categories: MenuCategory[] = arr(v.categories).slice(0, 20).map((c: any, ci) => ({
-    key: key(c?.key ?? c?.label, `cat_${ci + 1}`),
-    label: str(c?.label, 40, `Section ${ci + 1}`),
-    items: arr(c?.items).slice(0, 60).map((it: any, ii): MenuItem => {
-      let k = key(it?.key ?? it?.name, `item_${ci + 1}_${ii + 1}`);
-      while (itemKeys.has(k)) k = `${k}_2`;
-      itemKeys.add(k);
-      const dietary = arr(it?.dietary).filter((x): x is string => typeof x === 'string').map((x) => x.slice(0, 20)).slice(0, 5);
-      const mods = arr(it?.modifier_groups).filter((g): g is string => typeof g === 'string' && g in groups);
-      const aliases = arr(it?.aliases).filter((x): x is string => typeof x === 'string').map((x) => x.slice(0, 40)).slice(0, 5);
-      return {
-        key: k,
-        name: str(it?.name, 60, `Dish ${ii + 1}`) || `Dish ${ii + 1}`,
-        price_pence: int(it?.price_pence, 0, 100000, 0),
-        description: str(it?.description, 200) || undefined,
-        allergens: allergens(it?.allergens),
-        allergens_unknown: it?.allergens_unknown === true || undefined,
-        may_contain: allergens(it?.may_contain).length ? allergens(it?.may_contain) : undefined,
-        dietary: dietary.length ? dietary : undefined,
-        modifier_groups: mods.length ? mods : undefined,
-        available: it?.available === false ? false : undefined,
-        aliases: aliases.length ? aliases : undefined,
-      };
-    }),
-  }));
-  return {
-    categories,
-    modifier_groups: groups,
-    allergen_statement: str(v.allergen_statement, 600, d.allergen_statement) || d.allergen_statement,
-    source: oneOf(v.source, ['sample', 'draft', 'website', 'manual'] as const, 'manual'),
-    allergens_are_examples: bool(v.allergens_are_examples, true),
-  };
-}
-
 export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
   const d = defaultAnswers();
   const x = (input ?? {}) as any;
@@ -152,22 +99,7 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
     serve: {
       reservations: bool(s.reservations, d.serve.reservations),
       walk_ins: bool(s.walk_ins, d.serve.walk_ins),
-      collection: {
-        enabled: bool(s.collection?.enabled, d.serve.collection.enabled),
-        prep_minutes: int(s.collection?.prep_minutes, 5, 120, d.serve.collection.prep_minutes),
-        slot_minutes: oneOf(s.collection?.slot_minutes, [5, 10, 15, 20, 30] as unknown as readonly number[] as never, d.serve.collection.slot_minutes as never),
-        per_slot: int(s.collection?.per_slot, 0, 50, d.serve.collection.per_slot),
-        evenings_only: bool(s.collection?.evenings_only, d.serve.collection.evenings_only),
-      },
-      delivery: {
-        enabled: bool(s.delivery?.enabled, d.serve.delivery.enabled),
-        districts: arr(s.delivery?.districts).filter((z): z is string => typeof z === 'string')
-          .map((z) => z.toUpperCase().replace(/\s+/g, '')).filter((z) => /^[A-Z]{1,2}\d[A-Z\d]?$/.test(z)).slice(0, 30),
-        fee_pence: int(s.delivery?.fee_pence, 0, 2000, d.serve.delivery.fee_pence),
-        min_order_pence: int(s.delivery?.min_order_pence, 0, 10000, d.serve.delivery.min_order_pence),
-        extra_minutes: int(s.delivery?.extra_minutes, 0, 120, d.serve.delivery.extra_minutes),
-      },
-      delivery_apps: arr(s.delivery_apps).filter((z): z is string => typeof z === 'string').map((z) => z.slice(0, 20)).slice(0, 5),
+      ...sanitiseOrdering(s, d.serve),
     },
     seating: {
       areas: ar,
@@ -187,7 +119,7 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
       highchairs: int(st.highchairs, 0, 30, d.seating.highchairs),
       buffer_minutes: int(st.buffer_minutes, 0, 60, d.seating.buffer_minutes),
     },
-    menu: menu(x.menu, d.menu),
+    menu: sanitiseMenu(x.menu, d.menu),
     money: {
       deposit: {
         mode: oneOf(m.deposit?.mode, ['none', 'per_person', 'per_booking', 'card_hold'] as const, d.money.deposit.mode),
@@ -195,7 +127,7 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
         min_party: int(m.deposit?.min_party, 1, 60, d.money.deposit.min_party),
       },
       cancellation_policy: str(m.cancellation_policy, 300, d.money.cancellation_policy),
-      takeaway_payment: oneOf(m.takeaway_payment, ['phone', 'collection', 'either'] as const, d.money.takeaway_payment),
+      takeaway_payment: oneOf(m.takeaway_payment, ORDER_PAYMENTS, d.money.takeaway_payment),
       service_charge: str(m.service_charge, 200, d.money.service_charge),
     },
     policies: {
@@ -224,7 +156,7 @@ export function validateRestaurant(a: RestaurantAnswers): Issue[] {
   const err = (step: Issue['step'], message: string) => out.push({ step, level: 'error', message });
   const warn = (step: Issue['step'], message: string) => out.push({ step, level: 'warning', message });
 
-  if (!a.serve.reservations && !a.serve.collection.enabled && !a.serve.delivery.enabled) {
+  if (!a.serve.reservations && !takesOrders(a.serve)) {
     warn('serve', 'With no bookings and no takeaway, the receptionist can only answer questions.');
   }
   if (a.serve.reservations) {
@@ -241,11 +173,8 @@ export function validateRestaurant(a: RestaurantAnswers): Issue[] {
       if (clash && t.key < clash.key) warn('floor', `${t.label} and ${clash.label} overlap on the floor plan.`);
     }
   }
-  const items = a.menu.categories.flatMap((c) => c.items);
-  if ((a.serve.collection.enabled || a.serve.delivery.enabled) && !items.length) err('menu', 'Takeaway needs a menu: add some dishes or turn takeaway off.');
-  if (items.some((i) => i.price_pence === 0)) warn('menu', 'Some dishes have no price yet.');
-  if (a.menu.allergens_are_examples && items.length) warn('menu', 'The allergens are examples until you check them.');
-  if (a.serve.delivery.enabled && !a.serve.delivery.districts.length) err('serve', 'List the postcode districts you deliver to, like NG1.');
+  out.push(...validateMenu(a.menu, 'menu', { orderable: takesOrders(a.serve) }));
+  out.push(...validateOrdering(a.serve, 'serve'));
   if (a.money.deposit.mode !== 'none' && a.money.deposit.mode !== 'card_hold' && a.money.deposit.amount_pence <= 0) err('money', 'Set the deposit amount.');
   return out;
 }

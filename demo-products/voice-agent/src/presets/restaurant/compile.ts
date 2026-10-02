@@ -2,12 +2,13 @@
 // always make the same profile, and every field the builder offers changes
 // something here (test/restaurant.test.ts checks each one).
 
-import type { BookableService, KnowledgeEntry, Ordering, Resource, SeatingArea, TenantProfile } from '../../domain/types.ts';
-import { minutesOf } from '../../domain/time.ts';
+import type { BookableService, KnowledgeEntry, Resource, SeatingArea, TenantProfile } from '../../domain/types.ts';
 import { pounds } from '../../domain/types.ts';
-import { bookingWindows, groupByDay, hoursSentence as sayHours } from '../common/hours.ts';
+import { bookingWindows, hoursSentence as sayHours } from '../common/hours.ts';
 import { baseProfile, entry, greetingFor as greetingOf, mergeFaqs } from '../common/profile.ts';
 import type { DayHours } from '../common/types.ts';
+import { compileMenu, hasMenu } from '../food/menu.ts';
+import { compileOrdering, deliveryAppsEntry, takeawaySentence } from '../food/ordering.ts';
 import type { AreaAnswer, RestaurantAnswers, TableAnswer } from './answers.ts';
 
 export { dayRange } from '../common/hours.ts';
@@ -106,26 +107,6 @@ function service(a: RestaurantAnswers): BookableService {
   };
 }
 
-function ordering(a: RestaurantAnswers): Ordering | undefined {
-  const c = a.serve.collection;
-  const del = a.serve.delivery;
-  if (!c.enabled && !del.enabled) return undefined;
-  const periods = a.hours.days.map((d) =>
-    d.open ? d.services.filter((s) => !c.evenings_only || minutesOf(s.close) > minutesOf('17:00')).map((s) => ({ ...s, label: 'takeaway' })) : null,
-  );
-  return {
-    collection: c.enabled,
-    delivery: del.enabled
-      ? { districts: del.districts.map((x) => x.toUpperCase().trim()).filter(Boolean), fee_pence: del.fee_pence, min_order_pence: del.min_order_pence, extra_minutes: del.extra_minutes }
-      : undefined,
-    prep_minutes: c.prep_minutes,
-    slot_minutes: c.slot_minutes,
-    slot_capacity: c.per_slot > 0 ? c.per_slot : undefined,
-    payment: a.money.takeaway_payment,
-    hours: groupByDay(periods, (s) => `${s.open}|${s.close}`).map((g) => ({ days: g.days.sort(), open: g.value.open, close: g.value.close, label: 'takeaway' })),
-  };
-}
-
 function dogsAnswer(a: RestaurantAnswers): string {
   const outside = a.seating.areas.find((x) => x.kind === 'outdoor');
   if (a.policies.dogs === 'inside') return 'Dogs are welcome inside and out; we have water bowls.';
@@ -141,15 +122,6 @@ function depositSentence(a: RestaurantAnswers): string | null {
   if (d.mode === 'per_booking') return `Bookings for ${d.min_party} or more pay a ${pounds(d.amount_pence)} deposit when booking, taken off the bill on the night.`;
   if (d.mode === 'card_hold') return 'We take card details to hold larger bookings; nothing is charged unless it is a no-show.';
   return null;
-}
-
-function takeawaySentence(a: RestaurantAnswers): string | null {
-  const c = a.serve.collection;
-  const del = a.serve.delivery;
-  if (!c.enabled && !del.enabled) return null;
-  const how = [c.enabled ? 'click and collect by phone' : null, del.enabled ? `delivery to ${del.districts.join(', ') || 'nearby postcodes'}` : null].filter(Boolean).join(' and ');
-  const pay = { phone: 'Takeaway is paid by card over the phone.', collection: 'Takeaway is paid when you collect.', either: 'Takeaway can be paid by card over the phone or when you collect.' }[a.money.takeaway_payment];
-  return `Takeaway: ${how}${c.evenings_only ? ', evenings' : ''}; food takes about ${c.prep_minutes} minutes. ${pay}`;
 }
 
 function seatingSentence(a: RestaurantAnswers): string | null {
@@ -179,9 +151,7 @@ function knowledge(a: RestaurantAnswers): KnowledgeEntry[] {
     entry('Is there a service charge?', a.money.service_charge, ['service', 'charge', 'tip', 'gratuity']),
     entry('What is your cancellation policy?', a.money.cancellation_policy, ['cancel', 'cancellation', 'refund', 'deposit']),
     entry('Do you take walk-ins?', a.serve.walk_ins ? (a.seating.tables.some((t) => t.walk_in) ? 'Yes, we keep some tables for walk-ins, though booking is safest at busy times.' : 'Yes, if there’s a table free, though booking is safest at busy times.') : 'We’re bookings only, I’m afraid.', ['walk', 'walk-in', 'without booking', 'turn up']),
-    a.serve.delivery_apps.length
-      ? entry('Are you on the delivery apps?', `Yes, you can order from us on ${a.serve.delivery_apps.join(' and ')}.`, ['deliveroo', 'uber', 'just eat', 'app', 'delivery'])
-      : null,
+    deliveryAppsEntry(a.serve),
   ], p.faqs);
 }
 
@@ -193,12 +163,12 @@ export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }):
   if (dep) policies.deposit = dep;
   if (a.money.cancellation_policy.trim()) policies.cancellation = a.money.cancellation_policy.trim();
   if (a.money.service_charge.trim()) policies.service_charge = a.money.service_charge.trim();
-  const tk = takeawaySentence(a);
+  const tk = takeawaySentence(a.serve, a.money.takeaway_payment);
   if (tk) policies.takeaway = tk;
   policies.dogs = dogsAnswer(a);
 
   const bookable = a.serve.reservations && a.seating.tables.some((t) => tableBookable(a, t));
-  const hasMenu = a.menu.categories.some((c) => c.items.length);
+  const menu = hasMenu(a.menu);
 
   return {
     ...baseProfile(a, meta, {
@@ -206,7 +176,7 @@ export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }):
       noun: 'restaurant',
       facts: [
         seatingSentence(a),
-        takeawaySentence(a),
+        tk,
         [a.policies.accessibility, a.policies.children, a.seating.highchairs ? `${a.seating.highchairs} highchairs.` : ''].filter(Boolean).join(' '),
         a.policies.parking,
       ],
@@ -215,8 +185,8 @@ export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }):
     booking: bookable
       ? { services: [service(a)], resources: resources(a), areas: areas(a), highchairs: a.seating.highchairs, fixtures: a.seating.fixtures.length ? a.seating.fixtures : undefined }
       : undefined,
-    menu: hasMenu ? { categories: a.menu.categories, modifier_groups: a.menu.modifier_groups, allergen_statement: a.menu.allergen_statement } : undefined,
-    ordering: hasMenu ? ordering(a) : undefined,
+    menu: menu ? compileMenu(a.menu) : undefined,
+    ordering: menu ? compileOrdering(a.serve, a.hours, a.money.takeaway_payment) : undefined,
     policies,
   };
 }
