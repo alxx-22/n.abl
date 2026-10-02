@@ -24,13 +24,19 @@ const samples = new Map<string, Menu>();
 /**
  * A sample menu from a fixture under fixtures/ ("tenants/lucas-trattoria.json"),
  * complete with allergens and options. Read once; every call gets its own
- * copy, because a builder edits its defaults in place.
+ * copy, because a builder edits its defaults in place. It is cleaned as it is
+ * read, the way a saved menu is: the fixture leaves allergens off some
+ * options, and defaults that the first save would change are not stable.
  */
 export function sampleMenu(file: string): MenuAnswer {
   let m = samples.get(file);
   if (!m) {
     const p = JSON.parse(readFileSync(join(FIXTURES, file), 'utf8'));
-    m = { categories: p.menu.categories, modifier_groups: p.menu.modifier_groups, allergen_statement: p.menu.allergen_statement };
+    const clean = sanitiseMenu(
+      { ...p.menu, source: 'sample', allergens_are_examples: true },
+      { categories: [], modifier_groups: {}, allergen_statement: '', source: 'sample', allergens_are_examples: true },
+    );
+    m = { categories: clean.categories, modifier_groups: clean.modifier_groups, allergen_statement: clean.allergen_statement };
     samples.set(file, m);
   }
   const copy = structuredClone(m);

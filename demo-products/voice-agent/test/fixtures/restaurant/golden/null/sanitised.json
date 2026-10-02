@@ -577,22 +577,26 @@
      {
       "key": "nduja",
       "name": "nduja",
-      "price_pence": 200
+      "price_pence": 200,
+      "allergens": []
      },
      {
       "key": "olives",
       "name": "olives",
-      "price_pence": 100
+      "price_pence": 100,
+      "allergens": []
      },
      {
       "key": "rocket",
       "name": "rocket",
-      "price_pence": 100
+      "price_pence": 100,
+      "allergens": []
      },
      {
       "key": "chilli",
       "name": "fresh chilli",
-      "price_pence": 50
+      "price_pence": 50,
+      "allergens": []
      }
     ]
    },
@@ -604,17 +608,20 @@
      {
       "key": "no_basil",
       "name": "no basil",
-      "price_pence": 0
+      "price_pence": 0,
+      "allergens": []
      },
      {
       "key": "no_cheese",
       "name": "no cheese",
-      "price_pence": 0
+      "price_pence": 0,
+      "allergens": []
      },
      {
       "key": "no_garlic",
       "name": "no garlic",
-      "price_pence": 0
+      "price_pence": 0,
+      "allergens": []
      }
     ]
    },
@@ -626,7 +633,8 @@
      {
       "key": "gluten_free_base",
       "name": "gluten-free base",
-      "price_pence": 200
+      "price_pence": 200,
+      "allergens": []
      }
     ]
    },
@@ -644,7 +652,8 @@
      {
       "key": "chilli_flakes",
       "name": "chilli flakes",
-      "price_pence": 0
+      "price_pence": 0,
+      "allergens": []
      }
     ]
    }

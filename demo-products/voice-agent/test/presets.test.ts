@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { PRESETS, answersOf, builtPreset, getPreset, type BaseAnswers, type Preset } from '../src/presets/index.ts';
 import { PresetError } from '../src/presets/common/errors.ts';
-import { sampleMenu } from '../src/presets/food/menu.ts';
+import { sampleMenu, sanitiseMenu } from '../src/presets/food/menu.ts';
 import { compileOrdering, sanitiseOrdering, takeawaySentence, validateOrdering, type OrderingAnswer } from '../src/presets/food/ordering.ts';
 import { defaultAnswers, type RestaurantAnswers } from '../src/presets/restaurant/answers.ts';
 import { compileRestaurant } from '../src/presets/restaurant/compile.ts';
@@ -31,6 +31,9 @@ test('presets: the sample menu is read once, and every caller gets its own copy'
   assert.deepEqual(a, b);
   assert.equal(a.source, 'sample');
   assert.equal(a.allergens_are_examples, true);
+  // Cleaned as it is read, so the first save of a new workspace changes nothing.
+  assert.deepEqual(sanitiseMenu(structuredClone(a), a), a);
+  assert.ok(Object.values(a.modifier_groups).every((g) => g.options.every((o) => Array.isArray(o.allergens))), 'every option lists its allergens');
 });
 
 test('presets: answers with no week of hours open as the defaults do, and a week that arrived is read as before', () => {
@@ -207,22 +210,16 @@ test('presets: every built preset passes the checks of PRESETS.md §4 that apply
     if (!preset) continue;
     const steps = new Set(preset.steps.map((s) => s.key));
     assert.equal(steps.size, preset.steps.length, `${p.key}: each step once`);
-    // The restaurant's sample menu leaves allergens off nine options, and
-    // answers with no menu get it as it is, so the next pass adds them as
-    // []. Its goldens record that; cleaning the sample once when it is read
-    // is a named change (PRESETS.md §0.3). Until then it is held to
-    // stability from the second pass, and every other preset from the first.
-    const settled = (x: unknown): BaseAnswers => (p.key === 'restaurant' ? preset.sanitise(x) : (x as BaseAnswers));
     const inputs: unknown[] = [{}, null, 'junk', [1, 2], { basics: 7, hours: 'x', policies: { faqs: { q: 1 } } }, emptied(preset.defaults())];
     for (const raw of inputs) {
-      const a: BaseAnswers = settled(answersOf(preset, structuredClone(raw)));
+      const a: BaseAnswers = answersOf(preset, structuredClone(raw));
       assert.deepEqual(preset.sanitise(structuredClone(a)), a, `${p.key}: sanitise is stable`);
       for (const i of preset.validate(a)) assert.ok(steps.has(i.step), `${p.key}: an issue on "${i.step}", which is not a step`);
     }
     const named = preset.defaults();
     named.basics.name = 'Checked';
     assert.deepEqual(preset.validate(preset.sanitise(named)).filter((i) => i.level === 'error'), [], `${p.key}: the defaults and a name are ready to start`);
-    if (p.key !== 'restaurant') assert.deepEqual(preset.sanitise(preset.defaults()), preset.defaults(), `${p.key}: the defaults are already clean`);
+    assert.deepEqual(preset.sanitise(preset.defaults()), preset.defaults(), `${p.key}: the defaults are already clean`);
   }
   assert.deepEqual(restaurant.steps.map((s) => s.label), ['Basics', 'Opening hours', 'How you serve', 'Seating', 'Floor plan', 'Menu', 'Money', 'Policies and questions'], 'today\'s titles');
 });
