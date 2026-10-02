@@ -7,7 +7,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
-import { mentionedAllergy, namedAllergy, newCallState, runTool, toolDeclarations, type Action, type ToolContext } from '../src/core/tools.ts';
+import { mentionedAllergy, namedAllergy, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type ToolContext } from '../src/core/tools.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
 import { DEFAULT_DEMO_CARDS } from '../src/domain/payments.ts';
 import type { Tenant } from '../src/domain/types.ts';
@@ -95,10 +95,27 @@ test('restaurant tools: inside or on the terrace, and the weather rule', async (
   assert.match(String(full.next), /inside is free at that time/i);
 });
 
+test('restaurant tools: with inside and the terrace both free, the booking names the one the caller chose', async () => {
+  const t = await restaurant('tools-area-choice');
+  const { ctx } = await call(t);
+  // From a live test: read back as "on the terrace", booked with no area, and seated inside.
+  const r = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: 'Sam Price', allergies: 'none' }, ctx);
+  assert.equal(r.booked, false);
+  assert.match(String(r.message), /Inside and Terrace are both free then: pass area/);
+  const ok = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: 'Sam Price', allergies: 'none', area: 'Terrace' }, ctx);
+  assert.equal(ok.booked, true, JSON.stringify(ok));
+  assert.equal(ok.area, 'Terrace');
+  // Once the terrace is full at that time there is no choice to make, so no area is needed.
+  for (let i = 0; i < 3; i++) await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: `Terrace ${i}`, allergies: 'none', area: 'terrace' }, ctx);
+  const inside = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: 'Tom Wright', allergies: 'none' }, ctx);
+  assert.equal(inside.booked, true, JSON.stringify(inside));
+  assert.equal(inside.area, 'Inside');
+});
+
 test('restaurant tools: a wheelchair gets a step-free table; wishes are kept or noted', async () => {
   const t = await restaurant('tools-access');
   const { ctx } = await call(t);
-  const r = await runTool('create_booking', { date: SAT, time: '18:00', party_size: 3, name: 'Priya Shah', accessible: true, highchairs: 5, prefer: 'window' }, ctx);
+  const r = await runTool('create_booking', { area: 'inside', date: SAT, time: '18:00', party_size: 3, name: 'Priya Shah', accessible: true, highchairs: 5, prefer: 'window' }, ctx);
   assert.equal(r.booked, true, JSON.stringify(r));
   const b = (await repo.getBookingByReference(t.id, String(r.reference)))!;
   const table = t.profile.booking!.resources.find((x) => x.key === b.resource_key)!;
@@ -106,7 +123,7 @@ test('restaurant tools: a wheelchair gets a step-free table; wishes are kept or 
   assert.ok(b.tags?.includes('wheelchair') && b.tags?.includes('highchair'));
   assert.match(String(r.note), /only have 3 highchairs/);
   assert.match(String(r.note), /window/, 'no step-free window table: noted as a request');
-  const w = await runTool('create_booking', { date: SAT, time: '12:30', party_size: 2, name: 'Tom Wright', prefer: 'by the window' }, ctx);
+  const w = await runTool('create_booking', { area: 'inside', date: SAT, time: '12:30', party_size: 2, name: 'Tom Wright', prefer: 'by the window' }, ctx);
   const wb = (await repo.getBookingByReference(t.id, String(w.reference)))!;
   assert.ok(t.profile.booking!.resources.find((x) => x.key === wb.resource_key)!.features?.includes('window'));
 });
@@ -128,7 +145,7 @@ test('restaurant tools: a private room is an enquiry; an unknown area says what 
 test('restaurant tools: changes by reference keep the table when it fits, with a new text', async () => {
   const t = await restaurant('tools-change');
   const { ctx, sent } = await call(t);
-  const r = await runTool('create_booking', { date: SAT, time: '19:00', party_size: 2, name: 'Grace Wood' }, ctx);
+  const r = await runTool('create_booking', { area: 'inside', date: SAT, time: '19:00', party_size: 2, name: 'Grace Wood' }, ctx);
   const before = (await repo.getBookingByReference(t.id, String(r.reference)))!;
   const later = await runTool('modify_booking', { reference: String(r.reference).toLowerCase(), time: '19:30' }, ctx);
   assert.equal(later.changed, true, JSON.stringify(later));
@@ -148,6 +165,26 @@ test('restaurant tools: changes by reference keep the table when it fits, with a
   assert.deepEqual(part.bookings, []);
   assert.match(String(part.note), /only part of a reference/);
   assert.doesNotMatch(String(part.note), /No upcoming bookings/);
+});
+
+test('restaurant tools: the call does not end before the caller has heard the new reference', async () => {
+  const t = await restaurant('tools-owed');
+  const { ctx } = await call(t);
+  const r = await runTool('create_booking', { area: 'inside', date: SAT, time: '19:00', party_size: 2, name: 'Sam Price' }, ctx);
+  const ref = String(r.reference);
+  assert.equal(ctx.state.owed, ref);
+  // Booked and hung up in one go, as in a live test: the caller heard nothing.
+  assert.equal(unsaidReference(ctx.state, 'Shall I book that for you?'), ref);
+  assert.equal(unsaidReference(ctx.state, ''), null, 'asked once, never in a loop');
+  // Read out a character at a time, with commas and spaces: heard.
+  await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Sam Price' }, ctx);
+  const spoken = `That's booked. Your reference is ${ctx.state.owed!.split('').join(', ')}. Goodbye!`;
+  assert.equal(unsaidReference(ctx.state, spoken), null);
+  ctx.state.owed = 'XW105';
+  assert.equal(unsaidReference(ctx.state, 'Your reference is X, W, one, oh, five.'), null, 'numbers said as words');
+  // A change keeps the reference the caller already has, so nothing new is owed.
+  await runTool('modify_booking', { reference: ref, time: '19:30' }, ctx);
+  assert.equal(ctx.state.owed, null);
 });
 
 test('restaurant tools: collection slots the kitchen can handle, and pay on collection', async () => {
@@ -189,17 +226,17 @@ test('restaurant tools: an allergy the caller mentioned is never dropped', async
   const t = await restaurant('tools-allergy');
   const { ctx } = await call(t);
   ctx.state.heard.push('Hi, a table for two on Saturday at eight.', 'My wife has a severe nut allergy.');
-  const first = await runTool('create_booking', { date: SAT, time: '20:00', party_size: 2, name: 'Joe Doyle' }, ctx);
+  const first = await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Joe Doyle' }, ctx);
   assert.equal(first.booked, false);
   assert.match(String(first.message), /severe nut allergy.*allergies/);
-  const second = await runTool('create_booking', { date: SAT, time: '20:00', party_size: 2, name: 'Joe Doyle', allergies: 'Severe nut allergy (wife)' }, ctx);
+  const second = await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Joe Doyle', allergies: 'Severe nut allergy (wife)' }, ctx);
   assert.equal(second.booked, true);
   assert.equal((await repo.getBookingByReference(t.id, String(second.reference)))!.allergies, 'Severe nut allergy (wife)');
   // Asked once per call: "none" is accepted and stored as no allergy.
   const other = await call(t);
   other.ctx.state.heard.push('Do you do gluten-free pizza?');
-  assert.equal((await runTool('create_booking', { date: SAT, time: '20:00', party_size: 2, name: 'Amy Hall' }, other.ctx)).booked, false);
-  const none = await runTool('create_booking', { date: SAT, time: '20:00', party_size: 2, name: 'Amy Hall', allergies: 'none' }, other.ctx);
+  assert.equal((await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Amy Hall' }, other.ctx)).booked, false);
+  const none = await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Amy Hall', allergies: 'none' }, other.ctx);
   assert.equal(none.booked, true);
   assert.equal((await repo.getBookingByReference(t.id, String(none.reference)))!.allergies, null);
 });
@@ -211,11 +248,11 @@ test('restaurant tools: a booking needs a real name, and the name and number can
   const t = await restaurant('tools-names');
   const { ctx, sent } = await call(t);
   for (const stand_in of ['Caller', 'the caller', 'guest', 'N/A', '']) {
-    const r = await runTool('create_booking', { date: SAT, time: '12:30', party_size: 2, name: stand_in, allergies: 'none' }, ctx);
+    const r = await runTool('create_booking', { area: 'inside', date: SAT, time: '12:30', party_size: 2, name: stand_in, allergies: 'none' }, ctx);
     assert.equal(r.booked, false, stand_in);
     assert.match(String(r.message), /caller's name/);
   }
-  const booked = await runTool('create_booking', { date: SAT, time: '12:30', party_size: 2, name: 'Pat', allergies: 'none' }, ctx);
+  const booked = await runTool('create_booking', { area: 'inside', date: SAT, time: '12:30', party_size: 2, name: 'Pat', allergies: 'none' }, ctx);
   assert.equal(booked.booked, true, JSON.stringify(booked));
 
   // Today, twenty minutes from now: inside the notice period, so a move would be refused, but a new name is not a move.

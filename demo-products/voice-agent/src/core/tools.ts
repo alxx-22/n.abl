@@ -59,15 +59,32 @@ export interface CallState {
   heard: string[];
   /** The allergy check below asks once per call, never in a loop. */
   allergyAsked: boolean;
+  /** The reference or order number just made, until the call has checked the caller heard it (see unsaidReference). */
+  owed: string | null;
 }
 
 export function newCallState(): CallState {
   return {
     lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
     committed: [], found: [], lastOrder: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
-    heard: [], allergyAsked: false,
+    heard: [], allergyAsked: false, owed: null,
   };
 }
+
+/**
+ * The reference the caller has not yet heard, if the call is about to end
+ * without it. In a live test the receptionist booked and hung up in one go,
+ * so the caller heard nothing. Asked once per reference, never in a loop.
+ */
+export function unsaidReference(state: CallState, agentWords: string): string | null {
+  const owed = state.owed;
+  state.owed = null;
+  if (!owed) return null;
+  const digits = agentWords.replace(/\b(zero|oh|one|two|three|four|five|six|seven|eight|nine)\b/gi, (w) => String(DIGIT_WORDS.indexOf(w.toLowerCase()) % 10));
+  return digits.replace(/[^a-z0-9]/gi, '').toUpperCase().includes(owed) ? null : owed;
+}
+// "oh" is how people say 0 in a reference; it sits at 10 so % 10 gives 0.
+const DIGIT_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'oh'];
 
 const ALLERGY_WORDS = /\b(allerg\w*|coeliac|celiac|intoleran\w*|anaphyla\w*|epi-?pen|nuts?|peanuts?|tree nuts?|shellfish|gluten|dairy|lactose|sesame)\b/i;
 const NO_ALLERGY = /\b(no|not any|none|without|nothing)\b[^.?!]{0,20}\b(allerg|dietary|intoleran)|\bno,? (?:that's|thats) (?:all|fine)|^no\.?$/i;
@@ -451,6 +468,8 @@ const TOOLS: Record<string, Tool> = {
         delete slot.resource_key;
         // The table number is for staff; callers hear the area and what the table is like (unless they asked for that table).
         if (service.kind === 'table' && !table.key) delete slot.resource_label;
+        // Step-free only when asked: unasked, it led the receptionist to mark a booking as needing step-free access.
+        if (!bool(args.accessible)) delete slot.accessible;
         const wanted = preferences(args.prefer);
         const missing = wanted.filter((f) => !(r.slot!.features ?? []).includes(f));
         if (missing.length) out.note = `No ${missing.map((f) => f.replace('_', ' ')).join(' or ')} table free then; it can be noted as a request.`;
@@ -491,6 +510,22 @@ const TOOLS: Record<string, Tool> = {
       if (table.walkIn || table.unknown) return { booked: false, message: table.walkIn ?? table.unknown };
       const name = realName(args.name);
       if (!name) return { booked: false, message: ASK_NAME };
+      if (isTables(ctx.tenant) && !area.key && !table.key) {
+        // In a live test the read-back said "on the terrace" but the booking named no area, so the table went inside.
+        // When the caller has a choice, the area they chose must be passed.
+        const service = findService(p, str(args.service));
+        const date = str(args.date) ?? '';
+        const time = str(args.time);
+        if (service && isIsoDate(date) && time) {
+          const { areas_free: free } = checkAvailability({
+            profile: p, serviceKey: service.key, date, time, partySize: int(args.party_size) ?? 1, now: ctx.now(),
+            existing: await ctx.repo.busyForDate(ctx.tenant, date), accessible: bool(args.accessible),
+          });
+          if (free && free.length > 1) {
+            return { booked: false, message: `${free.join(' and ')} are both free then: pass area, the one the caller chose (ask if they have not said; if they do not mind, ${free[0].toLowerCase()}).` };
+          }
+        }
+      }
       if (isTables(ctx.tenant)) {
         const nudge = allergyCheck(ctx, str(args.allergies), 'create_booking', 'allergies');
         if (nudge) return { booked: false, ...nudge };
@@ -537,6 +572,7 @@ const TOOLS: Record<string, Tool> = {
       const b = r.booking;
       ctx.state.committed.push(b.reference);
       ctx.state.lastBookingRef = b.reference;
+      ctx.state.owed = b.reference;
       const s = bookingSummary(ctx.tenant, b);
       const areaInfo = b.area_key ? p.booking?.areas?.find((a) => a.key === b.area_key) : undefined;
       ctx.action({
@@ -971,6 +1007,7 @@ const TOOLS: Record<string, Tool> = {
       });
       ctx.state.committed.push(order.reference);
       ctx.state.lastOrder = order;
+      ctx.state.owed = order.reference;
       ctx.state.lines = [];
       ctx.state.fulfilment = null;
       changed(ctx);

@@ -13,7 +13,7 @@ import type { Tenant } from '../domain/types.ts';
 import { LiveSession, connectWithFallback, type FunctionCall, type LiveSetup, type UsageMetadata } from './live.ts';
 import { compilePrompt } from './prompt.ts';
 import {
-  loggableArgs, newCallState, runTool, toolDeclarations, type Action, type CallState, type SmsSender, type Telephony,
+  loggableArgs, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type CallState, type SmsSender, type Telephony,
   type ToolContext,
 } from './tools.ts';
 import { checkUtterance, type Flag } from './guardrails.ts';
@@ -506,6 +506,15 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.hangupTimer = setTimeout(() => {
       const wait = Math.max(0, this.agentSpeakingUntil - Date.now());
       setTimeout(() => {
+        const said = [...this.transcript.filter((l) => l.role === 'agent').map((l) => l.text), this.agentBuf].join(' ');
+        const owed = this.ended || this.state.transferRequested ? null : unsaidReference(this.state, said);
+        if (owed) {
+          // Not yet: the caller would hang up without their reference.
+          this.state.ending = false;
+          this.record('system', { event: 'reference_not_said', reference: owed });
+          this.session?.sendText(`[From the system: the caller has not heard their reference yet. Tell them it is done, read ${owed.split('').join(', ')} one character at a time, then say goodbye and use end_call.]`);
+          return;
+        }
         this.emit('hangup', reason);
         void this.end(this.state.transferRequested ? 'transferred' : 'completed');
       }, wait + 300);
