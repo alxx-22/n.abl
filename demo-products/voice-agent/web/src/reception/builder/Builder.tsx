@@ -1,50 +1,31 @@
-// The builder: seven short steps with a live preview. Every change saves
-// itself (debounced) and comes back validated, so the preview and the list
-// of what is still missing are always the server's view, not a guess.
+// The builder: the preset's steps with a live preview, then Review and
+// start. Every change saves itself (debounced) and comes back validated, so
+// the preview and the list of what is still missing are always the server's
+// view, not a guess. Which steps there are, and what each shows, comes from
+// the preset's builder (registry.ts).
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import { Link, navigate } from '../../router.tsx';
+import { presetInfo } from '../../../../src/presets/catalogue.ts';
 import { R, RxTop, expiryLine } from '../Reception.tsx';
 import { brandStyle } from '../brand.ts';
-import type { Issue, Me, RestaurantAnswers, WorkspacePayload } from '../types.ts';
+import type { BaseAnswers, Me, WorkspacePayload } from '../types.ts';
+import { Review } from './common/Review.tsx';
+import { REVIEW, builderFor, type StepProps, type Update } from './registry.ts';
 import { ScoutCard } from './Scout.tsx';
-import { StepBasics, StepHours, StepMenu, StepMoney, StepPolicies, StepReview, StepSeating, StepServe } from './steps.tsx';
-import { StepFloor } from './StepFloor.tsx';
 
-export type StepKey = Issue['step'] | 'review';
-
-const STEPS: { key: StepKey; label: string; needsTables?: boolean }[] = [
-  { key: 'basics', label: 'Basics' },
-  { key: 'hours', label: 'Opening hours' },
-  { key: 'serve', label: 'How you serve' },
-  { key: 'seating', label: 'Seating', needsTables: true },
-  { key: 'floor', label: 'Floor plan', needsTables: true },
-  { key: 'menu', label: 'Menu' },
-  { key: 'money', label: 'Money' },
-  { key: 'policies', label: 'Policies and questions' },
-  { key: 'review', label: 'Review and start' },
-];
-
-export type Update = (fn: (draft: RestaurantAnswers) => void) => void;
-
-export interface StepProps {
-  a: RestaurantAnswers;
-  set: Update;
-  ws: WorkspacePayload;
-  me: Me;
-  issues: Issue[];
-  go: (s: StepKey) => void;
-}
+/** "New restaurant", while it has no name. */
+const unnamed = (preset: string) => `New ${presetInfo(preset)?.noun ?? 'demo'}`;
 
 export function Builder({ id, me }: { id: string; me: Me }) {
   const [ws, setWs] = useState<WorkspacePayload | null>(null);
-  const [answers, setAnswers] = useState<RestaurantAnswers | null>(null);
-  const [step, setStep] = useState<StepKey>('basics');
+  const [answers, setAnswers] = useState<BaseAnswers | null>(null);
+  const [step, setStep] = useState<string | null>(null);
   const [saving, setSaving] = useState<'idle' | 'pending' | 'saving' | 'saved' | 'error'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const latest = useRef<RestaurantAnswers | null>(null);
+  const latest = useRef<BaseAnswers | null>(null);
   const edits = useRef(0);
   const scan = new URLSearchParams(location.search).get('scan') === '1';
 
@@ -54,7 +35,7 @@ export function Builder({ id, me }: { id: string; me: Me }) {
         setWs(w);
         setAnswers(w.answers);
         latest.current = w.answers;
-        document.title = `${w.name || 'New restaurant'} · setup · n.abl`;
+        document.title = `${w.name || unnamed(w.preset)} · setup · n.abl`;
       })
       .catch((e: Error) => toast(e.message));
     return () => clearTimeout(timer.current);
@@ -116,11 +97,20 @@ export function Builder({ id, me }: { id: string; me: Me }) {
     );
   }
 
-  const steps = STEPS.filter((s) => !s.needsTables || answers.serve.reservations);
+  const def = builderFor(ws.preset);
+  if (!def) {
+    return (
+      <>
+        <RxTop me={me} />
+        <main className="rx-main"><p className="empty">This kind of business isn't ready yet.</p></main>
+      </>
+    );
+  }
+  const steps = [...def.steps.filter((s) => def.show?.[s.key]?.(answers) ?? true), REVIEW];
   const i = Math.max(0, steps.findIndex((s) => s.key === step));
   const current = steps[i];
-  const issuesFor = (k: StepKey) => ws.issues.filter((x) => x.step === k);
-  const go = (k: StepKey) => {
+  const issuesFor = (k: string) => ws.issues.filter((x) => x.step === k);
+  const go = (k: string) => {
     void flush();
     setStep(k);
     window.scrollTo(0, 0);
@@ -133,7 +123,7 @@ export function Builder({ id, me }: { id: string; me: Me }) {
       <div className="accent-bar" />
       <RxTop me={me}>
         <span className="crumb">
-          <b>{answers.basics.name || 'New restaurant'}</b> <span className="muted">· setup</span>
+          <b>{answers.basics.name || unnamed(ws.preset)}</b> <span className="muted">· setup</span>
         </span>
         {ws.expires_at ? <span className="expiry small">{expiryLine(ws)}</span> : null}
         <span className={`save-state ${saving}`} aria-live="polite">
@@ -144,7 +134,7 @@ export function Builder({ id, me }: { id: string; me: Me }) {
         ) : null}
       </RxTop>
 
-      <main className={`rx-main builder ${current.key === 'floor' ? 'wide-step' : ''}`}>
+      <main className={`rx-main builder ${def.wide?.[current.key] ? 'wide-step' : ''}`}>
         <nav className="steps" aria-label="Setup steps">
           <ol>
             {steps.map((s, n) => {
@@ -176,15 +166,9 @@ export function Builder({ id, me }: { id: string; me: Me }) {
             </ul>
           ) : null}
 
-          {current.key === 'basics' ? <StepBasics {...props} /> : null}
-          {current.key === 'hours' ? <StepHours {...props} /> : null}
-          {current.key === 'serve' ? <StepServe {...props} /> : null}
-          {current.key === 'seating' ? <StepSeating {...props} /> : null}
-          {current.key === 'floor' ? <StepFloor {...props} /> : null}
-          {current.key === 'menu' ? <StepMenu {...props} /> : null}
-          {current.key === 'money' ? <StepMoney {...props} /> : null}
-          {current.key === 'policies' ? <StepPolicies {...props} /> : null}
-          {current.key === 'review' ? <StepReview {...props} flush={flush} onStarted={() => navigate(`${R}/live/${id}`)} /> : null}
+          {current.key === REVIEW.key
+            ? <Review {...props} copy={def.review} flush={flush} onStarted={() => navigate(`${R}/live/${id}`)} />
+            : def.render[current.key](props)}
 
           <footer className="step-nav">
             {i > 0 ? <button type="button" onClick={() => go(steps[i - 1].key)}>Back</button> : <span />}
@@ -198,25 +182,28 @@ export function Builder({ id, me }: { id: string; me: Me }) {
 
         <aside className="preview panel" aria-label="What the receptionist will say">
           <h2>Preview</h2>
-          {ws.preview ? (
-            <>
-              <p className="say">“{ws.preview.greeting}”</p>
-              {ws.preview.hours ? <p className="small"><b>Hours.</b> {ws.preview.hours}</p> : null}
-              {answers.serve.reservations && ws.preview.covers.length ? (
-                <p className="small">
-                  <b>Seats.</b> {ws.preview.covers.map((c) => `${c.label} ${c.covers}`).join(' · ')} · {ws.preview.bookable_tables} bookable tables
-                  {ws.preview.pairs.length ? ` · ${ws.preview.pairs.length} pairs push together` : ''}
-                </p>
-              ) : null}
-              <p className="small"><b>Menu.</b> {ws.preview.dishes} dishes{answers.menu.allergens_are_examples ? ', allergens still to check' : ''}.</p>
-              <p className="small muted">What it tells callers first:</p>
-              <ul className="facts">
-                {ws.preview.core_facts.map((f, n) => <li key={n}>{f}</li>)}
-              </ul>
-            </>
-          ) : null}
+          {ws.preview ? (def.preview ? def.preview(answers, ws) : <PreviewLines preview={ws.preview} />) : null}
         </aside>
       </main>
     </div>
+  );
+}
+
+/** A preset with no preview of its own: the greeting, then its lines as they come. */
+function PreviewLines({ preview }: { preview: NonNullable<WorkspacePayload['preview']> }) {
+  return (
+    <>
+      {preview.greeting ? <p className="say">“{preview.greeting}”</p> : null}
+      {preview.hours ? <p className="small"><b>Hours.</b> {preview.hours}</p> : null}
+      {(preview.lines ?? []).map((line, n) => <p className="small" key={n}>{line}</p>)}
+      {preview.core_facts?.length ? (
+        <>
+          <p className="small muted">What it tells callers first:</p>
+          <ul className="facts">
+            {preview.core_facts.map((f, n) => <li key={n}>{f}</li>)}
+          </ul>
+        </>
+      ) : null}
+    </>
   );
 }

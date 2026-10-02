@@ -1,10 +1,12 @@
-// What the prospect API (src/server/demo.ts) sends. The restaurant's answers
-// are the server's own type: one definition, checked on both sides.
+// What the prospect API (src/server/demo.ts) sends. Answers, issues and the
+// catalogue are the server's own types: one definition, checked on both sides.
 
+import type { BaseAnswers, Issue } from '../../../src/presets/common/types.ts';
 import type { AreaAnswer, FixtureAnswer, RestaurantAnswers, TableAnswer } from '../../../src/presets/restaurant/answers.ts';
+import type { PresetInfo } from '../../../src/presets/catalogue.ts';
 import type { TenantState } from '../types.ts';
 
-export type { AreaAnswer, FixtureAnswer, RestaurantAnswers, TableAnswer };
+export type { AreaAnswer, BaseAnswers, FixtureAnswer, Issue, PresetInfo, RestaurantAnswers, TableAnswer };
 
 export interface Limits {
   days: number;
@@ -40,33 +42,35 @@ export interface Me {
   workspaces?: WorkspaceSummary[];
 }
 
-export interface PresetInfo {
-  key: string;
-  label: string;
-  blurb: string;
-  status: 'live' | 'soon';
-  covers: string[];
+/**
+ * The builder's preview pane, as the preset makes it. Every preset may send
+ * these; the restaurant adds its own fields (RestaurantPreview), and the
+ * presets after it send `lines` instead.
+ */
+export type PreviewPayload = {
+  greeting?: string;
+  core_facts?: string[];
+  hours?: string | null;
+  lines?: string[];
+} & Record<string, unknown>;
+
+/** The restaurant's preview: today's fields, and no lines. */
+export interface RestaurantPreview {
+  greeting: string;
+  core_facts: string[];
+  hours: string | null;
+  covers: { area: string; label: string; covers: number }[];
+  bookable_tables: number;
+  pairs: string[];
+  dishes: number;
 }
 
-export interface Issue {
-  step: 'basics' | 'hours' | 'serve' | 'seating' | 'floor' | 'menu' | 'money' | 'policies';
-  level: 'error' | 'warning';
-  message: string;
-}
-
-export interface WorkspacePayload extends WorkspaceSummary {
-  answers: RestaurantAnswers;
+/** A workspace in the builder; each preset's steps narrow A to its own answers. */
+export interface WorkspacePayload<A extends BaseAnswers = BaseAnswers> extends WorkspaceSummary {
+  answers: A;
   settings: Record<string, unknown>;
   issues: Issue[];
-  preview: {
-    greeting: string;
-    core_facts: string[];
-    hours: string | null;
-    covers: { area: string; label: string; covers: number }[];
-    bookable_tables: number;
-    pairs: string[];
-    dishes: number;
-  } | null;
+  preview: PreviewPayload | null;
   profile: { voice: string; greeting: string; demo_pin?: string | null; phone_display?: string | null };
 }
 
@@ -134,7 +138,7 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   started_at: string | null;
   /** Shared keys: when this demo is deleted. */
   expires_at: string | null;
-  tenant: TenantState['tenant'] & { brand: Partial<RestaurantAnswers['theme']>; timezone: string };
+  tenant: TenantState['tenant'] & { brand: Partial<BaseAnswers['theme']>; timezone: string };
   plan: {
     areas: { key: string; label: string; kind: string; reservable: boolean; enquiry_only?: boolean; weather_note?: string }[];
     tables: PlanTable[];

@@ -1,8 +1,8 @@
 // The restaurant builder's steps, in order, with today's titles; the shared
 // Review and start step comes after them. Every validation issue points at
-// one of these keys, which is what the builder jumps to. The web still keeps
-// its own copy (web/src/reception/builder/Builder.tsx) until its builder
-// registry reads this one (PRESETS.md §3).
+// one of these keys, which is what the builder jumps to. The web's builder
+// (web/src/reception/builder/restaurant/builder.tsx) lists these very steps,
+// so this file is bundled for the browser and must import nothing.
 
 export const STEPS = [
   { key: 'basics', label: 'Basics' },

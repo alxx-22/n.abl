@@ -1,16 +1,16 @@
-// Step 5: the floor plan, one area at a time. Drag tables into place (they
-// line up with their neighbours as they go, or use the arrow keys), then
-// click one to rename it, change its seats, mark it step-free or kept for
-// walk-ins, and link the tables that push together. A bar, doors, windows
-// and walls can be added for looks.
+// The restaurant's floor plan, one area at a time. Drag tables into place
+// (they line up with their neighbours as they go, or use the arrow keys),
+// then click one to rename it, change its seats, mark it step-free or kept
+// for walk-ins, and link the tables that push together. A bar, doors,
+// windows and walls can be added for looks.
 
 import { useState } from 'react';
-import { FIXTURE_LABEL, FloorPlan, ZoomControls, unbookableTag } from '../FloorPlan.tsx';
-import { toast } from '../../components/Toaster.tsx';
-import { FIXTURE_LENGTH, autoLayout, fixtureRect, fixtureSize, freeSpot, tableRect } from '../../../../src/presets/restaurant/layout.ts';
-import type { FixtureAnswer, RestaurantAnswers } from '../types.ts';
-import type { StepProps } from './Builder.tsx';
-import { FEATURES, KINDS, addArea, addTable, nextAreaKey, nextTableKey, removeTable } from './steps.tsx';
+import { FIXTURE_LABEL, FloorPlan, ZoomControls, unbookableTag } from '../../FloorPlan.tsx';
+import { toast } from '../../../components/Toaster.tsx';
+import { FIXTURE_LENGTH, autoLayout, fixtureRect, fixtureSize, freeSpot, tableRect } from '../../../../../src/presets/restaurant/layout.ts';
+import type { FixtureAnswer, RestaurantAnswers } from '../../types.ts';
+import type { StepProps } from '../registry.ts';
+import { FEATURES, KINDS, addArea, addTable, nextAreaKey, nextTableKey, removeTable } from './seating.ts';
 
 const nextFixtureKey = (fixtures: FixtureAnswer[]) => `F${Math.max(0, ...fixtures.map((f) => Number(/^F(\d+)$/.exec(f.key)?.[1] ?? 0))) + 1}`;
 
@@ -22,7 +22,7 @@ function addFixture(d: RestaurantAnswers, area: string, kind: FixtureAnswer['kin
   d.seating.fixtures.push(f);
 }
 
-export function StepFloor({ a, set }: StepProps) {
+export function StepFloor({ a, set }: StepProps<RestaurantAnswers>) {
   const [tab, setTab] = useState(a.seating.areas[0]?.key ?? '');
   const area = a.seating.areas.find((x) => x.key === tab) ?? a.seating.areas[0];
   const [sel, setSel] = useState<string | null>(null);
