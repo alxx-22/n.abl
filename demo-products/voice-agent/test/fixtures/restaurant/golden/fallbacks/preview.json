@@ -1,0 +1,32 @@
+{
+ "greeting": "Hello, you're through to the restaurant. I'm the AI assistant on this demo line. How can I help?",
+ "core_facts": [
+  "Your restaurant, in Nottingham.",
+  "Sunday: 12 noon till 10pm. Closed Monday to Saturday.",
+  "Seating: area 1 (3 tables) and garden (1 tables). The garden is bookable; if the weather turns, we move you inside. Walk-ins are welcome when a table is free.",
+  "Takeaway: click and collect by phone and delivery to NG1, NG7, W1A, evenings; food takes about 5 minutes. Takeaway can be paid by card over the phone or when you collect.",
+  "3 highchairs.",
+  "No car park of our own; the nearest multi-storey is about five minutes’ walk."
+ ],
+ "hours": "Sunday: 12 noon till 10pm. Closed Monday to Saturday.",
+ "covers": [
+  {
+   "area": "inside_room",
+   "label": "Area 1",
+   "covers": 11
+  },
+  {
+   "area": "area_3",
+   "label": "Garden",
+   "covers": 20
+  },
+  {
+   "area": "area_4",
+   "label": "Area 4",
+   "covers": 0
+  }
+ ],
+ "bookable_tables": 4,
+ "pairs": ["Table 1 and 2"],
+ "dishes": 3
+}

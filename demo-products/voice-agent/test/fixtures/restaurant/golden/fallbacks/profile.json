@@ -1,0 +1,328 @@
+{
+ "slug": "golden",
+ "name": "Your restaurant",
+ "business_type": "restaurant",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Kore",
+ "greeting": "Hello, you're through to the restaurant. I'm the AI assistant on this demo line. How can I help?",
+ "summary": "Your restaurant is a restaurant in Nottingham.",
+ "address": "Nottingham",
+ "phone_display": "0115 496 0123",
+ "website": "https://padded.example",
+ "brand": {
+  "accent": "#e9ac57",
+  "primary": "#2a2217",
+  "background": "#0e0c0a",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Your restaurant, in Nottingham.",
+  "Sunday: 12 noon till 10pm. Closed Monday to Saturday.",
+  "Seating: area 1 (3 tables) and garden (1 tables). The garden is bookable; if the weather turns, we move you inside. Walk-ins are welcome when a table is free.",
+  "Takeaway: click and collect by phone and delivery to NG1, NG7, W1A, evenings; food takes about 5 minutes. Takeaway can be paid by card over the phone or when you collect.",
+  "3 highchairs.",
+  "No car park of our own; the nearest multi-storey is about five minutes’ walk."
+ ],
+ "opening_hours": [
+  {
+   "days": [0],
+   "open": "12:00",
+   "close": "22:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [
+  {
+   "date": "2026-13-45",
+   "note": "Matches the pattern only"
+  },
+  {
+   "date": "2026-11-05"
+  }
+ ],
+ "knowledge": [
+  {
+   "q": "Can I bring my dog?",
+   "a": "Dogs are welcome on the garden, but not inside, apart from assistance dogs.",
+   "tags": ["dog","dogs","pet"]
+  },
+  {
+   "q": "Is there parking?",
+   "a": "No car park of our own; the nearest multi-storey is about five minutes’ walk.",
+   "tags": ["parking","car","park"]
+  },
+  {
+   "q": "Are children welcome?",
+   "a": "We have 3 highchairs.",
+   "tags": ["children","kids","child","highchair","baby"]
+  },
+  {
+   "q": "What is your cancellation policy?",
+   "a": "Please give 48 hours' notice to cancel or change. Deposits are refunded with 48 hours' notice.",
+   "tags": ["cancel","cancellation","refund","deposit"]
+  },
+  {
+   "q": "Do you take walk-ins?",
+   "a": "Yes, if there’s a table free, though booking is safest at busy times.",
+   "tags": ["walk","walk-in","without booking","turn up"]
+  },
+  {
+   "q": "Are you on the delivery apps?",
+   "a": "Yes, you can order from us on Deliveroo and A name far longer th.",
+   "tags": ["deliveroo","uber","just eat","app","delivery"]
+  },
+  {
+   "q": "Spaced?",
+   "a": "Yes.",
+   "tags": []
+  }
+ ],
+ "booking": {
+  "services": [
+   {
+    "key": "table",
+    "label": "table",
+    "kind": "table",
+    "slot_minutes": 15,
+    "duration_rules": [
+     {
+      "max_party": 2,
+      "minutes": 30
+     },
+     {
+      "max_party": 4,
+      "minutes": 90
+     },
+     {
+      "max_party": 8,
+      "minutes": 360
+     },
+     {
+      "max_party": 100,
+      "minutes": 150
+     }
+    ],
+    "windows": [
+     {
+      "days": [0],
+      "first": "12:00",
+      "last": "21:00"
+     }
+    ],
+    "max_party": 1,
+    "large_party_note": "For more than 1 people, take their name, number, preferred date and time, and say the manager will call back.",
+    "lead_minutes": 0,
+    "horizon_days": 1,
+    "buffer_minutes": 60,
+    "deposit": {
+     "min_party": 1,
+     "per_person_pence": 0
+    }
+   }
+  ],
+  "resources": [
+   {
+    "key": "T1",
+    "label": "Table 1",
+    "services": ["table"],
+    "capacity": 1,
+    "min": 1,
+    "area": "inside_room",
+    "features": ["window"],
+    "layout": {
+     "x": 0,
+     "y": 4000,
+     "shape": "round",
+     "seats": 1,
+     "rotation": 359
+    }
+   },
+   {
+    "key": "T2",
+    "label": "Table 2",
+    "services": ["table"],
+    "capacity": 6,
+    "min": 3,
+    "area": "inside_room",
+    "layout": {
+     "x": 0,
+     "y": 0,
+     "shape": "rect",
+     "seats": 6
+    }
+   },
+   {
+    "key": "T4",
+    "label": "Table 4",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "inside_room",
+    "layout": {
+     "x": 0,
+     "y": 0,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T5",
+    "label": "Garden table",
+    "services": ["table"],
+    "capacity": 20,
+    "min": 3,
+    "area": "area_3",
+    "layout": {
+     "x": 0,
+     "y": 0,
+     "shape": "square",
+     "seats": 20
+    }
+   },
+   {
+    "key": "T1+T2",
+    "label": "Table 1 and 2",
+    "services": ["table"],
+    "capacity": 7,
+    "min": 7,
+    "combines": ["T1","T2"],
+    "area": "inside_room",
+    "features": ["window"]
+   }
+  ],
+  "areas": [
+   {
+    "key": "inside_room",
+    "label": "Area 1",
+    "kind": "indoor",
+    "reservable": true
+   },
+   {
+    "key": "area_3",
+    "label": "Garden",
+    "kind": "outdoor",
+    "reservable": true,
+    "weather_note": "The garden is bookable; if the weather turns, we move you inside."
+   },
+   {
+    "key": "area_4",
+    "label": "Area 4",
+    "kind": "bar",
+    "reservable": true
+   }
+  ],
+  "highchairs": 3,
+  "fixtures": [
+   {
+    "key": "F1",
+    "area": "inside_room",
+    "kind": "wall",
+    "x": 40,
+    "y": 40,
+    "length": 40,
+    "rotation": 90
+   },
+   {
+    "key": "F4",
+    "area": "area_3",
+    "kind": "window",
+    "x": 40,
+    "y": 40,
+    "length": 600,
+    "rotation": 0
+   }
+  ]
+ },
+ "menu": {
+  "categories": [
+   {
+    "key": "cat_1",
+    "label": "",
+    "items": [
+     {
+      "key": "item_1_1",
+      "name": "Dish 1",
+      "price_pence": 0,
+      "allergens": ["gluten"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["big_extras"]
+     },
+     {
+      "key": "dup",
+      "name": "Dup",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "dup_2",
+      "name": "Dup again",
+      "price_pence": 0,
+      "allergens": []
+     }
+    ]
+   },
+   {
+    "key": "cat_2",
+    "label": "Section 2",
+    "items": []
+   }
+  ],
+  "modifier_groups": {
+   "big_extras": {
+    "label": "Options",
+    "min": 0,
+    "max": 1,
+    "options": [
+     {
+      "key": "cheese",
+      "name": "Cheese",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "opt_2",
+      "name": "Option 2",
+      "price_pence": 0,
+      "allergens": []
+     }
+    ]
+   },
+   "options": {
+    "label": "Empty key",
+    "min": 0,
+    "max": 1,
+    "options": []
+   }
+  },
+  "allergen_statement": "Our kitchen handles all 14 major allergens, including nuts, so we can't guarantee any dish is completely free from traces. For a severe allergy, we'll note it on the order and the kitchen will take extra care."
+ },
+ "ordering": {
+  "collection": true,
+  "delivery": {
+   "districts": ["NG1","NG7","W1A"],
+   "fee_pence": 2000,
+   "min_order_pence": 13,
+   "extra_minutes": 20
+  },
+  "prep_minutes": 5,
+  "slot_minutes": 15,
+  "payment": "either",
+  "hours": [
+   {
+    "days": [0],
+    "open": "12:00",
+    "close": "22:00",
+    "label": "takeaway"
+   }
+  ]
+ },
+ "policies": {
+  "deposit": "Tables of 1 or more pay a £0.00 a head deposit when booking, taken off the bill on the night.",
+  "cancellation": "Please give 48 hours' notice to cancel or change. Deposits are refunded with 48 hours' notice.",
+  "takeaway": "Takeaway: click and collect by phone and delivery to NG1, NG7, W1A, evenings; food takes about 5 minutes. Takeaway can be paid by card over the phone or when you collect.",
+  "dogs": "Dogs are welcome on the garden, but not inside, apart from assistance dogs."
+ }
+}

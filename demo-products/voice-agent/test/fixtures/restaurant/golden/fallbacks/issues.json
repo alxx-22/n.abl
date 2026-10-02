@@ -1,0 +1,32 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the restaurant a name."
+ },
+ {
+  "step": "seating",
+  "level": "error",
+  "message": "Allow bookings for at least two people."
+ },
+ {
+  "step": "floor",
+  "level": "warning",
+  "message": "Table 2 and Table 4 overlap on the floor plan."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "Some dishes have no price yet."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ },
+ {
+  "step": "money",
+  "level": "error",
+  "message": "Set the deposit amount."
+ }
+]

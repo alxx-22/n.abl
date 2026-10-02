@@ -1,0 +1,778 @@
+{
+ "slug": "golden",
+ "name": "The Copper Pot",
+ "business_type": "restaurant",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Puck",
+ "greeting": "Good evening, you've reached The Copper Pot. I'm the AI assistant on this demo line; how can I help?",
+ "summary": "The Copper Pot is a restaurant in Leeds: Modern British small plates and Sunday roasts.",
+ "address": "14 Call Lane, Leeds LS1 6DT",
+ "phone_display": "0113 496 0456",
+ "website": "https://www.copperpot.example",
+ "brand": {
+  "accent": "#2f6f4e",
+  "primary": "#1b1b1b",
+  "background": "#faf7f2",
+  "font_heading": "Playfair Display",
+  "font_body": "Source Sans 3",
+  "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+ },
+ "core_facts": [
+  "The Copper Pot: Modern British small plates and Sunday roasts, at 14 Call Lane, Leeds LS1 6DT.",
+  "Sunday: 12 noon till 5pm. Tuesday to Thursday: lunch 12 noon till 3pm, dinner 6pm till 10:30pm. Friday and Saturday: brunch 9:30am till 11:30am, lunch 12 noon till 3pm, dinner 5pm till 11pm. Closed Mondays.",
+  "Seating: main room (7 tables) and courtyard (4 tables) and bar (2 tables, walk-in only) and the snug (1 tables, private hire by enquiry) and mezzanine (3 tables). The courtyard is bookable, but in bad weather we cannot promise a table inside. We keep some tables back for walk-ins.",
+  "Takeaway: click and collect by phone and delivery to LS1, LS2, LS6, LS11; food takes about 25 minutes. Takeaway is paid by card over the phone.",
+  "Level access, with a ramp at the side door and an accessible toilet. Children are welcome until 8pm. 5 highchairs.",
+  "Pay and display on Swinegate, two minutes away."
+ ],
+ "opening_hours": [
+  {
+   "days": [0],
+   "open": "12:00",
+   "close": "17:00",
+   "label": "Roast"
+  },
+  {
+   "days": [2,3,4,5,6],
+   "open": "12:00",
+   "close": "15:00",
+   "label": "Lunch"
+  },
+  {
+   "days": [2,3,4],
+   "open": "18:00",
+   "close": "22:30",
+   "label": "Dinner"
+  },
+  {
+   "days": [5,6],
+   "open": "09:30",
+   "close": "11:30",
+   "label": "Brunch"
+  },
+  {
+   "days": [5,6],
+   "open": "17:00",
+   "close": "23:00",
+   "label": "Dinner"
+  }
+ ],
+ "closures": [
+  {
+   "date": "2026-10-13",
+   "note": "Private event"
+  },
+  {
+   "date": "2026-12-25",
+   "note": "Christmas Day"
+  }
+ ],
+ "knowledge": [
+  {
+   "q": "Can I bring my dog?",
+   "a": "Dogs are welcome inside and out; we have water bowls.",
+   "tags": ["dog","dogs","pet"]
+  },
+  {
+   "q": "Is there parking?",
+   "a": "Pay and display on Swinegate, two minutes away.",
+   "tags": ["parking","car","park"]
+  },
+  {
+   "q": "Is it accessible for wheelchairs?",
+   "a": "Level access, with a ramp at the side door and an accessible toilet.",
+   "tags": ["wheelchair","accessible","disabled","step free","accessibility","toilet"]
+  },
+  {
+   "q": "Is there a dress code?",
+   "a": "Smart casual.",
+   "tags": ["dress","code","smart","wear"]
+  },
+  {
+   "q": "Can I bring my own wine?",
+   "a": "Corkage is £15 a bottle, wine only.",
+   "tags": ["byo","corkage","wine","bring"]
+  },
+  {
+   "q": "Can I bring a birthday cake?",
+   "a": "Bring a cake and we will serve it with candles for £2 a head.",
+   "tags": ["cake","birthday","cakeage"]
+  },
+  {
+   "q": "Do you sell gift vouchers?",
+   "a": "Vouchers are sold online and at the bar.",
+   "tags": ["voucher","gift","present"]
+  },
+  {
+   "q": "Do you have vegan or gluten-free options?",
+   "a": "Most dishes can be made gluten-free; tell us when you book.",
+   "tags": ["vegan","vegetarian","gluten","coeliac","dairy","dietary"]
+  },
+  {
+   "q": "Are children welcome?",
+   "a": "Children are welcome until 8pm. We have 5 highchairs.",
+   "tags": ["children","kids","child","highchair","baby"]
+  },
+  {
+   "q": "Is there a service charge?",
+   "a": "A 10% service charge is added to every bill.",
+   "tags": ["service","charge","tip","gratuity"]
+  },
+  {
+   "q": "What is your cancellation policy?",
+   "a": "Cancel up to 24 hours before for a full refund of your deposit.",
+   "tags": ["cancel","cancellation","refund","deposit"]
+  },
+  {
+   "q": "Do you take walk-ins?",
+   "a": "Yes, we keep some tables for walk-ins, though booking is safest at busy times.",
+   "tags": ["walk","walk-in","without booking","turn up"]
+  },
+  {
+   "q": "Are you on the delivery apps?",
+   "a": "Yes, you can order from us on Deliveroo and Just Eat.",
+   "tags": ["deliveroo","uber","just eat","app","delivery"]
+  },
+  {
+   "q": "Do you have a private room?",
+   "a": "Yes, The Snug seats ten; ask us about it.",
+   "tags": []
+  },
+  {
+   "q": "Is there live music?",
+   "a": "A jazz trio plays on Thursday evenings.",
+   "tags": []
+  },
+  {
+   "q": "Can I book the courtyard?",
+   "a": "Yes, though we cannot promise a table inside if it rains.",
+   "tags": []
+  }
+ ],
+ "booking": {
+  "services": [
+   {
+    "key": "table",
+    "label": "table",
+    "kind": "table",
+    "slot_minutes": 15,
+    "duration_rules": [
+     {
+      "max_party": 2,
+      "minutes": 90
+     },
+     {
+      "max_party": 4,
+      "minutes": 105
+     },
+     {
+      "max_party": 8,
+      "minutes": 135
+     },
+     {
+      "max_party": 100,
+      "minutes": 180
+     }
+    ],
+    "windows": [
+     {
+      "days": [0],
+      "first": "12:00",
+      "last": "16:15"
+     },
+     {
+      "days": [2,3,4,5,6],
+      "first": "12:00",
+      "last": "14:15"
+     },
+     {
+      "days": [2,3,4],
+      "first": "18:00",
+      "last": "21:45"
+     },
+     {
+      "days": [5,6],
+      "first": "09:30",
+      "last": "10:45"
+     },
+     {
+      "days": [5,6],
+      "first": "17:00",
+      "last": "22:15"
+     }
+    ],
+    "max_party": 14,
+    "large_party_note": "For more than 14 people, take their name, number, preferred date and time, and say the manager will call back.",
+    "lead_minutes": 60,
+    "horizon_days": 90,
+    "buffer_minutes": 15,
+    "deposit": {
+     "min_party": 8,
+     "flat_pence": 2500
+    }
+   }
+  ],
+  "resources": [
+   {
+    "key": "M1",
+    "label": "Table M1",
+    "services": ["table"],
+    "capacity": 2,
+    "min": 1,
+    "area": "main",
+    "features": ["window"],
+    "layout": {
+     "x": 40,
+     "y": 40,
+     "shape": "round",
+     "seats": 2
+    }
+   },
+   {
+    "key": "M2",
+    "label": "Table M2",
+    "services": ["table"],
+    "capacity": 2,
+    "min": 1,
+    "area": "main",
+    "features": ["window"],
+    "layout": {
+     "x": 130,
+     "y": 40,
+     "shape": "round",
+     "seats": 2
+    }
+   },
+   {
+    "key": "M3",
+    "label": "Table M3",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "main",
+    "accessible": true,
+    "layout": {
+     "x": 230,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "M4",
+    "label": "Table M4",
+    "services": [],
+    "capacity": 4,
+    "min": 1,
+    "area": "main",
+    "layout": {
+     "x": 340,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "M5",
+    "label": "Table M5",
+    "services": ["table"],
+    "capacity": 6,
+    "min": 3,
+    "area": "main",
+    "features": ["booth"],
+    "layout": {
+     "x": 40,
+     "y": 160,
+     "shape": "rect",
+     "seats": 6,
+     "rotation": 90
+    }
+   },
+   {
+    "key": "M6",
+    "label": "Table M6",
+    "services": ["table"],
+    "capacity": 6,
+    "min": 3,
+    "area": "main",
+    "features": ["quiet"],
+    "layout": {
+     "x": 200,
+     "y": 160,
+     "shape": "rect",
+     "seats": 6
+    }
+   },
+   {
+    "key": "M7",
+    "label": "Table M7",
+    "services": ["table"],
+    "capacity": 8,
+    "min": 3,
+    "area": "main",
+    "features": ["view","high_table"],
+    "layout": {
+     "x": 400,
+     "y": 160,
+     "shape": "rect",
+     "seats": 8
+    }
+   },
+   {
+    "key": "C1",
+    "label": "Table C1",
+    "services": ["table"],
+    "capacity": 2,
+    "min": 1,
+    "area": "courtyard",
+    "features": ["heated","covered"],
+    "layout": {
+     "x": 40,
+     "y": 40,
+     "shape": "round",
+     "seats": 2
+    }
+   },
+   {
+    "key": "C2",
+    "label": "Table C2",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "courtyard",
+    "features": ["dog_friendly"],
+    "layout": {
+     "x": 140,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "C3",
+    "label": "Table C3",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "courtyard",
+    "layout": {
+     "x": 250,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "C4",
+    "label": "Table C4",
+    "services": ["table"],
+    "capacity": 6,
+    "min": 3,
+    "area": "courtyard",
+    "layout": {
+     "x": 40,
+     "y": 150,
+     "shape": "rect",
+     "seats": 6,
+     "rotation": 180
+    }
+   },
+   {
+    "key": "B1",
+    "label": "Table B1",
+    "services": [],
+    "capacity": 2,
+    "min": 1,
+    "area": "bar",
+    "features": ["high_table"],
+    "layout": {
+     "x": 40,
+     "y": 40,
+     "shape": "round",
+     "seats": 2
+    }
+   },
+   {
+    "key": "B2",
+    "label": "Table B2",
+    "services": [],
+    "capacity": 2,
+    "min": 1,
+    "area": "bar",
+    "layout": {
+     "x": 120,
+     "y": 40,
+     "shape": "round",
+     "seats": 2
+    }
+   },
+   {
+    "key": "S1",
+    "label": "Table S1",
+    "services": [],
+    "capacity": 10,
+    "min": 3,
+    "area": "snug",
+    "features": ["sofa"],
+    "layout": {
+     "x": 40,
+     "y": 40,
+     "shape": "rect",
+     "seats": 10
+    }
+   },
+   {
+    "key": "Z1",
+    "label": "Table Z1",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "mezzanine",
+    "accessible": true,
+    "layout": {
+     "x": 40,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "Z2",
+    "label": "Table Z2",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "mezzanine",
+    "layout": {
+     "x": 150,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "Z3",
+    "label": "Table Z3",
+    "services": ["table"],
+    "capacity": 12,
+    "min": 3,
+    "area": "mezzanine",
+    "layout": {
+     "x": 40,
+     "y": 160,
+     "shape": "rect",
+     "seats": 12
+    }
+   },
+   {
+    "key": "M1+M2",
+    "label": "Table M1 and M2",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 3,
+    "combines": ["M1","M2"],
+    "area": "main",
+    "features": ["window"]
+   },
+   {
+    "key": "M5+M6",
+    "label": "Table M5 and M6",
+    "services": ["table"],
+    "capacity": 12,
+    "min": 7,
+    "combines": ["M5","M6"],
+    "area": "main",
+    "features": ["booth","quiet"]
+   },
+   {
+    "key": "C2+C3",
+    "label": "Table C2 and C3",
+    "services": ["table"],
+    "capacity": 8,
+    "min": 5,
+    "combines": ["C2","C3"],
+    "area": "courtyard",
+    "features": ["dog_friendly"]
+   },
+   {
+    "key": "Z1+Z2",
+    "label": "Table Z1 and Z2",
+    "services": ["table"],
+    "capacity": 8,
+    "min": 5,
+    "combines": ["Z1","Z2"],
+    "area": "mezzanine",
+    "accessible": true,
+    "features": []
+   }
+  ],
+  "areas": [
+   {
+    "key": "main",
+    "label": "Main room",
+    "kind": "indoor",
+    "reservable": true
+   },
+   {
+    "key": "courtyard",
+    "label": "Courtyard",
+    "kind": "outdoor",
+    "reservable": true,
+    "weather_note": "The courtyard is bookable, but in bad weather we cannot promise a table inside."
+   },
+   {
+    "key": "bar",
+    "label": "Bar",
+    "kind": "bar",
+    "reservable": false
+   },
+   {
+    "key": "snug",
+    "label": "The Snug",
+    "kind": "private",
+    "reservable": false,
+    "enquiry_only": true
+   },
+   {
+    "key": "mezzanine",
+    "label": "Mezzanine",
+    "kind": "other",
+    "reservable": true
+   }
+  ],
+  "highchairs": 5,
+  "fixtures": [
+   {
+    "key": "F1",
+    "area": "main",
+    "kind": "window",
+    "x": 30,
+    "y": 10,
+    "length": 200,
+    "rotation": 0
+   },
+   {
+    "key": "F2",
+    "area": "main",
+    "kind": "bar",
+    "x": 300,
+    "y": 300,
+    "length": 300,
+    "rotation": 0
+   },
+   {
+    "key": "F3",
+    "area": "main",
+    "kind": "door",
+    "x": 40,
+    "y": 330,
+    "length": 80,
+    "rotation": 90
+   },
+   {
+    "key": "F4",
+    "area": "courtyard",
+    "kind": "wall",
+    "x": 10,
+    "y": 10,
+    "length": 400,
+    "rotation": 180
+   },
+   {
+    "key": "F5",
+    "area": "courtyard",
+    "kind": "door",
+    "x": 420,
+    "y": 60,
+    "length": 90,
+    "rotation": 270
+   },
+   {
+    "key": "F6",
+    "area": "bar",
+    "kind": "bar",
+    "x": 40,
+    "y": 120,
+    "length": 260,
+    "rotation": 0
+   }
+  ]
+ },
+ "menu": {
+  "categories": [
+   {
+    "key": "small_plates",
+    "label": "Small plates",
+    "items": [
+     {
+      "key": "whipped_feta",
+      "name": "Whipped feta, honey and thyme",
+      "price_pence": 650,
+      "description": "With warm flatbread",
+      "allergens": ["milk","gluten"],
+      "dietary": ["vegetarian"],
+      "aliases": ["feta"]
+     },
+     {
+      "key": "crispy_squid",
+      "name": "Crispy squid",
+      "price_pence": 850,
+      "allergens": ["molluscs","gluten","eggs"],
+      "may_contain": ["crustaceans"],
+      "modifier_groups": ["dips"]
+     },
+     {
+      "key": "sourdough",
+      "name": "Sourdough and cultured butter",
+      "price_pence": 450,
+      "allergens": ["gluten","milk"],
+      "available": false
+     }
+    ]
+   },
+   {
+    "key": "mains",
+    "label": "Mains",
+    "items": [
+     {
+      "key": "roast_beef",
+      "name": "Roast sirloin of beef",
+      "price_pence": 2200,
+      "description": "Yorkshire pudding, roast potatoes, gravy",
+      "allergens": ["gluten","eggs","milk","celery","sulphites"],
+      "modifier_groups": ["sides"]
+     },
+     {
+      "key": "nut_roast",
+      "name": "Chestnut and mushroom roast",
+      "price_pence": 1600,
+      "allergens": ["nuts","celery"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["sides"]
+     },
+     {
+      "key": "fish_pie",
+      "name": "Smoked haddock fish pie",
+      "price_pence": 1750,
+      "allergens": [],
+      "allergens_unknown": true
+     }
+    ]
+   },
+   {
+    "key": "puddings",
+    "label": "Puddings",
+    "items": [
+     {
+      "key": "sticky_toffee",
+      "name": "Sticky toffee pudding",
+      "price_pence": 750,
+      "allergens": ["gluten","eggs","milk"],
+      "aliases": ["STP","toffee pudding"]
+     },
+     {
+      "key": "sorbet",
+      "name": "Blood orange sorbet",
+      "price_pence": 600,
+      "allergens": [],
+      "dietary": ["vegan","gluten-free"]
+     }
+    ]
+   }
+  ],
+  "modifier_groups": {
+   "dips": {
+    "label": "Dips",
+    "min": 0,
+    "max": 2,
+    "options": [
+     {
+      "key": "aioli",
+      "name": "Aioli",
+      "price_pence": 100,
+      "allergens": ["eggs","mustard"]
+     },
+     {
+      "key": "chilli_jam",
+      "name": "Chilli jam",
+      "price_pence": 100,
+      "allergens": []
+     }
+    ]
+   },
+   "sides": {
+    "label": "Extra sides",
+    "min": 0,
+    "max": 3,
+    "options": [
+     {
+      "key": "cauliflower_cheese",
+      "name": "Cauliflower cheese",
+      "price_pence": 400,
+      "allergens": ["milk","mustard"]
+     },
+     {
+      "key": "yorkshire",
+      "name": "Extra Yorkshire pudding",
+      "price_pence": 200,
+      "allergens": ["gluten","eggs","milk"]
+     }
+    ]
+   }
+  },
+  "allergen_statement": "We handle all 14 major allergens in one small kitchen. Tell us about any allergy when you book or order."
+ },
+ "ordering": {
+  "collection": true,
+  "delivery": {
+   "districts": ["LS1","LS2","LS6","LS11"],
+   "fee_pence": 300,
+   "min_order_pence": 2000,
+   "extra_minutes": 25
+  },
+  "prep_minutes": 25,
+  "slot_minutes": 10,
+  "slot_capacity": 6,
+  "payment": "phone",
+  "hours": [
+   {
+    "days": [0],
+    "open": "12:00",
+    "close": "17:00",
+    "label": "takeaway"
+   },
+   {
+    "days": [2,3,4,5,6],
+    "open": "12:00",
+    "close": "15:00",
+    "label": "takeaway"
+   },
+   {
+    "days": [2,3,4],
+    "open": "18:00",
+    "close": "22:30",
+    "label": "takeaway"
+   },
+   {
+    "days": [5,6],
+    "open": "09:30",
+    "close": "11:30",
+    "label": "takeaway"
+   },
+   {
+    "days": [5,6],
+    "open": "17:00",
+    "close": "23:00",
+    "label": "takeaway"
+   }
+  ]
+ },
+ "policies": {
+  "deposit": "Bookings for 8 or more pay a £25.00 deposit when booking, taken off the bill on the night.",
+  "cancellation": "Cancel up to 24 hours before for a full refund of your deposit.",
+  "service_charge": "A 10% service charge is added to every bill.",
+  "takeaway": "Takeaway: click and collect by phone and delivery to LS1, LS2, LS6, LS11; food takes about 25 minutes. Takeaway is paid by card over the phone.",
+  "dogs": "Dogs are welcome inside and out; we have water bowls."
+ }
+}

@@ -1,0 +1,132 @@
+{
+ "categories": [
+  {
+   "key": "antipasti",
+   "label": "Antipasti",
+   "items": [
+    {
+     "key": "garlic_bread",
+     "name": "Garlic Bread",
+     "price_pence": 550,
+     "description": "Wood-fired, with rosemary",
+     "allergens": ["gluten","milk"],
+     "dietary": ["vegetarian"]
+    },
+    {
+     "key": "burrata",
+     "name": "Burrata",
+     "price_pence": 895,
+     "description": "Heritage tomatoes, basil oil",
+     "allergens": ["milk"],
+     "dietary": ["vegetarian","gluten-free option"],
+     "available": false
+    },
+    {
+     "key": "garlic_bread_2",
+     "name": "Garlic Bread",
+     "price_pence": 650,
+     "allergens": ["gluten","milk","mustard"],
+     "modifier_groups": ["dips_sauces"]
+    }
+   ]
+  },
+  {
+   "key": "pizza",
+   "label": "Pizza",
+   "items": [
+    {
+     "key": "margherita",
+     "name": "Margherita",
+     "price_pence": 1050,
+     "allergens": ["gluten","milk"],
+     "dietary": ["vegetarian"],
+     "modifier_groups": ["pizza_extras","size"]
+    },
+    {
+     "key": "diavola",
+     "name": "Diavola",
+     "price_pence": 1295,
+     "description": "Spicy salami, chilli honey",
+     "allergens": ["gluten","milk","celery"],
+     "dietary": ["spicy"],
+     "modifier_groups": ["pizza_extras"]
+    },
+    {
+     "key": "funghi",
+     "name": "Funghi",
+     "price_pence": 1150,
+     "allergens": ["gluten","milk"]
+    }
+   ]
+  },
+  {
+   "key": "dolci",
+   "label": "Dolci",
+   "items": [
+    {
+     "key": "tiramisu",
+     "name": "Tiramisu",
+     "price_pence": 650,
+     "allergens": ["eggs","milk","gluten"],
+     "available": false
+    }
+   ]
+  }
+ ],
+ "modifier_groups": {
+  "pizza_extras": {
+   "label": "Pizza extras",
+   "min": 0,
+   "max": 4,
+   "options": [
+    {
+     "key": "extra_mozzarella",
+     "name": "Extra mozzarella",
+     "price_pence": 150,
+     "allergens": ["milk"]
+    },
+    {
+     "key": "nduja",
+     "name": "Nduja",
+     "price_pence": 200,
+     "allergens": []
+    }
+   ]
+  },
+  "size": {
+   "label": "Size",
+   "min": 1,
+   "max": 1,
+   "options": [
+    {
+     "key": "regular",
+     "name": "Regular",
+     "price_pence": 0,
+     "allergens": []
+    },
+    {
+     "key": "large",
+     "name": "Large",
+     "price_pence": 300,
+     "allergens": []
+    }
+   ]
+  },
+  "dips_sauces": {
+   "label": "Dips",
+   "min": 0,
+   "max": 2,
+   "options": [
+    {
+     "key": "garlic_mayo",
+     "name": "Garlic mayo",
+     "price_pence": 100,
+     "allergens": ["eggs"]
+    }
+   ]
+  }
+ },
+ "allergen_statement": "All our dishes are made in a kitchen that handles the 14 major allergens. Please tell us about any allergy before you order.",
+ "source": "draft",
+ "allergens_are_examples": true
+}

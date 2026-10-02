@@ -1,0 +1,515 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "Bella Vista",
+  "style": "Wood-fired pizza and fresh pasta",
+  "town": "Nottingham",
+  "address": "212 Mansfield Road, NG5 2BU",
+  "phone_display": "0115 496 0999",
+  "website": "https://www.bellavista.example/",
+  "voice": "Kore",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "12:00",
+      "close": "20:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:00",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:00",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:00",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:00",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "12:00",
+      "close": "22:30"
+     }
+    ]
+   }
+  ],
+  "last_booking_before_close": 60,
+  "closures": []
+ },
+ "serve": {
+  "reservations": true,
+  "walk_ins": true,
+  "collection": {
+   "enabled": true,
+   "prep_minutes": 20,
+   "slot_minutes": 15,
+   "per_slot": 4,
+   "evenings_only": true
+  },
+  "delivery": {
+   "enabled": false,
+   "districts": [],
+   "fee_pence": 250,
+   "min_order_pence": 1500,
+   "extra_minutes": 20
+  },
+  "delivery_apps": ["Deliveroo"]
+ },
+ "seating": {
+  "areas": [
+   {
+    "key": "indoor",
+    "label": "Inside",
+    "kind": "indoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   },
+   {
+    "key": "terrace",
+    "label": "Beer garden",
+    "kind": "outdoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": "move_inside"
+   }
+  ],
+  "tables": [
+   {
+    "key": "T1",
+    "label": "Table 1",
+    "area": "indoor",
+    "seats": 2,
+    "shape": "round",
+    "x": 40,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["window"],
+    "joins": ["T2"]
+   },
+   {
+    "key": "T2",
+    "label": "Table 2",
+    "area": "indoor",
+    "seats": 2,
+    "shape": "round",
+    "x": 130,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["window"],
+    "joins": ["T1"]
+   },
+   {
+    "key": "T3",
+    "label": "Table 3",
+    "area": "indoor",
+    "seats": 2,
+    "shape": "round",
+    "x": 220,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T4"]
+   },
+   {
+    "key": "T4",
+    "label": "Table 4",
+    "area": "indoor",
+    "seats": 2,
+    "shape": "round",
+    "x": 310,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T3"]
+   },
+   {
+    "key": "T5",
+    "label": "Table 5",
+    "area": "indoor",
+    "seats": 4,
+    "shape": "square",
+    "x": 400,
+    "y": 40,
+    "rotation": 0,
+    "accessible": true,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T6",
+    "label": "Table 6",
+    "area": "indoor",
+    "seats": 4,
+    "shape": "square",
+    "x": 510,
+    "y": 40,
+    "rotation": 0,
+    "accessible": true,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T7",
+    "label": "Table 7",
+    "area": "indoor",
+    "seats": 4,
+    "shape": "square",
+    "x": 620,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T8"]
+   },
+   {
+    "key": "T8",
+    "label": "Table 8",
+    "area": "indoor",
+    "seats": 4,
+    "shape": "square",
+    "x": 730,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T7"]
+   },
+   {
+    "key": "T9",
+    "label": "Table 9",
+    "area": "indoor",
+    "seats": 4,
+    "shape": "square",
+    "x": 840,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T10",
+    "label": "Table 10",
+    "area": "indoor",
+    "seats": 6,
+    "shape": "rect",
+    "x": 40,
+    "y": 150,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["booth"],
+    "joins": []
+   },
+   {
+    "key": "T11",
+    "label": "Table 11",
+    "area": "indoor",
+    "seats": 6,
+    "shape": "rect",
+    "x": 236,
+    "y": 150,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["quiet"],
+    "joins": []
+   },
+   {
+    "key": "T12",
+    "label": "Table 12",
+    "area": "terrace",
+    "seats": 4,
+    "shape": "square",
+    "x": 40,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["heated"],
+    "joins": []
+   },
+   {
+    "key": "T13",
+    "label": "Table 13",
+    "area": "terrace",
+    "seats": 4,
+    "shape": "square",
+    "x": 150,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["heated"],
+    "joins": ["T14"]
+   },
+   {
+    "key": "T14",
+    "label": "Table 14",
+    "area": "terrace",
+    "seats": 4,
+    "shape": "square",
+    "x": 260,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["heated"],
+    "joins": ["T13"]
+   },
+   {
+    "key": "T15",
+    "label": "Table 15",
+    "area": "terrace",
+    "seats": 4,
+    "shape": "square",
+    "x": 370,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["heated"],
+    "joins": []
+   }
+  ],
+  "fixtures": [
+   {
+    "key": "F1",
+    "area": "indoor",
+    "kind": "window",
+    "x": 30,
+    "y": 10,
+    "length": 166,
+    "rotation": 0
+   },
+   {
+    "key": "F2",
+    "area": "indoor",
+    "kind": "bar",
+    "x": 676,
+    "y": 270,
+    "length": 240,
+    "rotation": 0
+   },
+   {
+    "key": "F3",
+    "area": "indoor",
+    "kind": "door",
+    "x": 40,
+    "y": 260,
+    "length": 70,
+    "rotation": 0
+   }
+  ],
+  "plan": 2,
+  "sittings": {
+   "up_to_2": 75,
+   "up_to_4": 90,
+   "up_to_8": 120,
+   "larger": 150
+  },
+  "max_party": 10,
+  "notice_minutes": 30,
+  "horizon_days": 60,
+  "highchairs": 3,
+  "buffer_minutes": 0
+ },
+ "menu": {
+  "categories": [
+   {
+    "key": "pizza",
+    "label": "Pizza",
+    "items": [
+     {
+      "key": "margherita",
+      "name": "Margherita",
+      "price_pence": 1050,
+      "description": "Tomato, fior di latte, basil",
+      "allergens": [],
+      "allergens_unknown": true,
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "diavola",
+      "name": "Diavola",
+      "price_pence": 1250,
+      "allergens": ["gluten","milk"]
+     },
+     {
+      "key": "quattro_formaggi",
+      "name": "Quattro Formaggi",
+      "price_pence": 1300,
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"]
+     }
+    ]
+   },
+   {
+    "key": "pasta",
+    "label": "Pasta",
+    "items": [
+     {
+      "key": "carbonara",
+      "name": "Carbonara",
+      "price_pence": 1200,
+      "allergens": [],
+      "allergens_unknown": true
+     },
+     {
+      "key": "arrabbiata",
+      "name": "Arrabbiata",
+      "price_pence": 1000,
+      "description": "Spicy tomato",
+      "allergens": ["gluten"],
+      "dietary": ["vegan","spicy"]
+     }
+    ]
+   }
+  ],
+  "modifier_groups": {},
+  "allergen_statement": "Our kitchen handles all 14 allergens. Ask us before you order.",
+  "source": "website",
+  "allergens_are_examples": false
+ },
+ "money": {
+  "deposit": {
+   "mode": "per_person",
+   "amount_pence": 1000,
+   "min_party": 7
+  },
+  "cancellation_policy": "Please give 48 hours' notice to cancel or change. Deposits are refunded with 48 hours' notice.",
+  "takeaway_payment": "either",
+  "service_charge": "A discretionary 12.5% service charge is added for tables of six or more."
+ },
+ "policies": {
+  "children": "Children are welcome; we have two highchairs.",
+  "dogs": "inside",
+  "accessibility": "Step-free at the front door.",
+  "parking": "Free parking on Hucknall Road after 6pm.",
+  "dress_code": "No dress code.",
+  "corkage": "£10 a bottle corkage.",
+  "cakes": "You’re welcome to bring a birthday cake; there’s no cakeage charge.",
+  "vouchers": "Gift vouchers from the bar.",
+  "dietary": "Gluten-free pizza bases.",
+  "faqs": [
+   {
+    "q": "Can I bring my dog?",
+    "a": "Dogs are welcome in the bar area."
+   },
+   {
+    "q": "Do you do gluten free?",
+    "a": "Yes, gluten-free pizza bases."
+   }
+  ]
+ },
+ "theme": {
+  "accent": "#679079",
+  "primary": "#2a2217",
+  "background": "#0e0c0a",
+  "font_heading": "Playfair Display",
+  "font_body": "system-ui",
+  "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+ },
+ "sources": {
+  "basics.name": "website",
+  "basics.address": "website",
+  "basics.town": "website",
+  "basics.phone_display": "website",
+  "basics.style": "guess",
+  "theme.logo": "website",
+  "hours.days": "website",
+  "menu.categories": "website",
+  "theme.accent": "website",
+  "theme.fonts": "website",
+  "serve.reservations": "website",
+  "serve.collection": "website",
+  "serve.delivery_apps": "website",
+  "seating.areas": "guess",
+  "policies.dogs": "website",
+  "policies.corkage": "website",
+  "policies.dietary": "website",
+  "policies.parking": "website",
+  "policies.children": "website",
+  "policies.vouchers": "website",
+  "policies.accessibility": "website",
+  "policies.faqs": "website"
+ }
+}

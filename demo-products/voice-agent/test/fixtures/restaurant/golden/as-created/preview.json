@@ -1,0 +1,27 @@
+{
+ "greeting": "Hello, you're through to Olive & Ember. I'm the AI assistant on this demo line. How can I help?",
+ "core_facts": [
+  "Olive & Ember: Neapolitan pizza, fresh pasta and Italian small plates, in Nottingham.",
+  "Sunday: 12 noon till 8pm. Tuesday to Saturday: lunch 12 noon till 2:30pm, dinner 5:30pm till 10pm. Closed Mondays.",
+  "Seating: inside (11 tables) and terrace (4 tables). The terrace is bookable; if the weather turns, we move you inside. Walk-ins are welcome when a table is free.",
+  "Takeaway: click and collect by phone, evenings; food takes about 20 minutes. Takeaway can be paid by card over the phone or when you collect.",
+  "Step-free entrance, level floor throughout the ground floor, and an accessible toilet. Children are very welcome, with highchairs and a kids’ menu. 3 highchairs.",
+  "No car park of our own; the nearest multi-storey is about five minutes’ walk."
+ ],
+ "hours": "Sunday: 12 noon till 8pm. Tuesday to Saturday: lunch 12 noon till 2:30pm, dinner 5:30pm till 10pm. Closed Mondays.",
+ "covers": [
+  {
+   "area": "indoor",
+   "label": "Inside",
+   "covers": 40
+  },
+  {
+   "area": "terrace",
+   "label": "Terrace",
+   "covers": 16
+  }
+ ],
+ "bookable_tables": 15,
+ "pairs": ["Table 1 and 2","Table 3 and 4","Table 7 and 8","Table 13 and 14"],
+ "dishes": 16
+}

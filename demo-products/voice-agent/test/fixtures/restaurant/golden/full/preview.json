@@ -1,0 +1,42 @@
+{
+ "greeting": "Good evening, you've reached The Copper Pot. I'm the AI assistant on this demo line; how can I help?",
+ "core_facts": [
+  "The Copper Pot: Modern British small plates and Sunday roasts, at 14 Call Lane, Leeds LS1 6DT.",
+  "Sunday: 12 noon till 5pm. Tuesday to Thursday: lunch 12 noon till 3pm, dinner 6pm till 10:30pm. Friday and Saturday: brunch 9:30am till 11:30am, lunch 12 noon till 3pm, dinner 5pm till 11pm. Closed Mondays.",
+  "Seating: main room (7 tables) and courtyard (4 tables) and bar (2 tables, walk-in only) and the snug (1 tables, private hire by enquiry) and mezzanine (3 tables). The courtyard is bookable, but in bad weather we cannot promise a table inside. We keep some tables back for walk-ins.",
+  "Takeaway: click and collect by phone and delivery to LS1, LS2, LS6, LS11; food takes about 25 minutes. Takeaway is paid by card over the phone.",
+  "Level access, with a ramp at the side door and an accessible toilet. Children are welcome until 8pm. 5 highchairs.",
+  "Pay and display on Swinegate, two minutes away."
+ ],
+ "hours": "Sunday: 12 noon till 5pm. Tuesday to Thursday: lunch 12 noon till 3pm, dinner 6pm till 10:30pm. Friday and Saturday: brunch 9:30am till 11:30am, lunch 12 noon till 3pm, dinner 5pm till 11pm. Closed Mondays.",
+ "covers": [
+  {
+   "area": "main",
+   "label": "Main room",
+   "covers": 32
+  },
+  {
+   "area": "courtyard",
+   "label": "Courtyard",
+   "covers": 16
+  },
+  {
+   "area": "bar",
+   "label": "Bar",
+   "covers": 4
+  },
+  {
+   "area": "snug",
+   "label": "The Snug",
+   "covers": 10
+  },
+  {
+   "area": "mezzanine",
+   "label": "Mezzanine",
+   "covers": 20
+  }
+ ],
+ "bookable_tables": 13,
+ "pairs": ["Table M1 and M2","Table M5 and M6","Table C2 and C3","Table Z1 and Z2"],
+ "dishes": 8
+}

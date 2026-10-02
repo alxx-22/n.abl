@@ -1,0 +1,182 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "",
+  "style": "Neapolitan pizza, fresh pasta and Italian small plates",
+  "town": "Nottingham",
+  "address": "",
+  "phone_display": "0115 496 0123",
+  "website": "",
+  "voice": "Kore",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "All day",
+      "open": "12:00",
+      "close": "20:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:30",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:30",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:30",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:30",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:30",
+      "close": "22:00"
+     }
+    ]
+   }
+  ],
+  "last_booking_before_close": 60,
+  "closures": []
+ },
+ "serve": {
+  "reservations": true,
+  "walk_ins": true,
+  "collection": {
+   "enabled": true,
+   "prep_minutes": 20,
+   "slot_minutes": 15,
+   "per_slot": 4,
+   "evenings_only": true
+  },
+  "delivery": {
+   "enabled": false,
+   "districts": [],
+   "fee_pence": 250,
+   "min_order_pence": 1500,
+   "extra_minutes": 20
+  },
+  "delivery_apps": []
+ },
+ "seating": {
+  "areas": [],
+  "tables": [],
+  "fixtures": [],
+  "plan": 2,
+  "sittings": {
+   "up_to_2": 75,
+   "up_to_4": 90,
+   "up_to_8": 120,
+   "larger": 150
+  },
+  "max_party": 10,
+  "notice_minutes": 30,
+  "horizon_days": 60,
+  "highchairs": 3,
+  "buffer_minutes": 0
+ },
+ "menu": {
+  "categories": [],
+  "modifier_groups": {},
+  "allergen_statement": "Our kitchen handles all 14 major allergens, including nuts, so we can't guarantee any dish is completely free from traces. For a severe allergy, we'll note it on the order and the kitchen will take extra care.",
+  "source": "manual",
+  "allergens_are_examples": true
+ },
+ "money": {
+  "deposit": {
+   "mode": "per_person",
+   "amount_pence": 1000,
+   "min_party": 7
+  },
+  "cancellation_policy": "Please give 48 hours' notice to cancel or change. Deposits are refunded with 48 hours' notice.",
+  "takeaway_payment": "either",
+  "service_charge": "A discretionary 12.5% service charge is added for tables of six or more."
+ },
+ "policies": {
+  "children": "Children are very welcome, with highchairs and a kids’ menu.",
+  "dogs": "outside_only",
+  "accessibility": "Step-free entrance, level floor throughout the ground floor, and an accessible toilet.",
+  "parking": "No car park of our own; the nearest multi-storey is about five minutes’ walk.",
+  "dress_code": "No dress code.",
+  "corkage": "We don’t allow bring your own.",
+  "cakes": "You’re welcome to bring a birthday cake; there’s no cakeage charge.",
+  "vouchers": "Gift vouchers are available in the restaurant.",
+  "dietary": "Plenty of vegetarian dishes, several vegan, and gluten-free pizza bases.",
+  "faqs": []
+ },
+ "theme": {
+  "accent": "#e9ac57",
+  "primary": "#2a2217",
+  "background": "#0e0c0a",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

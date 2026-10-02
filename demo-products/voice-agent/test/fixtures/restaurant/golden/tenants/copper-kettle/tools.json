@@ -1,0 +1,14 @@
+[
+ "get_opening_hours",
+ "search_knowledge",
+ "get_menu",
+ "get_item_details",
+ "add_to_order",
+ "change_order_line",
+ "set_fulfilment",
+ "review_order",
+ "confirm_order",
+ "take_demo_payment",
+ "take_message",
+ "end_call"
+]

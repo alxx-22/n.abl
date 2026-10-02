@@ -1,0 +1,753 @@
+{
+ "slug": "olive-ember",
+ "name": "Olive & Ember",
+ "business_type": "restaurant",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Kore",
+ "greeting": "Hello, you're through to Olive & Ember. I'm the AI assistant on this demo line. How can I help?",
+ "summary": "Olive & Ember is a restaurant in Nottingham: Neapolitan pizza, fresh pasta and Italian small plates.",
+ "address": "Nottingham",
+ "phone_display": "0115 496 0123",
+ "brand": {
+  "accent": "#e9ac57",
+  "primary": "#2a2217",
+  "background": "#0e0c0a",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Olive & Ember: Neapolitan pizza, fresh pasta and Italian small plates, in Nottingham.",
+  "Sunday: 12 noon till 8pm. Tuesday to Saturday: lunch 12 noon till 2:30pm, dinner 5:30pm till 10pm. Closed Mondays.",
+  "Seating: inside (11 tables) and terrace (4 tables). The terrace is bookable; if the weather turns, we move you inside. We keep some tables back for walk-ins.",
+  "Takeaway: click and collect by phone, evenings; food takes about 20 minutes. Takeaway can be paid by card over the phone or when you collect.",
+  "Step-free entrance, level floor throughout the ground floor, and an accessible toilet. Children are very welcome, with highchairs and a kids’ menu. 3 highchairs.",
+  "No car park of our own; the nearest multi-storey is about five minutes’ walk."
+ ],
+ "opening_hours": [
+  {
+   "days": [0],
+   "open": "12:00",
+   "close": "20:00",
+   "label": "All day"
+  },
+  {
+   "days": [2,3,4,5,6],
+   "open": "12:00",
+   "close": "14:30",
+   "label": "Lunch"
+  },
+  {
+   "days": [2,3,4,5,6],
+   "open": "17:30",
+   "close": "22:00",
+   "label": "Dinner"
+  }
+ ],
+ "closures": [],
+ "knowledge": [
+  {
+   "q": "Can I bring my dog?",
+   "a": "Dogs are welcome on the terrace, but not inside, apart from assistance dogs.",
+   "tags": ["dog","dogs","pet"]
+  },
+  {
+   "q": "Is there parking?",
+   "a": "No car park of our own; the nearest multi-storey is about five minutes’ walk.",
+   "tags": ["parking","car","park"]
+  },
+  {
+   "q": "Is it accessible for wheelchairs?",
+   "a": "Step-free entrance, level floor throughout the ground floor, and an accessible toilet.",
+   "tags": ["wheelchair","accessible","disabled","step free","accessibility","toilet"]
+  },
+  {
+   "q": "Is there a dress code?",
+   "a": "No dress code.",
+   "tags": ["dress","code","smart","wear"]
+  },
+  {
+   "q": "Can I bring my own wine?",
+   "a": "We don’t allow bring your own.",
+   "tags": ["byo","corkage","wine","bring"]
+  },
+  {
+   "q": "Can I bring a birthday cake?",
+   "a": "You’re welcome to bring a birthday cake; there’s no cakeage charge.",
+   "tags": ["cake","birthday","cakeage"]
+  },
+  {
+   "q": "Do you sell gift vouchers?",
+   "a": "Gift vouchers are available in the restaurant.",
+   "tags": ["voucher","gift","present"]
+  },
+  {
+   "q": "Do you have vegan or gluten-free options?",
+   "a": "Plenty of vegetarian dishes, several vegan, and gluten-free pizza bases.",
+   "tags": ["vegan","vegetarian","gluten","coeliac","dairy","dietary"]
+  },
+  {
+   "q": "Are children welcome?",
+   "a": "Children are very welcome, with highchairs and a kids’ menu. We have 3 highchairs.",
+   "tags": ["children","kids","child","highchair","baby"]
+  },
+  {
+   "q": "Is there a service charge?",
+   "a": "A discretionary 12.5% service charge is added for tables of six or more.",
+   "tags": ["service","charge","tip","gratuity"]
+  },
+  {
+   "q": "What is your cancellation policy?",
+   "a": "Please give 48 hours' notice to cancel or change. Deposits are refunded with 48 hours' notice.",
+   "tags": ["cancel","cancellation","refund","deposit"]
+  },
+  {
+   "q": "Do you take walk-ins?",
+   "a": "Yes, we keep some tables for walk-ins, though booking is safest at busy times.",
+   "tags": ["walk","walk-in","without booking","turn up"]
+  }
+ ],
+ "booking": {
+  "services": [
+   {
+    "key": "table",
+    "label": "table",
+    "kind": "table",
+    "slot_minutes": 15,
+    "duration_rules": [
+     {
+      "max_party": 2,
+      "minutes": 75
+     },
+     {
+      "max_party": 4,
+      "minutes": 90
+     },
+     {
+      "max_party": 8,
+      "minutes": 120
+     },
+     {
+      "max_party": 100,
+      "minutes": 150
+     }
+    ],
+    "windows": [
+     {
+      "days": [0],
+      "first": "12:00",
+      "last": "19:00"
+     },
+     {
+      "days": [2,3,4,5,6],
+      "first": "12:00",
+      "last": "13:30"
+     },
+     {
+      "days": [2,3,4,5,6],
+      "first": "17:30",
+      "last": "21:00"
+     }
+    ],
+    "max_party": 10,
+    "large_party_note": "For more than 10 people, take their name, number, preferred date and time, and say the manager will call back.",
+    "lead_minutes": 30,
+    "horizon_days": 60,
+    "deposit": {
+     "min_party": 7,
+     "per_person_pence": 1000
+    }
+   }
+  ],
+  "resources": [
+   {
+    "key": "T1",
+    "label": "Table 1",
+    "services": ["table"],
+    "capacity": 2,
+    "min": 1,
+    "area": "indoor",
+    "features": ["window"],
+    "layout": {
+     "x": 40,
+     "y": 50,
+     "shape": "round",
+     "seats": 2
+    }
+   },
+   {
+    "key": "T2",
+    "label": "Table 2",
+    "services": ["table"],
+    "capacity": 2,
+    "min": 1,
+    "area": "indoor",
+    "features": ["window"],
+    "layout": {
+     "x": 130,
+     "y": 50,
+     "shape": "round",
+     "seats": 2
+    }
+   },
+   {
+    "key": "T3",
+    "label": "Table 3",
+    "services": ["table"],
+    "capacity": 2,
+    "min": 1,
+    "area": "indoor",
+    "layout": {
+     "x": 220,
+     "y": 50,
+     "shape": "round",
+     "seats": 2
+    }
+   },
+   {
+    "key": "T4",
+    "label": "Table 4",
+    "services": [],
+    "capacity": 2,
+    "min": 1,
+    "area": "indoor",
+    "layout": {
+     "x": 310,
+     "y": 50,
+     "shape": "round",
+     "seats": 2
+    }
+   },
+   {
+    "key": "T5",
+    "label": "Table 5",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "indoor",
+    "accessible": true,
+    "layout": {
+     "x": 400,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T6",
+    "label": "Table 6",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "indoor",
+    "accessible": true,
+    "layout": {
+     "x": 510,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T7",
+    "label": "Table 7",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "indoor",
+    "layout": {
+     "x": 620,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T8",
+    "label": "Table 8",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "indoor",
+    "layout": {
+     "x": 730,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T9",
+    "label": "Table 9",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "indoor",
+    "layout": {
+     "x": 840,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T10",
+    "label": "Table 10",
+    "services": ["table"],
+    "capacity": 6,
+    "min": 3,
+    "area": "indoor",
+    "features": ["booth"],
+    "layout": {
+     "x": 40,
+     "y": 150,
+     "shape": "rect",
+     "seats": 6
+    }
+   },
+   {
+    "key": "T11",
+    "label": "Table 11",
+    "services": ["table"],
+    "capacity": 6,
+    "min": 3,
+    "area": "indoor",
+    "features": ["quiet"],
+    "layout": {
+     "x": 236,
+     "y": 150,
+     "shape": "rect",
+     "seats": 6
+    }
+   },
+   {
+    "key": "T12",
+    "label": "Table 12",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "terrace",
+    "features": ["heated"],
+    "layout": {
+     "x": 40,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T13",
+    "label": "Table 13",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "terrace",
+    "features": ["heated"],
+    "layout": {
+     "x": 150,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T14",
+    "label": "Table 14",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "terrace",
+    "features": ["heated"],
+    "layout": {
+     "x": 260,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T15",
+    "label": "Table 15",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 1,
+    "area": "terrace",
+    "features": ["heated"],
+    "layout": {
+     "x": 370,
+     "y": 40,
+     "shape": "square",
+     "seats": 4
+    }
+   },
+   {
+    "key": "T1+T2",
+    "label": "Table 1 and 2",
+    "services": ["table"],
+    "capacity": 4,
+    "min": 3,
+    "combines": ["T1","T2"],
+    "area": "indoor",
+    "features": ["window"]
+   },
+   {
+    "key": "T3+T4",
+    "label": "Table 3 and 4",
+    "services": [],
+    "capacity": 4,
+    "min": 3,
+    "combines": ["T3","T4"],
+    "area": "indoor",
+    "features": []
+   },
+   {
+    "key": "T7+T8",
+    "label": "Table 7 and 8",
+    "services": ["table"],
+    "capacity": 8,
+    "min": 5,
+    "combines": ["T7","T8"],
+    "area": "indoor",
+    "features": []
+   },
+   {
+    "key": "T13+T14",
+    "label": "Table 13 and 14",
+    "services": ["table"],
+    "capacity": 8,
+    "min": 5,
+    "combines": ["T13","T14"],
+    "area": "terrace",
+    "features": ["heated"]
+   }
+  ],
+  "areas": [
+   {
+    "key": "indoor",
+    "label": "Inside",
+    "kind": "indoor",
+    "reservable": true
+   },
+   {
+    "key": "terrace",
+    "label": "Terrace",
+    "kind": "outdoor",
+    "reservable": true,
+    "weather_note": "The terrace is bookable; if the weather turns, we move you inside."
+   }
+  ],
+  "highchairs": 3,
+  "fixtures": [
+   {
+    "key": "F1",
+    "area": "indoor",
+    "kind": "window",
+    "x": 30,
+    "y": 10,
+    "length": 166,
+    "rotation": 0
+   },
+   {
+    "key": "F2",
+    "area": "indoor",
+    "kind": "bar",
+    "x": 676,
+    "y": 270,
+    "length": 240,
+    "rotation": 0
+   },
+   {
+    "key": "F3",
+    "area": "indoor",
+    "kind": "door",
+    "x": 40,
+    "y": 260,
+    "length": 70,
+    "rotation": 0
+   }
+  ]
+ },
+ "menu": {
+  "categories": [
+   {
+    "key": "starters",
+    "label": "Starters",
+    "items": [
+     {
+      "key": "garlic_bread",
+      "name": "Garlic bread",
+      "price_pence": 550,
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "bruschetta",
+      "name": "Bruschetta",
+      "price_pence": 650,
+      "description": "Tomato, basil and garlic on toasted sourdough.",
+      "allergens": ["gluten"],
+      "dietary": ["vegan"]
+     },
+     {
+      "key": "arancini",
+      "name": "Arancini",
+      "price_pence": 700,
+      "description": "Fried risotto balls with mozzarella.",
+      "allergens": ["gluten","milk","eggs"],
+      "dietary": ["vegetarian"]
+     }
+    ]
+   },
+   {
+    "key": "pizza",
+    "label": "Pizzas",
+    "items": [
+     {
+      "key": "margherita",
+      "name": "Margherita",
+      "price_pence": 1150,
+      "description": "Tomato, mozzarella and basil.",
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["pizza_extras","pizza_remove","pizza_base"]
+     },
+     {
+      "key": "diavola",
+      "name": "Diavola",
+      "price_pence": 1350,
+      "description": "Spicy salami, chilli, mozzarella.",
+      "allergens": ["gluten","milk","mustard"],
+      "modifier_groups": ["pizza_extras","pizza_remove","pizza_base"],
+      "aliases": ["pepperoni","spicy salami pizza"]
+     },
+     {
+      "key": "funghi",
+      "name": "Funghi",
+      "price_pence": 1250,
+      "description": "Mushrooms, mozzarella, thyme.",
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["pizza_extras","pizza_remove","pizza_base"],
+      "aliases": ["mushroom pizza"]
+     },
+     {
+      "key": "verdure",
+      "name": "Vegan Verdure",
+      "price_pence": 1200,
+      "description": "Roast vegetables and tomato, no cheese.",
+      "allergens": ["gluten"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["pizza_extras","pizza_remove","pizza_base"],
+      "aliases": ["vegan pizza","vegetable pizza"]
+     }
+    ]
+   },
+   {
+    "key": "pasta",
+    "label": "Pasta",
+    "items": [
+     {
+      "key": "carbonara",
+      "name": "Spaghetti Carbonara",
+      "price_pence": 1300,
+      "allergens": ["gluten","eggs","milk"],
+      "modifier_groups": ["pasta_extras"]
+     },
+     {
+      "key": "arrabbiata",
+      "name": "Penne Arrabbiata",
+      "price_pence": 1100,
+      "description": "Spicy tomato sauce.",
+      "allergens": ["gluten"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["pasta_extras"]
+     },
+     {
+      "key": "lasagne",
+      "name": "Lasagne",
+      "price_pence": 1400,
+      "allergens": ["gluten","milk","eggs","celery"],
+      "modifier_groups": ["pasta_extras"]
+     },
+     {
+      "key": "pesto",
+      "name": "Trofie al Pesto",
+      "price_pence": 1250,
+      "description": "Basil pesto with pine nuts and cashews.",
+      "allergens": ["gluten","milk","nuts"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["pasta_extras"],
+      "aliases": ["pesto pasta"]
+     }
+    ]
+   },
+   {
+    "key": "desserts",
+    "label": "Desserts",
+    "items": [
+     {
+      "key": "tiramisu",
+      "name": "Tiramisu",
+      "price_pence": 650,
+      "allergens": ["gluten","eggs","milk"],
+      "may_contain": ["nuts"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "panna_cotta",
+      "name": "Panna cotta",
+      "price_pence": 600,
+      "allergens": ["milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "affogato",
+      "name": "Affogato",
+      "price_pence": 500,
+      "description": "Vanilla gelato with a shot of espresso.",
+      "allergens": ["milk"],
+      "may_contain": ["nuts","eggs"],
+      "dietary": ["vegetarian"]
+     }
+    ]
+   },
+   {
+    "key": "drinks",
+    "label": "Soft drinks",
+    "items": [
+     {
+      "key": "san_pellegrino",
+      "name": "San Pellegrino",
+      "price_pence": 280,
+      "allergens": [],
+      "aliases": ["sparkling water","lemonade"]
+     },
+     {
+      "key": "coke",
+      "name": "Coca-Cola",
+      "price_pence": 250,
+      "allergens": [],
+      "aliases": ["coke","cola","diet coke"]
+     }
+    ]
+   }
+  ],
+  "modifier_groups": {
+   "pizza_extras": {
+    "label": "Extras",
+    "min": 0,
+    "max": 4,
+    "options": [
+     {
+      "key": "extra_mozzarella",
+      "name": "extra mozzarella",
+      "price_pence": 150,
+      "allergens": ["milk"]
+     },
+     {
+      "key": "nduja",
+      "name": "nduja",
+      "price_pence": 200
+     },
+     {
+      "key": "olives",
+      "name": "olives",
+      "price_pence": 100
+     },
+     {
+      "key": "rocket",
+      "name": "rocket",
+      "price_pence": 100
+     },
+     {
+      "key": "chilli",
+      "name": "fresh chilli",
+      "price_pence": 50
+     }
+    ]
+   },
+   "pizza_remove": {
+    "label": "Leave off",
+    "min": 0,
+    "max": 3,
+    "options": [
+     {
+      "key": "no_basil",
+      "name": "no basil",
+      "price_pence": 0
+     },
+     {
+      "key": "no_cheese",
+      "name": "no cheese",
+      "price_pence": 0
+     },
+     {
+      "key": "no_garlic",
+      "name": "no garlic",
+      "price_pence": 0
+     }
+    ]
+   },
+   "pizza_base": {
+    "label": "Base",
+    "min": 0,
+    "max": 1,
+    "options": [
+     {
+      "key": "gluten_free_base",
+      "name": "gluten-free base",
+      "price_pence": 200
+     }
+    ]
+   },
+   "pasta_extras": {
+    "label": "Extras",
+    "min": 0,
+    "max": 2,
+    "options": [
+     {
+      "key": "parmesan",
+      "name": "extra parmesan",
+      "price_pence": 100,
+      "allergens": ["milk"]
+     },
+     {
+      "key": "chilli_flakes",
+      "name": "chilli flakes",
+      "price_pence": 0
+     }
+    ]
+   }
+  },
+  "allergen_statement": "Our kitchen handles all 14 major allergens, including nuts, so we can't guarantee any dish is completely free from traces. For a severe allergy, we'll note it on the order and the kitchen will take extra care."
+ },
+ "ordering": {
+  "collection": true,
+  "prep_minutes": 20,
+  "slot_minutes": 15,
+  "slot_capacity": 4,
+  "payment": "either",
+  "hours": [
+   {
+    "days": [0],
+    "open": "12:00",
+    "close": "20:00",
+    "label": "takeaway"
+   },
+   {
+    "days": [2,3,4,5,6],
+    "open": "17:30",
+    "close": "22:00",
+    "label": "takeaway"
+   }
+  ]
+ },
+ "policies": {
+  "deposit": "Tables of 7 or more pay a £10.00 a head deposit when booking, taken off the bill on the night.",
+  "cancellation": "Please give 48 hours' notice to cancel or change. Deposits are refunded with 48 hours' notice.",
+  "service_charge": "A discretionary 12.5% service charge is added for tables of six or more.",
+  "takeaway": "Takeaway: click and collect by phone, evenings; food takes about 20 minutes. Takeaway can be paid by card over the phone or when you collect.",
+  "dogs": "Dogs are welcome on the terrace, but not inside, apart from assistance dogs."
+ }
+}

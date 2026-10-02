@@ -1,0 +1,32 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the restaurant a name."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Open on at least one day."
+ },
+ {
+  "step": "seating",
+  "level": "error",
+  "message": "Add at least one seating area."
+ },
+ {
+  "step": "seating",
+  "level": "error",
+  "message": "Nothing is bookable: add tables to an area that takes bookings."
+ },
+ {
+  "step": "seating",
+  "level": "warning",
+  "message": "No table or pair of tables seats 8; bigger parties will be offered a callback."
+ },
+ {
+  "step": "menu",
+  "level": "error",
+  "message": "Takeaway needs a menu: add some dishes or turn takeaway off."
+ }
+]

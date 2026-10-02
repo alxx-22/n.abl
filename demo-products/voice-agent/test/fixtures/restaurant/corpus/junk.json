@@ -1,0 +1,34 @@
+{
+ "version": "one",
+ "basics": "Pizza Palace",
+ "hours": [1,2,3],
+ "serve": 42,
+ "seating": {
+  "areas": {
+   "indoor": true
+  },
+  "tables": "many",
+  "fixtures": 7,
+  "plan": "1",
+  "sittings": [],
+  "max_party": {}
+ },
+ "menu": ["pizza"],
+ "money": true,
+ "policies": {
+  "faqs": {
+   "q": "a"
+  },
+  "dogs": ["inside"]
+ },
+ "theme": "dark",
+ "sources": "website",
+ "extra": {
+  "nested": [
+   null,
+   {
+    "deep": true
+   }
+  ]
+ }
+}

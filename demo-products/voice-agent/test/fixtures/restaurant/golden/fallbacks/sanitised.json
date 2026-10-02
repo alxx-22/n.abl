@@ -1,0 +1,347 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "",
+  "style": "",
+  "town": "Nottingham",
+  "address": "",
+  "phone_display": "0115 496 0123",
+  "website": "https://padded.example",
+  "voice": "Kore",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:00"
+     },
+     {
+      "label": "Dinner",
+      "open": "18:00",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:30",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:30",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "14:30"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:30",
+      "close": "22:00"
+     }
+    ]
+   }
+  ],
+  "last_booking_before_close": 60,
+  "closures": [
+   {
+    "date": "2026-13-45",
+    "note": "Matches the pattern only"
+   },
+   {
+    "date": "2026-11-05",
+    "note": ""
+   }
+  ]
+ },
+ "serve": {
+  "reservations": true,
+  "walk_ins": true,
+  "collection": {
+   "enabled": true,
+   "prep_minutes": 5,
+   "slot_minutes": 15,
+   "per_slot": 0,
+   "evenings_only": true
+  },
+  "delivery": {
+   "enabled": true,
+   "districts": ["NG1","NG7","W1A"],
+   "fee_pence": 2000,
+   "min_order_pence": 13,
+   "extra_minutes": 20
+  },
+  "delivery_apps": ["Deliveroo","A name far longer th"]
+ },
+ "seating": {
+  "areas": [
+   {
+    "key": "inside_room",
+    "label": "Area 1",
+    "kind": "indoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   },
+   {
+    "key": "area_3",
+    "label": "Garden",
+    "kind": "outdoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": "move_inside"
+   },
+   {
+    "key": "area_4",
+    "label": "Area 4",
+    "kind": "bar",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   }
+  ],
+  "tables": [
+   {
+    "key": "T1",
+    "label": "Table 1",
+    "area": "inside_room",
+    "seats": 1,
+    "shape": "round",
+    "x": 0,
+    "y": 4000,
+    "rotation": 359,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["window"],
+    "joins": ["T2"]
+   },
+   {
+    "key": "T2",
+    "label": "Table 2",
+    "area": "inside_room",
+    "seats": 6,
+    "shape": "rect",
+    "x": 0,
+    "y": 0,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T1"]
+   },
+   {
+    "key": "T4",
+    "label": "Table 4",
+    "area": "inside_room",
+    "seats": 4,
+    "shape": "square",
+    "x": 0,
+    "y": 0,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T5"]
+   },
+   {
+    "key": "T5",
+    "label": "Garden table",
+    "area": "area_3",
+    "seats": 20,
+    "shape": "square",
+    "x": 0,
+    "y": 0,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T4"]
+   }
+  ],
+  "fixtures": [
+   {
+    "key": "F1",
+    "area": "inside_room",
+    "kind": "wall",
+    "x": 40,
+    "y": 40,
+    "length": 40,
+    "rotation": 90
+   },
+   {
+    "key": "F4",
+    "area": "area_3",
+    "kind": "window",
+    "x": 40,
+    "y": 40,
+    "length": 600,
+    "rotation": 0
+   }
+  ],
+  "plan": 2,
+  "sittings": {
+   "up_to_2": 30,
+   "up_to_4": 90,
+   "up_to_8": 360,
+   "larger": 150
+  },
+  "max_party": 1,
+  "notice_minutes": 0,
+  "horizon_days": 1,
+  "highchairs": 3,
+  "buffer_minutes": 60
+ },
+ "menu": {
+  "categories": [
+   {
+    "key": "cat_1",
+    "label": "",
+    "items": [
+     {
+      "key": "item_1_1",
+      "name": "Dish 1",
+      "price_pence": 0,
+      "allergens": ["gluten"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["big_extras"]
+     },
+     {
+      "key": "dup",
+      "name": "Dup",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "dup_2",
+      "name": "Dup again",
+      "price_pence": 0,
+      "allergens": []
+     }
+    ]
+   },
+   {
+    "key": "cat_2",
+    "label": "Section 2",
+    "items": []
+   }
+  ],
+  "modifier_groups": {
+   "big_extras": {
+    "label": "Options",
+    "min": 0,
+    "max": 1,
+    "options": [
+     {
+      "key": "cheese",
+      "name": "Cheese",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "opt_2",
+      "name": "Option 2",
+      "price_pence": 0,
+      "allergens": []
+     }
+    ]
+   },
+   "options": {
+    "label": "Empty key",
+    "min": 0,
+    "max": 1,
+    "options": []
+   }
+  },
+  "allergen_statement": "Our kitchen handles all 14 major allergens, including nuts, so we can't guarantee any dish is completely free from traces. For a severe allergy, we'll note it on the order and the kitchen will take extra care.",
+  "source": "manual",
+  "allergens_are_examples": true
+ },
+ "money": {
+  "deposit": {
+   "mode": "per_person",
+   "amount_pence": 0,
+   "min_party": 1
+  },
+  "cancellation_policy": "Please give 48 hours' notice to cancel or change. Deposits are refunded with 48 hours' notice.",
+  "takeaway_payment": "either",
+  "service_charge": ""
+ },
+ "policies": {
+  "children": "",
+  "dogs": "outside_only",
+  "accessibility": "",
+  "parking": "No car park of our own; the nearest multi-storey is about five minutes’ walk.",
+  "dress_code": "",
+  "corkage": "",
+  "cakes": "",
+  "vouchers": "",
+  "dietary": "",
+  "faqs": [
+   {
+    "q": "Spaced?",
+    "a": "Yes."
+   }
+  ]
+ },
+ "theme": {
+  "accent": "#e9ac57",
+  "primary": "#2a2217",
+  "background": "#0e0c0a",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {
+  "basics.name": "website",
+  "hours.days": "guess"
+ }
+}

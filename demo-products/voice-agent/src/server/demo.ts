@@ -151,8 +151,8 @@ function workspaceSummary(w: Workspace) {
   };
 }
 
-/** What the builder's preview pane shows: what the receptionist will actually say. */
-function preview(w: Workspace, profile: TenantProfile, answers: unknown) {
+/** What the builder's preview pane shows: what the receptionist will actually say. Exported for the restaurant goldens. */
+export function preview(w: Workspace, profile: TenantProfile, answers: unknown) {
   const a = answers as RestaurantAnswers;
   const tables = profile.booking?.resources.filter((r) => r.layout) ?? [];
   const covers: Record<string, number> = {};
