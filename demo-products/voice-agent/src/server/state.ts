@@ -3,12 +3,48 @@
 
 import type { Repo } from '../db/repo.ts';
 import type { Bus } from './bus.ts';
-import type { Tenant } from '../domain/types.ts';
+import type { Tenant, TenantProfile } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
 import { displayUkPhone } from '../domain/phone.ts';
+import { capabilities } from '../core/prompt.ts';
+import type { WorkspaceSpec } from '../presets/index.ts';
 
-export async function tenantState(repo: Repo, t: Tenant, bus: Bus) {
+/**
+ * The team console's board for our own demo businesses, which have no
+ * preset: its panels in its own words (web/src/pages/Board.tsx), from what
+ * the business can do. A diary when it takes bookings, orders when it takes
+ * them, and the board's Reset refills the diary only.
+ */
+export function boardWorkspace(profile: TenantProfile): WorkspaceSpec {
+  const caps = capabilities(profile);
+  const tables = Boolean(profile.booking?.services.some((s) => s.kind === 'table'));
+  return {
+    views: [
+      ...(caps.booking ? [{ id: 'timeline', label: 'Diary' }] as const : []),
+      ...(caps.ordering ? [{ id: 'orders', label: 'Orders' }] as const : []),
+      { id: 'messages', label: 'Messages and texts' },
+      { id: 'calls', label: 'Recent calls' },
+    ],
+    bookings: caps.booking
+      ? {
+          resource: tables ? 'table' : 'staff member',
+          resources: tables ? 'tables' : 'staff',
+          party: tables ? 'Party' : null,
+          visit: tables
+            ? { expected: 'Expected', arrived: 'Arrived', seated: 'Seated', finished: 'Finished', no_show: 'No-show' }
+            : { expected: 'Expected', arrived: 'Arrived', finished: 'Finished', no_show: 'No-show' },
+          allergies: tables,
+        }
+      : undefined,
+    orders: caps.ordering ? { board: 'Orders', done: { collection: 'Collected', delivery: 'Delivered' }, drivers: false, advance: false } : undefined,
+    suggestions: [],
+    resetLine: 'bookings',
+  };
+}
+
+/** `workspace`: a prospect's workspace passes its preset's; our own businesses get the board's. */
+export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: WorkspaceSpec = boardWorkspace(t.profile)) {
   const tz = t.profile.timezone;
   const now = new Date();
   const today = toLocal(now, tz).date;
@@ -41,6 +77,7 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus) {
         }
       : null,
     opening_hours: t.profile.opening_hours,
+    workspace,
     bookings: bookings.map((b) => {
       const l = toLocal(b.starts_at, tz);
       const e = toLocal(b.ends_at, tz);

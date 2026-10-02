@@ -140,3 +140,53 @@ test('presets over HTTP: the PIN and call settings survive every rebuild', async
   }
   assert.deepEqual((await kim('GET', path)).data.answers.menu, named.menu, 'the saved menu is untouched');
 });
+
+test('presets over HTTP: the back office says what to show, in the business\'s own words, and loses nothing', async () => {
+  const team = client('10.1.1.1');
+  const ana = client('10.1.1.2');
+  assert.equal((await team('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const key = await team('POST', '/demo/api/admin/keys', { person_name: 'Ana Ruiz', company: 'Casa Ana', days: 7 });
+  assert.equal((await ana('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+  const made = await ana('POST', '/demo/api/workspaces', { preset: 'restaurant', name: 'Casa Ana' });
+  assert.equal(made.status, 201);
+  const path = `/demo/api/workspaces/${made.data.id}`;
+  assert.deepEqual(Object.keys(made.data.preview), ['greeting', 'core_facts', 'hours', 'covers', 'bookable_tables', 'pairs', 'dishes'], 'the restaurant\'s preview: today\'s fields, and no lines');
+  assert.equal((await ana('POST', `${path}/start`)).status, 200);
+
+  const state = (await ana('GET', `${path}/state`)).data;
+  for (const k of ['tenant', 'today', 'now', 'active_calls', 'plan', 'opening_hours', 'bookings', 'orders', 'messages', 'calls', 'started_at', 'expires_at']) {
+    assert.ok(k in state, `/state still has ${k}`);
+  }
+  // Today's tabs, words and suggestions, as web/src/reception/workspace draws them.
+  assert.deepEqual(state.workspace, {
+    views: [
+      { id: 'floor', label: 'Floor plan' }, { id: 'timeline', label: 'Timeline' }, { id: 'orders', label: 'Kitchen' },
+      { id: 'messages', label: 'Messages' }, { id: 'calls', label: 'Calls' },
+    ],
+    bookings: {
+      resource: 'table', resources: 'tables', party: 'Party',
+      visit: { expected: 'Expected', arrived: 'Arrived', seated: 'Seated', finished: 'Finished', no_show: 'No-show' }, allergies: true,
+    },
+    orders: { board: 'Kitchen', done: { collection: 'Collected', delivery: 'Collected' }, drivers: false, advance: false },
+    suggestions: [
+      'Can I book a table for four on Friday at half seven, outside if possible?',
+      "I've got a booking. Can we make it five people instead?",
+      'Can I order some food to collect at seven?',
+      'Do you have gluten-free options?',
+    ],
+    resetLine: 'bookings and orders',
+  });
+
+  // Our own businesses on the team's board: from what each can do.
+  const board = async (slug: string) => (await team('GET', `/demo/api/admin/tenants/${slug}/state`)).data.workspace;
+  const lucas = await board('lucas-trattoria');
+  assert.deepEqual(lucas.views.map((v: any) => v.label), ['Diary', 'Orders', 'Messages and texts', 'Recent calls']);
+  assert.equal(lucas.bookings.party, 'Party');
+  const fade = await board('fade-and-co');
+  assert.deepEqual(fade.views.map((v: any) => v.id), ['timeline', 'messages', 'calls'], 'a barber takes no orders');
+  assert.equal(fade.bookings.party, null);
+  assert.equal(fade.orders, undefined);
+  const kettle = await board('copper-kettle');
+  assert.deepEqual(kettle.views.map((v: any) => v.id), ['orders', 'messages', 'calls'], 'a café that takes no bookings has no diary');
+  assert.equal(kettle.bookings, undefined);
+});

@@ -36,8 +36,9 @@ export function restaurantPreview(a: RestaurantAnswers, profile: TenantProfile) 
 /**
  * The back office as the web draws it for a restaurant today (Workspace.tsx,
  * Kitchen.tsx, BookingDrawer.tsx): the floor plan and timeline when there are
- * tables to book, then the kitchen, messages and calls. Not read by the web
- * yet; it is what the web's view registry will draw from.
+ * tables to book, then the kitchen, messages and calls. GET /state sends it
+ * as `workspace`, for the web's view registry to draw from, so its words
+ * must stay the ones the web shows now.
  */
 export function restaurantWorkspace(profile: TenantProfile): WorkspaceSpec {
   const outside = (profile.booking?.areas ?? []).some((a) => a.reservable && !a.enquiry_only && a.kind === 'outdoor');

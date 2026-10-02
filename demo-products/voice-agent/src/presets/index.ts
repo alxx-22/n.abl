@@ -37,6 +37,14 @@ export interface WorkspaceSpec {
   resetLine: string;
 }
 
+/**
+ * What the builder's preview pane shows. The restaurant sends the fields it
+ * always has (greeting, core facts, hours, covers, tables, pairs, dishes) and
+ * no lines; every later preset sends `lines`, which the pane lists as they
+ * are, so a new kind of business needs no new pane (PRESETS.md §1, rule 7).
+ */
+export type PreviewPayload = { lines?: string[] } & Record<string, unknown>;
+
 /** A catalogue the builder drafts from a description: the restaurant's menu, later a price list. S is that section's type. */
 export interface CatalogueDraft<A extends BaseAnswers, S = unknown> {
   /** The answers section a draft fills, and the key the route sends it back under: { menu }. */
@@ -69,8 +77,8 @@ export interface Preset<A extends BaseAnswers = BaseAnswers> {
   compile(a: A, meta: { slug: string }): TenantProfile;
   /** A believable week of data for the compiled profile, deterministic for a seed. */
   seed(profile: TenantProfile, now: Date, seed: number): SeedPlan;
-  /** What the builder's preview pane shows. */
-  preview(a: A, profile: TenantProfile): Record<string, unknown>;
+  /** What the builder's preview pane shows: the restaurant's own fields, or lines. */
+  preview(a: A, profile: TenantProfile): PreviewPayload;
   /** What the FAQ draft is told about the business. */
   factSheet(a: A): string;
   /** What the receptionist does itself, which the FAQ draft leaves out: "booking a table or ordering food". */

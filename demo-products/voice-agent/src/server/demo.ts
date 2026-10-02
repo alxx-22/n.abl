@@ -416,7 +416,8 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
 
   // ── The live workspace ────────────────────────────────────────────────
   if (sub === 'state' && req.method === 'GET') {
-    return json(res, 200, { ...(await tenantState(repo, t, bus)), started_at: w.started_at?.toISOString() ?? null, expires_at: w.expires_at?.toISOString() ?? null }), true;
+    const state = await tenantState(repo, t, bus, preset.workspace(t.profile));
+    return json(res, 200, { ...state, started_at: w.started_at?.toISOString() ?? null, expires_at: w.expires_at?.toISOString() ?? null }), true;
   }
   if (sub === 'events' && req.method === 'GET') return eventStream(req, res, bus, t.id), true;
   if (sub === 'settings' && req.method === 'PATCH') {
