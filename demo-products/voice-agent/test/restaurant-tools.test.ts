@@ -123,6 +123,11 @@ test('restaurant tools: a wheelchair gets a step-free table; wishes are kept or 
   assert.ok(b.tags?.includes('wheelchair') && b.tags?.includes('highchair'));
   assert.match(String(r.note), /only have 3 highchairs/);
   assert.match(String(r.note), /window/, 'no step-free window table: noted as a request');
+  // Step-free is mentioned only when asked: unasked, it led to a booking marked as needing step-free access.
+  const plain = await runTool('check_availability', { date: SAT, time: '18:00', party_size: 3, area: 'inside' }, ctx);
+  assert.equal((plain.slot as any)?.accessible, undefined, JSON.stringify(plain));
+  const asked = await runTool('check_availability', { date: SAT, time: '18:30', party_size: 3, area: 'inside', accessible: true }, ctx);
+  assert.equal((asked.slot as any)?.accessible, true, JSON.stringify(asked));
   const w = await runTool('create_booking', { area: 'inside', date: SAT, time: '12:30', party_size: 2, name: 'Tom Wright', prefer: 'by the window' }, ctx);
   const wb = (await repo.getBookingByReference(t.id, String(w.reference)))!;
   assert.ok(t.profile.booking!.resources.find((x) => x.key === wb.resource_key)!.features?.includes('window'));
