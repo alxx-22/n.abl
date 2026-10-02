@@ -652,7 +652,7 @@ export class CallSession extends EventEmitter<CallEvents> {
 
   private deriveOutcome(fallback: string): string {
     const kinds = new Set<string>();
-    if (this.state.lastOrder) kinds.add('ordered');
+    if (this.state.lastOrderRef) kinds.add('ordered');
     if (this.state.lastBookingRef) kinds.add('booked');
     if (this.state.committed.length && !kinds.size) kinds.add('changed');
     if (this.state.paid.length) kinds.add('paid');

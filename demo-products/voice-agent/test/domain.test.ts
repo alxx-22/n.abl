@@ -7,7 +7,8 @@ import { searchKnowledge } from '../src/domain/knowledge.ts';
 import { processDemoPayment, parseDemoCards, DEFAULT_DEMO_CARDS, digitsOf } from '../src/domain/payments.ts';
 import { redactCardNumbers, REDACTED } from '../src/core/redact.ts';
 import { PROMISED_MESSAGE, checkUtterance } from '../src/core/guardrails.ts';
-import { newCallState } from '../src/core/tools.ts';
+import { newCallState, record, unsaidReference, type ToolContext } from '../src/core/tools.ts';
+import { readFileSync } from 'node:fs';
 import { normaliseUkPhone, displayUkPhone } from '../src/domain/phone.ts';
 import { zonedToUtc } from '../src/domain/time.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
@@ -179,6 +180,30 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
   assert.equal(checkUtterance("It isn't booked yet.", s).length, 0);
   s.committed.push('HK482');
   assert.equal(checkUtterance("That's booked, reference H K four eight two.", s).length, 0);
+});
+
+test('records: every booking and order a call makes or finds goes through record()', () => {
+  const ctx = { state: newCallState() } as ToolContext;
+  const s = ctx.state;
+  const seen = () => ({ committed: [...s.committed], found: [...s.found], booking: s.lastBookingRef, order: s.lastOrderRef, owed: s.owed });
+  record(ctx, 'AH101', 'booking', 'found');
+  assert.deepEqual(seen(), { committed: [], found: ['AH101'], booking: null, order: null, owed: null }, 'found: talking about it is no false claim, and nothing is owed');
+  record(ctx, 'AH101', 'change', 'committed');
+  assert.deepEqual(seen(), { committed: ['AH101'], found: ['AH101'], booking: 'AH101', order: null, owed: null }, 'changed: still the call\'s booking, under the reference the caller has');
+  record(ctx, 'JK202', 'cancellation', 'committed');
+  assert.deepEqual(seen(), { committed: ['AH101', 'JK202'], found: ['AH101'], booking: 'AH101', order: null, owed: null }, 'cancelled: done with');
+  record(ctx, 'HK482', 'booking', 'committed');
+  assert.deepEqual(seen(), { committed: ['AH101', 'JK202', 'HK482'], found: ['AH101'], booking: 'HK482', order: null, owed: 'HK482' }, 'made: the caller must hear it');
+  assert.equal(unsaidReference(s, 'Your reference is H, K, 4, 8, 2.'), null);
+  record(ctx, '104', 'order', 'committed');
+  assert.deepEqual(seen(), { committed: ['AH101', 'JK202', 'HK482', '104'], found: ['AH101'], booking: 'HK482', order: '104', owed: '104' });
+  assert.equal(checkUtterance("That's all ordered, number one oh four.", s).length, 0);
+
+  // Only record() writes them: a tool that set them itself could forget one.
+  for (const file of ['../src/core/tools.ts', '../src/core/call.ts']) {
+    const src = readFileSync(new URL(file, import.meta.url), 'utf8').replace(/export function record\([\s\S]*?\n}\n/, '');
+    assert.doesNotMatch(src, /\.(committed|found)\.push\(|\.(lastBookingRef|lastOrderRef)\s*=\s*[^=\s]|\.owed\s*=\s*(?!null\b)[^=\s]/, file);
+  }
 });
 
 test('guardrail: payment and allergy claims', () => {

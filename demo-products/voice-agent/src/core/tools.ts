@@ -8,7 +8,7 @@
 import type { FunctionDeclaration } from './live.ts';
 import type { Repo } from '../db/repo.ts';
 import { spokenReference } from '../db/repo.ts';
-import type { Booking, Order, OrderLine, Tenant } from '../domain/types.ts';
+import type { Booking, OrderLine, Tenant } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { checkAvailability, findService } from '../domain/availability.ts';
 import {
@@ -46,11 +46,12 @@ export interface CallState {
   /** What the caller agreed to at the last read-back; confirm_order compares content, not a counter. */
   reviewedKey: string | null;
   fulfilment: { type: 'collection' | 'delivery'; requested: string; due_at: Date; postcode: string | null; address: string | null } | null;
-  /** References created or changed by this call: the guardrail's evidence. */
+  /** References created or changed by this call: the guardrail's evidence. Written only by record(). */
   committed: string[];
-  /** Existing bookings looked up in this call (talking about them is not a false claim). */
+  /** Existing bookings looked up in this call (talking about them is not a false claim). Written only by record(). */
   found: string[];
-  lastOrder: Order | null;
+  /** The order this call placed, and the booking it made or changed: what a payment is for, and the call's outcome. */
+  lastOrderRef: string | null;
   lastBookingRef: string | null;
   paid: string[];
   ending: boolean;
@@ -69,9 +70,41 @@ export interface CallState {
 export function newCallState(): CallState {
   return {
     lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
-    committed: [], found: [], lastOrder: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
+    committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, owed: null, messageTaken: false, messageChecked: false,
   };
+}
+
+/**
+ * What a record is to this call: a booking or an order it made or looked
+ * up, or a change to or cancellation of a booking.
+ */
+export type RecordKind = 'booking' | 'order' | 'change' | 'cancellation';
+
+/**
+ * Every tool that makes or finds a booking or an order says so here, and
+ * only here (PRESETS.md §1, rule 5), so a new tool cannot leave out the
+ * part of the call state that one of its readers needs: the guardrail
+ * (did the call really make or find something it talks about), the check
+ * that the caller heard a new reference before the call ends, and the
+ * call's outcome and what a payment is for.
+ *
+ * 'found': looked up, so talking about it is not a false claim.
+ * 'committed': written by this call. A new booking or order is the call's
+ * own and its reference is owed to the caller; a change keeps the
+ * booking the call's own, under the reference the caller already has; a
+ * cancellation is neither.
+ */
+export function record(ctx: ToolContext, ref: string, kind: RecordKind, how: 'committed' | 'found'): void {
+  const s = ctx.state;
+  if (how === 'found') {
+    s.found.push(ref);
+    return;
+  }
+  s.committed.push(ref);
+  if (kind === 'booking' || kind === 'change') s.lastBookingRef = ref;
+  if (kind === 'order') s.lastOrderRef = ref;
+  if (kind === 'booking' || kind === 'order') s.owed = ref;
 }
 
 /**
@@ -576,9 +609,7 @@ const TOOLS: Record<string, Tool> = {
         };
       }
       const b = r.booking;
-      ctx.state.committed.push(b.reference);
-      ctx.state.lastBookingRef = b.reference;
-      ctx.state.owed = b.reference;
+      record(ctx, b.reference, 'booking', 'committed');
       const s = bookingSummary(ctx.tenant, b);
       const areaInfo = b.area_key ? p.booking?.areas?.find((a) => a.key === b.area_key) : undefined;
       ctx.action({
@@ -627,7 +658,7 @@ const TOOLS: Record<string, Tool> = {
       let found = await ctx.repo.findBookings(ctx.tenant.id, { reference, phone, name: reference || phone ? undefined : name }, ctx.now());
       // Callers quote a number other than the one they booked with: in a live test the right name was never searched.
       if (!found.length && !reference && phone && name) found = await ctx.repo.findBookings(ctx.tenant.id, { name }, ctx.now());
-      for (const b of found) ctx.state.found.push(b.reference);
+      for (const b of found) record(ctx, b.reference, 'booking', 'found');
       if (!found.length) return { bookings: [], note: 'No upcoming bookings found. Ask for the reference or the name it was booked under.' };
       return { bookings: found.map((b) => bookingSummary(ctx.tenant, b)) };
     },
@@ -663,8 +694,7 @@ const TOOLS: Record<string, Tool> = {
         ctx.now(),
       );
       if (!r.ok) return { changed: false, message: r.message, next: 'Check other times with check_availability, then offer them.' };
-      ctx.state.committed.push(r.booking.reference);
-      ctx.state.lastBookingRef = r.booking.reference;
+      record(ctx, r.booking.reference, 'change', 'committed');
       const s = bookingSummary(ctx.tenant, r.booking);
       ctx.action({
         kind: 'booking_changed', title: 'Booking changed',
@@ -690,7 +720,7 @@ const TOOLS: Record<string, Tool> = {
     async handler(args, ctx) {
       const b = await ctx.repo.cancelBooking(ctx.tenant.id, str(args.reference) ?? '');
       if (!b) return { cancelled: false, message: 'No confirmed booking with that reference.' };
-      ctx.state.committed.push(b.reference);
+      record(ctx, b.reference, 'cancellation', 'committed');
       const s = bookingSummary(ctx.tenant, b);
       ctx.action({ kind: 'booking_cancelled', title: 'Booking cancelled', detail: `${s.spoken_date}, ${s.spoken_time} · ${b.name} · ref ${b.reference}` });
       await smsTo(ctx, b.phone, `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled. To book again, just call us. (Demo)`);
@@ -1015,9 +1045,7 @@ const TOOLS: Record<string, Tool> = {
         lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,
         allergy_notes: namedAllergy(noneToNull(str(args.allergy_notes)), ctx.state.heard) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
       });
-      ctx.state.committed.push(order.reference);
-      ctx.state.lastOrder = order;
-      ctx.state.owed = order.reference;
+      record(ctx, order.reference, 'order', 'committed');
       ctx.state.lines = [];
       ctx.state.fulfilment = null;
       changed(ctx);
@@ -1059,7 +1087,7 @@ const TOOLS: Record<string, Tool> = {
       ),
     },
     async handler(args, ctx) {
-      const kind = str(args.for)?.toLowerCase().startsWith('dep') ? 'deposit' : ctx.state.lastOrder || !ctx.state.lastBookingRef ? 'order' : 'deposit';
+      const kind = str(args.for)?.toLowerCase().startsWith('dep') ? 'deposit' : ctx.state.lastOrderRef || !ctx.state.lastBookingRef ? 'order' : 'deposit';
       let amount = 0;
       let orderId: string | null = null;
       let bookingId: string | null = null;
@@ -1069,7 +1097,7 @@ const TOOLS: Record<string, Tool> = {
       }
       if (kind === 'order') {
         // Always re-read: the copy held in call state does not know it was paid.
-        const ref = str(args.reference) ?? ctx.state.lastOrder?.reference;
+        const ref = str(args.reference) ?? ctx.state.lastOrderRef;
         const order = ref ? await ctx.repo.getOrder(ctx.tenant.id, ref) : null;
         if (!order) return { result: 'no_order', message: 'Place the order with confirm_order before taking payment.' };
         if (order.payment_status === 'paid') return { result: 'already_paid', message: 'That order is already paid.' };
