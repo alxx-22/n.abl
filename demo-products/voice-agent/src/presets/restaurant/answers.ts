@@ -32,7 +32,7 @@ export interface RestaurantAnswers extends BaseAnswers {
   serve: {
     reservations: boolean;
     walk_ins: boolean;
-    collection: CollectionAnswer;
+    collection: CollectionAnswer & { evenings_only: boolean };
     delivery: DeliveryAnswer;
     /** Named for the FAQ only: "you'll find us on Deliveroo". */
     delivery_apps: string[];

@@ -60,7 +60,9 @@ run. The goldens protect every workspace made from now on.
    the only way stored or PUT answers are read (it replaces the eleven
    `preset.sanitise` calls in `demo.ts`). `sanitise` writes `VERSION`, never a
    literal. Shared section sanitisers may add optional fields with defaults;
-   they never rename, retype or remove one, and never tighten a cap. Every
+   they never rename, retype or remove one, and never tighten a cap. A shared
+   sanitiser writes an optional field only when the preset's defaults have
+   it, so one preset's fields never appear in another's answers. Every
    preset ships with its own golden corpus.
 3. **Share by composition.** Shared sanitise, compile, validate and web
    components take the sub-object, the step key and the field options as
@@ -257,12 +259,23 @@ quotes honest wait times when it is busy.
 ### 5.1 Answers (`VERSION` 1)
 
 `BaseAnswers` plus:
-- `ordering`: `collection { enabled, prep_minutes, slot_minutes, per_slot }`
-  (`per_slot`: orders the kitchen can make in a slot, collection and delivery
-  alike); `delivery { enabled, districts: { code, fee_pence?,
-  min_order_pence? }[], fee_pence, min_order_pence, free_over_pence?,
-  extra_minutes, drivers: string[] }`; `delivery_apps[]`; `timed_orders`
-  (take orders for a time later today; default yes). Today only, always.
+- `ordering`: the food `OrderingAnswer` (`food/ordering.ts`), the shape the
+  restaurant's `serve` already has, plus optional fields only the takeaway's
+  defaults carry (rule 2), so the shared sanitise, compile and validate take
+  it as they are. `collection { enabled, prep_minutes, slot_minutes,
+  per_slot }` (`per_slot`: orders the kitchen can make in a slot, collection
+  and delivery alike; no `evenings_only`, which is the restaurant's and
+  counts as no when missing). `delivery { enabled, districts: string[],
+  fee_pence, min_order_pence, extra_minutes, zones?: { code, fee_pence?,
+  min_order_pence? }[], free_over_pence?: number | null, drivers?: string[]
+  }`: `districts` lists every district delivered to, as the restaurant's
+  does; a zone gives one of them its own fee or minimum (the sanitiser drops
+  a zone whose district is not in the list); `free_over_pence` null means
+  never free. `delivery_apps[]`; `timed_orders?` (take orders for a time
+  later today; default yes). Today only, always. The sanitiser takes these
+  today; `compileOrdering` writes zones, free delivery and drivers into the
+  profile only when present (rule 4), in the takeaway's own commit, with the
+  engine change that reads them.
 - `menu`: the food `MenuAnswer`. Each section may carry **sizes** (labels with
   price differences) and **extras** (names and prices) that apply to every
   item in it; they compile into modifier groups.

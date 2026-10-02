@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { PRESETS, answersOf, builtPreset, getPreset, type BaseAnswers, type Preset } from '../src/presets/index.ts';
 import { PresetError } from '../src/presets/common/errors.ts';
 import { sampleMenu } from '../src/presets/food/menu.ts';
+import { compileOrdering, sanitiseOrdering, takeawaySentence, validateOrdering, type OrderingAnswer } from '../src/presets/food/ordering.ts';
 import { defaultAnswers, type RestaurantAnswers } from '../src/presets/restaurant/answers.ts';
 import { compileRestaurant } from '../src/presets/restaurant/compile.ts';
 import { factSheet } from '../src/presets/restaurant/drafts.ts';
@@ -127,4 +128,54 @@ test('presets: the menu draft needs something to go on before it asks the model'
   await assert.rejects(restaurant.draft!.run({}, a, loadConfig()), (e: unknown) => e instanceof PresetError && e.status === 400 && e.message === 'Describe the food first.');
   assert.equal(restaurant.draft!.label, 'menu');
   assert.deepEqual(restaurant.draft!.counts(a), { dishes: a.menu.categories.reduce((n, c) => n + c.items.length, 0) });
+});
+
+test('presets: the shared ordering keeps a takeaway\'s zones, drivers and timed orders, and gives the restaurant none of them', () => {
+  // The takeaway's defaults as PRESETS.md §5.1 gives them: every district in one list, two of them further away.
+  const takeaway: OrderingAnswer = {
+    collection: { enabled: true, prep_minutes: 15, slot_minutes: 15, per_slot: 4 },
+    delivery: {
+      enabled: true, districts: ['NG1', 'NG2', 'NG3', 'NG5', 'NG7', 'NG9'], fee_pence: 250, min_order_pence: 1200, extra_minutes: 25,
+      zones: [{ code: 'NG7', fee_pence: 350, min_order_pence: 1500 }, { code: 'NG9', fee_pence: 350, min_order_pence: 1500 }],
+      free_over_pence: 3000, drivers: ['Kai', 'Priya', 'Tom'],
+    },
+    delivery_apps: [],
+    timed_orders: true,
+  };
+  assert.deepEqual(sanitiseOrdering(structuredClone(takeaway), takeaway), takeaway, 'the defaults come back as they are');
+
+  const edited = sanitiseOrdering({
+    ...takeaway,
+    delivery: {
+      ...takeaway.delivery, districts: ['ng 7', 'NG1'],
+      zones: [{ code: 'ng7', fee_pence: 400 }, { code: 'NG7', fee_pence: 1 }, { code: 'NG9', fee_pence: 350 }, { code: 'Nottingham' }, null],
+      free_over_pence: null, drivers: [' Sam ', '', 7, 'Jo'],
+    },
+    timed_orders: false,
+  }, takeaway);
+  assert.deepEqual(edited.delivery.districts, ['NG7', 'NG1']);
+  assert.deepEqual(edited.delivery.zones, [{ code: 'NG7', fee_pence: 400 }], 'each district once, and only districts delivered to');
+  assert.equal(edited.delivery.free_over_pence, null, 'never free');
+  assert.deepEqual(edited.delivery.drivers, ['Sam', 'Jo']);
+  assert.equal(edited.timed_orders, false);
+  assert.ok(!('evenings_only' in edited.collection), 'the restaurant\'s evenings switch is not the takeaway\'s');
+  assert.deepEqual(validateOrdering(edited, 'ordering'), [], 'Start is not refused');
+
+  // With no evenings switch, takeaway runs in every service.
+  const lunch = { open: true, services: [{ label: 'Lunch', open: '12:00', close: '15:00' }] };
+  assert.deepEqual(compileOrdering(edited, { days: Array.from({ length: 7 }, () => lunch) }, 'phone')!.hours.map((h) => `${h.open}-${h.close}`), ['12:00-15:00']);
+  assert.doesNotMatch(takeawaySentence(edited, 'phone')!, /evenings/);
+
+  // Answers saved before a field existed take its default.
+  const older = sanitiseOrdering({ collection: {}, delivery: { enabled: true, districts: ['NG7'] } }, takeaway);
+  assert.deepEqual(older.delivery.zones, [{ code: 'NG7', fee_pence: 350, min_order_pence: 1500 }]);
+  assert.equal(older.delivery.free_over_pence, 3000);
+  assert.deepEqual(older.delivery.drivers, ['Kai', 'Priya', 'Tom']);
+  assert.equal(older.timed_orders, true);
+
+  // The restaurant's defaults have none of these, so its answers never gain them, whatever is sent.
+  const r = sanitiseRestaurant({ serve: { delivery: { enabled: true, districts: ['NG1'], zones: [{ code: 'NG1' }], free_over_pence: 100, drivers: ['Kai'] }, timed_orders: false } });
+  assert.deepEqual(Object.keys(r.serve).sort(), ['collection', 'delivery', 'delivery_apps', 'reservations', 'walk_ins']);
+  assert.deepEqual(Object.keys(r.serve.collection), ['enabled', 'prep_minutes', 'slot_minutes', 'per_slot', 'evenings_only']);
+  assert.deepEqual(Object.keys(r.serve.delivery), ['enabled', 'districts', 'fee_pence', 'min_order_pence', 'extra_minutes']);
 });
