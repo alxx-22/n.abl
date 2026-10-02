@@ -33,6 +33,20 @@ test('presets: the sample menu is read once, and every caller gets its own copy'
   assert.equal(a.allergens_are_examples, true);
 });
 
+test('presets: answers with no week of hours open as the defaults do, and a week that arrived is read as before', () => {
+  const d = restaurant.defaults();
+  for (const raw of [{}, null, 'junk', { hours: [1, 2, 3] }, { hours: { days: 'every day' } }]) {
+    assert.deepEqual(restaurant.sanitise(structuredClone(raw)).hours, d.hours, JSON.stringify(raw));
+  }
+  const a = restaurant.sanitise({});
+  a.hours.days[0].services[0].label = 'Changed';
+  assert.equal(restaurant.defaults().hours.days[0].services[0].label, 'All day', 'the defaults are copied, not shared');
+  // Stored weeks always have seven days with their services; a day that
+  // arrived with none is closed, as it always was.
+  const sent = sanitiseRestaurant({ hours: { days: [{ open: true, services: [] }, { open: false }, {}] } }).hours.days;
+  assert.deepEqual(sent.slice(0, 3).map((x) => x.open), [false, false, false]);
+});
+
 test('presets: every kind of business has its words, its type and a placeholder website', () => {
   assert.equal(new Set(PRESETS.map((p) => p.key)).size, PRESETS.length);
   for (const p of PRESETS) {

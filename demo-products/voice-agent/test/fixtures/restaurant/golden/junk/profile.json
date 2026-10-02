@@ -19,13 +19,32 @@
  },
  "core_facts": [
   "Your restaurant: Neapolitan pizza, fresh pasta and Italian small plates, in Nottingham.",
-  "Closed Every day.",
+  "Sunday: 12 noon till 8pm. Tuesday to Saturday: lunch 12 noon till 2:30pm, dinner 5:30pm till 10pm. Closed Mondays.",
   "Seating: . Walk-ins are welcome when a table is free.",
   "Takeaway: click and collect by phone, evenings; food takes about 20 minutes. Takeaway can be paid by card over the phone or when you collect.",
   "Step-free entrance, level floor throughout the ground floor, and an accessible toilet. Children are very welcome, with highchairs and a kids’ menu. 3 highchairs.",
   "No car park of our own; the nearest multi-storey is about five minutes’ walk."
  ],
- "opening_hours": [],
+ "opening_hours": [
+  {
+   "days": [0],
+   "open": "12:00",
+   "close": "20:00",
+   "label": "All day"
+  },
+  {
+   "days": [2,3,4,5,6],
+   "open": "12:00",
+   "close": "14:30",
+   "label": "Lunch"
+  },
+  {
+   "days": [2,3,4,5,6],
+   "open": "17:30",
+   "close": "22:00",
+   "label": "Dinner"
+  }
+ ],
  "closures": [],
  "knowledge": [
   {

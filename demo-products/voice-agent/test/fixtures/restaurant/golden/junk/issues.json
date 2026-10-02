@@ -5,11 +5,6 @@
   "message": "Give the restaurant a name."
  },
  {
-  "step": "hours",
-  "level": "error",
-  "message": "Open on at least one day."
- },
- {
   "step": "seating",
   "level": "error",
   "message": "Add at least one seating area."

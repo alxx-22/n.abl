@@ -5,11 +5,6 @@
   "message": "Give the restaurant a name."
  },
  {
-  "step": "hours",
-  "level": "error",
-  "message": "Open on at least one day."
- },
- {
   "step": "menu",
   "level": "warning",
   "message": "The allergens are examples until you check them."

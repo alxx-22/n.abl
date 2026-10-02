@@ -13,7 +13,7 @@
  "hours": {
   "days": [
    {
-    "open": false,
+    "open": true,
     "services": [
      {
       "label": "All day",
@@ -27,7 +27,7 @@
     "services": []
    },
    {
-    "open": false,
+    "open": true,
     "services": [
      {
       "label": "Lunch",
@@ -42,7 +42,7 @@
     ]
    },
    {
-    "open": false,
+    "open": true,
     "services": [
      {
       "label": "Lunch",
@@ -57,7 +57,7 @@
     ]
    },
    {
-    "open": false,
+    "open": true,
     "services": [
      {
       "label": "Lunch",
@@ -72,7 +72,7 @@
     ]
    },
    {
-    "open": false,
+    "open": true,
     "services": [
      {
       "label": "Lunch",
@@ -87,7 +87,7 @@
     ]
    },
    {
-    "open": false,
+    "open": true,
     "services": [
      {
       "label": "Lunch",

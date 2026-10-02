@@ -37,12 +37,16 @@ export function sanitiseBasics(v: unknown, d: BasicsAnswer): BasicsAnswer {
 }
 
 /**
- * Seven days of up to three services. A day's open flag is read from the
- * services list it arrived with, not from the defaults, so {} closes every
- * day; PRESETS.md §0.3 fixes that in its own commit, with its goldens.
+ * Seven days of up to three services. Answers that arrive with no week at
+ * all (a new or junk config) get the defaults' week: reading each day from a
+ * list that is not there used to close every day, so Start was refused and
+ * the profile said closed all week. A day that did arrive keeps today's
+ * reading: its open flag follows the services list it came with, so saved
+ * and edited weeks load exactly as before.
  */
 export function sanitiseDays(v: unknown, d: DayHours[]): DayHours[] {
-  const input = arr(v);
+  if (!Array.isArray(v)) return structuredClone(d);
+  const input = v;
   return d.map((def, i) => {
     const x = (input[i] ?? {}) as any;
     const services = arr(x.services).slice(0, 3).map((s: any, j) => ({
