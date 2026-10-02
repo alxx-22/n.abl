@@ -4,39 +4,14 @@
 // missing or wrong before Start.
 
 import { ALLERGENS, type Allergen, type MenuCategory, type MenuItem, type ModifierGroup } from '../../domain/types.ts';
-import { VOICE_NAMES } from '../../domain/voices.ts';
-import { defaultAnswers, type AreaAnswer, type DayHours, type FixtureAnswer, type RestaurantAnswers, type TableAnswer } from './answers.ts';
+import { arr, bool, int, key, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseFaqs, sanitiseSources, sanitiseTheme, str } from '../common/sanitise.ts';
+import type { Issue as BaseIssue } from '../common/types.ts';
+import { validateBase } from '../common/validate.ts';
+import { defaultAnswers, type AreaAnswer, type FixtureAnswer, type RestaurantAnswers, type TableAnswer } from './answers.ts';
 import { FIXTURE_LENGTH, intoRooms } from './layout.ts';
 import { tableBookable } from './compile.ts';
 
-const str = (v: unknown, max: number, fallback = ''): string => (typeof v === 'string' ? v.trim().slice(0, max) : fallback);
-const int = (v: unknown, min: number, max: number, fallback: number): number => {
-  const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
-  return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : fallback;
-};
-const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback);
-const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T => (options.includes(v as T) ? (v as T) : fallback);
-const time = (v: unknown, fallback: string): string => (typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : fallback);
-const colour = (v: unknown, fallback: string): string => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : fallback);
-const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
-const key = (v: unknown, fallback: string): string => {
-  const s = typeof v === 'string' ? v.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_|_$/g, '').slice(0, 40) : '';
-  return s || fallback;
-};
 const FEATURES = ['window', 'booth', 'quiet', 'heated', 'covered', 'dog_friendly', 'high_table', 'sofa', 'view'] as const;
-
-function days(v: unknown, d: DayHours[]): DayHours[] {
-  const input = arr(v);
-  return d.map((def, i) => {
-    const x = (input[i] ?? {}) as any;
-    const services = arr(x.services).slice(0, 3).map((s: any, j) => ({
-      label: str(s?.label, 30, j === 0 ? 'Lunch' : 'Dinner') || 'Open',
-      open: time(s?.open, '12:00'),
-      close: time(s?.close, '22:00'),
-    }));
-    return { open: bool(x.open, def.open) && services.length > 0, services: x.services === undefined ? def.services : services };
-  });
-}
 
 function areas(v: unknown, d: AreaAnswer[]): AreaAnswer[] {
   const list = arr(v).slice(0, 8).map((x: any, i): AreaAnswer => ({
@@ -161,31 +136,18 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
   const x = (input ?? {}) as any;
   const ar = areas(x.seating?.areas, d.seating.areas);
   const areaKeys = new Set(ar.map((a) => a.key));
-  const b = x.basics ?? {};
   const h = x.hours ?? {};
   const s = x.serve ?? {};
   const st = x.seating ?? {};
   const m = x.money ?? {};
   const p = x.policies ?? {};
-  const th = x.theme ?? {};
   return {
     version: 1,
-    basics: {
-      name: str(b.name, 60, d.basics.name),
-      style: str(b.style, 160, d.basics.style),
-      town: str(b.town, 60, d.basics.town),
-      address: str(b.address, 160, d.basics.address),
-      phone_display: str(b.phone_display, 20, d.basics.phone_display),
-      website: str(b.website, 200, d.basics.website),
-      voice: typeof b.voice === 'string' && VOICE_NAMES.has(b.voice) ? b.voice : d.basics.voice,
-      greeting: str(b.greeting, 300, d.basics.greeting),
-    },
+    basics: sanitiseBasics(x.basics, d.basics),
     hours: {
-      days: days(h.days, d.hours.days),
+      days: sanitiseDays(h.days, d.hours.days),
       last_booking_before_close: int(h.last_booking_before_close, 0, 240, d.hours.last_booking_before_close),
-      closures: arr(h.closures).slice(0, 30)
-        .map((c: any) => ({ date: typeof c?.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(c.date) ? c.date : '', note: str(c?.note, 60) }))
-        .filter((c) => c.date),
+      closures: sanitiseClosures(h.closures),
     },
     serve: {
       reservations: bool(s.reservations, d.serve.reservations),
@@ -246,47 +208,22 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
       cakes: str(p.cakes, 200, d.policies.cakes),
       vouchers: str(p.vouchers, 200, d.policies.vouchers),
       dietary: str(p.dietary, 300, d.policies.dietary),
-      faqs: arr(p.faqs).slice(0, 20).map((f: any) => ({ q: str(f?.q, 150), a: str(f?.a, 500) })).filter((f) => f.q && f.a),
+      faqs: sanitiseFaqs(p.faqs),
     },
-    theme: {
-      accent: colour(th.accent, d.theme.accent),
-      primary: colour(th.primary, d.theme.primary),
-      background: colour(th.background, d.theme.background),
-      font_heading: str(th.font_heading, 60, d.theme.font_heading).replace(/[^A-Za-z0-9 \-]/g, '') || d.theme.font_heading,
-      font_body: str(th.font_body, 60, d.theme.font_body).replace(/[^A-Za-z0-9 \-]/g, '') || d.theme.font_body,
-      // Logos are only ever data: URLs the scout made or our own paths.
-      logo: typeof th.logo === 'string' && (/^data:image\/(png|jpeg|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(th.logo) && th.logo.length < 400_000) ? th.logo : null,
-    },
-    sources: Object.fromEntries(
-      Object.entries((x.sources ?? {}) as Record<string, unknown>)
-        .filter(([k, v]) => /^[a-z_.0-9]{1,60}$/.test(k) && (v === 'website' || v === 'guess'))
-        .slice(0, 100),
-    ) as Record<string, 'website' | 'guess'>,
+    theme: sanitiseTheme(x.theme, d.theme),
+    sources: sanitiseSources(x.sources),
   };
 }
 
-export interface Issue {
-  /** The builder step it belongs to. */
-  step: 'basics' | 'hours' | 'serve' | 'seating' | 'floor' | 'menu' | 'money' | 'policies';
-  level: 'error' | 'warning';
-  message: string;
-}
+/** The builder steps an issue can point at. */
+export type RestaurantStep = 'basics' | 'hours' | 'serve' | 'seating' | 'floor' | 'menu' | 'money' | 'policies';
+export type Issue = BaseIssue<RestaurantStep>;
 
 export function validateRestaurant(a: RestaurantAnswers): Issue[] {
-  const out: Issue[] = [];
+  const out: Issue[] = validateBase(a, 'restaurant');
   const err = (step: Issue['step'], message: string) => out.push({ step, level: 'error', message });
   const warn = (step: Issue['step'], message: string) => out.push({ step, level: 'warning', message });
 
-  if (!a.basics.name) err('basics', 'Give the restaurant a name.');
-  if (a.basics.greeting && (!/\bAI\b/.test(a.basics.greeting) || !/\bdemo\b/i.test(a.basics.greeting))) {
-    err('basics', 'The greeting must say it is an AI assistant and that this is a demo line.');
-  }
-  if (!a.hours.days.some((d) => d.open && d.services.length)) err('hours', 'Open on at least one day.');
-  a.hours.days.forEach((d, i) => {
-    for (const s of d.open ? d.services : []) {
-      if (s.close <= s.open) err('hours', `${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][i]}: ${s.label} closes before it opens.`);
-    }
-  });
   if (!a.serve.reservations && !a.serve.collection.enabled && !a.serve.delivery.enabled) {
     warn('serve', 'With no bookings and no takeaway, the receptionist can only answer questions.');
   }

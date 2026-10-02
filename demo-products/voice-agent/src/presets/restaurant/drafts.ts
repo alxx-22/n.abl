@@ -7,6 +7,7 @@
 import type { Config } from '../../config.ts';
 import { generateJson } from '../../core/gemini.ts';
 import { ALLERGENS } from '../../domain/types.ts';
+import { draftFaqs as draftFaqsFrom } from '../common/drafts.ts';
 import type { RestaurantAnswers } from './answers.ts';
 import { hoursSentence } from './compile.ts';
 import { sanitiseRestaurant } from './validate.ts';
@@ -150,17 +151,6 @@ export async function draftMenu(brief: MenuBrief, config: Config): Promise<Resta
 
 // ── Common questions ─────────────────────────────────────────────────────
 
-const FAQ_SCHEMA = {
-  type: 'OBJECT',
-  properties: {
-    faqs: {
-      type: 'ARRAY',
-      items: { type: 'OBJECT', properties: { q: { type: 'STRING' }, a: { type: 'STRING' } }, required: ['q', 'a'] },
-    },
-  },
-  required: ['faqs'],
-};
-
 /** What the model is told about the restaurant: its own answers, as plain facts. */
 export function factSheet(a: RestaurantAnswers): string {
   const areas = a.seating.areas.map((x) => `${x.label}${x.reservable ? '' : ' (walk-in only)'}${x.enquiry_only ? ' (enquiries only)' : ''}`).join(', ');
@@ -177,14 +167,9 @@ export function factSheet(a: RestaurantAnswers): string {
   ].join('\n');
 }
 
+/** What the receptionist does itself, so the FAQ draft leaves it out. */
+export const RESTAURANT_HANDLES = 'booking a table or ordering food';
+
 export async function draftFaqs(a: RestaurantAnswers, config: Config): Promise<{ q: string; a: string }[]> {
-  const prompt = [
-    'These are the facts about a UK restaurant, set by its owner for an AI phone receptionist demo.',
-    factSheet(a),
-    '',
-    'Write the ten questions callers most often ask a restaurant like this that the facts above answer, each with a short spoken answer (one or two sentences, friendly, British English).',
-    'Use only these facts. Where the facts do not cover something, leave that question out rather than guess. No questions about booking a table or ordering food themselves; the receptionist handles those.',
-  ].join('\n');
-  const d = await generateJson<{ faqs: { q: string; a: string }[] }>(config.textModel, prompt, config.keys.text, FAQ_SCHEMA, { temperature: 0.4 });
-  return sanitiseRestaurant({ policies: { faqs: d?.faqs ?? [] } }).policies.faqs.slice(0, 12);
+  return draftFaqsFrom(factSheet(a), 'restaurant', RESTAURANT_HANDLES, config);
 }

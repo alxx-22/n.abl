@@ -2,79 +2,17 @@
 // always make the same profile, and every field the builder offers changes
 // something here (test/restaurant.test.ts checks each one).
 
-import type {
-  BookableService, KnowledgeEntry, OpeningHours, Ordering, Resource, SeatingArea, TenantProfile, Window,
-} from '../../domain/types.ts';
-import { dayName, minutesOf, spokenTime, timeOf } from '../../domain/time.ts';
+import type { BookableService, KnowledgeEntry, Ordering, Resource, SeatingArea, TenantProfile } from '../../domain/types.ts';
+import { minutesOf } from '../../domain/time.ts';
 import { pounds } from '../../domain/types.ts';
+import { bookingWindows, groupByDay, hoursSentence as sayHours } from '../common/hours.ts';
+import { baseProfile, entry, greetingFor as greetingOf, mergeFaqs } from '../common/profile.ts';
+import type { DayHours } from '../common/types.ts';
 import type { AreaAnswer, RestaurantAnswers, TableAnswer } from './answers.ts';
 
-const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday first, the way people say it
+export { dayRange } from '../common/hours.ts';
 
-/** "Tuesday to Saturday", "Sunday", "Friday and Saturday", "Monday, Wednesday and Friday". */
-export function dayRange(days: number[]): string {
-  const sorted = DAY_ORDER.filter((d) => days.includes(d));
-  if (sorted.length === 7) return 'Every day';
-  const runs: number[][] = [];
-  for (const d of sorted) {
-    const last = runs[runs.length - 1];
-    if (last && DAY_ORDER.indexOf(d) === DAY_ORDER.indexOf(last[last.length - 1]) + 1) last.push(d);
-    else runs.push([d]);
-  }
-  const parts = runs.map((r) => (r.length >= 3 ? `${dayName(r[0])} to ${dayName(r[r.length - 1])}` : r.map(dayName).join(' and ')));
-  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0];
-}
-
-/** Groups identical entries across days: [{days:[2..6], value}]. */
-function groupByDay<T>(perDay: (T[] | null)[], key: (v: T) => string): { days: number[]; value: T }[] {
-  const out = new Map<string, { days: number[]; value: T }>();
-  perDay.forEach((vals, day) => {
-    for (const v of vals ?? []) {
-      const k = key(v);
-      const g = out.get(k) ?? { days: [], value: v };
-      g.days.push(day);
-      out.set(k, g);
-    }
-  });
-  return [...out.values()];
-}
-
-function openingHours(a: RestaurantAnswers): OpeningHours[] {
-  return groupByDay(
-    a.hours.days.map((d) => (d.open ? d.services : null)),
-    (s) => `${s.label}|${s.open}|${s.close}`,
-  ).map((g) => ({ days: g.days.sort(), open: g.value.open, close: g.value.close, label: g.value.label }));
-}
-
-export function hoursSentence(a: RestaurantAnswers): string {
-  const byPattern = groupByDay(
-    a.hours.days.map((d) => (d.open && d.services.length ? [d.services] : null)),
-    (ss) => ss.map((s) => `${s.label}|${s.open}|${s.close}`).join(','),
-  );
-  const parts = byPattern.map((g) => {
-    const ss = g.value;
-    const times = ss.length === 1
-      ? `${spokenTime(ss[0].open)} till ${spokenTime(ss[0].close)}`
-      : ss.map((s) => `${s.label.toLowerCase()} ${spokenTime(s.open)} till ${spokenTime(s.close)}`).join(', ');
-    return `${dayRange(g.days)}: ${times}`;
-  });
-  const closed = a.hours.days.map((d, i) => (d.open ? -1 : i)).filter((i) => i >= 0);
-  if (closed.length) parts.push(`Closed ${dayRange(closed)}${closed.length === 1 ? 's' : ''}`);
-  return parts.map((p) => p.replace(/^./, (c) => c.toUpperCase())).join('. ') + '.';
-}
-
-function windows(a: RestaurantAnswers): Window[] {
-  return groupByDay(
-    a.hours.days.map((d) =>
-      d.open
-        ? d.services
-            .map((s) => ({ first: s.open, last: timeOf(Math.max(minutesOf(s.open), minutesOf(s.close) - a.hours.last_booking_before_close)) }))
-            .filter((w) => minutesOf(w.last) >= minutesOf(w.first))
-        : null,
-    ),
-    (w) => `${w.first}|${w.last}`,
-  ).map((g) => ({ days: g.days.sort(), first: g.value.first, last: g.value.last }));
-}
+export const hoursSentence = (a: { hours: { days: DayHours[] } }): string => sayHours(a.hours);
 
 const WEATHER: Record<NonNullable<AreaAnswer['weather_rule']>, string> = {
   move_inside: 'is bookable; if the weather turns, we move you inside',
@@ -155,7 +93,7 @@ function service(a: RestaurantAnswers): BookableService {
       { max_party: 8, minutes: a.seating.sittings.up_to_8 },
       { max_party: 100, minutes: a.seating.sittings.larger },
     ],
-    windows: windows(a),
+    windows: bookingWindows(a.hours, a.hours.last_booking_before_close),
     max_party: a.seating.max_party,
     large_party_note: `For more than ${a.seating.max_party} people, take their name, number, preferred date and time, and say the manager will call back.`,
     lead_minutes: a.seating.notice_minutes,
@@ -228,49 +166,28 @@ function seatingSentence(a: RestaurantAnswers): string | null {
 
 function knowledge(a: RestaurantAnswers): KnowledgeEntry[] {
   const p = a.policies;
-  const e = (q: string, ans: string, tags: string[]): KnowledgeEntry | null => (ans.trim() ? { q, a: ans.trim(), tags } : null);
-  const list: (KnowledgeEntry | null)[] = [
-    e('Can I bring my dog?', dogsAnswer(a), ['dog', 'dogs', 'pet']),
-    e('Is there parking?', p.parking, ['parking', 'car', 'park']),
-    e('Is it accessible for wheelchairs?', p.accessibility, ['wheelchair', 'accessible', 'disabled', 'step free', 'accessibility', 'toilet']),
-    e('Is there a dress code?', p.dress_code, ['dress', 'code', 'smart', 'wear']),
-    e('Can I bring my own wine?', p.corkage, ['byo', 'corkage', 'wine', 'bring']),
-    e('Can I bring a birthday cake?', p.cakes, ['cake', 'birthday', 'cakeage']),
-    e('Do you sell gift vouchers?', p.vouchers, ['voucher', 'gift', 'present']),
-    e('Do you have vegan or gluten-free options?', p.dietary, ['vegan', 'vegetarian', 'gluten', 'coeliac', 'dairy', 'dietary']),
-    e('Are children welcome?', `${p.children}${a.seating.highchairs ? ` We have ${a.seating.highchairs} highchairs.` : ''}`, ['children', 'kids', 'child', 'highchair', 'baby']),
-    e('Is there a service charge?', a.money.service_charge, ['service', 'charge', 'tip', 'gratuity']),
-    e('What is your cancellation policy?', a.money.cancellation_policy, ['cancel', 'cancellation', 'refund', 'deposit']),
-    e('Do you take walk-ins?', a.serve.walk_ins ? (a.seating.tables.some((t) => t.walk_in) ? 'Yes, we keep some tables for walk-ins, though booking is safest at busy times.' : 'Yes, if there’s a table free, though booking is safest at busy times.') : 'We’re bookings only, I’m afraid.', ['walk', 'walk-in', 'without booking', 'turn up']),
+  return mergeFaqs([
+    entry('Can I bring my dog?', dogsAnswer(a), ['dog', 'dogs', 'pet']),
+    entry('Is there parking?', p.parking, ['parking', 'car', 'park']),
+    entry('Is it accessible for wheelchairs?', p.accessibility, ['wheelchair', 'accessible', 'disabled', 'step free', 'accessibility', 'toilet']),
+    entry('Is there a dress code?', p.dress_code, ['dress', 'code', 'smart', 'wear']),
+    entry('Can I bring my own wine?', p.corkage, ['byo', 'corkage', 'wine', 'bring']),
+    entry('Can I bring a birthday cake?', p.cakes, ['cake', 'birthday', 'cakeage']),
+    entry('Do you sell gift vouchers?', p.vouchers, ['voucher', 'gift', 'present']),
+    entry('Do you have vegan or gluten-free options?', p.dietary, ['vegan', 'vegetarian', 'gluten', 'coeliac', 'dairy', 'dietary']),
+    entry('Are children welcome?', `${p.children}${a.seating.highchairs ? ` We have ${a.seating.highchairs} highchairs.` : ''}`, ['children', 'kids', 'child', 'highchair', 'baby']),
+    entry('Is there a service charge?', a.money.service_charge, ['service', 'charge', 'tip', 'gratuity']),
+    entry('What is your cancellation policy?', a.money.cancellation_policy, ['cancel', 'cancellation', 'refund', 'deposit']),
+    entry('Do you take walk-ins?', a.serve.walk_ins ? (a.seating.tables.some((t) => t.walk_in) ? 'Yes, we keep some tables for walk-ins, though booking is safest at busy times.' : 'Yes, if there’s a table free, though booking is safest at busy times.') : 'We’re bookings only, I’m afraid.', ['walk', 'walk-in', 'without booking', 'turn up']),
     a.serve.delivery_apps.length
-      ? e('Are you on the delivery apps?', `Yes, you can order from us on ${a.serve.delivery_apps.join(' and ')}.`, ['deliveroo', 'uber', 'just eat', 'app', 'delivery'])
+      ? entry('Are you on the delivery apps?', `Yes, you can order from us on ${a.serve.delivery_apps.join(' and ')}.`, ['deliveroo', 'uber', 'just eat', 'app', 'delivery'])
       : null,
-  ];
-  return [...list.filter((x): x is KnowledgeEntry => Boolean(x)), ...a.policies.faqs.filter((f) => f.q.trim() && f.a.trim()).map((f) => ({ q: f.q.trim(), a: f.a.trim(), tags: [] }))];
+  ], p.faqs);
 }
 
-export function greetingFor(a: RestaurantAnswers): string {
-  const g = a.basics.greeting.trim();
-  if (g) return g;
-  const name = a.basics.name.trim() || 'the restaurant';
-  // "Hello, Pici." sounded like greeting someone called Pici: say where they have rung.
-  return `Hello, you're through to ${name}. I'm the AI assistant on this demo line. How can I help?`;
-}
+export const greetingFor = (a: RestaurantAnswers): string => greetingOf(a.basics, 'restaurant');
 
 export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }): TenantProfile {
-  const name = a.basics.name.trim() || 'Your restaurant';
-  const place = a.basics.address.trim() || a.basics.town.trim();
-  const style = a.basics.style.trim();
-  const where = a.basics.address.trim() ? `, at ${a.basics.address.trim()}` : a.basics.town.trim() ? `, in ${a.basics.town.trim()}` : '';
-  const facts = [
-    `${name}${style ? `: ${style}` : ''}${where}.`,
-    hoursSentence(a),
-    seatingSentence(a),
-    takeawaySentence(a),
-    [a.policies.accessibility, a.policies.children, a.seating.highchairs ? `${a.seating.highchairs} highchairs.` : ''].filter(Boolean).join(' '),
-    a.policies.parking,
-  ].filter((f): f is string => Boolean(f && f.trim()));
-
   const policies: Record<string, string> = {};
   const dep = depositSentence(a);
   if (dep) policies.deposit = dep;
@@ -284,28 +201,16 @@ export function compileRestaurant(a: RestaurantAnswers, meta: { slug: string }):
   const hasMenu = a.menu.categories.some((c) => c.items.length);
 
   return {
-    slug: meta.slug,
-    name,
-    business_type: 'restaurant',
-    timezone: 'Europe/London',
-    status: 'demo',
-    voice: a.basics.voice || 'Kore',
-    greeting: greetingFor(a),
-    summary: `${name} is a restaurant${a.basics.town.trim() ? ` in ${a.basics.town.trim()}` : ''}${style ? `: ${style}` : ''}.`,
-    address: place || 'Address not given',
-    phone_display: a.basics.phone_display.trim() || undefined,
-    website: a.basics.website.trim() || undefined,
-    brand: {
-      accent: a.theme.accent,
-      primary: a.theme.primary,
-      background: a.theme.background,
-      font_heading: a.theme.font_heading,
-      font_body: a.theme.font_body,
-      logo: a.theme.logo,
-    },
-    core_facts: facts.slice(0, 6),
-    opening_hours: openingHours(a),
-    closures: a.hours.closures.filter((c) => /^\d{4}-\d{2}-\d{2}$/.test(c.date)).map((c) => ({ date: c.date, note: c.note || undefined })),
+    ...baseProfile(a, meta, {
+      businessType: 'restaurant',
+      noun: 'restaurant',
+      facts: [
+        seatingSentence(a),
+        takeawaySentence(a),
+        [a.policies.accessibility, a.policies.children, a.seating.highchairs ? `${a.seating.highchairs} highchairs.` : ''].filter(Boolean).join(' '),
+        a.policies.parking,
+      ],
+    }),
     knowledge: knowledge(a),
     booking: bookable
       ? { services: [service(a)], resources: resources(a), areas: areas(a), highchairs: a.seating.highchairs, fixtures: a.seating.fixtures.length ? a.seating.fixtures : undefined }

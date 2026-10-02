@@ -7,18 +7,10 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { MenuCategory, ModifierGroup } from '../../domain/types.ts';
+import type { BaseAnswers, BasicsAnswer, ClosureAnswer, DayHours, FaqAnswer, Sources, ThemeAnswer } from '../common/types.ts';
 import { FIXTURE_LENGTH, autoLayout, footprint } from './layout.ts';
 
-export interface ServicePeriod {
-  label: string;
-  open: string;
-  close: string;
-}
-
-export interface DayHours {
-  open: boolean;
-  services: ServicePeriod[];
-}
+export type { DayHours, ServicePeriod } from '../common/types.ts';
 
 export interface AreaAnswer {
   key: string;
@@ -61,25 +53,14 @@ export interface FixtureAnswer {
   rotation: number;
 }
 
-export interface RestaurantAnswers {
+export interface RestaurantAnswers extends BaseAnswers {
   version: 1;
-  basics: {
-    name: string;
-    /** "Neapolitan pizza and fresh pasta": drives the menu draft and the greeting's tone. */
-    style: string;
-    town: string;
-    address: string;
-    phone_display: string;
-    website: string;
-    voice: string;
-    /** Empty: generated from the name. */
-    greeting: string;
-  };
+  basics: BasicsAnswer;
   hours: {
     /** Seven entries, 0 = Sunday. */
     days: DayHours[];
     last_booking_before_close: number;
-    closures: { date: string; note: string }[];
+    closures: ClosureAnswer[];
   };
   serve: {
     reservations: boolean;
@@ -127,18 +108,10 @@ export interface RestaurantAnswers {
     cakes: string;
     vouchers: string;
     dietary: string;
-    faqs: { q: string; a: string }[];
+    faqs: FaqAnswer[];
   };
-  theme: {
-    accent: string;
-    primary: string;
-    background: string;
-    font_heading: string;
-    font_body: string;
-    logo: string | null;
-  };
-  /** Where each field came from, by path ("basics.name"): the scout marks what it found or guessed. */
-  sources: Record<string, 'website' | 'guess'>;
+  theme: ThemeAnswer;
+  sources: Sources;
 }
 
 const HERE = dirname(fileURLToPath(import.meta.url));

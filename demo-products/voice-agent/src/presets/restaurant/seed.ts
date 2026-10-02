@@ -9,72 +9,11 @@
 import type { Resource, TenantProfile, OrderLine, MenuItem } from '../../domain/types.ts';
 import { candidateTimes, checkSlot, depositFor, durationFor, findService, type BusyInterval } from '../../domain/availability.ts';
 import { addDays, minutesOf, toLocal, weekdayOf, zonedToUtc } from '../../domain/time.ts';
+import { ALLERGIES, ids, rng } from '../common/random.ts';
+import type { SeedBooking, SeedMessage, SeedOrder, SeedPlan } from '../common/types.ts';
 
-export interface SeedBooking {
-  reference: string;
-  resource_key: string;
-  area_key: string | null;
-  starts_at: Date;
-  ends_at: Date;
-  party_size: number;
-  name: string;
-  phone: string;
-  notes: string | null;
-  allergies: string | null;
-  tags: string[];
-  deposit_pence: number;
-  deposit_paid: boolean;
-  visit_status: 'expected' | 'arrived' | 'seated' | 'finished' | 'no_show';
-  booked_via: 'receptionist' | 'staff' | 'online';
-}
-
-export interface SeedOrder {
-  reference: string;
-  name: string;
-  phone: string;
-  due_at: Date;
-  lines: OrderLine[];
-  subtotal_pence: number;
-  total_pence: number;
-  allergy_notes: string | null;
-  status: 'confirmed' | 'in_kitchen' | 'ready' | 'completed';
-  payment_status: 'unpaid' | 'paid';
-}
-
-export interface SeedMessage {
-  from_name: string;
-  from_phone: string;
-  body: string;
-}
-
-export interface SeedPlan {
-  bookings: SeedBooking[];
-  orders: SeedOrder[];
-  messages: SeedMessage[];
-}
-
-export function rng(seed: number): () => number {
-  let s = seed >>> 0 || 1;
-  return () => {
-    s ^= s << 13;
-    s ^= s >>> 17;
-    s ^= s << 5;
-    return (s >>> 0) / 4294967296;
-  };
-}
-
-export const seedFrom = (s: string) => [...s].reduce((a, c) => (Math.imul(a, 31) + c.charCodeAt(0)) >>> 0, 7);
-
-const FIRST = [
-  'Sarah', 'James', 'Priya', 'Tom', 'Aisha', 'Daniel', 'Hannah', 'Mohammed', 'Emily', 'Oliver', 'Grace', 'Liam', 'Chloe', 'Ben',
-  'Amara', 'Jack', 'Sophie', 'Ravi', 'Lucy', 'Callum', 'Zara', 'Ethan', 'Megan', 'Kwame', 'Holly', 'Adam', 'Niamh', 'Sam', 'Isla', 'Joe',
-];
-const LAST = [
-  'Collins', 'Patel', 'Walker', 'Okafor', 'Hughes', 'Khan', 'Wright', 'Murphy', 'Nowak', 'Jones', 'Clarke', 'Singh', 'Brown', 'Evans',
-  'Taylor', 'Ahmed', 'Green', 'Mensah', 'Kelly', 'Robinson', 'Hall', 'Shah', 'Wood', 'Lewis', 'Begum', 'Price', 'Doyle', 'Chen',
-];
-const ALLERGIES = ['Coeliac', 'Severe nut allergy', 'Dairy-free', 'Shellfish allergy', 'Vegan', 'Gluten intolerant', 'Sesame allergy'];
-const REF_LETTERS = 'AHJKLQRWXY';
+export { rng, seedFrom } from '../common/random.ts';
+export type { SeedBooking, SeedMessage, SeedOrder, SeedPlan } from '../common/types.ts';
 
 /**
  * How full each service gets, as a share of its table time: a neighbourhood
@@ -105,28 +44,13 @@ function humpsFor(first: number, last: number, evening: boolean, allDay: boolean
 
 export function planRestaurantSeed(profile: TenantProfile, now: Date, seed: number, days = 7): SeedPlan {
   const random = rng(seed);
-  const pick = <T>(xs: T[]): T => xs[Math.floor(random() * xs.length)];
+  const { pick, ref, phone, person } = ids(random);
   const tz = profile.timezone;
   const today = toLocal(now, tz).date;
   const service = findService(profile, 'table');
   const resources = profile.booking?.resources ?? [];
   const bookable = resources.filter((r) => service && r.services.includes(service.key));
   const areas = profile.booking?.areas ?? [];
-  const usedRefs = new Set<string>();
-  const usedPhones = new Set<string>();
-  const ref = () => {
-    for (;;) {
-      const r = `${REF_LETTERS[Math.floor(random() * 10)]}${REF_LETTERS[Math.floor(random() * 10)]}${100 + Math.floor(random() * 900)}`;
-      if (!usedRefs.has(r)) return usedRefs.add(r), r;
-    }
-  };
-  const phone = () => {
-    for (;;) {
-      const p = `+447700900${String(Math.floor(random() * 1000)).padStart(3, '0')}`;
-      if (!usedPhones.has(p)) return usedPhones.add(p), p;
-    }
-  };
-  const person = () => `${pick(FIRST)} ${pick(LAST)}`;
 
   const bookings: SeedBooking[] = [];
   const existing: BusyInterval[] = [];
