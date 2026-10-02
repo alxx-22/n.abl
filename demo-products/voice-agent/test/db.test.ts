@@ -2,6 +2,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { openPglite, migrate, migrationFiles, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
+import { DemoRepo, USAGE_KINDS } from '../src/db/demo-repo.ts';
 import { seedAll } from '../src/db/seed.ts';
 import type { Tenant } from '../src/domain/types.ts';
 
@@ -225,6 +226,19 @@ test('a demo line PIN belongs to one business, and an ended demo answers none', 
   await db.query(`update public.voice_tenants set expires_at = now() + interval '1 hour' where id = $1`, [t.id]);
   assert.equal(await repo.tenantForPin('4321'), t.id, 'one still running answers');
   for (const slug of ['pin-holder', 'pin-less', 'pin-less-too']) await repo.deleteTenant(slug);
+});
+
+test('every kind of usage the code records is one the database accepts, and no more', async () => {
+  const demo = new DemoRepo(db);
+  const key = await demo.createKey({ hash: 'usage-kinds', prefix: 'USGE', person_name: 'Usage', company: null, expires_at: new Date(Date.now() + 86400000) });
+  for (const kind of USAGE_KINDS) await demo.recordUsage(key.id, null, kind, { checked: true });
+  assert.equal(await demo.countUsage(key.id, [...USAGE_KINDS], 1), USAGE_KINDS.length);
+  // The other way round: the CHECK lists exactly these, so a kind dropped from the code is dropped from the database too.
+  const [check] = await db.query<{ def: string }>(
+    `select pg_get_constraintdef(oid) as def from pg_constraint where conrelid = 'public.voice_demo_usage'::regclass and conname = 'voice_demo_usage_kind_check'`,
+  );
+  assert.deepEqual([...check.def.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]).sort(), [...USAGE_KINDS].sort());
+  await assert.rejects(demo.recordUsage(key.id, null, 'nonsense' as never), /check constraint/);
 });
 
 test('a demo reset clears one tenant and leaves the others alone', async () => {

@@ -37,9 +37,16 @@ export interface Workspace {
   updated_at: Date;
 }
 
-export type UsageKind =
-  | 'opened' | 'workspace_created' | 'config_saved' | 'scouted' | 'started' | 'reset'
-  | 'call' | 'booking' | 'order' | 'menu_draft' | 'faq_draft' | 'staff_action';
+/**
+ * Every kind of usage row, as a list so a test can insert each one: a kind
+ * added here but not to voice_demo_usage's CHECK (in a migration) would
+ * fail only when a prospect first did that thing (PRESETS.md §1, rule 6).
+ */
+export const USAGE_KINDS = [
+  'opened', 'workspace_created', 'config_saved', 'scouted', 'started', 'reset',
+  'call', 'booking', 'order', 'menu_draft', 'faq_draft', 'staff_action',
+] as const;
+export type UsageKind = (typeof USAGE_KINDS)[number];
 
 function mapKey(r: any): DemoKey {
   const kind: KeyKind = r.kind === 'shared' ? 'shared' : 'private';
