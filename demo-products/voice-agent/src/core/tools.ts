@@ -528,7 +528,7 @@ const TOOLS: Record<string, Tool> = {
             existing: await ctx.repo.busyForDate(ctx.tenant, date), accessible: bool(args.accessible),
           });
           if (free && free.length > 1) {
-            return { booked: false, message: `${free.join(' and ')} are both free then: pass area, the one the caller chose (ask if they have not said; if they do not mind, ${free[0].toLowerCase()}).` };
+            return { booked: false, message: `Not booked yet: ${free.join(' and ')} are both free then, and this booking named neither. Call create_booking again with area set to the one the caller chose. Only ask them if they have not said; if they do not mind, ${free[0].toLowerCase()}.` };
           }
         }
       }

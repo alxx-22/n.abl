@@ -370,6 +370,13 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (this.turns?.isOpen) next.sendActivityStart();
     old?.removeAllListeners();
     old?.close();
+    // A turn the old session never answered is still owed. On 2 October a session dropped six seconds after
+    // the caller spoke, resumed, and said nothing: the watchdog had already counted the old session's last
+    // message as an answer. Timing the turn afresh lets it hand the call over if the resumed one stays silent.
+    if (this.awaitingReply) {
+      this.lastCallerSound = Date.now();
+      this.lastModelSign = 0;
+    }
     this.record('system', { event: 'resumed', with_handle: Boolean(this.resumeHandle) });
   }
 

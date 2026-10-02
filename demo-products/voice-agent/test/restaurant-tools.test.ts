@@ -101,7 +101,7 @@ test('restaurant tools: with inside and the terrace both free, the booking names
   // From a live test: read back as "on the terrace", booked with no area, and seated inside.
   const r = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: 'Sam Price', allergies: 'none' }, ctx);
   assert.equal(r.booked, false);
-  assert.match(String(r.message), /Inside and Terrace are both free then: pass area/);
+  assert.match(String(r.message), /Inside and Terrace are both free then, and this booking named neither\. Call create_booking again with area/);
   const ok = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: 'Sam Price', allergies: 'none', area: 'Terrace' }, ctx);
   assert.equal(ok.booked, true, JSON.stringify(ok));
   assert.equal(ok.area, 'Terrace');
