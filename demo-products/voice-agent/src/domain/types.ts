@@ -6,7 +6,10 @@
 // for itself. Transactional records (bookings, orders, payments, calls) are
 // proper tables.
 
-export type BusinessType = 'restaurant' | 'cafe' | 'takeaway' | 'pub' | 'hotel' | 'salon' | 'barber' | 'other';
+// Every kind of business in src/presets/catalogue.ts, and 'other' for fixtures read from a website.
+export type BusinessType =
+  | 'restaurant' | 'takeaway' | 'cafe' | 'pub' | 'barber' | 'salon' | 'beauty' | 'spa'
+  | 'estate_agent' | 'letting_agent' | 'hotel' | 'gym' | 'dog_grooming' | 'garage' | 'other';
 
 export const ALLERGENS = [
   'celery', 'gluten', 'crustaceans', 'eggs', 'fish', 'lupin', 'milk',

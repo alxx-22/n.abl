@@ -13,18 +13,17 @@ import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
 import { tenantState } from './state.ts';
 import type { DemoKey, Workspace } from '../db/demo-repo.ts';
 import { SHARED_DEMO_MINUTES, SHARED_DRAFT_MINUTES, THROTTLE, hashKey, ipHash, newVisitor, normaliseKey, prefixOf, readSession, signSession } from '../demo/access.ts';
-import { PRESETS, getPreset, type Preset } from '../presets/index.ts';
-import { seedFrom } from '../presets/restaurant/seed.ts';
-import { cleanBrief, draftFaqs, draftMenu } from '../presets/restaurant/drafts.ts';
-import { hoursSentence } from '../presets/restaurant/compile.ts';
-import type { RestaurantAnswers } from '../presets/restaurant/answers.ts';
+import { PRESETS, answersOf, builtPreset, getPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
+import { draftFaqs } from '../presets/common/drafts.ts';
+import { PresetError } from '../presets/common/errors.ts';
+import { seedFrom } from '../presets/common/random.ts';
 import { applySettings, type SettingsPatch } from '../domain/settings.ts';
 import type { TenantProfile } from '../domain/types.ts';
 import { spokenDate, spokenTime, toLocal } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { SimulatedSms } from '../channels/sms.ts';
 import { ScoutError, scanProgress, startScan, type ScanResult } from '../scout/scan.ts';
-import { applyScan, scanView, type ScanPart } from '../scout/map.ts';
+import { scanView, type ScanPart } from '../scout/map.ts';
 
 export const API = `${BASE}/api`;
 export const SESSION_COOKIE = 'demo_s';
@@ -42,6 +41,7 @@ export const demoSms = new SimulatedSms();
 /** voice_tenants.config for a workspace. */
 export interface WorkspaceConfig {
   preset: string;
+  /** Always 1, and not read: the answers carry their own version (answersOf). */
   version: 1;
   answers: unknown;
   /** Call settings the builder does not ask about: language, reply speed, model, turn-taking. */
@@ -56,7 +56,7 @@ function configOf(w: Workspace): WorkspaceConfig {
 }
 
 /** The profile the receptionist runs on: the preset's compile, then the call settings. */
-export function buildProfile(preset: Preset, answers: unknown, slug: string, settings?: SettingsPatch): TenantProfile {
+export function buildProfile(preset: Preset, answers: BaseAnswers, slug: string, settings?: SettingsPatch): TenantProfile {
   const profile = preset.compile(answers, { slug });
   if (!settings) return profile;
   const r = applySettings(profile, settings);
@@ -64,6 +64,18 @@ export function buildProfile(preset: Preset, answers: unknown, slug: string, set
 }
 
 const slugPart = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24);
+
+/**
+ * Recompiles a workspace from its answers and saves both. The demo line's
+ * PIN and the call settings are never the builder's to change, so they are
+ * always kept; Start passes a PIN when the workspace has none yet.
+ */
+async function rebuild(ctx: Ctx, w: Workspace, preset: Preset, answers: BaseAnswers, settings = configOf(w).settings, pin = w.tenant.profile.demo_pin): Promise<{ workspace: Workspace; profile: TenantProfile }> {
+  const profile = buildProfile(preset, answers, w.tenant.slug, settings);
+  if (pin) profile.demo_pin = pin;
+  const workspace = await ctx.demo.saveWorkspace(w.tenant.id, profile, { ...configOf(w), answers, settings } satisfies WorkspaceConfig);
+  return { workspace, profile };
+}
 
 // ── Sessions ──────────────────────────────────────────────────────────────
 
@@ -151,33 +163,22 @@ function workspaceSummary(w: Workspace) {
   };
 }
 
-/** What the builder's preview pane shows: what the receptionist will actually say. Exported for the restaurant goldens. */
-export function preview(w: Workspace, profile: TenantProfile, answers: unknown) {
-  const a = answers as RestaurantAnswers;
-  const tables = profile.booking?.resources.filter((r) => r.layout) ?? [];
-  const covers: Record<string, number> = {};
-  for (const t of tables) covers[t.area ?? ''] = (covers[t.area ?? ''] ?? 0) + (t.layout?.seats ?? 0);
-  return {
-    greeting: profile.greeting,
-    core_facts: profile.core_facts,
-    hours: w.preset === 'restaurant' ? hoursSentence(a) : null,
-    covers: (profile.booking?.areas ?? []).map((ar) => ({ area: ar.key, label: ar.label, covers: covers[ar.key] ?? 0 })),
-    bookable_tables: tables.filter((t) => t.services.length).length,
-    pairs: profile.booking?.resources.filter((r) => r.combines).map((r) => r.label) ?? [],
-    dishes: profile.menu?.categories.reduce((n, c) => n + c.items.length, 0) ?? 0,
-  };
+/** What the builder's preview pane shows, from the workspace's preset. Exported for the restaurant goldens. */
+export function preview(w: Pick<Workspace, 'preset'>, profile: TenantProfile, answers: BaseAnswers) {
+  const preset = builtPreset(w.preset ?? '');
+  return preset ? preset.preview(answers, profile) : null;
 }
 
 function workspacePayload(w: Workspace) {
   const cfg = configOf(w);
   const preset = getPreset(cfg.preset);
-  const answers = preset ? preset.sanitise(cfg.answers) : cfg.answers;
+  const answers = preset ? answersOf(preset, cfg.answers) : null;
   return {
     ...workspaceSummary(w),
-    answers,
+    answers: answers ?? cfg.answers,
     settings: cfg.settings ?? {},
-    issues: preset ? preset.validate(answers) : [],
-    preview: preset ? preview(w, w.tenant.profile, answers) : null,
+    issues: preset && answers ? preset.validate(answers) : [],
+    preview: preset && answers ? preset.preview(answers, w.tenant.profile) : null,
     profile: {
       voice: w.tenant.profile.voice, greeting: w.tenant.profile.greeting, language_code: w.tenant.profile.language_code,
       reply_speed: w.tenant.profile.reply_speed, live_model: w.tenant.profile.live_model, turn_taking: w.tenant.profile.turn_taking,
@@ -277,11 +278,12 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
       bus.publish({ type: 'refresh', tenant_id: replace.tenant.id, call_id: '', at: new Date().toISOString(), reason: 'deleted' });
       await demo.recordUsage(key.id, null, 'reset', { replaced: replace.tenant.id }, who.visitor);
     }
-    const answers = preset.defaults() as RestaurantAnswers;
+    const answers = preset.defaults();
     answers.basics.name = String(b.name ?? key.company ?? '').trim().slice(0, 60);
     if (typeof b.website === 'string' && b.website.trim()) answers.basics.website = b.website.trim().slice(0, 200);
-    const clean = preset.sanitise(answers);
-    const slug = `demo-${key.key_prefix.toLowerCase()}-${slugPart(answers.basics.name) || preset.info.key}-${randomBytes(2).toString('hex')}`;
+    const clean = answersOf(preset, answers);
+    // A key such as estate_agent is not a slug: the database allows only letters, digits and hyphens.
+    const slug = `demo-${key.key_prefix.toLowerCase()}-${slugPart(answers.basics.name) || slugPart(preset.info.key)}-${randomBytes(2).toString('hex')}`;
     const profile = buildProfile(preset, clean, slug);
     const w = await demo.createWorkspace(key.id, preset.info.key, profile, { preset: preset.info.key, version: 1, answers: clean } satisfies WorkspaceConfig, {
       visitor: who.visitor,
@@ -320,11 +322,8 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     const now = Date.now();
     if (now - (lastSave.get(t.id) ?? 0) < 800) throw new HttpError(429, 'Saving too fast; try again in a moment.');
     lastSave.set(t.id, now);
-    const answers = preset.sanitise(await readJson(req, 1_500_000));
-    const profile = buildProfile(preset, answers, t.slug, cfg.settings);
-    // Keep the demo line's PIN and anything else set outside the builder.
-    if (t.profile.demo_pin) profile.demo_pin = t.profile.demo_pin;
-    const saved = await demo.saveWorkspace(t.id, profile, { ...cfg, answers } satisfies WorkspaceConfig);
+    const answers = answersOf(preset, await readJson(req, 1_500_000));
+    const { workspace: saved } = await rebuild(ctx, w, preset, answers);
     if (now - (lastSaveLogged.get(t.id) ?? 0) > 10 * 60000) {
       lastSaveLogged.set(t.id, now);
       void usage('config_saved');
@@ -333,24 +332,27 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     return json(res, 200, workspacePayload(saved)), true;
   }
   if (sub === 'menu-draft' && req.method === 'POST') {
+    const draft = preset.draft;
+    if (!draft) throw new HttpError(404, 'There is nothing to draft for this kind of business.');
     await spendDraft(ctx, who, admin);
-    const current = preset.sanitise(cfg.answers) as RestaurantAnswers;
-    const brief = cleanBrief(await readJson(req, 20_000), current.basics.style);
-    if (!brief.description && !brief.style) throw new HttpError(400, 'Describe the food first.');
+    const current = answersOf(preset, cfg.answers);
+    const brief = await readJson(req, 20_000);
+    let next: BaseAnswers;
     try {
-      const menu = await draftMenu(brief, config);
-      void usage('menu_draft', { dishes: menu.categories.reduce((n, c) => n + c.items.length, 0) });
-      return json(res, 200, { menu }), true;
+      next = await draft.run(brief, current, config);
     } catch (err) {
+      if (err instanceof PresetError) throw new HttpError(err.status, err.message);
       throw new HttpError(502, draftError(err));
     }
+    void usage('menu_draft', { catalogue: draft.label, ...draft.counts(next) });
+    return json(res, 200, { [draft.label]: (next as unknown as Record<string, unknown>)[draft.label] }), true;
   }
   if (sub === 'faq-draft' && req.method === 'POST') {
     await spendDraft(ctx, who, admin);
     const body = await readJson(req, 1_500_000);
-    const answers = preset.sanitise(body?.answers ?? cfg.answers) as RestaurantAnswers;
+    const answers = answersOf(preset, body?.answers ?? cfg.answers);
     try {
-      const faqs = await draftFaqs(answers, config);
+      const faqs = await draftFaqs(preset.factSheet(answers), preset.info.noun, preset.handles, config);
       void usage('faq_draft', { faqs: faqs.length });
       return json(res, 200, { faqs }), true;
     } catch (err) {
@@ -386,12 +388,9 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     const body = await readJson(req, 10_000);
     const scan = cfg.scan && cfg.scan.id === body.scan ? await demo.getScan(cfg.scan.id) : null;
     if (!scan || scan.status !== 'done') throw new HttpError(409, 'That website read has not finished.');
-    const use = Object.fromEntries(['identity', 'hours', 'menu', 'theme', 'services', 'policies'].map((k) => [k, body.use?.[k] === true])) as Record<ScanPart, boolean>;
-    const current = preset.sanitise(cfg.answers) as RestaurantAnswers;
-    const answers = preset.sanitise(applyScan(current, scan.result as ScanResult, use));
-    const profile = buildProfile(preset, answers, t.slug, cfg.settings);
-    if (t.profile.demo_pin) profile.demo_pin = t.profile.demo_pin;
-    const saved = await demo.saveWorkspace(t.id, profile, { ...cfg, answers } satisfies WorkspaceConfig);
+    const use = Object.fromEntries(preset.scan.parts.map((k) => [k, body.use?.[k] === true])) as Record<ScanPart, boolean>;
+    const answers = answersOf(preset, preset.scan.apply(answersOf(preset, cfg.answers), scan.result as ScanResult, use));
+    const { workspace: saved } = await rebuild(ctx, w, preset, answers);
     if (w.started_at) refresh({ reason: 'config' });
     return json(res, 200, workspacePayload(saved)), true;
   }
@@ -399,12 +398,10 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   // ── Start and reset: compile, then fill the diary ─────────────────────
   if ((sub === 'start' || sub === 'reset') && req.method === 'POST') {
     if (bus.activeFor(t.id).length) throw new HttpError(409, 'Hang up the call first.');
-    const answers = preset.sanitise(cfg.answers);
+    const answers = answersOf(preset, cfg.answers);
     const errors = preset.validate(answers).filter((i) => i.level === 'error');
     if (errors.length) return json(res, 400, { error: errors[0].message, issues: errors }), true;
-    const profile = buildProfile(preset, answers, t.slug, cfg.settings);
-    profile.demo_pin = t.profile.demo_pin ?? String(1000 + Math.floor(Math.random() * 9000));
-    await demo.saveWorkspace(t.id, profile, { ...cfg, answers });
+    const { profile } = await rebuild(ctx, w, preset, answers, cfg.settings, t.profile.demo_pin ?? String(1000 + Math.floor(Math.random() * 9000)));
     await repo.resetTenantData(t.id);
     // A fresh seed each time: Reset shows a different week, still believable.
     const plan = preset.seed(profile, new Date(), seedFrom(`${t.id}:${Date.now()}`));
@@ -427,14 +424,12 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     const r = applySettings(t.profile, patch);
     if (!r.ok) throw new HttpError(400, r.error);
     // Voice and greeting are builder answers too; the rest are call settings.
-    const answers = preset.sanitise(cfg.answers) as RestaurantAnswers;
+    const answers = answersOf(preset, cfg.answers);
     if (patch.voice !== undefined) answers.basics.voice = r.profile.voice;
     if (patch.greeting !== undefined) answers.basics.greeting = r.profile.greeting;
     const { voice: _v, greeting: _g, ...rest } = patch;
     const settings = { ...(cfg.settings ?? {}), ...rest };
-    const profile = buildProfile(preset, answers, t.slug, settings);
-    if (t.profile.demo_pin) profile.demo_pin = t.profile.demo_pin;
-    const saved = await demo.saveWorkspace(t.id, profile, { ...cfg, answers, settings });
+    const { workspace: saved } = await rebuild(ctx, w, preset, answers, settings);
     return json(res, 200, workspacePayload(saved)), true;
   }
   if (sub === 'voice-preview' && req.method === 'POST') {
@@ -461,9 +456,10 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
       if (!r.ok) throw new HttpError(409, r.message);
       message = `Moved to ${t.profile.booking?.resources.find((x) => x.key === r.booking.resource_key)?.label ?? r.booking.resource_key}.`;
     } else if (b.action === 'combine') {
+      if (!preset.combineTables) throw new HttpError(400, 'Nothing here can be pushed together.');
       // Push two tables together for this booking: the pair if it exists, or
       // join them in the setup (same area, both real) and then use the pair.
-      const pair = await combineTables(ctx, w, preset, cfg, String(b.tables?.[0] ?? ''), String(b.tables?.[1] ?? ''));
+      const pair = await combineTables(ctx, w, preset, String(b.tables?.[0] ?? ''), String(b.tables?.[1] ?? ''));
       const fresh = (await demo.getWorkspace(t.id))!.tenant;
       const r = await repo.moveBookingToTable(fresh, ref, pair);
       if (!r.ok) throw new HttpError(409, r.message);
@@ -539,25 +535,21 @@ async function textCustomer(ctx: Ctx, tenantId: string, to: string | null, body:
 }
 
 /** The key of the pushed-together pair for two tables, joining them in the setup if need be. */
-async function combineTables(ctx: Ctx, w: Workspace, preset: Preset, cfg: WorkspaceConfig, a: string, b: string): Promise<string> {
+async function combineTables(ctx: Ctx, w: Workspace, preset: Preset, a: string, b: string): Promise<string> {
   const resources = w.tenant.profile.booking?.resources ?? [];
   const existing = resources.find((r) => r.combines && r.combines.length === 2 && r.combines.includes(a) && r.combines.includes(b));
   if (existing) {
     if (!existing.services.length) throw new HttpError(409, `${existing.label} is not bookable.`);
     return existing.key;
   }
-  const answers = preset.sanitise(cfg.answers) as RestaurantAnswers;
-  const ta = answers.seating.tables.find((t) => t.key === a);
-  const tb = answers.seating.tables.find((t) => t.key === b);
-  if (!ta || !tb || a === b) throw new HttpError(400, 'Pick two different tables.');
-  if (ta.area !== tb.area) throw new HttpError(409, `${ta.label} and ${tb.label} are in different areas.`);
-  if (ta.walk_in || tb.walk_in) throw new HttpError(409, 'One of those tables is kept for walk-ins.');
-  ta.joins = [...new Set([...ta.joins, b])];
-  tb.joins = [...new Set([...tb.joins, a])];
-  const clean = preset.sanitise(answers);
-  const profile = buildProfile(preset, clean, w.tenant.slug, cfg.settings);
-  if (w.tenant.profile.demo_pin) profile.demo_pin = w.tenant.profile.demo_pin;
-  await ctx.demo.saveWorkspace(w.tenant.id, profile, { ...cfg, answers: clean });
+  let joined: BaseAnswers;
+  try {
+    joined = preset.combineTables!(answersOf(preset, configOf(w).answers), a, b);
+  } catch (err) {
+    if (err instanceof PresetError) throw new HttpError(err.status, err.message);
+    throw err;
+  }
+  const { profile } = await rebuild(ctx, w, preset, answersOf(preset, joined));
   const pair = profile.booking?.resources.find((r) => r.combines?.includes(a) && r.combines.includes(b));
   if (!pair) throw new HttpError(409, 'Those tables cannot be pushed together.');
   return pair.key;

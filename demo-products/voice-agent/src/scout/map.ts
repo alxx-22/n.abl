@@ -2,8 +2,8 @@
 // ticked, each field marked "from your website" (or "our guess" where it was
 // inferred) so the builder shows what to check.
 
-import { defaultAnswers, type RestaurantAnswers } from '../presets/restaurant/answers.ts';
-import { hoursSentence } from '../presets/restaurant/compile.ts';
+import { hoursSentence } from '../presets/common/hours.ts';
+import type { RestaurantAnswers } from '../presets/restaurant/answers.ts';
 import type { ScanResult } from './scan.ts';
 
 export type ScanPart = 'identity' | 'hours' | 'menu' | 'theme' | 'services' | 'policies';
@@ -88,9 +88,8 @@ export function scanView(scan: { id: string; status: 'running' | 'done' | 'faile
   const r = scan.status === 'done' ? (scan.result as ScanResult) : null;
   let hours = null;
   if (r?.hours) {
-    const a = defaultAnswers();
-    a.hours.days = r.hours.map((d) => ({ open: d.open && d.services.length > 0, services: d.services.map((s) => ({ ...s, label: s.label || 'Open' })) }));
-    hours = { days: a.hours.days.filter((d) => d.open).length, sentence: hoursSentence(a) };
+    const days = r.hours.map((d) => ({ open: d.open && d.services.length > 0, services: d.services.map((s) => ({ ...s, label: s.label || 'Open' })) }));
+    hours = { days: days.filter((d) => d.open).length, sentence: hoursSentence({ days }) };
   }
   const services: string[] = [];
   if (r) {

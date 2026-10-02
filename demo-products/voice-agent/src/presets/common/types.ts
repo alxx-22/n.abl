@@ -74,6 +74,9 @@ export interface Issue<StepKey extends string = string> {
   message: string;
 }
 
+/** Where a booked guest is on the day: expected, arrived, seated, finished, or a no-show. */
+export type VisitStatus = NonNullable<Booking['visit_status']>;
+
 // ── A seeded week: planned in memory, then written by repo.insertSeed ────
 
 export interface SeedBooking {
@@ -90,7 +93,7 @@ export interface SeedBooking {
   tags: string[];
   deposit_pence: number;
   deposit_paid: boolean;
-  visit_status: NonNullable<Booking['visit_status']>;
+  visit_status: VisitStatus;
   booked_via: 'receptionist' | 'staff' | 'online';
 }
 

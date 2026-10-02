@@ -17,8 +17,11 @@ export { defaultAreas } from '../seating/areas.ts';
 export { defaultFixtures } from '../seating/fixtures.ts';
 export { tablesFromCounts, type TableCounts } from '../seating/tables.ts';
 
+/** The shape of the answers today. Raise it with a migrate step (PRESETS.md §1, rule 2), so saved setups keep loading. */
+export const VERSION = 1;
+
 export interface RestaurantAnswers extends BaseAnswers {
-  version: 1;
+  version: typeof VERSION;
   basics: BasicsAnswer;
   hours: {
     /** Seven entries, 0 = Sunday. */
@@ -94,7 +97,7 @@ export function defaultAnswers(): RestaurantAnswers {
   const areas = defaultAreas();
   const tables = defaultTables(areas);
   return {
-    version: 1,
+    version: VERSION,
     basics: {
       name: '',
       style: 'Neapolitan pizza, fresh pasta and Italian small plates',

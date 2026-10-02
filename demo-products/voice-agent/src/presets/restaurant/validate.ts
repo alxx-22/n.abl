@@ -9,7 +9,7 @@ import { validateBase } from '../common/validate.ts';
 import { sanitiseMenu, validateMenu } from '../food/menu.ts';
 import { ORDER_PAYMENTS, sanitiseOrdering, takesOrders, validateOrdering } from '../food/ordering.ts';
 import { sanitiseDeposit, sanitiseSeating, validateDeposit, validateSeating } from '../seating/floor.ts';
-import { defaultAnswers, type RestaurantAnswers } from './answers.ts';
+import { VERSION, defaultAnswers, type RestaurantAnswers } from './answers.ts';
 
 export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
   const d = defaultAnswers();
@@ -19,7 +19,7 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
   const m = x.money ?? {};
   const p = x.policies ?? {};
   return {
-    version: 1,
+    version: VERSION,
     basics: sanitiseBasics(x.basics, d.basics),
     hours: {
       days: sanitiseDays(h.days, d.hours.days),

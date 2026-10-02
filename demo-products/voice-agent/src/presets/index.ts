@@ -1,38 +1,107 @@
-// The preset registry: what the server needs from each kind of business.
-// Only the restaurant is built; the catalogue lists the rest as coming soon.
+// The preset registry: what the server needs from each kind of business, and
+// the one way it reads a workspace's saved answers. A preset is served to
+// prospects once it is built here and its catalogue entry says live
+// (PRESETS.md §2.2). Only the restaurant is built so far.
 
+import type { Config } from '../config.ts';
 import type { TenantProfile } from '../domain/types.ts';
+import type { ScanPart } from '../scout/map.ts';
+import type { ScanResult } from '../scout/scan.ts';
 import { PRESETS, presetInfo, type PresetInfo } from './catalogue.ts';
-import { defaultAnswers as restaurantDefaults } from './restaurant/answers.ts';
-import { compileRestaurant } from './restaurant/compile.ts';
-import { sanitiseRestaurant, validateRestaurant, type Issue } from './restaurant/validate.ts';
-import { planRestaurantSeed, type SeedPlan } from './restaurant/seed.ts';
+import type { BaseAnswers, Issue, SeedPlan, VisitStatus } from './common/types.ts';
+import { restaurant } from './restaurant/preset.ts';
 
-export interface Preset {
-  info: PresetInfo;
-  defaults(): unknown;
-  /** Rebuild answers from untrusted JSON. */
-  sanitise(input: unknown): unknown;
-  validate(answers: unknown): Issue[];
-  compile(answers: unknown, meta: { slug: string }): TenantProfile;
-  /** A believable week of data for the compiled profile, deterministic for a seed. */
-  seed(profile: TenantProfile, now: Date, seed: number): SeedPlan;
+export type ViewId = 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls';
+
+/** The back office a workspace shows, in the preset's own words (PRESETS.md §2.5). */
+export interface WorkspaceSpec {
+  /** Tab order; the first is the default. */
+  views: { id: ViewId; label: string; of?: string }[];
+  bookings?: {
+    resource: string;
+    resources: string;
+    party: string | null;
+    visit: Partial<Record<VisitStatus, string>>;
+    allergies: boolean;
+  };
+  orders?: {
+    board: string;
+    done: { collection: string; delivery: string };
+    drivers: boolean;
+    /** Seeded orders move on with the clock. */
+    advance: boolean;
+  };
+  /** What to try saying on the call; {ref} is filled from state. */
+  suggestions: string[];
+  /** What Reset makes again: "bookings and orders". */
+  resetLine: string;
 }
 
-const BUILT: Record<string, Omit<Preset, 'info'>> = {
-  restaurant: {
-    defaults: restaurantDefaults,
-    sanitise: sanitiseRestaurant,
-    validate: (a) => validateRestaurant(a as ReturnType<typeof restaurantDefaults>),
-    compile: (a, meta) => compileRestaurant(a as ReturnType<typeof restaurantDefaults>, meta),
-    seed: (profile, now, seed) => planRestaurantSeed(profile, now, seed),
-  },
-};
+/** A catalogue the builder drafts from a description: the restaurant's menu, later a price list. */
+export interface CatalogueDraft<A extends BaseAnswers> {
+  /** The answers section a draft fills, and the key the route sends it back under: { menu }. */
+  label: string;
+  /**
+   * The request's brief and the current answers: the answers with that
+   * section drafted. Throws PresetError (400) when the brief gives nothing to
+   * go on.
+   */
+  run(brief: unknown, a: A, config: Config): Promise<A>;
+  /** Recorded with the usage row: { dishes: 18 }. */
+  counts(a: A): Record<string, number>;
+}
 
+export interface Preset<A extends BaseAnswers = BaseAnswers> {
+  info: PresetInfo;
+  /** The shape of the answers today; saved answers with an older version go through migrate first. */
+  VERSION: number;
+  migrate?(raw: unknown, from: number): unknown;
+  /** A fresh object every call. */
+  defaults(): A;
+  /** Rebuild answers from untrusted JSON. Writes VERSION. */
+  sanitise(input: unknown): A;
+  validate(a: A): Issue[];
+  compile(a: A, meta: { slug: string }): TenantProfile;
+  /** A believable week of data for the compiled profile, deterministic for a seed. */
+  seed(profile: TenantProfile, now: Date, seed: number): SeedPlan;
+  /** What the builder's preview pane shows. */
+  preview(a: A, profile: TenantProfile): Record<string, unknown>;
+  /** What the FAQ draft is told about the business. */
+  factSheet(a: A): string;
+  /** What the receptionist does itself, which the FAQ draft leaves out: "booking a table or ordering food". */
+  handles: string;
+  draft?: CatalogueDraft<A>;
+  /** Which parts of a website scan the builder offers, and how they land in the answers. Takes scans saved by earlier code. */
+  scan: { parts: ScanPart[]; apply(a: A, result: ScanResult, use: Partial<Record<ScanPart, boolean>>): A };
+  workspace(profile: TenantProfile): WorkspaceSpec;
+  /** Staff push two tables together for a booking; throws PresetError when they cannot be. */
+  combineTables?(a: A, x: string, y: string): A;
+}
+
+const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant };
+
+/** A preset prospects can use: built, and live in the catalogue. */
 export function getPreset(key: string): Preset | null {
   const info = presetInfo(key);
   const built = BUILT[key];
   return info && built && info.status === 'live' ? { info, ...built } : null;
 }
 
-export { PRESETS, type Issue, type SeedPlan };
+/** Any built preset, live or not: for tests, and for previewing one before it goes live. */
+export function builtPreset(key: string): Preset | null {
+  const info = presetInfo(key);
+  const built = BUILT[key];
+  return info && built ? { info, ...built } : null;
+}
+
+/**
+ * The only way stored or sent answers are read: brought up to the preset's
+ * version, then cleaned. Answers with no version are the first.
+ */
+export function answersOf<A extends BaseAnswers>(preset: Preset<A>, raw: unknown): A {
+  const v = (raw as { version?: unknown } | null | undefined)?.version;
+  const from = typeof v === 'number' ? v : 1;
+  return preset.sanitise(preset.migrate && from < preset.VERSION ? preset.migrate(raw, from) : raw);
+}
+
+export { PRESETS, type BaseAnswers, type Issue, type PresetInfo, type SeedPlan };

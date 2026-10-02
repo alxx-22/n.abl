@@ -3,6 +3,7 @@
 // included.
 
 import type { Resource } from '../../domain/types.ts';
+import { PresetError } from '../common/errors.ts';
 import { arr, bool, int, oneOf, str } from '../common/sanitise.ts';
 import { areaBookable } from './areas.ts';
 import { autoLayout } from './layout.ts';
@@ -108,4 +109,17 @@ export function compileTables(s: SeatingAnswer, reservations: boolean): Resource
     }
   }
   return [...tables, ...pairs];
+}
+
+/**
+ * The tables with x and y pushed together, both ways: staff joining two
+ * tables for a booking in the back office. Refuses two that cannot be.
+ */
+export function joinTables(tables: TableAnswer[], x: string, y: string): TableAnswer[] {
+  const tx = tables.find((t) => t.key === x);
+  const ty = tables.find((t) => t.key === y);
+  if (!tx || !ty || x === y) throw new PresetError(400, 'Pick two different tables.');
+  if (tx.area !== ty.area) throw new PresetError(409, `${tx.label} and ${ty.label} are in different areas.`);
+  if (tx.walk_in || ty.walk_in) throw new PresetError(409, 'One of those tables is kept for walk-ins.');
+  return tables.map((t) => (t === tx ? { ...t, joins: [...new Set([...t.joins, y])] } : t === ty ? { ...t, joins: [...new Set([...t.joins, x])] } : t));
 }
