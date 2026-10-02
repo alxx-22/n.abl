@@ -996,7 +996,8 @@ const TOOLS: Record<string, Tool> = {
         const again = await TOOLS.review_order.handler({}, ctx);
         return {
           placed: false,
-          message: 'The order is different from what was read back. Read this back, ask if it is right, and on yes call confirm_order again.',
+          // "Different" when nothing had been read back had the receptionist tell the caller the order had changed, then say it was placed.
+          message: `Not placed yet: ${ctx.state.reviewedKey === null ? 'the caller has not heard the order read back' : 'the order has changed since it was read back'}. Read this back word for word, ask if it is right, and on yes call confirm_order again. Until it returns an order number, do not say the order is placed.`,
           read_back: again.read_back,
         };
       }
