@@ -13,6 +13,10 @@ import { compileRestaurant } from '../src/presets/restaurant/compile.ts';
 import { factSheet } from '../src/presets/restaurant/drafts.ts';
 import { sanitiseRestaurant, validateRestaurant } from '../src/presets/restaurant/validate.ts';
 import { loadConfig } from '../src/config.ts';
+import { bookingWindows, hoursSentence } from '../src/presets/common/hours.ts';
+import { planRestaurantSeed } from '../src/presets/restaurant/seed.ts';
+import { candidateTimes } from '../src/domain/availability.ts';
+import { toLocal } from '../src/domain/time.ts';
 
 const corpus = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/restaurant/corpus/${name}.json`, import.meta.url), 'utf8'));
 const restaurant = builtPreset('restaurant') as unknown as Preset<RestaurantAnswers>;
@@ -48,6 +52,35 @@ test('presets: answers with no week of hours open as the defaults do, and a week
   // arrived with none is closed, as it always was.
   const sent = sanitiseRestaurant({ hours: { days: [{ open: true, services: [] }, { open: false }, {}] } }).hours.days;
   assert.deepEqual(sent.slice(0, 3).map((x) => x.open), [false, false, false]);
+});
+
+test('presets: a place can close at midnight, written 24:00, and only close then', () => {
+  const late = (open: string, close: string) => ({ open: true, services: [{ label: 'Dinner', open, close }] });
+  const a = defaultAnswers();
+  a.basics.name = 'Late Night';
+  a.hours.days[5] = late('17:30', '24:00');
+  a.hours.days[6] = late('24:00', '24:00');
+  const clean = sanitiseRestaurant(structuredClone(a));
+  assert.deepEqual(clean.hours.days[5].services[0], { label: 'Dinner', open: '17:30', close: '24:00' });
+  assert.equal(clean.hours.days[6].services[0].open, '12:00', 'nothing opens at 24:00');
+  assert.equal(sanitiseRestaurant({ hours: { days: [late('12:00', '24:30'), late('12:00', '25:00')] } }).hours.days[0].services[0].close, '22:00', 'midnight is the latest close');
+  assert.deepEqual(validateRestaurant(clean).filter((i) => i.step === 'hours'), [], 'midnight closes after it opens');
+  assert.match(hoursSentence(clean.hours), /Friday: 5:30pm till midnight\./);
+  assert.match(hoursSentence(clean.hours), /Saturday: 12 noon till midnight\./);
+
+  const profile = compileRestaurant(clean, { slug: 'late' });
+  assert.ok(profile.ordering!.hours.some((h) => h.days.includes(5) && h.close === '24:00'), 'evening takeaway runs to midnight');
+  assert.ok(profile.core_facts.some((f) => /Friday: 5:30pm till midnight/.test(f)));
+  const table = profile.booking!.services[0];
+  assert.ok(table.windows.some((w) => w.days.includes(5) && w.last === '23:00'), 'last booking an hour before midnight');
+  const zero = bookingWindows(clean.hours, 0).find((w) => w.days.includes(5))!;
+  assert.equal(zero.last, '23:59', 'with no gap before closing, the last start is still that day');
+  assert.equal(candidateTimes({ ...table, windows: [{ days: [5], first: '23:00', last: '24:00' }] }, '2026-10-09').at(-1), '23:45', 'nothing starts at midnight');
+
+  // Friday 9 October at 7pm: every seeded order is due that Friday, the last by a quarter to midnight.
+  const plan = planRestaurantSeed(profile, new Date('2026-10-09T18:00:00Z'), 42);
+  assert.ok(plan.orders.length);
+  for (const o of plan.orders) assert.equal(toLocal(o.due_at, profile.timezone).date, '2026-10-09');
 });
 
 test('presets: every kind of business has its words, its type and a placeholder website', () => {

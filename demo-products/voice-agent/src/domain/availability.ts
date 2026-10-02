@@ -7,7 +7,7 @@
 
 import type { BookableService, Resource, TenantProfile } from './types.ts';
 import {
-  addDays, isIsoDate, minutesOf, normaliseTime, spokenDate, spokenTime, timeOf, toLocal, weekdayOf, zonedToUtc,
+  LAST_START, addDays, closeMinutes, isIsoDate, minutesOf, normaliseTime, spokenDate, spokenTime, timeOf, toLocal, weekdayOf, zonedToUtc,
 } from './time.ts';
 
 export interface BusyInterval {
@@ -112,7 +112,8 @@ export function candidateTimes(service: BookableService, date: string): string[]
   const set = new Set<number>();
   for (const w of service.windows) {
     if (!w.days.includes(wd)) continue;
-    for (let t = minutesOf(w.first); t <= minutesOf(w.last); t += service.slot_minutes) set.add(t);
+    // Nothing starts at midnight: that is the next day's first minute.
+    for (let t = minutesOf(w.first); t <= Math.min(minutesOf(w.last), LAST_START); t += service.slot_minutes) set.add(t);
   }
   return [...set].sort((a, b) => a - b).map(timeOf);
 }
@@ -278,7 +279,8 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
     .filter((w) => w.days.includes(wd))
     .filter((w) => !free.some((t) => t >= w.first && t <= w.last))
     .map((w) => {
-      const h = profile.opening_hours.find((x) => x.days.includes(wd) && x.open <= w.first && w.first < x.close);
+      const first = minutesOf(w.first);
+      const h = profile.opening_hours.find((x) => x.days.includes(wd) && minutesOf(x.open) <= first && first < closeMinutes(x.close));
       return h?.label && !/all day/i.test(h.label) ? h.label.toLowerCase() : `${spokenTime(w.first)} to ${spokenTime(w.last)}`;
     });
   if (full.length && free.length) result.fully_booked = full;

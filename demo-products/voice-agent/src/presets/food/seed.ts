@@ -3,7 +3,7 @@
 // puts it in. Draws from the plan's shared dice, so it must keep drawing in
 // the same order: the restaurant's recorded weeks depend on it.
 
-import { minutesOf, toLocal, weekdayOf, zonedToUtc } from '../../domain/time.ts';
+import { LAST_START, closeMinutes, minutesOf, toLocal, weekdayOf, zonedToUtc } from '../../domain/time.ts';
 import type { MenuItem, OrderLine, TenantProfile } from '../../domain/types.ts';
 import { ALLERGIES, type Ids } from '../common/random.ts';
 import type { SeedOrder } from '../common/types.ts';
@@ -20,7 +20,8 @@ export function planOrders(profile: TenantProfile, now: Date, random: () => numb
     const slot = o.slot_minutes ?? 15;
     const slots: Date[] = [];
     for (const p of periods) {
-      for (let m = minutesOf(p.open) + (o.prep_minutes ?? 20); m <= minutesOf(p.close); m += slot) {
+      // A slot at midnight would fall on tomorrow's date.
+      for (let m = minutesOf(p.open) + (o.prep_minutes ?? 20); m <= Math.min(closeMinutes(p.close), LAST_START); m += slot) {
         slots.push(zonedToUtc(today, `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`, tz));
       }
     }

@@ -4,6 +4,7 @@
 // takes its sub-object and its defaults, never a path, so a preset can keep
 // them wherever its answers do.
 
+import { MIDNIGHT } from '../../domain/time.ts';
 import { VOICE_NAMES } from '../../domain/voices.ts';
 import type { BasicsAnswer, ClosureAnswer, DayHours, FaqAnswer, Sources, ThemeAnswer } from './types.ts';
 
@@ -15,6 +16,8 @@ export const int = (v: unknown, min: number, max: number, fallback: number): num
 export const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback);
 export const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T => (options.includes(v as T) ? (v as T) : fallback);
 export const time = (v: unknown, fallback: string): string => (typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : fallback);
+/** A closing time: any time, or midnight as '24:00'. */
+export const closeTime = (v: unknown, fallback: string): string => (v === MIDNIGHT ? MIDNIGHT : time(v, fallback));
 export const colour = (v: unknown, fallback: string): string => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : fallback);
 export const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 export const key = (v: unknown, fallback: string): string => {
@@ -52,7 +55,7 @@ export function sanitiseDays(v: unknown, d: DayHours[]): DayHours[] {
     const services = arr(x.services).slice(0, 3).map((s: any, j) => ({
       label: str(s?.label, 30, j === 0 ? 'Lunch' : 'Dinner') || 'Open',
       open: time(s?.open, '12:00'),
-      close: time(s?.close, '22:00'),
+      close: closeTime(s?.close, '22:00'),
     }));
     return { open: bool(x.open, def.open) && services.length > 0, services: x.services === undefined ? def.services : services };
   });

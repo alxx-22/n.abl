@@ -371,3 +371,27 @@ test('restaurant tools: a full lunch is fully booked, not closed', async () => {
   assert.equal(later.available, false);
   assert.ok((later.alternatives as unknown[]).length || (later.available_ranges as string[]).length, 'something to offer instead');
 });
+
+test('restaurant tools: a place that shuts at midnight takes a collection for half eleven, and says midnight', async () => {
+  // Friday's dinner runs to midnight; the call is Friday at 4pm.
+  const t = await restaurant('tools-midnight', (a) => {
+    a.hours.days[5] = { open: true, services: [{ label: 'Dinner', open: '17:30', close: '24:00' }] };
+  });
+  const order = async (time: string) => {
+    const { ctx } = await call(t);
+    await runTool('add_to_order', { item: t.profile.menu!.categories[0].items[0].name, quantity: 1 }, ctx);
+    return runTool('set_fulfilment', { type: 'collection', time }, ctx);
+  };
+  const late = await order('23:30');
+  assert.equal(late.ok, true, JSON.stringify(late));
+  assert.equal(late.spoken_time, '11:30pm');
+  assert.equal((await order('23:45')).ok, true, 'the last slot before midnight');
+
+  const { ctx } = await call(t);
+  const hours = await runTool('get_opening_hours', { date: '2026-10-02' }, ctx) as { days: Record<string, unknown>[] };
+  assert.deepEqual(hours.days[0].open, ['Dinner 5:30pm to midnight']);
+  assert.deepEqual(hours.days[0].orders, ['5:30pm to midnight']);
+  assert.deepEqual(hours.days[0].last_booking_times, ['11pm'], 'an hour before closing, as on any other night');
+  const table = await runTool('check_availability', { date: '2026-10-02', time: '23:00', party_size: 2 }, ctx);
+  assert.equal(table.available, true, JSON.stringify(table));
+});

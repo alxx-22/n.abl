@@ -2,11 +2,12 @@
 // opening hours and booking windows. Every kind of business has a week of up
 // to three services a day, so these take the hours block, never the answers.
 
-import { dayName, minutesOf, spokenTime, timeOf } from '../../domain/time.ts';
+import { LAST_START, closeMinutes, dayName, minutesOf, spokenTime, timeOf } from '../../domain/time.ts';
 import type { OpeningHours, Window } from '../../domain/types.ts';
 import type { DayHours } from './types.ts';
 
 export type { DayHours, ServicePeriod } from './types.ts';
+export { MIDNIGHT, closeMinutes } from '../../domain/time.ts';
 
 export const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday first, the way people say it
 
@@ -62,13 +63,16 @@ export function hoursSentence(hours: { days: DayHours[] }): string {
   return parts.map((p) => p.replace(/^./, (c) => c.toUpperCase())).join('. ') + '.';
 }
 
-/** When a booking may start: each open service, ending this many minutes before it closes. */
+/**
+ * When a booking may start: each open service, ending this many minutes
+ * before it closes, and never at midnight itself, which is the next day.
+ */
 export function bookingWindows(hours: { days: DayHours[] }, lastStartBeforeClose: number): Window[] {
   return groupByDay(
     hours.days.map((d) =>
       d.open
         ? d.services
-            .map((s) => ({ first: s.open, last: timeOf(Math.max(minutesOf(s.open), minutesOf(s.close) - lastStartBeforeClose)) }))
+            .map((s) => ({ first: s.open, last: timeOf(Math.max(minutesOf(s.open), Math.min(LAST_START, closeMinutes(s.close) - lastStartBeforeClose))) }))
             .filter((w) => minutesOf(w.last) >= minutesOf(w.first))
         : null,
     ),

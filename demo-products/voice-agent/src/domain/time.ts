@@ -89,6 +89,21 @@ export function minutesOf(time: string): number {
   return h * 60 + m;
 }
 
+/**
+ * A business that shuts at midnight closes at '24:00', the end of its own day,
+ * so that day's hours stay in order and on one date ('00:00' would be its
+ * start). Only a closing time may be '24:00'; nothing starts then, so the
+ * last minute anything can start is LAST_START. Closing after midnight
+ * (01:00) is not supported.
+ */
+export const MIDNIGHT = '24:00';
+export const LAST_START = 24 * 60 - 1;
+
+/** Minutes into the day a service closes: 1440 for midnight. */
+export function closeMinutes(close: string): number {
+  return close === MIDNIGHT ? 24 * 60 : minutesOf(close);
+}
+
 export function timeOf(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
@@ -126,7 +141,7 @@ export function spokenDate(date: string): string {
 export function spokenTime(time: string): string {
   const [h, m] = time.split(':').map(Number);
   if (h === 12 && m === 0) return '12 noon';
-  if (h === 0 && m === 0) return 'midnight';
+  if ((h === 0 || h === 24) && m === 0) return 'midnight';
   const suffix = h < 12 ? 'am' : 'pm';
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return m === 0 ? `${h12}${suffix}` : `${h12}:${String(m).padStart(2, '0')}${suffix}`;

@@ -63,4 +63,6 @@ test('spoken forms', () => {
   assert.equal(spokenTime('19:30'), '7:30pm');
   assert.equal(spokenTime('12:00'), '12 noon');
   assert.equal(spokenTime('09:00'), '9am');
+  assert.equal(spokenTime('24:00'), 'midnight', 'a closing time at the end of the day');
+  assert.equal(spokenTime('00:00'), 'midnight');
 });

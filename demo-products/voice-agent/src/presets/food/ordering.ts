@@ -10,7 +10,7 @@
 // preset's answers keep exactly the shape its defaults give (PRESETS.md §1,
 // rule 2) and the restaurant's never gain the takeaway's.
 
-import { minutesOf } from '../../domain/time.ts';
+import { closeMinutes, minutesOf } from '../../domain/time.ts';
 import type { KnowledgeEntry, Ordering } from '../../domain/types.ts';
 import { groupByDay } from '../common/hours.ts';
 import { entry } from '../common/profile.ts';
@@ -139,7 +139,7 @@ export function compileOrdering(o: OrderingAnswer, hours: { days: DayHours[] }, 
   const del = o.delivery;
   if (!c.enabled && !del.enabled) return undefined;
   const periods = hours.days.map((d) =>
-    d.open ? d.services.filter((s) => !c.evenings_only || minutesOf(s.close) > minutesOf('17:00')).map((s) => ({ ...s, label: 'takeaway' })) : null,
+    d.open ? d.services.filter((s) => !c.evenings_only || closeMinutes(s.close) > minutesOf('17:00')).map((s) => ({ ...s, label: 'takeaway' })) : null,
   );
   return {
     collection: c.enabled,

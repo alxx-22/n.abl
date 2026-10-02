@@ -12,7 +12,7 @@ import type { Booking, Order, OrderLine, Tenant } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { checkAvailability, findService } from '../domain/availability.ts';
 import {
-  addDays, isIsoDate, minutesOf, normaliseTime, spokenDate, spokenTime, toLocal, weekdayOf, zonedToUtc,
+  addDays, closeMinutes, isIsoDate, minutesOf, normaliseTime, spokenDate, spokenTime, toLocal, weekdayOf, zonedToUtc,
 } from '../domain/time.ts';
 import { searchKnowledge } from '../domain/knowledge.ts';
 import {
@@ -361,7 +361,7 @@ function withinOrderingHours(ctx: ToolContext, due: Date): boolean {
   const o = ctx.tenant.profile.ordering!;
   const local = toLocal(due, ctx.tenant.profile.timezone);
   const m = minutesOf(local.time);
-  return o.hours.some((h) => h.days.includes(local.weekday) && m >= minutesOf(h.open) && m <= minutesOf(h.close));
+  return o.hours.some((h) => h.days.includes(local.weekday) && m >= minutesOf(h.open) && m <= closeMinutes(h.close));
 }
 
 function postcodeOf(input: unknown): { full: string; district: string } | null {

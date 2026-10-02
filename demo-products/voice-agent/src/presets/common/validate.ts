@@ -1,6 +1,7 @@
 // What every builder checks before Start, whatever the business: a name, a
 // greeting that says it is an AI on a demo line, and hours that make sense.
 
+import { closeMinutes, minutesOf } from '../../domain/time.ts';
 import type { BaseAnswers, Issue } from './types.ts';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -16,7 +17,7 @@ export function validateBase(a: BaseAnswers, noun: string): Issue<'basics' | 'ho
   if (!a.hours.days.some((d) => d.open && d.services.length)) err('hours', 'Open on at least one day.');
   a.hours.days.forEach((d, i) => {
     for (const s of d.open ? d.services : []) {
-      if (s.close <= s.open) err('hours', `${DAY_NAMES[i]}: ${s.label} closes before it opens.`);
+      if (closeMinutes(s.close) <= minutesOf(s.open)) err('hours', `${DAY_NAMES[i]}: ${s.label} closes before it opens.`);
     }
   });
   return out;
