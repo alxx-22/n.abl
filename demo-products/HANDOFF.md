@@ -1,4 +1,4 @@
-# Handover: the receptionist demo service (1 October 2026, second session)
+# Handover: the receptionist demo service (2 October 2026, third session)
 
 For the next session. Read `CLAUDE.md` (rules and commands) first.
 
@@ -43,9 +43,82 @@ demo service at `nabl.agency/demo`. All on the `voice-agent-DEV` branch.
 | Site Worker forwarding `/demo/*` | repo root `worker/index.ts`, `wrangler.jsonc` (`DEMO_ORIGIN`) |
 | Evals | `src/eval/scenarios.ts` (`ws-*` = builder-made restaurant) |
 
-Tests: 142 unit and HTTP tests plus the Chromium walkthrough, all passing.
+Tests: 145 unit and HTTP tests plus the Chromium walkthrough, all passing.
 `test/design-tokens.test.ts` fails if `web/src/tokens.css` drifts from the
 site's `src/styles/tokens.css`: change the site's file, then copy it over.
+
+## This session (2 October): the live runs and the scout on Pici
+
+The session had a Gemini key, so the live checks the last session could not
+do were run: all 25 scenarios (the 7 on the builder-made restaurant and the
+18 older ones), fixes, re-runs of what failed, then a full run of all 25.
+In that full run **21 of 25 passed, all 7 builder-made ones among them**.
+The 4 that failed were fixed while it ran (it used the code from its
+start), then re-run on the final code: all 4 passed.
+
+Reading the transcripts mattered as much as the pass marks: several faults
+passed their checks. Found and fixed (unit tests for all but 6 and 7,
+which only live calls can show):
+
+1. **A terrace booking seated inside.** The receptionist read it back as
+   "on the terrace" but booked without naming an area, and the table went
+   inside. When more than one area is free, a booking that names none is
+   now refused until the area the caller chose is passed. Seen working
+   live: it forgot again, was stopped, and booked the right area.
+2. **Hung up before giving the reference.** It booked and put the phone
+   down in one go. The call now checks the caller has heard the new
+   reference or order number before hanging up; if not, the receptionist
+   is told to give it first (once per reference).
+3. **A promised call-back never taken** (the hotel, 3 runs out of 3). It
+   said "I'll pass your details on", or even "I've passed that on", and
+   took no message. Now: "I've passed that on" with no message is flagged
+   like a false "it's booked"; "I'll pass that on" with no message in that
+   turn gets a nudge to take it there and then; and a call marked as a
+   message cannot end without one.
+4. **"We don't have any allergies" read as an allergy**, which held a
+   booking back. Don't, doesn't, haven't and the like now count as a no.
+5. **A reference read a letter at a time**: it searched after each letter
+   and said "I can't find it" five times. Every reference is five
+   characters, so a shorter one is treated as unfinished.
+6. **"This is not medical advice, see a healthcare professional"** to a
+   parent mentioning an allergy. The receptionist is now told to
+   acknowledge an allergy in a few words and carry on, and its own version
+   has gone. The model service still sometimes adds a stock notice of its
+   own ("This site provides factual information but does not provide
+   medical advice…": once in the full run). An instruction cannot stop
+   that; it may differ on the paid tier or another model.
+7. **Dead air after the line to the model dropped.** The connection closed
+   six seconds after the caller spoke; the call reconnected, but nothing
+   answered the caller. After a reconnect an unanswered turn is now timed
+   afresh, so the existing hand-over steps in. Not yet seen live: a drop
+   cannot be forced.
+8. **A booking not found because the caller quoted another number.** The
+   search used only the number and never the name. If the number finds
+   nothing, the name is now searched too.
+9. **"The order is different from what was read back"** when the
+   receptionist had read it back in its own words: it told the caller the
+   order "had changed", and once said it was placed before it was. The
+   refusal now says "not placed yet", why, and not to say it is placed
+   until an order number comes back.
+10. Step-free was mentioned unasked, and one booking was marked as needing
+    it; availability now mentions it only when asked.
+11. Two tests could not show what they claim. `ws-inside-or-out` could
+    find the terrace full at Sunday lunch, so it now starts from a clear
+    Sunday and needs the terrace offered. `prompt-injection` failed on any
+    order, including one the simulated caller placed at full price after
+    the free one was refused; it now fails only if food is given away.
+
+**The scout on Pici** (`npm run e2e:scout -- https://www.picinottingham.co.uk/`):
+the menu comes from `/pici-menus` with its six sections (snacks, small
+plates, pizzettes, pasta, mains, dessert) and all 24 food prices match the
+page (pici cacio e pepe £11.50). Most runs also bring in the drinks tabs
+(71 items in all), which is correct too. One fault, fixed: Pici lists its
+hours as "wed, thur 12-10pm" and "fri, sat 12-11pm", and the scout only
+understood ranges, so the builder would have shown it closed on Wednesdays
+and Fridays. Day lists now work, and the saved copy of Pici's home page has
+its hours block so the regression test covers them. One run in five lost
+the second model call (FAQs and policies) to a model error; the reason now
+goes to the server log.
 
 ## Alex's feedback: done on 1 October (second session)
 
@@ -77,16 +150,17 @@ All six points from Alex's first test call are built, tested and pushed.
 
 ## To do next
 
-- **Run the live scenarios.** The session had no Gemini key, so none ran.
-  Run all of them: the seeded week, the walk-in default and the booking
-  prompt all changed.
-  `npm run eval -- --only ws-terrace-allergy,ws-inside-or-out,ws-wheelchair,ws-amend-by-ref,ws-sunday-lunch-table4,ws-rename-by-ref,ws-collect-pay-later`
-- **Run the scout on Pici with the model**:
-  `npm run e2e:scout -- https://www.picinottingham.co.uk/`. Check the
-  sections (snacks, small plates, pizzettes, pasta, mains, dessert) and the
-  prices (e.g. pici cacio e pepe £11.50).
-- **A key for cloud sessions**: Alex was asked to add `GEMINI_API_KEY` to
-  the cloud environment's settings, so the next session can run both.
+- **Watch the next live runs for:** the reconnect fix (point 7) when a drop
+  happens; the receptionist going quiet after an empty reply from the model
+  (seen once in `book-alternative`: the stall watchdog counts any message
+  from the model as a reply, so it did not step in); the model service's
+  health notice (point 6); and the receptionist reading an order back in
+  its own words instead of the system's (point 9 makes it recover, but the
+  caller hears the order twice).
+- The simulated caller in `ws-amend-by-ref` and `ws-rename-by-ref` reads the
+  reference one character per turn. It is a fair stress test, so it stays.
+- Re-run the live scenarios after any change to `src/core/prompt.ts` or
+  `src/core/tools.ts`: `npm run eval` (all 25, about 40 minutes).
 
 ## Still outstanding (not from Alex's feedback)
 
