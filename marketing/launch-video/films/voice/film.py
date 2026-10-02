@@ -1,5 +1,5 @@
 """
-The voice reel: n.abl's AI receptionist takes a booking, in 11 seconds, cut
+The voice reel: n.abl's AI receptionist takes a booking, in 13 seconds, cut
 to music with no voice.
 
 The same grammar as the AI reel (films/reel): one continuous virtual camera
@@ -33,7 +33,7 @@ SCENES = [
     dict(id="call", beats=8, lines=[]),   # the phone rings; the AI answers and books a table for four; the call folds into the booking
     dict(id="plan", beats=5, lines=[]),   # the booking flies down onto tonight's floor plan: table 12, on the terrace
     dict(id="text", beats=4, lines=[]),   # the guest's phone: the confirmation lands
-    dict(id="end",  beats=4, lines=[]),   # the name on the hit; book your personalised demo
+    dict(id="end",  beats=8, lines=[]),   # the name on the hit; book your personalised demo, rolling over to nabl.agency 4 beats in
 ]
 
 MUSIC = "file"

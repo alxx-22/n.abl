@@ -35,6 +35,10 @@
   font: 600 38px var(--sans); color: var(--white); letter-spacing: -.02em; white-space: nowrap; overflow: hidden; background: #1E1A16; border: 1px solid rgba(233, 172, 87, .45); }
 .v-cta .sheen { position: absolute; top: 0; bottom: 0; width: 70%; background: linear-gradient(90deg, transparent, rgba(233, 172, 87, .38) 40%, rgba(214, 196, 255, .28) 65%, transparent); }
 .v-cta span { position: relative; }
+.v-cta .sp { width: 28px; height: 28px; display: inline-flex; }
+/* the offer and the address on one strip, rolled up a line on the beat; its width is set each frame */
+.v-cta .roll { align-self: stretch; }
+.v-cta .roll span { position: absolute; left: 50%; top: 50%; }
 
 /* the shape that carries the booking: a ringing circle, the live call, the
    booking, the text, the dot of the name. Its size, corners, fill and rim

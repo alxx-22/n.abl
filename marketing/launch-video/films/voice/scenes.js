@@ -1,5 +1,5 @@
 /* ============================================================
-   THE VOICE REEL: n.abl's AI receptionist takes a booking, in 11 seconds
+   THE VOICE REEL: n.abl's AI receptionist takes a booking, in 13 seconds
 
    The grammar of the AI reel (films/reel), from the same kit: a dark stage
    lit softly from above, a 3D camera on a smooth path smearing the frame
@@ -17,11 +17,12 @@
    text  a copy lifts off with the whip, lands on the guest's phone and
          opens into the confirmation, then closes to a square of amber
    end   on the hit the square becomes the dot of the name as its letters
-         draw; then the offer, a personalised demo
+         draw; then the offer, a personalised demo, which rolls over to
+         the address
    The script is films/voice/film.py; the brief is films/voice/SCRIPT.md.
    ============================================================ */
 
-import { E, LAND, M, P, TL, WORDMARK, bell, cue, h, icon, lerp, put, rise, rng, scene, sceneById, spark, words } from '../../film/stage.js'
+import { E, LAND, M, P, TL, WORDMARK, bell, cue, h, icon, lerp, put, rise, rng, scene, sceneById, spark, vis, words } from '../../film/stage.js'
 import { AMB, ICE, WHITE, blurIn, bokeh, drop, lens, path, shoot, widen } from '../../film/kit.js'
 
 const B = TL.beat
@@ -293,7 +294,8 @@ function buildText(s) {
 
 /* ============================================================
    END: on the hit the square flies up into its place as the dot of the
-   name while the letters draw themselves round it; then the offer.
+   name while the letters draw themselves round it; then the offer, which
+   rolls over to the address on the beat where the reel used to end.
    ============================================================ */
 function buildEnd(s) {
   widen(s)
@@ -302,14 +304,13 @@ function buildEnd(s) {
   const MW = M({ land: 600, def: 560 }), MH = MW * 100 / 273, k = MW / 273
   const mark = h('div', 'r-mark', s.cam, WORDMARK()); mark.firstChild.setAttribute('width', MW)
   const strokes = [...mark.querySelectorAll('[data-k]')].filter(e => e.dataset.k !== 'dot'), dotEl = mark.querySelector('[data-k="dot"]')
-  strokes.forEach(e => { e.style.strokeDasharray = '1 1' })
   const sqr = h('div', 'v-blk', s.cam)
   const tag = h('div', 'r-tagl', s.cam, 'An AI receptionist, built for your business.')
-  const cta = h('div', 'v-cta', s.cam, `<div class="sheen"></div><span style="width:28px;height:28px;display:inline-flex">${spark(28)}</span><span>Book your personalised demo</span>`)
-  const sheen = cta.querySelector('.sheen')
-  const url = h('div', 'r-url', s.cam, '<b>nabl.agency</b>')
-  const tLand = t0 + .3, tTag = t0 + beat(.75), tCta = t0 + beat(1.5)
-  const yM = -150, yT = -30, yC = 90, yU = 180
+  // the offer and the address on one strip inside the pill, rolled like a slot machine
+  const cta = h('div', 'v-cta', s.cam, `<div class="sheen"></div><span class="sp">${spark(28)}</span><span class="roll"><span>Book your personalised demo</span><span>nabl.agency</span></span>`)
+  const sheen = cta.querySelector('.sheen'), roll = cta.querySelector('.roll'), [offer, addr] = roll.children
+  const tLand = t0 + .3, tTag = t0 + beat(.75), tCta = t0 + beat(1.5), tSwap = t0 + beat(4)
+  const yM = -150, yT = -30, yC = 90
   const D = [-MW / 2 + 84.5 * k, yM - MH / 2 + 75.5 * k], DS = 13 * k   // the dot of the name, in the world
   const S0 = SQ * (1800 / (1800 - 360)) / (1800 / (1800 - 220))     // the square as big as the text left it
   const cam = path([[t0, 0, -40, 220, 0, -8, 0, 1], [tCta, 0, -20, 40, 0, -2, 0, 1], [t1, 0, -10, -40, 0, 3, 0, 1]])
@@ -319,22 +320,40 @@ function buildEnd(s) {
   drop(tLand, 5, { wet: .2, v: .6 })                        // the dot clicks into place
   drop(tTag, 2, { wet: .6, v: .35 })
   cue('confirm', tCta, { n: 2, deg: 1, v: .4 })             // the offer
+  drop(tSwap, 4, { wet: .3, v: .45 })                       // and it rolls over to the address
+  const ROLL = 84                                           // far enough to clear the pill's edge
+  let wA = 0, wB = 0
   return t => {
+    if (!wA) { wA = offer.offsetWidth; wB = addr.offsetWidth }
     const p = P(t, t0, t0 + .3, E.out)
     put(mark, { y: yM, s: lerp(1.06, 1, p), o: Math.min(1, p * 2), blur: (1 - p) * 10 })
-    strokes.forEach((e, i) => { e.style.strokeDashoffset = (1 - P(t, t0 + .03 + i * .045, t0 + .33 + i * .045, E.out)).toFixed(4) })
+    // a drawn stroke drops its dash, so the name ends as the untouched wordmark: a dash ending where it began leaves a seam on the bowls
+    strokes.forEach((e, i) => {
+      const d = P(t, t0 + .03 + i * .045, t0 + .33 + i * .045, E.out)
+      e.style.strokeDasharray = d < 1 ? '1 1' : ''; e.style.strokeDashoffset = d < 1 ? (1 - d).toFixed(4) : ''
+    })
     const landed = t >= tLand
     dotEl.style.opacity = landed ? 1 : 0
-    mark.firstChild.style.filter = `drop-shadow(0 0 ${(40 * bell(t, tLand, tLand + .06, tLand + .9)).toFixed(1)}px rgba(${AMB},.55))`
+    const gl = 40 * bell(t, tLand, tLand + .06, tLand + .9)
+    mark.firstChild.style.filter = gl > .05 ? `drop-shadow(0 0 ${gl.toFixed(1)}px rgba(${AMB},.55))` : 'none'
     // the square, from the middle of the frame to its place as the dot
     const u = P(t, t0, tLand, E.io)
     shape(sqr, { w: lerp(S0, DS, u), h: lerp(S0, DS, u), r: lerp(2, 0, u), fill: AMB, rim: HOT, ra: 1 - u, glow: .9 })
     put(sqr, { x: lerp(0, D[0], u), y: lerp(-40, D[1], u), z: 140 * Math.sin(Math.PI * u), o: landed ? 0 : 1 })
     blurIn(tag, t, tTag, { y: yT, dur: .32, s0: 1, blur: 14, dy: 14 })
-    blurIn(cta, t, tCta, { y: yC, dur: .34, s0: .94, blur: 18, dy: 18 })
-    sheen.style.left = lerp(-70, 110, P(t, tCta + .1, tCta + .9, E.io)).toFixed(1) + '%'
-    cta.style.boxShadow = `0 0 ${(30 + 50 * bell(t, tCta + .1, tCta + .4, tCta + 1.2)).toFixed(0)}px rgba(${AMB},.3)`
-    blurIn(url, t, tCta + .2, { y: yU, dur: .3, s0: 1, blur: 12, dy: 10 })
+    blurIn(cta, t, tCta, { y: yC, dur: .34, s0: .94, blur: 18, dy: 18, s: 1 + .025 * bell(t, tSwap, tSwap + .08, tSwap + .45) })
+    // on the beat the strip rolls up a line, settling with a little overshoot, as the pill closes round the address
+    const r = P(t, tSwap - .05, tSwap + .45, E.snap), blur = 4 * bell(t, tSwap - .05, tSwap, tSwap + .1)
+    roll.style.width = lerp(wA, wB, P(t, tSwap - .05, tSwap + .45, E.out)).toFixed(1) + 'px'
+    ;[[offer, -ROLL * r, t < tSwap + .2], [addr, ROLL * (1 - r), t >= tSwap - .05]].forEach(([e, y, on]) => {
+      e.style.transform = `translate(-50%,-50%) translateY(${y.toFixed(1)}px)`
+      vis(e, on ? 1 : 0)
+      e.style.filter = blur > .05 ? `blur(${blur.toFixed(2)}px)` : 'none'
+    })
+    // the light runs across it as it arrives, and again after the swap
+    const sw = t < tSwap + .1 ? P(t, tCta + .1, tCta + .9, E.io) : P(t, tSwap + .18, tSwap + .98, E.io)
+    sheen.style.left = lerp(-70, 110, sw).toFixed(1) + '%'
+    cta.style.boxShadow = `0 0 ${(30 + 50 * bell(t, tCta + .1, tCta + .4, tCta + 1.2) + 40 * bell(t, tSwap, tSwap + .2, tSwap + 1)).toFixed(0)}px rgba(${AMB},.3)`
     specks(t, 1 - P(t, t1 - .5, t1))
     shoot(s, cam, t)
     lens(s, { o: 1 - P(t, t1 - .35, t1, E.in2) })

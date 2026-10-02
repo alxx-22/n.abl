@@ -1,6 +1,6 @@
 # Your AI receptionist: the short reel
 
-An 11-second reel (10.7 s) about one thing: n.abl's AI receptionist taking a
+A 13-second reel (12.8 s) about one thing: n.abl's AI receptionist taking a
 booking. Cut to music with no voice, in every social format from one
 timeline: 16:9, 1:1, 4:5 and 9:16. It ends on an offer, a personalised demo.
 It uses the grammar and the kit (`film/kit.js`) of the AI reel
@@ -14,7 +14,7 @@ Three were on the table: a part of the AI services, the new demo platform
 a personalised demo at the end. The voice agent wins, and the demo platform
 is the ending rather than the subject:
 
-- **One idea fits 11 seconds.** "The phone rings, the AI books the table,
+- **One idea fits 13 seconds.** "The phone rings, the AI books the table,
   the guest gets the text" reads at a glance. "A platform where you build your
   business and then ring it" is two ideas.
 - **The demo platform is not public yet.** It is built and tested but not
@@ -58,7 +58,7 @@ The tempo is the music's, 117.3 BPM; every move lands on its beat.
 | 3.58 | **Fold** | The call folds into a small amber block, the shape of a table, with *12* on it; the lines blur away. | Holds on it as it folds. |
 | 3.80 | **Plan** | The block flies down the floor in an arc, turning over once, as tonight's floor plan (*Friday · 7:30 pm*) draws in below it: the room, the bar, the terrace dashed in amber, its tables, some already booked. On the second drop (5.63 s) it drops into place as table 12, which lights up with a ring of light: *Table 12 · 4 guests · 7:30 pm*, *Booked by AI*. | Cranes down the floor after it, tilting until the plan lies almost flat, then tilts up to face table 12 on the drop and whips right. |
 | 6.65 | **Text** | A copy of the block lifts off with the whip and holds still as the world smears past, lands on the guest's phone and opens into the message: *Luca's Trattoria: Booked: Fri 7:30 pm, 4 people, terrace. Ref KX4Q7. To change it, call us and quote your reference.* In the breath before the name (8.44 s) the message closes back down to a square of amber. | Arrives out of the whip, settles on the message. |
-| 8.70 | **Name** | On the hit the square flies up into its place as the dot of the wordmark while the letters draw themselves round it; it clicks in. *An AI receptionist, built for your business.* Then *Book your personalised demo*, a light across it, and *nabl.agency*. | Eases back as it settles. |
+| 8.70 | **Name** | On the hit the square flies up into its place as the dot of the wordmark while the letters draw themselves round it; it clicks in, and the name stands as the clean wordmark. *An AI receptionist, built for your business.* Then *Book your personalised demo*, a light across it. Four beats later (10.74 s) the pill turns over like a slot machine: the offer rolls up and out, *nabl.agency* rolls up in with a little bounce as the pill closes round it, and the light runs across it again. It holds on the address to the end (12.79 s). | Eases back as it settles, then drifts slowly back to the end. |
 
 Captions: *Never miss a booking* (title), *Answers every call*, *Books the
 table*, *Puts it on your floor plan*, *Texts your guest*.
@@ -83,7 +83,8 @@ from B♭ to F (`fresh-melodic-1-edit.wav`, cut with `musicedit.py`):
   again, the clicky percussion at its fullest, with a rush of air into it
   and a low hit.
 - **A breath** before the name, then a low hit under it on the chord change,
-  the track thinning out under the offer.
+  the track thinning out under the offer and fading away under the address
+  over the last two seconds.
 
 **Effects**, drowned as in the AI reel (a low-pass at 2.2 kHz, a slow waver
 in pitch, a short dark room), except for the front of every water drop,
@@ -94,7 +95,8 @@ the AI thinks, the arrival and a chime for the booking, a deep bubble and a
 flip as the call folds, a rising whoosh for the flight and a falling tone
 into the landing, a double drop as it lands on table 12 with a chime, a
 swish for the tag, the arrival of the text with a drop, a bubble as it
-closes, and an impact, shimmer and a drop as the dot clicks into the name.
+closes, an impact, shimmer and a drop as the dot clicks into the name, and
+one more drop as the offer rolls over to the address.
 
 **Mix**: the music about 1 dB over the effects; −14 LUFS integrated, true
 peak below −1 dBTP on the delivered AAC.
