@@ -260,12 +260,12 @@ combining only where the spec says. Refresh on every action except
   the earlier ones booked; each order slot stays within capacity, every due
   time falls in ordering hours, every delivery postcode is in the
   districts; `insertSeed` reads back as planned.
-  Two of these the restaurant does not meet, and its goldens hold it
-  instead: until the §0.3 sample-menu commit, `sanitise(defaults())` adds
-  `allergens: []` to nine options (so it is checked as stable from the
-  second pass), and its prompt is 7,574 characters as created and 10,476 at
-  its maximum. Shortening the restaurant's prompt is a named change with its
-  evals re-run; the 7,000 limit is for each new preset.
+  One of these the restaurant does not meet, and its goldens hold it
+  instead: its prompt is 7,574 characters as created and 10,476 at its
+  maximum. Shortening the restaurant's prompt is a named change with its
+  evals re-run; the 7,000 limit is for each new preset. (The test's maximal
+  config repeats the defaults, so distinct lists such as twenty towns are
+  checked by the preset's golden `max` instead, as the estate agent's is.)
 - Its golden corpus (`test/fixtures/<preset>/`), created when it ships.
 - `test/<preset>.test.ts` (compiler field table, validation, seed shape) and
   `test/<preset>-tools.test.ts` (signature moments through `runTool`).
