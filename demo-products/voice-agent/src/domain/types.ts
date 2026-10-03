@@ -341,6 +341,8 @@ export interface Listing {
   personal_interest: { staff: string; wording: string } | null;
   other_agents: string;
   links: ('brochure' | 'floorplan' | 'video' | 'epc')[];
+  /** An invented sample home: the back office labels it "example". */
+  example?: boolean;
 }
 
 /** A member of an agency's team, as messages and texts reach them. Callers hear the first name only. */
@@ -528,6 +530,8 @@ export interface Offer {
 }
 
 export type SaleStatus = 'progressing' | 'exchanged' | 'completed' | 'fell_through';
+/** A sale's steps, from the memorandum to the keys (presets/estate-agent.md §6, Sales progress). */
+export const SALE_MILESTONES = ['memorandum_sent', 'solicitors_instructed', 'searches', 'survey', 'mortgage_offer', 'enquiries_answered', 'exchange', 'completion'] as const;
 
 export interface SaleParty {
   /** buyer_solicitor, seller_solicitor, chain_agent, broker. */

@@ -3,8 +3,9 @@
 
 import type { Repo } from '../db/repo.ts';
 import type { Bus } from './bus.ts';
-import type { Tenant, TenantProfile } from '../domain/types.ts';
+import type { Booking, Listing, Tenant, TenantProfile } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
+import { shortAddress } from '../domain/listings.ts';
 import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
 import { displayUkPhone } from '../domain/phone.ts';
 import { capabilities } from '../core/prompt.ts';
@@ -55,6 +56,7 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
   const resources = new Map((t.profile.booking?.resources ?? []).map((r) => [r.key, r]));
   const services = new Map((t.profile.booking?.services ?? []).map((s) => [s.key, s.label]));
   const areas = new Map((t.profile.booking?.areas ?? []).map((a) => [a.key, a.label]));
+  const homes = new Map((t.profile.listings ?? []).map((l) => [l.key, shortAddress(l)]));
   return {
     tenant: {
       id: t.id, slug: t.slug, name: t.profile.name, business_type: t.profile.business_type, status: t.profile.status,
@@ -91,6 +93,9 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
         with: r?.label ?? b.resource_key, area: b.area_key ? areas.get(b.area_key) ?? b.area_key : null,
         service: services.get(b.service_key) ?? b.service_key,
         deposit: b.deposit_pence ? pounds(b.deposit_pence) : null, deposit_paid: b.deposit_paid,
+        // A viewing's home, and what a viewing or valuation knows: an estate agency's only.
+        ...(b.listing_key ? { listing_key: b.listing_key, home: homes.get(b.listing_key) ?? b.listing_key } : {}),
+        ...(b.details && Object.keys(b.details).length ? { details: b.details } : {}),
       };
     }),
     orders: orders.map((o) => ({
@@ -103,6 +108,56 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
     calls: (await repo.listCalls(t.id, 12)).map((c) => ({
       id: c.id, channel: c.channel, started_at: c.started_at, ended_at: c.ended_at, outcome: c.outcome, summary: c.summary,
       model: c.model, guardrail_flags: c.guardrail_flags, latency: c.latency, usage: c.usage,
+    })),
+    ...(t.profile.listings ? await estateState(repo, t, bookings, now) : {}),
+  };
+}
+
+const DAY = 86400000;
+
+/** Price, tenure, the council tax band and the EPC: what every advert must state, at today's price. */
+const partAMissing = (l: Listing, price: number) =>
+  [price ? null : 'price', l.tenure !== 'unknown' ? null : 'tenure', l.local_tax ? null : 'council tax band', l.epc ? null : 'EPC'].filter((x): x is string => x !== null);
+
+/**
+ * An estate agency's homes (the owner's facts joined with the live row),
+ * offers and team, for its Diary, Properties and Offers (presets/estate-agent.md §6).
+ */
+async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date) {
+  const team = t.profile.team ?? [];
+  const names = new Map(team.map((s) => [s.key, s.name]));
+  const live = new Map((await repo.listingStates(t.id)).map((r) => [r.listing_key, r]));
+  const offers = await repo.listOffers(t.id);
+  const homes = new Map((t.profile.listings ?? []).map((l) => [l.key, shortAddress(l)]));
+  const weekOn = new Date(now.getTime() + 7 * DAY);
+  return {
+    team: team.map((s) => ({ key: s.key, name: s.name, first_name: s.first_name, role: s.role, does: s.does, days: s.days, mobile: s.mobile })),
+    listings: (t.profile.listings ?? []).map((l) => {
+      const r = live.get(l.key);
+      const price = r?.price_pence ?? l.initial.price_pence;
+      return {
+        key: l.key, ref: l.ref, address: shortAddress(l), town: l.town, district: l.district, type: l.type, home: l.home, example: Boolean(l.example),
+        status: r?.status ?? l.initial.status, price_pence: price, qualifier: r?.qualifier ?? l.initial.qualifier,
+        days_on_market: r ? Math.max(0, Math.floor((now.getTime() - r.marketed_at.getTime()) / DAY)) : l.marketed_days_ago,
+        back_on_market_at: r?.back_on_market_at?.toISOString() ?? null,
+        negotiator: names.get(l.negotiator) ?? null,
+        viewings_week: bookings.filter((b) => b.listing_key === l.key && b.status === 'confirmed' && b.starts_at >= now && b.starts_at < weekOn).length,
+        offers: offers.filter((o) => o.listing_key === l.key && (o.status === 'received' || o.status === 'sent')).length,
+        part_a_missing: partAMissing(l, price),
+        unknown: l.unknown.length,
+        personal_interest: Boolean(l.personal_interest),
+        marketing_continues: r?.marketing_continues ?? true,
+        best_final_at: r?.best_final_at?.toISOString() ?? null,
+        checking: r?.checking ?? [],
+        blocked: r?.blocked ?? [],
+        history: (r?.history ?? []).slice(-6),
+      };
+    }),
+    offers: offers.map((o) => ({
+      reference: o.reference, listing_key: o.listing_key, home: homes.get(o.listing_key) ?? o.listing_key, revises: o.revises,
+      amount_pence: o.amount_pence, buyer_names: o.buyer_names, phone: displayUkPhone(o.phone), position: o.position, conditions: o.conditions,
+      flags: o.flags, status: o.status, received_at: o.received_at.toISOString(), sent_at: o.sent_at?.toISOString() ?? null,
+      decided_at: o.decided_at?.toISOString() ?? null, note: o.note, source: o.source,
     })),
   };
 }

@@ -363,3 +363,107 @@ test('demo: private demos are deleted 30 days after their key ends, not before',
   await app.repo.db.query(`update public.voice_demo_keys set expires_at = now() - interval '31 days' where id = $1`, [k.data.record.id]);
   assert.ok((await sweep({ demo: app.demo, bus: app.bus })).includes(w.id));
 });
+
+test('demo: an estate agency: Start, then offers, homes and feedback from the back office, each with its text', async () => {
+  // Built but not live in the catalogue yet: switched on for this test only.
+  const { PRESETS } = await import('../src/presets/catalogue.ts');
+  const info = PRESETS.find((p) => p.key === 'estate_agent')!;
+  const was = info.status;
+  info.status = 'live';
+  try {
+    assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+    const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Jo Green', company: 'Hartwell & Green' });
+    const jo = client('10.0.0.9');
+    assert.equal((await jo.call('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+    const made = await jo.call('POST', '/demo/api/workspaces', { preset: 'estate_agent' });
+    assert.equal(made.status, 201, JSON.stringify(made.data));
+    const path = `/demo/api/workspaces/${made.data.id}`;
+    const defaults = await jo.call('GET', `${path}/defaults`);
+    assert.equal(defaults.data.answers.listings.length, 18, 'the sample homes, for "Start from the sample"');
+    const started = await jo.call('POST', `${path}/start`);
+    assert.equal(started.status, 200, JSON.stringify(started.data));
+
+    const state = async () => (await jo.call('GET', `${path}/state`)).data;
+    const s = await state();
+    assert.equal(s.listings.length, 18);
+    assert.equal(s.team.length, 6);
+    assert.ok(s.offers.length >= 3, `${s.offers.length} offers`);
+    assert.ok(s.listings.every((l: any) => l.example), 'every sample home is an example');
+    const viewing = s.bookings.find((b: any) => b.listing_key && b.status === 'confirmed' && b.starts_at > s.now);
+    assert.ok(viewing?.home, 'a viewing knows its home');
+    const texts = async (phone: string) => (await jo.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
+
+    // An offer goes to the seller, then is accepted: sale agreed, a sale opens, the buyer and any other bidders hear.
+    const offer = s.offers.find((o: any) => o.status === 'received' && o.phone);
+    assert.ok(offer, 'a received offer');
+    assert.equal((await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'sent' })).status, 200);
+    assert.match((await texts(offer.phone)).at(-1), /Your offer of £[\d,]+ for .+ was put to the seller at \d/);
+    assert.equal((await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'sent' })).status, 409, 'already sent');
+    const rivals = s.offers.filter((o: any) => o.listing_key === offer.listing_key && o.reference !== offer.reference && ['received', 'sent'].includes(o.status));
+    const accepted = await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'accept', viewings_continue: false });
+    assert.equal(accepted.status, 200, JSON.stringify(accepted.data));
+    assert.match((await texts(offer.phone)).at(-1), /accepted your offer of £[\d,]+ for .+, subject to contract\. \w+ will confirm it in writing/);
+    for (const r of rivals) assert.match((await texts(r.phone)).at(-1), /has accepted another offer, subject to contract/);
+    const after = await state();
+    const home = after.listings.find((l: any) => l.key === offer.listing_key);
+    assert.equal(home.status, 'sale_agreed');
+    assert.equal(home.marketing_continues, false);
+    assert.equal(after.offers.find((o: any) => o.reference === offer.reference).status, 'accepted');
+    const sales = await app.repo.listSales(made.data.id);
+    assert.ok(sales.some((x) => x.offer_ref === offer.reference && x.milestones.length === 8 && x.milestones.every((m) => !m.done_at)), 'a sale opened, its milestones still to come');
+    assert.equal((await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'decline' })).status, 409, 'already decided');
+    assert.equal((await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'dance' })).status, 400);
+    assert.equal((await jo.call('PATCH', `${path}/offers/ZZ999`, { action: 'sent' })).status, 404);
+    const other = after.offers.find((o: any) => ['received', 'sent'].includes(o.status) && o.phone);
+    if (other) {
+      assert.equal((await jo.call('PATCH', `${path}/offers/${other.reference}`, { action: 'decline', note: 'Too low' })).status, 200);
+      assert.match((await texts(other.phone)).at(-1), /decided not to accept your offer/);
+    }
+
+    // A home: reduced, dates blocked (naming the viewings booked then), a fact being checked, withdrawn.
+    const avail = after.listings.find((l: any) => l.status === 'available' && l.key === viewing.listing_key) ?? after.listings.find((l: any) => l.status === 'available');
+    const lower = avail.price_pence - 1_000_000;
+    const priced = await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'price', price_pence: lower });
+    assert.equal(priced.status, 200, JSON.stringify(priced.data));
+    assert.match(priced.data.message, /reduced to £/);
+    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'price', price_pence: 5 })).status, 400);
+    const vhome = after.listings.find((l: any) => l.key === viewing.listing_key);
+    const blocked = await jo.call('PATCH', `${path}/listings/${vhome.key}`, { action: 'block', from: viewing.date, to: viewing.date, note: 'Seller away' });
+    assert.equal(blocked.status, 200, JSON.stringify(blocked.data));
+    assert.ok(blocked.data.affected.some((x: string) => x.includes(viewing.reference)), 'the viewing booked that day is named');
+    assert.equal((await jo.call('PATCH', `${path}/listings/${vhome.key}`, { action: 'block', from: '2026-13-01' })).status, 400);
+    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'checking', fact: 'parking' })).status, 200);
+    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'checking', fact: 'gossip' })).status, 400);
+    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'best_final', at: new Date(Date.now() + 3 * 86400000).toISOString() })).status, 200);
+    let now = await state();
+    let h = now.listings.find((l: any) => l.key === avail.key);
+    assert.equal(h.price_pence, lower);
+    assert.match(h.history.map((x: any) => x.what).join(' | '), /price reduced from £/);
+    assert.deepEqual(h.checking, ['parking']);
+    assert.ok(h.best_final_at);
+    assert.equal(now.listings.find((l: any) => l.key === vhome.key).blocked[0].note, 'Seller away');
+    assert.equal((await jo.call('PATCH', `${path}/listings/${vhome.key}`, { action: 'unblock', index: 0 })).status, 200);
+    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'status', status: 'withdrawn' })).status, 200);
+    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'status', status: 'gone' })).status, 400);
+    assert.equal((await jo.call('PATCH', `${path}/listings/no_such_home`, { action: 'status', status: 'available' })).status, 404);
+    now = await state();
+    assert.deepEqual(now.listings.find((l: any) => l.key === vhome.key).blocked, []);
+    assert.equal(now.listings.find((l: any) => l.key === avail.key).status, 'withdrawn');
+
+    // Feedback on a viewing, from the agent who showed it.
+    assert.equal((await jo.call('PATCH', `${path}/bookings/${viewing.reference}`, { action: 'feedback', category: 'keen', words: 'Loved the garden' })).status, 200);
+    assert.equal((await jo.call('PATCH', `${path}/bookings/${viewing.reference}`, { action: 'feedback', category: 'meh' })).status, 400);
+    const fb = (await state()).bookings.find((b: any) => b.reference === viewing.reference);
+    assert.equal(fb.details.feedback.category, 'keen');
+    assert.equal(fb.details.feedback.words, 'Loved the garden');
+
+    // Reset puts every home back as Start made it.
+    assert.equal((await jo.call('POST', `${path}/reset`)).status, 200);
+    h = (await state()).listings.find((l: any) => l.key === avail.key);
+    assert.equal(h.status, 'available');
+    assert.equal(h.price_pence, avail.price_pence);
+    assert.deepEqual(h.checking, []);
+  } finally {
+    info.status = was;
+  }
+});

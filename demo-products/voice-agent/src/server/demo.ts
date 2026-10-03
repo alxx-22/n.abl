@@ -18,8 +18,9 @@ import { draftFaqs } from '../presets/common/drafts.ts';
 import { PresetError } from '../presets/common/errors.ts';
 import { seedFrom } from '../presets/common/random.ts';
 import { applySettings, type SettingsPatch } from '../domain/settings.ts';
-import type { TenantProfile } from '../domain/types.ts';
-import { spokenDate, spokenTime, toLocal } from '../domain/time.ts';
+import { CHECK_KEYS, SALE_MILESTONES, type ListingStatus, type Tenant, type TenantProfile } from '../domain/types.ts';
+import { shortAddress } from '../domain/listings.ts';
+import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { SimulatedSms } from '../channels/sms.ts';
 import { ScoutError, scanProgress, startScan, type ScanResult } from '../scout/scan.ts';
@@ -303,7 +304,8 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     return json(res, 201, workspacePayload(w)), true;
   }
 
-  const m = /^\/workspaces\/([0-9a-f-]{36})(?:\/([a-z-]+)(?:\/([A-Za-z0-9+]{1,12}|[0-9a-f-]{36}))?)?$/.exec(p);
+  // The last part: a booking or offer reference, a message's id, or a home's key ("albion_41_flat_2").
+  const m = /^\/workspaces\/([0-9a-f-]{36})(?:\/([a-z-]+)(?:\/([A-Za-z0-9+_]{1,48}|[0-9a-f-]{36}))?)?$/.exec(p);
   if (!m) throw new HttpError(404, 'Not found.');
   const w = await demo.getWorkspace(m[1]);
   // Someone else's workspace looks exactly like a missing one.
@@ -489,6 +491,13 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
       if (Array.isArray(b.tags)) d.tags = b.tags.filter((x: unknown) => typeof x === 'string').map((x: string) => x.trim().slice(0, 30)).filter(Boolean).slice(0, 8);
       await repo.updateBookingDetails(t.id, ref, d);
       message = 'Saved.';
+    } else if (b.action === 'feedback') {
+      // A viewing's feedback, from the agent who showed it.
+      const category = String(b.category ?? '');
+      if (!FEEDBACK.includes(category)) throw new HttpError(400, 'Unknown feedback.');
+      const words = String(b.words ?? '').trim().slice(0, 300);
+      await repo.mergeBookingDetails(t.id, ref, { feedback: { category, words, source: 'staff', at: new Date().toISOString() }, awaiting_feedback: false }, `feedback: ${category.replace(/_/g, ' ')}`);
+      message = 'Feedback saved.';
     } else if (b.action === 'cancel') {
       const c = await repo.cancelBooking(t.id, ref, 'staff');
       if (!c) throw new HttpError(409, 'That booking is already cancelled.');
@@ -517,6 +526,18 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     refresh({ reason: 'staff', reference: o.reference, what: `Order ${o.reference}: ${status.replace('_', ' ')}` });
     return json(res, 200, { ok: true }), true;
   }
+  if (sub === 'offers' && ref && req.method === 'PATCH') {
+    const message = await offerAction(ctx, t, ref, await readJson(req, 10_000));
+    void usage('staff_action', { action: 'offer' });
+    refresh({ reason: 'staff', reference: ref.toUpperCase(), what: message });
+    return json(res, 200, { ok: true, message }), true;
+  }
+  if (sub === 'listings' && ref && req.method === 'PATCH') {
+    const { message, affected } = await listingAction(ctx, t, ref, await readJson(req, 10_000));
+    void usage('staff_action', { action: 'listing' });
+    refresh({ reason: 'staff', what: message });
+    return json(res, 200, { ok: true, message, ...(affected ? { affected } : {}) }), true;
+  }
   if (sub === 'messages' && ref && req.method === 'PATCH') {
     const { status } = await readJson(req, 1000);
     if (status !== 'read' && status !== 'new') throw new HttpError(400, 'Unknown state.');
@@ -538,6 +559,159 @@ function draftError(err: unknown): string {
   if (/429|quota|exhausted/i.test(m)) return 'The drafting model is busy (free-tier limit). Try again in a minute, or edit by hand.';
   if (/503|overloaded|high demand/i.test(m)) return 'The drafting model is overloaded right now. Try again in a minute.';
   return m.startsWith('The draft') ? m : 'The draft did not work this time. Try again, or edit by hand.';
+}
+
+// ── An estate agency's staff actions (presets/estate-agent.md §6) ─────────
+
+const FEEDBACK = ['keen', 'second_viewing', 'likely_offer', 'not_for_me'];
+const STATUSES: ListingStatus[] = ['coming_soon', 'available', 'under_offer', 'sale_agreed', 'exchanged', 'completed', 'withdrawn'];
+/** What a home's facts can be marked as being checked: a checklist item, or one of these. */
+const CHECKABLE: string[] = [...CHECK_KEYS, 'price', 'rooms', 'tenure', 'lease', 'local_tax', 'epc'];
+/** "£320,000": what a buyer reads in a text. */
+const figure = (pence: number) => `£${Math.round(pence / 100).toLocaleString('en-GB')}`;
+/** A real calendar day as YYYY-MM-DD, or null: "2026-13-01" is not one. */
+const isoDay = (v: unknown) => {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v ? v : null;
+};
+
+/**
+ * An offer moves on, and the buyer hears each step by text: sent to the
+ * seller; accepted (the home turns sale agreed, a sale opens, and anyone
+ * else with an offer on it is told, TPO 9h); declined; countered; withdrawn.
+ */
+async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<string> {
+  const { repo } = ctx;
+  if (!t.profile.listings) throw new HttpError(400, 'This business takes no offers.');
+  const offer = (await repo.findOffer(t.id, { reference: ref }))[0];
+  if (!offer) throw new HttpError(404, 'No such offer.');
+  const home = t.profile.listings.find((l) => l.key === offer.listing_key);
+  const where = home ? shortAddress(home) : 'the home';
+  const agent = t.profile.team?.find((s) => s.key === home?.negotiator)?.first_name ?? 'We';
+  const name = t.profile.name;
+  const note = typeof b.note === 'string' ? b.note.trim().slice(0, 300) || null : null;
+  const open = offer.status === 'received' || offer.status === 'sent';
+  const yours = `your offer of ${figure(offer.amount_pence)} for ${where}`;
+  const text = (body: string) => textCustomer(ctx, t.id, offer.phone, `${name}: ${body} (Demo)`);
+  switch (b.action) {
+    case 'sent': {
+      if (offer.status !== 'received') throw new HttpError(409, 'That offer has already gone to the seller.');
+      await repo.setOfferStatus(t.id, offer.reference, 'sent', { note });
+      await text(`${yours[0].toUpperCase()}${yours.slice(1)} was put to the seller at ${spokenTime(toLocal(new Date(), t.profile.timezone).time)} today. We'll let you know their answer.`);
+      return 'Sent to the seller; the buyer has been told.';
+    }
+    case 'accept': {
+      if (!open) throw new HttpError(409, 'That offer has already been decided.');
+      await repo.setOfferStatus(t.id, offer.reference, 'accepted', { note });
+      await repo.setListing(t.id, offer.listing_key, { status: 'sale_agreed', marketing_continues: b.viewings_continue !== false }, 'staff', `sale agreed: offer ${offer.reference} accepted`);
+      await repo.createSale(t.id, {
+        listing_key: offer.listing_key, offer_ref: offer.reference, buyer_name: offer.buyer_names.join(' and ') || 'The buyer', buyer_phone: offer.phone,
+        agreed_pence: offer.amount_pence, milestones: SALE_MILESTONES.map((key) => ({ key, done_at: null })), exchange_target: null, completion_date: null,
+        parties: offer.solicitor ? [{ role: 'buyer_solicitor', name: offer.solicitor }] : [], chain: null,
+      });
+      await text(`the seller has accepted ${yours}, subject to contract. ${agent} will confirm it in writing and explain the ID checks.`);
+      const others = (await repo.listOffers(t.id, offer.listing_key)).filter((o) => o.reference !== offer.reference && (o.status === 'received' || o.status === 'sent'));
+      for (const o of others) {
+        await textCustomer(ctx, t.id, o.phone, `${name}: the seller of ${where} has accepted another offer, subject to contract. Thank you for yours; we'll let you know if anything changes. (Demo)`);
+      }
+      return `Accepted: ${where} is sale agreed${others.length ? `, and ${others.length} other buyer${others.length === 1 ? ' has' : 's have'} been told` : ''}.`;
+    }
+    case 'decline': {
+      if (!open) throw new HttpError(409, 'That offer has already been decided.');
+      await repo.setOfferStatus(t.id, offer.reference, 'declined', { note });
+      await text(`the seller has decided not to accept ${yours}. ${agent} will call you to talk it through.`);
+      return 'Declined; the buyer has been told.';
+    }
+    case 'counter': {
+      if (!open) throw new HttpError(409, 'That offer has already been decided.');
+      await repo.setOfferStatus(t.id, offer.reference, 'countered', { note });
+      await text(`the seller has come back to you about ${yours}. ${agent} will call you to talk it through.`);
+      return 'Countered; the buyer has been told.';
+    }
+    case 'withdraw': {
+      if (!open) throw new HttpError(409, 'That offer has already been decided.');
+      await repo.setOfferStatus(t.id, offer.reference, 'withdrawn', { note });
+      await text(`we've noted that ${yours} is withdrawn. Thank you for letting us know.`);
+      return 'Withdrawn.';
+    }
+    default:
+      throw new HttpError(400, 'Unknown action.');
+  }
+}
+
+/**
+ * A staff change to a home: its status, its price, dates with no viewings
+ * (and the viewings already booked in them), a fact being checked, a best
+ * and final deadline, and whether viewings go on after a sale is agreed.
+ */
+async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<{ message: string; affected?: string[] }> {
+  const { repo } = ctx;
+  const home = t.profile.listings?.find((l) => l.key === key);
+  if (!home) throw new HttpError(404, 'No such home.');
+  const live = await repo.listingState(t.id, key);
+  if (!live) throw new HttpError(409, 'Press Start first.');
+  const where = shortAddress(home);
+  switch (b.action) {
+    case 'status': {
+      const status = String(b.status ?? '') as ListingStatus;
+      if (!STATUSES.includes(status)) throw new HttpError(400, 'Unknown status.');
+      // Back on the market after an offer or a sale: callers hear it is back, with the reason the seller agreed to share.
+      const back = status === 'available' && (live.status === 'under_offer' || live.status === 'sale_agreed');
+      await repo.setListing(t.id, key, { status, ...(back ? { back_on_market_at: new Date() } : {}) });
+      return { message: `${where}: ${status.replace(/_/g, ' ')}.` };
+    }
+    case 'price': {
+      const pence = Math.round(Number(b.price_pence));
+      if (!Number.isFinite(pence) || pence < 100_000 || pence > 2_000_000_000) throw new HttpError(400, 'Give a price in pounds.');
+      const lower = pence < live.price_pence;
+      await repo.setListing(t.id, key, { price_pence: pence }, 'staff', `price ${lower ? 'reduced' : 'changed'} from ${figure(live.price_pence)} to ${figure(pence)}`);
+      return { message: `${where}: ${lower ? 'reduced' : 'now'} to ${figure(pence)}.` };
+    }
+    case 'block': {
+      const from = isoDay(b.from);
+      const to = isoDay(b.to) ?? from;
+      if (!from || !to || to < from) throw new HttpError(400, 'Choose the first and last dates.');
+      const note = String(b.note ?? '').trim().slice(0, 80);
+      await repo.setListing(t.id, key, { blocked: [...live.blocked, { from, to, ...(note ? { note } : {}) }].slice(-12) }, 'staff', `no viewings ${from} to ${to}`);
+      const tz = t.profile.timezone;
+      const inside = (await repo.listBookings(t.id, zonedToUtc(from, '00:00', tz), zonedToUtc(addDays(to, 1), '00:00', tz)))
+        .filter((x) => x.listing_key === key && x.status === 'confirmed');
+      const affected = inside.map((x) => {
+        const l = toLocal(x.starts_at, tz);
+        return `${spokenDate(l.date)} at ${spokenTime(l.time)}: ${x.name} (${x.reference})`;
+      });
+      return {
+        message: `${where}: no viewings from ${spokenDate(from)}${to !== from ? ` to ${spokenDate(to)}` : ''}. ${affected.length ? `${affected.length} viewing${affected.length === 1 ? ' is' : 's are'} already booked then.` : 'No viewings are booked then.'}`,
+        affected,
+      };
+    }
+    case 'unblock': {
+      const i = Number(b.index);
+      if (!Number.isInteger(i) || !live.blocked[i]) throw new HttpError(400, 'No such dates.');
+      await repo.setListing(t.id, key, { blocked: live.blocked.filter((_, j) => j !== i) }, 'staff', 'blocked dates cleared');
+      return { message: `${where}: viewings open again on those dates.` };
+    }
+    case 'checking': {
+      const fact = String(b.fact ?? '');
+      if (!CHECKABLE.includes(fact)) throw new HttpError(400, 'Unknown fact.');
+      const checking = b.on === false ? live.checking.filter((x) => x !== fact) : [...new Set([...live.checking, fact])];
+      await repo.setListing(t.id, key, { checking }, 'staff', `${fact.replace(/_/g, ' ')} ${b.on === false ? 'checked' : 'being checked'}`);
+      return { message: `${where}: ${fact.replace(/_/g, ' ')} ${b.on === false ? 'cleared' : 'marked as being checked'}.` };
+    }
+    case 'best_final': {
+      const at = b.at === null ? null : new Date(String(b.at ?? ''));
+      if (at && Number.isNaN(at.getTime())) throw new HttpError(400, 'Choose a date and time.');
+      await repo.setListing(t.id, key, { best_final_at: at });
+      return { message: at ? `${where}: best and final by ${spokenDate(toLocal(at, t.profile.timezone).date)} at ${spokenTime(toLocal(at, t.profile.timezone).time)}.` : `${where}: best and final cleared.` };
+    }
+    case 'viewings_continue': {
+      await repo.setListing(t.id, key, { marketing_continues: b.on !== false });
+      return { message: `${where}: ${b.on !== false ? 'viewings continue' : 'no more viewings'}.` };
+    }
+    default:
+      throw new HttpError(400, 'Unknown action.');
+  }
 }
 
 /** A text to the customer from the back office: stored, shown on the phone mockup, never sent. */

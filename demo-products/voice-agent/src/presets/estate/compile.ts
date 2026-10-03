@@ -158,6 +158,7 @@ export function compileListing(l: ListingAnswer, a: EstateAnswers, team: StaffMe
     personal_interest: l.personal_interest?.staff ? l.personal_interest : null,
     other_agents: l.other_agents,
     links: (['brochure', 'floorplan', 'video', 'epc'] as const).filter((k) => l.links[k]),
+    ...(l.example ? { example: true } : {}),
   };
 }
 

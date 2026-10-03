@@ -16,7 +16,7 @@ import {
   addWorkingDays, initialLive, insideRule, isWorkingDay, offerReceivedText, offerSentText, positionBadges, shortAddress, viewingRules, viewingText, type ListingLive,
 } from '../../domain/listings.ts';
 import { addDays, minutesOf, toLocal, weekdayOf, zonedToUtc } from '../../domain/time.ts';
-import type { Buyer, BuyerPosition, HomeType, Listing, ListingState, Offer, Sale, StaffMember, TenantProfile } from '../../domain/types.ts';
+import { SALE_MILESTONES, type Buyer, type BuyerPosition, type HomeType, type Listing, type ListingState, type Offer, type Sale, type StaffMember, type TenantProfile } from '../../domain/types.ts';
 import { FIRST_NAMES, LAST_NAMES, ids, rng } from '../common/random.ts';
 import type { SeedBooking, SeedMessage, SeedPlan, SeedText } from '../common/types.ts';
 import { featured } from './featured.ts';
@@ -483,7 +483,7 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
   const exchangedOffer = f.exchanged ? offer({ l: f.exchanged, amount: round(priceOf(f.exchanged) * 0.97), p: liam, received: new Date(now.getTime() - 84 * DAY), status: 'accepted', sent: new Date(now.getTime() - 84 * DAY + 2 * HOUR), decided: new Date(now.getTime() - 82 * DAY) }) : null;
 
   // ── Sales in progress ───────────────────────────────────────────────────
-  const MILESTONES = ['memorandum_sent', 'solicitors_instructed', 'searches', 'survey', 'mortgage_offer', 'enquiries_answered', 'exchange', 'completion'];
+  const MILESTONES = SALE_MILESTONES;
   const milestones = (done: number, from: Date) => MILESTONES.map((key, i) => ({ key, done_at: i < done ? new Date(from.getTime() + (i + 1) * 3 * DAY).toISOString() : null }));
   const solicitors = (buyerSide: { name: string; firm: string; phone: string }) => [
     { role: 'buyer_solicitor', ...buyerSide },
