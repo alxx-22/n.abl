@@ -18,6 +18,13 @@ export interface Flag {
 
 const CLAIM =
   /\b(you'?re (all )?(booked|set|sorted|confirmed)|(that'?s|it'?s|is|are|has been|have been|i'?ve|we'?ve) (now |all )?(booked|confirmed|reserved|placed|sorted)( in| for you)?|booking is (now )?(confirmed|made)|order (is|has been) (placed|confirmed|in|through)|all booked)\b/i;
+// "I'm afraid 7pm is booked", "Saturday's all booked up": the time is taken, not a booking made. On
+// 3 October a receptionist's "7pm is booked" was caught as a claim, so it apologised and said it all again.
+const SLOT =
+  /\b(?:\d{1,2}(?:[:.]\d{2})?\s?(?:[ap]m|o'?clock)|\d{1,2}[:.]\d{2}|\d{1,2}(?:st|nd|rd|th)|half (?:past )?(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)|(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve) (?:fifteen|thirty|forty-five|o'?clock|[ap]m)|noon|midday|times?|slots?|sittings?|days?|dates?|lunch(?:time)?|morning|afternoon|evening|night|tonight|tomorrow|weekend|(?:mon|tues|wednes|thurs|fri|satur|sun)days?)(?:'s)?\s+$/i;
+// ...unless what is booked is the caller's: "your 7pm is booked", "the table for four at 7pm is booked".
+const THING = /\b(?:your|table|booking|reservation|viewing|appointment|valuation|order)\b/i;
+const BOOKED_UP = /^\s+(?:up|out|solid)\b/i;
 const NEGATED = /\b(not|isn'?t|aren'?t|haven'?t|hasn'?t|no|once|before|until|when|if|shall|should|can|could|would|will)\b[^.?!]{0,25}$/i;
 const PAID = /\b(payment(?:'s| has)? (?:gone|went) through|that'?s (?:gone through|been paid|paid)|payment (?:is |was |has been )?(?:approved|successful|complete|received|taken)|paid in full)\b/i;
 // Reading out its own notes about the caller instead of speaking to them. On
@@ -91,6 +98,16 @@ function estateFlags(text: string, state: CallState, names: string[]): Flag[] {
   return flags;
 }
 
+/** A time or a slot that is taken, not a booking made. A claim said "for you" or "booked in" is still a claim. */
+function slotTaken(text: string, claim: RegExpExecArray): boolean {
+  const after = text.slice(claim.index + claim[0].length);
+  if (/(?: in| for you)$/i.test(claim[0]) || /^\s+(?:in|for you)\b/i.test(after)) return false;
+  if (BOOKED_UP.test(after)) return true;
+  const before = text.slice(Math.max(0, claim.index - 60), claim.index).replace(/\b([ap])\.m\./gi, '$1m');
+  const clause = before.split(/[.?!,;:](?=\s)/).pop() ?? '';
+  return SLOT.test(clause) && !THING.test(clause);
+}
+
 function negated(text: string, index: number): boolean {
   const before = text.slice(Math.max(0, index - 40), index);
   return NEGATED.test(before);
@@ -100,7 +117,7 @@ function negated(text: string, index: number): boolean {
 export function checkUtterance(text: string, state: CallState, staff: string[] = []): Flag[] {
   const flags: Flag[] = [];
   const claim = CLAIM.exec(text);
-  if (claim && !negated(text, claim.index) && state.committed.length === 0 && state.found.length === 0) {
+  if (claim && !negated(text, claim.index) && !slotTaken(text, claim) && state.committed.length === 0 && state.found.length === 0) {
     flags.push({ rule: 'unconfirmed_claim', text: claim[0] });
   }
   const paid = PAID.exec(text);

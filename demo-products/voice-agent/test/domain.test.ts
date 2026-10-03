@@ -178,6 +178,33 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
   assert.equal(checkUtterance("I haven't passed that on yet.", s).length, 0);
   assert.equal(checkUtterance("I've passed that on.", { ...s, messageTaken: true }).length, 0);
   assert.equal(checkUtterance("It isn't booked yet.", s).length, 0);
+  // A time that is taken is no claim. On 3 October "I'm afraid 7pm is booked" was caught as one.
+  for (const taken of [
+    "I'm afraid 7pm is booked, but I could do half past seven.",
+    'Sorry, that time is booked. How about 8?',
+    'Saturday is booked, I\'m afraid.',
+    'Unfortunately 8 p.m. on Saturday is booked.',
+    "7:30's all booked.",
+    'Half seven is booked, sadly.',
+    'Those slots are booked.',
+    "I'm afraid we're fully booked at 7pm.",
+    'Saturday is fully booked.',
+    "Sorry, it's booked up that evening.",
+    "We're all booked up on Friday.",
+  ]) {
+    assert.equal(checkUtterance(taken, s).length, 0, taken);
+  }
+  for (const claim of [
+    "That's booked for you.",
+    "You're all booked in.",
+    'Lovely, your 7pm is booked.',
+    'Right, the table for four at 7pm is booked.',
+    "Saturday's all booked in for you.",
+    'Perfect, 7pm is booked for you.',
+    "Lovely, for four people at 7pm, that's booked.",
+  ]) {
+    assert.equal(checkUtterance(claim, s)[0]?.rule, 'unconfirmed_claim', claim);
+  }
   s.committed.push('HK482');
   assert.equal(checkUtterance("That's booked, reference H K four eight two.", s).length, 0);
 });
