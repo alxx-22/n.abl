@@ -291,9 +291,12 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
         onEnded: (s) => {
           if (!who) return;
           const made = (name: string) => s.tools.filter((t) => t.name === name && (t.result as any)?.ok !== false && !(t.result as any)?.error).length;
+          const done = (name: string, key: string) => s.tools.filter((t) => t.name === name && (t.result as any)?.[key] === true).length;
           void demo.recordUsage(who.key.id, w.tenant.id, 'call', {
             seconds: s.duration_s, outcome: s.outcome, model: s.model,
             bookings: made('create_booking'), changes: made('modify_booking'), orders: made('confirm_order'),
+            // An estate agency's calls also count valuations booked and offers taken; no new usage kind.
+            ...(w.tenant.profile.estate ? { valuations: done('book_valuation', 'booked'), offers: done('record_offer', 'recorded') } : {}),
           }, who.visitor).catch(() => {});
         },
       });

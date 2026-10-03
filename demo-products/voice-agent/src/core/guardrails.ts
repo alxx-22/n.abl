@@ -8,7 +8,11 @@
 import type { CallState } from './tools.ts';
 
 export interface Flag {
-  rule: 'unconfirmed_claim' | 'unpaid_claim' | 'said_safe_for_allergy' | 'narrated' | 'untaken_message';
+  rule:
+    | 'unconfirmed_claim' | 'unpaid_claim' | 'said_safe_for_allergy' | 'narrated' | 'untaken_message'
+    // An estate agency's (presets/estate-agent.md §8), checked only on its calls.
+    | 'valuation_figure' | 'bank_details' | 'code_spoken' | 'vacancy_said' | 'staff_whereabouts' | 'invented_interest'
+    | 'unconfirmed_acceptance' | 'disclosure_missed';
   text: string;
 }
 
@@ -28,12 +32,72 @@ const PASSED_ON = /\b(?:i'?ve|i have|we'?ve|we have|that'?s|it'?s|has been|have 
 export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:that|it|this|those|these|your [a-z]+)(?: details)? (?:on|along)|let (?:the|our) [a-z ]{0,20}know|ask (?:them|the [a-z ]{0,20}) to (?:call|ring|give you a (?:call|ring)))/i;
 const SAFE = /\b(it'?s|is|that'?s|will be|would be|should be|totally|completely|perfectly) (safe|fine|okay|ok) (for|with) (you|your|him|her|them|someone|a) [^.?!]*(allerg|coeliac|nut|gluten)/i;
 
+// ── An estate agency's ────────────────────────────────────────────────────
+// The tools hold nothing that must not be said; these catch the model
+// saying it anyway, from its own knowledge or the caller's words.
+
+/** A sum of money, as figures or in words: "£400,000", "400k", "four hundred grand", "three hundred thousand". */
+const MONEY = /£\s?\d|\b\d{2,3}(?:,\d{3})?\s?(?:k|grand|thousand)\b|\b(?:hundred|thousand|grand|million)\b|\b\d{3},\d{3}\b|\b\d{6,7}\b/i;
+/** A home being worth or fetching something. "Worth noting" and "worth asking" are not about money. */
+const WORTH = /\b(?:worth(?! (?:noting|mentioning|knowing|checking|asking|a look|bearing|it|having|doing|getting|booking|a call))|valued? at|valuation of|fetch(?:es|ed|ing)?|sells? for|selling for|sold for|go(?:es|ing)? for|went for|get(?:ting)? for|achieve[sd]?|ballpark|market (?:it|your home|the house|yours) at)\b/i;
+const SORT_CODE = /\b\d{2}[- ]\d{2}[- ]\d{2}\b|\b(?:account(?: number)?|sort code)\b[^.?!]{0,40}?\d[\d -]{4,}\d|\b\d{8}\b/i;
+const CODE = /\b(?:key ?safe|key ?box|lock ?box|alarm|door code|gate code|access code|entry code)\b[^.?!]{0,30}?\b\d{3,6}\b|\bcode (?:is|was|'s)\s*\d{3,6}\b/i;
+/** Saying a home is empty, or who holds its keys. "Vacant possession" is a legal term, and allowed. */
+const VACANT = /\b(?:vacant(?! possession)|unoccupied|lying empty|(?:is|it's|home's|house's|property's|flat's|bungalow's|been|sits|stands|standing|currently|now) (?:currently |now |completely )?empty|empty (?:home|house|property|flat|bungalow)|nobody(?:'s| is)? (?:living|lives) there|no one(?:'s| is)? (?:living|lives) there|(?:we|the office|our office) (?:hold|holds|have|has|keep|keeps) the keys?|keys? (?:are|is) (?:held|kept|with us|at the office|in the office))\b/i;
+const HYPE = /\b(?:lots? of interest|a lot of interest|loads of interest|plenty of interest|huge interest|high demand|in (?:high |big )?demand|won'?t (?:last|hang about|be around (?:long|for long))|selling (?:fast|quickly)|going (?:fast|quickly)|snapped up|really popular|very popular|so popular|lots of viewings|a lot of viewings|other buyers are (?:keen|interested))\b/i;
+const ACCEPTED = /\b(?:(?:offer|it|that) (?:has been|'s been|was|is|has now been) accepted|(?:they've|they have|seller has|seller's|sellers have|sellers've|vendor has|vendor's|vendors have) accepted|accepted (?:your|the|an|their) offer|sale (?:has been |is )?agreed|keys? (?:are|is) ready|ready to collect (?:the|your) keys?)\b/i;
+const MAYBE = /\b(?:whether|hope|hopefully|unless|in case|might|may|if|once|when|until|not|can'?t|cannot|won'?t|don'?t|only|let you know)\b[^.?!]{0,40}$/i;
+const RECORDED = /\b(?:i'?ve|i have|it'?s|that'?s|it has|your offer has|your offer is|your offer's) (?:now |been |just |already )*(?:recorded|logged|put to the seller|sent to the seller)\b/i;
+
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Where a member of the team is or what they are doing: never a caller's business. */
+function whereabouts(text: string, names: string[]): RegExpExecArray | null {
+  if (!names.length) return null;
+  const re = new RegExp(
+    `\\b(?:${names.map(escape).join('|')})(?:'s| is| has| will be|'ll be)\\s+(?:currently |just |already |still |actually )?` +
+      "(?:out\\b|away\\b|off sick|on (?:holiday|leave|annual leave|a viewing|another viewing|her way|his way|their way|the road|lunch)|" +
+      'at (?:lunch|home|a viewing|another viewing|an appointment|a valuation|the doctor|the dentist)|showing (?:a|another|someone|some)|' +
+      'with (?:a|another) (?:client|buyer|seller|customer)|driving|in (?:a|the) (?:meeting|car)|sick\\b|ill\\b|not in (?:today|at the moment))',
+    'i',
+  );
+  return re.exec(text);
+}
+
+function estateFlags(text: string, state: CallState, names: string[]): Flag[] {
+  const flags: Flag[] = [];
+  for (const sentence of text.split(/(?<=[.!?])\s+/)) {
+    if (WORTH.test(sentence) && MONEY.test(sentence)) {
+      flags.push({ rule: 'valuation_figure', text: sentence.slice(0, 160) });
+      break;
+    }
+  }
+  const bank = SORT_CODE.exec(text);
+  if (bank) flags.push({ rule: 'bank_details', text: bank[0] });
+  const code = CODE.exec(text);
+  if (code) flags.push({ rule: 'code_spoken', text: code[0] });
+  const vacant = VACANT.exec(text);
+  if (vacant) flags.push({ rule: 'vacancy_said', text: vacant[0] });
+  const where = whereabouts(text, names);
+  if (where) flags.push({ rule: 'staff_whereabouts', text: where[0] });
+  const hype = HYPE.exec(text);
+  if (hype && !state.seen.interest) flags.push({ rule: 'invented_interest', text: hype[0] });
+  const accepted = ACCEPTED.exec(text);
+  if (accepted && !state.seen.accepted.length && !MAYBE.test(text.slice(Math.max(0, accepted.index - 60), accepted.index))) {
+    flags.push({ rule: 'unconfirmed_acceptance', text: accepted[0] });
+  }
+  const recorded = RECORDED.exec(text);
+  if (recorded && !negated(text, recorded.index) && state.committed.length === 0) flags.push({ rule: 'unconfirmed_claim', text: recorded[0] });
+  return flags;
+}
+
 function negated(text: string, index: number): boolean {
   const before = text.slice(Math.max(0, index - 40), index);
   return NEGATED.test(before);
 }
 
-export function checkUtterance(text: string, state: CallState): Flag[] {
+/** `staff`: the team's first names, for an estate agency's whereabouts check. */
+export function checkUtterance(text: string, state: CallState, staff: string[] = []): Flag[] {
   const flags: Flag[] = [];
   const claim = CLAIM.exec(text);
   if (claim && !negated(text, claim.index) && state.committed.length === 0 && state.found.length === 0) {
@@ -47,5 +111,6 @@ export function checkUtterance(text: string, state: CallState): Flag[] {
   if (passed && !negated(text, passed.index) && !state.messageTaken) flags.push({ rule: 'untaken_message', text: passed[0] });
   const narrated = NARRATED.exec(text);
   if (narrated) flags.push({ rule: 'narrated', text: narrated[0] });
+  if (state.estate) flags.push(...estateFlags(text, state, staff));
   return flags;
 }

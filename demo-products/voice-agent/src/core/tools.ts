@@ -21,11 +21,15 @@ import {
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
+import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
+import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
+
+export { record, type RecordKind } from './tool-kit.ts';
 
 export interface Action {
   kind:
     | 'booking_created' | 'booking_changed' | 'booking_cancelled' | 'order_updated' | 'order_placed'
-    | 'payment' | 'message_taken' | 'sms' | 'transfer' | 'call_ending';
+    | 'payment' | 'message_taken' | 'sms' | 'transfer' | 'call_ending' | 'offer_recorded';
   title: string;
   detail?: string;
   data?: Record<string, unknown>;
@@ -65,6 +69,27 @@ export interface CallState {
   messageTaken: boolean;
   /** end_call refuses once to end a "message" call with no message taken, never in a loop. */
   messageChecked: boolean;
+  // The estate agent's (presets/estate-agent.md §4.4). Empty for every
+  // other business, and read only by the estate tools and guardrails.
+  /** Set at the start of an estate agency's call: its guardrails apply. */
+  estate: boolean;
+  /** The receptionist's own lines, as the caller heard them: what the disclosure check listens to. */
+  said: string[];
+  /** Homes described by get_property in this call, and how many lines had been said by then. */
+  briefed: Record<string, number>;
+  /** Homes (and offers on them, as "offer:<home>") the disclosure check has stopped once: never twice. */
+  gateAsked: string[];
+  /** Who a caller was checked to be, and how many checks failed (milestone 2). */
+  verified: { listing: string; role: string }[];
+  verifyMisses: number;
+  /** A free valuation is offered to a buyer with a home to sell once a call, never pressed. */
+  valuationOffered: boolean;
+  /** What the tools told this call, so a guardrail knows an accepted offer was real news. */
+  seen: { accepted: string[]; interest: boolean };
+  /** The offer this call recorded. */
+  lastOfferRef: string | null;
+  /** Something a tool noticed went wrong (a must-say line skipped), for the call to flag. */
+  toolFlags: { rule: 'disclosure_missed'; text: string }[];
 }
 
 export function newCallState(): CallState {
@@ -72,39 +97,9 @@ export function newCallState(): CallState {
     lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, owed: null, messageTaken: false, messageChecked: false,
+    estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false,
+    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
   };
-}
-
-/**
- * What a record is to this call: a booking or an order it made or looked
- * up, or a change to or cancellation of a booking.
- */
-export type RecordKind = 'booking' | 'order' | 'change' | 'cancellation';
-
-/**
- * Every tool that makes or finds a booking or an order says so here, and
- * only here (PRESETS.md §1, rule 5), so a new tool cannot leave out the
- * part of the call state that one of its readers needs: the guardrail
- * (did the call really make or find something it talks about), the check
- * that the caller heard a new reference before the call ends, and the
- * call's outcome and what a payment is for.
- *
- * 'found': looked up, so talking about it is not a false claim.
- * 'committed': written by this call. A new booking or order is the call's
- * own and its reference is owed to the caller; a change keeps the
- * booking the call's own, under the reference the caller already has; a
- * cancellation is neither.
- */
-export function record(ctx: ToolContext, ref: string, kind: RecordKind, how: 'committed' | 'found'): void {
-  const s = ctx.state;
-  if (how === 'found') {
-    s.found.push(ref);
-    return;
-  }
-  s.committed.push(ref);
-  if (kind === 'booking' || kind === 'change') s.lastBookingRef = ref;
-  if (kind === 'order') s.lastOrderRef = ref;
-  if (kind === 'booking' || kind === 'order') s.owed = ref;
 }
 
 /**
@@ -174,14 +169,6 @@ export function namedAllergy(given: string | undefined, heard: string[]): string
   return given;
 }
 
-/** A name the caller actually gave, not a stand-in. On 1 October a booking went through as "Caller". */
-function realName(v: unknown): string | undefined {
-  const n = str(v);
-  if (!n || !/\p{L}{2}/u.test(n)) return undefined;
-  return /^(the )?(caller|customer|guest|user|client|unknown|anonymous|name|no name|n\/?a|none|test|sir|madam)$/i.test(n) ? undefined : n;
-}
-const ASK_NAME = "Not done: you don't have the caller's name yet. Ask for it (a first name is fine), read it back, then call this again with it.";
-
 export interface ToolContext {
   tenant: Tenant;
   repo: Repo;
@@ -196,36 +183,20 @@ export interface ToolContext {
   action: (a: Action) => void;
 }
 
-type Args = Record<string, unknown>;
-type Handler = (args: Args, ctx: ToolContext) => Promise<Record<string, unknown>>;
+export type Args = Record<string, unknown>;
+export type Handler = (args: Args, ctx: ToolContext) => Promise<Record<string, unknown>>;
 
 export interface ToolOptions {
   canTransfer: boolean;
 }
 
-interface Tool {
+export interface Tool {
   decl: FunctionDeclaration;
   handler: Handler;
   when?: (t: Tenant, o: ToolOptions) => boolean;
   /** Adds the parameters only some businesses need (seating areas, access, allergies). */
   tailor?: (decl: FunctionDeclaration, t: Tenant) => FunctionDeclaration;
 }
-
-const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
-const int = (v: unknown): number | undefined => {
-  const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
-  return Number.isFinite(n) ? Math.round(n) : undefined;
-};
-const strList = (v: unknown): string[] =>
-  Array.isArray(v) ? v.filter((x) => typeof x === 'string' && x.trim()).map((x) => (x as string).trim()) : typeof v === 'string' && v.trim() ? v.split(/,| and /).map((x) => x.trim()).filter(Boolean) : [];
-
-const S = (description: string) => ({ type: 'STRING', description });
-const I = (description: string) => ({ type: 'INTEGER', description });
-const obj = (properties: Record<string, unknown>, required: string[] = []) => ({
-  type: 'OBJECT', properties, ...(required.length ? { required } : {}),
-});
-const B = (description: string) => ({ type: 'BOOLEAN', description });
-const bool = (v: unknown): boolean | undefined => (v === true || v === 'true' ? true : v === false || v === 'false' ? false : undefined);
 
 // ── Tables: areas, access, features, allergies ────────────────────────────
 
@@ -290,6 +261,7 @@ function tableParams(decl: FunctionDeclaration, t: Tenant, extra: 'check' | 'boo
 
 /** The text a caller gets: what, when, where, the reference, and how to change it. */
 function bookingText(t: Tenant, b: Booking, verb: string): string {
+  if (t.profile.estate) return estateText(t, b, verb === 'Changed:' ? 'changed' : 'booked');
   const local = toLocal(b.starts_at, t.profile.timezone);
   const r = t.profile.booking?.resources.find((x) => x.key === b.resource_key);
   const area = b.area_key ? t.profile.booking?.areas?.find((a) => a.key === b.area_key) : undefined;
@@ -310,15 +282,8 @@ function hoursFor(t: Tenant, date: string): string[] {
   return open.map((h) => `${h.label ? `${h.label} ` : ''}${spokenTime(h.open)} to ${spokenTime(h.close)}`);
 }
 
-async function smsTo(ctx: ToolContext, to: string | null, body: string): Promise<string | null> {
-  if (!to) return null;
-  const status = await ctx.sms.send(to, body);
-  await ctx.repo.addMessage({ tenant_id: ctx.tenant.id, call_id: ctx.callId, kind: 'sms', to_number: to, body, status });
-  ctx.action({ kind: 'sms', title: status === 'sent' ? 'SMS sent' : 'SMS (simulated)', detail: body, data: { to: displayUkPhone(to), status } });
-  return status;
-}
-
-function bookingSummary(t: Tenant, b: { reference: string; starts_at: Date; party_size: number; name: string; service_key: string; resource_key: string; area_key?: string | null; allergies?: string | null; notes?: string | null }) {
+function bookingSummary(t: Tenant, b: { reference: string; starts_at: Date; party_size: number; name: string; service_key: string; resource_key: string; area_key?: string | null; allergies?: string | null; notes?: string | null; listing_key?: string | null; details?: Record<string, unknown> }) {
+  if (t.profile.estate) return estateSummary(t, b);
   const local = toLocal(b.starts_at, t.profile.timezone);
   const service = findService(t.profile, b.service_key);
   const resource = t.profile.booking?.resources.find((r) => r.key === b.resource_key);
@@ -397,15 +362,6 @@ function withinOrderingHours(ctx: ToolContext, due: Date): boolean {
   return o.hours.some((h) => h.days.includes(local.weekday) && m >= minutesOf(h.open) && m <= closeMinutes(h.close));
 }
 
-function postcodeOf(input: unknown): { full: string; district: string } | null {
-  const s = str(input)?.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (!s) return null;
-  const m = /^([A-Z]{1,2}[0-9][A-Z0-9]?)([0-9][A-Z]{2})$/.exec(s);
-  if (m) return { full: `${m[1]} ${m[2]}`, district: m[1] };
-  const d = /^([A-Z]{1,2}[0-9][A-Z0-9]?)$/.exec(s);
-  return d ? { full: d[1], district: d[1] } : null;
-}
-
 /** What to tell the caller about paying for takeaway, by the business's rule. */
 function paymentRule(rule: 'phone' | 'collection' | 'either', fulfilment: 'collection' | 'delivery'): string {
   if (rule === 'phone') return 'Payment is taken on the phone: take it now with take_demo_payment, reading out the demo card if they need it.';
@@ -420,6 +376,7 @@ const TOOLS: Record<string, Tool> = {
       description: 'Opening, last-booking and takeaway times for a date, or the next 7 days.',
       parameters: obj({ date: S('YYYY-MM-DD') }),
     },
+    tailor: (d, t) => estateParams(d, t, 'hours'),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const today = toLocal(ctx.now(), p.timezone).date;
@@ -436,6 +393,7 @@ const TOOLS: Record<string, Tool> = {
           }
           const take = p.ordering?.hours.filter((h) => h.days.includes(wd));
           if (take?.length) out.orders = take.map((h) => `${spokenTime(h.open)} to ${spokenTime(h.close)}`);
+          if (p.estate) Object.assign(out, estateHours(ctx.tenant, d));
           return out;
         }),
       };
@@ -479,13 +437,15 @@ const TOOLS: Record<string, Tool> = {
         ['date'],
       ),
     },
-    tailor: (d, t) => tableParams(d, t, 'check'),
+    tailor: (d, t) => estateParams(tableParams(d, t, 'check'), t, 'check'),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const service = findService(p, str(args.service));
       if (!service) {
         return { available: false, message: `Not a bookable service. Services: ${p.booking!.services.map((s) => s.label).join(', ')}.` };
       }
+      const estate = await estateAvailability(args, ctx, service);
+      if (estate) return estate;
       const area = resolveArea(ctx.tenant, str(args.area));
       if (area.enquiry || area.walkIn || area.unknown) return { available: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
       const table = service.kind === 'table' ? resolveTable(ctx.tenant, str(args.table)) : {};
@@ -539,9 +499,14 @@ const TOOLS: Record<string, Tool> = {
         ['date', 'time', 'name'],
       ),
     },
-    tailor: (d, t) => tableParams(d, t, 'book'),
+    tailor: (d, t) => estateParams(tableParams(d, t, 'book'), t, 'book'),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
+      if (p.estate) {
+        const service = findService(p, str(args.service));
+        const estate = service ? await estateBooking(args, ctx, service) : null;
+        if (estate) return estate;
+      }
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
       const area = resolveArea(ctx.tenant, str(args.area));
       if (area.enquiry || area.walkIn || area.unknown) return { booked: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
@@ -685,11 +650,14 @@ const TOOLS: Record<string, Tool> = {
       const phone = str(args.phone) ? normaliseUkPhone(str(args.phone)) : undefined;
       if (str(args.phone) && !phone) return { changed: false, message: 'That is not a UK phone number. Ask for it again, digit by digit.' };
       if (str(args.name) && !realName(args.name)) return { changed: false, message: ASK_NAME };
+      // A viewing moves only within its home's rules.
+      const listing = ctx.tenant.profile.listings ? await moveRule(ctx, ref) : undefined;
       const r = await ctx.repo.modifyBooking(
         ctx.tenant, ref,
         {
           date: str(args.date), time: str(args.time), party_size: int(args.party_size), notes: str(args.notes), area: area.key,
           accessible: bool(args.accessible), allergies: namedAllergy(noneToNull(str(args.allergies)), ctx.state.heard), name: realName(args.name), phone: phone ?? undefined,
+          listing,
         },
         ctx.now(),
       );
@@ -698,7 +666,9 @@ const TOOLS: Record<string, Tool> = {
       const s = bookingSummary(ctx.tenant, r.booking);
       ctx.action({
         kind: 'booking_changed', title: 'Booking changed',
-        detail: `${s.spoken_date}, ${s.spoken_time} · ${r.booking.party_size} people${s.table ? ` · ${s.table}` : ''} · ref ${r.booking.reference}`,
+        detail: ctx.tenant.profile.estate
+          ? `${s.spoken_date}, ${s.spoken_time}${'property' in s && s.property ? ` · ${s.property}` : ''} · with ${s.with} · ref ${r.booking.reference}`
+          : `${s.spoken_date}, ${s.spoken_time} · ${r.booking.party_size} people${s.table ? ` · ${s.table}` : ''} · ref ${r.booking.reference}`,
         data: { reference: r.booking.reference },
       });
       await smsTo(ctx, r.booking.phone, bookingText(ctx.tenant, r.booking, 'Changed:'));
@@ -723,7 +693,7 @@ const TOOLS: Record<string, Tool> = {
       record(ctx, b.reference, 'cancellation', 'committed');
       const s = bookingSummary(ctx.tenant, b);
       ctx.action({ kind: 'booking_cancelled', title: 'Booking cancelled', detail: `${s.spoken_date}, ${s.spoken_time} · ${b.name} · ref ${b.reference}` });
-      await smsTo(ctx, b.phone, `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled. To book again, just call us. (Demo)`);
+      await smsTo(ctx, b.phone, ctx.tenant.profile.estate ? estateText(ctx.tenant, b, 'cancelled') : `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled. To book again, just call us. (Demo)`);
       return { cancelled: true, ...s, policy: ctx.tenant.profile.policies?.cancellation };
     },
   },
@@ -1135,13 +1105,18 @@ const TOOLS: Record<string, Tool> = {
     },
   },
 
+  ...ESTATE_TOOLS,
+
   take_message: {
     decl: {
       name: 'take_message',
       description: 'A message for the team, with a name and call-back number.',
       parameters: obj({ name: S("Caller's name"), phone: S('Call-back number'), message: S('One or two sentences') }, ['name', 'message']),
     },
+    tailor: (d, t) => estateParams(d, t, 'message'),
     async handler(args, ctx) {
+      const estate = await estateMessage(args, ctx);
+      if (estate) return estate;
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
       const body = str(args.message) ?? '';
       const name = str(args.name) ?? 'Unknown';

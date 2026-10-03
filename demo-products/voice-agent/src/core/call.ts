@@ -105,7 +105,7 @@ const SPEECH_RMS = 700;
 const WATCHDOG_MS = 7000;
 
 /** After these, the receptionist reads back something that matters: harder to interrupt by accident. */
-const READ_BACK_TOOLS = new Set(['review_order', 'confirm_order', 'create_booking', 'modify_booking', 'cancel_booking', 'take_demo_payment']);
+const READ_BACK_TOOLS = new Set(['review_order', 'confirm_order', 'create_booking', 'modify_booking', 'cancel_booking', 'take_demo_payment', 'record_offer', 'book_valuation']);
 const MAX_RECOVERIES = 2;
 /**
  * With contextual turn-taking the server knows the moment a turn ended, and a
@@ -125,6 +125,18 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
     '[Correction from the system: no message has been taken in this call, so the team has not been told. Take it now with take_message (their name, number and what they want), then tell them it has been passed on.]',
   narrated:
     '[Correction from the system: you just read out a note about the caller instead of talking to them. Never describe what the caller or anyone in the room said. Say "Sorry, I misheard you there", ask them what they would like, and carry on talking to them directly.]',
+  // An estate agency's (presets/estate-agent.md §8).
+  valuation_figure:
+    "[Correction from the system: never give a figure, a range or an opinion of what anyone's home is worth. Say you can't value a home on the phone, and offer a free valuation instead.]",
+  bank_details:
+    '[Correction from the system: never say or take bank details. Tell the caller not to pay anything or act on changed bank details, to check with their own solicitor on a number they already have, and to report it to Report Fraud on 0300 123 2040. Then take an urgent message (category fraud).]',
+  code_spoken: '[Correction from the system: never say a key-safe, door or alarm code. Say you can\'t share access details, and offer a message for the negotiator.]',
+  vacancy_said: "[Correction from the system: never say whether a home is empty or lived in, or who holds keys. Say only when viewings can happen.]",
+  staff_whereabouts: "[Correction from the system: never say where a member of the team is or what they are doing. Offer to send them a message instead.]",
+  invented_interest: "[Correction from the system: never talk up interest or urgency in a home. Give only facts from your tools.]",
+  unconfirmed_acceptance:
+    "[Correction from the system: no tool has said any offer was accepted or any keys are ready. Correct yourself: only the seller decides, and the negotiator confirms any decision in writing.]",
+  disclosure_missed: "[Correction from the system: you haven't yet told the caller something they must hear about this home. Say it now, from say_first in get_property, before going on.]",
 };
 
 export class CallSession extends EventEmitter<CallEvents> {
@@ -168,6 +180,7 @@ export class CallSession extends EventEmitter<CallEvents> {
   constructor(opts: CallOptions) {
     super();
     this.opts = opts;
+    this.state.estate = Boolean(opts.tenant.profile.estate);
   }
 
   private now(): Date {
@@ -459,15 +472,8 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.emitLine('agent', text, true);
     this.record('agent', { text: clean, interrupted });
     this.turns?.agentSaid(clean);
-    for (const f of checkUtterance(text, this.state)) {
-      this.flags.push(f);
-      this.emit('flag', f);
-      this.publish('flag', { rule: f.rule, text: f.text });
-      this.record('guardrail', f);
-      // Correct it on the call, not just in the log: the next thing the
-      // agent does is put it right.
-      this.session?.sendText(CORRECTIONS[f.rule]);
-    }
+    if (this.state.estate) this.state.said.push(clean);
+    for (const f of checkUtterance(text, this.state, this.staffNames)) this.raise(f);
     if (!this.state.messageTaken && !this.state.messageChecked && PROMISED_MESSAGE.test(clean)) {
       // Once the turn's tool calls have run: the message may be on its way already.
       void this.toolQueue.then(() => {
@@ -479,7 +485,26 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.emit('agentTurn', clean);
   }
 
+  private get staffNames(): string[] {
+    return this.opts.tenant.profile.team?.map((t) => t.first_name) ?? [];
+  }
+
+  private raise(f: Flag): void {
+    this.flags.push(f);
+    this.emit('flag', f);
+    this.publish('flag', { rule: f.rule, text: f.text });
+    this.record('guardrail', f);
+    // Correct it on the call, not just in the log: the next thing the
+    // agent does is put it right.
+    this.session?.sendText(CORRECTIONS[f.rule]);
+  }
+
   private async handleTools(s: LiveSession, calls: FunctionCall[]): Promise<void> {
+    // What the receptionist has said so far this turn counts too: it often
+    // says a home's must-say line and asks for times in one breath, before
+    // the turn's words are final.
+    const partial = this.agentBuf.trim();
+    if (partial && this.state.estate) this.state.said.push(redactCardNumbers(partial, this.opts.config.demoCards).text);
     const ctx: ToolContext = {
       tenant: this.opts.tenant,
       repo: this.opts.repo,
@@ -505,6 +530,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       this.record('tool_result', { name: c.name, ms: Date.now() - t0, result });
       this.toolTrace.push({ name: c.name, args: loggableArgs(c.name, c.args), result });
       responses.push({ id: c.id, name: c.name, response: result });
+      for (const f of this.state.toolFlags.splice(0)) this.raise(f);
     }
     this.lastActivity = Date.now();
     if (calls.some((c) => READ_BACK_TOOLS.has(c.name))) this.turns?.protect();
@@ -654,6 +680,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     const kinds = new Set<string>();
     if (this.state.lastOrderRef) kinds.add('ordered');
     if (this.state.lastBookingRef) kinds.add('booked');
+    if (this.state.lastOfferRef) kinds.add('offered');
     if (this.state.committed.length && !kinds.size) kinds.add('changed');
     if (this.state.paid.length) kinds.add('paid');
     if (this.state.transferRequested) kinds.add('transferred');
