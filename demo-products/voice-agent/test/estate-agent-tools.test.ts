@@ -599,3 +599,13 @@ test('get_property: the facts every advert must state come first, in one sentenc
   const checking = await (await call(t)).run('get_property', { property: '22 Albion Road' });
   assert.equal(checking.describe, undefined, 'a fact being checked is not stated');
 });
+
+test('end_call: an estate call ending "booked" with nothing booked is stopped once', async () => {
+  const t = await agency('ea-end-booked');
+  const { run } = await call(t);
+  const first = await run('end_call', { outcome: 'booked' });
+  assert.equal(first.ok, false);
+  assert.match(String(first.message), /Nothing has been booked in this call/);
+  assert.equal((await run('end_call', { outcome: 'booked' })).ok, true, 'never twice');
+  assert.equal((await (await call(t)).run('end_call', { outcome: 'answered' })).ok, true, 'only a call said to be booked');
+});

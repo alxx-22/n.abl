@@ -497,7 +497,26 @@ export class CallSession extends EventEmitter<CallEvents> {
    * answered another question instead). Reminded once, after the turn's
    * tool calls have run.
    */
+  /** A booking tool that said "not done yet, ask for X and call again" leaves the booking outstanding until one succeeds. */
+  private noteOutstanding(name: string, result: unknown): void {
+    if (name !== 'create_booking' && name !== 'book_valuation' && name !== 'record_offer') return;
+    const r = (result ?? {}) as { booked?: boolean; recorded?: boolean; message?: unknown };
+    if (r.booked || r.recorded) this.state.outstanding = null;
+    else if ((r.booked === false || r.recorded === false) && /call (?:this|it|create_booking|book_valuation|record_offer) again|call again/i.test(String(r.message ?? ''))) {
+      this.state.outstanding = { tool: name, heard: this.state.heard.length };
+    }
+  }
+
   private remindToBook(line: string): void {
+    // The caller gave what the tool asked for, and the receptionist talked about the time or amount without trying again (ea-valuation-no-figure, 3 October).
+    const owed = this.state.outstanding;
+    if (owed && !this.state.retryNudged && this.state.heard.length > owed.heard && READ_BACK_DETAIL.test(line)) {
+      void this.toolQueue.then(() => {
+        if (this.ended || this.state.retryNudged || this.state.outstanding !== owed) return;
+        this.state.retryNudged = true;
+        this.session?.sendText(`[From the system: ${owed.tool} said it was not done yet, and nothing has been booked or recorded since. If you now have what it asked for, call it again now; if not, ask for just that. Never say it is booked until it returns a reference.]`);
+      });
+    }
     const yes = this.state.saidYes;
     if (yes && !this.state.bookNudged) {
       this.state.saidYes = null;
@@ -553,6 +572,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       this.record('tool_call', { name: c.name, args: loggableArgs(c.name, c.args) });
       const t0 = Date.now();
       const result = await runTool(c.name, c.args, ctx);
+      if (this.state.estate) this.noteOutstanding(c.name, result);
       this.record('tool_result', { name: c.name, ms: Date.now() - t0, result });
       this.toolTrace.push({ name: c.name, args: loggableArgs(c.name, c.args), result });
       responses.push({ id: c.id, name: c.name, response: result });

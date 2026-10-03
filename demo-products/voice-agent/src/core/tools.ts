@@ -97,6 +97,11 @@ export interface CallState {
   commitTries: number;
   /** The reminder to book what the caller said yes to is given once a call, never in a loop. */
   bookNudged: boolean;
+  /** A booking tool said "not done yet" and what it needs (a name, a postcode), and the caller lines heard by then. */
+  outstanding: { tool: string; heard: number } | null;
+  retryNudged: boolean;
+  /** end_call refuses once to end a "booked" call with nothing booked. */
+  bookedChecked: boolean;
 }
 
 export function newCallState(): CallState {
@@ -106,7 +111,7 @@ export function newCallState(): CallState {
     heard: [], allergyAsked: false, owed: null, messageTaken: false, messageChecked: false,
     estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false,
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
-    readBack: null, saidYes: null, commitTries: 0, bookNudged: false,
+    readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false,
   };
 }
 
@@ -1167,6 +1172,11 @@ const TOOLS: Record<string, Tool> = {
       if (/message/i.test(str(args.outcome) ?? '') && !ctx.state.messageTaken && !ctx.state.messageChecked) {
         ctx.state.messageChecked = true;
         return { ok: false, message: 'No message has been taken, so nobody would call them back. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then say goodbye and use end_call.' };
+      }
+      // An estate agency's call on 3 October ended "booked" after book_valuation had said "not done": nothing was in the diary.
+      if (ctx.state.estate && /book/i.test(str(args.outcome) ?? '') && ctx.state.committed.length === 0 && !ctx.state.bookedChecked) {
+        ctx.state.bookedChecked = true;
+        return { ok: false, message: "Nothing has been booked in this call: no booking tool returned a reference. If they want it, call the tool now with what they've told you and give them the reference; if not, tell them it isn't booked. Then end_call." };
       }
       ctx.state.ending = true;
       ctx.action({ kind: 'call_ending', title: 'Call ending', detail: str(args.outcome) });
