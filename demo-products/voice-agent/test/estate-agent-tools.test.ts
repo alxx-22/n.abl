@@ -140,17 +140,16 @@ test('get_property never says a seller\'s number, that a home is empty, keys, or
   assert.equal(bungalow.viewing, 'Viewings any time in our viewing hours. First viewings are in office hours.');
 });
 
-test('the disclosure gate: no times before get_property and the must-say line; it stops once, then goes ahead and flags it', async () => {
+test('the disclosure gate: no times before the must-say line; it stops once, then goes ahead and flags it', async () => {
   const t = await agency('ea-gate');
+  const NOT_YET = `Not checked yet. Before any times, tell the caller: "It's leasehold, with 76 years left on the lease." Then call this again. Add nothing about the home that a tool didn't give you.`;
   {
     const { run, ctx, say } = await call(t);
-    const first = await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '11:00' });
-    assert.match(String(first.not_yet), /First use get_property/);
     await run('get_property', { property: 'albion_41_flat_2' });
     say('Flat 2, 41 Albion Road is a two-bedroom flat at a guide price of £185,000.');
     const held = await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '11:00' });
-    assert.equal(held.available, false);
-    assert.equal(held.not_yet, `Before any times, tell the caller: "It's leasehold, with 76 years left on the lease." Then ask again.`);
+    assert.equal(held.not_yet, NOT_YET);
+    assert.equal(held.available, undefined, 'never "not available": it was not checked');
     assert.equal(held.alternatives, undefined, 'no times yet');
     const again = await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '11:00' });
     assert.equal(again.not_yet, undefined, 'never a loop: the second time it goes ahead');
@@ -168,6 +167,18 @@ test('the disclosure gate: no times before get_property and the must-say line; i
     const r = await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '11:00' });
     assert.equal(r.not_yet, undefined);
     assert.deepEqual(ctx.state.toolFlags, []);
+  }
+  {
+    // Asked for times before looking the home up: briefed there and then, with the line to say in the answer.
+    const { run, ctx, say } = await call(t);
+    const first = await run('check_availability', { property: 'the flat on Albion Road', date: SAT, time: '11:00' });
+    assert.equal(first.not_yet, NOT_YET);
+    assert.equal(ctx.state.briefed.albion_41_flat_2, 0);
+    say("It's leasehold, with 76 years left on the lease.");
+    assert.equal((await run('check_availability', { property: 'the flat on Albion Road', date: SAT, time: '11:00' })).not_yet, undefined);
+    assert.deepEqual(ctx.state.toolFlags, []);
+    // A home with nothing to say first is checked at once.
+    assert.equal((await run('check_availability', { property: '22 Albion Road', date: SAT, time: '11:00' })).not_yet, undefined);
   }
   {
     // A line said before the briefing does not count: it was not about this home.
@@ -379,13 +390,11 @@ test('an offer, end to end: the fee first, then recorded whatever it is, confirm
   const before = await repo.listOffers(t.id, 'albion_22');
   assert.ok(before.length, 'the seed has an offer on 22 Albion Road already');
   const { run, ctx, sent, say, actions } = await call(t);
-  const blind = await run('record_offer', { property: '22 Albion Road', amount: 320000, buyer_names: 'Sam Price' });
-  assert.match(String(blind.not_yet), /get_property/);
   await run('get_property', { property: '22 Albion Road' });
   const args = { property: '22 Albion Road', amount: '320k', buyer_names: ['Sam Price', 'Alex Price'], conditions: 'subject to survey', first_time_buyer: true, funding: 'mortgage agreed in principle' };
   const fee = await run('record_offer', args);
   assert.equal(fee.recorded, false);
-  assert.equal(fee.not_yet, 'Before taking the offer, tell the caller: "Buyers pay £36 including VAT each for ID checks, once an offer is accepted." Then ask again.');
+  assert.equal(fee.not_yet, 'Not recorded yet. Before taking the offer, tell the caller: "Buyers pay £36 including VAT each for ID checks, once an offer is accepted." Then call this again. Add nothing about the home that a tool didn\'t give you.');
   say('Before I take it: buyers pay thirty-six pounds including VAT each for ID checks, once an offer is accepted.');
   const r = await run('record_offer', args);
   assert.equal(r.recorded, true, JSON.stringify(r));

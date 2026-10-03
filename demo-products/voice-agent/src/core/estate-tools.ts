@@ -102,23 +102,30 @@ function stopFor(ctx: ToolContext, h: Home, all: Home[], date?: string): Record<
 
 /**
  * The disclosure gate (§4.4). Deciding to view is a decision a buyer makes
- * on what they have been told, so a viewing (or an offer) waits until
- * get_property has run for the home in this call and the receptionist has
- * said each line it must say first. It stops once per home, never in a
+ * on what they have been told, so a viewing (or an offer) waits until the
+ * receptionist has said each line it must say first about the home, since
+ * it was briefed on it in this call. It stops once per home, never in a
  * loop: the second time it goes ahead, and the call is flagged.
+ *
+ * A home asked about before get_property is briefed here and now, with
+ * the lines in the answer. In a live test, refusing with "use get_property
+ * first" had the receptionist tell the caller the time was taken, and
+ * describe the home in words no tool gave it.
  */
 function gate(ctx: ToolContext, h: Home, kind: 'viewing' | 'offer'): Record<string, unknown> | null {
   const s = ctx.state;
   const l = h.listing;
+  if (!(l.key in s.briefed)) s.briefed[l.key] = s.said.length;
   const at = s.briefed[l.key];
-  if (at === undefined) return { not_yet: `First use get_property for ${shortAddress(l)}, and tell the caller what it says to say first. Then ask again.` };
   const items = kind === 'offer' ? l.before_offer : sayFirst(l, h.live, today(ctx), startOf(h, ctx.now()), ctx.tenant.profile.timezone);
   const missing = unsaid(items, s.said.slice(at));
   if (!missing.length) return null;
   const key = kind === 'offer' ? `offer:${l.key}` : l.key;
   if (!s.gateAsked.includes(key)) {
     s.gateAsked.push(key);
-    return { not_yet: `Before ${kind === 'offer' ? 'taking the offer' : 'any times'}, tell the caller: ${missing.map((i) => `"${i.say}"`).join(' ')} Then ask again.` };
+    return {
+      not_yet: `Not ${kind === 'offer' ? 'recorded' : 'checked'} yet. Before ${kind === 'offer' ? 'taking the offer' : 'any times'}, tell the caller: ${missing.map((i) => `"${i.say}"`).join(' ')} Then call this again. Add nothing about the home that a tool didn't give you.`,
+    };
   }
   if (!s.gateAsked.includes(`missed:${key}`)) {
     s.gateAsked.push(`missed:${key}`);
@@ -293,7 +300,7 @@ export async function estateAvailability(args: Args, ctx: ToolContext, service: 
   const stop = stopFor(ctx, h, all, date);
   if (stop) return { available: false, ...stop };
   const held = gate(ctx, h, 'viewing');
-  if (held) return { available: false, ...held };
+  if (held) return { checked: false, ...held };
   const no = excludedStaff(ctx, h, staff);
   if (no) return { available: false, message: no };
   const rule = viewingRules(h.listing, p, service.key, h.live);
