@@ -70,11 +70,13 @@ const COUNTED = /\b(bookings|orders)\b/g;
 
 /**
  * Reset's question: everything it clears, and what it makes again. The
- * restaurant's reads as it always has.
+ * restaurant's reads as it always has; an estate agency's names its
+ * viewings, valuations, offers and sales.
  */
 export function resetConfirm(spec: WorkspaceSpec): string {
-  const kinds = [...spec.resetLine.matchAll(COUNTED)].map((m) => m[1].slice(0, -1));
-  const refill = spec.bookings ? 'fill the diary with a fresh sample week' : `make fresh sample ${spec.resetLine}`;
+  const kinds = spec.resetLine.split(/,\s*|\s+and\s+/).map((w) => w.trim().replace(/s$/, '')).filter(Boolean);
+  const diary = spec.bookings && kinds.every((k) => k === 'booking' || k === 'order');
+  const refill = diary ? 'fill the diary with a fresh sample week' : `make fresh sample ${spec.resetLine}`;
   return `Clear every ${[...kinds, 'call and text'].join(', ')}, and ${refill} from your setup?`;
 }
 

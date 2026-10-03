@@ -210,6 +210,10 @@ test('scout: a whole site, politely, into the builder', async () => {
   assert.match(view.found!.hours!.sentence, /Closed Mondays/);
   assert.ok(view.found!.services.some((s) => /OpenTable/.test(s)));
   assert.ok(view.found!.services.includes('outdoor seating'));
+  // A site that is not a restaurant: worth a question when building one, never when building an estate agency.
+  const agency = { ...scan!, result: { ...(scan!.result as object), not_hospitality: true } };
+  assert.match(scanView(agency, null).error ?? '', /does not look like a restaurant/);
+  assert.equal(scanView(agency, null, false).error, null);
 
   // Applied: only what was ticked, every field marked, and still a valid restaurant.
   const base = defaultAnswers();

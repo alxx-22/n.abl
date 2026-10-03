@@ -336,7 +336,9 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     if (now - (lastSave.get(t.id) ?? 0) < 800) throw new HttpError(429, 'Saving too fast; try again in a moment.');
     lastSave.set(t.id, now);
     const answers = answersOf(preset, await readJson(req, 1_500_000));
-    const { workspace: saved } = await rebuild(ctx, w, preset, answers);
+    const { workspace: saved, profile } = await rebuild(ctx, w, preset, answers);
+    // A running estate demo: homes added, removed, or repriced in the builder reach the back office and the calls.
+    if (w.started_at && profile.listings) await repo.syncListings(t.id, profile, new Date());
     if (now - (lastSaveLogged.get(t.id) ?? 0) > 10 * 60000) {
       lastSaveLogged.set(t.id, now);
       void usage('config_saved');
@@ -376,7 +378,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   // ── Build from the website: the scout ─────────────────────────────────
   if (sub === 'scout' && !ref && req.method === 'GET') {
     const scan = cfg.scan ? await demo.getScan(cfg.scan.id) : null;
-    return json(res, 200, { scan: scan ? scanView(scan, scanProgress(scan.id)) : null }), true;
+    return json(res, 200, { scan: scan ? scanView(scan, scanProgress(scan.id), preset.scan.parts.includes('menu')) : null }), true;
   }
   if (sub === 'scout' && !ref && req.method === 'POST') {
     const { url: site } = await readJson(req, 10_000);
@@ -395,7 +397,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     await demo.saveWorkspace(t.id, t.profile, { ...cfg, scan: { id, url: site.trim().slice(0, 200) } } satisfies WorkspaceConfig);
     void usage('scouted', { site: site.trim().slice(0, 200) });
     const scan = (await demo.getScan(id))!;
-    return json(res, 200, { scan: scanView(scan, scanProgress(id)) }), true;
+    return json(res, 200, { scan: scanView(scan, scanProgress(id), preset.scan.parts.includes('menu')) }), true;
   }
   if (sub === 'scout' && ref === 'apply' && req.method === 'POST') {
     const body = await readJson(req, 10_000);

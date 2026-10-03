@@ -457,12 +457,26 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal(fb.details.feedback.category, 'keen');
     assert.equal(fb.details.feedback.words, 'Loved the garden');
 
+    // The builder after Start: a home repriced, one added and one removed reach the back office.
+    const answers = (await jo.call('GET', path)).data.answers;
+    const [first, gone] = answers.listings.filter((x: any) => ![avail.key, vhome.key, offer.listing_key].includes(x.key));
+    first.price_pence += 500_000;
+    answers.listings = answers.listings.filter((x: any) => x.key !== gone.key);
+    answers.listings.push({ ...structuredClone(first), key: 'new_home', number: '99', ref: 'HG199' });
+    const saved = await jo.call('PUT', `${path}/answers`, answers);
+    assert.equal(saved.status, 200, JSON.stringify(saved.data));
+    const synced = (await state()).listings;
+    assert.equal(synced.find((l: any) => l.key === first.key).price_pence, first.price_pence);
+    assert.ok(synced.some((l: any) => l.key === 'new_home'));
+    assert.ok(!synced.some((l: any) => l.key === gone.key));
+
     // Reset puts every home back as Start made it.
     assert.equal((await jo.call('POST', `${path}/reset`)).status, 200);
     h = (await state()).listings.find((l: any) => l.key === avail.key);
     assert.equal(h.status, 'available');
     assert.equal(h.price_pence, avail.price_pence);
     assert.deepEqual(h.checking, []);
+    assert.equal((await state()).listings.find((l: any) => l.key === first.key).price_pence, first.price_pence, 'the builder\'s price now');
   } finally {
     info.status = was;
   }

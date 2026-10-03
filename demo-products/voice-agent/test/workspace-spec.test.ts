@@ -29,6 +29,8 @@ test('workspace spec: Reset counts each word wherever it is, and nothing else', 
   assert.equal(resetToast(orders, { bookings: 3, orders: 40 }), 'Reset: 40 orders.');
   assert.equal(resetToast({ ...orders, resetLine: 'bookings today and bookings tomorrow' }, { bookings: 2 }), 'Reset: 2 bookings today and 2 bookings tomorrow.', 'every time it appears');
   assert.equal(resetToast(boardWorkspace(restaurant()), { bookings: 9, orders: 1 }), 'Reset: 9 bookings.');
+  const estate: WorkspaceSpec = { views: [], suggestions: [], resetLine: 'viewings, valuations, offers and sales', bookings: { resource: 'person', resources: 'team', party: null, visit: {}, allergies: false } };
+  assert.equal(resetConfirm(estate), 'Clear every viewing, valuation, offer, sale, call and text, and make fresh sample viewings, valuations, offers and sales from your setup?');
 });
 
 test('workspace spec: {ref} is filled from the latest order, or the next booking, or the line is left out', () => {

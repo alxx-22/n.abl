@@ -111,7 +111,8 @@ export function applyScan(input: RestaurantAnswers, r: ScanResult, use: Partial<
 }
 
 /** What the builder's scout card shows. */
-export function scanView(scan: { id: string; status: 'running' | 'done' | 'failed'; result: any; error: string | null }, progress: { stage: string; pages: number } | null) {
+/** `food`: the scan is for a restaurant, café or pub, so a site that is none of those is worth a question; any other kind of business never hears it. */
+export function scanView(scan: { id: string; status: 'running' | 'done' | 'failed'; result: any; error: string | null }, progress: { stage: string; pages: number } | null, food = true) {
   const r = scan.status === 'done' ? (scan.result as ScanResult) : null;
   let hours = null;
   if (r?.hours) {
@@ -133,7 +134,7 @@ export function scanView(scan: { id: string; status: 'running' | 'done' | 'faile
     status: scan.status,
     stage: progress?.stage ?? (scan.status === 'running' ? 'Starting…' : ''),
     pages: r ? r.pages.length : progress?.pages ?? 0,
-    error: scan.status === 'failed' ? scan.error : r?.not_hospitality ? 'That site does not look like a restaurant, café or pub. Is it the right address?' : null,
+    error: scan.status === 'failed' ? scan.error : r?.not_hospitality && food ? 'That site does not look like a restaurant, café or pub. Is it the right address?' : null,
     notes: r?.notes ?? [],
     found: r
       ? {
