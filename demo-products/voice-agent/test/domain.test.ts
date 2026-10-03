@@ -221,6 +221,13 @@ test('a read-back answered yes: what an estate agency\'s call reminds the recept
   assert.ok(READ_BACK.test(number) && !READ_BACK_DETAIL.test(number));
   assert.ok(!READ_BACK.test('Shall I check Saturday at 11am for you, or would another day suit?'), 'a question that is not the read-back');
   for (const no of ['No, Sunday please.', 'Actually, can we make it 11?', 'Hang on, not quite.']) assert.ok(!SAID_YES.test(no), no);
+  // At an estate agency the read-back is no claim; the same words said as a statement still are, and a restaurant's read-back is checked as before.
+  const s = newCallState();
+  s.estate = true;
+  const asked = "So that's a viewing of 22 Albion Road on Saturday at quarter past ten with Tom, and it's booked in under Lou Grant. Is that all correct?";
+  assert.equal(checkUtterance(asked, s).length, 0);
+  assert.equal(checkUtterance("Lovely, that's booked in under Lou Grant for Saturday.", s)[0]?.rule, 'unconfirmed_claim');
+  assert.equal(checkUtterance(asked, newCallState())[0]?.rule, 'unconfirmed_claim');
 });
 
 test('records: every booking and order a call makes or finds goes through record()', () => {

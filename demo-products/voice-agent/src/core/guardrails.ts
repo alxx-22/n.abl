@@ -122,7 +122,10 @@ function negated(text: string, index: number): boolean {
 export function checkUtterance(text: string, state: CallState, staff: string[] = []): Flag[] {
   const flags: Flag[] = [];
   const claim = CLAIM.exec(text);
-  if (claim && !negated(text, claim.index) && !slotTaken(text, claim) && state.committed.length === 0 && state.found.length === 0) {
+  // An estate agency's read-back ("...and it's booked in under Lou Grant. Is that all correct?") asks for the yes that books it, and the call
+  // reminds the receptionist to book once it comes; correcting it mid-read-back threw a live call off on 3 October.
+  const readBack = state.estate && READ_BACK.test(text);
+  if (claim && !readBack && !negated(text, claim.index) && !slotTaken(text, claim) && state.committed.length === 0 && state.found.length === 0) {
     flags.push({ rule: 'unconfirmed_claim', text: claim[0] });
   }
   const paid = PAID.exec(text);
