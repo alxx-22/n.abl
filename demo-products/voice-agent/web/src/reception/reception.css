@@ -343,6 +343,40 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .tl-now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--danger); pointer-events: none; }
 
 .kitchen { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; align-items: start; }
+
+/* ── An estate agency's back office ───────────────────────────────────── */
+.diary .tl-bar.valuation { background: color-mix(in srgb, var(--info) 45%, #1a1613); }
+.diary .tl-bar.other { background: color-mix(in srgb, var(--ok) 40%, #1a1613); }
+.badges { display: flex; gap: 4px; flex-wrap: wrap; }
+.kitchen.offers { grid-template-columns: repeat(3, minmax(200px, 1fr)); }
+.kitchen.offers .ticket { cursor: default; display: grid; gap: 4px; }
+.offer-actions { justify-content: flex-start !important; }
+.accept-box { display: grid; gap: 6px; margin-top: 6px; padding: 8px; border-radius: 8px; background: var(--surface-2); }
+.homes { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; align-items: start; }
+.home-card { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.home-card.open { grid-column: 1 / -1; border-color: var(--accent); }
+.home-pic { position: relative; display: grid; align-content: start; gap: 4px; }
+.home-pic .example { font: 500 10px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); text-align: center; }
+svg.house { width: 96px; height: auto; display: block; }
+svg.house .ground { stroke: var(--line-strong); stroke-width: 2; }
+svg.house .wall { fill: color-mix(in srgb, var(--cream) 14%, transparent); stroke: var(--cream-300); stroke-width: 1.2; }
+svg.house .roof { fill: color-mix(in srgb, var(--accent) 45%, transparent); stroke: var(--accent); stroke-width: 1.2; }
+svg.house .window { fill: color-mix(in srgb, var(--info) 35%, transparent); }
+svg.house .door { fill: var(--accent); }
+.home-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; min-width: 0; align-content: start; }
+.home-body header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.home-body header b { color: var(--heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.home-body header .badge { flex: none; }
+.home-price b { font-size: 16px; color: var(--heading); }
+.home-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--muted); }
+.home-meter { display: grid; grid-template-columns: auto minmax(60px, 1fr) auto; gap: 8px; align-items: center; }
+.home-meter .meter-fill { display: block; height: 100%; }
+.home-meter .meter-fill.ok { background: var(--ok); }
+.home-meter .meter-fill.warn { background: var(--amber); }
+.home-body > button { justify-self: start; }
+.home-manage { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+.home-manage .field-row { flex-wrap: wrap; align-items: center; }
+.home-manage .field-row input, .home-manage .field-row select { width: auto; padding: 5px 8px; }
 .k-col { background: var(--surface-2); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 8px; min-height: 180px; align-content: start; border: 2px solid transparent; }
 .k-col.over { border-color: var(--accent); }
 .k-col h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: flex; justify-content: space-between; }

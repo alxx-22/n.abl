@@ -10,8 +10,11 @@ import type { TenantState } from '../../types.ts';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { FloorBoard, type View } from './FloorBoard.tsx';
 import { Messages } from './Messages.tsx';
+import { Offers } from './Offers.tsx';
 import { OrderBoard } from './OrderBoard.tsx';
+import { Properties } from './Properties.tsx';
 import type { Shows, WorkspaceSpec } from './spec.ts';
+import { StaffDiary } from './StaffDiary.tsx';
 import { Timeline } from './Timeline.tsx';
 
 export type ViewId = WorkspaceSpec['views'][number]['id'];
@@ -59,7 +62,19 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
   timeline: {
     shows: 'bookings',
     needs: (s) => Boolean(s.plan),
-    render: (p) => <Timeline state={p.state} today={p.today} nowMinute={p.nowMinute} view={p.view} setView={p.setView} onOpen={p.onOpen} onMove={p.onMove} />,
+    // A row per table, or (an estate agency's diary) a row per member of the team.
+    render: (p) => (p.spec.views.find((v) => v.id === 'timeline')?.of === 'staff'
+      ? <StaffDiary state={p.state} today={p.today} nowMinute={p.nowMinute} view={p.view} setView={p.setView} onOpen={p.onOpen} />
+      : <Timeline state={p.state} today={p.today} nowMinute={p.nowMinute} view={p.view} setView={p.setView} onOpen={p.onOpen} onMove={p.onMove} />),
+  },
+  properties: {
+    shows: null,
+    render: (p) => <Properties id={p.id} state={p.state} onDone={p.refresh} />,
+  },
+  offers: {
+    shows: null,
+    count: (s) => (s.offers ?? []).filter((o) => o.status === 'received').length,
+    render: (p) => <Offers id={p.id} state={p.state} nowMs={p.clock} onDone={p.refresh} />,
   },
   orders: {
     shows: 'orders',

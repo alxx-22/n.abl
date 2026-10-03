@@ -8,12 +8,16 @@ import { useEffect, useState } from 'react';
 import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import type { LiveBooking, LiveState } from '../types.ts';
+import { positionBadges } from './estate.ts';
 import { SOURCE, combineOptions, moveOptions } from './model.ts';
 import type { WorkspaceSpec } from './spec.ts';
 
 type BookingsSpec = NonNullable<WorkspaceSpec['bookings']>;
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** A viewing's feedback, as the agent who showed it records it. */
+const FEEDBACK: [string, string][] = [['keen', 'Keen'], ['second_viewing', 'Second viewing'], ['likely_offer', 'Likely offer'], ['not_for_me', 'Not for me']];
 
 export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDone }: {
   id: string;
@@ -31,6 +35,9 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
   const [allergies, setAllergies] = useState(b.allergies ?? '');
   const [tags, setTags] = useState(b.tags.join(', '));
   const [busy, setBusy] = useState(false);
+  const feedback = b.details?.feedback as { category: string; words?: string } | undefined;
+  const [said, setSaid] = useState(feedback?.words ?? '');
+  useEffect(() => setSaid(feedback?.words ?? ''), [b.reference, feedback?.words]);
   useEffect(() => {
     setNotes(b.notes ?? '');
     setAllergies(b.allergies ?? '');
@@ -50,7 +57,8 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
     }
   };
 
-  const moves = b.status === 'confirmed' ? moveOptions(state, b) : [];
+  // Moving a viewing to another person waits for the generic move (HANDOFF.md, known items).
+  const moves = b.status === 'confirmed' && !words.property ? moveOptions(state, b) : [];
   const joins = b.status === 'confirmed' && words.combine ? combineOptions(state, b) : [];
   const areas = new Map((state.plan?.areas ?? []).map((a) => [a.key, a.label]));
   const dirty = notes !== (b.notes ?? '') || allergies !== (b.allergies ?? '') || tags !== b.tags.join(', ');
@@ -85,8 +93,15 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
           {b.phone ? <button type="button" className="small" onClick={callBack}>Call back</button> : null}
         </dd>
         {b.deposit ? (<><dt>Deposit</dt><dd><span className={`badge ${b.deposit_paid ? 'ok' : 'warn'}`}>{b.deposit_paid ? `${b.deposit} paid (demo)` : `${b.deposit} due`}</span></dd></>) : null}
+        {words.property && b.home ? (<><dt>Home</dt><dd>{b.home}</dd></>) : null}
+        {words.property && b.details?.postcode ? (<><dt>Postcode</dt><dd>{String(b.details.postcode)}</dd></>) : null}
         <dt>Booked by</dt><dd>{SOURCE[b.source] ?? b.source}</dd>
       </dl>
+      {words.property ? (
+        <div className="badges">
+          {[...new Set([...((b.details?.badges as string[] | undefined) ?? []), ...positionBadges(b.details?.position as never)])].map((x) => <span key={x} className="badge">{x}</span>)}
+        </div>
+      ) : null}
 
       {words.allergies && b.allergies ? <div className="allergy">ALLERGY: {b.allergies}</div> : null}
 
@@ -100,7 +115,19 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
             ))}
           </div>
 
-          <div className="field">
+          {words.property && b.listing_key ? (
+            <div className="field">
+              <label>Feedback</label>
+              <div className="visit" role="group" aria-label="Feedback">
+                {FEEDBACK.map(([key, label]) => (
+                  <button type="button" key={key} aria-pressed={feedback?.category === key} disabled={busy} onClick={() => act({ action: 'feedback', category: key, words: said })}>{label}</button>
+                ))}
+              </div>
+              <input aria-label="What they said" placeholder="What they said (optional)" value={said} maxLength={300} onChange={(e) => setSaid(e.target.value)} />
+              {feedback && said !== (feedback.words ?? '') ? <button type="button" className="small" disabled={busy} onClick={() => act({ action: 'feedback', category: feedback.category, words: said })}>Save feedback</button> : null}
+            </div>
+          ) : null}
+          {words.property ? null : (<div className="field">
             <label htmlFor="bd-move">{`Move to another ${words.resource}`}</label>
             <select id="bd-move" value="" disabled={busy || !moves.length} onChange={(e) => e.target.value && act({ action: 'move', table: e.target.value })}>
               <option value="">{moves.length ? `Choose a free ${words.resource}…` : `No other ${words.resource} fits at this time`}</option>
@@ -111,7 +138,7 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
               ))}
             </select>
             {onPlan ? <p className="hint">{`Or drag the ${words.resource} on the floor plan onto another.`}</p> : null}
-          </div>
+          </div>)}
           {joins.length ? (
             <div className="field">
               <label htmlFor="bd-join">Push {b.with.replace(/^Table /, 'table ')} together with</label>

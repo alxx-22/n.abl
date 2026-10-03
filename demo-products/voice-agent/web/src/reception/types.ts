@@ -2,6 +2,7 @@
 // catalogue are the server's own types: one definition, checked on both sides.
 
 import type { BaseAnswers, Issue } from '../../../src/presets/common/types.ts';
+import type { BuyerPosition, HomeType, ListingStatus, OfferStatus, PriceQualifier, StaffDuty, StaffRole } from '../../../src/domain/types.ts';
 import type { AreaAnswer, FixtureAnswer, RestaurantAnswers, TableAnswer } from '../../../src/presets/restaurant/answers.ts';
 import type { PresetInfo } from '../../../src/presets/catalogue.ts';
 import type { WorkspaceSpec } from '../../../src/presets/index.ts';
@@ -115,6 +116,68 @@ export interface LiveBooking {
   service: string;
   deposit: string | null;
   deposit_paid: boolean;
+  /** A viewing's home (an estate agency's). */
+  listing_key?: string;
+  home?: string;
+  /** What a viewing or valuation knows: the buyer's position and badges, feedback, a valuation's lead. */
+  details?: Record<string, unknown>;
+}
+
+/** An estate agency's home in the back office: its facts joined with what staff changed (src/server/state.ts). */
+export interface LiveListing {
+  key: string;
+  ref: string;
+  address: string;
+  town: string;
+  district: string;
+  type: HomeType;
+  home: string;
+  example: boolean;
+  status: ListingStatus;
+  price_pence: number;
+  qualifier: PriceQualifier;
+  days_on_market: number;
+  back_on_market_at: string | null;
+  negotiator: string | null;
+  viewings_week: number;
+  offers: number;
+  part_a_missing: string[];
+  unknown: number;
+  personal_interest: boolean;
+  marketing_continues: boolean;
+  best_final_at: string | null;
+  checking: string[];
+  blocked: { from: string; to: string; note?: string }[];
+  history: { at: string; by: string; what: string }[];
+}
+
+export interface LiveOffer {
+  reference: string;
+  listing_key: string;
+  home: string;
+  revises: string | null;
+  amount_pence: number;
+  buyer_names: string[];
+  phone: string | null;
+  position: BuyerPosition;
+  conditions: string | null;
+  flags: string[];
+  status: OfferStatus;
+  received_at: string;
+  sent_at: string | null;
+  decided_at: string | null;
+  note: string | null;
+  source: string;
+}
+
+export interface LiveStaff {
+  key: string;
+  name: string;
+  first_name: string;
+  role: StaffRole;
+  does: StaffDuty[];
+  days: number[];
+  mobile: string;
 }
 
 export interface LiveOrder {
@@ -151,4 +214,8 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   workspace?: WorkspaceSpec;
   bookings: LiveBooking[];
   orders: LiveOrder[];
+  /** An estate agency's. */
+  team?: LiveStaff[];
+  listings?: LiveListing[];
+  offers?: LiveOffer[];
 }
