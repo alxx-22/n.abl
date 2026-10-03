@@ -2,6 +2,11 @@
 // a walk for each kind of business that is built (WALKS, below). Fails on
 // any page error.
 //
+// The estate agent's walk: an agency from the preset, an edit on each of the
+// builder's nine steps (all still there after a reload), Start, then the
+// Diary with a viewing's feedback, Properties with a price change, and an
+// offer accepted, which makes its home sale agreed and texts the buyer.
+//
 // The restaurant's walk: a key from the team, the one-click link, a
 // restaurant from the preset, the builder's steps (an edit on each, all
 // still there after a reload), Start, then the back office (floor plan,
@@ -35,6 +40,7 @@ interface Walk {
 /** A walk for each built preset. One that is built without a walk fails the run, so no kind of business goes unwalked. */
 const WALKS: Record<string, (w: Walk) => Promise<void>> = {
   restaurant: walkRestaurant,
+  estate_agent: walkEstate,
 };
 
 const built = PRESETS.filter((p) => builtPreset(p.key)).map((p) => p.key);
@@ -396,4 +402,158 @@ async function walkRestaurant({ shot }: Walk) {
     await first.context().close();
     await page.goto(`${base}/`);
     await page.waitForSelector('table.keys td:has-text("2 people")');
+}
+
+async function walkEstate({ shot }: Walk) {
+  const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  page.on('console', (m) => m.type() === 'error' && !/40[14]|scout/.test(m.text()) && errors.push(`console: ${m.text()}`));
+  const saved = () => page.waitForSelector('.save-state.saved', { timeout: 10000 });
+  const next = async (title: string) => {
+    await page.click('.step-nav button.primary');
+    await page.waitForSelector(`#step-title:has-text("${title}")`);
+  };
+  const kept = (what: string, ok: boolean) => {
+    if (!ok) throw new Error(`after a reload, the builder lost ${what}`);
+  };
+
+  // A key from the team, and the agency from the preset.
+  await page.goto(`${base}/`);
+  await page.waitForSelector('#password');
+  await page.fill('#password', 'team');
+  await page.click('.signin button[type=submit]');
+  await page.waitForSelector('#k-name');
+  await page.fill('#k-name', 'Jo Green');
+  await page.fill('#k-company', 'Hartwell & Green');
+  await page.click('button:has-text("Issue a private key")');
+  await page.waitForSelector('.issued code');
+  const raw = (await page.textContent('.issued code'))!.trim();
+  await page.goto(`${base}/demo/reception#key=${raw}`);
+  await page.waitForSelector('text=Welcome, Jo.');
+  await page.click('text=Build a new demo');
+  await page.waitForSelector('.preset');
+  await page.click('.preset:has-text("Estate agent")');
+  await page.waitForSelector('#new-name');
+  await shot(page, 'pick-preset');
+  await page.click('text=Build from the preset');
+
+  // An edit on every step.
+  const style = 'input[maxlength="160"][placeholder="Independent estate agency, sales only"]';
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  await page.fill(style, 'Independent estate agency, family run since 1998');
+  await saved();
+  await shot(page, 'builder-basics');
+  await next('Where you work');
+  await page.getByLabel('Postcode districts you cover').fill('BK1, BK2, BK3, BK4, BK5, BK6');
+  await saved();
+  await shot(page, 'builder-patch');
+  await next('Office and viewing hours');
+  await page.fill('input[aria-label="Viewings Saturday Open closes"]', '17:00');
+  await saved();
+  await shot(page, 'builder-hours');
+  await next('Your team');
+  await page.click('button:has-text("+ Add someone")');
+  await page.locator('input[aria-label="Name"]').last().fill('Alex Reed');
+  await saved();
+  await shot(page, 'builder-team');
+  await next('Listings');
+  await page.click('.home-row:has-text("22 Albion Road")');
+  await page.click('.home-editor [role=tab]:has-text("Price and status")');
+  await page.getByLabel('Price in pounds').fill('330000');
+  await saved();
+  await shot(page, 'builder-listings');
+  await page.click('.home-editor [role=tab]:has-text("Checklist")');
+  await shot(page, 'builder-listings-checklist');
+  await next('Viewings and safety');
+  await page.getByLabel('Travel between homes').fill('20');
+  await saved();
+  await next('Offers and valuations');
+  await page.getByLabel('What you call them').fill('free valuation');
+  await saved();
+  await shot(page, 'builder-offers');
+  await next('Fees and services');
+  await page.getByRole('switch', { name: /Quote your fees/ }).check();
+  await saved();
+  await shot(page, 'builder-services');
+  await next('Area guide and questions');
+  await page.click('button:has-text("+ Add an area question")');
+  await page.locator('input[aria-label="Area question"]').last().fill('Is there a farmers market?');
+  await page.locator('textarea[aria-label="Area answer"]').last().fill('Yes, on the High Street every Saturday morning.');
+  await saved();
+  await next('Review and start');
+  await shot(page, 'builder-review');
+
+  // Reloaded, every edit is still there.
+  await page.reload();
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  kept('the style', (await page.inputValue(style)) === 'Independent estate agency, family run since 1998');
+  await next('Where you work');
+  kept('the districts', (await page.getByLabel('Postcode districts you cover').inputValue()) === 'BK1, BK2, BK3, BK4, BK5, BK6');
+  await next('Office and viewing hours');
+  kept("Saturday's viewing hours", (await page.inputValue('input[aria-label="Viewings Saturday Open closes"]')) === '17:00');
+  await next('Your team');
+  kept('the new person', (await page.locator('input[aria-label="Name"]').last().inputValue()) === 'Alex Reed');
+  await next('Listings');
+  await page.click('.home-row:has-text("22 Albion Road")');
+  kept("22 Albion Road's price", (await page.locator('.home-row:has-text("22 Albion Road")').textContent())!.includes('£330,000'));
+  await next('Viewings and safety');
+  kept('the travel time', (await page.getByLabel('Travel between homes').inputValue()) === '20');
+  await next('Offers and valuations');
+  kept("the valuations' name", (await page.getByLabel('What you call them').inputValue()) === 'free valuation');
+  await next('Fees and services');
+  kept('fees quoted', await page.getByRole('switch', { name: /Quote your fees/ }).isChecked());
+  await next('Area guide and questions');
+  kept('the area question', (await page.locator('input[aria-label="Area question"]').last().inputValue()) === 'Is there a farmers market?');
+  await next('Review and start');
+  await page.click('button:has-text("Start my demo")');
+
+  // The Diary: a viewing opened, its feedback recorded.
+  await page.waitForSelector('.diary', { timeout: 20000 });
+  await page.waitForSelector('.phone');
+  await shot(page, 'workspace-diary');
+  await page.locator('.days button:has(.count)').last().click();
+  await page.locator('.diary .tl-bar.viewing').first().click();
+  await page.waitForSelector('.drawer');
+  await page.click('.drawer [aria-label="Feedback"] button:has-text("Keen")');
+  await page.waitForSelector('.toast:has-text("Feedback saved")', { timeout: 10000 });
+  await page.waitForSelector('.drawer [aria-label="Feedback"] button[aria-pressed="true"]:has-text("Keen")');
+  await shot(page, 'workspace-diary-viewing');
+
+  // Properties: the price the builder set, then a reduction from the back office.
+  await page.click('.tabs [role=tab]:has-text("Properties")');
+  const albion = page.locator('.home-card', { has: page.locator('header b', { hasText: /^22 Albion Road$/ }) });
+  await albion.waitFor();
+  if (!(await albion.textContent())!.includes('£330,000')) throw new Error("Properties does not show the builder's new price");
+  await shot(page, 'workspace-properties');
+  await albion.locator('button:has-text("Manage")').click();
+  await albion.getByLabel('Price £').fill('320000');
+  await albion.locator('button:has-text("Change price")').click();
+  await page.waitForSelector('.toast:has-text("reduced to £320,000")', { timeout: 10000 });
+  await shot(page, 'workspace-properties-manage');
+
+  // Offers: one accepted; its home turns sale agreed, and the buyer is texted.
+  await page.click('.tabs [role=tab]:has-text("Offers")');
+  await page.waitForSelector('.offer');
+  await shot(page, 'workspace-offers');
+  const card = page.locator('.k-col', { hasText: 'Received' }).locator('.offer').first();
+  const home = (await card.locator('b').first().textContent())!.trim();
+  await card.locator('button:has-text("Seller accepts")').click();
+  await card.locator('button:has-text("Confirm: seller accepts")').click();
+  await page.waitForSelector(`.toast:has-text("${home} is sale agreed")`, { timeout: 10000 });
+  await shot(page, 'workspace-offer-accepted');
+  await page.click('.tabs [role=tab]:has-text("Properties")');
+  const agreed = page.locator('.home-card', { has: page.locator('header b', { hasText: new RegExp(`^${home.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`) }) });
+  if (!(await agreed.locator('.badge').first().textContent())!.includes('Sale agreed')) throw new Error(`${home} is not shown as sale agreed`);
+  await page.click('.tabs [role=tab]:has-text("Messages")');
+  await page.waitForSelector('.ws-messages');
+  if (!(await page.locator('.ws-messages').textContent())!.includes('subject to contract')) throw new Error('the buyer was not texted');
+  await shot(page, 'workspace-messages');
+  await page.click('.tabs [role=tab]:has-text("Calls")');
+  await shot(page, 'workspace-calls');
+
+  // Narrow screen.
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.click('.tabs [role=tab]:has-text("Properties")');
+  await shot(page, 'workspace-mobile');
+  await page.context().close();
 }

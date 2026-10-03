@@ -377,6 +377,12 @@ svg.house .door { fill: var(--accent); }
 .home-manage { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
 .home-manage .field-row { flex-wrap: wrap; align-items: center; }
 .home-manage .field-row input, .home-manage .field-row select { width: auto; padding: 5px 8px; }
+@media (max-width: 560px) {
+  .homes { grid-template-columns: minmax(0, 1fr); }
+  .home-card { grid-template-columns: 56px minmax(0, 1fr); gap: 8px; }
+  svg.house { width: 56px; }
+  .kitchen.offers { grid-template-columns: minmax(0, 1fr); }
+}
 .k-col { background: var(--surface-2); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 8px; min-height: 180px; align-content: start; border: 2px solid transparent; }
 .k-col.over { border-color: var(--accent); }
 .k-col h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: flex; justify-content: space-between; }
