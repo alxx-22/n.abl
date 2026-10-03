@@ -588,3 +588,14 @@ test('take_message: a caller who talked about bank details leaves an urgent frau
   await plain.run('take_message', { name: 'Ruth Lane', message: 'About the garden.', category: 'general', urgency: 'today' });
   assert.equal((await repo.listMessages(t.id, 500)).find((x) => x.from_name === 'Ruth Lane')!.category, 'general');
 });
+
+test('get_property: the facts every advert must state come first, in one sentence; left out while staff check them', async () => {
+  const t = await agency('ea-describe');
+  const { run } = await call(t);
+  const r = await run('get_property', { property: '22 Albion Road' });
+  assert.equal(r.describe, '22 Albion Road is a three-bedroom semi-detached house with offers over £325,000, council tax band C, and EPC rating D. It\'s freehold.');
+  assert.match(String(r.note), /^Say describe first/);
+  await repo.setListing(t.id, 'albion_22', { checking: ['local_tax'] });
+  const checking = await (await call(t)).run('get_property', { property: '22 Albion Road' });
+  assert.equal(checking.describe, undefined, 'a fact being checked is not stated');
+});

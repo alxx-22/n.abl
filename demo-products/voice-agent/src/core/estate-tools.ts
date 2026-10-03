@@ -15,7 +15,7 @@ import { ASK_NAME, B, I, S, bool, int, obj, postcodeOf, realName, record, smsTo,
 import { newBookingReference, spokenReference } from '../db/repo.ts';
 import { candidateTimes, checkAvailability, checkSlot, durationFor, findService, type AvailabilityResult, type SlotRequest } from '../domain/availability.ts';
 import {
-  STATUS_WORDS, UNSAYABLE, addWorkingDays, clause, districtsIn, facts, findListings, firstViewingDate, homeKind, initialLive, insideRule, listingSummary, matches,
+  STATUS_WORDS, UNSAYABLE, addWorkingDays, clause, districtsIn, facts, findListings, firstViewingDate, homeKind, initialLive, insideRule, describeLine, matches,
   offerReceivedText, poundsWhole, priceWords, requirementsIn, sayFirst, shortAddress, similar, positionBadges, unsaid, viewingRules, viewingText,
   type ListingLive, type Requirements,
 } from '../domain/listings.ts';
@@ -753,7 +753,7 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
   if (!l.local_tax.trim() && e?.official) official.local_tax = e.official.local_tax;
   const negotiator = firstNameOf(ctx.tenant, l.negotiator);
   // The facts every advert must state (price, tenure, council tax, EPC), said up front; left out while staff check any of them.
-  const describe = live.checking.some((c) => ['price', 'tenure', 'lease', 'local_tax', 'epc'].includes(c)) ? undefined : listingSummary(l, live, day, nation);
+  const describe = live.checking.some((c) => ['price', 'tenure', 'lease', 'local_tax', 'epc'].includes(c)) ? undefined : describeLine(l, live, day, nation);
   return scrub({
     property: l.key, address: l.address, status: STATUS_WORDS[live.status], describe, price: priceOf(h), price_note: priceNote, on_market: onMarket,
     facts: f.facts,

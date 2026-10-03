@@ -331,6 +331,20 @@ export function listingSummary(l: Listing, live: Pick<ListingLive, 'price_pence'
   return `${shortAddress(l)} is a ${homeKind(l)} ${price}. ${tenureSentence(l, today)} ${tax ? `${tax}, and ${epc}.` : `${epc[0].toUpperCase()}${epc.slice(1)}.`}`;
 }
 
+/**
+ * What get_property gives the receptionist to say first: the price, the
+ * council tax band and the EPC in one sentence, then the tenure. In a live
+ * call the receptionist read the first two sentences of the preview's
+ * summary and stopped, so the facts every advert must state come first.
+ */
+export function describeLine(l: Listing, live: Pick<ListingLive, 'price_pence' | 'qualifier'>, today: string, nation: Nation): string {
+  const price = PRICE_PHRASE[live.qualifier](poundsWhole(live.price_pence), l.lease?.shared?.share_percent);
+  const tax = localTaxWords(l.local_tax, nation);
+  const epc = l.epc.trim() ? (/^exempt$/i.test(l.epc.trim()) ? 'no EPC rating (exempt)' : `EPC rating ${l.epc.trim()}`) : "the EPC isn't in yet";
+  const more = [tax ? (nation === 'northern_ireland' ? tax.replace(/^Rates/, 'rates') : tax.replace(/^Council/, 'council')) : '', epc].filter(Boolean).join(', and ');
+  return `${shortAddress(l)} is a ${homeKind(l)} ${price}, ${more}. ${tenureSentence(l, today)}`;
+}
+
 // ── Working days and offer timers ─────────────────────────────────────────
 
 /** Bank holidays as observed, 2026 and 2027; Northern Ireland adds two of its own. Wales follows England. */
