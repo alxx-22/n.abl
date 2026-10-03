@@ -1,17 +1,28 @@
-// The kitchen board: takeaway tickets in columns, New to Collected. Moving a
-// ticket to Ready sends the customer the "your order is ready" text.
+// The order board: phone orders in columns, New to done, in the business's
+// own words (the restaurant's kitchen: Collected). Moving a ticket to Ready
+// sends the customer the "your order is ready" text.
 
 import { useState, type DragEvent } from 'react';
 import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import type { LiveOrder, LiveState } from '../types.ts';
+import type { WorkspaceSpec } from './spec.ts';
 
-const COLUMNS: { status: LiveOrder['status']; label: string; next?: { status: LiveOrder['status']; label: string } }[] = [
-  { status: 'confirmed', label: 'New', next: { status: 'in_kitchen', label: 'Start' } },
-  { status: 'in_kitchen', label: 'Preparing', next: { status: 'ready', label: 'Ready: text them' } },
-  { status: 'ready', label: 'Ready', next: { status: 'completed', label: 'Collected' } },
-  { status: 'completed', label: 'Collected' },
-];
+type OrdersSpec = NonNullable<WorkspaceSpec['orders']>;
+type Column = { status: LiveOrder['status']; label: string; next?: { status: LiveOrder['status']; label: (o: LiveOrder) => string } };
+
+/** What an order is once it has gone: collected, or delivered. */
+const doneFor = (spec: OrdersSpec, o: LiveOrder) => (o.fulfilment === 'delivery' ? spec.done.delivery : spec.done.collection);
+
+function columns(spec: OrdersSpec): Column[] {
+  const { collection, delivery } = spec.done;
+  return [
+    { status: 'confirmed', label: 'New', next: { status: 'in_kitchen', label: () => 'Start' } },
+    { status: 'in_kitchen', label: 'Preparing', next: { status: 'ready', label: () => 'Ready: text them' } },
+    { status: 'ready', label: 'Ready', next: { status: 'completed', label: (o) => doneFor(spec, o) } },
+    { status: 'completed', label: collection === delivery ? collection : `${collection} or ${delivery.toLowerCase()}` },
+  ];
+}
 
 function countdown(dueAt: string, nowMs: number): { text: string; late: boolean } {
   const m = Math.round((new Date(dueAt).getTime() - nowMs) / 60000);
@@ -20,7 +31,7 @@ function countdown(dueAt: string, nowMs: number): { text: string; late: boolean 
   return { text: `${-m} min late`, late: -m > 5 };
 }
 
-export function Kitchen({ id, state, nowMs, onDone }: { id: string; state: LiveState; nowMs: number; onDone: () => void }) {
+export function OrderBoard({ id, state, spec, nowMs, onDone }: { id: string; state: LiveState; spec: OrdersSpec; nowMs: number; onDone: () => void }) {
   const [over, setOver] = useState<string | null>(null);
   const orders = state.orders.filter((o) => o.status !== 'cancelled');
   const setStatus = async (o: LiveOrder, status: LiveOrder['status']) => {
@@ -43,7 +54,7 @@ export function Kitchen({ id, state, nowMs, onDone }: { id: string; state: LiveS
   if (!state.tenant.has_ordering) return <p className="empty">Click and collect is off. Turn it on in the setup’s “How you serve”.</p>;
   return (
     <div className="kitchen">
-      {COLUMNS.map((c) => {
+      {columns(spec).map((c) => {
         const mine = orders.filter((o) => o.status === c.status).sort((a, b) => a.due_at.localeCompare(b.due_at));
         return (
           <section
@@ -69,7 +80,7 @@ export function Kitchen({ id, state, nowMs, onDone }: { id: string; state: LiveS
                   <footer>
                     <span className={`badge ${o.payment_status === 'paid' ? 'ok' : 'warn'}`}>{o.payment_status === 'paid' ? 'Paid (demo)' : 'Pay on collection'}</span>
                     <span className="muted small">{o.total}</span>
-                    {c.next ? <button type="button" className="small primary" onClick={() => setStatus(o, c.next!.status)}>{c.next.label}</button> : null}
+                    {c.next ? <button type="button" className="small primary" onClick={() => setStatus(o, c.next!.status)}>{c.next.label(o)}</button> : null}
                   </footer>
                 </article>
               );

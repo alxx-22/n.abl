@@ -210,7 +210,8 @@ the catalogue's live presets and the registry agree.
 interface WorkspaceSpec {
   views: { id: ViewId; label: string; of?: string }[];  // tab order; the first is the default
   bookings?: { resource: string; resources: string; party: string | null;
-               visit: Partial<Record<VisitStatus, string>>; allergies: boolean };
+               visit: Partial<Record<VisitStatus, string>>; allergies: boolean;
+               combine?: boolean };                    // staff push tables together (combineTables)
   orders?: { board: string; done: { collection: string; delivery: string };
              drivers: boolean; advance: boolean };      // advance: seeded orders move on with the clock
   suggestions: string[];                                 // templates; {ref} filled from state

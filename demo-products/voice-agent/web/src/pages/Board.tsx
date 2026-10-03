@@ -11,8 +11,6 @@ import type { AppConfig, BoardEvent, TenantState } from '../types.ts';
 import { Link } from '../router.tsx';
 import { Logo } from '../components/Logo.tsx';
 
-const REFRESH_ON = new Set(['booking_created', 'booking_changed', 'booking_cancelled', 'order_placed', 'order_updated', 'payment', 'message_taken', 'sms']);
-
 export function Board({ slug }: { slug: string }) {
   const [state, setState] = useState<TenantState | null>(null);
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -40,7 +38,8 @@ export function Board({ slug }: { slug: string }) {
     es.onmessage = (m) => {
       const e = JSON.parse(m.data) as BoardEvent;
       dispatch({ type: 'event', event: e });
-      if ((e.type === 'action' && REFRESH_ON.has(e.action.kind)) || e.type === 'call_ended' || e.type === 'refresh' || e.type === 'call_started') refreshSoon();
+      // Whatever a tool did may show on the board; only the goodbye changes nothing.
+      if ((e.type === 'action' && e.action.kind !== 'call_ending') || e.type === 'call_ended' || e.type === 'refresh' || e.type === 'call_started') refreshSoon();
     };
     es.onerror = () => setTimeout(refreshSoon, 2000);
     return () => {

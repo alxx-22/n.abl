@@ -23,6 +23,8 @@ export interface WorkspaceSpec {
     party: string | null;
     visit: Partial<Record<VisitStatus, string>>;
     allergies: boolean;
+    /** Staff can push two tables together for a booking: the preset has combineTables. */
+    combine?: boolean;
   };
   orders?: {
     board: string;

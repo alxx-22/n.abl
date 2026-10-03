@@ -166,7 +166,7 @@ test('presets over HTTP: the back office says what to show, in the business\'s o
     ],
     bookings: {
       resource: 'table', resources: 'tables', party: 'Party',
-      visit: { expected: 'Expected', arrived: 'Arrived', seated: 'Seated', finished: 'Finished', no_show: 'No-show' }, allergies: true,
+      visit: { expected: 'Expected', arrived: 'Arrived', seated: 'Seated', finished: 'Finished', no_show: 'No-show' }, allergies: true, combine: true,
     },
     orders: { board: 'Kitchen', done: { collection: 'Collected', delivery: 'Collected' }, drivers: false, advance: false },
     suggestions: [

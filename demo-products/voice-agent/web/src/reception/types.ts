@@ -4,6 +4,7 @@
 import type { BaseAnswers, Issue } from '../../../src/presets/common/types.ts';
 import type { AreaAnswer, FixtureAnswer, RestaurantAnswers, TableAnswer } from '../../../src/presets/restaurant/answers.ts';
 import type { PresetInfo } from '../../../src/presets/catalogue.ts';
+import type { WorkspaceSpec } from '../../../src/presets/index.ts';
 import type { TenantState } from '../types.ts';
 
 export type { AreaAnswer, BaseAnswers, FixtureAnswer, Issue, PresetInfo, RestaurantAnswers, TableAnswer };
@@ -146,6 +147,8 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
     fixtures: { key: string; area: string; kind: 'bar' | 'door' | 'window' | 'wall'; x: number; y: number; length: number; rotation: number }[];
   } | null;
   opening_hours: { days: number[]; open: string; close: string; label?: string }[];
+  /** What the back office shows, in the business's words; missing from a server that predates it. */
+  workspace?: WorkspaceSpec;
   bookings: LiveBooking[];
   orders: LiveOrder[];
 }

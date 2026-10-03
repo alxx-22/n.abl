@@ -1,5 +1,7 @@
-// A booking, opened from the floor plan or the timeline: who, when, where,
-// what to watch for, and what staff can do with it. Every action goes to the
+// A booking, opened from a view that shows bookings: who, when, where, what
+// to watch for, and what staff can do with it, in the business's own words
+// (a table and a party, or a member of staff). Allergies and pushing tables
+// together show only where the workspace spec says. Every action goes to the
 // server, which checks it (capacity, clashes) and logs it on the booking.
 
 import { useEffect, useState } from 'react';
@@ -7,17 +9,24 @@ import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { SOURCE, combineOptions, moveOptions } from './model.ts';
+import type { WorkspaceSpec } from './spec.ts';
 
-const VISIT: { key: LiveBooking['visit_status']; label: string }[] = [
-  { key: 'expected', label: 'Expected' },
-  { key: 'arrived', label: 'Arrived' },
-  { key: 'seated', label: 'Seated' },
-  { key: 'finished', label: 'Finished' },
-  { key: 'no_show', label: 'No-show' },
-];
+type BookingsSpec = NonNullable<WorkspaceSpec['bookings']>;
 
-export function BookingDrawer({ id, state, booking, onClose, onDone }: { id: string; state: LiveState; booking: LiveBooking; onClose: () => void; onDone: () => void }) {
+const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDone }: {
+  id: string;
+  state: LiveState;
+  booking: LiveBooking;
+  words: BookingsSpec;
+  /** A floor plan is one of the views, so a booking can be dragged there too. */
+  onPlan: boolean;
+  onClose: () => void;
+  onDone: () => void;
+}) {
   const b = booking;
+  const visits = Object.entries(words.visit) as [LiveBooking['visit_status'], string][];
   const [notes, setNotes] = useState(b.notes ?? '');
   const [allergies, setAllergies] = useState(b.allergies ?? '');
   const [tags, setTags] = useState(b.tags.join(', '));
@@ -42,7 +51,7 @@ export function BookingDrawer({ id, state, booking, onClose, onDone }: { id: str
   };
 
   const moves = b.status === 'confirmed' ? moveOptions(state, b) : [];
-  const joins = b.status === 'confirmed' ? combineOptions(state, b) : [];
+  const joins = b.status === 'confirmed' && words.combine ? combineOptions(state, b) : [];
   const areas = new Map((state.plan?.areas ?? []).map((a) => [a.key, a.label]));
   const dirty = notes !== (b.notes ?? '') || allergies !== (b.allergies ?? '') || tags !== b.tags.join(', ');
   const callBack = async () => {
@@ -68,8 +77,8 @@ export function BookingDrawer({ id, state, booking, onClose, onDone }: { id: str
       {b.status === 'cancelled' ? <p className="badge bad">Cancelled</p> : null}
       <dl className="facts-list">
         <dt>When</dt><dd>{b.day}, {b.time} to {b.end_time}</dd>
-        <dt>Party</dt><dd>{b.party_size} {b.party_size === 1 ? 'person' : 'people'}</dd>
-        <dt>Table</dt><dd>{b.with}{b.area ? `, ${b.area}` : ''}</dd>
+        {words.party ? (<><dt>{words.party}</dt><dd>{b.party_size} {b.party_size === 1 ? 'person' : 'people'}</dd></>) : null}
+        <dt>{capital(words.resource)}</dt><dd>{b.with}{b.area ? `, ${b.area}` : ''}</dd>
         <dt>Phone</dt>
         <dd>
           {b.phone ?? 'not given'}{' '}
@@ -79,29 +88,29 @@ export function BookingDrawer({ id, state, booking, onClose, onDone }: { id: str
         <dt>Booked by</dt><dd>{SOURCE[b.source] ?? b.source}</dd>
       </dl>
 
-      {b.allergies ? <div className="allergy">ALLERGY: {b.allergies}</div> : null}
+      {words.allergies && b.allergies ? <div className="allergy">ALLERGY: {b.allergies}</div> : null}
 
       {b.status === 'confirmed' ? (
         <>
           <div className="visit" role="group" aria-label="Visit">
-            {VISIT.map((v) => (
-              <button type="button" key={v.key} aria-pressed={b.visit_status === v.key} disabled={busy} onClick={() => act({ action: 'visit', status: v.key })}>
-                {v.label}
+            {visits.map(([key, label]) => (
+              <button type="button" key={key} aria-pressed={b.visit_status === key} disabled={busy} onClick={() => act({ action: 'visit', status: key })}>
+                {label}
               </button>
             ))}
           </div>
 
           <div className="field">
-            <label htmlFor="bd-move">Move to another table</label>
+            <label htmlFor="bd-move">{`Move to another ${words.resource}`}</label>
             <select id="bd-move" value="" disabled={busy || !moves.length} onChange={(e) => e.target.value && act({ action: 'move', table: e.target.value })}>
-              <option value="">{moves.length ? 'Choose a free table…' : 'No other table fits at this time'}</option>
+              <option value="">{moves.length ? `Choose a free ${words.resource}…` : `No other ${words.resource} fits at this time`}</option>
               {moves.map((m) => (
                 <option key={m.key} value={m.key}>
                   {m.label} ({m.seats}){m.area ? `, ${areas.get(m.area) ?? m.area}` : ''}{m.accessible ? ', step-free' : ''}
                 </option>
               ))}
             </select>
-            <p className="hint">Or drag the table on the floor plan onto another.</p>
+            {onPlan ? <p className="hint">{`Or drag the ${words.resource} on the floor plan onto another.`}</p> : null}
           </div>
           {joins.length ? (
             <div className="field">
@@ -116,10 +125,12 @@ export function BookingDrawer({ id, state, booking, onClose, onDone }: { id: str
         </>
       ) : null}
 
-      <div className="field">
-        <label htmlFor="bd-allergy">Allergies</label>
-        <input id="bd-allergy" value={allergies} maxLength={200} onChange={(e) => setAllergies(e.target.value)} placeholder="None noted" />
-      </div>
+      {words.allergies ? (
+        <div className="field">
+          <label htmlFor="bd-allergy">Allergies</label>
+          <input id="bd-allergy" value={allergies} maxLength={200} onChange={(e) => setAllergies(e.target.value)} placeholder="None noted" />
+        </div>
+      ) : null}
       <div className="field">
         <label htmlFor="bd-notes">Notes</label>
         <textarea id="bd-notes" className="prose" rows={2} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} />

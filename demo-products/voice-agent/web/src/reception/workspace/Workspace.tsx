@@ -4,7 +4,6 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { ApiError, DEMO_API, demoApi } from '../../api.ts';
-import { Calls } from '../../components/BoardPanels.tsx';
 import { ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
 import { LivePanel } from '../../components/LivePanel.tsx';
 import { SettingsDialog } from '../../components/SettingsDialog.tsx';
@@ -12,36 +11,22 @@ import { toast } from '../../components/Toaster.tsx';
 import { initialStream, streamReducer } from '../../live/stream.ts';
 import { useLiveCall } from '../../live/useLiveCall.ts';
 import { Link } from '../../router.tsx';
-import type { BoardEvent, TenantState } from '../../types.ts';
+import type { BoardEvent } from '../../types.ts';
 import { R, RxTop, minutesUntil } from '../Reception.tsx';
 import { brandStyle } from '../brand.ts';
 import type { LiveBooking, LiveState, Me } from '../types.ts';
 import { BookingDrawer } from './BookingDrawer.tsx';
-import { FloorBoard, type View } from './FloorBoard.tsx';
-import { Kitchen } from './Kitchen.tsx';
+import type { View } from './FloorBoard.tsx';
 import { bookingOn, hhmm, localNow, servicesOn } from './model.ts';
 import { Phone, usePhoneNumber } from './Phone.tsx';
-import { Timeline } from './Timeline.tsx';
-
-type Tab = 'floor' | 'timeline' | 'kitchen' | 'messages' | 'calls';
-const REFRESH_ON = new Set(['booking_created', 'booking_changed', 'booking_cancelled', 'order_placed', 'order_updated', 'payment', 'message_taken', 'sms']);
-
-function suggestions(state: LiveState): string[] {
-  const out: string[] = [];
-  const areas = state.plan?.areas.filter((a) => a.reservable && !a.enquiry_only) ?? [];
-  if (state.tenant.has_booking) {
-    out.push(areas.some((a) => a.kind === 'outdoor') ? 'Can I book a table for four on Friday at half seven, outside if possible?' : 'Can I book a table for four on Friday at half seven?');
-    out.push("I've got a booking. Can we make it five people instead?");
-  }
-  if (state.tenant.has_ordering) out.push('Can I order some food to collect at seven?');
-  out.push('Do you have gluten-free options?');
-  return out;
-}
+import { fallbackSpec, focusTab, resetConfirm, resetToast, suggestionsFor } from './spec.ts';
+import { viewsOf, type ViewId } from './views.tsx';
 
 export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: () => void }) {
   const [state, setState] = useState<LiveState | null>(null);
   const [card, setCard] = useState<{ spoken: string; expiry: string; cvc: string } | null>(null);
-  const [tab, setTab] = useState<Tab>('floor');
+  /** null: the spec's first view. */
+  const [tab, setTab] = useState<ViewId | null>(null);
   const [view, setView] = useState<View | null>(null);
   const [selected, setSelected] = useState<{ ref: string } | null>(null);
   const [flash, setFlash] = useState<Set<string>>(new Set());
@@ -93,7 +78,8 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
         return;
       }
       dispatch({ type: 'event', event: e });
-      if ((e.type === 'action' && REFRESH_ON.has(e.action.kind)) || e.type === 'call_ended' || e.type === 'refresh' || e.type === 'call_started') refreshSoon();
+      // Whatever a tool did may show in the back office; only the goodbye changes nothing.
+      if ((e.type === 'action' && e.action.kind !== 'call_ending') || e.type === 'call_ended' || e.type === 'refresh' || e.type === 'call_started') refreshSoon();
       if (e.type === 'call_ended') onUsage();
     };
     es.onerror = () => setTimeout(refreshSoon, 2000);
@@ -105,14 +91,17 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
     };
   }, [id, refresh, refreshSoon, onUsage, failed]);
 
-  // A booking made or changed on the call: jump to its day and time, and flash its table.
+  // A booking made or changed on the call: jump to its day and time, flash
+  // its table, and bring forward the first view that shows bookings, unless
+  // one already is.
   useEffect(() => {
     if (!stream.focusRef || !state) return;
     const b = state.bookings.find((x) => x.reference === stream.focusRef);
     if (!b) return;
     setView({ date: b.date, minute: Number(b.time.slice(0, 2)) * 60 + Number(b.time.slice(3, 5)) });
     setFlash(new Set(b.tables));
-    setTab((t) => (t === 'kitchen' || t === 'messages' || t === 'calls' ? 'floor' : t));
+    const views = viewsOf(state.workspace ?? fallbackSpec(state), state);
+    setTab((t) => focusTab(views, t, 'bookings'));
     dispatch({ type: 'focused' });
     const t = setTimeout(() => setFlash(new Set()), 3500);
     return () => clearTimeout(t);
@@ -155,13 +144,15 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
     );
   }
 
+  const spec = state.workspace ?? fallbackSpec(state);
+  const views = viewsOf(spec, state);
+  const current = views.find((v) => v.id === tab) ?? views[0];
   const now = localNow(state.tenant.timezone, new Date(clock));
   const t = state.tenant;
   const brand = t.brand ?? {};
   const style = brandStyle({ accent: brand.accent ?? t.accent, font_heading: brand.font_heading, font_body: brand.font_body });
   const booking: LiveBooking | null = selected ? state.bookings.find((b) => b.reference === selected.ref) ?? null : null;
   const minutesLeft = Math.max(0, me.limits.call_minutes_per_day - me.used.call_minutes);
-  const newMessages = state.messages.filter((m) => m.kind === 'message' && m.status === 'new').length;
 
   const selectTable = (key: string | null) => {
     if (!key) return setSelected(null);
@@ -187,13 +178,13 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
     if (b) void moveBooking(b, to);
   };
   const reset = async () => {
-    if (!confirm('Clear every booking, order, call and text, and fill the diary with a fresh sample week from your setup?')) return;
+    if (!confirm(resetConfirm(spec))) return;
     try {
       const r = await demoApi<{ bookings: number; orders: number }>(`/workspaces/${id}/reset`, { method: 'POST' });
       dispatch({ type: 'note', text: 'Demo reset.' });
       setSelected(null);
       await refresh();
-      toast(`Reset: ${r.bookings} bookings and ${r.orders} orders.`);
+      toast(resetToast(spec, r));
     } catch (e) {
       toast((e as Error).message);
     }
@@ -222,34 +213,30 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
         <div className="ws-call">
           <LivePanel
             tenant={t} phase={live.phase} model={live.model} latencies={live.latencies} turn={live.turn} call={live.call}
-            stream={stream} card={card} onStart={live.start} onStop={live.stop} suggestions={suggestions(state)}
+            stream={stream} card={card} onStart={live.start} onStop={live.stop} suggestions={suggestionsFor(spec, state)}
           />
           <p className="hint privacy">Calls go through Google’s Gemini. Use made-up names and details, never a real customer’s.</p>
         </div>
 
         <section className="ws-office panel" aria-label="Back office">
           <div className="tabs" role="tablist">
-            {([
-              ['floor', 'Floor plan'], ['timeline', 'Timeline'], ['kitchen', `Kitchen${state.orders.filter((o) => o.status === 'confirmed').length ? ` (${state.orders.filter((o) => o.status === 'confirmed').length})` : ''}`],
-              ['messages', `Messages${newMessages ? ` (${newMessages})` : ''}`], ['calls', 'Calls'],
-            ] as [Tab, string][]).filter(([k]) => (k !== 'floor' && k !== 'timeline') || state.plan).map(([k, label]) => (
-              <button type="button" role="tab" key={k} aria-selected={tab === k} onClick={() => setTab(k)}>{label}</button>
+            {views.map((v) => (
+              <button type="button" role="tab" key={v.id} aria-selected={current?.id === v.id} onClick={() => setTab(v.id)}>{v.label}</button>
             ))}
           </div>
           <div className="office-body">
             <div className="office-main">
-              {tab === 'floor' ? (
-                <FloorBoard state={state} today={now.date} nowMinute={now.minutes} view={view} setView={setView} selected={booking?.tables[0] ?? null} onSelectTable={selectTable} onDrop={dropOnTable} flash={flash} />
-              ) : null}
-              {tab === 'timeline' ? (
-                <Timeline state={state} today={now.date} nowMinute={now.minutes} view={view} setView={setView} onOpen={(b) => setSelected({ ref: b.reference })} onMove={moveBooking} />
-              ) : null}
-              {tab === 'kitchen' ? <Kitchen id={id} state={state} nowMs={clock} onDone={refreshSoon} /> : null}
-              {tab === 'messages' ? <Messages id={id} state={state} onDone={refreshSoon} /> : null}
-              {tab === 'calls' ? <Calls state={state as unknown as TenantState} /> : null}
+              {current?.def.render({
+                id, state, spec, today: now.date, nowMinute: now.minutes, clock, view, setView,
+                selected: booking?.tables[0] ?? null, onSelectTable: selectTable, onDrop: dropOnTable, flash,
+                onOpen: (b) => setSelected({ ref: b.reference }), onMove: moveBooking, refresh: refreshSoon,
+              })}
             </div>
-            {booking && (tab === 'floor' || tab === 'timeline') ? (
-              <BookingDrawer id={id} state={state} booking={booking} onClose={() => setSelected(null)} onDone={refreshSoon} />
+            {booking && spec.bookings && current?.shows === 'bookings' ? (
+              <BookingDrawer
+                id={id} state={state} booking={booking} words={spec.bookings} onPlan={views.some((v) => v.id === 'floor')}
+                onClose={() => setSelected(null)} onDone={refreshSoon}
+              />
             ) : null}
           </div>
         </section>
@@ -258,39 +245,6 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
       </main>
 
       <SettingsDialog target={{ workspace: id }} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => refreshSoon()} />
-    </div>
-  );
-}
-
-function Messages({ id, state, onDone }: { id: string; state: LiveState; onDone: () => void }) {
-  const callbacks = state.messages.filter((m) => m.kind === 'message');
-  const texts = state.messages.filter((m) => m.kind === 'sms');
-  const mark = async (mid: string, status: 'read' | 'new') => {
-    try {
-      await demoApi(`/workspaces/${id}/messages/${mid}`, { method: 'PATCH', json: { status } });
-      onDone();
-    } catch (e) {
-      toast((e as Error).message);
-    }
-  };
-  return (
-    <div className="ws-messages">
-      <h3>Callbacks and messages</h3>
-      {callbacks.length ? callbacks.map((m) => (
-        <div className={`message ${m.status === 'read' ? 'done' : ''}`} key={m.id}>
-          <span className="from">{m.from_name ?? 'A caller'}</span>
-          {m.from_phone ? <span className="muted"> · {m.from_phone}</span> : null}
-          <div>{m.body}</div>
-          <button type="button" className="small" onClick={() => mark(m.id, m.status === 'read' ? 'new' : 'read')}>{m.status === 'read' ? 'Mark not done' : 'Mark done'}</button>
-        </div>
-      )) : <p className="empty">No messages. The receptionist takes one when a caller needs a person.</p>}
-      <h3>Texts sent</h3>
-      {texts.length ? texts.map((m) => (
-        <div className="message" key={m.id}>
-          <span className="muted">To {m.to_number}</span>
-          <div>{m.body}</div>
-        </div>
-      )) : <p className="empty">No texts yet.</p>}
     </div>
   );
 }

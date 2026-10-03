@@ -34,11 +34,11 @@ export function restaurantPreview(a: RestaurantAnswers, profile: TenantProfile) 
 }
 
 /**
- * The back office as the web draws it for a restaurant today (Workspace.tsx,
- * Kitchen.tsx, BookingDrawer.tsx): the floor plan and timeline when there are
+ * The restaurant's back office: the floor plan and timeline when there are
  * tables to book, then the kitchen, messages and calls. GET /state sends it
- * as `workspace`, for the web's view registry to draw from, so its words
- * must stay the ones the web shows now.
+ * as `workspace`, and the web draws its tabs, kitchen board and booking
+ * drawer from it (web/src/reception/workspace), so these are the words
+ * the restaurant's back office has always shown.
  */
 export function restaurantWorkspace(profile: TenantProfile): WorkspaceSpec {
   const outside = (profile.booking?.areas ?? []).some((a) => a.reservable && !a.enquiry_only && a.kind === 'outdoor');
@@ -62,6 +62,7 @@ export function restaurantWorkspace(profile: TenantProfile): WorkspaceSpec {
       party: 'Party',
       visit: { expected: 'Expected', arrived: 'Arrived', seated: 'Seated', finished: 'Finished', no_show: 'No-show' },
       allergies: true,
+      combine: true,
     },
     orders: { board: 'Kitchen', done: { collection: 'Collected', delivery: 'Collected' }, drivers: false, advance: false },
     suggestions,
