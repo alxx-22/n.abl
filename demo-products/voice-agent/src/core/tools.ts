@@ -102,6 +102,8 @@ export interface CallState {
   retryNudged: boolean;
   /** end_call refuses once to end a "booked" call with nothing booked. */
   bookedChecked: boolean;
+  /** The reminder to report bank-details talk as an urgent fraud message is given once a call. */
+  fraudNudged: boolean;
 }
 
 export function newCallState(): CallState {
@@ -111,7 +113,7 @@ export function newCallState(): CallState {
     heard: [], allergyAsked: false, owed: null, messageTaken: false, messageChecked: false,
     estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false,
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
-    readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false,
+    readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false,
   };
 }
 

@@ -16,7 +16,7 @@ import {
   loggableArgs, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type CallState, type SmsSender, type Telephony,
   type ToolContext,
 } from './tools.ts';
-import { PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance, type Flag } from './guardrails.ts';
+import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance, type Flag } from './guardrails.ts';
 import { redactCardNumbers } from './redact.ts';
 import { rms } from './audio.ts';
 import { generateText } from './gemini.ts';
@@ -487,7 +487,10 @@ export class CallSession extends EventEmitter<CallEvents> {
         this.session?.sendText('[From the system: you told the caller you would pass this on, but no message has been taken. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then tell them it has been passed on.]');
       });
     }
-    if (this.state.estate) this.remindToBook(clean);
+    if (this.state.estate) {
+      this.remindToBook(clean);
+      this.remindFraud();
+    }
     this.emit('agentTurn', clean);
   }
 
@@ -505,6 +508,21 @@ export class CallSession extends EventEmitter<CallEvents> {
     else if ((r.booked === false || r.recorded === false) && /call (?:this|it|create_booking|book_valuation|record_offer) again|call again/i.test(String(r.message ?? ''))) {
       this.state.outstanding = { tool: name, heard: this.state.heard.length };
     }
+  }
+
+  /**
+   * An estate agency's call where the caller talked about bank or account
+   * details and the receptionist answered without taking a message: on 3
+   * October it refused rightly and took none, so the team never heard of a
+   * likely payment scam. Reminded once, after the turn's tool calls.
+   */
+  private remindFraud(): void {
+    if (this.state.fraudNudged || this.state.messageTaken || !BANK_TALK.test(this.state.heard.join(' '))) return;
+    void this.toolQueue.then(() => {
+      if (this.ended || this.state.fraudNudged || this.state.messageTaken) return;
+      this.state.fraudNudged = true;
+      this.session?.sendText('[From the system: the caller talked about bank or account details, which may be a payment scam. Take an urgent message now with take_message (category fraud, urgency urgent) with their name, number and what they asked, so the team can check it. Then carry on.]');
+    });
   }
 
   private remindToBook(line: string): void {

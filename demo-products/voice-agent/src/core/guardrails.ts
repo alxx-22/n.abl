@@ -41,6 +41,8 @@ export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:tha
 // a caller answered "Yes, that's all correct. Could I also see 10 Meadow View?" and the viewing was never booked.
 export const READ_BACK = /\b(?:is that (?:all )?(?:right|correct)|does that (?:all )?(?:sound|look) right|have i got that right|shall i (?:book|go ahead|put (?:that|it) through)|is that ok(?:ay)? to book)\b[^?]*\?\s*$/i;
 export const READ_BACK_DETAIL = /\b\d{1,2}(?::\d{2})?\s?(?:am|pm)\b|\b(?:half|quarter) (?:past|to) [a-z]+\b|\bhalf (?:nine|ten|eleven|twelve|one|two|three|four|five|six)\b|\b(?:nine|ten|eleven|twelve|one|two|three|four|five|six|seven) (?:o'?clock|fifteen|thirty|forty-five)\b|£\s?\d|\bthousand\b/i;
+/** A caller talking about bank or account details: at an estate agency, a possible payment scam that the team must hear about at once. */
+export const BANK_TALK = /\b(?:bank|account) details\b|\bsort code\b|\baccount number\b|\bnew (?:bank )?account\b/i;
 export const SAID_YES = /^\s*(?:yes|yeah|yep|yup|correct|that'?s (?:all )?(?:right|correct|fine|perfect)|perfect|sounds good|lovely|great|please do|go ahead)\b/i;
 const SAFE = /\b(it'?s|is|that'?s|will be|would be|should be|totally|completely|perfectly) (safe|fine|okay|ok) (for|with) (you|your|him|her|them|someone|a) [^.?!]*(allerg|coeliac|nut|gluten)/i;
 

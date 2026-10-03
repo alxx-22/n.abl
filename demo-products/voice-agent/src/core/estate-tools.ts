@@ -11,6 +11,7 @@
 
 import type { FunctionDeclaration } from './live.ts';
 import type { Args, Tool, ToolContext } from './tools.ts';
+import { BANK_TALK } from './guardrails.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, postcodeOf, realName, record, smsTo, str, strList } from './tool-kit.ts';
 import { newBookingReference, spokenReference } from '../db/repo.ts';
 import { candidateTimes, checkAvailability, checkSlot, durationFor, findService, type AvailabilityResult, type SlotRequest } from '../domain/availability.ts';
@@ -475,7 +476,7 @@ export async function estateMessage(args: Args, ctx: ToolContext): Promise<Recor
   const body = str(args.message) ?? '';
   const name = str(args.name) ?? 'Unknown';
   // A caller who talked about bank or account details is a possible payment scam, whatever the model filed it as (ea-bank-details-change).
-  const money = /\b(?:bank|account) details\b|\bsort code\b|\baccount number\b|\bnew (?:bank )?account\b/i.test(ctx.state.heard.join(' '));
+  const money = BANK_TALK.test(ctx.state.heard.join(' '));
   const chosen = categoryOf(args.category);
   const category: Category = money && !['complaint', 'data', 'compliance', 'safeguarding'].includes(chosen) ? 'fraud' : chosen;
   const urgency = category === 'fraud' && chosen !== 'fraud' ? 'urgent' : urgencyOf(args.urgency, category);
