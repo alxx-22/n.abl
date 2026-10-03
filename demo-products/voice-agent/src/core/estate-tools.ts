@@ -20,7 +20,7 @@ import {
   type ListingLive, type Requirements,
 } from '../domain/listings.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
-import { isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
+import { dayName, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
 import type { BookableService, Booking, BuyerPosition, Funding, Listing, Selling, StaffMember, Tenant } from '../domain/types.ts';
 
 const DAY = 86400000;
@@ -134,13 +134,25 @@ function gate(ctx: ToolContext, h: Home, kind: 'viewing' | 'offer'): Record<stri
   return null;
 }
 
+/** The member of the team a caller asked for by name, if any. */
+function staffNamed(t: Tenant, words: string | undefined): StaffMember | undefined {
+  const s = words?.trim().toLowerCase();
+  return s ? teamOf(t).find((m) => s === m.key || s === m.first_name.toLowerCase() || m.name.toLowerCase().startsWith(s)) : undefined;
+}
+
+/** A named member of the team on a day they don't work: say so, rather than "fully booked". */
+function notWorking(ctx: ToolContext, staff: string | undefined, date: string): string | null {
+  const who = staffNamed(ctx.tenant, staff);
+  if (!who || !isIsoDate(date) || who.days.includes(weekdayOf(date))) return null;
+  return `${who.first_name} doesn't work on ${dayName(weekdayOf(date))}s. Offer another day, or someone else.`;
+}
+
 /** A member of the team with a personal interest in a home never shows it; the caller hears only who can. */
 function excludedStaff(ctx: ToolContext, h: Home, staff: string | undefined): string | null {
   const pi = h.listing.personal_interest;
   if (!staff || !pi) return null;
-  const who = teamOf(ctx.tenant).find((m) => m.key === pi.staff);
-  const s = staff.trim().toLowerCase();
-  if (!who || (s !== who.key && s !== who.first_name.toLowerCase() && !who.name.toLowerCase().startsWith(s))) return null;
+  const who = staffNamed(ctx.tenant, staff);
+  if (!who || who.key !== pi.staff) return null;
   const instead = [h.listing.negotiator, ...teamOf(ctx.tenant).filter((m) => m.does.includes('viewings')).map((m) => m.key)].find((k) => k !== who.key);
   return `${who.first_name} can't show this home; offer ${firstNameOf(ctx.tenant, instead) || 'another member of the team'}.`;
 }
@@ -290,18 +302,20 @@ export async function estateAvailability(args: Args, ctx: ToolContext, service: 
       const pc = postcodeOf(args.postcode);
       if (pc && !p.estate.districts.includes(pc.district)) return { available: false, message: "That's outside the area we cover: say so kindly. No booking." };
     }
+    const off = notWorking(ctx, staff, date);
+    if (off) return { available: false, message: off };
     const req: SlotRequest = { profile: p, serviceKey: service.key, date, time: str(args.time), partySize: 1, staff, now: ctx.now(), existing: await existing() };
     return withNames(ctx, checkAvailability(req), req, service);
   }
   const r = await resolveHome(ctx, args.property);
-  if ('reply' in r) return { available: false, ...r.reply };
+  if ('reply' in r) return { checked: false, ...r.reply };
   const { home: h, all } = r;
   noteSeen(ctx, [h]);
   const stop = stopFor(ctx, h, all, date);
   if (stop) return { available: false, ...stop };
   const held = gate(ctx, h, 'viewing');
   if (held) return { checked: false, ...held };
-  const no = excludedStaff(ctx, h, staff);
+  const no = excludedStaff(ctx, h, staff) ?? notWorking(ctx, staff, date);
   if (no) return { available: false, message: no };
   const rule = viewingRules(h.listing, p, service.key, h.live);
   const req: SlotRequest = { profile: p, serviceKey: service.key, date, time: str(args.time), partySize: 1, staff, now: ctx.now(), existing: await existing(), listing: rule };

@@ -301,6 +301,8 @@ test('a personal interest: the line is said first, and the member of staff never
   say("Before we go on, I should tell you the seller is the brother of Tom, one of our negotiators.");
   const tom = await run('check_availability', { property: '9 Kingfisher Way', date: SAT, time: '10:00', staff: 'Tom' });
   assert.equal(tom.message, "Tom can't show this home; offer Jess.");
+  const monday = await run('check_availability', { service: 'viewing', property: '22 Albion Road', date: '2026-10-12', staff: 'Tom' });
+  assert.equal(monday.message, "Tom doesn't work on Mondays. Offer another day, or someone else.", 'not "fully booked"');
   const any = await run('check_availability', { property: '9 Kingfisher Way', date: SAT });
   assert.equal(any.available, true);
   for (const time of ['09:00', '12:00', '14:00']) {
