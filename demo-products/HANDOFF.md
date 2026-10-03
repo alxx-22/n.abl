@@ -1,10 +1,10 @@
-# Handover: the receptionist demo service (3 October 2026)
+# Handover: the receptionist demo service (3 October 2026, evening)
 
 For the next session. Read `CLAUDE.md` (rules and commands) first, then this.
 
 ## How to work (Alex's request)
 
-Alex hit his usage limit many times in the last session. **Do not use
+Alex hit his usage limit many times in earlier sessions. **Do not use
 multi-agent workflows or spawn subagents.** Work directly, in small steps:
 read only the files a step needs, run `npm run check` before each commit,
 commit and push after each finished step. Tell Alex in plain words what was
@@ -12,99 +12,94 @@ done after each step.
 
 ## Do next, in this order
 
-### 1. Fix a restaurant wording quirk (small)
+### 1. Estate agent milestone 2 (M2)
 
-The guardrail that catches a false "it's booked" misread "I'm afraid **7pm
-is booked**" (meaning the slot is taken) as a claim that a booking was made.
-It interrupted the call with a correction, so the receptionist said "Ah, my
-mistake" and repeated itself (live scenario `book-alternative`, 3 October;
-the other 20 restaurant scenarios passed).
+The spec is `presets/estate-agent.md` (§12, M2): sellers and buyers the
+agency knows. *How's my sale going?* for a seller verified by number and
+address (the week's viewings, feedback, the offer they're considering;
+"drop it by ten grand" becomes a message, not a change); buyer registration
+with requirements and alerts consent; the *Applicants* and *Valuations*
+views; *Call as* on the call panel (the seeded personas); "Seller replied by
+phone" on offers. Add its `ea-` scenarios, run them, and re-record the estate
+goldens in a commit that names the change (`node scripts/estate-goldens.ts`).
 
-- Where: `CLAIM` and `negated()` in `voice-agent/src/core/guardrails.ts`.
-- Fix: don't flag "is/are booked" when its subject is a time or a slot ("7pm
-  is booked", "that time is booked", "Saturday is booked"), or when it reads
-  "fully booked" or "booked up". Real claims ("that's booked for you",
-  "you're all booked in") must still be flagged.
-- Tests: add cases to the guardrail test in `test/domain.test.ts`.
-- Then run `npm run eval -- --only book-alternative,book-simple` (needs
-  `GEMINI_API_KEY`) and check both pass.
+### 2. Estate agent milestone 3 (M3)
 
-### 2. Finish the estate agent's first milestone (M1)
+Sale progression (spec §12, M3): the *Sales progress* view (milestones,
+dates, the chain, updates), *Completed: release keys*, *Fell through* (back
+on the market, back-up buyers texted).
 
-The spec is `presets/estate-agent.md` (M1 is in its §12). The researched use
-cases are in `presets/estate-agent-use-cases.md`.
+### 3. Property maintenance
 
-**Done and pushed:** the data (`src/presets/estate/`: answers, 18 sample homes
-in a made-up town in `fixtures/presets/estate-listings.json`, a fortnight
-seeded from Start), migration `src/db/migrations/voice_0005_estate.sql`, repo
-functions, `src/domain/listings.ts`, and the receptionist (`src/core/estate-tools.ts`:
-listing search and facts, viewings that keep each seller's rules,
-valuations, offers recorded and passed on, its prompt branch and guardrails,
-a named negotiator's day off). Also 7 live scenarios (`ea-*`) and 241 tests.
-The preset is built but **not live** in the catalogue yet.
-
-**Still to do for M1:**
-1. **Web builder:** a `BuilderDef` for `estate_agent` in
-   `web/src/reception/builder/registry.ts`, keyed by `src/presets/estate/steps.ts`
-   (follow the restaurant's; the listing editor without the draft).
-2. **Back office** (spec §6): Diary (the timeline by negotiator and valuer),
-   Properties (listings: status, price, viewings; price change and status
-   actions), Offers (timers; *Sent to seller*, *Seller accepts* or *rejects*;
-   accepting makes the listing sale agreed, opens a sale and texts the
-   buyer). `/state` must add listings, offers and team. Staff actions go in
-   `src/server/demo.ts`, each with an HTTP test.
-3. Open items left by the data step:
-   - wire `repo.syncListings` into the answers save after Start;
-   - the reset confirm (`resetConfirm`) only knows "bookings" and "orders";
-   - the scout's "not a restaurant" message is restaurant-worded.
-4. Make `estate_agent` live in `src/presets/catalogue.ts`. The test
-   `test/web-registry.test.ts` then requires its builder and a view for
-   every tab.
-5. **Walkthrough:** add an `estate_agent` walk to `test-e2e/demo-ui.ts`. It
-   picks the preset, edits each step, reloads, presses Start, opens each view
-   and accepts an offer. Run `npm run e2e:demo -- --only estate_agent` and
-   `-- --only restaurant`. **Send Alex the screenshots** from
-   `eval-results/demo-ui/estate_agent/`.
-6. **Live calls:** `npm run eval -- --only` with the `ea-*` ids from
-   `src/eval/scenarios.ts`. Read the transcripts, fix real faults, re-run.
-7. **Database:** apply `voice_0005_estate.sql` to the shared Supabase project
-   through the connector and record it in `voice_schema_migrations`.
-   `voice_0004_orders` is already applied.
-8. Add an estate golden corpus, as PRESETS.md §4 asks of every preset.
-
-Then M2 (sellers and buyers the agency knows: *how's my sale going?*, buyer
-registration) and M3 (sale progression), per the spec's §12.
-
-**Alex's defaults (he can change them):** sample homes stay in the made-up
-town and are labelled "example"; fees are "explained at your valuation";
-the receptionist records offers itself; lettings calls become a message.
-
-### 3. Then property maintenance (a new kind of business)
-
-The use cases are researched (`presets/property-maintenance-use-cases.md`, 89
-of them). There is no spec yet: write `presets/property-maintenance.md` in
-the shape of `presets/estate-agent.md`, then build it the same way. Its
-catalogue entry doesn't exist yet.
+**The spec is written**: `presets/property-maintenance.md`, in the estate
+agent's shape, following the use cases' reviewer's corrections. Before
+building, ask Alex the six "Decisions for Alex" at its end (or go with the
+defaults written there: the invented town Brackenford, all four nations,
+properties as sample data, approvals on the second phone, a short gas call,
+answering mode later). Then build M1 as its §12 says: server preset,
+migration `voice_0006_maintenance`, window booking, safety mode and the tool
+gate, the six tools, prompt, guardrails, builder, back office (Jobs,
+Dispatch, Properties and compliance, Safety log, the engineer's phone), walk,
+`pm-` scenarios, golden corpus, database, live.
 
 ## Where things stand
 
-- **Restaurant**: finished. Its recorded baseline (`test/fixtures/restaurant/`,
-  checked by `test/restaurant-golden.test.ts`) proves later changes leave it
-  alone. Change those files only in a commit whose purpose is a named
-  restaurant change.
-- **Framework** for every kind of business: done (`PRESETS.md` is the design).
-  Shared code is in `src/presets/common`, `food` and `seating`. The registry
-  is `src/presets/index.ts`, and the web has builder and back-office
-  registries. `npm run e2e:demo -- --only <key>` walks one preset.
+- **Restaurant**: finished. Its goldens (`test/fixtures/restaurant/`)
+  prove later changes leave it alone.
+- **Estate agent M1: finished and live in the catalogue** (3 October).
+  - Builder: nine steps (`web/src/reception/builder/estate/`), including a
+    listings editor in tabs with a Part A meter and *Start from the sample*
+    (it reads `GET /workspaces/:id/defaults`).
+  - Back office: Diary (a row per person; a viewing's drawer has feedback
+    buttons), Properties (cards with a drawn house and a Manage panel:
+    status, price, blocked dates, facts being checked, best and final,
+    viewings after a sale), Offers (received, sent, decided, with waiting
+    timers; *Seller accepts* makes the home sale agreed, opens a sale and
+    texts the buyer and other bidders). `/state` carries `listings`,
+    `offers` and `team`. Staff actions are in `src/server/demo.ts`
+    (`offerAction`, `listingAction`, booking `feedback`), tested in
+    `test/demo-api.test.ts`.
+  - Builder saves after Start sync the homes (`repo.syncListings`).
+  - Walkthrough: `npm run e2e:demo -- --only estate_agent` (screenshots in
+    `eval-results/demo-ui/estate_agent/`, sent to Alex).
+  - Live calls: see "Live calls" below.
+  - Database: `voice_0005_estate` applied to the shared Supabase project and
+    recorded in `voice_schema_migrations` (3 October).
+  - Golden corpus: `test/fixtures/estate_agent/`, made by
+    `scripts/estate-goldens.ts`, checked by `test/estate-golden.test.ts`. The
+    shared helpers are in `scripts/goldens.ts`. Its `max` setup is the true
+    maximum (twenty distinct towns): the prompt is 6,484 characters there,
+    after the "We cover..." fact was capped at six towns.
+- **Framework** for every kind of business: done (`PRESETS.md`).
 - **Order of presets** (Alex): estate agent, property maintenance, then
-  takeaway (its spec is PRESETS.md §5), barber, salon, café, pub, beauty, spa,
-  hotel, letting agent, gym, dog grooming, garage.
+  takeaway (PRESETS.md §5), barber, salon, café, pub, beauty, spa, hotel,
+  letting agent, gym, dog grooming, garage.
 - **Not online** until the whole demo is built (Alex's decision). The
   Oracle hosting kit (`voice-agent/deploy/oracle/`) waits until then.
-- Known small items: PRESETS.md §4 still mentions a restaurant exception
-  that was removed; the takeaway's order fields (`ready_at`, `driver`) are
-  written but not yet read back (do it when the takeaway is built); moving a
-  booking to another staff member must be made generic before the barber.
+
+## Live calls (estate agent, 3 October)
+
+First run of the seven `ea-` scenarios: `ea-short-lease`, `ea-book-viewing`
+and `ea-valuation-no-figure` passed. Fixed from the other four's transcripts:
+`get_property` now gives a `describe` sentence (price, tenure, council tax
+band, EPC) to say first; `search_properties` offers similar homes when the
+one asked for is withdrawn or sold; a caller who talked about bank or account
+details always leaves an urgent fraud message; and two checks were too
+narrow ("the details don't confirm it" about flooding, and "I can't comment
+on whether it will be accepted"). The four were being re-run at the end of
+the session: see the latest folder in `voice-agent/eval-results/`.
+
+## Known small items
+
+- Moving a booking to another staff member must be made generic before the
+  barber; the estate Diary has no drag-to-move until then (its drawer hides
+  the move list for viewings).
+- The estate seed put no bookings on "today" when Start was pressed on a
+  Saturday at 17:22 (after viewing hours). Check whether the seed should add
+  a few earlier that day, as the restaurant's does.
+- The takeaway's order fields (`ready_at`, `driver`) are written but not yet
+  read back (do it when the takeaway is built).
+- `NEXT-SESSION-PROMPT.md` is from an older session; use this file instead.
 
 ## Testing as Alex does
 
@@ -113,4 +108,5 @@ catalogue entry doesn't exist yet.
   It installs Chromium. Then run `npm run check:all`.
 - **In the app**: in the console, issue a key, then open `/demo/reception` on
   the same address and enter it. After pulling new code, restart `npm run dev`
-  and press **Reset** in the demo.
+  and press **Reset** in the demo. The estate agent is now on the "Build a new
+  demo" page.

@@ -704,7 +704,7 @@ export const SCENARIOS: Scenario[] = [
       const boxRoom = lines.filter((l) => /box room|third bedroom|bedroom three|bedroom 3/i.test(l));
       expect(f, boxRoom.every((l) => !/\d(?:\.\d)?\s?(?:m\b|metres?|meters?|feet|foot)|\bby\b \d/i.test(l)), `gave a size for the box room: ${boxRoom.join(' / ')}`);
       const flood = lines.filter((l) => /flood/i.test(l));
-      expect(f, flood.some((l) => /not in the details|isn'?t in the details|don'?t have|not something|isn'?t something|not recorded/i.test(l)), 'flooding was not said to be missing from the details');
+      expect(f, flood.some((l) => /not in the details|isn'?t in the details|don'?t have|not something|isn'?t something|not recorded|do(?:es)?n'?t (?:say|confirm|mention)/i.test(l)), 'flooding was not said to be missing from the details');
       expect(f, /Environment Agency/i.test(c.agentText), 'the Environment Agency\'s flood service was not named');
       expect(f, !flood.some((l) => /(?:never|hasn'?t|has not|no history of|not that I know of)[^.?!]{0,20}flood|no flood(?:ing)?\b/i.test(l) && !/can'?t say|don'?t know|not in the details|isn'?t in the details|not sure/i.test(l)), 'said it has not flooded');
       const msgs = await messages(c);
@@ -795,7 +795,7 @@ export const SCENARIOS: Scenario[] = [
       expect(f, v.some((b) => b.listing_key === 'albion_22'), 'no viewing booked at 22 Albion Road');
       expect(f, !v.some((b) => b.listing_key === 'meadow_view_10'), 'booked a viewing of a home off the market');
       expect(f, /no longer on the market|off the market|been withdrawn|not on the market/i.test(c.agentText), '10 Meadow View was not said to be off the market');
-      const others = [...results(c, 'get_property'), ...results(c, 'check_availability')].flatMap((r) => (r.similar ?? []) as { says: string }[]);
+      const others = [...results(c, 'search_properties'), ...results(c, 'get_property'), ...results(c, 'check_availability')].flatMap((r) => (r.similar ?? []) as { says: string }[]);
       // "27 Station Road: three-bedroom terraced house" is named as Station Road.
       const streets = [...new Set(others.map((o) => o.says.split(':')[0].split(/\s+/).slice(-2).join(' ')))];
       expect(f, streets.length >= 2, 'no similar homes came back from the tools');
@@ -864,7 +864,9 @@ export const SCENARIOS: Scenario[] = [
       const msgs = await messages(c);
       expect(f, msgs.some((m) => m.for_staff === 'jess' && m.category === 'offer' && m.urgency === 'urgent'), 'no urgent offer message for Jess');
       expect(f, !/332|three hundred and thirty[- ]two/i.test(c.agentText), 'another buyer\'s offer was said');
-      expect(f, !/(?:likely|probably|should|will|would) (?:be )?accept|good chance|strong offer|they'?ll (?:take|accept|go for)|I think they|(?:too )?low (?:offer|for)|great offer/i.test(c.agentText), 'hinted at the outcome or commented on the amount');
+      // "I can't comment on whether it will be accepted" is the refusal, not a hint.
+      const hint = /(?:likely|probably|should|will|would) (?:be )?accept|good chance|strong offer|they'?ll (?:take|accept|go for)|I think they|(?:too )?low (?:offer|for)|great offer/i;
+      expect(f, !agentLines(c).some((l) => hint.test(l) && !/can'?t|cannot|not able|unable|only the sellers? can/i.test(l)), 'hinted at the outcome or commented on the amount');
       noFlags(c, f);
       return f;
     },

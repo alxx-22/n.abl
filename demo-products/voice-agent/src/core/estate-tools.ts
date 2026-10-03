@@ -15,7 +15,7 @@ import { ASK_NAME, B, I, S, bool, int, obj, postcodeOf, realName, record, smsTo,
 import { newBookingReference, spokenReference } from '../db/repo.ts';
 import { candidateTimes, checkAvailability, checkSlot, durationFor, findService, type AvailabilityResult, type SlotRequest } from '../domain/availability.ts';
 import {
-  STATUS_WORDS, UNSAYABLE, addWorkingDays, clause, districtsIn, facts, findListings, firstViewingDate, homeKind, initialLive, insideRule, matches,
+  STATUS_WORDS, UNSAYABLE, addWorkingDays, clause, districtsIn, facts, findListings, firstViewingDate, homeKind, initialLive, insideRule, listingSummary, matches,
   offerReceivedText, poundsWhole, priceWords, requirementsIn, sayFirst, shortAddress, similar, positionBadges, unsaid, viewingRules, viewingText,
   type ListingLive, type Requirements,
 } from '../domain/listings.ts';
@@ -474,8 +474,11 @@ export async function estateMessage(args: Args, ctx: ToolContext): Promise<Recor
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const body = str(args.message) ?? '';
   const name = str(args.name) ?? 'Unknown';
-  const category = categoryOf(args.category);
-  const urgency = urgencyOf(args.urgency, category);
+  // A caller who talked about bank or account details is a possible payment scam, whatever the model filed it as (ea-bank-details-change).
+  const money = /\b(?:bank|account) details\b|\bsort code\b|\baccount number\b|\bnew (?:bank )?account\b/i.test(ctx.state.heard.join(' '));
+  const chosen = categoryOf(args.category);
+  const category: Category = money && !['complaint', 'data', 'compliance', 'safeguarding'].includes(chosen) ? 'fraud' : chosen;
+  const urgency = category === 'fraud' && chosen !== 'fraud' ? 'urgent' : urgencyOf(args.urgency, category);
   let home: Listing | null = null;
   if (str(args.property)) {
     const r = await resolveHome(ctx, args.property);
@@ -749,8 +752,10 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
   );
   if (!l.local_tax.trim() && e?.official) official.local_tax = e.official.local_tax;
   const negotiator = firstNameOf(ctx.tenant, l.negotiator);
+  // The facts every advert must state (price, tenure, council tax, EPC), said up front; left out while staff check any of them.
+  const describe = live.checking.some((c) => ['price', 'tenure', 'lease', 'local_tax', 'epc'].includes(c)) ? undefined : listingSummary(l, live, day, nation);
   return scrub({
-    property: l.key, address: l.address, status: STATUS_WORDS[live.status], price: priceOf(h), price_note: priceNote, on_market: onMarket,
+    property: l.key, address: l.address, status: STATUS_WORDS[live.status], describe, price: priceOf(h), price_note: priceNote, on_market: onMarket,
     facts: f.facts,
     unknown: f.unknown.length ? f.unknown : undefined,
     being_checked: f.being_checked.length ? f.being_checked : undefined,
@@ -763,6 +768,7 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
     negotiator,
     links: l.links,
     note: [
+      describe ? 'Describe it first with describe, as it is; then answer from facts.' : '',
       f.unknown.length ? `Unknown: say it isn't in the details (never "no"), name any official service, and offer to ask ${negotiator}.` : '',
       f.being_checked.length ? 'Being checked: say so, and state nothing about them.' : '',
     ].filter(Boolean).join(' ') || undefined,
@@ -801,7 +807,14 @@ async function searchProperties(args: Args, ctx: ToolContext): Promise<Record<st
     const found = findListings(findable(all), q).map((l) => byKey(all, l.key));
     if (found.length) {
       noteSeen(ctx, found);
-      return { matches: found.slice(0, 3).map(brief), note: found.length > 1 ? 'More than one: ask which.' : undefined };
+      // The one home asked for is gone: say so, and offer the closest homes still for sale, as get_property does.
+      const gone = found.length === 1 && ['withdrawn', 'exchanged', 'completed'].includes(found[0].live.status);
+      const alt = gone ? similar(found[0].listing, findable(all)).map((x) => brief(byKey(all, x.key))) : [];
+      return {
+        matches: found.slice(0, 3).map(brief),
+        ...(alt.length ? { similar: alt } : {}),
+        note: found.length > 1 ? 'More than one: ask which.' : gone ? `Say it's ${STATUS_WORDS[found[0].live.status]}${alt.length ? ', and offer these instead' : ''}.` : undefined,
+      };
     }
   }
   const places = { districts: e?.districts ?? [], towns: e?.towns ?? [] };
