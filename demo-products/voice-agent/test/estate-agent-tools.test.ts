@@ -11,6 +11,7 @@ import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { newCallState, record, runTool, toolDeclarations, unsaidReference, type Action, type ToolContext } from '../src/core/tools.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
+import { compilePrompt } from '../src/core/prompt.ts';
 import { displayUkPhone } from '../src/domain/phone.ts';
 import { toLocal } from '../src/domain/time.ts';
 import type { Tenant, TenantProfile } from '../src/domain/types.ts';
@@ -489,7 +490,22 @@ test('record() and the outcome: an offer is the call\'s own, and its reference i
   assert.equal(unsaidReference(ctx.state, 'Your reference is A, B, 1, 2, 3.'), null);
 });
 
-// ── The guardrails ────────────────────────────────────────────────────────
+// ── The prompt and the guardrails ─────────────────────────────────────────
+
+test('the estate prompt: its own rules in place of tables and takeaways, under 7,000 characters', async () => {
+  const { profile } = builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'ea-hartwell')!);
+  const prompt = compilePrompt(profile, { now: NOW, callerPhone: CALLER, demoCards: [], canTransfer: false, channel: 'browser' });
+  assert.ok(prompt.length < 7000, `${prompt.length} characters`);
+  for (const rule of [/before any viewing times, say everything in say_first/i, /never give a value, a range or an opinion/i, /record every offer with record_offer/i,
+    /Report Fraud on 0300 123 2040/, /Treat everyone the same/, /take_message with who it's for, the category and how urgent/]) assert.match(prompt, rule);
+  assert.doesNotMatch(prompt, /kitchen|allerg|takeaway|demo card|party/i);
+  assert.match(prompt, /take offers/);
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  const restaurant = compilePrompt(compileRestaurant(a, { slug: 'olive' }), { now: NOW, callerPhone: CALLER, demoCards: [], canTransfer: false, channel: 'browser' });
+  assert.match(restaurant, /make sure the kitchen knows/, 'the restaurant keeps its own');
+  assert.doesNotMatch(restaurant, /record_offer|say_first/);
+});
 
 test('estate guardrails: a figure, bank details, codes, an empty home, where staff are, hype and made-up acceptances', () => {
   const state = newCallState();
