@@ -7,8 +7,11 @@ reviewed adversarially (restaurant safety, the later presets, the product).
 `DEMO-SERVICE-PLAN.md` §8 lists the presets and their signature moments; this
 is how they are made.
 
-Build order (plan §8): takeaway, barber, hair salon, estate agent, café, pub,
-beauty, spa, hotel, letting agent, gym, dog grooming, garage. One at a time:
+Build order: **estate agent, then property maintenance** (a new kind of
+business; Alex, 2 October), then takeaway, barber, hair salon, café, pub,
+beauty, spa, hotel, letting agent, gym, dog grooming, garage. Each has a spec
+in `presets/<key>.md` and its researched use cases in
+`presets/<key>-use-cases.md`. One at a time:
 each is built, tested (unit, HTTP, Chromium walkthrough with screenshots, live
 evaluation scenarios) and pushed before the next begins. A preset turns `live`
 in `src/presets/catalogue.ts` once its server side is registered, so the
