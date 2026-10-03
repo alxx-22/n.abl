@@ -19,6 +19,9 @@ import { candidateTimes } from '../src/domain/availability.ts';
 import { toLocal } from '../src/domain/time.ts';
 import { BUILDER_TENANTS, FRIDAY_EVENING, SCENARIOS, builderTenant } from '../src/eval/scenarios.ts';
 import { loadFixtures } from '../src/db/seed.ts';
+import { compilePrompt } from '../src/core/prompt.ts';
+import { minutesOf } from '../src/domain/time.ts';
+import { replaySeed } from './seed-replay.ts';
 
 const corpus = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/restaurant/corpus/${name}.json`, import.meta.url), 'utf8'));
 const restaurant = builtPreset('restaurant') as unknown as Preset<RestaurantAnswers>;
@@ -257,6 +260,49 @@ test('presets: every built preset passes the checks of PRESETS.md §4 that apply
     assert.deepEqual(preset.sanitise(preset.defaults()), preset.defaults(), `${p.key}: the defaults are already clean`);
   }
   assert.deepEqual(restaurant.steps.map((s) => s.label), ['Basics', 'Opening hours', 'How you serve', 'Seating', 'Floor plan', 'Menu', 'Money', 'Policies and questions'], 'today\'s titles');
+});
+
+/** The defaults at their limits: every list repeated to well past its cap and every free-text string far too long, for sanitise to cut back. */
+function maximal(x: unknown): unknown {
+  if (Array.isArray(x)) return x.length ? Array.from({ length: 40 }, (_, i) => maximal(x[i % x.length])) : x;
+  if (x && typeof x === 'object') return Object.fromEntries(Object.entries(x).map(([k, v]) => [k, maximal(v)]));
+  return typeof x === 'string' && x.length > 3 && !/^\d\d:\d\d$|^#|^\d{4}-/.test(x) ? `${x} `.repeat(Math.ceil(600 / (x.length + 1))) : x;
+}
+
+test('presets: every built preset compiles to a sane profile, a short enough prompt, and a seeded week that replays', () => {
+  // Start at different moments of the week: a weekday morning, Friday evening, a Sunday.
+  const nows = [new Date('2026-10-07T10:00:00Z'), FRIDAY_EVENING, new Date('2026-10-11T12:00:00Z')];
+  for (const p of PRESETS) {
+    const preset = builtPreset(p.key);
+    if (!preset) continue;
+    const a = preset.defaults();
+    a.basics.name = 'Checked';
+    const profile = preset.compile(answersOf(preset, a), { slug: 'checked' });
+    assert.match(profile.greeting, /\bAI\b/, `${p.key}: the greeting says it is an AI`);
+    assert.match(profile.greeting, /\bdemo\b/i, `${p.key}: and that this is a demo line`);
+    assert.ok(profile.core_facts.length <= 6, `${p.key}: at most six core facts`);
+    for (const s of profile.booking?.services ?? []) {
+      for (const w of s.windows) assert.ok(minutesOf(w.first) <= minutesOf(w.last), `${p.key}: ${s.key} window ${w.first} to ${w.last}`);
+    }
+    for (const g of Object.values(profile.menu?.modifier_groups ?? {})) assert.ok(g.options.length, `${p.key}: an empty option group`);
+    for (const i of profile.menu?.categories.flatMap((c) => c.items) ?? []) {
+      for (const gk of i.modifier_groups ?? []) assert.ok(profile.menu!.modifier_groups[gk], `${p.key}: ${i.name} points at a missing group ${gk}`);
+    }
+    // The restaurant's prompt is longer, and its goldens hold it (PRESETS.md §4); 7,000 is each new preset's limit.
+    if (p.key !== 'restaurant') {
+      const big = answersOf(preset, maximal(preset.defaults()));
+      big.basics.greeting = `Hello, you're through to the AI assistant on this demo line. ${'x'.repeat(240)}`;
+      const prompt = compilePrompt(preset.compile(big, { slug: 'biggest' }), { now: nows[0], callerPhone: null, demoCards: [], canTransfer: false, channel: 'browser' });
+      assert.ok(prompt.length < 7000, `${p.key}: the prompt at its largest is ${prompt.length} characters`);
+    }
+    for (const now of nows) {
+      for (const seed of [1, 7, 42]) {
+        const plan = preset.seed(profile, now, seed);
+        assert.deepEqual(replaySeed(profile, plan), [], `${p.key}: the week seeded at ${now.toISOString()} with ${seed} replays`);
+        assert.equal(new Set(plan.bookings.map((b) => b.reference)).size, plan.bookings.length, `${p.key}: each reference once`);
+      }
+    }
+  }
 });
 
 test('presets: the eval\'s builder businesses are made through the registry and seeded by their preset', () => {

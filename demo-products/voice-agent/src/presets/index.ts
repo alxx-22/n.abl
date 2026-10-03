@@ -1,7 +1,8 @@
 // The preset registry: what the server needs from each kind of business, and
 // the one way it reads a workspace's saved answers. A preset is served to
 // prospects once it is built here and its catalogue entry says live
-// (PRESETS.md §2.2). Only the restaurant is built so far.
+// (PRESETS.md §2.2). The restaurant is built and live; the estate agent is
+// built, and goes live once its back office and builder are in the web.
 
 import type { Config } from '../config.ts';
 import type { TenantProfile } from '../domain/types.ts';
@@ -9,9 +10,11 @@ import type { ScanPart } from '../scout/map.ts';
 import type { ScanResult } from '../scout/scan.ts';
 import { PRESETS, presetInfo, type PresetInfo } from './catalogue.ts';
 import type { BaseAnswers, Issue, SeedPlan, VisitStatus } from './common/types.ts';
+import { estateAgent } from './estate/preset.ts';
 import { restaurant } from './restaurant/preset.ts';
 
-export type ViewId = 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls';
+/** properties, offers, applicants, valuations and sales are the estate agent's (presets/estate-agent.md §6). */
+export type ViewId = 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls' | 'properties' | 'offers' | 'applicants' | 'valuations' | 'sales';
 
 /** The back office a workspace shows, in the preset's own words (PRESETS.md §2.5). */
 export interface WorkspaceSpec {
@@ -25,6 +28,8 @@ export interface WorkspaceSpec {
     allergies: boolean;
     /** Staff can push two tables together for a booking: the preset has combineTables. */
     combine?: boolean;
+    /** A booking is at one of the business's homes (a viewing): the drawer shows which. */
+    property?: boolean;
   };
   orders?: {
     board: string;
@@ -33,6 +38,10 @@ export interface WorkspaceSpec {
     /** Seeded orders move on with the clock. */
     advance: boolean;
   };
+  /** The team's phones, to watch their urgent texts on the demo's phone. */
+  teamPhones?: { name: string; phone: string }[];
+  /** People the prospect can ring as (the caller's number the call sends). */
+  callAs?: { label: string; phone: string }[];
   /** What to try saying on the call; {ref} is filled from state. */
   suggestions: string[];
   /** What Reset makes again: "bookings and orders". */
@@ -93,7 +102,7 @@ export interface Preset<A extends BaseAnswers = BaseAnswers> {
   combineTables?(a: A, x: string, y: string): A;
 }
 
-const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant };
+const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant, estate_agent: estateAgent };
 
 /** A preset prospects can use: built, and live in the catalogue. */
 export function getPreset(key: string): Preset | null {

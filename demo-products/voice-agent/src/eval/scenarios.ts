@@ -47,6 +47,8 @@ export const BUILDER_TENANTS: BuilderTenant[] = [
     a.basics.name = 'Olive & Ember Kitchen';
     a.money.takeaway_payment = 'collection';
   }),
+  // The estate agent as it comes (presets/estate-agent.md §9): its ea- scenarios join with its tools.
+  { slug: 'ea-hartwell', preset: 'estate_agent', edit: (a) => void (a.basics.name = 'Hartwell & Green') },
 ];
 
 /** A builder business's preset, and its profile: the defaults, the edit, then cleaned and compiled as Start does. */

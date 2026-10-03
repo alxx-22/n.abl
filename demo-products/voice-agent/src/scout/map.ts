@@ -3,6 +3,7 @@
 // inferred) so the builder shows what to check.
 
 import { hoursSentence } from '../presets/common/hours.ts';
+import type { BaseAnswers } from '../presets/common/types.ts';
 import type { RestaurantAnswers } from '../presets/restaurant/answers.ts';
 import type { ScanResult } from './scan.ts';
 
@@ -18,24 +19,58 @@ const FONT_STACK: Record<string, string> = {
 };
 export const fontStack = (category: string) => FONT_STACK[category] ?? FONT_STACK.sans;
 
+type Mark = (path: string, how?: 'website' | 'guess') => void;
+const marker = (a: BaseAnswers): Mark => (path, how = 'website') => void (a.sources[path] = how);
+
+/** The parts every kind of business takes from its website: who and where it is, its hours, its look. */
+function scanIdentity(a: BaseAnswers, r: ScanResult, mark: Mark): void {
+  const id = r.identity;
+  if (id.name) (a.basics.name = id.name), mark('basics.name');
+  if (id.address) (a.basics.address = id.address), mark('basics.address');
+  if (id.town) (a.basics.town = id.town), mark('basics.town');
+  if (id.phone) (a.basics.phone_display = id.phone), mark('basics.phone_display');
+  if (id.style) (a.basics.style = id.style), mark('basics.style', 'guess');
+  if (r.url) a.basics.website = r.url;
+  if (id.logo) (a.theme.logo = id.logo), mark('theme.logo');
+}
+
+function scanHours(a: BaseAnswers, r: ScanResult, mark: Mark): void {
+  if (!r.hours) return;
+  a.hours.days = r.hours.map((d) => ({ open: d.open && d.services.length > 0, services: d.services.map((s) => ({ ...s, label: s.label || 'Open' })) }));
+  mark('hours.days');
+}
+
+function scanTheme(a: BaseAnswers, r: ScanResult, mark: Mark): void {
+  if (!r.theme) return;
+  a.theme.accent = r.theme.accent;
+  a.theme.primary = r.theme.primary;
+  a.theme.background = r.theme.background;
+  a.theme.font_heading = r.theme.font_heading;
+  a.theme.font_body = r.theme.font_body;
+  mark('theme.accent');
+  mark('theme.fonts');
+}
+
+/**
+ * A scan into any kind of business's answers, its identity, hours and
+ * theme only: a business that is not a restaurant takes nothing about menus,
+ * tables or dining policies from a website.
+ */
+export function applyBaseScan<A extends BaseAnswers>(input: A, r: ScanResult, use: Partial<Record<ScanPart, boolean>>): A {
+  const a = structuredClone(input);
+  const mark = marker(a);
+  if (use.identity) scanIdentity(a, r, mark);
+  if (use.hours) scanHours(a, r, mark);
+  if (use.theme) scanTheme(a, r, mark);
+  return a;
+}
+
 export function applyScan(input: RestaurantAnswers, r: ScanResult, use: Partial<Record<ScanPart, boolean>>): RestaurantAnswers {
   const a = structuredClone(input);
-  const mark = (path: string, how: 'website' | 'guess' = 'website') => void (a.sources[path] = how);
+  const mark = marker(a);
 
-  if (use.identity) {
-    const id = r.identity;
-    if (id.name) (a.basics.name = id.name), mark('basics.name');
-    if (id.address) (a.basics.address = id.address), mark('basics.address');
-    if (id.town) (a.basics.town = id.town), mark('basics.town');
-    if (id.phone) (a.basics.phone_display = id.phone), mark('basics.phone_display');
-    if (id.style) (a.basics.style = id.style), mark('basics.style', 'guess');
-    if (r.url) a.basics.website = r.url;
-    if (id.logo) (a.theme.logo = id.logo), mark('theme.logo');
-  }
-  if (use.hours && r.hours) {
-    a.hours.days = r.hours.map((d) => ({ open: d.open && d.services.length > 0, services: d.services.map((s) => ({ ...s, label: s.label || 'Open' })) }));
-    mark('hours.days');
-  }
+  if (use.identity) scanIdentity(a, r, mark);
+  if (use.hours) scanHours(a, r, mark);
   if (use.menu && r.menu) {
     a.menu = {
       categories: r.menu.categories,
@@ -47,15 +82,7 @@ export function applyScan(input: RestaurantAnswers, r: ScanResult, use: Partial<
     };
     mark('menu.categories');
   }
-  if (use.theme && r.theme) {
-    a.theme.accent = r.theme.accent;
-    a.theme.primary = r.theme.primary;
-    a.theme.background = r.theme.background;
-    a.theme.font_heading = r.theme.font_heading;
-    a.theme.font_body = r.theme.font_body;
-    mark('theme.accent');
-    mark('theme.fonts');
-  }
+  if (use.theme) scanTheme(a, r, mark);
   if (use.services) {
     const s = r.services;
     if (s.reservations !== null) (a.serve.reservations = s.reservations), mark('serve.reservations');
