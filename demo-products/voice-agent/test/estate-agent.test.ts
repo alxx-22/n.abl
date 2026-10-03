@@ -6,7 +6,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkAvailability, checkSlot, findService, type BusyInterval } from '../src/domain/availability.ts';
 import {
-  addWorkingDays, checkSays, initialLive, isWorkingDay, leaseYears, listingSummary, numberWords, offerTimer, positionBadges, priceWords, sayFirst, viewingRule, viewingRules,
+  addWorkingDays, checkSays, districtsIn, facts, findListings, initialLive, isWorkingDay, leaseYears, listingSummary, matches, numberWords, offerTimer, positionBadges,
+  priceWords, queryTokens, requirementsIn, sayFirst, similar, unsaid, viewingRule, viewingRules,
 } from '../src/domain/listings.ts';
 import { toLocal, weekdayOf } from '../src/domain/time.ts';
 import type { Listing, TenantProfile } from '../src/domain/types.ts';
@@ -498,4 +499,94 @@ test('seed: a full fortnight, none on Sundays, the same for the same seed', () =
   assert.equal(viewings.filter((b) => b.listing_key === 'albion_22' && localOf(b.starts_at).date === '2026-10-08').length, 0);
   assert.deepEqual(plan(), p, 'the same seed plans the same fortnight');
   assert.notDeepEqual(plan(WEDNESDAY, 8).bookings.map((b) => b.reference), p.bookings.map((b) => b.reference));
+});
+
+// ── Finding homes from what callers say (presets/estate-agent.md §4.2) ────
+
+const FINDABLE = compile(named()).listings!.map((l) => ({ listing: l, price_pence: l.initial.price_pence, status: l.initial.status }));
+const found = (words: string) => findListings(FINDABLE, words).map((l) => l.key);
+
+test('finding homes: two on one street come back together, so the receptionist asks which', () => {
+  assert.deepEqual(found('the one on Albion Road').sort(), ['albion_22', 'albion_41_flat_2']);
+  assert.deepEqual(found('Albany Road').sort(), ['albion_22', 'albion_41_flat_2'], 'misheard, it still sounds like Albion');
+  assert.deepEqual(found('Mill Road').sort(), ['mill_31', 'mill_6_bungalow'], 'the wrong kind of street still finds the right street');
+  assert.deepEqual(found('the flat on Albion Road'), ['albion_41_flat_2'], 'the kind of home narrows it');
+  assert.deepEqual(found('the house on Albion Road'), ['albion_22']);
+  assert.deepEqual(found('the three-bed on Mill Lane'), ['mill_31']);
+  assert.deepEqual(found('the bungalow on Mill Lane'), ['mill_6_bungalow']);
+  assert.deepEqual(found('Wharf House'), ['wharf_house_9'], 'a building\'s name is not a kind of home');
+});
+
+test('finding homes: numbers as figures or words, misheard numbers, references and prices', () => {
+  assert.deepEqual(found('22 Albion Road'), ['albion_22']);
+  assert.deepEqual(found('twenty-two Albion'), ['albion_22']);
+  assert.deepEqual(found('41 Albion Road'), ['albion_41_flat_2']);
+  assert.deepEqual(found('forty Larkspur Close'), ['larkspur_14'], '40 is easily misheard for 14');
+  assert.deepEqual(found('nine Kingfisher Way'), ['kingfisher_9']);
+  assert.deepEqual(found('HG102'), ['albion_22']);
+  assert.deepEqual(found('h g one oh two'), ['albion_22'], 'a reference read a character at a time');
+  assert.deepEqual(found('the one at 325'), ['albion_22']);
+  assert.deepEqual(found('the one at three hundred and twenty-five thousand'), ['albion_22']);
+  assert.deepEqual(found('12 Hawthorn Way'), [], 'not one of ours');
+  assert.deepEqual(found('three bed house with a garden'), [], 'a description is a search, not an address');
+  assert.deepEqual(queryTokens('bravo kilo two, £325k'), ['b', 'k', '2', '325000']);
+  assert.deepEqual(districtsIn('bravo kilo two or BK 3', ['BK1', 'BK2', 'BK3']), ['BK2', 'BK3']);
+});
+
+test('finding homes: what a buyer wants, and two homes like one that has gone', () => {
+  const places = { districts: ['BK1', 'BK2', 'BK3', 'BK4', 'BK5'], towns: ['Brackenford', 'Little Haddon', 'Coldbrook'] };
+  assert.deepEqual(requirementsIn('a three-bed house with a garden in Coldbrook or bravo kilo two, under 350', places), {
+    min_beds: 3, max_price_pence: 35000000, types: ['house'], areas: ['BK2', 'Coldbrook'], must_haves: ['garden'],
+  });
+  assert.deepEqual(requirementsIn('anything with no chain, two bedrooms', places), { min_beds: 2, must_haves: ['no chain'] });
+  const fit = matches({ max_price_pence: 35000000, min_beds: 3, areas: ['BK2', 'BK3'], must_haves: ['garden'] }, FINDABLE);
+  assert.ok(fit.length >= 2, fit.map((l) => l.key).join());
+  for (const l of fit) {
+    assert.ok(['BK2', 'BK3'].includes(l.district) && l.beds >= 3 && l.features.some((f) => /garden/.test(f)), l.key);
+    assert.ok(['available', 'under_offer'].includes(l.initial.status), `${l.key} is for sale`);
+  }
+  assert.ok(matches({ types: ['flat'] }, FINDABLE).every((l) => l.type === 'flat'));
+  assert.deepEqual(matches({ min_beds: 9 }, FINDABLE), []);
+  const gone = FINDABLE.find((h) => h.listing.key === 'meadow_view_10')!.listing;
+  const like = similar(gone, FINDABLE);
+  assert.equal(like.length, 2);
+  for (const l of like) assert.ok(l.type !== 'flat' && FINDABLE.find((h) => h.listing.key === l.key)!.status === 'available', l.key);
+});
+
+test('a home\'s facts: short words, unknowns named and never said as no, nothing being checked', () => {
+  const p = compile(named());
+  const house = home(p, 'albion_22');
+  const f = facts(house, { checking: [] }, TODAY, 'england');
+  assert.deepEqual(f.unknown, ['flooding']);
+  assert.equal(f.facts.flooded, undefined, 'flooding unknown is not a fact');
+  assert.equal(f.facts.tenure, 'freehold');
+  assert.equal(f.facts.council_tax, 'band C');
+  assert.match(f.facts.rooms, /Bedroom 3 \(box room\) not measured/);
+  assert.match(f.facts.none, /No restrictive covenants, .* or alterations declared\./);
+  assert.equal(f.facts.parking, 'driveway for two cars and a single garage.');
+  const flat = facts(home(p, 'albion_41_flat_2'), { checking: [] }, TODAY, 'england');
+  assert.equal(flat.facts.tenure, 'leasehold, with 76 years left on the lease');
+  assert.match(flat.facts.service_charge, /£1,320 a year/);
+  assert.match(flat.facts.ground_rent, /£250 a year, doubling every 25 years/);
+  const checking = facts(house, { checking: ['parking', 'rooms'] }, TODAY, 'england');
+  assert.equal(checking.facts.parking, undefined);
+  assert.equal(checking.facts.rooms, undefined);
+  assert.deepEqual(checking.being_checked, ['parking', 'rooms']);
+  // An owner's note that gives away an empty home never leaves the facts.
+  const noted = structuredClone(house);
+  noted.checks.parking = { v: 'yes', says: 'Parking: keys for the garage are in the office.' };
+  assert.equal(facts(noted, { checking: [] }, TODAY, 'england').facts.parking, undefined);
+});
+
+test('the disclosure check hears a line said in figures or words, and nothing else', () => {
+  const p = compile(named());
+  const flat = home(p, 'albion_41_flat_2');
+  const lines = sayFirst(flat, initialLive(flat, WEDNESDAY), TODAY, WEDNESDAY);
+  assert.equal(unsaid(lines, []).length, 1);
+  assert.deepEqual(unsaid(lines, ["It's leasehold, with seventy six years left."]), []);
+  assert.deepEqual(unsaid(lines, ['Seventy-six years are left on the lease.']), []);
+  assert.deepEqual(unsaid(lines, ['It has 76 years left.']), []);
+  assert.equal(unsaid(lines, ["It's a lovely flat, guide price £185,000."]).length, 1);
+  assert.deepEqual(unsaid(flat.before_offer, ['Buyers pay thirty-six pounds each for ID checks.']), []);
+  assert.equal(unsaid(flat.before_offer, ["I'd like to take your offer."]).length, 1);
 });

@@ -5,7 +5,7 @@
 // name each official service ("on GOV.UK") and never read a web address out.
 // Scotland works differently and is not offered.
 
-import type { KnowledgeEntry, Nation } from '../../domain/types.ts';
+import type { EstateSettings, KnowledgeEntry, Nation } from '../../domain/types.ts';
 
 export interface NationPack {
   /** "England", for "We sell homes in England". */
@@ -17,6 +17,8 @@ export interface NationPack {
   gas: { who: string; number: string };
   tenants: string;
   equality: string;
+  /** The official services named when a home's details don't say: never a web address. */
+  official: { flooding: string; local_tax: string };
 }
 
 export const NATION_PACKS: Record<Nation, NationPack> = {
@@ -28,6 +30,7 @@ export const NATION_PACKS: Record<Nation, NationPack> = {
     gas: { who: 'the National Gas Emergency Service', number: '0800 111 999' },
     tenants: 'Shelter or Citizens Advice can explain a tenant\'s rights when the home they rent is being sold.',
     equality: 'the Equality Act 2010',
+    official: { flooding: "the Environment Agency's long-term flood risk service on GOV.UK", local_tax: "the Valuation Office Agency's council tax band checker on GOV.UK" },
   },
   wales: {
     name: 'Wales',
@@ -37,6 +40,7 @@ export const NATION_PACKS: Record<Nation, NationPack> = {
     gas: { who: 'the National Gas Emergency Service', number: '0800 111 999' },
     tenants: 'Shelter Cymru or Citizens Advice can explain a tenant\'s rights when the home they rent is being sold.',
     equality: 'the Equality Act 2010',
+    official: { flooding: "Natural Resources Wales's flood risk map", local_tax: "the Valuation Office Agency's council tax band checker on GOV.UK" },
   },
   northern_ireland: {
     name: 'Northern Ireland',
@@ -46,8 +50,16 @@ export const NATION_PACKS: Record<Nation, NationPack> = {
     gas: { who: 'the Northern Ireland Gas Emergency Service', number: '0800 002 001' },
     tenants: 'The Housing Advice NI service can explain a tenant\'s rights when the home they rent is being sold.',
     equality: 'the Fair Employment and Treatment (Northern Ireland) Order 1998 and the Race Relations (Northern Ireland) Order 1997',
+    official: { flooding: "the Department for Infrastructure's Flood Maps NI", local_tax: "Land and Property Services' rates calculator on nidirect" },
   },
 };
+
+/** Where a buyer checks what a home's details leave out, by the nation's own services. */
+export const officialSources = (n: Nation): NonNullable<EstateSettings['official']> => ({
+  ...NATION_PACKS[n].official,
+  broadband: "Ofcom's broadband and mobile checker",
+  mobile: "Ofcom's broadband and mobile checker",
+});
 
 /** The gas emergency line, said as a core fact: an emergency at a home must never wait for a tool. */
 export const gasFact = (n: Nation) => `Gas emergency: call ${NATION_PACKS[n].gas.who} on ${NATION_PACKS[n].gas.number}.`;

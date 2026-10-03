@@ -378,6 +378,8 @@ export interface EstateSettings {
   mortgage: { staff: string; firm: string; statement: string } | null;
   /** The nation's gas emergency number. */
   gas: string;
+  /** Where a buyer checks for themselves what a home's details leave out ("the Environment Agency's long-term flood risk service on GOV.UK"). */
+  official?: { flooding: string; local_tax: string; broadband: string; mobile: string };
   redress: 'tpo' | 'prs';
   complaints_handler: string;
   data_lead: string;

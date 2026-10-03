@@ -5,8 +5,9 @@
 // agent's compile, preview and seed use them now; the receptionist's tools
 // read listings through the same functions (presets/estate-agent.md §4.2).
 
-import type {
-  BuyerPosition, CheckKey, CheckValue, HomeType, Listing, ListingState, Nation, OpeningHours, PriceQualifier, SayItem, TenantProfile, ViewingWindow,
+import {
+  CHECK_KEYS, type BuyerPosition, type CheckKey, type CheckValue, type HomeType, type Listing, type ListingState, type ListingStatus, type Nation, type OpeningHours,
+  type PriceQualifier, type SayItem, type TenantProfile, type ViewingWindow,
 } from './types.ts';
 import { addDays, closeMinutes, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf, zonedToUtc } from './time.ts';
 
@@ -417,4 +418,379 @@ export function offerReceivedText(agency: string, amountPence: number, address: 
 /** Sent when staff mark an offer as put to the seller. */
 export function offerSentText(agency: string, amountPence: number, address: string, at: { time: string }): string {
   return `${agency}: your offer of ${poundsWhole(amountPence)} for ${address} was put to the seller at ${spokenTime(at.time)} today. We'll let you know their answer. ${DEMO_TEXT}`;
+}
+
+// ── Finding a home from what a caller said ────────────────────────────────
+
+const NATO: Record<string, string> = {
+  alpha: 'a', alfa: 'a', bravo: 'b', charlie: 'c', delta: 'd', echo: 'e', foxtrot: 'f', golf: 'g', hotel: 'h', india: 'i',
+  juliet: 'j', juliett: 'j', kilo: 'k', lima: 'l', mike: 'm', november: 'n', oscar: 'o', papa: 'p', quebec: 'q', romeo: 'r',
+  sierra: 's', tango: 't', uniform: 'u', victor: 'v', whiskey: 'w', whisky: 'w', xray: 'x', yankee: 'y', zulu: 'z',
+};
+const UNITS: Record<string, number> = Object.fromEntries([...ONES.map((w, i) => [w, i] as const), ['oh', 0]]);
+const TEN_WORDS: Record<string, number> = Object.fromEntries(TENS.map((w, i) => [w, i * 10] as const).filter(([w]) => w));
+
+/**
+ * Number words to figures, the way callers say them: "twenty-two" is 22,
+ * "three hundred and twenty-five thousand" is 325000, and digits read one
+ * at a time ("one oh two") are 102. A lone "one" is left as a word: "the
+ * one on Albion Road" names no house number.
+ */
+function numberRuns(tokens: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < tokens.length;) {
+    const isNum = (t: string | undefined) => t !== undefined && (t in UNITS || t in TEN_WORDS || t === 'hundred' || t === 'thousand' || t === 'million');
+    if (!isNum(tokens[i]) || (tokens[i] === 'oh' && !isNum(tokens[i + 1]))) {
+      out.push(tokens[i++]);
+      continue;
+    }
+    const run: string[] = [];
+    while (i < tokens.length && (isNum(tokens[i]) || (tokens[i] === 'and' && isNum(tokens[i + 1]) && run.length))) {
+      if (tokens[i] !== 'and') run.push(tokens[i]);
+      i++;
+    }
+    if (run.length === 1 && (run[0] === 'one' || run[0] === 'oh')) {
+      out.push(run[0]);
+      continue;
+    }
+    if (run.every((t) => t in UNITS && UNITS[t] < 10)) {
+      out.push(run.map((t) => UNITS[t]).join(''));
+      continue;
+    }
+    let total = 0;
+    let current = 0;
+    for (const t of run) {
+      if (t in UNITS) current += UNITS[t];
+      else if (t in TEN_WORDS) current += TEN_WORDS[t];
+      else if (t === 'hundred') current = (current || 1) * 100;
+      else if (t === 'thousand') (total += (current || 1) * 1000), (current = 0);
+      else if (t === 'million') (total += (current || 1) * 1_000_000), (current = 0);
+    }
+    out.push(String(total + current));
+  }
+  return out;
+}
+
+/** What a caller said, as tokens: lower case, number words as figures, "325k" as 325000, the phonetic alphabet as letters. */
+export function queryTokens(text: string): string[] {
+  const s = text.toLowerCase()
+    .replace(/(\d),(\d{3})\b/g, '$1$2')
+    .replace(/£/g, ' ')
+    .replace(/\b(\d+(?:\.\d+)?)\s?k\b/g, (_, n: string) => String(Math.round(Number(n) * 1000)))
+    .replace(/\bx-ray\b/g, 'xray')
+    .replace(/[^a-z0-9]+/g, ' ');
+  return numberRuns(s.split(' ').filter(Boolean).map((t) => NATO[t] ?? t));
+}
+
+/** Letters and digits read a few at a time, joined: "b k 2" and "bk 2" are "bk2", "h g 102" is "hg102". */
+function joinedRuns(tokens: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    let s = '';
+    for (let j = i; j < tokens.length && j < i + 6 && (tokens[j].length <= 2 || /^\d+$/.test(tokens[j])); j++) {
+      s += tokens[j];
+      if (j > i) out.push(s);
+    }
+  }
+  return out;
+}
+
+const SUFFIXES = new Set(['road', 'lane', 'close', 'way', 'street', 'drive', 'court', 'walk', 'rise', 'gardens', 'avenue', 'crescent', 'place', 'grove', 'view', 'row', 'terrace', 'hill', 'park', 'square', 'mews', 'green', 'house', 'flat', 'apartment', 'the']);
+
+function lev(a: string, b: string): number {
+  const dp = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = dp[j];
+      dp[j] = Math.min(dp[j] + 1, dp[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+  return dp[b.length];
+}
+
+/** How a word sounds, roughly: "Albion" and "Albany" sound alike. */
+function soundex(w: string): string {
+  const code: Record<string, string> = { b: '1', f: '1', p: '1', v: '1', c: '2', g: '2', j: '2', k: '2', q: '2', s: '2', x: '2', z: '2', d: '3', t: '3', l: '4', m: '5', n: '5', r: '6' };
+  let out = w[0];
+  let last = code[w[0]] ?? '';
+  for (const ch of w.slice(1)) {
+    const c = code[ch] ?? '';
+    if (c && c !== last) out += c;
+    if (!'hw'.includes(ch)) last = c;
+  }
+  return (out + '000').slice(0, 4);
+}
+
+/** A street word heard right, or near enough: one letter out, or sounding the same. */
+function wordScore(heard: string, word: string): number {
+  if (heard === word) return 3;
+  if (heard.length < 4 || word.length < 4) return 0;
+  if (lev(heard, word) <= (word.length >= 7 ? 2 : 1)) return 2;
+  return heard.slice(0, 2) === word.slice(0, 2) && soundex(heard) === soundex(word) ? 2 : 0;
+}
+
+/** Numbers easily misheard for each other on the phone. */
+const sameSounding = (a: number, b: number) => a !== b && a >= 13 && b >= 13 && a <= 90 && b <= 90 && ((a % 10 === 0 && b === a / 10 + 10) || (b % 10 === 0 && a === b / 10 + 10));
+
+const TYPE_HEARD: [RegExp, (t: HomeType) => boolean][] = [
+  [/^(flat|apartment|maisonette)s?$/, (t) => t === 'flat' || t === 'maisonette'],
+  [/^(house|home)s?$/, (t) => t !== 'flat' && t !== 'maisonette'],
+  [/^semi$/, (t) => t === 'semi'],
+  [/^detached$/, (t) => t === 'detached'],
+  [/^(terrace|terraced)$/, (t) => t === 'terraced' || t === 'end_terrace'],
+  [/^bungalows?$/, (t) => t === 'bungalow'],
+  [/^cottages?$/, (t) => t === 'cottage'],
+];
+
+/** A home as the finder sees it: its facts and, where there is one, its live price. */
+export interface Findable {
+  listing: Listing;
+  price_pence: number;
+}
+
+/**
+ * The homes a caller means: a street heard wrongly ("Albany Road"), a
+ * house number easily misheard (14 or 40), a postcode district in the
+ * phonetic alphabet, the agency's reference, or "the one at 325". When
+ * more than one fits as well, all of them come back, so the receptionist
+ * asks which.
+ */
+export function findListings(homes: Findable[], words: string): Listing[] {
+  const tokens = queryTokens(words);
+  const joined = joinedRuns(tokens);
+  const all = new Set([...tokens, ...joined]);
+  const beds = /^\d+$/;
+  const bedCount = tokens.flatMap((t, i) => (beds.test(t) && /^bed/.test(tokens[i + 1] ?? '') ? [Number(t)] : []));
+  const numbers = tokens.filter((t, i) => beds.test(t) && !/^bed/.test(tokens[i + 1] ?? '')).map(Number);
+  const scored = homes.map(({ listing: l, price_pence }) => {
+    // "Wharf House" is a block of flats, and "The Bungalow" a name: words in a home's own name are not a type the caller asked for.
+    const own = new Set(queryTokens(`${l.number} ${l.street}`));
+    const typeTests = TYPE_HEARD.filter(([re]) => tokens.some((t) => re.test(t) && !own.has(t))).map(([, test]) => test);
+    let id = 0;
+    let score = 0;
+    if (all.has(l.ref.toLowerCase()) || all.has(l.key)) id += 20;
+    const name = queryTokens(`${l.number} ${l.street}`).filter((w) => !/^\d+$/.test(w) && !SUFFIXES.has(w));
+    const street = name.reduce((s, w) => s + Math.max(0, ...tokens.map((t) => wordScore(t, w))), 0);
+    id += street;
+    if (street) {
+      const suffix = queryTokens(l.street).find((w) => SUFFIXES.has(w));
+      if (suffix && tokens.includes(suffix)) score += 1;
+    }
+    const pounds = Math.round(price_pence / 100);
+    const price = numbers.some((n) => n >= 50 && Math.abs((n < 10000 ? n * 1000 : n) - pounds) <= Math.max(1000, pounds * 0.005));
+    if (price) id += 5;
+    const houseNumbers = (l.number.match(/\d+/g) ?? []).map(Number);
+    for (const n of numbers) {
+      if (houseNumbers.includes(n)) score += 4;
+      else if (houseNumbers.some((o) => sameSounding(n, o))) score += 3;
+      else if (street && !price && n < 1000) score -= 3;
+    }
+    for (const test of typeTests) score += test(l.type) ? 2 : -3;
+    for (const b of bedCount) score += b === l.beds ? 1 : -2;
+    if (tokens.includes(l.district.toLowerCase()) || joined.includes(l.district.toLowerCase())) score += 1;
+    return { l, id, score: id + score };
+  }).filter((x) => x.id > 0 && x.score > 0);
+  const best = Math.max(0, ...scored.map((x) => x.score));
+  return scored.filter((x) => x.score >= best - 1).sort((a, b) => b.score - a.score).map((x) => x.l);
+}
+
+/** The postcode districts a caller named, from those the agency covers ("bravo kilo two" is BK2). */
+export function districtsIn(text: string, known: string[]): string[] {
+  const tokens = queryTokens(text);
+  const heard = new Set([...tokens, ...joinedRuns(tokens)]);
+  return known.filter((d) => heard.has(d.toLowerCase()));
+}
+
+// ── What a buyer asked for ────────────────────────────────────────────────
+
+export interface Requirements {
+  max_price_pence?: number;
+  min_beds?: number;
+  /** Home types, or "house" / "flat" as callers say them. */
+  types?: string[];
+  /** Postcode districts or towns. */
+  areas?: string[];
+  /** garden, parking, no chain, step-free. */
+  must_haves?: string[];
+}
+
+const HAS: [RegExp, (l: Listing) => boolean][] = [
+  [/garden/, (l) => l.features.some((f) => /garden/i.test(f))],
+  [/park|drive|garage/, (l) => l.checks.parking.v === 'yes' || l.features.some((f) => /park|drive|garage/i.test(f))],
+  [/chain/, (l) => /no onward chain|no chain|no onward purchase/i.test(l.seller_position)],
+  [/step|level|wheel|ground floor|access/, (l) => l.checks.accessibility.v === 'yes' || l.features.some((f) => /step-free|level access|ground floor/i.test(f))],
+];
+
+/**
+ * What a buyer described in their own words ("a three-bed house with a
+ * garden in Coldbrook, under 300"), for a search with nothing else to go on.
+ */
+export function requirementsIn(text: string, places: { districts: string[]; towns: string[] }): Requirements {
+  const tokens = queryTokens(text);
+  const out: Requirements = {};
+  const i = tokens.findIndex((t, n) => /^\d+$/.test(t) && /^bed/.test(tokens[n + 1] ?? ''));
+  if (i >= 0) out.min_beds = Number(tokens[i]);
+  const cap = tokens.findIndex((t, n) => /^(under|below|max|maximum|upto|budget)$/.test(t) && /^\d+$/.test(tokens[n + 1] ?? ''));
+  if (cap >= 0) {
+    const n = Number(tokens[cap + 1]);
+    out.max_price_pence = (n < 10000 ? n * 1000 : n) * 100;
+  }
+  const types = tokens.filter((t) => TYPE_HEARD.some(([re]) => re.test(t)));
+  if (types.length) out.types = types;
+  const lower = ` ${tokens.join(' ')} `;
+  const areas = [...districtsIn(text, places.districts), ...places.towns.filter((t) => lower.includes(` ${queryTokens(t).join(' ')} `))];
+  if (areas.length) out.areas = areas;
+  const must = HAS.filter(([re]) => !re.test('chain') && tokens.some((t) => re.test(t))).map(([re]) => re.source);
+  if (/no (onward )?chain|chain free/.test(lower)) must.push('chain');
+  const named = must.map((m) => (/garden/.test(m) ? 'garden' : /park/.test(m) ? 'parking' : /chain/.test(m) ? 'no chain' : 'step-free'));
+  if (named.length) out.must_haves = [...new Set(named)];
+  return out;
+}
+
+/** Whether a type word ("house", "semi", "flat") fits a home. */
+const typeFits = (word: string, t: HomeType) => {
+  const w = word.toLowerCase().replace(/_/g, ' ').trim();
+  if (w === t.replace(/_/g, ' ')) return true;
+  return TYPE_HEARD.some(([re, test]) => w.split(/\s+/).some((x) => re.test(x)) && test(t));
+};
+
+/**
+ * Homes for sale that fit what a buyer wants, best first: available
+ * before under offer, then nearest the budget. Every requirement must be
+ * met, except a price up to 5% over, which buyers usually still want to hear.
+ */
+export function matches(req: Requirements, homes: (Findable & { status: ListingStatus })[]): Listing[] {
+  const areas = (req.areas ?? []).map((a) => a.toLowerCase().replace(/\s+/g, ''));
+  return homes
+    .filter((h) => h.status === 'available' || h.status === 'under_offer')
+    .filter(({ listing: l, price_pence }) =>
+      (!req.max_price_pence || price_pence <= req.max_price_pence * 1.05) &&
+      (!req.min_beds || l.beds >= req.min_beds) &&
+      (!req.types?.length || req.types.some((t) => typeFits(t, l.type))) &&
+      (!areas.length || areas.some((a) => a === l.district.toLowerCase() || a === l.town.toLowerCase().replace(/\s+/g, ''))) &&
+      (req.must_haves ?? []).every((m) => HAS.find(([re]) => re.test(m.toLowerCase()))?.[1](l) ?? true))
+    .sort((a, b) =>
+      (a.status === 'available' ? 0 : 1) - (b.status === 'available' ? 0 : 1) ||
+      (req.max_price_pence && (a.price_pence > req.max_price_pence ? 1 : 0) - (b.price_pence > req.max_price_pence ? 1 : 0)) ||
+      b.price_pence - a.price_pence)
+    .map((h) => h.listing);
+}
+
+/** Two available homes most like this one, for a caller whose home has gone: the same kind, a similar size and price, nearby. */
+export function similar(l: Listing, homes: (Findable & { status: ListingStatus })[], n = 2): Listing[] {
+  const flatLike = (t: HomeType) => t === 'flat' || t === 'maisonette';
+  const price = Math.max(1, l.initial.price_pence);
+  return homes
+    .filter((h) => h.listing.key !== l.key && h.status === 'available')
+    .map((h) => ({
+      h,
+      score: (flatLike(h.listing.type) === flatLike(l.type) ? 3 : 0) + (h.listing.type === l.type ? 1 : 0) - Math.abs(h.listing.beds - l.beds) -
+        Math.abs(h.price_pence - price) / price * 10 + (h.listing.district === l.district ? 1 : 0),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n)
+    .map((x) => x.h.listing);
+}
+
+// ── A home's facts, as a caller may hear them ─────────────────────────────
+
+export const STATUS_WORDS: Record<ListingStatus, string> = {
+  coming_soon: 'coming soon', available: 'available', under_offer: 'under offer', sale_agreed: 'sale agreed, subject to contract',
+  exchanged: 'sold (contracts exchanged)', completed: 'sold', withdrawn: 'no longer on the market',
+};
+
+/**
+ * Checks the seller answered "no" with nothing to add, said in three short
+ * lines rather than thirteen, so a home's facts stay small enough to send
+ * on every question. A "no" with a note is said on its own.
+ */
+/** Checks whose "yes" only names the topic, so the note alone says it. */
+const TOPIC_ONLY = new Set<CheckKey>(['heating', 'broadband', 'mobile', 'parking']);
+const NOT_IN: Partial<Record<CheckKey, string>> = { listed: 'listed', conservation_area: 'in a conservation area', mining: 'in a coal mining area' };
+const NO_RISK: Partial<Record<CheckKey, string>> = { flood_defences: 'flood defences', coastal_erosion: 'coastal erosion risk', warranty: 'new-build warranty' };
+const DECLARED: Partial<Record<CheckKey, string>> = {
+  covenants: 'restrictive covenants', rights_of_way: 'rights of way', planning: 'planning applications', building_safety: 'building safety issues',
+  knotweed: 'Japanese knotweed', disputes: 'disputes', alterations: 'alterations',
+};
+
+/**
+ * Words that tell a stranger a home is empty or how to get in. They never
+ * leave the tools, whatever an owner typed into a note: the rule a caller
+ * hears is "first viewings are in office hours".
+ */
+export const UNSAYABLE = /\b(vacant(?! possession)|empty|unoccupied|nobody lives|no one lives|keys?|key-?safe|lock-?box|alarm code)\b/i;
+
+const orList = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}` : xs[0] ?? '');
+
+/**
+ * The facts of a home as a caller may hear them, in short sentences,
+ * kept small enough to send on every question. Anything staff are
+ * checking is left out and named in being_checked; anything unknown is
+ * named in unknown, never said as no.
+ */
+export function facts(l: Listing, live: Pick<ListingLive, 'checking'>, today: string, nation: Nation): { facts: Record<string, string>; unknown: string[]; being_checked: string[] } {
+  const checking = new Set(live.checking);
+  const out: Record<string, string> = { home: l.home };
+  if (l.summary) out.summary = l.summary;
+  if (l.features.length) out.features = l.features.join(', ');
+  if (l.rooms.length && !checking.has('rooms')) out.rooms = l.rooms.map((r) => `${r.name} ${r.size || 'not measured'}`).join('; ');
+  out.tenure = clause(tenureSentence(l, today).replace(/^It's /, ''));
+  const lease = l.lease;
+  if (lease) {
+    if (lease.service_charge) out.service_charge = lease.service_charge;
+    if (lease.ground_rent) out.ground_rent = lease.ground_rent;
+    if (lease.reserve_fund) out.reserve_fund = lease.reserve_fund;
+    if (lease.event_fee) out.event_fee = lease.event_fee;
+    if (lease.managing_agent) out.managing_agent = lease.managing_agent;
+    if (lease.age_limit) out.age_limit = `buyers aged ${lease.age_limit} or over`;
+    if (lease.shared) out.shared_ownership = `${lease.shared.share_percent}% share with ${lease.shared.provider || 'a housing association'}, rent ${poundsWhole(lease.shared.rent_pence_month)} a month on the rest${lease.shared.eligibility ? `; ${clause(lease.shared.eligibility)}` : ''}`;
+  }
+  const tax = localTaxWords(l.local_tax, nation);
+  if (tax) out[nation === 'northern_ireland' ? 'rates' : 'council_tax'] = tax.replace(/^Council tax /, '');
+  out.epc = l.epc.trim() ? l.epc.trim() : 'not yet available';
+  const said = (k: CheckKey) => !checking.has(k) && l.checks[k].v !== 'unknown';
+  const grouped = new Set<CheckKey>();
+  /** The keys in a group the seller answered plainly, each taken out of the list said one by one. */
+  const plain = (group: Partial<Record<CheckKey, string>>, v: CheckValue) => (Object.keys(group) as CheckKey[]).filter((k) => {
+    const ok = said(k) && l.checks[k].v === v && l.checks[k].says === `${CHECKS[k][v as 'yes' | 'no']}.`;
+    if (ok) grouped.add(k);
+    return ok;
+  });
+  const mains = plain({ mains_gas: 'gas', mains_water: 'water', mains_drainage: 'drainage' }, 'yes');
+  if (mains.length) out.mains = `Mains ${mains.map((k) => k.replace('mains_', '')).join(', ').replace(/, ([^,]*)$/, ' and $1')}.`;
+  const lines = [
+    plain(NOT_IN, 'no').map((k) => NOT_IN[k]!),
+    plain(NO_RISK, 'no').map((k) => NO_RISK[k]!),
+    plain(DECLARED, 'no').map((k) => DECLARED[k]!),
+  ];
+  const none = [
+    lines[0].length ? `Not ${lines[0].join(', not ').replace(/, not ([^,]*)$/, ' and not $1')}.` : '',
+    lines[1].length ? `No ${orList(lines[1])}.` : '',
+    lines[2].length ? `No ${orList(lines[2])} declared.` : '',
+  ].filter(Boolean).join(' ');
+  if (none) out.none = none;
+  for (const k of CHECK_KEYS) {
+    if (!said(k) || grouped.has(k)) continue;
+    // "Parking: one allocated space." under the key parking says parking twice.
+    out[k] = TOPIC_ONLY.has(k) && l.checks[k].v === 'yes' ? l.checks[k].says.replace(/^[^:]+: /, '') : l.checks[k].says;
+  }
+  for (const [k, v] of Object.entries(out)) if (UNSAYABLE.test(v)) delete out[k];
+  return {
+    facts: out,
+    unknown: CHECK_KEYS.filter((k) => !checking.has(k) && l.checks[k].v === 'unknown').map((k) => CHECKS[k].unknown),
+    being_checked: [...checking].map((k) => (k in CHECKS ? CHECKS[k as CheckKey].unknown : k)),
+  };
+}
+
+/**
+ * Which must-say lines the agent has not said yet, from its own words
+ * since the home was briefed: any one of an item's listen words will do,
+ * with hyphens and punctuation ignored ("seventy six" is "seventy-six").
+ */
+export function unsaid(items: SayItem[], lines: string[]): SayItem[] {
+  const said = ` ${lines.join(' ').toLowerCase().replace(/[^a-z0-9]+/g, ' ')} `;
+  return items.filter((i) => !i.listen.some((w) => said.includes(` ${w.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `)));
 }

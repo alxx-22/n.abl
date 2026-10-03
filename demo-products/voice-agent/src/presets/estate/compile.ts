@@ -15,7 +15,7 @@ import { baseProfile, entry, greetingFor as greetingOf, mergeFaqs } from '../com
 import type { DayHours } from '../common/types.ts';
 import type { EstateAnswers, StaffAnswer } from './answers.ts';
 import type { ListingAnswer } from './listings.ts';
-import { NATION_PACKS, gasFact, nationKnowledge } from './nations.ts';
+import { NATION_PACKS, gasFact, nationKnowledge, officialSources } from './nations.ts';
 
 export const NOUN = 'estate agency';
 
@@ -97,6 +97,7 @@ export function compileSettings(a: EstateAnswers): EstateSettings {
     },
     mortgage: a.partners.mortgage.on ? { staff: a.partners.mortgage.staff, firm: a.partners.mortgage.firm, statement: a.partners.mortgage.statement } : null,
     gas: NATION_PACKS[a.patch.nation].gas.number,
+    official: officialSources(a.patch.nation),
     redress: a.compliance.redress,
     complaints_handler: a.compliance.complaints_handler,
     data_lead: a.compliance.data_lead,
