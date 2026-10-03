@@ -3,7 +3,7 @@
 // server can read a name, a voice or a greeting without knowing which kind of
 // business it is.
 
-import type { Booking, OrderLine } from '../../domain/types.ts';
+import type { Booking, Buyer, ListingState, Offer, OrderLine, Sale } from '../../domain/types.ts';
 
 export interface ServicePeriod {
   label: string;
@@ -101,6 +101,10 @@ export interface SeedBooking {
   deposit_paid: boolean;
   visit_status: VisitStatus;
   booked_via: 'receptionist' | 'staff' | 'online';
+  /** A viewing's home. */
+  listing_key?: string;
+  /** The buyer's position and feedback, or a valuation's lead. */
+  details?: Record<string, unknown>;
 }
 
 export interface SeedOrder {
@@ -136,10 +140,40 @@ export interface SeedMessage {
   from_name: string;
   from_phone: string;
   body: string;
+  /** Who in the team it is for (a staff key). */
+  for_staff?: string;
+  /** complaint, offer, access, progression...: how the back office sorts it. */
+  category?: string;
+  urgency?: 'urgent' | 'today' | 'this_week';
+  /** A complaint's own reference. */
+  reference?: string;
+  details?: Record<string, unknown>;
+  /** Default new. */
+  status?: 'new' | 'read';
+  /** Default when the plan is written. */
+  created_at?: Date;
 }
 
+/** A text already on someone's phone when the demo starts. */
+export interface SeedText {
+  to: string;
+  body: string;
+  created_at: Date;
+}
+
+/**
+ * A seeded week. The last five sections are the estate agent's: written
+ * only when a plan has them, so every other business's plans write what
+ * they always did.
+ */
 export interface SeedPlan {
   bookings: SeedBooking[];
   orders: SeedOrder[];
   messages: SeedMessage[];
+  listings?: ListingState[];
+  offers?: Omit<Offer, 'source' | 'call_id'>[];
+  sales?: Omit<Sale, 'id'>[];
+  /** Buyers and sellers the agency knows (voice_customers). */
+  people?: Buyer[];
+  texts?: SeedText[];
 }

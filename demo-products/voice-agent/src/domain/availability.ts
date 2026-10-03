@@ -6,6 +6,7 @@
 // locked, so two callers can never take the last table between check and commit.
 
 import type { BookableService, Resource, TenantProfile } from './types.ts';
+import { insideRule, type ListingRule } from './listings.ts';
 import {
   LAST_START, addDays, closeMinutes, isIsoDate, minutesOf, normaliseTime, spokenDate, spokenTime, timeOf, toLocal, weekdayOf, zonedToUtc,
 } from './time.ts';
@@ -16,6 +17,8 @@ export interface BusyInterval {
   starts_at: Date;
   ends_at: Date;
   buffer_minutes?: number;
+  /** A viewing's home: two viewings of one home never overlap, whoever shows them. */
+  listing_key?: string | null;
 }
 
 export interface SlotRequest {
@@ -39,6 +42,12 @@ export interface SlotRequest {
   keep?: string;
   /** Tables: only this one (the caller asked for "table 4"). */
   only?: string;
+  /**
+   * A viewing: the home's own rules on top of the service's (its windows,
+   * notice, blocked dates, who may not show it, office hours for an empty
+   * home). Only the estate agent's tools pass it; without it nothing changes.
+   */
+  listing?: ListingRule;
 }
 
 export interface Slot {
@@ -167,9 +176,11 @@ export function suitableResources(
   resources: Resource[],
   party: number,
   staff?: string,
-  needs: { area?: string; accessible?: boolean; prefer?: string[]; only?: string } = {},
+  needs: { area?: string; accessible?: boolean; prefer?: string[]; only?: string; weekday?: number } = {},
 ): Resource[] | 'unknown_staff' {
   let list = resources.filter((r) => r.services.includes(service.key));
+  // Someone who works only some days cannot be booked on the others.
+  if (needs.weekday !== undefined) list = list.filter((r) => !r.days || r.days.includes(needs.weekday!));
   if (service.kind === 'table') {
     if (needs.only) list = list.filter((r) => r.key === needs.only);
     list = list.filter((r) => (r.capacity ?? 0) >= party && (r.min ?? 1) <= party);
@@ -191,15 +202,24 @@ export function suitableResources(
 export function checkSlot(req: SlotRequest, service: BookableService, time: string): Slot | null {
   const { profile } = req;
   const resources = profile.booking?.resources ?? [];
-  const res = suitableResources(service, resources, req.partySize, req.staff, req);
+  const rule = req.listing;
+  // Only the estate agent's people carry working days, so for anyone else this filters nothing.
+  const res = suitableResources(service, resources, req.partySize, req.staff, { ...req, weekday: weekdayOf(req.date) });
   if (res === 'unknown_staff') return null;
   const starts = zonedToUtc(req.date, time, profile.timezone);
   const minutes = durationFor(service, req.partySize);
   const ends = new Date(starts.getTime() + minutes * 60000);
   const lead = (service.lead_minutes ?? 0) * 60000;
   if (starts.getTime() < req.now.getTime() + lead) return null;
+  if (rule) {
+    if (!insideRule(rule, req.date, minutesOf(time), minutesOf(time) + minutes)) return null;
+    if (starts.getTime() < req.now.getTime() + rule.notice_minutes * 60000) return null;
+    const home = req.existing.some((b) => b.listing_key === rule.key && b.id !== req.excludeBookingId && overlaps(starts.getTime(), ends.getTime(), b.starts_at.getTime(), b.ends_at.getTime()));
+    if (home) return null;
+  }
   const order = req.keep ? [...res.filter((r) => r.key === req.keep), ...res.filter((r) => r.key !== req.keep)] : res;
   for (const r of order) {
+    if (rule?.exclude_staff.includes(r.key)) continue;
     if (isFree(r.key, starts, ends, service.buffer_minutes ?? 0, req.existing, resources, req.excludeBookingId)) {
       return { time, resource_key: r.key, starts_at: starts, ends_at: ends };
     }
