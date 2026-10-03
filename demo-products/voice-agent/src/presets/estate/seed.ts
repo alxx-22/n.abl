@@ -345,7 +345,8 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
       // Times the seller allows: a home viewed only on Saturday mornings is not tried at noon on a Tuesday.
       const rule = viewingRules(l, profile, 'viewing', live.get(l.key));
       const t = pick(viewingTimes(date).filter((x) => insideRule(rule, date, minutesOf(x), minutesOf(x) + viewingMinutes)));
-      if (!t || (d === 0 && at(date, t) <= now)) continue;
+      // Earlier today counts as the week gone (done, some with feedback), so Start pressed in the evening still shows a day's work; only a viewing under way now is skipped.
+      if (!t || (d === 0 && at(date, t) <= now && at(date, t).getTime() + viewingMinutes * 60000 > now.getTime())) continue;
       const done = at(date, t).getTime() + 60 * 60000 <= now.getTime();
       const extra = done && random() < 0.7 ? feedbackOf(pick(Object.keys(FEEDBACK)), at(date, t)) : {};
       const b = place({ service: 'viewing', date, time: t, listing: l, who: p, details: viewingDetails(l, p, 'viewing', extra) });
