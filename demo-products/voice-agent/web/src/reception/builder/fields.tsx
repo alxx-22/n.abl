@@ -76,6 +76,35 @@ export function Pounds(props: { label: ReactNode; pence: number; onChange: (penc
   );
 }
 
+/**
+ * A list typed as one line, split on commas: postcode districts, towns. What
+ * is typed stays as typed while the box has focus, so a saved and cleaned
+ * list never pulls the text from under the cursor.
+ */
+export function ListText(props: { label: ReactNode; value: string[]; onChange: (v: string[]) => void; hint?: ReactNode; placeholder?: string; max?: number }) {
+  const shown = props.value.join(', ');
+  const [text, setText] = useState(shown);
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) setText(shown);
+  }, [shown, focused]);
+  return (
+    <Field label={props.label} hint={props.hint}>
+      {(id) => (
+        <input
+          id={id} maxLength={props.max ?? 400} placeholder={props.placeholder} value={text}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onChange={(e) => {
+            setText(e.target.value);
+            props.onChange(e.target.value.split(',').map((x) => x.trim()).filter(Boolean));
+          }}
+        />
+      )}
+    </Field>
+  );
+}
+
 export function Toggle({ label, checked, onChange, hint }: { label: ReactNode; checked: boolean; onChange: (v: boolean) => void; hint?: ReactNode }) {
   const id = useId();
   return (
@@ -89,14 +118,15 @@ export function Toggle({ label, checked, onChange, hint }: { label: ReactNode; c
   );
 }
 
-export function Choice<T extends string>({ legend, value, options, onChange }: { legend: ReactNode; value: T; options: { value: T; label: ReactNode; hint?: ReactNode }[]; onChange: (v: T) => void }) {
+/** `disabled`: an option shown for what is coming, never picked (an estate agency in Scotland). */
+export function Choice<T extends string>({ legend, value, options, onChange }: { legend: ReactNode; value: T; options: { value: T; label: ReactNode; hint?: ReactNode; disabled?: boolean }[]; onChange: (v: T) => void }) {
   const name = useId();
   return (
     <fieldset className="choice">
       <legend>{legend}</legend>
       {options.map((o) => (
         <label key={o.value}>
-          <input type="radio" name={name} checked={value === o.value} onChange={() => onChange(o.value)} />
+          <input type="radio" name={name} checked={value === o.value} disabled={o.disabled} onChange={() => onChange(o.value)} />
           <span>
             {o.label}
             {o.hint ? <span className="hint"> {o.hint}</span> : null}

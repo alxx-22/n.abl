@@ -5,7 +5,7 @@
 // restaurant's last booking) go in as children, after the week.
 
 import type { ReactNode } from 'react';
-import type { ServicePeriod } from '../../../../../src/presets/common/types.ts';
+import type { DayHours, ServicePeriod } from '../../../../../src/presets/common/types.ts';
 import { Source, Toggle } from '../fields.tsx';
 import type { StepProps } from '../registry.ts';
 import { MIDNIGHT, savedClose, shownClose } from './closing.ts';
@@ -23,57 +23,13 @@ export interface HoursOptions {
   copy: { from: number; to: number[]; label: string };
 }
 
-export function Hours({ a, set, options, children }: StepProps & { options: HoursOptions; children?: ReactNode }) {
-  const { copy } = options;
+const LEAD = 'When you are open, and the services within each day. The receptionist only offers times inside these, and answers “are you open?” from them.';
+
+export function Hours({ a, set, options, lead = LEAD, add, children }: StepProps & { options: HoursOptions; lead?: string; add?: string; children?: ReactNode }) {
   return (
     <div className="fields">
-      <p className="lead">When you are open, and the services within each day. The receptionist only offers times inside these, and answers “are you open?” from them. <Source of="hours.days" sources={a.sources} /></p>
-      <div className="hours">
-        {WEEK.map((i) => {
-          const day = a.hours.days[i];
-          return (
-            <div className="day-row" key={i}>
-              <Toggle label={DAY_NAMES[i]} checked={day.open} onChange={(v) => set((d) => {
-                d.hours.days[i].open = v;
-                if (v && !d.hours.days[i].services.length) d.hours.days[i].services = [{ ...options.day }];
-              })} />
-              {day.open ? (
-                <div className="services">
-                  {day.services.map((sv, j) => (
-                    <div className="service" key={j}>
-                      <input aria-label={`${DAY_NAMES[i]} service name`} value={sv.label} maxLength={30} onChange={(e) => set((d) => void (d.hours.days[i].services[j].label = e.target.value))} />
-                      <input aria-label={`${DAY_NAMES[i]} ${sv.label} opens`} type="time" step={900} value={sv.open} onChange={(e) => set((d) => void (d.hours.days[i].services[j].open = e.target.value))} />
-                      <span className="muted">to</span>
-                      <input
-                        aria-label={`${DAY_NAMES[i]} ${sv.label} closes`} type="time" step={900} value={shownClose(sv.close)}
-                        aria-describedby={sv.close === MIDNIGHT ? `midnight-${i}-${j}` : undefined}
-                        onChange={(e) => set((d) => void (d.hours.days[i].services[j].close = savedClose(e.target.value)))}
-                      />
-                      <button type="button" className="ghost" aria-label={`Remove ${sv.label}`} onClick={() => set((d) => {
-                        d.hours.days[i].services.splice(j, 1);
-                        if (!d.hours.days[i].services.length) d.hours.days[i].open = false;
-                      })}>✕</button>
-                      {/* Last, so the boxes before it keep their place (and focus) when it appears. */}
-                      {sv.close === MIDNIGHT ? <span className="hint midnight" id={`midnight-${i}-${j}`}>midnight</span> : null}
-                    </div>
-                  ))}
-                  {day.services.length < 3 ? (
-                    <button type="button" className="ghost small" onClick={() => set((d) => void d.hours.days[i].services.push({ ...(d.hours.days[i].services.length ? options.next : options.first) }))}>
-                      + Add a service
-                    </button>
-                  ) : null}
-                </div>
-              ) : (
-                <span className="muted small">Closed</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div className="row-tools">
-        <button type="button" className="small" onClick={() => set((d) => { const t = d.hours.days[copy.from]; for (const k of copy.to) d.hours.days[k] = structuredClone(t); })}>{copy.label}</button>
-        <span className="hint">The latest close is midnight: enter it as 00:00.</span>
-      </div>
+      <p className="lead">{lead} <Source of="hours.days" sources={a.sources} /></p>
+      <Week days={a.hours.days} edit={(fn) => set((d) => fn(d.hours.days))} options={options} add={add} />
       {children}
       <div className="field">
         <label>Closures</label>
@@ -88,5 +44,65 @@ export function Hours({ a, set, options, children }: StepProps & { options: Hour
         <p className="hint">Days you are shut outside the usual pattern: a holiday, a private hire.</p>
       </div>
     </div>
+  );
+}
+
+/**
+ * One week of days, each open or shut with up to three periods. `name` tells
+ * the boxes apart when a step has more than one week (an estate agency's
+ * office, viewings and valuations); `add` is what adding a period says.
+ */
+export function Week({ days, edit, options, name, add = '+ Add a service' }: { days: DayHours[]; edit: (fn: (days: DayHours[]) => void) => void; options: HoursOptions; name?: string; add?: string }) {
+  const { copy } = options;
+  const at = (i: number) => (name ? `${name} ${DAY_NAMES[i]}` : DAY_NAMES[i]);
+  return (
+    <>
+      <div className="hours">
+        {WEEK.map((i) => {
+          const day = days[i];
+          return (
+            <div className="day-row" key={i}>
+              <Toggle label={DAY_NAMES[i]} checked={day.open} onChange={(v) => edit((w) => {
+                w[i].open = v;
+                if (v && !w[i].services.length) w[i].services = [{ ...options.day }];
+              })} />
+              {day.open ? (
+                <div className="services">
+                  {day.services.map((sv, j) => (
+                    <div className="service" key={j}>
+                      <input aria-label={`${at(i)} service name`} value={sv.label} maxLength={30} onChange={(e) => edit((w) => void (w[i].services[j].label = e.target.value))} />
+                      <input aria-label={`${at(i)} ${sv.label} opens`} type="time" step={900} value={sv.open} onChange={(e) => edit((w) => void (w[i].services[j].open = e.target.value))} />
+                      <span className="muted">to</span>
+                      <input
+                        aria-label={`${at(i)} ${sv.label} closes`} type="time" step={900} value={shownClose(sv.close)}
+                        aria-describedby={sv.close === MIDNIGHT ? `midnight-${name ?? ''}${i}-${j}` : undefined}
+                        onChange={(e) => edit((w) => void (w[i].services[j].close = savedClose(e.target.value)))}
+                      />
+                      <button type="button" className="ghost" aria-label={`Remove ${sv.label}`} onClick={() => edit((w) => {
+                        w[i].services.splice(j, 1);
+                        if (!w[i].services.length) w[i].open = false;
+                      })}>✕</button>
+                      {/* Last, so the boxes before it keep their place (and focus) when it appears. */}
+                      {sv.close === MIDNIGHT ? <span className="hint midnight" id={`midnight-${name ?? ''}${i}-${j}`}>midnight</span> : null}
+                    </div>
+                  ))}
+                  {day.services.length < 3 ? (
+                    <button type="button" className="ghost small" onClick={() => edit((w) => void w[i].services.push({ ...(w[i].services.length ? options.next : options.first) }))}>
+                      {add}
+                    </button>
+                  ) : null}
+                </div>
+              ) : (
+                <span className="muted small">Closed</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="row-tools">
+        <button type="button" className="small" onClick={() => edit((w) => { const t = w[copy.from]; for (const k of copy.to) w[k] = structuredClone(t); })}>{copy.label}</button>
+        <span className="hint">The latest close is midnight: enter it as 00:00.</span>
+      </div>
+    </>
   );
 }

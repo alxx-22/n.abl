@@ -327,6 +327,8 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   }
 
   // ── The builder ───────────────────────────────────────────────────────
+  // A fresh set of the preset's answers: the estate agent's "Start from the sample" takes its homes from these.
+  if (sub === 'defaults' && req.method === 'GET') return json(res, 200, { answers: answersOf(preset, preset.defaults()) }), true;
   if (sub === 'answers' && req.method === 'PUT') {
     const now = Date.now();
     if (now - (lastSave.get(t.id) ?? 0) < 800) throw new HttpError(429, 'Saving too fast; try again in a moment.');

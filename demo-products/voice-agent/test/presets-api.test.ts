@@ -71,6 +71,12 @@ test('presets over HTTP: the PIN and call settings survive every rebuild', async
   const unnamed = await kim('POST', `${path}/start`);
   assert.equal(unnamed.status, 400);
   assert.equal(unnamed.data.error, 'Give the restaurant a name.');
+  // The preset's own defaults, for a builder to take a part of (the estate agent's sample homes); nothing saved.
+  const defaults = await kim('GET', `${path}/defaults`);
+  assert.equal(defaults.status, 200);
+  assert.deepEqual(defaults.data.answers.seating, made.data.answers.seating);
+  assert.equal(defaults.data.answers.basics.name, '');
+  assert.equal((await kim('GET', `/demo/api/workspaces/${'0'.repeat(8)}-0000-0000-0000-${'0'.repeat(12)}/defaults`)).status, 404);
 
   assert.equal((await kim('PATCH', `${path}/settings`, { reply_speed: 'patient' })).status, 200);
   const named = made.data.answers;
