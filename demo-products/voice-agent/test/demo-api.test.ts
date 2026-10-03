@@ -365,12 +365,7 @@ test('demo: private demos are deleted 30 days after their key ends, not before',
 });
 
 test('demo: an estate agency: Start, then offers, homes and feedback from the back office, each with its text', async () => {
-  // Built but not live in the catalogue yet: switched on for this test only.
-  const { PRESETS } = await import('../src/presets/catalogue.ts');
-  const info = PRESETS.find((p) => p.key === 'estate_agent')!;
-  const was = info.status;
-  info.status = 'live';
-  try {
+  {
     assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
     const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Jo Green', company: 'Hartwell & Green' });
     const jo = client('10.0.0.9');
@@ -477,7 +472,5 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal(h.price_pence, avail.price_pence);
     assert.deepEqual(h.checking, []);
     assert.equal((await state()).listings.find((l: any) => l.key === first.key).price_pence, first.price_pence, 'the builder\'s price now');
-  } finally {
-    info.status = was;
   }
 });

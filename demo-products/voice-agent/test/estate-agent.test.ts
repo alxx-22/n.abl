@@ -357,7 +357,7 @@ test('estate agent: the builder\'s preview, the fact sheet and the back office',
   assert.ok(f.house && f.house.key !== 'albion_22' && f.house.initial.status === 'available');
   const preset = builtPreset('estate_agent')!;
   assert.deepEqual(preset.scan.parts, ['identity', 'hours', 'theme'], 'homes are never read from a website');
-  assert.equal(getPreset('estate_agent'), null, 'built, not yet live: the web turns it on');
+  assert.equal(getPreset('estate_agent')?.info.key, 'estate_agent', 'live: prospects can pick it');
   assert.deepEqual(answersOf(preset, { version: 1, basics: { name: 'Kept' } }).basics.name, 'Kept');
 });
 
