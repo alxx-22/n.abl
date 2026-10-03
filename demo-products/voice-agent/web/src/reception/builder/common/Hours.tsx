@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import type { ServicePeriod } from '../../../../../src/presets/common/types.ts';
 import { Source, Toggle } from '../fields.tsx';
 import type { StepProps } from '../registry.ts';
+import { MIDNIGHT, savedClose, shownClose } from './closing.ts';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WEEK = [1, 2, 3, 4, 5, 6, 0];
@@ -43,11 +44,17 @@ export function Hours({ a, set, options, children }: StepProps & { options: Hour
                       <input aria-label={`${DAY_NAMES[i]} service name`} value={sv.label} maxLength={30} onChange={(e) => set((d) => void (d.hours.days[i].services[j].label = e.target.value))} />
                       <input aria-label={`${DAY_NAMES[i]} ${sv.label} opens`} type="time" step={900} value={sv.open} onChange={(e) => set((d) => void (d.hours.days[i].services[j].open = e.target.value))} />
                       <span className="muted">to</span>
-                      <input aria-label={`${DAY_NAMES[i]} ${sv.label} closes`} type="time" step={900} value={sv.close} onChange={(e) => set((d) => void (d.hours.days[i].services[j].close = e.target.value))} />
+                      <input
+                        aria-label={`${DAY_NAMES[i]} ${sv.label} closes`} type="time" step={900} value={shownClose(sv.close)}
+                        aria-describedby={sv.close === MIDNIGHT ? `midnight-${i}-${j}` : undefined}
+                        onChange={(e) => set((d) => void (d.hours.days[i].services[j].close = savedClose(e.target.value)))}
+                      />
                       <button type="button" className="ghost" aria-label={`Remove ${sv.label}`} onClick={() => set((d) => {
                         d.hours.days[i].services.splice(j, 1);
                         if (!d.hours.days[i].services.length) d.hours.days[i].open = false;
                       })}>✕</button>
+                      {/* Last, so the boxes before it keep their place (and focus) when it appears. */}
+                      {sv.close === MIDNIGHT ? <span className="hint midnight" id={`midnight-${i}-${j}`}>midnight</span> : null}
                     </div>
                   ))}
                   {day.services.length < 3 ? (
@@ -65,6 +72,7 @@ export function Hours({ a, set, options, children }: StepProps & { options: Hour
       </div>
       <div className="row-tools">
         <button type="button" className="small" onClick={() => set((d) => { const t = d.hours.days[copy.from]; for (const k of copy.to) d.hours.days[k] = structuredClone(t); })}>{copy.label}</button>
+        <span className="hint">The latest close is midnight: enter it as 00:00.</span>
       </div>
       {children}
       <div className="field">

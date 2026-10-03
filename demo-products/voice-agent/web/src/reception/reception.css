@@ -108,6 +108,8 @@ textarea.prose { font-family: var(--font); font-size: 14px; min-height: 0; resiz
 .services { display: grid; gap: 6px; }
 .service { display: grid; grid-template-columns: minmax(80px, 140px) 118px auto 118px auto; gap: 8px; align-items: center; }
 .service input[type='time'] { padding: 7px 8px; }
+/* Under the closing time it names: a row of its own, so the boxes above stay put. */
+.service .midnight { grid-column: 4; }
 
 .area-card { gap: 10px; }
 .area-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -388,6 +390,7 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
   .two, .four { grid-template-columns: 1fr 1fr; }
   .day-row { grid-template-columns: 1fr; }
   .service { grid-template-columns: 1fr 1fr; }
+  .service .midnight { grid-column: auto; }
   .dish { grid-template-columns: 1fr 100px; }
   .kitchen { grid-template-columns: 1fr; }
   .found li { grid-template-columns: 1fr; }
