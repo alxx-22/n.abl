@@ -8,7 +8,7 @@
 import type { FunctionDeclaration } from './live.ts';
 import type { Repo } from '../db/repo.ts';
 import { spokenReference } from '../db/repo.ts';
-import type { Booking, OrderLine, Tenant } from '../domain/types.ts';
+import type { Booking, OrderLine, SayItem, Tenant } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { checkAvailability, findService } from '../domain/availability.ts';
 import {
@@ -89,7 +89,7 @@ export interface CallState {
   /** The offer this call recorded. */
   lastOfferRef: string | null;
   /** Something a tool noticed went wrong (a must-say line skipped), for the call to flag. */
-  toolFlags: { rule: 'disclosure_missed'; text: string }[];
+  toolFlags: { rule: 'disclosure_missed'; text: string; recheck?: { items: SayItem[]; at: number } }[];
   /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
   readBack: { committed: number; tries: number } | null;
   saidYes: { committed: number; tries: number } | null;

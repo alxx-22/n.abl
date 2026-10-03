@@ -101,7 +101,9 @@ function estateFlags(text: string, state: CallState, names: string[]): Flag[] {
     flags.push({ rule: 'unconfirmed_acceptance', text: accepted[0] });
   }
   const recorded = RECORDED.exec(text);
-  if (recorded && !negated(text, recorded.index) && state.committed.length === 0) flags.push({ rule: 'unconfirmed_claim', text: recorded[0] });
+  // "I've recorded that this was about bank details", once a message is taken, is true: the rule is for offers (a live call on 3 October).
+  const aboutMessage = state.messageTaken && !/\boffer/i.test(text);
+  if (recorded && !aboutMessage && !negated(text, recorded.index) && state.committed.length === 0) flags.push({ rule: 'unconfirmed_claim', text: recorded[0] });
   return flags;
 }
 

@@ -130,7 +130,8 @@ function gate(ctx: ToolContext, h: Home, kind: 'viewing' | 'offer'): Record<stri
   }
   if (!s.gateAsked.includes(`missed:${key}`)) {
     s.gateAsked.push(`missed:${key}`);
-    s.toolFlags.push({ rule: 'disclosure_missed', text: `${shortAddress(l)}: ${missing.map((i) => i.say).join(' ')}` });
+    // Re-checked once the turn's words are in: a tool call can arrive before the transcript of the line said just before it.
+    s.toolFlags.push({ rule: 'disclosure_missed', text: `${shortAddress(l)}: ${missing.map((i) => i.say).join(' ')}`, recheck: { items: missing, at } });
   }
   return null;
 }

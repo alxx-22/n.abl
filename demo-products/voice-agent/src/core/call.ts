@@ -18,6 +18,7 @@ import {
 } from './tools.ts';
 import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance, type Flag } from './guardrails.ts';
 import { redactCardNumbers } from './redact.ts';
+import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
 import { generateText } from './gemini.ts';
 import { REPLY_SPEEDS } from '../domain/voices.ts';
@@ -151,6 +152,8 @@ export class CallSession extends EventEmitter<CallEvents> {
   private agentBuf = '';
   private transcript: { role: string; text: string }[] = [];
   private flags: Flag[] = [];
+  /** Tool flags waiting for the turn's words (see raiseHeld). */
+  private held: CallState['toolFlags'] = [];
   private toolTrace: { name: string; args: unknown; result: unknown }[] = [];
   private usage = { total: 0, prompt_first: 0, prompt_max: 0, responses: 0 };
   private latencies: number[] = [];
@@ -478,6 +481,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.record('agent', { text: clean, interrupted });
     this.turns?.agentSaid(clean);
     if (this.state.estate) this.state.said.push(clean);
+    this.raiseHeld();
     for (const f of checkUtterance(text, this.state, this.staffNames)) this.raise(f);
     if (!this.state.messageTaken && !this.state.messageChecked && PROMISED_MESSAGE.test(clean)) {
       // Once the turn's tool calls have run: the message may be on its way already.
@@ -551,14 +555,22 @@ export class CallSession extends EventEmitter<CallEvents> {
     return this.opts.tenant.profile.team?.map((t) => t.first_name) ?? [];
   }
 
-  private raise(f: Flag): void {
+  private raise(f: Flag, correct = true): void {
     this.flags.push(f);
     this.emit('flag', f);
     this.publish('flag', { rule: f.rule, text: f.text });
     this.record('guardrail', f);
     // Correct it on the call, not just in the log: the next thing the
     // agent does is put it right.
-    this.session?.sendText(CORRECTIONS[f.rule]);
+    if (correct) this.session?.sendText(CORRECTIONS[f.rule]);
+  }
+
+  /** Tool flags held for the turn's words: raised only if, with them in, the line is still unsaid. */
+  private raiseHeld(correct = true): void {
+    for (const f of this.held.splice(0)) {
+      if (f.recheck && !unsaid(f.recheck.items, this.state.said.slice(f.recheck.at)).length) continue;
+      this.raise({ rule: f.rule, text: f.text }, correct);
+    }
   }
 
   private async handleTools(s: LiveSession, calls: FunctionCall[]): Promise<void> {
@@ -594,7 +606,10 @@ export class CallSession extends EventEmitter<CallEvents> {
       this.record('tool_result', { name: c.name, ms: Date.now() - t0, result });
       this.toolTrace.push({ name: c.name, args: loggableArgs(c.name, c.args), result });
       responses.push({ id: c.id, name: c.name, response: result });
-      for (const f of this.state.toolFlags.splice(0)) this.raise(f);
+      for (const f of this.state.toolFlags.splice(0)) {
+        if (f.recheck) this.held.push(f);
+        else this.raise(f);
+      }
     }
     this.lastActivity = Date.now();
     if (calls.some((c) => READ_BACK_TOOLS.has(c.name))) this.turns?.protect();
@@ -708,6 +723,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     await this.toolQueue.catch(() => {});
     this.flushCaller();
     this.flushAgent(false);
+    this.raiseHeld(false);
     this.session?.removeAllListeners();
     this.session?.close();
     const finalOutcome = this.deriveOutcome(outcome);

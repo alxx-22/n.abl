@@ -14,6 +14,7 @@ import { checkUtterance } from '../src/core/guardrails.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
 import { displayUkPhone } from '../src/domain/phone.ts';
 import { toLocal } from '../src/domain/time.ts';
+import { unsaid } from '../src/domain/listings.ts';
 import type { Tenant, TenantProfile } from '../src/domain/types.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
 import { defaultAnswers } from '../src/presets/restaurant/answers.ts';
@@ -158,6 +159,11 @@ test('the disclosure gate: no times before the must-say line; it stops once, the
     assert.equal(again.not_yet, undefined, 'never a loop: the second time it goes ahead');
     assert.ok(again.available || (again.alternatives as unknown[]).length, JSON.stringify(again));
     assert.deepEqual(ctx.state.toolFlags.map((f) => f.rule), ['disclosure_missed']);
+    // The call re-checks it once the turn's words are in: the line may have been said just before the tool call reached us.
+    const flag = ctx.state.toolFlags[0];
+    assert.ok(flag.recheck && unsaid(flag.recheck.items, ctx.state.said.slice(flag.recheck.at)).length, 'still unsaid now');
+    say(`Before any times: ${flag.recheck!.items.map((i) => i.say).join(' ')}`);
+    assert.equal(unsaid(flag.recheck!.items, ctx.state.said.slice(flag.recheck!.at)).length, 0, 'said in the same turn: not raised');
     await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '12:00' });
     assert.equal(ctx.state.toolFlags.length, 1, 'flagged once');
   }
@@ -562,6 +568,11 @@ test('estate guardrails: a figure, bank details, codes, an empty home, where sta
     ["I've recorded your offer.", ['unconfirmed_claim']],
   ];
   for (const [line, want] of cases) assert.deepEqual(rules(line), want, line);
+  // Once a message is taken, "I've recorded that" is true; an offer still needs record_offer's reference.
+  state.messageTaken = true;
+  assert.deepEqual(rules("I've passed your details to Rachel, and I've recorded that this was about bank details for 2 Elm Court."), []);
+  assert.deepEqual(rules("I've recorded your offer."), ['unconfirmed_claim']);
+  state.messageTaken = false;
   state.seen.accepted.push('albion_22');
   assert.deepEqual(rules('An offer has been accepted on it, subject to contract.'), [], 'the tools said so');
   state.committed.push('XY889');
