@@ -22,7 +22,7 @@ import type { DemoRepo } from '../db/demo-repo.ts';
 import { assertPublicUrl } from '../ingest/ingest.ts';
 import type { MenuCategory } from '../domain/types.ts';
 import { sanitiseRestaurant } from '../presets/restaurant/validate.ts';
-import { READER, coloursOf, fontsOf, labelServices, linkScore, menuPdf, pageText, pencePrice, readPage, type DayHoursFound, type PageSignals } from './extract.ts';
+import { READER, closingAt, coloursOf, fontsOf, labelServices, linkScore, menuPdf, pageText, pencePrice, readPage, type DayHoursFound, type PageSignals } from './extract.ts';
 import { askFacts, askMenu, type FactsOut, type MenuOut } from './model.ts';
 import { imageAsDataUrl, renderPage, themeFrom, type Rendered, type Theme } from './render.ts';
 
@@ -442,16 +442,18 @@ function hoursFromFacts(f: FactsOut | null): DayHoursFound[] | null {
   const names = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   for (const h of f.hours) {
     const d = names.indexOf(h.day);
-    if (d < 0 || !/^\d{2}:\d{2}$/.test(h.open) || !/^\d{2}:\d{2}$/.test(h.close) || h.close <= h.open) continue;
+    if (d < 0 || !/^\d{2}:\d{2}$/.test(h.open) || !/^\d{2}:\d{2}$/.test(h.close)) continue;
+    const close = closingAt(h.close);
+    if (close <= h.open) continue;
     days[d].open = true;
-    days[d].services.push({ label: h.label || '', open: h.open, close: h.close });
+    days[d].services.push({ label: h.label || '', open: h.open, close });
   }
   if (!days.some((d) => d.open)) return null;
   const labelled = labelServices(days);
   // Keep the site's own labels where it gave them.
   for (const h of f.hours) {
     const d = labelled[names.indexOf(h.day)];
-    const s = d?.services.find((x) => x.open === h.open && x.close === h.close);
+    const s = d?.services.find((x) => x.open === h.open && x.close === closingAt(h.close));
     if (s && h.label) s.label = h.label.slice(0, 30);
   }
   return labelled;

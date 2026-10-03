@@ -4,6 +4,7 @@
 // welcome. Everything here is pure and tested (test/scout.test.ts); the model
 // is asked only for what this leaves empty. DEMO-SERVICE-PLAN.md §4.7.
 
+import { MIDNIGHT } from '../domain/time.ts';
 import { htmlToText } from '../ingest/ingest.ts';
 
 export interface DayHoursFound {
@@ -15,8 +16,16 @@ export interface DayHoursFound {
  * How pages are read. Bumped when reading changes, so pages and scans cached
  * the old way are read again rather than reused for the fortnight.
  * 2: tabbed menus keep their tab names; prices without a £ sign count.
+ * 3: a place that closes at midnight closes at midnight, not a minute before.
  */
-export const READER = 2;
+export const READER = 3;
+
+/**
+ * A closing time as the builder keeps it. Sites and the model write midnight
+ * as 00:00 (or 24:00); read as a time of day that is before any opening, so
+ * the evening was dropped or cut to 23:59.
+ */
+export const closingAt = (close: string): string => (close === '00:00' || close === '24:00' ? MIDNIGHT : close);
 
 export interface PageSignals {
   reader?: number;
@@ -93,7 +102,7 @@ function hoursFromSpec(spec: any[]): DayHoursFound[] | null {
       const i = DAYS.indexOf(d);
       if (i < 0) continue;
       days[i].open = true;
-      days[i].services.push({ label: '', open: opens, close: closes === '00:00' ? '23:59' : closes });
+      days[i].services.push({ label: '', open: opens, close: closingAt(closes) });
       any = true;
     }
   }
@@ -117,7 +126,7 @@ function hoursFromText(list: string[]): DayHoursFound[] | null {
     }
     for (const d of idx) {
       days[d].open = true;
-      days[d].services.push({ label: '', open: time24(m[2])!, close: time24(m[3])! });
+      days[d].services.push({ label: '', open: time24(m[2])!, close: closingAt(time24(m[3])!) });
       any = true;
     }
   }
@@ -201,7 +210,7 @@ export function hoursFromWords(text: string): DayHoursFound[] | null {
       let close = parseClock(s[2]);
       // "5-10": the close is in the evening too.
       if (open && close && close <= open && Number(close.slice(0, 2)) < 12 && !/am/i.test(s[2])) close = `${Number(close.slice(0, 2)) + 12}${close.slice(2)}`;
-      if (close === '24:00') close = '23:59';
+      if (close && (close === '00:00' || /midnight/i.test(s[2]))) close = MIDNIGHT;
       return { label: '', open, close };
     }).filter((s): s is { label: string; open: string; close: string } => Boolean(s.open && s.close && s.open < s.close));
     if (!services.length) continue;

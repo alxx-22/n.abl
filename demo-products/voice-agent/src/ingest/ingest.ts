@@ -12,6 +12,7 @@ import type { Config } from '../config.ts';
 import { generateJson } from '../core/gemini.ts';
 import { ALLERGENS, type BusinessType, type TenantProfile, type Window } from '../domain/types.ts';
 import { minutesOf, timeOf } from '../domain/time.ts';
+import { freePin } from '../demo/access.ts';
 
 const USEFUL = /menu|food|drink|eat|about|contact|find|visit|location|faq|question|book|reserv|hours|opening|allergen|price|service|treatment|spa|room|stay|takeaway|order|deliver|policy|terms/i;
 const MAX_PAGES = 8;
@@ -206,7 +207,8 @@ const isAllergen = (a: string): a is (typeof ALLERGENS)[number] => (ALLERGENS as
 const slugify = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'new-business';
 const key = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
 
-export function toProfile(x: Extracted, site: string): TenantProfile & { review_notes: string[] } {
+/** `pin`: the demo line PIN the drafted business will answer to. */
+export function toProfile(x: Extracted, site: string, pin: string): TenantProfile & { review_notes: string[] } {
   const notes = [...(x.missing_or_unclear ?? []).map((m) => `Not found on the site: ${m}`)];
   const hours = new Map<string, { days: number[]; open: string; close: string; label?: string }>();
   for (const h of x.opening_hours) {
@@ -226,7 +228,7 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
     business_type: x.business_type,
     timezone: 'Europe/London',
     status: 'demo',
-    demo_pin: String(1000 + Math.floor(Math.random() * 9000)),
+    demo_pin: pin,
     voice: x.business_type === 'barber' ? 'Charon' : 'Kore',
     greeting: `Hello, you're through to ${x.name}. I'm the AI assistant, and this is a demo line. How can I help?`,
     summary: x.summary,
@@ -309,10 +311,16 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
   return profile;
 }
 
+/**
+ * `pinTaken` says whether a business already holds a demo line PIN, so the
+ * draft gets a free one, drawn as Start draws them: never 1000 to 1099,
+ * which are kept for our own businesses. Without it (the end-to-end test,
+ * which saves nothing) any PIN is taken to be free.
+ */
 export async function ingestWebsite(
   raw: string,
   config: Config,
-  opts: { allowPrivate?: boolean } = {},
+  opts: { allowPrivate?: boolean; pinTaken?: (pin: string) => Promise<boolean> } = {},
 ): Promise<TenantProfile & { review_notes: string[]; pages: string[] }> {
   // Only the local end-to-end test reads a private address.
   ALLOW_PRIVATE = Boolean(opts.allowPrivate);
@@ -345,5 +353,6 @@ export async function ingestWebsite(
     if (r && r.type.includes('pdf')) parts.push({ inlineData: { mimeType: 'application/pdf', data: r.body.toString('base64') } });
   }
   const extracted = await generateJson<Extracted>(config.textModel, parts, config.keys.scout, SCHEMA, { temperature: 0.1 });
-  return { ...toProfile(extracted, start.href), pages: pages.map((p) => p.url) };
+  const pin = await freePin(opts.pinTaken ?? (async () => false));
+  return { ...toProfile(extracted, start.href, pin), pages: pages.map((p) => p.url) };
 }

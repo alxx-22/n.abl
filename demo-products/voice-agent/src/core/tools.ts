@@ -1096,7 +1096,7 @@ const TOOLS: Record<string, Tool> = {
         return { result: 'not_needed', message: 'This restaurant takes payment on collection. No card is needed on the phone: tell them to pay when they collect.' };
       }
       if (kind === 'order') {
-        // Always re-read: the copy held in call state does not know it was paid.
+        // Read from the database: the call holds only the reference, and the order may have been paid since.
         const ref = str(args.reference) ?? ctx.state.lastOrderRef;
         const order = ref ? await ctx.repo.getOrder(ctx.tenant.id, ref) : null;
         if (!order) return { result: 'no_order', message: 'Place the order with confirm_order before taking payment.' };

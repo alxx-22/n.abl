@@ -84,7 +84,7 @@ export async function handleAdmin(ctx: Ctx, req: IncomingMessage, res: ServerRes
   if (p === '/voices') return json(res, 200, voiceMeta(ctx)), true;
   if (p === '/ingest' && req.method === 'POST') {
     const { url: site } = await readJson(req);
-    return json(res, 200, { profile: await ingestWebsite(String(site ?? ''), config) }), true;
+    return json(res, 200, { profile: await ingestWebsite(String(site ?? ''), config, { pinTaken: (pin) => demo.pinTaken(pin) }) }), true;
   }
   // Read a prospect's website before issuing their key, so their builder opens instantly (the result is cached).
   if (p === '/scout' && req.method === 'POST') {

@@ -12,7 +12,7 @@ import { BASE, HttpError, clientIp, cookie, eventStream, json, overHttps, readJs
 import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
 import { tenantState } from './state.ts';
 import type { DemoKey, Workspace } from '../db/demo-repo.ts';
-import { SHARED_DEMO_MINUTES, SHARED_DRAFT_MINUTES, THROTTLE, drawPin, hashKey, ipHash, newVisitor, normaliseKey, prefixOf, readSession, signSession } from '../demo/access.ts';
+import { SHARED_DEMO_MINUTES, SHARED_DRAFT_MINUTES, THROTTLE, hashKey, ipHash, newVisitor, normaliseKey, prefixOf, readSession, signSession, withFreePin } from '../demo/access.ts';
 import { PRESETS, answersOf, builtPreset, getPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
 import { draftFaqs } from '../presets/common/drafts.ts';
 import { PresetError } from '../presets/common/errors.ts';
@@ -79,20 +79,11 @@ async function rebuild(ctx: Ctx, w: Workspace, preset: Preset, answers: BaseAnsw
 
 /**
  * Start's rebuild: a workspace keeps its PIN; the first Start draws one no
- * other business holds. Two Starts at once can still draw the same free
- * PIN; the database refuses the second, which draws again.
+ * other business holds.
  */
 async function startProfile(ctx: Ctx, w: Workspace, preset: Preset, answers: BaseAnswers, settings: SettingsPatch | undefined) {
   if (w.tenant.profile.demo_pin) return rebuild(ctx, w, preset, answers, settings);
-  for (let tries = 0; ; tries++) {
-    let pin = drawPin();
-    for (let draws = 0; draws < 50 && (await ctx.demo.pinTaken(pin)); draws++) pin = drawPin();
-    try {
-      return await rebuild(ctx, w, preset, answers, settings, pin);
-    } catch (err) {
-      if (tries >= 3 || (err as { code?: string }).code !== '23505') throw err;
-    }
-  }
+  return withFreePin((pin) => ctx.demo.pinTaken(pin), (pin) => rebuild(ctx, w, preset, answers, settings, pin));
 }
 
 // ── Sessions ──────────────────────────────────────────────────────────────

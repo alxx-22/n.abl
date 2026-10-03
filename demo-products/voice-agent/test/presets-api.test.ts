@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { setTimeout as wait } from 'node:timers/promises';
 import { loadConfig } from '../src/config.ts';
 import { startServer, type App } from '../src/server/main.ts';
-import { drawPin } from '../src/demo/access.ts';
+import { drawPin, freePin, withFreePin } from '../src/demo/access.ts';
 
 let app: App;
 let dir: string;
@@ -220,4 +220,29 @@ test('presets over HTTP: Start draws again until the PIN is free, and never take
   assert.equal(await start('Quin', [0.5, 0.25]), '3325');
   const lucas = (await team('GET', '/demo/api/admin/tenants/lucas-trattoria')).data.profile;
   assert.equal(lucas.demo_pin, '1001', 'our businesses keep theirs');
+});
+
+test('PINs: a PIN another business holds is drawn again, and so is one the database refuses at the save', async () => {
+  const dice = (...rolls: number[]) => () => rolls.shift() ?? 0.999999;
+  const held = new Set(['5550', '3325']);
+  const taken = async (pin: string) => held.has(pin);
+  assert.equal(await freePin(taken, dice(0.5, 0.25, 0.75)), '7775', 'two held, the third is free');
+  assert.equal(await freePin(taken, dice(0)), '1100', 'never one of ours');
+
+  // Two Starts at once draw the same free PIN; the unique index refuses the second save, which draws again.
+  const saved: string[] = [];
+  const clash = Object.assign(new Error('duplicate key value violates unique constraint'), { code: '23505' });
+  const save = async (pin: string) => {
+    if (pin === '7775') throw clash;
+    saved.push(pin);
+    return pin;
+  };
+  assert.equal(await withFreePin(taken, save, dice(0.75, 0.125)), '2212');
+  assert.deepEqual(saved, ['2212']);
+  // Anything else is not about the PIN, and is not hidden by drawing again.
+  await assert.rejects(withFreePin(taken, async () => { throw new Error('the database is down'); }, dice(0.75)), /database is down/);
+  // Nor is a clash that keeps happening.
+  let tries = 0;
+  await assert.rejects(withFreePin(taken, async () => { tries++; throw clash; }), (e) => e === clash);
+  assert.equal(tries, 4, 'three more draws, then it gives up');
 });

@@ -51,8 +51,10 @@ test('an extraction becomes a usable profile, with the assumptions listed', () =
       missing_or_unclear: ['phone number'],
     },
     'https://luigis.example/',
+    '4821',
   );
   assert.equal(p.slug, 'luigi-s-pizzeria');
+  assert.equal(p.demo_pin, '4821');
   assert.match(p.greeting, /AI assistant, and this is a demo line/);
   assert.deepEqual(p.opening_hours.map((h) => h.days), [[5, 6], [0]]);
   assert.equal(p.booking?.services[0].windows[0].last, '20:30');

@@ -137,3 +137,30 @@ export const THROTTLE = { windowMinutes: 15, perIp: 10, perPrefix: 25 };
  * workspace can never take one of theirs. Start checks it is free.
  */
 export const drawPin = (random: () => number = Math.random): string => String(1100 + Math.floor(random() * 8900));
+
+/** A PIN no business holds as far as `taken` knows: the one to save, or to show before it is saved. */
+export async function freePin(taken: (pin: string) => Promise<boolean>, random: () => number = Math.random): Promise<string> {
+  let pin = drawPin(random);
+  for (let draws = 0; draws < 50 && (await taken(pin)); draws++) pin = drawPin(random);
+  return pin;
+}
+
+/** Postgres refused a row that would break a unique index. */
+const uniqueViolation = (err: unknown) => (err as { code?: string } | null)?.code === '23505';
+
+/**
+ * Saves something under a PIN no other business holds: draws until `taken`
+ * says one is free, then saves with it. Two saves at once can still draw the
+ * same free PIN; the unique index on demo_pin refuses the second, which
+ * draws again. Anything else the save throws is not about the PIN, so it is
+ * thrown on.
+ */
+export async function withFreePin<T>(taken: (pin: string) => Promise<boolean>, save: (pin: string) => Promise<T>, random: () => number = Math.random): Promise<T> {
+  for (let tries = 0; ; tries++) {
+    try {
+      return await save(await freePin(taken, random));
+    } catch (err) {
+      if (tries >= 3 || !uniqueViolation(err)) throw err;
+    }
+  }
+}

@@ -7,7 +7,7 @@ import { createServer, type Server } from 'node:http';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fontCategory, fontsOf, hoursFromWords, linkScore, menuPdf, pageText, parseClock, pencePrice, priceCount, readPage } from '../src/scout/extract.ts';
+import { closingAt, fontCategory, fontsOf, hoursFromWords, linkScore, menuPdf, pageText, parseClock, pencePrice, priceCount, readPage } from '../src/scout/extract.ts';
 import { contrast, hex, readableAccent, themeFrom } from '../src/scout/render.ts';
 import { startScan, digest, type ScanResult } from '../src/scout/scan.ts';
 import { applyScan, scanView } from '../src/scout/map.ts';
@@ -117,7 +117,7 @@ test('scout: opening hours in the ways sites write them', () => {
     ['12:00-20:00', 'closed', '17:00-22:00', '12:00-22:00', '12:00-22:00', '12:00-23:00', '12:00-23:00']);
   const d = hoursFromWords('Mon-Wed, Fri 12-10pm. Saturday and Sunday 10am - 11pm. Closed Thursdays')!;
   assert.deepEqual(d.map((x) => x.open), [true, true, true, true, false, true, true]);
-  assert.equal(hoursFromWords('Fri & Sat: 5pm to midnight')![5].services[0].close, '23:59');
+  assert.equal(hoursFromWords('Fri & Sat: 5pm to midnight')![5].services[0].close, '24:00', 'midnight, as the builder keeps it');
   assert.equal(parseClock('5.30pm'), '17:30');
   assert.equal(parseClock('noon'), '12:00');
   assert.equal(parseClock('12am'), '00:00');
@@ -335,4 +335,19 @@ test('scout: Pici, read from a saved copy, gives the menu page with its prices',
   } finally {
     pici.close();
   }
+});
+
+test('scout: a place that closes at midnight closes at midnight, however the site writes it', () => {
+  assert.equal(closingAt('00:00'), '24:00');
+  assert.equal(closingAt('24:00'), '24:00');
+  assert.equal(closingAt('23:30'), '23:30');
+  assert.deepEqual(hoursFromWords('Friday and Saturday 5pm - 12am')![5].services, [{ label: 'Dinner', open: '17:00', close: '24:00' }]);
+  const page = (data: unknown) => readPage(`<html><head><script type="application/ld+json">${JSON.stringify(data)}</script></head><body></body></html>`, 'https://late.example/');
+  // schema.org opening hours, both forms: midnight read as a time of day used to be cut to 23:59, or dropped as closing before it opens.
+  const spec = page({ '@type': 'Restaurant', name: 'Late', openingHoursSpecification: [{ dayOfWeek: 'Friday', opens: '17:00', closes: '00:00' }] }).hours!;
+  assert.deepEqual(spec[5].services.map((x) => `${x.open}-${x.close}`), ['17:00-24:00']);
+  const text = page({ '@type': 'Restaurant', name: 'Late', openingHours: 'Fr-Sa 17:00-00:00' }).hours!;
+  assert.deepEqual(text[6].services.map((x) => `${x.open}-${x.close}`), ['17:00-24:00']);
+  const builder = sanitiseRestaurant({ hours: { days: spec } }).hours.days[5].services[0];
+  assert.equal(builder.close, '24:00', 'and the builder keeps it');
 });

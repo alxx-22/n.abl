@@ -144,10 +144,14 @@ export class Repo {
     return rows[0] ?? null;
   }
 
-  /** The business a demo line caller reaches with this PIN; a shared demo past its hour is gone, even before the sweeper deletes it. */
+  /**
+   * The business a demo line caller reaches with this PIN; a shared demo past
+   * its hour is gone, even before the sweeper deletes it. `profile ?
+   * 'demo_pin'` is the unique index's condition, so the lookup can use it.
+   */
   async tenantForPin(pin: string): Promise<string | null> {
     const rows = await this.db.query<any>(
-      `select id from public.voice_tenants where profile->>'demo_pin' = $1 and (expires_at is null or expires_at > now()) limit 1`,
+      `select id from public.voice_tenants where profile ? 'demo_pin' and profile->>'demo_pin' = $1 and (expires_at is null or expires_at > now()) limit 1`,
       [pin],
     );
     return rows[0]?.id ?? null;

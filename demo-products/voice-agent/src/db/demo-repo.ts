@@ -241,9 +241,13 @@ export class DemoRepo {
     return mapWorkspace(rows[0]);
   }
 
-  /** Whether any business holds this demo line PIN, an ended demo not yet deleted included: the unique index counts it too. */
+  /**
+   * Whether any business holds this demo line PIN, an ended demo not yet
+   * deleted included: the unique index counts it too. `profile ? 'demo_pin'`
+   * is the index's own condition, so the lookup can use it.
+   */
   async pinTaken(pin: string): Promise<boolean> {
-    const rows = await this.db.query(`select 1 from public.voice_tenants where profile->>'demo_pin' = $1 limit 1`, [pin]);
+    const rows = await this.db.query(`select 1 from public.voice_tenants where profile ? 'demo_pin' and profile->>'demo_pin' = $1 limit 1`, [pin]);
     return rows.length > 0;
   }
 
