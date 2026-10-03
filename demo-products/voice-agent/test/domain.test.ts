@@ -6,7 +6,7 @@ import { resolveItem, resolveModifiers, allergenAnswer, lineTotal } from '../src
 import { searchKnowledge } from '../src/domain/knowledge.ts';
 import { processDemoPayment, parseDemoCards, DEFAULT_DEMO_CARDS, digitsOf } from '../src/domain/payments.ts';
 import { redactCardNumbers, REDACTED } from '../src/core/redact.ts';
-import { PROMISED_MESSAGE, checkUtterance } from '../src/core/guardrails.ts';
+import { PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance } from '../src/core/guardrails.ts';
 import { newCallState, record, unsaidReference, type ToolContext } from '../src/core/tools.ts';
 import { readFileSync } from 'node:fs';
 import { normaliseUkPhone, displayUkPhone } from '../src/domain/phone.ts';
@@ -207,6 +207,20 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
   }
   s.committed.push('HK482');
   assert.equal(checkUtterance("That's booked, reference H K four eight two.", s).length, 0);
+});
+
+test('a read-back answered yes: what an estate agency\'s call reminds the receptionist to book', () => {
+  // The lines of the live call on 3 October where the viewing was never booked.
+  const readBack = "Thanks, Lou. Just to confirm, you're viewing 22 Albion Road on Saturday 10 October at quarter past ten? One of the team will meet you there. And you're Lou Grant, on the number you're calling from, a first-time buyer. Is that correct?";
+  assert.ok(READ_BACK.test(readBack) && READ_BACK_DETAIL.test(readBack));
+  assert.ok(SAID_YES.test("Yes, that's all correct. Could I also see 10 Meadow View, please?"));
+  const offer = 'So that is an offer of three hundred and twenty thousand pounds for 22 Albion Road, subject to survey. Is that right?';
+  assert.ok(READ_BACK.test(offer) && READ_BACK_DETAIL.test(offer));
+  // A phone number read back is not a booking to make: no time, no amount.
+  const number = "So that's oh seven seven double oh, nine double oh one two three. Is that right?";
+  assert.ok(READ_BACK.test(number) && !READ_BACK_DETAIL.test(number));
+  assert.ok(!READ_BACK.test('Shall I check Saturday at 11am for you, or would another day suit?'), 'a question that is not the read-back');
+  for (const no of ['No, Sunday please.', 'Actually, can we make it 11?', 'Hang on, not quite.']) assert.ok(!SAID_YES.test(no), no);
 });
 
 test('records: every booking and order a call makes or finds goes through record()', () => {

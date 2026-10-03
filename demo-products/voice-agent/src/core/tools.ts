@@ -90,6 +90,13 @@ export interface CallState {
   lastOfferRef: string | null;
   /** Something a tool noticed went wrong (a must-say line skipped), for the call to flag. */
   toolFlags: { rule: 'disclosure_missed'; text: string }[];
+  /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
+  readBack: { committed: number; tries: number } | null;
+  saidYes: { committed: number; tries: number } | null;
+  /** How many times this call has tried create_booking, book_valuation or record_offer, whatever came back. */
+  commitTries: number;
+  /** The reminder to book what the caller said yes to is given once a call, never in a loop. */
+  bookNudged: boolean;
 }
 
 export function newCallState(): CallState {
@@ -99,6 +106,7 @@ export function newCallState(): CallState {
     heard: [], allergyAsked: false, owed: null, messageTaken: false, messageChecked: false,
     estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false,
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
+    readBack: null, saidYes: null, commitTries: 0, bookNudged: false,
   };
 }
 

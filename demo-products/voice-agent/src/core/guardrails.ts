@@ -37,6 +37,11 @@ const PASSED_ON = /\b(?:i'?ve|i have|we'?ve|we have|that'?s|it'?s|has been|have 
 // receptionist to take it. In three live runs the hotel's receptionist said "I'll pass your details on"
 // and never took the message; by the time it tried to hang up, the caller had gone.
 export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:that|it|this|those|these|your [a-z]+)(?: details)? (?:on|along)|let (?:the|our) [a-z ]{0,20}know|ask (?:them|the [a-z ]{0,20}) to (?:call|ring|give you a (?:call|ring)))/i;
+// A booking, valuation or offer read back for a yes, with its time or amount (an estate agency's calls). On 3 October
+// a caller answered "Yes, that's all correct. Could I also see 10 Meadow View?" and the viewing was never booked.
+export const READ_BACK = /\b(?:is that (?:all )?(?:right|correct)|does that (?:all )?(?:sound|look) right|have i got that right|shall i (?:book|go ahead|put (?:that|it) through)|is that ok(?:ay)? to book)\b[^?]*\?\s*$/i;
+export const READ_BACK_DETAIL = /\b\d{1,2}(?::\d{2})?\s?(?:am|pm)\b|\b(?:half|quarter) (?:past|to) [a-z]+\b|\bhalf (?:nine|ten|eleven|twelve|one|two|three|four|five|six)\b|\b(?:nine|ten|eleven|twelve|one|two|three|four|five|six|seven) (?:o'?clock|fifteen|thirty|forty-five)\b|£\s?\d|\bthousand\b/i;
+export const SAID_YES = /^\s*(?:yes|yeah|yep|yup|correct|that'?s (?:all )?(?:right|correct|fine|perfect)|perfect|sounds good|lovely|great|please do|go ahead)\b/i;
 const SAFE = /\b(it'?s|is|that'?s|will be|would be|should be|totally|completely|perfectly) (safe|fine|okay|ok) (for|with) (you|your|him|her|them|someone|a) [^.?!]*(allerg|coeliac|nut|gluten)/i;
 
 // ── An estate agency's ────────────────────────────────────────────────────

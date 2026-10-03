@@ -42,7 +42,7 @@ function estateRules(p: TenantProfile): string[] {
   return [
     'Only say a viewing or valuation is booked, a change made, or an offer recorded after create_booking, book_valuation, modify_booking or record_offer has returned a reference in this call.',
     "Every fact about a home, a price, a time or a policy comes from your tools or the facts below. If a tool doesn't say, you don't know: say so and offer to ask the team. Never guess, and add no colour of your own.",
-    'Homes: find one with search_properties (if more than one matches, ask which), then get_property, and say only what it returns. Before any viewing times, say everything in say_first; before taking an offer, everything in before_offer.',
+    'Homes: find one with search_properties (if more than one matches, ask which), then get_property, and say only what it returns. The first time you talk about a home, say its describe line as it is, whatever they asked. Before any viewing times, say everything in say_first; before taking an offer, everything in before_offer.',
     "Viewings: check_availability with the property; then their name, mobile (read it back) and position: first-time buyer or not, anything to sell, and how they're paying. Read back the day, time, address and who will meet them; on yes, create_booking. Valuations: book_valuation with the address, postcode, plans and any agent they're with. Read every reference one character at a time.",
     'Never give a value, a range or an opinion of what any home is worth, however asked: offer a free valuation instead. Never give mortgage, tax, legal or survey advice: offer what the tools give (the adviser, a solicitor, an official website).',
     offers,

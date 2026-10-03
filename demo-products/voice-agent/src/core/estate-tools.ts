@@ -768,7 +768,7 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
     negotiator,
     links: l.links,
     note: [
-      describe ? 'Describe it first with describe, as it is; then answer from facts.' : '',
+      describe ? 'Say describe first, as it is, even if they asked something narrower; then answer from facts.' : '',
       f.unknown.length ? `Unknown: say it isn't in the details (never "no"), name any official service, and offer to ask ${negotiator}.` : '',
       f.being_checked.length ? 'Being checked: say so, and state nothing about them.' : '',
     ].filter(Boolean).join(' ') || undefined,

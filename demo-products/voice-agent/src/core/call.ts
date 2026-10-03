@@ -16,7 +16,7 @@ import {
   loggableArgs, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type CallState, type SmsSender, type Telephony,
   type ToolContext,
 } from './tools.ts';
-import { PROMISED_MESSAGE, checkUtterance, type Flag } from './guardrails.ts';
+import { PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance, type Flag } from './guardrails.ts';
 import { redactCardNumbers } from './redact.ts';
 import { rms } from './audio.ts';
 import { generateText } from './gemini.ts';
@@ -459,6 +459,11 @@ export class CallSession extends EventEmitter<CallEvents> {
     const clean = redactCardNumbers(text, this.opts.config.demoCards).text;
     this.transcript.push({ role: 'caller', text: clean });
     this.state.heard.push(clean);
+    // An estate agency's read-back answered: a yes means book it now (see flushAgent).
+    if (this.state.estate) {
+      if (this.state.readBack && SAID_YES.test(clean)) this.state.saidYes = this.state.readBack;
+      this.state.readBack = null;
+    }
     this.emitLine('caller', text, true);
     this.record('caller', { text: clean });
   }
@@ -482,7 +487,27 @@ export class CallSession extends EventEmitter<CallEvents> {
         this.session?.sendText('[From the system: you told the caller you would pass this on, but no message has been taken. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then tell them it has been passed on.]');
       });
     }
+    if (this.state.estate) this.remindToBook(clean);
     this.emit('agentTurn', clean);
+  }
+
+  /**
+   * An estate agency's call: the caller said yes to a viewing, valuation or
+   * offer read back, and the next turn neither made it nor tried to (it
+   * answered another question instead). Reminded once, after the turn's
+   * tool calls have run.
+   */
+  private remindToBook(line: string): void {
+    const yes = this.state.saidYes;
+    if (yes && !this.state.bookNudged) {
+      this.state.saidYes = null;
+      void this.toolQueue.then(() => {
+        if (this.ended || this.state.bookNudged || this.state.committed.length > yes.committed || this.state.commitTries > yes.tries) return;
+        this.state.bookNudged = true;
+        this.session?.sendText('[From the system: the caller said yes to what you read back, but nothing has been booked or recorded yet. Do it now with create_booking, book_valuation or record_offer, using what they already told you (if the tool asks for something first, ask for just that). Then answer anything else they asked.]');
+      });
+    }
+    this.state.readBack = READ_BACK.test(line) && READ_BACK_DETAIL.test(line) ? { committed: this.state.committed.length, tries: this.state.commitTries } : null;
   }
 
   private get staffNames(): string[] {
@@ -524,6 +549,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     };
     const responses = [];
     for (const c of calls) {
+      if (c.name === 'create_booking' || c.name === 'book_valuation' || c.name === 'record_offer') this.state.commitTries++;
       this.record('tool_call', { name: c.name, args: loggableArgs(c.name, c.args) });
       const t0 = Date.now();
       const result = await runTool(c.name, c.args, ctx);
