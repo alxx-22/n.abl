@@ -94,6 +94,9 @@ test('the honest listing answer: "the one on Albion Road" asks which; the flat s
   const which = await run('get_property', { property: 'Albion Road' });
   assert.equal(which.facts, undefined, 'no facts until the caller says which');
   assert.equal(which.next, 'More than one: ask which.');
+  const times = await run('check_availability', { property: 'Albion Road', date: SAT, time: '11:00' });
+  assert.equal(times.next, 'More than one: ask which.');
+  assert.equal(times.available, undefined, 'never "not available": no home was checked');
   assert.deepEqual(ctx.state.briefed, {}, 'nothing briefed yet');
 
   const flat = await run('get_property', { property: 'the flat on Albion Road' });
@@ -303,6 +306,9 @@ test('a personal interest: the line is said first, and the member of staff never
   assert.equal(tom.message, "Tom can't show this home; offer Jess.");
   const monday = await run('check_availability', { service: 'viewing', property: '22 Albion Road', date: '2026-10-12', staff: 'Tom' });
   assert.equal(monday.message, "Tom doesn't work on Mondays. Offer another day, or someone else.", 'not "fully booked"');
+  const mondayBooking = await run('create_booking', { property: '22 Albion Road', date: '2026-10-12', time: '17:30', name: 'Ola Nowak', postcode: 'BK2 1AA', staff: 'Tom' });
+  assert.equal(mondayBooking.booked, false);
+  assert.match(String(mondayBooking.message), /^Tom doesn't work on Mondays/);
   const any = await run('check_availability', { property: '9 Kingfisher Way', date: SAT });
   assert.equal(any.available, true);
   for (const time of ['09:00', '12:00', '14:00']) {
@@ -383,6 +389,8 @@ test('a valuation with no figure: outside the area, Help to Buy and a lender are
   const executor = await run('book_valuation', { date: TUE, time, name: 'Ruth Ames', address: '3 Church Lane', postcode: 'BK4 1EW', capacity: 'executor', reason: "my late father's home" });
   assert.equal(executor.booked, true, JSON.stringify(executor));
   assert.equal(executor.tone, 'Go gently. No rush.');
+  const sunday = await run('book_valuation', { date: '2026-10-11', time: '10:00', name: 'Ruth Ames', address: '3 Church Lane', postcode: 'BK4 1EW', staff: 'Priya' });
+  assert.equal(sunday.message, "Priya doesn't work on Sundays. Offer another day, or someone else.");
   const viaBooking = await run('create_booking', { service: 'valuation', date: THU, time: '16:00', name: 'Jo Bloggs' });
   assert.match(String(viaBooking.message), /book_valuation/);
 });

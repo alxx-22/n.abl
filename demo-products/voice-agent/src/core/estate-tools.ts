@@ -362,7 +362,7 @@ export async function estateBooking(args: Args, ctx: ToolContext, service: Booka
   if (stop) return { booked: false, ...stop };
   const held = gate(ctx, h, 'viewing');
   if (held) return { booked: false, ...held };
-  const no = excludedStaff(ctx, h, str(args.staff));
+  const no = excludedStaff(ctx, h, str(args.staff)) ?? notWorking(ctx, str(args.staff), date);
   if (no) return { booked: false, message: no };
   const negotiator = firstNameOf(ctx.tenant, l.negotiator) || 'the negotiator';
   // Nobody is let into an empty home on an unknown number: the safety rule, said as a rule and never as why.
@@ -594,6 +594,8 @@ async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<strin
   const date = str(args.date) ?? '';
   const time = str(args.time) ?? '';
   const staff = str(args.staff);
+  const off = notWorking(ctx, staff, date);
+  if (off) return { booked: false, message: off };
   const made = await ctx.repo.createBooking(
     t, { service: 'valuation', date, time, party_size: 1, name, phone, notes: null, staff, source: source(ctx), call_id: ctx.callId, details: JSON.parse(JSON.stringify(details)) }, ctx.now(),
   );
