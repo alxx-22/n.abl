@@ -1,0 +1,127 @@
+[
+ {
+  "step": "patch",
+  "level": "error",
+  "message": "Add at least one postcode district you cover."
+ },
+ {
+  "step": "patch",
+  "level": "error",
+  "message": "Choose who in the team lettings messages go to."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Someone in the team must do viewings."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Someone in the team must do valuations."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Ben Shaw works no days: pick at least one."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Every member of the team needs a name."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "The person on call is not in the team."
+ },
+ {
+  "step": "services",
+  "level": "error",
+  "message": "Choose who handles complaints from the team."
+ },
+ {
+  "step": "services",
+  "level": "error",
+  "message": "Choose who leads on data protection from the team."
+ },
+ {
+  "step": "services",
+  "level": "error",
+  "message": "Choose the mortgage adviser from the team."
+ },
+ {
+  "step": "offers",
+  "level": "error",
+  "message": "Choose who does RICS valuations from the team."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "Every home needs a street."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "Flat 2, 41: choose its negotiator from the team."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "22 Albion Road: choose its negotiator from the team."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "22 Albion Road: the personal interest names someone not in the team."
+ },
+ {
+  "step": "listings",
+  "level": "warning",
+  "message": "22 Albion Road: say how the personal interest is disclosed to buyers."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "22 Albion Road is listed twice."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "22 Albion Road: choose its negotiator from the team."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "7 Lease Lane: choose its negotiator from the team."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "7 Lease Lane: add the lease details."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "8 Bare Street: choose its negotiator from the team."
+ },
+ {
+  "step": "listings",
+  "level": "warning",
+  "message": "8 Bare Street is missing its price, tenure, council tax band, EPC."
+ },
+ {
+  "step": "listings",
+  "level": "warning",
+  "message": "8 Bare Street has 23 checks still unknown: callers will hear \"that isn't in the details\"."
+ },
+ {
+  "step": "services",
+  "level": "warning",
+  "message": "Add the mortgage partner's approved sentence, with its FCA status."
+ },
+ {
+  "step": "services",
+  "level": "warning",
+  "message": "Fees are quoted: add the minimum term of the agreement."
+ }
+]

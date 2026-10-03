@@ -22,7 +22,7 @@
 // running this script on the code from before it (6bdd42f), which gives the
 // same files.
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, rmSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defaultAnswers } from '../src/presets/restaurant/answers.ts';
@@ -41,6 +41,7 @@ import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
 import { ALLERGENS, type TenantProfile } from '../src/domain/types.ts';
 import type { Workspace } from '../src/db/demo-repo.ts';
 import type { Config } from '../src/config.ts';
+import { goldenFilesIn, lines, readJson, stored, withoutClock, write } from './goldens.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', 'test', 'fixtures', 'restaurant');
 const CORPUS_DIR = join(ROOT, 'corpus');
@@ -508,83 +509,17 @@ function buildCorpus(): Record<(typeof CORPUS)[number], unknown> {
 
 // ── Reading and writing ──────────────────────────────────────────────────
 
-export const readJson = (file: string): unknown => JSON.parse(readFileSync(file, 'utf8'));
-const stored = <T>(x: T): T => JSON.parse(JSON.stringify(x));
-
-/** JSON with short lists of plain values on one line (allergens, features), so a diff stays readable. */
-function format(v: unknown, indent = ''): string {
-  const inner = `${indent} `;
-  if (Array.isArray(v)) {
-    const flat = JSON.stringify(v);
-    if (v.every((x) => x === null || typeof x !== 'object') && flat.length <= 140) return flat;
-    return `[\n${v.map((x) => inner + format(x, inner)).join(',\n')}\n${indent}]`;
-  }
-  if (v && typeof v === 'object') {
-    const entries = Object.entries(v);
-    if (!entries.length) return '{}';
-    return `{\n${entries.map(([k, x]) => `${inner}${JSON.stringify(k)}: ${format(x, inner)}`).join(',\n')}\n${indent}}`;
-  }
-  return JSON.stringify(v);
-}
-const write = (file: string, value: unknown) => {
-  mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, `${format(stored(value))}\n`);
-};
+export { readJson };
 
 export function readCorpus(): Record<string, unknown> {
   return Object.fromEntries(CORPUS.map((name) => [name, readJson(join(CORPUS_DIR, `${name}.json`))]));
 }
 
 /** Every golden file under golden/, by path relative to it. */
-export function goldenFiles(): string[] {
-  if (!existsSync(GOLDEN_DIR)) return [];
-  return readdirSync(GOLDEN_DIR, { recursive: true, withFileTypes: true })
-    .filter((e) => e.isFile() && e.name.endsWith('.json'))
-    .map((e) => relative(GOLDEN_DIR, join(e.parentPath, e.name)))
-    .sort();
-}
-
-// ── No clock, no dice ────────────────────────────────────────────────────
-
-/**
- * Runs fn with the clock and Math.random refused. Every function recorded
- * here takes its time and seed as arguments today; if one starts reading
- * them itself, its golden would change from run to run, so this fails loudly
- * instead. (crypto.randomBytes cannot be trapped this way: it is used only
- * for workspace slugs in demo.ts, and the goldens use a fixed slug. Start's
- * PIN comes from Math.random after compiling, so no golden holds one.)
- */
-function withoutClock<T>(fn: () => T): T {
-  const RealDate = Date;
-  const random = Math.random;
-  const refuse = (what: string): never => {
-    throw new Error(`A restaurant golden read ${what}: pass the time or seed in, or pin it in scripts/restaurant-goldens.ts.`);
-  };
-  class NoClock extends RealDate {
-    constructor(...args: unknown[]) {
-      if (!args.length) refuse('the clock (new Date())');
-      super(...(args as []));
-    }
-    static now(): number {
-      return refuse('the clock (Date.now)');
-    }
-    static [Symbol.hasInstance](x: unknown): boolean {
-      return x instanceof RealDate;
-    }
-  }
-  globalThis.Date = NoClock as DateConstructor;
-  Math.random = () => refuse('Math.random');
-  try {
-    return fn();
-  } finally {
-    globalThis.Date = RealDate;
-    Math.random = random;
-  }
-}
+export const goldenFiles = (): string[] => goldenFilesIn(GOLDEN_DIR);
 
 // ── The goldens ──────────────────────────────────────────────────────────
 
-const lines = (s: string) => s.split('\n');
 const tenantOf = (profile: TenantProfile) => ({ id: 'golden', slug: profile.slug, profile });
 const prompts = (profile: TenantProfile) => Object.fromEntries(Object.entries(PROMPTS).map(([k, ctx]) => [k, lines(compilePrompt(profile, ctx))]));
 const tools = (profile: TenantProfile) => toolDeclarations(tenantOf(profile)).map((d) => d.name);
@@ -672,7 +607,7 @@ export function computeGoldens(corpus = readCorpus(), scan = readJson(SCAN_FILE)
       put(`tenants/${b.slug}/tools.json`, tools(p));
     }
     return out;
-  });
+  }, { name: 'restaurant', script: 'scripts/restaurant-goldens.ts' });
 }
 
 // ── Run as a script ──────────────────────────────────────────────────────

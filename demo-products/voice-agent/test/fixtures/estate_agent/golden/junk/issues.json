@@ -1,0 +1,82 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the estate agency a name."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Someone in the team must do viewings."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Someone in the team must do valuations."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Junk works no days: pick at least one."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Every member of the team needs a name."
+ },
+ {
+  "step": "services",
+  "level": "error",
+  "message": "Choose who handles complaints from the team."
+ },
+ {
+  "step": "services",
+  "level": "error",
+  "message": "Choose who leads on data protection from the team."
+ },
+ {
+  "step": "services",
+  "level": "error",
+  "message": "Choose the mortgage adviser from the team."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "Every home needs a street."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "A home: choose its negotiator from the team."
+ },
+ {
+  "step": "listings",
+  "level": "warning",
+  "message": "A home is missing its price, tenure, council tax band, EPC."
+ },
+ {
+  "step": "listings",
+  "level": "warning",
+  "message": "A home has 23 checks still unknown: callers will hear \"that isn't in the details\"."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "Every home needs a street."
+ },
+ {
+  "step": "listings",
+  "level": "error",
+  "message": "A home: choose its negotiator from the team."
+ },
+ {
+  "step": "listings",
+  "level": "warning",
+  "message": "A home is missing its price, tenure, council tax band, EPC."
+ },
+ {
+  "step": "listings",
+  "level": "warning",
+  "message": "A home has 23 checks still unknown: callers will hear \"that isn't in the details\"."
+ }
+]

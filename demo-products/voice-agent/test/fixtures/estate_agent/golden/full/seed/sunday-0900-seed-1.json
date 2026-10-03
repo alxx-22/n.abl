@@ -1,0 +1,4039 @@
+{
+ "bookings": [
+  {
+   "reference": "LK817",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-17T10:00:00.000Z",
+   "ends_at": "2026-10-17T10:45:00.000Z",
+   "party_size": 1,
+   "name": "Holly Collins",
+   "phone": "+447700900884",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "mill_31",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_not_yet"
+    },
+    "badges": ["FTB"]
+   }
+  },
+  {
+   "reference": "JH321",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-03T14:00:00.000Z",
+   "ends_at": "2026-10-03T14:45:00.000Z",
+   "party_size": 1,
+   "name": "Aisha Khan",
+   "phone": "+447700900003",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["FTB","AIP"],
+    "feedback": {
+     "category": "likely_offer",
+     "words": "Very keen; likely to make an offer this week.",
+     "source": "staff",
+     "at": "2026-10-04T10:00:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "QL542",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-09-30T13:00:00.000Z",
+   "ends_at": "2026-09-30T13:45:00.000Z",
+   "party_size": 1,
+   "name": "Amara Robinson",
+   "phone": "+447700900682",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "staff",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"],
+    "feedback": {
+     "category": "second_viewing",
+     "words": "Would like a second look before deciding.",
+     "source": "staff",
+     "at": "2026-10-01T09:00:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "JA120",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-09-26T10:15:00.000Z",
+   "ends_at": "2026-09-26T11:00:00.000Z",
+   "party_size": 1,
+   "name": "James Collins",
+   "phone": "+447700900627",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["FTB","AIP"],
+    "feedback": {
+     "category": "not_for_me",
+     "words": "The garden is smaller than we need.",
+     "source": "staff",
+     "at": "2026-09-27T06:15:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "XR823",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-09-24T09:00:00.000Z",
+   "ends_at": "2026-09-24T09:45:00.000Z",
+   "party_size": 1,
+   "name": "Joe Doyle",
+   "phone": "+447700900078",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "staff",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "cash"
+    },
+    "badges": ["Chain"],
+    "feedback": {
+     "category": "not_for_me",
+     "words": "The road is busier than we expected.",
+     "source": "staff",
+     "at": "2026-09-25T05:00:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "KK252",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-09-19T09:45:00.000Z",
+   "ends_at": "2026-09-19T10:30:00.000Z",
+   "party_size": 1,
+   "name": "Emily Kelly",
+   "phone": "+447700900179",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "cash"
+    },
+    "badges": ["Chain"],
+    "feedback": {
+     "category": "second_viewing",
+     "words": "Would like a second look before deciding.",
+     "source": "staff",
+     "at": "2026-09-20T05:45:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "AR797",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-09-15T14:45:00.000Z",
+   "ends_at": "2026-09-15T15:30:00.000Z",
+   "party_size": 1,
+   "name": "Kwame Wood",
+   "phone": "+447700900301",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "online",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"],
+    "feedback": {
+     "category": "not_for_me",
+     "words": "The garden is smaller than we need.",
+     "source": "staff",
+     "at": "2026-09-16T10:45:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "QX473",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-06T11:00:00.000Z",
+   "ends_at": "2026-10-06T11:45:00.000Z",
+   "party_size": 1,
+   "name": "Hannah Doyle",
+   "phone": "+447700900401",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"],
+    "feedback": {
+     "category": "second_viewing",
+     "words": "Loved the garden; the kitchen feels dated.",
+     "source": "staff",
+     "at": "2026-10-07T07:45:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "AL123",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-07T09:15:00.000Z",
+   "ends_at": "2026-10-07T10:00:00.000Z",
+   "party_size": 1,
+   "name": "Amara Collins",
+   "phone": "+447700900193",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "online",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"],
+    "feedback": {
+     "category": "not_for_me",
+     "words": "Price feels high for the size.",
+     "source": "staff",
+     "at": "2026-10-08T06:00:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "HL842",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-09T17:15:00.000Z",
+   "ends_at": "2026-10-09T18:00:00.000Z",
+   "party_size": 1,
+   "name": "Sam Price",
+   "phone": "+447700900002",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "online",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"],
+    "awaiting_feedback": true
+   }
+  },
+  {
+   "reference": "AW123",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-12T09:00:00.000Z",
+   "ends_at": "2026-10-12T09:45:00.000Z",
+   "party_size": 1,
+   "name": "Grace Evans",
+   "phone": "+447700900862",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"]
+   }
+  },
+  {
+   "reference": "AQ534",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-12T13:15:00.000Z",
+   "ends_at": "2026-10-12T14:00:00.000Z",
+   "party_size": 1,
+   "name": "Emily Kelly",
+   "phone": "+447700900179",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "online",
+   "listing_key": "larkspur_14",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "cash"
+    },
+    "badges": ["Chain"]
+   }
+  },
+  {
+   "reference": "XA677",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-12T10:15:00.000Z",
+   "ends_at": "2026-10-12T11:00:00.000Z",
+   "party_size": 1,
+   "name": "Sam Price",
+   "phone": "+447700900002",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "fernbank_11",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "YQ645",
+   "service_key": "second_viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-13T13:00:00.000Z",
+   "ends_at": "2026-10-13T14:00:00.000Z",
+   "party_size": 1,
+   "name": "Ravi Kelly",
+   "phone": "+447700900724",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "kingfisher_9",
+   "details": {
+    "kind": "second_viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "cash"
+    },
+    "badges": ["Chain"]
+   }
+  },
+  {
+   "reference": "LR203",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-05T14:15:00.000Z",
+   "ends_at": "2026-10-05T15:00:00.000Z",
+   "party_size": 1,
+   "name": "Emily Kelly",
+   "phone": "+447700900179",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "listing_key": "heron_18",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "cash"
+    },
+    "badges": ["Chain"],
+    "feedback": {
+     "category": "keen",
+     "words": "Really liked it; the light in the living room is lovely.",
+     "source": "staff",
+     "at": "2026-10-06T10:15:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "JA608",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-05T17:15:00.000Z",
+   "ends_at": "2026-10-05T18:00:00.000Z",
+   "party_size": 1,
+   "name": "Grace Evans",
+   "phone": "+447700900862",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "online",
+   "listing_key": "station_27",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"],
+    "feedback": {
+     "category": "second_viewing",
+     "words": "Would like a second look before deciding.",
+     "source": "staff",
+     "at": "2026-10-06T13:15:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "JW531",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-06T12:00:00.000Z",
+   "ends_at": "2026-10-06T12:45:00.000Z",
+   "party_size": 1,
+   "name": "Grace Evans",
+   "phone": "+447700900862",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "online",
+   "listing_key": "heron_18",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"],
+    "feedback": {
+     "category": "likely_offer",
+     "words": "Very keen; likely to make an offer this week.",
+     "source": "staff",
+     "at": "2026-10-07T08:00:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "WK700",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-07T15:30:00.000Z",
+   "ends_at": "2026-10-07T16:15:00.000Z",
+   "party_size": 1,
+   "name": "Ethan Patel",
+   "phone": "+447700900774",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "online",
+   "listing_key": "orchard_7",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["FTB","AIP"],
+    "feedback": {
+     "category": "second_viewing",
+     "words": "Loved the garden; would like to see it again with family.",
+     "source": "staff",
+     "at": "2026-10-08T11:30:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "WY496",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-08T08:45:00.000Z",
+   "ends_at": "2026-10-08T09:30:00.000Z",
+   "party_size": 1,
+   "name": "Hannah Doyle",
+   "phone": "+447700900401",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "no_show",
+   "booked_via": "online",
+   "listing_key": "albion_41_flat_2",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "JK818",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-09T08:15:00.000Z",
+   "ends_at": "2026-10-09T09:00:00.000Z",
+   "party_size": 1,
+   "name": "Adam Jones",
+   "phone": "+447700900952",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "listing_key": "orchard_7",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"],
+    "feedback": {
+     "category": "likely_offer",
+     "words": "Thinking about an offer; checking with the mortgage adviser.",
+     "source": "staff",
+     "at": "2026-10-10T04:15:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "XJ637",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-10T09:15:00.000Z",
+   "ends_at": "2026-10-10T10:00:00.000Z",
+   "party_size": 1,
+   "name": "Grace Wood",
+   "phone": "+447700900576",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "staff",
+   "listing_key": "mill_6_bungalow",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["FTB","AIP","ID check"]
+   }
+  },
+  {
+   "reference": "HX168",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-10T11:45:00.000Z",
+   "ends_at": "2026-10-10T12:30:00.000Z",
+   "party_size": 1,
+   "name": "Oliver Walker",
+   "phone": "+447700900526",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "listing_key": "albion_41_flat_2",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["FTB","AIP"],
+    "feedback": {
+     "category": "second_viewing",
+     "words": "Loved the garden; would like to see it again with family.",
+     "source": "staff",
+     "at": "2026-10-11T07:45:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "XQ802",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "ffion",
+   "area_key": null,
+   "starts_at": "2026-10-10T08:30:00.000Z",
+   "ends_at": "2026-10-10T09:15:00.000Z",
+   "party_size": 1,
+   "name": "Amara Collins",
+   "phone": "+447700900193",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "online",
+   "listing_key": "beechwood_court_12",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"],
+    "feedback": {
+     "category": "likely_offer",
+     "words": "Thinking about an offer; checking with the mortgage adviser.",
+     "source": "staff",
+     "at": "2026-10-11T04:30:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "JJ383",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-10T14:00:00.000Z",
+   "ends_at": "2026-10-10T14:45:00.000Z",
+   "party_size": 1,
+   "name": "Adam Collins",
+   "phone": "+447700900895",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "listing_key": "orchard_7",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "JL655",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-13T14:45:00.000Z",
+   "ends_at": "2026-10-13T15:30:00.000Z",
+   "party_size": 1,
+   "name": "Oliver Khan",
+   "phone": "+447700900490",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "online",
+   "listing_key": "mill_6_bungalow",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash","ID check"]
+   }
+  },
+  {
+   "reference": "LA429",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-13T13:15:00.000Z",
+   "ends_at": "2026-10-13T14:00:00.000Z",
+   "party_size": 1,
+   "name": "Chloe Patel",
+   "phone": "+447700900523",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "albion_41_flat_2",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_not_yet"
+    },
+    "badges": ["Chain"]
+   }
+  },
+  {
+   "reference": "QR455",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-14T13:00:00.000Z",
+   "ends_at": "2026-10-14T13:45:00.000Z",
+   "party_size": 1,
+   "name": "Oliver Khan",
+   "phone": "+447700900490",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "station_27",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"]
+   }
+  },
+  {
+   "reference": "AY704",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-14T09:30:00.000Z",
+   "ends_at": "2026-10-14T10:15:00.000Z",
+   "party_size": 1,
+   "name": "Oliver Murphy",
+   "phone": "+447700900056",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff",
+   "listing_key": "orchard_7",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "YH735",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-14T09:00:00.000Z",
+   "ends_at": "2026-10-14T09:45:00.000Z",
+   "party_size": 1,
+   "name": "Amara Shah",
+   "phone": "+447700900203",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff",
+   "listing_key": "station_27",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"]
+   }
+  },
+  {
+   "reference": "JR787",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-15T10:45:00.000Z",
+   "ends_at": "2026-10-15T11:30:00.000Z",
+   "party_size": 1,
+   "name": "Ethan Patel",
+   "phone": "+447700900774",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "kingfisher_9",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["FTB","AIP"]
+   }
+  },
+  {
+   "reference": "LL660",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-15T15:00:00.000Z",
+   "ends_at": "2026-10-15T15:45:00.000Z",
+   "party_size": 1,
+   "name": "Sophie Evans",
+   "phone": "+447700900535",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff",
+   "listing_key": "albion_41_flat_2",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "JX383",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-16T10:45:00.000Z",
+   "ends_at": "2026-10-16T11:30:00.000Z",
+   "party_size": 1,
+   "name": "Kwame Wood",
+   "phone": "+447700900301",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "kingfisher_3",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"]
+   }
+  },
+  {
+   "reference": "AJ256",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-16T10:15:00.000Z",
+   "ends_at": "2026-10-16T11:00:00.000Z",
+   "party_size": 1,
+   "name": "Daniel Chen",
+   "phone": "+447700900568",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "fernbank_11",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "QW849",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "ffion",
+   "area_key": null,
+   "starts_at": "2026-10-17T09:00:00.000Z",
+   "ends_at": "2026-10-17T09:45:00.000Z",
+   "party_size": 1,
+   "name": "Amara Collins",
+   "phone": "+447700900193",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "heron_18",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"]
+   }
+  },
+  {
+   "reference": "HH385",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-17T08:30:00.000Z",
+   "ends_at": "2026-10-17T09:15:00.000Z",
+   "party_size": 1,
+   "name": "Joe Shah",
+   "phone": "+447700900709",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "online",
+   "listing_key": "copse_lane_19",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_not_yet"
+    },
+    "badges": ["Chain"]
+   }
+  },
+  {
+   "reference": "KH524",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-17T12:30:00.000Z",
+   "ends_at": "2026-10-17T13:15:00.000Z",
+   "party_size": 1,
+   "name": "Ethan Doyle",
+   "phone": "+447700900702",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "heron_18",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_not_yet"
+    },
+    "badges": ["FTB"]
+   }
+  },
+  {
+   "reference": "QJ984",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-17T13:45:00.000Z",
+   "ends_at": "2026-10-17T14:30:00.000Z",
+   "party_size": 1,
+   "name": "Holly Ahmed",
+   "phone": "+447700900480",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "heron_18",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"]
+   }
+  },
+  {
+   "reference": "LH882",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "ffion",
+   "area_key": null,
+   "starts_at": "2026-10-17T12:15:00.000Z",
+   "ends_at": "2026-10-17T13:00:00.000Z",
+   "party_size": 1,
+   "name": "Sophie Walker",
+   "phone": "+447700900122",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "online",
+   "listing_key": "station_27",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "YK793",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "ffion",
+   "area_key": null,
+   "starts_at": "2026-10-17T11:00:00.000Z",
+   "ends_at": "2026-10-17T11:45:00.000Z",
+   "party_size": 1,
+   "name": "Oliver Khan",
+   "phone": "+447700900490",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "station_27",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"]
+   }
+  },
+  {
+   "reference": "XX136",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "ffion",
+   "area_key": null,
+   "starts_at": "2026-10-17T13:45:00.000Z",
+   "ends_at": "2026-10-17T14:30:00.000Z",
+   "party_size": 1,
+   "name": "Oliver Collins",
+   "phone": "+447700900190",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "online",
+   "listing_key": "wharf_house_9",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "JJ468",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-19T09:30:00.000Z",
+   "ends_at": "2026-10-19T10:15:00.000Z",
+   "party_size": 1,
+   "name": "Joe Doyle",
+   "phone": "+447700900078",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff",
+   "listing_key": "fernbank_11",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "cash"
+    },
+    "badges": ["Chain"]
+   }
+  },
+  {
+   "reference": "KL178",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-19T15:30:00.000Z",
+   "ends_at": "2026-10-19T16:15:00.000Z",
+   "party_size": 1,
+   "name": "Hannah Doyle",
+   "phone": "+447700900401",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "copse_lane_19",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "AK413",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-20T17:00:00.000Z",
+   "ends_at": "2026-10-20T17:45:00.000Z",
+   "party_size": 1,
+   "name": "Adam Shah",
+   "phone": "+447700900748",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "orchard_7",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["FTB","AIP"]
+   }
+  },
+  {
+   "reference": "HA312",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "jess",
+   "area_key": null,
+   "starts_at": "2026-10-20T08:15:00.000Z",
+   "ends_at": "2026-10-20T09:00:00.000Z",
+   "party_size": 1,
+   "name": "Daniel Chen",
+   "phone": "+447700900568",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "beechwood_court_12",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "badges": ["AIP","Chain"]
+   }
+  },
+  {
+   "reference": "QH956",
+   "service_key": "viewing",
+   "buffer_minutes": 20,
+   "resource_key": "tom",
+   "area_key": null,
+   "starts_at": "2026-10-20T16:30:00.000Z",
+   "ends_at": "2026-10-20T17:15:00.000Z",
+   "party_size": 1,
+   "name": "Kwame Wood",
+   "phone": "+447700900301",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "listing_key": "mill_31",
+   "details": {
+    "kind": "viewing",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "badges": ["Cash"]
+   }
+  },
+  {
+   "reference": "XK267",
+   "service_key": "valuation",
+   "buffer_minutes": 20,
+   "resource_key": "priya",
+   "area_key": null,
+   "starts_at": "2026-10-09T08:15:00.000Z",
+   "ends_at": "2026-10-09T09:00:00.000Z",
+   "party_size": 1,
+   "name": "Emily Khan",
+   "phone": "+447700900559",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "details": {
+    "kind": "valuation",
+    "purpose": "sale",
+    "capacity": "owner",
+    "owners_agree": true,
+    "address": "19 Copse Lane",
+    "postcode": "BK4 3RL",
+    "property_type": "cottage",
+    "bedrooms": 3,
+    "heard_from": "a board",
+    "reason": "retiring to the coast",
+    "timescale": "within three months",
+    "other_agent": null,
+    "needs_to_buy": false,
+    "dual_fee": false,
+    "hot": true,
+    "outcome": "instructed",
+    "became": "copse_lane_19"
+   }
+  },
+  {
+   "reference": "HH267",
+   "service_key": "valuation",
+   "buffer_minutes": 20,
+   "resource_key": "priya",
+   "area_key": null,
+   "starts_at": "2026-10-08T13:00:00.000Z",
+   "ends_at": "2026-10-08T13:45:00.000Z",
+   "party_size": 1,
+   "name": "Callum Green",
+   "phone": "+447700900759",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "details": {
+    "kind": "valuation",
+    "purpose": "sale",
+    "capacity": "owner",
+    "owners_agree": true,
+    "address": "27 Bramble Drive",
+    "postcode": "BK2 6JD",
+    "property_type": "semi",
+    "bedrooms": 3,
+    "heard_from": "Rightmove",
+    "reason": "upsizing",
+    "timescale": "within six months",
+    "other_agent": "Harper & Co, sole agency",
+    "needs_to_buy": true,
+    "dual_fee": true,
+    "hot": true,
+    "outcome": "lost",
+    "lost_to": "Harper & Co"
+   }
+  },
+  {
+   "reference": "YJ179",
+   "service_key": "valuation",
+   "buffer_minutes": 20,
+   "resource_key": "priya",
+   "area_key": null,
+   "starts_at": "2026-10-07T12:00:00.000Z",
+   "ends_at": "2026-10-07T12:45:00.000Z",
+   "party_size": 1,
+   "name": "Kwame Mensah",
+   "phone": "+447700900136",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist",
+   "details": {
+    "kind": "valuation",
+    "purpose": "sale",
+    "capacity": "owner",
+    "owners_agree": true,
+    "address": "4 Sorrel Way",
+    "postcode": "BK3 2NP",
+    "property_type": "semi",
+    "bedrooms": 3,
+    "heard_from": "a board",
+    "reason": "downsizing",
+    "timescale": "within six months",
+    "other_agent": null,
+    "needs_to_buy": true,
+    "dual_fee": false,
+    "hot": false,
+    "outcome": "thinking",
+    "follow_up": "2026-10-25"
+   }
+  },
+  {
+   "reference": "YJ912",
+   "service_key": "valuation",
+   "buffer_minutes": 20,
+   "resource_key": "priya",
+   "area_key": null,
+   "starts_at": "2026-10-12T13:00:00.000Z",
+   "ends_at": "2026-10-12T13:45:00.000Z",
+   "party_size": 1,
+   "name": "Adam Hughes",
+   "phone": "+447700900731",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "details": {
+    "kind": "valuation",
+    "purpose": "sale",
+    "capacity": "executor",
+    "owners_agree": true,
+    "address": "Ivy Cottage, 3 Church Lane",
+    "postcode": "BK4 1EW",
+    "property_type": "cottage",
+    "bedrooms": 2,
+    "heard_from": "Rightmove",
+    "reason": "selling their late mother's home",
+    "timescale": "no rush",
+    "other_agent": null,
+    "needs_to_buy": false,
+    "dual_fee": false,
+    "hot": false,
+    "tone": "Go gently. No rush."
+   }
+  },
+  {
+   "reference": "KX514",
+   "service_key": "valuation",
+   "buffer_minutes": 20,
+   "resource_key": "priya",
+   "area_key": null,
+   "starts_at": "2026-10-13T13:00:00.000Z",
+   "ends_at": "2026-10-13T13:45:00.000Z",
+   "party_size": 1,
+   "name": "Hannah Mensah",
+   "phone": "+447700900742",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "details": {
+    "kind": "valuation",
+    "purpose": "sale",
+    "capacity": "owner",
+    "owners_agree": true,
+    "address": "15 Foxglove Road",
+    "postcode": "BK1 4TS",
+    "property_type": "semi",
+    "bedrooms": 3,
+    "heard_from": "a friend",
+    "reason": "moving for work",
+    "timescale": "within three months",
+    "other_agent": "Harper & Co, six weeks into a sole agency",
+    "needs_to_buy": true,
+    "dual_fee": true,
+    "hot": true
+   }
+  },
+  {
+   "reference": "YX403",
+   "service_key": "valuation",
+   "buffer_minutes": 20,
+   "resource_key": "priya",
+   "area_key": null,
+   "starts_at": "2026-10-15T08:15:00.000Z",
+   "ends_at": "2026-10-15T09:00:00.000Z",
+   "party_size": 1,
+   "name": "Amara Patel",
+   "phone": "+447700900046",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "details": {
+    "kind": "valuation",
+    "purpose": "sale",
+    "capacity": "owner",
+    "owners_agree": true,
+    "address": "8 Thistle Close",
+    "postcode": "BK5 2HB",
+    "property_type": "semi",
+    "bedrooms": 3,
+    "heard_from": "a leaflet",
+    "reason": "separating",
+    "timescale": "within six months",
+    "other_agent": null,
+    "needs_to_buy": false,
+    "dual_fee": false,
+    "hot": false
+   }
+  },
+  {
+   "reference": "WW812",
+   "service_key": "valuation",
+   "buffer_minutes": 20,
+   "resource_key": "priya",
+   "area_key": null,
+   "starts_at": "2026-10-17T08:45:00.000Z",
+   "ends_at": "2026-10-17T09:30:00.000Z",
+   "party_size": 1,
+   "name": "Oliver Wright",
+   "phone": "+447700900264",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "details": {
+    "kind": "valuation",
+    "purpose": "sale",
+    "capacity": "owner",
+    "owners_agree": true,
+    "address": "33 Linden Avenue",
+    "postcode": "BK2 5AQ",
+    "property_type": "detached",
+    "bedrooms": 4,
+    "heard_from": "a leaflet",
+    "reason": "curious what it is worth",
+    "timescale": "just looking",
+    "other_agent": null,
+    "needs_to_buy": false,
+    "dual_fee": false,
+    "hot": false
+   }
+  },
+  {
+   "reference": "KA518",
+   "service_key": "mortgage",
+   "buffer_minutes": 0,
+   "resource_key": "mark",
+   "area_key": null,
+   "starts_at": "2026-10-13T15:30:00.000Z",
+   "ends_at": "2026-10-13T16:15:00.000Z",
+   "party_size": 1,
+   "name": "Emily Evans",
+   "phone": "+447700900678",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist",
+   "details": {
+    "kind": "mortgage",
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    }
+   }
+  },
+  {
+   "reference": "AA353",
+   "service_key": "mortgage",
+   "buffer_minutes": 0,
+   "resource_key": "mark",
+   "area_key": null,
+   "starts_at": "2026-10-15T14:00:00.000Z",
+   "ends_at": "2026-10-15T14:45:00.000Z",
+   "party_size": 1,
+   "name": "Kwame Khan",
+   "phone": "+447700900266",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff",
+   "details": {
+    "kind": "mortgage",
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    }
+   }
+  }
+ ],
+ "orders": [],
+ "messages": [
+  {
+   "from_name": "Nadia Osei, Fenwick Law (example)",
+   "from_phone": "+447700900005",
+   "for_staff": "dan",
+   "category": "progression",
+   "urgency": "today",
+   "body": "Chasing replies to our enquiries on 2 Elm Court: the seller's solicitor still hasn't answered the boundary question. Exchange is meant to be next week.",
+   "created_at": "2026-10-10T15:40:00.000Z"
+  },
+  {
+   "from_name": "Adam Wright",
+   "from_phone": "+447700900750",
+   "for_staff": "jess",
+   "category": "access",
+   "urgency": "today",
+   "body": "Surveyor for a buyer's lender. Would like access to The Bungalow, 6 Mill Lane on Wednesday morning. Needs the seller's permission first.",
+   "created_at": "2026-10-10T15:40:00.000Z"
+  },
+  {
+   "from_name": "Daniel Hall",
+   "from_phone": "+447700900825",
+   "for_staff": "jess",
+   "category": "seller",
+   "urgency": "today",
+   "body": "Seller of 11 Fernbank Drive. Wants to talk about the price after this week's offer was declined.",
+   "created_at": "2026-10-10T12:00:00.000Z"
+  },
+  {
+   "from_name": "Ethan Clarke",
+   "from_phone": "+447700900812",
+   "for_staff": "rachel",
+   "category": "general",
+   "urgency": "this_week",
+   "body": "Neighbour on Willow Gardens: your board is still up three weeks after the sale next door completed.",
+   "created_at": "2026-10-08T15:40:00.000Z",
+   "status": "read"
+  },
+  {
+   "from_name": "Joe Hughes",
+   "from_phone": "+447700900058",
+   "for_staff": "rachel",
+   "category": "supplier",
+   "urgency": "this_week",
+   "body": "Sales rep from a property portal, asking to talk about advertising packages.",
+   "created_at": "2026-10-08T10:00:00.000Z",
+   "status": "read"
+  },
+  {
+   "from_name": "Oliver Hughes",
+   "from_phone": "+447700900922",
+   "for_staff": "rachel",
+   "category": "job",
+   "urgency": "this_week",
+   "body": "Asking whether there are any negotiator jobs going; has two years in lettings.",
+   "created_at": "2026-10-09T15:40:00.000Z"
+  },
+  {
+   "from_name": "Megan Hughes",
+   "from_phone": "+447700900007",
+   "for_staff": "jess",
+   "category": "viewing",
+   "urgency": "today",
+   "body": "Zoopla enquiry about 22 Albion Road: \"Is there parking? We'd like to view.\"",
+   "details": {
+    "portal": "Zoopla",
+    "listing": "albion_22",
+    "answered": false
+   },
+   "created_at": "2026-10-10T18:42:00.000Z"
+  },
+  {
+   "from_name": "James Okafor",
+   "from_phone": "+447700900583",
+   "for_staff": "jess",
+   "category": "viewing",
+   "urgency": "today",
+   "body": "Rightmove enquiry about 5 Riverside Walk: \"Is it still available? Could we see it this weekend?\"",
+   "details": {
+    "portal": "Rightmove",
+    "listing": "riverside_5",
+    "answered": false
+   },
+   "created_at": "2026-10-10T08:00:00.000Z"
+  },
+  {
+   "from_name": "Kwame Brown",
+   "from_phone": "+447700900216",
+   "for_staff": "tom",
+   "category": "complaint",
+   "urgency": "this_week",
+   "reference": "HH574",
+   "body": "Complaint: unhappy that a viewing was cancelled at short notice twice. Wants a call back.",
+   "details": {
+    "acknowledged_at": "2026-10-06T09:00:00.000Z",
+    "acknowledge_by": "2026-10-08",
+    "final_by": "2026-10-26"
+   },
+   "created_at": "2026-10-05T14:20:00.000Z",
+   "status": "read"
+  }
+ ],
+ "listings": [
+  {
+   "listing_key": "albion_41_flat_2",
+   "status": "available",
+   "price_pence": 18500000,
+   "qualifier": "guide",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Oliver Okafor",
+     "phone": "+447700900551"
+    }
+   ],
+   "marketed_at": "2026-09-03T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 18500000
+   },
+   "history": [
+    {
+     "at": "2026-09-03T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    },
+    {
+     "at": "2026-09-29T08:00:00.000Z",
+     "by": "staff",
+     "what": "reduced from 195000 to 185000"
+    }
+   ]
+  },
+  {
+   "listing_key": "albion_22",
+   "status": "available",
+   "price_pence": 32500000,
+   "qualifier": "offers_over",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Niamh Hall",
+     "phone": "+447700900034"
+    }
+   ],
+   "marketed_at": "2026-09-21T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 32500000
+   },
+   "history": [
+    {
+     "at": "2026-09-21T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "larkspur_14",
+   "status": "under_offer",
+   "price_pence": 29995000,
+   "qualifier": "guide",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Sarah Collins",
+     "phone": "+447700900001"
+    }
+   ],
+   "marketed_at": "2026-09-11T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "under_offer",
+    "price_pence": 29995000
+   },
+   "history": [
+    {
+     "at": "2026-09-11T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "kingfisher_9",
+   "status": "available",
+   "price_pence": 36500000,
+   "qualifier": "oiro",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Ethan Wright",
+     "phone": "+447700900892"
+    }
+   ],
+   "marketed_at": "2026-09-26T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 36500000
+   },
+   "history": [
+    {
+     "at": "2026-09-26T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "kingfisher_3",
+   "status": "sale_agreed",
+   "price_pence": 24500000,
+   "qualifier": "fixed",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Grace Hall",
+     "phone": "+447700900276"
+    }
+   ],
+   "marketed_at": "2026-08-12T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "sale_agreed",
+    "price_pence": 24500000
+   },
+   "history": [
+    {
+     "at": "2026-08-12T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "mill_6_bungalow",
+   "status": "available",
+   "price_pence": 27500000,
+   "qualifier": "oiro",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Joe Murphy",
+     "phone": "+447700900889"
+    }
+   ],
+   "marketed_at": "2026-09-16T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 27500000
+   },
+   "history": [
+    {
+     "at": "2026-09-16T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "mill_31",
+   "status": "under_offer",
+   "price_pence": 34000000,
+   "qualifier": "guide",
+   "marketing_continues": true,
+   "best_final_at": "2026-10-16T11:00:00.000Z",
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Zara Walker",
+     "phone": "+447700900496"
+    }
+   ],
+   "marketed_at": "2026-09-20T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "under_offer",
+    "price_pence": 34000000
+   },
+   "history": [
+    {
+     "at": "2026-09-20T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    },
+    {
+     "at": "2026-10-10T12:00:00.000Z",
+     "by": "staff",
+     "what": "best and final set"
+    }
+   ]
+  },
+  {
+   "listing_key": "orchard_7",
+   "status": "available",
+   "price_pence": 16500000,
+   "qualifier": "fixed",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Emily Mensah",
+     "phone": "+447700900660"
+    }
+   ],
+   "marketed_at": "2026-08-27T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 16500000
+   },
+   "history": [
+    {
+     "at": "2026-08-27T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "wharf_house_9",
+   "status": "available",
+   "price_pence": 12000000,
+   "qualifier": "fixed",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Mohammed Chen",
+     "phone": "+447700900109"
+    }
+   ],
+   "marketed_at": "2026-08-22T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 12000000
+   },
+   "history": [
+    {
+     "at": "2026-08-22T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "beechwood_court_12",
+   "status": "available",
+   "price_pence": 14500000,
+   "qualifier": "fixed",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Kwame Hall",
+     "phone": "+447700900251"
+    }
+   ],
+   "marketed_at": "2026-08-02T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 14500000
+   },
+   "history": [
+    {
+     "at": "2026-08-02T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "heron_18",
+   "status": "available",
+   "price_pence": 11000000,
+   "qualifier": "share",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Chloe Murphy",
+     "phone": "+447700900703"
+    }
+   ],
+   "marketed_at": "2026-09-08T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 11000000
+   },
+   "history": [
+    {
+     "at": "2026-09-08T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "riverside_5",
+   "status": "available",
+   "price_pence": 47500000,
+   "qualifier": "guide",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Holly Hall",
+     "phone": "+447700900718"
+    }
+   ],
+   "marketed_at": "2026-10-11T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 47500000
+   },
+   "history": [
+    {
+     "at": "2026-10-11T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "station_27",
+   "status": "available",
+   "price_pence": 24900000,
+   "qualifier": "fixed",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Chloe Wright",
+     "phone": "+447700900429"
+    }
+   ],
+   "marketed_at": "2026-07-13T08:00:00.000Z",
+   "back_on_market_at": "2026-09-27T08:00:00.000Z",
+   "set_from": {
+    "status": "available",
+    "price_pence": 24900000
+   },
+   "history": [
+    {
+     "at": "2026-07-13T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    },
+    {
+     "at": "2026-09-27T08:00:00.000Z",
+     "by": "staff",
+     "what": "back on the market"
+    },
+    {
+     "at": "2026-09-29T08:00:00.000Z",
+     "by": "staff",
+     "what": "reduced from 259000 to 249000"
+    }
+   ]
+  },
+  {
+   "listing_key": "fernbank_11",
+   "status": "available",
+   "price_pence": 21500000,
+   "qualifier": "fixed",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Daniel Hall",
+     "phone": "+447700900825"
+    }
+   ],
+   "marketed_at": "2026-09-01T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "available",
+    "price_pence": 21500000
+   },
+   "history": [
+    {
+     "at": "2026-09-01T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    },
+    {
+     "at": "2026-10-05T08:00:00.000Z",
+     "by": "staff",
+     "what": "reduced from 225000 to 215000"
+    }
+   ]
+  },
+  {
+   "listing_key": "elm_court_2",
+   "status": "sale_agreed",
+   "price_pence": 28900000,
+   "qualifier": "fixed",
+   "marketing_continues": false,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Emily Green",
+     "phone": "+447700900085"
+    }
+   ],
+   "marketed_at": "2026-07-23T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "sale_agreed",
+    "price_pence": 28900000
+   },
+   "history": [
+    {
+     "at": "2026-07-23T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "willow_gardens_8",
+   "status": "exchanged",
+   "price_pence": 41000000,
+   "qualifier": "fixed",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Sophie Brown",
+     "phone": "+447700900191"
+    }
+   ],
+   "marketed_at": "2026-06-23T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "exchanged",
+    "price_pence": 41000000
+   },
+   "history": [
+    {
+     "at": "2026-06-23T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  },
+  {
+   "listing_key": "copse_lane_19",
+   "status": "coming_soon",
+   "price_pence": 31500000,
+   "qualifier": "guide",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Sophie Jones",
+     "phone": "+447700900944"
+    }
+   ],
+   "marketed_at": "2026-10-11T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "coming_soon",
+    "price_pence": 31500000
+   },
+   "history": [
+    {
+     "at": "2026-10-11T08:00:00.000Z",
+     "by": "seed",
+     "what": "coming soon"
+    }
+   ]
+  },
+  {
+   "listing_key": "meadow_view_10",
+   "status": "withdrawn",
+   "price_pence": 28000000,
+   "qualifier": "fixed",
+   "marketing_continues": true,
+   "best_final_at": null,
+   "checking": [],
+   "blocked": [],
+   "sellers": [
+    {
+     "name": "Zara Okafor",
+     "phone": "+447700900379"
+    }
+   ],
+   "marketed_at": "2026-07-03T08:00:00.000Z",
+   "back_on_market_at": null,
+   "set_from": {
+    "status": "withdrawn",
+    "price_pence": 28000000
+   },
+   "history": [
+    {
+     "at": "2026-07-03T08:00:00.000Z",
+     "by": "seed",
+     "what": "on the market"
+    }
+   ]
+  }
+ ],
+ "offers": [
+  {
+   "reference": "YQ647",
+   "listing_key": "larkspur_14",
+   "revises": null,
+   "amount_pence": 28500000,
+   "buyer_names": ["Aisha Khan"],
+   "phone": "+447700900003",
+   "email": null,
+   "position": {
+    "first_time_buyer": true,
+    "selling": "nothing",
+    "funding": "mortgage_aip"
+   },
+   "conditions": "subject to survey",
+   "solicitor": null,
+   "flags": [],
+   "status": "sent",
+   "received_at": "2026-10-09T12:00:00.000Z",
+   "sent_at": "2026-10-10T10:00:00.000Z",
+   "decided_at": null,
+   "note": null,
+   "history": [
+    {
+     "at": "2026-10-09T12:00:00.000Z",
+     "by": "receptionist",
+     "what": "received"
+    },
+    {
+     "at": "2026-10-10T10:00:00.000Z",
+     "by": "staff",
+     "what": "sent to the seller"
+    }
+   ]
+  },
+  {
+   "reference": "RL121",
+   "listing_key": "mill_31",
+   "revises": null,
+   "amount_pence": 33000000,
+   "buyer_names": ["Jack Brown"],
+   "phone": "+447700900638",
+   "email": null,
+   "position": {
+    "first_time_buyer": true,
+    "selling": "nothing",
+    "funding": "mortgage_not_yet"
+   },
+   "conditions": "subject to survey",
+   "solicitor": null,
+   "flags": [],
+   "status": "received",
+   "received_at": "2026-10-09T15:40:00.000Z",
+   "sent_at": null,
+   "decided_at": null,
+   "note": null,
+   "history": [
+    {
+     "at": "2026-10-09T15:40:00.000Z",
+     "by": "receptionist",
+     "what": "received"
+    }
+   ]
+  },
+  {
+   "reference": "XL840",
+   "listing_key": "mill_31",
+   "revises": null,
+   "amount_pence": 33700000,
+   "buyer_names": ["Amara Murphy"],
+   "phone": "+447700900769",
+   "email": null,
+   "position": {
+    "first_time_buyer": false,
+    "selling": "on_market",
+    "funding": "mortgage_aip"
+   },
+   "conditions": "subject to survey",
+   "solicitor": null,
+   "flags": [],
+   "status": "sent",
+   "received_at": "2026-10-07T08:00:00.000Z",
+   "sent_at": "2026-10-07T14:00:00.000Z",
+   "decided_at": null,
+   "note": null,
+   "history": [
+    {
+     "at": "2026-10-07T08:00:00.000Z",
+     "by": "receptionist",
+     "what": "received"
+    },
+    {
+     "at": "2026-10-07T14:00:00.000Z",
+     "by": "staff",
+     "what": "sent to the seller"
+    }
+   ]
+  },
+  {
+   "reference": "AY125",
+   "listing_key": "albion_22",
+   "revises": null,
+   "amount_pence": 31200000,
+   "buyer_names": ["Sophie Evans"],
+   "phone": "+447700900535",
+   "email": null,
+   "position": {
+    "first_time_buyer": false,
+    "selling": "on_market",
+    "funding": "mortgage_aip"
+   },
+   "conditions": "subject to survey and mortgage",
+   "solicitor": null,
+   "flags": [],
+   "status": "received",
+   "received_at": "2026-10-10T15:40:00.000Z",
+   "sent_at": null,
+   "decided_at": null,
+   "note": null,
+   "history": [
+    {
+     "at": "2026-10-10T15:40:00.000Z",
+     "by": "receptionist",
+     "what": "received"
+    }
+   ]
+  },
+  {
+   "reference": "AR356",
+   "listing_key": "fernbank_11",
+   "revises": null,
+   "amount_pence": 18900000,
+   "buyer_names": ["Amara Murphy"],
+   "phone": "+447700900769",
+   "email": null,
+   "position": {
+    "first_time_buyer": false,
+    "selling": "on_market",
+    "funding": "mortgage_aip"
+   },
+   "conditions": "subject to survey",
+   "solicitor": null,
+   "flags": [],
+   "status": "declined",
+   "received_at": "2026-10-06T08:00:00.000Z",
+   "sent_at": "2026-10-06T10:00:00.000Z",
+   "decided_at": "2026-10-06T15:40:00.000Z",
+   "note": "The seller felt it was too low after the reduction.",
+   "history": [
+    {
+     "at": "2026-10-06T08:00:00.000Z",
+     "by": "receptionist",
+     "what": "received"
+    },
+    {
+     "at": "2026-10-06T10:00:00.000Z",
+     "by": "staff",
+     "what": "sent to the seller"
+    },
+    {
+     "at": "2026-10-06T15:40:00.000Z",
+     "by": "staff",
+     "what": "declined"
+    }
+   ]
+  },
+  {
+   "reference": "HQ713",
+   "listing_key": "kingfisher_3",
+   "revises": null,
+   "amount_pence": 24000000,
+   "buyer_names": ["Ben Walker"],
+   "phone": "+447700900004",
+   "email": null,
+   "position": {
+    "first_time_buyer": true,
+    "selling": "nothing",
+    "funding": "mortgage_aip"
+   },
+   "conditions": "subject to survey",
+   "solicitor": null,
+   "flags": [],
+   "status": "accepted",
+   "received_at": "2026-10-07T08:00:00.000Z",
+   "sent_at": "2026-10-07T10:00:00.000Z",
+   "decided_at": "2026-10-09T08:00:00.000Z",
+   "note": null,
+   "history": [
+    {
+     "at": "2026-10-07T08:00:00.000Z",
+     "by": "receptionist",
+     "what": "received"
+    },
+    {
+     "at": "2026-10-07T10:00:00.000Z",
+     "by": "staff",
+     "what": "sent to the seller"
+    },
+    {
+     "at": "2026-10-09T08:00:00.000Z",
+     "by": "staff",
+     "what": "accepted"
+    }
+   ]
+  },
+  {
+   "reference": "YW189",
+   "listing_key": "kingfisher_3",
+   "revises": null,
+   "amount_pence": 23000000,
+   "buyer_names": ["James Collins"],
+   "phone": "+447700900627",
+   "email": null,
+   "position": {
+    "first_time_buyer": true,
+    "selling": "nothing",
+    "funding": "mortgage_aip"
+   },
+   "conditions": "subject to survey",
+   "solicitor": null,
+   "flags": [],
+   "status": "declined",
+   "received_at": "2026-10-01T08:00:00.000Z",
+   "sent_at": "2026-10-01T10:00:00.000Z",
+   "decided_at": "2026-10-01T15:40:00.000Z",
+   "note": "Would still buy if the sale falls through.",
+   "history": [
+    {
+     "at": "2026-10-01T08:00:00.000Z",
+     "by": "receptionist",
+     "what": "received"
+    },
+    {
+     "at": "2026-10-01T10:00:00.000Z",
+     "by": "staff",
+     "what": "sent to the seller"
+    },
+    {
+     "at": "2026-10-01T15:40:00.000Z",
+     "by": "staff",
+     "what": "declined"
+    }
+   ]
+  },
+  {
+   "reference": "JY515",
+   "listing_key": "elm_court_2",
+   "revises": null,
+   "amount_pence": 28300000,
+   "buyer_names": ["Ethan Evans"],
+   "phone": "+447700900970",
+   "email": null,
+   "position": {
+    "first_time_buyer": false,
+    "selling": "on_market",
+    "funding": "cash"
+   },
+   "conditions": "subject to survey",
+   "solicitor": null,
+   "flags": [],
+   "status": "accepted",
+   "received_at": "2026-08-22T08:00:00.000Z",
+   "sent_at": "2026-08-22T11:00:00.000Z",
+   "decided_at": "2026-08-24T08:00:00.000Z",
+   "note": null,
+   "history": [
+    {
+     "at": "2026-08-22T08:00:00.000Z",
+     "by": "receptionist",
+     "what": "received"
+    },
+    {
+     "at": "2026-08-22T11:00:00.000Z",
+     "by": "staff",
+     "what": "sent to the seller"
+    },
+    {
+     "at": "2026-08-24T08:00:00.000Z",
+     "by": "staff",
+     "what": "accepted"
+    }
+   ]
+  },
+  {
+   "reference": "QA592",
+   "listing_key": "willow_gardens_8",
+   "revises": null,
+   "amount_pence": 39800000,
+   "buyer_names": ["Liam Doyle"],
+   "phone": "+447700900008",
+   "email": null,
+   "position": {
+    "first_time_buyer": false,
+    "selling": "under_offer",
+    "funding": "mortgage_aip"
+   },
+   "conditions": "subject to survey",
+   "solicitor": null,
+   "flags": [],
+   "status": "accepted",
+   "received_at": "2026-07-19T08:00:00.000Z",
+   "sent_at": "2026-07-19T10:00:00.000Z",
+   "decided_at": "2026-07-21T08:00:00.000Z",
+   "note": null,
+   "history": [
+    {
+     "at": "2026-07-19T08:00:00.000Z",
+     "by": "receptionist",
+     "what": "received"
+    },
+    {
+     "at": "2026-07-19T10:00:00.000Z",
+     "by": "staff",
+     "what": "sent to the seller"
+    },
+    {
+     "at": "2026-07-21T08:00:00.000Z",
+     "by": "staff",
+     "what": "accepted"
+    }
+   ]
+  }
+ ],
+ "sales": [
+  {
+   "listing_key": "kingfisher_3",
+   "offer_ref": "HQ713",
+   "buyer_name": "Ben Walker",
+   "buyer_phone": "+447700900004",
+   "agreed_pence": 24000000,
+   "milestones": [
+    {
+     "key": "memorandum_sent",
+     "done_at": "2026-10-09T20:00:00.000Z"
+    },
+    {
+     "key": "solicitors_instructed",
+     "done_at": "2026-10-10T08:00:00.000Z"
+    },
+    {
+     "key": "searches",
+     "done_at": null
+    },
+    {
+     "key": "survey",
+     "done_at": null
+    },
+    {
+     "key": "mortgage_offer",
+     "done_at": null
+    },
+    {
+     "key": "enquiries_answered",
+     "done_at": null
+    },
+    {
+     "key": "exchange",
+     "done_at": null
+    },
+    {
+     "key": "completion",
+     "done_at": null
+    }
+   ],
+   "exchange_target": null,
+   "completion_date": null,
+   "parties": [
+    {
+     "role": "buyer_solicitor",
+     "name": "Lucy Khan",
+     "firm": "Haddon Conveyancing (example)",
+     "phone": "+447700900040"
+    },
+    {
+     "role": "seller_solicitor",
+     "name": "Callum Khan",
+     "firm": "Brackenford Legal (example)",
+     "phone": "+447700900966"
+    }
+   ],
+   "chain": null,
+   "status": "progressing",
+   "keys_released_at": null,
+   "updates": [
+    {
+     "at": "2026-10-09T20:00:00.000Z",
+     "by": "staff",
+     "what": "memorandum of sale sent to both solicitors"
+    }
+   ],
+   "created_at": "2026-10-09T08:00:00.000Z"
+  },
+  {
+   "listing_key": "elm_court_2",
+   "offer_ref": "JY515",
+   "buyer_name": "Ethan Evans",
+   "buyer_phone": "+447700900970",
+   "agreed_pence": 28300000,
+   "milestones": [
+    {
+     "key": "memorandum_sent",
+     "done_at": "2026-08-27T08:00:00.000Z"
+    },
+    {
+     "key": "solicitors_instructed",
+     "done_at": "2026-08-30T08:00:00.000Z"
+    },
+    {
+     "key": "searches",
+     "done_at": "2026-09-02T08:00:00.000Z"
+    },
+    {
+     "key": "survey",
+     "done_at": "2026-09-05T08:00:00.000Z"
+    },
+    {
+     "key": "mortgage_offer",
+     "done_at": "2026-09-08T08:00:00.000Z"
+    },
+    {
+     "key": "enquiries_answered",
+     "done_at": null
+    },
+    {
+     "key": "exchange",
+     "done_at": null
+    },
+    {
+     "key": "completion",
+     "done_at": null
+    }
+   ],
+   "exchange_target": "2026-10-19",
+   "completion_date": null,
+   "parties": [
+    {
+     "role": "buyer_solicitor",
+     "name": "Nadia Osei",
+     "firm": "Fenwick Law (example)",
+     "phone": "+447700900005"
+    },
+    {
+     "role": "seller_solicitor",
+     "name": "Emily Shah",
+     "firm": "Brackenford Legal (example)",
+     "phone": "+447700900112"
+    },
+    {
+     "role": "chain_agent",
+     "name": "Harper & Co",
+     "firm": "Harper & Co",
+     "phone": "+447700900006"
+    }
+   ],
+   "chain": "Our buyer is selling 5 Ash Grove through Harper & Co; their buyer's mortgage valuation is booked.",
+   "status": "progressing",
+   "keys_released_at": null,
+   "updates": [
+    {
+     "at": "2026-10-05T08:00:00.000Z",
+     "by": "staff",
+     "what": "mortgage offer received by the buyer"
+    }
+   ],
+   "created_at": "2026-08-24T08:00:00.000Z"
+  },
+  {
+   "listing_key": "willow_gardens_8",
+   "offer_ref": "QA592",
+   "buyer_name": "Liam Doyle",
+   "buyer_phone": "+447700900008",
+   "agreed_pence": 39800000,
+   "milestones": [
+    {
+     "key": "memorandum_sent",
+     "done_at": "2026-07-24T08:00:00.000Z"
+    },
+    {
+     "key": "solicitors_instructed",
+     "done_at": "2026-07-27T08:00:00.000Z"
+    },
+    {
+     "key": "searches",
+     "done_at": "2026-07-30T08:00:00.000Z"
+    },
+    {
+     "key": "survey",
+     "done_at": "2026-08-02T08:00:00.000Z"
+    },
+    {
+     "key": "mortgage_offer",
+     "done_at": "2026-08-05T08:00:00.000Z"
+    },
+    {
+     "key": "enquiries_answered",
+     "done_at": "2026-08-08T08:00:00.000Z"
+    },
+    {
+     "key": "exchange",
+     "done_at": "2026-08-11T08:00:00.000Z"
+    },
+    {
+     "key": "completion",
+     "done_at": null
+    }
+   ],
+   "exchange_target": "2026-10-06",
+   "completion_date": "2026-10-13",
+   "parties": [
+    {
+     "role": "buyer_solicitor",
+     "name": "Kwame Lewis",
+     "firm": "Coldbrook Law (example)",
+     "phone": "+447700900270"
+    },
+    {
+     "role": "seller_solicitor",
+     "name": "Ethan Hughes",
+     "firm": "Brackenford Legal (example)",
+     "phone": "+447700900855"
+    }
+   ],
+   "chain": null,
+   "status": "exchanged",
+   "keys_released_at": null,
+   "updates": [
+    {
+     "at": "2026-10-06T08:00:00.000Z",
+     "by": "staff",
+     "what": "contracts exchanged"
+    }
+   ],
+   "created_at": "2026-07-21T08:00:00.000Z"
+  }
+ ],
+ "people": [
+  {
+   "phone": "+447700900884",
+   "name": "Holly Collins",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_not_yet"
+    },
+    "requirements": {
+     "areas": ["BK1"],
+     "max_price_pence": 29500000,
+     "min_beds": 1,
+     "types": ["detached"],
+     "must_haves": ["parking"],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900003",
+   "name": "Aisha Khan",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK1"],
+     "max_price_pence": 50500000,
+     "min_beds": 3,
+     "types": ["bungalow"],
+     "must_haves": ["garden"],
+     "timescale": "within six months"
+    },
+    "consent_at": "2026-08-14T08:00:00.000Z",
+    "last_contact": "2026-10-09T12:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900682",
+   "name": "Amara Robinson",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2","BK1"],
+     "max_price_pence": 33000000,
+     "min_beds": 4,
+     "types": ["cottage"],
+     "must_haves": [],
+     "timescale": "within three months"
+    },
+    "consent_at": "2026-08-12T08:00:00.000Z",
+    "last_contact": "2026-09-30T13:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900627",
+   "name": "James Collins",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2"],
+     "max_price_pence": 40500000,
+     "min_beds": 1,
+     "types": ["terraced"],
+     "must_haves": [],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": "2026-10-01T15:40:00.000Z",
+    "backup_for": ["kingfisher_3"],
+    "investor": true,
+    "last_contact": "2026-10-01T15:40:00.000Z",
+    "source": "offer"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900078",
+   "name": "Joe Doyle",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK2","BK1"],
+     "max_price_pence": 37000000,
+     "min_beds": 1,
+     "types": ["detached"],
+     "must_haves": ["parking"],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900179",
+   "name": "Emily Kelly",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK1","BK7"],
+     "max_price_pence": 29000000,
+     "min_beds": 4,
+     "types": ["terraced"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": "2026-09-04T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900301",
+   "name": "Kwame Wood",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK2","BK7"],
+     "max_price_pence": 17500000,
+     "min_beds": 4,
+     "types": ["detached"],
+     "must_haves": ["garden"],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900401",
+   "name": "Hannah Doyle",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2","BK1"],
+     "max_price_pence": 22000000,
+     "min_beds": 4,
+     "types": ["bungalow"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900193",
+   "name": "Amara Collins",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK1"],
+     "max_price_pence": 36000000,
+     "min_beds": 4,
+     "types": ["cottage"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900002",
+   "name": "Sam Price",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK1"],
+     "max_price_pence": 15500000,
+     "min_beds": 1,
+     "types": ["flat"],
+     "must_haves": [],
+     "timescale": "within three months"
+    },
+    "consent_at": null,
+    "tried_to_call": {
+     "by": "tom",
+     "at": "2026-10-10T14:20:00.000Z"
+    },
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900862",
+   "name": "Grace Evans",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK7","BK2"],
+     "max_price_pence": 49000000,
+     "min_beds": 4,
+     "types": ["bungalow"],
+     "must_haves": [],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": "2026-09-29T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900724",
+   "name": "Ravi Kelly",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK1","BK2"],
+     "max_price_pence": 38500000,
+     "min_beds": 1,
+     "types": ["flat"],
+     "must_haves": [],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": "2026-08-17T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900774",
+   "name": "Ethan Patel",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK7","BK2"],
+     "max_price_pence": 37000000,
+     "min_beds": 3,
+     "types": ["detached"],
+     "must_haves": ["garden"],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900952",
+   "name": "Adam Jones",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK1","BK2"],
+     "max_price_pence": 26500000,
+     "min_beds": 4,
+     "types": ["detached"],
+     "must_haves": [],
+     "timescale": "within three months"
+    },
+    "consent_at": "2026-10-07T08:00:00.000Z",
+    "last_contact": "2026-10-09T08:15:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900576",
+   "name": "Grace Wood",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2","BK1"],
+     "max_price_pence": 25000000,
+     "min_beds": 4,
+     "types": ["semi"],
+     "must_haves": [],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-10T09:15:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900526",
+   "name": "Oliver Walker",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK7"],
+     "max_price_pence": 33000000,
+     "min_beds": 3,
+     "types": ["semi"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-10T11:45:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900895",
+   "name": "Adam Collins",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2","BK7"],
+     "max_price_pence": 12500000,
+     "min_beds": 2,
+     "types": ["cottage"],
+     "must_haves": ["no chain"],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-10T14:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900490",
+   "name": "Oliver Khan",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK7","BK2"],
+     "max_price_pence": 27500000,
+     "min_beds": 3,
+     "types": ["semi"],
+     "must_haves": [],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900523",
+   "name": "Chloe Patel",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_not_yet"
+    },
+    "requirements": {
+     "areas": ["BK7","BK2"],
+     "max_price_pence": 51500000,
+     "min_beds": 3,
+     "types": ["bungalow"],
+     "must_haves": [],
+     "timescale": "within six months"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900056",
+   "name": "Oliver Murphy",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK7","BK2"],
+     "max_price_pence": 29500000,
+     "min_beds": 1,
+     "types": ["flat"],
+     "must_haves": ["step-free"],
+     "timescale": "just looking"
+    },
+    "consent_at": "2026-09-01T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900203",
+   "name": "Amara Shah",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK2"],
+     "max_price_pence": 32000000,
+     "min_beds": 1,
+     "types": ["semi"],
+     "must_haves": ["no chain"],
+     "timescale": "just looking"
+    },
+    "consent_at": "2026-09-14T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900535",
+   "name": "Sophie Evans",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK7","BK2"],
+     "max_price_pence": 22500000,
+     "min_beds": 1,
+     "types": ["flat"],
+     "must_haves": ["no chain"],
+     "timescale": "within three months"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900568",
+   "name": "Daniel Chen",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK1","BK2"],
+     "max_price_pence": 41000000,
+     "min_beds": 4,
+     "types": ["terraced"],
+     "must_haves": [],
+     "timescale": "within three months"
+    },
+    "consent_at": "2026-08-23T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900709",
+   "name": "Joe Shah",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_not_yet"
+    },
+    "requirements": {
+     "areas": ["BK2"],
+     "max_price_pence": 19500000,
+     "min_beds": 2,
+     "types": ["semi"],
+     "must_haves": [],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": "2026-08-24T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900702",
+   "name": "Ethan Doyle",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_not_yet"
+    },
+    "requirements": {
+     "areas": ["BK2","BK7"],
+     "max_price_pence": 38500000,
+     "min_beds": 2,
+     "types": ["flat"],
+     "must_haves": ["parking"],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": "2026-09-03T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900480",
+   "name": "Holly Ahmed",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK1"],
+     "max_price_pence": 11500000,
+     "min_beds": 1,
+     "types": ["bungalow"],
+     "must_haves": [],
+     "timescale": "within three months"
+    },
+    "consent_at": "2026-09-20T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900122",
+   "name": "Sophie Walker",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK1","BK2"],
+     "max_price_pence": 15000000,
+     "min_beds": 4,
+     "types": ["detached"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900190",
+   "name": "Oliver Collins",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2","BK7"],
+     "max_price_pence": 46000000,
+     "min_beds": 4,
+     "types": ["terraced"],
+     "must_haves": [],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900748",
+   "name": "Adam Shah",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK7"],
+     "max_price_pence": 18500000,
+     "min_beds": 3,
+     "types": ["detached"],
+     "must_haves": ["garden"],
+     "timescale": "within six months"
+    },
+    "consent_at": "2026-10-02T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "viewing"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900559",
+   "name": "Emily Khan",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK7"],
+     "max_price_pence": 19500000,
+     "min_beds": 1,
+     "types": ["bungalow"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": "2026-08-27T08:00:00.000Z",
+    "last_contact": "2026-10-09T11:00:00.000Z",
+    "source": "valuation"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900759",
+   "name": "Callum Green",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2","BK7"],
+     "max_price_pence": 29000000,
+     "min_beds": 3,
+     "types": ["cottage"],
+     "must_haves": ["garden"],
+     "timescale": "within six months"
+    },
+    "consent_at": "2026-08-22T08:00:00.000Z",
+    "last_contact": "2026-10-08T11:00:00.000Z",
+    "source": "valuation"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900136",
+   "name": "Kwame Mensah",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2","BK1"],
+     "max_price_pence": 39000000,
+     "min_beds": 3,
+     "types": ["semi"],
+     "must_haves": ["garden"],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-07T11:00:00.000Z",
+    "source": "valuation"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900731",
+   "name": "Adam Hughes",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK1"],
+     "max_price_pence": 33000000,
+     "min_beds": 4,
+     "types": ["terraced"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "valuation"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900742",
+   "name": "Hannah Mensah",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK1"],
+     "max_price_pence": 18500000,
+     "min_beds": 3,
+     "types": ["detached"],
+     "must_haves": [],
+     "timescale": "within six months"
+    },
+    "consent_at": "2026-08-31T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "valuation"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900046",
+   "name": "Amara Patel",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK7"],
+     "max_price_pence": 28000000,
+     "min_beds": 3,
+     "types": ["semi"],
+     "must_haves": ["step-free"],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "valuation"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900264",
+   "name": "Oliver Wright",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2","BK7"],
+     "max_price_pence": 25500000,
+     "min_beds": 2,
+     "types": ["semi"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": "2026-08-18T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "valuation"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900678",
+   "name": "Emily Evans",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2"],
+     "max_price_pence": 20000000,
+     "min_beds": 2,
+     "types": ["terraced"],
+     "must_haves": ["parking"],
+     "timescale": "within three months"
+    },
+    "consent_at": "2026-09-22T08:00:00.000Z",
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "mortgage"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900266",
+   "name": "Kwame Khan",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK2","BK1"],
+     "max_price_pence": 35500000,
+     "min_beds": 4,
+     "types": ["detached"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-11T08:00:00.000Z",
+    "source": "mortgage"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900638",
+   "name": "Jack Brown",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_not_yet"
+    },
+    "requirements": {
+     "areas": ["BK2","BK1"],
+     "max_price_pence": 20000000,
+     "min_beds": 2,
+     "types": ["bungalow"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-09T15:40:00.000Z",
+    "source": "offer"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900769",
+   "name": "Amara Murphy",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK7"],
+     "max_price_pence": 51500000,
+     "min_beds": 4,
+     "types": ["flat"],
+     "must_haves": ["garden"],
+     "timescale": "within three months"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-07T08:00:00.000Z",
+    "source": "offer"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900004",
+   "name": "Ben Walker",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": true,
+     "selling": "nothing",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK1","BK7"],
+     "max_price_pence": 31500000,
+     "min_beds": 4,
+     "types": ["terraced"],
+     "must_haves": [],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-07T08:00:00.000Z",
+    "source": "offer"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900970",
+   "name": "Ethan Evans",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "on_market",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK7"],
+     "max_price_pence": 32500000,
+     "min_beds": 1,
+     "types": ["detached"],
+     "must_haves": ["parking"],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-08-22T08:00:00.000Z",
+    "source": "offer"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900008",
+   "name": "Liam Doyle",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK7","BK2"],
+     "max_price_pence": 40000000,
+     "min_beds": 3,
+     "types": ["bungalow"],
+     "must_haves": [],
+     "timescale": "within six months"
+    },
+    "consent_at": "2026-08-15T08:00:00.000Z",
+    "last_contact": "2026-07-19T08:00:00.000Z",
+    "source": "offer"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900007",
+   "name": "Megan Hughes",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_not_yet"
+    },
+    "requirements": {
+     "areas": ["BK2","BK7"],
+     "max_price_pence": 20000000,
+     "min_beds": 3,
+     "types": ["semi"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": null,
+    "last_contact": "2026-10-10T18:42:00.000Z",
+    "source": "Zoopla"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900593",
+   "name": "Chloe Doyle",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "under_offer",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK7","BK1"],
+     "max_price_pence": 48500000,
+     "min_beds": 4,
+     "types": ["terraced"],
+     "must_haves": [],
+     "timescale": "as soon as possible"
+    },
+    "consent_at": null,
+    "last_contact": "2026-09-10T08:00:00.000Z",
+    "source": "a board"
+   },
+   "marketing_consent": false
+  },
+  {
+   "phone": "+447700900851",
+   "name": "Amara Okafor",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "not_on_market",
+     "funding": "mortgage_aip"
+    },
+    "requirements": {
+     "areas": ["BK7","BK1"],
+     "max_price_pence": 37000000,
+     "min_beds": 4,
+     "types": ["flat"],
+     "must_haves": [],
+     "timescale": "just looking"
+    },
+    "consent_at": "2026-09-25T08:00:00.000Z",
+    "last_contact": "2026-09-02T08:00:00.000Z",
+    "source": "Rightmove"
+   },
+   "marketing_consent": true
+  },
+  {
+   "phone": "+447700900001",
+   "name": "Sarah Collins",
+   "details": {
+    "roles": ["seller"],
+    "last_contact": "2026-10-09T15:40:00.000Z",
+    "source": "seller"
+   },
+   "marketing_consent": false
+  }
+ ],
+ "texts": [
+  {
+   "to": "+447700900002",
+   "body": "Morgan & Price: viewing booked, Monday 11:15am at 11 Fernbank Drive, with Jess. Ref XA677. To change it, call us and quote your reference. (Demo)",
+   "created_at": "2026-10-10T08:00:00.000Z"
+  },
+  {
+   "to": "+447700900003",
+   "body": "Morgan & Price: we received your offer of £285,000 for 14 Larkspur Close at 1pm on 9 October, subject to survey. Ref YQ647. We'll put it to the seller promptly and confirm in writing. (Demo)",
+   "created_at": "2026-10-09T12:00:00.000Z"
+  },
+  {
+   "to": "+447700900003",
+   "body": "Morgan & Price: your offer of £285,000 for 14 Larkspur Close was put to the seller at 11am today. We'll let you know their answer. (Demo)",
+   "created_at": "2026-10-10T10:00:00.000Z"
+  }
+ ]
+}

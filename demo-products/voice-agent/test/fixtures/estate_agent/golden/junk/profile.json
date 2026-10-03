@@ -1,0 +1,720 @@
+{
+ "slug": "golden",
+ "name": "Your estate agency",
+ "business_type": "estate_agent",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Kore",
+ "greeting": "Hello, you're through to the estate agency. I'm the AI assistant on this demo line. How can I help?",
+ "summary": "Your estate agency is an estate agency in Brackenford: Independent estate agency, sales only.",
+ "address": "12 High Street, Brackenford BK1 2AB",
+ "phone_display": "01632 960 123",
+ "brand": {
+  "accent": "#c9a24a",
+  "primary": "#1d3b34",
+  "background": "#0f1513",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Your estate agency: Independent estate agency, sales only, at 12 High Street, Brackenford BK1 2AB.",
+  "Monday to Friday: 9am till 5:30pm. Saturday: 9am till 4pm. Closed Sundays.",
+  "Viewings: by arrangement. Valuations: Monday to Friday 9am till 6pm and Saturday 9am till 1pm.",
+  "We cover Brackenford, Little Haddon and Coldbrook, BK2.",
+  "Free market appraisals take about an hour.",
+  "Gas emergency: call the National Gas Emergency Service on 0800 111 999."
+ ],
+ "opening_hours": [
+  {
+   "days": [1,2,3,4,5],
+   "open": "09:00",
+   "close": "17:30",
+   "label": "Open"
+  },
+  {
+   "days": [6],
+   "open": "09:00",
+   "close": "16:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [],
+ "knowledge": [
+  {
+   "q": "Which areas do you cover?",
+   "a": "We cover Brackenford, Little Haddon and Coldbrook, BK2.",
+   "tags": ["area","cover","postcode","where"]
+  },
+  {
+   "q": "Is there parking at your office?",
+   "a": "There is free parking behind our office on the High Street.",
+   "tags": ["parking","park","office"]
+  },
+  {
+   "q": "Can I bring my children or my dog to a viewing?",
+   "a": "Children are welcome at viewings; please leave dogs at home.",
+   "tags": ["children","kids","dog","pet","viewing"]
+  },
+  {
+   "q": "What are your fees?",
+   "a": "Our fees are explained at your free market appraisal and in writing before you sign anything.",
+   "tags": ["fees","fee","commission","charge","cost","percent"]
+  },
+  {
+   "q": "How would you market my home?",
+   "a": "We list homes on Rightmove, Zoopla and OnTheMarket, with professional photos, a floorplan, a video tour, a board, accompanied viewings and feedback within 24 hours.",
+   "tags": ["market","marketing","rightmove","zoopla","photos","advertise"]
+  },
+  {
+   "q": "Do buyers pay you anything?",
+   "a": "No: buyers pay us nothing.",
+   "tags": ["buyer","fee","pay","id check"]
+  },
+  {
+   "q": "Is this ID check really from you?",
+   "a": "Our ID checks are done by Movecheck (example). If you're unsure about a message, call us on a number you already have before you reply.",
+   "tags": ["id","identity","check","genuine","scam"]
+  },
+  {
+   "q": "How does best and final work?",
+   "a": "Best and final offers are made in writing by a set time, and every buyer who has offered hears at once.",
+   "tags": ["best and final","sealed bid","highest","deadline"]
+  },
+  {
+   "q": "What do guide price and offers over mean?",
+   "a": "A guide price is roughly what the seller hopes for; offers over means offers above that figure; offers in the region of means around it; and a fixed price is the asking price.",
+   "tags": ["guide","offers over","region","asking price"]
+  },
+  {
+   "q": "What is the lowest the seller will take?",
+   "a": "We can't say: only the seller decides, and every offer goes to them. I can take an offer if you'd like to make one.",
+   "tags": ["lowest","minimum","accept","take"]
+  },
+  {
+   "q": "Is a valuation free?",
+   "a": "Our free market appraisal is free, with no obligation, and takes about an hour.",
+   "tags": ["valuation","appraisal","free","cost"]
+  },
+  {
+   "q": "Do you do RICS valuations?",
+   "a": "We don't do RICS valuations. For probate, Help to Buy, staircasing or a divorce you need a RICS Registered Valuer; our free appraisal is a marketing opinion only.",
+   "tags": ["rics","probate","help to buy","staircasing","divorce","surveyor","valuer"]
+  },
+  {
+   "q": "Do you have a mortgage adviser?",
+   "a": "Clearwater Mortgages is a separate firm we work with, and we may receive a referral fee. Seeing them is optional and makes no difference to any viewing or offer.",
+   "tags": ["mortgage","adviser","broker","lend","lender"]
+  },
+  {
+   "q": "Can you recommend a solicitor?",
+   "a": "You're free to use any solicitor or licensed conveyancer you like.",
+   "tags": ["solicitor","conveyancer","conveyancing","lawyer"]
+  },
+  {
+   "q": "How do I make a complaint?",
+   "a": "Tell us what went wrong and the manager will look into it. We acknowledge a complaint within 3 working days and send a written answer within 15. If you're still unhappy after our final answer, or after 8 weeks, you can go to The Property Ombudsman.",
+   "tags": ["complain","complaint","unhappy","ombudsman"]
+  },
+  {
+   "q": "Is this call recorded?",
+   "a": "Calls on this demo line are transcribed so the team can see what was said.",
+   "tags": ["recorded","recording","transcribed","transcript"]
+  },
+  {
+   "q": "Am I talking to a real person?",
+   "a": "I'm an AI assistant answering for the team. If you'd rather speak to a person, I can take a message and someone will call you back.",
+   "tags": ["real person","robot","ai","human"]
+  },
+  {
+   "q": "Can I see the data you hold about me, or stop your texts?",
+   "a": "Our data protection lead looks after data protection, and we reply to any request within a month. To stop our texts, just say so and we'll stop them.",
+   "tags": ["data","gdpr","personal information","stop texts","unsubscribe"]
+  },
+  {
+   "q": "Can I cancel my agreement with you?",
+   "a": "If you signed your agreement at home or anywhere away from our office, you usually have 14 days to cancel. For anything else, I can take a message for the manager.",
+   "tags": ["cancel","contract","agreement","tie-in","switch"]
+  },
+  {
+   "q": "Do you do lettings?",
+   "a": "We're sales only, so we don't let homes; a local letting agent can help.",
+   "tags": ["let","letting","lettings","rent","rental","landlord"]
+  },
+  {
+   "q": "How do I check the council tax band?",
+   "a": "Council tax bands are on the Valuation Office Agency's council tax band checker on GOV.UK.",
+   "tags": ["council tax","band","rates","tax"]
+  },
+  {
+   "q": "How much stamp duty will I pay?",
+   "a": "We can't advise on tax, but HMRC's Stamp Duty Land Tax calculator on GOV.UK gives the figure, and your solicitor will confirm it.",
+   "tags": ["stamp duty","land transaction tax","tax"]
+  },
+  {
+   "q": "Is it at risk of flooding?",
+   "a": "You can check the long-term flood risk for any address on the Environment Agency's flood risk service on GOV.UK.",
+   "tags": ["flood","flooding","river"]
+  },
+  {
+   "q": "I can smell gas at a property.",
+   "a": "Leave the property, don't use any switches, and call the National Gas Emergency Service on 0800 111 999. In danger, call 999.",
+   "tags": ["gas","smell","leak","emergency"]
+  },
+  {
+   "q": "I'm a tenant in a home that's being sold.",
+   "a": "Shelter or Citizens Advice can explain a tenant's rights when the home they rent is being sold. I can take a message for the team with the times that suit you for viewings.",
+   "tags": ["tenant","renting","evict","notice"]
+  },
+  {
+   "q": "What broadband and mobile signal is there?",
+   "a": "Ofcom's broadband and mobile checker shows what's available at any address.",
+   "tags": ["broadband","internet","mobile","signal"]
+  },
+  {
+   "q": "Where can I see the energy performance certificate?",
+   "a": "Every EPC is on the energy performance certificate register on GOV.UK, and I can text you the link we have.",
+   "tags": ["epc","energy"]
+  },
+  {
+   "q": "Is the area safe?",
+   "a": "Crime figures for any street are on police.uk. I can give you facts about the home, but not opinions about who lives nearby.",
+   "tags": ["crime","safe","area","police"]
+  },
+  {
+   "q": "What did houses on the street sell for?",
+   "a": "Sold prices are published by HM Land Registry on GOV.UK.",
+   "tags": ["sold","price","land registry"]
+  },
+  {
+   "q": "How do I protect my own home from fraud?",
+   "a": "HM Land Registry's free Property Alert service on GOV.UK tells you if anyone tries to change the register for your home.",
+   "tags": ["fraud","property alert","title"]
+  },
+  {
+   "q": "Someone asked me to pay to hold a home, or told me bank details have changed.",
+   "a": "Don't pay anything. Check with your own solicitor on a number you already have, and report it to Report Fraud on 0300 123 2040. We never change bank details by email or text.",
+   "tags": ["fraud","bank","deposit","pay","scam"]
+  },
+  {
+   "q": "I'm struggling and need someone to talk to.",
+   "a": "Samaritans are there day and night on 116 123, free. I'm sorry things are hard.",
+   "tags": ["samaritans","struggling","upset"]
+  },
+  {
+   "q": "Do you treat everyone the same?",
+   "a": "Yes. We treat every buyer and seller the same, as the Equality Act 2010 requires, and we describe homes, never who lives nearby.",
+   "tags": ["discrimination","equality","fair"]
+  },
+  {
+   "q": "Do you sell homes in Scotland?",
+   "a": "No: buying and selling in Scotland works differently, and we sell homes in England.",
+   "tags": ["scotland"]
+  },
+  {
+   "q": "Do you sell commercial property or land?",
+   "a": "We sell homes only, not commercial property or land.",
+   "tags": ["commercial","land","business","shop"]
+  }
+ ],
+ "booking": {
+  "services": [
+   {
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "lead_minutes": 120,
+    "horizon_days": 21,
+    "key": "viewing",
+    "label": "viewing",
+    "duration_minutes": 90,
+    "buffer_minutes": 15,
+    "windows": [],
+    "needs_listing": true
+   },
+   {
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "lead_minutes": 120,
+    "horizon_days": 21,
+    "key": "second_viewing",
+    "label": "second viewing",
+    "duration_minutes": 45,
+    "buffer_minutes": 15,
+    "windows": [],
+    "needs_listing": true
+   },
+   {
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "lead_minutes": 120,
+    "horizon_days": 21,
+    "key": "valuation",
+    "label": "free market appraisal",
+    "duration_minutes": 60,
+    "buffer_minutes": 15,
+    "windows": [
+     {
+      "days": [1,2,3,4,5],
+      "first": "09:00",
+      "last": "17:00"
+     },
+     {
+      "days": [6],
+      "first": "09:00",
+      "last": "12:00"
+     }
+    ]
+   },
+   {
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "lead_minutes": 120,
+    "horizon_days": 21,
+    "key": "mortgage",
+    "label": "mortgage appointment",
+    "duration_minutes": 45,
+    "buffer_minutes": 0,
+    "windows": [
+     {
+      "days": [1,2,3,4,5],
+      "first": "09:00",
+      "last": "16:45"
+     },
+     {
+      "days": [6],
+      "first": "09:00",
+      "last": "15:15"
+     }
+    ]
+   }
+  ],
+  "resources": [
+   {
+    "key": "junk",
+    "label": "Junk",
+    "services": [],
+    "days": [],
+    "kind": "staff"
+   },
+   {
+    "key": "person_2",
+    "label": "person_2",
+    "services": [],
+    "days": [],
+    "kind": "staff"
+   }
+  ]
+ },
+ "listings": [
+  {
+   "key": "home_1",
+   "ref": "",
+   "number": "",
+   "street": "",
+   "district": "",
+   "town": "",
+   "address": "",
+   "initial": {
+    "status": "available",
+    "price_pence": 0,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 0,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "other",
+   "beds": 0,
+   "baths": 0,
+   "receptions": 0,
+   "home": "home",
+   "features": [],
+   "summary": "",
+   "rooms": [],
+   "tenure": "unknown",
+   "lease": null,
+   "local_tax": "",
+   "epc": "",
+   "checks": {
+    "construction": {
+     "v": "unknown",
+     "says": ""
+    },
+    "heating": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mains_gas": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mains_water": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mains_drainage": {
+     "v": "unknown",
+     "says": ""
+    },
+    "broadband": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mobile": {
+     "v": "unknown",
+     "says": ""
+    },
+    "parking": {
+     "v": "unknown",
+     "says": ""
+    },
+    "flooded": {
+     "v": "unknown",
+     "says": ""
+    },
+    "flood_defences": {
+     "v": "unknown",
+     "says": ""
+    },
+    "coastal_erosion": {
+     "v": "unknown",
+     "says": ""
+    },
+    "listed": {
+     "v": "unknown",
+     "says": ""
+    },
+    "conservation_area": {
+     "v": "unknown",
+     "says": ""
+    },
+    "covenants": {
+     "v": "unknown",
+     "says": ""
+    },
+    "rights_of_way": {
+     "v": "unknown",
+     "says": ""
+    },
+    "planning": {
+     "v": "unknown",
+     "says": ""
+    },
+    "building_safety": {
+     "v": "unknown",
+     "says": ""
+    },
+    "accessibility": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mining": {
+     "v": "unknown",
+     "says": ""
+    },
+    "knotweed": {
+     "v": "unknown",
+     "says": ""
+    },
+    "disputes": {
+     "v": "unknown",
+     "says": ""
+    },
+    "alterations": {
+     "v": "unknown",
+     "says": ""
+    },
+    "warranty": {
+     "v": "unknown",
+     "says": ""
+    }
+   },
+   "unknown": [
+    "how it is built",
+    "the heating",
+    "whether it has mains gas",
+    "whether it has mains water",
+    "whether it has mains drainage",
+    "broadband speed",
+    "mobile signal",
+    "parking",
+    "flooding",
+    "flood defences",
+    "coastal erosion",
+    "whether it is listed",
+    "whether it is in a conservation area",
+    "restrictive covenants",
+    "rights of way",
+    "planning applications",
+    "building safety",
+    "accessibility",
+    "mining",
+    "Japanese knotweed",
+    "disputes with neighbours",
+    "alterations and building regulations",
+    "a new-build warranty"
+   ],
+   "say_first": [],
+   "before_offer": [],
+   "seller_position": "",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"]
+  },
+  {
+   "key": "home_2",
+   "ref": "",
+   "number": "",
+   "street": "",
+   "district": "",
+   "town": "",
+   "address": "",
+   "initial": {
+    "status": "available",
+    "price_pence": 0,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 0,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "other",
+   "beds": 0,
+   "baths": 0,
+   "receptions": 0,
+   "home": "home",
+   "features": [],
+   "summary": "",
+   "rooms": [],
+   "tenure": "unknown",
+   "lease": null,
+   "local_tax": "",
+   "epc": "",
+   "checks": {
+    "construction": {
+     "v": "unknown",
+     "says": ""
+    },
+    "heating": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mains_gas": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mains_water": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mains_drainage": {
+     "v": "unknown",
+     "says": ""
+    },
+    "broadband": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mobile": {
+     "v": "unknown",
+     "says": ""
+    },
+    "parking": {
+     "v": "unknown",
+     "says": ""
+    },
+    "flooded": {
+     "v": "unknown",
+     "says": ""
+    },
+    "flood_defences": {
+     "v": "unknown",
+     "says": ""
+    },
+    "coastal_erosion": {
+     "v": "unknown",
+     "says": ""
+    },
+    "listed": {
+     "v": "unknown",
+     "says": ""
+    },
+    "conservation_area": {
+     "v": "unknown",
+     "says": ""
+    },
+    "covenants": {
+     "v": "unknown",
+     "says": ""
+    },
+    "rights_of_way": {
+     "v": "unknown",
+     "says": ""
+    },
+    "planning": {
+     "v": "unknown",
+     "says": ""
+    },
+    "building_safety": {
+     "v": "unknown",
+     "says": ""
+    },
+    "accessibility": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mining": {
+     "v": "unknown",
+     "says": ""
+    },
+    "knotweed": {
+     "v": "unknown",
+     "says": ""
+    },
+    "disputes": {
+     "v": "unknown",
+     "says": ""
+    },
+    "alterations": {
+     "v": "unknown",
+     "says": ""
+    },
+    "warranty": {
+     "v": "unknown",
+     "says": ""
+    }
+   },
+   "unknown": [
+    "how it is built",
+    "the heating",
+    "whether it has mains gas",
+    "whether it has mains water",
+    "whether it has mains drainage",
+    "broadband speed",
+    "mobile signal",
+    "parking",
+    "flooding",
+    "flood defences",
+    "coastal erosion",
+    "whether it is listed",
+    "whether it is in a conservation area",
+    "restrictive covenants",
+    "rights of way",
+    "planning applications",
+    "building safety",
+    "accessibility",
+    "mining",
+    "Japanese knotweed",
+    "disputes with neighbours",
+    "alterations and building regulations",
+    "a new-build warranty"
+   ],
+   "say_first": [],
+   "before_offer": [],
+   "seller_position": "",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"]
+  }
+ ],
+ "team": [
+  {
+   "key": "junk",
+   "name": "Junk",
+   "first_name": "Junk",
+   "role": "other",
+   "does": [],
+   "days": [],
+   "mobile": ""
+  },
+  {
+   "key": "person_2",
+   "name": "",
+   "first_name": "person_2",
+   "role": "other",
+   "does": [],
+   "days": [],
+   "mobile": ""
+  }
+ ],
+ "estate": {
+  "nation": "england",
+  "districts": ["BK2"],
+  "towns": ["Brackenford","Little Haddon","Coldbrook"],
+  "lettings": "none",
+  "lettings_contact": null,
+  "out_of_hours_booking": true,
+  "on_call": null,
+  "viewing_hours": [],
+  "valuation_hours": [
+   {
+    "days": [1,2,3,4,5],
+    "open": "09:00",
+    "close": "18:00",
+    "label": "Open"
+   },
+   {
+    "days": [6],
+    "open": "09:00",
+    "close": "13:00",
+    "label": "Open"
+   }
+  ],
+  "safety": {
+   "take_postcode": true,
+   "empty_office_hours_only": true
+  },
+  "offers": {
+   "take": "record",
+   "buyer_fee_pence": 0,
+   "buyer_fee": "",
+   "id_provider": "Movecheck (example)",
+   "best_final": "Best and final offers are made in writing by a set time, and every buyer who has offered hears at once."
+  },
+  "valuations": {
+   "name": "free market appraisal",
+   "minutes": 60,
+   "rics": {
+    "offered": false,
+    "fee_pence": 0,
+    "staff": null
+   },
+   "say": "It's free and takes about an hour."
+  },
+  "mortgage": {
+   "staff": "mark",
+   "firm": "Clearwater Mortgages",
+   "statement": "Clearwater Mortgages is a separate firm we work with, and we may receive a referral fee. Seeing them is optional and makes no difference to any viewing or offer."
+  },
+  "gas": "0800 111 999",
+  "official": {
+   "flooding": "the Environment Agency's long-term flood risk service on GOV.UK",
+   "local_tax": "the Valuation Office Agency's council tax band checker on GOV.UK",
+   "broadband": "Ofcom's broadband and mobile checker",
+   "mobile": "Ofcom's broadband and mobile checker"
+  },
+  "redress": "tpo",
+  "complaints_handler": "rachel",
+  "data_lead": "rachel"
+ }
+}

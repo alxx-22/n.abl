@@ -1,0 +1,53 @@
+{
+ "contents": [
+  {
+   "role": "user",
+   "parts": [
+    {
+     "text": [
+      "These are the facts about a UK estate agency, set by its owner for an AI phone receptionist demo.",
+      "Name: Morgan & Price. Style: Family-run estate agency, sales and lettings messages. Address: 3 Bridge Street, Aberllyn BK1 4CD. Sells homes in Wales.",
+      "Patch: We cover Aberllyn and Pentre, BK1, BK2 and BK7. Lettings: lettings calls taken as a message for Rachel.",
+      "Office hours: Monday to Friday: 9am till 5:30pm. Saturday: 9am till 4pm. Closed Sundays.",
+      "Viewings: Monday to Friday 9am till 7pm and Saturday 9am till 4pm; 45 minutes each. Valuations: Monday to Friday 9am till 6pm and Saturday 9am till 1pm. Valuations take about 45 minutes, and are free.",
+      "Team: Rachel (manager), Jess (negotiator: viewings), Tom (negotiator: viewings), Priya (valuer: valuations), Dan (progressor: progression), Mark (adviser: mortgage), Ffion (other: viewings, valuations).",
+      "RICS valuations: yes. Fees: quoted: £1995 including VAT, 8 weeks multi agency. Marketing: Rightmove, Zoopla, OnTheMarket, professional photos, a floorplan, a video tour, a board, accompanied viewings, feedback within 24 hours.",
+      "Buyers: pay nothing.",
+      "Mortgage partner: Clearwater Mortgages. Clearwater Mortgages is a separate firm we work with, and we may receive a referral fee. Seeing them is optional and makes no difference to any viewing or offer.. Conveyancing panel: yes.",
+      "Redress scheme: the Property Redress Scheme. Complaints: Tom.",
+      "Parking: Park on Bridge Street; the first hour is free. At viewings: Please take your shoes off at viewings. Appraisals take 45 minutes.",
+      "Area guide: How far is the station, and how long does the train take? Brackenford station is a ten-minute walk from the High Street, with trains to the city about every half hour taking around 35 minutes. What are the primary schools like? There are two primary schools in town, Brackenford Church of England Primary and Mill Lane Primary. Ofsted reports are on GOV.UK, and places are allocated by the county council. Which secondary school is it for? Most children go to Brackenford Academy, but catchment areas change, so please check with the county council admissions team. Is there a doctor nearby? The Brackenford Health Centre on Station Road is the GP surgery for the town and the villages. Are there parks nearby? Riverside Park runs along the river from Mill Lane, and Coldbrook Common is a short drive away. Is there parking in town? There are two pay and display car parks off the High Street, and free parking on Sundays.",
+      "",
+      "Write the ten questions callers most often ask an estate agency like this that the facts above answer, each with a short spoken answer (one or two sentences, friendly, British English).",
+      "Use only these facts. Where the facts do not cover something, leave that question out rather than guess. No questions about finding homes, booking viewings and valuations, or taking offers themselves; the receptionist handles those."
+     ]
+    }
+   ]
+  }
+ ],
+ "generationConfig": {
+  "temperature": 0.4,
+  "responseMimeType": "application/json",
+  "responseSchema": {
+   "type": "OBJECT",
+   "properties": {
+    "faqs": {
+     "type": "ARRAY",
+     "items": {
+      "type": "OBJECT",
+      "properties": {
+       "q": {
+        "type": "STRING"
+       },
+       "a": {
+        "type": "STRING"
+       }
+      },
+      "required": ["q","a"]
+     }
+    }
+   },
+   "required": ["faqs"]
+  }
+ }
+}

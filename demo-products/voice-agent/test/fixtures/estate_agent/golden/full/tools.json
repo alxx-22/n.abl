@@ -1,0 +1,16 @@
+[
+ "get_opening_hours",
+ "search_knowledge",
+ "check_availability",
+ "create_booking",
+ "find_bookings",
+ "modify_booking",
+ "cancel_booking",
+ "search_properties",
+ "get_property",
+ "send_property_details",
+ "book_valuation",
+ "record_offer",
+ "take_message",
+ "end_call"
+]

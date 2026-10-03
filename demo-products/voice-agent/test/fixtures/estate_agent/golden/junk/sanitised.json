@@ -1,0 +1,606 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "",
+  "style": "Independent estate agency, sales only",
+  "town": "Brackenford",
+  "address": "12 High Street, Brackenford BK1 2AB",
+  "phone_display": "01632 960 123",
+  "website": "",
+  "voice": "Kore",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "16:00"
+     }
+    ]
+   }
+  ],
+  "closures": []
+ },
+ "patch": {
+  "nation": "england",
+  "districts": ["BK2"],
+  "towns": ["Brackenford","Little Haddon","Coldbrook"],
+  "lettings": "none",
+  "lettings_contact": ""
+ },
+ "diary": {
+  "viewing_days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "16:00"
+     }
+    ]
+   }
+  ],
+  "valuation_days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "13:00"
+     }
+    ]
+   }
+  ],
+  "out_of_hours_booking": true,
+  "on_call": null
+ },
+ "team": [
+  {
+   "key": "junk",
+   "name": "Junk",
+   "role": "other",
+   "does": [],
+   "days": [],
+   "mobile": ""
+  },
+  {
+   "key": "person_2",
+   "name": "",
+   "role": "other",
+   "does": [],
+   "days": [],
+   "mobile": ""
+  }
+ ],
+ "listings": [
+  {
+   "key": "home_1",
+   "ref": "",
+   "number": "",
+   "street": "",
+   "district": "",
+   "town": "",
+   "status": "available",
+   "price_pence": 0,
+   "qualifier": "fixed",
+   "marketed_days_ago": 0,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "other",
+   "beds": 0,
+   "baths": 0,
+   "receptions": 0,
+   "features": [],
+   "summary": "",
+   "rooms": [],
+   "tenure": "unknown",
+   "lease": null,
+   "local_tax": "",
+   "epc": "",
+   "checks": {
+    "construction": {
+     "v": "unknown",
+     "note": ""
+    },
+    "heating": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mains_gas": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "unknown",
+     "note": ""
+    },
+    "broadband": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mobile": {
+     "v": "unknown",
+     "note": ""
+    },
+    "parking": {
+     "v": "unknown",
+     "note": ""
+    },
+    "flooded": {
+     "v": "unknown",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "unknown",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "unknown",
+     "note": ""
+    },
+    "listed": {
+     "v": "unknown",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "unknown",
+     "note": ""
+    },
+    "covenants": {
+     "v": "unknown",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "unknown",
+     "note": ""
+    },
+    "planning": {
+     "v": "unknown",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "unknown",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mining": {
+     "v": "unknown",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "unknown",
+     "note": ""
+    },
+    "disputes": {
+     "v": "unknown",
+     "note": ""
+    },
+    "alterations": {
+     "v": "unknown",
+     "note": ""
+    },
+    "warranty": {
+     "v": "unknown",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": false
+  },
+  {
+   "key": "home_2",
+   "ref": "",
+   "number": "",
+   "street": "",
+   "district": "",
+   "town": "",
+   "status": "available",
+   "price_pence": 0,
+   "qualifier": "fixed",
+   "marketed_days_ago": 0,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "other",
+   "beds": 0,
+   "baths": 0,
+   "receptions": 0,
+   "features": [],
+   "summary": "",
+   "rooms": [],
+   "tenure": "unknown",
+   "lease": null,
+   "local_tax": "",
+   "epc": "",
+   "checks": {
+    "construction": {
+     "v": "unknown",
+     "note": ""
+    },
+    "heating": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mains_gas": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "unknown",
+     "note": ""
+    },
+    "broadband": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mobile": {
+     "v": "unknown",
+     "note": ""
+    },
+    "parking": {
+     "v": "unknown",
+     "note": ""
+    },
+    "flooded": {
+     "v": "unknown",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "unknown",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "unknown",
+     "note": ""
+    },
+    "listed": {
+     "v": "unknown",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "unknown",
+     "note": ""
+    },
+    "covenants": {
+     "v": "unknown",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "unknown",
+     "note": ""
+    },
+    "planning": {
+     "v": "unknown",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "unknown",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mining": {
+     "v": "unknown",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "unknown",
+     "note": ""
+    },
+    "disputes": {
+     "v": "unknown",
+     "note": ""
+    },
+    "alterations": {
+     "v": "unknown",
+     "note": ""
+    },
+    "warranty": {
+     "v": "unknown",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": false
+  }
+ ],
+ "viewings": {
+  "minutes": 90,
+  "second_minutes": 45,
+  "travel_minutes": 15,
+  "notice_hours": 2,
+  "horizon_days": 21,
+  "safety": {
+   "take_postcode": true,
+   "empty_office_hours_only": true
+  }
+ },
+ "offers": {
+  "take": "record",
+  "buyer_fee_pence": 0,
+  "buyer_fee_when": "once an offer is accepted",
+  "id_provider": "Movecheck (example)",
+  "best_final": "Best and final offers are made in writing by a set time, and every buyer who has offered hears at once."
+ },
+ "valuations": {
+  "name": "free market appraisal",
+  "minutes": 60,
+  "rics": {
+   "offered": false,
+   "fee_pence": 0,
+   "staff": ""
+  }
+ },
+ "fees": {
+  "quote": false,
+  "kind": "percent",
+  "percent_hundredths": 1000,
+  "fixed_pence": 0,
+  "min_weeks": 12,
+  "contract": "sole_agency",
+  "includes": "Professional photos, a floorplan, a video tour, a board, accompanied viewings and feedback within 24 hours.",
+  "extras": "",
+  "marketing": [
+   "Rightmove",
+   "Zoopla",
+   "OnTheMarket",
+   "professional photos",
+   "a floorplan",
+   "a video tour",
+   "a board",
+   "accompanied viewings",
+   "feedback within 24 hours"
+  ]
+ },
+ "partners": {
+  "mortgage": {
+   "on": true,
+   "staff": "mark",
+   "firm": "Clearwater Mortgages",
+   "statement": "Clearwater Mortgages is a separate firm we work with, and we may receive a referral fee. Seeing them is optional and makes no difference to any viewing or offer."
+  },
+  "conveyancing": {
+   "on": false,
+   "statement": ""
+  }
+ },
+ "compliance": {
+  "redress": "tpo",
+  "complaints_handler": "rachel",
+  "data_lead": "rachel",
+  "recording": "Calls on this demo line are transcribed so the team can see what was said."
+ },
+ "area": {
+  "faqs": []
+ },
+ "policies": {
+  "faqs": [],
+  "parking": "There is free parking behind our office on the High Street.",
+  "at_viewings": "Children are welcome at viewings; please leave dogs at home."
+ },
+ "theme": {
+  "accent": "#c9a24a",
+  "primary": "#1d3b34",
+  "background": "#0f1513",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

@@ -52,8 +52,16 @@ export function districtWords(districts: string[]): string {
   return districts.length > 1 ? `${districts.slice(0, -1).join(', ')} and ${districts.at(-1)}` : districts[0] ?? '';
 }
 
-export function patchSentence(a: EstateAnswers): string {
-  const towns = a.patch.towns;
+/**
+ * "We cover Brackenford, Little Haddon and Coldbrook, BK1 to BK5." `most`
+ * names that many towns and counts the rest: the prompt's core fact keeps to
+ * six, so twenty long town names cannot push it past its size, while the
+ * searchable answer lists them all.
+ */
+export function patchSentence(a: EstateAnswers, most = Infinity): string {
+  const all = a.patch.towns;
+  const more = all.length > most ? all.length - most : 0;
+  const towns = more ? [...all.slice(0, most), `${more} more town${more === 1 ? '' : 's'} and village${more === 1 ? '' : 's'}`] : all;
   const where = towns.length > 1 ? `${towns.slice(0, -1).join(', ')} and ${towns.at(-1)}` : towns[0] ?? '';
   const districts = districtWords(a.patch.districts);
   if (!where && !districts) return '';
@@ -258,7 +266,7 @@ export function compileEstate(a: EstateAnswers, meta: { slug: string }): TenantP
       noun: NOUN,
       facts: [
         `Viewings: ${daysWords(a.diary.viewing_days)}. Valuations: ${daysWords(a.diary.valuation_days)}.`,
-        patchSentence(a),
+        patchSentence(a, 6),
         appraisalSentence(a),
         gasFact(a.patch.nation),
       ],

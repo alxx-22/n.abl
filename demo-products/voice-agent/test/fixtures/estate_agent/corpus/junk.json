@@ -1,0 +1,88 @@
+{
+ "version": "nine",
+ "basics": {
+  "name": 42,
+  "voice": "Nobody",
+  "greeting": ["hi"]
+ },
+ "hours": {
+  "days": "every day",
+  "closures": [
+   {
+    "date": "soon"
+   }
+  ]
+ },
+ "patch": {
+  "nation": "scotland",
+  "districts": ["not a district","bk 2",7],
+  "towns": "Brackenford",
+  "lettings": "always"
+ },
+ "diary": {
+  "viewing_days": [null],
+  "on_call": {
+   "who": "me"
+  }
+ },
+ "team": [
+  {
+   "name": "Junk",
+   "role": "king",
+   "does": ["everything"],
+   "days": [9,"Monday"]
+  },
+  "nobody"
+ ],
+ "listings": [
+  {
+   "status": "sold",
+   "price_pence": -5,
+   "type": "castle",
+   "tenure": "forever",
+   "checks": {
+    "mining": {
+     "v": "maybe"
+    }
+   },
+   "viewing": {
+    "windows": [
+     {
+      "days": [8]
+     }
+    ]
+   }
+  },
+  null
+ ],
+ "viewings": {
+  "minutes": 1000,
+  "safety": "yes"
+ },
+ "offers": {
+  "take": "shout",
+  "buyer_fee_pence": -1
+ },
+ "fees": {
+  "quote": "yes",
+  "percent_hundredths": 99999
+ },
+ "partners": {
+  "mortgage": "on"
+ },
+ "compliance": {
+  "redress": "none"
+ },
+ "area": {
+  "faqs": [
+   {
+    "q": ""
+   }
+  ]
+ },
+ "policies": null,
+ "theme": {
+  "accent": "blue"
+ },
+ "sources": "web"
+}

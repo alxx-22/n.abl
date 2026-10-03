@@ -1,0 +1,3418 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "",
+  "style": "Independent estate agency, sales only",
+  "town": "Brackenford",
+  "address": "12 High Street, Brackenford BK1 2AB",
+  "phone_display": "01632 960 123",
+  "website": "",
+  "voice": "Kore",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "16:00"
+     }
+    ]
+   }
+  ],
+  "closures": []
+ },
+ "patch": {
+  "nation": "england",
+  "districts": ["BK1","BK2","BK3","BK4","BK5"],
+  "towns": ["Brackenford","Little Haddon","Coldbrook"],
+  "lettings": "none",
+  "lettings_contact": ""
+ },
+ "diary": {
+  "viewing_days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "19:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "16:00"
+     }
+    ]
+   }
+  ],
+  "valuation_days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "13:00"
+     }
+    ]
+   }
+  ],
+  "out_of_hours_booking": true,
+  "on_call": "rachel"
+ },
+ "team": [
+  {
+   "key": "rachel",
+   "name": "Rachel Hartwell",
+   "role": "manager",
+   "does": [],
+   "days": [1,2,3,4,5],
+   "mobile": "07700 900020"
+  },
+  {
+   "key": "jess",
+   "name": "Jess Morgan",
+   "role": "negotiator",
+   "does": ["viewings"],
+   "days": [1,2,3,4,5,6],
+   "mobile": "07700 900021"
+  },
+  {
+   "key": "tom",
+   "name": "Tom Bennett",
+   "role": "negotiator",
+   "does": ["viewings"],
+   "days": [2,3,4,5,6],
+   "mobile": "07700 900022"
+  },
+  {
+   "key": "priya",
+   "name": "Priya Shah",
+   "role": "valuer",
+   "does": ["valuations"],
+   "days": [1,2,3,4,5,6],
+   "mobile": "07700 900023"
+  },
+  {
+   "key": "dan",
+   "name": "Dan Fletcher",
+   "role": "progressor",
+   "does": ["progression"],
+   "days": [1,2,3,4,5],
+   "mobile": "07700 900024"
+  },
+  {
+   "key": "mark",
+   "name": "Mark Ellis",
+   "role": "adviser",
+   "does": ["mortgage"],
+   "days": [2,4],
+   "mobile": "07700 900025"
+  }
+ ],
+ "listings": [
+  {
+   "key": "albion_41_flat_2",
+   "ref": "HG101",
+   "number": "Flat 2, 41",
+   "street": "Albion Road",
+   "district": "BK2",
+   "town": "Brackenford",
+   "status": "available",
+   "price_pence": 18500000,
+   "qualifier": "guide",
+   "marketed_days_ago": 38,
+   "reduced": {
+    "days_ago": 12,
+    "from_pence": 19500000
+   },
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "flat",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["allocated parking","communal garden","bay window"],
+   "summary": "A second-floor flat in a converted Victorian villa, with a bay-fronted living room and one allocated parking space.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.6m x 3.9m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.1m x 2.4m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.0m x 3.3m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.0m x 2.6m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.2m x 1.9m"
+    }
+   ],
+   "tenure": "leasehold",
+   "lease": {
+    "expires": "2102-12-24",
+    "service_charge": "£1,320 a year, covering buildings insurance and the communal areas",
+    "ground_rent": "£250 a year, doubling every 25 years",
+    "reserve_fund": "About £4,800 in the reserve fund",
+    "event_fee": "",
+    "managing_agent": "Brackenford Block Management (example)",
+    "age_limit": null,
+    "shared": null
+   },
+   "local_tax": "B",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a slate roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "One allocated space"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "yes",
+     "note": "The Albion Road conservation area"
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": "Second floor, with no lift"
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The seller has found a home and is ready to move.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "albion_22",
+   "ref": "HG102",
+   "number": "22",
+   "street": "Albion Road",
+   "district": "BK2",
+   "town": "Brackenford",
+   "status": "available",
+   "price_pence": 32500000,
+   "qualifier": "offers_over",
+   "marketed_days_ago": 20,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 2,
+   "features": ["garden","driveway","garage"],
+   "summary": "A 1930s semi-detached house with a south-facing garden, a driveway and a garage.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.3m x 3.7m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.6m x 3.2m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.4m x 2.7m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.1m x 3.4m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.6m x 3.2m"
+    },
+    {
+     "name": "Bedroom 3 (box room)",
+     "size": ""
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.4m x 2.0m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "D",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Driveway for two cars and a single garage"
+    },
+    "flooded": {
+     "v": "unknown",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The sellers are looking for a home in Little Haddon and have not found one yet.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [
+     {
+      "days": [6],
+      "from": "10:00",
+      "to": "13:00"
+     },
+     {
+      "days": [1,2,3,4,5],
+      "from": "17:00",
+      "to": "19:00"
+     }
+    ],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "Harper & Co, until June",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "larkspur_14",
+   "ref": "HG103",
+   "number": "14",
+   "street": "Larkspur Close",
+   "district": "BK3",
+   "town": "Brackenford",
+   "status": "under_offer",
+   "price_pence": 29995000,
+   "qualifier": "guide",
+   "marketed_days_ago": 30,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["garden","driveway","conservatory"],
+   "summary": "A modern semi-detached house on a quiet close, with a conservatory and a landscaped garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.8m x 3.6m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "5.2m x 2.9m"
+    },
+    {
+     "name": "Conservatory",
+     "size": "3.0m x 2.8m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.9m x 3.1m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.3m x 2.8m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.6m x 2.2m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.1m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Driveway for one car"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The sellers are moving to be near family and are flexible on dates.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "kingfisher_9",
+   "ref": "HG104",
+   "number": "9",
+   "street": "Kingfisher Way",
+   "district": "BK4",
+   "town": "Little Haddon",
+   "status": "available",
+   "price_pence": 36500000,
+   "qualifier": "oiro",
+   "marketed_days_ago": 15,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "detached",
+   "beds": 3,
+   "baths": 2,
+   "receptions": 2,
+   "features": ["garden","double garage","en-suite"],
+   "summary": "A detached family house built in 2009, with an en-suite to the main bedroom and a double garage.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "5.1m x 3.8m"
+    },
+    {
+     "name": "Study",
+     "size": "2.7m x 2.4m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "6.2m x 3.4m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.2m x 3.6m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.5m x 3.1m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.9m x 2.6m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.3m x 2.0m"
+    },
+    {
+     "name": "En-suite",
+     "size": "2.0m x 1.6m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "E",
+   "epc": "B",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Double garage and a driveway"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The seller has an offer accepted on another home.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "jess",
+   "personal_interest": {
+    "staff": "tom",
+    "wording": "The seller is the brother of Tom Bennett, one of our negotiators."
+   },
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "kingfisher_3",
+   "ref": "HG105",
+   "number": "3",
+   "street": "Kingfisher Way",
+   "district": "BK4",
+   "town": "Little Haddon",
+   "status": "sale_agreed",
+   "price_pence": 24500000,
+   "qualifier": "fixed",
+   "marketed_days_ago": 60,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["garden","parking"],
+   "summary": "A two-bedroom semi-detached house with a low-maintenance garden and parking for two cars.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.4m x 3.5m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.2m x 2.6m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.8m x 3.1m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.0m x 2.4m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.0m x 1.8m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "B",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Driveway for two cars"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The seller is moving into rented accommodation.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "mill_6_bungalow",
+   "ref": "HG106",
+   "number": "The Bungalow, 6",
+   "street": "Mill Lane",
+   "district": "BK1",
+   "town": "Brackenford",
+   "status": "available",
+   "price_pence": 27500000,
+   "qualifier": "oiro",
+   "marketed_days_ago": 25,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "bungalow",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["garden","garage","step-free"],
+   "summary": "A detached bungalow on a generous plot, with a garage and level access throughout, in need of some updating.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "5.0m x 3.9m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.4m x 2.8m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.9m x 3.4m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.2m x 2.9m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.4m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "E",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating; the boiler is about 15 years old"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Garage and driveway"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "yes",
+     "note": "Level access throughout and a level-access shower"
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "No onward chain: it is an executors' sale.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "vacant",
+    "key_held": true
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "mill_31",
+   "ref": "HG107",
+   "number": "31",
+   "street": "Mill Lane",
+   "district": "BK1",
+   "town": "Brackenford",
+   "status": "under_offer",
+   "price_pence": 34000000,
+   "qualifier": "guide",
+   "marketed_days_ago": 21,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "end_terrace",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 2,
+   "features": ["garden","cellar","period features"],
+   "summary": "A Victorian end-of-terrace house with a long garden, a cellar and its original fireplaces.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.2m x 3.8m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.9m x 3.6m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "4.0m x 2.5m"
+    },
+    {
+     "name": "Cellar",
+     "size": "3.8m x 3.5m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.2m x 3.8m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.9m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.8m x 2.3m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.6m x 2.1m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "D",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Solid brick with a slate roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "no",
+     "note": "On-street parking with a residents' permit"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The sellers are buying a new-build home due to complete in the spring.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "orchard_7",
+   "ref": "HG108",
+   "number": "7",
+   "street": "Orchard Rise",
+   "district": "BK5",
+   "town": "Coldbrook",
+   "status": "available",
+   "price_pence": 16500000,
+   "qualifier": "fixed",
+   "marketed_days_ago": 45,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["garden","driveway"],
+   "summary": "A three-bedroom semi-detached house on a corner plot, of 1950s concrete panel construction.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.5m x 3.6m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.3m x 2.7m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.8m x 3.2m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.4m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.5m x 2.2m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.1m x 1.8m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "B",
+   "epc": "D",
+   "checks": {
+    "construction": {
+     "v": "no",
+     "note": "Concrete panel construction from the 1950s. Most mortgage lenders will not lend on it, so it is for cash buyers only"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Driveway for one car"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "No onward chain.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "wharf_house_9",
+   "ref": "HG109",
+   "number": "Flat 9, Wharf House",
+   "street": "Canal Street",
+   "district": "BK2",
+   "town": "Brackenford",
+   "status": "available",
+   "price_pence": 12000000,
+   "qualifier": "fixed",
+   "marketed_days_ago": 50,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "flat",
+   "beds": 1,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["lift","secure entry","canal views"],
+   "summary": "A first-floor flat in a converted canal warehouse, sold with the tenant in place.",
+   "rooms": [
+    {
+     "name": "Open-plan living room and kitchen",
+     "size": "6.1m x 4.2m"
+    },
+    {
+     "name": "Bedroom",
+     "size": "3.6m x 3.1m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.2m x 1.7m"
+    }
+   ],
+   "tenure": "leasehold",
+   "lease": {
+    "expires": "2138-12-31",
+    "service_charge": "£1,180 a year, covering buildings insurance, the lift and the communal areas",
+    "ground_rent": "£150 a year, fixed",
+    "reserve_fund": "About £12,000 in the reserve fund",
+    "event_fee": "",
+    "managing_agent": "Canalside Estates (example)",
+    "age_limit": null,
+    "shared": null
+   },
+   "local_tax": "A",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick warehouse conversion"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Electric panel heaters"
+    },
+    "mains_gas": {
+     "v": "no",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "no",
+     "note": "No parking; a public car park is nearby"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": "No cladding; the building has a fire risk assessment from this year"
+    },
+    "accessibility": {
+     "v": "yes",
+     "note": "Lift to every floor"
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": ["It's sold with the tenant in place, paying £725 a month, so it suits an investor."],
+   "seller_position": "The seller is an investor selling with the tenant in place.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 24,
+    "occupied": "tenant",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "beechwood_court_12",
+   "ref": "HG110",
+   "number": "Flat 12, Beechwood Court",
+   "street": "Heath Road",
+   "district": "BK3",
+   "town": "Brackenford",
+   "status": "available",
+   "price_pence": 14500000,
+   "qualifier": "fixed",
+   "marketed_days_ago": 70,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "flat",
+   "beds": 1,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["lift","house manager","residents' lounge","communal garden"],
+   "summary": "A ground-floor retirement flat with a house manager, a residents' lounge and communal gardens.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "5.2m x 3.4m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "2.6m x 2.2m"
+    },
+    {
+     "name": "Bedroom",
+     "size": "4.1m x 2.9m"
+    },
+    {
+     "name": "Shower room",
+     "size": "2.2m x 1.8m"
+    }
+   ],
+   "tenure": "leasehold",
+   "lease": {
+    "expires": "2120-06-30",
+    "service_charge": "£2,950 a year, including the house manager, buildings insurance and the communal areas",
+    "ground_rent": "£395 a year",
+    "reserve_fund": "About £38,000 in the reserve fund",
+    "event_fee": "1% of the sale price, paid to the freeholder each time the flat is sold",
+    "managing_agent": "Beechwood Retirement Management (example)",
+    "age_limit": 60,
+    "shared": null
+   },
+   "local_tax": "B",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Electric storage heaters"
+    },
+    "mains_gas": {
+     "v": "no",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Residents' car park, first come first served"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "yes",
+     "note": "Ground floor, level access and a walk-in shower"
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "No onward chain.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "heron_18",
+   "ref": "HG111",
+   "number": "18",
+   "street": "Heron Close",
+   "district": "BK4",
+   "town": "Little Haddon",
+   "status": "available",
+   "price_pence": 11000000,
+   "qualifier": "share",
+   "marketed_days_ago": 33,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "terraced",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["garden","parking"],
+   "summary": "A two-bedroom house built in 2019, sold as a 50% shared ownership share with Meadow Homes.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.6m x 3.5m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.0m x 2.5m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.7m x 3.2m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.1m x 2.4m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.0m x 1.8m"
+    }
+   ],
+   "tenure": "shared_ownership",
+   "lease": {
+    "expires": "2144-03-31",
+    "service_charge": "£264 a year for the estate's communal areas",
+    "ground_rent": "None",
+    "reserve_fund": "",
+    "event_fee": "",
+    "managing_agent": "Meadow Homes (example)",
+    "age_limit": null,
+    "shared": {
+     "share_percent": 50,
+     "rent_pence_month": 45800,
+     "provider": "Meadow Homes",
+     "eligibility": "a household income under £80,000 and no other home",
+     "nomination_weeks": 8
+    }
+   },
+   "local_tax": "B",
+   "epc": "B",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Two allocated spaces"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "yes",
+     "note": "NHBC warranty until 2029"
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The seller is buying a home outright and is ready to move.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "riverside_5",
+   "ref": "HG112",
+   "number": "5",
+   "street": "Riverside Walk",
+   "district": "BK1",
+   "town": "Brackenford",
+   "status": "available",
+   "price_pence": 47500000,
+   "qualifier": "guide",
+   "marketed_days_ago": 0,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "detached",
+   "beds": 4,
+   "baths": 2,
+   "receptions": 2,
+   "features": ["garden","river views","double garage","en-suite"],
+   "summary": "A four-bedroom detached house backing on to the river, with a double garage and a large garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "6.0m x 4.1m"
+    },
+    {
+     "name": "Family room",
+     "size": "4.0m x 3.6m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "7.2m x 3.8m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.6m x 3.9m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.9m x 3.4m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "3.4m x 3.0m"
+    },
+    {
+     "name": "Bedroom 4",
+     "size": "2.9m x 2.6m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.6m x 2.2m"
+    },
+    {
+     "name": "En-suite",
+     "size": "2.2m x 1.8m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "F",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Double garage and a driveway"
+    },
+    "flooded": {
+     "v": "unknown",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "unknown",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The sellers are relocating for work and want to move by the new year.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "station_27",
+   "ref": "HG113",
+   "number": "27",
+   "street": "Station Road",
+   "district": "BK2",
+   "town": "Brackenford",
+   "status": "available",
+   "price_pence": 24900000,
+   "qualifier": "fixed",
+   "marketed_days_ago": 90,
+   "reduced": {
+    "days_ago": 12,
+    "from_pence": 25900000
+   },
+   "back_on_market_days_ago": 14,
+   "viewings_from_days": null,
+   "type": "terraced",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 2,
+   "features": ["garden","near the station"],
+   "summary": "A Victorian terraced house five minutes from the station, with two reception rooms and a courtyard garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.0m x 3.6m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.8m x 3.5m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.6m x 2.3m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.0m x 3.7m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.6m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.7m x 2.1m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.3m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "B",
+   "epc": "D",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Solid brick with a slate roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "no",
+     "note": "On-street parking"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The seller has found a home and is ready to move.",
+   "fall_through": "The last buyer's survey found some roof spread; the seller has had it assessed and the report is available.",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "fernbank_11",
+   "ref": "HG114",
+   "number": "11",
+   "street": "Fernbank Drive",
+   "district": "BK3",
+   "town": "Brackenford",
+   "status": "available",
+   "price_pence": 21500000,
+   "qualifier": "fixed",
+   "marketed_days_ago": 40,
+   "reduced": {
+    "days_ago": 6,
+    "from_pence": 22500000
+   },
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "terraced",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["garden","parking"],
+   "summary": "A two-bedroom mid-terrace house with a new kitchen, an enclosed garden and an allocated parking space.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.4m x 3.6m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "4.4m x 2.8m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.9m x 3.0m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.1m x 2.5m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.0m x 1.8m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "B",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "One allocated space"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The seller is moving in with a partner; no onward purchase.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "elm_court_2",
+   "ref": "HG115",
+   "number": "2",
+   "street": "Elm Court",
+   "district": "BK5",
+   "town": "Coldbrook",
+   "status": "sale_agreed",
+   "price_pence": 28900000,
+   "qualifier": "fixed",
+   "marketed_days_ago": 80,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["garden","garage"],
+   "summary": "A three-bedroom semi-detached house in a cul-de-sac, with a garage and a west-facing garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.6m x 3.7m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "5.0m x 3.0m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.9m x 3.2m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.4m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.6m x 2.1m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.1m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Garage and driveway"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The sellers are buying a home further up the chain.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "willow_gardens_8",
+   "ref": "HG116",
+   "number": "8",
+   "street": "Willow Gardens",
+   "district": "BK1",
+   "town": "Brackenford",
+   "status": "exchanged",
+   "price_pence": 41000000,
+   "qualifier": "fixed",
+   "marketed_days_ago": 110,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "detached",
+   "beds": 4,
+   "baths": 2,
+   "receptions": 2,
+   "features": ["garden","double garage","en-suite"],
+   "summary": "A four-bedroom detached house with a double garage, on a tree-lined road close to the primary school.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "5.4m x 4.0m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.8m x 3.4m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "4.4m x 3.2m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.4m x 3.8m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.8m x 3.3m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "3.2m x 2.9m"
+    },
+    {
+     "name": "Bedroom 4",
+     "size": "2.8m x 2.5m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.5m x 2.1m"
+    },
+    {
+     "name": "En-suite",
+     "size": "2.1m x 1.7m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "E",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Double garage and a driveway"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The sellers are downsizing.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "copse_lane_19",
+   "ref": "HG117",
+   "number": "19",
+   "street": "Copse Lane",
+   "district": "BK4",
+   "town": "Little Haddon",
+   "status": "coming_soon",
+   "price_pence": 31500000,
+   "qualifier": "guide",
+   "marketed_days_ago": 0,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": 5,
+   "type": "cottage",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 2,
+   "features": ["garden","woodburner","period features"],
+   "summary": "A three-bedroom period cottage on the edge of the village, with a woodburner and a cottage garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.5m x 3.9m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.5m x 3.3m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.6m x 2.6m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.8m x 3.5m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.3m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.6m x 2.4m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.3m x 2.0m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "D",
+   "epc": "",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Stone with a slate roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Oil-fired central heating"
+    },
+    "mains_gas": {
+     "v": "no",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "no",
+     "note": "A septic tank, shared with the cottage next door"
+    },
+    "broadband": {
+     "v": "unknown",
+     "note": ""
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "no",
+     "note": "On-street parking"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "yes",
+     "note": "Little Haddon conservation area"
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "The sellers are retiring to the coast.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  },
+  {
+   "key": "meadow_view_10",
+   "ref": "HG118",
+   "number": "10",
+   "street": "Meadow View",
+   "district": "BK5",
+   "town": "Coldbrook",
+   "status": "withdrawn",
+   "price_pence": 28000000,
+   "qualifier": "fixed",
+   "marketed_days_ago": 100,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 1,
+   "features": ["garden","driveway"],
+   "summary": "A three-bedroom semi-detached house overlooking fields, with a driveway and a large garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.7m x 3.6m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "5.1m x 3.0m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.8m x 3.3m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.4m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.6m x 2.2m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.1m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "note": "Brick with a tiled roof"
+    },
+    "heating": {
+     "v": "yes",
+     "note": "Gas central heating with a combination boiler"
+    },
+    "mains_gas": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_water": {
+     "v": "yes",
+     "note": ""
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "note": ""
+    },
+    "broadband": {
+     "v": "yes",
+     "note": "Superfast available, up to 80Mbps"
+    },
+    "mobile": {
+     "v": "yes",
+     "note": "Good outdoor signal on the main networks"
+    },
+    "parking": {
+     "v": "yes",
+     "note": "Driveway for one car"
+    },
+    "flooded": {
+     "v": "no",
+     "note": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "note": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "note": ""
+    },
+    "listed": {
+     "v": "no",
+     "note": ""
+    },
+    "conservation_area": {
+     "v": "no",
+     "note": ""
+    },
+    "covenants": {
+     "v": "no",
+     "note": ""
+    },
+    "rights_of_way": {
+     "v": "no",
+     "note": ""
+    },
+    "planning": {
+     "v": "no",
+     "note": ""
+    },
+    "building_safety": {
+     "v": "no",
+     "note": ""
+    },
+    "accessibility": {
+     "v": "no",
+     "note": ""
+    },
+    "mining": {
+     "v": "no",
+     "note": ""
+    },
+    "knotweed": {
+     "v": "no",
+     "note": ""
+    },
+    "disputes": {
+     "v": "no",
+     "note": ""
+    },
+    "alterations": {
+     "v": "no",
+     "note": ""
+    },
+    "warranty": {
+     "v": "no",
+     "note": ""
+    }
+   },
+   "say_up_front": [],
+   "seller_position": "",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_hours": 2,
+    "occupied": "owner",
+    "key_held": false
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": {
+    "brochure": true,
+    "floorplan": true,
+    "video": false,
+    "epc": true
+   },
+   "example": true
+  }
+ ],
+ "viewings": {
+  "minutes": 30,
+  "second_minutes": 45,
+  "travel_minutes": 15,
+  "notice_hours": 2,
+  "horizon_days": 21,
+  "safety": {
+   "take_postcode": true,
+   "empty_office_hours_only": true
+  }
+ },
+ "offers": {
+  "take": "record",
+  "buyer_fee_pence": 3600,
+  "buyer_fee_when": "once an offer is accepted",
+  "id_provider": "Movecheck (example)",
+  "best_final": "Best and final offers are made in writing by a set time, and every buyer who has offered hears at once."
+ },
+ "valuations": {
+  "name": "free market appraisal",
+  "minutes": 60,
+  "rics": {
+   "offered": false,
+   "fee_pence": 0,
+   "staff": ""
+  }
+ },
+ "fees": {
+  "quote": false,
+  "kind": "percent",
+  "percent_hundredths": 120,
+  "fixed_pence": 0,
+  "min_weeks": 12,
+  "contract": "sole_agency",
+  "includes": "Professional photos, a floorplan, a video tour, a board, accompanied viewings and feedback within 24 hours.",
+  "extras": "",
+  "marketing": [
+   "Rightmove",
+   "Zoopla",
+   "OnTheMarket",
+   "professional photos",
+   "a floorplan",
+   "a video tour",
+   "a board",
+   "accompanied viewings",
+   "feedback within 24 hours"
+  ]
+ },
+ "partners": {
+  "mortgage": {
+   "on": true,
+   "staff": "mark",
+   "firm": "Clearwater Mortgages",
+   "statement": "Clearwater Mortgages is a separate firm we work with, and we may receive a referral fee. Seeing them is optional and makes no difference to any viewing or offer."
+  },
+  "conveyancing": {
+   "on": false,
+   "statement": ""
+  }
+ },
+ "compliance": {
+  "redress": "tpo",
+  "complaints_handler": "rachel",
+  "data_lead": "rachel",
+  "recording": "Calls on this demo line are transcribed so the team can see what was said."
+ },
+ "area": {
+  "faqs": [
+   {
+    "q": "How far is the station, and how long does the train take?",
+    "a": "Brackenford station is a ten-minute walk from the High Street, with trains to the city about every half hour taking around 35 minutes."
+   },
+   {
+    "q": "What are the primary schools like?",
+    "a": "There are two primary schools in town, Brackenford Church of England Primary and Mill Lane Primary. Ofsted reports are on GOV.UK, and places are allocated by the county council."
+   },
+   {
+    "q": "Which secondary school is it for?",
+    "a": "Most children go to Brackenford Academy, but catchment areas change, so please check with the county council admissions team."
+   },
+   {
+    "q": "Is there a doctor nearby?",
+    "a": "The Brackenford Health Centre on Station Road is the GP surgery for the town and the villages."
+   },
+   {
+    "q": "Are there parks nearby?",
+    "a": "Riverside Park runs along the river from Mill Lane, and Coldbrook Common is a short drive away."
+   },
+   {
+    "q": "Is there parking in town?",
+    "a": "There are two pay and display car parks off the High Street, and free parking on Sundays."
+   }
+  ]
+ },
+ "policies": {
+  "faqs": [],
+  "parking": "There is free parking behind our office on the High Street.",
+  "at_viewings": "Children are welcome at viewings; please leave dogs at home."
+ },
+ "theme": {
+  "accent": "#c9a24a",
+  "primary": "#1d3b34",
+  "background": "#0f1513",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

@@ -1,0 +1,45 @@
+{
+ "views": [
+  {
+   "id": "timeline",
+   "label": "Diary",
+   "of": "staff"
+  },
+  {
+   "id": "properties",
+   "label": "Properties"
+  },
+  {
+   "id": "offers",
+   "label": "Offers"
+  },
+  {
+   "id": "messages",
+   "label": "Messages"
+  },
+  {
+   "id": "calls",
+   "label": "Calls"
+  }
+ ],
+ "bookings": {
+  "resource": "person",
+  "resources": "team",
+  "party": null,
+  "visit": {
+   "expected": "Booked",
+   "finished": "Done",
+   "no_show": "No-show"
+  },
+  "allergies": false,
+  "combine": false,
+  "property": true
+ },
+ "teamPhones": [],
+ "suggestions": [
+  "Tell me about the flat on .",
+  "What's my house worth? Next door went for four hundred.",
+  "I've got a viewing, reference {ref}. Can I move it?"
+ ],
+ "resetLine": "viewings, valuations, offers and sales"
+}

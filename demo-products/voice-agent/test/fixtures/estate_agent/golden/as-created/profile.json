@@ -1,0 +1,3725 @@
+{
+ "slug": "golden",
+ "name": "Hartwell & Green",
+ "business_type": "estate_agent",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Kore",
+ "greeting": "Hello, you're through to Hartwell & Green. I'm the AI assistant on this demo line. How can I help?",
+ "summary": "Hartwell & Green is an estate agency in Brackenford: Independent estate agency, sales only.",
+ "address": "12 High Street, Brackenford BK1 2AB",
+ "phone_display": "01632 960 123",
+ "brand": {
+  "accent": "#c9a24a",
+  "primary": "#1d3b34",
+  "background": "#0f1513",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Hartwell & Green: Independent estate agency, sales only, at 12 High Street, Brackenford BK1 2AB.",
+  "Monday to Friday: 9am till 5:30pm. Saturday: 9am till 4pm. Closed Sundays.",
+  "Viewings: Monday to Friday 9am till 7pm and Saturday 9am till 4pm. Valuations: Monday to Friday 9am till 6pm and Saturday 9am till 1pm.",
+  "We cover Brackenford, Little Haddon and Coldbrook, BK1 to BK5.",
+  "Free market appraisals take about an hour.",
+  "Gas emergency: call the National Gas Emergency Service on 0800 111 999."
+ ],
+ "opening_hours": [
+  {
+   "days": [1,2,3,4,5],
+   "open": "09:00",
+   "close": "17:30",
+   "label": "Open"
+  },
+  {
+   "days": [6],
+   "open": "09:00",
+   "close": "16:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [],
+ "knowledge": [
+  {
+   "q": "Which areas do you cover?",
+   "a": "We cover Brackenford, Little Haddon and Coldbrook, BK1 to BK5.",
+   "tags": ["area","cover","postcode","where"]
+  },
+  {
+   "q": "Is there parking at your office?",
+   "a": "There is free parking behind our office on the High Street.",
+   "tags": ["parking","park","office"]
+  },
+  {
+   "q": "Can I bring my children or my dog to a viewing?",
+   "a": "Children are welcome at viewings; please leave dogs at home.",
+   "tags": ["children","kids","dog","pet","viewing"]
+  },
+  {
+   "q": "What are your fees?",
+   "a": "Our fees are explained at your free market appraisal and in writing before you sign anything.",
+   "tags": ["fees","fee","commission","charge","cost","percent"]
+  },
+  {
+   "q": "How would you market my home?",
+   "a": "We list homes on Rightmove, Zoopla and OnTheMarket, with professional photos, a floorplan, a video tour, a board, accompanied viewings and feedback within 24 hours.",
+   "tags": ["market","marketing","rightmove","zoopla","photos","advertise"]
+  },
+  {
+   "q": "Do buyers pay you anything?",
+   "a": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted. The checks are done by Movecheck (example).",
+   "tags": ["buyer","fee","pay","id check"]
+  },
+  {
+   "q": "Is this ID check really from you?",
+   "a": "Our ID checks are done by Movecheck (example). If you're unsure about a message, call us on a number you already have before you reply.",
+   "tags": ["id","identity","check","genuine","scam"]
+  },
+  {
+   "q": "How does best and final work?",
+   "a": "Best and final offers are made in writing by a set time, and every buyer who has offered hears at once.",
+   "tags": ["best and final","sealed bid","highest","deadline"]
+  },
+  {
+   "q": "What do guide price and offers over mean?",
+   "a": "A guide price is roughly what the seller hopes for; offers over means offers above that figure; offers in the region of means around it; and a fixed price is the asking price.",
+   "tags": ["guide","offers over","region","asking price"]
+  },
+  {
+   "q": "What is the lowest the seller will take?",
+   "a": "We can't say: only the seller decides, and every offer goes to them. I can take an offer if you'd like to make one.",
+   "tags": ["lowest","minimum","accept","take"]
+  },
+  {
+   "q": "Is a valuation free?",
+   "a": "Our free market appraisal is free, with no obligation, and takes about an hour.",
+   "tags": ["valuation","appraisal","free","cost"]
+  },
+  {
+   "q": "Do you do RICS valuations?",
+   "a": "We don't do RICS valuations. For probate, Help to Buy, staircasing or a divorce you need a RICS Registered Valuer; our free appraisal is a marketing opinion only.",
+   "tags": ["rics","probate","help to buy","staircasing","divorce","surveyor","valuer"]
+  },
+  {
+   "q": "Do you have a mortgage adviser?",
+   "a": "Clearwater Mortgages is a separate firm we work with, and we may receive a referral fee. Seeing them is optional and makes no difference to any viewing or offer. Mark sees people on Tuesday and Thursday.",
+   "tags": ["mortgage","adviser","broker","lend","lender"]
+  },
+  {
+   "q": "Can you recommend a solicitor?",
+   "a": "You're free to use any solicitor or licensed conveyancer you like.",
+   "tags": ["solicitor","conveyancer","conveyancing","lawyer"]
+  },
+  {
+   "q": "How do I make a complaint?",
+   "a": "Tell us what went wrong and Rachel will look into it. We acknowledge a complaint within 3 working days and send a written answer within 15. If you're still unhappy after our final answer, or after 8 weeks, you can go to The Property Ombudsman.",
+   "tags": ["complain","complaint","unhappy","ombudsman"]
+  },
+  {
+   "q": "Is this call recorded?",
+   "a": "Calls on this demo line are transcribed so the team can see what was said.",
+   "tags": ["recorded","recording","transcribed","transcript"]
+  },
+  {
+   "q": "Am I talking to a real person?",
+   "a": "I'm an AI assistant answering for the team. If you'd rather speak to a person, I can take a message and someone will call you back.",
+   "tags": ["real person","robot","ai","human"]
+  },
+  {
+   "q": "Can I see the data you hold about me, or stop your texts?",
+   "a": "Rachel looks after data protection, and we reply to any request within a month. To stop our texts, just say so and we'll stop them.",
+   "tags": ["data","gdpr","personal information","stop texts","unsubscribe"]
+  },
+  {
+   "q": "Can I cancel my agreement with you?",
+   "a": "If you signed your agreement at home or anywhere away from our office, you usually have 14 days to cancel. For anything else, I can take a message for Rachel.",
+   "tags": ["cancel","contract","agreement","tie-in","switch"]
+  },
+  {
+   "q": "Do you do lettings?",
+   "a": "We're sales only, so we don't let homes; a local letting agent can help.",
+   "tags": ["let","letting","lettings","rent","rental","landlord"]
+  },
+  {
+   "q": "How do I check the council tax band?",
+   "a": "Council tax bands are on the Valuation Office Agency's council tax band checker on GOV.UK.",
+   "tags": ["council tax","band","rates","tax"]
+  },
+  {
+   "q": "How much stamp duty will I pay?",
+   "a": "We can't advise on tax, but HMRC's Stamp Duty Land Tax calculator on GOV.UK gives the figure, and your solicitor will confirm it.",
+   "tags": ["stamp duty","land transaction tax","tax"]
+  },
+  {
+   "q": "Is it at risk of flooding?",
+   "a": "You can check the long-term flood risk for any address on the Environment Agency's flood risk service on GOV.UK.",
+   "tags": ["flood","flooding","river"]
+  },
+  {
+   "q": "I can smell gas at a property.",
+   "a": "Leave the property, don't use any switches, and call the National Gas Emergency Service on 0800 111 999. In danger, call 999.",
+   "tags": ["gas","smell","leak","emergency"]
+  },
+  {
+   "q": "I'm a tenant in a home that's being sold.",
+   "a": "Shelter or Citizens Advice can explain a tenant's rights when the home they rent is being sold. I can take a message for the team with the times that suit you for viewings.",
+   "tags": ["tenant","renting","evict","notice"]
+  },
+  {
+   "q": "What broadband and mobile signal is there?",
+   "a": "Ofcom's broadband and mobile checker shows what's available at any address.",
+   "tags": ["broadband","internet","mobile","signal"]
+  },
+  {
+   "q": "Where can I see the energy performance certificate?",
+   "a": "Every EPC is on the energy performance certificate register on GOV.UK, and I can text you the link we have.",
+   "tags": ["epc","energy"]
+  },
+  {
+   "q": "Is the area safe?",
+   "a": "Crime figures for any street are on police.uk. I can give you facts about the home, but not opinions about who lives nearby.",
+   "tags": ["crime","safe","area","police"]
+  },
+  {
+   "q": "What did houses on the street sell for?",
+   "a": "Sold prices are published by HM Land Registry on GOV.UK.",
+   "tags": ["sold","price","land registry"]
+  },
+  {
+   "q": "How do I protect my own home from fraud?",
+   "a": "HM Land Registry's free Property Alert service on GOV.UK tells you if anyone tries to change the register for your home.",
+   "tags": ["fraud","property alert","title"]
+  },
+  {
+   "q": "Someone asked me to pay to hold a home, or told me bank details have changed.",
+   "a": "Don't pay anything. Check with your own solicitor on a number you already have, and report it to Report Fraud on 0300 123 2040. We never change bank details by email or text.",
+   "tags": ["fraud","bank","deposit","pay","scam"]
+  },
+  {
+   "q": "I'm struggling and need someone to talk to.",
+   "a": "Samaritans are there day and night on 116 123, free. I'm sorry things are hard.",
+   "tags": ["samaritans","struggling","upset"]
+  },
+  {
+   "q": "Do you treat everyone the same?",
+   "a": "Yes. We treat every buyer and seller the same, as the Equality Act 2010 requires, and we describe homes, never who lives nearby.",
+   "tags": ["discrimination","equality","fair"]
+  },
+  {
+   "q": "Do you sell homes in Scotland?",
+   "a": "No: buying and selling in Scotland works differently, and we sell homes in England.",
+   "tags": ["scotland"]
+  },
+  {
+   "q": "Do you sell commercial property or land?",
+   "a": "We sell homes only, not commercial property or land.",
+   "tags": ["commercial","land","business","shop"]
+  },
+  {
+   "q": "How far is the station, and how long does the train take?",
+   "a": "Brackenford station is a ten-minute walk from the High Street, with trains to the city about every half hour taking around 35 minutes.",
+   "tags": []
+  },
+  {
+   "q": "What are the primary schools like?",
+   "a": "There are two primary schools in town, Brackenford Church of England Primary and Mill Lane Primary. Ofsted reports are on GOV.UK, and places are allocated by the county council.",
+   "tags": []
+  },
+  {
+   "q": "Which secondary school is it for?",
+   "a": "Most children go to Brackenford Academy, but catchment areas change, so please check with the county council admissions team.",
+   "tags": []
+  },
+  {
+   "q": "Is there a doctor nearby?",
+   "a": "The Brackenford Health Centre on Station Road is the GP surgery for the town and the villages.",
+   "tags": []
+  },
+  {
+   "q": "Are there parks nearby?",
+   "a": "Riverside Park runs along the river from Mill Lane, and Coldbrook Common is a short drive away.",
+   "tags": []
+  },
+  {
+   "q": "Is there parking in town?",
+   "a": "There are two pay and display car parks off the High Street, and free parking on Sundays.",
+   "tags": []
+  }
+ ],
+ "booking": {
+  "services": [
+   {
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "lead_minutes": 120,
+    "horizon_days": 21,
+    "key": "viewing",
+    "label": "viewing",
+    "duration_minutes": 30,
+    "buffer_minutes": 15,
+    "windows": [
+     {
+      "days": [1,2,3,4,5],
+      "first": "09:00",
+      "last": "18:30"
+     },
+     {
+      "days": [6],
+      "first": "09:00",
+      "last": "15:30"
+     }
+    ],
+    "needs_listing": true
+   },
+   {
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "lead_minutes": 120,
+    "horizon_days": 21,
+    "key": "second_viewing",
+    "label": "second viewing",
+    "duration_minutes": 45,
+    "buffer_minutes": 15,
+    "windows": [
+     {
+      "days": [1,2,3,4,5],
+      "first": "09:00",
+      "last": "18:15"
+     },
+     {
+      "days": [6],
+      "first": "09:00",
+      "last": "15:15"
+     }
+    ],
+    "needs_listing": true
+   },
+   {
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "lead_minutes": 120,
+    "horizon_days": 21,
+    "key": "valuation",
+    "label": "free market appraisal",
+    "duration_minutes": 60,
+    "buffer_minutes": 15,
+    "windows": [
+     {
+      "days": [1,2,3,4,5],
+      "first": "09:00",
+      "last": "17:00"
+     },
+     {
+      "days": [6],
+      "first": "09:00",
+      "last": "12:00"
+     }
+    ]
+   },
+   {
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "lead_minutes": 120,
+    "horizon_days": 21,
+    "key": "mortgage",
+    "label": "mortgage appointment",
+    "duration_minutes": 45,
+    "buffer_minutes": 0,
+    "windows": [
+     {
+      "days": [1,2,3,4,5],
+      "first": "09:00",
+      "last": "16:45"
+     },
+     {
+      "days": [6],
+      "first": "09:00",
+      "last": "15:15"
+     }
+    ]
+   }
+  ],
+  "resources": [
+   {
+    "key": "rachel",
+    "label": "Rachel Hartwell",
+    "services": [],
+    "days": [1,2,3,4,5],
+    "kind": "staff"
+   },
+   {
+    "key": "jess",
+    "label": "Jess Morgan",
+    "services": ["viewing","second_viewing"],
+    "days": [1,2,3,4,5,6],
+    "kind": "staff"
+   },
+   {
+    "key": "tom",
+    "label": "Tom Bennett",
+    "services": ["viewing","second_viewing"],
+    "days": [2,3,4,5,6],
+    "kind": "staff"
+   },
+   {
+    "key": "priya",
+    "label": "Priya Shah",
+    "services": ["valuation"],
+    "days": [1,2,3,4,5,6],
+    "kind": "staff"
+   },
+   {
+    "key": "dan",
+    "label": "Dan Fletcher",
+    "services": [],
+    "days": [1,2,3,4,5],
+    "kind": "staff"
+   },
+   {
+    "key": "mark",
+    "label": "Mark Ellis",
+    "services": ["mortgage"],
+    "days": [2,4],
+    "kind": "staff"
+   }
+  ]
+ },
+ "listings": [
+  {
+   "key": "albion_41_flat_2",
+   "ref": "HG101",
+   "number": "Flat 2, 41",
+   "street": "Albion Road",
+   "district": "BK2",
+   "town": "Brackenford",
+   "address": "Flat 2, 41 Albion Road, Brackenford BK2",
+   "initial": {
+    "status": "available",
+    "price_pence": 18500000,
+    "qualifier": "guide"
+   },
+   "marketed_days_ago": 38,
+   "reduced": {
+    "days_ago": 12,
+    "from_pence": 19500000
+   },
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "flat",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "home": "two-bedroom flat, one bathroom, one reception",
+   "features": ["allocated parking","communal garden","bay window"],
+   "summary": "A second-floor flat in a converted Victorian villa, with a bay-fronted living room and one allocated parking space.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.6m x 3.9m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.1m x 2.4m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.0m x 3.3m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.0m x 2.6m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.2m x 1.9m"
+    }
+   ],
+   "tenure": "leasehold",
+   "lease": {
+    "expires": "2102-12-24",
+    "service_charge": "£1,320 a year, covering buildings insurance and the communal areas",
+    "ground_rent": "£250 a year, doubling every 25 years",
+    "reserve_fund": "About £4,800 in the reserve fund",
+    "event_fee": "",
+    "managing_agent": "Brackenford Block Management (example)",
+    "age_limit": null,
+    "shared": null
+   },
+   "local_tax": "B",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a slate roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: one allocated space."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "yes",
+     "says": "In a conservation area: the Albion Road conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility: second floor, with no lift."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The seller has found a home and is ready to move.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "albion_22",
+   "ref": "HG102",
+   "number": "22",
+   "street": "Albion Road",
+   "district": "BK2",
+   "town": "Brackenford",
+   "address": "22 Albion Road, Brackenford BK2",
+   "initial": {
+    "status": "available",
+    "price_pence": 32500000,
+    "qualifier": "offers_over"
+   },
+   "marketed_days_ago": 20,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 2,
+   "home": "three-bedroom semi-detached house, one bathroom, two receptions",
+   "features": ["garden","driveway","garage"],
+   "summary": "A 1930s semi-detached house with a south-facing garden, a driveway and a garage.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.3m x 3.7m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.6m x 3.2m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.4m x 2.7m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.1m x 3.4m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.6m x 3.2m"
+    },
+    {
+     "name": "Bedroom 3 (box room)",
+     "size": ""
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.4m x 2.0m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "D",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: driveway for two cars and a single garage."
+    },
+    "flooded": {
+     "v": "unknown",
+     "says": ""
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": ["flooding"],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The sellers are looking for a home in Little Haddon and have not found one yet.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [
+     {
+      "days": [6],
+      "from": "10:00",
+      "to": "13:00"
+     },
+     {
+      "days": [1,2,3,4,5],
+      "from": "17:00",
+      "to": "19:00"
+     }
+    ],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings on Saturdays 10am to 1pm and weekday evenings 5pm to 7pm."
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "Harper & Co, until June",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "larkspur_14",
+   "ref": "HG103",
+   "number": "14",
+   "street": "Larkspur Close",
+   "district": "BK3",
+   "town": "Brackenford",
+   "address": "14 Larkspur Close, Brackenford BK3",
+   "initial": {
+    "status": "under_offer",
+    "price_pence": 29995000,
+    "qualifier": "guide"
+   },
+   "marketed_days_ago": 30,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 1,
+   "home": "three-bedroom semi-detached house, one bathroom, one reception",
+   "features": ["garden","driveway","conservatory"],
+   "summary": "A modern semi-detached house on a quiet close, with a conservatory and a landscaped garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.8m x 3.6m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "5.2m x 2.9m"
+    },
+    {
+     "name": "Conservatory",
+     "size": "3.0m x 2.8m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.9m x 3.1m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.3m x 2.8m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.6m x 2.2m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.1m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: driveway for one car."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The sellers are moving to be near family and are flexible on dates.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "kingfisher_9",
+   "ref": "HG104",
+   "number": "9",
+   "street": "Kingfisher Way",
+   "district": "BK4",
+   "town": "Little Haddon",
+   "address": "9 Kingfisher Way, Little Haddon BK4",
+   "initial": {
+    "status": "available",
+    "price_pence": 36500000,
+    "qualifier": "oiro"
+   },
+   "marketed_days_ago": 15,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "detached",
+   "beds": 3,
+   "baths": 2,
+   "receptions": 2,
+   "home": "three-bedroom detached house, two bathrooms, two receptions",
+   "features": ["garden","double garage","en-suite"],
+   "summary": "A detached family house built in 2009, with an en-suite to the main bedroom and a double garage.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "5.1m x 3.8m"
+    },
+    {
+     "name": "Study",
+     "size": "2.7m x 2.4m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "6.2m x 3.4m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.2m x 3.6m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.5m x 3.1m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.9m x 2.6m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.3m x 2.0m"
+    },
+    {
+     "name": "En-suite",
+     "size": "2.0m x 1.6m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "E",
+   "epc": "B",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: double garage and a driveway."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [
+    {
+     "say": "The seller is the brother of Tom Bennett, one of our negotiators.",
+     "listen": ["tom"]
+    }
+   ],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The seller has an offer accepted on another home.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "jess",
+   "personal_interest": {
+    "staff": "tom",
+    "wording": "The seller is the brother of Tom Bennett, one of our negotiators."
+   },
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "kingfisher_3",
+   "ref": "HG105",
+   "number": "3",
+   "street": "Kingfisher Way",
+   "district": "BK4",
+   "town": "Little Haddon",
+   "address": "3 Kingfisher Way, Little Haddon BK4",
+   "initial": {
+    "status": "sale_agreed",
+    "price_pence": 24500000,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 60,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "home": "two-bedroom semi-detached house, one bathroom, one reception",
+   "features": ["garden","parking"],
+   "summary": "A two-bedroom semi-detached house with a low-maintenance garden and parking for two cars.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.4m x 3.5m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.2m x 2.6m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.8m x 3.1m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.0m x 2.4m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.0m x 1.8m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "B",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: driveway for two cars."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The seller is moving into rented accommodation.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "mill_6_bungalow",
+   "ref": "HG106",
+   "number": "The Bungalow, 6",
+   "street": "Mill Lane",
+   "district": "BK1",
+   "town": "Brackenford",
+   "address": "The Bungalow, 6 Mill Lane, Brackenford BK1",
+   "initial": {
+    "status": "available",
+    "price_pence": 27500000,
+    "qualifier": "oiro"
+   },
+   "marketed_days_ago": 25,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "bungalow",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "home": "two-bedroom bungalow, one bathroom, one reception",
+   "features": ["garden","garage","step-free"],
+   "summary": "A detached bungalow on a generous plot, with a garage and level access throughout, in need of some updating.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "5.0m x 3.9m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.4m x 2.8m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.9m x 3.4m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.2m x 2.9m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.4m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "E",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating; the boiler is about 15 years old."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: garage and driveway."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "yes",
+     "says": "Accessible: level access throughout and a level-access shower."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": ["broadband speed"],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "No onward chain: it is an executors' sale.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "vacant",
+    "key_held": true,
+    "first_in_office_hours": true,
+    "rule": "Viewings any time in our viewing hours. First viewings are in office hours."
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "mill_31",
+   "ref": "HG107",
+   "number": "31",
+   "street": "Mill Lane",
+   "district": "BK1",
+   "town": "Brackenford",
+   "address": "31 Mill Lane, Brackenford BK1",
+   "initial": {
+    "status": "under_offer",
+    "price_pence": 34000000,
+    "qualifier": "guide"
+   },
+   "marketed_days_ago": 21,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "end_terrace",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 2,
+   "home": "three-bedroom end-of-terrace house, one bathroom, two receptions",
+   "features": ["garden","cellar","period features"],
+   "summary": "A Victorian end-of-terrace house with a long garden, a cellar and its original fireplaces.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.2m x 3.8m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.9m x 3.6m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "4.0m x 2.5m"
+    },
+    {
+     "name": "Cellar",
+     "size": "3.8m x 3.5m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.2m x 3.8m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.9m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.8m x 2.3m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.6m x 2.1m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "D",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: solid brick with a slate roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "no",
+     "says": "No off-street parking: on-street parking with a residents' permit."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The sellers are buying a new-build home due to complete in the spring.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "orchard_7",
+   "ref": "HG108",
+   "number": "7",
+   "street": "Orchard Rise",
+   "district": "BK5",
+   "town": "Coldbrook",
+   "address": "7 Orchard Rise, Coldbrook BK5",
+   "initial": {
+    "status": "available",
+    "price_pence": 16500000,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 45,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 1,
+   "home": "three-bedroom semi-detached house, one bathroom, one reception",
+   "features": ["garden","driveway"],
+   "summary": "A three-bedroom semi-detached house on a corner plot, of 1950s concrete panel construction.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.5m x 3.6m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.3m x 2.7m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.8m x 3.2m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.4m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.5m x 2.2m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.1m x 1.8m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "B",
+   "epc": "D",
+   "checks": {
+    "construction": {
+     "v": "no",
+     "says": "Non-standard construction: concrete panel construction from the 1950s. Most mortgage lenders will not lend on it, so it is for cash buyers only."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: driveway for one car."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": ["broadband speed"],
+   "say_first": [
+    {
+     "say": "It's of non-standard construction: concrete panel construction from the 1950s. Most mortgage lenders will not lend on it, so it is for cash buyers only.",
+     "listen": ["non-standard"]
+    }
+   ],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "No onward chain.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "wharf_house_9",
+   "ref": "HG109",
+   "number": "Flat 9, Wharf House",
+   "street": "Canal Street",
+   "district": "BK2",
+   "town": "Brackenford",
+   "address": "Flat 9, Wharf House Canal Street, Brackenford BK2",
+   "initial": {
+    "status": "available",
+    "price_pence": 12000000,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 50,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "flat",
+   "beds": 1,
+   "baths": 1,
+   "receptions": 1,
+   "home": "one-bedroom flat, one bathroom, one reception",
+   "features": ["lift","secure entry","canal views"],
+   "summary": "A first-floor flat in a converted canal warehouse, sold with the tenant in place.",
+   "rooms": [
+    {
+     "name": "Open-plan living room and kitchen",
+     "size": "6.1m x 4.2m"
+    },
+    {
+     "name": "Bedroom",
+     "size": "3.6m x 3.1m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.2m x 1.7m"
+    }
+   ],
+   "tenure": "leasehold",
+   "lease": {
+    "expires": "2138-12-31",
+    "service_charge": "£1,180 a year, covering buildings insurance, the lift and the communal areas",
+    "ground_rent": "£150 a year, fixed",
+    "reserve_fund": "About £12,000 in the reserve fund",
+    "event_fee": "",
+    "managing_agent": "Canalside Estates (example)",
+    "age_limit": null,
+    "shared": null
+   },
+   "local_tax": "A",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick warehouse conversion."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: electric panel heaters."
+    },
+    "mains_gas": {
+     "v": "no",
+     "says": "No mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "no",
+     "says": "No off-street parking: no parking; a public car park is nearby."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared: no cladding; the building has a fire risk assessment from this year."
+    },
+    "accessibility": {
+     "v": "yes",
+     "says": "Accessible: lift to every floor."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [
+    {
+     "say": "It's sold with the tenant in place, paying £725 a month, so it suits an investor.",
+     "listen": ["investor","tenant","paying"]
+    }
+   ],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The seller is an investor selling with the tenant in place.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 1440,
+    "occupied": "tenant",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours. Viewings need 24 hours' notice."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "beechwood_court_12",
+   "ref": "HG110",
+   "number": "Flat 12, Beechwood Court",
+   "street": "Heath Road",
+   "district": "BK3",
+   "town": "Brackenford",
+   "address": "Flat 12, Beechwood Court Heath Road, Brackenford BK3",
+   "initial": {
+    "status": "available",
+    "price_pence": 14500000,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 70,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "flat",
+   "beds": 1,
+   "baths": 1,
+   "receptions": 1,
+   "home": "one-bedroom flat, one bathroom, one reception",
+   "features": ["lift","house manager","residents' lounge","communal garden"],
+   "summary": "A ground-floor retirement flat with a house manager, a residents' lounge and communal gardens.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "5.2m x 3.4m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "2.6m x 2.2m"
+    },
+    {
+     "name": "Bedroom",
+     "size": "4.1m x 2.9m"
+    },
+    {
+     "name": "Shower room",
+     "size": "2.2m x 1.8m"
+    }
+   ],
+   "tenure": "leasehold",
+   "lease": {
+    "expires": "2120-06-30",
+    "service_charge": "£2,950 a year, including the house manager, buildings insurance and the communal areas",
+    "ground_rent": "£395 a year",
+    "reserve_fund": "About £38,000 in the reserve fund",
+    "event_fee": "1% of the sale price, paid to the freeholder each time the flat is sold",
+    "managing_agent": "Beechwood Retirement Management (example)",
+    "age_limit": 60,
+    "shared": null
+   },
+   "local_tax": "B",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: electric storage heaters."
+    },
+    "mains_gas": {
+     "v": "no",
+     "says": "No mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: residents' car park, first come first served."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "yes",
+     "says": "Accessible: ground floor, level access and a walk-in shower."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [
+    {
+     "say": "There's an event fee: 1% of the sale price, paid to the freeholder each time the flat is sold.",
+     "listen": ["event fee"]
+    },
+    {
+     "say": "It's for buyers aged 60 or over.",
+     "listen": ["60","sixty"]
+    }
+   ],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "No onward chain.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "heron_18",
+   "ref": "HG111",
+   "number": "18",
+   "street": "Heron Close",
+   "district": "BK4",
+   "town": "Little Haddon",
+   "address": "18 Heron Close, Little Haddon BK4",
+   "initial": {
+    "status": "available",
+    "price_pence": 11000000,
+    "qualifier": "share"
+   },
+   "marketed_days_ago": 33,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "terraced",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "home": "two-bedroom terraced house, one bathroom, one reception",
+   "features": ["garden","parking"],
+   "summary": "A two-bedroom house built in 2019, sold as a 50% shared ownership share with Meadow Homes.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.6m x 3.5m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.0m x 2.5m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.7m x 3.2m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.1m x 2.4m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.0m x 1.8m"
+    }
+   ],
+   "tenure": "shared_ownership",
+   "lease": {
+    "expires": "2144-03-31",
+    "service_charge": "£264 a year for the estate's communal areas",
+    "ground_rent": "None",
+    "reserve_fund": "",
+    "event_fee": "",
+    "managing_agent": "Meadow Homes (example)",
+    "age_limit": null,
+    "shared": {
+     "share_percent": 50,
+     "rent_pence_month": 45800,
+     "provider": "Meadow Homes",
+     "eligibility": "a household income under £80,000 and no other home",
+     "nomination_weeks": 8
+    }
+   },
+   "local_tax": "B",
+   "epc": "B",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: two allocated spaces."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "yes",
+     "says": "A new-build warranty: NHBC warranty until 2029."
+    }
+   },
+   "unknown": [],
+   "say_first": [
+    {
+     "say": "It's shared ownership with Meadow Homes: you buy a 50% share and pay rent of £458 a month on the rest. Buyers must qualify: a household income under £80,000 and no other home. Meadow Homes has 8 weeks to find a buyer first.",
+     "listen": ["shared ownership","50","fifty"]
+    }
+   ],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The seller is buying a home outright and is ready to move.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "riverside_5",
+   "ref": "HG112",
+   "number": "5",
+   "street": "Riverside Walk",
+   "district": "BK1",
+   "town": "Brackenford",
+   "address": "5 Riverside Walk, Brackenford BK1",
+   "initial": {
+    "status": "available",
+    "price_pence": 47500000,
+    "qualifier": "guide"
+   },
+   "marketed_days_ago": 0,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "detached",
+   "beds": 4,
+   "baths": 2,
+   "receptions": 2,
+   "home": "four-bedroom detached house, two bathrooms, two receptions",
+   "features": ["garden","river views","double garage","en-suite"],
+   "summary": "A four-bedroom detached house backing on to the river, with a double garage and a large garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "6.0m x 4.1m"
+    },
+    {
+     "name": "Family room",
+     "size": "4.0m x 3.6m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "7.2m x 3.8m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.6m x 3.9m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.9m x 3.4m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "3.4m x 3.0m"
+    },
+    {
+     "name": "Bedroom 4",
+     "size": "2.9m x 2.6m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.6m x 2.2m"
+    },
+    {
+     "name": "En-suite",
+     "size": "2.2m x 1.8m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "F",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: double garage and a driveway."
+    },
+    "flooded": {
+     "v": "unknown",
+     "says": ""
+    },
+    "flood_defences": {
+     "v": "unknown",
+     "says": ""
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": ["flooding","flood defences"],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The sellers are relocating for work and want to move by the new year.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "station_27",
+   "ref": "HG113",
+   "number": "27",
+   "street": "Station Road",
+   "district": "BK2",
+   "town": "Brackenford",
+   "address": "27 Station Road, Brackenford BK2",
+   "initial": {
+    "status": "available",
+    "price_pence": 24900000,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 90,
+   "reduced": {
+    "days_ago": 12,
+    "from_pence": 25900000
+   },
+   "back_on_market_days_ago": 14,
+   "viewings_from_days": null,
+   "type": "terraced",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 2,
+   "home": "three-bedroom terraced house, one bathroom, two receptions",
+   "features": ["garden","near the station"],
+   "summary": "A Victorian terraced house five minutes from the station, with two reception rooms and a courtyard garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.0m x 3.6m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.8m x 3.5m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.6m x 2.3m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.0m x 3.7m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.6m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.7m x 2.1m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.3m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "B",
+   "epc": "D",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: solid brick with a slate roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "no",
+     "says": "No off-street parking: on-street parking."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The seller has found a home and is ready to move.",
+   "fall_through": "The last buyer's survey found some roof spread; the seller has had it assessed and the report is available.",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "fernbank_11",
+   "ref": "HG114",
+   "number": "11",
+   "street": "Fernbank Drive",
+   "district": "BK3",
+   "town": "Brackenford",
+   "address": "11 Fernbank Drive, Brackenford BK3",
+   "initial": {
+    "status": "available",
+    "price_pence": 21500000,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 40,
+   "reduced": {
+    "days_ago": 6,
+    "from_pence": 22500000
+   },
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "terraced",
+   "beds": 2,
+   "baths": 1,
+   "receptions": 1,
+   "home": "two-bedroom terraced house, one bathroom, one reception",
+   "features": ["garden","parking"],
+   "summary": "A two-bedroom mid-terrace house with a new kitchen, an enclosed garden and an allocated parking space.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.4m x 3.6m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "4.4m x 2.8m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.9m x 3.0m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.1m x 2.5m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.0m x 1.8m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "B",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: one allocated space."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The seller is moving in with a partner; no onward purchase.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "elm_court_2",
+   "ref": "HG115",
+   "number": "2",
+   "street": "Elm Court",
+   "district": "BK5",
+   "town": "Coldbrook",
+   "address": "2 Elm Court, Coldbrook BK5",
+   "initial": {
+    "status": "sale_agreed",
+    "price_pence": 28900000,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 80,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 1,
+   "home": "three-bedroom semi-detached house, one bathroom, one reception",
+   "features": ["garden","garage"],
+   "summary": "A three-bedroom semi-detached house in a cul-de-sac, with a garage and a west-facing garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.6m x 3.7m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "5.0m x 3.0m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.9m x 3.2m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.4m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.6m x 2.1m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.1m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: garage and driveway."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The sellers are buying a home further up the chain.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "willow_gardens_8",
+   "ref": "HG116",
+   "number": "8",
+   "street": "Willow Gardens",
+   "district": "BK1",
+   "town": "Brackenford",
+   "address": "8 Willow Gardens, Brackenford BK1",
+   "initial": {
+    "status": "exchanged",
+    "price_pence": 41000000,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 110,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "detached",
+   "beds": 4,
+   "baths": 2,
+   "receptions": 2,
+   "home": "four-bedroom detached house, two bathrooms, two receptions",
+   "features": ["garden","double garage","en-suite"],
+   "summary": "A four-bedroom detached house with a double garage, on a tree-lined road close to the primary school.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "5.4m x 4.0m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.8m x 3.4m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "4.4m x 3.2m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "4.4m x 3.8m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.8m x 3.3m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "3.2m x 2.9m"
+    },
+    {
+     "name": "Bedroom 4",
+     "size": "2.8m x 2.5m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.5m x 2.1m"
+    },
+    {
+     "name": "En-suite",
+     "size": "2.1m x 1.7m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "E",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: double garage and a driveway."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The sellers are downsizing.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "copse_lane_19",
+   "ref": "HG117",
+   "number": "19",
+   "street": "Copse Lane",
+   "district": "BK4",
+   "town": "Little Haddon",
+   "address": "19 Copse Lane, Little Haddon BK4",
+   "initial": {
+    "status": "coming_soon",
+    "price_pence": 31500000,
+    "qualifier": "guide"
+   },
+   "marketed_days_ago": 0,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": 5,
+   "type": "cottage",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 2,
+   "home": "three-bedroom cottage, one bathroom, two receptions",
+   "features": ["garden","woodburner","period features"],
+   "summary": "A three-bedroom period cottage on the edge of the village, with a woodburner and a cottage garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.5m x 3.9m"
+    },
+    {
+     "name": "Dining room",
+     "size": "3.5m x 3.3m"
+    },
+    {
+     "name": "Kitchen",
+     "size": "3.6m x 2.6m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.8m x 3.5m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.3m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.6m x 2.4m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.3m x 2.0m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "D",
+   "epc": "",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: stone with a slate roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: oil-fired central heating."
+    },
+    "mains_gas": {
+     "v": "no",
+     "says": "No mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "no",
+     "says": "No mains drainage: A septic tank, shared with the cottage next door."
+    },
+    "broadband": {
+     "v": "unknown",
+     "says": ""
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "no",
+     "says": "No off-street parking: on-street parking."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "yes",
+     "says": "In a conservation area: little Haddon conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": ["broadband speed"],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "The sellers are retiring to the coast.",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "jess",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  },
+  {
+   "key": "meadow_view_10",
+   "ref": "HG118",
+   "number": "10",
+   "street": "Meadow View",
+   "district": "BK5",
+   "town": "Coldbrook",
+   "address": "10 Meadow View, Coldbrook BK5",
+   "initial": {
+    "status": "withdrawn",
+    "price_pence": 28000000,
+    "qualifier": "fixed"
+   },
+   "marketed_days_ago": 100,
+   "reduced": null,
+   "back_on_market_days_ago": null,
+   "viewings_from_days": null,
+   "type": "semi",
+   "beds": 3,
+   "baths": 1,
+   "receptions": 1,
+   "home": "three-bedroom semi-detached house, one bathroom, one reception",
+   "features": ["garden","driveway"],
+   "summary": "A three-bedroom semi-detached house overlooking fields, with a driveway and a large garden.",
+   "rooms": [
+    {
+     "name": "Living room",
+     "size": "4.7m x 3.6m"
+    },
+    {
+     "name": "Kitchen and dining room",
+     "size": "5.1m x 3.0m"
+    },
+    {
+     "name": "Bedroom 1",
+     "size": "3.8m x 3.3m"
+    },
+    {
+     "name": "Bedroom 2",
+     "size": "3.4m x 3.0m"
+    },
+    {
+     "name": "Bedroom 3",
+     "size": "2.6m x 2.2m"
+    },
+    {
+     "name": "Bathroom",
+     "size": "2.1m x 1.9m"
+    }
+   ],
+   "tenure": "freehold",
+   "lease": null,
+   "local_tax": "C",
+   "epc": "C",
+   "checks": {
+    "construction": {
+     "v": "yes",
+     "says": "Standard construction: brick with a tiled roof."
+    },
+    "heating": {
+     "v": "yes",
+     "says": "Central heating: gas central heating with a combination boiler."
+    },
+    "mains_gas": {
+     "v": "yes",
+     "says": "Mains gas."
+    },
+    "mains_water": {
+     "v": "yes",
+     "says": "Mains water."
+    },
+    "mains_drainage": {
+     "v": "yes",
+     "says": "Mains drainage."
+    },
+    "broadband": {
+     "v": "yes",
+     "says": "Broadband: superfast available, up to 80Mbps."
+    },
+    "mobile": {
+     "v": "yes",
+     "says": "Mobile signal: good outdoor signal on the main networks."
+    },
+    "parking": {
+     "v": "yes",
+     "says": "Parking: driveway for one car."
+    },
+    "flooded": {
+     "v": "no",
+     "says": "The seller says it has never flooded."
+    },
+    "flood_defences": {
+     "v": "no",
+     "says": "No flood defences."
+    },
+    "coastal_erosion": {
+     "v": "no",
+     "says": "No coastal erosion risk."
+    },
+    "listed": {
+     "v": "no",
+     "says": "Not listed."
+    },
+    "conservation_area": {
+     "v": "no",
+     "says": "Not in a conservation area."
+    },
+    "covenants": {
+     "v": "no",
+     "says": "No restrictive covenants declared."
+    },
+    "rights_of_way": {
+     "v": "no",
+     "says": "No rights of way declared."
+    },
+    "planning": {
+     "v": "no",
+     "says": "No planning applications declared."
+    },
+    "building_safety": {
+     "v": "no",
+     "says": "No building safety issues declared."
+    },
+    "accessibility": {
+     "v": "no",
+     "says": "Not adapted for accessibility."
+    },
+    "mining": {
+     "v": "no",
+     "says": "Not in a coal mining area."
+    },
+    "knotweed": {
+     "v": "no",
+     "says": "No Japanese knotweed declared."
+    },
+    "disputes": {
+     "v": "no",
+     "says": "No disputes declared."
+    },
+    "alterations": {
+     "v": "no",
+     "says": "No alterations declared."
+    },
+    "warranty": {
+     "v": "no",
+     "says": "No new-build warranty."
+    }
+   },
+   "unknown": [],
+   "say_first": [],
+   "before_offer": [
+    {
+     "say": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+     "listen": ["36","thirty-six","id"]
+    }
+   ],
+   "seller_position": "",
+   "fall_through": "",
+   "viewing": {
+    "windows": [],
+    "notice_minutes": 120,
+    "occupied": "owner",
+    "key_held": false,
+    "first_in_office_hours": false,
+    "rule": "Viewings any time in our viewing hours."
+   },
+   "negotiator": "tom",
+   "personal_interest": null,
+   "other_agents": "",
+   "links": ["brochure","floorplan","epc"],
+   "example": true
+  }
+ ],
+ "team": [
+  {
+   "key": "rachel",
+   "name": "Rachel Hartwell",
+   "first_name": "Rachel",
+   "role": "manager",
+   "does": [],
+   "days": [1,2,3,4,5],
+   "mobile": "07700 900020"
+  },
+  {
+   "key": "jess",
+   "name": "Jess Morgan",
+   "first_name": "Jess",
+   "role": "negotiator",
+   "does": ["viewings"],
+   "days": [1,2,3,4,5,6],
+   "mobile": "07700 900021"
+  },
+  {
+   "key": "tom",
+   "name": "Tom Bennett",
+   "first_name": "Tom",
+   "role": "negotiator",
+   "does": ["viewings"],
+   "days": [2,3,4,5,6],
+   "mobile": "07700 900022"
+  },
+  {
+   "key": "priya",
+   "name": "Priya Shah",
+   "first_name": "Priya",
+   "role": "valuer",
+   "does": ["valuations"],
+   "days": [1,2,3,4,5,6],
+   "mobile": "07700 900023"
+  },
+  {
+   "key": "dan",
+   "name": "Dan Fletcher",
+   "first_name": "Dan",
+   "role": "progressor",
+   "does": ["progression"],
+   "days": [1,2,3,4,5],
+   "mobile": "07700 900024"
+  },
+  {
+   "key": "mark",
+   "name": "Mark Ellis",
+   "first_name": "Mark",
+   "role": "adviser",
+   "does": ["mortgage"],
+   "days": [2,4],
+   "mobile": "07700 900025"
+  }
+ ],
+ "estate": {
+  "nation": "england",
+  "districts": ["BK1","BK2","BK3","BK4","BK5"],
+  "towns": ["Brackenford","Little Haddon","Coldbrook"],
+  "lettings": "none",
+  "lettings_contact": null,
+  "out_of_hours_booking": true,
+  "on_call": "rachel",
+  "viewing_hours": [
+   {
+    "days": [1,2,3,4,5],
+    "open": "09:00",
+    "close": "19:00",
+    "label": "Open"
+   },
+   {
+    "days": [6],
+    "open": "09:00",
+    "close": "16:00",
+    "label": "Open"
+   }
+  ],
+  "valuation_hours": [
+   {
+    "days": [1,2,3,4,5],
+    "open": "09:00",
+    "close": "18:00",
+    "label": "Open"
+   },
+   {
+    "days": [6],
+    "open": "09:00",
+    "close": "13:00",
+    "label": "Open"
+   }
+  ],
+  "safety": {
+   "take_postcode": true,
+   "empty_office_hours_only": true
+  },
+  "offers": {
+   "take": "record",
+   "buyer_fee_pence": 3600,
+   "buyer_fee": "Buyers pay £36 including VAT each for ID checks, once an offer is accepted.",
+   "id_provider": "Movecheck (example)",
+   "best_final": "Best and final offers are made in writing by a set time, and every buyer who has offered hears at once."
+  },
+  "valuations": {
+   "name": "free market appraisal",
+   "minutes": 60,
+   "rics": {
+    "offered": false,
+    "fee_pence": 0,
+    "staff": null
+   },
+   "say": "It's free and takes about an hour."
+  },
+  "mortgage": {
+   "staff": "mark",
+   "firm": "Clearwater Mortgages",
+   "statement": "Clearwater Mortgages is a separate firm we work with, and we may receive a referral fee. Seeing them is optional and makes no difference to any viewing or offer."
+  },
+  "gas": "0800 111 999",
+  "official": {
+   "flooding": "the Environment Agency's long-term flood risk service on GOV.UK",
+   "local_tax": "the Valuation Office Agency's council tax band checker on GOV.UK",
+   "broadband": "Ofcom's broadband and mobile checker",
+   "mobile": "Ofcom's broadband and mobile checker"
+  },
+  "redress": "tpo",
+  "complaints_handler": "rachel",
+  "data_lead": "rachel"
+ }
+}
