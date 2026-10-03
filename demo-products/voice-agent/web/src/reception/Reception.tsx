@@ -10,6 +10,7 @@ import { ApiError, BASE, demoApi, onSessionEnded } from '../api.ts';
 import { Toaster, toast } from '../components/Toaster.tsx';
 import { Link, navigate } from '../router.tsx';
 import { Builder } from './builder/Builder.tsx';
+import { untitled } from './nouns.ts';
 import { Workspace } from './workspace/Workspace.tsx';
 import type { Me, PresetInfo, WorkspacePayload, WorkspaceSummary } from './types.ts';
 import { Logo } from '../components/Logo.tsx';
@@ -213,7 +214,7 @@ function Home({ me, onChange }: { me: Me; onChange: () => void }) {
             <>
               <h1>Welcome.</h1>
               <p>
-                Build an AI receptionist for your own restaurant and ring it. This is a shared demo link: your demo is <b>private to this browser</b>, and
+                Build an AI receptionist for your own business and ring it. This is a shared demo link: your demo is <b>private to this browser</b>, and
                 everything in it (the setup, bookings, orders, calls and texts) is <b>deleted an hour after you press Start</b>.
               </p>
             </>
@@ -236,7 +237,7 @@ function Home({ me, onChange }: { me: Me; onChange: () => void }) {
         <div className="tenants">
           {workspaces.map((w, i) => (
             <article key={w.id} className="panel tenant-card lift enter" style={{ ...(w.accent ? { '--accent': w.accent } : {}), '--enter-delay': `${0.06 * i}s` } as React.CSSProperties}>
-              <h3>{w.name || 'Untitled restaurant'}</h3>
+              <h3>{w.name || untitled(w.preset)}</h3>
               <p>{w.started_at ? 'Live: ring it, and watch the back office.' : 'Being set up. Finish the steps, then press Start.'}</p>
               {expiryLine(w, now) ? <p className="expiry">{expiryLine(w, now)}</p> : null}
               <div className="row">
@@ -339,11 +340,11 @@ function NewDemo({ me }: { me: Me }) {
 
         {chosen ? (
           <form className="panel new-form enter" onSubmit={create}>
-            <h2>Your {chosen.label.toLowerCase()}</h2>
+            <h2>Your {chosen.noun}</h2>
             <label htmlFor="new-name">Name</label>
             <input id="new-name" required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} placeholder="Lucas Kitchen" />
             <label htmlFor="new-site">Your website <span className="muted">(optional)</span></label>
-            <input id="new-site" type="url" inputMode="url" placeholder="https://www.your-restaurant.co.uk" value={website} onChange={(e) => setWebsite(e.target.value)} />
+            <input id="new-site" type="url" inputMode="url" placeholder={chosen.example} value={website} onChange={(e) => setWebsite(e.target.value)} />
             <p className="hint">
               With a website, we read its public pages to fill in your menu, hours, colours and fonts, and mark everything we found so you can check it.
               Without one, you start from sensible defaults.
@@ -357,7 +358,7 @@ function NewDemo({ me }: { me: Me }) {
                 </p>
                 {replaceable.length > 1 ? replaceable.map((w) => (
                   <label key={w.id}>
-                    <input type="radio" name="replace" checked={replace === w.id} onChange={() => setReplace(w.id)} /> {w.name || 'Untitled restaurant'}
+                    <input type="radio" name="replace" checked={replace === w.id} onChange={() => setReplace(w.id)} /> {w.name || untitled(w.preset)}
                   </label>
                 )) : null}
               </fieldset>

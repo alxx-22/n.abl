@@ -8,16 +8,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import { Link, navigate } from '../../router.tsx';
-import { presetInfo } from '../../../../src/presets/catalogue.ts';
 import { R, RxTop, expiryLine } from '../Reception.tsx';
 import { brandStyle } from '../brand.ts';
+import { unnamed } from '../nouns.ts';
 import type { BaseAnswers, Me, WorkspacePayload } from '../types.ts';
 import { Review } from './common/Review.tsx';
 import { REVIEW, builderFor, type StepProps, type Update } from './registry.ts';
 import { ScoutCard } from './Scout.tsx';
-
-/** "New restaurant", while it has no name. */
-const unnamed = (preset: string) => `New ${presetInfo(preset)?.noun ?? 'demo'}`;
 
 export function Builder({ id, me }: { id: string; me: Me }) {
   const [ws, setWs] = useState<WorkspacePayload | null>(null);
