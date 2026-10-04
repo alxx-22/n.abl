@@ -681,3 +681,32 @@ test('find_party: who the calling number is to us, from their own records; never
   assert.equal((await party('+447700900998')).known, false);
   assert.equal((await party(null)).known, false);
 });
+
+test('get_marketing_update: the seller of that home only, checked by number; viewings, feedback and offers by position, never names', async () => {
+  const t = await agency('ea-vendor');
+  const sarah = await call(t, '+447700900001');
+  const u = await sarah.run('get_marketing_update', { property: 'Larkspur Close' });
+  assert.equal(u.verified, true, JSON.stringify(u));
+  const v = u.viewings as { last_7_days: number; since_launch: number; upcoming: string[] };
+  assert.ok(v.last_7_days >= 2 && v.since_launch >= v.last_7_days, JSON.stringify(v));
+  assert.equal(v.upcoming.length, 2, JSON.stringify(v.upcoming));
+  const said = (u.feedback as { said: string }[]).map((f) => f.said);
+  for (const words of ['Loved the garden; the kitchen feels dated.', 'Price feels high for the size.']) assert.ok(said.includes(words), JSON.stringify(said));
+  const offer = (u.offers as { amount: string; status: string; buyer: string }[])[0];
+  assert.deepEqual([offer.amount, offer.buyer], ['£285,000', 'First-time buyer, mortgage agreed in principle']);
+  assert.match(offer.status, /^with you to consider since /);
+  assert.ok(!/Aisha|Khan|07700|\+447/.test(JSON.stringify(u)), 'no buyer named or numbered');
+  assert.match(String(u.next), /urgent message for \w+/);
+  // Her number, another home: not hers to hear about.
+  assert.equal((await sarah.run('get_marketing_update', { property: '22 Albion Road' })).verified, false);
+  // A stranger: the same refusal each time, and after three misses no more tries this call.
+  const stranger = await call(t, '+447700900009');
+  for (let i = 0; i < 3; i++) {
+    const r = await stranger.run('get_marketing_update', { property: 'Larkspur Close' });
+    assert.deepEqual([r.verified, r.property, r.viewings], [false, undefined, undefined]);
+    assert.match(String(r.say), /can't go through a sale without checking who's calling/);
+  }
+  assert.match(String((await stranger.run('get_marketing_update', { property: 'Larkspur Close' })).next), /No more tries/);
+  // No calling number: never verified.
+  assert.equal((await (await call(t, null)).run('get_marketing_update', { property: 'Larkspur Close' })).verified, false);
+});

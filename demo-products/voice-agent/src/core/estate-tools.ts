@@ -867,6 +867,77 @@ async function findParty(_args: Args, ctx: ToolContext): Promise<Record<string, 
   };
 }
 
+const NOT_VERIFIED = "I can't go through a sale without checking who's calling. I can take a message for the negotiator.";
+const FEEDBACK_WORDS: Record<string, string> = { keen: 'keen', second_viewing: 'would like a second viewing', likely_offer: 'likely to make an offer', not_for_me: 'not for them' };
+
+/**
+ * A home's seller, checked in code: the calling number must be one of the
+ * home's sellers. The model never holds the answer it checks, and three
+ * misses end the tries for the call.
+ */
+async function verifySeller(args: Args, ctx: ToolContext): Promise<{ home: Home; all: Home[] } | { reply: Record<string, unknown> }> {
+  const refuse = (next = 'Offer a message for the negotiator. Never say whether the home or the person is ours.') => ({ reply: { verified: false, say: NOT_VERIFIED, next } });
+  if (ctx.state.verifyMisses >= 3) return refuse('No more tries this call: offer a message.');
+  const r = await resolveHome(ctx, args.property);
+  // Two public homes that fit: asking which gives nothing away.
+  if ('reply' in r && r.reply.more_than_one) return { reply: { verified: false, ...r.reply } };
+  const phone = ctx.callerPhone;
+  const key = 'reply' in r ? null : r.home.listing.key;
+  const ok = key && phone && (ctx.state.verified.some((v) => v.listing === key && v.role === 'seller') || (await ctx.repo.sellersOf(ctx.tenant.id, key)).some((x) => x.phone === phone));
+  if (!ok || 'reply' in r) {
+    ctx.state.verifyMisses++;
+    return refuse();
+  }
+  if (!ctx.state.verified.some((v) => v.listing === key && v.role === 'seller')) ctx.state.verified.push({ listing: key!, role: 'seller' });
+  return r;
+}
+
+/** "How's my sale going?": the week's viewings, feedback as recorded, and offers by the buyer's position, for a verified seller only. */
+async function getMarketingUpdate(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const r = await verifySeller(args, ctx);
+  if ('reply' in r) return r.reply;
+  const t = ctx.tenant;
+  const tz = t.profile.timezone;
+  const { listing: l, live } = r.home;
+  const now = ctx.now();
+  const day = today(ctx);
+  const [bookings, offers] = await Promise.all([
+    ctx.repo.listBookings(t.id, new Date(Math.min(live.marketed_at.getTime(), now.getTime() - 30 * DAY)), new Date(now.getTime() + 14 * DAY)),
+    ctx.repo.listOffers(t.id, l.key),
+  ]);
+  const views = bookings.filter((b) => b.listing_key === l.key && (b.service_key === 'viewing' || b.service_key === 'second_viewing'));
+  const past = views.filter((b) => b.ends_at <= now);
+  const when = (d: Date) => toLocal(d, tz);
+  const fb = (b: Booking) => b.details?.feedback as { category?: string; words?: string } | undefined;
+  const negotiator = firstNameOf(t, l.negotiator) || 'the negotiator';
+  return {
+    verified: true,
+    property: shortAddress(l),
+    status: STATUS_WORDS[live.status],
+    price: live.checking.includes('price') ? undefined : priceOf(r.home),
+    viewings: {
+      last_7_days: past.filter((b) => b.starts_at.getTime() > now.getTime() - 7 * DAY).length,
+      since_launch: past.filter((b) => b.starts_at >= live.marketed_at).length,
+      upcoming: views.filter((b) => b.starts_at > now && b.starts_at.getTime() < now.getTime() + 7 * DAY).map((b) => `${dayWords(when(b.starts_at).date, day)} ${spokenTime(when(b.starts_at).time)}`),
+      second_viewings: views.filter((b) => b.service_key === 'second_viewing').length,
+    },
+    feedback: past.filter((b) => fb(b)?.words).slice(-5).map((b) => {
+      const pos = b.details?.position as BuyerPosition | undefined;
+      return { when: dayWords(when(b.starts_at).date, day), from: pos?.first_time_buyer ? 'a first-time buyer' : 'a buyer', said: fb(b)!.words, so: FEEDBACK_WORDS[fb(b)!.category ?? ''] };
+    }),
+    feedback_awaited: past.filter((b) => !fb(b) && b.starts_at.getTime() > now.getTime() - 14 * DAY).length || undefined,
+    offers: offers.filter((o) => ['received', 'sent', 'countered'].includes(o.status)).map((o) => ({
+      reference: o.reference,
+      amount: poundsWhole(o.amount_pence),
+      status: o.status === 'sent' ? `with you to consider since ${dayWords(when(o.sent_at ?? o.received_at).date, day)}`
+        : o.status === 'countered' ? 'you came back to them; waiting for their answer' : `received ${dayWords(when(o.received_at).date, day)}; ${negotiator} will put it to you`,
+      buyer: positionWords(o.position ?? {}, o.buyer_names.length).replace(/\.$/, '') || 'position not given',
+    })),
+    best_and_final: live.best_final_at ? `best and final offers by ${dayWords(when(live.best_final_at).date, day)} ${spokenTime(when(live.best_final_at).time)}` : undefined,
+    next: `Buyers by position only, never names or numbers. A price change, or an answer to an offer, is an urgent message for ${negotiator} (category seller, or offer), never done on the call.`,
+  };
+}
+
 const LINK_WORDS: [RegExp, Listing['links'][number]][] = [[/brochure|details|particular/, 'brochure'], [/floor/, 'floorplan'], [/video|tour/, 'video'], [/epc|energy/, 'epc']];
 const LINK_LABEL: Record<Listing['links'][number], string> = { brochure: 'Brochure', floorplan: 'Floorplan', video: 'Video tour', epc: 'EPC' };
 
@@ -963,6 +1034,15 @@ export const ESTATE_TOOLS: Record<string, Tool> = {
       parameters: obj({}),
     },
     handler: findParty,
+  },
+  get_marketing_update: {
+    when: hasHomes,
+    decl: {
+      name: 'get_marketing_update',
+      description: "A seller's update on their own home: viewings, feedback and offers. It checks the calling number is the seller; if not, share nothing and offer a message.",
+      parameters: obj({ property: S('The home, as the caller said it') }, ['property']),
+    },
+    handler: getMarketingUpdate,
   },
   get_property: {
     when: hasHomes,
