@@ -503,6 +503,7 @@ export async function estateMessage(args: Args, ctx: ToolContext): Promise<Recor
     },
   });
   ctx.state.messageTaken = true;
+  if (category === 'fraud') ctx.state.fraudReported = true;
   ctx.action({
     kind: 'message_taken', title: quiet ? 'Private note' : `Message for ${first} from ${name}`,
     detail: quiet ? 'Private: in Messages' : `${body}${phone ? ` · ${displayUkPhone(phone)}` : ''}`,
@@ -757,7 +758,8 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
   // The facts every advert must state (price, tenure, council tax, EPC), said up front; left out while staff check any of them.
   const describe = live.checking.some((c) => ['price', 'tenure', 'lease', 'local_tax', 'epc'].includes(c)) ? undefined : describeLine(l, live, day, nation);
   return scrub({
-    property: l.key, address: l.address, status: STATUS_WORDS[live.status], describe, price: priceOf(h), price_note: priceNote, on_market: onMarket,
+    property: l.key, address: l.address, status: STATUS_WORDS[live.status], describe,
+    price: live.checking.includes('price') ? undefined : priceOf(h), price_note: live.checking.includes('price') ? undefined : priceNote, on_market: onMarket,
     facts: f.facts,
     unknown: f.unknown.length ? f.unknown : undefined,
     being_checked: f.being_checked.length ? f.being_checked : undefined,

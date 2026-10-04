@@ -39,11 +39,16 @@ const PASSED_ON = /\b(?:i'?ve|i have|we'?ve|we have|that'?s|it'?s|has been|have 
 export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:that|it|this|those|these|your [a-z]+)(?: details)? (?:on|along)|let (?:the|our) [a-z ]{0,20}know|ask (?:them|the [a-z ]{0,20}) to (?:call|ring|give you a (?:call|ring)))/i;
 // A booking, valuation or offer read back for a yes, with its time or amount (an estate agency's calls). On 3 October
 // a caller answered "Yes, that's all correct. Could I also see 10 Meadow View?" and the viewing was never booked.
-export const READ_BACK = /\b(?:is that (?:all )?(?:right|correct)|does that (?:all )?(?:sound|look) right|have i got that right|shall i (?:book|go ahead|put (?:that|it) through)|is that ok(?:ay)? to book)\b[^?]*\?\s*$/i;
+export const READ_BACK = /\b(?:is that (?:all )?(?:right|correct)|does that (?:all )?(?:sound|look) right|have i got that right)\b[^?]*\?\s*$/i;
 export const READ_BACK_DETAIL = /\b\d{1,2}(?::\d{2})?\s?(?:am|pm)\b|\b(?:half|quarter) (?:past|to) [a-z]+\b|\bhalf (?:nine|ten|eleven|twelve|one|two|three|four|five|six)\b|\b(?:nine|ten|eleven|twelve|one|two|three|four|five|six|seven) (?:o'?clock|fifteen|thirty|forty-five)\b|£\s?\d|\bthousand\b/i;
 /** A caller talking about bank or account details: at an estate agency, a possible payment scam that the team must hear about at once. */
 export const BANK_TALK = /\b(?:bank|account) details\b|\bsort code\b|\baccount number\b|\bnew (?:bank )?account\b/i;
 export const SAID_YES = /^\s*(?:yes|yeah|yep|yup|correct|that'?s (?:all )?(?:right|correct|fine|perfect)|perfect|sounds good|lovely|great|please do|go ahead)\b/i;
+/** A plain yes to a read-back: "Yes, but could we make it 11?" and "Yeah, no, Saturday's no good" are not. */
+export function saidYes(line: string): boolean {
+  const m = SAID_YES.exec(line);
+  return Boolean(m) && !/\b(?:but|actually|instead|rather|though|no|not)\b/i.test(line.slice(m!.index + m![0].length));
+}
 const SAFE = /\b(it'?s|is|that'?s|will be|would be|should be|totally|completely|perfectly) (safe|fine|okay|ok) (for|with) (you|your|him|her|them|someone|a) [^.?!]*(allerg|coeliac|nut|gluten)/i;
 
 // ── An estate agency's ────────────────────────────────────────────────────
@@ -102,19 +107,23 @@ function estateFlags(text: string, state: CallState, names: string[]): Flag[] {
   }
   const recorded = RECORDED.exec(text);
   // "I've recorded that this was about bank details", once a message is taken, is true: the rule is for offers (a live call on 3 October).
-  const aboutMessage = state.messageTaken && !/\boffer/i.test(text);
+  const aboutMessage = state.messageTaken && recorded !== null && !/\boffer/i.test(text) && !/to the seller/i.test(recorded[0]) && !MONEY.test(text);
   if (recorded && !aboutMessage && !negated(text, recorded.index) && state.committed.length === 0) flags.push({ rule: 'unconfirmed_claim', text: recorded[0] });
   return flags;
 }
 
 /** A time or a slot that is taken, not a booking made. A claim said "for you" or "booked in" is still a claim. */
 function slotTaken(text: string, claim: RegExpExecArray): boolean {
+  // Only "booked" can mean taken: "confirmed", "reserved", "sorted" and "you're ..." are always claims.
+  if (!/\bbooked\b/i.test(claim[0]) || /^you/i.test(claim[0])) return false;
   const after = text.slice(claim.index + claim[0].length);
   if (/(?: in| for you)$/i.test(claim[0]) || /^\s+(?:in|for you)\b/i.test(after)) return false;
   if (BOOKED_UP.test(after)) return true;
-  const before = text.slice(Math.max(0, claim.index - 60), claim.index).replace(/\b([ap])\.m\./gi, '$1m');
-  const clause = before.split(/[.?!,;:](?=\s)/).pop() ?? '';
-  return SLOT.test(clause) && !THING.test(clause);
+  const before = text.slice(Math.max(0, claim.index - 80), claim.index).replace(/\b([ap])\.m\./gi, '$1m');
+  // The slot is the subject of its own clause; anything of the caller's in the sentence ("the table for four, and 7pm is booked") makes it a claim.
+  const sentence = before.split(/[.?!](?=\s)/).pop() ?? '';
+  const clause = sentence.split(/[,;:](?=\s)/).pop() ?? '';
+  return SLOT.test(clause) && !THING.test(sentence);
 }
 
 function negated(text: string, index: number): boolean {
@@ -128,7 +137,8 @@ export function checkUtterance(text: string, state: CallState, staff: string[] =
   const claim = CLAIM.exec(text);
   // An estate agency's read-back ("...and it's booked in under Lou Grant. Is that all correct?") asks for the yes that books it, and the call
   // reminds the receptionist to book once it comes; correcting it mid-read-back threw a live call off on 3 October.
-  const readBack = state.estate && READ_BACK.test(text);
+  // Only the read-back's own form, "booked in under <name>", followed by its question.
+  const readBack = state.estate && claim !== null && READ_BACK.test(text) && /^\s*under\b/i.test(text.slice(claim.index + claim[0].length));
   if (claim && !readBack && !negated(text, claim.index) && !slotTaken(text, claim) && state.committed.length === 0 && state.found.length === 0) {
     flags.push({ rule: 'unconfirmed_claim', text: claim[0] });
   }

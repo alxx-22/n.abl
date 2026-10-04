@@ -16,7 +16,7 @@ import {
   loggableArgs, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type CallState, type SmsSender, type Telephony,
   type ToolContext,
 } from './tools.ts';
-import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance, type Flag } from './guardrails.ts';
+import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, checkUtterance, saidYes, type Flag } from './guardrails.ts';
 import { redactCardNumbers } from './redact.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
@@ -154,6 +154,8 @@ export class CallSession extends EventEmitter<CallEvents> {
   private flags: Flag[] = [];
   /** Tool flags waiting for the turn's words (see raiseHeld). */
   private held: CallState['toolFlags'] = [];
+  /** The last tool that looked up or made a booking: a read-back after find_bookings is not one to book. */
+  private lastLookup: string | null = null;
   private toolTrace: { name: string; args: unknown; result: unknown }[] = [];
   private usage = { total: 0, prompt_first: 0, prompt_max: 0, responses: 0 };
   private latencies: number[] = [];
@@ -464,7 +466,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.state.heard.push(clean);
     // An estate agency's read-back answered: a yes means book it now (see flushAgent).
     if (this.state.estate) {
-      if (this.state.readBack && SAID_YES.test(clean)) this.state.saidYes = this.state.readBack;
+      if (this.state.readBack && saidYes(clean)) this.state.saidYes = this.state.readBack;
       this.state.readBack = null;
     }
     this.emitLine('caller', text, true);
@@ -504,14 +506,18 @@ export class CallSession extends EventEmitter<CallEvents> {
    * answered another question instead). Reminded once, after the turn's
    * tool calls have run.
    */
-  /** A booking tool that said "not done yet, ask for X and call again" leaves the booking outstanding until one succeeds. */
+  /**
+   * A booking tool that said "not done yet, ask for X and call again" leaves
+   * the booking outstanding; any later answer from one of them (booked, or
+   * refused for another reason such as the time going) replaces it. The
+   * caller's words that led to the call may not be flushed yet, so they
+   * count as heard.
+   */
   private noteOutstanding(name: string, result: unknown): void {
     if (name !== 'create_booking' && name !== 'book_valuation' && name !== 'record_offer') return;
     const r = (result ?? {}) as { booked?: boolean; recorded?: boolean; message?: unknown };
-    if (r.booked || r.recorded) this.state.outstanding = null;
-    else if ((r.booked === false || r.recorded === false) && /call (?:this|it|create_booking|book_valuation|record_offer) again|call again/i.test(String(r.message ?? ''))) {
-      this.state.outstanding = { tool: name, heard: this.state.heard.length };
-    }
+    const again = (r.booked === false || r.recorded === false) && /call (?:this|it|create_booking|book_valuation|record_offer) again|call again/i.test(String(r.message ?? ''));
+    this.state.outstanding = again ? { tool: name, heard: this.state.heard.length + (this.callerBuf.trim() ? 1 : 0) } : null;
   }
 
   /**
@@ -521,9 +527,9 @@ export class CallSession extends EventEmitter<CallEvents> {
    * likely payment scam. Reminded once, after the turn's tool calls.
    */
   private remindFraud(): void {
-    if (this.state.fraudNudged || this.state.messageTaken || !BANK_TALK.test(this.state.heard.join(' '))) return;
+    if (this.state.fraudNudged || this.state.fraudReported || !BANK_TALK.test(this.state.heard.join(' '))) return;
     void this.toolQueue.then(() => {
-      if (this.ended || this.state.fraudNudged || this.state.messageTaken) return;
+      if (this.ended || this.state.fraudNudged || this.state.fraudReported) return;
       this.state.fraudNudged = true;
       this.session?.sendText('[From the system: the caller talked about bank or account details, which may be a payment scam. Take an urgent message now with take_message (category fraud, urgency urgent) with their name, number and what they asked, so the team can check it. Then carry on.]');
     });
@@ -548,7 +554,9 @@ export class CallSession extends EventEmitter<CallEvents> {
         this.session?.sendText('[From the system: the caller said yes to what you read back, but nothing has been booked or recorded yet. Do it now with create_booking, book_valuation or record_offer, using what they already told you (if the tool asks for something first, ask for just that). Then answer anything else they asked.]');
       });
     }
-    this.state.readBack = READ_BACK.test(line) && READ_BACK_DETAIL.test(line) ? { committed: this.state.committed.length, tries: this.state.commitTries } : null;
+    // A read-back of something to make, not of a booking just found ("I can see your viewing on Saturday at 10am. Is that right?").
+    const making = this.lastLookup !== 'find_bookings' && this.lastLookup !== 'modify_booking';
+    this.state.readBack = making && READ_BACK.test(line) && READ_BACK_DETAIL.test(line) ? { committed: this.state.committed.length, tries: this.state.commitTries } : null;
   }
 
   private get staffNames(): string[] {
@@ -598,7 +606,9 @@ export class CallSession extends EventEmitter<CallEvents> {
     };
     const responses = [];
     for (const c of calls) {
-      if (c.name === 'create_booking' || c.name === 'book_valuation' || c.name === 'record_offer') this.state.commitTries++;
+      // A change or cancellation answers a yes too: only "book it now" is reminded (remindToBook).
+      if (['create_booking', 'book_valuation', 'record_offer', 'modify_booking', 'cancel_booking'].includes(c.name)) this.state.commitTries++;
+      if (['check_availability', 'find_bookings', 'modify_booking', 'create_booking', 'book_valuation', 'record_offer'].includes(c.name)) this.lastLookup = c.name;
       this.record('tool_call', { name: c.name, args: loggableArgs(c.name, c.args) });
       const t0 = Date.now();
       const result = await runTool(c.name, c.args, ctx);

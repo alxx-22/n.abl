@@ -572,6 +572,9 @@ test('estate guardrails: a figure, bank details, codes, an empty home, where sta
   state.messageTaken = true;
   assert.deepEqual(rules("I've passed your details to Rachel, and I've recorded that this was about bank details for 2 Elm Court."), []);
   assert.deepEqual(rules("I've recorded your offer."), ['unconfirmed_claim']);
+  // ...and an offer said with its amount, or "sent to the seller", is never covered by an earlier message.
+  assert.deepEqual(rules("Thank you. £320,000 for 22 Albion Road: I've logged that and it's been sent to the seller."), ['unconfirmed_claim']);
+  assert.deepEqual(rules("Lovely, three hundred and twenty thousand, that's now recorded."), ['unconfirmed_claim']);
   state.messageTaken = false;
   state.seen.accepted.push('albion_22');
   assert.deepEqual(rules('An offer has been accepted on it, subject to contract.'), [], 'the tools said so');
@@ -591,6 +594,7 @@ test('take_message: a caller who talked about bank details leaves an urgent frau
   assert.equal(r.taken, true);
   const m = (await repo.listMessages(t.id, 500)).find((x) => x.from_name === 'Mark Field')!;
   assert.equal(m.category, 'fraud');
+  assert.equal(ctx.state.fraudReported, true, 'the call knows a fraud message is taken (no reminder needed)');
   assert.equal(m.urgency, 'urgent');
   assert.ok(sent.some((x) => x.body.startsWith('URGENT from the AI receptionist: Mark Field')), 'the person it is for is texted');
   // A caller who never mentioned money keeps the category the receptionist chose.
@@ -609,6 +613,15 @@ test('get_property: the facts every advert must state come first, in one sentenc
   await repo.setListing(t.id, 'albion_22', { checking: ['local_tax'] });
   const checking = await (await call(t)).run('get_property', { property: '22 Albion Road' });
   assert.equal(checking.describe, undefined, 'a fact being checked is not stated');
+  // Nor is the fact itself, anywhere in the answer.
+  for (const [fact, gone] of [['price', 'price'], ['tenure', 'tenure'], ['local_tax', 'council_tax'], ['epc', 'epc']] as const) {
+    await repo.setListing(t.id, 'albion_22', { checking: [fact] });
+    const r = await (await call(t)).run('get_property', { property: '22 Albion Road' });
+    const facts = r.facts as Record<string, string>;
+    assert.equal(fact === 'price' ? r.price : facts[gone], undefined, `${fact} withheld while it is checked`);
+    assert.ok((r.being_checked as string[]).length === 1, fact);
+  }
+  await repo.setListing(t.id, 'albion_22', { checking: [] });
 });
 
 test('end_call: an estate call ending "booked" with nothing booked is stopped once', async () => {

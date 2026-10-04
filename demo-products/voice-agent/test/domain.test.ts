@@ -6,7 +6,7 @@ import { resolveItem, resolveModifiers, allergenAnswer, lineTotal } from '../src
 import { searchKnowledge } from '../src/domain/knowledge.ts';
 import { processDemoPayment, parseDemoCards, DEFAULT_DEMO_CARDS, digitsOf } from '../src/domain/payments.ts';
 import { redactCardNumbers, REDACTED } from '../src/core/redact.ts';
-import { PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance } from '../src/core/guardrails.ts';
+import { PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance, saidYes } from '../src/core/guardrails.ts';
 import { newCallState, record, unsaidReference, type ToolContext } from '../src/core/tools.ts';
 import { readFileSync } from 'node:fs';
 import { normaliseUkPhone, displayUkPhone } from '../src/domain/phone.ts';
@@ -202,6 +202,14 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
     "Saturday's all booked in for you.",
     'Perfect, 7pm is booked for you.',
     "Lovely, for four people at 7pm, that's booked.",
+    // Claims of the kind the guard was written for (29 September), whatever slot they name: only "booked" can mean taken.
+    'Lovely, Saturday at 7pm is confirmed.',
+    'Saturday at 7pm is reserved.',
+    'Great, tomorrow lunchtime is sorted.',
+    "Right, tomorrow at 7pm you're all booked.",
+    "That's all sorted out for you.",
+    "Right, you're all sorted out.",
+    'Lovely, so that is a table for four, and 7pm on Saturday is booked.',
   ]) {
     assert.equal(checkUtterance(claim, s)[0]?.rule, 'unconfirmed_claim', claim);
   }
@@ -220,7 +228,10 @@ test('a read-back answered yes: what an estate agency\'s call reminds the recept
   const number = "So that's oh seven seven double oh, nine double oh one two three. Is that right?";
   assert.ok(READ_BACK.test(number) && !READ_BACK_DETAIL.test(number));
   assert.ok(!READ_BACK.test('Shall I check Saturday at 11am for you, or would another day suit?'), 'a question that is not the read-back');
+  assert.ok(!READ_BACK.test('I have Saturday at 10am or 11:30am with Tom. Shall I book one of those for you?'), 'an offer of times, not a read-back');
   for (const no of ['No, Sunday please.', 'Actually, can we make it 11?', 'Hang on, not quite.']) assert.ok(!SAID_YES.test(no), no);
+  for (const no of ['Yes, but could we make it 11 instead?', "Yeah, no, Saturday's no good actually.", "Yes, that's not quite it."]) assert.ok(!saidYes(no), no);
+  for (const yes of ["Yes, that's all correct. Could I also see 10 Meadow View, please?", "Yes, that's right, and I've nothing to sell."]) assert.ok(saidYes(yes), yes);
   // At an estate agency the read-back is no claim; the same words said as a statement still are, and a restaurant's read-back is checked as before.
   const s = newCallState();
   s.estate = true;
@@ -228,6 +239,10 @@ test('a read-back answered yes: what an estate agency\'s call reminds the recept
   assert.equal(checkUtterance(asked, s).length, 0);
   assert.equal(checkUtterance("Lovely, that's booked in under Lou Grant for Saturday.", s)[0]?.rule, 'unconfirmed_claim');
   assert.equal(checkUtterance(asked, newCallState())[0]?.rule, 'unconfirmed_claim');
+  // A claim in its own sentence before any question is still a claim, at an estate agency too.
+  for (const claim of ["You're all booked for Saturday at 10am. Is that all correct?", 'Your viewing is confirmed. Does that all sound right?', "That's booked for you, reference A B 1 2. Is that right?"]) {
+    assert.equal(checkUtterance(claim, s)[0]?.rule, 'unconfirmed_claim', claim);
+  }
 });
 
 test('records: every booking and order a call makes or finds goes through record()', () => {

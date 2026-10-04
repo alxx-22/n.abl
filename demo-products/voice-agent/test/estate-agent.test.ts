@@ -571,7 +571,11 @@ test('a home\'s facts: short words, unknowns named and never said as no, nothing
   const checking = facts(house, { checking: ['parking', 'rooms'] }, TODAY, 'england');
   assert.equal(checking.facts.parking, undefined);
   assert.equal(checking.facts.rooms, undefined);
-  assert.deepEqual(checking.being_checked, ['parking', 'rooms']);
+  assert.deepEqual(checking.being_checked, ['parking', 'the room sizes']);
+  // The main facts too: none is stated while staff check it.
+  const main = facts(home(p, 'albion_41_flat_2'), { checking: ['tenure', 'local_tax', 'epc'] }, TODAY, 'england');
+  for (const k of ['tenure', 'service_charge', 'ground_rent', 'council_tax', 'epc']) assert.equal(main.facts[k], undefined, k);
+  assert.deepEqual(main.being_checked, ['the tenure', 'the council tax band', 'the EPC rating']);
   // An owner's note that gives away an empty home never leaves the facts.
   const noted = structuredClone(house);
   noted.checks.parking = { v: 'yes', says: 'Parking: keys for the garage are in the office.' };

@@ -208,7 +208,7 @@ export function sayFirst(l: Listing, live: ListingLive, today: string, start: Da
     const first = firstViewingDate(l, start, timezone);
     if (first > today) out.push(sayItem(`It's coming soon: first viewings from ${spokenDate(first)}.`, ['coming soon', spokenDate(first).split(' ')[0]]));
   }
-  const years = l.lease ? leaseYears(l.lease.expires, today) : null;
+  const years = l.lease && !live.checking.includes('lease') && !live.checking.includes('tenure') ? leaseYears(l.lease.expires, today) : null;
   if (years !== null && years < SHORT_LEASE_YEARS) out.push(sayItem(`It's leasehold, with ${years} years left on the lease.`, [years]));
   return [...out, ...l.say_first];
 }
@@ -745,14 +745,19 @@ const orList = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')}
  * checking is left out and named in being_checked; anything unknown is
  * named in unknown, never said as no.
  */
+/** What the facts outside the checklist are called when staff mark them as being checked. */
+const CHECKING_WORDS: Record<string, string> = { price: 'the price', rooms: 'the room sizes', tenure: 'the tenure', lease: 'the lease details', local_tax: 'the council tax band', epc: 'the EPC rating' };
+
 export function facts(l: Listing, live: Pick<ListingLive, 'checking'>, today: string, nation: Nation): { facts: Record<string, string>; unknown: string[]; being_checked: string[] } {
   const checking = new Set(live.checking);
   const out: Record<string, string> = { home: l.home };
   if (l.summary) out.summary = l.summary;
   if (l.features.length) out.features = l.features.join(', ');
   if (l.rooms.length && !checking.has('rooms')) out.rooms = l.rooms.map((r) => `${r.name} ${r.size || 'not measured'}`).join('; ');
-  out.tenure = clause(tenureSentence(l, today).replace(/^It's /, ''));
-  const lease = l.lease;
+  // A fact staff are checking is not stated: the receptionist says it is being checked.
+  const leaseChecked = checking.has('tenure') || checking.has('lease');
+  if (!checking.has('tenure')) out.tenure = clause(tenureSentence(l, today).replace(/^It's /, ''));
+  const lease = leaseChecked ? null : l.lease;
   if (lease) {
     if (lease.service_charge) out.service_charge = lease.service_charge;
     if (lease.ground_rent) out.ground_rent = lease.ground_rent;
@@ -762,9 +767,9 @@ export function facts(l: Listing, live: Pick<ListingLive, 'checking'>, today: st
     if (lease.age_limit) out.age_limit = `buyers aged ${lease.age_limit} or over`;
     if (lease.shared) out.shared_ownership = `${lease.shared.share_percent}% share with ${lease.shared.provider || 'a housing association'}, rent ${poundsWhole(lease.shared.rent_pence_month)} a month on the rest${lease.shared.eligibility ? `; ${clause(lease.shared.eligibility)}` : ''}`;
   }
-  const tax = localTaxWords(l.local_tax, nation);
+  const tax = checking.has('local_tax') ? '' : localTaxWords(l.local_tax, nation);
   if (tax) out[nation === 'northern_ireland' ? 'rates' : 'council_tax'] = tax.replace(/^Council tax /, '');
-  out.epc = l.epc.trim() ? l.epc.trim() : 'not yet available';
+  if (!checking.has('epc')) out.epc = l.epc.trim() ? l.epc.trim() : 'not yet available';
   const said = (k: CheckKey) => !checking.has(k) && l.checks[k].v !== 'unknown';
   const grouped = new Set<CheckKey>();
   /** The keys in a group the seller answered plainly, each taken out of the list said one by one. */
@@ -795,7 +800,7 @@ export function facts(l: Listing, live: Pick<ListingLive, 'checking'>, today: st
   return {
     facts: out,
     unknown: CHECK_KEYS.filter((k) => !checking.has(k) && l.checks[k].v === 'unknown').map((k) => CHECKS[k].unknown),
-    being_checked: [...checking].map((k) => (k in CHECKS ? CHECKS[k as CheckKey].unknown : k)),
+    being_checked: [...checking].map((k) => (k in CHECKS ? CHECKS[k as CheckKey].unknown : CHECKING_WORDS[k] ?? k.replace(/_/g, ' '))),
   };
 }
 
