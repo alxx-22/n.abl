@@ -20,7 +20,7 @@ import { seedFrom } from '../presets/common/random.ts';
 import { applySettings, type SettingsPatch } from '../domain/settings.ts';
 import { CHECK_KEYS, SALE_MILESTONES, type ListingStatus, type OfferStatus, type Tenant, type TenantProfile } from '../domain/types.ts';
 import { matches, priceWords, shortAddress } from '../domain/listings.ts';
-import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
+import { addDays, isIsoDate, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { SimulatedSms } from '../channels/sms.ts';
 import { ScoutError, scanProgress, startScan, type ScanResult } from '../scout/scan.ts';
@@ -502,6 +502,16 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
       const words = String(b.words ?? '').trim().slice(0, 300);
       await repo.mergeBookingDetails(t.id, ref, { feedback: { category, words, source: 'staff', at: new Date().toISOString() }, awaiting_feedback: false }, `feedback: ${category.replace(/_/g, ' ')}`);
       message = 'Feedback saved.';
+    } else if (b.action === 'outcome') {
+      // A valuation won, being thought about (with a day to follow up) or lost (and to whom): the Valuations view's columns.
+      if (booking.service_key !== 'valuation') throw new HttpError(400, 'Only a valuation has an outcome.');
+      if (booking.status !== 'confirmed') throw new HttpError(409, 'That valuation was cancelled.');
+      const outcome = String(b.outcome ?? '');
+      if (!['instructed', 'thinking', 'lost'].includes(outcome)) throw new HttpError(400, 'Unknown outcome.');
+      const followUp = outcome === 'thinking' ? (isIsoDate(String(b.follow_up ?? '')) ? String(b.follow_up) : addDays(toLocal(new Date(), t.profile.timezone).date, 14)) : null;
+      const lostTo = outcome === 'lost' ? String(b.lost_to ?? '').trim().slice(0, 80) || null : null;
+      await repo.mergeBookingDetails(t.id, ref, { outcome, follow_up: followUp, lost_to: lostTo }, `valuation outcome: ${outcome}`);
+      message = outcome === 'instructed' ? 'Instructed: well done.' : outcome === 'thinking' ? `Thinking: follow up on ${followUp}.` : `Lost${lostTo ? ` to ${lostTo}` : ''}.`;
     } else if (b.action === 'cancel') {
       const c = await repo.cancelBooking(t.id, ref, 'staff');
       if (!c) throw new HttpError(409, 'That booking is already cancelled.');
