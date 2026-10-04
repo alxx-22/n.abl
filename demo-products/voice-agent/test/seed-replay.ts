@@ -39,9 +39,9 @@ export function replaySeed(profile: TenantProfile, plan: SeedPlan): string[] {
     );
     if (!slot) out.push(`${say}: not free, or not allowed`);
     else if (slot.resource_key !== b.resource_key || slot.ends_at.getTime() !== b.ends_at.getTime()) out.push(`${say}: checkSlot gives ${slot.resource_key} until ${slot.ends_at.toISOString()}`);
-    // An estate agency's buyer is at one home at a time, travel included.
-    const gap = (b.buffer_minutes ?? 0) * 60000;
-    const clash = profile.listings && b.phone ? sorted.find((x) => x !== b && x.phone === b.phone && x.starts_at <= b.starts_at && b.starts_at.getTime() < x.ends_at.getTime() + gap) : undefined;
+    // An estate agency's buyer is at one place at a time, travel included: the longer of the two bookings' travel times.
+    const gapAfter = (x: typeof b) => Math.max(b.buffer_minutes ?? 0, x.buffer_minutes ?? 0) * 60000;
+    const clash = profile.listings && b.phone ? sorted.find((x) => x !== b && x.phone === b.phone && x.starts_at <= b.starts_at && b.starts_at.getTime() < x.ends_at.getTime() + gapAfter(x)) : undefined;
     if (clash) out.push(`${say}: ${b.name} is still at ${clash.reference}`);
     existing.push({ id: b.reference, resource_key: b.resource_key, starts_at: b.starts_at, ends_at: b.ends_at, buffer_minutes: b.buffer_minutes ?? 0, listing_key: b.listing_key ?? null });
   }

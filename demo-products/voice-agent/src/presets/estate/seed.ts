@@ -178,9 +178,13 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
       o.time,
     );
     if (!slot) return null;
-    // One buyer is never at two homes at once, travel between them included.
-    const gap = (service.buffer_minutes ?? 0) * 60000;
-    if (bookings.some((x) => x.phone === o.who.phone && x.starts_at.getTime() < slot.ends_at.getTime() + gap && slot.starts_at.getTime() < x.ends_at.getTime() + gap)) return null;
+    // One buyer is never in two places at once, travel between them included: the longer of the two bookings' travel times,
+    // so an office mortgage appointment (none) cannot end as their viewing across town begins (seed 77, Friday evening).
+    const clash = (x: SeedBooking) => {
+      const gap = Math.max(service.buffer_minutes ?? 0, x.buffer_minutes ?? 0) * 60000;
+      return x.phone === o.who.phone && x.starts_at.getTime() < slot.ends_at.getTime() + gap && slot.starts_at.getTime() < x.ends_at.getTime() + gap;
+    };
+    if (bookings.some(clash)) return null;
     const b: SeedBooking = {
       reference: ref(),
       service_key: service.key,

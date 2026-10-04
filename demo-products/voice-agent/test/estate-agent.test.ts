@@ -19,6 +19,8 @@ import { sampleListings } from '../src/presets/estate/listings.ts';
 import { estatePreview, estateWorkspace, factSheet } from '../src/presets/estate/preset.ts';
 import { sanitiseEstate } from '../src/presets/estate/sanitise.ts';
 import { PERSONAS, planEstateSeed } from '../src/presets/estate/seed.ts';
+import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
+import { replaySeed } from './seed-replay.ts';
 import { STEPS } from '../src/presets/estate/steps.ts';
 import { validateEstate } from '../src/presets/estate/validate.ts';
 
@@ -429,6 +431,14 @@ test('seed: Priya keeps her next two working mornings free for a valuation at 10
   assert.equal(next.length, 2, 'two in the next two working days');
   assert.ok(next.some((b) => (b.details as { capacity: string }).capacity === 'executor'), 'one is an executor');
   assert.ok(vals.some((b) => (b.details as { dual_fee: boolean }).dual_fee && b.starts_at > WEDNESDAY), 'one is already with another agent');
+});
+
+test('seed: a buyer is never in two places at once, travel included, whatever the seed', () => {
+  // Seed 77 on a Friday evening gave a mortgage appointment ending as the same buyer's viewing across town began.
+  const profile = builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'ea-hartwell')!).profile;
+  for (const [now, seeds] of [[new Date('2026-10-09T17:00:00Z'), [77]], [WEDNESDAY, Array.from({ length: 60 }, (_, i) => i)]] as const) {
+    for (const seed of seeds) assert.deepEqual(replaySeed(profile, planEstateSeed(profile, now, seed)).filter((x) => /is still at/.test(x)), [], `seed ${seed}`);
+  }
 });
 
 test('seed: the best-and-final home always has two different bidders, whatever the seed', () => {
