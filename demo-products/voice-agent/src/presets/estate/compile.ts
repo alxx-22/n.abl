@@ -44,6 +44,10 @@ export function daysWords(days: DayHours[]): string {
   return spans.length > 1 ? `${spans.slice(0, -1).join(', ')} and ${spans.at(-1)}` : spans[0] ?? 'by arrangement';
 }
 
+/** The viewing and valuation days, said once when they are the same. */
+const diaryFact = (viewings: string, valuations: string) =>
+  viewings === valuations ? `Viewings and valuations: ${viewings}.` : `Viewings: ${viewings}. Valuations: ${valuations}.`;
+
 /** daysWords, or past `max` characters the days alone: check_availability has the times. */
 export function weekWords(days: DayHours[], max = Infinity): string {
   const full = daysWords(days);
@@ -290,7 +294,7 @@ export function compileEstate(a: EstateAnswers, meta: { slug: string }): TenantP
       hoursMax: 200,
       noun: NOUN,
       facts: [
-        `Viewings: ${weekWords(a.diary.viewing_days, 160)}. Valuations: ${weekWords(a.diary.valuation_days, 160)}.`,
+        diaryFact(weekWords(a.diary.viewing_days, 160), weekWords(a.diary.valuation_days, 160)),
         patchSentence(a, 6),
         appraisalSentence(a),
         gasFact(a.patch.nation),

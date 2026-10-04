@@ -20,7 +20,7 @@
  "core_facts": [
   "Name Name Name Name Name Name Name Name Name Name Name Name: Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Styl, at Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address.",
   "Open every day, at times that vary by day: get_opening_hours has them.",
-  "Viewings: every day, at set times (check_availability has them). Valuations: every day, at set times (check_availability has them).",
+  "Viewings and valuations: every day, at set times (check_availability has them).",
   "We cover Town 1 long long long long long long long long long long, Town 2 long long long long long long long long long long and 18 more towns and villages, BK1, BK3, BK5, BK7, BK9, BK11 and 24 more districts.",
   "Valuation valuation valuation valuation valuation valuation s take about an hour, and are free.",
   "Gas emergency: call the National Gas Emergency Service on 0800 111 999."
