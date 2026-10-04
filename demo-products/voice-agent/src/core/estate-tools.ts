@@ -22,7 +22,7 @@ import {
 } from '../domain/listings.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { addDays, dayName, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
-import type { BookableService, Booking, BuyerPosition, Funding, Listing, Selling, StaffMember, Tenant } from '../domain/types.ts';
+import type { BookableService, Booking, BuyerDetails, BuyerPosition, Funding, Listing, Selling, StaffMember, Tenant } from '../domain/types.ts';
 
 const DAY = 86400000;
 
@@ -1037,6 +1037,95 @@ async function recordViewingFeedback(args: Args, ctx: ToolContext): Promise<Reco
   };
 }
 
+/** "three-bed houses in BK2 up to £300,000, with a garden": what a buyer asked for, as their text and the team read it. */
+function requirementsWords(r: NonNullable<BuyerDetails['requirements']>): string {
+  const what = `${r.min_beds ? `${r.min_beds}-bed ` : ''}${r.types?.length ? r.types.join(' or ') : 'homes'}`;
+  return [
+    what,
+    r.areas?.length ? `in ${r.areas.join(', ')}` : '',
+    r.max_price_pence ? `up to ${poundsWhole(r.max_price_pence)}` : '',
+    r.must_haves?.length ? `with ${r.must_haves.join(', ')}` : '',
+  ].filter(Boolean).join(' ');
+}
+
+/**
+ * A buyer joins the agency's list: what they want, their position, and
+ * alerts only if they said yes (asked, never assumed; the time is kept).
+ * Their own other roles (a seller too) are kept.
+ */
+async function registerBuyer(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const t = ctx.tenant;
+  const name = realName(args.name);
+  if (!name) return { registered: false, message: ASK_NAME };
+  const alerts = bool(args.alerts);
+  if (alerts === undefined) return { registered: false, message: 'Ask whether they would like a text when a home that matches comes on (never assume), then call this again with alerts.' };
+  const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+  if (!phone) return { registered: false, message: 'Ask for a mobile number, read it back, then call this again with phone.' };
+  const places = { districts: t.profile.estate?.districts ?? [], towns: t.profile.estate?.towns ?? [] };
+  const areaWords = strList(args.areas);
+  // Districts as the agency writes them ("bk2" is BK2), towns by their own name, anything else as said.
+  const areas = areaWords.flatMap((a) => {
+    const d = districtsIn(a, places.districts);
+    return d.length ? d : [places.towns.find((x) => x.toLowerCase() === a.trim().toLowerCase()) ?? a.trim()];
+  });
+  const max = poundsOf(args.max_price);
+  const requirements = Object.fromEntries(Object.entries({
+    areas: areas.length ? [...new Set(areas)] : undefined,
+    max_price_pence: max ? max * 100 : undefined,
+    min_beds: int(args.min_beds),
+    types: strList(args.types).length ? strList(args.types) : undefined,
+    must_haves: strList(args.must_haves).length ? strList(args.must_haves) : undefined,
+    timescale: str(args.timescale),
+  }).filter(([, v]) => v !== undefined)) as NonNullable<BuyerDetails['requirements']>;
+  const all = await homesOf(ctx);
+  const existing = await ctx.repo.findBuyer(t.id, phone);
+  let backup: string[] | undefined;
+  if (str(args.backup_for)) {
+    const r = await resolveHome(ctx, args.backup_for);
+    if ('reply' in r) return { registered: false, ...r.reply };
+    backup = [...new Set([...(existing?.details.backup_for ?? []), r.home.listing.key])];
+  }
+  const position = positionOf(args);
+  const email = str(args.email);
+  await ctx.repo.upsertBuyer(t.id, phone, name, {
+    roles: [...new Set([...(existing?.details.roles ?? []), 'buyer' as const])],
+    position: { ...(existing?.details.position ?? {}), ...position },
+    requirements,
+    ...(backup ? { backup_for: backup } : {}),
+    ...(bool(args.investor) ? { investor: true } : {}),
+    ...(email ? { email } : {}),
+    last_contact: ctx.now().toISOString(),
+    source: existing?.details.source ?? 'phone',
+  }, alerts);
+  const wants = requirementsWords(requirements);
+  const sent = await smsTo(ctx, phone, `${t.profile.name}: you're registered with us as a buyer, looking for ${wants}. ${alerts ? "We'll text you when a home that matches comes on. To stop these texts, call us." : 'We won\'t text you about new homes unless you ask us to.'} (Demo)`);
+  ctx.action({ kind: 'buyer_registered', title: `Buyer registered · ${name}`, detail: `${wants}${alerts ? ' · alerts on' : ''}${backup ? ` · back-up buyer for ${backup.map((k) => shortAddress(byKey(all, k).listing)).join(', ')}` : ''}` });
+  const found = matches({ ...requirements, types: requirements.types }, findable(all)).slice(0, 3).map((l) => brief(byKey(all, l.key)));
+  const selling = position.selling ?? existing?.details.position?.selling;
+  let next = found.length ? 'Offer these, or a viewing of one.' : 'Nothing matches now: say we will be in touch when something does.';
+  if (selling === 'not_on_market' && !ctx.state.valuationOffered) {
+    ctx.state.valuationOffered = true;
+    next += ' Offer a free valuation of their own home, once, without pressure.';
+  }
+  return {
+    registered: true, looking_for: wants, alerts: alerts ? 'on' : 'off', summary_text: sent ? 'sent by text' : undefined,
+    backup_for: backup ? backup.map((k) => shortAddress(byKey(all, k).listing)) : undefined,
+    matches: found, next: `${next} Never promise a first look for using our other services.`,
+  };
+}
+
+/** Alerts off at once for the calling number, with one text to say so. */
+async function stopAlerts(_args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const phone = ctx.callerPhone;
+  if (!phone) return { stopped: false, message: 'There is no calling number: take a message (category data) with the number they want taken off.' };
+  const existing = await ctx.repo.findBuyer(ctx.tenant.id, phone);
+  if (!existing?.marketing_consent) return { stopped: true, say: "That number isn't getting alerts from us." };
+  await ctx.repo.upsertBuyer(ctx.tenant.id, phone, null, { last_contact: ctx.now().toISOString() }, false);
+  await smsTo(ctx, phone, `${ctx.tenant.profile.name}: we've stopped texting you about new homes, as you asked. (Demo)`);
+  ctx.action({ kind: 'buyer_registered', title: 'Alerts stopped', detail: displayUkPhone(phone) });
+  return { stopped: true, say: "Done: we've stopped the texts about new homes, and sent one text to confirm." };
+}
+
 const LINK_WORDS: [RegExp, Listing['links'][number]][] = [[/brochure|details|particular/, 'brochure'], [/floor/, 'floorplan'], [/video|tour/, 'video'], [/epc|energy/, 'epc']];
 const LINK_LABEL: Record<Listing['links'][number], string> = { brochure: 'Brochure', floorplan: 'Floorplan', video: 'Video tour', epc: 'EPC' };
 
@@ -1163,6 +1252,30 @@ export const ESTATE_TOOLS: Record<string, Tool> = {
       ),
     },
     handler: recordViewingFeedback,
+  },
+  register_buyer: {
+    when: hasHomes,
+    decl: {
+      name: 'register_buyer',
+      description: "Put a buyer on our list: what they want, their position, and texts about new homes only if they said yes. Returns up to three homes that match.",
+      parameters: obj(
+        {
+          name: S("The buyer's name"), phone: S('Only if not the calling number'), email: S('If they give one'),
+          areas: S('Towns or postcode districts, comma separated'), max_price: I('Budget in pounds'), min_beds: I('Fewest bedrooms'),
+          types: S('house, flat, bungalow, semi, detached, terraced or cottage'), must_haves: S('garden, parking, no chain or step-free'), timescale: S('When they hope to move'),
+          first_time_buyer: B('First-time buyer'), selling: S('nothing, not on the market, on the market, or under offer'), funding: S('mortgage agreed in principle, mortgage not yet, or cash'),
+          aip_amount: I('Mortgage agreed in principle, in pounds'), alerts: B('They said yes to texts about new homes. Ask; never assume.'),
+          backup_for: S('A home they would buy if its sale falls through'), investor: B('Buying to let or invest'),
+        },
+        ['name', 'alerts'],
+      ),
+    },
+    handler: registerBuyer,
+  },
+  stop_alerts: {
+    when: hasHomes,
+    decl: { name: 'stop_alerts', description: 'Stop our texts about new homes to the calling number, at once.', parameters: obj({}) },
+    handler: stopAlerts,
   },
   get_property: {
     when: hasHomes,

@@ -11,6 +11,8 @@
  "get_marketing_update",
  "get_offer_status",
  "record_viewing_feedback",
+ "register_buyer",
+ "stop_alerts",
  "get_property",
  "send_property_details",
  "book_valuation",

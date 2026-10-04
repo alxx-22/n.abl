@@ -29,7 +29,7 @@ export { record, type RecordKind } from './tool-kit.ts';
 export interface Action {
   kind:
     | 'booking_created' | 'booking_changed' | 'booking_cancelled' | 'order_updated' | 'order_placed'
-    | 'payment' | 'message_taken' | 'sms' | 'transfer' | 'call_ending' | 'offer_recorded';
+    | 'payment' | 'message_taken' | 'sms' | 'transfer' | 'call_ending' | 'offer_recorded' | 'buyer_registered';
   title: string;
   detail?: string;
   data?: Record<string, unknown>;

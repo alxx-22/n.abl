@@ -761,3 +761,37 @@ test('record_viewing_feedback: the caller\'s own past viewing only; it reaches t
   assert.match(String(stranger.message), /message for the negotiator/);
   assert.equal((await sam.run('record_viewing_feedback', { words: 'Nice.' })).recorded, false, 'how keen is asked, never assumed');
 });
+
+test('register_buyer and stop_alerts: requirements and position kept, alerts only when asked, a summary text; stopped at once', async () => {
+  const t = await agency('ea-register');
+  const kim = await call(t, '+447700900150');
+  const args = { name: 'Kim Hale', areas: 'bk2, Brackenford', max_price: '300k', min_beds: 2, types: 'house', first_time_buyer: true, funding: 'mortgage agreed in principle' };
+  assert.match(String((await kim.run('register_buyer', args)).message), /never assume/);
+  const r = await kim.run('register_buyer', { ...args, alerts: true });
+  assert.equal(r.registered, true, JSON.stringify(r));
+  assert.equal(r.looking_for, '2-bed house in BK2, Brackenford up to £300,000');
+  assert.ok((r.matches as unknown[]).length <= 3);
+  assert.match(String(r.next), /Never promise a first look/);
+  assert.match(kim.sent.at(-1)!.body, /registered with us as a buyer, looking for 2-bed house .*To stop these texts, call us\. \(Demo\)$/);
+  const row = (await repo.findBuyer(t.id, '+447700900150'))!;
+  assert.deepEqual([row.marketing_consent, Boolean(row.details.consent_at), row.details.position?.first_time_buyer, row.details.requirements?.max_price_pence], [true, true, true, 30_000_000]);
+  assert.equal(kim.actions.at(-1)?.kind, 'buyer_registered');
+  // Stopped at once, with one text; asked again, nothing more is sent.
+  const stop = await kim.run('stop_alerts', {});
+  assert.equal(stop.stopped, true);
+  assert.match(kim.sent.at(-1)!.body, /stopped texting you about new homes/);
+  assert.equal((await repo.findBuyer(t.id, '+447700900150'))!.marketing_consent, false);
+  const texts = kim.sent.length;
+  assert.match(String((await kim.run('stop_alerts', {})).say), /isn't getting alerts/);
+  assert.equal(kim.sent.length, texts);
+  // A seller buying too stays a seller; a home to sell not yet on the market gets one valuation offer; a back-up buyer is noted.
+  const sarah = await call(t, '+447700900001');
+  const s = await sarah.run('register_buyer', { name: 'Sarah Collins', areas: 'Brackenford', min_beds: 3, alerts: false, selling: 'not on the market', backup_for: '3 Kingfisher Way' });
+  assert.equal(s.registered, true, JSON.stringify(s));
+  assert.match(String(s.next), /Offer a free valuation of their own home, once/);
+  assert.deepEqual(s.backup_for, ['3 Kingfisher Way']);
+  const both = (await repo.findBuyer(t.id, '+447700900001'))!;
+  assert.deepEqual([...both.details.roles!].sort(), ['buyer', 'seller']);
+  assert.equal(both.marketing_consent, false);
+  assert.match(sarah.sent.at(-1)!.body, /won't text you about new homes unless you ask/);
+});
