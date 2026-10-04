@@ -13,22 +13,66 @@ done after each step.
 ## Pick up here first (the last session stopped at the weekly usage limit)
 
 The session of 4 October stopped near Alex's weekly limit (it resets on
-Thursday 8 October, 15:00 UK time). Two checks were still running:
+Thursday 8 October, 15:00 UK time), with two checks part-done. Their
+results were only in that session's container, so what came in is copied
+here. Work directly; no subagents.
 
-- **Re-check of the review fixes.** Five reviewers re-checked the five fix
-  commits listed under "Where things stand". Their results lived only in
-  that session's container. If this file doesn't record them below, re-check
-  the five commits yourself (`git show <commit>`): is each fix right, and
-  did it break anything? Do it directly; no subagents.
-- **Final run of the seven `ea-` live calls** (`npm run eval -- --only
-  ea-listing-facts,ea-short-lease,ea-book-viewing,ea-sale-agreed,ea-valuation-no-figure,ea-offer-taken,ea-bank-details-change`).
-  First results on the finished code: `ea-listing-facts` failed (the search
-  didn't return both Albion Road homes; a price before asking which home;
-  council tax band, flooding and the Environment Agency not said) and
-  `ea-short-lease` failed (mortgage adviser or solicitor not offered). Both
-  had passed before the review fixes. Read the transcripts in the newest
-  `voice-agent/eval-results/` folder, find out whether a fix caused it (the
-  prompt's facts and the reminders changed), fix, and re-run only those.
+### A. Re-check of the review fixes
+
+Five fix commits (listed under "Where things stand") were being re-checked
+area by area. Not yet re-checked when the session stopped: server
+(`705c78b`), builder (`267e7a7`), back office (`bdddb2a`), data
+(`288aae9`). Re-check those yourself with `git show <commit>`.
+
+**Call engine (`7f815bd`)**: five findings fixed, two only partly:
+
+- *Partly*: a restaurant line like "Brilliant, 7pm is booked under Smith."
+  or "Saturday at 7pm is now booked." is not flagged as a false claim,
+  because `slotTaken` (`src/core/guardrails.ts`) treats it as "that time is
+  taken". The gap dates from `3ecdddb`. Fixing it touches the restaurant:
+  keep its goldens unchanged.
+- *Partly*: when staff mark the lease as being checked, `facts()`
+  (`src/domain/listings.ts`) still gives `tenure` from `tenureSentence()`,
+  which includes the years left on the lease.
+
+Possible new problems the re-check reported (not yet confirmed by a second
+look; reproduce each before fixing):
+
+1. `call.ts` (~558): after any earlier `find_bookings`/`modify_booking` in a
+   call, no read-back is reminded to be booked, so an offer read back later
+   is never recorded.
+2. `guardrails.ts` `saidYes()`: a "no", "not", "but" etc. anywhere later in
+   the caller's line, even in a separate sentence, cancels the yes
+   ("Yes, that's right. I'm not sure about parking though.").
+3. `guardrails.ts` READ_BACK: "Shall I go ahead and book that?" no longer
+   counts as a read-back, so a yes to it is never reminded.
+4. `guardrails.ts` (~110): `!MONEY.test(text)` also matches a mobile number's
+   six-digit group or "hundred"/"thousand", so a true "I've passed your
+   message on" line with a number in it is flagged.
+5. `guardrails.ts` (~126): THING is tested against the whole sentence, so a
+   natural "slot taken" line with "your" or "viewing" earlier in it is
+   flagged again (the 3 October false alarm).
+6. `call.ts` (~610): counting `cancel_booking` as a booking attempt turns
+   off the reminder for a new viewing read back before a cancellation.
+
+### B. Final run of the seven `ea-` live calls
+
+Results are not in git (`eval-results/` is ignored): re-run with
+`npm run eval -- --only ea-listing-facts,ea-short-lease,ea-book-viewing,ea-sale-agreed,ea-valuation-no-figure,ea-offer-taken,ea-bank-details-change`.
+On 4 October, on the finished code:
+
+- `ea-book-viewing` and `ea-sale-agreed`: passed.
+- `ea-listing-facts`: failed. The simulated caller said "the house on
+  Albion Road" instead of "the one on Albion Road", so returning only the
+  house was right; the check should accept that (only ask "which" when the
+  caller didn't say house or flat). Two real slips: the receptionist gave
+  the price from `search_properties` before calling `get_property`, so the
+  full describe line (council tax band C, EPC D) was never said; and on
+  flooding it took a message for Jess without saying it isn't in the
+  details or naming the Environment Agency's service.
+- `ea-short-lease`: failed: didn't offer the mortgage adviser or a
+  solicitor.
+- The other three hadn't finished when this was written.
 
 Then go on with "Do next" below.
 
