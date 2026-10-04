@@ -59,6 +59,10 @@ export function validateEstate(a: EstateAnswers): Issue<EstateStep>[] {
       const missing = missingPartA(l);
       if (missing.length) warn('listings', `${name} is missing its ${missing.join(', ')}.`);
     }
+    // Compile leaves out hours with no days; with none left, the seller's limits are gone, which the agent must know.
+    const dayless = l.viewing.windows.filter((w) => !w.days.length).length;
+    if (dayless && dayless === l.viewing.windows.length) warn('listings', `${name}: its viewing hours have no days ticked, so viewings can be booked any time in your viewing hours.`);
+    else if (dayless) warn('listings', `${name}: ${dayless === 1 ? 'one set' : `${dayless} sets`} of viewing hours ${dayless === 1 ? 'has' : 'have'} no days ticked, so ${dayless === 1 ? 'it is' : 'they are'} left out.`);
     const unknown = Object.values(l.checks).filter((c) => c.v === 'unknown').length;
     if (unknown > 5) warn('listings', `${name} has ${unknown} checks still unknown: callers will hear "that isn't in the details".`);
   }

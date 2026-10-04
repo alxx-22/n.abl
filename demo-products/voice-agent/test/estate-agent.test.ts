@@ -321,6 +321,10 @@ test('estate agent: validation says what is missing, on the step it belongs to',
   assert.deepEqual(issues((a) => (a.listings[3].personal_interest!.wording = '')), ['warning listings: 9 Kingfisher Way: say how the personal interest is disclosed to buyers.']);
   assert.deepEqual(issues((a) => (a.partners.mortgage.statement = '')), ['warning services: Add the mortgage partner\'s approved sentence, with its FCA status.']);
   assert.deepEqual(issues((a) => Object.assign(a.fees, { quote: true, min_weeks: 0 })), ['warning services: Fees are quoted: add the minimum term of the agreement.']);
+  // Viewing hours with no days ticked are left out by compile; with none left, viewings fall back to any time in the viewing hours.
+  assert.deepEqual(issues((a) => (a.listings[1].viewing.windows[1].days = [])), ['warning listings: 22 Albion Road: one set of viewing hours has no days ticked, so it is left out.']);
+  assert.deepEqual(issues((a) => a.listings[1].viewing.windows.forEach((w) => (w.days = []))),
+    ['warning listings: 22 Albion Road: its viewing hours have no days ticked, so viewings can be booked any time in your viewing hours.']);
   const steps = new Set<string>(STEPS.map((s) => s.key));
   for (const i of validateEstate(sanitiseEstate({ team: [], listings: [{}], patch: { districts: [] } }))) assert.ok(steps.has(i.step), i.step);
 });

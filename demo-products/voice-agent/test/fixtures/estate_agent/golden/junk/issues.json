@@ -57,6 +57,11 @@
  {
   "step": "listings",
   "level": "warning",
+  "message": "A home: its viewing hours have no days ticked, so viewings can be booked any time in your viewing hours."
+ },
+ {
+  "step": "listings",
+  "level": "warning",
   "message": "A home has 23 checks still unknown: callers will hear \"that isn't in the details\"."
  },
  {

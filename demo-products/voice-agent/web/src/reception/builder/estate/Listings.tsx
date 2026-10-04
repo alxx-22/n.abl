@@ -309,6 +309,7 @@ function ViewingRules({ l, edit, a }: { l: ListingAnswer; edit: Edit; a: EstateA
         {v.windows.map((w, j) => (
           <div className="group window" key={j}>
             <DayChips legend="Days" days={w.days} onChange={(days) => edit((x) => void (x.viewing.windows[j].days = days))} />
+            {!w.days.length ? <p className="warn-line">No days chosen: these hours are left out until you tick one.</p> : null}
             <div className="field-row">
               <input aria-label="From" type="time" step={900} value={w.from} onChange={(e) => edit((x) => void (x.viewing.windows[j].from = e.target.value))} />
               <span className="muted">to</span>
@@ -318,7 +319,7 @@ function ViewingRules({ l, edit, a }: { l: ListingAnswer; edit: Edit; a: EstateA
           </div>
         ))}
         <button type="button" className="ghost small" disabled={v.windows.length >= 6} onClick={() => edit((x) => void x.viewing.windows.push({ days: [6], from: '10:00', to: '13:00' }))}>+ Add hours</button>
-        <p className="hint">{v.windows.length ? 'Viewings are offered only in these.' : 'None set: any time in your viewing hours.'}</p>
+        <p className="hint">{v.windows.some((w) => w.days.length) ? 'Viewings are offered only in these.' : 'None set: any time in your viewing hours.'}</p>
       </div>
     </>
   );
