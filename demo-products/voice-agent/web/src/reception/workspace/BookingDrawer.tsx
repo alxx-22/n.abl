@@ -7,9 +7,8 @@
 import { useEffect, useState } from 'react';
 import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
-import type { BuyerPosition } from '../../../../src/domain/types.ts';
 import type { LiveBooking, LiveState } from '../types.ts';
-import { positionBadges } from './estate.ts';
+import { bookingBadges } from './estate.ts';
 import { SOURCE, combineOptions, moveOptions } from './model.ts';
 import type { WorkspaceSpec } from './spec.ts';
 
@@ -100,7 +99,7 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
       </dl>
       {words.property ? (
         <div className="badges">
-          {(b.details?.position ? positionBadges(b.details.position as BuyerPosition) : ((b.details?.badges as string[] | undefined) ?? [])).map((x) => <span key={x} className="badge">{x}</span>)}
+          {bookingBadges(b.details).map((x) => <span key={x} className="badge">{x}</span>)}
         </div>
       ) : null}
 

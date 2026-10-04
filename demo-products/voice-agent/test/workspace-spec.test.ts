@@ -10,7 +10,7 @@ import { restaurantWorkspace } from '../src/presets/restaurant/preset.ts';
 import { boardWorkspace } from '../src/server/state.ts';
 import { fallbackSpec, focusTab, resetConfirm, resetToast, suggestionsFor, type WorkspaceSpec } from '../web/src/reception/workspace/spec.ts';
 import type { LiveState } from '../web/src/reception/types.ts';
-import { positionBadges, waited, when } from '../web/src/reception/workspace/estate.ts';
+import { bookingBadges, positionBadges, waited, when } from '../web/src/reception/workspace/estate.ts';
 import type { BuyerPosition } from '../src/domain/types.ts';
 
 const restaurant = () => {
@@ -77,6 +77,16 @@ test('estate back office: a cash buyer with a home to sell shows as a chain, nev
   assert.deepEqual(positionBadges({ funding: 'cash', selling: 'on_market' } as BuyerPosition), ['Chain: on the market']);
   assert.deepEqual(positionBadges({ funding: 'cash', selling: 'nothing' } as BuyerPosition), ['Cash', 'Nothing to sell']);
   assert.deepEqual(positionBadges({ funding: 'mortgage_aip', selling: 'under_offer' } as BuyerPosition), ['AIP', 'Chain: under offer']);
+  // Cash with "anything to sell" unknown is no cash buyer yet, as in the domain.
+  assert.deepEqual(positionBadges({ first_time_buyer: false, funding: 'cash' } as BuyerPosition), []);
+});
+
+test("estate back office: a viewing's badges are its buyer's position plus any others it was given, such as an empty home's ID check", () => {
+  const position = { first_time_buyer: true, selling: 'nothing', funding: 'mortgage_aip' } as BuyerPosition;
+  assert.deepEqual(bookingBadges({ position, badges: ['FTB', 'AIP', 'ID check'] }), ['FTB', 'AIP', 'ID check']);
+  assert.deepEqual(bookingBadges({ position: { ...position, first_time_buyer: false, selling: 'on_market' }, badges: ['FTB', 'AIP', 'ID check'] }), ['AIP', 'Chain: on the market', 'ID check'], 'the position as it is now');
+  assert.deepEqual(bookingBadges({ badges: ['ID check'] }), ['ID check']);
+  assert.deepEqual(bookingBadges(undefined), []);
 });
 
 test("estate back office: an offer's timer is the domain's, in the agency's time zone, with bank holidays skipped", () => {

@@ -1,7 +1,7 @@
 // An estate agency's words in the back office: what a home's status and
 // price are called, a buyer's position as badges, money as buyers read it.
 
-import { offerTimer } from '../../../../src/domain/listings.ts';
+import { offerTimer, positionBadges as domainBadges } from '../../../../src/domain/listings.ts';
 import type { BuyerPosition, ListingStatus, Nation, OfferStatus, PriceQualifier } from '../../../../src/domain/types.ts';
 
 export const STATUS: Record<ListingStatus, { label: string; badge: string }> = {
@@ -24,16 +24,29 @@ export const pounds = (pence: number) => `£${Math.round(pence / 100).toLocaleSt
 /**
  * FTB, Cash, AIP, Chain: what a negotiator scans for, in the domain's rule
  * (positionBadges in src/domain/listings.ts) with the chain spelt out.
- * "We're cash" with a home to sell is a chain, never a cash buyer.
+ * "We're cash" with a home to sell is a chain, never a cash buyer; with
+ * "anything to sell" not yet answered, not a cash buyer yet either.
  */
 export function positionBadges(p: BuyerPosition | undefined): string[] {
   if (!p) return [];
-  const chain = p.selling && p.selling !== 'nothing';
   return [
     p.first_time_buyer ? 'FTB' : null,
-    p.funding === 'cash' ? (chain ? null : 'Cash') : p.funding === 'mortgage_aip' ? 'AIP' : p.funding === 'mortgage_not_yet' ? 'No AIP yet' : null,
+    p.funding === 'cash' ? (p.selling === 'nothing' ? 'Cash' : null) : p.funding === 'mortgage_aip' ? 'AIP' : p.funding === 'mortgage_not_yet' ? 'No AIP yet' : null,
     p.selling === 'nothing' ? (p.first_time_buyer ? null : 'Nothing to sell') : p.selling === 'under_offer' ? 'Chain: under offer' : p.selling === 'on_market' ? 'Chain: on the market' : p.selling === 'not_on_market' ? 'Chain: not on the market' : null,
   ].filter((x): x is string => x !== null);
+}
+
+/** Every badge the domain makes from a position: a booking's own copies of them are replaced by the position as it is now. */
+const POSITION_WORDS = new Set([
+  ...domainBadges({ first_time_buyer: true, selling: 'on_market', funding: 'mortgage_aip' }),
+  ...domainBadges({ first_time_buyer: false, selling: 'nothing', funding: 'cash' }),
+]);
+
+/** A viewing's badges: its buyer's position, plus any others it was given ("ID check" for an empty home). */
+export function bookingBadges(details: { position?: unknown; badges?: unknown } | undefined): string[] {
+  const given = Array.isArray(details?.badges) ? (details.badges as string[]) : [];
+  if (!details?.position) return given;
+  return [...positionBadges(details.position as BuyerPosition), ...given.filter((x) => !POSITION_WORDS.has(x))];
 }
 
 /** "Mon 3 Oct, 14:05", in the agency's time zone: the browser may be elsewhere. */
