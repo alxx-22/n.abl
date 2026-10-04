@@ -2728,13 +2728,13 @@
    "listing_key": "mill_31",
    "revises": null,
    "amount_pence": 33700000,
-   "buyer_names": ["Emily Khan"],
-   "phone": "+447700900103",
+   "buyer_names": ["Chloe Kelly"],
+   "phone": "+447700900093",
    "email": null,
    "position": {
     "first_time_buyer": false,
-    "selling": "not_on_market",
-    "funding": "mortgage_aip"
+    "selling": "on_market",
+    "funding": "cash"
    },
    "conditions": "subject to survey",
    "solicitor": null,
@@ -4062,30 +4062,6 @@
     "source": "valuation"
    },
    "marketing_consent": true
-  },
-  {
-   "phone": "+447700900103",
-   "name": "Emily Khan",
-   "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": false,
-     "selling": "not_on_market",
-     "funding": "mortgage_aip"
-    },
-    "requirements": {
-     "areas": ["BK4","BK5"],
-     "max_price_pence": 21500000,
-     "min_beds": 2,
-     "types": ["terraced"],
-     "must_haves": [],
-     "timescale": "within six months"
-    },
-    "consent_at": null,
-    "last_contact": "2026-10-06T09:30:00.000Z",
-    "source": "offer"
-   },
-   "marketing_consent": false
   },
   {
    "phone": "+447700900004",

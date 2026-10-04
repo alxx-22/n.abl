@@ -2431,13 +2431,13 @@
    "listing_key": "mill_31",
    "revises": null,
    "amount_pence": 33700000,
-   "buyer_names": ["Amara Murphy"],
-   "phone": "+447700900769",
+   "buyer_names": ["Mohammed Green"],
+   "phone": "+447700900431",
    "email": null,
    "position": {
     "first_time_buyer": false,
-    "selling": "on_market",
-    "funding": "mortgage_aip"
+    "selling": "nothing",
+    "funding": "cash"
    },
    "conditions": "subject to survey",
    "solicitor": null,
@@ -3841,6 +3841,30 @@
    "marketing_consent": false
   },
   {
+   "phone": "+447700900431",
+   "name": "Mohammed Green",
+   "details": {
+    "roles": ["buyer"],
+    "position": {
+     "first_time_buyer": false,
+     "selling": "nothing",
+     "funding": "cash"
+    },
+    "requirements": {
+     "areas": ["BK7","BK1"],
+     "max_price_pence": 27000000,
+     "min_beds": 1,
+     "types": ["flat"],
+     "must_haves": [],
+     "timescale": "within six months"
+    },
+    "consent_at": "2026-09-06T08:00:00.000Z",
+    "last_contact": "2026-10-07T08:00:00.000Z",
+    "source": "offer"
+   },
+   "marketing_consent": true
+  },
+  {
    "phone": "+447700900769",
    "name": "Amara Murphy",
    "details": {
@@ -3859,7 +3883,7 @@
      "timescale": "within three months"
     },
     "consent_at": null,
-    "last_contact": "2026-10-07T08:00:00.000Z",
+    "last_contact": "2026-10-06T08:00:00.000Z",
     "source": "offer"
    },
    "marketing_consent": false

@@ -2448,12 +2448,12 @@
    "listing_key": "mill_31",
    "revises": null,
    "amount_pence": 33700000,
-   "buyer_names": ["Ethan Doyle"],
-   "phone": "+447700900702",
+   "buyer_names": ["Ravi Hughes"],
+   "phone": "+447700900281",
    "email": null,
    "position": {
-    "first_time_buyer": true,
-    "selling": "nothing",
+    "first_time_buyer": false,
+    "selling": "not_on_market",
     "funding": "mortgage_not_yet"
    },
    "conditions": "subject to survey",
@@ -3809,28 +3809,28 @@
    "marketing_consent": false
   },
   {
-   "phone": "+447700900702",
-   "name": "Ethan Doyle",
+   "phone": "+447700900281",
+   "name": "Ravi Hughes",
    "details": {
     "roles": ["buyer"],
     "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
+     "first_time_buyer": false,
+     "selling": "not_on_market",
      "funding": "mortgage_not_yet"
     },
     "requirements": {
-     "areas": ["BK2","BK7"],
-     "max_price_pence": 38500000,
-     "min_beds": 2,
-     "types": ["flat"],
-     "must_haves": ["parking"],
-     "timescale": "as soon as possible"
+     "areas": ["BK1","BK2"],
+     "max_price_pence": 42000000,
+     "min_beds": 3,
+     "types": ["cottage"],
+     "must_haves": ["step-free"],
+     "timescale": "within six months"
     },
-    "consent_at": "2026-09-02T09:30:00.000Z",
+    "consent_at": null,
     "last_contact": "2026-10-06T09:30:00.000Z",
     "source": "offer"
    },
-   "marketing_consent": true
+   "marketing_consent": false
   },
   {
    "phone": "+447700900952",

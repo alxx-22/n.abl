@@ -473,8 +473,10 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
     );
   }
   if (f.bestFinal) {
-    offer({ l: f.bestFinal, amount: round(priceOf(f.bestFinal) * 0.97), p: pick(pool), received: officeBefore(26), status: 'received' });
-    offer({ l: f.bestFinal, amount: round(priceOf(f.bestFinal) * 0.99), p: pick(pool), received: officeBefore(96), status: 'sent', sent: officeBefore(90) });
+    // Two different buyers: best and final is a contest, and the console's accept tells the rival.
+    const first = pick(pool);
+    offer({ l: f.bestFinal, amount: round(priceOf(f.bestFinal) * 0.97), p: first, received: officeBefore(26), status: 'received' });
+    offer({ l: f.bestFinal, amount: round(priceOf(f.bestFinal) * 0.99), p: pick(pool.filter((x) => x !== first)), received: officeBefore(96), status: 'sent', sent: officeBefore(90) });
   }
   if (f.house) offer({ l: f.house, amount: round(priceOf(f.house) * 0.96), p: pick(pool), received: officeBefore(2), status: 'received', conditions: 'subject to survey and mortgage' });
   if (f.reduced) offer({ l: f.reduced, amount: round(priceOf(f.reduced) * 0.88), p: pick(pool), received: officeBefore(120), status: 'declined', sent: officeBefore(118), decided: officeBefore(98), note: 'The seller felt it was too low after the reduction.' });

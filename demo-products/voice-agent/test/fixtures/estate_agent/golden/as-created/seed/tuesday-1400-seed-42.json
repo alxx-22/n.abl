@@ -2428,13 +2428,13 @@
    "listing_key": "mill_31",
    "revises": null,
    "amount_pence": 33700000,
-   "buyer_names": ["Daniel Doyle"],
-   "phone": "+447700900253",
+   "buyer_names": ["Emily Wright"],
+   "phone": "+447700900801",
    "email": null,
    "position": {
     "first_time_buyer": false,
-    "selling": "nothing",
-    "funding": "cash"
+    "selling": "not_on_market",
+    "funding": "mortgage_aip"
    },
    "conditions": "subject to survey",
    "solicitor": null,
@@ -3106,7 +3106,7 @@
      "timescale": "within three months"
     },
     "consent_at": null,
-    "last_contact": "2026-10-01T08:00:00.000Z",
+    "last_contact": "2026-10-02T13:00:00.000Z",
     "source": "viewing"
    },
    "marketing_consent": false

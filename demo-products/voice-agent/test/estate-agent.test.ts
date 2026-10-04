@@ -427,6 +427,16 @@ test('seed: Priya keeps her next two working mornings free for a valuation at 10
   assert.ok(vals.some((b) => (b.details as { dual_fee: boolean }).dual_fee && b.starts_at > WEDNESDAY), 'one is already with another agent');
 });
 
+test('seed: the best-and-final home always has two different bidders, whatever the seed', () => {
+  // The demo's estate API test needs a rival on another phone; the same buyer twice made it fail about 1 run in 40.
+  for (let seed = 0; seed < 300; seed++) {
+    const p = plan(WEDNESDAY, seed);
+    const home = p.listings!.find((l) => l.best_final_at)!;
+    const phones = p.offers!.filter((o) => o.listing_key === home.listing_key && ['received', 'sent'].includes(o.status)).map((o) => o.phone);
+    assert.equal(new Set(phones).size, 2, `seed ${seed}: ${phones.join(', ')}`);
+  }
+});
+
 test('seed: offers this week, one waiting too long, three sales, and the people callers can ring as', () => {
   const p = plan();
   const week = p.offers!.filter((o) => o.received_at.getTime() > WEDNESDAY.getTime() - 7 * 86400000);
