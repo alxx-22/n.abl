@@ -110,7 +110,7 @@ export function StepListings({ a, set, ws }: Props) {
               <button type="button" className={`home-row${l.key === open ? ' on' : ''}`} aria-current={l.key === open} onClick={() => setOpen(l.key)}>
                 <span className="home-name">{homeName(l)}{l.example ? <span className="muted small"> · example</span> : null}</span>
                 <span className="muted small">{l.price_pence ? pounds(l.price_pence) : 'no price'}</span>
-                <span className={`badge ${s.badge}`}>{s.label}</span>
+                <span className={`badge home-status ${s.badge}`}>{s.label}</span>
                 <span className={`badge ${missing.length ? 'warn' : 'ok'}`} title={missing.length ? `Missing: ${missing.join(', ')}` : 'Price, tenure, council tax band and EPC'}>Part A {4 - missing.length}/4</span>
               </button>
             </div>

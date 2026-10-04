@@ -144,8 +144,11 @@ textarea.prose { font-family: var(--font); font-size: 14px; min-height: 0; resiz
 
 /* ── The estate agent's homes ─────────────────────────────────────────── */
 .home-list { display: grid; gap: 6px; }
-.home-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; text-align: left; font-weight: 400; padding: 8px 12px; }
+/* Full width inside its listitem, so every row's price and badges line up at the right. */
+.home-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; text-align: left; font-weight: 400; padding: 8px 12px; width: 100%; }
 .home-row.on { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+/* As wide as the longest status ("UNDER OFFER"), so the prices beside it form a column. */
+.home-status { min-width: calc(11ch + 0.66em + 20px); text-align: center; }
 .home-name { font-weight: 600; color: var(--heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-editor .tabs { padding: 0; margin: 0 -2px; }
 .check-list { display: grid; gap: 6px; }
