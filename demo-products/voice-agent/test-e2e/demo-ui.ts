@@ -554,6 +554,14 @@ async function walkEstate({ shot }: Walk) {
   await page.click('.tabs [role=tab]:has-text("Calls")');
   await shot(page, 'workspace-calls');
 
+  // Call as Sarah, the seller: her number, what to try, and the texts already on her phone.
+  await page.getByLabel('Call as').selectOption({ label: 'Sarah Collins, a seller' });
+  await page.waitForSelector('.phone-number:has-text("07700 900001")');
+  if (!(await page.locator('.phone-number').textContent())!.includes('Ask how the sale is going')) throw new Error('Call as did not say what to try');
+  await shot(page, 'workspace-call-as');
+  await page.getByLabel('Call as').selectOption({ label: 'Yourself, a new caller' });
+  if ((await page.locator('.phone-number b.mono').textContent()) === '07700 900001') throw new Error('Call as did not go back to a new number');
+
   // Narrow screen.
   await page.setViewportSize({ width: 390, height: 900 });
   await page.click('.tabs [role=tab]:has-text("Properties")');

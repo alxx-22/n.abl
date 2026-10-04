@@ -419,6 +419,7 @@ svg.house .door { fill: var(--accent); }
 .phone-empty { color: #8e8e93; font-size: 12px; text-align: center; margin: 40px 12px 0; }
 .phone-number { width: 280px; text-align: center; }
 .phone-number p { margin: 0; }
+.call-as { display: grid; gap: 4px; margin: 0 0 8px; text-align: left; }
 
 @media (prefers-reduced-motion: reduce) {
   .spinner, .table.flash .top, .sms.fresh { animation: none; }

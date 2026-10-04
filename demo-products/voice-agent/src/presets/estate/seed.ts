@@ -20,19 +20,9 @@ import { SALE_MILESTONES, type Buyer, type BuyerPosition, type HomeType, type Li
 import { FIRST_NAMES, LAST_NAMES, ids, rng } from '../common/random.ts';
 import type { SeedBooking, SeedMessage, SeedPlan, SeedText } from '../common/types.ts';
 import { featured } from './featured.ts';
+import { PERSONAS } from './personas.ts';
 
-/** The people a caller can ring as (M2's Call as), and the evaluations use: fixed numbers, fixed parts. */
-export const PERSONAS = {
-  seller: { phone: '+447700900001', name: 'Sarah Collins' },
-  sam: { phone: '+447700900002', name: 'Sam Price' },
-  aisha: { phone: '+447700900003', name: 'Aisha Khan' },
-  ben: { phone: '+447700900004', name: 'Ben Walker' },
-  solicitor: { phone: '+447700900005', name: 'Nadia Osei' },
-  chainAgent: { phone: '+447700900006', name: 'Harper & Co' },
-  megan: { phone: '+447700900007', name: 'Megan Hughes' },
-  liam: { phone: '+447700900008', name: 'Liam Doyle' },
-  nobody: { phone: '+447700900009', name: '' },
-} as const;
+export { PERSONAS };
 
 /** Viewers' words after a viewing, by what they mean. */
 const FEEDBACK: Record<string, string[]> = {

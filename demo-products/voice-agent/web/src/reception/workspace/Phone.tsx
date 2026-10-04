@@ -3,7 +3,15 @@
 // number unless the prospect types another). Nothing is ever really texted.
 
 import { useEffect, useState, type FormEvent } from 'react';
+import { displayUkPhone, normaliseUkPhone } from '../../../../src/domain/phone.ts';
 import { demoApi } from '../../api.ts';
+
+/** A seeded person the prospect can ring as (an estate agency's Call as). */
+export interface CallAs {
+  phone: string;
+  who: string;
+  try: string;
+}
 
 interface Text {
   id: string;
@@ -20,7 +28,7 @@ export function usePhoneNumber(id: string): [string, (n: string) => void] {
       const saved = localStorage.getItem(key(id));
       if (saved) return saved;
     } catch { /* private window */ }
-    return `07700 900${String(100 + Math.floor(Math.random() * 900))}`;
+    return fresh();
   });
   const set = (v: string) => {
     setN(v);
@@ -31,11 +39,14 @@ export function usePhoneNumber(id: string): [string, (n: string) => void] {
   return [n, set];
 }
 
-export function Phone({ id, number, setNumber, sender, tick, nowLabel }: { id: string; number: string; setNumber: (n: string) => void; sender: string; tick: number; nowLabel: string }) {
+const fresh = () => `07700 900${String(100 + Math.floor(Math.random() * 900))}`;
+
+export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = [] }: { id: string; number: string; setNumber: (n: string) => void; sender: string; tick: number; nowLabel: string; callAs?: CallAs[] }) {
   const [texts, setTexts] = useState<Text[]>([]);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(number);
-  const [fresh, setFresh] = useState<string | null>(null);
+  const [lastNew, setLastNew] = useState<string | null>(null);
+  const as = callAs.find((p) => p.phone === normaliseUkPhone(number));
 
   useEffect(() => {
     let stop = false;
@@ -44,7 +55,7 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel }: { id: s
         if (stop) return;
         setTexts((prev) => {
           const last = r.messages.at(-1);
-          if (last && prev.length && !prev.some((p) => p.id === last.id)) setFresh(last.id);
+          if (last && prev.length && !prev.some((p) => p.id === last.id)) setLastNew(last.id);
           return r.messages;
         });
       })
@@ -73,16 +84,25 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel }: { id: s
         </div>
         <div className="phone-thread" aria-live="polite">
           {texts.length ? texts.map((t) => (
-            <div key={t.id} className={`sms ${fresh === t.id ? 'fresh' : ''}`}>
+            <div key={t.id} className={`sms ${lastNew === t.id ? 'fresh' : ''}`}>
               <p>{t.body}</p>
               <time>{new Date(t.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</time>
             </div>
           )) : (
-            <p className="phone-empty">No texts yet. Book a table or order on the call, and the confirmation lands here.</p>
+            <p className="phone-empty">{callAs.length ? 'No texts yet. Book a viewing or make an offer on the call, and the text lands here.' : 'No texts yet. Book a table or order on the call, and the confirmation lands here.'}</p>
           )}
         </div>
       </div>
       <div className="phone-number">
+        {callAs.length ? (
+          <label className="field call-as">
+            <span className="small">Call as</span>
+            <select value={as?.phone ?? ''} onChange={(e) => setNumber(e.target.value ? displayUkPhone(e.target.value) : fresh())}>
+              <option value="">Yourself, a new caller</option>
+              {callAs.map((p) => <option key={p.phone} value={p.phone}>{p.who}</option>)}
+            </select>
+          </label>
+        ) : null}
         {editing ? (
           <form onSubmit={save} className="field-row">
             <input aria-label="Your number in this demo" value={draft} onChange={(e) => setDraft(e.target.value)} inputMode="tel" />
@@ -90,6 +110,7 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel }: { id: s
           </form>
         ) : (
           <p className="small muted">
+            {as ? <><b>{as.who}</b>. {as.try}<br /></> : null}
             You are calling as <b className="mono">{number}</b>.{' '}
             <button type="button" className="linkish small" onClick={() => { setDraft(number); setEditing(true); }}>Change</button>
             <br />A pretend number: texts only ever appear here.

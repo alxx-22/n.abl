@@ -3,6 +3,7 @@
 // call does arrives over the event stream and lands on all three at once.
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { CALL_AS } from '../../../../src/presets/estate/personas.ts';
 import { ApiError, DEMO_API, demoApi } from '../../api.ts';
 import { ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
 import { LivePanel } from '../../components/LivePanel.tsx';
@@ -241,7 +242,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
           </div>
         </section>
 
-        <Phone id={id} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)} />
+        <Phone id={id} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)} callAs={t.business_type === 'estate_agent' ? CALL_AS : []} />
       </main>
 
       <SettingsDialog target={{ workspace: id }} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => refreshSoon()} />
