@@ -4,7 +4,7 @@
 // price, blocks dates, marks a fact as being checked, sets best and final,
 // and says whether viewings go on after a sale is agreed.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CHECKS } from '../../../../src/domain/listings.ts';
 import { CHECK_KEYS, type HomeType, type ListingStatus } from '../../../../src/domain/types.ts';
 import { demoApi } from '../../api.ts';
@@ -60,14 +60,16 @@ export function Properties({ id, state, onDone }: { id: string; state: LiveState
   if (!listings.length) return <p className="empty">No homes yet. Add them in the setup’s “Listings”.</p>;
   return (
     <div className="homes">
-      {listings.map((l) => <HomeCard key={l.key} id={id} l={l} open={open === l.key} onToggle={() => setOpen(open === l.key ? null : l.key)} onDone={onDone} />)}
+      {listings.map((l) => <HomeCard key={l.key} id={id} l={l} tz={state.tenant.timezone} open={open === l.key} onToggle={() => setOpen(open === l.key ? null : l.key)} onDone={onDone} />)}
     </div>
   );
 }
 
-function HomeCard({ id, l, open, onToggle, onDone }: { id: string; l: LiveListing; open: boolean; onToggle: () => void; onDone: () => void }) {
+function HomeCard({ id, l, tz, open, onToggle, onDone }: { id: string; l: LiveListing; tz: string; open: boolean; onToggle: () => void; onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [price, setPrice] = useState(String(Math.round(l.price_pence / 100)));
+  // The card stays mounted through Reset and other changes: the box follows the live price.
+  useEffect(() => setPrice(String(Math.round(l.price_pence / 100))), [l.price_pence]);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [fact, setFact] = useState('');
@@ -113,7 +115,7 @@ function HomeCard({ id, l, open, onToggle, onDone }: { id: string; l: LiveListin
         </div>
         <div className="badges">
           {l.personal_interest ? <span className="badge warn">Personal interest</span> : null}
-          {l.best_final_at ? <span className="badge warn">Best and final {when(l.best_final_at)}</span> : null}
+          {l.best_final_at ? <span className="badge warn">Best and final {when(l.best_final_at, tz)}</span> : null}
           {l.checking.map((c) => <span key={c} className="badge info">Checking: {factName(c)}</span>)}
           {l.blocked.map((b, i) => <span key={i} className="badge">No viewings {b.from}{b.to !== b.from ? ` to ${b.to}` : ''}{b.note ? ` (${b.note})` : ''}</span>)}
           {l.status === 'sale_agreed' && !l.marketing_continues ? <span className="badge">No more viewings</span> : null}
@@ -163,7 +165,7 @@ function HomeCard({ id, l, open, onToggle, onDone }: { id: string; l: LiveListin
             <div className="field-row">
               <label className="small" htmlFor={`bf-${l.key}`}>Best and final by</label>
               <input id={`bf-${l.key}`} type="datetime-local" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
-              <button type="button" className="small" disabled={busy || !deadline} onClick={() => act({ action: 'best_final', at: new Date(deadline).toISOString() })}>Set</button>
+              <button type="button" className="small" disabled={busy || !deadline} onClick={() => act({ action: 'best_final', date: deadline.slice(0, 10), time: deadline.slice(11, 16) })}>Set</button>
               {l.best_final_at ? <button type="button" className="ghost small" disabled={busy} onClick={() => act({ action: 'best_final', at: null })}>Clear</button> : null}
             </div>
             {l.status === 'sale_agreed' ? (
@@ -175,7 +177,7 @@ function HomeCard({ id, l, open, onToggle, onDone }: { id: string; l: LiveListin
             {l.history.length ? (
               <details className="history">
                 <summary>History ({l.history.length})</summary>
-                <ol>{l.history.map((h, i) => <li key={i}><span className="muted small">{when(h.at)}</span> {h.what}</li>)}</ol>
+                <ol>{l.history.map((h, i) => <li key={i}><span className="muted small">{when(h.at, tz)}</span> {h.what}</li>)}</ol>
               </details>
             ) : null}
           </div>

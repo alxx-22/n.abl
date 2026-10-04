@@ -1,11 +1,12 @@
 // An estate agency's offers in three columns: received, sent to the
 // seller, decided. An offer not yet sent shows how long it has waited (amber
-// after a working day, red at two). Each action texts the buyer; accepting
+// after a day, red at two working days). Each action texts the buyer; accepting
 // asks whether viewings go on, makes the home sale agreed and opens a sale.
 
 import { useState } from 'react';
 import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
+import type { Nation } from '../../../../src/domain/types.ts';
 import type { LiveOffer, LiveState } from '../types.ts';
 import { OFFER_STATUS, pounds, positionBadges, waited, when } from './estate.ts';
 
@@ -32,7 +33,7 @@ export function Offers({ id, state, nowMs, onDone }: { id: string; state: LiveSt
         return (
           <section key={c.label} className="k-col" aria-label={c.label}>
             <h3>{c.label} <span className="count">{mine.length}</span></h3>
-            {mine.map((o) => <OfferCard key={o.reference} id={id} o={o} nowMs={nowMs} onDone={onDone} />)}
+            {mine.map((o) => <OfferCard key={o.reference} id={id} o={o} nowMs={nowMs} nation={state.nation ?? 'england'} tz={state.tenant.timezone} onDone={onDone} />)}
             {!mine.length ? <p className="empty">Nothing here.</p> : null}
           </section>
         );
@@ -41,12 +42,12 @@ export function Offers({ id, state, nowMs, onDone }: { id: string; state: LiveSt
   );
 }
 
-function OfferCard({ id, o, nowMs, onDone }: { id: string; o: LiveOffer; nowMs: number; onDone: () => void }) {
+function OfferCard({ id, o, nowMs, nation, tz, onDone }: { id: string; o: LiveOffer; nowMs: number; nation: Nation; tz: string; onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [viewings, setViewings] = useState(true);
   const open = o.status === 'received' || o.status === 'sent';
-  const wait = o.status === 'received' ? waited(o.received_at, nowMs) : null;
+  const wait = o.status === 'received' ? waited(o.received_at, nowMs, nation, tz) : null;
   const act = async (body: Record<string, unknown>) => {
     setBusy(true);
     try {
@@ -76,8 +77,8 @@ function OfferCard({ id, o, nowMs, onDone }: { id: string; o: LiveOffer; nowMs: 
       </div>
       {o.conditions ? <div className="small">Conditions: {o.conditions}</div> : null}
       <div className="muted small">
-        Received {when(o.received_at)}{o.source === 'seed' ? '' : ' by the AI receptionist'}
-        {o.sent_at ? ` · sent ${when(o.sent_at)}` : ''}{o.decided_at ? ` · ${OFFER_STATUS[o.status].toLowerCase()} ${when(o.decided_at)}` : ''}
+        Received {when(o.received_at, tz)}{o.source === 'seed' ? '' : ' by the AI receptionist'}
+        {o.sent_at ? ` · sent ${when(o.sent_at, tz)}` : ''}{o.decided_at ? ` · ${OFFER_STATUS[o.status].toLowerCase()} ${when(o.decided_at, tz)}` : ''}
       </div>
       {o.note ? <div className="small">Note: {o.note}</div> : null}
       {open ? (

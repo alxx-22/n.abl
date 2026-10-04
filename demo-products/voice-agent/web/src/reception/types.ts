@@ -2,7 +2,7 @@
 // catalogue are the server's own types: one definition, checked on both sides.
 
 import type { BaseAnswers, Issue } from '../../../src/presets/common/types.ts';
-import type { BuyerPosition, HomeType, ListingStatus, OfferStatus, PriceQualifier, StaffDuty, StaffRole } from '../../../src/domain/types.ts';
+import type { BuyerPosition, HomeType, ListingStatus, Nation, OfferStatus, PriceQualifier, StaffDuty, StaffRole } from '../../../src/domain/types.ts';
 import type { AreaAnswer, FixtureAnswer, RestaurantAnswers, TableAnswer } from '../../../src/presets/restaurant/answers.ts';
 import type { PresetInfo } from '../../../src/presets/catalogue.ts';
 import type { WorkspaceSpec } from '../../../src/presets/index.ts';
@@ -215,6 +215,7 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   bookings: LiveBooking[];
   orders: LiveOrder[];
   /** An estate agency's. */
+  nation?: Nation;
   team?: LiveStaff[];
   listings?: LiveListing[];
   offers?: LiveOffer[];

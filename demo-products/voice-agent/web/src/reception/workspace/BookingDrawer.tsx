@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
+import type { BuyerPosition } from '../../../../src/domain/types.ts';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { positionBadges } from './estate.ts';
 import { SOURCE, combineOptions, moveOptions } from './model.ts';
@@ -66,7 +67,7 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
     if (!b.phone) return;
     try {
       await navigator.clipboard.writeText(b.phone.replace(/\s/g, ''));
-      toast(`${b.phone} copied. In a live deployment, this rings them from the restaurant's line.`);
+      toast(`${b.phone} copied. In a live deployment, this rings them from ${words.property ? 'your office' : 'the restaurant'}'s line.`);
     } catch {
       toast(`Their number: ${b.phone}`);
     }
@@ -99,7 +100,7 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
       </dl>
       {words.property ? (
         <div className="badges">
-          {[...new Set([...((b.details?.badges as string[] | undefined) ?? []), ...positionBadges(b.details?.position as never)])].map((x) => <span key={x} className="badge">{x}</span>)}
+          {(b.details?.position ? positionBadges(b.details.position as BuyerPosition) : ((b.details?.badges as string[] | undefined) ?? [])).map((x) => <span key={x} className="badge">{x}</span>)}
         </div>
       ) : null}
 

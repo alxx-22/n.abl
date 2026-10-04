@@ -456,13 +456,18 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal((await jo.call('PATCH', `${path}/listings/${vhome.key}`, { action: 'block', from: '2026-13-01' })).status, 400);
     assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'checking', fact: 'parking' })).status, 200);
     assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'checking', fact: 'gossip' })).status, 400);
-    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'best_final', at: new Date(Date.now() + 3 * 86400000).toISOString() })).status, 200);
+    // The deadline is the agency's own time (London, summer time here), wherever the browser is.
+    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'best_final', date: '2026-10-09', time: '25:00' })).status, 400);
+    const bf = await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'best_final', date: '2026-10-09', time: '12:00' });
+    assert.equal(bf.status, 200);
+    assert.match(bf.data.message, /Friday 9 October at 12 noon/);
     let now = await state();
     let h = now.listings.find((l: any) => l.key === avail.key);
     assert.equal(h.price_pence, lower);
     assert.match(h.history.map((x: any) => x.what).join(' | '), /price reduced from £/);
     assert.deepEqual(h.checking, ['parking']);
-    assert.ok(h.best_final_at);
+    assert.equal(h.best_final_at, '2026-10-09T11:00:00.000Z');
+    assert.equal(now.nation, 'england');
     assert.equal(now.listings.find((l: any) => l.key === vhome.key).blocked[0].note, 'Seller away');
     assert.equal((await jo.call('PATCH', `${path}/listings/${vhome.key}`, { action: 'unblock', index: 0 })).status, 200);
     assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'status', status: 'withdrawn' })).status, 200);

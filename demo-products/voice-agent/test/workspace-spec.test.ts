@@ -10,6 +10,8 @@ import { restaurantWorkspace } from '../src/presets/restaurant/preset.ts';
 import { boardWorkspace } from '../src/server/state.ts';
 import { fallbackSpec, focusTab, resetConfirm, resetToast, suggestionsFor, type WorkspaceSpec } from '../web/src/reception/workspace/spec.ts';
 import type { LiveState } from '../web/src/reception/types.ts';
+import { positionBadges, waited, when } from '../web/src/reception/workspace/estate.ts';
+import type { BuyerPosition } from '../src/domain/types.ts';
 
 const restaurant = () => {
   const a = defaultAnswers();
@@ -69,4 +71,23 @@ test('workspace spec: a booking made on a call brings forward the first view of 
   assert.equal(focusTab(takeaway, null, 'orders'), null);
   assert.equal(focusTab(takeaway, 'messages', 'orders'), 'orders');
   assert.equal(focusTab(takeaway, 'messages', 'bookings'), 'messages', 'no view shows bookings: stay');
+});
+
+test('estate back office: a cash buyer with a home to sell shows as a chain, never as Cash', () => {
+  assert.deepEqual(positionBadges({ funding: 'cash', selling: 'on_market' } as BuyerPosition), ['Chain: on the market']);
+  assert.deepEqual(positionBadges({ funding: 'cash', selling: 'nothing' } as BuyerPosition), ['Cash', 'Nothing to sell']);
+  assert.deepEqual(positionBadges({ funding: 'mortgage_aip', selling: 'under_offer' } as BuyerPosition), ['AIP', 'Chain: under offer']);
+});
+
+test("estate back office: an offer's timer is the domain's, in the agency's time zone, with bank holidays skipped", () => {
+  const at = (iso: string) => new Date(iso).getTime();
+  // Received Saturday 16:40, seen Monday 10:00: 41 hours, amber though no working day has passed.
+  assert.deepEqual(waited('2026-10-03T15:40:00Z', at('2026-10-05T09:00:00Z'), 'england', 'Europe/London'), { text: '1d 17h waiting', level: 'warn' });
+  // Christmas Eve to the 28th (a bank holiday): still amber; red on the 30th.
+  assert.equal(waited('2026-12-24T10:00:00Z', at('2026-12-28T10:00:00Z'), 'england', 'Europe/London').level, 'warn');
+  assert.equal(waited('2026-12-24T10:00:00Z', at('2026-12-30T10:00:00Z'), 'england', 'Europe/London').level, 'bad');
+  assert.deepEqual(waited('2026-10-05T09:00:00Z', at('2026-10-05T09:20:00Z'), 'england', 'Europe/London'), { text: 'just now', level: '' });
+  // Shown in the agency's time, not the browser's.
+  assert.match(when('2026-10-09T11:00:00Z', 'Europe/London'), /12:00/);
+  assert.match(when('2026-10-09T11:00:00Z', 'America/New_York'), /07:00/);
 });

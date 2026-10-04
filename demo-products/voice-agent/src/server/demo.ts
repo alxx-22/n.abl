@@ -735,8 +735,11 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
       return { message: `${where}: ${fact.replace(/_/g, ' ')} ${b.on === false ? 'cleared' : 'marked as being checked'}.` };
     }
     case 'best_final': {
-      const at = b.at === null ? null : new Date(String(b.at ?? ''));
-      if (at && Number.isNaN(at.getTime())) throw new HttpError(400, 'Choose a date and time.');
+      // The deadline is typed in the agency's own time, wherever the browser is.
+      const day = isoDay(b.date);
+      const time = typeof b.time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(b.time) ? b.time : null;
+      if (b.at !== null && (!day || !time)) throw new HttpError(400, 'Choose a date and time.');
+      const at = b.at === null ? null : zonedToUtc(day!, time!, t.profile.timezone);
       await repo.setListing(t.id, key, { best_final_at: at });
       return { message: at ? `${where}: best and final by ${spokenDate(toLocal(at, t.profile.timezone).date)} at ${spokenTime(toLocal(at, t.profile.timezone).time)}.` : `${where}: best and final cleared.` };
     }

@@ -131,6 +131,8 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
   const homes = new Map((t.profile.listings ?? []).map((l) => [l.key, shortAddress(l)]));
   const weekOn = new Date(now.getTime() + 7 * DAY);
   return {
+    // For the offer timers, which skip the nation's bank holidays.
+    nation: t.profile.estate?.nation ?? 'england',
     team: team.map((s) => ({ key: s.key, name: s.name, first_name: s.first_name, role: s.role, does: s.does, days: s.days, mobile: s.mobile })),
     listings: (t.profile.listings ?? []).map((l) => {
       const r = live.get(l.key);
