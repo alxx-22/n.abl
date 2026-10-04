@@ -73,7 +73,8 @@ Results are not in git (`eval-results/` is ignored): re-run with
 `npm run eval -- --only ea-listing-facts,ea-short-lease,ea-book-viewing,ea-sale-agreed,ea-valuation-no-figure,ea-offer-taken,ea-bank-details-change`.
 On 4 October, on the finished code:
 
-- `ea-book-viewing`, `ea-sale-agreed` and `ea-offer-taken`: passed.
+- 4 of 7 passed: `ea-book-viewing`, `ea-sale-agreed`, `ea-offer-taken`
+  and `ea-bank-details-change`.
 - `ea-valuation-no-figure`: failed. The receptionist repeated the caller's
   own figure back ("You mentioned next door went for four hundred; when was
   that?"); the guardrail flagged it, it said the same line again, and the
@@ -89,7 +90,6 @@ On 4 October, on the finished code:
   details or naming the Environment Agency's service.
 - `ea-short-lease`: failed: didn't offer the mortgage adviser or a
   solicitor.
-- `ea-bank-details-change` hadn't finished when this was written.
 
 Then go on with "Do next" below.
 
