@@ -90,8 +90,12 @@ test('the honest listing answer: "the one on Albion Road" asks which; the flat s
   const { run, ctx } = await call(t);
   const both = await run('search_properties', { query: 'the one on Albion Road' });
   assert.deepEqual((both.matches as any[]).map((m) => m.property).sort(), ['albion_22', 'albion_41_flat_2']);
-  assert.equal(both.note, 'More than one: ask which.');
+  assert.equal(both.note, 'More than one: ask which, then get_property.');
   assert.match(JSON.stringify(both.matches), /22 Albion Road: three-bedroom semi-detached house/);
+  // No price for a home the caller named: it is said in get_property's describe line, with the council tax band and EPC (a live call, 4 October).
+  assert.ok(!JSON.stringify(both.matches).includes('£'), JSON.stringify(both.matches));
+  const named = await run('search_properties', { query: 'the house on Albion Road' });
+  assert.equal(named.note, 'Now get_property, and say its describe line first.');
   const which = await run('get_property', { property: 'Albion Road' });
   assert.equal(which.facts, undefined, 'no facts until the caller says which');
   assert.equal(which.next, 'More than one: ask which.');
@@ -119,7 +123,10 @@ test('the honest listing answer: "the one on Albion Road" asks which; the flat s
   assert.match(String(house.note), /isn't in the details \(never "no"\)/);
   assert.match((house.facts as Record<string, string>).rooms, /box room\) not measured/);
   assert.equal(house.negotiator, 'Jess');
-  assert.ok(JSON.stringify(house).length < 2100, `kept small: ${JSON.stringify(house).length} characters`);
+  assert.ok(JSON.stringify(house).length < 2100, `kept small: ${JSON.stringify(house).length} characters`);  // A mortgage question about a leasehold home has someone to offer, never an opinion (ea-short-lease, 4 October).
+  const leasehold = await run('get_property', { property: '41 Albion Road' });
+  assert.equal(leasehold.mortgage_question, "Can't advise: offer Mark, our mortgage adviser, and their solicitor for the lease.");
+  assert.equal(house.mortgage_question, undefined);
 });
 
 test('get_property never says a seller\'s number, that a home is empty, keys, or why anyone is selling', async () => {
@@ -624,13 +631,12 @@ test('get_property: the facts every advert must state come first, in one sentenc
   // A price being checked is not given by the other tools either: not in a search, nor in the text of the details.
   await repo.setListing(t.id, 'albion_22', { checking: ['price'] });
   const c = await call(t);
-  const found = await c.run('search_properties', { query: '22 Albion Road' });
-  const match = (found.matches as Record<string, unknown>[])[0];
-  assert.equal(match.property, 'albion_22');
+  const listed = await c.run('search_properties', { min_beds: 3 });
+  const match = (listed.matches as Record<string, unknown>[]).find((m) => m.property === 'albion_22')!;
   assert.equal(match.price, undefined);
   assert.deepEqual(match.being_checked, ['the price']);
-  const listed = await c.run('search_properties', { min_beds: 3 });
   assert.ok(!JSON.stringify(listed).includes('325,000'), JSON.stringify(listed));
+  assert.ok((listed.matches as Record<string, unknown>[]).some((m) => m.price), 'other homes keep theirs');
   const sent = await c.run('send_property_details', { property: '22 Albion Road', what: 'brochure' });
   assert.equal(sent.sent, true);
   assert.ok(!c.sent.at(-1)!.body.includes('£'), c.sent.at(-1)!.body);

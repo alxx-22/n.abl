@@ -19,6 +19,22 @@ in small steps; no subagents. Order: fix the confirmed call-engine problems
 (A), the three failed live calls (B), the other reported problems after
 reproducing each, re-check the data commit, then M2.
 
+**Progress since (next session, on branch
+`claude/handoff-demo-products-onewca`, started from `voice-agent-DEV`):**
+
+- Done: call engine new problems 1–5 (`5c1d9b4`) and its three *partly*
+  items (`5553951`), each with a test that failed first.
+- Done in code, not yet run live: the three failed live calls in B (this
+  commit: the figure rule, named-home searches without a price, a
+  `mortgage_question` line for leasehold homes, the `ea-listing-facts`
+  check). The live calls **cannot run in a Claude Code cloud session**: its
+  network proxy does not carry WebSockets, which the live model needs. Run
+  them in the Codespace (see "Testing as Alex does").
+- The prompt at its largest is now about 6,960 characters (limit 7,000):
+  put new guidance in tool answers, not the prompt.
+- Still to do, in order: the other reported problems below (server, back
+  office, builder), the data re-check, then M2.
+
 ### A. Re-check of the review fixes
 
 Five fix commits (listed under "Where things stand") were being re-checked

@@ -59,10 +59,14 @@ function startOf(h: Home, now: Date): Date {
 
 const priceOf = (h: Home) => priceWords(h.live.price_pence, h.live.qualifier, h.listing.lease?.shared?.share_percent);
 
-/** A home in one line, as a list of matches gives it: never its seller, whether anyone lives there, or keys; nor a price staff are checking. */
-const brief = (h: Home) => {
+/**
+ * A home in one line, as a list of matches gives it: never its seller, whether anyone lives there, or keys; nor a price staff are checking.
+ * A home the caller named comes without its price, so the receptionist opens with get_property's describe line: on 4 October it read the
+ * price from the search and never said the council tax band or the EPC.
+ */
+const brief = (h: Home, priced = true) => {
   const checked = h.live.checking.includes('price');
-  return { property: h.listing.key, says: `${shortAddress(h.listing)}: ${homeKind(h.listing)}`, price: checked ? undefined : priceOf(h), being_checked: checked ? ['the price'] : undefined, status: STATUS_WORDS[h.live.status] };
+  return { property: h.listing.key, says: `${shortAddress(h.listing)}: ${homeKind(h.listing)}`, price: checked || !priced ? undefined : priceOf(h), being_checked: checked && priced ? ['the price'] : undefined, status: STATUS_WORDS[h.live.status] };
 };
 
 /** An accepted offer the tools reported is news the receptionist may pass on; one it made up is not (guardrails). */
@@ -79,7 +83,7 @@ async function resolveHome(ctx: ToolContext, words: unknown): Promise<{ home: Ho
   if (exact) return { home: exact, all };
   const found = findListings(findable(all), w);
   if (found.length === 1) return { home: byKey(all, found[0].key), all };
-  if (found.length > 1) return { reply: { more_than_one: found.slice(0, 3).map((l) => brief(byKey(all, l.key))), next: 'More than one: ask which.' } };
+  if (found.length > 1) return { reply: { more_than_one: found.slice(0, 3).map((l) => brief(byKey(all, l.key), false)), next: 'More than one: ask which.' } };
   return { reply: { message: 'None of our homes matches that. Check the street and number with the caller, or use search_properties.' } };
 }
 
@@ -772,6 +776,10 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
     seller_position: l.seller_position || undefined,
     fell_through: l.fall_through || undefined,
     official: Object.keys(official).length ? official : undefined,
+    // On 4 October "Will I get a mortgage on that?" about a short lease was answered with no one to ask. Leasehold only: the answer is kept small.
+    mortgage_question: l.lease
+      ? `Can't advise: ${e?.mortgage ? `offer ${firstNameOf(ctx.tenant, e.mortgage.staff) || 'someone'}, our mortgage adviser` : 'suggest an independent mortgage broker'}, and their solicitor for the lease.`
+      : undefined,
     negotiator,
     links: l.links,
     note: [
@@ -819,9 +827,9 @@ async function searchProperties(args: Args, ctx: ToolContext): Promise<Record<st
       const gone = found.length === 1 && ['withdrawn', 'exchanged', 'completed'].includes(found[0].live.status);
       const alt = gone ? similar(found[0].listing, findable(all)).map((x) => brief(byKey(all, x.key))) : [];
       return {
-        matches: found.slice(0, 3).map(brief),
+        matches: found.slice(0, 3).map((h) => brief(h, false)),
         ...(alt.length ? { similar: alt } : {}),
-        note: found.length > 1 ? 'More than one: ask which.' : gone ? `Say it's ${STATUS_WORDS[found[0].live.status]}${alt.length ? ', and offer these instead' : ''}.` : undefined,
+        note: found.length > 1 ? 'More than one: ask which, then get_property.' : gone ? `Say it's ${STATUS_WORDS[found[0].live.status]}${alt.length ? ', and offer these instead' : ''}.` : 'Now get_property, and say its describe line first.',
       };
     }
   }
@@ -849,7 +857,7 @@ async function searchProperties(args: Args, ctx: ToolContext): Promise<Record<st
   const list = matches(req, findable(all)).map((l) => byKey(all, l.key));
   if (!list.length) return { matches: [], note: 'Nothing matches. Offer to take their details in a message, so the team can call when something comes in.' };
   noteSeen(ctx, list);
-  return { matches: list.slice(0, 3).map(brief), note: list.length > 3 ? 'There are more: ask what matters most, to narrow it down.' : undefined };
+  return { matches: list.slice(0, 3).map((h) => brief(h)), note: list.length > 3 ? 'There are more: ask what matters most, to narrow it down.' : undefined };
 }
 
 // ── Declarations ──────────────────────────────────────────────────────────
@@ -892,7 +900,7 @@ export const ESTATE_TOOLS: Record<string, Tool> = {
     when: (t) => Boolean(t.profile.estate && t.profile.booking?.services.some((s) => s.key === 'valuation')),
     decl: {
       name: 'book_valuation',
-      description: "Book a free valuation of the caller's home, after reading back the day, time and address and hearing yes. Returns the reference. Never give a figure.",
+      description: "Book a free valuation of the caller's home, after reading back the day, time and address and hearing yes. Returns the reference. Never give a figure, nor repeat one the caller gives.",
       parameters: obj(
         {
           date: S('YYYY-MM-DD'), time: S('HH:MM'), name: S("The owner's name"), phone: S('Only if not the calling number'),

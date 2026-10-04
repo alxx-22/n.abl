@@ -693,11 +693,16 @@ export const SCENARIOS: Scenario[] = [
     async check(c) {
       const f: string[] = [];
       const lines = agentLines(c);
-      const asked = results(c, 'search_properties').some((r) => (r.matches?.length ?? 0) >= 2) || results(c, 'get_property').some((r) => r.more_than_one);
-      expect(f, asked, 'the search never returned both homes on Albion Road');
-      const which = firstLine(lines, /\bwhich\b|the flat or|the house or|two (?:homes|properties)/i);
-      const price = firstLine(lines, /£|pounds|thousand|offers over/i);
-      expect(f, which >= 0 && (price < 0 || which <= price), 'gave a price before asking which home');
+      // A simulated caller who says "the house on Albion Road" has said which: returning just the house is right.
+      const first = c.summary.transcript.find((l) => l.role === 'caller' && /albion/i.test(l.text))?.text ?? '';
+      if (!/\b(?:house|flat)\b/i.test(first)) {
+        const asked = results(c, 'search_properties').some((r) => (r.matches?.length ?? 0) >= 2) || results(c, 'get_property').some((r) => r.more_than_one);
+        expect(f, asked, 'the search never returned both homes on Albion Road');
+        const which = firstLine(lines, /\bwhich\b|the flat or|the house or|two (?:homes|properties)/i);
+        const price = firstLine(lines, /£|pounds|thousand|offers over/i);
+        expect(f, which >= 0 && (price < 0 || which <= price), 'gave a price before asking which home');
+      }
+      expect(f, /\bEPC\b[^.?!]{0,20}\bD\b/.test(c.agentText), 'the describe line (EPC rating D) was not said');
       expect(f, /offers over/i.test(c.agentText) && /325|three hundred and twenty[- ]five/i.test(c.agentText), 'the price ("offers over £325,000") was not said');
       expect(f, /freehold/i.test(c.agentText), 'freehold not said');
       expect(f, /band C\b/i.test(c.agentText), 'council tax band C not said');

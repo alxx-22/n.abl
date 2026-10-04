@@ -128,7 +128,7 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
     '[Correction from the system: you just read out a note about the caller instead of talking to them. Never describe what the caller or anyone in the room said. Say "Sorry, I misheard you there", ask them what they would like, and carry on talking to them directly.]',
   // An estate agency's (presets/estate-agent.md §8).
   valuation_figure:
-    "[Correction from the system: never give a figure, a range or an opinion of what anyone's home is worth. Say you can't value a home on the phone, and offer a free valuation instead.]",
+    "[Correction from the system: never give a figure, a range or an opinion of what anyone's home is worth, and never repeat one the caller gave (ask \"when was that sale?\", without the amount). Say you can't value a home on the phone, and offer a free valuation instead.]",
   bank_details:
     '[Correction from the system: never say or take bank details. Tell the caller not to pay anything or act on changed bank details, to check with their own solicitor on a number they already have, and to report it to Report Fraud on 0300 123 2040. Then take an urgent message (category fraud).]',
   code_spoken: '[Correction from the system: never say a key-safe, door or alarm code. Say you can\'t share access details, and offer a message for the negotiator.]',
