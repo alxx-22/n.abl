@@ -68,5 +68,8 @@ export function suggestions(profile: TenantProfile): string[] {
   out.push("What's my house worth? Next door went for four hundred.");
   if (f.house) out.push(`I'd like to make an offer on ${name(f.house)}.`);
   out.push("I've got a viewing, reference {ref}. Can I move it?");
+  // M2: the people the agency knows (Call as Sarah for the first; anyone for the second).
+  if (f.seller) out.push(`Calling as Sarah: how's it going at ${f.seller.street}?`);
+  out.push("Put me on your list: a three-bed with a garden, and text me when one comes up.");
   return out;
 }

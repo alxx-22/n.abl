@@ -44,6 +44,11 @@
   "property": true
  },
  "teamPhones": [],
- "suggestions": ["What's my house worth? Next door went for four hundred.","I've got a viewing, reference {ref}. Can I move it?"],
+ "suggestions": [
+  "What's my house worth? Next door went for four hundred.",
+  "I've got a viewing, reference {ref}. Can I move it?",
+  "Calling as Sarah: how's it going at ?",
+  "Put me on your list: a three-bed with a garden, and text me when one comes up."
+ ],
  "resetLine": "viewings, valuations, offers and sales"
 }

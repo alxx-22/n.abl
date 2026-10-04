@@ -98,7 +98,9 @@
   "Can I view 2 Street Street Street Street Street Street Street Street Street Street  1 on Saturday at 11?",
   "What's my house worth? Next door went for four hundred.",
   "I'd like to make an offer on 2 Street Street Street Street Street Street Street Street Street Street  1.",
-  "I've got a viewing, reference {ref}. Can I move it?"
+  "I've got a viewing, reference {ref}. Can I move it?",
+  "Calling as Sarah: how's it going at Street Street Street Street Street Street Street Street Street Street  2?",
+  "Put me on your list: a three-bed with a garden, and text me when one comes up."
  ],
  "resetLine": "viewings, valuations, offers and sales"
 }

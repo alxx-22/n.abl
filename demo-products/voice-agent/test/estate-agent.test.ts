@@ -356,6 +356,7 @@ test('estate agent: the builder\'s preview, the fact sheet and the back office',
   assert.deepEqual(spec.suggestions, [
     'Tell me about the flat on Albion Road.', 'Can I view 22 Albion Road on Saturday at 11?', "What's my house worth? Next door went for four hundred.",
     "I'd like to make an offer on 22 Albion Road.", "I've got a viewing, reference {ref}. Can I move it?",
+    "Calling as Sarah: how's it going at Larkspur Close?", 'Put me on your list: a three-bed with a garden, and text me when one comes up.',
   ]);
   assert.equal(spec.resetLine, 'viewings, valuations, offers and sales');
   // The story follows the homes: without the Albion Road house, the next one that fits takes its part.
