@@ -756,7 +756,8 @@ export function facts(l: Listing, live: Pick<ListingLive, 'checking'>, today: st
   if (l.rooms.length && !checking.has('rooms')) out.rooms = l.rooms.map((r) => `${r.name} ${r.size || 'not measured'}`).join('; ');
   // A fact staff are checking is not stated: the receptionist says it is being checked.
   const leaseChecked = checking.has('tenure') || checking.has('lease');
-  if (!checking.has('tenure')) out.tenure = clause(tenureSentence(l, today).replace(/^It's /, ''));
+  // The years left are the lease's: while it is checked the tenure is said without them.
+  if (!checking.has('tenure')) out.tenure = clause(tenureSentence(leaseChecked ? { ...l, lease: null } : l, today).replace(/^It's /, ''));
   const lease = leaseChecked ? null : l.lease;
   if (lease) {
     if (lease.service_charge) out.service_charge = lease.service_charge;

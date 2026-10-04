@@ -621,6 +621,19 @@ test('get_property: the facts every advert must state come first, in one sentenc
     assert.equal(fact === 'price' ? r.price : facts[gone], undefined, `${fact} withheld while it is checked`);
     assert.ok((r.being_checked as string[]).length === 1, fact);
   }
+  // A price being checked is not given by the other tools either: not in a search, nor in the text of the details.
+  await repo.setListing(t.id, 'albion_22', { checking: ['price'] });
+  const c = await call(t);
+  const found = await c.run('search_properties', { query: '22 Albion Road' });
+  const match = (found.matches as Record<string, unknown>[])[0];
+  assert.equal(match.property, 'albion_22');
+  assert.equal(match.price, undefined);
+  assert.deepEqual(match.being_checked, ['the price']);
+  const listed = await c.run('search_properties', { min_beds: 3 });
+  assert.ok(!JSON.stringify(listed).includes('325,000'), JSON.stringify(listed));
+  const sent = await c.run('send_property_details', { property: '22 Albion Road', what: 'brochure' });
+  assert.equal(sent.sent, true);
+  assert.ok(!c.sent.at(-1)!.body.includes('£'), c.sent.at(-1)!.body);
   await repo.setListing(t.id, 'albion_22', { checking: [] });
 });
 

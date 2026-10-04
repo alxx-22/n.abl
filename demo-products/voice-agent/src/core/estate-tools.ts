@@ -59,8 +59,11 @@ function startOf(h: Home, now: Date): Date {
 
 const priceOf = (h: Home) => priceWords(h.live.price_pence, h.live.qualifier, h.listing.lease?.shared?.share_percent);
 
-/** A home in one line, as a list of matches gives it: never its seller, whether anyone lives there, or keys. */
-const brief = (h: Home) => ({ property: h.listing.key, says: `${shortAddress(h.listing)}: ${homeKind(h.listing)}`, price: priceOf(h), status: STATUS_WORDS[h.live.status] });
+/** A home in one line, as a list of matches gives it: never its seller, whether anyone lives there, or keys; nor a price staff are checking. */
+const brief = (h: Home) => {
+  const checked = h.live.checking.includes('price');
+  return { property: h.listing.key, says: `${shortAddress(h.listing)}: ${homeKind(h.listing)}`, price: checked ? undefined : priceOf(h), being_checked: checked ? ['the price'] : undefined, status: STATUS_WORDS[h.live.status] };
+};
 
 /** An accepted offer the tools reported is news the receptionist may pass on; one it made up is not (guardrails). */
 function noteSeen(ctx: ToolContext, hs: Home[]): void {
@@ -799,7 +802,8 @@ async function sendDetails(args: Args, ctx: ToolContext): Promise<Record<string,
   if (!phone) return { sent: false, message: 'Ask for a mobile number to text it to, read it back, then call this again with phone.' };
   const site = (p.website ?? 'https://www.your-estate-agency.co.uk').replace(/\/+$/, '');
   const links = have.map((k) => `${LINK_LABEL[k]}: ${site}/property/${l.ref.toLowerCase()}/${k} (demo link)`).join(' ');
-  await smsTo(ctx, phone, `${p.name}: ${l.address}, ${priceOf(r.home)}. ${links} (Demo)`);
+  const price = r.home.live.checking.includes('price') ? '' : `, ${priceOf(r.home)}`;
+  await smsTo(ctx, phone, `${p.name}: ${l.address}${price}. ${links} (Demo)`);
   return { sent: true, to: displayUkPhone(phone), what: have, missing: missing.length ? `No ${missing.join(' or ')} for this home.` : undefined };
 }
 

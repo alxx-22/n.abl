@@ -578,6 +578,10 @@ test('a home\'s facts: short words, unknowns named and never said as no, nothing
   const main = facts(home(p, 'albion_41_flat_2'), { checking: ['tenure', 'local_tax', 'epc'] }, TODAY, 'england');
   for (const k of ['tenure', 'service_charge', 'ground_rent', 'council_tax', 'epc']) assert.equal(main.facts[k], undefined, k);
   assert.deepEqual(main.being_checked, ['the tenure', 'the council tax band', 'the EPC rating']);
+  // The lease being checked: the tenure is said without the years left, which are the lease's.
+  const lease = facts(home(p, 'albion_41_flat_2'), { checking: ['lease'] }, TODAY, 'england');
+  assert.equal(lease.facts.tenure, 'leasehold');
+  assert.equal(lease.facts.service_charge, undefined);
   // An owner's note that gives away an empty home never leaves the facts.
   const noted = structuredClone(house);
   noted.checks.parking = { v: 'yes', says: 'Parking: keys for the garage are in the office.' };

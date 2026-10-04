@@ -26,6 +26,7 @@ const SLOT =
 const THING = /\b(?:your|table|booking|reservation|viewing|appointment|valuation|order)\b/i;
 const BOOKED_UP = /^\s+(?:up|out|solid)\b/i;
 const REGRET = /\b(?:afraid|sorry|unfortunately|sadly|apologies)\b/i;
+const GOOD_NEWS = /^\s*(?:lovely|great|brilliant|perfect|wonderful|excellent|fantastic|fab|super|done|all done)\b/i;
 const OFFERED = /^[^.?!]*\bbut\b[^.?!]*\b(?:free|available|open|could do|can do|have)\b|^[^.?!]*[.?!]\s+(?:how about|what about|would|could|can i offer|i could|i can|there'?s)\b/i;
 const NEGATED = /\b(not|isn'?t|aren'?t|haven'?t|hasn'?t|no|once|before|until|when|if|shall|should|can|could|would|will)\b[^.?!]{0,25}$/i;
 const PAID = /\b(payment(?:'s| has)? (?:gone|went) through|that'?s (?:gone through|been paid|paid)|payment (?:is |was |has been )?(?:approved|successful|complete|received|taken)|paid in full)\b/i;
@@ -134,10 +135,11 @@ function slotTaken(text: string, claim: RegExpExecArray): boolean {
   // The slot is the subject of its own clause, and anything of the caller's in that clause makes it a claim ("your 7pm is booked").
   const sentence = before.split(/[.?!](?=\s)/).pop() ?? '';
   const clause = sentence.split(/[,;:](?=\s)|\band\b/).pop() ?? '';
-  if (!SLOT.test(clause) || THING.test(clause)) return false;
-  // Theirs elsewhere in the sentence ("the table for four, and 7pm is booked") is a claim, unless it is said with regret or
-  // another time is offered: "For your viewing, I'm afraid 10am is booked" is the 3 October false alarm.
-  return !THING.test(sentence) || REGRET.test(sentence) || OFFERED.test(after);
+  if (!SLOT.test(clause) || THING.test(clause) || /^\s+under\b/i.test(after)) return false;
+  // Said with regret or with another time offered, it is taken: "For your viewing, I'm afraid 10am is booked" (the 3 October false alarm).
+  if (REGRET.test(sentence) || OFFERED.test(after)) return true;
+  // Otherwise theirs elsewhere in the sentence ("the table for four, and 7pm is booked"), "now booked" or good news is a claim.
+  return !THING.test(sentence) && !/\bnow\b/i.test(claim[0]) && !GOOD_NEWS.test(sentence);
 }
 
 function negated(text: string, index: number): boolean {

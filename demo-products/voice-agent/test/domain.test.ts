@@ -188,6 +188,7 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
     'Half seven is booked, sadly.',
     'Those slots are booked.',
     "I'm afraid we're fully booked at 7pm.",
+    'Sorry, 7pm is now booked, but 8 is free.',
     'Saturday is fully booked.',
     "Sorry, it's booked up that evening.",
     "We're all booked up on Friday.",
@@ -210,6 +211,10 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
     "That's all sorted out for you.",
     "Right, you're all sorted out.",
     'Lovely, so that is a table for four, and 7pm on Saturday is booked.',
+    // A time just booked, said as the caller hears good news (the second review, 4 October).
+    'Brilliant, 7pm is booked under Smith.',
+    'Saturday at 7pm is now booked.',
+    'Lovely, 7pm is booked.',
   ]) {
     assert.equal(checkUtterance(claim, s)[0]?.rule, 'unconfirmed_claim', claim);
   }
