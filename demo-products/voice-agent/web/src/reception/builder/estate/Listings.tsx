@@ -14,6 +14,7 @@ import { toast } from '../../../components/Toaster.tsx';
 import { DraftText, ListText, Num, Select, Text, Toggle } from '../fields.tsx';
 import type { StepProps } from '../registry.ts';
 import { DayChips, staffOptions } from './steps.tsx';
+import { setTenure } from './tenure.ts';
 
 type Props = StepProps<EstateAnswers>;
 
@@ -57,7 +58,6 @@ function blankHome(a: EstateAnswers): ListingAnswer {
   };
 }
 
-const blankLease = (): LeaseAnswer => ({ expires: '', service_charge: '', ground_rent: '', reserve_fund: '', event_fee: '', managing_agent: '', age_limit: null, shared: null });
 
 export function StepListings({ a, set, ws }: Props) {
   const [open, setOpen] = useState<string | null>(a.listings[0]?.key ?? null);
@@ -230,13 +230,7 @@ function MoneyLegal({ l, edit, nation }: { l: ListingAnswer; edit: Edit; nation:
   return (
     <>
       <div className="three">
-        <Select label="Tenure" value={l.tenure} options={options(TENURES)} onChange={(v) => edit((x) => {
-          x.tenure = v;
-          if ((v === 'leasehold' || v === 'share_of_freehold' || v === 'shared_ownership') && !x.lease) x.lease = blankLease();
-          if (v === 'shared_ownership' && x.lease && !x.lease.shared) x.lease.shared = { share_percent: 50, rent_pence_month: 0, provider: '', eligibility: '', nomination_weeks: 0 };
-          // Shared ownership hidden is shared ownership gone: never left to be read out for a home that isn't one.
-          if (v !== 'shared_ownership' && x.lease) x.lease.shared = null;
-        })} />
+        <Select label="Tenure" value={l.tenure} options={options(TENURES)} onChange={(v) => edit((x) => setTenure(x, v))} />
         <Text label={nation === 'northern_ireland' ? 'Rates' : 'Council tax band'} value={l.local_tax} max={30} placeholder={nation === 'northern_ireland' ? '£1,150 a year' : 'C'} onChange={(v) => edit((x) => void (x.local_tax = v))} />
         <Text label="EPC rating" value={l.epc} max={12} placeholder="C, or exempt" onChange={(v) => edit((x) => void (x.epc = v))} hint="Empty if it isn’t in yet." />
       </div>
