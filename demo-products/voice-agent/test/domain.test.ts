@@ -245,6 +245,34 @@ test('a read-back answered yes: what an estate agency\'s call reminds the recept
   }
 });
 
+test('read-backs and yeses: the second review of 4 October', () => {
+  // A worry in a sentence of its own takes nothing back; a correction still does.
+  for (const yes of ["Yes, that's right. I'm not sure about parking though.", "Yes. I'm not in a chain, by the way.", "Yep, that's all correct. We're not in any rush."]) assert.ok(saidYes(yes), yes);
+  for (const no of ['Yes. But could we make it 11?', "Yes, that's right. Actually, could we do Sunday?", 'Yes. Hang on, not Saturday.', "Yes, that's right. Could we make it 11 instead?"]) assert.ok(!saidYes(no), no);
+  // "Shall I go ahead and book that?" asks for the yes that books it; an offer of times does not.
+  for (const q of ["So that's 22 Albion Road on Saturday at 11:15am with Jess. Shall I go ahead and book that?", 'An offer of £320,000 for 22 Albion Road. Shall I put that through?', "That's Thursday at 10am with Priya. Shall I go ahead?"]) {
+    assert.ok(READ_BACK.test(q) && READ_BACK_DETAIL.test(q), q);
+  }
+  assert.ok(!READ_BACK.test('I have Saturday at 10am or 11:30am with Tom. Shall I go ahead and book one of those for you?'));
+});
+
+test('guardrail: a message line with a phone number, or a taken time beside the caller\'s words, is no false claim', () => {
+  const s = newCallState();
+  s.estate = true;
+  s.messageTaken = true;
+  for (const line of ["I've recorded your message, and Jess will call you back on 07700 900123.", "I've logged that, and Jess will ring you on oh seven seven hundred, nine hundred one two three."]) {
+    assert.deepEqual(checkUtterance(line, s), [], line);
+  }
+  // An amount is still an offer, message or not.
+  for (const line of ["I've recorded three hundred and twenty thousand for 22 Albion Road.", "I've recorded £320,000 for you.", "I've logged 320k for 22 Albion Road."]) {
+    assert.equal(checkUtterance(line, s)[0]?.rule, 'unconfirmed_claim', line);
+  }
+  const r = newCallState();
+  for (const taken of ["For your viewing on Saturday, I'm afraid 10am is booked, but 11am is free.", "I've checked your viewing times and 10am is booked, but 11am is free.", "Sorry, for your table of four, 7pm is booked. How about 8?"]) {
+    assert.deepEqual(checkUtterance(taken, r), [], taken);
+  }
+});
+
 test('records: every booking and order a call makes or finds goes through record()', () => {
   const ctx = { state: newCallState() } as ToolContext;
   const s = ctx.state;

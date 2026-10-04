@@ -25,6 +25,8 @@ const SLOT =
 // ...unless what is booked is the caller's: "your 7pm is booked", "the table for four at 7pm is booked".
 const THING = /\b(?:your|table|booking|reservation|viewing|appointment|valuation|order)\b/i;
 const BOOKED_UP = /^\s+(?:up|out|solid)\b/i;
+const REGRET = /\b(?:afraid|sorry|unfortunately|sadly|apologies)\b/i;
+const OFFERED = /^[^.?!]*\bbut\b[^.?!]*\b(?:free|available|open|could do|can do|have)\b|^[^.?!]*[.?!]\s+(?:how about|what about|would|could|can i offer|i could|i can|there'?s)\b/i;
 const NEGATED = /\b(not|isn'?t|aren'?t|haven'?t|hasn'?t|no|once|before|until|when|if|shall|should|can|could|would|will)\b[^.?!]{0,25}$/i;
 const PAID = /\b(payment(?:'s| has)? (?:gone|went) through|that'?s (?:gone through|been paid|paid)|payment (?:is |was |has been )?(?:approved|successful|complete|received|taken)|paid in full)\b/i;
 // Reading out its own notes about the caller instead of speaking to them. On
@@ -39,15 +41,22 @@ const PASSED_ON = /\b(?:i'?ve|i have|we'?ve|we have|that'?s|it'?s|has been|have 
 export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:that|it|this|those|these|your [a-z]+)(?: details)? (?:on|along)|let (?:the|our) [a-z ]{0,20}know|ask (?:them|the [a-z ]{0,20}) to (?:call|ring|give you a (?:call|ring)))/i;
 // A booking, valuation or offer read back for a yes, with its time or amount (an estate agency's calls). On 3 October
 // a caller answered "Yes, that's all correct. Could I also see 10 Meadow View?" and the viewing was never booked.
-export const READ_BACK = /\b(?:is that (?:all )?(?:right|correct)|does that (?:all )?(?:sound|look) right|have i got that right)\b[^?]*\?\s*$/i;
+// "Shall I go ahead and book that?" asks for the same yes; "Shall I book one of those?", an offer of times, does not.
+export const READ_BACK = /\b(?:is that (?:all )?(?:right|correct)|does that (?:all )?(?:sound|look) right|have i got that right|shall i (?:go ahead and )?(?:book|record|put|send) (?:that|it|this)\b|shall i go ahead\b(?! and)|is that ok(?:ay)? to book)[^?]*\?\s*$/i;
 export const READ_BACK_DETAIL = /\b\d{1,2}(?::\d{2})?\s?(?:am|pm)\b|\b(?:half|quarter) (?:past|to) [a-z]+\b|\bhalf (?:nine|ten|eleven|twelve|one|two|three|four|five|six)\b|\b(?:nine|ten|eleven|twelve|one|two|three|four|five|six|seven) (?:o'?clock|fifteen|thirty|forty-five)\b|£\s?\d|\bthousand\b/i;
+/** A read-back's amount: an offer, which find_bookings never finds. */
+export const READ_BACK_AMOUNT = /£\s?\d|\b(?:thousand|pounds)\b/i;
 /** A caller talking about bank or account details: at an estate agency, a possible payment scam that the team must hear about at once. */
 export const BANK_TALK = /\b(?:bank|account) details\b|\bsort code\b|\baccount number\b|\bnew (?:bank )?account\b/i;
 export const SAID_YES = /^\s*(?:yes|yeah|yep|yup|correct|that'?s (?:all )?(?:right|correct|fine|perfect)|perfect|sounds good|lovely|great|please do|go ahead)\b/i;
 /** A plain yes to a read-back: "Yes, but could we make it 11?" and "Yeah, no, Saturday's no good" are not. */
 export function saidYes(line: string): boolean {
   const m = SAID_YES.exec(line);
-  return Boolean(m) && !/\b(?:but|actually|instead|rather|though|no|not)\b/i.test(line.slice(m!.index + m![0].length));
+  if (!m) return false;
+  const [own, ...later] = line.slice(m.index + m[0].length).split(/(?<=[.?!])\s+/);
+  if (/\b(?:but|actually|instead|rather|though|no|not)\b/i.test(own)) return false;
+  // A later sentence takes it back only as a correction: "I'm not sure about parking though" is a worry, not a no.
+  return !later.some((s) => /^(?:but|actually|no|nope|wait|hang on|sorry|hmm)\b/i.test(s) || /\b(?:instead|rather|make it|change it)\b/i.test(s));
 }
 const SAFE = /\b(it'?s|is|that'?s|will be|would be|should be|totally|completely|perfectly) (safe|fine|okay|ok) (for|with) (you|your|him|her|them|someone|a) [^.?!]*(allerg|coeliac|nut|gluten)/i;
 
@@ -57,6 +66,8 @@ const SAFE = /\b(it'?s|is|that'?s|will be|would be|should be|totally|completely|
 
 /** A sum of money, as figures or in words: "£400,000", "400k", "four hundred grand", "three hundred thousand". */
 const MONEY = /£\s?\d|\b\d{2,3}(?:,\d{3})?\s?(?:k|grand|thousand)\b|\b(?:hundred|thousand|grand|million)\b|\b\d{3},\d{3}\b|\b\d{6,7}\b/i;
+/** An amount said as money, never a phone number: "nine hundred one two three" and "900123" are a mobile's digits. */
+const AMOUNT = /£\s?\d|\b\d{1,3}(?:,\d{3})+\b|\b\d+\s?(?:k|grand|thousand|million)\b|\b(?:grand|pounds?|thousand|million)\b/i;
 /** A home being worth or fetching something. "Worth noting" and "worth asking" are not about money. */
 const WORTH = /\b(?:worth(?! (?:noting|mentioning|knowing|checking|asking|a look|bearing|it|having|doing|getting|booking|a call))|valued? at|valuation of|fetch(?:es|ed|ing)?|sells? for|selling for|sold for|go(?:es|ing)? for|went for|get(?:ting)? for|achieve[sd]?|ballpark|market (?:it|your home|the house|yours) at)\b/i;
 const SORT_CODE = /\b\d{2}[- ]\d{2}[- ]\d{2}\b|\b(?:account(?: number)?|sort code)\b[^.?!]{0,40}?\d[\d -]{4,}\d|\b\d{8}\b/i;
@@ -107,7 +118,7 @@ function estateFlags(text: string, state: CallState, names: string[]): Flag[] {
   }
   const recorded = RECORDED.exec(text);
   // "I've recorded that this was about bank details", once a message is taken, is true: the rule is for offers (a live call on 3 October).
-  const aboutMessage = state.messageTaken && recorded !== null && !/\boffer/i.test(text) && !/to the seller/i.test(recorded[0]) && !MONEY.test(text);
+  const aboutMessage = state.messageTaken && recorded !== null && !/\boffer/i.test(text) && !/to the seller/i.test(recorded[0]) && !AMOUNT.test(text);
   if (recorded && !aboutMessage && !negated(text, recorded.index) && state.committed.length === 0) flags.push({ rule: 'unconfirmed_claim', text: recorded[0] });
   return flags;
 }
@@ -120,10 +131,13 @@ function slotTaken(text: string, claim: RegExpExecArray): boolean {
   if (/(?: in| for you)$/i.test(claim[0]) || /^\s+(?:in|for you)\b/i.test(after)) return false;
   if (BOOKED_UP.test(after)) return true;
   const before = text.slice(Math.max(0, claim.index - 80), claim.index).replace(/\b([ap])\.m\./gi, '$1m');
-  // The slot is the subject of its own clause; anything of the caller's in the sentence ("the table for four, and 7pm is booked") makes it a claim.
+  // The slot is the subject of its own clause, and anything of the caller's in that clause makes it a claim ("your 7pm is booked").
   const sentence = before.split(/[.?!](?=\s)/).pop() ?? '';
-  const clause = sentence.split(/[,;:](?=\s)/).pop() ?? '';
-  return SLOT.test(clause) && !THING.test(sentence);
+  const clause = sentence.split(/[,;:](?=\s)|\band\b/).pop() ?? '';
+  if (!SLOT.test(clause) || THING.test(clause)) return false;
+  // Theirs elsewhere in the sentence ("the table for four, and 7pm is booked") is a claim, unless it is said with regret or
+  // another time is offered: "For your viewing, I'm afraid 10am is booked" is the 3 October false alarm.
+  return !THING.test(sentence) || REGRET.test(sentence) || OFFERED.test(after);
 }
 
 function negated(text: string, index: number): boolean {

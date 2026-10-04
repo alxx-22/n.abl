@@ -16,7 +16,7 @@ import {
   loggableArgs, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type CallState, type SmsSender, type Telephony,
   type ToolContext,
 } from './tools.ts';
-import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, checkUtterance, saidYes, type Flag } from './guardrails.ts';
+import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DETAIL, checkUtterance, saidYes, type Flag } from './guardrails.ts';
 import { redactCardNumbers } from './redact.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
@@ -154,8 +154,11 @@ export class CallSession extends EventEmitter<CallEvents> {
   private flags: Flag[] = [];
   /** Tool flags waiting for the turn's words (see raiseHeld). */
   private held: CallState['toolFlags'] = [];
-  /** The last tool that looked up or made a booking: a read-back after find_bookings is not one to book. */
-  private lastLookup: string | null = null;
+  /**
+   * A booking just found or changed, whose read-back is not one to book. Only the next read-back: a booking found
+   * earlier in the call must not hide a later offer's (the second review, 4 October).
+   */
+  private lookedUp = false;
   private toolTrace: { name: string; args: unknown; result: unknown }[] = [];
   private usage = { total: 0, prompt_first: 0, prompt_max: 0, responses: 0 };
   private latencies: number[] = [];
@@ -551,12 +554,15 @@ export class CallSession extends EventEmitter<CallEvents> {
       void this.toolQueue.then(() => {
         if (this.ended || this.state.bookNudged || this.state.committed.length > yes.committed || this.state.commitTries > yes.tries) return;
         this.state.bookNudged = true;
-        this.session?.sendText('[From the system: the caller said yes to what you read back, but nothing has been booked or recorded yet. Do it now with create_booking, book_valuation or record_offer, using what they already told you (if the tool asks for something first, ask for just that). Then answer anything else they asked.]');
+        this.session?.sendText('[From the system: the caller said yes to what you read back, but nothing has been booked or recorded yet. Do it now with create_booking, book_valuation or record_offer (modify_booking or cancel_booking for a change to a booking they have), using what they already told you (if the tool asks for something first, ask for just that). Then answer anything else they asked.]');
       });
     }
     // A read-back of something to make, not of a booking just found ("I can see your viewing on Saturday at 10am. Is that right?").
-    const making = this.lastLookup !== 'find_bookings' && this.lastLookup !== 'modify_booking';
-    this.state.readBack = making && READ_BACK.test(line) && READ_BACK_DETAIL.test(line) ? { committed: this.state.committed.length, tries: this.state.commitTries } : null;
+    // An amount is an offer, and offers are never found.
+    const readBack = READ_BACK.test(line) && READ_BACK_DETAIL.test(line);
+    const found = readBack && this.lookedUp && !READ_BACK_AMOUNT.test(line);
+    if (found) this.lookedUp = false;
+    this.state.readBack = readBack && !found ? { committed: this.state.committed.length, tries: this.state.commitTries } : null;
   }
 
   private get staffNames(): string[] {
@@ -608,11 +614,13 @@ export class CallSession extends EventEmitter<CallEvents> {
     for (const c of calls) {
       // A change or cancellation answers a yes too: only "book it now" is reminded (remindToBook).
       if (['create_booking', 'book_valuation', 'record_offer', 'modify_booking', 'cancel_booking'].includes(c.name)) this.state.commitTries++;
-      if (['check_availability', 'find_bookings', 'modify_booking', 'create_booking', 'book_valuation', 'record_offer'].includes(c.name)) this.lastLookup = c.name;
       this.record('tool_call', { name: c.name, args: loggableArgs(c.name, c.args) });
       const t0 = Date.now();
       const result = await runTool(c.name, c.args, ctx);
       if (this.state.estate) this.noteOutstanding(c.name, result);
+      if (c.name === 'find_bookings') this.lookedUp = Boolean((result as { bookings?: unknown[] }).bookings?.length);
+      else if (c.name === 'modify_booking') this.lookedUp = true;
+      else if (['check_availability', 'create_booking', 'book_valuation', 'record_offer'].includes(c.name)) this.lookedUp = false;
       this.record('tool_result', { name: c.name, ms: Date.now() - t0, result });
       this.toolTrace.push({ name: c.name, args: loggableArgs(c.name, c.args), result });
       responses.push({ id: c.id, name: c.name, response: result });

@@ -100,9 +100,12 @@ test('a yes that is not a plain yes, or a read-back of a booking found, is no re
     assert.deepEqual(c.reminders(), []);
   }
   {
-    const c = await call(estate);
-    await c.tool('find_bookings', { phone: '+447700900123' });
-    await c.agent('I can see your viewing of 22 Albion Road on Saturday at 10am with Tom. Is that right?');
+    const phone = '+447700900142';
+    const made = await (await call(estate, phone)).tool('create_booking', { property: '22 Albion Road', date: SAT, time: '10:15', name: 'Kit Moss', postcode: 'BK3 4RT', first_time_buyer: true, selling: 'nothing', funding: 'cash' });
+    assert.equal(made.booked, true, JSON.stringify(made));
+    const c = await call(estate, phone);
+    await c.tool('find_bookings', { phone });
+    await c.agent('I can see your viewing of 22 Albion Road on Saturday at 10:15am with Tom. Is that right?');
     c.caller('Yes.');
     await c.agent('What would you like to move it to?');
     assert.deepEqual(c.reminders(), []);
@@ -115,6 +118,47 @@ test('a yes that is not a plain yes, or a read-back of a booking found, is no re
     c.caller('Yes, 11:15.');
     await c.agent("Lovely. Could I take your name and mobile number?");
     assert.deepEqual(c.reminders(), []);
+  }
+});
+
+test('a booking found earlier in the call hides only its own read-back: a later offer read back and answered yes is reminded', async () => {
+  const phone = '+447700900141';
+  {
+    const c = await call(estate, phone);
+    const made = await c.tool('create_booking', { property: '22 Albion Road', date: SAT, time: '11:30', name: 'Sam Price', postcode: 'BK3 4RT', first_time_buyer: true, selling: 'nothing', funding: 'cash' });
+    assert.equal(made.booked, true, JSON.stringify(made));
+  }
+  {
+    const c = await call(estate, phone);
+    const found = await c.tool('find_bookings', { phone });
+    assert.equal((found.bookings as unknown[]).length, 1);
+    await c.agent('I can see your viewing of 22 Albion Road on Saturday at 11:30am with Jess. Is that right?');
+    c.caller("Yes. I'd like to make an offer on it, please.");
+    await c.agent('Of course. How much would you like to offer?');
+    assert.deepEqual(c.reminders(), [], 'the found booking\'s read-back is not one to book');
+    c.caller('Three hundred and twenty thousand.');
+    await c.agent('So that is an offer of £320,000 for 22 Albion Road from Sam Price. Is that right?');
+    c.caller("Yes, that's right.");
+    await c.agent('Lovely. Is there anything else I can help with?');
+    assert.equal(c.reminders().filter((t) => /said yes to what you read back/.test(t)).length, 1);
+  }
+  {
+    // No read-back of the booking found at all: an amount is still an offer to make.
+    const c = await call(estate, phone);
+    await c.tool('find_bookings', { phone });
+    await c.agent('Your viewing is on Saturday at 11:30am. And so that is an offer of £320,000 for 22 Albion Road. Is that right?');
+    c.caller('Yes.');
+    await c.agent('And do you have a home to sell?');
+    assert.equal(c.reminders().filter((t) => /said yes to what you read back/.test(t)).length, 1);
+  }
+  {
+    // A yes to "Shall I go ahead and book that?" is a yes to book.
+    const c = await call(estate);
+    await c.tool('check_availability', { property: 'albion_22', date: SAT, time: '11:00' });
+    await c.agent("So that's 22 Albion Road on Saturday at 11:15am with Jess. Shall I go ahead and book that?");
+    c.caller('Yes please.');
+    await c.agent('And could I ask whether you have a home to sell?');
+    assert.equal(c.reminders().filter((t) => /said yes to what you read back/.test(t)).length, 1);
   }
 });
 
