@@ -631,8 +631,10 @@ async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
       await text(`the seller has accepted ${yours}, subject to contract. ${agent} will confirm it in writing and explain the ID checks.`);
       const all = await repo.listOffers(t.id, home.key);
       // The buyer's own earlier offers, which this one raised, are replaced by it: closed, and never told "another offer" was accepted.
+      // Only the same phone's: the reference a raise names is the caller's word, and another buyer's offer must stay open and be told.
       const replaced = new Set<string>();
-      for (let r = offer.revises; r && !replaced.has(r); r = all.find((o) => o.reference === r)?.revises ?? null) replaced.add(r);
+      const mine = (ref: string) => all.find((o) => o.reference === ref && offer.phone && o.phone === offer.phone);
+      for (let r = offer.revises; r && !replaced.has(r) && mine(r); r = mine(r)!.revises) replaced.add(r);
       for (const r of replaced) {
         const o = all.find((x) => x.reference === r);
         if (o && OPEN.includes(o.status)) await repo.setOfferStatus(t.id, r, 'withdrawn', { note: `Replaced by ${offer.reference}`, from: OPEN });

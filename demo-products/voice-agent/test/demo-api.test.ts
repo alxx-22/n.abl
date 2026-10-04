@@ -435,6 +435,15 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.doesNotMatch(took.data.message, /other buyer/);
     assert.ok(!(await texts('07700 900772')).some((x: string) => /another offer/.test(x)));
     assert.equal((await app.repo.findOffer(made.data.id, { reference: earlier.reference }))[0].status, 'withdrawn');
+    // A "raise" naming someone else's offer (the reference is the caller's word) replaces nothing: that buyer's stays open and is told.
+    const calm = [...after.listings].reverse().find((l: any) => l.status === 'available' && !openOn(l.key).length && l.key !== viewing.listing_key && l.key !== quiet.key);
+    const theirs = await app.repo.createOffer(tenant, { listing_key: calm.key, amount_pence: 25_000_000, buyer_names: ['Ida Moss'], phone: '+447700900773', source: 'console' });
+    const wrong = await app.repo.createOffer(tenant, { listing_key: calm.key, amount_pence: 26_000_000, buyer_names: ['Ned Ray'], phone: '+447700900779', source: 'console', revises: theirs.reference });
+    const won = await jo.call('PATCH', `${path}/offers/${wrong.reference}`, { action: 'accept' });
+    assert.equal(won.status, 200, JSON.stringify(won.data));
+    assert.match(won.data.message, /1 other buyer has been told/);
+    assert.match((await texts('07700 900773')).at(-1), /accepted another offer/);
+    assert.equal((await app.repo.findOffer(made.data.id, { reference: theirs.reference }))[0].status, 'received');
 
     const other = (await state()).offers.find((o: any) => ['received', 'sent'].includes(o.status) && o.phone);
     if (other) {
