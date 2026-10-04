@@ -159,16 +159,30 @@ Then go on with "Do next" below.
 
 ## Do next, in this order
 
-### 1. Estate agent milestone 2 (M2)
+### 1. Estate agent milestone 2 (M2): built, live calls being tuned
 
-The spec is `presets/estate-agent.md` (§12, M2): sellers and buyers the
-agency knows. *How's my sale going?* for a seller verified by number and
-address (the week's viewings, feedback, the offer they're considering;
-"drop it by ten grand" becomes a message, not a change); buyer registration
-with requirements and alerts consent; the *Applicants* and *Valuations*
-views; *Call as* on the call panel (the seeded personas); "Seller replied by
-phone" on offers. Add its `ea-` scenarios, run them, and re-record the estate
-goldens in a commit that names the change (`node scripts/estate-goldens.ts`).
+The spec is `presets/estate-agent.md` (§12, M2). Built on 5 October, each
+with tests (`test/estate-agent-tools.test.ts`, `test/demo-api.test.ts`) and
+the walkthrough:
+- Tools (`src/core/estate-tools.ts`): `find_party` (who the number is to
+  us: bookings, portal enquiries, offers, seller or not, a missed call;
+  booking from an enquiry marks it answered), `get_marketing_update`
+  (verified seller only, in code, three tries a call), `get_offer_status`
+  (the number that made it only), `record_viewing_feedback`,
+  `register_buyer`, `stop_alerts`; `record_offer` says other offers exist.
+  A verified seller's offer message is urgent and marked `seller_reply`.
+- Prompt rule 7 names the checking tools (largest prompt 6,946 characters).
+- Back office: *Call as* on the phone (`src/presets/estate/personas.ts`),
+  *Applicants* (with Mark hot, Send matches, Stop alerts:
+  `PATCH /workspaces/:id/buyers/:number`), *Valuations* (booked, done,
+  outcome), "Seller replied by phone" on offers.
+- Scenarios `ea-vendor-update`, `ea-stalker`, `ea-register-position`,
+  `ea-personal-interest` are in `src/eval/scenarios.ts`; see "Live calls,
+  M2" below for how they ran.
+
+Not done in M2: valuation outcomes can't be changed from the Valuations
+view yet (only the seed sets them); the "Try saying" chips don't yet
+suggest the M2 calls ("How's my sale going?" as Sarah).
 
 ### 2. Estate agent milestone 3 (M3)
 
