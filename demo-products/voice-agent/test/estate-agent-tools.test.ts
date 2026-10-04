@@ -681,6 +681,9 @@ test('find_party: who the calling number is to us, from their own records; never
   const sam = await party('+447700900002');
   assert.match(String(sam.tried_to_call), /^[A-Z][a-z]+ tried to call yesterday afternoon$/);
   assert.match(String(sam.note), /never why/);
+  // An offer: named with its reference, its status left to get_offer_status.
+  const aisha = await party('+447700900003');
+  assert.ok((aisha.is as string[]).some((x) => /^made an offer on 14 Larkspur Close, ref [A-Z]{2}\d{3}: get_offer_status says where it stands$/.test(x)), JSON.stringify(aisha.is));
   // Nobody we know, and no number at all.
   assert.equal((await party('+447700900998')).known, false);
   assert.equal((await party(null)).known, false);

@@ -824,11 +824,12 @@ async function findParty(_args: Args, ctx: ToolContext): Promise<Record<string, 
   const tz = t.profile.timezone;
   const day = today(ctx);
   const now = ctx.now();
-  const [buyer, bookings, enquiries, states] = await Promise.all([
+  const [buyer, bookings, enquiries, states, offers] = await Promise.all([
     ctx.repo.findBuyer(t.id, phone),
     ctx.repo.listBookings(t.id, new Date(now.getTime() - 14 * DAY), new Date(now.getTime() + 30 * DAY)),
     ctx.repo.messagesFrom(t.id, phone),
     ctx.repo.listingStates(t.id),
+    ctx.repo.findOffer(t.id, { phone }),
   ]);
   const home = (key: unknown) => t.profile.listings?.find((l) => l.key === key);
   const is: string[] = [];
@@ -853,6 +854,10 @@ async function findParty(_args: Args, ctx: ToolContext): Promise<Record<string, 
     const local = toLocal(new Date(m.created_at), tz);
     const asked = /"([^"]+)"/.exec(m.body)?.[1];
     is.push(`enquired on ${portal} ${dayWords(local.date, day)} about ${shortAddress(l)}${asked ? `: "${asked}"` : ''}${m.details.answered ? '' : ' (not answered yet)'}`);
+  }
+  // Their own offers, latest on each home: where each stands is get_offer_status's to say.
+  for (const o of offers.filter((x, i) => offers.findIndex((y) => y.listing_key === x.listing_key) === i)) {
+    if (home(o.listing_key)) is.push(`made an offer on ${shortAddress(home(o.listing_key)!)}, ref ${o.reference}: get_offer_status says where it stands`);
   }
   const sells = states.some((x) => x.sellers?.some((p) => p.phone === phone));
   const tried = buyer?.details.tried_to_call;
