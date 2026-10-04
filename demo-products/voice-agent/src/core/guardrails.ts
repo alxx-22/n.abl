@@ -16,8 +16,9 @@ export interface Flag {
   text: string;
 }
 
+// "I have you booked" was said before any booking on a live call on 4 October; "I have you down for..." is a read-back, so not here.
 const CLAIM =
-  /\b(you'?re (all )?(booked|set|sorted|confirmed)|(that'?s|it'?s|is|are|has been|have been|i'?ve|we'?ve) (now |all )?(booked|confirmed|reserved|placed|sorted)( in| for you)?|booking is (now )?(confirmed|made)|order (is|has been) (placed|confirmed|in|through)|all booked)\b/i;
+  /\b(you'?re (all )?(booked|set|sorted|confirmed)|i(?:'ve| have) (?:got )?you (?:all )?booked|(that'?s|it'?s|is|are|has been|have been|i'?ve|we'?ve) (now |all )?(booked|confirmed|reserved|placed|sorted)( in| for you)?|booking is (now )?(confirmed|made)|order (is|has been) (placed|confirmed|in|through)|all booked)\b/i;
 // "I'm afraid 7pm is booked", "Saturday's all booked up": the time is taken, not a booking made. On
 // 3 October a receptionist's "7pm is booked" was caught as a claim, so it apologised and said it all again.
 const SLOT =
@@ -127,7 +128,7 @@ function estateFlags(text: string, state: CallState, names: string[]): Flag[] {
 /** A time or a slot that is taken, not a booking made. A claim said "for you" or "booked in" is still a claim. */
 function slotTaken(text: string, claim: RegExpExecArray): boolean {
   // Only "booked" can mean taken: "confirmed", "reserved", "sorted" and "you're ..." are always claims.
-  if (!/\bbooked\b/i.test(claim[0]) || /^you/i.test(claim[0])) return false;
+  if (!/\bbooked\b/i.test(claim[0]) || /^(?:you|i\b)/i.test(claim[0])) return false;
   const after = text.slice(claim.index + claim[0].length);
   if (/(?: in| for you)$/i.test(claim[0]) || /^\s+(?:in|for you)\b/i.test(after)) return false;
   if (BOOKED_UP.test(after)) return true;

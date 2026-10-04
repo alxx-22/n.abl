@@ -169,6 +169,7 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
   assert.equal(checkUtterance("Great, you're all booked in.", s)[0]?.rule, 'unconfirmed_claim');
   assert.equal(checkUtterance('Shall I go ahead and book that for you?', s).length, 0);
   assert.equal(checkUtterance("Once it's confirmed I'll text you.", s).length, 0);
+  assert.equal(checkUtterance("Once I have you booked, I'll text you the reference.", s).length, 0);
   assert.equal(checkUtterance("Lovely, I've passed that on to the reservations team for you.", s)[0]?.rule, 'untaken_message');
   assert.equal(checkUtterance("I'll pass that on to the team.", s).length, 0, 'a promise, not a claim');
   // ...but a promise the call follows up, so the message is taken while the caller is still there.
@@ -211,6 +212,9 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
     "That's all sorted out for you.",
     "Right, you're all sorted out.",
     'Lovely, so that is a table for four, and 7pm on Saturday is booked.',
+    // A live call on 4 October: said before create_booking, which then failed for want of a postcode.
+    'Wonderful. I have you booked for a viewing on Saturday the 10th of October at quarter past ten. Could I get your full name, please?',
+    "Lovely, I've got you booked in for Saturday.",
     // A time just booked, said as the caller hears good news (the second review, 4 October).
     'Brilliant, 7pm is booked under Smith.',
     'Saturday at 7pm is now booked.',
