@@ -170,6 +170,21 @@ export interface LiveOffer {
   source: string;
 }
 
+/** A valuation and its lead, from booked to won or lost (the Valuations view). */
+export interface LiveValuation {
+  reference: string;
+  date: string;
+  day: string;
+  time: string;
+  starts_at: string;
+  ends_at: string;
+  valuer: string;
+  name: string;
+  phone: string;
+  visit_status: string;
+  details: Record<string, unknown>;
+}
+
 /** A buyer on the agency's list (the Applicants view). */
 export interface LiveBuyer {
   name: string | null;
@@ -237,4 +252,5 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   listings?: LiveListing[];
   offers?: LiveOffer[];
   buyers?: LiveBuyer[];
+  valuations?: LiveValuation[];
 }

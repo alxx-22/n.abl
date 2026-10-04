@@ -557,6 +557,13 @@ async function walkEstate({ shot }: Walk) {
   await page.waitForSelector('.applicant');
   if (!(await page.locator('.applicants').textContent())!.includes('Alerts on')) throw new Error('no buyer with alerts on');
   await shot(page, 'workspace-applicants');
+  await page.click('.tabs [role=tab]:has-text("Valuations")');
+  await page.waitForSelector('.valuation');
+  if (!(await page.locator('.k-col[aria-label="Booked"] .valuation').count())) throw new Error('no valuation booked');
+  const outcomes = await page.locator('.k-col[aria-label="Outcome"]').textContent();
+  for (const o of ['Instructed', 'Thinking', 'Lost']) if (!outcomes!.includes(o)) throw new Error(`no valuation ${o}`);
+  if (!(await page.locator('.valuations').textContent())!.includes('Possible double fee')) throw new Error('the double-fee flag is missing');
+  await shot(page, 'workspace-valuations');
 
   // Call as Sarah, the seller: her number, what to try, and the texts already on her phone.
   await page.getByLabel('Call as').selectOption({ label: 'Sarah Collins, a seller' });

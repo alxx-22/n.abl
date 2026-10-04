@@ -7,6 +7,7 @@
 import type { ReactNode } from 'react';
 import { Calls } from '../../components/BoardPanels.tsx';
 import { Applicants } from './Applicants.tsx';
+import { Valuations } from './Valuations.tsx';
 import type { TenantState } from '../../types.ts';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { FloorBoard, type View } from './FloorBoard.tsx';
@@ -80,6 +81,10 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
   applicants: {
     shows: null,
     render: (p) => <Applicants state={p.state} />,
+  },
+  valuations: {
+    shows: null,
+    render: (p) => <Valuations state={p.state} />,
   },
   orders: {
     shows: 'orders',

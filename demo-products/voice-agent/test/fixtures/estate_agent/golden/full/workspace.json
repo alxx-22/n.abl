@@ -18,6 +18,10 @@
    "label": "Applicants"
   },
   {
+   "id": "valuations",
+   "label": "Valuations"
+  },
+  {
    "id": "messages",
    "label": "Messages"
   },

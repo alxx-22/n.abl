@@ -353,6 +353,8 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .badges { display: flex; gap: 4px; flex-wrap: wrap; }
 .kitchen.offers { grid-template-columns: repeat(3, minmax(200px, 1fr)); }
 .kitchen.offers .ticket { cursor: default; display: grid; gap: 4px; }
+.valuation .badges { flex-wrap: wrap; }
+.valuation .badge { white-space: normal; }
 .offer-actions { justify-content: flex-start !important; }
 .accept-box { display: grid; gap: 6px; margin-top: 6px; padding: 8px; border-radius: 8px; background: var(--surface-2); }
 .homes { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; align-items: start; }

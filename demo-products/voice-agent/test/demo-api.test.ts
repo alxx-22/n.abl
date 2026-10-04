@@ -389,6 +389,9 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.ok(s.buyers.length >= 10, `${s.buyers.length} buyers`);
     assert.ok(s.buyers.some((b: any) => b.alerts && b.consent_at && b.wants && b.matches >= 0));
     assert.ok(s.buyers.some((b: any) => b.backup_for.length), 'the back-up buyer');
+    // The Valuations view: the seed's seven, last week's won, lost and thinking among them.
+    assert.equal(s.valuations.length, 7, JSON.stringify(s.valuations.map((v: any) => v.details.address)));
+    assert.deepEqual(s.valuations.map((v: any) => v.details.outcome).filter(Boolean).sort(), ['instructed', 'lost', 'thinking']);
     const viewing = s.bookings.find((b: any) => b.listing_key && b.status === 'confirmed' && b.starts_at > s.now);
     assert.ok(viewing?.home, 'a viewing knows its home');
     const texts = async (phone: string) => (await jo.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);

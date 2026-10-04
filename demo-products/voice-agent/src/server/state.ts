@@ -129,6 +129,9 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
   const live = new Map((await repo.listingStates(t.id)).map((r) => [r.listing_key, r]));
   const offers = await repo.listOffers(t.id);
   const buyers = await repo.listBuyers(t.id);
+  // The Valuations view reaches back further than the diary: last week's appraisals are still being won or lost.
+  const valuations = (await repo.listBookings(t.id, new Date(now.getTime() - 30 * DAY), new Date(now.getTime() + 30 * DAY))).filter((b) => b.service_key === 'valuation');
+  const tz = t.profile.timezone;
   const homes = new Map((t.profile.listings ?? []).map((l) => [l.key, shortAddress(l)]));
   const findable = (t.profile.listings ?? []).map((l) => ({ listing: l, price_pence: live.get(l.key)?.price_pence ?? l.initial.price_pence, status: live.get(l.key)?.status ?? l.initial.status }));
   const weekOn = new Date(now.getTime() + 7 * DAY);
@@ -163,6 +166,14 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
       flags: o.flags, status: o.status, received_at: o.received_at.toISOString(), sent_at: o.sent_at?.toISOString() ?? null,
       decided_at: o.decided_at?.toISOString() ?? null, note: o.note, source: o.source,
     })),
+    valuations: valuations.map((b) => {
+      const l = toLocal(b.starts_at, tz);
+      return {
+        reference: b.reference, date: l.date, day: spokenDate(l.date), time: l.time, starts_at: b.starts_at.toISOString(), ends_at: b.ends_at.toISOString(),
+        valuer: names.get(b.resource_key) ?? b.resource_key, name: b.name, phone: displayUkPhone(b.phone), visit_status: b.visit_status ?? 'expected',
+        details: b.details ?? {},
+      };
+    }),
     // The Applicants view: everyone registered as a buyer, newest contact first, and how many homes fit them now.
     buyers: buyers.map((b) => {
       const r = b.details.requirements;
