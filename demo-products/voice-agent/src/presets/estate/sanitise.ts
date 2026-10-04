@@ -3,11 +3,19 @@
 // odd into a profile. Answers that arrive with no team or no homes at all
 // (a new or junk config) get the defaults', as a missing week of hours does.
 
-import { arr, bool, int, key, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseFaqs, sanitiseSources, sanitiseTheme, str } from '../common/sanitise.ts';
+import { arr, bool, int, key, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseSources, sanitiseTheme, str } from '../common/sanitise.ts';
+import type { FaqAnswer } from '../common/types.ts';
 import { MAX_TEAM, NATIONS, STAFF_DUTIES, STAFF_ROLES, VERSION, defaultAnswers, type EstateAnswers, type StaffAnswer } from './answers.ts';
 import { district, sanitiseListings, staffRef } from './listings.ts';
 
 const days = (v: unknown): number[] => [...new Set(arr(v).map((d) => int(d, -1, 7, -1)).filter((d) => d >= 0 && d <= 6))].sort();
+
+/**
+ * Questions as the builder edits them: one still being written (no answer
+ * yet) is kept, so an autosave never deletes it mid-thought. Compile and
+ * the receptionist use only those with both.
+ */
+const draftFaqs = (v: unknown): FaqAnswer[] => arr(v).slice(0, 20).filter((f) => f && typeof f === 'object').map((f: any) => ({ q: str(f.q, 150), a: str(f.a, 500) }));
 
 export function sanitiseTeam(v: unknown[]): StaffAnswer[] {
   const used = new Set<string>();
@@ -116,9 +124,9 @@ export function sanitiseEstate(input: unknown): EstateAnswers {
       data_lead: c.data_lead === undefined ? d.compliance.data_lead : staffRef(c.data_lead),
       recording: str(c.recording, 300, d.compliance.recording),
     },
-    area: { faqs: x.area && Array.isArray(x.area.faqs) ? sanitiseFaqs(x.area.faqs) : d.area.faqs },
+    area: { faqs: x.area && Array.isArray(x.area.faqs) ? draftFaqs(x.area.faqs) : d.area.faqs },
     policies: {
-      faqs: sanitiseFaqs(po.faqs),
+      faqs: draftFaqs(po.faqs),
       parking: str(po.parking, 300, d.policies.parking),
       at_viewings: str(po.at_viewings, 300, d.policies.at_viewings),
     },

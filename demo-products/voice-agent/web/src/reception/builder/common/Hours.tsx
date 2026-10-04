@@ -62,7 +62,7 @@ export function Week({ days, edit, options, name, add = '+ Add a service' }: { d
           const day = days[i];
           return (
             <div className="day-row" key={i}>
-              <Toggle label={DAY_NAMES[i]} checked={day.open} onChange={(v) => edit((w) => {
+              <Toggle label={at(i)} checked={day.open} onChange={(v) => edit((w) => {
                 w[i].open = v;
                 if (v && !w[i].services.length) w[i].services = [{ ...options.day }];
               })} />

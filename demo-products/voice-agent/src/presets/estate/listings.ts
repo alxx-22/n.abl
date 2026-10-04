@@ -160,19 +160,20 @@ export function sanitiseListing(v: unknown, fallbackKey: string): ListingAnswer 
     receptions: int(x.receptions, 0, 10, 0),
     features: strings(x.features, 12, 40),
     summary: str(x.summary, 200),
-    rooms: arr(x.rooms).slice(0, 20).map((m: any) => ({ name: str(m?.name, 40), size: str(m?.size, 30) })).filter((m) => m.name),
+    // Rows still being filled in are kept, so an autosave never takes one from under the cursor; compile leaves out what is empty.
+    rooms: arr(x.rooms).slice(0, 20).map((m: any) => ({ name: str(m?.name, 40), size: str(m?.size, 30) })),
     tenure: oneOf(x.tenure, TENURES, 'unknown'),
     lease: sanitiseLease(x.lease),
     local_tax: str(x.local_tax, 30),
     epc: str(x.epc, 12),
     checks: sanitiseChecks(x.checks),
-    say_up_front: strings(x.say_up_front, 4, 200),
+    say_up_front: arr(x.say_up_front).slice(0, 4).map((t) => str(t, 200)),
     seller_position: str(x.seller_position, 200),
     fall_through: str(x.fall_through, 200),
     viewing: {
       windows: arr(view.windows).slice(0, 6)
-        .map((w: any) => ({ days: days(w?.days), from: time(w?.from, '09:00'), to: closeTime(w?.to, '17:00') }))
-        .filter((w) => w.days.length),
+        .filter((w: any) => w && typeof w === 'object')
+        .map((w: any) => ({ days: days(w?.days), from: time(w?.from, '09:00'), to: closeTime(w?.to, '17:00') })),
       notice_hours: int(view.notice_hours, 0, 168, 2),
       occupied: oneOf(view.occupied, ['owner', 'tenant', 'vacant'] as const, 'owner'),
       key_held: bool(view.key_held, false),

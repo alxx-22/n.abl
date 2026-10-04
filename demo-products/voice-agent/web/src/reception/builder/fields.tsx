@@ -37,7 +37,7 @@ export function Num(props: { label: ReactNode; value: number; onChange: (v: numb
       {(id) => (
         <span className="num-field">
           <input
-            id={id} type="number" inputMode="numeric" min={props.min} max={props.max} step={props.step ?? 1} value={text}
+            id={id} type="number" inputMode={props.step !== undefined && props.step < 1 ? 'decimal' : 'numeric'} min={props.min} max={props.max} step={props.step ?? 1} value={text}
             onChange={(e) => {
               setText(e.target.value);
               const n = Number(e.target.value);
@@ -71,6 +71,33 @@ export function Pounds(props: { label: ReactNode; pence: number; onChange: (penc
             onBlur={() => setText((props.pence / 100).toFixed(2))}
           />
         </span>
+      )}
+    </Field>
+  );
+}
+
+/**
+ * One short value the server cleans to something complete or nothing (a
+ * postcode district: "BK" is not one): what is typed stays as typed while
+ * the box has focus, so a save mid-word never empties it.
+ */
+export function DraftText(props: { label: ReactNode; value: string; onChange: (v: string) => void; hint?: ReactNode; placeholder?: string; max?: number }) {
+  const [text, setText] = useState(props.value);
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) setText(props.value);
+  }, [props.value, focused]);
+  return (
+    <Field label={props.label} hint={props.hint}>
+      {(id) => (
+        <input
+          id={id} maxLength={props.max} placeholder={props.placeholder} value={text}
+          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+          onChange={(e) => {
+            setText(e.target.value);
+            props.onChange(e.target.value);
+          }}
+        />
       )}
     </Field>
   );

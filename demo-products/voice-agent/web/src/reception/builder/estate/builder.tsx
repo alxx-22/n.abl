@@ -60,7 +60,7 @@ export const estateBuilder: BuilderDef<EstateAnswers, EstateStep> = {
       ['Homes', stockLine(a.listings)],
       ['Each viewing', `${a.viewings.minutes} minutes, ${a.viewings.travel_minutes} to travel, booked up to ${a.viewings.horizon_days} days ahead`],
       ['Offers', a.offers.take === 'record' ? 'recorded and read back, then passed to the negotiator' : 'taken as an urgent message'],
-      ['Fees', a.fees.quote ? (a.fees.kind === 'percent' ? `${(a.fees.percent_hundredths / 100).toFixed(2).replace(/\.?0+$/, '')}% including VAT` : `£${(a.fees.fixed_pence / 100).toLocaleString('en-GB')} including VAT`) : `explained at your ${a.valuations.name}`],
+      ['Fees', a.fees.quote ? (a.fees.kind === 'percent' ? `${(a.fees.percent_hundredths / 100).toFixed(2).replace(/\.?0+$/, '')}% including VAT` : `£${(a.fees.fixed_pence / 100).toLocaleString('en-GB', { minimumFractionDigits: a.fees.fixed_pence % 100 ? 2 : 0, maximumFractionDigits: 2 })} including VAT`) : `explained at your ${a.valuations.name}`],
       ['Questions', <>{a.area.faqs.length} about the area and {a.policies.faqs.length} of your own</>],
     ],
     start: 'Start builds your receptionist from these answers and fills a fortnight of viewings, valuations, offers and sales, shaped by your own homes, team and hours.',

@@ -11,7 +11,7 @@ import type { ListingAnswerStatus } from '../../../../../src/presets/estate/list
 import { missingPartA } from '../../../../../src/presets/estate/validate.ts';
 import { demoApi } from '../../../api.ts';
 import { toast } from '../../../components/Toaster.tsx';
-import { ListText, Num, Select, Text, Toggle } from '../fields.tsx';
+import { DraftText, ListText, Num, Select, Text, Toggle } from '../fields.tsx';
 import type { StepProps } from '../registry.ts';
 import { DayChips, staffOptions } from './steps.tsx';
 
@@ -106,12 +106,14 @@ export function StepListings({ a, set, ws }: Props) {
           const missing = missingPartA(l);
           const s = STATUSES[l.status];
           return (
-            <button type="button" role="listitem" key={l.key} className={`home-row${l.key === open ? ' on' : ''}`} aria-current={l.key === open} onClick={() => setOpen(l.key)}>
-              <span className="home-name">{homeName(l)}{l.example ? <span className="muted small"> · example</span> : null}</span>
-              <span className="muted small">{l.price_pence ? pounds(l.price_pence) : 'no price'}</span>
-              <span className={`badge ${s.badge}`}>{s.label}</span>
-              <span className={`badge ${missing.length ? 'warn' : 'ok'}`} title={missing.length ? `Missing: ${missing.join(', ')}` : 'Price, tenure, council tax band and EPC'}>Part A {4 - missing.length}/4</span>
-            </button>
+            <div role="listitem" key={l.key}>
+              <button type="button" className={`home-row${l.key === open ? ' on' : ''}`} aria-current={l.key === open} onClick={() => setOpen(l.key)}>
+                <span className="home-name">{homeName(l)}{l.example ? <span className="muted small"> · example</span> : null}</span>
+                <span className="muted small">{l.price_pence ? pounds(l.price_pence) : 'no price'}</span>
+                <span className={`badge ${s.badge}`}>{s.label}</span>
+                <span className={`badge ${missing.length ? 'warn' : 'ok'}`} title={missing.length ? `Missing: ${missing.join(', ')}` : 'Price, tenure, council tax band and EPC'}>Part A {4 - missing.length}/4</span>
+              </button>
+            </div>
           );
         })}
         {!a.listings.length ? <p className="muted">No homes yet.</p> : null}
@@ -161,7 +163,7 @@ function HomeFacts({ l, edit }: { l: ListingAnswer; edit: Edit }) {
         <Text label="Number or name" value={l.number} max={60} placeholder="Flat 2, 41" onChange={(v) => edit((x) => void (x.number = v))} />
         <Text label="Street" value={l.street} max={80} onChange={(v) => edit((x) => void (x.street = v))} />
         <Text label="Town" value={l.town} max={60} onChange={(v) => edit((x) => void (x.town = v))} />
-        <Text label="Postcode district" value={l.district} max={4} placeholder="BK2" onChange={(v) => edit((x) => void (x.district = v.toUpperCase()))} />
+        <DraftText label="Postcode district" value={l.district} max={4} placeholder="BK2" onChange={(v) => edit((x) => void (x.district = v.toUpperCase()))} />
         <Text label="Your reference" value={l.ref} max={12} placeholder="HG104" onChange={(v) => edit((x) => void (x.ref = v.toUpperCase()))} hint="As on the portals." />
         <Select label="Type" value={l.type} options={options(TYPES)} onChange={(v) => edit((x) => void (x.type = v))} />
       </div>
@@ -193,7 +195,11 @@ function PriceStatus({ l, edit }: { l: ListingAnswer; edit: Edit }) {
   return (
     <>
       <div className="three">
-        <Select label="Status at Start" value={l.status} options={(Object.keys(STATUSES) as ListingAnswerStatus[]).map((value) => ({ value, label: STATUSES[value].label }))} onChange={(v) => edit((x) => void (x.status = v))} />
+        <Select label="Status at Start" value={l.status} options={(Object.keys(STATUSES) as ListingAnswerStatus[]).map((value) => ({ value, label: STATUSES[value].label }))} onChange={(v) => edit((x) => {
+          x.status = v;
+          // What the box below shows is what is saved: coming soon starts at a week, and only then does the receptionist say when viewings begin.
+          if (v === 'coming_soon' && x.viewings_from_days === null) x.viewings_from_days = 7;
+        })} />
         <Num label="Price in pounds" min={0} max={20_000_000} step={1000} value={Math.round(l.price_pence / 100)} onChange={(v) => edit((x) => void (x.price_pence = Math.round(v) * 100))} />
         <Select label="Asking" value={l.qualifier} options={options(QUALIFIERS)} onChange={(v) => edit((x) => void (x.qualifier = v))} />
         <Num label="On the market for" suffix="days" min={0} max={3650} value={l.marketed_days_ago} onChange={(v) => edit((x) => void (x.marketed_days_ago = v))} hint="Counted back from Start, so the demo never goes stale." />
@@ -217,7 +223,7 @@ function PriceStatus({ l, edit }: { l: ListingAnswer; edit: Edit }) {
 }
 
 function MoneyLegal({ l, edit, nation }: { l: ListingAnswer; edit: Edit; nation: EstateAnswers['patch']['nation'] }) {
-  const leased = l.tenure === 'leasehold' || l.tenure === 'shared_ownership';
+  const leased = l.tenure === 'leasehold' || l.tenure === 'share_of_freehold' || l.tenure === 'shared_ownership';
   const lease = l.lease;
   const setLease = (fn: (x: LeaseAnswer) => void) => edit((x) => void (x.lease && fn(x.lease)));
   const shared = lease?.shared;
@@ -226,8 +232,10 @@ function MoneyLegal({ l, edit, nation }: { l: ListingAnswer; edit: Edit; nation:
       <div className="three">
         <Select label="Tenure" value={l.tenure} options={options(TENURES)} onChange={(v) => edit((x) => {
           x.tenure = v;
-          if ((v === 'leasehold' || v === 'shared_ownership') && !x.lease) x.lease = blankLease();
+          if ((v === 'leasehold' || v === 'share_of_freehold' || v === 'shared_ownership') && !x.lease) x.lease = blankLease();
           if (v === 'shared_ownership' && x.lease && !x.lease.shared) x.lease.shared = { share_percent: 50, rent_pence_month: 0, provider: '', eligibility: '', nomination_weeks: 0 };
+          // Shared ownership hidden is shared ownership gone: never left to be read out for a home that isn't one.
+          if (v !== 'shared_ownership' && x.lease) x.lease.shared = null;
         })} />
         <Text label={nation === 'northern_ireland' ? 'Rates' : 'Council tax band'} value={l.local_tax} max={30} placeholder={nation === 'northern_ireland' ? '£1,150 a year' : 'C'} onChange={(v) => edit((x) => void (x.local_tax = v))} />
         <Text label="EPC rating" value={l.epc} max={12} placeholder="C, or exempt" onChange={(v) => edit((x) => void (x.epc = v))} hint="Empty if it isn’t in yet." />

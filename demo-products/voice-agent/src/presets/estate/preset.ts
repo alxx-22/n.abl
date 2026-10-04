@@ -65,7 +65,7 @@ export function factSheet(a: EstateAnswers): string {
     `Mortgage partner: ${a.partners.mortgage.on ? `${a.partners.mortgage.firm}. ${a.partners.mortgage.statement}` : 'none'}. Conveyancing panel: ${a.partners.conveyancing.on ? 'yes' : 'no'}.`,
     `Redress scheme: ${a.compliance.redress === 'tpo' ? 'The Property Ombudsman' : 'the Property Redress Scheme'}. Complaints: ${nameOf(a, a.compliance.complaints_handler) || 'the manager'}.`,
     `Parking: ${a.policies.parking} At viewings: ${a.policies.at_viewings} Appraisals take ${durationWords(a.valuations.minutes)}.`,
-    `Area guide: ${a.area.faqs.map((f) => `${f.q} ${f.a}`).join(' ')}`,
+    `Area guide: ${a.area.faqs.filter((f) => f.q && f.a).map((f) => `${f.q} ${f.a}`).join(' ')}`,
   ].join('\n');
 }
 

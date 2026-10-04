@@ -63,6 +63,8 @@ export function validateEstate(a: EstateAnswers): Issue<EstateStep>[] {
     if (unknown > 5) warn('listings', `${name} has ${unknown} checks still unknown: callers will hear "that isn't in the details".`);
   }
 
+  const unanswered = [...a.area.faqs, ...a.policies.faqs].filter((f) => !f.q || !f.a).length;
+  if (unanswered) warn('policies', `${unanswered} question${unanswered === 1 ? ' needs' : 's need'} both the question and its answer before the receptionist can use ${unanswered === 1 ? 'it' : 'them'}.`);
   if (a.partners.mortgage.on && !a.partners.mortgage.statement) warn('services', 'Add the mortgage partner\'s approved sentence, with its FCA status.');
   if (a.fees.quote && !a.fees.min_weeks) warn('services', 'Fees are quoted: add the minimum term of the agreement.');
   return out;

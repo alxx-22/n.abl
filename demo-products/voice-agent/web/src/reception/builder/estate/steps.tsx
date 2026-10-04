@@ -138,7 +138,18 @@ export function StepTeam({ a, set }: Props) {
               {homes ? <span className="muted small">{homes} home{homes === 1 ? '' : 's'}</span> : null}
               <button type="button" className="ghost small" onClick={() => {
                 if (homes && !confirm(`Remove ${t.name || 'this person'}? ${homes} home${homes === 1 ? '' : 's'} will need another negotiator.`)) return;
-                set((d) => void d.team.splice(i, 1));
+                set((d) => {
+                  d.team.splice(i, 1);
+                  // Nothing may point at someone who has gone: each is left to choose again (the validator says where).
+                  const k = t.key;
+                  if (d.diary.on_call === k) d.diary.on_call = null;
+                  if (d.patch.lettings_contact === k) d.patch.lettings_contact = '';
+                  if (d.valuations.rics.staff === k) d.valuations.rics.staff = '';
+                  if (d.partners.mortgage.staff === k) d.partners.mortgage.staff = '';
+                  if (d.compliance.complaints_handler === k) d.compliance.complaints_handler = '';
+                  if (d.compliance.data_lead === k) d.compliance.data_lead = '';
+                  for (const l of d.listings) if (l.personal_interest?.staff === k) l.personal_interest.staff = '';
+                });
               }}>Remove</button>
             </div>
             <fieldset className="chips">

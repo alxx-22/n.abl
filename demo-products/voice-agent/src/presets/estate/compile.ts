@@ -119,7 +119,9 @@ export function compileSettings(a: EstateAnswers): EstateSettings {
  */
 export function compileListing(l: ListingAnswer, a: EstateAnswers, team: StaffMember[]): Listing {
   const leased = l.tenure === 'leasehold' || l.tenure === 'share_of_freehold' || l.tenure === 'shared_ownership';
-  const lease = leased ? l.lease : null;
+  // A shared-ownership block left over from an earlier tenure is never read out for a home that isn't one.
+  const lease = leased && l.lease ? (l.tenure === 'shared_ownership' ? l.lease : { ...l.lease, shared: null }) : null;
+  const windows = l.viewing.windows.filter((w) => w.days.length);
   const firstInOffice = l.viewing.occupied === 'vacant' && a.viewings.safety.empty_office_hours_only;
   const notice = Math.max(l.viewing.notice_hours, a.viewings.notice_hours) * 60;
   const fee = buyerFeeSentence(a.offers.buyer_fee_pence, a.offers.buyer_fee_when);
@@ -143,7 +145,7 @@ export function compileListing(l: ListingAnswer, a: EstateAnswers, team: StaffMe
     home: homeWords(l),
     features: l.features,
     summary: l.summary,
-    rooms: l.rooms,
+    rooms: l.rooms.filter((r) => r.name),
     tenure: l.tenure,
     lease,
     local_tax: l.local_tax,
@@ -155,12 +157,12 @@ export function compileListing(l: ListingAnswer, a: EstateAnswers, team: StaffMe
     seller_position: l.seller_position,
     fall_through: l.fall_through,
     viewing: {
-      windows: l.viewing.windows,
+      windows,
       notice_minutes: notice,
       occupied: l.viewing.occupied,
       key_held: l.viewing.key_held,
       first_in_office_hours: firstInOffice,
-      rule: viewingRule({ windows: l.viewing.windows, notice_minutes: notice, first_in_office_hours: firstInOffice }, a.viewings.notice_hours * 60),
+      rule: viewingRule({ windows, notice_minutes: notice, first_in_office_hours: firstInOffice }, a.viewings.notice_hours * 60),
     },
     negotiator: l.negotiator,
     personal_interest: l.personal_interest?.staff ? l.personal_interest : null,
@@ -254,7 +256,7 @@ function knowledge(a: EstateAnswers, s: EstateSettings): KnowledgeEntry[] {
       ? `Our lettings are handled by ${nameOf(a, a.patch.lettings_contact) || 'our lettings team'}: I can take a message.`
       : "We're sales only, so we don't let homes; a local letting agent can help.", ['let', 'letting', 'lettings', 'rent', 'rental', 'landlord']),
     ...nationKnowledge(a.patch.nation),
-  ], [...a.area.faqs, ...a.policies.faqs]);
+  ], [...a.area.faqs, ...a.policies.faqs].filter((f) => f.q && f.a));
 }
 
 export function compileEstate(a: EstateAnswers, meta: { slug: string }): TenantProfile {

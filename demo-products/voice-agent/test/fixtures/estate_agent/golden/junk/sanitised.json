@@ -364,7 +364,13 @@
    "seller_position": "",
    "fall_through": "",
    "viewing": {
-    "windows": [],
+    "windows": [
+     {
+      "days": [],
+      "from": "09:00",
+      "to": "17:00"
+     }
+    ],
     "notice_hours": 2,
     "occupied": "owner",
     "key_held": false
@@ -587,7 +593,12 @@
   "recording": "Calls on this demo line are transcribed so the team can see what was said."
  },
  "area": {
-  "faqs": []
+  "faqs": [
+   {
+    "q": "",
+    "a": ""
+   }
+  ]
  },
  "policies": {
   "faqs": [],

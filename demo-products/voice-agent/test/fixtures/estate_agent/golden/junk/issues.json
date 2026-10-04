@@ -78,5 +78,10 @@
   "step": "listings",
   "level": "warning",
   "message": "A home has 23 checks still unknown: callers will hear \"that isn't in the details\"."
+ },
+ {
+  "step": "policies",
+  "level": "warning",
+  "message": "1 question needs both the question and its answer before the receptionist can use it."
  }
 ]

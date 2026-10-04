@@ -13,7 +13,7 @@ import { toLocal, weekdayOf } from '../src/domain/time.ts';
 import type { Listing, TenantProfile } from '../src/domain/types.ts';
 import { answersOf, builtPreset, getPreset } from '../src/presets/index.ts';
 import { defaultAnswers, type EstateAnswers } from '../src/presets/estate/answers.ts';
-import { compileEstate } from '../src/presets/estate/compile.ts';
+import { compileEstate, compileListing } from '../src/presets/estate/compile.ts';
 import { featured } from '../src/presets/estate/featured.ts';
 import { sampleListings } from '../src/presets/estate/listings.ts';
 import { estatePreview, estateWorkspace, factSheet } from '../src/presets/estate/preset.ts';
@@ -281,7 +281,9 @@ test('estate agent: the sanitiser bounds hostile input, keeps Scotland out, and 
   assert.equal(a.listings[0].price_pence, 0);
   assert.equal(a.listings[0].checks.flooded.v, 'unknown');
   assert.equal(a.listings[0].checks.heating.v, 'unknown', 'a check that never arrived is unknown, not no');
-  assert.deepEqual(a.listings[0].viewing.windows, [{ days: [6], from: '09:00', to: '24:00' }]);
+  // A window with no days yet is kept, so the builder never loses one mid-edit; compile leaves it out.
+  assert.deepEqual(a.listings[0].viewing.windows, [{ days: [6], from: '09:00', to: '24:00' }, { days: [], from: '09:00', to: '17:00' }]);
+  assert.deepEqual(compileListing(a.listings[0], a, []).viewing.windows, [{ days: [6], from: '09:00', to: '24:00' }]);
   assert.equal(a.listings[0].example, false, 'a prospect\'s own home is not an example');
   assert.equal(a.viewings.minutes, 90);
   assert.equal(a.viewings.notice_hours, 0);
@@ -593,4 +595,21 @@ test('the disclosure check hears a line said in figures or words, and nothing el
   assert.equal(unsaid(lines, ["It's a lovely flat, guide price £185,000."]).length, 1);
   assert.deepEqual(unsaid(flat.before_offer, ['Buyers pay thirty-six pounds each for ID checks.']), []);
   assert.equal(unsaid(flat.before_offer, ["I'd like to take your offer."]).length, 1);
+});
+
+test('a leftover shared-ownership block is never read out for a home that is no longer one', () => {
+  const a = sanitiseEstate(named());
+  const flat = structuredClone(a.listings.find((l) => l.key === 'albion_41_flat_2')!);
+  flat.lease!.shared = { share_percent: 50, rent_pence_month: 0, provider: '', eligibility: '', nomination_weeks: 0 };
+  const compiled = compileListing(flat, a, []);
+  assert.equal(compiled.lease?.shared, null, 'leasehold: no share');
+  assert.ok(!compiled.say_first.some((i) => /shared ownership/i.test(i.say)));
+  flat.tenure = 'shared_ownership';
+  assert.ok(compileListing(flat, a, []).lease?.shared, 'shared ownership keeps it');
+  // Rooms, questions and up-front lines still being written are left out of what the receptionist reads.
+  flat.tenure = 'leasehold';
+  flat.rooms.push({ name: '', size: '3m x 2m' });
+  flat.say_up_front.push('');
+  assert.ok(compileListing(flat, a, []).rooms.every((r) => r.name));
+  assert.ok(compileListing(flat, a, []).say_first.every((i) => i.say.trim()));
 });
