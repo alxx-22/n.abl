@@ -10,6 +10,28 @@ read only the files a step needs, run `npm run check` before each commit,
 commit and push after each finished step. Tell Alex in plain words what was
 done after each step.
 
+## Pick up here first (the last session stopped at the weekly usage limit)
+
+The session of 4 October stopped near Alex's weekly limit (it resets on
+Thursday 8 October, 15:00 UK time). Two checks were still running:
+
+- **Re-check of the review fixes.** Five reviewers re-checked the five fix
+  commits listed under "Where things stand". Their results lived only in
+  that session's container. If this file doesn't record them below, re-check
+  the five commits yourself (`git show <commit>`): is each fix right, and
+  did it break anything? Do it directly; no subagents.
+- **Final run of the seven `ea-` live calls** (`npm run eval -- --only
+  ea-listing-facts,ea-short-lease,ea-book-viewing,ea-sale-agreed,ea-valuation-no-figure,ea-offer-taken,ea-bank-details-change`).
+  First results on the finished code: `ea-listing-facts` failed (the search
+  didn't return both Albion Road homes; a price before asking which home;
+  council tax band, flooding and the Environment Agency not said) and
+  `ea-short-lease` failed (mortgage adviser or solicitor not offered). Both
+  had passed before the review fixes. Read the transcripts in the newest
+  `voice-agent/eval-results/` folder, find out whether a fix caused it (the
+  prompt's facts and the reminders changed), fix, and re-run only those.
+
+Then go on with "Do next" below.
+
 ## Do next, in this order
 
 ### 1. Estate agent milestone 2 (M2)
