@@ -924,7 +924,8 @@ export const SCENARIOS: Scenario[] = [
       const live = (await c.db.query<any>(`select price_pence from public.voice_listings where tenant_id = $1 and listing_key = 'larkspur_14'`, [c.tenant.id]))[0];
       const listed = c.tenant.profile.listings!.find((l) => l.key === 'larkspur_14')!;
       expect(f, live?.price_pence === listed.initial.price_pence, `the price changed on the call: ${live?.price_pence}`);
-      expect(f, !agentLines(c).some((l) => /(?:suggest|recommend|i'?d|you (?:could|should|might))[^.?!]{0,50}(?:£|\d{3},\d{3}|thousand|grand)/i.test(l)), 'a price was suggested');
+      // The receptionist's own idea, not the seller's read back ("you want to suggest dropping it by ten grand, is that right?").
+      expect(f, !agentLines(c).some((l) => /\b(?:i'?d (?:suggest|recommend)|i (?:suggest|recommend)|we'?d (?:suggest|recommend)|you (?:could|should|might) (?:drop|reduce|lower|try|go))[^.?!]{0,50}(?:£|\d{3},\d{3}|thousand|grand)/i.test(l)), 'a price was suggested');
       noFlags(c, f);
       return f;
     },

@@ -704,6 +704,10 @@ test('get_marketing_update: the seller of that home only, checked by number; vie
   assert.match(offer.status, /^with you to consider since /);
   assert.ok(!/Aisha|Khan|07700|\+447/.test(JSON.stringify(u)), 'no buyer named or numbered');
   assert.match(String(u.next), /urgent message for \w+/);
+  // A sentence to open with: the counts, the week's feedback in their words, and the offer by position.
+  assert.match(String(u.say), /^[A-Z][a-z]+ viewings? in the last seven days, [a-z]+ viewings? since it went on the market, and two more booked: tomorrow\. /);
+  assert.match(String(u.say), /"Loved the garden; the kitchen feels dated\."/);
+  assert.match(String(u.say), /An offer of £285,000 from a first-time buyer, mortgage agreed in principle, with you to consider\.$/);
   // Her number, another home: not hers to hear about.
   assert.equal((await sarah.run('get_marketing_update', { property: '22 Albion Road' })).verified, false);
   // A stranger: the same refusal each time, and after three misses no more tries this call.
@@ -771,6 +775,10 @@ test('register_buyer and stop_alerts: requirements and position kept, alerts onl
   const t = await agency('ea-register');
   const kim = await call(t, '+447700900150');
   const args = { name: 'Kim Hale', areas: 'bk2, Brackenford', max_price: '300k', min_beds: 2, types: 'house', first_time_buyer: true, funding: 'mortgage agreed in principle' };
+  // Never on a name alone: what they want, then their position, then alerts (a live call registered "cash buyers" on their name).
+  assert.match(String((await kim.run('register_buyer', { name: 'Kim Hale', funding: 'cash', alerts: true })).message), /Ask what they are looking for/);
+  assert.match(String((await kim.run('register_buyer', { name: 'Kim Hale', areas: 'BK2', funding: 'cash', alerts: true })).message), /whether they have a home to sell/);
+  assert.equal(await repo.findBuyer(t.id, '+447700900150'), null, 'nothing written until then');
   assert.match(String((await kim.run('register_buyer', args)).message), /never assume/);
   const r = await kim.run('register_buyer', { ...args, alerts: true });
   assert.equal(r.registered, true, JSON.stringify(r));

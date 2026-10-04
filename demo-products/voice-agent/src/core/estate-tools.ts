@@ -877,6 +877,7 @@ async function findParty(_args: Args, ctx: ToolContext): Promise<Record<string, 
   };
 }
 
+const NUMBER_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
 const NOT_VERIFIED = "I can't go through a sale without checking who's calling. I can take a message for the negotiator.";
 const FEEDBACK_WORDS: Record<string, string> = { keen: 'keen', second_viewing: 'would like a second viewing', likely_offer: 'likely to make an offer', not_for_me: 'not for them' };
 
@@ -920,8 +921,23 @@ async function getMarketingUpdate(args: Args, ctx: ToolContext): Promise<Record<
   const when = (d: Date) => toLocal(d, tz);
   const fb = (b: Booking) => b.details?.feedback as { category?: string; words?: string } | undefined;
   const negotiator = firstNameOf(t, l.negotiator) || 'the negotiator';
+  const week = past.filter((b) => b.starts_at.getTime() > now.getTime() - 7 * DAY);
+  const launched = past.filter((b) => b.starts_at >= live.marketed_at).length;
+  const ahead = views.filter((b) => b.starts_at > now && b.starts_at.getTime() < now.getTime() + 7 * DAY);
+  const open = offers.filter((o) => ['received', 'sent', 'countered'].includes(o.status));
+  const count = (n: number, one: string, many = `${one}s`) => `${n < NUMBER_WORDS.length ? NUMBER_WORDS[n] : n} ${n === 1 ? one : many}`;
+  const heard = week.filter((b) => fb(b)?.words).slice(-3).map((b) => cap(`${dayWords(when(b.starts_at).date, day)} a buyer said "${fb(b)!.words!.trim().replace(/[.!?]?$/, '.')}"`));
+  // A sentence to open with, as get_property's describe: on 5 October a live call summed the week up as "gone well" and left out the counts, the kitchen and the offer.
+  const say = [
+    `${cap(count(week.length, 'viewing'))} in the last seven days, ${count(launched, 'viewing')} since it went on the market${ahead.length ? `, and ${count(ahead.length, 'more', 'more')} booked: ${[...new Set(ahead.map((b) => dayWords(when(b.starts_at).date, day)))].join(' and ')}` : ''}.`,
+    heard.join(' '),
+    open.length
+      ? open.map((o) => `An offer of ${poundsWhole(o.amount_pence)} from ${positionWords(o.position ?? {}, o.buyer_names.length).replace(/\.$/, '').replace(/^([A-Z])/, (c) => `a ${c.toLowerCase()}`) || 'a buyer'}, ${o.status === 'sent' ? 'with you to consider' : 'about to be put to you'}.`).join(' ')
+      : 'No offers at the moment.',
+  ].filter(Boolean).join(' ');
   return {
     verified: true,
+    say,
     property: shortAddress(l),
     status: STATUS_WORDS[live.status],
     price: live.checking.includes('price') ? undefined : priceOf(r.home),
@@ -944,7 +960,7 @@ async function getMarketingUpdate(args: Args, ctx: ToolContext): Promise<Record<
       buyer: positionWords(o.position ?? {}, o.buyer_names.length).replace(/\.$/, '') || 'position not given',
     })),
     best_and_final: live.best_final_at ? `best and final offers by ${dayWords(when(live.best_final_at).date, day)} ${spokenTime(when(live.best_final_at).time)}` : undefined,
-    next: `Buyers by position only, never names or numbers. A price change, or an answer to an offer, is an urgent message for ${negotiator} (category seller, or offer), never done on the call.`,
+    next: `Say say first, as it is; then answer from the rest. Buyers by position only, never names or numbers. A price change, or an answer to an offer, is an urgent message for ${negotiator} (category seller, or offer), never done on the call.`,
   };
 }
 
@@ -1054,6 +1070,10 @@ async function registerBuyer(args: Args, ctx: ToolContext): Promise<Record<strin
   const t = ctx.tenant;
   const name = realName(args.name);
   if (!name) return { registered: false, message: ASK_NAME };
+  // On 5 October a live call registered "cash buyers" on their name alone, before asking what they wanted or whether they had a home to sell.
+  const searched = [args.areas, args.max_price, args.min_beds, args.types].some((v) => str(v) || int(v));
+  if (!searched) return { registered: false, message: 'Not registered yet. Ask what they are looking for: where, their budget, bedrooms, anything they must have. Then call this again.' };
+  if (!sellingOf(args.selling) && !bool(args.first_time_buyer)) return { registered: false, message: 'Not registered yet. Ask whether they have a home to sell (and if so whether it is on the market), and how they are paying. "Cash" with a home to sell is a chain. Then call this again.' };
   const alerts = bool(args.alerts);
   if (alerts === undefined) return { registered: false, message: 'Ask whether they would like a text when a home that matches comes on (never assume), then call this again with alerts.' };
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
@@ -1254,7 +1274,7 @@ export const ESTATE_TOOLS: Record<string, Tool> = {
     when: hasHomes,
     decl: {
       name: 'register_buyer',
-      description: "Put a buyer on our list: what they want, their position, and texts about new homes only if they said yes. Returns up to three homes that match.",
+      description: "Put a buyer on our list once you know what they want (where, budget, bedrooms) and their position (anything to sell, how they're paying): texts about new homes only if they said yes. Returns up to three homes that match.",
       parameters: obj(
         {
           name: S("The buyer's name"), phone: S('Only if not the calling number'), email: S('If they give one'),
