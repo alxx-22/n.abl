@@ -395,6 +395,24 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     const viewing = s.bookings.find((b: any) => b.listing_key && b.status === 'confirmed' && b.starts_at > s.now);
     assert.ok(viewing?.home, 'a viewing knows its home');
     const texts = async (phone: string) => (await jo.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
+    // Applicants' actions: hot, matches texted only with a yes to alerts, alerts stopped with one text.
+    // The seed is random: if no buyer with alerts has a home that fits, one is added who fits anything.
+    let keen = s.buyers.find((b: any) => b.alerts && b.matches > 0);
+    if (!keen) {
+      await app.repo.upsertBuyer(made.data.id, '+447700900775', 'Ali Keen', { roles: ['buyer'], requirements: { min_beds: 1 } }, true);
+      keen = (await state()).buyers.find((b: any) => b.phone === '07700 900775');
+    }
+    const digits = (b: any) => b.phone.replace(/\s/g, '');
+    assert.match((await jo.call('PATCH', `${path}/buyers/${digits(keen)}`, { action: 'hot' })).data.message, /marked hot/);
+    const sentMatches = await jo.call('PATCH', `${path}/buyers/${digits(keen)}`, { action: 'send_matches' });
+    assert.equal(sentMatches.status, 200, JSON.stringify(sentMatches.data));
+    assert.match((await texts(keen.phone)).at(-1), /homes that fit what you asked for: .*To stop these texts, call us\. \(Demo\)$/);
+    assert.equal((await jo.call('PATCH', `${path}/buyers/${digits(keen)}`, { action: 'unsubscribe' })).status, 200);
+    assert.match((await texts(keen.phone)).at(-1), /stopped texting you about new homes/);
+    assert.equal((await jo.call('PATCH', `${path}/buyers/${digits(keen)}`, { action: 'send_matches' })).status, 409, 'no yes, no texts');
+    const again = (await state()).buyers.find((b: any) => b.phone === keen.phone);
+    assert.deepEqual([again.hot, again.alerts], [true, false]);
+    assert.equal((await jo.call('PATCH', `${path}/buyers/07700900998`, { action: 'hot' })).status, 404);
 
     // An offer goes to the seller, then is accepted: sale agreed, a sale opens, the buyer and every other bidder hear (each once).
     const openOn = (key: string) => s.offers.filter((o: any) => o.listing_key === key && ['received', 'sent'].includes(o.status) && o.phone);

@@ -185,7 +185,7 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
         wants: r ? requirementsWords(r) : null, timescale: r?.timescale ?? null,
         matches: r ? matches(r, findable).length : 0,
         alerts: b.marketing_consent, consent_at: b.details.consent_at ?? null,
-        backup_for: (b.details.backup_for ?? []).map((k) => homes.get(k) ?? k), investor: Boolean(b.details.investor),
+        backup_for: (b.details.backup_for ?? []).map((k) => homes.get(k) ?? k), investor: Boolean(b.details.investor), hot: Boolean(b.details.hot),
         last_contact: b.details.last_contact ?? null, source: b.details.source ?? null,
       };
     }),

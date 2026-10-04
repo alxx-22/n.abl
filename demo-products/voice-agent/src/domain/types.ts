@@ -570,6 +570,8 @@ export interface BuyerDetails {
   /** Homes they would buy if a sale falls through. */
   backup_for?: string[];
   investor?: boolean;
+  /** Marked hot by staff in Applicants: ready to buy, worth a call first. */
+  hot?: boolean;
   email?: string;
   /** Who in the team rang them and missed them: who, never why. */
   tried_to_call?: { by: string; at: string };

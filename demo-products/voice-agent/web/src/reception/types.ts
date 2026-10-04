@@ -200,6 +200,7 @@ export interface LiveBuyer {
   consent_at: string | null;
   backup_for: string[];
   investor: boolean;
+  hot: boolean;
   last_contact: string | null;
   source: string | null;
 }

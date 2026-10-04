@@ -80,7 +80,7 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
   },
   applicants: {
     shows: null,
-    render: (p) => <Applicants state={p.state} />,
+    render: (p) => <Applicants id={p.id} state={p.state} onDone={p.refresh} />,
   },
   valuations: {
     shows: null,

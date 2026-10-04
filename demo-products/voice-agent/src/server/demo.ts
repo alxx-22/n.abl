@@ -19,7 +19,7 @@ import { PresetError } from '../presets/common/errors.ts';
 import { seedFrom } from '../presets/common/random.ts';
 import { applySettings, type SettingsPatch } from '../domain/settings.ts';
 import { CHECK_KEYS, SALE_MILESTONES, type ListingStatus, type OfferStatus, type Tenant, type TenantProfile } from '../domain/types.ts';
-import { shortAddress } from '../domain/listings.ts';
+import { matches, priceWords, shortAddress } from '../domain/listings.ts';
 import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { SimulatedSms } from '../channels/sms.ts';
@@ -536,6 +536,12 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     refresh({ reason: 'staff', reference: ref.toUpperCase(), what: message });
     return json(res, 200, { ok: true, message }), true;
   }
+  if (sub === 'buyers' && ref && req.method === 'PATCH') {
+    const message = await buyerAction(ctx, t, ref, await readJson(req, 10_000));
+    void usage('staff_action', { action: 'buyer' });
+    refresh({ reason: 'staff', what: message });
+    return json(res, 200, { ok: true, message }), true;
+  }
   if (sub === 'listings' && ref && req.method === 'PATCH') {
     const { message, affected } = await listingAction(ctx, t, ref, await readJson(req, 10_000));
     void usage('staff_action', { action: 'listing' });
@@ -755,6 +761,46 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
 }
 
 /** A text to the customer from the back office: stored, shown on the phone mockup, never sent. */
+/**
+ * Staff and a buyer in Applicants, by the buyer's number: mark them hot,
+ * text them the homes that fit now (only with their yes to alerts), or stop
+ * the alerts, with one text to say so.
+ */
+async function buyerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<string> {
+  const { repo } = ctx;
+  if (!t.profile.listings) throw new HttpError(400, 'This business has no buyers.');
+  const phone = normaliseUkPhone(ref);
+  const buyer = phone ? await repo.findBuyer(t.id, phone) : null;
+  if (!phone || !buyer) throw new HttpError(404, 'No such buyer.');
+  const who = buyer.name ?? displayUkPhone(phone);
+  switch (b.action) {
+    case 'hot': {
+      const hot = !buyer.details.hot;
+      await repo.upsertBuyer(t.id, phone, null, { hot });
+      return hot ? `${who} marked hot.` : `${who} no longer marked hot.`;
+    }
+    case 'send_matches': {
+      if (!buyer.marketing_consent) throw new HttpError(409, `${who} hasn't said yes to texts about new homes.`);
+      const r = buyer.details.requirements;
+      const live = new Map((await repo.listingStates(t.id)).map((x) => [x.listing_key, x]));
+      const homes = (t.profile.listings ?? []).filter((l) => live.has(l.key)).map((l) => ({ listing: l, price_pence: live.get(l.key)!.price_pence, status: live.get(l.key)!.status }));
+      const fit = r ? matches(r, homes).slice(0, 3) : [];
+      if (!fit.length) throw new HttpError(409, `Nothing on the market fits ${who} right now.`);
+      const lines = fit.map((l) => { const h = homes.find((x) => x.listing.key === l.key)!; return `${shortAddress(l)}, ${priceWords(h.price_pence, live.get(l.key)!.qualifier, l.lease?.shared?.share_percent)}`; });
+      await textCustomer(ctx, t.id, phone, `${t.profile.name}: homes that fit what you asked for: ${lines.join('; ')}. Call us to book a viewing. To stop these texts, call us. (Demo)`);
+      return `${who}: ${fit.length} home${fit.length === 1 ? '' : 's'} texted.`;
+    }
+    case 'unsubscribe': {
+      if (!buyer.marketing_consent) throw new HttpError(409, `${who} isn't getting texts about new homes.`);
+      await repo.upsertBuyer(t.id, phone, null, {}, false);
+      await textCustomer(ctx, t.id, phone, `${t.profile.name}: we've stopped texting you about new homes, as you asked. (Demo)`);
+      return `${who} won't get texts about new homes any more.`;
+    }
+    default:
+      throw new HttpError(400, 'Unknown action.');
+  }
+}
+
 async function textCustomer(ctx: Ctx, tenantId: string, to: string | null, body: string): Promise<void> {
   if (!to) return;
   await ctx.repo.addMessage({ tenant_id: tenantId, kind: 'sms', to_number: to, body, status: await demoSms.send() });
