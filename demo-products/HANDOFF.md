@@ -19,21 +19,33 @@ in small steps; no subagents. Order: fix the confirmed call-engine problems
 (A), the three failed live calls (B), the other reported problems after
 reproducing each, re-check the data commit, then M2.
 
-**Progress since (next session, on branch
-`claude/handoff-demo-products-onewca`, started from `voice-agent-DEV`):**
+**Progress since (the next session, 4–5 October, on `voice-agent-DEV`).**
+Everything in A and B below is done, each fix reproduced by a test first:
 
-- Done: call engine new problems 1–5 (`5c1d9b4`) and its three *partly*
-  items (`5553951`), each with a test that failed first.
-- Done in code, not yet run live: the three failed live calls in B (this
-  commit: the figure rule, named-home searches without a price, a
-  `mortgage_question` line for leasehold homes, the `ea-listing-facts`
-  check). The live calls **cannot run in a Claude Code cloud session**: its
-  network proxy does not carry WebSockets, which the live model needs. Run
-  them in the Codespace (see "Testing as Alex does").
+- Call engine: new problems 1–5 (`5c1d9b4`), the three *partly* items
+  (`5553951`), and a new gap seen live: "I have you booked" with nothing
+  booked is now a claim (`4628f1c`).
+- B, the three failed live calls (`393f0c8`): never repeat the caller's
+  figure; a search for a named home gives no price (open `get_property`
+  first); a leasehold home's `mortgage_question` names the adviser and
+  the solicitor; `ea-listing-facts` accepts "the house".
+- Server: best and final always has two different bidders (`08657cc`);
+  accepting a raise closes only the same phone's offers (`81cb2cd`).
+- Back office: ID check badge back, no Cash before "anything to sell" is
+  known (`4fa58a4`).
+- Builder: shared ownership kept through a tenure change (`e99b839`), the
+  home list lines up (`5cebc0c`), copy buttons named by week (`8a4d60c`),
+  viewing hours with no days warned (`e0c0517`).
+- Data re-check of `288aae9`: one slip, a buyer's travel time now counts
+  from either booking (`ecb594d`).
+- Live calls **do** run in a cloud session (an earlier note here said they
+  couldn't; that was wrong). The live service is unsteady: a call can end
+  early when the receptionist's model falls back and the simulated caller
+  goes quiet. Re-run a call that ends after a turn or two before reading
+  anything into it.
 - The prompt at its largest is now about 6,960 characters (limit 7,000):
   put new guidance in tool answers, not the prompt.
-- Still to do, in order: the other reported problems below (server, back
-  office, builder), the data re-check, then M2.
+- Next: M2 (below).
 
 ### A. Re-check of the review fixes
 
