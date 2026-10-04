@@ -20,9 +20,31 @@ here. Work directly; no subagents.
 ### A. Re-check of the review fixes
 
 Five fix commits (listed under "Where things stand") were being re-checked
-area by area. Not yet re-checked when the session stopped: builder
-(`267e7a7`), back office (`bdddb2a`), data (`288aae9`). Re-check those
-yourself with `git show <commit>`.
+area by area. Not yet re-checked when the session stopped: data
+(`288aae9`). Re-check it yourself with `git show 288aae9`.
+
+**Builder (`267e7a7`)**: eight findings fixed; one partly: the three
+"Copy Monday to Tuesday–Friday" buttons on the estate hours step still have
+the same name (`web/src/reception/builder/common/Hours.tsx` ~103; name them
+by week, as the day switches now are). New problems reported:
+
+- `estate/Listings.tsx` (~238): moving a home's tenure away from shared
+  ownership now wipes its share, rent and provider; moving back gives
+  defaults that get read out. Don't clear it in the builder (compile already
+  ignores a hidden block).
+- `estate/Listings.tsx` (~109): wrapping each home row in a `listitem` div
+  stops the rows stretching, so prices and badges no longer line up. Make
+  the wrapper the grid item (`display: contents` or move the class).
+- `estate/Listings.tsx` (~327): a viewing window with no days ticked is
+  kept and shown as if it applied, but compile drops it. Warn in
+  `validateEstate`, or show it as "no days chosen".
+
+**Back office (`bdddb2a`)**: four findings fixed; one partly: a cash buyer
+whose "anything to sell" answer is unknown still shows Cash on the screen
+(the domain gives no Cash then). New problem: the viewing drawer now shows
+only the position badges, so the "ID check" badge for an empty home (put in
+`details.badges` by the seed and `create_booking`) is lost. Show
+position badges plus any `details.badges` that aren't position badges.
 
 **Server (`705c78b`)**: all five findings fixed. Two new problems reported:
 
