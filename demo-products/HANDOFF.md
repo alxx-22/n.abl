@@ -176,13 +176,16 @@ the walkthrough:
   *Applicants* (with Mark hot, Send matches, Stop alerts:
   `PATCH /workspaces/:id/buyers/:number`), *Valuations* (booked, done,
   outcome), "Seller replied by phone" on offers.
+- Valuation outcomes (Instructed, Thinking with a follow-up day, Lost) are
+  set from the Valuations view; "Try saying" suggests the M2 calls.
 - Scenarios `ea-vendor-update`, `ea-stalker`, `ea-register-position`,
-  `ea-personal-interest` are in `src/eval/scenarios.ts`; see "Live calls,
-  M2" below for how they ran.
+  `ea-personal-interest` (`src/eval/scenarios.ts`): all four pass live (5
+  October, after `53adfb9`: registration now needs a search and the
+  selling position first, and the seller update gives a sentence to say
+  first).
 
-Not done in M2: valuation outcomes can't be changed from the Valuations
-view yet (only the seed sets them); the "Try saying" chips don't yet
-suggest the M2 calls ("How's my sale going?" as Sarah).
+Left for M2: re-run the seven M1 calls when the live service is steady;
+then M3.
 
 ### 2. Estate agent milestone 3 (M3)
 
