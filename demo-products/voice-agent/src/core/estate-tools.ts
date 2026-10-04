@@ -495,6 +495,8 @@ export async function estateMessage(args: Args, ctx: ToolContext): Promise<Recor
     const r = await resolveHome(ctx, args.property);
     if ('home' in r) home = r.home.listing;
   }
+  // The home's own seller answering an offer by phone: urgent, and shown on its offers as "Seller replied by phone"; staff confirm before any buyer hears.
+  const sellerReply = Boolean(home && phone && (category === 'offer' || category === 'seller') && (await ctx.repo.sellersOf(t.id, home.key)).some((x) => x.phone === phone));
   const to = messageFor(t, str(args.for), category, home);
   const first = to?.first_name ?? 'the team';
   const complaint = category === 'complaint';
@@ -504,9 +506,10 @@ export async function estateMessage(args: Args, ctx: ToolContext): Promise<Recor
   const day = today(ctx);
   await ctx.repo.addMessage({
     tenant_id: t.id, call_id: ctx.callId, kind: 'message', from_name: name, from_phone: phone, body, status: 'new',
-    for_staff: to?.key ?? null, category, urgency, reference,
+    for_staff: to?.key ?? null, category, urgency: sellerReply ? 'urgent' : urgency, reference,
     details: {
       ...(home ? { listing: home.key } : {}),
+      ...(sellerReply ? { seller_reply: true } : {}),
       ...(complaint ? { acknowledge_by: addWorkingDays(day, 3, nation), final_by: addWorkingDays(day, 15, nation) } : {}),
       ...(quiet ? { private: true } : {}),
     },
@@ -518,7 +521,7 @@ export async function estateMessage(args: Args, ctx: ToolContext): Promise<Recor
     detail: quiet ? 'Private: in Messages' : `${body}${phone ? ` · ${displayUkPhone(phone)}` : ''}`,
   });
   if (quiet) return { taken: true, note: "Say only that you've noted it. Never repeat it, and never say who it is for." };
-  if (urgency === 'urgent' && to?.mobile) {
+  if ((urgency === 'urgent' || sellerReply) && to?.mobile) {
     await smsTo(ctx, normaliseUkPhone(to.mobile), `URGENT from the AI receptionist: ${name}${phone ? ` (${displayUkPhone(phone)})` : ''}: ${body} (Demo)`);
   }
   const owner = p.owner_sms_number;

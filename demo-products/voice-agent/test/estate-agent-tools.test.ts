@@ -17,6 +17,8 @@ import { toLocal } from '../src/domain/time.ts';
 import { unsaid } from '../src/domain/listings.ts';
 import type { Tenant, TenantProfile } from '../src/domain/types.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
+import { tenantState } from '../src/server/state.ts';
+import type { Bus } from '../src/server/bus.ts';
 import { defaultAnswers } from '../src/presets/restaurant/answers.ts';
 import { compileRestaurant } from '../src/presets/restaurant/compile.ts';
 
@@ -794,4 +796,25 @@ test('register_buyer and stop_alerts: requirements and position kept, alerts onl
   assert.deepEqual([...both.details.roles!].sort(), ['buyer', 'seller']);
   assert.equal(both.marketing_consent, false);
   assert.match(sarah.sent.at(-1)!.body, /won't text you about new homes unless you ask/);
+});
+
+test('a seller answering an offer by phone: an urgent message, and "Seller replied by phone" on the offer until it is read', async () => {
+  const t = await agency('ea-seller-reply');
+  const bus = { activeFor: () => [] } as unknown as Bus;
+  const aishas = async () => ((await tenantState(repo, t, bus)) as any).offers.find((o: any) => o.phone === '07700 900003');
+  assert.equal((await aishas()).seller_replied, false);
+  // Anyone else saying the same is just a message.
+  const stranger = await call(t, '+447700900009');
+  await stranger.run('take_message', { name: 'Sarah', message: 'We accept the offer on Larkspur Close.', category: 'offer', property: 'Larkspur Close' });
+  assert.equal((await aishas()).seller_replied, false);
+  // The seller: urgent, texted to the negotiator, and shown on the offer.
+  const sarah = await call(t, '+447700900001');
+  await sarah.run('take_message', { name: 'Sarah Collins', message: "We'd like to accept the first-time buyer's offer.", category: 'offer', property: 'Larkspur Close', urgency: 'today' });
+  const m = (await repo.messagesFrom(t.id, '+447700900001'))[0];
+  assert.equal(m.details.seller_reply, true);
+  assert.ok(sarah.sent.some((x) => /^URGENT from the AI receptionist: Sarah Collins/.test(x.body)), 'the negotiator is texted');
+  assert.ok(!sarah.sent.some((x) => x.to === '+447700900003'), 'the buyer hears nothing until staff confirm');
+  assert.equal((await aishas()).seller_replied, true);
+  await repo.setMessageStatus(t.id, m.id, 'read');
+  assert.equal((await aishas()).seller_replied, false);
 });

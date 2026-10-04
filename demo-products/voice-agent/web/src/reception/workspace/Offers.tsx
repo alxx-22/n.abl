@@ -72,6 +72,7 @@ function OfferCard({ id, o, nowMs, nation, tz, onDone }: { id: string; o: LiveOf
       <div><b>{o.home}</b></div>
       <div className="muted small">{o.buyer_names.join(' and ') || 'A buyer'}{o.phone ? ` · ${o.phone}` : ''} · ref {o.reference}</div>
       <div className="badges">
+        {o.seller_replied ? <span className="badge bad" title="The seller left a message about this home on a call: read it in Messages, then act here.">Seller replied by phone</span> : null}
         {positionBadges(o.position).map((b) => <span key={b} className="badge">{b}</span>)}
         {flags.map((f) => <span key={f} className="badge warn">{f}</span>)}
       </div>

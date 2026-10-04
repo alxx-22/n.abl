@@ -129,6 +129,8 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
   const live = new Map((await repo.listingStates(t.id)).map((r) => [r.listing_key, r]));
   const offers = await repo.listOffers(t.id);
   const buyers = await repo.listBuyers(t.id);
+  // Unread seller replies by home: an open offer on it shows "Seller replied by phone" until someone reads the message.
+  const replies = (await repo.listMessages(t.id, 200)).filter((m: any) => m.kind === 'message' && m.status === 'new' && m.details?.seller_reply);
   // The Valuations view reaches back further than the diary: last week's appraisals are still being won or lost.
   const valuations = (await repo.listBookings(t.id, new Date(now.getTime() - 30 * DAY), new Date(now.getTime() + 30 * DAY))).filter((b) => b.service_key === 'valuation');
   const tz = t.profile.timezone;
@@ -165,6 +167,7 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
       amount_pence: o.amount_pence, buyer_names: o.buyer_names, phone: displayUkPhone(o.phone), position: o.position, conditions: o.conditions,
       flags: o.flags, status: o.status, received_at: o.received_at.toISOString(), sent_at: o.sent_at?.toISOString() ?? null,
       decided_at: o.decided_at?.toISOString() ?? null, note: o.note, source: o.source,
+      seller_replied: ['received', 'sent'].includes(o.status) && replies.some((m: any) => m.details.listing === o.listing_key),
     })),
     valuations: valuations.map((b) => {
       const l = toLocal(b.starts_at, tz);

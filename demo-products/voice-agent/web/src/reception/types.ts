@@ -168,6 +168,8 @@ export interface LiveOffer {
   decided_at: string | null;
   note: string | null;
   source: string;
+  /** The home's seller left an offer message on a call that nobody has read yet. */
+  seller_replied?: boolean;
 }
 
 /** A valuation and its lead, from booked to won or lost (the Valuations view). */
