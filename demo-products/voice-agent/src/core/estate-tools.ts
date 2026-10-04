@@ -17,7 +17,7 @@ import { newBookingReference, spokenReference } from '../db/repo.ts';
 import { candidateTimes, checkAvailability, checkSlot, durationFor, findService, type AvailabilityResult, type SlotRequest } from '../domain/availability.ts';
 import {
   STATUS_WORDS, UNSAYABLE, addWorkingDays, clause, districtsIn, facts, findListings, firstViewingDate, homeKind, initialLive, insideRule, describeLine, matches,
-  offerReceivedText, poundsWhole, priceWords, requirementsIn, sayFirst, shortAddress, similar, positionBadges, unsaid, viewingRules, viewingText,
+  offerReceivedText, poundsWhole, priceWords, requirementsIn, requirementsWords, sayFirst, shortAddress, similar, positionBadges, unsaid, viewingRules, viewingText,
   type ListingLive, type Requirements,
 } from '../domain/listings.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
@@ -1035,17 +1035,6 @@ async function recordViewingFeedback(args: Args, ctx: ToolContext): Promise<Reco
       ? "Thank them. Offer once to note what they're looking for, so we can tell them about other homes."
       : 'Offer a second viewing or to take an offer, once, without pressure.',
   };
-}
-
-/** "three-bed houses in BK2 up to £300,000, with a garden": what a buyer asked for, as their text and the team read it. */
-function requirementsWords(r: NonNullable<BuyerDetails['requirements']>): string {
-  const what = `${r.min_beds ? `${r.min_beds}-bed ` : ''}${r.types?.length ? r.types.join(' or ') : 'homes'}`;
-  return [
-    what,
-    r.areas?.length ? `in ${r.areas.join(', ')}` : '',
-    r.max_price_pence ? `up to ${poundsWhole(r.max_price_pence)}` : '',
-    r.must_haves?.length ? `with ${r.must_haves.join(', ')}` : '',
-  ].filter(Boolean).join(' ');
 }
 
 /**

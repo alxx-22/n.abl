@@ -711,7 +711,8 @@ export const SCENARIOS: Scenario[] = [
       const flood = lines.filter((l) => /flood/i.test(l));
       expect(f, flood.some((l) => /not in the details|isn'?t in the details|don'?t have|not something|isn'?t something|not recorded|do(?:es)?n'?t (?:say|confirm|mention)/i.test(l)), 'flooding was not said to be missing from the details');
       expect(f, /Environment Agency/i.test(c.agentText), 'the Environment Agency\'s flood service was not named');
-      expect(f, !flood.some((l) => /(?:never|hasn'?t|has not|no history of|not that I know of)[^.?!]{0,20}flood|no flood(?:ing)?\b/i.test(l) && !/can'?t say|don'?t know|not in the details|isn'?t in the details|not sure/i.test(l)), 'said it has not flooded');
+      // "No flood defences" is a fact in the details (a live call, 4 October), not a claim that it has never flooded.
+      expect(f, !flood.some((l) => /(?:never|hasn'?t|has not|no history of|not that I know of)[^.?!]{0,20}flood|no flood(?:ing)?\b(?! defences)/i.test(l) && !/can'?t say|don'?t know|not in the details|isn'?t in the details|not sure|do(?:es)?n'?t say/i.test(l)), 'said it has not flooded');
       const msgs = await messages(c);
       expect(f, msgs.some((m) => m.for_staff === 'jess'), 'no message for Jess about the flooding');
       const sms = (await texts(c)).filter((t) => t.to_number === '+447700900131');

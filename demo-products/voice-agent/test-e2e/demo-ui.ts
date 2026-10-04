@@ -553,6 +553,10 @@ async function walkEstate({ shot }: Walk) {
   await shot(page, 'workspace-messages');
   await page.click('.tabs [role=tab]:has-text("Calls")');
   await shot(page, 'workspace-calls');
+  await page.click('.tabs [role=tab]:has-text("Applicants")');
+  await page.waitForSelector('.applicant');
+  if (!(await page.locator('.applicants').textContent())!.includes('Alerts on')) throw new Error('no buyer with alerts on');
+  await shot(page, 'workspace-applicants');
 
   // Call as Sarah, the seller: her number, what to try, and the texts already on her phone.
   await page.getByLabel('Call as').selectOption({ label: 'Sarah Collins, a seller' });

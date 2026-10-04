@@ -81,6 +81,7 @@ export function estateWorkspace(profile: TenantProfile): WorkspaceSpec {
       { id: 'timeline', label: 'Diary', of: 'staff' },
       { id: 'properties', label: 'Properties' },
       { id: 'offers', label: 'Offers' },
+      { id: 'applicants', label: 'Applicants' },
       { id: 'messages', label: 'Messages' },
       { id: 'calls', label: 'Calls' },
     ],

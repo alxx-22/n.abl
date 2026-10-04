@@ -6,6 +6,7 @@
 
 import type { ReactNode } from 'react';
 import { Calls } from '../../components/BoardPanels.tsx';
+import { Applicants } from './Applicants.tsx';
 import type { TenantState } from '../../types.ts';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { FloorBoard, type View } from './FloorBoard.tsx';
@@ -75,6 +76,10 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
     shows: null,
     count: (s) => (s.offers ?? []).filter((o) => o.status === 'received').length,
     render: (p) => <Offers id={p.id} state={p.state} nowMs={p.clock} onDone={p.refresh} />,
+  },
+  applicants: {
+    shows: null,
+    render: (p) => <Applicants state={p.state} />,
   },
   orders: {
     shows: 'orders',

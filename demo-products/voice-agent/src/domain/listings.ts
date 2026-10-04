@@ -6,7 +6,7 @@
 // read listings through the same functions (presets/estate-agent.md §4.2).
 
 import {
-  CHECK_KEYS, type BuyerPosition, type CheckKey, type CheckValue, type HomeType, type Listing, type ListingState, type ListingStatus, type Nation, type OpeningHours,
+  CHECK_KEYS, type BuyerDetails, type BuyerPosition, type CheckKey, type CheckValue, type HomeType, type Listing, type ListingState, type ListingStatus, type Nation, type OpeningHours,
   type PriceQualifier, type SayItem, type TenantProfile, type ViewingWindow,
 } from './types.ts';
 import { addDays, closeMinutes, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf, zonedToUtc } from './time.ts';
@@ -619,6 +619,17 @@ export function districtsIn(text: string, known: string[]): string[] {
 }
 
 // ── What a buyer asked for ────────────────────────────────────────────────
+
+/** "three-bed houses in BK2 up to £300,000, with a garden": what a buyer asked for, as their text and the team read it. */
+export function requirementsWords(r: NonNullable<BuyerDetails['requirements']>): string {
+  const what = `${r.min_beds ? `${r.min_beds}-bed ` : ''}${r.types?.length ? r.types.join(' or ') : 'homes'}`;
+  return [
+    what,
+    r.areas?.length ? `in ${r.areas.join(', ')}` : '',
+    r.max_price_pence ? `up to ${poundsWhole(r.max_price_pence)}` : '',
+    r.must_haves?.length ? `with ${r.must_haves.join(', ')}` : '',
+  ].filter(Boolean).join(' ');
+}
 
 export interface Requirements {
   max_price_pence?: number;

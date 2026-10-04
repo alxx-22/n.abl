@@ -5,7 +5,7 @@ import type { Repo } from '../db/repo.ts';
 import type { Bus } from './bus.ts';
 import type { Booking, Listing, Tenant, TenantProfile } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
-import { shortAddress } from '../domain/listings.ts';
+import { matches, requirementsWords, shortAddress } from '../domain/listings.ts';
 import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
 import { displayUkPhone } from '../domain/phone.ts';
 import { capabilities } from '../core/prompt.ts';
@@ -128,7 +128,9 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
   const names = new Map(team.map((s) => [s.key, s.name]));
   const live = new Map((await repo.listingStates(t.id)).map((r) => [r.listing_key, r]));
   const offers = await repo.listOffers(t.id);
+  const buyers = await repo.listBuyers(t.id);
   const homes = new Map((t.profile.listings ?? []).map((l) => [l.key, shortAddress(l)]));
+  const findable = (t.profile.listings ?? []).map((l) => ({ listing: l, price_pence: live.get(l.key)?.price_pence ?? l.initial.price_pence, status: live.get(l.key)?.status ?? l.initial.status }));
   const weekOn = new Date(now.getTime() + 7 * DAY);
   return {
     // For the offer timers, which skip the nation's bank holidays.
@@ -161,5 +163,17 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
       flags: o.flags, status: o.status, received_at: o.received_at.toISOString(), sent_at: o.sent_at?.toISOString() ?? null,
       decided_at: o.decided_at?.toISOString() ?? null, note: o.note, source: o.source,
     })),
+    // The Applicants view: everyone registered as a buyer, newest contact first, and how many homes fit them now.
+    buyers: buyers.map((b) => {
+      const r = b.details.requirements;
+      return {
+        name: b.name, phone: displayUkPhone(b.phone), position: b.details.position ?? null,
+        wants: r ? requirementsWords(r) : null, timescale: r?.timescale ?? null,
+        matches: r ? matches(r, findable).length : 0,
+        alerts: b.marketing_consent, consent_at: b.details.consent_at ?? null,
+        backup_for: (b.details.backup_for ?? []).map((k) => homes.get(k) ?? k), investor: Boolean(b.details.investor),
+        last_contact: b.details.last_contact ?? null, source: b.details.source ?? null,
+      };
+    }),
   };
 }

@@ -348,7 +348,7 @@ test('estate agent: the builder\'s preview, the fact sheet and the back office',
   assert.match(sheet, /Fees: explained at the free market appraisal, not on the phone/);
   assert.doesNotMatch(sheet, /Albion/, 'no homes in the fact sheet');
   const spec = estateWorkspace(p);
-  assert.deepEqual(spec.views.map((v) => `${v.id}:${v.label}`), ['timeline:Diary', 'properties:Properties', 'offers:Offers', 'messages:Messages', 'calls:Calls']);
+  assert.deepEqual(spec.views.map((v) => `${v.id}:${v.label}`), ['timeline:Diary', 'properties:Properties', 'offers:Offers', 'applicants:Applicants', 'messages:Messages', 'calls:Calls']);
   assert.equal(spec.views[0].of, 'staff');
   assert.equal(spec.bookings!.property, true);
   assert.equal(spec.bookings!.allergies, false);

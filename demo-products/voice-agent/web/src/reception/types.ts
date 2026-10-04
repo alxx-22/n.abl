@@ -170,6 +170,23 @@ export interface LiveOffer {
   source: string;
 }
 
+/** A buyer on the agency's list (the Applicants view). */
+export interface LiveBuyer {
+  name: string | null;
+  phone: string;
+  position: BuyerPosition | null;
+  wants: string | null;
+  timescale: string | null;
+  /** Homes on the market now that fit what they asked for. */
+  matches: number;
+  alerts: boolean;
+  consent_at: string | null;
+  backup_for: string[];
+  investor: boolean;
+  last_contact: string | null;
+  source: string | null;
+}
+
 export interface LiveStaff {
   key: string;
   name: string;
@@ -219,4 +236,5 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   team?: LiveStaff[];
   listings?: LiveListing[];
   offers?: LiveOffer[];
+  buyers?: LiveBuyer[];
 }
