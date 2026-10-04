@@ -18,7 +18,7 @@ import { draftFaqs } from '../presets/common/drafts.ts';
 import { PresetError } from '../presets/common/errors.ts';
 import { seedFrom } from '../presets/common/random.ts';
 import { applySettings, type SettingsPatch } from '../domain/settings.ts';
-import { CHECK_KEYS, SALE_MILESTONES, type ListingStatus, type Tenant, type TenantProfile } from '../domain/types.ts';
+import { CHECK_KEYS, SALE_MILESTONES, type ListingStatus, type OfferStatus, type Tenant, type TenantProfile } from '../domain/types.ts';
 import { shortAddress } from '../domain/listings.ts';
 import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
@@ -494,7 +494,9 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
       await repo.updateBookingDetails(t.id, ref, d);
       message = 'Saved.';
     } else if (b.action === 'feedback') {
-      // A viewing's feedback, from the agent who showed it.
+      // A viewing's feedback, from the agent who showed it: only an estate agency's viewings have a home.
+      if (!booking.listing_key) throw new HttpError(400, 'Unknown action.');
+      if (booking.status !== 'confirmed') throw new HttpError(409, 'That viewing was cancelled.');
       const category = String(b.category ?? '');
       if (!FEEDBACK.includes(category)) throw new HttpError(400, 'Unknown feedback.');
       const words = String(b.words ?? '').trim().slice(0, 300);
@@ -589,51 +591,74 @@ async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
   const offer = (await repo.findOffer(t.id, { reference: ref }))[0];
   if (!offer) throw new HttpError(404, 'No such offer.');
   const home = t.profile.listings.find((l) => l.key === offer.listing_key);
-  const where = home ? shortAddress(home) : 'the home';
-  const agent = t.profile.team?.find((s) => s.key === home?.negotiator)?.first_name ?? 'We';
+  const live = home ? await repo.listingState(t.id, home.key) : null;
+  // A home taken out in the builder keeps its offers on record, but nothing more can happen to them.
+  if (!home || !live) throw new HttpError(409, 'That home is no longer in your list.');
+  const where = shortAddress(home);
+  const agent = t.profile.team?.find((s) => s.key === home.negotiator)?.first_name ?? 'We';
   const name = t.profile.name;
   const note = typeof b.note === 'string' ? b.note.trim().slice(0, 300) || null : null;
-  const open = offer.status === 'received' || offer.status === 'sent';
+  const OPEN: OfferStatus[] = ['received', 'sent'];
   const yours = `your offer of ${figure(offer.amount_pence)} for ${where}`;
   const text = (body: string) => textCustomer(ctx, t.id, offer.phone, `${name}: ${body} (Demo)`);
+  /** Moves the offer on only from an open status, in one statement: a second click finds it decided. */
+  const decide = async (status: OfferStatus, from: OfferStatus[] = OPEN) => {
+    if (!(await repo.setOfferStatus(t.id, offer.reference, status, { note, from }))) {
+      throw new HttpError(409, status === 'sent' ? 'That offer has already gone to the seller.' : 'That offer has already been decided.');
+    }
+  };
   switch (b.action) {
     case 'sent': {
-      if (offer.status !== 'received') throw new HttpError(409, 'That offer has already gone to the seller.');
-      await repo.setOfferStatus(t.id, offer.reference, 'sent', { note });
+      await decide('sent', ['received']);
       await text(`${yours[0].toUpperCase()}${yours.slice(1)} was put to the seller at ${spokenTime(toLocal(new Date(), t.profile.timezone).time)} today. We'll let you know their answer.`);
       return 'Sent to the seller; the buyer has been told.';
     }
     case 'accept': {
-      if (!open) throw new HttpError(409, 'That offer has already been decided.');
-      await repo.setOfferStatus(t.id, offer.reference, 'accepted', { note });
-      await repo.setListing(t.id, offer.listing_key, { status: 'sale_agreed', marketing_continues: b.viewings_continue !== false }, 'staff', `sale agreed: offer ${offer.reference} accepted`);
+      // One sale at a time: a home already sale agreed (or sold, or withdrawn) needs that settled first.
+      if (live.status === 'exchanged' || live.status === 'completed') throw new HttpError(409, `${where} is already sold.`);
+      if (live.status === 'withdrawn') throw new HttpError(409, `${where} is withdrawn: put it back on the market first.`);
+      const sales = (await repo.listSales(t.id)).filter((x) => x.listing_key === home.key && x.status === 'progressing');
+      if (live.status === 'sale_agreed' || sales.length) {
+        throw new HttpError(409, `${where} already has a sale agreed. If it has fallen through, put the home back on the market first.`);
+      }
+      await decide('accepted');
+      await repo.setListing(t.id, home.key, { status: 'sale_agreed', marketing_continues: b.viewings_continue !== false }, 'staff', `sale agreed: offer ${offer.reference} accepted`);
       await repo.createSale(t.id, {
-        listing_key: offer.listing_key, offer_ref: offer.reference, buyer_name: offer.buyer_names.join(' and ') || 'The buyer', buyer_phone: offer.phone,
+        listing_key: home.key, offer_ref: offer.reference, buyer_name: offer.buyer_names.join(' and ') || 'The buyer', buyer_phone: offer.phone,
         agreed_pence: offer.amount_pence, milestones: SALE_MILESTONES.map((key) => ({ key, done_at: null })), exchange_target: null, completion_date: null,
         parties: offer.solicitor ? [{ role: 'buyer_solicitor', name: offer.solicitor }] : [], chain: null,
       });
       await text(`the seller has accepted ${yours}, subject to contract. ${agent} will confirm it in writing and explain the ID checks.`);
-      const others = (await repo.listOffers(t.id, offer.listing_key)).filter((o) => o.reference !== offer.reference && (o.status === 'received' || o.status === 'sent'));
-      for (const o of others) {
+      const all = await repo.listOffers(t.id, home.key);
+      // The buyer's own earlier offers, which this one raised, are replaced by it: closed, and never told "another offer" was accepted.
+      const replaced = new Set<string>();
+      for (let r = offer.revises; r && !replaced.has(r); r = all.find((o) => o.reference === r)?.revises ?? null) replaced.add(r);
+      for (const r of replaced) {
+        const o = all.find((x) => x.reference === r);
+        if (o && OPEN.includes(o.status)) await repo.setOfferStatus(t.id, r, 'withdrawn', { note: `Replaced by ${offer.reference}`, from: OPEN });
+      }
+      const told = new Set<string>(offer.phone ? [offer.phone] : []);
+      let others = 0;
+      for (const o of all) {
+        if (o.reference === offer.reference || replaced.has(o.reference) || !OPEN.includes(o.status) || !o.phone || told.has(o.phone)) continue;
+        told.add(o.phone);
+        others++;
         await textCustomer(ctx, t.id, o.phone, `${name}: the seller of ${where} has accepted another offer, subject to contract. Thank you for yours; we'll let you know if anything changes. (Demo)`);
       }
-      return `Accepted: ${where} is sale agreed${others.length ? `, and ${others.length} other buyer${others.length === 1 ? ' has' : 's have'} been told` : ''}.`;
+      return `Accepted: ${where} is sale agreed${others ? `, and ${others} other buyer${others === 1 ? ' has' : 's have'} been told` : ''}.`;
     }
     case 'decline': {
-      if (!open) throw new HttpError(409, 'That offer has already been decided.');
-      await repo.setOfferStatus(t.id, offer.reference, 'declined', { note });
+      await decide('declined');
       await text(`the seller has decided not to accept ${yours}. ${agent} will call you to talk it through.`);
       return 'Declined; the buyer has been told.';
     }
     case 'counter': {
-      if (!open) throw new HttpError(409, 'That offer has already been decided.');
-      await repo.setOfferStatus(t.id, offer.reference, 'countered', { note });
+      await decide('countered');
       await text(`the seller has come back to you about ${yours}. ${agent} will call you to talk it through.`);
       return 'Countered; the buyer has been told.';
     }
     case 'withdraw': {
-      if (!open) throw new HttpError(409, 'That offer has already been decided.');
-      await repo.setOfferStatus(t.id, offer.reference, 'withdrawn', { note });
+      await decide('withdrawn');
       await text(`we've noted that ${yours} is withdrawn. Thank you for letting us know.`);
       return 'Withdrawn.';
     }
@@ -661,7 +686,15 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
       // Back on the market after an offer or a sale: callers hear it is back, with the reason the seller agreed to share.
       const back = status === 'available' && (live.status === 'under_offer' || live.status === 'sale_agreed');
       await repo.setListing(t.id, key, { status, ...(back ? { back_on_market_at: new Date() } : {}) });
-      return { message: `${where}: ${status.replace(/_/g, ' ')}.` };
+      // Back on the market or withdrawn: a sale in progress on it has fallen through, so another offer can be accepted.
+      let fell = 0;
+      if (status === 'available' || status === 'coming_soon' || status === 'withdrawn') {
+        for (const sale of (await repo.listSales(t.id)).filter((x) => x.listing_key === key && x.status === 'progressing' && x.id)) {
+          await repo.updateSale(t.id, sale.id!, { status: 'fell_through' }, { by: 'staff', what: `fell through: the home is ${status.replace(/_/g, ' ')} again` });
+          fell++;
+        }
+      }
+      return { message: `${where}: ${status.replace(/_/g, ' ')}.${fell ? ' Its sale in progress is marked fallen through.' : ''}` };
     }
     case 'price': {
       const pence = Math.round(Number(b.price_pence));

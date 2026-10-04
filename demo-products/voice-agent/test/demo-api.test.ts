@@ -202,6 +202,7 @@ test('demo: the back office moves, combines, seats and cancels, with texts', asy
   assert.equal((await sam.call('PATCH', `/demo/api/workspaces/${ws}/bookings/${b.reference}`, { action: 'visit', status: 'arrived' })).status, 200);
   assert.equal((await sam.call('PATCH', `/demo/api/workspaces/${ws}/bookings/${b.reference}`, { action: 'visit', status: 'dancing' })).status, 400);
 
+  assert.equal((await sam.call('PATCH', `/demo/api/workspaces/${ws}/bookings/${b.reference}`, { action: 'feedback', category: 'keen' })).status, 400, 'a restaurant booking has no viewing feedback');
   const cancelled = await sam.call('PATCH', `/demo/api/workspaces/${ws}/bookings/${b.reference}`, { action: 'cancel' });
   assert.equal(cancelled.status, 200);
   const phone = await sam.call('GET', `/demo/api/workspaces/${ws}/phone?number=${encodeURIComponent(b.phone)}`);
@@ -388,15 +389,18 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.ok(viewing?.home, 'a viewing knows its home');
     const texts = async (phone: string) => (await jo.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
 
-    // An offer goes to the seller, then is accepted: sale agreed, a sale opens, the buyer and any other bidders hear.
-    const offer = s.offers.find((o: any) => o.status === 'received' && o.phone);
-    assert.ok(offer, 'a received offer');
+    // An offer goes to the seller, then is accepted: sale agreed, a sale opens, the buyer and every other bidder hear (each once).
+    const openOn = (key: string) => s.offers.filter((o: any) => o.listing_key === key && ['received', 'sent'].includes(o.status) && o.phone);
+    const offer = s.offers.find((o: any) => o.status === 'received' && o.phone && openOn(o.listing_key).some((x: any) => x.phone !== o.phone));
+    assert.ok(offer, 'a received offer on a home with another bidder (the seed\'s best and final)');
     assert.equal((await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'sent' })).status, 200);
     assert.match((await texts(offer.phone)).at(-1), /Your offer of £[\d,]+ for .+ was put to the seller at \d/);
     assert.equal((await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'sent' })).status, 409, 'already sent');
-    const rivals = s.offers.filter((o: any) => o.listing_key === offer.listing_key && o.reference !== offer.reference && ['received', 'sent'].includes(o.status));
+    const rivals = openOn(offer.listing_key).filter((o: any) => o.reference !== offer.reference && o.phone !== offer.phone);
+    assert.ok(rivals.length > 0, 'someone else to tell');
     const accepted = await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'accept', viewings_continue: false });
     assert.equal(accepted.status, 200, JSON.stringify(accepted.data));
+    assert.match(accepted.data.message, /other buyers? (?:has|have) been told/);
     assert.match((await texts(offer.phone)).at(-1), /accepted your offer of £[\d,]+ for .+, subject to contract\. \w+ will confirm it in writing/);
     for (const r of rivals) assert.match((await texts(r.phone)).at(-1), /has accepted another offer, subject to contract/);
     const after = await state();
@@ -409,7 +413,30 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal((await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'decline' })).status, 409, 'already decided');
     assert.equal((await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'dance' })).status, 400);
     assert.equal((await jo.call('PATCH', `${path}/offers/ZZ999`, { action: 'sent' })).status, 404);
-    const other = after.offers.find((o: any) => ['received', 'sent'].includes(o.status) && o.phone);
+
+    // One sale at a time: a rival on the same home cannot be accepted while the sale stands, nor a new offer on a home the seed made sale agreed.
+    assert.equal((await jo.call('PATCH', `${path}/offers/${rivals[0].reference}`, { action: 'accept' })).status, 409);
+    const tenant = (await app.repo.getTenantById(made.data.id))!;
+    const agreedHome = after.listings.find((l: any) => l.status === 'sale_agreed' && l.key !== offer.listing_key);
+    const late = await app.repo.createOffer(tenant, { listing_key: agreedHome.key, amount_pence: 30_000_000, buyer_names: ['Lee Late'], phone: '+447700900771', source: 'console' });
+    assert.equal((await jo.call('PATCH', `${path}/offers/${late.reference}`, { action: 'accept' })).status, 409);
+    // Back on the market, the sale has fallen through, and the rival can be accepted.
+    const back = await jo.call('PATCH', `${path}/listings/${offer.listing_key}`, { action: 'status', status: 'available' });
+    assert.match(back.data.message, /fallen through/);
+    assert.equal((await app.repo.listSales(made.data.id)).find((x) => x.offer_ref === offer.reference)!.status, 'fell_through');
+    assert.equal((await jo.call('PATCH', `${path}/offers/${rivals[0].reference}`, { action: 'accept' })).status, 200);
+
+    // A raised offer: accepting it closes the buyer's earlier one, and that buyer never hears that "another offer" was accepted.
+    const quiet = [...after.listings].reverse().find((l: any) => l.status === 'available' && !openOn(l.key).length && l.key !== viewing.listing_key);
+    const earlier = await app.repo.createOffer(tenant, { listing_key: quiet.key, amount_pence: 25_000_000, buyer_names: ['Rae Lowe'], phone: '+447700900772', source: 'console' });
+    const raised = await app.repo.createOffer(tenant, { listing_key: quiet.key, amount_pence: 26_000_000, buyer_names: ['Rae Lowe'], phone: '+447700900772', source: 'console', revises: earlier.reference });
+    const took = await jo.call('PATCH', `${path}/offers/${raised.reference}`, { action: 'accept' });
+    assert.equal(took.status, 200, JSON.stringify(took.data));
+    assert.doesNotMatch(took.data.message, /other buyer/);
+    assert.ok(!(await texts('07700 900772')).some((x: string) => /another offer/.test(x)));
+    assert.equal((await app.repo.findOffer(made.data.id, { reference: earlier.reference }))[0].status, 'withdrawn');
+
+    const other = (await state()).offers.find((o: any) => ['received', 'sent'].includes(o.status) && o.phone);
     if (other) {
       assert.equal((await jo.call('PATCH', `${path}/offers/${other.reference}`, { action: 'decline', note: 'Too low' })).status, 200);
       assert.match((await texts(other.phone)).at(-1), /decided not to accept your offer/);
@@ -448,14 +475,17 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     // Feedback on a viewing, from the agent who showed it.
     assert.equal((await jo.call('PATCH', `${path}/bookings/${viewing.reference}`, { action: 'feedback', category: 'keen', words: 'Loved the garden' })).status, 200);
     assert.equal((await jo.call('PATCH', `${path}/bookings/${viewing.reference}`, { action: 'feedback', category: 'meh' })).status, 400);
+    const valuation = s.bookings.find((b: any) => !b.listing_key && b.status === 'confirmed');
+    assert.equal((await jo.call('PATCH', `${path}/bookings/${valuation.reference}`, { action: 'feedback', category: 'keen' })).status, 400, 'only a viewing has feedback');
     const fb = (await state()).bookings.find((b: any) => b.reference === viewing.reference);
     assert.equal(fb.details.feedback.category, 'keen');
     assert.equal(fb.details.feedback.words, 'Loved the garden');
 
     // The builder after Start: a home repriced, one added and one removed reach the back office.
     const answers = (await jo.call('GET', path)).data.answers;
-    const [first, gone] = answers.listings.filter((x: any) => ![avail.key, vhome.key, offer.listing_key].includes(x.key));
+    const [first, gone] = answers.listings.filter((x: any) => ![avail.key, vhome.key, offer.listing_key, quiet.key].includes(x.key));
     first.price_pence += 500_000;
+    const orphan = await app.repo.createOffer(tenant, { listing_key: gone.key, amount_pence: 20_000_000, buyer_names: ['Gil Gone'], phone: '+447700900773', source: 'console' });
     answers.listings = answers.listings.filter((x: any) => x.key !== gone.key);
     answers.listings.push({ ...structuredClone(first), key: 'new_home', number: '99', ref: 'HG199' });
     const saved = await jo.call('PUT', `${path}/answers`, answers);
@@ -464,6 +494,8 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal(synced.find((l: any) => l.key === first.key).price_pence, first.price_pence);
     assert.ok(synced.some((l: any) => l.key === 'new_home'));
     assert.ok(!synced.some((l: any) => l.key === gone.key));
+    // Its offers stay on record, but nothing more can happen to them.
+    assert.equal((await jo.call('PATCH', `${path}/offers/${orphan.reference}`, { action: 'accept' })).status, 409);
 
     // Reset puts every home back as Start made it.
     assert.equal((await jo.call('POST', `${path}/reset`)).status, 200);

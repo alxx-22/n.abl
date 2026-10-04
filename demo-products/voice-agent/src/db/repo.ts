@@ -866,7 +866,8 @@ export class Repo {
    * countered or withdrawn. When it was sent and decided are kept, with
    * each step in its history. Returns null for an offer that does not exist.
    */
-  async setOfferStatus(tenantId: string, reference: string, status: OfferStatus, opts: { note?: string | null; by?: string; at?: Date } = {}): Promise<Offer | null> {
+  /** `from`: the statuses it may move from, checked in the same statement, so two clicks cannot both decide an offer. */
+  async setOfferStatus(tenantId: string, reference: string, status: OfferStatus, opts: { note?: string | null; by?: string; at?: Date; from?: OfferStatus[] } = {}): Promise<Offer | null> {
     const at = opts.at ?? new Date();
     const decided = ['accepted', 'declined', 'countered', 'withdrawn'].includes(status);
     const rows = await this.db.query<any>(
@@ -874,9 +875,9 @@ export class Repo {
          sent_at = case when $3 = 'sent' then $4 else sent_at end,
          decided_at = case when $5 then $4 else decided_at end,
          note = coalesce($6, note), history = history || $7::jsonb
-       where tenant_id = $1 and reference = $2 returning *`,
+       where tenant_id = $1 and reference = $2 and ($8::text[] is null or status = any($8::text[])) returning *`,
       [tenantId, reference.toUpperCase(), status, at, decided, opts.note ?? null,
-        JSON.stringify([{ at: at.toISOString(), by: opts.by ?? 'staff', what: status === 'sent' ? 'sent to the seller' : status }])],
+        JSON.stringify([{ at: at.toISOString(), by: opts.by ?? 'staff', what: status === 'sent' ? 'sent to the seller' : status }]), opts.from ?? null],
     );
     return rows[0] ? mapOffer(rows[0]) : null;
   }
