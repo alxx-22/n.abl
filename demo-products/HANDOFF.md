@@ -43,6 +43,16 @@ Everything in A and B below is done, each fix reproduced by a test first:
   early when the receptionist's model falls back and the simulated caller
   goes quiet. Re-run a call that ends after a turn or two before reading
   anything into it.
+- Live run, night of 4–5 October (`eval-results/2026-10-04T22-51-23`, not
+  in git): 2 of 7 passed (`ea-short-lease`, `ea-bank-details-change`).
+  `ea-listing-facts` was right but the check read "no flood defences" as
+  "never flooded" (check fixed in `e58e691`). Four calls ended with the
+  receptionist silent mid-sentence for 45 s (after a tool's "not yet", or
+  with no tool at all); the code from before this session (`13d333d`)
+  stalls the same way on `ea-offer-taken`, so it is the live service that
+  night, not the code. Re-run all seven before trusting either result. One
+  real slip seen twice: a read-back phrased "I've booked ... is that
+  right?" (rule 1 and the guard already cover it).
 - The prompt at its largest is now about 6,960 characters (limit 7,000):
   put new guidance in tool answers, not the prompt.
 - Next: M2 (below).
