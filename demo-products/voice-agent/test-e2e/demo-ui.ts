@@ -450,6 +450,9 @@ async function walkEstate({ shot }: Walk) {
   await next('Office and viewing hours');
   await page.fill('input[aria-label="Viewings Saturday Open closes"]', '17:00');
   await saved();
+  // Three copy buttons, one per week, each with its own name.
+  const copies = await page.getByRole('button', { name: /Copy Monday/ }).evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-label') ?? b.textContent));
+  if (copies.length !== 3 || new Set(copies).size !== 3) throw new Error(`copy buttons not named by week: ${JSON.stringify(copies)}`);
   await shot(page, 'builder-hours');
   await next('Your team');
   await page.click('button:has-text("+ Add someone")');

@@ -100,7 +100,8 @@ export function Week({ days, edit, options, name, add = '+ Add a service' }: { d
         })}
       </div>
       <div className="row-tools">
-        <button type="button" className="small" onClick={() => edit((w) => { const t = w[copy.from]; for (const k of copy.to) w[k] = structuredClone(t); })}>{copy.label}</button>
+        {/* Named by its week, as the day switches are: a screen reader hears three different buttons, not one name three times. */}
+        <button type="button" className="small" aria-label={name ? `${name}: ${copy.label}` : undefined} onClick={() => edit((w) => { const t = w[copy.from]; for (const k of copy.to) w[k] = structuredClone(t); })}>{copy.label}</button>
         <span className="hint">The latest close is midnight: enter it as 00:00.</span>
       </div>
     </>
