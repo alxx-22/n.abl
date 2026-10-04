@@ -516,11 +516,11 @@ export class Repo {
   }
 
   /** Adds to what a booking knows (a viewing's feedback), keeping the rest, with a line in its history. */
-  async mergeBookingDetails(tenantId: string, reference: string, patch: Record<string, unknown>, what: string): Promise<Booking | null> {
+  async mergeBookingDetails(tenantId: string, reference: string, patch: Record<string, unknown>, what: string, by = 'staff'): Promise<Booking | null> {
     const rows = await this.db.query<any>(
       `update public.voice_bookings set details = details || $3::jsonb, history = history || $4::jsonb, updated_at = now()
        where tenant_id = $1 and reference = $2 returning *`,
-      [tenantId, reference.toUpperCase(), JSON.stringify(patch), historyEntry('staff', what)],
+      [tenantId, reference.toUpperCase(), JSON.stringify(patch), historyEntry(by, what)],
     );
     return rows[0] ? mapBooking(rows[0]) : null;
   }

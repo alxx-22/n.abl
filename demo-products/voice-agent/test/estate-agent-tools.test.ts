@@ -740,3 +740,24 @@ test('get_offer_status: a buyer\'s own offer as recorded, only for the number it
   const rival = (await repo.listOffers(t.id, home.listing_key)).find((o) => o.phone !== bidder.phone && ['received', 'sent'].includes(o.status))!;
   assert.ok(!JSON.stringify(bf).includes((rival.amount_pence / 100).toLocaleString('en-GB')), 'never the rival\'s amount');
 });
+
+test('record_viewing_feedback: the caller\'s own past viewing only; it reaches the seller\'s update', async () => {
+  const t = await agency('ea-feedback');
+  const sam = await call(t, '+447700900002');
+  const before = await (await call(t, '+447700900001')).run('get_marketing_update', { property: 'Larkspur Close' });
+  assert.equal(before.feedback_awaited, 1, "Sam's is awaited");
+  const r = await sam.run('record_viewing_feedback', { category: 'keen', words: 'Lovely garden, a bit small upstairs.' });
+  assert.equal(r.recorded, true, JSON.stringify(r));
+  assert.equal(r.property, '14 Larkspur Close');
+  assert.match(String(r.next), /second viewing or to take an offer, once/);
+  assert.equal(sam.actions.at(-1)?.kind, 'booking_changed');
+  const after = await (await call(t, '+447700900001')).run('get_marketing_update', { property: 'Larkspur Close' });
+  assert.ok((after.feedback as { said: string }[]).some((f) => f.said === 'Lovely garden, a bit small upstairs.'), JSON.stringify(after.feedback));
+  assert.equal(after.feedback_awaited, undefined);
+  // Someone else's viewing, or no viewing at all: a message instead.
+  const other = (await repo.listBookings(t.id, new Date(NOW.getTime() - 14 * 86400000), NOW)).find((b) => b.listing_key && b.phone && b.phone !== '+447700900002')!;
+  assert.equal((await sam.run('record_viewing_feedback', { reference: other.reference, category: 'not for me', words: 'Too dark.' })).recorded, false);
+  const stranger = await (await call(t, '+447700900009')).run('record_viewing_feedback', { category: 'keen', words: 'Nice.' });
+  assert.match(String(stranger.message), /message for the negotiator/);
+  assert.equal((await sam.run('record_viewing_feedback', { words: 'Nice.' })).recorded, false, 'how keen is asked, never assumed');
+});

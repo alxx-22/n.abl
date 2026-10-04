@@ -1000,6 +1000,43 @@ async function getOfferStatus(args: Args, ctx: ToolContext): Promise<Record<stri
   };
 }
 
+/** "keen", "second viewing", "likely to offer", "not for me", as a caller or the model says them. */
+function feedbackCategory(v: unknown): string | null {
+  const w = (str(v) ?? '').toLowerCase();
+  if (/second|again|another look/.test(w)) return 'second_viewing';
+  if (/offer/.test(w)) return 'likely_offer';
+  if (/not for|didn'?t|\bpass\b|\bno\b/.test(w)) return 'not_for_me';
+  if (/keen|interest|lik|love/.test(w)) return 'keen';
+  return null;
+}
+
+/** A buyer's own feedback on a viewing they've had: it goes on the viewing, and into the seller's update. */
+async function recordViewingFeedback(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const t = ctx.tenant;
+  const phone = ctx.callerPhone;
+  const words = str(args.words);
+  const category = feedbackCategory(args.category);
+  if (!words || !category) return { recorded: false, message: 'Ask what they thought, in their words, and whether they are keen, would like a second viewing, may offer, or it is not for them; then call this again.' };
+  const now = ctx.now();
+  const ref = str(args.reference)?.replace(/[^a-z0-9]/gi, '').toUpperCase();
+  const theirs = phone
+    ? (await ctx.repo.listBookings(t.id, new Date(now.getTime() - 30 * DAY), now)).filter((b) => b.phone === phone && b.listing_key && b.ends_at <= now && (!ref || b.reference === ref))
+    : [];
+  const b = theirs.sort((x, y) => y.starts_at.getTime() - x.starts_at.getTime())[0];
+  // Only their own viewing: anyone else's feedback, or a reference not on this number, is a message.
+  if (!b) return { recorded: false, message: 'There is no past viewing on this number. Take their feedback as a message for the negotiator (category viewing).' };
+  const l = t.profile.listings!.find((x) => x.key === b.listing_key)!;
+  await ctx.repo.mergeBookingDetails(t.id, b.reference, { feedback: { category, words, source: 'caller', at: now.toISOString() }, awaiting_feedback: false }, `feedback from the buyer: ${category.replace(/_/g, ' ')}`, 'receptionist');
+  ctx.action({ kind: 'booking_changed', title: `Feedback · ${shortAddress(l)}`, detail: `${FEEDBACK_WORDS[category]}: "${words}" · ref ${b.reference}`, data: { reference: b.reference } });
+  return {
+    recorded: true,
+    property: shortAddress(l),
+    next: category === 'not_for_me'
+      ? "Thank them. Offer once to note what they're looking for, so we can tell them about other homes."
+      : 'Offer a second viewing or to take an offer, once, without pressure.',
+  };
+}
+
 const LINK_WORDS: [RegExp, Listing['links'][number]][] = [[/brochure|details|particular/, 'brochure'], [/floor/, 'floorplan'], [/video|tour/, 'video'], [/epc|energy/, 'epc']];
 const LINK_LABEL: Record<Listing['links'][number], string> = { brochure: 'Brochure', floorplan: 'Floorplan', video: 'Video tour', epc: 'EPC' };
 
@@ -1114,6 +1151,18 @@ export const ESTATE_TOOLS: Record<string, Tool> = {
       parameters: obj({ property: S('The home, as the caller said it'), reference: S("The offer's reference, if they have it") }),
     },
     handler: getOfferStatus,
+  },
+  record_viewing_feedback: {
+    when: hasHomes,
+    decl: {
+      name: 'record_viewing_feedback',
+      description: "Note the caller's own feedback on a viewing they've had. It goes to the seller.",
+      parameters: obj(
+        { reference: S("The viewing's reference, if they have it; else their most recent"), category: S('keen, second viewing, likely offer, or not for me'), words: S('What they thought, in their words') },
+        ['category', 'words'],
+      ),
+    },
+    handler: recordViewingFeedback,
   },
   get_property: {
     when: hasHomes,
