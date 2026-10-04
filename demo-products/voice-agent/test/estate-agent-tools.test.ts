@@ -422,6 +422,8 @@ test('an offer, end to end: the fee first, then recorded whatever it is, confirm
   const r = await run('record_offer', args);
   assert.equal(r.recorded, true, JSON.stringify(r));
   assert.equal(r.read_back, 'An offer of £320,000 for 22 Albion Road from Sam and Alex Price, subject to survey. First-time buyers, mortgage agreed in principle.');
+  // The seed's offer on the house is there: that others exist may be said, never who or how much (TPO 9f).
+  assert.equal(r.other_offers, 'There are other offers on this home; we never share amounts.');
   assert.match(String(r.say), /goes to the seller promptly/);
   for (const o of before) assert.ok(!JSON.stringify(r).includes(String(o.amount_pence / 100).slice(0, 3)) || o.amount_pence === 32000000, 'no other offer\'s amount');
   assert.doesNotMatch(JSON.stringify(r), /other offer of|accept(ed)? it|likely|good offer|low/i);
@@ -709,4 +711,32 @@ test('get_marketing_update: the seller of that home only, checked by number; vie
   assert.match(String((await stranger.run('get_marketing_update', { property: 'Larkspur Close' })).next), /No more tries/);
   // No calling number: never verified.
   assert.equal((await (await call(t, null)).run('get_marketing_update', { property: 'Larkspur Close' })).verified, false);
+});
+
+test('get_offer_status: a buyer\'s own offer as recorded, only for the number it was made from; others exist, never how much', async () => {
+  const t = await agency('ea-offer-status');
+  const aisha = await call(t, '+447700900003');
+  const mine = await aisha.run('get_offer_status', { property: 'Larkspur Close' });
+  assert.equal(mine.verified, true, JSON.stringify(mine));
+  assert.equal(mine.amount, '£285,000');
+  assert.match(String(mine.status), /^put to the seller yesterday at .+; waiting for their decision$/);
+  assert.equal(mine.other_offers, undefined, 'hers is the only one');
+  assert.match(String(mine.say), /will confirm any decision in writing/);
+  // Accepted, as the tool says: the receptionist may say so without a false-acceptance flag.
+  const ben = await call(t, '+447700900004');
+  const won = await ben.run('get_offer_status', {});
+  assert.match(String(won.status), /^accepted .+, subject to contract$/);
+  assert.equal(checkUtterance('Good news: your offer has been accepted, subject to contract.', ben.ctx.state).filter((f) => f.rule === 'unconfirmed_acceptance').length, 0);
+  // Someone else with Aisha's reference: nothing, not even that it exists.
+  const stranger = await call(t, '+447700900009');
+  const theirs = await stranger.run('get_offer_status', { reference: String(mine.reference) });
+  assert.deepEqual([theirs.verified, theirs.amount, theirs.status], [false, undefined, undefined]);
+  // Best and final, with a rival bid: the deadline and that others exist.
+  const home = (await repo.listingStates(t.id)).find((l) => l.best_final_at)!;
+  const bidder = (await repo.listOffers(t.id, home.listing_key)).find((o) => o.phone && ['received', 'sent'].includes(o.status))!;
+  const bf = await (await call(t, bidder.phone)).run('get_offer_status', {});
+  assert.match(String(bf.best_and_final), /^best and final offers by /);
+  assert.equal(bf.other_offers, 'There are other offers on this home; we never share amounts.');
+  const rival = (await repo.listOffers(t.id, home.listing_key)).find((o) => o.phone !== bidder.phone && ['received', 'sent'].includes(o.status))!;
+  assert.ok(!JSON.stringify(bf).includes((rival.amount_pence / 100).toLocaleString('en-GB')), 'never the rival\'s amount');
 });

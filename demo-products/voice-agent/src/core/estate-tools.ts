@@ -711,7 +711,9 @@ async function recordOffer(args: Args, ctx: ToolContext): Promise<Record<string,
     say: "It goes to the seller promptly, and we'll confirm it in writing. If it's accepted, there are standard ID and proof-of-funds checks.",
     note: status === 'sale_agreed' ? 'A sale is agreed on this home, but every offer still goes to the seller until contracts are exchanged: say so.' : undefined,
     confirmation_text: sent ? 'sent by text, with the reference' : email ? 'the team will email it' : 'Ask for a mobile or email so we can confirm it in writing, and take it in a message.',
-    next: 'Read back read_back and the reference one character at a time, then say. Never hint at the answer, comment on the amount, or mention any other offer.',
+    // That other offers exist may be said (TPO 9f); who made them and how much, never.
+    other_offers: (await othersOn(ctx, l.key, phone)) ? OTHER_OFFERS : undefined,
+    next: 'Read back read_back and the reference one character at a time, then say. Never hint at the answer or comment on the amount; of other offers, say only other_offers.',
   };
 }
 
@@ -938,6 +940,66 @@ async function getMarketingUpdate(args: Args, ctx: ToolContext): Promise<Record<
   };
 }
 
+const OTHER_OFFERS = 'There are other offers on this home; we never share amounts.';
+
+/** Open offers on a home from anyone but this number: that they exist may be said (TPO 9f), never who or how much. */
+async function othersOn(ctx: ToolContext, key: string, phone: string | null): Promise<boolean> {
+  return (await ctx.repo.listOffers(ctx.tenant.id, key)).some((o) => ['received', 'sent', 'countered'].includes(o.status) && o.phone !== phone);
+}
+
+/** Where a buyer's own offer stands, as recorded: only for the number that made it. */
+async function getOfferStatus(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const t = ctx.tenant;
+  const phone = ctx.callerPhone;
+  const refuse = (next = 'Offer a message for the negotiator. Never say whether that offer exists.') => ({ verified: false, say: "I can only talk about an offer with the number it was made from. I can take a message for the negotiator.", next });
+  if (ctx.state.verifyMisses >= 3) return refuse('No more tries this call: offer a message.');
+  const ref = str(args.reference)?.replace(/[^a-z0-9]/gi, '').toUpperCase();
+  const mine = phone ? await ctx.repo.findOffer(t.id, { phone }) : [];
+  let picked = ref ? mine.filter((o) => o.reference === ref) : mine;
+  if (!ref && str(args.property)) {
+    const r = await resolveHome(ctx, args.property);
+    if ('reply' in r && r.reply.more_than_one) return { verified: false, ...r.reply };
+    picked = 'reply' in r ? [] : mine.filter((o) => o.listing_key === r.home.listing.key);
+  }
+  // Their latest offer on each home: a raise replaces what it raised.
+  picked = picked.filter((o, i) => picked.findIndex((x) => x.listing_key === o.listing_key) === i);
+  if (!picked.length) {
+    ctx.state.verifyMisses++;
+    return refuse();
+  }
+  if (picked.length > 1) return { verified: true, more_than_one: picked.map((o) => shortAddress(t.profile.listings!.find((l) => l.key === o.listing_key)!)), next: 'Ask which home.' };
+  const o = picked[0];
+  const l = t.profile.listings!.find((x) => x.key === o.listing_key)!;
+  const live = (await ctx.repo.listingState(t.id, l.key))!;
+  const tz = t.profile.timezone;
+  const day = today(ctx);
+  const at = (d: Date) => `${dayWords(toLocal(d, tz).date, day)} at ${spokenTime(toLocal(d, tz).time)}`;
+  const negotiator = firstNameOf(t, l.negotiator) || 'the negotiator';
+  const decided = o.decided_at ?? o.received_at;
+  const status: Record<string, string> = {
+    received: `received ${at(o.received_at)}; ${negotiator} will put it to the seller`,
+    sent: `put to the seller ${at(o.sent_at ?? o.received_at)}; waiting for their decision`,
+    accepted: `accepted ${at(decided)}, subject to contract`,
+    declined: `the seller decided not to accept it (${at(decided)})`,
+    countered: `the seller came back about it ${at(decided)}; ${negotiator} will call you to talk it through`,
+    withdrawn: `withdrawn ${at(decided)}`,
+  };
+  // An acceptance the tool reported is news the receptionist may pass on (guardrails).
+  if (o.status === 'accepted' && !ctx.state.seen.accepted.includes(l.key)) ctx.state.seen.accepted.push(l.key);
+  const open = ['received', 'sent', 'countered'].includes(o.status);
+  return {
+    verified: true,
+    property: shortAddress(l),
+    reference: o.reference,
+    amount: poundsWhole(o.amount_pence),
+    status: status[o.status],
+    best_and_final: open && live.best_final_at ? `best and final offers by ${at(live.best_final_at)}` : undefined,
+    other_offers: open && (await othersOn(ctx, l.key, phone)) ? OTHER_OFFERS : undefined,
+    say: `${negotiator} will confirm any decision in writing.`,
+    next: 'Say only this. Never guess what the seller will decide, or when.',
+  };
+}
+
 const LINK_WORDS: [RegExp, Listing['links'][number]][] = [[/brochure|details|particular/, 'brochure'], [/floor/, 'floorplan'], [/video|tour/, 'video'], [/epc|energy/, 'epc']];
 const LINK_LABEL: Record<Listing['links'][number], string> = { brochure: 'Brochure', floorplan: 'Floorplan', video: 'Video tour', epc: 'EPC' };
 
@@ -1043,6 +1105,15 @@ export const ESTATE_TOOLS: Record<string, Tool> = {
       parameters: obj({ property: S('The home, as the caller said it') }, ['property']),
     },
     handler: getMarketingUpdate,
+  },
+  get_offer_status: {
+    when: hasHomes,
+    decl: {
+      name: 'get_offer_status',
+      description: "Where the caller's own offer stands, as recorded. Only for the number it was made from.",
+      parameters: obj({ property: S('The home, as the caller said it'), reference: S("The offer's reference, if they have it") }),
+    },
+    handler: getOfferStatus,
   },
   get_property: {
     when: hasHomes,

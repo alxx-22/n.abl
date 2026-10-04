@@ -9,6 +9,7 @@
  "search_properties",
  "find_party",
  "get_marketing_update",
+ "get_offer_status",
  "get_property",
  "send_property_details",
  "book_valuation",
