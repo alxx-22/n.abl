@@ -1,4 +1,4 @@
-# Handover: the receptionist demo service (3 October 2026, evening)
+# Handover: the receptionist demo service (4 October 2026)
 
 For the next session. Read `CLAUDE.md` (rules and commands) first, then this.
 
@@ -68,8 +68,16 @@ Dispatch, Properties and compliance, Safety log, the engineer's phone), walk,
   - Golden corpus: `test/fixtures/estate_agent/`, made by
     `scripts/estate-goldens.ts`, checked by `test/estate-golden.test.ts`. The
     shared helpers are in `scripts/goldens.ts`. Its `max` setup is the true
-    maximum (twenty distinct towns): the prompt is 6,484 characters there,
-    after the "We cover..." fact was capped at six towns.
+    maximum and valid (every box at its cap, twenty long towns, thirty
+    districts not in a run, three different periods every day in all three
+    weeks): the prompt is 6,922 characters there. Very long hours, viewing
+    times and area lists are shortened in the prompt only (the open days and
+    "the tool has the times"; the first few towns and districts and a count);
+    the searchable answers keep them in full.
+  - Independent review (3 October, evening): 29 confirmed problems across the
+    call engine, staff actions, builder, back office and seed. All fixed in
+    five commits on 4 October (`7f815bd`, `705c78b`, `267e7a7`, `bdddb2a`,
+    `288aae9`), each with tests.
 - **Framework** for every kind of business: done (`PRESETS.md`).
 - **Order of presets** (Alex): estate agent, property maintenance, then
   takeaway (PRESETS.md §5), barber, salon, café, pub, beauty, spa, hotel,
@@ -94,9 +102,9 @@ the session: see the latest folder in `voice-agent/eval-results/`.
 - Moving a booking to another staff member must be made generic before the
   barber; the estate Diary has no drag-to-move until then (its drawer hides
   the move list for viewings).
-- The estate seed put no bookings on "today" when Start was pressed on a
-  Saturday at 17:22 (after viewing hours). Check whether the seed should add
-  a few earlier that day, as the restaurant's does.
+- The restaurant's builder still drops a half-filled question row on
+  autosave (the estate's now keeps it until compile). Fix it when the
+  restaurant is next touched, and re-record its goldens in that commit.
 - The takeaway's order fields (`ready_at`, `driver`) are written but not yet
   read back (do it when the takeaway is built).
 - `NEXT-SESSION-PROMPT.md` is from an older session; use this file instead.
