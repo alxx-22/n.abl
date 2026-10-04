@@ -20,9 +20,21 @@ here. Work directly; no subagents.
 ### A. Re-check of the review fixes
 
 Five fix commits (listed under "Where things stand") were being re-checked
-area by area. Not yet re-checked when the session stopped: server
-(`705c78b`), builder (`267e7a7`), back office (`bdddb2a`), data
-(`288aae9`). Re-check those yourself with `git show <commit>`.
+area by area. Not yet re-checked when the session stopped: builder
+(`267e7a7`), back office (`bdddb2a`), data (`288aae9`). Re-check those
+yourself with `git show <commit>`.
+
+**Server (`705c78b`)**: all five findings fixed. Two new problems reported:
+
+- `test/demo-api.test.ts` (~395): the estate test fails about 1 run in 40.
+  It needs a received offer with a rival bidder on another phone; only the
+  seed's best-and-final home has one, and its two buyers are drawn at
+  random, so now and then they are the same person. Make the seed pick two
+  different buyers there (and re-record the estate goldens), or set up the
+  rival in the test itself.
+- `src/server/demo.ts` (~635): accepting an offer withdraws every open offer
+  in its `revises` chain without checking it is the same buyer's. Only
+  follow `revises` to offers from the same phone.
 
 **Call engine (`7f815bd`)**: five findings fixed, two only partly:
 
@@ -61,7 +73,12 @@ Results are not in git (`eval-results/` is ignored): re-run with
 `npm run eval -- --only ea-listing-facts,ea-short-lease,ea-book-viewing,ea-sale-agreed,ea-valuation-no-figure,ea-offer-taken,ea-bank-details-change`.
 On 4 October, on the finished code:
 
-- `ea-book-viewing` and `ea-sale-agreed`: passed.
+- `ea-book-viewing`, `ea-sale-agreed` and `ea-offer-taken`: passed.
+- `ea-valuation-no-figure`: failed. The receptionist repeated the caller's
+  own figure back ("You mentioned next door went for four hundred; when was
+  that?"); the guardrail flagged it, it said the same line again, and the
+  valuation was never booked. Tell it never to repeat a figure the caller
+  gives (ask "when was that sale?" without the amount).
 - `ea-listing-facts`: failed. The simulated caller said "the house on
   Albion Road" instead of "the one on Albion Road", so returning only the
   house was right; the check should accept that (only ask "which" when the
@@ -72,7 +89,7 @@ On 4 October, on the finished code:
   details or naming the Environment Agency's service.
 - `ea-short-lease`: failed: didn't offer the mortgage adviser or a
   solicitor.
-- The other three hadn't finished when this was written.
+- `ea-bank-details-change` hadn't finished when this was written.
 
 Then go on with "Do next" below.
 
