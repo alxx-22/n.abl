@@ -61,7 +61,8 @@ test('estate golden: what the FAQ draft asks the model', () => check('drafts'));
 test('estate golden: the eval\'s Hartwell & Green: profile, prompt and tools', () => check('tenants/ea-hartwell'));
 
 test('estate golden: the prompt at its very largest stays under 7,000 characters', () => {
-  // The corpus's max has every list at its cap with distinct entries (twenty towns, thirty districts), which presets.test.ts's repeated defaults do not reach.
+  // The corpus's max has every box and list at its cap with distinct entries (twenty long towns, thirty districts not in a run,
+  // three different periods every day in all three weeks), which presets.test.ts's repeated defaults do not reach.
   const prompt = goldens().get('max/prompt.json') as Record<string, string[]>;
   for (const [channel, lines] of Object.entries(prompt)) assert.ok(lines.join('\n').length < 7000, `${channel}: ${lines.join('\n').length} characters`);
 });

@@ -1,8 +1,9 @@
 // A seeded week replayed through the availability check (PRESETS.md §4):
 // sorted by start, each booking must be what checkSlot gives with the
 // earlier ones already booked, at a time its service offers, on the same
-// table or person, under its home's rules for a viewing. The seed skips
-// only the notice period, as it does for rows already in the past.
+// table or person, under its home's rules for a viewing, and an estate
+// agency's buyer at one home at a time. The seed skips only the notice
+// period, as it does for rows already in the past.
 
 import { candidateTimes, checkSlot, findService, type BusyInterval } from '../src/domain/availability.ts';
 import { viewingRules } from '../src/domain/listings.ts';
@@ -38,6 +39,10 @@ export function replaySeed(profile: TenantProfile, plan: SeedPlan): string[] {
     );
     if (!slot) out.push(`${say}: not free, or not allowed`);
     else if (slot.resource_key !== b.resource_key || slot.ends_at.getTime() !== b.ends_at.getTime()) out.push(`${say}: checkSlot gives ${slot.resource_key} until ${slot.ends_at.toISOString()}`);
+    // An estate agency's buyer is at one home at a time, travel included.
+    const gap = (b.buffer_minutes ?? 0) * 60000;
+    const clash = profile.listings && b.phone ? sorted.find((x) => x !== b && x.phone === b.phone && x.starts_at <= b.starts_at && b.starts_at.getTime() < x.ends_at.getTime() + gap) : undefined;
+    if (clash) out.push(`${say}: ${b.name} is still at ${clash.reference}`);
     existing.push({ id: b.reference, resource_key: b.resource_key, starts_at: b.starts_at, ends_at: b.ends_at, buffer_minutes: b.buffer_minutes ?? 0, listing_key: b.listing_key ?? null });
   }
   return out;

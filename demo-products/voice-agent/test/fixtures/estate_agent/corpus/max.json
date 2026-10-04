@@ -3,25 +3,31 @@
  "basics": {
   "name": "Name Name Name Name Name Name Name Name Name Name Name Name Name Name ",
   "style": "Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style St",
-  "town": "Brackenford",
-  "address": "12 High Street, Brackenford BK1 2AB",
+  "town": "Town Town Town Town Town Town Town Town Town Town Town Town Town Town ",
+  "address": "Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Ad BK1 2AB",
   "phone_display": "01632 960 123",
   "website": "",
   "voice": "Kore",
-  "greeting": ""
+  "greeting": "Hello, you're through to the AI assistant on this demo line. Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Gre"
  },
  "hours": {
   "days": [
    {
-    "open": false,
-    "services": []
-   },
-   {
     "open": true,
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:10",
+      "close": "13:20"
+     },
+     {
+      "label": "Open",
+      "open": "14:10",
       "close": "17:30"
      }
     ]
@@ -31,8 +37,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "17:30"
+      "open": "08:15",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:11",
+      "close": "13:21"
+     },
+     {
+      "label": "Open",
+      "open": "14:11",
+      "close": "18:31"
      }
     ]
    },
@@ -41,8 +57,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "17:30"
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:12",
+      "close": "13:22"
+     },
+     {
+      "label": "Open",
+      "open": "14:12",
+      "close": "19:32"
      }
     ]
    },
@@ -51,8 +77,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "17:30"
+      "open": "08:15",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:13",
+      "close": "13:23"
+     },
+     {
+      "label": "Open",
+      "open": "14:13",
+      "close": "17:33"
      }
     ]
    },
@@ -61,8 +97,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "17:30"
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:14",
+      "close": "13:24"
+     },
+     {
+      "label": "Open",
+      "open": "14:14",
+      "close": "18:34"
      }
     ]
    },
@@ -71,8 +117,38 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "16:00"
+      "open": "08:15",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:15",
+      "close": "13:25"
+     },
+     {
+      "label": "Open",
+      "open": "14:15",
+      "close": "19:35"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:16",
+      "close": "13:26"
+     },
+     {
+      "label": "Open",
+      "open": "14:16",
+      "close": "17:36"
      }
     ]
    }
@@ -83,40 +159,40 @@
   "nation": "england",
   "districts": [
    "BK1",
-   "BK2",
    "BK3",
-   "BK4",
    "BK5",
-   "BK6",
    "BK7",
-   "BK8",
    "BK9",
-   "BK10",
    "BK11",
-   "BK12",
    "BK13",
-   "BK14",
    "BK15",
-   "BK16",
    "BK17",
-   "BK18",
    "BK19",
-   "BK20",
    "BK21",
-   "BK22",
    "BK23",
-   "BK24",
    "BK25",
-   "BK26",
    "BK27",
-   "BK28",
    "BK29",
-   "BK30",
    "BK31",
-   "BK32",
    "BK33",
-   "BK34",
-   "BK35"
+   "BK35",
+   "BK37",
+   "BK39",
+   "BK41",
+   "BK43",
+   "BK45",
+   "BK47",
+   "BK49",
+   "BK51",
+   "BK53",
+   "BK55",
+   "BK57",
+   "BK59",
+   "BK61",
+   "BK63",
+   "BK65",
+   "BK67",
+   "BK69"
   ],
   "towns": [
    "Town 1 long long long long long long long long long long ",
@@ -151,16 +227,22 @@
  "diary": {
   "viewing_days": [
    {
-    "open": false,
-    "services": []
-   },
-   {
     "open": true,
     "services": [
      {
-      "label": "Open",
-      "open": "09:00",
-      "close": "19:00"
+      "label": "Viewings",
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Viewings",
+      "open": "11:10",
+      "close": "13:20"
+     },
+     {
+      "label": "Viewings",
+      "open": "14:10",
+      "close": "17:30"
      }
     ]
    },
@@ -169,8 +251,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "19:00"
+      "open": "08:15",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:11",
+      "close": "13:21"
+     },
+     {
+      "label": "Open",
+      "open": "14:11",
+      "close": "18:31"
      }
     ]
    },
@@ -179,8 +271,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "19:00"
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:12",
+      "close": "13:22"
+     },
+     {
+      "label": "Open",
+      "open": "14:12",
+      "close": "19:32"
      }
     ]
    },
@@ -189,8 +291,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "19:00"
+      "open": "08:15",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:13",
+      "close": "13:23"
+     },
+     {
+      "label": "Open",
+      "open": "14:13",
+      "close": "17:33"
      }
     ]
    },
@@ -199,8 +311,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "19:00"
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:14",
+      "close": "13:24"
+     },
+     {
+      "label": "Open",
+      "open": "14:14",
+      "close": "18:34"
      }
     ]
    },
@@ -209,24 +331,60 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "16:00"
+      "open": "08:15",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:15",
+      "close": "13:25"
+     },
+     {
+      "label": "Open",
+      "open": "14:15",
+      "close": "19:35"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:16",
+      "close": "13:26"
+     },
+     {
+      "label": "Open",
+      "open": "14:16",
+      "close": "17:36"
      }
     ]
    }
   ],
   "valuation_days": [
    {
-    "open": false,
-    "services": []
-   },
-   {
     "open": true,
     "services": [
      {
-      "label": "Open",
-      "open": "09:00",
-      "close": "18:00"
+      "label": "Valuations",
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Valuations",
+      "open": "11:10",
+      "close": "13:20"
+     },
+     {
+      "label": "Valuations",
+      "open": "14:10",
+      "close": "17:30"
      }
     ]
    },
@@ -235,8 +393,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "18:00"
+      "open": "08:15",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:11",
+      "close": "13:21"
+     },
+     {
+      "label": "Open",
+      "open": "14:11",
+      "close": "18:31"
      }
     ]
    },
@@ -245,8 +413,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "18:00"
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:12",
+      "close": "13:22"
+     },
+     {
+      "label": "Open",
+      "open": "14:12",
+      "close": "19:32"
      }
     ]
    },
@@ -255,8 +433,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "18:00"
+      "open": "08:15",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:13",
+      "close": "13:23"
+     },
+     {
+      "label": "Open",
+      "open": "14:13",
+      "close": "17:33"
      }
     ]
    },
@@ -265,8 +453,18 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "18:00"
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:14",
+      "close": "13:24"
+     },
+     {
+      "label": "Open",
+      "open": "14:14",
+      "close": "18:34"
      }
     ]
    },
@@ -275,8 +473,38 @@
     "services": [
      {
       "label": "Open",
-      "open": "09:00",
-      "close": "13:00"
+      "open": "08:15",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:15",
+      "close": "13:25"
+     },
+     {
+      "label": "Open",
+      "open": "14:15",
+      "close": "19:35"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "07:45",
+      "close": "10:30"
+     },
+     {
+      "label": "Open",
+      "open": "11:16",
+      "close": "13:26"
+     },
+     {
+      "label": "Open",
+      "open": "14:16",
+      "close": "17:36"
      }
     ]
    }
@@ -2882,7 +3110,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_13",
+   "negotiator": "person_1",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -3068,7 +3296,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_14",
+   "negotiator": "person_2",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -3255,7 +3483,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_1",
+   "negotiator": "person_3",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -3454,7 +3682,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_2",
+   "negotiator": "person_4",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -3645,7 +3873,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_3",
+   "negotiator": "person_5",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -3832,7 +4060,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_4",
+   "negotiator": "person_6",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -4027,7 +4255,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_5",
+   "negotiator": "person_7",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -4229,7 +4457,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_6",
+   "negotiator": "person_8",
    "personal_interest": null,
    "other_agents": "Harper & Co, until June",
    "links": {
@@ -4420,7 +4648,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_7",
+   "negotiator": "person_9",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -4615,7 +4843,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_8",
+   "negotiator": "person_10",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -4798,7 +5026,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_9",
+   "negotiator": "person_11",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -4981,7 +5209,7 @@
     "occupied": "vacant",
     "key_held": true
    },
-   "negotiator": "person_10",
+   "negotiator": "person_12",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -5176,7 +5404,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_11",
+   "negotiator": "person_1",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -5363,7 +5591,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_12",
+   "negotiator": "person_2",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -5547,7 +5775,7 @@
     "occupied": "tenant",
     "key_held": false
    },
-   "negotiator": "person_13",
+   "negotiator": "person_3",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -5735,7 +5963,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_14",
+   "negotiator": "person_4",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -5933,7 +6161,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_1",
+   "negotiator": "person_5",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -6132,7 +6360,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_2",
+   "negotiator": "person_6",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -6326,7 +6554,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_3",
+   "negotiator": "person_7",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -6512,7 +6740,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_4",
+   "negotiator": "person_8",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -6699,7 +6927,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_5",
+   "negotiator": "person_9",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -6898,7 +7126,7 @@
     "occupied": "owner",
     "key_held": false
    },
-   "negotiator": "person_6",
+   "negotiator": "person_10",
    "personal_interest": null,
    "other_agents": "",
    "links": {
@@ -6929,7 +7157,7 @@
   "best_final": "Best and final offers are made in writing by a set time, and every buyer who has offered hears at once."
  },
  "valuations": {
-  "name": "free market appraisal",
+  "name": "valuation valuation valuation valuation valuation valuation valuation ",
   "minutes": 60,
   "rics": {
    "offered": false,

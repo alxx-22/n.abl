@@ -94,8 +94,23 @@ function max(): unknown {
   const a = defaultAnswers();
   a.basics.name = text(70, 'Name');
   a.basics.style = text(200, 'Style');
-  a.patch.districts = Array.from({ length: 35 }, (_, i) => `BK${i + 1}`);
+  a.basics.address = `${text(170, 'Address')} BK1 2AB`;
+  a.basics.town = text(70, 'Town');
+  a.basics.greeting = `Hello, you're through to the AI assistant on this demo line. ${text(300, 'Greeting')}`;
+  a.valuations.name = text(70, 'valuation');
+  // Three different periods every day, in all three weeks: hours words that cannot fold together.
+  const three = (label: string, d: number) => ({ open: true, services: [
+    { label, open: `0${7 + (d % 2)}:${d % 2 ? '15' : '45'}`, close: '10:30' },
+    { label, open: `11:${10 + d}`, close: `13:${20 + d}` },
+    { label, open: `14:${10 + d}`, close: `1${7 + (d % 3)}:${30 + d}` },
+  ] });
+  a.hours.days = a.hours.days.map((day, d) => three(day.services[0]?.label ?? 'Open', d));
+  a.diary.viewing_days = a.diary.viewing_days.map((day, d) => three(day.services[0]?.label ?? 'Viewings', d));
+  a.diary.valuation_days = a.diary.valuation_days.map((day, d) => three(day.services[0]?.label ?? 'Valuations', d));
+  // Not in a run, so the prompt cannot fold them into "BK1 to BK30".
+  a.patch.districts = Array.from({ length: 35 }, (_, i) => `BK${1 + i * 2}`);
   a.patch.towns = Array.from({ length: 25 }, (_, i) => `Town ${i + 1} ${text(50, 'long')}`);
+  // Two past the cap of twelve; the homes name only the twelve kept.
   a.team = Array.from({ length: 14 }, (_, i) => ({
     key: `person_${i + 1}`, name: `Person ${i + 1} ${text(60, 'Surname')}`, role: 'negotiator' as const,
     does: ['viewings', 'valuations', 'progression', 'mortgage'] as ('viewings' | 'valuations' | 'progression' | 'mortgage')[], days: [0, 1, 2, 3, 4, 5, 6], mobile: '07700 900099',
@@ -105,7 +120,7 @@ function max(): unknown {
     const l = structuredClone(sample[i % sample.length]);
     return {
       ...l, key: `home_${i + 1}`, ref: `HG${200 + i}`, number: `${i + 1}`, street: `${text(70, 'Street')} ${i}`,
-      negotiator: `person_${(i % 14) + 1}`, summary: text(250, 'Summary'), features: Array.from({ length: 15 }, (_, j) => `feature ${j} ${text(30, 'x')}`),
+      negotiator: `person_${(i % 12) + 1}`, summary: text(250, 'Summary'), features: Array.from({ length: 15 }, (_, j) => `feature ${j} ${text(30, 'x')}`),
       say_up_front: Array.from({ length: 6 }, (_, j) => `Must say ${j}: ${text(220, 'fact')}`), personal_interest: null,
     };
   });

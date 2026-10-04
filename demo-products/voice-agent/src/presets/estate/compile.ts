@@ -44,26 +44,48 @@ export function daysWords(days: DayHours[]): string {
   return spans.length > 1 ? `${spans.slice(0, -1).join(', ')} and ${spans.at(-1)}` : spans[0] ?? 'by arrangement';
 }
 
-/** "BK1 to BK5" when they run in order, else listed. */
-export function districtWords(districts: string[]): string {
+/** daysWords, or past `max` characters the days alone: check_availability has the times. */
+export function weekWords(days: DayHours[], max = Infinity): string {
+  const full = daysWords(days);
+  if (full.length <= max) return full;
+  const open = days.map((d, i) => (d.open && d.services.length ? i : -1)).filter((i) => i >= 0);
+  return `${dayRange(open).replace(/^Every/, 'every')}, at set times (check_availability has them)`;
+}
+
+const and = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}` : xs[0] ?? '');
+
+/** "BK1 to BK5" when they run in order, else listed: past `most`, the rest counted. */
+export function districtWords(districts: string[], most = Infinity): string {
   const m = districts.map((d) => /^([A-Z]+)(\d+)$/.exec(d));
   const run = districts.length > 2 && m.every((x, i) => x && x[1] === m[0]![1] && Number(x[2]) === Number(m[0]![2]) + i);
   if (run) return `${districts[0]} to ${districts.at(-1)}`;
-  return districts.length > 1 ? `${districts.slice(0, -1).join(', ')} and ${districts.at(-1)}` : districts[0] ?? '';
+  const more = districts.length - most;
+  return more > 0 ? and([...districts.slice(0, most), `${more} more district${more === 1 ? '' : 's'}`]) : and(districts);
+}
+
+/** Towns named while they fit in `chars` (always one), up to `most`. */
+function namedTowns(towns: string[], most: number, chars: number): string[] {
+  const out: string[] = [];
+  for (const t of towns) {
+    if (out.length >= most || (out.length && [...out, t].join(', ').length > chars)) break;
+    out.push(t);
+  }
+  return out;
 }
 
 /**
- * "We cover Brackenford, Little Haddon and Coldbrook, BK1 to BK5." `most`
- * names that many towns and counts the rest: the prompt's core fact keeps to
- * six, so twenty long town names cannot push it past its size, while the
- * searchable answer lists them all.
+ * "We cover Brackenford, Little Haddon and Coldbrook, BK1 to BK5." With
+ * `most`, the prompt's core fact names that many towns and districts (fewer
+ * towns when the names are long) and counts the rest, so twenty long town
+ * names and thirty districts cannot push it past its size; the searchable
+ * answer lists them all.
  */
 export function patchSentence(a: EstateAnswers, most = Infinity): string {
   const all = a.patch.towns;
-  const more = all.length > most ? all.length - most : 0;
-  const towns = more ? [...all.slice(0, most), `${more} more town${more === 1 ? '' : 's'} and village${more === 1 ? '' : 's'}`] : all;
-  const where = towns.length > 1 ? `${towns.slice(0, -1).join(', ')} and ${towns.at(-1)}` : towns[0] ?? '';
-  const districts = districtWords(a.patch.districts);
+  const named = Number.isFinite(most) ? namedTowns(all, most, 140) : all;
+  const more = all.length - named.length;
+  const where = and(more ? [...named, more === 1 ? 'one more town or village' : `${more} more towns and villages`] : named);
+  const districts = districtWords(a.patch.districts, most);
   if (!where && !districts) return '';
   return `We cover ${[where, districts].filter(Boolean).join(', ')}.`;
 }
@@ -265,9 +287,10 @@ export function compileEstate(a: EstateAnswers, meta: { slug: string }): TenantP
   return {
     ...baseProfile(a, meta, {
       businessType: 'estate_agent',
+      hoursMax: 200,
       noun: NOUN,
       facts: [
-        `Viewings: ${daysWords(a.diary.viewing_days)}. Valuations: ${daysWords(a.diary.valuation_days)}.`,
+        `Viewings: ${weekWords(a.diary.viewing_days, 160)}. Valuations: ${weekWords(a.diary.valuation_days, 160)}.`,
         patchSentence(a, 6),
         appraisalSentence(a),
         gasFact(a.patch.nation),

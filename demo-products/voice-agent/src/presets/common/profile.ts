@@ -3,8 +3,8 @@
 // facts. A preset adds its own facts, knowledge, booking and ordering.
 
 import type { BusinessType, KnowledgeEntry, TenantProfile } from '../../domain/types.ts';
-import { hoursSentence, openingHours } from './hours.ts';
-import type { BaseAnswers, BasicsAnswer, FaqAnswer } from './types.ts';
+import { dayRange, hoursSentence, openingHours } from './hours.ts';
+import type { BaseAnswers, BasicsAnswer, DayHours, FaqAnswer } from './types.ts';
 
 /** The prompt keeps only this many facts: the rest are the tools' job. */
 export const MAX_CORE_FACTS = 6;
@@ -32,6 +32,17 @@ export function capFacts(facts: (string | null | undefined)[]): string[] {
   return facts.filter((f): f is string => Boolean(f && f.trim())).slice(0, MAX_CORE_FACTS);
 }
 
+/**
+ * The hours fact. Past `max` characters (three different periods every day
+ * reads out as a paragraph), the open days alone: the tool has the times.
+ */
+export function hoursFact(hours: { days: DayHours[] }, max = Infinity): string {
+  const full = hoursSentence(hours);
+  if (full.length <= max) return full;
+  const open = hours.days.map((d, i) => (d.open && d.services.length ? i : -1)).filter((i) => i >= 0);
+  return `Open ${dayRange(open).replace(/^Every/, 'every')}, at times that vary by day: get_opening_hours has them.`;
+}
+
 export type BaseProfile = Pick<
   TenantProfile,
   'slug' | 'name' | 'business_type' | 'timezone' | 'status' | 'voice' | 'greeting' | 'summary' | 'address' | 'phone_display' | 'website' | 'brand' | 'core_facts' | 'opening_hours' | 'closures'
@@ -41,7 +52,7 @@ export type BaseProfile = Pick<
  * The profile's header. Core facts open with who and where, then the hours;
  * `facts` follow in the order given.
  */
-export function baseProfile(a: BaseAnswers, meta: { slug: string }, kind: { businessType: BusinessType; noun: string; facts: (string | null | undefined)[] }): BaseProfile {
+export function baseProfile(a: BaseAnswers, meta: { slug: string }, kind: { businessType: BusinessType; noun: string; facts: (string | null | undefined)[]; hoursMax?: number }): BaseProfile {
   const b = a.basics;
   const name = b.name.trim() || `Your ${kind.noun}`;
   const place = b.address.trim() || b.town.trim();
@@ -67,7 +78,7 @@ export function baseProfile(a: BaseAnswers, meta: { slug: string }, kind: { busi
       font_body: a.theme.font_body,
       logo: a.theme.logo,
     },
-    core_facts: capFacts([`${name}${style ? `: ${style}` : ''}${where}.`, hoursSentence(a.hours), ...kind.facts]),
+    core_facts: capFacts([`${name}${style ? `: ${style}` : ''}${where}.`, hoursFact(a.hours, kind.hoursMax), ...kind.facts]),
     opening_hours: openingHours(a.hours),
     closures: a.hours.closures.filter((c) => /^\d{4}-\d{2}-\d{2}$/.test(c.date)).map((c) => ({ date: c.date, note: c.note || undefined })),
   };

@@ -271,7 +271,8 @@ function maximal(x: unknown): unknown {
 
 test('presets: every built preset compiles to a sane profile, a short enough prompt, and a seeded week that replays', () => {
   // Start at different moments of the week: a weekday morning, Friday evening, a Sunday.
-  const nows = [new Date('2026-10-07T10:00:00Z'), FRIDAY_EVENING, new Date('2026-10-11T12:00:00Z')];
+  // Saturday mid-morning: viewings already finished earlier that day, where a buyer once clashed with themselves.
+  const nows = [new Date('2026-10-07T10:00:00Z'), FRIDAY_EVENING, new Date('2026-10-10T09:30:00Z'), new Date('2026-10-11T12:00:00Z')];
   for (const p of PRESETS) {
     const preset = builtPreset(p.key);
     if (!preset) continue;

@@ -5,9 +5,9 @@
  "timezone": "Europe/London",
  "status": "demo",
  "voice": "Kore",
- "greeting": "Hello, you're through to Name Name Name Name Name Name Name Name Name Name Name Name. I'm the AI assistant on this demo line. How can I help?",
- "summary": "Name Name Name Name Name Name Name Name Name Name Name Name is an estate agency in Brackenford: Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Styl.",
- "address": "12 High Street, Brackenford BK1 2AB",
+ "greeting": "Hello, you're through to the AI assistant on this demo line. Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greet",
+ "summary": "Name Name Name Name Name Name Name Name Name Name Name Name is an estate agency in Town Town Town Town Town Town Town Town Town Town Town Town: Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Styl.",
+ "address": "Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address",
  "phone_display": "01632 960 123",
  "brand": {
   "accent": "#c9a24a",
@@ -18,24 +18,108 @@
   "logo": null
  },
  "core_facts": [
-  "Name Name Name Name Name Name Name Name Name Name Name Name: Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Styl, at 12 High Street, Brackenford BK1 2AB.",
-  "Monday to Friday: 9am till 5:30pm. Saturday: 9am till 4pm. Closed Sundays.",
-  "Viewings: Monday to Friday 9am till 7pm and Saturday 9am till 4pm. Valuations: Monday to Friday 9am till 6pm and Saturday 9am till 1pm.",
-  "We cover Town 1 long long long long long long long long long long, Town 2 long long long long long long long long long long, Town 3 long long long long long long long long long long, Town 4 long long long long long long long long long long, Town 5 long long long long long long long long long long, Town 6 long long long long long long long long long long and 14 more towns and villages, BK1 to BK30.",
-  "Free market appraisals take about an hour.",
+  "Name Name Name Name Name Name Name Name Name Name Name Name: Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Styl, at Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address.",
+  "Open every day, at times that vary by day: get_opening_hours has them.",
+  "Viewings: every day, at set times (check_availability has them). Valuations: every day, at set times (check_availability has them).",
+  "We cover Town 1 long long long long long long long long long long, Town 2 long long long long long long long long long long and 18 more towns and villages, BK1, BK3, BK5, BK7, BK9, BK11 and 24 more districts.",
+  "Valuation valuation valuation valuation valuation valuation s take about an hour, and are free.",
   "Gas emergency: call the National Gas Emergency Service on 0800 111 999."
  ],
  "opening_hours": [
   {
-   "days": [1,2,3,4,5],
-   "open": "09:00",
+   "days": [0,2,4,6],
+   "open": "07:45",
+   "close": "10:30",
+   "label": "Open"
+  },
+  {
+   "days": [0],
+   "open": "11:10",
+   "close": "13:20",
+   "label": "Open"
+  },
+  {
+   "days": [0],
+   "open": "14:10",
    "close": "17:30",
    "label": "Open"
   },
   {
+   "days": [1,3,5],
+   "open": "08:15",
+   "close": "10:30",
+   "label": "Open"
+  },
+  {
+   "days": [1],
+   "open": "11:11",
+   "close": "13:21",
+   "label": "Open"
+  },
+  {
+   "days": [1],
+   "open": "14:11",
+   "close": "18:31",
+   "label": "Open"
+  },
+  {
+   "days": [2],
+   "open": "11:12",
+   "close": "13:22",
+   "label": "Open"
+  },
+  {
+   "days": [2],
+   "open": "14:12",
+   "close": "19:32",
+   "label": "Open"
+  },
+  {
+   "days": [3],
+   "open": "11:13",
+   "close": "13:23",
+   "label": "Open"
+  },
+  {
+   "days": [3],
+   "open": "14:13",
+   "close": "17:33",
+   "label": "Open"
+  },
+  {
+   "days": [4],
+   "open": "11:14",
+   "close": "13:24",
+   "label": "Open"
+  },
+  {
+   "days": [4],
+   "open": "14:14",
+   "close": "18:34",
+   "label": "Open"
+  },
+  {
+   "days": [5],
+   "open": "11:15",
+   "close": "13:25",
+   "label": "Open"
+  },
+  {
+   "days": [5],
+   "open": "14:15",
+   "close": "19:35",
+   "label": "Open"
+  },
+  {
    "days": [6],
-   "open": "09:00",
-   "close": "16:00",
+   "open": "11:16",
+   "close": "13:26",
+   "label": "Open"
+  },
+  {
+   "days": [6],
+   "open": "14:16",
+   "close": "17:36",
    "label": "Open"
   }
  ],
@@ -43,7 +127,7 @@
  "knowledge": [
   {
    "q": "Which areas do you cover?",
-   "a": "We cover Town 1 long long long long long long long long long long, Town 2 long long long long long long long long long long, Town 3 long long long long long long long long long long, Town 4 long long long long long long long long long long, Town 5 long long long long long long long long long long, Town 6 long long long long long long long long long long, Town 7 long long long long long long long long long long, Town 8 long long long long long long long long long long, Town 9 long long long long long long long long long long, Town 10 long long long long long long long long long long, Town 11 long long long long long long long long long long, Town 12 long long long long long long long long long long, Town 13 long long long long long long long long long long, Town 14 long long long long long long long long long long, Town 15 long long long long long long long long long long, Town 16 long long long long long long long long long long, Town 17 long long long long long long long long long long, Town 18 long long long long long long long long long long, Town 19 long long long long long long long long long long and Town 20 long long long long long long long long long long, BK1 to BK30.",
+   "a": "We cover Town 1 long long long long long long long long long long, Town 2 long long long long long long long long long long, Town 3 long long long long long long long long long long, Town 4 long long long long long long long long long long, Town 5 long long long long long long long long long long, Town 6 long long long long long long long long long long, Town 7 long long long long long long long long long long, Town 8 long long long long long long long long long long, Town 9 long long long long long long long long long long, Town 10 long long long long long long long long long long, Town 11 long long long long long long long long long long, Town 12 long long long long long long long long long long, Town 13 long long long long long long long long long long, Town 14 long long long long long long long long long long, Town 15 long long long long long long long long long long, Town 16 long long long long long long long long long long, Town 17 long long long long long long long long long long, Town 18 long long long long long long long long long long, Town 19 long long long long long long long long long long and Town 20 long long long long long long long long long long, BK1, BK3, BK5, BK7, BK9, BK11, BK13, BK15, BK17, BK19, BK21, BK23, BK25, BK27, BK29, BK31, BK33, BK35, BK37, BK39, BK41, BK43, BK45, BK47, BK49, BK51, BK53, BK55, BK57 and BK59.",
    "tags": ["area","cover","postcode","where"]
   },
   {
@@ -58,7 +142,7 @@
   },
   {
    "q": "What are your fees?",
-   "a": "Our fees are explained at your free market appraisal and in writing before you sign anything.",
+   "a": "Our fees are explained at your valuation valuation valuation valuation valuation valuation  and in writing before you sign anything.",
    "tags": ["fees","fee","commission","charge","cost","percent"]
   },
   {
@@ -93,7 +177,7 @@
   },
   {
    "q": "Is a valuation free?",
-   "a": "Our free market appraisal is free, with no obligation, and takes about an hour.",
+   "a": "Our valuation valuation valuation valuation valuation valuation  is free, with no obligation, and takes about an hour.",
    "tags": ["valuation","appraisal","free","cost"]
   },
   {
@@ -430,14 +514,84 @@
     "buffer_minutes": 15,
     "windows": [
      {
-      "days": [1,2,3,4,5],
-      "first": "09:00",
-      "last": "18:30"
+      "days": [0,2,4,6],
+      "first": "07:45",
+      "last": "10:00"
+     },
+     {
+      "days": [0],
+      "first": "11:10",
+      "last": "12:50"
+     },
+     {
+      "days": [0],
+      "first": "14:10",
+      "last": "17:00"
+     },
+     {
+      "days": [1,3,5],
+      "first": "08:15",
+      "last": "10:00"
+     },
+     {
+      "days": [1],
+      "first": "11:11",
+      "last": "12:51"
+     },
+     {
+      "days": [1],
+      "first": "14:11",
+      "last": "18:01"
+     },
+     {
+      "days": [2],
+      "first": "11:12",
+      "last": "12:52"
+     },
+     {
+      "days": [2],
+      "first": "14:12",
+      "last": "19:02"
+     },
+     {
+      "days": [3],
+      "first": "11:13",
+      "last": "12:53"
+     },
+     {
+      "days": [3],
+      "first": "14:13",
+      "last": "17:03"
+     },
+     {
+      "days": [4],
+      "first": "11:14",
+      "last": "12:54"
+     },
+     {
+      "days": [4],
+      "first": "14:14",
+      "last": "18:04"
+     },
+     {
+      "days": [5],
+      "first": "11:15",
+      "last": "12:55"
+     },
+     {
+      "days": [5],
+      "first": "14:15",
+      "last": "19:05"
      },
      {
       "days": [6],
-      "first": "09:00",
-      "last": "15:30"
+      "first": "11:16",
+      "last": "12:56"
+     },
+     {
+      "days": [6],
+      "first": "14:16",
+      "last": "17:06"
      }
     ],
     "needs_listing": true
@@ -453,14 +607,84 @@
     "buffer_minutes": 15,
     "windows": [
      {
-      "days": [1,2,3,4,5],
-      "first": "09:00",
-      "last": "18:15"
+      "days": [0,2,4,6],
+      "first": "07:45",
+      "last": "09:45"
+     },
+     {
+      "days": [0],
+      "first": "11:10",
+      "last": "12:35"
+     },
+     {
+      "days": [0],
+      "first": "14:10",
+      "last": "16:45"
+     },
+     {
+      "days": [1,3,5],
+      "first": "08:15",
+      "last": "09:45"
+     },
+     {
+      "days": [1],
+      "first": "11:11",
+      "last": "12:36"
+     },
+     {
+      "days": [1],
+      "first": "14:11",
+      "last": "17:46"
+     },
+     {
+      "days": [2],
+      "first": "11:12",
+      "last": "12:37"
+     },
+     {
+      "days": [2],
+      "first": "14:12",
+      "last": "18:47"
+     },
+     {
+      "days": [3],
+      "first": "11:13",
+      "last": "12:38"
+     },
+     {
+      "days": [3],
+      "first": "14:13",
+      "last": "16:48"
+     },
+     {
+      "days": [4],
+      "first": "11:14",
+      "last": "12:39"
+     },
+     {
+      "days": [4],
+      "first": "14:14",
+      "last": "17:49"
+     },
+     {
+      "days": [5],
+      "first": "11:15",
+      "last": "12:40"
+     },
+     {
+      "days": [5],
+      "first": "14:15",
+      "last": "18:50"
      },
      {
       "days": [6],
-      "first": "09:00",
-      "last": "15:15"
+      "first": "11:16",
+      "last": "12:41"
+     },
+     {
+      "days": [6],
+      "first": "14:16",
+      "last": "16:51"
      }
     ],
     "needs_listing": true
@@ -471,19 +695,89 @@
     "lead_minutes": 120,
     "horizon_days": 21,
     "key": "valuation",
-    "label": "free market appraisal",
+    "label": "valuation valuation valuation valuation valuation valuation ",
     "duration_minutes": 60,
     "buffer_minutes": 15,
     "windows": [
      {
-      "days": [1,2,3,4,5],
-      "first": "09:00",
-      "last": "17:00"
+      "days": [0,2,4,6],
+      "first": "07:45",
+      "last": "09:30"
+     },
+     {
+      "days": [0],
+      "first": "11:10",
+      "last": "12:20"
+     },
+     {
+      "days": [0],
+      "first": "14:10",
+      "last": "16:30"
+     },
+     {
+      "days": [1,3,5],
+      "first": "08:15",
+      "last": "09:30"
+     },
+     {
+      "days": [1],
+      "first": "11:11",
+      "last": "12:21"
+     },
+     {
+      "days": [1],
+      "first": "14:11",
+      "last": "17:31"
+     },
+     {
+      "days": [2],
+      "first": "11:12",
+      "last": "12:22"
+     },
+     {
+      "days": [2],
+      "first": "14:12",
+      "last": "18:32"
+     },
+     {
+      "days": [3],
+      "first": "11:13",
+      "last": "12:23"
+     },
+     {
+      "days": [3],
+      "first": "14:13",
+      "last": "16:33"
+     },
+     {
+      "days": [4],
+      "first": "11:14",
+      "last": "12:24"
+     },
+     {
+      "days": [4],
+      "first": "14:14",
+      "last": "17:34"
+     },
+     {
+      "days": [5],
+      "first": "11:15",
+      "last": "12:25"
+     },
+     {
+      "days": [5],
+      "first": "14:15",
+      "last": "18:35"
      },
      {
       "days": [6],
-      "first": "09:00",
-      "last": "12:00"
+      "first": "11:16",
+      "last": "12:26"
+     },
+     {
+      "days": [6],
+      "first": "14:16",
+      "last": "16:36"
      }
     ]
    },
@@ -498,14 +792,84 @@
     "buffer_minutes": 0,
     "windows": [
      {
-      "days": [1,2,3,4,5],
-      "first": "09:00",
+      "days": [0,2,4,6],
+      "first": "07:45",
+      "last": "09:45"
+     },
+     {
+      "days": [0],
+      "first": "11:10",
+      "last": "12:35"
+     },
+     {
+      "days": [0],
+      "first": "14:10",
       "last": "16:45"
      },
      {
+      "days": [1,3,5],
+      "first": "08:15",
+      "last": "09:45"
+     },
+     {
+      "days": [1],
+      "first": "11:11",
+      "last": "12:36"
+     },
+     {
+      "days": [1],
+      "first": "14:11",
+      "last": "17:46"
+     },
+     {
+      "days": [2],
+      "first": "11:12",
+      "last": "12:37"
+     },
+     {
+      "days": [2],
+      "first": "14:12",
+      "last": "18:47"
+     },
+     {
+      "days": [3],
+      "first": "11:13",
+      "last": "12:38"
+     },
+     {
+      "days": [3],
+      "first": "14:13",
+      "last": "16:48"
+     },
+     {
+      "days": [4],
+      "first": "11:14",
+      "last": "12:39"
+     },
+     {
+      "days": [4],
+      "first": "14:14",
+      "last": "17:49"
+     },
+     {
+      "days": [5],
+      "first": "11:15",
+      "last": "12:40"
+     },
+     {
+      "days": [5],
+      "first": "14:15",
+      "last": "18:50"
+     },
+     {
       "days": [6],
-      "first": "09:00",
-      "last": "15:15"
+      "first": "11:16",
+      "last": "12:41"
+     },
+     {
+      "days": [6],
+      "first": "14:16",
+      "last": "16:51"
      }
     ]
    }
@@ -3297,7 +3661,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_13",
+   "negotiator": "person_1",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -3498,7 +3862,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_14",
+   "negotiator": "person_2",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -3700,7 +4064,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_1",
+   "negotiator": "person_3",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -3914,7 +4278,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_2",
+   "negotiator": "person_4",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -4120,7 +4484,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_3",
+   "negotiator": "person_5",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -4322,7 +4686,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_4",
+   "negotiator": "person_6",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -4532,7 +4896,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_5",
+   "negotiator": "person_7",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -4749,7 +5113,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings on Saturdays 10am to 1pm and weekday evenings 5pm to 7pm."
    },
-   "negotiator": "person_6",
+   "negotiator": "person_8",
    "personal_interest": null,
    "other_agents": "Harper & Co, until June",
    "links": ["brochure","floorplan","epc"],
@@ -4955,7 +5319,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_7",
+   "negotiator": "person_9",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -5165,7 +5529,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_8",
+   "negotiator": "person_10",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -5363,7 +5727,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_9",
+   "negotiator": "person_11",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -5561,7 +5925,7 @@
     "first_in_office_hours": true,
     "rule": "Viewings any time in our viewing hours. First viewings are in office hours."
    },
-   "negotiator": "person_10",
+   "negotiator": "person_12",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -5771,7 +6135,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_11",
+   "negotiator": "person_1",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -5977,7 +6341,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_12",
+   "negotiator": "person_2",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -6176,7 +6540,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours. Viewings need 24 hours' notice."
    },
-   "negotiator": "person_13",
+   "negotiator": "person_3",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -6387,7 +6751,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_14",
+   "negotiator": "person_4",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -6604,7 +6968,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_1",
+   "negotiator": "person_5",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -6818,7 +7182,7 @@
     "first_in_office_hours": false,
     "rule": "Viewings any time in our viewing hours."
    },
-   "negotiator": "person_2",
+   "negotiator": "person_6",
    "personal_interest": null,
    "other_agents": "",
    "links": ["brochure","floorplan","epc"],
@@ -6939,35 +7303,35 @@
   "nation": "england",
   "districts": [
    "BK1",
-   "BK2",
    "BK3",
-   "BK4",
    "BK5",
-   "BK6",
    "BK7",
-   "BK8",
    "BK9",
-   "BK10",
    "BK11",
-   "BK12",
    "BK13",
-   "BK14",
    "BK15",
-   "BK16",
    "BK17",
-   "BK18",
    "BK19",
-   "BK20",
    "BK21",
-   "BK22",
    "BK23",
-   "BK24",
    "BK25",
-   "BK26",
    "BK27",
-   "BK28",
    "BK29",
-   "BK30"
+   "BK31",
+   "BK33",
+   "BK35",
+   "BK37",
+   "BK39",
+   "BK41",
+   "BK43",
+   "BK45",
+   "BK47",
+   "BK49",
+   "BK51",
+   "BK53",
+   "BK55",
+   "BK57",
+   "BK59"
   ],
   "towns": [
    "Town 1 long long long long long long long long long long",
@@ -6997,29 +7361,209 @@
   "on_call": "person_1",
   "viewing_hours": [
    {
-    "days": [1,2,3,4,5],
-    "open": "09:00",
-    "close": "19:00",
+    "days": [0],
+    "open": "07:45",
+    "close": "10:30",
+    "label": "Viewings"
+   },
+   {
+    "days": [0],
+    "open": "11:10",
+    "close": "13:20",
+    "label": "Viewings"
+   },
+   {
+    "days": [0],
+    "open": "14:10",
+    "close": "17:30",
+    "label": "Viewings"
+   },
+   {
+    "days": [1,3,5],
+    "open": "08:15",
+    "close": "10:30",
+    "label": "Open"
+   },
+   {
+    "days": [1],
+    "open": "11:11",
+    "close": "13:21",
+    "label": "Open"
+   },
+   {
+    "days": [1],
+    "open": "14:11",
+    "close": "18:31",
+    "label": "Open"
+   },
+   {
+    "days": [2,4,6],
+    "open": "07:45",
+    "close": "10:30",
+    "label": "Open"
+   },
+   {
+    "days": [2],
+    "open": "11:12",
+    "close": "13:22",
+    "label": "Open"
+   },
+   {
+    "days": [2],
+    "open": "14:12",
+    "close": "19:32",
+    "label": "Open"
+   },
+   {
+    "days": [3],
+    "open": "11:13",
+    "close": "13:23",
+    "label": "Open"
+   },
+   {
+    "days": [3],
+    "open": "14:13",
+    "close": "17:33",
+    "label": "Open"
+   },
+   {
+    "days": [4],
+    "open": "11:14",
+    "close": "13:24",
+    "label": "Open"
+   },
+   {
+    "days": [4],
+    "open": "14:14",
+    "close": "18:34",
+    "label": "Open"
+   },
+   {
+    "days": [5],
+    "open": "11:15",
+    "close": "13:25",
+    "label": "Open"
+   },
+   {
+    "days": [5],
+    "open": "14:15",
+    "close": "19:35",
     "label": "Open"
    },
    {
     "days": [6],
-    "open": "09:00",
-    "close": "16:00",
+    "open": "11:16",
+    "close": "13:26",
+    "label": "Open"
+   },
+   {
+    "days": [6],
+    "open": "14:16",
+    "close": "17:36",
     "label": "Open"
    }
   ],
   "valuation_hours": [
    {
-    "days": [1,2,3,4,5],
-    "open": "09:00",
-    "close": "18:00",
+    "days": [0],
+    "open": "07:45",
+    "close": "10:30",
+    "label": "Valuations"
+   },
+   {
+    "days": [0],
+    "open": "11:10",
+    "close": "13:20",
+    "label": "Valuations"
+   },
+   {
+    "days": [0],
+    "open": "14:10",
+    "close": "17:30",
+    "label": "Valuations"
+   },
+   {
+    "days": [1,3,5],
+    "open": "08:15",
+    "close": "10:30",
+    "label": "Open"
+   },
+   {
+    "days": [1],
+    "open": "11:11",
+    "close": "13:21",
+    "label": "Open"
+   },
+   {
+    "days": [1],
+    "open": "14:11",
+    "close": "18:31",
+    "label": "Open"
+   },
+   {
+    "days": [2,4,6],
+    "open": "07:45",
+    "close": "10:30",
+    "label": "Open"
+   },
+   {
+    "days": [2],
+    "open": "11:12",
+    "close": "13:22",
+    "label": "Open"
+   },
+   {
+    "days": [2],
+    "open": "14:12",
+    "close": "19:32",
+    "label": "Open"
+   },
+   {
+    "days": [3],
+    "open": "11:13",
+    "close": "13:23",
+    "label": "Open"
+   },
+   {
+    "days": [3],
+    "open": "14:13",
+    "close": "17:33",
+    "label": "Open"
+   },
+   {
+    "days": [4],
+    "open": "11:14",
+    "close": "13:24",
+    "label": "Open"
+   },
+   {
+    "days": [4],
+    "open": "14:14",
+    "close": "18:34",
+    "label": "Open"
+   },
+   {
+    "days": [5],
+    "open": "11:15",
+    "close": "13:25",
+    "label": "Open"
+   },
+   {
+    "days": [5],
+    "open": "14:15",
+    "close": "19:35",
     "label": "Open"
    },
    {
     "days": [6],
-    "open": "09:00",
-    "close": "13:00",
+    "open": "11:16",
+    "close": "13:26",
+    "label": "Open"
+   },
+   {
+    "days": [6],
+    "open": "14:16",
+    "close": "17:36",
     "label": "Open"
    }
   ],
@@ -7035,7 +7579,7 @@
    "best_final": "Best and final offers are made in writing by a set time, and every buyer who has offered hears at once."
   },
   "valuations": {
-   "name": "free market appraisal",
+   "name": "valuation valuation valuation valuation valuation valuation ",
    "minutes": 60,
    "rics": {
     "offered": false,

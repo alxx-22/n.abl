@@ -178,6 +178,9 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
       o.time,
     );
     if (!slot) return null;
+    // One buyer is never at two homes at once, travel between them included.
+    const gap = (service.buffer_minutes ?? 0) * 60000;
+    if (bookings.some((x) => x.phone === o.who.phone && x.starts_at.getTime() < slot.ends_at.getTime() + gap && slot.starts_at.getTime() < x.ends_at.getTime() + gap)) return null;
     const b: SeedBooking = {
       reference: ref(),
       service_key: service.key,

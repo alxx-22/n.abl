@@ -13,7 +13,7 @@ import { toLocal, weekdayOf } from '../src/domain/time.ts';
 import type { Listing, TenantProfile } from '../src/domain/types.ts';
 import { answersOf, builtPreset, getPreset } from '../src/presets/index.ts';
 import { defaultAnswers, type EstateAnswers } from '../src/presets/estate/answers.ts';
-import { compileEstate, compileListing } from '../src/presets/estate/compile.ts';
+import { compileEstate, compileListing, patchSentence, weekWords } from '../src/presets/estate/compile.ts';
 import { featured } from '../src/presets/estate/featured.ts';
 import { sampleListings } from '../src/presets/estate/listings.ts';
 import { estatePreview, estateWorkspace, factSheet } from '../src/presets/estate/preset.ts';
@@ -612,4 +612,19 @@ test('a leftover shared-ownership block is never read out for a home that is no 
   flat.say_up_front.push('');
   assert.ok(compileListing(flat, a, []).rooms.every((r) => r.name));
   assert.ok(compileListing(flat, a, []).say_first.every((i) => i.say.trim()));
+});
+
+test("the prompt's areas and viewing times stay short however the agency fills them in; the searchable answer keeps everything", () => {
+  const a = defaultAnswers();
+  a.patch.towns = ['Brackenford', 'Little Haddon', 'Coldbrook', 'Pentre', 'Aberllyn', 'Hatherleigh', 'Wickham'];
+  assert.match(patchSentence(a, 6), /Aberllyn, Hatherleigh and one more town or village, BK1 to BK5\.$/);
+  assert.match(patchSentence(a), /Hatherleigh and Wickham, BK1 to BK5\.$/);
+  a.patch.towns = Array.from({ length: 8 }, (_, i) => `Town ${i} ${'long '.repeat(10).trim()}`);
+  a.patch.districts = ['BK1', 'BK3', 'BK5', 'BK7', 'BK9', 'BK11', 'BK13', 'BK15'];
+  assert.equal(patchSentence(a, 6), `We cover ${a.patch.towns[0]}, ${a.patch.towns[1]} and 6 more towns and villages, BK1, BK3, BK5, BK7, BK9, BK11 and 2 more districts.`);
+  assert.match(patchSentence(a), /BK13 and BK15\.$/);
+  // Three periods a day, different every day: the days alone, and the tool for the times.
+  const week = a.diary.viewing_days.map((d, i) => ({ open: i !== 0, services: [0, 1, 2].map((k) => ({ label: 'Viewings', open: `${9 + k * 3}:0${i}`, close: `${10 + k * 3}:30` })) }));
+  assert.equal(weekWords(week, 160), 'Monday to Saturday, at set times (check_availability has them)');
+  assert.equal(weekWords(a.diary.viewing_days, 160), weekWords(a.diary.viewing_days));
 });
