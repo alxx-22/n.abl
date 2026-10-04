@@ -234,9 +234,9 @@ test('demo: the kitchen board sends the ready text', async () => {
     const t = (await app.repo.getTenantById(ws))!;
     await app.repo.createOrder(t, {
       name: 'Test Order', phone: '+447700900555', fulfilment: 'collection', due_at: new Date(Date.now() + 3600000), address: null, postcode: null,
-      lines: [], subtotal_pence: 1000, delivery_fee_pence: 0, total_pence: 1000, allergy_notes: null, source: 'test', call_id: null,
+      lines: [], subtotal_pence: 1000, delivery_fee_pence: 0, total_pence: 1000, allergy_notes: null, source: 'console', call_id: null,
     });
-    o = (await sam.call('GET', `/demo/api/workspaces/${ws}/state`)).data.orders[0];
+    o = (await sam.call('GET', `/demo/api/workspaces/${ws}/state`)).data.orders.find((x: any) => x.phone);
   }
   assert.equal((await sam.call('PATCH', `/demo/api/workspaces/${ws}/orders/${o.reference}`, { status: 'in_kitchen' })).status, 200);
   assert.equal((await sam.call('PATCH', `/demo/api/workspaces/${ws}/orders/${o.reference}`, { status: 'ready' })).status, 200);
