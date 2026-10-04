@@ -943,6 +943,36 @@ export class Repo {
     return mapBuyer(rows[0]);
   }
 
+  /** One person the agency knows, by their number: a buyer, a seller or both. */
+  async findBuyer(tenantId: string, phone: string): Promise<Buyer | null> {
+    const rows = await this.db.query<any>(
+      'select phone, name, details, marketing_consent from public.voice_customers where tenant_id = $1 and phone = $2',
+      [tenantId, phone],
+    );
+    return rows[0] ? mapBuyer(rows[0]) : null;
+  }
+
+  /** The messages left from one number (not texts), newest first: their enquiries and call-backs. */
+  async messagesFrom(tenantId: string, phone: string): Promise<{ id: string; body: string; category: string | null; details: Record<string, unknown>; created_at: Date }[]> {
+    return this.db.query<any>(
+      `select id, body, category, details, created_at from public.voice_messages
+       where tenant_id = $1 and kind = 'message' and from_phone = $2 order by created_at desc limit 20`,
+      [tenantId, phone],
+    );
+  }
+
+  /** A portal enquiry answered: the caller rang back and booked from it. */
+  async markEnquiriesAnswered(tenantId: string, phone: string, listingKey: string): Promise<number> {
+    const rows = await this.db.query<any>(
+      `update public.voice_messages set details = details || '{"answered": true}'::jsonb
+       where tenant_id = $1 and kind = 'message' and from_phone = $2 and details->>'listing' = $3 and details ? 'portal'
+         and coalesce((details->>'answered')::boolean, false) = false
+       returning id`,
+      [tenantId, phone, listingKey],
+    );
+    return rows.length;
+  }
+
   /** Everyone the agency knows as a buyer. */
   async listBuyers(tenantId: string): Promise<Buyer[]> {
     const rows = await this.db.query<any>(

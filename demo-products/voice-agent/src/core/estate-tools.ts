@@ -21,7 +21,7 @@ import {
   type ListingLive, type Requirements,
 } from '../domain/listings.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
-import { dayName, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
+import { addDays, dayName, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
 import type { BookableService, Booking, BuyerPosition, Funding, Listing, Selling, StaffMember, Tenant } from '../domain/types.ts';
 
 const DAY = 86400000;
@@ -405,6 +405,8 @@ export async function estateBooking(args: Args, ctx: ToolContext, service: Booka
   const b = made.booking;
   record(ctx, b.reference, 'booking', 'committed');
   if (phone) await ctx.repo.upsertBuyer(ctx.tenant.id, phone, name, { roles: ['buyer'], position, ...(email ? { email } : {}), last_contact: ctx.now().toISOString(), source: 'phone' });
+  // Booked from a portal enquiry about this home: it is answered, and leaves the team's list of leads waiting.
+  if (phone) await ctx.repo.markEnquiriesAnswered(ctx.tenant.id, phone, l.key);
   const local = toLocal(b.starts_at, p.timezone);
   const who = firstNameOf(ctx.tenant, b.resource_key);
   ctx.action({
@@ -790,6 +792,81 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
   });
 }
 
+// ── The people we know ────────────────────────────────────────────────────
+
+/** "today", "yesterday", "on Tuesday", "Saturday", "3 October": a day as a caller would say it, from the agency's today. */
+function dayWords(date: string, day: string): string {
+  if (date === day) return 'today';
+  if (date === addDays(day, -1)) return 'yesterday';
+  if (date === addDays(day, 1)) return 'tomorrow';
+  const [name, d, month] = spokenDate(date).split(' ');
+  if (date < day && date >= addDays(day, -6)) return `on ${name}`;
+  if (date > day && date <= addDays(day, 6)) return name;
+  return `${d} ${month}`;
+}
+const partOfDay = (time: string) => (time < '12:00' ? 'morning' : time < '17:00' ? 'afternoon' : 'evening');
+
+/**
+ * Who the calling number is to us, from their own records only: viewings
+ * and valuations, portal enquiries, being registered, selling with us, and
+ * a missed call from the team (who, never why). Never a seller's address:
+ * get_marketing_update checks the home they name.
+ */
+async function findParty(_args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const t = ctx.tenant;
+  const phone = ctx.callerPhone;
+  if (!phone) return { known: false, note: 'No calling number to look up: ask how you can help.' };
+  const tz = t.profile.timezone;
+  const day = today(ctx);
+  const now = ctx.now();
+  const [buyer, bookings, enquiries, states] = await Promise.all([
+    ctx.repo.findBuyer(t.id, phone),
+    ctx.repo.listBookings(t.id, new Date(now.getTime() - 14 * DAY), new Date(now.getTime() + 30 * DAY)),
+    ctx.repo.messagesFrom(t.id, phone),
+    ctx.repo.listingStates(t.id),
+  ]);
+  const home = (key: unknown) => t.profile.listings?.find((l) => l.key === key);
+  const is: string[] = [];
+  if (buyer?.details.requirements) is.push(`a registered buyer${buyer.marketing_consent ? ', with alerts on' : ''}`);
+  for (const k of buyer?.details.backup_for ?? []) if (home(k)) is.push(`a back-up buyer for ${shortAddress(home(k)!)}`);
+  for (const b of bookings.filter((x) => x.phone === phone).sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())) {
+    const local = toLocal(b.starts_at, tz);
+    const l = home(b.listing_key);
+    const what = findService(t.profile, b.service_key)?.label ?? b.service_key;
+    const where = l ? `, ${shortAddress(l)}` : '';
+    if (b.ends_at <= now) {
+      if (l) is.push(`viewed ${shortAddress(l)} ${dayWords(local.date, day)}, ref ${b.reference}`);
+    } else {
+      is.push(`${what}: ${dayWords(local.date, day)} ${spokenTime(local.time)}${where}, ref ${b.reference}`);
+    }
+    record(ctx, b.reference, 'booking', 'found');
+  }
+  for (const m of enquiries) {
+    const portal = typeof m.details?.portal === 'string' ? m.details.portal : null;
+    const l = home(m.details?.listing);
+    if (!portal || !l) continue;
+    const local = toLocal(new Date(m.created_at), tz);
+    const asked = /"([^"]+)"/.exec(m.body)?.[1];
+    is.push(`enquired on ${portal} ${dayWords(local.date, day)} about ${shortAddress(l)}${asked ? `: "${asked}"` : ''}${m.details.answered ? '' : ' (not answered yet)'}`);
+  }
+  const sells = states.some((x) => x.sellers?.some((p) => p.phone === phone));
+  const tried = buyer?.details.tried_to_call;
+  const triedAt = tried ? toLocal(new Date(tried.at), tz) : null;
+  const known = Boolean(is.length || sells || tried || buyer);
+  if (!known) return { known: false, note: 'Nothing on this number. Ask how you can help.' };
+  return {
+    known: true,
+    first_name: (buyer?.name ?? bookings.find((b) => b.phone === phone)?.name ?? '').split(' ')[0] || undefined,
+    is: is.length ? is : undefined,
+    seller: sells ? 'sells a home with us: use get_marketing_update once they say which' : undefined,
+    tried_to_call: tried && triedAt ? `${firstNameOf(t, tried.by) || 'Someone in the team'} tried to call ${dayWords(triedAt.date, day)} ${partOfDay(triedAt.time)}` : undefined,
+    note: [
+      tried ? 'Say who tried to call, never why: offer a message for them.' : '',
+      is.some((x) => x.endsWith('(not answered yet)')) ? 'An enquiry not answered yet: say sorry nobody got back to them, and help now.' : '',
+    ].filter(Boolean).join(' ') || undefined,
+  };
+}
+
 const LINK_WORDS: [RegExp, Listing['links'][number]][] = [[/brochure|details|particular/, 'brochure'], [/floor/, 'floorplan'], [/video|tour/, 'video'], [/epc|energy/, 'epc']];
 const LINK_LABEL: Record<Listing['links'][number], string> = { brochure: 'Brochure', floorplan: 'Floorplan', video: 'Video tour', epc: 'EPC' };
 
@@ -877,6 +954,15 @@ export const ESTATE_TOOLS: Record<string, Tool> = {
       }),
     },
     handler: searchProperties,
+  },
+  find_party: {
+    when: hasHomes,
+    decl: {
+      name: 'find_party',
+      description: "Who the caller is to us, from their number: their viewings and valuations, portal enquiries, whether they're registered or sell with us, and a missed call from the team. Use it when they mention something they've booked or asked about before, or a missed call from us.",
+      parameters: obj({}),
+    },
+    handler: findParty,
   },
   get_property: {
     when: hasHomes,

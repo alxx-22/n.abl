@@ -7,6 +7,7 @@
  "modify_booking",
  "cancel_booking",
  "search_properties",
+ "find_party",
  "get_property",
  "send_property_details",
  "book_valuation",

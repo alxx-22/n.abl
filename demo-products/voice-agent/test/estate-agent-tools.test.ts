@@ -652,3 +652,32 @@ test('end_call: an estate call ending "booked" with nothing booked is stopped on
   assert.equal((await run('end_call', { outcome: 'booked' })).ok, true, 'never twice');
   assert.equal((await (await call(t)).run('end_call', { outcome: 'answered' })).ok, true, 'only a call said to be booked');
 });
+
+test('find_party: who the calling number is to us, from their own records; never a seller\'s address or why someone rang', async () => {
+  const t = await agency('ea-party');
+  const party = async (phone: string | null) => (await call(t, phone)).run('find_party', {});
+  // The seller: told they sell with us, not where.
+  const sarah = await party('+447700900001');
+  assert.equal(sarah.known, true);
+  assert.match(String(sarah.seller), /get_marketing_update/);
+  assert.ok(!/Larkspur/i.test(JSON.stringify(sarah)), JSON.stringify(sarah));
+  // A Zoopla enquiry nobody answered: said, with sorry, until a viewing is booked from it.
+  const megan = await party('+447700900007');
+  const asked = (megan.is as string[]).find((x) => x.startsWith('enquired on Zoopla'))!;
+  assert.match(asked, /: "Is there parking\? We'd like to view\." \(not answered yet\)$/);
+  assert.match(String(megan.note), /sorry nobody got back to them/);
+  const key = (await repo.messagesFrom(t.id, '+447700900007'))[0].details.listing as string;
+  const c = await call(t, '+447700900007');
+  const booked = await c.run('create_booking', { property: key, date: SAT, time: '11:30', name: 'Megan Hughes', postcode: 'BK2 9PL', first_time_buyer: true, selling: 'nothing', funding: 'mortgage_aip' });
+  assert.equal(booked.booked, true, JSON.stringify(booked));
+  const after = await party('+447700900007');
+  assert.ok((after.is as string[]).some((x) => x.startsWith('enquired on Zoopla') && !x.includes('not answered')), JSON.stringify(after.is));
+  assert.ok((after.is as string[]).some((x) => x.startsWith('viewing: Saturday')), JSON.stringify(after.is));
+  // A missed call from the team: who and when, never why.
+  const sam = await party('+447700900002');
+  assert.match(String(sam.tried_to_call), /^[A-Z][a-z]+ tried to call yesterday afternoon$/);
+  assert.match(String(sam.note), /never why/);
+  // Nobody we know, and no number at all.
+  assert.equal((await party('+447700900998')).known, false);
+  assert.equal((await party(null)).known, false);
+});
