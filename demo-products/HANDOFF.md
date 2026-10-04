@@ -12,10 +12,12 @@ done after each step.
 
 ## Pick up here first (the last session stopped at the weekly usage limit)
 
-The session of 4 October stopped near Alex's weekly limit (it resets on
-Thursday 8 October, 15:00 UK time), with two checks part-done. Their
-results were only in that session's container, so what came in is copied
-here. Work directly; no subagents.
+The session of 4 October stopped at 97% of Alex's weekly limit (it resets
+on Thursday 8 October, 15:00 UK time). Its last two checks' results were
+only in that session's container, so they are copied here. Work directly,
+in small steps; no subagents. Order: fix the confirmed call-engine problems
+(A), the three failed live calls (B), the other reported problems after
+reproducing each, re-check the data commit, then M2.
 
 ### A. Re-check of the review fixes
 
@@ -46,7 +48,9 @@ only the position badges, so the "ID check" badge for an empty home (put in
 `details.badges` by the seed and `create_booking`) is lost. Show
 position badges plus any `details.badges` that aren't position badges.
 
-**Server (`705c78b`)**: all five findings fixed. Two new problems reported:
+**Server (`705c78b`)**: all five findings fixed. Two new problems reported
+(this and the builder's and back office's were not double-checked:
+reproduce each before fixing):
 
 - `test/demo-api.test.ts` (~395): the estate test fails about 1 run in 40.
   It needs a received offer with a rival bidder on another phone; only the
@@ -68,9 +72,11 @@ position badges plus any `details.badges` that aren't position badges.
 - *Partly*: when staff mark the lease as being checked, `facts()`
   (`src/domain/listings.ts`) still gives `tenure` from `tenureSentence()`,
   which includes the years left on the lease.
+- *Partly*: when staff mark the price as being checked, `get_property`
+  leaves it out, but `search_properties` and `send_property_details` still
+  give the price.
 
-Possible new problems the re-check reported (not yet confirmed by a second
-look; reproduce each before fixing):
+New problems, all confirmed by a second reviewer who reproduced them:
 
 1. `call.ts` (~558): after any earlier `find_bookings`/`modify_booking` in a
    call, no read-back is reminded to be booked, so an offer read back later
@@ -86,8 +92,6 @@ look; reproduce each before fixing):
 5. `guardrails.ts` (~126): THING is tested against the whole sentence, so a
    natural "slot taken" line with "your" or "viewing" earlier in it is
    flagged again (the 3 October false alarm).
-6. `call.ts` (~610): counting `cancel_booking` as a booking attempt turns
-   off the reminder for a new viewing read back before a cancellation.
 
 ### B. Final run of the seven `ea-` live calls
 
