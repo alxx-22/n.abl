@@ -258,7 +258,7 @@ contractor; HSE's register).
 | `engineers` | Engineers and on call | people, trades, accreditations, days, districts, jobs per window, mobile; the nightly on-call pairs; escalation and the duty manager | M1 (escalation M2) |
 | `priorities` | Urgency and response | emergency, urgent and routine targets with example faults; the vulnerable uplift and the winter heating rule | M1 |
 | `safety` | Safety | the fixed scripts (gas, carbon monoxide, fire, electrics, water, flood, break-in) shown read-only with each nation's numbers; the four checks you allow | M1 |
-| `visits` | Visits | windows (label, times, days, premium), notice, how far ahead, adult present, call-ahead, abortive fee | M1 |
+| `visits` | Office hours and visits | the shared office hours (their checks point here); windows (label, times, days, premium), notice, how far ahead, adult present, call-ahead, abortive fee | M1 |
 | `prices` | Prices and payment | call-out, rates, out of hours, minimum, lockout, free quotes over, guarantee, account terms, VAT, cancellation | M1 |
 | `planned` | Safety checks and servicing | gas safety record, boiler service, the two together, EICR, reminder lead time | M1 |
 | `policies` | Policies and questions | accreditations and insurance, complaints, guarantee, asbestos, parking, payment, careers, then *Draft common questions* | M1 |
