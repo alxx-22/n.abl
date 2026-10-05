@@ -1007,4 +1007,32 @@ export const SCENARIOS: Scenario[] = [
       return f;
     },
   },
+
+  // ── M3: after the offer ─────────────────────────────────────────────────
+  {
+    id: 'ea-fall-through',
+    tenant: 'ea-hartwell',
+    title: 'Ben\'s mortgage refused, pulling out of 3 Kingfisher Way: an urgent message for the progressor; the sale left as it is; no lending advice',
+    kind: 'edge',
+    now: WEDNESDAY_MORNING,
+    callerPhone: '+447700900004',
+    persona: 'You are Ben Walker, buying 3 Kingfisher Way through this agency. Say: "Our mortgage has been refused, we\'ll have to pull out." If asked why, the lender\'s valuation came in low. Ask once whether there is any way round it. Accept that someone will call you. Your number is the one you are calling from.',
+    async check(c) {
+      const f: string[] = [];
+      const team = c.tenant.profile.team ?? [];
+      const progressor = (team.find((t) => t.role === 'progressor') ?? team.find((t) => t.does.includes('progression')))?.key;
+      const msgs = await messages(c);
+      expect(f, msgs.some((m) => m.for_staff === progressor && m.category === 'progression' && m.urgency === 'urgent' && /mortgage|lend|valu/i.test(m.body)), `no urgent progression message for ${progressor} with the reason`);
+      const live = (await c.db.query<any>(`select status from public.voice_listings where tenant_id = $1 and listing_key = 'kingfisher_3'`, [c.tenant.id]))[0];
+      expect(f, live?.status === 'sale_agreed', `3 Kingfisher Way is ${live?.status}, not still sale agreed`);
+      const sale = (await c.db.query<any>(`select status from public.voice_sales where tenant_id = $1 and listing_key = 'kingfisher_3' order by created_at desc limit 1`, [c.tenant.id]))[0];
+      expect(f, sale?.status === 'progressing', `the sale is ${sale?.status}, not still progressing`);
+      expect(f, !/\byou (?:could|should|might|can) (?:try|apply|go to|re-?apply|appeal)|another lender|different lender|re-?apply|appeal the/i.test(c.agentText), 'gave lending advice');
+      const adviser = agentLines(c).filter((l) => /mortgage adviser|\bMark\b|mortgage appointment/i.test(l)).length;
+      expect(f, adviser <= 1, `the adviser was offered ${adviser} times`);
+      expect(f, /(?:call|ring|phone|contact) you (?:back )?today|in touch (?:with you )?today/i.test(c.agentText), '"will call you today" was not said');
+      noFlags(c, f);
+      return f;
+    },
+  },
 ];

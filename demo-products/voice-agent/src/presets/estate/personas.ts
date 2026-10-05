@@ -15,12 +15,16 @@ export const PERSONAS = {
   nobody: { phone: '+447700900009', name: '' },
 } as const;
 
-/** Who to ring as, and what to try: only the parts the receptionist can already play (M2). */
+/** Who to ring as, and what to try (M2 and M3). */
 export const CALL_AS: { phone: string; who: string; try: string }[] = [
   { phone: PERSONAS.seller.phone, who: 'Sarah Collins, a seller', try: 'Ask how the sale is going.' },
   { phone: PERSONAS.sam.phone, who: 'Sam Price, a buyer', try: 'Ask about your viewings, or the missed call.' },
   { phone: PERSONAS.aisha.phone, who: 'Aisha Khan, made an offer', try: 'Ask where your offer stands.' },
   { phone: PERSONAS.ben.phone, who: 'Ben Walker, offer accepted', try: 'Ask about your offer.' },
   { phone: PERSONAS.megan.phone, who: 'Megan Hughes, enquired on Zoopla', try: 'Say nobody got back to you.' },
+  { phone: PERSONAS.ben.phone, who: 'Ben Walker, buying 3 Kingfisher Way', try: "Ask when you'll exchange, or say your mortgage was refused." },
+  { phone: PERSONAS.liam.phone, who: 'Liam Doyle, completing this week', try: 'Ask about completion day and the keys.' },
+  { phone: PERSONAS.solicitor.phone, who: "Nadia Osei, a buyer's solicitor", try: 'Ask where the sale of 2 Elm Court has got to.' },
+  { phone: PERSONAS.chainAgent.phone, who: 'Harper & Co, an agent in the chain', try: 'Ask how the chain on 2 Elm Court looks.' },
   { phone: PERSONAS.nobody.phone, who: 'A stranger', try: "Ask about Sarah's sale: you'll get nothing." },
 ];
