@@ -1,0 +1,75 @@
+{
+ "views": [
+  {
+   "id": "jobs",
+   "label": "Jobs"
+  },
+  {
+   "id": "dispatch",
+   "label": "Dispatch",
+   "of": "engineer"
+  },
+  {
+   "id": "compliance",
+   "label": "Properties and compliance"
+  },
+  {
+   "id": "safety",
+   "label": "Safety log"
+  },
+  {
+   "id": "messages",
+   "label": "Messages"
+  },
+  {
+   "id": "calls",
+   "label": "Calls"
+  }
+ ],
+ "teamPhones": [
+  {
+   "name": "Dan",
+   "phone": "07700 900301"
+  },
+  {
+   "name": "Callum",
+   "phone": "07700 900302"
+  },
+  {
+   "name": "Marek",
+   "phone": "07700 900303"
+  },
+  {
+   "name": "Priya",
+   "phone": "07700 900304"
+  },
+  {
+   "name": "Shaz",
+   "phone": "07700 900306"
+  },
+  {
+   "name": "Leon",
+   "phone": "07700 900307"
+  },
+  {
+   "name": "Grace",
+   "phone": "07700 900308"
+  },
+  {
+   "name": "nobody",
+   "phone": "07700 900301"
+  },
+  {
+   "name": "Idle",
+   "phone": "07700 900301"
+  }
+ ],
+ "suggestions": [
+  "There's a strong smell of gas in my kitchen.",
+  "Water's coming through my ceiling.",
+  "I need a gas safety check at 14 Elm Road.",
+  "When's my engineer coming? Reference {ref}.",
+  "Can you tell me how to reset my boiler?"
+ ],
+ "resetLine": "jobs, safety checks and incidents"
+}

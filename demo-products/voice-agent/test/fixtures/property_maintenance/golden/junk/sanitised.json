@@ -1,0 +1,300 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "",
+  "style": "Repairs and maintenance for homes, landlords and letting agents",
+  "town": "Nottingham",
+  "address": "Unit 4, Fernhill Trade Park, Nottingham NG7 (example)",
+  "phone_display": "0115 496 0456",
+  "website": "",
+  "voice": "Charon",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "12:00"
+     }
+    ]
+   }
+  ],
+  "closures": []
+ },
+ "area": {
+  "nation": "england",
+  "districts": ["NG5"],
+  "towns": ["Nottingham","Derby","Loughborough","Beeston","West Bridgford","Long Eaton"]
+ },
+ "customers": {
+  "homeowners": true,
+  "landlords": true,
+  "agents": true,
+  "blocks": false,
+  "social": {
+   "on": false,
+   "agent_of_landlord": false
+  },
+  "commercial": false,
+  "insurers": false,
+  "tenant_no_client": "contact_landlord",
+  "recharge_lockouts": true
+ },
+ "clients": [
+  {
+   "key": "junk",
+   "name": "Junk",
+   "kind": "landlord",
+   "works_limit_pence": 0,
+   "emergency_authority_pence": 0,
+   "po_required": false,
+   "contact": {
+    "name": "",
+    "phone": "",
+    "email": ""
+   },
+   "notice": "over_limit",
+   "instructions": "",
+   "status": "active",
+   "example": false
+  }
+ ],
+ "trades": [
+  {
+   "key": "ponds",
+   "label": "Ponds",
+   "on": true
+  }
+ ],
+ "dont_do": [
+  {
+   "what": "pest control",
+   "suggest": "the council's pest service, or a member of the British Pest Control Association"
+  },
+  {
+   "what": "lifts",
+   "suggest": "the building's lift contractor"
+  },
+  {
+   "what": "white goods",
+   "suggest": "the manufacturer or the shop it came from"
+  },
+  {
+   "what": "asbestos removal",
+   "suggest": "a licensed contractor: the HSE keeps a register"
+  }
+ ],
+ "engineers": [
+  {
+   "key": "junk",
+   "name": "Junk",
+   "trades": [],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [],
+   "districts": [],
+   "per_window": 6,
+   "mobile": ""
+  }
+ ],
+ "on_call": {
+  "nights": [
+   {
+    "day": 0,
+    "engineers": ["callum","priya"]
+   },
+   {
+    "day": 1,
+    "engineers": ["dan","leon"]
+   },
+   {
+    "day": 2,
+    "engineers": ["callum","priya"]
+   },
+   {
+    "day": 3,
+    "engineers": ["dan","leon"]
+   },
+   {
+    "day": 4,
+    "engineers": ["callum","priya"]
+   },
+   {
+    "day": 5,
+    "engineers": ["dan","leon"]
+   },
+   {
+    "day": 6,
+    "engineers": ["callum","priya"]
+   }
+  ],
+  "escalate_minutes": 5,
+  "duty_manager": {
+   "name": "Helen Ward",
+   "mobile": "07700 900310"
+  }
+ },
+ "priorities": {
+  "emergency": {
+   "attend_hours": 24,
+   "make_safe_hours": 24,
+   "examples": [
+    "no heating or hot water for a vulnerable household",
+    "an uncontrollable leak",
+    "no power at all",
+    "a door that won't lock",
+    "sewage coming up inside"
+   ]
+  },
+  "urgent": {
+   "working_days": 3,
+   "examples": ["no heating in winter","a toilet not flushing (the only one)","a partial loss of power","a roof leak in heavy rain"]
+  },
+  "routine": {
+   "working_days": 20,
+   "examples": ["a dripping tap","a sticking door","a cracked tile","a loose handrail"]
+  },
+  "vulnerable_uplift": true,
+  "winter_heating": true
+ },
+ "checks": {
+  "prepayment": true,
+  "thermostat": true,
+  "trip_reset": true,
+  "boiler_pressure": true
+ },
+ "visits": {
+  "windows": [
+   {
+    "key": "window_1",
+    "label": "Morning",
+    "from": "08:00",
+    "to": "12:00",
+    "premium_pence": 0,
+    "days": []
+   }
+  ],
+  "notice_hours": 0,
+  "horizon_days": 21,
+  "adult_present": true,
+  "call_ahead": true,
+  "abortive_fee_pence": 4500
+ },
+ "prices": {
+  "vat_registered": true,
+  "callout_pence": 9500,
+  "half_hour_pence": 4000,
+  "ooh_first_hour_pence": 15000,
+  "minimum_pence": 9500,
+  "lockout_from_pence": 12000,
+  "free_quote_over_pence": 50000,
+  "card_on_booking": false,
+  "account_days": 14,
+  "guarantee_months": 12,
+  "cancellation": "You can cancel free of charge until 5pm the working day before your visit."
+ },
+ "planned": {
+  "gas_record_pence": 7500,
+  "extra_appliance_pence": 1500,
+  "boiler_service_pence": 8500,
+  "combined_pence": 13000,
+  "eicr_from_pence": 15000,
+  "reminder_weeks": 6
+ },
+ "compliance": {
+  "gas_safe_number": "512345 (example)",
+  "niceic": true,
+  "napit": false,
+  "oftec": false,
+  "insurance": "£5 million public liability (example)",
+  "waste_carrier": "Registered upper-tier waste carrier (example)",
+  "complaints_handler": "Helen Ward",
+  "data_lead": "Helen Ward",
+  "recording": "Calls on this demo line are transcribed so the team can see what was said."
+ },
+ "policies": {
+  "faqs": [
+   {
+    "q": "Do you work on Sundays?",
+    "a": "The office is closed on Sundays, but an engineer is on call for emergencies day and night."
+   },
+   {
+    "q": "Are your engineers DBS checked?",
+    "a": "Yes, every engineer has a basic DBS check and carries ID. You can ask to see it at the door."
+   }
+  ],
+  "guarantee": "Our workmanship is guaranteed for 12 months; parts carry the maker’s warranty.",
+  "asbestos": "If we find anything that might be asbestos, we stop and arrange for it to be tested before any work goes on.",
+  "parking": "Please let us know about any parking restrictions; a permit or a space on the drive helps.",
+  "payment": "Homeowners pay on completion by card or bank transfer; landlords and agents on account, within 14 days.",
+  "careers": "We’re always glad to hear from qualified engineers: take a message and the office will call back."
+ },
+ "theme": {
+  "accent": "#e0a23b",
+  "primary": "#1f3347",
+  "background": "#0f151b",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

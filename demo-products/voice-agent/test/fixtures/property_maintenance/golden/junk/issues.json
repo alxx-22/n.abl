@@ -1,0 +1,97 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the business a name."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "No engineer does ponds: add one, or turn it off."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Junk works no days: pick at least one."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Junk has no trades, so is never booked."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Sunday night's rota names someone who isn't one of your engineers."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Nobody is on call on Sunday night."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Monday night's rota names someone who isn't one of your engineers."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Nobody is on call on Monday night."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Tuesday night's rota names someone who isn't one of your engineers."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Nobody is on call on Tuesday night."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Wednesday night's rota names someone who isn't one of your engineers."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Nobody is on call on Wednesday night."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Thursday night's rota names someone who isn't one of your engineers."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Nobody is on call on Thursday night."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Friday night's rota names someone who isn't one of your engineers."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Nobody is on call on Friday night."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Saturday night's rota names someone who isn't one of your engineers."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Nobody is on call on Saturday night."
+ },
+ {
+  "step": "visits",
+  "level": "warning",
+  "message": "The morning window has no days ticked, so it is never offered."
+ }
+]

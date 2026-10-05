@@ -1,0 +1,12 @@
+[
+ "get_opening_hours",
+ "search_knowledge",
+ "safety_advice",
+ "find_property",
+ "triage_fault",
+ "job",
+ "check_windows",
+ "compliance",
+ "take_message",
+ "end_call"
+]

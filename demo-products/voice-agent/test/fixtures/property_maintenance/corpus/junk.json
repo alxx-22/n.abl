@@ -1,0 +1,80 @@
+{
+ "version": "nine",
+ "basics": {
+  "name": 42,
+  "voice": "Nobody",
+  "greeting": ["hi"]
+ },
+ "hours": {
+  "days": "every day",
+  "closures": [
+   {
+    "date": "soon"
+   }
+  ]
+ },
+ "area": {
+  "nation": "mars",
+  "districts": ["not a district","ng 5",7],
+  "towns": "Nottingham"
+ },
+ "customers": {
+  "homeowners": "yes",
+  "social": "on"
+ },
+ "clients": [
+  {
+   "name": "Junk",
+   "kind": "king",
+   "works_limit_pence": -5,
+   "notice": "always"
+  },
+  "nobody"
+ ],
+ "trades": [
+  {
+   "label": "Ponds",
+   "gas": true
+  },
+  null
+ ],
+ "engineers": [
+  {
+   "name": "Junk",
+   "trades": ["everything"],
+   "days": [9,"Monday"],
+   "per_window": 99
+  }
+ ],
+ "on_call": {
+  "nights": "every",
+  "escalate_minutes": -1
+ },
+ "priorities": {
+  "emergency": {
+   "attend_hours": 999
+  }
+ },
+ "checks": "all",
+ "visits": {
+  "windows": [
+   {
+    "from": "25:00",
+    "days": [8]
+   }
+  ],
+  "notice_hours": -4
+ },
+ "prices": {
+  "callout_pence": "cheap"
+ },
+ "planned": null,
+ "compliance": {
+  "niceic": "maybe"
+ },
+ "policies": null,
+ "theme": {
+  "accent": "blue"
+ },
+ "sources": "web"
+}

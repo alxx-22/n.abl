@@ -1,0 +1,428 @@
+{
+ "slug": "golden",
+ "name": "Your property maintenance company",
+ "business_type": "property_maintenance",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Charon",
+ "greeting": "Hello, you're through to the property maintenance company. I'm the AI assistant on this demo line. How can I help?",
+ "summary": "Your property maintenance company is a property maintenance company in Nottingham: Repairs and maintenance for homes, landlords and letting agents.",
+ "address": "Unit 4, Fernhill Trade Park, Nottingham NG7 (example)",
+ "phone_display": "0115 496 0456",
+ "brand": {
+  "accent": "#e0a23b",
+  "primary": "#1f3347",
+  "background": "#0f151b",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Your property maintenance company: Repairs and maintenance for homes, landlords and letting agents, at Unit 4, Fernhill Trade Park, Nottingham NG7 (example).",
+  "Monday to Friday: 8am till 5:30pm. Saturday: 9am till 12 noon. Closed Sundays.",
+  "We cover Nottingham, Derby, Loughborough, Beeston and 2 more towns: NG5.",
+  "Emergencies, day and night: we aim to attend within 24 hours and make safe within 24.",
+  "Call-out £95 including VAT, with the first hour, then £40 a half hour. Nights and weekends: £150 for the first hour.",
+  "Gas emergency: the National Gas Emergency Service, 0800 111 999."
+ ],
+ "opening_hours": [
+  {
+   "days": [1,2,3,4,5],
+   "open": "08:00",
+   "close": "17:30",
+   "label": "Open"
+  },
+  {
+   "days": [6],
+   "open": "09:00",
+   "close": "12:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [],
+ "knowledge": [
+  {
+   "q": "Which areas do you cover?",
+   "a": "We cover Nottingham, Derby, Loughborough, Beeston, West Bridgford and Long Eaton: NG5. Outside those, we can't send an engineer, sorry.",
+   "tags": ["area","cover","postcode","where","come out"]
+  },
+  {
+   "q": "What work do you do?",
+   "a": "We do ponds.",
+   "tags": ["trades","work","do you do","services"]
+  },
+  {
+   "q": "Do you do pest control?",
+   "a": "We don't do pest control, sorry. Try the council's pest service, or a member of the British Pest Control Association.",
+   "tags": ["pest control","pest","control"]
+  },
+  {
+   "q": "Do you do lifts?",
+   "a": "We don't do lifts, sorry. Try the building's lift contractor.",
+   "tags": ["lifts","lifts"]
+  },
+  {
+   "q": "Do you do white goods?",
+   "a": "We don't do white goods, sorry. Try the manufacturer or the shop it came from.",
+   "tags": ["white goods","white","goods"]
+  },
+  {
+   "q": "Do you do asbestos removal?",
+   "a": "We don't do asbestos removal, sorry. Try a licensed contractor: the HSE keeps a register.",
+   "tags": ["asbestos removal","asbestos","removal"]
+  },
+  {
+   "q": "Who do you work for?",
+   "a": "We work for homeowners, landlords and letting agents.",
+   "tags": ["landlord","letting agent","homeowner","business","who"]
+  },
+  {
+   "q": "I'm a tenant: can I book a repair?",
+   "a": "Yes: tell me the address and what's wrong. If your landlord or letting agent is one of our clients, we arrange it with them; if not, we need your landlord's go-ahead first, and I can take their details.",
+   "tags": ["tenant","renting","rent","landlord"]
+  },
+  {
+   "q": "How much is a call-out?",
+   "a": "Call-out £95 including VAT, with the first hour, then £40 a half hour. Nights and weekends: £150 for the first hour. Bigger jobs, over £500, we quote for, free.",
+   "tags": ["price","cost","call-out","callout","charge","how much","hourly","rate"]
+  },
+  {
+   "q": "How much is it out of hours?",
+   "a": "Nights and weekends, the first hour is £150 including VAT. Emergencies, day and night: we aim to attend within 24 hours and make safe within 24.",
+   "tags": ["night","weekend","out of hours","emergency","evening"]
+  },
+  {
+   "q": "How much is a lockout?",
+   "a": "Lockouts start from £120 including VAT. If you rent, your landlord or agent may pass the cost on to you: that is for them to decide.",
+   "tags": ["lockout","locked out","keys","lost keys","locksmith"]
+  },
+  {
+   "q": "How much is a gas safety certificate?",
+   "a": "A landlord's gas safety record is £75 including VAT for one appliance, plus £15 for each extra one. A boiler service is £85, or £130 for both on one visit.",
+   "tags": ["gas safety","gas certificate","cp12","boiler service","service","landlord certificate"]
+  },
+  {
+   "q": "How much is an EICR?",
+   "a": "An electrical installation condition report starts from £150 including VAT, depending on the size of the property.",
+   "tags": ["eicr","electrical certificate","electrical safety","electrics check"]
+  },
+  {
+   "q": "Do you give free quotes?",
+   "a": "Jobs over £500 are quoted, free. Smaller repairs are charged at the call-out rate, £95 including VAT with the first hour.",
+   "tags": ["quote","estimate","free"]
+  },
+  {
+   "q": "What time will the engineer come?",
+   "a": "We book a window rather than a time: . The engineer texts when they're on the way. Someone over 18 needs to be in.",
+   "tags": ["what time","arrive","window","slot","when","morning","afternoon","evening"]
+  },
+  {
+   "q": "What if I'm not in?",
+   "a": "Let us know beforehand and we'll move the visit. If nobody's in and we weren't told, there's a £45 charge for the wasted visit.",
+   "tags": ["not in","missed","out","no access","wasted"]
+  },
+  {
+   "q": "Can I cancel?",
+   "a": "You can cancel free of charge until 5pm the working day before your visit.",
+   "tags": ["cancel","cancellation","change my mind"]
+  },
+  {
+   "q": "Is your work guaranteed?",
+   "a": "Our workmanship is guaranteed for 12 months; parts carry the maker’s warranty.",
+   "tags": ["guarantee","warranty","come back"]
+  },
+  {
+   "q": "How do I pay?",
+   "a": "Homeowners pay on completion by card or bank transfer; landlords and agents on account, within 14 days.",
+   "tags": ["pay","payment","card","invoice","account","bank transfer"]
+  },
+  {
+   "q": "Are you Gas Safe registered?",
+   "a": "Yes: we're Gas Safe registered, number 512345 (example), and every engineer who does gas work carries their own Gas Safe ID card. We're registered with NICEIC. We carry £5 million public liability (example). Registered upper-tier waste carrier (example).",
+   "tags": ["gas safe","registered","niceic","napit","oftec","accredited","qualified","insured","insurance"]
+  },
+  {
+   "q": "Could there be asbestos?",
+   "a": "If we find anything that might be asbestos, we stop and arrange for it to be tested before any work goes on. The HSE's asbestos guidance explains more.",
+   "tags": ["asbestos","artex"]
+  },
+  {
+   "q": "Do I need to sort out parking?",
+   "a": "Please let us know about any parking restrictions; a permit or a space on the drive helps.",
+   "tags": ["parking","permit","park","van"]
+  },
+  {
+   "q": "Are you hiring?",
+   "a": "We’re always glad to hear from qualified engineers: take a message and the office will call back.",
+   "tags": ["job","jobs","hiring","work for you","career","vacancy"]
+  },
+  {
+   "q": "How do I make a complaint?",
+   "a": "Tell us what went wrong and Helen Ward will look into it and call you back.",
+   "tags": ["complain","complaint","unhappy"]
+  },
+  {
+   "q": "Is this call recorded?",
+   "a": "Calls on this demo line are transcribed so the team can see what was said.",
+   "tags": ["recorded","recording","transcribed","transcript"]
+  },
+  {
+   "q": "Am I talking to a real person?",
+   "a": "I'm an AI assistant answering for the team. If you'd rather speak to a person, I can take a message and someone will call you back.",
+   "tags": ["real person","robot","ai","human"]
+  },
+  {
+   "q": "Can I see the data you hold about me, or stop your texts?",
+   "a": "Helen Ward looks after data protection, and we reply to any request within a month. To stop our texts, reply STOP or just say so.",
+   "tags": ["data","gdpr","personal information","stop texts","unsubscribe"]
+  },
+  {
+   "q": "There is a power cut.",
+   "a": "For a power cut, ring 105: it is free and puts you through to your local network operator.",
+   "tags": ["power cut","no power","electricity","105"]
+  },
+  {
+   "q": "Who do I ring about a burst water main?",
+   "a": "A burst main or no water in the street is for your water company: the number is on your water bill.",
+   "tags": ["water main","no water","water pressure","street"]
+  },
+  {
+   "q": "Who do I ring about flooding?",
+   "a": "For flood warnings, ring Floodline on 0345 988 1188. If anyone is in danger, ring 999.",
+   "tags": ["flood","flooding","river"]
+  },
+  {
+   "q": "What alarms must a landlord fit?",
+   "a": "Landlords in England must fit a smoke alarm on every storey and a carbon monoxide alarm in any room with a fixed fuel-burning appliance, like a boiler or wood burner (not a gas cooker), and repair or replace them when told they're faulty.",
+   "tags": ["smoke alarm","carbon monoxide alarm","heat alarm","alarm"]
+  },
+  {
+   "q": "How often does a landlord need a gas safety check?",
+   "a": "A landlord needs a gas safety check every 12 months by a Gas Safe registered engineer. It can be done from 10 months on without losing the date, so booking early costs nothing.",
+   "tags": ["gas safety","gas certificate","cp12","landlord"]
+  },
+  {
+   "q": "How often do the electrics need checking?",
+   "a": "Landlords must have the electrics checked by a qualified electrician at least every five years, with an electrical installation condition report.",
+   "tags": ["eicr","electrical","certificate","landlord"]
+  },
+  {
+   "q": "What must a landlord do about damp and mould?",
+   "a": "For social housing in England, Awaab's Law sets time limits for landlords to look into and fix damp and mould. Any tenant can get advice from Shelter or Citizens Advice.",
+   "tags": ["damp","mould","condensation","awaab's law"]
+  },
+  {
+   "q": "I'm a tenant and my repairs aren't being done.",
+   "a": "Shelter or Citizens Advice can explain a tenant's rights about repairs. I can take the details of the repair for whoever looks after the property.",
+   "tags": ["tenant","rights","landlord","complaint"]
+  },
+  {
+   "q": "Someone told me your bank details have changed.",
+   "a": "We never change bank details by email or text. Don't pay anything: check with us on a number you already have, and report it to Report Fraud on 0300 123 2040.",
+   "tags": ["fraud","bank details","scam","invoice"]
+  },
+  {
+   "q": "Do you work on Sundays?",
+   "a": "The office is closed on Sundays, but an engineer is on call for emergencies day and night.",
+   "tags": []
+  },
+  {
+   "q": "Are your engineers DBS checked?",
+   "a": "Yes, every engineer has a basic DBS check and carries ID. You can ask to see it at the door.",
+   "tags": []
+  }
+ ],
+ "team": [
+  {
+   "key": "junk",
+   "name": "Junk",
+   "first_name": "Junk",
+   "role": "other",
+   "does": [],
+   "days": [],
+   "mobile": ""
+  },
+  {
+   "key": "duty_manager",
+   "name": "Helen Ward",
+   "first_name": "Helen",
+   "role": "manager",
+   "does": [],
+   "days": [0,1,2,3,4,5,6],
+   "mobile": "07700 900310"
+  }
+ ],
+ "maintenance": {
+  "nation": "england",
+  "districts": ["NG5"],
+  "towns": ["Nottingham","Derby","Loughborough","Beeston","West Bridgford","Long Eaton"],
+  "customers": {
+   "homeowners": true,
+   "landlords": true,
+   "agents": true,
+   "blocks": false,
+   "social": {
+    "on": false,
+    "agent_of_landlord": false
+   },
+   "commercial": false,
+   "insurers": false,
+   "tenant_no_client": "contact_landlord",
+   "recharge_lockouts": true
+  },
+  "clients": [
+   {
+    "key": "junk",
+    "name": "Junk",
+    "kind": "landlord",
+    "works_limit_pence": 0,
+    "emergency_authority_pence": 0,
+    "po_required": false,
+    "contact": {
+     "name": "",
+     "phone": null,
+     "email": ""
+    },
+    "notice": "over_limit",
+    "instructions": "",
+    "status": "active"
+   }
+  ],
+  "trades": [
+   {
+    "key": "ponds",
+    "label": "Ponds",
+    "gas": false
+   }
+  ],
+  "dont_do": [
+   {
+    "what": "pest control",
+    "suggest": "the council's pest service, or a member of the British Pest Control Association"
+   },
+   {
+    "what": "lifts",
+    "suggest": "the building's lift contractor"
+   },
+   {
+    "what": "white goods",
+    "suggest": "the manufacturer or the shop it came from"
+   },
+   {
+    "what": "asbestos removal",
+    "suggest": "a licensed contractor: the HSE keeps a register"
+   }
+  ],
+  "engineers": [
+   {
+    "key": "junk",
+    "name": "Junk",
+    "first_name": "Junk",
+    "trades": [],
+    "gas_safe": false,
+    "accreditations": [],
+    "days": [],
+    "districts": [],
+    "per_window": 6
+   }
+  ],
+  "on_call": {
+   "nights": [
+    {
+     "day": 0,
+     "engineers": ["callum","priya"]
+    },
+    {
+     "day": 1,
+     "engineers": ["dan","leon"]
+    },
+    {
+     "day": 2,
+     "engineers": ["callum","priya"]
+    },
+    {
+     "day": 3,
+     "engineers": ["dan","leon"]
+    },
+    {
+     "day": 4,
+     "engineers": ["callum","priya"]
+    },
+    {
+     "day": 5,
+     "engineers": ["dan","leon"]
+    },
+    {
+     "day": 6,
+     "engineers": ["callum","priya"]
+    }
+   ],
+   "escalate_minutes": 5,
+   "duty_manager": {
+    "name": "Helen Ward",
+    "mobile": "07700 900310"
+   }
+  },
+  "priorities": {
+   "emergency": {
+    "attend_hours": 24,
+    "make_safe_hours": 24,
+    "examples": [
+     "no heating or hot water for a vulnerable household",
+     "an uncontrollable leak",
+     "no power at all",
+     "a door that won't lock",
+     "sewage coming up inside"
+    ]
+   },
+   "urgent": {
+    "working_days": 3,
+    "examples": ["no heating in winter","a toilet not flushing (the only one)","a partial loss of power","a roof leak in heavy rain"]
+   },
+   "routine": {
+    "working_days": 20,
+    "examples": ["a dripping tap","a sticking door","a cracked tile","a loose handrail"]
+   },
+   "vulnerable_uplift": true,
+   "winter_heating": true
+  },
+  "checks": {
+   "prepayment": true,
+   "thermostat": true,
+   "trip_reset": true,
+   "boiler_pressure": true
+  },
+  "windows": [],
+  "visits": {
+   "notice_hours": 0,
+   "horizon_days": 21,
+   "adult_present": true,
+   "call_ahead": true,
+   "abortive_fee_pence": 4500
+  },
+  "prices": {
+   "vat_registered": true,
+   "callout_pence": 9500,
+   "half_hour_pence": 4000,
+   "ooh_first_hour_pence": 15000,
+   "minimum_pence": 9500,
+   "lockout_from_pence": 12000,
+   "free_quote_over_pence": 50000,
+   "card_on_booking": false,
+   "account_days": 14,
+   "guarantee_months": 12,
+   "cancellation": "You can cancel free of charge until 5pm the working day before your visit."
+  },
+  "planned": {
+   "gas_record_pence": 7500,
+   "extra_appliance_pence": 1500,
+   "boiler_service_pence": 8500,
+   "combined_pence": 13000,
+   "eicr_from_pence": 15000,
+   "reminder_weeks": 6
+  },
+  "gas": "0800 111 999",
+  "complaints_handler": "Helen Ward",
+  "data_lead": "Helen Ward"
+ }
+}

@@ -1,0 +1,2687 @@
+{
+ "bookings": [],
+ "orders": [],
+ "messages": [
+  {
+   "from_name": "Ellie Burke",
+   "from_phone": "+447700900546",
+   "body": "Can the engineer come after 3pm on Thursday? I'm at work in the mornings. (Flat 2, 20 Saxonby Street (example), NG1)",
+   "for_staff": "duty_manager",
+   "category": "job",
+   "urgency": "this_week",
+   "created_at": "2026-10-10T22:00:00.000Z"
+  },
+  {
+   "from_name": "Kieran Doyle",
+   "from_phone": "+447700900611",
+   "body": "I'm a qualified electrician, NICEIC registered, looking for work. Please call me back.",
+   "for_staff": "duty_manager",
+   "category": "careers",
+   "created_at": "2026-10-09T23:00:00.000Z"
+  }
+ ],
+ "texts": [],
+ "properties": [
+  {
+   "key": "tansy_flat_3_22",
+   "number": "Flat 3, 22",
+   "street": "Tansy Lane",
+   "district": "NG2",
+   "town": "West Bridgford",
+   "kind": "flat",
+   "client": "ellis",
+   "occupant": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "vulnerable_consent_at": null,
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "larchfield_80",
+   "number": "80",
+   "street": "Larchfield Close",
+   "district": "NG3",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "whitfield",
+   "occupant": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "on the street, no permit needed",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "vulnerable_consent_at": null,
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "tansy_81",
+   "number": "81",
+   "street": "Tansy Lane",
+   "district": "NG2",
+   "town": "West Bridgford",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": ["a medical condition that needs heating"],
+   "vulnerable_consent_at": null,
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "saxonby_flat_2_20",
+   "number": "Flat 2, 20",
+   "street": "Saxonby Street",
+   "district": "NG1",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Ellie Burke",
+    "phone": "+447700900546",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "vulnerable_consent_at": null,
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "larchfield_flat_2_67",
+   "number": "Flat 2, 67",
+   "street": "Larchfield Close",
+   "district": "NG3",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "vulnerable_consent_at": null,
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "tansy_95",
+   "number": "95",
+   "street": "Tansy Lane",
+   "district": "NG2",
+   "town": "West Bridgford",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "pay and display nearby",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "vulnerable_consent_at": null,
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "saxonby_flat_3_91",
+   "number": "Flat 3, 91",
+   "street": "Saxonby Street",
+   "district": "NG1",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Lucy Doyle",
+    "phone": "+447700900566",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "vulnerable_consent_at": null,
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  }
+ ],
+ "jobs": [
+  {
+   "reference": "HH520",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Urgent: no hot water",
+   "visit_date": "2026-10-10",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Diverter valve replaced; hot water and heating working.",
+   "history": [
+    {
+     "at": "2026-10-09T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-09T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Dan"
+    },
+    {
+     "at": "2026-10-10T10:30:00.000Z",
+     "by": "Dan",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-09T07:00:00.000Z",
+   "done_at": "2026-10-10T10:30:00.000Z",
+   "trade": "gas_heating",
+   "priority": "urgent",
+   "description": "No hot water",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "QX391",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Routine: cracked bedroom window",
+   "visit_date": "2026-10-10",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Pane measured; sealed unit fitted.",
+   "history": [
+    {
+     "at": "2026-10-06T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-06T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    },
+    {
+     "at": "2026-10-10T10:30:00.000Z",
+     "by": "Leon",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T07:00:00.000Z",
+   "done_at": "2026-10-10T10:30:00.000Z",
+   "trade": "glazing",
+   "priority": "routine",
+   "description": "Cracked bedroom window",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "HL522",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Routine: front door lock stiff",
+   "visit_date": "2026-10-09",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Lock cylinder replaced; three keys handed to the tenant.",
+   "history": [
+    {
+     "at": "2026-10-07T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-07T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    },
+    {
+     "at": "2026-10-09T10:30:00.000Z",
+     "by": "Leon",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-07T07:00:00.000Z",
+   "done_at": "2026-10-09T10:30:00.000Z",
+   "trade": "locksmith",
+   "priority": "routine",
+   "description": "Front door lock stiff",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "WR395",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: slipped roof tiles after the wind",
+   "visit_date": "2026-10-09",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "tom",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Three tiles refixed with new clips.",
+   "history": [
+    {
+     "at": "2026-10-06T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-06T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Tom"
+    },
+    {
+     "at": "2026-10-09T10:30:00.000Z",
+     "by": "Tom",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T07:00:00.000Z",
+   "done_at": "2026-10-09T10:30:00.000Z",
+   "trade": "roofing",
+   "priority": "routine",
+   "description": "Slipped roof tiles after the wind",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "AW291",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Urgent: cracked bedroom window",
+   "visit_date": "2026-10-09",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Pane measured; sealed unit fitted.",
+   "history": [
+    {
+     "at": "2026-10-07T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-07T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    },
+    {
+     "at": "2026-10-09T10:30:00.000Z",
+     "by": "Leon",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-07T07:00:00.000Z",
+   "done_at": "2026-10-09T10:30:00.000Z",
+   "trade": "glazing",
+   "priority": "urgent",
+   "description": "Cracked bedroom window",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "LX935",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: dripping kitchen tap",
+   "visit_date": "2026-10-09",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "callum",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Replaced the washer and the cartridge; no drips.",
+   "history": [
+    {
+     "at": "2026-10-05T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-05T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Callum"
+    },
+    {
+     "at": "2026-10-09T10:30:00.000Z",
+     "by": "Callum",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-05T07:00:00.000Z",
+   "done_at": "2026-10-09T10:30:00.000Z",
+   "trade": "plumbing",
+   "priority": "routine",
+   "description": "Dripping kitchen tap",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "KW734",
+   "property_key": "saxonby_flat_3_91",
+   "client_key": null,
+   "reporter": {
+    "name": "Lucy Doyle",
+    "phone": "+447700900566",
+    "role": "homeowner"
+   },
+   "reason": "Routine: loose stair handrail",
+   "visit_date": "2026-10-09",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "shaz",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Handrail brackets refixed into the studs.",
+   "history": [
+    {
+     "at": "2026-10-06T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-06T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Shaz"
+    },
+    {
+     "at": "2026-10-09T10:30:00.000Z",
+     "by": "Shaz",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T07:00:00.000Z",
+   "done_at": "2026-10-09T10:30:00.000Z",
+   "trade": "carpentry",
+   "priority": "routine",
+   "description": "Loose stair handrail",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "HY453",
+   "property_key": "saxonby_flat_3_91",
+   "client_key": null,
+   "reporter": {
+    "name": "Lucy Doyle",
+    "phone": "+447700900566",
+    "role": "homeowner"
+   },
+   "reason": "Routine: boiler losing pressure",
+   "visit_date": "2026-10-08",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Pressure relief valve replaced; boiler holding pressure.",
+   "history": [
+    {
+     "at": "2026-10-06T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-06T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Dan"
+    },
+    {
+     "at": "2026-10-08T10:30:00.000Z",
+     "by": "Dan",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T07:00:00.000Z",
+   "done_at": "2026-10-08T10:30:00.000Z",
+   "trade": "gas_heating",
+   "priority": "routine",
+   "description": "Boiler losing pressure",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "RA878",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565",
+    "role": "homeowner"
+   },
+   "reason": "Routine: cracked bedroom window",
+   "visit_date": "2026-10-08",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Pane measured; sealed unit fitted.",
+   "history": [
+    {
+     "at": "2026-10-06T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-06T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    },
+    {
+     "at": "2026-10-08T10:30:00.000Z",
+     "by": "Leon",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T07:00:00.000Z",
+   "done_at": "2026-10-08T10:30:00.000Z",
+   "trade": "glazing",
+   "priority": "routine",
+   "description": "Cracked bedroom window",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "JX799",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "reporter": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562",
+    "role": "homeowner"
+   },
+   "reason": "Routine: mould on the bathroom ceiling",
+   "visit_date": "2026-10-08",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "grace",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Treated with fungicide; advised on ventilation; fan working.",
+   "history": [
+    {
+     "at": "2026-10-06T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-06T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Grace"
+    },
+    {
+     "at": "2026-10-08T10:30:00.000Z",
+     "by": "Grace",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T07:00:00.000Z",
+   "done_at": "2026-10-08T10:30:00.000Z",
+   "trade": "damp_mould",
+   "priority": "routine",
+   "description": "Mould on the bathroom ceiling",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "AR935",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: no hot water",
+   "visit_date": "2026-10-08",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Diverter valve replaced; hot water and heating working.",
+   "history": [
+    {
+     "at": "2026-10-04T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-04T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Dan"
+    },
+    {
+     "at": "2026-10-08T10:30:00.000Z",
+     "by": "Dan",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-04T07:00:00.000Z",
+   "done_at": "2026-10-08T10:30:00.000Z",
+   "trade": "gas_heating",
+   "priority": "routine",
+   "description": "No hot water",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "HW813",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "reporter": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562",
+    "role": "homeowner"
+   },
+   "reason": "Urgent: socket not working in the bedroom",
+   "visit_date": "2026-10-08",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "priya",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Loose terminal remade; socket tested.",
+   "history": [
+    {
+     "at": "2026-10-06T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-06T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Priya"
+    },
+    {
+     "at": "2026-10-08T10:30:00.000Z",
+     "by": "Priya",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T07:00:00.000Z",
+   "done_at": "2026-10-08T10:30:00.000Z",
+   "trade": "electrical",
+   "priority": "urgent",
+   "description": "Socket not working in the bedroom",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "RX484",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "reporter": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545",
+    "role": "homeowner"
+   },
+   "reason": "Urgent: bathroom extractor fan not working",
+   "visit_date": "2026-10-07",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "priya",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "New fan fitted and tested.",
+   "history": [
+    {
+     "at": "2026-10-05T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-05T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Priya"
+    },
+    {
+     "at": "2026-10-07T10:30:00.000Z",
+     "by": "Priya",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-05T07:00:00.000Z",
+   "done_at": "2026-10-07T10:30:00.000Z",
+   "trade": "electrical",
+   "priority": "urgent",
+   "description": "Bathroom extractor fan not working",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "AQ969",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "reporter": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545",
+    "role": "homeowner"
+   },
+   "reason": "Urgent: socket not working in the bedroom",
+   "visit_date": "2026-10-07",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "priya",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Loose terminal remade; socket tested.",
+   "history": [
+    {
+     "at": "2026-10-05T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-05T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Priya"
+    },
+    {
+     "at": "2026-10-07T10:30:00.000Z",
+     "by": "Priya",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-05T07:00:00.000Z",
+   "done_at": "2026-10-07T10:30:00.000Z",
+   "trade": "electrical",
+   "priority": "urgent",
+   "description": "Socket not working in the bedroom",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "QQ766",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "reporter": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562",
+    "role": "homeowner"
+   },
+   "reason": "Routine: no hot water",
+   "visit_date": "2026-10-07",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Diverter valve replaced; hot water and heating working.",
+   "history": [
+    {
+     "at": "2026-10-03T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-03T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Dan"
+    },
+    {
+     "at": "2026-10-07T10:30:00.000Z",
+     "by": "Dan",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-03T07:00:00.000Z",
+   "done_at": "2026-10-07T10:30:00.000Z",
+   "trade": "gas_heating",
+   "priority": "routine",
+   "description": "No hot water",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "WK418",
+   "property_key": "saxonby_flat_2_20",
+   "client_key": null,
+   "reporter": {
+    "name": "Ellie Burke",
+    "phone": "+447700900546",
+    "role": "homeowner"
+   },
+   "reason": "Routine: loose stair handrail",
+   "visit_date": "2026-10-07",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "shaz",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Handrail brackets refixed into the studs.",
+   "history": [
+    {
+     "at": "2026-10-04T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-04T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Shaz"
+    },
+    {
+     "at": "2026-10-07T10:30:00.000Z",
+     "by": "Shaz",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-04T07:00:00.000Z",
+   "done_at": "2026-10-07T10:30:00.000Z",
+   "trade": "carpentry",
+   "priority": "routine",
+   "description": "Loose stair handrail",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "YW926",
+   "property_key": "saxonby_flat_2_20",
+   "client_key": null,
+   "reporter": {
+    "name": "Ellie Burke",
+    "phone": "+447700900546",
+    "role": "homeowner"
+   },
+   "reason": "Routine: cracked bedroom window",
+   "visit_date": "2026-10-07",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Pane measured; sealed unit fitted.",
+   "history": [
+    {
+     "at": "2026-10-06T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-06T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    },
+    {
+     "at": "2026-10-07T10:30:00.000Z",
+     "by": "Leon",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T07:00:00.000Z",
+   "done_at": "2026-10-07T10:30:00.000Z",
+   "trade": "glazing",
+   "priority": "routine",
+   "description": "Cracked bedroom window",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "KR197",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: gutter overflowing at the front",
+   "visit_date": "2026-10-06",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "tom",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Gutter cleared and a joint resealed.",
+   "history": [
+    {
+     "at": "2026-10-04T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-04T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Tom"
+    },
+    {
+     "at": "2026-10-06T10:30:00.000Z",
+     "by": "Tom",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-04T07:00:00.000Z",
+   "done_at": "2026-10-06T10:30:00.000Z",
+   "trade": "roofing",
+   "priority": "routine",
+   "description": "Gutter overflowing at the front",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "RQ453",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "reporter": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562",
+    "role": "homeowner"
+   },
+   "reason": "Routine: back door sticking",
+   "visit_date": "2026-10-06",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "shaz",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Door planed and hinges adjusted.",
+   "history": [
+    {
+     "at": "2026-10-05T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-05T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Shaz"
+    },
+    {
+     "at": "2026-10-06T10:30:00.000Z",
+     "by": "Shaz",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-05T07:00:00.000Z",
+   "done_at": "2026-10-06T10:30:00.000Z",
+   "trade": "carpentry",
+   "priority": "routine",
+   "description": "Back door sticking",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "AQ173",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "reporter": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545",
+    "role": "homeowner"
+   },
+   "reason": "Routine: toilet not flushing",
+   "visit_date": "2026-10-06",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "callum",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "New flush valve fitted; flushing properly.",
+   "history": [
+    {
+     "at": "2026-10-05T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-05T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Callum"
+    },
+    {
+     "at": "2026-10-06T10:30:00.000Z",
+     "by": "Callum",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-05T07:00:00.000Z",
+   "done_at": "2026-10-06T10:30:00.000Z",
+   "trade": "plumbing",
+   "priority": "routine",
+   "description": "Toilet not flushing",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "WA616",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565",
+    "role": "homeowner"
+   },
+   "reason": "Urgent: toilet not flushing",
+   "visit_date": "2026-10-06",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "callum",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "New flush valve fitted; flushing properly.",
+   "history": [
+    {
+     "at": "2026-10-02T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-02T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Callum"
+    },
+    {
+     "at": "2026-10-06T10:30:00.000Z",
+     "by": "Callum",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-02T07:00:00.000Z",
+   "done_at": "2026-10-06T10:30:00.000Z",
+   "trade": "plumbing",
+   "priority": "urgent",
+   "description": "Toilet not flushing",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "KA247",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: front door lock stiff",
+   "visit_date": "2026-10-06",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Lock cylinder replaced; three keys handed to the tenant.",
+   "history": [
+    {
+     "at": "2026-10-03T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-03T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    },
+    {
+     "at": "2026-10-06T10:30:00.000Z",
+     "by": "Leon",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-03T07:00:00.000Z",
+   "done_at": "2026-10-06T10:30:00.000Z",
+   "trade": "locksmith",
+   "priority": "routine",
+   "description": "Front door lock stiff",
+   "kind": "repair",
+   "status": "done"
+  },
+  {
+   "reference": "QW667",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Urgent: no hot water: back again",
+   "visit_date": "2026-10-12",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "callum",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["recall","gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Recall of HH520.",
+   "history": [
+    {
+     "at": "2026-10-08T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-08T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Callum"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-08T07:00:00.000Z",
+   "done_at": null,
+   "trade": "gas_heating",
+   "priority": "urgent",
+   "description": "No hot water: back again",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "RX103",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Urgent: cracked bedroom window: back again",
+   "visit_date": "2026-10-12",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["recall"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Recall of QX391.",
+   "history": [
+    {
+     "at": "2026-10-10T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-10T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-10T07:00:00.000Z",
+   "done_at": null,
+   "trade": "glazing",
+   "priority": "urgent",
+   "description": "Cracked bedroom window: back again",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "AW677",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "reporter": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562",
+    "role": "homeowner"
+   },
+   "reason": "Routine: gutter overflowing at the front",
+   "visit_date": "2026-10-12",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "tom",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Tom"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "roofing",
+   "priority": "routine",
+   "description": "Gutter overflowing at the front",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "QA680",
+   "property_key": "saxonby_flat_3_91",
+   "client_key": null,
+   "reporter": {
+    "name": "Lucy Doyle",
+    "phone": "+447700900566",
+    "role": "homeowner"
+   },
+   "reason": "Routine: toilet not flushing",
+   "visit_date": "2026-10-13",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-10T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-10T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Dan"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-10T07:00:00.000Z",
+   "done_at": null,
+   "trade": "plumbing",
+   "priority": "routine",
+   "description": "Toilet not flushing",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "XH595",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565",
+    "role": "homeowner"
+   },
+   "reason": "Routine: lights keep tripping",
+   "visit_date": "2026-10-13",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "priya",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Priya"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "electrical",
+   "priority": "routine",
+   "description": "Lights keep tripping",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "QJ518",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565",
+    "role": "homeowner"
+   },
+   "reason": "Routine: back door sticking",
+   "visit_date": "2026-10-14",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "shaz",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Shaz"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "carpentry",
+   "priority": "routine",
+   "description": "Back door sticking",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "JQ645",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Routine: blocked kitchen sink",
+   "visit_date": "2026-10-14",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "marek",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Marek"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "drainage",
+   "priority": "routine",
+   "description": "Blocked kitchen sink",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "LJ382",
+   "property_key": "saxonby_flat_2_20",
+   "client_key": null,
+   "reporter": {
+    "name": "Ellie Burke",
+    "phone": "+447700900546",
+    "role": "homeowner"
+   },
+   "reason": "Routine: blocked kitchen sink",
+   "visit_date": "2026-10-15",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "marek",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Marek"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "drainage",
+   "priority": "routine",
+   "description": "Blocked kitchen sink",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "HL823",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "reporter": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562",
+    "role": "homeowner"
+   },
+   "reason": "Routine: front door lock stiff",
+   "visit_date": "2026-10-15",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "locksmith",
+   "priority": "routine",
+   "description": "Front door lock stiff",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "QL299",
+   "property_key": "saxonby_flat_3_91",
+   "client_key": null,
+   "reporter": {
+    "name": "Lucy Doyle",
+    "phone": "+447700900566",
+    "role": "homeowner"
+   },
+   "reason": "Routine: toilet not flushing",
+   "visit_date": "2026-10-16",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "callum",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Callum"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "plumbing",
+   "priority": "routine",
+   "description": "Toilet not flushing",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "WH326",
+   "property_key": "saxonby_flat_3_91",
+   "client_key": null,
+   "reporter": {
+    "name": "Lucy Doyle",
+    "phone": "+447700900566",
+    "role": "homeowner"
+   },
+   "reason": "Routine: slipped roof tiles after the wind",
+   "visit_date": "2026-10-16",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "tom",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Tom"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "roofing",
+   "priority": "routine",
+   "description": "Slipped roof tiles after the wind",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "RX375",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: cracked bedroom window",
+   "visit_date": "2026-10-17",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "glazing",
+   "priority": "routine",
+   "description": "Cracked bedroom window",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "JX295",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565",
+    "role": "homeowner"
+   },
+   "reason": "Routine: front door lock stiff",
+   "visit_date": "2026-10-17",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "locksmith",
+   "priority": "routine",
+   "description": "Front door lock stiff",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "KK639",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "reporter": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545",
+    "role": "homeowner"
+   },
+   "reason": "Routine: front door lock stiff",
+   "visit_date": "2026-10-19",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Leon"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "locksmith",
+   "priority": "routine",
+   "description": "Front door lock stiff",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "LX406",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "reporter": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545",
+    "role": "homeowner"
+   },
+   "reason": "Routine: no hot water",
+   "visit_date": "2026-10-19",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "callum",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Callum"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "gas_heating",
+   "priority": "routine",
+   "description": "No hot water",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "RJ853",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: back door sticking",
+   "visit_date": "2026-10-20",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "shaz",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Shaz"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "carpentry",
+   "priority": "routine",
+   "description": "Back door sticking",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "JA775",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565",
+    "role": "homeowner"
+   },
+   "reason": "Routine: boiler losing pressure",
+   "visit_date": "2026-10-20",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Dan"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "gas_heating",
+   "priority": "routine",
+   "description": "Boiler losing pressure",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "HX688",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "reporter": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545",
+    "role": "homeowner"
+   },
+   "reason": "Routine: mould on the bathroom ceiling",
+   "visit_date": "2026-10-21",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "grace",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Grace"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "damp_mould",
+   "priority": "routine",
+   "description": "Mould on the bathroom ceiling",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "HR973",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: back door sticking",
+   "visit_date": "2026-10-21",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "shaz",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Shaz"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "carpentry",
+   "priority": "routine",
+   "description": "Back door sticking",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "JX134",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Routine: loose stair handrail",
+   "visit_date": "2026-10-22",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "shaz",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Shaz"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "carpentry",
+   "priority": "routine",
+   "description": "Loose stair handrail",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "JL259",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "reporter": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545",
+    "role": "homeowner"
+   },
+   "reason": "Routine: outside drain overflowing",
+   "visit_date": "2026-10-22",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "marek",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Marek"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "drainage",
+   "priority": "routine",
+   "description": "Outside drain overflowing",
+   "kind": "repair",
+   "status": "scheduled"
+  },
+  {
+   "reference": "JQ185",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565",
+    "role": "homeowner"
+   },
+   "reason": "Routine: quote for a new boiler",
+   "visit_date": "2026-10-13",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-09T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-09T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Dan"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-09T07:00:00.000Z",
+   "done_at": null,
+   "trade": "gas_heating",
+   "priority": "routine",
+   "description": "Quote for a new boiler",
+   "kind": "quote",
+   "status": "scheduled"
+  },
+  {
+   "reference": "YL917",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Routine: electrical installation condition report",
+   "visit_date": "2026-10-14",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "priya",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": 15000,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Priya"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "electrical",
+   "priority": "routine",
+   "description": "Electrical installation condition report",
+   "kind": "eicr",
+   "status": "scheduled"
+  },
+  {
+   "reference": "HQ386",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: empty-property inspection between tenants",
+   "visit_date": "2026-10-15",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "shaz",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-11T00:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-11T00:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Shaz"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-11T00:00:00.000Z",
+   "done_at": null,
+   "trade": "carpentry",
+   "priority": "routine",
+   "description": "Empty-property inspection between tenants",
+   "kind": "inspection",
+   "status": "scheduled"
+  },
+  {
+   "reference": "QH510",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Routine: boiler replacement: quote q-2291",
+   "visit_date": null,
+   "window_key": null,
+   "attend_by": null,
+   "engineer_key": null,
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": 245000,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Quote Q-2291 sent to Mrs Ellis.",
+   "history": [
+    {
+     "at": "2026-10-05T01:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-05T01:00:00.000Z",
+   "done_at": null,
+   "trade": "gas_heating",
+   "priority": "routine",
+   "description": "Boiler replacement: quote Q-2291",
+   "kind": "repair",
+   "status": "awaiting_approval"
+  },
+  {
+   "reference": "YJ950",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Routine: new kitchen circuit for an electric cooker",
+   "visit_date": null,
+   "window_key": null,
+   "attend_by": null,
+   "engineer_key": null,
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": 52000,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-09T01:00:00.000Z",
+     "by": "staff",
+     "what": "raised"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-09T01:00:00.000Z",
+   "done_at": null,
+   "trade": "electrical",
+   "priority": "routine",
+   "description": "New kitchen circuit for an electric cooker",
+   "kind": "repair",
+   "status": "awaiting_approval"
+  },
+  {
+   "reference": "HX306",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "reporter": {
+    "name": "Zara Gray",
+    "phone": "+447700900542",
+    "role": "occupant"
+   },
+   "reason": "Routine: no hot water: diverter valve",
+   "visit_date": null,
+   "window_key": null,
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": "parts: a replacement diverter valve, due Thursday",
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-06T01:00:00.000Z",
+     "by": "staff",
+     "what": "raised"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T01:00:00.000Z",
+   "done_at": null,
+   "trade": "gas_heating",
+   "priority": "routine",
+   "description": "No hot water: diverter valve",
+   "kind": "repair",
+   "status": "waiting"
+  },
+  {
+   "reference": "WJ682",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "reporter": {
+    "name": "Kwame Reid",
+    "phone": "+447700900535",
+    "role": "occupant"
+   },
+   "reason": "Routine: misted double-glazed unit in the lounge",
+   "visit_date": null,
+   "window_key": null,
+   "attend_by": null,
+   "engineer_key": "leon",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": "parts: a new sealed unit is being made",
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-06T01:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T01:00:00.000Z",
+   "done_at": null,
+   "trade": "glazing",
+   "priority": "routine",
+   "description": "Misted double-glazed unit in the lounge",
+   "kind": "repair",
+   "status": "waiting"
+  },
+  {
+   "reference": "JY985",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "reporter": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562",
+    "role": "homeowner"
+   },
+   "reason": "Routine: mould in the back bedroom",
+   "visit_date": null,
+   "window_key": null,
+   "attend_by": null,
+   "engineer_key": "grace",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 2,
+   "waiting_for": "access: no answer at two visits; the agent is contacting the tenant",
+   "notes": null,
+   "history": [
+    {
+     "at": "2026-10-06T01:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T01:00:00.000Z",
+   "done_at": null,
+   "trade": "damp_mould",
+   "priority": "routine",
+   "description": "Mould in the back bedroom",
+   "kind": "repair",
+   "status": "waiting"
+  },
+  {
+   "reference": "HW308",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "reporter": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545",
+    "role": "homeowner"
+   },
+   "reason": "Urgent: gas smell: supply capped by the emergency service; find and repair the leak",
+   "visit_date": "2026-10-08",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "callum",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": ["gas"],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Leaking joint on the hob supply remade; tightness test passed; supply restored.",
+   "history": [
+    {
+     "at": "2026-10-07T18:32:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-07T18:42:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Callum"
+    },
+    {
+     "at": "2026-10-08T10:00:00.000Z",
+     "by": "Callum",
+     "what": "done"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-07T18:32:00.000Z",
+   "done_at": "2026-10-08T10:00:00.000Z",
+   "trade": "gas_heating",
+   "priority": "urgent",
+   "description": "Gas smell: supply capped by the emergency service; find and repair the leak",
+   "kind": "repair",
+   "status": "done"
+  }
+ ],
+ "certificates": [
+  {
+   "property_key": "tansy_flat_3_22",
+   "kind": "gas_record",
+   "issued": "2025-10-20",
+   "expires": "2026-10-20",
+   "remedials": [],
+   "booked_job": null
+  },
+  {
+   "property_key": "tansy_flat_3_22",
+   "kind": "eicr",
+   "issued": "2021-10-23",
+   "expires": "2026-10-23",
+   "remedials": [],
+   "booked_job": "YL917"
+  },
+  {
+   "property_key": "larchfield_80",
+   "kind": "gas_record",
+   "issued": "2025-10-27",
+   "expires": "2026-10-27",
+   "remedials": [],
+   "booked_job": null
+  },
+  {
+   "property_key": "larchfield_80",
+   "kind": "eicr",
+   "issued": "2021-11-04",
+   "expires": "2026-11-04",
+   "remedials": [],
+   "booked_job": null
+  },
+  {
+   "property_key": "tansy_81",
+   "kind": "boiler_service",
+   "issued": "2025-10-31",
+   "expires": "2026-10-31",
+   "remedials": [],
+   "booked_job": null
+  },
+  {
+   "property_key": "larchfield_flat_2_67",
+   "kind": "boiler_service",
+   "issued": "2026-01-21",
+   "expires": "2027-01-21",
+   "remedials": [],
+   "booked_job": null
+  },
+  {
+   "property_key": "saxonby_flat_3_91",
+   "kind": "boiler_service",
+   "issued": "2026-04-13",
+   "expires": "2027-04-13",
+   "remedials": [],
+   "booked_job": null
+  }
+ ],
+ "incidents": [
+  {
+   "property_key": "tansy_81",
+   "kind": "gas",
+   "advice_version": 1,
+   "advised_at": "2026-10-07T18:02:20.000Z",
+   "caller_phone": "+447700900545",
+   "follow_up_job": "HW308",
+   "notes": "Told to leave and ring the gas emergency line from outside; number texted.",
+   "source": "seed",
+   "created_at": "2026-10-07T18:02:00.000Z"
+  }
+ ]
+}

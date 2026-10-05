@@ -1,0 +1,12 @@
+[
+ {
+  "step": "customers",
+  "level": "warning",
+  "message": "Mrs J Ellis is on stop: the receptionist won't book work for them."
+ },
+ {
+  "step": "prices",
+  "level": "warning",
+  "message": "You're not VAT registered, so callers hear your prices as they are, with no VAT."
+ }
+]
