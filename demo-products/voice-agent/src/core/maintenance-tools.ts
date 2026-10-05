@@ -682,7 +682,16 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
   const jobs = await ctx.repo.listJobs(ctx.tenant.id);
   const offer = () => freeWindows(m, jobs, { trade, gas: kind !== 'eicr', district: p.district, from: keeps && keeps > l.date ? keeps : l.date, now: l })
     .map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date) }));
-  if (!date || !w) return { booked: false, price: `${money(price)}${incVat(m)}`, message: 'Say the price, offer these windows, and call again with the one they choose.', windows: offer() };
+  // The register's news a landlord came for: when the record runs out, and that booking now keeps that date (the signature moment, §1).
+  const current = gasCert?.expires && keeps
+    ? `The current gas safety record runs to ${spokenDate(gasCert.expires)}; a visit from ${spokenDate(keeps > l.date ? keeps : l.date)} keeps that date.`
+    : undefined;
+  if (!date || !w) {
+    return {
+      booked: false, price: `${money(price)}${incVat(m)}`, ...(current ? { current } : {}),
+      message: `${current ? 'Say when the current record runs out, then the' : 'Say the'} price, offer these windows, and call again with the one they choose.`, windows: offer(),
+    };
+  }
   if (keeps && date < keeps && !bool(args.early)) {
     return { booked: false, message: `Booking before ${spokenDate(keeps)} loses the current record's date: the new one would run 12 months from the visit. Offer ${spokenDate(keeps)} or later, or call again with early true if they still want it.`, windows: offer() };
   }

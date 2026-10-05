@@ -1,4 +1,4 @@
-# Handover: the receptionist demo service (4 October 2026)
+# Handover: the receptionist demo service (5 October 2026)
 
 For the next session. Read `CLAUDE.md` (rules and commands) first, then this.
 
@@ -214,18 +214,55 @@ Not done: Applicants' "send matches" and the alerts are pretend texts only,
 as everywhere in the demo. Re-run all twelve `ea-` calls together when the
 live service is steady.
 
-### 3. Property maintenance
+### 3. Property maintenance: M1 built and live on this branch (5 October)
 
-**The spec is written**: `presets/property-maintenance.md`, in the estate
-agent's shape, following the use cases' reviewer's corrections. Before
-building, ask Alex the six "Decisions for Alex" at its end (or go with the
-defaults written there: the invented town Brackenford, all four nations,
-properties as sample data, approvals on the second phone, a short gas call,
-answering mode later). Then build M1 as its §12 says: server preset,
-migration `voice_0006_maintenance`, window booking, safety mode and the tool
-gate, the six tools, prompt, guardrails, builder, back office (Jobs,
-Dispatch, Properties and compliance, Safety log, the engineer's phone), walk,
-`pm-` scenarios, golden corpus, database, live.
+The spec is `presets/property-maintenance.md`. Alex's answers: go ahead,
+with the demo area changed to **Nottingham, Derby and Loughborough** (real
+districts NG1–NG11, DE1–DE3, DE21–DE24, LE11; every street invented and
+shown "(example)"); the other five defaults stand. Built, in this order,
+each with tests:
+
+- Server preset (`src/presets/maintenance/`): answers and defaults
+  (Fernhill Property Care, 8 engineers, 11 trades, 6 sample clients),
+  sanitise, validate (§3's rules), the four-nation pack with the fixed
+  safety scripts (`nations.ts`), compile (`profile.maintenance`; no
+  `profile.booking`, so no table tools), preview, fact sheet, workspace.
+- Data: 70 sample homes (`fixtures/presets/maintenance-properties.json`,
+  no key safe code stored anywhere), migration `voice_0006_maintenance`
+  (properties, jobs, certificates, incidents) applied to Supabase and
+  recorded, repository calls, and a seeded week that replays under the
+  window rules (`src/domain/windows.ts`; the replay is in
+  `test/seed-replay.ts`).
+- Receptionist: safety mode (`src/core/safety.ts`: an emergency in the
+  caller's words arms it; every other tool refuses until the advice and
+  the number are said), the tools (`src/core/maintenance-tools.ts`:
+  `safety_advice`, `find_property`, `triage_fault`, `job`, `check_windows`,
+  `compliance`), the prompt branch (about 5,400 characters; 6,460 at the
+  largest), the §8 guardrails, and access codes removed from every
+  transcript (all presets).
+- Back office (`src/server/maintenance.ts`, `web/src/reception/workspace/`):
+  Jobs, Dispatch (drag a job to an engineer's window), Properties and
+  compliance (Book from a row), Safety log, the engineer's phone (accept or
+  decline a page, On my way) and Call as.
+- Builder (`web/src/reception/builder/maintenance/`): the eleven steps.
+- Tests: `test/property-maintenance.test.ts`,
+  `test/property-maintenance-tools.test.ts`, an end-to-end HTTP test in
+  `test/demo-api.test.ts`, the golden corpus
+  (`scripts/maintenance-goldens.ts`, `test/property-maintenance-golden.test.ts`),
+  and the walk: `npm run e2e:demo -- --only property_maintenance`
+  (screenshots sent to Alex on 5 October).
+- Live calls, the seven `pm-` scenarios on `pm-fernhill`: see "Live calls
+  (property maintenance)" below.
+
+Deviations from the spec, written into it: office hours sit on the Visits
+step; windows and engineers live in `profile.maintenance`, not
+`profile.booking`; the Properties view's id is `compliance`; engineers keep
+the estate agent's staff roles (`other`).
+
+Not done (M2 and M3 in the spec): approvals on the authoriser's phone,
+quotes and invoices, social housing and Awaab's Law clocks, block managers,
+commercial sites and insurers, the escalation timer, Scotland's bank
+holidays (it counts England's for now).
 
 ## Where things stand
 

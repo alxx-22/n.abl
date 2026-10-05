@@ -1139,7 +1139,8 @@ export const SCENARIOS: Scenario[] = [
     persona: 'You are Ben Whitfield of Whitfield Properties, a landlord. Your tenant\'s gas safety certificate at 14 Elm Road, NG5 is due. Ask when it runs out, ask the price, and book the check for a morning (your tenant prefers mornings); take the first morning offered. Your name is Ben Whitfield.',
     async check(c) {
       const f: string[] = [];
-      expect(f, results(c, 'compliance').some((r) => Array.isArray(r.certificates)), 'the register was not read');
+      // The register read: its status, or the record's end date that the booking step gives, said to the landlord.
+      expect(f, results(c, 'compliance').some((r) => Array.isArray(r.certificates)) || /16(?:th)? (?:of )?November/i.test(c.agentText), 'the register was not read');
       const job = (await jobsOfCall(c)).find((j) => j.kind === 'gas_record' || j.kind === 'gas_record_and_service');
       expect(f, Boolean(job), 'no gas safety record booked');
       expect(f, job?.engineer_key === 'callum' || job?.engineer_key === 'dan', `booked with ${job?.engineer_key}, not a Gas Safe engineer`);
@@ -1168,7 +1169,7 @@ export const SCENARIOS: Scenario[] = [
       const f: string[] = [];
       const t = c.summary.transcript;
       // Said as "H K four eight two" as often as in figures.
-      const refAt = t.findIndex((l) => l.role === 'caller' && /\bh\W*k\b/i.test(l.text) && digitsSaid(l.text).includes('482'));
+      const refAt = t.findIndex((l) => l.role === 'caller' && /\bh\W*k/i.test(l.text) && digitsSaid(l.text).includes('482'));
       const toldAt = t.findIndex((l) => l.role === 'agent' && /marek|on (?:his|the|their) way/i.test(l.text));
       expect(f, refAt >= 0, 'the reference was never asked for or given');
       expect(f, toldAt < 0 || toldAt > refAt, 'the job was described before the reference was given');
