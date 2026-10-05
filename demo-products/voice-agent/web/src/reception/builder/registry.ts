@@ -8,6 +8,7 @@
 import type { ReactNode } from 'react';
 import type { BaseAnswers, Issue, Me, WorkspacePayload } from '../types.ts';
 import { estateBuilder } from './estate/builder.tsx';
+import { maintenanceBuilder } from './maintenance/builder.tsx';
 import { restaurantBuilder } from './restaurant/builder.tsx';
 
 /** Change the answers: the function edits a copy, which is then saved. */
@@ -59,6 +60,7 @@ const entry = <A extends BaseAnswers, K extends string>(def: BuilderDef<A, K>): 
 const BUILDERS: Record<string, AnyBuilder> = {
   restaurant: entry(restaurantBuilder),
   estate_agent: entry(estateBuilder),
+  property_maintenance: entry(maintenanceBuilder),
 };
 
 /** The builder for a preset, or null when this kind of business has none yet. */

@@ -44,22 +44,25 @@ export function fallbackSpec(state: LiveState): WorkspaceSpec {
  * else the next booking's. A suggestion that needs a reference when there is
  * none is left out.
  */
-export function suggestionsFor(spec: WorkspaceSpec, state: Pick<LiveState, 'orders' | 'bookings' | 'now'>): string[] {
+export function suggestionsFor(spec: WorkspaceSpec, state: Pick<LiveState, 'orders' | 'bookings' | 'now'> & Partial<Pick<LiveState, 'jobs'>>): string[] {
   const order = state.orders.filter((o) => o.status !== 'cancelled').sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
   const booking = state.bookings.filter((b) => b.status === 'confirmed' && b.starts_at >= state.now).sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0];
-  const ref = order?.reference ?? booking?.reference ?? null;
+  // A repairs contractor's: the engineer on the way, else the next job booked.
+  const jobs = state.jobs ?? [];
+  const job = jobs.find((j) => j.status === 'on_the_way') ?? jobs.filter((j) => j.status === 'scheduled' && j.date).sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))[0];
+  const ref = order?.reference ?? booking?.reference ?? job?.reference ?? null;
   return spec.suggestions.flatMap((s) => (!s.includes('{ref}') ? [s] : ref ? [s.split('{ref}').join(ref)] : []));
 }
 
 /** What a view of the back office shows, so a booking or order made on a call can be brought forward. */
-export type Shows = 'bookings' | 'orders' | null;
+export type Shows = 'bookings' | 'orders' | 'jobs' | null;
 
 /**
  * The tab to show when a call makes or changes a booking or an order: the
  * open one if it already shows that kind, else the first view that does,
  * else the open one. `open` null is the spec's first view.
  */
-export function focusTab<T extends string>(views: { id: T; shows: Shows }[], open: T | null, kind: 'bookings' | 'orders'): T | null {
+export function focusTab<T extends string>(views: { id: T; shows: Shows }[], open: T | null, kind: 'bookings' | 'orders' | 'jobs'): T | null {
   const shown = views.find((v) => v.id === open) ?? views[0];
   if (!shown || shown.shows === kind) return open;
   return views.find((v) => v.shows === kind)?.id ?? open;

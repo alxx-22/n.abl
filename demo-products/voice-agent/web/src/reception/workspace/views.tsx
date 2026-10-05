@@ -7,6 +7,10 @@
 import type { ReactNode } from 'react';
 import { Calls } from '../../components/BoardPanels.tsx';
 import { Applicants } from './Applicants.tsx';
+import { Compliance } from './Compliance.tsx';
+import { Dispatch } from './Dispatch.tsx';
+import { Jobs } from './Jobs.tsx';
+import { SafetyLog } from './SafetyLog.tsx';
 import { Valuations } from './Valuations.tsx';
 import { Sales } from './Sales.tsx';
 import type { TenantState } from '../../types.ts';
@@ -90,6 +94,25 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
   valuations: {
     shows: null,
     render: (p) => <Valuations id={p.id} state={p.state} onDone={p.refresh} />,
+  },
+  // A repairs contractor's (presets/property-maintenance.md §6).
+  jobs: {
+    shows: 'jobs',
+    count: (s) => (s.jobs ?? []).filter((j) => j.status === 'new' || j.status === 'awaiting_approval').length,
+    render: (p) => <Jobs id={p.id} state={p.state} nowMs={p.clock} flash={p.flash} onDone={p.refresh} />,
+  },
+  dispatch: {
+    shows: null,
+    render: (p) => <Dispatch id={p.id} state={p.state} flash={p.flash} onDone={p.refresh} />,
+  },
+  compliance: {
+    shows: null,
+    count: (s) => (s.properties ?? []).filter((x) => x.certificates.some((c) => c.state === 'overdue')).length,
+    render: (p) => <Compliance id={p.id} state={p.state} onDone={p.refresh} />,
+  },
+  safety: {
+    shows: null,
+    render: (p) => <SafetyLog state={p.state} />,
   },
   orders: {
     shows: 'orders',

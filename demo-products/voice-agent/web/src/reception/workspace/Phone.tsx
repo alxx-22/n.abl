@@ -5,6 +5,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { displayUkPhone, normaliseUkPhone } from '../../../../src/domain/phone.ts';
 import { demoApi } from '../../api.ts';
+import type { LiveEngineer, LiveJob } from '../types.ts';
+import { jobAct } from './maintenance.ts';
 
 /** A seeded person the prospect can ring as (an estate agency's Call as). */
 export interface CallAs {
@@ -41,12 +43,21 @@ export function usePhoneNumber(id: string): [string, (n: string) => void] {
 
 const fresh = () => `07700 900${String(100 + Math.floor(Math.random() * 900))}`;
 
-export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = [] }: { id: string; number: string; setNumber: (n: string) => void; sender: string; tick: number; nowLabel: string; callAs?: CallAs[] }) {
+/** A repairs contractor's engineers: the phone can be theirs, with the job sheet (presets/property-maintenance.md §6). */
+interface Engineers {
+  engineers: Pick<LiveEngineer, 'key' | 'first_name' | 'mobile'>[];
+  jobs: LiveJob[];
+  today: string;
+  onDone: () => void;
+}
+
+export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = [], crew }: { id: string; number: string; setNumber: (n: string) => void; sender: string; tick: number; nowLabel: string; callAs?: CallAs[]; crew?: Engineers }) {
   const [texts, setTexts] = useState<Text[]>([]);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(number);
   const [lastNew, setLastNew] = useState<string | null>(null);
   const as = callAs.find((p) => p.phone === normaliseUkPhone(number));
+  const engineer = crew?.engineers.find((e) => normaliseUkPhone(e.mobile) === normaliseUkPhone(number));
 
   useEffect(() => {
     let stop = false;
@@ -80,7 +91,7 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = 
         <div className="phone-head">
           <span className="avatar" aria-hidden="true">{sender.slice(0, 1)}</span>
           <b>{sender}</b>
-          <span className="muted small">Text message</span>
+          <span className="muted small">{engineer ? `${engineer.first_name}'s phone` : 'Text message'}</span>
         </div>
         <div className="phone-thread" aria-live="polite">
           {texts.length ? texts.map((t) => (
@@ -89,9 +100,15 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = 
               <time>{new Date(t.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</time>
             </div>
           )) : (
-            <p className="phone-empty">{callAs.length ? 'No texts yet. Book a viewing or make an offer on the call, and the text lands here.' : 'No texts yet. Book a table or order on the call, and the confirmation lands here.'}</p>
+            <p className="phone-empty">
+              {engineer ? 'No pages yet. An emergency raised on the call pages the engineer on call here.'
+                : crew ? 'No texts yet. Report a repair on the call, and the text lands here.'
+                : callAs.length ? 'No texts yet. Book a viewing or make an offer on the call, and the text lands here.'
+                : 'No texts yet. Book a table or order on the call, and the confirmation lands here.'}
+            </p>
           )}
         </div>
+        {engineer && crew ? <JobSheet id={id} engineer={engineer.key} name={engineer.first_name} crew={crew} /> : null}
       </div>
       <div className="phone-number">
         {callAs.length ? (
@@ -100,6 +117,11 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = 
             <select value={as?.phone ?? ''} onChange={(e) => setNumber(e.target.value ? displayUkPhone(e.target.value) : fresh())}>
               <option value="">Yourself, a new caller</option>
               {callAs.map((p) => <option key={p.phone} value={p.phone}>{p.who}</option>)}
+              {crew?.engineers.length ? (
+                <optgroup label="An engineer's phone">
+                  {crew.engineers.map((e) => <option key={e.key} value={normaliseUkPhone(e.mobile) ?? e.mobile}>{e.first_name}, engineer</option>)}
+                </optgroup>
+              ) : null}
             </select>
           </label>
         ) : null}
@@ -111,6 +133,7 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = 
         ) : (
           <p className="small muted">
             {as ? <><b>{as.who}</b>. {as.try}<br /></> : null}
+            {engineer ? <><b>{engineer.first_name}'s phone</b>: pages and the job sheet. Accept an emergency here, then tap On my way.<br /></> : null}
             You are calling as <b className="mono">{number}</b>.{' '}
             <button type="button" className="linkish small" onClick={() => { setDraft(number); setEditing(true); }}>Change</button>
             <br />A pretend number: texts only ever appear here.
@@ -118,5 +141,47 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = 
         )}
       </div>
     </section>
+  );
+}
+
+/**
+ * The engineer's job sheet: a page to accept or decline, today's jobs in
+ * order with On my way, On site and Done. Never a code: the board has none.
+ */
+function JobSheet({ id, engineer, name, crew }: { id: string; engineer: string; name: string; crew: Engineers }) {
+  const [busy, setBusy] = useState(false);
+  const mine = crew.jobs.filter((j) => j.engineer_key === engineer);
+  const pages = mine.filter((j) => j.status === 'new' && j.flags.includes('paged'));
+  const today = mine.filter((j) => j.date === crew.today && ['scheduled', 'on_the_way', 'on_site'].includes(j.status)).sort((a, b) => (a.window_key ?? '').localeCompare(b.window_key ?? ''));
+  const act = async (ref: string, body: Record<string, unknown>) => {
+    setBusy(true);
+    await jobAct(id, ref, body, crew.onDone);
+    setBusy(false);
+  };
+  return (
+    <div className="job-sheet" aria-label={`${name}'s job sheet`}>
+      {pages.map((j) => (
+        <div key={j.reference} className="page-alert">
+          <b>Emergency: {j.trade_label}</b>
+          <span className="small">{j.address} · {j.description}</span>
+          <div className="row-tools">
+            <button type="button" className="small primary" disabled={busy} onClick={() => act(j.reference, { action: 'accept' })}>Accept</button>
+            <button type="button" className="small" disabled={busy} onClick={() => act(j.reference, { action: 'decline' })}>Decline</button>
+          </div>
+        </div>
+      ))}
+      <b className="small">Today ({today.length})</b>
+      {today.length ? today.map((j) => (
+        <div key={j.reference} className="sheet-job">
+          <span className="small"><b>{j.window?.split(',')[0] ?? 'Emergency'}</b> · {j.address}</span>
+          <span className="small muted">{j.trade_label}: {j.description}{j.pets ? ` · ${j.pets}` : ''}</span>
+          <div className="row-tools">
+            {j.status === 'scheduled' ? <button type="button" className="small primary" disabled={busy} onClick={() => act(j.reference, { action: 'on_the_way', eta_minutes: 20 })}>On my way</button> : null}
+            {j.status === 'on_the_way' ? <button type="button" className="small primary" disabled={busy} onClick={() => act(j.reference, { action: 'on_site' })}>On site</button> : null}
+            {j.status === 'on_site' ? <button type="button" className="small" disabled={busy} onClick={() => { const notes = prompt('What was done?'); if (notes) void act(j.reference, { action: 'done', notes }); }}>Done</button> : null}
+          </div>
+        </div>
+      )) : <p className="small muted">Nothing today.</p>}
+    </div>
   );
 }

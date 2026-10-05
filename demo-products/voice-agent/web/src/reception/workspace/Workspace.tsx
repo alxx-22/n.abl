@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { CALL_AS } from '../../../../src/presets/estate/personas.ts';
+import { MT_CALL_AS } from '../../../../src/presets/maintenance/personas.ts';
 import { ApiError, DEMO_API, demoApi } from '../../api.ts';
 import { ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
 import { LivePanel } from '../../components/LivePanel.tsx';
@@ -98,6 +99,15 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   useEffect(() => {
     if (!stream.focusRef || !state) return;
     const b = state.bookings.find((x) => x.reference === stream.focusRef);
+    // A repairs job raised or changed on the call: flash its card and bring the jobs board forward.
+    const job = b ? undefined : state.jobs?.find((x) => x.reference === stream.focusRef);
+    if (job) {
+      setFlash(new Set([job.reference]));
+      setTab((t) => focusTab(viewsOf(state.workspace ?? fallbackSpec(state), state), t, 'jobs'));
+      dispatch({ type: 'focused' });
+      const t = setTimeout(() => setFlash(new Set()), 3500);
+      return () => clearTimeout(t);
+    }
     if (!b) return;
     setView({ date: b.date, minute: Number(b.time.slice(0, 2)) * 60 + Number(b.time.slice(3, 5)) });
     setFlash(new Set(b.tables));
@@ -242,7 +252,11 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
           </div>
         </section>
 
-        <Phone id={id} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)} callAs={t.business_type === 'estate_agent' ? CALL_AS : []} />
+        <Phone
+          id={id} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)}
+          callAs={t.business_type === 'estate_agent' ? CALL_AS : t.business_type === 'property_maintenance' ? MT_CALL_AS : []}
+          crew={state.engineers ? { engineers: state.engineers, jobs: state.jobs ?? [], today: now.date, onDone: refreshSoon } : undefined}
+        />
       </main>
 
       <SettingsDialog target={{ workspace: id }} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => refreshSoon()} />

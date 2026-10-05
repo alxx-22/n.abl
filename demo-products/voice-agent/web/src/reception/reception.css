@@ -478,3 +478,48 @@ svg.house .door { fill: var(--accent); }
 .replace-box label { display: flex; gap: 8px; align-items: center; }
 .replace-box input { width: auto; accent-color: var(--accent); }
 .ended { max-width: 560px; margin: 40px auto; display: grid; gap: 12px; justify-items: start; }
+
+/* ── A repairs contractor's back office (presets/property-maintenance.md §6) ── */
+.block { display: block; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.jobs { display: grid; gap: 10px; justify-items: start; }
+.jobs-board { width: 100%; }
+.jobs-board .ticket.job { cursor: default; display: grid; gap: 4px; border-left: 4px solid var(--line-strong); }
+.ticket.job.urgent { border-left-color: var(--accent); }
+.ticket.job.emergency { border-left-color: var(--danger); background: var(--danger-soft); }
+.ticket.job header b { font-size: 13px; }
+.move-job { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; align-items: end; }
+.move-job button { grid-column: 1 / -1; justify-self: start; }
+.done-jobs { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+.dispatch { display: grid; gap: 10px; min-width: 0; }
+.on-call { margin: 0; }
+.day-tabs { display: flex; gap: 4px; overflow-x: auto; }
+.day-tabs button { white-space: nowrap; font-size: 12px; padding: 4px 10px; }
+.day-tabs button[aria-selected='true'] { border-color: var(--accent); color: var(--heading); }
+.emergencies { display: flex; gap: 6px; flex-wrap: wrap; }
+.dispatch-grid { width: 100%; border-collapse: separate; border-spacing: 4px; font-size: 12px; table-layout: fixed; }
+.dispatch-grid th { text-align: left; font-weight: 600; color: var(--heading); vertical-align: top; }
+.dispatch-grid th .muted { display: block; font-weight: 400; }
+.dispatch-grid td { background: var(--surface-2); border: 2px solid transparent; border-radius: 8px; padding: 4px; vertical-align: top; min-height: 36px; height: 40px; }
+.dispatch-grid td.over { border-color: var(--accent); }
+.dispatch-grid td.full { background: repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 6px, var(--surface) 6px, var(--surface) 12px); }
+.dispatch-grid tr.off th, .dispatch-grid tr.off td { opacity: 0.5; }
+.dispatch .chip { display: block; margin: 2px 0; font: 500 11px/1.3 var(--font-sans, inherit); white-space: normal; cursor: grab; }
+.chip.emergency { border-color: rgba(224, 121, 109, 0.6); color: var(--danger); }
+.chip.urgent { border-color: rgba(var(--accent-rgb), 0.5); }
+.tray { display: grid; gap: 4px; }
+.tray h3 { margin: 0; }
+.compliance { display: grid; gap: 10px; }
+.register { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.register-row { width: 100%; text-align: left; display: grid; gap: 4px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; }
+.register-detail { padding: 8px 10px; display: grid; gap: 10px; }
+.certs, .safety-log { width: 100%; border-collapse: collapse; font-size: 13px; }
+.certs th, .certs td, .safety-log th, .safety-log td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.safety-log th, .certs th { color: var(--muted); font-weight: 600; font-size: 12px; }
+@media (max-width: 640px) {
+  .move-job { grid-template-columns: 1fr; }
+  .dispatch-grid { font-size: 11px; }
+}
+.job-sheet { display: grid; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line); }
+.page-alert { display: grid; gap: 4px; padding: 8px; border-radius: 10px; background: var(--danger-soft); border: 1px solid rgba(224, 121, 109, 0.4); }
+.sheet-job { display: grid; gap: 2px; padding: 6px 0; border-bottom: 1px solid var(--line); }

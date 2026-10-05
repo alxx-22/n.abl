@@ -251,6 +251,114 @@ export interface LiveOrder {
   created_at: string;
 }
 
+// ── A repairs contractor's (presets/property-maintenance.md §6) ─────────
+
+export interface LiveMtWindow {
+  key: string;
+  label: string;
+  from: string;
+  to: string;
+  premium_pence: number;
+  days: number[];
+}
+
+export interface LiveEngineer {
+  key: string;
+  name: string;
+  first_name: string;
+  trades: string[];
+  gas_safe: boolean;
+  accreditations: string[];
+  days: number[];
+  districts: string[];
+  per_window: number;
+  mobile: string;
+}
+
+export type JobStatus = 'new' | 'awaiting_approval' | 'scheduled' | 'on_the_way' | 'on_site' | 'waiting' | 'done' | 'invoiced' | 'cancelled';
+
+/** A job as the board shows it: first names only, and a window or an attend-by time. */
+export interface LiveJob {
+  reference: string;
+  property_key: string | null;
+  address: string | null;
+  client: string | null;
+  reporter: { name: string | null; phone: string; role: string | null };
+  trade: string;
+  trade_label: string;
+  priority: 'emergency' | 'urgent' | 'routine';
+  reason: string | null;
+  description: string;
+  kind: string;
+  status: JobStatus;
+  date: string | null;
+  day: string | null;
+  window_key: string | null;
+  window: string | null;
+  attend_by: string | null;
+  engineer_key: string | null;
+  engineer: string | null;
+  eta_minutes: number | null;
+  on_the_way_at: string | null;
+  po: string | null;
+  price_pence: number | null;
+  clocks: { kind: string; label: string; start: string; due: string }[];
+  flags: string[];
+  waiting_for: string | null;
+  access_attempts: number;
+  notes: string | null;
+  history: { at: string; by: string; what: string }[];
+  source: string;
+  created_at: string;
+  done_at: string | null;
+  pets: string | null;
+  vulnerable: string[];
+}
+
+export interface LiveCertificate {
+  kind: 'gas_record' | 'eicr' | 'boiler_service' | 'alarms' | 'pat';
+  issued: string | null;
+  expires: string | null;
+  booked_job: string | null;
+  remedials: { what: string; due: string; done?: boolean }[];
+  state: 'booked' | 'overdue' | 'due soon' | 'in date' | 'unknown';
+}
+
+export interface LiveMtProperty {
+  key: string;
+  address: string;
+  town: string;
+  district: string;
+  kind: string;
+  example: boolean;
+  client_key: string | null;
+  client: string | null;
+  occupant: { name: string | null; phone: string };
+  notes: { stopcock?: string; boiler?: string; parking?: string; pets?: string };
+  /** occupant, key_safe or keys_held: a code is never sent. */
+  access: string;
+  vulnerable: string[];
+  markers: string[];
+  gas: boolean;
+  gas_appliances: number;
+  certificates: LiveCertificate[];
+}
+
+export interface LiveIncident {
+  id: string;
+  kind: string;
+  title: string;
+  number: string | null;
+  address: string | null;
+  caller_phone: string;
+  advised_at: string | null;
+  created_at: string;
+  follow_up_job: string | null;
+  advice_version: number;
+  notes: string | null;
+  source: string;
+}
+
 export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   now: string;
   started_at: string | null;
@@ -276,4 +384,18 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   buyers?: LiveBuyer[];
   valuations?: LiveValuation[];
   sales?: LiveSale[];
+  /** A repairs contractor's. */
+  maintenance?: {
+    nation: string;
+    windows: LiveMtWindow[];
+    trades: { key: string; label: string; gas: boolean }[];
+    on_call_tonight: string[];
+    duty_manager: string;
+    reminder_weeks: number;
+    attend_hours: number;
+  };
+  engineers?: LiveEngineer[];
+  jobs?: LiveJob[];
+  properties?: LiveMtProperty[];
+  incidents?: LiveIncident[];
 }

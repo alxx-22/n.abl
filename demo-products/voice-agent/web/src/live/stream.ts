@@ -47,7 +47,7 @@ export function streamReducer(s: StreamState, a: StreamAction): StreamState {
     case 'action': {
       if (e.action.kind === 'call_ending') return s;
       const tone = e.action.kind === 'payment' ? 'payment' : e.action.kind === 'sms' ? 'sms' : e.action.kind === 'transfer' ? 'sms' : '';
-      const ref = e.action.kind === 'booking_created' || e.action.kind === 'booking_changed' ? String(e.action.data?.reference ?? '') || null : s.focusRef;
+      const ref = ['booking_created', 'booking_changed', 'job_created', 'job_changed'].includes(e.action.kind) ? String(e.action.data?.reference ?? '') || null : s.focusRef;
       return {
         ...s,
         focusRef: ref,

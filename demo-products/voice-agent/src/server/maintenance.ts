@@ -10,7 +10,7 @@ import { certState } from '../core/maintenance-tools.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { isIsoDate, spokenDate, spokenTime, toLocal } from '../domain/time.ts';
 import type { Job, JobStatus, Tenant } from '../domain/types.ts';
-import { checkWindow, onCallAt, unable, windowOf } from '../domain/windows.ts';
+import { checkWindow, freeWindows, onCallAt, unable, windowOf } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
 import { safetyScript, type SafetyKind } from '../presets/maintenance/nations.ts';
 import { shortAddress } from '../presets/maintenance/properties.ts';
@@ -179,4 +179,52 @@ export async function jobAction(repo: Repo, t: Tenant, ref: string, b: any, text
     default:
       throw new HttpError(400, 'Unknown action.');
   }
+}
+
+const PLANNED: Record<string, { kind: 'gas_record' | 'eicr' | 'boiler_service'; trade: string; what: string; gas: boolean }> = {
+  gas_record: { kind: 'gas_record', trade: 'boiler_servicing', what: 'Gas safety record', gas: true },
+  boiler_service: { kind: 'boiler_service', trade: 'boiler_servicing', what: 'Boiler service', gas: true },
+  eicr: { kind: 'eicr', trade: 'electrical', what: 'Electrical installation condition report', gas: false },
+};
+
+const minusMonths = (date: string, n: number) => {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() - n);
+  return d.toISOString().slice(0, 10);
+};
+
+/**
+ * Properties and compliance: book a certificate's renewal straight from its
+ * row, into the first free window that keeps a gas record's date, with an
+ * engineer who may do it. The occupant is texted.
+ */
+export async function propertyAction(repo: Repo, t: Tenant, key: string, b: any, text: (to: string | null, body: string) => Promise<void>, now = new Date()): Promise<string> {
+  const m = t.profile.maintenance;
+  if (!m) throw new HttpError(400, 'This business has no properties.');
+  const p = await repo.getMtProperty(t.id, key);
+  if (!p) throw new HttpError(404, 'No such property.');
+  if (b.action !== 'book') throw new HttpError(400, 'Unknown action.');
+  const plan = PLANNED[String(b.what ?? '')];
+  if (!plan) throw new HttpError(400, 'Book a gas safety record, a boiler service or an EICR.');
+  if (!m.trades.some((x) => x.key === plan.trade)) throw new HttpError(409, "That trade is turned off in the setup.");
+  const cert = (await repo.listCertificates(t.id, key)).find((c) => c.kind === plan.kind);
+  if (cert?.booked_job) throw new HttpError(409, `Already booked: job ${cert.booked_job}.`);
+  const l = toLocal(now, t.profile.timezone);
+  // A gas record renewed more than two months early loses its date: start from the day that keeps it.
+  const keeps = plan.kind === 'gas_record' && cert?.expires ? minusMonths(cert.expires, 2) : l.date;
+  const [slot] = freeWindows(m, await repo.listJobs(t.id), { trade: plan.trade, gas: plan.gas, district: p.district, from: keeps > l.date ? keeps : l.date, now: l, limit: 1 });
+  if (!slot) throw new HttpError(409, 'No free window in the next three weeks.');
+  const e = slot.engineers[0];
+  const price = plan.kind === 'eicr' ? m.planned.eicr_from_pence : plan.kind === 'boiler_service' ? m.planned.boiler_service_pence
+    : m.planned.gas_record_pence + Math.max(0, p.gas_appliances - 1) * m.planned.extra_appliance_pence;
+  const client = p.client ? m.clients.find((c) => c.key === p.client) : undefined;
+  const job = await repo.createJob(t, {
+    property_key: p.key, client_key: p.client, reporter: { name: client?.contact.name ?? p.occupant.name, phone: client?.contact.phone ?? p.occupant.phone, role: client ? 'landlord' : 'homeowner' },
+    trade: plan.trade, priority: 'routine', reason: 'Planned: safety check', description: plan.what, kind: plan.kind, status: 'scheduled',
+    visit_date: slot.date, window_key: slot.window.key, engineer_key: e.key, price_pence: price, flags: plan.gas ? ['gas'] : [], source: 'console',
+  }, 'staff');
+  await repo.setCertificateBooked(t.id, p.key, plan.kind, job.reference);
+  const when = `${spokenDate(slot.date)}, ${inSentence(slot.window.label)} (${spokenTime(slot.window.from)} to ${spokenTime(slot.window.to)})`;
+  if (p.occupant.texts_ok) await text(p.occupant.phone, `${t.profile.name}: a ${plan.what.toLowerCase()} is booked at your home for ${when} with ${e.first_name}. Someone over 18 needs to be in. Ref ${job.reference}. (Demo)`);
+  return `${shortAddress(p)}: ${plan.what.toLowerCase()} booked for ${when} with ${e.first_name}.`;
 }
