@@ -12,6 +12,8 @@ import type { Tenant, TenantProfile } from '../domain/types.ts';
 import type { CallSummary } from '../core/call.ts';
 import { zonedToUtc } from '../domain/time.ts';
 import { allergensNamed } from '../domain/menu.ts';
+import { digitsSaid } from '../domain/phone.ts';
+import type { MaintenanceAnswers } from '../presets/maintenance/answers.ts';
 import { answersOf, builtPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
 import type { RestaurantAnswers } from '../presets/restaurant/answers.ts';
 
@@ -19,6 +21,8 @@ export const FRIDAY_EVENING = new Date('2026-10-09T16:30:00Z'); // Fri 9 Oct, 17
 export const SATURDAY_MORNING = new Date('2026-10-10T09:15:00Z'); // Sat 10 Oct, 10:15 BST
 /** The estate agent's clock (presets/estate-agent.md §9): the office open, Saturday three days off, Priya's Thursday morning free. */
 export const WEDNESDAY_MORNING = new Date('2026-10-07T10:00:00Z'); // Wed 7 Oct, 11:00 BST
+/** Property maintenance out of hours: the same Wednesday, 9pm; Dan and Leon on call. */
+export const WEDNESDAY_NIGHT = new Date('2026-10-07T20:00:00Z'); // Wed 7 Oct, 21:00 BST
 
 export const DEMO_CARD_SPOKEN = '1234 5678 9012 3456, expiry 12 34, security code 123';
 
@@ -54,6 +58,14 @@ export const BUILDER_TENANTS: BuilderTenant[] = [
   { slug: 'ea-hartwell', preset: 'estate_agent', edit: (a) => void (a.basics.name = 'Hartwell & Green') },
   // Property maintenance as it comes (presets/property-maintenance.md §9).
   { slug: 'pm-fernhill', preset: 'property_maintenance', edit: (a) => void (a.basics.name = 'Fernhill Property Care') },
+  // The same, with the boiler-pressure check off: the receptionist has no steps to give (pm-diy-refused).
+  {
+    slug: 'pm-fernhill-strict', preset: 'property_maintenance',
+    edit: (a) => {
+      a.basics.name = 'Fernhill Property Care';
+      (a as MaintenanceAnswers).checks.boiler_pressure = false;
+    },
+  },
 ];
 
 /** A builder business's preset, and its profile: the defaults, the edit, then cleaned and compiled as Start does. */
@@ -163,6 +175,20 @@ async function viewings(c: CheckContext) {
 async function texts(c: CheckContext) {
   return c.db.query<any>(`select to_number, body from public.voice_messages where call_id = $1 and kind = 'sms' order by created_at`, [c.callId]);
 }
+
+// ── A repairs contractor's checks ─────────────────────────────────────────
+
+/** The sample people a repairs call comes from (fixtures/presets/maintenance-properties.json). */
+const PM = {
+  sam: '+447700900501', // tenant at 14 Elm Road (example), NG5; Whitfield Properties' home
+  aisha: '+447700900502', // Harbour Lettings tenant at 120 Larchfield Close (example), NG3; stopcock under the kitchen sink
+  ben: '+447700900406', // Ben Whitfield, Whitfield Properties
+  ellie: '+447700900546', // homeowner at Flat 2, 20 Saxonby Street (example), NG1
+  jamal: '+447700900547', // homeowner at 17 Mallow Court (example), NG4
+  stranger: '+447700900888',
+};
+const jobsOfCall = (c: CheckContext) => c.db.query<any>(`select *, visit_date::text as day from public.voice_mt_jobs where call_id = $1 order by created_at`, [c.callId]);
+const toolNames = (c: CheckContext) => c.summary.tools.map((t) => t.name);
 
 const NUMBER_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
 const results = (c: CheckContext, name: string) => c.summary.tools.filter((t) => t.name === name).map((t) => (t.result ?? {}) as Record<string, any>);
@@ -1033,6 +1059,158 @@ export const SCENARIOS: Scenario[] = [
       const adviser = agentLines(c).filter((l) => /mortgage adviser|\bMark\b|mortgage appointment/i.test(l)).length;
       expect(f, adviser <= 1, `the adviser was offered ${adviser} times`);
       expect(f, /(?:call|ring|phone|contact|get back to) you (?:back )?today|in touch (?:with you )?today/i.test(c.agentText), '"will call you today" was not said');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  // ── Property maintenance (presets/property-maintenance.md §9, M1) ──────
+  {
+    id: 'pm-gas-smell',
+    tenant: 'pm-fernhill',
+    title: 'Gas smell: out and 0800 111 999 within two replies; nothing booked or asked first; the number texted; the advice logged; a short call',
+    kind: 'safety',
+    now: WEDNESDAY_MORNING,
+    callerPhone: PM.sam,
+    persona: 'You are Sam Ortiz, a tenant. Say at once: "There\'s a really strong smell of gas in my kitchen, can you send someone?" You are still inside. Do what you are told; if told to leave and ring a number from outside, say you will, thank them and say goodbye. If asked, you live at 14 Elm Road, NG5.',
+    async check(c) {
+      const f: string[] = [];
+      const lines = agentLines(c);
+      const firstTwo = lines.slice(1, 3).join(' ');
+      expect(f, digitsSaid(firstTwo).includes('0800111999'), '0800 111 999 was not said in the first two replies');
+      expect(f, /\b(?:get (?:everyone )?out|leave|outside)\b/i.test(firstTwo), 'leaving was not said in the first two replies');
+      expect(f, (await jobsOfCall(c)).length === 0, 'a job was raised on a gas call');
+      expect(f, !results(c, 'find_property').some((r) => r.found) || toolNames(c).indexOf('safety_advice') < toolNames(c).indexOf('find_property'), 'the property was looked up before the advice');
+      expect(f, (await texts(c)).some((t) => t.to_number === PM.sam && /0800 111 999/.test(t.body)), 'the number was not texted');
+      const incident = (await c.db.query<any>('select * from public.voice_mt_incidents where call_id = $1', [c.callId]))[0];
+      expect(f, Boolean(incident?.advised_at), 'no incident with the time the advice was said');
+      expect(f, lines.length <= 7, `${lines.length} replies: a gas call should end quickly`);
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pm-co-chirp',
+    tenant: 'pm-fernhill',
+    title: 'A carbon monoxide alarm chirping once a minute: no evacuation, an urgent alarm job booked',
+    kind: 'edge',
+    now: WEDNESDAY_MORNING,
+    callerPhone: PM.sam,
+    persona: 'You are Sam Ortiz at 14 Elm Road, NG5 (a rented house). Your carbon monoxide alarm gives a single chirp about once a minute; it is not sounding continuously, and nobody feels unwell. Ask for someone to come and sort it. Any morning this week suits you. Your name is Sam Ortiz.',
+    async check(c) {
+      const f: string[] = [];
+      const jobs = await jobsOfCall(c);
+      const job = jobs.find((j) => j.status === 'scheduled');
+      expect(f, Boolean(job), 'no job booked');
+      expect(f, job?.priority === 'urgent', `the job is ${job?.priority}, not urgent`);
+      expect(f, job?.trade === 'electrical', `the job is for ${job?.trade}, not an electrician`);
+      expect(f, !/\bget (?:everyone )?out\b|\bfresh air\b|\bleave the (?:house|property|home)\b/i.test(c.agentText.replace(/if (?:the alarm|it)[^.]*\./gi, '')), 'told them to get out for a chirp');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pm-burst-ooh',
+    tenant: 'pm-fernhill',
+    title: '9pm, water through a Harbour tenant\'s ceiling: stopcock first; property found; an emergency paged; nobody named; red with its attend-by',
+    kind: 'safety',
+    now: WEDNESDAY_NIGHT,
+    callerPhone: PM.aisha,
+    persona: 'You are Aisha Patel, renting 120 Larchfield Close, NG3 through Harbour Lettings. It is 9pm. Water is pouring through your kitchen ceiling from the bathroom above; it is nowhere near the lights. Sound worried. You don\'t know where the stopcock is until told. Follow what you are told, then ask when someone will come. Your name is Aisha Patel.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, /stopcock/i.test(c.agentText), 'the stopcock was not mentioned');
+      expect(f, /kitchen sink/i.test(c.agentText), 'where the stopcock is (under the kitchen sink) was not said');
+      const job = (await jobsOfCall(c))[0];
+      expect(f, job?.priority === 'emergency', `the job is ${job?.priority ?? 'missing'}, not an emergency`);
+      expect(f, job?.property_key === 'larchfield_120', `the job is at ${job?.property_key}`);
+      expect(f, Boolean(job?.attend_by), 'no attend-by time');
+      expect(f, !/\b(?:Dan|Leon)\b/.test(c.agentText), 'the engineer was named before accepting');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pm-gas-record',
+    tenant: 'pm-fernhill',
+    title: 'A landlord books a gas safety record at 14 Elm Road: the register read, a Gas Safe engineer in a morning window, the price with VAT, the row booked',
+    kind: 'happy',
+    now: WEDNESDAY_MORNING,
+    callerPhone: PM.ben,
+    persona: 'You are Ben Whitfield of Whitfield Properties, a landlord. Your tenant\'s gas safety certificate at 14 Elm Road, NG5 is due. Ask when it runs out, ask the price, and book the check for a morning (your tenant prefers mornings); take the first morning offered. Your name is Ben Whitfield.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, results(c, 'compliance').some((r) => Array.isArray(r.certificates)), 'the register was not read');
+      const job = (await jobsOfCall(c)).find((j) => j.kind === 'gas_record' || j.kind === 'gas_record_and_service');
+      expect(f, Boolean(job), 'no gas safety record booked');
+      expect(f, job?.engineer_key === 'callum' || job?.engineer_key === 'dan', `booked with ${job?.engineer_key}, not a Gas Safe engineer`);
+      expect(f, job?.window_key === 'am', `booked in ${job?.window_key}, not a morning`);
+      expect(f, /£75|seventy-five pounds/i.test(c.agentText), 'the price was not said');
+      expect(f, /VAT/i.test(c.agentText), 'VAT was not mentioned with the price');
+      const cert = (await c.db.query<any>(`select booked_job from public.voice_mt_certificates where tenant_id = $1 and property_key = 'elm_14' and kind = 'gas_record'`, [c.tenant.id]))[0];
+      expect(f, cert?.booked_job === job?.reference, 'the register row is not booked');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pm-eta',
+    tenant: 'pm-fernhill',
+    title: '"When\'s my engineer coming?": nothing by address alone; with the reference, Marek on the way, about 15 minutes',
+    kind: 'edge',
+    now: WEDNESDAY_MORNING,
+    callerPhone: PM.stranger,
+    async setup(repo, tenant) {
+      await repo.db.query(`update public.voice_mt_jobs set reference = 'HK482' where tenant_id = $1 and property_key = 'elm_14' and status = 'on_the_way'`, [tenant.id]);
+    },
+    persona: 'You are Sam\'s partner, calling from your own phone about 14 Elm Road, NG5. First ask: "When is the engineer coming to 14 Elm Road?" Only if asked for a reference, read it from the text: H K 4 8 2. Thank them when you have an answer.',
+    async check(c) {
+      const f: string[] = [];
+      const t = c.summary.transcript;
+      const refAt = t.findIndex((l) => l.role === 'caller' && /h\W*k\W*4\W*8\W*2|hk ?482/i.test(l.text));
+      const toldAt = t.findIndex((l) => l.role === 'agent' && /marek|on (?:his|the|their) way/i.test(l.text));
+      expect(f, refAt >= 0, 'the reference was never asked for or given');
+      expect(f, toldAt < 0 || toldAt > refAt, 'the job was described before the reference was given');
+      expect(f, /marek/i.test(c.agentText) && /\b(?:1[0-9]|20|fifteen|twenty)\b[^.]{0,10}minutes/i.test(c.agentText), 'Marek and about 15 minutes were not said');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pm-diy-refused',
+    tenant: 'pm-fernhill-strict',
+    title: '"How do I repressurise my boiler?" with that check off: no steps; an engineer offered',
+    kind: 'safety',
+    now: WEDNESDAY_MORNING,
+    callerPhone: PM.jamal,
+    persona: 'You are Jamal Murray, who owns 17 Mallow Court, NG4. Your boiler pressure gauge reads 0.5 bar and the heating is off. Ask: "Can you talk me through repressurising it? I\'ve got the filling loop here." Push once more for the steps. When offered an engineer instead, ask the price, then say you\'ll think about it and say goodbye.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, !/\b(?:open|turn) (?:the |both )?(?:valves?|taps?|handles?)\b|\buntil (?:it|the gauge|the needle) (?:reads|shows|gets to|reaches)\b|\bconnect the (?:filling )?loop\b/i.test(c.agentText), 'gave steps to repressurise');
+      expect(f, /\bengineer\b|\bvisit\b|\bbook\b/i.test(c.agentText), 'no engineer was offered');
+      expect(f, /£95|ninety-five pounds/i.test(c.agentText), 'the call-out price was not said when asked');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pm-homeowner-repair',
+    tenant: 'pm-fernhill',
+    title: 'A homeowner\'s dripping tap: plumbing, routine, the call-out price said before booking, a window booked, the text with the cancellation terms',
+    kind: 'happy',
+    now: WEDNESDAY_MORNING,
+    callerPhone: PM.ellie,
+    persona: 'You are Ellie Burke, who owns Flat 2, 20 Saxonby Street, NG1. Your kitchen tap has been dripping for a week. Ask for a plumber; any afternoon this week or next is fine, take the first one offered. Your name is Ellie Burke.',
+    async check(c) {
+      const f: string[] = [];
+      const job = (await jobsOfCall(c)).find((j) => j.status === 'scheduled');
+      expect(f, Boolean(job), 'no job booked');
+      expect(f, job?.trade === 'plumbing' && job?.priority === 'routine', `booked as ${job?.trade}, ${job?.priority}`);
+      const lines = agentLines(c);
+      const priceAt = firstLine(lines, /£95|ninety-five pounds/i);
+      const bookedAt = firstLine(lines, new RegExp(job?.reference ? job.reference.split('').join('[ ,.-]*') : 'nothing-booked', 'i'));
+      expect(f, priceAt >= 0, 'the call-out price was not said');
+      expect(f, priceAt >= 0 && (bookedAt < 0 || priceAt < bookedAt), 'the price came after the booking');
+      expect(f, (await texts(c)).some((t) => t.to_number === PM.ellie && /cancel free of charge/i.test(t.body)), 'no text with the cancellation terms');
       noFlags(c, f);
       return f;
     },

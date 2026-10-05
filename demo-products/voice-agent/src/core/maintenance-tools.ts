@@ -15,7 +15,7 @@ import { spokenReference, type NewJob } from '../db/repo.ts';
 import { addWorkingDays, numberWords } from '../domain/listings.ts';
 import { displayUkPhone, normaliseUkPhone, spokenNumber } from '../domain/phone.ts';
 import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
-import type { Job, JobKind, JobPriority, MaintenanceSettings, MtClient, MtProperty, MtWindow, ReporterRole, Tenant } from '../domain/types.ts';
+import type { Certificate, Job, JobKind, JobPriority, MaintenanceSettings, MtClient, MtProperty, MtWindow, ReporterRole, Tenant } from '../domain/types.ts';
 import { checkWindow, freeWindows, isGasTrade, onCallAt, unable, windowAt, windowOf, windowsOn } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
 import { SAFETY_KINDS, SAFETY_VERSION, safetyScript, type SafetyKind } from '../presets/maintenance/nations.ts';
@@ -176,7 +176,7 @@ const TRADE_WORDS: [string, RegExp][] = [
   ['gas_heating', /\bboiler\b|\bheating\b|\bradiators?\b|\bhot water\b|\bthermostat\b|\bpilot\b|\bgas (?:fire|hob|cooker)\b/i],
   ['damp_mould', /\bdamp\b|\bmould\b|\bmold\b|\bcondensation\b|\bblack spots?\b/i],
   ['drainage', /\bdrains?\b|\bblock(?:ed|age)\b|\bsewage\b|\bgully\b|\boverflowing\b|\bslow(?:-| )draining\b/i],
-  ['electrical', /\bsockets?\b|\blights?\b|\bfuse\b|\btrip(?:s|ped|ping)?\b|\belectric(?:s|ity|al)?\b|\bpower\b|\bswitch\b|\bextractor\b|\bconsumer unit\b/i],
+  ['electrical', /\b(?:smoke|heat|carbon monoxide|co|fire) alarms?\b|\bsockets?\b|\blights?\b|\bfuse\b|\btrip(?:s|ped|ping)?\b|\belectric(?:s|ity|al)?\b|\bpower\b|\bswitch\b|\bextractor\b|\bconsumer unit\b/i],
   ['plumbing', /\bleak\w*\b|\btaps?\b|\btoilet\b|\bpipes?\b|\bwater\b|\bshower\b|\bsink\b|\bcistern\b|\bburst\b|\bdrip\w*\b|\bflush\w*\b/i],
   ['roofing', /\broof\b|\btiles?\b|\bgutters?\b|\bchimney\b|\bslates?\b|\bflashing\b/i],
   ['glazing', /\bwindows?\b|\bglass\b|\bpanes?\b|\bglazing\b|\bboard(?:ed|ing)? up\b|\bdouble glaz/i],
@@ -185,7 +185,8 @@ const TRADE_WORDS: [string, RegExp][] = [
 ];
 
 const EMERGENCY = /\bburst\b|\buncontroll\w+|\bpouring\b|\bwon'?t stop\b|\bflood\w*\b|\bthrough the ceiling\b|\bceiling (?:is )?(?:coming down|collaps\w+)|\bno (?:power|electric\w*) at all\b|\bwhole house\b[^.?!]{0,30}\bno power\b|\b(?:won'?t|can'?t|doesn'?t|will not) (?:lock|shut|close)\b|\bnot secure\b|\bbroken in\b|\bsewage\b[^.?!]{0,30}\b(?:inside|coming up|in the house)\b/i;
-const URGENT = /\bno (?:heating|hot water)\b|\b(?:heating|boiler) (?:isn'?t|not|has stopped|stopped) working\b|\bonly (?:toilet|loo)\b|\bpartial\b|\bsome of the (?:sockets|lights)\b|\broof leak\w*\b|\bleak\w* (?:from|through) the roof\b|\bleak\w*\b/i;
+// A faulty smoke or carbon monoxide alarm leaves a home unprotected: urgent, whoever's it is.
+const URGENT = /\b(?:smoke|heat|carbon monoxide|co) alarms?\b|\bno (?:heating|hot water)\b|\b(?:heating|boiler) (?:isn'?t|not|has stopped|stopped) working\b|\bonly (?:toilet|loo)\b|\bpartial\b|\bsome of the (?:sockets|lights)\b|\broof leak\w*\b|\bleak\w* (?:from|through) the roof\b|\bleak\w*\b/i;
 const VULNERABLE = /\b(?:over (?:7[5-9]|[89]\d)|(?:is|she'?s|he'?s|they'?re|aged) (?:7[5-9]|[89]\d)\b|(?:7[5-9]|[89]\d) years? old|elderly|pensioner|bab(?:y|ies)|newborn|toddler|under (?:five|5)|disab\w+|wheelchair|pregnan\w+|medical|asthma|oxygen|dialysis|chemo\w*|terminal\w*|vulnerable)\b/i;
 const WINTER = (date: string) => date.slice(5) >= '10-31' || date.slice(5) <= '05-01';
 const NO_HEAT = /\bno (?:heating|hot water)\b|\b(?:heating|boiler)\b[^.?!]{0,20}\b(?:not working|broken|stopped|isn'?t working)\b/i;
@@ -611,6 +612,14 @@ async function checkWindowsTool(args: Args, ctx: ToolContext): Promise<Record<st
 
 // ── Safety certificates ───────────────────────────────────────────────────
 
+/** A certificate as the register shows it on a day: booked, overdue, due soon (inside the reminder lead time), or in date. */
+export function certState(c: Pick<Certificate, 'expires' | 'booked_job'>, today: string, reminderWeeks: number): 'booked' | 'overdue' | 'due soon' | 'in date' | 'unknown' {
+  if (c.booked_job) return 'booked';
+  if (!c.expires) return 'unknown';
+  const days = Math.round((Date.parse(c.expires) - Date.parse(today)) / 86_400_000);
+  return days < 0 ? 'overdue' : days <= reminderWeeks * 7 ? 'due soon' : 'in date';
+}
+
 const CERT_WORDS: Record<string, string> = { gas_record: 'gas safety record', eicr: 'electrical installation condition report', boiler_service: 'boiler service', alarms: 'alarm check', pat: 'PAT test' };
 const minusMonths = (date: string, n: number) => {
   const d = new Date(`${date}T12:00:00Z`);
@@ -636,8 +645,7 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
     return {
       property: shortAddress(p),
       certificates: certs.map((c) => {
-        const days = c.expires ? Math.round((Date.parse(c.expires) - Date.parse(l.date)) / 86_400_000) : null;
-        const state = c.booked_job ? 'booked' : days === null ? 'unknown' : days < 0 ? 'overdue' : days <= m.planned.reminder_weeks * 7 ? 'due soon' : 'in date';
+        const state = certState(c, l.date, m.planned.reminder_weeks);
         const keeps = c.kind === 'gas_record' && c.expires && !c.booked_job ? minusMonths(c.expires, 2) : null;
         return {
           what: CERT_WORDS[c.kind] ?? c.kind,

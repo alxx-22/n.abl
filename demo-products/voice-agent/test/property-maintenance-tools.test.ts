@@ -15,6 +15,7 @@ import { armSafety, detectSafety, noteAdvice } from '../src/core/safety.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
 import { redactCodes } from '../src/core/redact.ts';
+import { jobAction, maintenanceState } from '../src/server/maintenance.ts';
 import { digitsSaid, spokenNumber } from '../src/domain/phone.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
@@ -348,4 +349,59 @@ test('access codes are removed from what is stored, and nothing else is', () => 
   assert.equal(redactCodes('the code is four seven one nine, by the door').text, 'the code is [code removed], by the door');
   assert.equal(redactCodes('The alarm code 2580, please').text, 'The alarm code [code removed], please');
   for (const keep of ['If the carbon monoxide alarm is sounding, ring 0800 111 999', 'My postcode is NG5 3AB', 'Gas Safe number 512345', 'Ref HK101, one of the codes']) assert.equal(redactCodes(keep).text, keep);
+});
+
+test('the back office: jobs, engineers, properties with their certificates, and the safety log, as the views read them', async () => {
+  const t = await fernhill('pm-office-state');
+  const st = await maintenanceState(repo, t, NOW);
+  assert.deepEqual(st.maintenance.on_call_tonight, ['Dan', 'Leon']);
+  assert.equal(st.engineers.length, 8);
+  assert.equal(st.engineers.find((e) => e.key === 'dan')!.mobile, '07700 900301');
+  const elm = st.jobs.find((j) => j.property_key === 'elm_14' && j.status === 'on_the_way')!;
+  assert.deepEqual([elm.engineer, elm.address, elm.client, elm.eta_minutes], ['Marek', '14 Elm Road (example), NG5', 'Whitfield Properties', 20]);
+  assert.equal(st.properties.length, 70);
+  const elmHome = st.properties.find((p) => p.key === 'elm_14')!;
+  assert.deepEqual(elmHome.certificates.find((c) => c.kind === 'gas_record')!.state, 'due soon');
+  assert.ok(st.properties.some((p) => p.certificates.some((c) => c.state === 'overdue')));
+  assert.ok(!JSON.stringify(st.properties).match(/key safe[^"]*\d{4}/i), 'no code anywhere');
+  assert.equal(st.incidents.length, 1);
+  assert.equal(st.incidents[0].title, 'A smell of gas');
+  assert.ok(st.incidents[0].follow_up_job);
+});
+
+test('the back office: dispatch keeps to the window rules, an engineer accepts or declines a page, and the occupant is texted', async () => {
+  const t = await fernhill('pm-office-actions');
+  const sent: { to: string | null; body: string }[] = [];
+  const text = async (to: string | null, body: string) => void sent.push({ to, body });
+  const act = (ref: string, b: Record<string, unknown>, now = NOW) => jobAction(repo, t, ref, b, text, now);
+  const jobs = await repo.listJobs(t.id);
+  const gasJob = jobs.find((j) => j.status === 'scheduled' && j.flags.includes('gas') && j.visit_date! > '2026-10-07')!;
+  await assert.rejects(act(gasJob.reference, { action: 'assign', engineer: 'marek' }), /Marek doesn't do|isn't Gas Safe/);
+  const plumbing = jobs.find((j) => j.status === 'scheduled' && j.trade === 'plumbing' && !j.flags.includes('gas') && j.visit_date! > '2026-10-07')!;
+  // Fill Callum's Friday morning, then try to put another job in it.
+  const busy = jobs.filter((j) => j.engineer_key === 'callum' && j.visit_date === '2026-10-09' && j.window_key === 'am' && j.status !== 'cancelled').length;
+  for (let i = busy; i < 2; i++) {
+    await repo.createJob(t, { trade: 'plumbing', priority: 'routine', description: `Filler ${i}`, kind: 'repair', status: 'scheduled', visit_date: '2026-10-09', window_key: 'am', engineer_key: 'callum', source: 'console' });
+  }
+  await assert.rejects(act(plumbing.reference, { action: 'assign', engineer: 'callum', date: '2026-10-09', window: 'am' }), /Callum's morning is full/);
+  const moved = await act(plumbing.reference, { action: 'assign', engineer: 'marek', date: '2026-10-09', window: 'pm' });
+  assert.match(moved, /Marek, Friday 9 October afternoon/);
+  // On the way texts the occupant; done needs notes.
+  assert.match(await act(plumbing.reference, { action: 'on_the_way', eta_minutes: 25 }, new Date('2026-10-09T11:30:00Z')), /on the way/);
+  assert.ok(sent.some((x) => /Marek is on the way, about 25 minutes/.test(x.body)));
+  await assert.rejects(act(plumbing.reference, { action: 'done' }), /Add what was done/);
+  assert.match(await act(plumbing.reference, { action: 'done', notes: 'New washer fitted.' }), /done/);
+  // An emergency at 9pm: Dan accepts, and only then the caller hears his name.
+  const home = (await repo.listMtProperties(t.id)).find((p) => p.client === 'harbour')!;
+  const c = await call(t, home.occupant.phone, NIGHT);
+  await c.run('find_property', { postcode: home.district, number: home.number, street: home.street });
+  const r = await c.run('job', { action: 'create', description: 'Burst pipe, water pouring through the ceiling', name: home.occupant.name });
+  assert.equal((await repo.listJobs(t.id, { reference: r.reference }))[0].engineer_key, 'dan');
+  assert.match(await act(r.reference, { action: 'accept' }, NIGHT), /Dan accepted/);
+  assert.ok(sent.some((x) => x.to === home.occupant.phone && /Dan is on call tonight and coming to you by about 1am/.test(x.body)));
+  await assert.rejects(act(r.reference, { action: 'accept' }, NIGHT), /no page waiting/);
+  // Declined, with nobody else on call who plumbs: the duty manager is texted.
+  const r2 = await c.run('job', { action: 'create', description: 'Another burst pipe, pouring through the ceiling', name: home.occupant.name });
+  assert.match(await act(r2.reference, { action: 'decline' }, NIGHT), /Helen Ward has been texted/);
+  assert.ok(sent.some((x) => x.to === '+447700900310' && /URGENT/.test(x.body)));
 });

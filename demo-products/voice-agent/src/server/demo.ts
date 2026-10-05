@@ -11,6 +11,7 @@ import type { Ctx } from './context.ts';
 import { BASE, HttpError, clientIp, cookie, eventStream, json, overHttps, readJson, sameOrigin, setCookie } from './http.ts';
 import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
 import { tenantState } from './state.ts';
+import { jobAction } from './maintenance.ts';
 import type { DemoKey, Workspace } from '../db/demo-repo.ts';
 import { SHARED_DEMO_MINUTES, SHARED_DRAFT_MINUTES, THROTTLE, hashKey, ipHash, newVisitor, normaliseKey, prefixOf, readSession, signSession, withFreePin } from '../demo/access.ts';
 import { PRESETS, answersOf, builtPreset, getPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
@@ -563,6 +564,12 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     void usage('staff_action', { action: 'listing' });
     refresh({ reason: 'staff', what: message });
     return json(res, 200, { ok: true, message, ...(affected ? { affected } : {}) }), true;
+  }
+  if (sub === 'jobs' && ref && req.method === 'PATCH') {
+    const message = await jobAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body));
+    void usage('staff_action', { action: 'job' });
+    refresh({ reason: 'staff', reference: ref.toUpperCase(), what: message });
+    return json(res, 200, { ok: true, message }), true;
   }
   if (sub === 'messages' && ref && req.method === 'PATCH') {
     const { status } = await readJson(req, 1000);

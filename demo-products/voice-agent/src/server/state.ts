@@ -10,6 +10,7 @@ import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from '../core/prompt.ts';
 import type { WorkspaceSpec } from '../presets/index.ts';
+import { maintenanceState } from './maintenance.ts';
 
 /**
  * The team console's board for our own demo businesses, which have no
@@ -110,6 +111,7 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
       model: c.model, guardrail_flags: c.guardrail_flags, latency: c.latency, usage: c.usage,
     })),
     ...(t.profile.listings ? await estateState(repo, t, bookings, now) : {}),
+    ...(t.profile.maintenance ? await maintenanceState(repo, t, now) : {}),
   };
 }
 
