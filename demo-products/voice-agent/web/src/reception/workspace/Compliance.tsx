@@ -27,7 +27,7 @@ export function Compliance({ id, state, onDone }: { id: string; state: LiveState
         <span className="badge bad">{counts.overdue} overdue</span>
         <span className="badge warn">{counts.soon} due soon</span>
         <span className="muted small">{all.length} properties, all examples</span>
-        <label className="small"><input type="checkbox" checked={filter === 'due'} onChange={(e) => setFilter(e.target.checked ? 'due' : 'all')} /> Due or overdue only</label>
+        <label className="small inline-check"><input type="checkbox" checked={filter === 'due'} onChange={(e) => setFilter(e.target.checked ? 'due' : 'all')} /> Due or overdue only</label>
       </div>
       {!shown.length ? <p className="empty">Nothing due. Untick to see every property.</p> : null}
       <ul className="register">

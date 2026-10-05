@@ -41,6 +41,7 @@ interface Walk {
 const WALKS: Record<string, (w: Walk) => Promise<void>> = {
   restaurant: walkRestaurant,
   estate_agent: walkEstate,
+  property_maintenance: walkMaintenance,
 };
 
 const built = PRESETS.filter((p) => builtPreset(p.key)).map((p) => p.key);
@@ -598,6 +599,178 @@ async function walkEstate({ shot }: Walk) {
   // Narrow screen.
   await page.setViewportSize({ width: 390, height: 900 });
   await page.click('.tabs [role=tab]:has-text("Properties")');
+  await shot(page, 'workspace-mobile');
+  await page.context().close();
+}
+
+async function walkMaintenance({ shot }: Walk) {
+  const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  page.on('console', (m) => m.type() === 'error' && !/40[1349]|scout/.test(m.text()) && errors.push(`console: ${m.text()}`));
+  const saved = () => page.waitForSelector('.save-state.saved', { timeout: 10000 });
+  const next = async (title: string) => {
+    await page.click('.step-nav button.primary');
+    await page.waitForSelector(`#step-title:has-text("${title}")`);
+  };
+  const kept = (what: string, ok: boolean) => {
+    if (!ok) throw new Error(`after a reload, the builder lost ${what}`);
+  };
+
+  // A key from the team, and the contractor from the preset.
+  await page.goto(`${base}/`);
+  await page.waitForSelector('#password');
+  await page.fill('#password', 'team');
+  await page.click('.signin button[type=submit]');
+  await page.waitForSelector('#k-name');
+  await page.fill('#k-name', 'Helen Ward');
+  await page.fill('#k-company', 'Fernhill Property Care');
+  await page.click('button:has-text("Issue a private key")');
+  await page.waitForSelector('.issued code');
+  const raw = (await page.textContent('.issued code'))!.trim();
+  await page.goto(`${base}/demo/reception#key=${raw}`);
+  await page.waitForSelector('text=Welcome, Helen.');
+  await page.click('text=Build a new demo');
+  await page.waitForSelector('.preset');
+  await page.click('.preset:has-text("Property maintenance")');
+  await page.waitForSelector('#new-name');
+  await shot(page, 'pick-preset');
+  await page.click('text=Build from the preset');
+
+  // An edit on every step.
+  const style = 'input[maxlength="160"][placeholder="Repairs and maintenance for homes, landlords and letting agents"]';
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  await page.fill(style, 'Repairs, safety checks and maintenance across the East Midlands');
+  await saved();
+  await shot(page, 'builder-basics');
+  await next('Where you work');
+  const districts = page.getByLabel('Postcode districts you cover');
+  await districts.fill(`${await districts.inputValue()}, NG12`);
+  await saved();
+  await shot(page, 'builder-area');
+  await next('Who you work for');
+  await page.click('button:has-text("+ Add a client")');
+  await page.locator('input[aria-label="Client name"]').last().fill('Parkside Lettings');
+  await page.getByLabel('Contact', { exact: true }).last().fill('Ruth Mills');
+  await page.getByLabel('Their mobile').last().fill('07700 900420');
+  await saved();
+  await shot(page, 'builder-customers');
+  await next('Trades');
+  await page.getByRole('switch', { name: /^Decorating/ }).uncheck();
+  await saved();
+  await shot(page, 'builder-trades');
+  await next('Engineers and on call');
+  await page.getByLabel('Jobs per window').first().fill('3');
+  await saved();
+  await shot(page, 'builder-engineers');
+  await next('Urgency and response');
+  await page.getByLabel('Attend within').fill('2');
+  await saved();
+  await next('Safety');
+  await page.getByRole('switch', { name: /Boiler pressure/ }).uncheck();
+  await page.click('.scripts summary:has-text("A smell of gas")');
+  await saved();
+  await shot(page, 'builder-safety');
+  await next('Office hours and visits');
+  await page.locator('input[aria-label="Window name"]').first().fill('Morning');
+  await page.getByLabel('Notice needed').fill('3');
+  await saved();
+  await shot(page, 'builder-visits');
+  await next('Prices and payment');
+  await page.getByLabel('Call-out, with the first hour').fill('99.00');
+  await saved();
+  await next('Safety checks and servicing');
+  await page.getByLabel('Gas safety record, one appliance').fill('79.00');
+  await saved();
+  await shot(page, 'builder-planned');
+  await next('Policies and questions');
+  await page.getByLabel('Insurance').fill('£10 million public liability (example)');
+  await saved();
+  await next('Review and start');
+  await shot(page, 'builder-review');
+
+  // Reloaded, every edit is still there.
+  await page.reload();
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  kept('the style', (await page.inputValue(style)) === 'Repairs, safety checks and maintenance across the East Midlands');
+  await next('Where you work');
+  kept('the new district', (await page.getByLabel('Postcode districts you cover').inputValue()).endsWith('NG12'));
+  await next('Who you work for');
+  kept('the new client', (await page.locator('input[aria-label="Client name"]').last().inputValue()) === 'Parkside Lettings');
+  await next('Trades');
+  kept('decorating off', !(await page.getByRole('switch', { name: /^Decorating/ }).isChecked()));
+  await next('Engineers and on call');
+  kept('jobs per window', (await page.getByLabel('Jobs per window').first().inputValue()) === '3');
+  await next('Urgency and response');
+  kept('the emergency target', (await page.getByLabel('Attend within').inputValue()) === '2');
+  await next('Safety');
+  kept('the boiler pressure check off', !(await page.getByRole('switch', { name: /Boiler pressure/ }).isChecked()));
+  await next('Office hours and visits');
+  kept('the notice', (await page.getByLabel('Notice needed').inputValue()) === '3');
+  await next('Prices and payment');
+  kept('the call-out', (await page.getByLabel('Call-out, with the first hour').inputValue()) === '99.00');
+  await next('Safety checks and servicing');
+  kept('the gas record price', (await page.getByLabel('Gas safety record, one appliance').inputValue()) === '79.00');
+  await next('Policies and questions');
+  kept('the insurance', (await page.getByLabel('Insurance').inputValue()) === '£10 million public liability (example)');
+  await next('Review and start');
+  await page.click('button:has-text("Start my demo")');
+
+  // Jobs: the board, and an engineer sent on their way.
+  await page.waitForSelector('.jobs-board', { timeout: 20000 });
+  await page.waitForSelector('.phone');
+  await shot(page, 'workspace-jobs');
+  // Only today's visits can be set off; on a day with no windows (a Sunday) there are none.
+  const today = page.locator('.k-col[aria-label="Booked"] .ticket.job', { has: page.locator('button:has-text("On the way")') }).first();
+  if (await today.count()) {
+    await today.locator('button:has-text("On the way")').click();
+    await page.waitForSelector('.toast:has-text("on the way")', { timeout: 10000 });
+    await today.locator('button:has-text("More")').click();
+    await shot(page, 'workspace-jobs-on-the-way');
+  }
+
+  // Dispatch: tonight's pair, the grid, and gas work refused for someone who isn't Gas Safe.
+  await page.click('.tabs [role=tab]:has-text("Dispatch")');
+  await page.waitForSelector('.dispatch');
+  if (!(await page.locator('.on-call').textContent())!.match(/On call tonight: \w+ and \w+/)) throw new Error('no on-call pair shown');
+  for (const tab of await page.locator('.day-tabs [role=tab]').all()) {
+    await tab.click();
+    const gas = page.locator('.dispatch-grid td .chip[draggable=true]', { hasText: 'gas' }).first();
+    const grace = page.locator('.dispatch-grid tr', { has: page.locator('th', { hasText: /^Grace/ }) }).locator('td').first();
+    if (!(await gas.count()) || (await grace.locator('text=Off').count())) continue;
+    await gas.dragTo(grace);
+    await page.waitForSelector('.toast:has-text("Grace")', { timeout: 10000 });
+    break;
+  }
+  await shot(page, 'workspace-dispatch');
+
+  // Properties and compliance: a home opened, an overdue gas record booked from its row.
+  await page.click('.tabs [role=tab]:has-text("Properties and compliance")');
+  await page.waitForSelector('.register');
+  await shot(page, 'workspace-compliance');
+  const overdue = page.locator('.register li', { has: page.locator('.badge.bad', { hasText: 'Gas safety: overdue' }) }).first();
+  await overdue.locator('.register-row').click();
+  await overdue.locator('.certs tr', { hasText: 'Gas safety' }).locator('button:has-text("Book")').click();
+  await page.waitForSelector('.toast:has-text("gas safety record booked")', { timeout: 10000 });
+  await shot(page, 'workspace-compliance-booked');
+
+  // The safety log: last week's gas call, the advice given and its follow-up.
+  await page.click('.tabs [role=tab]:has-text("Safety log")');
+  await page.waitForSelector('.safety-log');
+  if (!(await page.locator('.safety-log').textContent())!.includes('A smell of gas')) throw new Error('the gas call is not in the safety log');
+  await shot(page, 'workspace-safety-log');
+
+  // The engineer's phone, and Call as a tenant.
+  await page.getByLabel('Call as').selectOption({ label: 'Dan, engineer' });
+  await page.waitForSelector(".phone-head:has-text(\"Dan's phone\")");
+  await page.waitForSelector('.job-sheet');
+  await shot(page, 'workspace-engineer-phone');
+  await page.getByLabel('Call as').selectOption({ label: 'Sam Ortiz, tenant at 14 Elm Road' });
+  await page.waitForSelector('.phone-number:has-text("07700 900501")');
+  await shot(page, 'workspace-call-as');
+
+  // Narrow screen.
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.click('.tabs [role=tab]:has-text("Jobs")');
   await shot(page, 'workspace-mobile');
   await page.context().close();
 }

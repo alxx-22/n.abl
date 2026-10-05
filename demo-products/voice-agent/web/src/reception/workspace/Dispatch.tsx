@@ -63,7 +63,7 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
                 <tr key={e.key} className={off ? 'off' : ''}>
                   <th scope="row">
                     {e.first_name}
-                    <span className="muted small"> {e.gas_safe ? 'Gas Safe · ' : ''}{e.trades.map((t) => m?.trades.find((x) => x.key === t)?.label.split(/[,;]| and /)[0] ?? t).join(', ')}</span>
+                    <span className="muted small"> {e.gas_safe ? 'Gas Safe · ' : ''}{e.trades.map((t) => m?.trades.find((x) => x.key === t)?.label.split(/[,;]| and /)[0] ?? `${t[0].toUpperCase()}${t.slice(1).replace(/_/g, ' ')} (off)`).join(', ')}</span>
                   </th>
                   {windows.map((w) => {
                     const cell = `${e.key}|${w.key}`;
@@ -105,7 +105,7 @@ function JobChip({ j, fresh }: { j: LiveJob; fresh: boolean }) {
       onDragStart={(e) => e.dataTransfer.setData('text/plain', j.reference)}
       title={`${PRIORITY[j.priority].label}: ${j.description} (${j.status.replace(/_/g, ' ')})`}
     >
-      {j.address?.split(' (example)')[0] ?? j.reference} · {j.trade_label.split(/[,;]| and /)[0]}{j.flags.includes('gas') ? ' · gas' : ''}{j.status === 'on_the_way' ? ' · on the way' : j.status === 'on_site' ? ' · on site' : j.status === 'waiting' ? ' · waiting' : ''}
+      {j.address?.split(' (example)')[0] ?? j.reference} · {j.trade_label.split(/[,;]| and /)[0]}{j.flags.includes('gas') && !/gas/i.test(j.trade_label.split(/[,;]| and /)[0]) ? ' · gas' : ''}{j.status === 'on_the_way' ? ' · on the way' : j.status === 'on_site' ? ' · on site' : j.status === 'waiting' ? ' · waiting' : ''}
     </span>
   );
 }

@@ -523,3 +523,5 @@ svg.house .door { fill: var(--accent); }
 .job-sheet { display: grid; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line); }
 .page-alert { display: grid; gap: 4px; padding: 8px; border-radius: 10px; background: var(--danger-soft); border: 1px solid rgba(224, 121, 109, 0.4); }
 .sheet-job { display: grid; gap: 2px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.inline-check { display: inline-flex; gap: 6px; align-items: center; }
+.inline-check input { width: auto; }

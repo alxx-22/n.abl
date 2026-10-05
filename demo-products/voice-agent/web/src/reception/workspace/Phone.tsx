@@ -114,7 +114,7 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = 
         {callAs.length ? (
           <label className="field call-as">
             <span className="small">Call as</span>
-            <select value={as?.phone ?? ''} onChange={(e) => setNumber(e.target.value ? displayUkPhone(e.target.value) : fresh())}>
+            <select value={as?.phone ?? (engineer ? normaliseUkPhone(engineer.mobile) ?? '' : '')} onChange={(e) => setNumber(e.target.value ? displayUkPhone(e.target.value) : fresh())}>
               <option value="">Yourself, a new caller</option>
               {callAs.map((p) => <option key={p.phone} value={p.phone}>{p.who}</option>)}
               {crew?.engineers.length ? (
@@ -152,7 +152,11 @@ function JobSheet({ id, engineer, name, crew }: { id: string; engineer: string; 
   const [busy, setBusy] = useState(false);
   const mine = crew.jobs.filter((j) => j.engineer_key === engineer);
   const pages = mine.filter((j) => j.status === 'new' && j.flags.includes('paged'));
-  const today = mine.filter((j) => j.date === crew.today && ['scheduled', 'on_the_way', 'on_site'].includes(j.status)).sort((a, b) => (a.window_key ?? '').localeCompare(b.window_key ?? ''));
+  const ahead = mine.filter((j) => j.date && j.date >= crew.today && ['scheduled', 'on_the_way', 'on_site'].includes(j.status));
+  // Today's jobs, or on a quiet day the next day that has some, so the sheet always shows what's coming.
+  const day = ahead.some((j) => j.date === crew.today) ? crew.today : ahead.map((j) => j.date!).sort()[0];
+  const today = ahead.filter((j) => j.date === day).sort((a, b) => (a.window ?? '').localeCompare(b.window ?? ''));
+  const heading = !day || day === crew.today ? 'Today' : new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' });
   const act = async (ref: string, body: Record<string, unknown>) => {
     setBusy(true);
     await jobAct(id, ref, body, crew.onDone);
@@ -170,18 +174,18 @@ function JobSheet({ id, engineer, name, crew }: { id: string; engineer: string; 
           </div>
         </div>
       ))}
-      <b className="small">Today ({today.length})</b>
+      <b className="small">{heading} ({today.length})</b>
       {today.length ? today.map((j) => (
         <div key={j.reference} className="sheet-job">
           <span className="small"><b>{j.window?.split(',')[0] ?? 'Emergency'}</b> · {j.address}</span>
           <span className="small muted">{j.trade_label}: {j.description}{j.pets ? ` · ${j.pets}` : ''}</span>
           <div className="row-tools">
-            {j.status === 'scheduled' ? <button type="button" className="small primary" disabled={busy} onClick={() => act(j.reference, { action: 'on_the_way', eta_minutes: 20 })}>On my way</button> : null}
+            {j.status === 'scheduled' && j.date === crew.today ? <button type="button" className="small primary" disabled={busy} onClick={() => act(j.reference, { action: 'on_the_way', eta_minutes: 20 })}>On my way</button> : null}
             {j.status === 'on_the_way' ? <button type="button" className="small primary" disabled={busy} onClick={() => act(j.reference, { action: 'on_site' })}>On site</button> : null}
             {j.status === 'on_site' ? <button type="button" className="small" disabled={busy} onClick={() => { const notes = prompt('What was done?'); if (notes) void act(j.reference, { action: 'done', notes }); }}>Done</button> : null}
           </div>
         </div>
-      )) : <p className="small muted">Nothing today.</p>}
+      )) : <p className="small muted">Nothing booked.</p>}
     </div>
   );
 }
