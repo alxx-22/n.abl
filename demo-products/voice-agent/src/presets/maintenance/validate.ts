@@ -7,7 +7,7 @@
 import { minutesOf } from '../../domain/time.ts';
 import type { Issue } from '../common/types.ts';
 import { validateBase } from '../common/validate.ts';
-import type { MaintenanceAnswers } from './answers.ts';
+import { inSentence, type MaintenanceAnswers } from './answers.ts';
 import type { MaintenanceStep } from './steps.ts';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -37,7 +37,7 @@ export function validateMaintenance(a: MaintenanceAnswers): Issue<MaintenanceSte
   if (!tradesOn.length) err('trades', 'Turn on at least one trade.');
   for (const t of tradesOn) {
     const doers = working.filter((e) => e.trades.includes(t.key) && (!t.gas || e.gas_safe));
-    if (!doers.length) err('engineers', t.gas ? `${t.label} is gas work: it needs an engineer with a Gas Safe number.` : `No engineer does ${t.label.toLowerCase()}: add one, or turn it off.`);
+    if (!doers.length) err('engineers', t.gas ? `${t.label} is gas work: it needs an engineer with a Gas Safe number.` : `No engineer does ${inSentence(t.label)}: add one, or turn it off.`);
   }
   for (const d of a.dont_do) if (!d.suggest) warn('trades', `Say who to suggest for ${d.what}.`);
 
@@ -65,8 +65,8 @@ export function validateMaintenance(a: MaintenanceAnswers): Issue<MaintenanceSte
   const w = a.visits.windows;
   if (!w.length) err('visits', 'Add at least one visit window.');
   for (const x of w) {
-    if (minutesOf(x.to) <= minutesOf(x.from)) err('visits', `The ${x.label.toLowerCase()} window ends before it starts.`);
-    if (!x.days.length) warn('visits', `The ${x.label.toLowerCase()} window has no days ticked, so it is never offered.`);
+    if (minutesOf(x.to) <= minutesOf(x.from)) err('visits', `The ${inSentence(x.label)} window ends before it starts.`);
+    if (!x.days.length) warn('visits', `The ${inSentence(x.label)} window has no days ticked, so it is never offered.`);
   }
   // An all-day window may hold the morning and the afternoon; only a part overlap muddles which one a job is in.
   const reported = new Set<string>();
@@ -77,7 +77,7 @@ export function validateMaintenance(a: MaintenanceAnswers): Issue<MaintenanceSte
     const nested = (xf <= yf && yt <= xt) || (yf <= xf && xt <= yt);
     const same = xf === yf && xt === yt;
     if (shared.length && xf < yt && yf < xt && (same || !nested)) {
-      err('visits', `The ${x.label.toLowerCase()} and ${y.label.toLowerCase()} windows overlap on ${DAY_NAMES[shared[0]]}.`);
+      err('visits', `The ${inSentence(x.label)} and ${inSentence(y.label)} windows overlap on ${DAY_NAMES[shared[0]]}.`);
       reported.add(`${x.key}|${y.key}`);
     }
   }

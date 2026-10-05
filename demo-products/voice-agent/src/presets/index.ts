@@ -11,10 +11,17 @@ import type { ScanResult } from '../scout/scan.ts';
 import { PRESETS, presetInfo, type PresetInfo } from './catalogue.ts';
 import type { BaseAnswers, Issue, SeedPlan, VisitStatus } from './common/types.ts';
 import { estateAgent } from './estate/preset.ts';
+import { propertyMaintenance } from './maintenance/preset.ts';
 import { restaurant } from './restaurant/preset.ts';
 
-/** properties, offers, applicants, valuations and sales are the estate agent's (presets/estate-agent.md §6). */
-export type ViewId = 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls' | 'properties' | 'offers' | 'applicants' | 'valuations' | 'sales';
+/**
+ * properties, offers, applicants, valuations and sales are the estate
+ * agent's (presets/estate-agent.md §6); jobs, dispatch, compliance and
+ * safety the property maintenance contractor's (presets/property-maintenance.md §6).
+ */
+export type ViewId =
+  | 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls' | 'properties' | 'offers' | 'applicants' | 'valuations' | 'sales'
+  | 'jobs' | 'dispatch' | 'compliance' | 'safety';
 
 /** The back office a workspace shows, in the preset's own words (PRESETS.md §2.5). */
 export interface WorkspaceSpec {
@@ -102,7 +109,7 @@ export interface Preset<A extends BaseAnswers = BaseAnswers> {
   combineTables?(a: A, x: string, y: string): A;
 }
 
-const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant, estate_agent: estateAgent };
+const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant, estate_agent: estateAgent, property_maintenance: propertyMaintenance };
 
 /** A preset prospects can use: built, and live in the catalogue. */
 export function getPreset(key: string): Preset | null {

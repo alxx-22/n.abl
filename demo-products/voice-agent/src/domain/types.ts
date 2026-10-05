@@ -9,7 +9,7 @@
 // Every kind of business in src/presets/catalogue.ts, and 'other' for fixtures read from a website.
 export type BusinessType =
   | 'restaurant' | 'takeaway' | 'cafe' | 'pub' | 'barber' | 'salon' | 'beauty' | 'spa'
-  | 'estate_agent' | 'letting_agent' | 'hotel' | 'gym' | 'dog_grooming' | 'garage' | 'other';
+  | 'estate_agent' | 'letting_agent' | 'property_maintenance' | 'hotel' | 'gym' | 'dog_grooming' | 'garage' | 'other';
 
 export const ALLERGENS = [
   'celery', 'gluten', 'crustaceans', 'eggs', 'fish', 'lupin', 'milk',
@@ -231,6 +231,13 @@ export interface TenantProfile {
   listings?: Listing[];
   team?: StaffMember[];
   estate?: EstateSettings;
+  /**
+   * The repairs contractor's settings (presets/property-maintenance.md
+   * §4.1). Only the property maintenance compile writes it; without it a
+   * call runs as it always has. Its windows and engineers live here, not in
+   * booking, so no table or appointment tool is ever offered for a job.
+   */
+  maintenance?: MaintenanceSettings;
 }
 
 // ── Estate agency ─────────────────────────────────────────────────────────
@@ -383,6 +390,107 @@ export interface EstateSettings {
   /** Where a buyer checks for themselves what a home's details leave out ("the Environment Agency's long-term flood risk service on GOV.UK"). */
   official?: { flooding: string; local_tax: string; broadband: string; mobile: string };
   redress: 'tpo' | 'prs';
+  complaints_handler: string;
+  data_lead: string;
+}
+
+// ── Property maintenance ──────────────────────────────────────────────────
+
+export type MtNation = 'england' | 'wales' | 'scotland' | 'northern_ireland';
+export type MtClientKind = 'agent' | 'landlord' | 'block' | 'social' | 'commercial' | 'insurer';
+export type JobPriority = 'emergency' | 'urgent' | 'routine';
+
+/** A letting agent, landlord or other client: who authorises work, and up to how much. */
+export interface MtClient {
+  key: string;
+  name: string;
+  kind: MtClientKind;
+  works_limit_pence: number;
+  emergency_authority_pence: number;
+  po_required: boolean;
+  /** The authoriser. Their phone recognises them calling in, and is never read out. */
+  contact: { name: string; phone: string | null; email: string };
+  notice: 'every_job' | 'over_limit' | 'emergencies';
+  /** For staff only. */
+  instructions: string;
+  status: 'active' | 'on_stop';
+  example?: boolean;
+}
+
+/** An engineer as windows, dispatch and the on-call rota read them. Callers hear first_name only. */
+export interface MtEngineer {
+  key: string;
+  name: string;
+  first_name: string;
+  trades: string[];
+  /** Gas Safe registered: the only engineers a gas job may go to. */
+  gas_safe: boolean;
+  /** "Gas Safe 512345 (example)", "NICEIC": said when a caller asks. */
+  accreditations: string[];
+  days: number[];
+  /** Empty: the whole area. */
+  districts: string[];
+  per_window: number;
+}
+
+/** A visit window as a caller books it: "Thursday morning, 8 to 12". */
+export interface MtWindow {
+  key: string;
+  label: string;
+  from: string;
+  to: string;
+  premium_pence: number;
+  days: number[];
+}
+
+export interface MaintenanceSettings {
+  nation: MtNation;
+  districts: string[];
+  towns: string[];
+  customers: {
+    homeowners: boolean;
+    landlords: boolean;
+    agents: boolean;
+    blocks: boolean;
+    social: { on: boolean; agent_of_landlord: boolean };
+    commercial: boolean;
+    insurers: boolean;
+    tenant_no_client: 'contact_landlord' | 'private';
+    recharge_lockouts: boolean;
+  };
+  clients: MtClient[];
+  /** The trades that are on. */
+  trades: { key: string; label: string; gas: boolean }[];
+  dont_do: { what: string; suggest: string }[];
+  engineers: MtEngineer[];
+  on_call: { nights: { day: number; engineers: string[] }[]; escalate_minutes: number; duty_manager: { name: string; mobile: string } };
+  priorities: {
+    emergency: { attend_hours: number; make_safe_hours: number; examples: string[] };
+    urgent: { working_days: number; examples: string[] };
+    routine: { working_days: number; examples: string[] };
+    vulnerable_uplift: boolean;
+    winter_heating: boolean;
+  };
+  /** The only things the receptionist may suggest trying. */
+  checks: { prepayment: boolean; thermostat: boolean; trip_reset: boolean; boiler_pressure: boolean };
+  windows: MtWindow[];
+  visits: { notice_hours: number; horizon_days: number; adult_present: boolean; call_ahead: boolean; abortive_fee_pence: number };
+  prices: {
+    vat_registered: boolean;
+    callout_pence: number;
+    half_hour_pence: number;
+    ooh_first_hour_pence: number;
+    minimum_pence: number;
+    lockout_from_pence: number;
+    free_quote_over_pence: number;
+    card_on_booking: boolean;
+    account_days: number;
+    guarantee_months: number;
+    cancellation: string;
+  };
+  planned: { gas_record_pence: number; extra_appliance_pence: number; boiler_service_pence: number; combined_pence: number; eicr_from_pence: number; reminder_weeks: number };
+  /** The nation's gas emergency number. */
+  gas: string;
   complaints_handler: string;
   data_lead: string;
 }

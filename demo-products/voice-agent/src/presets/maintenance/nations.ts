@@ -228,7 +228,7 @@ export const safetyScripts = (nation: MtNation): SafetyScript[] => SAFETY_KINDS.
 /** The gas emergency line, said as a core fact: an emergency must never wait for a tool. */
 export const gasFact = (n: MtNation) => `Gas emergency: ${MT_NATION_PACKS[n].gas.who}, ${MT_NATION_PACKS[n].gas.number}.`;
 
-/** The nation's rules and the official places to ask, for search_knowledge. */
+/** The nation's rules and the official places to ask, for search_knowledge. The business's own asbestos answer names the guidance. */
 export function nationKnowledge(n: MtNation): { q: string; a: string; tags: string[] }[] {
   const p = MT_NATION_PACKS[n];
   return [
@@ -240,7 +240,6 @@ export function nationKnowledge(n: MtNation): { q: string; a: string; tags: stri
     { q: 'How often do the electrics need checking?', a: 'Landlords must have the electrics checked by a qualified electrician at least every five years, with an electrical installation condition report.', tags: ['eicr', 'electrical', 'certificate', 'landlord'] },
     { q: 'What must a landlord do about damp and mould?', a: p.damp, tags: ['damp', 'mould', 'condensation', "awaab's law"] },
     { q: "I'm a tenant and my repairs aren't being done.", a: `${p.tenants} I can take the details of the repair for whoever looks after the property.`, tags: ['tenant', 'rights', 'landlord', 'complaint'] },
-    { q: 'Could there be asbestos?', a: `If we find anything that might be asbestos, we stop and have it tested before any work goes on. ${p.asbestos.replace(/^./, (c) => c.toUpperCase())} explains more.`, tags: ['asbestos', 'artex'] },
     {
       q: 'Someone told me your bank details have changed.',
       a: `We never change bank details by email or text. Don't pay anything: check with us on a number you already have, and report it to ${p.fraud}.`,

@@ -77,6 +77,11 @@ export const PRESETS: PresetInfo[] = [
     noun: 'letting agency', business_type: 'letting_agent', example: 'https://www.your-letting-agency.co.uk',
   },
   {
+    key: 'property_maintenance', label: 'Property maintenance', blurb: 'Puts safety first on emergency calls, books the right engineer into a real window, and tells tenants when their engineer is coming.', status: 'soon',
+    covers: ['Trades and engineers', 'Emergencies and on call', 'Safety checks and servicing'],
+    noun: 'property maintenance company', business_type: 'property_maintenance', example: 'https://www.your-property-maintenance.co.uk',
+  },
+  {
     key: 'hotel', label: 'Hotel and B&B', blurb: 'Checks rooms across dates and answers check-in, parking and dog questions.', status: 'soon',
     covers: ['Rooms and rates', 'Stays', 'Policies'],
     noun: 'hotel', business_type: 'hotel', example: 'https://www.your-hotel.co.uk',

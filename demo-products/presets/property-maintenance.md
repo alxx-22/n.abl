@@ -306,11 +306,16 @@ Only `compileMaintenance` writes these.
 
 | Field | Switches on |
 |---|---|
-| `profile.maintenance: MaintenanceSettings` | the maintenance tools (§4.3), prompt branch (§4.5), safety mode and the tool gate (§4.4), guardrails (§8) |
-| `profile.team: StaffMember[]` with `does: ['engineer']` and `accreditations` | engineers as people; `take_message` for whom (already there for the estate agent) |
-| `BookableService.window_mode: true` | window booking (§4.2) instead of minute slots |
-| `Resource.kind: 'engineer'`, `Resource.trades`, `Resource.gas_safe`, `Resource.districts`, `Resource.per_window` | the dispatch diary's rows and the window capacity and skill filters |
-| `profile.nation_pack: 'maintenance'` | the maintenance nation pack's numbers in knowledge and safety scripts |
+| `profile.maintenance: MaintenanceSettings` | the maintenance tools (§4.3), prompt branch (§4.5), safety mode and the tool gate (§4.4), guardrails (§8); its `nation` picks the maintenance nation pack's numbers |
+| `profile.team: StaffMember[]` | the engineers and the duty manager as people (key `duty_manager`); `take_message` for whom (already there for the estate agent). Roles stay the estate agent's (engineers are `other`), so its builder is unchanged |
+
+As built (5 October 2026): the visit windows and the engineers (trades,
+Gas Safe, accreditations, districts, jobs per window) live in
+`profile.maintenance`, not in `profile.booking`. A maintenance profile has
+no `booking` at all, so the restaurant's table and appointment tools are
+never offered for a job, and jobs are rows of their own (§5.2) rather than
+bookings. This replaces the plan's `BookableService.window_mode`,
+`Resource.kind: 'engineer'` and `profile.nation_pack`.
 
 `MaintenanceSettings` holds the nation, districts, towns, the customer rules,
 the clients (compiled, without contacts' numbers in anything the receptionist
@@ -544,7 +549,8 @@ property inside the districts.
 ## 6. The back office
 
 **WorkspaceSpec**: views `jobs` (Jobs), `dispatch` (Dispatch, `of:
-'engineer'`), `properties` (Properties and compliance), `safety` (Safety
+'engineer'`), `compliance` (Properties and compliance: its own id, as the
+estate agent's `properties` is a different view), `safety` (Safety
 log), `messages`, `calls`; M2 adds `clients` and `money` (quotes and
 invoices); `ViewId` gains them (rule 7). `teamPhones` lists the engineers;
 `callAs` (M2) the seeded personas: the tenant at 14 Elm Road, Jess at

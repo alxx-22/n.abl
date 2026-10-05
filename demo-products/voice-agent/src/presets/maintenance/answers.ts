@@ -6,21 +6,26 @@
 // Compiled into a TenantProfile by compile.ts; the receptionist never reads
 // these directly.
 
+import type { MtClientKind, MtNation } from '../../domain/types.ts';
 import type { BaseAnswers, BasicsAnswer, DayHours, FaqAnswer, HoursAnswer, Sources, ThemeAnswer } from '../common/types.ts';
 
 /** The shape of the answers today. Raise it with a migrate step (PRESETS.md §1, rule 2), so saved setups keep loading. */
 export const VERSION = 1;
 
 /** All four nations: the safety numbers are the same, and the differences are in the nation pack. */
-export const MT_NATIONS = ['england', 'wales', 'scotland', 'northern_ireland'] as const;
-export type MtNation = (typeof MT_NATIONS)[number];
+export const MT_NATIONS = ['england', 'wales', 'scotland', 'northern_ireland'] as const satisfies readonly MtNation[];
+export type { MtNation };
 
-export const CLIENT_KINDS = ['agent', 'landlord', 'block', 'social', 'commercial', 'insurer'] as const;
-export type ClientKind = (typeof CLIENT_KINDS)[number];
+export const CLIENT_KINDS = ['agent', 'landlord', 'block', 'social', 'commercial', 'insurer'] as const satisfies readonly MtClientKind[];
+export type ClientKind = MtClientKind;
 export const MAX_CLIENTS = 20;
 export const MAX_ENGINEERS = 12;
 export const MAX_TRADES = 16;
 export const MAX_WINDOWS = 6;
+
+/** A window's label inside a sentence: "the morning window", but "the Saturday morning window" and "the AM window". */
+export const inSentence = (label: string) =>
+  /^(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\b/.test(label) || /^.[A-Z]/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1);
 
 export interface ClientAnswer {
   key: string;
@@ -328,7 +333,7 @@ export function defaultAnswers(): MaintenanceAnswers {
     },
     policies: {
       faqs: [
-        { q: 'Do you charge for a quote?', a: 'Quotes for bigger jobs are free. Small repairs are charged at the call-out rate, which includes the first hour.' },
+        { q: 'Do you work on Sundays?', a: 'The office is closed on Sundays, but an engineer is on call for emergencies day and night.' },
         { q: 'Are your engineers DBS checked?', a: 'Yes, every engineer has a basic DBS check and carries ID. You can ask to see it at the door.' },
       ],
       guarantee: 'Our workmanship is guaranteed for 12 months; parts carry the maker’s warranty.',
