@@ -89,6 +89,9 @@ const GIST: Partial<Record<SafetyKind, RegExp>> = {
   electric: /\b(?:don'?t touch|do not touch|main switch|power off|switch (?:it|the power|everything) off|turn (?:the power|the electrics|everything) off)\b/i,
 };
 
+/** These words start this kind's advice, number or not: a reply that doesn't, while it is owed, puts something else first. */
+export const adviceStarted = (kind: SafetyKind, words: string) => Boolean(GIST[kind]?.test(words));
+
 /** The receptionist said this kind's advice, number included, in these words. */
 export function adviceSaid(kind: SafetyKind, words: string, nation: MtNation): boolean {
   if (!GIST[kind]?.test(words)) return false;

@@ -19,6 +19,7 @@ const NOW = new Date('2026-10-07T10:00:00Z');
 let repo: Repo;
 let estate: Tenant;
 let restaurant: Tenant;
+let fernhill: Tenant;
 
 before(async () => {
   const db = await openPglite();
@@ -30,6 +31,9 @@ before(async () => {
   const rs = builderTenant(BUILDER_TENANTS.find((b) => b.preset === 'restaurant')!);
   restaurant = await repo.upsertTenant({ ...rs.profile, slug: 'nudge-restaurant' });
   await repo.insertSeed(restaurant.id, rs.preset.seed(restaurant.profile, NOW, 7));
+  const pm = builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'pm-fernhill')!);
+  fernhill = await repo.upsertTenant({ ...pm.profile, slug: 'nudge-fernhill' });
+  await repo.insertSeed(fernhill.id, pm.preset.seed(fernhill.profile, NOW, 7));
 });
 
 /** The live model, as far as the call can tell: it hears what the call sends and raises what the model would. */
@@ -74,6 +78,7 @@ async function call(tenant: Tenant, callerPhone: string | null = '+447700900123'
       return fake.toolResponses.at(-1)?.[0]?.response ?? {};
     },
     reminders: () => fake.texts.filter((t) => t.startsWith('[From the system')),
+    id: () => c.callId,
   };
 }
 
@@ -240,4 +245,38 @@ test('a restaurant call gets none of the estate reminders', async () => {
   c.caller("Yes, that's right. And our bank details have changed, by the way.");
   await c.agent('Lovely. Anything else?');
   assert.deepEqual(c.reminders(), []);
+});
+
+test('a gas smell on a repairs call: the advice is asked for at once, anything else first is flagged, and the safety log gets the time it was said', async () => {
+  const c = await call(fernhill, '+447700900501');
+  c.caller("Hi, there's a really strong smell of gas in my kitchen, can you send someone?");
+  await c.agent("I'm sorry to hear that. Can I take your postcode?");
+  assert.equal(c.reminders().filter((t) => /may be describing an emergency \(a smell of gas\)/.test(t)).length, 1);
+  assert.match(c.reminders()[0], /Get everyone out of the property now\./);
+  assert.ok(c.flags().includes('safety_delayed'), 'a question about the address came first');
+  const refused = await c.tool('find_property', { postcode: 'NG5', number: '14' });
+  assert.match(String(refused.message), /^Give the safety advice first/);
+  const advice = await c.tool('safety_advice', { kind: 'gas' });
+  assert.equal(advice.number, '0800 111 999');
+  await c.agent('Please get everyone out of the property now, open the doors and windows, and from outside ring the National Gas Emergency Service on 0800 111 999. That is oh eight hundred, one one one, nine nine nine.');
+  const [incident] = (await repo.listIncidents(fernhill.id)).filter((i) => i.source === 'eval');
+  assert.ok(incident.advised_at, 'the safety log shows when the advice was said');
+  const found = await c.tool('find_property', { postcode: 'NG5', number: '14' });
+  assert.equal(found.found, 1, 'once said, the call carries on');
+  c.caller('Yes, it really does smell strongly of gas.');
+  await c.agent("Please hang up now and ring them from outside. We'll be here once it's made safe.");
+  assert.equal(c.reminders().filter((t) => /may be describing an emergency/.test(t)).length, 1, 'never twice');
+});
+
+test('a repairs call: a key safe code is kept out of the transcript, and an estate call gets none of the safety reminders', async () => {
+  const c = await call(fernhill, '+447700900501');
+  c.caller('The key safe code is 4719 if the engineer needs it.');
+  await c.agent("Thanks, I won't repeat that. I'll make sure the office knows there's a key safe.");
+  const stored = JSON.stringify(await repo.listEvents(c.id()));
+  assert.ok(!stored.includes('4719'), 'the code is never stored');
+  assert.ok(stored.includes('The key safe code is [code removed]'));
+  const e = await call(estate);
+  e.caller('I think I can smell gas at the house I viewed.');
+  await e.agent('Please leave the property and call the gas emergency number in the facts.');
+  assert.deepEqual(e.reminders().filter((t) => /may be describing an emergency/.test(t)), []);
 });

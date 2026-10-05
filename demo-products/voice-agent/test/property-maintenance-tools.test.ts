@@ -12,6 +12,9 @@ import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { newCallState, runTool, toolDeclarations, type Action, type ToolContext } from '../src/core/tools.ts';
 import { armSafety, detectSafety, noteAdvice } from '../src/core/safety.ts';
+import { checkUtterance } from '../src/core/guardrails.ts';
+import { compilePrompt } from '../src/core/prompt.ts';
+import { redactCodes } from '../src/core/redact.ts';
 import { digitsSaid, spokenNumber } from '../src/domain/phone.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
@@ -281,4 +284,68 @@ test('messages and hours: for an engineer or the office, urgent ones by text, ba
   assert.match(day.on_call, /^Out of hours, an engineer is on call for emergencies/);
   assert.ok(!/Dan|Leon/.test(day.on_call), 'never a name');
   assert.ok(day.visit_windows.includes('morning 8am to 12 noon'));
+});
+
+test("the receptionist's rules: safety first with the nation's numbers, and none of the restaurant's", async () => {
+  const t = await fernhill('pm-prompt');
+  const prompt = compilePrompt(t.profile, { now: NOW, callerPhone: SAM, demoCards: [], canTransfer: false, channel: 'eval' });
+  assert.ok(prompt.length < 7000, `${prompt.length} characters`);
+  assert.match(prompt, /1\. Safety first\. Gas smell: everyone out, .* ring 0800 111 999 now \(say it twice, in groups\)/);
+  assert.match(prompt, /999 or NHS 111 for anyone ill/);
+  assert.match(prompt, /Tenants can get advice from Shelter or Citizens Advice\./);
+  assert.match(prompt, /You can: .*give safety advice in an emergency; find a property and book an engineer into a visit window/);
+  for (const never of ['create_booking', 'confirm_order', 'kitchen', 'allerg']) assert.ok(!prompt.includes(never), never);
+  // Northern Ireland's own gas line, and no NHS 111 there.
+  const ni = structuredClone(t.profile);
+  ni.maintenance!.nation = 'northern_ireland';
+  ni.maintenance!.gas = '0800 002 001';
+  const niPrompt = compilePrompt(ni, { now: NOW, callerPhone: null, demoCards: [], canTransfer: false, channel: 'eval' });
+  assert.match(niPrompt, /ring 0800 002 001 now/);
+  assert.match(niPrompt, /999 or your GP or the out-of-hours GP service/);
+});
+
+test('guardrails on a repairs call: each rule fires where it must, and stays quiet on the advice itself', async () => {
+  const t = await fernhill('pm-guard');
+  const m = t.profile.maintenance!;
+  const c = await call(t, SAM);
+  const rules = (line: string) => checkUtterance(line, c.ctx.state, ['Dan', 'Marek', 'Callum'], m).map((f) => f.rule);
+  // The advice is owed: anything else first is flagged; the advice is not.
+  c.hear("There's a smell of gas in the kitchen");
+  assert.deepEqual(rules("I'm sorry to hear that. What's the postcode?"), ['safety_delayed']);
+  assert.deepEqual(rules("Please get everyone out now. Turn the gas off at the meter, if it's safe to reach, and ring 0800 111 999 from outside."), []);
+  c.say('Please get everyone out now and ring oh eight hundred, one one one, nine nine nine.');
+  assert.deepEqual(rules("I'm sorry, what's the postcode?"), [], 'once said, the call moves on');
+  // Calling an appliance safe, and DIY beyond the allowed checks.
+  assert.deepEqual(rules("It's probably nothing, the boiler is perfectly safe."), ['said_safe_appliance']);
+  assert.deepEqual(rules('You could take the cover off and relight the pilot.'), ['unsafe_diy']);
+  assert.deepEqual(rules("Please don't take the cover off the boiler."), []);
+  assert.deepEqual(rules('If you have been shown how, you can top it up with the filling loop.'), [], 'the pressure check is allowed');
+  m.checks.boiler_pressure = false;
+  assert.deepEqual(rules('You can top it up with the filling loop under the boiler.'), ['unsafe_diy']);
+  m.checks.boiler_pressure = true;
+  // Fault, legal deadlines, codes.
+  assert.deepEqual(rules("I'm so sorry, that's our fault and we'll pay for the damage."), ['liability_admitted']);
+  assert.deepEqual(rules('By law your landlord has to fix it within 14 days.'), ['legal_deadline']);
+  assert.deepEqual(rules('The key safe code is 4719.'), ['code_spoken']);
+  // Arrival times: made up before any job, fine as the business's target.
+  assert.deepEqual(rules('An engineer will be with you at about 3pm.'), ['invented_eta']);
+  assert.deepEqual(rules('We aim to be with you within 4 hours.'), []);
+  // A paged emergency: no name, nobody "on the way" until they accept.
+  c.ctx.state.paged = true;
+  c.ctx.state.jobsVerified.push('XX100');
+  assert.ok(rules("Dan is on his way and will be with you by half ten.").includes('invented_eta'));
+  c.ctx.state.paged = false;
+  // Awaiting approval is not booked.
+  // As job create leaves it: the job is the call's own (its reference owed), but only raised.
+  c.ctx.state.committed.push('XX101');
+  c.ctx.state.awaitingApproval = true;
+  assert.deepEqual(rules("That's booked, and an engineer will come out on Thursday."), ['approval_claim']);
+  assert.deepEqual(rules("It isn't booked yet: we're waiting for your agent's approval."), []);
+});
+
+test('access codes are removed from what is stored, and nothing else is', () => {
+  assert.equal(redactCodes('The key safe code is 4719').text, 'The key safe code is [code removed]');
+  assert.equal(redactCodes('the code is four seven one nine, by the door').text, 'the code is [code removed], by the door');
+  assert.equal(redactCodes('The alarm code 2580, please').text, 'The alarm code [code removed], please');
+  for (const keep of ['If the carbon monoxide alarm is sounding, ring 0800 111 999', 'My postcode is NG5 3AB', 'Gas Safe number 512345', 'Ref HK101, one of the codes']) assert.equal(redactCodes(keep).text, keep);
 });

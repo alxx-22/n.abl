@@ -17,7 +17,8 @@ import {
   type ToolContext,
 } from './tools.ts';
 import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DETAIL, checkUtterance, saidYes, type Flag } from './guardrails.ts';
-import { redactCardNumbers } from './redact.ts';
+import { redactLine } from './redact.ts';
+import { armSafety, noteAdvice, safetyCorrection } from './safety.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
 import { generateText } from './gemini.ts';
@@ -138,6 +139,14 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
   unconfirmed_acceptance:
     "[Correction from the system: no tool has said any offer was accepted or any keys are ready. Correct yourself: only the seller decides, and the negotiator confirms any decision in writing.]",
   disclosure_missed: "[Correction from the system: you haven't yet told the caller something they must hear about this home. Say it now, from say_first in get_property, before going on.]",
+  // A repairs contractor's (presets/property-maintenance.md §8).
+  safety_delayed: '[Correction from the system: this is an emergency. Give the safety advice and the number now, before anything else, from safety_advice.]',
+  approval_claim: "[Correction from the system: that job is waiting for the landlord's or agent's approval. Nothing is booked and nobody is coming yet: correct yourself, and say we'll call back once it's approved.]",
+  invented_eta: "[Correction from the system: no tool has given that arrival time, and no engineer has accepted. Correct yourself: say only what the job tool returned (the window, or that the engineer has been paged and they'll get a text).]",
+  said_safe_appliance: "[Correction from the system: never say an appliance is safe or that it's probably nothing. Only an engineer can say that. Correct yourself, and offer to book someone.]",
+  unsafe_diy: '[Correction from the system: never give steps beyond the checks triage_fault allows: nothing inside a boiler or fuse box, no ladders, no chemicals. Tell them not to, and offer an engineer.]',
+  liability_admitted: "[Correction from the system: never say who pays, admit fault or promise compensation. Correct yourself: the office will look into it, and take a message (category complaint).]",
+  legal_deadline: "[Correction from the system: never state a legal deadline: no tool gave one. Correct yourself, and point them to Shelter or Citizens Advice for their rights.]",
 };
 
 export class CallSession extends EventEmitter<CallEvents> {
@@ -189,6 +198,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     super();
     this.opts = opts;
     this.state.estate = Boolean(opts.tenant.profile.estate);
+    this.state.maintenance = Boolean(opts.tenant.profile.maintenance);
   }
 
   private now(): Date {
@@ -310,7 +320,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       this.listener = l;
       turns.wordsAvailable = true;
       l.on('text', (t) => {
-        this.record('system', { event: 'heard', text: redactCardNumbers(t, this.opts.config.demoCards).text });
+        this.record('system', { event: 'heard', text: redactLine(t, this.opts.config.demoCards) });
         turns.callerWords(t);
       });
       l.on('closed', () => (turns.wordsAvailable = false));
@@ -455,7 +465,7 @@ export class CallSession extends EventEmitter<CallEvents> {
   }
 
   private emitLine(role: 'caller' | 'agent', text: string, final: boolean): void {
-    const clean = redactCardNumbers(text, this.opts.config.demoCards).text;
+    const clean = redactLine(text, this.opts.config.demoCards);
     this.emit('transcript', { role, text: clean, final });
     this.publish('transcript', { role, text: clean, final });
   }
@@ -464,7 +474,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     const text = this.callerBuf.trim();
     this.callerBuf = '';
     if (!text) return;
-    const clean = redactCardNumbers(text, this.opts.config.demoCards).text;
+    const clean = redactLine(text, this.opts.config.demoCards);
     this.transcript.push({ role: 'caller', text: clean });
     this.state.heard.push(clean);
     // An estate agency's read-back answered: a yes means book it now (see flushAgent).
@@ -474,20 +484,28 @@ export class CallSession extends EventEmitter<CallEvents> {
     }
     this.emitLine('caller', text, true);
     this.record('caller', { text: clean });
+    // A repairs contractor's caller describing an emergency: the advice comes before anything else (core/safety.ts).
+    const m = this.opts.tenant.profile.maintenance;
+    const kind = m ? armSafety(this.state, clean) : null;
+    if (m && kind) {
+      this.record('system', { event: 'safety_armed', kind });
+      this.session?.sendText(safetyCorrection(kind, m.nation));
+    }
   }
 
   private flushAgent(interrupted: boolean): void {
     const text = this.agentBuf.trim();
     this.agentBuf = '';
     if (!text) return;
-    const clean = redactCardNumbers(text, this.opts.config.demoCards).text;
+    const clean = redactLine(text, this.opts.config.demoCards);
     this.transcript.push({ role: 'agent', text: clean + (interrupted ? ' —' : '') });
     this.emitLine('agent', text, true);
     this.record('agent', { text: clean, interrupted });
     this.turns?.agentSaid(clean);
-    if (this.state.estate) this.state.said.push(clean);
+    if (this.state.estate || this.state.maintenance) this.state.said.push(clean);
+    this.noteSafetySaid();
     this.raiseHeld();
-    for (const f of checkUtterance(text, this.state, this.staffNames)) this.raise(f);
+    for (const f of checkUtterance(text, this.state, this.staffNames, this.opts.tenant.profile.maintenance)) this.raise(f);
     if (!this.state.messageTaken && !this.state.messageChecked && PROMISED_MESSAGE.test(clean)) {
       // Once the turn's tool calls have run: the message may be on its way already.
       void this.toolQueue.then(() => {
@@ -521,6 +539,15 @@ export class CallSession extends EventEmitter<CallEvents> {
     const r = (result ?? {}) as { booked?: boolean; recorded?: boolean; message?: unknown };
     const again = (r.booked === false || r.recorded === false) && /call (?:this|it|create_booking|book_valuation|record_offer) again|call again/i.test(String(r.message ?? ''));
     this.state.outstanding = again ? { tool: name, heard: this.state.heard.length + (this.callerBuf.trim() ? 1 : 0) } : null;
+  }
+
+  /** The receptionist has now said the safety advice and the number: the tools open, and the safety log gets the time. */
+  private noteSafetySaid(): void {
+    const m = this.opts.tenant.profile.maintenance;
+    const done = m ? noteAdvice(this.state, m.nation) : null;
+    if (!done) return;
+    this.record('system', { event: 'safety_advice_said', kind: done.kind });
+    if (done.incident) void this.opts.repo.updateIncident(this.opts.tenant.id, done.incident, { advised_at: this.now() }).catch(() => {});
   }
 
   /**
@@ -592,7 +619,8 @@ export class CallSession extends EventEmitter<CallEvents> {
     // says a home's must-say line and asks for times in one breath, before
     // the turn's words are final.
     const partial = this.agentBuf.trim();
-    if (partial && this.state.estate) this.state.said.push(redactCardNumbers(partial, this.opts.config.demoCards).text);
+    if (partial && (this.state.estate || this.state.maintenance)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
+    this.noteSafetySaid();
     const ctx: ToolContext = {
       tenant: this.opts.tenant,
       repo: this.opts.repo,

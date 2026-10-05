@@ -125,6 +125,10 @@ export interface CallState {
   jobsVerified: string[];
   /** A homeowner heard the price before a job was booked: asked for once. */
   priceAsked: boolean;
+  /** A job this call raised is waiting for the client's approval: nothing is booked or coming yet. */
+  awaitingApproval: boolean;
+  /** An emergency this call raised has paged an engineer who hasn't accepted: no name, no time. */
+  paged: boolean;
 }
 
 export function newCallState(): CallState {
@@ -135,7 +139,7 @@ export function newCallState(): CallState {
     estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false,
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
-    maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false,
+    maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
   };
 }
 
@@ -1195,7 +1199,8 @@ const TOOLS: Record<string, Tool> = {
     },
     async handler(args, ctx) {
       // In a live test the receptionist said "I'll pass those details on" and hung up with no message taken: nobody would have called back.
-      if (/message/i.test(str(args.outcome) ?? '') && !ctx.state.messageTaken && !ctx.state.messageChecked) {
+      // A safety call ends fast: the caller must hang up and ring the emergency line (presets/property-maintenance.md §4.2).
+      if (/message/i.test(str(args.outcome) ?? '') && !ctx.state.messageTaken && !ctx.state.messageChecked && !ctx.state.safetyDone.length && !ctx.state.safety) {
         ctx.state.messageChecked = true;
         return { ok: false, message: 'No message has been taken, so nobody would call them back. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then say goodbye and use end_call.' };
       }

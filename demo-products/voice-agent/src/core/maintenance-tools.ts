@@ -436,6 +436,7 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     const attendBy = new Date(ctx.now().getTime() + m.priorities.emergency.attend_hours * 3_600_000);
     const job = await ctx.repo.createJob(ctx.tenant, { ...base, status: 'new', attend_by: attendBy, engineer_key: e?.key ?? null, flags: [...flags, 'paged', ...(ooh ? ['out_of_hours'] : [])] });
     record(ctx, job.reference, 'job', 'committed');
+    ctx.state.paged = true;
     ctx.state.jobsVerified.push(job.reference);
     const mobile = normaliseUkPhone(ctx.tenant.profile.team?.find((x) => x.key === e?.key)?.mobile);
     if (mobile) await smsTo(ctx, mobile, `${ctx.tenant.profile.name} URGENT: ${tradeLabel(m, trade)} at ${fullAddress(p)}: ${description}. Job ${job.reference}. Accept on the job sheet.`);
@@ -454,6 +455,8 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   if (client && estimate && estimate * 100 > client.works_limit_pence) {
     const job = await ctx.repo.createJob(ctx.tenant, { ...base, status: 'awaiting_approval', price_pence: estimate * 100 });
     record(ctx, job.reference, 'job', 'committed');
+    // Raised, not booked: the guardrail holds "booked" and "coming" back (§8, approval_claim).
+    ctx.state.awaitingApproval = true;
     ctx.state.jobsVerified.push(job.reference);
     if (client.contact.phone) await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: job ${job.reference} at ${shortAddress(p)} needs your approval (about ${money(estimate * 100)}, over your ${money(client.works_limit_pence)} limit). (Demo)`);
     ctx.action({ kind: 'job_created', title: `Awaiting approval · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · ${client.name} · ref ${job.reference}`, data: { reference: job.reference } });
