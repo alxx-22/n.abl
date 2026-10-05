@@ -560,7 +560,8 @@ export async function estateMessage(args: Args, ctx: ToolContext): Promise<Recor
     };
   }
   if (category === 'data') return { taken: true, for: first, note: `Tell them ${first} will reply within a month.` };
-  if (urgency === 'urgent') return { taken: true, for: first, note: `Tell them you've sent ${first} an urgent message. Never say where ${first} is.` };
+  // When they will hear back: on 5 October Ben, pulling out, was told the message was sent and nothing more.
+  if (urgency === 'urgent') return { taken: true, for: first, note: `Tell them you've sent ${first} an urgent message and ${first} will call them today. Never say where ${first} is.` };
   return { taken: true, for: first, note: `Tell them ${first} will get back to them${urgency === 'today' ? ' today' : ''}.` };
 }
 
