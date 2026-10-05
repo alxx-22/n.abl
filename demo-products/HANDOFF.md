@@ -307,6 +307,27 @@ holidays (it counts England's for now).
 - **Not online** until the whole demo is built (Alex's decision). The
   Oracle hosting kit (`voice-agent/deploy/oracle/`) waits until then.
 
+## Live calls (property maintenance, 5 October)
+
+The seven `pm-` scenarios on `pm-fernhill` (`node src/eval/run.ts --only
+pm-...`; reports in `voice-agent/eval-results/`, not in git):
+
+- Passing live: `pm-gas-smell` (first run), `pm-co-chirp`, `pm-burst-ooh`,
+  `pm-diy-refused`, `pm-homeowner-repair`, `pm-eta`.
+- `pm-gas-record`: every part has passed, in different runs (the register
+  read and the date said; Callum booked in a morning at £75 with the row
+  marked booked), but the last two runs stalled mid-call with the
+  receptionist silent, as the live service does. Re-run it when the
+  service is steady.
+- Real slips fixed from these runs: the call-out price guessed for a gas
+  record (the register now carries the prices); the street-flooding
+  script for a burst pipe (the kinds are now described one by one, and
+  the rules say stopcock first); "ninety five pounds" without a hyphen
+  not counted as said; a job booked under the name "Owner"; refusing to
+  give repressurising steps flagged as giving them; the record's end date
+  not said unless asked. Several first-run failures were the checks, not
+  the receptionist, and the checks are fixed.
+
 ## Live calls (estate agent, 3 October)
 
 First run of the seven `ea-` scenarios: `ea-short-lease`, `ea-book-viewing`
