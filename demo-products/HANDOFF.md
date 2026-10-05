@@ -184,14 +184,35 @@ the walkthrough:
   selling position first, and the seller update gives a sentence to say
   first).
 
-Left for M2: re-run the seven M1 calls when the live service is steady;
-then M3.
+Left for M2: re-run the seven M1 calls when the live service is steady.
 
-### 2. Estate agent milestone 3 (M3)
+### 2. Estate agent milestone 3 (M3): built (5 October)
 
-Sale progression (spec §12, M3): the *Sales progress* view (milestones,
-dates, the chain, updates), *Completed: release keys*, *Fell through* (back
-on the market, back-up buyers texted).
+- `get_sale_progress` (`src/core/estate-tools.ts`): by who is calling,
+  checked in code: buyer or seller (milestones, recorded dates, chain,
+  keys), a solicitor on the file (milestones; requests to the progressor),
+  an agent in the chain (the chain line), the broker (agreed price,
+  memorandum date); anyone else nothing.
+- Sale actions (`PATCH /workspaces/:id/sales/:id` in `src/server/demo.ts`):
+  tick a milestone (exchange makes the home exchanged), dates, log an
+  update, *Completed: release keys* (on or after the completion date; texts
+  the buyer), *Fell through* (a reason; back on the market texts back-up
+  and consenting matching buyers, else withdrawn).
+- `alertBuyers`: a price reduction or a return to the market texts
+  consenting buyers it fits (back-up buyers on a return only).
+- Back office: *Sales progress* tab (`web/src/reception/workspace/Sales.tsx`).
+- A message from the buyer or seller in a sale under way goes to the
+  progressor, urgent when pulling out; urgent messages say "will call you
+  today".
+- Rule 7 names `get_sale_progress` (largest prompt 6,965 characters).
+- *Call as* adds Ben, Liam, Nadia and Harper & Co.
+- *Describe your stock* (`src/presets/estate/stock.ts`): the Listings
+  step drafts homes on made-up streets, every check unknown.
+- `ea-fall-through` passes live (third run, after the routing fix).
+
+Not done: Applicants' "send matches" and the alerts are pretend texts only,
+as everywhere in the demo. Re-run all twelve `ea-` calls together when the
+live service is steady.
 
 ### 3. Property maintenance
 
