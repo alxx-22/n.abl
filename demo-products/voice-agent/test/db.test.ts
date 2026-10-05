@@ -8,6 +8,7 @@ import type { Tenant } from '../src/domain/types.ts';
 import { builtPreset, answersOf } from '../src/presets/index.ts';
 import { planEstateSeed } from '../src/presets/estate/seed.ts';
 import { viewingRules } from '../src/domain/listings.ts';
+import { sampleProperties } from '../src/presets/maintenance/properties.ts';
 
 const NOW = new Date('2026-09-29T14:00:00Z'); // Tuesday 3pm BST
 let db: Db;
@@ -17,7 +18,7 @@ let fade: Tenant;
 
 before(async () => {
   db = await openPglite();
-  assert.deepEqual(await migrate(db), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate']);
+  assert.deepEqual(await migrate(db), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance']);
   repo = new Repo(db);
   const tenants = await seedAll(repo, NOW, { diary: false });
   lucas = tenants.find((t) => t.slug === 'lucas-trattoria')!;
@@ -37,7 +38,7 @@ function copyOfLucas(slug: string) {
 test('migrations are idempotent and recorded', async () => {
   assert.deepEqual(await migrate(db), []);
   const rows = await db.query<{ name: string }>('select name from public.voice_schema_migrations');
-  assert.deepEqual(rows.map((r) => r.name).sort(), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate']);
+  assert.deepEqual(rows.map((r) => r.name).sort(), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance']);
 });
 
 test('every migration only touches voice_ objects', () => {
@@ -429,4 +430,52 @@ test('estate: a viewing is booked under its home\'s rules and carries the home a
   assert.deepEqual([m.for_staff, m.category, m.urgency, m.reference, m.details], ['jess', 'viewing', 'urgent', null, { property: 'albion_22' }]);
   await assert.rejects(repo.addMessage({ tenant_id: t.id, kind: 'message', body: 'x', status: 'new', urgency: 'whenever' as never }), /check constraint/);
   await repo.deleteTenant('estate-viewing');
+});
+
+test('property maintenance: properties, jobs, certificates and safety calls go with their business, and Reset clears them', async () => {
+  const preset = builtPreset('property_maintenance')!;
+  const a = preset.defaults();
+  a.basics.name = 'Fernhill Property Care';
+  const t = await repo.upsertTenant(preset.compile(answersOf(preset, a), { slug: 'mt-rows' }));
+  const props = sampleProperties();
+  const elm = props.find((p) => p.key === 'elm_14')!;
+  await repo.insertSeed(t.id, {
+    bookings: [], orders: [], messages: [],
+    properties: props,
+    jobs: [{
+      reference: 'HK101', property_key: 'elm_14', client_key: 'whitfield', reporter: { name: 'Sam Ortiz', phone: elm.occupant.phone, role: 'occupant' }, trade: 'plumbing', priority: 'urgent',
+      reason: 'Urgent: a leak under the sink', description: 'Leak under the kitchen sink', kind: 'repair', status: 'on_the_way', visit_date: '2026-10-07', window_key: 'am', attend_by: null,
+      engineer_key: 'marek', eta_minutes: 20, on_the_way_at: new Date('2026-10-07T09:40:00Z'), po: null, price_pence: null, clocks: [], flags: [], access_attempts: 0, waiting_for: null, notes: null,
+      history: [{ at: '2026-10-06T15:00:00.000Z', by: 'staff', what: 'raised' }], source: 'seed', created_at: new Date('2026-10-06T15:00:00Z'), done_at: null,
+    }],
+    certificates: [{ property_key: 'elm_14', kind: 'gas_record', issued: '2025-11-14', expires: '2026-11-14', remedials: [], booked_job: null }],
+    incidents: [{ property_key: null, kind: 'gas', advice_version: 1, advised_at: new Date('2026-10-05T19:02:10Z'), caller_phone: '+447700900599', follow_up_job: null, notes: null, source: 'seed', created_at: new Date('2026-10-05T19:02:00Z') }],
+  });
+  const stored = await repo.listMtProperties(t.id);
+  assert.equal(stored.length, 70);
+  assert.deepEqual(await repo.getMtProperty(t.id, 'elm_14'), elm, 'a property reads back as it was planned');
+  // A job, by its reference however it is said, and from the occupant's number even though someone else reported it.
+  const [job] = await repo.listJobs(t.id, { reference: 'h k 1 0 1' });
+  assert.deepEqual([job.status, job.visit_date, job.window_key, job.engineer_key, job.eta_minutes], ['on_the_way', '2026-10-07', 'am', 'marek', 20]);
+  assert.equal((await repo.listJobs(t.id, { phone: elm.occupant.phone! })).length, 1);
+  assert.equal((await repo.listJobs(t.id, { phone: '+447700900999' })).length, 0, 'a stranger\'s number finds nothing');
+  // A new job never reuses a reference; a status change is guarded and logged.
+  const made = await repo.createJob(t, { trade: 'electrical', priority: 'routine', description: 'Socket not working', kind: 'repair', property_key: 'elm_14', status: 'scheduled', visit_date: '2026-10-09', window_key: 'pm', engineer_key: 'priya', source: 'browser' });
+  assert.notEqual(made.reference, 'HK101');
+  assert.match(made.reference, /^[A-Z]{2}\d{3}$/);
+  const onWay = await repo.updateJob(t.id, made.reference, { status: 'on_the_way', eta_minutes: 25 }, 'on the way', { from: ['scheduled'] });
+  assert.deepEqual([onWay!.status, onWay!.eta_minutes, onWay!.history.at(-1)!.what], ['on_the_way', 25, 'on the way']);
+  assert.equal(await repo.updateJob(t.id, made.reference, { status: 'on_the_way' }, 'again', { from: ['scheduled'] }), null, 'two clicks cannot both dispatch it');
+  // Certificates read back with their dates as days; booking one marks it.
+  await repo.setCertificateBooked(t.id, 'elm_14', 'gas_record', made.reference);
+  assert.deepEqual(await repo.listCertificates(t.id, 'elm_14'), [{ property_key: 'elm_14', kind: 'gas_record', issued: '2025-11-14', expires: '2026-11-14', remedials: [], booked_job: made.reference }]);
+  // A safety call is logged, then marked when the advice was said.
+  const inc = await repo.logIncident(t.id, { property_key: 'elm_14', kind: 'gas', advice_version: 1, advised_at: null, caller_phone: elm.occupant.phone, follow_up_job: null, notes: null, source: 'browser' });
+  const said = await repo.updateIncident(t.id, inc.id, { advised_at: new Date('2026-10-07T10:00:05Z') });
+  assert.equal(said!.advised_at!.toISOString(), '2026-10-07T10:00:05.000Z');
+  assert.equal((await repo.listIncidents(t.id)).length, 2);
+  // Reset clears them all; the business stays.
+  await repo.resetTenantData(t.id);
+  assert.deepEqual([(await repo.listMtProperties(t.id)).length, (await repo.listJobs(t.id)).length, (await repo.listCertificates(t.id)).length, (await repo.listIncidents(t.id)).length], [0, 0, 0, 0]);
+  await repo.deleteTenant('mt-rows');
 });

@@ -3,7 +3,7 @@
 // server can read a name, a voice or a greeting without knowing which kind of
 // business it is.
 
-import type { Booking, Buyer, ListingState, Offer, OrderLine, Sale } from '../../domain/types.ts';
+import type { Booking, Buyer, Certificate, Incident, Job, ListingState, MtProperty, Offer, OrderLine, Sale } from '../../domain/types.ts';
 
 export interface ServicePeriod {
   label: string;
@@ -162,9 +162,9 @@ export interface SeedText {
 }
 
 /**
- * A seeded week. The last five sections are the estate agent's: written
- * only when a plan has them, so every other business's plans write what
- * they always did.
+ * A seeded week. The optional sections are the estate agent's and the
+ * property maintenance contractor's: written only when a plan has them, so
+ * every other business's plans write what they always did.
  */
 export interface SeedPlan {
   bookings: SeedBooking[];
@@ -176,4 +176,9 @@ export interface SeedPlan {
   /** Buyers and sellers the agency knows (voice_customers). */
   people?: Buyer[];
   texts?: SeedText[];
+  /** A property maintenance contractor's homes, jobs, certificates and safety calls. */
+  properties?: MtProperty[];
+  jobs?: Omit<Job, 'id'>[];
+  certificates?: Certificate[];
+  incidents?: Omit<Incident, 'id'>[];
 }

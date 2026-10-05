@@ -693,3 +693,106 @@ export interface Buyer {
   details: BuyerDetails;
   marketing_consent: boolean;
 }
+
+// ── A property maintenance contractor's records during the demo ─────────
+
+/**
+ * A property the contractor looks after. The occupant's number and the
+ * staff markers are never read to a caller; a key safe's code is never
+ * stored at all.
+ */
+export interface MtProperty {
+  key: string;
+  /** "14", "Flat 3, 22". */
+  number: string;
+  street: string;
+  district: string;
+  town: string;
+  kind: 'house' | 'flat' | 'bungalow' | 'commercial';
+  /** The client who authorises work here; null for a homeowner's own home. */
+  client: string | null;
+  occupant: { name: string | null; phone: string | null; texts_ok: boolean };
+  notes: { stopcock?: string; boiler?: string; parking?: string; pets?: string };
+  access: { method: 'occupant' | 'key_safe' | 'keys_held'; note: string };
+  /** Noted with the occupant's consent; can raise a job's priority. */
+  vulnerable: string[];
+  vulnerable_consent_at: Date | null;
+  /** For staff only. */
+  markers: string[];
+  gas: boolean;
+  gas_appliances: number;
+  example: boolean;
+}
+
+export type JobStatus = 'new' | 'awaiting_approval' | 'scheduled' | 'on_the_way' | 'on_site' | 'waiting' | 'done' | 'invoiced' | 'cancelled';
+export type JobKind = 'repair' | 'gas_record' | 'boiler_service' | 'gas_record_and_service' | 'eicr' | 'quote' | 'inspection';
+export type ReporterRole = 'occupant' | 'agent' | 'landlord' | 'homeowner' | 'other';
+
+/** A target counting down on a job: an Awaab's Law investigation, an EICR remedial. */
+export interface JobClock {
+  kind: string;
+  label: string;
+  start: string;
+  due: string;
+}
+
+export interface Job {
+  id: string;
+  reference: string;
+  property_key: string | null;
+  client_key: string | null;
+  reporter: { name: string | null; phone: string | null; role: ReporterRole | null };
+  trade: string;
+  priority: JobPriority;
+  /** "Emergency: uncontained leak; vulnerable occupant +1". */
+  reason: string | null;
+  description: string;
+  kind: JobKind;
+  status: JobStatus;
+  /** Routine and urgent: a date and a window. */
+  visit_date: string | null;
+  window_key: string | null;
+  /** Emergencies: attend by this time instead. */
+  attend_by: Date | null;
+  engineer_key: string | null;
+  eta_minutes: number | null;
+  on_the_way_at: Date | null;
+  po: string | null;
+  price_pence: number | null;
+  clocks: JobClock[];
+  /** gas, vulnerable, recall, out_of_hours, key_collection, pets... */
+  flags: string[];
+  access_attempts: number;
+  waiting_for: string | null;
+  notes: string | null;
+  history: HistoryEntry[];
+  source: string;
+  created_at: Date;
+  done_at: Date | null;
+}
+
+export type CertificateKind = 'gas_record' | 'eicr' | 'boiler_service' | 'alarms' | 'pat';
+
+export interface Certificate {
+  property_key: string;
+  kind: CertificateKind;
+  issued: string | null;
+  expires: string | null;
+  /** An EICR's C2 items: what, and the day they must be put right by. */
+  remedials: { what: string; due: string; done?: boolean }[];
+  booked_job: string | null;
+}
+
+/** A safety call: the advice given and when, by which script. */
+export interface Incident {
+  id: string;
+  property_key: string | null;
+  kind: string;
+  advice_version: number;
+  advised_at: Date | null;
+  caller_phone: string | null;
+  follow_up_job: string | null;
+  notes: string | null;
+  source: string;
+  created_at: Date;
+}

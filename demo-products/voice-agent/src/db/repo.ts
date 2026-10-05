@@ -7,7 +7,8 @@
 import { randomInt } from 'node:crypto';
 import type { Db, Queryable } from './db.ts';
 import type {
-  Booking, Buyer, BuyerDetails, BuyerPosition, ListingState, Offer, OfferStatus, Order, OrderLine, Sale, Tenant, TenantProfile,
+  Booking, Buyer, BuyerDetails, BuyerPosition, Certificate, CertificateKind, Incident, Job, JobStatus, ListingState, MtProperty, Offer, OfferStatus, Order, OrderLine,
+  Sale, Tenant, TenantProfile,
 } from '../domain/types.ts';
 import { checkSlot, findService, depositFor, resourceFree, type BusyInterval, type Unavailable } from '../domain/availability.ts';
 import type { ListingRule } from '../domain/listings.ts';
@@ -139,6 +140,111 @@ const mapBuyer = (r: any): Buyer => ({ phone: r.phone, name: r.name ?? null, det
 const labelOf = (resources: { key: string; label: string }[], key: string) => resources.find((r) => r.key === key)?.label ?? key;
 
 const historyEntry = (by: string, what: string) => JSON.stringify([{ at: new Date().toISOString(), by, what }]);
+
+// ── A property maintenance contractor's rows ─────────────────────────────
+// Dates are read as text (YYYY-MM-DD): the two drivers turn a date column
+// into midnight in different time zones.
+
+const JOB_COLS = `*, visit_date::text as visit_day`;
+const CERT_COLS = `property_key, kind, issued::text as issued_day, expires::text as expires_day, remedials, booked_job`;
+
+function mapMtProperty(r: any): MtProperty {
+  return {
+    key: r.property_key,
+    number: r.number,
+    street: r.street,
+    district: r.district,
+    town: r.town,
+    kind: r.kind,
+    client: r.client_key ?? null,
+    occupant: { name: r.occupant_name ?? null, phone: r.occupant_phone ?? null, texts_ok: Boolean(r.occupant_texts_ok) },
+    notes: r.notes ?? {},
+    access: r.access?.method ? r.access : { method: 'occupant', note: '' },
+    vulnerable: r.vulnerable ?? [],
+    vulnerable_consent_at: date(r.vulnerable_consent_at),
+    markers: r.markers ?? [],
+    gas: Boolean(r.gas),
+    gas_appliances: Number(r.gas_appliances ?? 0),
+    example: Boolean(r.example),
+  };
+}
+
+function mapJob(r: any): Job {
+  return {
+    id: r.id,
+    reference: r.reference,
+    property_key: r.property_key ?? null,
+    client_key: r.client_key ?? null,
+    reporter: { name: r.reporter_name ?? null, phone: r.reporter_phone ?? null, role: r.reporter_role ?? null },
+    trade: r.trade,
+    priority: r.priority,
+    reason: r.reason ?? null,
+    description: r.description ?? '',
+    kind: r.kind,
+    status: r.status,
+    visit_date: r.visit_day ?? null,
+    window_key: r.window_key ?? null,
+    attend_by: date(r.attend_by),
+    engineer_key: r.engineer_key ?? null,
+    eta_minutes: r.eta_minutes ?? null,
+    on_the_way_at: date(r.on_the_way_at),
+    po: r.po ?? null,
+    price_pence: r.price_pence === null || r.price_pence === undefined ? null : Number(r.price_pence),
+    clocks: r.clocks ?? [],
+    flags: r.flags ?? [],
+    access_attempts: Number(r.access_attempts ?? 0),
+    waiting_for: r.waiting_for ?? null,
+    notes: r.notes ?? null,
+    history: r.history ?? [],
+    source: r.source,
+    created_at: new Date(r.created_at),
+    done_at: date(r.done_at),
+  };
+}
+
+const mapCertificate = (r: any): Certificate => ({
+  property_key: r.property_key, kind: r.kind, issued: r.issued_day ?? null, expires: r.expires_day ?? null, remedials: r.remedials ?? [], booked_job: r.booked_job ?? null,
+});
+
+const mapIncident = (r: any): Incident => ({
+  id: r.id,
+  property_key: r.property_key ?? null,
+  kind: r.kind,
+  advice_version: Number(r.advice_version),
+  advised_at: date(r.advised_at),
+  caller_phone: r.caller_phone ?? null,
+  follow_up_job: r.follow_up_job ?? null,
+  notes: r.notes ?? null,
+  source: r.source,
+  created_at: new Date(r.created_at),
+});
+
+/** What a new or seeded job carries; everything else starts empty. */
+export type NewJob = Pick<Job, 'trade' | 'priority' | 'description' | 'kind'>
+  & Partial<Omit<Job, 'id' | 'reference' | 'history' | 'trade' | 'priority' | 'description' | 'kind'>>
+  & { call_id?: string | null };
+
+/** The columns a staff action or a tool may change on a job. */
+export type JobPatch = Partial<Pick<Job,
+  'status' | 'visit_date' | 'window_key' | 'attend_by' | 'engineer_key' | 'eta_minutes' | 'on_the_way_at' | 'po' | 'price_pence' | 'notes' | 'waiting_for' | 'access_attempts' | 'done_at' | 'flags' | 'clocks' | 'priority' | 'reason'>>;
+
+const JOB_PATCH_COLS: (keyof JobPatch)[] = [
+  'status', 'visit_date', 'window_key', 'attend_by', 'engineer_key', 'eta_minutes', 'on_the_way_at', 'po', 'price_pence', 'notes', 'waiting_for', 'access_attempts', 'done_at', 'flags', 'clocks', 'priority', 'reason',
+];
+
+function jobParams(tenantId: string, reference: string, j: NewJob, history: string): unknown[] {
+  return [
+    tenantId, reference, j.property_key ?? null, j.client_key ?? null, j.reporter?.name ?? null, j.reporter?.phone ?? null, j.reporter?.role ?? null,
+    j.trade, j.priority, j.reason ?? null, j.description, j.kind, j.status ?? 'new', j.visit_date ?? null, j.window_key ?? null, j.attend_by ?? null,
+    j.engineer_key ?? null, j.eta_minutes ?? null, j.on_the_way_at ?? null, j.po ?? null, j.price_pence ?? null, JSON.stringify(j.clocks ?? []), j.flags ?? [],
+    j.access_attempts ?? 0, j.waiting_for ?? null, j.notes ?? null, history, j.source ?? 'phone', j.call_id ?? null, j.created_at ?? new Date(), j.done_at ?? null,
+  ];
+}
+
+const JOB_INSERT = `insert into public.voice_mt_jobs (tenant_id, reference, property_key, client_key, reporter_name, reporter_phone, reporter_role, trade, priority,
+  reason, description, kind, status, visit_date, window_key, attend_by, engineer_key, eta_minutes, on_the_way_at, po, price_pence, clocks, flags,
+  access_attempts, waiting_for, notes, history, source, call_id, created_at, done_at)
+  values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22::jsonb,$23::text[],$24,$25,$26,$27::jsonb,$28,$29,$30,$31)`;
 
 function mapOrder(r: any): Order {
   return {
@@ -1066,6 +1172,33 @@ export class Repo {
           [tenantId, b.phone, b.name, JSON.stringify(b.details), b.marketing_consent],
         );
       }
+      // A property maintenance contractor's properties, jobs, certificates and safety calls.
+      for (const p of plan.properties ?? []) {
+        await q.query(
+          `insert into public.voice_mt_properties (tenant_id, property_key, number, street, district, town, kind, client_key, occupant_name, occupant_phone,
+             occupant_texts_ok, notes, access, vulnerable, vulnerable_consent_at, markers, gas, gas_appliances, example)
+           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::text[], $15, $16::text[], $17, $18, $19)`,
+          [tenantId, p.key, p.number, p.street, p.district, p.town, p.kind, p.client, p.occupant.name, p.occupant.phone, p.occupant.texts_ok,
+            JSON.stringify(p.notes), JSON.stringify(p.access), p.vulnerable, p.vulnerable_consent_at, p.markers, p.gas, p.gas_appliances, p.example],
+        );
+      }
+      for (const j of plan.jobs ?? []) {
+        await q.query(JOB_INSERT, jobParams(tenantId, j.reference, { ...j, source: 'seed' }, JSON.stringify(j.history)));
+      }
+      for (const c of plan.certificates ?? []) {
+        await q.query(
+          `insert into public.voice_mt_certificates (tenant_id, property_key, kind, issued, expires, remedials, booked_job)
+           values ($1, $2, $3, $4, $5, $6::jsonb, $7)`,
+          [tenantId, c.property_key, c.kind, c.issued, c.expires, JSON.stringify(c.remedials), c.booked_job],
+        );
+      }
+      for (const i of plan.incidents ?? []) {
+        await q.query(
+          `insert into public.voice_mt_incidents (tenant_id, property_key, kind, advice_version, advised_at, caller_phone, follow_up_job, notes, source, created_at)
+           values ($1, $2, $3, $4, $5, $6, $7, $8, 'seed', $9)`,
+          [tenantId, i.property_key, i.kind, i.advice_version, i.advised_at, i.caller_phone, i.follow_up_job, i.notes, i.created_at],
+        );
+      }
       for (const t of plan.texts ?? []) {
         await q.query(`insert into public.voice_messages (tenant_id, kind, to_number, body, status, created_at) values ($1, 'sms', $2, $3, 'simulated', $4)`, [
           tenantId, t.to, t.body, t.created_at,
@@ -1074,11 +1207,144 @@ export class Repo {
     });
   }
 
+  // ── A property maintenance contractor's properties, jobs and certificates ──
+
+  async listMtProperties(tenantId: string): Promise<MtProperty[]> {
+    const rows = await this.db.query<any>('select * from public.voice_mt_properties where tenant_id = $1 order by district, street, number', [tenantId]);
+    return rows.map(mapMtProperty);
+  }
+
+  async getMtProperty(tenantId: string, key: string): Promise<MtProperty | null> {
+    const rows = await this.db.query<any>('select * from public.voice_mt_properties where tenant_id = $1 and property_key = $2', [tenantId, key]);
+    return rows[0] ? mapMtProperty(rows[0]) : null;
+  }
+
+  /**
+   * Jobs, newest first: every one, or those at a property, from a number
+   * (the reporter's, or the occupant's at the job's property), or by
+   * reference. Never by address alone: a stranger could name any street.
+   */
+  async listJobs(tenantId: string, by: { reference?: string; phone?: string; property?: string } = {}): Promise<Job[]> {
+    if (by.reference) {
+      const rows = await this.db.query<any>(`select ${JOB_COLS} from public.voice_mt_jobs where tenant_id = $1 and reference = $2`, [
+        tenantId, by.reference.replace(/[^a-z0-9]/gi, '').toUpperCase(),
+      ]);
+      return rows.map(mapJob);
+    }
+    if (by.phone) {
+      const rows = await this.db.query<any>(
+        `select ${JOB_COLS} from public.voice_mt_jobs j where tenant_id = $1 and (reporter_phone = $2 or exists (
+           select 1 from public.voice_mt_properties p where p.tenant_id = j.tenant_id and p.property_key = j.property_key and p.occupant_phone = $2))
+         order by created_at desc`,
+        [tenantId, by.phone],
+      );
+      return rows.map(mapJob);
+    }
+    const rows = await this.db.query<any>(
+      `select ${JOB_COLS} from public.voice_mt_jobs where tenant_id = $1 ${by.property ? 'and property_key = $2' : ''} order by created_at desc`,
+      by.property ? [tenantId, by.property] : [tenantId],
+    );
+    return rows.map(mapJob);
+  }
+
+  /** Records a job under a reference no booking, offer or job of this business has. */
+  async createJob(tenant: Tenant, j: NewJob, by = 'receptionist'): Promise<Job> {
+    return this.db.tx(async (q) => {
+      await q.query('select id from public.voice_tenants where id = $1 for update', [tenant.id]);
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const reference = newBookingReference();
+        const clash = await q.query(
+          `select 1 from public.voice_mt_jobs where tenant_id = $1 and reference = $2
+           union all select 1 from public.voice_bookings where tenant_id = $1 and reference = $2
+           union all select 1 from public.voice_offers where tenant_id = $1 and reference = $2`,
+          [tenant.id, reference],
+        );
+        if (clash.length) continue;
+        await q.query(JOB_INSERT, jobParams(tenant.id, reference, j, historyEntry(by, j.status === 'awaiting_approval' ? 'raised, awaiting approval' : 'raised')));
+        const rows = await q.query<any>(`select ${JOB_COLS} from public.voice_mt_jobs where tenant_id = $1 and reference = $2`, [tenant.id, reference]);
+        return mapJob(rows[0]);
+      }
+      throw new Error('could not allocate a job reference');
+    });
+  }
+
+  /**
+   * Changes a job, with a line in its history. `from`: the statuses it may
+   * move from, checked in the same statement, so two clicks cannot both
+   * dispatch it. Returns null for a job that does not exist or has moved on.
+   */
+  async updateJob(tenantId: string, reference: string, patch: JobPatch, what: string, opts: { by?: string; from?: JobStatus[] } = {}): Promise<Job | null> {
+    const cols = JOB_PATCH_COLS.filter((k) => k in patch);
+    const params: unknown[] = [tenantId, reference, JSON.stringify([{ at: new Date().toISOString(), by: opts.by ?? 'staff', what }])];
+    const sets = cols.map((k) => {
+      const v = patch[k];
+      params.push(k === 'clocks' ? JSON.stringify(v) : v);
+      return `${k} = $${params.length}${k === 'clocks' ? '::jsonb' : k === 'flags' ? '::text[]' : ''}`;
+    });
+    let guard = '';
+    if (opts.from?.length) {
+      params.push(opts.from);
+      guard = ` and status = any($${params.length}::text[])`;
+    }
+    const rows = await this.db.query<any>(
+      `update public.voice_mt_jobs set ${[...sets, 'history = history || $3::jsonb'].join(', ')}
+       where tenant_id = $1 and reference = $2${guard} returning ${JOB_COLS}`,
+      params,
+    );
+    return rows[0] ? mapJob(rows[0]) : null;
+  }
+
+  /** Every certificate, or one property's. */
+  async listCertificates(tenantId: string, propertyKey?: string): Promise<Certificate[]> {
+    const rows = await this.db.query<any>(
+      `select ${CERT_COLS} from public.voice_mt_certificates where tenant_id = $1 ${propertyKey ? 'and property_key = $2' : ''} order by expires nulls last`,
+      propertyKey ? [tenantId, propertyKey] : [tenantId],
+    );
+    return rows.map(mapCertificate);
+  }
+
+  /** Marks a certificate as booked for renewal by a job, or clears it (null). */
+  async setCertificateBooked(tenantId: string, propertyKey: string, kind: CertificateKind, job: string | null): Promise<void> {
+    await this.db.query(
+      `insert into public.voice_mt_certificates (tenant_id, property_key, kind, booked_job) values ($1, $2, $3, $4)
+       on conflict (tenant_id, property_key, kind) do update set booked_job = excluded.booked_job`,
+      [tenantId, propertyKey, kind, job],
+    );
+  }
+
+  /** A safety call: logged when the advice is fetched, and marked when it was said. */
+  async logIncident(tenantId: string, i: Omit<Incident, 'id' | 'created_at'> & { call_id?: string | null; created_at?: Date }): Promise<Incident> {
+    const rows = await this.db.query<any>(
+      `insert into public.voice_mt_incidents (tenant_id, property_key, kind, advice_version, advised_at, caller_phone, follow_up_job, notes, source, call_id, created_at)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, coalesce($11, now())) returning *`,
+      [tenantId, i.property_key, i.kind, i.advice_version, i.advised_at, i.caller_phone, i.follow_up_job, i.notes, i.source, i.call_id ?? null, i.created_at ?? null],
+    );
+    return mapIncident(rows[0]);
+  }
+
+  async updateIncident(tenantId: string, id: string, patch: Partial<Pick<Incident, 'advised_at' | 'follow_up_job' | 'property_key' | 'notes'>>): Promise<Incident | null> {
+    const cols = (['advised_at', 'follow_up_job', 'property_key', 'notes'] as const).filter((k) => k in patch);
+    if (!cols.length) return null;
+    const rows = await this.db.query<any>(
+      `update public.voice_mt_incidents set ${cols.map((k, n) => `${k} = $${n + 3}`).join(', ')} where tenant_id = $1 and id = $2 returning *`,
+      [tenantId, id, ...cols.map((k) => patch[k])],
+    );
+    return rows[0] ? mapIncident(rows[0]) : null;
+  }
+
+  async listIncidents(tenantId: string): Promise<Incident[]> {
+    const rows = await this.db.query<any>('select * from public.voice_mt_incidents where tenant_id = $1 order by created_at desc', [tenantId]);
+    return rows.map(mapIncident);
+  }
+
   // ── Demo reset ─────────────────────────────────────────────────────────
 
   async resetTenantData(tenantId: string): Promise<void> {
     await this.db.tx(async (q) => {
-      for (const t of ['voice_payments', 'voice_orders', 'voice_bookings', 'voice_messages', 'voice_calls', 'voice_customers', 'voice_offers', 'voice_sales', 'voice_listings']) {
+      for (const t of [
+        'voice_payments', 'voice_orders', 'voice_bookings', 'voice_messages', 'voice_calls', 'voice_customers', 'voice_offers', 'voice_sales', 'voice_listings',
+        'voice_mt_jobs', 'voice_mt_certificates', 'voice_mt_incidents', 'voice_mt_properties',
+      ]) {
         await q.query(`delete from public.${t} where tenant_id = $1`, [tenantId]);
       }
     });

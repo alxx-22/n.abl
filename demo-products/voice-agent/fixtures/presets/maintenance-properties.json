@@ -1,0 +1,2047 @@
+{
+ "_about": "The property maintenance demo's sample homes (presets/property-maintenance.md §2.1 and §7). Every one is invented: the postcode districts are real (Nottingham, Derby and Loughborough) but every street is made up, every address is shown with \"(example)\", and every phone number is in Ofcom's range for drama, so it rings nobody. Key safe codes are never stored: the office \"has the code\".",
+ "properties": [
+  {
+   "key": "elm_14",
+   "number": "14",
+   "street": "Elm Road",
+   "district": "NG5",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "whitfield",
+   "occupant": {
+    "name": "Sam Ortiz",
+    "phone": "07700 900501",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "larchfield_120",
+   "number": "120",
+   "street": "Larchfield Close",
+   "district": "NG3",
+   "town": "Nottingham",
+   "kind": "bungalow",
+   "client": "harbour",
+   "occupant": {
+    "name": "Aisha Patel",
+    "phone": "07700 900502",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "wrenbury_89",
+   "number": "89",
+   "street": "Wrenbury Avenue",
+   "district": "NG7",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "harbour",
+   "occupant": {
+    "name": "Tom Mistry",
+    "phone": "07700 900503",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "residents' car park at the back",
+    "pets": "a dog: please knock and wait"
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Keys held at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "copperbeech_flat_5_86",
+   "number": "Flat 5, 86",
+   "street": "Copperbeech Way",
+   "district": "NG8",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "harbour",
+   "occupant": {
+    "name": "Megan Bennett",
+    "phone": "07700 900504",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "key_safe",
+    "note": "Key safe by the front door: the office has the code."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "tansy_36",
+   "number": "36",
+   "street": "Tansy Lane",
+   "district": "NG2",
+   "town": "West Bridgford",
+   "kind": "house",
+   "client": "harbour",
+   "occupant": {
+    "name": "Kwame Reid",
+    "phone": "07700 900505",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "saxonby_101",
+   "number": "101",
+   "street": "Saxonby Street",
+   "district": "NG1",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "harbour",
+   "occupant": {
+    "name": "Lucy Doyle",
+    "phone": "07700 900506",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [
+    "over 75"
+   ],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "mallow_flat_4_71",
+   "number": "Flat 4, 71",
+   "street": "Mallow Court",
+   "district": "NG4",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "harbour",
+   "occupant": {
+    "name": "Daniel Okoro",
+    "phone": "07700 900507",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "ferncroft_75",
+   "number": "75",
+   "street": "Ferncroft Road",
+   "district": "NG6",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "harbour",
+   "occupant": {
+    "name": "Priti Shaw",
+    "phone": "07700 900508",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "kestrel_flat_1_75",
+   "number": "Flat 1, 75",
+   "street": "Kestrel Rise",
+   "district": "NG9",
+   "town": "Beeston",
+   "kind": "flat",
+   "client": "harbour",
+   "occupant": {
+    "name": "Josh Akhtar",
+    "phone": "07700 900509",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Keys held at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "linnet_flat_2_102",
+   "number": "Flat 2, 102",
+   "street": "Linnet Walk",
+   "district": "NG11",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "harbour",
+   "occupant": {
+    "name": "Hannah Hart",
+    "phone": "07700 900510",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "drive at the front",
+    "pets": "a dog: please knock and wait"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [
+    "Lone working: send two engineers."
+   ],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "sorrel_flat_5_55",
+   "number": "Flat 5, 55",
+   "street": "Sorrel Street",
+   "district": "NG10",
+   "town": "Long Eaton",
+   "kind": "flat",
+   "client": "harbour",
+   "occupant": {
+    "name": "Callum Hussain",
+    "phone": "07700 900511",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "thistledown_87",
+   "number": "87",
+   "street": "Thistledown Road",
+   "district": "DE22",
+   "town": "Derby",
+   "kind": "house",
+   "client": "harbour",
+   "occupant": {
+    "name": "Zara Gray",
+    "phone": "07700 900512",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "key_safe",
+    "note": "Key safe by the front door: the office has the code."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "pennyroyal_61",
+   "number": "61",
+   "street": "Pennyroyal Close",
+   "district": "DE1",
+   "town": "Derby",
+   "kind": "house",
+   "client": "harbour",
+   "occupant": {
+    "name": "Owen Price",
+    "phone": "07700 900513",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "drive at the front",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [
+    "a child under 5"
+   ],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "millrace_22",
+   "number": "22",
+   "street": "Millrace Lane",
+   "district": "DE21",
+   "town": "Derby",
+   "kind": "house",
+   "client": "harbour",
+   "occupant": {
+    "name": "Fatima Begum",
+    "phone": "07700 900514",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "goldcrest_23",
+   "number": "23",
+   "street": "Goldcrest Way",
+   "district": "DE23",
+   "town": "Derby",
+   "kind": "house",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Ryan Brennan",
+    "phone": "07700 900515",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Keys held at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "corvedale_38",
+   "number": "38",
+   "street": "Corvedale Road",
+   "district": "DE24",
+   "town": "Derby",
+   "kind": "house",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Ellie Burke",
+    "phone": "07700 900516",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "hazelmere_54",
+   "number": "54",
+   "street": "Hazelmere Gardens",
+   "district": "DE3",
+   "town": "Derby",
+   "kind": "house",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Jamal Murray",
+    "phone": "07700 900517",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "wharfside_108",
+   "number": "108",
+   "street": "Wharfside Mews",
+   "district": "DE2",
+   "town": "Derby",
+   "kind": "bungalow",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Sophie Nash",
+    "phone": "07700 900518",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "charnwood_flat_1_27",
+   "number": "Flat 1, 27",
+   "street": "Charnwood Vale",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "flat",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Liam Kowalski",
+    "phone": "07700 900519",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "drive at the front",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "bellfounder_flat_1_27",
+   "number": "Flat 1, 27",
+   "street": "Bellfounder Street",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "flat",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Chloe Fletcher",
+    "phone": "07700 900520",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "key_safe",
+    "note": "Key safe by the front door: the office has the code."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "elm_32",
+   "number": "32",
+   "street": "Elm Road",
+   "district": "NG5",
+   "town": "Nottingham",
+   "kind": "bungalow",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Nathan Iqbal",
+    "phone": "07700 900521",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "on the street, no permit needed",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Keys held at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "larchfield_119",
+   "number": "119",
+   "street": "Larchfield Close",
+   "district": "NG3",
+   "town": "Nottingham",
+   "kind": "bungalow",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Amira Lowe",
+    "phone": "07700 900522",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "drive at the front",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "wrenbury_19",
+   "number": "19",
+   "street": "Wrenbury Avenue",
+   "district": "NG7",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Kieran Mensah",
+    "phone": "07700 900523",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "copperbeech_flat_2_14",
+   "number": "Flat 2, 14",
+   "street": "Copperbeech Way",
+   "district": "NG8",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "castle_gate",
+   "occupant": {
+    "name": "Grace Turner",
+    "phone": "07700 900524",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "tansy_78",
+   "number": "78",
+   "street": "Tansy Lane",
+   "district": "NG2",
+   "town": "West Bridgford",
+   "kind": "bungalow",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Ben Nolan",
+    "phone": "07700 900525",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "saxonby_60",
+   "number": "60",
+   "street": "Saxonby Street",
+   "district": "NG1",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Molly Kerr",
+    "phone": "07700 900526",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Electric heating: no gas supply",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true
+  },
+  {
+   "key": "mallow_flat_1_85",
+   "number": "Flat 1, 85",
+   "street": "Mallow Court",
+   "district": "NG4",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Imran Walsh",
+    "phone": "07700 900527",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Keys held at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "ferncroft_62",
+   "number": "62",
+   "street": "Ferncroft Road",
+   "district": "NG6",
+   "town": "Nottingham",
+   "kind": "bungalow",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Jade Lloyd",
+    "phone": "07700 900528",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "key_safe",
+    "note": "Key safe by the front door: the office has the code."
+   },
+   "vulnerable": [
+    "uses a wheelchair"
+   ],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "kestrel_66",
+   "number": "66",
+   "street": "Kestrel Rise",
+   "district": "NG9",
+   "town": "Beeston",
+   "kind": "house",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Lewis Rahman",
+    "phone": "07700 900529",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "linnet_flat_2_39",
+   "number": "Flat 2, 39",
+   "street": "Linnet Walk",
+   "district": "NG11",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Rosa Ali",
+    "phone": "07700 900530",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Electric heating: no gas supply",
+    "parking": "drive at the front",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true
+  },
+  {
+   "key": "sorrel_68",
+   "number": "68",
+   "street": "Sorrel Street",
+   "district": "NG10",
+   "town": "Long Eaton",
+   "kind": "house",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Sam Ortiz",
+    "phone": "07700 900531",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "thistledown_flat_5_91",
+   "number": "Flat 5, 91",
+   "street": "Thistledown Road",
+   "district": "DE22",
+   "town": "Derby",
+   "kind": "flat",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Aisha Patel",
+    "phone": "07700 900532",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "pennyroyal_28",
+   "number": "28",
+   "street": "Pennyroyal Close",
+   "district": "DE1",
+   "town": "Derby",
+   "kind": "house",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Tom Mistry",
+    "phone": "07700 900533",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Keys held at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "millrace_14",
+   "number": "14",
+   "street": "Millrace Lane",
+   "district": "DE21",
+   "town": "Derby",
+   "kind": "house",
+   "client": "oakfield",
+   "occupant": {
+    "name": "Megan Bennett",
+    "phone": "07700 900534",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "drive at the front",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [
+    "Ring before arriving: the occupant works nights."
+   ],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "tansy_flat_3_22",
+   "number": "Flat 3, 22",
+   "street": "Tansy Lane",
+   "district": "NG2",
+   "town": "West Bridgford",
+   "kind": "flat",
+   "client": "ellis",
+   "occupant": {
+    "name": "Kwame Reid",
+    "phone": "07700 900535",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "corvedale_34",
+   "number": "34",
+   "street": "Corvedale Road",
+   "district": "DE24",
+   "town": "Derby",
+   "kind": "bungalow",
+   "client": "ellis",
+   "occupant": {
+    "name": "Lucy Doyle",
+    "phone": "07700 900536",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Electric heating: no gas supply",
+    "parking": "pay and display nearby",
+    "pets": "two cats"
+   },
+   "access": {
+    "method": "key_safe",
+    "note": "Key safe by the front door: the office has the code."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true
+  },
+  {
+   "key": "hazelmere_flat_4_120",
+   "number": "Flat 4, 120",
+   "street": "Hazelmere Gardens",
+   "district": "DE3",
+   "town": "Derby",
+   "kind": "flat",
+   "client": "kaur",
+   "occupant": {
+    "name": "Daniel Okoro",
+    "phone": "07700 900537",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Electric heating: no gas supply",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true
+  },
+  {
+   "key": "wharfside_flat_3_6",
+   "number": "Flat 3, 6",
+   "street": "Wharfside Mews",
+   "district": "DE2",
+   "town": "Derby",
+   "kind": "flat",
+   "client": "kaur",
+   "occupant": {
+    "name": "Priti Shaw",
+    "phone": "07700 900538",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "charnwood_19",
+   "number": "19",
+   "street": "Charnwood Vale",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "house",
+   "client": "kaur",
+   "occupant": {
+    "name": "Josh Akhtar",
+    "phone": "07700 900539",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Keys held at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "bellfounder_24",
+   "number": "24",
+   "street": "Bellfounder Street",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "house",
+   "client": "whitfield",
+   "occupant": {
+    "name": "Hannah Hart",
+    "phone": "07700 900540",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "drive at the front",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "elm_flat_4_115",
+   "number": "Flat 4, 115",
+   "street": "Elm Road",
+   "district": "NG5",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "whitfield",
+   "occupant": {
+    "name": "Callum Hussain",
+    "phone": "07700 900541",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "on the street, no permit needed",
+    "pets": "two cats"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "larchfield_80",
+   "number": "80",
+   "street": "Larchfield Close",
+   "district": "NG3",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "whitfield",
+   "occupant": {
+    "name": "Zara Gray",
+    "phone": "07700 900542",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "on the street, no permit needed",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "wrenbury_flat_1_55",
+   "number": "Flat 1, 55",
+   "street": "Wrenbury Avenue",
+   "district": "NG7",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "whitfield",
+   "occupant": {
+    "name": "Owen Price",
+    "phone": "07700 900543",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "copperbeech_23",
+   "number": "23",
+   "street": "Copperbeech Way",
+   "district": "NG8",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "whitfield",
+   "occupant": {
+    "name": "Fatima Begum",
+    "phone": "07700 900544",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink, behind the bin",
+    "boiler": "Electric heating: no gas supply",
+    "parking": "drive at the front",
+    "pets": ""
+   },
+   "access": {
+    "method": "key_safe",
+    "note": "Key safe by the front door: the office has the code."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true
+  },
+  {
+   "key": "tansy_81",
+   "number": "81",
+   "street": "Tansy Lane",
+   "district": "NG2",
+   "town": "West Bridgford",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Ryan Brennan",
+    "phone": "07700 900545",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [
+    "a medical condition that needs heating"
+   ],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "saxonby_flat_2_20",
+   "number": "Flat 2, 20",
+   "street": "Saxonby Street",
+   "district": "NG1",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Ellie Burke",
+    "phone": "07700 900546",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "mallow_17",
+   "number": "17",
+   "street": "Mallow Court",
+   "district": "NG4",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Jamal Murray",
+    "phone": "07700 900547",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "ferncroft_94",
+   "number": "94",
+   "street": "Ferncroft Road",
+   "district": "NG6",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Sophie Nash",
+    "phone": "07700 900548",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Electric heating: no gas supply",
+    "parking": "drive at the front",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true
+  },
+  {
+   "key": "kestrel_82",
+   "number": "82",
+   "street": "Kestrel Rise",
+   "district": "NG9",
+   "town": "Beeston",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Liam Kowalski",
+    "phone": "07700 900549",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "linnet_flat_1_89",
+   "number": "Flat 1, 89",
+   "street": "Linnet Walk",
+   "district": "NG11",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Chloe Fletcher",
+    "phone": "07700 900550",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "sorrel_84",
+   "number": "84",
+   "street": "Sorrel Street",
+   "district": "NG10",
+   "town": "Long Eaton",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Nathan Iqbal",
+    "phone": "07700 900551",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "on the street, no permit needed",
+    "pets": "two cats"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "thistledown_110",
+   "number": "110",
+   "street": "Thistledown Road",
+   "district": "DE22",
+   "town": "Derby",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Amira Lowe",
+    "phone": "07700 900552",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "key_safe",
+    "note": "Key safe by the front door: the office has the code."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "pennyroyal_63",
+   "number": "63",
+   "street": "Pennyroyal Close",
+   "district": "DE1",
+   "town": "Derby",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Kieran Mensah",
+    "phone": "07700 900553",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "millrace_flat_5_112",
+   "number": "Flat 5, 112",
+   "street": "Millrace Lane",
+   "district": "DE21",
+   "town": "Derby",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Grace Turner",
+    "phone": "07700 900554",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "drive at the front",
+    "pets": "two cats"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "goldcrest_flat_6_101",
+   "number": "Flat 6, 101",
+   "street": "Goldcrest Way",
+   "district": "DE23",
+   "town": "Derby",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Ben Nolan",
+    "phone": "07700 900555",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "corvedale_5",
+   "number": "5",
+   "street": "Corvedale Road",
+   "district": "DE24",
+   "town": "Derby",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Molly Kerr",
+    "phone": "07700 900556",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "hazelmere_40",
+   "number": "40",
+   "street": "Hazelmere Gardens",
+   "district": "DE3",
+   "town": "Derby",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Imran Walsh",
+    "phone": "07700 900557",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "wharfside_14",
+   "number": "14",
+   "street": "Wharfside Mews",
+   "district": "DE2",
+   "town": "Derby",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Jade Lloyd",
+    "phone": "07700 900558",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "charnwood_74",
+   "number": "74",
+   "street": "Charnwood Vale",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Lewis Rahman",
+    "phone": "07700 900559",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "residents' car park at the back",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "bellfounder_75",
+   "number": "75",
+   "street": "Bellfounder Street",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Rosa Ali",
+    "phone": "07700 900560",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Worcester combi in the kitchen cupboard",
+    "parking": "drive at the front",
+    "pets": ""
+   },
+   "access": {
+    "method": "key_safe",
+    "note": "Key safe by the front door: the office has the code."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "elm_94",
+   "number": "94",
+   "street": "Elm Road",
+   "district": "NG5",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Sam Ortiz",
+    "phone": "07700 900561",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Ideal combi on the kitchen wall",
+    "parking": "pay and display nearby",
+    "pets": "a dog: please knock and wait"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "larchfield_flat_2_67",
+   "number": "Flat 2, 67",
+   "street": "Larchfield Close",
+   "district": "NG3",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Aisha Patel",
+    "phone": "07700 900562",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "wrenbury_flat_3_39",
+   "number": "Flat 3, 39",
+   "street": "Wrenbury Avenue",
+   "district": "NG7",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Tom Mistry",
+    "phone": "07700 900563",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "permit zone: ask the occupant for a visitor permit",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "copperbeech_66",
+   "number": "66",
+   "street": "Copperbeech Way",
+   "district": "NG8",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Megan Bennett",
+    "phone": "07700 900564",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "on the street, no permit needed",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "tansy_95",
+   "number": "95",
+   "street": "Tansy Lane",
+   "district": "NG2",
+   "town": "West Bridgford",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Kwame Reid",
+    "phone": "07700 900565",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "pay and display nearby",
+    "pets": "a friendly dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "saxonby_flat_3_91",
+   "number": "Flat 3, 91",
+   "street": "Saxonby Street",
+   "district": "NG1",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": null,
+   "occupant": {
+    "name": "Lucy Doyle",
+    "phone": "07700 900566",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Vaillant combi in the airing cupboard",
+    "parking": "on the street, no permit needed",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "mallow_58",
+   "number": "58",
+   "street": "Mallow Court",
+   "district": "NG4",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Daniel Okoro",
+    "phone": "07700 900567",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "on the street, no permit needed",
+    "pets": "two cats"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "ferncroft_49",
+   "number": "49",
+   "street": "Ferncroft Road",
+   "district": "NG6",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Priti Shaw",
+    "phone": "07700 900568",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the cupboard under the stairs",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "drive at the front",
+    "pets": "two cats"
+   },
+   "access": {
+    "method": "key_safe",
+    "note": "Key safe by the front door: the office has the code."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "kestrel_64",
+   "number": "64",
+   "street": "Kestrel Rise",
+   "district": "NG9",
+   "town": "Beeston",
+   "kind": "house",
+   "client": null,
+   "occupant": {
+    "name": "Josh Akhtar",
+    "phone": "07700 900569",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Baxi system boiler in the loft",
+    "parking": "drive at the front",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  },
+  {
+   "key": "linnet_105",
+   "number": "105",
+   "street": "Linnet Walk",
+   "district": "NG11",
+   "town": "Nottingham",
+   "kind": "bungalow",
+   "client": null,
+   "occupant": {
+    "name": "Hannah Hart",
+    "phone": "07700 900570",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the downstairs toilet, behind the cistern",
+    "boiler": "Viessmann combi in the utility room",
+    "parking": "drive at the front",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 2,
+   "example": true
+  }
+ ]
+}

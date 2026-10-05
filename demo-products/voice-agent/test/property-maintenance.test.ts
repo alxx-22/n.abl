@@ -10,6 +10,7 @@ import { builtPreset, getPreset } from '../src/presets/index.ts';
 import { MT_NATIONS, defaultAnswers, type MaintenanceAnswers } from '../src/presets/maintenance/answers.ts';
 import { DUTY_MANAGER_KEY, areaSentence, compileMaintenance, districtRuns, money } from '../src/presets/maintenance/compile.ts';
 import { factSheet, maintenancePreview, maintenanceWorkspace } from '../src/presets/maintenance/preset.ts';
+import { fullAddress, sampleProperties, shortAddress } from '../src/presets/maintenance/properties.ts';
 import { MT_NATION_PACKS, SAFETY_KINDS, gasFact, nationKnowledge, safetyScript, safetyScripts } from '../src/presets/maintenance/nations.ts';
 import { sanitiseMaintenance } from '../src/presets/maintenance/sanitise.ts';
 import { STEPS } from '../src/presets/maintenance/steps.ts';
@@ -230,4 +231,34 @@ test("property maintenance: the builder's preview, the fact sheet and the back o
   // Built, but not offered to prospects until its back office and builder are in the web.
   assert.ok(builtPreset('property_maintenance'));
   assert.equal(getPreset('property_maintenance'), null);
+});
+
+test('property maintenance: the sample properties are invented, inside the patch, and never hold a code', () => {
+  const a = defaultAnswers();
+  const props = sampleProperties();
+  assert.equal(props.length, 70);
+  assert.equal(new Set(props.map((p) => p.key)).size, 70, 'each key once');
+  assert.equal(new Set(props.map((p) => `${p.number}|${p.street}`)).size, 70, 'each address once');
+  const clients = new Set(a.clients.map((c) => c.key));
+  for (const p of props) {
+    assert.ok(a.area.districts.includes(p.district), `${p.key}: ${p.district} is in the patch`);
+    assert.ok(p.client === null || clients.has(p.client), `${p.key}: ${p.client} is a sample client`);
+    assert.match(p.occupant.phone!, /^\+447700900\d{3}$/, `${p.key}: a number in Ofcom's drama range`);
+    assert.ok(p.example);
+    assert.match(shortAddress(p), /\(example\), [A-Z]{2}\d+$/);
+    // A key safe's code is never stored, in any form.
+    assert.doesNotMatch(JSON.stringify(p.access), /\d{3,}/, `${p.key}: no code`);
+  }
+  assert.equal(props.filter((p) => p.access.method === 'key_safe').length, 9);
+  assert.equal(props.filter((p) => p.client === null).length, 26, 'homeowners');
+  // The homes the signature moments lean on.
+  const elm = props.find((p) => p.key === 'elm_14')!;
+  assert.equal(fullAddress(elm), '14 Elm Road (example), Nottingham NG5');
+  assert.deepEqual([elm.client, elm.occupant.name, elm.notes.stopcock, elm.gas], ['whitfield', 'Sam Ortiz', 'under the kitchen sink', true]);
+  assert.equal(shortAddress(props.find((p) => p.client === 'ellis')!), 'Flat 3, 22 Tansy Lane (example), NG2');
+  assert.ok(props.some((p) => p.client === 'harbour' && p.notes.stopcock === 'under the kitchen sink'));
+  assert.ok(props.filter((p) => p.vulnerable.length).length >= 3);
+  // A fresh copy every time: a seed that edits one cannot change the next.
+  props[0].street = 'Changed';
+  assert.equal(sampleProperties()[0].street, 'Elm Road');
 });
