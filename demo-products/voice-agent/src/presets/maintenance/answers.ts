@@ -223,7 +223,7 @@ export function defaultEngineers(): EngineerAnswer[] {
     ({ key, name, trades, gas_safe: '', niceic: false, oftec: false, days: MON_FRI, districts: [], per_window: 2, mobile, ...extra });
   return [
     e('dan', 'Dan Hughes', ['gas_heating', 'plumbing'], { gas_safe: '512345 (example)', days: MON_SAT }, '07700 900301'),
-    e('callum', 'Callum Price', ['boiler_servicing', 'gas_heating'], { gas_safe: '587210 (example)' }, '07700 900302'),
+    e('callum', 'Callum Price', ['boiler_servicing', 'gas_heating', 'plumbing'], { gas_safe: '587210 (example)' }, '07700 900302'),
     e('marek', 'Marek Nowak', ['plumbing', 'drainage'], { days: MON_SAT }, '07700 900303'),
     e('priya', 'Priya Shah', ['electrical'], { niceic: true }, '07700 900304'),
     e('tom', 'Tom Reilly', ['roofing'], {}, '07700 900305'),
@@ -242,7 +242,7 @@ export function defaultClients(): ClientAnswer[] {
     c('castle_gate', 'Castle Gate Residential', 'agent', 15_000, 30_000, false, { name: 'Imran Akhtar', phone: '07700 900402', email: 'repairs@castlegate.example' }, 'every_job'),
     c('oakfield', 'Oakfield Homes', 'agent', 30_000, 40_000, false, { name: 'Natalie Byrne', phone: '07700 900403', email: 'property@oakfield.example' }, 'over_limit'),
     c('ellis', 'Mrs J Ellis', 'landlord', 20_000, 30_000, false, { name: 'Jean Ellis', phone: '07700 900404', email: '' }, 'every_job',
-      'Holds quote Q-2291 for the bathroom at her flat.'),
+      'Holds quote Q-2291: a £2,450 boiler replacement at her flat.'),
     c('kaur', 'Mr R Kaur', 'landlord', 15_000, 25_000, false, { name: 'Raj Kaur', phone: '07700 900405', email: '' }, 'over_limit'),
     c('whitfield', 'Whitfield Properties', 'landlord', 25_000, 40_000, false, { name: 'Ben Whitfield', phone: '07700 900406', email: 'ben@whitfield.example' }, 'over_limit'),
   ];

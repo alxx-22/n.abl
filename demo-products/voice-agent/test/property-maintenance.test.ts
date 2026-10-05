@@ -11,6 +11,11 @@ import { MT_NATIONS, defaultAnswers, type MaintenanceAnswers } from '../src/pres
 import { DUTY_MANAGER_KEY, areaSentence, compileMaintenance, districtRuns, money } from '../src/presets/maintenance/compile.ts';
 import { factSheet, maintenancePreview, maintenanceWorkspace } from '../src/presets/maintenance/preset.ts';
 import { fullAddress, sampleProperties, shortAddress } from '../src/presets/maintenance/properties.ts';
+import { planMaintenanceSeed } from '../src/presets/maintenance/seed.ts';
+import { checkWindow, freeWindows, onCallAt, overlaps, windowAt } from '../src/domain/windows.ts';
+import { addDays, toLocal } from '../src/domain/time.ts';
+import type { Job } from '../src/domain/types.ts';
+import { replaySeed } from './seed-replay.ts';
 import { MT_NATION_PACKS, SAFETY_KINDS, gasFact, nationKnowledge, safetyScript, safetyScripts } from '../src/presets/maintenance/nations.ts';
 import { sanitiseMaintenance } from '../src/presets/maintenance/sanitise.ts';
 import { STEPS } from '../src/presets/maintenance/steps.ts';
@@ -155,6 +160,8 @@ test('property maintenance: the nation pack and the fixed safety scripts', () =>
 const compile = (a: MaintenanceAnswers) => compileMaintenance(sanitiseMaintenance(structuredClone(a)), { slug: 'fernhill' });
 /** Wednesday 7 October 2026, 11am. */
 const WEDNESDAY = new Date('2026-10-07T10:00:00Z');
+/** Friday 9 October 2026, 7pm. */
+const FRIDAY_6PM = new Date('2026-10-09T18:00:00Z');
 
 test('property maintenance: the defaults compile to a working contractor, with no table or appointment tools', () => {
   const p = compile(named());
@@ -261,4 +268,100 @@ test('property maintenance: the sample properties are invented, inside the patch
   // A fresh copy every time: a seed that edits one cannot change the next.
   props[0].street = 'Changed';
   assert.equal(sampleProperties()[0].street, 'Elm Road');
+});
+
+test('property maintenance: visit windows go to engineers who do the trade, are Gas Safe for gas, cover the district and have room', () => {
+  const a = named();
+  a.engineers.find((e) => e.key === 'marek')!.districts = ['NG5'];
+  const m = compile(a).maintenance!;
+  const job = (x: Partial<Job>): Job => ({
+    id: 'x', reference: 'XX100', property_key: null, client_key: null, reporter: { name: null, phone: null, role: null }, trade: 'plumbing', priority: 'routine', reason: null,
+    description: '', kind: 'repair', status: 'scheduled', visit_date: '2026-10-08', window_key: 'am', attend_by: null, engineer_key: 'dan', eta_minutes: null, on_the_way_at: null,
+    po: null, price_pence: null, clocks: [], flags: [], access_attempts: 0, waiting_for: null, notes: null, history: [], source: 'seed', created_at: new Date(), done_at: null, ...x,
+  });
+  const who = (c: ReturnType<typeof checkWindow>) => (c.ok ? c.engineers.map((e) => e.key) : c.reason);
+  // Thursday morning, plumbing in NG7: Dan, Callum (both Gas Safe, both plumb); Marek only covers NG5.
+  assert.deepEqual(who(checkWindow(m, [], { date: '2026-10-08', window: 'am', trade: 'plumbing', district: 'NG7' })), ['dan', 'callum']);
+  assert.deepEqual(who(checkWindow(m, [], { date: '2026-10-08', window: 'am', trade: 'plumbing', district: 'NG5' })), ['dan', 'callum', 'marek']);
+  // Gas work: only Gas Safe engineers, even when the trade isn't a gas trade.
+  assert.deepEqual(who(checkWindow(m, [], { date: '2026-10-08', window: 'am', trade: 'plumbing', gas: true, district: 'NG5' })), ['dan', 'callum']);
+  assert.deepEqual(who(checkWindow(m, [], { date: '2026-10-08', window: 'am', trade: 'boiler_servicing' })), ['callum']);
+  // Two jobs a window each: Dan's morning is full, and an all-day job holds both halves.
+  const full = [job({ reference: 'AA100' }), job({ reference: 'AA101' })];
+  assert.deepEqual(who(checkWindow(m, full, { date: '2026-10-08', window: 'am', trade: 'plumbing', engineer: 'dan' })), 'full');
+  assert.deepEqual(who(checkWindow(m, full, { date: '2026-10-08', window: 'am', trade: 'plumbing', engineer: 'dan', exclude: 'AA101' })), ['dan'], 'moving a job frees its own place');
+  assert.deepEqual(who(checkWindow(m, full, { date: '2026-10-08', window: 'pm', trade: 'plumbing', engineer: 'dan' })), ['dan']);
+  assert.ok(overlaps({ from: '08:00', to: '17:00' }, { from: '12:00', to: '17:00' }));
+  assert.ok(!overlaps({ from: '08:00', to: '12:00' }, { from: '12:00', to: '17:00' }));
+  // The Saturday morning window is Saturdays only; Grace doesn't work Saturdays.
+  assert.equal(who(checkWindow(m, [], { date: '2026-10-08', window: 'sat_am', trade: 'plumbing' })), 'not_that_day');
+  assert.equal(who(checkWindow(m, [], { date: '2026-10-10', window: 'sat_am', trade: 'decorating' })), 'nobody');
+  assert.equal(who(checkWindow(m, [], { date: '2026-10-08', window: 'night', trade: 'plumbing' })), 'no_window');
+  // The next free windows skip the notice period: at 11am Wednesday, the 12 o'clock window is inside the 2 hours.
+  const next = freeWindows(m, [], { trade: 'electrical', from: '2026-10-07', now: { date: '2026-10-07', time: '11:00' } });
+  assert.deepEqual(next.map((f) => `${f.date} ${f.window.key}`), ['2026-10-07 evening', '2026-10-08 am', '2026-10-08 pm']);
+  assert.equal(windowAt(m, '2026-10-07', '12:00')?.key, 'pm');
+  assert.equal(windowAt(m, '2026-10-07', '21:00'), undefined);
+  // The night belongs to the evening it starts: 2am Thursday is Wednesday night's pair.
+  assert.deepEqual(onCallAt(m, '2026-10-08', '02:00').map((e) => e.key), ['dan', 'leon']);
+  assert.deepEqual(onCallAt(m, '2026-10-08', '21:00').map((e) => e.key), ['callum', 'priya']);
+});
+
+test('property maintenance: the seeded week, anchored to Start, replays under the window rules', () => {
+  const p = compile(named());
+  const plan = planMaintenanceSeed(p, WEDNESDAY, 7);
+  assert.deepEqual(replaySeed(p, plan), []);
+  const jobs = plan.jobs!;
+  assert.ok(jobs.length >= 50 && jobs.length <= 75, `${jobs.length} jobs`);
+  const count = (f: (j: (typeof jobs)[number]) => boolean) => jobs.filter(f).length;
+  assert.ok(count((j) => j.status === 'done') >= 25);
+  assert.equal(count((j) => j.status === 'awaiting_approval'), 4);
+  assert.equal(count((j) => j.status === 'waiting'), 3);
+  assert.equal(count((j) => j.flags.includes('recall')), 2);
+  // Marek on the way to 14 Elm Road, about 20 minutes, and the tenant has the text.
+  const elm = jobs.find((j) => j.property_key === 'elm_14')!;
+  assert.deepEqual([elm.status, elm.engineer_key, elm.eta_minutes, elm.visit_date], ['on_the_way', 'marek', 20, '2026-10-07']);
+  assert.equal(plan.texts![0].body, `Fernhill Property Care: Marek is on the way, about 20 minutes. Ref ${elm.reference}. (Demo)`);
+  // Last night's burst pipe went to someone on call, was made safe, and has its repair booked.
+  const burst = jobs.find((j) => j.priority === 'emergency')!;
+  assert.equal(toLocal(burst.created_at, 'Europe/London').time, '02:10');
+  assert.equal(burst.status, 'done');
+  assert.ok(jobs.some((j) => j.notes === `Follow-up to ${burst.reference}.` && j.status === 'scheduled'));
+  // Mrs Ellis's quote is waiting on her.
+  const q = jobs.find((j) => j.description.includes('Q-2291'))!;
+  assert.deepEqual([q.status, q.price_pence, q.client_key], ['awaiting_approval', 245_000, 'ellis']);
+  // One gas call this week: advised, then a Gas Safe repair done.
+  const [gas] = plan.incidents!;
+  const repair = jobs.find((j) => j.reference === gas.follow_up_job)!;
+  assert.deepEqual([gas.kind, repair.status, p.maintenance!.engineers.find((e) => e.key === repair.engineer_key)!.gas_safe], ['gas', 'done', true]);
+  // The register: 14 Elm Road's gas record runs out in 40 days;
+  // six gas records are due within six weeks and one is three days overdue; one EICR has C2 items on day 19 of 28.
+  const certs = plan.certificates!;
+  assert.equal(certs.find((c) => c.property_key === 'elm_14' && c.kind === 'gas_record')!.expires, addDays('2026-10-07', 40));
+  const gasRecords = certs.filter((c) => c.kind === 'gas_record').map((c) => (Date.parse(c.expires!) - Date.parse('2026-10-07')) / 86_400_000);
+  assert.equal(gasRecords.filter((d) => d >= 0 && d <= 42).length, 6);
+  assert.deepEqual(gasRecords.filter((d) => d < 0), [-3]);
+  assert.equal(certs.filter((c) => c.kind === 'eicr' && (Date.parse(c.expires!) - Date.parse('2026-10-07')) / 86_400_000 <= 60).length, 4);
+  const c2 = certs.find((c) => c.remedials.length)!;
+  assert.deepEqual([c2.issued, c2.remedials[0].due], [addDays('2026-10-07', -19), addDays('2026-10-07', 9)]);
+  // The board is never full: a routine plumbing job can go in within two working days.
+  const free = freeWindows(p.maintenance!, jobs, { trade: 'plumbing', from: '2026-10-07', now: { date: '2026-10-07', time: '11:00' }, days: 2 });
+  assert.ok(free.length, 'a free window within two days');
+  // No key safe code is ever seeded, in any form.
+  for (const x of plan.properties!) assert.doesNotMatch(JSON.stringify(x.access), /\d/, x.key);
+});
+
+test('property maintenance: a trade turned off, or its engineer removed, leaves its jobs out rather than forcing them in', () => {
+  const a = named();
+  a.trades.find((t) => t.key === 'plumbing')!.on = false;
+  a.engineers = a.engineers.filter((e) => e.key !== 'tom');
+  a.trades.find((t) => t.key === 'roofing')!.on = false;
+  a.clients = a.clients.filter((c) => c.key !== 'harbour');
+  const p = compile(a);
+  for (const seed of [1, 7, 42]) {
+    const plan = planMaintenanceSeed(p, FRIDAY_6PM, seed);
+    assert.deepEqual(replaySeed(p, plan), [], `seed ${seed}`);
+    assert.ok(!plan.jobs!.some((j) => j.trade === 'plumbing' || j.trade === 'roofing'));
+    assert.ok(!plan.properties!.some((x) => x.client === 'harbour'), 'a client who has gone takes their homes with them');
+  }
 });

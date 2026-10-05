@@ -9,6 +9,7 @@ import { builtPreset, answersOf } from '../src/presets/index.ts';
 import { planEstateSeed } from '../src/presets/estate/seed.ts';
 import { viewingRules } from '../src/domain/listings.ts';
 import { sampleProperties } from '../src/presets/maintenance/properties.ts';
+import { planMaintenanceSeed } from '../src/presets/maintenance/seed.ts';
 
 const NOW = new Date('2026-09-29T14:00:00Z'); // Tuesday 3pm BST
 let db: Db;
@@ -478,4 +479,22 @@ test('property maintenance: properties, jobs, certificates and safety calls go w
   await repo.resetTenantData(t.id);
   assert.deepEqual([(await repo.listMtProperties(t.id)).length, (await repo.listJobs(t.id)).length, (await repo.listCertificates(t.id)).length, (await repo.listIncidents(t.id)).length], [0, 0, 0, 0]);
   await repo.deleteTenant('mt-rows');
+});
+
+test('property maintenance: a seeded week is written whole and reads back as planned', async () => {
+  const preset = builtPreset('property_maintenance')!;
+  const a = preset.defaults();
+  a.basics.name = 'Fernhill Property Care';
+  const t = await repo.upsertTenant(preset.compile(answersOf(preset, a), { slug: 'mt-week' }));
+  const plan = planMaintenanceSeed(t.profile, new Date('2026-10-07T10:00:00Z'), 7);
+  await repo.insertSeed(t.id, plan);
+  const jobs = await repo.listJobs(t.id);
+  assert.equal(jobs.length, plan.jobs!.length);
+  const elm = jobs.find((j) => j.property_key === 'elm_14')!;
+  const planned = plan.jobs!.find((j) => j.property_key === 'elm_14')!;
+  assert.deepEqual({ ...elm, id: undefined }, { ...planned, id: undefined, source: 'seed' });
+  assert.equal((await repo.listCertificates(t.id)).length, plan.certificates!.length);
+  assert.equal((await repo.listIncidents(t.id)).length, 1);
+  assert.equal((await repo.listMtProperties(t.id)).length, 70);
+  await repo.deleteTenant('mt-week');
 });

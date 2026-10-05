@@ -225,7 +225,8 @@ Office hours Monday to Friday 08:00 to 17:30, Saturday 09:00 to 12:00.
 
 Engineers (Gas Safe numbers are invented and marked example):
 Dan Hughes (Gas Safe: heating and plumbing), Callum Price (Gas Safe: boiler
-servicing and gas safety records), Marek Nowak (plumbing and drainage),
+servicing, gas safety records and plumbing, so every night has a plumber
+on call), Marek Nowak (plumbing and drainage),
 Priya Shah (electrician, NICEIC: EICRs and PAT), Tom Reilly (roofing and
 gutters), Shaz Ahmed (carpentry and handyman), Leon Clarke (locksmith,
 glazing, boarding), Grace Okafor (decorating, damp and mould). Nights: a

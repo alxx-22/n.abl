@@ -14,6 +14,7 @@ import { VERSION, defaultAnswers, inSentence, type MaintenanceAnswers } from './
 import { NOUN, areaSentence, calloutSentence, compileMaintenance, emergencySentence, firstName, plannedSentence, windowWords } from './compile.ts';
 import { MT_NATION_PACKS, safetyScript } from './nations.ts';
 import { sanitiseMaintenance } from './sanitise.ts';
+import { planMaintenanceSeed } from './seed.ts';
 import { STEPS } from './steps.ts';
 import { validateMaintenance } from './validate.ts';
 
@@ -93,8 +94,7 @@ export const propertyMaintenance: Omit<Preset<MaintenanceAnswers>, 'info'> = {
   steps: STEPS,
   validate: validateMaintenance,
   compile: compileMaintenance,
-  // The seeded week (jobs, properties, certificates) comes with the database tables; until then a fresh start.
-  seed: () => ({ bookings: [], orders: [], messages: [] }),
+  seed: planMaintenanceSeed,
   preview: (a, profile) => maintenancePreview(a, profile),
   factSheet,
   handles: MAINTENANCE_HANDLES,
