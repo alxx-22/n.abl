@@ -13,6 +13,7 @@
  "record_viewing_feedback",
  "register_buyer",
  "stop_alerts",
+ "get_sale_progress",
  "get_property",
  "send_property_details",
  "book_valuation",

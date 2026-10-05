@@ -1143,6 +1143,70 @@ async function stopAlerts(_args: Args, ctx: ToolContext): Promise<Record<string,
   return { stopped: true, say: "Done: we've stopped the texts about new homes, and sent one text to confirm." };
 }
 
+const MILESTONE_WORDS: Record<string, string> = {
+  memorandum_sent: 'memorandum of sale sent', solicitors_instructed: 'solicitors instructed', searches: 'searches back', survey: 'survey done',
+  mortgage_offer: 'mortgage offer issued', enquiries_answered: 'enquiries answered', exchange: 'contracts exchanged', completion: 'completed',
+};
+const ROLE_WORDS: Record<string, string> = { buyer: 'the buyer', seller: 'the seller', buyer_solicitor: "the buyer's solicitor", seller_solicitor: "the seller's solicitor", chain_agent: 'an agent in the chain', broker: "the buyer's broker" };
+
+/**
+ * Where a sale has got to, told by who is calling (presets/estate-agent.md §4.3, M3): the
+ * buyer or seller hears the milestones, the dates recorded and the keys; a solicitor on the
+ * file the milestones, with requests going to the progressor; an agent in the chain the chain
+ * line; a broker the agreed price and the memorandum date. Anyone else hears nothing.
+ */
+async function getSaleProgress(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const t = ctx.tenant;
+  const refuse = (next = 'Offer a message for the team. Never say whether there is a sale, or who is in it.') => ({ verified: false, say: NOT_VERIFIED, next });
+  if (ctx.state.verifyMisses >= 3) return refuse('No more tries this call: offer a message.');
+  const r = await resolveHome(ctx, args.property);
+  if ('reply' in r && r.reply.more_than_one) return { verified: false, ...r.reply };
+  const phone = ctx.callerPhone;
+  const key = 'reply' in r ? null : r.home.listing.key;
+  const sale = key ? (await ctx.repo.listSales(t.id)).filter((x) => x.listing_key === key && x.status !== 'fell_through').at(-1) : undefined;
+  let role: string | null = null;
+  if (sale && phone) {
+    if (sale.buyer_phone === phone) role = 'buyer';
+    else if ((await ctx.repo.sellersOf(t.id, sale.listing_key)).some((x) => x.phone === phone)) role = 'seller';
+    else role = sale.parties.find((p) => p.phone && normaliseUkPhone(p.phone) === phone)?.role ?? null;
+  }
+  if (!sale || !role || 'reply' in r) {
+    ctx.state.verifyMisses++;
+    return refuse();
+  }
+  if (!ctx.state.verified.some((v) => v.listing === sale.listing_key && v.role === role)) ctx.state.verified.push({ listing: sale.listing_key, role });
+  const l = r.home.listing;
+  const progressor = teamOf(t).find((m) => m.role === 'progressor') ?? teamOf(t).find((m) => m.does.includes('progression'));
+  const dan = progressor?.first_name ?? 'the team';
+  const done = sale.milestones.filter((m) => m.done_at).map((m) => MILESTONE_WORDS[m.key] ?? m.key);
+  const toCome = sale.milestones.filter((m) => !m.done_at).map((m) => MILESTONE_WORDS[m.key] ?? m.key);
+  const completionDone = sale.milestones.some((m) => m.key === 'completion' && m.done_at);
+  const keys = sale.keys_released_at ? 'released'
+    : sale.completion_date && sale.completion_date <= today(ctx) ? "waiting for the seller's solicitor to confirm completion"
+    : 'released on completion day, once the seller\'s solicitor confirms completion';
+  const base = { verified: true, role: ROLE_WORDS[role] ?? role, property: shortAddress(l) };
+  const never = 'Never predict a date or outcome that isn\'t recorded.';
+  if (role === 'buyer' || role === 'seller') {
+    return {
+      ...base, done, still_to_come: toCome,
+      exchange: sale.status === 'exchanged' || done.includes(MILESTONE_WORDS.exchange) ? 'contracts have been exchanged'
+        : sale.exchange_target ? `aiming to exchange on ${spokenDate(sale.exchange_target)}` : 'no exchange date recorded yet',
+      completion: completionDone ? 'completed' : sale.completion_date ? `completion is set for ${spokenDate(sale.completion_date)}` : 'no completion date recorded yet',
+      chain: sale.chain ?? undefined,
+      keys,
+      next: `${never} Anything they want chased is a message for ${dan} (category progression).`,
+    };
+  }
+  if (role === 'buyer_solicitor' || role === 'seller_solicitor') {
+    return { ...base, done, still_to_come: toCome, next: `Requests and paperwork go to ${dan}: take a message (category progression). ${never}` };
+  }
+  if (role === 'chain_agent') {
+    return { ...base, chain: sale.chain ?? 'Nothing recorded about the chain.', next: `Their news is a message for ${dan} (category progression). ${never}` };
+  }
+  const memo = sale.milestones.find((m) => m.key === 'memorandum_sent' && m.done_at)?.done_at;
+  return { ...base, agreed_price: poundsWhole(sale.agreed_pence), memorandum: memo ? `sent ${spokenDate(toLocal(new Date(memo), t.profile.timezone).date)}` : 'not sent yet', next: never };
+}
+
 const LINK_WORDS: [RegExp, Listing['links'][number]][] = [[/brochure|details|particular/, 'brochure'], [/floor/, 'floorplan'], [/video|tour/, 'video'], [/epc|energy/, 'epc']];
 const LINK_LABEL: Record<Listing['links'][number], string> = { brochure: 'Brochure', floorplan: 'Floorplan', video: 'Video tour', epc: 'EPC' };
 
@@ -1293,6 +1357,15 @@ export const ESTATE_TOOLS: Record<string, Tool> = {
     when: hasHomes,
     decl: { name: 'stop_alerts', description: 'Stop our texts about new homes to the calling number, at once.', parameters: obj({}) },
     handler: stopAlerts,
+  },
+  get_sale_progress: {
+    when: hasHomes,
+    decl: {
+      name: 'get_sale_progress',
+      description: "Where a sale has got to, for someone in it: the buyer, the seller, a solicitor on the file, an agent in the chain or the buyer's broker, checked by their number. Anyone else: share nothing.",
+      parameters: obj({ property: S('The home, as the caller said it') }, ['property']),
+    },
+    handler: getSaleProgress,
   },
   get_property: {
     when: hasHomes,

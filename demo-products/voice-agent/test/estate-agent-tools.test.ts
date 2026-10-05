@@ -829,3 +829,49 @@ test('a seller answering an offer by phone: an urgent message, and "Seller repli
   await repo.setMessageStatus(t.id, m.id, 'read');
   assert.equal((await aishas()).seller_replied, false);
 });
+
+test('get_sale_progress: each party hears their part, checked by number; anyone else nothing; never a date not recorded', async () => {
+  const t = await agency('ea-progress');
+  const sales = await repo.listSales(t.id);
+  const ask = async (phone: string | null, property: string) => (await call(t, phone)).run('get_sale_progress', { property });
+  const home = (key: string) => t.profile.listings!.find((l) => l.key === key)!;
+  const words = (key: string) => `${home(key).number} ${home(key).street}`;
+  // Ben, buying 3 Kingfisher Way: the milestones, no dates yet, keys on completion day.
+  const ben = await ask('+447700900004', words('kingfisher_3'));
+  assert.equal(ben.verified, true, JSON.stringify(ben));
+  assert.equal(ben.role, 'the buyer');
+  assert.deepEqual(ben.done, ['memorandum of sale sent', 'solicitors instructed']);
+  assert.equal(ben.exchange, 'no exchange date recorded yet');
+  assert.equal(ben.completion, 'no completion date recorded yet');
+  assert.match(String(ben.keys), /^released on completion day/);
+  assert.match(String(ben.next), /Never predict a date/);
+  // Liam, exchanged: the completion date as recorded.
+  const liam = await ask('+447700900008', words('willow_gardens_8'));
+  assert.equal(liam.exchange, 'contracts have been exchanged');
+  assert.match(String(liam.completion), /^completion is set for Friday 9 October$/);
+  // The buyer's solicitor on 2 Elm Court: the milestones and who takes requests, no dates or keys.
+  const nadia = await ask('+447700900005', words('elm_court_2'));
+  assert.equal(nadia.role, "the buyer's solicitor");
+  assert.ok((nadia.done as string[]).length === 5);
+  assert.equal(nadia.keys, undefined);
+  assert.match(String(nadia.next), /^Requests and paperwork go to \w+: take a message/);
+  // The agent in the chain: the chain line only.
+  const harper = await ask('+447700900006', words('elm_court_2'));
+  assert.equal(harper.role, 'an agent in the chain');
+  assert.match(String(harper.chain), /Harper & Co/);
+  assert.equal(harper.done, undefined);
+  // A broker added to the file: the agreed price and the memorandum date only.
+  const sale = sales.find((s) => s.listing_key === 'kingfisher_3')!;
+  await repo.updateSale(t.id, sale.id!, { parties: [...sale.parties, { role: 'broker', name: 'Pat Broker', firm: 'Clear Mortgages', phone: '07700 900160' }] });
+  const broker = await ask('+447700900160', words('kingfisher_3'));
+  assert.deepEqual([broker.role, broker.agreed_price, broker.done], ["the buyer's broker", `£${(sale.agreed_pence / 100).toLocaleString('en-GB')}`, undefined]);
+  assert.match(String(broker.memorandum), /^sent [A-Z][a-z]+day \d+ [A-Z][a-z]+$/);
+  // Ben asking about someone else's sale, and a stranger: the same refusal; three misses end the tries.
+  assert.equal((await ask('+447700900004', words('elm_court_2'))).verified, false);
+  const stranger = await call(t, '+447700900009');
+  for (let i = 0; i < 3; i++) assert.equal((await stranger.run('get_sale_progress', { property: words('kingfisher_3') })).verified, false);
+  assert.match(String((await stranger.run('get_sale_progress', { property: words('kingfisher_3') })).next), /No more tries/);
+  // A home with no sale: nothing said about whether there is one.
+  const none = await ask('+447700900004', '22 Albion Road');
+  assert.deepEqual([none.verified, none.done], [false, undefined]);
+});
