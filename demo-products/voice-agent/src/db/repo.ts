@@ -953,9 +953,9 @@ export class Repo {
   }
 
   /** The messages left from one number (not texts), newest first: their enquiries and call-backs. */
-  async messagesFrom(tenantId: string, phone: string): Promise<{ id: string; body: string; category: string | null; details: Record<string, unknown>; created_at: Date }[]> {
+  async messagesFrom(tenantId: string, phone: string): Promise<{ id: string; body: string; category: string | null; for_staff: string | null; urgency: string | null; details: Record<string, unknown>; created_at: Date }[]> {
     return this.db.query<any>(
-      `select id, body, category, details, created_at from public.voice_messages
+      `select id, body, category, for_staff, urgency, details, created_at from public.voice_messages
        where tenant_id = $1 and kind = 'message' and from_phone = $2 order by created_at desc limit 20`,
       [tenantId, phone],
     );

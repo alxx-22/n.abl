@@ -478,6 +478,22 @@ function urgencyOf(v: unknown, category: Category): 'urgent' | 'today' | 'this_w
  * complaint gets a reference, an acknowledgement and the process; a
  * compliance note is private, never texted or read back.
  */
+const PULLING_OUT = /\bpull(?:ing)? out\b|\bwithdraw|mortgage (?:has been |was |'s been )?(?:refused|declined|turned down)|can'?t (?:go ahead|proceed)|fall(?:en|ing)? through/i;
+
+/** The sale under way this caller is the buyer or a seller in, when their message is about it: not a complaint, fraud or data, and not for someone they named. */
+async function saleParty(ctx: ToolContext, phone: string | null, forWords: string | undefined, category: Category): Promise<{ home: Listing } | null> {
+  if (!phone || ['complaint', 'fraud', 'data', 'compliance', 'safeguarding'].includes(category)) return null;
+  const w = forWords?.toLowerCase() ?? '';
+  // Someone named ("Rachel") is respected; "the manager" or "the team" is the model's guess.
+  if (w && teamOf(ctx.tenant).some((m) => w.includes(m.first_name.toLowerCase()) && m.role !== 'progressor')) return null;
+  for (const sale of (await ctx.repo.listSales(ctx.tenant.id)).filter((x) => x.status === 'progressing' || x.status === 'exchanged')) {
+    const mine = sale.buyer_phone === phone || (await ctx.repo.sellersOf(ctx.tenant.id, sale.listing_key)).some((x) => x.phone === phone);
+    const home = ctx.tenant.profile.listings?.find((l) => l.key === sale.listing_key);
+    if (mine && home) return { home };
+  }
+  return null;
+}
+
 export async function estateMessage(args: Args, ctx: ToolContext): Promise<Record<string, unknown> | null> {
   const t = ctx.tenant;
   const p = t.profile;
@@ -488,16 +504,24 @@ export async function estateMessage(args: Args, ctx: ToolContext): Promise<Recor
   // A caller who talked about bank or account details is a possible payment scam, whatever the model filed it as (ea-bank-details-change).
   const money = BANK_TALK.test(ctx.state.heard.join(' '));
   const chosen = categoryOf(args.category);
-  const category: Category = money && !['complaint', 'data', 'compliance', 'safeguarding'].includes(chosen) ? 'fraud' : chosen;
-  const urgency = category === 'fraud' && chosen !== 'fraud' ? 'urgent' : urgencyOf(args.urgency, category);
+  let category: Category = money && !['complaint', 'data', 'compliance', 'safeguarding'].includes(chosen) ? 'fraud' : chosen;
+  let urgency = category === 'fraud' && chosen !== 'fraud' ? 'urgent' : urgencyOf(args.urgency, category);
   let home: Listing | null = null;
   if (str(args.property)) {
     const r = await resolveHome(ctx, args.property);
     if ('home' in r) home = r.home.listing;
   }
+  // The buyer or seller in a sale under way: theirs is the progressor's, unless they asked for someone by name, and pulling out
+  // is urgent. A live call on 5 October filed "our mortgage has been refused, we'll have to pull out" for the manager.
+  const routed = await saleParty(ctx, phone, str(args.for), category);
+  if (routed) {
+    category = 'progression';
+    home ??= routed.home;
+    if (PULLING_OUT.test(`${body} ${ctx.state.heard.join(' ')}`)) urgency = 'urgent';
+  }
   // The home's own seller answering an offer by phone: urgent, and shown on its offers as "Seller replied by phone"; staff confirm before any buyer hears.
   const sellerReply = Boolean(home && phone && (category === 'offer' || category === 'seller') && (await ctx.repo.sellersOf(t.id, home.key)).some((x) => x.phone === phone));
-  const to = messageFor(t, str(args.for), category, home);
+  const to = messageFor(t, routed ? undefined : str(args.for), category, home);
   const first = to?.first_name ?? 'the team';
   const complaint = category === 'complaint';
   const quiet = category === 'compliance';

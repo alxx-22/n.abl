@@ -1030,7 +1030,7 @@ export const SCENARIOS: Scenario[] = [
       expect(f, !/\byou (?:could|should|might|can) (?:try|apply|go to|re-?apply|appeal)|another lender|different lender|re-?apply|appeal the/i.test(c.agentText), 'gave lending advice');
       const adviser = agentLines(c).filter((l) => /mortgage adviser|\bMark\b|mortgage appointment/i.test(l)).length;
       expect(f, adviser <= 1, `the adviser was offered ${adviser} times`);
-      expect(f, /(?:call|ring|phone|contact) you (?:back )?today|in touch (?:with you )?today/i.test(c.agentText), '"will call you today" was not said');
+      expect(f, /(?:call|ring|phone|contact|get back to) you (?:back )?today|in touch (?:with you )?today/i.test(c.agentText), '"will call you today" was not said');
       noFlags(c, f);
       return f;
     },

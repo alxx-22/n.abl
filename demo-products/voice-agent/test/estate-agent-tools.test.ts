@@ -875,3 +875,21 @@ test('get_sale_progress: each party hears their part, checked by number; anyone 
   const none = await ask('+447700900004', '22 Albion Road');
   assert.deepEqual([none.verified, none.done], [false, undefined]);
 });
+
+test('a message from the buyer or seller in a sale under way is the progressor\'s, and pulling out is urgent', async () => {
+  const t = await agency('ea-sale-message');
+  const msg = async (phone: string, args: Record<string, unknown>) => {
+    const c = await call(t, phone);
+    await c.run('take_message', { name: 'Caller', ...args });
+    return (await repo.messagesFrom(t.id, phone))[0];
+  };
+  // Ben, buying 3 Kingfisher Way: filed as general for the manager by the model, it reaches Dan, urgent.
+  const ben = await msg('+447700900004', { message: "Our mortgage has been refused; we'll have to pull out.", category: 'general', for: 'manager' });
+  assert.deepEqual([ben.category, ben.for_staff, ben.urgency, ben.details.listing], ['progression', 'dan', 'urgent', 'kingfisher_3']);
+  // Asking for someone by name is respected.
+  const named = await msg('+447700900004', { message: 'Please ask Jess to call me.', category: 'general', for: 'Jess' });
+  assert.equal(named.for_staff, 'jess');
+  // A complaint stays a complaint; someone not in a sale is routed as before.
+  assert.equal((await msg('+447700900004', { message: 'I want to complain about the delays.', category: 'complaint' })).category, 'complaint');
+  assert.equal((await msg('+447700900161', { message: "Our mortgage has been refused.", category: 'general' })).category, 'general');
+});
