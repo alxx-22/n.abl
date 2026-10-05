@@ -497,7 +497,8 @@ async function saleParty(ctx: ToolContext, phone: string | null, forWords: strin
 export async function estateMessage(args: Args, ctx: ToolContext): Promise<Record<string, unknown> | null> {
   const t = ctx.tenant;
   const p = t.profile;
-  if (!p.team) return null;
+  // A repairs contractor has a team too, with its own messages (maintenance-tools.ts).
+  if (!p.team || !p.estate) return null;
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const body = str(args.message) ?? '';
   const name = str(args.name) ?? 'Unknown';

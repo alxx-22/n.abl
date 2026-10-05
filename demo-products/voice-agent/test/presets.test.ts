@@ -316,7 +316,7 @@ test('presets: the eval\'s builder businesses are made through the registry and 
     assert.equal(profile.slug, b.slug);
     assert.ok(profile.name, `${b.slug} has a name`);
     const plan = preset.seed(profile, FRIDAY_EVENING, 7);
-    assert.ok(plan.bookings.length || plan.orders.length, `${b.slug}: a seeded week`);
+    assert.ok(plan.bookings.length || plan.orders.length || plan.jobs?.length, `${b.slug}: a seeded week`);
     if (b.preset === 'restaurant') assert.deepEqual(plan, planRestaurantSeed(profile, FRIDAY_EVENING, 7), 'the restaurant\'s week, as before');
   }
   const ember = builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'olive-ember')!).profile;

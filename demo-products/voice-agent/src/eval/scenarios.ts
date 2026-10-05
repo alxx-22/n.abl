@@ -52,6 +52,8 @@ export const BUILDER_TENANTS: BuilderTenant[] = [
   }),
   // The estate agent as it comes (presets/estate-agent.md §9): its ea- scenarios join with its tools.
   { slug: 'ea-hartwell', preset: 'estate_agent', edit: (a) => void (a.basics.name = 'Hartwell & Green') },
+  // Property maintenance as it comes (presets/property-maintenance.md §9).
+  { slug: 'pm-fernhill', preset: 'property_maintenance', edit: (a) => void (a.basics.name = 'Fernhill Property Care') },
 ];
 
 /** A builder business's preset, and its profile: the defaults, the edit, then cleaned and compiled as Start does. */

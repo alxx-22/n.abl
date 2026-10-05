@@ -1219,6 +1219,24 @@ export class Repo {
     return rows[0] ? mapMtProperty(rows[0]) : null;
   }
 
+  /** A new customer's home, added by the receptionist; never an example. Returns the existing one if the key is taken. */
+  async addMtProperty(tenantId: string, p: MtProperty): Promise<MtProperty> {
+    await this.db.query(
+      `insert into public.voice_mt_properties (tenant_id, property_key, number, street, district, town, kind, client_key, occupant_name, occupant_phone,
+         occupant_texts_ok, notes, access, vulnerable, vulnerable_consent_at, markers, gas, gas_appliances, example)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::text[], $15, $16::text[], $17, $18, false)
+       on conflict (tenant_id, property_key) do nothing`,
+      [tenantId, p.key, p.number, p.street, p.district, p.town, p.kind, p.client, p.occupant.name, p.occupant.phone, p.occupant.texts_ok,
+        JSON.stringify(p.notes), JSON.stringify(p.access), p.vulnerable, p.vulnerable_consent_at, p.markers, p.gas, p.gas_appliances],
+    );
+    return (await this.getMtProperty(tenantId, p.key))!;
+  }
+
+  /** Notes vulnerability at a property, with the occupant's consent and when it was given. */
+  async setVulnerable(tenantId: string, key: string, vulnerable: string[], at: Date): Promise<void> {
+    await this.db.query('update public.voice_mt_properties set vulnerable = $3::text[], vulnerable_consent_at = $4 where tenant_id = $1 and property_key = $2', [tenantId, key, vulnerable, at]);
+  }
+
   /**
    * Jobs, newest first: every one, or those at a property, from a number
    * (the reporter's, or the occupant's at the job's property), or by

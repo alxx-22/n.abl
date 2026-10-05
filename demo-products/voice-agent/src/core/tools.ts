@@ -23,13 +23,16 @@ import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
+import type { SafetyState } from './safety.ts';
+import { MAINTENANCE_TOOLS, maintenanceHours, maintenanceMessage, maintenanceParams } from './maintenance-tools.ts';
 
 export { record, type RecordKind } from './tool-kit.ts';
 
 export interface Action {
   kind:
     | 'booking_created' | 'booking_changed' | 'booking_cancelled' | 'order_updated' | 'order_placed'
-    | 'payment' | 'message_taken' | 'sms' | 'transfer' | 'call_ending' | 'offer_recorded' | 'buyer_registered';
+    | 'payment' | 'message_taken' | 'sms' | 'transfer' | 'call_ending' | 'offer_recorded' | 'buyer_registered'
+    | 'job_created' | 'job_changed' | 'safety_advice';
   title: string;
   detail?: string;
   data?: Record<string, unknown>;
@@ -106,6 +109,22 @@ export interface CallState {
   fraudNudged: boolean;
   /** A fraud message has been taken: an earlier, unrelated message does not count. */
   fraudReported: boolean;
+  // A repairs contractor's (presets/property-maintenance.md §4.4). Empty for
+  // every other business, and read only by the maintenance tools and guardrails.
+  /** Set at the start of a property maintenance contractor's call. */
+  maintenance: boolean;
+  /** An emergency the caller described, until the advice has been said. */
+  safety: SafetyState | null;
+  /** Emergencies already advised on this call: each arms once. */
+  safetyDone: string[];
+  /** The property this call is about, once find_property has found it. */
+  property: string | null;
+  /** Who the caller is to that property: what they may hear and do. */
+  role: 'occupant' | 'authoriser' | 'homeowner' | 'stranger' | null;
+  /** Jobs this caller may hear about: they gave the reference, or rang from the number on the job. */
+  jobsVerified: string[];
+  /** A homeowner heard the price before a job was booked: asked for once. */
+  priceAsked: boolean;
 }
 
 export function newCallState(): CallState {
@@ -116,6 +135,7 @@ export function newCallState(): CallState {
     estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false,
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
+    maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false,
   };
 }
 
@@ -393,7 +413,7 @@ const TOOLS: Record<string, Tool> = {
       description: 'Opening, last-booking and takeaway times for a date, or the next 7 days.',
       parameters: obj({ date: S('YYYY-MM-DD') }),
     },
-    tailor: (d, t) => estateParams(d, t, 'hours'),
+    tailor: (d, t) => maintenanceParams(estateParams(d, t, 'hours'), t, 'hours'),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const today = toLocal(ctx.now(), p.timezone).date;
@@ -411,6 +431,7 @@ const TOOLS: Record<string, Tool> = {
           const take = p.ordering?.hours.filter((h) => h.days.includes(wd));
           if (take?.length) out.orders = take.map((h) => `${spokenTime(h.open)} to ${spokenTime(h.close)}`);
           if (p.estate) Object.assign(out, estateHours(ctx.tenant, d));
+          if (p.maintenance) Object.assign(out, maintenanceHours(ctx.tenant, d));
           return out;
         }),
       };
@@ -1123,6 +1144,7 @@ const TOOLS: Record<string, Tool> = {
   },
 
   ...ESTATE_TOOLS,
+  ...MAINTENANCE_TOOLS,
 
   take_message: {
     decl: {
@@ -1130,9 +1152,9 @@ const TOOLS: Record<string, Tool> = {
       description: 'A message for the team, with a name and call-back number.',
       parameters: obj({ name: S("Caller's name"), phone: S('Call-back number'), message: S('One or two sentences') }, ['name', 'message']),
     },
-    tailor: (d, t) => estateParams(d, t, 'message'),
+    tailor: (d, t) => maintenanceParams(estateParams(d, t, 'message'), t, 'message'),
     async handler(args, ctx) {
-      const estate = await estateMessage(args, ctx);
+      const estate = (await estateMessage(args, ctx)) ?? (await maintenanceMessage(args, ctx));
       if (estate) return estate;
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
       const body = str(args.message) ?? '';

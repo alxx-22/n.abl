@@ -86,7 +86,7 @@ export const MT_NATION_PACKS: Record<MtNation, MtNationPack> = {
   },
 };
 
-export const SAFETY_KINDS = ['gas', 'co', 'co_chirp', 'fire', 'electric', 'water', 'flood', 'break_in', 'lockout', 'structural'] as const;
+export const SAFETY_KINDS = ['gas', 'co', 'co_chirp', 'fire', 'hurt', 'electric', 'water', 'flood', 'break_in', 'lockout', 'structural'] as const;
 export type SafetyKind = (typeof SAFETY_KINDS)[number];
 
 /** Logged with every incident, so the safety log says which wording the caller heard. */
@@ -155,6 +155,13 @@ export function safetyScript(kind: SafetyKind, nation: MtNation): SafetyScript {
         steps: ['Get everyone out and stay out.', 'Ring 999 and ask for the fire service.', "Don't go back in for anything."],
         number: '999',
         next: 'End the call so they can ring 999.',
+      };
+    case 'hurt':
+      return {
+        kind, title: 'Someone hurt',
+        steps: ['If anyone is hurt or in danger, ring 999 now.', "Don't move someone who may be badly hurt unless they're in danger where they are."],
+        number: '999',
+        next: 'End the call so they can ring 999; offer to call back about the repair.',
       };
     case 'electric':
       return {

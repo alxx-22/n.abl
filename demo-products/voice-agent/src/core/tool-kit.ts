@@ -24,9 +24,10 @@ export const bool = (v: unknown): boolean | undefined => (v === true || v === 't
 
 /**
  * What a record is to this call: a booking or an order it made or looked
- * up, a change to or cancellation of a booking, or an offer it took.
+ * up, a change to or cancellation of a booking, an offer it took, or a
+ * repair job it raised.
  */
-export type RecordKind = 'booking' | 'order' | 'change' | 'cancellation' | 'offer';
+export type RecordKind = 'booking' | 'order' | 'change' | 'cancellation' | 'offer' | 'job';
 
 /**
  * Every tool that makes or finds a booking or an order says so here, and
@@ -52,7 +53,7 @@ export function record(ctx: { state: CallState }, ref: string, kind: RecordKind,
   if (kind === 'booking' || kind === 'change') s.lastBookingRef = ref;
   if (kind === 'order') s.lastOrderRef = ref;
   if (kind === 'offer') s.lastOfferRef = ref;
-  if (kind === 'booking' || kind === 'order' || kind === 'offer') s.owed = ref;
+  if (kind === 'booking' || kind === 'order' || kind === 'offer' || kind === 'job') s.owed = ref;
 }
 
 export async function smsTo(ctx: ToolContext, to: string | null, body: string): Promise<string | null> {
