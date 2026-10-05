@@ -211,11 +211,16 @@ the sample clients. The builder lists them read-only in M1 (an editor is M3),
 so no property address is ever typed by a prospect and none can be a real
 home.
 
-### 2.2 Defaults: Fernhill Property Care, Brackenford
+### 2.2 Defaults: Fernhill Property Care, Nottingham, Derby and Loughborough
 
-The invented town the estate agent uses (BK is not a real postcode area),
-so no sample address can be a real home, and the two demos share a world.
-England. Districts BK1 to BK9; towns Brackenford, Little Haddon, Coldbrook.
+Alex's decision (5 October 2026): the demo covers real towns, Nottingham,
+Derby and Loughborough, so a prospect in the East Midlands sees their own
+patch. Districts NG1 to NG11, DE1 to DE3, DE21 to DE24 and LE11; towns
+Nottingham, Derby, Loughborough, Beeston, West Bridgford and Long Eaton.
+England. Because the postcodes are real, every sample address is on an
+invented street name, carries "(example)" wherever it is shown, and is never
+put in a text as a real address; a made-up street may still share its name
+with a real one somewhere in the patch, which the example label covers.
 Office hours Monday to Friday 08:00 to 17:30, Saturday 09:00 to 12:00.
 
 Engineers (Gas Safe numbers are invented and marked example):
@@ -379,7 +384,7 @@ also in the prompt (§4.5), so the first sentence never waits on a tool.
 
 **`find_property`** (M1). Args: `postcode`, `number` (door number or name),
 `street`, `phone` (defaults to the caller's). Returns at most three:
-`{ property: id, says: "14 Elm Road, BK2", client: "Harbour Lettings"
+`{ property: id, says: "14 Elm Road (example), NG5", client: "Harbour Lettings"
 (kind only for a stranger), occupant_known: true, notes: { stopcock,
 boiler, pets, parking, access: "key safe (code held; never read out)" },
 vulnerable: [...], markers_for_staff: never returned }`. Matched by number:
@@ -583,8 +588,8 @@ text. An acceptance during a call reaches the receptionist as a system note
 ## 7. The seeded week
 
 Anchored to Start. Fernhill's engineers and clients as §2.2; about 70
-properties with invented addresses in Brackenford, Little Haddon and
-Coldbrook; occupants with 07700 900xxx numbers; stopcock and boiler notes;
+properties on invented streets in Nottingham, Derby and Loughborough (each
+marked "(example)"); occupants with 07700 900xxx numbers; stopcock and boiler notes;
 key safes on 9 (codes never stored in clear); pets on some.
 
 Compliance register: gas records spread over the year, 6 due within 6 weeks
@@ -769,10 +774,9 @@ strip; surge day; relay and language support.
 
 Defaults chosen so the build can start; each can be changed:
 
-1. **The town.** Fernhill Property Care in Brackenford, the invented town the
-   estate agent uses, so no sample address is a real home. (The research
-   suggested Nottingham; real postcodes with invented addresses could match
-   real houses.)
+1. **The area.** Decided 5 October: Nottingham, Derby and Loughborough (NG,
+   DE and LE11), with invented street names marked "(example)" (§2.2). The
+   estate agent stays in Brackenford.
 2. **All four nations** in the builder, through a nation pack (the estate
    agent shows Scotland as "coming later"; here the safety numbers are the
    same and the differences are small enough to include).
