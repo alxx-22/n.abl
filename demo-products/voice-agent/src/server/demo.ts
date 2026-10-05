@@ -546,6 +546,12 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     refresh({ reason: 'staff', reference: ref.toUpperCase(), what: message });
     return json(res, 200, { ok: true, message }), true;
   }
+  if (sub === 'sales' && ref && req.method === 'PATCH') {
+    const message = await saleAction(ctx, t, ref, await readJson(req, 10_000));
+    void usage('staff_action', { action: 'sale' });
+    refresh({ reason: 'staff', what: message });
+    return json(res, 200, { ok: true, message }), true;
+  }
   if (sub === 'buyers' && ref && req.method === 'PATCH') {
     const message = await buyerAction(ctx, t, ref, await readJson(req, 10_000));
     void usage('staff_action', { action: 'buyer' });
@@ -805,6 +811,102 @@ async function buyerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
       await repo.upsertBuyer(t.id, phone, null, {}, false);
       await textCustomer(ctx, t.id, phone, `${t.profile.name}: we've stopped texting you about new homes, as you asked. (Demo)`);
       return `${who} won't get texts about new homes any more.`;
+    }
+    default:
+      throw new HttpError(400, 'Unknown action.');
+  }
+}
+
+/**
+ * A home back on the market (or reduced): the buyers who asked to hear. Its
+ * back-up buyers always; anyone else only with a yes to alerts and a search
+ * it fits. Each number once. Returns how many were texted.
+ */
+async function alertBuyers(ctx: Ctx, t: Tenant, key: string, why: 'back' | 'reduced'): Promise<number> {
+  const { repo } = ctx;
+  const home = t.profile.listings!.find((l) => l.key === key)!;
+  const live = (await repo.listingState(t.id, key))!;
+  const findable = [{ listing: home, price_pence: live.price_pence, status: live.status }];
+  const told = new Set<string>();
+  for (const b of await repo.listBuyers(t.id)) {
+    const backup = (b.details.backup_for ?? []).includes(key);
+    const fits = b.marketing_consent && b.details.requirements && matches(b.details.requirements, findable).length > 0;
+    if ((!backup && !fits) || told.has(b.phone)) continue;
+    told.add(b.phone);
+    const price = priceWords(live.price_pence, live.qualifier, home.lease?.shared?.share_percent);
+    const news = why === 'back' ? `${shortAddress(home)} is back on the market, ${price}.` : `${shortAddress(home)} has been reduced: now ${price}.`;
+    await textCustomer(ctx, t.id, b.phone, `${t.profile.name}: ${news} Call us if you'd like to view it.${fits ? ' To stop these texts, call us.' : ''} (Demo)`);
+  }
+  return told.size;
+}
+
+/**
+ * Staff moving a sale on in Sales progress: tick a milestone, set the dates,
+ * log an update from a solicitor or an agent in the chain, release the keys
+ * on completion day, or record that it fell through (and, if the seller
+ * wants, put the home back on the market and tell the buyers waiting for it).
+ */
+async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<string> {
+  const { repo } = ctx;
+  if (!t.profile.listings) throw new HttpError(400, 'This business has no sales.');
+  const sale = (await repo.listSales(t.id)).find((x) => x.id === id);
+  if (!sale) throw new HttpError(404, 'No such sale.');
+  const home = t.profile.listings.find((l) => l.key === sale.listing_key);
+  if (!home) throw new HttpError(409, 'That home is no longer in your list.');
+  const where = shortAddress(home);
+  const today = toLocal(new Date(), t.profile.timezone).date;
+  if (sale.status === 'fell_through' || sale.status === 'completed') throw new HttpError(409, `The sale of ${where} has ${sale.status === 'completed' ? 'completed' : 'fallen through'}.`);
+  switch (b.action) {
+    case 'milestone': {
+      const key = String(b.key ?? '');
+      if (!(SALE_MILESTONES as readonly string[]).includes(key)) throw new HttpError(400, 'Unknown milestone.');
+      if (key === 'completion') throw new HttpError(400, 'Completion is recorded with "Completed: release keys".');
+      const done = b.done !== false;
+      const milestones = sale.milestones.map((m) => (m.key === key ? { key, done_at: done ? new Date().toISOString() : null } : m));
+      // Exchanged is a status for the home and the sale too: callers then hear it is sold.
+      const status = key === 'exchange' ? (done ? 'exchanged' : 'progressing') : undefined;
+      await repo.updateSale(t.id, id, { milestones, ...(status ? { status } : {}) }, { by: 'staff', what: `${key.replace(/_/g, ' ')} ${done ? 'done' : 'not done'}` });
+      if (status) await repo.setListing(t.id, sale.listing_key, { status: done ? 'exchanged' : 'sale_agreed' }, 'staff', done ? 'contracts exchanged' : 'exchange undone');
+      return `${where}: ${key.replace(/_/g, ' ')} ${done ? 'ticked' : 'unticked'}.`;
+    }
+    case 'dates': {
+      const exchange = b.exchange_target === null ? null : isoDay(b.exchange_target);
+      const completion = b.completion_date === null ? null : isoDay(b.completion_date);
+      if ((b.exchange_target && !exchange) || (b.completion_date && !completion)) throw new HttpError(400, 'Choose real dates.');
+      if (exchange && completion && completion < exchange) throw new HttpError(400, 'Completion comes on or after exchange.');
+      const patch = { ...('exchange_target' in b ? { exchange_target: exchange } : {}), ...('completion_date' in b ? { completion_date: completion } : {}) };
+      await repo.updateSale(t.id, id, patch, { by: 'staff', what: `dates: exchange ${exchange ?? 'none'}, completion ${completion ?? 'none'}` });
+      return `${where}: dates saved.`;
+    }
+    case 'update': {
+      const what = String(b.what ?? '').trim().slice(0, 300);
+      if (!what) throw new HttpError(400, 'Say what the update is.');
+      const from = ['buyer_solicitor', 'seller_solicitor', 'chain_agent', 'buyer', 'seller', 'staff'].includes(b.from) ? b.from : 'staff';
+      await repo.updateSale(t.id, id, {}, { by: from, what });
+      return `${where}: update logged.`;
+    }
+    case 'release_keys': {
+      // Only once completion is due: the seller's solicitor confirms on the day, and staff release the keys.
+      if (!sale.completion_date || sale.completion_date > today) throw new HttpError(409, `Keys are released on completion day${sale.completion_date ? `, ${sale.completion_date}` : ': set the completion date first'}.`);
+      const milestones = sale.milestones.map((m) => (m.key === 'completion' || m.key === 'exchange') && !m.done_at ? { ...m, done_at: new Date().toISOString() } : m);
+      await repo.updateSale(t.id, id, { milestones, status: 'completed', keys_released_at: new Date() }, { by: 'staff', what: 'completed: keys released' });
+      await repo.setListing(t.id, sale.listing_key, { status: 'completed' }, 'staff', 'completed: keys released');
+      const negotiator = t.profile.team?.find((s) => s.key === home.negotiator)?.first_name;
+      await textCustomer(ctx, t.id, sale.buyer_phone, `${t.profile.name}: completion has gone through on ${where}. Your keys are ready to collect from our office${negotiator ? `; ${negotiator} has them` : ''}. Congratulations! (Demo)`);
+      return `${where}: completed; the buyer has been texted that the keys are ready.`;
+    }
+    case 'fell_through': {
+      if (sale.status !== 'progressing') throw new HttpError(409, `${where} has exchanged: a sale that falls through after exchange is one for the solicitors.`);
+      const reason = String(b.reason ?? '').trim().slice(0, 200);
+      if (!reason) throw new HttpError(400, 'Say why it fell through.');
+      await repo.updateSale(t.id, id, { status: 'fell_through' }, { by: 'staff', what: `fell through: ${reason}` });
+      if (!b.back_on_market) {
+        await repo.setListing(t.id, sale.listing_key, { status: 'withdrawn' }, 'staff', `sale fell through (${reason}); not back on the market yet`);
+        return `${where}: the sale fell through. The home is withdrawn until the seller decides.`;
+      }
+      await repo.setListing(t.id, sale.listing_key, { status: 'available', back_on_market_at: new Date() }, 'staff', `back on the market: sale fell through (${reason})`);
+      const told = await alertBuyers(ctx, t, sale.listing_key, 'back');
+      return `${where}: back on the market${told ? `, and ${told} buyer${told === 1 ? ' has' : 's have'} been texted` : ''}.`;
     }
     default:
       throw new HttpError(400, 'Unknown action.');

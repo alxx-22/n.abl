@@ -552,3 +552,60 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal((await state()).listings.find((l: any) => l.key === first.key).price_pence, first.price_pence, 'the builder\'s price now');
   }
 });
+
+test('demo: an estate agency\'s sales: milestones, dates, updates, keys on completion day, and a sale that falls through', async () => {
+  assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Dan Fletcher', company: 'Hartwell & Green' });
+  const dan = client('10.0.0.12');
+  assert.equal((await dan.call('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+  const made = await dan.call('POST', '/demo/api/workspaces', { preset: 'estate_agent' });
+  const path = `/demo/api/workspaces/${made.data.id}`;
+  assert.equal((await dan.call('POST', `${path}/start`)).status, 200);
+  const sales = async () => app.repo.listSales(made.data.id);
+  const texts = async (phone: string) => (await dan.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
+  const act = (id: string, body: Record<string, unknown>) => dan.call('PATCH', `${path}/sales/${id}`, body);
+  const listing = async (k: string) => (await app.repo.listingState(made.data.id, k))!;
+
+  // A milestone ticked, dates set, an update logged; completion only through the keys.
+  const ben = (await sales()).find((x) => x.listing_key === 'kingfisher_3')!;
+  assert.equal((await act(ben.id!, { action: 'milestone', key: 'searches' })).status, 200);
+  assert.equal((await act(ben.id!, { action: 'milestone', key: 'completion' })).status, 400);
+  assert.equal((await act(ben.id!, { action: 'dates', exchange_target: '2026-10-20', completion_date: '2026-10-15' })).status, 400, 'completion before exchange');
+  assert.equal((await act(ben.id!, { action: 'dates', exchange_target: '2026-10-20', completion_date: '2026-10-30' })).status, 200);
+  assert.equal((await act(ben.id!, { action: 'update', from: 'seller_solicitor', what: 'Replies to enquiries sent today.' })).status, 200);
+  let now = (await sales()).find((x) => x.id === ben.id)!;
+  assert.ok(now.milestones.find((m) => m.key === 'searches')!.done_at);
+  assert.deepEqual([now.exchange_target, now.completion_date], ['2026-10-20', '2026-10-30']);
+  assert.deepEqual(now.updates.at(-1), { ...now.updates.at(-1), by: 'seller_solicitor', what: 'Replies to enquiries sent today.' });
+  // Keys: refused before completion day.
+  assert.equal((await act(ben.id!, { action: 'release_keys' })).status, 409);
+
+  // Exchanged, then completion day: keys released, the buyer texted, the home completed.
+  const liam = (await sales()).find((x) => x.listing_key === 'willow_gardens_8')!;
+  const today = new Date().toISOString().slice(0, 10);
+  await app.repo.updateSale(made.data.id, liam.id!, { completion_date: today });
+  const keys = await act(liam.id!, { action: 'release_keys' });
+  assert.equal(keys.status, 200, JSON.stringify(keys.data));
+  assert.match((await texts(liam.buyer_phone!)).at(-1), /completion has gone through on 8 Willow Gardens\. Your keys are ready to collect/);
+  assert.equal((await listing('willow_gardens_8')).status, 'completed');
+  assert.equal((await act(liam.id!, { action: 'milestone', key: 'survey' })).status, 409, 'a completed sale is done with');
+
+  // Exchange ticked: the home is exchanged; a sale that has exchanged cannot simply fall through.
+  const elm = (await sales()).find((x) => x.listing_key === 'elm_court_2')!;
+  await act(elm.id!, { action: 'milestone', key: 'exchange' });
+  assert.equal((await listing('elm_court_2')).status, 'exchanged');
+  assert.equal((await act(elm.id!, { action: 'fell_through', reason: 'x', back_on_market: true })).status, 409);
+
+  // Ben's mortgage refused: back on the market, and the back-up buyer hears.
+  const backup = (await app.repo.listBuyers(made.data.id)).find((b) => (b.details.backup_for ?? []).includes('kingfisher_3'))!;
+  assert.equal((await act(ben.id!, { action: 'fell_through', back_on_market: true })).status, 400, 'a reason is needed');
+  const fell = await act(ben.id!, { action: 'fell_through', reason: "the buyer's mortgage was refused", back_on_market: true });
+  assert.equal(fell.status, 200, JSON.stringify(fell.data));
+  assert.match(fell.data.message, /back on the market, and \d+ buyers? (?:has|have) been texted/);
+  assert.match((await texts(backup.phone)).at(-1), /3 Kingfisher Way is back on the market, .+ Call us if you'd like to view it/);
+  assert.equal((await listing('kingfisher_3')).status, 'available');
+  assert.ok((await listing('kingfisher_3')).back_on_market_at);
+  assert.equal((await sales()).find((x) => x.id === ben.id)!.status, 'fell_through');
+  assert.equal((await act(ben.id!, { action: 'milestone', key: 'survey' })).status, 409);
+  assert.equal((await act('00000000-0000-0000-0000-000000000000', { action: 'milestone', key: 'survey' })).status, 404);
+});
