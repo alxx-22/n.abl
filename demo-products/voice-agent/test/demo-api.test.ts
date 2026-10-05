@@ -617,4 +617,28 @@ test('demo: an estate agency\'s sales: milestones, dates, updates, keys on compl
   assert.match(cut.data.message, /reduced to £[\d,]+\. \d+ buyers? (?:has|have) been texted\./);
   assert.match((await texts('07700 900781')).at(-1), /27 Station Road has been reduced: now .+ To stop these texts, call us\./);
   assert.equal((await texts('07700 900782')).length, 0);
+
+  // Describe your stock: a description first; then the drafted homes come back, and nothing is saved.
+  const before = (await dan.call('GET', path)).data.answers.listings;
+  const empty = await dan.call('POST', `${path}/menu-draft`, {});
+  assert.deepEqual([empty.status, empty.data.error], [400, 'Describe the homes you sell first.']);
+  const reply = JSON.stringify({ homes: [
+    { street: 'Acorn Close', number: '3', type: 'semi', beds: 3, price_pounds: 285_000, tenure: 'freehold', local_tax: 'C', epc: 'D', summary: 'A semi with a long garden.', features: ['garden', 'parking'] },
+    { street: 'Juniper Court', number: 'Flat 4, 12', type: 'flat', beds: 1, price_pounds: 142_000, tenure: 'leasehold', lease_years_left: 110, local_tax: 'A', epc: 'C', summary: 'A first-floor flat.' },
+  ] });
+  const real = globalThis.fetch;
+  globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) =>
+    String(input).startsWith('https://generativelanguage.googleapis.com/')
+      ? new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: reply }] } }] }), { headers: { 'content-type': 'application/json' } })
+      : real(input, init)) as typeof fetch;
+  try {
+    const drafted = await dan.call('POST', `${path}/menu-draft`, { description: 'Family semis and a few flats', homes: 2 });
+    assert.equal(drafted.status, 200, JSON.stringify(drafted.data));
+    assert.deepEqual(Object.keys(drafted.data), ['listings']);
+    assert.deepEqual(drafted.data.listings.map((l: any) => `${l.number} ${l.street}`), ['3 Acorn Close', 'Flat 4, 12 Juniper Court']);
+    assert.ok(drafted.data.listings.every((l: any) => l.example && Object.values(l.checks).every((c: any) => c.v === 'unknown')));
+  } finally {
+    globalThis.fetch = real;
+  }
+  assert.deepEqual((await dan.call('GET', path)).data.answers.listings, before, 'the saved homes are untouched');
 });

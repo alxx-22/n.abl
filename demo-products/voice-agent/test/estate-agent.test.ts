@@ -21,6 +21,7 @@ import { sanitiseEstate } from '../src/presets/estate/sanitise.ts';
 import { PERSONAS, planEstateSeed } from '../src/presets/estate/seed.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
 import { replaySeed } from './seed-replay.ts';
+import { STREETS, listingsFromDraft, stockBrief } from '../src/presets/estate/stock.ts';
 import { STEPS } from '../src/presets/estate/steps.ts';
 import { validateEstate } from '../src/presets/estate/validate.ts';
 
@@ -656,4 +657,29 @@ test("the prompt's areas and viewing times stay short however the agency fills t
   const week = a.diary.viewing_days.map((d, i) => ({ open: i !== 0, services: [0, 1, 2].map((k) => ({ label: 'Viewings', open: `${9 + k * 3}:0${i}`, close: `${10 + k * 3}:30` })) }));
   assert.equal(weekWords(week, 160), 'Monday to Saturday, at set times (check_availability has them)');
   assert.equal(weekWords(a.diary.viewing_days, 160), weekWords(a.diary.viewing_days));
+});
+
+test('describe your stock: drafted homes on made-up streets in the agency\'s districts, every check unknown, each an example', () => {
+  const a = sanitiseEstate(named());
+  const homes = listingsFromDraft({
+    homes: [
+      { street: 'Rowan Way', number: '14', district: 'SW1', type: 'flat', beds: 2, price_pounds: 187_400, tenure: 'leasehold', lease_years_left: 85, local_tax: 'b', epc: 'c', summary: 'A second-floor flat near the station.' },
+      { street: 'Downing Street', number: '10', type: 'detached', beds: 4, price_pounds: 612_345, tenure: 'freehold', local_tax: 'Z', summary: 'A detached house with a garden.' },
+      { street: 'Rowan Way', number: '14', type: 'terraced', beds: 3, price_pounds: 265_000, tenure: 'freehold', summary: 'A terraced house.' },
+    ],
+  }, a, '2026-10-05');
+  assert.equal(homes.length, 3);
+  assert.ok(homes.every((h) => STREETS.includes(h.street) && a.patch.districts.includes(h.district) && h.example), JSON.stringify(homes.map((h) => [h.street, h.district])));
+  assert.notEqual(homes[1].street, 'Downing Street', 'a real address is never kept');
+  assert.equal(new Set(homes.map((h) => `${h.number}|${h.street}`)).size, 3, 'each address once');
+  assert.deepEqual(homes.map((h) => h.price_pence), [18_500_000, 61_000_000, 26_500_000], 'rounded to £5,000');
+  assert.equal(homes[0].lease?.expires, '2111-10-05', '85 years left');
+  assert.deepEqual([homes[0].local_tax, homes[0].epc, homes[1].local_tax], ['B', 'C', '']);
+  assert.ok(homes.every((h) => Object.values(h.checks).every((c) => c.v === 'unknown')), 'nothing about flooding and the rest is invented');
+  assert.ok(homes.every((h) => a.team.find((m) => m.key === h.negotiator)?.does.includes('viewings')));
+  // They pass the builder's checks as they come.
+  const withThem = { ...a, listings: homes };
+  assert.deepEqual(validateEstate(withThem).filter((i) => i.level === 'error'), []);
+  assert.deepEqual(stockBrief({ description: '  Victorian terraces  ', homes: 40 }), { description: 'Victorian terraces', homes: 12 });
+  assert.equal(stockBrief({}).homes, 8);
 });

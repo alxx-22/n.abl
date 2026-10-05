@@ -17,6 +17,7 @@ import { NATION_PACKS } from './nations.ts';
 import { sanitiseEstate } from './sanitise.ts';
 import { planEstateSeed } from './seed.ts';
 import { STEPS } from './steps.ts';
+import { draftStock } from './stock.ts';
 import { missingPartA, validateEstate } from './validate.ts';
 
 /** What the receptionist does itself, so the FAQ draft leaves it out. */
@@ -109,6 +110,12 @@ export const estateAgent: Omit<Preset<EstateAnswers>, 'info'> = {
   preview: (a, profile) => estatePreview(a, profile),
   factSheet,
   handles: ESTATE_HANDLES,
+  // "Describe your stock": the Listings step's draft (M3). The day is the agency's, for each lease's end.
+  draft: {
+    label: 'listings',
+    run: (body, a, config) => draftStock(body, a, config, toLocal(new Date(), 'Europe/London').date),
+    counts: (homes) => ({ homes: (homes as unknown[]).length }),
+  },
   scan: { parts: ['identity', 'hours', 'theme'], apply: applyBaseScan },
   workspace: estateWorkspace,
 };

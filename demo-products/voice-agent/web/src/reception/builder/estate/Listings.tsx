@@ -59,7 +59,7 @@ function blankHome(a: EstateAnswers): ListingAnswer {
 }
 
 
-export function StepListings({ a, set, ws }: Props) {
+export function StepListings({ a, set, ws, me }: Props) {
   const [open, setOpen] = useState<string | null>(a.listings[0]?.key ?? null);
   const [tab, setTab] = useState<Tab>('Home');
   const [busy, setBusy] = useState(false);
@@ -101,6 +101,10 @@ export function StepListings({ a, set, ws }: Props) {
   return (
     <div className="fields">
       <p className="lead">The homes you sell. The receptionist answers from these facts alone, and says “that isn’t in the details” for anything you leave unknown.</p>
+      <StockDraft
+        workspace={ws.id} draftsLeft={Math.max(0, me.limits.drafts_per_day - me.used.drafts)} has={a.listings.filter((l) => !l.example).length}
+        onDrafted={(homes) => { set((d) => void (d.listings = homes)); setOpen(homes[0]?.key ?? null); }}
+      />
       <div className="home-list" role="list">
         {a.listings.map((l) => {
           const missing = missingPartA(l);
@@ -376,3 +380,44 @@ export function stockLine(listings: ListingAnswer[]): string {
   return `${listings.length} home${listings.length === 1 ? '' : 's'}: ${counts.map(([s, n]) => `${n} ${STATUSES[s].label.toLowerCase()}`).join(', ')}`;
 }
 
+
+/**
+ * Describe your stock (M3): the AI drafts homes from a few words, on made-up
+ * streets in your districts, with every checklist answer left unknown for
+ * you to fill in. It replaces the list; the next autosave keeps it.
+ */
+function StockDraft({ workspace, draftsLeft, has, onDrafted }: { workspace: string; draftsLeft: number; has: number; onDrafted: (homes: ListingAnswer[]) => void }) {
+  const [description, setDescription] = useState('');
+  const [homes, setHomes] = useState(8);
+  const [busy, setBusy] = useState(false);
+  const draft = async () => {
+    if (has && !confirm(`Replace your ${has} home${has === 1 ? '' : 's'} with a new draft?`)) return;
+    setBusy(true);
+    try {
+      const { listings } = await demoApi<{ listings: ListingAnswer[] }>(`/workspaces/${workspace}/menu-draft`, { method: 'POST', json: { description, homes } });
+      onDrafted(listings);
+      toast(`Drafted ${listings.length} homes. Every checklist answer is unknown until you fill it in.`);
+    } catch (e) {
+      toast((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="group on draft-box">
+      <h3>Describe your stock</h3>
+      <textarea
+        className="prose" rows={2} maxLength={600} aria-label="Describe your stock"
+        placeholder="Mostly Victorian terraces and 1930s semis, £200,000 to £450,000, a few new-build flats and the odd bungalow"
+        value={description} onChange={(e) => setDescription(e.target.value)}
+      />
+      <div className="field-row">
+        <select aria-label="How many homes" value={homes} onChange={(e) => setHomes(Number(e.target.value))}>
+          {[4, 6, 8, 10, 12].map((n) => <option key={n} value={n}>{n} homes</option>)}
+        </select>
+        <button type="button" className="primary" disabled={busy || !description.trim()} onClick={draft}>{busy ? 'Drafting… (about 20 s)' : 'Draft my homes'}</button>
+      </div>
+      <p className="hint">Made-up addresses on streets in your area, marked as examples. {draftsLeft} drafts left today.</p>
+    </div>
+  );
+}
