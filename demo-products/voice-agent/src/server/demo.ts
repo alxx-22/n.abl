@@ -718,14 +718,18 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
           fell++;
         }
       }
-      return { message: `${where}: ${status.replace(/_/g, ' ')}.${fell ? ' Its sale in progress is marked fallen through.' : ''}` };
+      // Back on the market: the back-up buyers and the consenting buyers it fits hear, as from Sales progress.
+      const told = back ? await alertBuyers(ctx, t, key, 'back') : 0;
+      return { message: `${where}: ${status.replace(/_/g, ' ')}.${fell ? ' Its sale in progress is marked fallen through.' : ''}${told ? ` ${told} buyer${told === 1 ? ' has' : 's have'} been texted.` : ''}` };
     }
     case 'price': {
       const pence = Math.round(Number(b.price_pence));
       if (!Number.isFinite(pence) || pence < 100_000 || pence > 2_000_000_000) throw new HttpError(400, 'Give a price in pounds.');
       const lower = pence < live.price_pence;
       await repo.setListing(t.id, key, { price_pence: pence }, 'staff', `price ${lower ? 'reduced' : 'changed'} from ${figure(live.price_pence)} to ${figure(pence)}`);
-      return { message: `${where}: ${lower ? 'reduced' : 'now'} to ${figure(pence)}.` };
+      // A reduction on a home still for sale reaches the buyers who said yes to alerts and whose search it now fits.
+      const told = lower && (live.status === 'available' || live.status === 'under_offer') ? await alertBuyers(ctx, t, key, 'reduced') : 0;
+      return { message: `${where}: ${lower ? 'reduced' : 'now'} to ${figure(pence)}.${told ? ` ${told} buyer${told === 1 ? ' has' : 's have'} been texted.` : ''}` };
     }
     case 'block': {
       const from = isoDay(b.from);
@@ -829,7 +833,8 @@ async function alertBuyers(ctx: Ctx, t: Tenant, key: string, why: 'back' | 'redu
   const findable = [{ listing: home, price_pence: live.price_pence, status: live.status }];
   const told = new Set<string>();
   for (const b of await repo.listBuyers(t.id)) {
-    const backup = (b.details.backup_for ?? []).includes(key);
+    // A back-up buyer asked to hear if the sale falls through, not about a reduction.
+    const backup = why === 'back' && (b.details.backup_for ?? []).includes(key);
     const fits = b.marketing_consent && b.details.requirements && matches(b.details.requirements, findable).length > 0;
     if ((!backup && !fits) || told.has(b.phone)) continue;
     told.add(b.phone);
