@@ -642,3 +642,50 @@ test('demo: an estate agency\'s sales: milestones, dates, updates, keys on compl
   }
   assert.deepEqual((await dan.call('GET', path)).data.answers.listings, before, 'the saved homes are untouched');
 });
+
+test('demo: a repairs contractor end to end: start fills the board, staff dispatch and move jobs on, a certificate is booked from the register, reset refills it', async () => {
+  assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Helen Ward', company: 'Fernhill Property Care' });
+  const helen = client('10.0.0.31');
+  assert.equal((await helen.call('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+  const made = await helen.call('POST', '/demo/api/workspaces', { preset: 'property_maintenance' });
+  assert.equal(made.status, 201, JSON.stringify(made.data));
+  const path = `/demo/api/workspaces/${made.data.id}`;
+  const answers = (await helen.call('GET', path)).data.answers;
+  answers.basics.name = 'Fernhill Property Care';
+  assert.equal((await helen.call('PUT', `${path}/answers`, answers)).status, 200);
+  const started = await helen.call('POST', `${path}/start`);
+  assert.equal(started.status, 200, JSON.stringify(started.data));
+  assert.ok(started.data.jobs > 40, `${started.data.jobs} jobs`);
+  const state = (await helen.call('GET', `${path}/state`)).data;
+  assert.deepEqual(state.workspace.views.map((v: any) => v.id), ['jobs', 'dispatch', 'compliance', 'safety', 'messages', 'calls']);
+  assert.equal(state.engineers.length, 8);
+  assert.equal(state.properties.length, 70);
+  assert.equal(state.incidents.length, 1);
+  const texts = async (phone: string) => (await helen.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
+  // Dispatch refuses gas work for an engineer who isn't Gas Safe, and says why.
+  const gas = state.jobs.find((j: any) => j.status === 'scheduled' && j.flags.includes('gas'));
+  const refused = await helen.call('PATCH', `${path}/jobs/${gas.reference}`, { action: 'assign', engineer: 'grace' });
+  assert.equal(refused.status, 409);
+  assert.match(refused.data.error, /Grace doesn't do|isn't Gas Safe/);
+  // On the way texts the occupant.
+  const booked = state.jobs.find((j: any) => j.status === 'scheduled' && j.engineer && j.property_key);
+  const prop = state.properties.find((p: any) => p.key === booked.property_key);
+  const otw = await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'on_the_way', eta_minutes: 25 });
+  assert.equal(otw.status, 200, JSON.stringify(otw.data));
+  if (prop.occupant.phone) assert.match((await texts(prop.occupant.phone)).at(-1), new RegExp(`${booked.engineer} is on the way, about 25 minutes`));
+  assert.equal((await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'done' })).status, 400, 'done needs notes');
+  assert.equal((await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'done', notes: 'Fixed.' })).status, 200);
+  // A certificate booked from the register, then refused the second time.
+  const due = state.properties.find((p: any) => p.certificates.some((c: any) => c.kind === 'gas_record' && c.state === 'overdue'));
+  const book = await helen.call('POST', `${path}/properties/${due.key}`, { action: 'book', what: 'gas_record' });
+  assert.equal(book.status, 200, JSON.stringify(book.data));
+  assert.match(book.data.message, /gas safety record booked for .* with (Dan|Callum)/);
+  assert.equal((await helen.call('POST', `${path}/properties/${due.key}`, { action: 'book', what: 'gas_record' })).status, 409);
+  // Reset refills the board.
+  const reset = await helen.call('POST', `${path}/reset`);
+  assert.equal(reset.status, 200);
+  assert.ok(reset.data.jobs > 40);
+  const after = (await helen.call('GET', `${path}/state`)).data;
+  assert.ok(!after.jobs.some((j: any) => j.reference === booked.reference && j.status === 'done' && j.notes === 'Fixed.'));
+});

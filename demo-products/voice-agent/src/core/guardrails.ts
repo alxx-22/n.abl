@@ -165,7 +165,8 @@ const DIY: { re: RegExp; allowedBy?: keyof MaintenanceSettings['checks'] }[] = [
   { re: /\bopen (?:up )?(?:the )?(?:boiler|fuse box|consumer unit|meter)\b/i },
   { re: /\brelight (?:the )?(?:pilot|boiler)\b|\buncap\b/i },
   { re: /\bbleed (?:the |your )?radiators?\b/i },
-  { re: /\b(?:re-?pressuri[sz]e|top (?:it|the pressure|the boiler) up|filling loop)\b/i, allowedBy: 'boiler_pressure' },
+  // Steps, not the word: on 5 October "I can't give instructions on how to repressurise" was flagged twice.
+  { re: /\b(?:you can|you could|you'?ll need to|just|simply|try to|go ahead and|then)\s+(?:re-?pressuri[sz]e|top (?:it|the pressure|the boiler|the system) up)\b|\b(?:open|turn|connect|use|attach) (?:the |your )?filling loop\b|\buntil (?:the gauge|it|the needle|the pressure) (?:reads|shows|reaches|gets to|is at)\b/i, allowedBy: 'boiler_pressure' },
   { re: /\b(?:get|climb) (?:up )?(?:a |the )?ladder\b|\bclimb (?:up )?on(?:to)? the roof\b|\bbleach\b|\bcaustic\b|\bdrain unblocker\b/i },
 ];
 const LIABLE = /\b(?:(?:it'?s|that'?s|was) our fault|we'?ll pay for|we will pay for|we'?ll cover the cost|you'?ll be compensated|we'?ll compensate|we'?re liable|we are liable|we take (?:full )?responsibility)\b/i;

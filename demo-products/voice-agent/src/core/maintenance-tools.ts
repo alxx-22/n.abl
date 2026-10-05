@@ -380,11 +380,11 @@ async function propertyFor(args: Args, ctx: ToolContext): Promise<MtProperty | {
   return saved;
 }
 
-/** A price said aloud: "£95", "95 pounds", "ninety-five pounds". */
+/** A price said aloud: "£95", "95 pounds", "ninety-five pounds" or, as transcripts write it, "ninety five pounds". */
 function priceSaid(said: string[], pence: number): boolean {
   const n = Math.round(pence / 100);
-  const text = said.join(' ').toLowerCase();
-  return text.includes(`£${n}`) || new RegExp(`\\b${n} pounds\\b`).test(text) || text.includes(`${numberWords(n)} pounds`);
+  const text = said.join(' ').toLowerCase().replace(/-/g, ' ');
+  return text.includes(`£${n}`) || new RegExp(`\\b${n} pounds\\b`).test(text) || text.includes(`${numberWords(n).replace(/-/g, ' ')} pounds`);
 }
 
 /** Who gets the page for an emergency: on call out of hours, or whoever is working today, able for the trade. */
@@ -620,6 +620,12 @@ export function certState(c: Pick<Certificate, 'expires' | 'booked_job'>, today:
   return days < 0 ? 'overdue' : days <= reminderWeeks * 7 ? 'due soon' : 'in date';
 }
 
+/** The planned work's prices, as a landlord asks them. */
+function plannedWords(m: MaintenanceSettings): string {
+  const pl = m.planned;
+  return `Gas safety record ${money(pl.gas_record_pence)}${incVat(m)} for one appliance, plus ${money(pl.extra_appliance_pence)} each extra; boiler service ${money(pl.boiler_service_pence)}; both on one visit ${money(pl.combined_pence)}; EICR from ${money(pl.eicr_from_pence)}.`;
+}
+
 const CERT_WORDS: Record<string, string> = { gas_record: 'gas safety record', eicr: 'electrical installation condition report', boiler_service: 'boiler service', alarms: 'alarm check', pat: 'PAT test' };
 const minusMonths = (date: string, n: number) => {
   const d = new Date(`${date}T12:00:00Z`);
@@ -644,6 +650,8 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
   if (action === 'status') {
     return {
       property: shortAddress(p),
+      // On 5 October a landlord heard the call-out price for a gas safety record, guessed before booking: the prices come with the register.
+      prices: `${plannedWords(m)}`,
       certificates: certs.map((c) => {
         const state = certState(c, l.date, m.planned.reminder_weeks);
         const keeps = c.kind === 'gas_record' && c.expires && !c.booked_job ? minusMonths(c.expires, 2) : null;
@@ -797,7 +805,11 @@ export const MAINTENANCE_TOOLS: Record<string, Tool> = {
     decl: {
       name: 'safety_advice',
       description: 'The fixed safety script for an emergency: what to say, the number (also texted), and what to do next. Say its first lines before anything else.',
-      parameters: obj({ kind: S(`One of: ${SAFETY_KINDS.join(', ')}`), where: S('In the property, or outside it') }, ['kind']),
+      // On 5 October a burst pipe inside got the flood script (street flooding, Floodline) instead of the stopcock.
+      parameters: obj({
+        kind: S('gas (a smell of gas), co (a carbon monoxide alarm sounding, or fumes making someone ill), co_chirp (an alarm chirping once a minute), fire, hurt (someone injured), electric (sparks, burning, or water on lights or sockets), water (a leak or burst pipe inside the home, water through a ceiling), flood (flood water from outside, or a burst main in the street), break_in, lockout, structural (a ceiling or wall that may fall)'),
+        where: S('In the property, or outside it'),
+      }, ['kind']),
     },
     handler: safetyAdvice,
   },

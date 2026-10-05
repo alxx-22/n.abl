@@ -69,7 +69,7 @@ export function focusTab<T extends string>(views: { id: T; shows: Shows }[], ope
 }
 
 /** The words in resetLine that the reset counts. */
-const COUNTED = /\b(bookings|orders)\b/g;
+const COUNTED = /\b(bookings|orders|jobs)\b/g;
 
 /**
  * Reset's question: everything it clears, and what it makes again. The
@@ -84,6 +84,6 @@ export function resetConfirm(spec: WorkspaceSpec): string {
 }
 
 /** "Reset: 14 bookings and 6 orders.": each counted word in resetLine gets its number, wherever and however often it appears. */
-export function resetToast(spec: WorkspaceSpec, counts: { bookings?: number; orders?: number }): string {
+export function resetToast(spec: WorkspaceSpec, counts: { bookings?: number; orders?: number; jobs?: number }): string {
   return `Reset: ${spec.resetLine.replace(COUNTED, (word) => `${counts[word as keyof typeof counts] ?? 0} ${word}`)}.`;
 }

@@ -1,6 +1,7 @@
-// The kinds of business a prospect can build a demo for. Restaurant and
-// estate agent are live; the rest are listed so prospects see where the
-// product is going, and are built in the order of DEMO-SERVICE-PLAN.md §8.
+// The kinds of business a prospect can build a demo for. Restaurant, estate
+// agent and property maintenance are live; the rest are listed so prospects
+// see where the product is going, and are built in the order of
+// DEMO-SERVICE-PLAN.md §8.
 
 import type { BusinessType } from '../domain/types.ts';
 
@@ -77,7 +78,7 @@ export const PRESETS: PresetInfo[] = [
     noun: 'letting agency', business_type: 'letting_agent', example: 'https://www.your-letting-agency.co.uk',
   },
   {
-    key: 'property_maintenance', label: 'Property maintenance', blurb: 'Puts safety first on emergency calls, books the right engineer into a real window, and tells tenants when their engineer is coming.', status: 'soon',
+    key: 'property_maintenance', label: 'Property maintenance', blurb: 'Puts safety first on emergency calls, books the right engineer into a real window, and tells tenants when their engineer is coming.', status: 'live',
     covers: ['Trades and engineers', 'Emergencies and on call', 'Safety checks and servicing'],
     noun: 'property maintenance company', business_type: 'property_maintenance', example: 'https://www.your-property-maintenance.co.uk',
   },

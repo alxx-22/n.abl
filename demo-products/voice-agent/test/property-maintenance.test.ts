@@ -235,9 +235,9 @@ test("property maintenance: the builder's preview, the fact sheet and the back o
   assert.deepEqual(spec.views.map((v) => v.id), ['jobs', 'dispatch', 'compliance', 'safety', 'messages', 'calls']);
   assert.equal(spec.teamPhones!.length, 9, 'every engineer and the duty manager');
   assert.equal(spec.resetLine, 'jobs, safety checks and incidents');
-  // Built, but not offered to prospects until its back office and builder are in the web.
+  // Live: its back office and builder are in the web.
   assert.ok(builtPreset('property_maintenance'));
-  assert.equal(getPreset('property_maintenance'), null);
+  assert.ok(getPreset('property_maintenance'));
 });
 
 test('property maintenance: the sample properties are invented, inside the patch, and never hold a code', () => {

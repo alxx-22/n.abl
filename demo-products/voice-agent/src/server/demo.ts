@@ -427,7 +427,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     if (w.owner_visitor && !w.started_at) await demo.setExpiry(t.id, new Date(Date.now() + SHARED_DEMO_MINUTES * 60000));
     void usage(sub === 'start' ? 'started' : 'reset', { bookings: plan.bookings.length, orders: plan.orders.length });
     refresh({ reason: sub });
-    return json(res, 200, { ok: true, bookings: plan.bookings.length, orders: plan.orders.length, workspace: workspacePayload((await demo.getWorkspace(t.id))!) }), true;
+    return json(res, 200, { ok: true, bookings: plan.bookings.length, orders: plan.orders.length, jobs: plan.jobs?.length ?? 0, workspace: workspacePayload((await demo.getWorkspace(t.id))!) }), true;
   }
 
   // ── The live workspace ────────────────────────────────────────────────

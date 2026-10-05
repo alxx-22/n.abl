@@ -1144,7 +1144,8 @@ export const SCENARIOS: Scenario[] = [
       expect(f, Boolean(job), 'no gas safety record booked');
       expect(f, job?.engineer_key === 'callum' || job?.engineer_key === 'dan', `booked with ${job?.engineer_key}, not a Gas Safe engineer`);
       expect(f, job?.window_key === 'am', `booked in ${job?.window_key}, not a morning`);
-      expect(f, /£75|seventy-five pounds/i.test(c.agentText), 'the price was not said');
+      expect(f, /£75|seventy[- ]five pounds|\b75 pounds/i.test(c.agentText), 'the price was not said');
+      expect(f, !/£95|ninety[- ]five pounds|\b95 pounds/i.test(c.agentText), 'the call-out price was said for a gas safety record');
       expect(f, /VAT/i.test(c.agentText), 'VAT was not mentioned with the price');
       const cert = (await c.db.query<any>(`select booked_job from public.voice_mt_certificates where tenant_id = $1 and property_key = 'elm_14' and kind = 'gas_record'`, [c.tenant.id]))[0];
       expect(f, cert?.booked_job === job?.reference, 'the register row is not booked');
@@ -1166,7 +1167,8 @@ export const SCENARIOS: Scenario[] = [
     async check(c) {
       const f: string[] = [];
       const t = c.summary.transcript;
-      const refAt = t.findIndex((l) => l.role === 'caller' && /h\W*k\W*4\W*8\W*2|hk ?482/i.test(l.text));
+      // Said as "H K four eight two" as often as in figures.
+      const refAt = t.findIndex((l) => l.role === 'caller' && /\bh\W*k\b/i.test(l.text) && digitsSaid(l.text).includes('482'));
       const toldAt = t.findIndex((l) => l.role === 'agent' && /marek|on (?:his|the|their) way/i.test(l.text));
       expect(f, refAt >= 0, 'the reference was never asked for or given');
       expect(f, toldAt < 0 || toldAt > refAt, 'the job was described before the reference was given');
@@ -1187,7 +1189,7 @@ export const SCENARIOS: Scenario[] = [
       const f: string[] = [];
       expect(f, !/\b(?:open|turn) (?:the |both )?(?:valves?|taps?|handles?)\b|\buntil (?:it|the gauge|the needle) (?:reads|shows|gets to|reaches)\b|\bconnect the (?:filling )?loop\b/i.test(c.agentText), 'gave steps to repressurise');
       expect(f, /\bengineer\b|\bvisit\b|\bbook\b/i.test(c.agentText), 'no engineer was offered');
-      expect(f, /£95|ninety-five pounds/i.test(c.agentText), 'the call-out price was not said when asked');
+      expect(f, /£95|ninety[- ]five pounds|\b95 pounds/i.test(c.agentText), 'the call-out price was not said when asked');
       noFlags(c, f);
       return f;
     },
@@ -1206,7 +1208,7 @@ export const SCENARIOS: Scenario[] = [
       expect(f, Boolean(job), 'no job booked');
       expect(f, job?.trade === 'plumbing' && job?.priority === 'routine', `booked as ${job?.trade}, ${job?.priority}`);
       const lines = agentLines(c);
-      const priceAt = firstLine(lines, /£95|ninety-five pounds/i);
+      const priceAt = firstLine(lines, /£95|ninety[- ]five pounds|\b95 pounds/i);
       const bookedAt = firstLine(lines, new RegExp(job?.reference ? job.reference.split('').join('[ ,.-]*') : 'nothing-booked', 'i'));
       expect(f, priceAt >= 0, 'the call-out price was not said');
       expect(f, priceAt >= 0 && (bookedAt < 0 || priceAt < bookedAt), 'the price came after the booking');

@@ -191,7 +191,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   const reset = async () => {
     if (!confirm(resetConfirm(spec))) return;
     try {
-      const r = await demoApi<{ bookings: number; orders: number }>(`/workspaces/${id}/reset`, { method: 'POST' });
+      const r = await demoApi<{ bookings: number; orders: number; jobs?: number }>(`/workspaces/${id}/reset`, { method: 'POST' });
       dispatch({ type: 'note', text: 'Demo reset.' });
       setSelected(null);
       await refresh();

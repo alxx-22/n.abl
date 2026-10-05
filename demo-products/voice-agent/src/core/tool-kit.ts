@@ -77,6 +77,7 @@ export function postcodeOf(input: unknown): { full: string; district: string } |
 export function realName(v: unknown): string | undefined {
   const n = str(v);
   if (!n || !/\p{L}{2}/u.test(n)) return undefined;
-  return /^(the )?(caller|customer|guest|user|client|unknown|anonymous|name|no name|n\/?a|none|test|sir|madam)$/i.test(n) ? undefined : n;
+  // On 5 October a repair was booked for "Owner": a role is not a name either.
+  return /^(the )?(caller|customer|guest|user|client|unknown|anonymous|name|no name|n\/?a|none|test|sir|madam|owner|homeowner|home owner|tenant|occupant|resident|landlord)$/i.test(n) ? undefined : n;
 }
 export const ASK_NAME = "Not done: you don't have the caller's name yet. Ask for it (a first name is fine), read it back, then call this again with it.";

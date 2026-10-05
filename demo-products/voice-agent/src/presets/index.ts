@@ -1,8 +1,8 @@
 // The preset registry: what the server needs from each kind of business, and
 // the one way it reads a workspace's saved answers. A preset is served to
 // prospects once it is built here and its catalogue entry says live
-// (PRESETS.md §2.2). The restaurant is built and live; the estate agent is
-// built, and goes live once its back office and builder are in the web.
+// (PRESETS.md §2.2). The restaurant, the estate agent and property
+// maintenance are built and live.
 
 import type { Config } from '../config.ts';
 import type { TenantProfile } from '../domain/types.ts';

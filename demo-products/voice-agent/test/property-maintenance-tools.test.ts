@@ -323,6 +323,7 @@ test('guardrails on a repairs call: each rule fires where it must, and stays qui
   assert.deepEqual(rules('If you have been shown how, you can top it up with the filling loop.'), [], 'the pressure check is allowed');
   m.checks.boiler_pressure = false;
   assert.deepEqual(rules('You can top it up with the filling loop under the boiler.'), ['unsafe_diy']);
+  assert.deepEqual(rules("I understand you're looking to repressurise it, but I can't give instructions on how to do that."), [], 'refusing is not instructing');
   m.checks.boiler_pressure = true;
   // Fault, legal deadlines, codes.
   assert.deepEqual(rules("I'm so sorry, that's our fault and we'll pay for the damage."), ['liability_admitted']);
@@ -404,4 +405,19 @@ test('the back office: dispatch keeps to the window rules, an engineer accepts o
   const r2 = await c.run('job', { action: 'create', description: 'Another burst pipe, pouring through the ceiling', name: home.occupant.name });
   assert.match(await act(r2.reference, { action: 'decline' }, NIGHT), /Helen Ward has been texted/);
   assert.ok(sent.some((x) => x.to === '+447700900310' && /URGENT/.test(x.body)));
+});
+
+test('a homeowner told "ninety five pounds" has heard the price, and a job is never booked for "Owner"', async () => {
+  const t = await fernhill('pm-price-words');
+  const home = (await repo.listMtProperties(t.id)).find((p) => p.client === null && p.occupant.phone && p.occupant.name)!;
+  const c = await call(t, home.occupant.phone);
+  await c.run('find_property', { postcode: home.district, number: home.number, street: home.street });
+  c.say('Our call out would be ninety five pounds, including VAT, which covers the first hour.');
+  const windows = await c.run('job', { action: 'create', description: 'Dripping kitchen tap', trade: 'plumbing', name: 'Owner' });
+  assert.ok(windows.windows, `the price was heard: ${JSON.stringify(windows)}`);
+  const w = windows.windows[0];
+  const booked = await c.run('job', { action: 'create', description: 'Dripping kitchen tap', trade: 'plumbing', name: 'Owner', date: w.date, window: w.window });
+  assert.equal(booked.booked, true);
+  const [job] = await repo.listJobs(t.id, { reference: booked.reference });
+  assert.equal(job.reporter.name, home.occupant.name, "the name on file for the number they ring from, not a role");
 });
