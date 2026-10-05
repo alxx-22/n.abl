@@ -7,7 +7,7 @@ import type { Booking, Listing, Tenant, TenantProfile } from '../domain/types.ts
 import { pounds } from '../domain/types.ts';
 import { matches, requirementsWords, shortAddress } from '../domain/listings.ts';
 import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
-import { displayUkPhone } from '../domain/phone.ts';
+import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from '../core/prompt.ts';
 import type { WorkspaceSpec } from '../presets/index.ts';
 
@@ -129,6 +129,7 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
   const live = new Map((await repo.listingStates(t.id)).map((r) => [r.listing_key, r]));
   const offers = await repo.listOffers(t.id);
   const buyers = await repo.listBuyers(t.id);
+  const sales = await repo.listSales(t.id);
   // Unread seller replies by home: an open offer on it shows "Seller replied by phone" until someone reads the message.
   const replies = (await repo.listMessages(t.id, 200)).filter((m: any) => m.kind === 'message' && m.status === 'new' && m.details?.seller_reply);
   // The Valuations view reaches back further than the diary: last week's appraisals are still being won or lost.
@@ -177,6 +178,13 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
         details: b.details ?? {},
       };
     }),
+    // The Sales progress view: every sale, newest first, with its parties and log.
+    sales: sales.map((x) => ({
+      id: x.id, listing_key: x.listing_key, home: homes.get(x.listing_key) ?? x.listing_key, buyer_name: x.buyer_name, buyer_phone: displayUkPhone(x.buyer_phone),
+      agreed_pence: x.agreed_pence, milestones: x.milestones, exchange_target: x.exchange_target, completion_date: x.completion_date,
+      parties: x.parties.map((p) => ({ ...p, phone: p.phone ? displayUkPhone(normaliseUkPhone(p.phone)) : null })), chain: x.chain, status: x.status,
+      keys_released_at: x.keys_released_at?.toISOString() ?? null, updates: x.updates.slice(-8), created_at: x.created_at.toISOString(),
+    })).sort((a, b) => b.created_at.localeCompare(a.created_at)),
     // The Applicants view: everyone registered as a buyer, newest contact first, and how many homes fit them now.
     buyers: buyers.map((b) => {
       const r = b.details.requirements;

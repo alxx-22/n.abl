@@ -172,6 +172,25 @@ export interface LiveOffer {
   seller_replied?: boolean;
 }
 
+/** A sale from the offer accepted to the keys (the Sales progress view). */
+export interface LiveSale {
+  id: string;
+  listing_key: string;
+  home: string;
+  buyer_name: string;
+  buyer_phone: string;
+  agreed_pence: number;
+  milestones: { key: string; done_at: string | null }[];
+  exchange_target: string | null;
+  completion_date: string | null;
+  parties: { role: string; name: string; firm?: string; phone: string | null }[];
+  chain: string | null;
+  status: 'progressing' | 'exchanged' | 'completed' | 'fell_through';
+  keys_released_at: string | null;
+  updates: { at: string; by: string; what: string }[];
+  created_at: string;
+}
+
 /** A valuation and its lead, from booked to won or lost (the Valuations view). */
 export interface LiveValuation {
   reference: string;
@@ -256,4 +275,5 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   offers?: LiveOffer[];
   buyers?: LiveBuyer[];
   valuations?: LiveValuation[];
+  sales?: LiveSale[];
 }

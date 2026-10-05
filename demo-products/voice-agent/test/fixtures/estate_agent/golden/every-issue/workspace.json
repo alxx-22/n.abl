@@ -14,6 +14,10 @@
    "label": "Offers"
   },
   {
+   "id": "sales",
+   "label": "Sales progress"
+  },
+  {
    "id": "applicants",
    "label": "Applicants"
   },

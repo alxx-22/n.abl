@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import { Calls } from '../../components/BoardPanels.tsx';
 import { Applicants } from './Applicants.tsx';
 import { Valuations } from './Valuations.tsx';
+import { Sales } from './Sales.tsx';
 import type { TenantState } from '../../types.ts';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { FloorBoard, type View } from './FloorBoard.tsx';
@@ -81,6 +82,10 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
   applicants: {
     shows: null,
     render: (p) => <Applicants id={p.id} state={p.state} onDone={p.refresh} />,
+  },
+  sales: {
+    shows: null,
+    render: (p) => <Sales id={p.id} state={p.state} onDone={p.refresh} />,
   },
   valuations: {
     shows: null,

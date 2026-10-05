@@ -565,6 +565,28 @@ async function walkEstate({ shot }: Walk) {
   if (!(await page.locator('.valuations').textContent())!.includes('Possible double fee')) throw new Error('the double-fee flag is missing');
   await shot(page, 'workspace-valuations');
 
+  // Sales progress (M3): a milestone ticked on 2 Elm Court; 8 Willow Gardens completes today and its keys are released;
+  // Ben's sale of 3 Kingfisher Way falls through and the home goes back on the market.
+  await page.click('.tabs [role=tab]:has-text("Sales progress")');
+  const sale = (home: string) => page.locator(`article.sale[aria-label="Sale of ${home}"]`);
+  await sale('2 Elm Court').locator('button.step:has-text("Enquiries")').click();
+  await sale('2 Elm Court').locator('button.step.on:has-text("Enquiries")').waitFor();
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+  await sale('8 Willow Gardens').locator('input[type=date]').nth(1).fill(today);
+  await sale('8 Willow Gardens').locator('button:has-text("Save dates")').click();
+  await page.waitForSelector('text=8 Willow Gardens: dates saved.');
+  await shot(page, 'workspace-sales');
+  await sale('8 Willow Gardens').locator('button:has-text("Completed: release keys")').click();
+  await page.waitForSelector('text=the buyer has been texted that the keys are ready');
+  await sale('8 Willow Gardens').getByText(/^Keys released/).waitFor();
+  // Why it fell through (a prompt), then yes, back on the market (a confirm): one handler for both, as they come.
+  const answer = (d: import('playwright-core').Dialog) => void (d.type() === 'prompt' ? d.accept("The buyer's mortgage was refused") : d.accept());
+  page.on('dialog', answer);
+  await sale('3 Kingfisher Way').locator('button:has-text("Fell through")').click();
+  await page.waitForSelector('text=/3 Kingfisher Way: back on the market/');
+  page.off('dialog', answer);
+  await shot(page, 'workspace-sales-after');
+
   // Call as Sarah, the seller: her number, what to try, and the texts already on her phone.
   await page.getByLabel('Call as').selectOption({ label: 'Sarah Collins, a seller' });
   await page.waitForSelector('.phone-number:has-text("07700 900001")');
