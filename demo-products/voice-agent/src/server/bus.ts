@@ -3,7 +3,7 @@
 // a demo runs on one machine.
 
 import { EventEmitter } from 'node:events';
-import type { BoardEvent } from '../core/call.ts';
+import type { BoardEvent, CallNote } from '../core/call.ts';
 
 export class Bus {
   private readonly emitter = new EventEmitter();
@@ -21,6 +21,17 @@ export class Bus {
 
   subscribe(tenantId: string, fn: (e: BoardEvent) => void): () => void {
     const key = `tenant:${tenantId}`;
+    this.emitter.on(key, fn);
+    return () => this.emitter.off(key, fn);
+  }
+
+  /** Something that happened off the call (an approval pressed, a page accepted), for any call on that business. */
+  note(tenantId: string, n: CallNote): void {
+    this.emitter.emit(`note:${tenantId}`, n);
+  }
+
+  onNote(tenantId: string, fn: (n: CallNote) => void): () => void {
+    const key = `note:${tenantId}`;
     this.emitter.on(key, fn);
     return () => this.emitter.off(key, fn);
   }

@@ -494,11 +494,19 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   };
 }
 
+/** A job by its own reference, or by the quote it waits on ("Q-2291"). */
+async function jobsByRef(ctx: ToolContext, ref: string): Promise<Job[]> {
+  const quote = /^Q(\d{3,6})$/.exec(ref);
+  if (!quote) return ctx.repo.listJobs(ctx.tenant.id, { reference: ref });
+  const [q] = await ctx.repo.listQuotes(ctx.tenant.id, { reference: `Q-${quote[1]}` });
+  return q?.job_ref ? ctx.repo.listJobs(ctx.tenant.id, { reference: q.job_ref }) : [];
+}
+
 async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const ref = str(args.reference)?.replace(/[^a-z0-9]/gi, '').toUpperCase();
   let jobs: Job[] = [];
   if (ref) {
-    jobs = await ctx.repo.listJobs(ctx.tenant.id, { reference: ref });
+    jobs = await jobsByRef(ctx, ref);
     if (!jobs.length) return { found: 0, message: `No job ${spokenReference(ref)}. Ask them to read it from their text again, one character at a time.` };
   } else if (ctx.callerPhone) {
     // Only the number they ring from counts: a number they say could be anyone's.
@@ -508,17 +516,25 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
     return { found: 0, message: "Nothing found. Ask for the job reference from their text. Never look a job up by address alone: say you can't give job details without the reference or a call from the number on the job." };
   }
   const props = new Map((await ctx.repo.listMtProperties(ctx.tenant.id)).map((p) => [p.key, p]));
+  const quotes = await ctx.repo.listQuotes(ctx.tenant.id);
   for (const j of jobs) {
     record(ctx, j.reference, 'job', 'found');
     if (!ctx.state.jobsVerified.includes(j.reference)) ctx.state.jobsVerified.push(j.reference);
+    if (j.status === 'awaiting_approval') ctx.state.awaitingApproval = true;
   }
-  return { found: jobs.length, jobs: jobs.map((j) => jobWords(ctx, j, j.property_key ? props.get(j.property_key) ?? null : null)) };
+  return {
+    found: jobs.length,
+    jobs: jobs.map((j) => {
+      const q = j.status === 'awaiting_approval' ? quotes.find((x) => x.job_ref === j.reference && x.status === 'sent') : undefined;
+      return { ...jobWords(ctx, j, j.property_key ? props.get(j.property_key) ?? null : null), ...(q ? { quote: `${q.reference}, ${money(q.amount_pence)}${incVat(mt(ctx))}` } : {}) };
+    }),
+  };
 }
 
 async function verifiedJob(args: Args, ctx: ToolContext): Promise<{ job: Job } | { reply: Record<string, unknown> }> {
   const ref = str(args.reference)?.replace(/[^a-z0-9]/gi, '').toUpperCase();
   if (!ref) return { reply: { done: false, message: 'Ask for the job reference from their text.' } };
-  const [job] = await ctx.repo.listJobs(ctx.tenant.id, { reference: ref });
+  const [job] = await jobsByRef(ctx, ref);
   if (!job) return { reply: { done: false, message: `No job ${spokenReference(ref)}. Ask them to read it again.` } };
   if (!ctx.state.jobsVerified.includes(job.reference)) ctx.state.jobsVerified.push(job.reference);
   return { job };
@@ -578,6 +594,39 @@ async function cancelJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   return { cancelled: true, reference: j.reference };
 }
 
+/**
+ * A yes or no to work awaiting approval is never taken by voice: anyone can
+ * say a postcode (presets/property-maintenance.md, decision 4). The request
+ * goes again to the client's phone on file, and the answer pressed there
+ * reaches this call as a note from the system.
+ */
+async function requestApproval(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const m = mt(ctx);
+  const v = await verifiedJob(args, ctx);
+  if ('reply' in v) return v.reply;
+  const j = v.job;
+  if (j.status !== 'awaiting_approval') return { done: false, message: `It isn't waiting for approval: it's ${STATUS[j.status]}. Say so.` };
+  const client = j.client_key ? m.clients.find((c) => c.key === j.client_key) : undefined;
+  if (!client?.contact.phone) return { done: false, message: 'Take a message for the office (category job): they will contact the client.' };
+  const p = j.property_key ? await ctx.repo.getMtProperty(ctx.tenant.id, j.property_key) : null;
+  const [q] = (await ctx.repo.listQuotes(ctx.tenant.id, { job: j.reference })).filter((x) => x.status === 'sent');
+  const amount = q?.amount_pence ?? j.price_pence;
+  ctx.state.awaitingApproval = true;
+  await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: ${q ? `quote ${q.reference}` : `job ${j.reference}`}${p ? ` at ${shortAddress(p)}` : ''} is waiting for your approval${amount ? ` (${money(amount)}${incVat(m)})` : ''}. Open the request on this phone to approve or decline. (Demo)`);
+  ctx.action({ kind: 'approval_requested', title: `Approval requested · ${q?.reference ?? j.reference}`, detail: `${client.name}${p ? ` · ${shortAddress(p)}` : ''}`, data: { reference: j.reference, quote: q?.reference ?? null } });
+  const theirs = ctx.callerPhone === client.contact.phone;
+  return {
+    approved: false,
+    request_sent: true,
+    reference: j.reference,
+    ...(q ? { quote: q.reference } : {}),
+    say: theirs
+      ? `For security, approvals are made on your phone, never by voice. The request${q ? ` for ${q.reference}` : ''} is on your phone now: press Approve or Decline there, and I'll tell you the moment it comes through.`
+      : "Approvals can only come from the client, on the phone we hold for them, never on a call. We've sent the request there.",
+    never: 'Never say it is approved, booked or declined until the system tells you it came through.',
+  };
+}
+
 async function jobTool(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const action = str(args.action)?.toLowerCase();
   if (action === 'find') return findJobs(args, ctx);
@@ -589,9 +638,9 @@ async function jobTool(args: Args, ctx: ToolContext): Promise<Record<string, unk
     case 'cancel': return cancelJob(args, ctx);
     case 'approve':
     case 'decline':
-      return { done: false, message: "Approvals are given on the authoriser's own phone, never on a call. Tell them the request is waiting there." };
+      return requestApproval(args, ctx);
     default:
-      return { error: 'action must be create, find, move or cancel.' };
+      return { error: 'action must be create, find, move, cancel, approve or decline.' };
   }
 }
 
@@ -844,10 +893,10 @@ export const MAINTENANCE_TOOLS: Record<string, Tool> = {
     when: hasMt,
     decl: {
       name: 'job',
-      description: 'Repair jobs. create: after the property, the trade and a window (or for an emergency, none); a homeowner hears the price first. find: by reference, or the calling number. move or cancel: by reference. The only way a job exists.',
+      description: 'Repair jobs. create: after the property, the trade and a window (or for an emergency, none); a homeowner hears the price first. find: by reference, or the calling number. move or cancel: by reference. approve or decline: sends the request to the client\'s own phone; never approved by voice. The only way a job exists.',
       parameters: obj(
         {
-          action: S('create, find, move or cancel'), reference: S('For find, move or cancel'), property: S('From find_property'), trade: S('From triage_fault'),
+          action: S('create, find, move, cancel, approve or decline'), reference: S('The job reference, or a quote such as Q-2291'), property: S('From find_property'), trade: S('From triage_fault'),
           priority: S('From triage_fault'), description: S('The fault, in a few words'), date: S('YYYY-MM-DD'), window: S('The window key, e.g. am or pm'),
           name: S("The caller's name"), phone: S('Only if not the calling number'), role: S('occupant, agent, landlord, homeowner or other'),
           access: S('How the engineer gets in, or a time to avoid'), vulnerable: S('Anyone vulnerable, as the caller said'), consent: B('They agreed to us noting it'),

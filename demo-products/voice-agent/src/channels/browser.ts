@@ -37,6 +37,7 @@ export async function handleBrowserCall(
     sms: deps.sms,
     telephony: null,
     publish: deps.bus.publish,
+    notes: (fn) => deps.bus.onNote(deps.tenant.id, fn),
     maxSeconds: deps.maxSeconds,
   });
   if (deps.onEnded) call.once('ended', deps.onEnded);

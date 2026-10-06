@@ -32,7 +32,7 @@ export interface Action {
   kind:
     | 'booking_created' | 'booking_changed' | 'booking_cancelled' | 'order_updated' | 'order_placed'
     | 'payment' | 'message_taken' | 'sms' | 'transfer' | 'call_ending' | 'offer_recorded' | 'buyer_registered'
-    | 'job_created' | 'job_changed' | 'safety_advice';
+    | 'job_created' | 'job_changed' | 'safety_advice' | 'approval_requested' | 'note';
   title: string;
   detail?: string;
   data?: Record<string, unknown>;

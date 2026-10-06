@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { openPglite, migrate } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
-import { CallSession } from '../src/core/call.ts';
+import { CallSession, type CallNote } from '../src/core/call.ts';
 import { loadConfig } from '../src/config.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
@@ -79,6 +79,7 @@ async function call(tenant: Tenant, callerPhone: string | null = '+447700900123'
     },
     reminders: () => fake.texts.filter((t) => t.startsWith('[From the system')),
     id: () => c.callId,
+    note: (n: CallNote) => session.note(n),
   };
 }
 
@@ -279,4 +280,22 @@ test('a repairs call: a key safe code is kept out of the transcript, and an esta
   e.caller('I think I can smell gas at the house I viewed.');
   await e.agent('Please leave the property and call the gas emergency number in the facts.');
   assert.deepEqual(e.reminders().filter((t) => /may be describing an emergency/.test(t)), []);
+});
+
+test('a note from off the call: only a call with that job in hand hears it, and an approval lifts the hold on "booked"', async () => {
+  const jean = '+447700900404'; // Mrs Ellis, who holds quote Q-2291
+  const c = await call(fernhill, jean);
+  const found = await c.tool('job', { action: 'find', reference: 'Q-2291' });
+  const ref = (found.jobs as any[])[0].reference;
+  assert.match((found.jobs as any[])[0].quote, /^Q-2291, £2,450/);
+  await c.agent("It's booked for Thursday.");
+  assert.ok(c.flags().includes('approval_claim'), 'not booked while it waits');
+  c.note({ kind: 'approved', job: 'ZZ999', text: 'Someone else approved another job.' });
+  assert.deepEqual(c.reminders().filter((t) => /approved/.test(t)), [], 'not this call\'s job');
+  c.note({ kind: 'approved', job: ref, text: `Mrs J Ellis has just approved quote Q-2291 on their own phone. It's booked for Friday 9 October, in the morning (8am to 12pm) with Dan.` });
+  assert.ok(c.reminders().some((t) => t.startsWith('[From the system: Mrs J Ellis has just approved quote Q-2291')));
+  const before = c.flags().length;
+  await c.agent("Good news: that's come through, and it's booked for Friday morning, 8 to 12, with Dan.");
+  assert.equal(c.flags().length, before, `no flag once approved: ${c.flags().join(', ')}`);
+  await c.end();
 });

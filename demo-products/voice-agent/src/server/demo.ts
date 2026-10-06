@@ -566,7 +566,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     return json(res, 200, { ok: true, message, ...(affected ? { affected } : {}) }), true;
   }
   if (sub === 'jobs' && ref && req.method === 'PATCH') {
-    const message = await jobAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body));
+    const message = await jobAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body), new Date(), (n) => bus.note(t.id, n));
     void usage('staff_action', { action: 'job' });
     refresh({ reason: 'staff', reference: ref.toUpperCase(), what: message });
     return json(res, 200, { ok: true, message }), true;

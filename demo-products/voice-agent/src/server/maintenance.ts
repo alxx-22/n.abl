@@ -5,6 +5,7 @@
 // never put gas work with an engineer who isn't Gas Safe, overfill a window,
 // or send someone outside their districts.
 
+import type { CallNote } from '../core/call.ts';
 import type { Repo } from '../db/repo.ts';
 import { certState } from '../core/maintenance-tools.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
@@ -43,6 +44,13 @@ export async function maintenanceState(repo: Repo, t: Tenant, now: Date) {
       attend_hours: m.priorities.emergency.attend_hours,
     },
     engineers: m.engineers.map((e) => ({ ...e, mobile: mobile(e.key) })),
+    // The authorisers' phones are the second device: approvals are pressed there.
+    clients: m.clients.map((c) => ({
+      key: c.key, name: c.name, kind: c.kind, works_limit_pence: c.works_limit_pence, emergency_authority_pence: c.emergency_authority_pence,
+      po_required: c.po_required, notice: c.notice, instructions: c.instructions, status: c.status,
+      contact: { name: c.contact.name, phone: displayUkPhone(c.contact.phone), email: c.contact.email },
+      properties: props.filter((p) => p.client === c.key).length,
+    })),
     jobs: jobs.map((j) => {
       const p = j.property_key ? byKey.get(j.property_key) : undefined;
       const w = windowOf(m, j.window_key);
@@ -100,7 +108,9 @@ const OPEN: JobStatus[] = ['new', 'scheduled', 'awaiting_approval', 'waiting'];
  * window rules), accept or decline a page, on the way (texts the occupant),
  * on site, done, waiting, invoice, or cancel. Returns what the board says.
  */
-export async function jobAction(repo: Repo, t: Tenant, ref: string, b: any, text: (to: string | null, body: string) => Promise<void>, now = new Date()): Promise<string> {
+export async function jobAction(
+  repo: Repo, t: Tenant, ref: string, b: any, text: (to: string | null, body: string) => Promise<void>, now = new Date(), note: (n: CallNote) => void = () => {},
+): Promise<string> {
   const m = t.profile.maintenance;
   if (!m) throw new HttpError(400, 'This business has no jobs.');
   const [job] = await repo.listJobs(t.id, { reference: ref });
@@ -147,6 +157,7 @@ export async function jobAction(repo: Repo, t: Tenant, ref: string, b: any, text
       const r = await repo.updateJob(t.id, job.reference, { status: 'scheduled', flags: job.flags.filter((f) => f !== 'paged') }, `accepted by ${name(job.engineer_key)}`, { by: name(job.engineer_key), from: ['new'] });
       const by = job.attend_by ? ` by about ${spokenTime(toLocal(job.attend_by, tz).time)}` : '';
       await text(job.reporter.phone ?? occupant, `${t.profile.name}: ${name(job.engineer_key)} is ${job.flags.includes('out_of_hours') ? 'on call tonight and ' : ''}coming to you${by}. Ref ${job.reference}. (Demo)`);
+      if (r) note({ kind: 'accepted', job: job.reference, text: `${name(job.engineer_key)} has accepted job ${job.reference} and is coming, aiming to be there${by}. You may now tell the caller ${name(job.engineer_key)}'s first name and that time; they've had a text too.` });
       return done(r, `${name(job.engineer_key)} accepted ${job.reference}; the caller has been texted.`);
     }
     case 'decline': {
@@ -157,6 +168,7 @@ export async function jobAction(repo: Repo, t: Tenant, ref: string, b: any, text
       const r = await repo.updateJob(t.id, job.reference, { engineer_key: next?.key ?? null }, `declined by ${name(job.engineer_key)}${next ? `; paged ${next.first_name}` : '; duty manager told'}`, { by: name(job.engineer_key), from: ['new'] });
       const to = next ? t.profile.team?.find((s) => s.key === next.key)?.mobile : m.on_call.duty_manager.mobile;
       await text(normaliseUkPhone(to), `${t.profile.name} URGENT: job ${job.reference} at ${where} needs someone: ${job.description}.`);
+      if (r) note({ kind: 'repaged', job: job.reference, text: `The first engineer couldn't take job ${job.reference}, so ${next ? 'another engineer on call' : 'the duty manager'} has been asked. Still no name or arrival time for the caller: they'll get a text when someone accepts.` });
       return done(r, next ? `Declined: ${next.first_name} paged instead.` : `Declined: nobody else on call, so ${m.on_call.duty_manager.name} has been texted.`);
     }
     case 'on_the_way': {
@@ -183,6 +195,41 @@ export async function jobAction(repo: Repo, t: Tenant, ref: string, b: any, text
       const r = await repo.updateJob(t.id, job.reference, { status: 'waiting', waiting_for: note ? `${reason}: ${note}` : reason, ...(reason === 'access' ? { access_attempts: job.access_attempts + 1 } : {}) }, `waiting for ${reason}`, { by: 'staff', from: ['scheduled', 'on_site', 'on_the_way', 'new'] });
       if (reason === 'access' && m.visits.abortive_fee_pence) await text(occupant, `${t.profile.name}: sorry we missed you for job ${job.reference}. Please call us to rebook. (Demo)`);
       return done(r, `${job.reference}: waiting for ${reason}.`);
+    }
+    case 'authorise': {
+      // The client's own phone: the only place a yes or no to work over their limit is given (decision 4).
+      if (job.status !== 'awaiting_approval') throw new HttpError(409, "It isn't waiting for approval any more.");
+      const client = job.client_key ? m.clients.find((c) => c.key === job.client_key) : undefined;
+      const who = client?.contact.name ?? 'the client';
+      const [quote] = (await repo.listQuotes(t.id, { job: job.reference })).filter((q) => q.status === 'sent');
+      const what = quote ? `quote ${quote.reference}` : `job ${job.reference}`;
+      if (b.answer === 'no') {
+        const r = await repo.updateJob(t.id, job.reference, { status: 'cancelled' }, `declined by ${who}`, { by: who, from: ['awaiting_approval'] });
+        if (!r) throw new HttpError(409, 'That job has moved on: refresh and try again.');
+        if (quote) await repo.decideQuote(t.id, quote.reference, 'declined', who, now);
+        const reporter = job.reporter.phone && job.reporter.phone !== client?.contact.phone ? job.reporter.phone : occupant;
+        if (reporter && reporter !== client?.contact.phone) await text(reporter, `${t.profile.name}: ${client?.name ?? 'Your landlord'} hasn't approved job ${job.reference} at ${where}, so it isn't going ahead for now. Please speak to them. (Demo)`);
+        note({ kind: 'declined', job: job.reference, text: `${client?.name ?? 'The client'} has just declined ${what} on their own phone, so it isn't going ahead. Tell the caller kindly; for a tenant, they should speak to ${client?.name ?? 'their landlord'}. Never say why.` });
+        return `${what[0].toUpperCase()}${what.slice(1)} declined.`;
+      }
+      if (b.answer !== 'yes') throw new HttpError(400, 'Approve or decline?');
+      // Approved: booked into the first free window with someone who can do it, and the tenant told when.
+      const slots = freeWindows(m, await repo.listJobs(t.id), { trade: job.trade, gas: job.flags.includes('gas'), district: p?.district, from: today.date, now: today, limit: 1 });
+      const slot = slots[0];
+      const patch = slot ? { status: 'scheduled' as const, visit_date: slot.date, window_key: slot.window.key, engineer_key: slot.engineers[0].key } : { status: 'new' as const };
+      const r = await repo.updateJob(t.id, job.reference, patch, `approved by ${who}${slot ? `; booked ${spokenDate(slot.date)} ${inSentence(slot.window.label)} with ${slot.engineers[0].first_name}` : ''}`, { by: who, from: ['awaiting_approval'] });
+      if (!r) throw new HttpError(409, 'That job has moved on: refresh and try again.');
+      if (quote) await repo.decideQuote(t.id, quote.reference, 'approved', who, now);
+      const when = slot ? `${spokenDate(slot.date)}, ${inSentence(slot.window.label)} (${spokenTime(slot.window.from)} to ${spokenTime(slot.window.to)})` : null;
+      if (occupant && occupant !== client?.contact.phone) {
+        await text(occupant, `${t.profile.name}: ${client?.name ?? 'your landlord'} has approved job ${job.reference}. ${when ? `${slot!.engineers[0].first_name} will come ${when}. Call us if that doesn't suit.` : "We'll call you to arrange a time."} (Demo)`);
+      }
+      if (client?.contact.phone) await text(client.contact.phone, `${t.profile.name}: thank you, ${what} approved.${when ? ` Booked for ${when}.` : ''} (Demo)`);
+      note({
+        kind: 'approved', job: job.reference,
+        text: `${client?.name ?? 'The client'} has just approved ${what} on their own phone. ${when ? `It's booked for ${when} with ${slot!.engineers[0].first_name}, and the tenant has had a text.` : "The office will arrange a time."} Tell the caller now.`,
+      });
+      return `${what[0].toUpperCase()}${what.slice(1)} approved${when ? `: booked ${when} with ${slot!.engineers[0].first_name}` : ''}.`;
     }
     case 'invoice': {
       // The office bills a finished job: the job's own price, or the call-out. A client pays on account; a homeowner within a week.

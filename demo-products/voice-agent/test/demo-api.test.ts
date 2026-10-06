@@ -685,6 +685,15 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   assert.equal((await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'invoice' })).status, 409);
   const inv = (await helen.call('GET', `${path}/state`)).data.invoices.find((i: any) => i.reference === 'INV-1044');
   assert.deepEqual([inv.job_ref, inv.status, inv.amount_pence > 0], [booked.reference, 'due', true]);
+  // Mrs Ellis approves Q-2291 on her own phone: the job is booked and her phone thanks her.
+  assert.equal(state.clients.length, 6);
+  const ellis = state.jobs.find((j: any) => j.status === 'awaiting_approval' && j.description.includes('Q-2291'));
+  const ok = await helen.call('PATCH', `${path}/jobs/${ellis.reference}`, { action: 'authorise', answer: 'yes' });
+  assert.equal(ok.status, 200, JSON.stringify(ok.data));
+  const now2 = (await helen.call('GET', `${path}/state`)).data;
+  assert.equal(now2.quotes.find((q: any) => q.reference === 'Q-2291').status, 'approved');
+  assert.equal(now2.jobs.find((j: any) => j.reference === ellis.reference).status, 'scheduled');
+  assert.match((await texts('07700 900404')).at(-1), /quote Q-2291 approved\. Booked for/);
   // A certificate booked from the register, then refused the second time.
   const due = state.properties.find((p: any) => p.certificates.some((c: any) => c.kind === 'gas_record' && c.state === 'overdue'));
   const book = await helen.call('POST', `${path}/properties/${due.key}`, { action: 'book', what: 'gas_record' });

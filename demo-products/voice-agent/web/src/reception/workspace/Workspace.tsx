@@ -255,7 +255,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
         <Phone
           id={id} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)}
           callAs={t.business_type === 'estate_agent' ? CALL_AS : t.business_type === 'property_maintenance' ? MT_CALL_AS : []}
-          crew={state.engineers ? { engineers: state.engineers, jobs: state.jobs ?? [], today: now.date, onDone: refreshSoon } : undefined}
+          crew={state.engineers ? { engineers: state.engineers, clients: state.clients ?? [], jobs: state.jobs ?? [], quotes: state.quotes ?? [], today: now.date, onDone: refreshSoon } : undefined}
         />
       </main>
 

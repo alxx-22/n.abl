@@ -173,6 +173,7 @@ export function handleTwilioStream(ws: WebSocket, deps: StreamDeps): void {
           sms: deps.sms,
           telephony: twilioTelephony(deps.config, callSid, tenant.slug, p.to || undefined),
           publish: deps.bus.publish,
+          notes: (fn) => deps.bus.onNote(tenant.id, fn),
           openingCue: p.cue || undefined,
         });
         call.on('audio', (pcm24) => {

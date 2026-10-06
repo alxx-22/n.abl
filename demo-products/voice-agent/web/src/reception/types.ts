@@ -275,6 +275,21 @@ export interface LiveEngineer {
   mobile: string;
 }
 
+/** A letting agent, landlord or other client, and the authoriser whose phone approves work over the limit. */
+export interface LiveClient {
+  key: string;
+  name: string;
+  kind: string;
+  works_limit_pence: number;
+  emergency_authority_pence: number;
+  po_required: boolean;
+  notice: string;
+  instructions: string;
+  status: 'active' | 'on_stop';
+  contact: { name: string; phone: string; email: string };
+  properties: number;
+}
+
 export type JobStatus = 'new' | 'awaiting_approval' | 'scheduled' | 'on_the_way' | 'on_site' | 'waiting' | 'done' | 'invoiced' | 'cancelled';
 
 /** A job as the board shows it: first names only, and a window or an attend-by time. */
@@ -428,6 +443,7 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
     attend_hours: number;
   };
   engineers?: LiveEngineer[];
+  clients?: LiveClient[];
   jobs?: LiveJob[];
   properties?: LiveMtProperty[];
   incidents?: LiveIncident[];

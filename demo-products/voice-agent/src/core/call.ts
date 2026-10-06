@@ -18,6 +18,7 @@ import {
 } from './tools.ts';
 import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DETAIL, checkUtterance, saidYes, type Flag } from './guardrails.ts';
 import { redactLine } from './redact.ts';
+import { record } from './tool-kit.ts';
 import { armSafety, noteAdvice, safetyCorrection } from './safety.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
@@ -71,6 +72,19 @@ export interface CallSummary {
   tools: { name: string; args: unknown; result: unknown }[];
 }
 
+/**
+ * Something that happened off the call that the caller may be waiting on:
+ * the client pressed Approve or Decline on their own phone, or the paged
+ * engineer accepted (presets/property-maintenance.md §6). Only a call that
+ * has this job in hand hears it.
+ */
+export interface CallNote {
+  kind: 'approved' | 'declined' | 'accepted' | 'repaged';
+  job: string;
+  /** For the receptionist, in the system's words. */
+  text: string;
+}
+
 export interface CallOptions {
   tenant: Tenant;
   repo: Repo;
@@ -84,6 +98,8 @@ export interface CallOptions {
   now?: () => Date;
   models?: string[];
   publish?: (e: BoardEvent) => void;
+  /** Subscribes to notes from off the call; returns the unsubscribe. */
+  notes?: (fn: (n: CallNote) => void) => () => void;
   /** Eval text mode: no silence prompts, no audio-based timing. */
   textMode?: boolean;
   /** Instead of the greeting, e.g. after an unanswered transfer. */
@@ -190,6 +206,7 @@ export class CallSession extends EventEmitter<CallEvents> {
   private turns: TurnManager | null = null;
   private listener: CallerListener | null = null;
   private turnTimer: NodeJS.Timeout | null = null;
+  private stopNotes: (() => void) | null = null;
   /** Contextual turn-taking: when the caller stopped talking, and how long past the usual pause we waited. */
   private replyFrom = 0;
   private replyExtra = 0;
@@ -271,6 +288,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       return;
     }
     this.attach(this.session, prompt);
+    this.stopNotes = this.opts.notes?.((n) => this.note(n)) ?? null;
     await repo.updateCall(this.callId, { model: this.model, fallbacks: this.fallbacks });
     this.publish('call_started', { channel: this.opts.channel, model: this.model, caller: this.opts.callerPhone ? `…${this.opts.callerPhone.slice(-4)}` : null });
     this.record('system', { event: 'started', model: this.model, fallbacks: this.fallbacks });
@@ -708,6 +726,23 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.session.sendAudio(pcm, rate);
   }
 
+  /**
+   * A note from off the call. The job must be one this call raised or looked
+   * up; then what the caller may now hear changes (an approved job may be
+   * called booked, an accepting engineer named) and the receptionist is told.
+   */
+  note(n: CallNote): void {
+    if (this.ended || !this.state.jobsVerified.includes(n.job)) return;
+    if (n.kind === 'approved' || n.kind === 'declined') this.state.awaitingApproval = false;
+    if (n.kind === 'accepted') this.state.paged = false;
+    if (n.kind === 'approved') record(this, n.job, 'job', 'committed');
+    const a: Action = { kind: 'note', title: n.kind === 'approved' ? 'Approved by the client' : n.kind === 'declined' ? 'Declined by the client' : n.kind === 'accepted' ? 'Engineer accepted' : 'Paged again', detail: n.text, data: { reference: n.job } };
+    this.emit('action', a);
+    this.publish('action', { action: a });
+    this.record('action', a);
+    this.sendText(`[From the system: ${n.text}]`);
+  }
+
   /** Text as the caller (evaluation text mode) or as a system cue in [brackets]. */
   sendText(text: string): void {
     if (!this.session?.isOpen) return;
@@ -762,6 +797,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (this.ended) return null;
     this.ended = true;
     this.closing = true;
+    this.stopNotes?.();
     if (this.timer) clearInterval(this.timer);
     if (this.turnTimer) clearInterval(this.turnTimer);
     this.listener?.close();

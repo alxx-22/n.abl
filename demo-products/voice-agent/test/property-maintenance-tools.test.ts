@@ -421,3 +421,47 @@ test('a homeowner told "ninety five pounds" has heard the price, and a job is ne
   const [job] = await repo.listJobs(t.id, { reference: booked.reference });
   assert.equal(job.reporter.name, home.occupant.name, "the name on file for the number they ring from, not a role");
 });
+
+test('approvals: never by voice; the request goes to the client\'s own phone, where a yes books the first free window and a no tells the tenant', async () => {
+  const t = await fernhill('pm-approvals');
+  const JEAN = '+447700900404'; // Mrs Ellis, who holds quote Q-2291
+  const sent: { to: string | null; body: string }[] = [];
+  const notes: { kind: string; job: string; text: string }[] = [];
+  const act = (ref: string, b: Record<string, unknown>) => jobAction(repo, t, ref, b, async (to, body) => void sent.push({ to, body }), NOW, (n) => void notes.push(n));
+  // Mrs Ellis rings to say yes: the yes is never taken by voice, and the request goes to her phone on file.
+  const c = await call(t, JEAN);
+  const found = await c.run('job', { action: 'find', reference: 'Q 2291' });
+  assert.match(found.jobs[0].status, /waiting for approval/);
+  const asked = await c.run('job', { action: 'approve', reference: 'Q-2291' });
+  assert.deepEqual([asked.approved, asked.request_sent, asked.quote], [false, true, 'Q-2291']);
+  assert.match(asked.say, /on your phone now: press Approve or Decline there/);
+  assert.ok(c.sent.some((x) => x.to === JEAN && /quote Q-2291 .*waiting for your approval \(£2,450 including VAT\)/.test(x.body)), JSON.stringify(c.sent));
+  assert.equal(c.actions.at(-1)!.kind, 'approval_requested');
+  // Someone else saying the postcode and "yes" gets the same answer, without a name or a number.
+  const stranger = await call(t, STRANGER);
+  const other = await stranger.run('job', { action: 'approve', reference: 'Q-2291' });
+  assert.match(other.say, /phone we hold for them/);
+  assert.ok(!JSON.stringify(other).includes('Ellis') && stranger.sent.every((x) => x.to === JEAN));
+  // She presses Approve on her phone: Gas Safe, the first free window, the tenant texted, and the call told.
+  const job = (await repo.listJobs(t.id, { reference: found.jobs[0].reference }))[0];
+  assert.match(await act(job.reference, { action: 'authorise', answer: 'yes' }), /^Quote Q-2291 approved: booked .* with (Dan|Callum)\.$/);
+  const after = (await repo.listJobs(t.id, { reference: job.reference }))[0];
+  assert.equal(after.status, 'scheduled');
+  assert.ok(t.profile.maintenance!.engineers.find((e) => e.key === after.engineer_key)!.gas_safe);
+  const [q] = await repo.listQuotes(t.id, { reference: 'Q-2291' });
+  assert.deepEqual([q.status, q.decided_by], ['approved', 'Jean Ellis']);
+  const home = (await repo.getMtProperty(t.id, job.property_key!))!;
+  assert.ok(sent.some((x) => x.to === home.occupant.phone && /Mrs J Ellis has approved job .* will come/.test(x.body)));
+  assert.deepEqual(notes.map((n) => [n.kind, n.job]), [['approved', job.reference]]);
+  await assert.rejects(act(job.reference, { action: 'authorise', answer: 'yes' }), /isn't waiting for approval/);
+  // A job over Harbour's limit, raised on a call, then declined on Sophie's phone: the tenant is told it isn't going ahead.
+  const harbour = (await repo.listMtProperties(t.id)).find((p) => p.client === 'harbour' && p.occupant.phone)!;
+  const tenant = await call(t, harbour.occupant.phone);
+  await tenant.run('find_property', { postcode: harbour.district, number: harbour.number, street: harbour.street });
+  const raised = await tenant.run('job', { action: 'create', description: 'Replace the rotten back door', trade: 'carpentry', name: harbour.occupant.name, estimate_pounds: 600 });
+  assert.equal(raised.awaiting_approval, true);
+  assert.equal(await act(raised.reference, { action: 'authorise', answer: 'no' }), `Job ${raised.reference} declined.`);
+  assert.equal((await repo.listJobs(t.id, { reference: raised.reference }))[0].status, 'cancelled');
+  assert.ok(sent.some((x) => x.to === harbour.occupant.phone && /Harbour Lettings hasn't approved job/.test(x.body)));
+  assert.equal(notes.at(-1)!.kind, 'declined');
+});
