@@ -114,6 +114,7 @@
    "notice": "over_limit",
    "instructions": "Always ring the tenant 30 minutes before arriving.",
    "status": "active",
+   "min_priority": null,
    "example": true
   },
   {
@@ -131,6 +132,7 @@
    "notice": "every_job",
    "instructions": "",
    "status": "active",
+   "min_priority": null,
    "example": true
   },
   {
@@ -148,6 +150,7 @@
    "notice": "over_limit",
    "instructions": "",
    "status": "active",
+   "min_priority": null,
    "example": true
   },
   {
@@ -165,6 +168,7 @@
    "notice": "every_job",
    "instructions": "Holds quote Q-2291: a £2,450 boiler replacement at her flat.",
    "status": "active",
+   "min_priority": null,
    "example": true
   },
   {
@@ -182,6 +186,7 @@
    "notice": "over_limit",
    "instructions": "",
    "status": "active",
+   "min_priority": null,
    "example": true
   },
   {
@@ -199,6 +204,7 @@
    "notice": "over_limit",
    "instructions": "",
    "status": "active",
+   "min_priority": null,
    "example": true
   }
  ],

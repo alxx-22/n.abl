@@ -73,7 +73,7 @@
   },
   {
    "q": "Who do you work for?",
-   "a": "We work for homeowners, landlords, letting agents and housing associations.",
+   "a": "We work for homeowners, landlords, letting agents, block managers, housing associations, businesses and insurers.",
    "tags": ["landlord","letting agent","homeowner","business","who"]
   },
   {
@@ -328,13 +328,13 @@
    "homeowners": true,
    "landlords": true,
    "agents": true,
-   "blocks": false,
+   "blocks": true,
    "social": {
     "on": true,
     "agent_of_landlord": true
    },
-   "commercial": false,
-   "insurers": false,
+   "commercial": true,
+   "insurers": true,
    "tenant_no_client": "contact_landlord",
    "recharge_lockouts": true
   },
@@ -455,6 +455,110 @@
     },
     "notice": "every_job",
     "instructions": "We act as Meadowbank's agent for repairs: report damp and mould the same day, with the time it was reported.",
+    "status": "active",
+    "example": true
+   },
+   {
+    "key": "riverside",
+    "name": "Riverside Block Management",
+    "kind": "block",
+    "works_limit_pence": 50000,
+    "emergency_authority_pence": 75000,
+    "po_required": false,
+    "contact": {
+     "name": "Martin Hale",
+     "phone": "+447700900408",
+     "email": "blocks@riverside-bm.example"
+    },
+    "notice": "every_job",
+    "instructions": "Common parts (roof, entrance, stairs, lift, communal pipes) are Riverside's to instruct; inside a flat is the leaseholder's own. Big communal works may need leaseholders consulted first.",
+    "status": "active",
+    "example": true
+   },
+   {
+    "key": "bramley",
+    "name": "Bramley Mutual Insurance",
+    "kind": "insurer",
+    "works_limit_pence": 150000,
+    "emergency_authority_pence": 100000,
+    "po_required": false,
+    "contact": {
+     "name": "Claims desk",
+     "phone": "+447700900409",
+     "email": "claims@bramley-mutual.example"
+    },
+    "notice": "every_job",
+    "instructions": "Claim number on every job. The policyholder pays any excess to the insurer, never to us; never say what a policy covers.",
+    "status": "active",
+    "example": true
+   },
+   {
+    "key": "copper_kettle",
+    "name": "The Copper Kettle",
+    "kind": "commercial",
+    "works_limit_pence": 40000,
+    "emergency_authority_pence": 60000,
+    "po_required": true,
+    "contact": {
+     "name": "Sian Morris",
+     "phone": "+447700900412",
+     "email": "sian@copperkettle.example"
+    },
+    "notice": "every_job",
+    "instructions": "Café: open 8 to 4. Come before opening where possible; kitchen jobs need the food safety induction.",
+    "status": "active",
+    "min_priority": "urgent",
+    "example": true
+   },
+   {
+    "key": "larkbrook_dental",
+    "name": "Larkbrook Dental Practice",
+    "kind": "commercial",
+    "works_limit_pence": 60000,
+    "emergency_authority_pence": 80000,
+    "po_required": true,
+    "contact": {
+     "name": "Dr Anil Varma",
+     "phone": "+447700900413",
+     "email": "practice@larkbrook.example"
+    },
+    "notice": "every_job",
+    "instructions": "Surgery hours 8 to 6: water or power out stops treatment, so same-day. Clinical rooms only with the practice manager.",
+    "status": "active",
+    "min_priority": "urgent",
+    "example": true
+   },
+   {
+    "key": "arden_vale",
+    "name": "Arden & Vale Accountants",
+    "kind": "commercial",
+    "works_limit_pence": 40000,
+    "emergency_authority_pence": 60000,
+    "po_required": false,
+    "contact": {
+     "name": "Ruth Arden",
+     "phone": "+447700900414",
+     "email": "office@ardenvale.example"
+    },
+    "notice": "over_limit",
+    "instructions": "Office, 9 to 5. Reception holds keys.",
+    "status": "active",
+    "example": true
+   },
+   {
+    "key": "second_chances",
+    "name": "Second Chances (charity shop)",
+    "kind": "commercial",
+    "works_limit_pence": 20000,
+    "emergency_authority_pence": 40000,
+    "po_required": false,
+    "contact": {
+     "name": "Pat Hughes",
+     "phone": "+447700900415",
+     "email": "shop@secondchances.example"
+    },
+    "notice": "over_limit",
+    "instructions": "Volunteer-run, open 10 to 4 except Sundays. Ask for the shop manager.",
     "status": "active",
     "example": true
    }

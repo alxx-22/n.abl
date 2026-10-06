@@ -88,13 +88,13 @@
   "homeowners": true,
   "landlords": true,
   "agents": true,
-  "blocks": false,
+  "blocks": true,
   "social": {
    "on": true,
    "agent_of_landlord": true
   },
-  "commercial": false,
-  "insurers": false,
+  "commercial": true,
+  "insurers": true,
   "tenant_no_client": "contact_landlord",
   "recharge_lockouts": true
  },
@@ -114,6 +114,7 @@
    "notice": "over_limit",
    "instructions": "",
    "status": "active",
+   "min_priority": null,
    "example": false
   }
  ],

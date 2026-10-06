@@ -29,6 +29,8 @@
    "district": "NG2",
    "town": "West Bridgford",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "ellis",
    "occupant": {
     "name": "Kwame Reid",
@@ -59,6 +61,8 @@
    "district": "NG3",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "whitfield",
    "occupant": {
     "name": "Zara Gray",
@@ -89,6 +93,8 @@
    "district": "NG2",
    "town": "West Bridgford",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Ryan Brennan",
@@ -119,6 +125,8 @@
    "district": "NG1",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Ellie Burke",
@@ -149,6 +157,8 @@
    "district": "NG3",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Aisha Patel",
@@ -179,6 +189,8 @@
    "district": "NG2",
    "town": "West Bridgford",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Kwame Reid",
@@ -209,6 +221,8 @@
    "district": "NG1",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Lucy Doyle",
@@ -257,6 +271,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Door planed and hinges adjusted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-07T07:00:00.000Z",
@@ -306,6 +322,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pane measured; sealed unit fitted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-07T07:00:00.000Z",
@@ -355,6 +373,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Handrail brackets refixed into the studs.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -404,6 +424,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "New fan fitted and tested.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -453,6 +475,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Treated with fungicide; advised on ventilation; fan working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -502,6 +526,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Lock cylinder replaced; three keys handed to the tenant.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -551,6 +577,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pane measured; sealed unit fitted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T11:00:00.000Z",
@@ -600,6 +628,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Lock cylinder replaced; three keys handed to the tenant.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T11:00:00.000Z",
@@ -649,6 +679,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Door planed and hinges adjusted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T11:00:00.000Z",
@@ -698,6 +730,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pressure relief valve replaced; boiler holding pressure.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -747,6 +781,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Door planed and hinges adjusted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -796,6 +832,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Diverter valve replaced; hot water and heating working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T07:00:00.000Z",
@@ -845,6 +883,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Rodded the gully; cleared a fat blockage.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-07T07:00:00.000Z",
@@ -894,6 +934,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Treated with fungicide; advised on ventilation; fan working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T07:00:00.000Z",
@@ -943,6 +985,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pressure relief valve replaced; boiler holding pressure.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -992,6 +1036,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Bled the radiators and balanced the system.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-03T07:00:00.000Z",
@@ -1046,6 +1092,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Diverter valve replaced; hot water and heating working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -1100,6 +1148,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Handrail brackets refixed into the studs.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-03T07:00:00.000Z",
@@ -1154,6 +1204,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "New fan fitted and tested.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -1208,6 +1260,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Loose terminal remade; socket tested.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -1262,6 +1316,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Diverter valve replaced; hot water and heating working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-02T07:00:00.000Z",
@@ -1316,6 +1372,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Diverter valve replaced; hot water and heating working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -1370,6 +1428,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Handrail brackets refixed into the studs.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T07:00:00.000Z",
@@ -1424,6 +1484,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Bled the radiators and balanced the system.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -1478,6 +1540,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pane measured; sealed unit fitted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-01T07:00:00.000Z",
@@ -1532,6 +1596,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pane measured; sealed unit fitted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-03T07:00:00.000Z",
@@ -1586,6 +1652,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "New flush valve fitted; flushing properly.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-03T07:00:00.000Z",
@@ -1640,6 +1708,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Rodded the gully; cleared a fat blockage.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-03T07:00:00.000Z",
@@ -1694,6 +1764,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pane measured; sealed unit fitted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-02T07:00:00.000Z",
@@ -1748,6 +1820,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Descaled the shower head and cleared the filter.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-02T07:00:00.000Z",
@@ -1802,6 +1876,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pane measured; sealed unit fitted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-01T07:00:00.000Z",
@@ -1856,6 +1932,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Recall of LL705.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -1900,6 +1978,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Recall of YX687.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -1944,6 +2024,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Quote Q-2288 approved by Ben Whitfield.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -1988,6 +2070,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T07:00:00.000Z",
@@ -2032,6 +2116,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2076,6 +2162,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -2120,6 +2208,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2164,6 +2254,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2208,6 +2300,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2252,6 +2346,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2296,6 +2392,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2340,6 +2438,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2384,6 +2484,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2428,6 +2530,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2472,6 +2576,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2516,6 +2622,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2560,6 +2668,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2604,6 +2714,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2648,6 +2760,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2692,6 +2806,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2736,6 +2852,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2780,6 +2898,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2824,6 +2944,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T17:00:00.000Z",
@@ -2868,6 +2990,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Quote Q-2291 sent to Mrs Ellis.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-03T18:00:00.000Z",
@@ -2907,6 +3031,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Quote Q-2292 sent to Ben Whitfield.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-07T18:00:00.000Z",
@@ -2946,6 +3072,8 @@
    "access_attempts": 0,
    "waiting_for": "parts: a replacement diverter valve, due Thursday",
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T18:00:00.000Z",
@@ -2985,6 +3113,8 @@
    "access_attempts": 0,
    "waiting_for": "parts: a new sealed unit is being made",
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T18:00:00.000Z",
@@ -3024,6 +3154,8 @@
    "access_attempts": 2,
    "waiting_for": "access: no answer at two visits; the agent is contacting the tenant",
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T18:00:00.000Z",
@@ -3041,12 +3173,12 @@
    "status": "waiting"
   },
   {
-   "reference": "YY623",
-   "property_key": "tansy_95",
+   "reference": "YQ399",
+   "property_key": "larchfield_flat_2_67",
    "client_key": null,
    "reporter": {
-    "name": "Kwame Reid",
-    "phone": "+447700900565",
+    "name": "Aisha Patel",
+    "phone": "+447700900562",
     "role": "homeowner"
    },
    "reason": "Urgent: gas smell: supply capped by the emergency service; find and repair the leak",
@@ -3063,6 +3195,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Leaking joint on the hob supply remade; tightness test passed; supply restored.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T18:32:00.000Z",
@@ -3090,7 +3224,7 @@
    "status": "done"
   },
   {
-   "reference": "JQ965",
+   "reference": "QY435",
    "property_key": "saxonby_flat_2_20",
    "client_key": null,
    "reporter": {
@@ -3112,14 +3246,16 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Replaced the radiator valve; no leaks; heating topped up.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
-     "at": "2026-10-04T07:00:00.000Z",
+     "at": "2026-10-05T07:00:00.000Z",
      "by": "receptionist",
      "what": "raised"
     },
     {
-     "at": "2026-10-04T07:10:00.000Z",
+     "at": "2026-10-05T07:10:00.000Z",
      "by": "staff",
      "what": "booked: morning with Callum"
     },
@@ -3135,7 +3271,7 @@
     }
    ],
    "source": "seed",
-   "created_at": "2026-10-04T07:00:00.000Z",
+   "created_at": "2026-10-05T07:00:00.000Z",
    "done_at": "2026-10-07T10:30:00.000Z",
    "trade": "plumbing",
    "priority": "routine",
@@ -3204,12 +3340,12 @@
  ],
  "incidents": [
   {
-   "property_key": "tansy_95",
+   "property_key": "larchfield_flat_2_67",
    "kind": "gas",
    "advice_version": 1,
    "advised_at": "2026-10-05T18:02:20.000Z",
-   "caller_phone": "+447700900565",
-   "follow_up_job": "YY623",
+   "caller_phone": "+447700900562",
+   "follow_up_job": "YQ399",
    "notes": "Told to leave and ring the gas emergency line from outside; number texted.",
    "source": "seed",
    "created_at": "2026-10-05T18:02:00.000Z"
@@ -3285,7 +3421,7 @@
    },
    "kind": "job",
    "description": "Cracked bedroom window (80 Larchfield Close (example), NG3)",
-   "amount_pence": 7500,
+   "amount_pence": 10500,
    "status": "due",
    "issued": "2026-10-03",
    "due": "2026-10-17",
@@ -3306,7 +3442,7 @@
    },
    "kind": "job",
    "description": "Low pressure in the shower (Flat 3, 91 Saxonby Street (example), NG1)",
-   "amount_pence": 10500,
+   "amount_pence": 7500,
    "status": "paid",
    "issued": "2026-10-03",
    "due": "2026-10-10",
@@ -3348,7 +3484,7 @@
    },
    "kind": "job",
    "description": "Cracked bedroom window (Flat 3, 22 Tansy Lane (example), NG2)",
-   "amount_pence": 7500,
+   "amount_pence": 13500,
    "status": "due",
    "issued": "2026-10-05",
    "due": "2026-10-19",
@@ -3369,7 +3505,7 @@
    },
    "kind": "job",
    "description": "Cracked bedroom window (Flat 2, 67 Larchfield Close (example), NG3)",
-   "amount_pence": 13500,
+   "amount_pence": 7500,
    "status": "paid",
    "issued": "2026-10-05",
    "due": "2026-10-12",
@@ -3411,7 +3547,7 @@
    },
    "kind": "job",
    "description": "Outside drain overflowing (95 Tansy Lane (example), NG2)",
-   "amount_pence": 7500,
+   "amount_pence": 10500,
    "status": "paid",
    "issued": "2026-10-05",
    "due": "2026-10-12",
@@ -3432,7 +3568,7 @@
    },
    "kind": "job",
    "description": "Socket not working in the bedroom (95 Tansy Lane (example), NG2)",
-   "amount_pence": 10500,
+   "amount_pence": 7500,
    "status": "paid",
    "issued": "2026-10-06",
    "due": "2026-10-13",
@@ -3453,7 +3589,7 @@
    },
    "kind": "job",
    "description": "No hot water (Flat 3, 22 Tansy Lane (example), NG2)",
-   "amount_pence": 7500,
+   "amount_pence": 13500,
    "status": "due",
    "issued": "2026-10-06",
    "due": "2026-10-20",
@@ -3495,7 +3631,7 @@
    },
    "kind": "job",
    "description": "Loose stair handrail (Flat 3, 22 Tansy Lane (example), NG2)",
-   "amount_pence": 13500,
+   "amount_pence": 10500,
    "status": "due",
    "issued": "2026-10-06",
    "due": "2026-10-20",
@@ -3516,7 +3652,7 @@
    },
    "kind": "job",
    "description": "Radiator cold at the top (Flat 3, 91 Saxonby Street (example), NG1)",
-   "amount_pence": 10500,
+   "amount_pence": 13500,
    "status": "paid",
    "issued": "2026-10-06",
    "due": "2026-10-13",
@@ -3528,7 +3664,7 @@
   },
   {
    "reference": "INV-1039",
-   "job_ref": "JQ965",
+   "job_ref": "QY435",
    "property_key": "saxonby_flat_2_20",
    "client_key": null,
    "payer": {
@@ -3537,7 +3673,7 @@
    },
    "kind": "job",
    "description": "Leaking radiator valve in the lounge (Flat 2, 20 Saxonby Street (example), NG1)",
-   "amount_pence": 13500,
+   "amount_pence": 7500,
    "status": "due",
    "issued": "2026-10-07",
    "due": "2026-10-14",
@@ -3558,7 +3694,7 @@
    },
    "kind": "job",
    "description": "Radiator cold at the top (80 Larchfield Close (example), NG3)",
-   "amount_pence": 7500,
+   "amount_pence": 10500,
    "status": "due",
    "issued": "2026-10-07",
    "due": "2026-10-21",
@@ -3600,7 +3736,7 @@
    },
    "kind": "job",
    "description": "Loose stair handrail (Flat 2, 67 Larchfield Close (example), NG3)",
-   "amount_pence": 10500,
+   "amount_pence": 16500,
    "status": "paid",
    "issued": "2026-10-07",
    "due": "2026-10-14",
@@ -3621,7 +3757,7 @@
    },
    "kind": "job",
    "description": "Bathroom extractor fan not working (80 Larchfield Close (example), NG3)",
-   "amount_pence": 16500,
+   "amount_pence": 7500,
    "status": "due",
    "issued": "2026-10-07",
    "due": "2026-10-21",

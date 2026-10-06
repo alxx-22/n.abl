@@ -73,7 +73,7 @@
   },
   {
    "q": "Who do you work for?",
-   "a": "We work for homeowners, landlords, letting agents and housing associations.",
+   "a": "We work for homeowners, landlords, letting agents, block managers, housing associations, businesses and insurers.",
    "tags": ["landlord","letting agent","homeowner","business","who"]
   },
   {
@@ -265,13 +265,13 @@
    "homeowners": true,
    "landlords": true,
    "agents": true,
-   "blocks": false,
+   "blocks": true,
    "social": {
     "on": true,
     "agent_of_landlord": true
    },
-   "commercial": false,
-   "insurers": false,
+   "commercial": true,
+   "insurers": true,
    "tenant_no_client": "contact_landlord",
    "recharge_lockouts": true
   },

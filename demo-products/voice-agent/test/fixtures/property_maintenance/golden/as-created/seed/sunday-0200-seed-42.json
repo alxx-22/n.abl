@@ -29,6 +29,8 @@
    "district": "NG5",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "whitfield",
    "occupant": {
     "name": "Sam Ortiz",
@@ -59,6 +61,8 @@
    "district": "NG3",
    "town": "Nottingham",
    "kind": "bungalow",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Aisha Patel",
@@ -89,6 +93,8 @@
    "district": "NG7",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Tom Mistry",
@@ -119,6 +125,8 @@
    "district": "NG8",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Megan Bennett",
@@ -149,6 +157,8 @@
    "district": "NG2",
    "town": "West Bridgford",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Kwame Reid",
@@ -179,6 +189,8 @@
    "district": "NG1",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Lucy Doyle",
@@ -209,6 +221,8 @@
    "district": "NG4",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Daniel Okoro",
@@ -239,6 +253,8 @@
    "district": "NG6",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Priti Shaw",
@@ -269,6 +285,8 @@
    "district": "NG9",
    "town": "Beeston",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Josh Akhtar",
@@ -299,6 +317,8 @@
    "district": "NG11",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Hannah Hart",
@@ -329,6 +349,8 @@
    "district": "NG10",
    "town": "Long Eaton",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Callum Hussain",
@@ -359,6 +381,8 @@
    "district": "DE22",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Zara Gray",
@@ -389,6 +413,8 @@
    "district": "DE1",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Owen Price",
@@ -419,6 +445,8 @@
    "district": "DE21",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "harbour",
    "occupant": {
     "name": "Fatima Begum",
@@ -449,6 +477,8 @@
    "district": "DE23",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Ryan Brennan",
@@ -479,6 +509,8 @@
    "district": "DE24",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Ellie Burke",
@@ -509,6 +541,8 @@
    "district": "DE3",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Jamal Murray",
@@ -539,6 +573,8 @@
    "district": "DE2",
    "town": "Derby",
    "kind": "bungalow",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Sophie Nash",
@@ -569,6 +605,8 @@
    "district": "LE11",
    "town": "Loughborough",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Liam Kowalski",
@@ -599,6 +637,8 @@
    "district": "LE11",
    "town": "Loughborough",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Chloe Fletcher",
@@ -629,6 +669,8 @@
    "district": "NG5",
    "town": "Nottingham",
    "kind": "bungalow",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Nathan Iqbal",
@@ -659,6 +701,8 @@
    "district": "NG3",
    "town": "Nottingham",
    "kind": "bungalow",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Amira Lowe",
@@ -689,6 +733,8 @@
    "district": "NG7",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Kieran Mensah",
@@ -719,6 +765,8 @@
    "district": "NG8",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "castle_gate",
    "occupant": {
     "name": "Grace Turner",
@@ -749,6 +797,8 @@
    "district": "NG2",
    "town": "West Bridgford",
    "kind": "bungalow",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Ben Nolan",
@@ -779,6 +829,8 @@
    "district": "NG1",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Molly Kerr",
@@ -809,6 +861,8 @@
    "district": "NG4",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Imran Walsh",
@@ -839,6 +893,8 @@
    "district": "NG6",
    "town": "Nottingham",
    "kind": "bungalow",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Jade Lloyd",
@@ -869,6 +925,8 @@
    "district": "NG9",
    "town": "Beeston",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Lewis Rahman",
@@ -899,6 +957,8 @@
    "district": "NG11",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Rosa Ali",
@@ -929,6 +989,8 @@
    "district": "NG10",
    "town": "Long Eaton",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Sam Ortiz",
@@ -959,6 +1021,8 @@
    "district": "DE22",
    "town": "Derby",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Aisha Patel",
@@ -989,6 +1053,8 @@
    "district": "DE1",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Tom Mistry",
@@ -1019,6 +1085,8 @@
    "district": "DE21",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "oakfield",
    "occupant": {
     "name": "Megan Bennett",
@@ -1049,6 +1117,8 @@
    "district": "NG2",
    "town": "West Bridgford",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "ellis",
    "occupant": {
     "name": "Kwame Reid",
@@ -1079,6 +1149,8 @@
    "district": "DE24",
    "town": "Derby",
    "kind": "bungalow",
+   "block": null,
+   "site_name": null,
    "client": "ellis",
    "occupant": {
     "name": "Lucy Doyle",
@@ -1109,6 +1181,8 @@
    "district": "DE3",
    "town": "Derby",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "kaur",
    "occupant": {
     "name": "Daniel Okoro",
@@ -1139,6 +1213,8 @@
    "district": "DE2",
    "town": "Derby",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "kaur",
    "occupant": {
     "name": "Priti Shaw",
@@ -1169,6 +1245,8 @@
    "district": "LE11",
    "town": "Loughborough",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "kaur",
    "occupant": {
     "name": "Josh Akhtar",
@@ -1199,6 +1277,8 @@
    "district": "LE11",
    "town": "Loughborough",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "whitfield",
    "occupant": {
     "name": "Hannah Hart",
@@ -1229,6 +1309,8 @@
    "district": "NG5",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "whitfield",
    "occupant": {
     "name": "Callum Hussain",
@@ -1259,6 +1341,8 @@
    "district": "NG3",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "whitfield",
    "occupant": {
     "name": "Zara Gray",
@@ -1289,6 +1373,8 @@
    "district": "NG7",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": "whitfield",
    "occupant": {
     "name": "Owen Price",
@@ -1319,6 +1405,8 @@
    "district": "NG8",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": "whitfield",
    "occupant": {
     "name": "Fatima Begum",
@@ -1349,6 +1437,8 @@
    "district": "NG2",
    "town": "West Bridgford",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Ryan Brennan",
@@ -1379,6 +1469,8 @@
    "district": "NG1",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Ellie Burke",
@@ -1409,6 +1501,8 @@
    "district": "NG4",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Jamal Murray",
@@ -1439,6 +1533,8 @@
    "district": "NG6",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Sophie Nash",
@@ -1469,6 +1565,8 @@
    "district": "NG9",
    "town": "Beeston",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Liam Kowalski",
@@ -1499,6 +1597,8 @@
    "district": "NG11",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Chloe Fletcher",
@@ -1529,6 +1629,8 @@
    "district": "NG10",
    "town": "Long Eaton",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Nathan Iqbal",
@@ -1559,6 +1661,8 @@
    "district": "DE22",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Amira Lowe",
@@ -1589,6 +1693,8 @@
    "district": "DE1",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Kieran Mensah",
@@ -1619,6 +1725,8 @@
    "district": "DE21",
    "town": "Derby",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Grace Turner",
@@ -1649,6 +1757,8 @@
    "district": "DE23",
    "town": "Derby",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Ben Nolan",
@@ -1679,6 +1789,8 @@
    "district": "DE24",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Molly Kerr",
@@ -1709,6 +1821,8 @@
    "district": "DE3",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Imran Walsh",
@@ -1739,6 +1853,8 @@
    "district": "DE2",
    "town": "Derby",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Jade Lloyd",
@@ -1769,6 +1885,8 @@
    "district": "LE11",
    "town": "Loughborough",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Lewis Rahman",
@@ -1799,6 +1917,8 @@
    "district": "LE11",
    "town": "Loughborough",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Rosa Ali",
@@ -1829,6 +1949,8 @@
    "district": "NG5",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Sam Ortiz",
@@ -1859,6 +1981,8 @@
    "district": "NG3",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Aisha Patel",
@@ -1889,6 +2013,8 @@
    "district": "NG7",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Tom Mistry",
@@ -1919,6 +2045,8 @@
    "district": "NG8",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Megan Bennett",
@@ -1949,6 +2077,8 @@
    "district": "NG2",
    "town": "West Bridgford",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Kwame Reid",
@@ -1979,6 +2109,8 @@
    "district": "NG1",
    "town": "Nottingham",
    "kind": "flat",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Lucy Doyle",
@@ -2009,6 +2141,8 @@
    "district": "NG4",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Daniel Okoro",
@@ -2039,6 +2173,8 @@
    "district": "NG6",
    "town": "Nottingham",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Priti Shaw",
@@ -2069,6 +2205,8 @@
    "district": "NG9",
    "town": "Beeston",
    "kind": "house",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Josh Akhtar",
@@ -2099,6 +2237,8 @@
    "district": "NG11",
    "town": "Nottingham",
    "kind": "bungalow",
+   "block": null,
+   "site_name": null,
    "client": null,
    "occupant": {
     "name": "Hannah Hart",
@@ -2147,6 +2287,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Quote Q-2288 approved by Ben Whitfield.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -2191,6 +2333,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Lock cylinder replaced; three keys handed to the tenant.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T08:00:00.000Z",
@@ -2240,6 +2384,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Bled the radiators and balanced the system.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T08:00:00.000Z",
@@ -2289,6 +2435,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "New fan fitted and tested.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -2343,6 +2491,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pane measured; sealed unit fitted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -2397,6 +2547,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Three tiles refixed with new clips.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -2446,6 +2598,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Cleared the trap and the waste pipe; draining freely.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -2495,6 +2649,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Three tiles refixed with new clips.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -2544,6 +2700,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Replaced the washer and the cartridge; no drips.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -2598,6 +2756,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Lock cylinder replaced; three keys handed to the tenant.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -2652,6 +2812,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "New fan fitted and tested.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -2706,6 +2868,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Stain-blocked and two coats on the ceiling.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -2760,6 +2924,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Stain-blocked and two coats on the ceiling.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -2814,6 +2980,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Diverter valve replaced; hot water and heating working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -2868,6 +3036,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Lock cylinder replaced; three keys handed to the tenant.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T07:00:00.000Z",
@@ -2922,6 +3092,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Stain-blocked and two coats on the ceiling.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -2976,6 +3148,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Cleared the trap and the waste pipe; draining freely.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -3030,6 +3204,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Pane measured; sealed unit fitted.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T07:00:00.000Z",
@@ -3084,6 +3260,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Treated with fungicide; advised on ventilation; fan working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -3138,6 +3316,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Diverter valve replaced; hot water and heating working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T07:00:00.000Z",
@@ -3192,6 +3372,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "New flush valve fitted; flushing properly.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T07:00:00.000Z",
@@ -3246,6 +3428,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Treated with fungicide; advised on ventilation; fan working.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-04T07:00:00.000Z",
@@ -3300,6 +3484,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Stain-blocked and two coats on the ceiling.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-02T11:00:00.000Z",
@@ -3354,6 +3540,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Recall of JH109.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -3398,6 +3586,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Recall of HK925.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-10T07:00:00.000Z",
@@ -3442,6 +3632,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Made safe: water off at the stopcock (behind the bath panel), pipe clamped. Permanent repair booked.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-10T01:10:00.000Z",
@@ -3491,6 +3683,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Follow-up to LR752.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -3535,6 +3729,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -3579,6 +3775,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -3623,6 +3821,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -3667,6 +3867,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -3711,6 +3913,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -3755,6 +3959,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -3799,6 +4005,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -3843,6 +4051,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -3887,6 +4097,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -3931,6 +4143,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -3975,6 +4189,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4019,6 +4235,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4063,6 +4281,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4107,6 +4327,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4151,6 +4373,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4195,6 +4419,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4239,6 +4465,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4283,6 +4511,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4327,6 +4557,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-10T07:00:00.000Z",
@@ -4371,6 +4603,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4415,6 +4649,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -4459,6 +4695,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Quote Q-2291 sent to Mrs Ellis.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T01:00:00.000Z",
@@ -4498,6 +4736,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Quote Q-2292 sent to Sophie Grant.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T01:00:00.000Z",
@@ -4537,6 +4777,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Quote Q-2293 sent to Imran Akhtar.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T01:00:00.000Z",
@@ -4555,11 +4797,11 @@
   },
   {
    "reference": "AQ438",
-   "property_key": "wharfside_flat_3_6",
+   "property_key": "charnwood_19",
    "client_key": "kaur",
    "reporter": {
-    "name": "Priti Shaw",
-    "phone": "+447700900538",
+    "name": "Josh Akhtar",
+    "phone": "+447700900539",
     "role": "occupant"
    },
    "reason": "Routine: new kitchen circuit for an electric cooker",
@@ -4576,6 +4818,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Quote Q-2294 sent to Raj Kaur.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-09T01:00:00.000Z",
@@ -4615,6 +4859,8 @@
    "access_attempts": 0,
    "waiting_for": "parts: a replacement diverter valve, due Thursday",
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T01:00:00.000Z",
@@ -4654,6 +4900,8 @@
    "access_attempts": 0,
    "waiting_for": "parts: a new sealed unit is being made",
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T01:00:00.000Z",
@@ -4693,6 +4941,8 @@
    "access_attempts": 2,
    "waiting_for": "access: no answer at two visits; the agent is contacting the tenant",
    "notes": null,
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-06T01:00:00.000Z",
@@ -4710,12 +4960,12 @@
    "status": "waiting"
   },
   {
-   "reference": "YH323",
-   "property_key": "goldcrest_flat_6_101",
+   "reference": "HJ815",
+   "property_key": "wrenbury_flat_3_39",
    "client_key": null,
    "reporter": {
-    "name": "Ben Nolan",
-    "phone": "+447700900555",
+    "name": "Tom Mistry",
+    "phone": "+447700900563",
     "role": "homeowner"
    },
    "reason": "Urgent: gas smell: supply capped by the emergency service; find and repair the leak",
@@ -4732,6 +4982,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Leaking joint on the hob supply remade; tightness test passed; supply restored.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-07T18:32:00.000Z",
@@ -4759,28 +5011,30 @@
    "status": "done"
   },
   {
-   "reference": "KY967",
-   "property_key": "charnwood_flat_1_27",
-   "client_key": "castle_gate",
+   "reference": "YY764",
+   "property_key": "ferncroft_75",
+   "client_key": "harbour",
    "reporter": {
-    "name": "Liam Kowalski",
-    "phone": "+447700900519",
+    "name": "Priti Shaw",
+    "phone": "+447700900508",
     "role": "occupant"
    },
-   "reason": "Routine: dripping kitchen tap",
+   "reason": "Routine: blocked kitchen sink",
    "visit_date": "2026-09-24",
    "window_key": "am",
    "attend_by": null,
-   "engineer_key": "dan",
+   "engineer_key": "marek",
    "eta_minutes": null,
    "on_the_way_at": null,
-   "po": null,
+   "po": "PO-5918",
    "price_pence": null,
    "clocks": [],
    "flags": [],
    "access_attempts": 0,
    "waiting_for": null,
-   "notes": "Replaced the washer and the cartridge; no drips.",
+   "notes": "Cleared the trap and the waste pipe; draining freely.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-09-22T07:00:00.000Z",
@@ -4790,11 +5044,11 @@
     {
      "at": "2026-09-22T07:10:00.000Z",
      "by": "staff",
-     "what": "booked: morning with Dan"
+     "what": "booked: morning with Marek"
     },
     {
      "at": "2026-09-24T10:30:00.000Z",
-     "by": "Dan",
+     "by": "Marek",
      "what": "done"
     },
     {
@@ -4806,35 +5060,37 @@
    "source": "seed",
    "created_at": "2026-09-22T07:00:00.000Z",
    "done_at": "2026-09-24T10:30:00.000Z",
-   "trade": "plumbing",
+   "trade": "drainage",
    "priority": "routine",
-   "description": "Dripping kitchen tap",
+   "description": "Blocked kitchen sink",
    "kind": "repair",
    "status": "invoiced"
   },
   {
-   "reference": "QR751",
-   "property_key": "millrace_22",
-   "client_key": "harbour",
+   "reference": "WL655",
+   "property_key": "sorrel_68",
+   "client_key": "oakfield",
    "reporter": {
-    "name": "Fatima Begum",
-    "phone": "+447700900514",
+    "name": "Sam Ortiz",
+    "phone": "+447700900531",
     "role": "occupant"
    },
-   "reason": "Routine: low pressure in the shower",
+   "reason": "Routine: lights keep tripping",
    "visit_date": "2026-09-18",
    "window_key": "am",
    "attend_by": null,
-   "engineer_key": "callum",
+   "engineer_key": "priya",
    "eta_minutes": null,
    "on_the_way_at": null,
-   "po": "PO-7085",
+   "po": null,
    "price_pence": null,
    "clocks": [],
    "flags": [],
    "access_attempts": 0,
    "waiting_for": null,
-   "notes": "Descaled the shower head and cleared the filter.",
+   "notes": "Faulty light fitting in the hall replaced; circuit tested.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-09-15T07:00:00.000Z",
@@ -4844,11 +5100,11 @@
     {
      "at": "2026-09-15T07:10:00.000Z",
      "by": "staff",
-     "what": "booked: morning with Callum"
+     "what": "booked: morning with Priya"
     },
     {
      "at": "2026-09-18T10:30:00.000Z",
-     "by": "Callum",
+     "by": "Priya",
      "what": "done"
     },
     {
@@ -4860,14 +5116,14 @@
    "source": "seed",
    "created_at": "2026-09-15T07:00:00.000Z",
    "done_at": "2026-09-18T10:30:00.000Z",
-   "trade": "plumbing",
+   "trade": "electrical",
    "priority": "routine",
-   "description": "Low pressure in the shower",
+   "description": "Lights keep tripping",
    "kind": "repair",
    "status": "invoiced"
   },
   {
-   "reference": "YQ399",
+   "reference": "QK912",
    "property_key": "saxonby_flat_2_20",
    "client_key": null,
    "reporter": {
@@ -4879,7 +5135,7 @@
    "visit_date": "2026-10-09",
    "window_key": "am",
    "attend_by": null,
-   "engineer_key": "dan",
+   "engineer_key": "marek",
    "eta_minutes": null,
    "on_the_way_at": null,
    "po": null,
@@ -4889,6 +5145,8 @@
    "access_attempts": 0,
    "waiting_for": null,
    "notes": "Replaced the radiator valve; no leaks; heating topped up.",
+   "claim_ref": null,
+   "reporters": [],
    "history": [
     {
      "at": "2026-10-05T07:00:00.000Z",
@@ -4898,11 +5156,11 @@
     {
      "at": "2026-10-05T07:10:00.000Z",
      "by": "staff",
-     "what": "booked: morning with Dan"
+     "what": "booked: morning with Marek"
     },
     {
      "at": "2026-10-09T10:30:00.000Z",
-     "by": "Dan",
+     "by": "Marek",
      "what": "done"
     },
     {
@@ -5698,12 +5956,12 @@
  ],
  "incidents": [
   {
-   "property_key": "goldcrest_flat_6_101",
+   "property_key": "wrenbury_flat_3_39",
    "kind": "gas",
    "advice_version": 1,
    "advised_at": "2026-10-07T18:02:20.000Z",
-   "caller_phone": "+447700900555",
-   "follow_up_job": "YH323",
+   "caller_phone": "+447700900563",
+   "follow_up_job": "HJ815",
    "notes": "Told to leave and ring the gas emergency line from outside; number texted.",
    "source": "seed",
    "created_at": "2026-10-07T18:02:00.000Z"
@@ -5755,7 +6013,7 @@
   {
    "reference": "Q-2294",
    "job_ref": "AQ438",
-   "property_key": "wharfside_flat_3_6",
+   "property_key": "charnwood_19",
    "client_key": "kaur",
    "description": "New kitchen circuit for an electric cooker",
    "amount_pence": 52000,
@@ -5783,7 +6041,7 @@
   {
    "reference": "Q-2289",
    "job_ref": null,
-   "property_key": "copperbeech_23",
+   "property_key": "bellfounder_24",
    "client_key": "whitfield",
    "description": "Replace six fence panels and two posts",
    "amount_pence": 68000,
@@ -5798,16 +6056,16 @@
  "invoices": [
   {
    "reference": "INV-1024",
-   "job_ref": "QR751",
-   "property_key": "millrace_22",
-   "client_key": "harbour",
+   "job_ref": "WL655",
+   "property_key": "sorrel_68",
+   "client_key": "oakfield",
    "payer": {
-    "name": "Sophie Grant",
-    "phone": "+447700900401"
+    "name": "Natalie Byrne",
+    "phone": "+447700900403"
    },
    "kind": "job",
-   "description": "Low pressure in the shower (22 Millrace Lane (example), DE21)",
-   "amount_pence": 9500,
+   "description": "Lights keep tripping (68 Sorrel Street (example), NG10)",
+   "amount_pence": 13500,
    "status": "due",
    "issued": "2026-09-18",
    "due": "2026-10-02",
@@ -5819,15 +6077,15 @@
   },
   {
    "reference": "INV-1025",
-   "job_ref": "KY967",
-   "property_key": "charnwood_flat_1_27",
-   "client_key": "castle_gate",
+   "job_ref": "YY764",
+   "property_key": "ferncroft_75",
+   "client_key": "harbour",
    "payer": {
-    "name": "Imran Akhtar",
-    "phone": "+447700900402"
+    "name": "Sophie Grant",
+    "phone": "+447700900401"
    },
    "kind": "job",
-   "description": "Dripping kitchen tap (Flat 1, 27 Charnwood Vale (example), LE11)",
+   "description": "Blocked kitchen sink (75 Ferncroft Road (example), NG6)",
    "amount_pence": 13500,
    "status": "due",
    "issued": "2026-09-24",
@@ -5849,7 +6107,7 @@
    },
    "kind": "job",
    "description": "Mould on the bathroom ceiling (101 Saxonby Street (example), NG1)",
-   "amount_pence": 13500,
+   "amount_pence": 17500,
    "status": "due",
    "issued": "2026-10-06",
    "due": "2026-10-20",
@@ -5870,7 +6128,7 @@
    },
    "kind": "job",
    "description": "No hot water (Flat 2, 39 Linnet Walk (example), NG11)",
-   "amount_pence": 17500,
+   "amount_pence": 13500,
    "status": "due",
    "issued": "2026-10-06",
    "due": "2026-10-20",
@@ -5891,7 +6149,7 @@
    },
    "kind": "job",
    "description": "Toilet not flushing (95 Tansy Lane (example), NG2)",
-   "amount_pence": 13500,
+   "amount_pence": 17500,
    "status": "paid",
    "issued": "2026-10-06",
    "due": "2026-10-13",
@@ -5912,7 +6170,7 @@
    },
    "kind": "job",
    "description": "Mould on the bathroom ceiling (Flat 5, 91 Thistledown Road (example), DE22)",
-   "amount_pence": 17500,
+   "amount_pence": 21500,
    "status": "due",
    "issued": "2026-10-06",
    "due": "2026-10-20",
@@ -5933,7 +6191,7 @@
    },
    "kind": "job",
    "description": "Patch and paint the ceiling after a leak (120 Larchfield Close (example), NG3)",
-   "amount_pence": 21500,
+   "amount_pence": 13500,
    "status": "due",
    "issued": "2026-10-06",
    "due": "2026-10-20",
@@ -5954,7 +6212,7 @@
    },
    "kind": "job",
    "description": "No hot water (14 Millrace Lane (example), DE21)",
-   "amount_pence": 13500,
+   "amount_pence": 9500,
    "status": "due",
    "issued": "2026-10-07",
    "due": "2026-10-21",
@@ -5975,7 +6233,7 @@
    },
    "kind": "job",
    "description": "Front door lock stiff (14 Millrace Lane (example), DE21)",
-   "amount_pence": 9500,
+   "amount_pence": 13500,
    "status": "due",
    "issued": "2026-10-07",
    "due": "2026-10-21",
@@ -5996,7 +6254,7 @@
    },
    "kind": "job",
    "description": "Patch and paint the ceiling after a leak (94 Ferncroft Road (example), NG6)",
-   "amount_pence": 13500,
+   "amount_pence": 9500,
    "status": "paid",
    "issued": "2026-10-07",
    "due": "2026-10-14",
@@ -6038,7 +6296,7 @@
    },
    "kind": "job",
    "description": "Cracked bedroom window (87 Thistledown Road (example), DE22)",
-   "amount_pence": 9500,
+   "amount_pence": 17500,
    "status": "due",
    "issued": "2026-10-07",
    "due": "2026-10-21",
@@ -6059,7 +6317,7 @@
    },
    "kind": "job",
    "description": "Dripping kitchen tap (120 Larchfield Close (example), NG3)",
-   "amount_pence": 17500,
+   "amount_pence": 9500,
    "status": "due",
    "issued": "2026-10-08",
    "due": "2026-10-22",
@@ -6101,7 +6359,7 @@
    },
    "kind": "job",
    "description": "Bathroom extractor fan not working (95 Tansy Lane (example), NG2)",
-   "amount_pence": 9500,
+   "amount_pence": 13500,
    "status": "paid",
    "issued": "2026-10-08",
    "due": "2026-10-15",
@@ -6122,7 +6380,7 @@
    },
    "kind": "job",
    "description": "Patch and paint the ceiling after a leak (Flat 1, 27 Bellfounder Street (example), LE11)",
-   "amount_pence": 13500,
+   "amount_pence": 9500,
    "status": "due",
    "issued": "2026-10-08",
    "due": "2026-10-22",
@@ -6143,7 +6401,7 @@
    },
    "kind": "job",
    "description": "Patch and paint the ceiling after a leak (87 Thistledown Road (example), DE22)",
-   "amount_pence": 9500,
+   "amount_pence": 17500,
    "status": "due",
    "issued": "2026-10-08",
    "due": "2026-10-22",
@@ -6155,7 +6413,7 @@
   },
   {
    "reference": "INV-1041",
-   "job_ref": "YQ399",
+   "job_ref": "QK912",
    "property_key": "saxonby_flat_2_20",
    "client_key": null,
    "payer": {
@@ -6185,7 +6443,7 @@
    },
    "kind": "job",
    "description": "Bathroom extractor fan not working (60 Saxonby Street (example), NG1)",
-   "amount_pence": 17500,
+   "amount_pence": 13500,
    "status": "due",
    "issued": "2026-10-09",
    "due": "2026-10-23",
@@ -6206,7 +6464,7 @@
    },
    "kind": "job",
    "description": "Cracked bedroom window (Flat 1, 75 Kestrel Rise (example), NG9)",
-   "amount_pence": 13500,
+   "amount_pence": 17500,
    "status": "due",
    "issued": "2026-10-09",
    "due": "2026-10-23",
