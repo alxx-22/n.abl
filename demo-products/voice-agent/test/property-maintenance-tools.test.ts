@@ -660,8 +660,15 @@ test("the caller's own words count: a leak they said was pouring is an emergency
   const jess = await call(t, '+447700900411');
   jess.hear("The rotten back door and frame need replacing, and I'd like to book that in.");
   assert.equal((await jess.run('triage_fault', { description: 'Replace the rotten back door and frame' })).priority, 'routine');
-  // A chirping carbon monoxide alarm is the electrician's, whatever trade the model passes.
+  // Raised, so "I've booked that in" is true; an arrival time before anyone accepts is not.
+  const said = (line: string) => checkUtterance(line, c.ctx.state, ['Dan', 'Leon'], t.profile.maintenance).map((f) => f.rule);
+  assert.deepEqual(said("I've booked that in, and our on-call engineer has been paged."), []);
+  assert.ok(said("Dan will be with you by ten o'clock.").includes('invented_eta'));
+  // A chirping carbon monoxide alarm is the electrician's, whatever trade the model passes; "nobody vulnerable" raises nothing (live, 6 October).
   const sam = await call(t, '+447700900501');
+  sam.hear("I'm calling about my carbon monoxide alarm. It's chirping once a minute.");
+  sam.hear("There's no one particularly vulnerable here.");
+  assert.equal((await sam.run('triage_fault', { description: 'CO alarm chirping', answers: 'no one vulnerable' })).priority, 'urgent');
   await sam.run('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
   const w = (await sam.run('job', { action: 'create', description: 'CO alarm chirping once a minute', trade: 'gas_heating', name: 'Sam Ortiz' })).windows[0];
   const chirp = await sam.run('job', { action: 'create', description: 'CO alarm chirping once a minute', trade: 'gas_heating', name: 'Sam Ortiz', date: w.date, window: w.window });

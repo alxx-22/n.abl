@@ -184,7 +184,8 @@ function maintenanceFlags(text: string, state: CallState, staff: string[], m: Ma
   // While the advice is owed, a reply that doesn't start it put something else first.
   if (s && !s.spoken && ['gas', 'co', 'fire', 'hurt'].includes(s.kind) && !adviceStarted(s.kind, text)) flags.push({ rule: 'safety_delayed', text: text.slice(0, 120) });
   const coming = COMING.exec(text);
-  if (coming && !negated(text, coming.index) && (state.awaitingApproval || state.paged)) flags.push({ rule: state.awaitingApproval ? 'approval_claim' : 'invented_eta', text: coming[0] });
+  // A paged emergency is raised, so "I've booked that in" is true of it; only an arrival is invented before someone accepts.
+  if (coming && !negated(text, coming.index) && (state.awaitingApproval || (state.paged && !/booked/i.test(coming[0])))) flags.push({ rule: state.awaitingApproval ? 'approval_claim' : 'invented_eta', text: coming[0] });
   const named = staff.length ? new RegExp(`\\b(?:${staff.map(escape).join('|')})\\b`).exec(text) : null;
   if (state.paged && named && /\b(?:on (?:his|her|their) way|coming|be with you|be there)\b/i.test(text)) flags.push({ rule: 'invented_eta', text: named[0] });
   const arrival = ARRIVAL.exec(text);

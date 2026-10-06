@@ -252,7 +252,10 @@ export function triage(m: MaintenanceSettings, words: string, opts: { vulnerable
   });
   let level: JobPriority = EMERGENCY.test(words) || example(m.priorities.emergency.examples) ? 'emergency' : URGENT.test(words) || example(m.priorities.urgent.examples) ? 'urgent' : 'routine';
   const why = [level === 'emergency' ? 'Emergency' : level === 'urgent' ? 'Urgent' : 'Routine'];
-  const vulnerable = [...(opts.vulnerable ?? []), ...(VULNERABLE.exec(words)?.[0] ? [VULNERABLE.exec(words)![0]] : [])];
+  // "Nobody here is vulnerable" names nobody.
+  const named = VULNERABLE.exec(words);
+  const denied = named && /\b(?:no ?one|nobody|not|isn'?t|aren'?t|no)\b[^.?!]{0,25}$/i.test(words.slice(Math.max(0, named.index - 30), named.index));
+  const vulnerable = [...(opts.vulnerable ?? []), ...(named && !denied ? [named[0]] : [])];
   if (m.priorities.winter_heating && WINTER(opts.date) && NO_HEAT.test(words) && vulnerable.length && level === 'routine') {
     level = 'urgent';
     why.push('no heating in winter for a vulnerable household');
@@ -266,7 +269,7 @@ export function triage(m: MaintenanceSettings, words: string, opts: { vulnerable
 
 const FILLER = new Set(['that', 'this', 'with', 'from', 'have', 'there', 'their', 'they', 'when', 'what', 'your', 'been', 'into', 'only', 'some', 'more', 'very', 'will', 'just', 'over', 'which', 'where', 'about', 'after', 'than', 'then', 'them', 'were', 'would', 'could', 'should', 'all', 'whole', 'household']);
 
-const RANK: JobPriority[] = ['routine', 'urgent', 'emergency'];
+const WATER_EMERGENCY = /\bburst\b|\buncontroll\w+|\bpouring\b|\bwon'?t stop\b|\bflooding\b|\bthrough the ceiling\b|\bceiling (?:is )?(?:coming down|collaps\w+)/i;
 
 /**
  * Triage on the receptionist's summary, raised to what the caller's own
@@ -275,8 +278,11 @@ const RANK: JobPriority[] = ['routine', 'urgent', 'emergency'];
  */
 function triageCall(m: MaintenanceSettings, words: string, heard: string[], opts: { vulnerable?: string[]; date: string }): Triage {
   const t = triage(m, words, opts);
-  const said = triage(m, heard.slice(-6).join('. '), opts);
-  if (said.trade && said.trade === t.trade && RANK.indexOf(said.priority) > RANK.indexOf(t.priority)) return { ...t, priority: said.priority, reason: said.reason };
+  // Only water the summary played down: the caller's other words ("nobody here is vulnerable") are not raised on.
+  const said = heard.slice(-6).join('. ');
+  if (t.priority !== 'emergency' && WATER_EMERGENCY.test(said) && t.trade && triage(m, said, opts).trade === t.trade) {
+    return { ...t, priority: 'emergency', reason: `Emergency: ${WATER_EMERGENCY.exec(said)![0].toLowerCase()}, in the caller's words` };
+  }
   return t;
 }
 
