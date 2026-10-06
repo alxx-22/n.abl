@@ -3,7 +3,7 @@
 // anything odd into a profile. validate(): what the builder shows as still
 // missing or wrong before Start.
 
-import { bool, int, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseFaqs, sanitiseSources, sanitiseTheme, str } from '../common/sanitise.ts';
+import { bool, int, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseDraftFaqs, sanitiseSources, sanitiseTheme, str } from '../common/sanitise.ts';
 import type { Issue as BaseIssue } from '../common/types.ts';
 import { validateBase } from '../common/validate.ts';
 import { sanitiseMenu, validateMenu } from '../food/menu.ts';
@@ -50,7 +50,7 @@ export function sanitiseRestaurant(input: unknown): RestaurantAnswers {
       cakes: str(p.cakes, 200, d.policies.cakes),
       vouchers: str(p.vouchers, 200, d.policies.vouchers),
       dietary: str(p.dietary, 300, d.policies.dietary),
-      faqs: sanitiseFaqs(p.faqs),
+      faqs: sanitiseDraftFaqs(p.faqs),
     },
     theme: sanitiseTheme(x.theme, d.theme),
     sources: sanitiseSources(x.sources),
@@ -69,5 +69,7 @@ export function validateRestaurant(a: RestaurantAnswers): Issue[] {
   out.push(...validateMenu(a.menu, 'menu', { orderable: takesOrders(a.serve) }));
   out.push(...validateOrdering(a.serve, 'serve'));
   out.push(...validateDeposit(a.money.deposit, 'money'));
+  const unanswered = a.policies.faqs.filter((f) => !f.q || !f.a).length;
+  if (unanswered) out.push({ step: 'policies', level: 'warning', message: `${unanswered} question${unanswered === 1 ? ' needs' : 's need'} both the question and its answer before the receptionist can use ${unanswered === 1 ? 'it' : 'them'}.` });
   return out;
 }

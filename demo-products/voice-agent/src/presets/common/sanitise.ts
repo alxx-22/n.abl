@@ -71,6 +71,15 @@ export function sanitiseFaqs(v: unknown): FaqAnswer[] {
   return arr(v).slice(0, 20).map((f: any) => ({ q: str(f?.q, 150), a: str(f?.a, 500) })).filter((f) => f.q && f.a);
 }
 
+/**
+ * The builder's questions as typed, half-filled rows included, so autosave
+ * never drops a question before its answer is written; compile uses only
+ * whole ones (mergeFaqs), and validation says which are unfinished.
+ */
+export function sanitiseDraftFaqs(v: unknown): FaqAnswer[] {
+  return arr(v).slice(0, 20).filter((f) => f && typeof f === 'object').map((f: any) => ({ q: str(f.q, 150), a: str(f.a, 500) }));
+}
+
 export function sanitiseTheme(v: unknown, d: ThemeAnswer): ThemeAnswer {
   const th = (v ?? {}) as any;
   return {

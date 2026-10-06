@@ -28,5 +28,10 @@
   "step": "money",
   "level": "error",
   "message": "Set the deposit amount."
+ },
+ {
+  "step": "policies",
+  "level": "warning",
+  "message": "2 questions need both the question and its answer before the receptionist can use them."
  }
 ]

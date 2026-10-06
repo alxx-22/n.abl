@@ -368,3 +368,15 @@ test('workspace: a key owns a workspace that seeds into the database', async () 
   assert.ok((await demo.keyById(key.id))!.revoked_at);
   await db.close();
 });
+
+test("restaurant builder: a half-filled question survives autosave, is warned about, and isn't given to the receptionist", () => {
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  a.policies.faqs = [{ q: 'Do you do bottomless brunch?', a: '' }, { q: 'Is there a kids menu?', a: 'Yes, until 7pm.' }];
+  const kept = sanitiseRestaurant(structuredClone(a));
+  assert.deepEqual(kept.policies.faqs.map((f) => f.q), ['Do you do bottomless brunch?', 'Is there a kids menu?'], 'kept while the answer is being written');
+  assert.ok(validateRestaurant(kept).some((i) => i.step === 'policies' && /1 question needs both the question and its answer/.test(i.message)));
+  const p = compileRestaurant(kept, { slug: 'olive' });
+  assert.ok(p.knowledge.some((k) => k.q === 'Is there a kids menu?'));
+  assert.ok(!p.knowledge.some((k) => k.q === 'Do you do bottomless brunch?'), 'an unanswered question is never given to callers');
+});

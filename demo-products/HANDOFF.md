@@ -422,9 +422,6 @@ the session: see the latest folder in `voice-agent/eval-results/`.
 - Moving a booking to another staff member must be made generic before the
   barber; the estate Diary has no drag-to-move until then (its drawer hides
   the move list for viewings).
-- The restaurant's builder still drops a half-filled question row on
-  autosave (the estate's now keeps it until compile). Fix it when the
-  restaurant is next touched, and re-record its goldens in that commit.
 - The takeaway's order fields (`ready_at`, `driver`) are written but not yet
   read back (do it when the takeaway is built).
 - `NEXT-SESSION-PROMPT.md` is from an older session; use this file instead.
