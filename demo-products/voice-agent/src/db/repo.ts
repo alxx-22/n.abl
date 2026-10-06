@@ -1452,6 +1452,15 @@ export class Repo {
     return rows[0] ? mapInvoice(rows[0]) : null;
   }
 
+  /** Marks an invoice paid by bank transfer, as the office sees it arrive. Only one still due changes. */
+  async markInvoicePaidByBank(tenantId: string, reference: string, at = new Date()): Promise<Invoice | null> {
+    const rows = await this.db.query<any>(
+      `update public.voice_mt_invoices set status = 'paid', paid_at = $3, paid_how = 'bank' where tenant_id = $1 and reference = $2 and status = 'due' returning ${INVOICE_COLS}`,
+      [tenantId, reference, at],
+    );
+    return rows[0] ? mapInvoice(rows[0]) : null;
+  }
+
   // ── Demo reset ─────────────────────────────────────────────────────────
 
   async resetTenantData(tenantId: string): Promise<void> {

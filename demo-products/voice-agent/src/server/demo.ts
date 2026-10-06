@@ -11,7 +11,7 @@ import type { Ctx } from './context.ts';
 import { BASE, HttpError, clientIp, cookie, eventStream, json, overHttps, readJson, sameOrigin, setCookie } from './http.ts';
 import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
 import { tenantState } from './state.ts';
-import { jobAction, propertyAction } from './maintenance.ts';
+import { invoiceAction, jobAction, propertyAction } from './maintenance.ts';
 import type { DemoKey, Workspace } from '../db/demo-repo.ts';
 import { SHARED_DEMO_MINUTES, SHARED_DRAFT_MINUTES, THROTTLE, hashKey, ipHash, newVisitor, normaliseKey, prefixOf, readSession, signSession, withFreePin } from '../demo/access.ts';
 import { PRESETS, answersOf, builtPreset, getPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
@@ -305,8 +305,8 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     return json(res, 201, workspacePayload(w)), true;
   }
 
-  // The last part: a booking or offer reference, a message's id, or a home's key ("albion_41_flat_2").
-  const m = /^\/workspaces\/([0-9a-f-]{36})(?:\/([a-z-]+)(?:\/([A-Za-z0-9+_]{1,48}|[0-9a-f-]{36}))?)?$/.exec(p);
+  // The last part: a booking or offer reference, a message's id, a home's key ("albion_41_flat_2") or an invoice ("INV-1043").
+  const m = /^\/workspaces\/([0-9a-f-]{36})(?:\/([a-z-]+)(?:\/([A-Za-z0-9+_-]{1,48}))?)?$/.exec(p);
   if (!m) throw new HttpError(404, 'Not found.');
   const w = await demo.getWorkspace(m[1]);
   // Someone else's workspace looks exactly like a missing one.
@@ -569,6 +569,12 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     const message = await jobAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body), new Date(), (n) => bus.note(t.id, n));
     void usage('staff_action', { action: 'job' });
     refresh({ reason: 'staff', reference: ref.toUpperCase(), what: message });
+    return json(res, 200, { ok: true, message }), true;
+  }
+  if (sub === 'invoices' && ref && req.method === 'PATCH') {
+    const message = await invoiceAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body));
+    void usage('staff_action', { action: 'invoice' });
+    refresh({ reason: 'staff', what: message });
     return json(res, 200, { ok: true, message }), true;
   }
   if (sub === 'properties' && ref && req.method === 'POST') {

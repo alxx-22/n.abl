@@ -19,6 +19,9 @@ export async function jobAct(id: string, ref: string, body: Record<string, unkno
   }
 }
 
+/** £2,450, or £95.50: as the office writes money. */
+export const money = (pence: number) => `£${(pence / 100).toLocaleString('en-GB', { minimumFractionDigits: pence % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
+
 export const PRIORITY: Record<LiveJob['priority'], { label: string; badge: string }> = {
   emergency: { label: 'Emergency', badge: 'bad' },
   urgent: { label: 'Urgent', badge: 'warn' },

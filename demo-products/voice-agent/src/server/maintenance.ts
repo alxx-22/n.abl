@@ -280,6 +280,32 @@ export async function jobAction(
   }
 }
 
+/**
+ * Quotes and invoices: the office sends a reminder for an unpaid invoice
+ * (to the payer's phone, with how to pay; never bank details by text), or
+ * marks one paid by bank transfer when it arrives.
+ */
+export async function invoiceAction(repo: Repo, t: Tenant, ref: string, b: any, text: (to: string | null, body: string) => Promise<void>, now = new Date()): Promise<string> {
+  const m = t.profile.maintenance;
+  if (!m) throw new HttpError(400, 'This business has no invoices.');
+  const [inv] = await repo.listInvoices(t.id, { reference: ref.toUpperCase() });
+  if (!inv) throw new HttpError(404, 'No such invoice.');
+  if (inv.status !== 'due') throw new HttpError(409, `${inv.reference} is ${inv.status === 'paid' ? 'already paid' : 'cancelled'}.`);
+  const pounds = `£${(inv.amount_pence / 100).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`;
+  if (b.action === 'remind') {
+    const today = toLocal(now, t.profile.timezone).date;
+    const late = inv.due < today;
+    await text(inv.payer.phone, `${t.profile.name}: a reminder that invoice ${inv.reference} for ${pounds} ${late ? `was due on ${spokenDate(inv.due)}` : `is due by ${spokenDate(inv.due)}`}. Call us to pay by card, or pay by bank transfer as shown on the invoice. (Demo)`);
+    return `Reminder sent to ${inv.payer.name ?? 'the payer'}.`;
+  }
+  if (b.action === 'paid_bank') {
+    const r = await repo.markInvoicePaidByBank(t.id, inv.reference, now);
+    if (!r) throw new HttpError(409, 'That invoice has moved on: refresh and try again.');
+    return `${inv.reference} marked paid by bank transfer.`;
+  }
+  throw new HttpError(400, 'Unknown action.');
+}
+
 /** The engineers a page has already gone to: the one holding it, and any who declined or didn't answer. */
 function triedOn(job: Job, m: NonNullable<Tenant['profile']['maintenance']>): Set<string> {
   const keys = new Set<string>(job.engineer_key ? [job.engineer_key] : []);

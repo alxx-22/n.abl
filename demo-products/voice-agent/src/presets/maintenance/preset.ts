@@ -61,9 +61,10 @@ export function factSheet(a: MaintenanceAnswers): string {
 }
 
 /**
- * The contractor's back office (presets/property-maintenance.md §6, the M1
- * views): the jobs board, the dispatch diary with a column per engineer,
- * properties and their certificates, the safety log, messages and calls.
+ * The contractor's back office (presets/property-maintenance.md §6): the
+ * jobs board, the dispatch diary with a column per engineer, properties and
+ * their certificates, the safety log, the clients and what waits on them,
+ * quotes and invoices, messages and calls.
  */
 export function maintenanceWorkspace(profile: TenantProfile): WorkspaceSpec {
   return {
@@ -72,6 +73,8 @@ export function maintenanceWorkspace(profile: TenantProfile): WorkspaceSpec {
       { id: 'dispatch', label: 'Dispatch', of: 'engineer' },
       { id: 'compliance', label: 'Properties and compliance' },
       { id: 'safety', label: 'Safety log' },
+      { id: 'clients', label: 'Clients' },
+      { id: 'money', label: 'Quotes and invoices' },
       { id: 'messages', label: 'Messages' },
       { id: 'calls', label: 'Calls' },
     ],

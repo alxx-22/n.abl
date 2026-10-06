@@ -16,12 +16,12 @@ import { restaurant } from './restaurant/preset.ts';
 
 /**
  * properties, offers, applicants, valuations and sales are the estate
- * agent's (presets/estate-agent.md §6); jobs, dispatch, compliance and
- * safety the property maintenance contractor's (presets/property-maintenance.md §6).
+ * agent's (presets/estate-agent.md §6); jobs, dispatch, compliance, safety,
+ * clients and money the property maintenance contractor's (presets/property-maintenance.md §6).
  */
 export type ViewId =
   | 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls' | 'properties' | 'offers' | 'applicants' | 'valuations' | 'sales'
-  | 'jobs' | 'dispatch' | 'compliance' | 'safety';
+  | 'jobs' | 'dispatch' | 'compliance' | 'safety' | 'clients' | 'money';
 
 /** The back office a workspace shows, in the preset's own words (PRESETS.md §2.5). */
 export interface WorkspaceSpec {

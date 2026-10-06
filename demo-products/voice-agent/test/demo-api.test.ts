@@ -658,7 +658,7 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   assert.equal(started.status, 200, JSON.stringify(started.data));
   assert.ok(started.data.jobs > 40, `${started.data.jobs} jobs`);
   const state = (await helen.call('GET', `${path}/state`)).data;
-  assert.deepEqual(state.workspace.views.map((v: any) => v.id), ['jobs', 'dispatch', 'compliance', 'safety', 'messages', 'calls']);
+  assert.deepEqual(state.workspace.views.map((v: any) => v.id), ['jobs', 'dispatch', 'compliance', 'safety', 'clients', 'money', 'messages', 'calls']);
   assert.equal(state.engineers.length, 8);
   assert.equal(state.properties.length, 76);
   assert.equal(state.incidents.length, 1);
@@ -685,6 +685,13 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   assert.equal((await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'invoice' })).status, 409);
   const inv = (await helen.call('GET', `${path}/state`)).data.invoices.find((i: any) => i.reference === 'INV-1044');
   assert.deepEqual([inv.job_ref, inv.status, inv.amount_pence > 0], [booked.reference, 'due', true]);
+  // Money: a reminder for an overdue bill goes by text, without bank details; a bank transfer marked paid, once.
+  const late = state.invoices.find((i: any) => i.status === 'overdue');
+  const reminded = await helen.call('PATCH', `${path}/invoices/${late.reference}`, { action: 'remind' });
+  assert.equal(reminded.status, 200, JSON.stringify(reminded.data));
+  assert.match((await texts(late.payer.phone)).at(-1), new RegExp(`invoice ${late.reference} for £[\\d,.]+ was due on .*bank transfer as shown on the invoice`));
+  assert.equal((await helen.call('PATCH', `${path}/invoices/${late.reference}`, { action: 'paid_bank' })).status, 200);
+  assert.equal((await helen.call('PATCH', `${path}/invoices/${late.reference}`, { action: 'paid_bank' })).status, 409);
   // Mrs Ellis approves Q-2291 on her own phone: the job is booked and her phone thanks her.
   assert.equal(state.clients.length, 7);
   const ellis = state.jobs.find((j: any) => j.status === 'awaiting_approval' && j.description.includes('Q-2291'));

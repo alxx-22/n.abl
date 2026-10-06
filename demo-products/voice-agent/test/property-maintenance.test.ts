@@ -12,6 +12,7 @@ import { DUTY_MANAGER_KEY, areaSentence, compileMaintenance, districtRuns, money
 import { factSheet, maintenancePreview, maintenanceWorkspace } from '../src/presets/maintenance/preset.ts';
 import { fullAddress, sampleProperties, shortAddress } from '../src/presets/maintenance/properties.ts';
 import { planMaintenanceSeed } from '../src/presets/maintenance/seed.ts';
+import { MT_CALL_AS } from '../src/presets/maintenance/personas.ts';
 import { checkWindow, freeWindows, onCallAt, overlaps, windowAt } from '../src/domain/windows.ts';
 import { addWorkingDays } from '../src/domain/listings.ts';
 import { addDays, toLocal } from '../src/domain/time.ts';
@@ -236,7 +237,7 @@ test("property maintenance: the builder's preview, the fact sheet and the back o
   assert.match(sheet, /NG1 to NG11/);
   for (const never of ['Harbour', 'Ellis', '07700', 'Elm Road', 'Q-2291']) assert.ok(!sheet.includes(never), never);
   const spec = maintenanceWorkspace(p);
-  assert.deepEqual(spec.views.map((v) => v.id), ['jobs', 'dispatch', 'compliance', 'safety', 'messages', 'calls']);
+  assert.deepEqual(spec.views.map((v) => v.id), ['jobs', 'dispatch', 'compliance', 'safety', 'clients', 'money', 'messages', 'calls']);
   assert.equal(spec.teamPhones!.length, 9, 'every engineer and the duty manager');
   assert.equal(spec.resetLine, 'jobs, safety checks and incidents');
   // Live: its back office and builder are in the web.
@@ -342,10 +343,10 @@ test('property maintenance: the seeded week, anchored to Start, replays under th
   const approved = quotes.find((x) => x.status === 'approved')!;
   assert.equal(jobs.find((j) => j.reference === approved.job_ref)!.status, 'scheduled');
   assert.equal(quotes.find((x) => x.status === 'declined')!.job_ref, null);
-  // Eighteen of the week's finished jobs invoiced, and two from last month overdue; the last is INV-1043.
+  // Eighteen of the week's finished jobs invoiced, Ellie Burke's visit, and two from last month overdue; the last is INV-1043.
   const invoices = plan.invoices!;
-  assert.equal(invoices.length, 20);
-  assert.equal(count((j) => j.status === 'invoiced'), 20);
+  assert.equal(invoices.length, 21);
+  assert.equal(count((j) => j.status === 'invoiced'), 21);
   assert.equal(invoices.at(-1)!.reference, 'INV-1043');
   assert.equal(invoices.filter((i) => i.status === 'due' && i.due < '2026-10-07').length, 2);
   for (const i of invoices) {
@@ -353,10 +354,11 @@ test('property maintenance: the seeded week, anchored to Start, replays under th
     assert.equal(j.status, 'invoiced', i.reference);
     if (j.client_key) assert.ok(i.amount_pence <= p.maintenance!.clients.find((c) => c.key === j.client_key)!.works_limit_pence, `${i.reference} within the limit`);
   }
-  // Homeowners paid on the day by the demo card, all but the latest, who still owes.
+  // Homeowners paid on the day by the demo card, all but Ellie Burke (Call as), who still owes.
   const own = invoices.filter((i) => !i.client_key);
   assert.ok(own.length >= 2);
-  assert.deepEqual(own.map((i) => i.status), [...own.slice(0, -1).map(() => 'paid'), 'due']);
+  assert.deepEqual(own.filter((i) => i.status === 'due').map((i) => i.property_key), ['saxonby_flat_2_20']);
+  assert.equal(own.find((i) => i.status === 'due')!.payer.phone, '+447700900546');
   // Meadowbank: an open damp case whose investigation is due in four working days, labelled from its own repairs policy,
   // and last week's emergency hazard made safe within 24 hours; the social electrical deadline on its homes.
   const damp = jobs.find((j) => j.clocks.some((c) => c.kind === 'awaab_investigation'))!;
@@ -405,4 +407,23 @@ test('property maintenance: a trade turned off, or its engineer removed, leaves 
     assert.ok(!plan.jobs!.some((j) => j.trade === 'plumbing' || j.trade === 'roofing'));
     assert.ok(!plan.properties!.some((x) => x.client === 'harbour'), 'a client who has gone takes their homes with them');
   }
+});
+
+test('property maintenance: everyone under Call as is who they say they are in the seeded week', () => {
+  const p = compile(named());
+  const plan = planMaintenanceSeed(p, WEDNESDAY, 7);
+  const homes = plan.properties!;
+  const at = (phone: string) => homes.find((h) => h.occupant.phone === phone);
+  const contact = (phone: string) => p.maintenance!.clients.find((c) => c.contact.phone === phone);
+  const who = Object.fromEntries(MT_CALL_AS.map((x) => [x.who.split(',')[0].split(' at ')[0], x.phone]));
+  assert.equal(at(who['Sam Ortiz'])!.key, 'elm_14');
+  assert.equal(at(who['Aisha Patel'])!.client, 'harbour');
+  assert.equal(contact(who['Ben Whitfield'])!.key, 'whitfield');
+  assert.equal(contact(who['Jean Ellis'])!.key, 'ellis');
+  assert.equal(at(who['Nadia Hussain'])!.client, 'meadowbank');
+  assert.equal(at(who['Ellie Burke'])!.client, null);
+  assert.ok(plan.invoices!.some((i) => i.payer.phone === who['Ellie Burke'] && i.status === 'due'), 'Ellie has a bill to pay');
+  // Harbour's Jess raises work; only Harbour's contact approves it, so her number is on no home and no client.
+  assert.ok(!at(who['Jess Morgan']) && !contact(who['Jess Morgan']));
+  assert.ok(!at(who['A stranger']) && !contact(who['A stranger']));
 });

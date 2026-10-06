@@ -7,6 +7,7 @@
 import type { ReactNode } from 'react';
 import { Calls } from '../../components/BoardPanels.tsx';
 import { Applicants } from './Applicants.tsx';
+import { Clients } from './Clients.tsx';
 import { Compliance } from './Compliance.tsx';
 import { Dispatch } from './Dispatch.tsx';
 import { Jobs } from './Jobs.tsx';
@@ -17,6 +18,7 @@ import type { TenantState } from '../../types.ts';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { FloorBoard, type View } from './FloorBoard.tsx';
 import { Messages } from './Messages.tsx';
+import { Money } from './Money.tsx';
 import { Offers } from './Offers.tsx';
 import { OrderBoard } from './OrderBoard.tsx';
 import { Properties } from './Properties.tsx';
@@ -113,6 +115,16 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
   safety: {
     shows: null,
     render: (p) => <SafetyLog state={p.state} />,
+  },
+  clients: {
+    shows: null,
+    count: (s) => (s.jobs ?? []).filter((j) => j.status === 'awaiting_approval').length,
+    render: (p) => <Clients state={p.state} />,
+  },
+  money: {
+    shows: null,
+    count: (s) => (s.invoices ?? []).filter((i) => i.status === 'overdue').length,
+    render: (p) => <Money id={p.id} state={p.state} onDone={p.refresh} />,
   },
   orders: {
     shows: 'orders',

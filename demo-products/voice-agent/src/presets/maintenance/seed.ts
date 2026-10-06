@@ -400,9 +400,20 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
     }
     return [];
   });
-  const billed = [...older, ...pastDone.slice().sort((a, b) => a.done_at!.getTime() - b.done_at!.getTime()).slice(0, Math.max(0, Math.min(18, pastDone.length - 5)))]
+  // The homeowner a prospect can ring as (Ellie Burke, personas.ts) still owes for last week's visit.
+  const ellie = byKey.get('saxonby_flat_2_20');
+  let owing: SeedJob | null = null;
+  for (const date of ellie && trades.includes('plumbing') ? earlier.slice(1) : []) {
+    owing = place(ellie!, date, { trade: 'plumbing', priority: 'routine', description: 'Leaking radiator valve in the lounge', kind: 'repair', status: 'scheduled' });
+    if (owing) {
+      done(owing, timeOf(minutesOf(windowEnd(owing)) - 30), 'Replaced the radiator valve; no leaks; heating topped up.');
+      break;
+    }
+  }
+  const billed = [...older, ...(owing ? [owing] : []), ...pastDone.slice().sort((a, b) => a.done_at!.getTime() - b.done_at!.getTime()).slice(0, Math.max(0, Math.min(18, pastDone.length - 5)))]
     .sort((a, b) => a.done_at!.getTime() - b.done_at!.getTime());
   const homeowners = billed.filter((j) => !j.client_key);
+  const stillOwes = owing ?? homeowners[homeowners.length - 1];
   const invoices: Invoice[] = billed.map((j, n) => {
     const p = byKey.get(j.property_key!)!;
     const c = j.client_key ? clients.get(j.client_key) : undefined;
@@ -410,8 +421,8 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
     const reference = `INV-${1044 - billed.length + n}`;
     const extra = Math.floor(random() * 4);
     const amount = j.price_pence ?? Math.min(c?.works_limit_pence ?? Infinity, m.prices.callout_pence + extra * m.prices.half_hour_pence);
-    // A homeowner pays on the day by card, except the latest, still to pay.
-    const paid = !c && j !== homeowners[homeowners.length - 1];
+    // A homeowner pays on the day by card, except Ellie (or, without her, the latest), still to pay.
+    const paid = !c && j !== stillOwes;
     j.status = 'invoiced';
     j.history.push({ at: new Date(j.done_at!.getTime() + 3_600_000).toISOString(), by: 'office', what: `invoiced ${reference}` });
     return {
