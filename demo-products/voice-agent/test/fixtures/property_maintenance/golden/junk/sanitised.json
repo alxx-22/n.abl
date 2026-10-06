@@ -90,8 +90,8 @@
   "agents": true,
   "blocks": false,
   "social": {
-   "on": false,
-   "agent_of_landlord": false
+   "on": true,
+   "agent_of_landlord": true
   },
   "commercial": false,
   "insurers": false,

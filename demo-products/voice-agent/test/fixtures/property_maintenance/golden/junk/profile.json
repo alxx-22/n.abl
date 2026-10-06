@@ -73,7 +73,7 @@
   },
   {
    "q": "Who do you work for?",
-   "a": "We work for homeowners, landlords and letting agents.",
+   "a": "We work for homeowners, landlords, letting agents and housing associations.",
    "tags": ["landlord","letting agent","homeowner","business","who"]
   },
   {
@@ -262,8 +262,8 @@
    "agents": true,
    "blocks": false,
    "social": {
-    "on": false,
-    "agent_of_landlord": false
+    "on": true,
+    "agent_of_landlord": true
    },
    "commercial": false,
    "insurers": false,
