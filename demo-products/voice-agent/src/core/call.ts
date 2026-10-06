@@ -19,6 +19,7 @@ import {
 import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DETAIL, checkUtterance, saidYes, type Flag } from './guardrails.ts';
 import { redactLine } from './redact.ts';
 import { record } from './tool-kit.ts';
+import { amountsIn } from '../domain/amounts.ts';
 import { armSafety, noteAdvice, safetyCorrection } from './safety.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
@@ -169,6 +170,7 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
   legal_deadline: "[Correction from the system: never state a legal deadline: no tool gave one. Correct yourself, and point them to Shelter or Citizens Advice for their rights.]",
   damp_blame: "[Correction from the system: never suggest the tenant caused damp or mould, or tell them how to live. Correct yourself kindly: it's for the landlord to look into, and it has been passed on.]",
   medical_advice: "[Correction from the system: never give health advice. Correct yourself: for anyone unwell, their GP or NHS 111, or 999 in an emergency.]",
+  invented_price: "[Correction from the system: no tool or fact gave that price. Correct yourself: say you can't price that on the phone; the engineer prices it on the visit, or it is a free quote, and give only the prices your tools return.]",
 };
 
 export class CallSession extends EventEmitter<CallEvents> {
@@ -281,6 +283,8 @@ export class CallSession extends EventEmitter<CallEvents> {
       channel: this.opts.channel,
     });
     this.prompt = prompt;
+    // Every price in its instructions may be said (a repairs call's invented_price).
+    if (this.state.maintenance) this.state.amounts.push(...amountsIn(prompt));
     if (this.contextual) this.startTurnTaking();
     const pinned = tenant.profile.live_model;
     const models = this.opts.models ?? (pinned ? [pinned, ...config.liveModels.filter((m) => m !== pinned)] : config.liveModels);

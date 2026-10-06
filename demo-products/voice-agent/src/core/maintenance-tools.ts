@@ -15,6 +15,7 @@ import { spokenReference, type NewJob } from '../db/repo.ts';
 import { addWorkingDays, numberWords } from '../domain/listings.ts';
 import { displayUkPhone, normaliseUkPhone, spokenNumber } from '../domain/phone.ts';
 import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
+import { poundsIn } from '../domain/amounts.ts';
 import { processDemoPayment } from '../domain/payments.ts';
 import type { Certificate, Invoice, Job, JobKind, JobPriority, MaintenanceSettings, MtClient, MtProperty, MtWindow, ReporterRole, Tenant } from '../domain/types.ts';
 import { checkWindow, freeWindows, isGasTrade, onCallAt, unable, windowAt, windowOf, windowsOn } from '../domain/windows.ts';
@@ -242,15 +243,31 @@ export interface Triage {
 }
 
 /** The trade and how soon, from the owner's rules and examples, the vulnerable uplift and the winter rule. Never a diagnosis. */
-export function triage(m: MaintenanceSettings, words: string, opts: { vulnerable?: string[]; date: string }): Triage {
+/**
+ * What the caller said is wrong, without what they said isn't: "no water
+ * near electrics, no vulnerable people" named neither (live, 6 October: a
+ * dripping tap triaged as an electrical emergency).
+ */
+export function withoutDenials(words: string): string {
+  return words.split(/[,;.!?]|\b(?:and|but)\b/i)
+    // "No heating" or "no power" is the fault itself, not a denial; "no water near the electrics" is.
+    .filter((part) => FAULT_LACK.test(part) || !/^\s*(?:no|not|none|nothing|never|nobody|no ?one|isn'?t|aren'?t|wasn'?t|there'?s no|there is no|without)\b/i.test(part))
+    .join(', ');
+}
+const FAULT_LACK = /^\s*(?:there'?s |there is |we'?ve got |we have )?no (?:heating|heat|hot water|power|electric(?:s|ity)?|water|gas|lights?|supply)\b(?!\s+(?:near|on|by|coming|getting|anywhere|around))/i;
+
+export function triage(m: MaintenanceSettings, heard: string, opts: { vulnerable?: string[]; date: string }): Triage {
+  const words = withoutDenials(heard);
   const dontDo = m.dont_do.find((d) => new RegExp(`\\b${d.what.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(words) || d.what.split(/\s+/).some((w) => w.length > 4 && new RegExp(`\\b${w}`, 'i').test(words)));
   const on = new Set(m.trades.map((t) => t.key));
   const trade = TRADE_WORDS.find(([k, re]) => on.has(k) && re.test(words))?.[0] ?? null;
   // An owner's example matches on its telling words, whole: "a door that won't lock" is not any sentence with "door" and "that".
   const said = new Set(words.toLowerCase().split(/[^a-z']+/));
   const example = (xs: string[]) => xs.some((x) => {
+    // All its telling words (all but one in a long example), and at least two: "heating" and "water" alone are not
+    // "no heating or hot water for a vulnerable household", and "power" alone is not "no power at all".
     const sig = x.toLowerCase().split(/[^a-z']+/).filter((w) => w.length > 3 && !FILLER.has(w));
-    return sig.length > 0 && sig.filter((w) => said.has(w)).length >= Math.min(2, sig.length);
+    return sig.length >= 2 && sig.filter((w) => said.has(w)).length >= (sig.length <= 3 ? sig.length : sig.length - 1);
   });
   let level: JobPriority = EMERGENCY.test(words) || example(m.priorities.emergency.examples) ? 'emergency' : URGENT.test(words) || example(m.priorities.urgent.examples) ? 'urgent' : 'routine';
   const why = [level === 'emergency' ? 'Emergency' : level === 'urgent' ? 'Urgent' : 'Routine'];
@@ -399,29 +416,7 @@ async function noticeToClient(ctx: ToolContext, client: MtClient | undefined, j:
   await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: new ${j.priority} job ${j.reference} at ${shortAddress(p)}: ${j.description}.${extra ? ` ${extra}` : ''} (Demo)`);
 }
 
-const UNITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
-const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-
-/** A price as said or written: "£2,450", "600 pounds", "two thousand four hundred and fifty pounds". Undefined if none. */
-export function poundsIn(text: string): number | undefined {
-  const digits = /£\s?(\d[\d,]*)|\b(\d[\d,]*)\s*(?:pounds|quid)\b/i.exec(text);
-  if (digits) return Number((digits[1] ?? digits[2]).replace(/,/g, '')) || undefined;
-  const words = /\b((?:(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|and|a)[\s-]+)+)(?:pounds|quid)\b/i.exec(text);
-  if (!words) return undefined;
-  let total = 0;
-  let part = 0;
-  for (const w of words[1].toLowerCase().split(/[\s-]+/).filter(Boolean)) {
-    if (UNITS.includes(w)) part += UNITS.indexOf(w);
-    else if (TENS.includes(w)) part += TENS.indexOf(w) * 10;
-    else if (w === 'a') part += 1;
-    else if (w === 'hundred') part = (part || 1) * 100;
-    else if (w === 'thousand') {
-      total += (part || 1) * 1000;
-      part = 0;
-    }
-  }
-  return total + part || undefined;
-}
+export { poundsIn };
 
 /** Signs that damp and mould may be an emergency hazard: for the landlord to decide, never the receptionist. */
 const HAZARD = /\b(?:asthma|breath\w*|respiratory|copd|lungs?|bab(?:y|ies)|newborn|pregnan\w+|immun\w+|chemo\w*|oxygen|water (?:coming )?(?:through|into|in) (?:the |a )?(?:lights?|light fittings?|sockets?|electrics?)|ceiling (?:is )?(?:sagging|bowing|coming down))\b/i;
@@ -813,7 +808,8 @@ async function requestApproval(args: Args, ctx: ToolContext): Promise<Record<str
 }
 
 async function jobTool(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
-  const action = str(args.action)?.toLowerCase();
+  // The first action named: the model has sent the parameter's whole list ("create, find, move...") as one.
+  const action = /\b(create|find|move|cancel|approve|decline)\b/i.exec(str(args.action) ?? '')?.[1]?.toLowerCase();
   if (action === 'find') return findJobs(args, ctx);
   const gate = safetyGate(ctx);
   if (gate) return gate;
@@ -1191,7 +1187,7 @@ export const MAINTENANCE_TOOLS: Record<string, Tool> = {
       description: 'Repair jobs. create: after the property, the trade and a window (or for an emergency, none); a homeowner hears the price first. find: by reference, or the calling number. move or cancel: by reference. approve or decline: sends the request to the client\'s own phone; never approved by voice. The only way a job exists.',
       parameters: obj(
         {
-          action: S('create, find, move, cancel, approve or decline'), reference: S('Only one the caller has read out: a job reference, or a quote reference. Never make one up'), property: S('From find_property'), trade: S('From triage_fault'),
+          action: S('One word: create, find, move, cancel, approve or decline'), reference: S('Only one the caller has read out: a job reference, or a quote reference. Never make one up'), property: S('From find_property'), trade: S('From triage_fault'),
           priority: S('From triage_fault'), description: S('The fault, in a few words'), date: S('YYYY-MM-DD'), window: S('The window key, e.g. am or pm'),
           name: S("The caller's name"), phone: S('Only if not the calling number'), role: S('occupant, agent, landlord, homeowner or other'),
           access: S('How the engineer gets in, or a time to avoid'), vulnerable: S('Anyone vulnerable, as the caller said'), consent: B('They agreed to us noting it'),

@@ -739,3 +739,47 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   const msg = await nadia.run('take_message', { name: 'Nadia Hussain', message: 'Black mould in the bedroom', category: 'damp' });
   assert.match(msg.also, /Raise the repair too, with job create: that is what tells Meadowbank Housing today/);
 });
+
+test('invented_price: a sum no setting, tool or caller gave is caught; the real ones are not', async () => {
+  const t = await fernhill('pm-prices');
+  const c = await call(t, '+447700900501');
+  const rules = (line: string) => checkUtterance(line, c.ctx.state, ['Dan'], t.profile.maintenance).map((f) => f.rule);
+  // Live, 6 October, "forty pounds" for an alarm: that happens to be the half-hour rate, so only a sum matching nothing is caught.
+  assert.deepEqual(rules('Replacing the alarm comes to sixty five pounds, including VAT.'), ['invented_price']);
+  assert.deepEqual(rules('The call-out is ninety five pounds including VAT, then £40 a half hour.'), []);
+  assert.deepEqual(rules('The evening window is £30 extra, so £125 for the call-out.'), []);
+  assert.deepEqual(rules('We carry £5 million public liability insurance.'), []);
+  // The caller's own figure may be repeated; a tool's may be said once it has given it.
+  c.hear('The joiner priced it at six hundred pounds.');
+  assert.deepEqual(rules('So that was six hundred pounds?'), []);
+  assert.deepEqual(rules('Quote Q-2291 is for £2,450.'), ['invented_price']);
+  await c.run('job', { action: 'find', reference: 'Q-2291' });
+  assert.deepEqual(rules('Quote Q-2291 is for £2,450.'), []);
+});
+
+test('sums as people say them', async () => {
+  const { amountsIn } = await import('../src/domain/amounts.ts');
+  assert.deepEqual(amountsIn('£95.50, then eleven pounds fifty, then £2,450'), [9550, 1150, 245000]);
+  assert.deepEqual(amountsIn('a hundred and twenty quid'), [12000]);
+  assert.deepEqual(amountsIn('£10 million cover and £5m more'), []);
+  assert.deepEqual(amountsIn('ring 0800 111 999 at 8 to 12'), []);
+  assert.deepEqual(amountsIn('£95.'), [9500]);
+});
+
+test('triage reads what is wrong, not what the caller says is fine; and the job action is read from a list sent whole', async () => {
+  const t = await fernhill('pm-denials');
+  const m = t.profile.maintenance!;
+  const { triage } = await import('../src/core/maintenance-tools.ts');
+  // Live, 6 October: a dripping tap became an electrical emergency from "no water near electrics".
+  const tap = triage(m, 'dripping kitchen tap. no water near electrics, no vulnerable people, stopcock known', { date: '2026-10-07' });
+  assert.deepEqual([tap.trade, tap.priority], ['plumbing', 'routine']);
+  // A lack that is the fault still counts.
+  assert.equal(triage(m, 'There is no heating and no hot water', { date: '2026-12-07' }).priority, 'urgent');
+  assert.equal(triage(m, 'no power at all in the house', { date: '2026-10-07' }).priority, 'emergency');
+  // "create, find, move, cancel, approve or decline" sent as the action: the first one counts.
+  const home = (await repo.listMtProperties(t.id)).find((p) => p.client === null && p.occupant.phone && p.occupant.name)!;
+  const c = await call(t, home.occupant.phone);
+  await c.run('find_property', { postcode: home.district, number: home.number, street: home.street });
+  const r = await c.run('job', { action: 'create, find, move, cancel, approve or decline', description: 'Dripping kitchen tap', name: home.occupant.name });
+  assert.equal(r.error, undefined, JSON.stringify(r));
+});

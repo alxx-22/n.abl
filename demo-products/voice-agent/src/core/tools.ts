@@ -18,6 +18,7 @@ import { searchKnowledge } from '../domain/knowledge.ts';
 import {
   allergenAnswer, allergensNamed, allergensOf, describeLine, lineTotal, optionsFor, resolveItem, resolveModifiers,
 } from '../domain/menu.ts';
+import { amountsIn } from '../domain/amounts.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
@@ -133,6 +134,8 @@ export interface CallState {
   invoice: string | null;
   /** The trade triage_fault called an emergency on this call: no visit window is offered for it. */
   emergencyTrade: string | null;
+  /** Sums, in pence, the receptionist may say: from its instructions and what its tools returned. */
+  amounts: number[];
 }
 
 export function newCallState(): CallState {
@@ -144,7 +147,7 @@ export function newCallState(): CallState {
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
-    invoice: null, emergencyTrade: null,
+    invoice: null, emergencyTrade: null, amounts: [],
   };
 }
 
@@ -1233,7 +1236,10 @@ export async function runTool(name: string, args: Args, ctx: ToolContext): Promi
   const tool = TOOLS[name];
   if (!tool || (tool.when && !tool.when(ctx.tenant, { canTransfer: Boolean(ctx.telephony) }))) return { error: `No tool called ${name}.` };
   try {
-    return await tool.handler(args ?? {}, ctx);
+    const result = await tool.handler(args ?? {}, ctx);
+    // A price a tool gave may be said; one nothing gave may not (a repairs call's invented_price).
+    if (ctx.state.maintenance) ctx.state.amounts.push(...amountsIn(JSON.stringify(result)));
+    return result;
   } catch (err) {
     return { error: 'That did not work. Apologise briefly and offer to take a message.', detail: (err as Error).message };
   }
