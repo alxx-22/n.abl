@@ -314,7 +314,7 @@ test('property maintenance: the seeded week, anchored to Start, replays under th
   const jobs = plan.jobs!;
   assert.ok(jobs.length >= 50 && jobs.length <= 75, `${jobs.length} jobs`);
   const count = (f: (j: (typeof jobs)[number]) => boolean) => jobs.filter(f).length;
-  assert.ok(count((j) => j.status === 'done') >= 25);
+  assert.ok(count((j) => j.status === 'done' || j.status === 'invoiced') >= 25);
   assert.equal(count((j) => j.status === 'awaiting_approval'), 4);
   assert.equal(count((j) => j.status === 'waiting'), 3);
   assert.equal(count((j) => j.flags.includes('recall')), 2);
@@ -330,6 +330,29 @@ test('property maintenance: the seeded week, anchored to Start, replays under th
   // Mrs Ellis's quote is waiting on her.
   const q = jobs.find((j) => j.description.includes('Q-2291'))!;
   assert.deepEqual([q.status, q.price_pence, q.client_key], ['awaiting_approval', 245_000, 'ellis']);
+  // Four quotes waiting on their authorisers, one approved and booked in, one turned down.
+  const quotes = plan.quotes!;
+  assert.deepEqual(quotes.filter((x) => x.status === 'sent').map((x) => x.reference).sort(), ['Q-2291', 'Q-2292', 'Q-2293', 'Q-2294']);
+  const q2291 = quotes.find((x) => x.reference === 'Q-2291')!;
+  assert.deepEqual([q2291.job_ref, q2291.amount_pence, q2291.client_key, q2291.description], [q.reference, 245_000, 'ellis', 'Boiler replacement']);
+  const approved = quotes.find((x) => x.status === 'approved')!;
+  assert.equal(jobs.find((j) => j.reference === approved.job_ref)!.status, 'scheduled');
+  assert.equal(quotes.find((x) => x.status === 'declined')!.job_ref, null);
+  // Eighteen of the week's finished jobs invoiced, and two from last month overdue; the last is INV-1043.
+  const invoices = plan.invoices!;
+  assert.equal(invoices.length, 20);
+  assert.equal(count((j) => j.status === 'invoiced'), 20);
+  assert.equal(invoices.at(-1)!.reference, 'INV-1043');
+  assert.equal(invoices.filter((i) => i.status === 'due' && i.due < '2026-10-07').length, 2);
+  for (const i of invoices) {
+    const j = jobs.find((x) => x.reference === i.job_ref)!;
+    assert.equal(j.status, 'invoiced', i.reference);
+    if (j.client_key) assert.ok(i.amount_pence <= p.maintenance!.clients.find((c) => c.key === j.client_key)!.works_limit_pence, `${i.reference} within the limit`);
+  }
+  // Homeowners paid on the day by the demo card, all but the latest, who still owes.
+  const own = invoices.filter((i) => !i.client_key);
+  assert.ok(own.length >= 2);
+  assert.deepEqual(own.map((i) => i.status), [...own.slice(0, -1).map(() => 'paid'), 'due']);
   // One gas call this week: advised, then a Gas Safe repair done.
   const [gas] = plan.incidents!;
   const repair = jobs.find((j) => j.reference === gas.follow_up_job)!;

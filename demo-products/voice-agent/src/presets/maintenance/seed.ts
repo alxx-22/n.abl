@@ -2,7 +2,8 @@
 // (presets/property-maintenance.md §7): the sample properties under the
 // sample clients, jobs done earlier in the week, today's board moving with
 // the clock, the coming fortnight, jobs awaiting approval or waiting for
-// parts, the certificate register, last night's emergency and one gas call.
+// parts, the certificate register, last night's emergency, one gas call,
+// the quotes out, and the invoices for finished work.
 //
 // Every job is placed by the same window rules the tools use, so no
 // engineer is over capacity, gas work goes only to Gas Safe engineers and
@@ -11,7 +12,7 @@
 // engineer) is left out, never forced in.
 
 import { addDays, minutesOf, timeOf, toLocal, zonedToUtc } from '../../domain/time.ts';
-import type { Certificate, HistoryEntry, Incident, Job, JobKind, JobPriority, MtProperty, TenantProfile } from '../../domain/types.ts';
+import type { Certificate, HistoryEntry, Incident, Invoice, Job, JobKind, JobPriority, MtProperty, Quote, TenantProfile } from '../../domain/types.ts';
 import { checkWindow, isGasTrade, onCallAt, windowAt, windowOf, windowsOn } from '../../domain/windows.ts';
 import { ids, rng } from '../common/random.ts';
 import type { SeedMessage, SeedPlan, SeedText } from '../common/types.ts';
@@ -315,6 +316,74 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
     });
   }
 
+  // ── Quotes, and the bills for finished work ─────────────────────────────
+  // Last, so adding them leaves every job before them as it was.
+  const quotes: Quote[] = [];
+  const quote = (reference: string, x: Omit<Quote, 'reference' | 'decided_at' | 'decided_by' | 'status' | 'valid_until' | 'created_at'>, decided?: { status: 'approved' | 'declined'; by: string; daysAgo: number }) => {
+    quotes.push({
+      reference, ...x, valid_until: addDays(x.issued, 30), status: decided?.status ?? 'sent',
+      decided_at: decided ? new Date(now.getTime() - decided.daysAgo * DAY) : null, decided_by: decided?.by ?? null, created_at: at(x.issued, '10:00'),
+    });
+  };
+  const awaiting = jobs.filter((j) => j.status === 'awaiting_approval');
+  let next = 2292;
+  awaiting.forEach((j) => {
+    const reference = j.description.match(/Q-\d+/)?.[0] ?? `Q-${next++}`;
+    const who = clients.get(j.client_key ?? '')?.contact.name;
+    if (!j.notes) j.notes = `Quote ${reference} sent${who ? ` to ${who}` : ''}.`;
+    quote(reference, { job_ref: j.reference, property_key: j.property_key, client_key: j.client_key, description: j.description.replace(/: quote Q-\d+$/, ''), amount_pence: j.price_pence ?? 0, issued: toLocal(j.created_at, tz).date });
+  });
+  // One said yes to last week, now booked in; one turned down.
+  const yes = jobs.find((j) => j.status === 'scheduled' && j.kind === 'repair' && j.client_key && !j.flags.includes('recall') && (j.visit_date ?? '') > today && !j.notes);
+  const yesClient = yes ? clients.get(yes.client_key!) : undefined;
+  if (yes && yesClient) {
+    Object.assign(yes, { price_pence: yesClient.works_limit_pence + 14_500, notes: `Quote Q-2288 approved by ${yesClient.contact.name}.` });
+    quote('Q-2288', { job_ref: yes.reference, property_key: yes.property_key, client_key: yes.client_key, description: yes.description, amount_pence: yes.price_pence!, issued: addDays(today, -8) }, { status: 'approved', by: yesClient.contact.name, daysAgo: 5 });
+  }
+  const fence = someProperty((p) => p.client !== null && clients.get(p.client)!.kind === 'landlord' && p.client !== 'ellis');
+  if (fence) {
+    quote('Q-2289', { job_ref: null, property_key: fence.key, client_key: fence.client, description: 'Replace six fence panels and two posts', amount_pence: 68_000, issued: addDays(today, -9) }, { status: 'declined', by: clients.get(fence.client!)!.contact.name, daysAgo: 4 });
+  }
+
+  // Eighteen of the week's finished jobs are billed, and two from last month are overdue.
+  const longAgo = workingDays(today, 20, -1);
+  const older = [longAgo[14], longAgo[19]].flatMap((date) => {
+    // A few tries: the first home or trade picked may have nobody free that day.
+    for (let tries = 0; date && tries < 8; tries++) {
+      const p = someProperty((x) => x.client !== null && clients.get(x.client)!.kind === 'agent');
+      const trade = randomTrade();
+      if (!p || !trade) return [];
+      const [description, notes] = fault(trade);
+      const j = place(p, date, { trade, priority: 'routine', description, kind: 'repair', status: 'scheduled' });
+      if (!j) continue;
+      done(j, timeOf(minutesOf(windowEnd(j)) - 30), notes);
+      return [j];
+    }
+    return [];
+  });
+  const billed = [...older, ...pastDone.slice().sort((a, b) => a.done_at!.getTime() - b.done_at!.getTime()).slice(0, Math.max(0, Math.min(18, pastDone.length - 5)))]
+    .sort((a, b) => a.done_at!.getTime() - b.done_at!.getTime());
+  const homeowners = billed.filter((j) => !j.client_key);
+  const invoices: Invoice[] = billed.map((j, n) => {
+    const p = byKey.get(j.property_key!)!;
+    const c = j.client_key ? clients.get(j.client_key) : undefined;
+    const issued = toLocal(j.done_at!, tz).date;
+    const reference = `INV-${1044 - billed.length + n}`;
+    const extra = Math.floor(random() * 4);
+    const amount = j.price_pence ?? Math.min(c?.works_limit_pence ?? Infinity, m.prices.callout_pence + extra * m.prices.half_hour_pence);
+    // A homeowner pays on the day by card, except the latest, still to pay.
+    const paid = !c && j !== homeowners[homeowners.length - 1];
+    j.status = 'invoiced';
+    j.history.push({ at: new Date(j.done_at!.getTime() + 3_600_000).toISOString(), by: 'office', what: `invoiced ${reference}` });
+    return {
+      reference, job_ref: j.reference, property_key: j.property_key, client_key: j.client_key,
+      payer: c ? { name: c.contact.name, phone: c.contact.phone } : { name: p.occupant.name, phone: p.occupant.phone },
+      kind: 'job', description: `${j.description} (${shortAddress(p)})`, amount_pence: amount, status: paid ? 'paid' : 'due',
+      issued, due: addDays(issued, c ? m.prices.account_days : 7), paid_at: paid ? j.done_at : null, paid_how: paid ? 'card' : null,
+      card_last4: paid ? '3456' : null, auth_code: paid ? `DEMO-${reference.slice(4)}` : null, created_at: new Date(j.done_at!.getTime() + 3_600_000),
+    };
+  });
+
   return {
     bookings: [], orders: [],
     messages: messages(properties, now),
@@ -323,6 +392,8 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
     jobs,
     certificates: certificates(properties, jobs, today),
     incidents,
+    quotes,
+    invoices,
   };
 }
 

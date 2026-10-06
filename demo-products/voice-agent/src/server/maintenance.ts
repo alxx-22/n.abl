@@ -68,6 +68,19 @@ export async function maintenanceState(repo: Repo, t: Tenant, now: Date) {
         kind: c.kind, issued: c.issued, expires: c.expires, booked_job: c.booked_job, remedials: c.remedials, state: certState(c, today, m.planned.reminder_weeks),
       })),
     })),
+    quotes: (await repo.listQuotes(t.id)).map((q) => ({
+      reference: q.reference, job_ref: q.job_ref, address: q.property_key && byKey.get(q.property_key) ? shortAddress(byKey.get(q.property_key)!) : null,
+      client_key: q.client_key, client: q.client_key ? clients.get(q.client_key)?.name ?? q.client_key : null, description: q.description,
+      amount_pence: q.amount_pence, status: q.status, issued: q.issued, valid_until: q.valid_until, decided_at: q.decided_at?.toISOString() ?? null, decided_by: q.decided_by,
+    })),
+    invoices: (await repo.listInvoices(t.id)).map((i) => ({
+      reference: i.reference, job_ref: i.job_ref, address: i.property_key && byKey.get(i.property_key) ? shortAddress(byKey.get(i.property_key)!) : null,
+      client_key: i.client_key, client: i.client_key ? clients.get(i.client_key)?.name ?? i.client_key : null,
+      payer: { name: i.payer.name, phone: displayUkPhone(i.payer.phone) }, kind: i.kind, description: i.description, amount_pence: i.amount_pence,
+      // Overdue is the day's reading of the due date, never stored.
+      status: i.status === 'due' && i.due < today ? 'overdue' : i.status, issued: i.issued, due: i.due,
+      paid_at: i.paid_at?.toISOString() ?? null, paid_how: i.paid_how, card_last4: i.card_last4,
+    })),
     incidents: (await repo.listIncidents(t.id)).map((i) => {
       const p = i.property_key ? byKey.get(i.property_key) : undefined;
       const kind = i.kind as SafetyKind;
@@ -85,7 +98,7 @@ const OPEN: JobStatus[] = ['new', 'scheduled', 'awaiting_approval', 'waiting'];
 /**
  * A staff or engineer action on a job: assign or move it (through the
  * window rules), accept or decline a page, on the way (texts the occupant),
- * on site, done, waiting, or cancel. Returns what the board says.
+ * on site, done, waiting, invoice, or cancel. Returns what the board says.
  */
 export async function jobAction(repo: Repo, t: Tenant, ref: string, b: any, text: (to: string | null, body: string) => Promise<void>, now = new Date()): Promise<string> {
   const m = t.profile.maintenance;
@@ -170,6 +183,26 @@ export async function jobAction(repo: Repo, t: Tenant, ref: string, b: any, text
       const r = await repo.updateJob(t.id, job.reference, { status: 'waiting', waiting_for: note ? `${reason}: ${note}` : reason, ...(reason === 'access' ? { access_attempts: job.access_attempts + 1 } : {}) }, `waiting for ${reason}`, { by: 'staff', from: ['scheduled', 'on_site', 'on_the_way', 'new'] });
       if (reason === 'access' && m.visits.abortive_fee_pence) await text(occupant, `${t.profile.name}: sorry we missed you for job ${job.reference}. Please call us to rebook. (Demo)`);
       return done(r, `${job.reference}: waiting for ${reason}.`);
+    }
+    case 'invoice': {
+      // The office bills a finished job: the job's own price, or the call-out. A client pays on account; a homeowner within a week.
+      if (job.status !== 'done') throw new HttpError(409, 'Only a finished job can be invoiced.');
+      const client = job.client_key ? m.clients.find((c) => c.key === job.client_key) : undefined;
+      const amount = Math.round(Number(b.amount_pence) || job.price_pence || m.prices.callout_pence);
+      if (amount <= 0 || amount > 5_000_000) throw new HttpError(400, 'Give an amount.');
+      const issued = today.date;
+      const due = new Date(`${issued}T12:00:00Z`);
+      due.setUTCDate(due.getUTCDate() + (client ? m.prices.account_days : 7));
+      const r = await repo.updateJob(t.id, job.reference, { status: 'invoiced' }, 'invoiced', { by: 'office', from: ['done'] });
+      if (!r) throw new HttpError(409, 'That job has moved on: refresh and try again.');
+      const inv = await repo.createInvoice(t.id, {
+        job_ref: job.reference, property_key: job.property_key, client_key: job.client_key,
+        payer: client ? { name: client.contact.name, phone: client.contact.phone } : { name: p?.occupant.name ?? job.reporter.name, phone: p?.occupant.phone ?? job.reporter.phone },
+        kind: 'job', description: `${job.description} (${where})`, amount_pence: amount, status: 'due', issued, due: due.toISOString().slice(0, 10),
+        paid_at: null, paid_how: null, card_last4: null, auth_code: null,
+      });
+      await text(inv.payer.phone, `${t.profile.name}: invoice ${inv.reference} for £${(amount / 100).toFixed(2)} (${job.reference}, ${where}). Due by ${spokenDate(inv.due)}. (Demo)`);
+      return `${job.reference}: invoice ${inv.reference} sent.`;
     }
     case 'cancel': {
       const r = await repo.updateJob(t.id, job.reference, { status: 'cancelled' }, 'cancelled by staff', { by: 'staff', from: [...OPEN, 'on_the_way'] });

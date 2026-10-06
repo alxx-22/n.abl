@@ -3,7 +3,7 @@
 // server can read a name, a voice or a greeting without knowing which kind of
 // business it is.
 
-import type { Booking, Buyer, Certificate, Incident, Job, ListingState, MtProperty, Offer, OrderLine, Sale } from '../../domain/types.ts';
+import type { Booking, Buyer, Certificate, Incident, Invoice, Job, ListingState, MtProperty, Offer, OrderLine, Quote, Sale } from '../../domain/types.ts';
 
 export interface ServicePeriod {
   label: string;
@@ -181,4 +181,7 @@ export interface SeedPlan {
   jobs?: Omit<Job, 'id'>[];
   certificates?: Certificate[];
   incidents?: Omit<Incident, 'id'>[];
+  /** Its quotes waiting for an answer or decided, and its invoices. */
+  quotes?: Quote[];
+  invoices?: Invoice[];
 }

@@ -1,8 +1,9 @@
 // A repairs contractor's jobs board (presets/property-maintenance.md §6):
 // new and awaiting approval, booked, out now (on the way or on site), and
-// waiting, with this week's done jobs below. Cards are coloured by priority
-// and carry the triage reason and their badges; a job made on a call
-// flashes as it lands. Staff move a job on from its card.
+// waiting, with the fortnight's done and invoiced jobs below, each finished
+// one ready to invoice. Cards are coloured by priority and carry the triage
+// reason and their badges; a job made on a call flashes as it lands. Staff
+// move a job on from its card.
 
 import { useState } from 'react';
 import type { LiveJob, LiveState } from '../types.ts';
@@ -48,19 +49,33 @@ export function Jobs({ id, state, nowMs, flash, onDone }: { id: string; state: L
         })}
       </div>
       <button type="button" className="linkish small" onClick={() => setShowDone(!showDone)} aria-expanded={showDone}>
-        {showDone ? 'Hide' : 'Show'} done this week ({done.length})
+        {showDone ? 'Hide' : 'Show'} done and invoiced ({done.length}, {done.filter((j) => j.status === 'done').length} to invoice)
       </button>
       {showDone ? (
         <ul className="done-jobs">
-          {done.map((j) => (
-            <li key={j.reference}>
-              <b>{j.address ?? j.reference}</b> · {j.trade_label} · {j.engineer ?? 'nobody'} · <span className="muted">{j.notes ?? j.description}</span>
-              {j.flags.includes('recall') ? <span className="badge warn">Recall</span> : null}
-            </li>
-          ))}
+          {done.map((j) => <DoneJob key={j.reference} id={id} j={j} invoice={(state.invoices ?? []).find((i) => i.job_ref === j.reference)?.reference} onDone={onDone} />)}
         </ul>
       ) : null}
     </div>
+  );
+}
+
+/** A finished job: what was done, and its invoice, or the button that sends one. */
+function DoneJob({ id, j, invoice, onDone }: { id: string; j: LiveJob; invoice?: string; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const bill = async () => {
+    setBusy(true);
+    await jobAct(id, j.reference, { action: 'invoice' }, onDone);
+    setBusy(false);
+  };
+  return (
+    <li>
+      <b>{j.address ?? j.reference}</b> · {j.trade_label} · {j.engineer ?? 'nobody'} · <span className="muted">{j.notes ?? j.description}</span>
+      {j.flags.includes('recall') ? <span className="badge warn">Recall</span> : null}
+      {j.status === 'invoiced' ? <span className="badge ok">Invoiced{invoice ? ` · ${invoice}` : ''}</span> : (
+        <button type="button" className="small" disabled={busy} onClick={bill}>Invoice</button>
+      )}
+    </li>
   );
 }
 

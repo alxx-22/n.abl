@@ -783,6 +783,46 @@ export interface Certificate {
   booked_job: string | null;
 }
 
+export type QuoteStatus = 'sent' | 'approved' | 'declined' | 'expired';
+
+/** A quote waiting for the authoriser's yes or no, given on their own phone. */
+export interface Quote {
+  reference: string;
+  job_ref: string | null;
+  property_key: string | null;
+  client_key: string | null;
+  description: string;
+  amount_pence: number;
+  status: QuoteStatus;
+  issued: string;
+  valid_until: string | null;
+  decided_at: Date | null;
+  decided_by: string | null;
+  created_at: Date;
+}
+
+export type InvoiceStatus = 'due' | 'paid' | 'void';
+
+/** A finished job's bill, or a homeowner's call-out paid when booking. Paid by demo card only. */
+export interface Invoice {
+  reference: string;
+  job_ref: string | null;
+  property_key: string | null;
+  client_key: string | null;
+  payer: { name: string | null; phone: string | null };
+  kind: 'job' | 'callout';
+  description: string;
+  amount_pence: number;
+  status: InvoiceStatus;
+  issued: string;
+  due: string;
+  paid_at: Date | null;
+  paid_how: 'card' | 'bank' | null;
+  card_last4: string | null;
+  auth_code: string | null;
+  created_at: Date;
+}
+
 /** A safety call: the advice given and when, by which script. */
 export interface Incident {
   id: string;

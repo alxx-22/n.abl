@@ -7,7 +7,7 @@
 import { randomInt } from 'node:crypto';
 import type { Db, Queryable } from './db.ts';
 import type {
-  Booking, Buyer, BuyerDetails, BuyerPosition, Certificate, CertificateKind, Incident, Job, JobStatus, ListingState, MtProperty, Offer, OfferStatus, Order, OrderLine,
+  Booking, Buyer, BuyerDetails, BuyerPosition, Certificate, CertificateKind, Incident, Invoice, Job, JobStatus, ListingState, MtProperty, Offer, OfferStatus, Quote, QuoteStatus, Order, OrderLine,
   Sale, Tenant, TenantProfile,
 } from '../domain/types.ts';
 import { checkSlot, findService, depositFor, resourceFree, type BusyInterval, type Unavailable } from '../domain/availability.ts';
@@ -205,6 +205,31 @@ function mapJob(r: any): Job {
 const mapCertificate = (r: any): Certificate => ({
   property_key: r.property_key, kind: r.kind, issued: r.issued_day ?? null, expires: r.expires_day ?? null, remedials: r.remedials ?? [], booked_job: r.booked_job ?? null,
 });
+
+const QUOTE_COLS = `*, issued::text as issued_day, valid_until::text as valid_day`;
+const INVOICE_COLS = `*, issued::text as issued_day, due::text as due_day`;
+
+const mapQuote = (r: any): Quote => ({
+  reference: r.reference, job_ref: r.job_ref ?? null, property_key: r.property_key ?? null, client_key: r.client_key ?? null, description: r.description,
+  amount_pence: Number(r.amount_pence), status: r.status, issued: r.issued_day, valid_until: r.valid_day ?? null, decided_at: date(r.decided_at),
+  decided_by: r.decided_by ?? null, created_at: new Date(r.created_at),
+});
+
+const mapInvoice = (r: any): Invoice => ({
+  reference: r.reference, job_ref: r.job_ref ?? null, property_key: r.property_key ?? null, client_key: r.client_key ?? null,
+  payer: { name: r.payer_name ?? null, phone: r.payer_phone ?? null }, kind: r.kind, description: r.description ?? '', amount_pence: Number(r.amount_pence),
+  status: r.status, issued: r.issued_day, due: r.due_day, paid_at: date(r.paid_at), paid_how: r.paid_how ?? null, card_last4: r.card_last4 ?? null,
+  auth_code: r.auth_code ?? null, created_at: new Date(r.created_at),
+});
+
+const INVOICE_INSERT = `insert into public.voice_mt_invoices (tenant_id, reference, job_ref, property_key, client_key, payer_name, payer_phone, kind, description,
+  amount_pence, status, issued, due, paid_at, paid_how, card_last4, auth_code, call_id, created_at)
+  values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, coalesce($19, now()))`;
+
+const invoiceParams = (tenantId: string, i: Invoice, callId: string | null = null): unknown[] => [
+  tenantId, i.reference, i.job_ref, i.property_key, i.client_key, i.payer.name, i.payer.phone, i.kind, i.description, i.amount_pence, i.status,
+  i.issued, i.due, i.paid_at, i.paid_how, i.card_last4, i.auth_code, callId, i.created_at ?? null,
+];
 
 const mapIncident = (r: any): Incident => ({
   id: r.id,
@@ -1199,6 +1224,16 @@ export class Repo {
           [tenantId, i.property_key, i.kind, i.advice_version, i.advised_at, i.caller_phone, i.follow_up_job, i.notes, i.created_at],
         );
       }
+      for (const x of plan.quotes ?? []) {
+        await q.query(
+          `insert into public.voice_mt_quotes (tenant_id, reference, job_ref, property_key, client_key, description, amount_pence, status, issued, valid_until,
+             decided_at, decided_by, created_at)
+           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+          [tenantId, x.reference, x.job_ref, x.property_key, x.client_key, x.description, x.amount_pence, x.status, x.issued, x.valid_until,
+            x.decided_at, x.decided_by, x.created_at],
+        );
+      }
+      for (const i of plan.invoices ?? []) await q.query(INVOICE_INSERT, invoiceParams(tenantId, i));
       for (const t of plan.texts ?? []) {
         await q.query(`insert into public.voice_messages (tenant_id, kind, to_number, body, status, created_at) values ($1, 'sms', $2, $3, 'simulated', $4)`, [
           tenantId, t.to, t.body, t.created_at,
@@ -1355,13 +1390,69 @@ export class Repo {
     return rows.map(mapIncident);
   }
 
+  // ── Its quotes and invoices ────────────────────────────────────────────
+
+  async listQuotes(tenantId: string, by: { reference?: string; job?: string } = {}): Promise<Quote[]> {
+    const where = by.reference ? 'and reference = $2' : by.job ? 'and job_ref = $2' : '';
+    const rows = await this.db.query<any>(
+      `select ${QUOTE_COLS} from public.voice_mt_quotes where tenant_id = $1 ${where} order by issued desc, reference desc`,
+      by.reference ? [tenantId, by.reference] : by.job ? [tenantId, by.job] : [tenantId],
+    );
+    return rows.map(mapQuote);
+  }
+
+  /** The authoriser's answer. Only a quote still waiting changes, so two presses cannot both count. */
+  async decideQuote(tenantId: string, reference: string, status: Extract<QuoteStatus, 'approved' | 'declined'>, by: string, at = new Date()): Promise<Quote | null> {
+    const rows = await this.db.query<any>(
+      `update public.voice_mt_quotes set status = $3, decided_by = $4, decided_at = $5 where tenant_id = $1 and reference = $2 and status = 'sent'
+       returning ${QUOTE_COLS}`,
+      [tenantId, reference, status, by, at],
+    );
+    return rows[0] ? mapQuote(rows[0]) : null;
+  }
+
+  /** Invoices, newest first: every one, one by its reference, a job's, or those billed to a number. */
+  async listInvoices(tenantId: string, by: { reference?: string; job?: string; phone?: string } = {}): Promise<Invoice[]> {
+    const [col, val] = by.reference ? ['reference', by.reference] : by.job ? ['job_ref', by.job] : by.phone ? ['payer_phone', by.phone] : [null, null];
+    const rows = await this.db.query<any>(
+      `select ${INVOICE_COLS} from public.voice_mt_invoices where tenant_id = $1 ${col ? `and ${col} = $2` : ''} order by issued desc, reference desc`,
+      col ? [tenantId, val] : [tenantId],
+    );
+    return rows.map(mapInvoice);
+  }
+
+  /** A new invoice under the next number after the highest this business has used. */
+  async createInvoice(tenantId: string, i: Omit<Invoice, 'reference' | 'created_at'>, callId: string | null = null): Promise<Invoice> {
+    return this.db.tx(async (q) => {
+      await q.query('select id from public.voice_tenants where id = $1 for update', [tenantId]);
+      const [top] = await q.query<any>(
+        `select coalesce(max(substring(reference from 5)::int), 1000) as n from public.voice_mt_invoices where tenant_id = $1 and reference ~ '^INV-[0-9]+$'`,
+        [tenantId],
+      );
+      const reference = `INV-${Number(top.n) + 1}`;
+      await q.query(INVOICE_INSERT, invoiceParams(tenantId, { ...i, reference, created_at: new Date() }, callId));
+      const rows = await q.query<any>(`select ${INVOICE_COLS} from public.voice_mt_invoices where tenant_id = $1 and reference = $2`, [tenantId, reference]);
+      return mapInvoice(rows[0]);
+    });
+  }
+
+  /** Marks an invoice paid by the demo card. Only one still due changes. */
+  async payInvoice(tenantId: string, reference: string, card: { last4: string; auth_code: string }, at = new Date()): Promise<Invoice | null> {
+    const rows = await this.db.query<any>(
+      `update public.voice_mt_invoices set status = 'paid', paid_at = $3, paid_how = 'card', card_last4 = $4, auth_code = $5
+       where tenant_id = $1 and reference = $2 and status = 'due' returning ${INVOICE_COLS}`,
+      [tenantId, reference, at, card.last4, card.auth_code],
+    );
+    return rows[0] ? mapInvoice(rows[0]) : null;
+  }
+
   // ── Demo reset ─────────────────────────────────────────────────────────
 
   async resetTenantData(tenantId: string): Promise<void> {
     await this.db.tx(async (q) => {
       for (const t of [
         'voice_payments', 'voice_orders', 'voice_bookings', 'voice_messages', 'voice_calls', 'voice_customers', 'voice_offers', 'voice_sales', 'voice_listings',
-        'voice_mt_jobs', 'voice_mt_certificates', 'voice_mt_incidents', 'voice_mt_properties',
+        'voice_mt_jobs', 'voice_mt_certificates', 'voice_mt_incidents', 'voice_mt_properties', 'voice_mt_quotes', 'voice_mt_invoices',
       ]) {
         await q.query(`delete from public.${t} where tenant_id = $1`, [tenantId]);
       }

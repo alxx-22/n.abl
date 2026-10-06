@@ -359,6 +359,39 @@ export interface LiveIncident {
   source: string;
 }
 
+export interface LiveQuote {
+  reference: string;
+  job_ref: string | null;
+  address: string | null;
+  client_key: string | null;
+  client: string | null;
+  description: string;
+  amount_pence: number;
+  status: 'sent' | 'approved' | 'declined' | 'expired';
+  issued: string;
+  valid_until: string | null;
+  decided_at: string | null;
+  decided_by: string | null;
+}
+
+export interface LiveInvoice {
+  reference: string;
+  job_ref: string | null;
+  address: string | null;
+  client_key: string | null;
+  client: string | null;
+  payer: { name: string | null; phone: string };
+  kind: 'job' | 'callout';
+  description: string;
+  amount_pence: number;
+  status: 'due' | 'overdue' | 'paid' | 'void';
+  issued: string;
+  due: string;
+  paid_at: string | null;
+  paid_how: 'card' | 'bank' | null;
+  card_last4: string | null;
+}
+
 export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   now: string;
   started_at: string | null;
@@ -398,4 +431,6 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   jobs?: LiveJob[];
   properties?: LiveMtProperty[];
   incidents?: LiveIncident[];
+  quotes?: LiveQuote[];
+  invoices?: LiveInvoice[];
 }

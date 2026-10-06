@@ -676,6 +676,15 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   if (prop.occupant.phone) assert.match((await texts(prop.occupant.phone)).at(-1), new RegExp(`${booked.engineer} is on the way, about 25 minutes`));
   assert.equal((await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'done' })).status, 400, 'done needs notes');
   assert.equal((await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'done', notes: 'Fixed.' })).status, 200);
+  // The office invoices it: the next number, and the bill goes by text; never twice.
+  assert.ok(state.quotes.some((q: any) => q.reference === 'Q-2291' && q.status === 'sent'));
+  assert.equal(state.invoices.filter((i: any) => i.status === 'overdue').length, 2);
+  const billed = await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'invoice' });
+  assert.equal(billed.status, 200, JSON.stringify(billed.data));
+  assert.match(billed.data.message, /invoice INV-1044 sent/);
+  assert.equal((await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'invoice' })).status, 409);
+  const inv = (await helen.call('GET', `${path}/state`)).data.invoices.find((i: any) => i.reference === 'INV-1044');
+  assert.deepEqual([inv.job_ref, inv.status, inv.amount_pence > 0], [booked.reference, 'due', true]);
   // A certificate booked from the register, then refused the second time.
   const due = state.properties.find((p: any) => p.certificates.some((c: any) => c.kind === 'gas_record' && c.state === 'overdue'));
   const book = await helen.call('POST', `${path}/properties/${due.key}`, { action: 'book', what: 'gas_record' });
