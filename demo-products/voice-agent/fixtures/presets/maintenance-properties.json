@@ -2042,6 +2042,182 @@
    "gas": true,
    "gas_appliances": 2,
    "example": true
+  },
+  {
+   "key": "larkspur_flat_2_7",
+   "number": "Flat 2, 7",
+   "street": "Larkspur Walk",
+   "district": "DE23",
+   "town": "Derby",
+   "kind": "flat",
+   "client": "meadowbank",
+   "occupant": {
+    "name": "Nadia Hussain",
+    "phone": "07700 900571",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the hall cupboard, low down",
+    "boiler": "Ideal combi in the kitchen",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "larkspur_flat_5_7",
+   "number": "Flat 5, 7",
+   "street": "Larkspur Walk",
+   "district": "DE23",
+   "town": "Derby",
+   "kind": "flat",
+   "client": "meadowbank",
+   "occupant": {
+    "name": "Tomasz Nowicki",
+    "phone": "07700 900572",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the hall cupboard, low down",
+    "boiler": "Electric storage heaters: no gas supply",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true
+  },
+  {
+   "key": "harebell_9",
+   "number": "9",
+   "street": "Harebell Close",
+   "district": "NG6",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "meadowbank",
+   "occupant": {
+    "name": "Gary Lomax",
+    "phone": "07700 900573",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the stairs",
+    "boiler": "Baxi combi in the kitchen",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [
+    "over 75"
+   ],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "harebell_15",
+   "number": "15",
+   "street": "Harebell Close",
+   "district": "NG6",
+   "town": "Nottingham",
+   "kind": "house",
+   "client": "meadowbank",
+   "occupant": {
+    "name": "Chloe Barnes",
+    "phone": "07700 900574",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Vaillant combi in the bathroom cupboard",
+    "parking": "residents' parking",
+    "pets": "a dog"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "speedwell_flat_4",
+   "number": "Flat 4",
+   "street": "Speedwell Court",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "flat",
+   "client": "meadowbank",
+   "occupant": {
+    "name": "Ewa Kowalczyk",
+    "phone": "07700 900575",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Worcester combi in the kitchen",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Keys held at the office for the block."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true
+  },
+  {
+   "key": "speedwell_flat_9",
+   "number": "Flat 9",
+   "street": "Speedwell Court",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "flat",
+   "client": "meadowbank",
+   "occupant": {
+    "name": "Dominic Achebe",
+    "phone": "07700 900576",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the bath panel",
+    "boiler": "Electric boiler in the airing cupboard",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true
   }
  ]
 }

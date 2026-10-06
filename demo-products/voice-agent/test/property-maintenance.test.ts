@@ -13,6 +13,7 @@ import { factSheet, maintenancePreview, maintenanceWorkspace } from '../src/pres
 import { fullAddress, sampleProperties, shortAddress } from '../src/presets/maintenance/properties.ts';
 import { planMaintenanceSeed } from '../src/presets/maintenance/seed.ts';
 import { checkWindow, freeWindows, onCallAt, overlaps, windowAt } from '../src/domain/windows.ts';
+import { addWorkingDays } from '../src/domain/listings.ts';
 import { addDays, toLocal } from '../src/domain/time.ts';
 import type { Job } from '../src/domain/types.ts';
 import { replaySeed } from './seed-replay.ts';
@@ -45,6 +46,9 @@ test('property maintenance: the defaults are Fernhill, in Nottingham, Derby and 
   }
   // Invented, and said so: sample clients and Gas Safe numbers are examples; numbers are in Ofcom's drama range.
   assert.ok(a.clients.every((c) => c.example));
+  // Meadowbank Housing, for whom Fernhill acts as agent: Awaab's Law clocks start when Fernhill is told.
+  assert.deepEqual(a.customers.social, { on: true, agent_of_landlord: true });
+  assert.equal(a.clients.find((c) => c.kind === 'social')!.name, 'Meadowbank Housing');
   assert.ok(a.engineers.filter((e) => e.gas_safe).every((e) => e.gas_safe.endsWith('(example)')));
   assert.ok([...a.engineers.map((e) => e.mobile), ...a.clients.map((c) => c.contact.phone)].every((p) => p.startsWith('07700 900')));
   assert.match(a.basics.address, /\(example\)$/);
@@ -112,8 +116,8 @@ test('property maintenance: validation says what is missing, on the step it belo
   assert.deepEqual(issues((a) => (a.on_call.duty_manager.mobile = '')), ["warning engineers: Add the duty manager's name and mobile, for emergencies nobody accepts."]);
   assert.deepEqual(issues((a) => (a.clients[0].contact.phone = '')), ['error customers: Harbour Lettings: add the contact who approves work, with their phone.']);
   assert.deepEqual(issues((a) => (a.clients[1].status = 'on_stop')), ["warning customers: Castle Gate Residential is on stop: the receptionist won't book work for them."]);
-  assert.deepEqual(issues((a) => Object.assign(a.customers, { homeowners: false, landlords: false, agents: false })), ['error customers: Choose at least one kind of customer.']);
-  assert.deepEqual(issues((a) => (a.customers.social.on = true)), ["warning customers: Social housing is on, but you haven't said you act as the landlord's agent, so damp and mould clocks are the landlord's to start."]);
+  assert.deepEqual(issues((a) => Object.assign(a.customers, { homeowners: false, landlords: false, agents: false, social: { on: false, agent_of_landlord: false } })), ['error customers: Choose at least one kind of customer.']);
+  assert.deepEqual(issues((a) => (a.customers.social.agent_of_landlord = false)), ["warning customers: Social housing is on, but you haven't said you act as the landlord's agent, so damp and mould clocks are the landlord's to start."]);
   assert.deepEqual(issues((a) => (a.priorities.routine.working_days = 3)), ['error priorities: The urgent target must be shorter than the routine one.']);
   assert.deepEqual(issues((a) => Object.assign(a.priorities.emergency, { attend_hours: 24 }) && (a.priorities.urgent.working_days = 1)), ['error priorities: The emergency target must be shorter than the urgent one.']);
   assert.deepEqual(issues((a) => (a.visits.windows[0].to = '13:00')), ['error visits: The morning and afternoon windows overlap on Monday.']);
@@ -243,9 +247,9 @@ test("property maintenance: the builder's preview, the fact sheet and the back o
 test('property maintenance: the sample properties are invented, inside the patch, and never hold a code', () => {
   const a = defaultAnswers();
   const props = sampleProperties();
-  assert.equal(props.length, 70);
-  assert.equal(new Set(props.map((p) => p.key)).size, 70, 'each key once');
-  assert.equal(new Set(props.map((p) => `${p.number}|${p.street}`)).size, 70, 'each address once');
+  assert.equal(props.length, 76);
+  assert.equal(new Set(props.map((p) => p.key)).size, 76, 'each key once');
+  assert.equal(new Set(props.map((p) => `${p.number}|${p.street}`)).size, 76, 'each address once');
   const clients = new Set(a.clients.map((c) => c.key));
   for (const p of props) {
     assert.ok(a.area.districts.includes(p.district), `${p.key}: ${p.district} is in the patch`);
@@ -353,6 +357,20 @@ test('property maintenance: the seeded week, anchored to Start, replays under th
   const own = invoices.filter((i) => !i.client_key);
   assert.ok(own.length >= 2);
   assert.deepEqual(own.map((i) => i.status), [...own.slice(0, -1).map(() => 'paid'), 'due']);
+  // Meadowbank: an open damp case whose investigation is due in four working days, labelled from its own repairs policy,
+  // and last week's emergency hazard made safe within 24 hours; the social electrical deadline on its homes.
+  const damp = jobs.find((j) => j.clocks.some((c) => c.kind === 'awaab_investigation'))!;
+  assert.deepEqual([damp.client_key, damp.status, damp.trade], ['meadowbank', 'scheduled', 'damp_mould']);
+  assert.equal(damp.clocks[0].due, addWorkingDays('2026-10-07', 4, 'england'));
+  assert.match(damp.clocks[0].label, /Meadowbank Housing's repairs policy/);
+  assert.doesNotMatch(JSON.stringify(jobs), /Right to Repair/);
+  assert.ok(damp.visit_date! <= damp.clocks[0].due, 'the inspection is booked inside the clock');
+  const hazard = jobs.find((j) => j.flags.includes('emergency_hazard'))!;
+  assert.equal(hazard.status, 'done');
+  assert.ok(hazard.done_at!.getTime() - hazard.created_at.getTime() < 86_400_000, 'made safe within 24 hours');
+  const pats = plan.certificates!.filter((c) => c.kind === 'pat');
+  assert.equal(pats.length, 6);
+  assert.ok(pats.every((c) => c.expires === '2026-11-01'));
   // One gas call this week: advised, then a Gas Safe repair done.
   const [gas] = plan.incidents!;
   const repair = jobs.find((j) => j.reference === gas.follow_up_job)!;

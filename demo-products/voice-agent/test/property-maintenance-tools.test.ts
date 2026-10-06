@@ -17,6 +17,7 @@ import { compilePrompt } from '../src/core/prompt.ts';
 import { redactCodes } from '../src/core/redact.ts';
 import { jobAction, maintenanceState } from '../src/server/maintenance.ts';
 import { digitsSaid, spokenNumber } from '../src/domain/phone.ts';
+import { addWorkingDays } from '../src/domain/listings.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
 
@@ -360,7 +361,7 @@ test('the back office: jobs, engineers, properties with their certificates, and 
   assert.equal(st.engineers.find((e) => e.key === 'dan')!.mobile, '07700 900301');
   const elm = st.jobs.find((j) => j.property_key === 'elm_14' && j.status === 'on_the_way')!;
   assert.deepEqual([elm.engineer, elm.address, elm.client, elm.eta_minutes], ['Marek', '14 Elm Road (example), NG5', 'Whitfield Properties', 20]);
-  assert.equal(st.properties.length, 70);
+  assert.equal(st.properties.length, 76);
   const elmHome = st.properties.find((p) => p.key === 'elm_14')!;
   assert.deepEqual(elmHome.certificates.find((c) => c.kind === 'gas_record')!.state, 'due soon');
   assert.ok(st.properties.some((p) => p.certificates.some((c) => c.state === 'overdue')));
@@ -515,4 +516,62 @@ test('invoices and demo payments: found by number or from the payer\'s phone, pa
   assert.equal((await repo.listInvoices(t2.id, { job: booked.reference }))[0].status, 'paid');
   // The tool speaks of invoices and call-outs here, never orders or deposits.
   assert.match(toolDeclarations(t).find((x) => x.name === 'take_demo_payment')!.description!, /an invoice or a homeowner's call-out/);
+});
+
+test("damp and mould at Meadowbank: no blame, no health advice, the vulnerability noted with consent, a possible hazard for Meadowbank to decide, and Awaab's clock started", async () => {
+  const t = await fernhill('pm-damp');
+  const NADIA = '+447700900571'; // Flat 2, 7 Larkspur Walk, a Meadowbank tenant
+  const CARL = '+447700900407'; // Meadowbank's repairs manager
+  const c = await call(t, NADIA);
+  const found = await c.run('find_property', { postcode: 'DE23', number: 'Flat 2, 7', street: 'Larkspur Walk' });
+  assert.equal(found.found, 1, JSON.stringify(found));
+  const tri = await c.run('triage_fault', { description: "Black mould all over my son's bedroom wall; he has asthma" });
+  assert.equal(tri.trade, 'damp_mould');
+  const args = { action: 'create', description: "Black mould on the son's bedroom wall", trade: 'damp_mould', name: 'Nadia Hussain', vulnerable: 'a child with asthma', consent: true };
+  const offer = await c.run('job', args);
+  const w = offer.windows[0];
+  const r = await c.run('job', { ...args, date: w.date, window: w.window });
+  assert.equal(r.booked, true, JSON.stringify(r));
+  assert.match(r.landlord_told, /Meadowbank Housing has been told today, with the time it was reported\. It is flagged for them to decide whether it is an emergency hazard\./);
+  assert.match(r.never, /Never say what caused it.*never give health advice.*never quote a legal deadline/);
+  const [job] = await repo.listJobs(t.id, { reference: r.reference });
+  assert.equal(job.priority, 'urgent', 'the asthma raises it a step');
+  assert.ok(['damp_mould', 'possible_emergency_hazard', 'vulnerable'].every((f) => job.flags.includes(f)), job.flags.join());
+  assert.deepEqual(job.clocks.map((k) => [k.kind, k.due]), [['awaab_investigation', addWorkingDays('2026-10-07', 10, 'england')]]);
+  assert.equal(job.clocks[0].start, NOW.toISOString(), 'the report time recorded');
+  const home = (await repo.getMtProperty(t.id, 'larkspur_flat_2_7'))!;
+  assert.deepEqual(home.vulnerable, ['a child with asthma']);
+  // Meadowbank told the same day: the time, the investigation date, and the hazard for them to decide.
+  const told = c.sent.find((x) => x.to === CARL)!;
+  assert.match(told.body, /Reported 11am today\. Investigation due by Wednesday 21 October .*Possible emergency hazard: yours to decide/);
+  // Without consent nothing about anyone's health is kept.
+  const other = await call(t, '+447700900572');
+  await other.run('find_property', { postcode: 'DE23', number: 'Flat 5, 7', street: 'Larkspur Walk' });
+  const o = await other.run('job', { action: 'create', description: 'Mould round the bathroom window', trade: 'damp_mould', name: 'Tomasz Nowicki', vulnerable: 'he is pregnant', consent: false });
+  const ow = o.windows[0];
+  const or = await other.run('job', { action: 'create', description: 'Mould round the bathroom window', trade: 'damp_mould', name: 'Tomasz Nowicki', vulnerable: 'pregnant', consent: false, date: ow.date, window: ow.window });
+  assert.deepEqual((await repo.getMtProperty(t.id, 'larkspur_flat_5_7'))!.vulnerable, []);
+  assert.ok(!(await repo.listJobs(t.id, { reference: or.reference }))[0].flags.includes('vulnerable'));
+  // A private landlord's tenant: no Awaab clock (it is for social housing), and nothing said about one.
+  const harbour = (await repo.listMtProperties(t.id)).find((p) => p.client === 'harbour' && p.occupant.phone)!;
+  const h = await call(t, harbour.occupant.phone);
+  await h.run('find_property', { postcode: harbour.district, number: harbour.number, street: harbour.street });
+  const hw = (await h.run('job', { action: 'create', description: 'Mould in the bathroom', trade: 'damp_mould', name: harbour.occupant.name })).windows[0];
+  const hr = await h.run('job', { action: 'create', description: 'Mould in the bathroom', trade: 'damp_mould', name: harbour.occupant.name, date: hw.date, window: hw.window });
+  assert.deepEqual((await repo.listJobs(t.id, { reference: hr.reference }))[0].clocks, []);
+  assert.equal(hr.landlord_told, undefined);
+});
+
+test('damp and mould: the receptionist never blames the tenant or gives health advice', async () => {
+  const t = await fernhill('pm-damp-words');
+  const c = await call(t, '+447700900571');
+  const rules = (line: string) => checkUtterance(line, c.ctx.state, ['Grace'], t.profile.maintenance).map((f) => f.rule);
+  assert.deepEqual(rules("It's probably caused by drying clothes indoors."), ['damp_blame']);
+  assert.deepEqual(rules('You should open your windows more often.'), ['damp_blame']);
+  assert.deepEqual(rules('Keep him out of that room for now.'), ['medical_advice']);
+  assert.deepEqual(rules('Make sure he uses his inhaler.'), ['medical_advice']);
+  assert.deepEqual(rules('Give him his inhaler if he needs it.'), ['medical_advice']);
+  // Kind, and pointed the right way: no flag.
+  assert.deepEqual(rules("I'm sorry you're dealing with this. It's not something you've done. If he feels unwell, your GP or NHS 111 can help."), []);
+  assert.deepEqual(rules("I've passed it to Meadowbank Housing today, and flagged it for them to look at urgently."), []);
 });

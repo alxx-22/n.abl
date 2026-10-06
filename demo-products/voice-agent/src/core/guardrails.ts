@@ -16,7 +16,8 @@ export interface Flag {
     | 'valuation_figure' | 'bank_details' | 'code_spoken' | 'vacancy_said' | 'staff_whereabouts' | 'invented_interest'
     | 'unconfirmed_acceptance' | 'disclosure_missed'
     // A repairs contractor's (presets/property-maintenance.md §8), checked only on its calls.
-    | 'safety_delayed' | 'approval_claim' | 'invented_eta' | 'said_safe_appliance' | 'unsafe_diy' | 'liability_admitted' | 'legal_deadline';
+    | 'safety_delayed' | 'approval_claim' | 'invented_eta' | 'said_safe_appliance' | 'unsafe_diy' | 'liability_admitted' | 'legal_deadline'
+    | 'damp_blame' | 'medical_advice';
   text: string;
 }
 
@@ -172,6 +173,10 @@ const DIY: { re: RegExp; allowedBy?: keyof MaintenanceSettings['checks'] }[] = [
 const LIABLE = /\b(?:(?:it'?s|that'?s|was) our fault|we'?ll pay for|we will pay for|we'?ll cover the cost|you'?ll be compensated|we'?ll compensate|we'?re liable|we are liable|we take (?:full )?responsibility)\b/i;
 const LEGAL = /\b(?:by law|legally|the law says|statutory|awaab'?s law)\b[^.?!]{0,60}\b\d+\s*(?:working )?(?:days?|hours?|weeks?)\b|\b\d+\s*(?:working )?(?:days?|hours?|weeks?)\b[^.?!]{0,60}\b(?:by law|legally|the law|statutory)\b/i;
 const IFFY = /\b(?:if|only if|when|unless|whether|once)\b[^.?!]{0,20}$/i;
+// Damp and mould is the landlord's to look into: the Housing Ombudsman's point is that tenants are not blamed for their "lifestyle".
+const DAMP_BLAME = /\b(?:(?:it'?s|that'?s|is) (?:probably |likely |just )?(?:caused by|down to|because of) (?:you|your|drying|cooking|showers?|not (?:opening|heating|ventilating))|your lifestyle|lifestyle (?:damp|issue|choices?)|(?:you(?:'ll)? (?:need|have|want) to|you should|try to|make sure you|just) (?:open (?:the |your |a )?windows?|ventilate|keep (?:the |your )?(?:windows?|heating)|stop drying|dry (?:your |the )?(?:washing|clothes) (?:outside|outdoors)|wipe (?:it|the mould|down)|use (?:a )?(?:bleach|mould spray|dehumidifier)))\b/i;
+// Health is for a GP or NHS 111: never a view on symptoms, medicines or what is safe for someone's health.
+const MEDICAL = /\b(?:(?:us(?:e|es|ing)|tak(?:e|es|ing)|giv(?:e|ing) (?:him|her|them)) (?:his |her |their |your )?(?:inhaler|medication|medicine|antihistamines?)|(?:it|the mould|that)(?:'s| is| isn'?t| won'?t| shouldn'?t| will not| should not| is not) (?:be )?(?:harmful|dangerous|bad|a risk) (?:to|for) (?:his|her|their|your|anyone'?s) (?:health|breathing|lungs|asthma)|keep (?:him|her|them|the (?:child|children|baby|kids)) out of (?:that|the) room|(?:it|that)(?:'s| is) (?:probably )?(?:just )?(?:a cold|nothing serious|not serious))\b/i;
 
 function maintenanceFlags(text: string, state: CallState, staff: string[], m: MaintenanceSettings | undefined): Flag[] {
   const flags: Flag[] = [];
@@ -201,6 +206,10 @@ function maintenanceFlags(text: string, state: CallState, staff: string[], m: Ma
   if (liable && !negated(text, liable.index)) flags.push({ rule: 'liability_admitted', text: liable[0] });
   const legal = LEGAL.exec(text);
   if (legal) flags.push({ rule: 'legal_deadline', text: legal[0] });
+  const blame = DAMP_BLAME.exec(text);
+  if (blame && !negated(text, blame.index)) flags.push({ rule: 'damp_blame', text: blame[0] });
+  const medical = MEDICAL.exec(text);
+  if (medical) flags.push({ rule: 'medical_advice', text: medical[0] });
   const code = CODE.exec(text);
   if (code) flags.push({ rule: 'code_spoken', text: code[0] });
   return flags;

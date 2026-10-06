@@ -453,7 +453,7 @@ test('property maintenance: properties, jobs, certificates and safety calls go w
     incidents: [{ property_key: null, kind: 'gas', advice_version: 1, advised_at: new Date('2026-10-05T19:02:10Z'), caller_phone: '+447700900599', follow_up_job: null, notes: null, source: 'seed', created_at: new Date('2026-10-05T19:02:00Z') }],
   });
   const stored = await repo.listMtProperties(t.id);
-  assert.equal(stored.length, 70);
+  assert.equal(stored.length, 76);
   assert.deepEqual(await repo.getMtProperty(t.id, 'elm_14'), elm, 'a property reads back as it was planned');
   // A job, by its reference however it is said, and from the occupant's number even though someone else reported it.
   const [job] = await repo.listJobs(t.id, { reference: 'h k 1 0 1' });
@@ -495,6 +495,6 @@ test('property maintenance: a seeded week is written whole and reads back as pla
   assert.deepEqual({ ...elm, id: undefined }, { ...planned, id: undefined, source: 'seed' });
   assert.equal((await repo.listCertificates(t.id)).length, plan.certificates!.length);
   assert.equal((await repo.listIncidents(t.id)).length, 1);
-  assert.equal((await repo.listMtProperties(t.id)).length, 70);
+  assert.equal((await repo.listMtProperties(t.id)).length, 76);
   await repo.deleteTenant('mt-week');
 });

@@ -30,7 +30,19 @@ export function jobBadges(j: LiveJob): { label: string; level: string }[] {
   const out: { label: string; level: string }[] = [];
   if (j.flags.includes('gas')) out.push({ label: 'Gas', level: 'warn' });
   if (j.vulnerable.length || j.flags.includes('vulnerable')) out.push({ label: 'Vulnerable', level: 'bad' });
-  if (j.clocks.length) out.push({ label: 'Clock', level: 'bad' });
+  // A clock counts down on the card: an Awaab's Law investigation by a day, an emergency hazard by a time.
+  for (const c of j.clocks) {
+    const when = c.due.length > 10
+      ? new Date(c.due).toLocaleString('en-GB', { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+      : new Date(`${c.due}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+    if (j.status === 'cancelled') continue;
+    if (j.done_at) {
+      const met = c.due.length > 10 ? j.done_at <= c.due : j.done_at.slice(0, 10) <= c.due;
+      out.push({ label: met ? 'Within the clock' : 'Clock missed', level: met ? 'ok' : 'bad' });
+    } else out.push({ label: `${c.kind.startsWith('awaab') ? 'Investigate' : 'Due'} by ${when}`, level: 'bad' });
+  }
+  if (j.flags.includes('possible_emergency_hazard')) out.push({ label: 'Possible hazard: landlord decides', level: 'bad' });
+  if (j.flags.includes('damp_mould') && !j.clocks.length) out.push({ label: 'Damp and mould', level: 'warn' });
   if (j.po) out.push({ label: `PO ${j.po}`, level: 'info' });
   if (j.flags.includes('recall')) out.push({ label: 'Recall', level: 'warn' });
   if (j.flags.includes('key_collection')) out.push({ label: 'Keys', level: 'info' });

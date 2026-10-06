@@ -245,6 +245,8 @@ export function defaultClients(): ClientAnswer[] {
       'Holds quote Q-2291: a £2,450 boiler replacement at her flat.'),
     c('kaur', 'Mr R Kaur', 'landlord', 15_000, 25_000, false, { name: 'Raj Kaur', phone: '07700 900405', email: '' }, 'over_limit'),
     c('whitfield', 'Whitfield Properties', 'landlord', 25_000, 40_000, false, { name: 'Ben Whitfield', phone: '07700 900406', email: 'ben@whitfield.example' }, 'over_limit'),
+    c('meadowbank', 'Meadowbank Housing', 'social', 50_000, 100_000, true, { name: 'Carl Mensah', phone: '07700 900407', email: 'repairs@meadowbank.example' }, 'every_job',
+      "We act as Meadowbank's agent for repairs: report damp and mould the same day, with the time it was reported."),
   ];
 }
 
@@ -272,7 +274,7 @@ export function defaultAnswers(): MaintenanceAnswers {
     },
     customers: {
       homeowners: true, landlords: true, agents: true, blocks: false,
-      social: { on: false, agent_of_landlord: false }, commercial: false, insurers: false,
+      social: { on: true, agent_of_landlord: true }, commercial: false, insurers: false,
       tenant_no_client: 'contact_landlord', recharge_lockouts: true,
     },
     clients: defaultClients(),

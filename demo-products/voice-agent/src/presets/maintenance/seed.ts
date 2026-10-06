@@ -3,7 +3,8 @@
 // sample clients, jobs done earlier in the week, today's board moving with
 // the clock, the coming fortnight, jobs awaiting approval or waiting for
 // parts, the certificate register, last night's emergency, one gas call,
-// the quotes out, and the invoices for finished work.
+// a housing association's damp case on the clock, the quotes out, and the
+// invoices for finished work.
 //
 // Every job is placed by the same window rules the tools use, so no
 // engineer is over capacity, gas work goes only to Gas Safe engineers and
@@ -11,6 +12,7 @@
 // cannot be placed (a prospect turned the trade off, or removed its
 // engineer) is left out, never forced in.
 
+import { addWorkingDays } from '../../domain/listings.ts';
 import { addDays, minutesOf, timeOf, toLocal, zonedToUtc } from '../../domain/time.ts';
 import type { Certificate, HistoryEntry, Incident, Invoice, Job, JobKind, JobPriority, MtProperty, Quote, TenantProfile } from '../../domain/types.ts';
 import { checkWindow, isGasTrade, onCallAt, windowAt, windowOf, windowsOn } from '../../domain/windows.ts';
@@ -300,6 +302,43 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
     }
   }
 
+  // ── Meadowbank Housing: a damp case on the clock, and a hazard closed ──
+  // The open case's clock is labelled from the housing association's own
+  // repairs policy, not "Right to Repair (statutory)", which is for council
+  // tenants (the reviewer's correction).
+  const social = m.clients.find((c) => c.kind === 'social');
+  const socialHomes = social ? properties.filter((p) => p.client === social.key) : [];
+  if (social && socialHomes.length && trades.includes('damp_mould')) {
+    let reported = today;
+    for (let n = 0; n < 6;) {
+      reported = addDays(reported, -1);
+      if (addWorkingDays(addDays(reported, -1), 1, 'england') === reported) n++;
+    }
+    const home = socialHomes.find((p) => p.vulnerable.length) ?? socialHomes[0];
+    const created = at(reported, '10:20');
+    const clock = { kind: 'awaab_investigation', label: `Investigation due: ${social.name}'s repairs policy (10 working days)`, start: created.toISOString(), due: addWorkingDays(reported, 10, 'england') };
+    for (const date of upcoming.slice(1, 5)) {
+      const j = place(home, date, {
+        trade: 'damp_mould', priority: 'urgent', description: 'Black mould on the bedroom walls and ceiling', kind: 'inspection', status: 'scheduled', created_at: created,
+        flags: ['damp_mould', ...(home.vulnerable.length ? ['vulnerable'] : [])], clocks: [clock], notes: `${social.name} told the same day, with the time it was reported.`,
+      });
+      if (j) break;
+    }
+    // Last week's emergency hazard: water through a light fitting and mould spreading, made safe within the morning.
+    const flat = socialHomes.find((p) => p !== home && p.access.method === 'keys_held') ?? socialHomes.find((p) => p !== home);
+    const day = earlier[3] ?? earlier[0];
+    const trade = trades.includes('plumbing') ? 'plumbing' : 'damp_mould';
+    if (flat && day) {
+      const raised = at(day, '07:50');
+      const j = place(flat, day, {
+        trade, priority: 'emergency', description: 'Water through the bathroom light fitting from the flat above; black mould spreading in the bedroom', kind: 'repair', status: 'scheduled',
+        created_at: raised, reason: 'Emergency: water on electrics', flags: ['damp_mould', 'emergency_hazard'],
+        clocks: [{ kind: 'awaab_emergency', label: 'Emergency hazard: investigate and make safe within 24 hours', start: raised.toISOString(), due: new Date(raised.getTime() + DAY).toISOString() }],
+      }, { window: 'am' });
+      done(j, '11:40', `Made safe: the leak from the flat above isolated, the light fitting disconnected and capped; mould treated. ${social.name} told at 8am.`);
+    }
+  }
+
   // ── One gas call this week: sent to the emergency service, then repaired ──
   const incidents: Omit<Incident, 'id'>[] = [];
   const gasDay = earlier[2] ?? earlier[0];
@@ -390,7 +429,7 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
     texts: texts(profile, jobs, byKey),
     properties,
     jobs,
-    certificates: certificates(properties, jobs, today),
+    certificates: certificates(properties, jobs, today, new Set(m.clients.filter((c) => c.kind === 'social').map((c) => c.key))),
     incidents,
     quotes,
     invoices,
@@ -414,14 +453,19 @@ const plusYears = (date: string, n: number) => `${Number(date.slice(0, 4)) + n}$
 /** Days to go on the gas records due soonest; with 14 Elm Road's 40, six are due within six weeks and one is three days overdue. */
 const GAS_DUE = [9, 16, 23, 30, 37, -3];
 
+/** The Electrical Safety Standards in the Social Rented Sector reach existing tenancies on this day. */
+const SOCIAL_ELECTRICAL_DEADLINE = '2026-11-01';
+
 /**
  * The compliance register: a gas safety record for every rented home with
  * gas, an EICR for every rented home, and boiler services for some
  * homeowners, spread over their lives. Four EICRs are due within two
  * months, and one, done 19 days ago, found C2 items to put right within 28.
  */
-function certificates(props: MtProperty[], jobs: SeedJob[], today: string): Certificate[] {
+function certificates(props: MtProperty[], jobs: SeedJob[], today: string, social: Set<string>): Certificate[] {
   const out: Certificate[] = [];
+  // A housing association's homes: the electrical safety rules for social housing reach existing tenancies on 1 November 2026, PAT tests included.
+  for (const p of props) if (p.client && social.has(p.client)) out.push({ property_key: p.key, kind: 'pat', issued: null, expires: SOCIAL_ELECTRICAL_DEADLINE, remedials: [], booked_job: null });
   const rented = props.filter((p) => p.client !== null);
   let g = 0;
   rented.forEach((p, i) => {

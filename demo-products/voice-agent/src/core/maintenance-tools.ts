@@ -342,9 +342,36 @@ function bookedText(ctx: ToolContext, j: Job, homeowner: boolean): string {
 /** The job's client's contact hears of it as their notice setting says, on their own phone. */
 async function noticeToClient(ctx: ToolContext, client: MtClient | undefined, j: Job, p: MtProperty): Promise<void> {
   if (!client?.contact.phone) return;
-  const send = client.notice === 'every_job' || (client.notice === 'emergencies' && j.priority === 'emergency');
+  // Damp and mould at a social landlord's home is always told the same day: the clock is theirs.
+  const damp = j.flags.includes('damp_mould') && client.kind === 'social';
+  const send = damp || client.notice === 'every_job' || (client.notice === 'emergencies' && j.priority === 'emergency');
   if (!send) return;
-  await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: new ${j.priority} job ${j.reference} at ${shortAddress(p)}: ${j.description}. (Demo)`);
+  const clock = j.clocks.find((c) => c.kind === 'awaab_investigation');
+  const extra = [
+    damp ? `Reported ${spokenTime(toLocal(ctx.now(), ctx.tenant.profile.timezone).time)} today.` : '',
+    clock ? `Investigation due by ${spokenDate(clock.due)} (10 working days, Awaab's Law; we act as your agent).` : '',
+    j.flags.includes('possible_emergency_hazard') ? 'Possible emergency hazard: yours to decide. If it is one, it must be investigated and made safe within 24 hours.' : '',
+  ].filter(Boolean).join(' ');
+  await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: new ${j.priority} job ${j.reference} at ${shortAddress(p)}: ${j.description}.${extra ? ` ${extra}` : ''} (Demo)`);
+}
+
+/** Signs that damp and mould may be an emergency hazard: for the landlord to decide, never the receptionist. */
+const HAZARD = /\b(?:asthma|breath\w*|respiratory|copd|lungs?|bab(?:y|ies)|newborn|pregnan\w+|immun\w+|chemo\w*|oxygen|water (?:coming )?(?:through|into|in) (?:the |a )?(?:lights?|light fittings?|sockets?|electrics?)|ceiling (?:is )?(?:sagging|bowing|coming down))\b/i;
+
+/**
+ * Awaab's Law (England, social housing): the landlord must investigate damp
+ * and mould within 10 working days of being told. A contractor acting as
+ * its agent being told counts, so the clock starts at the report, with the
+ * time recorded. Not for a private landlord, another nation, or a
+ * contractor that isn't the landlord's agent: their clocks are their own.
+ */
+export function dampClocks(m: MaintenanceSettings, client: MtClient | undefined, trade: string, words: string, vulnerable: string[], now: Date, today: string) {
+  const damp = trade === 'damp_mould' || /\b(?:damp|mould|mold)\b/i.test(words);
+  if (!damp || client?.kind !== 'social') return { damp, clocks: [], hazard: false };
+  const hazard = HAZARD.test(words) || vulnerable.some((v) => HAZARD.test(v));
+  const agent = m.customers.social.on && m.customers.social.agent_of_landlord && m.nation === 'england';
+  const clocks = agent ? [{ kind: 'awaab_investigation', label: "Awaab's Law: investigate within 10 working days", start: now.toISOString(), due: addWorkingDays(today, 10, 'england') }] : [];
+  return { damp, clocks, hazard };
 }
 
 const ROLES: ReporterRole[] = ['occupant', 'agent', 'landlord', 'homeowner', 'other'];
@@ -408,7 +435,8 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   const description = str(args.description);
   if (!description) return { booked: false, message: 'Say what the problem is in a few words (description), then call again.' };
   const l = local(ctx);
-  const t = triage(m, description, { vulnerable: p.vulnerable, date: l.date });
+  // Someone vulnerable, noted with consent, can raise the priority (the owner's uplift rule).
+  const t = triage(m, description, { vulnerable: str(args.vulnerable) && bool(args.consent) ? [...p.vulnerable, str(args.vulnerable)!] : p.vulnerable, date: l.date });
   const trade = str(args.trade) && m.trades.some((x) => x.key === str(args.trade)) ? str(args.trade)! : t.trade;
   if (!trade) return { booked: false, message: `Use triage_fault first to find the trade. Trades: ${m.trades.map((x) => x.key).join(', ')}.` };
   const asked = str(args.priority) as JobPriority | undefined;
@@ -425,12 +453,24 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   const gas = isGasTrade(m, trade) || t.gas;
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const role = roleOf(args.role) ?? (ctx.state.role === 'authoriser' ? (client?.kind === 'agent' ? 'agent' : 'landlord') : homeowner ? 'homeowner' : 'occupant');
-  if (str(args.vulnerable) && bool(args.consent)) await ctx.repo.setVulnerable(ctx.tenant.id, p.key, [...new Set([...p.vulnerable, str(args.vulnerable)!])], ctx.now());
-  const flags = [...(gas ? ['gas'] : []), ...(p.vulnerable.length || str(args.vulnerable) ? ['vulnerable'] : []), ...(p.notes.pets ? ['pets'] : []), ...(p.access.method === 'key_safe' || p.access.method === 'keys_held' ? ['key_collection'] : [])];
+  // Noted only with their consent; without it, nothing about anyone's health is kept.
+  const consented = str(args.vulnerable) && bool(args.consent) ? str(args.vulnerable)! : null;
+  if (consented) await ctx.repo.setVulnerable(ctx.tenant.id, p.key, [...new Set([...p.vulnerable, consented])], ctx.now());
+  const d = dampClocks(m, client, trade, `${description}. ${str(args.vulnerable) ?? ''}`, consented ? [...p.vulnerable, consented] : p.vulnerable, ctx.now(), l.date);
+  const flags = [
+    ...(gas ? ['gas'] : []), ...(p.vulnerable.length || consented ? ['vulnerable'] : []), ...(p.notes.pets ? ['pets'] : []),
+    ...(p.access.method === 'key_safe' || p.access.method === 'keys_held' ? ['key_collection'] : []),
+    ...(d.damp && client?.kind === 'social' ? ['damp_mould'] : []), ...(d.hazard ? ['possible_emergency_hazard'] : []),
+  ];
   const base: NewJob = {
     property_key: p.key, client_key: p.client, reporter: { name, phone, role }, trade, priority, reason: t.reason, description, kind: 'repair',
-    po: str(args.po) ?? null, notes: str(args.access) ?? null, source: source(ctx), call_id: ctx.callId || null, flags,
+    po: str(args.po) ?? null, notes: str(args.access) ?? null, source: source(ctx), call_id: ctx.callId || null, flags, clocks: d.clocks,
   };
+  // For a social landlord's damp case: who is told, and what never to say.
+  const dampWords = d.damp && client?.kind === 'social' ? {
+    landlord_told: `${client.name} ${d.clocks.length ? 'has been told today, with the time it was reported' : 'has been told today'}.${d.hazard ? ' It is flagged for them to decide whether it is an emergency hazard.' : ''}`,
+    never: "Never say what caused it or suggest it's anything the tenant did; never give health advice (for anyone unwell, their GP or NHS 111); never quote a legal deadline.",
+  } : {};
 
   if (priority === 'emergency') {
     const e = pageFor(ctx, trade, gas, p.district);
@@ -448,7 +488,8 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     return {
       booked: true, reference: job.reference, reference_spoken: spokenReference(job.reference), priority,
       say: `Our ${ooh ? 'on-call ' : ''}engineer has been paged. We aim to be with them within ${m.priorities.emergency.attend_hours} hours, and they'll get a text as soon as the engineer accepts.`,
-      never: "Don't give the engineer's name or an arrival time: nobody has accepted yet.",
+      ...dampWords,
+      never: `Don't give the engineer's name or an arrival time: nobody has accepted yet.${dampWords.never ? ` ${dampWords.never}` : ''}`,
     };
   }
 
@@ -462,7 +503,7 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     ctx.state.jobsVerified.push(job.reference);
     if (client.contact.phone) await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: job ${job.reference} at ${shortAddress(p)} needs your approval (about ${money(estimate * 100)}, over your ${money(client.works_limit_pence)} limit). (Demo)`);
     ctx.action({ kind: 'job_created', title: `Awaiting approval · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · ${client.name} · ref ${job.reference}`, data: { reference: job.reference } });
-    return { booked: false, awaiting_approval: true, reference: job.reference, reference_spoken: spokenReference(job.reference), say: `This needs ${client.name}'s approval first. We've asked them, and we'll call back with a time once they say yes. It isn't booked yet.` };
+    return { booked: false, awaiting_approval: true, reference: job.reference, reference_spoken: spokenReference(job.reference), say: `This needs ${client.name}'s approval first. We've asked them, and we'll call back with a time once they say yes. It isn't booked yet.`, ...dampWords };
   }
 
   const date = str(args.date);
@@ -500,6 +541,7 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     ...(price ? { price: `${money(price)}${incVat(m)} call-out, with the first hour` } : {}),
     text_sent: Boolean(phone),
     remind: m.visits.adult_present ? 'Someone over 18 needs to be in.' : undefined,
+    ...dampWords,
     ...(deposit ? { payment: `The ${money(deposit.amount_pence)} call-out is paid by card now: take it with take_demo_payment (for callout), giving the demo card first. If they'd rather not, the visit stays booked and the office will call.` } : {}),
   };
 }

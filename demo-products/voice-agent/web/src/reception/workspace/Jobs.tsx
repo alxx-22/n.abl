@@ -111,6 +111,7 @@ function JobCard({ id, j, state, nowMs, fresh, onDone }: { id: string; j: LiveJo
         <>
           <span>{j.trade_label}: {j.description}</span>
           {j.reason ? <span className="small muted">{j.reason}</span> : null}
+          {j.clocks.map((c) => <span key={c.kind} className="small muted">{c.label}</span>)}
           {j.client ? <span className="small muted">For {j.client}</span> : null}
           <span className="small muted">Ref {j.reference}{j.reporter.name ? ` · reported by ${j.reporter.name}` : ''}</span>
         </>

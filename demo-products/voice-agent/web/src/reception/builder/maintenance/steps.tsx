@@ -63,7 +63,17 @@ export function StepCustomers({ a, set }: Props) {
       <Toggle label="Homeowners" checked={c.homeowners} onChange={(v) => set((d) => void (d.customers.homeowners = v))} />
       <Toggle label="Landlords" checked={c.landlords} onChange={(v) => set((d) => void (d.customers.landlords = v))} />
       <Toggle label="Letting agents" checked={c.agents} onChange={(v) => set((d) => void (d.customers.agents = v))} />
-      <p className="hint">Block managers, housing associations, businesses and insurers are coming later.</p>
+      <Toggle
+        label="Housing associations (social housing)" checked={c.social.on} onChange={(v) => set((d) => void (d.customers.social.on = v))}
+        hint="Damp and mould is told to them the same day, with the time it was reported, and never blamed on the tenant."
+      />
+      {c.social.on ? (
+        <Toggle
+          label="We act as their agent for repairs" checked={c.social.agent_of_landlord} onChange={(v) => set((d) => void (d.customers.social.agent_of_landlord = v))}
+          hint="In England, Awaab's Law then starts their 10-working-day damp and mould clock when we're told, and it counts down on the job."
+        />
+      ) : null}
+      <p className="hint">Block managers, businesses and insurers are coming later.</p>
       <Choice
         legend="A tenant whose landlord isn't one of your clients" value={c.tenant_no_client}
         options={[
@@ -78,13 +88,13 @@ export function StepCustomers({ a, set }: Props) {
       />
 
       <h3 className="sub">Clients</h3>
-      <p className="hint">Agents and landlords who authorise work. Their contact approves anything over the limit on their own phone, never by voice.</p>
+      <p className="hint">Agents, landlords and housing associations who authorise work. Their contact approves anything over the limit on their own phone, never by voice.</p>
       {a.clients.map((cl, i) => (
         <div className="group on area-card" key={cl.key}>
           <div className="area-head">
             <input aria-label="Client name" className="area-name" placeholder="Harbour Lettings" value={cl.name} maxLength={80} onChange={(e) => set((d) => void (d.clients[i].name = e.target.value))} />
             <select aria-label={`${cl.name || 'Client'} kind`} value={cl.kind} onChange={(e) => set((d) => void (d.clients[i].kind = e.target.value as ClientAnswer['kind']))}>
-              {CLIENT_KINDS.filter((k) => k === 'agent' || k === 'landlord' || k === cl.kind).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
+              {CLIENT_KINDS.filter((k) => k === 'agent' || k === 'landlord' || (k === 'social' && c.social.on) || k === cl.kind).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
             </select>
             {cl.example ? <span className="badge">Example</span> : null}
             <button type="button" className="ghost small" onClick={() => {
@@ -110,7 +120,7 @@ export function StepCustomers({ a, set }: Props) {
       <div className="row-tools">
         <button type="button" className="small" disabled={a.clients.length >= MAX_CLIENTS} onClick={add}>+ Add a client</button>
       </div>
-      <p className="hint">Start adds 70 sample homes on made-up streets in your districts, under these clients and homeowners, each marked “example”. You'll see them under Properties and compliance.</p>
+      <p className="hint">Start adds 76 sample homes on made-up streets in your districts, under these clients and homeowners, each marked “example”. You'll see them under Properties and compliance.</p>
     </div>
   );
 }

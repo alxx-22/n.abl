@@ -163,6 +163,8 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
   unsafe_diy: '[Correction from the system: never give steps beyond the checks triage_fault allows: nothing inside a boiler or fuse box, no ladders, no chemicals. Tell them not to, and offer an engineer.]',
   liability_admitted: "[Correction from the system: never say who pays, admit fault or promise compensation. Correct yourself: the office will look into it, and take a message (category complaint).]",
   legal_deadline: "[Correction from the system: never state a legal deadline: no tool gave one. Correct yourself, and point them to Shelter or Citizens Advice for their rights.]",
+  damp_blame: "[Correction from the system: never suggest the tenant caused damp or mould, or tell them how to live. Correct yourself kindly: it's for the landlord to look into, and it has been passed on.]",
+  medical_advice: "[Correction from the system: never give health advice. Correct yourself: for anyone unwell, their GP or NHS 111, or 999 in an emergency.]",
 };
 
 export class CallSession extends EventEmitter<CallEvents> {

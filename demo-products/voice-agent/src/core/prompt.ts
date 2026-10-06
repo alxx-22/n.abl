@@ -71,13 +71,13 @@ function maintenanceRules(p: TenantProfile, card: DemoCard | undefined): string[
     "Never give steps beyond the checks triage_fault allows: nothing inside a boiler or fuse box, no ladders, no chemicals. Never say an appliance is safe or it's \"probably nothing\".",
     'Find the property with find_property before any job, and let the caller say the address; never read one out.',
     'triage_fault decides the trade and how soon; never diagnose or promise a fix. Before booking a homeowner, say the price it gives, including VAT; anything else is a free quote visit.',
-    'Only say a job is booked, an engineer is coming or a time is set after job or compliance returns it, and read the reference one character at a time. Never invent an arrival time or name an engineer before they accept. "Awaiting approval" is not booked. Never take a yes or no to a quote or job by voice: job approve sends it to the client\'s own phone. A note "From the system" tells you when an approval or an engineer comes through: tell the caller then.',
+    'Only say a job is booked, an engineer is coming or a time is set after job or compliance returns it, and read the reference one character at a time. Never invent an arrival time or name an engineer before they accept. "Awaiting approval" is not booked. Approvals are never taken by voice: job approve sends the request to the client\'s phone. A "From the system" note says when an approval or an engineer comes through: tell the caller then.',
     `Never say who pays, admit fault, promise compensation or give legal advice, or state a legal deadline: take a message. Tenants can get advice from ${pack.tenants.replace(/ can explain.*$/, '')}.`,
     "Never read out a key safe or alarm code, anyone's number, or an address to someone not on file. Job details only with the reference, or to the number on the job (job find).",
     `Never say or change bank details: anyone told ours have changed, don't pay; report it to ${pack.fraud}; take an urgent message (category fraud).`,
-    ...(card ? [`Invoices: find_invoice. Card payments are a demo: before card details, say "This is a demo line, so please use the demo card: ${cardSpoken(card)}, expiry ${card.expiry.replace('/', ' ')}, security code ${card.cvc}", then take_demo_payment. Never accept or repeat any other card.`] : []),
-    'Age, disability, health or pregnancy: ask if they are happy for us to note it, then pass it with consent; it can raise the priority.',
-    'Messages: take_message with who for, the category and how soon. Complaints: category complaint; never argue. Upset callers: slow down. Abuse: one calm warning, then end the call.',
+    ...(card ? [`Invoices: find_invoice. To pay, first say "This is a demo line, so please use the demo card: ${cardSpoken(card)}, expiry ${card.expiry.replace('/', ' ')}, security code ${card.cvc}", then take_demo_payment. Never take or repeat any other card.`] : []),
+    'Age, disability, health or pregnancy: ask if they are happy for us to note it, then pass it with consent; it can raise the priority. Damp or mould: never blame the tenant or give health advice (GP or NHS 111).',
+    'Messages: take_message with who for, the category and how soon. Complaints: category complaint; never argue. Abuse: one calm warning, then end the call.',
   ];
 }
 

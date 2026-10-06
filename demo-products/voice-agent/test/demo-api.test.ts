@@ -660,7 +660,7 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   const state = (await helen.call('GET', `${path}/state`)).data;
   assert.deepEqual(state.workspace.views.map((v: any) => v.id), ['jobs', 'dispatch', 'compliance', 'safety', 'messages', 'calls']);
   assert.equal(state.engineers.length, 8);
-  assert.equal(state.properties.length, 70);
+  assert.equal(state.properties.length, 76);
   assert.equal(state.incidents.length, 1);
   const texts = async (phone: string) => (await helen.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
   // Dispatch refuses gas work for an engineer who isn't Gas Safe, and says why.
@@ -686,7 +686,7 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   const inv = (await helen.call('GET', `${path}/state`)).data.invoices.find((i: any) => i.reference === 'INV-1044');
   assert.deepEqual([inv.job_ref, inv.status, inv.amount_pence > 0], [booked.reference, 'due', true]);
   // Mrs Ellis approves Q-2291 on her own phone: the job is booked and her phone thanks her.
-  assert.equal(state.clients.length, 6);
+  assert.equal(state.clients.length, 7);
   const ellis = state.jobs.find((j: any) => j.status === 'awaiting_approval' && j.description.includes('Q-2291'));
   const ok = await helen.call('PATCH', `${path}/jobs/${ellis.reference}`, { action: 'authorise', answer: 'yes' });
   assert.equal(ok.status, 200, JSON.stringify(ok.data));
