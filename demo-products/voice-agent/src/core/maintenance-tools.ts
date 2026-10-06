@@ -397,6 +397,30 @@ async function noticeToClient(ctx: ToolContext, client: MtClient | undefined, j:
   await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: new ${j.priority} job ${j.reference} at ${shortAddress(p)}: ${j.description}.${extra ? ` ${extra}` : ''} (Demo)`);
 }
 
+const UNITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+/** A price as said or written: "£2,450", "600 pounds", "two thousand four hundred and fifty pounds". Undefined if none. */
+export function poundsIn(text: string): number | undefined {
+  const digits = /£\s?(\d[\d,]*)|\b(\d[\d,]*)\s*(?:pounds|quid)\b/i.exec(text);
+  if (digits) return Number((digits[1] ?? digits[2]).replace(/,/g, '')) || undefined;
+  const words = /\b((?:(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|and|a)[\s-]+)+)(?:pounds|quid)\b/i.exec(text);
+  if (!words) return undefined;
+  let total = 0;
+  let part = 0;
+  for (const w of words[1].toLowerCase().split(/[\s-]+/).filter(Boolean)) {
+    if (UNITS.includes(w)) part += UNITS.indexOf(w);
+    else if (TENS.includes(w)) part += TENS.indexOf(w) * 10;
+    else if (w === 'a') part += 1;
+    else if (w === 'hundred') part = (part || 1) * 100;
+    else if (w === 'thousand') {
+      total += (part || 1) * 1000;
+      part = 0;
+    }
+  }
+  return total + part || undefined;
+}
+
 /** Signs that damp and mould may be an emergency hazard: for the landlord to decide, never the receptionist. */
 const HAZARD = /\b(?:asthma|breath\w*|respiratory|copd|lungs?|bab(?:y|ies)|newborn|pregnan\w+|immun\w+|chemo\w*|oxygen|water (?:coming )?(?:through|into|in) (?:the |a )?(?:lights?|light fittings?|sockets?|electrics?)|ceiling (?:is )?(?:sagging|bowing|coming down))\b/i;
 
@@ -485,7 +509,7 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   const asked = str(args.priority) as JobPriority | undefined;
   // The tool's priority stands unless the model asks for a higher one: a caller's say-so never lowers an emergency.
   const order: JobPriority[] = ['routine', 'urgent', 'emergency'];
-  const priority = asked && order.includes(asked) && order.indexOf(asked) > order.indexOf(t.priority) ? asked : t.priority;
+  let priority = asked && order.includes(asked) && order.indexOf(asked) > order.indexOf(t.priority) ? asked : t.priority;
   const name = realName(args.name) ?? (ctx.callerPhone === p.occupant.phone ? p.occupant.name ?? undefined : undefined);
   if (!name) return { booked: false, message: ASK_NAME };
   const homeowner = p.client === null;
@@ -520,7 +544,27 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     never: "Never say what caused it or suggest it's anything the tenant did; never give health advice (for anyone unwell, their GP or NHS 111); never quote a legal deadline.",
   } : {};
 
-  if (priority === 'emergency') {
+  // Over the client's limit: their contact approves, on their own phone, before anything is booked.
+  // A price already in the description or the caller's words ("£600", "six hundred pounds") counts, so it isn't asked for twice.
+  const heardAll = ctx.state.heard.join(' ');
+  const estimate = int(args.estimate_pounds) ?? poundsIn(description) ?? poundsIn(heardAll);
+  // "Go ahead with quote Q-2291": that work is already raised, waiting on the client; it is answered, not raised again.
+  const quoted = /\bQ[\s-]?(\d{4})\b/i.exec(`${description} ${str(args.reference) ?? ''} ${ctx.state.heard.slice(-4).join(' ')}`);
+  if (quoted) {
+    const [q] = await ctx.repo.listQuotes(ctx.tenant.id, { reference: `Q-${quoted[1]}` });
+    // The yes is sent to the client's phone here and now, whichever action the model reached for.
+    if (q?.status === 'sent' && q.job_ref) return { ...(await requestApproval({ reference: q.reference }, ctx)), raised_already: `Quote ${q.reference} was already raised: nothing new is booked.` };
+  }
+  // Work quoted last week is planned, however it is described ("doesn't lock properly"): it goes through the
+  // client's limit, not the on-call pager. Never when water is pouring or a safety script was given.
+  const quotedWork = estimate !== undefined && /\b(?:quoted?|priced|estimated?)\b/i.test(`${description} ${heardAll}`)
+    && !WATER_EMERGENCY.test(heardAll) && !ctx.state.safetyDone.length;
+  if (quotedWork && priority === 'emergency') {
+    priority = 'urgent';
+    Object.assign(base, { priority, reason: `Quoted work, about ${money(estimate! * 100)}: planned, not an emergency call-out` });
+  }
+
+  if (priority === 'emergency' && !quotedWork) {
     const e = pageFor(ctx, trade, gas, p.district);
     const ooh = outOfHours(ctx);
     const attendBy = new Date(ctx.now().getTime() + m.priorities.emergency.attend_hours * 3_600_000);
@@ -541,17 +585,6 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     };
   }
 
-  // Over the client's limit: their contact approves, on their own phone, before anything is booked.
-  // A price already in the description or the caller's words counts, so it isn't asked for twice.
-  const named = /£\s?(\d[\d,]*)/.exec(`${description} ${ctx.state.heard.join(' ')}`);
-  const estimate = int(args.estimate_pounds) ?? (named ? Number(named[1].replace(/,/g, '')) || undefined : undefined);
-  // "Go ahead with quote Q-2291": that work is already raised, waiting on the client; it is answered, not raised again.
-  const quoted = /\bQ[\s-]?(\d{4})\b/i.exec(`${description} ${str(args.reference) ?? ''} ${ctx.state.heard.slice(-4).join(' ')}`);
-  if (quoted) {
-    const [q] = await ctx.repo.listQuotes(ctx.tenant.id, { reference: `Q-${quoted[1]}` });
-    // The yes is sent to the client's phone here and now, whichever action the model reached for.
-    if (q?.status === 'sent' && q.job_ref) return { ...(await requestApproval({ reference: q.reference }, ctx)), raised_already: `Quote ${q.reference} was already raised: nothing new is booked.` };
-  }
   // Work already priced ("as per the quote") is checked against the limit, so the amount is needed first;
   // a tenant asking what it will cost has no quote.
   if (client && !estimate && /\b(?:quoted?|priced|estimated?)\b/i.test(`${description} ${str(args.reference) ?? ''} ${ctx.state.heard.join(' ')}`)) {

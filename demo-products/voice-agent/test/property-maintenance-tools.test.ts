@@ -639,6 +639,15 @@ test('the job tool steers the call: a quote is answered not raised again, damp a
   await jess.run('find_property', { postcode: 'NG3', number: '120', street: 'Larchfield Close' });
   const priced = await jess.run('job', { action: 'create', description: 'Replace the back door and frame as per the quote (£600)', trade: 'carpentry', name: 'Jess Morgan' });
   assert.equal(priced.awaiting_approval, true, JSON.stringify(priced));
+  // Live, 6 October: quoted last week at "six hundred pounds", and the door "doesn't lock properly". That is planned work
+  // through Harbour's limit, not an emergency page.
+  const jess2 = await call(t, '+447700900411');
+  jess2.hear('Your joiner priced the rotten back door and frame at six hundred pounds last week; please book it in.');
+  jess2.hear("The back door is rotten and doesn't lock properly at the bottom.");
+  await jess2.run('find_property', { postcode: 'NG3', number: '120', street: 'Larchfield Close' });
+  const planned = await jess2.run('job', { action: 'create', description: "Rotten back door and frame; doesn't lock properly", trade: 'carpentry', name: 'Jess Morgan' });
+  assert.equal(planned.awaiting_approval, true, JSON.stringify(planned));
+  assert.equal((await repo.listJobs(t.id, { reference: planned.reference }))[0].priority, 'urgent');
   // "Both" books the record and the service together, at the combined price.
   const ben = await call(t, '+447700900406');
   await ben.run('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
@@ -693,4 +702,14 @@ test("the caller's own words count: a leak they said was pouring is an emergency
   // A stranger to a home hears that anyone may report a repair there.
   const found = await jess.run('find_property', { postcode: 'NG3', number: '120', street: 'Larchfield Close' });
   assert.match(found.properties[0].reporting, /Anyone may report a repair here/);
+});
+
+test('prices as people say them', async () => {
+  const { poundsIn } = await import('../src/core/maintenance-tools.ts');
+  assert.equal(poundsIn('priced at six hundred pounds last week'), 600);
+  assert.equal(poundsIn('two thousand four hundred and fifty pounds'), 2450);
+  assert.equal(poundsIn('about a hundred and twenty quid'), 120);
+  assert.equal(poundsIn('the quote was £2,450'), 2450);
+  assert.equal(poundsIn('it came to 380 pounds'), 380);
+  assert.equal(poundsIn('no price here'), undefined);
 });
