@@ -852,6 +852,8 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
       describe ? 'Say describe first, as it is, even if they asked something narrower; then answer from facts.' : '',
       f.unknown.length ? `Unknown: say it isn't in the details (never "no"), name any official service, and offer to ask ${negotiator}.` : '',
       f.being_checked.length ? 'Being checked: say so, and state nothing about them.' : '',
+      // Live, 6 October: "would 9:30, 10:30 or 11:30 work?" straight after the details, with nothing checked.
+      'Viewing times only from check_availability: none before it.',
     ].filter(Boolean).join(' ') || undefined,
   });
 }

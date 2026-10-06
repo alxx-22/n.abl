@@ -128,7 +128,7 @@ test('the honest listing answer: "the one on Albion Road" asks which; the flat s
   assert.match(String(house.note), /isn't in the details \(never "no"\)/);
   assert.match((house.facts as Record<string, string>).rooms, /box room\) not measured/);
   assert.equal(house.negotiator, 'Jess');
-  assert.ok(JSON.stringify(house).length < 2100, `kept small: ${JSON.stringify(house).length} characters`);  // A mortgage question about a leasehold home has someone to offer, never an opinion (ea-short-lease, 4 October).
+  assert.ok(JSON.stringify(house).length < 2150, `kept small: ${JSON.stringify(house).length} characters`);  // A mortgage question about a leasehold home has someone to offer, never an opinion (ea-short-lease, 4 October).
   const leasehold = await run('get_property', { property: '41 Albion Road' });
   assert.equal(leasehold.mortgage_question, "Can't advise: offer Mark, our mortgage adviser, and their solicitor for the lease.");
   assert.equal(house.mortgage_question, undefined);
