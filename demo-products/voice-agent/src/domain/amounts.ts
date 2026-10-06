@@ -6,6 +6,8 @@
 const UNITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
 const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
 const NUMBER_WORD = `(?:${[...UNITS, ...TENS.filter(Boolean), 'hundred', 'thousand', 'and', 'a'].join('|')})`;
+// Pence after "pounds" are a plain number: "forty pounds a half hour" has no pence.
+const PENCE_WORD = `(?:${[...UNITS, ...TENS.filter(Boolean)].join('|')})`;
 
 /** "two thousand four hundred and fifty" → 2450; undefined for no number. */
 function wordsToNumber(words: string): number | undefined {
@@ -28,7 +30,7 @@ function wordsToNumber(words: string): number | undefined {
 
 // "£10 million" (an insurance cover) is not a price, nor its "£1".
 const DIGITS = /£\s?(\d[\d,]*)(?:\.(\d{2}))?(?!\d|,\d|\.\d)(?!\s*(?:million|m\b|bn|billion))|\b(\d[\d,]*)(?:\.(\d{2}))?\s*(?:pounds?|quid)\b/gi;
-const WORDS = new RegExp(`\\b((?:${NUMBER_WORD}[\\s-]+)+)(?:pounds?|quid)(?:\\s+((?:${NUMBER_WORD}[\\s-]*)+)(?=\\b))?`, 'gi');
+const WORDS = new RegExp(`\\b((?:${NUMBER_WORD}[\\s-]+)+)(?:pounds?|quid)(?:\\s+((?:${PENCE_WORD}\\b[\\s-]*)+))?`, 'gi');
 
 /** Every sum in the text, in pence, in the order said. */
 export function amountsIn(text: string): number[] {

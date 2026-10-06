@@ -67,9 +67,10 @@ const HURT = /\b(?:is|'s|has been|got|was) (?:hurt|injured|unconscious|bleeding 
 
 /** The emergency a caller's line describes, if any; a chirping carbon monoxide alarm is its own, milder kind. */
 export function detectSafety(line: string): SafetyKind | null {
+  // A denial before the words, or inside them: "the water isn't anywhere near the lights" (live, 6 October).
   const hit = (re: RegExp) => {
     const m = re.exec(line);
-    return m !== null && !NOT.test(line.slice(Math.max(0, m.index - 30), m.index));
+    return m !== null && !NOT.test(line.slice(Math.max(0, m.index - 30), m.index)) && !/\b(?:not|nowhere|never|no)\b|n'?t\b/i.test(m[0]);
   };
   if (hit(GAS)) return 'gas';
   if (CO_ALARM.test(line) && CHIRP.test(line)) return 'co_chirp';

@@ -764,6 +764,9 @@ test('sums as people say them', async () => {
   assert.deepEqual(amountsIn('£10 million cover and £5m more'), []);
   assert.deepEqual(amountsIn('ring 0800 111 999 at 8 to 12'), []);
   assert.deepEqual(amountsIn('£95.'), [9500]);
+  // Live, 6 October: "a half hour" is not a penny.
+  assert.deepEqual(amountsIn('ninety five pounds, then forty pounds a half hour'), [9500, 4000]);
+  assert.deepEqual(amountsIn('eleven pounds fifty five'), [1155]);
 });
 
 test('triage reads what is wrong, not what the caller says is fine; and the job action is read from a list sent whole', async () => {
@@ -782,4 +785,11 @@ test('triage reads what is wrong, not what the caller says is fine; and the job 
   await c.run('find_property', { postcode: home.district, number: home.number, street: home.street });
   const r = await c.run('job', { action: 'create, find, move, cancel, approve or decline', description: 'Dripping kitchen tap', name: home.occupant.name });
   assert.equal(r.error, undefined, JSON.stringify(r));
+});
+
+test('safety mode hears a denial inside the words too', async () => {
+  const { detectSafety } = await import('../src/core/safety.ts');
+  // Live, 6 October: the burst-pipe caller said the water was nowhere near the lights.
+  assert.equal(detectSafety("The water isn't anywhere near the lights, though."), null);
+  assert.equal(detectSafety('Water is coming through the light fitting in the hall.'), 'electric');
 });
