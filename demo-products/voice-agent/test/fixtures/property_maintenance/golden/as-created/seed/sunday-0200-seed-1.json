@@ -2666,7 +2666,7 @@
     {
      "at": "2026-10-08T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1036"
+     "what": "invoiced INV-1035"
     }
    ],
    "source": "seed",
@@ -2720,7 +2720,7 @@
     {
      "at": "2026-10-08T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1037"
+     "what": "invoiced INV-1036"
     }
    ],
    "source": "seed",
@@ -2774,7 +2774,7 @@
     {
      "at": "2026-10-08T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1038"
+     "what": "invoiced INV-1037"
     }
    ],
    "source": "seed",
@@ -2828,7 +2828,7 @@
     {
      "at": "2026-10-08T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1039"
+     "what": "invoiced INV-1038"
     }
    ],
    "source": "seed",
@@ -2882,7 +2882,7 @@
     {
      "at": "2026-10-08T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1040"
+     "what": "invoiced INV-1039"
     }
    ],
    "source": "seed",
@@ -2936,7 +2936,7 @@
     {
      "at": "2026-10-07T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1031"
+     "what": "invoiced INV-1030"
     }
    ],
    "source": "seed",
@@ -2990,7 +2990,7 @@
     {
      "at": "2026-10-07T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1032"
+     "what": "invoiced INV-1031"
     }
    ],
    "source": "seed",
@@ -3044,7 +3044,7 @@
     {
      "at": "2026-10-07T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1033"
+     "what": "invoiced INV-1032"
     }
    ],
    "source": "seed",
@@ -3098,7 +3098,7 @@
     {
      "at": "2026-10-07T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1034"
+     "what": "invoiced INV-1033"
     }
    ],
    "source": "seed",
@@ -3152,7 +3152,7 @@
     {
      "at": "2026-10-07T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1035"
+     "what": "invoiced INV-1034"
     }
    ],
    "source": "seed",
@@ -3206,7 +3206,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1026"
+     "what": "invoiced INV-1025"
     }
    ],
    "source": "seed",
@@ -3260,7 +3260,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1027"
+     "what": "invoiced INV-1026"
     }
    ],
    "source": "seed",
@@ -3314,7 +3314,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1028"
+     "what": "invoiced INV-1027"
     }
    ],
    "source": "seed",
@@ -3368,7 +3368,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1029"
+     "what": "invoiced INV-1028"
     }
    ],
    "source": "seed",
@@ -3422,7 +3422,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1030"
+     "what": "invoiced INV-1029"
     }
    ],
    "source": "seed",
@@ -4991,7 +4991,7 @@
     {
      "at": "2026-09-24T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1025"
+     "what": "invoiced INV-1024"
     }
    ],
    "source": "seed",
@@ -5045,7 +5045,7 @@
     {
      "at": "2026-09-18T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1024"
+     "what": "invoiced INV-1023"
     }
    ],
    "source": "seed",
@@ -5054,6 +5054,60 @@
    "trade": "damp_mould",
    "priority": "routine",
    "description": "Mould on the bathroom ceiling",
+   "kind": "repair",
+   "status": "invoiced"
+  },
+  {
+   "reference": "RY286",
+   "property_key": "saxonby_flat_2_20",
+   "client_key": null,
+   "reporter": {
+    "name": "Ellie Burke",
+    "phone": "+447700900546",
+    "role": "homeowner"
+   },
+   "reason": "Routine: leaking radiator valve in the lounge",
+   "visit_date": "2026-10-09",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Replaced the radiator valve; no leaks; heating topped up.",
+   "history": [
+    {
+     "at": "2026-10-07T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-07T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Dan"
+    },
+    {
+     "at": "2026-10-09T10:30:00.000Z",
+     "by": "Dan",
+     "what": "done"
+    },
+    {
+     "at": "2026-10-09T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1040"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-07T07:00:00.000Z",
+   "done_at": "2026-10-09T10:30:00.000Z",
+   "trade": "plumbing",
+   "priority": "routine",
+   "description": "Leaking radiator valve in the lounge",
    "kind": "repair",
    "status": "invoiced"
   }
@@ -5934,7 +5988,7 @@
  ],
  "invoices": [
   {
-   "reference": "INV-1024",
+   "reference": "INV-1023",
    "job_ref": "JQ566",
    "property_key": "wharfside_108",
    "client_key": "castle_gate",
@@ -5955,7 +6009,7 @@
    "created_at": "2026-09-18T11:30:00.000Z"
   },
   {
-   "reference": "INV-1025",
+   "reference": "INV-1024",
    "job_ref": "JA147",
    "property_key": "pennyroyal_61",
    "client_key": "harbour",
@@ -5965,7 +6019,7 @@
    },
    "kind": "job",
    "description": "Bathroom extractor fan not working (61 Pennyroyal Close (example), DE1)",
-   "amount_pence": 13500,
+   "amount_pence": 21500,
    "status": "due",
    "issued": "2026-09-24",
    "due": "2026-10-08",
@@ -5976,7 +6030,7 @@
    "created_at": "2026-09-24T11:30:00.000Z"
   },
   {
-   "reference": "INV-1026",
+   "reference": "INV-1025",
    "job_ref": "AQ454",
    "property_key": "pennyroyal_61",
    "client_key": "harbour",
@@ -5986,7 +6040,7 @@
    },
    "kind": "job",
    "description": "Cracked bedroom window (61 Pennyroyal Close (example), DE1)",
-   "amount_pence": 17500,
+   "amount_pence": 21500,
    "status": "due",
    "issued": "2026-10-06",
    "due": "2026-10-20",
@@ -5997,7 +6051,7 @@
    "created_at": "2026-10-06T11:30:00.000Z"
   },
   {
-   "reference": "INV-1027",
+   "reference": "INV-1026",
    "job_ref": "HR872",
    "property_key": "goldcrest_flat_6_101",
    "client_key": null,
@@ -6007,7 +6061,28 @@
    },
    "kind": "job",
    "description": "Gutter overflowing at the front (Flat 6, 101 Goldcrest Way (example), DE23)",
-   "amount_pence": 21500,
+   "amount_pence": 13500,
+   "status": "paid",
+   "issued": "2026-10-06",
+   "due": "2026-10-13",
+   "paid_at": "2026-10-06T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1026",
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1027",
+   "job_ref": "XA903",
+   "property_key": "corvedale_5",
+   "client_key": null,
+   "payer": {
+    "name": "Molly Kerr",
+    "phone": "+447700900556"
+   },
+   "kind": "job",
+   "description": "Front door lock stiff (5 Corvedale Road (example), DE24)",
+   "amount_pence": 17500,
    "status": "paid",
    "issued": "2026-10-06",
    "due": "2026-10-13",
@@ -6019,27 +6094,6 @@
   },
   {
    "reference": "INV-1028",
-   "job_ref": "XA903",
-   "property_key": "corvedale_5",
-   "client_key": null,
-   "payer": {
-    "name": "Molly Kerr",
-    "phone": "+447700900556"
-   },
-   "kind": "job",
-   "description": "Front door lock stiff (5 Corvedale Road (example), DE24)",
-   "amount_pence": 9500,
-   "status": "paid",
-   "issued": "2026-10-06",
-   "due": "2026-10-13",
-   "paid_at": "2026-10-06T10:30:00.000Z",
-   "paid_how": "card",
-   "card_last4": "3456",
-   "auth_code": "DEMO-1028",
-   "created_at": "2026-10-06T11:30:00.000Z"
-  },
-  {
-   "reference": "INV-1029",
    "job_ref": "RR732",
    "property_key": "millrace_14",
    "client_key": "oakfield",
@@ -6049,7 +6103,7 @@
    },
    "kind": "job",
    "description": "Back door sticking (14 Millrace Lane (example), DE21)",
-   "amount_pence": 13500,
+   "amount_pence": 9500,
    "status": "due",
    "issued": "2026-10-06",
    "due": "2026-10-20",
@@ -6060,7 +6114,7 @@
    "created_at": "2026-10-06T11:30:00.000Z"
   },
   {
-   "reference": "INV-1030",
+   "reference": "INV-1029",
    "job_ref": "AR899",
    "property_key": "kestrel_64",
    "client_key": null,
@@ -6070,18 +6124,18 @@
    },
    "kind": "job",
    "description": "Toilet not flushing (64 Kestrel Rise (example), NG9)",
-   "amount_pence": 9500,
+   "amount_pence": 17500,
    "status": "paid",
    "issued": "2026-10-06",
    "due": "2026-10-13",
    "paid_at": "2026-10-06T10:30:00.000Z",
    "paid_how": "card",
    "card_last4": "3456",
-   "auth_code": "DEMO-1030",
+   "auth_code": "DEMO-1029",
    "created_at": "2026-10-06T11:30:00.000Z"
   },
   {
-   "reference": "INV-1031",
+   "reference": "INV-1030",
    "job_ref": "RW377",
    "property_key": "thistledown_110",
    "client_key": null,
@@ -6091,7 +6145,28 @@
    },
    "kind": "job",
    "description": "Gutter overflowing at the front (110 Thistledown Road (example), DE22)",
-   "amount_pence": 21500,
+   "amount_pence": 13500,
+   "status": "paid",
+   "issued": "2026-10-07",
+   "due": "2026-10-14",
+   "paid_at": "2026-10-07T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1030",
+   "created_at": "2026-10-07T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1031",
+   "job_ref": "HY802",
+   "property_key": "wharfside_14",
+   "client_key": null,
+   "payer": {
+    "name": "Jade Lloyd",
+    "phone": "+447700900558"
+   },
+   "kind": "job",
+   "description": "Gutter overflowing at the front (14 Wharfside Mews (example), DE2)",
+   "amount_pence": 13500,
    "status": "paid",
    "issued": "2026-10-07",
    "due": "2026-10-14",
@@ -6103,27 +6178,6 @@
   },
   {
    "reference": "INV-1032",
-   "job_ref": "HY802",
-   "property_key": "wharfside_14",
-   "client_key": null,
-   "payer": {
-    "name": "Jade Lloyd",
-    "phone": "+447700900558"
-   },
-   "kind": "job",
-   "description": "Gutter overflowing at the front (14 Wharfside Mews (example), DE2)",
-   "amount_pence": 21500,
-   "status": "paid",
-   "issued": "2026-10-07",
-   "due": "2026-10-14",
-   "paid_at": "2026-10-07T10:30:00.000Z",
-   "paid_how": "card",
-   "card_last4": "3456",
-   "auth_code": "DEMO-1032",
-   "created_at": "2026-10-07T11:30:00.000Z"
-  },
-  {
-   "reference": "INV-1033",
    "job_ref": "LK641",
    "property_key": "sorrel_68",
    "client_key": "oakfield",
@@ -6144,7 +6198,7 @@
    "created_at": "2026-10-07T11:30:00.000Z"
   },
   {
-   "reference": "INV-1034",
+   "reference": "INV-1033",
    "job_ref": "RQ453",
    "property_key": "copperbeech_23",
    "client_key": "whitfield",
@@ -6154,7 +6208,7 @@
    },
    "kind": "job",
    "description": "Front door lock stiff (23 Copperbeech Way (example), NG8)",
-   "amount_pence": 17500,
+   "amount_pence": 9500,
    "status": "due",
    "issued": "2026-10-07",
    "due": "2026-10-21",
@@ -6165,7 +6219,7 @@
    "created_at": "2026-10-07T11:30:00.000Z"
   },
   {
-   "reference": "INV-1035",
+   "reference": "INV-1034",
    "job_ref": "AQ173",
    "property_key": "copperbeech_flat_2_14",
    "client_key": "castle_gate",
@@ -6186,7 +6240,7 @@
    "created_at": "2026-10-07T11:30:00.000Z"
   },
   {
-   "reference": "INV-1036",
+   "reference": "INV-1035",
    "job_ref": "AL893",
    "property_key": "ferncroft_62",
    "client_key": "oakfield",
@@ -6207,7 +6261,7 @@
    "created_at": "2026-10-08T11:30:00.000Z"
   },
   {
-   "reference": "INV-1037",
+   "reference": "INV-1036",
    "job_ref": "AH736",
    "property_key": "copperbeech_flat_5_86",
    "client_key": "harbour",
@@ -6217,7 +6271,7 @@
    },
    "kind": "job",
    "description": "Front door lock stiff (Flat 5, 86 Copperbeech Way (example), NG8)",
-   "amount_pence": 13500,
+   "amount_pence": 21500,
    "status": "due",
    "issued": "2026-10-08",
    "due": "2026-10-22",
@@ -6228,7 +6282,7 @@
    "created_at": "2026-10-08T11:30:00.000Z"
   },
   {
-   "reference": "INV-1038",
+   "reference": "INV-1037",
    "job_ref": "WK653",
    "property_key": "corvedale_5",
    "client_key": null,
@@ -6238,18 +6292,18 @@
    },
    "kind": "job",
    "description": "Blocked kitchen sink (5 Corvedale Road (example), DE24)",
-   "amount_pence": 13500,
+   "amount_pence": 21500,
    "status": "paid",
    "issued": "2026-10-08",
    "due": "2026-10-15",
    "paid_at": "2026-10-08T10:30:00.000Z",
    "paid_how": "card",
    "card_last4": "3456",
-   "auth_code": "DEMO-1038",
+   "auth_code": "DEMO-1037",
    "created_at": "2026-10-08T11:30:00.000Z"
   },
   {
-   "reference": "INV-1039",
+   "reference": "INV-1038",
    "job_ref": "YK161",
    "property_key": "linnet_flat_2_39",
    "client_key": "oakfield",
@@ -6259,7 +6313,7 @@
    },
    "kind": "job",
    "description": "Patch and paint the ceiling after a leak (Flat 2, 39 Linnet Walk (example), NG11)",
-   "amount_pence": 13500,
+   "amount_pence": 21500,
    "status": "due",
    "issued": "2026-10-08",
    "due": "2026-10-22",
@@ -6270,7 +6324,7 @@
    "created_at": "2026-10-08T11:30:00.000Z"
   },
   {
-   "reference": "INV-1040",
+   "reference": "INV-1039",
    "job_ref": "YQ603",
    "property_key": "ferncroft_49",
    "client_key": null,
@@ -6280,15 +6334,36 @@
    },
    "kind": "job",
    "description": "Front door lock stiff (49 Ferncroft Road (example), NG6)",
-   "amount_pence": 9500,
+   "amount_pence": 13500,
    "status": "paid",
    "issued": "2026-10-08",
    "due": "2026-10-15",
    "paid_at": "2026-10-08T10:30:00.000Z",
    "paid_how": "card",
    "card_last4": "3456",
-   "auth_code": "DEMO-1040",
+   "auth_code": "DEMO-1039",
    "created_at": "2026-10-08T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1040",
+   "job_ref": "RY286",
+   "property_key": "saxonby_flat_2_20",
+   "client_key": null,
+   "payer": {
+    "name": "Ellie Burke",
+    "phone": "+447700900546"
+   },
+   "kind": "job",
+   "description": "Leaking radiator valve in the lounge (Flat 2, 20 Saxonby Street (example), NG1)",
+   "amount_pence": 17500,
+   "status": "due",
+   "issued": "2026-10-09",
+   "due": "2026-10-16",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-09T11:30:00.000Z"
   },
   {
    "reference": "INV-1041",
@@ -6301,14 +6376,14 @@
    },
    "kind": "job",
    "description": "Socket not working in the bedroom (5 Corvedale Road (example), DE24)",
-   "amount_pence": 9500,
-   "status": "due",
+   "amount_pence": 21500,
+   "status": "paid",
    "issued": "2026-10-09",
    "due": "2026-10-16",
-   "paid_at": null,
-   "paid_how": null,
-   "card_last4": null,
-   "auth_code": null,
+   "paid_at": "2026-10-09T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1041",
    "created_at": "2026-10-09T11:30:00.000Z"
   },
   {
@@ -6322,7 +6397,7 @@
    },
    "kind": "job",
    "description": "Radiator cold at the top (38 Corvedale Road (example), DE24)",
-   "amount_pence": 15000,
+   "amount_pence": 9500,
    "status": "due",
    "issued": "2026-10-09",
    "due": "2026-10-23",
@@ -6343,7 +6418,7 @@
    },
    "kind": "job",
    "description": "Bathroom extractor fan not working (19 Charnwood Vale (example), LE11)",
-   "amount_pence": 15000,
+   "amount_pence": 13500,
    "status": "due",
    "issued": "2026-10-09",
    "due": "2026-10-23",

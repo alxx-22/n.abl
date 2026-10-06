@@ -18,6 +18,14 @@
    "label": "Safety log"
   },
   {
+   "id": "clients",
+   "label": "Clients"
+  },
+  {
+   "id": "money",
+   "label": "Quotes and invoices"
+  },
+  {
    "id": "messages",
    "label": "Messages"
   },

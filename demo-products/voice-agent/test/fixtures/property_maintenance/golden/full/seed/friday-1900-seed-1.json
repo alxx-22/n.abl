@@ -1330,7 +1330,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1034"
+     "what": "invoiced INV-1033"
     }
    ],
    "source": "seed",
@@ -1384,7 +1384,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1035"
+     "what": "invoiced INV-1034"
     }
    ],
    "source": "seed",
@@ -1438,7 +1438,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1036"
+     "what": "invoiced INV-1035"
     }
    ],
    "source": "seed",
@@ -1492,7 +1492,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1037"
+     "what": "invoiced INV-1036"
     }
    ],
    "source": "seed",
@@ -1546,7 +1546,7 @@
     {
      "at": "2026-10-06T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1038"
+     "what": "invoiced INV-1037"
     }
    ],
    "source": "seed",
@@ -1600,7 +1600,7 @@
     {
      "at": "2026-10-05T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1029"
+     "what": "invoiced INV-1028"
     }
    ],
    "source": "seed",
@@ -1654,7 +1654,7 @@
     {
      "at": "2026-10-05T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1030"
+     "what": "invoiced INV-1029"
     }
    ],
    "source": "seed",
@@ -1708,7 +1708,7 @@
     {
      "at": "2026-10-05T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1031"
+     "what": "invoiced INV-1030"
     }
    ],
    "source": "seed",
@@ -1762,7 +1762,7 @@
     {
      "at": "2026-10-05T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1032"
+     "what": "invoiced INV-1031"
     }
    ],
    "source": "seed",
@@ -1816,7 +1816,7 @@
     {
      "at": "2026-10-05T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1033"
+     "what": "invoiced INV-1032"
     }
    ],
    "source": "seed",
@@ -1870,7 +1870,7 @@
     {
      "at": "2026-10-03T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1026"
+     "what": "invoiced INV-1025"
     }
    ],
    "source": "seed",
@@ -1924,7 +1924,7 @@
     {
      "at": "2026-10-03T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1027"
+     "what": "invoiced INV-1026"
     }
    ],
    "source": "seed",
@@ -1978,7 +1978,7 @@
     {
      "at": "2026-10-03T11:30:00.000Z",
      "by": "office",
-     "what": "invoiced INV-1028"
+     "what": "invoiced INV-1027"
     }
    ],
    "source": "seed",
@@ -3157,6 +3157,60 @@
    "description": "Gas smell: supply capped by the emergency service; find and repair the leak",
    "kind": "repair",
    "status": "done"
+  },
+  {
+   "reference": "LY634",
+   "property_key": "saxonby_flat_2_20",
+   "client_key": null,
+   "reporter": {
+    "name": "Ellie Burke",
+    "phone": "+447700900546",
+    "role": "homeowner"
+   },
+   "reason": "Routine: leaking radiator valve in the lounge",
+   "visit_date": "2026-10-07",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "marek",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Replaced the radiator valve; no leaks; heating topped up.",
+   "history": [
+    {
+     "at": "2026-10-06T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-10-06T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Marek"
+    },
+    {
+     "at": "2026-10-07T10:30:00.000Z",
+     "by": "Marek",
+     "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1038"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-10-06T07:00:00.000Z",
+   "done_at": "2026-10-07T10:30:00.000Z",
+   "trade": "plumbing",
+   "priority": "routine",
+   "description": "Leaking radiator valve in the lounge",
+   "kind": "repair",
+   "status": "invoiced"
   }
  ],
  "certificates": [
@@ -3290,7 +3344,7 @@
  ],
  "invoices": [
   {
-   "reference": "INV-1026",
+   "reference": "INV-1025",
    "job_ref": "LJ492",
    "property_key": "saxonby_flat_3_91",
    "client_key": null,
@@ -3307,11 +3361,11 @@
    "paid_at": "2026-10-03T10:30:00.000Z",
    "paid_how": "card",
    "card_last4": "3456",
-   "auth_code": "DEMO-1026",
+   "auth_code": "DEMO-1025",
    "created_at": "2026-10-03T11:30:00.000Z"
   },
   {
-   "reference": "INV-1027",
+   "reference": "INV-1026",
    "job_ref": "JL337",
    "property_key": "saxonby_flat_2_20",
    "client_key": null,
@@ -3328,11 +3382,11 @@
    "paid_at": "2026-10-03T10:30:00.000Z",
    "paid_how": "card",
    "card_last4": "3456",
-   "auth_code": "DEMO-1027",
+   "auth_code": "DEMO-1026",
    "created_at": "2026-10-03T11:30:00.000Z"
   },
   {
-   "reference": "INV-1028",
+   "reference": "INV-1027",
    "job_ref": "YR286",
    "property_key": "saxonby_flat_3_91",
    "client_key": null,
@@ -3342,18 +3396,18 @@
    },
    "kind": "job",
    "description": "Outside drain overflowing (Flat 3, 91 Saxonby Street (example), NG1)",
-   "amount_pence": 10500,
+   "amount_pence": 13500,
    "status": "paid",
    "issued": "2026-10-03",
    "due": "2026-10-10",
    "paid_at": "2026-10-03T10:30:00.000Z",
    "paid_how": "card",
    "card_last4": "3456",
-   "auth_code": "DEMO-1028",
+   "auth_code": "DEMO-1027",
    "created_at": "2026-10-03T11:30:00.000Z"
   },
   {
-   "reference": "INV-1029",
+   "reference": "INV-1028",
    "job_ref": "KQ867",
    "property_key": "larchfield_flat_2_67",
    "client_key": null,
@@ -3363,6 +3417,27 @@
    },
    "kind": "job",
    "description": "Back door sticking (Flat 2, 67 Larchfield Close (example), NG3)",
+   "amount_pence": 13500,
+   "status": "paid",
+   "issued": "2026-10-05",
+   "due": "2026-10-12",
+   "paid_at": "2026-10-05T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1028",
+   "created_at": "2026-10-05T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1029",
+   "job_ref": "KY309",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "payer": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565"
+   },
+   "kind": "job",
+   "description": "Toilet not flushing (95 Tansy Lane (example), NG2)",
    "amount_pence": 16500,
    "status": "paid",
    "issued": "2026-10-05",
@@ -3375,27 +3450,6 @@
   },
   {
    "reference": "INV-1030",
-   "job_ref": "KY309",
-   "property_key": "tansy_95",
-   "client_key": null,
-   "payer": {
-    "name": "Kwame Reid",
-    "phone": "+447700900565"
-   },
-   "kind": "job",
-   "description": "Toilet not flushing (95 Tansy Lane (example), NG2)",
-   "amount_pence": 13500,
-   "status": "paid",
-   "issued": "2026-10-05",
-   "due": "2026-10-12",
-   "paid_at": "2026-10-05T10:30:00.000Z",
-   "paid_how": "card",
-   "card_last4": "3456",
-   "auth_code": "DEMO-1030",
-   "created_at": "2026-10-05T11:30:00.000Z"
-  },
-  {
-   "reference": "INV-1031",
    "job_ref": "JH328",
    "property_key": "larchfield_80",
    "client_key": "whitfield",
@@ -3405,7 +3459,7 @@
    },
    "kind": "job",
    "description": "Gutter overflowing at the front (80 Larchfield Close (example), NG3)",
-   "amount_pence": 13500,
+   "amount_pence": 7500,
    "status": "due",
    "issued": "2026-10-05",
    "due": "2026-10-19",
@@ -3416,7 +3470,7 @@
    "created_at": "2026-10-05T11:30:00.000Z"
   },
   {
-   "reference": "INV-1032",
+   "reference": "INV-1031",
    "job_ref": "JL350",
    "property_key": "larchfield_flat_2_67",
    "client_key": null,
@@ -3426,7 +3480,28 @@
    },
    "kind": "job",
    "description": "Gutter overflowing at the front (Flat 2, 67 Larchfield Close (example), NG3)",
-   "amount_pence": 16500,
+   "amount_pence": 7500,
+   "status": "paid",
+   "issued": "2026-10-05",
+   "due": "2026-10-12",
+   "paid_at": "2026-10-05T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1031",
+   "created_at": "2026-10-05T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1032",
+   "job_ref": "HL823",
+   "property_key": "saxonby_flat_2_20",
+   "client_key": null,
+   "payer": {
+    "name": "Ellie Burke",
+    "phone": "+447700900546"
+   },
+   "kind": "job",
+   "description": "Loose stair handrail (Flat 2, 20 Saxonby Street (example), NG1)",
+   "amount_pence": 10500,
    "status": "paid",
    "issued": "2026-10-05",
    "due": "2026-10-12",
@@ -3438,27 +3513,6 @@
   },
   {
    "reference": "INV-1033",
-   "job_ref": "HL823",
-   "property_key": "saxonby_flat_2_20",
-   "client_key": null,
-   "payer": {
-    "name": "Ellie Burke",
-    "phone": "+447700900546"
-   },
-   "kind": "job",
-   "description": "Loose stair handrail (Flat 2, 20 Saxonby Street (example), NG1)",
-   "amount_pence": 7500,
-   "status": "paid",
-   "issued": "2026-10-05",
-   "due": "2026-10-12",
-   "paid_at": "2026-10-05T10:30:00.000Z",
-   "paid_how": "card",
-   "card_last4": "3456",
-   "auth_code": "DEMO-1033",
-   "created_at": "2026-10-05T11:30:00.000Z"
-  },
-  {
-   "reference": "INV-1034",
    "job_ref": "RY768",
    "property_key": "tansy_flat_3_22",
    "client_key": "ellis",
@@ -3479,7 +3533,7 @@
    "created_at": "2026-10-06T11:30:00.000Z"
   },
   {
-   "reference": "INV-1035",
+   "reference": "INV-1034",
    "job_ref": "LR379",
    "property_key": "larchfield_flat_2_67",
    "client_key": null,
@@ -3489,18 +3543,18 @@
    },
    "kind": "job",
    "description": "Socket not working in the bedroom (Flat 2, 67 Larchfield Close (example), NG3)",
-   "amount_pence": 13500,
+   "amount_pence": 16500,
    "status": "paid",
    "issued": "2026-10-06",
    "due": "2026-10-13",
    "paid_at": "2026-10-06T10:30:00.000Z",
    "paid_how": "card",
    "card_last4": "3456",
-   "auth_code": "DEMO-1035",
+   "auth_code": "DEMO-1034",
    "created_at": "2026-10-06T11:30:00.000Z"
   },
   {
-   "reference": "INV-1036",
+   "reference": "INV-1035",
    "job_ref": "RA117",
    "property_key": "larchfield_80",
    "client_key": "whitfield",
@@ -3510,7 +3564,7 @@
    },
    "kind": "job",
    "description": "Toilet not flushing (80 Larchfield Close (example), NG3)",
-   "amount_pence": 16500,
+   "amount_pence": 7500,
    "status": "due",
    "issued": "2026-10-06",
    "due": "2026-10-20",
@@ -3521,7 +3575,7 @@
    "created_at": "2026-10-06T11:30:00.000Z"
   },
   {
-   "reference": "INV-1037",
+   "reference": "INV-1036",
    "job_ref": "QL226",
    "property_key": "larchfield_flat_2_67",
    "client_key": null,
@@ -3531,18 +3585,18 @@
    },
    "kind": "job",
    "description": "Cracked bedroom window (Flat 2, 67 Larchfield Close (example), NG3)",
-   "amount_pence": 7500,
+   "amount_pence": 10500,
    "status": "paid",
    "issued": "2026-10-06",
    "due": "2026-10-13",
    "paid_at": "2026-10-06T10:30:00.000Z",
    "paid_how": "card",
    "card_last4": "3456",
-   "auth_code": "DEMO-1037",
+   "auth_code": "DEMO-1036",
    "created_at": "2026-10-06T11:30:00.000Z"
   },
   {
-   "reference": "INV-1038",
+   "reference": "INV-1037",
    "job_ref": "YH667",
    "property_key": "tansy_95",
    "client_key": null,
@@ -3559,8 +3613,29 @@
    "paid_at": "2026-10-06T10:30:00.000Z",
    "paid_how": "card",
    "card_last4": "3456",
-   "auth_code": "DEMO-1038",
+   "auth_code": "DEMO-1037",
    "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1038",
+   "job_ref": "LY634",
+   "property_key": "saxonby_flat_2_20",
+   "client_key": null,
+   "payer": {
+    "name": "Ellie Burke",
+    "phone": "+447700900546"
+   },
+   "kind": "job",
+   "description": "Leaking radiator valve in the lounge (Flat 2, 20 Saxonby Street (example), NG1)",
+   "amount_pence": 16500,
+   "status": "due",
+   "issued": "2026-10-07",
+   "due": "2026-10-14",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-07T11:30:00.000Z"
   },
   {
    "reference": "INV-1039",
@@ -3573,7 +3648,7 @@
    },
    "kind": "job",
    "description": "Front door lock stiff (95 Tansy Lane (example), NG2)",
-   "amount_pence": 10500,
+   "amount_pence": 16500,
    "status": "paid",
    "issued": "2026-10-07",
    "due": "2026-10-14",
@@ -3594,7 +3669,7 @@
    },
    "kind": "job",
    "description": "Cracked bedroom window (81 Tansy Lane (example), NG2)",
-   "amount_pence": 13500,
+   "amount_pence": 10500,
    "status": "paid",
    "issued": "2026-10-07",
    "due": "2026-10-14",
@@ -3615,7 +3690,7 @@
    },
    "kind": "job",
    "description": "Socket not working in the bedroom (Flat 3, 91 Saxonby Street (example), NG1)",
-   "amount_pence": 16500,
+   "amount_pence": 13500,
    "status": "paid",
    "issued": "2026-10-07",
    "due": "2026-10-14",
@@ -3657,14 +3732,14 @@
    },
    "kind": "job",
    "description": "Lights keep tripping (81 Tansy Lane (example), NG2)",
-   "amount_pence": 10500,
-   "status": "due",
+   "amount_pence": 13500,
+   "status": "paid",
    "issued": "2026-10-07",
    "due": "2026-10-14",
-   "paid_at": null,
-   "paid_how": null,
-   "card_last4": null,
-   "auth_code": null,
+   "paid_at": "2026-10-07T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1043",
    "created_at": "2026-10-07T11:30:00.000Z"
   }
  ]
