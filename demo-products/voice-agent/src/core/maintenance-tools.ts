@@ -180,6 +180,7 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
     return { p, score };
   }).filter((x) => x.score >= (street && nums.length ? 6 : 4)).sort((a, b) => b.score - a.score);
   if (!scored.length) {
+    if (insurerCalling(ctx)) return { found: 0, message: "Not on our books: that's fine for a claim. Take the address and postcode, the claim number, and the policyholder's name and phone, then job create." };
     return {
       found: 0,
       message: m.customers.homeowners
@@ -399,7 +400,15 @@ async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string,
     : [];
   // A block's shared parts: the managing agent pays and instructs, so a resident hears no price and is offered no window.
   const part = p?.block ? sharedPart(words, p) : null;
-  const homeowner = (!p || p.client === null) && !part;
+  // Nor does an insurer's claims desk: the insurer pays.
+  const homeowner = (!p || p.client === null) && !part && !insurerCalling(ctx);
+  // A business's contract sets the least it gets.
+  const site = p?.client ? m.clients.find((c) => c.key === p.client) : undefined;
+  const order: JobPriority[] = ['routine', 'urgent', 'emergency'];
+  if (site?.min_priority && order.indexOf(t.priority) < order.indexOf(site.min_priority)) {
+    t.priority = site.min_priority;
+    t.reason = `${site.name}'s contract: at least ${site.min_priority}`;
+  }
   const ooh = outOfHours(ctx);
   return {
     trade: t.trade ?? 'investigate',
@@ -508,6 +517,25 @@ export function dampClocks(m: MaintenanceSettings, client: MtClient | undefined,
 const ROLES: ReporterRole[] = ['occupant', 'agent', 'landlord', 'homeowner', 'other'];
 const roleOf = (v: unknown): ReporterRole | null => (ROLES.includes(str(v)?.toLowerCase() as ReporterRole) ? (str(v)!.toLowerCase() as ReporterRole) : /tenant|live/i.test(str(v) ?? '') ? 'occupant' : null);
 
+/** An insurer's claims line ringing us: the insurer instructs and pays; the policyholder is the one we contact. */
+const insurerCalling = (ctx: ToolContext): MtClient | undefined =>
+  ctx.callerPhone ? mt(ctx).clients.find((c) => c.kind === 'insurer' && normaliseUkPhone(c.contact.phone) === ctx.callerPhone) : undefined;
+
+/** "Claim 77-23019", "claim number 77 23019": the number as given, never made up. */
+export function claimIn(words: string): string | null {
+  const m = /\bclaim(?:\s+(?:number|no\.?|ref(?:erence)?))?\s*(?:is\s+)?:?\s*([A-Z]{0,3}-?\d[\dA-Z]*(?:[\s-]\d[\dA-Z]*)?)\b/i.exec(words);
+  return m ? m[1].replace(/\s+/g, '-').toUpperCase() : null;
+}
+
+/** "Mr David Shaw, 07700 900590": the policyholder's name and phone, from what an insurer gave. */
+function policyholderOf(v: unknown): { name: string; phone: string } | null {
+  const s = str(v);
+  const number = s ? /(?:\+44\s?|0)\d[\d\s]{8,12}\d/.exec(s) : null;
+  const phone = number ? normaliseUkPhone(number[0]) : null;
+  const name = s && number ? realName(s.replace(number[0], '').replace(/[,;:]+/g, ' ').replace(/\s+/g, ' ').trim()) : undefined;
+  return phone && name ? { name, phone } : null;
+}
+
 /** The property a job is for: the one found this call, one named, or a new homeowner's from the address given. */
 async function propertyFor(args: Args, ctx: ToolContext): Promise<MtProperty | { reply: Record<string, unknown> }> {
   const m = mt(ctx);
@@ -524,18 +552,21 @@ async function propertyFor(args: Args, ctx: ToolContext): Promise<MtProperty | {
   if (role === 'occupant' && m.customers.tenant_no_client === 'contact_landlord') {
     return { reply: { done: false, message: "They rent from a landlord who isn't one of our clients, so we need the landlord's go-ahead first. Take a message (category job) with the landlord's name and number, the address and the repair." } };
   }
-  if (!m.customers.homeowners) return { reply: { done: false, message: 'We only work for landlords and agents: take a message.' } };
+  const insurer = insurerCalling(ctx);
+  if (!m.customers.homeowners && !insurer) return { reply: { done: false, message: 'We only work for landlords and agents: take a message.' } };
+  const holder = insurer ? policyholderOf(args.policyholder) : null;
+  if (insurer && !holder) return { reply: { done: false, message: "Ask for the policyholder's name and phone number, so we can arrange access with them, then call again with policyholder." } };
   const [, number = '', street = address] = /^\s*((?:flat\s*\w+,?\s*)?\d+\w?)?\s*,?\s*(.*)$/i.exec(address) ?? [];
-  const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+  const phone = holder?.phone ?? normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const p: MtProperty = {
     key: `new_${(number + street).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40)}`,
     number: number.trim(), street: street.trim(), district: pc.district, town: m.towns[0] ?? '', kind: 'house', block: null, site_name: null, client: null,
-    occupant: { name: realName(args.name) ?? null, phone, texts_ok: true }, notes: {}, access: { method: 'occupant', note: '' },
+    occupant: { name: holder?.name ?? realName(args.name) ?? null, phone, texts_ok: true }, notes: {}, access: { method: 'occupant', note: '' },
     vulnerable: [], vulnerable_consent_at: null, markers: [], gas: false, gas_appliances: 0, example: false,
   };
   const saved = await ctx.repo.addMtProperty(ctx.tenant.id, p);
   ctx.state.property = saved.key;
-  ctx.state.role = 'homeowner';
+  ctx.state.role = insurer ? 'authoriser' : 'homeowner';
   return saved;
 }
 
@@ -630,7 +661,13 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     return { booked: false, message: `We don't look after lifts: the building's lift contractor does.${block.notes.lift ? ` ${block.notes.lift}.` : ''} If someone is trapped, use triage_fault.` };
   }
   if (block) p = block;
-  const client = p.client ? m.clients.find((c) => c.key === p.client) : undefined;
+  // An insurer's claim: the insurer instructs and pays, by its claim number (never made up); what a policy covers is never said.
+  const insurer = insurerCalling(ctx);
+  const claim = claimIn(`${str(args.claim) ? `claim ${str(args.claim)}` : ''} ${description} ${ctx.state.heard.join(' ')}`);
+  if (insurer && !claim) return { booked: false, message: 'Ask for the claim number, read it back, then call again with claim.' };
+  // A policyholder with a claim number: their insurer confirms it before anything is booked on its account.
+  const claimFor = !insurer && claim && p.client === null ? m.clients.find((c) => c.kind === 'insurer' && m.customers.insurers) : undefined;
+  const client = insurer ?? claimFor ?? (p.client ? m.clients.find((c) => c.key === p.client) : undefined);
   if (client?.status === 'on_stop') return { booked: false, message: `We can't book work for ${client.name} at the moment. Take a message for the office (category client).` };
   // Already reported by another resident: added to that job before anything else is asked.
   const reporterName = realName(args.name) ?? (ctx.callerPhone === home.occupant.phone ? home.occupant.name ?? undefined : undefined);
@@ -652,16 +689,21 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   // The tool's priority stands unless the model asks for a higher one: a caller's say-so never lowers an emergency.
   const order: JobPriority[] = ['routine', 'urgent', 'emergency'];
   let priority = asked && order.includes(asked) && order.indexOf(asked) > order.indexOf(t.priority) ? asked : t.priority;
-  const name = reporterName;
+  // A business's contract sets the least it gets: a dental surgery without hot water is urgent, whatever the fault looks like.
+  if (client?.min_priority && order.indexOf(priority) < order.indexOf(client.min_priority)) {
+    priority = client.min_priority;
+    t.reason = `${client.name}'s contract: at least ${client.min_priority}`;
+  }
+  const name = reporterName ?? (insurer ? insurer.contact.name : undefined);
   if (!name) return { booked: false, message: ASK_NAME };
-  const homeowner = p.client === null;
+  const homeowner = !client;
   if (homeowner && !priceSaid(ctx.state.said, m.prices.callout_pence) && !ctx.state.priceAsked) {
     ctx.state.priceAsked = true;
     return { booked: false, message: `Not booked yet. Tell them the price first: call-out ${money(m.prices.callout_pence)}${incVat(m)}, with the first hour, then ${money(m.prices.half_hour_pence)} a half hour. If they're happy, call this again.` };
   }
   const gas = isGasTrade(m, trade) || t.gas;
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
-  const role = roleOf(args.role) ?? (ctx.state.role === 'authoriser' ? (client?.kind === 'agent' ? 'agent' : 'landlord') : homeowner ? 'homeowner' : 'occupant');
+  const role = roleOf(args.role) ?? (insurer ? 'other' : ctx.state.role === 'authoriser' ? (client?.kind === 'agent' ? 'agent' : 'landlord') : homeowner ? 'homeowner' : 'occupant');
   // Water coming in through a block's roof is made safe now, on the managing agent's emergency authority; the repair waits for them.
   if (block && client?.kind === 'block' && priority !== 'emergency' && /\b(?:leak\w*|drip\w*|water (?:is )?(?:coming|getting|pouring) (?:in|through))\b/i.test(`${description} ${ctx.state.heard.join(' ')}`) && ['roof', 'shared parts'].includes(part!)) {
     priority = 'emergency';
@@ -682,9 +724,12 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     ...(d.damp && client?.kind === 'social' ? ['damp_mould'] : []), ...(d.hazard ? ['possible_emergency_hazard'] : []),
   ];
   const base: NewJob = {
-    property_key: p.key, client_key: p.client, reporter: { name, phone, role }, trade, priority, reason: t.reason, description, kind: 'repair',
-    po: str(args.po) ?? null, notes: str(args.access) ?? null, source: source(ctx), call_id: ctx.callId || null, flags, clocks: d.clocks, created_at: ctx.now(),
+    property_key: p.key, client_key: client?.key ?? null, reporter: { name, phone, role }, trade, priority, reason: t.reason, description, kind: 'repair',
+    po: str(args.po) ?? null, notes: [claim ? `Insurance claim ${claim}.` : '', str(args.access) ?? ''].filter(Boolean).join(' ') || null,
+    source: source(ctx), call_id: ctx.callId || null, flags, clocks: d.clocks, created_at: ctx.now(), claim_ref: claim,
   };
+  // What a business or an insurer has told us to keep to, for the receptionist to follow (and say where it helps).
+  const clientNotes = client && ['commercial', 'insurer'].includes(client.kind) && client.instructions ? { client_notes: client.instructions } : {};
   // For a social landlord's damp case: who is told, and what never to say.
   const dampWords = d.damp && client?.kind === 'social' ? {
     landlord_told: `${client.name} ${d.clocks.length ? 'has been told today, with the time it was reported' : 'has been told today'}.${d.hazard ? ' It is flagged for them to decide whether it is an emergency hazard.' : ''}`,
@@ -747,6 +792,30 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
       never: `Never agree a price or a date for ${client.name}, and never give a view on what the lease says.`,
     };
   }
+  if (claimFor) {
+    const job = await ctx.repo.createJob(ctx.tenant, { ...base, status: 'awaiting_approval', reason: `${base.reason ? `${base.reason}; ` : ''}for ${claimFor.name} to confirm claim ${claim}` });
+    record(ctx, job.reference, 'job', 'committed');
+    ctx.state.awaitingApproval = true;
+    ctx.state.jobsVerified.push(job.reference);
+    if (claimFor.contact.phone) await smsTo(ctx, claimFor.contact.phone, `${ctx.tenant.profile.name}: your policyholder at ${shortAddress(p)} gave claim ${claim}: ${description}. Job ${job.reference} is waiting for you to confirm. (Demo)`);
+    if (phone) await smsTo(ctx, phone, `${ctx.tenant.profile.name}: we've sent job ${job.reference} (claim ${claim}) to ${claimFor.name} to confirm. We'll call to arrange a time once they do. (Demo)`);
+    ctx.action({ kind: 'job_created', title: `For ${claimFor.name} to confirm · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · claim ${claim} · ref ${job.reference}`, data: { reference: job.reference } });
+    return {
+      booked: false, for_insurer_to_confirm: true, reference: job.reference, reference_spoken: spokenReference(job.reference),
+      say: `As it's an insurance claim, ${claimFor.name} confirm it first. We've sent it to them, and we'll call to arrange a time once they do. It isn't booked yet.`,
+      never: 'Never say what their policy covers, whether the claim will be paid, or anything about the excess beyond the notes.', ...clientNotes,
+    };
+  }
+  // A business: how it affects trading, when they're open and how to get in, and their order number, asked once before booking.
+  const siteGate = `site:${p.key}`;
+  if (client?.kind === 'commercial' && !str(args.access) && !ctx.state.gateAsked.includes(siteGate)) {
+    ctx.state.gateAsked.push(siteGate);
+    const po = client.po_required && !str(args.po);
+    return {
+      booked: false, ...clientNotes,
+      message: `Not booked yet. Ask how it's affecting trading, their opening hours and any out-of-hours access, and who to ask for on site${po ? ', and their purchase order number' : ''}. Then call again with access${po ? ' and po' : ''}.`,
+    };
+  }
   if (client && estimate && estimate * 100 > client.works_limit_pence) {
     const job = await ctx.repo.createJob(ctx.tenant, { ...base, status: 'awaiting_approval', price_pence: estimate * 100 });
     record(ctx, job.reference, 'job', 'committed');
@@ -797,6 +866,10 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     : null;
   if (deposit) ctx.state.invoice = deposit.reference;
   if (client) await noticeToClient(ctx, client, job, p);
+  // The insurer instructed it; the policyholder is the one who lets us in.
+  if (insurer && p.occupant.phone && p.occupant.phone !== phone) {
+    await smsTo(ctx, p.occupant.phone, `${ctx.tenant.profile.name}: ${insurer.name} has asked us to come about claim ${claim}: ${description}. ${cap(windowWords(w, date, l.date))}, with ${e.first_name}. Ref ${job.reference}. Call us if that doesn't suit. (Demo)`);
+  }
   ctx.action({ kind: 'job_created', title: `${cap(priority)} · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · ${windowWords(w, date, l.date)} · ${e.first_name} · ref ${job.reference}`, data: { reference: job.reference } });
   return {
     booked: true, reference: job.reference, reference_spoken: spokenReference(job.reference), priority,
@@ -806,6 +879,10 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     remind: m.visits.adult_present ? 'Someone over 18 needs to be in.' : undefined,
     ...dampWords,
     ...(deposit ? { payment: `The ${money(deposit.amount_pence)} call-out is paid by card now: take it with take_demo_payment (for callout), giving the demo card first. If they'd rather not, the visit stays booked and the office will call.` } : {}),
+    ...(insurer ? { claim, policyholder_told: Boolean(p.occupant.phone), never: 'Never say what the policy covers or whether the claim will be paid.' } : {}),
+    // Control of Asbestos Regulations 2012, reg 4: the duty to manage it in a business's building.
+    ...(client?.kind === 'commercial' ? { asbestos: 'Say: if the building is from before 2000, the engineer checks the asbestos register before any work that disturbs it.' } : {}),
+    ...clientNotes,
   };
 }
 
@@ -1347,8 +1424,9 @@ export const MAINTENANCE_TOOLS: Record<string, Tool> = {
           priority: S('From triage_fault'), description: S('The fault, in a few words'), date: S('YYYY-MM-DD'), window: S('The window key, e.g. am or pm'),
           name: S("The caller's name"), phone: S('Only if not the calling number'), role: S('occupant, agent, landlord, homeowner or other'),
           access: S('How the engineer gets in, or a time to avoid'), vulnerable: S('Anyone vulnerable, as the caller said'), consent: B('They agreed to us noting it'),
-          po: S("The agent's purchase order number"), estimate_pounds: I('A quoted price, if there is one'),
+          po: S("The client's purchase order number"), estimate_pounds: I('A quoted price, if there is one'),
           address: S('A new customer: number and street'), postcode: S('A new customer: postcode'),
+          claim: S('An insurance claim number, as the caller said it'), policyholder: S("When an insurer rings: the policyholder's name and phone"),
         },
         ['action'],
       ),

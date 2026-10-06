@@ -173,6 +173,7 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
   medical_advice: "[Correction from the system: never give health advice. Correct yourself: for anyone unwell, their GP or NHS 111, or 999 in an emergency.]",
   invented_time:
     "[Correction from the system: no tool has given that time. Never offer a time you haven't checked: say sorry, you haven't checked yet, then call check_availability and offer only the times it returns.]",
+  cover_advice: "[Correction from the system: never say what a policy covers or whether a claim will be paid. Correct yourself: that is for their insurer to confirm.]",
   invented_price: "[Correction from the system: no tool or fact gave that price. Correct yourself: say you can't price that on the phone; the engineer prices it on the visit, or it is a free quote, and give only the prices your tools return.]",
 };
 

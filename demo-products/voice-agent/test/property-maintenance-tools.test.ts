@@ -905,3 +905,69 @@ test('a business site: the site contact who rings is the one who approves; found
   const byName = await sian.run('find_property', { postcode: 'NG1', number: 'The Copper Kettle' });
   assert.equal(byName.properties?.[0]?.property, 'hosiery_row_9', JSON.stringify(byName));
 });
+
+test('an insurer\'s claim: the claim number and the policyholder first; the insurer pays, the policyholder hears; never what is covered', async () => {
+  const t = await fernhill('pm-claim');
+  const desk = await call(t, '+447700900409');
+  desk.hear('Claim 77-23019, escape of water at 4 Holly Close, NG5 2BT, trace and access please.');
+  const who = await desk.run('find_property', {});
+  assert.match(who.caller_is, /Bramley Mutual Insurance/);
+  const none = await desk.run('find_property', { postcode: 'NG5', number: '4', street: 'Holly Close' });
+  assert.match(none.message, /that's fine for a claim.*policyholder/);
+  const tri = await desk.run('triage_fault', { description: 'Escape of water under the bathroom floor: trace and access' });
+  assert.equal(tri.price, undefined, 'the insurer pays');
+  const job = { action: 'create', description: 'Escape of water: trace and access under the bathroom', address: '4 Holly Close', postcode: 'NG5 2BT', name: 'Claims desk' };
+  const noHolder = await desk.run('job', job);
+  assert.match(noHolder.message, /policyholder's name and phone/);
+  const windows = await desk.run('job', { ...job, policyholder: 'David Shaw, 07700 900590' });
+  assert.ok(windows.windows?.length, JSON.stringify(windows));
+  const first = windows.windows[0];
+  const booked = await desk.run('job', { ...job, policyholder: 'David Shaw, 07700 900590', date: first.date, window: first.window });
+  assert.equal(booked.booked, true, JSON.stringify(booked));
+  assert.deepEqual([booked.claim, booked.price, booked.policyholder_told], ['77-23019', undefined, true]);
+  assert.match(booked.never, /what the policy covers/);
+  const row = (await repo.listJobs(t.id, { reference: booked.reference }))[0];
+  assert.deepEqual([row.client_key, row.claim_ref, row.reporter.role], ['bramley', '77-23019', 'other']);
+  const home = (await repo.getMtProperty(t.id, row.property_key!))!;
+  assert.deepEqual([home.occupant.name, home.occupant.phone, home.client], ['David Shaw', '+447700900590', null]);
+  assert.match(desk.sent.find((x) => x.to === '+447700900590')!.body, /Bramley Mutual Insurance has asked us to come about claim 77-23019/);
+
+  // A policyholder with a claim number: sent to the insurer to confirm, nothing booked, no price.
+  const ellie = await call(t, '+447700900546');
+  await ellie.run('find_property', { postcode: 'NG3', number: 'Flat 2, 20', street: 'Saxonby' });
+  ellie.hear("I've got a claim with Bramley, claim number BM-4471, for the leak.");
+  const own = await ellie.run('job', { action: 'create', description: 'Leak under the kitchen floor', name: 'Ellie Burke' });
+  assert.equal(own.for_insurer_to_confirm, true, JSON.stringify(own));
+  assert.match(own.say, /Bramley Mutual Insurance confirm it first.*It isn't booked yet\./);
+  assert.match(ellie.sent.find((x) => x.to === '+447700900409')!.body, /claim BM-4471/);
+
+  // What is covered is the insurer's to say.
+  const s = newCallState();
+  s.maintenance = true;
+  for (const line of ["Don't worry, your insurance should cover that.", "You're fully covered for escape of water.", 'The claim will be paid once they see the report.']) {
+    assert.deepEqual(checkUtterance(line, s).map((f) => f.rule), ['cover_advice'], line);
+  }
+  for (const line of ["I can't say whether it's covered: that's for Bramley to confirm.", "We'll send the report to your insurer."]) assert.deepEqual(checkUtterance(line, s), [], line);
+});
+
+test('a business: the contract sets the priority; trading, access and the order number asked once; the asbestos register', async () => {
+  const t = await fernhill('pm-cafe');
+  const sian = await call(t, '+447700900412');
+  await sian.run('find_property', { postcode: 'NG1', number: '9', street: 'Hosiery Row' });
+  const tri = await sian.run('triage_fault', { description: 'The kitchen sink is draining slowly' });
+  assert.equal(tri.priority, 'urgent');
+  assert.match(tri.reason, /The Copper Kettle's contract: at least urgent/);
+  assert.equal(tri.price, undefined);
+  const job = { action: 'create', description: 'Kitchen sink draining slowly', name: 'Sian Morris' };
+  const ask = await sian.run('job', job);
+  assert.match(ask.message, /affecting trading.*opening hours.*purchase order number/);
+  assert.match(ask.client_notes, /open 8 to 4/);
+  const windows = await sian.run('job', { ...job, access: 'Before 8, Sian opens up', po: 'CK-1182' });
+  const w = windows.windows[0];
+  const booked = await sian.run('job', { ...job, access: 'Before 8, Sian opens up', po: 'CK-1182', date: w.date, window: w.window });
+  assert.equal(booked.booked, true, JSON.stringify(booked));
+  assert.equal(booked.priority, 'urgent');
+  assert.match(booked.asbestos, /before 2000.*asbestos register/);
+  const row = (await repo.listJobs(t.id, { reference: booked.reference }))[0];
+  assert.deepEqual([row.po, row.client_key, row.priority], ['CK-1182', 'copper_kettle', 'urgent']);
+});

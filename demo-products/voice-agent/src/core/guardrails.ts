@@ -19,7 +19,7 @@ export interface Flag {
     | 'unconfirmed_acceptance' | 'disclosure_missed' | 'invented_time'
     // A repairs contractor's (presets/property-maintenance.md §8), checked only on its calls.
     | 'safety_delayed' | 'approval_claim' | 'invented_eta' | 'said_safe_appliance' | 'unsafe_diy' | 'liability_admitted' | 'legal_deadline'
-    | 'damp_blame' | 'medical_advice' | 'invented_price';
+    | 'damp_blame' | 'medical_advice' | 'invented_price' | 'cover_advice';
   text: string;
 }
 
@@ -183,6 +183,8 @@ const IFFY = /\b(?:if|only if|when|unless|whether|once)\b[^.?!]{0,20}$/i;
 // Damp and mould is the landlord's to look into: the Housing Ombudsman's point is that tenants are not blamed for their "lifestyle".
 const DAMP_BLAME = /\b(?:(?:it'?s|that'?s|is) (?:probably |likely |just )?(?:caused by|down to|because of) (?:you|your|drying|cooking|showers?|not (?:opening|heating|ventilating))|(?:drying (?:your |the )?(?:washing|clothes|laundry)|cooking|showering)(?: indoors| inside)? (?:can |does |will |may |might )?(?:contribute|cause|add|lead)|your lifestyle|lifestyle (?:damp|issue|choices?)|(?:you(?:'ll)? (?:need|have|want) to|you should|try to|make sure you|just) (?:open (?:the |your |a )?windows?|ventilate|keep (?:the |your )?(?:windows?|heating)|stop drying|dry (?:your |the )?(?:washing|clothes) (?:outside|outdoors)|wipe (?:it|the mould|down)|use (?:a )?(?:bleach|mould spray|dehumidifier)))\b/i;
 // Health is for a GP or NHS 111: never a view on symptoms, medicines or what is safe for someone's health.
+// What a policy covers, or whether a claim is paid, is the insurer's to say (presets/property-maintenance-use-cases.md, insurance claims).
+const COVER = /\b(?:(?:your|the|their) (?:policy|insurance|insurer|insurers)(?: will| should| would| does| ought to)? (?:cover|pay for|pay out)|(?:you'?re|you are|it'?s|that'?s|it is|that is|this is|should be|would be|will be) (?:fully |definitely |probably |all )?covered|(?:the )?claim (?:will|should) be (?:paid|accepted|approved))\b/i;
 const MEDICAL = /\b(?:(?:us(?:e|es|ing)|tak(?:e|es|ing)|giv(?:e|ing) (?:him|her|them)) (?:his |her |their |your )?(?:inhaler|medication|medicine|antihistamines?)|(?:it|the mould|that)(?:'s| is| isn'?t| won'?t| shouldn'?t| will not| should not| is not) (?:be )?(?:harmful|dangerous|bad|a risk) (?:to|for) (?:his|her|their|your|anyone'?s) (?:health|breathing|lungs|asthma)|keep (?:him|her|them|the (?:child|children|baby|kids)) out of (?:that|the) room|(?:it|that)(?:'s| is) (?:probably )?(?:just )?(?:a cold|nothing serious|not serious))\b/i;
 
 /** Every sum the owner set: prices, planned work, window premiums, clients' limits. */
@@ -225,6 +227,8 @@ function maintenanceFlags(text: string, state: CallState, staff: string[], m: Ma
   if (blame && !negated(text, blame.index)) flags.push({ rule: 'damp_blame', text: blame[0] });
   const medical = MEDICAL.exec(text);
   if (medical) flags.push({ rule: 'medical_advice', text: medical[0] });
+  const cover = COVER.exec(text);
+  if (cover && !negated(text, cover.index)) flags.push({ rule: 'cover_advice', text: cover[0] });
   // A price must come from the settings, the instructions, a tool, or the caller (live, 6 October: "forty pounds" for an alarm).
   const said = amountsIn(text);
   if (said.length && m) {
