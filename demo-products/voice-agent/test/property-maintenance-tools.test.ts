@@ -701,7 +701,7 @@ test("the caller's own words count: a leak they said was pouring is an emergency
   assert.match(msg.at_the_door, /we haven't sent anyone, not to let them in/);
   // A stranger to a home hears that anyone may report a repair there.
   const found = await jess.run('find_property', { postcode: 'NG3', number: '120', street: 'Larchfield Close' });
-  assert.match(found.properties[0].reporting, /Anyone may report a repair here/);
+  assert.match(found.properties[0].reporting, /Raise their repair with job create, not a message/);
 });
 
 test('prices as people say them', async () => {

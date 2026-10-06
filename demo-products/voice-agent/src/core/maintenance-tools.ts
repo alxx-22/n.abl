@@ -105,8 +105,9 @@ function propertyBrief(ctx: ToolContext, p: MtProperty, role: Role) {
     property: p.key,
     says: shortAddress(p),
     looked_after_by: client ? (known ? client.name : `${KIND_WORDS[client.kind] ?? 'a client'} we work for`) : 'the homeowner',
-    caller_is: role === 'stranger' ? 'not on file for this property' : role,
-    ...(role === 'stranger' && client ? { reporting: `Anyone may report a repair here, an agent's staff included: raise it with job create. ${client.kind === 'agent' || client.kind === 'social' ? 'The client' : 'The landlord'} approves anything over their limit on their own phone.` } : {}),
+    // "Not on file" read as "refuse" on a live call (6 October): it limits what they hear, not what they may report.
+    caller_is: role === 'stranger' ? 'someone not on file: they may report a repair here, but hear no names, times or private details' : role,
+    ...(role === 'stranger' && client ? { reporting: `Raise their repair with job create, not a message: an agent's staff report jobs for their tenants. ${client.kind === 'agent' || client.kind === 'social' ? 'The client' : 'The landlord'} approves anything over their limit on their own phone.` } : {}),
     notes: {
       stopcock: p.notes.stopcock,
       ...(known ? { boiler: p.notes.boiler, parking: p.notes.parking, pets: p.notes.pets || undefined } : {}),
@@ -1163,7 +1164,7 @@ export const MAINTENANCE_TOOLS: Record<string, Tool> = {
       description: 'Repair jobs. create: after the property, the trade and a window (or for an emergency, none); a homeowner hears the price first. find: by reference, or the calling number. move or cancel: by reference. approve or decline: sends the request to the client\'s own phone; never approved by voice. The only way a job exists.',
       parameters: obj(
         {
-          action: S('create, find, move, cancel, approve or decline'), reference: S('A job reference from their text, or a quote reference (Q and four digits)'), property: S('From find_property'), trade: S('From triage_fault'),
+          action: S('create, find, move, cancel, approve or decline'), reference: S('Only one the caller has read out: a job reference, or a quote reference. Never make one up'), property: S('From find_property'), trade: S('From triage_fault'),
           priority: S('From triage_fault'), description: S('The fault, in a few words'), date: S('YYYY-MM-DD'), window: S('The window key, e.g. am or pm'),
           name: S("The caller's name"), phone: S('Only if not the calling number'), role: S('occupant, agent, landlord, homeowner or other'),
           access: S('How the engineer gets in, or a time to avoid'), vulnerable: S('Anyone vulnerable, as the caller said'), consent: B('They agreed to us noting it'),
