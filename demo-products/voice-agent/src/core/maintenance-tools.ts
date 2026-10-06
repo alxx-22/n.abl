@@ -106,6 +106,7 @@ function propertyBrief(ctx: ToolContext, p: MtProperty, role: Role) {
     says: shortAddress(p),
     looked_after_by: client ? (known ? client.name : `${KIND_WORDS[client.kind] ?? 'a client'} we work for`) : 'the homeowner',
     caller_is: role === 'stranger' ? 'not on file for this property' : role,
+    ...(role === 'stranger' && client ? { reporting: `Anyone may report a repair here, an agent's staff included: raise it with job create. ${client.kind === 'agent' || client.kind === 'social' ? 'The client' : 'The landlord'} approves anything over their limit on their own phone.` } : {}),
     notes: {
       stopcock: p.notes.stopcock,
       ...(known ? { boiler: p.notes.boiler, parking: p.notes.parking, pets: p.notes.pets || undefined } : {}),
@@ -127,6 +128,7 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
   if (pc && !m.districts.some((d) => soundKey(d) === soundKey(pc.district))) {
     return { found: 0, outside: true, message: `We don't cover ${pc.district}: say so kindly, and suggest they look for someone local.` };
   }
+  if (pc && !number && !street) return { found: 0, message: 'Ask for the house number or name and the street, then call this again with all three.' };
   if (!pc && !street) {
     // Only the number they ring from: never read out an address for it, so a stranger learns nothing.
     const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
@@ -161,12 +163,27 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
     ctx.state.property = props[0].key;
     ctx.state.role = roleAt(ctx, props[0]);
   }
+  // The authoriser ringing about their own home hears what waits on their yes or no, so a quote is answered, not raised again.
+  const waiting = props.length === 1 && ctx.state.role === 'authoriser' ? await awaitingAt(ctx, props[0].key) : [];
   return {
     found: props.length,
     properties: props.map((p) => propertyBrief(ctx, p, roleAt(ctx, p))),
+    ...(waiting.length ? { waiting_for_their_approval: waiting, to_answer: 'For a yes or no to one of these, use job approve or decline with its reference; never raise it again.' } : {}),
     ...(props.length > 1 ? { ask: 'More than one fits: ask which, by the house number or flat.' } : {}),
     ...(nums.length > 1 && props.length === 1 && houseNumber(props[0]) !== nums[0] ? { check: `Check the number: we have ${houseNumber(props[0])}, they said ${nums[0]}.` } : {}),
   };
+}
+
+/** Jobs at a home waiting for the client's yes or no, with their quotes. */
+async function awaitingAt(ctx: ToolContext, propertyKey: string): Promise<Record<string, unknown>[]> {
+  const jobs = (await ctx.repo.listJobs(ctx.tenant.id, { property: propertyKey })).filter((j) => j.status === 'awaiting_approval');
+  if (!jobs.length) return [];
+  const quotes = await ctx.repo.listQuotes(ctx.tenant.id);
+  return jobs.map((j) => {
+    const q = quotes.find((x) => x.job_ref === j.reference && x.status === 'sent');
+    if (!ctx.state.jobsVerified.includes(j.reference)) ctx.state.jobsVerified.push(j.reference);
+    return { reference: q?.reference ?? j.reference, about: j.description.replace(/: quote Q-\d+$/, ''), amount: q || j.price_pence ? money(q?.amount_pence ?? j.price_pence!) : undefined };
+  });
 }
 
 // ── The fault ─────────────────────────────────────────────────────────────
@@ -227,9 +244,11 @@ export function triage(m: MaintenanceSettings, words: string, opts: { vulnerable
   const dontDo = m.dont_do.find((d) => new RegExp(`\\b${d.what.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(words) || d.what.split(/\s+/).some((w) => w.length > 4 && new RegExp(`\\b${w}`, 'i').test(words)));
   const on = new Set(m.trades.map((t) => t.key));
   const trade = TRADE_WORDS.find(([k, re]) => on.has(k) && re.test(words))?.[0] ?? null;
+  // An owner's example matches on its telling words, whole: "a door that won't lock" is not any sentence with "door" and "that".
+  const said = new Set(words.toLowerCase().split(/[^a-z']+/));
   const example = (xs: string[]) => xs.some((x) => {
-    const sig = x.toLowerCase().split(/[^a-z']+/).filter((w) => w.length > 3);
-    return sig.length > 0 && sig.filter((w) => words.toLowerCase().includes(w)).length >= Math.min(2, sig.length);
+    const sig = x.toLowerCase().split(/[^a-z']+/).filter((w) => w.length > 3 && !FILLER.has(w));
+    return sig.length > 0 && sig.filter((w) => said.has(w)).length >= Math.min(2, sig.length);
   });
   let level: JobPriority = EMERGENCY.test(words) || example(m.priorities.emergency.examples) ? 'emergency' : URGENT.test(words) || example(m.priorities.urgent.examples) ? 'urgent' : 'routine';
   const why = [level === 'emergency' ? 'Emergency' : level === 'urgent' ? 'Urgent' : 'Routine'];
@@ -243,6 +262,22 @@ export function triage(m: MaintenanceSettings, words: string, opts: { vulnerable
     why.push(`vulnerable occupant (${vulnerable[0]}) +1`);
   }
   return { trade, priority: level, reason: why.join('; '), gas: trade ? isGasTrade(m, trade) : false, dont_do: dontDo ?? null };
+}
+
+const FILLER = new Set(['that', 'this', 'with', 'from', 'have', 'there', 'their', 'they', 'when', 'what', 'your', 'been', 'into', 'only', 'some', 'more', 'very', 'will', 'just', 'over', 'which', 'where', 'about', 'after', 'than', 'then', 'them', 'were', 'would', 'could', 'should', 'all', 'whole', 'household']);
+
+const RANK: JobPriority[] = ['routine', 'urgent', 'emergency'];
+
+/**
+ * Triage on the receptionist's summary, raised to what the caller's own
+ * words say for the same trade: "water leak from the ceiling" is urgent,
+ * but the caller said it was pouring through (a live call, 6 October).
+ */
+function triageCall(m: MaintenanceSettings, words: string, heard: string[], opts: { vulnerable?: string[]; date: string }): Triage {
+  const t = triage(m, words, opts);
+  const said = triage(m, heard.slice(-6).join('. '), opts);
+  if (said.trade && said.trade === t.trade && RANK.indexOf(said.priority) > RANK.indexOf(t.priority)) return { ...t, priority: said.priority, reason: said.reason };
+  return t;
 }
 
 function targetWords(m: MaintenanceSettings, p: JobPriority): string {
@@ -266,7 +301,8 @@ async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string,
   if (!words) return { done: false, message: 'Ask what the problem is, in their words.' };
   const key = str(args.property) ?? ctx.state.property;
   const p = key ? await ctx.repo.getMtProperty(ctx.tenant.id, key) : null;
-  const t = triage(m, words, { vulnerable: p?.vulnerable, date: local(ctx).date });
+  const t = triageCall(m, words, ctx.state.heard, { vulnerable: p?.vulnerable, date: local(ctx).date });
+  if (t.priority === 'emergency' && t.trade) ctx.state.emergencyTrade = t.trade;
   if (t.dont_do) return { trade: null, dont_do: t.dont_do, say: `We don't do ${t.dont_do.what}. Suggest ${t.dont_do.suggest}.` };
   const checks = t.trade
     ? (Object.keys(CHECKS) as (keyof typeof CHECKS)[]).filter((k) => m.checks[k] && CHECKS[k].trades.includes(t.trade!)).map((k) => CHECKS[k].say)
@@ -436,8 +472,9 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   if (!description) return { booked: false, message: 'Say what the problem is in a few words (description), then call again.' };
   const l = local(ctx);
   // Someone vulnerable, noted with consent, can raise the priority (the owner's uplift rule).
-  const t = triage(m, description, { vulnerable: str(args.vulnerable) && bool(args.consent) ? [...p.vulnerable, str(args.vulnerable)!] : p.vulnerable, date: l.date });
-  const trade = str(args.trade) && m.trades.some((x) => x.key === str(args.trade)) ? str(args.trade)! : t.trade;
+  const t = triageCall(m, description, ctx.state.heard, { vulnerable: str(args.vulnerable) && bool(args.consent) ? [...p.vulnerable, str(args.vulnerable)!] : p.vulnerable, date: l.date });
+  // triage_fault decides the trade (rule 4): the model's own guess counts only where the words name none.
+  const trade = t.trade ?? (str(args.trade) && m.trades.some((x) => x.key === str(args.trade)) ? str(args.trade)! : null);
   if (!trade) return { booked: false, message: `Use triage_fault first to find the trade. Trades: ${m.trades.map((x) => x.key).join(', ')}.` };
   const asked = str(args.priority) as JobPriority | undefined;
   // The tool's priority stands unless the model asks for a higher one: a caller's say-so never lowers an emergency.
@@ -453,7 +490,12 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   const gas = isGasTrade(m, trade) || t.gas;
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const role = roleOf(args.role) ?? (ctx.state.role === 'authoriser' ? (client?.kind === 'agent' ? 'agent' : 'landlord') : homeowner ? 'homeowner' : 'occupant');
-  // Noted only with their consent; without it, nothing about anyone's health is kept.
+  // Noted only with their consent; without it, nothing about anyone's health is kept. Unsaid is asked, once.
+  const vulnerableGate = `consent:${p.key}`;
+  if (str(args.vulnerable) && !/^(?:none|no|n\/a)$/i.test(str(args.vulnerable)!) && bool(args.consent) === undefined && !ctx.state.gateAsked.includes(vulnerableGate)) {
+    ctx.state.gateAsked.push(vulnerableGate);
+    return { booked: false, message: 'Not booked yet. If they already said they are happy for us to note it, call again with consent true; if not, ask them first, then call again with consent true or false.' };
+  }
   const consented = str(args.vulnerable) && bool(args.consent) ? str(args.vulnerable)! : null;
   if (consented) await ctx.repo.setVulnerable(ctx.tenant.id, p.key, [...new Set([...p.vulnerable, consented])], ctx.now());
   const d = dampClocks(m, client, trade, `${description}. ${str(args.vulnerable) ?? ''}`, consented ? [...p.vulnerable, consented] : p.vulnerable, ctx.now(), l.date);
@@ -495,6 +537,18 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
 
   // Over the client's limit: their contact approves, on their own phone, before anything is booked.
   const estimate = int(args.estimate_pounds);
+  // "Go ahead with quote Q-2291": that work is already raised, waiting on the client; it is answered, not raised again.
+  const quoted = /\bQ[\s-]?(\d{4})\b/i.exec(`${description} ${str(args.reference) ?? ''} ${ctx.state.heard.slice(-4).join(' ')}`);
+  if (quoted) {
+    const [q] = await ctx.repo.listQuotes(ctx.tenant.id, { reference: `Q-${quoted[1]}` });
+    // The yes is sent to the client's phone here and now, whichever action the model reached for.
+    if (q?.status === 'sent' && q.job_ref) return { ...(await requestApproval({ reference: q.reference }, ctx)), raised_already: `Quote ${q.reference} was already raised: nothing new is booked.` };
+  }
+  // Work already priced ("as per the quote") is checked against the limit, so the amount is needed first;
+  // a tenant asking what it will cost has no quote.
+  if (client && !estimate && /\b(?:quoted?|priced|estimated?)\b/i.test(`${description} ${str(args.reference) ?? ''} ${ctx.state.heard.join(' ')}`)) {
+    return { booked: false, message: `Ask what the quote or price came to, then call again with estimate_pounds: work over ${client.name}'s limit needs their approval before it is booked.` };
+  }
   if (client && estimate && estimate * 100 > client.works_limit_pence) {
     const job = await ctx.repo.createJob(ctx.tenant, { ...base, status: 'awaiting_approval', price_pence: estimate * 100 });
     record(ctx, job.reference, 'job', 'committed');
@@ -506,7 +560,18 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     return { booked: false, awaiting_approval: true, reference: job.reference, reference_spoken: spokenReference(job.reference), say: `This needs ${client.name}'s approval first. We've asked them, and we'll call back with a time once they say yes. It isn't booked yet.`, ...dampWords };
   }
 
-  const date = str(args.date);
+  // A social landlord's damp case: who lives there decides how soon, and Meadowbank must hear it, so ask once before booking.
+  const dampGate = `damp:${p.key}`;
+  if (d.damp && client?.kind === 'social' && !str(args.vulnerable) && !ctx.state.gateAsked.includes(dampGate)) {
+    ctx.state.gateAsked.push(dampGate);
+    return { booked: false, message: 'Not booked yet. Ask whether anyone at home has asthma or another breathing problem, or is very young, elderly or pregnant, and if they are happy for us to note it. Then call again with vulnerable (or "none") and consent.' };
+  }
+  let date = str(args.date);
+  // "The morning one" picked from the windows just offered, with no date: the first free window of that kind.
+  if ((!date || !isIsoDate(date)) && str(args.window)) {
+    const picked = freeWindows(m, await ctx.repo.listJobs(ctx.tenant.id), { trade, gas, district: p.district, from: l.date, now: l }).find((f) => f.window.key === str(args.window)?.toLowerCase());
+    if (picked) date = picked.date;
+  }
   const w = date && isIsoDate(date) ? windowNamed(m, args.window, date) : undefined;
   if (!date || !isIsoDate(date) || !w) {
     const free = freeWindows(m, await ctx.repo.listJobs(ctx.tenant.id), { trade, gas, district: p.district, from: l.date, now: l });
@@ -565,10 +630,18 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
     jobs = (await ctx.repo.listJobs(ctx.tenant.id, { phone: ctx.callerPhone })).filter((j) => !['cancelled'].includes(j.status)).slice(0, 3);
   }
   if (!jobs.length) {
-    return { found: 0, message: "Nothing found. Ask for the job reference from their text. Never look a job up by address alone: say you can't give job details without the reference or a call from the number on the job." };
+    return {
+      found: 0,
+      message: ref || !ctx.callerPhone
+        ? "Nothing found. Ask for the job reference from their text. Never look a job up by address alone: say you can't give job details without the reference or a call from the number on the job."
+        : "Nothing is booked for this number, so nobody from us is due today. If they have a reference, ask for it. Never look a job up by address alone.",
+    };
   }
   const props = new Map((await ctx.repo.listMtProperties(ctx.tenant.id)).map((p) => [p.key, p]));
   const quotes = await ctx.repo.listQuotes(ctx.tenant.id);
+  const today = local(ctx).date;
+  // "Someone at my door says they're from you": only a visit on the board today means we sent someone.
+  const visiting = jobs.some((j) => j.status === 'on_the_way' || j.status === 'on_site' || (j.status === 'scheduled' && j.visit_date === today) || (j.status === 'new' && j.priority === 'emergency'));
   for (const j of jobs) {
     record(ctx, j.reference, 'job', 'found');
     if (!ctx.state.jobsVerified.includes(j.reference)) ctx.state.jobsVerified.push(j.reference);
@@ -576,6 +649,7 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
   }
   return {
     found: jobs.length,
+    ...(visiting ? {} : { today: 'Nobody from us is booked to visit today.' }),
     jobs: jobs.map((j) => {
       const q = j.status === 'awaiting_approval' ? quotes.find((x) => x.job_ref === j.reference && x.status === 'sent') : undefined;
       return { ...jobWords(ctx, j, j.property_key ? props.get(j.property_key) ?? null : null), ...(q ? { quote: `${q.reference}, ${money(q.amount_pence)}${incVat(mt(ctx))}` } : {}) };
@@ -702,6 +776,8 @@ async function checkWindowsTool(args: Args, ctx: ToolContext): Promise<Record<st
   const m = mt(ctx);
   const trade = str(args.trade);
   if (!trade || !m.trades.some((t) => t.key === trade)) return { error: `trade must be one of: ${m.trades.map((t) => t.key).join(', ')}` };
+  // An emergency has no window: the engineer is paged (a live call offered tomorrow's slots for a burst pipe, 6 October).
+  if (ctx.state.emergencyTrade === trade) return { windows: [], message: 'This is an emergency: no window. Raise it now with job create; the engineer is paged and we aim to attend within the target.' };
   const key = str(args.property) ?? ctx.state.property;
   const p = key ? await ctx.repo.getMtProperty(ctx.tenant.id, key) : null;
   const l = local(ctx);
@@ -879,7 +955,26 @@ export async function maintenanceMessage(args: Args, ctx: ToolContext): Promise<
   const mobile = normaliseUkPhone(member?.mobile);
   if (urgency === 'urgent' && mobile) await smsTo(ctx, mobile, `${p.name} URGENT message from ${name} (${displayUkPhone(phone)}): ${body}`);
   ctx.action({ kind: 'message_taken', title: `Message for ${member?.first_name ?? 'the office'} · ${category}`, detail: `${name}: ${body}${phone ? ` · ${displayUkPhone(phone)}` : ''}` });
-  return { taken: true, for: member?.first_name ?? 'the office', urgency, note: urgency === 'urgent' ? 'Tell them it has gone to the team straight away.' : 'Tell them the office will call back.' };
+  return {
+    taken: true, for: member?.first_name ?? 'the office', urgency, note: urgency === 'urgent' ? 'Tell them it has gone to the team straight away.' : 'Tell them the office will call back.',
+    ...(await atTheDoor(ctx, `${body} ${ctx.state.heard.slice(-3).join(' ')}`)),
+  };
+}
+
+const DOOR = /\b(?:at (?:my|the) (?:front )?door|on (?:my|the) doorstep|says? (?:he|she|they)(?:'s| is| are)? from|claim(?:s|ing) to be from|wasn'?t expecting (?:anyone|anybody|him|her|them))\b/i;
+
+/**
+ * "Someone at my door says they're from you": the board decides. A visit
+ * on it today is ours (ask to see ID); none means we haven't sent anyone.
+ */
+async function atTheDoor(ctx: ToolContext, words: string): Promise<Record<string, unknown>> {
+  if (!DOOR.test(words) || !ctx.callerPhone) return {};
+  const today = local(ctx).date;
+  const jobs = await ctx.repo.listJobs(ctx.tenant.id, { phone: ctx.callerPhone });
+  const ours = jobs.find((j) => j.status === 'on_the_way' || j.status === 'on_site' || (j.status === 'scheduled' && j.visit_date === today));
+  return ours
+    ? { at_the_door: `${firstName(mt(ctx), ours.engineer_key) || 'Our engineer'} is booked with them today: they can ask to see photo ID before letting them in.` }
+    : { at_the_door: "Nobody from us is booked to visit today: say we haven't sent anyone, not to let them in, and to ring 101, or 999 if they feel unsafe." };
 }
 
 /** The office hours, the visit windows and tonight's cover by trade: never a name. */
@@ -1026,7 +1121,7 @@ export const MAINTENANCE_TOOLS: Record<string, Tool> = {
       description: 'Repair jobs. create: after the property, the trade and a window (or for an emergency, none); a homeowner hears the price first. find: by reference, or the calling number. move or cancel: by reference. approve or decline: sends the request to the client\'s own phone; never approved by voice. The only way a job exists.',
       parameters: obj(
         {
-          action: S('create, find, move, cancel, approve or decline'), reference: S('The job reference, or a quote such as Q-2291'), property: S('From find_property'), trade: S('From triage_fault'),
+          action: S('create, find, move, cancel, approve or decline'), reference: S('A job reference from their text, or a quote reference (Q and four digits)'), property: S('From find_property'), trade: S('From triage_fault'),
           priority: S('From triage_fault'), description: S('The fault, in a few words'), date: S('YYYY-MM-DD'), window: S('The window key, e.g. am or pm'),
           name: S("The caller's name"), phone: S('Only if not the calling number'), role: S('occupant, agent, landlord, homeowner or other'),
           access: S('How the engineer gets in, or a time to avoid'), vulnerable: S('Anyone vulnerable, as the caller said'), consent: B('They agreed to us noting it'),

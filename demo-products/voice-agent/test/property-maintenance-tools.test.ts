@@ -604,10 +604,74 @@ test('damp and mould: the receptionist never blames the tenant or gives health a
   const rules = (line: string) => checkUtterance(line, c.ctx.state, ['Grace'], t.profile.maintenance).map((f) => f.rule);
   assert.deepEqual(rules("It's probably caused by drying clothes indoors."), ['damp_blame']);
   assert.deepEqual(rules('You should open your windows more often.'), ['damp_blame']);
+  // From a live call on 6 October: half an answer is still blame.
+  assert.deepEqual(rules('While drying washing indoors can contribute to moisture, I can\'t say what caused it.'), ['damp_blame']);
   assert.deepEqual(rules('Keep him out of that room for now.'), ['medical_advice']);
   assert.deepEqual(rules('Make sure he uses his inhaler.'), ['medical_advice']);
   assert.deepEqual(rules('Give him his inhaler if he needs it.'), ['medical_advice']);
   // Kind, and pointed the right way: no flag.
   assert.deepEqual(rules("I'm sorry you're dealing with this. It's not something you've done. If he feels unwell, your GP or NHS 111 can help."), []);
   assert.deepEqual(rules("I've passed it to Meadowbank Housing today, and flagged it for them to look at urgently."), []);
+});
+
+test('the job tool steers the call: a quote is answered not raised again, damp asks who lives there, consent is asked, and "the morning one" needs no date', async () => {
+  const t = await fernhill('pm-steer');
+  // Mrs Ellis finds her flat: what waits on her is listed, and "go ahead with Q-2291" as a new job sends the approval instead.
+  const jean = await call(t, '+447700900404');
+  const found = await jean.run('find_property', { postcode: 'NG2', number: 'Flat 3, 22', street: 'Tansy Lane' });
+  assert.equal(found.waiting_for_their_approval[0].reference, 'Q-2291');
+  jean.hear("I'd like to go ahead with quote Q-2291 for the boiler.");
+  const raised = await jean.run('job', { action: 'create', description: 'New boiler as per the quote', trade: 'gas_heating', name: 'Jean Ellis' });
+  assert.deepEqual([raised.request_sent, raised.quote, raised.raised_already], [true, 'Q-2291', 'Quote Q-2291 was already raised: nothing new is booked.']);
+  assert.equal((await repo.listJobs(t.id)).filter((j) => j.description.includes('as per the quote')).length, 0);
+  // A Meadowbank damp report: asked once who lives there, then once for consent when a condition is given without it.
+  const nadia = await call(t, '+447700900571');
+  await nadia.run('find_property', { postcode: 'DE23', number: 'Flat 2, 7', street: 'Larkspur Walk' });
+  const base = { action: 'create', description: 'Black mould on the bedroom wall', trade: 'damp_mould', name: 'Nadia Hussain' };
+  assert.match((await nadia.run('job', base)).message, /asthma or another breathing problem/);
+  assert.match((await nadia.run('job', { ...base, vulnerable: 'a son with asthma' })).message, /call again with consent true/);
+  // "The morning one", with no date: the first free morning.
+  const booked = await nadia.run('job', { ...base, vulnerable: 'a son with asthma', consent: true, window: 'am' });
+  assert.equal(booked.booked, true, JSON.stringify(booked));
+  assert.match(booked.when, /morning window/);
+  // Nothing on the board for a caller: "nobody from us is due today".
+  const aisha = (await repo.listMtProperties(t.id)).find((p) => p.key === 'larchfield_120')!;
+  for (const j of await repo.listJobs(t.id, { property: aisha.key })) if (!['done', 'invoiced'].includes(j.status)) await repo.updateJob(t.id, j.reference, { status: 'cancelled' }, 'test');
+  const door = await (await call(t, aisha.occupant.phone)).run('job', { action: 'find' });
+  assert.ok(door.found === 0 ? /nobody from us is due today/.test(door.message) : door.today === 'Nobody from us is booked to visit today.', JSON.stringify(door));
+});
+
+test("the caller's own words count: a leak they said was pouring is an emergency, a guessed trade loses to the fault, and \"someone at my door\" is answered from the board", async () => {
+  const t = await fernhill('pm-own-words');
+  const home = (await repo.listMtProperties(t.id)).find((p) => p.key === 'larchfield_120')!;
+  for (const j of await repo.listJobs(t.id, { property: home.key })) if (!['done', 'invoiced'].includes(j.status)) await repo.updateJob(t.id, j.reference, { status: 'cancelled' }, 'test');
+  // Live, 6 October: the summary said "water leak from kitchen ceiling"; the caller said pouring.
+  const c = await call(t, home.occupant.phone, NIGHT);
+  c.hear("Water is pouring through my kitchen ceiling from the bathroom above!");
+  await c.run('find_property', { postcode: 'NG3', number: '120', street: 'Larchfield Close' });
+  assert.equal((await c.run('triage_fault', { description: 'water leak from kitchen ceiling' })).priority, 'emergency');
+  // An emergency has no window to offer.
+  assert.match((await c.run('check_windows', { trade: 'plumbing', property: home.key })).message, /This is an emergency: no window/);
+  const r = await c.run('job', { action: 'create', description: 'water leak from kitchen ceiling', trade: 'plumbing', name: home.occupant.name });
+  assert.equal(r.priority, 'emergency');
+  // A postcode alone asks for the rest, rather than "not on our books".
+  assert.match((await c.run('find_property', { postcode: 'NG5' })).message, /Ask for the house number or name and the street/);
+  // "A door that won't lock" is the owner's example; "I'd like to book that in" about a door is not it.
+  const jess = await call(t, '+447700900411');
+  jess.hear("The rotten back door and frame need replacing, and I'd like to book that in.");
+  assert.equal((await jess.run('triage_fault', { description: 'Replace the rotten back door and frame' })).priority, 'routine');
+  // A chirping carbon monoxide alarm is the electrician's, whatever trade the model passes.
+  const sam = await call(t, '+447700900501');
+  await sam.run('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
+  const w = (await sam.run('job', { action: 'create', description: 'CO alarm chirping once a minute', trade: 'gas_heating', name: 'Sam Ortiz' })).windows[0];
+  const chirp = await sam.run('job', { action: 'create', description: 'CO alarm chirping once a minute', trade: 'gas_heating', name: 'Sam Ortiz', date: w.date, window: w.window });
+  assert.equal((await repo.listJobs(t.id, { reference: chirp.reference }))[0].trade, 'electrical');
+  // Someone at the door, and nothing on the board for them today.
+  const aisha = await call(t, home.occupant.phone);
+  aisha.hear("There's a man at my door saying he's from Fernhill to check my boiler, but I wasn't expecting anyone.");
+  const msg = await aisha.run('take_message', { name: 'Aisha Patel', message: 'Man at the door says he is from us; not expecting anyone.', category: 'safety', urgency: 'urgent' });
+  assert.match(msg.at_the_door, /we haven't sent anyone, not to let them in/);
+  // A stranger to a home hears that anyone may report a repair there.
+  const found = await jess.run('find_property', { postcode: 'NG3', number: '120', street: 'Larchfield Close' });
+  assert.match(found.properties[0].reporting, /Anyone may report a repair here/);
 });

@@ -35,14 +35,15 @@ export function jobBadges(j: LiveJob): { label: string; level: string }[] {
   if (j.vulnerable.length || j.flags.includes('vulnerable')) out.push({ label: 'Vulnerable', level: 'bad' });
   // A clock counts down on the card: an Awaab's Law investigation by a day, an emergency hazard by a time.
   for (const c of j.clocks) {
-    const when = c.due.length > 10
-      ? new Date(c.due).toLocaleString('en-GB', { weekday: 'short', hour: 'numeric', minute: '2-digit' })
-      : new Date(`${c.due}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+    // Short enough for a card: "Due Mon 12 Oct", or for a 24-hour clock "Due Tue 7:50am".
+    const d = c.due.length > 10 ? new Date(c.due) : new Date(`${c.due}T12:00:00Z`);
+    const part = (o: Intl.DateTimeFormatOptions) => d.toLocaleString('en-GB', { ...o, ...(c.due.length > 10 ? {} : { timeZone: 'UTC' }) });
+    const when = `${part({ weekday: 'short' })} ${c.due.length > 10 ? part({ hour: 'numeric', minute: '2-digit', hour12: true }).replace(' ', '') : `${part({ day: 'numeric' })} ${part({ month: 'short' })}`}`;
     if (j.status === 'cancelled') continue;
     if (j.done_at) {
       const met = c.due.length > 10 ? j.done_at <= c.due : j.done_at.slice(0, 10) <= c.due;
       out.push({ label: met ? 'Within the clock' : 'Clock missed', level: met ? 'ok' : 'bad' });
-    } else out.push({ label: `${c.kind.startsWith('awaab') ? 'Investigate' : 'Due'} by ${when}`, level: 'bad' });
+    } else out.push({ label: `Due ${when}`, level: 'bad' });
   }
   if (j.flags.includes('duty_manager')) out.push({ label: 'Duty manager told', level: 'bad' });
   if (j.flags.includes('possible_emergency_hazard')) out.push({ label: 'Possible hazard: landlord decides', level: 'bad' });

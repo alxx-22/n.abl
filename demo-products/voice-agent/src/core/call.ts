@@ -132,6 +132,10 @@ const MAX_RECOVERIES = 2;
  */
 const CONTEXTUAL_WATCHDOG_MS = 4000;
 
+/** A repairs contractor's: its jobs are booked with the job tool, not create_booking. */
+const MT_UNCONFIRMED =
+  '[Correction from the system: nothing has been booked yet: job create has not returned a reference in this call, so any reference you said is wrong. Tell the caller you just need to finalise it, then call job create now with the date and window they chose. Only then give the reference it returns.]';
+
 const CORRECTIONS: Record<Flag['rule'], string> = {
   unconfirmed_claim:
     '[Correction from the system: nothing has been booked or ordered yet. No create_booking, modify_booking or confirm_order has succeeded in this call. Tell the caller you just need to finalise it, read the details back, and call the tool now. Only then give the reference.]',
@@ -623,7 +627,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.record('guardrail', f);
     // Correct it on the call, not just in the log: the next thing the
     // agent does is put it right.
-    if (correct) this.session?.sendText(CORRECTIONS[f.rule]);
+    if (correct) this.session?.sendText(f.rule === 'unconfirmed_claim' && this.state.maintenance ? MT_UNCONFIRMED : CORRECTIONS[f.rule]);
   }
 
   /** Tool flags held for the turn's words: raised only if, with them in, the line is still unsaid. */

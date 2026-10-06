@@ -131,6 +131,8 @@ export interface CallState {
   paged: boolean;
   /** The invoice this call found or raised: what take_demo_payment pays by default. */
   invoice: string | null;
+  /** The trade triage_fault called an emergency on this call: no visit window is offered for it. */
+  emergencyTrade: string | null;
 }
 
 export function newCallState(): CallState {
@@ -142,7 +144,7 @@ export function newCallState(): CallState {
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
-    invoice: null,
+    invoice: null, emergencyTrade: null,
   };
 }
 

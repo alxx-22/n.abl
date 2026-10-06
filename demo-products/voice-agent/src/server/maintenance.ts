@@ -10,7 +10,7 @@ import type { JobPatch, Repo } from '../db/repo.ts';
 import type { Bus } from './bus.ts';
 import { certState } from '../core/maintenance-tools.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
-import { isIsoDate, spokenDate, spokenTime, toLocal } from '../domain/time.ts';
+import { addDays, isIsoDate, spokenDate, spokenTime, toLocal } from '../domain/time.ts';
 import type { Job, JobStatus, Tenant } from '../domain/types.ts';
 import { checkWindow, freeWindows, onCallAt, unable, windowOf } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
@@ -233,8 +233,9 @@ export async function jobAction(
       }
       if (b.answer !== 'yes') throw new HttpError(400, 'Approve or decline?');
       // Approved: booked into the first free window with someone who can do it, and the tenant told when.
-      const slots = freeWindows(m, await repo.listJobs(t.id), { trade: job.trade, gas: job.flags.includes('gas'), district: p?.district, from: today.date, now: today, limit: 1 });
-      const slot = slots[0];
+      // From tomorrow, so the tenant has notice, and a window without the evening's extra charge if there is one.
+      const slots = freeWindows(m, await repo.listJobs(t.id), { trade: job.trade, gas: job.flags.includes('gas'), district: p?.district, from: addDays(today.date, 1), now: today, limit: 6 });
+      const slot = slots.find((x) => !x.window.premium_pence) ?? slots[0];
       const patch = slot ? { status: 'scheduled' as const, visit_date: slot.date, window_key: slot.window.key, engineer_key: slot.engineers[0].key } : { status: 'new' as const };
       const r = await update(job.reference, patch, `approved by ${who}${slot ? `; booked ${spokenDate(slot.date)} ${inSentence(slot.window.label)} with ${slot.engineers[0].first_name}` : ''}`, { by: who, from: ['awaiting_approval'] });
       if (!r) throw new HttpError(409, 'That job has moved on: refresh and try again.');

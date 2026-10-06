@@ -125,7 +125,11 @@ async function runOne(s: Scenario, repo: Repo, db: Awaited<ReturnType<typeof ope
   call.on('transcript', (l) => {
     if (l.role === 'agent') agentActive = Date.now();
   });
-  call.on('action', () => (agentActive = Date.now()));
+  call.on('action', (a) => {
+    agentActive = Date.now();
+    // Someone on another device (a landlord's phone, an engineer's) acting while the call is on.
+    void Promise.resolve(s.during?.({ action: a, repo, tenant, now: clock(), note: (n) => call.note(n) })).catch(() => {});
+  });
   call.on('hangup', () => (hungUp = true));
   caller.on('outputTranscript', (t) => {
     callerText += t;

@@ -514,6 +514,10 @@ svg.house .door { fill: var(--accent); }
 .register-row { width: 100%; text-align: left; display: grid; gap: 4px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; }
 .register-detail { padding: 8px 10px; display: grid; gap: 10px; }
 .certs, .safety-log { width: 100%; border-collapse: collapse; font-size: 13px; }
+/* Quotes and invoices: a reference on one line, and the two buttons side by side. */
+.money td:first-child b, .money td:nth-child(3) { white-space: nowrap; }
+.money td.actions .row-tools { flex-wrap: nowrap; }
+.money td.actions button { white-space: nowrap; }
 .certs th, .certs td, .safety-log th, .safety-log td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .safety-log th, .certs th { color: var(--muted); font-weight: 600; font-size: 12px; }
 @media (max-width: 640px) {

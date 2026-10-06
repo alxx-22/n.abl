@@ -1,4 +1,4 @@
-# Handover: the receptionist demo service (5 October 2026)
+# Handover: the receptionist demo service (6 October 2026)
 
 For the next session. Read `CLAUDE.md` (rules and commands) first, then this.
 
@@ -259,10 +259,57 @@ step; windows and engineers live in `profile.maintenance`, not
 `profile.booking`; the Properties view's id is `compliance`; engineers keep
 the estate agent's staff roles (`other`).
 
-Not done (M2 and M3 in the spec): approvals on the authoriser's phone,
-quotes and invoices, social housing and Awaab's Law clocks, block managers,
-commercial sites and insurers, the escalation timer, Scotland's bank
-holidays (it counts England's for now).
+Not done (M3 in the spec): block managers, commercial sites and insurers,
+the compliance portfolio, the demo clock, incident notice and engineer
+absence, the property editor, the KPI strip, surge day, relay and
+language support, Scotland's bank holidays (it counts England's for now).
+M2 is section 4 below.
+
+### 4. Property maintenance: M2 built (6 October)
+
+Alex said "go on next milestone", directly and in small steps. Each step
+was committed and pushed with `npm run check` green, and the repairs
+goldens re-recorded in their own named commit each time (the restaurant's
+and the estate agent's never changed):
+
+1. Quotes and invoices: migration `voice_0007_mt_money`
+   (`voice_mt_quotes`, `voice_mt_invoices`), applied to Supabase and
+   recorded. The seed has four quotes waiting (Q-2291 among them), one
+   approved, one declined, and 21 invoices (two from last month overdue;
+   Ellie Burke, a Call as homeowner, still owes). Jobs: *Invoice* on a
+   finished job.
+2. Approvals on the client's own phone, never by voice (decision 4). Call
+   as lists every client's phone, with Approve and Decline; Approve books
+   the first free window from tomorrow, without the evening's extra
+   charge, and texts the tenant. Off-call events reach a live call as a
+   note (`CallNote`, `Bus.note`, `CallSession.note`): approvals, and pages
+   accepted, declined or unanswered.
+3. `find_invoice` and the repairs `take_demo_payment` (demo card only);
+   *Homeowners pay the call-out by card when booking* in the prices step.
+4. Social housing: Meadowbank Housing (six sample homes; 76 in all), "we
+   act as their agent", the Awaab's Law 10-working-day clock on a damp
+   job (England, social, agent), a possible emergency hazard flagged for
+   the landlord to decide, consent before noting health, guardrails
+   `damp_blame` and `medical_advice`. Seed: an open damp case labelled
+   from Meadowbank's repairs policy, a hazard made safe, and the
+   1 November 2026 electrical deadline on its homes.
+5. Paging escalation: no answer in 15 minutes (a builder field) pages the
+   other engineer on call, then texts the duty manager (`startPager` in
+   `src/server/maintenance.ts`, every 30 s; *No answer* on the card).
+6. Views *Clients* and *Quotes and invoices* (Remind, Paid by bank), and
+   Call as: Jess at Harbour Lettings, Jean Ellis (Q-2291), Nadia Hussain
+   (Meadowbank, damp and asthma).
+7. The four M2 live calls (below), the walk with M2 screens, this note.
+
+How it differs from the spec: the client's contact is the authoriser (an
+agent's staff, like Jess, raise jobs; only the contact's phone approves);
+Invoiced is a badge in "done and invoiced" below the board, not a column;
+the job tool sends the approval itself when a caller asks to "go ahead
+with Q-2291" as a new job, and asks once about breathing problems before
+booking a social landlord's damp job.
+
+The prompt at its largest is now about 6,960 characters (limit 7,000):
+new guidance goes in tool answers.
 
 ## Where things stand
 

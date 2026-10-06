@@ -771,6 +771,13 @@ quotes and invoices with demo payments; Awaab clocks and damp and mould;
 paging escalation and async events into a live call; Clients and Money views;
 *Call as*.
 
+*Built 6 October* (HANDOFF.md, "Property maintenance: M2 built"), with
+these differences: the client's contact is the authoriser (an agent's
+staff raise jobs; only the contact's phone approves); approving books the
+first free window from tomorrow without a window premium; Invoiced is a
+badge below the board rather than a column; the view ids are `clients`
+and `money` ("Quotes and invoices"); migration `voice_0007_mt_money`.
+
 **M3. The rest**: blocks, commercial and insurers; the compliance portfolio;
 demo clock; incident notice and engineer absence; the property editor; KPI
 strip; surge day; relay and language support.

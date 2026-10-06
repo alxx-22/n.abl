@@ -41,7 +41,7 @@ export function Money({ id, state, onDone }: { id: string; state: LiveState; onD
     <div className="compliance">
       <h3 className="sub">Quotes</h3>
       {quotes.length ? (
-        <table className="certs">
+        <table className="certs money">
           <thead><tr><th scope="col">Quote</th><th scope="col">For</th><th scope="col">Amount</th><th scope="col">State</th></tr></thead>
           <tbody>
             {quotes.map((q) => (
@@ -63,7 +63,7 @@ export function Money({ id, state, onDone }: { id: string; state: LiveState; onD
         <label className="small inline-check"><input type="checkbox" checked={show === 'unpaid'} onChange={(e) => setShow(e.target.checked ? 'unpaid' : 'all')} /> Unpaid only</label>
       </div>
       {shown.length ? (
-        <table className="certs">
+        <table className="certs money">
           <thead><tr><th scope="col">Invoice</th><th scope="col">For</th><th scope="col">Amount</th><th scope="col">State</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
           <tbody>
             {shown.map((i) => (
@@ -75,7 +75,7 @@ export function Money({ id, state, onDone }: { id: string; state: LiveState; onD
                   <span className={`badge ${INVOICE[i.status].level}`}>{INVOICE[i.status].label}</span>
                   <span className="small muted block">{i.status === 'paid' ? `${i.paid_how === 'card' ? `Demo card …${i.card_last4}` : 'Bank transfer'}${i.paid_at ? `, ${day(i.paid_at)}` : ''}` : `Due ${day(i.due)}`}</span>
                 </td>
-                <td>
+                <td className="actions">
                   {i.status === 'due' || i.status === 'overdue' ? (
                     <div className="row-tools">
                       <button type="button" className="small" disabled={busy} onClick={() => act(i.reference, 'remind')}>Remind</button>

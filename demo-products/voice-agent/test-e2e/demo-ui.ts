@@ -605,6 +605,8 @@ async function walkEstate({ shot }: Walk) {
 
 async function walkMaintenance({ shot }: Walk) {
   const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+  // Toasts from the last action clear in a few seconds: wait, so they don't cover the screenshot.
+  const calm = () => page.waitForFunction(() => !document.querySelector('.toast'), undefined, { timeout: 15000 }).catch(() => {});
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => m.type() === 'error' && !/40[1349]|scout/.test(m.text()) && errors.push(`console: ${m.text()}`));
   const saved = () => page.waitForSelector('.save-state.saved', { timeout: 10000 });
@@ -648,6 +650,7 @@ async function walkMaintenance({ shot }: Walk) {
   await saved();
   await shot(page, 'builder-area');
   await next('Who you work for');
+  if (!(await page.getByRole('switch', { name: /We act as their agent for repairs/ }).isChecked())) throw new Error("Meadowbank's agent answer is not on");
   await page.click('button:has-text("+ Add a client")');
   await page.locator('input[aria-label="Client name"]').last().fill('Parkside Lettings');
   await page.getByLabel('Contact', { exact: true }).last().fill('Ruth Mills');
@@ -758,6 +761,50 @@ async function walkMaintenance({ shot }: Walk) {
   await page.waitForSelector('.safety-log');
   if (!(await page.locator('.safety-log').textContent())!.includes('A smell of gas')) throw new Error('the gas call is not in the safety log');
   await shot(page, 'workspace-safety-log');
+
+  // Clients: what waits on each, and the housing association that Fernhill acts for.
+  await page.click('.tabs [role=tab]:has-text("Clients")');
+  await page.waitForSelector('.register');
+  const meadowbank = page.locator('.register li', { hasText: 'Meadowbank Housing' });
+  await meadowbank.locator('.register-row').click();
+  await page.waitForSelector('.register-detail:has-text("Approves")');
+  await calm();
+  await shot(page, 'workspace-clients');
+
+  // Quotes and invoices: an overdue bill reminded by text, and one marked paid by bank transfer.
+  await page.click('.tabs [role=tab]:has-text("Quotes and invoices")');
+  await page.waitForSelector('.certs');
+  if (!(await page.locator('.compliance').textContent())!.includes('Q-2291')) throw new Error('Q-2291 is not on the quotes');
+  await calm();
+  await shot(page, 'workspace-money');
+  const late = page.locator('.certs tr', { has: page.locator('.badge.bad', { hasText: 'Overdue' }) }).first();
+  await late.locator('button:has-text("Remind")').click();
+  await page.waitForSelector('.toast:has-text("Reminder sent")', { timeout: 10000 });
+  await late.locator('button:has-text("Paid by bank")').click();
+  await page.waitForSelector('.toast:has-text("marked paid by bank transfer")', { timeout: 10000 });
+
+  // The landlord's own phone: Mrs Ellis approves Q-2291 there, and the job is booked.
+  await page.getByLabel('Call as').selectOption({ label: 'Jean Ellis, a landlord with quote Q-2291' });
+  await page.waitForSelector('.job-sheet:has-text("Quote Q-2291")');
+  await shot(page, 'workspace-approval-phone');
+  await page.locator('.job-sheet .page-alert', { hasText: 'Q-2291' }).locator('button:has-text("Approve")').click();
+  await page.waitForSelector('.toast:has-text("Quote Q-2291 approved")', { timeout: 10000 });
+  await page.waitForSelector('.sms:has-text("quote Q-2291 approved")', { timeout: 10000 });
+  await calm();
+  await shot(page, 'workspace-approval-done');
+
+  // The damp case on the clock: Meadowbank's, counting down on its card.
+  await page.click('.tabs [role=tab]:has-text("Dispatch")');
+  await page.click('.tabs [role=tab]:has-text("Jobs")');
+  await page.waitForSelector('.jobs-board');
+  const clocked = page.locator('.ticket.job', { has: page.locator('.badge', { hasText: /^Due / }) }).first();
+  if (await clocked.count()) {
+    await clocked.locator('button:has-text("More")').click();
+    // A full-page shot of a scrolled page draws the sticky header halfway down.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await calm();
+    await shot(page, 'workspace-damp-clock');
+  }
 
   // The engineer's phone, and Call as a tenant.
   await page.getByLabel('Call as').selectOption({ label: 'Dan, engineer' });
