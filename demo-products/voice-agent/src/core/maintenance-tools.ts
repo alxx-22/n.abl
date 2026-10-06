@@ -345,6 +345,43 @@ function outOfHours(ctx: ToolContext): boolean {
   return !ctx.tenant.profile.opening_hours.some((h) => h.days.includes(wd) && minutesOf(h.open) <= minutesOf(l.time) && minutesOf(l.time) < minutesOf(h.close));
 }
 
+// Someone trapped in a lift: the lift company frees people, never us (LOLER 1998; presets/property-maintenance-use-cases.md).
+const TRAPPED = /\b(?:stuck|trapped)\b[^.?!]{0,40}\blifts?\b|\blifts?\b[^.?!]{0,40}\b(?:stuck|trapped)\b/i;
+
+/** The block a lift call is about: the property found on the call, or a block named in what the caller said. */
+async function blockNamed(ctx: ToolContext, p: MtProperty | null, words: string): Promise<MtProperty | null> {
+  if (p?.kind === 'communal') return p;
+  if (p?.block) return ctx.repo.getMtProperty(ctx.tenant.id, p.block);
+  const blocks = (await ctx.repo.listMtProperties(ctx.tenant.id)).filter((x) => x.kind === 'communal');
+  return blocks.find((b) => new RegExp(`\\b${blockName(b).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(words)) ?? null;
+}
+
+async function liftTrapped(ctx: ToolContext, p: MtProperty | null, words: string): Promise<Record<string, unknown>> {
+  const block = await blockNamed(ctx, p, `${words} ${ctx.state.heard.join(' ')}`);
+  const agent = block?.client ? mt(ctx).clients.find((c) => c.key === block.client) : undefined;
+  const where = block ? blockName(block) : 'the building';
+  const contractor = block?.notes.lift;
+  const at = spokenTime(local(ctx).time);
+  if (agent?.contact.phone) await smsTo(ctx, agent.contact.phone, `${ctx.tenant.profile.name} URGENT: someone reported trapped in the lift at ${where}, ${at}. Caller told to use the lift alarm${contractor ? ' and given the lift company' : ''}, and 999 if anyone is unwell. (Demo)`);
+  await ctx.repo.addMessage({
+    tenant_id: ctx.tenant.id, call_id: ctx.callId, kind: 'message', from_name: 'A caller', from_phone: ctx.callerPhone, status: 'new',
+    body: `Someone reported trapped in the lift at ${where}, ${at}.${agent ? ` ${agent.name} told by text.` : ''}`, for_staff: 'duty_manager', category: 'safety', urgency: 'urgent',
+    details: block ? { property: block.key } : {},
+  });
+  ctx.state.messageTaken = true;
+  ctx.action({ kind: 'safety_advice', title: 'Trapped in a lift', detail: `${where} · ${agent ? `${agent.name} told` : 'office told'}` });
+  return {
+    trade: null, trapped_in_lift: true,
+    say: [
+      'If anyone in the lift is unwell, distressed or hurt, call 999 now.',
+      'Tell them to press the alarm button in the lift: it goes to the lift company, who will come and free them.',
+      contractor ? `The lift company for ${where}: ${contractor.replace(/^Lift:\s*/i, '')}.` : "The lift company's number is usually on a notice in the lift.",
+      agent ? `We've told ${agent.name}, who manage the building, just now.` : "We've told the office just now.",
+    ],
+    never: "We don't send our engineers to free anyone from a lift: only the lift company's trained engineers do that. Book nothing, and give no time.",
+  };
+}
+
 async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const gate = safetyGate(ctx);
   if (gate) return gate;
@@ -353,6 +390,7 @@ async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string,
   if (!words) return { done: false, message: 'Ask what the problem is, in their words.' };
   const key = str(args.property) ?? ctx.state.property;
   const p = key ? await ctx.repo.getMtProperty(ctx.tenant.id, key) : null;
+  if (TRAPPED.test(words)) return liftTrapped(ctx, p, words);
   const t = triageCall(m, words, ctx.state.heard, { vulnerable: p?.vulnerable, date: local(ctx).date });
   if (t.priority === 'emergency' && t.trade) ctx.state.emergencyTrade = t.trade;
   if (t.dont_do) return { trade: null, dont_do: t.dont_do, say: `We don't do ${t.dont_do.what}. Suggest ${t.dont_do.suggest}.` };
@@ -588,6 +626,7 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   const part = p.block ? sharedPart(description, p) : null;
   const block = part ? (p.kind === 'communal' ? p : await ctx.repo.getMtProperty(ctx.tenant.id, p.block!)) : null;
   if (part === 'lift' && block) {
+    if (TRAPPED.test(`${description} ${ctx.state.heard.slice(-3).join(' ')}`)) return liftTrapped(ctx, home, description);
     return { booked: false, message: `We don't look after lifts: the building's lift contractor does.${block.notes.lift ? ` ${block.notes.lift}.` : ''} If someone is trapped, use triage_fault.` };
   }
   if (block) p = block;

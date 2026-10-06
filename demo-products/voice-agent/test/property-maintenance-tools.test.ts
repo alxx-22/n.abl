@@ -873,6 +873,30 @@ test('a block: shared faults are one job on the block for its managing agent; in
   assert.deepEqual(told.sort(), [JOANNE, MARCUS].sort());
 });
 
+test('trapped in a lift: 999 if unwell, the lift alarm and company, the managing agent told; nobody sent, nothing booked', async () => {
+  const t = await fernhill('pm-lift');
+  const before = (await repo.listJobs(t.id)).length;
+  // A neighbour, not on file, names the block.
+  const c = await call(t, '+447700900999');
+  c.hear("My neighbour's stuck in the lift at Riverside Court, she's been in there ten minutes.");
+  const r = await c.run('triage_fault', { description: "Neighbour stuck in the lift at Riverside Court" });
+  assert.equal(r.trapped_in_lift, true, JSON.stringify(r));
+  assert.match(r.say[0], /call 999 now/);
+  assert.match(r.say[1], /alarm button in the lift/);
+  assert.match(r.say[2], /Apex Lifts \(example\), 0115 496 0711/);
+  assert.match(r.say[3], /told Riverside Block Management/);
+  assert.match(r.never, /Book nothing/);
+  assert.match(c.sent.find((x) => x.to === '+447700900408')!.body, /URGENT: someone reported trapped in the lift at Riverside Court/);
+  const [m] = (await repo.listMessages(t.id, 50)).filter((x) => x.category === 'safety');
+  assert.deepEqual([m.urgency, m.for_staff], ['urgent', 'duty_manager']);
+  assert.equal((await repo.listJobs(t.id)).length, before, 'no job');
+  // From a resident's own flat, through the job tool: the same.
+  const marcus = await call(t, '+447700900578');
+  await marcus.run('find_property', { postcode: 'NG7', number: 'Flat 4', street: 'Riverside Court' });
+  const viaJob = await marcus.run('job', { action: 'create', description: 'Someone is trapped in the lift', name: 'Marcus Okoro' });
+  assert.equal(viaJob.trapped_in_lift, true);
+});
+
 test('a business site: the site contact who rings is the one who approves; found by its name', async () => {
   const t = await fernhill('pm-site');
   const sian = await call(t, '+447700900412');
