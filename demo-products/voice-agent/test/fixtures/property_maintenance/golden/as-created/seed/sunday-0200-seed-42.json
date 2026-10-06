@@ -2141,12 +2141,12 @@
    "eta_minutes": null,
    "on_the_way_at": null,
    "po": null,
-   "price_pence": null,
+   "price_pence": 39500,
    "clocks": [],
    "flags": [],
    "access_attempts": 0,
    "waiting_for": null,
-   "notes": null,
+   "notes": "Quote Q-2288 approved by Ben Whitfield.",
    "history": [
     {
      "at": "2026-10-11T00:00:00.000Z",
@@ -2304,6 +2304,11 @@
      "at": "2026-10-09T10:30:00.000Z",
      "by": "Priya",
      "what": "done"
+    },
+    {
+     "at": "2026-10-09T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1042"
     }
    ],
    "source": "seed",
@@ -2313,7 +2318,7 @@
    "priority": "routine",
    "description": "Bathroom extractor fan not working",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "RH479",
@@ -2353,6 +2358,11 @@
      "at": "2026-10-09T10:30:00.000Z",
      "by": "Leon",
      "what": "done"
+    },
+    {
+     "at": "2026-10-09T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1043"
     }
    ],
    "source": "seed",
@@ -2362,7 +2372,7 @@
    "priority": "routine",
    "description": "Cracked bedroom window",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "XY542",
@@ -2549,6 +2559,11 @@
      "at": "2026-10-08T10:30:00.000Z",
      "by": "Marek",
      "what": "done"
+    },
+    {
+     "at": "2026-10-08T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1037"
     }
    ],
    "source": "seed",
@@ -2558,7 +2573,7 @@
    "priority": "routine",
    "description": "Dripping kitchen tap",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "LX114",
@@ -2598,6 +2613,11 @@
      "at": "2026-10-08T10:30:00.000Z",
      "by": "Leon",
      "what": "done"
+    },
+    {
+     "at": "2026-10-08T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1038"
     }
    ],
    "source": "seed",
@@ -2607,7 +2627,7 @@
    "priority": "routine",
    "description": "Front door lock stiff",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "JL332",
@@ -2647,6 +2667,11 @@
      "at": "2026-10-08T10:30:00.000Z",
      "by": "Priya",
      "what": "done"
+    },
+    {
+     "at": "2026-10-08T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1039"
     }
    ],
    "source": "seed",
@@ -2656,7 +2681,7 @@
    "priority": "routine",
    "description": "Bathroom extractor fan not working",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "JJ948",
@@ -2696,6 +2721,11 @@
      "at": "2026-10-08T10:30:00.000Z",
      "by": "Grace",
      "what": "done"
+    },
+    {
+     "at": "2026-10-08T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1040"
     }
    ],
    "source": "seed",
@@ -2705,7 +2735,7 @@
    "priority": "routine",
    "description": "Patch and paint the ceiling after a leak",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "LA333",
@@ -2745,6 +2775,11 @@
      "at": "2026-10-08T10:30:00.000Z",
      "by": "Grace",
      "what": "done"
+    },
+    {
+     "at": "2026-10-08T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1041"
     }
    ],
    "source": "seed",
@@ -2754,7 +2789,7 @@
    "priority": "routine",
    "description": "Patch and paint the ceiling after a leak",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "YY768",
@@ -2794,6 +2829,11 @@
      "at": "2026-10-07T10:30:00.000Z",
      "by": "Dan",
      "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1032"
     }
    ],
    "source": "seed",
@@ -2803,7 +2843,7 @@
    "priority": "routine",
    "description": "No hot water",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "YJ269",
@@ -2843,6 +2883,11 @@
      "at": "2026-10-07T10:30:00.000Z",
      "by": "Leon",
      "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1033"
     }
    ],
    "source": "seed",
@@ -2852,7 +2897,7 @@
    "priority": "routine",
    "description": "Front door lock stiff",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "QW706",
@@ -2892,6 +2937,11 @@
      "at": "2026-10-07T10:30:00.000Z",
      "by": "Grace",
      "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1034"
     }
    ],
    "source": "seed",
@@ -2901,7 +2951,7 @@
    "priority": "routine",
    "description": "Patch and paint the ceiling after a leak",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "WA751",
@@ -2941,6 +2991,11 @@
      "at": "2026-10-07T10:30:00.000Z",
      "by": "Marek",
      "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1035"
     }
    ],
    "source": "seed",
@@ -2950,7 +3005,7 @@
    "priority": "routine",
    "description": "Blocked kitchen sink",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "WL192",
@@ -2990,6 +3045,11 @@
      "at": "2026-10-07T10:30:00.000Z",
      "by": "Leon",
      "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1036"
     }
    ],
    "source": "seed",
@@ -2999,7 +3059,7 @@
    "priority": "routine",
    "description": "Cracked bedroom window",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "LR131",
@@ -3039,6 +3099,11 @@
      "at": "2026-10-06T10:30:00.000Z",
      "by": "Grace",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1027"
     }
    ],
    "source": "seed",
@@ -3048,7 +3113,7 @@
    "priority": "routine",
    "description": "Mould on the bathroom ceiling",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "JA895",
@@ -3088,6 +3153,11 @@
      "at": "2026-10-06T10:30:00.000Z",
      "by": "Dan",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1028"
     }
    ],
    "source": "seed",
@@ -3097,7 +3167,7 @@
    "priority": "urgent",
    "description": "No hot water",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "JH968",
@@ -3137,6 +3207,11 @@
      "at": "2026-10-06T10:30:00.000Z",
      "by": "Dan",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1029"
     }
    ],
    "source": "seed",
@@ -3146,7 +3221,7 @@
    "priority": "routine",
    "description": "Toilet not flushing",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "AK657",
@@ -3186,6 +3261,11 @@
      "at": "2026-10-06T10:30:00.000Z",
      "by": "Grace",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1030"
     }
    ],
    "source": "seed",
@@ -3195,7 +3275,7 @@
    "priority": "routine",
    "description": "Mould on the bathroom ceiling",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "QR202",
@@ -3235,6 +3315,11 @@
      "at": "2026-10-06T15:30:00.000Z",
      "by": "Grace",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T16:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1031"
     }
    ],
    "source": "seed",
@@ -3244,7 +3329,7 @@
    "priority": "urgent",
    "description": "Patch and paint the ceiling after a leak",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "HK838",
@@ -4412,7 +4497,7 @@
    "flags": [],
    "access_attempts": 0,
    "waiting_for": null,
-   "notes": null,
+   "notes": "Quote Q-2292 sent to Sophie Grant.",
    "history": [
     {
      "at": "2026-10-09T01:00:00.000Z",
@@ -4451,7 +4536,7 @@
    "flags": [],
    "access_attempts": 0,
    "waiting_for": null,
-   "notes": null,
+   "notes": "Quote Q-2293 sent to Imran Akhtar.",
    "history": [
     {
      "at": "2026-10-09T01:00:00.000Z",
@@ -4490,7 +4575,7 @@
    "flags": [],
    "access_attempts": 0,
    "waiting_for": null,
-   "notes": null,
+   "notes": "Quote Q-2294 sent to Raj Kaur.",
    "history": [
     {
      "at": "2026-10-09T01:00:00.000Z",
@@ -4672,6 +4757,114 @@
    "description": "Gas smell: supply capped by the emergency service; find and repair the leak",
    "kind": "repair",
    "status": "done"
+  },
+  {
+   "reference": "KY967",
+   "property_key": "charnwood_flat_1_27",
+   "client_key": "castle_gate",
+   "reporter": {
+    "name": "Liam Kowalski",
+    "phone": "+447700900519",
+    "role": "occupant"
+   },
+   "reason": "Routine: dripping kitchen tap",
+   "visit_date": "2026-09-24",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "dan",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": null,
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Replaced the washer and the cartridge; no drips.",
+   "history": [
+    {
+     "at": "2026-09-22T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-09-22T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Dan"
+    },
+    {
+     "at": "2026-09-24T10:30:00.000Z",
+     "by": "Dan",
+     "what": "done"
+    },
+    {
+     "at": "2026-09-24T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1026"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-09-22T07:00:00.000Z",
+   "done_at": "2026-09-24T10:30:00.000Z",
+   "trade": "plumbing",
+   "priority": "routine",
+   "description": "Dripping kitchen tap",
+   "kind": "repair",
+   "status": "invoiced"
+  },
+  {
+   "reference": "QR751",
+   "property_key": "millrace_22",
+   "client_key": "harbour",
+   "reporter": {
+    "name": "Fatima Begum",
+    "phone": "+447700900514",
+    "role": "occupant"
+   },
+   "reason": "Routine: low pressure in the shower",
+   "visit_date": "2026-09-18",
+   "window_key": "am",
+   "attend_by": null,
+   "engineer_key": "callum",
+   "eta_minutes": null,
+   "on_the_way_at": null,
+   "po": "PO-7085",
+   "price_pence": null,
+   "clocks": [],
+   "flags": [],
+   "access_attempts": 0,
+   "waiting_for": null,
+   "notes": "Descaled the shower head and cleared the filter.",
+   "history": [
+    {
+     "at": "2026-09-15T07:00:00.000Z",
+     "by": "receptionist",
+     "what": "raised"
+    },
+    {
+     "at": "2026-09-15T07:10:00.000Z",
+     "by": "staff",
+     "what": "booked: morning with Callum"
+    },
+    {
+     "at": "2026-09-18T10:30:00.000Z",
+     "by": "Callum",
+     "what": "done"
+    },
+    {
+     "at": "2026-09-18T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1025"
+    }
+   ],
+   "source": "seed",
+   "created_at": "2026-09-15T07:00:00.000Z",
+   "done_at": "2026-09-18T10:30:00.000Z",
+   "trade": "plumbing",
+   "priority": "routine",
+   "description": "Low pressure in the shower",
+   "kind": "repair",
+   "status": "invoiced"
   }
  ],
  "certificates": [
@@ -5460,6 +5653,493 @@
    "notes": "Told to leave and ring the gas emergency line from outside; number texted.",
    "source": "seed",
    "created_at": "2026-10-07T18:02:00.000Z"
+  }
+ ],
+ "quotes": [
+  {
+   "reference": "Q-2291",
+   "job_ref": "XR374",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "description": "Boiler replacement",
+   "amount_pence": 245000,
+   "issued": "2026-10-05",
+   "valid_until": "2026-11-04",
+   "status": "sent",
+   "decided_at": null,
+   "decided_by": null,
+   "created_at": "2026-10-05T09:00:00.000Z"
+  },
+  {
+   "reference": "Q-2292",
+   "job_ref": "RK831",
+   "property_key": "thistledown_87",
+   "client_key": "harbour",
+   "description": "Replace the flat roof over the back extension",
+   "amount_pence": 60000,
+   "issued": "2026-10-09",
+   "valid_until": "2026-11-08",
+   "status": "sent",
+   "decided_at": null,
+   "decided_by": null,
+   "created_at": "2026-10-09T09:00:00.000Z"
+  },
+  {
+   "reference": "Q-2293",
+   "job_ref": "HL743",
+   "property_key": "hazelmere_54",
+   "client_key": "castle_gate",
+   "description": "Replace the rotten back door and frame",
+   "amount_pence": 38000,
+   "issued": "2026-10-09",
+   "valid_until": "2026-11-08",
+   "status": "sent",
+   "decided_at": null,
+   "decided_by": null,
+   "created_at": "2026-10-09T09:00:00.000Z"
+  },
+  {
+   "reference": "Q-2294",
+   "job_ref": "AQ438",
+   "property_key": "wharfside_flat_3_6",
+   "client_key": "kaur",
+   "description": "New kitchen circuit for an electric cooker",
+   "amount_pence": 52000,
+   "issued": "2026-10-09",
+   "valid_until": "2026-11-08",
+   "status": "sent",
+   "decided_at": null,
+   "decided_by": null,
+   "created_at": "2026-10-09T09:00:00.000Z"
+  },
+  {
+   "reference": "Q-2288",
+   "job_ref": "RH864",
+   "property_key": "elm_14",
+   "client_key": "whitfield",
+   "description": "Leak under the kitchen sink",
+   "amount_pence": 39500,
+   "issued": "2026-10-03",
+   "valid_until": "2026-11-02",
+   "status": "approved",
+   "decided_at": "2026-10-06T01:00:00.000Z",
+   "decided_by": "Ben Whitfield",
+   "created_at": "2026-10-03T09:00:00.000Z"
+  },
+  {
+   "reference": "Q-2289",
+   "job_ref": null,
+   "property_key": "copperbeech_23",
+   "client_key": "whitfield",
+   "description": "Replace six fence panels and two posts",
+   "amount_pence": 68000,
+   "issued": "2026-10-02",
+   "valid_until": "2026-11-01",
+   "status": "declined",
+   "decided_at": "2026-10-07T01:00:00.000Z",
+   "decided_by": "Ben Whitfield",
+   "created_at": "2026-10-02T09:00:00.000Z"
+  }
+ ],
+ "invoices": [
+  {
+   "reference": "INV-1025",
+   "job_ref": "QR751",
+   "property_key": "millrace_22",
+   "client_key": "harbour",
+   "payer": {
+    "name": "Sophie Grant",
+    "phone": "+447700900401"
+   },
+   "kind": "job",
+   "description": "Low pressure in the shower (22 Millrace Lane (example), DE21)",
+   "amount_pence": 9500,
+   "status": "due",
+   "issued": "2026-09-18",
+   "due": "2026-10-02",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-09-18T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1026",
+   "job_ref": "KY967",
+   "property_key": "charnwood_flat_1_27",
+   "client_key": "castle_gate",
+   "payer": {
+    "name": "Imran Akhtar",
+    "phone": "+447700900402"
+   },
+   "kind": "job",
+   "description": "Dripping kitchen tap (Flat 1, 27 Charnwood Vale (example), LE11)",
+   "amount_pence": 15000,
+   "status": "due",
+   "issued": "2026-09-24",
+   "due": "2026-10-08",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-09-24T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1027",
+   "job_ref": "LR131",
+   "property_key": "saxonby_101",
+   "client_key": "harbour",
+   "payer": {
+    "name": "Sophie Grant",
+    "phone": "+447700900401"
+   },
+   "kind": "job",
+   "description": "Mould on the bathroom ceiling (101 Saxonby Street (example), NG1)",
+   "amount_pence": 21500,
+   "status": "due",
+   "issued": "2026-10-06",
+   "due": "2026-10-20",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1028",
+   "job_ref": "JA895",
+   "property_key": "linnet_flat_2_39",
+   "client_key": "oakfield",
+   "payer": {
+    "name": "Natalie Byrne",
+    "phone": "+447700900403"
+   },
+   "kind": "job",
+   "description": "No hot water (Flat 2, 39 Linnet Walk (example), NG11)",
+   "amount_pence": 17500,
+   "status": "due",
+   "issued": "2026-10-06",
+   "due": "2026-10-20",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1029",
+   "job_ref": "JH968",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "payer": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565"
+   },
+   "kind": "job",
+   "description": "Toilet not flushing (95 Tansy Lane (example), NG2)",
+   "amount_pence": 13500,
+   "status": "paid",
+   "issued": "2026-10-06",
+   "due": "2026-10-13",
+   "paid_at": "2026-10-06T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1029",
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1030",
+   "job_ref": "AK657",
+   "property_key": "thistledown_flat_5_91",
+   "client_key": "oakfield",
+   "payer": {
+    "name": "Natalie Byrne",
+    "phone": "+447700900403"
+   },
+   "kind": "job",
+   "description": "Mould on the bathroom ceiling (Flat 5, 91 Thistledown Road (example), DE22)",
+   "amount_pence": 21500,
+   "status": "due",
+   "issued": "2026-10-06",
+   "due": "2026-10-20",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1031",
+   "job_ref": "QR202",
+   "property_key": "larchfield_120",
+   "client_key": "harbour",
+   "payer": {
+    "name": "Sophie Grant",
+    "phone": "+447700900401"
+   },
+   "kind": "job",
+   "description": "Patch and paint the ceiling after a leak (120 Larchfield Close (example), NG3)",
+   "amount_pence": 9500,
+   "status": "due",
+   "issued": "2026-10-06",
+   "due": "2026-10-20",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-06T16:30:00.000Z"
+  },
+  {
+   "reference": "INV-1032",
+   "job_ref": "YY768",
+   "property_key": "millrace_14",
+   "client_key": "oakfield",
+   "payer": {
+    "name": "Natalie Byrne",
+    "phone": "+447700900403"
+   },
+   "kind": "job",
+   "description": "No hot water (14 Millrace Lane (example), DE21)",
+   "amount_pence": 13500,
+   "status": "due",
+   "issued": "2026-10-07",
+   "due": "2026-10-21",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-07T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1033",
+   "job_ref": "YJ269",
+   "property_key": "millrace_14",
+   "client_key": "oakfield",
+   "payer": {
+    "name": "Natalie Byrne",
+    "phone": "+447700900403"
+   },
+   "kind": "job",
+   "description": "Front door lock stiff (14 Millrace Lane (example), DE21)",
+   "amount_pence": 13500,
+   "status": "due",
+   "issued": "2026-10-07",
+   "due": "2026-10-21",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-07T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1034",
+   "job_ref": "QW706",
+   "property_key": "ferncroft_94",
+   "client_key": null,
+   "payer": {
+    "name": "Sophie Nash",
+    "phone": "+447700900548"
+   },
+   "kind": "job",
+   "description": "Patch and paint the ceiling after a leak (94 Ferncroft Road (example), NG6)",
+   "amount_pence": 17500,
+   "status": "paid",
+   "issued": "2026-10-07",
+   "due": "2026-10-14",
+   "paid_at": "2026-10-07T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1034",
+   "created_at": "2026-10-07T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1035",
+   "job_ref": "WA751",
+   "property_key": "bellfounder_75",
+   "client_key": null,
+   "payer": {
+    "name": "Rosa Ali",
+    "phone": "+447700900560"
+   },
+   "kind": "job",
+   "description": "Blocked kitchen sink (75 Bellfounder Street (example), LE11)",
+   "amount_pence": 13500,
+   "status": "paid",
+   "issued": "2026-10-07",
+   "due": "2026-10-14",
+   "paid_at": "2026-10-07T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1035",
+   "created_at": "2026-10-07T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1036",
+   "job_ref": "WL192",
+   "property_key": "thistledown_87",
+   "client_key": "harbour",
+   "payer": {
+    "name": "Sophie Grant",
+    "phone": "+447700900401"
+   },
+   "kind": "job",
+   "description": "Cracked bedroom window (87 Thistledown Road (example), DE22)",
+   "amount_pence": 17500,
+   "status": "due",
+   "issued": "2026-10-07",
+   "due": "2026-10-21",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-07T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1037",
+   "job_ref": "XK910",
+   "property_key": "larchfield_120",
+   "client_key": "harbour",
+   "payer": {
+    "name": "Sophie Grant",
+    "phone": "+447700900401"
+   },
+   "kind": "job",
+   "description": "Dripping kitchen tap (120 Larchfield Close (example), NG3)",
+   "amount_pence": 21500,
+   "status": "due",
+   "issued": "2026-10-08",
+   "due": "2026-10-22",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-08T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1038",
+   "job_ref": "LX114",
+   "property_key": "wharfside_flat_3_6",
+   "client_key": "kaur",
+   "payer": {
+    "name": "Raj Kaur",
+    "phone": "+447700900405"
+   },
+   "kind": "job",
+   "description": "Front door lock stiff (Flat 3, 6 Wharfside Mews (example), DE2)",
+   "amount_pence": 13500,
+   "status": "due",
+   "issued": "2026-10-08",
+   "due": "2026-10-22",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-08T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1039",
+   "job_ref": "JL332",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "payer": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565"
+   },
+   "kind": "job",
+   "description": "Bathroom extractor fan not working (95 Tansy Lane (example), NG2)",
+   "amount_pence": 9500,
+   "status": "due",
+   "issued": "2026-10-08",
+   "due": "2026-10-15",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-08T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1040",
+   "job_ref": "JJ948",
+   "property_key": "bellfounder_flat_1_27",
+   "client_key": "castle_gate",
+   "payer": {
+    "name": "Imran Akhtar",
+    "phone": "+447700900402"
+   },
+   "kind": "job",
+   "description": "Patch and paint the ceiling after a leak (Flat 1, 27 Bellfounder Street (example), LE11)",
+   "amount_pence": 13500,
+   "status": "due",
+   "issued": "2026-10-08",
+   "due": "2026-10-22",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-08T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1041",
+   "job_ref": "LA333",
+   "property_key": "thistledown_87",
+   "client_key": "harbour",
+   "payer": {
+    "name": "Sophie Grant",
+    "phone": "+447700900401"
+   },
+   "kind": "job",
+   "description": "Patch and paint the ceiling after a leak (87 Thistledown Road (example), DE22)",
+   "amount_pence": 9500,
+   "status": "due",
+   "issued": "2026-10-08",
+   "due": "2026-10-22",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-08T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1042",
+   "job_ref": "HA892",
+   "property_key": "saxonby_60",
+   "client_key": "oakfield",
+   "payer": {
+    "name": "Natalie Byrne",
+    "phone": "+447700900403"
+   },
+   "kind": "job",
+   "description": "Bathroom extractor fan not working (60 Saxonby Street (example), NG1)",
+   "amount_pence": 9500,
+   "status": "due",
+   "issued": "2026-10-09",
+   "due": "2026-10-23",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-09T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1043",
+   "job_ref": "RH479",
+   "property_key": "kestrel_flat_1_75",
+   "client_key": "harbour",
+   "payer": {
+    "name": "Sophie Grant",
+    "phone": "+447700900401"
+   },
+   "kind": "job",
+   "description": "Cracked bedroom window (Flat 1, 75 Kestrel Rise (example), NG9)",
+   "amount_pence": 17500,
+   "status": "due",
+   "issued": "2026-10-09",
+   "due": "2026-10-23",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-09T11:30:00.000Z"
   }
  ]
 }

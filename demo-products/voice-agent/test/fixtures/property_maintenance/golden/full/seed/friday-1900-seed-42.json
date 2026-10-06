@@ -1007,6 +1007,11 @@
      "at": "2026-10-07T10:30:00.000Z",
      "by": "Callum",
      "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1040"
     }
    ],
    "source": "seed",
@@ -1016,7 +1021,7 @@
    "priority": "routine",
    "description": "Radiator cold at the top",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "AR714",
@@ -1056,6 +1061,11 @@
      "at": "2026-10-07T10:30:00.000Z",
      "by": "Dan",
      "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1041"
     }
    ],
    "source": "seed",
@@ -1065,7 +1075,7 @@
    "priority": "routine",
    "description": "No hot water",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "RJ868",
@@ -1105,6 +1115,11 @@
      "at": "2026-10-07T10:30:00.000Z",
      "by": "Shaz",
      "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1042"
     }
    ],
    "source": "seed",
@@ -1114,7 +1129,7 @@
    "priority": "urgent",
    "description": "Loose stair handrail",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "WY249",
@@ -1154,6 +1169,11 @@
      "at": "2026-10-07T10:30:00.000Z",
      "by": "Priya",
      "what": "done"
+    },
+    {
+     "at": "2026-10-07T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1043"
     }
    ],
    "source": "seed",
@@ -1163,7 +1183,7 @@
    "priority": "routine",
    "description": "Bathroom extractor fan not working",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "AY947",
@@ -1203,6 +1223,11 @@
      "at": "2026-10-06T10:30:00.000Z",
      "by": "Priya",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1035"
     }
    ],
    "source": "seed",
@@ -1212,7 +1237,7 @@
    "priority": "routine",
    "description": "Socket not working in the bedroom",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "HY480",
@@ -1252,6 +1277,11 @@
      "at": "2026-10-06T10:30:00.000Z",
      "by": "Dan",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1036"
     }
    ],
    "source": "seed",
@@ -1261,7 +1291,7 @@
    "priority": "routine",
    "description": "No hot water",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "XH805",
@@ -1301,6 +1331,11 @@
      "at": "2026-10-06T10:30:00.000Z",
      "by": "Dan",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1037"
     }
    ],
    "source": "seed",
@@ -1310,7 +1345,7 @@
    "priority": "routine",
    "description": "No hot water",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "HY126",
@@ -1350,6 +1385,11 @@
      "at": "2026-10-06T10:30:00.000Z",
      "by": "Shaz",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1038"
     }
    ],
    "source": "seed",
@@ -1359,7 +1399,7 @@
    "priority": "urgent",
    "description": "Loose stair handrail",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "KR319",
@@ -1399,6 +1439,11 @@
      "at": "2026-10-06T10:30:00.000Z",
      "by": "Callum",
      "what": "done"
+    },
+    {
+     "at": "2026-10-06T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1039"
     }
    ],
    "source": "seed",
@@ -1408,7 +1453,7 @@
    "priority": "urgent",
    "description": "Radiator cold at the top",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "QR202",
@@ -1448,6 +1493,11 @@
      "at": "2026-10-05T10:30:00.000Z",
      "by": "Leon",
      "what": "done"
+    },
+    {
+     "at": "2026-10-05T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1031"
     }
    ],
    "source": "seed",
@@ -1457,7 +1507,7 @@
    "priority": "urgent",
    "description": "Cracked bedroom window",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "XH454",
@@ -1497,6 +1547,11 @@
      "at": "2026-10-05T10:30:00.000Z",
      "by": "Leon",
      "what": "done"
+    },
+    {
+     "at": "2026-10-05T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1032"
     }
    ],
    "source": "seed",
@@ -1506,7 +1561,7 @@
    "priority": "routine",
    "description": "Cracked bedroom window",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "XL679",
@@ -1546,6 +1601,11 @@
      "at": "2026-10-05T10:30:00.000Z",
      "by": "Callum",
      "what": "done"
+    },
+    {
+     "at": "2026-10-05T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1033"
     }
    ],
    "source": "seed",
@@ -1555,7 +1615,7 @@
    "priority": "routine",
    "description": "Toilet not flushing",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "LL951",
@@ -1595,6 +1655,11 @@
      "at": "2026-10-05T10:30:00.000Z",
      "by": "Marek",
      "what": "done"
+    },
+    {
+     "at": "2026-10-05T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1034"
     }
    ],
    "source": "seed",
@@ -1604,7 +1669,7 @@
    "priority": "routine",
    "description": "Outside drain overflowing",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "QL240",
@@ -1644,6 +1709,11 @@
      "at": "2026-10-03T10:30:00.000Z",
      "by": "Leon",
      "what": "done"
+    },
+    {
+     "at": "2026-10-03T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1028"
     }
    ],
    "source": "seed",
@@ -1653,7 +1723,7 @@
    "priority": "routine",
    "description": "Cracked bedroom window",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "YL619",
@@ -1693,6 +1763,11 @@
      "at": "2026-10-03T10:30:00.000Z",
      "by": "Marek",
      "what": "done"
+    },
+    {
+     "at": "2026-10-03T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1029"
     }
    ],
    "source": "seed",
@@ -1702,7 +1777,7 @@
    "priority": "urgent",
    "description": "Low pressure in the shower",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "XR301",
@@ -1742,6 +1817,11 @@
      "at": "2026-10-03T10:30:00.000Z",
      "by": "Leon",
      "what": "done"
+    },
+    {
+     "at": "2026-10-03T11:30:00.000Z",
+     "by": "office",
+     "what": "invoiced INV-1030"
     }
    ],
    "source": "seed",
@@ -1751,7 +1831,7 @@
    "priority": "routine",
    "description": "Cracked bedroom window",
    "kind": "repair",
-   "status": "done"
+   "status": "invoiced"
   },
   {
    "reference": "QR636",
@@ -1858,12 +1938,12 @@
    "eta_minutes": null,
    "on_the_way_at": null,
    "po": null,
-   "price_pence": null,
+   "price_pence": 39500,
    "clocks": [],
    "flags": [],
    "access_attempts": 0,
    "waiting_for": null,
-   "notes": null,
+   "notes": "Quote Q-2288 approved by Ben Whitfield.",
    "history": [
     {
      "at": "2026-10-08T07:00:00.000Z",
@@ -2826,7 +2906,7 @@
    "flags": [],
    "access_attempts": 0,
    "waiting_for": null,
-   "notes": null,
+   "notes": "Quote Q-2292 sent to Ben Whitfield.",
    "history": [
     {
      "at": "2026-10-07T18:00:00.000Z",
@@ -3079,6 +3159,402 @@
    "notes": "Told to leave and ring the gas emergency line from outside; number texted.",
    "source": "seed",
    "created_at": "2026-10-05T18:02:00.000Z"
+  }
+ ],
+ "quotes": [
+  {
+   "reference": "Q-2291",
+   "job_ref": "YH323",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "description": "Boiler replacement",
+   "amount_pence": 245000,
+   "issued": "2026-10-03",
+   "valid_until": "2026-11-02",
+   "status": "sent",
+   "decided_at": null,
+   "decided_by": null,
+   "created_at": "2026-10-03T09:00:00.000Z"
+  },
+  {
+   "reference": "Q-2292",
+   "job_ref": "QH286",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "description": "New kitchen circuit for an electric cooker",
+   "amount_pence": 52000,
+   "issued": "2026-10-07",
+   "valid_until": "2026-11-06",
+   "status": "sent",
+   "decided_at": null,
+   "decided_by": null,
+   "created_at": "2026-10-07T09:00:00.000Z"
+  },
+  {
+   "reference": "Q-2288",
+   "job_ref": "KJ764",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "description": "Dripping kitchen tap",
+   "amount_pence": 39500,
+   "issued": "2026-10-01",
+   "valid_until": "2026-10-31",
+   "status": "approved",
+   "decided_at": "2026-10-04T18:00:00.000Z",
+   "decided_by": "Ben Whitfield",
+   "created_at": "2026-10-01T09:00:00.000Z"
+  },
+  {
+   "reference": "Q-2289",
+   "job_ref": null,
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "description": "Replace six fence panels and two posts",
+   "amount_pence": 68000,
+   "issued": "2026-09-30",
+   "valid_until": "2026-10-30",
+   "status": "declined",
+   "decided_at": "2026-10-05T18:00:00.000Z",
+   "decided_by": "Ben Whitfield",
+   "created_at": "2026-09-30T09:00:00.000Z"
+  }
+ ],
+ "invoices": [
+  {
+   "reference": "INV-1028",
+   "job_ref": "QL240",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "payer": {
+    "name": "Ben Whitfield",
+    "phone": "+447700900406"
+   },
+   "kind": "job",
+   "description": "Cracked bedroom window (80 Larchfield Close (example), NG3)",
+   "amount_pence": 10500,
+   "status": "due",
+   "issued": "2026-10-03",
+   "due": "2026-10-17",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-03T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1029",
+   "job_ref": "YL619",
+   "property_key": "saxonby_flat_3_91",
+   "client_key": null,
+   "payer": {
+    "name": "Lucy Doyle",
+    "phone": "+447700900566"
+   },
+   "kind": "job",
+   "description": "Low pressure in the shower (Flat 3, 91 Saxonby Street (example), NG1)",
+   "amount_pence": 13500,
+   "status": "paid",
+   "issued": "2026-10-03",
+   "due": "2026-10-10",
+   "paid_at": "2026-10-03T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1029",
+   "created_at": "2026-10-03T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1030",
+   "job_ref": "XR301",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "payer": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545"
+   },
+   "kind": "job",
+   "description": "Cracked bedroom window (81 Tansy Lane (example), NG2)",
+   "amount_pence": 10500,
+   "status": "paid",
+   "issued": "2026-10-03",
+   "due": "2026-10-10",
+   "paid_at": "2026-10-03T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1030",
+   "created_at": "2026-10-03T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1031",
+   "job_ref": "QR202",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "payer": {
+    "name": "Jean Ellis",
+    "phone": "+447700900404"
+   },
+   "kind": "job",
+   "description": "Cracked bedroom window (Flat 3, 22 Tansy Lane (example), NG2)",
+   "amount_pence": 13500,
+   "status": "due",
+   "issued": "2026-10-05",
+   "due": "2026-10-19",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-05T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1032",
+   "job_ref": "XH454",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "payer": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562"
+   },
+   "kind": "job",
+   "description": "Cracked bedroom window (Flat 2, 67 Larchfield Close (example), NG3)",
+   "amount_pence": 16500,
+   "status": "paid",
+   "issued": "2026-10-05",
+   "due": "2026-10-12",
+   "paid_at": "2026-10-05T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1032",
+   "created_at": "2026-10-05T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1033",
+   "job_ref": "XL679",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "payer": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545"
+   },
+   "kind": "job",
+   "description": "Toilet not flushing (81 Tansy Lane (example), NG2)",
+   "amount_pence": 10500,
+   "status": "paid",
+   "issued": "2026-10-05",
+   "due": "2026-10-12",
+   "paid_at": "2026-10-05T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1033",
+   "created_at": "2026-10-05T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1034",
+   "job_ref": "LL951",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "payer": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565"
+   },
+   "kind": "job",
+   "description": "Outside drain overflowing (95 Tansy Lane (example), NG2)",
+   "amount_pence": 7500,
+   "status": "paid",
+   "issued": "2026-10-05",
+   "due": "2026-10-12",
+   "paid_at": "2026-10-05T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1034",
+   "created_at": "2026-10-05T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1035",
+   "job_ref": "AY947",
+   "property_key": "tansy_95",
+   "client_key": null,
+   "payer": {
+    "name": "Kwame Reid",
+    "phone": "+447700900565"
+   },
+   "kind": "job",
+   "description": "Socket not working in the bedroom (95 Tansy Lane (example), NG2)",
+   "amount_pence": 10500,
+   "status": "paid",
+   "issued": "2026-10-06",
+   "due": "2026-10-13",
+   "paid_at": "2026-10-06T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1035",
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1036",
+   "job_ref": "HY480",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "payer": {
+    "name": "Jean Ellis",
+    "phone": "+447700900404"
+   },
+   "kind": "job",
+   "description": "No hot water (Flat 3, 22 Tansy Lane (example), NG2)",
+   "amount_pence": 7500,
+   "status": "due",
+   "issued": "2026-10-06",
+   "due": "2026-10-20",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1037",
+   "job_ref": "XH805",
+   "property_key": "tansy_81",
+   "client_key": null,
+   "payer": {
+    "name": "Ryan Brennan",
+    "phone": "+447700900545"
+   },
+   "kind": "job",
+   "description": "No hot water (81 Tansy Lane (example), NG2)",
+   "amount_pence": 7500,
+   "status": "paid",
+   "issued": "2026-10-06",
+   "due": "2026-10-13",
+   "paid_at": "2026-10-06T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1037",
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1038",
+   "job_ref": "HY126",
+   "property_key": "tansy_flat_3_22",
+   "client_key": "ellis",
+   "payer": {
+    "name": "Jean Ellis",
+    "phone": "+447700900404"
+   },
+   "kind": "job",
+   "description": "Loose stair handrail (Flat 3, 22 Tansy Lane (example), NG2)",
+   "amount_pence": 13500,
+   "status": "due",
+   "issued": "2026-10-06",
+   "due": "2026-10-20",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1039",
+   "job_ref": "KR319",
+   "property_key": "saxonby_flat_3_91",
+   "client_key": null,
+   "payer": {
+    "name": "Lucy Doyle",
+    "phone": "+447700900566"
+   },
+   "kind": "job",
+   "description": "Radiator cold at the top (Flat 3, 91 Saxonby Street (example), NG1)",
+   "amount_pence": 7500,
+   "status": "paid",
+   "issued": "2026-10-06",
+   "due": "2026-10-13",
+   "paid_at": "2026-10-06T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1039",
+   "created_at": "2026-10-06T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1040",
+   "job_ref": "HL653",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "payer": {
+    "name": "Ben Whitfield",
+    "phone": "+447700900406"
+   },
+   "kind": "job",
+   "description": "Radiator cold at the top (80 Larchfield Close (example), NG3)",
+   "amount_pence": 7500,
+   "status": "due",
+   "issued": "2026-10-07",
+   "due": "2026-10-21",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-07T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1041",
+   "job_ref": "AR714",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "payer": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562"
+   },
+   "kind": "job",
+   "description": "No hot water (Flat 2, 67 Larchfield Close (example), NG3)",
+   "amount_pence": 10500,
+   "status": "paid",
+   "issued": "2026-10-07",
+   "due": "2026-10-14",
+   "paid_at": "2026-10-07T10:30:00.000Z",
+   "paid_how": "card",
+   "card_last4": "3456",
+   "auth_code": "DEMO-1041",
+   "created_at": "2026-10-07T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1042",
+   "job_ref": "RJ868",
+   "property_key": "larchfield_flat_2_67",
+   "client_key": null,
+   "payer": {
+    "name": "Aisha Patel",
+    "phone": "+447700900562"
+   },
+   "kind": "job",
+   "description": "Loose stair handrail (Flat 2, 67 Larchfield Close (example), NG3)",
+   "amount_pence": 7500,
+   "status": "due",
+   "issued": "2026-10-07",
+   "due": "2026-10-14",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-07T11:30:00.000Z"
+  },
+  {
+   "reference": "INV-1043",
+   "job_ref": "WY249",
+   "property_key": "larchfield_80",
+   "client_key": "whitfield",
+   "payer": {
+    "name": "Ben Whitfield",
+    "phone": "+447700900406"
+   },
+   "kind": "job",
+   "description": "Bathroom extractor fan not working (80 Larchfield Close (example), NG3)",
+   "amount_pence": 13500,
+   "status": "due",
+   "issued": "2026-10-07",
+   "due": "2026-10-21",
+   "paid_at": null,
+   "paid_how": null,
+   "card_last4": null,
+   "auth_code": null,
+   "created_at": "2026-10-07T11:30:00.000Z"
   }
  ]
 }
