@@ -107,6 +107,7 @@ function propertyBrief(ctx: ToolContext, p: MtProperty, role: Role) {
     looked_after_by: client ? (known ? client.name : `${KIND_WORDS[client.kind] ?? 'a client'} we work for`) : 'the homeowner',
     // "Not on file" read as "refuse" on a live call (6 October): it limits what they hear, not what they may report.
     caller_is: role === 'stranger' ? 'someone not on file: they may report a repair here, but hear no names, times or private details' : role,
+    ...(client?.kind === 'social' ? { damp: `Damp or mould here is a job: raise it with job create, never only a message. That tells ${known ? client.name : 'the landlord'} today with the time, and starts their clock.` } : {}),
     ...(role === 'stranger' && client ? { reporting: `Raise their repair with job create, not a message: an agent's staff report jobs for their tenants. ${client.kind === 'agent' || client.kind === 'social' ? 'The client' : 'The landlord'} approves anything over their limit on their own phone.` } : {}),
     notes: {
       stopcock: p.notes.stopcock,
@@ -675,6 +676,11 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
   } else if (ctx.callerPhone) {
     // Only the number they ring from counts: a number they say could be anyone's.
     jobs = (await ctx.repo.listJobs(ctx.tenant.id, { phone: ctx.callerPhone })).filter((j) => !['cancelled'].includes(j.status)).slice(0, 3);
+  }
+  // "Go ahead with your quote" with nothing on file: raise it, priced, rather than hunt (live, 6 October).
+  const priced = /\b(?:quoted?|priced|estimated?)\b/i.test(ctx.state.heard.join(' '));
+  if (!jobs.length && priced && !ref) {
+    return { found: 0, message: 'No quote is on file for them. Raise the work now with job create, with estimate_pounds as the price they gave: over the client\'s limit, it goes to the client for approval.' };
   }
   if (!jobs.length) {
     return {

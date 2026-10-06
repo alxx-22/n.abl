@@ -722,6 +722,10 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   const found = await jean.run('job', { action: 'find', reference: 'Q-2291' });
   assert.equal(found.approval.request_sent, true);
   assert.ok(jean.sent.some((x) => x.to === '+447700900404' && /waiting for your approval/.test(x.body)));
+  // An agent going ahead with a quote that isn't on file: raise it, priced, rather than hunt for it.
+  const jess = await call(t, '+447700900411');
+  jess.hear("We'd like to go ahead with the six hundred pound quote for the back door at 120 Larchfield Close.");
+  assert.match((await jess.run('job', { action: 'find' })).message, /No quote is on file for them. Raise the work now with job create/);
   // A landlord's gas safety check raised as a repair is sent to the register instead.
   const ben = await call(t, '+447700900406');
   await ben.run('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
@@ -730,6 +734,8 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   const nadia = await call(t, '+447700900571');
   await nadia.run('find_property', { postcode: 'DE23', number: 'Flat 2, 7', street: 'Larkspur Walk' });
   nadia.hear("There's black mould spreading on my son's bedroom wall.");
+  const home = await nadia.run('find_property', { postcode: 'DE23', number: 'Flat 2, 7', street: 'Larkspur Walk' });
+  assert.match(home.properties[0].damp, /Damp or mould here is a job: raise it with job create/);
   const msg = await nadia.run('take_message', { name: 'Nadia Hussain', message: 'Black mould in the bedroom', category: 'damp' });
   assert.match(msg.also, /Raise the repair too, with job create: that is what tells Meadowbank Housing today/);
 });
