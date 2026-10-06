@@ -542,6 +542,10 @@
    {
     "q": "Are your engineers DBS checked?",
     "a": "Yes, every engineer has a basic DBS check and carries ID. You can ask to see it at the door."
+   },
+   {
+    "q": "Someone at my door says they're from you, but I wasn't expecting anyone",
+    "a": "We only come when a visit is booked, and we text when the engineer is on the way. If nothing is booked, we haven't sent anyone: don't let them in. If you feel unsafe, ring 999; otherwise the police on 101."
    }
   ],
   "guarantee": "Our workmanship is guaranteed for 12 months; parts carry the maker’s warranty.",
