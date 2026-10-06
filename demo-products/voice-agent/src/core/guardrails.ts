@@ -7,6 +7,7 @@
 
 import type { MaintenanceSettings } from '../domain/types.ts';
 import { amountsIn } from '../domain/amounts.ts';
+import { knownTimes, timesIn } from '../domain/clock-times.ts';
 import { adviceStarted } from './safety.ts';
 import type { CallState } from './tools.ts';
 
@@ -15,7 +16,7 @@ export interface Flag {
     | 'unconfirmed_claim' | 'unpaid_claim' | 'said_safe_for_allergy' | 'narrated' | 'untaken_message'
     // An estate agency's (presets/estate-agent.md §8), checked only on its calls.
     | 'valuation_figure' | 'bank_details' | 'code_spoken' | 'vacancy_said' | 'staff_whereabouts' | 'invented_interest'
-    | 'unconfirmed_acceptance' | 'disclosure_missed'
+    | 'unconfirmed_acceptance' | 'disclosure_missed' | 'invented_time'
     // A repairs contractor's (presets/property-maintenance.md §8), checked only on its calls.
     | 'safety_delayed' | 'approval_claim' | 'invented_eta' | 'said_safe_appliance' | 'unsafe_diy' | 'liability_admitted' | 'legal_deadline'
     | 'damp_blame' | 'medical_advice' | 'invented_price';
@@ -128,6 +129,11 @@ function estateFlags(text: string, state: CallState, names: string[]): Flag[] {
   // "I've recorded that this was about bank details", once a message is taken, is true: the rule is for offers (a live call on 3 October).
   const aboutMessage = state.messageTaken && recorded !== null && !/\boffer/i.test(text) && !/to the seller/i.test(recorded[0]) && !AMOUNT.test(text);
   if (recorded && !aboutMessage && !negated(text, recorded.index) && state.committed.length === 0) flags.push({ rule: 'unconfirmed_claim', text: recorded[0] });
+  // A time must come from the instructions, a tool or the caller (live, 6 October: "9am or 10:30am" offered for a
+  // viewing before anything was checked; 9am turned out to be taken).
+  const known = new Set([...state.times, ...state.heard.flatMap(knownTimes)]);
+  const made = timesIn(text).find((t) => !t.readings.some((r) => known.has(r) || state.timeRanges.some(([a, b]) => r >= a && r <= b)));
+  if (made) flags.push({ rule: 'invented_time', text: made.said });
   return flags;
 }
 

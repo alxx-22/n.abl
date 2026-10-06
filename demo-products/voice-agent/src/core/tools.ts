@@ -19,6 +19,7 @@ import {
   allergenAnswer, allergensNamed, allergensOf, describeLine, lineTotal, optionsFor, resolveItem, resolveModifiers,
 } from '../domain/menu.ts';
 import { amountsIn } from '../domain/amounts.ts';
+import { knownTimes, rangesIn } from '../domain/clock-times.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
@@ -88,6 +89,8 @@ export interface CallState {
   verifyMisses: number;
   /** A free valuation is offered to a buyer with a home to sell once a call, never pressed. */
   valuationOffered: boolean;
+  /** record_offer asks once whether an offer is subject to anything, never in a loop. */
+  conditionsAsked: boolean;
   /** What the tools told this call, so a guardrail knows an accepted offer was real news. */
   seen: { accepted: string[]; interest: boolean };
   /** The offer this call recorded. */
@@ -136,6 +139,9 @@ export interface CallState {
   emergencyTrade: string | null;
   /** Sums, in pence, the receptionist may say: from its instructions and what its tools returned. */
   amounts: number[];
+  /** An estate agency's times of day the receptionist may say (minutes after midnight), and the ranges its tools gave. */
+  times: number[];
+  timeRanges: [number, number][];
 }
 
 export function newCallState(): CallState {
@@ -143,11 +149,11 @@ export function newCallState(): CallState {
     lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, owed: null, messageTaken: false, messageChecked: false,
-    estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false,
+    estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
-    invoice: null, emergencyTrade: null, amounts: [],
+    invoice: null, emergencyTrade: null, amounts: [], times: [], timeRanges: [],
   };
 }
 
@@ -1239,6 +1245,12 @@ export async function runTool(name: string, args: Args, ctx: ToolContext): Promi
     const result = await tool.handler(args ?? {}, ctx);
     // A price a tool gave may be said; one nothing gave may not (a repairs call's invented_price).
     if (ctx.state.maintenance) ctx.state.amounts.push(...amountsIn(JSON.stringify(result)));
+    // So too a time (an estate agency's invented_time).
+    if (ctx.state.estate) {
+      const json = JSON.stringify(result);
+      ctx.state.times.push(...knownTimes(json));
+      ctx.state.timeRanges.push(...rangesIn(json));
+    }
     return result;
   } catch (err) {
     return { error: 'That did not work. Apologise briefly and offer to take a message.', detail: (err as Error).message };

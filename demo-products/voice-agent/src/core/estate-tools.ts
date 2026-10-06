@@ -561,6 +561,14 @@ export async function estateMessage(args: Args, ctx: ToolContext): Promise<Recor
     };
   }
   if (category === 'data') return { taken: true, for: first, note: `Tell them ${first} will reply within a month.` };
+  // A possible payment scam: the advice goes with the message. A live call on 6 October took the message and never gave it.
+  if (category === 'fraud') {
+    return {
+      taken: true, for: first,
+      say: "Please don't pay anything or act on changed bank details. Check with your own solicitor, on a number you already have, and you can report it to Report Fraud on 0300 123 2040.",
+      note: `Say that first, then that you've sent ${first} an urgent message and ${first} will call them today. Never say where ${first} is.`,
+    };
+  }
   // When they will hear back: on 5 October Ben, pulling out, was told the message was sent and nothing more.
   if (urgency === 'urgent') return { taken: true, for: first, note: `Tell them you've sent ${first} an urgent message and ${first} will call them today. Never say where ${first} is.` };
   return { taken: true, for: first, note: `Tell them ${first} will get back to them${urgency === 'today' ? ' today' : ''}.` };
@@ -598,6 +606,8 @@ function ricsAnswer(purpose: string, t: Tenant): string {
 /** Within about three months, or already with another agent: worth a call back soon. */
 const HOT = /\b(asap|as soon|straight away|immediately|right away|this month|next month|weeks?|(?:within |in )?(?:a|one|two|three|1|2|3|a couple of|a few) months?)\b/i;
 
+const TIMESCALE = /\b(?:within|in|over) (?:the next )?(?:a|one|two|three|four|five|six|nine|twelve|\d+|a couple of|a few) (?:weeks?|months?|years?)\b|\b(?:asap|as soon as (?:possible|we can)|(?:this|next) (?:month|year|spring|summer|autumn|winter))\b/i;
+
 async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const t = ctx.tenant;
   const p = t.profile;
@@ -626,7 +636,8 @@ async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<strin
   if (!address) return { booked: false, message: 'Ask for the first line of the address, read it back, then call this again.' };
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const otherAgent = noneToNull(str(args.other_agent));
-  const timescale = str(args.timescale);
+  // The caller's own words when the model leaves it out (a live call on 6 October: "moving for work within three months").
+  const timescale = str(args.timescale) ?? TIMESCALE.exec(ctx.state.heard.join(' '))?.[0];
   const executor = /executor|attorney|deputy/.test(capacity);
   const needsToBuy = bool(args.needs_to_buy);
   const details = {
@@ -680,6 +691,9 @@ async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<strin
  * and an urgent alert for the negotiator. Nothing here accepts, declines or
  * hints at either, and no other buyer's offer is ever in the answer.
  */
+/** "...three hundred and twenty thousand, subject to survey." The caller's own terms, up to the end of the sentence. */
+const SUBJECT_TO = /\bsubject to ((?:[a-z]+[ ,]{0,2}){1,8}?)(?=[.?!]|$|,? (?:and )?(?:we|i|it|that)\b)/i;
+
 async function recordOffer(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const t = ctx.tenant;
   const p = t.profile;
@@ -707,7 +721,13 @@ async function recordOffer(args: Args, ctx: ToolContext): Promise<Record<string,
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const email = str(args.email);
   const position = positionOf(args);
-  const conditions = noneToNull(str(args.conditions)) ?? null;
+  // Whether it's subject to anything is asked once: a live call on 6 October took "£320,000" and never heard "subject to survey".
+  const said = SUBJECT_TO.exec(ctx.state.heard.join('. '));
+  const conditions = noneToNull(str(args.conditions)) ?? (said ? `subject to ${said[1].trim()}` : null);
+  if (str(args.conditions) === undefined && !conditions && !ctx.state.conditionsAsked) {
+    ctx.state.conditionsAsked = true;
+    return { recorded: false, not_yet: 'Not recorded yet. Ask whether the offer is subject to anything (a survey, their mortgage, selling their home), then call this again with conditions, or "none".' };
+  }
   const viewedWith = noneToNull(str(args.viewed_with));
   const flags = [
     l.personal_interest ? 'connected' : null, bool(args.company_or_trust) ? 'company' : null, bool(args.gifted_deposit) ? 'gifted_deposit' : null,

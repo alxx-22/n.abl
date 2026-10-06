@@ -14,6 +14,7 @@ import { checkUtterance } from '../src/core/guardrails.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
 import { displayUkPhone } from '../src/domain/phone.ts';
 import { toLocal } from '../src/domain/time.ts';
+import { knownTimes, rangesIn } from '../src/domain/clock-times.ts';
 import { unsaid } from '../src/domain/listings.ts';
 import type { Tenant, TenantProfile } from '../src/domain/types.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
@@ -468,6 +469,39 @@ test('an offer, end to end: the fee first, then recorded whatever it is, confirm
   assert.match(String(m.message), /urgent message for Jess \(category offer\)/);
 });
 
+test('an offer\'s terms: asked for once when not given; the caller\'s own "subject to survey" is kept; a valuation keeps when they hope to move', async () => {
+  const t = await agency('ea-offer-terms');
+  const fee = 'Buyers pay thirty-six pounds including VAT each for ID checks, once an offer is accepted.';
+  const offer = { property: '22 Albion Road', amount: 320000, buyer_names: 'Alex Moran and Jamie Moran', first_time_buyer: true, funding: 'mortgage agreed in principle' };
+  // Live, 6 October: "£320,000" taken, and "subject to survey" never asked for or heard.
+  const a = await call(t);
+  await a.run('get_property', { property: '22 Albion Road' });
+  await a.run('record_offer', offer);
+  a.say(fee);
+  const ask = await a.run('record_offer', offer);
+  assert.equal(ask.recorded, false);
+  assert.match(String(ask.not_yet), /subject to anything/);
+  const none = await a.run('record_offer', offer);
+  assert.equal(none.recorded, true, 'asked once, never in a loop');
+  assert.equal((await repo.findOffer(t.id, { reference: String(none.reference) }))[0].conditions, null);
+  // Said by the caller but left out by the receptionist: kept as said.
+  const b = await call(t, '+447700900141');
+  await b.run('get_property', { property: '22 Albion Road' });
+  b.ctx.state.heard.push("It's three hundred and twenty thousand, subject to survey. We're first-time buyers.");
+  await b.run('record_offer', offer);
+  b.say(fee);
+  const kept = await b.run('record_offer', offer);
+  assert.equal(kept.recorded, true, JSON.stringify(kept));
+  assert.equal((await repo.findOffer(t.id, { reference: String(kept.reference) }))[0].conditions, 'subject to survey');
+  // A valuation: "within three months" from the caller's own words when the receptionist leaves it out.
+  const c = await call(t, '+447700900142');
+  c.ctx.state.heard.push("Yes, I'm looking to sell, moving for work within three months.");
+  const v = await c.run('book_valuation', { date: THU, time: '10:00', name: 'Jo Bloggs', address: '12 Hawthorn Way', postcode: 'BK3 7XY', purpose: 'sale', reason: 'moving for work' });
+  assert.equal(v.booked, true, JSON.stringify(v));
+  const d = (await repo.getBookingByReference(t.id, String(v.reference)))!.details as Record<string, unknown>;
+  assert.deepEqual([d.timescale, d.hot], ['within three months', true]);
+});
+
 test('messages reach one person: urgent ones text them; a complaint gets its reference and process; a compliance note stays private', async () => {
   const t = await agency('ea-messages');
   const { run, ctx, sent } = await call(t);
@@ -554,6 +588,8 @@ test('estate guardrails: a figure, bank details, codes, an empty home, where sta
   state.estate = true;
   const team = ['Rachel', 'Jess', 'Tom', 'Priya'];
   const rules = (line: string) => checkUtterance(line, state, team).map((f) => f.rule);
+  // Jess's 11:15 came from check_availability.
+  state.times.push(11 * 60 + 15);
   const cases: [string, string[]][] = [
     ["I can't value a home on the phone, but Priya can come and see it for free.", []],
     ['Next door went for four hundred, so yours could fetch about £410,000.', ['valuation_figure']],
@@ -597,12 +633,35 @@ test('estate guardrails: a figure, bank details, codes, an empty home, where sta
   for (const [line] of cases) assert.ok(checkUtterance(line, restaurant, team).every((f) => ['unconfirmed_claim', 'unpaid_claim', 'said_safe_for_allergy', 'narrated', 'untaken_message'].includes(f.rule)), line);
 });
 
+test('estate guardrails: a time offered must come from the instructions, a tool or the caller', () => {
+  const state = newCallState();
+  state.estate = true;
+  const rules = (line: string) => checkUtterance(line, state).map((f) => f.rule);
+  // Live, 6 October: times offered for a viewing before anything was checked; 9am was taken.
+  state.times.push(...knownTimes('Saturday: 9am till 4pm.'));
+  assert.deepEqual(rules("I've got availability at 9am or 10:30am this Saturday, which works for you?"), ['invented_time']);
+  assert.deepEqual(rules("We're open from 9am on Saturday."), [], 'from the instructions');
+  // A tool's exact times and anything inside its ranges may be offered, however the time is written or transcribed.
+  const result = JSON.stringify({ available_ranges: ['10am to 10:15am', '11:15am to 12:30pm'], alternatives: [{ time: '14:00', spoken: '2pm' }] });
+  state.times.push(...knownTimes(result));
+  state.timeRanges.push(...rangesIn(result));
+  for (const line of ['We have 10 am to 10 15 am, or 11:15am to 12:30pm.', 'How about 11:30am?', 'I could do 2pm with Tom.', 'Would midday suit?', "That's Flat 4 10am, then."]) assert.deepEqual(rules(line), [], line);
+  assert.deepEqual(rules('Or there is 3:45pm.'), ['invented_time']);
+  // The caller's own time may be said back.
+  state.heard.push('Could you do quarter to five, say 4:45pm?');
+  assert.deepEqual(rules('Let me check 4:45pm for you.'), []);
+  // A repairs contractor's and a restaurant's calls are not checked for times.
+  assert.deepEqual(checkUtterance("I've got 9am or 10:30am.", newCallState()), []);
+});
+
 test('take_message: a caller who talked about bank details leaves an urgent fraud message, whatever it was filed as', async () => {
   const t = await agency('ea-fraud');
   const { ctx, run, sent } = await call(t, '+447700900137');
   ctx.state.heard.push("Actually, our firm's bank details have changed. Please tell the buyer to send the deposit to our new account.");
   const r = await run('take_message', { name: 'Mark Field', message: 'Please call back about 2 Elm Court.', category: 'general', urgency: 'today', for: 'negotiator' });
   assert.equal(r.taken, true);
+  // The advice goes with it: a live call on 6 October took the message and never gave it.
+  assert.match(String(r.say), /don't pay anything or act on changed bank details.*own solicitor, on a number you already have.*Report Fraud on 0300 123 2040/);
   const m = (await repo.listMessages(t.id, 500)).find((x) => x.from_name === 'Mark Field')!;
   assert.equal(m.category, 'fraud');
   assert.equal(ctx.state.fraudReported, true, 'the call knows a fraud message is taken (no reminder needed)');
