@@ -264,7 +264,7 @@ test('property maintenance: the sample properties are invented, inside the patch
     assert.doesNotMatch(JSON.stringify(p.access), /\d{3,}/, `${p.key}: no code`);
   }
   assert.equal(props.filter((p) => p.access.method === 'key_safe').length, 9);
-  assert.equal(props.filter((p) => p.client === null).length, 26, 'homeowners');
+  assert.equal(props.filter((p) => p.client === null).length, 33, 'homeowners, the leaseholders in blocks among them');
   // The homes the signature moments lean on.
   const elm = props.find((p) => p.key === 'elm_14')!;
   assert.equal(fullAddress(elm), '14 Elm Road (example), Nottingham NG5');

@@ -793,3 +793,91 @@ test('safety mode hears a denial inside the words too', async () => {
   assert.equal(detectSafety("The water isn't anywhere near the lights, though."), null);
   assert.equal(detectSafety('Water is coming through the light fitting in the hall.'), 'electric');
 });
+
+test('a block: shared faults are one job on the block for its managing agent; inside a flat is the leaseholder\'s own', async () => {
+  const t = await fernhill('pm-block');
+  const MARCUS = '+447700900578';
+  const JOANNE = '+447700900577';
+  const MARTIN = '+447700900408';
+  const blockJobs = async () => (await repo.listJobs(t.id, { property: 'riverside_court' })).filter((j) => j.status !== 'cancelled');
+  // The seed's door entry: rung in from Flat 1, then Flat 9.
+  const door = (await blockJobs()).find((j) => /door entry/i.test(j.description))!;
+  assert.deepEqual([door.status, door.client_key, door.reporters.length], ['scheduled', 'riverside', 1]);
+
+  // Marcus in Flat 4 finds his flat by the block's name: it's his own, and the block's shared parts are Riverside's.
+  const marcus = await call(t, MARCUS);
+  const found = await marcus.run('find_property', { postcode: 'NG7', number: 'Flat 4', street: 'Riverside Court' });
+  assert.equal(found.found, 1, JSON.stringify(found));
+  const flat = found.properties[0];
+  assert.deepEqual([flat.property, flat.caller_is, flat.looked_after_by, flat.block], ['riverside_court_flat_4', 'homeowner', 'the homeowner', 'Riverside Court']);
+  assert.match(flat.shared_parts, /for Riverside Block Management to instruct/);
+  assert.match(flat.inside_the_flat, /leaseholder's own/);
+
+  // The door entry again: one job, Marcus added, told its status; never who else rang.
+  const tri = await marcus.run('triage_fault', { description: "The door entry buzzer isn't letting anyone in" });
+  assert.equal(tri.price, undefined, 'Riverside pays for the shared parts');
+  assert.match(tri.shared_parts, /no price and no window/);
+  const again = await marcus.run('job', { action: 'create', description: "The door entry buzzer isn't letting anyone in", name: 'Marcus Okoro' });
+  assert.equal(again.already_reported, true, JSON.stringify(again));
+  assert.equal(again.reference, door.reference);
+  assert.match(again.say, /^We already have that one: it's booked for /);
+  assert.doesNotMatch(JSON.stringify(again), /Joanne|Helen|Pierce|Duffy|Flat 1|Flat 9/);
+  assert.match(marcus.sent.at(-1)!.body, new RegExp(`already have the door entry fault at Riverside Court as job ${door.reference}`));
+  await marcus.run('job', { action: 'create', description: 'Door entry still broken', name: 'Marcus Okoro' });
+  assert.deepEqual((await repo.listJobs(t.id, { reference: door.reference }))[0].reporters.map((r) => r.phone), ['+447700900579', MARCUS], 'added once');
+
+  // A new shared fault: logged for Riverside to instruct, no date, and Martin Hale's phone asked.
+  const lights = await marcus.run('job', { action: 'create', description: 'The stairwell lights are out on the second floor', name: 'Marcus Okoro' });
+  assert.equal(lights.for_client_to_instruct, true, JSON.stringify(lights));
+  assert.match(lights.say, /shared parts of Riverside Court, so it's for Riverside Block Management to instruct.*It isn't booked yet\./);
+  assert.ok(marcus.ctx.state.awaitingApproval, 'the guardrail holds "booked" back');
+  const lj = (await repo.listJobs(t.id, { reference: lights.reference }))[0];
+  assert.deepEqual([lj.property_key, lj.client_key, lj.status, lj.visit_date, lj.reporter.phone], ['riverside_court', 'riverside', 'awaiting_approval', null, MARCUS]);
+  assert.match(marcus.sent.find((x) => x.to === MARTIN)!.body, /stairwell lights|lights fault at Riverside Court/);
+  // Joanne rings about the same lights: added to it.
+  const joanne = await call(t, JOANNE);
+  await joanne.run('find_property', { postcode: 'NG7', number: 'Flat 1', street: 'Weaver Lane' });
+  const same = await joanne.run('job', { action: 'create', description: 'No lights on the landing', name: 'Joanne Pierce' });
+  assert.deepEqual([same.already_reported, same.reference], [true, lights.reference]);
+  assert.match(same.status, /waiting for approval/);
+
+  // Water through the roof into a top-floor flat: made safe now, the repair logged for Riverside.
+  const helen = await call(t, '+447700900579');
+  await helen.run('find_property', { postcode: 'NG7', number: 'Flat 9', street: 'Riverside Court' });
+  const roof = await helen.run('job', { action: 'create', description: 'The roof is leaking into my bedroom', name: 'Helen Duffy' });
+  assert.deepEqual([roof.booked, roof.priority], [true, 'emergency'], JSON.stringify(roof));
+  assert.match(roof.say, /paged to make it safe.*The repair itself is for Riverside Block Management to instruct/);
+  const roofJobs = (await blockJobs()).filter((j) => /roof/i.test(j.description));
+  assert.deepEqual(roofJobs.map((j) => j.status).sort(), ['awaiting_approval', 'new']);
+
+  // Inside the flat: the leaseholder's own, priced first like any homeowner's.
+  const tap = await marcus.run('job', { action: 'create', description: 'Kitchen tap dripping', name: 'Marcus Okoro' });
+  assert.equal(tap.booked, false);
+  assert.match(tap.message, /Tell them the price first/);
+
+  // A flat heated by the block's boiler: no heating is the block's.
+  const ravi = await call(t, '+447700900580');
+  await ravi.run('find_property', { postcode: 'DE1', number: 'Flat 3', street: 'Kingfisher House' });
+  const heat = await ravi.run('job', { action: 'create', description: 'No heating in the flat since this morning', name: 'Ravi Sandhu' });
+  assert.equal(heat.for_client_to_instruct, true, JSON.stringify(heat));
+  assert.equal((await repo.listJobs(t.id, { reference: heat.reference }))[0].property_key, 'kingfisher_house');
+
+  // A lift is the lift contractor's, never ours.
+  const lift = await marcus.run('job', { action: 'create', description: 'The lift is out of order', name: 'Marcus Okoro' });
+  assert.match(lift.message, /We don't look after lifts.*Apex Lifts/);
+
+  // Approved on Martin's phone: everyone who reported the lights hears when.
+  const texts: { to: string | null; body: string }[] = [];
+  await jobAction(repo, t, lights.reference, { action: 'authorise', answer: 'yes' }, async (to, body) => void texts.push({ to, body }), NOW);
+  const told = texts.filter((x) => /has approved job/.test(x.body)).map((x) => x.to);
+  assert.deepEqual(told.sort(), [JOANNE, MARCUS].sort());
+});
+
+test('a business site: the site contact who rings is the one who approves; found by its name', async () => {
+  const t = await fernhill('pm-site');
+  const sian = await call(t, '+447700900412');
+  const found = await sian.run('find_property', { postcode: 'NG1', number: '9', street: 'Hosiery Row' });
+  assert.equal(found.properties[0].caller_is, 'authoriser');
+  const byName = await sian.run('find_property', { postcode: 'NG1', number: 'The Copper Kettle' });
+  assert.equal(byName.properties?.[0]?.property, 'hosiery_row_9', JSON.stringify(byName));
+});

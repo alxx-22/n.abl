@@ -92,15 +92,32 @@ type Role = 'occupant' | 'authoriser' | 'homeowner' | 'stranger';
 function roleAt(ctx: ToolContext, p: MtProperty): Role {
   const phone = ctx.callerPhone;
   if (!phone) return 'stranger';
-  if (p.occupant.phone === phone) return p.client ? 'occupant' : 'homeowner';
+  // The client's contact first: at a business, the site contact who rings is also the one who approves.
   const client = p.client ? mt(ctx).clients.find((c) => c.key === p.client) : undefined;
-  return client?.contact.phone === phone ? 'authoriser' : 'stranger';
+  if (client?.contact.phone === phone) return 'authoriser';
+  if (p.occupant.phone === phone) return p.client ? 'occupant' : 'homeowner';
+  return 'stranger';
 }
 
 const KIND_WORDS: Record<string, string> = { agent: 'a letting agent', landlord: 'a landlord', block: 'a block manager', social: 'a housing association', commercial: 'a business', insurer: 'an insurer' };
 
+/** A block's name, from its common parts' record: "Riverside Court, 2" is Riverside Court. */
+export const blockName = (b: Pick<MtProperty, 'number'>) => b.number.replace(/,?\s*\d+\w?\s*$/, '').trim() || b.number;
+
+/** What a caller in a block hears about it: the shared parts are its managing agent's, inside a flat is the leaseholder's own. */
+function blockBrief(ctx: ToolContext, p: MtProperty, block: MtProperty | undefined, known: boolean) {
+  if (!block) return {};
+  const agent = block.client ? mt(ctx).clients.find((c) => c.key === block.client) : undefined;
+  const who = agent ? (known ? agent.name : "the block's managing agent") : 'the freeholder';
+  return {
+    block: blockName(block),
+    shared_parts: `Faults in the shared parts of ${blockName(block)} (the main door and door entry, stairs and landings, their lights, the roof) are for ${who} to instruct. Raise them with job create: they go on the block's own record, once however many residents ring.`,
+    ...(p.kind === 'flat' ? { inside_the_flat: "Repairs inside the flat (its taps, boiler or electrics) are the leaseholder's own to arrange and pay for: book them privately at our normal prices. Give no view on what the lease says." } : {}),
+  };
+}
+
 /** A property as a caller may hear it: who looks after it only to someone on file, and never a code or a staff marker. */
-function propertyBrief(ctx: ToolContext, p: MtProperty, role: Role) {
+function propertyBrief(ctx: ToolContext, p: MtProperty, role: Role, block?: MtProperty) {
   const client = p.client ? mt(ctx).clients.find((c) => c.key === p.client) : undefined;
   const known = role !== 'stranger';
   return {
@@ -118,6 +135,7 @@ function propertyBrief(ctx: ToolContext, p: MtProperty, role: Role) {
     },
     ...(known && p.vulnerable.length ? { vulnerable: p.vulnerable } : {}),
     gas_supply: p.gas,
+    ...blockBrief(ctx, p, block, known),
   };
 }
 
@@ -143,12 +161,20 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
     if (!mine.length) return { found: 0, message: 'No property on file for this number. Ask for the postcode and the house number or name.' };
     return { found: mine.length, message: "We have this number on file. Ask them to say the address; don't read it out. Then call this again with the postcode and number." };
   }
-  const nums = number ? numbersLike(/(\d+)\s*$/.exec(number)?.[1] ?? number) : [];
+  // "Flat 9" alone has no building number; "Flat 2, 7" has 7.
+  const building = number?.replace(/^\s*(?:flat|apartment)\s*\w+\s*,?\s*/i, '') ?? '';
+  const nums = /\d/.test(building) ? numbersLike(/(\d+)\s*$/.exec(building)?.[1] ?? building) : [];
   const flat = number && /flat|apartment/i.test(number) ? /(?:flat|apartment)\s*(\w+)/i.exec(number)?.[1] : undefined;
+  // A block or a business by its own name: "Flat 9, Riverside Court", "The Copper Kettle".
+  const named = (p: MtProperty, q: string | undefined) => {
+    const core = q ? streetCore(q) : '';
+    return core.length > 2 && streetCore(`${p.number} ${p.site_name ?? ''}`).includes(core);
+  };
   const scored = all.map((p) => {
     let score = 0;
     if (pc && soundKey(p.district) === soundKey(pc.district)) score += 2;
-    if (street && (streetCore(p.street) === streetCore(street) || streetCore(p.street).startsWith(streetCore(street)) || streetCore(street).startsWith(streetCore(p.street)))) score += 3;
+    if (street && (streetCore(p.street) === streetCore(street) || streetCore(p.street).startsWith(streetCore(street)) || streetCore(street).startsWith(streetCore(p.street)) || named(p, street))) score += 3;
+    else if (!street && named(p, building)) score += 3;
     if (nums.length) score += nums[0] === houseNumber(p) ? 3 : nums.includes(houseNumber(p)) ? 1 : -5;
     if (flat && !new RegExp(`flat\\s*${flat}\\b`, 'i').test(p.number)) score -= 2;
     return { p, score };
@@ -171,7 +197,7 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
   const waiting = props.length === 1 && ctx.state.role === 'authoriser' ? await awaitingAt(ctx, props[0].key) : [];
   return {
     found: props.length,
-    properties: props.map((p) => propertyBrief(ctx, p, roleAt(ctx, p))),
+    properties: props.map((p) => propertyBrief(ctx, p, roleAt(ctx, p), p.block ? all.find((x) => x.key === p.block) : undefined)),
     ...(waiting.length ? { waiting_for_their_approval: waiting, to_answer: 'For a yes or no to one of these, use job approve or decline with its reference; never raise it again.' } : {}),
     ...(props.length > 1 ? { ask: 'More than one fits: ask which, by the house number or flat.' } : {}),
     ...(nums.length > 1 && props.length === 1 && houseNumber(props[0]) !== nums[0] ? { check: `Check the number: we have ${houseNumber(props[0])}, they said ${nums[0]}.` } : {}),
@@ -333,7 +359,9 @@ async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string,
   const checks = t.trade
     ? (Object.keys(CHECKS) as (keyof typeof CHECKS)[]).filter((k) => m.checks[k] && CHECKS[k].trades.includes(t.trade!)).map((k) => CHECKS[k].say)
     : [];
-  const homeowner = !p || p.client === null;
+  // A block's shared parts: the managing agent pays and instructs, so a resident hears no price and is offered no window.
+  const part = p?.block ? sharedPart(words, p) : null;
+  const homeowner = (!p || p.client === null) && !part;
   const ooh = outOfHours(ctx);
   return {
     trade: t.trade ?? 'investigate',
@@ -346,6 +374,7 @@ async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string,
     checks_allowed: checks,
     ...(checks.length ? {} : { no_checks: 'Suggest nothing for them to try: no checks are allowed for this.' }),
     ...(homeowner ? { price: ooh && t.priority === 'emergency' ? `Out of hours: ${money(m.prices.ooh_first_hour_pence)}${incVat(m)} for the first hour.` : `Call-out ${money(m.prices.callout_pence)}${incVat(m)}, with the first hour; then ${money(m.prices.half_hour_pence)} a half hour.` } : {}),
+    ...(part ? { shared_parts: `The ${part} is in the block's shared parts: no price and no window for them. Raise it with job create: it goes to the managing agent to instruct, or onto the job already open for it.` } : {}),
     note: "Say the trade and how soon. Never say what's wrong, that it's safe, or what it will cost beyond the price above.",
   };
 }
@@ -489,15 +518,87 @@ function pageFor(ctx: ToolContext, trade: string, gas: boolean, district: string
   return able[0] ?? (outOfHours(ctx) ? pool.find((e) => !gas || e.gas_safe) ?? null : null);
 }
 
+// The shared parts of a block, by what failed. Whoever rings, a fault there is the block's: one job on its own record,
+// for its managing agent, however many residents report it (presets/property-maintenance-use-cases.md, communal faults).
+const SHARED: [string, RegExp][] = [
+  ['door entry', /\b(?:door ?entry|entry ?(?:phone|system)|intercom|buzzer|(?:main|communal|entrance) (?:front )?doors?|main entrance|front door (?:to|of) the (?:block|building|flats))\b/i],
+  ['lights', /\b(?:communal|stair(?:well|case)?|landing|hall(?:way)?|corridor|entrance|emergency) light(?:s|ing)?\b|\blights? (?:on|in) the (?:stairs|stairwell|landings?|hall(?:way)?|corridors?|entrance)\b/i],
+  ['roof', /\broof\b|\bgutter\w*|\bdownpipes?\b/i],
+  ['lift', /\blifts?\b/i],
+  ['stairs', /\bstair(?:s|well|case|way)\b|\blandings?\b|\bcorridors?\b/i],
+  ['bin store', /\bbin (?:store|room|area|shed)\b/i],
+  ['fire doors', /\bfire doors?\b/i],
+  ['communal heating', /\bcommunal (?:boiler|heating)\b|\bplant room\b/i],
+  ['shared parts', /\bcommunal\b|\bcommon parts\b|\bshared (?:area|parts|hall)\b/i],
+];
+
+/** The shared part a fault is in, or null for one inside a flat. A flat heated by the block's boiler shares its heating faults. */
+export function sharedPart(words: string, p?: Pick<MtProperty, 'notes'>): string | null {
+  const hit = SHARED.find(([, re]) => re.test(words));
+  if (hit) return hit[0];
+  return p && /\bcommunal\b/i.test(p.notes.boiler ?? '') && NO_HEAT.test(words) ? 'communal heating' : null;
+}
+
+/** A repair in a block's shared parts, raised for its managing agent to instruct: their phone says yes, as for work over a limit. */
+async function forInstruction(ctx: ToolContext, base: NewJob, client: MtClient, block: MtProperty, part: string): Promise<Job> {
+  const m = mt(ctx);
+  const job = await ctx.repo.createJob(ctx.tenant, { ...base, status: 'awaiting_approval', reason: `${base.reason ? `${base.reason}; ` : ''}for ${client.name} to instruct` });
+  record(ctx, job.reference, 'job', 'committed');
+  // Raised, not booked: the guardrail holds "booked" and "coming" back (§8, approval_claim).
+  ctx.state.awaitingApproval = true;
+  ctx.state.jobsVerified.push(job.reference);
+  if (client.contact.phone) await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: ${part} fault at ${blockName(block)}, reported by a resident: ${base.description}. Job ${job.reference} is waiting for you to instruct us. (Demo)`);
+  if (base.reporter?.phone) await smsTo(ctx, base.reporter.phone, `${ctx.tenant.profile.name}: we've logged the ${part} fault at ${blockName(block)} for ${client.name} to instruct, ref ${job.reference}. We'll text you once a visit is booked. (Demo)`);
+  ctx.action({ kind: 'job_created', title: `For ${client.name} to instruct · ${cap(tradeLabel(m, job.trade))}`, detail: `${blockName(block)} · ${part} · ref ${job.reference}`, data: { reference: job.reference } });
+  return job;
+}
+
+/** An open job on the block for the same shared part: the caller is added to it, never told who else rang. */
+async function sharedAlready(ctx: ToolContext, block: MtProperty, part: string, name: string, phone: string | null): Promise<Record<string, unknown> | null> {
+  const open = (await ctx.repo.listJobs(ctx.tenant.id, { property: block.key }))
+    .filter((j) => !['done', 'invoiced', 'cancelled'].includes(j.status) && sharedPart(j.description) === part);
+  const j = open[0];
+  if (!j) return null;
+  const known = j.reporter.phone === phone || j.reporters.some((r) => r.phone === phone);
+  if (!known) {
+    await ctx.repo.updateJob(ctx.tenant.id, j.reference, { reporters: [...j.reporters, { name, phone, at: ctx.now().toISOString() }] }, 'also reported by a resident', { by: 'receptionist', at: ctx.now() });
+  }
+  ctx.state.found.push(j.reference);
+  ctx.state.jobsVerified.push(j.reference);
+  const words = jobWords(ctx, j, block);
+  if (phone) await smsTo(ctx, phone, `${ctx.tenant.profile.name}: we already have the ${part} fault at ${blockName(block)} as job ${j.reference} (${words.status}). We've added you, so you'll hear when it's done. (Demo)`);
+  ctx.action({ kind: 'job_changed', title: `Also reported · ${cap(part)}`, detail: `${blockName(block)} · ref ${j.reference}`, data: { reference: j.reference } });
+  return {
+    booked: false, already_reported: true, ...words,
+    say: `We already have that one: it's ${words.status}. I've added them to it, so they'll hear when it's done.`,
+    never: 'Never say who else reported it, or anything about the other residents.',
+  };
+}
+
 async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const m = mt(ctx);
   const found = await propertyFor(args, ctx);
   if ('reply' in found) return found.reply;
-  const p = found;
-  const client = p.client ? m.clients.find((c) => c.key === p.client) : undefined;
-  if (client?.status === 'on_stop') return { booked: false, message: `We can't book work for ${client.name} at the moment. Take a message for the office (category client).` };
+  /** Where the caller is; the job goes on p, which for a fault in a block's shared parts is the block itself. */
+  const home = found;
+  let p = found;
   const description = str(args.description);
   if (!description) return { booked: false, message: 'Say what the problem is in a few words (description), then call again.' };
+  // From the job's own words only: "the stair lights too", said earlier, must not send a dripping tap to the block.
+  const part = p.block ? sharedPart(description, p) : null;
+  const block = part ? (p.kind === 'communal' ? p : await ctx.repo.getMtProperty(ctx.tenant.id, p.block!)) : null;
+  if (part === 'lift' && block) {
+    return { booked: false, message: `We don't look after lifts: the building's lift contractor does.${block.notes.lift ? ` ${block.notes.lift}.` : ''} If someone is trapped, use triage_fault.` };
+  }
+  if (block) p = block;
+  const client = p.client ? m.clients.find((c) => c.key === p.client) : undefined;
+  if (client?.status === 'on_stop') return { booked: false, message: `We can't book work for ${client.name} at the moment. Take a message for the office (category client).` };
+  // Already reported by another resident: added to that job before anything else is asked.
+  const reporterName = realName(args.name) ?? (ctx.callerPhone === home.occupant.phone ? home.occupant.name ?? undefined : undefined);
+  if (block && part && reporterName) {
+    const already = await sharedAlready(ctx, block, part, reporterName, normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone);
+    if (already) return already;
+  }
   // A landlord's safety check is booked on the register, which keeps the record's date (live, 6 October: one went in as a repair).
   if (p.client && /\b(?:gas safety (?:record|check|certificate|inspection)|cp12|landlord'?s gas|eicr|electrical (?:installation )?condition report)\b/i.test(description)) {
     return { booked: false, message: 'That is a safety check: book it with compliance (action book, with the services), which keeps the record\'s date and marks the register.' };
@@ -512,7 +613,7 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   // The tool's priority stands unless the model asks for a higher one: a caller's say-so never lowers an emergency.
   const order: JobPriority[] = ['routine', 'urgent', 'emergency'];
   let priority = asked && order.includes(asked) && order.indexOf(asked) > order.indexOf(t.priority) ? asked : t.priority;
-  const name = realName(args.name) ?? (ctx.callerPhone === p.occupant.phone ? p.occupant.name ?? undefined : undefined);
+  const name = reporterName;
   if (!name) return { booked: false, message: ASK_NAME };
   const homeowner = p.client === null;
   if (homeowner && !priceSaid(ctx.state.said, m.prices.callout_pence) && !ctx.state.priceAsked) {
@@ -522,6 +623,11 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   const gas = isGasTrade(m, trade) || t.gas;
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const role = roleOf(args.role) ?? (ctx.state.role === 'authoriser' ? (client?.kind === 'agent' ? 'agent' : 'landlord') : homeowner ? 'homeowner' : 'occupant');
+  // Water coming in through a block's roof is made safe now, on the managing agent's emergency authority; the repair waits for them.
+  if (block && client?.kind === 'block' && priority !== 'emergency' && /\b(?:leak\w*|drip\w*|water (?:is )?(?:coming|getting|pouring) (?:in|through))\b/i.test(`${description} ${ctx.state.heard.join(' ')}`) && ['roof', 'shared parts'].includes(part!)) {
+    priority = 'emergency';
+    t.reason = `Water coming in from the shared parts: made safe on ${client.name}'s emergency authority`;
+  }
   // Noted only with their consent; without it, nothing about anyone's health is kept. Unsaid is asked, once.
   const vulnerableGate = `consent:${p.key}`;
   if (str(args.vulnerable) && !/^(?:none|no|n\/a)$/i.test(str(args.vulnerable)!) && bool(args.consent) === undefined && !ctx.state.gateAsked.includes(vulnerableGate)) {
@@ -579,9 +685,10 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     await smsTo(ctx, phone, `${ctx.tenant.profile.name}: emergency job ${job.reference} raised. Our ${ooh ? 'on-call ' : ''}engineer has been paged; we'll text you when they're on the way. (Demo)`);
     if (client) await noticeToClient(ctx, client, job, p);
     ctx.action({ kind: 'job_created', title: `Emergency · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · paged ${e?.first_name ?? 'nobody free'} · ref ${job.reference}`, data: { reference: job.reference } });
+    const repair = block && client?.kind === 'block' ? await forInstruction(ctx, { ...base, description: `Repair after make-safe ${job.reference}: ${description}`, priority: 'urgent' }, client, block, part!) : null;
     return {
       booked: true, reference: job.reference, reference_spoken: spokenReference(job.reference), priority,
-      say: `Our ${ooh ? 'on-call ' : ''}engineer has been paged. We aim to be with them within ${m.priorities.emergency.attend_hours} hours, and they'll get a text as soon as the engineer accepts.`,
+      say: `Our ${ooh ? 'on-call ' : ''}engineer has been paged${block ? ' to make it safe' : ''}. We aim to be with them within ${m.priorities.emergency.attend_hours} hours, and they'll get a text as soon as the engineer accepts.${repair ? ` The repair itself is for ${client!.name} to instruct: it's logged for them, with no date yet.` : ''}`,
       ...dampWords,
       never: `Don't give the engineer's name or an arrival time: nobody has accepted yet.${dampWords.never ? ` ${dampWords.never}` : ''}`,
     };
@@ -591,6 +698,15 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   // a tenant asking what it will cost has no quote.
   if (client && !estimate && /\b(?:quoted?|priced|estimated?)\b/i.test(`${description} ${str(args.reference) ?? ''} ${ctx.state.heard.join(' ')}`)) {
     return { booked: false, message: `Ask what the quote or price came to, then call again with estimate_pounds: work over ${client.name}'s limit needs their approval before it is booked.` };
+  }
+  // A block's shared parts are its managing agent's to instruct: logged for them with no date, and never priced for them.
+  if (block && client?.kind === 'block') {
+    const job = await forInstruction(ctx, base, client, block, part!);
+    return {
+      booked: false, for_client_to_instruct: true, reference: job.reference, reference_spoken: spokenReference(job.reference),
+      say: `That's in the shared parts of ${blockName(block)}, so it's for ${client.name} to instruct. I've logged it and sent it to them, and we'll text you once a visit is booked. It isn't booked yet.`,
+      never: `Never agree a price or a date for ${client.name}, and never give a view on what the lease says.`,
+    };
   }
   if (client && estimate && estimate * 100 > client.works_limit_pence) {
     const job = await ctx.repo.createJob(ctx.tenant, { ...base, status: 'awaiting_approval', price_pence: estimate * 100 });

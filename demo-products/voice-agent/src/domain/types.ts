@@ -718,7 +718,7 @@ export interface MtProperty {
   /** The client who authorises work here; null for a homeowner's own home. */
   client: string | null;
   occupant: { name: string | null; phone: string | null; texts_ok: boolean };
-  notes: { stopcock?: string; boiler?: string; parking?: string; pets?: string };
+  notes: { stopcock?: string; boiler?: string; parking?: string; pets?: string; lift?: string };
   access: { method: 'occupant' | 'key_safe' | 'keys_held'; note: string };
   /** Noted with the occupant's consent; can raise a job's priority. */
   vulnerable: string[];

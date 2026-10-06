@@ -241,8 +241,10 @@ export async function jobAction(
       if (!r) throw new HttpError(409, 'That job has moved on: refresh and try again.');
       if (quote) await repo.decideQuote(t.id, quote.reference, 'approved', who, now);
       const when = slot ? `${spokenDate(slot.date)}, ${inSentence(slot.window.label)} (${spokenTime(slot.window.from)} to ${spokenTime(slot.window.to)})` : null;
-      if (occupant && occupant !== client?.contact.phone) {
-        await text(occupant, `${t.profile.name}: ${client?.name ?? 'your landlord'} has approved job ${job.reference}. ${when ? `${slot!.engineers[0].first_name} will come ${when}. Call us if that doesn't suit.` : "We'll call you to arrange a time."} (Demo)`);
+      // A block's shared parts: everyone who reported it hears, not only the first.
+      for (const to of new Set([occupant, ...job.reporters.map((x) => x.phone)])) {
+        if (!to || to === client?.contact.phone) continue;
+        await text(to, `${t.profile.name}: ${client?.name ?? 'your landlord'} has approved job ${job.reference}. ${when ? `${slot!.engineers[0].first_name} will come ${when}. Call us if that doesn't suit.` : "We'll call you to arrange a time."} (Demo)`);
       }
       if (client?.contact.phone) await text(client.contact.phone, `${t.profile.name}: thank you, ${what} approved.${when ? ` Booked for ${when}.` : ''} (Demo)`);
       note({

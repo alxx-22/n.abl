@@ -2257,7 +2257,7 @@
    "district": "NG7",
    "town": "Nottingham",
    "kind": "flat",
-   "client": "riverside",
+   "client": null,
    "occupant": {
     "name": "Joanne Pierce",
     "phone": "07700 900577",
@@ -2287,7 +2287,7 @@
    "district": "NG7",
    "town": "Nottingham",
    "kind": "flat",
-   "client": "riverside",
+   "client": null,
    "occupant": {
     "name": "Marcus Okoro",
     "phone": "07700 900578",
@@ -2317,7 +2317,7 @@
    "district": "NG7",
    "town": "Nottingham",
    "kind": "flat",
-   "client": "riverside",
+   "client": null,
    "occupant": {
     "name": "Helen Duffy",
     "phone": "07700 900579",
@@ -2377,7 +2377,7 @@
    "district": "DE1",
    "town": "Derby",
    "kind": "flat",
-   "client": "riverside",
+   "client": null,
    "occupant": {
     "name": "Ravi Sandhu",
     "phone": "07700 900580",
@@ -2407,7 +2407,7 @@
    "district": "DE1",
    "town": "Derby",
    "kind": "flat",
-   "client": "riverside",
+   "client": null,
    "occupant": {
     "name": "Grace Liddell",
     "phone": "07700 900581",
@@ -2467,7 +2467,7 @@
    "district": "LE11",
    "town": "Loughborough",
    "kind": "flat",
-   "client": "riverside",
+   "client": null,
    "occupant": {
     "name": "Tom Ashby",
     "phone": "07700 900582",
@@ -2497,7 +2497,7 @@
    "district": "LE11",
    "town": "Loughborough",
    "kind": "flat",
-   "client": "riverside",
+   "client": null,
    "occupant": {
     "name": "Leah Grant",
     "phone": "07700 900583",
