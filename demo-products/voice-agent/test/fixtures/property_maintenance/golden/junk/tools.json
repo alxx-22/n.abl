@@ -1,11 +1,13 @@
 [
  "get_opening_hours",
  "search_knowledge",
+ "take_demo_payment",
  "safety_advice",
  "find_property",
  "triage_fault",
  "job",
  "check_windows",
+ "find_invoice",
  "compliance",
  "take_message",
  "end_call"
