@@ -610,13 +610,14 @@ test('demo: an estate agency\'s sales: milestones, dates, updates, keys on compl
   assert.equal((await act('00000000-0000-0000-0000-000000000000', { action: 'milestone', key: 'survey' })).status, 404);
 
   // A reduction: the buyers who said yes to alerts and whose search it fits hear; one who said no does not.
-  await app.repo.upsertBuyer(made.data.id, '+447700900781', 'Yes Please', { roles: ['buyer'], requirements: { min_beds: 1 } }, true);
-  await app.repo.upsertBuyer(made.data.id, '+447700900782', 'No Thanks', { roles: ['buyer'], requirements: { min_beds: 1 } }, false);
+  // Below 030: the seed's random buyers never have these numbers (estate/seed.ts), so neither is someone else's already.
+  await app.repo.upsertBuyer(made.data.id, '+447700900011', 'Yes Please', { roles: ['buyer'], requirements: { min_beds: 1 } }, true);
+  await app.repo.upsertBuyer(made.data.id, '+447700900012', 'No Thanks', { roles: ['buyer'], requirements: { min_beds: 1 } }, false);
   const station = await listing('station_27');
   const cut = await dan.call('PATCH', `${path}/listings/station_27`, { action: 'price', price_pence: station.price_pence - 500_000 });
   assert.match(cut.data.message, /reduced to £[\d,]+\. \d+ buyers? (?:has|have) been texted\./);
-  assert.match((await texts('07700 900781')).at(-1), /27 Station Road has been reduced: now .+ To stop these texts, call us\./);
-  assert.equal((await texts('07700 900782')).length, 0);
+  assert.match((await texts('07700 900011')).at(-1), /27 Station Road has been reduced: now .+ To stop these texts, call us\./);
+  assert.deepEqual(await texts('07700 900012'), []);
 
   // Describe your stock: a description first; then the drafted homes come back, and nothing is saved.
   const before = (await dan.call('GET', path)).data.answers.listings;
