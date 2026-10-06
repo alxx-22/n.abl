@@ -6,7 +6,8 @@
 // or send someone outside their districts.
 
 import type { CallNote } from '../core/call.ts';
-import type { Repo } from '../db/repo.ts';
+import type { JobPatch, Repo } from '../db/repo.ts';
+import type { Bus } from './bus.ts';
 import { certState } from '../core/maintenance-tools.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { isIsoDate, spokenDate, spokenTime, toLocal } from '../domain/time.ts';
@@ -40,6 +41,7 @@ export async function maintenanceState(repo: Repo, t: Tenant, now: Date) {
       trades: m.trades,
       on_call_tonight: onCallAt(m, today, '20:00').map((e) => e.first_name),
       duty_manager: m.on_call.duty_manager.name,
+      escalate_minutes: m.on_call.escalate_minutes,
       reminder_weeks: m.planned.reminder_weeks,
       attend_hours: m.priorities.emergency.attend_hours,
     },
@@ -125,6 +127,8 @@ export async function jobAction(
   };
   const tz = t.profile.timezone;
   const today = toLocal(now, tz);
+  // Every change is stamped with the action's own time, so a page's escalation counts from when it went.
+  const update = (r: string, patch: JobPatch, what: string, o: { by?: string; from?: JobStatus[] }) => repo.updateJob(t.id, r, patch, what, { ...o, at: now });
   switch (b.action) {
     case 'assign': {
       // Dispatch: an engineer, and for a booked visit a date and window too.
@@ -143,56 +147,71 @@ export async function jobAction(
           throw new HttpError(409, c.reason === 'full' ? `${engineer.first_name}'s ${c.window!.label.toLowerCase()} is full.` : c.reason === 'not_that_day' ? `There's no ${c.window!.label.toLowerCase()} window that day.` : c.reason === 'nobody' ? `${engineer.first_name} doesn't work that day.` : 'No such window.');
         }
         const w = c.window;
-        const r = await repo.updateJob(t.id, job.reference, { engineer_key: engineer.key, visit_date: date, window_key: w.key, status: job.status === 'new' ? 'scheduled' : job.status }, `assigned to ${engineer.first_name}, ${spokenDate(date)} ${inSentence(w.label)}`, { by: 'staff', from: [job.status] });
+        const r = await update(job.reference, { engineer_key: engineer.key, visit_date: date, window_key: w.key, status: job.status === 'new' ? 'scheduled' : job.status }, `assigned to ${engineer.first_name}, ${spokenDate(date)} ${inSentence(w.label)}`, { by: 'staff', from: [job.status] });
         if (date !== job.visit_date || w.key !== job.window_key) await text(occupant, `${t.profile.name}: your visit for job ${job.reference} is now ${spokenDate(date)}, ${inSentence(w.label)} (${spokenTime(w.from)} to ${spokenTime(w.to)}). (Demo)`);
         return done(r, `${job.reference}: ${engineer.first_name}, ${spokenDate(date)} ${inSentence(w.label)}.`);
       }
-      const r = await repo.updateJob(t.id, job.reference, { engineer_key: engineer.key }, `paged ${engineer.first_name}`, { by: 'staff', from: [job.status] });
+      // An emergency handed to someone by hand is a fresh page: the escalation clock starts again.
+      const r = await update(job.reference, { engineer_key: engineer.key, flags: [...job.flags.filter((f) => f !== 'paged' && f !== 'duty_manager'), 'paged'] }, `paged ${engineer.first_name}`, { by: 'staff', from: [job.status] });
       await text(normaliseUkPhone(t.profile.team?.find((s) => s.key === engineer.key)?.mobile), `${t.profile.name} URGENT: job ${job.reference} at ${where}: ${job.description}. Accept on the job sheet.`);
       return done(r, `${job.reference}: ${engineer.first_name} paged.`);
     }
     case 'accept': {
       // The engineer's phone: a paged emergency accepted. Only now does the caller hear a name.
       if (job.status !== 'new' || !job.engineer_key) throw new HttpError(409, 'There is no page waiting on this job.');
-      const r = await repo.updateJob(t.id, job.reference, { status: 'scheduled', flags: job.flags.filter((f) => f !== 'paged') }, `accepted by ${name(job.engineer_key)}`, { by: name(job.engineer_key), from: ['new'] });
+      const r = await update(job.reference, { status: 'scheduled', flags: job.flags.filter((f) => f !== 'paged') }, `accepted by ${name(job.engineer_key)}`, { by: name(job.engineer_key), from: ['new'] });
       const by = job.attend_by ? ` by about ${spokenTime(toLocal(job.attend_by, tz).time)}` : '';
       await text(job.reporter.phone ?? occupant, `${t.profile.name}: ${name(job.engineer_key)} is ${job.flags.includes('out_of_hours') ? 'on call tonight and ' : ''}coming to you${by}. Ref ${job.reference}. (Demo)`);
       if (r) note({ kind: 'accepted', job: job.reference, text: `${name(job.engineer_key)} has accepted job ${job.reference} and is coming, aiming to be there${by}. You may now tell the caller ${name(job.engineer_key)}'s first name and that time; they've had a text too.` });
       return done(r, `${name(job.engineer_key)} accepted ${job.reference}; the caller has been texted.`);
     }
-    case 'decline': {
-      if (job.status !== 'new' || !job.engineer_key) throw new HttpError(409, 'There is no page waiting on this job.');
-      // The next engineer on call who can do it, else the duty manager by text.
+    case 'decline':
+    case 'no_answer': {
+      // Declined on the engineer's phone, or no answer within the escalation time: the next engineer
+      // on call who can do it and hasn't been asked, else the duty manager by text.
+      if (job.status !== 'new' || !job.engineer_key || !job.flags.includes('paged')) throw new HttpError(409, 'There is no page waiting on this job.');
       const l = toLocal(now, tz);
-      const next = onCallAt(m, l.date, l.time).find((e) => e.key !== job.engineer_key && !unable(m, e, { trade: job.trade, gas: job.flags.includes('gas'), district: p?.district }));
-      const r = await repo.updateJob(t.id, job.reference, { engineer_key: next?.key ?? null }, `declined by ${name(job.engineer_key)}${next ? `; paged ${next.first_name}` : '; duty manager told'}`, { by: name(job.engineer_key), from: ['new'] });
+      const asked = triedOn(job, m);
+      const pool = onCallAt(m, l.date, l.time).filter((e) => !asked.has(e.key));
+      // As when it was raised: out of hours, whoever is on call makes it safe even outside their trade; gas still needs Gas Safe.
+      const next = pool.find((e) => !unable(m, e, { trade: job.trade, gas: job.flags.includes('gas'), district: p?.district }))
+        ?? (job.flags.includes('out_of_hours') ? pool.find((e) => !job.flags.includes('gas') || e.gas_safe) : undefined);
+      const why = b.action === 'decline' ? `declined by ${name(job.engineer_key)}` : `no answer from ${name(job.engineer_key)} in ${m.on_call.escalate_minutes} minutes`;
+      const r = await update(
+        job.reference,
+        { engineer_key: next?.key ?? null, flags: next ? job.flags : [...job.flags.filter((f) => f !== 'paged'), 'duty_manager'] },
+        `${why}${next ? `; paged ${next.first_name}` : `; ${m.on_call.duty_manager.name} (duty manager) told`}`,
+        { by: b.action === 'decline' ? name(job.engineer_key) : 'system', from: ['new'] },
+      );
       const to = next ? t.profile.team?.find((s) => s.key === next.key)?.mobile : m.on_call.duty_manager.mobile;
-      await text(normaliseUkPhone(to), `${t.profile.name} URGENT: job ${job.reference} at ${where} needs someone: ${job.description}.`);
-      if (r) note({ kind: 'repaged', job: job.reference, text: `The first engineer couldn't take job ${job.reference}, so ${next ? 'another engineer on call' : 'the duty manager'} has been asked. Still no name or arrival time for the caller: they'll get a text when someone accepts.` });
-      return done(r, next ? `Declined: ${next.first_name} paged instead.` : `Declined: nobody else on call, so ${m.on_call.duty_manager.name} has been texted.`);
+      await text(normaliseUkPhone(to), `${t.profile.name} URGENT: job ${job.reference} at ${where} needs someone: ${job.description}.${next ? ' Accept on the job sheet.' : ' Nobody on call has accepted.'}`);
+      const first = b.action === 'decline' ? "The engineer paged couldn't take" : `The engineer paged hasn't answered in ${m.on_call.escalate_minutes} minutes on`;
+      if (r) note({ kind: 'repaged', job: job.reference, text: `${first} job ${job.reference}, so ${next ? 'another engineer on call has been paged' : 'the duty manager has been told and will arrange someone'}. Still no name or arrival time for the caller: they'll get a text when someone accepts.` });
+      if (b.action === 'decline') return done(r, next ? `Declined: ${next.first_name} paged instead.` : `Declined: nobody else on call, so ${m.on_call.duty_manager.name} has been texted.`);
+      return done(r, next ? `No answer: ${next.first_name} paged instead.` : `No answer from anyone on call, so ${m.on_call.duty_manager.name} has been texted.`);
     }
     case 'on_the_way': {
       if (!['scheduled', 'new'].includes(job.status) || !job.engineer_key) throw new HttpError(409, 'Assign an engineer first.');
       const eta = Math.min(180, Math.max(5, Math.round(Number(b.eta_minutes) || 20)));
-      const r = await repo.updateJob(t.id, job.reference, { status: 'on_the_way', eta_minutes: eta, on_the_way_at: now }, `on the way, about ${eta} minutes`, { by: name(job.engineer_key), from: ['scheduled', 'new'] });
+      const r = await update(job.reference, { status: 'on_the_way', eta_minutes: eta, on_the_way_at: now }, `on the way, about ${eta} minutes`, { by: name(job.engineer_key), from: ['scheduled', 'new'] });
       await text(occupant, `${t.profile.name}: ${name(job.engineer_key)} is on the way, about ${eta} minutes. Ref ${job.reference}. (Demo)`);
       return done(r, `${name(job.engineer_key)} is on the way; the occupant has been texted.`);
     }
     case 'on_site': {
-      const r = await repo.updateJob(t.id, job.reference, { status: 'on_site' }, 'on site', { by: name(job.engineer_key), from: ['on_the_way', 'scheduled'] });
+      const r = await update(job.reference, { status: 'on_site' }, 'on site', { by: name(job.engineer_key), from: ['on_the_way', 'scheduled'] });
       return done(r, `${job.reference}: on site.`);
     }
     case 'done': {
       const notes = String(b.notes ?? '').trim().slice(0, 500);
       if (!notes) throw new HttpError(400, 'Add what was done.');
-      const r = await repo.updateJob(t.id, job.reference, { status: 'done', done_at: now, notes }, 'done', { by: name(job.engineer_key), from: ['on_site', 'on_the_way', 'scheduled', 'waiting'] });
+      const r = await update(job.reference, { status: 'done', done_at: now, notes }, 'done', { by: name(job.engineer_key), from: ['on_site', 'on_the_way', 'scheduled', 'waiting'] });
       return done(r, `${job.reference}: done.`);
     }
     case 'waiting': {
       const reason = ['parts', 'access', 'quote'].includes(b.reason) ? b.reason : null;
       if (!reason) throw new HttpError(400, 'Waiting for parts, access or a quote?');
       const note = String(b.note ?? '').trim().slice(0, 200);
-      const r = await repo.updateJob(t.id, job.reference, { status: 'waiting', waiting_for: note ? `${reason}: ${note}` : reason, ...(reason === 'access' ? { access_attempts: job.access_attempts + 1 } : {}) }, `waiting for ${reason}`, { by: 'staff', from: ['scheduled', 'on_site', 'on_the_way', 'new'] });
+      const r = await update(job.reference, { status: 'waiting', waiting_for: note ? `${reason}: ${note}` : reason, ...(reason === 'access' ? { access_attempts: job.access_attempts + 1 } : {}) }, `waiting for ${reason}`, { by: 'staff', from: ['scheduled', 'on_site', 'on_the_way', 'new'] });
       if (reason === 'access' && m.visits.abortive_fee_pence) await text(occupant, `${t.profile.name}: sorry we missed you for job ${job.reference}. Please call us to rebook. (Demo)`);
       return done(r, `${job.reference}: waiting for ${reason}.`);
     }
@@ -204,7 +223,7 @@ export async function jobAction(
       const [quote] = (await repo.listQuotes(t.id, { job: job.reference })).filter((q) => q.status === 'sent');
       const what = quote ? `quote ${quote.reference}` : `job ${job.reference}`;
       if (b.answer === 'no') {
-        const r = await repo.updateJob(t.id, job.reference, { status: 'cancelled' }, `declined by ${who}`, { by: who, from: ['awaiting_approval'] });
+        const r = await update(job.reference, { status: 'cancelled' }, `declined by ${who}`, { by: who, from: ['awaiting_approval'] });
         if (!r) throw new HttpError(409, 'That job has moved on: refresh and try again.');
         if (quote) await repo.decideQuote(t.id, quote.reference, 'declined', who, now);
         const reporter = job.reporter.phone && job.reporter.phone !== client?.contact.phone ? job.reporter.phone : occupant;
@@ -217,7 +236,7 @@ export async function jobAction(
       const slots = freeWindows(m, await repo.listJobs(t.id), { trade: job.trade, gas: job.flags.includes('gas'), district: p?.district, from: today.date, now: today, limit: 1 });
       const slot = slots[0];
       const patch = slot ? { status: 'scheduled' as const, visit_date: slot.date, window_key: slot.window.key, engineer_key: slot.engineers[0].key } : { status: 'new' as const };
-      const r = await repo.updateJob(t.id, job.reference, patch, `approved by ${who}${slot ? `; booked ${spokenDate(slot.date)} ${inSentence(slot.window.label)} with ${slot.engineers[0].first_name}` : ''}`, { by: who, from: ['awaiting_approval'] });
+      const r = await update(job.reference, patch, `approved by ${who}${slot ? `; booked ${spokenDate(slot.date)} ${inSentence(slot.window.label)} with ${slot.engineers[0].first_name}` : ''}`, { by: who, from: ['awaiting_approval'] });
       if (!r) throw new HttpError(409, 'That job has moved on: refresh and try again.');
       if (quote) await repo.decideQuote(t.id, quote.reference, 'approved', who, now);
       const when = slot ? `${spokenDate(slot.date)}, ${inSentence(slot.window.label)} (${spokenTime(slot.window.from)} to ${spokenTime(slot.window.to)})` : null;
@@ -240,7 +259,7 @@ export async function jobAction(
       const issued = today.date;
       const due = new Date(`${issued}T12:00:00Z`);
       due.setUTCDate(due.getUTCDate() + (client ? m.prices.account_days : 7));
-      const r = await repo.updateJob(t.id, job.reference, { status: 'invoiced' }, 'invoiced', { by: 'office', from: ['done'] });
+      const r = await update(job.reference, { status: 'invoiced' }, 'invoiced', { by: 'office', from: ['done'] });
       if (!r) throw new HttpError(409, 'That job has moved on: refresh and try again.');
       const inv = await repo.createInvoice(t.id, {
         job_ref: job.reference, property_key: job.property_key, client_key: job.client_key,
@@ -252,13 +271,74 @@ export async function jobAction(
       return `${job.reference}: invoice ${inv.reference} sent.`;
     }
     case 'cancel': {
-      const r = await repo.updateJob(t.id, job.reference, { status: 'cancelled' }, 'cancelled by staff', { by: 'staff', from: [...OPEN, 'on_the_way'] });
+      const r = await update(job.reference, { status: 'cancelled' }, 'cancelled by staff', { by: 'staff', from: [...OPEN, 'on_the_way'] });
       if (b.notify !== false) await text(job.reporter.phone ?? occupant, `${t.profile.name}: job ${job.reference} at ${where} is cancelled. Call us if you still need us. (Demo)`);
       return done(r, `${job.reference}: cancelled.`);
     }
     default:
       throw new HttpError(400, 'Unknown action.');
   }
+}
+
+/** The engineers a page has already gone to: the one holding it, and any who declined or didn't answer. */
+function triedOn(job: Job, m: NonNullable<Tenant['profile']['maintenance']>): Set<string> {
+  const keys = new Set<string>(job.engineer_key ? [job.engineer_key] : []);
+  for (const h of job.history) {
+    for (const hit of h.what.matchAll(/\b(?:paged|declined by|no answer from|accepted by) ([A-Z][a-z]+)/g)) {
+      const e = m.engineers.find((x) => x.first_name === hit[1]);
+      if (e) keys.add(e.key);
+    }
+  }
+  return keys;
+}
+
+/**
+ * Pages nobody has answered (presets/property-maintenance.md §2.1,
+ * escalate_minutes): once the time has passed since the page went, the
+ * next engineer on call is paged, and when there is nobody left, the duty
+ * manager is texted. A call waiting on the job hears it.
+ */
+export async function escalatePages(repo: Repo, now: Date, text: (tenantId: string, to: string | null, body: string) => Promise<void>, note: (tenantId: string, n: CallNote) => void): Promise<string[]> {
+  const out: string[] = [];
+  for (const { tenant_id, job } of await repo.listUnansweredPages()) {
+    const t = await repo.getTenantById(tenant_id);
+    const m = t?.profile.maintenance;
+    if (!t || !m) continue;
+    const since = Date.parse(job.history.at(-1)?.at ?? job.created_at.toISOString());
+    if (now.getTime() - since < m.on_call.escalate_minutes * 60_000) continue;
+    try {
+      out.push(await jobAction(repo, t, job.reference, { action: 'no_answer' }, (to, body) => text(t.id, to, body), now, (n) => note(t.id, n)));
+    } catch {
+      // Accepted or moved on between the read and the change: nothing to do.
+    }
+  }
+  return out;
+}
+
+/** Checks for unanswered pages every half minute. */
+export function startPager(deps: { repo: Repo; bus: Bus }, everyMs = 30_000): () => void {
+  let running = false;
+  const run = async () => {
+    if (running) return;
+    running = true;
+    try {
+      const done = await escalatePages(
+        deps.repo, new Date(),
+        async (tenantId, to, body) => {
+          if (to) await deps.repo.addMessage({ tenant_id: tenantId, kind: 'sms', to_number: to, body, status: 'simulated' });
+          deps.bus.publish({ type: 'refresh', tenant_id: tenantId, call_id: '', at: new Date().toISOString(), reason: 'staff' });
+        },
+        (tenantId, n) => deps.bus.note(tenantId, n),
+      );
+      if (done.length) console.log(`pager: ${done.length} page${done.length > 1 ? 's' : ''} escalated`);
+    } catch (err) {
+      console.error(`pager: ${(err as Error).message}`);
+    } finally {
+      running = false;
+    }
+  };
+  const timer = setInterval(() => void run(), everyMs);
+  return () => clearInterval(timer);
 }
 
 const PLANNED: Record<string, { kind: 'gas_record' | 'eicr' | 'boiler_service'; trade: string; what: string; gas: boolean }> = {

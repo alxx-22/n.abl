@@ -220,6 +220,10 @@ export function StepEngineers({ a, set }: Props) {
           </div>
         );
       })}
+      <Num
+        label="No answer to a page after" value={a.on_call.escalate_minutes} min={5} max={60} suffix="minutes"
+        onChange={(v) => set((d) => void (d.on_call.escalate_minutes = v))} hint="Then the other engineer on call is paged, and after them the duty manager."
+      />
       <div className="two">
         <Text label="Duty manager" value={a.on_call.duty_manager.name} max={60} onChange={(v) => set((d) => void (d.on_call.duty_manager.name = v))} hint="Texted when nobody on call can take an emergency." />
         <Text label="Their mobile" value={a.on_call.duty_manager.mobile} max={20} onChange={(v) => set((d) => void (d.on_call.duty_manager.mobile = v))} />

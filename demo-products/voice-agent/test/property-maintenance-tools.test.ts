@@ -15,7 +15,7 @@ import { armSafety, detectSafety, noteAdvice } from '../src/core/safety.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
 import { redactCodes } from '../src/core/redact.ts';
-import { jobAction, maintenanceState } from '../src/server/maintenance.ts';
+import { escalatePages, jobAction, maintenanceState } from '../src/server/maintenance.ts';
 import { digitsSaid, spokenNumber } from '../src/domain/phone.ts';
 import { addWorkingDays } from '../src/domain/listings.ts';
 import type { Tenant } from '../src/domain/types.ts';
@@ -402,10 +402,46 @@ test('the back office: dispatch keeps to the window rules, an engineer accepts o
   assert.match(await act(r.reference, { action: 'accept' }, NIGHT), /Dan accepted/);
   assert.ok(sent.some((x) => x.to === home.occupant.phone && /Dan is on call tonight and coming to you by about 1am/.test(x.body)));
   await assert.rejects(act(r.reference, { action: 'accept' }, NIGHT), /no page waiting/);
-  // Declined, with nobody else on call who plumbs: the duty manager is texted.
+  // Declined: Leon, the other on call, makes it safe though he doesn't plumb; when he declines too, the duty manager is texted.
   const r2 = await c.run('job', { action: 'create', description: 'Another burst pipe, pouring through the ceiling', name: home.occupant.name });
+  assert.match(await act(r2.reference, { action: 'decline' }, NIGHT), /Leon paged instead/);
   assert.match(await act(r2.reference, { action: 'decline' }, NIGHT), /Helen Ward has been texted/);
   assert.ok(sent.some((x) => x.to === '+447700900310' && /URGENT/.test(x.body)));
+  assert.ok((await repo.listJobs(t.id, { reference: r2.reference }))[0].flags.includes('duty_manager'));
+  await assert.rejects(act(r2.reference, { action: 'decline' }, NIGHT), /no page waiting/);
+});
+
+test('escalation: a page nobody answers goes to the other engineer on call after 15 minutes, then to the duty manager, and a call waiting on it hears', async () => {
+  const t = await fernhill('pm-escalate');
+  const home = (await repo.listMtProperties(t.id)).find((p) => p.client === 'harbour')!;
+  const c = await call(t, home.occupant.phone, NIGHT);
+  await c.run('find_property', { postcode: home.district, number: home.number, street: home.street });
+  const r = await c.run('job', { action: 'create', description: 'Burst pipe, water pouring through the ceiling', name: home.occupant.name });
+  const texts: { tenant: string; to: string | null; body: string }[] = [];
+  const notes: { tenant: string; kind: string; job: string }[] = [];
+  const run = (minutes: number) => escalatePages(repo, new Date(NIGHT.getTime() + minutes * 60_000), async (tenant, to, body) => void texts.push({ tenant, to, body }), (tenant, n) => void notes.push({ tenant, ...n }));
+  const holder = async () => (await repo.listJobs(t.id, { reference: r.reference }))[0].engineer_key;
+  // Ten minutes: still Dan's.
+  await run(10);
+  assert.equal(await holder(), 'dan');
+  // Sixteen: no answer from Dan, so Leon; the call that raised it is told, without a name.
+  assert.ok((await run(16)).includes('No answer: Leon paged instead.'));
+  const [job] = await repo.listJobs(t.id, { reference: r.reference });
+  assert.equal(job.engineer_key, 'leon');
+  assert.match(job.history.at(-1)!.what, /no answer from Dan in 15 minutes; paged Leon/);
+  assert.ok(texts.some((x) => x.tenant === t.id && x.to === '+447700900307' && /URGENT: job .* Accept on the job sheet/.test(x.body)), JSON.stringify(texts));
+  // (Other tests' pages in this database escalate too: only this business's count.)
+  assert.deepEqual(notes.filter((n) => n.tenant === t.id).map((n) => [n.kind, n.job]), [['repaged', r.reference]]);
+  // Leon's page has its own fifteen minutes: nothing at 20, the duty manager at 32.
+  await run(20);
+  assert.equal(await holder(), 'leon');
+  assert.ok((await run(32)).includes('No answer from anyone on call, so Helen Ward has been texted.'));
+  assert.ok(texts.some((x) => x.to === '+447700900310' && /Nobody on call has accepted/.test(x.body)));
+  // Then it stops: the duty manager has it.
+  const before = texts.length;
+  await run(60);
+  assert.equal(texts.filter((x) => x.tenant === t.id).length, texts.slice(0, before).filter((x) => x.tenant === t.id).length);
+  assert.ok((await repo.listJobs(t.id, { reference: r.reference }))[0].flags.includes('duty_manager'));
 });
 
 test('a homeowner told "ninety five pounds" has heard the price, and a job is never booked for "Owner"', async () => {

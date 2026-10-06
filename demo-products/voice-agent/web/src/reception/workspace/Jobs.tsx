@@ -121,6 +121,7 @@ function JobCard({ id, j, state, nowMs, fresh, onDone }: { id: string; j: LiveJo
           <>
             <button type="button" className="small primary" disabled={busy} onClick={() => act({ action: 'accept' })}>{j.engineer} accepts</button>
             <button type="button" className="small" disabled={busy} onClick={() => act({ action: 'decline' })}>Declines</button>
+            <button type="button" className="small" disabled={busy} onClick={() => act({ action: 'no_answer' })} title={`What happens by itself after ${state.maintenance?.escalate_minutes ?? 15} minutes`}>No answer</button>
           </>
         ) : null}
         {j.status === 'scheduled' && (j.date === state.today || !j.date) ? <button type="button" className="small primary" disabled={busy || !j.engineer} onClick={() => act({ action: 'on_the_way', eta_minutes: 20 })}>On the way</button> : null}

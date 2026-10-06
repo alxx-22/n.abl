@@ -139,7 +139,7 @@ const mapBuyer = (r: any): Buyer => ({ phone: r.phone, name: r.name ?? null, det
 
 const labelOf = (resources: { key: string; label: string }[], key: string) => resources.find((r) => r.key === key)?.label ?? key;
 
-const historyEntry = (by: string, what: string) => JSON.stringify([{ at: new Date().toISOString(), by, what }]);
+const historyEntry = (by: string, what: string, at = new Date()) => JSON.stringify([{ at: at.toISOString(), by, what }]);
 
 // ── A property maintenance contractor's rows ─────────────────────────────
 // Dates are read as text (YYYY-MM-DD): the two drivers turn a date column
@@ -1300,6 +1300,12 @@ export class Repo {
     return rows.map(mapJob);
   }
 
+  /** Every business's emergency pages that nobody has accepted yet. */
+  async listUnansweredPages(): Promise<{ tenant_id: string; job: Job }[]> {
+    const rows = await this.db.query<any>(`select ${JOB_COLS} from public.voice_mt_jobs where status = 'new' and 'paged' = any(flags) and engineer_key is not null`);
+    return rows.map((r) => ({ tenant_id: r.tenant_id, job: mapJob(r) }));
+  }
+
   /** Records a job under a reference no booking, offer or job of this business has. */
   async createJob(tenant: Tenant, j: NewJob, by = 'receptionist'): Promise<Job> {
     return this.db.tx(async (q) => {
@@ -1313,7 +1319,7 @@ export class Repo {
           [tenant.id, reference],
         );
         if (clash.length) continue;
-        await q.query(JOB_INSERT, jobParams(tenant.id, reference, j, historyEntry(by, j.status === 'awaiting_approval' ? 'raised, awaiting approval' : 'raised')));
+        await q.query(JOB_INSERT, jobParams(tenant.id, reference, j, historyEntry(by, j.status === 'awaiting_approval' ? 'raised, awaiting approval' : 'raised', j.created_at ?? undefined)));
         const rows = await q.query<any>(`select ${JOB_COLS} from public.voice_mt_jobs where tenant_id = $1 and reference = $2`, [tenant.id, reference]);
         return mapJob(rows[0]);
       }
@@ -1326,9 +1332,9 @@ export class Repo {
    * move from, checked in the same statement, so two clicks cannot both
    * dispatch it. Returns null for a job that does not exist or has moved on.
    */
-  async updateJob(tenantId: string, reference: string, patch: JobPatch, what: string, opts: { by?: string; from?: JobStatus[] } = {}): Promise<Job | null> {
+  async updateJob(tenantId: string, reference: string, patch: JobPatch, what: string, opts: { by?: string; from?: JobStatus[]; at?: Date } = {}): Promise<Job | null> {
     const cols = JOB_PATCH_COLS.filter((k) => k in patch);
-    const params: unknown[] = [tenantId, reference, JSON.stringify([{ at: new Date().toISOString(), by: opts.by ?? 'staff', what }])];
+    const params: unknown[] = [tenantId, reference, JSON.stringify([{ at: (opts.at ?? new Date()).toISOString(), by: opts.by ?? 'staff', what }])];
     const sets = cols.map((k) => {
       const v = patch[k];
       params.push(k === 'clocks' ? JSON.stringify(v) : v);

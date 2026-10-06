@@ -41,6 +41,7 @@ export function jobBadges(j: LiveJob): { label: string; level: string }[] {
       out.push({ label: met ? 'Within the clock' : 'Clock missed', level: met ? 'ok' : 'bad' });
     } else out.push({ label: `${c.kind.startsWith('awaab') ? 'Investigate' : 'Due'} by ${when}`, level: 'bad' });
   }
+  if (j.flags.includes('duty_manager')) out.push({ label: 'Duty manager told', level: 'bad' });
   if (j.flags.includes('possible_emergency_hazard')) out.push({ label: 'Possible hazard: landlord decides', level: 'bad' });
   if (j.flags.includes('damp_mould') && !j.clocks.length) out.push({ label: 'Damp and mould', level: 'warn' });
   if (j.po) out.push({ label: `PO ${j.po}`, level: 'info' });

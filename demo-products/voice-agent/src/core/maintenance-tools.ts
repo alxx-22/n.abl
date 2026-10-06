@@ -464,7 +464,7 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   ];
   const base: NewJob = {
     property_key: p.key, client_key: p.client, reporter: { name, phone, role }, trade, priority, reason: t.reason, description, kind: 'repair',
-    po: str(args.po) ?? null, notes: str(args.access) ?? null, source: source(ctx), call_id: ctx.callId || null, flags, clocks: d.clocks,
+    po: str(args.po) ?? null, notes: str(args.access) ?? null, source: source(ctx), call_id: ctx.callId || null, flags, clocks: d.clocks, created_at: ctx.now(),
   };
   // For a social landlord's damp case: who is told, and what never to say.
   const dampWords = d.damp && client?.kind === 'social' ? {

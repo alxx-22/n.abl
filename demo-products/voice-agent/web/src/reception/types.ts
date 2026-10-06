@@ -439,6 +439,7 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
     trades: { key: string; label: string; gas: boolean }[];
     on_call_tonight: string[];
     duty_manager: string;
+    escalate_minutes: number;
     reminder_weeks: number;
     attend_hours: number;
   };

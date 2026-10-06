@@ -38,6 +38,7 @@ import { BASE, DEV_HEADERS, HttpError, SECURITY_HEADERS, json, readBody, sameOri
 import { handleAdmin, isAdmin } from './admin.ts';
 import { DEMO_CALLS_PER_KEY, DEMO_CALLS_TOTAL, callSecondsLeft, callerId, callsByKey, demoSms, ended, handleDemo, owns, sessionWho } from './demo.ts';
 import { startSweeper } from '../demo/sweeper.ts';
+import { startPager } from './maintenance.ts';
 
 const WEB = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'web');
 const DIST = join(WEB, 'dist');
@@ -307,6 +308,8 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
   const keepAlive = setInterval(() => void repo.ping().catch(() => {}), 6 * 3600000);
   // Shared demos go an hour after Start; private ones 30 days after their key ends.
   const stopSweeper = opts.sweep === false ? () => {} : startSweeper({ demo, bus });
+  // Emergency pages nobody answered go to the next engineer on call, then the duty manager.
+  const stopPager = opts.sweep === false ? () => {} : startPager({ repo, bus });
 
   await new Promise<void>((resolve, reject) => server.once('error', reject).listen(config.port, resolve));
   const address = server.address();
@@ -316,6 +319,7 @@ export async function startServer(config: Config = loadConfig(), opts: ServerOpt
     close: async () => {
       clearInterval(keepAlive);
       stopSweeper();
+      stopPager();
       for (const c of wss.clients) c.terminate();
       await vite?.close();
       server.closeAllConnections();
