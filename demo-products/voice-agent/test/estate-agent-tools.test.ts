@@ -97,15 +97,17 @@ test('the honest listing answer: "the one on Albion Road" asks which; the flat s
   assert.match(JSON.stringify(both.matches), /22 Albion Road: three-bedroom semi-detached house/);
   // No price for a home the caller named: it is said in get_property's describe line, with the council tax band and EPC (a live call, 4 October).
   assert.ok(!JSON.stringify(both.matches).includes('£'), JSON.stringify(both.matches));
+  // One home: its details come back with the search, so they are never guessed (live, 6 October: get_property skipped, details invented).
   const named = await run('search_properties', { query: 'the house on Albion Road' });
-  assert.equal(named.note, 'Now get_property, and say its describe line first.');
+  assert.deepEqual([(named.matches as unknown[]).length, named.property], [1, 'albion_22']);
+  assert.match(String(named.describe), /^22 Albion Road is a three-bedroom semi-detached house/);
   const which = await run('get_property', { property: 'Albion Road' });
   assert.equal(which.facts, undefined, 'no facts until the caller says which');
   assert.equal(which.next, 'More than one: ask which.');
   const times = await run('check_availability', { property: 'Albion Road', date: SAT, time: '11:00' });
   assert.equal(times.next, 'More than one: ask which.');
   assert.equal(times.available, undefined, 'never "not available": no home was checked');
-  assert.deepEqual(ctx.state.briefed, {}, 'nothing briefed yet');
+  assert.deepEqual(Object.keys(ctx.state.briefed), ['albion_22'], 'only the house found by name is briefed yet');
 
   const flat = await run('get_property', { property: 'the flat on Albion Road' });
   assert.equal(flat.property, 'albion_41_flat_2');
@@ -470,7 +472,7 @@ test('an offer, end to end: the fee first, then recorded whatever it is, confirm
   assert.match(String(m.message), /urgent message for Jess \(category offer\)/);
 });
 
-test('an offer\'s terms: asked for once when not given; the caller\'s own "subject to survey" is kept; a valuation keeps when they hope to move', async () => {
+test('an offer\'s terms: asked for once when not given; the caller\'s own "subject to survey" is kept; a valuation keeps why and when they move', async () => {
   const t = await agency('ea-offer-terms');
   const fee = 'Buyers pay thirty-six pounds including VAT each for ID checks, once an offer is accepted.';
   const offer = { property: '22 Albion Road', amount: 320000, buyer_names: 'Alex Moran and Jamie Moran', first_time_buyer: true, funding: 'mortgage agreed in principle' };
@@ -497,10 +499,11 @@ test('an offer\'s terms: asked for once when not given; the caller\'s own "subje
   // A valuation: "within three months" from the caller's own words when the receptionist leaves it out.
   const c = await call(t, '+447700900142');
   c.ctx.state.heard.push("Yes, I'm looking to sell, moving for work within three months.");
-  const v = await c.run('book_valuation', { date: THU, time: '10:00', name: 'Jo Bloggs', address: '12 Hawthorn Way', postcode: 'BK3 7XY', purpose: 'sale', reason: 'moving for work' });
+  const v = await c.run('book_valuation', { date: THU, time: '10:00', name: 'Jo Bloggs', address: '12 Hawthorn Way', postcode: 'BK3 7XY', purpose: 'sale' });
   assert.equal(v.booked, true, JSON.stringify(v));
   const d = (await repo.getBookingByReference(t.id, String(v.reference)))!.details as Record<string, unknown>;
-  assert.deepEqual([d.timescale, d.hot], ['within three months', true]);
+  // ...and why they're moving, without the when.
+  assert.deepEqual([d.timescale, d.hot, d.reason], ['within three months', true, 'moving for work']);
 });
 
 test('messages reach one person: urgent ones text them; a complaint gets its reference and process; a compliance note stays private', async () => {

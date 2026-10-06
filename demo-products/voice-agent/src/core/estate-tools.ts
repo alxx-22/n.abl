@@ -608,6 +608,15 @@ function ricsAnswer(purpose: string, t: Tenant): string {
 /** Within about three months, or already with another agent: worth a call back soon. */
 const HOT = /\b(asap|as soon|straight away|immediately|right away|this month|next month|weeks?|(?:within |in )?(?:a|one|two|three|1|2|3|a couple of|a few) months?)\b/i;
 
+/** Why they're moving, in their words, without when: "moving for work within three months" is "moving for work". */
+function movingReason(heard: string): string | undefined {
+  const m = /\b(?:moving|relocating|downsizing|upsizing|emigrating|selling up|retiring)\b[^.,?!]{0,40}/i.exec(heard);
+  if (!m) return undefined;
+  // Cut off mid-word at the length limit: drop the part-word.
+  const words = /\w/.test(heard[m.index + m[0].length] ?? '') ? m[0].replace(/\s+\S*$/, '') : m[0];
+  return words.replace(/\s+(?:within|in|over|next|this|and|but|so|as soon)\b.*$/i, '').trim();
+}
+
 const TIMESCALE = /\b(?:within|in|over) (?:the next )?(?:a|one|two|three|four|five|six|nine|twelve|\d+|a couple of|a few) (?:weeks?|months?|years?)\b|\b(?:asap|as soon as (?:possible|we can)|(?:this|next) (?:month|year|spring|summer|autumn|winter))\b/i;
 
 async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
@@ -644,7 +653,9 @@ async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<strin
   const needsToBuy = bool(args.needs_to_buy);
   const details = {
     kind: 'valuation', address, postcode: pc.full, purpose: purpose === 'curious' ? 'curious' : 'sale', also_for: RICS_PURPOSES[purpose] ? purpose : undefined,
-    capacity, owners_agree: bool(args.owners_agree), property_type: str(args.property_type), bedrooms: int(args.bedrooms), reason: str(args.reason),
+    capacity, owners_agree: bool(args.owners_agree), property_type: str(args.property_type), bedrooms: int(args.bedrooms),
+    // As for the timescale, the caller's own words when the model leaves it out (live, 6 October: "moving for work").
+    reason: str(args.reason) ?? movingReason(ctx.state.heard.join('. ')),
     timescale, other_agent: otherAgent ?? null, needs_to_buy: needsToBuy ?? false, heard_from: str(args.heard_from),
     dual_fee: Boolean(otherAgent), hot: Boolean(otherAgent) || HOT.test(timescale ?? ''), ...(executor ? { tone: 'Go gently. No rush.' } : {}), source: 'AI receptionist',
   };
@@ -1291,6 +1302,11 @@ async function searchProperties(args: Args, ctx: ToolContext): Promise<Record<st
       // The one home asked for is gone: say so, and offer the closest homes still for sale, as get_property does.
       const gone = found.length === 1 && ['withdrawn', 'exchanged', 'completed'].includes(found[0].live.status);
       const alt = gone ? similar(found[0].listing, findable(all)).map((x) => brief(byKey(all, x.key))) : [];
+      // One home for sale: its full details come back here and now. Twice on 6 October a live call skipped get_property
+      // after a search, then invented the home's details (a tenant, planning permission) and offered unchecked times.
+      if (found.length === 1 && !gone) {
+        return { matches: [brief(found[0], false)], ...(await getProperty({ property: found[0].listing.key }, ctx)) };
+      }
       return {
         matches: found.slice(0, 3).map((h) => brief(h, false)),
         ...(alt.length ? { similar: alt } : {}),
