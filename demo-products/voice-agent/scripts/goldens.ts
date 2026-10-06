@@ -4,7 +4,7 @@
 // function that starts reading either fails loudly instead of drifting.
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 
 export const readJson = (file: string): unknown => JSON.parse(readFileSync(file, 'utf8'));
 export const stored = <T>(x: T): T => JSON.parse(JSON.stringify(x));
@@ -32,12 +32,12 @@ export const write = (file: string, value: unknown) => {
   writeFileSync(file, `${format(stored(value))}\n`);
 };
 
-/** Every golden file under a folder, by path relative to it. */
+/** Every golden file under a folder, by path relative to it, with forward slashes as the scripts name them (Windows lists them with backslashes). */
 export function goldenFilesIn(dir: string): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { recursive: true, withFileTypes: true })
     .filter((e) => e.isFile() && e.name.endsWith('.json'))
-    .map((e) => relative(dir, join(e.parentPath, e.name)))
+    .map((e) => relative(dir, join(e.parentPath, e.name)).split(sep).join('/'))
     .sort();
 }
 

@@ -46,7 +46,8 @@ test('oracle: the app environment has every setting, unquoted, and a session sec
     assert.match(env.SESSION_SECRET, /^[0-9a-f]{64}$/);
     assert.equal(env.ORIGIN_HOST, undefined, 'the deploy\'s own settings stay out of the app');
     assert.equal(r.read('first.env'), r.read('app.env'), 'the session secret survives a redeploy, so sessions do too');
-    assert.equal(statSync(join(r.dir, 'app.env')).mode & 0o777, 0o600);
+    // Readable by its owner only, on the Linux server it is written for; Windows has no such file modes to check.
+    if (process.platform !== 'win32') assert.equal(statSync(join(r.dir, 'app.env')).mode & 0o777, 0o600);
   } finally {
     r.done();
   }
