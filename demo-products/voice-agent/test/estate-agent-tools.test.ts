@@ -191,7 +191,8 @@ test('the disclosure gate: no times before the must-say line; it stops once, the
     // Asked for times before looking the home up: briefed there and then, with the line to say in the answer.
     const { run, ctx, say } = await call(t);
     const first = await run('check_availability', { property: 'the flat on Albion Road', date: SAT, time: '11:00' });
-    assert.equal(first.not_yet, NOT_YET);
+    // ...and sent to get_property for the rest (live, 6 October: never looked up, its details were invented).
+    assert.equal(first.not_yet, NOT_YET.replace('Not checked yet.', 'Not checked yet. Call get_property for it first: what to say about it, and its details, come from there.'));
     assert.equal(ctx.state.briefed.albion_41_flat_2, 0);
     say("It's leasehold, with 76 years left on the lease.");
     assert.equal((await run('check_availability', { property: 'the flat on Albion Road', date: SAT, time: '11:00' })).not_yet, undefined);
@@ -605,6 +606,9 @@ test('estate guardrails: a figure, bank details, codes, an empty home, where sta
     ['The bungalow is empty at the moment, so any time works.', ['vacancy_said']],
     ["It's sold with vacant possession.", []],
     ['We hold the keys, so Jess can let you in.', ['vacancy_said']],
+    // Lived in is as private as empty (live, 6 October: "there's a tenant currently living there").
+    ["Before we look at times, there's a tenant currently living there.", ['vacancy_said']],
+    ["It's currently occupied, so viewings need notice.", ['vacancy_said']],
     ['Jess is out on a viewing right now.', ['staff_whereabouts']],
     ['Tom is on holiday this week.', ['staff_whereabouts']],
     ['Jess is free at 11:15.', []],
@@ -645,8 +649,10 @@ test('estate guardrails: a time offered must come from the instructions, a tool 
   const result = JSON.stringify({ available_ranges: ['10am to 10:15am', '11:15am to 12:30pm'], alternatives: [{ time: '14:00', spoken: '2pm' }] });
   state.times.push(...knownTimes(result));
   state.timeRanges.push(...rangesIn(result));
-  for (const line of ['We have 10 am to 10 15 am, or 11:15am to 12:30pm.', 'How about 11:30am?', 'I could do 2pm with Tom.', 'Would midday suit?', "That's Flat 4 10am, then."]) assert.deepEqual(rules(line), [], line);
+  for (const line of ['We have 10 am to 10 15 am, or 11:15am to 12:30pm.', 'How about 11:30am?', 'I could do 2pm with Tom.', 'Would midday suit?', "That's Flat 4 10am, then.", 'Shall I book ten fifteen?', 'Or half past eleven?', "Two o'clock with Tom?"]) assert.deepEqual(rules(line), [], line);
   assert.deepEqual(rules('Or there is 3:45pm.'), ['invented_time']);
+  // Said in words, as a live call on 6 October did after being corrected once.
+  assert.deepEqual(rules('Okay, we have Thursday at quarter past four, or Friday at half past nine.'), ['invented_time']);
   // The caller's own time may be said back.
   state.heard.push('Could you do quarter to five, say 4:45pm?');
   assert.deepEqual(rules('Let me check 4:45pm for you.'), []);

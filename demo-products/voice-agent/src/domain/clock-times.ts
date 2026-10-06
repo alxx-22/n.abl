@@ -18,6 +18,17 @@ function minutes(hour: number, minute: number, half?: string): number | undefine
 const TWELVE = /\b(\d{1,2})(?:([:.]|\s)(\d{2}))?\s?([ap])\.?m\b\.?/gi;
 const TWENTY_FOUR = /\b([01]?\d|2[0-3]):([0-5]\d)\b(?!\s?[ap]\.?m\b)/gi;
 const NOON = /\b(?:noon|midday)\b/gi;
+// Spoken: "quarter past two", "half past eleven", "ten fifteen", "eleven thirty", "two o'clock" (a live call on
+// 6 October offered "Thursday at quarter past two" having checked nothing).
+const HOURS = ['twelve', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven'];
+const HOUR = `(${HOURS.join('|')})`;
+const PAST = new RegExp(`\\b(quarter|half|ten|five|twenty|twenty[- ]five) (past|to) ${HOUR}\\b`, 'gi');
+const SAID = new RegExp(`\\b${HOUR} (o'?clock|fifteen|thirty|forty[- ]five)\\b`, 'gi');
+const PAST_MINUTES: Record<string, number> = { quarter: 15, half: 30, ten: 10, five: 5, twenty: 20, 'twenty five': 25, 'twenty-five': 25 };
+const SAID_MINUTES: Record<string, number> = { oclock: 0, "o'clock": 0, fifteen: 15, thirty: 30, 'forty five': 45, 'forty-five': 45 };
+
+/** An hour said without morning or afternoon: either. */
+const bothHalves = (hour: number, minute: number) => [(hour % 12) * 60 + minute, ((hour % 12) + 12) * 60 + minute];
 
 /**
  * Each time said, as the readings it could be. "Flat 4 10am" might be 4:10am or 10am, so both
@@ -35,13 +46,25 @@ export function timesIn(text: string): { said: string; readings: number[] }[] {
       if (sep === ' ') readings.push(minutes(Number(mm), 0, half.toLowerCase()));
     }
     const ok = readings.filter((r): r is number => r !== undefined);
-    if (ok.length) out.push({ said: m[0].trim(), readings: ok });
+    if (ok.length) out.push({ said: m[0].trim().replace(/\.$/, ''), readings: ok });
   }
   for (const m of text.matchAll(TWENTY_FOUR)) {
-    const t = minutes(Number(m[1]), Number(m[2]));
-    if (t !== undefined) out.push({ said: m[0], readings: [t] });
+    const h = Number(m[1]);
+    // "2:15" said aloud is as likely the afternoon; "14:00" is only that.
+    const readings = h >= 1 && h <= 12 ? bothHalves(h, Number(m[2])) : [minutes(h, Number(m[2]))!];
+    out.push({ said: m[0], readings });
   }
   for (const m of text.matchAll(NOON)) out.push({ said: m[0], readings: [720] });
+  for (const m of text.matchAll(PAST)) {
+    const hour = HOURS.indexOf(m[3].toLowerCase());
+    const by = PAST_MINUTES[m[1].toLowerCase()];
+    // "Quarter to three" is 2:45.
+    out.push({ said: m[0], readings: m[2].toLowerCase() === 'past' ? bothHalves(hour, by) : bothHalves((hour + 11) % 12, 60 - by) });
+  }
+  for (const m of text.matchAll(SAID)) {
+    const by = SAID_MINUTES[m[2].toLowerCase()];
+    if (by !== undefined) out.push({ said: m[0], readings: bothHalves(HOURS.indexOf(m[1].toLowerCase()), by) });
+  }
   return out;
 }
 

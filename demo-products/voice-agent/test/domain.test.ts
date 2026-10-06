@@ -244,6 +244,8 @@ test('a read-back answered yes: what an estate agency\'s call reminds the recept
   // At an estate agency the read-back is no claim; the same words said as a statement still are, and a restaurant's read-back is checked as before.
   const s = newCallState();
   s.estate = true;
+  // 10:15 came from check_availability, so it may be said.
+  s.times.push(10 * 60 + 15);
   const asked = "So that's a viewing of 22 Albion Road on Saturday at quarter past ten with Tom, and it's booked in under Lou Grant. Is that all correct?";
   assert.equal(checkUtterance(asked, s).length, 0);
   assert.equal(checkUtterance("Lovely, that's booked in under Lou Grant for Saturday.", s)[0]?.rule, 'unconfirmed_claim');

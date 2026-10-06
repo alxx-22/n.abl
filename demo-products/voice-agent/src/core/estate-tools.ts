@@ -123,7 +123,9 @@ function stopFor(ctx: ToolContext, h: Home, all: Home[], date?: string): Record<
 function gate(ctx: ToolContext, h: Home, kind: 'viewing' | 'offer'): Record<string, unknown> | null {
   const s = ctx.state;
   const l = h.listing;
-  if (!(l.key in s.briefed)) s.briefed[l.key] = s.said.length;
+  // Never described by get_property in this call (live, 6 October: times offered and a flat's details invented without it).
+  const described = l.key in s.briefed;
+  if (!described) s.briefed[l.key] = s.said.length;
   const at = s.briefed[l.key];
   const items = kind === 'offer' ? l.before_offer : sayFirst(l, h.live, today(ctx), startOf(h, ctx.now()), ctx.tenant.profile.timezone);
   const missing = unsaid(items, s.said.slice(at));
@@ -132,7 +134,7 @@ function gate(ctx: ToolContext, h: Home, kind: 'viewing' | 'offer'): Record<stri
   if (!s.gateAsked.includes(key)) {
     s.gateAsked.push(key);
     return {
-      not_yet: `Not ${kind === 'offer' ? 'recorded' : 'checked'} yet. Before ${kind === 'offer' ? 'taking the offer' : 'any times'}, tell the caller: ${missing.map((i) => `"${i.say}"`).join(' ')} Then call this again. Add nothing about the home that a tool didn't give you.`,
+      not_yet: `Not ${kind === 'offer' ? 'recorded' : 'checked'} yet.${described ? '' : ' Call get_property for it first: what to say about it, and its details, come from there.'} Before ${kind === 'offer' ? 'taking the offer' : 'any times'}, tell the caller: ${missing.map((i) => `"${i.say}"`).join(' ')} Then call this again. Add nothing about the home that a tool didn't give you.`,
     };
   }
   if (!s.gateAsked.includes(`missed:${key}`)) {

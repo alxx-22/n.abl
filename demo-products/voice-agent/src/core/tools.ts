@@ -471,7 +471,9 @@ const TOOLS: Record<string, Tool> = {
       ];
       const hits = searchKnowledge(entries, q);
       if (!hits.length) {
-        return { answers: [], note: "Nothing on file for that. Say you're not sure, and offer to take a message so the team can call back." };
+        // A live call on 6 October asked here for a flat's service charge and ground rent, which get_property had all along.
+        const home = p.estate ? ' If it is about one of our homes (its price, lease, service charge, ground rent, rooms or parking), call get_property for it instead.' : '';
+        return { answers: [], note: `Nothing on file for that.${home} Otherwise say you're not sure, and offer to take a message so the team can call back.` };
       }
       return { answers: hits.map((h) => ({ about: h.q, answer: h.a })) };
     },
