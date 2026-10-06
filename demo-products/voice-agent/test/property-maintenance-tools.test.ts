@@ -361,7 +361,7 @@ test('the back office: jobs, engineers, properties with their certificates, and 
   assert.equal(st.engineers.find((e) => e.key === 'dan')!.mobile, '07700 900301');
   const elm = st.jobs.find((j) => j.property_key === 'elm_14' && j.status === 'on_the_way')!;
   assert.deepEqual([elm.engineer, elm.address, elm.client, elm.eta_minutes], ['Marek', '14 Elm Road (example), NG5', 'Whitfield Properties', 20]);
-  assert.equal(st.properties.length, 76);
+  assert.equal(st.properties.length, 90);
   const elmHome = st.properties.find((p) => p.key === 'elm_14')!;
   assert.deepEqual(elmHome.certificates.find((c) => c.kind === 'gas_record')!.state, 'due soon');
   assert.ok(st.properties.some((p) => p.certificates.some((c) => c.state === 'overdue')));

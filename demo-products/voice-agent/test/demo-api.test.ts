@@ -660,7 +660,7 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   const state = (await helen.call('GET', `${path}/state`)).data;
   assert.deepEqual(state.workspace.views.map((v: any) => v.id), ['jobs', 'dispatch', 'compliance', 'safety', 'clients', 'money', 'messages', 'calls']);
   assert.equal(state.engineers.length, 8);
-  assert.equal(state.properties.length, 76);
+  assert.equal(state.properties.length, 90);
   assert.equal(state.incidents.length, 1);
   const texts = async (phone: string) => (await helen.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
   // Dispatch refuses gas work for an engineer who isn't Gas Safe, and says why.
@@ -678,7 +678,7 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   assert.equal((await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'done', notes: 'Fixed.' })).status, 200);
   // The office invoices it: the next number, and the bill goes by text; never twice.
   assert.ok(state.quotes.some((q: any) => q.reference === 'Q-2291' && q.status === 'sent'));
-  assert.equal(state.invoices.filter((i: any) => i.status === 'overdue').length, 2);
+  assert.equal(state.invoices.filter((i: any) => i.status === 'overdue').length, 3, 'two from last month and the café');
   const billed = await helen.call('PATCH', `${path}/jobs/${booked.reference}`, { action: 'invoice' });
   assert.equal(billed.status, 200, JSON.stringify(billed.data));
   assert.match(billed.data.message, /invoice INV-1044 sent/);
@@ -693,7 +693,7 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   assert.equal((await helen.call('PATCH', `${path}/invoices/${late.reference}`, { action: 'paid_bank' })).status, 200);
   assert.equal((await helen.call('PATCH', `${path}/invoices/${late.reference}`, { action: 'paid_bank' })).status, 409);
   // Mrs Ellis approves Q-2291 on her own phone: the job is booked and her phone thanks her.
-  assert.equal(state.clients.length, 7);
+  assert.equal(state.clients.length, 13);
   const ellis = state.jobs.find((j: any) => j.status === 'awaiting_approval' && j.description.includes('Q-2291'));
   const ok = await helen.call('PATCH', `${path}/jobs/${ellis.reference}`, { action: 'authorise', answer: 'yes' });
   assert.equal(ok.status, 200, JSON.stringify(ok.data));

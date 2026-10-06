@@ -55,7 +55,7 @@ export function StepCustomers({ a, set }: Props) {
   const c = a.customers;
   const add = () => set((d) => void d.clients.push({
     key: `client_${Date.now().toString(36)}`, name: '', kind: 'agent', works_limit_pence: 25_000, emergency_authority_pence: 40_000, po_required: false,
-    contact: { name: '', phone: '', email: '' }, notice: 'over_limit', instructions: '', status: 'active', example: false,
+    contact: { name: '', phone: '', email: '' }, notice: 'over_limit', instructions: '', status: 'active', min_priority: null, example: false,
   }));
   return (
     <div className="fields">
@@ -73,7 +73,12 @@ export function StepCustomers({ a, set }: Props) {
           hint="In England, Awaab's Law then starts their 10-working-day damp and mould clock when we're told, and it counts down on the job."
         />
       ) : null}
-      <p className="hint">Block managers, businesses and insurers are coming later.</p>
+      <Toggle
+        label="Block and property managers" checked={c.blocks} onChange={(v) => set((d) => void (d.customers.blocks = v))}
+        hint="A fault in a block's common parts is one job however many residents ring; inside a flat is the leaseholder's own."
+      />
+      <Toggle label="Businesses" checked={c.commercial} onChange={(v) => set((d) => void (d.customers.commercial = v))} hint="Shops, offices and surgeries: trading hours, a PO and the contract's priority." />
+      <Toggle label="Insurers" checked={c.insurers} onChange={(v) => set((d) => void (d.customers.insurers = v))} hint="Claim work: the claim number on every job, and never a word on what a policy covers." />
       <Choice
         legend="A tenant whose landlord isn't one of your clients" value={c.tenant_no_client}
         options={[
@@ -88,13 +93,13 @@ export function StepCustomers({ a, set }: Props) {
       />
 
       <h3 className="sub">Clients</h3>
-      <p className="hint">Agents, landlords and housing associations who authorise work. Their contact approves anything over the limit on their own phone, never by voice.</p>
+      <p className="hint">Agents, landlords, housing associations, block managers, businesses and insurers who authorise work. Their contact approves anything over the limit on their own phone, never by voice.</p>
       {a.clients.map((cl, i) => (
         <div className="group on area-card" key={cl.key}>
           <div className="area-head">
             <input aria-label="Client name" className="area-name" placeholder="Harbour Lettings" value={cl.name} maxLength={80} onChange={(e) => set((d) => void (d.clients[i].name = e.target.value))} />
             <select aria-label={`${cl.name || 'Client'} kind`} value={cl.kind} onChange={(e) => set((d) => void (d.clients[i].kind = e.target.value as ClientAnswer['kind']))}>
-              {CLIENT_KINDS.filter((k) => k === 'agent' || k === 'landlord' || (k === 'social' && c.social.on) || k === cl.kind).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
+              {CLIENT_KINDS.filter((k) => k === 'agent' || k === 'landlord' || (k === 'social' && c.social.on) || (k === 'block' && c.blocks) || (k === 'commercial' && c.commercial) || (k === 'insurer' && c.insurers) || k === cl.kind).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
             </select>
             {cl.example ? <span className="badge">Example</span> : null}
             <button type="button" className="ghost small" onClick={() => {
@@ -113,6 +118,13 @@ export function StepCustomers({ a, set }: Props) {
             <Text label="Email" value={cl.contact.email} max={120} onChange={(v) => set((d) => void (d.clients[i].contact.email = v))} />
           </div>
           <Toggle label="A purchase order on every job" checked={cl.po_required} onChange={(v) => set((d) => void (d.clients[i].po_required = v))} />
+          {cl.kind === 'commercial' ? (
+            <Select
+              label="Their contract makes every job at least" value={cl.min_priority ?? ''}
+              options={[{ value: '', label: 'As triaged' }, { value: 'urgent', label: 'Urgent' }, { value: 'emergency', label: 'An emergency' }]}
+              onChange={(v) => set((d) => void (d.clients[i].min_priority = v === 'urgent' || v === 'emergency' ? v : null))}
+            />
+          ) : null}
           <Toggle label="On stop" checked={cl.status === 'on_stop'} onChange={(v) => set((d) => void (d.clients[i].status = v ? 'on_stop' : 'active'))} hint="No new work is booked for them." />
           <Text label="Notes for staff" value={cl.instructions} max={300} onChange={(v) => set((d) => void (d.clients[i].instructions = v))} hint="Never said to callers." />
         </div>
@@ -120,7 +132,7 @@ export function StepCustomers({ a, set }: Props) {
       <div className="row-tools">
         <button type="button" className="small" disabled={a.clients.length >= MAX_CLIENTS} onClick={add}>+ Add a client</button>
       </div>
-      <p className="hint">Start adds 76 sample homes on made-up streets in your districts, under these clients and homeowners, each marked “example”. You'll see them under Properties and compliance.</p>
+      <p className="hint">Start adds 90 sample homes and sites on made-up streets in your districts, under these clients and homeowners, each marked “example”. You'll see them under Properties and compliance.</p>
     </div>
   );
 }

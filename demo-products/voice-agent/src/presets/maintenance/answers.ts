@@ -43,6 +43,8 @@ export interface ClientAnswer {
   /** For staff only ("always ring the tenant 30 minutes before"), never said to callers. */
   instructions: string;
   status: 'active' | 'on_stop';
+  /** A business's contract: every job for them is at least this urgent (M3). Null: the usual triage. */
+  min_priority: 'urgent' | 'emergency' | null;
   example: boolean;
 }
 
@@ -234,8 +236,8 @@ export function defaultEngineers(): EngineerAnswer[] {
 }
 
 export function defaultClients(): ClientAnswer[] {
-  const c = (key: string, name: string, kind: ClientAnswer['kind'], limit: number, emergency: number, po: boolean, contact: ClientAnswer['contact'], notice: ClientAnswer['notice'], instructions = ''): ClientAnswer =>
-    ({ key, name, kind, works_limit_pence: limit, emergency_authority_pence: emergency, po_required: po, contact, notice, instructions, status: 'active', example: true });
+  const c = (key: string, name: string, kind: ClientAnswer['kind'], limit: number, emergency: number, po: boolean, contact: ClientAnswer['contact'], notice: ClientAnswer['notice'], instructions = '', min_priority: ClientAnswer['min_priority'] = null): ClientAnswer =>
+    ({ key, name, kind, works_limit_pence: limit, emergency_authority_pence: emergency, po_required: po, contact, notice, instructions, status: 'active', min_priority, example: true });
   return [
     c('harbour', 'Harbour Lettings', 'agent', 25_000, 40_000, true, { name: 'Sophie Grant', phone: '07700 900401', email: 'maintenance@harbour-lettings.example' }, 'over_limit',
       'Always ring the tenant 30 minutes before arriving.'),
@@ -247,6 +249,18 @@ export function defaultClients(): ClientAnswer[] {
     c('whitfield', 'Whitfield Properties', 'landlord', 25_000, 40_000, false, { name: 'Ben Whitfield', phone: '07700 900406', email: 'ben@whitfield.example' }, 'over_limit'),
     c('meadowbank', 'Meadowbank Housing', 'social', 50_000, 100_000, true, { name: 'Carl Mensah', phone: '07700 900407', email: 'repairs@meadowbank.example' }, 'every_job',
       "We act as Meadowbank's agent for repairs: report damp and mould the same day, with the time it was reported."),
+    c('riverside', 'Riverside Block Management', 'block', 50_000, 75_000, false, { name: 'Martin Hale', phone: '07700 900408', email: 'blocks@riverside-bm.example' }, 'every_job',
+      "Common parts (roof, entrance, stairs, lift, communal pipes) are Riverside's to instruct; inside a flat is the leaseholder's own. Big communal works may need leaseholders consulted first."),
+    c('bramley', 'Bramley Mutual Insurance', 'insurer', 150_000, 100_000, false, { name: 'Claims desk', phone: '07700 900409', email: 'claims@bramley-mutual.example' }, 'every_job',
+      'Claim number on every job. The policyholder pays any excess to the insurer, never to us; never say what a policy covers.'),
+    c('copper_kettle', 'The Copper Kettle', 'commercial', 40_000, 60_000, true, { name: 'Sian Morris', phone: '07700 900412', email: 'sian@copperkettle.example' }, 'every_job',
+      'Café: open 8 to 4. Come before opening where possible; kitchen jobs need the food safety induction.', 'urgent'),
+    c('larkbrook_dental', 'Larkbrook Dental Practice', 'commercial', 60_000, 80_000, true, { name: 'Dr Anil Varma', phone: '07700 900413', email: 'practice@larkbrook.example' }, 'every_job',
+      'Surgery hours 8 to 6: water or power out stops treatment, so same-day. Clinical rooms only with the practice manager.', 'urgent'),
+    c('arden_vale', 'Arden & Vale Accountants', 'commercial', 40_000, 60_000, false, { name: 'Ruth Arden', phone: '07700 900414', email: 'office@ardenvale.example' }, 'over_limit',
+      'Office, 9 to 5. Reception holds keys.'),
+    c('second_chances', 'Second Chances (charity shop)', 'commercial', 20_000, 40_000, false, { name: 'Pat Hughes', phone: '07700 900415', email: 'shop@secondchances.example' }, 'over_limit',
+      'Volunteer-run, open 10 to 4 except Sundays. Ask for the shop manager.'),
   ];
 }
 
@@ -273,8 +287,8 @@ export function defaultAnswers(): MaintenanceAnswers {
       towns: ['Nottingham', 'Derby', 'Loughborough', 'Beeston', 'West Bridgford', 'Long Eaton'],
     },
     customers: {
-      homeowners: true, landlords: true, agents: true, blocks: false,
-      social: { on: true, agent_of_landlord: true }, commercial: false, insurers: false,
+      homeowners: true, landlords: true, agents: true, blocks: true,
+      social: { on: true, agent_of_landlord: true }, commercial: true, insurers: true,
       tenant_no_client: 'contact_landlord', recharge_lockouts: true,
     },
     clients: defaultClients(),

@@ -14,7 +14,7 @@ const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..',
 
 let sample: MtProperty[] | null = null;
 
-/** The 70 sample homes, with numbers as a caller's arrives (E.164). A fresh copy every call. */
+/** The sample homes and sites, with numbers as a caller's arrives (E.164). A fresh copy every call. */
 export function sampleProperties(): MtProperty[] {
   sample ??= (JSON.parse(readFileSync(join(FIXTURES, 'presets', 'maintenance-properties.json'), 'utf8')).properties as any[]).map((p) => ({
     key: p.key,
@@ -23,6 +23,8 @@ export function sampleProperties(): MtProperty[] {
     district: p.district,
     town: p.town,
     kind: p.kind,
+    block: p.block ?? null,
+    site_name: p.site_name ?? null,
     client: p.client ?? null,
     occupant: { name: p.occupant.name, phone: normaliseUkPhone(p.occupant.phone), texts_ok: Boolean(p.occupant.texts_ok) },
     notes: p.notes,
@@ -37,10 +39,10 @@ export function sampleProperties(): MtProperty[] {
   return structuredClone(sample);
 }
 
-/** "14 Elm Road (example), NG5": how a property is said and shown. */
-export const shortAddress = (p: Pick<MtProperty, 'number' | 'street' | 'district' | 'example'>) =>
-  `${p.number} ${p.street}${p.example ? ' (example)' : ''}, ${p.district}`;
+/** "14 Elm Road (example), NG5", or a business "The Copper Kettle, 9 Hosiery Row (example), NG1": how a property is said and shown. */
+export const shortAddress = (p: Pick<MtProperty, 'number' | 'street' | 'district' | 'example'> & { site_name?: string | null }) =>
+  `${p.site_name ? `${p.site_name}, ` : ''}${p.number} ${p.street}${p.example ? ' (example)' : ''}, ${p.district}`;
 
 /** "14 Elm Road (example), Nottingham NG5". */
-export const fullAddress = (p: Pick<MtProperty, 'number' | 'street' | 'district' | 'town' | 'example'>) =>
-  `${p.number} ${p.street}${p.example ? ' (example)' : ''}, ${p.town} ${p.district}`;
+export const fullAddress = (p: Pick<MtProperty, 'number' | 'street' | 'district' | 'town' | 'example'> & { site_name?: string | null }) =>
+  `${p.site_name ? `${p.site_name}, ` : ''}${p.number} ${p.street}${p.example ? ' (example)' : ''}, ${p.town} ${p.district}`;

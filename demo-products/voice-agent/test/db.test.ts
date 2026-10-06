@@ -19,7 +19,7 @@ let fade: Tenant;
 
 before(async () => {
   db = await openPglite();
-  assert.deepEqual(await migrate(db), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance', 'voice_0007_mt_money']);
+  assert.deepEqual(await migrate(db), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance', 'voice_0007_mt_money', 'voice_0008_mt_blocks']);
   repo = new Repo(db);
   const tenants = await seedAll(repo, NOW, { diary: false });
   lucas = tenants.find((t) => t.slug === 'lucas-trattoria')!;
@@ -39,7 +39,7 @@ function copyOfLucas(slug: string) {
 test('migrations are idempotent and recorded', async () => {
   assert.deepEqual(await migrate(db), []);
   const rows = await db.query<{ name: string }>('select name from public.voice_schema_migrations');
-  assert.deepEqual(rows.map((r) => r.name).sort(), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance', 'voice_0007_mt_money']);
+  assert.deepEqual(rows.map((r) => r.name).sort(), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance', 'voice_0007_mt_money', 'voice_0008_mt_blocks']);
 });
 
 test('every migration only touches voice_ objects', () => {
@@ -446,14 +446,14 @@ test('property maintenance: properties, jobs, certificates and safety calls go w
     jobs: [{
       reference: 'HK101', property_key: 'elm_14', client_key: 'whitfield', reporter: { name: 'Sam Ortiz', phone: elm.occupant.phone, role: 'occupant' }, trade: 'plumbing', priority: 'urgent',
       reason: 'Urgent: a leak under the sink', description: 'Leak under the kitchen sink', kind: 'repair', status: 'on_the_way', visit_date: '2026-10-07', window_key: 'am', attend_by: null,
-      engineer_key: 'marek', eta_minutes: 20, on_the_way_at: new Date('2026-10-07T09:40:00Z'), po: null, price_pence: null, clocks: [], flags: [], access_attempts: 0, waiting_for: null, notes: null,
+      engineer_key: 'marek', eta_minutes: 20, on_the_way_at: new Date('2026-10-07T09:40:00Z'), po: null, claim_ref: null, price_pence: null, clocks: [], reporters: [], flags: [], access_attempts: 0, waiting_for: null, notes: null,
       history: [{ at: '2026-10-06T15:00:00.000Z', by: 'staff', what: 'raised' }], source: 'seed', created_at: new Date('2026-10-06T15:00:00Z'), done_at: null,
     }],
     certificates: [{ property_key: 'elm_14', kind: 'gas_record', issued: '2025-11-14', expires: '2026-11-14', remedials: [], booked_job: null }],
     incidents: [{ property_key: null, kind: 'gas', advice_version: 1, advised_at: new Date('2026-10-05T19:02:10Z'), caller_phone: '+447700900599', follow_up_job: null, notes: null, source: 'seed', created_at: new Date('2026-10-05T19:02:00Z') }],
   });
   const stored = await repo.listMtProperties(t.id);
-  assert.equal(stored.length, 76);
+  assert.equal(stored.length, 90);
   assert.deepEqual(await repo.getMtProperty(t.id, 'elm_14'), elm, 'a property reads back as it was planned');
   // A job, by its reference however it is said, and from the occupant's number even though someone else reported it.
   const [job] = await repo.listJobs(t.id, { reference: 'h k 1 0 1' });
@@ -495,6 +495,6 @@ test('property maintenance: a seeded week is written whole and reads back as pla
   assert.deepEqual({ ...elm, id: undefined }, { ...planned, id: undefined, source: 'seed' });
   assert.equal((await repo.listCertificates(t.id)).length, plan.certificates!.length);
   assert.equal((await repo.listIncidents(t.id)).length, 1);
-  assert.equal((await repo.listMtProperties(t.id)).length, 76);
+  assert.equal((await repo.listMtProperties(t.id)).length, 90);
   await repo.deleteTenant('mt-week');
 });

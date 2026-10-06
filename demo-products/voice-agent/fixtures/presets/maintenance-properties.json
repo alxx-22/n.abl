@@ -2218,6 +2218,427 @@
    "gas": false,
    "gas_appliances": 0,
    "example": true
+  },
+  {
+   "key": "riverside_court",
+   "number": "Riverside Court, 2",
+   "street": "Weaver Lane",
+   "district": "NG7",
+   "town": "Nottingham",
+   "kind": "communal",
+   "client": "riverside",
+   "occupant": {
+    "name": null,
+    "phone": null,
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the bin store, by the main riser",
+    "boiler": "No communal boiler",
+    "parking": "visitor bays at the front",
+    "pets": "",
+    "lift": "Lift: Apex Lifts (example), 0115 496 0711; alarm button in the car goes to them"
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Fob and keys held at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true,
+   "block": "riverside_court"
+  },
+  {
+   "key": "riverside_court_flat_1",
+   "number": "Flat 1, Riverside Court, 2",
+   "street": "Weaver Lane",
+   "district": "NG7",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "riverside",
+   "occupant": {
+    "name": "Joanne Pierce",
+    "phone": "07700 900577",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the hall cupboard",
+    "boiler": "Electric boiler in the airing cupboard",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true,
+   "block": "riverside_court"
+  },
+  {
+   "key": "riverside_court_flat_4",
+   "number": "Flat 4, Riverside Court, 2",
+   "street": "Weaver Lane",
+   "district": "NG7",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "riverside",
+   "occupant": {
+    "name": "Marcus Okoro",
+    "phone": "07700 900578",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the hall cupboard",
+    "boiler": "Electric boiler in the airing cupboard",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true,
+   "block": "riverside_court"
+  },
+  {
+   "key": "riverside_court_flat_9",
+   "number": "Flat 9, Riverside Court, 2",
+   "street": "Weaver Lane",
+   "district": "NG7",
+   "town": "Nottingham",
+   "kind": "flat",
+   "client": "riverside",
+   "occupant": {
+    "name": "Helen Duffy",
+    "phone": "07700 900579",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the kitchen, under the sink",
+    "boiler": "Electric boiler in the airing cupboard",
+    "parking": "residents' parking",
+    "pets": "a cat"
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true,
+   "block": "riverside_court"
+  },
+  {
+   "key": "kingfisher_house",
+   "number": "Kingfisher House, 40",
+   "street": "Tannery Row",
+   "district": "DE1",
+   "town": "Derby",
+   "kind": "communal",
+   "client": "riverside",
+   "occupant": {
+    "name": null,
+    "phone": null,
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the ground-floor plant room",
+    "boiler": "Communal gas boiler in the plant room",
+    "parking": "pay and display nearby",
+    "pets": ""
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Plant room key at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true,
+   "block": "kingfisher_house"
+  },
+  {
+   "key": "kingfisher_house_flat_3",
+   "number": "Flat 3, Kingfisher House, 40",
+   "street": "Tannery Row",
+   "district": "DE1",
+   "town": "Derby",
+   "kind": "flat",
+   "client": "riverside",
+   "occupant": {
+    "name": "Ravi Sandhu",
+    "phone": "07700 900580",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the hall cupboard",
+    "boiler": "Heating from the communal boiler",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true,
+   "block": "kingfisher_house"
+  },
+  {
+   "key": "kingfisher_house_flat_6",
+   "number": "Flat 6, Kingfisher House, 40",
+   "street": "Tannery Row",
+   "district": "DE1",
+   "town": "Derby",
+   "kind": "flat",
+   "client": "riverside",
+   "occupant": {
+    "name": "Grace Liddell",
+    "phone": "07700 900581",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the hall cupboard",
+    "boiler": "Heating from the communal boiler",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true,
+   "block": "kingfisher_house"
+  },
+  {
+   "key": "mill_view",
+   "number": "Mill View, 5",
+   "street": "Carding Close",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "communal",
+   "client": "riverside",
+   "occupant": {
+    "name": null,
+    "phone": null,
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the cupboard by the main door",
+    "boiler": "No communal boiler",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Door code and keys held at the office."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true,
+   "block": "mill_view"
+  },
+  {
+   "key": "mill_view_flat_2",
+   "number": "Flat 2, Mill View, 5",
+   "street": "Carding Close",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "flat",
+   "client": "riverside",
+   "occupant": {
+    "name": "Tom Ashby",
+    "phone": "07700 900582",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Combi boiler in the kitchen",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true,
+   "block": "mill_view"
+  },
+  {
+   "key": "mill_view_flat_5",
+   "number": "Flat 5, Mill View, 5",
+   "street": "Carding Close",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "flat",
+   "client": "riverside",
+   "occupant": {
+    "name": "Leah Grant",
+    "phone": "07700 900583",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "under the kitchen sink",
+    "boiler": "Combi boiler in the kitchen",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true,
+   "block": "mill_view"
+  },
+  {
+   "key": "hosiery_row_9",
+   "number": "9",
+   "street": "Hosiery Row",
+   "district": "NG1",
+   "town": "Nottingham",
+   "kind": "commercial",
+   "client": "copper_kettle",
+   "occupant": {
+    "name": "Sian Morris",
+    "phone": "07700 900412",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "behind the kitchen hatch, under the sink",
+    "boiler": "Combi boiler in the back store",
+    "parking": "loading bay before 10am",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true,
+   "site_name": "The Copper Kettle"
+  },
+  {
+   "key": "spindle_street_31",
+   "number": "31",
+   "street": "Spindle Street",
+   "district": "DE22",
+   "town": "Derby",
+   "kind": "commercial",
+   "client": "larkbrook_dental",
+   "occupant": {
+    "name": "Dr Anil Varma",
+    "phone": "07700 900413",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the staff room",
+    "boiler": "Combi boiler in the staff room",
+    "parking": "staff car park at the rear",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": true,
+   "gas_appliances": 1,
+   "example": true,
+   "site_name": "Larkbrook Dental Practice"
+  },
+  {
+   "key": "bobbin_court_3",
+   "number": "Unit 3",
+   "street": "Bobbin Court",
+   "district": "NG2",
+   "town": "West Bridgford",
+   "kind": "commercial",
+   "client": "arden_vale",
+   "occupant": {
+    "name": "Ruth Arden",
+    "phone": "07700 900414",
+    "texts_ok": true
+   },
+   "notes": {
+    "stopcock": "in the kitchenette",
+    "boiler": "Electric heating",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "keys_held",
+    "note": "Reception holds keys; out of hours, the office has a set."
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true,
+   "site_name": "Arden & Vale Accountants"
+  },
+  {
+   "key": "tanners_walk_52",
+   "number": "52",
+   "street": "Tanners Walk",
+   "district": "LE11",
+   "town": "Loughborough",
+   "kind": "commercial",
+   "client": "second_chances",
+   "occupant": {
+    "name": "Pat Hughes",
+    "phone": "07700 900415",
+    "texts_ok": false
+   },
+   "notes": {
+    "stopcock": "in the back room, behind the stock rail",
+    "boiler": "Electric heaters",
+    "parking": "residents' parking",
+    "pets": ""
+   },
+   "access": {
+    "method": "occupant",
+    "note": ""
+   },
+   "vulnerable": [],
+   "markers": [],
+   "gas": false,
+   "gas_appliances": 0,
+   "example": true,
+   "site_name": "Second Chances"
   }
  ]
 }

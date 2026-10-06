@@ -462,7 +462,7 @@ async function propertyFor(args: Args, ctx: ToolContext): Promise<MtProperty | {
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const p: MtProperty = {
     key: `new_${(number + street).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40)}`,
-    number: number.trim(), street: street.trim(), district: pc.district, town: m.towns[0] ?? '', kind: 'house', client: null,
+    number: number.trim(), street: street.trim(), district: pc.district, town: m.towns[0] ?? '', kind: 'house', block: null, site_name: null, client: null,
     occupant: { name: realName(args.name) ?? null, phone, texts_ok: true }, notes: {}, access: { method: 'occupant', note: '' },
     vulnerable: [], vulnerable_consent_at: null, markers: [], gas: false, gas_appliances: 0, example: false,
   };

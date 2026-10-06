@@ -120,6 +120,7 @@ export function compileClients(a: MaintenanceAnswers): MtClient[] {
     notice: c.notice,
     instructions: c.instructions,
     status: c.status,
+    ...(c.min_priority ? { min_priority: c.min_priority } : {}),
     ...(c.example ? { example: true } : {}),
   }));
 }

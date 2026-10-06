@@ -156,6 +156,8 @@ function mapMtProperty(r: any): MtProperty {
     district: r.district,
     town: r.town,
     kind: r.kind,
+    block: r.block ?? null,
+    site_name: r.site_name ?? null,
     client: r.client_key ?? null,
     occupant: { name: r.occupant_name ?? null, phone: r.occupant_phone ?? null, texts_ok: Boolean(r.occupant_texts_ok) },
     notes: r.notes ?? {},
@@ -189,8 +191,10 @@ function mapJob(r: any): Job {
     eta_minutes: r.eta_minutes ?? null,
     on_the_way_at: date(r.on_the_way_at),
     po: r.po ?? null,
+    claim_ref: r.claim_ref ?? null,
     price_pence: r.price_pence === null || r.price_pence === undefined ? null : Number(r.price_pence),
     clocks: r.clocks ?? [],
+    reporters: r.reporters ?? [],
     flags: r.flags ?? [],
     access_attempts: Number(r.access_attempts ?? 0),
     waiting_for: r.waiting_for ?? null,
@@ -251,11 +255,12 @@ export type NewJob = Pick<Job, 'trade' | 'priority' | 'description' | 'kind'>
 
 /** The columns a staff action or a tool may change on a job. */
 export type JobPatch = Partial<Pick<Job,
-  'status' | 'visit_date' | 'window_key' | 'attend_by' | 'engineer_key' | 'eta_minutes' | 'on_the_way_at' | 'po' | 'price_pence' | 'notes' | 'waiting_for' | 'access_attempts' | 'done_at' | 'flags' | 'clocks' | 'priority' | 'reason'>>;
+  'status' | 'visit_date' | 'window_key' | 'attend_by' | 'engineer_key' | 'eta_minutes' | 'on_the_way_at' | 'po' | 'price_pence' | 'notes' | 'waiting_for' | 'access_attempts' | 'done_at' | 'flags' | 'clocks' | 'priority' | 'reason' | 'reporters' | 'claim_ref'>>;
 
 const JOB_PATCH_COLS: (keyof JobPatch)[] = [
-  'status', 'visit_date', 'window_key', 'attend_by', 'engineer_key', 'eta_minutes', 'on_the_way_at', 'po', 'price_pence', 'notes', 'waiting_for', 'access_attempts', 'done_at', 'flags', 'clocks', 'priority', 'reason',
+  'status', 'visit_date', 'window_key', 'attend_by', 'engineer_key', 'eta_minutes', 'on_the_way_at', 'po', 'price_pence', 'notes', 'waiting_for', 'access_attempts', 'done_at', 'flags', 'clocks', 'priority', 'reason', 'reporters', 'claim_ref',
 ];
+const JSON_COLS = new Set<keyof JobPatch>(['clocks', 'reporters']);
 
 function jobParams(tenantId: string, reference: string, j: NewJob, history: string): unknown[] {
   return [
@@ -263,13 +268,14 @@ function jobParams(tenantId: string, reference: string, j: NewJob, history: stri
     j.trade, j.priority, j.reason ?? null, j.description, j.kind, j.status ?? 'new', j.visit_date ?? null, j.window_key ?? null, j.attend_by ?? null,
     j.engineer_key ?? null, j.eta_minutes ?? null, j.on_the_way_at ?? null, j.po ?? null, j.price_pence ?? null, JSON.stringify(j.clocks ?? []), j.flags ?? [],
     j.access_attempts ?? 0, j.waiting_for ?? null, j.notes ?? null, history, j.source ?? 'phone', j.call_id ?? null, j.created_at ?? new Date(), j.done_at ?? null,
+    j.claim_ref ?? null, JSON.stringify(j.reporters ?? []),
   ];
 }
 
 const JOB_INSERT = `insert into public.voice_mt_jobs (tenant_id, reference, property_key, client_key, reporter_name, reporter_phone, reporter_role, trade, priority,
   reason, description, kind, status, visit_date, window_key, attend_by, engineer_key, eta_minutes, on_the_way_at, po, price_pence, clocks, flags,
-  access_attempts, waiting_for, notes, history, source, call_id, created_at, done_at)
-  values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22::jsonb,$23::text[],$24,$25,$26,$27::jsonb,$28,$29,$30,$31)`;
+  access_attempts, waiting_for, notes, history, source, call_id, created_at, done_at, claim_ref, reporters)
+  values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22::jsonb,$23::text[],$24,$25,$26,$27::jsonb,$28,$29,$30,$31,$32,$33::jsonb)`;
 
 function mapOrder(r: any): Order {
   return {
@@ -1201,10 +1207,11 @@ export class Repo {
       for (const p of plan.properties ?? []) {
         await q.query(
           `insert into public.voice_mt_properties (tenant_id, property_key, number, street, district, town, kind, client_key, occupant_name, occupant_phone,
-             occupant_texts_ok, notes, access, vulnerable, vulnerable_consent_at, markers, gas, gas_appliances, example)
-           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::text[], $15, $16::text[], $17, $18, $19)`,
+             occupant_texts_ok, notes, access, vulnerable, vulnerable_consent_at, markers, gas, gas_appliances, example, block, site_name)
+           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::text[], $15, $16::text[], $17, $18, $19, $20, $21)`,
           [tenantId, p.key, p.number, p.street, p.district, p.town, p.kind, p.client, p.occupant.name, p.occupant.phone, p.occupant.texts_ok,
-            JSON.stringify(p.notes), JSON.stringify(p.access), p.vulnerable, p.vulnerable_consent_at, p.markers, p.gas, p.gas_appliances, p.example],
+            JSON.stringify(p.notes), JSON.stringify(p.access), p.vulnerable, p.vulnerable_consent_at, p.markers, p.gas, p.gas_appliances, p.example,
+            p.block ?? null, p.site_name ?? null],
         );
       }
       for (const j of plan.jobs ?? []) {
@@ -1258,11 +1265,11 @@ export class Repo {
   async addMtProperty(tenantId: string, p: MtProperty): Promise<MtProperty> {
     await this.db.query(
       `insert into public.voice_mt_properties (tenant_id, property_key, number, street, district, town, kind, client_key, occupant_name, occupant_phone,
-         occupant_texts_ok, notes, access, vulnerable, vulnerable_consent_at, markers, gas, gas_appliances, example)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::text[], $15, $16::text[], $17, $18, false)
+         occupant_texts_ok, notes, access, vulnerable, vulnerable_consent_at, markers, gas, gas_appliances, example, block, site_name)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::text[], $15, $16::text[], $17, $18, false, $19, $20)
        on conflict (tenant_id, property_key) do nothing`,
       [tenantId, p.key, p.number, p.street, p.district, p.town, p.kind, p.client, p.occupant.name, p.occupant.phone, p.occupant.texts_ok,
-        JSON.stringify(p.notes), JSON.stringify(p.access), p.vulnerable, p.vulnerable_consent_at, p.markers, p.gas, p.gas_appliances],
+        JSON.stringify(p.notes), JSON.stringify(p.access), p.vulnerable, p.vulnerable_consent_at, p.markers, p.gas, p.gas_appliances, p.block ?? null, p.site_name ?? null],
     );
     return (await this.getMtProperty(tenantId, p.key))!;
   }
@@ -1337,8 +1344,8 @@ export class Repo {
     const params: unknown[] = [tenantId, reference, JSON.stringify([{ at: (opts.at ?? new Date()).toISOString(), by: opts.by ?? 'staff', what }])];
     const sets = cols.map((k) => {
       const v = patch[k];
-      params.push(k === 'clocks' ? JSON.stringify(v) : v);
-      return `${k} = $${params.length}${k === 'clocks' ? '::jsonb' : k === 'flags' ? '::text[]' : ''}`;
+      params.push(JSON_COLS.has(k) ? JSON.stringify(v) : v);
+      return `${k} = $${params.length}${JSON_COLS.has(k) ? '::jsonb' : k === 'flags' ? '::text[]' : ''}`;
     });
     let guard = '';
     if (opts.from?.length) {

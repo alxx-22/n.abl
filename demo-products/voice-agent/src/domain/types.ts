@@ -414,6 +414,8 @@ export interface MtClient {
   /** For staff only. */
   instructions: string;
   status: 'active' | 'on_stop';
+  /** A business's contract: every job for them is at least this urgent. */
+  min_priority?: 'urgent' | 'emergency';
   example?: boolean;
 }
 
@@ -708,7 +710,11 @@ export interface MtProperty {
   street: string;
   district: string;
   town: string;
-  kind: 'house' | 'flat' | 'bungalow' | 'commercial';
+  kind: 'house' | 'flat' | 'bungalow' | 'commercial' | 'communal';
+  /** The block a flat is in, or whose common parts these are (the communal property's key); null otherwise. */
+  block: string | null;
+  /** A business site's trading name: "The Copper Kettle". */
+  site_name: string | null;
   /** The client who authorises work here; null for a homeowner's own home. */
   client: string | null;
   occupant: { name: string | null; phone: string | null; texts_ok: boolean };
@@ -758,8 +764,12 @@ export interface Job {
   eta_minutes: number | null;
   on_the_way_at: Date | null;
   po: string | null;
+  /** An insurer's claim number. */
+  claim_ref: string | null;
   price_pence: number | null;
   clocks: JobClock[];
+  /** Everyone else who reported it: a communal fault rung in by several residents is one job. */
+  reporters: { name: string | null; phone: string | null; at: string }[];
   /** gas, vulnerable, recall, out_of_hours, key_collection, pets... */
   flags: string[];
   access_attempts: number;

@@ -117,7 +117,7 @@ test('property maintenance: validation says what is missing, on the step it belo
   assert.deepEqual(issues((a) => (a.on_call.duty_manager.mobile = '')), ["warning engineers: Add the duty manager's name and mobile, for emergencies nobody accepts."]);
   assert.deepEqual(issues((a) => (a.clients[0].contact.phone = '')), ['error customers: Harbour Lettings: add the contact who approves work, with their phone.']);
   assert.deepEqual(issues((a) => (a.clients[1].status = 'on_stop')), ["warning customers: Castle Gate Residential is on stop: the receptionist won't book work for them."]);
-  assert.deepEqual(issues((a) => Object.assign(a.customers, { homeowners: false, landlords: false, agents: false, social: { on: false, agent_of_landlord: false } })), ['error customers: Choose at least one kind of customer.']);
+  assert.deepEqual(issues((a) => Object.assign(a.customers, { homeowners: false, landlords: false, agents: false, blocks: false, commercial: false, insurers: false, social: { on: false, agent_of_landlord: false } })), ['error customers: Choose at least one kind of customer.']);
   assert.deepEqual(issues((a) => (a.customers.social.agent_of_landlord = false)), ["warning customers: Social housing is on, but you haven't said you act as the landlord's agent, so damp and mould clocks are the landlord's to start."]);
   assert.deepEqual(issues((a) => (a.priorities.routine.working_days = 3)), ['error priorities: The urgent target must be shorter than the routine one.']);
   assert.deepEqual(issues((a) => Object.assign(a.priorities.emergency, { attend_hours: 24 }) && (a.priorities.urgent.working_days = 1)), ['error priorities: The emergency target must be shorter than the urgent one.']);
@@ -248,14 +248,16 @@ test("property maintenance: the builder's preview, the fact sheet and the back o
 test('property maintenance: the sample properties are invented, inside the patch, and never hold a code', () => {
   const a = defaultAnswers();
   const props = sampleProperties();
-  assert.equal(props.length, 76);
-  assert.equal(new Set(props.map((p) => p.key)).size, 76, 'each key once');
-  assert.equal(new Set(props.map((p) => `${p.number}|${p.street}`)).size, 76, 'each address once');
+  assert.equal(props.length, 90);
+  assert.equal(new Set(props.map((p) => p.key)).size, 90, 'each key once');
+  assert.equal(new Set(props.map((p) => `${p.number}|${p.street}`)).size, 90, 'each address once');
   const clients = new Set(a.clients.map((c) => c.key));
   for (const p of props) {
     assert.ok(a.area.districts.includes(p.district), `${p.key}: ${p.district} is in the patch`);
     assert.ok(p.client === null || clients.has(p.client), `${p.key}: ${p.client} is a sample client`);
-    assert.match(p.occupant.phone!, /^\+447700900\d{3}$/, `${p.key}: a number in Ofcom's drama range`);
+    // A block's communal parts have nobody living in them to ring.
+    if (p.kind === 'communal') assert.equal(p.occupant.phone, null, p.key);
+    else assert.match(p.occupant.phone!, /^\+447700900\d{3}$/, `${p.key}: a number in Ofcom's drama range`);
     assert.ok(p.example);
     assert.match(shortAddress(p), /\(example\), [A-Z]{2}\d+$/);
     // A key safe's code is never stored, in any form.
@@ -270,6 +272,11 @@ test('property maintenance: the sample properties are invented, inside the patch
   assert.equal(shortAddress(props.find((p) => p.client === 'ellis')!), 'Flat 3, 22 Tansy Lane (example), NG2');
   assert.ok(props.some((p) => p.client === 'harbour' && p.notes.stopcock === 'under the kitchen sink'));
   assert.ok(props.filter((p) => p.vulnerable.length).length >= 3);
+  // Three blocks, each with its communal parts and flats, and four business sites.
+  const communal = props.filter((p) => p.kind === 'communal');
+  assert.deepEqual(communal.map((p) => p.key).sort(), ['kingfisher_house', 'mill_view', 'riverside_court']);
+  for (const c of communal) assert.ok(props.some((p) => p.block === c.key && p.kind === 'flat'), `${c.key} has flats`);
+  assert.equal(props.filter((p) => p.kind === 'commercial').length, 4);
   // A fresh copy every time: a seed that edits one cannot change the next.
   props[0].street = 'Changed';
   assert.equal(sampleProperties()[0].street, 'Elm Road');
@@ -282,7 +289,7 @@ test('property maintenance: visit windows go to engineers who do the trade, are 
   const job = (x: Partial<Job>): Job => ({
     id: 'x', reference: 'XX100', property_key: null, client_key: null, reporter: { name: null, phone: null, role: null }, trade: 'plumbing', priority: 'routine', reason: null,
     description: '', kind: 'repair', status: 'scheduled', visit_date: '2026-10-08', window_key: 'am', attend_by: null, engineer_key: 'dan', eta_minutes: null, on_the_way_at: null,
-    po: null, price_pence: null, clocks: [], flags: [], access_attempts: 0, waiting_for: null, notes: null, history: [], source: 'seed', created_at: new Date(), done_at: null, ...x,
+    po: null, claim_ref: null, price_pence: null, clocks: [], reporters: [], flags: [], access_attempts: 0, waiting_for: null, notes: null, history: [], source: 'seed', created_at: new Date(), done_at: null, ...x,
   });
   const who = (c: ReturnType<typeof checkWindow>) => (c.ok ? c.engineers.map((e) => e.key) : c.reason);
   // Thursday morning, plumbing in NG7: Dan, Callum (both Gas Safe, both plumb); Marek only covers NG5.
@@ -343,12 +350,13 @@ test('property maintenance: the seeded week, anchored to Start, replays under th
   const approved = quotes.find((x) => x.status === 'approved')!;
   assert.equal(jobs.find((j) => j.reference === approved.job_ref)!.status, 'scheduled');
   assert.equal(quotes.find((x) => x.status === 'declined')!.job_ref, null);
-  // Eighteen of the week's finished jobs invoiced, Ellie Burke's visit, and two from last month overdue; the last is INV-1043.
+  // The week's finished jobs invoiced, Ellie Burke's visit, two from last month and the café's overdue; the last is INV-1043.
   const invoices = plan.invoices!;
   assert.equal(invoices.length, 21);
   assert.equal(count((j) => j.status === 'invoiced'), 21);
   assert.equal(invoices.at(-1)!.reference, 'INV-1043');
-  assert.equal(invoices.filter((i) => i.status === 'due' && i.due < '2026-10-07').length, 2);
+  assert.equal(invoices.filter((i) => i.status === 'due' && i.due < '2026-10-07').length, 3);
+  assert.equal(invoices.find((i) => i.client_key === 'copper_kettle')!.status, 'due', "the café's bill is still owed");
   for (const i of invoices) {
     const j = jobs.find((x) => x.reference === i.job_ref)!;
     assert.equal(j.status, 'invoiced', i.reference);

@@ -72,6 +72,7 @@ export function sanitiseClients(v: unknown[]): ClientAnswer[] {
       notice: oneOf(c.notice, ['every_job', 'over_limit', 'emergencies'] as const, 'over_limit'),
       instructions: str(c.instructions, 300),
       status: oneOf(c.status, ['active', 'on_stop'] as const, 'active'),
+      min_priority: c.min_priority === 'urgent' || c.min_priority === 'emergency' ? c.min_priority : null,
       example: bool(c.example, false),
     };
   }));

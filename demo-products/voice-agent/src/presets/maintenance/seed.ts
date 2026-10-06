@@ -96,7 +96,7 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
       reason: `${priority[0].toUpperCase()}${priority.slice(1)}: ${x.description.toLowerCase()}`,
       visit_date: null, window_key: null, attend_by: null, engineer_key: null, eta_minutes: null, on_the_way_at: null,
       po: p?.client && clients.get(p.client)?.po_required ? `PO-${4000 + Math.floor(random() * 5000)}` : null,
-      price_pence: null, clocks: [], flags: [], access_attempts: 0, waiting_for: null, notes: null,
+      price_pence: null, clocks: [], flags: [], access_attempts: 0, waiting_for: null, notes: null, claim_ref: null, reporters: [],
       history: [{ at: created.toISOString(), by: random() < 0.6 ? 'receptionist' : 'staff', what: 'raised' }],
       source: 'seed', created_at: created, done_at: null,
       ...x,
@@ -287,7 +287,8 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
     ['agent', 'carpentry', 'Replace the rotten back door and frame', 38_000],
     ['landlord', 'electrical', 'New kitchen circuit for an electric cooker', 52_000],
   ] as const) {
-    const p = someProperty((x) => x.client !== null && clients.get(x.client)!.kind === kind && clients.get(x.client)!.works_limit_pence < pence);
+    // Not Mrs Ellis's flat: her boiler quote is the one a caller asks about.
+    const p = someProperty((x) => x.client !== null && x.client !== 'ellis' && clients.get(x.client)!.kind === kind && clients.get(x.client)!.works_limit_pence < pence);
     if (p && trades.includes(trade)) jobs.push(blank(p, { trade, priority: 'routine', description, kind: 'repair', status: 'awaiting_approval', price_pence: pence, created_at: new Date(now.getTime() - 2 * DAY) }));
   }
   for (const [trade, description, waiting, attempts] of [
@@ -337,6 +338,48 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
       }, { window: 'am' });
       done(j, '11:40', `Made safe: the leak from the flat above isolated, the light fitting disconnected and capped; mould treated. ${social.name} told at 8am.`);
     }
+  }
+
+  // ── Blocks, businesses and an insurer (M3) ───────────────────────────────
+  // Riverside Court's door entry: one job, already rung in by two residents.
+  const court = byKey.get('riverside_court');
+  const flat1 = byKey.get('riverside_court_flat_1');
+  const flat9 = byKey.get('riverside_court_flat_9');
+  if (court && flat1 && trades.includes('electrical')) {
+    for (const date of upcoming.slice(1, 4)) {
+      const j = place(court, date, {
+        trade: 'electrical', priority: 'urgent', description: "Door entry system: the main door won't release from the flats", kind: 'repair', status: 'scheduled',
+        created_at: new Date(now.getTime() - DAY), reporter: { name: flat1.occupant.name, phone: flat1.occupant.phone, role: 'occupant' },
+        reporters: flat9 ? [{ name: flat9.occupant.name, phone: flat9.occupant.phone, at: new Date(now.getTime() - DAY + 2 * 3_600_000).toISOString() }] : [],
+        notes: 'Communal: for Riverside. Second report from Flat 9 added to this job.',
+      }, { window: 'am' });
+      if (j) break;
+    }
+  }
+  // An insurer's claim: escape of water at a homeowner's, trace and access booked.
+  const claimHome = someProperty((p) => p.client === null && p.kind === 'house');
+  if (claimHome && trades.includes('plumbing') && clients.has('bramley')) {
+    for (const date of upcoming.slice(2, 6)) {
+      const j = place(claimHome, date, {
+        trade: 'plumbing', priority: 'urgent', description: 'Escape of water: trace and access under the bathroom floor', kind: 'repair', status: 'scheduled',
+        client_key: 'bramley', claim_ref: '77-23019', reporter: { name: 'Claims desk', phone: clients.get('bramley')!.contact.phone, role: 'other' },
+        notes: 'Insurance claim 77-23019. The policyholder pays any excess to Bramley Mutual.',
+      });
+      if (j) break;
+    }
+  }
+  // A dental practice under its contract (every job at least urgent), and a café's bill 35 days overdue.
+  const dental = byKey.get('spindle_street_31');
+  if (dental && trades.includes('plumbing')) {
+    for (const date of upcoming.slice(0, 3)) if (place(dental, date, { trade: 'plumbing', priority: 'urgent', description: 'No hot water in surgery 2', kind: 'repair', status: 'scheduled', reason: 'Urgent: by contract' })) break;
+  }
+  const cafe = byKey.get('hosiery_row_9');
+  let cafeJob: SeedJob | null = null;
+  if (cafe && trades.includes('drainage')) {
+    let day = addDays(today, -49);
+    while (!windowsOn(m, day).length) day = addDays(day, -1);
+    cafeJob = place(cafe, day, { trade: 'drainage', priority: 'urgent', description: 'Kitchen sink and floor gully blocked', kind: 'repair', status: 'scheduled', reason: 'Urgent: by contract' });
+    done(cafeJob, '10:30', 'Jetted the kitchen waste and the gully; grease trap emptied; running freely.');
   }
 
   // ── One gas call this week: sent to the emergency service, then repaired ──
@@ -410,7 +453,7 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
       break;
     }
   }
-  const billed = [...older, ...(owing ? [owing] : []), ...pastDone.slice().sort((a, b) => a.done_at!.getTime() - b.done_at!.getTime()).slice(0, Math.max(0, Math.min(18, pastDone.length - 5)))]
+  const billed = [...older, ...(cafeJob ? [cafeJob] : []), ...(owing ? [owing] : []), ...pastDone.slice().sort((a, b) => a.done_at!.getTime() - b.done_at!.getTime()).slice(0, Math.max(0, Math.min(18, pastDone.length - 5)))]
     .sort((a, b) => a.done_at!.getTime() - b.done_at!.getTime());
   const homeowners = billed.filter((j) => !j.client_key);
   const stillOwes = owing ?? homeowners[homeowners.length - 1];
