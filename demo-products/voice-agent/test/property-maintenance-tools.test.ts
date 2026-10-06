@@ -713,3 +713,23 @@ test('prices as people say them', async () => {
   assert.equal(poundsIn('it came to 380 pounds'), 380);
   assert.equal(poundsIn('no price here'), undefined);
 });
+
+test('the tools finish what the model starts: a yes found is sent, a safety check goes on the register, and damp at Meadowbank is a job', async () => {
+  const t = await fernhill('pm-finish');
+  // Mrs Ellis says go ahead, and the receptionist only looks Q-2291 up: the request goes to her phone all the same.
+  const jean = await call(t, '+447700900404');
+  jean.hear("I've decided to go ahead with quote Q-2291 for a new boiler.");
+  const found = await jean.run('job', { action: 'find', reference: 'Q-2291' });
+  assert.equal(found.approval.request_sent, true);
+  assert.ok(jean.sent.some((x) => x.to === '+447700900404' && /waiting for your approval/.test(x.body)));
+  // A landlord's gas safety check raised as a repair is sent to the register instead.
+  const ben = await call(t, '+447700900406');
+  await ben.run('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
+  assert.match((await ben.run('job', { action: 'create', description: 'Annual gas safety check', trade: 'boiler_servicing', name: 'Ben Whitfield' })).message, /book it with compliance/);
+  // Damp at Meadowbank taken as a message: the receptionist is told to raise the job too.
+  const nadia = await call(t, '+447700900571');
+  await nadia.run('find_property', { postcode: 'DE23', number: 'Flat 2, 7', street: 'Larkspur Walk' });
+  nadia.hear("There's black mould spreading on my son's bedroom wall.");
+  const msg = await nadia.run('take_message', { name: 'Nadia Hussain', message: 'Black mould in the bedroom', category: 'damp' });
+  assert.match(msg.also, /Raise the repair too, with job create: that is what tells Meadowbank Housing today/);
+});

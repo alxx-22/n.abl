@@ -501,6 +501,10 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   if (client?.status === 'on_stop') return { booked: false, message: `We can't book work for ${client.name} at the moment. Take a message for the office (category client).` };
   const description = str(args.description);
   if (!description) return { booked: false, message: 'Say what the problem is in a few words (description), then call again.' };
+  // A landlord's safety check is booked on the register, which keeps the record's date (live, 6 October: one went in as a repair).
+  if (p.client && /\b(?:gas safety (?:record|check|certificate|inspection)|cp12|landlord'?s gas|eicr|electrical (?:installation )?condition report)\b/i.test(description)) {
+    return { booked: false, message: 'That is a safety check: book it with compliance (action book, with the services), which keeps the record\'s date and marks the register.' };
+  }
   const l = local(ctx);
   // Someone vulnerable, noted with consent, can raise the priority (the owner's uplift rule).
   const t = triageCall(m, description, ctx.state.heard, { vulnerable: str(args.vulnerable) && bool(args.consent) ? [...p.vulnerable, str(args.vulnerable)!] : p.vulnerable, date: l.date });
@@ -662,6 +666,7 @@ async function jobsByRef(ctx: ToolContext, ref: string): Promise<Job[]> {
 }
 
 async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const m = mt(ctx);
   const ref = str(args.reference)?.replace(/[^a-z0-9]/gi, '').toUpperCase();
   let jobs: Job[] = [];
   if (ref) {
@@ -689,8 +694,14 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
     if (!ctx.state.jobsVerified.includes(j.reference)) ctx.state.jobsVerified.push(j.reference);
     if (j.status === 'awaiting_approval') ctx.state.awaitingApproval = true;
   }
+  // The client ringing to say yes to their own quote: the request goes to their phone now, as job approve would
+  // (live, 6 October: the receptionist looked Q-2291 up eight times and never sent it).
+  const theirs = jobs.find((j) => j.status === 'awaiting_approval' && m.clients.find((c) => c.key === j.client_key)?.contact.phone === ctx.callerPhone);
+  const yes = theirs && /\b(?:go(?:ing)? ahead|approve|accept|happy to proceed|proceed with|say yes|want it done)\b/i.test(ctx.state.heard.slice(-4).join(' '));
+  const sent = yes ? await requestApproval({ reference: theirs!.reference }, ctx) : null;
   return {
     found: jobs.length,
+    ...(sent?.request_sent ? { approval: sent } : {}),
     ...(visiting ? {} : { today: 'Nobody from us is booked to visit today.', ...(await atTheDoor(ctx, ctx.state.heard.slice(-4).join(' '))) }),
     jobs: jobs.map((j) => {
       const q = j.status === 'awaiting_approval' ? quotes.find((x) => x.job_ref === j.reference && x.status === 'sent') : undefined;
@@ -1001,6 +1012,7 @@ export async function maintenanceMessage(args: Args, ctx: ToolContext): Promise<
   return {
     taken: true, for: member?.first_name ?? 'the office', urgency, note: urgency === 'urgent' ? 'Tell them it has gone to the team straight away.' : 'Tell them the office will call back.',
     ...(await atTheDoor(ctx, `${body} ${ctx.state.heard.slice(-3).join(' ')}`)),
+    ...(await dampByMessage(ctx, body)),
   };
 }
 
@@ -1018,6 +1030,15 @@ async function atTheDoor(ctx: ToolContext, words: string): Promise<Record<string
   return ours
     ? { at_the_door: `${firstName(mt(ctx), ours.engineer_key) || 'Our engineer'} is booked with them today: they can ask to see photo ID before letting them in.` }
     : { at_the_door: "Nobody from us is booked to visit today: say we haven't sent anyone, not to let them in, and to ring 101, or 999 if they feel unsafe." };
+}
+
+/** Damp at a housing association's home is a job, not a message: the job tells them today and starts their clock. */
+async function dampByMessage(ctx: ToolContext, body: string): Promise<Record<string, unknown>> {
+  if (!ctx.state.property || !/\b(?:damp|mould|mold)\b/i.test(`${body} ${ctx.state.heard.join(' ')}`)) return {};
+  const p = await ctx.repo.getMtProperty(ctx.tenant.id, ctx.state.property);
+  const client = p?.client ? mt(ctx).clients.find((c) => c.key === p.client) : undefined;
+  if (client?.kind !== 'social') return {};
+  return { also: `Raise the repair too, with job create: that is what tells ${client.name} today, with the time, and starts their clock. A message alone does neither.` };
 }
 
 /** The office hours, the visit windows and tonight's cover by trade: never a name. */
