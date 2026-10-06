@@ -341,6 +341,7 @@ export function StepPrices({ a, set }: Props) {
         <Num label="Workmanship guarantee" value={p.guarantee_months} min={0} max={120} suffix="months" onChange={(v) => set((d) => void (d.prices.guarantee_months = v))} />
         <Num label="Account terms" value={p.account_days} min={0} max={90} suffix="days" onChange={(v) => set((d) => void (d.prices.account_days = v))} />
       </div>
+      <Toggle label="Homeowners pay the call-out by card when booking" checked={p.card_on_booking} onChange={(v) => set((d) => void (d.prices.card_on_booking = v))} hint="With the demo card only: no real card is ever taken. Clients pay on account." />
       <Text label="Cancellation, as homeowners are told" area rows={2} max={300} value={p.cancellation} onChange={(v) => set((d) => void (d.prices.cancellation = v))} hint="Goes in every homeowner's booking text." />
     </div>
   );

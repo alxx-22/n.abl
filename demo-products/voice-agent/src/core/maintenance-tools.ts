@@ -15,7 +15,8 @@ import { spokenReference, type NewJob } from '../db/repo.ts';
 import { addWorkingDays, numberWords } from '../domain/listings.ts';
 import { displayUkPhone, normaliseUkPhone, spokenNumber } from '../domain/phone.ts';
 import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
-import type { Certificate, Job, JobKind, JobPriority, MaintenanceSettings, MtClient, MtProperty, MtWindow, ReporterRole, Tenant } from '../domain/types.ts';
+import { processDemoPayment } from '../domain/payments.ts';
+import type { Certificate, Invoice, Job, JobKind, JobPriority, MaintenanceSettings, MtClient, MtProperty, MtWindow, ReporterRole, Tenant } from '../domain/types.ts';
 import { checkWindow, freeWindows, isGasTrade, onCallAt, unable, windowAt, windowOf, windowsOn } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
 import { SAFETY_KINDS, SAFETY_VERSION, safetyScript, type SafetyKind } from '../presets/maintenance/nations.ts';
@@ -483,6 +484,14 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   record(ctx, job.reference, 'job', 'committed');
   ctx.state.jobsVerified.push(job.reference);
   await smsTo(ctx, phone, bookedText(ctx, job, homeowner));
+  // Where the owner asks for it, a homeowner pays the call-out by card when booking: billed now, paid with the demo card.
+  const deposit = homeowner && price && m.prices.card_on_booking
+    ? await ctx.repo.createInvoice(ctx.tenant.id, {
+      job_ref: job.reference, property_key: p.key, client_key: null, payer: { name, phone }, kind: 'callout', description: `Call-out for job ${job.reference} (${shortAddress(p)})`,
+      amount_pence: price, status: 'due', issued: l.date, due: date, paid_at: null, paid_how: null, card_last4: null, auth_code: null,
+    }, ctx.callId || null)
+    : null;
+  if (deposit) ctx.state.invoice = deposit.reference;
   if (client) await noticeToClient(ctx, client, job, p);
   ctx.action({ kind: 'job_created', title: `${cap(priority)} · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · ${windowWords(w, date, l.date)} · ${e.first_name} · ref ${job.reference}`, data: { reference: job.reference } });
   return {
@@ -491,6 +500,7 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     ...(price ? { price: `${money(price)}${incVat(m)} call-out, with the first hour` } : {}),
     text_sent: Boolean(phone),
     remind: m.visits.adult_present ? 'Someone over 18 needs to be in.' : undefined,
+    ...(deposit ? { payment: `The ${money(deposit.amount_pence)} call-out is paid by card now: take it with take_demo_payment (for callout), giving the demo card first. If they'd rather not, the visit stays booked and the office will call.` } : {}),
   };
 }
 
@@ -855,6 +865,84 @@ export function maintenanceParams(decl: FunctionDeclaration, t: Tenant, tool: 'm
   } as FunctionDeclaration;
 }
 
+// ── Invoices and demo payments ────────────────────────────────────────────
+
+const INVOICE_STATUS = (i: Invoice, today: string) => (i.status === 'paid' ? 'paid' : i.status === 'void' ? 'cancelled' : i.due < today ? 'overdue' : 'due');
+
+/**
+ * An invoice by its reference, or those billed to the calling number. Its
+ * amount and state may be said; the home it was for only to the payer.
+ * Bank details are never read out, and a dispute is a message for accounts.
+ */
+async function findInvoice(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const m = mt(ctx);
+  const l = local(ctx);
+  const raw = str(args.reference)?.replace(/[^a-z0-9]/gi, '').toUpperCase();
+  const ref = raw ? `INV-${raw.replace(/^INV/, '')}` : null;
+  const found = ref ? await ctx.repo.listInvoices(ctx.tenant.id, { reference: ref })
+    : ctx.callerPhone ? (await ctx.repo.listInvoices(ctx.tenant.id, { phone: ctx.callerPhone })).slice(0, 3) : [];
+  if (!found.length) return { found: 0, message: ref ? `No invoice ${spokenReference(ref)}. Ask them to read it from the invoice again.` : 'Nothing billed to this number. Ask for the invoice number (it starts INV).' };
+  const open = found.find((i) => i.status === 'due');
+  if (open) ctx.state.invoice = open.reference;
+  return {
+    found: found.length,
+    invoices: found.map((i) => {
+      const payer = Boolean(ctx.callerPhone && i.payer.phone === ctx.callerPhone);
+      const state = INVOICE_STATUS(i, l.date);
+      return {
+        reference: i.reference, reference_spoken: spokenReference(i.reference),
+        // The home is in brackets after the work: only the payer hears it.
+        for: payer ? i.description : i.description.split(' (')[0],
+        amount: `${money(i.amount_pence)}${incVat(m)}`,
+        status: state === 'paid' ? `paid${i.paid_at ? ` ${dayWords(toLocal(i.paid_at, ctx.tenant.profile.timezone).date, l.date)}` : ''}` : state === 'overdue' ? `overdue: it was due ${dayWords(i.due, l.date)}` : state === 'due' ? `due by ${dayWords(i.due, l.date)}` : 'cancelled',
+      };
+    }),
+    pay: open ? 'They can pay now by card with take_demo_payment (for invoice), or by bank transfer: the details are on the invoice; never read them out.' : undefined,
+    dispute: 'A question about the amount or the work: take a message for accounts (category invoice). Never change or waive an amount.',
+  };
+}
+
+/** take_demo_payment for a repairs contractor: an invoice, or a homeowner's call-out, with the demo card only. */
+export async function maintenancePayment(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const gate = safetyGate(ctx);
+  if (gate) return gate;
+  const raw = str(args.reference)?.replace(/[^a-z0-9]/gi, '').toUpperCase();
+  let inv: Invoice | undefined;
+  if (raw && !/^INV/.test(raw)) inv = (await ctx.repo.listInvoices(ctx.tenant.id, { job: raw })).find((i) => i.status === 'due');
+  else {
+    const ref = raw ? `INV-${raw.replace(/^INV/, '')}` : ctx.state.invoice;
+    inv = ref ? (await ctx.repo.listInvoices(ctx.tenant.id, { reference: ref }))[0] : undefined;
+  }
+  if (!inv) return { result: 'no_invoice', message: 'Find the invoice first with find_invoice, or ask for its number (it starts INV).' };
+  if (inv.status === 'paid') return { result: 'already_paid', message: `${inv.reference} is already paid.` };
+  if (inv.status !== 'due') return { result: 'not_due', message: 'Nothing is owed on that one.' };
+  const outcome = processDemoPayment(args.card_number, ctx.demoCards);
+  if (outcome.result === 'refused') return { result: 'refused', message: outcome.message };
+  // A realistic pause, as a real card terminal would take.
+  await new Promise((r) => setTimeout(r, ctx.channel === 'eval' ? 50 : 900));
+  if (outcome.result === 'declined') {
+    ctx.action({ kind: 'payment', title: `Declined (demo) · ${money(inv.amount_pence)}`, detail: `${inv.reference} · card ending ${outcome.last4}` });
+    return { result: 'declined', amount: money(inv.amount_pence), message: 'Declined. Ask if they would like to try again with the demo card.' };
+  }
+  const paid = await ctx.repo.payInvoice(ctx.tenant.id, inv.reference, { last4: outcome.last4, auth_code: outcome.auth_code }, ctx.now());
+  if (!paid) return { result: 'already_paid', message: `${inv.reference} has just been paid.` };
+  ctx.state.paid.push(inv.reference);
+  ctx.action({ kind: 'payment', title: `Paid (demo) · ${money(inv.amount_pence)}`, detail: `${inv.reference} · card ending ${outcome.last4} · ${outcome.auth_code}`, data: { reference: inv.reference } });
+  await smsTo(ctx, ctx.callerPhone, `${ctx.tenant.profile.name}: ${money(inv.amount_pence)} received for ${inv.reference}. Thank you. DEMO: no money has been taken.`);
+  return { result: 'approved', amount: money(inv.amount_pence), for: inv.kind === 'callout' ? `the call-out for job ${inv.job_ref}` : inv.reference, card_ending: outcome.last4, auth_code: outcome.auth_code };
+}
+
+/** The payment tool's words for a repairs contractor: an invoice or a call-out, not an order or a deposit. */
+export function maintenancePaymentParams(decl: FunctionDeclaration, t: Tenant): FunctionDeclaration {
+  if (!t.profile.maintenance) return decl;
+  const params = decl.parameters as { properties: Record<string, unknown>; required?: string[] };
+  return {
+    ...decl,
+    description: "DEMO card payment for an invoice or a homeowner's call-out. Say the demo card first; only demo cards work.",
+    parameters: { ...params, properties: { ...params.properties, for: S('invoice or callout'), reference: S('The invoice (INV-1043) or the job; defaults to this call\'s') } },
+  } as FunctionDeclaration;
+}
+
 // ── The tools ─────────────────────────────────────────────────────────────
 
 export const MAINTENANCE_TOOLS: Record<string, Tool> = {
@@ -916,6 +1004,15 @@ export const MAINTENANCE_TOOLS: Record<string, Tool> = {
       parameters: obj({ trade: S('From triage_fault'), date: S('From, YYYY-MM-DD'), property: S('From find_property'), gas: B('Gas work') }, ['trade']),
     },
     handler: checkWindowsTool,
+  },
+  find_invoice: {
+    when: hasMt,
+    decl: {
+      name: 'find_invoice',
+      description: 'An invoice by its number (INV-1043), or those billed to the calling number: the amount, and whether it is paid, due or overdue.',
+      parameters: obj({ reference: S('The invoice number, if they have it') }, []),
+    },
+    handler: findInvoice,
   },
   compliance: {
     when: hasMt,

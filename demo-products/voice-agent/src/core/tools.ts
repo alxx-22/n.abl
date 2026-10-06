@@ -24,7 +24,7 @@ import { capabilities } from './prompt.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
-import { MAINTENANCE_TOOLS, maintenanceHours, maintenanceMessage, maintenanceParams } from './maintenance-tools.ts';
+import { MAINTENANCE_TOOLS, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
 export { record, type RecordKind } from './tool-kit.ts';
 
@@ -129,6 +129,8 @@ export interface CallState {
   awaitingApproval: boolean;
   /** An emergency this call raised has paged an engineer who hasn't accepted: no name, no time. */
   paged: boolean;
+  /** The invoice this call found or raised: what take_demo_payment pays by default. */
+  invoice: string | null;
 }
 
 export function newCallState(): CallState {
@@ -140,6 +142,7 @@ export function newCallState(): CallState {
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
+    invoice: null,
   };
 }
 
@@ -1083,7 +1086,8 @@ const TOOLS: Record<string, Tool> = {
   },
 
   take_demo_payment: {
-    when: (t) => capabilities(t.profile).payments,
+    when: (t) => capabilities(t.profile).payments || Boolean(t.profile.maintenance),
+    tailor: maintenancePaymentParams,
     decl: {
       name: 'take_demo_payment',
       description: 'DEMO card payment for the order or a deposit. Say the demo card first; only demo cards work.',
@@ -1099,6 +1103,7 @@ const TOOLS: Record<string, Tool> = {
       ),
     },
     async handler(args, ctx) {
+      if (ctx.tenant.profile.maintenance) return maintenancePayment(args, ctx);
       const kind = str(args.for)?.toLowerCase().startsWith('dep') ? 'deposit' : ctx.state.lastOrderRef || !ctx.state.lastBookingRef ? 'order' : 'deposit';
       let amount = 0;
       let orderId: string | null = null;

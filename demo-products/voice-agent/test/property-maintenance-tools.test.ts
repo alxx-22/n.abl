@@ -70,7 +70,7 @@ async function call(tenant: Tenant, callerPhone: string | null, now = NOW) {
 test('maintenance tools: only a repairs contractor has them, and it has no table or appointment tools', async () => {
   const t = await fernhill('pm-decl');
   const names = toolDeclarations(t).map((d) => d.name);
-  for (const n of ['safety_advice', 'find_property', 'triage_fault', 'job', 'check_windows', 'compliance', 'take_message', 'get_opening_hours', 'search_knowledge', 'end_call']) assert.ok(names.includes(n), n);
+  for (const n of ['safety_advice', 'find_property', 'triage_fault', 'job', 'check_windows', 'compliance', 'find_invoice', 'take_demo_payment', 'take_message', 'get_opening_hours', 'search_knowledge', 'end_call']) assert.ok(names.includes(n), n);
   for (const n of ['check_availability', 'create_booking', 'search_properties', 'record_offer']) assert.ok(!names.includes(n), n);
   const props = Object.keys((toolDeclarations(t).find((d) => d.name === 'take_message')!.parameters as any).properties);
   for (const k of ['for', 'category', 'urgency']) assert.ok(props.includes(k), k);
@@ -464,4 +464,55 @@ test('approvals: never by voice; the request goes to the client\'s own phone, wh
   assert.equal((await repo.listJobs(t.id, { reference: raised.reference }))[0].status, 'cancelled');
   assert.ok(sent.some((x) => x.to === harbour.occupant.phone && /Harbour Lettings hasn't approved job/.test(x.body)));
   assert.equal(notes.at(-1)!.kind, 'declined');
+});
+
+test('invoices and demo payments: found by number or from the payer\'s phone, paid only with the demo card, and a call-out by card when the owner asks for it', async () => {
+  const t = await fernhill('pm-money');
+  const cards = [{ number: '1234567890123456', expiry: '12/34', cvc: '123', result: 'approve' as const }, { number: '4000000000000002', expiry: '12/34', cvc: '123', result: 'decline' as const }];
+  const owed = (await repo.listInvoices(t.id)).find((i) => i.status === 'due' && !i.client_key)!;
+  assert.ok(owed, 'a homeowner still owes');
+  // From the payer's own phone: the bill, with the home, and how to pay; never the bank details.
+  const c = await call(t, owed.payer.phone);
+  c.ctx.demoCards = cards;
+  const found = await c.run('find_invoice', {});
+  const mine = found.invoices.find((i: any) => i.reference === owed.reference);
+  assert.match(mine.for, /\(example\)/);
+  assert.match(mine.status, /^due by /);
+  assert.match(found.pay, /never read them out/);
+  // A stranger with the number hears the amount, not the home.
+  const other = await call(t, STRANGER);
+  const theirs = await other.run('find_invoice', { reference: owed.reference.replace('INV-', 'inv ') });
+  assert.doesNotMatch(theirs.invoices[0].for, /example/);
+  // A real-looking card is refused; the demo decline card declines; the demo card pays, once.
+  assert.equal((await c.run('take_demo_payment', { card_number: '4111 1111 1111 1111' })).result, 'refused');
+  assert.equal((await c.run('take_demo_payment', { card_number: '4000 0000 0000 0002' })).result, 'declined');
+  const paid = await c.run('take_demo_payment', { card_number: '1234 5678 9012 3456', expiry: '12/34', security_code: '123' });
+  assert.equal(paid.result, 'approved');
+  const after = (await repo.listInvoices(t.id, { reference: owed.reference }))[0];
+  assert.deepEqual([after.status, after.paid_how, after.card_last4], ['paid', 'card', '3456']);
+  assert.ok(c.sent.some((x) => /received for INV-\d+.*DEMO: no money has been taken/.test(x.body)));
+  assert.equal((await c.run('take_demo_payment', { card_number: '1234 5678 9012 3456' })).result, 'already_paid');
+  // The overdue ones read as overdue.
+  const late = (await repo.listInvoices(t.id)).find((i) => i.status === 'due' && i.due < '2026-10-07')!;
+  assert.match((await (await call(t, late.payer.phone)).run('find_invoice', { reference: late.reference })).invoices[0].status, /^overdue/);
+  // With card on booking: a homeowner's booked visit raises the call-out, paid on the call.
+  const { preset, profile } = builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'pm-fernhill')!);
+  profile.maintenance!.prices.card_on_booking = true;
+  const t2 = await repo.upsertTenant({ ...profile, slug: 'pm-card-on-booking' });
+  await repo.insertSeed(t2.id, preset.seed(t2.profile, NOW, 7));
+  const home = (await repo.listMtProperties(t2.id)).find((p) => p.client === null && p.occupant.phone && p.occupant.name)!;
+  const h = await call(t2, home.occupant.phone);
+  h.ctx.demoCards = cards;
+  await h.run('find_property', { postcode: home.district, number: home.number, street: home.street });
+  h.say('The call-out is ninety five pounds including VAT, with the first hour.');
+  const offer = await h.run('job', { action: 'create', description: 'Dripping kitchen tap', trade: 'plumbing', name: home.occupant.name });
+  const w = offer.windows[0];
+  const booked = await h.run('job', { action: 'create', description: 'Dripping kitchen tap', trade: 'plumbing', name: home.occupant.name, date: w.date, window: w.window });
+  assert.equal(booked.booked, true);
+  assert.match(booked.payment, /^The £\d+ call-out is paid by card now/);
+  const deposit = await h.run('take_demo_payment', { for: 'callout', card_number: '1234567890123456' });
+  assert.deepEqual([deposit.result, deposit.for], ['approved', `the call-out for job ${booked.reference}`]);
+  assert.equal((await repo.listInvoices(t2.id, { job: booked.reference }))[0].status, 'paid');
+  // The tool speaks of invoices and call-outs here, never orders or deposits.
+  assert.match(toolDeclarations(t).find((x) => x.name === 'take_demo_payment')!.description!, /an invoice or a homeowner's call-out/);
 });
