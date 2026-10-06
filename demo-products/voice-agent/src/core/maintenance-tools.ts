@@ -542,7 +542,9 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   }
 
   // Over the client's limit: their contact approves, on their own phone, before anything is booked.
-  const estimate = int(args.estimate_pounds);
+  // A price already in the description or the caller's words counts, so it isn't asked for twice.
+  const named = /£\s?(\d[\d,]*)/.exec(`${description} ${ctx.state.heard.join(' ')}`);
+  const estimate = int(args.estimate_pounds) ?? (named ? Number(named[1].replace(/,/g, '')) || undefined : undefined);
   // "Go ahead with quote Q-2291": that work is already raised, waiting on the client; it is answered, not raised again.
   const quoted = /\bQ[\s-]?(\d{4})\b/i.exec(`${description} ${str(args.reference) ?? ''} ${ctx.state.heard.slice(-4).join(' ')}`);
   if (quoted) {
@@ -655,7 +657,7 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
   }
   return {
     found: jobs.length,
-    ...(visiting ? {} : { today: 'Nobody from us is booked to visit today.' }),
+    ...(visiting ? {} : { today: 'Nobody from us is booked to visit today.', ...(await atTheDoor(ctx, ctx.state.heard.slice(-4).join(' '))) }),
     jobs: jobs.map((j) => {
       const q = j.status === 'awaiting_approval' ? quotes.find((x) => x.job_ref === j.reference && x.status === 'sent') : undefined;
       return { ...jobWords(ctx, j, j.property_key ? props.get(j.property_key) ?? null : null), ...(q ? { quote: `${q.reference}, ${money(q.amount_pence)}${incVat(mt(ctx))}` } : {}) };
@@ -851,7 +853,8 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
   }
   if (action !== 'book') return { error: 'action must be status or book.' };
   const what = str(args.services)?.toLowerCase() ?? '';
-  const both = /both|and/.test(what) && /gas/.test(what) && /service/.test(what);
+  // "Both" on its own means the two together (a live call booked "both" as the gas record alone, 6 October).
+  const both = /\bboth\b/.test(what) || (/gas/.test(what) && /service/.test(what));
   const kind: JobKind = both ? 'gas_record_and_service' : /eicr|electric/.test(what) ? 'eicr' : /service/.test(what) ? 'boiler_service' : 'gas_record';
   const trade = kind === 'eicr' ? 'electrical' : 'boiler_servicing';
   if (!m.trades.some((t) => t.key === trade)) return { done: false, message: "We don't do that: take a message." };

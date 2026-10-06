@@ -634,11 +634,23 @@ test('the job tool steers the call: a quote is answered not raised again, damp a
   const booked = await nadia.run('job', { ...base, vulnerable: 'a son with asthma', consent: true, window: 'am' });
   assert.equal(booked.booked, true, JSON.stringify(booked));
   assert.match(booked.when, /morning window/);
+  // A price already in the description is the estimate: over Harbour's limit, it waits for approval at once.
+  const jess = await call(t, '+447700900411');
+  await jess.run('find_property', { postcode: 'NG3', number: '120', street: 'Larchfield Close' });
+  const priced = await jess.run('job', { action: 'create', description: 'Replace the back door and frame as per the quote (£600)', trade: 'carpentry', name: 'Jess Morgan' });
+  assert.equal(priced.awaiting_approval, true, JSON.stringify(priced));
+  // "Both" books the record and the service together, at the combined price.
+  const ben = await call(t, '+447700900406');
+  await ben.run('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
+  const both = await ben.run('compliance', { property: 'elm_14', action: 'book', services: 'both' });
+  assert.equal(both.price, '£130 including VAT');
   // Nothing on the board for a caller: "nobody from us is due today".
   const aisha = (await repo.listMtProperties(t.id)).find((p) => p.key === 'larchfield_120')!;
   for (const j of await repo.listJobs(t.id, { property: aisha.key })) if (!['done', 'invoiced'].includes(j.status)) await repo.updateJob(t.id, j.reference, { status: 'cancelled' }, 'test');
-  const door = await (await call(t, aisha.occupant.phone)).run('job', { action: 'find' });
-  assert.ok(door.found === 0 ? /nobody from us is due today/.test(door.message) : door.today === 'Nobody from us is booked to visit today.', JSON.stringify(door));
+  const caller = await call(t, aisha.occupant.phone);
+  caller.hear("A man at my door says he's from Fernhill, but I wasn't expecting anyone.");
+  const door = await caller.run('job', { action: 'find' });
+  assert.ok(door.found === 0 ? /nobody from us is due today/.test(door.message) : /we haven't sent anyone, not to let them in/.test(door.at_the_door), JSON.stringify(door));
 });
 
 test("the caller's own words count: a leak they said was pouring is an emergency, a guessed trade loses to the fault, and \"someone at my door\" is answered from the board", async () => {

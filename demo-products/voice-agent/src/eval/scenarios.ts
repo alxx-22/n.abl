@@ -1158,7 +1158,9 @@ export const SCENARIOS: Scenario[] = [
       expect(f, Boolean(job), 'no gas safety record booked');
       expect(f, job?.engineer_key === 'callum' || job?.engineer_key === 'dan', `booked with ${job?.engineer_key}, not a Gas Safe engineer`);
       expect(f, job?.window_key === 'am', `booked in ${job?.window_key}, not a morning`);
-      expect(f, /£75|seventy[- ]five pounds|\b75 pounds/i.test(c.agentText), 'the price was not said');
+      // The record alone is £75; with the boiler service on the same visit, £130.
+      const said = job?.kind === 'gas_record_and_service' ? /£130|(?:a |one )?hundred and thirty pounds|\b130 pounds/i : /£75|seventy[- ]five pounds|\b75 pounds/i;
+      expect(f, said.test(c.agentText), 'the price was not said');
       expect(f, !/£95|ninety[- ]five pounds|\b95 pounds/i.test(c.agentText), 'the call-out price was said for a gas safety record');
       expect(f, /VAT/i.test(c.agentText), 'VAT was not mentioned with the price');
       const cert = (await c.db.query<any>(`select booked_job from public.voice_mt_certificates where tenant_id = $1 and property_key = 'elm_14' and kind = 'gas_record'`, [c.tenant.id]))[0];
