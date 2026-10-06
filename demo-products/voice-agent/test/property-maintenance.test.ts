@@ -427,3 +427,18 @@ test('property maintenance: everyone under Call as is who they say they are in t
   assert.ok(!at(who['Jess Morgan']) && !contact(who['Jess Morgan']));
   assert.ok(!at(who['A stranger']) && !contact(who['A stranger']));
 });
+
+test("working days follow the nation's bank holidays, Scotland's included", async () => {
+  const { addWorkingDays, isWorkingDay } = await import('../src/domain/working-days.ts');
+  // St Andrew's Day and the first Monday of August are Scotland's; Easter Monday and late August are not.
+  assert.equal(isWorkingDay('2026-11-30', 'scotland'), false);
+  assert.equal(isWorkingDay('2026-11-30', 'england'), true);
+  assert.equal(isWorkingDay('2026-08-03', 'scotland'), false);
+  assert.equal(isWorkingDay('2026-08-31', 'scotland'), true);
+  assert.equal(isWorkingDay('2026-04-06', 'scotland'), true);
+  assert.equal(isWorkingDay('2026-04-06', 'wales'), false);
+  assert.equal(isWorkingDay('2027-01-04', 'scotland'), false, '2 January falls on a Saturday: the Monday is the holiday');
+  // Three working days from Thursday 26 November: past the weekend and St Andrew's Day in Scotland.
+  assert.equal(addWorkingDays('2026-11-26', 3, 'scotland'), '2026-12-02');
+  assert.equal(addWorkingDays('2026-11-26', 3, 'england'), '2026-12-01');
+});

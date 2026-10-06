@@ -10,6 +10,7 @@ import {
   type PriceQualifier, type SayItem, type TenantProfile, type ViewingWindow,
 } from './types.ts';
 import { addDays, closeMinutes, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf, zonedToUtc } from './time.ts';
+import { addWorkingDays, isWorkingDay } from './working-days.ts';
 
 // ── Numbers and money in words ────────────────────────────────────────────
 
@@ -347,28 +348,8 @@ export function describeLine(l: Listing, live: Pick<ListingLive, 'price_pence' |
 
 // ── Working days and offer timers ─────────────────────────────────────────
 
-/** Bank holidays as observed, 2026 and 2027; Northern Ireland adds two of its own. Wales follows England. */
-const BANK_HOLIDAYS = [
-  '2026-01-01', '2026-04-03', '2026-04-06', '2026-05-04', '2026-05-25', '2026-08-31', '2026-12-25', '2026-12-28',
-  '2027-01-01', '2027-03-26', '2027-03-29', '2027-05-03', '2027-05-31', '2027-08-30', '2027-12-27', '2027-12-28',
-];
-const NI_HOLIDAYS = ['2026-03-17', '2026-07-13', '2027-03-17', '2027-07-12'];
-
-export function isWorkingDay(date: string, nation: Nation): boolean {
-  const wd = weekdayOf(date);
-  if (wd === 0 || wd === 6) return false;
-  return !BANK_HOLIDAYS.includes(date) && !(nation === 'northern_ireland' && NI_HOLIDAYS.includes(date));
-}
-
-/** The date n working days after `date` (n >= 0), skipping weekends and bank holidays. */
-export function addWorkingDays(date: string, n: number, nation: Nation): string {
-  let d = date;
-  for (let left = n; left > 0;) {
-    d = addDays(d, 1);
-    if (isWorkingDay(d, nation)) left--;
-  }
-  return d;
-}
+// Working days moved to working-days.ts, gaining Scotland's (presets/property-maintenance.md §4.2); kept here for the estate agent.
+export { addWorkingDays, isWorkingDay };
 
 /** How long an offer may wait for the seller: amber after a day, red at two working days. */
 export const OFFER_AMBER_HOURS = 24;

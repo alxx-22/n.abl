@@ -12,7 +12,8 @@
 // no staff-only marker, and no engineer's name or time the board hasn't got.
 
 import { spokenReference, type NewJob } from '../db/repo.ts';
-import { addWorkingDays, numberWords } from '../domain/listings.ts';
+import { numberWords } from '../domain/listings.ts';
+import { addWorkingDays } from '../domain/working-days.ts';
 import { displayUkPhone, normaliseUkPhone, spokenNumber } from '../domain/phone.ts';
 import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
 import { poundsIn } from '../domain/amounts.ts';
@@ -38,7 +39,7 @@ const incVat = (m: MaintenanceSettings) => (m.prices.vat_registered ? ' includin
 const tradeLabel = (m: MaintenanceSettings, key: string) => inSentence(m.trades.find((t) => t.key === key)?.label ?? key.replace(/_/g, ' '));
 const firstName = (m: MaintenanceSettings, key: string | null) => m.engineers.find((e) => e.key === key)?.first_name ?? '';
 /** Bank holidays are kept for three nations; Scotland's are not yet, so it counts England's (presets/property-maintenance.md §4.2). */
-const nationForDays = (m: MaintenanceSettings) => (m.nation === 'scotland' ? 'england' : m.nation);
+
 
 /** The refusal while an emergency's advice is unsaid; null when the tool may go on. */
 export function safetyGate(ctx: ToolContext): Record<string, unknown> | null {
@@ -373,7 +374,7 @@ function jobWords(ctx: ToolContext, j: Job, p: MtProperty | null): Record<string
   if (j.status === 'waiting' && j.waiting_for) status = `waiting for ${j.waiting_for}`;
   if (j.status === 'new' && j.priority === 'emergency' && j.attend_by) status = `raised as an emergency; the engineer has been paged and we aim to be there by ${spokenTime(toLocal(j.attend_by, ctx.tenant.profile.timezone).time)}`;
   if ((j.status === 'done' || j.status === 'invoiced') && j.done_at) status = `done ${dayWords(toLocal(j.done_at, ctx.tenant.profile.timezone).date, l.date)}`;
-  const due = j.priority === 'emergency' ? null : addWorkingDays(toLocal(j.created_at, ctx.tenant.profile.timezone).date, j.priority === 'urgent' ? m.priorities.urgent.working_days : m.priorities.routine.working_days, nationForDays(m));
+  const due = j.priority === 'emergency' ? null : addWorkingDays(toLocal(j.created_at, ctx.tenant.profile.timezone).date, j.priority === 'urgent' ? m.priorities.urgent.working_days : m.priorities.routine.working_days, m.nation);
   const late = due && !['done', 'invoiced', 'cancelled'].includes(j.status) && (j.visit_date ?? '9999') > due && l.date > due;
   return {
     reference: j.reference,

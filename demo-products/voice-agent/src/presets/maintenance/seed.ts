@@ -12,7 +12,7 @@
 // cannot be placed (a prospect turned the trade off, or removed its
 // engineer) is left out, never forced in.
 
-import { addWorkingDays } from '../../domain/listings.ts';
+import { addWorkingDays } from '../../domain/working-days.ts';
 import { addDays, minutesOf, timeOf, toLocal, zonedToUtc } from '../../domain/time.ts';
 import type { Certificate, HistoryEntry, Incident, Invoice, Job, JobKind, JobPriority, MtProperty, Quote, TenantProfile } from '../../domain/types.ts';
 import { checkWindow, isGasTrade, onCallAt, windowAt, windowOf, windowsOn } from '../../domain/windows.ts';
