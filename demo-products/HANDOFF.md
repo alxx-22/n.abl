@@ -354,6 +354,36 @@ new guidance goes in tool answers.
 - **Not online** until the whole demo is built (Alex's decision). The
   Oracle hosting kit (`voice-agent/deploy/oracle/`) waits until then.
 
+## Live calls (property maintenance M2, 6 October)
+
+Eleven `pm-` scenarios now (the seven M1 ones and `pm-agent-over-limit`,
+`pm-landlord-approves`, `pm-damp-asthma`, `pm-someone-at-door`).
+`pm-landlord-approves` presses Approve on Mrs Ellis's phone mid-call
+through the scenario hook `during` (`src/eval/scenarios.ts`), which acts
+off the call as a second device would.
+
+Every one has passed on the current code. The model varies from run to
+run, so most fixes went into the tools rather than the prompt (it is at
+about 6,960 of 7,000 characters at its largest): the job tool sends a
+quote's approval itself, reads a price said in words, treats quoted work
+as planned (not an emergency page), asks once about breathing problems
+for a social landlord's damp job and for consent, answers "someone at my
+door" from the board, and refuses visit windows for an emergency. Two
+real bugs the runs found: "both" booked the gas record alone at £75, and
+"nobody here is vulnerable" made a chirping CO alarm an emergency.
+
+Seen but not fixed: the receptionist once said a made-up price for
+replacing an alarm ("forty pounds"); no guardrail catches an invented
+price yet. The simulated caller still goes silent now and then; the run
+retries on the other model and carries on.
+
+Last full run (`eval-results/2026-10-06T18-45-54`, not in git): 7 of 11,
+then each of the four that failed was fixed in the tools and passed on
+re-run (`pm-gas-record`, `pm-landlord-approves`, `pm-damp-asthma`,
+`pm-agent-over-limit`; the last one also stalled once mid-call). Expect a
+call or two to fail on any one full run: re-run before reading anything
+into it, and fix what repeats.
+
 ## Live calls (property maintenance, 5 October)
 
 The seven `pm-` scenarios on `pm-fernhill` (`node src/eval/run.ts --only
