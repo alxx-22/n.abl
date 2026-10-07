@@ -88,6 +88,7 @@ function knowledge(a: TakeawayAnswers): KnowledgeEntry[] {
 export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): TenantProfile {
   const orders = ordersSentence(a);
   const delivery = deliverySentence(a);
+  const ordering = compileOrdering(a.ordering, a.hours, a.money.payment);
   const policies: Record<string, string> = {};
   if (orders) policies.ordering = orders;
   if (delivery) policies.delivery = delivery;
@@ -97,7 +98,8 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
     ...baseProfile(a, meta, { businessType: 'takeaway', noun: 'takeaway', facts: [orders, delivery, halalSentence(a), a.menu.allergen_statement] }),
     knowledge: knowledge(a),
     menu: compileMenu(a.menu),
-    ordering: compileOrdering(a.ordering, a.hours, a.money.payment),
+    // The kitchen counts every order by when it must be ready (core/kitchen.ts).
+    ordering: ordering && { ...ordering, kitchen: { last_orders_minutes: a.kitchen.last_orders_minutes } },
     policies,
   };
 }

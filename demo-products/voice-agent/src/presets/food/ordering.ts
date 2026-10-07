@@ -141,11 +141,18 @@ export function compileOrdering(o: OrderingAnswer, hours: { days: DayHours[] }, 
   const periods = hours.days.map((d) =>
     d.open ? d.services.filter((s) => !c.evenings_only || closeMinutes(s.close) > minutesOf('17:00')).map((s) => ({ ...s, label: 'takeaway' })) : null,
   );
+  // Zones, free delivery and timed orders reach the profile only when the answers have them (§1 rule 4): the restaurant's never do.
+  const zones = (del.zones ?? []).filter((z) => z.fee_pence !== undefined || z.min_order_pence !== undefined);
   return {
     collection: c.enabled,
     delivery: del.enabled
-      ? { districts: del.districts.map((x) => x.toUpperCase().trim()).filter(Boolean), fee_pence: del.fee_pence, min_order_pence: del.min_order_pence, extra_minutes: del.extra_minutes }
+      ? {
+        districts: del.districts.map((x) => x.toUpperCase().trim()).filter(Boolean), fee_pence: del.fee_pence, min_order_pence: del.min_order_pence, extra_minutes: del.extra_minutes,
+        ...(zones.length ? { zones: zones.map((z) => ({ ...z })) } : {}),
+        ...(del.free_over_pence ? { free_over_pence: del.free_over_pence } : {}),
+      }
       : undefined,
+    ...(o.timed_orders !== undefined ? { timed_orders: o.timed_orders } : {}),
     prep_minutes: c.prep_minutes,
     slot_minutes: c.slot_minutes,
     slot_capacity: c.per_slot > 0 ? c.per_slot : undefined,

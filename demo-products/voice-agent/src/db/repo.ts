@@ -731,6 +731,15 @@ export class Repo {
     return rows.map(mapOrder);
   }
 
+  /** Orders the kitchen must have ready in [from, to), collection and delivery alike: a takeaway's kitchen capacity (core/kitchen.ts). */
+  async ordersReadyBetween(tenantId: string, from: Date, to: Date): Promise<number> {
+    const rows = await this.db.query<any>(
+      `select count(*)::int as n from public.voice_orders where tenant_id = $1 and status <> 'cancelled' and coalesce(ready_at, due_at) >= $2 and coalesce(ready_at, due_at) < $3`,
+      [tenantId, from, to],
+    );
+    return Number(rows[0]?.n ?? 0);
+  }
+
   /** Orders due in [from, to), for collection-slot capacity. */
   async ordersDueBetween(tenantId: string, from: Date, to: Date): Promise<number> {
     const rows = await this.db.query<any>(

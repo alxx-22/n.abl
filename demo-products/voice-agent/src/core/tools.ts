@@ -23,6 +23,7 @@ import { knownTimes, rangesIn } from '../domain/clock-times.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
+import { feeFor, kitchenFulfilment, waitTimes } from './kitchen.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
@@ -54,7 +55,8 @@ export interface CallState {
   basketVersion: number;
   /** What the caller agreed to at the last read-back; confirm_order compares content, not a counter. */
   reviewedKey: string | null;
-  fulfilment: { type: 'collection' | 'delivery'; requested: string; due_at: Date; postcode: string | null; address: string | null } | null;
+  /** For a takeaway's delivery, the postcode's own fee and minimum (core/kitchen.ts); otherwise the delivery-wide ones apply. */
+  fulfilment: { type: 'collection' | 'delivery'; requested: string; due_at: Date; postcode: string | null; address: string | null; fee_pence?: number; min_order_pence?: number } | null;
   /** References created or changed by this call: the guardrail's evidence. Written only by record(). */
   committed: string[];
   /** Existing bookings looked up in this call (talking about them is not a false claim). Written only by record(). */
@@ -931,6 +933,8 @@ const TOOLS: Record<string, Tool> = {
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const o = p.ordering!;
+      // A takeaway's kitchen counts every order by when it must be ready, with zones and last orders (core/kitchen.ts).
+      if (o.kitchen) return kitchenFulfilment(args, ctx);
       const type = str(args.type)?.toLowerCase().startsWith('deliv') ? 'delivery' : 'collection';
       if (type === 'delivery' && !o.delivery) return { ok: false, message: 'Delivery is not offered; collection only.' };
       if (type === 'collection' && !o.collection) return { ok: false, message: 'Collection is not offered.' };
@@ -999,6 +1003,16 @@ const TOOLS: Record<string, Tool> = {
     },
   },
 
+  get_wait_times: {
+    when: (t) => capabilities(t.profile).ordering && Boolean(t.profile.ordering?.kitchen),
+    decl: {
+      name: 'get_wait_times',
+      description: "How long collection and delivery take right now, from the kitchen's queue, and last orders; with a postcode, whether we deliver there and its fee and minimum. Use before saying any wait.",
+      parameters: obj({ postcode: S('Delivery postcode, or just its first half, if they gave one') }),
+    },
+    handler: waitTimes,
+  },
+
   review_order: {
     when: (t) => capabilities(t.profile).ordering,
     decl: {
@@ -1012,17 +1026,20 @@ const TOOLS: Record<string, Tool> = {
       if (!ctx.state.fulfilment) return { ok: false, message: 'Ask collection or delivery first, then call set_fulfilment.' };
       const b = basketSummary(ctx);
       const f = ctx.state.fulfilment;
-      const fee = f.type === 'delivery' ? o.delivery!.fee_pence : 0;
-      if (f.type === 'delivery' && b.subtotal_pence < o.delivery!.min_order_pence) {
-        return { ok: false, message: `Delivery needs a minimum order of ${pounds(o.delivery!.min_order_pence)}; it is ${b.subtotal} so far.` };
+      // A takeaway's postcode has its own fee and minimum, and delivery can be free over an amount (core/kitchen.ts).
+      const min = f.min_order_pence ?? o.delivery?.min_order_pence ?? 0;
+      const fee = f.type === 'delivery' ? feeFor(o, f.fee_pence ?? o.delivery!.fee_pence, b.subtotal_pence) : 0;
+      if (f.type === 'delivery' && b.subtotal_pence < min) {
+        return { ok: false, message: `Delivery needs a minimum order of ${pounds(min)}; it is ${b.subtotal} so far.`, ...(o.kitchen ? { short_by: pounds(min - b.subtotal_pence) } : {}) };
       }
       ctx.state.reviewedKey = basketKey(ctx.state);
       const local = toLocal(f.due_at, ctx.tenant.profile.timezone);
       const when = `${f.type} at ${spokenTime(local.time)}${f.address ? ` to ${f.address}, ${f.postcode}` : ''}`;
       const total = b.subtotal_pence + fee;
+      const free = f.type === 'delivery' && !fee && Boolean(o.delivery?.free_over_pence);
       return {
         ok: true,
-        read_back: `${ctx.state.lines.map(spokenLine).join(', ')}. ${fee ? `Delivery ${pounds(fee)}. ` : ''}That's ${pounds(total)} altogether, for ${when}.`,
+        read_back: `${ctx.state.lines.map(spokenLine).join(', ')}. ${fee ? `Delivery ${pounds(fee)}. ` : free ? 'Delivery is free. ' : ''}That's ${pounds(total)} altogether, for ${when}.`,
         item_count: ctx.state.lines.reduce((n, l) => n + l.quantity, 0),
         lines: b.lines,
         subtotal: b.subtotal,
@@ -1067,7 +1084,7 @@ const TOOLS: Record<string, Tool> = {
       if (!phone && ctx.channel === 'phone') return { placed: false, message: 'Need a contact number.' };
       const f = ctx.state.fulfilment;
       const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
-      const fee = f.type === 'delivery' ? o.delivery!.fee_pence : 0;
+      const fee = f.type === 'delivery' ? feeFor(o, f.fee_pence ?? o.delivery!.fee_pence, subtotal) : 0;
       const order = await ctx.repo.createOrder(ctx.tenant, {
         name, phone, fulfilment: f.type, due_at: f.due_at, address: f.address, postcode: f.postcode,
         lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,

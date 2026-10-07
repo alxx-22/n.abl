@@ -162,9 +162,21 @@ export interface Ordering {
     fee_pence: number;
     min_order_pence: number;
     extra_minutes: number;
+    /** A district's own fee or minimum, in place of the ones above (the takeaway's zones). */
+    zones?: { code: string; fee_pence?: number; min_order_pence?: number }[];
+    /** Delivery is free at or over this (the takeaway's). */
+    free_over_pence?: number;
   };
   prep_minutes: number;
   hours: OpeningHours[];
+  /** False: only as soon as possible. Unset: a time later today may be asked for, as before. */
+  timed_orders?: boolean;
+  /**
+   * The takeaway's kitchen (presets/takeaway.md §4.2): every order, collection
+   * or delivery, counted by when it must be ready; no orders in the last
+   * minutes before closing; everything handed over by closing (core/kitchen.ts).
+   */
+  kitchen?: { last_orders_minutes: number };
 }
 
 export interface KnowledgeEntry {
