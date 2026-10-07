@@ -99,7 +99,10 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
     knowledge: knowledge(a),
     menu: dealMenu ? { ...menu, categories: [dealMenu.category, ...menu.categories], modifier_groups: { ...menu.modifier_groups, ...dealMenu.groups }, deals: dealMenu.deals } : menu,
     // The kitchen counts every order by when it must be ready (core/kitchen.ts).
-    ordering: ordering && { ...ordering, kitchen: { last_orders_minutes: a.kitchen.last_orders_minutes } },
+    ordering: ordering && {
+      ...ordering, kitchen: { last_orders_minutes: a.kitchen.last_orders_minutes },
+      ...(a.ordering.delivery.enabled && a.money.payment !== 'phone' ? { pay_driver: a.money.pay_driver } : {}),
+    },
     policies,
   };
 }

@@ -246,9 +246,13 @@ export interface LiveOrder {
   lines: { name: string; quantity: number; modifiers: { name: string }[]; notes?: string | null }[];
   total: string;
   allergy_notes: string | null;
-  status: 'confirmed' | 'in_kitchen' | 'ready' | 'completed' | 'cancelled';
+  status: 'confirmed' | 'in_kitchen' | 'ready' | 'out_for_delivery' | 'completed' | 'cancelled';
   payment_status: 'paid' | 'unpaid';
   created_at: string;
+  /** A takeaway's: who has it, since when, and what they need at the door ("Cash: change from £20"). */
+  driver?: string | null;
+  out_at?: string | null;
+  pay_note?: string | null;
 }
 
 // ── A repairs contractor's (presets/property-maintenance.md §6) ─────────
@@ -424,6 +428,8 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   workspace?: WorkspaceSpec;
   bookings: LiveBooking[];
   orders: LiveOrder[];
+  /** A takeaway's drivers, by first name. */
+  drivers?: string[];
   /** An estate agency's. */
   nation?: Nation;
   team?: LiveStaff[];

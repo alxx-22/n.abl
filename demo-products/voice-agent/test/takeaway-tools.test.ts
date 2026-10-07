@@ -113,7 +113,7 @@ test('the kitchen: the postcode decides the fee and minimum, the amount short is
   const free = await c.run('review_order', {});
   assert.equal(free.delivery_fee, undefined);
   assert.match(free.read_back, /Delivery is free\. That's £35\.96 altogether/);
-  const done = await c.run('confirm_order', { name: 'Ellie', allergy_notes: 'none' });
+  const done = await c.run('confirm_order', { name: 'Ellie', allergy_notes: 'none', pay_driver: 'phone' });
   assert.equal(done.placed, true, JSON.stringify(done));
   const order = (await repo.getOrder(t.id, done.order_number))!;
   assert.deepEqual([order.delivery_fee_pence, order.total_pence], [0, 3596]);

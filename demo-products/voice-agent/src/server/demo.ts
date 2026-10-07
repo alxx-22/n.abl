@@ -527,12 +527,26 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     return json(res, 200, { ok: true, message }), true;
   }
   if (sub === 'orders' && ref && req.method === 'PATCH') {
-    const { status } = await readJson(req, 10_000);
-    if (!['confirmed', 'in_kitchen', 'ready', 'completed', 'cancelled'].includes(status)) throw new HttpError(400, 'Unknown order state.');
+    const { status, driver } = await readJson(req, 10_000);
+    const kitchen = Boolean(t.profile.ordering?.kitchen);
+    if (!['confirmed', 'in_kitchen', 'ready', 'completed', 'cancelled', ...(kitchen ? ['out_for_delivery'] : [])].includes(status)) throw new HttpError(400, 'Unknown order state.');
     const o = await repo.getOrder(t.id, ref);
     if (!o) throw new HttpError(404, 'No such order.');
+    // A takeaway sends a delivery out with a driver, and that is when the customer hears it's on its way.
+    if (status === 'out_for_delivery') {
+      const drivers = t.profile.ordering?.delivery?.drivers ?? [];
+      const who = drivers.find((d) => d.toLowerCase() === String(driver ?? '').trim().toLowerCase());
+      if (!who) throw new HttpError(400, drivers.length ? `Which driver: ${drivers.join(', ')}?` : 'Add your drivers in the setup first.');
+      const out = await repo.sendOutOrder(t.id, o.reference, who, new Date());
+      if (!out) throw new HttpError(409, o.fulfilment === 'delivery' ? 'That order has already gone.' : 'Only a delivery goes out with a driver.');
+      await textCustomer(ctx, t.id, o.phone, `${t.profile.name}: order ${o.reference} is on its way with ${who}. (Demo)`);
+      void usage('staff_action', { action: 'order_out_for_delivery' });
+      refresh({ reason: 'staff', reference: o.reference, what: `Order ${o.reference}: out with ${who}` });
+      return json(res, 200, { ok: true }), true;
+    }
     await repo.setOrderStatus(t.id, o.reference, status);
-    if (status === 'ready' && o.status !== 'ready') {
+    // A takeaway's delivery that is ready waits for a driver: the "on its way" text comes when it goes out.
+    if (status === 'ready' && o.status !== 'ready' && !(kitchen && o.fulfilment === 'delivery')) {
       await textCustomer(ctx, t.id, o.phone, o.fulfilment === 'delivery'
         ? `${t.profile.name}: order ${o.reference} is on its way. (Demo)`
         : `${t.profile.name}: order ${o.reference} is ready to collect. See you soon! (Demo)`);

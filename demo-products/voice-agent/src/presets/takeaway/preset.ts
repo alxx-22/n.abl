@@ -56,18 +56,21 @@ export function factSheet(a: TakeawayAnswers): string {
   ].join('\n');
 }
 
-/** The takeaway's back office: the kitchen board, then messages and calls. */
+/** The takeaway's back office (presets/takeaway.md §6): the kitchen board, the drivers, then messages and calls. */
 export function takeawayWorkspace(profile: TenantProfile): WorkspaceSpec {
+  const drivers = Boolean(profile.ordering?.delivery?.drivers?.length);
   const suggestions = ['How long for delivery tonight?', 'Can I get a burger, fries and a can for collection?'];
   if (profile.ordering?.delivery) suggestions.push('Do you deliver to NG9?');
   suggestions.push("My son's allergic to sesame. Is the Burger meal OK?");
+  if (drivers) suggestions.push("Where's my order? (Call as Amy)");
   return {
     views: [
       { id: 'orders', label: 'Kitchen' },
+      ...(drivers ? [{ id: 'drivers' as const, label: 'Drivers' }] : []),
       { id: 'messages', label: 'Messages' },
       { id: 'calls', label: 'Calls' },
     ],
-    orders: { board: 'Kitchen', done: { collection: 'Collected', delivery: 'Delivered' }, drivers: false, advance: false },
+    orders: { board: 'Kitchen', done: { collection: 'Collected', delivery: 'Delivered' }, drivers, advance: true },
     suggestions,
     resetLine: 'orders',
   };

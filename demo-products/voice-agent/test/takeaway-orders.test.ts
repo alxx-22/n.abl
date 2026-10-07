@@ -64,6 +64,34 @@ test("where's my order: out with the driver, found by the calling number, with n
   assert.equal(await repo.sendOutOrder(t.id, o.reference, 'Tom', at('19:50')), null);
 });
 
+test('paying the driver: asked once how, and for cash the change they need, on the order and in the text', async () => {
+  const t = await firebird('tk-pay-driver');
+  const sent: { to: string; body: string }[] = [];
+  const c = await call(t, at('19:00'), AMY);
+  c.ctx.sms = { send: async (to, body) => (sent.push({ to, body }), 'simulated') };
+  await c.run('add_to_order', { item: 'Burger meal', options: ['cheeseburger', 'fries', 'coke'] });
+  await c.run('add_to_order', { item: 'Six hot wings' });
+  await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 1AA', address: '3 Near Road' });
+  await c.run('review_order', {});
+  const ask = await c.run('confirm_order', { name: 'Amy', allergy_notes: 'none' });
+  assert.equal(ask.placed, false);
+  assert.match(ask.message, /ask how they'll pay: now by card on the phone, or the driver in cash or by card\. For cash, ask "Do you need change from anything\?"/);
+  const placed = await c.run('confirm_order', { name: 'Amy', allergy_notes: 'none', pay_driver: 'cash', change_from: '£20' });
+  assert.equal(placed.placed, true, JSON.stringify(placed));
+  assert.equal(placed.payment, "They're paying the driver (cash: change from £20): don't take a card on the phone.");
+  assert.equal((await repo.getOrder(t.id, placed.order_number))!.pay_note, 'Cash: change from £20');
+  assert.match(sent.at(-1)!.body, /Paying the driver: cash, change from £20\./);
+  // Card at the door, and paying now on the phone, which leaves nothing for the driver.
+  for (const [how, note] of [['card', 'Card at the door'], ['phone', null]] as const) {
+    const d = await call(t, at('19:00'), AMY);
+    await d.run('add_to_order', { item: 'Pizza night', options: ['margherita', 'pepperoni', 'coke', 'fanta'] });
+    await d.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 1AA', address: '3 Near Road' });
+    await d.run('review_order', {});
+    const p = await d.run('confirm_order', { name: 'Amy', allergy_notes: 'none', pay_driver: how });
+    assert.equal((await repo.getOrder(t.id, p.order_number))!.pay_note, note, how);
+  }
+});
+
 test("where's my order: by its number from another phone, in the kitchen, running late, and only today's", async () => {
   const t = await firebird('tk-where-2');
   const o = await order(t, AMY, 'collection', at('19:15'));

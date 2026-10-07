@@ -1133,6 +1133,15 @@ const TOOLS: Record<string, Tool> = {
         ['name'],
       ),
     },
+    // A takeaway whose drivers take payment: how they'll pay, and the change needed for cash.
+    tailor: (d, t) => {
+      const pay = t.profile.ordering?.pay_driver;
+      if (!t.profile.ordering?.kitchen || !pay || pay === 'no') return d;
+      const p = { ...(d.parameters as { properties: Record<string, unknown> }).properties };
+      p.pay_driver = S(`For a delivery: "phone" if paying now by card, or the driver: ${pay === 'cash' ? '"cash"' : '"cash" or "card"'}`);
+      p.change_from = S('Paying the driver in cash: the note they will pay with, e.g. "£20"');
+      return { ...d, parameters: { ...(d.parameters as object), properties: p } };
+    },
     async handler(args, ctx) {
       const o = ctx.tenant.profile.ordering!;
       if (!ctx.state.lines.length || !ctx.state.fulfilment) return { placed: false, message: 'Nothing to place yet.' };
@@ -1154,12 +1163,25 @@ const TOOLS: Record<string, Tool> = {
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
       if (!phone && ctx.channel === 'phone') return { placed: false, message: 'Need a contact number.' };
       const f = ctx.state.fulfilment;
+      // A takeaway's delivery paid at the door: how, and for cash the change the driver needs (presets/takeaway.md §4.3). Asked once.
+      let payNote: string | null = null;
+      if (o.kitchen && f.type === 'delivery' && o.pay_driver && o.pay_driver !== 'no') {
+        const how = str(args.pay_driver)?.toLowerCase() ?? '';
+        if (!how && !ctx.state.gateAsked.includes('pay_driver')) {
+          ctx.state.gateAsked.push('pay_driver');
+          return { placed: false, message: `Before placing it, ask how they'll pay: now by card on the phone, or the driver ${o.pay_driver === 'cash' ? 'in cash' : 'in cash or by card'}. For cash, ask "Do you need change from anything?". Then call confirm_order again with pay_driver and change_from.` };
+        }
+        const note = str(args.change_from)?.match(/\d+/)?.[0];
+        if (/cash/.test(how)) payNote = note ? `Cash: change from £${note}` : 'Cash: no change needed';
+        else if (/card/.test(how) && !/phone|now/.test(how) && o.pay_driver === 'cash_or_card') payNote = 'Card at the door';
+      }
       const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
       const fee = f.type === 'delivery' ? feeFor(o, f.fee_pence ?? o.delivery!.fee_pence, subtotal) : 0;
       const order = await ctx.repo.createOrder(ctx.tenant, {
         name, phone, fulfilment: f.type, due_at: f.due_at, address: f.address, postcode: f.postcode,
         lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,
         allergy_notes: namedAllergy(noneToNull(str(args.allergy_notes)), ctx.state.heard) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
+        ...(payNote ? { pay_note: payNote } : {}),
       });
       record(ctx, order.reference, 'order', 'committed');
       ctx.state.lines = [];
@@ -1173,7 +1195,7 @@ const TOOLS: Record<string, Tool> = {
         data: { reference: order.reference },
       });
       const rule = o.payment ?? 'either';
-      const payLine = rule === 'collection' ? (order.fulfilment === 'delivery' ? ' Pay on delivery.' : ' Pay when you collect.') : '';
+      const payLine = payNote ? ` Paying the driver: ${payNote.replace(/^Cash: /, 'cash, ').toLowerCase()}.` : rule === 'collection' ? (order.fulfilment === 'delivery' ? ' Pay on delivery.' : ' Pay when you collect.') : '';
       await smsTo(ctx, phone, `${ctx.tenant.profile.name}: order ${order.reference}, ${pounds(order.total_pence)}, ${order.fulfilment} at ${spokenTime(local.time)}.${payLine} Quote ${order.reference} if you call us. (Demo order)`);
       return {
         placed: true,
@@ -1181,7 +1203,7 @@ const TOOLS: Record<string, Tool> = {
         spoken_order_number: order.reference.split('').join(' '),
         total: pounds(order.total_pence),
         ready: `${order.fulfilment} at ${spokenTime(local.time)}`,
-        payment: paymentRule(rule, order.fulfilment),
+        payment: payNote ? `They're paying the driver (${payNote.toLowerCase()}): don't take a card on the phone.` : paymentRule(rule, order.fulfilment),
       };
     },
   },

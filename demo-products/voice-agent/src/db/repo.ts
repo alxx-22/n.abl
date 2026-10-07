@@ -688,6 +688,8 @@ export class Repo {
       name: string; phone: string | null; fulfilment: 'collection' | 'delivery'; due_at: Date;
       address: string | null; postcode: string | null; lines: OrderLine[]; subtotal_pence: number;
       delivery_fee_pence: number; total_pence: number; allergy_notes: string | null; source: string; call_id: string | null;
+      /** What the driver needs to know: "Cash: change from £20" (a takeaway's). */
+      pay_note?: string | null;
     },
   ): Promise<Order> {
     return this.db.tx(async (q) => {
@@ -697,11 +699,11 @@ export class Repo {
       const customerId = await this.upsertCustomer(q, tenant.id, o.phone, o.name);
       const rows = await q.query<any>(
         `insert into public.voice_orders (tenant_id, reference, customer_id, name, phone, fulfilment, due_at, ready_at, address, postcode,
-           lines, subtotal_pence, delivery_fee_pence, total_pence, allergy_notes, source, call_id)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,$14,$15,$16,$17) returning *`,
+           lines, subtotal_pence, delivery_fee_pence, total_pence, allergy_notes, source, call_id, pay_note)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,$14,$15,$16,$17,$18) returning *`,
         [
           tenant.id, reference, customerId, o.name, o.phone, o.fulfilment, o.due_at, readyAt(tenant.profile, o.fulfilment, o.due_at), o.address, o.postcode,
-          JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence, o.total_pence, o.allergy_notes, o.source, o.call_id,
+          JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence, o.total_pence, o.allergy_notes, o.source, o.call_id, o.pay_note ?? null,
         ],
       );
       return mapOrder(rows[0]);

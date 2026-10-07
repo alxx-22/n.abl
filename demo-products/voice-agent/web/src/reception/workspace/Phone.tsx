@@ -57,7 +57,7 @@ interface Engineers {
   onDone: () => void;
 }
 
-export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = [], crew }: { id: string; number: string; setNumber: (n: string) => void; sender: string; tick: number; nowLabel: string; callAs?: CallAs[]; crew?: Engineers }) {
+export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = [], crew, emptyHint }: { id: string; number: string; setNumber: (n: string) => void; sender: string; tick: number; nowLabel: string; callAs?: CallAs[]; crew?: Engineers; emptyHint?: string }) {
   const [texts, setTexts] = useState<Text[]>([]);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(number);
@@ -112,6 +112,7 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = 
               {engineer ? 'No pages yet. An emergency raised on the call pages the engineer on call here.'
                 : client ? "No texts yet. Requests for this client's approval, and notices of their jobs, land here."
                 : crew ? 'No texts yet. Report a repair on the call, and the text lands here.'
+                : emptyHint ? emptyHint
                 : callAs.length ? 'No texts yet. Book a viewing or make an offer on the call, and the text lands here.'
                 : 'No texts yet. Book a table or order on the call, and the confirmation lands here.'}
             </p>

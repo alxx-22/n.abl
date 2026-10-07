@@ -15,13 +15,8 @@ import { lineTotal } from '../../domain/menu.ts';
 import { addDays, closeMinutes, toLocal, weekdayOf, zonedToUtc } from '../../domain/time.ts';
 import { ALLERGIES, ids, rng } from '../common/random.ts';
 import type { SeedMessage, SeedOrder, SeedPlan } from '../common/types.ts';
+import { TK_PEOPLE } from './personas.ts';
 
-/** Who the prospect can ring as (the workspace's Call as). */
-export const TK_CALL_AS = {
-  amy: { name: 'Amy Clarke', phone: '+447700900801' },
-  parent: { name: 'Jo Patel', phone: '+447700900802' },
-  outer: { name: 'Sam Reid', phone: '+447700900803' },
-};
 
 /** Orders a quarter of an hour, by the hour they leave the kitchen; a Friday or Saturday. Other days are quieter. */
 const PER_SLOT: Record<number, number> = { 12: 1.2, 13: 1.5, 14: 0.6, 15: 0.4, 16: 0.6, 17: 1.8, 18: 3, 19: 3.6, 20: 3.2, 21: 2.2, 22: 1.4, 23: 0.8 };
@@ -60,7 +55,7 @@ function itemLine(menu: Menu, item: MenuItem, random: () => number, pick: <T>(xs
 export function planTakeawaySeed(profile: TenantProfile, now: Date, seed: number): SeedPlan {
   const random = rng(seed);
   const id = ids(random);
-  const reserved = new Set(Object.values(TK_CALL_AS).map((p) => p.phone));
+  const reserved = new Set(Object.values(TK_PEOPLE).map((p) => p.phone));
   const phone = () => { for (;;) { const p = id.phone(); if (!reserved.has(p)) return p; } };
   const o = profile.ordering;
   const menu = profile.menu;
@@ -155,7 +150,7 @@ export function planTakeawaySeed(profile: TenantProfile, now: Date, seed: number
   // Amy's delivery, out with the first driver since a few minutes ago, when it can be.
   const amyReady = Math.floor((now.getTime() - 8 * MIN) / step) * step;
   const open = periodsToday(profile, date).some((p) => amyReady >= p.open.getTime() + prep && amyReady + road <= p.close.getTime());
-  if (delivers && open) make(new Date(amyReady), new Date(amyReady + road), TK_CALL_AS.amy, 'delivery');
+  if (delivers && open) make(new Date(amyReady), new Date(amyReady + road), TK_PEOPLE.amy, 'delivery');
 
   // Where each order is now, and who took the deliveries out.
   let turn = 0;
@@ -173,7 +168,7 @@ export function planTakeawaySeed(profile: TenantProfile, now: Date, seed: number
     if (x.status === 'completed') x.payment_status = 'paid';
   }
   // Amy's is out with the first driver.
-  const amy = orders.find((x) => x.phone === TK_CALL_AS.amy.phone);
+  const amy = orders.find((x) => x.phone === TK_PEOPLE.amy.phone);
   if (amy && amy.status === 'out_for_delivery') amy.driver = drivers[0];
   orders.sort((a, b) => a.created_at!.getTime() - b.created_at!.getTime());
   orders.forEach((x, i) => (x.reference = String(101 + i)));

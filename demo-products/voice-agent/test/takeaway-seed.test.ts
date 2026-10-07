@@ -12,7 +12,8 @@ import type { Tenant } from '../src/domain/types.ts';
 import { defaultAnswers } from '../src/presets/takeaway/answers.ts';
 import { compileTakeaway } from '../src/presets/takeaway/compile.ts';
 import { sanitiseTakeaway } from '../src/presets/takeaway/sanitise.ts';
-import { TK_CALL_AS, planTakeawaySeed } from '../src/presets/takeaway/seed.ts';
+import { planTakeawaySeed } from '../src/presets/takeaway/seed.ts';
+import { TK_PEOPLE } from '../src/presets/takeaway/personas.ts';
 
 const at = (hhmm: string, day = '2026-10-09') => new Date(`${day}T${hhmm}:00+01:00`);
 const FRIDAY_7PM = at('19:00');
@@ -78,9 +79,9 @@ test('the seeded evening: a Friday at 7pm is busy, honest about it, and every de
     }
     assert.ok(orders.some((o) => o.lines.some((l) => ['burger_meal', 'chicken_box', 'pizza_night'].includes(l.item_key))), 'meal deals among them');
     // Amy, whom the prospect can ring as, has a delivery out with Kai.
-    const amy = orders.find((o) => o.phone === TK_CALL_AS.amy.phone)!;
+    const amy = orders.find((o) => o.phone === TK_PEOPLE.amy.phone)!;
     assert.deepEqual([amy.status, amy.driver, amy.fulfilment], ['out_for_delivery', 'Kai', 'delivery']);
-    assert.equal(orders.filter((o) => o.phone === TK_CALL_AS.parent.phone || o.phone === TK_CALL_AS.outer.phone).length, 0, 'the other numbers are free');
+    assert.equal(orders.filter((o) => o.phone === TK_PEOPLE.parent.phone || o.phone === TK_PEOPLE.outer.phone).length, 0, 'the other numbers are free');
     // Straight after Start, "how long tonight?" is about 45 to 50 minutes for collection.
     const t = await started(`tk-seed-${seed}`, FRIDAY_7PM, seed);
     const w = await wait(t, FRIDAY_7PM);
@@ -118,6 +119,6 @@ test("the seeded evening: seeded orders move on with the clock; the prospect's o
     else if (ready - 15 * 60_000 <= half.getTime() && ready > half.getTime()) assert.ok(['in_kitchen', 'ready'].includes(o.status), `${o.reference}: ${o.status}`);
   }
   // Amy's delivery was due at 7:10: delivered by 7:30.
-  assert.equal(orders.find((o) => o.phone === TK_CALL_AS.amy.phone)!.status, 'completed');
+  assert.equal(orders.find((o) => o.phone === TK_PEOPLE.amy.phone)!.status, 'completed');
   assert.equal(orders.find((o) => o.reference === mine.reference)!.status, 'confirmed', 'the prospect moves their own');
 });

@@ -21,6 +21,7 @@ import { Messages } from './Messages.tsx';
 import { Money } from './Money.tsx';
 import { Offers } from './Offers.tsx';
 import { OrderBoard } from './OrderBoard.tsx';
+import { Drivers } from './Drivers.tsx';
 import { Properties } from './Properties.tsx';
 import type { Shows, WorkspaceSpec } from './spec.ts';
 import { StaffDiary } from './StaffDiary.tsx';
@@ -130,6 +131,12 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
     shows: 'orders',
     count: (s) => s.orders.filter((o) => o.status === 'confirmed').length,
     render: (p) => (p.spec.orders ? <OrderBoard id={p.id} state={p.state} spec={p.spec.orders} nowMs={p.clock} onDone={p.refresh} /> : null),
+  },
+  // A takeaway's (presets/takeaway.md §6): the number in the tab is the deliveries waiting for a driver.
+  drivers: {
+    shows: 'orders',
+    count: (s) => s.orders.filter((o) => o.fulfilment === 'delivery' && o.status === 'ready').length,
+    render: (p) => <Drivers id={p.id} state={p.state} nowMs={p.clock} onDone={p.refresh} />,
   },
   messages: {
     shows: null,

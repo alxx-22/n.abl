@@ -189,6 +189,8 @@ export interface Ordering {
   hours: OpeningHours[];
   /** False: only as soon as possible. Unset: a time later today may be asked for, as before. */
   timed_orders?: boolean;
+  /** What the driver takes at the door (the takeaway's): unset, nothing is said about it. */
+  pay_driver?: 'no' | 'cash' | 'cash_or_card';
   /**
    * The takeaway's kitchen (presets/takeaway.md §4.2): every order, collection
    * or delivery, counted by when it must be ready; no orders in the last
