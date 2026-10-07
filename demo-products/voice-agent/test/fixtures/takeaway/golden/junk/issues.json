@@ -1,0 +1,27 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the takeaway a name."
+ },
+ {
+  "step": "ordering",
+  "level": "warning",
+  "message": "Add your drivers, so the back office can send deliveries out."
+ },
+ {
+  "step": "menu",
+  "level": "error",
+  "message": "Takeaway needs a menu: add some dishes or turn takeaway off."
+ },
+ {
+  "step": "deals",
+  "level": "error",
+  "message": "Junk: give it a price."
+ },
+ {
+  "step": "deals",
+  "level": "warning",
+  "message": "Junk: the \"Thing\" choice has nothing on the menu to choose from, so the deal is left out until you fix it."
+ }
+]

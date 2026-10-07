@@ -1,0 +1,74 @@
+{
+ "version": "nine",
+ "basics": {
+  "name": 42,
+  "voice": "Nobody",
+  "greeting": ["hi"]
+ },
+ "hours": {
+  "days": "every day",
+  "closures": [
+   {
+    "date": "soon"
+   }
+  ]
+ },
+ "ordering": {
+  "collection": {
+   "prep_minutes": -5,
+   "slot_minutes": 7
+  },
+  "delivery": {
+   "districts": ["not a district","ng 5",7],
+   "zones": [
+    {
+     "code": "NG99"
+    },
+    "x"
+   ],
+   "free_over_pence": "free",
+   "drivers": "Kai"
+  },
+  "timed_orders": "yes"
+ },
+ "kitchen": {
+  "last_orders_minutes": 999,
+  "big_order_mains": "lots"
+ },
+ "menu": {
+  "categories": "burgers"
+ },
+ "deals": [
+  {
+   "name": "Junk",
+   "price_pence": -1,
+   "parts": [
+    {
+     "label": "Thing",
+     "category_key": "nowhere",
+     "choose": 99,
+     "upcharge_pence": {
+      "x": "free"
+     }
+    }
+   ]
+  },
+  "deal"
+ ],
+ "money": {
+  "payment": "cheque",
+  "pay_driver": "gold",
+  "card_minimum_pence": -3
+ },
+ "policies": {
+  "halal": "some",
+  "hygiene_rating": "five",
+  "faqs": {
+   "q": 1
+  }
+ },
+ "theme": {
+  "accent": "blue"
+ },
+ "sources": "web"
+}

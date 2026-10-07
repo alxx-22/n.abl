@@ -1,0 +1,936 @@
+{
+ "slug": "golden",
+ "name": "Your takeaway",
+ "business_type": "takeaway",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Achird",
+ "greeting": "Hello, you're through to the takeaway. I'm the AI assistant on this demo line. How can I help?",
+ "summary": "Your takeaway is a takeaway in Nottingham: Fried chicken, burgers and pizza.",
+ "address": "Nottingham",
+ "phone_display": "0115 496 0456",
+ "brand": {
+  "accent": "#f2542d",
+  "primary": "#2b1a14",
+  "background": "#120c0a",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Your takeaway: Fried chicken, burgers and pizza, in Nottingham.",
+  "Monday to Thursday and Sunday: 12 noon till 11pm. Friday and Saturday: 12 noon till midnight.",
+  "We take orders by phone for collection and delivery, for today, as soon as possible or for a time later on. Orders are paid by card on the phone, when you collect, or to the driver in cash or by card.",
+  "Our chicken is halal; our other meat is not.",
+  "We cook in a shared kitchen and fryers, so we can't rule out traces of any allergen."
+ ],
+ "opening_hours": [
+  {
+   "days": [0,1,2,3,4],
+   "open": "12:00",
+   "close": "23:00",
+   "label": "Open"
+  },
+  {
+   "days": [5,6],
+   "open": "12:00",
+   "close": "24:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [],
+ "knowledge": [
+  {
+   "q": "Do you have any meal deals?",
+   "a": "Burger meal, £8.99: Any burger with regular fries and a can. Chicken box, £7.99: Wings, strips, popcorn chicken or two pieces, with fries or onion rings and a can. Pizza night, £19.99: Any two 10-inch pizzas, a garlic bread and two cans.",
+   "tags": ["deal","deals","meal","combo","box"]
+  },
+  {
+   "q": "Is your food halal?",
+   "a": "Our chicken is halal; our other meat is not.",
+   "tags": ["halal","meat","chicken","beef","pork"]
+  },
+  {
+   "q": "Can you cater for allergies?",
+   "a": "We cook in a shared kitchen and fryers, so we can't rule out traces of any allergen. Ask about any item and I'll tell you its allergens.",
+   "tags": ["allergy","allergies","allergen","intolerance","coeliac"]
+  },
+  {
+   "q": "Do you charge for paying by card?",
+   "a": "There's no extra charge for paying by card.",
+   "tags": ["card","surcharge","fee","contactless","pay"]
+  },
+  {
+   "q": "Is there parking?",
+   "a": "You can park in the bays out front for up to 20 minutes while you collect.",
+   "tags": ["parking","car","park"]
+  },
+  {
+   "q": "Do you charge for bags?",
+   "a": "Your food comes in a paper bag, at no charge.",
+   "tags": ["bag","bags","carrier"]
+  },
+  {
+   "q": "Are you hiring?",
+   "a": "We're often looking for drivers and kitchen staff: ask for the manager in the shop.",
+   "tags": ["job","jobs","work","hiring","vacancy","apply","driver"]
+  },
+  {
+   "q": "Can I tip the driver?",
+   "a": "Tips for the drivers are welcome, and they keep all of them.",
+   "tags": ["tip","tips","tipping","driver"]
+  },
+  {
+   "q": "What is your food hygiene rating?",
+   "a": "Our food hygiene rating is 5. You can check it on the Food Standards Agency's ratings website.",
+   "tags": ["hygiene","rating","clean","inspection","fsa"]
+  }
+ ],
+ "menu": {
+  "categories": [
+   {
+    "key": "meal_deals",
+    "label": "Meal deals",
+    "items": [
+     {
+      "key": "burger_meal",
+      "name": "Burger meal",
+      "price_pence": 899,
+      "description": "Any burger with regular fries and a can.",
+      "allergens": ["celery","eggs","gluten","milk","mustard","sesame","soya"],
+      "modifier_groups": ["burger_meal_1","burger_meal_2","burger_meal_3","burger_extras"]
+     },
+     {
+      "key": "chicken_box",
+      "name": "Chicken box",
+      "price_pence": 799,
+      "description": "Wings, strips, popcorn chicken or two pieces, with fries or onion rings and a can.",
+      "allergens": ["celery","eggs","gluten","milk"],
+      "modifier_groups": ["chicken_box_1","chicken_box_2","chicken_box_3"]
+     },
+     {
+      "key": "pizza_night",
+      "name": "Pizza night",
+      "price_pence": 1999,
+      "description": "Any two 10-inch pizzas, a garlic bread and two cans.",
+      "allergens": ["gluten","milk","mustard"],
+      "modifier_groups": ["pizza_night_1","pizza_night_2","pizza_extras"]
+     }
+    ]
+   },
+   {
+    "key": "burgers",
+    "label": "Burgers",
+    "items": [
+     {
+      "key": "classic_burger",
+      "name": "Classic beef burger",
+      "price_pence": 649,
+      "description": "A quarter-pound beef patty with lettuce, tomato, onion and burger sauce in a sesame-topped brioche bun.",
+      "allergens": ["gluten","eggs","milk","sesame","mustard"],
+      "modifier_groups": ["burger_extras"],
+      "aliases": ["beef burger","hamburger","classic burger"]
+     },
+     {
+      "key": "cheeseburger",
+      "name": "Cheeseburger",
+      "price_pence": 699,
+      "description": "The classic with a slice of cheese.",
+      "allergens": ["gluten","eggs","milk","sesame","mustard"],
+      "modifier_groups": ["burger_extras"]
+     },
+     {
+      "key": "double_cheeseburger",
+      "name": "Double cheeseburger",
+      "price_pence": 899,
+      "description": "Two patties and two slices of cheese.",
+      "allergens": ["gluten","eggs","milk","sesame","mustard"],
+      "modifier_groups": ["burger_extras"],
+      "aliases": ["double burger","double"]
+     },
+     {
+      "key": "chicken_burger",
+      "name": "Crispy chicken burger",
+      "price_pence": 649,
+      "description": "A crispy chicken fillet with lettuce and mayo in a sesame-topped brioche bun.",
+      "allergens": ["gluten","eggs","milk","sesame","mustard"],
+      "modifier_groups": ["burger_extras"],
+      "aliases": ["chicken burger","chicken fillet burger"]
+     },
+     {
+      "key": "spicy_chicken_burger",
+      "name": "Firebird spicy burger",
+      "price_pence": 679,
+      "description": "A crispy chicken fillet in our hot coating, with slaw and chilli mayo.",
+      "allergens": ["gluten","eggs","milk","sesame","mustard","celery"],
+      "modifier_groups": ["burger_extras"],
+      "aliases": ["spicy chicken burger","spicy burger","firebird burger"]
+     },
+     {
+      "key": "veggie_burger",
+      "name": "Veggie burger",
+      "price_pence": 599,
+      "description": "A spiced bean and vegetable patty with lettuce, tomato and mayo.",
+      "allergens": ["gluten","eggs","milk","sesame","mustard","soya","celery"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["burger_extras"],
+      "aliases": ["vegetarian burger","bean burger"]
+     }
+    ]
+   },
+   {
+    "key": "chicken",
+    "label": "Fried chicken",
+    "items": [
+     {
+      "key": "hot_wings",
+      "name": "Six hot wings",
+      "price_pence": 499,
+      "allergens": ["gluten","milk","celery"],
+      "aliases": ["wings","hot wings","chicken wings"]
+     },
+     {
+      "key": "chicken_strips",
+      "name": "Three chicken strips",
+      "price_pence": 499,
+      "allergens": ["gluten","eggs","milk"],
+      "aliases": ["strips","chicken strips","tenders"]
+     },
+     {
+      "key": "popcorn_chicken",
+      "name": "Popcorn chicken",
+      "price_pence": 449,
+      "allergens": ["gluten","milk"]
+     },
+     {
+      "key": "two_piece",
+      "name": "Two pieces of chicken",
+      "price_pence": 449,
+      "allergens": ["gluten","milk","celery"],
+      "aliases": ["two piece","2 piece","chicken pieces"]
+     },
+     {
+      "key": "family_bucket",
+      "name": "Family bucket",
+      "price_pence": 2299,
+      "description": "Ten pieces of chicken, four regular fries, a large coleslaw and a 1.25 litre drink.",
+      "allergens": ["gluten","milk","celery","eggs","mustard"],
+      "aliases": ["bucket","family meal"]
+     }
+    ]
+   },
+   {
+    "key": "wraps",
+    "label": "Wraps",
+    "items": [
+     {
+      "key": "chicken_wrap",
+      "name": "Chicken wrap",
+      "price_pence": 549,
+      "description": "Crispy chicken strips, lettuce and mayo in a flour tortilla.",
+      "allergens": ["gluten","eggs","milk","mustard"]
+     },
+     {
+      "key": "spicy_chicken_wrap",
+      "name": "Spicy chicken wrap",
+      "price_pence": 579,
+      "description": "Hot chicken strips, slaw and chilli mayo in a flour tortilla.",
+      "allergens": ["gluten","eggs","milk","mustard","celery"],
+      "aliases": ["spicy wrap"]
+     },
+     {
+      "key": "halloumi_wrap",
+      "name": "Halloumi wrap",
+      "price_pence": 549,
+      "description": "Grilled halloumi, salad and sweet chilli sauce.",
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"]
+     }
+    ]
+   },
+   {
+    "key": "pizzas",
+    "label": "Pizzas",
+    "items": [
+     {
+      "key": "margherita",
+      "name": "Margherita",
+      "price_pence": 899,
+      "description": "Tomato and mozzarella. 10 inch; 12 inch for £3 more.",
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["pizza_size","pizza_extras"],
+      "aliases": ["cheese pizza","plain pizza"]
+     },
+     {
+      "key": "pepperoni",
+      "name": "Pepperoni",
+      "price_pence": 1049,
+      "description": "Beef pepperoni and mozzarella.",
+      "allergens": ["gluten","milk"],
+      "modifier_groups": ["pizza_size","pizza_extras"]
+     },
+     {
+      "key": "bbq_chicken",
+      "name": "BBQ chicken",
+      "price_pence": 1099,
+      "description": "Chicken, red onion and peppers on a barbecue base.",
+      "allergens": ["gluten","milk","mustard"],
+      "modifier_groups": ["pizza_size","pizza_extras"],
+      "aliases": ["barbecue chicken"]
+     },
+     {
+      "key": "hot_and_spicy",
+      "name": "Hot and spicy",
+      "price_pence": 1099,
+      "description": "Spicy chicken, jalapeños and chilli.",
+      "allergens": ["gluten","milk"],
+      "modifier_groups": ["pizza_size","pizza_extras"],
+      "aliases": ["spicy pizza","hot pizza"]
+     },
+     {
+      "key": "veggie_supreme",
+      "name": "Veggie supreme",
+      "price_pence": 999,
+      "description": "Mushrooms, peppers, onion and sweetcorn.",
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["pizza_size","pizza_extras"],
+      "aliases": ["veggie pizza","vegetarian pizza"]
+     }
+    ]
+   },
+   {
+    "key": "sides",
+    "label": "Sides",
+    "items": [
+     {
+      "key": "fries",
+      "name": "Fries",
+      "price_pence": 249,
+      "description": "Cooked in the same fryers as our chicken.",
+      "allergens": [],
+      "may_contain": ["gluten","milk"],
+      "modifier_groups": ["fries_size"],
+      "aliases": ["chips","french fries"]
+     },
+     {
+      "key": "cheesy_fries",
+      "name": "Cheesy fries",
+      "price_pence": 349,
+      "allergens": ["milk"],
+      "may_contain": ["gluten"],
+      "aliases": ["cheese fries","cheesy chips"]
+     },
+     {
+      "key": "onion_rings",
+      "name": "Onion rings",
+      "price_pence": 299,
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "coleslaw",
+      "name": "Coleslaw",
+      "price_pence": 149,
+      "allergens": ["eggs","mustard"],
+      "dietary": ["vegetarian"],
+      "aliases": ["slaw"]
+     },
+     {
+      "key": "corn_cob",
+      "name": "Corn on the cob",
+      "price_pence": 199,
+      "allergens": ["milk"],
+      "dietary": ["vegetarian"],
+      "aliases": ["corn"]
+     },
+     {
+      "key": "garlic_bread",
+      "name": "Garlic bread",
+      "price_pence": 349,
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"]
+     }
+    ]
+   },
+   {
+    "key": "drinks",
+    "label": "Drinks",
+    "items": [
+     {
+      "key": "cola",
+      "name": "Coca-Cola",
+      "price_pence": 150,
+      "allergens": [],
+      "modifier_groups": ["drink_size"],
+      "aliases": ["coke","cola"]
+     },
+     {
+      "key": "diet_cola",
+      "name": "Diet Coke",
+      "price_pence": 150,
+      "allergens": [],
+      "modifier_groups": ["drink_size"],
+      "aliases": ["diet cola"]
+     },
+     {
+      "key": "orange",
+      "name": "Fanta Orange",
+      "price_pence": 150,
+      "allergens": [],
+      "modifier_groups": ["drink_size"],
+      "aliases": ["fanta","orange"]
+     },
+     {
+      "key": "lemonade",
+      "name": "Sprite",
+      "price_pence": 150,
+      "allergens": [],
+      "modifier_groups": ["drink_size"],
+      "aliases": ["lemonade","lemon and lime"]
+     },
+     {
+      "key": "water",
+      "name": "Bottled water",
+      "price_pence": 100,
+      "allergens": [],
+      "aliases": ["water"]
+     }
+    ]
+   },
+   {
+    "key": "desserts",
+    "label": "Desserts",
+    "items": [
+     {
+      "key": "brownie",
+      "name": "Chocolate brownie",
+      "price_pence": 349,
+      "allergens": ["gluten","eggs","milk","soya"],
+      "may_contain": ["nuts"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "cookie_dough",
+      "name": "Cookie dough",
+      "price_pence": 399,
+      "description": "Warm cookie dough with vanilla ice cream.",
+      "allergens": ["gluten","eggs","milk","soya"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "ice_cream",
+      "name": "Vanilla ice cream tub",
+      "price_pence": 299,
+      "allergens": ["milk"],
+      "dietary": ["vegetarian"],
+      "aliases": ["ice cream"]
+     }
+    ]
+   }
+  ],
+  "modifier_groups": {
+   "burger_extras": {
+    "label": "Extras",
+    "min": 0,
+    "max": 4,
+    "options": [
+     {
+      "key": "extra_cheese",
+      "name": "extra cheese",
+      "price_pence": 80,
+      "allergens": ["milk"]
+     },
+     {
+      "key": "turkey_rasher",
+      "name": "turkey rasher",
+      "price_pence": 120,
+      "allergens": []
+     },
+     {
+      "key": "jalapenos",
+      "name": "jalapeños",
+      "price_pence": 50,
+      "allergens": []
+     },
+     {
+      "key": "extra_patty",
+      "name": "extra beef patty",
+      "price_pence": 200,
+      "allergens": []
+     },
+     {
+      "key": "hash_brown",
+      "name": "hash brown",
+      "price_pence": 80,
+      "allergens": ["gluten"]
+     }
+    ]
+   },
+   "pizza_size": {
+    "label": "Size",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "size_10",
+      "name": "10 inch",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "size_12",
+      "name": "12 inch",
+      "price_pence": 300,
+      "allergens": []
+     }
+    ]
+   },
+   "pizza_extras": {
+    "label": "Extra toppings",
+    "min": 0,
+    "max": 5,
+    "options": [
+     {
+      "key": "pizza_cheese",
+      "name": "extra cheese",
+      "price_pence": 100,
+      "allergens": ["milk"]
+     },
+     {
+      "key": "pizza_pepperoni",
+      "name": "extra pepperoni",
+      "price_pence": 120,
+      "allergens": []
+     },
+     {
+      "key": "pizza_chicken",
+      "name": "chicken",
+      "price_pence": 150,
+      "allergens": []
+     },
+     {
+      "key": "pizza_jalapenos",
+      "name": "jalapeños",
+      "price_pence": 70,
+      "allergens": []
+     },
+     {
+      "key": "pizza_mushrooms",
+      "name": "mushrooms",
+      "price_pence": 70,
+      "allergens": []
+     },
+     {
+      "key": "pizza_peppers",
+      "name": "peppers",
+      "price_pence": 70,
+      "allergens": []
+     }
+    ]
+   },
+   "fries_size": {
+    "label": "Size",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "fries_regular",
+      "name": "regular",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "fries_large",
+      "name": "large",
+      "price_pence": 100,
+      "allergens": []
+     }
+    ]
+   },
+   "drink_size": {
+    "label": "Size",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "drink_can",
+      "name": "can",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "drink_bottle",
+      "name": "1.25 litre bottle",
+      "price_pence": 200,
+      "allergens": []
+     }
+    ]
+   },
+   "burger_meal_1": {
+    "label": "Burger",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "classic_burger",
+      "name": "Classic beef burger",
+      "price_pence": 0,
+      "allergens": ["gluten","eggs","milk","sesame","mustard"],
+      "aliases": ["beef burger","hamburger","classic burger"]
+     },
+     {
+      "key": "cheeseburger",
+      "name": "Cheeseburger",
+      "price_pence": 50,
+      "allergens": ["gluten","eggs","milk","sesame","mustard"]
+     },
+     {
+      "key": "double_cheeseburger",
+      "name": "Double cheeseburger",
+      "price_pence": 250,
+      "allergens": ["gluten","eggs","milk","sesame","mustard"],
+      "aliases": ["double burger","double"]
+     },
+     {
+      "key": "chicken_burger",
+      "name": "Crispy chicken burger",
+      "price_pence": 0,
+      "allergens": ["gluten","eggs","milk","sesame","mustard"],
+      "aliases": ["chicken burger","chicken fillet burger"]
+     },
+     {
+      "key": "spicy_chicken_burger",
+      "name": "Firebird spicy burger",
+      "price_pence": 30,
+      "allergens": ["gluten","eggs","milk","sesame","mustard","celery"],
+      "aliases": ["spicy chicken burger","spicy burger","firebird burger"]
+     },
+     {
+      "key": "veggie_burger",
+      "name": "Veggie burger",
+      "price_pence": 0,
+      "allergens": ["gluten","eggs","milk","sesame","mustard","soya","celery"],
+      "aliases": ["vegetarian burger","bean burger"]
+     }
+    ]
+   },
+   "burger_meal_2": {
+    "label": "Side",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "fries",
+      "name": "Fries",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["chips","french fries"]
+     }
+    ]
+   },
+   "burger_meal_3": {
+    "label": "Drink",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "cola",
+      "name": "Coca-Cola",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["coke","cola"]
+     },
+     {
+      "key": "diet_cola",
+      "name": "Diet Coke",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["diet cola"]
+     },
+     {
+      "key": "orange",
+      "name": "Fanta Orange",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["fanta","orange"]
+     },
+     {
+      "key": "lemonade",
+      "name": "Sprite",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["lemonade","lemon and lime"]
+     }
+    ]
+   },
+   "chicken_box_1": {
+    "label": "Chicken",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "hot_wings",
+      "name": "Six hot wings",
+      "price_pence": 0,
+      "allergens": ["gluten","milk","celery"],
+      "aliases": ["wings","hot wings","chicken wings"]
+     },
+     {
+      "key": "chicken_strips",
+      "name": "Three chicken strips",
+      "price_pence": 0,
+      "allergens": ["gluten","eggs","milk"],
+      "aliases": ["strips","chicken strips","tenders"]
+     },
+     {
+      "key": "popcorn_chicken",
+      "name": "Popcorn chicken",
+      "price_pence": 0,
+      "allergens": ["gluten","milk"]
+     },
+     {
+      "key": "two_piece",
+      "name": "Two pieces of chicken",
+      "price_pence": 0,
+      "allergens": ["gluten","milk","celery"],
+      "aliases": ["two piece","2 piece","chicken pieces"]
+     }
+    ]
+   },
+   "chicken_box_2": {
+    "label": "Side",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "fries",
+      "name": "Fries",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["chips","french fries"]
+     },
+     {
+      "key": "onion_rings",
+      "name": "Onion rings",
+      "price_pence": 0,
+      "allergens": ["gluten","milk"]
+     }
+    ]
+   },
+   "chicken_box_3": {
+    "label": "Drink",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "cola",
+      "name": "Coca-Cola",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["coke","cola"]
+     },
+     {
+      "key": "diet_cola",
+      "name": "Diet Coke",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["diet cola"]
+     },
+     {
+      "key": "orange",
+      "name": "Fanta Orange",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["fanta","orange"]
+     },
+     {
+      "key": "lemonade",
+      "name": "Sprite",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["lemonade","lemon and lime"]
+     }
+    ]
+   },
+   "pizza_night_1": {
+    "label": "Pizzas",
+    "min": 2,
+    "max": 2,
+    "options": [
+     {
+      "key": "margherita",
+      "name": "Margherita",
+      "price_pence": 0,
+      "allergens": ["gluten","milk"],
+      "aliases": ["cheese pizza","plain pizza"]
+     },
+     {
+      "key": "pepperoni",
+      "name": "Pepperoni",
+      "price_pence": 0,
+      "allergens": ["gluten","milk"]
+     },
+     {
+      "key": "bbq_chicken",
+      "name": "BBQ chicken",
+      "price_pence": 0,
+      "allergens": ["gluten","milk","mustard"],
+      "aliases": ["barbecue chicken"]
+     },
+     {
+      "key": "hot_and_spicy",
+      "name": "Hot and spicy",
+      "price_pence": 0,
+      "allergens": ["gluten","milk"],
+      "aliases": ["spicy pizza","hot pizza"]
+     },
+     {
+      "key": "veggie_supreme",
+      "name": "Veggie supreme",
+      "price_pence": 0,
+      "allergens": ["gluten","milk"],
+      "aliases": ["veggie pizza","vegetarian pizza"]
+     }
+    ]
+   },
+   "pizza_night_2": {
+    "label": "Drinks",
+    "min": 2,
+    "max": 2,
+    "options": [
+     {
+      "key": "cola",
+      "name": "Coca-Cola",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["coke","cola"]
+     },
+     {
+      "key": "diet_cola",
+      "name": "Diet Coke",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["diet cola"]
+     },
+     {
+      "key": "orange",
+      "name": "Fanta Orange",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["fanta","orange"]
+     },
+     {
+      "key": "lemonade",
+      "name": "Sprite",
+      "price_pence": 0,
+      "allergens": [],
+      "aliases": ["lemonade","lemon and lime"]
+     }
+    ]
+   }
+  },
+  "allergen_statement": "We cook in a shared kitchen and fryers, so we can't rule out traces of any allergen.",
+  "deals": [
+   {
+    "item_key": "burger_meal",
+    "parts": [
+     {
+      "label": "Burger",
+      "group": "burger_meal_1",
+      "choose": 1
+     },
+     {
+      "label": "Side",
+      "group": "burger_meal_2",
+      "choose": 1
+     },
+     {
+      "label": "Drink",
+      "group": "burger_meal_3",
+      "choose": 1
+     }
+    ],
+    "includes": [],
+    "description": "Any burger with regular fries and a can."
+   },
+   {
+    "item_key": "chicken_box",
+    "parts": [
+     {
+      "label": "Chicken",
+      "group": "chicken_box_1",
+      "choose": 1
+     },
+     {
+      "label": "Side",
+      "group": "chicken_box_2",
+      "choose": 1
+     },
+     {
+      "label": "Drink",
+      "group": "chicken_box_3",
+      "choose": 1
+     }
+    ],
+    "includes": [],
+    "description": "Wings, strips, popcorn chicken or two pieces, with fries or onion rings and a can."
+   },
+   {
+    "item_key": "pizza_night",
+    "parts": [
+     {
+      "label": "Pizzas",
+      "group": "pizza_night_1",
+      "choose": 2
+     },
+     {
+      "label": "Drinks",
+      "group": "pizza_night_2",
+      "choose": 2
+     }
+    ],
+    "includes": ["garlic_bread"],
+    "description": "Any two 10-inch pizzas, a garlic bread and two cans."
+   }
+  ]
+ },
+ "ordering": {
+  "collection": true,
+  "delivery": {
+   "districts": [],
+   "fee_pence": 250,
+   "min_order_pence": 1200,
+   "extra_minutes": 25,
+   "free_over_pence": 3000,
+   "drivers": ["Kai","Priya","Tom"]
+  },
+  "timed_orders": true,
+  "prep_minutes": 15,
+  "slot_minutes": 15,
+  "slot_capacity": 4,
+  "payment": "either",
+  "hours": [
+   {
+    "days": [0,1,2,3,4],
+    "open": "12:00",
+    "close": "23:00",
+    "label": "takeaway"
+   },
+   {
+    "days": [5,6],
+    "open": "12:00",
+    "close": "24:00",
+    "label": "takeaway"
+   }
+  ],
+  "kitchen": {
+   "last_orders_minutes": 15
+  },
+  "pay_driver": "cash_or_card"
+ },
+ "policies": {
+  "card_payments": "There's no extra charge for paying by card."
+ }
+}

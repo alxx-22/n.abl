@@ -1,0 +1,131 @@
+{
+ "slug": "golden",
+ "name": "Your takeaway",
+ "business_type": "takeaway",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Achird",
+ "greeting": "Hello, you're through to the takeaway. I'm the AI assistant on this demo line. How can I help?",
+ "summary": "Your takeaway is a takeaway in Nottingham: Fried chicken, burgers and pizza.",
+ "address": "Nottingham",
+ "phone_display": "0115 496 0456",
+ "brand": {
+  "accent": "#f2542d",
+  "primary": "#2b1a14",
+  "background": "#120c0a",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Your takeaway: Fried chicken, burgers and pizza, in Nottingham.",
+  "Monday to Thursday and Sunday: 12 noon till 11pm. Friday and Saturday: 12 noon till midnight.",
+  "We take orders by phone for collection and delivery, for today, as soon as possible or for a time later on. Orders are paid by card on the phone, when you collect, or to the driver in cash or by card.",
+  "Delivery to NG5 is £2.50, with a £12 minimum. Delivery is free on orders of £30 or more.",
+  "Our chicken is halal; our other meat is not.",
+  "We cook in a shared kitchen and fryers, so we can't rule out traces of any allergen."
+ ],
+ "opening_hours": [
+  {
+   "days": [0,1,2,3,4],
+   "open": "12:00",
+   "close": "23:00",
+   "label": "Open"
+  },
+  {
+   "days": [5,6],
+   "open": "12:00",
+   "close": "24:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [],
+ "knowledge": [
+  {
+   "q": "Do you deliver to me?",
+   "a": "Delivery to NG5 is £2.50, with a £12 minimum. Delivery is free on orders of £30 or more.",
+   "tags": ["deliver","delivery","postcode","area","fee","minimum","free delivery"]
+  },
+  {
+   "q": "Is your food halal?",
+   "a": "Our chicken is halal; our other meat is not.",
+   "tags": ["halal","meat","chicken","beef","pork"]
+  },
+  {
+   "q": "Can you cater for allergies?",
+   "a": "We cook in a shared kitchen and fryers, so we can't rule out traces of any allergen. Ask about any item and I'll tell you its allergens.",
+   "tags": ["allergy","allergies","allergen","intolerance","coeliac"]
+  },
+  {
+   "q": "Do you charge for paying by card?",
+   "a": "There's no extra charge for paying by card.",
+   "tags": ["card","surcharge","fee","contactless","pay"]
+  },
+  {
+   "q": "Is there parking?",
+   "a": "You can park in the bays out front for up to 20 minutes while you collect.",
+   "tags": ["parking","car","park"]
+  },
+  {
+   "q": "Do you charge for bags?",
+   "a": "Your food comes in a paper bag, at no charge.",
+   "tags": ["bag","bags","carrier"]
+  },
+  {
+   "q": "Are you hiring?",
+   "a": "We're often looking for drivers and kitchen staff: ask for the manager in the shop.",
+   "tags": ["job","jobs","work","hiring","vacancy","apply","driver"]
+  },
+  {
+   "q": "Can I tip the driver?",
+   "a": "Tips for the drivers are welcome, and they keep all of them.",
+   "tags": ["tip","tips","tipping","driver"]
+  },
+  {
+   "q": "What is your food hygiene rating?",
+   "a": "Our food hygiene rating is 5. You can check it on the Food Standards Agency's ratings website.",
+   "tags": ["hygiene","rating","clean","inspection","fsa"]
+  }
+ ],
+ "menu": {
+  "categories": [],
+  "modifier_groups": {},
+  "allergen_statement": "We cook in a shared kitchen and fryers, so we can't rule out traces of any allergen."
+ },
+ "ordering": {
+  "collection": true,
+  "delivery": {
+   "districts": ["NG5"],
+   "fee_pence": 250,
+   "min_order_pence": 1200,
+   "extra_minutes": 25,
+   "free_over_pence": 3000
+  },
+  "timed_orders": true,
+  "prep_minutes": 5,
+  "slot_minutes": 15,
+  "slot_capacity": 4,
+  "payment": "either",
+  "hours": [
+   {
+    "days": [0,1,2,3,4],
+    "open": "12:00",
+    "close": "23:00",
+    "label": "takeaway"
+   },
+   {
+    "days": [5,6],
+    "open": "12:00",
+    "close": "24:00",
+    "label": "takeaway"
+   }
+  ],
+  "kitchen": {
+   "last_orders_minutes": 120
+  },
+  "pay_driver": "cash_or_card"
+ },
+ "policies": {
+  "card_payments": "There's no extra charge for paying by card."
+ }
+}

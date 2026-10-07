@@ -1,0 +1,158 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "",
+  "style": "Fried chicken, burgers and pizza",
+  "town": "Nottingham",
+  "address": "",
+  "phone_display": "0115 496 0456",
+  "website": "",
+  "voice": "Achird",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "24:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "24:00"
+     }
+    ]
+   }
+  ],
+  "closures": []
+ },
+ "ordering": {
+  "collection": {
+   "enabled": true,
+   "prep_minutes": 5,
+   "slot_minutes": 15,
+   "per_slot": 4
+  },
+  "delivery": {
+   "enabled": true,
+   "districts": ["NG5"],
+   "fee_pence": 250,
+   "min_order_pence": 1200,
+   "extra_minutes": 25,
+   "zones": [],
+   "free_over_pence": 3000,
+   "drivers": []
+  },
+  "delivery_apps": [],
+  "timed_orders": true
+ },
+ "kitchen": {
+  "last_orders_minutes": 120,
+  "big_order_mains": 6
+ },
+ "menu": {
+  "categories": [],
+  "modifier_groups": {},
+  "allergen_statement": "We cook in a shared kitchen and fryers, so we can't rule out traces of any allergen.",
+  "source": "manual",
+  "allergens_are_examples": true
+ },
+ "deals": [
+  {
+   "key": "junk",
+   "name": "Junk",
+   "price_pence": 0,
+   "description": "",
+   "parts": [
+    {
+     "label": "Thing",
+     "category_key": "nowhere",
+     "choose": 4
+    }
+   ]
+  }
+ ],
+ "money": {
+  "payment": "either",
+  "pay_driver": "cash_or_card",
+  "card_minimum_pence": 0
+ },
+ "policies": {
+  "halal": "chicken",
+  "hygiene_rating": 5,
+  "parking": "You can park in the bays out front for up to 20 minutes while you collect.",
+  "offers": "",
+  "bags": "Your food comes in a paper bag, at no charge.",
+  "careers": "We're often looking for drivers and kitchen staff: ask for the manager in the shop.",
+  "tips": "Tips for the drivers are welcome, and they keep all of them.",
+  "faqs": []
+ },
+ "theme": {
+  "accent": "#f2542d",
+  "primary": "#2b1a14",
+  "background": "#120c0a",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

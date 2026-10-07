@@ -1,0 +1,50 @@
+{
+ "contents": [
+  {
+   "role": "user",
+   "parts": [
+    {
+     "text": [
+      "These are the facts about a UK takeaway, set by its owner for an AI phone receptionist demo.",
+      "Name: Firebird Chicken & Burgers. Style: Fried chicken, burgers and pizza. Town: Nottingham.",
+      "Hours: Monday to Thursday and Sunday: 12 noon till 11pm. Friday and Saturday: 12 noon till midnight.",
+      "Collection: yes. Delivery to NG1, NG2, NG3 and NG7 is £2.50, with a £12 minimum; to NG5 and NG9, £3.50 with a £15 minimum. Delivery is free on orders of £30 or more. Also on Just Eat.",
+      "Orders are paid by card on the phone, when you collect, or to the driver in cash or by card.",
+      "Our chicken is halal; our other meat is not. We cook in a shared kitchen and fryers, so we can't rule out traces of any allergen.",
+      "Parking: You can park in the bays out front for up to 20 minutes while you collect. Bags: Your food comes in a paper bag, at no charge. Tips: Tips for the drivers are welcome, and they keep all of them. Jobs: We're often looking for drivers and kitchen staff: ask for the manager in the shop.",
+      "Menu: Burgers: Classic beef burger, Cheeseburger, Double cheeseburger, Crispy chicken burger, Firebird spicy burger, Veggie burger; Fried chicken: Six hot wings, Three chicken strips, Popcorn chicken, Two pieces of chicken, Family bucket; Wraps: Chicken wrap, Spicy chicken wrap, Halloumi wrap; Pizzas: Margherita, Pepperoni, BBQ chicken, Hot and spicy, Veggie supreme; Sides: Fries, Cheesy fries, Onion rings, Coleslaw, Corn on the cob, Garlic bread; Drinks: Coca-Cola, Diet Coke, Fanta Orange, Sprite, Bottled water; Desserts: Chocolate brownie, Cookie dough, Vanilla ice cream tub.",
+      "Meal deals: Burger meal, Chicken box, Pizza night.",
+      "",
+      "Write the ten questions callers most often ask a takeaway like this that the facts above answer, each with a short spoken answer (one or two sentences, friendly, British English).",
+      "Use only these facts. Where the facts do not cover something, leave that question out rather than guess. No questions about taking orders for collection or delivery, and saying how long an order will be themselves; the receptionist handles those."
+     ]
+    }
+   ]
+  }
+ ],
+ "generationConfig": {
+  "temperature": 0.4,
+  "responseMimeType": "application/json",
+  "responseSchema": {
+   "type": "OBJECT",
+   "properties": {
+    "faqs": {
+     "type": "ARRAY",
+     "items": {
+      "type": "OBJECT",
+      "properties": {
+       "q": {
+        "type": "STRING"
+       },
+       "a": {
+        "type": "STRING"
+       }
+      },
+      "required": ["q","a"]
+     }
+    }
+   },
+   "required": ["faqs"]
+  }
+ }
+}

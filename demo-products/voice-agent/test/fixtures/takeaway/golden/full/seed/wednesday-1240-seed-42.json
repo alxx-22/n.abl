@@ -1,0 +1,16 @@
+{
+ "bookings": [],
+ "orders": [],
+ "messages": [
+  {
+   "from_name": "Sarah Kelly",
+   "from_phone": "+447700900110",
+   "body": "Wanting 30 wraps and some fries for an office lunch next Friday. Please call back with a price."
+  },
+  {
+   "from_name": "Adam Begum",
+   "from_phone": "+447700900335",
+   "body": "Asking whether you are hiring delivery drivers for weekends."
+  }
+ ]
+}

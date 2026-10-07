@@ -1,0 +1,32 @@
+{
+ "views": [
+  {
+   "id": "orders",
+   "label": "Kitchen"
+  },
+  {
+   "id": "messages",
+   "label": "Messages"
+  },
+  {
+   "id": "calls",
+   "label": "Calls"
+  }
+ ],
+ "orders": {
+  "board": "Kitchen",
+  "done": {
+   "collection": "Collected",
+   "delivery": "Delivered"
+  },
+  "drivers": false,
+  "advance": true
+ },
+ "suggestions": [
+  "How long for delivery tonight?",
+  "Can I get a burger, fries and a can for collection?",
+  "Do you deliver to NG9?",
+  "My son's allergic to sesame. Is the Burger meal OK?"
+ ],
+ "resetLine": "orders"
+}

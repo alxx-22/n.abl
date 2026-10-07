@@ -1,0 +1,62 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "The greeting must say it is an AI assistant and that this is a demo line."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Monday: Open closes before it opens."
+ },
+ {
+  "step": "ordering",
+  "level": "error",
+  "message": "List the postcode districts you deliver to, like NG1."
+ },
+ {
+  "step": "ordering",
+  "level": "warning",
+  "message": "Add your drivers, so the back office can send deliveries out."
+ },
+ {
+  "step": "ordering",
+  "level": "warning",
+  "message": "Free delivery starts at or below the minimum order, so every delivery is free."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ },
+ {
+  "step": "deals",
+  "level": "error",
+  "message": "Burger meal: give it a price."
+ },
+ {
+  "step": "deals",
+  "level": "error",
+  "message": "Chicken box: add at least one choice, like \"any burger\"."
+ },
+ {
+  "step": "deals",
+  "level": "warning",
+  "message": "Pizza night: the \"Pizzas\" choice has nothing on the menu to choose from, so the deal is left out until you fix it."
+ },
+ {
+  "step": "deals",
+  "level": "warning",
+  "message": "Dear meal costs as much as its cheapest choices bought separately, so the receptionist won't suggest it as a saving."
+ },
+ {
+  "step": "money",
+  "level": "error",
+  "message": "Delivery orders need paying: take card on the phone, or let the driver take payment."
+ },
+ {
+  "step": "policies",
+  "level": "warning",
+  "message": "1 question needs both the question and its answer before the receptionist can use it."
+ }
+]
