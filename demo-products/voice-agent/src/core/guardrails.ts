@@ -19,7 +19,9 @@ export interface Flag {
     | 'unconfirmed_acceptance' | 'disclosure_missed' | 'invented_time'
     // A repairs contractor's (presets/property-maintenance.md §8), checked only on its calls.
     | 'safety_delayed' | 'approval_claim' | 'invented_eta' | 'said_safe_appliance' | 'unsafe_diy' | 'liability_admitted' | 'legal_deadline'
-    | 'damp_blame' | 'medical_advice' | 'invented_price' | 'cover_advice';
+    | 'damp_blame' | 'medical_advice' | 'invented_price' | 'cover_advice'
+    // A takeaway's (presets/takeaway.md §8); it also uses invented_time and invented_price.
+    | 'card_surcharge';
   text: string;
 }
 
@@ -131,9 +133,37 @@ function estateFlags(text: string, state: CallState, names: string[]): Flag[] {
   if (recorded && !aboutMessage && !negated(text, recorded.index) && state.committed.length === 0) flags.push({ rule: 'unconfirmed_claim', text: recorded[0] });
   // A time must come from the instructions, a tool or the caller (live, 6 October: "9am or 10:30am" offered for a
   // viewing before anything was checked; 9am turned out to be taken).
+  const made = madeUpTime(text, state);
+  if (made) flags.push({ rule: 'invented_time', text: made });
+  return flags;
+}
+
+/** A time of day no instruction, tool or caller gave this call, as said; null when every one is known. */
+function madeUpTime(text: string, state: CallState): string | null {
   const known = new Set([...state.times, ...state.heard.flatMap(knownTimes)]);
-  const made = timesIn(text).find((t) => !t.readings.some((r) => known.has(r) || state.timeRanges.some(([a, b]) => r >= a && r <= b)));
-  if (made) flags.push({ rule: 'invented_time', text: made.said });
+  return timesIn(text).find((t) => !t.readings.some((r) => known.has(r) || state.timeRanges.some(([a, b]) => r >= a && r <= b)))?.said ?? null;
+}
+
+// "There's a 50p charge for card": a shop may not charge more for paying by consumer card (Consumer Rights (Payment
+// Surcharges) Regulations 2012, as amended in 2018). "No charge for card" is the right answer, so a denial is not a flag.
+const SURCHARGE = /\b(?:card|contactless) (?:fee|surcharge|charge)\b|\b(?:fee|surcharge|charge|extra|more) (?:for|to pay by|if you pay by|on) (?:a |the )?(?:card|contactless)\b/i;
+
+/**
+ * A takeaway's (presets/takeaway.md §8): no wait or time no tool gave, no
+ * price or saving no tool, fact or caller gave, and no card surcharge.
+ */
+function takeawayFlags(text: string, state: CallState): Flag[] {
+  const flags: Flag[] = [];
+  const time = madeUpTime(text, state);
+  if (time) flags.push({ rule: 'invented_time', text: time });
+  const said = amountsIn(text);
+  if (said.length) {
+    const known = new Set([...state.amounts, ...state.heard.flatMap(amountsIn)]);
+    const made = said.find((p) => !known.has(p));
+    if (made !== undefined) flags.push({ rule: 'invented_price', text: `£${(made / 100).toFixed(made % 100 ? 2 : 0)}` });
+  }
+  const surcharge = SURCHARGE.exec(text);
+  if (surcharge && !negated(text, surcharge.index) && !/\bno\b[^.?!]{0,20}$/i.test(text.slice(0, surcharge.index))) flags.push({ rule: 'card_surcharge', text: surcharge[0] });
   return flags;
 }
 
@@ -262,5 +292,6 @@ export function checkUtterance(text: string, state: CallState, staff: string[] =
   if (narrated) flags.push({ rule: 'narrated', text: narrated[0] });
   if (state.estate) flags.push(...estateFlags(text, state, staff));
   if (state.maintenance) flags.push(...maintenanceFlags(text, state, staff, m));
+  if (state.takeaway) flags.push(...takeawayFlags(text, state));
   return flags;
 }

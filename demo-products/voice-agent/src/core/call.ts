@@ -135,6 +135,14 @@ const MAX_RECOVERIES = 2;
 const CONTEXTUAL_WATCHDOG_MS = 4000;
 
 /** A repairs contractor's: its jobs are booked with the job tool, not create_booking. */
+// A takeaway's corrections, where the shared wording names another business's tools (presets/takeaway.md §8).
+const TAKEAWAY_CORRECTIONS: Partial<Record<Flag['rule'], string>> = {
+  invented_time:
+    "[Correction from the system: no tool has given that time. Never say a wait or a time you haven't checked: say sorry, let me check, then call get_wait_times (or set_fulfilment for their order) and say only what it returns.]",
+  invented_price:
+    '[Correction from the system: no tool or fact gave that price. Correct yourself: prices, savings and totals come only from get_menu, get_item_details, add_to_order and review_order. Say only what they return.]',
+};
+
 const MT_UNCONFIRMED =
   '[Correction from the system: nothing has been booked yet: job create has not returned a reference in this call, so any reference you said is wrong. Tell the caller you just need to finalise it, then call job create now with the date and window they chose. Only then give the reference it returns.]';
 
@@ -175,6 +183,7 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
     "[Correction from the system: no tool has given that time. Never offer a time you haven't checked: say sorry, you haven't checked yet, then call check_availability and offer only the times it returns.]",
   cover_advice: "[Correction from the system: never say what a policy covers or whether a claim will be paid. Correct yourself: that is for their insurer to confirm.]",
   invented_price: "[Correction from the system: no tool or fact gave that price. Correct yourself: say you can't price that on the phone; the engineer prices it on the visit, or it is a free quote, and give only the prices your tools return.]",
+  card_surcharge: "[Correction from the system: there is no extra charge for paying by card, and a shop may not add one. Correct yourself now.]",
 };
 
 export class CallSession extends EventEmitter<CallEvents> {
@@ -228,6 +237,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.opts = opts;
     this.state.estate = Boolean(opts.tenant.profile.estate);
     this.state.maintenance = Boolean(opts.tenant.profile.maintenance);
+    this.state.takeaway = Boolean(opts.tenant.profile.ordering?.kitchen);
   }
 
   private now(): Date {
@@ -288,10 +298,10 @@ export class CallSession extends EventEmitter<CallEvents> {
     });
     this.prompt = prompt;
     // Every price in its instructions may be said (a repairs call's invented_price).
-    if (this.state.maintenance) this.state.amounts.push(...amountsIn(prompt));
-    // And every time in them (an estate agency's invented_time), but not their ranges: an opening-hours
-    // range would let any time through.
-    if (this.state.estate) this.state.times.push(...knownTimes(prompt));
+    if (this.state.maintenance || this.state.takeaway) this.state.amounts.push(...amountsIn(prompt));
+    // And every time in them (an estate agency's and a takeaway's invented_time), but not their ranges: an
+    // opening-hours range would let any time through.
+    if (this.state.estate || this.state.takeaway) this.state.times.push(...knownTimes(prompt));
     if (this.contextual) this.startTurnTaking();
     const pinned = tenant.profile.live_model;
     const models = this.opts.models ?? (pinned ? [pinned, ...config.liveModels.filter((m) => m !== pinned)] : config.liveModels);
@@ -638,7 +648,10 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.record('guardrail', f);
     // Correct it on the call, not just in the log: the next thing the
     // agent does is put it right.
-    if (correct) this.session?.sendText(f.rule === 'unconfirmed_claim' && this.state.maintenance ? MT_UNCONFIRMED : CORRECTIONS[f.rule]);
+    if (correct) {
+      const tk = this.state.takeaway ? TAKEAWAY_CORRECTIONS[f.rule] : undefined;
+      this.session?.sendText(tk ?? (f.rule === 'unconfirmed_claim' && this.state.maintenance ? MT_UNCONFIRMED : CORRECTIONS[f.rule]));
+    }
   }
 
   /** Tool flags held for the turn's words: raised only if, with them in, the line is still unsaid. */

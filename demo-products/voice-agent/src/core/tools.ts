@@ -88,6 +88,8 @@ export interface CallState {
   // other business, and read only by the estate tools and guardrails.
   /** Set at the start of an estate agency's call: its guardrails apply. */
   estate: boolean;
+  /** Set at the start of a takeaway's call (a kitchen in its ordering): its guardrails apply (presets/takeaway.md §8). */
+  takeaway: boolean;
   /** The receptionist's own lines, as the caller heard them: what the disclosure check listens to. */
   said: string[];
   /** Homes described by get_property in this call, and how many lines had been said by then. */
@@ -159,7 +161,7 @@ export function newCallState(): CallState {
     lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false,
-    estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
+    estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
@@ -1332,9 +1334,9 @@ export async function runTool(name: string, args: Args, ctx: ToolContext): Promi
   try {
     const result = await tool.handler(args ?? {}, ctx);
     // A price a tool gave may be said; one nothing gave may not (a repairs call's invented_price).
-    if (ctx.state.maintenance) ctx.state.amounts.push(...amountsIn(JSON.stringify(result)));
-    // So too a time (an estate agency's invented_time).
-    if (ctx.state.estate) {
+    if (ctx.state.maintenance || ctx.state.takeaway) ctx.state.amounts.push(...amountsIn(JSON.stringify(result)));
+    // So too a time (an estate agency's and a takeaway's invented_time).
+    if (ctx.state.estate || ctx.state.takeaway) {
       const json = JSON.stringify(result);
       ctx.state.times.push(...knownTimes(json));
       ctx.state.timeRanges.push(...rangesIn(json));

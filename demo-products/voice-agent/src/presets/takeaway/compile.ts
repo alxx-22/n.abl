@@ -92,11 +92,8 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
   // Meal deals first, as a takeaway's menu shows them, each choice an option group (food/deals.ts).
   const menu = compileMenu(a.menu);
   const dealMenu = compileDeals(a.menu, a.deals);
-  const policies: Record<string, string> = {};
-  if (orders) policies.ordering = orders;
-  if (delivery) policies.delivery = delivery;
-  policies.halal = halalSentence(a);
-  policies.card_payments = cardAnswer(a);
+  // How ordering, delivery and halal work are already core facts; only what isn't goes here, so the prompt says each once.
+  const policies: Record<string, string> = { card_payments: cardAnswer(a) };
   return {
     ...baseProfile(a, meta, { businessType: 'takeaway', noun: 'takeaway', facts: [orders, delivery, halalSentence(a), a.menu.allergen_statement] }),
     knowledge: knowledge(a),
