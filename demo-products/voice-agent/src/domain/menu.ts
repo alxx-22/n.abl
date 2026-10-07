@@ -92,6 +92,27 @@ export function optionsFor(menu: Menu, item: MenuItem): { group: string; option:
   );
 }
 
+/**
+ * A required choice already in the words for the item: "regular fries", "a can of Coke", "12 inch
+ * margherita". Only a group that must be chosen, only when the words name as many as it needs, and only
+ * when none was asked for already. A live takeaway call on 8 October passed "regular fries" with no
+ * options, was asked "regular or large?", and the fries never reached the order.
+ */
+export function choicesIn(menu: Menu, item: MenuItem, words: string, requested: string[]): string[] {
+  const said = ` ${normalise(words).join(' ')} `;
+  const asked = new Set(requested.map((r) => normalise(r).join(' ')));
+  const out: string[] = [];
+  for (const g of item.modifier_groups ?? []) {
+    const group = menu.modifier_groups[g];
+    if (!group || group.min < 1) continue;
+    const named = (o: ModifierOption) => [o.name, ...(o.aliases ?? [])].map((n) => normalise(n).join(' ')).filter(Boolean);
+    if (group.options.some((o) => named(o).some((n) => asked.has(n)))) continue;
+    const hits = group.options.filter((o) => named(o).some((n) => said.includes(` ${n} `)));
+    if (hits.length === group.min) out.push(...hits.map((o) => o.name));
+  }
+  return out;
+}
+
 export function resolveModifiers(
   menu: Menu,
   item: MenuItem,

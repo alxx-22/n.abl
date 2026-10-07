@@ -16,7 +16,7 @@ import {
 } from '../domain/time.ts';
 import { searchKnowledge } from '../domain/knowledge.ts';
 import {
-  allergenAnswer, allergensNamed, allergensOf, describeLine, lineTotal, optionsFor, resolveItem, resolveModifiers,
+  allergenAnswer, allergensNamed, allergensOf, choicesIn, describeLine, lineTotal, optionsFor, resolveItem, resolveModifiers,
 } from '../domain/menu.ts';
 import { amountsIn } from '../domain/amounts.ts';
 import { knownTimes, rangesIn } from '../domain/clock-times.ts';
@@ -897,8 +897,10 @@ const TOOLS: Record<string, Tool> = {
       if (!r.ok) return { added: false, question: r.question };
       const item = r.value;
       if (item.available === false) return { added: false, message: `${item.name} is not available today.` };
-      const mods = resolveModifiers(menu, item, strList(args.options));
-      if (!mods.ok) return { added: false, question: mods.question };
+      // A size or choice already in the item's words ("regular fries") counts as asked for.
+      const requested = strList(args.options);
+      const mods = resolveModifiers(menu, item, [...requested, ...choicesIn(menu, item, str(args.item) ?? '', requested)]);
+      if (!mods.ok) return { added: false, question: mods.question, nothing_added: 'Nothing was added yet. Ask the caller this, then call add_to_order again with their answer in options.' };
       const quantity = Math.min(Math.max(int(args.quantity) ?? 1, 1), 20);
       const line: OrderLine = {
         line: ctx.state.nextLine++,

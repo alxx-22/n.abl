@@ -135,3 +135,17 @@ test('meal deals: two meals with different choices, an extra charged, and a miss
   assert.equal(missing.added, false);
   assert.equal(missing.question, 'Burger meal needs a choice of Drink: Coca-Cola, Diet Coke, Fanta Orange, Sprite.');
 });
+
+test('ordering: a size already in the words is taken; a missing one is asked for, and nothing is added until it is', async () => {
+  const t = await firebird('tk-choices-in-words');
+  const c = await call(t);
+  // Live, 8 October: "regular fries" and "Coke" were each asked about, and neither reached the order.
+  assert.match((await c.run('add_to_order', { item: 'regular fries' })).added, /Fries \(regular\) — £2\.49/);
+  assert.match((await c.run('add_to_order', { item: 'a can of Coke' })).added, /Coca-Cola \(can\) — £1\.50/);
+  assert.match((await c.run('add_to_order', { item: '12 inch margherita' })).added, /Margherita \(12 inch\) — £11\.99/);
+  assert.match((await c.run('add_to_order', { item: 'large fries', options: ['large'] })).added, /Fries \(large\) — £3\.49/, 'said twice, taken once');
+  const ask = await c.run('add_to_order', { item: 'fries' });
+  assert.deepEqual([ask.added, ask.question], [false, 'Fries needs a choice of Size: regular, large.']);
+  assert.match(ask.nothing_added, /^Nothing was added yet\. Ask the caller this/);
+  assert.equal(c.ctx.state.lines.length, 4);
+});
