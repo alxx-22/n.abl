@@ -148,7 +148,7 @@ export const takeawayBuilder: BuilderDef<TakeawayAnswers, TakeawayStep> = {
     },
     start: 'Start builds your receptionist from these answers and fills today’s orders so far, busy like a Friday night: deliveries out with your drivers and the kitchen full for the next forty minutes.',
     restart: 'Your changes are saved and the receptionist already uses them. To refill the kitchen to match (a new menu, deals or hours), reset the demo data.',
-    ready: (r) => `Ready: ${r.orders} orders today so far, made from your setup.`,
+    ready: (r) => `Ready: ${r.orders} order${r.orders === 1 ? '' : 's'} today so far, made from your setup.`,
   },
 };
 

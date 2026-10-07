@@ -346,10 +346,13 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .tl-now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--danger); pointer-events: none; }
 
 .kitchen { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; align-items: start; }
-.kitchen.with-out { grid-template-columns: repeat(5, minmax(150px, 1fr)); }
+.kitchen.with-out { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 /* A takeaway's drivers: a column each, then what is waiting for one. */
 .drivers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: start; }
 .drivers .ticket footer { flex-wrap: wrap; }
+@media (max-width: 560px) {
+  .kitchen.with-out, .drivers { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* ── An estate agency's back office ───────────────────────────────────── */
 .diary .tl-bar.valuation { background: color-mix(in srgb, var(--info) 45%, #1a1613); }

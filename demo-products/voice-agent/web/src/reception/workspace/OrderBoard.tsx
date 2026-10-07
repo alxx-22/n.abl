@@ -29,6 +29,8 @@ function columns(spec: OrdersSpec): Column[] {
 
 function countdown(dueAt: string, nowMs: number): { text: string; late: boolean } {
   const m = Math.round((new Date(dueAt).getTime() - nowMs) / 60000);
+  // An order for opening time, taken overnight: "in 12h 25m", not "in 745 min".
+  if (m > 90) return { text: `in ${Math.floor(m / 60)}h ${m % 60}m`, late: false };
   if (m > 0) return { text: `in ${m} min`, late: false };
   if (m === 0) return { text: 'due now', late: false };
   return { text: `${-m} min late`, late: -m > 5 };

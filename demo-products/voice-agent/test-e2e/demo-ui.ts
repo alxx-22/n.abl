@@ -42,6 +42,7 @@ const WALKS: Record<string, (w: Walk) => Promise<void>> = {
   restaurant: walkRestaurant,
   estate_agent: walkEstate,
   property_maintenance: walkMaintenance,
+  takeaway: walkTakeaway,
 };
 
 const built = PRESETS.filter((p) => builtPreset(p.key)).map((p) => p.key);
@@ -818,6 +819,125 @@ async function walkMaintenance({ shot }: Walk) {
   // Narrow screen.
   await page.setViewportSize({ width: 390, height: 900 });
   await page.click('.tabs [role=tab]:has-text("Jobs")');
+  await shot(page, 'workspace-mobile');
+  await page.context().close();
+}
+
+async function walkTakeaway({ shot }: Walk) {
+  const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+  const calm = () => page.waitForFunction(() => !document.querySelector('.toast'), undefined, { timeout: 15000 }).catch(() => {});
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  page.on('console', (m) => m.type() === 'error' && !/40[1349]|scout/.test(m.text()) && errors.push(`console: ${m.text()}`));
+  const saved = () => page.waitForSelector('.save-state.saved', { timeout: 10000 });
+  const next = async (title: string) => {
+    await page.click('.step-nav button.primary');
+    await page.waitForSelector(`#step-title:has-text("${title}")`);
+  };
+  const kept = (what: string, ok: boolean) => {
+    if (!ok) throw new Error(`after a reload, the builder lost ${what}`);
+  };
+
+  // A key from the team, and the takeaway from the preset.
+  await page.goto(`${base}/`);
+  await page.waitForSelector('#password');
+  await page.fill('#password', 'team');
+  await page.click('.signin button[type=submit]');
+  await page.waitForSelector('#k-name');
+  await page.fill('#k-name', 'Dev Shah');
+  await page.fill('#k-company', 'Firebird Chicken & Burgers');
+  await page.click('button:has-text("Issue a private key")');
+  await page.waitForSelector('.issued code');
+  const raw = (await page.textContent('.issued code'))!.trim();
+  await page.goto(`${base}/demo/reception#key=${raw}`);
+  await page.waitForSelector('text=Welcome, Dev.');
+  await page.click('text=Build a new demo');
+  await page.waitForSelector('.preset');
+  await page.click('.preset:has-text("Takeaway and fast food")');
+  await page.waitForSelector('#new-name');
+  await shot(page, 'pick-preset');
+  await page.click('text=Build from the preset');
+
+  // An edit on every step that has one.
+  const style = 'input[maxlength="160"][placeholder="Fried chicken, burgers and pizza"]';
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  await page.fill(style, 'Fried chicken, smash burgers and pizza');
+  await saved();
+  await shot(page, 'builder-basics');
+  await next('Opening hours');
+  await shot(page, 'builder-hours');
+  await next('Collection and delivery');
+  await page.getByLabel('Orders per slot').fill('5');
+  await page.getByRole('textbox', { name: 'Drivers' }).fill('Kai, Priya, Tom, Zara');
+  await saved();
+  await shot(page, 'builder-ordering');
+  await next('Menu');
+  await shot(page, 'builder-menu');
+  await next('Meal deals');
+  await page.click('button:has-text("Burger meal")');
+  await page.getByLabel('Price', { exact: true }).fill('9.29');
+  await saved();
+  await shot(page, 'builder-deals');
+  await next('Money');
+  await page.click('label:has-text("Cash only")');
+  await saved();
+  await shot(page, 'builder-money');
+  await next('Policies and questions');
+  await page.getByLabel('Food hygiene rating').selectOption({ label: '4' });
+  await saved();
+  await next('Review and start');
+  await shot(page, 'builder-review');
+
+  // Reloaded, every edit is still there.
+  await page.reload();
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  kept('the style', (await page.inputValue(style)) === 'Fried chicken, smash burgers and pizza');
+  await next('Opening hours');
+  await next('Collection and delivery');
+  kept('orders per slot', (await page.getByLabel('Orders per slot').inputValue()) === '5');
+  kept('the new driver', (await page.getByRole('textbox', { name: 'Drivers' }).inputValue()).includes('Zara'));
+  await next('Menu');
+  await next('Meal deals');
+  await page.click('button:has-text("Burger meal")');
+  kept('the Burger meal price', (await page.getByLabel('Price', { exact: true }).inputValue()) === '9.29');
+  await next('Money');
+  kept('cash only', await page.locator('label:has-text("Cash only") input').isChecked());
+  await next('Policies and questions');
+  kept('the hygiene rating', (await page.getByLabel('Food hygiene rating').inputValue()) === '4');
+  await next('Review and start');
+  await page.click('button:has-text("Start my demo")');
+
+  // The kitchen: today's orders so far, and a ready delivery sent out with a driver.
+  await page.waitForSelector('.kitchen.with-out', { timeout: 20000 });
+  await page.waitForSelector('.phone');
+  await shot(page, 'workspace-kitchen');
+  const waiting = page.locator('.k-col[aria-label="Ready"] .ticket', { has: page.locator('button:has-text("Out with Kai")') }).first();
+  if (await waiting.count()) {
+    await waiting.locator('button:has-text("Out with Kai")').click();
+    await page.waitForSelector('.toast:has-text("out with Kai")', { timeout: 10000 });
+    await calm();
+    await shot(page, 'workspace-kitchen-sent-out');
+  }
+
+  // The drivers: who has what, how long since they left, and Delivered.
+  await page.click('.tabs [role=tab]:has-text("Drivers")');
+  await page.waitForSelector('.drivers');
+  if (!(await page.locator('.drivers').textContent())!.includes('Kai')) throw new Error('Kai is not on the Drivers view');
+  await shot(page, 'workspace-drivers');
+  const out = page.locator('.drivers .ticket', { has: page.locator('button:has-text("Delivered")') }).first();
+  if (await out.count()) {
+    await out.locator('button:has-text("Delivered")').click();
+    await page.waitForSelector('.toast:has-text("delivered")', { timeout: 10000 });
+  }
+
+  // Call as Amy, whose delivery is out with Kai.
+  await page.getByLabel('Call as').selectOption({ label: 'Amy Clarke, with a delivery out with Kai' });
+  await page.waitForSelector('.phone-number:has-text("07700 900801")');
+  await calm();
+  await shot(page, 'workspace-call-as');
+
+  // Narrow screen.
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.click('.tabs [role=tab]:has-text("Kitchen")');
   await shot(page, 'workspace-mobile');
   await page.context().close();
 }
