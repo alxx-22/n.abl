@@ -23,9 +23,9 @@ The sample business is the one in `PRESETS.md` §5: Firebird Chicken & Burgers, 
 ## The moments that sell it in a demo
 
 1. Friday at 7pm, "how long for delivery tonight?": the receptionist reads the kitchen's real queue and says "about 50 minutes, so around 7:50". Pushed for sooner, it holds the honest time and offers collection instead, which is quicker.
-2. Burger, fries and a can, ordered one at a time: "If you make that a Burger meal, it's £1.30 less." The caller says yes; the ticket shows one deal line with the choices, and the total heard is the lower one. A second caller says no, and is never asked again.
+2. Burger, fries and a can, ordered one at a time: "If you make that a Burger meal, it's £1.49 less." The caller says yes; the ticket shows one deal line with the choices, and the total heard is the lower one. A second caller says no, and is never asked again.
 3. A postcode outside the area is offered collection; one in the outer zone hears its own fee and minimum; an order under the minimum hears exactly how much short it is.
-4. "My son's allergic to sesame. Is the Burger meal OK?": answered per choice (the brioche bun has sesame, the plain bun doesn't, the fries share a fryer), with the shared-kitchen caveat, never "safe". The allergy goes on the order, and the ticket on the board is marked.
+4. "My son's allergic to sesame. Is the Burger meal OK?": answered per choice (every burger comes in a sesame-topped brioche bun; the fries and the drinks have no sesame as an ingredient, and the fries share a fryer), with the shared-kitchen caveat, never "safe". The allergy goes on the order, and the ticket on the board is marked.
 5. The prospect moves an order to "Out with Kai" on the board. The customer's phone gets the "on its way" text, and a caller ringing from that number hears "It left with our driver at 7:42, so it should be with you in about ten minutes", without the address being read back.
 6. Cash for the driver: "Do you need change from anything?" "From a twenty." The driver's ticket says so.
 7. 11:45pm on a Saturday, a delivery order: delivery stops in time to arrive before midnight, when the shop's late-night licence ends, so the caller is offered collection by 11:55 instead.
@@ -72,7 +72,7 @@ The sample business is the one in `PRESETS.md` §5: Firebird Chicken & Burgers, 
 
 **Caller:** Customer
 
-**The receptionist:** When a deal's main is ordered on its own, it offers the meal once ("make it a Burger meal for £2.50 more, with fries and a drink"). When separate items already add up to more than a deal, it says so once ("as a Burger meal that's £1.30 less"), and on a yes swaps those lines for one deal line, keeping their extras and notes. On a no it never asks again in that call, and never pushes. It never invents a saving: the numbers come from the tool.
+**The receptionist:** When a deal's main is ordered on its own, it offers the meal once ("make it a Burger meal for £2.50 more, with fries and a drink"). When separate items already add up to more than a deal, it says so once ("as a Burger meal that's £1.49 less"), and on a yes swaps those lines for one deal line, keeping their extras and notes. On a no it never asks again in that call, and never pushes. It never invents a saving: the numbers come from the tool.
 
 **The system needs:** `meal_hint` and `deal_hint` from `add_to_order`, each once a call (`CallState.dealOffered`); `add_to_order` with `replaces: number[]` moving extras and notes onto the deal line; a guardrail that catches a price nothing gave (as the repairs receptionist's `invented_price`).
 
