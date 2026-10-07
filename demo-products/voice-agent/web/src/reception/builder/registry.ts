@@ -10,6 +10,7 @@ import type { BaseAnswers, Issue, Me, WorkspacePayload } from '../types.ts';
 import { estateBuilder } from './estate/builder.tsx';
 import { maintenanceBuilder } from './maintenance/builder.tsx';
 import { restaurantBuilder } from './restaurant/builder.tsx';
+import { takeawayBuilder } from './takeaway/builder.tsx';
 
 /** Change the answers: the function edits a copy, which is then saved. */
 export type Update<A extends BaseAnswers = BaseAnswers> = (fn: (draft: A) => void) => void;
@@ -61,6 +62,7 @@ const BUILDERS: Record<string, AnyBuilder> = {
   restaurant: entry(restaurantBuilder),
   estate_agent: entry(estateBuilder),
   property_maintenance: entry(maintenanceBuilder),
+  takeaway: entry(takeawayBuilder),
 };
 
 /** The builder for a preset, or null when this kind of business has none yet. */
