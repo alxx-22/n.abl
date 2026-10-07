@@ -430,8 +430,9 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
   // Eighteen of the week's finished jobs are billed, and two from last month are overdue.
   const longAgo = workingDays(today, 20, -1);
   const older = [longAgo[14], longAgo[19]].flatMap((date) => {
-    // A few tries: the first home or trade picked may have nobody free that day.
-    for (let tries = 0; date && tries < 8; tries++) {
+    // Tries enough that a busy day never leaves one out: the first home or trade picked may have nobody free
+    // that day, and with only eight about two Starts in a thousand had one overdue bill, not two.
+    for (let tries = 0; date && tries < 24; tries++) {
       const p = someProperty((x) => x.client !== null && clients.get(x.client)!.kind === 'agent');
       const trade = randomTrade();
       if (!p || !trade) return [];
