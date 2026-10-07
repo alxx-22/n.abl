@@ -4,14 +4,66 @@
 // has, so anything that reads the item alone stays safe; this is where a
 // caller hears which choices have it and which don't.
 
-import type { Allergen, Menu, MenuDeal, MenuItem, OrderLine } from './types.ts';
+import type { Allergen, Menu, MenuDeal, MenuItem, ModifierOption, OrderLine } from './types.ts';
 import { pounds } from './types.ts';
+import { normalise, score } from './menu.ts';
 
 export const dealOf = (menu: Menu, itemKey: string): MenuDeal | undefined => menu.deals?.find((d) => d.item_key === itemKey);
 
 const itemOf = (menu: Menu, key: string): MenuItem | undefined => menu.categories.flatMap((c) => c.items).find((i) => i.key === key);
 const list = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}` : xs[0] ?? '');
 const choicesOf = (menu: Menu, group: string): MenuItem[] => (menu.modifier_groups[group]?.options ?? []).map((o) => itemOf(menu, o.key)).filter((i): i is MenuItem => Boolean(i));
+const likeOption = (said: string, o: ModifierOption) => Math.max(score(said, o.name), ...(o.aliases ?? []).map((a) => score(said, a)));
+
+const DEAL_WORDS = new Set(['meal', 'deal', 'combo']);
+
+/**
+ * "A cheeseburger meal": the meal deal with that choice, not the cheeseburger.
+ * Only when the words say meal, deal or combo and the rest names one deal's
+ * choice clearly. Live, 8 October: "cheeseburger meal" went in as a
+ * Cheeseburger, and its fries and Fanta were refused as options.
+ */
+export function dealByChoice(menu: Menu, words: string): { item: MenuItem; choice: string } | null {
+  const q = normalise(words);
+  if (!menu.deals?.length || !q.some((w) => DEAL_WORDS.has(w))) return null;
+  const rest = q.filter((w) => !DEAL_WORDS.has(w)).join(' ');
+  if (!rest) return null;
+  let best: { item: MenuItem; choice: string; s: number } | null = null;
+  let tie = false;
+  for (const d of menu.deals) {
+    const item = itemOf(menu, d.item_key);
+    // "Burger meal" names the deal itself, not its veggie burger.
+    const own = new Set(normalise(item?.name ?? ''));
+    if (!item || rest.split(' ').every((w) => own.has(w))) continue;
+    for (const p of d.parts) {
+      for (const o of menu.modifier_groups[p.group]?.options ?? []) {
+        const s = likeOption(rest, o);
+        if (s < 0.8) continue;
+        if (!best || s > best.s) [best, tie] = [{ item, choice: o.name, s }, false];
+        else if (s === best.s && best.item !== item) tie = true;
+      }
+    }
+  }
+  return best && !tie ? { item: best.item, choice: best.choice } : null;
+}
+
+/**
+ * A dish asked for with a deal's other parts as its options ("a cheeseburger
+ * with fries and a Fanta"): the deal that has them, and its options. Live,
+ * 8 October: a spicy burger "with fries" was refused, and the fries went in
+ * on their own.
+ */
+export function dealForOptions(menu: Menu, item: MenuItem, unmatched: string[], requested: string[]): { deal: string; options: string[] } | null {
+  for (const d of menu.deals ?? []) {
+    const [main, ...rest] = d.parts;
+    const choice = main ? menu.modifier_groups[main.group]?.options.find((o) => o.key === item.key) : undefined;
+    if (!choice) continue;
+    const parts = rest.flatMap((p) => menu.modifier_groups[p.group]?.options ?? []);
+    if (!unmatched.some((u) => parts.some((o) => likeOption(u, o) >= 0.7))) continue;
+    return { deal: itemOf(menu, d.item_key)!.name, options: [choice.name, ...requested] };
+  }
+  return null;
+}
 
 /** An option the deal keeps from a line it replaces: an extra (extra cheese), not one of its choices. */
 export function dealExtra(menu: Menu, deal: MenuDeal, optionKey: string): boolean {

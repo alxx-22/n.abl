@@ -15,6 +15,7 @@ import type { Order, Ordering } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { lineTotal } from '../domain/menu.ts';
 import { addDays, closeMinutes, dayName, normaliseTime, spokenTime, toLocal, weekdayOf, zonedToUtc } from '../domain/time.ts';
+import { normaliseUkPhone } from '../domain/phone.ts';
 import { postcodeOf, record, str } from './tool-kit.ts';
 import type { Args, ToolContext } from './tools.ts';
 
@@ -186,6 +187,12 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
   ctx.state.basketVersion++;
   const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
   const short = terms && subtotal > 0 && subtotal < terms.min_order_pence ? terms.min_order_pence - subtotal : 0;
+  // With the order in, what to do next and its total, so the total is never added up by the model.
+  // Live, 8 October: "£30.98 with the delivery fee" was said from its own sum, before review_order.
+  const fee = terms ? feeFor(o, terms.fee_pence, subtotal) : 0;
+  const next = !subtotal ? {}
+    : short ? { next: `They're ${pounds(short)} short of the ${pounds(terms!.min_order_pence)} minimum for delivery here. Tell them, and ask what they'd like to add.` }
+    : { total_so_far: pounds(subtotal + fee), next: 'Now call review_order and read its read_back word for word.' };
   return {
     ok: true, type, time: toLocal(due, tz).time, spoken_time: at(due, tz), wait: waitWords(ctx, due),
     ...(address ? { address: `${address}, ${postcode}` } : {}),
@@ -195,6 +202,7 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
       ...(short ? { short_by: pounds(short) } : {}),
     } : {}),
     note: "This is the kitchen's real time now. Say it as it is and never promise sooner; collection is quicker if they're in a hurry.",
+    ...next,
   };
 }
 
@@ -268,7 +276,15 @@ export async function findOrder(args: Args, ctx: ToolContext): Promise<Record<st
   const isToday = (o: Order) => o.due_at.getTime() >= today.getTime() && o.due_at.getTime() < tomorrow.getTime();
   // The seed's orders have moved on since Start: say where they are now.
   await ctx.repo.advanceSeedOrders(ctx.tenant.id, ctx.now(), ctx.tenant.profile.ordering!.prep_minutes);
-  const number = str(args.order_number)?.replace(/[^0-9]/g, '');
+  let number = str(args.order_number)?.replace(/[^0-9]/g, '');
+  // A phone number passed as the order number: the calling number's own order, and no other.
+  // Live, 8 October: "07700 900801" was looked up as order 0 7 7 0 0..., and a caller's delivery went unfound.
+  if (number && number.length >= 9) {
+    if (normaliseUkPhone(number) !== ctx.callerPhone) {
+      return { found: false, message: "That's a phone number, not an order number. An order is found by its number, or by the number they're ringing from: ask for the order number." };
+    }
+    number = undefined;
+  }
   let order: Order | null = null;
   let by: 'number' | 'phone' = 'number';
   if (number) {

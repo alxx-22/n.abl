@@ -16,7 +16,7 @@ import {
 } from '../domain/time.ts';
 import { searchKnowledge } from '../domain/knowledge.ts';
 import {
-  allergenAnswer, allergensNamed, allergensOf, choicesIn, describeLine, lineTotal, optionsFor, resolveItem, resolveModifiers,
+  allergenAnswer, allergensNamed, allergensOf, choicesIn, countInName, describeLine, lineTotal, optionsFor, resolveItem, resolveModifiers, score,
 } from '../domain/menu.ts';
 import { amountsIn } from '../domain/amounts.ts';
 import { knownTimes, rangesIn } from '../domain/clock-times.ts';
@@ -24,7 +24,7 @@ import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
 import { feeFor, findOrder, kitchenFulfilment, waitTimes } from './kitchen.ts';
-import { DECLINED, dealAllergenAnswer, dealExtra, dealHint, dealOf, mealHint } from '../domain/deals.ts';
+import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
@@ -391,6 +391,11 @@ function spokenLine(l: OrderLine): string {
   if (l.notes) mods.push(l.notes);
   return `${n} ${l.name}${mods.length ? ` with ${mods.join(' and ')}` : ''}`;
 }
+
+// Live, 8 October: "ask collection or delivery first" had the receptionist ask
+// again what the caller had just said, and "nothing to place yet" left an
+// agreed collection unplaced.
+const NO_FULFILMENT = "Collection or delivery isn't set yet. If the caller has already said which, call set_fulfilment now (delivery needs the postcode and first line of the address); only if not, ask.";
 
 function orderAction(ctx: ToolContext, title: string) {
   const b = basketSummary(ctx);
@@ -842,7 +847,8 @@ const TOOLS: Record<string, Tool> = {
     },
     async handler(args, ctx) {
       const menu = ctx.tenant.profile.menu!;
-      const r = resolveItem(menu, str(args.item) ?? '');
+      const byChoice = dealByChoice(menu, str(args.item) ?? '');
+      const r = byChoice ? { ok: true as const, value: byChoice.item } : resolveItem(menu, str(args.item) ?? '');
       if (!r.ok) {
         const allergy = allergensNamed(str(args.item) ?? '');
         if (allergy.length) {
@@ -893,15 +899,28 @@ const TOOLS: Record<string, Tool> = {
     },
     async handler(args, ctx) {
       const menu = ctx.tenant.profile.menu!;
-      const r = resolveItem(menu, str(args.item) ?? '');
+      const words = str(args.item) ?? '';
+      // "A cheeseburger meal" is the Burger meal with a cheeseburger (domain/deals.ts).
+      const byChoice = dealByChoice(menu, words);
+      const r = byChoice ? { ok: true as const, value: byChoice.item } : resolveItem(menu, words);
       if (!r.ok) return { added: false, question: r.question };
       const item = r.value;
       if (item.available === false) return { added: false, message: `${item.name} is not available today.` };
       // A size or choice already in the item's words ("regular fries") counts as asked for.
-      const requested = strList(args.options);
-      const mods = resolveModifiers(menu, item, [...requested, ...choicesIn(menu, item, str(args.item) ?? '', requested)]);
-      if (!mods.ok) return { added: false, question: mods.question, nothing_added: 'Nothing was added yet. Ask the caller this, then call add_to_order again with their answer in options.' };
-      const quantity = Math.min(Math.max(int(args.quantity) ?? 1, 1), 20);
+      const given = strList(args.options);
+      const requested = byChoice && !given.some((g) => score(g, byChoice.choice) >= 0.7) ? [byChoice.choice, ...given] : given;
+      const mods = resolveModifiers(menu, item, [...requested, ...choicesIn(menu, item, words, requested)]);
+      if (!mods.ok) {
+        const meal = mods.unmatched.length ? dealForOptions(menu, item, mods.unmatched, requested) : null;
+        return {
+          added: false, question: mods.question, nothing_added: 'Nothing was added yet. Ask the caller this, then call add_to_order again with their answer in options.',
+          ...(meal ? { as_a_meal: `${mods.unmatched.join(' and ')} ${mods.unmatched.length > 1 ? 'come' : 'comes'} with the ${meal.deal}. Ask if they'd like it as a ${meal.deal}, or the items on their own. For the meal: add_to_order with item "${meal.deal}" and options ${JSON.stringify(meal.options)}.` } : {}),
+        };
+      }
+      let quantity = Math.min(Math.max(int(args.quantity) ?? 1, 1), 20);
+      // "Six hot wings" passed as six of them: the six is the dish's own name.
+      const inName = quantity > 1 && quantity === countInName(item.name);
+      if (inName) quantity = 1;
       const line: OrderLine = {
         line: ctx.state.nextLine++,
         item_key: item.key,
@@ -930,6 +949,7 @@ const TOOLS: Record<string, Tool> = {
       return {
         added: describeLine(line), line: line.line, order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal,
         ...(replaced.length ? { replaced: replaced.map((l) => l.line) } : {}),
+        ...(inName ? { quantity_note: `Taken as one ${item.name}: the number is in its name. If they want more than one portion, change the line's quantity.` } : {}),
         ...offer,
       };
     },
@@ -1096,7 +1116,7 @@ const TOOLS: Record<string, Tool> = {
     async handler(_args, ctx) {
       const o = ctx.tenant.profile.ordering!;
       if (!ctx.state.lines.length) return { ok: false, message: 'The order is empty.' };
-      if (!ctx.state.fulfilment) return { ok: false, message: 'Ask collection or delivery first, then call set_fulfilment.' };
+      if (!ctx.state.fulfilment) return { ok: false, message: NO_FULFILMENT };
       const b = basketSummary(ctx);
       const f = ctx.state.fulfilment;
       // A takeaway's postcode has its own fee and minimum, and delivery can be free over an amount (core/kitchen.ts).
@@ -1146,15 +1166,20 @@ const TOOLS: Record<string, Tool> = {
     },
     async handler(args, ctx) {
       const o = ctx.tenant.profile.ordering!;
-      if (!ctx.state.lines.length || !ctx.state.fulfilment) return { placed: false, message: 'Nothing to place yet.' };
+      if (!ctx.state.lines.length) return { placed: false, message: 'Nothing to place yet: the order is empty.' };
+      if (!ctx.state.fulfilment) return { placed: false, message: `Not placed yet. ${NO_FULFILMENT} Then review_order, read it back, and on yes call confirm_order again.` };
       if (ctx.state.reviewedKey !== basketKey(ctx.state)) {
         // Hand back the new read-back directly, so there is no loop: read it,
-        // hear yes, confirm.
+        // hear yes, confirm. Whether it was ever read back is decided before
+        // review_order marks it read: live on 8 October, a caller who had heard
+        // nothing was told the order had "changed slightly".
+        const never = ctx.state.reviewedKey === null;
         const again = await TOOLS.review_order.handler({}, ctx);
+        if (!again.ok) return { placed: false, ...again };
         return {
           placed: false,
           // "Different" when nothing had been read back had the receptionist tell the caller the order had changed, then say it was placed.
-          message: `Not placed yet: ${ctx.state.reviewedKey === null ? 'the caller has not heard the order read back' : 'the order has changed since it was read back'}. Read this back word for word, ask if it is right, and on yes call confirm_order again. Until it returns an order number, do not say the order is placed.`,
+          message: `Not placed yet: ${never ? 'the caller has not heard the order read back' : 'the order has changed since it was read back'}. Read this back word for word, ask if it is right, and on yes call confirm_order again. Until it returns an order number, do not say the order is placed.`,
           read_back: again.read_back,
         };
       }

@@ -113,6 +113,19 @@ export function choicesIn(menu: Menu, item: MenuItem, words: string, requested: 
   return out;
 }
 
+const COUNTS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+
+/**
+ * A count in a dish's own name: "Six hot wings" is 6, so six of them asked for
+ * is one portion. Live, 8 October: "six hot wings" went in as six portions of
+ * Six hot wings, £29.94.
+ */
+export function countInName(name: string): number | null {
+  const w = name.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
+  const n = /^\d+$/.test(w) ? Number(w) : w === 'twenty' ? 20 : COUNTS.indexOf(w);
+  return n > 1 ? n : null;
+}
+
 export function resolveModifiers(
   menu: Menu,
   item: MenuItem,

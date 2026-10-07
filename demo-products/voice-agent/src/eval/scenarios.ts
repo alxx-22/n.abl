@@ -23,9 +23,9 @@ export const FRIDAY_EVENING = new Date('2026-10-09T16:30:00Z'); // Fri 9 Oct, 17
 export const SATURDAY_MORNING = new Date('2026-10-10T09:15:00Z'); // Sat 10 Oct, 10:15 BST
 /** The estate agent's clock (presets/estate-agent.md §9): the office open, Saturday three days off, Priya's Thursday morning free. */
 export const WEDNESDAY_MORNING = new Date('2026-10-07T10:00:00Z'); // Wed 7 Oct, 11:00 BST
-/** The takeaway's rush: Friday 9 October at 7pm, and Saturday 10 October at 11:45pm, fifteen minutes before a midnight close. */
+/** The takeaway's rush: Friday 9 October at 7pm, and Saturday 10 October at 11:35pm, ten minutes before last orders and a midnight close. */
 export const TK_FRIDAY_7PM = new Date('2026-10-09T18:00:00Z');
-export const TK_SATURDAY_LATE = new Date('2026-10-10T22:45:00Z');
+export const TK_SATURDAY_LATE = new Date('2026-10-10T22:35:00Z');
 /** Property maintenance out of hours: the same Wednesday, 9pm; Dan and Leon on call. */
 export const WEDNESDAY_NIGHT = new Date('2026-10-07T20:00:00Z'); // Wed 7 Oct, 21:00 BST
 
@@ -1543,7 +1543,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: 'tk-last-orders',
     tenant: 'tk-firebird',
-    title: 'Saturday at 11:45pm: no delivery after closing; collection by the last slot',
+    title: 'Saturday at 11:35pm: no delivery after closing; collection by the last slot',
     kind: 'edge',
     callerPhone: '+447700900837',
     now: TK_SATURDAY_LATE,

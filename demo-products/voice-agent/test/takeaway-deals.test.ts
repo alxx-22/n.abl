@@ -136,6 +136,24 @@ test('meal deals: two meals with different choices, an extra charged, and a miss
   assert.equal(missing.question, 'Burger meal needs a choice of Drink: Coca-Cola, Diet Coke, Fanta Orange, Sprite.');
 });
 
+test('meal deals: "a cheeseburger meal" is the Burger meal with a cheeseburger, and a burger "with fries" points to the meal', async () => {
+  const t = await firebird('tk-deal-named');
+  const c = await call(t);
+  // Live, 8 October: "cheeseburger meal" went in as a Cheeseburger, its fries and Fanta refused as options.
+  const named = await c.run('add_to_order', { item: 'cheeseburger meal', options: ['fries', 'Fanta'] });
+  assert.match(named.added, /^1 × Burger meal \(Cheeseburger, Fries, Fanta Orange\) — £9\.49$/);
+  assert.match((await c.run('add_to_order', { item: 'veggie burger meal', options: ['Veggie burger', 'fries', 'coke'] })).added, /^1 × Burger meal \(Veggie burger, Fries, Coca-Cola\)/, 'the choice said twice, taken once');
+  assert.match((await c.run('add_to_order', { item: 'Burger meal', options: ['classic beef burger', 'fries', 'sprite'] })).added, /^1 × Burger meal \(Classic beef burger/);
+  assert.equal((await c.run('get_item_details', { item: 'the cheeseburger meal' })).name, 'Burger meal');
+  assert.match((await c.run('add_to_order', { item: 'cheeseburger' })).added, /^1 × Cheeseburger — £6\.99$/, 'a cheeseburger on its own is still a cheeseburger');
+  // Live, 8 October: a spicy burger "with fries" was refused, and the fries went in on their own.
+  const side = await c.run('add_to_order', { item: 'Firebird spicy burger', options: ['extra cheese', 'fries'] });
+  assert.equal(side.added, false);
+  assert.equal(side.as_a_meal, `fries comes with the Burger meal. Ask if they'd like it as a Burger meal, or the items on their own. For the meal: add_to_order with item "Burger meal" and options ["Firebird spicy burger","extra cheese","fries"].`);
+  const meal = await c.run('add_to_order', { item: 'Burger meal', options: JSON.parse(side.as_a_meal.match(/options (\[.*\])\.$/)![1]) });
+  assert.equal(meal.question, 'Burger meal needs a choice of Drink: Coca-Cola, Diet Coke, Fanta Orange, Sprite.');
+});
+
 test('ordering: a size already in the words is taken; a missing one is asked for, and nothing is added until it is', async () => {
   const t = await firebird('tk-choices-in-words');
   const c = await call(t);

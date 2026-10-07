@@ -96,15 +96,21 @@ test('the kitchen: the postcode decides the fee and minimum, the amount short is
   assert.match((await c.run('get_wait_times', { postcode: 'NG8' })).delivery, /outside the delivery area/);
   // £12.97 in the outer zone: £2.03 short of its £15 minimum.
   await c.run('add_to_order', { item: 'Classic beef burger' });
-  await c.run('add_to_order', { item: 'Six hot wings' });
+  // Live, 8 October: "six hot wings" passed as six of them. The six is the dish's name: one portion.
+  const wings = await c.run('add_to_order', { item: 'hot wings', quantity: 6 });
+  assert.equal(wings.added, '1 × Six hot wings — £4.99');
+  assert.match(wings.quantity_note, /^Taken as one Six hot wings: the number is in its name\./);
   await c.run('add_to_order', { item: 'Coleslaw' });
   const set = await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG9 2AB', address: '14 Larch Close' });
   assert.equal(set.short_by, '£2.03', JSON.stringify(set));
+  assert.deepEqual([set.next, set.total_so_far], ["They're £2.03 short of the £15.00 minimum for delivery here. Tell them, and ask what they'd like to add.", undefined]);
   const review = await c.run('review_order', {});
   assert.deepEqual([review.ok, review.short_by], [false, '£2.03']);
   assert.match(review.message, /minimum order of £15\.00/);
   // Closer in, the same order meets the £12 minimum and pays £2.50.
-  await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 1AA', address: '3 Near Road' });
+  // With the order in, the total with delivery and the next step, so it is never added up by the model.
+  const closer = await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 1AA', address: '3 Near Road' });
+  assert.deepEqual([closer.total_so_far, closer.next], ['£15.47', 'Now call review_order and read its read_back word for word.']);
   const near = await c.run('review_order', {});
   assert.equal(near.delivery_fee, '£2.50');
   assert.match(near.read_back, /Delivery £2\.50\. That's £15\.47 altogether/);
@@ -117,6 +123,23 @@ test('the kitchen: the postcode decides the fee and minimum, the amount short is
   assert.equal(done.placed, true, JSON.stringify(done));
   const order = (await repo.getOrder(t.id, done.order_number))!;
   assert.deepEqual([order.delivery_fee_pence, order.total_pence], [0, 3596]);
+});
+
+test('the kitchen: collection or delivery not yet set, the next step is said rather than asked again', async () => {
+  const t = await firebird('tk-next');
+  const c = await call(t);
+  await c.run('add_to_order', { item: 'Chicken box', options: ['strips', 'fries', 'Sprite'] });
+  // Live, 8 October: the caller had agreed to collect, and "nothing to place yet" left the order unplaced.
+  const early = await c.run('confirm_order', { name: 'Rob', allergy_notes: 'none' });
+  assert.equal(early.placed, false);
+  assert.match(early.message, /^Not placed yet\. Collection or delivery isn't set yet\. If the caller has already said which, call set_fulfilment now .*; only if not, ask\. Then review_order/);
+  assert.match((await c.run('review_order', {})).message, /^Collection or delivery isn't set yet\. If the caller has already said which, call set_fulfilment now/);
+  const set = await c.run('set_fulfilment', { type: 'collection' });
+  assert.deepEqual([set.total_so_far, set.next], ['£7.99', 'Now call review_order and read its read_back word for word.']);
+  // Never read back is said as that, not as a change (live, 8 October: "it's changed slightly").
+  assert.match((await c.run('confirm_order', { name: 'Rob' })).message, /^Not placed yet: the caller has not heard the order read back\./);
+  await c.run('add_to_order', { item: 'Coleslaw' });
+  assert.match((await c.run('confirm_order', { name: 'Rob' })).message, /^Not placed yet: the order has changed since it was read back\./);
 });
 
 test('the kitchen: "for 8pm" is the slot that arrives by eight, and a full one offers the times with room', async () => {
