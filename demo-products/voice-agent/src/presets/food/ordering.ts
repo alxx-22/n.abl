@@ -150,6 +150,7 @@ export function compileOrdering(o: OrderingAnswer, hours: { days: DayHours[] }, 
         districts: del.districts.map((x) => x.toUpperCase().trim()).filter(Boolean), fee_pence: del.fee_pence, min_order_pence: del.min_order_pence, extra_minutes: del.extra_minutes,
         ...(zones.length ? { zones: zones.map((z) => ({ ...z })) } : {}),
         ...(del.free_over_pence ? { free_over_pence: del.free_over_pence } : {}),
+        ...(del.drivers?.length ? { drivers: [...del.drivers] } : {}),
       }
       : undefined,
     ...(o.timed_orders !== undefined ? { timed_orders: o.timed_orders } : {}),

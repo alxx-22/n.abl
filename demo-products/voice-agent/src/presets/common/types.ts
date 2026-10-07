@@ -134,6 +134,8 @@ export interface SeedOrder {
   /** Who took a delivery out, and when. */
   driver?: string | null;
   out_at?: Date | null;
+  /** What the driver needs to know: "Cash: change from £20" (the takeaway's). */
+  pay_note?: string | null;
 }
 
 export interface SeedMessage {

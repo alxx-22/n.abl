@@ -182,6 +182,8 @@ export interface Ordering {
     zones?: { code: string; fee_pence?: number; min_order_pence?: number }[];
     /** Delivery is free at or over this (the takeaway's). */
     free_over_pence?: number;
+    /** The drivers' first names, for the back office's Drivers view (the takeaway's). */
+    drivers?: string[];
   };
   prep_minutes: number;
   hours: OpeningHours[];

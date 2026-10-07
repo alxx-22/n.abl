@@ -716,6 +716,27 @@ export class Repo {
     return rows[0] ? mapOrder(rows[0]) : null;
   }
 
+  /**
+   * A takeaway's seeded orders moved on with the clock (presets/takeaway.md §4.2): into the kitchen at prep
+   * time, a collection ready at its time and collected a little after, a delivery out with its driver when it
+   * is ready and delivered just after it is due. The prospect's own orders move only when the prospect moves them.
+   */
+  async advanceSeedOrders(tenantId: string, now: Date, prepMinutes: number): Promise<void> {
+    const seed = `tenant_id = $1 and source = 'seed'`;
+    await this.db.query(
+      `update public.voice_orders set status = 'completed', payment_status = 'paid' where ${seed} and status not in ('completed', 'cancelled')
+         and ((fulfilment = 'delivery' and due_at < $2::timestamptz - interval '5 minutes') or (fulfilment = 'collection' and coalesce(ready_at, due_at) < $2::timestamptz - interval '15 minutes'))`,
+      [tenantId, now],
+    );
+    await this.db.query(
+      `update public.voice_orders set status = 'out_for_delivery', out_at = coalesce(out_at, least(ready_at + interval '2 minutes', $2::timestamptz))
+         where ${seed} and fulfilment = 'delivery' and status in ('confirmed', 'in_kitchen', 'ready') and ready_at <= $2`,
+      [tenantId, now],
+    );
+    await this.db.query(`update public.voice_orders set status = 'ready' where ${seed} and fulfilment = 'collection' and status in ('confirmed', 'in_kitchen') and coalesce(ready_at, due_at) <= $2`, [tenantId, now]);
+    await this.db.query(`update public.voice_orders set status = 'in_kitchen' where ${seed} and status = 'confirmed' and coalesce(ready_at, due_at) - $3 * interval '1 minute' <= $2`, [tenantId, now, prepMinutes]);
+  }
+
   /** A delivery out with a driver, since `at`. Only one not yet out, collected or cancelled goes; null otherwise. */
   async sendOutOrder(tenantId: string, reference: string, driver: string, at: Date): Promise<Order | null> {
     const rows = await this.db.query<any>(
@@ -1185,12 +1206,12 @@ export class Repo {
         const fulfilment = o.fulfilment ?? 'collection';
         await q.query(
           `insert into public.voice_orders (tenant_id, reference, name, phone, fulfilment, due_at, ready_at, address, postcode, lines, subtotal_pence,
-             delivery_fee_pence, total_pence, allergy_notes, status, payment_status, source, created_at, driver, out_at)
-           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13, $14, $15, $16, 'seed', $17, $18, $19)`,
+             delivery_fee_pence, total_pence, allergy_notes, status, payment_status, source, created_at, driver, out_at, pay_note)
+           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13, $14, $15, $16, 'seed', $17, $18, $19, $20)`,
           [tenantId, o.reference, o.name, o.phone, fulfilment, o.due_at, o.ready_at ?? (fulfilment === 'collection' ? o.due_at : null),
             o.address ?? null, o.postcode ?? null, JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence ?? 0, o.total_pence,
             o.allergy_notes, o.status ?? 'confirmed', o.payment_status ?? 'unpaid', o.created_at ?? new Date(o.due_at.getTime() - 50 * 60000),
-            o.driver ?? null, o.out_at ?? null],
+            o.driver ?? null, o.out_at ?? null, o.pay_note ?? null],
         );
       }
       for (const m of plan.messages) {

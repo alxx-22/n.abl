@@ -53,7 +53,12 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
   const from = zonedToUtc(addDays(today, -1), '00:00', tz);
   const to = zonedToUtc(addDays(today, 14), '00:00', tz);
   const bookings = await repo.listBookings(t.id, from, to, true);
-  const orders = await repo.listOrders(t.id, new Date(now.getTime() - 36 * 3600000));
+  // A takeaway's board is the whole of today, its seeded orders moved on with the clock; anyone else's, the latest orders taken.
+  const kitchen = t.profile.ordering?.kitchen ? t.profile.ordering : null;
+  if (kitchen) await repo.advanceSeedOrders(t.id, now, kitchen.prep_minutes);
+  const orders = kitchen
+    ? await repo.listOrdersDue(t.id, zonedToUtc(today, '00:00', tz), zonedToUtc(addDays(today, 1), '00:00', tz))
+    : await repo.listOrders(t.id, new Date(now.getTime() - 36 * 3600000));
   const resources = new Map((t.profile.booking?.resources ?? []).map((r) => [r.key, r]));
   const services = new Map((t.profile.booking?.services ?? []).map((s) => [s.key, s.label]));
   const areas = new Map((t.profile.booking?.areas ?? []).map((a) => [a.key, a.label]));

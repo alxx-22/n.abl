@@ -266,6 +266,8 @@ export async function findOrder(args: Args, ctx: ToolContext): Promise<Record<st
   const today = zonedToUtc(date, '00:00', tz);
   const tomorrow = zonedToUtc(addDays(date, 1), '00:00', tz);
   const isToday = (o: Order) => o.due_at.getTime() >= today.getTime() && o.due_at.getTime() < tomorrow.getTime();
+  // The seed's orders have moved on since Start: say where they are now.
+  await ctx.repo.advanceSeedOrders(ctx.tenant.id, ctx.now(), ctx.tenant.profile.ordering!.prep_minutes);
   const number = str(args.order_number)?.replace(/[^0-9]/g, '');
   let order: Order | null = null;
   let by: 'number' | 'phone' = 'number';
