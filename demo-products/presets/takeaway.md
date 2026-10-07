@@ -84,29 +84,30 @@ interface TakeawayAnswers extends BaseAnswers {
   menu: MenuAnswer;           // food/menu.ts; sections may carry sizes and extras (below)
   deals: DealAnswer[];        // own section, so a menu draft never deletes them
   kitchen: {
-    last_orders: { collection_minutes: number; delivery_minutes: number }; // before closing; default 15 and the delivery minutes
-    big_order_mains: number;  // an order with more mains than this counts as two slots; default 6
-    catering_over_mains: number; // above this, a message for the manager instead; default 15
+    last_orders_minutes: number; // no new orders this long before closing; default 15. Every order is handed over by closing
+    big_order_mains: number;     // an order with more mains than this counts as two slots; default 6
+    catering_over_mains?: number; // M2: above this, a message for the manager instead; default 15
   };
   money: {
     payment: 'phone' | 'collection' | 'either';
     pay_driver: 'no' | 'cash' | 'cash_or_card';
     card_minimum_pence: number | null; // never a surcharge (§8); null: none
   };
-  after: {                    // what the receptionist may offer when something goes wrong
+  after?: {                   // M2: what the receptionist may offer when something goes wrong
     late_after_minutes: number;          // past the quoted time, a message for the manager; default 15
     missing_items: 'send_out' | 'manager'; // default 'manager'
     pay_on_phone_numbers: string[];      // numbers with refused deliveries: pay on the phone or no delivery
   };
-  alcohol: { on: boolean; until: string | null }; // M3; default off
+  alcohol?: { on: boolean; until: string | null }; // M3; default off
   policies: {
     halal: 'all' | 'chicken' | 'none';
-    allergens: string;        // the allergen statement, said with every allergy answer
     hygiene_rating: number | null;
     parking: string; offers: string; bags: string; careers: string; tips: string;
     faqs: FaqAnswer[];
   };
 }
+// The allergen statement, said with every allergy answer, is the menu's own
+// (MenuAnswer.allergen_statement), as the restaurant's is.
 
 interface DealAnswer {
   key: string; name: string; price_pence: number; description: string;
@@ -186,9 +187,10 @@ with room at or after now plus prep, for both kinds. "For 8pm" checks the
 slot that makes 8pm. A new `repo.ordersReadyBetween` replaces the due-time
 count for the takeaway only.
 
-**Last orders**: per day, from closing time: the last collection slot is
-closing less `collection_minutes`; the last delivery leaves so that it is
-handed over by closing (the late-night licence, use cases). `set_fulfilment`
+**Last orders**: no new order in the last `last_orders_minutes` before
+closing, and every order, collection or delivery, handed over by closing
+(the late-night licence, use cases), so the last delivery is the one whose
+slot plus the delivery minutes still lands by closing. `set_fulfilment`
 refuses past them and offers what is left.
 
 **Zones**: the postcode's district picks its zone's fee and minimum before
