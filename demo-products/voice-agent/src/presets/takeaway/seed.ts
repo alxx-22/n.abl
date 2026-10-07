@@ -129,7 +129,9 @@ export function planTakeawaySeed(profile: TenantProfile, now: Date, seed: number
   for (const period of periodsToday(profile, date)) {
     const first = Math.ceil((period.open.getTime() + prep) / step) * step;
     const last = period.close.getTime();
-    for (let t = first; t <= last && t <= now.getTime() + 60 * MIN; t += step) {
+    // Up to an hour from now; before opening, however far off, the first two slots for the pre-orders below.
+    const before = now.getTime() < period.open.getTime();
+    for (let t = first; t <= last && (t <= now.getTime() + 60 * MIN || (before && t - first < 2 * step)); t += step) {
       const ready = new Date(t);
       const hour = Number(toLocal(ready, tz).time.slice(0, 2));
       const ahead = t - now.getTime();
