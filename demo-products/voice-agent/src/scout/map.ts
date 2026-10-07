@@ -4,6 +4,7 @@
 
 import { hoursSentence } from '../presets/common/hours.ts';
 import type { BaseAnswers } from '../presets/common/types.ts';
+import type { MenuAnswer } from '../presets/food/menu.ts';
 import type { RestaurantAnswers } from '../presets/restaurant/answers.ts';
 import type { ScanResult } from './scan.ts';
 
@@ -51,6 +52,20 @@ function scanTheme(a: BaseAnswers, r: ScanResult, mark: Mark): void {
   mark('theme.fonts');
 }
 
+/** The menu a site lists, in place of the sample: any business that sells food. */
+function scanMenu(a: BaseAnswers & { menu: MenuAnswer }, r: ScanResult, mark: Mark): void {
+  if (!r.menu) return;
+  a.menu = {
+    categories: r.menu.categories,
+    modifier_groups: {},
+    allergen_statement: r.menu.allergen_statement || a.menu.allergen_statement,
+    source: 'website',
+    // Allergens the site states are theirs; the rest are marked unknown on each dish.
+    allergens_are_examples: false,
+  };
+  mark('menu.categories');
+}
+
 /**
  * A scan into any kind of business's answers, its identity, hours and
  * theme only: a business that is not a restaurant takes nothing about menus,
@@ -65,23 +80,24 @@ export function applyBaseScan<A extends BaseAnswers>(input: A, r: ScanResult, us
   return a;
 }
 
+/** A scan into a business that sells food but has no tables to book: its identity, hours, menu and theme (the takeaway). */
+export function applyFoodScan<A extends BaseAnswers & { menu: MenuAnswer }>(input: A, r: ScanResult, use: Partial<Record<ScanPart, boolean>>): A {
+  const a = structuredClone(input);
+  const mark = marker(a);
+  if (use.identity) scanIdentity(a, r, mark);
+  if (use.hours) scanHours(a, r, mark);
+  if (use.menu) scanMenu(a, r, mark);
+  if (use.theme) scanTheme(a, r, mark);
+  return a;
+}
+
 export function applyScan(input: RestaurantAnswers, r: ScanResult, use: Partial<Record<ScanPart, boolean>>): RestaurantAnswers {
   const a = structuredClone(input);
   const mark = marker(a);
 
   if (use.identity) scanIdentity(a, r, mark);
   if (use.hours) scanHours(a, r, mark);
-  if (use.menu && r.menu) {
-    a.menu = {
-      categories: r.menu.categories,
-      modifier_groups: {},
-      allergen_statement: r.menu.allergen_statement || a.menu.allergen_statement,
-      source: 'website',
-      // Allergens the site states are theirs; the rest are marked unknown on each dish.
-      allergens_are_examples: false,
-    };
-    mark('menu.categories');
-  }
+  if (use.menu) scanMenu(a, r, mark);
   if (use.theme) scanTheme(a, r, mark);
   if (use.services) {
     const s = r.services;

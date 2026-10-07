@@ -9,6 +9,8 @@ import { defaultAnswers, type TakeawayAnswers } from '../src/presets/takeaway/an
 import { sanitiseTakeaway } from '../src/presets/takeaway/sanitise.ts';
 import { STEPS } from '../src/presets/takeaway/steps.ts';
 import { validateTakeaway } from '../src/presets/takeaway/validate.ts';
+import { compileTakeaway } from '../src/presets/takeaway/compile.ts';
+import { answersOf, builtPreset, getPreset } from '../src/presets/index.ts';
 
 const named = (): TakeawayAnswers => {
   const a = defaultAnswers();
@@ -128,4 +130,49 @@ test('takeaway: validation says what is missing, on the step it belongs to', () 
   assert.deepEqual(issues((a) => (a.deals[1].parts = [])), ['error deals: Chicken box: add at least one choice, like "any burger".']);
   assert.deepEqual(issues((a) => (a.deals[0].price_pence = 1200)), ["warning deals: Burger meal costs as much as its cheapest choices bought separately, so the receptionist won't suggest it as a saving."]);
   assert.deepEqual(issues((a) => a.policies.faqs.push({ q: 'Do you do vegan cheese?', a: '' })), ['warning policies: 1 question needs both the question and its answer before the receptionist can use it.']);
+});
+
+test('takeaway: compiled, it knows how ordering, paying and delivery work, and never how long anything takes', () => {
+  const profile = compileTakeaway(sanitiseTakeaway(named()), { slug: 'firebird' });
+  assert.equal(profile.business_type, 'takeaway');
+  assert.equal(profile.greeting, "Hello, you're through to Firebird Chicken & Burgers. I'm the AI assistant on this demo line. How can I help?");
+  assert.deepEqual(profile.core_facts, [
+    'Firebird Chicken & Burgers: Fried chicken, burgers and pizza, in Nottingham.',
+    profile.core_facts[1],
+    'We take orders by phone for collection and delivery, for today, as soon as possible or for a time later on. Orders are paid by card on the phone, when you collect, or to the driver in cash or by card.',
+    'Delivery to NG1, NG2, NG3 and NG7 is £2.50, with a £12 minimum; to NG5 and NG9, £3.50 with a £15 minimum. Delivery is free on orders of £30 or more.',
+    'Our chicken is halal; our other meat is not.',
+    "We cook in a shared kitchen and fryers, so we can't rule out traces of any allergen.",
+  ]);
+  // A wait comes only from the kitchen's queue, through the tools (presets/takeaway.md §4.5).
+  for (const f of profile.core_facts.slice(2)) assert.doesNotMatch(f, /\bminutes?\b|\bhours?\b/, f);
+  const answer = (q: string) => profile.knowledge.find((k) => k.q === q)?.a;
+  assert.equal(answer('Do you charge for paying by card?'), "There's no extra charge for paying by card.");
+  assert.equal(answer('Do you have any meal deals?'), 'Burger meal, £8.99: Any burger with regular fries and a can. Chicken box, £7.99: Wings, strips, popcorn chicken or two pieces, with fries or onion rings and a can. Pizza night, £19.99: Any two 10-inch pizzas, a garlic bread and two cans.');
+  assert.equal(answer('What is your food hygiene rating?'), "Our food hygiene rating is 5. You can check it on the Food Standards Agency's ratings website.");
+  assert.equal(answer('Are you on the delivery apps?'), 'Yes, you can order from us on Just Eat.');
+  assert.equal(answer('Do you have any offers or discounts?'), undefined, 'no offers set, so nothing to say');
+  assert.equal(profile.menu!.categories.flatMap((c) => c.items).length, 33);
+  assert.deepEqual([profile.ordering!.collection, profile.ordering!.delivery!.districts.length, profile.ordering!.slot_capacity], [true, 6, 4]);
+  // A card minimum is said with the no-surcharge answer; a card fee never is.
+  const min = named();
+  min.money.card_minimum_pence = 500;
+  assert.equal(compileTakeaway(sanitiseTakeaway(min), { slug: 'x' }).knowledge.find((k) => k.q === 'Do you charge for paying by card?')!.a, "There's no extra charge for paying by card. The minimum spend on a card is £5.");
+  // Phone payment only: the driver takes nothing, so nothing is said about paying the driver.
+  const phone = named();
+  phone.money.payment = 'phone';
+  assert.match(compileTakeaway(sanitiseTakeaway(phone), { slug: 'x' }).core_facts[2], /Orders are paid by card on the phone\.$/);
+});
+
+test('takeaway: built and registered, but not offered to prospects until its builder screens exist', () => {
+  const p = builtPreset('takeaway')!;
+  assert.ok(p, 'built');
+  assert.equal(getPreset('takeaway'), null, 'not live yet');
+  assert.deepEqual(p.workspace(p.compile(answersOf(p, named()), { slug: 'x' })).views.map((v) => v.id), ['orders', 'messages', 'calls']);
+  const preview = p.preview(answersOf(p, named()), p.compile(answersOf(p, named()), { slug: 'x' }));
+  assert.equal(preview.lines!.at(-1), '33 items on the menu in 7 sections, and 3 meal deals.');
+  assert.match(p.factSheet(answersOf(p, named())), /^Name: Firebird Chicken & Burgers\. Style: Fried chicken, burgers and pizza\. Town: Nottingham\./);
+  // A website's menu replaces the sample's, marked as theirs; the deals stay, to be re-linked or flagged.
+  const scanned = p.scan.apply(answersOf(p, named()), { identity: {}, menu: { categories: [{ key: 'burgers', label: 'Burgers', items: [{ key: 'smash', name: 'Smash burger', price_pence: 800, allergens: [] }] }], allergen_statement: '' }, signals: [] } as any, { menu: true }) as TakeawayAnswers;
+  assert.deepEqual([scanned.menu.source, scanned.menu.categories.length, scanned.sources['menu.categories'], scanned.deals.length], ['website', 1, 'website', 3]);
 });

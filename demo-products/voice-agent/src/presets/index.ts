@@ -13,6 +13,7 @@ import type { BaseAnswers, Issue, SeedPlan, VisitStatus } from './common/types.t
 import { estateAgent } from './estate/preset.ts';
 import { propertyMaintenance } from './maintenance/preset.ts';
 import { restaurant } from './restaurant/preset.ts';
+import { takeaway } from './takeaway/preset.ts';
 
 /**
  * properties, offers, applicants, valuations and sales are the estate
@@ -109,7 +110,8 @@ export interface Preset<A extends BaseAnswers = BaseAnswers> {
   combineTables?(a: A, x: string, y: string): A;
 }
 
-const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant, estate_agent: estateAgent, property_maintenance: propertyMaintenance };
+// The takeaway is built but stays "soon" in the catalogue until its builder screens exist (presets/takeaway.md §12).
+const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant, estate_agent: estateAgent, property_maintenance: propertyMaintenance, takeaway };
 
 /** A preset prospects can use: built, and live in the catalogue. */
 export function getPreset(key: string): Preset | null {
