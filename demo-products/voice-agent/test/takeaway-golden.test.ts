@@ -58,6 +58,7 @@ for (const name of CORPUS) {
 }
 
 test('takeaway golden: what the FAQ draft asks the model', () => check('drafts'));
+test("takeaway golden: the eval's Firebird: profile, prompt and tools", () => check('tenants/tk-firebird'));
 
 test('takeaway golden: the prompt at its very largest stays under 7,000 characters', () => {
   // The corpus's max has every box and list at its cap with distinct entries (thirty-five districts not in a run, each

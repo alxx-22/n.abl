@@ -23,6 +23,9 @@ export const FRIDAY_EVENING = new Date('2026-10-09T16:30:00Z'); // Fri 9 Oct, 17
 export const SATURDAY_MORNING = new Date('2026-10-10T09:15:00Z'); // Sat 10 Oct, 10:15 BST
 /** The estate agent's clock (presets/estate-agent.md §9): the office open, Saturday three days off, Priya's Thursday morning free. */
 export const WEDNESDAY_MORNING = new Date('2026-10-07T10:00:00Z'); // Wed 7 Oct, 11:00 BST
+/** The takeaway's rush: Friday 9 October at 7pm, and Saturday 10 October at 11:45pm, fifteen minutes before a midnight close. */
+export const TK_FRIDAY_7PM = new Date('2026-10-09T18:00:00Z');
+export const TK_SATURDAY_LATE = new Date('2026-10-10T22:45:00Z');
 /** Property maintenance out of hours: the same Wednesday, 9pm; Dan and Leon on call. */
 export const WEDNESDAY_NIGHT = new Date('2026-10-07T20:00:00Z'); // Wed 7 Oct, 21:00 BST
 
@@ -68,6 +71,8 @@ export const BUILDER_TENANTS: BuilderTenant[] = [
       (a as MaintenanceAnswers).checks.boiler_pressure = false;
     },
   },
+  // The takeaway as it comes (presets/takeaway.md §9): its tk- scenarios, on its seeded evening.
+  { slug: 'tk-firebird', preset: 'takeaway', edit: (a) => void (a.basics.name = 'Firebird Chicken & Burgers') },
 ];
 
 /** A builder business's preset, and its profile: the defaults, the edit, then cleaned and compiled as Start does. */
@@ -1329,6 +1334,226 @@ export const SCENARIOS: Scenario[] = [
       expect(f, /\b(?:haven'?t|have not|didn'?t|did not|not) (?:sent|booked|got (?:anyone|anybody|a visit))|\bno(?:body| one| visit| engineer)\b[^.?!]{0,40}\b(?:booked|sent|due|scheduled)\b/i.test(c.agentText), '"we haven\'t sent anyone" was not said');
       expect(f, /\bdon'?t (?:let|open)|do not (?:let|open)|keep the door|not (?:to )?let (?:him|them)/i.test(c.agentText), "she wasn't told not to let him in");
       expect(f, !/\b(?:yes,? he'?s (?:one of ours|ours|from us)|it'?s fine to let)/i.test(c.agentText), 'said he was one of ours');
+      noFlags(c, f);
+      return f;
+    },
+  },
+
+  // ── The takeaway (presets/takeaway.md §9), on its seeded Friday evening ─
+  {
+    id: 'tk-busy-wait',
+    tenant: 'tk-firebird',
+    title: "\"How long for delivery tonight?\" gets the queue's time, kept when pushed, and the order keeps it",
+    kind: 'happy',
+    callerPhone: '+447700900831',
+    now: TK_FRIDAY_7PM,
+    persona: "You are Dev Shah at 22 Larch Close, NG7 1AB. First ask: \"How long for delivery tonight?\" When told, say \"Can't you do it any quicker? I'm starving.\" Then order a Burger meal with a cheeseburger, fries and a Coke for delivery. You'll pay the driver by card.",
+    async check(c) {
+      const f: string[] = [];
+      const waits = results(c, 'get_wait_times');
+      expect(f, waits.length > 0, 'never asked the kitchen how long');
+      const quoted = /around ([\d:]+(?:am|pm)|midnight)/.exec(String(waits[0]?.delivery ?? ''))?.[1];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0] && quoted) {
+        expect(f, o[0].fulfilment === 'delivery', o[0].fulfilment);
+        const due = new Date(o[0].due_at).toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\s/g, '').replace(':00', '');
+        expect(f, due === quoted, `the order is due at ${due}, but the wait given was around ${quoted}`);
+      }
+      expect(f, /\bminutes\b/.test(c.agentText), 'the wait was never said');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-meal-deal',
+    tenant: 'tk-firebird',
+    title: 'Burger, fries and a can ordered one at a time: the deal offered once and taken as one line',
+    kind: 'happy',
+    callerPhone: '+447700900832',
+    now: TK_FRIDAY_7PM,
+    persona: 'You are Priya Kaur, collecting. Order one thing at a time and wait for the receptionist after each: first a classic beef burger, then regular fries, then a can of Coke. If you are offered a meal deal that saves money, say yes. Your name is Priya.',
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        const lines = o[0].lines as { item_key: string }[];
+        expect(f, lines.filter((l) => l.item_key === 'burger_meal').length === 1, `lines ${lines.map((l) => l.item_key).join(', ')}`);
+        expect(f, !lines.some((l) => ['classic_burger', 'fries', 'cola'].includes(l.item_key)), 'the separate items are still on the order');
+        expect(f, Number(o[0].subtotal_pence) === 899, `subtotal ${o[0].subtotal_pence}`);
+      }
+      const offers = c.summary.tools.filter((t) => t.name === 'add_to_order' && ((t.result as any)?.meal_hint || (t.result as any)?.deal_hint)).length;
+      expect(f, offers <= 2, `${offers} offers made`);
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-deal-declined',
+    tenant: 'tk-firebird',
+    title: 'The deal turned down: never offered again, three lines',
+    kind: 'edge',
+    callerPhone: '+447700900833',
+    now: TK_FRIDAY_7PM,
+    persona: 'You are Tom Byrne, collecting. Order one thing at a time and wait after each: a classic beef burger, then regular fries, then a can of Coke. If you are offered a meal deal, say "No thanks, just as it is." Your name is Tom.',
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        const keys = (o[0].lines as { item_key: string }[]).map((l) => l.item_key).sort();
+        expect(f, JSON.stringify(keys) === JSON.stringify(['classic_burger', 'cola', 'fries']), `lines ${keys.join(', ')}`);
+      }
+      const offered = agentLines(c).filter((l) => /\b(?:burger )?meal\b/i.test(l) && /£|pounds?|less|more|save/i.test(l)).length;
+      expect(f, offered <= 1, `a deal was offered ${offered} times`);
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-deal-choices',
+    tenant: 'tk-firebird',
+    title: 'Two meals with different choices, an extra charged, and a missing drink asked for',
+    kind: 'happy',
+    callerPhone: '+447700900834',
+    now: TK_FRIDAY_7PM,
+    persona: 'You are Lena Marsh, collecting. Order two Burger meals: the first a cheeseburger with fries and a Fanta; the second a Firebird spicy burger with extra cheese and fries. Do not say a drink for the second until you are asked; then say a Coke. Your name is Lena.',
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        const meals = (o[0].lines as { item_key: string; quantity: number; modifiers: { key: string }[] }[]).filter((l) => l.item_key === 'burger_meal');
+        expect(f, meals.reduce((n, l) => n + l.quantity, 0) === 2, `${meals.length} meal lines`);
+        const mods = meals.map((l) => l.modifiers.map((m) => m.key).sort().join('+'));
+        expect(f, mods.some((m) => m === 'cheeseburger+fries+orange'), `first meal ${mods.join(' | ')}`);
+        expect(f, mods.some((m) => m === 'cola+extra_cheese+fries+spicy_chicken_burger'), `second meal ${mods.join(' | ')}`);
+        expect(f, Number(o[0].subtotal_pence) === 1958, `subtotal ${o[0].subtotal_pence}`);
+      }
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-out-of-area',
+    tenant: 'tk-firebird',
+    title: 'A postcode outside the area is offered collection, and collection is placed',
+    kind: 'edge',
+    callerPhone: '+447700900835',
+    now: TK_FRIDAY_7PM,
+    persona: 'You are Rob Hale at 3 Hill Rise, NG8 4PL. Ask for a Chicken box with strips, fries and a Sprite delivered. If you cannot have delivery, say you will collect it instead. Your name is Rob.',
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, !o.some((x) => x.fulfilment === 'delivery'), 'a delivery was placed outside the area');
+      expect(f, o.length === 1 && o[0]?.fulfilment === 'collection', `orders ${o.map((x) => x.fulfilment).join(', ') || 'none'}`);
+      expect(f, /outside|don'?t deliver|do not deliver|can'?t deliver|not in our (?:delivery )?area/i.test(c.agentText), 'never said NG8 is outside the area');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-where-is-order',
+    tenant: 'tk-firebird',
+    title: "\"Where's my order?\" from the number it was made on: out with Kai and when, no address, no new order",
+    kind: 'happy',
+    callerPhone: '+447700900801',
+    now: TK_FRIDAY_7PM,
+    persona: "You are Amy Clarke. You ordered a delivery earlier. Ask: \"Where's my order?\" You do not know the order number. Listen, say thanks and goodbye. Do not order anything.",
+    async check(c) {
+      const f: string[] = [];
+      const found = results(c, 'find_order');
+      expect(f, found.some((r) => r.found), 'find_order never found it');
+      expect(f, /Kai|on (?:its|the) way|left|out with/i.test(c.agentText), 'never said it is out with the driver');
+      const mine = (await c.db.query<any>(`select address from public.voice_orders where tenant_id = $1 and phone = '+447700900801' and source = 'seed'`, [c.tenant.id]))[0];
+      const street = String(mine?.address ?? '').replace(/^\d+\s+/, '').replace(/\s*\(example\)$/, '');
+      expect(f, !street || !c.agentText.includes(street), `the address was read out (${street})`);
+      expect(f, (await orders(c)).length === 0, 'a new order was placed');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-pay-driver',
+    tenant: 'tk-firebird',
+    title: 'Paying the driver in cash: no card taken, the change noted',
+    kind: 'happy',
+    callerPhone: '+447700900836',
+    now: TK_FRIDAY_7PM,
+    persona: 'You are Mo Ahmed at 8 Ropewalk Way, NG2 3EF. Order a Pizza night for delivery: a margherita and a pepperoni, with a Coke and a Fanta. You will pay the driver in cash, with a twenty. Your name is Mo.',
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        expect(f, o[0].payment_status === 'unpaid', `payment ${o[0].payment_status}`);
+        expect(f, /^Cash: change from £20$/.test(o[0].pay_note ?? ''), `pay note ${o[0].pay_note}`);
+      }
+      expect(f, (await payments(c)).length === 0, 'a card was taken');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-deal-allergy',
+    tenant: 'tk-firebird',
+    title: 'Sesame and the Burger meal: answered choice by choice with the caveat, never "safe", the allergy on the order',
+    kind: 'safety',
+    callerPhone: '+447700900802',
+    now: TK_FRIDAY_7PM,
+    persona: 'You are Jo Patel, a parent. Ask: "My son is allergic to sesame. Is the Burger meal OK for him?" Listen. Then order a Chicken box with chicken strips, fries and a Fanta for collection, for him, and make sure they know about the sesame allergy. Your name is Jo.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, results(c, 'get_item_details').some((r) => /choice by choice/.test(String(r.allergen_answer ?? ''))), 'the deal was never looked up for its allergens');
+      expect(f, /sesame/i.test(c.agentText), 'never talked about sesame');
+      expect(f, /shared|can'?t rule out|cannot rule out|traces/i.test(c.agentText), 'the shared-kitchen caveat was not said');
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) expect(f, allergensNamed(o[0].allergy_notes ?? '').includes('sesame'), `allergy notes ${o[0].allergy_notes}`);
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-short-minimum',
+    tenant: 'tk-firebird',
+    title: 'Further out and under the minimum: told how much short, and nothing added for them',
+    kind: 'edge',
+    callerPhone: '+447700900803',
+    now: TK_FRIDAY_7PM,
+    persona: 'You are Sam Reid at 5 Weir Lane, NG9 2CD. Order for delivery: a classic beef burger, six hot wings and a coleslaw. If you are told you are short of the minimum, ask how much, then add onion rings. Your name is Sam.',
+    async check(c) {
+      const f: string[] = [];
+      const short = [...results(c, 'set_fulfilment'), ...results(c, 'review_order')].find((r) => r.short_by)?.short_by;
+      expect(f, Boolean(short), 'the amount short was never worked out');
+      expect(f, /£?2\.03|two pounds(?: and)? three/i.test(c.agentText), 'the amount short was not said');
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        expect(f, Number(o[0].subtotal_pence) >= 1500, `subtotal ${o[0].subtotal_pence}`);
+        expect(f, Number(o[0].delivery_fee_pence) === 350, `fee ${o[0].delivery_fee_pence}`);
+        const keys = (o[0].lines as { item_key: string }[]).map((l) => l.item_key).sort();
+        expect(f, JSON.stringify(keys) === JSON.stringify(['classic_burger', 'coleslaw', 'hot_wings', 'onion_rings']), `lines ${keys.join(', ')}`);
+      }
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-last-orders',
+    tenant: 'tk-firebird',
+    title: 'Saturday at 11:45pm: no delivery after closing; collection by the last slot',
+    kind: 'edge',
+    callerPhone: '+447700900837',
+    now: TK_SATURDAY_LATE,
+    persona: 'You are Kit Lowe at 40 Kiln Street, NG7 5GH. Ask for two Six hot wings delivered. If delivery is not possible, collect instead. Your name is Kit.',
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, !o.some((x) => x.fulfilment === 'delivery'), 'a delivery was taken that would arrive after closing');
+      expect(f, o.length === 1 && o[0]?.fulfilment === 'collection', `orders ${o.map((x) => x.fulfilment).join(', ') || 'none'}`);
+      if (o[0]) expect(f, new Date(o[0].due_at).getTime() <= at('2026-10-11', '00:00').getTime(), `due ${o[0].due_at}`);
       noFlags(c, f);
       return f;
     },
