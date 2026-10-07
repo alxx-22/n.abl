@@ -419,7 +419,10 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal((await jo.call('PATCH', `${path}/buyers/${digits(keen)}`, { action: 'send_matches' })).status, 409, 'no yes, no texts');
     const again = (await state()).buyers.find((b: any) => b.phone === keen.phone);
     assert.deepEqual([again.hot, again.alerts], [true, false]);
-    assert.equal((await jo.call('PATCH', `${path}/buyers/07700900998`, { action: 'hot' })).status, 404);
+    // A number with nobody behind it: the seed draws buyers' numbers from the same drama range, so one it didn't use.
+    const buyers = new Set((await state()).buyers.map(digits));
+    const nobody = Array.from({ length: 1000 }, (_, i) => `07700900${String(999 - i).padStart(3, '0')}`).find((n) => !buyers.has(n))!;
+    assert.equal((await jo.call('PATCH', `${path}/buyers/${nobody}`, { action: 'hot' })).status, 404);
 
     // An offer goes to the seller, then is accepted: sale agreed, a sale opens, the buyer and every other bidder hear (each once).
     const openOn = (key: string) => s.offers.filter((o: any) => o.listing_key === key && ['received', 'sent'].includes(o.status) && o.phone);
