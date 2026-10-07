@@ -28,8 +28,10 @@ function wordsToNumber(words: string): number | undefined {
   return any ? total + part : undefined;
 }
 
-// "£10 million" (an insurance cover) is not a price, nor its "£1".
-const DIGITS = /£\s?(\d[\d,]*)(?:\.(\d{2}))?(?!\d|,\d|\.\d)(?!\s*(?:million|m\b|bn|billion))|\b(\d[\d,]*)(?:\.(\d{2}))?\s*(?:pounds?|quid)\b/gi;
+// "£10 million" (an insurance cover) is not a price, nor its "£1". A spoken price is often written down with
+// a space for the point ("£2 50"): a live takeaway call on 8 October read that as £2, flagged it as made up,
+// and the corrections derailed the call. Two digits after the space are pence, unless they are minutes.
+const DIGITS = /£\s?(\d[\d,]*)(?:(?:\.|\s)(\d{2})(?!\s*(?:minutes?|mins?\b|%|per ?cent)))?(?!\d|,\d|\.\d)(?!\s*(?:million|m\b|bn|billion))|\b(\d[\d,]*)(?:\.(\d{2}))?\s*(?:pounds?|quid)\b/gi;
 const WORDS = new RegExp(`\\b((?:${NUMBER_WORD}[\\s-]+)+)(?:pounds?|quid)(?:\\s+((?:${PENCE_WORD}\\b[\\s-]*)+))?`, 'gi');
 
 /** Every sum in the text, in pence, in the order said. */

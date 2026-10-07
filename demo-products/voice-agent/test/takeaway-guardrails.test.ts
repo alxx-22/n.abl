@@ -38,6 +38,10 @@ test('takeaway guardrails: no wait, price or card fee that no tool, fact or call
   assert.deepEqual(rules("As a meal that's £1.20 less."), ['invented_price'], 'a saving no tool gave');
   state.amounts.push(...amountsIn(JSON.stringify({ deal_hint: "As a Burger meal, that's £1.49 less." })));
   assert.deepEqual(rules("As a Burger meal, that's one pound forty-nine less."), []);
+  // Spoken prices as the transcript writes them, a space for the point (live, 8 October): the tools' £2.50 and £14.98.
+  assert.deepEqual(amountsIn('Delivery £2 50. That’s £14 98 altogether, about £2 30 minutes away.'), [250, 1498, 200]);
+  state.amounts.push(...amountsIn(JSON.stringify({ read_back: "Delivery £2.50. That's £14.98 altogether." })));
+  assert.deepEqual(rules("Delivery £2 50. That's £14 98 altogether."), []);
   // No card surcharges, ever; saying there is none is right.
   assert.deepEqual(rules("There's a 50p charge for card."), ['card_surcharge']);
   assert.deepEqual(rules("There's no extra charge for card."), []);
