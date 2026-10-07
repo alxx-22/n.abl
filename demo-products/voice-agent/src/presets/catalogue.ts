@@ -33,7 +33,7 @@ export const PRESETS: PresetInfo[] = [
     example: 'https://www.your-restaurant.co.uk',
   },
   {
-    key: 'takeaway', label: 'Takeaway and fast food', blurb: 'Takes orders for collection or delivery, upsells the meal deal, and quotes honest wait times.', status: 'soon',
+    key: 'takeaway', label: 'Takeaway and fast food', blurb: 'Takes orders for collection or delivery, upsells the meal deal, and quotes honest wait times.', status: 'live',
     covers: ['Menu, sizes and deals', 'Collection slots', 'Delivery areas'],
     noun: 'takeaway', business_type: 'takeaway', example: 'https://www.your-takeaway.co.uk',
   },

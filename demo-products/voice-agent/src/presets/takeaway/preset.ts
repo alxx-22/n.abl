@@ -1,6 +1,5 @@
 // The takeaway as the server sees it: the hooks of PRESETS.md §2.2, from the
-// files beside this one. Built here but not yet live in the catalogue, so
-// only tests and previews reach it until its builder screens exist.
+// files beside this one (presets/takeaway.md).
 
 import type { Config } from '../../config.ts';
 import type { TenantProfile } from '../../domain/types.ts';

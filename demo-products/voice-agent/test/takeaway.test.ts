@@ -164,10 +164,10 @@ test('takeaway: compiled, it knows how ordering, paying and delivery work, and n
   assert.match(compileTakeaway(sanitiseTakeaway(phone), { slug: 'x' }).core_facts[2], /Orders are paid by card on the phone\.$/);
 });
 
-test('takeaway: built and registered, but not offered to prospects until its builder screens exist', () => {
+test('takeaway: built, registered and live in the catalogue', () => {
   const p = builtPreset('takeaway')!;
   assert.ok(p, 'built');
-  assert.equal(getPreset('takeaway'), null, 'not live yet');
+  assert.ok(getPreset('takeaway'), 'live');
   assert.deepEqual(p.workspace(p.compile(answersOf(p, named()), { slug: 'x' })).views.map((v) => v.id), ['orders', 'drivers', 'messages', 'calls']);
   const preview = p.preview(answersOf(p, named()), p.compile(answersOf(p, named()), { slug: 'x' }));
   assert.equal(preview.lines!.at(-1), '33 items on the menu in 7 sections, and 3 meal deals.');

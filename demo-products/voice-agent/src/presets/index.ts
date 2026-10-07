@@ -1,8 +1,8 @@
 // The preset registry: what the server needs from each kind of business, and
 // the one way it reads a workspace's saved answers. A preset is served to
 // prospects once it is built here and its catalogue entry says live
-// (PRESETS.md §2.2). The restaurant, the estate agent and property
-// maintenance are built and live.
+// (PRESETS.md §2.2). The restaurant, the estate agent, property
+// maintenance and the takeaway are built and live.
 
 import type { Config } from '../config.ts';
 import type { TenantProfile } from '../domain/types.ts';
@@ -110,7 +110,6 @@ export interface Preset<A extends BaseAnswers = BaseAnswers> {
   combineTables?(a: A, x: string, y: string): A;
 }
 
-// The takeaway is built but stays "soon" in the catalogue until its builder screens exist (presets/takeaway.md §12).
 const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant, estate_agent: estateAgent, property_maintenance: propertyMaintenance, takeaway };
 
 /** A preset prospects can use: built, and live in the catalogue. */
