@@ -94,8 +94,10 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
   const dealMenu = compileDeals(a.menu, a.deals);
   // How ordering, delivery and halal work are already core facts; only what isn't goes here, so the prompt says each once.
   const policies: Record<string, string> = { card_payments: cardAnswer(a) };
+  // Past a few districts at their own prices, the fact says so in short: the knowledge entry and get_wait_times have each one.
+  const deliveryFact = delivery.length > 260 ? `We deliver to ${a.ordering.delivery.districts.length} postcode districts, each with its own fee and minimum: get_wait_times has them.` : delivery;
   return {
-    ...baseProfile(a, meta, { businessType: 'takeaway', noun: 'takeaway', facts: [orders, delivery, halalSentence(a), a.menu.allergen_statement] }),
+    ...baseProfile(a, meta, { businessType: 'takeaway', noun: 'takeaway', facts: [orders, deliveryFact, halalSentence(a), a.menu.allergen_statement], hoursMax: 220 }),
     knowledge: knowledge(a),
     menu: dealMenu ? { ...menu, categories: [dealMenu.category, ...menu.categories], modifier_groups: { ...menu.modifier_groups, ...dealMenu.groups }, deals: dealMenu.deals } : menu,
     // The kitchen counts every order by when it must be ready (core/kitchen.ts).
