@@ -113,6 +113,8 @@ export interface ModifierOption {
   name: string;
   price_pence: number;
   allergens?: Allergen[];
+  /** Other names a caller uses: a deal's "Coca-Cola" choice is also "a Coke". */
+  aliases?: string[];
 }
 
 export interface ModifierGroup {
@@ -147,6 +149,20 @@ export interface Menu {
   categories: MenuCategory[];
   modifier_groups: Record<string, ModifierGroup>;
   allergen_statement: string;
+  /**
+   * Meal deals (the takeaway's, presets/takeaway.md §4.2): each is an item in
+   * the menu whose choices are option groups, one per part; this says which
+   * groups are its parts, for the allergy answer part by part and the offers.
+   */
+  deals?: MenuDeal[];
+}
+
+export interface MenuDeal {
+  item_key: string;
+  parts: { label: string; group: string; choose: number }[];
+  /** Items always in it: Pizza night's garlic bread. */
+  includes: string[];
+  description: string;
 }
 
 export interface Ordering {

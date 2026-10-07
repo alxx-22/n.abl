@@ -9,7 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { MenuCategory } from '../../domain/types.ts';
+import type { Allergen, MenuCategory, MenuDeal, MenuItem, ModifierGroup } from '../../domain/types.ts';
 import { arr, int, key, str } from '../common/sanitise.ts';
 import type { Issue } from '../common/types.ts';
 import type { MenuAnswer } from './menu.ts';
@@ -118,4 +118,54 @@ export function validateDeals<K extends string>(deals: DealAnswer[], menu: MenuA
     }
   }
   return out;
+}
+
+const union = (lists: (readonly Allergen[] | undefined)[]): Allergen[] => [...new Set(lists.flatMap((l) => l ?? []))].sort();
+
+/**
+ * The deals the receptionist can sell, as menu items in a "Meal deals"
+ * section (presets/takeaway.md §4.2). Each choice is an option group of its
+ * candidates, priced at their upcharge; the candidates' optional extras come
+ * too (extra cheese on a Burger meal's burger). A deal lists every allergen
+ * any of its choices has, so nothing that reads the item alone can call it
+ * free of one; the allergy answer goes choice by choice from `deals`.
+ */
+export function compileDeals(menu: MenuAnswer, deals: DealAnswer[]): { category: MenuCategory; groups: Record<string, ModifierGroup>; deals: MenuDeal[] } | null {
+  const live = deals.filter((d) => dealComplete(menu, d));
+  if (!live.length) return null;
+  const all = menu.categories.flatMap((c) => c.items);
+  const taken = new Set(all.map((i) => i.key));
+  const groups: Record<string, ModifierGroup> = {};
+  const items: MenuItem[] = [];
+  const out: MenuDeal[] = [];
+  for (const d of live) {
+    const key = taken.has(d.key) ? `deal_${d.key}` : d.key;
+    const parts = d.parts.map((p, i) => {
+      const group = `${key}_${i + 1}`;
+      const candidates = dealCandidates(menu, p);
+      groups[group] = {
+        label: p.label, min: p.choose, max: p.choose,
+        options: candidates.map((c) => ({
+          key: c.key, name: c.name, price_pence: p.upcharge_pence?.[c.key] ?? 0, allergens: [...c.allergens],
+          ...(c.aliases?.length ? { aliases: [...c.aliases] } : {}),
+        })),
+      };
+      return { label: p.label, group, choose: p.choose, candidates };
+    });
+    const extras = [...new Set(parts.flatMap((p) => p.candidates.flatMap((c) => c.modifier_groups ?? [])))].filter((g) => menu.modifier_groups[g]?.min === 0);
+    const fixed = (d.includes ?? []).map((k) => all.find((i) => i.key === k)).filter((i): i is MenuItem => Boolean(i));
+    const every = [...parts.flatMap((p) => p.candidates), ...fixed];
+    const allergens = union(every.map((i) => i.allergens));
+    const may = union(every.map((i) => i.may_contain)).filter((a) => !allergens.includes(a));
+    items.push({
+      key, name: d.name, price_pence: d.price_pence,
+      ...(d.description ? { description: d.description } : {}),
+      allergens,
+      ...(may.length ? { may_contain: may } : {}),
+      ...(every.some((i) => i.allergens_unknown) ? { allergens_unknown: true } : {}),
+      modifier_groups: [...parts.map((p) => p.group), ...extras],
+    });
+    out.push({ item_key: key, parts: parts.map(({ label, group, choose }) => ({ label, group, choose })), includes: fixed.map((i) => i.key), description: d.description });
+  }
+  return { category: { key: 'meal_deals', label: 'Meal deals', items }, groups, deals: out };
 }

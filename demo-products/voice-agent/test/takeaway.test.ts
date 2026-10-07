@@ -152,7 +152,7 @@ test('takeaway: compiled, it knows how ordering, paying and delivery work, and n
   assert.equal(answer('What is your food hygiene rating?'), "Our food hygiene rating is 5. You can check it on the Food Standards Agency's ratings website.");
   assert.equal(answer('Are you on the delivery apps?'), 'Yes, you can order from us on Just Eat.');
   assert.equal(answer('Do you have any offers or discounts?'), undefined, 'no offers set, so nothing to say');
-  assert.equal(profile.menu!.categories.flatMap((c) => c.items).length, 33);
+  assert.equal(profile.menu!.categories.flatMap((c) => c.items).length, 36, 'the 33 items and the three meal deals');
   assert.deepEqual([profile.ordering!.collection, profile.ordering!.delivery!.districts.length, profile.ordering!.slot_capacity], [true, 6, 4]);
   // A card minimum is said with the no-surcharge answer; a card fee never is.
   const min = named();

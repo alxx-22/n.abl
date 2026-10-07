@@ -24,6 +24,7 @@ import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
 import { feeFor, kitchenFulfilment, waitTimes } from './kitchen.ts';
+import { DECLINED, dealAllergenAnswer, dealExtra, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
@@ -71,6 +72,13 @@ export interface CallState {
   heard: string[];
   /** The allergy check below asks once per call, never in a loop. */
   allergyAsked: boolean;
+  /**
+   * A takeaway's meal-deal offers (domain/deals.ts): each kind at most once a
+   * call, none after the caller says no, and none once a deal is in the order.
+   * `dealHeard` is how many caller lines had been heard when the last was made.
+   */
+  dealOffers: ('meal' | 'deal')[];
+  dealHeard: number | null;
   /** The reference or order number just made, until the call has checked the caller heard it (see unsaidReference). */
   owed: string | null;
   messageTaken: boolean;
@@ -150,7 +158,7 @@ export function newCallState(): CallState {
   return {
     lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
-    heard: [], allergyAsked: false, owed: null, messageTaken: false, messageChecked: false,
+    heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false,
     estate: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
@@ -389,6 +397,30 @@ function orderAction(ctx: ToolContext, title: string) {
 
 function changed(ctx: ToolContext) {
   ctx.state.basketVersion++;
+}
+
+/**
+ * A meal-deal offer after an item is added (domain/deals.ts): the cheaper-as-
+ * a-deal one first, else "make it a meal"; each kind at most once a call,
+ * none once a deal is in the order, and none at all after the caller says no.
+ */
+function dealOffer(ctx: ToolContext, added: OrderLine): Record<string, unknown> | null {
+  const menu = ctx.tenant.profile.menu!;
+  const s = ctx.state;
+  if (!menu.deals?.length) return null;
+  if (s.dealHeard !== null && s.heard.slice(s.dealHeard).some((l) => DECLINED.test(l))) s.dealOffers = ['meal', 'deal'];
+  if (s.lines.some((l) => dealOf(menu, l.item_key))) return null;
+  const offer = (!s.dealOffers.includes('deal') ? dealHint(menu, s.lines) : null) ?? (!s.dealOffers.includes('meal') ? mealHint(menu, s.lines, added) : null);
+  if (!offer) return null;
+  s.dealOffers.push(offer.kind);
+  s.dealHeard = s.heard.length;
+  const ask = offer.still_to_choose.map((x) => x.toLowerCase()).join(' and ');
+  return {
+    [offer.kind === 'meal' ? 'meal_hint' : 'deal_hint']: offer.say,
+    swap: offer.swap,
+    ...(ask ? { still_to_choose: offer.still_to_choose } : {}),
+    offer_once: `Offer this once, in one sentence, once they've said what they're ordering. On yes, ${ask ? `ask for their ${ask}, then ` : ''}call add_to_order with the deal, ${ask ? 'every choice' : 'these choices'} as options, and replaces. On no, carry on: never offer a deal again this call.`,
+  };
 }
 
 /**
@@ -817,6 +849,9 @@ const TOOLS: Record<string, Tool> = {
         return { found: false, question: r.question, options: 'options' in r ? r.options : undefined };
       }
       const item = r.value;
+      // A meal deal is answered choice by choice, for the allergen the caller named (domain/deals.ts).
+      const deal = dealOf(menu, item.key);
+      const priced = (o: { name: string; price_pence: number }) => `${o.name}${o.price_pence ? ` (+${pounds(o.price_pence)})` : ''}`;
       return {
         found: true,
         name: item.name,
@@ -824,9 +859,10 @@ const TOOLS: Record<string, Tool> = {
         description: item.description,
         dietary: item.dietary,
         available: item.available === false ? 'not available today' : 'yes',
-        options: optionsFor(menu, item).map((o) => `${o.option.name}${o.option.price_pence ? ` (+${pounds(o.option.price_pence)})` : ''}`),
+        options: optionsFor(menu, item).map((o) => priced(o.option)),
+        ...(deal ? { choices: deal.parts.map((p) => `${p.label}: ${(menu.modifier_groups[p.group]?.options ?? []).map(priced).join(', ')}`) } : {}),
         allergens: allergensOf(menu, item),
-        allergen_answer: allergenAnswer(menu, item),
+        allergen_answer: deal ? dealAllergenAnswer(menu, deal, allergensNamed(`${str(args.item) ?? ''} ${ctx.state.heard.slice(-4).join(' ')}`)) : allergenAnswer(menu, item),
       };
     },
   },
@@ -846,6 +882,13 @@ const TOOLS: Record<string, Tool> = {
         ['item'],
       ),
     },
+    // A takeaway's meal deals take the place of the lines they are made of (domain/deals.ts).
+    tailor: (d, t) => {
+      if (!t.profile.menu?.deals?.length) return d;
+      const p = { ...(d.parameters as { properties: Record<string, unknown> }).properties };
+      p.replaces = { type: 'ARRAY', items: { type: 'INTEGER' }, description: 'For a deal taken from a meal_hint or deal_hint: the line numbers it replaces, from its swap' };
+      return { ...d, parameters: { ...(d.parameters as object), properties: p } };
+    },
     async handler(args, ctx) {
       const menu = ctx.tenant.profile.menu!;
       const r = resolveItem(menu, str(args.item) ?? '');
@@ -864,11 +907,27 @@ const TOOLS: Record<string, Tool> = {
         modifiers: mods.value.map((m) => ({ key: m.key, name: m.name, price_pence: m.price_pence })),
         notes: str(args.notes),
       };
+      // A deal taking the place of separate lines: their extras (extra cheese) and notes move onto it.
+      const deal = dealOf(menu, item.key);
+      const replaced = deal && Array.isArray(args.replaces)
+        ? ctx.state.lines.filter((l) => (args.replaces as unknown[]).map(Number).includes(l.line) && !dealOf(menu, l.item_key))
+        : [];
+      for (const old of replaced) {
+        for (const m of old.modifiers) if (dealExtra(menu, deal!, m.key) && !line.modifiers.some((x) => x.key === m.key)) line.modifiers.push(m);
+      }
+      const notes = [line.notes, ...replaced.map((l) => l.notes)].filter(Boolean).join('; ');
+      if (notes) line.notes = notes;
+      ctx.state.lines = ctx.state.lines.filter((l) => !replaced.includes(l));
       ctx.state.lines.push(line);
       changed(ctx);
       orderAction(ctx, 'Order in progress');
+      const offer = deal ? null : dealOffer(ctx, line);
       const b = basketSummary(ctx);
-      return { added: describeLine(line), line: line.line, order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal };
+      return {
+        added: describeLine(line), line: line.line, order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal,
+        ...(replaced.length ? { replaced: replaced.map((l) => l.line) } : {}),
+        ...offer,
+      };
     },
   },
 

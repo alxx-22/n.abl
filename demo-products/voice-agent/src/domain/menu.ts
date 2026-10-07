@@ -102,7 +102,7 @@ export function resolveModifiers(
   const unmatched: string[] = [];
   for (const r of requested.map((x) => x.trim()).filter(Boolean)) {
     const scored = available
-      .map((a) => ({ ...a, s: Math.max(score(r, a.option.name), score(r, a.option.key.replace(/_/g, ' '))) }))
+      .map((a) => ({ ...a, s: Math.max(score(r, a.option.name), score(r, a.option.key.replace(/_/g, ' ')), ...(a.option.aliases ?? []).map((x) => score(r, x))) }))
       .sort((a, b) => b.s - a.s);
     if (scored[0] && scored[0].s >= 0.7) picked.push(scored[0]);
     else unmatched.push(r);

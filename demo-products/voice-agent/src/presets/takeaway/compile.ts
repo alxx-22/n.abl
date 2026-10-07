@@ -7,7 +7,7 @@ import { pounds, type KnowledgeEntry, type TenantProfile } from '../../domain/ty
 import { baseProfile, entry, mergeFaqs } from '../common/profile.ts';
 import { compileMenu } from '../food/menu.ts';
 import { compileOrdering, deliveryAppsEntry } from '../food/ordering.ts';
-import { dealComplete } from '../food/deals.ts';
+import { compileDeals, dealComplete } from '../food/deals.ts';
 import type { TakeawayAnswers } from './answers.ts';
 
 /** "£2.50", "£12". */
@@ -89,6 +89,9 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
   const orders = ordersSentence(a);
   const delivery = deliverySentence(a);
   const ordering = compileOrdering(a.ordering, a.hours, a.money.payment);
+  // Meal deals first, as a takeaway's menu shows them, each choice an option group (food/deals.ts).
+  const menu = compileMenu(a.menu);
+  const dealMenu = compileDeals(a.menu, a.deals);
   const policies: Record<string, string> = {};
   if (orders) policies.ordering = orders;
   if (delivery) policies.delivery = delivery;
@@ -97,7 +100,7 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
   return {
     ...baseProfile(a, meta, { businessType: 'takeaway', noun: 'takeaway', facts: [orders, delivery, halalSentence(a), a.menu.allergen_statement] }),
     knowledge: knowledge(a),
-    menu: compileMenu(a.menu),
+    menu: dealMenu ? { ...menu, categories: [dealMenu.category, ...menu.categories], modifier_groups: { ...menu.modifier_groups, ...dealMenu.groups }, deals: dealMenu.deals } : menu,
     // The kitchen counts every order by when it must be ready (core/kitchen.ts).
     ordering: ordering && { ...ordering, kitchen: { last_orders_minutes: a.kitchen.last_orders_minutes } },
     policies,
