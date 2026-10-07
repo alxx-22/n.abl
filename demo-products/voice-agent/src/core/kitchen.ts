@@ -11,11 +11,11 @@
 // untouched; the zone and free-delivery helpers return the delivery-wide
 // fee for a profile with neither.
 
-import type { Ordering } from '../domain/types.ts';
+import type { Order, Ordering } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { lineTotal } from '../domain/menu.ts';
 import { addDays, closeMinutes, dayName, normaliseTime, spokenTime, toLocal, weekdayOf, zonedToUtc } from '../domain/time.ts';
-import { postcodeOf, str } from './tool-kit.ts';
+import { postcodeOf, record, str } from './tool-kit.ts';
 import type { Args, ToolContext } from './tools.ts';
 
 type Kind = 'collection' | 'delivery';
@@ -229,4 +229,68 @@ export async function waitTimes(args: Args, ctx: ToolContext): Promise<Record<st
   if (today) out.last_orders = at(new Date(today.close.getTime() - (o.kitchen?.last_orders_minutes ?? 0) * 60000), tz);
   out.note = "These are the kitchen's real times right now. Say them as they are; never promise sooner.";
   return out;
+}
+
+// ── Where's my order? ─────────────────────────────────────────────────────
+
+/** An order's status in words, with its time: what a caller hears. */
+export function orderStatusWords(ctx: ToolContext, o: Order): string {
+  const tz = ctx.tenant.profile.timezone;
+  const now = ctx.now().getTime();
+  const due = o.due_at.getTime();
+  const late = Math.round((now - due) / 300000) * 5;
+  const lateWords = late >= 10 ? `, running about ${late} minutes late` : '';
+  const delivery = o.fulfilment === 'delivery';
+  switch (o.status) {
+    case 'out_for_delivery': {
+      const left = o.out_at ? `since ${at(o.out_at, tz)}` : '';
+      const mins = Math.round((due - now) / 60000);
+      return `out with ${o.driver ?? 'our driver'}${left ? ` ${left}` : ''}; ${mins > 3 ? `it should be with them in about ${Math.max(5, Math.round(mins / 5) * 5)} minutes` : 'it should be with them any minute'}`;
+    }
+    case 'ready':
+      return delivery ? `ready, and waiting for a driver; due with them around ${at(o.due_at, tz)}${lateWords}` : `ready to collect now`;
+    case 'completed':
+      return delivery ? 'delivered' : 'collected';
+    case 'cancelled':
+      return 'cancelled';
+    default:
+      return `${o.status === 'in_kitchen' ? 'being made in the kitchen' : 'in the queue for the kitchen'}; ${delivery ? 'due with them' : 'ready to collect'} around ${at(o.due_at, tz)}${lateWords}`;
+  }
+}
+
+/** find_order: today's order, by its number or the number the caller rings from. Never its address. */
+export async function findOrder(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  const tz = ctx.tenant.profile.timezone;
+  // Today's orders are the ones due today: every takeaway order is for the day it is taken.
+  const date = toLocal(ctx.now(), tz).date;
+  const today = zonedToUtc(date, '00:00', tz);
+  const tomorrow = zonedToUtc(addDays(date, 1), '00:00', tz);
+  const isToday = (o: Order) => o.due_at.getTime() >= today.getTime() && o.due_at.getTime() < tomorrow.getTime();
+  const number = str(args.order_number)?.replace(/[^0-9]/g, '');
+  let order: Order | null = null;
+  let by: 'number' | 'phone' = 'number';
+  if (number) {
+    const o = await ctx.repo.getOrder(ctx.tenant.id, number);
+    order = o && isToday(o) ? o : null;
+    if (!order) return { found: false, message: `No order ${number.split('').join(' ')} today. Check the number with them, or look it up by the number they ordered from.` };
+  } else {
+    if (!ctx.callerPhone) return { found: false, message: 'Ask for the order number.' };
+    by = 'phone';
+    order = (await ctx.repo.ordersForPhone(ctx.tenant.id, ctx.callerPhone, today, tomorrow)).find((o) => o.status !== 'cancelled') ?? null;
+    if (!order) return { found: false, message: "No order today from the number they're ringing on. Ask for the order number." };
+  }
+  record(ctx, order.reference, 'order', 'found');
+  return {
+    found: true,
+    order_number: order.reference,
+    spoken_order_number: order.reference.split('').join(' '),
+    kind: order.fulfilment,
+    status: orderStatusWords(ctx, order),
+    items: order.lines.map((l) => `${l.quantity} ${l.name}`).join(', '),
+    total: pounds(order.total_pence),
+    paid: order.payment_status === 'paid',
+    never: by === 'phone'
+      ? "Found by the number they're ringing from: never read the address or the name back. If they need to check it, ask them to say it."
+      : 'Never read the address back. If they need to check it, ask them to say it.',
+  };
 }

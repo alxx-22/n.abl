@@ -604,6 +604,13 @@ export interface Order {
   status: string;
   payment_status: 'unpaid' | 'paid';
   created_at: Date;
+  /** When the kitchen must have it ready: the due time, less the drive for a delivery. */
+  ready_at?: Date | null;
+  /** Out for delivery: since when, and with whom (a first name). */
+  out_at?: Date | null;
+  driver?: string | null;
+  /** What the driver needs to know: "change from £20". */
+  pay_note?: string | null;
 }
 
 export function pounds(pence: number): string {

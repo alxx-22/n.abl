@@ -23,7 +23,7 @@ import { knownTimes, rangesIn } from '../domain/clock-times.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
-import { feeFor, kitchenFulfilment, waitTimes } from './kitchen.ts';
+import { feeFor, findOrder, kitchenFulfilment, waitTimes } from './kitchen.ts';
 import { DECLINED, dealAllergenAnswer, dealExtra, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
@@ -1070,6 +1070,16 @@ const TOOLS: Record<string, Tool> = {
       parameters: obj({ postcode: S('Delivery postcode, or just its first half, if they gave one') }),
     },
     handler: waitTimes,
+  },
+
+  find_order: {
+    when: (t) => capabilities(t.profile).ordering && Boolean(t.profile.ordering?.kitchen),
+    decl: {
+      name: 'find_order',
+      description: "Where today's order is: in the kitchen, ready, out with the driver and since when, delivered. By its order number, or with none the number they're ringing from. Never for a new order.",
+      parameters: obj({ order_number: S('The order number, if they have it') }),
+    },
+    handler: findOrder,
   },
 
   review_order: {

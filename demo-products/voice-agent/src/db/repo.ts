@@ -296,13 +296,19 @@ function mapOrder(r: any): Order {
     status: r.status,
     payment_status: r.payment_status,
     created_at: new Date(r.created_at),
+    // The kitchen's own time, and who took it out and when: what "where's my order?" reads (core/kitchen.ts).
+    ready_at: r.ready_at ? new Date(r.ready_at) : null,
+    out_at: r.out_at ? new Date(r.out_at) : null,
+    driver: r.driver ?? null,
+    pay_note: r.pay_note ?? null,
   };
 }
 
 /**
  * When the kitchen must have an order ready: when it is due for a
  * collection, and the delivery minutes before that for a delivery, which
- * spends them on the road. Written with every order; nothing reads it yet.
+ * spends them on the road. Written with every order; a takeaway's kitchen
+ * counts its slots by it (core/kitchen.ts).
  */
 export function readyAt(profile: TenantProfile, fulfilment: 'collection' | 'delivery', due: Date): Date {
   const road = fulfilment === 'delivery' ? profile.ordering?.delivery?.extra_minutes ?? 0 : 0;
@@ -708,6 +714,25 @@ export class Repo {
       reference.replace(/[^0-9]/g, ''),
     ]);
     return rows[0] ? mapOrder(rows[0]) : null;
+  }
+
+  /** A delivery out with a driver, since `at`. Only one not yet out, collected or cancelled goes; null otherwise. */
+  async sendOutOrder(tenantId: string, reference: string, driver: string, at: Date): Promise<Order | null> {
+    const rows = await this.db.query<any>(
+      `update public.voice_orders set status = 'out_for_delivery', driver = $3, out_at = $4
+       where tenant_id = $1 and reference = $2 and fulfilment = 'delivery' and status in ('confirmed', 'in_kitchen', 'ready') returning *`,
+      [tenantId, reference, driver, at],
+    );
+    return rows[0] ? mapOrder(rows[0]) : null;
+  }
+
+  /** A caller's orders due in [from, to), latest first: "where's my order?" from the number they ring on. */
+  async ordersForPhone(tenantId: string, phone: string, from: Date, to: Date): Promise<Order[]> {
+    const rows = await this.db.query<any>(
+      'select * from public.voice_orders where tenant_id = $1 and phone = $2 and due_at >= $3 and due_at < $4 order by due_at desc, created_at desc limit 5',
+      [tenantId, phone, from, to],
+    );
+    return rows.map(mapOrder);
   }
 
   async listOrders(tenantId: string, since: Date): Promise<Order[]> {
