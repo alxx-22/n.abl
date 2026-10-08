@@ -1115,9 +1115,12 @@ test('an engineer off sick: no new visits, their jobs flagged to move, and a cal
   const found = await c.run('job', { action: 'find', reference: j.reference });
   assert.match(found.jobs[0].status, /is off sick then, so it needs a new time/);
   assert.ok(found.jobs[0].new_time.windows.length, JSON.stringify(found.jobs[0]));
+  // Our change costs them nothing more: no evening "£30 extra" (live, 8 October).
+  assert.ok(found.jobs[0].new_time.windows.every((x: { say: string }) => !/extra/.test(x.say)), JSON.stringify(found.jobs[0].new_time));
   const w = found.jobs[0].new_time.windows[0];
   const moved = await c.run('job', { action: 'move', reference: j.reference, date: w.date, window: w.window });
   assert.equal(moved.moved ?? moved.booked ?? moved.done, true, JSON.stringify(moved));
+  assert.doesNotMatch(moved.when, /extra/);
   assert.notEqual((await repo.listJobs(t.id, { reference: j.reference }))[0].engineer_key, who);
   // Back again.
   const back = await officeAction(repo, t, r.office, { action: 'back', engineer: who }, NOW);

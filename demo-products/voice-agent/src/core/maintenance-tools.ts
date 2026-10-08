@@ -55,8 +55,8 @@ function dayWords(date: string, today: string): string {
 }
 
 /** "Thursday 8 October, in the morning window, 8am to 12 noon". */
-export function windowWords(w: MtWindow, date: string, today: string): string {
-  return `${dayWords(date, today)}, ${inSentence(w.label).replace(/^(?=[a-z])/, 'the ')} window, ${spokenTime(w.from)} to ${spokenTime(w.to)}${w.premium_pence ? ` (${money(w.premium_pence)} extra)` : ''}`;
+export function windowWords(w: MtWindow, date: string, today: string, premium = true): string {
+  return `${dayWords(date, today)}, ${inSentence(w.label).replace(/^(?=[a-z])/, 'the ')} window, ${spokenTime(w.from)} to ${spokenTime(w.to)}${premium && w.premium_pence ? ` (${money(w.premium_pence)} extra)` : ''}`;
 }
 
 const WINDOW_WORDS: Record<string, RegExp> = { am: /\b(?:am|morning)\b/i, pm: /\b(?:pm|afternoon)\b/i, evening: /\bevening\b/i, all_day: /\ball day\b/i };
@@ -1029,7 +1029,9 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
       const l = local(ctx);
       const instead = off
         ? freeWindows(m, await ctx.repo.listJobs(ctx.tenant.id), { trade: j.trade, gas: j.flags.includes('gas'), district: p?.district, from: l.date, now: l, exclude: j.reference })
-          .map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date) }))
+          // Our engineer can't come, so a later or evening window costs them nothing more (live, 8 October: an evening
+          // window was offered as "(£30 extra)" and taken, the extra never said).
+          .map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date, false) }))
         : [];
       return {
         ...jobWords(ctx, j, p), ...(q ? { quote: `${q.reference}, ${money(q.amount_pence)}${incVat(mt(ctx))}` } : {}),
@@ -1067,15 +1069,18 @@ async function moveJob(args: Args, ctx: ToolContext): Promise<Record<string, unk
     return { moved: false, message: 'Offer these windows, then call again with the one they choose.', windows: free.map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date) })) };
   }
   const e = c.engineers.find((x) => x.key === j.engineer_key) ?? c.engineers[0];
-  const moved = await ctx.repo.updateJob(ctx.tenant.id, j.reference, { visit_date: date!, window_key: w!.key, engineer_key: e.key, status: 'scheduled' }, `moved to ${windowWords(w!, date!, l.date)}`, { by: 'receptionist', from: ['new', 'scheduled'] });
+  // Moved because its engineer is off: no extra for the window, as the offer said.
+  const ours = Boolean(j.engineer_key && j.visit_date && absentOn(m, j.engineer_key, j.visit_date));
+  const when = windowWords(w!, date!, l.date, !ours);
+  const moved = await ctx.repo.updateJob(ctx.tenant.id, j.reference, { visit_date: date!, window_key: w!.key, engineer_key: e.key, status: 'scheduled' }, `moved to ${when}`, { by: 'receptionist', from: ['new', 'scheduled'] });
   if (!moved) return { moved: false, message: 'It changed while we were talking: take a message for the office.' };
   record(ctx, moved.reference, 'change', 'committed');
   const to = j.reporter.phone ?? ctx.callerPhone;
   await smsTo(ctx, to, bookedText(ctx, moved, j.client_key === null).replace(' booked for ', ' moved to '));
   const client = j.client_key ? m.clients.find((c2) => c2.key === j.client_key) : undefined;
-  if (client?.contact.phone && client.notice === 'every_job') await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: job ${j.reference} moved to ${windowWords(w!, date!, l.date)}. (Demo)`);
-  ctx.action({ kind: 'job_changed', title: `Job moved · ${j.reference}`, detail: `${windowWords(w!, date!, l.date)} · ${e.first_name}`, data: { reference: j.reference } });
-  return { moved: true, reference: j.reference, when: windowWords(w!, date!, l.date), engineer: e.first_name };
+  if (client?.contact.phone && client.notice === 'every_job') await smsTo(ctx, client.contact.phone, `${ctx.tenant.profile.name}: job ${j.reference} moved to ${when}. (Demo)`);
+  ctx.action({ kind: 'job_changed', title: `Job moved · ${j.reference}`, detail: `${when} · ${e.first_name}`, data: { reference: j.reference } });
+  return { moved: true, reference: j.reference, when, engineer: e.first_name, ...(ours && w!.premium_pence ? { no_extra: 'No extra charge for this window: the change is ours.' } : {}) };
 }
 
 async function cancelJob(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
