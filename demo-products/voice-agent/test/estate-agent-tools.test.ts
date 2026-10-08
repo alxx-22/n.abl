@@ -332,6 +332,19 @@ test('a viewing on a home withdrawn or sold is never moved to a new day: the cal
   assert.equal((await repo.getBookingByReference(t.id, String(b.reference)))!.starts_at.toISOString().slice(0, 10), SAT, 'still on its day, never moved');
 });
 
+test('get_property: unknown broadband or mobile signal names Ofcom\'s checker, as unknown flooding names the flood service', async () => {
+  const t = await agency('ea-ofcom', (p) => {
+    const l = p.listings!.find((x) => x.key === 'albion_22')!;
+    for (const k of ['broadband', 'mobile', 'flooded'] as const) l.checks[k] = { v: 'unknown', says: '' } as any;
+  });
+  const { run } = await call(t);
+  const r = await run('get_property', { property: '22 Albion Road' });
+  const asked = r.if_asked as Record<string, string>;
+  assert.match(asked['broadband speed'], /Ofcom's broadband and mobile checker can tell you more/);
+  assert.match(asked['mobile signal'], /Ofcom's broadband and mobile checker can tell you more/);
+  assert.match(asked.flooding, /can tell you more/);
+});
+
 test('status first: off the market offers two others, a sale agreed is said before any times, coming soon gives its first day', async () => {
   const t = await agency('ea-status');
   const { run, ctx, say } = await call(t);

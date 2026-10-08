@@ -16,7 +16,7 @@ import { ASK_NAME, B, I, S, bool, int, obj, postcodeOf, realName, record, smsTo,
 import { newBookingReference, spokenReference } from '../db/repo.ts';
 import { candidateTimes, checkAvailability, checkSlot, durationFor, findService, type AvailabilityResult, type SlotRequest } from '../domain/availability.ts';
 import {
-  STATUS_WORDS, UNSAYABLE, addWorkingDays, clause, districtsIn, facts, findListings, firstViewingDate, homeKind, initialLive, insideRule, describeLine, matches,
+  CHECKS, STATUS_WORDS, UNSAYABLE, addWorkingDays, clause, districtsIn, facts, findListings, firstViewingDate, homeKind, initialLive, insideRule, describeLine, matches,
   offerReceivedText, poundsWhole, priceWords, requirementsIn, requirementsWords, sayFirst, shortAddress, similar, positionBadges, unsaid, viewingRules, viewingText,
   type ListingLive, type Requirements,
 } from '../domain/listings.ts';
@@ -961,10 +961,11 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
     ? 'coming soon'
     : live.back_on_market_at ? `back on the market since ${dayMonth(toLocal(live.back_on_market_at, tz).date)}`
     : marketed === day ? 'new to the market today' : `since ${dayMonth(marketed)}`;
-  const official = Object.fromEntries(
+  // Keyed by the words the unknown fact is said in ("broadband speed"), as if_asked looks them up (review, 8 October).
+  const official: Record<string, string> = Object.fromEntries(
     ([['flooded', 'flooding'], ['broadband', 'broadband'], ['mobile', 'mobile']] as const)
       .filter(([k]) => l.checks[k].v === 'unknown' && e?.official)
-      .map(([, w]) => [w, e!.official![w]]),
+      .map(([k, w]) => [CHECKS[k].unknown, e!.official![w]]),
   );
   if (!l.local_tax.trim() && e?.official) official.local_tax = e.official.local_tax;
   const negotiator = firstNameOf(ctx.tenant, l.negotiator);
