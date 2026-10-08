@@ -928,7 +928,12 @@ async function walkTakeaway({ shot }: Walk) {
   await shot(page, 'builder-money');
   await next('Policies and questions');
   await page.getByLabel('Food hygiene rating').selectOption({ label: '4' });
+  // Alcohol, off by default: switched on, with the sample drinks and the last sale.
+  await page.getByLabel('We sell alcohol with food orders').check();
+  await page.waitForSelector('text=Last alcohol sale');
   await saved();
+  await page.getByLabel('Last alcohol sale').scrollIntoViewIfNeeded();
+  await shot(page, 'builder-policies-alcohol');
   await next('Review and start');
   await shot(page, 'builder-review');
 
@@ -948,6 +953,7 @@ async function walkTakeaway({ shot }: Walk) {
   kept('cash only', await page.locator('label:has-text("Cash only") input').isChecked());
   await next('Policies and questions');
   kept('the hygiene rating', (await page.getByLabel('Food hygiene rating').inputValue()) === '4');
+  kept('alcohol switched on', await page.getByLabel('We sell alcohol with food orders').isChecked());
   await next('Review and start');
   await page.click('button:has-text("Start my demo")');
 
@@ -993,6 +999,8 @@ async function walkTakeaway({ shot }: Walk) {
   await page.click('label:has-text("Delivery is paused tonight") input');
   await page.waitForSelector('.toast:has-text("Delivery paused")', { timeout: 10000 });
   await page.waitForSelector('.tonight .chip.out');
+  // With alcohol switched on in the setup, its drinks are on the menu too.
+  if (!(await page.locator('.tonight-section[aria-label="Beer and wine"]').count())) throw new Error('the alcohol is not on the menu');
   await shot(page, 'workspace-menu-tonight');
   await calm();
   await page.click('label:has-text("Nothing: business as usual") input');

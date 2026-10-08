@@ -482,6 +482,36 @@ evals `tk-missing-item` and `tk-anaphylaxis`.
 **M3. The rest**: alcohol and the nation pack, energy drinks, other callers,
 "my usual", relay and language.
 
+*Built on 8 October*, and where it differs from the plan:
+
+- Delivery to someone else (an M1 use case, built here): `confirm_order`
+  takes `recipient_name` and `recipient_phone`; migration
+  `voice_0012_order_recipient` adds `recipient` to `voice_orders`. The
+  ticket and Drivers show "For Margaret Shah · 07700 900820"; the text goes
+  to the caller; "where's my order?" from the recipient's number finds it.
+  "For my mum" in the caller's words makes the read-back ask for both
+  names and her number.
+- Alcohol: `alcohol: { on, until, items }` holds the owner's own short
+  list (a sample four-pack and wine) rather than a mark on the shared
+  menu, so the restaurant's menu answer never changes. Compiled as a
+  "Beer and wine" section whose items carry `age: 18`. Not to a caller
+  who's said they're under 18, not after `until`; in Scotland only 10am to
+  10pm, and no delivery midnight to 6am; the ID check said; `check_id` on
+  the order and Check ID on the ticket and Drivers.
+- The nation is a new answer, `nation`; Wales and Northern Ireland change
+  the hygiene rating answer.
+- "My usual": `find_order` action `last_order` (the last order before
+  today from the calling number, never its address, lines to add again at
+  tonight's prices). The seeded history has Leah Grant's collection last
+  week.
+- Other callers: a "driver" hears no customer details; suppliers, the
+  council, sales calls and lost property have knowledge answers.
+- Relay UK is the shared call engine's (the repairs milestone built it);
+  a relay caller's order is marked `relay` and the ticket says so.
+- Not built: energy drinks (the April 2027 ban is still subject to
+  Parliament, and the sample menu sells none), calories (a chain-size
+  duty Firebird doesn't have), "texts only" for the takeaway.
+
 ---
 
 ## Decisions for Alex

@@ -114,13 +114,25 @@ waiting after Start. Migrations `voice_0009_takeaway` and
 the waiting request and Menu tonight; screenshots in
 `eval-results/demo-ui/takeaway/`, sent to Alex on 8 October.
 
-**Next for the takeaway: M3** (spec §12): alcohol and the nation pack
-(Scotland's hours, Wales's hygiene rating), energy drinks as a dated
-switch, other callers (drivers, suppliers, the council, applicants,
-sales), "my usual", relay and language. Also not built yet: delivery to
-someone else (a `recipient` on the order). The repairs demo's clock
-(`DemoClock.tsx`, the cloud session's) is repairs-only; turning it on for
-the takeaway would let a prospect try Saturday's last orders.
+**M3 is built** too (8 October; the spec's §12 says what, and where it
+differs): delivery to someone else (`recipient`, migration
+`voice_0012_order_recipient`, applied and recorded); alcohol for an owner
+who switches it on (off by default; adults only, the ID check, Check ID on
+the ticket, Scotland's 10am to 10pm), with the shop's `nation`; "my usual"
+(`find_order` action `last_order`, Leah Grant in Call as); drivers and
+other callers; a Relay UK caller's order marked. Seven more test calls:
+`tk-for-someone-else`, `tk-alcohol` and `tk-under-18` (on
+`tk-firebird-licensed`), `tk-my-usual`, `tk-driver-asks`. Not built:
+energy drinks (a ban still subject to Parliament; no energy drinks on the
+sample menu), calories, "texts only".
+
+**Next for the takeaway**: re-run all its calls together
+(`--max-seconds 360`: the someone-else call is long); then the walk with
+the M3 screens (the alcohol step, Check ID, "For Margaret") and
+screenshots to Alex. The repairs demo's clock (`DemoClock.tsx`, the cloud
+session's) is repairs-only; turning it on for the takeaway would let a
+prospect try Saturday's last orders. After the takeaway, the next preset
+in Alex's order is the barber.
 
 ### Working on Windows
 
