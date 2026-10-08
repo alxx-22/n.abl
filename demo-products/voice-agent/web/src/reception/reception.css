@@ -85,20 +85,21 @@ h3.sub { margin-top: 12px; font-size: 1rem; }
 .save-state.saved { color: var(--ok); }
 .save-state.error { color: var(--danger); }
 .builder { display: grid; grid-template-columns: 210px minmax(0, 1fr) 300px; gap: var(--gap); align-items: start; }
-.steps { position: sticky; top: 16px; }
+/* The steps and the preview stay in view under the top bar; Back and Next stay at the bottom of the window. */
+.steps { position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow-y: auto; }
 .steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .steps button { width: 100%; justify-content: flex-start; text-align: left; background: transparent; border-color: transparent; color: var(--muted); box-shadow: none; }
 .steps button:not(:disabled):hover { color: var(--heading); background: rgba(var(--cream-rgb), 0.04); border-color: transparent; box-shadow: none; }
 .steps button[aria-current='step'] { background: var(--surface-2); border-color: var(--line); color: var(--heading); }
 .steps .n { width: 24px; height: 24px; border-radius: var(--r-sm); display: inline-grid; place-items: center; font: 500 11px/1 var(--font-mono); border: 1px solid var(--line-strong); flex: none; color: var(--dim); }
 .steps button[aria-current='step'] .n { background: var(--accent); color: var(--ink); border-color: var(--accent); box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.35); }
-.step { padding: 24px 26px; }
+.step.panel { padding: 24px 26px; }
 .step > header h1 { font-size: 1.6rem; letter-spacing: var(--track-tight); }
 .issues { list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 6px; }
 .issues li { font-size: 13px; padding: 6px 10px; border-radius: 8px; background: var(--surface-2); border-left: 3px solid var(--warn); }
 .issues li.error { border-color: var(--danger); background: var(--error-ground); }
-.step-nav { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line); }
-.preview { position: sticky; top: 16px; display: grid; gap: 8px; }
+.step-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; bottom: 0; z-index: 2; margin: 24px -26px -24px; padding: 12px 26px; border-top: 1px solid var(--line); background: var(--surface-1); border-radius: 0 0 var(--radius) var(--radius); box-shadow: 0 -10px 18px -14px rgba(var(--bg-rgb), 0.9); }
+.preview { position: sticky; top: 84px; display: grid; gap: 8px; max-height: calc(100vh - 100px); overflow-y: auto; }
 /* The floor plan needs the room more than the spoken preview does. */
 .builder.wide-step { grid-template-columns: 210px minmax(0, 1fr); }
 .builder.wide-step .preview { display: none; }
@@ -518,7 +519,7 @@ svg.house .door { fill: var(--accent); }
   .ws-side { display: grid; gap: var(--gap); grid-column: 1; grid-row: 1; align-content: start; }
   .ws-call, .workspace .phone-col { grid-column: auto; grid-row: auto; }
   .builder { grid-template-columns: 190px minmax(0, 1fr); }
-  .preview { grid-column: 2; position: static; }
+  .preview { grid-column: 2; position: static; max-height: none; }
 }
 @media (max-width: 980px) {
   .rx-door { grid-template-columns: 1fr; min-height: 0; padding-top: 40px; }
@@ -531,7 +532,7 @@ svg.house .door { fill: var(--accent); }
   .office-body { grid-template-columns: 1fr; }
   .drawer { width: auto; border-width: 1px 0 0; max-height: none; }
   .builder { grid-template-columns: 1fr; }
-  .steps { position: static; }
+  .steps { position: static; max-height: none; }
   .steps ol { display: flex; overflow-x: auto; gap: 4px; }
   .steps button { white-space: nowrap; }
   .preview { grid-column: 1; }
@@ -540,6 +541,12 @@ svg.house .door { fill: var(--accent); }
 }
 @media (max-width: 640px) {
   .rx-main { padding: 16px; }
+  /* On a phone the top bar scrolls away and stays small: a quarter of the screen was going on it. */
+  .rx-top { position: static; gap: 8px; padding: 10px 16px; }
+  .rx-top > .muted.small { display: none; }
+  .rx-top button, .rx-top .button { padding: 6px 10px; font-size: 13px; }
+  .step.panel { padding: 18px 16px; }
+  .step-nav { margin: 18px -16px -18px; padding: 10px 16px; }
   .two, .four { grid-template-columns: 1fr 1fr; }
   .day-row { grid-template-columns: 1fr; }
   .service { grid-template-columns: 1fr 1fr; }
