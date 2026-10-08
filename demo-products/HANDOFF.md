@@ -25,6 +25,22 @@ files (`src/core/tools.ts`, `guardrails.ts`, `call.ts`, `src/db/repo.ts`)
 take small, separate edits; neither session changes the other's preset.
 Migrations take the next free number when they're written.
 
+### A third session (8 October, evening): colours, layout, review fixes
+
+Alex asked a third session to review the restaurant, estate agent and
+repairs work, make the demo easy to get around with little scrolling, and
+carry a website's colours through the demo. Done so far: the website's
+three colours now drive every page (`web/src/reception/brand.ts`, light
+pages for a light site; `cfdd5f0`), the workspace fits the window with
+each column scrolling on its own (`a543053`), the builder keeps Back and
+Next in view (`f566de2`), a `Folds` list in `builder/fields.tsx` for long
+steps (`8f95fb1`), and four repairs safety fixes (`c3d9d7e`). Next it
+compacts the long builder steps and back-office lists (repairs clients,
+engineers and properties; estate hours, team, Applicants and Properties)
+and works through a review's findings. It rebases before every push and
+keeps edits to shared files small; if you are changing the same screens,
+say so here.
+
 ### Property maintenance M3 (the cloud session): built (8 October)
 
 M3 is done, and with it the repairs preset as the spec plans it
