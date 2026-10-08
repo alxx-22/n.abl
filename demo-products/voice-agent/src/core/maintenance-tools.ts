@@ -614,8 +614,12 @@ async function propertyFor(args: Args, ctx: ToolContext): Promise<MtProperty | {
   }
   const insurer = insurerCalling(ctx);
   if (!m.customers.homeowners && !insurer) return { reply: { done: false, message: 'We only work for landlords and agents: take a message.' } };
-  const holder = insurer ? policyholderOf(args.policyholder) : null;
-  if (insurer && !holder) return { reply: { done: false, message: "Ask for the policyholder's name and phone number, so we can arrange access with them, then call again with policyholder." } };
+  // The policyholder as given, or the name and phone passed in its place (live, 8 October: an insurer was asked for them
+  // three times, gave them each time, and the job was never raised).
+  const given = normaliseUkPhone(str(args.phone));
+  const holder = !insurer ? null : policyholderOf(args.policyholder)
+    ?? (realName(args.name) && given && given !== ctx.callerPhone ? { name: realName(args.name)!, phone: given } : null);
+  if (insurer && !holder) return { reply: { done: false, message: "Ask for the policyholder's name and phone number, so we can arrange access with them, then call again with policyholder (\"name, phone\")." } };
   const [, number = '', street = address] = /^\s*((?:flat\s*\w+,?\s*)?\d+\w?)?\s*,?\s*(.*)$/i.exec(address) ?? [];
   const phone = holder?.phone ?? normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const p: MtProperty = {
@@ -886,9 +890,11 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   }
   // A business: how it affects trading, when they're open and how to get in, and their order number, asked once before booking.
   const siteGate = `site:${p.key}`;
-  if (client?.kind === 'commercial' && !str(args.access) && !ctx.state.gateAsked.includes(siteGate)) {
+  // A missing order number asks too, whatever access says (live, 8 October: "the occupant lets the engineer in", copied
+  // from the property's notes, booked a café's job with none of this asked).
+  const po = client?.po_required && !str(args.po);
+  if (client?.kind === 'commercial' && (!str(args.access) || po) && !ctx.state.gateAsked.includes(siteGate)) {
     ctx.state.gateAsked.push(siteGate);
-    const po = client.po_required && !str(args.po);
     return {
       booked: false, ...clientNotes,
       message: `Not booked yet. Ask how it's affecting trading, their opening hours and any out-of-hours access, and who to ask for on site${po ? ', and their purchase order number' : ''}. Then call again with access${po ? ' and po' : ''}.`,

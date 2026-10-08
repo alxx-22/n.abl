@@ -1444,7 +1444,9 @@ const TOOLS: Record<string, Tool> = {
         return { ok: false, message: 'You promised to pass a message on, and none has been taken: nobody would get back to them. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then tell them it has been passed on, say goodbye and use end_call.' };
       }
       // An estate agency's call on 3 October ended "booked" after book_valuation had said "not done": nothing was in the diary.
-      if (ctx.state.estate && /book/i.test(str(args.outcome) ?? '') && ctx.state.committed.length === 0 && !ctx.state.bookedChecked) {
+      // So did a repairs call on 8 October, with a made-up reference; there, being added to a job already open counts.
+      const nothing = ctx.state.committed.length === 0 && (ctx.state.estate || (ctx.state.maintenance && ctx.state.found.length === 0));
+      if (nothing && /book/i.test(str(args.outcome) ?? '') && !ctx.state.bookedChecked) {
         ctx.state.bookedChecked = true;
         return { ok: false, message: "Nothing has been booked in this call: no booking tool returned a reference. If they want it, call the tool now with what they've told you and give them the reference; if not, tell them it isn't booked. Then end_call." };
       }

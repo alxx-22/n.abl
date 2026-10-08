@@ -960,6 +960,13 @@ test('an insurer\'s claim: the claim number and the policyholder first; the insu
   const job = { action: 'create', description: 'Escape of water: trace and access under the bathroom', address: '4 Holly Close', postcode: 'NG5 2BT', name: 'Claims desk' };
   const noHolder = await desk.run('job', job);
   assert.match(noHolder.message, /policyholder's name and phone/);
+  // Live, 8 October: the model passed the policyholder as name and phone, three times, and the job was never raised.
+  const asNamed = await (await call(t, '+447700900409')).run('job', { ...job, claim: '77-23019', name: 'David Shaw', phone: '07700 900590', address: '6 Holly Close' });
+  assert.ok(asNamed.windows?.length, JSON.stringify(asNamed));
+  // And a repairs call that ends "booked" with nothing booked is stopped once.
+  const empty = await call(t, '+447700900409');
+  assert.equal((await empty.run('end_call', { outcome: 'booked' })).ok, false);
+  assert.equal((await empty.run('end_call', { outcome: 'booked' })).ok, true, 'never twice');
   const windows = await desk.run('job', { ...job, policyholder: 'David Shaw, 07700 900590' });
   assert.ok(windows.windows?.length, JSON.stringify(windows));
   const first = windows.windows[0];
@@ -1000,7 +1007,8 @@ test('a business: the contract sets the priority; trading, access and the order 
   assert.match(tri.reason, /The Copper Kettle's contract: at least urgent/);
   assert.equal(tri.price, undefined);
   const job = { action: 'create', description: 'Kitchen sink draining slowly', name: 'Sian Morris' };
-  const ask = await sian.run('job', job);
+  // Live, 8 October: access filled from the property's notes skipped all of this, and no order number was taken.
+  const ask = await sian.run('job', { ...job, access: 'the occupant lets the engineer in' });
   assert.match(ask.message, /affecting trading.*opening hours.*purchase order number/);
   assert.match(ask.client_notes, /open 8 to 4/);
   const windows = await sian.run('job', { ...job, access: 'Before 8, Sian opens up', po: 'CK-1182' });
