@@ -121,8 +121,10 @@ export function compilePrompt(p: TenantProfile, ctx: PromptContext): string {
   } else if (p.maintenance) {
     can.push('give safety advice in an emergency', 'find a property and book an engineer into a visit window', 'say where a job is', 'book gas safety records, boiler services and EICRs', 'find an invoice and take payment, with the demo card only');
   } else if (caps.booking) {
-    const labels = p.booking!.services.map((s) => s.label).join(', ');
-    can.push(`book, move and cancel: ${labels}`);
+    const all = p.booking!.services.map((s) => s.label);
+    const labels = all.join(', ');
+    // A long price list (a barber's thirty services) in short: check_availability knows every one.
+    can.push(labels.length <= 300 ? `book, move and cancel: ${labels}` : `book, move and cancel any of our ${all.length} services (${all.slice(0, 3).join(', ')} and more: check_availability knows them all)`);
   }
   if (caps.ordering && !p.estate) can.push(`take orders for ${p.ordering!.delivery ? 'collection or delivery' : 'collection'}`);
   if (kitchen) can.push("say how long collection and delivery take right now, and where today's order is");

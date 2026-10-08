@@ -33,6 +33,7 @@ import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf,
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
+import { depositOnCancel, noticeFirst } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -768,6 +769,9 @@ const TOOLS: Record<string, Tool> = {
     tailor: (d, t) => tableParams(d, t, 'change'),
     async handler(args, ctx) {
       const ref = str(args.reference) ?? '';
+      // A barber's deposit, moving a booking inside the notice: said before it happens (core/barber-tools.ts).
+      const first = str(args.date) || str(args.time) ? await noticeFirst(ctx, ref, 'move') : null;
+      if (first) return first;
       const area = resolveArea(ctx.tenant, str(args.area));
       if (area.enquiry || area.walkIn || area.unknown) return { changed: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
       const phone = str(args.phone) ? normaliseUkPhone(str(args.phone)) : undefined;
@@ -811,13 +815,17 @@ const TOOLS: Record<string, Tool> = {
       parameters: obj({ reference: S('Booking reference') }, ['reference']),
     },
     async handler(args, ctx) {
+      // A barber's deposit, inside the notice: said before it happens (core/barber-tools.ts).
+      const first = await noticeFirst(ctx, str(args.reference) ?? '', 'cancel');
+      if (first) return first;
       const b = await ctx.repo.cancelBooking(ctx.tenant.id, str(args.reference) ?? '');
       if (!b) return { cancelled: false, message: 'No confirmed booking with that reference.' };
+      const deposit = depositOnCancel(ctx, b);
       record(ctx, b.reference, 'cancellation', 'committed');
       const s = bookingSummary(ctx.tenant, b);
       ctx.action({ kind: 'booking_cancelled', title: 'Booking cancelled', detail: `${s.spoken_date}, ${s.spoken_time} · ${b.name} · ref ${b.reference}` });
-      await smsTo(ctx, b.phone, ctx.tenant.profile.estate ? estateText(ctx.tenant, b, 'cancelled') : `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled. To book again, just call us. (Demo)`);
-      return { cancelled: true, ...s, policy: ctx.tenant.profile.policies?.cancellation };
+      await smsTo(ctx, b.phone, ctx.tenant.profile.estate ? estateText(ctx.tenant, b, 'cancelled') : `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled.${deposit ? ` ${deposit}` : ''} To book again, just call us. (Demo)`);
+      return { cancelled: true, ...s, policy: ctx.tenant.profile.policies?.cancellation, ...(deposit ? { deposit } : {}) };
     },
   },
 

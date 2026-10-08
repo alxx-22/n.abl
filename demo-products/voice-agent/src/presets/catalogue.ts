@@ -48,7 +48,7 @@ export const PRESETS: PresetInfo[] = [
     noun: 'pub', business_type: 'pub', example: 'https://www.your-pub.co.uk',
   },
   {
-    key: 'barber', label: 'Barber', blurb: 'Books cuts with any barber or a named one, and handles the walk-in question.', status: 'soon',
+    key: 'barber', label: 'Barber', blurb: 'Books cuts with any barber or a named one, and handles the walk-in question.', status: 'live',
     covers: ['Barbers and chairs', 'Cuts, times and prices', 'Deposits and no-shows'],
     noun: 'barber shop', business_type: 'barber', example: 'https://www.your-barbers.co.uk',
   },

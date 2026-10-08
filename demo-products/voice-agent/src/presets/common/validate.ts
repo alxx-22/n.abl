@@ -4,7 +4,7 @@
 import { closeMinutes, minutesOf } from '../../domain/time.ts';
 import type { BaseAnswers, Issue } from './types.ts';
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function validateBase(a: BaseAnswers, noun: string): Issue<'basics' | 'hours'>[] {
   const out: Issue<'basics' | 'hours'>[] = [];

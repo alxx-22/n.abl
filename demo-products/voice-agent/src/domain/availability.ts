@@ -191,7 +191,8 @@ export function suitableResources(
     list.sort((a, b) => liked(b) - liked(a) || (a.capacity ?? 0) - (b.capacity ?? 0) || (a.combines ? 1 : 0) - (b.combines ? 1 : 0));
   } else if (staff && !/^any/i.test(staff.trim())) {
     const s = staff.trim().toLowerCase();
-    const named = list.filter((r) => r.key.toLowerCase() === s || r.label.toLowerCase().startsWith(s));
+    // By key, name or a nickname a barber is known by ("Marc" for Marcus).
+    const named = list.filter((r) => r.key.toLowerCase() === s || r.label.toLowerCase().startsWith(s) || (r.aliases ?? []).some((a) => a.toLowerCase() === s));
     if (!named.length) return 'unknown_staff';
     list = named;
   }
@@ -218,8 +219,12 @@ export function checkSlot(req: SlotRequest, service: BookableService, time: stri
     if (home) return null;
   }
   const order = req.keep ? [...res.filter((r) => r.key === req.keep), ...res.filter((r) => r.key !== req.keep)] : res;
+  const weekday = weekdayOf(req.date);
   for (const r of order) {
     if (rule?.exclude_staff.includes(r.key)) continue;
+    // A barber's own hours that day: the booking starts and finishes inside them.
+    const own = r.hours?.find((h) => h.day === weekday);
+    if (own && (minutesOf(time) < minutesOf(own.open) || minutesOf(time) + minutes > closeMinutes(own.close))) continue;
     if (isFree(r.key, starts, ends, service.buffer_minutes ?? 0, req.existing, resources, req.excludeBookingId)) {
       return { time, resource_key: r.key, starts_at: starts, ends_at: ends };
     }

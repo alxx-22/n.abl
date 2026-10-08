@@ -136,7 +136,7 @@ test('demo: the right key opens a session, forgiving case and spaces', async () 
 test('demo: pick the restaurant, build it, press Start', async () => {
   const presets = await sam.call('GET', '/demo/api/presets');
   assert.equal(presets.data.presets.find((p: any) => p.key === 'restaurant').status, 'live');
-  assert.equal((await sam.call('POST', '/demo/api/workspaces', { preset: 'barber' })).status, 400, 'not built yet');
+  assert.equal((await sam.call('POST', '/demo/api/workspaces', { preset: 'salon' })).status, 400, 'not built yet');
 
   const made = await sam.call('POST', '/demo/api/workspaces', { preset: 'restaurant', website: 'https://sams-kitchen.example' });
   assert.equal(made.status, 201, JSON.stringify(made.data));

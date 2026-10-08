@@ -75,6 +75,10 @@ export interface Resource {
   days?: number[];
   /** A member of staff: the back office's diary has a row each (estate agent only). */
   kind?: 'staff';
+  /** What callers call them ("Marc" for Marcus): a barber's. */
+  aliases?: string[];
+  /** Their own hours on some weekdays, inside which a booking must start and finish: a barber's. */
+  hours?: { day: number; open: string; close: string }[];
 }
 
 export interface TableLayout {
@@ -290,6 +294,27 @@ export interface TenantProfile {
    * booking, so no table or appointment tool is ever offered for a job.
    */
   maintenance?: MaintenanceSettings;
+  /**
+   * A barber's settings (presets/barber.md §4.1). Only the barber's compile
+   * writes it; without it a booking call runs as it always has.
+   */
+  barber?: BarberSettings;
+}
+
+export interface BarberSettings {
+  /** Free to cancel or move with this much notice; later, the deposit is kept. */
+  notice_hours: number;
+  /** False: a caller who'd rather pay in the shop keeps the booking. */
+  deposit_required: boolean;
+  /** This late and the booking still stands. */
+  late_grace_minutes: number;
+  /** More people than this in one call is a message for the owner. */
+  group_max: number;
+  walk_ins: boolean;
+  /** The kids' price age; null: none. */
+  kids_under: number | null;
+  under_16_with_adult: boolean;
+  skin_test: 'every_time' | 'six_months';
 }
 
 // ── Estate agency ─────────────────────────────────────────────────────────
