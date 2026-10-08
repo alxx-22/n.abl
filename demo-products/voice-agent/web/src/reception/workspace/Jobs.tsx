@@ -3,11 +3,14 @@
 // waiting, with the fortnight's done and invoiced jobs below, each finished
 // one ready to invoice. Cards are coloured by priority and carry the triage
 // reason and their badges; a job made on a call flashes as it lands. Staff
-// move a job on from its card.
+// move a job on from its card. The back office is a panel about 770px wide
+// on a laptop, so a card is a few short lines: where, what and when, who,
+// its badges and its next step; its address opens the rest.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { LiveJob, LiveState } from '../types.ts';
-import { PRIORITY, etaLeft, jobAct, jobBadges, jobWhen, money } from './maintenance.ts';
+import { PRIORITY, cardWhen, etaLeft, jobAct, jobBadges, money, splitAddress, tradeWord } from './maintenance.ts';
+import './repairs-office.css';
 
 const COLUMNS: { label: string; has: (j: LiveJob) => boolean }[] = [
   { label: 'New', has: (j) => j.status === 'new' || j.status === 'awaiting_approval' },
@@ -23,6 +26,11 @@ const BOARD_DAYS = 3;
 
 export function Jobs({ id, state, nowMs, flash, onDone }: { id: string; state: LiveState; nowMs: number; flash: Set<string>; onDone: () => void }) {
   const [showDone, setShowDone] = useState(false);
+  const doneToggle = useRef<HTMLButtonElement>(null);
+  // The board fills the panel, so the list opens below it: scroll the panel to the list's top.
+  useEffect(() => {
+    if (showDone) doneToggle.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, [showDone]);
   const jobs = state.jobs ?? [];
   if (!jobs.length) return <p className="empty">No jobs yet. The receptionist raises them on the phone.</p>;
   const done = jobs.filter((j) => j.status === 'done' || j.status === 'invoiced').sort((a, b) => (b.done_at ?? '').localeCompare(a.done_at ?? ''));
@@ -56,11 +64,11 @@ export function Jobs({ id, state, nowMs, flash, onDone }: { id: string; state: L
           );
         })}
       </div>
-      <button type="button" className="linkish small" onClick={() => setShowDone(!showDone)} aria-expanded={showDone}>
+      <button type="button" ref={doneToggle} className="linkish small" onClick={() => setShowDone(!showDone)} aria-expanded={showDone}>
         {showDone ? 'Hide' : 'Show'} done and invoiced ({done.length}, {done.filter((j) => j.status === 'done').length} to invoice)
       </button>
       {showDone ? (
-        <ul className="done-jobs">
+        <ul className="rp-done" aria-label="Done and invoiced">
           {done.map((j) => <DoneJob key={j.reference} id={id} j={j} invoice={(state.invoices ?? []).find((i) => i.job_ref === j.reference)?.reference} onDone={onDone} />)}
         </ul>
       ) : null}
@@ -76,13 +84,19 @@ function DoneJob({ id, j, invoice, onDone }: { id: string; j: LiveJob; invoice?:
     await jobAct(id, j.reference, { action: 'invoice' }, onDone);
     setBusy(false);
   };
+  const { street, postcode } = splitAddress(j.address);
+  const what = j.notes ?? j.description;
   return (
     <li>
-      <b>{j.address ?? j.reference}</b> · {j.trade_label} · {j.engineer ?? 'nobody'} · <span className="muted">{j.notes ?? j.description}</span>
-      {j.flags.includes('recall') ? <span className="badge warn">Recall</span> : null}
-      {j.status === 'invoiced' ? <span className="badge ok">Invoiced{invoice ? ` · ${invoice}` : ''}</span> : (
-        <button type="button" className="small" disabled={busy} onClick={bill}>Invoice</button>
-      )}
+      <span className="rp-done-where" title={j.address ?? undefined}><b>{street || j.reference}</b>{postcode ? <span className="muted"> {postcode}</span> : null}</span>
+      <span className="rp-done-who muted">{tradeWord(j.trade_label)} · {j.engineer ?? 'nobody'}</span>
+      <span className="rp-done-what" title={what}>{what}</span>
+      <span className="rp-done-end">
+        {j.flags.includes('recall') ? <span className="badge warn">Recall</span> : null}
+        {j.status === 'invoiced' ? <span className="badge ok">Invoiced{invoice ? ` · ${invoice}` : ''}</span> : (
+          <button type="button" className="small" disabled={busy} onClick={bill} aria-label={`Invoice ${j.address ?? j.reference}`}>Invoice</button>
+        )}
+      </span>
     </li>
   );
 }
@@ -100,54 +114,64 @@ function JobCard({ id, j, state, nowMs, fresh, onDone }: { id: string; j: LiveJo
   };
   const eta = etaLeft(j, nowMs);
   const p = PRIORITY[j.priority];
+  const badges = jobBadges(j);
+  const { street, postcode } = splitAddress(j.address);
+  // Who has it and what it waits on: two lines at most, in full in its tooltip and once the card is open.
+  const who = [
+    j.engineer,
+    eta !== null ? `about ${eta} min away` : null,
+    j.status === 'awaiting_approval' ? `Awaiting approval${j.price_pence ? `: ${money(j.price_pence)}` : ''}` : null,
+    j.waiting_for ? `Waiting for ${j.waiting_for}` : null,
+  ].filter(Boolean).join(' · ');
+  // The next steps. Closed, a card shows only what moves the job on, so one waiting on nothing has no row of buttons.
+  const paged = j.status === 'new' && j.flags.includes('paged') && j.engineer;
+  const acts = [
+    paged ? <button key="accept" type="button" className="small primary" disabled={busy} onClick={() => act({ action: 'accept' })}>{j.engineer} accepts</button> : null,
+    paged ? <button key="decline" type="button" className="small" disabled={busy} onClick={() => act({ action: 'decline' })}>Declines</button> : null,
+    paged ? <button key="no_answer" type="button" className="small" disabled={busy} onClick={() => act({ action: 'no_answer' })} title={`What happens by itself after ${state.maintenance?.escalate_minutes ?? 15} minutes`}>No answer</button> : null,
+    j.status === 'scheduled' && (j.date === state.today || !j.date) ? <button key="on_the_way" type="button" className="small primary" disabled={busy || !j.engineer} onClick={() => act({ action: 'on_the_way', eta_minutes: 20 })}>On the way</button> : null,
+    j.status === 'on_the_way' ? <button key="on_site" type="button" className="small primary" disabled={busy} onClick={() => act({ action: 'on_site' })}>On site</button> : null,
+    j.status === 'on_site' || j.status === 'on_the_way' ? (
+      <button key="done" type="button" className="small" disabled={busy} onClick={() => { const notes = prompt('What was done?'); if (notes) void act({ action: 'done', notes }); }}>Done</button>
+    ) : null,
+    open && ['scheduled', 'on_site', 'new'].includes(j.status) ? (
+      <button key="waiting" type="button" className="small" disabled={busy} onClick={() => { const r = prompt('Waiting for parts, access or a quote?', 'parts'); if (r) void act({ action: 'waiting', reason: r.trim().toLowerCase(), note: '' }); }}>Waiting</button>
+    ) : null,
+    open && ['new', 'scheduled', 'waiting'].includes(j.status) && j.priority !== 'emergency' ? (
+      <button key="move" type="button" className="small" disabled={busy} onClick={() => setMoving(!moving)} aria-expanded={moving}>Move</button>
+    ) : null,
+    open && ['new', 'scheduled', 'waiting', 'awaiting_approval'].includes(j.status) ? (
+      <button key="cancel" type="button" className="small" disabled={busy} onClick={() => { if (confirm(`Cancel ${j.reference} and text ${j.reporter.name ?? 'the caller'}?`)) void act({ action: 'cancel' }); }}>Cancel</button>
+    ) : null,
+  ].filter(Boolean);
   return (
-    <article className={`ticket job ${j.priority} ${fresh ? 'new' : ''}`} aria-label={`${p.label} job ${j.reference}`}>
-      <b>{j.address ?? 'A new customer'}</b>
-      <span className="small">
-        {j.trade_label.split(/[,;]| and /)[0]} · {jobWhen(j, tz)}{j.engineer ? ` · ${j.engineer}` : ''}{eta !== null ? ` · about ${eta} min away` : ''}
-      </span>
-      {j.status === 'awaiting_approval' ? <span className="small">Awaiting approval{j.price_pence ? `: £${(j.price_pence / 100).toLocaleString('en-GB')}` : ''}</span> : null}
-      {j.waiting_for ? <span className="small">Waiting for {j.waiting_for}</span> : null}
+    <article className={`ticket job ${j.priority} ${fresh ? 'new' : ''} ${open ? 'open' : ''}`} aria-label={`${p.label} job ${j.reference}`}>
+      {/* The address opens the card: no row of its own for a More button. */}
+      <header>
+        <button type="button" className="jc-where" aria-expanded={open} onClick={() => setOpen(!open)} title={j.address ?? undefined}>
+          <b>{street || 'A new customer'}</b>{postcode ? <span className="jc-pc">{postcode}</span> : null}
+        </button>
+      </header>
+      <span className="jc-what">{tradeWord(j.trade_label)} · {cardWhen(j, state.today, tz)}</span>
+      {who ? <span className="jc-who" title={who}>{who}</span> : null}
       {/* Routine is the card's plain colour; only urgent and emergency need saying. */}
-      {j.priority !== 'routine' || jobBadges(j).length ? (
+      {j.priority !== 'routine' || badges.length ? (
         <div className="badges">
           {j.priority !== 'routine' ? <span className={`badge ${p.badge}`}>{p.label}</span> : null}
-          {jobBadges(j).map((b) => <span key={b.label} className={`badge ${b.level}`}>{b.label}</span>)}
+          {badges.map((b) => <span key={b.label} className={`badge ${b.level}`}>{b.label}</span>)}
         </div>
       ) : null}
       {open ? (
-        <>
+        <div className="jc-more">
+          {j.address ? <span>{j.address}</span> : null}
           <span>{j.trade_label}: {j.description}</span>
-          {j.reason ? <span className="small muted">{j.reason}</span> : null}
-          {j.clocks.map((c) => <span key={c.kind} className="small muted">{c.label}</span>)}
-          {j.client ? <span className="small muted">For {j.client}</span> : null}
-          <span className="small muted">Ref {j.reference}{j.reporter.name ? ` · reported by ${j.reporter.name}` : ''}</span>
-        </>
+          {j.reason ? <span className="muted">{j.reason}</span> : null}
+          {j.clocks.map((c) => <span key={c.kind} className="muted">{c.label}</span>)}
+          {j.client ? <span className="muted">For {j.client}</span> : null}
+          <span className="muted">Ref {j.reference}{j.reporter.name ? ` · reported by ${j.reporter.name}` : ''}</span>
+        </div>
       ) : null}
-      <div className="row-tools">
-        {j.status === 'new' && j.flags.includes('paged') && j.engineer ? (
-          <>
-            <button type="button" className="small primary" disabled={busy} onClick={() => act({ action: 'accept' })}>{j.engineer} accepts</button>
-            <button type="button" className="small" disabled={busy} onClick={() => act({ action: 'decline' })}>Declines</button>
-            <button type="button" className="small" disabled={busy} onClick={() => act({ action: 'no_answer' })} title={`What happens by itself after ${state.maintenance?.escalate_minutes ?? 15} minutes`}>No answer</button>
-          </>
-        ) : null}
-        {j.status === 'scheduled' && (j.date === state.today || !j.date) ? <button type="button" className="small primary" disabled={busy || !j.engineer} onClick={() => act({ action: 'on_the_way', eta_minutes: 20 })}>On the way</button> : null}
-        {j.status === 'on_the_way' ? <button type="button" className="small primary" disabled={busy} onClick={() => act({ action: 'on_site' })}>On site</button> : null}
-        {j.status === 'on_site' || j.status === 'on_the_way' ? (
-          <button type="button" className="small" disabled={busy} onClick={() => { const notes = prompt('What was done?'); if (notes) void act({ action: 'done', notes }); }}>Done</button>
-        ) : null}
-        {open && ['scheduled', 'on_site', 'new'].includes(j.status) ? (
-          <button type="button" className="small" disabled={busy} onClick={() => { const r = prompt('Waiting for parts, access or a quote?', 'parts'); if (r) void act({ action: 'waiting', reason: r.trim().toLowerCase(), note: '' }); }}>Waiting</button>
-        ) : null}
-        {open && ['new', 'scheduled', 'waiting'].includes(j.status) && j.priority !== 'emergency' ? (
-          <button type="button" className="small" disabled={busy} onClick={() => setMoving(!moving)} aria-expanded={moving}>Move</button>
-        ) : null}
-        {open && ['new', 'scheduled', 'waiting', 'awaiting_approval'].includes(j.status) ? (
-          <button type="button" className="small" disabled={busy} onClick={() => { if (confirm(`Cancel ${j.reference} and text ${j.reporter.name ?? 'the caller'}?`)) void act({ action: 'cancel' }); }}>Cancel</button>
-        ) : null}
-        <button type="button" className="small linkish" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Less' : 'More'}</button>
-      </div>
+      {acts.length ? <div className="row-tools jc-acts">{acts}</div> : null}
       {moving ? <MoveForm j={j} state={state} busy={busy} onMove={(b) => act({ action: 'assign', ...b }).then(() => setMoving(false))} /> : null}
     </article>
   );
@@ -197,12 +221,14 @@ function Kpis({ k }: { k: NonNullable<LiveState['kpis']> }) {
     { label: 'Unpaid bills', value: money(k.unpaid.pence), note: `${k.unpaid.count} bills, ${k.unpaid.overdue} overdue`, level: k.unpaid.overdue ? 'warn' : undefined },
   ];
   return (
-    <ul className="kpis" aria-label="This week at a glance">
+    <ul className="rp-kpis" aria-label="This week at a glance">
       {tiles.map((t) => (
         <li key={t.label} className={t.level ?? ''}>
-          <span className="kpi-label">{t.label}</span>
-          <b className="kpi-value">{t.value}</b>
-          {t.note ? <span className="kpi-note">{t.note}</span> : null}
+          <span className="rp-kpi-label">{t.label}</span>
+          <span className="rp-kpi-line">
+            <b className="rp-kpi-value">{t.value}</b>
+            {t.note ? <span className="rp-kpi-note">{t.note}</span> : null}
+          </span>
         </li>
       ))}
     </ul>

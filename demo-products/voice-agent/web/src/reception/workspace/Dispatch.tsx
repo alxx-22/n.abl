@@ -55,7 +55,7 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
       {windows.length ? (
         <table className="dispatch-grid">
           <thead>
-            <tr><th scope="col">Engineer</th>{windows.map((w) => <th key={w.key} scope="col">{w.label}<span className="muted small"> {w.from}–{w.to}</span></th>)}</tr>
+            <tr><th scope="col" className="dp-eng">Engineer</th>{windows.map((w) => <th key={w.key} scope="col">{w.label}<span className="muted small"> {w.from}–{w.to}</span></th>)}</tr>
           </thead>
           <tbody>
             {engineers.map((e) => {
@@ -65,21 +65,24 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
               return (
                 <tr key={e.key} className={off ? 'off' : ''}>
                   <th scope="row">
-                    {e.first_name}
-                    <span className="muted small"> {e.gas_safe ? 'Gas Safe · ' : ''}{e.trades.map((t) => m?.trades.find((x) => x.key === t)?.label.split(/[,;]| and /)[0] ?? `${t[0].toUpperCase()}${t.slice(1).replace(/_/g, ' ')} (off)`).join(', ')}</span>
-                    <span className="row-tools small">
-                      {e.off ? (
-                        <>
-                          <span className="badge warn">{e.off.reason === 'sick' ? 'Off sick' : 'On holiday'}</span>
-                          <button type="button" className="linkish" onClick={() => void officeAct(id, { action: 'back', engineer: e.key }, onDone)}>Back</button>
-                        </>
-                      ) : (
-                        <>
-                          <button type="button" className="linkish" onClick={() => void officeAct(id, { action: 'absent', engineer: e.key, reason: 'sick', days: 1 }, onDone)}>Off sick today</button>
-                          <button type="button" className="linkish" onClick={() => void officeAct(id, { action: 'absent', engineer: e.key, reason: 'holiday', days: 7 }, onDone)}>Holiday, a week</button>
-                        </>
-                      )}
-                    </span>
+                    {/* Name and the absence buttons on one line, the trades on the next: eight engineers fit the panel. */}
+                    <div className="dp-who">
+                      <b>{e.first_name}</b>
+                      <span className="row-tools dp-off">
+                        {e.off ? (
+                          <>
+                            <span className="badge warn">{e.off.reason === 'sick' ? 'Off sick' : 'On holiday'}</span>
+                            <button type="button" className="linkish" aria-label={`${e.first_name} is back`} onClick={() => void officeAct(id, { action: 'back', engineer: e.key }, onDone)}>Back</button>
+                          </>
+                        ) : (
+                          <>
+                            <button type="button" className="linkish" onClick={() => void officeAct(id, { action: 'absent', engineer: e.key, reason: 'sick', days: 1 }, onDone)}>Off sick today</button>
+                            <button type="button" className="linkish" onClick={() => void officeAct(id, { action: 'absent', engineer: e.key, reason: 'holiday', days: 7 }, onDone)}>Holiday, a week</button>
+                          </>
+                        )}
+                      </span>
+                      <span className="dp-trades muted">{e.gas_safe ? 'Gas Safe · ' : ''}{e.trades.map((t) => m?.trades.find((x) => x.key === t)?.label.split(/[,;]| and /)[0] ?? `${t[0].toUpperCase()}${t.slice(1).replace(/_/g, ' ')} (off)`).join(', ')}</span>
+                    </div>
                   </th>
                   {windows.map((w) => {
                     const cell = `${e.key}|${w.key}`;

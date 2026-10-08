@@ -6,7 +6,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { displayUkPhone, normaliseUkPhone } from '../../../../src/domain/phone.ts';
 import { demoApi } from '../../api.ts';
 import type { LiveClient, LiveEngineer, LiveJob, LiveQuote } from '../types.ts';
-import { jobAct } from './maintenance.ts';
+import { jobAct, shortPlace } from './maintenance.ts';
 
 /** A seeded person the prospect can ring as (an estate agency's Call as). */
 export interface CallAs {
@@ -94,7 +94,7 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = 
 
   return (
     <section className="phone-col" aria-label="The customer's phone">
-      <div className="phone">
+      <div className={`phone ${(engineer || client) && crew ? 'with-sheet' : ''}`}>
         <div className="phone-bar"><span>{nowLabel}</span><span className="notch" /><span>●●● 5G</span></div>
         <div className="phone-head">
           <span className="avatar" aria-hidden="true">{sender.slice(0, 1)}</span>
@@ -230,9 +230,9 @@ function JobSheet({ id, engineer, name, crew }: { id: string; engineer: string; 
       <b className="small">{heading} ({today.length})</b>
       {today.length ? today.map((j) => (
         <div key={j.reference} className="sheet-job">
-          <span className="small"><b>{j.window?.split(',')[0] ?? 'Emergency'}</b> · {j.address}</span>
-          <span className="small muted">{j.trade_label}: {j.description}{j.pets ? ` · ${j.pets}` : ''}</span>
-          <div className="row-tools">
+          <span className="small sj-where" title={j.address ?? undefined}><b>{j.window?.split(',')[0] ?? 'Emergency'}</b> · {shortPlace(j.address)}</span>
+          <span className="small muted sj-what" title={`${j.trade_label}: ${j.description}${j.pets ? ` · ${j.pets}` : ''}`}>{j.trade_label}: {j.description}{j.pets ? ` · ${j.pets}` : ''}</span>
+          <div className="row-tools sj-acts">
             {j.status === 'scheduled' && j.date === crew.today ? <button type="button" className="small primary" disabled={busy} onClick={() => act(j.reference, { action: 'on_the_way', eta_minutes: 20 })}>On my way</button> : null}
             {j.status === 'on_the_way' ? <button type="button" className="small primary" disabled={busy} onClick={() => act(j.reference, { action: 'on_site' })}>On site</button> : null}
             {j.status === 'on_site' ? <button type="button" className="small" disabled={busy} onClick={() => { const notes = prompt('What was done?'); if (notes) void act(j.reference, { action: 'done', notes }); }}>Done</button> : null}

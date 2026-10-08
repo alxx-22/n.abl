@@ -818,7 +818,8 @@ async function walkMaintenance({ shot }: Walk) {
   if (await today.count()) {
     await today.locator('button:has-text("On the way")').click();
     await page.waitForSelector('.toast:has-text("on the way")', { timeout: 10000 });
-    await today.locator('button:has-text("More")').click();
+    // A card opens from its address.
+    await page.locator('.k-col[aria-label="Out now"] .ticket.job .jc-where').first().click();
     await shot(page, 'workspace-jobs-on-the-way');
   }
 
@@ -843,15 +844,19 @@ async function walkMaintenance({ shot }: Walk) {
   }
   await shot(page, 'workspace-dispatch');
 
-  // Properties and compliance: a home opened, an overdue gas record booked from its row.
+  // Properties and compliance: a home opened in the panel, its overdue gas record booked there.
   await page.click('.tabs [role=tab]:has-text("Properties and compliance")');
-  await page.waitForSelector('.register');
+  await page.waitForSelector('.rp-props .rp-list');
   await shot(page, 'workspace-compliance');
-  const overdue = page.locator('.register li', { has: page.locator('.badge.bad', { hasText: 'Gas safety: overdue' }) }).first();
-  await overdue.locator('.register-row').click();
-  await overdue.locator('.certs tr', { hasText: 'Gas safety' }).locator('button:has-text("Book")').click();
+  const overdue = page.locator('.rp-props .rp-list li', { has: page.locator('.badge.bad', { hasText: 'Gas safety: overdue' }) }).first();
+  await overdue.locator('.rp-row').click();
+  await page.locator('dialog.rp-sheet .certs tr', { hasText: 'Gas safety' }).locator('button:has-text("Book")').click();
   await page.waitForSelector('.toast:has-text("gas safety record booked")', { timeout: 10000 });
+  await page.waitForSelector('dialog.rp-sheet .rp-said:has-text("gas safety record booked")');
   await shot(page, 'workspace-compliance-booked');
+  // The panel is modal: Escape closes it.
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('dialog.rp-sheet', { state: 'detached' });
 
   // The safety log: last week's gas call, the advice given and its follow-up.
   await page.click('.tabs [role=tab]:has-text("Safety log")');
@@ -861,20 +866,25 @@ async function walkMaintenance({ shot }: Walk) {
 
   // Clients: what waits on each, and the housing association that Fernhill acts for.
   await page.click('.tabs [role=tab]:has-text("Clients")');
-  await page.waitForSelector('.register');
-  const meadowbank = page.locator('.register li', { hasText: 'Meadowbank Housing' });
-  await meadowbank.locator('.register-row').click();
-  await page.waitForSelector('.register-detail:has-text("Approves")');
+  await page.waitForSelector('.rp-clients .rp-list');
   await calm();
   await shot(page, 'workspace-clients');
+  const meadowbank = page.locator('.rp-clients .rp-list li', { hasText: 'Meadowbank Housing' });
+  await meadowbank.locator('.rp-row').click();
+  await page.waitForSelector('dialog.rp-sheet:has-text("Approves")');
+  await shot(page, 'workspace-clients-open');
+  await page.locator('dialog.rp-sheet button[aria-label="Close"]').click();
+  await page.waitForSelector('dialog.rp-sheet', { state: 'detached' });
 
-  // Quotes and invoices: an overdue bill reminded by text, and one marked paid by bank transfer.
+  // Quotes and invoices: an overdue bill opened, reminded by text, and one marked paid by bank transfer.
   await page.click('.tabs [role=tab]:has-text("Quotes and invoices")');
-  await page.waitForSelector('.certs');
-  if (!(await page.locator('.compliance').textContent())!.includes('Q-2291')) throw new Error('Q-2291 is not on the quotes');
+  await page.waitForSelector('.rp-money');
+  if (!(await page.locator('.rp-money').textContent())!.includes('Q-2291')) throw new Error('Q-2291 is not on the quotes');
+  const late = page.locator('.rp-with-acts li', { has: page.locator('.badge.bad', { hasText: 'Overdue' }) }).first();
+  await late.locator('.rp-ref').click();
+  await page.waitForSelector('.rp-with-acts .rp-fold:has-text("Payer")');
   await calm();
   await shot(page, 'workspace-money');
-  const late = page.locator('.certs tr', { has: page.locator('.badge.bad', { hasText: 'Overdue' }) }).first();
   await late.locator('button:has-text("Remind")').click();
   await page.waitForSelector('.toast:has-text("Reminder sent")', { timeout: 10000 });
   await late.locator('button:has-text("Paid by bank")').click();
@@ -896,7 +906,7 @@ async function walkMaintenance({ shot }: Walk) {
   await page.waitForSelector('.jobs-board');
   const clocked = page.locator('.ticket.job', { has: page.locator('.badge', { hasText: /^Due / }) }).first();
   if (await clocked.count()) {
-    await clocked.locator('button:has-text("More")').click();
+    await clocked.locator('.jc-where').click();
     // A full-page shot of a scrolled page draws the sticky header halfway down.
     await page.evaluate(() => window.scrollTo(0, 0));
     await calm();

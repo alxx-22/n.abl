@@ -63,17 +63,60 @@ export function jobBadges(j: LiveJob): { label: string; level: string }[] {
 
 export const hhmm = (iso: string, timeZone: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone });
 
+/** "morning" from "Saturday morning, 8am to 12pm": the date already names the day. "AM" keeps its capitals. */
+function windowWord(window: string): string {
+  const w = window.split(',')[0].replace(/^(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\s+/i, '');
+  return /^.[A-Z]/.test(w) ? w : w.charAt(0).toLowerCase() + w.slice(1);
+}
+
 /** "Thu 8 Oct, morning", or "attend by 01:00", or "not booked yet". */
 export function jobWhen(j: LiveJob, timeZone: string): string {
   if (j.attend_by && !j.window_key) return `attend by ${hhmm(j.attend_by, timeZone)}`;
   if (j.date && j.window) {
     const d = new Date(`${j.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-    // "Sat 10 Oct, morning", not "Sat 10 Oct, saturday morning": the date already names the day. "AM" keeps its capitals.
-    const w = j.window.split(',')[0].replace(/^(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\s+/i, '');
-    return `${d}, ${/^.[A-Z]/.test(w) ? w : w.charAt(0).toLowerCase() + w.slice(1)}`;
+    return `${d}, ${windowWord(j.window)}`;
   }
   return 'not booked yet';
 }
+
+/**
+ * The same, short enough to sit beside the trade on a narrow card: "Today,
+ * morning", "Fri, morning" this week, and the full date further off.
+ */
+export function cardWhen(j: LiveJob, today: string, timeZone: string): string {
+  if (j.attend_by && !j.window_key) return `attend by ${hhmm(j.attend_by, timeZone)}`;
+  if (j.date && j.window) {
+    const ahead = Math.round((Date.parse(`${j.date}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000);
+    const d = new Date(`${j.date}T12:00:00Z`);
+    const day = ahead === 0 ? 'Today'
+      : ahead > 0 && ahead < 7 ? d.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })
+      : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+    return `${day}, ${windowWord(j.window)}`;
+  }
+  return 'not booked';
+}
+
+/**
+ * "Flat 3, 22 Tansy Lane" and "NG2", from "Flat 3, 22 Tansy Lane (example),
+ * NG2": a row or a card gives the street one line that can shorten, and
+ * keeps the postcode district in view. The full address is in its tooltip.
+ */
+export function splitAddress(address: string | null): { street: string; postcode: string } {
+  if (!address) return { street: '', postcode: '' };
+  const at = address.lastIndexOf(', ');
+  const tail = at > 0 ? address.slice(at + 2) : '';
+  const postcode = /^[A-Z]{1,2}\d[A-Z\d]?(?: \d[A-Z]{2})?$/i.test(tail) ? tail : '';
+  return { street: (postcode ? address.slice(0, at) : address).replace(' (example)', ''), postcode };
+}
+
+/** "Flat 3, 22 Tansy Lane, NG2": an address for a line that is short of room. */
+export const shortPlace = (address: string | null) => {
+  const { street, postcode } = splitAddress(address);
+  return [street, postcode].filter(Boolean).join(', ');
+};
+
+/** The first trade of a label such as "Gas, boilers and heating": what fits on a card. */
+export const tradeWord = (label: string) => label.split(/[,;]| and /)[0];
 
 /** Minutes left on the way: the ETA counted down from when they set off. */
 export function etaLeft(j: LiveJob, nowMs: number): number | null {
