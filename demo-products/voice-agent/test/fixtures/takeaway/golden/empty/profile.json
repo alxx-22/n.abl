@@ -89,6 +89,26 @@
    "q": "Do you sell alcohol?",
    "a": "We don't sell alcohol.",
    "tags": ["alcohol","beer","lager","wine","cider","drink","id","age"]
+  },
+  {
+   "q": "I'm a supplier, the landlord or from the card-machine company",
+   "a": "Take a message for the manager: their name, company, number and what it's about. Give no account details.",
+   "tags": ["supplier","invoice","landlord","card machine","account","delivery of stock"]
+  },
+  {
+   "q": "I'm from the council: environmental health, licensing or trading standards",
+   "a": "Take an urgent message for the manager with the officer's name, council, reason and number. Make no commitments for the shop.",
+   "tags": ["council","environmental health","licensing","trading standards","inspector","officer"]
+  },
+  {
+   "q": "I'm calling about advertising, energy or a delivery app account",
+   "a": "Say no thank you, politely: the shop doesn't take sales calls by phone. Then end the call.",
+   "tags": ["sales","advertising","energy","broker","marketing","business rates"]
+  },
+  {
+   "q": "I left something in the shop, or I want to say thank you",
+   "a": "Take a message for the shop. For a compliment, thank them and say you'll pass it on.",
+   "tags": ["lost","left","property","compliment","thank","great"]
   }
  ],
  "menu": {
