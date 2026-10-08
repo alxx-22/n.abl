@@ -54,6 +54,11 @@ export interface WorkspaceSpec {
   suggestions: string[];
   /** What Reset makes again: "bookings and orders". */
   resetLine: string;
+  /**
+   * The demo's own clock (the Time button): set for a business whose calls change with the hour, once every time it
+   * stamps comes from the demo's clock rather than the real one.
+   */
+  clock?: boolean;
 }
 
 /**

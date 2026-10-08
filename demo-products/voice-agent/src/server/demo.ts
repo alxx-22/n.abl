@@ -345,7 +345,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     const answers = answersOf(preset, await readJson(req, 1_500_000));
     const { workspace: saved, profile } = await rebuild(ctx, w, preset, answers);
     // A running estate demo: homes added, removed, or repriced in the builder reach the back office and the calls.
-    if (w.started_at && profile.listings) await repo.syncListings(t.id, profile, new Date());
+    if (w.started_at && profile.listings) await repo.syncListings(t.id, profile, tenantNow(t));
     if (now - (lastSaveLogged.get(t.id) ?? 0) > 10 * 60000) {
       lastSaveLogged.set(t.id, now);
       void usage('config_saved');
@@ -543,7 +543,8 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
       const category = String(b.category ?? '');
       if (!FEEDBACK.includes(category)) throw new HttpError(400, 'Unknown feedback.');
       const words = String(b.words ?? '').trim().slice(0, 300);
-      await repo.mergeBookingDetails(t.id, ref, { feedback: { category, words, source: 'staff', at: new Date().toISOString() }, awaiting_feedback: false }, `feedback: ${category.replace(/_/g, ' ')}`);
+      const at = tenantNow(t);
+      await repo.mergeBookingDetails(t.id, ref, { feedback: { category, words, source: 'staff', at: at.toISOString() }, awaiting_feedback: false }, `feedback: ${category.replace(/_/g, ' ')}`, 'staff', at);
       message = 'Feedback saved.';
     } else if (b.action === 'outcome') {
       // A valuation won, being thought about (with a day to follow up) or lost (and to whom): the Valuations view's columns.
@@ -551,9 +552,9 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
       if (booking.status !== 'confirmed') throw new HttpError(409, 'That valuation was cancelled.');
       const outcome = String(b.outcome ?? '');
       if (!['instructed', 'thinking', 'lost'].includes(outcome)) throw new HttpError(400, 'Unknown outcome.');
-      const followUp = outcome === 'thinking' ? (isIsoDate(String(b.follow_up ?? '')) ? String(b.follow_up) : addDays(toLocal(new Date(), t.profile.timezone).date, 14)) : null;
+      const followUp = outcome === 'thinking' ? (isIsoDate(String(b.follow_up ?? '')) ? String(b.follow_up) : addDays(toLocal(tenantNow(t), t.profile.timezone).date, 14)) : null;
       const lostTo = outcome === 'lost' ? String(b.lost_to ?? '').trim().slice(0, 80) || null : null;
-      await repo.mergeBookingDetails(t.id, ref, { outcome, follow_up: followUp, lost_to: lostTo }, `valuation outcome: ${outcome}`);
+      await repo.mergeBookingDetails(t.id, ref, { outcome, follow_up: followUp, lost_to: lostTo }, `valuation outcome: ${outcome}`, 'staff', tenantNow(t));
       message = outcome === 'instructed' ? 'Instructed: well done.' : outcome === 'thinking' ? `Thinking: follow up on ${followUp}.` : `Lost${lostTo ? ` to ${lostTo}` : ''}.`;
     } else if (b.action === 'cancel') {
       const c = await repo.cancelBooking(t.id, ref, 'staff');
@@ -735,6 +736,8 @@ const isoDay = (v: unknown) => {
  */
 async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<string> {
   const { repo } = ctx;
+  // The demo's own time, when its clock is set: what staff do happens then.
+  const now = tenantNow(t);
   if (!t.profile.listings) throw new HttpError(400, 'This business takes no offers.');
   const offer = (await repo.findOffer(t.id, { reference: ref }))[0];
   if (!offer) throw new HttpError(404, 'No such offer.');
@@ -751,14 +754,14 @@ async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
   const text = (body: string) => textCustomer(ctx, t.id, offer.phone, `${name}: ${body} (Demo)`);
   /** Moves the offer on only from an open status, in one statement: a second click finds it decided. */
   const decide = async (status: OfferStatus, from: OfferStatus[] = OPEN) => {
-    if (!(await repo.setOfferStatus(t.id, offer.reference, status, { note, from }))) {
+    if (!(await repo.setOfferStatus(t.id, offer.reference, status, { note, from, at: now }))) {
       throw new HttpError(409, status === 'sent' ? 'That offer has already gone to the seller.' : 'That offer has already been decided.');
     }
   };
   switch (b.action) {
     case 'sent': {
       await decide('sent', ['received']);
-      await text(`${yours[0].toUpperCase()}${yours.slice(1)} was put to the seller at ${spokenTime(toLocal(new Date(), t.profile.timezone).time)} today. We'll let you know their answer.`);
+      await text(`${yours[0].toUpperCase()}${yours.slice(1)} was put to the seller at ${spokenTime(toLocal(now, t.profile.timezone).time)} today. We'll let you know their answer.`);
       return 'Sent to the seller; the buyer has been told.';
     }
     case 'accept': {
@@ -770,11 +773,11 @@ async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
         throw new HttpError(409, `${where} already has a sale agreed. If it has fallen through, put the home back on the market first.`);
       }
       await decide('accepted');
-      await repo.setListing(t.id, home.key, { status: 'sale_agreed', marketing_continues: b.viewings_continue !== false }, 'staff', `sale agreed: offer ${offer.reference} accepted`);
+      await repo.setListing(t.id, home.key, { status: 'sale_agreed', marketing_continues: b.viewings_continue !== false }, 'staff', `sale agreed: offer ${offer.reference} accepted`, now);
       await repo.createSale(t.id, {
         listing_key: home.key, offer_ref: offer.reference, buyer_name: offer.buyer_names.join(' and ') || 'The buyer', buyer_phone: offer.phone,
         agreed_pence: offer.amount_pence, milestones: SALE_MILESTONES.map((key) => ({ key, done_at: null })), exchange_target: null, completion_date: null,
-        parties: offer.solicitor ? [{ role: 'buyer_solicitor', name: offer.solicitor }] : [], chain: null,
+        parties: offer.solicitor ? [{ role: 'buyer_solicitor', name: offer.solicitor }] : [], chain: null, created_at: now,
       });
       await text(`the seller has accepted ${yours}, subject to contract. ${agent} will confirm it in writing and explain the ID checks.`);
       const all = await repo.listOffers(t.id, home.key);
@@ -785,7 +788,7 @@ async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
       for (let r = offer.revises; r && !replaced.has(r) && mine(r); r = mine(r)!.revises) replaced.add(r);
       for (const r of replaced) {
         const o = all.find((x) => x.reference === r);
-        if (o && OPEN.includes(o.status)) await repo.setOfferStatus(t.id, r, 'withdrawn', { note: `Replaced by ${offer.reference}`, from: OPEN });
+        if (o && OPEN.includes(o.status)) await repo.setOfferStatus(t.id, r, 'withdrawn', { note: `Replaced by ${offer.reference}`, from: OPEN, at: now });
       }
       const told = new Set<string>(offer.phone ? [offer.phone] : []);
       let others = 0;
@@ -824,6 +827,8 @@ async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
  */
 async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<{ message: string; affected?: string[] }> {
   const { repo } = ctx;
+  // The demo's own time, when its clock is set: what staff do happens then.
+  const now = tenantNow(t);
   const home = t.profile.listings?.find((l) => l.key === key);
   if (!home) throw new HttpError(404, 'No such home.');
   const live = await repo.listingState(t.id, key);
@@ -835,12 +840,12 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
       if (!STATUSES.includes(status)) throw new HttpError(400, 'Unknown status.');
       // Back on the market after an offer or a sale: callers hear it is back, with the reason the seller agreed to share.
       const back = status === 'available' && (live.status === 'under_offer' || live.status === 'sale_agreed');
-      await repo.setListing(t.id, key, { status, ...(back ? { back_on_market_at: new Date() } : {}) });
+      await repo.setListing(t.id, key, { status, ...(back ? { back_on_market_at: now } : {}) }, 'staff', undefined, now);
       // Back on the market or withdrawn: a sale in progress on it has fallen through, so another offer can be accepted.
       let fell = 0;
       if (status === 'available' || status === 'coming_soon' || status === 'withdrawn') {
         for (const sale of (await repo.listSales(t.id)).filter((x) => x.listing_key === key && x.status === 'progressing' && x.id)) {
-          await repo.updateSale(t.id, sale.id!, { status: 'fell_through' }, { by: 'staff', what: `fell through: the home is ${status.replace(/_/g, ' ')} again` });
+          await repo.updateSale(t.id, sale.id!, { status: 'fell_through' }, { by: 'staff', at: now, what: `fell through: the home is ${status.replace(/_/g, ' ')} again` });
           fell++;
         }
       }
@@ -852,7 +857,7 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
       const pence = Math.round(Number(b.price_pence));
       if (!Number.isFinite(pence) || pence < 100_000 || pence > 2_000_000_000) throw new HttpError(400, 'Give a price in pounds.');
       const lower = pence < live.price_pence;
-      await repo.setListing(t.id, key, { price_pence: pence }, 'staff', `price ${lower ? 'reduced' : 'changed'} from ${figure(live.price_pence)} to ${figure(pence)}`);
+      await repo.setListing(t.id, key, { price_pence: pence }, 'staff', `price ${lower ? 'reduced' : 'changed'} from ${figure(live.price_pence)} to ${figure(pence)}`, now);
       // A reduction on a home still for sale reaches the buyers who said yes to alerts and whose search it now fits.
       const told = lower && (live.status === 'available' || live.status === 'under_offer') ? await alertBuyers(ctx, t, key, 'reduced') : 0;
       return { message: `${where}: ${lower ? 'reduced' : 'now'} to ${figure(pence)}.${told ? ` ${told} buyer${told === 1 ? ' has' : 's have'} been texted.` : ''}` };
@@ -862,7 +867,7 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
       const to = isoDay(b.to) ?? from;
       if (!from || !to || to < from) throw new HttpError(400, 'Choose the first and last dates.');
       const note = String(b.note ?? '').trim().slice(0, 80);
-      await repo.setListing(t.id, key, { blocked: [...live.blocked, { from, to, ...(note ? { note } : {}) }].slice(-12) }, 'staff', `no viewings ${from} to ${to}`);
+      await repo.setListing(t.id, key, { blocked: [...live.blocked, { from, to, ...(note ? { note } : {}) }].slice(-12) }, 'staff', `no viewings ${from} to ${to}`, now);
       const tz = t.profile.timezone;
       const inside = (await repo.listBookings(t.id, zonedToUtc(from, '00:00', tz), zonedToUtc(addDays(to, 1), '00:00', tz)))
         .filter((x) => x.listing_key === key && x.status === 'confirmed');
@@ -878,14 +883,14 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
     case 'unblock': {
       const i = Number(b.index);
       if (!Number.isInteger(i) || !live.blocked[i]) throw new HttpError(400, 'No such dates.');
-      await repo.setListing(t.id, key, { blocked: live.blocked.filter((_, j) => j !== i) }, 'staff', 'blocked dates cleared');
+      await repo.setListing(t.id, key, { blocked: live.blocked.filter((_, j) => j !== i) }, 'staff', 'blocked dates cleared', now);
       return { message: `${where}: viewings open again on those dates.` };
     }
     case 'checking': {
       const fact = String(b.fact ?? '');
       if (!CHECKABLE.includes(fact)) throw new HttpError(400, 'Unknown fact.');
       const checking = b.on === false ? live.checking.filter((x) => x !== fact) : [...new Set([...live.checking, fact])];
-      await repo.setListing(t.id, key, { checking }, 'staff', `${fact.replace(/_/g, ' ')} ${b.on === false ? 'checked' : 'being checked'}`);
+      await repo.setListing(t.id, key, { checking }, 'staff', `${fact.replace(/_/g, ' ')} ${b.on === false ? 'checked' : 'being checked'}`, now);
       return { message: `${where}: ${fact.replace(/_/g, ' ')} ${b.on === false ? 'cleared' : 'marked as being checked'}.` };
     }
     case 'best_final': {
@@ -894,11 +899,11 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
       const time = typeof b.time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(b.time) ? b.time : null;
       if (b.at !== null && (!day || !time)) throw new HttpError(400, 'Choose a date and time.');
       const at = b.at === null ? null : zonedToUtc(day!, time!, t.profile.timezone);
-      await repo.setListing(t.id, key, { best_final_at: at });
+      await repo.setListing(t.id, key, { best_final_at: at }, 'staff', undefined, now);
       return { message: at ? `${where}: best and final by ${spokenDate(toLocal(at, t.profile.timezone).date)} at ${spokenTime(toLocal(at, t.profile.timezone).time)}.` : `${where}: best and final cleared.` };
     }
     case 'viewings_continue': {
-      await repo.setListing(t.id, key, { marketing_continues: b.on !== false });
+      await repo.setListing(t.id, key, { marketing_continues: b.on !== false }, 'staff', undefined, now);
       return { message: `${where}: ${b.on !== false ? 'viewings continue' : 'no more viewings'}.` };
     }
     default:
@@ -979,13 +984,15 @@ async function alertBuyers(ctx: Ctx, t: Tenant, key: string, why: 'back' | 'redu
  */
 async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<string> {
   const { repo } = ctx;
+  // The demo's own time, when its clock is set: what staff do happens then.
+  const now = tenantNow(t);
   if (!t.profile.listings) throw new HttpError(400, 'This business has no sales.');
   const sale = (await repo.listSales(t.id)).find((x) => x.id === id);
   if (!sale) throw new HttpError(404, 'No such sale.');
   const home = t.profile.listings.find((l) => l.key === sale.listing_key);
   if (!home) throw new HttpError(409, 'That home is no longer in your list.');
   const where = shortAddress(home);
-  const today = toLocal(new Date(), t.profile.timezone).date;
+  const today = toLocal(now, t.profile.timezone).date;
   if (sale.status === 'fell_through' || sale.status === 'completed') throw new HttpError(409, `The sale of ${where} has ${sale.status === 'completed' ? 'completed' : 'fallen through'}.`);
   switch (b.action) {
     case 'milestone': {
@@ -993,11 +1000,11 @@ async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<stri
       if (!(SALE_MILESTONES as readonly string[]).includes(key)) throw new HttpError(400, 'Unknown milestone.');
       if (key === 'completion') throw new HttpError(400, 'Completion is recorded with "Completed: release keys".');
       const done = b.done !== false;
-      const milestones = sale.milestones.map((m) => (m.key === key ? { key, done_at: done ? new Date().toISOString() : null } : m));
+      const milestones = sale.milestones.map((m) => (m.key === key ? { key, done_at: done ? now.toISOString() : null } : m));
       // Exchanged is a status for the home and the sale too: callers then hear it is sold.
       const status = key === 'exchange' ? (done ? 'exchanged' : 'progressing') : undefined;
-      await repo.updateSale(t.id, id, { milestones, ...(status ? { status } : {}) }, { by: 'staff', what: `${key.replace(/_/g, ' ')} ${done ? 'done' : 'not done'}` });
-      if (status) await repo.setListing(t.id, sale.listing_key, { status: done ? 'exchanged' : 'sale_agreed' }, 'staff', done ? 'contracts exchanged' : 'exchange undone');
+      await repo.updateSale(t.id, id, { milestones, ...(status ? { status } : {}) }, { by: 'staff', at: now, what: `${key.replace(/_/g, ' ')} ${done ? 'done' : 'not done'}` });
+      if (status) await repo.setListing(t.id, sale.listing_key, { status: done ? 'exchanged' : 'sale_agreed' }, 'staff', done ? 'contracts exchanged' : 'exchange undone', now);
       return `${where}: ${key.replace(/_/g, ' ')} ${done ? 'ticked' : 'unticked'}.`;
     }
     case 'dates': {
@@ -1006,22 +1013,22 @@ async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<stri
       if ((b.exchange_target && !exchange) || (b.completion_date && !completion)) throw new HttpError(400, 'Choose real dates.');
       if (exchange && completion && completion < exchange) throw new HttpError(400, 'Completion comes on or after exchange.');
       const patch = { ...('exchange_target' in b ? { exchange_target: exchange } : {}), ...('completion_date' in b ? { completion_date: completion } : {}) };
-      await repo.updateSale(t.id, id, patch, { by: 'staff', what: `dates: exchange ${exchange ?? 'none'}, completion ${completion ?? 'none'}` });
+      await repo.updateSale(t.id, id, patch, { by: 'staff', at: now, what: `dates: exchange ${exchange ?? 'none'}, completion ${completion ?? 'none'}` });
       return `${where}: dates saved.`;
     }
     case 'update': {
       const what = String(b.what ?? '').trim().slice(0, 300);
       if (!what) throw new HttpError(400, 'Say what the update is.');
       const from = ['buyer_solicitor', 'seller_solicitor', 'chain_agent', 'buyer', 'seller', 'staff'].includes(b.from) ? b.from : 'staff';
-      await repo.updateSale(t.id, id, {}, { by: from, what });
+      await repo.updateSale(t.id, id, {}, { by: from, what, at: now });
       return `${where}: update logged.`;
     }
     case 'release_keys': {
       // Only once completion is due: the seller's solicitor confirms on the day, and staff release the keys.
       if (!sale.completion_date || sale.completion_date > today) throw new HttpError(409, `Keys are released on completion day${sale.completion_date ? `, ${sale.completion_date}` : ': set the completion date first'}.`);
-      const milestones = sale.milestones.map((m) => (m.key === 'completion' || m.key === 'exchange') && !m.done_at ? { ...m, done_at: new Date().toISOString() } : m);
-      await repo.updateSale(t.id, id, { milestones, status: 'completed', keys_released_at: new Date() }, { by: 'staff', what: 'completed: keys released' });
-      await repo.setListing(t.id, sale.listing_key, { status: 'completed' }, 'staff', 'completed: keys released');
+      const milestones = sale.milestones.map((m) => (m.key === 'completion' || m.key === 'exchange') && !m.done_at ? { ...m, done_at: now.toISOString() } : m);
+      await repo.updateSale(t.id, id, { milestones, status: 'completed', keys_released_at: now }, { by: 'staff', at: now, what: 'completed: keys released' });
+      await repo.setListing(t.id, sale.listing_key, { status: 'completed' }, 'staff', 'completed: keys released', now);
       const negotiator = t.profile.team?.find((s) => s.key === home.negotiator)?.first_name;
       await textCustomer(ctx, t.id, sale.buyer_phone, `${t.profile.name}: completion has gone through on ${where}. Your keys are ready to collect from our office${negotiator ? `; ${negotiator} has them` : ''}. Congratulations! (Demo)`);
       return `${where}: completed; the buyer has been texted that the keys are ready.`;
@@ -1030,12 +1037,12 @@ async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<stri
       if (sale.status !== 'progressing') throw new HttpError(409, `${where} has exchanged: a sale that falls through after exchange is one for the solicitors.`);
       const reason = String(b.reason ?? '').trim().slice(0, 200);
       if (!reason) throw new HttpError(400, 'Say why it fell through.');
-      await repo.updateSale(t.id, id, { status: 'fell_through' }, { by: 'staff', what: `fell through: ${reason}` });
+      await repo.updateSale(t.id, id, { status: 'fell_through' }, { by: 'staff', at: now, what: `fell through: ${reason}` });
       if (!b.back_on_market) {
-        await repo.setListing(t.id, sale.listing_key, { status: 'withdrawn' }, 'staff', `sale fell through (${reason}); not back on the market yet`);
+        await repo.setListing(t.id, sale.listing_key, { status: 'withdrawn' }, 'staff', `sale fell through (${reason}); not back on the market yet`, now);
         return `${where}: the sale fell through. The home is withdrawn until the seller decides.`;
       }
-      await repo.setListing(t.id, sale.listing_key, { status: 'available', back_on_market_at: new Date() }, 'staff', `back on the market: sale fell through (${reason})`);
+      await repo.setListing(t.id, sale.listing_key, { status: 'available', back_on_market_at: now }, 'staff', `back on the market: sale fell through (${reason})`, now);
       const told = await alertBuyers(ctx, t, sale.listing_key, 'back');
       return `${where}: back on the market${told ? `, and ${told} buyer${told === 1 ? ' has' : 's have'} been texted` : ''}.`;
     }

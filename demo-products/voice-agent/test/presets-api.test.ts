@@ -182,6 +182,7 @@ test('presets over HTTP: the back office says what to show, in the business\'s o
       'Do you have gluten-free options?',
     ],
     resetLine: 'bookings and orders',
+    clock: true,
   });
 
   // Our own businesses on the team's board: from what each can do.

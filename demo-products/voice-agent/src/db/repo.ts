@@ -699,11 +699,11 @@ export class Repo {
   }
 
   /** Adds to what a booking knows (a viewing's feedback), keeping the rest, with a line in its history. */
-  async mergeBookingDetails(tenantId: string, reference: string, patch: Record<string, unknown>, what: string, by = 'staff'): Promise<Booking | null> {
+  async mergeBookingDetails(tenantId: string, reference: string, patch: Record<string, unknown>, what: string, by = 'staff', at = new Date()): Promise<Booking | null> {
     const rows = await this.db.query<any>(
       `update public.voice_bookings set details = details || $3::jsonb, history = history || $4::jsonb, updated_at = now()
        where tenant_id = $1 and reference = $2 returning *`,
-      [tenantId, reference.toUpperCase(), JSON.stringify(patch), historyEntry(by, what)],
+      [tenantId, reference.toUpperCase(), JSON.stringify(patch), historyEntry(by, what, at)],
     );
     return rows[0] ? mapBooking(rows[0]) : null;
   }
@@ -1020,6 +1020,8 @@ export class Repo {
     patch: Partial<Pick<ListingState, 'status' | 'price_pence' | 'qualifier' | 'marketing_continues' | 'best_final_at' | 'checking' | 'blocked' | 'back_on_market_at'>>,
     by = 'staff',
     what?: string,
+    /** The demo's own time, when its clock is set: the history says then. */
+    at = new Date(),
   ): Promise<ListingState | null> {
     const before = await this.listingState(tenantId, key);
     if (!before) return null;
@@ -1042,7 +1044,7 @@ export class Repo {
        where tenant_id = $1 and listing_key = $2 returning *`,
       [tenantId, key, patch.status ?? null, patch.price_pence ?? null, patch.qualifier ?? null, patch.marketing_continues ?? null,
         patch.best_final_at !== undefined, patch.best_final_at ?? null, patch.checking ?? null, patch.blocked ? JSON.stringify(patch.blocked) : null,
-        patch.back_on_market_at !== undefined, patch.back_on_market_at ?? null, historyEntry(by, said)],
+        patch.back_on_market_at !== undefined, patch.back_on_market_at ?? null, historyEntry(by, said, at)],
     );
     return rows[0] ? mapListing(rows[0]) : null;
   }
@@ -1067,7 +1069,7 @@ export class Repo {
           await q.query(
             `insert into public.voice_listings (tenant_id, listing_key, status, price_pence, qualifier, marketed_at, set_from, history)
              values ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb)`,
-            [tenantId, l.key, builder.status, builder.price_pence, l.initial.qualifier, now, JSON.stringify(builder), historyEntry('builder', 'added in the builder')],
+            [tenantId, l.key, builder.status, builder.price_pence, l.initial.qualifier, now, JSON.stringify(builder), historyEntry('builder', 'added in the builder', now)],
           );
           continue;
         }
@@ -1078,7 +1080,7 @@ export class Repo {
           `update public.voice_listings set status = $3, price_pence = $4, qualifier = $5, set_from = $6::jsonb,
              history = history || $7::jsonb, updated_at = now() where tenant_id = $1 and listing_key = $2`,
           [tenantId, l.key, statusChanged ? builder.status : row.status, priceChanged ? builder.price_pence : row.price_pence, l.initial.qualifier,
-            JSON.stringify(builder), historyEntry('builder', 'set in the builder')],
+            JSON.stringify(builder), historyEntry('builder', 'set in the builder', now)],
         );
       }
     });
@@ -1191,7 +1193,7 @@ export class Repo {
     tenantId: string,
     id: string,
     patch: Partial<Pick<Sale, 'milestones' | 'exchange_target' | 'completion_date' | 'parties' | 'chain' | 'status' | 'keys_released_at'>>,
-    update?: { by: string; what: string },
+    update?: { by: string; what: string; at?: Date },
   ): Promise<Sale | null> {
     const rows = await this.db.query<any>(
       `update public.voice_sales set milestones = coalesce($3::jsonb, milestones),
@@ -1205,7 +1207,7 @@ export class Repo {
         patch.exchange_target !== undefined, patch.exchange_target ?? null, patch.completion_date !== undefined, patch.completion_date ?? null,
         patch.parties ? JSON.stringify(patch.parties) : null, patch.chain !== undefined, patch.chain ?? null, patch.status ?? null,
         patch.keys_released_at !== undefined, patch.keys_released_at ?? null,
-        update ? historyEntry(update.by, update.what) : '[]'],
+        update ? historyEntry(update.by, update.what, update.at) : '[]'],
     );
     return rows[0] ? mapSale(rows[0]) : null;
   }

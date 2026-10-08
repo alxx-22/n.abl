@@ -772,6 +772,39 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   assert.ok(!after.jobs.some((j: any) => j.reference === booked.reference && j.status === 'done' && j.notes === 'Fixed.'));
 });
 
+test('demo: an estate agency on its own clock: the Time button is offered, and what staff do happens at the demo time', async () => {
+  assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Eve Clock', company: 'Hartwell & Green' });
+  const eve = client('10.0.0.38');
+  assert.equal((await eve.call('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+  const made = await eve.call('POST', '/demo/api/workspaces', { preset: 'estate_agent' });
+  const path = `/demo/api/workspaces/${made.data.id}`;
+  assert.equal((await eve.call('POST', `${path}/start`)).status, 200);
+  // Tomorrow at 9pm, in the agency's own time.
+  const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(Date.now() + 86_400_000));
+  const set = await eve.call('POST', `${path}/clock`, { date, time: '21:00' });
+  assert.equal(set.status, 200, JSON.stringify(set.data));
+  const s = (await eve.call('GET', `${path}/state`)).data;
+  assert.equal(s.workspace.clock, true, 'the Time button is offered');
+  assert.equal(s.today, date);
+  const demoNow = new Date(s.now).getTime();
+  // An offer put to the seller, a price reduced and a sale's milestone ticked: each stamped at the demo time, not now.
+  const close = (iso: string | Date, what: string) => assert.ok(Math.abs(new Date(iso).getTime() - demoNow) < 5 * 60_000, `${what}: ${new Date(iso).toISOString()}, demo ${new Date(demoNow).toISOString()}`);
+  const offer = s.offers.find((o: any) => o.status === 'received');
+  assert.ok(offer, 'an offer waiting to go to the seller');
+  assert.equal((await eve.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'sent' })).status, 200);
+  close((await app.repo.findOffer(made.data.id, { reference: offer.reference }))[0].sent_at!, 'sent_at');
+  const home = s.listings.find((l: any) => l.status === 'available');
+  assert.equal((await eve.call('PATCH', `${path}/listings/${home.key}`, { action: 'price', price_pence: home.price_pence - 500_000 })).status, 200);
+  close((await app.repo.listingState(made.data.id, home.key))!.history.at(-1)!.at, 'price history');
+  const sale = (await app.repo.listSales(made.data.id)).find((x) => x.status === 'progressing')!;
+  const open = sale.milestones.find((m) => !m.done_at && m.key !== 'completion' && m.key !== 'exchange')!;
+  assert.equal((await eve.call('PATCH', `${path}/sales/${sale.id}`, { action: 'milestone', key: open.key })).status, 200);
+  const after = (await app.repo.listSales(made.data.id)).find((x) => x.id === sale.id)!;
+  close(after.milestones.find((m) => m.key === open.key)!.done_at!, 'milestone');
+  close(after.updates.at(-1)!.at, 'sale update');
+});
+
 test('demo: a workspace\'s own clock: a Friday night set, the week starts again around it, and back to real time', async () => {
   assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
   const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Owen Clock', company: 'Fernhill Property Care' });

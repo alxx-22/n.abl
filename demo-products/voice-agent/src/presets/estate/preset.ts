@@ -96,6 +96,7 @@ export function estateWorkspace(profile: TenantProfile): WorkspaceSpec {
     teamPhones: (profile.team ?? []).filter((t) => t.mobile).map((t) => ({ name: t.first_name, phone: t.mobile })),
     suggestions: suggestions(profile),
     resetLine: 'viewings, valuations, offers and sales',
+    clock: true,
   };
 }
 

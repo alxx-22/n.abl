@@ -222,7 +222,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
         ) : null}
         <button type="button" onClick={() => setSettingsOpen(true)}><SlidersIcon /> Voice</button>
         <Link to={`${R}/build/${id}`} className="button">Edit setup</Link>
-        {t.business_type === 'property_maintenance' ? (
+        {spec.clock ? (
           <DemoClock
             id={id} timeZone={t.timezone} realMs={clock} offsetMs={state.clock_offset_ms ?? 0} disabled={live.phase !== 'idle'}
             onSet={(message) => { setSelected(null); void refresh(); toast(message); }}

@@ -67,6 +67,7 @@ export function restaurantWorkspace(profile: TenantProfile): WorkspaceSpec {
     orders: { board: 'Kitchen', done: { collection: 'Collected', delivery: 'Collected' }, drivers: false, advance: false },
     suggestions,
     resetLine: 'bookings and orders',
+    clock: true,
   };
 }
 

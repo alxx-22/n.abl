@@ -87,6 +87,7 @@ export function maintenanceWorkspace(profile: TenantProfile): WorkspaceSpec {
       'Can you tell me how to reset my boiler?',
     ],
     resetLine: 'jobs, safety checks and incidents',
+    clock: true,
   };
 }
 

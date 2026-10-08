@@ -36,6 +36,7 @@ export function fallbackSpec(state: LiveState): WorkspaceSpec {
     orders: { board: 'Kitchen', done: { collection: 'Collected', delivery: 'Collected' }, drivers: false, advance: false },
     suggestions,
     resetLine: 'bookings and orders',
+    clock: true,
   };
 }
 
