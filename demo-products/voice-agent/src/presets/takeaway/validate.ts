@@ -1,6 +1,7 @@
 // What the takeaway builder shows as still missing or wrong before Start,
 // each issue on the step it belongs to.
 
+import { normaliseUkPhone } from '../../domain/phone.ts';
 import type { Issue as BaseIssue } from '../common/types.ts';
 import { validateBase } from '../common/validate.ts';
 import { validateDeals } from '../food/deals.ts';
@@ -27,6 +28,10 @@ export function validateTakeaway(a: TakeawayAnswers): Issue[] {
   // A delivery paid "when you collect" is never paid: it needs the phone or the driver.
   if (o.delivery.enabled && a.money.payment === 'collection' && a.money.pay_driver === 'no') {
     out.push({ step: 'money', level: 'error', message: 'Delivery orders need paying: take card on the phone, or let the driver take payment.' });
+  }
+  const notNumbers = a.after.pay_on_phone_numbers.filter((n) => !normaliseUkPhone(n));
+  if (notNumbers.length) {
+    out.push({ step: 'money', level: 'warning', message: `Not a UK phone number, so left off the pay-on-the-phone list: ${notNumbers.join(', ')}.` });
   }
   const unanswered = a.policies.faqs.filter((f) => !f.q || !f.a).length;
   if (unanswered) out.push({ step: 'policies', level: 'warning', message: `${unanswered} question${unanswered === 1 ? ' needs' : 's need'} both the question and its answer before the receptionist can use ${unanswered === 1 ? 'it' : 'them'}.` });

@@ -110,7 +110,7 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
       address: o.address ? `${o.address}, ${o.postcode}` : null, lines: o.lines, total: pounds(o.total_pence),
       allergy_notes: o.allergy_notes, status: o.status, payment_status: o.payment_status, created_at: o.created_at,
       // A takeaway's drivers: who has it, since when, and what they need to know at the door.
-      ...(kitchen ? { driver: o.driver ?? null, out_at: o.out_at?.toISOString() ?? null, pay_note: o.pay_note ?? null } : {}),
+      ...(kitchen ? { driver: o.driver ?? null, out_at: o.out_at?.toISOString() ?? null, pay_note: o.pay_note ?? null, requests: o.requests ?? [], flags: o.flags ?? [] } : {}),
     })),
     ...(kitchen ? { drivers: kitchen.delivery?.drivers ?? [] } : {}),
     messages: (await repo.listMessages(t.id, 60)).map((m) => ({ ...m, to_number: displayUkPhone(m.to_number), from_phone: displayUkPhone(m.from_phone) })),

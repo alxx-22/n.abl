@@ -253,6 +253,10 @@ export interface LiveOrder {
   driver?: string | null;
   out_at?: string | null;
   pay_note?: string | null;
+  /** A caller's requests, for staff to accept or refuse. */
+  requests?: { kind: 'cancel' | 'change' | 'send_missing'; what: string; answer: 'accepted' | 'refused' | null }[];
+  /** 'allergy': one told after ordering. */
+  flags?: string[];
 }
 
 // ── A repairs contractor's (presets/property-maintenance.md §6) ─────────

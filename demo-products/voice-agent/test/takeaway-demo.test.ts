@@ -96,6 +96,21 @@ test('demo: a takeaway end to end: Start fills the kitchen, a delivery goes out 
   });
   assert.equal((await dev.call('PATCH', `${path}/orders/${collect.reference}`, { status: 'out_for_delivery', driver: 'Kai' })).status, 409);
 
+  // A caller's requests wait on the ticket: refused, the order stands; accepted, it's cancelled. The customer is texted either way.
+  const asks = async (kind: 'cancel' | 'change', what: string) => app.repo.requestOnOrder(t.id, collect.reference, { kind, what, phone: '+447700900812', at: new Date().toISOString() });
+  await asks('change', 'no onions');
+  await asks('cancel', 'ordered twice');
+  const board = (await state()).orders.find((o: any) => o.reference === collect.reference);
+  assert.deepEqual(board.requests.map((r: any) => [r.kind, r.what, r.answer]), [['change', 'no onions', null], ['cancel', 'ordered twice', null]]);
+  const phone2 = async () => (await dev.call('GET', `${path}/phone?number=${encodeURIComponent('+447700900812')}`)).data.messages.map((m: any) => m.body);
+  assert.equal((await dev.call('PATCH', `${path}/orders/${collect.reference}`, { request: 0, answer: 'refused' })).status, 200);
+  assert.equal((await phone2()).at(-1), `Firebird Chicken & Burgers: sorry, we couldn't make your change to order ${collect.reference} (no onions). (Demo)`);
+  assert.equal((await dev.call('PATCH', `${path}/orders/${collect.reference}`, { request: 0, answer: 'accepted' })).status, 409, 'answered once');
+  assert.equal((await dev.call('PATCH', `${path}/orders/${collect.reference}`, { request: 1, answer: 'maybe' })).status, 400);
+  assert.equal((await dev.call('PATCH', `${path}/orders/${collect.reference}`, { request: 1, answer: 'accepted' })).status, 200);
+  assert.equal((await phone2()).at(-1), `Firebird Chicken & Burgers: order ${collect.reference} is cancelled. (Demo)`);
+  assert.equal((await app.repo.getOrder(t.id, collect.reference))!.status, 'cancelled');
+
   // Reset refills the kitchen from the seed, and our own orders go.
   assert.equal((await dev.call('POST', `${path}/reset`)).status, 200);
   const again = await state();

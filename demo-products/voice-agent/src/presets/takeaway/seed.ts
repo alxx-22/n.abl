@@ -153,6 +153,10 @@ export function planTakeawaySeed(profile: TenantProfile, now: Date, seed: number
   const amyReady = Math.floor((now.getTime() - 8 * MIN) / step) * step;
   const open = periodsToday(profile, date).some((p) => amyReady >= p.open.getTime() + prep && amyReady + road <= p.close.getTime());
   if (delivers && open) make(new Date(amyReady), new Date(amyReady + road), TK_PEOPLE.amy, 'delivery');
+  // Chris's, delivered about twenty minutes ago: the one whose fries weren't in the bag. Drawn last, so every other order stays as it was.
+  const chrisReady = Math.floor((now.getTime() - road - 20 * MIN) / step) * step;
+  const served = periodsToday(profile, date).some((p) => chrisReady >= p.open.getTime() + prep && chrisReady + road <= p.close.getTime());
+  if (delivers && served) make(new Date(chrisReady), new Date(chrisReady + road), TK_PEOPLE.delivered, 'delivery');
 
   // Where each order is now, and who took the deliveries out.
   let turn = 0;

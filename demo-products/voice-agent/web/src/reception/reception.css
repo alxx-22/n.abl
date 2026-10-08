@@ -350,6 +350,10 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 /* A takeaway's drivers: a column each, then what is waiting for one. */
 .drivers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: start; }
 .drivers .ticket footer { flex-wrap: wrap; }
+/* A caller's request on a ticket, waiting for staff to accept or refuse. */
+.ticket .request { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; margin: 6px 0; padding: 4px 8px; border-radius: 6px; border-left: 3px solid var(--amber); background: var(--surface-2); font-size: 13px; }
+.ticket .request.answered { border-left-color: var(--muted); color: var(--muted); }
+.ticket .request .row { display: flex; gap: 4px; }
 @media (max-width: 560px) {
   .kitchen.with-out, .drivers { grid-template-columns: minmax(0, 1fr); }
 }

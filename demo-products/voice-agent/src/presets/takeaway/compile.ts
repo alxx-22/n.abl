@@ -4,6 +4,7 @@
 // only from the kitchen's queue, through the tools (presets/takeaway.md §4.5).
 
 import { pounds, type KnowledgeEntry, type TenantProfile } from '../../domain/types.ts';
+import { normaliseUkPhone } from '../../domain/phone.ts';
 import { baseProfile, entry, mergeFaqs } from '../common/profile.ts';
 import { compileMenu } from '../food/menu.ts';
 import { compileOrdering, deliveryAppsEntry } from '../food/ordering.ts';
@@ -95,6 +96,10 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
   // How ordering, delivery and halal work are already core facts; only what isn't goes here, so the prompt says each once.
   const policies: Record<string, string> = { card_payments: cardAnswer(a) };
   // Past a few districts at their own prices, the fact says so in short: the knowledge entry and get_wait_times have each one.
+  // Numbers that pay on the phone for a delivery: only where the driver could otherwise take payment.
+  const payOnPhone = a.ordering.delivery.enabled && a.money.payment !== 'phone' && a.money.pay_driver !== 'no'
+    ? [...new Set(a.after.pay_on_phone_numbers.map(normaliseUkPhone).filter((n): n is string => Boolean(n)))]
+    : [];
   const deliveryFact = delivery.length > 260 ? `We deliver to ${a.ordering.delivery.districts.length} postcode districts, each with its own fee and minimum: get_wait_times has them.` : delivery;
   return {
     ...baseProfile(a, meta, { businessType: 'takeaway', noun: 'takeaway', facts: [orders, deliveryFact, halalSentence(a), a.menu.allergen_statement], hoursMax: 220 }),
@@ -102,8 +107,10 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
     menu: dealMenu ? { ...menu, categories: [dealMenu.category, ...menu.categories], modifier_groups: { ...menu.modifier_groups, ...dealMenu.groups }, deals: dealMenu.deals } : menu,
     // The kitchen counts every order by when it must be ready (core/kitchen.ts).
     ordering: ordering && {
-      ...ordering, kitchen: { last_orders_minutes: a.kitchen.last_orders_minutes },
+      ...ordering,
+      kitchen: { last_orders_minutes: a.kitchen.last_orders_minutes, late_after_minutes: a.after.late_after_minutes, missing_items: a.after.missing_items },
       ...(a.ordering.delivery.enabled && a.money.payment !== 'phone' ? { pay_driver: a.money.pay_driver } : {}),
+      ...(payOnPhone.length ? { pay_on_phone: payOnPhone } : {}),
     },
     policies,
   };

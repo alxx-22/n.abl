@@ -11,7 +11,7 @@
 // untouched; the zone and free-delivery helpers return the delivery-wide
 // fee for a profile with neither.
 
-import type { Order, Ordering } from '../domain/types.ts';
+import type { Order, OrderRequest, Ordering } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { lineTotal } from '../domain/menu.ts';
 import { addDays, closeMinutes, dayName, normaliseTime, spokenTime, toLocal, weekdayOf, zonedToUtc } from '../domain/time.ts';
@@ -49,6 +49,9 @@ function periodsOn(o: Ordering, tz: string, date: string): Period[] {
 }
 
 const at = (d: Date, tz: string) => spokenTime(toLocal(d, tz).time);
+
+/** A delivery to a number on the pay-on-the-phone list (it refused one before): card on the phone now, or collection. */
+export const PHONE_ONLY = "Deliveries to this number are paid by card on the phone: take it now with take_demo_payment, reading out the demo card if they need it. If they'd rather pay at the door, it can only be collection. Never say why.";
 
 /** When orders open next after today, within a week: "tomorrow at 12 noon". */
 function nextOpening(o: Ordering, tz: string, today: string): string | null {
@@ -202,6 +205,7 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
       ...(short ? { short_by: pounds(short) } : {}),
     } : {}),
     note: "This is the kitchen's real time now. Say it as it is and never promise sooner; collection is quicker if they're in a hurry.",
+    ...(type === 'delivery' && ctx.callerPhone && o.pay_on_phone?.includes(ctx.callerPhone) ? { pay: PHONE_ONLY } : {}),
     ...next,
   };
 }
@@ -298,7 +302,7 @@ export async function findOrder(args: Args, ctx: ToolContext): Promise<Record<st
     if (!order) return { found: false, message: "No order today from the number they're ringing on. Ask for the order number." };
   }
   record(ctx, order.reference, 'order', 'found');
-  return {
+  const found = {
     found: true,
     order_number: order.reference,
     spoken_order_number: order.reference.split('').join(' '),
@@ -307,8 +311,114 @@ export async function findOrder(args: Args, ctx: ToolContext): Promise<Record<st
     items: order.lines.map((l) => `${l.quantity} ${l.name}`).join(', '),
     total: pounds(order.total_pence),
     paid: order.payment_status === 'paid',
+    ...(waiting(order).length ? { waiting_for_staff: waiting(order).map((r) => `${REQUEST_WORDS[r.kind]}: ${r.what}`) } : {}),
     never: by === 'phone'
       ? "Found by the number they're ringing from: never read the address or the name back. If they need to check it, ask them to say it."
       : 'Never read the address back. If they need to check it, ask them to say it.',
+  };
+  const action = str(args.action)?.toLowerCase().replace(/[\s-]+/g, '_') ?? 'find';
+  if (action === 'find') return found;
+  const done = action === 'add_allergy' ? await addAllergy(args, ctx, order)
+    : action === 'request_cancel' || action === 'request_change' ? await requestOn(action === 'request_cancel' ? 'cancel' : 'change', args, ctx, order)
+    : action === 'report_problem' ? await reportProblem(args, ctx, order)
+    : { ok: false, message: 'action is one of find, add_allergy, request_cancel, request_change, report_problem.' };
+  return { ...found, ...done };
+}
+
+// ── After the order (presets/takeaway.md §4.3, M2) ─────────────────────────
+//
+// Nothing here cancels, changes or refunds: a cancellation or change is a
+// request on the ticket that staff accept or refuse, and a complaint is a
+// message for the manager. Only an allergy told while the food is still to
+// be made goes straight onto the order.
+
+const REQUEST_WORDS: Record<OrderRequest['kind'], string> = { cancel: 'Cancel', change: 'Change', send_missing: 'Send out' };
+const waiting = (o: Order) => (o.requests ?? []).filter((r) => !r.answer);
+const notYetMade = (o: Order) => o.status === 'confirmed' || o.status === 'in_kitchen';
+const NO_PROMISE = 'Never say it is cancelled, changed or refunded, or that they will get their money back: staff decide, and text them.';
+
+/** When the manager will ring back: tonight while open, otherwise tomorrow. */
+function callBack(ctx: ToolContext): string {
+  const o = ctx.tenant.profile.ordering!;
+  const tz = ctx.tenant.profile.timezone;
+  const close = periodsOn(o, tz, toLocal(ctx.now(), tz).date).at(-1)?.close;
+  return close && ctx.now().getTime() < close.getTime() ? `tonight, before we close at ${at(close, tz)}` : 'tomorrow, once we open';
+}
+
+async function complaint(ctx: ToolContext, order: Order, category: string, urgency: 'urgent' | 'today', body: string): Promise<void> {
+  const from = ctx.callerPhone ?? order.phone;
+  await ctx.repo.addMessage({
+    tenant_id: ctx.tenant.id, call_id: ctx.callId, kind: 'message', from_name: order.name, from_phone: from, body, status: 'new',
+    category, urgency, reference: order.reference, details: { order: order.reference },
+  });
+  ctx.state.messageTaken = true;
+  ctx.action({ kind: 'message_taken', title: `${category === 'allergy' ? 'Allergy' : 'Complaint'}: order ${order.reference}`, detail: body });
+}
+
+async function addAllergy(args: Args, ctx: ToolContext, order: Order): Promise<Record<string, unknown>> {
+  const what = str(args.details);
+  if (!what) return { ok: false, message: 'Ask what the allergy is, then call again with it in details.' };
+  if (notYetMade(order)) {
+    await ctx.repo.addOrderAllergy(ctx.tenant.id, order.reference, what);
+    ctx.action({ kind: 'order_updated', title: `Allergy added to order ${order.reference}`, detail: what });
+    return { ok: true, added: `Allergy on order ${order.reference} for the kitchen, marked on the ticket: ${what}.`, say: "It's on the order now and marked for the kitchen.", never: 'Never say the food will be safe: the shared-kitchen caveat still stands.' };
+  }
+  // Made already: nothing can be taken out of it. Not to be eaten until the manager has rung.
+  await complaint(ctx, order, 'allergy', 'urgent', `Allergy told after order ${order.reference} was made (${order.status.replace(/_/g, ' ')}): ${what}. Call them before they eat it.`);
+  return {
+    ok: true, added: false,
+    say: `The order is already made, so it can't be changed now. Ask them not to eat it until the manager has called them back, ${callBack(ctx)}.`,
+    never: 'Never say it is safe, or which parts are.',
+  };
+}
+
+async function requestOn(kind: 'cancel' | 'change', args: Args, ctx: ToolContext, order: Order): Promise<Record<string, unknown>> {
+  if (order.status === 'cancelled') return { ok: false, message: 'This order is already cancelled.' };
+  if (order.status === 'completed') return { ok: false, message: `It has been ${order.fulfilment === 'delivery' ? 'delivered' : 'collected'}. If something is wrong with it, use report_problem.` };
+  const what = str(args.details) ?? (kind === 'cancel' ? 'cancel the order' : null);
+  if (!what) return { ok: false, message: 'Ask what they would like changed, then call again with it in details.' };
+  if (kind === 'change' && order.status === 'out_for_delivery') return { ok: false, message: "It's already out with the driver, so it can't be changed. Offer a message for the manager." };
+  if (waiting(order).some((r) => r.kind === kind)) return { ok: true, requested: false, message: `A ${kind} request is already with staff for this order: say they'll text the answer.`, never: NO_PROMISE };
+  await ctx.repo.requestOnOrder(ctx.tenant.id, order.reference, { kind, what, phone: ctx.callerPhone ?? order.phone, at: ctx.now().toISOString() });
+  ctx.action({ kind: 'order_updated', title: `${REQUEST_WORDS[kind]} request on order ${order.reference}`, detail: what });
+  const made = order.status === 'in_kitchen' || order.status === 'ready';
+  return {
+    ok: true, requested: true,
+    say: `It's with the kitchen to ${kind === 'cancel' ? 'cancel' : 'change'}${made ? ", but it's already being made, so they may not be able to" : ''}; they'll text this number to say.${order.payment_status === 'paid' && kind === 'cancel' ? ' Any refund is for the manager to decide.' : ''}`,
+    never: NO_PROMISE,
+  };
+}
+
+const PROBLEMS = ['missing', 'wrong', 'cold', 'late', 'something_in_food', 'ill'] as const;
+type Problem = (typeof PROBLEMS)[number];
+
+async function reportProblem(args: Args, ctx: ToolContext, order: Order): Promise<Record<string, unknown>> {
+  const said = str(args.problem)?.toLowerCase().replace(/[\s-]+/g, '_') ?? '';
+  const problem = PROBLEMS.find((p) => said.includes(p.split('_')[0])) as Problem | undefined;
+  if (!problem) return { ok: false, message: `problem is one of ${PROBLEMS.join(', ')}.` };
+  const what = str(args.details) ?? problem.replace(/_/g, ' ');
+  const k = ctx.tenant.profile.ordering!.kitchen;
+  const tz = ctx.tenant.profile.timezone;
+  if (problem === 'late') {
+    const late = Math.round((ctx.now().getTime() - order.due_at.getTime()) / 60000);
+    if (order.status === 'completed' || late < (k?.late_after_minutes ?? 15)) {
+      return { ok: true, logged: false, say: `Not late enough to pass on yet: it was due around ${at(order.due_at, tz)}. Give them the status.` };
+    }
+    await complaint(ctx, order, 'complaint', 'urgent', `Order ${order.reference} is ${late} minutes late (${order.status.replace(/_/g, ' ')}). ${what}`);
+    return { ok: true, logged: true, say: `It's with the manager now, who will call them back about it ${callBack(ctx)}.`, never: NO_PROMISE };
+  }
+  if (problem === 'missing' && k?.missing_items === 'send_out' && order.fulfilment === 'delivery') {
+    await ctx.repo.requestOnOrder(ctx.tenant.id, order.reference, { kind: 'send_missing', what, phone: ctx.callerPhone ?? order.phone, at: ctx.now().toISOString() });
+    ctx.action({ kind: 'order_updated', title: `Send out to order ${order.reference}`, detail: what });
+    return { ok: true, logged: true, say: `The kitchen will send the missing ${what} out with the next driver; they'll text when it's on its way.`, never: NO_PROMISE };
+  }
+  const serious = problem === 'ill' || problem === 'something_in_food';
+  await complaint(ctx, order, 'complaint', serious ? 'urgent' : 'today', `${problem === 'ill' ? 'Ill after eating' : problem === 'something_in_food' ? 'Something in the food' : `${problem[0].toUpperCase()}${problem.slice(1)}`}, order ${order.reference}: ${what}`);
+  return {
+    ok: true, logged: true,
+    say: `It's with the manager, who will call them back ${callBack(ctx)}.`,
+    ...(problem === 'ill' ? { health: "If they feel unwell, they should contact their GP or NHS 111, or call 999 if it's severe. Ask them to keep any food that's left, and its packaging." } : {}),
+    ...(problem === 'something_in_food' ? { keep: "Ask them to keep it, and the food and packaging, for the manager." } : {}),
+    never: NO_PROMISE,
   };
 }

@@ -81,7 +81,11 @@ test('the seeded evening: a Friday at 7pm is busy, honest about it, and every de
     // Amy, whom the prospect can ring as, has a delivery out with Kai.
     const amy = orders.find((o) => o.phone === TK_PEOPLE.amy.phone)!;
     assert.deepEqual([amy.status, amy.driver, amy.fulfilment], ['out_for_delivery', 'Kai', 'delivery']);
-    assert.equal(orders.filter((o) => o.phone === TK_PEOPLE.parent.phone || o.phone === TK_PEOPLE.outer.phone).length, 0, 'the other numbers are free');
+    // Chris's delivery came twenty minutes ago or more (his fries weren't in the bag).
+    const chris = orders.filter((o) => o.phone === TK_PEOPLE.delivered.phone);
+    assert.deepEqual(chris.map((o) => [o.status, o.fulfilment]), [['completed', 'delivery']]);
+    assert.ok(chris[0].due_at.getTime() <= FRIDAY_7PM.getTime() - 20 * 60000, `delivered at ${chris[0].due_at.toISOString()}`);
+    assert.equal(orders.filter((o) => [TK_PEOPLE.parent, TK_PEOPLE.outer, TK_PEOPLE.refused].some((p) => o.phone === p.phone)).length, 0, 'the other numbers are free');
     // Straight after Start, "how long tonight?" is about 45 to 50 minutes for collection.
     const t = await started(`tk-seed-${seed}`, FRIDAY_7PM, seed);
     const w = await wait(t, FRIDAY_7PM);

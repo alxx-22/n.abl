@@ -13,7 +13,7 @@ import { DealsEditor } from '../food/Deals.tsx';
 import { MenuEditor } from '../food/MenuEditor.tsx';
 import { CollectionDelivery } from '../food/Ordering.tsx';
 import { TakeawayPayment } from '../food/Payment.tsx';
-import { Choice, Num, Pounds, Select, Toggle } from '../fields.tsx';
+import { Choice, ListText, Num, Pounds, Select, Toggle } from '../fields.tsx';
 import type { BuilderDef, StepProps } from '../registry.ts';
 import { sectionOf } from '../section.ts';
 
@@ -35,6 +35,26 @@ function StepOrdering({ a, set }: Props) {
           hint="Every order is handed over by closing, so the last delivery is earlier still."
         />
         <Num label="A big order" suffix="mains or more" min={2} max={30} value={k.big_order_mains} onChange={(v) => set((d) => void (d.kitchen.big_order_mains = v))} hint="Takes two of the kitchen's slots." />
+      </div>
+      <h3 className="sub">After the order</h3>
+      <p className="hint">The receptionist never cancels, changes or refunds: a cancellation or change waits on the ticket for you to accept, and a complaint is a message for the manager.</p>
+      <div className="two">
+        <Select
+          label="Late after" value={a.after.late_after_minutes}
+          options={[10, 15, 20, 30, 45].map((m) => ({ value: m, label: `${m} minutes past the time given` }))}
+          onChange={(v) => set((d) => void (d.after.late_after_minutes = v))}
+          hint="Before then, a caller hears where their order is; after, the manager calls them back."
+        />
+        {a.ordering.delivery.enabled ? (
+          <Choice
+            legend="Something missing from a delivery" value={a.after.missing_items}
+            options={[
+              { value: 'manager', label: 'The manager calls back' },
+              { value: 'send_out', label: 'Send it out', hint: 'with the next driver, once you accept' },
+            ]}
+            onChange={(v) => set((d) => void (d.after.missing_items = v))}
+          />
+        ) : null}
       </div>
     </>
   );
@@ -60,6 +80,13 @@ function StepMoney({ a, set }: Props) {
         <Toggle label="A minimum spend on card" checked={m.card_minimum_pence !== null} onChange={(v) => set((d) => void (d.money.card_minimum_pence = v ? 500 : null))} hint="Never a charge for card: a shop may not add one." />
         {m.card_minimum_pence !== null ? <Pounds label="Minimum on card" pence={m.card_minimum_pence} max={2000} onChange={(v) => set((d) => void (d.money.card_minimum_pence = v))} /> : null}
       </div>
+      {a.ordering.delivery.enabled && m.payment !== 'phone' && m.pay_driver !== 'no' ? (
+        <ListText
+          label="Pay on the phone only" value={a.after.pay_on_phone_numbers} placeholder="07700 900804"
+          onChange={(v) => set((d) => void (d.after.pay_on_phone_numbers = v))}
+          hint="Numbers that refused a delivery: they pay by card on the phone, or collect. The receptionist never says why."
+        />
+      ) : null}
     </>
   );
 }

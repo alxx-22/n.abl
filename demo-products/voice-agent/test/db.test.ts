@@ -19,7 +19,7 @@ let fade: Tenant;
 
 before(async () => {
   db = await openPglite();
-  assert.deepEqual(await migrate(db), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance', 'voice_0007_mt_money', 'voice_0008_mt_blocks']);
+  assert.deepEqual(await migrate(db), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance', 'voice_0007_mt_money', 'voice_0008_mt_blocks', 'voice_0009_takeaway']);
   repo = new Repo(db);
   const tenants = await seedAll(repo, NOW, { diary: false });
   lucas = tenants.find((t) => t.slug === 'lucas-trattoria')!;
@@ -39,7 +39,7 @@ function copyOfLucas(slug: string) {
 test('migrations are idempotent and recorded', async () => {
   assert.deepEqual(await migrate(db), []);
   const rows = await db.query<{ name: string }>('select name from public.voice_schema_migrations');
-  assert.deepEqual(rows.map((r) => r.name).sort(), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance', 'voice_0007_mt_money', 'voice_0008_mt_blocks']);
+  assert.deepEqual(rows.map((r) => r.name).sort(), ['voice_0001_core', 'voice_0002_demo', 'voice_0003_key_kinds', 'voice_0004_orders', 'voice_0005_estate', 'voice_0006_maintenance', 'voice_0007_mt_money', 'voice_0008_mt_blocks', 'voice_0009_takeaway']);
 });
 
 test('every migration only touches voice_ objects', () => {

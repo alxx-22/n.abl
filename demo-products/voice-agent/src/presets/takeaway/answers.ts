@@ -14,6 +14,7 @@ export const VERSION = 1;
 export const PAY_DRIVER = ['no', 'cash', 'cash_or_card'] as const;
 export type PayDriver = (typeof PAY_DRIVER)[number];
 export const HALAL = ['all', 'chicken', 'none'] as const;
+export const MISSING_ITEMS = ['manager', 'send_out'] as const;
 
 export interface TakeawayAnswers extends BaseAnswers {
   version: typeof VERSION;
@@ -36,6 +37,15 @@ export interface TakeawayAnswers extends BaseAnswers {
     pay_driver: PayDriver;
     /** A minimum spend for card; never a surcharge (presets/takeaway.md §8). Null: none. */
     card_minimum_pence: number | null;
+  };
+  /** When something goes wrong after the order. */
+  after: {
+    /** This long past the time they were given, "where's my food?" goes to the manager. */
+    late_after_minutes: number;
+    /** An item missing from a delivery: a call from the manager, or sent out with the next driver. */
+    missing_items: (typeof MISSING_ITEMS)[number];
+    /** Numbers that refused a delivery: they pay on the phone, or collect. Kept as typed; compile keeps the valid ones. */
+    pay_on_phone_numbers: string[];
   };
   policies: {
     halal: (typeof HALAL)[number];
@@ -93,6 +103,8 @@ export function defaultAnswers(): TakeawayAnswers {
     menu,
     deals: sampleDeals(MENU, menu),
     money: { payment: 'either', pay_driver: 'cash_or_card', card_minimum_pence: null },
+    // Dean Walsh (Call as) refused a delivery last month.
+    after: { late_after_minutes: 15, missing_items: 'manager', pay_on_phone_numbers: ['07700 900804'] },
     policies: {
       halal: 'chicken',
       hygiene_rating: 5,

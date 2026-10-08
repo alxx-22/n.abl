@@ -81,6 +81,7 @@ function full(): unknown {
   a.deals[0].price_pence = 949;
   a.deals[0].description = 'Any burger, regular fries and a can.';
   a.money = { payment: 'phone', pay_driver: 'cash', card_minimum_pence: 500 };
+  a.after = { late_after_minutes: 30, missing_items: 'send_out', pay_on_phone_numbers: [] };
   a.policies = { ...a.policies, halal: 'all', hygiene_rating: 4, offers: 'Tuesdays: two Burger meals for £16, collection only.', parking: 'Street parking only.', faqs: [{ q: 'Do you do vegan cheese?', a: 'Yes, on any burger for 80p.' }] };
   a.theme = { ...a.theme, accent: '#d94f30' };
   return a;
@@ -109,6 +110,7 @@ function max(): unknown {
   a.deals = Array.from({ length: 15 }, (_, i) => ({ ...structuredClone(a.deals[0]), key: `deal_${i}`, name: `Deal ${i} ${text(50, 'name')}`, description: text(200, 'desc'), parts: Array.from({ length: 7 }, () => structuredClone(a.deals[0].parts[0])) }));
   a.policies.faqs = Array.from({ length: 25 }, (_, i) => ({ q: `Question ${i} ${text(150, 'q')}`, a: text(550, 'answer') }));
   for (const k of ['parking', 'offers', 'bags', 'careers', 'tips'] as const) a.policies[k] = text(320, k);
+  a.after = { late_after_minutes: 60, missing_items: 'send_out', pay_on_phone_numbers: Array.from({ length: 40 }, (_, i) => `07700 9${String(100000 + i).slice(1)}`) };
   return a;
 }
 
@@ -125,6 +127,7 @@ function everyIssue(): unknown {
   a.deals[1].parts = [];
   a.deals.push({ ...structuredClone(a.deals[0]), key: 'dear_meal', name: 'Dear meal', price_pence: 3000 });
   a.policies.faqs.push({ q: 'Half a question', a: '' });
+  a.after.pay_on_phone_numbers = ['07700 9008', '07700 900804'];
   return a;
 }
 
@@ -134,7 +137,7 @@ function junk(): unknown {
     ordering: { collection: { prep_minutes: -5, slot_minutes: 7 }, delivery: { districts: ['not a district', 'ng 5', 7], zones: [{ code: 'NG99' }, 'x'], free_over_pence: 'free', drivers: 'Kai' }, timed_orders: 'yes' },
     kitchen: { last_orders_minutes: 999, big_order_mains: 'lots' }, menu: { categories: 'burgers' },
     deals: [{ name: 'Junk', price_pence: -1, parts: [{ label: 'Thing', category_key: 'nowhere', choose: 99, upcharge_pence: { x: 'free' } }] }, 'deal'],
-    money: { payment: 'cheque', pay_driver: 'gold', card_minimum_pence: -3 }, policies: { halal: 'some', hygiene_rating: 'five', faqs: { q: 1 } }, theme: { accent: 'blue' }, sources: 'web',
+    money: { payment: 'cheque', pay_driver: 'gold', card_minimum_pence: -3 }, after: { late_after_minutes: 'soon', missing_items: 'refund', pay_on_phone_numbers: [7, 'x'.repeat(40)] }, policies: { halal: 'some', hygiene_rating: 'five', faqs: { q: 1 } }, theme: { accent: 'blue' }, sources: 'web',
   };
 }
 

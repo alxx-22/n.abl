@@ -7,7 +7,7 @@
 import { randomInt } from 'node:crypto';
 import type { Db, Queryable } from './db.ts';
 import type {
-  Booking, Buyer, BuyerDetails, BuyerPosition, Certificate, CertificateKind, Incident, Invoice, Job, JobStatus, ListingState, MtProperty, Offer, OfferStatus, Quote, QuoteStatus, Order, OrderLine,
+  Booking, Buyer, BuyerDetails, BuyerPosition, Certificate, CertificateKind, Incident, Invoice, Job, JobStatus, ListingState, MtProperty, Offer, OfferStatus, Quote, QuoteStatus, Order, OrderLine, OrderRequest,
   Sale, Tenant, TenantProfile,
 } from '../domain/types.ts';
 import { checkSlot, findService, depositFor, resourceFree, type BusyInterval, type Unavailable } from '../domain/availability.ts';
@@ -301,6 +301,8 @@ function mapOrder(r: any): Order {
     out_at: r.out_at ? new Date(r.out_at) : null,
     driver: r.driver ?? null,
     pay_note: r.pay_note ?? null,
+    requests: r.requests ?? [],
+    flags: r.flags ?? [],
   };
 }
 
@@ -799,6 +801,49 @@ export class Repo {
 
   async setOrderStatus(tenantId: string, reference: string, status: string): Promise<void> {
     await this.db.query('update public.voice_orders set status = $3 where tenant_id = $1 and reference = $2', [tenantId, reference, status]);
+  }
+
+  /** A takeaway caller's request on an order (cancel, change, send a missing item), waiting for staff. */
+  async requestOnOrder(tenantId: string, reference: string, r: Omit<OrderRequest, 'answer' | 'answered_at'>): Promise<Order | null> {
+    const rows = await this.db.query<any>(
+      `update public.voice_orders set requests = requests || $3::jsonb where tenant_id = $1 and reference = $2 returning *`,
+      [tenantId, reference, JSON.stringify([{ ...r, answer: null, answered_at: null }])],
+    );
+    return rows[0] ? mapOrder(rows[0]) : null;
+  }
+
+  /**
+   * Staff answer a request, once. An accepted cancellation cancels the order;
+   * nothing else changes here (a change is made by staff in the kitchen).
+   */
+  async answerRequest(tenantId: string, reference: string, index: number, answer: 'accepted' | 'refused', at: Date): Promise<{ order: Order; request: OrderRequest } | null> {
+    return this.db.tx(async (q) => {
+      const rows = await q.query<any>('select * from public.voice_orders where tenant_id = $1 and reference = $2 for update', [tenantId, reference]);
+      if (!rows[0]) return null;
+      const requests: OrderRequest[] = rows[0].requests ?? [];
+      const r = requests[index];
+      if (!r || r.answer) return null;
+      requests[index] = { ...r, answer, answered_at: at.toISOString() };
+      const cancel = r.kind === 'cancel' && answer === 'accepted';
+      const out = await q.query<any>(
+        `update public.voice_orders set requests = $3::jsonb, status = case when $4 then 'cancelled' else status end
+         where tenant_id = $1 and reference = $2 returning *`,
+        [tenantId, reference, JSON.stringify(requests), cancel],
+      );
+      return { order: mapOrder(out[0]), request: requests[index] };
+    });
+  }
+
+  /** An allergy told after ordering: added to the order's notes and marked on the ticket. */
+  async addOrderAllergy(tenantId: string, reference: string, note: string): Promise<Order | null> {
+    const rows = await this.db.query<any>(
+      `update public.voice_orders
+         set allergy_notes = case when allergy_notes is null or allergy_notes = '' then $3 else allergy_notes || '; ' || $3 end,
+             flags = array_append(array_remove(flags, 'allergy'), 'allergy')
+       where tenant_id = $1 and reference = $2 returning *`,
+      [tenantId, reference, note],
+    );
+    return rows[0] ? mapOrder(rows[0]) : null;
   }
 
   async markOrderPaid(orderId: string): Promise<void> {

@@ -8,7 +8,7 @@ import { int, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseDra
 import { sanitiseDeals } from '../food/deals.ts';
 import { sanitiseMenu } from '../food/menu.ts';
 import { ORDER_PAYMENTS, sanitiseOrdering } from '../food/ordering.ts';
-import { HALAL, PAY_DRIVER, VERSION, defaultAnswers, type TakeawayAnswers } from './answers.ts';
+import { HALAL, MISSING_ITEMS, PAY_DRIVER, VERSION, defaultAnswers, type TakeawayAnswers } from './answers.ts';
 
 /** Null stays null ("none"); a number is kept in bounds; anything else is the default. */
 function orNull(v: unknown, min: number, max: number, d: number | null): number | null {
@@ -23,6 +23,7 @@ export function sanitiseTakeaway(input: unknown): TakeawayAnswers {
   const h = x.hours ?? {};
   const k = x.kitchen ?? {};
   const m = x.money ?? {};
+  const af = x.after ?? {};
   const p = x.policies ?? {};
   const menu = sanitiseMenu(x.menu, d.menu);
   return {
@@ -42,6 +43,14 @@ export function sanitiseTakeaway(input: unknown): TakeawayAnswers {
       payment: oneOf(m.payment, ORDER_PAYMENTS, d.money.payment),
       pay_driver: oneOf(m.pay_driver, PAY_DRIVER, d.money.pay_driver),
       card_minimum_pence: orNull(m.card_minimum_pence, 0, 2000, d.money.card_minimum_pence),
+    },
+    after: {
+      late_after_minutes: int(af.late_after_minutes, 5, 60, d.after.late_after_minutes),
+      missing_items: oneOf(af.missing_items, MISSING_ITEMS, d.after.missing_items),
+      // As typed, so a number half written is kept; compile uses only the valid ones.
+      pay_on_phone_numbers: Array.isArray(af.pay_on_phone_numbers)
+        ? af.pay_on_phone_numbers.map((n: unknown) => str(n, 20, '')).filter(Boolean).slice(0, 30)
+        : d.after.pay_on_phone_numbers,
     },
     policies: {
       halal: oneOf(p.halal, HALAL, d.policies.halal),

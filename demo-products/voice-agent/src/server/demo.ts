@@ -527,8 +527,26 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     return json(res, 200, { ok: true, message }), true;
   }
   if (sub === 'orders' && ref && req.method === 'PATCH') {
-    const { status, driver } = await readJson(req, 10_000);
+    const body = await readJson(req, 10_000);
+    const { status, driver } = body;
     const kitchen = Boolean(t.profile.ordering?.kitchen);
+    // A caller's request on a takeaway order (cancel, change, send a missing item): staff accept or refuse, and the customer hears which.
+    if (kitchen && body.request !== undefined) {
+      const answer = body.answer === 'accepted' || body.answer === 'refused' ? body.answer : null;
+      if (!answer || !Number.isInteger(body.request)) throw new HttpError(400, 'Accept or refuse a request.');
+      const done = await repo.answerRequest(t.id, ref, body.request, answer, new Date());
+      if (!done) throw new HttpError(409, 'That request has already been answered.');
+      const { order: o, request: r } = done;
+      const yes = answer === 'accepted';
+      const text = r.kind === 'cancel' ? (yes ? `order ${o.reference} is cancelled.` : `sorry, we can't cancel order ${o.reference} now. Call us if you need to.`)
+        : r.kind === 'change' ? (yes ? `we've made your change to order ${o.reference}: ${r.what}.` : `sorry, we couldn't make your change to order ${o.reference} (${r.what}).`)
+        : yes ? `the missing ${r.what} from order ${o.reference} is on its way.` : `about the missing ${r.what} from order ${o.reference}: our manager will call you.`;
+      await textCustomer(ctx, t.id, r.phone ?? o.phone, `${t.profile.name}: ${text} (Demo)`);
+      void usage('staff_action', { action: `order_request_${answer}` });
+      const what = `Order ${o.reference}: ${r.kind === 'send_missing' ? 'send out' : r.kind} ${answer}`;
+      refresh({ reason: 'staff', reference: o.reference, what });
+      return json(res, 200, { ok: true, message: what }), true;
+    }
     if (!['confirmed', 'in_kitchen', 'ready', 'completed', 'cancelled', ...(kitchen ? ['out_for_delivery'] : [])].includes(status)) throw new HttpError(400, 'Unknown order state.');
     const o = await repo.getOrder(t.id, ref);
     if (!o) throw new HttpError(404, 'No such order.');

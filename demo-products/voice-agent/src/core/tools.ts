@@ -24,7 +24,7 @@ import { referencesIn } from './guardrails.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
-import { feeFor, findOrder, kitchenFulfilment, waitTimes } from './kitchen.ts';
+import { PHONE_ONLY, feeFor, findOrder, kitchenFulfilment, waitTimes } from './kitchen.ts';
 import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
@@ -1103,8 +1103,13 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).ordering && Boolean(t.profile.ordering?.kitchen),
     decl: {
       name: 'find_order',
-      description: "Where today's order is: in the kitchen, ready, out with the driver and since when, delivered. By its order number, or with none the number they're ringing from. Never for a new order.",
-      parameters: obj({ order_number: S('The order number, if they have it') }),
+      description: "Today's order, by its number or with none the number they're ringing from: where it is, and what they need after ordering. Never for a new order.",
+      parameters: obj({
+        order_number: S('The order number, if they have it (never a phone number)'),
+        action: S('find (default), add_allergy, request_cancel, request_change or report_problem'),
+        problem: S('report_problem: missing, wrong, cold, late, something_in_food or ill'),
+        details: S('The allergy, the change, or what is wrong, in their words'),
+      }),
     },
     handler: findOrder,
   },
@@ -1195,7 +1200,10 @@ const TOOLS: Record<string, Tool> = {
       const f = ctx.state.fulfilment;
       // A takeaway's delivery paid at the door: how, and for cash the change the driver needs (presets/takeaway.md §4.3). Asked once.
       let payNote: string | null = null;
-      if (o.kitchen && f.type === 'delivery' && o.pay_driver && o.pay_driver !== 'no') {
+      // A number on the pay-on-the-phone list (it refused a delivery): card on the phone now, never the driver.
+      const phoneOnly = Boolean(o.kitchen && f.type === 'delivery' && [phone, ctx.callerPhone].some((n) => n && o.pay_on_phone?.includes(n)));
+      if (phoneOnly) payNote = 'Pay on the phone only';
+      else if (o.kitchen && f.type === 'delivery' && o.pay_driver && o.pay_driver !== 'no') {
         const how = str(args.pay_driver)?.toLowerCase() ?? '';
         if (!how && !ctx.state.gateAsked.includes('pay_driver')) {
           ctx.state.gateAsked.push('pay_driver');
@@ -1225,7 +1233,7 @@ const TOOLS: Record<string, Tool> = {
         data: { reference: order.reference },
       });
       const rule = o.payment ?? 'either';
-      const payLine = payNote ? ` Paying the driver: ${payNote.replace(/^Cash: /, 'cash, ').toLowerCase()}.` : rule === 'collection' ? (order.fulfilment === 'delivery' ? ' Pay on delivery.' : ' Pay when you collect.') : '';
+      const payLine = phoneOnly ? '' : payNote ? ` Paying the driver: ${payNote.replace(/^Cash: /, 'cash, ').toLowerCase()}.` : rule === 'collection' ? (order.fulfilment === 'delivery' ? ' Pay on delivery.' : ' Pay when you collect.') : '';
       await smsTo(ctx, phone, `${ctx.tenant.profile.name}: order ${order.reference}, ${pounds(order.total_pence)}, ${order.fulfilment} at ${spokenTime(local.time)}.${payLine} Quote ${order.reference} if you call us. (Demo order)`);
       return {
         placed: true,
@@ -1233,7 +1241,8 @@ const TOOLS: Record<string, Tool> = {
         spoken_order_number: order.reference.split('').join(' '),
         total: pounds(order.total_pence),
         ready: `${order.fulfilment} at ${spokenTime(local.time)}`,
-        payment: payNote ? `They're paying the driver (${payNote.toLowerCase()}): don't take a card on the phone.` : paymentRule(rule, order.fulfilment),
+        payment: phoneOnly ? PHONE_ONLY
+          : payNote ? `They're paying the driver (${payNote.toLowerCase()}): don't take a card on the phone.` : paymentRule(rule, order.fulfilment),
       };
     },
   },

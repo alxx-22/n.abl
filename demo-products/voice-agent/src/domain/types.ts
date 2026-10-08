@@ -196,7 +196,15 @@ export interface Ordering {
    * or delivery, counted by when it must be ready; no orders in the last
    * minutes before closing; everything handed over by closing (core/kitchen.ts).
    */
-  kitchen?: { last_orders_minutes: number };
+  kitchen?: {
+    last_orders_minutes: number;
+    /** After the order: this long past the time given, "where's my food?" goes to the manager. */
+    late_after_minutes?: number;
+    /** An item missing from a delivery: sent out with the next driver, or a call from the manager. */
+    missing_items?: 'send_out' | 'manager';
+  };
+  /** Numbers that refused a delivery: they pay on the phone, or collect. */
+  pay_on_phone?: string[];
 }
 
 export interface KnowledgeEntry {
@@ -615,6 +623,20 @@ export interface Order {
   driver?: string | null;
   /** What the driver needs to know: "change from £20". */
   pay_note?: string | null;
+  /** A takeaway caller's requests, for staff to accept or refuse: nothing changes until they do. */
+  requests?: OrderRequest[];
+  /** Marks on the ticket: 'allergy' (added after it was placed). */
+  flags?: string[];
+}
+
+export interface OrderRequest {
+  /** Cancel it, change it, or send out an item missing from it (the owner's choice). */
+  kind: 'cancel' | 'change' | 'send_missing';
+  what: string;
+  phone: string | null;
+  at: string;
+  answer: 'accepted' | 'refused' | null;
+  answered_at: string | null;
 }
 
 export function pounds(pence: number): string {

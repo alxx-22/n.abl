@@ -11,6 +11,7 @@ import type { LiveOrder, LiveState } from '../types.ts';
 import type { WorkspaceSpec } from './spec.ts';
 
 type OrdersSpec = NonNullable<WorkspaceSpec['orders']>;
+const REQUEST: Record<NonNullable<LiveOrder['requests']>[number]['kind'], string> = { cancel: 'Cancel?', change: 'Change?', send_missing: 'Send out?' };
 type Column = { status: LiveOrder['status']; label: string };
 
 /** What an order is once it has gone: collected, or delivered. */
@@ -52,6 +53,16 @@ export function OrderBoard({ id, state, spec, nowMs, onDone }: { id: string; sta
       await demoApi(`/workspaces/${id}/orders/${o.reference}`, { method: 'PATCH', json: driver ? { status, driver } : { status } });
       if (status === 'out_for_delivery') toast(`Order ${o.reference}: out with ${driver}. ${o.name} has been texted.`);
       else if (status === 'ready' && !(spec.drivers && o.fulfilment === 'delivery')) toast(`Order ${o.reference}: ${o.name} has been texted.`);
+      onDone();
+    } catch (e) {
+      toast((e as Error).message);
+    }
+  };
+  /** A caller's request on the ticket: nothing is cancelled or changed until staff accept, and the customer is texted either way. */
+  const answer = async (o: LiveOrder, request: number, answer: 'accepted' | 'refused') => {
+    try {
+      await demoApi(`/workspaces/${id}/orders/${o.reference}`, { method: 'PATCH', json: { request, answer } });
+      toast(`Order ${o.reference}: ${answer}. ${o.name} has been texted.`);
       onDone();
     } catch (e) {
       toast((e as Error).message);
@@ -112,7 +123,18 @@ export function OrderBoard({ id, state, spec, nowMs, onDone }: { id: string; sta
                       <li key={i}>{l.quantity} × {l.name}{l.modifiers.length ? ` (${l.modifiers.map((m) => m.name).join(', ')})` : ''}{l.notes ? `, ${l.notes}` : ''}</li>
                     ))}
                   </ul>
-                  {o.allergy_notes ? <div className="allergy">ALLERGY: {o.allergy_notes}</div> : null}
+                  {o.allergy_notes ? <div className="allergy">ALLERGY: {o.allergy_notes}{o.flags?.includes('allergy') ? ' (told after ordering)' : ''}</div> : null}
+                  {(o.requests ?? []).map((r, i) => (
+                    <div key={i} className={`request ${r.answer ? 'answered' : ''}`}>
+                      <span><strong>{REQUEST[r.kind]}</strong>: {r.what}{r.answer ? ` · ${r.answer}` : ''}</span>
+                      {r.answer ? null : (
+                        <span className="row">
+                          <button type="button" className="small primary" onClick={() => answer(o, i, 'accepted')}>Accept</button>
+                          <button type="button" className="small" onClick={() => answer(o, i, 'refused')}>Refuse</button>
+                        </span>
+                      )}
+                    </div>
+                  ))}
                   <footer>
                     <span className={`badge ${pay.ok ? 'ok' : 'warn'}`}>{pay.text}</span>
                     <span className="muted small">{o.total}</span>
