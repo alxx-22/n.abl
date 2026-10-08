@@ -345,6 +345,21 @@ test('get_property: unknown broadband or mobile signal names Ofcom\'s checker, a
   assert.match(asked.flooding, /can tell you more/);
 });
 
+test('a home removed in the builder: its buyer still hears where their offer stands, and their viewing feedback is still taken', async () => {
+  const t = await agency('ea-removed');
+  const offer = (await repo.listOffers(t.id)).find((o) => o.phone && o.status === 'sent')!;
+  const past = (await repo.listBookings(t.id, new Date(NOW.getTime() - 14 * 86400000), NOW)).find((b) => b.listing_key && b.phone && b.ends_at <= NOW && b.status === 'confirmed')!;
+  // The prospect takes both homes out of their list; what happened on them stays on record.
+  const gone: Tenant = { ...t, profile: { ...t.profile, listings: t.profile.listings!.filter((l) => l.key !== offer.listing_key && l.key !== past.listing_key) } };
+  const status = await (await call(gone, offer.phone)).run('get_offer_status', { reference: offer.reference });
+  assert.equal(status.verified, true, JSON.stringify(status));
+  assert.match(String(status.status), /put to the seller/);
+  assert.match(String(status.note), /no longer listed with us/);
+  const fb = await (await call(gone, past.phone)).run('record_viewing_feedback', { reference: past.reference, words: 'Lovely garden, too small inside.', category: 'not_for_me' });
+  assert.equal(fb.recorded, true, JSON.stringify(fb));
+  assert.equal(((await repo.getBookingByReference(t.id, past.reference))!.details?.feedback as { words?: string } | undefined)?.words, 'Lovely garden, too small inside.');
+});
+
 test('status first: off the market offers two others, a sale agreed is said before any times, coming soon gives its first day', async () => {
   const t = await agency('ea-status');
   const { run, ctx, say } = await call(t);

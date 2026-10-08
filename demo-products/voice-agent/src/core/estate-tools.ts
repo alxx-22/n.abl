@@ -1196,14 +1196,16 @@ async function getOfferStatus(args: Args, ctx: ToolContext): Promise<Record<stri
     ctx.state.verifyMisses++;
     return refuse();
   }
-  if (picked.length > 1) return { verified: true, more_than_one: picked.map((o) => shortAddress(t.profile.listings!.find((l) => l.key === o.listing_key)!)), next: 'Ask which home.' };
+  // A home taken out of the list in the builder keeps its offers on record (review, 8 October).
+  const homeOf = (key: string) => t.profile.listings?.find((x) => x.key === key);
+  if (picked.length > 1) return { verified: true, more_than_one: picked.map((o) => { const h = homeOf(o.listing_key); return h ? shortAddress(h) : `the offer ${o.reference}`; }), next: 'Ask which home.' };
   const o = picked[0];
-  const l = t.profile.listings!.find((x) => x.key === o.listing_key)!;
-  const live = (await ctx.repo.listingState(t.id, l.key))!;
+  const l = homeOf(o.listing_key);
+  const live = l ? await ctx.repo.listingState(t.id, l.key) : null;
   const tz = t.profile.timezone;
   const day = today(ctx);
   const at = (d: Date) => `${dayWords(toLocal(d, tz).date, day)} at ${spokenTime(toLocal(d, tz).time)}`;
-  const negotiator = firstNameOf(t, l.negotiator) || 'the negotiator';
+  const negotiator = (l && firstNameOf(t, l.negotiator)) || 'the negotiator';
   const decided = o.decided_at ?? o.received_at;
   const status: Record<string, string> = {
     received: `received ${at(o.received_at)}; ${negotiator} will put it to the seller`,
@@ -1214,8 +1216,14 @@ async function getOfferStatus(args: Args, ctx: ToolContext): Promise<Record<stri
     withdrawn: `withdrawn ${at(decided)}`,
   };
   // An acceptance the tool reported is news the receptionist may pass on (guardrails).
-  if (o.status === 'accepted' && !ctx.state.seen.accepted.includes(l.key)) ctx.state.seen.accepted.push(l.key);
+  if (o.status === 'accepted' && !ctx.state.seen.accepted.includes(o.listing_key)) ctx.state.seen.accepted.push(o.listing_key);
   const open = ['received', 'sent', 'countered'].includes(o.status);
+  if (!l || !live) {
+    return {
+      verified: true, reference: o.reference, amount: poundsWhole(o.amount_pence), status: status[o.status],
+      note: 'That home is no longer listed with us. Say where their offer stands, and offer a message for the team: never guess why, or what happens next.',
+    };
+  }
   return {
     verified: true,
     property: shortAddress(l),
@@ -1231,7 +1239,8 @@ async function getOfferStatus(args: Args, ctx: ToolContext): Promise<Record<stri
 
 /** "keen", "second viewing", "likely to offer", "not for me", as a caller or the model says them. */
 function feedbackCategory(v: unknown): string | null {
-  const w = (str(v) ?? '').toLowerCase();
+  // As said, or as the keys are written ("not_for_me").
+  const w = (str(v) ?? '').toLowerCase().replace(/_/g, ' ');
   if (/second|again|another look/.test(w)) return 'second_viewing';
   if (/offer/.test(w)) return 'likely_offer';
   if (/not for|didn'?t|\bpass\b|\bno\b/.test(w)) return 'not_for_me';
@@ -1254,9 +1263,11 @@ async function recordViewingFeedback(args: Args, ctx: ToolContext): Promise<Reco
   const b = theirs.sort((x, y) => y.starts_at.getTime() - x.starts_at.getTime())[0];
   // Only their own viewing: anyone else's feedback, or a reference not on this number, is a message.
   if (!b) return { recorded: false, message: 'There is no past viewing on this number. Take their feedback as a message for the negotiator (category viewing).' };
-  const l = t.profile.listings!.find((x) => x.key === b.listing_key)!;
+  // A home taken out of the list in the builder: the feedback still goes on the viewing (review, 8 October).
+  const l = t.profile.listings?.find((x) => x.key === b.listing_key);
   await ctx.repo.mergeBookingDetails(t.id, b.reference, { feedback: { category, words, source: 'caller', at: now.toISOString() }, awaiting_feedback: false }, `feedback from the buyer: ${category.replace(/_/g, ' ')}`, 'receptionist');
-  ctx.action({ kind: 'booking_changed', title: `Feedback · ${shortAddress(l)}`, detail: `${FEEDBACK_WORDS[category]}: "${words}" · ref ${b.reference}`, data: { reference: b.reference } });
+  ctx.action({ kind: 'booking_changed', title: `Feedback · ${l ? shortAddress(l) : `viewing ${b.reference}`}`, detail: `${FEEDBACK_WORDS[category]}: "${words}" · ref ${b.reference}`, data: { reference: b.reference } });
+  if (!l) return { recorded: true, next: "Thank them. That home is no longer listed with us: offer once to note what they're looking for, so we can tell them about other homes." };
   return {
     recorded: true,
     property: shortAddress(l),
