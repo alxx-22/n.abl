@@ -69,7 +69,7 @@ test("where's my order: out with the driver, found by the calling number, with n
   assert.equal(await repo.sendOutOrder(t.id, o.reference, 'Tom', at('19:50')), null);
 });
 
-test('paying the driver: asked once how, and for cash the change they need, on the order and in the text', async () => {
+test('paying the driver: asked once how, with the read-back, and for cash the change they need, on the order and in the text', async () => {
   const t = await firebird('tk-pay-driver');
   const sent: { to: string; body: string }[] = [];
   const c = await call(t, at('19:00'), AMY);
@@ -77,18 +77,23 @@ test('paying the driver: asked once how, and for cash the change they need, on t
   await c.run('add_to_order', { item: 'Burger meal', options: ['cheeseburger', 'fries', 'coke'] });
   await c.run('add_to_order', { item: 'Six hot wings' });
   await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 1AA', address: '3 Near Road' });
-  await c.run('review_order', {});
-  const ask = await c.run('confirm_order', { name: 'Amy', allergy_notes: 'none' });
-  assert.equal(ask.placed, false);
-  assert.match(ask.message, /ask how they'll pay: now by card on the phone, or the driver in cash or by card\. For cash, ask "Do you need change from anything\?"/);
+  // Asked in the same breath as the read-back, so the caller's yes places it. Live, 8 October: "yes, that's right, bye",
+  // then "how will you pay?", and three orders were never placed.
+  const review = await c.run('review_order', {});
+  assert.equal(review.next, `Read this back word for word and, in the same breath, ask their name, if you don't have it yet, and how they'll pay: now by card on the phone, or the driver in cash or by card, and for cash, "do you need change from anything?". On yes, call confirm_order at once with pay_driver and change_from: don't ask anything new after the yes.`);
   const placed = await c.run('confirm_order', { name: 'Amy', allergy_notes: 'none', pay_driver: 'cash', change_from: '£20' });
   assert.equal(placed.placed, true, JSON.stringify(placed));
   assert.equal(placed.payment, "They're paying the driver (cash: change from £20): don't take a card on the phone.");
   assert.equal((await repo.getOrder(t.id, placed.order_number))!.pay_note, 'Cash: change from £20');
   assert.match(sent.at(-1)!.body, /Paying the driver: cash, change from £20\./);
   // The note must be one they can hand over that covers the total. Live, 8 October: never asked, the total
-  // itself went in as the note, "change from £32"; a twenty for £22.49 is checked, and asked once.
-  for (const [given, asked, note] of [['£32.48', /^Ask "Do you need change from anything\?": the note they'll pay the driver with, for £22\.49\./, 'Cash: change from £50'], ['a twenty', /^£20 won't cover the £22\.49 total/, 'Cash: change from £50'], ['none', null, 'Cash: no change needed']] as const) {
+  // itself went in as the note, "change from £32"; a twenty for £22.49 is checked, once. Not said: no change needed.
+  for (const [given, asked, note] of [
+    ['£32.48', /^£32\.48 isn't a note they'd hand over: check what they'll pay the driver with, for £22\.49/, 'Cash: change from £50'],
+    ['a twenty', /^£20 won't cover the £22\.49 total/, 'Cash: change from £50'],
+    ['none', null, 'Cash: no change needed'],
+    ['', null, 'Cash: no change needed'],
+  ] as const) {
     const d = await call(t, at('19:00'), AMY);
     await d.run('add_to_order', { item: 'Pizza night', options: ['margherita', 'pepperoni', 'coke', 'fanta'] });
     await d.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 1AA', address: '3 Near Road' });

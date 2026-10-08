@@ -261,3 +261,16 @@ test('the kitchen: a big order takes two places in its slot; past the catering l
   assert.match(more.message, /^That makes 16 mains: more than 15 is a catering order, which the manager arranges\./);
   assert.equal(party.ctx.state.lines.length, 1);
 });
+
+test('the read-back: a dish the caller asked for that never reached the order is checked, once', async () => {
+  const t = await firebird('tk-heard');
+  const c = await call(t);
+  // Live, 8 October: "a classic beef burger, noted", never added, and the read-back went without it.
+  c.ctx.state.heard.push("Hi, I'd like to order a classic beef burger, please.", 'And some regular fries.', 'No onion rings, thanks.');
+  await c.run('add_to_order', { item: 'regular fries' });
+  await c.run('set_fulfilment', { type: 'collection' });
+  const first = await c.run('review_order', {});
+  assert.deepEqual([first.ok, first.not_on_order], [false, ['Classic beef burger']], '"no onion rings" is not one');
+  assert.match(first.message, /^Not read back yet: the caller mentioned Classic beef burger, which isn't on the order\. If they asked for it, add it with add_to_order now/);
+  assert.equal((await c.run('review_order', {})).ok, true, 'checked once only');
+});

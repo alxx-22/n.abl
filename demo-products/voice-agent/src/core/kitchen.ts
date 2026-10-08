@@ -13,7 +13,8 @@
 
 import type { Menu, Order, OrderLine, OrderRequest, Ordering, Tonight } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
-import { lineTotal } from '../domain/menu.ts';
+import { lineTotal, normalise } from '../domain/menu.ts';
+import { dealOf } from '../domain/deals.ts';
 import { addDays, closeMinutes, dayName, normaliseTime, spokenTime, toLocal, weekdayOf, zonedToUtc } from '../domain/time.ts';
 import { normaliseUkPhone } from '../domain/phone.ts';
 import { postcodeOf, record, str } from './tool-kit.ts';
@@ -255,6 +256,45 @@ export function soldOutWords(menu: Menu, key: string, soldOut: Set<string>): str
   const item = c?.items.find((i) => i.key === key);
   const others = (c?.items ?? []).filter((i) => i.key !== key && i.available !== false && !soldOut.has(i.key)).slice(0, 3).map((i) => i.name);
   return `${item?.name ?? 'That'} is sold out tonight.${others.length ? ` Other ${c!.label.toLowerCase()} tonight: ${others.join(', ')}.` : ''} Say sorry, and offer one of those.`;
+}
+
+// ── The read-back (presets/takeaway.md §4.5) ──────────────────────────────
+
+/**
+ * A takeaway's read-back asks everything still needed in the same breath, so
+ * the caller's yes places the order. Live, 8 October: three callers said
+ * "yes, that's right, bye" and were only then asked their name or how they'd
+ * pay the driver, and no order was placed. Asked here, the driver's question
+ * isn't asked again by confirm_order.
+ */
+export function readBackNext(ctx: ToolContext, type: Kind): string {
+  const o = ctx.tenant.profile.ordering!;
+  const asks = ["their name, if you don't have it yet"];
+  const phoneOnly = Boolean(ctx.callerPhone && o.pay_on_phone?.includes(ctx.callerPhone));
+  const driver = type === 'delivery' && o.pay_driver && o.pay_driver !== 'no' && !phoneOnly;
+  if (driver) {
+    asks.push(`how they'll pay: now by card on the phone, or the driver ${o.pay_driver === 'cash' ? 'in cash' : 'in cash or by card'}, and for cash, "do you need change from anything?"`);
+    for (const g of ['pay_driver', 'change_from']) if (!ctx.state.gateAsked.includes(g)) ctx.state.gateAsked.push(g);
+  }
+  return `Read this back word for word and, in the same breath, ask ${asks.join(', and ')}. On yes, call confirm_order at once${driver ? ' with pay_driver and change_from' : ''}: don't ask anything new after the yes.`;
+}
+
+/** Dishes of two words or more the caller named that aren't on the order, as a dish or a deal's choice. Not said with "no". */
+export function heardNotOrdered(ctx: ToolContext): string[] {
+  const menu = ctx.tenant.profile.menu!;
+  const said = ` ${normalise(ctx.state.heard.join(' . ')).join(' ')} `;
+  const inOrder = new Set(ctx.state.lines.flatMap((l) => [l.item_key, ...l.modifiers.map((m) => m.key)]));
+  const out: string[] = [];
+  for (const c of menu.categories) {
+    for (const i of c.items) {
+      const words = normalise(i.name);
+      if (inOrder.has(i.key) || dealOf(menu, i.key) || words.length < 2) continue;
+      const at = said.indexOf(` ${words.join(' ')} `);
+      if (at < 0 || /\b(?:no|not|without|instead|rather|than|don t|dont)\s*$/.test(said.slice(Math.max(0, at - 16), at))) continue;
+      out.push(i.name);
+    }
+  }
+  return out;
 }
 
 // ── Big orders and catering (presets/takeaway.md §2.1, §4.2) ──────────────

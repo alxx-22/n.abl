@@ -25,7 +25,8 @@ import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
 import {
-  PHONE_ONLY, cateringOrder, feeFor, findOrder, impliedCollection, isBig, kitchenFulfilment, menuTonight, shortOfMinimum, soldOutWords, waitTimes,
+  PHONE_ONLY, cateringOrder, feeFor, findOrder, heardNotOrdered, impliedCollection, isBig, kitchenFulfilment, menuTonight, readBackNext, shortOfMinimum,
+  soldOutWords, waitTimes,
 } from './kitchen.ts';
 import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
@@ -1155,6 +1156,15 @@ const TOOLS: Record<string, Tool> = {
       const refused = await impliedCollection(ctx);
       if (refused) return refused;
       if (!ctx.state.fulfilment) return { ok: false, message: NO_FULFILMENT };
+      // A takeaway's: a dish the caller named that never reached the order, checked once before the read-back.
+      const missing = o.kitchen && !ctx.state.gateAsked.includes('heard_items') ? heardNotOrdered(ctx) : [];
+      if (missing.length) {
+        ctx.state.gateAsked.push('heard_items');
+        return {
+          ok: false, not_on_order: missing,
+          message: `Not read back yet: the caller mentioned ${missing.join(' and ')}, which ${missing.length > 1 ? "aren't" : "isn't"} on the order. If they asked for ${missing.length > 1 ? 'them' : 'it'}, add ${missing.length > 1 ? 'them' : 'it'} with add_to_order now (asking only what you must); if they only asked about ${missing.length > 1 ? 'them' : 'it'}, call review_order again.`,
+        };
+      }
       const b = basketSummary(ctx);
       const f = ctx.state.fulfilment;
       // A takeaway's postcode has its own fee and minimum, and delivery can be free over an amount (core/kitchen.ts).
@@ -1178,7 +1188,7 @@ const TOOLS: Record<string, Tool> = {
         total: pounds(total),
         fulfilment: when,
         payment: paymentRule(o.payment ?? 'either', f.type),
-        next: 'Read this back and ask if it is all correct. Then ask for the name (and number if unknown), and any allergies, before confirm_order.',
+        next: o.kitchen ? readBackNext(ctx, f.type) : 'Read this back and ask if it is all correct. Then ask for the name (and number if unknown), and any allergies, before confirm_order.',
       };
     },
   },
@@ -1251,14 +1261,19 @@ const TOOLS: Record<string, Tool> = {
           const n = /\d/.test(said) ? Number(said.replace(/[^\d.]/g, '')) : word ? NOTES[word] : 0;
           const none = /\b(?:no|none|exact|not needed|n\/?a)\b/i.test(said);
           const note = !none && Number.isInteger(n) && n > 0 && n % 5 === 0 && n * 100 >= subtotal + fee ? n : null;
-          if (note === null && !none && !ctx.state.gateAsked.includes('change_from')) {
-            ctx.state.gateAsked.push('change_from');
+          // A note given that can't be right is checked once, even after the read-back asked.
+          if (note === null && !none && n > 0 && !ctx.state.gateAsked.includes('change_checked')) {
+            ctx.state.gateAsked.push('change_checked');
             return {
               placed: false,
-              message: n > 0 && n * 100 < subtotal + fee
+              message: n * 100 < subtotal + fee
                 ? `£${n} won't cover the ${pounds(subtotal + fee)} total: check what they'll pay the driver with, then call confirm_order again with change_from.`
-                : `Ask "Do you need change from anything?": the note they'll pay the driver with, for ${pounds(subtotal + fee)}. Then call confirm_order again with change_from, or "none".`,
+                : `£${n} isn't a note they'd hand over: check what they'll pay the driver with, for ${pounds(subtotal + fee)}, then call confirm_order again with change_from, or "none".`,
             };
+          }
+          if (note === null && !none && !ctx.state.gateAsked.includes('change_from')) {
+            ctx.state.gateAsked.push('change_from');
+            return { placed: false, message: `Ask "Do you need change from anything?": the note they'll pay the driver with, for ${pounds(subtotal + fee)}. Then call confirm_order again with change_from, or "none".` };
           }
           payNote = note ? `Cash: change from £${note}` : 'Cash: no change needed';
         } else if (/card/.test(how) && !/phone|now/.test(how) && o.pay_driver === 'cash_or_card') payNote = 'Card at the door';
