@@ -42,6 +42,9 @@ interface Tracked {
 export function armSafety(state: Tracked, line: string): SafetyKind | null {
   const kind = detectSafety(line);
   if (!kind || !GATED.includes(kind) || state.safetyDone.includes(kind) || state.safety?.kind === kind) return null;
+  // The chirping alarm named again ("this carbon monoxide alarm is a new problem") is still the chirp, unless it is now
+  // sounding or someone feels ill (live, 8 October: the full evacuation script was read out for a low battery).
+  if (kind === 'co' && state.heard.some((h) => detectSafety(h) === 'co_chirp') && !CO_SYMPTOMS.test(line) && !/\b(?:going off|sounding|won'?t stop|ringing|non-?stop|continuous(?:ly)?)\b/i.test(line)) return null;
   if (state.safety && !state.safety.spoken) return null;
   state.safety = { kind, armed_at: state.heard.length, said_from: state.said.length, spoken: false, incident: null, ...(inAnotherLanguage(line) ? { foreign: true } : {}) };
   return kind;

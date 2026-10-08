@@ -181,7 +181,7 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
     if (flat && !new RegExp(`flat\\s*${flat}\\b`, 'i').test(p.number)) score -= 2;
     // Rung from the occupant's own number: "Flat 4, NG7" is enough (live, 8 October: a leaseholder at Riverside Court
     // wasn't found from that, was taken as a new customer, and his block's door entry fault was priced to him).
-    if (ctx.callerPhone && p.occupant.phone === ctx.callerPhone && (pc || flat || nums.length)) score += 3;
+    if (ctx.callerPhone && p.occupant.phone === ctx.callerPhone && (pc || flat || nums.length || street)) score += 3;
     return { p, score };
   }).filter((x) => x.score >= (street && nums.length ? 6 : 4)).sort((a, b) => b.score - a.score);
   if (!scored.length) {
@@ -722,6 +722,8 @@ async function sharedAlready(ctx: ToolContext, block: MtProperty, part: string, 
 }
 
 async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
+  // "vulnerabilities" for vulnerable (live, 8 October: a damp job was refused twice over the name, then called booked).
+  if (args.vulnerable === undefined) args = { ...args, vulnerable: args.vulnerabilities ?? args.vulnerability };
   const m = mt(ctx);
   const found = await propertyFor(args, ctx);
   if ('reply' in found) return found.reply;
@@ -1020,6 +1022,8 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
   if (!jobs.length) {
     return {
       found: 0,
+      // Someone at the door and nothing booked: the plain words for it (live, 8 October: "I can't find any jobs" alone).
+      ...(ref ? {} : await atTheDoor(ctx, ctx.state.heard.slice(-6).join(' '))),
       message: ref || !ctx.callerPhone
         ? "Nothing found. Ask for the job reference from their text. Never look a job up by address alone: say you can't give job details without the reference or a call from the number on the job."
         : "Nothing is booked for this number, so nobody from us is due today. If they have a reference, ask for it. Never look a job up by address alone.",
@@ -1464,7 +1468,8 @@ export async function maintenanceMessage(args: Args, ctx: ToolContext): Promise<
   };
 }
 
-const DOOR = /\b(?:at (?:my|the) (?:front )?door|on (?:my|the) doorstep|says? (?:he|she|they)(?:'s| is| are)? from|claim(?:s|ing) to be from|wasn'?t expecting (?:anyone|anybody|him|her|them))\b/i;
+// "He just said he's from Fernhill", "is he one of yours?", "should I let him in?" (live, 8 October) as well.
+const DOOR = /\b(?:at (?:my|the) (?:front )?door|on (?:my|the) doorstep|(?:says?|said|saying) (?:he|she|they)(?:'s| is| are| was| were)? from|claim(?:s|ing|ed) to be from|wasn'?t expecting (?:anyone|anybody|him|her|them)|(?:is|are) (?:he|she|they) (?:one of yours|from you)|let (?:him|her|them) in)\b/i;
 
 /**
  * "Someone at my door says they're from you": the board decides. A visit

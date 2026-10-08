@@ -98,6 +98,10 @@ test('safety mode: spotting an emergency in what the caller says, and hearing th
   }
   assert.equal(detectSafety('Potrzebuję przeglądu gazowego'), null, 'a gas check, in Polish, is not a smell');
   for (const line of ['I sent you the gas safety certificate last week', 'The gas engineer sent me a text', 'Is the gas fuse box the same as the electric one?']) assert.equal(detectSafety(line), null, line);
+  // A chirping alarm named again later is still the chirp (live, 8 October), unless it is now sounding.
+  const chirp: Parameters<typeof armSafety>[0] = { safety: null, safetyDone: [], heard: ['Hi, my carbon monoxide alarm has started chirping once a minute.'], said: [] };
+  assert.equal(armSafety(chirp, 'Yes, that is my address. This carbon monoxide alarm is a new problem.'), null);
+  assert.equal(armSafety(chirp, "Now the carbon monoxide alarm is going off and it won't stop!"), 'co');
   // Advice given in their language: the number in digits shows it was said.
   const s: Parameters<typeof armSafety>[0] = { safety: null, safetyDone: [], heard: [], said: [] };
   assert.equal(armSafety(s, 'Czuję gaz w kuchni'), 'gas');
@@ -771,6 +775,13 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   assert.match(home.properties[0].damp, /Damp or mould here is a job: raise it with job create/);
   const msg = await nadia.run('take_message', { name: 'Nadia Hussain', message: 'Black mould in the bedroom', category: 'damp' });
   assert.match(msg.also, /Raise the repair too, with job create: that is what tells Meadowbank Housing today/);
+  // Live, 8 October: "vulnerabilities" for vulnerable, with consent, is taken as it is meant.
+  const nadia2 = await call(t, '+447700900571');
+  await nadia2.run('find_property', { postcode: 'DE23', number: 'Flat 2, 7', street: 'Larkspur Walk' });
+  nadia2.hear("There's black mould spreading on my son's bedroom wall. He's six and has asthma.");
+  const named = await nadia2.run('job', { action: 'create', description: "Black mould in son's bedroom", name: 'Nadia Hussain', vulnerabilities: 'child with asthma (6)', consent: true, trade: 'damp_mould' });
+  assert.ok(named.windows?.length || named.booked, JSON.stringify(named));
+  assert.doesNotMatch(String(named.message ?? ''), /Ask whether anyone at home has asthma/);
   // Live, 8 October: hanging up with no job raised is stopped once.
   const end = await nadia.run('end_call', { outcome: 'message' });
   assert.equal(end.ok, false);
@@ -782,6 +793,12 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   aisha.hear("There's a man at my door saying he's from Fernhill. He's given me the reference F P nine eight seven six.");
   const door = await aisha.run('job', { action: 'find', reference: 'FP9876' });
   assert.match(door.at_the_door, /we haven't sent anyone/);
+  // And as said on the next run: "is he one of yours?", "he just said he's from Fernhill", no reference.
+  const aisha2 = await call(t, '+447700900502');
+  aisha2.hear('Is he one of yours? Should I let him in?');
+  aisha2.hear("No, he just said he's from Fernhill. He's here to check the boiler.");
+  const none = await aisha2.run('job', { action: 'find', property: 'larchfield_120' });
+  assert.match(none.at_the_door, /we haven't sent anyone, not to let them in/);
   // The health question passed on is not health advice.
   const s2 = newCallState();
   s2.maintenance = true;
@@ -867,6 +884,9 @@ test('a leaseholder found from "Flat 4, NG7" and their own number, or from the f
   helen.hear("I'm calling about a leak in my bedroom ceiling. Since it rained last night, water's been dripping through.");
   const hers = await helen.run('find_property', { number: 'Flat 9, 2', street: 'Weaver Lane', postcode: 'NG7' });
   assert.match(hers.what_they_said, /the roof, in the block's shared parts: no price/);
+  // The street alone from the occupant's own number (live, 8 October: "Elm Road" from Sam's phone found nothing).
+  const sam = await (await call(t, SAM)).run('find_property', { street: 'Elm Road' });
+  assert.deepEqual([sam.found, sam.properties?.[0]?.property], [1, 'elm_14'], JSON.stringify(sam));
   // "9, Riverside Court": the block named, so 9 is the flat.
   const nine = await (await call(t, STRANGER)).run('find_property', { street: 'Riverside Court', number: '9' });
   assert.deepEqual([nine.found, nine.properties?.[0]?.property], [1, 'riverside_court_flat_9'], JSON.stringify(nine));
