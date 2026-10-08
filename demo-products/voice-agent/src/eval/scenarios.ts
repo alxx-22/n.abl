@@ -17,6 +17,7 @@ import { allergensNamed } from '../domain/menu.ts';
 import { digitsSaid } from '../domain/phone.ts';
 import { said999 } from '../core/reaction.ts';
 import { TK_PEOPLE } from '../presets/takeaway/personas.ts';
+import { BB_PEOPLE } from '../presets/barber/personas.ts';
 import type { MaintenanceAnswers } from '../presets/maintenance/answers.ts';
 import type { TakeawayAnswers } from '../presets/takeaway/answers.ts';
 import { answersOf, builtPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
@@ -29,6 +30,8 @@ export const WEDNESDAY_MORNING = new Date('2026-10-07T10:00:00Z'); // Wed 7 Oct,
 /** The takeaway's rush: Friday 9 October at 7pm, and Saturday 10 October at 11:35pm, ten minutes before last orders and a midnight close. */
 export const TK_FRIDAY_7PM = new Date('2026-10-09T18:00:00Z');
 export const TK_SATURDAY_LATE = new Date('2026-10-10T22:35:00Z');
+/** The barber's clock (presets/barber.md §8): Thursday 15 October, 11am, the late night ahead and Saturday two days off. */
+export const BB_THURSDAY = new Date('2026-10-15T10:00:00Z');
 /** Property maintenance out of hours: the same Wednesday, 9pm; Dan and Leon on call. */
 export const WEDNESDAY_NIGHT = new Date('2026-10-07T20:00:00Z'); // Wed 7 Oct, 21:00 BST
 
@@ -1902,6 +1905,153 @@ export const SCENARIOS: Scenario[] = [
       expect(f, !seeded.some((r) => r.phone && digitsSaid(c.agentText).includes(String(r.phone).replace(/^\+44/, '0').replace(/\D/g, '').slice(-6))), "a customer's number was read out");
       expect(f, (await messages(c)).length >= 1, 'the shop was not told');
       expect(f, (await orders(c)).length === 0, 'an order was placed');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  // ── Kingsley's Barbers (presets/barber.md §8, M1) ──────────────────────
+  {
+    id: 'bb-any-barber',
+    tenant: 'bb-kingsleys',
+    title: 'A classic cut tomorrow afternoon, any barber: real times, booked, read back with the price, texted',
+    kind: 'happy',
+    callerPhone: '+447700900951',
+    now: BB_THURSDAY,
+    persona: 'You are Tom Reid. Ask for a classic cut tomorrow (Friday) afternoon with any barber. Take the first time you are offered after 12 noon. No deposit now: you will pay in the shop. Your name is Tom.',
+    async check(c) {
+      const f: string[] = [];
+      const b = await bookings(c);
+      expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
+      if (b[0]) {
+        expect(f, b[0].service_key === 'classic_cut', b[0].service_key);
+        const start = new Date(b[0].starts_at).getTime();
+        expect(f, start >= at('2026-10-16', '12:00').getTime() && start < at('2026-10-16', '18:00').getTime(), `at ${new Date(b[0].starts_at).toISOString()}`);
+      }
+      expect(f, /£18|eighteen pounds/i.test(c.agentText), 'the price was not said');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'bb-named-barber',
+    tenant: 'bb-kingsleys',
+    title: 'A skin fade with Marcus on Saturday morning: his times only, booked with him, the deposit paid',
+    kind: 'happy',
+    callerPhone: '+447700900952',
+    now: BB_THURSDAY,
+    setup: (repo, tenant) => clearDay(repo, tenant, '2026-10-17'),
+    persona: `You are Jay Patel. You want a skin fade with Marcus on Saturday morning. Take the first morning time offered. Pay the deposit now by card: ${DEMO_CARD_SPOKEN}. Your name is Jay.`,
+    async check(c) {
+      const f: string[] = [];
+      const b = await bookings(c);
+      expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
+      if (b[0]) {
+        expect(f, b[0].resource_key === 'marcus', `with ${b[0].resource_key}`);
+        expect(f, b[0].service_key === 'skin_fade', b[0].service_key);
+        const start = new Date(b[0].starts_at).getTime();
+        expect(f, start >= at('2026-10-17', '08:00').getTime() && start < at('2026-10-17', '12:00').getTime(), `at ${new Date(b[0].starts_at).toISOString()}`);
+        expect(f, b[0].deposit_paid === true, 'deposit not paid');
+      }
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'bb-unknown-barber',
+    tenant: 'bb-kingsleys',
+    title: 'A cut with "Mike", who doesn\'t work there: no guessing, another barber offered and booked',
+    kind: 'edge',
+    callerPhone: '+447700900953',
+    now: BB_THURSDAY,
+    setup: (repo, tenant) => clearDay(repo, tenant, '2026-10-17'),
+    persona: 'You are Chris Doyle. You want a classic cut with Mike on Saturday at 11am. If there is no Mike, have whoever is free at 11. Pay in the shop, no deposit now. Your name is Chris.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, !/\bmike\b[^.?!]{0,40}\b(?:is free|can do|booked|is in)\b/i.test(c.agentText), 'Mike was treated as a barber');
+      const b = await bookings(c);
+      expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
+      if (b[0]) {
+        expect(f, ['marcus', 'dan', 'jordan', 'amira'].includes(b[0].resource_key), `with ${b[0].resource_key}`);
+        expect(f, new Date(b[0].starts_at).getTime() === at('2026-10-17', '11:00').getTime(), `at ${new Date(b[0].starts_at).toISOString()}`);
+      }
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'bb-cancel-late',
+    tenant: 'bb-kingsleys',
+    title: "Cancelling tomorrow's cut inside 24 hours: the deposit kept, said once, plainly; cancelled",
+    kind: 'edge',
+    callerPhone: BB_PEOPLE.soon.phone,
+    now: BB_THURSDAY,
+    persona: "You are Ollie Price. You have a cut booked with Dan tomorrow morning. Say: \"I need to cancel my booking tomorrow.\" If you're told the deposit is kept, say that's fine and cancel anyway. Your name is Ollie.",
+    async check(c) {
+      const f: string[] = [];
+      const mine = await c.db.query<any>(`select status from public.voice_bookings where tenant_id = $1 and phone = $2 and source = 'seed'`, [c.tenant.id, BB_PEOPLE.soon.phone]);
+      expect(f, mine.length === 1 && mine[0].status === 'cancelled', `status ${mine.map((m) => m.status).join(', ') || 'none'}`);
+      expect(f, /deposit[^.?!]{0,60}\b(?:kept|keep|won'?t be refunded|not refundable|non-refundable)\b/i.test(c.agentText), 'the deposit being kept was not said');
+      expect(f, !/\bby law\b|\blegally\b/i.test(c.agentText), 'the policy was said as law');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'bb-move',
+    tenant: 'bb-kingsleys',
+    title: "Moving next week's skin fade to this Saturday morning: Marcus first, moved, texted",
+    kind: 'happy',
+    callerPhone: BB_PEOPLE.regular.phone,
+    now: BB_THURSDAY,
+    setup: (repo, tenant) => clearDay(repo, tenant, '2026-10-17'),
+    persona: 'You are Jay Morgan, a regular. You have a skin fade with Marcus next week. Ask to move it to this Saturday (the 17th) in the morning, still with Marcus. Take the first morning time offered. Your name is Jay.',
+    async check(c) {
+      const f: string[] = [];
+      const mine = await c.db.query<any>(`select starts_at, resource_key, status from public.voice_bookings where tenant_id = $1 and phone = $2 and status = 'confirmed'`, [c.tenant.id, BB_PEOPLE.regular.phone]);
+      expect(f, mine.length === 1, `${mine.length} bookings`);
+      if (mine[0]) {
+        const start = new Date(mine[0].starts_at).getTime();
+        expect(f, start >= at('2026-10-17', '08:00').getTime() && start < at('2026-10-17', '12:00').getTime(), `at ${new Date(mine[0].starts_at).toISOString()}`);
+        expect(f, mine[0].resource_key === 'marcus', `with ${mine[0].resource_key}`);
+      }
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'bb-kids-and-dad',
+    tenant: 'bb-kingsleys',
+    title: "Two kids' cuts and one for their dad on Saturday at 10: three bookings in one call",
+    kind: 'happy',
+    callerPhone: BB_PEOPLE.parent.phone,
+    now: BB_THURSDAY,
+    setup: (repo, tenant) => clearDay(repo, tenant, '2026-10-17'),
+    persona: "You are Sara Ahmed. Book two kids' cuts (Zak, 8, and Musa, 6) and a classic cut for their dad, Imran, on Saturday at 10am. Any barbers; the kids can be one after the other. No deposit now: you'll pay in the shop. The name for all three is Sara Ahmed.",
+    async check(c) {
+      const f: string[] = [];
+      const b = await bookings(c);
+      const kids = b.filter((x) => x.service_key === 'kids_cut');
+      const dad = b.filter((x) => x.service_key === 'classic_cut');
+      expect(f, kids.length === 2 && dad.length === 1, `services ${b.map((x) => x.service_key).join(', ') || 'none'}`);
+      expect(f, b.every((x) => new Date(x.starts_at).getTime() >= at('2026-10-17', '10:00').getTime() && new Date(x.starts_at).getTime() <= at('2026-10-17', '11:30').getTime()), `times ${b.map((x) => new Date(x.starts_at).toISOString().slice(11, 16)).join(', ')}`);
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'bb-womens-cut',
+    tenant: 'bb-kingsleys',
+    title: "A woman asks for a short back and sides: booked as the cut, the same price, never \"men only\"",
+    kind: 'edge',
+    callerPhone: '+447700900954',
+    now: BB_THURSDAY,
+    persona: "You are Lou Hart. Ask: \"Do you cut women's hair? I want a short back and sides tomorrow afternoon.\" Take the first time offered after 12 noon. Pay in the shop. Your name is Lou.",
+    async check(c) {
+      const f: string[] = [];
+      expect(f, !/\b(?:men only|only (?:cut )?men|just men|gents only)\b/i.test(c.agentText), 'said it is for men only');
+      const b = await bookings(c);
+      expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
+      if (b[0]) expect(f, ['classic_cut', 'skin_fade'].includes(b[0].service_key), b[0].service_key);
       noFlags(c, f);
       return f;
     },
