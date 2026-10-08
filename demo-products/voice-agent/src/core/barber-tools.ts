@@ -64,7 +64,9 @@ export function oneEach(ctx: ToolContext, service: string | undefined, party: nu
 export function readBackFirst(ctx: ToolContext, service: BookableService, barber?: string): string | undefined {
   if (!ctx.tenant.profile.barber) return undefined;
   const price = servicePrice(service);
-  return `Read back the ${service.label.toLowerCase()}${barber ? ` with ${barber}` : ''}, the day, the time${price ? ` and the price (${price})` : ''}, and book with create_booking when they say yes. Nothing is booked and there is no reference until create_booking returns one.`;
+  // A live test moving a booking took "book with create_booking" at its word and left the old one standing.
+  const moving = ctx.state.found.length ? ' To move a booking they already have, use modify_booking with its reference instead, never a new booking.' : '';
+  return `Read back the ${service.label.toLowerCase()}${barber ? ` with ${barber}` : ''}, the day, the time${price ? ` and the price (${price})` : ''}, and book with create_booking when they say yes.${moving} Nothing is booked and there is no reference until create_booking returns one.`;
 }
 
 /** After booking: the deposit by the demo card, or in the shop when the shop does not insist. */
@@ -137,4 +139,28 @@ export async function sendHeldTexts(ctx: ToolContext): Promise<void> {
     list.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
     await smsTo(ctx, phone, barberText(ctx.tenant, list));
   }
+}
+
+/**
+ * A new booking beside one found in this call: a move, most likely, not a
+ * second cut. A live test booked Saturday for a caller moving Wednesday's and
+ * left Wednesday's standing. Asked once for each booking found.
+ */
+export async function secondBooking(ctx: ToolContext): Promise<Record<string, unknown> | null> {
+  const p = ctx.tenant.profile;
+  if (!p.barber) return null;
+  for (const ref of ctx.state.found) {
+    const gate = `second:${ref}`;
+    if (ctx.state.gateAsked.includes(gate)) continue;
+    const b = await ctx.repo.getBookingByReference(ctx.tenant.id, ref);
+    if (!b || b.status !== 'confirmed' || b.starts_at <= ctx.now()) continue;
+    ctx.state.gateAsked.push(gate);
+    const local = toLocal(b.starts_at, p.timezone);
+    const what = findService(p, b.service_key)?.label.toLowerCase() ?? 'booking';
+    return {
+      booked: false,
+      message: `Not booked yet: they already have ${b.reference}, a ${what} on ${spokenDate(local.date)} at ${spokenTime(local.time)}. To move it, use modify_booking with ${b.reference} and the new date and time, never a new booking. Only if they want another appointment as well, call create_booking again.`,
+    };
+  }
+  return null;
 }

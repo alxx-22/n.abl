@@ -158,6 +158,23 @@ test('barber: two kids back to back and their dad with another barber, in one te
   assert.equal(sent.length, 1, 'never twice');
 });
 
+test('barber: a caller moving their booking is steered to modify_booking, never a second booking', async () => {
+  // A live test, 8 October: Jay's move to Saturday went in as a new booking, and Wednesday's stood.
+  const t = await repo.upsertTenant(compileBarber(named(), { slug: 'kingsleys-move' }));
+  await repo.insertSeed(t.id, planBarberSeed(t.profile, THURSDAY, 1));
+  // Saturday cleared, as bb-move does: the seeded Saturday is full.
+  await db.query(`delete from public.voice_bookings where tenant_id = $1 and starts_at >= '2026-10-17T00:00:00Z' and starts_at < '2026-10-18T00:00:00Z'`, [t.id]);
+  const c = await call(t, BB_PEOPLE.regular.phone);
+  const jay =(await c.run('find_bookings', { name: 'Jay Morgan' })).bookings[0];
+  const free = await c.run('check_availability', { service: 'Skin fade', staff: 'Marcus', date: '2026-10-17', time: '08:00' });
+  assert.match(free.next, /To move a booking they already have, use modify_booking with its reference instead, never a new booking\./);
+  const second = await c.run('create_booking', { service: 'Skin fade', staff: 'Marcus', date: '2026-10-17', time: '08:00', name: 'Jay Morgan' });
+  assert.equal(second.booked, false);
+  assert.match(second.message, new RegExp(`^Not booked yet: they already have ${jay.reference}, a skin fade on `));
+  assert.equal((await c.run('modify_booking', { reference: jay.reference, date: '2026-10-17', time: '08:00' })).changed, true);
+  assert.equal((await c.run('create_booking', { service: 'Beard trim', date: '2026-10-17', time: '12:00', name: 'Jay Morgan' })).booked, true, 'asked once: another appointment as well is fine');
+});
+
 test('barber: the seeded week fills each barber on their days, Saturday busiest, with the people to ring as', () => {
   const p = profile();
   for (const seed of [1, 7]) {

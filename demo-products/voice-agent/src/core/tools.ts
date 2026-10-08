@@ -33,7 +33,7 @@ import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf,
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule, viewingStopped } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
-import { barberParams, depositNext, depositOnCancel, followOn, holdText, noticeFirst, oneEach, readBackFirst, sendHeldTexts, servicePrice } from './barber-tools.ts';
+import { barberParams, depositNext, depositOnCancel, followOn, holdText, noticeFirst, oneEach, readBackFirst, secondBooking, sendHeldTexts, servicePrice } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -638,6 +638,8 @@ const TOOLS: Record<string, Tool> = {
       const follow = await followOn(ctx, args);
       if (follow?.refusal) return follow.refusal;
       if (follow?.args) args = { ...args, ...follow.args };
+      const second = await secondBooking(ctx);
+      if (second) return second;
       if (p.estate) {
         const service = findService(p, str(args.service));
         const estate = service ? await estateBooking(args, ctx, service) : null;
