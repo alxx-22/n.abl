@@ -42,6 +42,6 @@ commit, when it's fixed or shown to be wrong.
 - [x] [medium] A waiting job given a new window stays 'waiting' and can't go on the way (`/home/user/n.abl/src/server/maintenance.ts:220`) Fixed in `ab7a2d8`.
 - [x] [medium] Register's booked_job: voice books twice, and cancel or done never clears it (`/home/user/n.abl/src/core/maintenance-tools.ts:1366`) Fixed in `b36dd5b` (a finished check also renews the record now).
 - [x] [medium] Call-out invoice ignored: job billed twice, and stays due after cancel (`/home/user/n.abl/src/server/maintenance.ts:330`) Fixed in `223107c`.
-- [low] Gas record offer says '(£30 extra)' but the price excludes it; tenant told too (`/home/user/n.abl/src/core/maintenance-tools.ts:1370`)
+- [x] [low] Gas record offer says '(£30 extra)' but the price excludes it; tenant told too (`/home/user/n.abl/src/core/maintenance-tools.ts:1370`) Fixed in `7d8dc51`.
 - [low] Safety log shows every non-gated incident as 'Not confirmed as said', with no follow-up job (`/home/user/n.abl/src/core/maintenance-tools.ts:1422`)
 - [x] [low] Bank holidays are working days: Christmas windows booked, emergencies paged in-hours (`/home/user/n.abl/src/core/maintenance-tools.ts:366`) Fixed in `0716ac0`.
