@@ -235,6 +235,24 @@ test('a disclosure said in the same turn as the tool call is not flagged; one ne
       await c.end();
       assert.ok(c.flags().includes('disclosure_missed'), c.flags().join());
     }
+    {
+      // The times come with the line (live, 8 October): a turn without a time is no slip, and the flag waits for one.
+      const c = await call(estate);
+      const r = await c.tool('check_availability', { property: 'albion_22', date: SAT, time: '11:00' });
+      assert.match(String(r.say_first), /An offer has been accepted/);
+      await c.agent('Could I take your name first?');
+      assert.ok(!c.flags().includes('disclosure_missed'), 'no time said yet');
+      await c.agent('Thanks. Saturday at 11:15am is free.');
+      assert.ok(c.flags().includes('disclosure_missed'), c.flags().join());
+    }
+    {
+      // ...and a call that never got to times has nothing to flag at its end.
+      const c = await call(estate);
+      await c.tool('check_availability', { property: 'albion_22', date: SAT, time: '11:00' });
+      await c.agent('Could I take your name first?');
+      await c.end();
+      assert.ok(!c.flags().includes('disclosure_missed'), c.flags().join());
+    }
   } finally {
     await repo.setListing(estate.id, 'albion_22', { status: 'available' });
   }

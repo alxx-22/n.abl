@@ -145,6 +145,26 @@ function gate(ctx: ToolContext, h: Home, kind: 'viewing' | 'offer'): Record<stri
   return null;
 }
 
+/**
+ * For check_availability: the lines still owed before any time, as an instruction to go with the times; null when all
+ * are said. Flagged at the turn's end only if times were said without them (once per home), and the booking itself
+ * still waits for them (gate, in create_booking).
+ */
+function sayFirstWith(ctx: ToolContext, h: Home): string | null {
+  const s = ctx.state;
+  const l = h.listing;
+  const described = l.key in s.briefed;
+  if (!described) s.briefed[l.key] = s.said.length;
+  const at = s.briefed[l.key];
+  const missing = unsaid(sayFirst(l, h.live, today(ctx), startOf(h, ctx.now()), ctx.tenant.profile.timezone), s.said.slice(at));
+  if (!missing.length) return null;
+  if (!s.gateAsked.includes(`missed:${l.key}`)) {
+    s.gateAsked.push(`missed:${l.key}`);
+    s.toolFlags.push({ rule: 'disclosure_missed', text: `${shortAddress(l)}: ${missing.map((i) => i.say).join(' ')}`, recheck: { items: missing, at, ifTimes: true } });
+  }
+  return `${described ? '' : 'Call get_property for it too: its details come from there. '}Before any of these times, tell the caller: ${missing.map((i) => `"${i.say}"`).join(' ')}`;
+}
+
 /** The member of the team a caller asked for by name, if any. */
 function staffNamed(t: Tenant, words: string | undefined): StaffMember | undefined {
   const s = words?.trim().toLowerCase();
@@ -324,8 +344,9 @@ export async function estateAvailability(args: Args, ctx: ToolContext, service: 
   noteSeen(ctx, [h]);
   const stop = stopFor(ctx, h, all, date);
   if (stop) return { available: false, ...stop };
-  const held = gate(ctx, h, 'viewing');
-  if (held) return { checked: false, ...held };
+  // What must be said first comes with the times, not instead of them: held back on 6 and 8 October, the times were
+  // guessed, again and again. Times said in a turn without the line are flagged at the turn's end (call.ts).
+  const first = sayFirstWith(ctx, h);
   const no = excludedStaff(ctx, h, staff) ?? notWorking(ctx, staff, date);
   if (no) return { available: false, message: no };
   const rule = viewingRules(h.listing, p, service.key, h.live);
@@ -346,7 +367,7 @@ export async function estateAvailability(args: Args, ctx: ToolContext, service: 
       out.message = `That's too soon: viewings need ${Math.round(rule.notice_minutes / 60)} hours' notice.`;
     }
   }
-  return out;
+  return first ? { say_first: first, ...out } : out;
 }
 
 /**
@@ -834,14 +855,17 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
     property: l.key, address: l.address, status: STATUS_WORDS[live.status], describe,
     price: live.checking.includes('price') ? undefined : priceOf(h), price_note: live.checking.includes('price') ? undefined : priceNote, on_market: onMarket,
     facts: f.facts,
-    unknown: f.unknown.length ? f.unknown : undefined,
     being_checked: f.being_checked.length ? f.being_checked : undefined,
     say_first: sayFirst(l, live, day, start, tz).map((i) => i.say),
     before_offer: l.before_offer.map((i) => i.say),
     viewing: l.viewing.rule,
     seller_position: l.seller_position || undefined,
     fell_through: l.fall_through || undefined,
-    official: Object.keys(official).length ? official : undefined,
+    // Ready to say, not left to wording: on 8 October "has it ever flooded?" got "I'm not sure", with no official service named.
+    if_asked: f.unknown.length || official.local_tax ? Object.fromEntries([...f.unknown, ...(official.local_tax ? ['local_tax'] : [])].map((w) => {
+      const what = w === 'local_tax' ? 'The council tax band' : cap(w);
+      return [w, `${what} isn't in the details we have.${official[w] ? ` ${cap(official[w])} can tell you more.` : ''} I can ask ${negotiator} to find out.`];
+    })) : undefined,
     // On 4 October "Will I get a mortgage on that?" about a short lease was answered with no one to ask. Leasehold only: the answer is kept small.
     mortgage_question: l.lease
       ? `Can't advise: ${e?.mortgage ? `offer ${firstNameOf(ctx.tenant, e.mortgage.staff) || 'someone'}, our mortgage adviser` : 'suggest an independent mortgage broker'}, and their solicitor for the lease.`
@@ -850,7 +874,7 @@ async function getProperty(args: Args, ctx: ToolContext): Promise<Record<string,
     links: l.links,
     note: [
       describe ? 'Say describe first, as it is, even if they asked something narrower; then answer from facts.' : '',
-      f.unknown.length ? `Unknown: say it isn't in the details (never "no"), name any official service, and offer to ask ${negotiator}.` : '',
+      f.unknown.length ? 'Unknowns: say the if_asked line, never "no".' : '',
       f.being_checked.length ? 'Being checked: say so, and state nothing about them.' : '',
       // Live, 6 October: "would 9:30, 10:30 or 11:30 work?" straight after the details, with nothing checked.
       'Viewing times only from check_availability: none before it.',

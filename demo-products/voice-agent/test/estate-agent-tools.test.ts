@@ -123,9 +123,10 @@ test('the honest listing answer: "the one on Albion Road" asks which; the flat s
   const house = await run('get_property', { property: '22 Albion Road' });
   assert.equal(house.price, 'offers over £325,000');
   assert.equal((house.facts as Record<string, string>).tenure, 'freehold');
-  assert.deepEqual(house.unknown, ['flooding']);
-  assert.match(String((house.official as Record<string, string>).flooding), /Environment Agency/);
-  assert.match(String(house.note), /isn't in the details \(never "no"\)/);
+  assert.deepEqual(Object.keys(house.if_asked as object), ['flooding']);
+  // Said as it comes: what isn't known, the official service, and who can find out.
+  assert.equal((house.if_asked as Record<string, string>).flooding, "Flooding isn't in the details we have. The Environment Agency's long-term flood risk service on GOV.UK can tell you more. I can ask Jess to find out.");
+  assert.match(String(house.note), /the if_asked line, never "no"/);
   assert.match((house.facts as Record<string, string>).rooms, /box room\) not measured/);
   assert.equal(house.negotiator, 'Jess');
   assert.ok(JSON.stringify(house).length < 2150, `kept small: ${JSON.stringify(house).length} characters`);  // A mortgage question about a leasehold home has someone to offer, never an opinion (ea-short-lease, 4 October).
@@ -156,28 +157,27 @@ test('get_property never says a seller\'s number, that a home is empty, keys, or
   assert.equal(bungalow.viewing, 'Viewings any time in our viewing hours. First viewings are in office hours.');
 });
 
-test('the disclosure gate: no times before the must-say line; it stops once, then goes ahead and flags it', async () => {
+test('the disclosure line: the times come with it, a time said without it is flagged, and the booking waits for it', async () => {
   const t = await agency('ea-gate');
-  const NOT_YET = `Not checked yet. Before any times, tell the caller: "It's leasehold, with 76 years left on the lease." Then call this again. Add nothing about the home that a tool didn't give you.`;
+  const FIRST = `Before any of these times, tell the caller: "It's leasehold, with 76 years left on the lease."`;
   {
+    // Live, 6 and 8 October: with the times held back until the line was said, they were guessed, again and again.
     const { run, ctx, say } = await call(t);
     await run('get_property', { property: 'albion_41_flat_2' });
     say('Flat 2, 41 Albion Road is a two-bedroom flat at a guide price of £185,000.');
-    const held = await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '11:00' });
-    assert.equal(held.not_yet, NOT_YET);
-    assert.equal(held.available, undefined, 'never "not available": it was not checked');
-    assert.equal(held.alternatives, undefined, 'no times yet');
-    const again = await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '11:00' });
-    assert.equal(again.not_yet, undefined, 'never a loop: the second time it goes ahead');
-    assert.ok(again.available || (again.alternatives as unknown[]).length, JSON.stringify(again));
-    assert.deepEqual(ctx.state.toolFlags.map((f) => f.rule), ['disclosure_missed']);
-    // The call re-checks it once the turn's words are in: the line may have been said just before the tool call reached us.
+    const r = await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '11:00' });
+    assert.equal(r.say_first, FIRST);
+    assert.ok(r.available || (r.alternatives as unknown[]).length, `real times, with the line: ${JSON.stringify(r)}`);
+    assert.equal(r.not_yet, undefined);
+    // Held for the turn's end: raised only if a time was said without the line (call.ts).
+    assert.deepEqual(ctx.state.toolFlags.map((f) => [f.rule, f.recheck?.ifTimes]), [['disclosure_missed', true]]);
     const flag = ctx.state.toolFlags[0];
-    assert.ok(flag.recheck && unsaid(flag.recheck.items, ctx.state.said.slice(flag.recheck.at)).length, 'still unsaid now');
+    assert.ok(unsaid(flag.recheck!.items, ctx.state.said.slice(flag.recheck!.at)).length, 'still unsaid now');
     say(`Before any times: ${flag.recheck!.items.map((i) => i.say).join(' ')}`);
     assert.equal(unsaid(flag.recheck!.items, ctx.state.said.slice(flag.recheck!.at)).length, 0, 'said in the same turn: not raised');
-    await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '12:00' });
-    assert.equal(ctx.state.toolFlags.length, 1, 'flagged once');
+    const again = await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '12:00' });
+    assert.equal(again.say_first, undefined, 'said: nothing owed');
+    assert.equal(ctx.state.toolFlags.length, 1, 'held once');
   }
   {
     // Looking the home up again keeps what was already said.
@@ -186,21 +186,19 @@ test('the disclosure gate: no times before the must-say line; it stops once, the
     say("It's leasehold, with seventy-six years left on the lease, and the service charge is £1,320 a year.");
     await run('get_property', { property: 'albion_41_flat_2' });
     const r = await run('check_availability', { property: 'albion_41_flat_2', date: SAT, time: '11:00' });
-    assert.equal(r.not_yet, undefined);
+    assert.equal(r.say_first, undefined);
     assert.deepEqual(ctx.state.toolFlags, []);
   }
   {
-    // Asked for times before looking the home up: briefed there and then, with the line to say in the answer.
+    // Asked for times before looking the home up: briefed there and then, with the line and get_property in the answer.
     const { run, ctx, say } = await call(t);
     const first = await run('check_availability', { property: 'the flat on Albion Road', date: SAT, time: '11:00' });
-    // ...and sent to get_property for the rest (live, 6 October: never looked up, its details were invented).
-    assert.equal(first.not_yet, NOT_YET.replace('Not checked yet.', 'Not checked yet. Call get_property for it first: what to say about it, and its details, come from there.'));
+    assert.equal(first.say_first, `Call get_property for it too: its details come from there. ${FIRST}`);
     assert.equal(ctx.state.briefed.albion_41_flat_2, 0);
     say("It's leasehold, with 76 years left on the lease.");
-    assert.equal((await run('check_availability', { property: 'the flat on Albion Road', date: SAT, time: '11:00' })).not_yet, undefined);
-    assert.deepEqual(ctx.state.toolFlags, []);
-    // A home with nothing to say first is checked at once.
-    assert.equal((await run('check_availability', { property: '22 Albion Road', date: SAT, time: '11:00' })).not_yet, undefined);
+    assert.equal((await run('check_availability', { property: 'the flat on Albion Road', date: SAT, time: '11:00' })).say_first, undefined);
+    // A home with nothing to say first has nothing owed.
+    assert.equal((await run('check_availability', { property: '22 Albion Road', date: SAT, time: '11:00' })).say_first, undefined);
   }
   {
     // A line said before the briefing does not count: it was not about this home.
@@ -300,10 +298,10 @@ test('status first: off the market offers two others, a sale agreed is said befo
   assert.match((agreed.say_first as string[])[0], /An offer has been accepted on it, subject to contract, but the seller is still taking viewings/);
   assert.ok(ctx.state.seen.accepted.includes('albion_22'), 'the guardrail knows this was real news');
   const held = await run('check_availability', { property: '22 Albion Road', date: SAT, time: '11:15' });
-  assert.match(String(held.not_yet), /accepted/);
+  assert.match(String(held.say_first), /^Before any of these times, tell the caller: "An offer has been accepted/);
   say('An offer has been accepted on it, subject to contract, but the seller is still taking viewings. Would you still like to see it?');
   const ok = await run('check_availability', { property: '22 Albion Road', date: SAT, time: '11:15' });
-  assert.equal(ok.not_yet, undefined);
+  assert.equal(ok.say_first, undefined);
 
   await repo.setListing(t.id, 'albion_22', { marketing_continues: false });
   const stopped = await run('check_availability', { property: '22 Albion Road', date: SAT, time: '11:15' });

@@ -20,7 +20,7 @@ import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DET
 import { redactLine } from './redact.ts';
 import { record } from './tool-kit.ts';
 import { amountsIn } from '../domain/amounts.ts';
-import { knownTimes } from '../domain/clock-times.ts';
+import { knownTimes, timesIn } from '../domain/clock-times.ts';
 import { armSafety, noteAdvice, safetyCorrection } from './safety.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
@@ -658,10 +658,18 @@ export class CallSession extends EventEmitter<CallEvents> {
 
   /** Tool flags held for the turn's words: raised only if, with them in, the line is still unsaid. */
   private raiseHeld(correct = true): void {
+    const keep: CallState['toolFlags'] = [];
     for (const f of this.held.splice(0)) {
-      if (f.recheck && !unsaid(f.recheck.items, this.state.said.slice(f.recheck.at)).length) continue;
+      const r = f.recheck;
+      if (r && !unsaid(r.items, this.state.said.slice(r.at)).length) continue;
+      // Owed before any time: only a time said without it is a slip. Until then it waits, turn after turn; at the end, it goes.
+      if (r?.ifTimes && !this.state.said.slice(r.at).some((l) => timesIn(l).length)) {
+        if (correct) keep.push(f);
+        continue;
+      }
       this.raise({ rule: f.rule, text: f.text }, correct);
     }
+    this.held.push(...keep);
   }
 
   private async handleTools(s: LiveSession, calls: FunctionCall[]): Promise<void> {
