@@ -12,7 +12,7 @@ commit, when it's fixed or shown to be wrong.
 **Estate agent (server)**
 
 - [x] [medium] A countered offer cannot be closed, is never told of an acceptance, and the seller hears it is 'about to be put to you' (`src/server/demo.ts:737`) Fixed in `e35c1c6`.
-- [medium] Changing a home's status in Properties leaves its sale disagreeing, and re-marketing a withdrawn home skips the back-up buyers (`src/server/demo.ts:821`)
+- [x] [medium] Changing a home's status in Properties leaves its sale disagreeing, and re-marketing a withdrawn home skips the back-up buyers (`src/server/demo.ts:821`) Fixed in `10bb706`.
 - [medium] A viewing on a withdrawn or sold home stays booked and the receptionist moves it to a new day (`src/core/tools.ts:773`)
 - [medium] A buyer offering on a home in best and final is never told the deadline (`src/core/estate-tools.ts:854`)
 - [medium] The builder's 'Book viewings and valuations when the office is shut' switch does nothing (`src/presets/estate/compile.ts:114`)
