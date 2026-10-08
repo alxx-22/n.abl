@@ -180,6 +180,11 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
   assert.ok(PROMISED_MESSAGE.test("Thank you, Chris. I'll pass that request on to Jess, and she'll get back to you."));
   assert.ok(PROMISED_MESSAGE.test('Of course, I can add that to the message for Jess.'));
   assert.ok(PROMISED_MESSAGE.test("As you're renting, I'll let Meadowbank Housing know about the mould today."));
+  // "Nobody ... is booked" is no claim (live, 8 October).
+  const quiet = newCallState();
+  quiet.maintenance = true;
+  for (const line of ["I've checked, but nobody from us is booked to visit today.", 'Nothing is booked for you today.']) assert.deepEqual(checkUtterance(line, quiet), [], line);
+  assert.deepEqual(checkUtterance("That's booked for tomorrow morning.", quiet).map((f) => f.rule), ['unconfirmed_claim']);
   assert.ok(!PROMISED_MESSAGE.test("I'll let you know about the times in a moment."));
   assert.ok(CALLBACK_PROMISED.test('Jess will be in touch with you about those questions.'));
   assert.ok(!CALLBACK_PROMISED.test('Would you like Jess to get back to you?'), 'an offer');

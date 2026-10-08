@@ -39,7 +39,9 @@ const BOOKED_UP = /^\s+(?:up|out|solid)\b/i;
 const REGRET = /\b(?:afraid|sorry|unfortunately|sadly|apologies)\b/i;
 const GOOD_NEWS = /^\s*(?:lovely|great|brilliant|perfect|wonderful|excellent|fantastic|fab|super|done|all done)\b/i;
 const OFFERED = /^[^.?!]*\bbut\b[^.?!]*\b(?:free|available|open|could do|can do|have)\b|^[^.?!]*[.?!]\s+(?:how about|what about|would|could|can i offer|i could|i can|there'?s)\b/i;
-const NEGATED = /\b(not|isn'?t|aren'?t|haven'?t|hasn'?t|no|once|before|until|when|if|shall|should|can|could|would|will)\b[^.?!]{0,25}$/i;
+// "Nobody from us is booked", "nothing is booked" too (live, 8 October: corrected for it, the receptionist asked a
+// caller with a stranger at the door which window she had chosen).
+const NEGATED = /\b(not|isn'?t|aren'?t|haven'?t|hasn'?t|no|nobody|nothing|none|once|before|until|when|if|shall|should|can|could|would|will)\b[^.?!]{0,25}$/i;
 const PAID = /\b(payment(?:'s| has)? (?:gone|went) through|that'?s (?:gone through|been paid|paid)|payment (?:is |was |has been )?(?:approved|successful|complete|received|taken)|paid in full)\b/i;
 // Reading out its own notes about the caller instead of speaking to them. On
 // 1 October a receptionist said aloud: 'user said to person in room "five past
