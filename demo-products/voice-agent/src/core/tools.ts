@@ -32,6 +32,7 @@ import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, 
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
+import type { SafetyKind } from '../presets/maintenance/nations.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -140,6 +141,9 @@ export interface CallState {
   safety: SafetyState | null;
   /** Emergencies already advised on this call: each arms once. */
   safetyDone: string[];
+  /** Emergencies heard while another's advice was owed, given in turn (core/safety.ts). */
+  safetyQueue?: SafetyKind[];
+  safetyIncidents?: Partial<Record<SafetyKind, string>>;
   /** The property this call is about, once find_property has found it. */
   property: string | null;
   /** Who the caller is to that property: what they may hear and do. */

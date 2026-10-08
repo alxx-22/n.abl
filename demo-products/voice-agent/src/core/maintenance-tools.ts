@@ -25,7 +25,7 @@ import { SAFETY_KINDS, SAFETY_VERSION, safetyScript, type SafetyKind } from '../
 import { fullAddress, shortAddress } from '../presets/maintenance/properties.ts';
 import type { FunctionDeclaration } from './live.ts';
 import { BANK_TALK } from './guardrails.ts';
-import { GATED, safetyFirst } from './safety.ts';
+import { GATED, detectKinds, queueSafety, safetyFirst } from './safety.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, postcodeOf, realName, record, smsTo, str } from './tool-kit.ts';
 import type { Args, Tool, ToolContext } from './tools.ts';
 
@@ -252,7 +252,7 @@ const TRADE_WORDS: [string, RegExp][] = [
   ['decorating', /\bpaint\w*\b|\bdecorat\w*\b|\bplaster\w*\b|\bwallpaper\b/i],
 ];
 
-const EMERGENCY = /\bburst\b|\buncontroll\w+|\bpouring\b|\bwon'?t stop\b|\bflood\w*\b|\bthrough the ceiling\b|\bceiling (?:is )?(?:coming down|collaps\w+)|\bno (?:power|electric\w*) at all\b|\bwhole house\b[^.?!]{0,30}\bno power\b|\b(?:won'?t|can'?t|doesn'?t|will not) (?:lock|shut|close)\b|\bnot secure\b|\bbroken in\b|\bsewage\b[^.?!]{0,30}\b(?:inside|coming up|in the house)\b/i;
+const EMERGENCY = /\bburst\b|\buncontroll\w+|\bpouring\b|\bwon'?t stop\b|\bflood\w*\b|\bthrough the ceiling\b|\bceiling (?:is )?(?:coming down|collaps\w+)|\bno (?:power|electric\w*) at all\b|\bwhole house\b[^.?!]{0,30}\bno power\b|\b(?:won'?t|can'?t|doesn'?t|will not) (?:lock|shut|close)\b|\bnot secure\b|\bbroken in\b|\bbroke in(?!\s+(?:half|two|pieces|bits))\b|\bsewage\b[^.?!]{0,30}\b(?:inside|coming up|in the house)\b/i;
 // A faulty smoke or carbon monoxide alarm leaves a home unprotected: urgent, whoever's it is.
 const URGENT = /\b(?:smoke|heat|carbon monoxide|co) alarms?\b|\bno (?:heating|hot water)\b|\b(?:heating|boiler) (?:isn'?t|not|has stopped|stopped) working\b|\bonly (?:toilet|loo)\b|\bpartial\b|\bsome of the (?:sockets|lights)\b|\broof leak\w*\b|\bleak\w* (?:from|through) the roof\b|\bleak\w*\b/i;
 const VULNERABLE = /\b(?:over (?:7[5-9]|[89]\d)|(?:is|she'?s|he'?s|they'?re|aged) (?:7[5-9]|[89]\d)\b|(?:7[5-9]|[89]\d) years? old|elderly|pensioner|bab(?:y|ies)|newborn|toddler|under (?:five|5)|disab\w+|wheelchair|pregnan\w+|medical|asthma|oxygen|dialysis|chemo\w*|terminal\w*|vulnerable)\b/i;
@@ -318,8 +318,10 @@ export function triage(m: MaintenanceSettings, heard: string, opts: { vulnerable
     const sig = x.toLowerCase().split(/[^a-z']+/).filter((w) => w.length > 3 && !FILLER.has(w));
     return sig.length >= 2 && sig.filter((w) => said.has(w)).length >= (sig.length <= 3 ? sig.length : sig.length - 1);
   });
-  let level: JobPriority = EMERGENCY.test(words) || example(m.priorities.emergency.examples) ? 'emergency' : URGENT.test(words) || example(m.priorities.urgent.examples) ? 'urgent' : 'routine';
-  const why = [level === 'emergency' ? 'Emergency' : level === 'urgent' ? 'Urgent' : 'Routine'];
+  // What safety mode calls dangerous is an emergency: sparks, scorching, water on the lights (core/safety.ts).
+  const danger = detectKinds(heard).find((k) => k === 'electric' || k === 'fire');
+  let level: JobPriority = danger || EMERGENCY.test(words) || example(m.priorities.emergency.examples) ? 'emergency' : URGENT.test(words) || example(m.priorities.urgent.examples) ? 'urgent' : 'routine';
+  const why = [level === 'emergency' ? (danger ? `Emergency: ${danger === 'fire' ? 'fire or smoke' : 'electrical danger'}` : 'Emergency') : level === 'urgent' ? 'Urgent' : 'Routine'];
   // "Nobody here is vulnerable" names nobody.
   const named = VULNERABLE.exec(words);
   const denied = named && /\b(?:no ?one|nobody|not|isn'?t|aren'?t|no)\b[^.?!]{0,25}$/i.test(words.slice(Math.max(0, named.index - 30), named.index));
@@ -350,6 +352,10 @@ function triageCall(m: MaintenanceSettings, words: string, heard: string[], opts
   const said = heard.slice(-6).join('. ');
   if (t.priority !== 'emergency' && WATER_EMERGENCY.test(said) && t.trade && triage(m, said, opts).trade === t.trade) {
     return { ...t, priority: 'emergency', reason: `Emergency: ${WATER_EMERGENCY.exec(said)![0].toLowerCase()}, in the caller's words` };
+  }
+  // Electrical danger in the caller's words, played down in the summary ("socket not working" for sparks).
+  if (t.priority !== 'emergency' && t.trade === 'electrical' && heard.slice(-6).some((h) => detectKinds(h).includes('electric'))) {
+    return { ...t, priority: 'emergency', reason: "Emergency: electrical danger, in the caller's words" };
   }
   return t;
 }
@@ -1414,15 +1420,15 @@ async function safetyAdvice(args: Args, ctx: ToolContext): Promise<Record<string
   if (!kind || !SAFETY_KINDS.includes(kind)) return { error: `kind must be one of: ${SAFETY_KINDS.join(', ')}` };
   const s = safetyScript(kind, m.nation);
   const st = ctx.state;
-  // The model may spot an emergency the words didn't: it arms the gate too.
-  if (GATED.includes(kind) && (!st.safety || st.safety.kind !== kind) && !st.safetyDone.includes(kind)) {
-    st.safety = { kind, armed_at: st.heard.length, said_from: st.said.length, spoken: false, incident: null };
-  }
+  // The model may spot an emergency the words didn't: it arms the gate too, after any more urgent advice still owed.
+  if (GATED.includes(kind) && st.safety?.kind !== kind && !st.safetyDone.includes(kind)) queueSafety(st, kind);
   const incident = await ctx.repo.logIncident(ctx.tenant.id, {
     property_key: st.property, kind, advice_version: SAFETY_VERSION, advised_at: st.safety?.kind === kind && st.safety.spoken ? ctx.now() : null,
     caller_phone: ctx.callerPhone, follow_up_job: null, notes: str(args.where) ?? null, source: source(ctx), call_id: ctx.callId || null,
   });
+  (st.safetyIncidents ??= {})[kind] = incident.id;
   if (st.safety?.kind === kind) st.safety.incident = incident.id;
+  const first = st.safety && !st.safety.spoken && st.safety.kind !== kind ? st.safety.kind : null;
   const textSent = s.text ? await smsTo(ctx, ctx.callerPhone, `${s.text} (Demo)`) : null;
   ctx.action({ kind: 'safety_advice', title: `Safety advice · ${s.title}`, detail: s.number ? `Number given: ${s.number}${textSent ? ' (texted)' : ''}` : undefined });
   return {
@@ -1433,6 +1439,7 @@ async function safetyAdvice(args: Args, ctx: ToolContext): Promise<Record<string
     text_sent: Boolean(textSent),
     next: s.next,
     ...(st.safety?.kind === kind && !st.safety.spoken ? { first: 'Say this now, in your own words, before anything else.' } : {}),
+    ...(first ? { after: `The ${safetyScript(first, m.nation).title.toLowerCase()} advice comes first; say it, then this.` } : {}),
   };
 }
 

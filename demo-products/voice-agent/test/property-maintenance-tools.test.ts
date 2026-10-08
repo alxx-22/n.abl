@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { newCallState, runTool, toolDeclarations, type Action, type ToolContext } from '../src/core/tools.ts';
-import { armSafety, detectSafety, noteAdvice } from '../src/core/safety.ts';
+import { armSafety, detectSafety, nextSafety, noteAdvice } from '../src/core/safety.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
 import { redactCodes } from '../src/core/redact.ts';
@@ -1229,4 +1229,52 @@ test('how they want to hear from us: a relay call and "texts only" go on the job
   assert.ok(row.flags.includes('relay') && row.flags.includes('text_only'), row.flags.join());
   const advice = await (await call(t, '+447700900502')).run('safety_advice', { kind: 'gas' });
   assert.match(advice.other_language, /in their language, but say the number as digits, twice/);
+});
+
+test('safety: a "no" answering the last question never cancels the gas smell after it', () => {
+  for (const line of ['No, I can smell gas in the kitchen', "No, it's not water, I can smell gas", "I don't know, I can smell gas"]) assert.equal(detectSafety(line), 'gas', line);
+  for (const line of ["I can't smell gas", "There's no gas smell", 'Nothing smells of gas']) assert.equal(detectSafety(line), null, line);
+});
+
+test('safety: a carbon monoxide alarm is a chirp only when it is chirping, nobody is ill and the caller does not deny it', () => {
+  assert.equal(detectSafety('The carbon monoxide alarm keeps beeping every few minutes and I feel dizzy since the boiler came on'), 'co');
+  assert.equal(detectSafety("My carbon monoxide alarm is going off, it's not a low battery chirp, it's sounding non-stop"), 'co');
+  assert.equal(detectSafety("The carbon monoxide alarm is going off, it's not the low battery"), 'co');
+  assert.equal(detectSafety('The CO alarm beeps every minute, I think it is the low battery'), 'co_chirp');
+});
+
+test('safety: two emergencies on one call are both advised, the most urgent first', () => {
+  const said = (state: { said: string[] }, words: string) => state.said.push(words);
+  const gasAdvice = 'Please get everyone out now, leave the door open, and from outside ring the National Gas Emergency Service on 0800 111 999, that is 0800 111 999.';
+  {
+    // Gas and someone collapsed in one line: gas first, then 999 for the collapse.
+    const state = { safety: null, safetyDone: [] as string[], heard: [] as string[], said: [] as string[] } as Parameters<typeof armSafety>[0];
+    assert.equal(armSafety(state, "There's a strong smell of gas and my husband has collapsed"), 'gas');
+    said(state, gasAdvice);
+    assert.equal(noteAdvice(state, 'england')?.kind, 'gas');
+    assert.equal(nextSafety(state), 'hurt', 'the collapse is owed next');
+    said(state, 'Ring 999 for an ambulance now.');
+    assert.equal(noteAdvice(state, 'england')?.kind, 'hurt');
+    assert.equal(nextSafety(state), null);
+  }
+  {
+    // Water on the lights, then gas: gas goes first; once everyone is out, the electrics advice is not owed.
+    const state = { safety: null, safetyDone: [] as string[], heard: [] as string[], said: [] as string[] } as Parameters<typeof armSafety>[0];
+    assert.equal(armSafety(state, 'Water is coming through the light fitting in the kitchen'), 'electric');
+    assert.equal(armSafety(state, "And I can smell gas as well, it's really strong"), 'gas');
+    said(state, gasAdvice);
+    assert.equal(noteAdvice(state, 'england')?.kind, 'gas');
+    assert.equal(nextSafety(state), null);
+  }
+});
+
+test('safety: electrical danger is triaged as an emergency, not routine', async () => {
+  const t = await fernhill('pm-electric-triage');
+  const m = t.profile.maintenance!;
+  const { triage } = await import('../src/core/maintenance-tools.ts');
+  for (const line of ['Sparks are coming out of the socket in the kitchen', 'Water is dripping through the light fitting in the hall', "There's a smell of burning from the fuse box"]) {
+    assert.equal(triage(m, line, { date: '2026-10-07' }).priority, 'emergency', line);
+  }
+  assert.equal(triage(m, 'Someone broke in and smashed the back door', { date: '2026-10-07' }).priority, 'emergency');
+  assert.notEqual(triage(m, 'The cupboard handle broke in half', { date: '2026-10-07' }).priority, 'emergency');
 });

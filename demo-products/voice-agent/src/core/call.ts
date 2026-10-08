@@ -22,7 +22,7 @@ import { record } from './tool-kit.ts';
 import { amountsIn } from '../domain/amounts.ts';
 import { knownTimes, timesIn } from '../domain/clock-times.ts';
 import { tenantNow } from '../domain/time.ts';
-import { armSafety, noteAdvice, safetyCorrection } from './safety.ts';
+import { armSafety, nextSafety, noteAdvice, safetyCorrection } from './safety.ts';
 import { REACTION_NOW, REACTION_SCRIPT, armReaction, noteReactionSaid } from './reaction.ts';
 import { allergyQuestionDish } from './kitchen.ts';
 import { addDays, toLocal, zonedToUtc } from '../domain/time.ts';
@@ -638,6 +638,12 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (!done) return;
     this.record('system', { event: 'safety_advice_said', kind: done.kind });
     if (done.incident) void this.opts.repo.updateIncident(this.opts.tenant.id, done.incident, { advised_at: this.now() }).catch(() => {});
+    // A second emergency on the same call (gas, and someone collapsed): its advice is owed next.
+    const next = nextSafety(this.state);
+    if (next && m) {
+      this.record('system', { event: 'safety_armed', kind: next });
+      this.session?.sendText(safetyCorrection(next, m.nation, this.state.safety?.foreign));
+    }
   }
 
   /**

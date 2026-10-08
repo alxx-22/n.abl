@@ -30,23 +30,66 @@ export interface SafetyState {
 interface Tracked {
   safety: SafetyState | null;
   safetyDone: string[];
+  /** Kinds heard while another's advice was owed: each is given in turn, the most urgent first. */
+  safetyQueue?: SafetyKind[];
+  /** The incident safety_advice logged for each kind, so a kind armed later still marks its own. */
+  safetyIncidents?: Partial<Record<SafetyKind, string>>;
   heard: string[];
   said: string[];
 }
 
+const GOING_OFF = /\b(?:going off|sounding|won'?t stop|ringing|non-?stop|continuous(?:ly)?)\b/i;
+const rank = (k: SafetyKind) => GATED.indexOf(k);
+/** Evacuation covers the electrics: with gas, a fire or carbon monoxide, nobody stays in to switch anything off. */
+const EVACUATE: SafetyKind[] = ['gas', 'co', 'fire'];
+
 /**
  * Arms safety mode for what the caller just said: the kind armed, or null.
- * Each kind arms once a call, and one at a time, so a caller repeating
- * themselves never restarts the advice.
+ * Each kind arms once a call. A caller describing two (a gas smell and
+ * someone collapsed, or water on the lights and then gas) gets both, the
+ * most urgent first: one heard while another is owed waits its turn, unless
+ * it is more urgent, when it goes first and the other waits.
  */
 export function armSafety(state: Tracked, line: string): SafetyKind | null {
-  const kind = detectSafety(line);
-  if (!kind || !GATED.includes(kind) || state.safetyDone.includes(kind) || state.safety?.kind === kind) return null;
-  // The chirping alarm named again ("this carbon monoxide alarm is a new problem") is still the chirp, unless it is now
-  // sounding or someone feels ill (live, 8 October: the full evacuation script was read out for a low battery).
-  if (kind === 'co' && state.heard.some((h) => detectSafety(h) === 'co_chirp') && !CO_SYMPTOMS.test(line) && !/\b(?:going off|sounding|won'?t stop|ringing|non-?stop|continuous(?:ly)?)\b/i.test(line)) return null;
+  const kinds = detectKinds(line).filter((kind) => {
+    if (!GATED.includes(kind) || state.safetyDone.includes(kind) || state.safety?.kind === kind) return false;
+    // The chirping alarm named again ("this carbon monoxide alarm is a new problem") is still the chirp, unless it is now
+    // sounding or someone feels ill (live, 8 October: the full evacuation script was read out for a low battery).
+    return !(kind === 'co' && state.heard.some((h) => detectSafety(h) === 'co_chirp') && !CO_SYMPTOMS.test(line) && !GOING_OFF.test(line));
+  });
+  const before = state.safety && !state.safety.spoken ? state.safety : null;
+  for (const kind of kinds) queueSafety(state, kind, line);
+  const after = state.safety && !state.safety.spoken ? state.safety : null;
+  return after && after !== before ? after.kind : null;
+}
+
+/**
+ * Adds a kind to what is owed: armed now if nothing is owed or it is more
+ * urgent than what is (which then waits), else queued for after.
+ */
+export function queueSafety(state: Tracked, kind: SafetyKind, line = ''): void {
+  const queue = (state.safetyQueue ??= []);
+  if (!queue.includes(kind)) queue.push(kind);
+  const owed = state.safety && !state.safety.spoken ? state.safety : null;
+  if (owed && rank(owed.kind) <= rank(kind)) return;
+  if (owed && !queue.includes(owed.kind)) queue.push(owed.kind);
+  armFrom(state, line);
+}
+
+/** The next owed kind, armed once the last one's advice is said: null when nothing else is owed. */
+export function nextSafety(state: Tracked): SafetyKind | null {
   if (state.safety && !state.safety.spoken) return null;
-  state.safety = { kind, armed_at: state.heard.length, said_from: state.said.length, spoken: false, incident: null, ...(inAnotherLanguage(line) ? { foreign: true } : {}) };
+  return armFrom(state, '');
+}
+
+function armFrom(state: Tracked, line: string): SafetyKind | null {
+  const evacuated = state.safetyDone.some((k) => EVACUATE.includes(k as SafetyKind));
+  const waiting = (state.safetyQueue ?? []).filter((k) => !state.safetyDone.includes(k) && !(k === 'electric' && evacuated)).sort((a, b) => rank(a) - rank(b));
+  const kind = waiting.shift();
+  if (!kind) return null;
+  state.safetyQueue = waiting;
+  const foreign = state.safety?.kind === kind ? state.safety.foreign : inAnotherLanguage(line);
+  state.safety = { kind, armed_at: state.heard.length, said_from: state.said.length, spoken: false, incident: state.safetyIncidents?.[kind] ?? null, ...(foreign ? { foreign: true } : {}) };
   return kind;
 }
 
@@ -75,21 +118,35 @@ const FIRE = /\b(?:on fire|there'?s a fire|caught fire|in flames|flames (?:are )
 const ELECTRIC = /\bsparks?\b|\bsparking\b|\bburning smell\b|\bsmell(?:s|ing)? of burning\b|\b(?:socket|plug|switch|fuse ?box|consumer unit)\b[^.?!]{0,30}\b(?:smoking|melted|melting|scorched|hot to touch|buzzing)\b|\bwater\b[^.?!]{0,40}\b(?:light fittings?|lights?|sockets?|fuse ?box|consumer unit|electrics)\b/i;
 const HURT = /\b(?:is|'s|has been|got|was) (?:hurt|injured|unconscious|bleeding badly)\b|\bnot breathing\b|\bcollapsed\b|\belectric shock\b|\bgot a shock\b/i;
 
-/** The emergency a caller's line describes, if any; a chirping carbon monoxide alarm is its own, milder kind. */
-export function detectSafety(line: string): SafetyKind | null {
+/** A match the caller denies in its own clause: "No, I can smell gas" answers the last question, then reports gas. */
+function denied(line: string, m: RegExpExecArray): boolean {
+  const before = line.slice(Math.max(0, m.index - 30), m.index).split(/[,;:]|\bbut\b/i).pop() ?? '';
+  return NOT.test(before) || /\b(?:not|nowhere|never|no)\b|n'?t\b/i.test(m[0]);
+}
+
+/**
+ * Every emergency a caller's line describes, the most urgent first; a
+ * chirping carbon monoxide alarm is its own, milder kind, but not when it is
+ * sounding, someone feels ill, or the caller says it isn't the battery.
+ */
+export function detectKinds(line: string): SafetyKind[] {
   // A denial before the words, or inside them: "the water isn't anywhere near the lights" (live, 6 October).
   const hit = (re: RegExp) => {
     const m = re.exec(line);
-    return m !== null && !NOT.test(line.slice(Math.max(0, m.index - 30), m.index)) && !/\b(?:not|nowhere|never|no)\b|n'?t\b/i.test(m[0]);
+    return m !== null && !denied(line, m);
   };
-  if (hit(GAS) || GAS_ABROAD.test(line)) return 'gas';
-  if (CO_ALARM.test(line) && CHIRP.test(line)) return 'co_chirp';
-  if (hit(CO_ALARM) || hit(CO_SYMPTOMS)) return 'co';
-  if (hit(FIRE)) return 'fire';
-  if (hit(HURT)) return 'hurt';
-  if (hit(ELECTRIC)) return 'electric';
-  return null;
+  const kinds: SafetyKind[] = [];
+  if (hit(GAS) || GAS_ABROAD.test(line)) kinds.push('gas');
+  if (CO_ALARM.test(line) && hit(CHIRP) && !CO_SYMPTOMS.test(line) && !GOING_OFF.test(line)) kinds.push('co_chirp');
+  else if (hit(CO_ALARM) || hit(CO_SYMPTOMS)) kinds.push('co');
+  if (hit(FIRE)) kinds.push('fire');
+  if (hit(HURT)) kinds.push('hurt');
+  if (hit(ELECTRIC)) kinds.push('electric');
+  return kinds;
 }
+
+/** The most urgent emergency a caller's line describes, if any. */
+export const detectSafety = (line: string): SafetyKind | null => detectKinds(line)[0] ?? null;
 
 /** What shows the advice was given: its first step's gist, and the number, in figures or words. */
 const GIST: Partial<Record<SafetyKind, RegExp>> = {
