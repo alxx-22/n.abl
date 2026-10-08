@@ -1138,10 +1138,10 @@ const TOOLS: Record<string, Tool> = {
     when: (t) => capabilities(t.profile).ordering && Boolean(t.profile.ordering?.kitchen),
     decl: {
       name: 'find_order',
-      description: "Today's order, by its number or with none the number they're ringing from: where it is, and what they need after ordering. Never for a new order.",
+      description: "Today's order, by its number or with none the number they're ringing from: where it is, and what they need after ordering. Or, for 'my usual', their last order before today (action last_order).",
       parameters: obj({
         order_number: S('The order number, if they have it (never a phone number)'),
-        action: S('find (default), add_allergy, request_cancel, request_change or report_problem'),
+        action: S('find (default), add_allergy, request_cancel, request_change, report_problem, or last_order for "my usual"'),
         problem: S('report_problem: missing, wrong, cold, late, something_in_food or ill'),
         details: S('The allergy, the change, or what is wrong, in their words'),
       }),

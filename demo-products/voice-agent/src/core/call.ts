@@ -154,6 +154,9 @@ const TAKEAWAY_CORRECTIONS: Partial<Record<Flag['rule'], string>> = {
 const MT_UNCONFIRMED =
   '[Correction from the system: nothing has been booked yet: job create has not returned a reference in this call, so any reference you said is wrong. Tell the caller you just need to finalise it, then call job create now with the date and window they chose. Only then give the reference it returns.]';
 
+/** A takeaway regular: "my usual", "the usual", "same as last time". */
+const USUAL = /\b(?:my|the) usual\b|\bsame as (?:last time|last week|before|always)\b|\bwhat I (?:always|usually) (?:have|get|order)\b/i;
+
 /** "Hello, this is Relay UK", "you're through to a relay assistant": a text relay call. */
 const RELAY = /\b(?:relay uk|text ?relay|typetalk|relay (?:assistant|service|call|operator))\b/i;
 
@@ -569,6 +572,11 @@ export class CallSession extends EventEmitter<CallEvents> {
       if (dish && !this.state.gateAsked.includes(`allergy:${dish}`)) {
         this.state.gateAsked.push(`allergy:${dish}`);
         this.session?.sendText(`[From the system: the caller is asking about an allergy and the ${dish}. Call get_item_details for "${dish}" now and say its allergen_answer, caveat included. Never say safe.]`);
+      }
+      // "My usual": their last order is looked up, never guessed. Live, 8 October: "I don't know your usual".
+      if (USUAL.test(clean) && !this.state.gateAsked.includes('usual')) {
+        this.state.gateAsked.push('usual');
+        this.session?.sendText("[From the system: the caller wants their usual. Call find_order with action last_order now, and read back what it returns.]");
       }
     }
   }
