@@ -9,6 +9,10 @@
    "label": "Drivers"
   },
   {
+   "id": "tonight",
+   "label": "Menu tonight"
+  },
+  {
    "id": "messages",
    "label": "Messages"
   },
