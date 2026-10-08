@@ -12,6 +12,7 @@ import type {
 } from '../domain/types.ts';
 import { checkSlot, findService, depositFor, resourceFree, type BusyInterval, type Unavailable } from '../domain/availability.ts';
 import type { ListingRule } from '../domain/listings.ts';
+import { renewal } from '../domain/certificates.ts';
 import { addDays, normaliseTime, toLocal, zonedToUtc, isIsoDate, weekdayOf } from '../domain/time.ts';
 import type { SeedPlan } from '../presets/common/types.ts';
 
@@ -1508,7 +1509,28 @@ export class Repo {
        where tenant_id = $1 and reference = $2${guard} returning ${JOB_COLS}`,
       params,
     );
+    // A cancelled job no longer holds a certificate's renewal, however it was cancelled (review, 8 October).
+    if (rows[0] && patch.status === 'cancelled') {
+      await this.db.query(`update public.voice_mt_certificates set booked_job = null where tenant_id = $1 and booked_job = $2`, [tenantId, reference]);
+    }
     return rows[0] ? mapJob(rows[0]) : null;
+  }
+
+  /** The certificates a finished job renewed: their new dates, and no longer booked. */
+  async renewCertificates(tenantId: string, jobRef: string, done: string): Promise<Certificate[]> {
+    const rows = await this.db.query<any>(`select ${CERT_COLS} from public.voice_mt_certificates where tenant_id = $1 and booked_job = $2`, [tenantId, jobRef]);
+    const out: Certificate[] = [];
+    for (const c of rows.map(mapCertificate)) {
+      const r = renewal(c, done);
+      // A new report replaces the old one's remedial items.
+      await this.db.query(
+        `update public.voice_mt_certificates set issued = $4, expires = $5, booked_job = null, remedials = '[]'::jsonb
+         where tenant_id = $1 and property_key = $2 and kind = $3`,
+        [tenantId, c.property_key, c.kind, r.issued, r.expires],
+      );
+      out.push({ ...c, ...r, booked_job: null, remedials: [] });
+    }
+    return out;
   }
 
   /** Every certificate, or one property's. */

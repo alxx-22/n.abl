@@ -291,6 +291,31 @@ test("compliance: the landlord hears the register and books a gas safety record 
   assert.match((await sam.run('compliance', { property: 'elm_14', action: 'status' })).message, /for the landlord or agent on file/);
 });
 
+test('compliance: a record already booked is never booked twice; cancelling frees the register, and the visit done renews the record', async () => {
+  const t = await fernhill('pm-gas-twice');
+  const ben = await call(t, BEN);
+  const offered = await ben.run('compliance', { property: 'elm_14', action: 'book', services: 'gas safety record' });
+  const w = offered.windows[0];
+  const first = await ben.run('compliance', { property: 'elm_14', action: 'book', services: 'gas safety record', date: w.date, window: w.window });
+  assert.equal(first.booked, true, JSON.stringify(first));
+  // Asked again (the landlord forgot): the booking there is, never a second job.
+  const again = await ben.run('compliance', { property: 'elm_14', action: 'book', services: 'gas safety record', date: offered.windows[1].date, window: offered.windows[1].window });
+  assert.equal(again.booked, false, JSON.stringify(again));
+  assert.equal(again.already?.reference, first.reference);
+  assert.equal((await repo.listJobs(t.id, { property: 'elm_14' })).filter((j) => j.kind === 'gas_record' && j.status !== 'cancelled').length, 1);
+  // The office cancels it: the register shows it unbooked again, and it can be booked.
+  await jobAction(repo, t, first.reference, { action: 'cancel', notify: false }, async () => {}, NOW);
+  const gas = async () => (await repo.listCertificates(t.id, 'elm_14')).find((c) => c.kind === 'gas_record')!;
+  assert.equal((await gas()).booked_job, null);
+  const second = await ben.run('compliance', { property: 'elm_14', action: 'book', services: 'gas safety record', date: w.date, window: w.window });
+  assert.equal(second.booked, true, JSON.stringify(second));
+  // Done inside the two months before 16 November: the new record runs a year from that date, not from the visit.
+  const visit = new Date(`${w.date}T12:00:00Z`);
+  await jobAction(repo, t, second.reference, { action: 'done', notes: 'Gas safety record issued.' }, async () => {}, visit);
+  const renewed = await gas();
+  assert.deepEqual([renewed.booked_job, renewed.issued, renewed.expires], [null, w.date, '2027-11-16']);
+});
+
 test('messages and hours: for an engineer or the office, urgent ones by text, bank talk as fraud; tonight\'s cover without names', async () => {
   const t = await fernhill('pm-messages');
   const c = await call(t, SAM);

@@ -280,6 +280,8 @@ export async function jobAction(
       const notes = String(b.notes ?? '').trim().slice(0, 500);
       if (!notes) throw new HttpError(400, 'Add what was done.');
       const r = await update(job.reference, { status: 'done', done_at: now, notes }, 'done', { by: name(job.engineer_key), from: ['on_site', 'on_the_way', 'scheduled', 'waiting'] });
+      // A safety check done renews its certificate on the register (review, 8 October).
+      if (r) await repo.renewCertificates(t.id, job.reference, today.date);
       return done(r, `${job.reference}: done.`);
     }
     case 'waiting': {

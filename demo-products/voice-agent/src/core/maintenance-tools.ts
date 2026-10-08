@@ -1366,6 +1366,18 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
   const extra = Math.max(0, (int(args.appliances) ?? p.gas_appliances ?? 1) - 1);
   const price = kind === 'eicr' ? m.planned.eicr_from_pence : kind === 'boiler_service' ? m.planned.boiler_service_pence
     : (kind === 'gas_record_and_service' ? m.planned.combined_pence : m.planned.gas_record_pence) + extra * m.planned.extra_appliance_pence;
+  // Already booked (the landlord forgot, or asks again): that visit, never a second job (review, 8 October).
+  const kinds = kind === 'gas_record_and_service' ? ['gas_record', 'boiler_service'] : [kind];
+  const held = certs.find((c) => kinds.includes(c.kind) && c.booked_job);
+  const heldJob = held ? (await ctx.repo.listJobs(ctx.tenant.id, { reference: held.booked_job! }))[0] : undefined;
+  if (heldJob && !['done', 'invoiced', 'cancelled'].includes(heldJob.status)) {
+    const hw = heldJob.visit_date ? windowOf(m, heldJob.window_key) : undefined;
+    return {
+      booked: false,
+      already: { reference: heldJob.reference, reference_spoken: spokenReference(heldJob.reference), what: heldJob.description, ...(hw && heldJob.visit_date ? { when: windowWords(hw, heldJob.visit_date, l.date) } : {}) },
+      message: 'That check is already booked: say when, and offer to move it (job move with its reference) rather than book another.',
+    };
+  }
   const date = str(args.date);
   const w = date && isIsoDate(date) ? windowNamed(m, args.window, date) : undefined;
   const gasCert = certs.find((c) => c.kind === 'gas_record');
