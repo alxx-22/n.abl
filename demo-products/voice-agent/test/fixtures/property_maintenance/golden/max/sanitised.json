@@ -588,6 +588,7 @@
    "example": true
   }
  ],
+ "properties": [],
  "trades": [
   {
    "key": "gas_heating",
