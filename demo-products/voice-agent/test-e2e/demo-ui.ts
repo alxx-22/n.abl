@@ -330,6 +330,18 @@ async function walkRestaurant({ shot }: Walk) {
     await page.waitForSelector('.ws-messages');
     await shot(page, 'workspace-messages');
 
+    // The demo's own clock: tomorrow at half seven, to see dinner service whatever the real time.
+    await page.click('.demo-clock > button');
+    await page.waitForSelector('.clock-pop');
+    await page.locator('.clock-pop select').selectOption({ index: 1 });
+    await page.fill('.clock-pop input[type=time]', '19:30');
+    await page.click('.clock-pop button[type=submit]');
+    await page.waitForSelector('.demo-clock > button:has-text("Demo time")');
+    await page.click('.tabs button:has-text("Floor plan")');
+    await page.waitForSelector('.workspace svg.floor g.table');
+    await page.waitForFunction(() => !document.querySelector('.toast'), undefined, { timeout: 15000 }).catch(() => {});
+    await shot(page, 'workspace-clock-dinner');
+
     // Narrow screen.
     await page.setViewportSize({ width: 390, height: 900 });
     await page.click('.tabs button:has-text("Floor plan")');

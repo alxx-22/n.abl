@@ -57,7 +57,8 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
     setTick((t) => t + 1);
     setView((v) => {
       if (v) return v;
-      const now = localNow(s.tenant.timezone);
+      // The demo's own time when its clock is set: Friday's dinner, not whenever the real time is.
+      const now = localNow(s.tenant.timezone, new Date(Date.now() + (s.clock_offset_ms ?? 0)));
       const services = servicesOn(s, now.date);
       const inService = services.some((x) => now.minutes >= x.open - 30 && now.minutes <= x.close);
       return { date: now.date, minute: inService || !services.length ? now.minutes : (services.find((x) => x.open > now.minutes) ?? services[services.length - 1]).open + 60 };
@@ -225,7 +226,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
         {spec.clock ? (
           <DemoClock
             id={id} timeZone={t.timezone} realMs={clock} offsetMs={state.clock_offset_ms ?? 0} disabled={live.phase !== 'idle'}
-            onSet={(message) => { setSelected(null); void refresh(); toast(message); }}
+            onSet={(message) => { setSelected(null); setView(null); void refresh(); toast(message); }}
           />
         ) : null}
         <button type="button" onClick={reset} disabled={live.phase !== 'idle'}><ResetIcon /> Reset</button>
