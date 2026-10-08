@@ -20,6 +20,9 @@ export interface BasicsCopy {
 
 let voiceCache: VoiceMeta | null = null;
 
+/** A business's three colours: the accent on buttons and links, the main colour on the top bar, the background for its pages. */
+const COLOURS = [['accent', 'Accent'], ['primary', 'Main colour'], ['background', 'Background']] as const;
+
 export function Basics({ a, set, ws, copy }: StepProps & { copy: BasicsCopy }) {
   const [voices, setVoices] = useState<VoiceMeta | null>(voiceCache);
   const [playing, setPlaying] = useState(false);
@@ -68,15 +71,19 @@ export function Basics({ a, set, ws, copy }: StepProps & { copy: BasicsCopy }) {
         onChange={(v) => set((d) => void (d.basics.greeting = v))}
         hint="Leave empty for the one shown. Yours must say it is an AI assistant and that this is a demo line."
       />
-      <div className="field">
-        <label htmlFor="b-accent">Accent colour <Source of="theme.accent" sources={s} /></label>
-        <div className="field-row colour-row">
-          <input id="b-accent" type="color" value={a.theme.accent} onChange={(e) => set((d) => void (d.theme.accent = e.target.value))} />
-          <span className="mono small">{a.theme.accent}</span>
+      <fieldset className="field colours">
+        <legend>Colours <Source of="theme.accent" sources={s} /></legend>
+        <div className="colour-row">
+          {COLOURS.map(([key, label]) => (
+            <label key={key} className="colour">
+              <input type="color" id={`b-${key}`} value={/^#[0-9a-f]{6}$/i.test(a.theme[key]) ? a.theme[key] : '#000000'} onChange={(e) => set((d) => void (d.theme[key] = e.target.value))} />
+              <span>{label}<span className="mono small dim"> {a.theme[key]}</span></span>
+            </label>
+          ))}
           {a.theme.logo ? <img className="logo-preview" src={a.theme.logo} alt="Your logo" /> : null}
         </div>
-        <p className="hint">{copy.accentHint}</p>
-      </div>
+        <p className="hint">{copy.accentHint} A light background gives light pages, a dark one dark pages; text is kept readable either way.</p>
+      </fieldset>
     </div>
   );
 }

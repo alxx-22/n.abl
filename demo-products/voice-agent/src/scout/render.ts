@@ -113,7 +113,8 @@ async function renderNow(url: string, opts: { allowPrivate?: boolean; timeoutMs?
       }
       return {
         text: (document.body?.innerText ?? '').slice(0, 40000),
-        body_bg: getComputedStyle(document.body).backgroundColor,
+        // A see-through body shows the page's own ground: the html element's colour, or the browser's white.
+        body_bg: [document.body, document.documentElement].map((el) => getComputedStyle(el).backgroundColor).find((c) => !clear(c)) ?? 'rgb(255, 255, 255)',
         header_bg: headerBg,
         button_bg: button ? getComputedStyle(button).backgroundColor : null,
         button_fg: button ? getComputedStyle(button).color : null,
@@ -194,8 +195,9 @@ function mix(a: string, b: string, t: number): string {
 const INK = '#14110e';
 
 /**
- * The workspace is dark, with dark text on accent-coloured buttons, so the
- * accent is lightened until that text passes WCAG AA (4.5:1).
+ * The accent lightened until dark text on it passes WCAG AA (4.5:1). The
+ * scan keeps the website's own colours; the demo's pages make them readable
+ * when they draw them (web/src/reception/brand.ts).
  */
 export function readableAccent(h: string): string {
   let c = h;
@@ -222,9 +224,11 @@ export function themeFrom(r: Rendered | null, fallback: { theme_color: string | 
   const heading = r?.heading_font ?? fallback.fonts[0] ?? null;
   const body = r?.body_font ?? fallback.fonts[1] ?? fallback.fonts[0] ?? null;
   if (!accentRaw && !heading) return null;
-  const accent = readableAccent(accentRaw ?? '#e9ac57');
-  const primary = primaryRaw && luminance(primaryRaw) < 0.2 ? primaryRaw : '#2a2217';
-  const background = r?.body_bg && luminance(r.body_bg) < 0.05 ? r.body_bg : '#0e0c0a';
+  // The website's own colours, as they are: a white site gives a light demo, a dark one a dark demo.
+  const accent = accentRaw ?? '#e9ac57';
+  const background = r?.body_bg ?? '#0e0c0a';
+  // A header with no colour of its own shows the page's: that is its main colour then.
+  const primary = primaryRaw ?? (r ? background : '#2a2217');
   // The browser's defaults are not a brand choice.
   const generic = /^(system-ui|-apple-system|sans-serif|serif|times new roman|times|arial|helvetica|liberation serif|liberation sans|dejavu sans|dejavu serif)$/i;
   const fontHeading = heading && !generic.test(heading) ? heading : 'system-ui';

@@ -136,13 +136,22 @@ test('scout: which links are worth a read, and fonts and colours into a readable
   assert.deepEqual(fontsOf('<style>body{font-family:-apple-system, "Segoe UI"} h1{font-family: "Canela", serif}</style>'), ['Canela']);
   assert.equal(hex('rgb(31, 92, 58)'), '#1f5c3a');
   assert.equal(hex('rgba(0, 0, 0, 0)'), null);
-  // A dark brand green becomes an accent dark text can sit on.
+  // readableAccent still lightens a dark brand green until dark text reads on it.
   const acc = readableAccent('#1f5c3a');
   assert.ok(contrast(acc, '#14110e') >= 4.5, `${acc} is readable`);
+  // The scan keeps the website's own colours: the demo's pages make them readable.
   const t = themeFrom(null, { theme_color: '#1f5c3a', colours: { '#c8553d': 3 }, fonts: ['Playfair Display', 'Lato'] })!;
   assert.equal(t.font_heading, 'Playfair Display');
   assert.equal(t.font_body, 'Lato');
-  assert.ok(contrast(t.accent, '#14110e') >= 4.5);
+  assert.equal(t.accent, '#1f5c3a');
+  assert.equal(t.background, '#0e0c0a', 'no render: the dark default');
+  // A white website with a navy header and a pink button: all three kept, so its demo is light.
+  const page = { text: '', body_bg: '#ffffff', header_bg: '#1b2a4a', button_bg: '#d6336c', button_fg: '#ffffff', link: null, heading_font: null, body_font: null, logo: null, painted: ['#ffffff', '#1b2a4a'] };
+  const w = themeFrom(page, { theme_color: null, colours: {}, fonts: [] })!;
+  assert.deepEqual([w.accent, w.primary, w.background], ['#d6336c', '#1b2a4a', '#ffffff']);
+  // A header with no colour of its own takes the page's.
+  const plain = themeFrom({ ...page, header_bg: null, painted: ['#ffffff'] }, { theme_color: null, colours: {}, fonts: [] })!;
+  assert.equal(plain.primary, '#ffffff');
 });
 
 const FACTS: FactsOut = {
@@ -200,7 +209,8 @@ test('scout: a whole site, politely, into the builder', async () => {
   assert.deepEqual(r.services.delivery_apps, ['Deliveroo']);
   assert.ok(r.services.providers.includes('OpenTable'));
   assert.equal(r.policies.dogs, 'inside');
-  assert.ok(r.theme && contrast(r.theme.accent, '#14110e') >= 4.5);
+  // The site's own brand colour, as it is (the demo's pages make it readable).
+  assert.ok(r.theme && ['#1f5c3a', '#c8553d'].includes(r.theme.accent), r.theme?.accent);
   assert.ok(digestSeen.length < 16500 && digestSeen.includes('Hucknall Road'), 'the digest carries the useful sentences');
   assert.ok(!digestSeen.includes('SECRET'));
 

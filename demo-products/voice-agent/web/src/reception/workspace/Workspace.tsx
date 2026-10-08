@@ -166,7 +166,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   const now = localNow(state.tenant.timezone, new Date(demoClock));
   const t = state.tenant;
   const brand = t.brand ?? {};
-  const style = brandStyle({ accent: brand.accent ?? t.accent, font_heading: brand.font_heading, font_body: brand.font_body });
+  const style = brandStyle({ accent: brand.accent ?? t.accent, primary: brand.primary, background: brand.background, font_heading: brand.font_heading, font_body: brand.font_body });
   const booking: LiveBooking | null = selected ? state.bookings.find((b) => b.reference === selected.ref) ?? null : null;
   const minutesLeft = Math.max(0, me.limits.call_minutes_per_day - me.used.call_minutes);
 
