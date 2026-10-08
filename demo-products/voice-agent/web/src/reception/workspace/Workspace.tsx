@@ -232,12 +232,21 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
       </RxTop>
 
       <main className="workspace">
-        <div className="ws-call">
-          <LivePanel
-            tenant={t} phase={live.phase} model={live.model} latencies={live.latencies} turn={live.turn} call={live.call}
-            stream={stream} card={card} onStart={live.start} onStop={live.stop} suggestions={suggestionsFor(spec, state)}
+        {/* The call and the phone: either side of the back office on a wide screen, one column on a narrower one. */}
+        <div className="ws-side">
+          <div className="ws-call">
+            <LivePanel
+              tenant={t} phase={live.phase} model={live.model} latencies={live.latencies} turn={live.turn} call={live.call}
+              stream={stream} card={card} onStart={live.start} onStop={live.stop} suggestions={suggestionsFor(spec, state)}
+            />
+            <p className="hint privacy">Calls go through Google’s Gemini. Use made-up names and details, never a real customer’s.</p>
+          </div>
+          <Phone
+            id={id} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)}
+            callAs={t.business_type === 'estate_agent' ? CALL_AS : t.business_type === 'property_maintenance' ? [...MT_CALL_AS, ...ownCallAs(state)] : t.business_type === 'takeaway' ? TK_CALL_AS : []}
+            emptyHint={t.business_type === 'takeaway' ? 'No texts yet. Order on the call: the confirmation, and "on its way" when it goes out with a driver, land here.' : undefined}
+            crew={state.engineers ? { engineers: state.engineers, clients: state.clients ?? [], jobs: state.jobs ?? [], quotes: state.quotes ?? [], today: now.date, onDone: refreshSoon } : undefined}
           />
-          <p className="hint privacy">Calls go through Google’s Gemini. Use made-up names and details, never a real customer’s.</p>
         </div>
 
         <section className="ws-office panel" aria-label="Back office">
@@ -262,13 +271,6 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
             ) : null}
           </div>
         </section>
-
-        <Phone
-          id={id} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)}
-          callAs={t.business_type === 'estate_agent' ? CALL_AS : t.business_type === 'property_maintenance' ? [...MT_CALL_AS, ...ownCallAs(state)] : t.business_type === 'takeaway' ? TK_CALL_AS : []}
-          emptyHint={t.business_type === 'takeaway' ? 'No texts yet. Order on the call: the confirmation, and "on its way" when it goes out with a driver, land here.' : undefined}
-          crew={state.engineers ? { engineers: state.engineers, clients: state.clients ?? [], jobs: state.jobs ?? [], quotes: state.quotes ?? [], today: now.date, onDone: refreshSoon } : undefined}
-        />
       </main>
 
       <SettingsDialog target={{ workspace: id }} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => refreshSoon()} />

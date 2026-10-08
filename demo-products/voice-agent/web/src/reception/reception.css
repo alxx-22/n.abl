@@ -302,6 +302,11 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 
 /* ── The workspace ────────────────────────────────────────────────────── */
 .workspace { display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(0, 2fr) 300px; gap: var(--gap); padding: 20px 24px; align-items: start; max-width: 1800px; margin: 0 auto; }
+/* The call and the phone sit either side of the back office; the wrapper only matters on narrower screens. */
+.ws-side { display: contents; }
+.ws-call { grid-column: 1; grid-row: 1; }
+.ws-office { grid-column: 2; grid-row: 1; }
+.workspace .phone-col { grid-column: 3; grid-row: 1; }
 .ws-call { display: grid; gap: 8px; position: sticky; top: 12px; }
 .ws-call .stream { max-height: 38vh; }
 .ws-call .console { gap: 14px; }
@@ -311,7 +316,9 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .days button[aria-pressed='true'] .count { color: var(--ink); opacity: 1; }
 .privacy { font-size: 12px; }
 .ws-office { padding: 0; overflow: hidden; }
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); padding: 8px 12px 0; overflow-x: auto; }
+/* Every tab in view: they wrap rather than hide off the edge. */
+.tabs { display: flex; flex-wrap: wrap; gap: 2px 2px; border-bottom: 1px solid var(--line); padding: 8px 12px 0; }
+.tabs button { padding: 7px 11px; font-size: 14px; }
 .tabs button { border-radius: var(--r-md) var(--r-md) 0 0; border: none; background: transparent; font-weight: 500; color: var(--muted); white-space: nowrap; box-shadow: none; }
 .tabs button:not(:disabled):hover { color: var(--heading); background: rgba(var(--cream-rgb), 0.04); box-shadow: none; }
 .tabs button[aria-selected='true'] { color: var(--heading); box-shadow: inset 0 -2px 0 var(--accent), 0 6px 18px -10px var(--accent); }
@@ -470,12 +477,34 @@ svg.house .door { fill: var(--accent); }
 .applicant { position: relative; }
 .buyer-actions { margin: 2px 0 0; }
 
+/* On a laptop or bigger, the workspace fits the window: the call, the back
+   office and the phone each scroll on their own, the tabs stay in view, and
+   the page itself never scrolls. A long board column scrolls inside itself. */
+@media (min-width: 981px) and (min-height: 600px) {
+  .workspace-page { height: 100vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .workspace-page > .workspace { flex: 1; min-height: 0; width: 100%; align-items: stretch; padding-top: 14px; padding-bottom: 14px; }
+  .ws-call, .workspace .phone-col, .ws-side { position: static; min-height: 0; overflow-y: auto; overscroll-behavior: contain; align-content: start; scrollbar-gutter: stable; }
+  /* Stacked in one column, the call and the phone keep their full height and the column scrolls. */
+  .ws-side { grid-auto-rows: max-content; }
+  .ws-side .ws-call, .ws-side .phone-col { overflow: visible; min-height: auto; }
+  .ws-office { display: flex; flex-direction: column; min-height: 0; }
+  .ws-office > .tabs { flex: none; }
+  .office-body { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  .office-main { min-height: 0; overflow: auto; overscroll-behavior: contain; }
+  .office-body > .drawer { max-height: none; min-height: 0; }
+  .k-col { max-height: max(260px, calc(100vh - 250px)); overflow-y: auto; overscroll-behavior: contain; }
+  .k-col h3 { position: sticky; top: -10px; margin: -10px -10px 0; padding: 10px 10px 6px; background: var(--surface-2); z-index: 1; }
+}
+@media (min-width: 1351px) and (min-height: 600px) {
+  .ws-side { display: contents; }
+}
 @media (prefers-reduced-motion: reduce) {
   .spinner, .table.flash .top, .sms.fresh { animation: none; }
 }
 @media (max-width: 1350px) {
   .workspace { grid-template-columns: minmax(300px, 1fr) minmax(0, 2fr); }
-  .phone-col { grid-column: 1; grid-row: 2; }
+  .ws-side { display: grid; gap: var(--gap); grid-column: 1; grid-row: 1; align-content: start; }
+  .ws-call, .workspace .phone-col { grid-column: auto; grid-row: auto; }
   .builder { grid-template-columns: 190px minmax(0, 1fr); }
   .preview { grid-column: 2; position: static; }
 }
@@ -483,7 +512,10 @@ svg.house .door { fill: var(--accent); }
   .rx-door { grid-template-columns: 1fr; min-height: 0; padding-top: 40px; }
   .workspace { grid-template-columns: 1fr; padding: 16px; }
   .ws-call, .phone-col { position: static; }
-  .phone-col { grid-row: auto; }
+  /* One column: the call, the back office, then the phone. */
+  .ws-side { display: contents; }
+  .ws-side, .ws-office { grid-column: auto; grid-row: auto; }
+  .ws-call { order: 1; } .ws-office { order: 2; } .workspace .phone-col { order: 3; }
   .office-body { grid-template-columns: 1fr; }
   .drawer { width: auto; border-width: 1px 0 0; max-height: none; }
   .builder { grid-template-columns: 1fr; }
