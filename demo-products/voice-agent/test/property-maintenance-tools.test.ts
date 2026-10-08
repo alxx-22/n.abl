@@ -805,6 +805,8 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   assert.deepEqual(checkUtterance('For whether to keep him out of the room, please speak to your GP or NHS 111.', s2).map((f) => f.rule), []);
   assert.deepEqual(checkUtterance('Please speak to your GP about whether to keep him out of the room.', s2).map((f) => f.rule), []);
   assert.deepEqual(checkUtterance('You should keep him out of the room for now.', s2).map((f) => f.rule), ['medical_advice']);
+  // Live, 8 October.
+  assert.deepEqual(checkUtterance("Damp and mould can sometimes make it worse, so it's best to limit his time in that room if you can.", s2).map((f) => f.rule), ['medical_advice']);
 });
 
 test('invented_price: a sum no setting, tool or caller gave is caught; the real ones are not', async () => {
