@@ -84,6 +84,11 @@
    "q": "What is your food hygiene rating?",
    "a": "Our food hygiene rating is 5. You can check it on the Food Standards Agency's ratings website.",
    "tags": ["hygiene","rating","clean","inspection","fsa"]
+  },
+  {
+   "q": "Do you sell alcohol?",
+   "a": "We don't sell alcohol.",
+   "tags": ["alcohol","beer","lager","wine","cider","drink","id","age"]
   }
  ],
  "menu": {
@@ -954,7 +959,8 @@
     "burger_meal": 1,
     "chicken_box": 1,
     "pizza_night": 2
-   }
+   },
+   "nation": "england"
   },
   "pay_driver": "cash_or_card",
   "pay_on_phone": ["+447700900804"]

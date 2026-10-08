@@ -92,6 +92,11 @@
    "tags": ["hygiene","rating","clean","inspection","fsa"]
   },
   {
+   "q": "Do you sell alcohol?",
+   "a": "We sell free beer with food orders until 11pm, to over-18s only. The driver asks for photo ID if you look under 25, and won't hand alcohol to anyone under 18 or who seems drunk.",
+   "tags": ["alcohol","beer","lager","wine","cider","drink","id","age"]
+  },
+  {
    "q": "Are you on the delivery apps?",
    "a": "Yes, you can order from us on Just Eat.",
    "tags": ["deliveroo","uber","just eat","app","delivery"]
@@ -369,6 +374,20 @@
       "allergens": ["milk"],
       "dietary": ["vegetarian"],
       "aliases": ["ice cream"]
+     }
+    ]
+   },
+   {
+    "key": "alcohol",
+    "label": "Beer and wine",
+    "items": [
+     {
+      "key": "alcohol_1",
+      "name": "Free beer",
+      "price_pence": 0,
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
      }
     ]
    }
@@ -691,7 +710,9 @@
     "spicy_chicken_wrap": 1,
     "halloumi_wrap": 1,
     "dear_meal": 1
-   }
+   },
+   "nation": "england",
+   "alcohol_until": "23:00"
   },
   "pay_driver": "no"
  },

@@ -99,8 +99,13 @@
   },
   {
    "q": "What is your food hygiene rating?",
-   "a": "Our food hygiene rating is 4. You can check it on the Food Standards Agency's ratings website.",
+   "a": "Our food hygiene rating is 4. By law we tell anyone who asks, and our menus and leaflets show it. You can check it on the Food Standards Agency's ratings website.",
    "tags": ["hygiene","rating","clean","inspection","fsa"]
+  },
+  {
+   "q": "Do you sell alcohol?",
+   "a": "We sell craft lager with food orders until 10pm, to over-18s only. The driver asks for photo ID if you look under 25, and won't hand alcohol to anyone under 18 or who seems drunk.",
+   "tags": ["alcohol","beer","lager","wine","cider","drink","id","age"]
   },
   {
    "q": "Are you on the delivery apps?",
@@ -445,6 +450,21 @@
       "allergens": ["milk"],
       "dietary": ["vegetarian"],
       "aliases": ["ice cream"]
+     }
+    ]
+   },
+   {
+    "key": "alcohol",
+    "label": "Beer and wine",
+    "items": [
+     {
+      "key": "alcohol_1",
+      "name": "Craft lager",
+      "price_pence": 450,
+      "description": "440ml can.",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
      }
     ]
    }
@@ -885,7 +905,9 @@
     "veggie_supreme": 1,
     "burger_meal": 1,
     "chicken_box": 1
-   }
+   },
+   "nation": "wales",
+   "alcohol_until": "22:00"
   }
  },
  "policies": {

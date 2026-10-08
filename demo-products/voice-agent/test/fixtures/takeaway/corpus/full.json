@@ -640,6 +640,18 @@
   "missing_items": "send_out",
   "pay_on_phone_numbers": []
  },
+ "nation": "wales",
+ "alcohol": {
+  "on": true,
+  "until": "22:00",
+  "items": [
+   {
+    "name": "Craft lager",
+    "price_pence": 450,
+    "description": "440ml can."
+   }
+  ]
+ },
  "policies": {
   "halal": "all",
   "hygiene_rating": 4,

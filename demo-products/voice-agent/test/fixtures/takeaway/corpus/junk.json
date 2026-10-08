@@ -60,6 +60,12 @@
   "pay_driver": "gold",
   "card_minimum_pence": -3
  },
+ "nation": "mars",
+ "alcohol": {
+  "on": "yes",
+  "until": "25:99",
+  "items": "beer"
+ },
  "after": {
   "late_after_minutes": "soon",
   "missing_items": "refund",

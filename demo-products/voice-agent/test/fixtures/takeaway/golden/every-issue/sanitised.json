@@ -614,6 +614,18 @@
   "missing_items": "manager",
   "pay_on_phone_numbers": ["07700 9008","07700 900804"]
  },
+ "nation": "england",
+ "alcohol": {
+  "on": true,
+  "until": "23:00",
+  "items": [
+   {
+    "name": "Free beer",
+    "price_pence": 0,
+    "description": ""
+   }
+  ]
+ },
  "policies": {
   "halal": "chicken",
   "hygiene_rating": 5,

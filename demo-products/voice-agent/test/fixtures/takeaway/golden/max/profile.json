@@ -181,6 +181,11 @@
    "tags": ["hygiene","rating","clean","inspection","fsa"]
   },
   {
+   "q": "Do you sell alcohol?",
+   "a": "We sell drink 0 name name name name name name name name name name, drink 1 name name name name name name name name name name, drink 2 name name name name name name name name name name, drink 3 name name name name name name name name name name, drink 4 name name name name name name name name name name, drink 5 name name name name name name name name name name, drink 6 name name name name name name name name name name, drink 7 name name name name name name name name name name, drink 8 name name name name name name name name name name, drink 9 name name name name name name name name name name, drink 10 name name name name name name name name name name, drink 11 name name name name name name name name name name with food orders, to over-18s only. The driver asks for photo ID if you look under 25, and won't hand alcohol to anyone under 18 or who seems drunk. In Scotland we can take payment for alcohol only between 10am and 10pm, and never deliver it between midnight and 6am.",
+   "tags": ["alcohol","beer","lager","wine","cider","drink","id","age"]
+  },
+  {
    "q": "Are you on the delivery apps?",
    "a": "Yes, you can order from us on Deliveroo and Uber Eats and Just Eat and Another App and One More.",
    "tags": ["deliveroo","uber","just eat","app","delivery"]
@@ -698,6 +703,120 @@
       "allergens": ["milk"],
       "dietary": ["vegetarian"],
       "aliases": ["ice cream"]
+     }
+    ]
+   },
+   {
+    "key": "alcohol",
+    "label": "Beer and wine",
+    "items": [
+     {
+      "key": "alcohol_1",
+      "name": "Drink 0 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_2",
+      "name": "Drink 1 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_3",
+      "name": "Drink 2 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_4",
+      "name": "Drink 3 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_5",
+      "name": "Drink 4 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_6",
+      "name": "Drink 5 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_7",
+      "name": "Drink 6 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_8",
+      "name": "Drink 7 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_9",
+      "name": "Drink 8 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_10",
+      "name": "Drink 9 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_11",
+      "name": "Drink 10 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
+     },
+     {
+      "key": "alcohol_12",
+      "name": "Drink 11 name name name name name name name name name name",
+      "price_pence": 19999,
+      "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc ",
+      "allergens": [],
+      "allergens_unknown": true,
+      "age": 18
      }
     ]
    }
@@ -4454,7 +4573,9 @@
     "deal_9": 5,
     "deal_10": 5,
     "deal_11": 5
-   }
+   },
+   "nation": "scotland",
+   "alcohol_until": null
   },
   "pay_driver": "cash_or_card",
   "pay_on_phone": [
