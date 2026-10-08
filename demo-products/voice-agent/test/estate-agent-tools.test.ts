@@ -988,3 +988,49 @@ test('a viewing moved to someone else never goes to the one with a personal inte
   assert.equal(r.ok, false);
   assert.match((r as { message: string }).message, /has a personal interest in this home, so can't show it/);
 });
+
+test('live slips, 8 October: the position from the caller\'s words, "Thursday" is the nearest one, and why they\'re moving asked once', async () => {
+  const t = await agency('ea-slips-8oct');
+  // The buyer's position said, and left out of the booking: taken from their words, and a valuation offered for the flat to sell.
+  {
+    const { run, ctx } = await call(t, '+447700900133');
+    ctx.state.heard.push('My name is Joe Carter. My postcode is BK3 4RT. I have a flat to sell that isn\'t on the market yet, and a mortgage agreed in principle.');
+    const r = await run('create_booking', { property: 'albion_22', date: SAT, time: '11:15', name: 'Joe Carter', postcode: 'BK3 4RT' });
+    assert.equal(r.booked, true, JSON.stringify(r));
+    const row = (await repo.getBookingByReference(t.id, String(r.reference)))!;
+    assert.deepEqual((row.details as any).position, { selling: 'not_on_market', funding: 'mortgage_aip' });
+    assert.match(String(r.next), /Offer a free valuation/);
+  }
+  {
+    const { run, ctx } = await call(t, '+447700900135');
+    ctx.state.heard.push("I'm a first-time buyer, paying cash.");
+    const r = await run('create_booking', { property: 'albion_22', date: SAT, time: '12:00', name: 'Ada Fox', postcode: 'BK3 4RT', funding: 'mortgage not yet' });
+    assert.equal(r.booked, true, JSON.stringify(r));
+    const row = (await repo.getBookingByReference(t.id, String(r.reference)))!;
+    assert.deepEqual((row.details as any).position, { first_time_buyer: true, selling: 'nothing', funding: 'mortgage_not_yet' }, 'what the model passed wins');
+  }
+  // "Thursday at 10" on a Wednesday is tomorrow: next week's is checked once; "next Thursday" or "the 15th" is not.
+  {
+    const { run, ctx } = await call(t, '+447700900136');
+    ctx.state.heard.push("I'm looking for a valuation. Could we do Thursday at 10 am? I'm moving for work within three months.");
+    const v = { date: '2026-10-15', time: '10:00', name: 'Jo Bloggs', address: '12 Hawthorn Way', postcode: 'BK3 7XY' };
+    const first = await run('book_valuation', v);
+    assert.equal(first.booked, false);
+    assert.match(String(first.message), /they said Thursday, and the nearest Thursday is Thursday 8 October \(tomorrow\), not Thursday 15 October/);
+    assert.equal((await run('book_valuation', v)).booked, true, 'asked once, never in a loop');
+    const later = await call(t, '+447700900137');
+    later.ctx.state.heard.push('Could we do next Thursday at 10 am? We are moving for work in a few months.');
+    assert.equal((await later.run('book_valuation', { ...v, time: '11:30', name: 'Al Ray' })).booked, true);
+  }
+  // Neither why nor when: asked once.
+  {
+    const { run, ctx } = await call(t, '+447700900138');
+    ctx.state.heard.push('I want a valuation of 3 Elm Close please.');
+    const v = { date: THU, time: '15:30', name: 'Bea Holt', address: '3 Elm Close', postcode: 'BK3 7XY' };
+    const asked = await run('book_valuation', v);
+    assert.equal(asked.booked, false);
+    assert.match(String(asked.message), /what's prompting the move and roughly when/);
+    const anyway = await run('book_valuation', v);
+    assert.equal(anyway.booked, true, `if they would rather not say: ${JSON.stringify(anyway)}`);
+  }
+});

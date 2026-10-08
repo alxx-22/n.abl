@@ -235,6 +235,23 @@ function positionOf(args: Args): BuyerPosition {
   return Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined)) as BuyerPosition;
 }
 
+/**
+ * The buyer's position in their own words, for what the model leaves out of a booking (live, 8 October: "a flat to
+ * sell that isn't on the market yet, and a mortgage agreed in principle" was said, and the viewing had none of it).
+ */
+export function positionHeard(heard: string): BuyerPosition {
+  const out: BuyerPosition = {};
+  if (/\bfirst[- ]time buyers?\b/i.test(heard)) Object.assign(out, { first_time_buyer: true, selling: 'nothing' });
+  const toSell = /\b(?:(?:a|my|our) (?:flat|house|home|place|property|bungalow|maisonette) to sell|selling (?:my|our) (?:flat|house|home|place|property))\b[^.?!]{0,60}/i.exec(heard);
+  const said = toSell ? sellingOf(toSell[0]) : undefined;
+  if (said && said !== 'nothing') out.selling = said;
+  if (/\bnothing to sell\b|\bno (?:home|house|flat|property) to sell\b|\bnot selling\b/i.test(heard)) out.selling = 'nothing';
+  if (/\b(?:agreed|approved|decision) in principle\b|\b(?:aip|dip|mip)\b/i.test(heard)) out.funding = 'mortgage_aip';
+  else if (/\bmortgage\b[^.?!]{0,30}\b(?:not (?:yet|arranged|sorted)|isn'?t (?:arranged|sorted|agreed)|haven'?t (?:got|arranged|sorted))|\bneed(?:s)? a mortgage\b/i.test(heard)) out.funding = 'mortgage_not_yet';
+  else if (/\b(?:cash buyers?|paying (?:in )?cash|buying (?:with|in) cash)\b/i.test(heard)) out.funding = 'cash';
+  return out;
+}
+
 /** "First-time buyers, mortgage agreed in principle." */
 function positionWords(p: BuyerPosition, people: number): string {
   const parts = [
@@ -371,6 +388,28 @@ export async function estateAvailability(args: Args, ctx: ToolContext, service: 
 }
 
 /**
+ * "Thursday", said, and a Thursday a week or more after the nearest one chosen: checked once, before anything is
+ * booked (live, 8 October: Thursday the 15th was booked for "Thursday at 10am" when Thursday was tomorrow).
+ */
+function dayCheck(ctx: ToolContext, date: string): string | null {
+  if (!isIsoDate(date)) return null;
+  const wd = weekdayOf(date);
+  const name = dayName(wd);
+  const said = ctx.state.heard.slice(-6).join(' ');
+  if (!new RegExp(`\\b${name}\\b`, 'i').test(said)) return null;
+  // "Next Thursday", "Thursday week", "the 15th": a later one was meant.
+  if (new RegExp(`\\b(?:next|following)\\s+${name}|\\b${name}\\s+(?:week|next week|after next)|\\bweek after\\b|\\b\\d{1,2}(?:st|nd|rd|th)\\b`, 'i').test(said)) return null;
+  const today = toLocal(ctx.now(), ctx.tenant.profile.timezone).date;
+  let nearest = today;
+  while (weekdayOf(nearest) !== wd) nearest = addDays(nearest, 1);
+  const key = `day:${date}`;
+  if (date <= nearest || ctx.state.gateAsked.includes(key)) return null;
+  ctx.state.gateAsked.push(key);
+  const when = nearest === today ? ' (today)' : nearest === addDays(today, 1) ? ' (tomorrow)' : '';
+  return `Not booked yet: they said ${name}, and the nearest ${name} is ${spokenDate(nearest)}${when}, not ${spokenDate(date)}. Check ${spokenDate(nearest)} with check_availability, unless they meant the week after.`;
+}
+
+/**
  * create_booking at an estate agency: a viewing, under the same checks as
  * check_availability, with the buyer's position on it and the buyer kept
  * on file. A valuation goes through book_valuation. Null for anything the
@@ -392,6 +431,8 @@ export async function estateBooking(args: Args, ctx: ToolContext, service: Booka
   noteSeen(ctx, [h]);
   const stop = stopFor(ctx, h, all, date);
   if (stop) return { booked: false, ...stop };
+  const day = dayCheck(ctx, date);
+  if (day) return { booked: false, message: day };
   const held = gate(ctx, h, 'viewing');
   if (held) return { booked: false, ...held };
   const no = excludedStaff(ctx, h, str(args.staff)) ?? notWorking(ctx, str(args.staff), date);
@@ -408,7 +449,7 @@ export async function estateBooking(args: Args, ctx: ToolContext, service: Booka
   }
   const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const email = str(args.email);
-  const position = positionOf(args);
+  const position = { ...positionHeard(ctx.state.heard.join('. ')), ...positionOf(args) };
   const badges = [...positionBadges(position), ...(l.viewing.occupied === 'vacant' ? ['ID check'] : [])];
   const details = {
     kind: service.key, position, badges, ...(postcode ? { postcode: postcode.full } : {}), ...(email ? { email } : {}), source: 'AI receptionist',
@@ -685,6 +726,13 @@ async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<strin
   const staff = str(args.staff);
   const off = notWorking(ctx, staff, date);
   if (off) return { booked: false, message: off };
+  const day = dayCheck(ctx, date);
+  if (day) return { booked: false, message: day };
+  // Why and when they're moving tell the valuer how hot it is: asked once (live, 8 October: booked with neither).
+  if (!details.reason && !details.timescale && !ctx.state.gateAsked.includes('valuation:why')) {
+    ctx.state.gateAsked.push('valuation:why');
+    return { booked: false, message: "Not booked yet. Ask, once, what's prompting the move and roughly when they'd like to be moved, then call again with reason and timescale (or without them, if they'd rather not say)." };
+  }
   const made = await ctx.repo.createBooking(
     t, { service: 'valuation', date, time, party_size: 1, name, phone, notes: null, staff, source: source(ctx), call_id: ctx.callId, details: JSON.parse(JSON.stringify(details)) }, ctx.now(),
   );

@@ -805,7 +805,8 @@ export const SCENARIOS: Scenario[] = [
       expect(f, lease >= 0 && (time < 0 || lease <= time), 'a time was offered before the short lease was said');
       expect(f, /1,320|thirteen hundred and twenty|one thousand,? three hundred and twenty/i.test(c.agentText), 'the service charge (£1,320) was not said');
       expect(f, /\b250\b|two hundred and fifty/i.test(c.agentText), 'the ground rent (£250) was not said');
-      expect(f, !/you(?:'ll| will| should)(?: definitely| probably)? (?:get|be able to get|be fine|have no)|(?:shouldn'?t|won'?t) be a problem|lenders? (?:will|would) (?:lend|be happy)|(?:hard|difficult|tricky) to get a mortgage/i.test(c.agentText), 'gave a mortgage opinion');
+      // "I can't advise you on whether you'll get a mortgage" is the right answer, not an opinion.
+      expect(f, !/(?<!whether |if )you(?:'ll| will| should)(?: definitely| probably)? (?:get|be able to get|be fine|have no)|(?:shouldn'?t|won'?t) be a problem|lenders? (?:will|would) (?:lend|be happy)|(?:hard|difficult|tricky) to get a mortgage/i.test(c.agentText), 'gave a mortgage opinion');
       expect(f, /adviser|advisor|Mark|Clearwater|solicitor|broker/i.test(c.agentText), 'did not offer the mortgage adviser or a solicitor');
       expect(f, !c.summary.flags.some((x) => x.rule === 'disclosure_missed'), 'a must-say line was skipped');
       noFlags(c, f);
