@@ -885,6 +885,11 @@ test('a block: shared faults are one job on the block for its managing agent; in
   assert.match(roof.say, /paged to make it safe.*The repair itself is for Riverside Block Management to instruct/);
   const roofJobs = (await blockJobs()).filter((j) => /roof/i.test(j.description));
   assert.deepEqual(roofJobs.map((j) => j.status).sort(), ['awaiting_approval', 'new']);
+  // Live, 8 October: the repair's reference was the one owed, so the caller was asked to hear a second one, and when
+  // the receptionist read it out it was called made up. The make-safe's is owed; the repair's, if said, is real.
+  assert.equal(helen.ctx.state.owed, roof.reference);
+  const repairRef = roofJobs.find((j) => j.status === 'awaiting_approval')!.reference;
+  assert.deepEqual(checkUtterance(`Your repair reference is ${repairRef.split('').join(', ')}.`, helen.ctx.state).map((f) => f.rule), []);
 
   // Inside the flat: the leaseholder's own, priced first like any homeowner's.
   const tap = await marcus.run('job', { action: 'create', description: 'Kitchen tap dripping', name: 'Marcus Okoro' });

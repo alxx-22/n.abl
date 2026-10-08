@@ -833,6 +833,8 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     if (client) await noticeToClient(ctx, client, job, p);
     ctx.action({ kind: 'job_created', title: `Emergency · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · paged ${e?.first_name ?? 'nobody free'} · ref ${job.reference}`, data: { reference: job.reference } });
     const repair = block && client?.kind === 'block' ? await forInstruction(ctx, { ...base, description: `Repair after make-safe ${job.reference}: ${description}`, priority: 'urgent' }, client, block, part!) : null;
+    // The make-safe's reference is the one they're given; the repair's comes by text once it's instructed.
+    if (repair) ctx.state.owed = job.reference;
     return {
       booked: true, reference: job.reference, reference_spoken: spokenReference(job.reference), priority,
       say: `Our ${ooh ? 'on-call ' : ''}engineer has been paged${block ? ' to make it safe' : ''}. We aim to be with them within ${m.priorities.emergency.attend_hours} hours, and they'll get a text as soon as the engineer accepts.${repair ? ` The repair itself is for ${client!.name} to instruct: it's logged for them, with no date yet.` : ''}`,

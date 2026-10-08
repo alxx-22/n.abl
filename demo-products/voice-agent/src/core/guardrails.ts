@@ -304,7 +304,9 @@ export function referencesIn(text: string): string[] {
 /** A reference said that no tool gave and the caller didn't read out. */
 function inventedReference(text: string, state: CallState): string | null {
   const heard = state.heard.join(' ').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  const known = (r: string) => state.references.includes(r) || heard.includes(r);
+  // Anything this call wrote or looked up is real, whether or not a tool's answer carried it (live, 8 October: a block
+  // repair logged beside a make-safe job was read out when asked for, and called made up).
+  const known = (r: string) => state.references.includes(r) || state.committed.includes(r) || state.found.includes(r) || heard.includes(r);
   for (const m of text.matchAll(REFERENCE)) {
     const ref = m[1].toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (ref.length < 4 || !/\d/.test(ref)) continue;
