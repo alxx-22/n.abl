@@ -24,7 +24,9 @@ import { referencesIn } from './guardrails.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
-import { PHONE_ONLY, feeFor, findOrder, impliedCollection, kitchenFulfilment, menuTonight, shortOfMinimum, soldOutWords, waitTimes } from './kitchen.ts';
+import {
+  PHONE_ONLY, cateringOrder, feeFor, findOrder, impliedCollection, isBig, kitchenFulfilment, menuTonight, shortOfMinimum, soldOutWords, waitTimes,
+} from './kitchen.ts';
 import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
@@ -963,6 +965,9 @@ const TOOLS: Record<string, Tool> = {
       }
       const notes = [line.notes, ...replaced.map((l) => l.notes)].filter(Boolean).join('; ');
       if (notes) line.notes = notes;
+      // Past the owner's limit it's catering: a message for the manager, nothing added.
+      const catering = cateringOrder(ctx, [...ctx.state.lines.filter((l) => !replaced.includes(l)), line]);
+      if (catering) return catering;
       ctx.state.lines = ctx.state.lines.filter((l) => !replaced.includes(l));
       ctx.state.lines.push(line);
       changed(ctx);
@@ -1261,6 +1266,7 @@ const TOOLS: Record<string, Tool> = {
         lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,
         allergy_notes: namedAllergy(noneToNull(str(args.allergy_notes)), ctx.state.heard) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
         ...(payNote ? { pay_note: payNote } : {}),
+        ...(isBig(ctx) ? { flags: ['big'] } : {}),
       });
       record(ctx, order.reference, 'order', 'committed');
       ctx.state.lines = [];

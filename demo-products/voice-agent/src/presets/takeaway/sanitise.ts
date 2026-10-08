@@ -35,6 +35,7 @@ export function sanitiseTakeaway(input: unknown): TakeawayAnswers {
     kitchen: {
       last_orders_minutes: int(k.last_orders_minutes, 0, 120, d.kitchen.last_orders_minutes),
       big_order_mains: int(k.big_order_mains, 2, 30, d.kitchen.big_order_mains),
+      catering_over_mains: int(k.catering_over_mains, 5, 100, d.kitchen.catering_over_mains),
     },
     menu,
     // A setup saved before it had deals takes the sample's; one that has deals, even none, keeps its own.

@@ -27,6 +27,8 @@ export interface TakeawayAnswers extends BaseAnswers {
     last_orders_minutes: number;
     /** An order with more mains than this takes two of the kitchen's slots. */
     big_order_mains: number;
+    /** More mains than this is a catering order: a message for the manager, not an order on the phone. */
+    catering_over_mains: number;
   };
   menu: MenuAnswer;
   /** Their own section, so a menu draft never deletes them. */
@@ -99,7 +101,7 @@ export function defaultAnswers(): TakeawayAnswers {
       delivery_apps: ['Just Eat'],
       timed_orders: true,
     },
-    kitchen: { last_orders_minutes: 15, big_order_mains: 6 },
+    kitchen: { last_orders_minutes: 15, big_order_mains: 6, catering_over_mains: 15 },
     menu,
     deals: sampleDeals(MENU, menu),
     money: { payment: 'either', pay_driver: 'cash_or_card', card_minimum_pence: null },

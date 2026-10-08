@@ -231,3 +231,33 @@ test('menu tonight: delivery paused offers collection; long waits hold every tim
   assert.deepEqual([w.tonight, w.collection, w.delivery], ['Long waits tonight: about 90 minutes. Say so before they order.', 'about 90 minutes, so around 8:30pm', 'about 100 minutes, so around 8:40pm']);
   assert.equal((await c.run('set_fulfilment', { type: 'collection' })).spoken_time, '8:30pm');
 });
+
+test('the kitchen: a big order takes two places in its slot; past the catering limit, a message for the manager', async () => {
+  const t = await firebird('tk-big');
+  const k = t.profile.ordering!.kitchen!;
+  assert.deepEqual([k.big_order_mains, k.catering_over_mains, k.mains!.cheeseburger, k.mains!.pizza_night, k.mains!.fries], [6, 15, 1, 2, undefined]);
+  // Three places left in the first slot: one order fits, a big one (seven mains) takes two.
+  for (let i = 0; i < 2; i++) await placed(t, 'collection', at('19:15'));
+  const c = await call(t);
+  await c.run('add_to_order', { item: 'Classic beef burger', quantity: 3 });
+  await c.run('add_to_order', { item: 'Pizza night', options: ['margherita', 'pepperoni', 'coke', 'fanta'] });
+  await c.run('add_to_order', { item: 'Cheeseburger', quantity: 2 });
+  const set = await c.run('set_fulfilment', { type: 'collection' });
+  assert.match(set.big_order, /^A big order \(7 mains\): it takes two of the kitchen's slots/);
+  assert.equal(set.spoken_time, '7:15pm', 'two of the four places are still free at 7:15');
+  await placed(t, 'collection', at('19:15'));
+  const again = await call(t);
+  for (const l of c.ctx.state.lines) again.ctx.state.lines.push(l);
+  assert.equal((await again.run('set_fulfilment', { type: 'collection' })).spoken_time, '7:30pm', 'one place left is not enough');
+  await c.run('review_order', {});
+  const done = await c.run('confirm_order', { name: 'Jas', allergy_notes: 'none' });
+  assert.deepEqual((await repo.getOrder(t.id, done.order_number))!.flags, ['big']);
+  assert.equal(await repo.ordersReadyBetween(t.id, at('19:15'), at('19:30')), 5, 'counted twice');
+  // Sixteen mains: catering, nothing added.
+  const party = await call(t);
+  await party.run('add_to_order', { item: 'Classic beef burger', quantity: 10 });
+  const more = await party.run('add_to_order', { item: 'Cheeseburger', quantity: 6 });
+  assert.deepEqual([more.added, more.catering], [false, true]);
+  assert.match(more.message, /^That makes 16 mains: more than 15 is a catering order, which the manager arranges\./);
+  assert.equal(party.ctx.state.lines.length, 1);
+});

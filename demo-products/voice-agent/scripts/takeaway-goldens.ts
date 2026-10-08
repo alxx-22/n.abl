@@ -76,7 +76,7 @@ function full(): unknown {
   a.ordering.delivery = { ...a.ordering.delivery, districts: ['NG1', 'NG2', 'NG3'], fee_pence: 300, min_order_pence: 1500, extra_minutes: 30, zones: [{ code: 'NG3', fee_pence: 400, min_order_pence: 2000 }], free_over_pence: null, drivers: ['Ali', 'Bea'] };
   a.ordering.delivery_apps = ['Deliveroo', 'Uber Eats'];
   a.ordering.timed_orders = false;
-  a.kitchen = { last_orders_minutes: 30, big_order_mains: 8 };
+  a.kitchen = { last_orders_minutes: 30, big_order_mains: 8, catering_over_mains: 20 };
   a.deals = a.deals.filter((d) => d.key !== 'pizza_night');
   a.deals[0].price_pence = 949;
   a.deals[0].description = 'Any burger, regular fries and a can.';

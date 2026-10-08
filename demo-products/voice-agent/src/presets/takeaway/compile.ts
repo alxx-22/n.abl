@@ -3,7 +3,7 @@
 // and where it delivers, but never how long anything takes: a wait comes
 // only from the kitchen's queue, through the tools (presets/takeaway.md §4.5).
 
-import { pounds, type KnowledgeEntry, type TenantProfile } from '../../domain/types.ts';
+import { pounds, type KnowledgeEntry, type Menu, type MenuDeal, type TenantProfile } from '../../domain/types.ts';
 import { normaliseUkPhone } from '../../domain/phone.ts';
 import { baseProfile, entry, mergeFaqs } from '../common/profile.ts';
 import { compileMenu } from '../food/menu.ts';
@@ -108,10 +108,32 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
     // The kitchen counts every order by when it must be ready (core/kitchen.ts).
     ordering: ordering && {
       ...ordering,
-      kitchen: { last_orders_minutes: a.kitchen.last_orders_minutes, late_after_minutes: a.after.late_after_minutes, missing_items: a.after.missing_items },
+      kitchen: {
+        last_orders_minutes: a.kitchen.last_orders_minutes, late_after_minutes: a.after.late_after_minutes, missing_items: a.after.missing_items,
+        big_order_mains: a.kitchen.big_order_mains, catering_over_mains: Math.max(a.kitchen.catering_over_mains, a.kitchen.big_order_mains), mains: mainsOf(a, menu, dealMenu?.deals ?? []),
+      },
       ...(a.ordering.delivery.enabled && a.money.payment !== 'phone' ? { pay_driver: a.money.pay_driver } : {}),
       ...(payOnPhone.length ? { pay_on_phone: payOnPhone } : {}),
     },
     policies,
   };
+}
+
+const NOT_A_MAIN = /side|drink|dessert|dip|sauce|extra|snack/i;
+
+/**
+ * How many mains each dish is, for a big order (presets/takeaway.md §4.2): one
+ * for a dish from a section of mains, none for sides, drinks and desserts,
+ * and for a meal deal the mains it is made of (Pizza night is two).
+ */
+function mainsOf(a: TakeawayAnswers, menu: Menu, deals: MenuDeal[]): Record<string, number> {
+  const mainSections = new Set(menu.categories.filter((c) => !NOT_A_MAIN.test(`${c.key} ${c.label}`)).map((c) => c.key));
+  const out: Record<string, number> = {};
+  for (const c of menu.categories) if (mainSections.has(c.key)) for (const i of c.items) out[i.key] = 1;
+  for (const d of deals) {
+    const answer = a.deals.find((x) => x.key === d.item_key);
+    const n = (answer?.parts ?? []).filter((p) => mainSections.has(p.category_key)).reduce((s, p) => s + p.choose, 0);
+    if (n) out[d.item_key] = n;
+  }
+  return out;
 }

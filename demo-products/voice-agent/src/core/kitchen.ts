@@ -11,7 +11,7 @@
 // untouched; the zone and free-delivery helpers return the delivery-wide
 // fee for a profile with neither.
 
-import type { Menu, Order, OrderRequest, Ordering, Tonight } from '../domain/types.ts';
+import type { Menu, Order, OrderLine, OrderRequest, Ordering, Tonight } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { lineTotal } from '../domain/menu.ts';
 import { addDays, closeMinutes, dayName, normaliseTime, spokenTime, toLocal, weekdayOf, zonedToUtc } from '../domain/time.ts';
@@ -97,12 +97,13 @@ function readyWindow(ctx: ToolContext, kind: Kind, floor = 0): Window {
 }
 
 /** Up to `limit` ready times from `from` to `latest` with room in the kitchen, every order counted by when it must be ready. */
-async function slotsWithRoom(ctx: ToolContext, from: Date, latest: Date, limit: number): Promise<Date[]> {
+async function slotsWithRoom(ctx: ToolContext, from: Date, latest: Date, limit: number, need = 1): Promise<Date[]> {
   const o = ctx.tenant.profile.ordering!;
   const step = (o.slot_minutes ?? 15) * 60000;
   const out: Date[] = [];
   for (let t = from.getTime(); t <= latest.getTime() && out.length < limit; t += step) {
-    const full = o.slot_capacity ? (await ctx.repo.ordersReadyBetween(ctx.tenant.id, new Date(t), new Date(t + step))) >= o.slot_capacity : false;
+    // `need`: a big order takes two places in its slot.
+    const full = o.slot_capacity ? (await ctx.repo.ordersReadyBetween(ctx.tenant.id, new Date(t), new Date(t + step))) + need > o.slot_capacity : false;
     if (!full) out.push(new Date(t));
   }
   return out;
@@ -115,11 +116,11 @@ function waitWords(ctx: ToolContext, due: Date): string {
 }
 
 /** The first time this kind of order can be handed over, or why it can't today. */
-async function firstDue(ctx: ToolContext, kind: Kind, floor = 0): Promise<{ due: Date } | { message: string }> {
+async function firstDue(ctx: ToolContext, kind: Kind, floor = 0, need = 1): Promise<{ due: Date } | { message: string }> {
   const o = ctx.tenant.profile.ordering!;
   const w = readyWindow(ctx, kind, floor);
   if (!w.ok) return { message: w.message };
-  const [ready] = await slotsWithRoom(ctx, w.earliest, w.latest, 1);
+  const [ready] = await slotsWithRoom(ctx, w.earliest, w.latest, 1, need);
   if (!ready) return { message: `The kitchen is full for ${kind} for the rest of today.` };
   return { due: new Date(ready.getTime() + (kind === 'delivery' ? (o.delivery?.extra_minutes ?? 0) * 60000 : 0)) };
 }
@@ -138,6 +139,9 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
   const o = p.ordering!;
   const tz = p.timezone;
   const type: Kind = str(args.type)?.toLowerCase().startsWith('deliv') ? 'delivery' : 'collection';
+  // A big order needs two places in its slot.
+  const big = isBig(ctx);
+  const need = big ? 2 : 1;
   if (type === 'delivery' && !o.delivery) return { ok: false, message: 'Delivery is not offered; collection only.' };
   if (type === 'collection' && !o.collection) return { ok: false, message: 'Collection is not offered.' };
   // Menu tonight: delivery paused, or long waits.
@@ -178,7 +182,7 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
     // The same answer again keeps the time already given to the caller.
     ready = new Date(prev.due_at.getTime() - road);
   } else if (asap) {
-    const [first] = await slotsWithRoom(ctx, w.earliest, w.latest, 1);
+    const [first] = await slotsWithRoom(ctx, w.earliest, w.latest, 1, need);
     if (!first) return { ok: false, message: `The kitchen is full for ${type} for the rest of today.` };
     ready = first;
   } else {
@@ -189,15 +193,15 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
     // "For 8pm" by delivery is the slot that leaves the kitchen in time to arrive by 8.
     const slot = new Date(Math.floor((wanted.getTime() - road) / step) * step);
     if (slot.getTime() < w.earliest.getTime()) {
-      const first = await firstDue(ctx, type, floor);
+      const first = await firstDue(ctx, type, floor, need);
       return { ok: false, message: 'due' in first ? `The earliest ${type} time is ${at(first.due, tz)}.` : first.message };
     }
     if (slot.getTime() > w.latest.getTime()) {
       return { ok: false, message: `We close at ${at(w.close, tz)}, so the latest ${type} time is ${at(new Date(w.latest.getTime() + road), tz)}.` };
     }
-    const [free] = await slotsWithRoom(ctx, slot, slot, 1);
+    const [free] = await slotsWithRoom(ctx, slot, slot, 1, need);
     if (!free) {
-      const near = await slotsWithRoom(ctx, new Date(Math.max(w.earliest.getTime(), slot.getTime() - 2 * step)), w.latest, 3);
+      const near = await slotsWithRoom(ctx, new Date(Math.max(w.earliest.getTime(), slot.getTime() - 2 * step)), w.latest, 3, need);
       const times = near.map((x) => at(new Date(x.getTime() + road), tz));
       return { ok: false, message: `The kitchen is full for ${at(wanted, tz)}.${times.length ? ` ${times.join(', ')} ${times.length > 1 ? 'have' : 'has'} room.` : ''}`, times_with_room: times };
     }
@@ -224,6 +228,7 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
     } : {}),
     note: "This is the kitchen's real time now. Say it as it is and never promise sooner; collection is quicker if they're in a hurry.",
     ...(type === 'delivery' && ctx.callerPhone && o.pay_on_phone?.includes(ctx.callerPhone) ? { pay: PHONE_ONLY } : {}),
+    ...(big ? { big_order: `A big order (${mainsIn(ctx, ctx.state.lines)} mains): it takes two of the kitchen's slots, which is why the time is what it is.` } : {}),
     ...next,
   };
 }
@@ -250,6 +255,31 @@ export function soldOutWords(menu: Menu, key: string, soldOut: Set<string>): str
   const item = c?.items.find((i) => i.key === key);
   const others = (c?.items ?? []).filter((i) => i.key !== key && i.available !== false && !soldOut.has(i.key)).slice(0, 3).map((i) => i.name);
   return `${item?.name ?? 'That'} is sold out tonight.${others.length ? ` Other ${c!.label.toLowerCase()} tonight: ${others.join(', ')}.` : ''} Say sorry, and offer one of those.`;
+}
+
+// ── Big orders and catering (presets/takeaway.md §2.1, §4.2) ──────────────
+
+/** The mains in these lines: a burger one, Pizza night two, fries none. */
+export function mainsIn(ctx: ToolContext, lines: OrderLine[]): number {
+  const mains = ctx.tenant.profile.ordering?.kitchen?.mains ?? {};
+  return lines.reduce((n, l) => n + l.quantity * (mains[l.item_key] ?? 0), 0);
+}
+
+/** More mains than the owner's big order: two of the kitchen's slots. */
+export function isBig(ctx: ToolContext): boolean {
+  const k = ctx.tenant.profile.ordering?.kitchen;
+  return Boolean(k?.big_order_mains && mainsIn(ctx, ctx.state.lines) > k.big_order_mains);
+}
+
+/** More mains than the owner takes on the phone: a catering order, for the manager. */
+export function cateringOrder(ctx: ToolContext, lines: OrderLine[]): Record<string, unknown> | null {
+  const k = ctx.tenant.profile.ordering?.kitchen;
+  const n = mainsIn(ctx, lines);
+  if (!k?.catering_over_mains || n <= k.catering_over_mains) return null;
+  return {
+    added: false, catering: true,
+    message: `That makes ${n} mains: more than ${k.catering_over_mains} is a catering order, which the manager arranges. Say so, and take a message with take_message: their name, number, what they'd like and for when.`,
+  };
 }
 
 /** Long waits tonight: no order is due sooner than this, from now. */

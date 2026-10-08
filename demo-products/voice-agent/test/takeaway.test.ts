@@ -85,7 +85,7 @@ test('takeaway: cleaning survives junk, keeps the shape, and treats a missing li
   });
   assert.deepEqual([a.money.payment, a.money.pay_driver, a.money.card_minimum_pence], ['either', 'cash', 500]);
   assert.deepEqual([a.policies.halal, a.policies.hygiene_rating, a.policies.offers.length], ['chicken', 5, 300]);
-  assert.deepEqual(a.kitchen, { last_orders_minutes: 0, big_order_mains: 6 });
+  assert.deepEqual(a.kitchen, { last_orders_minutes: 0, big_order_mains: 6, catering_over_mains: 15 });
   assert.equal(sanitiseTakeaway({ money: { card_minimum_pence: null } }).money.card_minimum_pence, null);
   assert.equal(sanitiseTakeaway({ policies: { hygiene_rating: null } }).policies.hygiene_rating, null);
   // Deals are bounded: a name, at most five choices, sensible prices, keys made unique.

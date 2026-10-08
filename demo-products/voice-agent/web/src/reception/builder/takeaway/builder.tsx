@@ -35,6 +35,7 @@ function StepOrdering({ a, set }: Props) {
           hint="Every order is handed over by closing, so the last delivery is earlier still."
         />
         <Num label="A big order" suffix="mains or more" min={2} max={30} value={k.big_order_mains} onChange={(v) => set((d) => void (d.kitchen.big_order_mains = v))} hint="Takes two of the kitchen's slots." />
+        <Num label="Catering" suffix="mains or more" min={5} max={100} value={k.catering_over_mains} onChange={(v) => set((d) => void (d.kitchen.catering_over_mains = v))} hint="Not taken on the phone: a message for the manager to arrange." />
       </div>
       <h3 className="sub">After the order</h3>
       <p className="hint">The receptionist never cancels, changes or refunds: a cancellation or change waits on the ticket for you to accept, and a complaint is a message for the manager.</p>

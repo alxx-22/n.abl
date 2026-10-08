@@ -714,6 +714,8 @@ export class Repo {
       delivery_fee_pence: number; total_pence: number; allergy_notes: string | null; source: string; call_id: string | null;
       /** What the driver needs to know: "Cash: change from £20" (a takeaway's). */
       pay_note?: string | null;
+      /** Marks for the ticket: "big" (it takes two of the kitchen's slots). */
+      flags?: string[];
     },
   ): Promise<Order> {
     return this.db.tx(async (q) => {
@@ -723,11 +725,11 @@ export class Repo {
       const customerId = await this.upsertCustomer(q, tenant.id, o.phone, o.name);
       const rows = await q.query<any>(
         `insert into public.voice_orders (tenant_id, reference, customer_id, name, phone, fulfilment, due_at, ready_at, address, postcode,
-           lines, subtotal_pence, delivery_fee_pence, total_pence, allergy_notes, source, call_id, pay_note)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,$14,$15,$16,$17,$18) returning *`,
+           lines, subtotal_pence, delivery_fee_pence, total_pence, allergy_notes, source, call_id, pay_note, flags)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,$14,$15,$16,$17,$18,$19::text[]) returning *`,
         [
           tenant.id, reference, customerId, o.name, o.phone, o.fulfilment, o.due_at, readyAt(tenant.profile, o.fulfilment, o.due_at), o.address, o.postcode,
-          JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence, o.total_pence, o.allergy_notes, o.source, o.call_id, o.pay_note ?? null,
+          JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence, o.total_pence, o.allergy_notes, o.source, o.call_id, o.pay_note ?? null, o.flags ?? [],
         ],
       );
       return mapOrder(rows[0]);
@@ -806,7 +808,9 @@ export class Repo {
   /** Orders the kitchen must have ready in [from, to), collection and delivery alike: a takeaway's kitchen capacity (core/kitchen.ts). */
   async ordersReadyBetween(tenantId: string, from: Date, to: Date): Promise<number> {
     const rows = await this.db.query<any>(
-      `select count(*)::int as n from public.voice_orders where tenant_id = $1 and status <> 'cancelled' and coalesce(ready_at, due_at) >= $2 and coalesce(ready_at, due_at) < $3`,
+      // A big order takes two of the kitchen's slots.
+      `select (count(*) + count(*) filter (where 'big' = any(flags)))::int as n from public.voice_orders
+       where tenant_id = $1 and status <> 'cancelled' and coalesce(ready_at, due_at) >= $2 and coalesce(ready_at, due_at) < $3`,
       [tenantId, from, to],
     );
     return Number(rows[0]?.n ?? 0);

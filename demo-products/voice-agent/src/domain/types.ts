@@ -202,6 +202,12 @@ export interface Ordering {
     late_after_minutes?: number;
     /** An item missing from a delivery: sent out with the next driver, or a call from the manager. */
     missing_items?: 'send_out' | 'manager';
+    /** An order with more mains than this takes two of the kitchen's slots... */
+    big_order_mains?: number;
+    /** ...and with more than this, it's catering: a message for the manager. */
+    catering_over_mains?: number;
+    /** How many mains each dish is, by item key: a burger one, Pizza night two, fries none. */
+    mains?: Record<string, number>;
   };
   /** Numbers that refused a delivery: they pay on the phone, or collect. */
   pay_on_phone?: string[];

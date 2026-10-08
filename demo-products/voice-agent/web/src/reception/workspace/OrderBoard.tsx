@@ -136,6 +136,7 @@ export function OrderBoard({ id, state, spec, nowMs, onDone }: { id: string; sta
                     </div>
                   ))}
                   <footer>
+                    {o.flags?.includes('big') ? <span className="badge warn" title="Takes two of the kitchen's slots">Big order</span> : null}
                     <span className={`badge ${pay.ok ? 'ok' : 'warn'}`}>{pay.text}</span>
                     <span className="muted small">{o.total}</span>
                     {actions(o)}
