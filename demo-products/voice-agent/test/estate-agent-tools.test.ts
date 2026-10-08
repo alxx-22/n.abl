@@ -264,6 +264,37 @@ test('a viewing booked properly: "Saturday at 11" gives 11:15 with Jess; the buy
   assert.deepEqual((cb.details as { badges: string[] }).badges, ['Chain']);
 });
 
+test('"Book viewings and valuations when the office is shut" off: in the evening, a message and when the office opens, never a booking', async () => {
+  const shut = await agency('ea-shut', (p) => void (p.estate!.out_of_hours_booking = false));
+  const open = await agency('ea-shut-on');
+  // Wednesday at 8pm: the office shut since 5.30 or 6.
+  const EVENING = new Date('2026-10-07T19:00:00Z');
+  const evening = async (t: Tenant) => {
+    const c = await call(t);
+    c.ctx.now = () => EVENING;
+    return c;
+  };
+  const s = await evening(shut);
+  await s.run('get_property', { property: '22 Albion Road' });
+  const avail = await s.run('check_availability', { property: '22 Albion Road', date: SAT });
+  assert.equal(avail.available, false, JSON.stringify(avail));
+  assert.match(String(avail.message), /The office is shut, and we book viewings in office hours\. Take a message \(category viewing\).*when the office opens, tomorrow at 9am/);
+  const booked = await s.run('create_booking', { property: '22 Albion Road', date: SAT, time: '11:15', name: 'Sam Price', postcode: 'BK3 4RT' });
+  assert.equal(booked.booked, false);
+  const val = await s.run('book_valuation', { date: THU, time: '16:00', name: 'Jo Bloggs', address: '3 Church Lane', postcode: 'BK4 1EW' });
+  assert.equal(val.booked, false);
+  assert.match(String(val.message), /we book valuations in office hours/);
+  // Switched on (the default): the same evening call books.
+  const o = await evening(open);
+  await o.run('get_property', { property: '22 Albion Road' });
+  assert.notEqual((await o.run('check_availability', { property: '22 Albion Road', date: SAT })).available, false);
+  // And with it off, in office hours, booking is as ever.
+  const day = await call(shut);
+  await day.run('get_property', { property: '22 Albion Road' });
+  const b = await day.run('create_booking', { property: '22 Albion Road', date: SAT, time: '11:15', name: 'Sam Price', postcode: 'BK3 4RT' });
+  assert.equal(b.booked, true, JSON.stringify(b));
+});
+
 test('a viewing moves only within its home\'s rules, and every change is texted', async () => {
   const t = await agency('ea-move');
   const { run, sent } = await call(t);

@@ -21,6 +21,7 @@ import {
   type ListingLive, type Requirements,
 } from '../domain/listings.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
+import { officeShut } from '../domain/windows.ts';
 import { addDays, dayName, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekdayOf } from '../domain/time.ts';
 import type { BookableService, Booking, BuyerDetails, BuyerPosition, Funding, Listing, Selling, StaffMember, Tenant } from '../domain/types.ts';
 
@@ -369,9 +370,33 @@ export function estateHours(t: Tenant, date: string): Record<string, unknown> {
  * valuation's postcode must be one the agency covers. Null for any other
  * business, which takes the shared path.
  */
+/**
+ * The builder's "Book viewings and valuations when the office is shut",
+ * switched off: while the office is shut, a message for the team instead of a
+ * booking, and when the office opens (review, 8 October). Null when booking
+ * goes ahead.
+ */
+function shutFor(ctx: ToolContext, what: 'viewing' | 'valuation'): string | null {
+  const p = ctx.tenant.profile;
+  if (!p.estate || p.estate.out_of_hours_booking) return null;
+  const now = toLocal(ctx.now(), p.timezone);
+  if (!officeShut(p, now.date, now.time)) return null;
+  // The next time the office opens, within the fortnight.
+  let opens: string | null = null;
+  for (let i = 0; i < 14 && !opens; i++) {
+    const date = addDays(now.date, i);
+    if (p.closures?.some((c) => c.date === date)) continue;
+    const h = p.opening_hours.find((x) => x.days.includes(weekdayOf(date)) && (i > 0 || minutesOf(x.open) > minutesOf(now.time)));
+    if (h) opens = `${dayWords(date, now.date)} at ${spokenTime(h.open)}`;
+  }
+  return `The office is shut, and we book ${what}s in office hours. Take a message (category ${what}) with ${what === 'viewing' ? 'the home' : 'the address'}, their name and number, and the days and times that suit, and say the team will call back${opens ? ` when the office opens, ${opens}` : ''}. Book nothing now.`;
+}
+
 export async function estateAvailability(args: Args, ctx: ToolContext, service: BookableService): Promise<Record<string, unknown> | null> {
   const p = ctx.tenant.profile;
   if (!p.estate) return null;
+  const shut = shutFor(ctx, service.key === 'valuation' ? 'valuation' : 'viewing');
+  if (shut) return { available: false, message: shut };
   const date = str(args.date) ?? '';
   const staff = str(args.staff);
   const existing = async () => (isIsoDate(date) ? ctx.repo.busyForDate(ctx.tenant, date) : []);
@@ -450,6 +475,8 @@ export async function estateBooking(args: Args, ctx: ToolContext, service: Booka
   if (!p.estate) return null;
   if (service.key === 'valuation') return { booked: false, message: 'Use book_valuation for a valuation: it takes the address and what they are planning.' };
   if (!service.needs_listing) return null;
+  const shut = shutFor(ctx, 'viewing');
+  if (shut) return { booked: false, message: shut };
   const name = realName(args.name);
   if (!name) return { booked: false, message: ASK_NAME };
   const r = await resolveHome(ctx, args.property);
@@ -717,6 +744,8 @@ async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<strin
   const e = p.estate!;
   const service = p.booking?.services.find((s) => s.key === 'valuation');
   if (!service) return { booked: false, message: "Valuations aren't booked by phone here: take a message for the team." };
+  const shut = shutFor(ctx, 'valuation');
+  if (shut) return { booked: false, message: shut };
   const pc = postcodeOf(args.postcode);
   if (!pc) return { booked: false, message: 'Ask for the postcode of the home, read it back, then call this again.' };
   if (!e.districts.includes(pc.district)) return { booked: false, message: "That's outside the area we cover: say so kindly. No booking." };
