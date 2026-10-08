@@ -92,6 +92,22 @@ test('safety mode: spotting an emergency in what the caller says, and hearing th
   assert.equal(detectSafety("The kitchen's full of smoke"), 'fire');
   assert.equal(detectSafety('My gas fire won\'t light'), null, 'a gas fire is an appliance, not a fire');
   assert.equal(detectSafety('I need a gas safety check'), null);
+  // In the languages most often heard here besides English (live, 8 October: Polish armed nothing).
+  for (const line of ['Dzień dobry, czuję gaz w kuchni, bardzo mocno.', 'Czuć zapach gazu w całym mieszkaniu', 'Miroase a gaz în bucătărie', 'Há um cheiro a gás na cozinha', 'Huele a gas en la cocina', "C'è odore di gas in cucina", 'Il y a une odeur de gaz', 'Jaučiu dujų kvapą virtuvėje']) {
+    assert.equal(detectSafety(line), 'gas', line);
+  }
+  assert.equal(detectSafety('Potrzebuję przeglądu gazowego'), null, 'a gas check, in Polish, is not a smell');
+  for (const line of ['I sent you the gas safety certificate last week', 'The gas engineer sent me a text', 'Is the gas fuse box the same as the electric one?']) assert.equal(detectSafety(line), null, line);
+  // Advice given in their language: the number in digits shows it was said.
+  const s: Parameters<typeof armSafety>[0] = { safety: null, safetyDone: [], heard: [], said: [] };
+  assert.equal(armSafety(s, 'Czuję gaz w kuchni'), 'gas');
+  assert.equal(s.safety!.foreign, true);
+  s.said.push('Proszę natychmiast wyjść z domu. Proszę zadzwonić pod numer 0800 111 999, 0800 111 999.');
+  assert.ok(noteAdvice(s, 'england')?.spoken);
+  const english: Parameters<typeof armSafety>[0] = { safety: null, safetyDone: [], heard: [], said: [] };
+  armSafety(english, "There's a strong smell of gas");
+  english.said.push('Call 0800 111 999.');
+  assert.equal(noteAdvice(english, 'england'), null, 'in English, getting out must be said too');
   assert.equal(spokenNumber('0800 111 999'), 'oh eight hundred, one one one, nine nine nine');
   assert.equal(spokenNumber('105'), 'one oh five');
   assert.equal(digitsSaid('ring oh eight hundred, one one one, nine nine nine'), '0800111999');

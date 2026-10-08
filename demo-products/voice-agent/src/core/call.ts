@@ -557,7 +557,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     const kind = m ? armSafety(this.state, clean) : null;
     if (m && kind) {
       this.record('system', { event: 'safety_armed', kind });
-      this.session?.sendText(safetyCorrection(kind, m.nation));
+      this.session?.sendText(safetyCorrection(kind, m.nation, this.state.safety?.foreign));
     }
     // A takeaway's caller describing a severe allergic reaction: 999 first (core/reaction.ts).
     if (this.state.takeaway && armReaction(this.state, clean)) {
