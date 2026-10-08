@@ -625,9 +625,19 @@ the session: see the latest folder in `voice-agent/eval-results/`.
 
 ## Known small items
 
-- Moving a booking to another staff member must be made generic before the
-  barber; the estate Diary has no drag-to-move until then (its drawer hides
-  the move list for viewings).
+- Moving a booking to another person is generic now (8 October, the cloud
+  session; `4b4ed60`, `4f8904b`), ready for the barber: `repo.moveBooking`
+  takes a table or a person (`kind: 'staff'`): a person must do the
+  booking's service, work that weekday, be free (buffers kept) and have no
+  personal interest in the home. The PATCH `move` action takes `to` (or
+  the old `table`) and texts the customer who they'll now see (an estate
+  agency's own "changed" text, or a plain one for any other business);
+  `notify: false` sends nothing. On the web, `personOptions()` in
+  `workspace/model.ts` lists who it can go to (the team in `/state` now
+  carries each person's `services`, and each booking its `service_key`
+  and `buffer_minutes`); the drawer has "Move to someone else", and
+  `StaffDiary` takes `onMove` and drags a bar to another row, lighting the
+  rows it can go to.
 - The takeaway's order fields (`ready_at`, `driver`) are written but not yet
   read back (do it when the takeaway is built).
 - `NEXT-SESSION-PROMPT.md` is from an older session; use this file instead.
