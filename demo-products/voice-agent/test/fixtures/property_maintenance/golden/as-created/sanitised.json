@@ -209,6 +209,7 @@
   }
  ],
  "properties": [],
+ "answering": "all",
  "trades": [
   {
    "key": "gas_heating",
