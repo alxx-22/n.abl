@@ -313,6 +313,7 @@
     "slot_minutes": 15,
     "duration_minutes": 45,
     "price_pence": 2500,
+    "price_from": true,
     "description": "Softens the grey without a flat colour; needs a skin test first.",
     "windows": [
      {

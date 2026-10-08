@@ -61,6 +61,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -97,6 +98,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -133,6 +135,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -169,6 +172,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -205,6 +209,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -241,6 +246,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -277,6 +283,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -313,6 +320,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -349,6 +357,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -385,6 +394,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -421,6 +431,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -457,6 +468,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -493,6 +505,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -529,6 +542,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -565,6 +579,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -601,6 +616,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -637,6 +653,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -673,6 +690,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -709,6 +727,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -745,6 +764,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -781,6 +801,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -817,6 +838,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -853,6 +875,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -889,6 +912,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -925,6 +949,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -961,6 +986,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -997,6 +1023,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -1033,6 +1060,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -1069,6 +1097,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -1105,6 +1134,7 @@
     "slot_minutes": 15,
     "duration_minutes": 240,
     "price_pence": 50000,
+    "price_from": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
