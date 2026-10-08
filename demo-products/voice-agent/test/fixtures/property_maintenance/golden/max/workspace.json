@@ -95,5 +95,6 @@
   "When's my engineer coming? Reference {ref}.",
   "Can you tell me how to reset my boiler?"
  ],
- "resetLine": "jobs, safety checks and incidents"
+ "resetLine": "jobs, safety checks and incidents",
+ "clock": true
 }

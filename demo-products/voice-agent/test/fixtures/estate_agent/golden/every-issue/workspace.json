@@ -55,5 +55,6 @@
   "Calling as Sarah: how's it going at Lease Lane?",
   "Put me on your list: a three-bed with a garden, and text me when one comes up."
  ],
- "resetLine": "viewings, valuations, offers and sales"
+ "resetLine": "viewings, valuations, offers and sales",
+ "clock": true
 }
