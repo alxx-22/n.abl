@@ -116,6 +116,28 @@ export function moveOptions(state: LiveState, b: LiveBooking): { key: string; la
   return [...tables, ...pairs];
 }
 
+/**
+ * The people a booking could move to: in the team, doing its service, working that day and free then, with each
+ * booking's gap after it kept, and never whoever has a personal interest in the home. The server checks again.
+ */
+export function personOptions(state: LiveState, b: LiveBooking): { key: string; label: string }[] {
+  const team = state.team ?? [];
+  if (b.status !== 'confirmed' || !team.some((m) => m.key === b.resource_key)) return [];
+  const wd = weekday(b.date);
+  const [s, e] = span(b);
+  const others = state.bookings.filter((x) => x.id !== b.id && x.date === b.date && x.status === 'confirmed');
+  const busy = (key: string) => others.some((x) => {
+    if (x.resource_key !== key) return false;
+    const [xs, xe] = span(x);
+    return xs < e + (b.buffer_minutes ?? 0) && s < xe + (x.buffer_minutes ?? 0);
+  });
+  // Never to whoever has a personal interest in the home (the walkthrough, 8 October: offered, then refused by the server).
+  const interest = b.listing_key ? state.listings?.find((l) => l.key === b.listing_key)?.interest_staff : null;
+  return team
+    .filter((m) => m.key !== b.resource_key && m.key !== interest && m.days.includes(wd) && (!b.service_key || (m.services ?? []).includes(b.service_key)) && !busy(m.key))
+    .map((m) => ({ key: m.key, label: m.name }));
+}
+
 /** Tables in the same area that could be pushed against this booking's table. */
 export function combineOptions(state: LiveState, b: LiveBooking): PlanTable[] {
   const plan = state.plan;

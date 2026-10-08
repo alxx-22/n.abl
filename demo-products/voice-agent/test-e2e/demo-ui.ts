@@ -524,6 +524,43 @@ async function walkEstate({ shot }: Walk) {
   await page.waitForSelector('.drawer [aria-label="Feedback"] button[aria-pressed="true"]:has-text("Keen")');
   await shot(page, 'workspace-diary-viewing');
 
+  // Given to someone else: from the viewing's panel, then by dragging a bar onto another person's row.
+  const who = page.locator('#bd-person');
+  await who.waitFor();
+  if ((await who.locator('option').count()) > 1) {
+    const name = (await who.locator('option').nth(1).textContent())!.trim();
+    await who.selectOption({ index: 1 });
+    await page.waitForSelector(`.toast:has-text("Moved to ${name}")`, { timeout: 10000 });
+    await page.waitForSelector(`.toast:has-text("has been texted")`);
+  }
+  await page.click('.drawer button[aria-label="Close"]');
+  await page.waitForFunction(() => !document.querySelector('.toast'), undefined, { timeout: 15000 }).catch(() => {});
+  let dragged = false;
+  for (let i = 0; i < Math.min(8, await page.locator('.diary .tl-bar').count()) && !dragged; i++) {
+    const bar = page.locator('.diary .tl-bar').nth(i);
+    const title = (await bar.getAttribute('title'))!;
+    const box = (await bar.boundingBox())!;
+    await page.mouse.move(box.x + 6, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 12, box.y + box.height / 2, { steps: 3 });
+    const target = page.locator('.diary .tl-row.can-drop').first();
+    if (await target.count()) {
+      const to = (await target.getAttribute('data-row'))!;
+      const t = (await target.boundingBox())!;
+      await page.mouse.move(t.x + t.width * 0.6, t.y + t.height / 2, { steps: 10 });
+      await shot(page, 'workspace-diary-drag');
+      await page.mouse.up();
+      // In the new person's row, and the toast says so.
+      await page.waitForSelector('.toast:has-text("Moved to")', { timeout: 10000 });
+      await page.locator(`.diary .tl-row[data-row="${to}"] .tl-bar[title="${title.replace(/"/g, '\\"')}"]`).waitFor({ timeout: 10000 });
+      dragged = true;
+    } else {
+      await page.mouse.up();
+      if (await page.locator('.drawer').count()) await page.click('.drawer button[aria-label="Close"]');
+    }
+  }
+  if (!dragged) throw new Error('no viewing in the Diary could be dragged to someone else');
+
   // Properties: the price the builder set, then a reduction from the back office.
   await page.click('.tabs [role=tab]:has-text("Properties")');
   const albion = page.locator('.home-card', { has: page.locator('header b', { hasText: /^22 Albion Road$/ }) });

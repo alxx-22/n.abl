@@ -61,6 +61,7 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
     : await repo.listOrders(t.id, new Date(now.getTime() - 36 * 3600000));
   const resources = new Map((t.profile.booking?.resources ?? []).map((r) => [r.key, r]));
   const services = new Map((t.profile.booking?.services ?? []).map((s) => [s.key, s.label]));
+  const buffers = new Map((t.profile.booking?.services ?? []).map((s) => [s.key, s.buffer_minutes ?? 0]));
   const areas = new Map((t.profile.booking?.areas ?? []).map((a) => [a.key, a.label]));
   const homes = new Map((t.profile.listings ?? []).map((l) => [l.key, shortAddress(l)]));
   return {
@@ -98,6 +99,8 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
         resource_key: b.resource_key, tables: r?.combines ?? [b.resource_key],
         with: r?.label ?? b.resource_key, area: b.area_key ? areas.get(b.area_key) ?? b.area_key : null,
         service: services.get(b.service_key) ?? b.service_key,
+        // For moving it to someone else from the back office: who does this service, and the gap it needs after.
+        service_key: b.service_key, buffer_minutes: buffers.get(b.service_key) ?? 0,
         deposit: b.deposit_pence ? pounds(b.deposit_pence) : null, deposit_paid: b.deposit_paid,
         // A viewing's home, and what a viewing or valuation knows: an estate agency's only.
         ...(b.listing_key ? { listing_key: b.listing_key, home: homes.get(b.listing_key) ?? b.listing_key } : {}),
@@ -136,6 +139,7 @@ const partAMissing = (l: Listing, price: number) =>
  */
 async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date) {
   const team = t.profile.team ?? [];
+  const staffServices = new Map((t.profile.booking?.resources ?? []).filter((r) => r.kind === 'staff').map((r) => [r.key, r.services]));
   const names = new Map(team.map((s) => [s.key, s.name]));
   const live = new Map((await repo.listingStates(t.id)).map((r) => [r.listing_key, r]));
   const offers = await repo.listOffers(t.id);
@@ -152,7 +156,8 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
   return {
     // For the offer timers, which skip the nation's bank holidays.
     nation: t.profile.estate?.nation ?? 'england',
-    team: team.map((s) => ({ key: s.key, name: s.name, first_name: s.first_name, role: s.role, does: s.does, days: s.days, mobile: s.mobile })),
+    // What each person can be booked for: a booking moves only to someone who does its service.
+    team: team.map((s) => ({ key: s.key, name: s.name, first_name: s.first_name, role: s.role, does: s.does, days: s.days, mobile: s.mobile, services: staffServices.get(s.key) ?? [] })),
     listings: (t.profile.listings ?? []).map((l) => {
       const r = live.get(l.key);
       const price = r?.price_pence ?? l.initial.price_pence;
@@ -167,6 +172,8 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
         part_a_missing: partAMissing(l, price),
         unknown: l.unknown.length,
         personal_interest: Boolean(l.personal_interest),
+        // Who that is: a viewing of this home is never moved to them.
+        interest_staff: l.personal_interest?.staff ?? null,
         marketing_continues: r?.marketing_continues ?? true,
         best_final_at: r?.best_final_at?.toISOString() ?? null,
         checking: r?.checking ?? [],

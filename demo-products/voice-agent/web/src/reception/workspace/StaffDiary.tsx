@@ -1,10 +1,12 @@
 // An estate agency's diary: a row for each member of the team, a bar for
 // each viewing, valuation and mortgage appointment across the day, so a gap
-// or a busy afternoon shows at once. Click a bar to open it.
+// or a busy afternoon shows at once. Click a bar to open it; drag it to
+// someone else's row to move it to them (the barber's diary will too).
 
+import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { DayPicker, type View } from './FloorBoard.tsx';
-import { hhmm, span, weekday } from './model.ts';
+import { hhmm, personOptions, span, weekday } from './model.ts';
 
 const ROLE: Record<string, string> = { manager: 'Manager', negotiator: 'Negotiator', valuer: 'Valuer', progressor: 'Progressor', adviser: 'Mortgages', other: '' };
 
@@ -16,14 +18,36 @@ function kindOf(b: LiveBooking): { label: string; cls: string } {
   return { label: b.service.charAt(0).toUpperCase() + b.service.slice(1), cls: 'other' };
 }
 
-export function StaffDiary({ state, today, nowMinute, view, setView, onOpen }: {
+export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onMove }: {
   state: LiveState;
   today: string;
   nowMinute: number;
   view: View;
   setView: (v: View) => void;
   onOpen: (b: LiveBooking) => void;
+  onMove: (b: LiveBooking, to: string) => void;
 }) {
+  // A bar being dragged, the row under the pointer, and the rows it may go to (lit while dragging).
+  const [drag, setDrag] = useState<{ ref: string; row: string | null; moved: boolean; ok: string[] } | null>(null);
+  const rowAt = (e: { clientX: number; clientY: number }) =>
+    document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-row]')?.dataset.row ?? null;
+  const down = (e: ReactPointerEvent<HTMLButtonElement>, b: LiveBooking) => {
+    if (e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDrag({ ref: b.reference, row: null, moved: false, ok: personOptions(state, b).map((m) => m.key) });
+  };
+  const move = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (drag) setDrag({ ...drag, row: rowAt(e), moved: true });
+  };
+  const up = (e: ReactPointerEvent<HTMLButtonElement>, b: LiveBooking) => {
+    const d = drag;
+    setDrag(null);
+    if (!d) return;
+    const row = rowAt(e);
+    // A row it can't go to is still tried: the server says why not (busy, not in, a personal interest).
+    if (d.moved && row && row !== b.resource_key) onMove(b, row);
+    else onOpen(b);
+  };
   const day = state.bookings.filter((b) => b.date === view.date && b.status === 'confirmed');
   const team = (state.team ?? []).filter((s) => s.does.length || day.some((b) => b.resource_key === s.key));
   // The office's day, stretched to every booking on it: viewings often run into the evening.
@@ -48,7 +72,7 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen }: {
         {team.map((s) => {
           const off = !s.days.includes(wd);
           return (
-            <div key={s.key} className={`tl-row ${off ? 'walk-in' : ''}`} data-row={s.key}>
+            <div key={s.key} className={`tl-row ${off ? 'walk-in' : ''} ${drag?.moved && drag.ok.includes(s.key) ? 'can-drop' : ''} ${drag?.row === s.key ? 'drop' : ''}`} data-row={s.key}>
               <span className="tl-label">
                 {s.first_name} <span className="muted">{ROLE[s.role] ?? ''}</span>
               </span>
@@ -60,9 +84,10 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen }: {
                   const badges = (b.details?.badges as string[] | undefined) ?? [];
                   return (
                     <button
-                      type="button" key={b.reference} className={`tl-bar ${b.visit_status} ${k.cls}`}
+                      type="button" key={b.reference} className={`tl-bar ${b.visit_status} ${k.cls} ${drag?.ref === b.reference ? 'lifted' : ''}`}
                       style={{ left: pct(st), width: `calc(${pct(en)} - ${pct(st)} - 2px)` }}
-                      onClick={() => onOpen(b)}
+                      onPointerDown={(e) => down(e, b)} onPointerMove={move} onPointerUp={(e) => up(e, b)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(b); } }}
                       title={`${b.time}–${b.end_time} · ${k.label}${b.home ? ` of ${b.home}` : ''} · ${b.name}${badges.length ? ` · ${badges.join(', ')}` : ''}`}
                     >
                       <b>{b.time}</b> {b.home ?? k.label} · {b.name}
@@ -75,7 +100,7 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen }: {
           );
         })}
       </div>
-      <p className="hint">Viewings, valuations and mortgage appointments, by person. Click one to open it, record feedback or mark it done.</p>
+      <p className="hint">Viewings, valuations and mortgage appointments, by person. Click one to open it, record feedback or mark it done; drag it to someone else's row to give it to them.</p>
     </div>
   );
 }

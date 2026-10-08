@@ -9,7 +9,7 @@ import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { bookingBadges } from './estate.ts';
-import { SOURCE, combineOptions, moveOptions } from './model.ts';
+import { SOURCE, combineOptions, moveOptions, personOptions } from './model.ts';
 import type { WorkspaceSpec } from './spec.ts';
 
 type BookingsSpec = NonNullable<WorkspaceSpec['bookings']>;
@@ -57,8 +57,10 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
     }
   };
 
-  // Moving a viewing to another person waits for the generic move (HANDOFF.md, known items).
   const moves = b.status === 'confirmed' && !words.property ? moveOptions(state, b) : [];
+  // A booking with a person (a viewing, a valuation): to someone else who can take it then.
+  const byPerson = (state.team ?? []).some((m) => m.key === b.resource_key);
+  const people = byPerson ? personOptions(state, b) : [];
   const joins = b.status === 'confirmed' && words.combine ? combineOptions(state, b) : [];
   const areas = new Map((state.plan?.areas ?? []).map((a) => [a.key, a.label]));
   const dirty = notes !== (b.notes ?? '') || allergies !== (b.allergies ?? '') || tags !== b.tags.join(', ');
@@ -125,6 +127,16 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
               </div>
               <input aria-label="What they said" placeholder="What they said (optional)" value={said} maxLength={300} onChange={(e) => setSaid(e.target.value)} />
               {feedback && said !== (feedback.words ?? '') ? <button type="button" className="small" disabled={busy} onClick={() => act({ action: 'feedback', category: feedback.category, words: said })}>Save feedback</button> : null}
+            </div>
+          ) : null}
+          {byPerson && b.status === 'confirmed' ? (
+            <div className="field">
+              <label htmlFor="bd-person">Move to someone else</label>
+              <select id="bd-person" value="" disabled={busy || !people.length} onChange={(e) => e.target.value && act({ action: 'move', to: e.target.value })}>
+                <option value="">{people.length ? 'Choose who…' : 'Nobody else who does this is free then'}</option>
+                {people.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+              </select>
+              <p className="hint">{`Or drag it to their row in the Diary. ${b.name} gets a text saying who they'll see.`}</p>
             </div>
           ) : null}
           {words.property ? null : (<div className="field">

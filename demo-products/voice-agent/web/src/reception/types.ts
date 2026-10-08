@@ -114,6 +114,9 @@ export interface LiveBooking {
   with: string;
   area: string | null;
   service: string;
+  service_key?: string;
+  /** The gap the service needs after it (an estate agency's travel time): a move keeps it. */
+  buffer_minutes?: number;
   deposit: string | null;
   deposit_paid: boolean;
   /** A viewing's home (an estate agency's). */
@@ -144,6 +147,8 @@ export interface LiveListing {
   part_a_missing: string[];
   unknown: number;
   personal_interest: boolean;
+  /** The member of the team with that interest, who never shows it. */
+  interest_staff?: string | null;
   marketing_continues: boolean;
   best_final_at: string | null;
   checking: string[];
@@ -232,6 +237,8 @@ export interface LiveStaff {
   does: StaffDuty[];
   days: number[];
   mobile: string;
+  /** The services they can be booked for (viewing, valuation...). */
+  services?: string[];
 }
 
 export interface LiveOrder {

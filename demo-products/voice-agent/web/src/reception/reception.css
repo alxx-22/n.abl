@@ -375,6 +375,8 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .tl-row.walk-in .tl-track { background: repeating-linear-gradient(135deg, var(--surface-2) 0 8px, transparent 8px 16px); }
 .tl-walkin { position: absolute; inset: 0; display: flex; align-items: center; padding-left: 10px; font-size: 12px; color: var(--muted); pointer-events: none; }
 .tl-row.drop .tl-track { outline: 2px solid var(--ok); }
+/* While a Diary bar is dragged: the people it could go to. */
+.tl-row.can-drop .tl-track { background: color-mix(in srgb, var(--ok) 10%, transparent); }
 .tl-open { position: absolute; top: 0; bottom: 0; background: rgba(var(--cream-rgb), 0.04); border-left: 1px dashed var(--line); border-right: 1px dashed var(--line); }
 .tl-bar {
   position: absolute; top: 3px; bottom: 3px; border-radius: 6px; padding: 0 6px; font-size: 11px; font-weight: 500; gap: 4px;

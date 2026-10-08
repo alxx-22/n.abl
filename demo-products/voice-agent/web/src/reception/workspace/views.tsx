@@ -75,7 +75,7 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
     needs: (s) => Boolean(s.plan),
     // A row per table, or (an estate agency's diary) a row per member of the team.
     render: (p) => (p.spec.views.find((v) => v.id === 'timeline')?.of === 'staff'
-      ? <StaffDiary state={p.state} today={p.today} nowMinute={p.nowMinute} view={p.view} setView={p.setView} onOpen={p.onOpen} />
+      ? <StaffDiary state={p.state} today={p.today} nowMinute={p.nowMinute} view={p.view} setView={p.setView} onOpen={p.onOpen} onMove={p.onMove} />
       : <Timeline state={p.state} today={p.today} nowMinute={p.nowMinute} view={p.view} setView={p.setView} onOpen={p.onOpen} onMove={p.onMove} />),
   },
   properties: {
