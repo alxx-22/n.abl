@@ -782,6 +782,16 @@ and `money` ("Quotes and invoices"); migration `voice_0007_mt_money`.
 demo clock; incident notice and engineer absence; the property editor; KPI
 strip; surge day; relay and language support.
 
+*Built 8 October* (HANDOFF.md, "Property maintenance M3"), with these
+differences: the property editor is "your own properties" in the builder
+(up to a few of the prospect's own, alongside the sample ones, which stay
+read-only); the demo clock is per workspace (migration
+`voice_0010_demo_clock`); the office notice and absences live in the
+workspace config and are laid over the profile; language support is the
+model translating the fixed safety scripts, with the number always in
+digits and texted (vetted translations need a person); ten M3 live
+scenarios (§9).
+
 ---
 
 ## Decisions for Alex

@@ -25,24 +25,34 @@ files (`src/core/tools.ts`, `guardrails.ts`, `call.ts`, `src/db/repo.ts`)
 take small, separate edits; neither session changes the other's preset.
 Migrations take the next free number when they're written.
 
-### Property maintenance M3 (the cloud session)
+### Property maintenance M3 (the cloud session): built (8 October)
 
-Done on 6–8 October: blocks of flats with one job for a block's shared
-parts however many residents ring (`4dea49c`, `8813538`), someone trapped in
-a block's lift (`48cb20f`), insurance claims and business sites
-(`8d19612`), Scotland's bank holidays (`4bf99ce`), a made-up reference
-caught on any call (`6b809c2`, fixed for a reference that runs on into the
-next sentence in `6de4e41`), the compliance portfolio, "what have I got due
+M3 is done, and with it the repairs preset as the spec plans it
+(`presets/property-maintenance.md` §12 has no M4). Built on 6–8 October:
+blocks of flats with one job for a block's shared parts however many
+residents ring (`4dea49c`, `8813538`), someone trapped in a block's lift
+(`48cb20f`), insurance claims and business sites (`8d19612`), Scotland's
+bank holidays (`4bf99ce`), a made-up reference caught on any call
+(`6b809c2`, `6de4e41`), the compliance portfolio, "what have I got due
 across my properties?" (Mr Kaur, `77d6caf`), the demo clock (a "Time"
 button beside Reset; migration `voice_0010_demo_clock`, applied and
 recorded; `fb5bf9a`), the office notice and engineers off sick or on
 holiday (on Dispatch; kept in the workspace config as `office`, laid over
-the profile at every rebuild; `a006442`), and "your own properties" in the
-builder with the week-at-a-glance strip on the Jobs board (`3a23016`).
-Screenshots of each went to Alex. Still to do: answering mode, relay and
-text-only, then the M3 live calls (none written yet for blocks, the lift,
-insurers, businesses, the portfolio, the storm notice or an absence), the
-walk's final screenshots and M3's own handover note.
+the profile at every rebuild; `a006442`), "your own properties" in the
+builder with the week-at-a-glance strip on the Jobs board (`3a23016`), and
+the answering mode, Relay UK calls and "texts only" (`2f4f997`). Ten M3
+live calls were written and run (`f61f789`; see "Live calls (property
+maintenance M3, 8 October)" below), and the walkthrough's final
+screenshots went to Alex.
+
+Not done, and needs a person: the safety advice in other languages is the
+model's own translation (the number is always said in digits and texted).
+Vetted translations of the gas, CO, fire and electrics scripts would need
+a translator; flagged to Alex.
+
+What next for this session is Alex's call: the next preset in the order
+after the takeaway is the barber, which has no spec yet
+(`presets/barber.md` would come first, as for the others).
 
 ### Estate agent
 
@@ -498,6 +508,57 @@ new guidance goes in tool answers.
   letting agent, gym, dog grooming, garage.
 - **Not online** until the whole demo is built (Alex's decision). The
   Oracle hosting kit (`voice-agent/deploy/oracle/`) waits until then.
+
+## Live calls (property maintenance M3, 8 October)
+
+Twenty-one `pm-` scenarios now: the eleven from M1 and M2 and ten for M3
+(`pm-communal-door`, `pm-block-roof-leak`, `pm-lift-trapped`,
+`pm-insurer-claim`, `pm-cafe-blocked-sink`, `pm-portfolio`,
+`pm-storm-notice`, `pm-engineer-absent`, `pm-relay`, `pm-polish-gas`).
+`pm-storm-notice` and `pm-engineer-absent` set the office notice or an
+absence through the scenario's `setup`, on the tenant the call is given.
+
+Every one has passed on the current code (the full run,
+`eval-results/2026-10-08T12-02-45`, not in git, was 15 of 21 before the
+last fixes; each of the six then passed on re-run). As before, the fixes
+went into the tools rather than the prompt:
+
+- Finding the home: the number someone rings from counts ("Flat 4, NG7",
+  "Elm Road"); a full address already on file is never added again;
+  "9, Riverside Court" reads 9 as the flat.
+- Blocks: a door entry goes to an electrician; a roof (or rain through a
+  ceiling) to a roofer, and is flagged as the block's shared parts as
+  soon as the flat is found, so no price is said; the make-safe's
+  reference is the one the caller is given.
+- Insurers: the policyholder taken from the name and phone given; the
+  confirmation to the claims desk and the claim text to the policyholder;
+  no window surcharge offered to a client or insurer.
+- Businesses: a missing purchase order asks the business questions even
+  when "access" was filled in.
+- Busy days: a repair taken as a message on an emergencies-only day is
+  logged on the board too; moving a visit because our engineer is off
+  costs nothing extra.
+- Safety: a gas smell recognised in Polish, Romanian, Portuguese, Spanish,
+  Italian, French and Lithuanian, with the advice in the caller's
+  language; if the advice is said but the safety step skipped, the call
+  logs it and texts the number as it ends; a chirping CO alarm named
+  again stays a chirp.
+- Damp: consent said aloud counts; "vulnerabilities" is read as
+  vulnerable; hanging up on damp at a housing association's home with
+  nothing raised is stopped once; a ready line for health questions (GP,
+  NHS 111).
+- Saying "booked" with nothing booked: a repairs call can't end "booked"
+  without a job (stopped once); a landlord's gas check asked for as a
+  repair is booked on the register by the job step itself; "the
+  reference for that job is ..." is checked for being made up.
+- Checks that were wrong: "nobody from us is booked", "speak to your GP
+  about whether to keep him out of the room", and a reference written
+  by the call but not read out (a block repair's) were all being flagged.
+
+Seen but not fixed: the model sometimes adds "Not medical advice or
+diagnosis; see a healthcare professional" to its health answers, in its
+own words; the simulated caller still goes quiet now and then (the run
+retries on the other model).
 
 ## Live calls (property maintenance M2, 6 October)
 
