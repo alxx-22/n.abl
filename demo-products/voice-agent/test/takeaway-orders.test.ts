@@ -154,3 +154,18 @@ test('a delivery for someone else: their name and number for the driver, the tex
   // Margaret rings to ask where it is: found from her number, as the caller's would be.
   assert.equal((await (await call(t, at('19:30'), '+447700900820')).run('find_order', {})).order_number, placed.order_number);
 });
+
+test('a delivery for someone else, said as "to my mum": the caller is asked their own name and hers, once', async () => {
+  const t = await firebird('tk-to-mum');
+  const c = await call(t, at('19:00'), AMY);
+  // Live, 8 October: mum's name went on the order as the caller's, and her number was never asked.
+  c.ctx.state.heard.push('Can I have a Pizza night delivered to my mum, please?', "It's three Mill Court.");
+  await c.run('add_to_order', { item: 'Pizza night', options: ['margherita', 'pepperoni', 'coke', 'fanta'] });
+  await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 2AB', address: '3 Mill Court' });
+  const review = await c.run('review_order', {});
+  assert.match(review.next, /ask the caller's own name, and the name and number of their mum, who it's for, for the driver \(recipient_name and recipient_phone\)/);
+  const ask = await c.run('confirm_order', { name: 'Margaret Shah', allergy_notes: 'none', pay_driver: 'phone' });
+  assert.equal(ask.message, "Not placed yet: the caller said it's for their mum. Ask the caller's own name for the order, and the name and number of their mum for the driver, then call confirm_order again with name, recipient_name and recipient_phone.");
+  const placed = await c.run('confirm_order', { name: 'Ravi', allergy_notes: 'none', pay_driver: 'phone', recipient_name: 'Margaret Shah', recipient_phone: '07700 900820' });
+  assert.deepEqual((await repo.getOrder(t.id, placed.order_number))!.recipient, { name: 'Margaret Shah', phone: '+447700900820' });
+});

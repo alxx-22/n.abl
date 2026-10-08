@@ -44,6 +44,7 @@ export function Drivers({ id, state, nowMs, onDone }: { id: string; state: LiveS
                 {o.allergy_notes ? <div className="allergy">ALLERGY: {o.allergy_notes}</div> : null}
                 <footer>
                   <span className={`badge ${o.payment_status === 'paid' ? 'ok' : 'warn'}`}>{o.payment_status === 'paid' ? 'Paid (demo)' : o.pay_note ?? 'Take payment'}</span>
+                  {o.flags?.includes('check_id') ? <span className="badge warn">Check ID</span> : null}
                   <span className="muted small">{o.total}</span>
                   <button type="button" className="small primary" onClick={() => act(o, 'completed')}>Delivered</button>
                 </footer>

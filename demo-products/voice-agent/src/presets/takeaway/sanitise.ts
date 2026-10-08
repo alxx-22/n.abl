@@ -4,11 +4,11 @@
 // are cleaned against the menu just cleaned, so a choice whose section a
 // menu draft renamed is re-linked here, on the next save.
 
-import { int, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseDraftFaqs, sanitiseSources, sanitiseTheme, str } from '../common/sanitise.ts';
+import { int, oneOf, sanitiseBasics, sanitiseClosures, sanitiseDays, sanitiseDraftFaqs, sanitiseSources, sanitiseTheme, str, time } from '../common/sanitise.ts';
 import { sanitiseDeals } from '../food/deals.ts';
 import { sanitiseMenu } from '../food/menu.ts';
 import { ORDER_PAYMENTS, sanitiseOrdering } from '../food/ordering.ts';
-import { HALAL, MISSING_ITEMS, PAY_DRIVER, VERSION, defaultAnswers, type TakeawayAnswers } from './answers.ts';
+import { HALAL, MISSING_ITEMS, PAY_DRIVER, TK_NATIONS, VERSION, defaultAnswers, type TakeawayAnswers } from './answers.ts';
 
 /** Null stays null ("none"); a number is kept in bounds; anything else is the default. */
 function orNull(v: unknown, min: number, max: number, d: number | null): number | null {
@@ -52,6 +52,15 @@ export function sanitiseTakeaway(input: unknown): TakeawayAnswers {
       pay_on_phone_numbers: Array.isArray(af.pay_on_phone_numbers)
         ? af.pay_on_phone_numbers.map((n: unknown) => str(n, 20, '')).filter(Boolean).slice(0, 30)
         : d.after.pay_on_phone_numbers,
+    },
+    nation: oneOf(x.nation, TK_NATIONS, d.nation),
+    alcohol: {
+      on: x.alcohol?.on === true,
+      until: x.alcohol?.until === null ? null : time(x.alcohol?.until, d.alcohol.until!),
+      // A list saved, even an empty one, is the owner's; none saved yet takes the sample.
+      items: Array.isArray(x.alcohol?.items)
+        ? (x.alcohol.items as any[]).map((i) => ({ name: str(i?.name, 60, ''), price_pence: int(i?.price_pence, 0, 20000, 0), description: str(i?.description, 120, '') })).filter((i) => i.name).slice(0, 12)
+        : d.alcohol.items,
     },
     policies: {
       halal: oneOf(p.halal, HALAL, d.policies.halal),

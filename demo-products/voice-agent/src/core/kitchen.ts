@@ -209,6 +209,9 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
     ready = slot;
   }
   const due = new Date(ready.getTime() + road);
+  if (type === 'delivery' && scottishNight(ctx, due)) {
+    return { ok: false, message: "In Scotland alcohol can't be delivered between midnight and 6am. Offer collection, or the delivery without the alcohol." };
+  }
   ctx.state.fulfilment = { type, requested: asap ? 'asap' : normaliseTime(t)!, due_at: due, postcode, address, ...(terms ?? {}) };
   ctx.state.basketVersion++;
   const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
@@ -269,7 +272,10 @@ export function soldOutWords(menu: Menu, key: string, soldOut: Set<string>): str
  */
 export function readBackNext(ctx: ToolContext, type: Kind): string {
   const o = ctx.tenant.profile.ordering!;
-  const asks = ["their name, if you don't have it yet"];
+  const forWho = type === 'delivery' ? forSomeoneElse(ctx.state.heard) : null;
+  const asks = forWho
+    ? [`the caller's own name, and the name and number of ${forWho}, who it's for, for the driver (recipient_name and recipient_phone)`]
+    : ["their name, if you don't have it yet"];
   const phoneOnly = Boolean(ctx.callerPhone && o.pay_on_phone?.includes(ctx.callerPhone));
   const driver = type === 'delivery' && o.pay_driver && o.pay_driver !== 'no' && !phoneOnly;
   if (driver) {
@@ -297,6 +303,18 @@ export function allergyQuestionDish(menu: Menu, line: string): string | null {
   return hits.sort((a, b) => b.name.length - a.name.length)[0]?.name ?? null;
 }
 
+const SOMEONE_ELSE = /\b(?:for|to)\s+(my\s+(?:mum|mom|mother|dad|father|nan|nana|gran|granny|grandma|grandad|grandmother|grandfather|sister|brother|son|daughter|wife|husband|partner|girlfriend|boyfriend|friend|neighbour|aunt|auntie|uncle|cousin|colleague)|someone else|a friend)\b/i;
+
+/**
+ * "Can I have a Pizza night delivered to my mum?": who the delivery is for,
+ * in the caller's words. Live, 8 October: mum's name went on the order as the
+ * caller's, and her number was never asked.
+ */
+export function forSomeoneElse(heard: string[]): string | null {
+  const m = SOMEONE_ELSE.exec(heard.join(' '));
+  return m ? m[1].replace(/^my\b/i, 'their') : null;
+}
+
 /** Dishes of two words or more the caller named that aren't on the order, as a dish or a deal's choice. Not said with "no". */
 export function heardNotOrdered(ctx: ToolContext): string[] {
   const menu = ctx.tenant.profile.menu!;
@@ -313,6 +331,50 @@ export function heardNotOrdered(ctx: ToolContext): string[] {
     }
   }
   return out;
+}
+
+// ── Alcohol (presets/takeaway-use-cases.md, "Alcohol and age-restricted items") ──
+
+const UNDER_18 = /\b(?:i'?m|i am|he'?s|she'?s|they'?re|we'?re)\s+(?:only\s+)?(?:1[0-7]|thirteen|fourteen|fifteen|sixteen|seventeen)\b|\bunder\s*(?:18|eighteen)\b|\bnot\s+(?:18|eighteen)\b/i;
+
+/** Minutes from the start of the trading day: 00:30 on a late night is after 23:00. */
+const lateMinutes = (hhmm: string) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return (h < 5 ? h + 24 : h) * 60 + m;
+};
+
+/** Alcohol is on the order, as a dish for adults only. */
+export function hasAlcohol(ctx: ToolContext, lines: OrderLine[] = ctx.state.lines): boolean {
+  const adult = new Set(allItems(ctx.tenant.profile.menu!).filter(({ item }) => item.age === 18).map(({ item }) => item.key));
+  return lines.some((l) => adult.has(l.item_key));
+}
+
+/**
+ * Whether alcohol can be sold on this call now, and the ID check to say if
+ * so: never to a caller who's said they're under 18 (the Licensing Act 2003),
+ * not after the owner's last sale, and in Scotland, paid for only between
+ * 10am and 10pm (Licensing (Scotland) Act 2005).
+ */
+export function alcoholRule(ctx: ToolContext): { refuse: string } | { say: string } {
+  const k = ctx.tenant.profile.ordering!.kitchen!;
+  const now = lateMinutes(toLocal(ctx.now(), ctx.tenant.profile.timezone).time);
+  if (UNDER_18.test(ctx.state.heard.join(' '))) {
+    return { refuse: "They may be under 18, so no alcohol can be sold to them. Say so kindly, and carry on with the food and soft drinks." };
+  }
+  if (k.nation === 'scotland' && (now < 10 * 60 || now >= 22 * 60)) {
+    return { refuse: 'In Scotland alcohol can be sold by phone only between 10am and 10pm. Say so, and carry on with the rest of the order.' };
+  }
+  if (k.alcohol_until && now >= lateMinutes(k.alcohol_until === '00:00' ? '24:00' : k.alcohol_until)) {
+    return { refuse: `We stop selling alcohol at ${at(zonedToUtc(toLocal(ctx.now(), ctx.tenant.profile.timezone).date, k.alcohol_until, ctx.tenant.profile.timezone), ctx.tenant.profile.timezone)}. Say so, and carry on with the rest of the order.` };
+  }
+  return { say: "Say: we'll ask for photo ID if they look under 25, and won't hand alcohol to anyone under 18 or who seems drunk." };
+}
+
+/** In Scotland, alcohol is never delivered between midnight and 6am. */
+function scottishNight(ctx: ToolContext, due: Date): boolean {
+  const k = ctx.tenant.profile.ordering?.kitchen;
+  const hh = Number(toLocal(due, ctx.tenant.profile.timezone).time.slice(0, 2));
+  return k?.nation === 'scotland' && hh < 6 && hasAlcohol(ctx);
 }
 
 // ── Big orders and catering (presets/takeaway.md §2.1, §4.2) ──────────────

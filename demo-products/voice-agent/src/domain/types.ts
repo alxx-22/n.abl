@@ -137,6 +137,8 @@ export interface MenuItem {
   modifier_groups?: string[];
   available?: boolean;
   aliases?: string[];
+  /** Sold only to someone this old or over: a takeaway's alcohol. */
+  age?: 18;
 }
 
 export interface MenuCategory {
@@ -208,6 +210,10 @@ export interface Ordering {
     catering_over_mains?: number;
     /** How many mains each dish is, by item key: a burger one, Pizza night two, fries none. */
     mains?: Record<string, number>;
+    /** Where the shop is: Scotland's hours for alcohol sold by phone. */
+    nation?: 'england' | 'wales' | 'scotland' | 'northern_ireland';
+    /** It sells alcohol: the last time it is sold ("23:00"), or null for whenever it is open. */
+    alcohol_until?: string | null;
   };
   /** Numbers that refused a delivery: they pay on the phone, or collect. */
   pay_on_phone?: string[];

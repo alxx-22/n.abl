@@ -29,6 +29,11 @@ export function validateTakeaway(a: TakeawayAnswers): Issue[] {
   if (o.delivery.enabled && a.money.payment === 'collection' && a.money.pay_driver === 'no') {
     out.push({ step: 'money', level: 'error', message: 'Delivery orders need paying: take card on the phone, or let the driver take payment.' });
   }
+  if (a.alcohol.on && !a.alcohol.items.length) {
+    out.push({ step: 'policies', level: 'warning', message: 'Add the drinks you sell, or turn alcohol off: with none listed, the receptionist sells none.' });
+  }
+  const unpriced = a.alcohol.on ? a.alcohol.items.filter((i) => !i.price_pence).map((i) => i.name) : [];
+  if (unpriced.length) out.push({ step: 'policies', level: 'warning', message: `Give a price for ${unpriced.join(', ')}.` });
   const notNumbers = a.after.pay_on_phone_numbers.filter((n) => !normaliseUkPhone(n));
   if (notNumbers.length) {
     out.push({ step: 'money', level: 'warning', message: `Not a UK phone number, so left off the pay-on-the-phone list: ${notNumbers.join(', ')}.` });

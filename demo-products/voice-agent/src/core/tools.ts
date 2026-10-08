@@ -25,7 +25,7 @@ import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
 import {
-  PHONE_ONLY, cateringOrder, feeFor, findOrder, heardNotOrdered, impliedCollection, isBig, kitchenFulfilment, menuTonight, readBackNext, shortOfMinimum,
+  PHONE_ONLY, alcoholRule, cateringOrder, forSomeoneElse, hasAlcohol, feeFor, findOrder, heardNotOrdered, impliedCollection, isBig, kitchenFulfilment, menuTonight, readBackNext, shortOfMinimum,
   soldOutWords, waitTimes,
 } from './kitchen.ts';
 import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, dealHint, dealOf, mealHint } from '../domain/deals.ts';
@@ -926,6 +926,9 @@ const TOOLS: Record<string, Tool> = {
       if (!r.ok) return { added: false, question: r.question };
       const item = r.value;
       if (item.available === false) return { added: false, message: soldOut.has(item.key) ? soldOutWords(menu, item.key, soldOut) : `${item.name} is not available today.` };
+      // Alcohol: not to under-18s, not after the last sale, in Scotland only 10am to 10pm; and the ID check said.
+      const adult = item.age === 18 ? alcoholRule(ctx) : null;
+      if (adult && 'refuse' in adult) return { added: false, message: adult.refuse };
       // A size or choice already in the item's words ("regular fries") counts as asked for.
       const given = strList(args.options);
       const requested = byChoice && !given.some((g) => score(g, byChoice.choice) >= 0.7) ? [byChoice.choice, ...given] : given;
@@ -982,6 +985,7 @@ const TOOLS: Record<string, Tool> = {
       return {
         added: describeLine(line), line: line.line, order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal,
         ...(replaced.length ? { replaced: replaced.map((l) => l.line) } : {}),
+        ...(adult && 'say' in adult ? { id_check: adult.say } : {}),
         ...(inName ? { quantity_note: `Taken as one ${item.name}: the number is in its name. If they want more than one portion, change the line's quantity.` } : {}),
         ...shortOfMinimum(ctx),
         ...offer,
@@ -1249,6 +1253,11 @@ const TOOLS: Record<string, Tool> = {
       // A takeaway delivery for someone else: their name and number for the driver; the caller's stay on the order. Their number asked once.
       const forName = o.kitchen && f.type === 'delivery' ? str(args.recipient_name) : undefined;
       const forPhone = normaliseUkPhone(str(args.recipient_phone));
+      const forWho = o.kitchen && f.type === 'delivery' && !forName ? forSomeoneElse(ctx.state.heard) : null;
+      if (forWho && !ctx.state.gateAsked.includes('recipient')) {
+        ctx.state.gateAsked.push('recipient');
+        return { placed: false, message: `Not placed yet: the caller said it's for ${forWho}. Ask the caller's own name for the order, and the name and number of ${forWho} for the driver, then call confirm_order again with name, recipient_name and recipient_phone.` };
+      }
       if (forName && !forPhone && !ctx.state.gateAsked.includes('recipient_phone')) {
         ctx.state.gateAsked.push('recipient_phone');
         return { placed: false, message: `Ask for ${forName}'s number, for the driver, then call confirm_order again with recipient_phone. If they don't have it, call again without it.` };
@@ -1297,7 +1306,7 @@ const TOOLS: Record<string, Tool> = {
         lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,
         allergy_notes: namedAllergy(noneToNull(str(args.allergy_notes)), ctx.state.heard) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
         ...(payNote ? { pay_note: payNote } : {}),
-        ...(isBig(ctx) ? { flags: ['big'] } : {}),
+        ...(isBig(ctx) || hasAlcohol(ctx) ? { flags: [...(isBig(ctx) ? ['big'] : []), ...(hasAlcohol(ctx) ? ['check_id'] : [])] } : {}),
         ...(recipient ? { recipient } : {}),
       });
       record(ctx, order.reference, 'order', 'committed');
@@ -1313,8 +1322,8 @@ const TOOLS: Record<string, Tool> = {
       });
       const rule = o.payment ?? 'either';
       const payLine = phoneOnly ? '' : payNote ? ` Paying the driver: ${payNote.replace(/^Cash: /, 'cash, ').toLowerCase()}.` : rule === 'collection' ? (order.fulfilment === 'delivery' ? ' Pay on delivery.' : ' Pay when you collect.') : '';
-      const forWho = recipient ? ` for ${recipient.name}` : '';
-      await smsTo(ctx, phone, `${ctx.tenant.profile.name}: order ${order.reference}${forWho}, ${pounds(order.total_pence)}, ${order.fulfilment} at ${spokenTime(local.time)}.${payLine} Quote ${order.reference} if you call us. (Demo order)`);
+      const forText = recipient ? ` for ${recipient.name}` : '';
+      await smsTo(ctx, phone, `${ctx.tenant.profile.name}: order ${order.reference}${forText}, ${pounds(order.total_pence)}, ${order.fulfilment} at ${spokenTime(local.time)}.${payLine} Quote ${order.reference} if you call us. (Demo order)`);
       return {
         placed: true,
         order_number: order.reference,

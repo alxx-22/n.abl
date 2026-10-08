@@ -13,7 +13,7 @@ import { DealsEditor } from '../food/Deals.tsx';
 import { MenuEditor } from '../food/MenuEditor.tsx';
 import { CollectionDelivery } from '../food/Ordering.tsx';
 import { TakeawayPayment } from '../food/Payment.tsx';
-import { Choice, ListText, Num, Pounds, Select, Toggle } from '../fields.tsx';
+import { Choice, ListText, Num, Pounds, Select, Text, Toggle } from '../fields.tsx';
 import type { BuilderDef, StepProps } from '../registry.ts';
 import { sectionOf } from '../section.ts';
 
@@ -92,11 +92,57 @@ function StepMoney({ a, set }: Props) {
   );
 }
 
+const NATIONS: { value: TakeawayAnswers['nation']; label: string }[] = [
+  { value: 'england', label: 'England' },
+  { value: 'wales', label: 'Wales' },
+  { value: 'scotland', label: 'Scotland' },
+  { value: 'northern_ireland', label: 'Northern Ireland' },
+];
+
+/** Alcohol, off by default: the owner's own short list, to adults only, until the licence's last sale (presets/takeaway.md, decision 2). */
+function Alcohol({ a, set }: Props) {
+  const al = a.alcohol;
+  return (
+    <>
+      <h3 className="sub">Alcohol</h3>
+      <Toggle
+        label="We sell alcohol with food orders" checked={al.on} onChange={(v) => set((d) => void (d.alcohol.on = v))}
+        hint="Only with a premises licence that allows it. The receptionist sells it to adults only and says the ID check; the ticket says Check ID."
+      />
+      {al.on ? (
+        <>
+          <Select
+            label="Last alcohol sale" value={al.until ?? 'open'}
+            options={[{ value: 'open', label: 'Whenever we are open' }, ...['21:00', '22:00', '23:00', '00:00'].map((t) => ({ value: t, label: t === '00:00' ? 'Midnight' : t }))]}
+            onChange={(v) => set((d) => void (d.alcohol.until = v === 'open' ? null : v))}
+            hint={a.nation === 'scotland' ? 'In Scotland alcohol sold by phone is paid for only between 10am and 10pm, whatever this says.' : undefined}
+          />
+          {al.items.map((item, i) => (
+            <div className="two" key={i}>
+              <Text label={`Drink ${i + 1}`} value={item.name} max={60} onChange={(v) => set((d) => void (d.alcohol.items[i].name = v))} />
+              <Pounds label="Price" pence={item.price_pence} max={20000} onChange={(v) => set((d) => void (d.alcohol.items[i].price_pence = v))} />
+            </div>
+          ))}
+          <div className="row">
+            {al.items.length < 12 ? <button type="button" className="small" onClick={() => set((d) => void d.alcohol.items.push({ name: '', price_pence: 0, description: '' }))}>Add a drink</button> : null}
+            {al.items.length ? <button type="button" className="small" onClick={() => set((d) => void d.alcohol.items.pop())}>Remove the last</button> : null}
+          </div>
+        </>
+      ) : null}
+    </>
+  );
+}
+
 function StepPolicies(props: Props) {
   const { a, set } = props;
   const p = a.policies;
   return (
     <Policies {...props}>
+      <Select
+        label="Where you are" value={a.nation} options={NATIONS} onChange={(v) => set((d) => void (d.nation = v))}
+        hint="Scotland has its own hours for alcohol; in Wales and Northern Ireland callers have a right to hear your hygiene rating."
+      />
+      <Alcohol {...props} />
       <Choice
         legend="Halal" value={p.halal}
         options={[

@@ -15,6 +15,23 @@ export const PAY_DRIVER = ['no', 'cash', 'cash_or_card'] as const;
 export type PayDriver = (typeof PAY_DRIVER)[number];
 export const HALAL = ['all', 'chicken', 'none'] as const;
 export const MISSING_ITEMS = ['manager', 'send_out'] as const;
+/** Where the shop is: Scotland's alcohol hours, and Wales's and Northern Ireland's hygiene rating rules. */
+export const TK_NATIONS = ['england', 'wales', 'scotland', 'northern_ireland'] as const;
+export type TkNation = (typeof TK_NATIONS)[number];
+
+/** A drink sold only to adults, on the owner's own short list. */
+export interface AlcoholItem {
+  name: string;
+  price_pence: number;
+  description: string;
+}
+
+/** The sample list an owner starts from when they switch alcohol on: invented prices, theirs to change. */
+export const SAMPLE_ALCOHOL: AlcoholItem[] = [
+  { name: 'Lager four-pack', price_pence: 749, description: 'Four 330ml bottles.' },
+  { name: 'Cider four-pack', price_pence: 749, description: 'Four 440ml cans.' },
+  { name: 'Bottle of rosé', price_pence: 999, description: '75cl.' },
+];
 
 export interface TakeawayAnswers extends BaseAnswers {
   version: typeof VERSION;
@@ -48,6 +65,15 @@ export interface TakeawayAnswers extends BaseAnswers {
     missing_items: (typeof MISSING_ITEMS)[number];
     /** Numbers that refused a delivery: they pay on the phone, or collect. Kept as typed; compile keeps the valid ones. */
     pay_on_phone_numbers: string[];
+  };
+  /** Where the shop is. */
+  nation: TkNation;
+  /** Off by default (presets/takeaway.md, decision 2). On: these drinks, to adults only, until the last sale time. */
+  alcohol: {
+    on: boolean;
+    /** "HH:MM": the last time alcohol is sold, by the licence. Null: whenever the shop is open. */
+    until: string | null;
+    items: AlcoholItem[];
   };
   policies: {
     halal: (typeof HALAL)[number];
@@ -107,6 +133,9 @@ export function defaultAnswers(): TakeawayAnswers {
     money: { payment: 'either', pay_driver: 'cash_or_card', card_minimum_pence: null },
     // Dean Walsh (Call as) refused a delivery last month.
     after: { late_after_minutes: 15, missing_items: 'manager', pay_on_phone_numbers: ['07700 900804'] },
+    nation: 'england',
+    // Off, with a sample list ready for an owner who switches it on.
+    alcohol: { on: false, until: '23:00', items: SAMPLE_ALCOHOL.map((i) => ({ ...i })) },
     policies: {
       halal: 'chicken',
       hygiene_rating: 5,

@@ -5,6 +5,7 @@
 
 import { pounds, type KnowledgeEntry, type Menu, type MenuDeal, type TenantProfile } from '../../domain/types.ts';
 import { normaliseUkPhone } from '../../domain/phone.ts';
+import { spokenTime } from '../../domain/time.ts';
 import { baseProfile, entry, mergeFaqs } from '../common/profile.ts';
 import { compileMenu } from '../food/menu.ts';
 import { compileOrdering, deliveryAppsEntry } from '../food/ordering.ts';
@@ -81,7 +82,8 @@ function knowledge(a: TakeawayAnswers): KnowledgeEntry[] {
     entry('Do you charge for bags?', p.bags, ['bag', 'bags', 'carrier']),
     entry('Are you hiring?', p.careers, ['job', 'jobs', 'work', 'hiring', 'vacancy', 'apply', 'driver']),
     entry('Can I tip the driver?', p.tips, ['tip', 'tips', 'tipping', 'driver']),
-    entry('What is your food hygiene rating?', p.hygiene_rating === null ? '' : `Our food hygiene rating is ${p.hygiene_rating}. You can check it on the Food Standards Agency's ratings website.`, ['hygiene', 'rating', 'clean', 'inspection', 'fsa']),
+    entry('What is your food hygiene rating?', hygieneAnswer(a), ['hygiene', 'rating', 'clean', 'inspection', 'fsa']),
+    entry('Do you sell alcohol?', alcoholAnswer(a), ['alcohol', 'beer', 'lager', 'wine', 'cider', 'drink', 'id', 'age']),
     deliveryAppsEntry(a.ordering),
   ], p.faqs);
 }
@@ -104,13 +106,14 @@ export function compileTakeaway(a: TakeawayAnswers, meta: { slug: string }): Ten
   return {
     ...baseProfile(a, meta, { businessType: 'takeaway', noun: 'takeaway', facts: [orders, deliveryFact, halalSentence(a), a.menu.allergen_statement], hoursMax: 220 }),
     knowledge: knowledge(a),
-    menu: dealMenu ? { ...menu, categories: [dealMenu.category, ...menu.categories], modifier_groups: { ...menu.modifier_groups, ...dealMenu.groups }, deals: dealMenu.deals } : menu,
+    menu: withAlcohol(a, dealMenu ? { ...menu, categories: [dealMenu.category, ...menu.categories], modifier_groups: { ...menu.modifier_groups, ...dealMenu.groups }, deals: dealMenu.deals } : menu),
     // The kitchen counts every order by when it must be ready (core/kitchen.ts).
     ordering: ordering && {
       ...ordering,
       kitchen: {
         last_orders_minutes: a.kitchen.last_orders_minutes, late_after_minutes: a.after.late_after_minutes, missing_items: a.after.missing_items,
         big_order_mains: a.kitchen.big_order_mains, catering_over_mains: Math.max(a.kitchen.catering_over_mains, a.kitchen.big_order_mains), mains: mainsOf(a, menu, dealMenu?.deals ?? []),
+        nation: a.nation, ...(sellsAlcohol(a) ? { alcohol_until: a.alcohol.until } : {}),
       },
       ...(a.ordering.delivery.enabled && a.money.payment !== 'phone' ? { pay_driver: a.money.pay_driver } : {}),
       ...(payOnPhone.length ? { pay_on_phone: payOnPhone } : {}),
@@ -136,4 +139,35 @@ function mainsOf(a: TakeawayAnswers, menu: Menu, deals: MenuDeal[]): Record<stri
     if (n) out[d.item_key] = n;
   }
   return out;
+}
+
+const sellsAlcohol = (a: TakeawayAnswers) => a.alcohol.on && a.alcohol.items.length > 0;
+
+/**
+ * The owner's drinks for adults, as their own section at the end of the menu,
+ * each sold only to someone 18 or over (the Licensing Act 2003). Their
+ * allergens aren't given, so the receptionist never says there are none.
+ */
+function withAlcohol(a: TakeawayAnswers, menu: Menu): Menu {
+  if (!sellsAlcohol(a)) return menu;
+  const items = a.alcohol.items.map((i, n) => ({
+    key: `alcohol_${n + 1}`, name: i.name, price_pence: i.price_pence, ...(i.description ? { description: i.description } : {}),
+    allergens: [], allergens_unknown: true, age: 18 as const,
+  }));
+  return { ...menu, categories: [...menu.categories, { key: 'alcohol', label: 'Beer and wine', items }] };
+}
+
+function alcoholAnswer(a: TakeawayAnswers): string {
+  if (!sellsAlcohol(a)) return "We don't sell alcohol.";
+  const until = a.alcohol.until ? ` until ${spokenTime(a.alcohol.until)}` : '';
+  const scotland = a.nation === 'scotland' ? ' In Scotland we can take payment for alcohol only between 10am and 10pm, and never deliver it between midnight and 6am.' : '';
+  return `We sell ${a.alcohol.items.map((i) => i.name.toLowerCase()).join(', ')} with food orders${until}, to over-18s only. The driver asks for photo ID if you look under 25, and won't hand alcohol to anyone under 18 or who seems drunk.${scotland}`;
+}
+
+/** The rating the owner set; in Wales and Northern Ireland it is the law to tell a caller who asks. */
+function hygieneAnswer(a: TakeawayAnswers): string {
+  const r = a.policies.hygiene_rating;
+  if (r === null) return '';
+  const law = a.nation === 'wales' || a.nation === 'northern_ireland' ? ' By law we tell anyone who asks, and our menus and leaflets show it.' : '';
+  return `Our food hygiene rating is ${r}.${law} You can check it on the Food Standards Agency's ratings website.`;
 }
