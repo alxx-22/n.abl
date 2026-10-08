@@ -34,6 +34,8 @@ interface Tracked {
   safetyQueue?: SafetyKind[];
   /** The incident safety_advice logged for each kind, so a kind armed later still marks its own. */
   safetyIncidents?: Partial<Record<SafetyKind, string>>;
+  /** Advice that opens nothing (a leak, a break-in), owed to the safety log until it is said. */
+  adviceOwed?: { kind: SafetyKind; incident: string; said_from: number }[];
   heard: string[];
   said: string[];
 }
@@ -155,6 +157,13 @@ const GIST: Partial<Record<SafetyKind, RegExp>> = {
   fire: /\b(?:get (?:everyone )?out|leave|outside)\b/i,
   hurt: /\b(?:999|nine nine nine|ambulance)\b/i,
   electric: /\b(?:don'?t touch|do not touch|main switch|power off|switch (?:it|the power|everything) off|turn (?:the power|the electrics|everything) off)\b/i,
+  // Advice that opens nothing: its own first steps, for the safety log's "said at".
+  co_chirp: /\b(?:battery|chirp\w*|end of (?:its )?life|everyone out)\b/i,
+  water: /\b(?:stop ?cock|stop tap|water (?:off|supply)|turn (?:the |your )?water off)\b/i,
+  flood: /\b(?:keep (?:away|clear|out)|flood ?water|main switch|floodline)\b/i,
+  break_in: /\b(?:999|101|nine nine nine|one oh one|police)\b/i,
+  lockout: /\b(?:locksmith|proof|999|nine nine nine)\b/i,
+  structural: /\b(?:keep (?:everyone )?(?:away|clear|out)|out of the room|999|nine nine nine)\b/i,
 };
 
 /** The kind's number said in these words, in figures or digit by digit. */
@@ -175,6 +184,17 @@ export function adviceSaid(kind: SafetyKind, words: string, nation: MtNation, fo
   // An electrical fault is made safe by the switch; its number (999) is only for a fire.
   if (!safetyScript(kind, nation).number || kind === 'electric') return true;
   return said;
+}
+
+/**
+ * Advice that opens nothing (a leak, a break-in), said since safety_advice
+ * gave it: the incidents the safety log can now mark as said (review, 8
+ * October). Each is owed once.
+ */
+export function otherAdviceSaid(state: Tracked): string[] {
+  const done = (state.adviceOwed ?? []).filter((o) => GIST[o.kind]?.test(state.said.slice(o.said_from).join(' ')));
+  if (done.length) state.adviceOwed = (state.adviceOwed ?? []).filter((o) => !done.includes(o));
+  return done.map((o) => o.incident);
 }
 
 /** The one line the call sends when it arms: the first steps, so the first sentence never waits on a tool. */

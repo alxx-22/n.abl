@@ -147,6 +147,8 @@ export interface CallState {
   /** Emergencies heard while another's advice was owed, given in turn (core/safety.ts). */
   safetyQueue?: SafetyKind[];
   safetyIncidents?: Partial<Record<SafetyKind, string>>;
+  /** Advice that opens nothing, until it is said (core/safety.ts). */
+  adviceOwed?: { kind: SafetyKind; incident: string; said_from: number }[];
   /** The property this call is about, once find_property has found it. */
   property: string | null;
   /** Who the caller is to that property: what they may hear and do. */

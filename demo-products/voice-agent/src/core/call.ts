@@ -23,7 +23,7 @@ import { record } from './tool-kit.ts';
 import { amountsIn } from '../domain/amounts.ts';
 import { knownTimes, timesIn } from '../domain/clock-times.ts';
 import { tenantNow } from '../domain/time.ts';
-import { armSafety, nextSafety, noteAdvice, safetyCorrection } from './safety.ts';
+import { armSafety, nextSafety, noteAdvice, otherAdviceSaid, safetyCorrection } from './safety.ts';
 import { REACTION_NOW, REACTION_SCRIPT, armReaction, noteReactionSaid } from './reaction.ts';
 import { allergyQuestionDish } from './kitchen.ts';
 import { addDays, toLocal, zonedToUtc } from '../domain/time.ts';
@@ -635,6 +635,8 @@ export class CallSession extends EventEmitter<CallEvents> {
   /** The receptionist has now said the safety advice and the number: the tools open, and the safety log gets the time. */
   private noteSafetySaid(): void {
     const m = this.opts.tenant.profile.maintenance;
+    // Advice that opens nothing (a leak, a break-in): the safety log gets the time too.
+    for (const id of m ? otherAdviceSaid(this.state) : []) void this.opts.repo.updateIncident(this.opts.tenant.id, id, { advised_at: this.now() }).catch(() => {});
     const done = m ? noteAdvice(this.state, m.nation) : null;
     if (!done) return;
     this.record('system', { event: 'safety_advice_said', kind: done.kind });

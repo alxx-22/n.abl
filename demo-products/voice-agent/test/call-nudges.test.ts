@@ -287,6 +287,20 @@ test('a gas smell on a repairs call: the advice is asked for at once, anything e
   assert.equal(c.reminders().filter((t) => /may be describing an emergency/.test(t)).length, 1, 'never twice');
 });
 
+test('a burst pipe: the safety log shows when the advice was said, as for gas, and the job booked after it', async () => {
+  const phone = '+447700900501';
+  const c = await call(fernhill, phone);
+  c.caller("A pipe's burst under the sink and there's water everywhere.");
+  await c.tool('safety_advice', { kind: 'water' });
+  await c.agent("First, turn the water off at the stopcock: it's often under the kitchen sink. Catch what you can in buckets if it's safe.");
+  const mine = async () => (await repo.listIncidents(fernhill.id)).filter((i) => i.caller_phone === phone && i.kind === 'water' && i.source === 'eval').sort((a, b) => b.created_at.getTime() - a.created_at.getTime())[0];
+  assert.ok((await mine()).advised_at, 'the safety log shows when the advice was said');
+  await c.tool('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
+  const job = await c.tool('job', { action: 'create', description: 'Burst pipe under the kitchen sink, water everywhere', trade: 'plumbing', name: 'Sam Patel' });
+  assert.ok(job.reference, JSON.stringify(job));
+  assert.equal((await mine()).follow_up_job, job.reference, 'the job booked after the advice is its follow-up');
+});
+
 test('gas advice said in Polish without the safety step: the reminder says their language, and as the call ends it is logged and the number texted', async () => {
   // Live, 8 October: the advice was given, but safety_advice never used, so nothing was logged and no text went.
   const phone = '+447700900889';

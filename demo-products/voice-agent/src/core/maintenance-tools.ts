@@ -1190,7 +1190,14 @@ async function jobTool(args: Args, ctx: ToolContext): Promise<Record<string, unk
   const gate = safetyGate(ctx);
   if (gate) return gate;
   switch (action) {
-    case 'create': return createJob(args, ctx);
+    case 'create': {
+      const r = await createJob(args, ctx);
+      // The job raised after safety advice on this call is that incident's follow-up, in the safety log (review, 8 October).
+      if (typeof r.reference === 'string') {
+        for (const id of Object.values(ctx.state.safetyIncidents ?? {})) await ctx.repo.updateIncident(ctx.tenant.id, id!, { follow_up_job: r.reference });
+      }
+      return r;
+    }
     case 'move': return moveJob(args, ctx);
     case 'cancel': return cancelJob(args, ctx);
     case 'approve':
@@ -1443,6 +1450,8 @@ async function safetyAdvice(args: Args, ctx: ToolContext): Promise<Record<string
     caller_phone: ctx.callerPhone, follow_up_job: null, notes: str(args.where) ?? null, source: source(ctx), call_id: ctx.callId || null,
   });
   (st.safetyIncidents ??= {})[kind] = incident.id;
+  // Advice that opens nothing is owed to the log until said; a line said just before the tool counts (review, 8 October).
+  if (!GATED.includes(kind)) (st.adviceOwed ??= []).push({ kind, incident: incident.id, said_from: Math.max(0, st.said.length - 1) });
   if (st.safety?.kind === kind) st.safety.incident = incident.id;
   const first = st.safety && !st.safety.spoken && st.safety.kind !== kind ? st.safety.kind : null;
   const textSent = s.text ? await smsTo(ctx, ctx.callerPhone, `${s.text} (Demo)`) : null;
