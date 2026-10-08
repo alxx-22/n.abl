@@ -209,6 +209,8 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
     properties: props.map((p) => propertyBrief(ctx, p, roleAt(ctx, p), p.block ? all.find((x) => x.key === p.block) : undefined)),
     ...(waiting.length ? { waiting_for_their_approval: waiting, to_answer: 'For a yes or no to one of these, use job approve or decline with its reference; never raise it again.' } : {}),
     ...(shared ? { what_they_said: `That sounds like the ${shared}, in the block's shared parts: no price and no window for them. Raise it with job create.` } : {}),
+    // Someone at their door: the board's answer comes with their home (live, 8 October: "I've checked" was said unchecked).
+    ...(props.length === 1 && props[0].occupant.phone === ctx.callerPhone ? await atTheDoor(ctx, ctx.state.heard.slice(-6).join(' ')) : {}),
     ...(props.length > 1 ? { ask: 'More than one fits: ask which, by the house number or flat.' } : {}),
     ...(nums.length > 1 && props.length === 1 && houseNumber(props[0]) !== nums[0] ? { check: `Check the number: we have ${houseNumber(props[0])}, they said ${nums[0]}.` } : {}),
   };
@@ -442,6 +444,9 @@ async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string,
     note: "Say the trade and how soon. Never say what's wrong, that it's safe, or what it will cost beyond the price above.",
   };
 }
+
+/** A caller's yes to noting who is vulnerable, in their own words. */
+const CONSENT_SAID = /\b(?:you can|feel free to|go ahead and) (?:note|record|share|put down|write down)\b|\bhappy (?:for you )?to (?:note|record|share|have (?:that|it|this) noted)|\b(?:yes|yeah),?\s+(?:note|record) (?:it|that|his|her|their)\b/i;
 
 /** "Texts only, please", "I'm deaf": contact by text, never a call. */
 const TEXT_ONLY = /\b(?:text(?:s|ing)? only|only (?:by )?text|by text,? (?:not|never|rather than) (?:a )?(?:call|phone)|(?:i'?m|i am) (?:deaf|hard of hearing)|can'?t hear (?:on )?(?:the )?phone)\b/i;
@@ -724,6 +729,8 @@ async function sharedAlready(ctx: ToolContext, block: MtProperty, part: string, 
 async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   // "vulnerabilities" for vulnerable (live, 8 October: a damp job was refused twice over the name, then called booked).
   if (args.vulnerable === undefined) args = { ...args, vulnerable: args.vulnerabilities ?? args.vulnerability };
+  // Consent said aloud counts ("you can note his asthma too"; live, 8 October: booked, but never noted).
+  if (bool(args.consent) === undefined && CONSENT_SAID.test(ctx.state.heard.slice(-6).join(' '))) args = { ...args, consent: true };
   const m = mt(ctx);
   const found = await propertyFor(args, ctx);
   if ('reply' in found) return found.reply;

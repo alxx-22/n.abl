@@ -1349,7 +1349,8 @@ export const SCENARIOS: Scenario[] = [
     persona: "You are Aisha Patel, a tenant at 120 Larchfield Close, NG3. You sound a bit worried and speak quietly. A man is at your front door saying he's from Fernhill and needs to check your boiler, but you weren't expecting anyone. Ask: \"Is he one of yours? Should I let him in?\" Follow their advice, thank them and say goodbye.",
     async check(c) {
       const f: string[] = [];
-      expect(f, results(c, 'job').length > 0, 'the board was never checked (job find)');
+      // The board's answer, from job find or with the home from find_property.
+      expect(f, results(c, 'job').length > 0 || c.summary.tools.some((t) => (t.result as { at_the_door?: string } | null)?.at_the_door), 'the board was never checked');
       // "We don't have anyone scheduled to visit you today" says it too.
       expect(f, /\b(?:haven'?t|have not|didn'?t|did not|not) (?:sent|booked|got (?:anyone|anybody|a visit))|\bno(?:body| one| visit| engineer)\b[^.?!]{0,40}\b(?:booked|sent|due|scheduled)\b|\b(?:don'?t|do not) have (?:anyone|anybody|an engineer|a visit)[^.?!]{0,30}\b(?:booked|scheduled|due|coming|sent)\b/i.test(c.agentText), '"we haven\'t sent anyone" was not said');
       expect(f, /\bdon'?t (?:let|open)|do not (?:let|open)|keep the door|not (?:to )?let (?:him|them)/i.test(c.agentText), "she wasn't told not to let him in");

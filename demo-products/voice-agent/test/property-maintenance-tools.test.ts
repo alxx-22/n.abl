@@ -782,6 +782,12 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   const named = await nadia2.run('job', { action: 'create', description: "Black mould in son's bedroom", name: 'Nadia Hussain', vulnerabilities: 'child with asthma (6)', consent: true, trade: 'damp_mould' });
   assert.ok(named.windows?.length || named.booked, JSON.stringify(named));
   assert.doesNotMatch(String(named.message ?? ''), /Ask whether anyone at home has asthma/);
+  // Consent said aloud is consent (live, 8 October: "you can note his asthma too", and it was never noted).
+  const nadia3 = await call(t, '+447700900571');
+  await nadia3.run('find_property', { postcode: 'DE23', number: 'Flat 2, 7', street: 'Larkspur Walk' });
+  nadia3.hear('Yes, please, book the visit for tomorrow morning. You can note his asthma too.');
+  const noted = await nadia3.run('job', { action: 'create', description: "Black mould in son's bedroom", name: 'Nadia Hussain', vulnerable: 'Son aged 6 has asthma', trade: 'damp_mould' });
+  assert.doesNotMatch(String(noted.message ?? ''), /consent/, JSON.stringify(noted));
   // Live, 8 October: hanging up with no job raised is stopped once.
   const end = await nadia.run('end_call', { outcome: 'message' });
   assert.equal(end.ok, false);
@@ -799,6 +805,9 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   aisha2.hear("No, he just said he's from Fernhill. He's here to check the boiler.");
   const none = await aisha2.run('job', { action: 'find', property: 'larchfield_120' });
   assert.match(none.at_the_door, /we haven't sent anyone, not to let them in/);
+  // Found from her own number, the home comes with the board's answer (live, 8 October: "I've checked", unchecked).
+  const home2 = await aisha2.run('find_property', { postcode: 'NG3', number: '120' });
+  assert.match(home2.at_the_door, /we haven't sent anyone/);
   // The health question passed on is not health advice.
   const s2 = newCallState();
   s2.maintenance = true;
