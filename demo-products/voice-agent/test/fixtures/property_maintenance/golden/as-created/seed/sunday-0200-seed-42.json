@@ -5533,29 +5533,13 @@
   {
    "property_key": "larchfield_120",
    "kind": "eicr",
-   "issued": "2021-11-04",
-   "expires": "2026-11-04",
-   "remedials": [],
-   "booked_job": null
-  },
-  {
-   "property_key": "wrenbury_89",
-   "kind": "gas_record",
-   "issued": "2025-10-27",
-   "expires": "2026-10-27",
-   "remedials": [],
-   "booked_job": null
-  },
-  {
-   "property_key": "wrenbury_89",
-   "kind": "eicr",
    "issued": "2021-11-16",
    "expires": "2026-11-16",
    "remedials": [],
    "booked_job": null
   },
   {
-   "property_key": "copperbeech_flat_5_86",
+   "property_key": "wrenbury_89",
    "kind": "gas_record",
    "issued": "2025-11-03",
    "expires": "2026-11-03",
@@ -5563,7 +5547,7 @@
    "booked_job": null
   },
   {
-   "property_key": "copperbeech_flat_5_86",
+   "property_key": "wrenbury_89",
    "kind": "eicr",
    "issued": "2021-11-28",
    "expires": "2026-11-28",
@@ -5571,10 +5555,26 @@
    "booked_job": null
   },
   {
-   "property_key": "tansy_36",
+   "property_key": "copperbeech_flat_5_86",
    "kind": "gas_record",
    "issued": "2025-11-10",
    "expires": "2026-11-10",
+   "remedials": [],
+   "booked_job": null
+  },
+  {
+   "property_key": "copperbeech_flat_5_86",
+   "kind": "eicr",
+   "issued": "2022-05-28",
+   "expires": "2027-05-28",
+   "remedials": [],
+   "booked_job": null
+  },
+  {
+   "property_key": "tansy_36",
+   "kind": "gas_record",
+   "issued": "2025-11-17",
+   "expires": "2026-11-17",
    "remedials": [],
    "booked_job": null
   },
@@ -5594,8 +5594,8 @@
   {
    "property_key": "saxonby_101",
    "kind": "gas_record",
-   "issued": "2025-11-17",
-   "expires": "2026-11-17",
+   "issued": "2026-05-29",
+   "expires": "2027-05-29",
    "remedials": [],
    "booked_job": null
   },
@@ -5610,8 +5610,8 @@
   {
    "property_key": "mallow_flat_4_71",
    "kind": "gas_record",
-   "issued": "2025-10-08",
-   "expires": "2026-10-08",
+   "issued": "2026-07-05",
+   "expires": "2027-07-05",
    "remedials": [],
    "booked_job": null
   },
@@ -6066,16 +6066,16 @@
   {
    "property_key": "hazelmere_flat_4_120",
    "kind": "eicr",
-   "issued": "2022-07-16",
-   "expires": "2027-07-16",
+   "issued": "2021-11-04",
+   "expires": "2026-11-04",
    "remedials": [],
    "booked_job": null
   },
   {
    "property_key": "wharfside_flat_3_6",
    "kind": "gas_record",
-   "issued": "2026-03-14",
-   "expires": "2027-03-14",
+   "issued": "2025-10-08",
+   "expires": "2026-10-08",
    "remedials": [],
    "booked_job": null
   },
@@ -6090,8 +6090,8 @@
   {
    "property_key": "charnwood_19",
    "kind": "gas_record",
-   "issued": "2026-04-20",
-   "expires": "2027-04-20",
+   "issued": "2025-10-27",
+   "expires": "2026-10-27",
    "remedials": [],
    "booked_job": null
   },
