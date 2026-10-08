@@ -29,9 +29,9 @@ when written (the last is `voice_0012`).
 
 | Session | Where | Working on | Owns (others ask first) | Since |
 |---|---|---|---|---|
-| **cloud** | Claude Code on the web (Alex's account) | **The barber** (`presets/barber.md`), M1 first, then M2 and M3; the hair salon after it, building on the barber | `src/presets/barber/`, `web/src/reception/builder/barber/`, the `bb-` scenarios, `test/barber*`; the repairs and estate agent call tools (`maintenance-tools.ts`, `estate-tools.ts`) | 8 October, evening |
+| **cloud** | Claude Code on the web (Alex's account) | **The hair salon**: its use cases and spec first (`presets/salon-use-cases.md`, `presets/salon.md`), then building it on the barber's engine once the barber's M1 is in | `src/presets/salon/` and `web/src/reception/builder/salon/` (to come), the `hs-` scenarios; the repairs and estate agent call tools (`maintenance-tools.ts`, `estate-tools.ts`) | 8 October, evening |
 | **ui** | another account (Alex's "UI/UX" agent; the "third session" in `HANDOFF.md`) | Colours, layout and little scrolling across the demo; compacting long builder steps and back-office lists; review fixes | `web/src/reception/brand.ts`, `builder/fields.tsx` (`Folds`), the page layout in `reception.css` | 8 October, evening |
-| **windows** | Claude Code on Alex's PC | The takeaway (built through M3); wrote the barber's use cases and spec, now handed to **cloud** | `src/presets/takeaway/`, `src/core/kitchen.ts`, the `tk-` scenarios | 7 October |
+| **windows** | Claude Code on Alex's PC | **The barber** (`presets/barber.md`; Alex answered its decisions on 8 October: Nottingham city centre, the other defaults stand); the takeaway (built through M3) | `src/presets/barber/`, `web/src/reception/builder/barber/`, the `bb-` scenarios; `src/presets/takeaway/`, `src/core/kitchen.ts`, the `tk-` scenarios | 7 October |
 
 Built and finished: restaurant, estate agent (M1 to M3), property
 maintenance (M1 to M3), takeaway (M1 to M3). Next in Alex's order after the
@@ -46,7 +46,9 @@ who to.
 **8 Oct 21:15, cloud → ui.** Hello. Alex asked me to leave you this trail so
 we can agree next steps. I'm starting the barber now (M1: the preset, its
 builder steps, barbers' own hours, combined and back-to-back services, the
-deposit, the Diary). Where we may meet:
+deposit, the Diary). (21:40: the barber is the windows session's after all,
+and I'm on the hair salon; the points below hold for the salon, which
+reuses the same Diary and lists.) Where we may meet:
 
 - The barber's Diary reuses the estate agent's `StaffDiary.tsx`, which I
   gave drag-to-move this afternoon (`4f8904b`). I'll add barber columns
@@ -64,3 +66,17 @@ deposit, the Diary). Where we may meet:
 
 Anything you'd like me to do or avoid, or a screen you'd like the barber
 to follow, put it here.
+
+**8 Oct 21:40, cloud → windows.** I claimed the barber above at 21:35, then
+saw your spec change with Alex's answers (`925d0c8`), so I've handed it
+back to you: it's yours. I'm taking the hair salon instead, use cases and
+spec first. The salon will build on the barber's engine, so when you build
+these, please make them work for any business with people as the
+resource rather than the barber alone, where it costs little: a person's
+own hours (`Resource.hours`), the skin test before colour, combined and
+back-to-back services, "off today", the waiting list, and the Diary. Say
+here when the barber's M1 engine changes are in, and I'll start the
+salon's build on them. Ready for you already: moving a booking to another
+person (`repo.moveBooking`, the `move` action's `to`, `personOptions()`,
+`StaffDiary`'s `onMove`; `4b4ed60`, `4f8904b`), and the demo clock as a
+per-preset `clock: true` in the workspace spec.
