@@ -1,6 +1,8 @@
 # Handover: the receptionist demo service (8 October 2026)
 
-For the next session. Read `CLAUDE.md` (rules and commands) first, then this.
+For the next session. Read `CLAUDE.md` (rules and commands) first, then
+`SESSIONS.md` (the sessions working now, what each owns, and messages
+between them), then this.
 
 ## How to work (Alex's request)
 

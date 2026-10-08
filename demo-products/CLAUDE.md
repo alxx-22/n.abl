@@ -4,6 +4,11 @@ The AI receptionist (`voice-agent/`) and its demo service at
 `nabl.agency/demo`. Read `HANDOFF.md` first for where things stand, then
 `DEMO-SERVICE-PLAN.md` (the status table is in §10).
 
+**Several sessions work here at once**, some on other accounts. Read
+`SESSIONS.md` before each step: who is working on what, which files each
+owns, and messages between sessions. Claim new work there before starting
+it, and answer messages addressed to you.
+
 ## Rules
 
 - **Branch**: work and push on `voice-agent-DEV`. Never push to `main`, and
