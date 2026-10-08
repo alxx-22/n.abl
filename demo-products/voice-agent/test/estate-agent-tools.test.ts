@@ -497,7 +497,7 @@ test('an offer\'s terms: asked for once when not given; the caller\'s own "subje
   // A valuation: "within three months" from the caller's own words when the receptionist leaves it out.
   const c = await call(t, '+447700900142');
   c.ctx.state.heard.push("Yes, I'm looking to sell, moving for work within three months.");
-  const v = await c.run('book_valuation', { date: THU, time: '10:00', name: 'Jo Bloggs', address: '12 Hawthorn Way', postcode: 'BK3 7XY', purpose: 'sale' });
+  const v = await c.run('book_valuation', { date: THU, time: '10:00', name: 'Jo Bloggs', address: '12 Hawthorn Way', postcode: 'BK3 7XY', purpose: 'sale', other_agent: 'none' });
   assert.equal(v.booked, true, JSON.stringify(v));
   const d = (await repo.getBookingByReference(t.id, String(v.reference)))!.details as Record<string, unknown>;
   // ...and why they're moving, without the when.
@@ -1013,7 +1013,7 @@ test('live slips, 8 October: the position from the caller\'s words, "Thursday" i
   {
     const { run, ctx } = await call(t, '+447700900136');
     ctx.state.heard.push("I'm looking for a valuation. Could we do Thursday at 10 am? I'm moving for work within three months.");
-    const v = { date: '2026-10-15', time: '10:00', name: 'Jo Bloggs', address: '12 Hawthorn Way', postcode: 'BK3 7XY' };
+    const v = { date: '2026-10-15', time: '10:00', name: 'Jo Bloggs', address: '12 Hawthorn Way', postcode: 'BK3 7XY', other_agent: 'none' };
     const first = await run('book_valuation', v);
     assert.equal(first.booked, false);
     assert.match(String(first.message), /they said Thursday, and the nearest Thursday is Thursday 8 October \(tomorrow\), not Thursday 15 October/);
@@ -1029,7 +1029,9 @@ test('live slips, 8 October: the position from the caller\'s words, "Thursday" i
     const v = { date: THU, time: '15:30', name: 'Bea Holt', address: '3 Elm Close', postcode: 'BK3 7XY' };
     const asked = await run('book_valuation', v);
     assert.equal(asked.booked, false);
-    assert.match(String(asked.message), /what's prompting the move and roughly when/);
+    assert.match(String(asked.message), /what's prompting the move and roughly when they'd like to be moved, and whether their home is on the market with another agent/);
+    // A placeholder is no name (live, 8 October: booked for "[Caller's Name]").
+    assert.match(String((await run('book_valuation', { ...v, name: "[Caller's Name]" })).message), /name/i);
     const anyway = await run('book_valuation', v);
     assert.equal(anyway.booked, true, `if they would rather not say: ${JSON.stringify(anyway)}`);
   }

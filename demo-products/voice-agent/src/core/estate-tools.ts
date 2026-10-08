@@ -728,10 +728,17 @@ async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<strin
   if (off) return { booked: false, message: off };
   const day = dayCheck(ctx, date);
   if (day) return { booked: false, message: day };
-  // Why and when they're moving tell the valuer how hot it is: asked once (live, 8 October: booked with neither).
-  if (!details.reason && !details.timescale && !ctx.state.gateAsked.includes('valuation:why')) {
+  // Why and when they're moving, and whether another agent has it, tell the valuer how hot it is and flag a possible
+  // double fee: asked once (live, 8 October: booked with none of them; then, asked why, still not the other agent).
+  const ask = [
+    ...(!details.reason && !details.timescale ? ["what's prompting the move and roughly when they'd like to be moved"] : []),
+    ...(args.other_agent === undefined ? ['whether their home is on the market with another agent'] : []),
+  ];
+  // Not an executor's: they're asked nothing more (go gently).
+  if (ask.length && !executor && !ctx.state.gateAsked.includes('valuation:why')) {
     ctx.state.gateAsked.push('valuation:why');
-    return { booked: false, message: "Not booked yet. Ask, once, what's prompting the move and roughly when they'd like to be moved, then call again with reason and timescale (or without them, if they'd rather not say)." };
+    const fill = [...(!details.reason && !details.timescale ? ['reason and timescale'] : []), ...(args.other_agent === undefined ? ['other_agent ("none" if not)'] : [])];
+    return { booked: false, message: `Not booked yet. Ask, once, ${ask.join(', and ')}, then call again with ${fill.join(' and ')} (or without them, if they'd rather not say).` };
   }
   const made = await ctx.repo.createBooking(
     t, { service: 'valuation', date, time, party_size: 1, name, phone, notes: null, staff, source: source(ctx), call_id: ctx.callId, details: JSON.parse(JSON.stringify(details)) }, ctx.now(),

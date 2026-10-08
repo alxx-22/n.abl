@@ -895,7 +895,8 @@ export const SCENARIOS: Scenario[] = [
       if (b) {
         expect(f, new Date(b.starts_at).getTime() === at('2026-10-08', '10:00').getTime(), `booked for ${new Date(b.starts_at).toISOString()}`);
         expect(f, b.resource_key === 'priya', `with ${b.resource_key}, not Priya`);
-        expect(f, /work/i.test(b.details?.reason ?? ''), `reason ${b.details?.reason}`);
+        // "Moving for work", in the receptionist's words or theirs: "relocation" is the same reason.
+        expect(f, /work|job|relocat/i.test(b.details?.reason ?? ''), `reason ${b.details?.reason}`);
         expect(f, /three|3/.test(b.details?.timescale ?? ''), `timescale ${b.details?.timescale}`);
         expect(f, /Harper/i.test(b.details?.other_agent ?? ''), `other agent ${b.details?.other_agent}`);
         expect(f, b.details?.dual_fee === true, 'no possible double-fee flag');
