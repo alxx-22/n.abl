@@ -1,0 +1,177 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "Sharp & Son",
+  "style": "Traditional barbering and wet shaves",
+  "town": "Kirkhill",
+  "address": "3 Mill Yard (example), Kirkhill",
+  "phone_display": "0115 496 0789",
+  "website": "",
+  "voice": "Puck",
+  "greeting": "Sharp & Son, you're through to the AI assistant on this demo line. Who are you booking with?"
+ },
+ "hours": {
+  "days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:30",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:30",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:30",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:30",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:30",
+      "close": "14:00"
+     }
+    ]
+   }
+  ],
+  "closures": [
+   {
+    "date": "2026-12-25",
+    "note": "Christmas Day"
+   }
+  ]
+ },
+ "team": [
+  {
+   "key": "ray",
+   "name": "Ray",
+   "aliases": ["Raymond"],
+   "days": [2,3,4,5,6],
+   "hours": [
+    {
+     "day": 6,
+     "open": "08:30",
+     "close": "12:00"
+    }
+   ],
+   "services": ["classic_cut","beard_trim","hot_towel_shave"],
+   "notes": "Forty years with the razor."
+  },
+  {
+   "key": "tom",
+   "name": "Tom",
+   "aliases": [],
+   "days": [3,4,5],
+   "hours": [],
+   "services": ["classic_cut","beard_trim"],
+   "notes": ""
+  }
+ ],
+ "services": [
+  {
+   "key": "classic_cut",
+   "name": "Classic cut",
+   "minutes": 30,
+   "price_pence": 2000,
+   "from": false,
+   "description": "Scissors and clippers, finished with a neck shave.",
+   "colour": false
+  },
+  {
+   "key": "beard_trim",
+   "name": "Beard trim",
+   "minutes": 20,
+   "price_pence": 1200,
+   "from": false,
+   "description": "Shaped, lined up and finished with oil.",
+   "colour": false
+  },
+  {
+   "key": "hot_towel_shave",
+   "name": "Hot towel shave",
+   "minutes": 30,
+   "price_pence": 2000,
+   "from": false,
+   "description": "A traditional straight-razor shave with hot towels.",
+   "colour": false
+  }
+ ],
+ "booking": {
+  "slot_minutes": 30,
+  "lead_minutes": 60,
+  "horizon_days": 14,
+  "walk_ins": false,
+  "group_max": 2,
+  "late_grace_minutes": 5,
+  "kids_under": null,
+  "under_16_with_adult": false
+ },
+ "money": {
+  "deposit_pence": 1000,
+  "deposit_required": true,
+  "notice_hours": 48,
+  "payment": "phone"
+ },
+ "policies": {
+  "skin_test": "six_months",
+  "fix_days": null,
+  "access": "Step-free from the street, with room for a wheelchair at every chair. Ask for a quiet time and we will book one.",
+  "parking": "There's no parking at the shop: the Lace Market and Victoria Centre car parks are a few minutes' walk.",
+  "products": "We sell the wax, clay, oils and beard balm we use in the shop.",
+  "tips": "Tips are welcome, and the barbers keep all of them.",
+  "careers": "We're always happy to hear from barbers and apprentices: drop your details in, or leave a message.",
+  "home_visits": "Ray visits care homes on Mondays: leave a message to arrange.",
+  "faqs": [
+   {
+    "q": "Do you do flat tops?",
+    "a": "Ray does, with a day's notice."
+   }
+  ]
+ },
+ "theme": {
+  "accent": "#2f6f4f",
+  "primary": "#1c1a17",
+  "background": "#0f0e0c",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

@@ -1,0 +1,281 @@
+{
+ "slug": "golden",
+ "name": "Sharp & Son",
+ "business_type": "barber",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Puck",
+ "greeting": "Sharp & Son, you're through to the AI assistant on this demo line. Who are you booking with?",
+ "summary": "Sharp & Son is a barber shop in Kirkhill: Traditional barbering and wet shaves.",
+ "address": "3 Mill Yard (example), Kirkhill",
+ "phone_display": "0115 496 0789",
+ "brand": {
+  "accent": "#2f6f4f",
+  "primary": "#1c1a17",
+  "background": "#0f0e0c",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Sharp & Son: Traditional barbering and wet shaves, at 3 Mill Yard (example), Kirkhill.",
+  "Tuesday to Friday: 8:30am till 5:30pm. Saturday: 8:30am till 2pm. Closed Monday and Sunday.",
+  "Barbers: Ray (forty years with the razor); Tom.",
+  "By appointment only.",
+  "A £10 deposit secures a booking and comes off the price. Free to cancel or move with 48 hours' notice; later than that, the deposit is kept.",
+  "Paid by card when booking."
+ ],
+ "opening_hours": [
+  {
+   "days": [2,3,4,5],
+   "open": "08:30",
+   "close": "17:30",
+   "label": "Open"
+  },
+  {
+   "days": [6],
+   "open": "08:30",
+   "close": "14:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [
+  {
+   "date": "2026-12-25",
+   "note": "Christmas Day"
+  }
+ ],
+ "booking": {
+  "services": [
+   {
+    "key": "classic_cut",
+    "label": "Classic cut",
+    "kind": "appointment",
+    "slot_minutes": 30,
+    "duration_minutes": 30,
+    "price_pence": 2000,
+    "description": "Scissors and clippers, finished with a neck shave.",
+    "windows": [
+     {
+      "days": [2,3,4,5],
+      "first": "08:30",
+      "last": "17:00"
+     },
+     {
+      "days": [6],
+      "first": "08:30",
+      "last": "13:30"
+     }
+    ],
+    "lead_minutes": 60,
+    "horizon_days": 14,
+    "deposit": {
+     "flat_pence": 1000
+    }
+   },
+   {
+    "key": "beard_trim",
+    "label": "Beard trim",
+    "kind": "appointment",
+    "slot_minutes": 30,
+    "duration_minutes": 20,
+    "price_pence": 1200,
+    "description": "Shaped, lined up and finished with oil.",
+    "windows": [
+     {
+      "days": [2,3,4,5],
+      "first": "08:30",
+      "last": "17:10"
+     },
+     {
+      "days": [6],
+      "first": "08:30",
+      "last": "13:40"
+     }
+    ],
+    "lead_minutes": 60,
+    "horizon_days": 14,
+    "deposit": {
+     "flat_pence": 1000
+    }
+   },
+   {
+    "key": "hot_towel_shave",
+    "label": "Hot towel shave",
+    "kind": "appointment",
+    "slot_minutes": 30,
+    "duration_minutes": 30,
+    "price_pence": 2000,
+    "description": "A traditional straight-razor shave with hot towels.",
+    "windows": [
+     {
+      "days": [2,3,4,5],
+      "first": "08:30",
+      "last": "17:00"
+     },
+     {
+      "days": [6],
+      "first": "08:30",
+      "last": "13:30"
+     }
+    ],
+    "lead_minutes": 60,
+    "horizon_days": 14,
+    "deposit": {
+     "flat_pence": 1000
+    }
+   }
+  ],
+  "resources": [
+   {
+    "key": "ray",
+    "label": "Ray",
+    "services": ["classic_cut","beard_trim","hot_towel_shave"],
+    "days": [2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Raymond"],
+    "hours": [
+     {
+      "day": 6,
+      "open": "08:30",
+      "close": "12:00"
+     }
+    ]
+   },
+   {
+    "key": "tom",
+    "label": "Tom",
+    "services": ["classic_cut","beard_trim"],
+    "days": [3,4,5],
+    "kind": "staff"
+   }
+  ]
+ },
+ "knowledge": [
+  {
+   "q": "How much is a cut? What are your prices?",
+   "a": "Classic cut £20 (30 minutes); Beard trim £12 (20 minutes); Hot towel shave £20 (30 minutes).",
+   "tags": ["price","prices","cost","how much","fade","cut","beard","shave"]
+  },
+  {
+   "q": "What is a classic cut?",
+   "a": "Classic cut: Scissors and clippers, finished with a neck shave. About 30 minutes, £20.",
+   "tags": ["classic cut","classic","cut"]
+  },
+  {
+   "q": "What is a beard trim?",
+   "a": "Beard trim: Shaped, lined up and finished with oil. About 20 minutes, £12.",
+   "tags": ["beard trim","beard","trim"]
+  },
+  {
+   "q": "What is a hot towel shave?",
+   "a": "Hot towel shave: A traditional straight-razor shave with hot towels. About 30 minutes, £20.",
+   "tags": ["hot towel shave","hot","towel","shave"]
+  },
+  {
+   "q": "Which days does each barber work?",
+   "a": "Ray: Tuesday, Wednesday, Thursday, Friday and Saturday (Saturday 8:30am to 12 noon). Tom: Wednesday, Thursday and Friday.",
+   "tags": ["days","working","in today","when","ray","tom"]
+  },
+  {
+   "q": "Who does what?",
+   "a": "Ray: Forty years with the razor.",
+   "tags": ["who","specialist","best","fade","shave","colour","ray","tom"]
+  },
+  {
+   "q": "Can I just walk in?",
+   "a": "We're appointments only, so please book a time.",
+   "tags": ["walk in","walk-in","drop in","queue","wait"]
+  },
+  {
+   "q": "Do you cut kids' hair?",
+   "a": "Yes.",
+   "tags": ["kids","children","child","son","daughter","boy","girl"]
+  },
+  {
+   "q": "Do you cut women's hair?",
+   "a": "Yes: the same services at the same prices as anyone, a short back and sides or a fade included.",
+   "tags": ["women","women's","ladies","girl","female","short hair"]
+  },
+  {
+   "q": "Do you do Afro and textured hair?",
+   "a": "Yes: any of our barbers.",
+   "tags": ["afro","textured","curly","black hair","twists","waves"]
+  },
+  {
+   "q": "Is there a charge for paying by card?",
+   "a": "No: there's no extra charge for paying by card.",
+   "tags": ["card","surcharge","fee","contactless","cash"]
+  },
+  {
+   "q": "What if I need to cancel or move my booking?",
+   "a": "A £10 deposit secures a booking and comes off the price. Free to cancel or move with 48 hours' notice; later than that, the deposit is kept.",
+   "tags": ["cancel","move","change","deposit","refund","notice"]
+  },
+  {
+   "q": "What if I'm running late?",
+   "a": "Up to 5 minutes late is fine; later than that we may need to move you to the next free time.",
+   "tags": ["late","running late","delayed","traffic"]
+  },
+  {
+   "q": "What if I'm not happy with my cut?",
+   "a": "Let us know and the owner will call you back to put it right.",
+   "tags": ["unhappy","not happy","wrong","fix","complaint","redo"]
+  },
+  {
+   "q": "Do I need a skin test for colour?",
+   "a": "We don't do colour.",
+   "tags": ["colour","dye","grey","skin test","patch test","allergy"]
+  },
+  {
+   "q": "Is the shop accessible?",
+   "a": "Step-free from the street, with room for a wheelchair at every chair. Ask for a quiet time and we will book one.",
+   "tags": ["wheelchair","access","step","disabled","quiet","autism","guide dog"]
+  },
+  {
+   "q": "Where can I park?",
+   "a": "There's no parking at the shop: the Lace Market and Victoria Centre car parks are a few minutes' walk.",
+   "tags": ["parking","park","car"]
+  },
+  {
+   "q": "Do you sell products?",
+   "a": "We sell the wax, clay, oils and beard balm we use in the shop.",
+   "tags": ["products","wax","clay","oil","balm","buy"]
+  },
+  {
+   "q": "Can I tip my barber?",
+   "a": "Tips are welcome, and the barbers keep all of them.",
+   "tags": ["tip","tips","tipping"]
+  },
+  {
+   "q": "Are you hiring?",
+   "a": "We're always happy to hear from barbers and apprentices: drop your details in, or leave a message.",
+   "tags": ["job","jobs","hiring","apprentice","apprenticeship","work"]
+  },
+  {
+   "q": "Do you do home visits?",
+   "a": "Ray visits care homes on Mondays: leave a message to arrange.",
+   "tags": ["home","visit","care home","house call"]
+  },
+  {
+   "q": "Do you do flat tops?",
+   "a": "Ray does, with a day's notice.",
+   "tags": []
+  }
+ ],
+ "policies": {
+  "deposit": "A £10 deposit secures a booking and comes off the price. Free to cancel or move with 48 hours' notice; later than that, the deposit is kept.",
+  "late": "More than 5 minutes late and the next free time may be offered instead.",
+  "card_payments": "There's no extra charge for paying by card."
+ },
+ "barber": {
+  "notice_hours": 48,
+  "deposit_required": true,
+  "late_grace_minutes": 5,
+  "group_max": 2,
+  "walk_ins": false,
+  "kids_under": null,
+  "under_16_with_adult": false,
+  "skin_test": "six_months"
+ }
+}

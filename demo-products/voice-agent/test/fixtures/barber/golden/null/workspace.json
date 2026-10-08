@@ -1,0 +1,38 @@
+{
+ "views": [
+  {
+   "id": "timeline",
+   "label": "Diary",
+   "of": "staff"
+  },
+  {
+   "id": "messages",
+   "label": "Messages"
+  },
+  {
+   "id": "calls",
+   "label": "Calls"
+  }
+ ],
+ "bookings": {
+  "resource": "barber",
+  "resources": "barbers",
+  "party": null,
+  "visit": {
+   "expected": "Booked",
+   "arrived": "In the chair",
+   "finished": "Done",
+   "no_show": "No-show"
+  },
+  "allergies": false,
+  "combine": false
+ },
+ "suggestions": [
+  "Can I get a skin fade with Marcus on Saturday morning?",
+  "Is anyone free for a cut tomorrow afternoon?",
+  "Do you cut women's hair? I want a short back and sides.",
+  "I need to cancel tomorrow's (Call as Ollie)"
+ ],
+ "resetLine": "bookings",
+ "clock": true
+}

@@ -1,0 +1,2806 @@
+{
+ "slug": "golden",
+ "name": "Name Name Name Name Name Name Name Name Name Name Name Name",
+ "business_type": "barber",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Charon",
+ "greeting": "Hello, you're through to the AI assistant on this demo line. Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Greeting Gree",
+ "summary": "Name Name Name Name Name Name Name Name Name Name Name Name is a barber shop in Town Town Town Town Town Town Town Town Town Town Town Town: Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Styl.",
+ "address": "Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address",
+ "phone_display": "0115 496 0789",
+ "brand": {
+  "accent": "#c8963e",
+  "primary": "#1c1a17",
+  "background": "#0f0e0c",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Name Name Name Name Name Name Name Name Name Name Name Name: Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Styl, at Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address.",
+  "Sunday: 10am till 3pm. Tuesday and Wednesday and Friday: 9am till 6pm. Thursday: 9am till 8pm. Saturday: 8am till 5pm. Closed Mondays.",
+  "12 barbers, including Barber 0 n n n n n n n n n n, Barber 1 n n n n n n n n n n and Barber 2 n n n n n n n n n n. Who does what: search_knowledge.",
+  "Appointments by phone, and walk-ins welcome when a chair is free: a booking comes first.",
+  "A £5 deposit is taken when booking if they can, and comes off the price; if not, they pay in the shop. Free to cancel or move with 24 hours' notice; later than that, the deposit is kept.",
+  "Paid in the shop, cash or card, or by card when booking."
+ ],
+ "opening_hours": [
+  {
+   "days": [0],
+   "open": "10:00",
+   "close": "15:00",
+   "label": "Open"
+  },
+  {
+   "days": [2,3,5],
+   "open": "09:00",
+   "close": "18:00",
+   "label": "Open"
+  },
+  {
+   "days": [4],
+   "open": "09:00",
+   "close": "20:00",
+   "label": "Open"
+  },
+  {
+   "days": [6],
+   "open": "08:00",
+   "close": "17:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [],
+ "booking": {
+  "services": [
+   {
+    "key": "service_0",
+    "label": "Service 0 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_1",
+    "label": "Service 1 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_2",
+    "label": "Service 2 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_3",
+    "label": "Service 3 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_4",
+    "label": "Service 4 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_5",
+    "label": "Service 5 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_6",
+    "label": "Service 6 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_7",
+    "label": "Service 7 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_8",
+    "label": "Service 8 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_9",
+    "label": "Service 9 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_10",
+    "label": "Service 10 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_11",
+    "label": "Service 11 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_12",
+    "label": "Service 12 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_13",
+    "label": "Service 13 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_14",
+    "label": "Service 14 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_15",
+    "label": "Service 15 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_16",
+    "label": "Service 16 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_17",
+    "label": "Service 17 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_18",
+    "label": "Service 18 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_19",
+    "label": "Service 19 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_20",
+    "label": "Service 20 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_21",
+    "label": "Service 21 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_22",
+    "label": "Service 22 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_23",
+    "label": "Service 23 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_24",
+    "label": "Service 24 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_25",
+    "label": "Service 25 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_26",
+    "label": "Service 26 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_27",
+    "label": "Service 27 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_28",
+    "label": "Service 28 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "service_29",
+    "label": "Service 29 name name name name name name name name name name",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 240,
+    "price_pence": 50000,
+    "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "11:00"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "14:00"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "16:00"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "13:00"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   }
+  ],
+  "resources": [
+   {
+    "key": "barber_0",
+    "label": "Barber 0 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_1",
+    "label": "Barber 1 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_2",
+    "label": "Barber 2 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_3",
+    "label": "Barber 3 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_4",
+    "label": "Barber 4 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_5",
+    "label": "Barber 5 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_6",
+    "label": "Barber 6 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_7",
+    "label": "Barber 7 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_8",
+    "label": "Barber 8 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_9",
+    "label": "Barber 9 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_10",
+    "label": "Barber 10 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "key": "barber_11",
+    "label": "Barber 11 n n n n n n n n n n",
+    "services": [
+     "service_0",
+     "service_1",
+     "service_2",
+     "service_3",
+     "service_4",
+     "service_5",
+     "service_6",
+     "service_7",
+     "service_8",
+     "service_9",
+     "service_10",
+     "service_11",
+     "service_12",
+     "service_13",
+     "service_14",
+     "service_15",
+     "service_16",
+     "service_17",
+     "service_18",
+     "service_19",
+     "service_20",
+     "service_21",
+     "service_22",
+     "service_23",
+     "service_24",
+     "service_25",
+     "service_26",
+     "service_27",
+     "service_28",
+     "service_29"
+    ],
+    "days": [0,1,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Alias one","Alias two","Alias three","Alias four"],
+    "hours": [
+     {
+      "day": 0,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 2,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 3,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 4,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 5,
+      "open": "10:00",
+      "close": "16:00"
+     },
+     {
+      "day": 6,
+      "open": "10:00",
+      "close": "16:00"
+     }
+    ]
+   }
+  ]
+ },
+ "knowledge": [
+  {
+   "q": "How much is a cut? What are your prices?",
+   "a": "Service 0 name name name name name name name name name name from £500 (240 minutes); Service 1 name name name name name name name name name name from £500 (240 minutes); Service 2 name name name name name name name name name name from £500 (240 minutes); Service 3 name name name name name name name name name name from £500 (240 minutes); Service 4 name name name name name name name name name name from £500 (240 minutes); Service 5 name name name name name name name name name name from £500 (240 minutes); Service 6 name name name name name name name name name name from £500 (240 minutes); Service 7 name name name name name name name name name name from £500 (240 minutes); Service 8 name name name name name name name name name name from £500 (240 minutes); Service 9 name name name name name name name name name name from £500 (240 minutes); Service 10 name name name name name name name name name name from £500 (240 minutes); Service 11 name name name name name name name name name name from £500 (240 minutes); Service 12 name name name name name name name name name name from £500 (240 minutes); Service 13 name name name name name name name name name name from £500 (240 minutes); Service 14 name name name name name name name name name name from £500 (240 minutes); Service 15 name name name name name name name name name name from £500 (240 minutes); Service 16 name name name name name name name name name name from £500 (240 minutes); Service 17 name name name name name name name name name name from £500 (240 minutes); Service 18 name name name name name name name name name name from £500 (240 minutes); Service 19 name name name name name name name name name name from £500 (240 minutes); Service 20 name name name name name name name name name name from £500 (240 minutes); Service 21 name name name name name name name name name name from £500 (240 minutes); Service 22 name name name name name name name name name name from £500 (240 minutes); Service 23 name name name name name name name name name name from £500 (240 minutes); Service 24 name name name name name name name name name name from £500 (240 minutes); Service 25 name name name name name name name name name name from £500 (240 minutes); Service 26 name name name name name name name name name name from £500 (240 minutes); Service 27 name name name name name name name name name name from £500 (240 minutes); Service 28 name name name name name name name name name name from £500 (240 minutes); Service 29 name name name name name name name name name name from £500 (240 minutes).",
+   "tags": ["price","prices","cost","how much","fade","cut","beard","shave"]
+  },
+  {
+   "q": "What is a service 0 name name name name name name name name name name?",
+   "a": "Service 0 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 0 name name name name name name name name name name",
+    "service",
+    "0",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 1 name name name name name name name name name name?",
+   "a": "Service 1 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 1 name name name name name name name name name name",
+    "service",
+    "1",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 2 name name name name name name name name name name?",
+   "a": "Service 2 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 2 name name name name name name name name name name",
+    "service",
+    "2",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 3 name name name name name name name name name name?",
+   "a": "Service 3 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 3 name name name name name name name name name name",
+    "service",
+    "3",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 4 name name name name name name name name name name?",
+   "a": "Service 4 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 4 name name name name name name name name name name",
+    "service",
+    "4",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 5 name name name name name name name name name name?",
+   "a": "Service 5 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 5 name name name name name name name name name name",
+    "service",
+    "5",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 6 name name name name name name name name name name?",
+   "a": "Service 6 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 6 name name name name name name name name name name",
+    "service",
+    "6",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 7 name name name name name name name name name name?",
+   "a": "Service 7 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 7 name name name name name name name name name name",
+    "service",
+    "7",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 8 name name name name name name name name name name?",
+   "a": "Service 8 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 8 name name name name name name name name name name",
+    "service",
+    "8",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 9 name name name name name name name name name name?",
+   "a": "Service 9 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 9 name name name name name name name name name name",
+    "service",
+    "9",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 10 name name name name name name name name name name?",
+   "a": "Service 10 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 10 name name name name name name name name name name",
+    "service",
+    "10",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 11 name name name name name name name name name name?",
+   "a": "Service 11 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 11 name name name name name name name name name name",
+    "service",
+    "11",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 12 name name name name name name name name name name?",
+   "a": "Service 12 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 12 name name name name name name name name name name",
+    "service",
+    "12",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 13 name name name name name name name name name name?",
+   "a": "Service 13 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 13 name name name name name name name name name name",
+    "service",
+    "13",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 14 name name name name name name name name name name?",
+   "a": "Service 14 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 14 name name name name name name name name name name",
+    "service",
+    "14",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 15 name name name name name name name name name name?",
+   "a": "Service 15 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 15 name name name name name name name name name name",
+    "service",
+    "15",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 16 name name name name name name name name name name?",
+   "a": "Service 16 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 16 name name name name name name name name name name",
+    "service",
+    "16",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 17 name name name name name name name name name name?",
+   "a": "Service 17 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 17 name name name name name name name name name name",
+    "service",
+    "17",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 18 name name name name name name name name name name?",
+   "a": "Service 18 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 18 name name name name name name name name name name",
+    "service",
+    "18",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 19 name name name name name name name name name name?",
+   "a": "Service 19 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 19 name name name name name name name name name name",
+    "service",
+    "19",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 20 name name name name name name name name name name?",
+   "a": "Service 20 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 20 name name name name name name name name name name",
+    "service",
+    "20",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 21 name name name name name name name name name name?",
+   "a": "Service 21 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 21 name name name name name name name name name name",
+    "service",
+    "21",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 22 name name name name name name name name name name?",
+   "a": "Service 22 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 22 name name name name name name name name name name",
+    "service",
+    "22",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 23 name name name name name name name name name name?",
+   "a": "Service 23 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 23 name name name name name name name name name name",
+    "service",
+    "23",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 24 name name name name name name name name name name?",
+   "a": "Service 24 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 24 name name name name name name name name name name",
+    "service",
+    "24",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 25 name name name name name name name name name name?",
+   "a": "Service 25 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 25 name name name name name name name name name name",
+    "service",
+    "25",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 26 name name name name name name name name name name?",
+   "a": "Service 26 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 26 name name name name name name name name name name",
+    "service",
+    "26",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 27 name name name name name name name name name name?",
+   "a": "Service 27 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 27 name name name name name name name name name name",
+    "service",
+    "27",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 28 name name name name name name name name name name?",
+   "a": "Service 28 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 28 name name name name name name name name name name",
+    "service",
+    "28",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "What is a service 29 name name name name name name name name name name?",
+   "a": "Service 29 name name name name name name name name name name: desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc About 240 minutes, from £500.",
+   "tags": [
+    "service 29 name name name name name name name name name name",
+    "service",
+    "29",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name",
+    "name"
+   ]
+  },
+  {
+   "q": "Which days does each barber work?",
+   "a": "Barber 0 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 1 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 2 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 3 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 4 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 5 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 6 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 7 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 8 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 9 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 10 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm). Barber 11 n n n n n n n n n n: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday and Saturday (Sunday 10am to 4pm, Tuesday 10am to 4pm, Wednesday 10am to 4pm, Thursday 10am to 4pm, Friday 10am to 4pm, Saturday 10am to 4pm).",
+   "tags": [
+    "days",
+    "working",
+    "in today",
+    "when",
+    "barber 0 n n n n n n n n n n",
+    "barber 1 n n n n n n n n n n",
+    "barber 2 n n n n n n n n n n",
+    "barber 3 n n n n n n n n n n",
+    "barber 4 n n n n n n n n n n",
+    "barber 5 n n n n n n n n n n",
+    "barber 6 n n n n n n n n n n",
+    "barber 7 n n n n n n n n n n",
+    "barber 8 n n n n n n n n n n",
+    "barber 9 n n n n n n n n n n",
+    "barber 10 n n n n n n n n n n",
+    "barber 11 n n n n n n n n n n"
+   ]
+  },
+  {
+   "q": "Who does what?",
+   "a": "Barber 0 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 1 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 2 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 3 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 4 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 5 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 6 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 7 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 8 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 9 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 10 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note. Barber 11 n n n n n n n n n n: notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes note.",
+   "tags": [
+    "who",
+    "specialist",
+    "best",
+    "fade",
+    "shave",
+    "colour",
+    "barber 0 n n n n n n n n n n",
+    "barber 1 n n n n n n n n n n",
+    "barber 2 n n n n n n n n n n",
+    "barber 3 n n n n n n n n n n",
+    "barber 4 n n n n n n n n n n",
+    "barber 5 n n n n n n n n n n",
+    "barber 6 n n n n n n n n n n",
+    "barber 7 n n n n n n n n n n",
+    "barber 8 n n n n n n n n n n",
+    "barber 9 n n n n n n n n n n",
+    "barber 10 n n n n n n n n n n",
+    "barber 11 n n n n n n n n n n"
+   ]
+  },
+  {
+   "q": "Can I just walk in?",
+   "a": "Walk-ins are welcome when a chair is free, but bookings come first, so it's worth booking a time.",
+   "tags": ["walk in","walk-in","drop in","queue","wait"]
+  },
+  {
+   "q": "Do you cut kids' hair?",
+   "a": "Yes: the kids' price is for under-12s. Under-16s come with an adult.",
+   "tags": ["kids","children","child","son","daughter","boy","girl"]
+  },
+  {
+   "q": "Do you cut women's hair?",
+   "a": "Yes: the same services at the same prices as anyone, a short back and sides or a fade included.",
+   "tags": ["women","women's","ladies","girl","female","short hair"]
+  },
+  {
+   "q": "Do you do Afro and textured hair?",
+   "a": "Yes: any of our barbers.",
+   "tags": ["afro","textured","curly","black hair","twists","waves"]
+  },
+  {
+   "q": "Is there a charge for paying by card?",
+   "a": "No: there's no extra charge for paying by card.",
+   "tags": ["card","surcharge","fee","contactless","cash"]
+  },
+  {
+   "q": "What if I need to cancel or move my booking?",
+   "a": "A £5 deposit is taken when booking if they can, and comes off the price; if not, they pay in the shop. Free to cancel or move with 24 hours' notice; later than that, the deposit is kept.",
+   "tags": ["cancel","move","change","deposit","refund","notice"]
+  },
+  {
+   "q": "What if I'm running late?",
+   "a": "Up to 10 minutes late is fine; later than that we may need to move you to the next free time.",
+   "tags": ["late","running late","delayed","traffic"]
+  },
+  {
+   "q": "What if I'm not happy with my cut?",
+   "a": "Let us know within 7 days and we'll put it right for free, with the same barber or another.",
+   "tags": ["unhappy","not happy","wrong","fix","complaint","redo"]
+  },
+  {
+   "q": "Do I need a skin test for colour?",
+   "a": "Yes: a quick skin test at least 48 hours before every colour, as the dye's instructions say. If you've ever reacted to hair dye, we won't colour your hair: speak to your GP or pharmacist.",
+   "tags": ["colour","dye","grey","skin test","patch test","allergy"]
+  },
+  {
+   "q": "Is the shop accessible?",
+   "a": "access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access access",
+   "tags": ["wheelchair","access","step","disabled","quiet","autism","guide dog"]
+  },
+  {
+   "q": "Where can I park?",
+   "a": "parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking parking park",
+   "tags": ["parking","park","car"]
+  },
+  {
+   "q": "Do you sell products?",
+   "a": "products products products products products products products products products products products products products products products products products products products products products products pr",
+   "tags": ["products","wax","clay","oil","balm","buy"]
+  },
+  {
+   "q": "Can I tip my barber?",
+   "a": "tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips",
+   "tags": ["tip","tips","tipping"]
+  },
+  {
+   "q": "Are you hiring?",
+   "a": "careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers careers care",
+   "tags": ["job","jobs","hiring","apprentice","apprenticeship","work"]
+  },
+  {
+   "q": "Do you do home visits?",
+   "a": "home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_visits home_vis",
+   "tags": ["home","visit","care home","house call"]
+  },
+  {
+   "q": "Question 0 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 1 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 2 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 3 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 4 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 5 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 6 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 7 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 8 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 9 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 10 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 11 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 12 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 13 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 14 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 15 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 16 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 17 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 18 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  },
+  {
+   "q": "Question 19 q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q q",
+   "a": "answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer answer ans",
+   "tags": []
+  }
+ ],
+ "policies": {
+  "deposit": "A £5 deposit is taken when booking if they can, and comes off the price; if not, they pay in the shop. Free to cancel or move with 24 hours' notice; later than that, the deposit is kept.",
+  "late": "More than 10 minutes late and the next free time may be offered instead.",
+  "card_payments": "There's no extra charge for paying by card."
+ },
+ "barber": {
+  "notice_hours": 24,
+  "deposit_required": false,
+  "late_grace_minutes": 10,
+  "group_max": 4,
+  "walk_ins": true,
+  "kids_under": 12,
+  "under_16_with_adult": true,
+  "skin_test": "every_time"
+ }
+}

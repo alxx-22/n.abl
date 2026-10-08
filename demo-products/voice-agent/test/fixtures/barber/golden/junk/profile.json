@@ -1,0 +1,155 @@
+{
+ "slug": "golden",
+ "name": "Your barber shop",
+ "business_type": "barber",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Charon",
+ "greeting": "Hello, you're through to the barber shop. I'm the AI assistant on this demo line. How can I help?",
+ "summary": "Your barber shop is a barber shop in Nottingham: Fades, classic cuts, beards and hot towel shaves.",
+ "address": "22 Hockley Row (example), Nottingham NG1",
+ "phone_display": "0115 496 0789",
+ "brand": {
+  "accent": "#c8963e",
+  "primary": "#1c1a17",
+  "background": "#0f0e0c",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Your barber shop: Fades, classic cuts, beards and hot towel shaves, at 22 Hockley Row (example), Nottingham NG1.",
+  "Sunday: 10am till 3pm. Tuesday and Wednesday and Friday: 9am till 6pm. Thursday: 9am till 8pm. Saturday: 8am till 5pm. Closed Mondays.",
+  "Appointments by phone, and walk-ins welcome when a chair is free: a booking comes first.",
+  "Free to cancel or move with 72 hours' notice.",
+  "Paid in the shop, cash or card, or by card when booking."
+ ],
+ "opening_hours": [
+  {
+   "days": [0],
+   "open": "10:00",
+   "close": "15:00",
+   "label": "Open"
+  },
+  {
+   "days": [2,3,5],
+   "open": "09:00",
+   "close": "18:00",
+   "label": "Open"
+  },
+  {
+   "days": [4],
+   "open": "09:00",
+   "close": "20:00",
+   "label": "Open"
+  },
+  {
+   "days": [6],
+   "open": "08:00",
+   "close": "17:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [],
+ "booking": {
+  "services": [],
+  "resources": []
+ },
+ "knowledge": [
+  {
+   "q": "How much is a cut? What are your prices?",
+   "a": ".",
+   "tags": ["price","prices","cost","how much","fade","cut","beard","shave"]
+  },
+  {
+   "q": "Can I just walk in?",
+   "a": "Walk-ins are welcome when a chair is free, but bookings come first, so it's worth booking a time.",
+   "tags": ["walk in","walk-in","drop in","queue","wait"]
+  },
+  {
+   "q": "Do you cut kids' hair?",
+   "a": "Yes: the kids' price is for under-12s. Under-16s come with an adult.",
+   "tags": ["kids","children","child","son","daughter","boy","girl"]
+  },
+  {
+   "q": "Do you cut women's hair?",
+   "a": "Yes: the same services at the same prices as anyone, a short back and sides or a fade included.",
+   "tags": ["women","women's","ladies","girl","female","short hair"]
+  },
+  {
+   "q": "Do you do Afro and textured hair?",
+   "a": "Yes: any of our barbers.",
+   "tags": ["afro","textured","curly","black hair","twists","waves"]
+  },
+  {
+   "q": "Is there a charge for paying by card?",
+   "a": "No: there's no extra charge for paying by card.",
+   "tags": ["card","surcharge","fee","contactless","cash"]
+  },
+  {
+   "q": "What if I need to cancel or move my booking?",
+   "a": "Free to cancel or move with 72 hours' notice.",
+   "tags": ["cancel","move","change","deposit","refund","notice"]
+  },
+  {
+   "q": "What if I'm running late?",
+   "a": "Up to 30 minutes late is fine; later than that we may need to move you to the next free time.",
+   "tags": ["late","running late","delayed","traffic"]
+  },
+  {
+   "q": "What if I'm not happy with my cut?",
+   "a": "Let us know within 7 days and we'll put it right for free, with the same barber or another.",
+   "tags": ["unhappy","not happy","wrong","fix","complaint","redo"]
+  },
+  {
+   "q": "Do I need a skin test for colour?",
+   "a": "We don't do colour.",
+   "tags": ["colour","dye","grey","skin test","patch test","allergy"]
+  },
+  {
+   "q": "Is the shop accessible?",
+   "a": "Step-free from the street, with room for a wheelchair at every chair. Ask for a quiet time and we will book one.",
+   "tags": ["wheelchair","access","step","disabled","quiet","autism","guide dog"]
+  },
+  {
+   "q": "Where can I park?",
+   "a": "There's no parking at the shop: the Lace Market and Victoria Centre car parks are a few minutes' walk.",
+   "tags": ["parking","park","car"]
+  },
+  {
+   "q": "Do you sell products?",
+   "a": "We sell the wax, clay, oils and beard balm we use in the shop.",
+   "tags": ["products","wax","clay","oil","balm","buy"]
+  },
+  {
+   "q": "Can I tip my barber?",
+   "a": "Tips are welcome, and the barbers keep all of them.",
+   "tags": ["tip","tips","tipping"]
+  },
+  {
+   "q": "Are you hiring?",
+   "a": "We're always happy to hear from barbers and apprentices: drop your details in, or leave a message.",
+   "tags": ["job","jobs","hiring","apprentice","apprenticeship","work"]
+  },
+  {
+   "q": "Do you do home visits?",
+   "a": "We don't do home visits.",
+   "tags": ["home","visit","care home","house call"]
+  }
+ ],
+ "policies": {
+  "deposit": "Free to cancel or move with 72 hours' notice.",
+  "late": "More than 30 minutes late and the next free time may be offered instead.",
+  "card_payments": "There's no extra charge for paying by card."
+ },
+ "barber": {
+  "notice_hours": 72,
+  "deposit_required": false,
+  "late_grace_minutes": 30,
+  "group_max": 1,
+  "walk_ins": true,
+  "kids_under": 12,
+  "under_16_with_adult": true,
+  "skin_test": "every_time"
+ }
+}

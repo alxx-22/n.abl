@@ -1,0 +1,533 @@
+{
+ "slug": "golden",
+ "name": "Kingsley's Barbers",
+ "business_type": "barber",
+ "timezone": "Europe/London",
+ "status": "demo",
+ "voice": "Charon",
+ "greeting": "Hello, you're through to Kingsley's Barbers. I'm the AI assistant on this demo line. How can I help?",
+ "summary": "Kingsley's Barbers is a barber shop in Nottingham: Fades, classic cuts, beards and hot towel shaves.",
+ "address": "22 Hockley Row (example), Nottingham NG1",
+ "phone_display": "0115 496 0789",
+ "brand": {
+  "accent": "#c8963e",
+  "primary": "#1c1a17",
+  "background": "#0f0e0c",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "core_facts": [
+  "Kingsley's Barbers: Fades, classic cuts, beards and hot towel shaves, at 22 Hockley Row (example), Nottingham NG1.",
+  "Sunday: 10am till 3pm. Tuesday and Wednesday and Friday: 9am till 6pm. Thursday: 9am till 8pm. Saturday: 8am till 5pm. Closed Mondays.",
+  "Barbers: Marcus (the owner: skin fades, Afro and textured hair, designs); Dan (classic cuts, beards and hot towel shaves); Jordan (cuts and kids); Amira (cuts, grey blending and beard colour).",
+  "Appointments by phone, and walk-ins welcome when a chair is free: a booking comes first.",
+  "A £5 deposit is taken when booking if they can, and comes off the price; if not, they pay in the shop. Free to cancel or move with 24 hours' notice; later than that, the deposit is kept.",
+  "Paid in the shop, cash or card, or by card when booking."
+ ],
+ "opening_hours": [
+  {
+   "days": [0],
+   "open": "10:00",
+   "close": "15:00",
+   "label": "Open"
+  },
+  {
+   "days": [2,3,5],
+   "open": "09:00",
+   "close": "18:00",
+   "label": "Open"
+  },
+  {
+   "days": [4],
+   "open": "09:00",
+   "close": "20:00",
+   "label": "Open"
+  },
+  {
+   "days": [6],
+   "open": "08:00",
+   "close": "17:00",
+   "label": "Open"
+  }
+ ],
+ "closures": [],
+ "booking": {
+  "services": [
+   {
+    "key": "classic_cut",
+    "label": "Classic cut",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 30,
+    "price_pence": 1800,
+    "description": "Scissors and clippers, finished with a neck shave.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:30"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "17:30"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:30"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:30"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "skin_fade",
+    "label": "Skin fade",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 45,
+    "price_pence": 2200,
+    "description": "Faded down to the skin at the back and sides, blended into the length on top.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:15"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "17:15"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:15"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:15"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "cut_and_beard",
+    "label": "Cut and beard",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 50,
+    "price_pence": 2800,
+    "description": "Any cut, with the beard shaped and lined up.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:10"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "17:10"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:10"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:10"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "beard_trim",
+    "label": "Beard trim",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 20,
+    "price_pence": 1200,
+    "description": "Shaped, lined up and finished with oil.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:40"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "17:40"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:40"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:40"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "hot_towel_shave",
+    "label": "Hot towel shave",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 30,
+    "price_pence": 2000,
+    "description": "A traditional straight-razor shave with hot towels.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:30"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "17:30"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:30"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:30"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "kids_cut",
+    "label": "Kids' cut",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 30,
+    "price_pence": 1300,
+    "description": "For under-12s.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:30"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "17:30"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:30"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:30"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "grey_blending",
+    "label": "Grey blending",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 45,
+    "price_pence": 2500,
+    "description": "Softens the grey without a flat colour; needs a skin test first.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:15"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "17:15"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:15"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:15"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   },
+   {
+    "key": "beard_colour",
+    "label": "Beard colour",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 30,
+    "price_pence": 1500,
+    "description": "Colour for the beard; needs a skin test first.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:30"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "17:30"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:30"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:30"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28,
+    "deposit": {
+     "flat_pence": 500
+    }
+   }
+  ],
+  "resources": [
+   {
+    "key": "marcus",
+    "label": "Marcus",
+    "services": ["classic_cut","skin_fade","cut_and_beard","beard_trim","hot_towel_shave","kids_cut","grey_blending","beard_colour"],
+    "days": [0,2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Marc"]
+   },
+   {
+    "key": "dan",
+    "label": "Dan",
+    "services": ["classic_cut","skin_fade","cut_and_beard","beard_trim","hot_towel_shave","kids_cut"],
+    "days": [2,3,4,5,6],
+    "kind": "staff",
+    "aliases": ["Danny"]
+   },
+   {
+    "key": "jordan",
+    "label": "Jordan",
+    "services": ["classic_cut","skin_fade","kids_cut"],
+    "days": [2,3,4,5,6],
+    "kind": "staff",
+    "hours": [
+     {
+      "day": 4,
+      "open": "09:00",
+      "close": "18:00"
+     }
+    ]
+   },
+   {
+    "key": "amira",
+    "label": "Amira",
+    "services": ["classic_cut","skin_fade","grey_blending","beard_colour"],
+    "days": [5,6],
+    "kind": "staff"
+   }
+  ]
+ },
+ "knowledge": [
+  {
+   "q": "How much is a cut? What are your prices?",
+   "a": "Classic cut £18 (30 minutes); Skin fade £22 (45 minutes); Cut and beard £28 (50 minutes); Beard trim £12 (20 minutes); Hot towel shave £20 (30 minutes); Kids' cut £13 (30 minutes); Grey blending from £25 (45 minutes); Beard colour £15 (30 minutes).",
+   "tags": ["price","prices","cost","how much","fade","cut","beard","shave"]
+  },
+  {
+   "q": "What is a classic cut?",
+   "a": "Classic cut: Scissors and clippers, finished with a neck shave. About 30 minutes, £18.",
+   "tags": ["classic cut","classic","cut"]
+  },
+  {
+   "q": "What is a skin fade?",
+   "a": "Skin fade: Faded down to the skin at the back and sides, blended into the length on top. About 45 minutes, £22.",
+   "tags": ["skin fade","skin","fade"]
+  },
+  {
+   "q": "What is a cut and beard?",
+   "a": "Cut and beard: Any cut, with the beard shaped and lined up. About 50 minutes, £28.",
+   "tags": ["cut and beard","cut","and","beard"]
+  },
+  {
+   "q": "What is a beard trim?",
+   "a": "Beard trim: Shaped, lined up and finished with oil. About 20 minutes, £12.",
+   "tags": ["beard trim","beard","trim"]
+  },
+  {
+   "q": "What is a hot towel shave?",
+   "a": "Hot towel shave: A traditional straight-razor shave with hot towels. About 30 minutes, £20.",
+   "tags": ["hot towel shave","hot","towel","shave"]
+  },
+  {
+   "q": "What is a kids' cut?",
+   "a": "Kids' cut: For under-12s. About 30 minutes, £13.",
+   "tags": ["kids' cut","kids'","cut"]
+  },
+  {
+   "q": "What is a grey blending?",
+   "a": "Grey blending: Softens the grey without a flat colour; needs a skin test first. About 45 minutes, from £25.",
+   "tags": ["grey blending","grey","blending"]
+  },
+  {
+   "q": "What is a beard colour?",
+   "a": "Beard colour: Colour for the beard; needs a skin test first. About 30 minutes, £15.",
+   "tags": ["beard colour","beard","colour"]
+  },
+  {
+   "q": "Which days does each barber work?",
+   "a": "Marcus: Sunday, Tuesday, Wednesday, Thursday, Friday and Saturday. Dan: Tuesday, Wednesday, Thursday, Friday and Saturday. Jordan: Tuesday, Wednesday, Thursday, Friday and Saturday (Thursday 9am to 6pm). Amira: Friday and Saturday.",
+   "tags": ["days","working","in today","when","marcus","dan","jordan","amira"]
+  },
+  {
+   "q": "Who does what?",
+   "a": "Marcus: The owner: skin fades, Afro and textured hair, designs. Dan: Classic cuts, beards and hot towel shaves. Jordan: Cuts and kids. Amira: Cuts, grey blending and beard colour.",
+   "tags": ["who","specialist","best","fade","shave","colour","marcus","dan","jordan","amira"]
+  },
+  {
+   "q": "Can I just walk in?",
+   "a": "Walk-ins are welcome when a chair is free, but bookings come first, so it's worth booking a time.",
+   "tags": ["walk in","walk-in","drop in","queue","wait"]
+  },
+  {
+   "q": "Do you cut kids' hair?",
+   "a": "Yes: the kids' price is for under-12s. Under-16s come with an adult.",
+   "tags": ["kids","children","child","son","daughter","boy","girl"]
+  },
+  {
+   "q": "Do you cut women's hair?",
+   "a": "Yes: the same services at the same prices as anyone, a short back and sides or a fade included.",
+   "tags": ["women","women's","ladies","girl","female","short hair"]
+  },
+  {
+   "q": "Do you do Afro and textured hair?",
+   "a": "Yes: Marcus specialises in Afro and textured hair.",
+   "tags": ["afro","textured","curly","black hair","twists","waves"]
+  },
+  {
+   "q": "Is there a charge for paying by card?",
+   "a": "No: there's no extra charge for paying by card.",
+   "tags": ["card","surcharge","fee","contactless","cash"]
+  },
+  {
+   "q": "What if I need to cancel or move my booking?",
+   "a": "A £5 deposit is taken when booking if they can, and comes off the price; if not, they pay in the shop. Free to cancel or move with 24 hours' notice; later than that, the deposit is kept.",
+   "tags": ["cancel","move","change","deposit","refund","notice"]
+  },
+  {
+   "q": "What if I'm running late?",
+   "a": "Up to 10 minutes late is fine; later than that we may need to move you to the next free time.",
+   "tags": ["late","running late","delayed","traffic"]
+  },
+  {
+   "q": "What if I'm not happy with my cut?",
+   "a": "Let us know within 7 days and we'll put it right for free, with the same barber or another.",
+   "tags": ["unhappy","not happy","wrong","fix","complaint","redo"]
+  },
+  {
+   "q": "Do I need a skin test for colour?",
+   "a": "Yes: a quick skin test at least 48 hours before every colour, as the dye's instructions say. If you've ever reacted to hair dye, we won't colour your hair: speak to your GP or pharmacist.",
+   "tags": ["colour","dye","grey","skin test","patch test","allergy"]
+  },
+  {
+   "q": "Is the shop accessible?",
+   "a": "Step-free from the street, with room for a wheelchair at every chair. Ask for a quiet time and we will book one.",
+   "tags": ["wheelchair","access","step","disabled","quiet","autism","guide dog"]
+  },
+  {
+   "q": "Where can I park?",
+   "a": "There's no parking at the shop: the Lace Market and Victoria Centre car parks are a few minutes' walk.",
+   "tags": ["parking","park","car"]
+  },
+  {
+   "q": "Do you sell products?",
+   "a": "We sell the wax, clay, oils and beard balm we use in the shop.",
+   "tags": ["products","wax","clay","oil","balm","buy"]
+  },
+  {
+   "q": "Can I tip my barber?",
+   "a": "Tips are welcome, and the barbers keep all of them.",
+   "tags": ["tip","tips","tipping"]
+  },
+  {
+   "q": "Are you hiring?",
+   "a": "We're always happy to hear from barbers and apprentices: drop your details in, or leave a message.",
+   "tags": ["job","jobs","hiring","apprentice","apprenticeship","work"]
+  },
+  {
+   "q": "Do you do home visits?",
+   "a": "We don't do home visits.",
+   "tags": ["home","visit","care home","house call"]
+  }
+ ],
+ "policies": {
+  "deposit": "A £5 deposit is taken when booking if they can, and comes off the price; if not, they pay in the shop. Free to cancel or move with 24 hours' notice; later than that, the deposit is kept.",
+  "late": "More than 10 minutes late and the next free time may be offered instead.",
+  "card_payments": "There's no extra charge for paying by card."
+ },
+ "barber": {
+  "notice_hours": 24,
+  "deposit_required": false,
+  "late_grace_minutes": 10,
+  "group_max": 4,
+  "walk_ins": true,
+  "kids_under": 12,
+  "under_16_with_adult": true,
+  "skin_test": "every_time"
+ }
+}

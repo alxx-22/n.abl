@@ -1,0 +1,32 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the barber shop a name."
+ },
+ {
+  "step": "services",
+  "level": "warning",
+  "message": "Junk has no price: callers will hear it's free."
+ },
+ {
+  "step": "services",
+  "level": "error",
+  "message": "Every service needs a name."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Every barber needs a name."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Every barber needs a name."
+ },
+ {
+  "step": "services",
+  "level": "warning",
+  "message": "No barber does Junk, so it can't be booked."
+ }
+]
