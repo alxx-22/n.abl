@@ -1103,6 +1103,14 @@ test('the office notice: "emergencies only" gives no times and logs the rest for
   assert.match(c.sent.at(-1)!.body, /Storm Ellen: emergencies only today\. We'll call you to book a time/);
   const found = await c.run('job', { action: 'find', reference: logged.reference });
   assert.equal(found.jobs[0].status, 'logged; the office will call to book a time');
+  // Live, 8 October: taken as a message instead, the repair never reached the board. Now it is logged too.
+  const sam = await call(storm, SAM);
+  await sam.run('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
+  const msg = await sam.run('take_message', { name: 'Sam Ortiz', message: 'Several slates have slipped on the roof after the wind. No water coming in.', category: 'job' });
+  assert.equal(msg.taken, true);
+  assert.ok(msg.job_logged, JSON.stringify(msg));
+  const fromMsg = (await repo.listJobs(t.id, { reference: msg.job_logged }))[0];
+  assert.deepEqual([fromMsg.property_key, fromMsg.status, fromMsg.flags.includes('callback')], ['elm_14', 'new', true]);
   // A burst pipe is still an emergency: paged, not logged.
   const burst = await call(storm, '+447700900503');
   await burst.run('find_property', { postcode: 'NG7', number: '89', street: 'Wrenbury' });

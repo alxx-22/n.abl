@@ -633,6 +633,18 @@ export class CallSession extends EventEmitter<CallEvents> {
   }
 
   /**
+   * Safety advice said without safety_advice ever being used (live, 8 October: a Polish caller was told to get out and
+   * ring 0800 111 999, but nothing was logged and the number never texted). As the call ends, the incident is logged
+   * and the number texted, as the tool would have.
+   */
+  private async safetyLogged(): Promise<void> {
+    const s = this.state.safety;
+    if (!this.opts.tenant.profile.maintenance || !s?.spoken || s.incident) return;
+    this.record('system', { event: 'safety_logged_at_end', kind: s.kind });
+    await runTool('safety_advice', { kind: s.kind }, this.toolContext()).catch(() => {});
+  }
+
+  /**
    * A takeaway's caller with a severe allergic reaction: once 999 has been
    * said, the tools open and the manager gets an urgent message with what the
    * caller said, linked to their order today if they have one.
@@ -736,18 +748,9 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.held.push(...keep);
   }
 
-  private async handleTools(s: LiveSession, calls: FunctionCall[]): Promise<void> {
-    // What the receptionist has said so far this turn counts too: it often
-    // says a home's must-say line and asks for times in one breath, before
-    // the turn's words are final.
-    // The caller's words that led to the call are heard before it runs: a tool that checks
-    // what they said (an address, "I'm collecting") must not miss their last line.
-    if (this.callerBuf.trim() && !this.agentBuf.trim()) this.flushCaller();
-    const partial = this.agentBuf.trim();
-    if (partial && (this.state.estate || this.state.maintenance || this.state.takeaway)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
-    this.noteSafetySaid();
-    this.noteReaction();
-    const ctx: ToolContext = {
+  /** What a tool sees of this call. */
+  private toolContext(): ToolContext {
+    return {
       tenant: this.opts.tenant,
       repo: this.opts.repo,
       now: () => this.now(),
@@ -764,6 +767,20 @@ export class CallSession extends EventEmitter<CallEvents> {
         this.record('action', a);
       },
     };
+  }
+
+  private async handleTools(s: LiveSession, calls: FunctionCall[]): Promise<void> {
+    // What the receptionist has said so far this turn counts too: it often
+    // says a home's must-say line and asks for times in one breath, before
+    // the turn's words are final.
+    // The caller's words that led to the call are heard before it runs: a tool that checks
+    // what they said (an address, "I'm collecting") must not miss their last line.
+    if (this.callerBuf.trim() && !this.agentBuf.trim()) this.flushCaller();
+    const partial = this.agentBuf.trim();
+    if (partial && (this.state.estate || this.state.maintenance || this.state.takeaway)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
+    this.noteSafetySaid();
+    this.noteReaction();
+    const ctx = this.toolContext();
     const responses = [];
     for (const c of calls) {
       // A change or cancellation answers a yes too: only "book it now" is reminded (remindToBook).
@@ -928,6 +945,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.flushCaller();
     this.flushAgent(false);
     this.raiseHeld(false);
+    await this.safetyLogged();
     this.session?.removeAllListeners();
     this.session?.close();
     const finalOutcome = this.deriveOutcome(outcome);

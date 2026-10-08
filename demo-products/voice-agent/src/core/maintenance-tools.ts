@@ -937,14 +937,15 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   const w = date && isIsoDate(date) ? windowNamed(m, args.window, date) : undefined;
   if (!date || !isIsoDate(date) || !w) {
     const free = freeWindows(m, await ctx.repo.listJobs(ctx.tenant.id), { trade, gas, district: p.district, from: l.date, now: l });
-    return { booked: false, message: 'Offer these windows and call again with the date and window they choose.', windows: free.map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date) })) };
+    // A window's extra is a homeowner's: a client or an insurer is billed on its own terms (live, 8 October: an insurer was told "£30 extra").
+    return { booked: false, message: 'Offer these windows and call again with the date and window they choose.', windows: free.map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date, homeowner) })) };
   }
   const jobs = await ctx.repo.listJobs(ctx.tenant.id);
   const tooSoon = date < l.date || (date === l.date && minutesOf(w.from) < minutesOf(l.time) + m.visits.notice_hours * 60);
   const c = tooSoon ? null : checkWindow(m, jobs, { date, window: w.key, trade, gas, district: p.district });
   if (!c || !c.ok) {
     const free = freeWindows(m, jobs, { trade, gas, district: p.district, from: l.date, now: l });
-    return { booked: false, message: `That window isn't free${tooSoon ? ' (too soon)' : ''}. Offer these instead.`, windows: free.map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date) })) };
+    return { booked: false, message: `That window isn't free${tooSoon ? ' (too soon)' : ''}. Offer these instead.`, windows: free.map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date, homeowner) })) };
   }
   const e = c.engineers[0];
   const price = homeowner ? m.prices.callout_pence + w.premium_pence : null;
@@ -968,7 +969,7 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   ctx.action({ kind: 'job_created', title: `${cap(priority)} · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · ${windowWords(w, date, l.date)} · ${e.first_name} · ref ${job.reference}`, data: { reference: job.reference } });
   return {
     booked: true, reference: job.reference, reference_spoken: spokenReference(job.reference), priority,
-    when: windowWords(w, date, l.date), engineer: e.first_name,
+    when: windowWords(w, date, l.date, homeowner), engineer: e.first_name,
     ...(price ? { price: `${money(price)}${incVat(m)} call-out, with the first hour` } : {}),
     text_sent: Boolean(phone),
     remind: m.visits.adult_present ? 'Someone over 18 needs to be in.' : undefined,
@@ -1184,7 +1185,8 @@ async function checkWindowsTool(args: Args, ctx: ToolContext): Promise<Record<st
   const from = str(args.date) && isIsoDate(str(args.date)!) && str(args.date)! > l.date ? str(args.date)! : l.date;
   const free = freeWindows(m, await ctx.repo.listJobs(ctx.tenant.id), { trade, gas: bool(args.gas) ?? false, district: p?.district, from, now: l });
   if (!free.length) return { windows: [], message: 'Nothing free in the next three weeks: take a message for the office.' };
-  return { windows: free.map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date) })), note: 'Offer two or three; never an exact time.' };
+  const homeowner = !insurerCalling(ctx) && (!p || p.client === null);
+  return { windows: free.map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date, homeowner) })), note: 'Offer two or three; never an exact time.' };
 }
 
 // ── Safety certificates ───────────────────────────────────────────────────
@@ -1434,12 +1436,18 @@ export async function maintenanceMessage(args: Args, ctx: ToolContext): Promise<
   });
   ctx.state.messageTaken = true;
   if (category === 'fraud') ctx.state.fraudReported = true;
+  // An emergencies-only day: a repair taken as a message is logged for the call back too, so it is on the board
+  // (live, 8 October: slipped slates went down as a message and never reached the jobs).
+  const logged = p.maintenance.notice?.emergencies_only && category === 'job' && ctx.state.property && !ctx.state.committed.length && body
+    ? await createJob({ action: 'create', description: body, name, phone: str(args.phone) }, ctx).catch(() => null)
+    : null;
   const member = p.team?.find((t) => t.key === staff);
   const mobile = normaliseUkPhone(member?.mobile);
   if (urgency === 'urgent' && mobile) await smsTo(ctx, mobile, `${p.name} URGENT message from ${name} (${displayUkPhone(phone)}): ${body}`);
   ctx.action({ kind: 'message_taken', title: `Message for ${member?.first_name ?? 'the office'} · ${category}`, detail: `${name}: ${body}${phone ? ` · ${displayUkPhone(phone)}` : ''}` });
   return {
     taken: true, for: member?.first_name ?? 'the office', urgency, note: urgency === 'urgent' ? 'Tell them it has gone to the team straight away.' : 'Tell them the office will call back.',
+    ...(logged?.reference ? { job_logged: logged.reference, reference_spoken: logged.reference_spoken, logged: logged.say ?? 'Logged for the office to call back and book.' } : {}),
     ...(await atTheDoor(ctx, `${body} ${ctx.state.heard.slice(-3).join(' ')}`)),
     ...(await dampByMessage(ctx, body)),
   };

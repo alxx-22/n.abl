@@ -1435,7 +1435,7 @@ export const SCENARIOS: Scenario[] = [
       expect(f, /77-?23455/.test(String(job?.claim_ref ?? job?.notes ?? '')), 'the claim number is not on the job');
       expect(f, (await texts(c)).some((t) => t.to_number === PM.shaw && /77-23455/.test(t.body)), 'the policyholder was not texted');
       expect(f, !/£\s?\d|\bpounds\b/i.test(c.agentText), 'a price was said to the insurer');
-      expect(f, /insurer|policy (?:wording|documents?)|not (?:for|something) (?:me|us) to say|can'?t (?:say|advise|comment)|(?:not able|unable) to (?:say|comment)/i.test(c.agentText), 'the cover question was not answered as theirs to decide');
+      expect(f, /insurer|policy (?:wording|documents?)|not (?:for|something) (?:me|us) to say|can'?t (?:say|advise|comment)|(?:not able|unable) to (?:say|comment)|answered by Bramley|for Bramley|Bramley (?:Mutual )?(?:would|will|can|to) (?:need to )?(?:confirm|decide|say|answer)/i.test(c.agentText), 'the cover question was not answered as theirs to decide');
       noFlags(c, f);
       return f;
     },

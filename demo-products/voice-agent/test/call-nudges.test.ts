@@ -287,6 +287,21 @@ test('a gas smell on a repairs call: the advice is asked for at once, anything e
   assert.equal(c.reminders().filter((t) => /may be describing an emergency/.test(t)).length, 1, 'never twice');
 });
 
+test('gas advice said in Polish without the safety step: the reminder says their language, and as the call ends it is logged and the number texted', async () => {
+  // Live, 8 October: the advice was given, but safety_advice never used, so nothing was logged and no text went.
+  const phone = '+447700900889';
+  const c = await call(fernhill, phone);
+  c.caller('Dzień dobry, czuję gaz w kuchni, bardzo mocno. Co mam robić?');
+  await c.agent('Proszę natychmiast opuścić mieszkanie i zadzwonić z zewnątrz pod numer 0800 111 999. Powtarzam: 0800 111 999.');
+  assert.match(c.reminders().find((t) => /may be describing an emergency/.test(t)) ?? '', /speaking another language/);
+  assert.ok(!c.flags().includes('safety_delayed'), 'advice in Polish, with the number, is the advice');
+  await c.end();
+  const sent = await repo.db.query<{ body: string }>(`select body from public.voice_messages where call_id = $1 and kind = 'sms' and to_number = $2`, [c.id(), phone]);
+  assert.ok(sent.some((m) => /0800 111 999/.test(m.body)), JSON.stringify(sent));
+  const incident = (await repo.listIncidents(fernhill.id)).find((i) => i.caller_phone === phone);
+  assert.ok(incident?.advised_at, 'logged, with when it was said');
+});
+
 test('a repairs call: a key safe code is kept out of the transcript, and an estate call gets none of the safety reminders', async () => {
   const c = await call(fernhill, '+447700900501');
   c.caller('The key safe code is 4719 if the engineer needs it.');
