@@ -736,6 +736,40 @@ test('demo: an estate agency\'s sales: milestones, dates, updates, keys on compl
   assert.deepEqual((await dan.call('GET', path)).data.answers.listings, before, 'the saved homes are untouched');
 });
 
+test('demo: an estate agency: a home\'s status changed in Properties keeps its sale in step, and a withdrawn home put back tells its back-up buyers', async () => {
+  assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Rhys Dale', company: 'Dale Homes' });
+  const rhys = client('10.0.0.17');
+  assert.equal((await rhys.call('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+  const made = await rhys.call('POST', '/demo/api/workspaces', { preset: 'estate_agent' });
+  const path = `/demo/api/workspaces/${made.data.id}`;
+  assert.equal((await rhys.call('POST', `${path}/start`)).status, 200);
+  const sales = async () => app.repo.listSales(made.data.id);
+  const texts = async (phone: string) => (await rhys.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
+  const status = (k: string, to: string) => rhys.call('PATCH', `${path}/listings/${k}`, { action: 'status', status: to });
+  const listing = async (k: string) => (await app.repo.listingState(made.data.id, k))!;
+  // A home with a sale going through: not "under offer" or "completed" by hand; exchanged ticks the sale's exchange too.
+  const going = (await sales()).find((x) => x.status === 'progressing' && x.listing_key !== 'kingfisher_3')!;
+  assert.equal((await status(going.listing_key, 'under_offer')).status, 409);
+  assert.equal((await status(going.listing_key, 'completed')).status, 409);
+  assert.equal((await status(going.listing_key, 'exchanged')).status, 200);
+  const exchanged = (await sales()).find((x) => x.id === going.id)!;
+  assert.equal(exchanged.status, 'exchanged');
+  assert.ok(exchanged.milestones.find((m) => m.key === 'exchange')!.done_at);
+  // Exchanged: it can't simply go back on the market, as from Sales progress.
+  assert.equal((await status(going.listing_key, 'available')).status, 409);
+  assert.equal((await listing(going.listing_key)).status, 'exchanged');
+  // Withdrawn (its sale falls through), then back on the market: the back-up buyer hears, as from Sales progress.
+  const backup = (await app.repo.listBuyers(made.data.id)).find((b) => (b.details.backup_for ?? []).includes('kingfisher_3'))!;
+  assert.equal((await status('kingfisher_3', 'withdrawn')).status, 200);
+  assert.equal((await sales()).find((x) => x.listing_key === 'kingfisher_3')!.status, 'fell_through');
+  const back = await status('kingfisher_3', 'available');
+  assert.equal(back.status, 200, JSON.stringify(back.data));
+  assert.match(back.data.message, /\d+ buyers? (?:has|have) been texted/);
+  assert.match((await texts(backup.phone)).at(-1), /3 Kingfisher Way is back on the market/);
+  assert.ok((await listing('kingfisher_3')).back_on_market_at);
+});
+
 test('demo: a repairs contractor end to end: start fills the board, staff dispatch and move jobs on, a certificate is booked from the register, reset refills it', async () => {
   assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
   const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Helen Ward', company: 'Fernhill Property Care' });

@@ -839,8 +839,24 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
     case 'status': {
       const status = String(b.status ?? '') as ListingStatus;
       if (!STATUSES.includes(status)) throw new HttpError(400, 'Unknown status.');
-      // Back on the market after an offer or a sale: callers hear it is back, with the reason the seller agreed to share.
-      const back = status === 'available' && (live.status === 'under_offer' || live.status === 'sale_agreed');
+      // A sale going through or exchanged: the home's status stays in step with it, as Sales progress keeps it (review, 8 October).
+      const sale = (await repo.listSales(t.id)).find((x) => x.listing_key === key && (x.status === 'progressing' || x.status === 'exchanged') && x.id);
+      if (sale?.status === 'exchanged' && status !== 'exchanged') {
+        throw new HttpError(409, status === 'completed'
+          ? `${where}: completion is recorded in Sales progress, with the keys.`
+          : `${where} has exchanged: a sale that falls through after exchange is one for the solicitors.`);
+      }
+      if (sale?.status === 'progressing') {
+        if (status === 'under_offer') throw new HttpError(409, `${where} has a sale agreed. If it has fallen through, put the home back on the market first.`);
+        if (status === 'completed') throw new HttpError(409, `${where}: completion is recorded in Sales progress, with the keys.`);
+        if (status === 'exchanged') {
+          const milestones = sale.milestones.map((m) => (m.key === 'exchange' && !m.done_at ? { ...m, done_at: now.toISOString() } : m));
+          await repo.updateSale(t.id, sale.id!, { milestones, status: 'exchanged' }, { by: 'staff', at: now, what: 'exchange done (from Properties)' });
+        }
+      }
+      // Back on the market after an offer, a sale, or a sale that fell through and was withdrawn: callers hear it is back,
+      // with the reason the seller agreed to share, and the back-up buyers are told.
+      const back = status === 'available' && (live.status === 'under_offer' || live.status === 'sale_agreed' || live.status === 'withdrawn');
       await repo.setListing(t.id, key, { status, ...(back ? { back_on_market_at: now } : {}) }, 'staff', undefined, now);
       // Back on the market or withdrawn: a sale in progress on it has fallen through, so another offer can be accepted.
       let fell = 0;
