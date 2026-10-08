@@ -44,4 +44,4 @@ commit, when it's fixed or shown to be wrong.
 - [x] [medium] Call-out invoice ignored: job billed twice, and stays due after cancel (`/home/user/n.abl/src/server/maintenance.ts:330`) Fixed in `223107c`.
 - [low] Gas record offer says '(£30 extra)' but the price excludes it; tenant told too (`/home/user/n.abl/src/core/maintenance-tools.ts:1370`)
 - [low] Safety log shows every non-gated incident as 'Not confirmed as said', with no follow-up job (`/home/user/n.abl/src/core/maintenance-tools.ts:1422`)
-- [low] Bank holidays are working days: Christmas windows booked, emergencies paged in-hours (`/home/user/n.abl/src/core/maintenance-tools.ts:366`)
+- [x] [low] Bank holidays are working days: Christmas windows booked, emergencies paged in-hours (`/home/user/n.abl/src/core/maintenance-tools.ts:366`) Fixed in `0716ac0`.
