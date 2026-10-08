@@ -1510,8 +1510,10 @@ export class Repo {
       params,
     );
     // A cancelled job no longer holds a certificate's renewal, however it was cancelled (review, 8 October).
+    // Its call-out, if not yet paid, is voided rather than left owing; one already paid stays for the office to refund.
     if (rows[0] && patch.status === 'cancelled') {
       await this.db.query(`update public.voice_mt_certificates set booked_job = null where tenant_id = $1 and booked_job = $2`, [tenantId, reference]);
+      await this.db.query(`update public.voice_mt_invoices set status = 'void' where tenant_id = $1 and job_ref = $2 and kind = 'callout' and status = 'due'`, [tenantId, reference]);
     }
     return rows[0] ? mapJob(rows[0]) : null;
   }

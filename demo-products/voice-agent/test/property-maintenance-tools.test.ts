@@ -641,6 +641,40 @@ test('invoices and demo payments: found by number or from the payer\'s phone, pa
   assert.match(toolDeclarations(t).find((x) => x.name === 'take_demo_payment')!.description!, /an invoice or a homeowner's call-out/);
 });
 
+test('a call-out paid when booking: the finished job bills only what is left, and a cancelled job\'s unpaid call-out is voided', async () => {
+  const { preset, profile } = builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'pm-fernhill')!);
+  profile.maintenance!.prices.card_on_booking = true;
+  const t = await repo.upsertTenant({ ...profile, slug: 'pm-callout-once' });
+  await repo.insertSeed(t.id, preset.seed(t.profile, NOW, 7));
+  const home = (await repo.listMtProperties(t.id)).find((p) => p.client === null && p.occupant.phone && p.occupant.name)!;
+  const h = await call(t, home.occupant.phone);
+  h.ctx.demoCards = [{ number: '1234567890123456', expiry: '12/34', cvc: '123', result: 'approve' as const }];
+  await h.run('find_property', { postcode: home.district, number: home.number, street: home.street });
+  h.say('The call-out is ninety five pounds including VAT, with the first hour.');
+  const book = async (description: string, i: number) => {
+    const offer = await h.run('job', { action: 'create', description, trade: 'plumbing', name: home.occupant.name });
+    const w = offer.windows[i];
+    const r = await h.run('job', { action: 'create', description, trade: 'plumbing', name: home.occupant.name, date: w.date, window: w.window });
+    assert.equal(r.booked, true, JSON.stringify(r));
+    return { ref: r.reference as string, date: w.date as string };
+  };
+  const tap = await book('Dripping kitchen tap', 0);
+  await h.run('take_demo_payment', { for: 'callout', card_number: '1234567890123456' });
+  const act = (ref: string, b: Record<string, unknown>, at = NOW) => jobAction(repo, t, ref, b, async () => {}, at);
+  const visit = new Date(`${tap.date}T15:00:00Z`);
+  await act(tap.ref, { action: 'done', notes: 'New cartridge fitted; an extra half hour.' }, visit);
+  // £160 for the job in all: the call-out paid when booking comes off, so the invoice is for the rest.
+  const paid = (await repo.listInvoices(t.id, { job: tap.ref }))[0].amount_pence;
+  assert.match(await act(tap.ref, { action: 'invoice', amount_pence: 16000 }, visit), /invoice INV-\d+ sent/);
+  const bills = await repo.listInvoices(t.id, { job: tap.ref });
+  assert.deepEqual(bills.map((i) => [i.kind, i.amount_pence, i.status]).sort(), [['callout', paid, 'paid'], ['job', 16000 - paid, 'due']]);
+  // A second job, its call-out not yet paid, cancelled by the office: the call-out is voided, not left owing.
+  const leak = await book('Leak under the bath', 1);
+  assert.equal((await repo.listInvoices(t.id, { job: leak.ref }))[0].status, 'due');
+  await act(leak.ref, { action: 'cancel', notify: false });
+  assert.equal((await repo.listInvoices(t.id, { job: leak.ref }))[0].status, 'void');
+});
+
 test("damp and mould at Meadowbank: no blame, no health advice, the vulnerability noted with consent, a possible hazard for Meadowbank to decide, and Awaab's clock started", async () => {
   const t = await fernhill('pm-damp');
   const NADIA = '+447700900571'; // Flat 2, 7 Larkspur Walk, a Meadowbank tenant

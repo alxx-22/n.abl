@@ -334,8 +334,17 @@ export async function jobAction(
       // The office bills a finished job: the job's own price, or the call-out. A client pays on account; a homeowner within a week.
       if (job.status !== 'done') throw new HttpError(409, 'Only a finished job can be invoiced.');
       const client = job.client_key ? m.clients.find((c) => c.key === job.client_key) : undefined;
-      const amount = Math.round(Number(b.amount_pence) || job.price_pence || m.prices.callout_pence);
-      if (amount <= 0 || amount > 5_000_000) throw new HttpError(400, 'Give an amount.');
+      const total = Math.round(Number(b.amount_pence) || job.price_pence || m.prices.callout_pence);
+      if (total <= 0 || total > 5_000_000) throw new HttpError(400, 'Give an amount.');
+      // The call-out billed when booking (paid or still due) comes off: the job is never billed twice (review, 8 October).
+      const callouts = (await repo.listInvoices(t.id, { job: job.reference })).filter((i) => i.kind === 'callout' && i.status !== 'void');
+      const billed = callouts.reduce((n, i) => n + i.amount_pence, 0);
+      const amount = total - billed;
+      if (amount <= 0) {
+        const r = await update(job.reference, { status: 'invoiced' }, `invoiced: covered by the call-out ${callouts.map((i) => i.reference).join(', ')}`, { by: 'office', from: ['done'] });
+        if (!r) throw new HttpError(409, 'That job has moved on: refresh and try again.');
+        return `${job.reference}: the call-out (${callouts.map((i) => i.reference).join(', ')}) covers it; nothing more to bill.`;
+      }
       const issued = today.date;
       const due = new Date(`${issued}T12:00:00Z`);
       due.setUTCDate(due.getUTCDate() + (client ? m.prices.account_days : 7));
@@ -344,7 +353,7 @@ export async function jobAction(
       const inv = await repo.createInvoice(t.id, {
         job_ref: job.reference, property_key: job.property_key, client_key: job.client_key,
         payer: client ? { name: client.contact.name, phone: client.contact.phone } : { name: p?.occupant.name ?? job.reporter.name, phone: p?.occupant.phone ?? job.reporter.phone },
-        kind: 'job', description: `${job.description} (${where})`, amount_pence: amount, status: 'due', issued, due: due.toISOString().slice(0, 10),
+        kind: 'job', description: `${job.description} (${where})${billed ? `, less the £${(billed / 100).toFixed(2)} call-out already billed` : ''}`, amount_pence: amount, status: 'due', issued, due: due.toISOString().slice(0, 10),
         paid_at: null, paid_how: null, card_last4: null, auth_code: null,
       });
       await text(inv.payer.phone, `${t.profile.name}: invoice ${inv.reference} for £${(amount / 100).toFixed(2)} (${job.reference}, ${where}). Due by ${spokenDate(inv.due)}. (Demo)`);
