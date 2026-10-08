@@ -184,10 +184,11 @@ export function allergensOf(menu: Menu, item: MenuItem, modifiers: ModifierOptio
 }
 
 const ALLERGEN_WORDS: [RegExp, Allergen[]][] = [
-  [/dairy|lactose|milk|cheese|cream|butter/, ['milk']],
+  [/dairy|lactose|milk|cheese|cream|butter(?!nut)/, ['milk']],
   [/gluten|coeliac|celiac|wheat|barley|\brye\b/, ['gluten']],
   [/peanut/, ['peanuts']],
-  [/(?<!pea)nut|almond|walnut|hazelnut|cashew|pistachio|pecan/, ['nuts']],
+  // Whole words only: coconut, nutmeg, doughnut and butternut squash are not tree nuts, and peanuts have their own line.
+  [/\b(?:tree ?)?nuts?\b|almond|walnut|hazelnut|cashew|pistachio|pecan|brazil ?nuts?|macadamia/, ['nuts']],
   [/shellfish/, ['crustaceans', 'molluscs']],
   [/crustacean|prawn|shrimp|crab|lobster|langoustine/, ['crustaceans']],
   [/mollusc|mussel|oyster|squid|clam|scallop|octopus/, ['molluscs']],

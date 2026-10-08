@@ -412,3 +412,21 @@ test('restaurant tools: a place that shuts at midnight takes a collection for ha
   const table = await runTool('check_availability', { date: '2026-10-02', time: '23:00', party_size: 2 }, ctx);
   assert.equal(table.available, true, JSON.stringify(table));
 });
+
+test('restaurant tools: a lunch already over is not "fully booked" when a caller asks about tonight', async () => {
+  // Friday at 4pm, an empty diary: lunch finished at 2:30.
+  const t = await restaurant('tools-lunch-over');
+  const { ctx } = await call(t);
+  const r = await runTool('check_availability', { date: '2026-10-02', time: '19:30', party_size: 2 }, ctx);
+  assert.equal(r.available, true);
+  assert.equal(r.fully_booked_note, undefined, String(r.fully_booked_note));
+});
+
+test('restaurant tools: coconut, nutmeg and doughnuts are not tree nuts', async () => {
+  const { allergensNamed } = await import('../src/domain/menu.ts');
+  for (const w of ['coconut', 'nutmeg', 'a doughnut', 'butternut squash']) assert.deepEqual(allergensNamed(w), [], w);
+  assert.deepEqual(allergensNamed('a nut allergy'), ['nuts']);
+  assert.deepEqual(allergensNamed('tree nuts'), ['nuts']);
+  assert.deepEqual(allergensNamed('peanuts'), ['peanuts']);
+  assert.deepEqual(allergensNamed('walnuts and peanuts').sort(), ['nuts', 'peanuts']);
+});

@@ -294,9 +294,11 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   const result: AvailabilityResult = { ...base, available: false, alternatives: [] };
 
   // Each sitting that has nothing left, by its name ("lunch"), so a full lunch is never mistaken for a closed one.
+  // Today, a sitting already over is over, not full: "lunch is fully booked" at 3pm misled every caller about tonight.
   const wd = weekdayOf(req.date);
+  const earliest = req.date === today ? minutesOf(toLocal(req.now, profile.timezone).time) + (service.lead_minutes ?? 0) : -1;
   const full = service.windows
-    .filter((w) => w.days.includes(wd))
+    .filter((w) => w.days.includes(wd) && minutesOf(w.last) >= earliest)
     .filter((w) => !free.some((t) => t >= w.first && t <= w.last))
     .map((w) => {
       const first = minutesOf(w.first);
