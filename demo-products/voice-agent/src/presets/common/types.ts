@@ -3,7 +3,7 @@
 // server can read a name, a voice or a greeting without knowing which kind of
 // business it is.
 
-import type { Booking, Buyer, Certificate, Incident, Invoice, Job, ListingState, MtProperty, Offer, OrderLine, Quote, Sale } from '../../domain/types.ts';
+import type { Booking, Buyer, Certificate, Incident, Invoice, Job, ListingState, MtProperty, Offer, OrderLine, OrderRequest, Quote, Sale } from '../../domain/types.ts';
 
 export interface ServicePeriod {
   label: string;
@@ -136,6 +136,8 @@ export interface SeedOrder {
   out_at?: Date | null;
   /** What the driver needs to know: "Cash: change from £20" (the takeaway's). */
   pay_note?: string | null;
+  /** A caller's request waiting for staff (the takeaway's): Accept or Refuse on the ticket. */
+  requests?: OrderRequest[];
 }
 
 export interface SeedMessage {

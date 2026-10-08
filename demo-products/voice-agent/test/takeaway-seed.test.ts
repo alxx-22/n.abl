@@ -86,6 +86,9 @@ test('the seeded evening: a Friday at 7pm is busy, honest about it, and every de
     assert.deepEqual(chris.map((o) => [o.status, o.fulfilment]), [['completed', 'delivery']]);
     assert.ok(chris[0].due_at.getTime() <= FRIDAY_7PM.getTime() - 20 * 60000, `delivered at ${chris[0].due_at.toISOString()}`);
     assert.equal(orders.filter((o) => [TK_PEOPLE.parent, TK_PEOPLE.outer, TK_PEOPLE.refused].some((p) => o.phone === p.phone)).length, 0, 'the other numbers are free');
+    // One change waits on a ticket not yet started, for staff to accept or refuse.
+    const asked = orders.filter((o) => o.requests?.length);
+    assert.deepEqual(asked.map((o) => [o.status, o.requests![0].kind, o.requests![0].what, o.requests![0].answer]), [['confirmed', 'change', 'no onions on the burger, please', null]]);
     // Straight after Start, "how long tonight?" is about 45 to 50 minutes for collection.
     const t = await started(`tk-seed-${seed}`, FRIDAY_7PM, seed);
     const w = await wait(t, FRIDAY_7PM);

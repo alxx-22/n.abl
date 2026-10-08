@@ -176,6 +176,15 @@ export function planTakeawaySeed(profile: TenantProfile, now: Date, seed: number
   // Amy's is out with the first driver.
   const amy = orders.find((x) => x.phone === TK_PEOPLE.amy.phone);
   if (amy && amy.status === 'out_for_delivery') amy.driver = drivers[0];
+  // One caller has rung back to change an order not yet started: it waits on the ticket for Accept or Refuse.
+  // Chosen, not drawn, so every other order stays as it was.
+  const burger = (x: SeedOrder) => x.lines.some((l) => /burger/.test(l.item_key));
+  const waiting = orders.filter((x) => x.status === 'confirmed' && x.due_at.getTime() > now.getTime() && !Object.values(TK_PEOPLE).some((p) => p.phone === x.phone));
+  const change = waiting.filter(burger).sort((a, b) => a.due_at.getTime() - b.due_at.getTime())[0] ?? waiting.sort((a, b) => a.due_at.getTime() - b.due_at.getTime())[0];
+  if (change) {
+    const what = burger(change) ? 'no onions on the burger, please' : 'add a can of Coke, please';
+    change.requests = [{ kind: 'change', what, phone: change.phone, at: new Date(now.getTime() - 3 * MIN).toISOString(), answer: null, answered_at: null }];
+  }
   orders.sort((a, b) => a.created_at!.getTime() - b.created_at!.getTime());
   orders.forEach((x, i) => (x.reference = String(101 + i)));
   return { bookings: [], orders, messages };

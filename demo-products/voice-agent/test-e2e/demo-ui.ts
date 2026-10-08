@@ -971,6 +971,31 @@ async function walkTakeaway({ shot }: Walk) {
     await page.waitForSelector('.toast:has-text("delivered")', { timeout: 10000 });
   }
 
+  // A caller's change waiting on a ticket: accepted, and the customer is texted.
+  await page.click('.tabs [role=tab]:has-text("Kitchen")');
+  const asked = page.locator('.ticket .request', { has: page.locator('button:has-text("Accept")') }).first();
+  if (!(await asked.count())) throw new Error('no request waiting on the kitchen board');
+  await asked.scrollIntoViewIfNeeded();
+  await shot(page, 'workspace-request');
+  await asked.locator('button:has-text("Accept")').click();
+  await page.waitForSelector('.toast:has-text("accepted")', { timeout: 10000 });
+  await calm();
+
+  // Menu tonight: a dish sold out, and delivery paused; then back to business as usual.
+  await page.click('.tabs [role=tab]:has-text("Menu tonight")');
+  await page.waitForSelector('.tonight');
+  await page.locator('.tonight .chip', { hasText: /^Cheeseburger$/ }).click();
+  await page.waitForSelector('.toast:has-text("sold out tonight")', { timeout: 10000 });
+  await calm();
+  await page.click('label:has-text("Delivery is paused tonight") input');
+  await page.waitForSelector('.toast:has-text("Delivery paused")', { timeout: 10000 });
+  await page.waitForSelector('.tonight .chip.out');
+  await shot(page, 'workspace-menu-tonight');
+  await calm();
+  await page.click('label:has-text("Nothing: business as usual") input');
+  await page.waitForSelector('.toast:has-text("No notice")', { timeout: 10000 });
+  await calm();
+
   // Call as Amy, whose delivery is out with Kai.
   await page.getByLabel('Call as').selectOption({ label: 'Amy Clarke, with a delivery out with Kai' });
   await page.waitForSelector('.phone-number:has-text("07700 900801")');

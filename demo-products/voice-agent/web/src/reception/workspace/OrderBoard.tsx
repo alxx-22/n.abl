@@ -11,7 +11,7 @@ import type { LiveOrder, LiveState } from '../types.ts';
 import type { WorkspaceSpec } from './spec.ts';
 
 type OrdersSpec = NonNullable<WorkspaceSpec['orders']>;
-const REQUEST: Record<NonNullable<LiveOrder['requests']>[number]['kind'], string> = { cancel: 'Cancel?', change: 'Change?', send_missing: 'Send out?' };
+const REQUEST: Record<NonNullable<LiveOrder['requests']>[number]['kind'], string> = { cancel: 'Asked to cancel', change: 'Asked to change', send_missing: 'Missing, send out' };
 type Column = { status: LiveOrder['status']; label: string };
 
 /** What an order is once it has gone: collected, or delivered. */

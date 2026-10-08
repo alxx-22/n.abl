@@ -1279,12 +1279,12 @@ export class Repo {
         const fulfilment = o.fulfilment ?? 'collection';
         await q.query(
           `insert into public.voice_orders (tenant_id, reference, name, phone, fulfilment, due_at, ready_at, address, postcode, lines, subtotal_pence,
-             delivery_fee_pence, total_pence, allergy_notes, status, payment_status, source, created_at, driver, out_at, pay_note)
-           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13, $14, $15, $16, 'seed', $17, $18, $19, $20)`,
+             delivery_fee_pence, total_pence, allergy_notes, status, payment_status, source, created_at, driver, out_at, pay_note, requests)
+           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13, $14, $15, $16, 'seed', $17, $18, $19, $20, $21::jsonb)`,
           [tenantId, o.reference, o.name, o.phone, fulfilment, o.due_at, o.ready_at ?? (fulfilment === 'collection' ? o.due_at : null),
             o.address ?? null, o.postcode ?? null, JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence ?? 0, o.total_pence,
             o.allergy_notes, o.status ?? 'confirmed', o.payment_status ?? 'unpaid', o.created_at ?? new Date(o.due_at.getTime() - 50 * 60000),
-            o.driver ?? null, o.out_at ?? null, o.pay_note ?? null],
+            o.driver ?? null, o.out_at ?? null, o.pay_note ?? null, JSON.stringify(o.requests ?? [])],
         );
       }
       for (const m of plan.messages) {

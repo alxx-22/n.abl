@@ -346,7 +346,8 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .tl-now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--danger); pointer-events: none; }
 
 .kitchen { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; align-items: start; }
-.kitchen.with-out { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+/* A takeaway's five columns keep a readable width and scroll sideways in their panel, rather than squeeze. */
+.kitchen.with-out { grid-template-columns: repeat(5, minmax(180px, 1fr)); overflow-x: auto; padding-bottom: 4px; }
 /* A takeaway's drivers: a column each, then what is waiting for one. */
 .drivers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: start; }
 .drivers .ticket footer { flex-wrap: wrap; }
@@ -557,7 +558,8 @@ svg.house .door { fill: var(--accent); }
 
 /* A takeaway's Menu tonight: the notice, then each section's dishes to switch off. */
 .tonight { display: grid; gap: 12px; max-width: 760px; }
-.tonight select { margin-left: 6px; }
+.tonight .choice label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tonight select { width: auto; min-width: 0; margin-left: 4px; }
 .tonight-section h4 { margin: 6px 0; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .tonight .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .tonight .chip { border-radius: 999px; padding: 4px 12px; font-size: 13px; }
