@@ -123,7 +123,10 @@
   "kitchen": {
    "last_orders_minutes": 120,
    "late_after_minutes": 15,
-   "missing_items": "manager"
+   "missing_items": "manager",
+   "big_order_mains": 6,
+   "catering_over_mains": 15,
+   "mains": {}
   },
   "pay_driver": "cash_or_card"
  },

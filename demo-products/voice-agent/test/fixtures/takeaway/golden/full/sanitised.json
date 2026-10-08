@@ -112,7 +112,8 @@
  },
  "kitchen": {
   "last_orders_minutes": 30,
-  "big_order_mains": 8
+  "big_order_mains": 8,
+  "catering_over_mains": 20
  },
  "menu": {
   "categories": [

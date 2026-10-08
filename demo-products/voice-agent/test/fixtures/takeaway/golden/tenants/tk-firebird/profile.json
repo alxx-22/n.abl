@@ -951,7 +951,33 @@
   "kitchen": {
    "last_orders_minutes": 15,
    "late_after_minutes": 15,
-   "missing_items": "manager"
+   "missing_items": "manager",
+   "big_order_mains": 6,
+   "catering_over_mains": 15,
+   "mains": {
+    "classic_burger": 1,
+    "cheeseburger": 1,
+    "double_cheeseburger": 1,
+    "chicken_burger": 1,
+    "spicy_chicken_burger": 1,
+    "veggie_burger": 1,
+    "hot_wings": 1,
+    "chicken_strips": 1,
+    "popcorn_chicken": 1,
+    "two_piece": 1,
+    "family_bucket": 1,
+    "chicken_wrap": 1,
+    "spicy_chicken_wrap": 1,
+    "halloumi_wrap": 1,
+    "margherita": 1,
+    "pepperoni": 1,
+    "bbq_chicken": 1,
+    "hot_and_spicy": 1,
+    "veggie_supreme": 1,
+    "burger_meal": 1,
+    "chicken_box": 1,
+    "pizza_night": 2
+   }
   },
   "pay_driver": "cash_or_card",
   "pay_on_phone": ["+447700900804"]
