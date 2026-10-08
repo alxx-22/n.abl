@@ -843,6 +843,7 @@ async function walkMaintenance({ shot }: Walk) {
   await page.click('.clock-pop button[type=submit]');
   await page.waitForSelector('.demo-clock > button:has-text("Demo time")');
   await page.click('.tabs [role=tab]:has-text("Jobs")');
+  await calm();
   await shot(page, 'workspace-clock-night');
 
   // The office's day: a notice every call hears, and an engineer off sick whose jobs need moving.
@@ -853,9 +854,11 @@ async function walkMaintenance({ shot }: Walk) {
   await page.waitForSelector('.office-notice.on');
   await page.locator('.dispatch-grid tbody tr').first().getByRole('button', { name: 'Off sick today' }).click();
   await page.waitForSelector('.dispatch-grid .badge:has-text("Off sick")');
+  await calm();
   await shot(page, 'workspace-office-notice');
   await page.click('.tabs [role=tab]:has-text("Jobs")');
   await page.waitForSelector('.jobs .office-notice.on');
+  await calm();
   await shot(page, 'workspace-office-jobs');
 
   // Narrow screen.

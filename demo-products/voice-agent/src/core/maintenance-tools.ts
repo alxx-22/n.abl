@@ -177,6 +177,9 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
     else if (!street && named(p, building)) score += 3;
     if (nums.length) score += nums[0] === houseNumber(p) ? 3 : nums.includes(houseNumber(p)) ? 1 : -5;
     if (flat && !new RegExp(`flat\\s*${flat}\\b`, 'i').test(p.number)) score -= 2;
+    // Rung from the occupant's own number: "Flat 4, NG7" is enough (live, 8 October: a leaseholder at Riverside Court
+    // wasn't found from that, was taken as a new customer, and his block's door entry fault was priced to him).
+    if (ctx.callerPhone && p.occupant.phone === ctx.callerPhone && (pc || flat || nums.length)) score += 3;
     return { p, score };
   }).filter((x) => x.score >= (street && nums.length ? 6 : 4)).sort((a, b) => b.score - a.score);
   if (!scored.length) {
@@ -184,7 +187,7 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
     return {
       found: 0,
       message: m.customers.homeowners
-        ? "Not on our books. If it's their own home, carry on as a new customer: take the address and postcode for the job. If they rent, ask who their landlord or agent is."
+        ? `Not on our books${street ? '' : ' from that'}. ${street ? '' : "Ask for the rest of the address (the street, or the building's name) and search again first. "}If it's their own home, carry on as a new customer: take the address and postcode for the job. If they rent, ask who their landlord or agent is.`
         : 'Not on our books. Ask who their landlord or agent is, and take a message.',
     };
   }
@@ -225,7 +228,8 @@ const TRADE_WORDS: [string, RegExp][] = [
   ['gas_heating', /\bboiler\b|\bheating\b|\bradiators?\b|\bhot water\b|\bthermostat\b|\bpilot\b|\bgas (?:fire|hob|cooker)\b/i],
   ['damp_mould', /\bdamp\b|\bmould\b|\bmold\b|\bcondensation\b|\bblack spots?\b/i],
   ['drainage', /\bdrains?\b|\bblock(?:ed|age)\b|\bsewage\b|\bgully\b|\boverflowing\b|\bslow(?:-| )draining\b/i],
-  ['electrical', /\b(?:smoke|heat|carbon monoxide|co|fire) alarms?\b|\bsockets?\b|\blights?\b|\bfuse\b|\btrip(?:s|ped|ping)?\b|\belectric(?:s|ity|al)?\b|\bpower\b|\bswitch\b|\bextractor\b|\bconsumer unit\b/i],
+  // A door entry system before carpentry's "door" (live, 8 October: a buzzer that won't release the door went to a joiner).
+  ['electrical', /\bdoor ?entry\b|\bentry ?(?:phone|system)\b|\bintercom\b|\bbuzzer\b|\b(?:smoke|heat|carbon monoxide|co|fire) alarms?\b|\bsockets?\b|\blights?\b|\bfuse\b|\btrip(?:s|ped|ping)?\b|\belectric(?:s|ity|al)?\b|\bpower\b|\bswitch\b|\bextractor\b|\bconsumer unit\b/i],
   ['plumbing', /\bleak\w*\b|\btaps?\b|\btoilet\b|\bpipes?\b|\bwater\b|\bshower\b|\bsink\b|\bcistern\b|\bburst\b|\bdrip\w*\b|\bflush\w*\b/i],
   ['roofing', /\broof\b|\btiles?\b|\bgutters?\b|\bchimney\b|\bslates?\b|\bflashing\b/i],
   ['glazing', /\bwindows?\b|\bglass\b|\bpanes?\b|\bglazing\b|\bboard(?:ed|ing)? up\b|\bdouble glaz/i],
@@ -390,7 +394,8 @@ async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string,
   const words = [str(args.description), str(args.answers)].filter(Boolean).join('. ');
   if (!words) return { done: false, message: 'Ask what the problem is, in their words.' };
   const key = str(args.property) ?? ctx.state.property;
-  const p = key ? await ctx.repo.getMtProperty(ctx.tenant.id, key) : null;
+  const named = key ? await propertyNamed(ctx, key) : null;
+  const p = named ? found(ctx, named) : null;
   if (TRAPPED.test(words)) return liftTrapped(ctx, p, words);
   const t = triageCall(m, words, ctx.state.heard, { vulnerable: p?.vulnerable, date: local(ctx).date });
   if (t.priority === 'emergency' && t.trade) ctx.state.emergencyTrade = t.trade;
@@ -554,18 +559,55 @@ function policyholderOf(v: unknown): { name: string; phone: string } | null {
   return phone && name ? { name, phone } : null;
 }
 
+function found(ctx: ToolContext, p: MtProperty): MtProperty {
+  if (ctx.state.property !== p.key) {
+    ctx.state.property = p.key;
+    ctx.state.role = roleAt(ctx, p);
+  }
+  return p;
+}
+
+/**
+ * A property on file at an address said in full ("Flat 4, Riverside Court, 2 Weaver Lane"): its street, its
+ * number, and the same flat or none. Only one match counts, so a new home is never mistaken for another.
+ */
+function onFile(all: MtProperty[], address: string, district?: string): MtProperty | null {
+  const said = ` ${streetCore(address)} `;
+  const numbers: string[] = address.match(/\d+/g) ?? [];
+  const flatOf = (s: string) => /(?:flat|apartment)\s*(\w+)/i.exec(s)?.[1]?.toLowerCase();
+  const flat = flatOf(address);
+  const hits = all.filter((p) => {
+    if (district && soundKey(p.district) !== soundKey(district)) return false;
+    const core = streetCore(p.street);
+    return Boolean(core) && said.includes(` ${core} `) && numbers.includes(houseNumber(p)) && flatOf(p.number) === flat;
+  });
+  return hits.length === 1 ? hits[0] : null;
+}
+
+/** A property by its key, or by the address the model passed in its place. */
+async function propertyNamed(ctx: ToolContext, key: string): Promise<MtProperty | null> {
+  const p = await ctx.repo.getMtProperty(ctx.tenant.id, key);
+  if (p || !/\d/.test(key) || !/[a-z]{3}/i.test(key)) return p;
+  const district = /\b([A-Z]{1,2}\d[A-Z\d]?)(?:\s*\d[A-Z]{2})?\s*$/i.exec(key.trim())?.[1];
+  return onFile(await ctx.repo.listMtProperties(ctx.tenant.id), key, district);
+}
+
 /** The property a job is for: the one found this call, one named, or a new homeowner's from the address given. */
 async function propertyFor(args: Args, ctx: ToolContext): Promise<MtProperty | { reply: Record<string, unknown> }> {
   const m = mt(ctx);
   const key = str(args.property) ?? ctx.state.property;
   if (key) {
-    const p = await ctx.repo.getMtProperty(ctx.tenant.id, key);
-    if (p) return p;
+    const p = await propertyNamed(ctx, key);
+    if (p) return found(ctx, p);
   }
   const pc = postcodeOf(args.postcode);
   const address = str(args.address);
   if (!pc || !address) return { reply: { done: false, message: 'Find the property first with find_property, or for a new customer give address and postcode.' } };
   if (!m.districts.includes(pc.district)) return { reply: { done: false, outside: true, message: `We don't cover ${pc.district}: say so kindly.` } };
+  // Already on our books at that address: never added again as a new home (live, 8 October: a leaseholder at
+  // Riverside Court was, so his block's door entry fault missed the job already open for it).
+  const known = onFile(await ctx.repo.listMtProperties(ctx.tenant.id), address, pc.district);
+  if (known) return found(ctx, known);
   const role = roleOf(args.role);
   if (role === 'occupant' && m.customers.tenant_no_client === 'contact_landlord') {
     return { reply: { done: false, message: "They rent from a landlord who isn't one of our clients, so we need the landlord's go-ahead first. Take a message (category job) with the landlord's name and number, the address and the repair." } };

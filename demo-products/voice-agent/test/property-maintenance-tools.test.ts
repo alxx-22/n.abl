@@ -803,6 +803,33 @@ test('safety mode hears a denial inside the words too', async () => {
   assert.equal(detectSafety('Water is coming through the light fitting in the hall.'), 'electric');
 });
 
+test('a leaseholder found from "Flat 4, NG7" and their own number, or from the full address: never added again as a new home', async () => {
+  const t = await fernhill('pm-block-found');
+  const MARCUS = '+447700900578';
+  const door = (await repo.listJobs(t.id, { property: 'riverside_court' })).find((j) => /door entry/i.test(j.description) && j.status !== 'cancelled')!;
+  const homes = (await repo.listMtProperties(t.id)).length;
+  // Live, 8 October: "Flat 4" and "NG7" found nothing, the door entry went to a joiner, priced, and his flat was added again.
+  const marcus = await call(t, MARCUS);
+  const found = await marcus.run('find_property', { number: 'Flat 4', postcode: 'NG7' });
+  assert.equal(found.found, 1, JSON.stringify(found));
+  assert.equal(found.properties[0].property, 'riverside_court_flat_4');
+  // From someone else's phone, the same words find nothing, and the model is told to ask for the rest first.
+  const other = await (await call(t, STRANGER)).run('find_property', { number: 'Flat 4', postcode: 'NG7' });
+  assert.equal(other.found, 0);
+  assert.match(other.message, /Ask for the rest of the address/);
+  // The fault: a door entry system is an electrician's, not a joiner's.
+  const tri = await (await call(t, STRANGER)).run('triage_fault', { description: "Door entry system isn't working. Pressing the button doesn't release the main door" });
+  assert.equal(tri.trade, 'electrical');
+  // The model passing the address for the key, then raising it as a new customer: both land on his flat.
+  const late = await call(t, MARCUS);
+  const named = await late.run('triage_fault', { property: 'Flat 4, Riverside Court, 2 Weaver Lane, NG7', description: "Door entry system isn't working" });
+  assert.equal(named.price, undefined, 'the shared parts are never priced to a leaseholder');
+  const fresh = await call(t, MARCUS);
+  const job = await fresh.run('job', { action: 'create', address: 'Flat 4, Riverside Court, 2 Weaver Lane', postcode: 'NG7 1AA', description: "Door entry system isn't working", name: 'Marcus Okoro', window: 'am', trade: 'carpentry' });
+  assert.deepEqual([job.already_reported, job.reference], [true, door.reference], JSON.stringify(job));
+  assert.equal((await repo.listMtProperties(t.id)).length, homes, 'no new home added');
+});
+
 test('a block: shared faults are one job on the block for its managing agent; inside a flat is the leaseholder\'s own', async () => {
   const t = await fernhill('pm-block');
   const MARCUS = '+447700900578';

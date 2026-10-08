@@ -68,7 +68,9 @@ export function jobWhen(j: LiveJob, timeZone: string): string {
   if (j.attend_by && !j.window_key) return `attend by ${hhmm(j.attend_by, timeZone)}`;
   if (j.date && j.window) {
     const d = new Date(`${j.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-    return `${d}, ${j.window.split(',')[0].toLowerCase()}`;
+    // "Sat 10 Oct, morning", not "Sat 10 Oct, saturday morning": the date already names the day. "AM" keeps its capitals.
+    const w = j.window.split(',')[0].replace(/^(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\s+/i, '');
+    return `${d}, ${/^.[A-Z]/.test(w) ? w : w.charAt(0).toLowerCase() + w.slice(1)}`;
   }
   return 'not booked yet';
 }
