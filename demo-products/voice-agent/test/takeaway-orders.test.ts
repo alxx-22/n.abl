@@ -58,6 +58,7 @@ test("where's my order: out with the driver, found by the calling number, with n
   assert.doesNotMatch(JSON.stringify(found), /Larch|NG9|Amy|Clarke/, 'nothing that says where or who');
   assert.match(found.never, /never read the address or the name back/);
   assert.ok(c.ctx.state.found.includes(o.reference), 'talking about it is not a false claim');
+  assert.deepEqual(c.ctx.state.privateAddresses, ['Larch Close'], 'its street, for the guardrail');
   // Live, 8 October: the caller's own number passed as the order number. It is that phone's order; any other phone number finds nothing.
   assert.equal((await c.run('find_order', { order_number: '07700 900322' })).order_number, o.reference);
   const someoneElse = await c.run('find_order', { order_number: '07700 900999' });

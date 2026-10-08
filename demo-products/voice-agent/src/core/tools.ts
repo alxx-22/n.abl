@@ -156,6 +156,8 @@ export interface CallState {
   references: string[];
   /** A takeaway's fee and minimum for the postcode get_wait_times was given, before collection or delivery is set. */
   deliveryTerms: { fee_pence: number; min_order_pence: number } | null;
+  /** The streets on orders find_order looked up: never said to the caller unless they said it first. */
+  privateAddresses: string[];
   /** An estate agency's times of day the receptionist may say (minutes after midnight), and the ranges its tools gave. */
   times: number[];
   timeRanges: [number, number][];
@@ -170,7 +172,7 @@ export function newCallState(): CallState {
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
-    invoice: null, emergencyTrade: null, amounts: [], references: [], deliveryTerms: null, times: [], timeRanges: [],
+    invoice: null, emergencyTrade: null, amounts: [], references: [], deliveryTerms: null, privateAddresses: [], times: [], timeRanges: [],
   };
 }
 

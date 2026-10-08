@@ -338,6 +338,9 @@ export async function findOrder(args: Args, ctx: ToolContext): Promise<Record<st
     if (!order) return { found: false, message: "No order today from the number they're ringing on. Ask for the order number." };
   }
   record(ctx, order.reference, 'order', 'found');
+  // Its street, for the guardrail: never said back to the caller unless they say it first.
+  const street = order.address?.replace(/\s*\(example\)\s*$/i, '').replace(/^\d+[a-z]?,?\s+/i, '').trim();
+  if (street && street.length >= 4 && !ctx.state.privateAddresses.includes(street)) ctx.state.privateAddresses.push(street);
   const found = {
     found: true,
     order_number: order.reference,

@@ -186,6 +186,8 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
   cover_advice: "[Correction from the system: never say what a policy covers or whether a claim will be paid. Correct yourself: that is for their insurer to confirm.]",
   invented_price: "[Correction from the system: no tool or fact gave that price. Correct yourself: say you can't price that on the phone; the engineer prices it on the visit, or it is a free quote, and give only the prices your tools return.]",
   card_surcharge: "[Correction from the system: there is no extra charge for paying by card, and a shop may not add one. Correct yourself now.]",
+  refund_claim: "[Correction from the system: nothing has been cancelled, changed or refunded: staff decide, and the team will text them. Correct yourself now: it's with the kitchen, and they'll hear by text.]",
+  address_read_back: "[Correction from the system: never say the address on an order. If they need to check it, ask them to say it. Don't repeat it.]",
 };
 
 export class CallSession extends EventEmitter<CallEvents> {

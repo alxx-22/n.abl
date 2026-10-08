@@ -21,7 +21,7 @@ export interface Flag {
     | 'safety_delayed' | 'approval_claim' | 'invented_eta' | 'said_safe_appliance' | 'unsafe_diy' | 'liability_admitted' | 'legal_deadline'
     | 'damp_blame' | 'medical_advice' | 'invented_price' | 'cover_advice'
     // A takeaway's (presets/takeaway.md §8); it also uses invented_time and invented_price.
-    | 'card_surcharge';
+    | 'card_surcharge' | 'refund_claim' | 'address_read_back';
   text: string;
 }
 
@@ -164,8 +164,21 @@ function takeawayFlags(text: string, state: CallState): Flag[] {
   }
   const surcharge = SURCHARGE.exec(text);
   if (surcharge && !negated(text, surcharge.index) && !/\bno\b[^.?!]{0,20}$/i.test(text.slice(0, surcharge.index))) flags.push({ rule: 'card_surcharge', text: surcharge[0] });
+  // Staff decide every cancellation and refund (presets/takeaway.md §8). A cancellation only once an order was looked up:
+  // "I've cancelled the Coke" while ordering is a change to the basket.
+  const refund = REFUNDED.exec(text) ?? (state.found.length ? CANCELLED.exec(text) : null);
+  if (refund && !negated(text, refund.index)) flags.push({ rule: 'refund_claim', text: refund[0] });
+  // An order's address, said to the caller before they said it.
+  const heard = state.heard.join(' ').toLowerCase();
+  const street = state.privateAddresses.find((s) => text.toLowerCase().includes(s.toLowerCase()) && !heard.includes(s.toLowerCase()));
+  if (street) flags.push({ rule: 'address_read_back', text: street });
   return flags;
 }
+
+// "You'll get your money back", "I've refunded you", "we'll give you a full refund".
+const REFUNDED = /\b(?:(?:i'?ve|i have|we'?ve|we have)\s+(?:now\s+|just\s+)?(?:refunded|credited)|(?:that'?s|it'?s|it is|that is|your (?:order|money)(?:'s| is| has)?)\s+(?:been\s+|now\s+)*refunded|(?:you'?ll|you will)\s+(?:get|receive|have|be given)\s+(?:a\s+|your\s+)?(?:full\s+)?(?:refund|money back)|(?:we'?ll|we will|i'?ll|i will)\s+(?:give|send)\s+you\s+(?:a\s+)?(?:full\s+)?refund)\b/i;
+// "I've cancelled it", "that's cancelled", "your order has been cancelled".
+const CANCELLED = /\b(?:(?:i'?ve|i have|we'?ve|we have)\s+(?:now\s+|just\s+)?cancell?ed|(?:that'?s|it'?s|it is|that is|your order(?:'s| is| has)?)\s+(?:been\s+|now\s+)*cancell?ed)\b/i;
 
 /** A time or a slot that is taken, not a booking made. A claim said "for you" or "booked in" is still a claim. */
 function slotTaken(text: string, claim: RegExpExecArray): boolean {

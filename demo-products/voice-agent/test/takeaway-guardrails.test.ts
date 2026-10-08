@@ -64,3 +64,21 @@ test("takeaway prompt: its own ordering rules in place of the restaurant's, and 
   assert.equal(p.match(/Our chicken is halal/g)!.length, 1);
   assert.equal(p.match(/Delivery to NG1/g)!.length, 1);
 });
+
+test('takeaway guardrails: no cancellation or refund before staff decide, and no address read out', () => {
+  const state = newCallState();
+  state.takeaway = true;
+  const rules = (line: string) => checkUtterance(line, state).map((f) => f.rule);
+  for (const line of ["Don't worry, you'll get your money back.", "I've refunded you.", "We'll give you a full refund."]) assert.deepEqual(rules(line), ['refund_claim'], line);
+  for (const line of ["The manager will decide whether you'll get a refund.", "If the manager agrees, you'll get your money back.", "I can't refund it on the phone."]) assert.deepEqual(rules(line), [], line);
+  // While ordering, "cancelled" is the basket's own; once an order was looked up, it is a claim staff haven't made.
+  assert.deepEqual(rules("I've cancelled the Coke, so that's just the burger."), []);
+  state.found.push('123');
+  assert.deepEqual(rules("That's cancelled for you."), ['refund_claim']);
+  assert.deepEqual(rules("It's not cancelled yet: the kitchen will text you."), []);
+  // The street on an order found for them, unless they said it first.
+  state.privateAddresses.push('Larch Close');
+  assert.deepEqual(rules("It's going to 14 Larch Close."), ['address_read_back']);
+  state.heard.push("It's 14 Larch Close.");
+  assert.deepEqual(rules('Yes, Larch Close, that matches.'), []);
+});
