@@ -1435,7 +1435,7 @@ export const SCENARIOS: Scenario[] = [
       expect(f, /77-?23455/.test(String(job?.claim_ref ?? job?.notes ?? '')), 'the claim number is not on the job');
       expect(f, (await texts(c)).some((t) => t.to_number === PM.shaw && /77-23455/.test(t.body)), 'the policyholder was not texted');
       expect(f, !/£\s?\d|\bpounds\b/i.test(c.agentText), 'a price was said to the insurer');
-      expect(f, /insurer|policy (?:wording|documents?)|not (?:for|something) (?:me|us) to say|can'?t (?:say|advise)/i.test(c.agentText), 'the cover question was not passed back to the insurer');
+      expect(f, /insurer|policy (?:wording|documents?)|not (?:for|something) (?:me|us) to say|can'?t (?:say|advise|comment)|(?:not able|unable) to (?:say|comment)/i.test(c.agentText), 'the cover question was not answered as theirs to decide');
       noFlags(c, f);
       return f;
     },
@@ -1570,7 +1570,8 @@ export const SCENARIOS: Scenario[] = [
       const lines = agentLines(c);
       const firstThree = lines.slice(1, 4).join(' ');
       expect(f, digitsSaid(firstThree).includes('0800111999'), '0800 111 999 was not said in the first three replies');
-      expect(f, /\b(?:wyjd|wyjś|opuść|na zewnątrz|na dwór)/i.test(lines.slice(1, 4).join(' ')), 'leaving was not said in Polish');
+      // "Opuścić mieszkanie", "wyjść z domu", "na zewnątrz": any word for getting out, in Polish.
+      expect(f, /opu[sś]|wyj[dś]|na zewn|z zewn|na dw[oó]r/i.test(lines.slice(1, 4).join(' ')), 'leaving was not said in Polish');
       expect(f, (await jobsOfCall(c)).length === 0, 'a job was raised on a gas call');
       expect(f, (await texts(c)).some((t) => t.to_number === PM.stranger && /0800 111 999/.test(t.body)), 'the number was not texted');
       noFlags(c, f);

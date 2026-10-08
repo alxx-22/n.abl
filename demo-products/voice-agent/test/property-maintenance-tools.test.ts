@@ -804,6 +804,14 @@ test('triage reads what is wrong, not what the caller says is fine; and the job 
   // A lack that is the fault still counts.
   assert.equal(triage(m, 'There is no heating and no hot water', { date: '2026-12-07' }).priority, 'urgent');
   assert.equal(triage(m, 'no power at all in the house', { date: '2026-10-07' }).priority, 'emergency');
+  // Live, 8 October: answers written as a form, and the roof ahead of the water and the lights it is near.
+  assert.equal(triage(m, 'slipped roof slates. water near electrics: no,vulnerable people: no', { date: '2026-10-07' }).trade, 'roofing');
+  assert.equal(triage(m, 'leak in bedroom ceiling from roof', { date: '2026-10-07' }).trade, 'roofing');
+  assert.equal(triage(m, 'a steady drip into a bucket, nowhere near any lights', { date: '2026-10-07' }).trade, 'plumbing');
+  assert.equal(triage(m, 'water dripping through bedroom ceiling since rain last night', { date: '2026-10-07' }).trade, 'roofing');
+  assert.equal(triage(m, 'the bathroom tiles are cracked', { date: '2026-10-07' }).trade, null, "a bathroom's tiles aren't a roofer's");
+  assert.equal(triage(m, 'a few tiles have blown off in the wind', { date: '2026-10-07' }).trade, 'roofing');
+  assert.equal(triage(m, 'water leaking behind the bathroom tiles', { date: '2026-10-07' }).trade, 'plumbing');
   // "create, find, move, cancel, approve or decline" sent as the action: the first one counts.
   const home = (await repo.listMtProperties(t.id)).find((p) => p.client === null && p.occupant.phone && p.occupant.name)!;
   const c = await call(t, home.occupant.phone);
@@ -829,6 +837,9 @@ test('a leaseholder found from "Flat 4, NG7" and their own number, or from the f
   const found = await marcus.run('find_property', { number: 'Flat 4', postcode: 'NG7' });
   assert.equal(found.found, 1, JSON.stringify(found));
   assert.equal(found.properties[0].property, 'riverside_court_flat_4');
+  // "9, Riverside Court": the block named, so 9 is the flat.
+  const nine = await (await call(t, STRANGER)).run('find_property', { street: 'Riverside Court', number: '9' });
+  assert.deepEqual([nine.found, nine.properties?.[0]?.property], [1, 'riverside_court_flat_9'], JSON.stringify(nine));
   // From someone else's phone, the same words find nothing, and the model is told to ask for the rest first.
   const other = await (await call(t, STRANGER)).run('find_property', { number: 'Flat 4', postcode: 'NG7' });
   assert.equal(other.found, 0);
@@ -979,6 +990,16 @@ test('an insurer\'s claim: the claim number and the policyholder first; the insu
   // Live, 8 October: the model passed the policyholder as name and phone, three times, and the job was never raised.
   const asNamed = await (await call(t, '+447700900409')).run('job', { ...job, claim: '77-23019', name: 'David Shaw', phone: '07700 900590', address: '6 Holly Close' });
   assert.ok(asNamed.windows?.length, JSON.stringify(asNamed));
+  // And again, as on the next live call: the handler's own name, the policyholder's name alone in its box.
+  const kim = await call(t, '+447700900409');
+  const kimArgs = { ...job, claim: '77-23455', name: 'Kim', policyholder: 'David Shaw', phone: '07700 900590', address: '8 Holly Close' };
+  const kw = (await kim.run('job', kimArgs)).windows[0];
+  const kimJob = await kim.run('job', { ...kimArgs, date: kw.date, window: kw.window });
+  assert.equal(kimJob.booked, true, JSON.stringify(kimJob));
+  const kimRow = (await repo.listJobs(t.id, { reference: kimJob.reference }))[0];
+  assert.equal((await repo.getMtProperty(t.id, kimRow.property_key!))!.occupant.name, 'David Shaw');
+  assert.equal(kimRow.reporter.phone, '+447700900409', "the booking's confirmation goes to the desk that rang");
+  assert.match(kim.sent.find((x) => x.to === '+447700900590')!.body, /asked us to come about claim 77-23455/);
   // And a repairs call that ends "booked" with nothing booked is stopped once.
   const empty = await call(t, '+447700900409');
   assert.equal((await empty.run('end_call', { outcome: 'booked' })).ok, false);

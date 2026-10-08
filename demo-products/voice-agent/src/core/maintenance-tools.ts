@@ -175,7 +175,9 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
     if (pc && soundKey(p.district) === soundKey(pc.district)) score += 2;
     if (street && (streetCore(p.street) === streetCore(street) || streetCore(p.street).startsWith(streetCore(street)) || streetCore(street).startsWith(streetCore(p.street)) || named(p, street))) score += 3;
     else if (!street && named(p, building)) score += 3;
-    if (nums.length) score += nums[0] === houseNumber(p) ? 3 : nums.includes(houseNumber(p)) ? 1 : -5;
+    // "9, Riverside Court" with the block named: 9 is the flat (live, 8 October: read as the building's number, it found nothing).
+    const flatHere = !flat && named(p, street ?? building) ? /(?:flat|apartment)\s*(\w+)/i.exec(p.number)?.[1] : undefined;
+    if (nums.length) score += nums[0] === houseNumber(p) || (flatHere !== undefined && nums.includes(flatHere)) ? 3 : nums.includes(houseNumber(p)) ? 1 : -5;
     if (flat && !new RegExp(`flat\\s*${flat}\\b`, 'i').test(p.number)) score -= 2;
     // Rung from the occupant's own number: "Flat 4, NG7" is enough (live, 8 October: a leaseholder at Riverside Court
     // wasn't found from that, was taken as a new customer, and his block's door entry fault was priced to him).
@@ -228,10 +230,13 @@ const TRADE_WORDS: [string, RegExp][] = [
   ['gas_heating', /\bboiler\b|\bheating\b|\bradiators?\b|\bhot water\b|\bthermostat\b|\bpilot\b|\bgas (?:fire|hob|cooker)\b/i],
   ['damp_mould', /\bdamp\b|\bmould\b|\bmold\b|\bcondensation\b|\bblack spots?\b/i],
   ['drainage', /\bdrains?\b|\bblock(?:ed|age)\b|\bsewage\b|\bgully\b|\boverflowing\b|\bslow(?:-| )draining\b/i],
+  // The roof before a leak's water or the lights it is near: "leaking through the ceiling from the roof" is a roofer's (live, 8 October).
+  ['roofing', /\broof\b|\bgutters?\b|\bchimney\b|\bslates?\b|\bflashing\b|\bceiling\b[^.?!]{0,60}\brain(?:s|ed|ing)?\b|\brain(?:s|ed|ing)?\b[^.?!]{0,60}\bceiling\b/i],
   // A door entry system before carpentry's "door" (live, 8 October: a buzzer that won't release the door went to a joiner).
   ['electrical', /\bdoor ?entry\b|\bentry ?(?:phone|system)\b|\bintercom\b|\bbuzzer\b|\b(?:smoke|heat|carbon monoxide|co|fire) alarms?\b|\bsockets?\b|\blights?\b|\bfuse\b|\btrip(?:s|ped|ping)?\b|\belectric(?:s|ity|al)?\b|\bpower\b|\bswitch\b|\bextractor\b|\bconsumer unit\b/i],
   ['plumbing', /\bleak\w*\b|\btaps?\b|\btoilet\b|\bpipes?\b|\bwater\b|\bshower\b|\bsink\b|\bcistern\b|\bburst\b|\bdrip\w*\b|\bflush\w*\b/i],
-  ['roofing', /\broof\b|\btiles?\b|\bgutters?\b|\bchimney\b|\bslates?\b|\bflashing\b/i],
+  // Tiles off a roof, not a bathroom's.
+  ['roofing', /\broof tiles?\b|\btiles?\b[^.?!]{0,30}\b(?:slipp|slid|fall|fell|fallen|blown|missing|off the)\w*/i],
   ['glazing', /\bwindows?\b|\bglass\b|\bpanes?\b|\bglazing\b|\bboard(?:ed|ing)? up\b|\bdouble glaz/i],
   ['carpentry', /\bdoors?\b|\bcupboards?\b|\bhandrail\b|\bbanister\b|\bfloorboards?\b|\bhinges?\b|\bshel(?:f|ves)\b|\bstairs?\b/i],
   ['decorating', /\bpaint\w*\b|\bdecorat\w*\b|\bplaster\w*\b|\bwallpaper\b/i],
@@ -283,7 +288,9 @@ export interface Triage {
 export function withoutDenials(words: string): string {
   return words.split(/[,;.!?]|\b(?:and|but)\b/i)
     // "No heating" or "no power" is the fault itself, not a denial; "no water near the electrics" is.
-    .filter((part) => FAULT_LACK.test(part) || !/^\s*(?:no|not|none|nothing|never|nobody|no ?one|isn'?t|aren'?t|wasn'?t|there'?s no|there is no|without)\b/i.test(part))
+    .filter((part) => FAULT_LACK.test(part) || !/^\s*(?:no|not|none|nothing|never|nobody|no ?one|nowhere|isn'?t|aren'?t|wasn'?t|there'?s no|there is no|without)\b/i.test(part))
+    // Answers written as a form: "water near electrics: no" (live, 8 October: slipped slates went to an electrician).
+    .filter((part) => !/[:=-]\s*(?:no|none|not|nope|n\/a)\s*$/i.test(part))
     .join(', ');
 }
 const FAULT_LACK = /^\s*(?:there'?s |there is |we'?ve got |we have )?no (?:heating|heat|hot water|power|electric(?:s|ity)?|water|gas|lights?|supply)\b(?!\s+(?:near|on|by|coming|getting|anywhere|around))/i;
@@ -617,8 +624,9 @@ async function propertyFor(args: Args, ctx: ToolContext): Promise<MtProperty | {
   // The policyholder as given, or the name and phone passed in its place (live, 8 October: an insurer was asked for them
   // three times, gave them each time, and the job was never raised).
   const given = normaliseUkPhone(str(args.phone));
+  const holderName = realName(args.policyholder) ?? realName(args.name);
   const holder = !insurer ? null : policyholderOf(args.policyholder)
-    ?? (realName(args.name) && given && given !== ctx.callerPhone ? { name: realName(args.name)!, phone: given } : null);
+    ?? (holderName && given && given !== ctx.callerPhone ? { name: holderName, phone: given } : null);
   if (insurer && !holder) return { reply: { done: false, message: "Ask for the policyholder's name and phone number, so we can arrange access with them, then call again with policyholder (\"name, phone\")." } };
   const [, number = '', street = address] = /^\s*((?:flat\s*\w+,?\s*)?\d+\w?)?\s*,?\s*(.*)$/i.exec(address) ?? [];
   const phone = holder?.phone ?? normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
@@ -656,7 +664,8 @@ function pageFor(ctx: ToolContext, trade: string, gas: boolean, district: string
 const SHARED: [string, RegExp][] = [
   ['door entry', /\b(?:door ?entry|entry ?(?:phone|system)|intercom|buzzer|(?:main|communal|entrance) (?:front )?doors?|main entrance|front door (?:to|of) the (?:block|building|flats))\b/i],
   ['lights', /\b(?:communal|stair(?:well|case)?|landing|hall(?:way)?|corridor|entrance|emergency) light(?:s|ing)?\b|\blights? (?:on|in) the (?:stairs|stairwell|landings?|hall(?:way)?|corridors?|entrance)\b/i],
-  ['roof', /\broof\b|\bgutter\w*|\bdownpipes?\b/i],
+  // Rain through a ceiling comes from the roof, however it's put ("dripping through my ceiling since it rained").
+  ['roof', /\broof\b|\bgutter\w*|\bdownpipes?\b|\bceiling\b[^.?!]{0,60}\brain(?:s|ed|ing)?\b|\brain(?:s|ed|ing)?\b[^.?!]{0,60}\bceiling\b/i],
   ['lift', /\blifts?\b/i],
   ['stairs', /\bstair(?:s|well|case|way)\b|\blandings?\b|\bcorridors?\b/i],
   ['bin store', /\bbin (?:store|room|area|shed)\b/i],
@@ -766,7 +775,9 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     return { booked: false, message: `Not booked yet. Tell them the price first: call-out ${money(m.prices.callout_pence)}${incVat(m)}, with the first hour, then ${money(m.prices.half_hour_pence)} a half hour. If they're happy, call this again.` };
   }
   const gas = isGasTrade(m, trade) || t.gas;
-  const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+  // An insurer's own confirmation goes to the claims desk that rang; the phone they gave is the policyholder's, who
+  // hears from us about the claim (live, 8 October: it had the plain booking text, with no claim number).
+  const phone = insurer ? ctx.callerPhone : normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
   const role = roleOf(args.role) ?? (insurer ? 'other' : ctx.state.role === 'authoriser' ? (client?.kind === 'agent' ? 'agent' : 'landlord') : homeowner ? 'homeowner' : 'occupant');
   // Water coming in through a block's roof is made safe now, on the managing agent's emergency authority; the repair waits for them.
   if (block && client?.kind === 'block' && priority !== 'emergency' && /\b(?:leak\w*|drip\w*|water (?:is )?(?:coming|getting|pouring) (?:in|through))\b/i.test(`${description} ${ctx.state.heard.join(' ')}`) && ['roof', 'shared parts'].includes(part!)) {
