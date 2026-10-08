@@ -135,7 +135,13 @@ order is placed, number 246" before placing it. The guardrail caught both
 and the real order was placed each time. The walk covers the alcohol
 step and Beer and wine on Menu tonight.
 
-**Next for the takeaway**: screenshots of the M3 screens to Alex. The repairs demo's clock (`DemoClock.tsx`, the cloud
+The M3 screens were sent to Alex on 8 October.
+
+**Next: the barber** (the next preset in Alex's order), taken by the
+Windows session so the two sessions don't both start it. First its use
+cases and spec (`presets/barber-use-cases.md`, `presets/barber.md`) with
+defaults and decisions for Alex, as the takeaway's were; building waits
+for his answers. The repairs demo's clock (`DemoClock.tsx`, the cloud
 session's) is repairs-only; turning it on for the takeaway would let a
 prospect try Saturday's last orders. After the takeaway, the next preset
 in Alex's order is the barber.
