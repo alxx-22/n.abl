@@ -1205,13 +1205,17 @@ const TOOLS: Record<string, Tool> = {
         ['name'],
       ),
     },
-    // A takeaway whose drivers take payment: how they'll pay, and the change needed for cash.
+    // A takeaway's delivery for someone else, and, where drivers take payment, how they'll pay and the change for cash.
     tailor: (d, t) => {
-      const pay = t.profile.ordering?.pay_driver;
-      if (!t.profile.ordering?.kitchen || !pay || pay === 'no') return d;
+      const o = t.profile.ordering;
+      if (!o?.kitchen || !o.delivery) return d;
       const p = { ...(d.parameters as { properties: Record<string, unknown> }).properties };
-      p.pay_driver = S(`For a delivery: "phone" if paying now by card, or the driver: ${pay === 'cash' ? '"cash"' : '"cash" or "card"'}`);
-      p.change_from = S('Paying the driver in cash: the note they will pay with, e.g. "£20"');
+      p.recipient_name = S('A delivery for someone else: the name of the person receiving it, for the driver');
+      p.recipient_phone = S("A delivery for someone else: their number, for the driver");
+      if (o.pay_driver && o.pay_driver !== 'no') {
+        p.pay_driver = S(`For a delivery: "phone" if paying now by card, or the driver: ${o.pay_driver === 'cash' ? '"cash"' : '"cash" or "card"'}`);
+        p.change_from = S('Paying the driver in cash: the note they will pay with, e.g. "£20"');
+      }
       return { ...d, parameters: { ...(d.parameters as object), properties: p } };
     },
     async handler(args, ctx) {
@@ -1242,6 +1246,14 @@ const TOOLS: Record<string, Tool> = {
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
       if (!phone && ctx.channel === 'phone') return { placed: false, message: 'Need a contact number.' };
       const f = ctx.state.fulfilment;
+      // A takeaway delivery for someone else: their name and number for the driver; the caller's stay on the order. Their number asked once.
+      const forName = o.kitchen && f.type === 'delivery' ? str(args.recipient_name) : undefined;
+      const forPhone = normaliseUkPhone(str(args.recipient_phone));
+      if (forName && !forPhone && !ctx.state.gateAsked.includes('recipient_phone')) {
+        ctx.state.gateAsked.push('recipient_phone');
+        return { placed: false, message: `Ask for ${forName}'s number, for the driver, then call confirm_order again with recipient_phone. If they don't have it, call again without it.` };
+      }
+      const recipient = forName && forName.toLowerCase() !== name.toLowerCase() ? { name: forName, phone: forPhone } : null;
       // A takeaway's delivery paid at the door: how, and for cash the change the driver needs (presets/takeaway.md §4.3). Asked once.
       let payNote: string | null = null;
       const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
@@ -1286,6 +1298,7 @@ const TOOLS: Record<string, Tool> = {
         allergy_notes: namedAllergy(noneToNull(str(args.allergy_notes)), ctx.state.heard) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
         ...(payNote ? { pay_note: payNote } : {}),
         ...(isBig(ctx) ? { flags: ['big'] } : {}),
+        ...(recipient ? { recipient } : {}),
       });
       record(ctx, order.reference, 'order', 'committed');
       ctx.state.lines = [];
@@ -1300,13 +1313,15 @@ const TOOLS: Record<string, Tool> = {
       });
       const rule = o.payment ?? 'either';
       const payLine = phoneOnly ? '' : payNote ? ` Paying the driver: ${payNote.replace(/^Cash: /, 'cash, ').toLowerCase()}.` : rule === 'collection' ? (order.fulfilment === 'delivery' ? ' Pay on delivery.' : ' Pay when you collect.') : '';
-      await smsTo(ctx, phone, `${ctx.tenant.profile.name}: order ${order.reference}, ${pounds(order.total_pence)}, ${order.fulfilment} at ${spokenTime(local.time)}.${payLine} Quote ${order.reference} if you call us. (Demo order)`);
+      const forWho = recipient ? ` for ${recipient.name}` : '';
+      await smsTo(ctx, phone, `${ctx.tenant.profile.name}: order ${order.reference}${forWho}, ${pounds(order.total_pence)}, ${order.fulfilment} at ${spokenTime(local.time)}.${payLine} Quote ${order.reference} if you call us. (Demo order)`);
       return {
         placed: true,
         order_number: order.reference,
         spoken_order_number: order.reference.split('').join(' '),
         total: pounds(order.total_pence),
         ready: `${order.fulfilment} at ${spokenTime(local.time)}`,
+        ...(recipient ? { recipient: `For ${recipient.name}: the driver has ${recipient.phone ? 'their name and number' : 'their name'}. The text goes to the caller.` } : {}),
         payment: phoneOnly ? PHONE_ONLY
           : payNote ? `They're paying the driver (${payNote.toLowerCase()}): don't take a card on the phone.` : paymentRule(rule, order.fulfilment),
       };

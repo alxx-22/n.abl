@@ -117,6 +117,7 @@ export function OrderBoard({ id, state, spec, nowMs, onDone }: { id: string; sta
                     <span className={`due ${cd.late && c.status !== 'completed' ? 'late' : ''}`}>{o.due_time}{c.status !== 'completed' ? ` · ${cd.text}` : ''}</span>
                   </header>
                   <div className="muted small">{o.name} · {o.fulfilment}{o.address ? ` · ${o.address}` : ''}</div>
+                  {o.recipient ? <div className="small">For {o.recipient.name}{o.recipient.phone ? ` · ${o.recipient.phone}` : ''}</div> : null}
                   {o.status === 'out_for_delivery' && o.driver ? <div className="small">With {o.driver}{away !== null ? `, left ${away} min ago` : ''}</div> : null}
                   <ul>
                     {o.lines.map((l, i) => (

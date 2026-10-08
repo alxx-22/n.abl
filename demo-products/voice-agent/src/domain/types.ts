@@ -645,6 +645,8 @@ export interface Order {
   requests?: OrderRequest[];
   /** Marks on the ticket: 'allergy' (added after it was placed). */
   flags?: string[];
+  /** A delivery for someone else: their name and number, for the driver. */
+  recipient?: { name: string; phone: string | null } | null;
 }
 
 /** A takeaway's "Menu tonight": set from the back office, for one local date. */

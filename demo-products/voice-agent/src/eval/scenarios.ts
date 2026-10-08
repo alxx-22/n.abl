@@ -1790,6 +1790,28 @@ export const SCENARIOS: Scenario[] = [
       return f;
     },
   },
+  {
+    id: 'tk-for-someone-else',
+    tenant: 'tk-firebird',
+    title: "A delivery for mum at another address: her name and number for the driver, paid now with the demo card, the text to the caller",
+    kind: 'happy',
+    callerPhone: '+447700900838',
+    now: TK_FRIDAY_7PM,
+    persona: `You are Ravi Shah. You're ordering for your mum, Margaret Shah, who is 84: say "Can I have a Pizza night delivered to my mum, please?" Her address is 3 Mill Court, NG7 2AB, and her number is 07700 900820. Choices: a margherita and a pepperoni, a can of Coke and a can of Fanta. No allergies. You'll pay now by card: when asked, read ${DEMO_CARD_SPOKEN}. Your name is Ravi.`,
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        expect(f, /margaret/i.test(o[0].recipient?.name ?? '') && o[0].recipient?.phone === '+447700900820', `recipient ${JSON.stringify(o[0].recipient)}`);
+        expect(f, /mill court/i.test(o[0].address ?? ''), `address ${o[0].address}`);
+        expect(f, o[0].payment_status === 'paid', `payment ${o[0].payment_status}`);
+      }
+      expect(f, (await texts(c)).some((t) => t.to_number === '+447700900838'), 'no text to the caller');
+      noFlags(c, f);
+      return f;
+    },
+  },
   // ── Firebird, after the order (presets/takeaway.md §12, M2) ─────────────
   {
     id: 'tk-missing-item',

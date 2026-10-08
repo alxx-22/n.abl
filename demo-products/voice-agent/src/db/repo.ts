@@ -303,6 +303,7 @@ function mapOrder(r: any): Order {
     pay_note: r.pay_note ?? null,
     requests: r.requests ?? [],
     flags: r.flags ?? [],
+    recipient: r.recipient ?? null,
   };
 }
 
@@ -716,6 +717,8 @@ export class Repo {
       pay_note?: string | null;
       /** Marks for the ticket: "big" (it takes two of the kitchen's slots). */
       flags?: string[];
+      /** A delivery for someone else: their name and number, for the driver. */
+      recipient?: { name: string; phone: string | null } | null;
     },
   ): Promise<Order> {
     return this.db.tx(async (q) => {
@@ -725,11 +728,12 @@ export class Repo {
       const customerId = await this.upsertCustomer(q, tenant.id, o.phone, o.name);
       const rows = await q.query<any>(
         `insert into public.voice_orders (tenant_id, reference, customer_id, name, phone, fulfilment, due_at, ready_at, address, postcode,
-           lines, subtotal_pence, delivery_fee_pence, total_pence, allergy_notes, source, call_id, pay_note, flags)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,$14,$15,$16,$17,$18,$19::text[]) returning *`,
+           lines, subtotal_pence, delivery_fee_pence, total_pence, allergy_notes, source, call_id, pay_note, flags, recipient)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,$14,$15,$16,$17,$18,$19::text[],$20::jsonb) returning *`,
         [
           tenant.id, reference, customerId, o.name, o.phone, o.fulfilment, o.due_at, readyAt(tenant.profile, o.fulfilment, o.due_at), o.address, o.postcode,
           JSON.stringify(o.lines), o.subtotal_pence, o.delivery_fee_pence, o.total_pence, o.allergy_notes, o.source, o.call_id, o.pay_note ?? null, o.flags ?? [],
+          o.recipient ? JSON.stringify(o.recipient) : null,
         ],
       );
       return mapOrder(rows[0]);
@@ -778,7 +782,9 @@ export class Repo {
   /** A caller's orders due in [from, to), latest first: "where's my order?" from the number they ring on. */
   async ordersForPhone(tenantId: string, phone: string, from: Date, to: Date): Promise<Order[]> {
     const rows = await this.db.query<any>(
-      'select * from public.voice_orders where tenant_id = $1 and phone = $2 and due_at >= $3 and due_at < $4 order by due_at desc, created_at desc limit 5',
+      // The caller's own orders, and a delivery made for them by someone else.
+      `select * from public.voice_orders where tenant_id = $1 and (phone = $2 or recipient->>'phone' = $2) and due_at >= $3 and due_at < $4
+       order by due_at desc, created_at desc limit 5`,
       [tenantId, phone, from, to],
     );
     return rows.map(mapOrder);

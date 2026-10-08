@@ -255,6 +255,8 @@ export interface LiveOrder {
   pay_note?: string | null;
   /** A caller's requests, for staff to accept or refuse. */
   requests?: { kind: 'cancel' | 'change' | 'send_missing'; what: string; answer: 'accepted' | 'refused' | null }[];
+  /** A delivery for someone else: their name and number, for the driver. */
+  recipient?: { name: string; phone: string | null } | null;
   /** 'allergy': one told after ordering. */
   flags?: string[];
 }

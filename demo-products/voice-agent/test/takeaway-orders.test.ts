@@ -133,3 +133,24 @@ test("where's my order: by its number from another phone, in the kitchen, runnin
   assert.match((await tomorrow.run('find_order', { order_number: o.reference })).message, /^No order .* today\./);
   assert.equal((await tomorrow.run('find_order', {})).message, 'Ask for the order number.');
 });
+
+test('a delivery for someone else: their name and number for the driver, the text to the caller, and found from their phone', async () => {
+  const t = await firebird('tk-for-mum');
+  const sent: { to: string; body: string }[] = [];
+  const c = await call(t, at('19:00'), AMY);
+  c.ctx.sms = { send: async (to, body) => (sent.push({ to, body }), 'simulated') };
+  await c.run('add_to_order', { item: 'Pizza night', options: ['margherita', 'pepperoni', 'coke', 'fanta'] });
+  await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 2AB', address: '3 Mill Court' });
+  await c.run('review_order', {});
+  const ask = await c.run('confirm_order', { name: 'Ravi', allergy_notes: 'none', pay_driver: 'phone', recipient_name: 'Margaret Shah' });
+  assert.equal(ask.message, "Ask for Margaret Shah's number, for the driver, then call confirm_order again with recipient_phone. If they don't have it, call again without it.");
+  const placed = await c.run('confirm_order', { name: 'Ravi', allergy_notes: 'none', pay_driver: 'phone', recipient_name: 'Margaret Shah', recipient_phone: '07700 900820' });
+  assert.equal(placed.placed, true, JSON.stringify(placed));
+  assert.equal(placed.recipient, 'For Margaret Shah: the driver has their name and number. The text goes to the caller.');
+  const o = (await repo.getOrder(t.id, placed.order_number))!;
+  assert.deepEqual([o.name, o.phone, o.recipient], ['Ravi', AMY, { name: 'Margaret Shah', phone: '+447700900820' }]);
+  assert.equal(sent.at(-1)!.to, AMY);
+  assert.match(sent.at(-1)!.body, new RegExp(`order ${placed.order_number} for Margaret Shah,`));
+  // Margaret rings to ask where it is: found from her number, as the caller's would be.
+  assert.equal((await (await call(t, at('19:30'), '+447700900820')).run('find_order', {})).order_number, placed.order_number);
+});

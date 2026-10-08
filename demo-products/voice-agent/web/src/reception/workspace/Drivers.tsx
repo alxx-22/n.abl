@@ -39,6 +39,7 @@ export function Drivers({ id, state, nowMs, onDone }: { id: string; state: LiveS
                   <span className="due">due {o.due_time}</span>
                 </header>
                 <div className="muted small">{o.address}</div>
+                {o.recipient ? <div className="small">For {o.recipient.name}{o.recipient.phone ? ` · ${o.recipient.phone}` : ''}</div> : null}
                 <div className="small">Left {o.out_at ? `${minutesSince(o.out_at, nowMs)} min ago` : 'just now'}</div>
                 {o.allergy_notes ? <div className="allergy">ALLERGY: {o.allergy_notes}</div> : null}
                 <footer>
@@ -61,6 +62,7 @@ export function Drivers({ id, state, nowMs, onDone }: { id: string; state: LiveS
               <span className="due">due {o.due_time}</span>
             </header>
             <div className="muted small">{o.address}</div>
+            {o.recipient ? <div className="small">For {o.recipient.name}{o.recipient.phone ? ` · ${o.recipient.phone}` : ''}</div> : null}
             <footer>
               {drivers.map((d) => <button key={d} type="button" className="small primary" onClick={() => act(o, 'out_for_delivery', d)}>Out with {d}</button>)}
             </footer>
