@@ -304,9 +304,13 @@ export function referencesIn(text: string): string[] {
 /** A reference said that no tool gave and the caller didn't read out. */
 function inventedReference(text: string, state: CallState): string | null {
   const heard = state.heard.join(' ').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const known = (r: string) => state.references.includes(r) || heard.includes(r);
   for (const m of text.matchAll(REFERENCE)) {
     const ref = m[1].toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (ref.length < 4 || !/\d/.test(ref) || state.references.includes(ref) || heard.includes(ref)) continue;
+    if (ref.length < 4 || !/\d/.test(ref)) continue;
+    // "R X 5 5 2. A text is on its way" reads on into the next word: a known reference followed by stray letters is
+    // still that reference (a live call on 8 October was told a real one was made up, and booked again).
+    if (Array.from({ length: ref.length - 3 }, (_, k) => ref.slice(0, ref.length - k)).some(known)) continue;
     return m[0].trim();
   }
   return null;

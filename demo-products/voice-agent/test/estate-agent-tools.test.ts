@@ -669,6 +669,9 @@ test('guardrails: a reference read out must come from a tool or the caller', () 
   s.references.push(...referencesIn(JSON.stringify({ booked: true, reference: 'QK379', quote: 'Q-2291' })));
   for (const line of ['Your booking reference is Q, K, 3, 7, 9. Thank you!', 'Your reference is QK379.', 'That was quote reference Q 2 2 9 1.']) assert.deepEqual(rules(line), [], line);
   assert.deepEqual(rules('Your reference is Q K 3 7 8.'), ['invented_reference'], 'one character out is still made up');
+  // Live, 8 October: a real reference ran on into the next sentence's "A", was called made up, and the viewing was booked twice.
+  assert.deepEqual(rules('Your reference is Q K 3 7 9. A confirmation text is on its way.'), []);
+  assert.deepEqual(rules('Your reference is RS678.'), ['invented_reference']);
   // The caller's own reference, read back to them.
   s.heard.push('My reference is X R 8 9 1.');
   assert.deepEqual(rules("Thanks: that's reference XR891."), []);
