@@ -771,6 +771,23 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   assert.match(home.properties[0].damp, /Damp or mould here is a job: raise it with job create/);
   const msg = await nadia.run('take_message', { name: 'Nadia Hussain', message: 'Black mould in the bedroom', category: 'damp' });
   assert.match(msg.also, /Raise the repair too, with job create: that is what tells Meadowbank Housing today/);
+  // Live, 8 October: hanging up with no job raised is stopped once.
+  const end = await nadia.run('end_call', { outcome: 'message' });
+  assert.equal(end.ok, false);
+  assert.match(end.message, /No job has been raised for the damp, so Meadowbank Housing haven't been told/);
+  assert.equal((await nadia.run('end_call', { outcome: 'message' })).ok, true, 'never twice');
+  // Someone at the door who gave a reference: no match, and nothing booked for this number today, so we haven't sent anyone.
+  const aisha = await call(t, '+447700900502');
+  await repo.db.query(`update public.voice_mt_jobs set status = 'cancelled' where tenant_id = $1 and property_key = 'larchfield_120' and status not in ('done', 'invoiced')`, [t.id]);
+  aisha.hear("There's a man at my door saying he's from Fernhill. He's given me the reference F P nine eight seven six.");
+  const door = await aisha.run('job', { action: 'find', reference: 'FP9876' });
+  assert.match(door.at_the_door, /we haven't sent anyone/);
+  // The health question passed on is not health advice.
+  const s2 = newCallState();
+  s2.maintenance = true;
+  assert.deepEqual(checkUtterance('For whether to keep him out of the room, please speak to your GP or NHS 111.', s2).map((f) => f.rule), []);
+  assert.deepEqual(checkUtterance('Please speak to your GP about whether to keep him out of the room.', s2).map((f) => f.rule), []);
+  assert.deepEqual(checkUtterance('You should keep him out of the room for now.', s2).map((f) => f.rule), ['medical_advice']);
 });
 
 test('invented_price: a sum no setting, tool or caller gave is caught; the real ones are not', async () => {

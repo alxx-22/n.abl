@@ -179,6 +179,8 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
   // Live, 8 October: both said, neither taken.
   assert.ok(PROMISED_MESSAGE.test("Thank you, Chris. I'll pass that request on to Jess, and she'll get back to you."));
   assert.ok(PROMISED_MESSAGE.test('Of course, I can add that to the message for Jess.'));
+  assert.ok(PROMISED_MESSAGE.test("As you're renting, I'll let Meadowbank Housing know about the mould today."));
+  assert.ok(!PROMISED_MESSAGE.test("I'll let you know about the times in a moment."));
   assert.ok(CALLBACK_PROMISED.test('Jess will be in touch with you about those questions.'));
   assert.ok(!CALLBACK_PROMISED.test('Would you like Jess to get back to you?'), 'an offer');
   assert.equal(checkUtterance("I haven't passed that on yet.", s).length, 0);

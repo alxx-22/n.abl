@@ -1000,6 +1000,9 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
   let jobs: Job[] = [];
   if (ref) {
     jobs = await jobsByRef(ctx, ref);
+    // A reference read off a stranger at the door: no match says nothing; the board for this number does (live, 8 October).
+    const door = jobs.length ? {} : await atTheDoor(ctx, ctx.state.heard.slice(-6).join(' '));
+    if (!jobs.length && door.at_the_door) return { found: 0, message: `No job ${spokenReference(ref)}.`, ...door };
     if (!jobs.length) return { found: 0, message: `No job ${spokenReference(ref)}. Ask them to read it from their text again, one character at a time.` };
   } else if (ctx.callerPhone) {
     // Only the number they ring from counts: a number they say could be anyone's.
@@ -1471,6 +1474,21 @@ async function atTheDoor(ctx: ToolContext, words: string): Promise<Record<string
   return ours
     ? { at_the_door: `${firstName(mt(ctx), ours.engineer_key) || 'Our engineer'} is booked with them today: they can ask to see photo ID before letting them in.` }
     : { at_the_door: "Nobody from us is booked to visit today: say we haven't sent anyone, not to let them in, and to ring 101, or 999 if they feel unsafe." };
+}
+
+/**
+ * Hanging up on damp at a housing association's home with no job raised: refused once (live, 8 October: "I'll let
+ * Meadowbank know", and nothing was raised, so they were never told and no clock started).
+ */
+export async function dampOwed(ctx: ToolContext): Promise<string | null> {
+  const st = ctx.state;
+  if (!st.maintenance || !st.property || st.gateAsked.includes('damp:end') || st.committed.length) return null;
+  if (!/\b(?:damp|mould|mold)\b/i.test(st.heard.join(' '))) return null;
+  const p = await ctx.repo.getMtProperty(ctx.tenant.id, st.property);
+  const client = p?.client ? mt(ctx).clients.find((c) => c.key === p.client) : undefined;
+  if (client?.kind !== 'social') return null;
+  st.gateAsked.push('damp:end');
+  return `No job has been raised for the damp, so ${client.name} haven't been told and their clock hasn't started. Raise it now with job create, using what they've told you, then give them the reference and end_call.`;
 }
 
 /** Damp at a housing association's home is a job, not a message: the job tells them today and starts their clock. */

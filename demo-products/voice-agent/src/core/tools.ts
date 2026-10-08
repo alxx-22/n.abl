@@ -33,7 +33,7 @@ import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf,
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
-import { MAINTENANCE_TOOLS, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
+import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
 export { record, type RecordKind } from './tool-kit.ts';
 
@@ -1477,6 +1477,8 @@ const TOOLS: Record<string, Tool> = {
         ctx.state.bookedChecked = true;
         return { ok: false, message: "Nothing has been booked in this call: no booking tool returned a reference. If they want it, call the tool now with what they've told you and give them the reference; if not, tell them it isn't booked. Then end_call." };
       }
+      const damp = await dampOwed(ctx);
+      if (damp) return { ok: false, message: damp };
       ctx.state.ending = true;
       ctx.action({ kind: 'call_ending', title: 'Call ending', detail: str(args.outcome) });
       return { ok: true };

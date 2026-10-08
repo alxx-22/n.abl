@@ -51,7 +51,7 @@ const PASSED_ON = /\b(?:i'?ve|i have|we'?ve|we have|that'?s|it'?s|has been|have 
 // receptionist to take it. In three live runs the hotel's receptionist said "I'll pass your details on"
 // and never took the message; by the time it tried to hang up, the caller had gone.
 // On 8 October an estate call said "I'll pass that request on to Jess" and "I can add that to the message for Jess", and took none.
-export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:that|it|this|those|these|your [a-z]+)(?: [a-z]+){0,2} (?:on|along)|let (?:the|our) [a-z ]{0,20}know|ask (?:them|the [a-z ]{0,20}) to (?:call|ring|give you a (?:call|ring)))|\bi (?:can|will|'ll) (?:add|put) (?:that|it|this) (?:to|in|on|into) (?:the|my) (?:message|note)/i;
+export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:that|it|this|those|these|your [a-z]+)(?: [a-z]+){0,2} (?:on|along)|let (?:the|our) [a-z ]{0,20}know|let (?!you\b|me\b|us\b)[a-z&']+(?: [a-z&']+){0,3} know about|ask (?:them|the [a-z ]{0,20}) to (?:call|ring|give you a (?:call|ring)))|\bi (?:can|will|'ll) (?:add|put) (?:that|it|this) (?:to|in|on|into) (?:the|my) (?:message|note)/i;
 /** An estate agency's "Jess will be in touch": a call back promised, which only a message makes true (same call). */
 export const CALLBACK_PROMISED = /\b[a-z]+ will (?:be in touch|get back to you|call you back|give you a call|ring you back)\b/i;
 // A booking, valuation or offer read back for a yes, with its time or amount (an estate agency's calls). On 3 October
@@ -275,7 +275,10 @@ function maintenanceFlags(text: string, state: CallState, staff: string[], m: Ma
   const blame = DAMP_BLAME.exec(text);
   if (blame && !negated(text, blame.index)) flags.push({ rule: 'damp_blame', text: blame[0] });
   const medical = MEDICAL.exec(text);
-  if (medical) flags.push({ rule: 'medical_advice', text: medical[0] });
+  // "Speak to your GP about whether to keep him out of the room" passes the question on (live, 8 October: corrected
+  // for it, the receptionist lost its way and never raised the damp job).
+  const passedOn = medical && /\b(?:whether|if) (?:to|you should|it'?s)\s*$|\babout\s*$/i.test(text.slice(Math.max(0, medical.index - 25), medical.index));
+  if (medical && !passedOn) flags.push({ rule: 'medical_advice', text: medical[0] });
   const cover = COVER.exec(text);
   if (cover && !negated(text, cover.index)) flags.push({ rule: 'cover_advice', text: cover[0] });
   // A price must come from the settings, the instructions, a tool, or the caller (live, 6 October: "forty pounds" for an alarm).
