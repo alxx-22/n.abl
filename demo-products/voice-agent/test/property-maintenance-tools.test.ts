@@ -473,6 +473,27 @@ test('escalation: a page nobody answers goes to the other engineer on call after
   assert.ok((await repo.listJobs(t.id, { reference: r.reference }))[0].flags.includes('duty_manager'));
 });
 
+test('an emergency in office hours: never paged to an engineer off sick, and a decline goes to whoever is working today, not last night\'s on-call pair', async () => {
+  const t = await fernhill('pm-day-page');
+  // Dan, the first plumber on a Wednesday, is off sick today.
+  const off = await officeAction(repo, t, {}, { action: 'absent', engineer: 'dan', reason: 'sick', days: 1 }, NOW);
+  const sick: Tenant = { ...t, profile: applyOffice(t.profile, off.office) };
+  const home = (await repo.listMtProperties(t.id)).find((p) => p.client === 'harbour')!;
+  const c = await call(sick, home.occupant.phone);
+  await c.run('find_property', { postcode: home.district, number: home.number, street: home.street });
+  const r = await c.run('job', { action: 'create', description: 'Burst pipe, water pouring through the ceiling', name: home.occupant.name });
+  const holder = async () => (await repo.listJobs(t.id, { reference: r.reference }))[0];
+  assert.equal((await holder()).engineer_key, 'callum', 'the next plumber in today, not Dan');
+  // Callum can't: Marek, also in today and a plumber. Last night's pair (Callum and Priya) don't come into it.
+  const sent: { to: string | null; body: string }[] = [];
+  const act = (b: Record<string, unknown>) => jobAction(repo, sick, r.reference, b, async (to, body) => void sent.push({ to, body }), NOW);
+  assert.match(await act({ action: 'decline' }), /Marek paged instead/);
+  assert.equal((await holder()).engineer_key, 'marek');
+  assert.ok(sent.some((x) => x.to === '+447700900303' && /URGENT/.test(x.body)), JSON.stringify(sent));
+  // Nobody else in today does plumbing (Dan is off): the duty manager.
+  assert.match(await act({ action: 'no_answer' }), /Helen Ward has been texted/);
+});
+
 test('a homeowner told "ninety five pounds" has heard the price, and a job is never booked for "Owner"', async () => {
   const t = await fernhill('pm-price-words');
   const home = (await repo.listMtProperties(t.id)).find((p) => p.client === null && p.occupant.phone && p.occupant.name)!;

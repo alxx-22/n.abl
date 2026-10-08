@@ -19,7 +19,7 @@ import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekday
 import { poundsIn } from '../domain/amounts.ts';
 import { processDemoPayment } from '../domain/payments.ts';
 import type { Certificate, Invoice, Job, JobKind, JobPriority, MaintenanceSettings, MtClient, MtProperty, MtWindow, ReporterRole, Tenant } from '../domain/types.ts';
-import { absentOn, checkWindow, freeWindows, isGasTrade, onCallAt, unable, windowAt, windowOf, windowsOn } from '../domain/windows.ts';
+import { absentOn, checkWindow, freeWindows, isGasTrade, officeShut, onCallAt, pageable, unable, windowAt, windowOf, windowsOn } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
 import { SAFETY_KINDS, SAFETY_VERSION, safetyScript, type SafetyKind } from '../presets/maintenance/nations.ts';
 import { fullAddress, shortAddress } from '../presets/maintenance/properties.ts';
@@ -368,9 +368,7 @@ function targetWords(m: MaintenanceSettings, p: JobPriority): string {
 /** Out of the office's hours: nights, Sundays and bank holidays. */
 function outOfHours(ctx: ToolContext): boolean {
   const l = local(ctx);
-  const wd = weekdayOf(l.date);
-  if (ctx.tenant.profile.closures?.some((c) => c.date === l.date)) return true;
-  return !ctx.tenant.profile.opening_hours.some((h) => h.days.includes(wd) && minutesOf(h.open) <= minutesOf(l.time) && minutesOf(l.time) < minutesOf(h.close));
+  return officeShut(ctx.tenant.profile, l.date, l.time);
 }
 
 // Someone trapped in a lift: the lift company frees people, never us (LOLER 1998; presets/property-maintenance-use-cases.md).
@@ -672,7 +670,8 @@ function priceSaid(said: string[], pence: number): boolean {
 function pageFor(ctx: ToolContext, trade: string, gas: boolean, district: string): { key: string; first_name: string } | null {
   const m = mt(ctx);
   const l = local(ctx);
-  const pool = outOfHours(ctx) ? onCallAt(m, l.date, l.time) : m.engineers.filter((e) => e.days.includes(weekdayOf(l.date)));
+  // In the office's hours, never someone the office has marked off (review, 8 October).
+  const pool = pageable(m, outOfHours(ctx), l.date, l.time);
   const able = pool.filter((e) => !unable(m, e, { trade, gas, district }));
   // Out of hours, whoever is on call makes it safe even outside their trade; gas still needs Gas Safe.
   return able[0] ?? (outOfHours(ctx) ? pool.find((e) => !gas || e.gas_safe) ?? null : null);

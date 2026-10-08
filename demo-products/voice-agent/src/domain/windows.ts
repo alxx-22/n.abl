@@ -5,7 +5,7 @@
 // their window is, and when the next free windows are.
 
 import { addDays, minutesOf, weekdayOf } from './time.ts';
-import type { Job, MaintenanceSettings, MtEngineer, MtWindow } from './types.ts';
+import type { Job, MaintenanceSettings, MtEngineer, MtWindow, TenantProfile } from './types.ts';
 
 /** Shares time with another window: an all-day window holds the morning and the afternoon. */
 export const overlaps = (a: Pick<MtWindow, 'from' | 'to'>, b: Pick<MtWindow, 'from' | 'to'>) =>
@@ -109,6 +109,21 @@ export function onCallAt(m: MaintenanceSettings, date: string, time: string): Mt
   const night = minutesOf(time) < 12 * 60 ? addDays(date, -1) : date;
   const keys = m.on_call.nights.find((n) => n.day === weekdayOf(night))?.engineers ?? [];
   return keys.filter((k) => !absentOn(m, k, night)).map((k) => m.engineers.find((e) => e.key === k)).filter((e): e is MtEngineer => e !== undefined);
+}
+
+/** Out of the office's hours at a local moment: nights, days it's closed, and its closures. */
+export function officeShut(p: Pick<TenantProfile, 'opening_hours' | 'closures'>, date: string, time: string): boolean {
+  if (p.closures?.some((c) => c.date === date)) return true;
+  const wd = weekdayOf(date);
+  return !p.opening_hours.some((h) => h.days.includes(wd) && minutesOf(h.open) <= minutesOf(time) && minutesOf(time) < minutesOf(h.close));
+}
+
+/**
+ * Who an emergency can be paged to at a moment: out of hours, the night's
+ * on-call pair; in the office's hours, whoever works that day and isn't off.
+ */
+export function pageable(m: MaintenanceSettings, shut: boolean, date: string, time: string): MtEngineer[] {
+  return shut ? onCallAt(m, date, time) : m.engineers.filter((e) => e.days.includes(weekdayOf(date)) && !absentOn(m, e.key, date));
 }
 
 /** Why an engineer is off on a date (the back office's absences), if they are. */

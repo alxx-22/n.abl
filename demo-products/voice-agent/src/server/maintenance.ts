@@ -12,7 +12,7 @@ import { certState } from '../core/maintenance-tools.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { addDays, isIsoDate, spokenDate, spokenTime, toLocal, tenantNow } from '../domain/time.ts';
 import type { Certificate, Invoice, Job, JobStatus, MaintenanceSettings, MtAbsence, MtNotice, Tenant, TenantProfile } from '../domain/types.ts';
-import { absentOn, checkWindow, freeWindows, onCallAt, unable, windowOf } from '../domain/windows.ts';
+import { absentOn, checkWindow, freeWindows, officeShut, onCallAt, pageable, unable, windowOf } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
 import { addWorkingDays } from '../domain/working-days.ts';
 import { safetyScript, type SafetyKind } from '../presets/maintenance/nations.ts';
@@ -242,10 +242,13 @@ export async function jobAction(
       if (job.status !== 'new' || !job.engineer_key || !job.flags.includes('paged')) throw new HttpError(409, 'There is no page waiting on this job.');
       const l = toLocal(now, tz);
       const asked = triedOn(job, m);
-      const pool = onCallAt(m, l.date, l.time).filter((e) => !asked.has(e.key));
-      // As when it was raised: out of hours, whoever is on call makes it safe even outside their trade; gas still needs Gas Safe.
+      // Who can be paged now, as when it was raised: in the office's hours whoever is in today (not last night's
+      // on-call pair), out of hours whoever is on call (review, 8 October).
+      const shut = officeShut(t.profile, l.date, l.time);
+      const pool = pageable(m, shut, l.date, l.time).filter((e) => !asked.has(e.key));
+      // Out of hours, whoever is on call makes it safe even outside their trade; gas still needs Gas Safe.
       const next = pool.find((e) => !unable(m, e, { trade: job.trade, gas: job.flags.includes('gas'), district: p?.district }))
-        ?? (job.flags.includes('out_of_hours') ? pool.find((e) => !job.flags.includes('gas') || e.gas_safe) : undefined);
+        ?? (shut ? pool.find((e) => !job.flags.includes('gas') || e.gas_safe) : undefined);
       const why = b.action === 'decline' ? `declined by ${name(job.engineer_key)}` : `no answer from ${name(job.engineer_key)} in ${m.on_call.escalate_minutes} minutes`;
       const r = await update(
         job.reference,
