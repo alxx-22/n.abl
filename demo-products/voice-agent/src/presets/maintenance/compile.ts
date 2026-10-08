@@ -14,7 +14,14 @@ import { MT_NATION_PACKS, gasFact, nationKnowledge } from './nations.ts';
 
 export const NOUN = 'property maintenance company';
 
-export const greetingFor = (a: MaintenanceAnswers): string => greetingOf(a.basics, NOUN);
+/** The greeting, which says when the receptionist answers: the owner's own words win. */
+export function greetingFor(a: MaintenanceAnswers): string {
+  if (a.basics.greeting.trim() || a.answering === 'all') return greetingOf(a.basics, NOUN);
+  const name = a.basics.name.trim() || `the ${NOUN}`;
+  const why = a.answering === 'out_of_hours' ? `${name}'s out-of-hours line` : name;
+  const lead = a.answering === 'overflow' ? ' The team are on other calls, so' : a.answering === 'lunch' ? ' The office is at lunch, so' : '';
+  return `Hello, you're through to ${why}.${lead ? `${lead} I'm` : " I'm"} the AI assistant on this demo line. How can I help?`;
+}
 
 export const firstName = (e: Pick<EngineerAnswer, 'name' | 'key'>) => e.name.trim().split(/\s+/)[0] || e.key;
 
@@ -242,6 +249,7 @@ export function compileMaintenance(a: MaintenanceAnswers, meta: { slug: string }
       noun: NOUN,
       facts: [areaSentence(a, 4), emergencySentence(a), calloutSentence(a), gasFact(a.area.nation)],
     }),
+    greeting: greetingFor(a),
     knowledge: knowledge(a),
     team: compileTeam(a),
     maintenance: compileSettings(a),

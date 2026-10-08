@@ -327,3 +327,12 @@ test('a repairs call in progress hears the office notice the moment it goes up, 
   assert.equal(tri.office_notice, 'Storm Ellen: emergencies only today');
   assert.equal(fernhill.profile.maintenance!.notice ?? null, null, 'the shared tenant is left as it was');
 });
+
+test('a Relay UK call: told once to speak to the caller directly and wait through the gaps', async () => {
+  const c = await call(fernhill, '+447700900502');
+  c.caller('Hello, this is Relay UK. I have a text relay call for you, please speak to the caller directly.');
+  await c.agent('Hello, how can I help?');
+  c.caller('Caller says: no hot water since yesterday.');
+  await c.agent("I'm sorry to hear that.");
+  assert.equal(c.reminders().filter((t) => t.includes('this is a Relay UK call')).length, 1);
+});

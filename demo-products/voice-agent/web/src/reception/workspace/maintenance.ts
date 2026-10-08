@@ -33,6 +33,8 @@ export function jobBadges(j: LiveJob): { label: string; level: string }[] {
   const out: { label: string; level: string }[] = [];
   if (j.engineer_off) out.push({ label: `${j.engineer ?? 'Engineer'} off: needs a new time`, level: 'bad' });
   if (j.flags.includes('callback')) out.push({ label: 'Call back to book', level: 'warn' });
+  if (j.flags.includes('relay')) out.push({ label: 'Relay UK', level: 'warn' });
+  if (j.flags.includes('text_only')) out.push({ label: 'Text only', level: 'warn' });
   if (j.flags.includes('gas')) out.push({ label: 'Gas', level: 'warn' });
   if (j.vulnerable.length || j.flags.includes('vulnerable')) out.push({ label: 'Vulnerable', level: 'bad' });
   // A clock counts down on the card: an Awaab's Law investigation by a day, an emergency hazard by a time.

@@ -1067,3 +1067,17 @@ test('an engineer off sick: no new visits, their jobs flagged to move, and a cal
   const back = await officeAction(repo, t, r.office, { action: 'back', engineer: who }, NOW);
   assert.deepEqual(back.office.absent, []);
 });
+
+test('how they want to hear from us: a relay call and "texts only" go on the job; the safety advice may be in their language, the number never', async () => {
+  const t = await fernhill('pm-contact');
+  const c = await call(t, '+447700900501');
+  c.ctx.state.relay = true;
+  await c.run('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
+  c.hear("I'm deaf, so texts only please. The kitchen tap is dripping.");
+  const r = await c.run('job', { action: 'create', description: 'Kitchen tap dripping', name: 'Sam Ortiz' });
+  const ref = r.reference ?? (await c.run('job', { action: 'create', description: 'Kitchen tap dripping', name: 'Sam Ortiz', date: r.windows?.[0]?.date, window: r.windows?.[0]?.window })).reference;
+  const row = (await repo.listJobs(t.id, { reference: ref }))[0];
+  assert.ok(row.flags.includes('relay') && row.flags.includes('text_only'), row.flags.join());
+  const advice = await (await call(t, '+447700900502')).run('safety_advice', { kind: 'gas' });
+  assert.match(advice.other_language, /in their language, but say the number as digits, twice/);
+});

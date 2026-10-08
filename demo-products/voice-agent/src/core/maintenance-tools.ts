@@ -427,6 +427,9 @@ async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string,
   };
 }
 
+/** "Texts only, please", "I'm deaf": contact by text, never a call. */
+const TEXT_ONLY = /\b(?:text(?:s|ing)? only|only (?:by )?text|by text,? (?:not|never|rather than) (?:a )?(?:call|phone)|(?:i'?m|i am) (?:deaf|hard of hearing)|can'?t hear (?:on )?(?:the )?phone)\b/i;
+
 // The office's notice for today (presets/property-maintenance-use-cases.md, surge day): every tool that books or
 // triages says it, and on an emergencies-only day nothing else gets a time.
 const emergenciesOnly = (m: MaintenanceSettings) => Boolean(m.notice?.emergencies_only);
@@ -733,7 +736,10 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   const consented = str(args.vulnerable) && bool(args.consent) ? str(args.vulnerable)! : null;
   if (consented) await ctx.repo.setVulnerable(ctx.tenant.id, p.key, [...new Set([...p.vulnerable, consented])], ctx.now());
   const d = dampClocks(m, client, trade, `${description}. ${str(args.vulnerable) ?? ''}`, consented ? [...p.vulnerable, consented] : p.vulnerable, ctx.now(), l.date);
+  // How they want to hear from us (Equality Act 2010, reasonable adjustments): on the job for the engineer and the office.
+  const textOnly = /text/i.test(str(args.contact) ?? '') || TEXT_ONLY.test(ctx.state.heard.join(' '));
   const flags = [
+    ...(ctx.state.relay || /relay/i.test(str(args.contact) ?? '') ? ['relay'] : []), ...(textOnly ? ['text_only'] : []),
     ...(gas ? ['gas'] : []), ...(p.vulnerable.length || consented ? ['vulnerable'] : []), ...(p.notes.pets ? ['pets'] : []),
     ...(p.access.method === 'key_safe' || p.access.method === 'keys_held' ? ['key_collection'] : []),
     ...(d.damp && client?.kind === 'social' ? ['damp_mould'] : []), ...(d.hazard ? ['possible_emergency_hazard'] : []),
@@ -1328,6 +1334,8 @@ async function safetyAdvice(args: Args, ctx: ToolContext): Promise<Record<string
   return {
     say: s.steps,
     ...(s.number ? { number: s.number, number_spoken: spokenNumber(s.number), say_number: 'twice, in groups' } : {}),
+    // Not yet translated by a person: the model may put the advice into the caller's language, never the number.
+    other_language: "If the caller is speaking another language, give this advice in their language, but say the number as digits, twice; it's texted too.",
     text_sent: Boolean(textSent),
     next: s.next,
     ...(st.safety?.kind === kind && !st.safety.spoken ? { first: 'Say this now, in your own words, before anything else.' } : {}),
@@ -1547,6 +1555,7 @@ export const MAINTENANCE_TOOLS: Record<string, Tool> = {
           po: S("The client's purchase order number"), estimate_pounds: I('A quoted price, if there is one'),
           address: S('A new customer: number and street'), postcode: S('A new customer: postcode'),
           claim: S('An insurance claim number, as the caller said it'), policyholder: S("When an insurer rings: the policyholder's name and phone"),
+          contact: S('How they want to hear from us, if they said: text only, or relay'),
         },
         ['action'],
       ),

@@ -153,6 +153,9 @@ const TAKEAWAY_CORRECTIONS: Partial<Record<Flag['rule'], string>> = {
 const MT_UNCONFIRMED =
   '[Correction from the system: nothing has been booked yet: job create has not returned a reference in this call, so any reference you said is wrong. Tell the caller you just need to finalise it, then call job create now with the date and window they chose. Only then give the reference it returns.]';
 
+/** "Hello, this is Relay UK", "you're through to a relay assistant": a text relay call. */
+const RELAY = /\b(?:relay uk|text ?relay|typetalk|relay (?:assistant|service|call|operator))\b/i;
+
 const CORRECTIONS: Record<Flag['rule'], string> = {
   unconfirmed_claim:
     '[Correction from the system: nothing has been booked or ordered yet. No create_booking, modify_booking or confirm_order has succeeded in this call. Tell the caller you just need to finalise it, read the details back, and call the tool now. Only then give the reference.]',
@@ -534,6 +537,12 @@ export class CallSession extends EventEmitter<CallEvents> {
     const clean = redactLine(text, this.opts.config.demoCards);
     this.transcript.push({ role: 'caller', text: clean });
     this.state.heard.push(clean);
+    // A Relay UK call (Equality Act 2010, reasonable adjustments): long gaps while the caller types, and the
+    // assistant's voice is not the caller's. Told once; the silence limits stretch from here on.
+    if (!this.state.relay && RELAY.test(clean)) {
+      this.state.relay = true;
+      this.sendText("[From the system: this is a Relay UK call. A relay assistant reads out what the caller types and types what you say. Speak to the caller directly, as \"you\", one question at a time, in short sentences, and wait through long gaps: they are typing. Never end the call for silence. Note that they prefer relay on any job.]");
+    }
     // An estate agency's read-back answered: a yes means book it now (see flushAgent).
     if (this.state.estate) {
       if (this.state.readBack && saidYes(clean)) this.state.saidYes = this.state.readBack;
@@ -881,11 +890,14 @@ export class CallSession extends EventEmitter<CallEvents> {
     // Mid-turn (a thinking pause, or on hold while they ask the family): not silence.
     if (this.turns?.isOpen) return;
     const quietFor = now - Math.max(this.lastActivity, this.agentSpeakingUntil);
-    if (quietFor > 10000 && !this.state.ending) {
+    // On a relay call a typed answer takes twenty seconds or more: a minute before a check, and four before goodbye.
+    const relay = this.state.relay;
+    if (quietFor > (relay ? 60000 : 10000) && !this.state.ending) {
       this.silencePrompts++;
       this.lastActivity = now;
-      if (this.silencePrompts === 1) this.session.sendText('[The caller has said nothing for ten seconds. Check they are still there.]');
-      else if (this.silencePrompts === 2) this.session.sendText('[Still no answer. Say a polite goodbye, then call end_call.]');
+      if (relay && this.silencePrompts < 4) this.session.sendText('[No reply for a minute: on a relay call they may still be typing. Say once, briefly, that you are still here, then wait.]');
+      else if (this.silencePrompts === 1) this.session.sendText('[The caller has said nothing for ten seconds. Check they are still there.]');
+      else if (this.silencePrompts === 2 || (relay && this.silencePrompts === 4)) this.session.sendText('[Still no answer. Say a polite goodbye, then call end_call.]');
       else {
         this.emit('hangup', 'silence');
         void this.end('silence');

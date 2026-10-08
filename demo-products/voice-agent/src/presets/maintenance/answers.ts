@@ -138,6 +138,11 @@ export interface MaintenanceAnswers extends BaseAnswers {
   clients: ClientAnswer[];
   /** The prospect's own homes and sites, added to the sample ones at Start (M3, the property editor). */
   properties: OwnPropertyAnswer[];
+  /**
+   * When the receptionist answers (M3): every call, when the office is busy, out of hours only, or over lunch.
+   * It changes the greeting; the demo line always answers, so the prospect can try it at any time.
+   */
+  answering: 'all' | 'overflow' | 'out_of_hours' | 'lunch';
   trades: Trade[];
   /** What the business doesn't do, and who to suggest instead. */
   dont_do: { what: string; suggest: string }[];
@@ -314,6 +319,7 @@ export function defaultAnswers(): MaintenanceAnswers {
     },
     clients: defaultClients(),
     properties: [],
+    answering: 'all',
     trades: standardTrades(),
     dont_do: [
       { what: 'pest control', suggest: "the council's pest service, or a member of the British Pest Control Association" },

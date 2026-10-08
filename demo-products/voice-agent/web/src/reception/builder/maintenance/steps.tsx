@@ -368,6 +368,17 @@ export function StepVisits(p: Props) {
   const v = a.visits;
   return (
     <div className="fields">
+      <Choice
+        legend="When the receptionist answers" value={a.answering}
+        options={[
+          { value: 'all', label: 'Every call', hint: 'it answers straight away, day and night' },
+          { value: 'overflow', label: 'When the office is busy', hint: 'calls your team can’t get to' },
+          { value: 'out_of_hours', label: 'Out of hours only', hint: 'evenings, nights and weekends, with the on-call engineers' },
+          { value: 'lunch', label: 'Over lunch', hint: 'while the office is at lunch' },
+        ]}
+        onChange={(val) => set((d) => void (d.answering = val as MaintenanceAnswers['answering']))}
+      />
+      <p className="hint">It changes how the receptionist says hello. The demo line always answers, so you can try it at any time.</p>
       <Hours {...p} options={OFFICE} add="+ Add hours" lead="When the office is open. Out of these hours, the engineers on call take emergencies.">
         <h3 className="sub">Visit windows</h3>
         <p className="hint">Callers book a window, never an exact time. An all-day window can hold a morning and an afternoon.</p>

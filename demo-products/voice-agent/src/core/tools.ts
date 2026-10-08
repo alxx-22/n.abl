@@ -155,6 +155,8 @@ export interface CallState {
   emergencyTrade: string | null;
   /** Sums, in pence, the receptionist may say: from its instructions and what its tools returned. */
   amounts: number[];
+  /** A Relay UK call: an assistant reads the caller's typed words, so gaps are long and silence is no goodbye. */
+  relay: boolean;
   /** Every reference the tools returned in this call, letters and digits only: one said that isn't here was made up. */
   references: string[];
   /** A takeaway's fee and minimum for the postcode get_wait_times was given, before collection or delivery is set. */
@@ -177,7 +179,7 @@ export function newCallState(): CallState {
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
-    invoice: null, emergencyTrade: null, amounts: [], references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
+    invoice: null, emergencyTrade: null, amounts: [], relay: false, references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
   };
 }
 

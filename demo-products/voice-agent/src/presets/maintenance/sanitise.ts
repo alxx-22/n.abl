@@ -153,6 +153,7 @@ export function sanitiseMaintenance(input: unknown): MaintenanceAnswers {
     },
     clients: Array.isArray(x.clients) ? sanitiseClients(x.clients) : d.clients,
     properties: Array.isArray(x.properties) ? sanitiseOwnProperties(x.properties) : d.properties,
+    answering: oneOf(x.answering, ['all', 'overflow', 'out_of_hours', 'lunch'] as const, d.answering),
     trades,
     dont_do: Array.isArray(x.dont_do)
       ? x.dont_do.slice(0, 8).filter((y: any) => y && typeof y === 'object').map((y: any) => ({ what: str(y.what, 60), suggest: str(y.suggest, 160) })).filter((y: { what: string }) => y.what)

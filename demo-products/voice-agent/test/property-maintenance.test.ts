@@ -475,3 +475,18 @@ test('property maintenance: your own properties go in with the samples at Start,
   assert.equal(plan.properties!.length, 91);
   assert.deepEqual(replaySeed(p, plan), []);
 });
+
+test('property maintenance: the answering mode changes how the receptionist says hello; the owner\'s own greeting wins', () => {
+  const greet = (mode: MaintenanceAnswers['answering'], own = '') => {
+    const a = named();
+    a.answering = mode;
+    a.basics.greeting = own;
+    return compile(a).greeting;
+  };
+  assert.equal(greet('all'), "Hello, you're through to Fernhill Property Care. I'm the AI assistant on this demo line. How can I help?");
+  assert.equal(greet('out_of_hours'), "Hello, you're through to Fernhill Property Care's out-of-hours line. I'm the AI assistant on this demo line. How can I help?");
+  assert.equal(greet('overflow'), "Hello, you're through to Fernhill Property Care. The team are on other calls, so I'm the AI assistant on this demo line. How can I help?");
+  assert.equal(greet('lunch'), "Hello, you're through to Fernhill Property Care. The office is at lunch, so I'm the AI assistant on this demo line. How can I help?");
+  assert.equal(greet('out_of_hours', 'Fernhill, good evening.'), 'Fernhill, good evening.');
+  assert.equal(sanitiseMaintenance({ ...named(), answering: 'sometimes' } as never).answering, 'all');
+});
