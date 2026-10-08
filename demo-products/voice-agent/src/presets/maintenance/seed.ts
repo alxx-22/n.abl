@@ -73,7 +73,8 @@ export function planMaintenanceSeed(profile: TenantProfile, now: Date, seed: num
 
   // Only homes inside the patch, under a client the business still has.
   const clients = new Map(m.clients.map((c) => [c.key, c]));
-  const properties = sampleProperties().filter((p) => m.districts.includes(p.district) && (p.client === null || clients.has(p.client)));
+  // The prospect's own homes go in with the samples, so their own calls find them.
+  const properties = [...sampleProperties(), ...(m.own_properties ?? [])].filter((p) => m.districts.includes(p.district) && (p.client === null || clients.has(p.client)));
   const byKey = new Map(properties.map((p) => [p.key, p]));
   const trades = m.trades.map((t) => t.key).filter((t) => FAULTS[t]);
   const jobs: SeedJob[] = [];

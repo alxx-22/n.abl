@@ -370,6 +370,14 @@ test('the back office: jobs, engineers, properties with their certificates, and 
   assert.equal(st.incidents.length, 1);
   assert.equal(st.incidents[0].title, 'A smell of gas');
   assert.ok(st.incidents[0].follow_up_job);
+  // The owner's Monday view: the week's work against its targets, and what is owed and overdue.
+  const k = st.kpis;
+  assert.ok(k.jobs_today >= 5, `${k.jobs_today} jobs today`);
+  assert.ok(k.targets.of >= 10 && k.targets.met <= k.targets.of, JSON.stringify(k.targets));
+  assert.equal(k.certificates_overdue, 1, 'the gas record three days overdue');
+  assert.equal(k.damp_clocks, 1, "Meadowbank's open damp case");
+  assert.equal(k.unpaid.overdue, 3);
+  assert.ok(k.unpaid.pence > 0);
 });
 
 test('the back office: dispatch keeps to the window rules, an engineer accepts or declines a page, and the occupant is texted', async () => {

@@ -658,6 +658,15 @@ async function walkMaintenance({ shot }: Walk) {
   await page.getByLabel('Their mobile').last().fill('07700 900420');
   await saved();
   await shot(page, 'builder-customers');
+  // A property of the prospect's own, to ring about as whoever lives there.
+  await page.click('button:has-text("+ Add a property")');
+  await page.getByLabel('Number or name').last().fill('12');
+  await page.getByLabel('Street').last().fill('Test Road');
+  await page.getByLabel('Who lives or works there').last().fill('Alex Test');
+  await page.getByLabel('Their phone').last().fill('07700 900999');
+  await saved();
+  await page.locator('h3:has-text("Your own properties")').scrollIntoViewIfNeeded();
+  await shot(page, 'builder-own-property');
   await next('Trades');
   await page.getByRole('switch', { name: /^Decorating/ }).uncheck();
   await saved();
@@ -741,8 +750,14 @@ async function walkMaintenance({ shot }: Walk) {
     const gas = page.locator('.dispatch-grid td .chip[draggable=true]', { hasText: 'gas' }).first();
     const grace = page.locator('.dispatch-grid tr', { has: page.locator('th', { hasText: /^Grace/ }) }).locator('td').first();
     if (!(await gas.count()) || (await grace.locator('text=Off').count())) continue;
-    await gas.dragTo(grace);
-    await page.waitForSelector('.toast:has-text("Grace")', { timeout: 10000 });
+    // The board refreshes after the last step's "on the way"; a refresh landing mid-drag loses the drop. The server
+    // refuses this one whatever happens, so a lost drop is simply tried again.
+    for (let tries = 0; ; tries++) {
+      await gas.dragTo(grace);
+      const told = await page.waitForSelector('.toast:has-text("Grace")', { timeout: 4000 }).catch(() => null);
+      if (told) break;
+      if (tries === 2) throw new Error('dragging gas work onto Grace never answered');
+    }
     break;
   }
   await shot(page, 'workspace-dispatch');
@@ -815,6 +830,9 @@ async function walkMaintenance({ shot }: Walk) {
   await page.getByLabel('Call as').selectOption({ label: 'Sam Ortiz, tenant at 14 Elm Road' });
   await page.waitForSelector('.phone-number:has-text("07700 900501")');
   await shot(page, 'workspace-call-as');
+  // The prospect's own property is there to ring as, too.
+  await page.getByLabel('Call as').selectOption({ label: 'Alex Test at 12 Test Road (yours)' });
+  await page.waitForSelector('.phone-number:has-text("07700 900999")');
 
   // The demo's own clock: tomorrow at 9pm, to try the on-call side whatever the real time.
   await page.click('.demo-clock > button');

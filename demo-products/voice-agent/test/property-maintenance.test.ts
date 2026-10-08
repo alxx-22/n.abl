@@ -450,3 +450,28 @@ test("working days follow the nation's bank holidays, Scotland's included", asyn
   assert.equal(addWorkingDays('2026-11-26', 3, 'scotland'), '2026-12-02');
   assert.equal(addWorkingDays('2026-11-26', 3, 'england'), '2026-12-01');
 });
+
+test('property maintenance: your own properties go in with the samples at Start, real (not "example"), checked as you add them', () => {
+  const a = named();
+  a.properties = [
+    { key: 'own_1', number: '12', street: 'Test Road', district: 'ng5', town: 'Nottingham', kind: 'house', client: 'harbour', occupant: { name: 'Alex Test', phone: '07700 900999' }, stopcock: 'under the stairs', boiler: 'Combi in the loft', gas: true },
+    { key: 'own_2', number: '', street: 'Nowhere Lane', district: 'NG5', town: '', kind: 'flat', client: null, occupant: { name: '', phone: '' }, stopcock: '', boiler: '', gas: false },
+    { key: 'own_3', number: '3', street: 'Far Away Road', district: 'B1', town: '', kind: 'house', client: 'gone', occupant: { name: 'Sam', phone: '07700 900998' }, stopcock: '', boiler: '', gas: false },
+  ] as never;
+  const s = sanitiseMaintenance(a);
+  assert.equal(s.properties[0].district, 'NG5');
+  assert.deepEqual(validateMaintenance(s).filter((i) => i.step === 'customers').map((i) => `${i.level} ${i.message}`), [
+    'error Nowhere Lane: add the house number or name, the street and the postcode district.',
+    "warning Nowhere Lane: add who lives there and their phone, to ring as them on the demo phone.",
+    "warning 3 Far Away Road is in B1, outside your area: callers about it will hear you don't cover it.",
+    "warning 3 Far Away Road: its client has been removed, so it's a homeowner's own.",
+  ]);
+  s.properties = s.properties.slice(0, 1);
+  const p = compile(s);
+  const own = p.maintenance!.own_properties!;
+  assert.deepEqual([own.length, own[0].occupant.phone, own[0].client, own[0].example, own[0].notes.stopcock], [1, '+447700900999', 'harbour', false, 'under the stairs']);
+  const plan = planMaintenanceSeed(p, WEDNESDAY, 7);
+  assert.ok(plan.properties!.some((x) => x.key === 'own_1' && x.number === '12'), 'seeded with the samples');
+  assert.equal(plan.properties!.length, 91);
+  assert.deepEqual(replaySeed(p, plan), []);
+});

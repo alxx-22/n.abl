@@ -5,7 +5,7 @@
 // repairs contractor asks. The safety scripts are shown, never edited.
 
 import type { MtNation } from '../../../../../src/domain/types.ts';
-import { CLIENT_KINDS, MAX_CLIENTS, MAX_ENGINEERS, MAX_TRADES, MAX_WINDOWS, type ClientAnswer, type MaintenanceAnswers } from '../../../../../src/presets/maintenance/answers.ts';
+import { CLIENT_KINDS, MAX_CLIENTS, MAX_ENGINEERS, MAX_OWN_PROPERTIES, MAX_TRADES, MAX_WINDOWS, type ClientAnswer, type MaintenanceAnswers, type OwnPropertyAnswer } from '../../../../../src/presets/maintenance/answers.ts';
 import { safetyScripts } from '../../../../../src/presets/maintenance/nations.ts';
 import { DayChips } from '../estate/steps.tsx';
 import { Hours, type HoursOptions } from '../common/Hours.tsx';
@@ -133,6 +133,59 @@ export function StepCustomers({ a, set }: Props) {
         <button type="button" className="small" disabled={a.clients.length >= MAX_CLIENTS} onClick={add}>+ Add a client</button>
       </div>
       <p className="hint">Start adds 90 sample homes and sites on made-up streets in your districts, under these clients and homeowners, each marked “example”. You'll see them under Properties and compliance.</p>
+
+      <h3 className="sub">Your own properties</h3>
+      <p className="hint">Add a few of your own, to ring about as the person who lives there: “Call as” lists them on the demo phone. Use made-up names and numbers (07700 900 numbers are safe): texts only ever appear in the demo.</p>
+      {a.properties.map((p, i) => (
+        <OwnProperty key={p.key} p={p} clients={a.clients} districts={a.area.districts} set={(edit) => set((d) => edit(d.properties[i]))} remove={() => set((d) => void d.properties.splice(i, 1))} />
+      ))}
+      <div className="row-tools">
+        <button
+          type="button" className="small" disabled={a.properties.length >= MAX_OWN_PROPERTIES}
+          onClick={() => set((d) => void d.properties.push({
+            key: `own_${Date.now().toString(36)}`, number: '', street: '', district: d.area.districts[0] ?? '', town: d.area.towns[0] ?? '', kind: 'house', client: null,
+            occupant: { name: '', phone: '' }, stopcock: '', boiler: '', gas: true,
+          }))}
+        >+ Add a property</button>
+      </div>
+    </div>
+  );
+}
+
+function OwnProperty({ p, clients, districts, set, remove }: {
+  p: OwnPropertyAnswer; clients: ClientAnswer[]; districts: string[]; set: (edit: (p: OwnPropertyAnswer) => void) => void; remove: () => void;
+}) {
+  const where = [p.number, p.street].filter(Boolean).join(' ') || 'New property';
+  return (
+    <div className="group on area-card">
+      <div className="area-head">
+        <b className="area-name">{where}</b>
+        <button type="button" className="ghost small" onClick={remove}>Remove</button>
+      </div>
+      <div className="three">
+        <Text label="Number or name" value={p.number} max={30} onChange={(v) => set((x) => void (x.number = v))} hint="“14”, or “Flat 2, 7”" />
+        <Text label="Street" value={p.street} max={60} onChange={(v) => set((x) => void (x.street = v))} />
+        <Select label="Postcode district" value={p.district} options={districts.map((d) => ({ value: d, label: d }))} onChange={(v) => set((x) => void (x.district = v))} />
+      </div>
+      <div className="three">
+        <Select
+          label="What it is" value={p.kind}
+          options={[{ value: 'house', label: 'House' }, { value: 'flat', label: 'Flat' }, { value: 'bungalow', label: 'Bungalow' }, { value: 'commercial', label: 'Business site' }]}
+          onChange={(v) => set((x) => void (x.kind = v as OwnPropertyAnswer['kind']))}
+        />
+        <Select
+          label="Whose it is" value={p.client ?? ''}
+          options={[{ value: '', label: 'A homeowner’s own' }, ...clients.filter((c) => c.name).map((c) => ({ value: c.key, label: c.name }))]}
+          onChange={(v) => set((x) => void (x.client = v || null))}
+        />
+        <Toggle label="Gas supply" checked={p.gas} onChange={(v) => set((x) => void (x.gas = v))} />
+      </div>
+      <div className="three">
+        <Text label="Who lives or works there" value={p.occupant.name} max={60} onChange={(v) => set((x) => void (x.occupant.name = v))} />
+        <Text label="Their phone" value={p.occupant.phone} max={20} onChange={(v) => set((x) => void (x.occupant.phone = v))} hint="Ring as this number on the demo phone." />
+        <Text label="Stopcock" value={p.stopcock} max={80} onChange={(v) => set((x) => void (x.stopcock = v))} hint="Where it is, for a leak." />
+      </div>
+      <Text label="Boiler" value={p.boiler} max={80} onChange={(v) => set((x) => void (x.boiler = v))} hint="Make and where it is." />
     </div>
   );
 }

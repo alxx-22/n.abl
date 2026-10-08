@@ -463,6 +463,15 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
     /** The office's notice for today, which every call hears. */
     notice?: { text: string; emergencies_only: boolean; at: string } | null;
   };
+  /** A repairs contractor's Monday view, along the top of the board. */
+  kpis?: {
+    jobs_today: number;
+    emergencies_open: number;
+    targets: { met: number; of: number };
+    damp_clocks: number;
+    certificates_overdue: number;
+    unpaid: { count: number; overdue: number; pence: number };
+  };
   engineers?: LiveEngineer[];
   clients?: LiveClient[];
   jobs?: LiveJob[];

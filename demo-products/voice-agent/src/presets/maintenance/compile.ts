@@ -7,7 +7,7 @@
 
 import { normaliseUkPhone } from '../../domain/phone.ts';
 import { spokenTime } from '../../domain/time.ts';
-import type { KnowledgeEntry, MaintenanceSettings, MtClient, MtEngineer, StaffMember, TenantProfile } from '../../domain/types.ts';
+import type { KnowledgeEntry, MaintenanceSettings, MtClient, MtEngineer, MtProperty, StaffMember, TenantProfile } from '../../domain/types.ts';
 import { baseProfile, entry, greetingFor as greetingOf, mergeFaqs } from '../common/profile.ts';
 import { inSentence, type EngineerAnswer, type MaintenanceAnswers } from './answers.ts';
 import { MT_NATION_PACKS, gasFact, nationKnowledge } from './nations.ts';
@@ -125,6 +125,19 @@ export function compileClients(a: MaintenanceAnswers): MtClient[] {
   }));
 }
 
+/** The prospect's own homes, as the seed adds them: real records, not marked "example", with nothing private stored. */
+export function compileOwnProperties(a: MaintenanceAnswers): MtProperty[] {
+  const clients = new Set(a.clients.filter((c) => c.name).map((c) => c.key));
+  return a.properties.filter((p) => p.number && p.street && p.district).map((p) => ({
+    key: p.key, number: p.number, street: p.street, district: p.district, town: p.town || a.area.towns[0] || '', kind: p.kind,
+    block: null, site_name: null, client: p.client && clients.has(p.client) ? p.client : null,
+    occupant: { name: p.occupant.name || null, phone: normaliseUkPhone(p.occupant.phone), texts_ok: true },
+    notes: { ...(p.stopcock ? { stopcock: p.stopcock } : {}), ...(p.boiler ? { boiler: p.boiler } : {}) },
+    access: { method: 'occupant', note: '' }, vulnerable: [], vulnerable_consent_at: null, markers: [],
+    gas: p.gas, gas_appliances: p.gas ? 1 : 0, example: false,
+  }));
+}
+
 export function compileSettings(a: MaintenanceAnswers): MaintenanceSettings {
   return {
     nation: a.area.nation,
@@ -132,6 +145,7 @@ export function compileSettings(a: MaintenanceAnswers): MaintenanceSettings {
     towns: a.area.towns,
     customers: structuredClone(a.customers),
     clients: compileClients(a),
+    ...(a.properties.length ? { own_properties: compileOwnProperties(a) } : {}),
     trades: a.trades.filter((t) => t.on).map((t) => ({ key: t.key, label: t.label, gas: Boolean(t.gas) })),
     dont_do: a.dont_do.filter((d) => d.what),
     engineers: compileEngineers(a),

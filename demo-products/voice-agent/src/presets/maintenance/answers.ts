@@ -19,6 +19,25 @@ export type { MtNation };
 export const CLIENT_KINDS = ['agent', 'landlord', 'block', 'social', 'commercial', 'insurer'] as const satisfies readonly MtClientKind[];
 export type ClientKind = MtClientKind;
 export const MAX_CLIENTS = 20;
+export const MAX_OWN_PROPERTIES = 10;
+
+/** A home or site the prospect adds themselves, to ring about as its occupant. */
+export interface OwnPropertyAnswer {
+  key: string;
+  /** "14" or "Flat 2, 7". */
+  number: string;
+  street: string;
+  /** The postcode district ("NG5"), inside the area to be covered. */
+  district: string;
+  town: string;
+  kind: 'house' | 'flat' | 'bungalow' | 'commercial';
+  /** A client's key, or null for a homeowner's own. */
+  client: string | null;
+  occupant: { name: string; phone: string };
+  stopcock: string;
+  boiler: string;
+  gas: boolean;
+}
 export const MAX_ENGINEERS = 12;
 export const MAX_TRADES = 16;
 export const MAX_WINDOWS = 6;
@@ -117,6 +136,8 @@ export interface MaintenanceAnswers extends BaseAnswers {
     recharge_lockouts: boolean;
   };
   clients: ClientAnswer[];
+  /** The prospect's own homes and sites, added to the sample ones at Start (M3, the property editor). */
+  properties: OwnPropertyAnswer[];
   trades: Trade[];
   /** What the business doesn't do, and who to suggest instead. */
   dont_do: { what: string; suggest: string }[];
@@ -292,6 +313,7 @@ export function defaultAnswers(): MaintenanceAnswers {
       tenant_no_client: 'contact_landlord', recharge_lockouts: true,
     },
     clients: defaultClients(),
+    properties: [],
     trades: standardTrades(),
     dont_do: [
       { what: 'pest control', suggest: "the council's pest service, or a member of the British Pest Control Association" },

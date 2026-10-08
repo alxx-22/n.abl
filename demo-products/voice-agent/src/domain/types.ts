@@ -542,6 +542,8 @@ export interface MaintenanceSettings {
   complaints_handler: string;
   data_lead: string;
   // Set in the back office during the day, never compiled from the builder's answers (server/maintenance.ts, applyOffice).
+  /** The prospect's own homes from the builder, added to the sample ones at Start. */
+  own_properties?: MtProperty[];
   /** The office's notice for today ("Storm Ellen: emergencies only"), heard on every call. */
   notice?: MtNotice | null;
   /** Engineers off: no new visits go to them on those days, and their booked jobs are flagged to move. */

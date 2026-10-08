@@ -7,8 +7,8 @@ import { arr, bool, int, key, oneOf, sanitiseBasics, sanitiseClosures, sanitiseD
 import type { FaqAnswer } from '../common/types.ts';
 import { district } from '../estate/listings.ts';
 import {
-  CLIENT_KINDS, MAX_CLIENTS, MAX_ENGINEERS, MAX_TRADES, MAX_WINDOWS, MT_NATIONS, VERSION, defaultAnswers,
-  type ClientAnswer, type EngineerAnswer, type MaintenanceAnswers, type Trade, type VisitWindow,
+  CLIENT_KINDS, MAX_CLIENTS, MAX_ENGINEERS, MAX_OWN_PROPERTIES, MAX_TRADES, MAX_WINDOWS, MT_NATIONS, VERSION, defaultAnswers,
+  type ClientAnswer, type EngineerAnswer, type MaintenanceAnswers, type OwnPropertyAnswer, type Trade, type VisitWindow,
 } from './answers.ts';
 
 const days = (v: unknown): number[] => [...new Set(arr(v).map((d) => int(d, -1, 7, -1)).filter((d) => d >= 0 && d <= 6))].sort((x, y) => x - y);
@@ -78,6 +78,25 @@ export function sanitiseClients(v: unknown[]): ClientAnswer[] {
   }));
 }
 
+export function sanitiseOwnProperties(v: unknown[]): OwnPropertyAnswer[] {
+  return uniqueKeys(v.slice(0, MAX_OWN_PROPERTIES).filter((p) => p && typeof p === 'object').map((p: any, i) => {
+    const occupant = (p.occupant ?? {}) as any;
+    return {
+      key: key(p.key ?? `own_${i + 1}`, `own_${i + 1}`),
+      number: str(p.number, 30),
+      street: str(p.street, 60),
+      district: district(p.district),
+      town: str(p.town, 40),
+      kind: oneOf(p.kind, ['house', 'flat', 'bungalow', 'commercial'] as const, 'house'),
+      client: typeof p.client === 'string' && p.client.trim() ? key(p.client, '') || null : null,
+      occupant: { name: str(occupant.name, 60), phone: str(occupant.phone, 20) },
+      stopcock: str(p.stopcock, 80),
+      boiler: str(p.boiler, 80),
+      gas: bool(p.gas, true),
+    };
+  }));
+}
+
 export function sanitiseWindows(v: unknown[], d: VisitWindow[]): VisitWindow[] {
   return uniqueKeys(v.slice(0, MAX_WINDOWS).filter((w) => w && typeof w === 'object').map((w: any, i) => {
     const label = str(w.label, 30);
@@ -133,6 +152,7 @@ export function sanitiseMaintenance(input: unknown): MaintenanceAnswers {
       recharge_lockouts: bool(cu.recharge_lockouts, d.customers.recharge_lockouts),
     },
     clients: Array.isArray(x.clients) ? sanitiseClients(x.clients) : d.clients,
+    properties: Array.isArray(x.properties) ? sanitiseOwnProperties(x.properties) : d.properties,
     trades,
     dont_do: Array.isArray(x.dont_do)
       ? x.dont_do.slice(0, 8).filter((y: any) => y && typeof y === 'object').map((y: any) => ({ what: str(y.what, 60), suggest: str(y.suggest, 160) })).filter((y: { what: string }) => y.what)

@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import type { LiveJob, LiveState } from '../types.ts';
-import { PRIORITY, etaLeft, jobAct, jobBadges, jobWhen } from './maintenance.ts';
+import { PRIORITY, etaLeft, jobAct, jobBadges, jobWhen, money } from './maintenance.ts';
 
 const COLUMNS: { label: string; has: (j: LiveJob) => boolean }[] = [
   { label: 'New', has: (j) => j.status === 'new' || j.status === 'awaiting_approval' },
@@ -34,6 +34,7 @@ export function Jobs({ id, state, nowMs, flash, onDone }: { id: string; state: L
   const notice = state.maintenance?.notice;
   return (
     <div className="jobs">
+      {state.kpis ? <Kpis k={state.kpis} /> : null}
       {notice ? (
         <p className="office-notice on" role="status">
           <b>Notice on every call:</b> {notice.text}{notice.emergencies_only ? <span className="badge bad">Emergencies only</span> : null}
@@ -181,5 +182,29 @@ export function MoveForm({ j, state, busy, onMove }: { j: LiveJob; state: LiveSt
       </label>
       <button type="submit" className="small primary" disabled={busy || !engineer || !windows.length}>Move</button>
     </form>
+  );
+}
+
+/** The owner's Monday view: today's work, what is open, the week against its targets, and what is overdue or owed. */
+function Kpis({ k }: { k: NonNullable<LiveState['kpis']> }) {
+  const pct = k.targets.of ? Math.round((k.targets.met / k.targets.of) * 100) : null;
+  const tiles: { label: string; value: string; note?: string; level?: 'bad' | 'warn' }[] = [
+    { label: 'Jobs today', value: String(k.jobs_today) },
+    { label: 'Emergencies open', value: String(k.emergencies_open), level: k.emergencies_open ? 'bad' : undefined },
+    { label: 'On target, last 7 days', value: pct === null ? '–' : `${pct}%`, note: `${k.targets.met} of ${k.targets.of} jobs`, level: pct !== null && pct < 90 ? 'warn' : undefined },
+    { label: 'Damp and mould clocks', value: String(k.damp_clocks), level: k.damp_clocks ? 'warn' : undefined },
+    { label: 'Certificates overdue', value: String(k.certificates_overdue), level: k.certificates_overdue ? 'bad' : undefined },
+    { label: 'Unpaid bills', value: money(k.unpaid.pence), note: `${k.unpaid.count} bills, ${k.unpaid.overdue} overdue`, level: k.unpaid.overdue ? 'warn' : undefined },
+  ];
+  return (
+    <ul className="kpis" aria-label="This week at a glance">
+      {tiles.map((t) => (
+        <li key={t.label} className={t.level ?? ''}>
+          <span className="kpi-label">{t.label}</span>
+          <b className="kpi-value">{t.value}</b>
+          {t.note ? <span className="kpi-note">{t.note}</span> : null}
+        </li>
+      ))}
+    </ul>
   );
 }

@@ -11,9 +11,10 @@ import type { Bus } from './bus.ts';
 import { certState } from '../core/maintenance-tools.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { addDays, isIsoDate, spokenDate, spokenTime, toLocal, tenantNow } from '../domain/time.ts';
-import type { Job, JobStatus, MtAbsence, MtNotice, Tenant, TenantProfile } from '../domain/types.ts';
+import type { Certificate, Invoice, Job, JobStatus, MaintenanceSettings, MtAbsence, MtNotice, Tenant, TenantProfile } from '../domain/types.ts';
 import { absentOn, checkWindow, freeWindows, onCallAt, unable, windowOf } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
+import { addWorkingDays } from '../domain/working-days.ts';
 import { safetyScript, type SafetyKind } from '../presets/maintenance/nations.ts';
 import { shortAddress } from '../presets/maintenance/properties.ts';
 import { HttpError } from './http.ts';
@@ -34,7 +35,9 @@ export async function maintenanceState(repo: Repo, t: Tenant, now: Date) {
   // Open jobs, and the last fortnight's closed ones: enough for the board and the week before.
   const jobs = (await repo.listJobs(t.id)).filter((j) => !['done', 'invoiced', 'cancelled'].includes(j.status) || now.getTime() - (j.done_at ?? j.created_at).getTime() < 14 * DAY);
   const trades = new Map(m.trades.map((x) => [x.key, x.label]));
+  const invoices = await repo.listInvoices(t.id);
   return {
+    kpis: kpis(m, jobs, certs, invoices, now, today, tz),
     maintenance: {
       nation: m.nation,
       windows: m.windows,
@@ -89,7 +92,7 @@ export async function maintenanceState(repo: Repo, t: Tenant, now: Date) {
       client_key: q.client_key, client: q.client_key ? clients.get(q.client_key)?.name ?? q.client_key : null, description: q.description,
       amount_pence: q.amount_pence, status: q.status, issued: q.issued, valid_until: q.valid_until, decided_at: q.decided_at?.toISOString() ?? null, decided_by: q.decided_by,
     })),
-    invoices: (await repo.listInvoices(t.id)).map((i) => ({
+    invoices: invoices.map((i) => ({
       reference: i.reference, job_ref: i.job_ref, address: i.property_key && byKey.get(i.property_key) ? shortAddress(byKey.get(i.property_key)!) : null,
       client_key: i.client_key, client: i.client_key ? clients.get(i.client_key)?.name ?? i.client_key : null,
       payer: { name: i.payer.name, phone: displayUkPhone(i.payer.phone) }, kind: i.kind, description: i.description, amount_pence: i.amount_pence,
@@ -110,6 +113,30 @@ export async function maintenanceState(repo: Repo, t: Tenant, now: Date) {
 }
 
 const OPEN: JobStatus[] = ['new', 'scheduled', 'awaiting_approval', 'waiting'];
+
+/**
+ * The owner's Monday view along the top of the board (presets/property-maintenance-use-cases.md): jobs today,
+ * emergencies open, response targets met over the last seven days, damp and mould clocks running, certificates
+ * overdue, and bills unpaid.
+ */
+function kpis(m: MaintenanceSettings, jobs: Job[], certs: Certificate[], invoices: Invoice[], now: Date, today: string, tz: string) {
+  const done = jobs.filter((j) => j.done_at && now.getTime() - j.done_at.getTime() < 7 * DAY && j.kind === 'repair');
+  // On target: an emergency attended by its attend-by time; anything else done within its working days.
+  const onTarget = (j: Job) => {
+    if (j.priority === 'emergency') return !j.attend_by || j.done_at! <= j.attend_by;
+    const days = j.priority === 'urgent' ? m.priorities.urgent.working_days : m.priorities.routine.working_days;
+    return toLocal(j.done_at!, tz).date <= addWorkingDays(toLocal(j.created_at, tz).date, days, m.nation);
+  };
+  const unpaid = invoices.filter((i) => i.status === 'due');
+  return {
+    jobs_today: jobs.filter((j) => j.visit_date === today && !['cancelled'].includes(j.status)).length,
+    emergencies_open: jobs.filter((j) => j.priority === 'emergency' && !['done', 'invoiced', 'cancelled'].includes(j.status)).length,
+    targets: { met: done.filter(onTarget).length, of: done.length },
+    damp_clocks: jobs.filter((j) => !['done', 'invoiced', 'cancelled'].includes(j.status) && j.clocks.some((c) => c.kind === 'awaab_investigation')).length,
+    certificates_overdue: certs.filter((c) => certState(c, today, m.planned.reminder_weeks) === 'overdue').length,
+    unpaid: { count: unpaid.length, overdue: unpaid.filter((i) => i.due < today).length, pence: unpaid.reduce((n, i) => n + i.amount_pence, 0) },
+  };
+}
 
 /** What the office changes during the day, kept with the workspace so a rebuild from the builder keeps it. */
 export interface OfficeState { notice?: MtNotice | null; absent?: MtAbsence[] }

@@ -32,6 +32,15 @@ export function validateMaintenance(a: MaintenanceAnswers): Issue<MaintenanceSte
     if ((cl.po_required || cl.works_limit_pence > 0) && (!cl.contact.name || !cl.contact.phone)) err('customers', `${cl.name}: add the contact who approves work, with their phone.`);
     if (cl.status === 'on_stop') warn('customers', `${cl.name} is on stop: the receptionist won't book work for them.`);
   }
+  // The prospect's own homes: an address to find, someone to ring as, and inside the area.
+  const clientKeys = new Set(a.clients.map((x) => x.key));
+  for (const p of a.properties) {
+    const where = [p.number, p.street].filter(Boolean).join(' ') || 'A property of yours';
+    if (!p.number || !p.street || !p.district) err('customers', `${where}: add the house number or name, the street and the postcode district.`);
+    else if (!a.area.districts.includes(p.district)) warn('customers', `${where} is in ${p.district}, outside your area: callers about it will hear you don't cover it.`);
+    if (!p.occupant.phone) warn('customers', `${where}: add who lives there and their phone, to ring as them on the demo phone.`);
+    if (p.client && !clientKeys.has(p.client)) warn('customers', `${where}: its client has been removed, so it's a homeowner's own.`);
+  }
   if (c.social.on && !c.social.agent_of_landlord) warn('customers', "Social housing is on, but you haven't said you act as the landlord's agent, so damp and mould clocks are the landlord's to start.");
 
   if (!tradesOn.length) err('trades', 'Turn on at least one trade.');
