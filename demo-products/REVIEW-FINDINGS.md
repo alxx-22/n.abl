@@ -37,8 +37,8 @@ commit, when it's fixed or shown to be wrong.
 
 **Repairs (server)**
 
-- [medium] In-hours page declined or unanswered goes to last night's on-call pair (`/home/user/n.abl/src/server/maintenance.ts:245`)
-- [medium] In-hours emergency pages an engineer the office marked off sick (`/home/user/n.abl/src/core/maintenance-tools.ts:669`)
+- [x] [medium] In-hours page declined or unanswered goes to last night's on-call pair (`/home/user/n.abl/src/server/maintenance.ts:245`) Fixed in `5e17c27`.
+- [x] [medium] In-hours emergency pages an engineer the office marked off sick (`/home/user/n.abl/src/core/maintenance-tools.ts:669`) Fixed in `5e17c27`.
 - [medium] A waiting job given a new window stays 'waiting' and can't go on the way (`/home/user/n.abl/src/server/maintenance.ts:220`)
 - [medium] Register's booked_job: voice books twice, and cancel or done never clears it (`/home/user/n.abl/src/core/maintenance-tools.ts:1366`)
 - [medium] Call-out invoice ignored: job billed twice, and stays due after cancel (`/home/user/n.abl/src/server/maintenance.ts:330`)
