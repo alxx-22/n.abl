@@ -24,6 +24,7 @@ import { knownTimes, timesIn } from '../domain/clock-times.ts';
 import { tenantNow } from '../domain/time.ts';
 import { armSafety, noteAdvice, safetyCorrection } from './safety.ts';
 import { REACTION_NOW, REACTION_SCRIPT, armReaction, noteReactionSaid } from './reaction.ts';
+import { allergyQuestionDish } from './kitchen.ts';
 import { addDays, toLocal, zonedToUtc } from '../domain/time.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
@@ -562,6 +563,13 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (this.state.takeaway && armReaction(this.state, clean)) {
       this.record('system', { event: 'reaction_armed' });
       this.session?.sendText(REACTION_NOW);
+    } else if (this.state.takeaway && this.opts.tenant.profile.menu) {
+      // An allergy question about a dish: its answer comes from get_item_details, once per dish.
+      const dish = allergyQuestionDish(this.opts.tenant.profile.menu, clean);
+      if (dish && !this.state.gateAsked.includes(`allergy:${dish}`)) {
+        this.state.gateAsked.push(`allergy:${dish}`);
+        this.session?.sendText(`[From the system: the caller is asking about an allergy and the ${dish}. Call get_item_details for "${dish}" now and say its allergen_answer, caveat included. Never say safe.]`);
+      }
     }
   }
 

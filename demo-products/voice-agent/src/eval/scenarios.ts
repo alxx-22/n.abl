@@ -1758,7 +1758,8 @@ export const SCENARIOS: Scenario[] = [
       // From add_to_order once the postcode is known, or from set_fulfilment and review_order.
       const short = [...results(c, 'add_to_order').map((r) => ({ short_by: r.short_of_delivery_minimum })), ...results(c, 'set_fulfilment'), ...results(c, 'review_order')].find((r) => r.short_by)?.short_by;
       expect(f, Boolean(short), 'the amount short was never worked out');
-      expect(f, /£?2\.03|two pounds(?: and)? three/i.test(c.agentText), 'the amount short was not said');
+      // Spoken as "£2.03", "£2 03" or in words.
+      expect(f, /£?2[. ]03|two pounds(?: and)? three/i.test(c.agentText), 'the amount short was not said');
       const o = await orders(c);
       expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
       if (o[0]) {

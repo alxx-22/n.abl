@@ -9,6 +9,7 @@ import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { newCallState, runTool, type Action, type ToolContext } from '../src/core/tools.ts';
 import { DECLINED } from '../src/domain/deals.ts';
+import { allergyQuestionDish } from '../src/core/kitchen.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { defaultAnswers } from '../src/presets/takeaway/answers.ts';
 import { compileTakeaway } from '../src/presets/takeaway/compile.ts';
@@ -176,4 +177,13 @@ test('meal deals: a deal missing a choice is asked for and added again as the sa
   assert.equal(ask.question, 'Pizza night needs a choice of Drinks: Coca-Cola, Diet Coke, Fanta Orange, Sprite.');
   assert.equal(ask.nothing_added, 'Nothing was added yet. Ask the caller this, then call add_to_order again with item "Pizza night" and options ["Margherita","Pepperoni"] plus their answer: it is all one Pizza night, never separate items.');
   assert.match((await c.run('add_to_order', { item: 'Pizza night', options: ['Margherita', 'Pepperoni', 'coke', 'fanta'] })).added, /^1 × Pizza night \(Margherita, Pepperoni, Coca-Cola, Fanta Orange\) — £19\.99$/);
+});
+
+test('meal deals: an allergy question about a dish is sent to get_item_details, and "no cheese" is not one', async () => {
+  const menu = (await firebird('tk-allergy-q')).profile.menu!;
+  // Live, 8 October: "Is the Burger meal OK for him?" was answered from memory, never looked up.
+  assert.equal(allergyQuestionDish(menu, 'My son is allergic to sesame. Is the Burger meal OK for him?'), 'Burger meal');
+  assert.equal(allergyQuestionDish(menu, 'Does the double cheeseburger contain gluten?'), 'Double cheeseburger');
+  assert.equal(allergyQuestionDish(menu, 'Two cheeseburgers, no cheese on one.'), null);
+  assert.equal(allergyQuestionDish(menu, "I'm allergic to nuts. What can I have?"), null, 'no dish named');
 });

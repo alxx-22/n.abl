@@ -13,7 +13,7 @@
 
 import type { Menu, Order, OrderLine, OrderRequest, Ordering, Tonight } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
-import { lineTotal, normalise } from '../domain/menu.ts';
+import { allItems, allergensNamed, lineTotal, normalise } from '../domain/menu.ts';
 import { dealOf } from '../domain/deals.ts';
 import { addDays, closeMinutes, dayName, normaliseTime, spokenTime, toLocal, weekdayOf, zonedToUtc } from '../domain/time.ts';
 import { normaliseUkPhone } from '../domain/phone.ts';
@@ -277,6 +277,24 @@ export function readBackNext(ctx: ToolContext, type: Kind): string {
     for (const g of ['pay_driver', 'change_from']) if (!ctx.state.gateAsked.includes(g)) ctx.state.gateAsked.push(g);
   }
   return `Read this back word for word and, in the same breath, ask ${asks.join(', and ')}. On yes, call confirm_order at once${driver ? ' with pay_driver and change_from' : ''}: don't ask anything new after the yes.`;
+}
+
+const ALLERGY_ASKED = /allerg|intoleran|coeliac|celiac|free from|contain|safe|ok(?:ay)? for|suitable/i;
+
+/**
+ * "My son's allergic to sesame. Is the Burger meal OK?": the dish an allergy
+ * question is about, so the call can send it to get_item_details. Live, 8
+ * October: the receptionist answered from memory and never looked it up.
+ * The longest name said wins ("Double cheeseburger" over "Cheeseburger").
+ */
+export function allergyQuestionDish(menu: Menu, line: string): string | null {
+  if (!ALLERGY_ASKED.test(line) || !allergensNamed(line).length) return null;
+  const said = ` ${normalise(line).join(' ')} `;
+  const hits = allItems(menu).map(({ item }) => item).filter((i) => {
+    const words = normalise(i.name);
+    return words.length > 0 && said.includes(` ${words.join(' ')} `);
+  });
+  return hits.sort((a, b) => b.name.length - a.name.length)[0]?.name ?? null;
 }
 
 /** Dishes of two words or more the caller named that aren't on the order, as a dish or a deal's choice. Not said with "no". */
