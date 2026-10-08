@@ -430,6 +430,25 @@ test('a valuation with no figure: outside the area, Help to Buy and a lender are
   assert.match(String(viaBooking.message), /book_valuation/);
 });
 
+test('an offer on a home in best and final: the buyer hears the deadline, and that they may improve their offer before it', async () => {
+  const t = await agency('ea-offer-bf');
+  // Best and final by Friday at noon.
+  await repo.setListing(t.id, 'albion_22', { best_final_at: new Date('2026-10-09T11:00:00Z') });
+  const { run, say } = await call(t);
+  await run('get_property', { property: '22 Albion Road' });
+  const args = { property: '22 Albion Road', amount: 325000, buyer_names: ['Sam Price'], conditions: 'none', first_time_buyer: true, funding: 'cash' };
+  await run('record_offer', args);
+  say('Before I take it: buyers pay thirty-six pounds including VAT each for ID checks, once an offer is accepted.');
+  const r = await run('record_offer', args);
+  assert.equal(r.recorded, true, JSON.stringify(r));
+  assert.match(String(r.best_and_final), /^The seller has asked for best and final offers by Friday at 12 noon/);
+  // After the deadline: no deadline to speak of, and the offer still goes to the seller.
+  await repo.setListing(t.id, 'albion_22', { best_final_at: new Date('2026-10-06T11:00:00Z') });
+  const late = await run('record_offer', { ...args, amount: 326000 });
+  assert.equal(late.recorded, true);
+  assert.equal(late.best_and_final, undefined);
+});
+
 test('an offer, end to end: the fee first, then recorded whatever it is, confirmed in writing to the buyer, and Jess alerted', async () => {
   const t = await agency('ea-offer');
   const before = await repo.listOffers(t.id, 'albion_22');

@@ -873,6 +873,8 @@ async function recordOffer(args: Args, ctx: ToolContext): Promise<Record<string,
     await smsTo(ctx, normaliseUkPhone(negotiator.mobile), `URGENT from the AI receptionist: ${alert}${phone ? ` Caller: ${displayUkPhone(phone)}.` : ''} (Demo)`);
   }
   const sent = await smsTo(ctx, phone, offerReceivedText(p.name, offer.amount_pence, shortAddress(l), toLocal(offer.received_at, p.timezone), conditions, offer.reference));
+  // Best and final still open: every bidder hears the deadline, this one included (review, 8 October).
+  const bf = h.live.best_final_at && h.live.best_final_at > ctx.now() ? toLocal(h.live.best_final_at, p.timezone) : null;
   ctx.action({ kind: 'offer_recorded', title: `Offer ${poundsWhole(offer.amount_pence)} · ${shortAddress(l)}`, detail: `${who}${terms}${pos ? ` · ${pos}` : ''} · ref ${offer.reference}`, data: { reference: offer.reference } });
   return {
     recorded: true, reference: offer.reference, spoken_reference: spokenReference(offer.reference), read_back: readBack,
@@ -881,7 +883,10 @@ async function recordOffer(args: Args, ctx: ToolContext): Promise<Record<string,
     confirmation_text: sent ? 'sent by text, with the reference' : email ? 'the team will email it' : 'Ask for a mobile or email so we can confirm it in writing, and take it in a message.',
     // That other offers exist may be said (TPO 9f); who made them and how much, never.
     other_offers: (await othersOn(ctx, l.key, phone)) ? OTHER_OFFERS : undefined,
-    next: 'Read back read_back and the reference one character at a time, then say. Never hint at the answer or comment on the amount; of other offers, say only other_offers.',
+    best_and_final: bf
+      ? `The seller has asked for best and final offers by ${dayWords(bf.date, toLocal(ctx.now(), p.timezone).date)} at ${spokenTime(bf.time)}. This offer goes in as it stands; they may improve it before then, and they'll hear the outcome after.`
+      : undefined,
+    next: `Read back read_back and the reference one character at a time, then say${bf ? ', then best_and_final' : ''}. Never hint at the answer or comment on the amount; of other offers, say only other_offers.`,
   };
 }
 
