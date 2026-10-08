@@ -640,6 +640,19 @@ the session: see the latest folder in `voice-agent/eval-results/`.
   rows it can go to.
 - The takeaway's order fields (`ready_at`, `driver`) are written but not yet
   read back (do it when the takeaway is built).
+- The demo clock (the Time button) is a switch in each preset's workspace
+  spec now, `clock: true` (8 October, the cloud session; `de7fe18`,
+  `43c4a7c`): on for the restaurant, estate agent and repairs. For the
+  takeaway, its own session can switch it on once its staff actions stamp
+  `tenantNow(t)` rather than `new Date()` (`answerRequest` and
+  `sendOutOrder` in `src/server/demo.ts` still use the real time); the
+  back office already opens at the demo's day and time.
+- `test/takeaway-demo.test.ts` ("a takeaway end to end") fails about one
+  run in three: the seed's made-up phones can draw 07700 900811, the
+  number the test uses for its own order, so "the prospect's own orders are
+  cleared" finds a seeded one. Seen by the cloud session on 8 October and
+  left for the takeaway's session (reserve 900811 in the seed, or use a
+  number the seed never draws).
 - `NEXT-SESSION-PROMPT.md` is from an older session; use this file instead.
 
 ## Testing as Alex does
