@@ -70,6 +70,19 @@ viewing times before checking, caught and corrected by `invented_time`
 (the scenario then fails on the flag, as it should); `ea-personal-interest`
 fails only when the simulated caller makes up a mobile number.
 
+Evening of 8 October (the cloud session), all twelve re-run after the
+day's shared changes: 4 of 12 on the first run, most of the rest because
+the simulated caller went quiet after a turn or two. Fixed from it
+(`1e6ee66`, `e8c8266`): the buyer's position taken from their own words
+when the booking leaves it out (and so the valuation offer for a home to
+sell); "Thursday" booked as next week's Thursday is checked once against
+the nearest; a valuation asks once why and when they're moving and
+whether another agent has the home (not an executor); a placeholder such
+as "[Caller's Name]" is never taken as a name. Every one of the twelve
+has passed since (`eval-results/2026-10-08T18-10-55` and `T18-35-43`,
+not in git). The Diary can give a viewing to someone else (panel or drag;
+`4f8904b`), and the estate agent has the demo clock.
+
 ### Takeaway (the Windows session)
 
 The spec is `presets/takeaway.md`, the use cases
