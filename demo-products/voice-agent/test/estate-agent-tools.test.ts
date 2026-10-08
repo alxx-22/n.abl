@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { newCallState, record, runTool, toolDeclarations, unsaidReference, type Action, type ToolContext } from '../src/core/tools.ts';
-import { checkUtterance } from '../src/core/guardrails.ts';
+import { checkUtterance, referencesIn } from '../src/core/guardrails.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
 import { displayUkPhone } from '../src/domain/phone.ts';
 import { toLocal } from '../src/domain/time.ts';
@@ -661,6 +661,19 @@ test('estate guardrails: a time offered must come from the instructions, a tool 
   assert.deepEqual(rules('Let me check 4:45pm for you.'), []);
   // A repairs contractor's and a restaurant's calls are not checked for times.
   assert.deepEqual(checkUtterance("I've got 9am or 10:30am.", newCallState()), []);
+});
+
+test('guardrails: a reference read out must come from a tool or the caller', () => {
+  const s = newCallState();
+  const rules = (line: string) => checkUtterance(line, s).map((f) => f.rule);
+  // Live, 6 October: no tool was used at all, and the valuation "booked" with reference 13579.
+  assert.deepEqual(rules("So that's Thursday at 10am. The reference is 13579. Anything else?"), ['invented_reference']);
+  s.references.push(...referencesIn(JSON.stringify({ booked: true, reference: 'QK379', quote: 'Q-2291' })));
+  for (const line of ['Your booking reference is Q, K, 3, 7, 9. Thank you!', 'Your reference is QK379.', 'That was quote reference Q 2 2 9 1.']) assert.deepEqual(rules(line), [], line);
+  assert.deepEqual(rules('Your reference is Q K 3 7 8.'), ['invented_reference'], 'one character out is still made up');
+  // The caller's own reference, read back to them.
+  s.heard.push('My reference is X R 8 9 1.');
+  assert.deepEqual(rules("Thanks: that's reference XR891."), []);
 });
 
 test('take_message: a caller who talked about bank details leaves an urgent fraud message, whatever it was filed as', async () => {

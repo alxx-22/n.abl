@@ -20,6 +20,7 @@ import {
 } from '../domain/menu.ts';
 import { amountsIn } from '../domain/amounts.ts';
 import { knownTimes, rangesIn } from '../domain/clock-times.ts';
+import { referencesIn } from './guardrails.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
@@ -151,6 +152,8 @@ export interface CallState {
   emergencyTrade: string | null;
   /** Sums, in pence, the receptionist may say: from its instructions and what its tools returned. */
   amounts: number[];
+  /** Every reference the tools returned in this call, letters and digits only: one said that isn't here was made up. */
+  references: string[];
   /** An estate agency's times of day the receptionist may say (minutes after midnight), and the ranges its tools gave. */
   times: number[];
   timeRanges: [number, number][];
@@ -165,7 +168,7 @@ export function newCallState(): CallState {
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
-    invoice: null, emergencyTrade: null, amounts: [], times: [], timeRanges: [],
+    invoice: null, emergencyTrade: null, amounts: [], references: [], times: [], timeRanges: [],
   };
 }
 
@@ -1382,11 +1385,12 @@ export async function runTool(name: string, args: Args, ctx: ToolContext): Promi
   if (!tool || (tool.when && !tool.when(ctx.tenant, { canTransfer: Boolean(ctx.telephony) }))) return { error: `No tool called ${name}.` };
   try {
     const result = await tool.handler(args ?? {}, ctx);
+    const json = JSON.stringify(result);
+    ctx.state.references.push(...referencesIn(json));
     // A price a tool gave may be said; one nothing gave may not (a repairs call's invented_price).
-    if (ctx.state.maintenance || ctx.state.takeaway) ctx.state.amounts.push(...amountsIn(JSON.stringify(result)));
+    if (ctx.state.maintenance || ctx.state.takeaway) ctx.state.amounts.push(...amountsIn(json));
     // So too a time (an estate agency's and a takeaway's invented_time).
     if (ctx.state.estate || ctx.state.takeaway) {
-      const json = JSON.stringify(result);
       ctx.state.times.push(...knownTimes(json));
       ctx.state.timeRanges.push(...rangesIn(json));
     }

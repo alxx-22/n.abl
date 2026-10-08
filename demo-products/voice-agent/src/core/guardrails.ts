@@ -13,7 +13,7 @@ import type { CallState } from './tools.ts';
 
 export interface Flag {
   rule:
-    | 'unconfirmed_claim' | 'unpaid_claim' | 'said_safe_for_allergy' | 'narrated' | 'untaken_message'
+    | 'unconfirmed_claim' | 'unpaid_claim' | 'said_safe_for_allergy' | 'narrated' | 'untaken_message' | 'invented_reference'
     // An estate agency's (presets/estate-agent.md §8), checked only on its calls.
     | 'valuation_figure' | 'bank_details' | 'code_spoken' | 'vacancy_said' | 'staff_whereabouts' | 'invented_interest'
     | 'unconfirmed_acceptance' | 'disclosure_missed' | 'invented_time'
@@ -272,6 +272,27 @@ function maintenanceFlags(text: string, state: CallState, staff: string[], m: Ma
 }
 
 /** `staff`: the team's first names, for an estate agency's whereabouts check and a contractor's engineers. `m`: a contractor's settings. */
+// A reference read out: "your reference is Q K 3 7 9", "ref 13579". On 6 October a live call used no tools at all, said the
+// valuation was booked, and gave "13579".
+// Read as one block ("QK379") or a character at a time ("Q, K, 3, 7, 9").
+const REFERENCE = /\b(?:reference|ref|booking number|confirmation number|job number|order number)(?: number| code)?(?: is|'s|:)?\s+(\b[A-Z0-9]{4,10}\b|\b[A-Z0-9]\b(?:[\s,.-]+\b[A-Z0-9]\b){3,9})/gi;
+
+/** References, as letters and digits only: what the tools returned in this call, for the check below. */
+export function referencesIn(text: string): string[] {
+  return (text.match(/\b[A-Z]{0,4}-?\d[\dA-Z-]{2,10}\b/g) ?? []).map((r) => r.replace(/-/g, ''));
+}
+
+/** A reference said that no tool gave and the caller didn't read out. */
+function inventedReference(text: string, state: CallState): string | null {
+  const heard = state.heard.join(' ').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  for (const m of text.matchAll(REFERENCE)) {
+    const ref = m[1].toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (ref.length < 4 || !/\d/.test(ref) || state.references.includes(ref) || heard.includes(ref)) continue;
+    return m[0].trim();
+  }
+  return null;
+}
+
 export function checkUtterance(text: string, state: CallState, staff: string[] = [], m?: MaintenanceSettings): Flag[] {
   const flags: Flag[] = [];
   const claim = CLAIM.exec(text);
@@ -290,6 +311,9 @@ export function checkUtterance(text: string, state: CallState, staff: string[] =
   if (passed && !negated(text, passed.index) && !state.messageTaken) flags.push({ rule: 'untaken_message', text: passed[0] });
   const narrated = NARRATED.exec(text);
   if (narrated) flags.push({ rule: 'narrated', text: narrated[0] });
+  // After the claims: "that's booked, reference A B 1 2" is first of all a booking nobody made.
+  const reference = inventedReference(text, state);
+  if (reference) flags.push({ rule: 'invented_reference', text: reference });
   if (state.estate) flags.push(...estateFlags(text, state, staff));
   if (state.maintenance) flags.push(...maintenanceFlags(text, state, staff, m));
   if (state.takeaway) flags.push(...takeawayFlags(text, state));

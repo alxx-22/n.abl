@@ -16,7 +16,7 @@ import {
   loggableArgs, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type CallState, type SmsSender, type Telephony,
   type ToolContext,
 } from './tools.ts';
-import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DETAIL, checkUtterance, saidYes, type Flag } from './guardrails.ts';
+import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DETAIL, checkUtterance, referencesIn, saidYes, type Flag } from './guardrails.ts';
 import { redactLine } from './redact.ts';
 import { record } from './tool-kit.ts';
 import { amountsIn } from '../domain/amounts.ts';
@@ -155,6 +155,8 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
     '[Correction from the system: never say a dish is safe for an allergy. Correct yourself now, using the allergen wording from get_item_details, including its caveat.]',
   untaken_message:
     '[Correction from the system: no message has been taken in this call, so the team has not been told. Take it now with take_message (their name, number and what they want), then tell them it has been passed on.]',
+  invented_reference:
+    "[Correction from the system: no tool gave that reference, so nothing is booked or recorded yet. Say sorry, it isn't done yet; call the right tool now, and give only the reference it returns.]",
   narrated:
     '[Correction from the system: you just read out a note about the caller instead of talking to them. Never describe what the caller or anyone in the room said. Say "Sorry, I misheard you there", ask them what they would like, and carry on talking to them directly.]',
   // An estate agency's (presets/estate-agent.md §8).
@@ -766,6 +768,8 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (n.kind === 'approved' || n.kind === 'declined') this.state.awaitingApproval = false;
     if (n.kind === 'accepted') this.state.paged = false;
     if (n.kind === 'approved') record(this, n.job, 'job', 'committed');
+    // Its references may be said, as a tool's may.
+    this.state.references.push(...referencesIn(`${n.job} ${n.text}`));
     const a: Action = { kind: 'note', title: n.kind === 'approved' ? 'Approved by the client' : n.kind === 'declined' ? 'Declined by the client' : n.kind === 'accepted' ? 'Engineer accepted' : 'Paged again', detail: n.text, data: { reference: n.job } };
     this.emit('action', a);
     this.publish('action', { action: a });
