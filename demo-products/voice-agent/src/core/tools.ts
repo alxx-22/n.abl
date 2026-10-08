@@ -33,7 +33,7 @@ import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf,
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
-import { depositOnCancel, noticeFirst } from './barber-tools.ts';
+import { depositNext, depositOnCancel, noticeFirst, oneEach, readBackFirst, servicePrice } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -564,6 +564,8 @@ const TOOLS: Record<string, Tool> = {
     tailor: (d, t) => estateParams(tableParams(d, t, 'check'), t, 'check'),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
+      const each = oneEach(ctx, str(args.service), int(args.party_size) ?? 1, 'available');
+      if (each) return each;
       const service = findService(p, str(args.service));
       if (!service) {
         return { available: false, message: `Not a bookable service. Services: ${p.booking!.services.map((s) => s.label).join(', ')}.` };
@@ -599,7 +601,8 @@ const TOOLS: Record<string, Tool> = {
       }
       if (r.areas_free && !table.key) out.next = `Both are free: ask whether they would like ${r.areas_free.map((a) => a.toLowerCase()).join(' or ')}.`;
       if (r.other_areas_free) out.next = `The ${p.booking?.areas?.find((a) => a.key === area.key)?.label.toLowerCase()} is full then, but ${r.other_areas_free.map((a) => a.toLowerCase()).join(' and ')} ${r.other_areas_free.length > 1 ? 'are' : 'is'} free at that time. Offer that first, then other times.`;
-      if (service.price_pence) out.price = pounds(service.price_pence);
+      if (service.price_pence) out.price = servicePrice(service);
+      if (!out.next && (r.available || r.alternatives.length)) out.next = readBackFirst(ctx, service, (out.with as string | undefined) ?? str(args.staff));
       return out;
     },
   },
@@ -626,6 +629,8 @@ const TOOLS: Record<string, Tool> = {
     tailor: (d, t) => estateParams(tableParams(d, t, 'book'), t, 'book'),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
+      const each = oneEach(ctx, str(args.service), int(args.party_size) ?? 1, 'booked');
+      if (each) return each;
       if (p.estate) {
         const service = findService(p, str(args.service));
         const estate = service ? await estateBooking(args, ctx, service) : null;
@@ -720,9 +725,9 @@ const TOOLS: Record<string, Tool> = {
           highchairs > chairs ? `We only have ${chairs} highchair${chairs === 1 ? '' : 's'}; say so.` : null,
           unmet.length ? `No ${unmet.map((f) => f.replace('_', ' ')).join(' or ')} table was free; say it is noted as a request.` : null,
         ].filter(Boolean).join(' ') || undefined,
-        next: b.deposit_pence
+        next: depositNext(ctx, b) ?? (b.deposit_pence
           ? `A ${pounds(b.deposit_pence)} deposit secures this booking. Offer to take it now with take_demo_payment (for "deposit"), or say a payment link will be texted.`
-          : undefined,
+          : undefined),
         confirmation_text: smsStatus ? 'sent by text, with the reference' : 'no number to text',
       };
     },

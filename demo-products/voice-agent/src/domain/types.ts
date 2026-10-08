@@ -44,6 +44,8 @@ export interface BookableService {
   duration_minutes?: number;
   buffer_minutes?: number;
   price_pence?: number;
+  /** The price is where it starts ("from £25"). */
+  price_from?: boolean;
   description?: string;
   windows: Window[];
   max_party?: number;

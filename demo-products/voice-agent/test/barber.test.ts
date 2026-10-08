@@ -102,6 +102,22 @@ test('barber: cancelling or moving inside the notice keeps the deposit, said fir
   assert.equal((await j.run('cancel_booking', { reference: jay.reference })).deposit, 'The £5.00 deposit is refunded (in the demo, no money moves).');
 });
 
+test('barber: one person and one service a booking, the price in the read-back, the deposit by the demo card or in the shop', async () => {
+  const t = await repo.upsertTenant(compileBarber(named(), { slug: 'kingsleys-tools' }));
+  const c = await call(t, '+447700900960');
+  const three = await c.run('check_availability', { service: 'Classic cut', date: '2026-10-17', time: '10:00', party_size: 3 });
+  assert.equal(three.available, false);
+  assert.match(three.message, /^Each person is their own booking/);
+  assert.equal((await c.run('create_booking', { service: 'Kids cut', date: '2026-10-17', time: '10:00', party_size: 3, name: 'Sara Ahmed' })).booked, false);
+  assert.match((await c.run('check_availability', { date: '2026-10-17', time: '10:00' })).message, /^Which service\? Ask what they are having: Classic cut, Skin fade, /);
+  const grey = await c.run('check_availability', { service: 'Grey blending', date: '2026-10-17', time: '10:00', staff: 'Marcus' });
+  assert.deepEqual([grey.available, grey.price, grey.with], [true, 'from £25.00', 'Marcus']);
+  assert.equal(grey.next, 'Read back the grey blending with Marcus, the day, the time and the price (from £25.00), and book with create_booking when they say yes. Nothing is booked and there is no reference until create_booking returns one.');
+  const booked = await c.run('create_booking', { service: 'Classic cut', date: '2026-10-17', time: '10:00', name: 'Tom Reid' });
+  assert.equal(booked.booked, true);
+  assert.equal(booked.next, 'Offer the £5.00 deposit now by card with take_demo_payment (for "deposit"). If they would rather pay in the shop, that is fine: the booking stands.');
+});
+
 test('barber: the seeded week fills each barber on their days, Saturday busiest, with the people to ring as', () => {
   const p = profile();
   for (const seed of [1, 7]) {

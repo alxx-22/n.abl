@@ -64,6 +64,7 @@ export function compileBooking(a: BarberAnswers): NonNullable<TenantProfile['boo
     slot_minutes: b.slot_minutes,
     duration_minutes: s.minutes,
     price_pence: s.price_pence,
+    ...(s.from ? { price_from: true } : {}),
     ...(s.description ? { description: s.description } : {}),
     windows: bookingWindows(a.hours, s.minutes),
     lead_minutes: b.lead_minutes,
