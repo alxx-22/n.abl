@@ -29,7 +29,7 @@ function StepTeam({ a, set }: Props) {
             <input aria-label="Name" className="area-name" placeholder="First name" value={t.name} maxLength={30} onChange={(e) => set((d) => void (d.team[i].name = e.target.value))} />
             <button type="button" className="ghost small" onClick={() => set((d) => void d.team.splice(i, 1))}>Remove</button>
           </div>
-          <ListText label="Also known as" value={t.aliases} placeholder="Marc" onChange={(v) => set((d) => void (d.team[i].aliases = v))} hint="Nicknames callers use." />
+          <ListText label="Also known as" value={t.aliases} placeholder="Optional" onChange={(v) => set((d) => void (d.team[i].aliases = v))} hint="Nicknames callers use." />
           <fieldset className="chips">
             <legend>What they do</legend>
             {a.services.filter((s) => s.name).map((s) => (
@@ -52,15 +52,17 @@ function StepTeam({ a, set }: Props) {
             hint="A later start or an early finish: they're only booked inside these."
           />
           {t.hours.map((h, j) => (
-            <div className="two" key={j}>
+            <div className="three" key={j}>
               <Select label="Day" value={h.day} options={t.days.map((day) => ({ value: day, label: DAYS[day] }))} onChange={(v) => set((d) => void (d.team[i].hours[j].day = v))} />
-              <div className="row">
-                <Text label="Starts" value={h.open} max={5} onChange={(v) => set((d) => void (d.team[i].hours[j].open = v))} />
-                <Text label="Finishes" value={h.close} max={5} onChange={(v) => set((d) => void (d.team[i].hours[j].close = v))} />
-              </div>
+              <Text label="Starts" value={h.open} max={5} onChange={(v) => set((d) => void (d.team[i].hours[j].open = v))} />
+              <Text label="Finishes" value={h.close} max={5} onChange={(v) => set((d) => void (d.team[i].hours[j].close = v))} />
             </div>
           ))}
-          {t.hours.length ? <button type="button" className="small" onClick={() => set((d) => void d.team[i].hours.push({ day: d.team[i].days[0] ?? 2, open: '09:00', close: '17:00' }))}>+ Another day</button> : null}
+          {t.hours.length ? (
+            <div className="row-tools">
+              <button type="button" className="small" onClick={() => set((d) => void d.team[i].hours.push({ day: d.team[i].days[0] ?? 2, open: '09:00', close: '17:00' }))}>+ Another day</button>
+            </div>
+          ) : null}
           <Text label="What callers may hear about them" value={t.notes} max={160} placeholder="Skin fades, Afro and textured hair" onChange={(v) => set((d) => void (d.team[i].notes = v))} />
         </div>
       ))}

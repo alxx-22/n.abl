@@ -1,7 +1,7 @@
 // An estate agency's diary: a row for each member of the team, a bar for
 // each viewing, valuation and mortgage appointment across the day, so a gap
 // or a busy afternoon shows at once. Click a bar to open it; drag it to
-// someone else's row to move it to them (the barber's diary will too).
+// someone else's row to move it to them. A barber's Diary is the same, a row a barber.
 
 import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { LiveBooking, LiveState } from '../types.ts';
@@ -49,7 +49,8 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onM
     else onOpen(b);
   };
   const day = state.bookings.filter((b) => b.date === view.date && b.status === 'confirmed');
-  const team = (state.team ?? []).filter((s) => s.does.length || day.some((b) => b.resource_key === s.key));
+  // A barber has no duties, only services.
+  const team = (state.team ?? []).filter((s) => s.does.length || s.services?.length || day.some((b) => b.resource_key === s.key));
   // The office's day, stretched to every booking on it: viewings often run into the evening.
   const lo = Math.min(9 * 60, ...day.map((b) => span(b)[0])) - 30;
   const hi = Math.max(18 * 60, ...day.map((b) => span(b)[1])) + 30;
@@ -100,7 +101,9 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onM
           );
         })}
       </div>
-      <p className="hint">Viewings, valuations and mortgage appointments, by person. Click one to open it, record feedback or mark it done; drag it to someone else's row to give it to them.</p>
+      <p className="hint">{state.listings
+        ? "Viewings, valuations and mortgage appointments, by person. Click one to open it, record feedback or mark it done; drag it to someone else's row to give it to them."
+        : "A row a barber. Click a booking to open it or mark them in the chair; drag it to another barber's row to give it to them."}</p>
     </div>
   );
 }

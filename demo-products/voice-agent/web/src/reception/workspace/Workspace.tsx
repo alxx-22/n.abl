@@ -246,7 +246,8 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
           <Phone
             id={id} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)}
             callAs={t.business_type === 'estate_agent' ? CALL_AS : t.business_type === 'property_maintenance' ? [...MT_CALL_AS, ...ownCallAs(state)] : t.business_type === 'takeaway' ? TK_CALL_AS : t.business_type === 'barber' ? BB_CALL_AS : []}
-            emptyHint={t.business_type === 'takeaway' ? 'No texts yet. Order on the call: the confirmation, and "on its way" when it goes out with a driver, land here.' : undefined}
+            emptyHint={t.business_type === 'takeaway' ? 'No texts yet. Order on the call: the confirmation, and "on its way" when it goes out with a driver, land here.'
+              : t.business_type === 'barber' ? 'No texts yet. Book a cut on the call, and the confirmation lands here.' : undefined}
             crew={state.engineers ? { engineers: state.engineers, clients: state.clients ?? [], jobs: state.jobs ?? [], quotes: state.quotes ?? [], today: now.date, onDone: refreshSoon } : undefined}
           />
         </div>

@@ -43,6 +43,7 @@ const WALKS: Record<string, (w: Walk) => Promise<void>> = {
   estate_agent: walkEstate,
   property_maintenance: walkMaintenance,
   takeaway: walkTakeaway,
+  barber: walkBarber,
 };
 
 const built = PRESETS.filter((p) => builtPreset(p.key)).map((p) => p.key);
@@ -1107,6 +1108,99 @@ async function walkTakeaway({ shot }: Walk) {
   // Narrow screen.
   await page.setViewportSize({ width: 390, height: 900 });
   await page.click('.tabs [role=tab]:has-text("Kitchen")');
+  await shot(page, 'workspace-mobile');
+  await page.context().close();
+}
+
+async function walkBarber({ shot }: Walk) {
+  const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+  const calm = () => page.waitForFunction(() => !document.querySelector('.toast'), undefined, { timeout: 15000 }).catch(() => {});
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  page.on('console', (m) => m.type() === 'error' && !/40[1349]|scout/.test(m.text()) && errors.push(`console: ${m.text()}`));
+  const saved = () => page.waitForSelector('.save-state.saved', { timeout: 10000 });
+  const next = async (title: string) => {
+    await page.click('.step-nav button.primary');
+    await page.waitForSelector(`#step-title:has-text("${title}")`);
+  };
+  const kept = (what: string, ok: boolean) => {
+    if (!ok) throw new Error(`after a reload, the builder lost ${what}`);
+  };
+
+  // A key from the team, and the barber from the preset.
+  await page.goto(`${base}/`);
+  await page.waitForSelector('#password');
+  await page.fill('#password', 'team');
+  await page.click('.signin button[type=submit]');
+  await page.waitForSelector('#k-name');
+  await page.fill('#k-name', 'Marcus Kingsley');
+  await page.fill('#k-company', "Kingsley's Barbers");
+  await page.click('button:has-text("Issue a private key")');
+  await page.waitForSelector('.issued code');
+  const raw = (await page.textContent('.issued code'))!.trim();
+  await page.goto(`${base}/demo/reception#key=${raw}`);
+  await page.waitForSelector('text=Welcome, Marcus.');
+  await page.click('text=Build a new demo');
+  await page.waitForSelector('.preset');
+  await page.click('.preset:has-text("Barber")');
+  await page.waitForSelector('#new-name');
+  await shot(page, 'pick-preset');
+  await page.click('text=Build from the preset');
+
+  // An edit on every step that has one.
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  await shot(page, 'builder-basics');
+  await next('Opening hours');
+  await shot(page, 'builder-hours');
+  await next('Your barbers');
+  await page.locator('.area-card').nth(1).getByRole('textbox', { name: 'Also known as' }).fill('Danny, Big Dan');
+  await saved();
+  await shot(page, 'builder-team');
+  await next('Services and prices');
+  await page.locator('.area-card').nth(1).getByLabel('Price', { exact: true }).fill('23');
+  await saved();
+  await shot(page, 'builder-services');
+  await next('Bookings and walk-ins');
+  await page.getByLabel('Running late').fill('15');
+  await saved();
+  await shot(page, 'builder-booking');
+  await next('Deposits and cancelling');
+  await shot(page, 'builder-money');
+  await next('Policies and questions');
+  await next('Review and start');
+  await shot(page, 'builder-review');
+
+  // Reloaded, every edit is still there.
+  await page.reload();
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  await next('Opening hours');
+  await next('Your barbers');
+  kept("Dan's nicknames", (await page.locator('.area-card').nth(1).getByRole('textbox', { name: 'Also known as' }).inputValue()).includes('Big Dan'));
+  await next('Services and prices');
+  kept('the skin fade price', (await page.locator('.area-card').nth(1).getByLabel('Price', { exact: true }).inputValue()) === '23.00');
+  await next('Bookings and walk-ins');
+  kept('the late grace', (await page.getByLabel('Running late').inputValue()) === '15');
+  await next('Deposits and cancelling');
+  await next('Policies and questions');
+  await next('Review and start');
+  await page.click('button:has-text("Start my demo")');
+
+  // The Diary: a column a barber, the week's bookings in their chairs.
+  await page.waitForSelector('.diary', { timeout: 20000 });
+  for (const name of ['Marcus', 'Dan', 'Jordan']) {
+    if (!(await page.locator('.diary').textContent())!.includes(name)) throw new Error(`${name} is not on the Diary`);
+  }
+  await page.waitForSelector('.phone');
+  await calm();
+  await shot(page, 'workspace-diary');
+
+  // Call as Ollie, booked inside the notice.
+  await page.getByLabel('Call as').selectOption({ label: 'Ollie Price, booked with Dan within the next day' });
+  await page.waitForSelector('.phone-number:has-text("07700 900902")');
+  await calm();
+  await shot(page, 'workspace-call-as');
+
+  // Narrow screen.
+  await page.setViewportSize({ width: 390, height: 900 });
   await shot(page, 'workspace-mobile');
   await page.context().close();
 }

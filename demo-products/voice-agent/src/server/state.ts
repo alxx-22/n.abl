@@ -124,6 +124,15 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
     })),
     ...(t.profile.listings ? await estateState(repo, t, bookings, now) : {}),
     ...(t.profile.maintenance ? await maintenanceState(repo, t, now) : {}),
+    ...(t.profile.barber ? barberState(t) : {}),
+  };
+}
+
+/** A barber shop's barbers, for its Diary: a row each, on their days (presets/barber.md §6). */
+function barberState(t: Tenant) {
+  const barbers = (t.profile.booking?.resources ?? []).filter((r) => r.kind === 'staff');
+  return {
+    team: barbers.map((r) => ({ key: r.key, name: r.label, first_name: r.label, role: 'other' as const, does: [], days: r.days ?? [0, 1, 2, 3, 4, 5, 6], mobile: '', services: r.services })),
   };
 }
 
