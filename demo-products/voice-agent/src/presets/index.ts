@@ -22,7 +22,7 @@ import { takeaway } from './takeaway/preset.ts';
  */
 export type ViewId =
   | 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls' | 'properties' | 'offers' | 'applicants' | 'valuations' | 'sales'
-  | 'jobs' | 'dispatch' | 'compliance' | 'safety' | 'clients' | 'money';
+  | 'jobs' | 'dispatch' | 'compliance' | 'safety' | 'clients' | 'money' | 'tonight';
 
 /** The back office a workspace shows, in the preset's own words (PRESETS.md §2.5). */
 export interface WorkspaceSpec {

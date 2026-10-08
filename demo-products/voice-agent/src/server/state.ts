@@ -112,7 +112,7 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
       // A takeaway's drivers: who has it, since when, and what they need to know at the door.
       ...(kitchen ? { driver: o.driver ?? null, out_at: o.out_at?.toISOString() ?? null, pay_note: o.pay_note ?? null, requests: o.requests ?? [], flags: o.flags ?? [] } : {}),
     })),
-    ...(kitchen ? { drivers: kitchen.delivery?.drivers ?? [] } : {}),
+    ...(kitchen ? { drivers: kitchen.delivery?.drivers ?? [], tonight: await tonightState(repo, t, today) } : {}),
     messages: (await repo.listMessages(t.id, 60)).map((m) => ({ ...m, to_number: displayUkPhone(m.to_number), from_phone: displayUkPhone(m.from_phone) })),
     calls: (await repo.listCalls(t.id, 12)).map((c) => ({
       id: c.id, channel: c.channel, started_at: c.started_at, ended_at: c.ended_at, outcome: c.outcome, summary: c.summary,
@@ -207,5 +207,15 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
         last_contact: b.details.last_contact ?? null, source: b.details.source ?? null,
       };
     }),
+  };
+}
+
+/** A takeaway's Menu tonight, with the menu to switch items off on (presets/takeaway.md §6). */
+async function tonightState(repo: Repo, t: Tenant, today: string) {
+  const night = await repo.getTonight(t.id, today);
+  return {
+    ...night,
+    delivery: Boolean(t.profile.ordering?.delivery),
+    menu: (t.profile.menu?.categories ?? []).map((c) => ({ label: c.label, items: c.items.map((i) => ({ key: i.key, name: i.name, off: i.available === false })) })),
   };
 }

@@ -639,6 +639,15 @@ export interface Order {
   flags?: string[];
 }
 
+/** A takeaway's "Menu tonight": set from the back office, for one local date. */
+export interface Tonight {
+  date: string;
+  /** Item keys sold out tonight. */
+  sold_out: string[];
+  /** One notice for callers. */
+  notice: { kind: 'delivery_paused' } | { kind: 'long_waits'; minutes: number } | null;
+}
+
 export interface OrderRequest {
   /** Cancel it, change it, or send out an item missing from it (the owner's choice). */
   kind: 'cancel' | 'change' | 'send_missing';

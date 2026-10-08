@@ -22,6 +22,7 @@ import { Money } from './Money.tsx';
 import { Offers } from './Offers.tsx';
 import { OrderBoard } from './OrderBoard.tsx';
 import { Drivers } from './Drivers.tsx';
+import { MenuTonight } from './MenuTonight.tsx';
 import { Properties } from './Properties.tsx';
 import type { Shows, WorkspaceSpec } from './spec.ts';
 import { StaffDiary } from './StaffDiary.tsx';
@@ -137,6 +138,12 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
     shows: 'orders',
     count: (s) => s.orders.filter((o) => o.fulfilment === 'delivery' && o.status === 'ready').length,
     render: (p) => <Drivers id={p.id} state={p.state} nowMs={p.clock} onDone={p.refresh} />,
+  },
+  // A takeaway's (presets/takeaway.md §6): the number in the tab is what is sold out tonight.
+  tonight: {
+    shows: null,
+    count: (s) => s.tonight?.sold_out.length ?? 0,
+    render: (p) => <MenuTonight id={p.id} state={p.state} onDone={p.refresh} />,
   },
   messages: {
     shows: null,

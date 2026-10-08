@@ -65,10 +65,17 @@ test('demo: a takeaway end to end: Start fills the kitchen, a delivery goes out 
   assert.equal((await dev.call('POST', `${path}/start`)).status, 200);
   const state = async () => (await dev.call('GET', `${path}/state`)).data;
   const s = await state();
-  assert.deepEqual(s.workspace.views.map((v: any) => v.id), ['orders', 'drivers', 'messages', 'calls']);
+  assert.deepEqual(s.workspace.views.map((v: any) => v.id), ['orders', 'drivers', 'tonight', 'messages', 'calls']);
   assert.deepEqual([s.workspace.orders.drivers, s.workspace.orders.advance], [true, true]);
   assert.deepEqual(s.drivers, ['Kai', 'Priya', 'Tom']);
   for (const o of s.orders) assert.ok('driver' in o && 'pay_note' in o, `${o.reference} carries its driver fields`);
+  // Menu tonight: a dish switched off and a notice, both on the state; anything not on the menu, or an odd wait, refused.
+  assert.equal((await dev.call('PATCH', `${path}/tonight`, { sold_out: ['cheeseburger'], notice: { kind: 'long_waits', minutes: 90 } })).status, 200);
+  const night = (await state()).tonight;
+  assert.deepEqual([night.sold_out, night.notice, night.delivery], [['cheeseburger'], { kind: 'long_waits', minutes: 90 }, true]);
+  assert.ok(night.menu.some((c: any) => c.items.some((i: any) => i.key === 'cheeseburger')));
+  assert.equal((await dev.call('PATCH', `${path}/tonight`, { sold_out: ['caviar'], notice: null })).status, 400);
+  assert.equal((await dev.call('PATCH', `${path}/tonight`, { sold_out: [], notice: { kind: 'long_waits', minutes: 7 } })).status, 400);
 
   // Whatever the clock says, a delivery of our own, ready and waiting for a driver.
   const t = (await app.repo.getTenantById(made.data.id))!;
@@ -116,4 +123,5 @@ test('demo: a takeaway end to end: Start fills the kitchen, a delivery goes out 
   const again = await state();
   assert.ok(!again.orders.some((o: any) => o.phone === '07700 900811'), 'the prospect\'s own orders are cleared');
   assert.deepEqual(again.drivers, ['Kai', 'Priya', 'Tom']);
+  assert.deepEqual([again.tonight.sold_out, again.tonight.notice], [[], null], 'Menu tonight starts again too');
 });

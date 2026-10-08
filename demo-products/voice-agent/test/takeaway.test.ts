@@ -168,7 +168,7 @@ test('takeaway: built, registered and live in the catalogue', () => {
   const p = builtPreset('takeaway')!;
   assert.ok(p, 'built');
   assert.ok(getPreset('takeaway'), 'live');
-  assert.deepEqual(p.workspace(p.compile(answersOf(p, named()), { slug: 'x' })).views.map((v) => v.id), ['orders', 'drivers', 'messages', 'calls']);
+  assert.deepEqual(p.workspace(p.compile(answersOf(p, named()), { slug: 'x' })).views.map((v) => v.id), ['orders', 'drivers', 'tonight', 'messages', 'calls']);
   const preview = p.preview(answersOf(p, named()), p.compile(answersOf(p, named()), { slug: 'x' }));
   assert.equal(preview.lines!.at(-1), '33 items on the menu in 7 sections, and 3 meal deals.');
   assert.match(p.factSheet(answersOf(p, named())), /^Name: Firebird Chicken & Burgers\. Style: Fried chicken, burgers and pizza\. Town: Nottingham\./);

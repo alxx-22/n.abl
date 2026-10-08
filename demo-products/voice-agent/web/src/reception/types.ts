@@ -440,6 +440,8 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   orders: LiveOrder[];
   /** A takeaway's drivers, by first name. */
   drivers?: string[];
+  /** A takeaway's Menu tonight, with the menu to switch dishes off on. */
+  tonight?: Tonight;
   /** An estate agency's. */
   nation?: Nation;
   team?: LiveStaff[];
@@ -468,4 +470,13 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   incidents?: LiveIncident[];
   quotes?: LiveQuote[];
   invoices?: LiveInvoice[];
+}
+
+/** A takeaway's Menu tonight (presets/takeaway.md §6): for today only. */
+export interface Tonight {
+  date: string;
+  sold_out: string[];
+  notice: { kind: 'delivery_paused' } | { kind: 'long_waits'; minutes: number } | null;
+  delivery: boolean;
+  menu: { label: string; items: { key: string; name: string; off: boolean }[] }[];
 }

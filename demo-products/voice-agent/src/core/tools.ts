@@ -24,7 +24,7 @@ import { referencesIn } from './guardrails.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
-import { PHONE_ONLY, feeFor, findOrder, impliedCollection, kitchenFulfilment, shortOfMinimum, waitTimes } from './kitchen.ts';
+import { PHONE_ONLY, feeFor, findOrder, impliedCollection, kitchenFulfilment, menuTonight, shortOfMinimum, soldOutWords, waitTimes } from './kitchen.ts';
 import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
@@ -818,7 +818,7 @@ const TOOLS: Record<string, Tool> = {
       parameters: obj({ category: S('e.g. pizzas, desserts'), free_from: S('An allergy, e.g. dairy, gluten, nuts: lists the dishes made without it') }),
     },
     async handler(args, ctx) {
-      const menu = ctx.tenant.profile.menu!;
+      const { menu, soldOut } = await menuTonight(ctx);
       const avoid = allergensNamed(str(args.free_from) ?? '');
       if (str(args.free_from) && !avoid.length) return { message: `"${str(args.free_from)}" is not one of the 14 allergens the menu records. Say you will note it for the kitchen.` };
       if (avoid.length) {
@@ -842,7 +842,7 @@ const TOOLS: Record<string, Tool> = {
             category: x.label,
             items: x.items.map((i) => ({
               name: i.name, price: pounds(i.price_pence), description: i.description, dietary: i.dietary,
-              available: i.available === false ? 'not today' : undefined,
+              available: i.available === false ? (soldOut.has(i.key) ? 'sold out tonight' : 'not today') : undefined,
             })),
           })),
         };
@@ -859,7 +859,7 @@ const TOOLS: Record<string, Tool> = {
       parameters: obj({ item: S('The dish') }, ['item']),
     },
     async handler(args, ctx) {
-      const menu = ctx.tenant.profile.menu!;
+      const { menu, soldOut } = await menuTonight(ctx);
       const byChoice = dealByChoice(menu, str(args.item) ?? '');
       const r = byChoice ? { ok: true as const, value: byChoice.item } : resolveItem(menu, str(args.item) ?? '');
       if (!r.ok) {
@@ -879,7 +879,7 @@ const TOOLS: Record<string, Tool> = {
         price: pounds(item.price_pence),
         description: item.description,
         dietary: item.dietary,
-        available: item.available === false ? 'not available today' : 'yes',
+        available: item.available === false ? (soldOut.has(item.key) ? 'sold out tonight' : 'not available today') : 'yes',
         options: optionsFor(menu, item).map((o) => priced(o.option)),
         ...(deal ? { choices: deal.parts.map((p) => `${p.label}: ${(menu.modifier_groups[p.group]?.options ?? []).map(priced).join(', ')}`) } : {}),
         allergens: allergensOf(menu, item),
@@ -911,14 +911,14 @@ const TOOLS: Record<string, Tool> = {
       return { ...d, parameters: { ...(d.parameters as object), properties: p } };
     },
     async handler(args, ctx) {
-      const menu = ctx.tenant.profile.menu!;
+      const { menu, soldOut } = await menuTonight(ctx);
       const words = str(args.item) ?? '';
       // "A cheeseburger meal" is the Burger meal with a cheeseburger (domain/deals.ts).
       const byChoice = dealByChoice(menu, words);
       const r = byChoice ? { ok: true as const, value: byChoice.item } : resolveItem(menu, words);
       if (!r.ok) return { added: false, question: r.question };
       const item = r.value;
-      if (item.available === false) return { added: false, message: `${item.name} is not available today.` };
+      if (item.available === false) return { added: false, message: soldOut.has(item.key) ? soldOutWords(menu, item.key, soldOut) : `${item.name} is not available today.` };
       // A size or choice already in the item's words ("regular fries") counts as asked for.
       const given = strList(args.options);
       const requested = byChoice && !given.some((g) => score(g, byChoice.choice) >= 0.7) ? [byChoice.choice, ...given] : given;
@@ -934,6 +934,11 @@ const TOOLS: Record<string, Tool> = {
             : 'Nothing was added yet. Ask the caller this, then call add_to_order again with their answer in options.',
           ...(meal ? { as_a_meal: `${mods.unmatched.join(' and ')} ${mods.unmatched.length > 1 ? 'come' : 'comes'} with the ${meal.deal}. Ask if they'd like it as a ${meal.deal}, or the items on their own. For the meal: add_to_order with item "${meal.deal}" and options ${JSON.stringify(meal.options)}.` } : {}),
         };
+      }
+      // A meal deal's choice sold out tonight (a cheeseburger in the Burger meal): another choice, never the deal without it.
+      const gone = mods.value.filter((m) => soldOut.has(m.key));
+      if (gone.length) {
+        return { added: false, message: `${gone.map((m) => m.name).join(' and ')} ${gone.length > 1 ? 'are' : 'is'} sold out tonight. Say sorry, and ask them to choose another for their ${item.name}.`, nothing_added: 'Nothing was added yet.' };
       }
       let quantity = Math.min(Math.max(int(args.quantity) ?? 1, 1), 20);
       // "Six hot wings" passed as six of them: the six is the dish's own name.

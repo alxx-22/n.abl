@@ -66,6 +66,7 @@ export function takeawayWorkspace(profile: TenantProfile): WorkspaceSpec {
     views: [
       { id: 'orders', label: 'Kitchen' },
       ...(drivers ? [{ id: 'drivers' as const, label: 'Drivers' }] : []),
+      { id: 'tonight', label: 'Menu tonight' },
       { id: 'messages', label: 'Messages' },
       { id: 'calls', label: 'Calls' },
     ],

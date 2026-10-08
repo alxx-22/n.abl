@@ -199,3 +199,35 @@ test('the kitchen: a delivery goes only to an address the caller said', async ()
   assert.equal((await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG2 3EF', address: '8 Ropewalk Way' })).ok, true, 'the number in words, the street as heard');
   assert.equal(saidByCaller('Flat 2, 14 Larch Close', ['I live at flat two, fourteen Larch Close']), true);
 });
+
+test('menu tonight: a dish sold out is refused at once with others from its section, and a deal will not take it', async () => {
+  const t = await firebird('tk-sold-out');
+  const c = await call(t);
+  assert.match((await c.run('add_to_order', { item: 'Cheeseburger' })).added, /Cheeseburger/);
+  // Switched off from the back office, mid-call: the very next tool hears it.
+  await repo.setTonight(t.id, { date: '2026-10-09', sold_out: ['cheeseburger'], notice: null });
+  const refused = await c.run('add_to_order', { item: 'Cheeseburger' });
+  assert.equal(refused.added, false);
+  assert.match(refused.message, /^Cheeseburger is sold out tonight\. Other burgers tonight: Classic beef burger, Double cheeseburger, Crispy chicken burger\. Say sorry, and offer one of those\.$/);
+  assert.equal((await c.run('get_item_details', { item: 'Cheeseburger' })).available, 'sold out tonight');
+  assert.equal((await c.run('get_menu', { category: 'burgers' })).categories[0].items.find((i: any) => i.name === 'Cheeseburger').available, 'sold out tonight');
+  const meal = await c.run('add_to_order', { item: 'Burger meal', options: ['cheeseburger', 'fries', 'coke'] });
+  assert.deepEqual([meal.added, meal.message], [false, 'Cheeseburger is sold out tonight. Say sorry, and ask them to choose another for their Burger meal.']);
+  // Another day's switches are gone.
+  const tomorrow = await call(t, new Date('2026-10-10T18:00:00Z'));
+  assert.match((await tomorrow.run('add_to_order', { item: 'Cheeseburger' })).added, /Cheeseburger/);
+});
+
+test('menu tonight: delivery paused offers collection; long waits hold every time back', async () => {
+  const t = await firebird('tk-notice');
+  await repo.setTonight(t.id, { date: '2026-10-09', sold_out: [], notice: { kind: 'delivery_paused' } });
+  const c = await call(t);
+  const paused = await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 1AA', address: '3 Near Road' });
+  assert.deepEqual([paused.ok, paused.message, paused.collection_instead], [false, 'Delivery is paused tonight. Say sorry, and offer collection.', 'Collection: about 15 minutes, so around 7:15pm.']);
+  assert.equal((await c.run('get_wait_times', { postcode: 'NG7 1AA' })).delivery, 'Delivery is paused tonight: say sorry, and offer collection.');
+  await repo.setTonight(t.id, { date: '2026-10-09', sold_out: [], notice: { kind: 'long_waits', minutes: 90 } });
+  const w = await c.run('get_wait_times', {});
+  // Delivery: the first slot on the kitchen's grid that arrives 90 minutes or more from now.
+  assert.deepEqual([w.tonight, w.collection, w.delivery], ['Long waits tonight: about 90 minutes. Say so before they order.', 'about 90 minutes, so around 8:30pm', 'about 100 minutes, so around 8:40pm']);
+  assert.equal((await c.run('set_fulfilment', { type: 'collection' })).spoken_time, '8:30pm');
+});

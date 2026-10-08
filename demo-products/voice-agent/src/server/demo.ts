@@ -556,6 +556,24 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     refresh({ reason: 'staff', reference: booking.reference, what: message });
     return json(res, 200, { ok: true, message }), true;
   }
+  // A takeaway's Menu tonight: what's sold out, and one notice for callers. Calls read it on every order tool.
+  if (sub === 'tonight' && !ref && req.method === 'PATCH' && t.profile.ordering?.kitchen) {
+    const b = await readJson(req, 10_000);
+    const keys = new Set((t.profile.menu?.categories ?? []).flatMap((c) => c.items.map((i) => i.key)));
+    const soldOut = Array.isArray(b.sold_out) ? [...new Set((b.sold_out as unknown[]).map(String))] : null;
+    if (!soldOut || soldOut.some((k) => !keys.has(k))) throw new HttpError(400, 'Sold out: items on the menu only.');
+    const n = b.notice;
+    const notice = n === null || n === undefined ? null
+      : n.kind === 'delivery_paused' && t.profile.ordering.delivery ? { kind: 'delivery_paused' as const }
+      : n.kind === 'long_waits' && [45, 60, 75, 90, 120].includes(Number(n.minutes)) ? { kind: 'long_waits' as const, minutes: Number(n.minutes) }
+      : undefined;
+    if (notice === undefined) throw new HttpError(400, 'The notice is delivery paused, or long waits of 45 to 120 minutes.');
+    await repo.setTonight(t.id, { date: toLocal(tenantNow(t), t.profile.timezone).date, sold_out: soldOut, notice });
+    void usage('staff_action', { action: 'menu_tonight' });
+    const what = notice?.kind === 'delivery_paused' ? 'delivery paused' : notice ? `long waits, about ${notice.minutes} minutes` : `${soldOut.length} sold out`;
+    refresh({ reason: 'staff', what: `Menu tonight: ${what}` });
+    return json(res, 200, { ok: true }), true;
+  }
   if (sub === 'orders' && ref && req.method === 'PATCH') {
     const body = await readJson(req, 10_000);
     const { status, driver } = body;

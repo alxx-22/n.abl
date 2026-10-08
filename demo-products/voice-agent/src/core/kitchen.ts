@@ -11,7 +11,7 @@
 // untouched; the zone and free-delivery helpers return the delivery-wide
 // fee for a profile with neither.
 
-import type { Order, OrderRequest, Ordering } from '../domain/types.ts';
+import type { Menu, Order, OrderRequest, Ordering, Tonight } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { lineTotal } from '../domain/menu.ts';
 import { addDays, closeMinutes, dayName, normaliseTime, spokenTime, toLocal, weekdayOf, zonedToUtc } from '../domain/time.ts';
@@ -66,7 +66,8 @@ function nextOpening(o: Ordering, tz: string, today: string): string | null {
 /** The ready times the kitchen can still make today for this kind of order, or why there are none. */
 type Window = { ok: true; earliest: Date; latest: Date; close: Date } | { ok: false; message: string };
 
-function readyWindow(ctx: ToolContext, kind: Kind): Window {
+/** `floor`: tonight's long waits, the soonest any order is due from now (Menu tonight). */
+function readyWindow(ctx: ToolContext, kind: Kind, floor = 0): Window {
   const p = ctx.tenant.profile;
   const o = p.ordering!;
   const tz = p.timezone;
@@ -78,7 +79,7 @@ function readyWindow(ctx: ToolContext, kind: Kind): Window {
   const periods = periodsOn(o, tz, today);
   for (const period of periods) {
     if (now > period.close.getTime() - stop) continue;
-    const earliest = new Date(Math.ceil((Math.max(now, period.open.getTime()) + o.prep_minutes * 60000) / step) * step);
+    const earliest = new Date(Math.ceil(Math.max(Math.max(now, period.open.getTime()) + o.prep_minutes * 60000, now + floor - road) / step) * step);
     // Ready in time to be handed over by closing.
     const latest = new Date(Math.floor((period.close.getTime() - road) / step) * step);
     if (earliest.getTime() <= latest.getTime()) return { ok: true, earliest, latest, close: period.close };
@@ -114,9 +115,9 @@ function waitWords(ctx: ToolContext, due: Date): string {
 }
 
 /** The first time this kind of order can be handed over, or why it can't today. */
-async function firstDue(ctx: ToolContext, kind: Kind): Promise<{ due: Date } | { message: string }> {
+async function firstDue(ctx: ToolContext, kind: Kind, floor = 0): Promise<{ due: Date } | { message: string }> {
   const o = ctx.tenant.profile.ordering!;
-  const w = readyWindow(ctx, kind);
+  const w = readyWindow(ctx, kind, floor);
   if (!w.ok) return { message: w.message };
   const [ready] = await slotsWithRoom(ctx, w.earliest, w.latest, 1);
   if (!ready) return { message: `The kitchen is full for ${kind} for the rest of today.` };
@@ -139,6 +140,13 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
   const type: Kind = str(args.type)?.toLowerCase().startsWith('deliv') ? 'delivery' : 'collection';
   if (type === 'delivery' && !o.delivery) return { ok: false, message: 'Delivery is not offered; collection only.' };
   if (type === 'collection' && !o.collection) return { ok: false, message: 'Collection is not offered.' };
+  // Menu tonight: delivery paused, or long waits.
+  const night = await tonight(ctx);
+  const floor = waitFloor(night);
+  if (type === 'delivery' && night?.notice?.kind === 'delivery_paused') {
+    const instead = o.collection ? await firstDue(ctx, 'collection', floor) : null;
+    return { ok: false, paused: true, message: 'Delivery is paused tonight. Say sorry, and offer collection.', ...(instead && 'due' in instead ? { collection_instead: `Collection: ${waitWords(ctx, instead.due)}.` } : {}) };
+  }
   let postcode: string | null = null;
   let address: string | null = null;
   let terms: { fee_pence: number; min_order_pence: number } | null = null;
@@ -155,9 +163,9 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
     postcode = pc.full;
     terms = deliveryTerms(o, pc.district);
   }
-  const w = readyWindow(ctx, type);
+  const w = readyWindow(ctx, type, floor);
   if (!w.ok) {
-    const instead = type === 'delivery' && o.collection ? await firstDue(ctx, 'collection') : null;
+    const instead = type === 'delivery' && o.collection ? await firstDue(ctx, 'collection', floor) : null;
     return { ok: false, message: w.message, ...(instead && 'due' in instead ? { collection_instead: `Collection is still possible: ${waitWords(ctx, instead.due)}.` } : {}) };
   }
   const step = (o.slot_minutes ?? 15) * 60000;
@@ -181,7 +189,7 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
     // "For 8pm" by delivery is the slot that leaves the kitchen in time to arrive by 8.
     const slot = new Date(Math.floor((wanted.getTime() - road) / step) * step);
     if (slot.getTime() < w.earliest.getTime()) {
-      const first = await firstDue(ctx, type);
+      const first = await firstDue(ctx, type, floor);
       return { ok: false, message: 'due' in first ? `The earliest ${type} time is ${at(first.due, tz)}.` : first.message };
     }
     if (slot.getTime() > w.latest.getTime()) {
@@ -219,6 +227,33 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
     ...next,
   };
 }
+
+// ── Menu tonight (presets/takeaway.md §6) ─────────────────────────────────
+
+/** Tonight's sold-out items and notice, read on every order tool, so a back-office switch reaches a call at once. A takeaway's only. */
+export async function tonight(ctx: ToolContext): Promise<Tonight | null> {
+  if (!ctx.tenant.profile.ordering?.kitchen) return null;
+  return ctx.repo.getTonight(ctx.tenant.id, toLocal(ctx.now(), ctx.tenant.profile.timezone).date);
+}
+
+/** The menu as it is tonight: what is sold out is not available, and says so. */
+export async function menuTonight(ctx: ToolContext): Promise<{ menu: Menu; soldOut: Set<string> }> {
+  const menu = ctx.tenant.profile.menu!;
+  const soldOut = new Set((await tonight(ctx))?.sold_out ?? []);
+  if (!soldOut.size) return { menu, soldOut };
+  return { menu: { ...menu, categories: menu.categories.map((c) => ({ ...c, items: c.items.map((i) => (soldOut.has(i.key) ? { ...i, available: false } : i)) })) }, soldOut };
+}
+
+/** "Sold out tonight", with what else that section has. */
+export function soldOutWords(menu: Menu, key: string, soldOut: Set<string>): string {
+  const c = menu.categories.find((x) => x.items.some((i) => i.key === key));
+  const item = c?.items.find((i) => i.key === key);
+  const others = (c?.items ?? []).filter((i) => i.key !== key && i.available !== false && !soldOut.has(i.key)).slice(0, 3).map((i) => i.name);
+  return `${item?.name ?? 'That'} is sold out tonight.${others.length ? ` Other ${c!.label.toLowerCase()} tonight: ${others.join(', ')}.` : ''} Say sorry, and offer one of those.`;
+}
+
+/** Long waits tonight: no order is due sooner than this, from now. */
+const waitFloor = (t: Tonight | null) => (t?.notice?.kind === 'long_waits' ? t.notice.minutes * 60000 : 0);
 
 /** "I'm collecting, so I don't need delivery": the caller said collection last, and delivery only to say no to it. */
 export function saidCollection(heard: string[]): boolean {
@@ -259,17 +294,22 @@ export async function waitTimes(args: Args, ctx: ToolContext): Promise<Record<st
   const o = ctx.tenant.profile.ordering!;
   const tz = ctx.tenant.profile.timezone;
   const out: Record<string, unknown> = {};
+  const night = await tonight(ctx);
+  const floor = waitFloor(night);
+  if (night?.notice?.kind === 'long_waits') out.tonight = `Long waits tonight: about ${night.notice.minutes} minutes. Say so before they order.`;
   if (o.collection) {
-    const c = await firstDue(ctx, 'collection');
+    const c = await firstDue(ctx, 'collection', floor);
     out.collection = 'due' in c ? waitWords(ctx, c.due) : c.message;
   }
-  if (o.delivery) {
+  if (o.delivery && night?.notice?.kind === 'delivery_paused') {
+    out.delivery = 'Delivery is paused tonight: say sorry, and offer collection.';
+  } else if (o.delivery) {
     // A district alone ("NG9") is enough to say yes or no.
     const pc = postcodeOf(args.postcode);
     if (pc && !o.delivery.districts.includes(pc.district)) {
       out.delivery = `${pc.district} is outside the delivery area: offer collection.`;
     } else {
-      const d = await firstDue(ctx, 'delivery');
+      const d = await firstDue(ctx, 'delivery', floor);
       out.delivery = 'due' in d ? waitWords(ctx, d.due) : d.message;
       if (pc) {
         const terms = deliveryTerms(o, pc.district);

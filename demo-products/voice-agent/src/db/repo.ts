@@ -7,7 +7,7 @@
 import { randomInt } from 'node:crypto';
 import type { Db, Queryable } from './db.ts';
 import type {
-  Booking, Buyer, BuyerDetails, BuyerPosition, Certificate, CertificateKind, Incident, Invoice, Job, JobStatus, ListingState, MtProperty, Offer, OfferStatus, Quote, QuoteStatus, Order, OrderLine, OrderRequest,
+  Booking, Buyer, BuyerDetails, BuyerPosition, Certificate, CertificateKind, Incident, Invoice, Job, JobStatus, ListingState, MtProperty, Offer, OfferStatus, Quote, QuoteStatus, Order, OrderLine, OrderRequest, Tonight,
   Sale, Tenant, TenantProfile,
 } from '../domain/types.ts';
 import { checkSlot, findService, depositFor, resourceFree, type BusyInterval, type Unavailable } from '../domain/availability.ts';
@@ -345,6 +345,17 @@ export class Repo {
   async getTenantById(id: string): Promise<Tenant | null> {
     const rows = await this.db.query<any>('select id, slug, profile, clock_offset_ms from public.voice_tenants where id = $1', [id]);
     return rows[0] ? mapTenant(rows[0]) : null;
+  }
+
+  /** A takeaway's "Menu tonight" for a local date: another day's reads as nothing sold out and no notice. */
+  async getTonight(tenantId: string, date: string): Promise<Tonight> {
+    const rows = await this.db.query<any>('select tonight from public.voice_tenants where id = $1', [tenantId]);
+    const t = rows[0]?.tonight ?? {};
+    return t.date === date ? { date, sold_out: t.sold_out ?? [], notice: t.notice ?? null } : { date, sold_out: [], notice: null };
+  }
+
+  async setTonight(tenantId: string, t: Tonight): Promise<void> {
+    await this.db.query('update public.voice_tenants set tonight = $2::jsonb, updated_at = now() where id = $1', [tenantId, JSON.stringify(t)]);
   }
 
   /** A demo workspace's clock, as an offset from real time (0 is real time). */
@@ -1591,6 +1602,8 @@ export class Repo {
       ]) {
         await q.query(`delete from public.${t} where tenant_id = $1`, [tenantId]);
       }
+      // A takeaway's sold-out switches and notice go with the demo's data.
+      await q.query(`update public.voice_tenants set tonight = '{}'::jsonb where id = $1`, [tenantId]);
     });
   }
 

@@ -554,3 +554,11 @@ svg.house .door { fill: var(--accent); }
 .office-notice input:not([type=checkbox]) { flex: 1 1 220px; min-width: 0; }
 .office-notice .check { display: inline-flex; gap: 6px; align-items: center; }
 .chip.needs-move { outline: 2px dashed var(--danger); outline-offset: 1px; }
+
+/* A takeaway's Menu tonight: the notice, then each section's dishes to switch off. */
+.tonight { display: grid; gap: 12px; max-width: 760px; }
+.tonight select { margin-left: 6px; }
+.tonight-section h4 { margin: 6px 0; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.tonight .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tonight .chip { border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.tonight .chip.out { background: var(--danger-ground); color: #ffd9cf; text-decoration: line-through; }
