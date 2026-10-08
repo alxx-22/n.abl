@@ -99,7 +99,8 @@ export function StepListings({ a, set, ws, me }: Props) {
   };
 
   return (
-    <div className="fields">
+    // es-listings sets the list and its checklist closer (estate.css), so eighteen homes and twenty-five checks fit in less than two screens.
+    <div className="fields es-listings">
       <p className="lead">The homes you sell. The receptionist answers from these facts alone, and says “that isn’t in the details” for anything you leave unknown.</p>
       <StockDraft
         workspace={ws.id} draftsLeft={Math.max(0, me.limits.drafts_per_day - me.used.drafts)} has={a.listings.filter((l) => !l.example).length}

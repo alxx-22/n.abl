@@ -3,12 +3,15 @@
 // fees and the firms it works with, and the area guide. Each composes the
 // shared pieces with what only an agency asks.
 
+import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { Nation, StaffDuty, StaffRole } from '../../../../../src/domain/types.ts';
+import type { DayHours } from '../../../../../src/presets/common/types.ts';
 import type { EstateAnswers, StaffAnswer } from '../../../../../src/presets/estate/answers.ts';
-import { Hours, Week, type HoursOptions } from '../common/Hours.tsx';
+import { Week, type HoursOptions } from '../common/Hours.tsx';
 import { Policies, PolicyText } from '../common/Policies.tsx';
-import { Choice, ListText, Num, Pounds, Select, Text, Toggle } from '../fields.tsx';
+import { Choice, Folds, ListText, Num, Pounds, Select, Source, Text, Toggle } from '../fields.tsx';
 import type { StepProps } from '../registry.ts';
+import './estate.css';
 
 type Props = StepProps<EstateAnswers>;
 
@@ -21,6 +24,23 @@ export const ROLES: Record<StaffRole, string> = {
 const DUTIES: Record<StaffDuty, string> = { viewings: 'Shows homes', valuations: 'Values homes', progression: 'Progresses sales', mortgage: 'Mortgage advice' };
 /** Monday first, as people read a week. */
 const DAYS: [number, string][] = [[1, 'Mon'], [2, 'Tue'], [3, 'Wed'], [4, 'Thu'], [5, 'Fri'], [6, 'Sat'], [0, 'Sun']];
+const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** "Mon–Fri", "Tue, Thu, Sat": someone's days short enough for their folded line, Monday first. */
+function dayRange(days: number[]): string {
+  const week = [...new Set(days)].map((d) => (d === 0 ? 7 : d)).sort((x, y) => x - y);
+  if (!week.length) return 'no days';
+  const name = (d: number) => DAY_SHORT[d % 7];
+  const runs: string[] = [];
+  let from = week[0];
+  for (let i = 1; i <= week.length; i++) {
+    if (i < week.length && week[i] === week[i - 1] + 1) continue;
+    const to = week[i - 1];
+    runs.push(to - from >= 2 ? `${name(from)}–${name(to)}` : to > from ? `${name(from)}, ${name(to)}` : name(from));
+    if (i < week.length) from = week[i];
+  }
+  return runs.join(', ');
+}
 
 /** The team as a picker's options; `none` adds a first option for nobody. */
 export function staffOptions(team: StaffAnswer[], none?: string): { value: string; label: string }[] {
@@ -90,20 +110,71 @@ const OFFICE: HoursOptions = {
 const VIEWINGS: HoursOptions = { ...OFFICE, day: { label: 'Viewings', open: '09:00', close: '19:00' }, first: { label: 'Viewings', open: '09:00', close: '19:00' }, next: { label: 'Viewings', open: '17:00', close: '19:00' } };
 const VALUATIONS: HoursOptions = { ...OFFICE, day: { label: 'Valuations', open: '09:00', close: '18:00' }, first: { label: 'Valuations', open: '09:00', close: '18:00' }, next: { label: 'Valuations', open: '14:00', close: '18:00' } };
 
-export function StepHours(p: Props) {
-  const { a, set } = p;
-  const diary = (k: 'viewing_days' | 'valuation_days') => ({ days: a.diary[k], edit: (fn: (days: EstateAnswers['diary'][typeof k]) => void) => set((d) => fn(d.diary[k])) });
+type WeekKey = 'office' | 'viewings' | 'valuations';
+
+/** The three diaries, in the order an agency thinks of them. `name` is what tells their boxes apart (Week). */
+const WEEKS: { key: WeekKey; tab: string; name?: string; hint: string; options: HoursOptions }[] = [
+  { key: 'office', tab: 'Office hours', hint: 'When the office is open. The receptionist answers “are you open?” from these, and says when someone will be back.', options: OFFICE },
+  { key: 'viewings', tab: 'Viewings', name: 'Viewings', hint: 'When homes can be shown: often later than the office. Each home’s own rules (a tenant’s notice, a seller’s hours) come on top.', options: VIEWINGS },
+  { key: 'valuations', tab: 'Valuations', name: 'Valuations', hint: 'When your valuers visit sellers.', options: VALUATIONS },
+];
+
+/**
+ * The three weeks behind one switch: stacked, they ran to three screens. The
+ * other two stay in the page, hidden, so their boxes keep their values and
+ * names. The shared Hours puts its week straight under its lead, with no room
+ * for a switch, so this step builds its own around Week, closures included.
+ */
+export function StepHours({ a, set }: Props) {
+  const [shown, setShown] = useState<WeekKey>('office');
+  const id = useId();
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const weeks: Record<WeekKey, { days: DayHours[]; edit: (fn: (days: DayHours[]) => void) => void }> = {
+    office: { days: a.hours.days, edit: (fn) => set((d) => fn(d.hours.days)) },
+    viewings: { days: a.diary.viewing_days, edit: (fn) => set((d) => fn(d.diary.viewing_days)) },
+    valuations: { days: a.diary.valuation_days, edit: (fn) => set((d) => fn(d.diary.valuation_days)) },
+  };
+  // Arrow keys move along the switch, as in any set of tabs; Tab goes on into the week.
+  const onKey = (e: KeyboardEvent, i: number) => {
+    const n = WEEKS.length;
+    const to = { ArrowRight: (i + 1) % n, ArrowLeft: (i + n - 1) % n, Home: 0, End: n - 1 }[e.key];
+    if (to === undefined) return;
+    e.preventDefault();
+    setShown(WEEKS[to].key);
+    tabs.current[to]?.focus();
+  };
   return (
-    <div className="fields">
-      <Hours {...p} options={OFFICE} add="+ Add hours" lead="When the office is open. The receptionist answers “are you open?” from these, and says when someone will be back.">
-        <h3 className="sub">Viewings</h3>
-        <p className="hint">When homes can be shown: often later than the office. Each home’s own rules (a tenant’s notice, a seller’s hours) come on top.</p>
-        <Week {...diary('viewing_days')} options={VIEWINGS} name="Viewings" add="+ Add hours" />
-        <h3 className="sub">Valuations</h3>
-        <p className="hint">When your valuers visit sellers.</p>
-        <Week {...diary('valuation_days')} options={VALUATIONS} name="Valuations" add="+ Add hours" />
-      </Hours>
-      <div className="fields">
+    <div className="fields es-hours">
+      <div className="es-seg" role="tablist" aria-label="Which hours">
+        {WEEKS.map((w, i) => (
+          <button
+            key={w.key} ref={(el) => void (tabs.current[i] = el)} type="button" role="tab"
+            id={`${id}-tab-${w.key}`} aria-controls={`${id}-week-${w.key}`} aria-selected={shown === w.key} tabIndex={shown === w.key ? 0 : -1}
+            onClick={() => setShown(w.key)} onKeyDown={(e) => onKey(e, i)}
+          >
+            {w.tab}
+          </button>
+        ))}
+      </div>
+      {WEEKS.map((w) => (
+        <div key={w.key} className="es-week" role="tabpanel" id={`${id}-week-${w.key}`} aria-labelledby={`${id}-tab-${w.key}`} hidden={shown !== w.key}>
+          <p className="hint">{w.hint}{w.key === 'office' ? <> <Source of="hours.days" sources={a.sources} /></> : null}</p>
+          <Week {...weeks[w.key]} options={w.options} name={w.name} add="+ Add hours" />
+        </div>
+      ))}
+      <div className="field">
+        <label>Closures</label>
+        {a.hours.closures.map((c, j) => (
+          <div className="field-row" key={j}>
+            <input type="date" aria-label="Closed on" value={c.date} onChange={(e) => set((d) => void (d.hours.closures[j].date = e.target.value))} />
+            <input aria-label="Reason" placeholder="Bank holiday" maxLength={60} value={c.note} onChange={(e) => set((d) => void (d.hours.closures[j].note = e.target.value))} />
+            <button type="button" className="ghost" aria-label="Remove closure" onClick={() => set((d) => void d.hours.closures.splice(j, 1))}>✕</button>
+          </div>
+        ))}
+        <button type="button" className="ghost small" onClick={() => set((d) => void d.hours.closures.push({ date: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10), note: '' }))}>+ Add a closure</button>
+        <p className="hint">Days the office is shut outside the usual pattern: a bank holiday, a staff training day.</p>
+      </div>
+      <div className="es-pair">
         <Toggle
           label="Book viewings and valuations when the office is shut" checked={a.diary.out_of_hours_booking}
           onChange={(v) => set((d) => void (d.diary.out_of_hours_booking = v))}
@@ -121,54 +192,84 @@ export function StepHours(p: Props) {
 
 // ── Your team ───────────────────────────────────────────────────────────
 
+const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+
 export function StepTeam({ a, set }: Props) {
   const add = () => set((d) => void d.team.push({ key: `person_${Date.now().toString(36)}`, name: '', role: 'negotiator', does: ['viewings'], days: [1, 2, 3, 4, 5], mobile: '' }));
+  const homesOf = (key: string) => a.listings.filter((l) => l.negotiator === key).length;
   return (
     <div className="fields">
       <p className="lead">Who works here and what each does. Callers hear first names only, and the diary books each person on their own days.</p>
-      {a.team.map((t, i) => {
-        const homes = a.listings.filter((l) => l.negotiator === t.key).length;
-        return (
-          <div className="group on area-card" key={t.key}>
-            <div className="area-head">
-              <input aria-label="Name" className="area-name" placeholder="Full name" value={t.name} maxLength={60} onChange={(e) => set((d) => void (d.team[i].name = e.target.value))} />
-              <select aria-label={`${t.name || 'Their'} role`} value={t.role} onChange={(e) => set((d) => void (d.team[i].role = e.target.value as StaffRole))}>
-                {Object.entries(ROLES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-              </select>
-              {homes ? <span className="muted small">{homes} home{homes === 1 ? '' : 's'}</span> : null}
-              <button type="button" className="ghost small" onClick={() => {
-                if (homes && !confirm(`Remove ${t.name || 'this person'}? ${homes} home${homes === 1 ? '' : 's'} will need another negotiator.`)) return;
-                set((d) => {
-                  d.team.splice(i, 1);
-                  // Nothing may point at someone who has gone: each is left to choose again (the validator says where).
-                  const k = t.key;
-                  if (d.diary.on_call === k) d.diary.on_call = null;
-                  if (d.patch.lettings_contact === k) d.patch.lettings_contact = '';
-                  if (d.valuations.rics.staff === k) d.valuations.rics.staff = '';
-                  if (d.partners.mortgage.staff === k) d.partners.mortgage.staff = '';
-                  if (d.compliance.complaints_handler === k) d.compliance.complaints_handler = '';
-                  if (d.compliance.data_lead === k) d.compliance.data_lead = '';
-                  for (const l of d.listings) if (l.personal_interest?.staff === k) l.personal_interest.staff = '';
-                });
-              }}>Remove</button>
-            </div>
-            <fieldset className="chips">
-              <legend>What they do</legend>
-              {(Object.keys(DUTIES) as StaffDuty[]).map((k) => (
-                <label key={k} className={t.does.includes(k) ? 'on' : ''}>
-                  <input type="checkbox" checked={t.does.includes(k)} onChange={(e) => set((d) => {
-                    const p = d.team[i];
-                    p.does = e.target.checked ? [...p.does, k] : p.does.filter((x) => x !== k);
-                  })} />
-                  {DUTIES[k]}
-                </label>
-              ))}
-            </fieldset>
-            <DayChips legend="Working days" days={t.days} onChange={(v) => set((d) => void (d.team[i].days = v))} />
-            <Text label="Mobile for urgent texts" value={t.mobile} max={20} placeholder="07700 900000" onChange={(v) => set((d) => void (d.team[i].mobile = v))} hint="Shown on the demo’s phone; nothing is sent." />
-          </div>
-        );
-      })}
+      <Folds
+        label="Your team" items={a.team} keyOf={(t) => t.key}
+        summary={(t) => {
+          const homes = homesOf(t.key);
+          return (
+            <>
+              <b>{t.name || 'New person'}</b>
+              <span>{ROLES[t.role]}</span>
+              <span className="muted">{cap(t.does.map((k) => DUTIES[k].toLowerCase()).join(', ')) || 'No duties'}</span>
+              <span className="muted">{dayRange(t.days)}</span>
+              {homes ? <span className="muted">{homes} home{homes === 1 ? '' : 's'}</span> : null}
+              {a.diary.on_call === t.key ? <span className="badge">On call</span> : null}
+            </>
+          );
+        }}
+        issue={(t) =>
+          !t.name ? 'Needs a name'
+          : !t.days.length ? 'Works no days'
+          // The person on call is texted at once, so a missing mobile matters for them alone.
+          : a.diary.on_call === t.key && !t.mobile.trim() ? 'On call: needs a mobile'
+          : null}
+      >
+        {(t, i) => {
+          const homes = homesOf(t.key);
+          return (
+            <>
+              <div className="area-head">
+                <input aria-label="Name" className="area-name" placeholder="Full name" value={t.name} maxLength={60} onChange={(e) => set((d) => void (d.team[i].name = e.target.value))} />
+                <select aria-label={`${t.name || 'Their'} role`} value={t.role} onChange={(e) => set((d) => void (d.team[i].role = e.target.value as StaffRole))}>
+                  {Object.entries(ROLES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+                </select>
+                {homes ? <span className="muted small">{homes} home{homes === 1 ? '' : 's'}</span> : null}
+                <button type="button" className="ghost small es-push" onClick={() => {
+                  if (homes && !confirm(`Remove ${t.name || 'this person'}? ${homes} home${homes === 1 ? '' : 's'} will need another negotiator.`)) return;
+                  set((d) => {
+                    d.team.splice(i, 1);
+                    // Nothing may point at someone who has gone: each is left to choose again (the validator says where).
+                    const k = t.key;
+                    if (d.diary.on_call === k) d.diary.on_call = null;
+                    if (d.patch.lettings_contact === k) d.patch.lettings_contact = '';
+                    if (d.valuations.rics.staff === k) d.valuations.rics.staff = '';
+                    if (d.partners.mortgage.staff === k) d.partners.mortgage.staff = '';
+                    if (d.compliance.complaints_handler === k) d.compliance.complaints_handler = '';
+                    if (d.compliance.data_lead === k) d.compliance.data_lead = '';
+                    for (const l of d.listings) if (l.personal_interest?.staff === k) l.personal_interest.staff = '';
+                  });
+                }}>Remove</button>
+              </div>
+              <div className="es-team-row">
+                <fieldset className="chips">
+                  <legend>What they do</legend>
+                  {(Object.keys(DUTIES) as StaffDuty[]).map((k) => (
+                    <label key={k} className={t.does.includes(k) ? 'on' : ''}>
+                      <input type="checkbox" checked={t.does.includes(k)} onChange={(e) => set((d) => {
+                        const p = d.team[i];
+                        p.does = e.target.checked ? [...p.does, k] : p.does.filter((x) => x !== k);
+                      })} />
+                      {DUTIES[k]}
+                    </label>
+                  ))}
+                </fieldset>
+                <DayChips legend="Working days" days={t.days} onChange={(v) => set((d) => void (d.team[i].days = v))} />
+              </div>
+              <div className="es-mobile">
+                <Text label="Mobile for urgent texts" value={t.mobile} max={20} placeholder="07700 900000" onChange={(v) => set((d) => void (d.team[i].mobile = v))} hint="Shown on the demo’s phone; nothing is sent." />
+              </div>
+            </>
+          );
+        }}
+      </Folds>
       <div className="row-tools">
         <button type="button" className="small" disabled={a.team.length >= MAX_TEAM} onClick={add}>+ Add someone</button>
         <span className="hint">Up to {MAX_TEAM} people.</span>

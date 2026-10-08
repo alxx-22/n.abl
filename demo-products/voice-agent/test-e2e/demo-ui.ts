@@ -462,13 +462,19 @@ async function walkEstate({ shot }: Walk) {
   await saved();
   await shot(page, 'builder-patch');
   await next('Office and viewing hours');
+  // One week at a time behind a switch; each week's copy button has its own name.
+  const copies: (string | null)[] = [];
+  for (const week of ['Office hours', 'Viewings', 'Valuations']) {
+    await page.getByRole('tab', { name: week, exact: true }).click();
+    copies.push(...(await page.getByRole('button', { name: /Copy Monday/ }).evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-label') ?? b.textContent))));
+  }
+  if (copies.length !== 3 || new Set(copies).size !== 3) throw new Error(`copy buttons not one a week, named by week: ${JSON.stringify(copies)}`);
+  await page.getByRole('tab', { name: 'Viewings', exact: true }).click();
   await page.fill('input[aria-label="Viewings Saturday Open closes"]', '17:00');
   await saved();
-  // Three copy buttons, one per week, each with its own name.
-  const copies = await page.getByRole('button', { name: /Copy Monday/ }).evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-label') ?? b.textContent));
-  if (copies.length !== 3 || new Set(copies).size !== 3) throw new Error(`copy buttons not named by week: ${JSON.stringify(copies)}`);
   await shot(page, 'builder-hours');
   await next('Your team');
+  // A new person's line opens by itself.
   await page.click('button:has-text("+ Add someone")');
   await page.locator('input[aria-label="Name"]').last().fill('Alex Reed');
   await saved();
@@ -509,6 +515,7 @@ async function walkEstate({ shot }: Walk) {
   await next('Office and viewing hours');
   kept("Saturday's viewing hours", (await page.inputValue('input[aria-label="Viewings Saturday Open closes"]')) === '17:00');
   await next('Your team');
+  await page.click('.fold-head:has-text("Alex Reed")');
   kept('the new person', (await page.locator('input[aria-label="Name"]').last().inputValue()) === 'Alex Reed');
   await next('Listings');
   await page.click('.home-row:has-text("22 Albion Road")');
