@@ -15,7 +15,7 @@ commit, when it's fixed or shown to be wrong.
 - [x] [medium] Changing a home's status in Properties leaves its sale disagreeing, and re-marketing a withdrawn home skips the back-up buyers (`src/server/demo.ts:821`) Fixed in `2bc9b93`.
 - [x] [medium] A viewing on a withdrawn or sold home stays booked and the receptionist moves it to a new day (`src/core/tools.ts:773`) Fixed in `c84d419`.
 - [x] [medium] A buyer offering on a home in best and final is never told the deadline (`src/core/estate-tools.ts:854`) Fixed in `75f5e73`.
-- [medium] The builder's 'Book viewings and valuations when the office is shut' switch does nothing (`src/presets/estate/compile.ts:114`)
+- [x] [medium] The builder's 'Book viewings and valuations when the office is shut' switch does nothing (`src/presets/estate/compile.ts:114`) Fixed in `b1215d7`.
 - [low] Unknown broadband or mobile never names Ofcom's checker, because of a key mismatch (`src/core/estate-tools.ts:846`)
 - [low] Seeded sales contradict their own logs and chain (`src/presets/estate/seed.ts:487`)
 - [low] Seeded valuation leads are listed as buyers, and the owner who instructed 19 Copse Lane is not its seller (`src/presets/estate/seed.ts:380`)
