@@ -16,7 +16,7 @@ import {
   loggableArgs, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type CallState, type SmsSender, type Telephony,
   type ToolContext,
 } from './tools.ts';
-import { BANK_TALK, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DETAIL, checkUtterance, referencesIn, saidYes, type Flag } from './guardrails.ts';
+import { BANK_TALK, CALLBACK_PROMISED, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DETAIL, checkUtterance, referencesIn, saidYes, type Flag } from './guardrails.ts';
 import { redactLine } from './redact.ts';
 import { record } from './tool-kit.ts';
 import { amountsIn } from '../domain/amounts.ts';
@@ -569,7 +569,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.noteReaction();
     this.raiseHeld();
     for (const f of checkUtterance(text, this.state, this.staffNames, this.opts.tenant.profile.maintenance)) this.raise(f);
-    if (!this.state.messageTaken && !this.state.messageChecked && PROMISED_MESSAGE.test(clean)) {
+    if (!this.state.messageTaken && !this.state.messageChecked && (PROMISED_MESSAGE.test(clean) || (this.state.estate && CALLBACK_PROMISED.test(clean)))) {
       // Once the turn's tool calls have run: the message may be on its way already.
       void this.toolQueue.then(() => {
         if (this.state.messageTaken || this.state.messageChecked || this.ended) return;

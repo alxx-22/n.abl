@@ -50,7 +50,10 @@ const PASSED_ON = /\b(?:i'?ve|i have|we'?ve|we have|that'?s|it'?s|has been|have 
 // A call-back promised but not yet taken: not a false claim, so not a flag, but the call nudges the
 // receptionist to take it. In three live runs the hotel's receptionist said "I'll pass your details on"
 // and never took the message; by the time it tried to hang up, the caller had gone.
-export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:that|it|this|those|these|your [a-z]+)(?: details)? (?:on|along)|let (?:the|our) [a-z ]{0,20}know|ask (?:them|the [a-z ]{0,20}) to (?:call|ring|give you a (?:call|ring)))/i;
+// On 8 October an estate call said "I'll pass that request on to Jess" and "I can add that to the message for Jess", and took none.
+export const PROMISED_MESSAGE = /\b(?:i'?ll|i will|i'?m going to) (?:pass (?:that|it|this|those|these|your [a-z]+)(?: [a-z]+){0,2} (?:on|along)|let (?:the|our) [a-z ]{0,20}know|ask (?:them|the [a-z ]{0,20}) to (?:call|ring|give you a (?:call|ring)))|\bi (?:can|will|'ll) (?:add|put) (?:that|it|this) (?:to|in|on|into) (?:the|my) (?:message|note)/i;
+/** An estate agency's "Jess will be in touch": a call back promised, which only a message makes true (same call). */
+export const CALLBACK_PROMISED = /\b[a-z]+ will (?:be in touch|get back to you|call you back|give you a call|ring you back)\b/i;
 // A booking, valuation or offer read back for a yes, with its time or amount (an estate agency's calls). On 3 October
 // a caller answered "Yes, that's all correct. Could I also see 10 Meadow View?" and the viewing was never booked.
 // "Shall I go ahead and book that?" asks for the same yes; "Shall I book one of those?", an offer of times, does not.

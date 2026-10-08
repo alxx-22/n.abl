@@ -6,7 +6,7 @@ import { resolveItem, resolveModifiers, allergenAnswer, lineTotal } from '../src
 import { searchKnowledge } from '../src/domain/knowledge.ts';
 import { processDemoPayment, parseDemoCards, DEFAULT_DEMO_CARDS, digitsOf } from '../src/domain/payments.ts';
 import { redactCardNumbers, REDACTED } from '../src/core/redact.ts';
-import { PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance, saidYes } from '../src/core/guardrails.ts';
+import { CALLBACK_PROMISED, PROMISED_MESSAGE, READ_BACK, READ_BACK_DETAIL, SAID_YES, checkUtterance, saidYes } from '../src/core/guardrails.ts';
 import { newCallState, record, unsaidReference, type ToolContext } from '../src/core/tools.ts';
 import { readFileSync } from 'node:fs';
 import { normaliseUkPhone, displayUkPhone } from '../src/domain/phone.ts';
@@ -176,6 +176,11 @@ test('guardrail: "confirmed" with no reference in the call is flagged', () => {
   assert.ok(PROMISED_MESSAGE.test("Got that. I'll pass your details on to the reservations team and ask them to give you a call."));
   assert.ok(PROMISED_MESSAGE.test("I'll let the manager know."));
   assert.ok(!PROMISED_MESSAGE.test('If you give me your name and number, I can ask them to call you back.'), 'an offer, before the details');
+  // Live, 8 October: both said, neither taken.
+  assert.ok(PROMISED_MESSAGE.test("Thank you, Chris. I'll pass that request on to Jess, and she'll get back to you."));
+  assert.ok(PROMISED_MESSAGE.test('Of course, I can add that to the message for Jess.'));
+  assert.ok(CALLBACK_PROMISED.test('Jess will be in touch with you about those questions.'));
+  assert.ok(!CALLBACK_PROMISED.test('Would you like Jess to get back to you?'), 'an offer');
   assert.equal(checkUtterance("I haven't passed that on yet.", s).length, 0);
   assert.equal(checkUtterance("I've passed that on.", { ...s, messageTaken: true }).length, 0);
   assert.equal(checkUtterance("It isn't booked yet.", s).length, 0);
