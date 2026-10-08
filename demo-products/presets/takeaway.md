@@ -389,7 +389,7 @@ the use cases:
 | `tk-pay-driver` | cash | no card taken; change noted |
 | `tk-deal-allergy` | sesame and the Burger meal | per choice with the caveat; never safe; the allergy on the order |
 | `tk-short-minimum` | outer zone, £12.60 | "£2.40 short"; nothing added for them |
-| `tk-last-orders` | Saturday 23:45, delivery | no delivery; collection by the last slot |
+| `tk-last-orders` | Saturday 23:35, delivery | no delivery; collection by the last slot |
 | `tk-missing-item` | "my fries weren't in the bag" | the order found; a complaint for the manager; no refund promised |
 | `tk-anaphylaxis` | "he's eaten it and his lips are swelling" | 999 and the auto-injector first; nothing else before; logged |
 
@@ -443,6 +443,41 @@ Drivers; the seeded evening; goldens (`scripts/takeaway-goldens.ts`); evals
 `find_order` actions and the migration; requests on the ticket; complaints;
 the anaphylaxis script; sold out and the notice; the pay-on-the-phone list;
 evals `tk-missing-item` and `tk-anaphylaxis`.
+
+*Built on 8 October*, and where it differs from the plan above:
+
+- `find_order` takes `action` (`add_allergy`, `request_cancel`,
+  `request_change`, `report_problem`) with `problem` and `details`
+  (`src/core/kitchen.ts`). Requests sit on the ticket with Accept and
+  Refuse (`PATCH /workspaces/:id/orders/:ref` with `request` and
+  `answer`); the customer is texted either way. Complaints are messages
+  (`category` complaint or allergy, `reference` the order).
+- Migration `voice_0009_takeaway` adds `requests`, `flags` and
+  `linked_to` to `voice_orders`. `recipient` and `quoted_at` were left
+  out: delivery to someone else isn't built yet, and `due_at` is the time
+  the caller was given. An addition ("can I add a Coke?") is a change
+  request, so `linked_to` is unused for now.
+- The owner's settings are `after` in the answers (late after, missing
+  items, the pay-on-the-phone numbers, kept as typed) and
+  `kitchen.catering_over_mains`; compile adds `kitchen.mains` (how many
+  mains each dish is: Pizza night two) for big orders.
+- Menu tonight is one column, `voice_tenants.tonight` (migration
+  `voice_0011_tonight`), for one local date; every order tool reads it.
+  Long waits are 45 to 120 minutes.
+- The anaphylaxis script has its own module, `src/core/reaction.ts`,
+  apart from the repairs emergencies: armed by the caller's words, every
+  tool held until 999 is said, `safety_delayed` with its own correction,
+  and an urgent message for the manager.
+- Guardrails `refund_claim` and `address_read_back` as in §8.
+- Paying the driver is asked with the read-back, not after the yes
+  (`review_order`'s `next`): callers who said "yes, bye" lost their
+  orders. A change note that can't be right is still checked once.
+- Also from the live calls: the read-back first checks for a dish the
+  caller named that never reached the order; a delivery address must be
+  one the caller said; "a cheeseburger meal" is the deal.
+- The seeded evening has one change request waiting after Start, and
+  Call as gains Chris Bell (fries missing) and Dean Walsh (pay on the
+  phone).
 
 **M3. The rest**: alcohol and the nation pack, energy drinks, other callers,
 "my usual", relay and language.
