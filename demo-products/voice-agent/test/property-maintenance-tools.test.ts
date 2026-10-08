@@ -316,6 +316,25 @@ test('compliance: a record already booked is never booked twice; cancelling free
   assert.deepEqual([renewed.booked_job, renewed.issued, renewed.expires], [null, w.date, '2027-11-16']);
 });
 
+test('compliance in an evening window: a landlord is never told "£30 extra" that isn\'t charged, nor the tenant; a homeowner pays it, in the price', async () => {
+  const t = await fernhill('pm-gas-evening');
+  const ben = await call(t, BEN);
+  const booked = await ben.run('compliance', { property: 'elm_14', action: 'book', services: 'gas safety record', date: '2026-10-12', window: 'evening' });
+  assert.equal(booked.booked, true, JSON.stringify(booked));
+  assert.equal(booked.price, '£75 including VAT');
+  assert.doesNotMatch(JSON.stringify(booked), /extra/);
+  assert.ok(ben.sent.length >= 2 && ben.sent.every((x) => !/extra/.test(x.body)), JSON.stringify(ben.sent));
+  // A homeowner with gas: the evening's extra is said, and it is in the price.
+  const homes = await repo.listMtProperties(t.id);
+  const own = homes.find((p) => p.client === null && p.gas && p.occupant.phone)!;
+  const h = await call(t, own.occupant.phone);
+  await h.run('find_property', { postcode: own.district, number: own.number, street: own.street });
+  const mine = await h.run('compliance', { property: own.key, action: 'book', services: 'gas safety record', date: '2026-10-12', window: 'evening' });
+  assert.equal(mine.booked, true, JSON.stringify(mine));
+  assert.match(mine.when, /£30 extra/);
+  assert.equal(mine.price, `£${75 + (own.gas_appliances > 1 ? (own.gas_appliances - 1) * 15 : 0) + 30} including VAT`);
+});
+
 test('messages and hours: for an engineer or the office, urgent ones by text, bank talk as fraud; tonight\'s cover without names', async () => {
   const t = await fernhill('pm-messages');
   const c = await call(t, SAM);

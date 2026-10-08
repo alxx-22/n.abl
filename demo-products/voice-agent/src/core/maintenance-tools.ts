@@ -990,9 +990,9 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
   if (client) await noticeToClient(ctx, client, job, p);
   // The insurer instructed it; the policyholder is the one who lets us in.
   if (insurer && p.occupant.phone && p.occupant.phone !== phone) {
-    await smsTo(ctx, p.occupant.phone, `${ctx.tenant.profile.name}: ${insurer.name} has asked us to come about claim ${claim}: ${description}. ${cap(windowWords(w, date, l.date))}, with ${e.first_name}. Ref ${job.reference}. Call us if that doesn't suit. (Demo)`);
+    await smsTo(ctx, p.occupant.phone, `${ctx.tenant.profile.name}: ${insurer.name} has asked us to come about claim ${claim}: ${description}. ${cap(windowWords(w, date, l.date, homeowner))}, with ${e.first_name}. Ref ${job.reference}. Call us if that doesn't suit. (Demo)`);
   }
-  ctx.action({ kind: 'job_created', title: `${cap(priority)} · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · ${windowWords(w, date, l.date)} · ${e.first_name} · ref ${job.reference}`, data: { reference: job.reference } });
+  ctx.action({ kind: 'job_created', title: `${cap(priority)} · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · ${windowWords(w, date, l.date, homeowner)} · ${e.first_name} · ref ${job.reference}`, data: { reference: job.reference } });
   return {
     booked: true, reference: job.reference, reference_spoken: spokenReference(job.reference), priority,
     when: windowWords(w, date, l.date, homeowner), engineer: e.first_name,
@@ -1305,7 +1305,8 @@ async function portfolio(args: Args, ctx: ToolContext, action: 'portfolio' | 'bo
     await ctx.repo.setCertificateBooked(ctx.tenant.id, p.key, kind, job.reference);
     record(ctx, job.reference, 'job', 'committed');
     ctx.state.jobsVerified.push(job.reference);
-    const when = windowWords(slot.window, slot.date, l.date);
+    // A client is billed on its own terms: no evening extra said to them or the tenant.
+    const when = windowWords(slot.window, slot.date, l.date, false);
     if (p.occupant.phone && p.occupant.texts_ok) {
       await smsTo(ctx, p.occupant.phone, `${ctx.tenant.profile.name}: your landlord has booked a ${plan.description.toLowerCase()} for ${when}. Someone over 18 needs to be in. Ref ${job.reference}. (Demo)`);
     }
@@ -1366,6 +1367,9 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
   const extra = Math.max(0, (int(args.appliances) ?? p.gas_appliances ?? 1) - 1);
   const price = kind === 'eicr' ? m.planned.eicr_from_pence : kind === 'boiler_service' ? m.planned.boiler_service_pence
     : (kind === 'gas_record_and_service' ? m.planned.combined_pence : m.planned.gas_record_pence) + extra * m.planned.extra_appliance_pence;
+  // A window's extra is a homeowner's, and is in their price; a landlord or agent is billed on their own terms,
+  // so never hears it, nor does the tenant (review, 8 October).
+  const homeowner = role !== 'authoriser';
   // Already booked (the landlord forgot, or asks again): that visit, never a second job (review, 8 October).
   const kinds = kind === 'gas_record_and_service' ? ['gas_record', 'boiler_service'] : [kind];
   const held = certs.find((c) => kinds.includes(c.kind) && c.booked_job);
@@ -1374,7 +1378,7 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
     const hw = heldJob.visit_date ? windowOf(m, heldJob.window_key) : undefined;
     return {
       booked: false,
-      already: { reference: heldJob.reference, reference_spoken: spokenReference(heldJob.reference), what: heldJob.description, ...(hw && heldJob.visit_date ? { when: windowWords(hw, heldJob.visit_date, l.date) } : {}) },
+      already: { reference: heldJob.reference, reference_spoken: spokenReference(heldJob.reference), what: heldJob.description, ...(hw && heldJob.visit_date ? { when: windowWords(hw, heldJob.visit_date, l.date, homeowner) } : {}) },
       message: 'That check is already booked: say when, and offer to move it (job move with its reference) rather than book another.',
     };
   }
@@ -1384,7 +1388,7 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
   const keeps = gasCert?.expires && kind !== 'eicr' && kind !== 'boiler_service' ? minusMonths(gasCert.expires, 2) : null;
   const jobs = await ctx.repo.listJobs(ctx.tenant.id);
   const offer = () => freeWindows(m, jobs, { trade, gas: kind !== 'eicr', district: p.district, from: keeps && keeps > l.date ? keeps : l.date, now: l })
-    .map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date) }));
+    .map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date, homeowner) }));
   // The register's news a landlord came for: when the record runs out, and that booking now keeps that date (the signature moment, §1).
   const current = gasCert?.expires && keeps
     ? `The current gas safety record runs to ${spokenDate(gasCert.expires)}; a visit from ${spokenDate(keeps > l.date ? keeps : l.date)} keeps that date.`
@@ -1402,12 +1406,13 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
   const c = tooSoon ? null : checkWindow(m, jobs, { date, window: w.key, trade, gas: kind !== 'eicr', district: p.district });
   if (!c || !c.ok) return { booked: false, message: "That window isn't free. Offer these instead.", windows: offer() };
   const e = c.engineers[0];
+  const charged = price + (homeowner ? w.premium_pence : 0);
   const name = realName(args.name) ?? m.clients.find((x) => x.key === p.client)?.contact.name ?? p.occupant.name ?? undefined;
   if (!name) return { booked: false, message: ASK_NAME };
   const description = kind === 'eicr' ? 'Electrical installation condition report' : kind === 'boiler_service' ? 'Boiler service' : kind === 'gas_record_and_service' ? 'Gas safety record and boiler service' : 'Gas safety record';
   const job = await ctx.repo.createJob(ctx.tenant, {
     property_key: p.key, client_key: p.client, reporter: { name, phone: ctx.callerPhone, role: role === 'authoriser' ? 'landlord' : 'homeowner' }, trade, priority: 'routine',
-    reason: 'Planned: safety check', description, kind, status: 'scheduled', visit_date: date, window_key: w.key, engineer_key: e.key, price_pence: price,
+    reason: 'Planned: safety check', description, kind, status: 'scheduled', visit_date: date, window_key: w.key, engineer_key: e.key, price_pence: charged,
     flags: kind === 'eicr' ? [] : ['gas'], source: source(ctx), call_id: ctx.callId || null,
   });
   for (const k of kind === 'gas_record_and_service' ? ['gas_record', 'boiler_service'] as const : [kind === 'eicr' ? 'eicr' as const : kind === 'boiler_service' ? 'boiler_service' as const : 'gas_record' as const]) {
@@ -1415,12 +1420,12 @@ async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, 
   }
   record(ctx, job.reference, 'job', 'committed');
   ctx.state.jobsVerified.push(job.reference);
-  await smsTo(ctx, ctx.callerPhone, `${ctx.tenant.profile.name}: ${description.toLowerCase()} at ${shortAddress(p)} booked for ${windowWords(w, date, l.date)} with ${e.first_name}, ${money(price)}${incVat(m)}. Ref ${job.reference}. (Demo)`);
+  await smsTo(ctx, ctx.callerPhone, `${ctx.tenant.profile.name}: ${description.toLowerCase()} at ${shortAddress(p)} booked for ${windowWords(w, date, l.date, homeowner)} with ${e.first_name}, ${money(charged)}${incVat(m)}. Ref ${job.reference}. (Demo)`);
   if (p.occupant.phone && p.occupant.texts_ok && p.occupant.phone !== ctx.callerPhone) {
-    await smsTo(ctx, p.occupant.phone, `${ctx.tenant.profile.name}: your landlord has booked a ${description.toLowerCase()} for ${windowWords(w, date, l.date)}. Someone over 18 needs to be in. Ref ${job.reference}. (Demo)`);
+    await smsTo(ctx, p.occupant.phone, `${ctx.tenant.profile.name}: your landlord has booked a ${description.toLowerCase()} for ${windowWords(w, date, l.date, false)}. Someone over 18 needs to be in. Ref ${job.reference}. (Demo)`);
   }
-  ctx.action({ kind: 'job_created', title: `${description} booked`, detail: `${shortAddress(p)} · ${windowWords(w, date, l.date)} · ${e.first_name} · ref ${job.reference}`, data: { reference: job.reference } });
-  return { booked: true, reference: job.reference, reference_spoken: spokenReference(job.reference), when: windowWords(w, date, l.date), engineer: e.first_name, price: `${money(price)}${incVat(m)}`, ...(keeps && date >= keeps ? { keeps_date: true } : {}) };
+  ctx.action({ kind: 'job_created', title: `${description} booked`, detail: `${shortAddress(p)} · ${windowWords(w, date, l.date, homeowner)} · ${e.first_name} · ref ${job.reference}`, data: { reference: job.reference } });
+  return { booked: true, reference: job.reference, reference_spoken: spokenReference(job.reference), when: windowWords(w, date, l.date, homeowner), engineer: e.first_name, price: `${money(charged)}${incVat(m)}`, ...(keeps && date >= keeps ? { keeps_date: true } : {}) };
 }
 
 // ── Safety advice ─────────────────────────────────────────────────────────
