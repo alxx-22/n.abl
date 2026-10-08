@@ -217,7 +217,9 @@ export async function jobAction(
           throw new HttpError(409, c.reason === 'full' ? `${engineer.first_name}'s ${c.window!.label.toLowerCase()} is full.` : c.reason === 'not_that_day' ? `There's no ${c.window!.label.toLowerCase()} window that day.` : c.reason === 'nobody' ? `${engineer.first_name} doesn't work that day.` : 'No such window.');
         }
         const w = c.window;
-        const r = await update(job.reference, { engineer_key: engineer.key, visit_date: date, window_key: w.key, status: job.status === 'new' ? 'scheduled' : job.status }, `assigned to ${engineer.first_name}, ${spokenDate(date)} ${inSentence(w.label)}`, { by: 'staff', from: [job.status] });
+        // A job waiting for parts or access, given its new visit, is booked again (review, 8 October).
+        const rebooked = job.status === 'new' || job.status === 'waiting';
+        const r = await update(job.reference, { engineer_key: engineer.key, visit_date: date, window_key: w.key, status: rebooked ? 'scheduled' : job.status, ...(job.status === 'waiting' ? { waiting_for: null } : {}) }, `assigned to ${engineer.first_name}, ${spokenDate(date)} ${inSentence(w.label)}`, { by: 'staff', from: [job.status] });
         if (date !== job.visit_date || w.key !== job.window_key) await text(occupant, `${t.profile.name}: your visit for job ${job.reference} is now ${spokenDate(date)}, ${inSentence(w.label)} (${spokenTime(w.from)} to ${spokenTime(w.to)}). (Demo)`);
         return done(r, `${job.reference}: ${engineer.first_name}, ${spokenDate(date)} ${inSentence(w.label)}.`);
       }

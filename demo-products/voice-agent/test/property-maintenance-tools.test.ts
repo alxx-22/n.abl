@@ -494,6 +494,18 @@ test('an emergency in office hours: never paged to an engineer off sick, and a d
   assert.match(await act({ action: 'no_answer' }), /Helen Ward has been texted/);
 });
 
+test('a job waiting for parts, given a new visit, is booked again: the engineer can go on the way and the caller hears the visit', async () => {
+  const t = await fernhill('pm-waiting-rebook');
+  const jobs = await repo.listJobs(t.id);
+  const j = jobs.find((x) => x.status === 'scheduled' && x.trade === 'plumbing' && !x.flags.includes('gas') && x.visit_date! > '2026-10-07' && x.reporter.phone)!;
+  const act = (b: Record<string, unknown>, now = NOW) => jobAction(repo, t, j.reference, b, async () => {}, now);
+  await act({ action: 'waiting', reason: 'parts', note: 'a new valve' });
+  assert.match(await act({ action: 'assign', engineer: 'marek', date: '2026-10-12', window: 'pm' }), /Marek, Monday 12 October afternoon/);
+  const [now] = await repo.listJobs(t.id, { reference: j.reference });
+  assert.deepEqual([now.status, now.waiting_for], ['scheduled', null]);
+  assert.match(await act({ action: 'on_the_way', eta_minutes: 20 }, new Date('2026-10-12T12:30:00Z')), /on the way/);
+});
+
 test('a homeowner told "ninety five pounds" has heard the price, and a job is never booked for "Owner"', async () => {
   const t = await fernhill('pm-price-words');
   const home = (await repo.listMtProperties(t.id)).find((p) => p.client === null && p.occupant.phone && p.occupant.name)!;
