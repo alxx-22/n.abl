@@ -696,6 +696,17 @@ const TOOLS: Record<string, Tool> = {
           profile: p, serviceKey: str(args.service), date, time: str(args.time), partySize: int(args.party_size) ?? 1, staff: str(args.staff),
           now: ctx.now(), existing: isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [], area: area.key, accessible, prefer, only: table.key,
         });
+        // A barber taken then while another is free: that one first. A live test put a child at 9:15 with Dan free at 10.
+        const other = p.barber && str(args.staff)
+          ? checkAvailability({ profile: p, serviceKey: str(args.service), date, time: str(args.time), partySize: 1, now: ctx.now(), existing: isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [] })
+          : null;
+        if (other?.available && other.slot) {
+          const who = other.slot.resource_label;
+          return {
+            booked: false, reason: 'fully_booked', message: `${a2.message ?? r.message} ${who} is free then.`, alternatives: a2.alternatives,
+            next: `Offer ${who} at ${other.slot.spoken} first, and book with staff "${who}" if they agree; if it must be ${str(args.staff)}, offer these times.`,
+          };
+        }
         return {
           booked: false, reason: 'fully_booked', message: a2.message ?? r.message, alternatives: a2.alternatives,
           other_areas_free: a2.other_areas_free,

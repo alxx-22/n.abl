@@ -7,9 +7,12 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
+import { compilePrompt } from '../src/core/prompt.ts';
 import { checkAvailability } from '../src/domain/availability.ts';
 import { newCallState, runTool, type ToolContext } from '../src/core/tools.ts';
 import type { Tenant } from '../src/domain/types.ts';
+import type { Bus } from '../src/server/bus.ts';
+import { tenantState } from '../src/server/state.ts';
 import { defaultAnswers, type BarberAnswers } from '../src/presets/barber/answers.ts';
 import { compileBarber } from '../src/presets/barber/compile.ts';
 import { BB_PEOPLE } from '../src/presets/barber/personas.ts';
@@ -116,6 +119,23 @@ test('barber: one person and one service a booking, the price in the read-back, 
   const booked = await c.run('create_booking', { service: 'Classic cut', date: '2026-10-17', time: '10:00', name: 'Tom Reid' });
   assert.equal(booked.booked, true);
   assert.equal(booked.next, 'Offer the £5.00 deposit now by card with take_demo_payment (for "deposit"). If they would rather pay in the shop, that is fine: the booking stands.');
+  // Marcus is now taken at 10, and Dan is free then: Dan first, not another time with Marcus.
+  const again = await c.run('create_booking', { service: "Kids' cut", date: '2026-10-17', time: '10:00', staff: 'Marcus', name: 'Sara Ahmed' });
+  assert.deepEqual([again.booked, again.message], [false, '10am is taken. Dan is free then.']);
+  assert.equal(again.next, 'Offer Dan at 10am first, and book with staff "Dan" if they agree; if it must be Marcus, offer these times.');
+  assert.match(compilePrompt(t.profile, { now: THURSDAY, callerPhone: null, demoCards: [], canTransfer: false, channel: 'phone' }), /read back the service, day, date, time, barber, price and name, and ask "Shall I book that\?"/);
+});
+
+test("barber: the back office's Diary has a row a barber, on their days, with what they do", async () => {
+  // The walkthrough, 8 October: the Diary read the estate agent's team and said no one takes bookings.
+  const t = await repo.upsertTenant(compileBarber(named(), { slug: 'kingsleys-diary' }));
+  const state = (await tenantState(repo, t, { activeFor: () => [] } as unknown as Bus)) as any;
+  assert.deepEqual(state.team.map((s: any) => [s.first_name, s.days, s.services.length]), [
+    ['Marcus', [0, 2, 3, 4, 5, 6], 8],
+    ['Dan', [2, 3, 4, 5, 6], 6],
+    ['Jordan', [2, 3, 4, 5, 6], 3],
+    ['Amira', [5, 6], 4],
+  ]);
 });
 
 test('barber: the seeded week fills each barber on their days, Saturday busiest, with the people to ring as', () => {
