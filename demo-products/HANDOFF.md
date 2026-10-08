@@ -89,30 +89,38 @@ The spec is `presets/takeaway.md`, the use cases
 - The prompt at its largest is about 6,940 characters (limit 7,000): new
   guidance goes in tool answers.
 
-**Live calls**, the ten `tk-` scenarios on `tk-firebird`
-(`src/eval/scenarios.ts`): the first run on 7 October passed 1 of 10. The
-fixes are in `14d89d5`, `81818cb`, `abc0a10` and `0092177`. The second
-run passed `tk-busy-wait`, `tk-deal-choices`,
-`tk-out-of-area`, `tk-where-is-order` and `tk-last-orders` (with
-`tk-meal-deal` from the first, 6 of 10). `tk-deal-allergy` and
-`tk-short-minimum` ended when the simulated caller went quiet; re-run
-before reading anything into them.
+**Live calls**, twelve `tk-` scenarios on `tk-firebird`
+(`src/eval/scenarios.ts`): the ten for M1, and `tk-missing-item` and
+`tk-anaphylaxis` for M2. The first run (7 October) passed 1 of 10; the
+fixes since are in the commits titled "Takeaway calls: ...". Every one of
+the twelve has now passed live at least once (8 October): the last full
+run passed 7 of 12, and the five it failed passed or were fixed on re-runs
+(`tk-meal-deal`, `tk-deal-declined` and `tk-deal-choices` on the next run, `tk-deal-allergy` and `tk-short-minimum` on the one after). Results still vary from run to run: the
+simulated caller sometimes says "yes, bye" before it's asked anything,
+and the receptionist sometimes misspeaks a time it was given ("quarter
+past" for 7:45), which the guardrails catch. Re-run all twelve together
+before reading much into one result.
 
-**M2 has started** (8 October): `find_order` now takes `action`
-(`add_allergy`, `request_cancel`, `request_change`, `report_problem`);
-cancellations and changes are requests on the ticket with Accept and
-Refuse, texted either way; complaints are messages for the manager; the
-owner's late and missing-item settings; the pay-on-the-phone list; Call as
-Chris Bell (delivered, fries missing) and Dean Walsh (on the list).
-Migration `voice_0009_takeaway` (requests, flags, linked_to) is applied to
-Supabase and recorded. **Still to do for M2**, in this order: the
-guardrails `refund_claim` and `address_read_back`; the anaphylaxis script
-(its own detector and tool gate in `src/core/safety.ts`, not the repairs
-kinds; 999 first); sold out tonight and the notice ("delivery paused",
-"long waits") from a Menu tonight view; a big order taking two slots
-(`kitchen.big_order_mains`); additions riding with an earlier order
-(`linked_to`); the evals `tk-missing-item` and `tk-anaphylaxis`; the walk
-with the M2 screens; screenshots to Alex; this note.
+**M2 is built** (8 October; the spec's §12 says what, and where it differs):
+`find_order` actions for after the order, with requests on the ticket
+(Accept and Refuse, texted either way) and complaints for the manager;
+the anaphylaxis script (`src/core/reaction.ts`, 999 first, every tool held
+until it's said); Menu tonight (sold out, delivery paused, long waits),
+read on every order tool; big orders taking two slots and catering going
+to the manager; the pay-on-the-phone list; guardrails `refund_claim` and
+`address_read_back`; Call as Chris Bell and Dean Walsh; one change request
+waiting after Start. Migrations `voice_0009_takeaway` and
+`voice_0011_tonight` are applied to Supabase and recorded. The walk covers
+the waiting request and Menu tonight; screenshots in
+`eval-results/demo-ui/takeaway/`, sent to Alex on 8 October.
+
+**Next for the takeaway: M3** (spec §12): alcohol and the nation pack
+(Scotland's hours, Wales's hygiene rating), energy drinks as a dated
+switch, other callers (drivers, suppliers, the council, applicants,
+sales), "my usual", relay and language. Also not built yet: delivery to
+someone else (a `recipient` on the order). The repairs demo's clock
+(`DemoClock.tsx`, the cloud session's) is repairs-only; turning it on for
+the takeaway would let a prospect try Saturday's last orders.
 
 ### Working on Windows
 
