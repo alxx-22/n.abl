@@ -283,6 +283,24 @@ test('a viewing moves only within its home\'s rules, and every change is texted'
   assert.match(sent.at(-1)!.body, /viewing cancelled, Tuesday 5:30pm at 22 Albion Road, with \w+\. Ref [A-Z]{2}\d{3}\. \(Demo\)$/);
 });
 
+test('a viewing on a home withdrawn or sold is never moved to a new day: the caller hears why, and is offered others', async () => {
+  const t = await agency('ea-move-gone');
+  const { run } = await call(t);
+  await run('get_property', { property: '22 Albion Road' });
+  const b = await run('create_booking', { property: '22 Albion Road', date: SAT, time: '11:15', name: 'Sam Price', postcode: 'BK3 4RT' });
+  assert.equal(b.booked, true);
+  for (const [live, words] of [[{ status: 'withdrawn' }, "It's no longer on the market."], [{ status: 'exchanged' }, "It's sold."], [{ status: 'sale_agreed', marketing_continues: false }, /isn't taking more viewings/]] as const) {
+    await repo.setListing(t.id, 'albion_22', live);
+    const moved = await run('modify_booking', { reference: b.reference, date: TUE, time: '17:30' });
+    assert.equal(moved.changed, false, JSON.stringify(moved));
+    if (typeof words === 'string') assert.equal(moved.message, words);
+    else assert.match(String(moved.message), words);
+    assert.ok((moved.similar as unknown[]).length > 0);
+    assert.match(String(moved.next), /cancel_booking/);
+  }
+  assert.equal((await repo.getBookingByReference(t.id, String(b.reference)))!.starts_at.toISOString().slice(0, 10), SAT, 'still on its day, never moved');
+});
+
 test('status first: off the market offers two others, a sale agreed is said before any times, coming soon gives its first day', async () => {
   const t = await agency('ea-status');
   const { run, ctx, say } = await call(t);

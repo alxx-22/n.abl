@@ -437,7 +437,8 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal(accepted.status, 200, JSON.stringify(accepted.data));
     assert.match(accepted.data.message, /other buyers? (?:has|have) been told/);
     assert.match((await texts(offer.phone)).at(-1), /accepted your offer of £[\d,]+ for .+, subject to contract\. \w+ will confirm it in writing/);
-    for (const r of rivals) assert.match((await texts(r.phone)).at(-1), /has accepted another offer, subject to contract/);
+    // (A rival with a viewing booked hears that it's cancelled too, as viewings don't continue.)
+    for (const r of rivals) assert.ok((await texts(r.phone)).some((x: string) => /has accepted another offer, subject to contract/.test(x)), r.phone);
     const after = await state();
     const home = after.listings.find((l: any) => l.key === offer.listing_key);
     assert.equal(home.status, 'sale_agreed');
@@ -514,13 +515,6 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal(now.nation, 'england');
     assert.equal(now.listings.find((l: any) => l.key === vhome.key).blocked[0].note, 'Seller away');
     assert.equal((await jo.call('PATCH', `${path}/listings/${vhome.key}`, { action: 'unblock', index: 0 })).status, 200);
-    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'status', status: 'withdrawn' })).status, 200);
-    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'status', status: 'gone' })).status, 400);
-    assert.equal((await jo.call('PATCH', `${path}/listings/no_such_home`, { action: 'status', status: 'available' })).status, 404);
-    now = await state();
-    assert.deepEqual(now.listings.find((l: any) => l.key === vhome.key).blocked, []);
-    assert.equal(now.listings.find((l: any) => l.key === avail.key).status, 'withdrawn');
-
     // Feedback on a viewing, from the agent who showed it.
     assert.equal((await jo.call('PATCH', `${path}/bookings/${viewing.reference}`, { action: 'feedback', category: 'keen', words: 'Loved the garden' })).status, 200);
     assert.equal((await jo.call('PATCH', `${path}/bookings/${viewing.reference}`, { action: 'feedback', category: 'meh' })).status, 400);
@@ -529,6 +523,15 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     const fb = (await state()).bookings.find((b: any) => b.reference === viewing.reference);
     assert.equal(fb.details.feedback.category, 'keen');
     assert.equal(fb.details.feedback.words, 'Loved the garden');
+    // Withdrawn: its viewings to come are cancelled, the buyers told.
+    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'status', status: 'withdrawn' })).status, 200);
+    if (avail.key === viewing.listing_key) assert.equal((await state()).bookings.find((b: any) => b.reference === viewing.reference).status, 'cancelled');
+    assert.equal((await jo.call('PATCH', `${path}/listings/${avail.key}`, { action: 'status', status: 'gone' })).status, 400);
+    assert.equal((await jo.call('PATCH', `${path}/listings/no_such_home`, { action: 'status', status: 'available' })).status, 404);
+    now = await state();
+    assert.deepEqual(now.listings.find((l: any) => l.key === vhome.key).blocked, []);
+    assert.equal(now.listings.find((l: any) => l.key === avail.key).status, 'withdrawn');
+
 
     // The builder after Start: a home repriced, one added and one removed reach the back office.
     const answers = (await jo.call('GET', path)).data.answers;
@@ -768,6 +771,30 @@ test('demo: an estate agency: a home\'s status changed in Properties keeps its s
   assert.match(back.data.message, /\d+ buyers? (?:has|have) been texted/);
   assert.match((await texts(backup.phone)).at(-1), /3 Kingfisher Way is back on the market/);
   assert.ok((await listing('kingfisher_3')).back_on_market_at);
+});
+
+test('demo: an estate agency: a home withdrawn or sold cancels its viewings to come, and each buyer is texted why', async () => {
+  assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Uma Vance', company: 'Vance Homes' });
+  const uma = client('10.0.0.18');
+  assert.equal((await uma.call('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+  const made = await uma.call('POST', '/demo/api/workspaces', { preset: 'estate_agent' });
+  const path = `/demo/api/workspaces/${made.data.id}`;
+  assert.equal((await uma.call('POST', `${path}/start`)).status, 200);
+  const s = (await uma.call('GET', `${path}/state`)).data;
+  const texts = async (phone: string) => (await uma.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
+  const ahead = (k: string) => s.bookings.filter((b: any) => b.listing_key === k && b.status === 'confirmed' && b.starts_at > s.now && ['viewing', 'second_viewing'].includes(b.service_key));
+  const home = s.listings.find((l: any) => l.status === 'available' && ahead(l.key).some((b: any) => b.phone));
+  assert.ok(home, 'an available home with a viewing to come');
+  const views = ahead(home.key);
+  const r = await uma.call('PATCH', `${path}/listings/${home.key}`, { action: 'status', status: 'withdrawn' });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.match(r.data.message, new RegExp(`${views.length} viewings? (?:is|are) cancelled`));
+  const after = (await uma.call('GET', `${path}/state`)).data;
+  for (const v of views) {
+    assert.equal(after.bookings.find((b: any) => b.reference === v.reference).status, 'cancelled');
+    if (v.phone) assert.match((await texts(v.phone)).at(-1), /viewing of .+ is cancelled: the home has been taken off the market/);
+  }
 });
 
 test('demo: a repairs contractor end to end: start fills the board, staff dispatch and move jobs on, a certificate is booked from the register, reset refills it', async () => {

@@ -799,7 +799,7 @@ async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
         others++;
         await textCustomer(ctx, t.id, o.phone, `${name}: the seller of ${where} has accepted another offer, subject to contract. Thank you for yours; we'll let you know if anything changes. (Demo)`);
       }
-      return `Accepted: ${where} is sale agreed${others ? `, and ${others} other buyer${others === 1 ? ' has' : 's have'} been told` : ''}.`;
+      return `Accepted: ${where} is sale agreed${others ? `, and ${others} other buyer${others === 1 ? ' has' : 's have'} been told` : ''}.${await closeViewings(ctx, t, home.key, now)}`;
     }
     case 'decline': {
       await decide('declined');
@@ -868,7 +868,8 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
       }
       // Back on the market: the back-up buyers and the consenting buyers it fits hear, as from Sales progress.
       const told = back ? await alertBuyers(ctx, t, key, 'back') : 0;
-      return { message: `${where}: ${status.replace(/_/g, ' ')}.${fell ? ' Its sale in progress is marked fallen through.' : ''}${told ? ` ${told} buyer${told === 1 ? ' has' : 's have'} been texted.` : ''}` };
+      const closed = await closeViewings(ctx, t, key, now);
+      return { message: `${where}: ${status.replace(/_/g, ' ')}.${fell ? ' Its sale in progress is marked fallen through.' : ''}${told ? ` ${told} buyer${told === 1 ? ' has' : 's have'} been texted.` : ''}${closed}` };
     }
     case 'price': {
       const pence = Math.round(Number(b.price_pence));
@@ -921,7 +922,7 @@ async function listingAction(ctx: Ctx, t: Tenant, key: string, b: any): Promise<
     }
     case 'viewings_continue': {
       await repo.setListing(t.id, key, { marketing_continues: b.on !== false }, 'staff', undefined, now);
-      return { message: `${where}: ${b.on !== false ? 'viewings continue' : 'no more viewings'}.` };
+      return { message: `${where}: ${b.on !== false ? 'viewings continue' : 'no more viewings'}.${await closeViewings(ctx, t, key, now)}` };
     }
     default:
       throw new HttpError(400, 'Unknown action.');
@@ -1022,7 +1023,7 @@ async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<stri
       const status = key === 'exchange' ? (done ? 'exchanged' : 'progressing') : undefined;
       await repo.updateSale(t.id, id, { milestones, ...(status ? { status } : {}) }, { by: 'staff', at: now, what: `${key.replace(/_/g, ' ')} ${done ? 'done' : 'not done'}` });
       if (status) await repo.setListing(t.id, sale.listing_key, { status: done ? 'exchanged' : 'sale_agreed' }, 'staff', done ? 'contracts exchanged' : 'exchange undone', now);
-      return `${where}: ${key.replace(/_/g, ' ')} ${done ? 'ticked' : 'unticked'}.`;
+      return `${where}: ${key.replace(/_/g, ' ')} ${done ? 'ticked' : 'unticked'}.${status ? await closeViewings(ctx, t, sale.listing_key, now) : ''}`;
     }
     case 'dates': {
       const exchange = b.exchange_target === null ? null : isoDay(b.exchange_target);
@@ -1048,7 +1049,7 @@ async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<stri
       await repo.setListing(t.id, sale.listing_key, { status: 'completed' }, 'staff', 'completed: keys released', now);
       const negotiator = t.profile.team?.find((s) => s.key === home.negotiator)?.first_name;
       await textCustomer(ctx, t.id, sale.buyer_phone, `${t.profile.name}: completion has gone through on ${where}. Your keys are ready to collect from our office${negotiator ? `; ${negotiator} has them` : ''}. Congratulations! (Demo)`);
-      return `${where}: completed; the buyer has been texted that the keys are ready.`;
+      return `${where}: completed; the buyer has been texted that the keys are ready.${await closeViewings(ctx, t, sale.listing_key, now)}`;
     }
     case 'fell_through': {
       if (sale.status !== 'progressing') throw new HttpError(409, `${where} has exchanged: a sale that falls through after exchange is one for the solicitors.`);
@@ -1057,7 +1058,7 @@ async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<stri
       await repo.updateSale(t.id, id, { status: 'fell_through' }, { by: 'staff', at: now, what: `fell through: ${reason}` });
       if (!b.back_on_market) {
         await repo.setListing(t.id, sale.listing_key, { status: 'withdrawn' }, 'staff', `sale fell through (${reason}); not back on the market yet`, now);
-        return `${where}: the sale fell through. The home is withdrawn until the seller decides.`;
+        return `${where}: the sale fell through. The home is withdrawn until the seller decides.${await closeViewings(ctx, t, sale.listing_key, now)}`;
       }
       await repo.setListing(t.id, sale.listing_key, { status: 'available', back_on_market_at: now }, 'staff', `back on the market: sale fell through (${reason})`, now);
       const told = await alertBuyers(ctx, t, sale.listing_key, 'back');
@@ -1066,6 +1067,33 @@ async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<stri
     default:
       throw new HttpError(400, 'Unknown action.');
   }
+}
+
+/**
+ * A home that can't be viewed any more (withdrawn, sold, or no more viewings
+ * since a sale was agreed): its viewings to come are cancelled, and each buyer
+ * is texted why, so nobody turns up to a home that's gone (review, 8 October).
+ * Says how many, for the staff message; empty when none.
+ */
+async function closeViewings(ctx: Ctx, t: Tenant, key: string, now: Date): Promise<string> {
+  const live = await ctx.repo.listingState(t.id, key);
+  const home = t.profile.listings?.find((l) => l.key === key);
+  if (!live || !home) return '';
+  const why = live.status === 'withdrawn' ? 'the home has been taken off the market'
+    : live.status === 'exchanged' || live.status === 'completed' ? 'the home has been sold'
+      : live.status === 'sale_agreed' && !live.marketing_continues ? "the seller has accepted an offer and isn't taking more viewings" : null;
+  if (!why) return '';
+  const tz = t.profile.timezone;
+  const ahead = (await ctx.repo.listBookings(t.id, now, new Date(now.getTime() + 400 * 86_400_000)))
+    .filter((b) => b.listing_key === key && b.status === 'confirmed' && b.starts_at > now && (b.service_key === 'viewing' || b.service_key === 'second_viewing'));
+  let n = 0;
+  for (const b of ahead) {
+    if (!(await ctx.repo.cancelBooking(t.id, b.reference, 'staff'))) continue;
+    n++;
+    const l = toLocal(b.starts_at, tz);
+    await textCustomer(ctx, t.id, b.phone, `${t.profile.name}: your viewing of ${shortAddress(home)} on ${spokenDate(l.date)} at ${spokenTime(l.time)} is cancelled: ${why}. Call us if you'd like to hear about similar homes. (Demo)`);
+  }
+  return n ? ` ${n} viewing${n === 1 ? ' is' : 's are'} cancelled, and the buyer${n === 1 ? ' has' : 's have'} been texted.` : '';
 }
 
 async function textCustomer(ctx: Ctx, tenantId: string, to: string | null, body: string): Promise<void> {

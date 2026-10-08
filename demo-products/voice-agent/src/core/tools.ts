@@ -30,7 +30,7 @@ import {
 } from './kitchen.ts';
 import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
-import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
+import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule, viewingStopped } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
 import { depositNext, depositOnCancel, noticeFirst, oneEach, readBackFirst, servicePrice } from './barber-tools.ts';
@@ -777,6 +777,9 @@ const TOOLS: Record<string, Tool> = {
       // A barber's deposit, moving a booking inside the notice: said before it happens (core/barber-tools.ts).
       const first = str(args.date) || str(args.time) ? await noticeFirst(ctx, ref, 'move') : null;
       if (first) return first;
+      // A viewing on a home withdrawn or sold is never moved to a new day (core/estate-tools.ts).
+      const gone = str(args.date) || str(args.time) ? await viewingStopped(ctx, ref) : null;
+      if (gone) return gone;
       const area = resolveArea(ctx.tenant, str(args.area));
       if (area.enquiry || area.walkIn || area.unknown) return { changed: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
       const phone = str(args.phone) ? normaliseUkPhone(str(args.phone)) : undefined;

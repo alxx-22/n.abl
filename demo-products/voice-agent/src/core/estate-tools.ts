@@ -325,6 +325,22 @@ export function estateText(t: Tenant, b: Booking, change: 'booked' | 'changed' |
 }
 
 /** A move of a viewing keeps to its home's rules (windows, notice, blocked dates, who may not show it). */
+/**
+ * A viewing on a home that can't be viewed any more (withdrawn, sold, or no
+ * more viewings since a sale was agreed): never moved to a new day; the caller
+ * hears why and is offered others (review, 8 October). Null for anything else.
+ */
+export async function viewingStopped(ctx: ToolContext, reference: string): Promise<Record<string, unknown> | null> {
+  if (!ctx.tenant.profile.listings) return null;
+  const b = await ctx.repo.getBookingByReference(ctx.tenant.id, reference.replace(/[^a-z0-9]/gi, '').toUpperCase());
+  if (!b?.listing_key || b.status !== 'confirmed') return null;
+  const all = await homesOf(ctx);
+  const h = all.find((x) => x.listing.key === b.listing_key);
+  const s = h?.live.status;
+  if (!h || !(s === 'withdrawn' || s === 'exchanged' || s === 'completed' || (s === 'sale_agreed' && !h.live.marketing_continues))) return null;
+  return { changed: false, ...stopFor(ctx, h, all), next: 'Say so kindly. Offer to cancel this viewing (cancel_booking) and to book one of these instead.' };
+}
+
 export async function moveRule(ctx: ToolContext, reference: string) {
   const b = await ctx.repo.getBookingByReference(ctx.tenant.id, reference.replace(/[^a-z0-9]/gi, '').toUpperCase());
   const l = b?.listing_key ? ctx.tenant.profile.listings?.find((x) => x.key === b.listing_key) : undefined;
