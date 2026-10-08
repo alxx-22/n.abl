@@ -73,8 +73,8 @@ interface ServiceAnswer { key: string; name: string; minutes: number; price_penc
 
 ### 2.2 Defaults: Kingsley's Barbers
 
-As the use cases set them: Beeston, Nottingham NG9, every street invented
-and marked "(example)". Marcus (owner; every service), Dan (cuts, beards,
+As the use cases set them: Nottingham city centre NG1 (22 Hockley Row),
+every street invented and marked "(example)". Marcus (owner; every service), Dan (cuts, beards,
 shaves; not Sunday), Jordan (cuts and kids; Tuesday to Saturday), Amira
 (cuts, grey blending, beard colour; Friday and Saturday). Hours: closed
 Monday; Tuesday to Friday 9 to 6, Thursday to 8; Saturday 8 to 5; Sunday 10
@@ -243,10 +243,13 @@ reminder text; `bb-razor-nick`.
 
 ## Decisions for Alex
 
+Alex, 8 October: the city centre, and the other four defaults stand.
+
 Defaults chosen so the build can start; each can be changed:
 
-1. **The business and area**: Kingsley's Barbers in Beeston, Nottingham, so
-   three demos share a city; four barbers as above.
+1. **The business and area**: Kingsley's Barbers in Nottingham city centre
+   (Alex, 8 October: the city centre rather than Beeston); four barbers as
+   above.
 2. **The deposit**: £5 off the price, not required (a caller who declines
    keeps the booking), kept for cancelling or moving inside 24 hours, and
    never more than the deposit. **Open legal point**: whether the 14-day
