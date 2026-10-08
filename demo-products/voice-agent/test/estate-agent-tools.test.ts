@@ -1036,3 +1036,20 @@ test('live slips, 8 October: the position from the caller\'s words, "Thursday" i
     assert.equal(anyway.booked, true, `if they would rather not say: ${JSON.stringify(anyway)}`);
   }
 });
+
+test('a known buyer who books a valuation of their own home stays a buyer, with the position they gave before', async () => {
+  const t = await agency('ea-keep-roles');
+  const phone = '+447700900777';
+  await repo.upsertBuyer(t.id, phone, 'Kit Lane', { roles: ['buyer'], position: { first_time_buyer: false, selling: 'not_on_market', funding: 'mortgage_aip' }, last_contact: NOW.toISOString(), source: 'phone' }, true);
+  const { run } = await call(t, phone);
+  const booked = await run('book_valuation', { date: THU, time: '11:00', name: 'Kit Lane', address: '4 Linnet Way', postcode: 'BK2 3QT', purpose: 'sale', reason: 'moving up', timescale: 'within six months', other_agent: 'none' });
+  assert.equal(booked.booked, true, JSON.stringify(booked));
+  const kit = (await repo.findBuyer(t.id, phone))!;
+  assert.deepEqual([...(kit.details.roles ?? [])].sort(), ['buyer', 'seller']);
+  assert.ok((await repo.listBuyers(t.id)).some((b) => b.phone === phone), 'still in Applicants');
+  // A viewing booked without any position words keeps what they said before.
+  const viewing = await run('check_availability', { property: 'albion_22', date: SAT, time: '11:00' });
+  assert.ok(viewing.available !== undefined);
+  await run('create_booking', { property: 'albion_22', date: SAT, time: '11:15', name: 'Kit Lane', phone: '07700 900777' });
+  assert.equal((await repo.findBuyer(t.id, phone))!.details.position?.funding, 'mortgage_aip');
+});

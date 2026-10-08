@@ -227,6 +227,20 @@ export function fundingOf(v: unknown): Funding | undefined {
 }
 
 /** A buyer's position from the tool's arguments. A first-time buyer has nothing to sell. */
+/**
+ * A caller's record after a viewing, valuation or offer: their other roles
+ * and what they told us before are kept. A buyer who books a valuation of
+ * their own home is still a buyer, in Applicants and on the alerts list.
+ */
+async function keepCaller(ctx: ToolContext, phone: string, name: string | null, roles: NonNullable<BuyerDetails['roles']>, details: Omit<BuyerDetails, 'roles'>): Promise<void> {
+  const existing = await ctx.repo.findBuyer(ctx.tenant.id, phone);
+  await ctx.repo.upsertBuyer(ctx.tenant.id, phone, name, {
+    ...details,
+    roles: [...new Set([...(existing?.details.roles ?? []), ...roles])],
+    ...(details.position ? { position: { ...(existing?.details.position ?? {}), ...details.position } } : {}),
+  });
+}
+
 function positionOf(args: Args): BuyerPosition {
   const ftb = bool(args.first_time_buyer);
   const selling = sellingOf(args.selling) ?? (ftb ? 'nothing' : undefined);
@@ -468,7 +482,7 @@ export async function estateBooking(args: Args, ctx: ToolContext, service: Booka
   }
   const b = made.booking;
   record(ctx, b.reference, 'booking', 'committed');
-  if (phone) await ctx.repo.upsertBuyer(ctx.tenant.id, phone, name, { roles: ['buyer'], position, ...(email ? { email } : {}), last_contact: ctx.now().toISOString(), source: 'phone' });
+  if (phone) await keepCaller(ctx, phone, name, ['buyer'], { position, ...(email ? { email } : {}), last_contact: ctx.now().toISOString(), source: 'phone' });
   // Booked from a portal enquiry about this home: it is answered, and leaves the team's list of leads waiting.
   if (phone) await ctx.repo.markEnquiriesAnswered(ctx.tenant.id, phone, l.key);
   const local = toLocal(b.starts_at, p.timezone);
@@ -752,7 +766,7 @@ async function bookValuation(args: Args, ctx: ToolContext): Promise<Record<strin
   const b = made.booking;
   record(ctx, b.reference, 'booking', 'committed');
   ctx.state.valuationOffered = true;
-  if (phone) await ctx.repo.upsertBuyer(t.id, phone, name, { roles: needsToBuy ? ['seller', 'buyer'] : ['seller'], last_contact: ctx.now().toISOString(), source: 'valuation' });
+  if (phone) await keepCaller(ctx, phone, name, needsToBuy ? ['seller', 'buyer'] : ['seller'], { last_contact: ctx.now().toISOString(), source: 'valuation' });
   const s = estateSummary(t, b);
   ctx.action({
     kind: 'booking_created', title: 'Valuation booked',
@@ -829,7 +843,7 @@ async function recordOffer(args: Args, ctx: ToolContext): Promise<Record<string,
     source: source(ctx), call_id: ctx.callId, received_at: ctx.now(),
   });
   record(ctx, offer.reference, 'offer', 'committed');
-  if (phone) await ctx.repo.upsertBuyer(t.id, phone, names[0], { roles: ['buyer'], position, ...(email ? { email } : {}), last_contact: ctx.now().toISOString(), source: 'offer' });
+  if (phone) await keepCaller(ctx, phone, names[0], ['buyer'], { position, ...(email ? { email } : {}), last_contact: ctx.now().toISOString(), source: 'offer' });
   const who = namesWords(names);
   const terms = conditions ? `, ${clause(conditions)}` : '';
   const pos = positionWords(position, names.length);
