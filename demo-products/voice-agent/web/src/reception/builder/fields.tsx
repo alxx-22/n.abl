@@ -184,3 +184,49 @@ export function Source({ of, sources }: { of: string; sources: Record<string, 'w
   if (!s) return null;
   return <span className={`source ${s}`}>{s === 'website' ? 'from your website' : 'our guess: check it'}</span>;
 }
+
+/**
+ * A long list of things to edit (clients, engineers, the team) as one line
+ * each, with one opened at a time: a step of fourteen clients reads as
+ * fourteen lines, not fourteen forms. A newly added item opens by itself.
+ * The summary says what matters at a glance; `issue` marks a row that needs
+ * attention, so a closed row never hides a problem.
+ */
+export function Folds<T>(props: {
+  items: T[];
+  keyOf: (item: T, index: number) => string;
+  summary: (item: T, index: number) => ReactNode;
+  children: (item: T, index: number) => ReactNode;
+  /** Short words for the row's state ("Needs a mobile"), shown in the closed row. */
+  issue?: (item: T, index: number) => string | null;
+  label: string;
+}) {
+  const keys = props.items.map(props.keyOf);
+  const [open, setOpen] = useState<string | null>(null);
+  const [seen, setSeen] = useState(keys);
+  // An item added since the last render opens, so its empty boxes are in view.
+  useEffect(() => {
+    const added = keys.find((k) => !seen.includes(k));
+    if (added) setOpen(added);
+    if (added || keys.length !== seen.length) setSeen(keys);
+  }, [keys.join('|')]);
+  return (
+    <ul className="folds" aria-label={props.label}>
+      {props.items.map((item, i) => {
+        const k = keys[i];
+        const isOpen = open === k;
+        const issue = props.issue?.(item, i) ?? null;
+        return (
+          <li key={k} className={`fold ${isOpen ? 'open' : ''} ${issue ? 'has-issue' : ''}`}>
+            <button type="button" className="fold-head" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : k)}>
+              <span className="fold-sum">{props.summary(item, i)}</span>
+              {issue ? <span className="badge warn">{issue}</span> : null}
+              <span className="fold-chev" aria-hidden="true">{isOpen ? '−' : '+'}</span>
+            </button>
+            {isOpen ? <div className="fold-body">{props.children(item, i)}</div> : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

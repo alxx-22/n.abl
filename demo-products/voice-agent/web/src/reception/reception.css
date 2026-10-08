@@ -44,6 +44,18 @@ h3.sub { margin-top: 12px; font-size: 1rem; }
 .builder-page .rx-top .badge.bad, .workspace-page .rx-top .badge.bad { background: #8e3128; color: #fff; border-color: transparent; }
 .builder-page .rx-top .badge.warn, .workspace-page .rx-top .badge.warn { background: #e9ac57; color: #24170a; border-color: transparent; }
 
+/* A long list edited one item at a time (fields.tsx Folds): a line each, one open. */
+.folds { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fold { border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.fold.open { border-color: rgba(var(--accent-rgb), 0.55); box-shadow: inset 3px 0 0 var(--accent); }
+.fold.has-issue:not(.open) { border-color: rgba(var(--warn-rgb), 0.45); }
+.fold-head { width: 100%; display: flex; align-items: center; gap: 10px; border: none; border-radius: 10px; background: transparent; padding: 9px 12px; text-align: left; font-weight: 400; box-shadow: none; }
+.fold-head:not(:disabled):hover { background: rgba(var(--cream-rgb), 0.04); box-shadow: none; }
+.fold-sum { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.fold-sum b { color: var(--heading); }
+.fold-chev { font: 500 18px/1 var(--font-mono); color: var(--muted); width: 18px; text-align: center; flex: none; }
+.fold-body { padding: 4px 12px 12px; display: grid; gap: 12px; }
+
 /* ── Door and home ────────────────────────────────────────────────────── */
 /* The site's hero beside the key: big type, its square full stop, a lead. */
 .rx-door { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 440px); gap: clamp(24px, 5vw, 72px); align-items: center; min-height: calc(100vh - 90px); max-width: 1180px; }
