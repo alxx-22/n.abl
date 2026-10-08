@@ -126,10 +126,16 @@ other callers; a Relay UK caller's order marked. Seven more test calls:
 energy drinks (a ban still subject to Parliament; no energy drinks on the
 sample menu), calories, "texts only".
 
-**Next for the takeaway**: re-run all its calls together
-(`--max-seconds 360`: the someone-else call is long); then the walk with
-the M3 screens (the alcohol step, Check ID, "For Margaret") and
-screenshots to Alex. The repairs demo's clock (`DemoClock.tsx`, the cloud
+**All seventeen takeaway calls together** (8 October, `--max-seconds 360`,
+`eval-results/2026-10-08T12-13-32`, not in git): 13 passed, every M3 and
+M2 call among them. Of the four: `tk-busy-wait` and `tk-out-of-area`
+ended after two turns when the simulated caller went quiet; `tk-meal-deal`
+opened its read-back with "That's sorted" and `tk-pay-driver` said "your
+order is placed, number 246" before placing it. The guardrail caught both
+and the real order was placed each time. The walk covers the alcohol
+step and Beer and wine on Menu tonight.
+
+**Next for the takeaway**: screenshots of the M3 screens to Alex. The repairs demo's clock (`DemoClock.tsx`, the cloud
 session's) is repairs-only; turning it on for the takeaway would let a
 prospect try Saturday's last orders. After the takeaway, the next preset
 in Alex's order is the barber.
