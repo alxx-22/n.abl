@@ -4,8 +4,12 @@
 // deposit, never "by law" (barber-use-cases.md, "Checked for gaps"). Only a
 // profile with `barber` gets any of this.
 
-import { pounds, type BookableService, type Booking } from '../domain/types.ts';
-import type { ToolContext } from './tools.ts';
+import type { FunctionDeclaration } from './live.ts';
+import { findService } from '../domain/availability.ts';
+import { spokenDate, spokenTime, toLocal } from '../domain/time.ts';
+import { pounds, type BookableService, type Booking, type Tenant } from '../domain/types.ts';
+import { S, smsTo, str } from './tool-kit.ts';
+import type { Args, ToolContext } from './tools.ts';
 
 const insideNotice = (ctx: ToolContext, b: Booking) =>
   (b.starts_at.getTime() - ctx.now().getTime()) / 3600000 < (ctx.tenant.profile.barber?.notice_hours ?? 0);
@@ -49,7 +53,7 @@ export function oneEach(ctx: ToolContext, service: string | undefined, party: nu
   const p = ctx.tenant.profile;
   if (!p.barber) return null;
   if (party > 1) {
-    return { [key]: false, message: 'Each person is their own booking with a barber, with their own service: check and book them one at a time (one after another with one barber, or at the same time with two). Ask what each person is having if they have not said.' };
+    return { [key]: false, message: 'Each person is their own booking with a barber, with their own service: check and book them one at a time (one after another with one barber, create_booking with after set to the booking before; or at the same time with two). Ask what each person is having if they have not said.' };
   }
   const services = p.booking?.services ?? [];
   if (!service && services.length > 1) return { [key]: false, message: `Which service? Ask what they are having: ${services.map((s) => s.label).join(', ')}.` };
@@ -70,4 +74,67 @@ export function depositNext(ctx: ToolContext, b: Booking): string | undefined {
   return bb.deposit_required
     ? `The ${pounds(b.deposit_pence)} deposit is needed to hold it: take it now with take_demo_payment (for "deposit").`
     : `Offer the ${pounds(b.deposit_pence)} deposit now by card with take_demo_payment (for "deposit"). If they would rather pay in the shop, that is fine: the booking stands.`;
+}
+
+/** create_booking's `after`, for a barber: the next person straight after, with the same barber. */
+export function barberParams(decl: FunctionDeclaration, t: Tenant): FunctionDeclaration {
+  if (!t.profile.barber) return decl;
+  const p = { ...(decl.parameters as { properties: Record<string, unknown> }).properties };
+  p.after = S('Reference of a booking made in this call: book straight after it, with the same barber (date, time and barber come from it)');
+  return { ...decl, parameters: { ...(decl.parameters as object), properties: p } } as FunctionDeclaration;
+}
+
+/**
+ * Booking straight after another (presets/barber.md §4.2): the date, time
+ * and barber from the booking it follows, so two kids go back to back.
+ */
+export async function followOn(ctx: ToolContext, args: Args): Promise<{ args?: Args; refusal?: Record<string, unknown> } | null> {
+  const ref = str(args.after);
+  if (!ctx.tenant.profile.barber || !ref) return null;
+  const b = await ctx.repo.getBookingByReference(ctx.tenant.id, ref.replace(/[^a-z0-9]/gi, '').toUpperCase());
+  if (!b || b.status !== 'confirmed') return { refusal: { booked: false, message: `No booking ${ref} to follow. Book a time from check_availability instead.` } };
+  const end = toLocal(b.ends_at, ctx.tenant.profile.timezone);
+  return { args: { date: end.date, time: end.time, staff: b.resource_key } };
+}
+
+/** The confirmation for a call's bookings to one number, in one text (presets/barber.md §4.5). */
+export function barberText(t: Tenant, bookings: Booking[]): string {
+  const p = t.profile;
+  const line = (b: Booking) => {
+    const local = toLocal(b.starts_at, p.timezone);
+    const s = findService(p, b.service_key);
+    const price = s ? servicePrice(s) : undefined;
+    const r = p.booking?.resources.find((x) => x.key === b.resource_key);
+    return `${spokenDate(local.date)} ${spokenTime(local.time)}, ${s?.label ?? b.service_key}${price ? ` (${price})` : ''}${r ? ` with ${r.label}` : ''}, ref ${b.reference}`;
+  };
+  const due = bookings.filter((b) => b.deposit_pence && !b.deposit_paid);
+  const deposit = !due.length ? ''
+    : due.length === bookings.length ? ` Deposit ${pounds(due[0].deposit_pence!)}${due.length > 1 ? ' each' : ''} due.`
+    : ` Deposit due on ${due.map((b) => b.reference).join(' and ')}.`;
+  const notice = p.barber?.notice_hours ? ` Free to cancel or move with ${p.barber.notice_hours} hours' notice.` : '';
+  const one = bookings.length === 1;
+  return `${p.name}: Booked: ${bookings.map(line).join('; ')}.${deposit}${notice} To change ${one ? 'it' : 'one'}, call us and quote ${one ? 'your' : 'its'} reference. (Demo)`;
+}
+
+/** A barber's booking text waits for the call to end, so a family's three cuts come in one text. */
+export function holdText(ctx: ToolContext, b: Booking, phone: string | null): 'held' | null {
+  if (!phone) return null;
+  if (!ctx.state.textsHeld.includes(b.reference)) ctx.state.textsHeld.push(b.reference);
+  return 'held';
+}
+
+/** At the end of the call (end_call, or the caller hanging up): one text to each number for its bookings still standing. */
+export async function sendHeldTexts(ctx: ToolContext): Promise<void> {
+  const refs = ctx.state.textsHeld.splice(0);
+  if (!refs.length) return;
+  const byPhone = new Map<string, Booking[]>();
+  for (const ref of refs) {
+    const b = await ctx.repo.getBookingByReference(ctx.tenant.id, ref);
+    if (!b || b.status !== 'confirmed' || !b.phone) continue;
+    byPhone.set(b.phone, [...(byPhone.get(b.phone) ?? []), b]);
+  }
+  for (const [phone, list] of byPhone) {
+    list.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+    await smsTo(ctx, phone, barberText(ctx.tenant, list));
+  }
 }

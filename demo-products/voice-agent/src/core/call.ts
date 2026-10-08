@@ -16,6 +16,7 @@ import {
   loggableArgs, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type CallState, type SmsSender, type Telephony,
   type ToolContext,
 } from './tools.ts';
+import { sendHeldTexts } from './barber-tools.ts';
 import { BANK_TALK, CALLBACK_PROMISED, PROMISED_MESSAGE, READ_BACK, READ_BACK_AMOUNT, READ_BACK_DETAIL, checkUtterance, referencesIn, saidYes, type Flag } from './guardrails.ts';
 import { redactLine } from './redact.ts';
 import { record } from './tool-kit.ts';
@@ -960,6 +961,8 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.flushAgent(false);
     this.raiseHeld(false);
     await this.safetyLogged();
+    // A barber's bookings, texted together when the caller hangs up without end_call.
+    await sendHeldTexts(this.toolContext()).catch(() => {});
     this.session?.removeAllListeners();
     this.session?.close();
     const finalOutcome = this.deriveOutcome(outcome);

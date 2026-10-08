@@ -33,7 +33,7 @@ import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf,
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule, viewingStopped } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
-import { depositNext, depositOnCancel, noticeFirst, oneEach, readBackFirst, servicePrice } from './barber-tools.ts';
+import { barberParams, depositNext, depositOnCancel, followOn, holdText, noticeFirst, oneEach, readBackFirst, sendHeldTexts, servicePrice } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -118,6 +118,8 @@ export interface CallState {
   lastOfferRef: string | null;
   /** Something a tool noticed went wrong (a must-say line skipped), for the call to flag. */
   toolFlags: { rule: 'disclosure_missed'; text: string; recheck?: { items: SayItem[]; at: number; ifTimes?: boolean } }[];
+  /** A barber's booking texts, held so the call's bookings go in one text when it ends (core/barber-tools.ts). */
+  textsHeld: string[];
   /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
   readBack: { committed: number; tries: number } | null;
   saidYes: { committed: number; tries: number } | null;
@@ -184,7 +186,7 @@ export function newCallState(): CallState {
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false, messageOwed: false,
     estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
-    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
+    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
     invoice: null, emergencyTrade: null, amounts: [], relay: false, references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
@@ -626,11 +628,14 @@ const TOOLS: Record<string, Tool> = {
         ['date', 'time', 'name'],
       ),
     },
-    tailor: (d, t) => estateParams(tableParams(d, t, 'book'), t, 'book'),
+    tailor: (d, t) => barberParams(estateParams(tableParams(d, t, 'book'), t, 'book'), t),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const each = oneEach(ctx, str(args.service), int(args.party_size) ?? 1, 'booked');
       if (each) return each;
+      const follow = await followOn(ctx, args);
+      if (follow?.refusal) return follow.refusal;
+      if (follow?.args) args = { ...args, ...follow.args };
       if (p.estate) {
         const service = findService(p, str(args.service));
         const estate = service ? await estateBooking(args, ctx, service) : null;
@@ -723,7 +728,7 @@ const TOOLS: Record<string, Tool> = {
         detail: `${s.spoken_date}, ${s.spoken_time} · ${b.party_size} ${b.party_size === 1 ? 'person' : 'people'} · ${b.name}${s.table ? ` · ${s.table}${s.area ? `, ${s.area.toLowerCase()}` : ''}` : s.with ? ` with ${s.with}` : ''}${b.allergies ? ` · ALLERGY: ${b.allergies}` : ''} · ref ${b.reference}`,
         data: { reference: b.reference },
       });
-      const smsStatus = await smsTo(ctx, phone, bookingText(ctx.tenant, b, 'Booked:'));
+      const smsStatus = p.barber ? holdText(ctx, b, phone) : await smsTo(ctx, phone, bookingText(ctx.tenant, b, 'Booked:'));
       const chairs = p.booking?.highchairs ?? 0;
       const got = ctx.tenant.profile.booking?.resources.find((x) => x.key === b.resource_key)?.features ?? [];
       const unmet = prefer.filter((f) => !got.includes(f));
@@ -739,7 +744,7 @@ const TOOLS: Record<string, Tool> = {
         next: depositNext(ctx, b) ?? (b.deposit_pence
           ? `A ${pounds(b.deposit_pence)} deposit secures this booking. Offer to take it now with take_demo_payment (for "deposit"), or say a payment link will be texted.`
           : undefined),
-        confirmation_text: smsStatus ? 'sent by text, with the reference' : 'no number to text',
+        confirmation_text: smsStatus === 'held' ? 'one text with every booking made in this call, sent when the call ends' : smsStatus ? 'sent by text, with the reference' : 'no number to text',
       };
     },
   },
@@ -817,7 +822,8 @@ const TOOLS: Record<string, Tool> = {
           : `${s.spoken_date}, ${s.spoken_time} · ${r.booking.party_size} people${s.table ? ` · ${s.table}` : ''} · ref ${r.booking.reference}`,
         data: { reference: r.booking.reference },
       });
-      await smsTo(ctx, r.booking.phone, bookingText(ctx.tenant, r.booking, 'Changed:'));
+      // A booking made in this call is still to be texted, with the change.
+      if (!ctx.state.textsHeld.includes(r.booking.reference)) await smsTo(ctx, r.booking.phone, bookingText(ctx.tenant, r.booking, 'Changed:'));
       return {
         changed: true, ...s,
         deposit_due: r.booking.deposit_pence && !r.booking.deposit_paid ? pounds(r.booking.deposit_pence) : undefined,
@@ -843,7 +849,9 @@ const TOOLS: Record<string, Tool> = {
       record(ctx, b.reference, 'cancellation', 'committed');
       const s = bookingSummary(ctx.tenant, b);
       ctx.action({ kind: 'booking_cancelled', title: 'Booking cancelled', detail: `${s.spoken_date}, ${s.spoken_time} · ${b.name} · ref ${b.reference}` });
-      await smsTo(ctx, b.phone, ctx.tenant.profile.estate ? estateText(ctx.tenant, b, 'cancelled') : `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled.${deposit ? ` ${deposit}` : ''} To book again, just call us. (Demo)`);
+      const held = ctx.state.textsHeld.indexOf(b.reference);
+      if (held >= 0) ctx.state.textsHeld.splice(held, 1);
+      else await smsTo(ctx, b.phone, ctx.tenant.profile.estate ? estateText(ctx.tenant, b, 'cancelled') : `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled.${deposit ? ` ${deposit}` : ''} To book again, just call us. (Demo)`);
       return { cancelled: true, ...s, policy: ctx.tenant.profile.policies?.cancellation, ...(deposit ? { deposit } : {}) };
     },
   },
@@ -1510,6 +1518,7 @@ const TOOLS: Record<string, Tool> = {
       }
       const damp = await dampOwed(ctx);
       if (damp) return { ok: false, message: damp };
+      await sendHeldTexts(ctx);
       ctx.state.ending = true;
       ctx.action({ kind: 'call_ending', title: 'Call ending', detail: str(args.outcome) });
       return { ok: true };

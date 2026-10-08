@@ -2021,7 +2021,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: 'bb-kids-and-dad',
     tenant: 'bb-kingsleys',
-    title: "Two kids' cuts and one for their dad on Saturday at 10: three bookings in one call",
+    title: "Two kids' cuts and one for their dad on Saturday at 10: three bookings in one call, one text",
     kind: 'happy',
     callerPhone: BB_PEOPLE.parent.phone,
     now: BB_THURSDAY,
@@ -2033,6 +2033,8 @@ export const SCENARIOS: Scenario[] = [
       const kids = b.filter((x) => x.service_key === 'kids_cut');
       const dad = b.filter((x) => x.service_key === 'classic_cut');
       expect(f, kids.length === 2 && dad.length === 1, `services ${b.map((x) => x.service_key).join(', ') || 'none'}`);
+      const sms = await texts(c);
+      expect(f, sms.length === 1 && b.every((x) => sms[0].body.includes(x.reference)), `${sms.length} texts, not one with every booking`);
       expect(f, b.every((x) => new Date(x.starts_at).getTime() >= at('2026-10-17', '10:00').getTime() && new Date(x.starts_at).getTime() <= at('2026-10-17', '11:30').getTime()), `times ${b.map((x) => new Date(x.starts_at).toISOString().slice(11, 16)).join(', ')}`);
       noFlags(c, f);
       return f;

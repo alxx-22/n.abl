@@ -39,10 +39,10 @@ const named = (edit?: (a: BarberAnswers) => void) => {
 };
 const profile = (edit?: (a: BarberAnswers) => void) => compileBarber(named(edit), { slug: 'kingsleys' });
 
-async function call(tenant: Tenant, callerPhone: string, now = THURSDAY) {
+async function call(tenant: Tenant, callerPhone: string, now = THURSDAY, sent: { to: string; body: string }[] = []) {
   const ctx: ToolContext = {
     tenant, repo, now: () => now, callId: await repo.createCall({ tenant_id: tenant.id, channel: 'eval' }), channel: 'eval', callerPhone,
-    state: newCallState(), demoCards: [], sms: { send: async () => 'simulated' }, telephony: null, action: () => {},
+    state: newCallState(), demoCards: [], sms: { send: async (to: string, body: string) => (sent.push({ to, body }), 'simulated') }, telephony: null, action: () => {},
   };
   return { ctx, run: (name: string, args: Record<string, unknown>) => runTool(name, args, ctx) as Promise<any> };
 }
@@ -136,6 +136,26 @@ test("barber: the back office's Diary has a row a barber, on their days, with wh
     ['Jordan', [2, 3, 4, 5, 6], 3],
     ['Amira', [5, 6], 4],
   ]);
+});
+
+test('barber: two kids back to back and their dad with another barber, in one text when the call ends', async () => {
+  const t = await repo.upsertTenant(compileBarber(named(), { slug: 'kingsleys-family' }));
+  const sent: { to: string; body: string }[] = [];
+  const c = await call(t, BB_PEOPLE.parent.phone, THURSDAY, sent);
+  const zak = await c.run('create_booking', { service: "Kids' cut", date: '2026-10-17', time: '10:00', name: 'Sara Ahmed' });
+  const musa = await c.run('create_booking', { service: "Kids' cut", after: zak.reference, name: 'Sara Ahmed' });
+  const dad = await c.run('create_booking', { service: 'Classic cut', date: '2026-10-17', time: '10:00', name: 'Sara Ahmed' });
+  assert.deepEqual([zak.booked, musa.booked, dad.booked], [true, true, true]);
+  assert.deepEqual([musa.time, musa.with], ['10:30', zak.with], 'straight after, with the same barber');
+  assert.notEqual(dad.with, zak.with);
+  assert.equal(zak.confirmation_text, 'one text with every booking made in this call, sent when the call ends');
+  assert.equal(sent.length, 0, 'nothing texted during the call');
+  assert.match((await c.run('create_booking', { service: "Kids' cut", after: 'ZZ999', name: 'Sara Ahmed' })).message, /^No booking ZZ999 to follow/);
+  assert.equal((await c.run('end_call', { outcome: 'booked' })).ok, true);
+  assert.equal(sent.length, 1, 'one text');
+  assert.equal(sent[0].body, `Kingsley's Barbers: Booked: Saturday 17 October 10am, Kids' cut (£13.00) with ${zak.with}, ref ${zak.reference}; Saturday 17 October 10am, Classic cut (£18.00) with ${dad.with}, ref ${dad.reference}; Saturday 17 October 10:30am, Kids' cut (£13.00) with ${zak.with}, ref ${musa.reference}. Deposit £5.00 each due. Free to cancel or move with 24 hours' notice. To change one, call us and quote its reference. (Demo)`);
+  await c.run('end_call', { outcome: 'booked' });
+  assert.equal(sent.length, 1, 'never twice');
 });
 
 test('barber: the seeded week fills each barber on their days, Saturday busiest, with the people to ring as', () => {
