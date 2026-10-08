@@ -751,10 +751,18 @@ test('the tools finish what the model starts: a yes found is sent, a safety chec
   const jess = await call(t, '+447700900411');
   jess.hear("We'd like to go ahead with the six hundred pound quote for the back door at 120 Larchfield Close.");
   assert.match((await jess.run('job', { action: 'find' })).message, /No quote is on file for them. Raise the work now with job create/);
-  // A landlord's gas safety check raised as a repair is sent to the register instead.
+  // A landlord's gas safety check raised as a repair goes on the register instead, booked there by the job tool itself
+  // (live, 8 October: told to use compliance, the receptionist said "booked" and never did).
   const ben = await call(t, '+447700900406');
   await ben.run('find_property', { postcode: 'NG5', number: '14', street: 'Elm Road' });
-  assert.match((await ben.run('job', { action: 'create', description: 'Annual gas safety check', trade: 'boiler_servicing', name: 'Ben Whitfield' })).message, /book it with compliance/);
+  const asRepair = await ben.run('job', { action: 'create', description: 'Annual gas safety check', trade: 'boiler_servicing', name: 'Ben Whitfield' });
+  assert.match(asRepair.booked_as, /safety check \(gas safety record\), on the register/);
+  assert.match(asRepair.price, /£75/);
+  const am = asRepair.windows.find((x: { window: string }) => x.window === 'am');
+  const onRegister = await ben.run('job', { action: 'create', description: 'Gas safety check.', trade: 'gas_heating', name: 'Ben Whitfield', date: am.date, window: 'am' });
+  assert.equal(onRegister.booked, true, JSON.stringify(onRegister));
+  const cert = (await repo.listCertificates(t.id, 'elm_14')).find((c) => c.kind === 'gas_record')!;
+  assert.equal(cert.booked_job, onRegister.reference);
   // Damp at Meadowbank taken as a message: the receptionist is told to raise the job too.
   const nadia = await call(t, '+447700900571');
   await nadia.run('find_property', { postcode: 'DE23', number: 'Flat 2, 7', street: 'Larkspur Walk' });

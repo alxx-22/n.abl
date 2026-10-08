@@ -294,7 +294,8 @@ function maintenanceFlags(text: string, state: CallState, staff: string[], m: Ma
 // A reference read out: "your reference is Q K 3 7 9", "ref 13579". On 6 October a live call used no tools at all, said the
 // valuation was booked, and gave "13579".
 // Read as one block ("QK379") or a character at a time ("Q, K, 3, 7, 9").
-const REFERENCE = /\b(?:reference|ref|booking number|confirmation number|job number|order number)(?: number| code)?(?: is|'s|:)?\s+(\b[A-Z0-9]{4,10}\b|\b[A-Z0-9]\b(?:[\s,.-]+\b[A-Z0-9]\b){3,9})/gi;
+// "The reference for that job is AU739" too (live, 8 October: made up, and missed).
+const REFERENCE = /\b(?:reference|ref|booking number|confirmation number|job number|order number)(?: number| code)?(?: for (?:that|this|the|your) [a-z]+)?(?: is|'s|:)?\s+(\b[A-Z0-9]{4,10}\b|\b[A-Z0-9]\b(?:[\s,.-]+\b[A-Z0-9]\b){3,9})/gi;
 
 /** References, as letters and digits only: what the tools returned in this call, for the check below. */
 export function referencesIn(text: string): string[] {

@@ -749,8 +749,12 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     if (already) return already;
   }
   // A landlord's safety check is booked on the register, which keeps the record's date (live, 6 October: one went in as a repair).
+  // Booked there by this tool itself (live, 8 October: told to use compliance, the receptionist said "booked" and never did).
   if (p.client && /\b(?:gas safety (?:record|check|certificate|inspection)|cp12|landlord'?s gas|eicr|electrical (?:installation )?condition report)\b/i.test(description)) {
-    return { booked: false, message: 'That is a safety check: book it with compliance (action book, with the services), which keeps the record\'s date and marks the register.' };
+    const words = `${description} ${str(args.services) ?? ''}`;
+    const services = /\b(?:eicr|electrical)\b/i.test(words) ? 'EICR' : /\bservic/i.test(words) ? 'both' : 'gas safety record';
+    const booked = await compliance({ action: 'book', property: p.key, services, date: args.date, window: args.window, name: args.name, appliances: args.appliances, early: args.early }, ctx);
+    return { ...booked, booked_as: `A safety check (${services}), on the register: it keeps the record's date.` };
   }
   const l = local(ctx);
   // Someone vulnerable, noted with consent, can raise the priority (the owner's uplift rule).
