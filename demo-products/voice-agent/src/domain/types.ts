@@ -559,6 +559,8 @@ export interface Tenant {
   id: string;
   slug: string;
   profile: TenantProfile;
+  /** A demo workspace's clock: this many milliseconds ahead of real time (behind if negative). Absent or 0 is real time. */
+  clock_offset_ms?: number;
 }
 
 export interface Booking {

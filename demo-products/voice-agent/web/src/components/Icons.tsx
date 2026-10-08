@@ -23,6 +23,13 @@ export const SlidersIcon = () => (
   </svg>
 );
 
+export const ClockIcon = () => (
+  <svg {...base}>
+    <circle cx="12" cy="12" r="8" />
+    <path d="M12 8v4l3 2" />
+  </svg>
+);
+
 export const ResetIcon = () => (
   <svg {...base}>
     <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" />

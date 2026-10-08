@@ -8,6 +8,7 @@ import { MT_CALL_AS } from '../../../../src/presets/maintenance/personas.ts';
 import { TK_CALL_AS } from '../../../../src/presets/takeaway/personas.ts';
 import { ApiError, DEMO_API, demoApi } from '../../api.ts';
 import { ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
+import { DemoClock } from './DemoClock.tsx';
 import { LivePanel } from '../../components/LivePanel.tsx';
 import { SettingsDialog } from '../../components/SettingsDialog.tsx';
 import { toast } from '../../components/Toaster.tsx';
@@ -159,7 +160,9 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   const spec = state.workspace ?? fallbackSpec(state);
   const views = viewsOf(spec, state);
   const current = views.find((v) => v.id === tab) ?? views[0];
-  const now = localNow(state.tenant.timezone, new Date(clock));
+  // The workspace's own clock: the board, the timers and the phone keep to it; the expiry badge keeps to real time.
+  const demoClock = clock + (state.clock_offset_ms ?? 0);
+  const now = localNow(state.tenant.timezone, new Date(demoClock));
   const t = state.tenant;
   const brand = t.brand ?? {};
   const style = brandStyle({ accent: brand.accent ?? t.accent, font_heading: brand.font_heading, font_body: brand.font_body });
@@ -218,6 +221,12 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
         ) : null}
         <button type="button" onClick={() => setSettingsOpen(true)}><SlidersIcon /> Voice</button>
         <Link to={`${R}/build/${id}`} className="button">Edit setup</Link>
+        {t.business_type === 'property_maintenance' ? (
+          <DemoClock
+            id={id} timeZone={t.timezone} realMs={clock} offsetMs={state.clock_offset_ms ?? 0} disabled={live.phase !== 'idle'}
+            onSet={(message) => { setSelected(null); void refresh(); toast(message); }}
+          />
+        ) : null}
         <button type="button" onClick={reset} disabled={live.phase !== 'idle'}><ResetIcon /> Reset</button>
       </RxTop>
 
@@ -239,7 +248,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
           <div className="office-body">
             <div className="office-main">
               {current?.def.render({
-                id, state, spec, today: now.date, nowMinute: now.minutes, clock, view, setView,
+                id, state, spec, today: now.date, nowMinute: now.minutes, clock: demoClock, view, setView,
                 selected: booking?.tables[0] ?? null, onSelectTable: selectTable, onDrop: dropOnTable, flash,
                 onOpen: (b) => setSelected({ ref: b.reference }), onMove: moveBooking, refresh: refreshSoon,
               })}

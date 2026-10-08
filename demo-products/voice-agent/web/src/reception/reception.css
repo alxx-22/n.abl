@@ -540,3 +540,10 @@ svg.house .door { fill: var(--accent); }
 .sheet-job { display: grid; gap: 2px; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .inline-check { display: inline-flex; gap: 6px; align-items: center; }
 .inline-check input { width: auto; }
+
+/* The demo's own clock: a small form under its button. */
+.demo-clock { position: relative; display: inline-flex; }
+.clock-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; display: grid; gap: 10px; width: min(280px, calc(100vw - 32px)); padding: 14px; }
+.clock-pop label { display: grid; gap: 4px; font-size: 13px; }
+.clock-pop .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.clock-pop .hint { margin: 0; }

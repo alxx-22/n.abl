@@ -718,3 +718,35 @@ test('demo: a repairs contractor end to end: start fills the board, staff dispat
   const after = (await helen.call('GET', `${path}/state`)).data;
   assert.ok(!after.jobs.some((j: any) => j.reference === booked.reference && j.status === 'done' && j.notes === 'Fixed.'));
 });
+
+test('demo: a workspace\'s own clock: a Friday night set, the week starts again around it, and back to real time', async () => {
+  assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Owen Clock', company: 'Fernhill Property Care' });
+  const owen = client('10.0.0.37');
+  assert.equal((await owen.call('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+  const made = await owen.call('POST', '/demo/api/workspaces', { preset: 'property_maintenance' });
+  const path = `/demo/api/workspaces/${made.data.id}`;
+  const answers = (await owen.call('GET', path)).data.answers;
+  answers.basics.name = 'Fernhill Property Care';
+  await owen.call('PUT', `${path}/answers`, answers);
+  assert.equal((await owen.call('POST', `${path}/start`)).status, 200);
+  // The next Friday, in the business's own time zone.
+  const london = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  let friday = new Date();
+  while (new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long' }).format(friday) !== 'Friday') friday = new Date(friday.getTime() + 86_400_000);
+  const date = london(friday);
+  assert.equal((await owen.call('POST', `${path}/clock`, { date, time: '25:00' })).status, 400);
+  assert.equal((await owen.call('POST', `${path}/clock`, { date: '2020-01-03', time: '21:00' })).status, 400, 'within a week of today');
+  const set = await owen.call('POST', `${path}/clock`, { date, time: '21:00' });
+  assert.equal(set.status, 200, JSON.stringify(set.data));
+  assert.ok(set.data.jobs > 40, 'the week made again around the new time');
+  assert.notEqual(set.data.workspace.clock_offset_ms, 0);
+  const state = (await owen.call('GET', `${path}/state`)).data;
+  assert.equal(state.today, date);
+  assert.match(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' }).format(new Date(state.now)), /^21:0[0-2]$/);
+  assert.ok(state.maintenance.on_call_tonight.length, 'Friday night has engineers on call');
+  // Back to real time.
+  const real = await owen.call('POST', `${path}/clock`, { real: true });
+  assert.equal(real.data.workspace.clock_offset_ms, 0);
+  assert.equal((await owen.call('GET', `${path}/state`)).data.today, london(new Date()));
+});

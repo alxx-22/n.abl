@@ -816,6 +816,17 @@ async function walkMaintenance({ shot }: Walk) {
   await page.waitForSelector('.phone-number:has-text("07700 900501")');
   await shot(page, 'workspace-call-as');
 
+  // The demo's own clock: tomorrow at 9pm, to try the on-call side whatever the real time.
+  await page.click('.demo-clock > button');
+  await page.waitForSelector('.clock-pop');
+  await page.locator('.clock-pop select').selectOption({ index: 1 });
+  await page.fill('.clock-pop input[type=time]', '21:00');
+  await shot(page, 'workspace-clock-set');
+  await page.click('.clock-pop button[type=submit]');
+  await page.waitForSelector('.demo-clock > button:has-text("Demo time")');
+  await page.click('.tabs [role=tab]:has-text("Jobs")');
+  await shot(page, 'workspace-clock-night');
+
   // Narrow screen.
   await page.setViewportSize({ width: 390, height: 900 });
   await page.click('.tabs [role=tab]:has-text("Jobs")');

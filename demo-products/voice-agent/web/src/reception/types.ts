@@ -417,6 +417,8 @@ export interface LiveInvoice {
 
 export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   now: string;
+  /** The workspace's own clock: this many milliseconds ahead of real time (behind if negative). */
+  clock_offset_ms?: number;
   started_at: string | null;
   /** Shared keys: when this demo is deleted. */
   expires_at: string | null;

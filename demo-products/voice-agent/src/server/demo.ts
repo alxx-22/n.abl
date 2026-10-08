@@ -21,7 +21,7 @@ import { seedFrom } from '../presets/common/random.ts';
 import { applySettings, type SettingsPatch } from '../domain/settings.ts';
 import { CHECK_KEYS, SALE_MILESTONES, type ListingStatus, type OfferStatus, type Tenant, type TenantProfile } from '../domain/types.ts';
 import { matches, priceWords, shortAddress } from '../domain/listings.ts';
-import { addDays, isIsoDate, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
+import { addDays, isIsoDate, spokenDate, spokenTime, tenantNow, toLocal, zonedToUtc } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { SimulatedSms } from '../channels/sms.ts';
 import { ScoutError, scanProgress, startScan, type ScanResult } from '../scout/scan.ts';
@@ -186,6 +186,8 @@ function workspacePayload(w: Workspace) {
   const answers = preset ? answersOf(preset, cfg.answers) : null;
   return {
     ...workspaceSummary(w),
+    // The demo's own clock, for the page to show: real time plus this.
+    clock_offset_ms: w.tenant.clock_offset_ms ?? 0,
     answers: answers ?? cfg.answers,
     settings: cfg.settings ?? {},
     issues: preset && answers ? preset.validate(answers) : [],
@@ -412,28 +414,53 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   }
 
   // ── Start and reset: compile, then fill the diary ─────────────────────
-  if ((sub === 'start' || sub === 'reset') && req.method === 'POST') {
-    if (bus.activeFor(t.id).length) throw new HttpError(409, 'Hang up the call first.');
+  /** The seeded week, made fresh around the workspace's own clock. */
+  const startAt = async (kind: 'start' | 'reset', now: Date) => {
     const answers = answersOf(preset, cfg.answers);
     const errors = preset.validate(answers).filter((i) => i.level === 'error');
     if (errors.length) return json(res, 400, { error: errors[0].message, issues: errors }), true;
     const { profile } = await startProfile(ctx, w, preset, answers, cfg.settings);
     await repo.resetTenantData(t.id);
     // A fresh seed each time: Reset shows a different week, still believable.
-    const plan = preset.seed(profile, new Date(), seedFrom(`${t.id}:${Date.now()}`));
+    const plan = preset.seed(profile, now, seedFrom(`${t.id}:${Date.now()}`));
     await repo.insertSeed(t.id, plan);
     await demo.markStarted(t.id);
     // A shared demo's hour starts the first time its data is made; Reset does not extend it.
     if (w.owner_visitor && !w.started_at) await demo.setExpiry(t.id, new Date(Date.now() + SHARED_DEMO_MINUTES * 60000));
-    void usage(sub === 'start' ? 'started' : 'reset', { bookings: plan.bookings.length, orders: plan.orders.length });
-    refresh({ reason: sub });
+    void usage(kind === 'start' ? 'started' : 'reset', { bookings: plan.bookings.length, orders: plan.orders.length });
+    refresh({ reason: kind });
     return json(res, 200, { ok: true, bookings: plan.bookings.length, orders: plan.orders.length, jobs: plan.jobs?.length ?? 0, workspace: workspacePayload((await demo.getWorkspace(t.id))!) }), true;
+  };
+  if ((sub === 'start' || sub === 'reset') && req.method === 'POST') {
+    if (bus.activeFor(t.id).length) throw new HttpError(409, 'Hang up the call first.');
+    return startAt(sub, tenantNow(t));
+  }
+  // The demo's own clock: a Friday night or a Sunday at 2am whatever the real time. Setting it starts the week
+  // again around that time, so the board, the seed and every call agree.
+  if (sub === 'clock' && req.method === 'POST') {
+    if (bus.activeFor(t.id).length) throw new HttpError(409, 'Hang up the call first.');
+    const b = (await readJson(req, 2_000)) as { date?: unknown; time?: unknown; real?: unknown };
+    let offset = 0;
+    if (b.real !== true) {
+      const date = String(b.date ?? '');
+      const time = String(b.time ?? '');
+      if (!isIsoDate(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new HttpError(400, 'Choose a day and a time.');
+      const today = toLocal(new Date(), t.profile.timezone).date;
+      if (date < addDays(today, -7) || date > addDays(today, 7)) throw new HttpError(400, 'Choose a day within a week of today.');
+      offset = zonedToUtc(date, time, t.profile.timezone).getTime() - Date.now();
+    }
+    await repo.setClockOffset(t.id, offset);
+    if (!w.started_at) {
+      refresh({ reason: 'config' });
+      return json(res, 200, { ok: true, workspace: workspacePayload((await demo.getWorkspace(t.id))!) }), true;
+    }
+    return startAt('reset', new Date(Date.now() + offset));
   }
 
   // ── The live workspace ────────────────────────────────────────────────
   if (sub === 'state' && req.method === 'GET') {
     const state = await tenantState(repo, t, bus, preset.workspace(t.profile));
-    return json(res, 200, { ...state, started_at: w.started_at?.toISOString() ?? null, expires_at: w.expires_at?.toISOString() ?? null }), true;
+    return json(res, 200, { ...state, started_at: w.started_at?.toISOString() ?? null, expires_at: w.expires_at?.toISOString() ?? null, clock_offset_ms: t.clock_offset_ms ?? 0 }), true;
   }
   if (sub === 'events' && req.method === 'GET') return eventStream(req, res, bus, t.id), true;
   if (sub === 'settings' && req.method === 'PATCH') {
@@ -598,19 +625,19 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     return json(res, 200, { ok: true, message, ...(affected ? { affected } : {}) }), true;
   }
   if (sub === 'jobs' && ref && req.method === 'PATCH') {
-    const message = await jobAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body), new Date(), (n) => bus.note(t.id, n));
+    const message = await jobAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body), tenantNow(t), (n) => bus.note(t.id, n));
     void usage('staff_action', { action: 'job' });
     refresh({ reason: 'staff', reference: ref.toUpperCase(), what: message });
     return json(res, 200, { ok: true, message }), true;
   }
   if (sub === 'invoices' && ref && req.method === 'PATCH') {
-    const message = await invoiceAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body));
+    const message = await invoiceAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body), tenantNow(t));
     void usage('staff_action', { action: 'invoice' });
     refresh({ reason: 'staff', what: message });
     return json(res, 200, { ok: true, message }), true;
   }
   if (sub === 'properties' && ref && req.method === 'POST') {
-    const message = await propertyAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body));
+    const message = await propertyAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body), tenantNow(t));
     void usage('staff_action', { action: 'property' });
     refresh({ reason: 'staff', what: message });
     return json(res, 200, { ok: true, message }), true;

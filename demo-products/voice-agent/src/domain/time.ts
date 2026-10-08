@@ -146,3 +146,6 @@ export function spokenTime(time: string): string {
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return m === 0 ? `${h12}${suffix}` : `${h12}:${String(m).padStart(2, '0')}${suffix}`;
 }
+
+/** The time in a tenant's world: a demo workspace's own clock (Tenant.clock_offset_ms), or real time. */
+export const tenantNow = (t: { clock_offset_ms?: number }, real = Date.now()): Date => new Date(real + (t.clock_offset_ms ?? 0));

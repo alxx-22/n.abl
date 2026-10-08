@@ -21,6 +21,7 @@ import { redactLine } from './redact.ts';
 import { record } from './tool-kit.ts';
 import { amountsIn } from '../domain/amounts.ts';
 import { knownTimes, timesIn } from '../domain/clock-times.ts';
+import { tenantNow } from '../domain/time.ts';
 import { armSafety, noteAdvice, safetyCorrection } from './safety.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
@@ -245,7 +246,8 @@ export class CallSession extends EventEmitter<CallEvents> {
   }
 
   private now(): Date {
-    return this.opts.now ? this.opts.now() : new Date();
+    // A demo workspace's own clock, so its calls happen at the time the prospect set.
+    return this.opts.now ? this.opts.now() : tenantNow(this.opts.tenant);
   }
 
   private publish(type: BoardEvent['type'], data: Record<string, unknown> = {}): void {

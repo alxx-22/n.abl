@@ -10,7 +10,7 @@ import type { JobPatch, Repo } from '../db/repo.ts';
 import type { Bus } from './bus.ts';
 import { certState } from '../core/maintenance-tools.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
-import { addDays, isIsoDate, spokenDate, spokenTime, toLocal } from '../domain/time.ts';
+import { addDays, isIsoDate, spokenDate, spokenTime, toLocal, tenantNow } from '../domain/time.ts';
 import type { Job, JobStatus, Tenant } from '../domain/types.ts';
 import { checkWindow, freeWindows, onCallAt, unable, windowOf } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
@@ -334,9 +334,11 @@ export async function escalatePages(repo: Repo, now: Date, text: (tenantId: stri
     const m = t?.profile.maintenance;
     if (!t || !m) continue;
     const since = Date.parse(job.history.at(-1)?.at ?? job.created_at.toISOString());
-    if (now.getTime() - since < m.on_call.escalate_minutes * 60_000) continue;
+    // On the workspace's own clock: its pages were stamped with it.
+    const at = tenantNow(t, now.getTime());
+    if (at.getTime() - since < m.on_call.escalate_minutes * 60_000) continue;
     try {
-      out.push(await jobAction(repo, t, job.reference, { action: 'no_answer' }, (to, body) => text(t.id, to, body), now, (n) => note(t.id, n)));
+      out.push(await jobAction(repo, t, job.reference, { action: 'no_answer' }, (to, body) => text(t.id, to, body), at, (n) => note(t.id, n)));
     } catch {
       // Accepted or moved on between the read and the change: nothing to do.
     }

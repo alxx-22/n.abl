@@ -3,6 +3,7 @@
 
 import type { Db } from './db.ts';
 import type { Tenant, TenantProfile } from '../domain/types.ts';
+import { mapTenant } from './repo.ts';
 import { limitsFor, type KeyKind, type Limits } from '../demo/access.ts';
 
 export interface DemoKey {
@@ -69,11 +70,11 @@ function mapKey(r: any): DemoKey {
   };
 }
 
-const WS_COLUMNS = 'id, slug, profile, owner_key_id, owner_visitor, expires_at, preset, config, started_at, created_at, updated_at';
+const WS_COLUMNS = 'id, slug, profile, clock_offset_ms, owner_key_id, owner_visitor, expires_at, preset, config, started_at, created_at, updated_at';
 
 function mapWorkspace(r: any): Workspace {
   return {
-    tenant: { id: r.id, slug: r.slug, profile: r.profile },
+    tenant: mapTenant(r),
     owner_key_id: r.owner_key_id,
     owner_visitor: r.owner_visitor ?? null,
     expires_at: r.expires_at ? new Date(r.expires_at) : null,

@@ -6,7 +6,7 @@ import type { Bus } from './bus.ts';
 import type { Booking, Listing, Tenant, TenantProfile } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
 import { matches, requirementsWords, shortAddress } from '../domain/listings.ts';
-import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
+import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc, tenantNow } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from '../core/prompt.ts';
 import type { WorkspaceSpec } from '../presets/index.ts';
@@ -48,7 +48,7 @@ export function boardWorkspace(profile: TenantProfile): WorkspaceSpec {
 /** `workspace`: a prospect's workspace passes its preset's; our own businesses get the board's. */
 export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: WorkspaceSpec = boardWorkspace(t.profile)) {
   const tz = t.profile.timezone;
-  const now = new Date();
+  const now = tenantNow(t);
   const today = toLocal(now, tz).date;
   const from = zonedToUtc(addDays(today, -1), '00:00', tz);
   const to = zonedToUtc(addDays(today, 14), '00:00', tz);

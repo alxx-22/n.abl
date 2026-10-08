@@ -317,6 +317,12 @@ export function readyAt(profile: TenantProfile, fulfilment: 'collection' | 'deli
   return new Date(due.getTime() - road * 60000);
 }
 
+/** A tenant row: its clock offset only when a demo has moved it. */
+export function mapTenant(r: any): Tenant {
+  const offset = Number(r.clock_offset_ms ?? 0);
+  return { id: r.id, slug: r.slug, profile: r.profile, ...(offset ? { clock_offset_ms: offset } : {}) };
+}
+
 export class Repo {
   readonly db: Db;
   constructor(db: Db) {
@@ -332,13 +338,18 @@ export class Repo {
   }
 
   async getTenant(slug: string): Promise<Tenant | null> {
-    const rows = await this.db.query<any>('select id, slug, profile from public.voice_tenants where slug = $1', [slug]);
-    return rows[0] ? { id: rows[0].id, slug: rows[0].slug, profile: rows[0].profile } : null;
+    const rows = await this.db.query<any>('select id, slug, profile, clock_offset_ms from public.voice_tenants where slug = $1', [slug]);
+    return rows[0] ? mapTenant(rows[0]) : null;
   }
 
   async getTenantById(id: string): Promise<Tenant | null> {
-    const rows = await this.db.query<any>('select id, slug, profile from public.voice_tenants where id = $1', [id]);
-    return rows[0] ? { id: rows[0].id, slug: rows[0].slug, profile: rows[0].profile } : null;
+    const rows = await this.db.query<any>('select id, slug, profile, clock_offset_ms from public.voice_tenants where id = $1', [id]);
+    return rows[0] ? mapTenant(rows[0]) : null;
+  }
+
+  /** A demo workspace's clock, as an offset from real time (0 is real time). */
+  async setClockOffset(tenantId: string, ms: number): Promise<void> {
+    await this.db.query('update public.voice_tenants set clock_offset_ms = $2, updated_at = now() where id = $1', [tenantId, Math.round(ms)]);
   }
 
   async upsertTenant(profile: TenantProfile): Promise<Tenant> {
