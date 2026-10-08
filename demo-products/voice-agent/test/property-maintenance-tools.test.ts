@@ -862,6 +862,11 @@ test('a leaseholder found from "Flat 4, NG7" and their own number, or from the f
   const found = await marcus.run('find_property', { number: 'Flat 4', postcode: 'NG7' });
   assert.equal(found.found, 1, JSON.stringify(found));
   assert.equal(found.properties[0].property, 'riverside_court_flat_4');
+  // Rain through a top-floor ceiling, said before the flat is found: the roof, in the shared parts, from the start.
+  const helen = await call(t, '+447700900579');
+  helen.hear("I'm calling about a leak in my bedroom ceiling. Since it rained last night, water's been dripping through.");
+  const hers = await helen.run('find_property', { number: 'Flat 9, 2', street: 'Weaver Lane', postcode: 'NG7' });
+  assert.match(hers.what_they_said, /the roof, in the block's shared parts: no price/);
   // "9, Riverside Court": the block named, so 9 is the flat.
   const nine = await (await call(t, STRANGER)).run('find_property', { street: 'Riverside Court', number: '9' });
   assert.deepEqual([nine.found, nine.properties?.[0]?.property], [1, 'riverside_court_flat_9'], JSON.stringify(nine));

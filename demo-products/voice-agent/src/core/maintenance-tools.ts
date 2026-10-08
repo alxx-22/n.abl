@@ -201,10 +201,14 @@ async function findProperty(args: Args, ctx: ToolContext): Promise<Record<string
   }
   // The authoriser ringing about their own home hears what waits on their yes or no, so a quote is answered, not raised again.
   const waiting = props.length === 1 && ctx.state.role === 'authoriser' ? await awaitingAt(ctx, props[0].key) : [];
+  // A flat in a block, and what they've said is already in its shared parts (live, 8 October: rain through a top-floor
+  // ceiling was priced to the leaseholder before anything was triaged).
+  const shared = props.length === 1 && props[0].block ? sharedPart(ctx.state.heard.slice(-4).join(' '), props[0]) : null;
   return {
     found: props.length,
     properties: props.map((p) => propertyBrief(ctx, p, roleAt(ctx, p), p.block ? all.find((x) => x.key === p.block) : undefined)),
     ...(waiting.length ? { waiting_for_their_approval: waiting, to_answer: 'For a yes or no to one of these, use job approve or decline with its reference; never raise it again.' } : {}),
+    ...(shared ? { what_they_said: `That sounds like the ${shared}, in the block's shared parts: no price and no window for them. Raise it with job create.` } : {}),
     ...(props.length > 1 ? { ask: 'More than one fits: ask which, by the house number or flat.' } : {}),
     ...(nums.length > 1 && props.length === 1 && houseNumber(props[0]) !== nums[0] ? { check: `Check the number: we have ${houseNumber(props[0])}, they said ${nums[0]}.` } : {}),
   };
@@ -231,7 +235,7 @@ const TRADE_WORDS: [string, RegExp][] = [
   ['damp_mould', /\bdamp\b|\bmould\b|\bmold\b|\bcondensation\b|\bblack spots?\b/i],
   ['drainage', /\bdrains?\b|\bblock(?:ed|age)\b|\bsewage\b|\bgully\b|\boverflowing\b|\bslow(?:-| )draining\b/i],
   // The roof before a leak's water or the lights it is near: "leaking through the ceiling from the roof" is a roofer's (live, 8 October).
-  ['roofing', /\broof\b|\bgutters?\b|\bchimney\b|\bslates?\b|\bflashing\b|\bceiling\b[^.?!]{0,60}\brain(?:s|ed|ing)?\b|\brain(?:s|ed|ing)?\b[^.?!]{0,60}\bceiling\b/i],
+  ['roofing', /\broof\b|\bgutters?\b|\bchimney\b|\bslates?\b|\bflashing\b|\bceiling\b[^?!]{0,80}\brain(?:s|ed|ing)?\b|\brain(?:s|ed|ing)?\b[^?!]{0,80}\bceiling\b/i],
   // A door entry system before carpentry's "door" (live, 8 October: a buzzer that won't release the door went to a joiner).
   ['electrical', /\bdoor ?entry\b|\bentry ?(?:phone|system)\b|\bintercom\b|\bbuzzer\b|\b(?:smoke|heat|carbon monoxide|co|fire) alarms?\b|\bsockets?\b|\blights?\b|\bfuse\b|\btrip(?:s|ped|ping)?\b|\belectric(?:s|ity|al)?\b|\bpower\b|\bswitch\b|\bextractor\b|\bconsumer unit\b/i],
   ['plumbing', /\bleak\w*\b|\btaps?\b|\btoilet\b|\bpipes?\b|\bwater\b|\bshower\b|\bsink\b|\bcistern\b|\bburst\b|\bdrip\w*\b|\bflush\w*\b/i],
@@ -664,8 +668,8 @@ function pageFor(ctx: ToolContext, trade: string, gas: boolean, district: string
 const SHARED: [string, RegExp][] = [
   ['door entry', /\b(?:door ?entry|entry ?(?:phone|system)|intercom|buzzer|(?:main|communal|entrance) (?:front )?doors?|main entrance|front door (?:to|of) the (?:block|building|flats))\b/i],
   ['lights', /\b(?:communal|stair(?:well|case)?|landing|hall(?:way)?|corridor|entrance|emergency) light(?:s|ing)?\b|\blights? (?:on|in) the (?:stairs|stairwell|landings?|hall(?:way)?|corridors?|entrance)\b/i],
-  // Rain through a ceiling comes from the roof, however it's put ("dripping through my ceiling since it rained").
-  ['roof', /\broof\b|\bgutter\w*|\bdownpipes?\b|\bceiling\b[^.?!]{0,60}\brain(?:s|ed|ing)?\b|\brain(?:s|ed|ing)?\b[^.?!]{0,60}\bceiling\b/i],
+  // Rain through a ceiling comes from the roof, however it's put, over a sentence or two ("my ceiling. Since it rained").
+  ['roof', /\broof\b|\bgutter\w*|\bdownpipes?\b|\bceiling\b[^?!]{0,80}\brain(?:s|ed|ing)?\b|\brain(?:s|ed|ing)?\b[^?!]{0,80}\bceiling\b/i],
   ['lift', /\blifts?\b/i],
   ['stairs', /\bstair(?:s|well|case|way)\b|\blandings?\b|\bcorridors?\b/i],
   ['bin store', /\bbin (?:store|room|area|shed)\b/i],
