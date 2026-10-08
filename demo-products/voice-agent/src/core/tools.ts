@@ -24,7 +24,7 @@ import { referencesIn } from './guardrails.ts';
 import { processDemoPayment, type DemoCard } from '../domain/payments.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
-import { PHONE_ONLY, feeFor, findOrder, kitchenFulfilment, waitTimes } from './kitchen.ts';
+import { PHONE_ONLY, feeFor, findOrder, impliedCollection, kitchenFulfilment, shortOfMinimum, waitTimes } from './kitchen.ts';
 import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
@@ -154,6 +154,8 @@ export interface CallState {
   amounts: number[];
   /** Every reference the tools returned in this call, letters and digits only: one said that isn't here was made up. */
   references: string[];
+  /** A takeaway's fee and minimum for the postcode get_wait_times was given, before collection or delivery is set. */
+  deliveryTerms: { fee_pence: number; min_order_pence: number } | null;
   /** An estate agency's times of day the receptionist may say (minutes after midnight), and the ranges its tools gave. */
   times: number[];
   timeRanges: [number, number][];
@@ -168,7 +170,7 @@ export function newCallState(): CallState {
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
-    invoice: null, emergencyTrade: null, amounts: [], references: [], times: [], timeRanges: [],
+    invoice: null, emergencyTrade: null, amounts: [], references: [], deliveryTerms: null, times: [], timeRanges: [],
   };
 }
 
@@ -398,7 +400,10 @@ function spokenLine(l: OrderLine): string {
 // Live, 8 October: "ask collection or delivery first" had the receptionist ask
 // again what the caller had just said, and "nothing to place yet" left an
 // agreed collection unplaced.
-const NO_FULFILMENT = "Collection or delivery isn't set yet. If the caller has already said which, call set_fulfilment now (delivery needs the postcode and first line of the address); only if not, ask.";
+/** A note said in words: "a twenty", "two twenties" is said as forty. */
+const NOTES: Record<string, number> = { five: 5, ten: 10, twenty: 20, forty: 40, fifty: 50 };
+
+const NO_FULFILMENT ="Collection or delivery isn't set yet. If the caller has already said which, call set_fulfilment now (delivery needs the postcode and first line of the address); only if not, ask.";
 
 function orderAction(ctx: ToolContext, title: string) {
   const b = basketSummary(ctx);
@@ -953,6 +958,7 @@ const TOOLS: Record<string, Tool> = {
         added: describeLine(line), line: line.line, order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal,
         ...(replaced.length ? { replaced: replaced.map((l) => l.line) } : {}),
         ...(inName ? { quantity_note: `Taken as one ${item.name}: the number is in its name. If they want more than one portion, change the line's quantity.` } : {}),
+        ...shortOfMinimum(ctx),
         ...offer,
       };
     },
@@ -984,7 +990,7 @@ const TOOLS: Record<string, Tool> = {
         changed(ctx);
         orderAction(ctx, 'Order in progress');
         const b = basketSummary(ctx);
-        return { removed: describeLine(line), order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal };
+        return { removed: describeLine(line), order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal, ...shortOfMinimum(ctx) };
       }
       if (args.options !== undefined) {
         const item = menu.categories.flatMap((c) => c.items).find((x) => x.key === line.item_key)!;
@@ -997,7 +1003,7 @@ const TOOLS: Record<string, Tool> = {
       changed(ctx);
       orderAction(ctx, 'Order in progress');
       const b = basketSummary(ctx);
-      return { updated: describeLine(line), order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal };
+      return { updated: describeLine(line), order_so_far: b.lines.map((l) => l.text), running_total: b.subtotal, ...shortOfMinimum(ctx) };
     },
   },
 
@@ -1124,6 +1130,8 @@ const TOOLS: Record<string, Tool> = {
     async handler(_args, ctx) {
       const o = ctx.tenant.profile.ordering!;
       if (!ctx.state.lines.length) return { ok: false, message: 'The order is empty.' };
+      const refused = await impliedCollection(ctx);
+      if (refused) return refused;
       if (!ctx.state.fulfilment) return { ok: false, message: NO_FULFILMENT };
       const b = basketSummary(ctx);
       const f = ctx.state.fulfilment;
@@ -1175,6 +1183,8 @@ const TOOLS: Record<string, Tool> = {
     async handler(args, ctx) {
       const o = ctx.tenant.profile.ordering!;
       if (!ctx.state.lines.length) return { placed: false, message: 'Nothing to place yet: the order is empty.' };
+      const refused = await impliedCollection(ctx);
+      if (refused) return { placed: false, ...refused };
       if (!ctx.state.fulfilment) return { placed: false, message: `Not placed yet. ${NO_FULFILMENT} Then review_order, read it back, and on yes call confirm_order again.` };
       if (ctx.state.reviewedKey !== basketKey(ctx.state)) {
         // Hand back the new read-back directly, so there is no loop: read it,
@@ -1200,6 +1210,8 @@ const TOOLS: Record<string, Tool> = {
       const f = ctx.state.fulfilment;
       // A takeaway's delivery paid at the door: how, and for cash the change the driver needs (presets/takeaway.md §4.3). Asked once.
       let payNote: string | null = null;
+      const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
+      const fee = f.type === 'delivery' ? feeFor(o, f.fee_pence ?? o.delivery!.fee_pence, subtotal) : 0;
       // A number on the pay-on-the-phone list (it refused a delivery): card on the phone now, never the driver.
       const phoneOnly = Boolean(o.kitchen && f.type === 'delivery' && [phone, ctx.callerPhone].some((n) => n && o.pay_on_phone?.includes(n)));
       if (phoneOnly) payNote = 'Pay on the phone only';
@@ -1209,12 +1221,26 @@ const TOOLS: Record<string, Tool> = {
           ctx.state.gateAsked.push('pay_driver');
           return { placed: false, message: `Before placing it, ask how they'll pay: now by card on the phone, or the driver ${o.pay_driver === 'cash' ? 'in cash' : 'in cash or by card'}. For cash, ask "Do you need change from anything?". Then call confirm_order again with pay_driver and change_from.` };
         }
-        const note = str(args.change_from)?.match(/\d+/)?.[0];
-        if (/cash/.test(how)) payNote = note ? `Cash: change from £${note}` : 'Cash: no change needed';
-        else if (/card/.test(how) && !/phone|now/.test(how) && o.pay_driver === 'cash_or_card') payNote = 'Card at the door';
+        if (/cash/.test(how)) {
+          // The note they'll hand over: whole pounds in fives that cover the total. Live, 8 October: never asked, the
+          // total itself went in as the note, and the driver's ticket read "change from £32".
+          const said = str(args.change_from) ?? '';
+          const word = /\b(five|ten|twenty|forty|fifty)\b/i.exec(said)?.[1].toLowerCase();
+          const n = /\d/.test(said) ? Number(said.replace(/[^\d.]/g, '')) : word ? NOTES[word] : 0;
+          const none = /\b(?:no|none|exact|not needed|n\/?a)\b/i.test(said);
+          const note = !none && Number.isInteger(n) && n > 0 && n % 5 === 0 && n * 100 >= subtotal + fee ? n : null;
+          if (note === null && !none && !ctx.state.gateAsked.includes('change_from')) {
+            ctx.state.gateAsked.push('change_from');
+            return {
+              placed: false,
+              message: n > 0 && n * 100 < subtotal + fee
+                ? `£${n} won't cover the ${pounds(subtotal + fee)} total: check what they'll pay the driver with, then call confirm_order again with change_from.`
+                : `Ask "Do you need change from anything?": the note they'll pay the driver with, for ${pounds(subtotal + fee)}. Then call confirm_order again with change_from, or "none".`,
+            };
+          }
+          payNote = note ? `Cash: change from £${note}` : 'Cash: no change needed';
+        } else if (/card/.test(how) && !/phone|now/.test(how) && o.pay_driver === 'cash_or_card') payNote = 'Card at the door';
       }
-      const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
-      const fee = f.type === 'delivery' ? feeFor(o, f.fee_pence ?? o.delivery!.fee_pence, subtotal) : 0;
       const order = await ctx.repo.createOrder(ctx.tenant, {
         name, phone, fulfilment: f.type, due_at: f.due_at, address: f.address, postcode: f.postcode,
         lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,

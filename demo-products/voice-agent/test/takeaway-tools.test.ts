@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { newCallState, runTool, toolDeclarations, type Action, type ToolContext } from '../src/core/tools.ts';
+import { saidCollection } from '../src/core/kitchen.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { defaultAnswers } from '../src/presets/takeaway/answers.ts';
 import { compileTakeaway } from '../src/presets/takeaway/compile.ts';
@@ -94,13 +95,17 @@ test('the kitchen: the postcode decides the fee and minimum, the amount short is
   assert.deepEqual([outside.ok, outside.outside], [false, true]);
   assert.match(outside.message, /NG8 is outside the delivery area\. Offer collection\./);
   assert.match((await c.run('get_wait_times', { postcode: 'NG8' })).delivery, /outside the delivery area/);
-  // £12.97 in the outer zone: £2.03 short of its £15 minimum.
+  // £12.97 in the outer zone: £2.03 short of its £15 minimum. Live, 8 October: the receptionist worked "£2.03" out itself,
+  // as only get_wait_times had the postcode; now each line added says how far short it is.
+  await c.run('get_wait_times', { postcode: 'NG9 2AB' });
+  assert.equal((await c.run('add_to_order', { item: 'Classic beef burger' })).short_of_delivery_minimum, '£8.51');
+  await c.run('change_order_line', { line: 1, quantity: 0 });
   await c.run('add_to_order', { item: 'Classic beef burger' });
   // Live, 8 October: "six hot wings" passed as six of them. The six is the dish's name: one portion.
   const wings = await c.run('add_to_order', { item: 'hot wings', quantity: 6 });
   assert.equal(wings.added, '1 × Six hot wings — £4.99');
   assert.match(wings.quantity_note, /^Taken as one Six hot wings: the number is in its name\./);
-  await c.run('add_to_order', { item: 'Coleslaw' });
+  assert.equal((await c.run('add_to_order', { item: 'Coleslaw' })).short_of_delivery_minimum, '£2.03');
   const set = await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG9 2AB', address: '14 Larch Close' });
   assert.equal(set.short_by, '£2.03', JSON.stringify(set));
   assert.deepEqual([set.next, set.total_so_far], ["They're £2.03 short of the £15.00 minimum for delivery here. Tell them, and ask what they'd like to add.", undefined]);
@@ -134,6 +139,15 @@ test('the kitchen: collection or delivery not yet set, the next step is said rat
   assert.equal(early.placed, false);
   assert.match(early.message, /^Not placed yet\. Collection or delivery isn't set yet\. If the caller has already said which, call set_fulfilment now .*; only if not, ask\. Then review_order/);
   assert.match((await c.run('review_order', {})).message, /^Collection or delivery isn't set yet\. If the caller has already said which, call set_fulfilment now/);
+  // Live, 8 October: "I'm collecting" said, and the order stalled. Said collection last, it is set for as soon as possible.
+  const said = await call(t);
+  await said.run('add_to_order', { item: 'Chicken box', options: ['strips', 'fries', 'Sprite'] });
+  said.ctx.state.heard.push("Actually, I'm collecting, so I don't need delivery.");
+  const read = await said.run('review_order', {});
+  assert.match(read.read_back, /for collection at 7:15pm\.$/);
+  for (const [words, yes] of [["I'll pick it up", true], ['Collection, please', true], ['I was going to collect but can you deliver it?', false], ['Delivery please', false], ['Two burgers', false]] as const) {
+    assert.equal(saidCollection([words]), yes, words);
+  }
   const set = await c.run('set_fulfilment', { type: 'collection' });
   assert.deepEqual([set.total_so_far, set.next], ['£7.99', 'Now call review_order and read its read_back word for word.']);
   // Never read back is said as that, not as a change (live, 8 October: "it's changed slightly").

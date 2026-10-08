@@ -85,6 +85,20 @@ test('paying the driver: asked once how, and for cash the change they need, on t
   assert.equal(placed.payment, "They're paying the driver (cash: change from £20): don't take a card on the phone.");
   assert.equal((await repo.getOrder(t.id, placed.order_number))!.pay_note, 'Cash: change from £20');
   assert.match(sent.at(-1)!.body, /Paying the driver: cash, change from £20\./);
+  // The note must be one they can hand over that covers the total. Live, 8 October: never asked, the total
+  // itself went in as the note, "change from £32"; a twenty for £22.49 is checked, and asked once.
+  for (const [given, asked, note] of [['£32.48', /^Ask "Do you need change from anything\?": the note they'll pay the driver with, for £22\.49\./, 'Cash: change from £50'], ['a twenty', /^£20 won't cover the £22\.49 total/, 'Cash: change from £50'], ['none', null, 'Cash: no change needed']] as const) {
+    const d = await call(t, at('19:00'), AMY);
+    await d.run('add_to_order', { item: 'Pizza night', options: ['margherita', 'pepperoni', 'coke', 'fanta'] });
+    await d.run('set_fulfilment', { type: 'delivery', postcode: 'NG7 1AA', address: '3 Near Road' });
+    await d.run('review_order', {});
+    const first = await d.run('confirm_order', { name: 'Amy', allergy_notes: 'none', pay_driver: 'cash', change_from: given });
+    if (asked) {
+      assert.match(first.message, asked, given);
+      const p = await d.run('confirm_order', { name: 'Amy', allergy_notes: 'none', pay_driver: 'cash', change_from: '£50' });
+      assert.equal((await repo.getOrder(t.id, p.order_number))!.pay_note, note, given);
+    } else assert.equal((await repo.getOrder(t.id, first.order_number))!.pay_note, note, given);
+  }
   // Card at the door, and paying now on the phone, which leaves nothing for the driver.
   for (const [how, note] of [['card', 'Card at the door'], ['phone', null]] as const) {
     const d = await call(t, at('19:00'), AMY);

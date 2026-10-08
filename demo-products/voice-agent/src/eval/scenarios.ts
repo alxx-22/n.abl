@@ -1481,14 +1481,14 @@ export const SCENARIOS: Scenario[] = [
     kind: 'happy',
     callerPhone: '+447700900836',
     now: TK_FRIDAY_7PM,
-    persona: 'You are Mo Ahmed at 8 Ropewalk Way, NG2 3EF. Order a Pizza night for delivery: a margherita and a pepperoni, with a Coke and a Fanta. You will pay the driver in cash, with a twenty. Your name is Mo.',
+    persona: 'You are Mo Ahmed at 8 Ropewalk Way, NG2 3EF. Say: "Can I have a Pizza night delivered, please?" Your choices: a margherita and a pepperoni, a can of Coke and a can of Fanta. You will pay the driver in cash, with a fifty-pound note. Your name is Mo.',
     async check(c) {
       const f: string[] = [];
       const o = await orders(c);
       expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
       if (o[0]) {
         expect(f, o[0].payment_status === 'unpaid', `payment ${o[0].payment_status}`);
-        expect(f, /^Cash: change from £20$/.test(o[0].pay_note ?? ''), `pay note ${o[0].pay_note}`);
+        expect(f, /^Cash: change from £50$/.test(o[0].pay_note ?? ''), `pay note ${o[0].pay_note}`);
       }
       expect(f, (await payments(c)).length === 0, 'a card was taken');
       noFlags(c, f);

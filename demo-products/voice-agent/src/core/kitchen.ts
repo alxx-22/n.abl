@@ -210,6 +210,40 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
   };
 }
 
+/** "I'm collecting, so I don't need delivery": the caller said collection last, and delivery only to say no to it. */
+export function saidCollection(heard: string[]): boolean {
+  const words = heard.join(' ').toLowerCase().replace(/\b(?:don'?t|do not|no|not)\s+(?:need|want)?\s*(?:a\s+|the\s+|it\s+)?deliver\w*/g, ' ');
+  const last = (re: RegExp) => Math.max(-1, ...[...words.matchAll(re)].map((m) => m.index!));
+  return last(/\b(?:collect\w*|pick(?:ing)?\s+(?:it\s+|them\s+)?up)\b/g) > last(/\bdeliver\w*/g);
+}
+
+/**
+ * Collection or delivery not set, when the caller already said collection: set
+ * it for as soon as possible, so the read-back carries the time. Live, 8
+ * October: "I'm collecting" was said, the order was placed without it, and the
+ * receptionist told the caller it couldn't find the order.
+ */
+export async function impliedCollection(ctx: ToolContext): Promise<Record<string, unknown> | null> {
+  if (ctx.state.fulfilment || !ctx.tenant.profile.ordering?.kitchen || !saidCollection(ctx.state.heard)) return null;
+  const set = await kitchenFulfilment({ type: 'collection' }, ctx);
+  return set.ok ? null : set;
+}
+
+/**
+ * A delivery's minimum, as the order grows: how far short it is, from the
+ * postcode's own minimum once delivery or a postcode is known. Live, 8
+ * October: "£2.03 short" was worked out by the receptionist, as no tool had
+ * said it yet.
+ */
+export function shortOfMinimum(ctx: ToolContext): Record<string, unknown> {
+  if (!ctx.tenant.profile.ordering?.kitchen) return {};
+  const f = ctx.state.fulfilment;
+  const min = f ? (f.type === 'delivery' ? f.min_order_pence : undefined) : ctx.state.deliveryTerms?.min_order_pence;
+  const subtotal = ctx.state.lines.reduce((s, l) => s + lineTotal(l), 0);
+  if (!min || subtotal >= min) return {};
+  return { short_of_delivery_minimum: pounds(min - subtotal), minimum_note: `Delivery here needs ${pounds(min)}: ${pounds(min - subtotal)} short so far. Say so once they've finished ordering, and let them choose what to add.` };
+}
+
 /** get_wait_times: "how long tonight?" and "do you deliver to me?", before any order. */
 export async function waitTimes(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const o = ctx.tenant.profile.ordering!;
@@ -229,6 +263,8 @@ export async function waitTimes(args: Args, ctx: ToolContext): Promise<Record<st
       out.delivery = 'due' in d ? waitWords(ctx, d.due) : d.message;
       if (pc) {
         const terms = deliveryTerms(o, pc.district);
+        // Kept for the order that follows: add_to_order says how far short of this minimum it is.
+        ctx.state.deliveryTerms = terms;
         out.delivery_fee = pounds(terms.fee_pence);
         out.minimum_order = pounds(terms.min_order_pence);
         if (o.delivery.free_over_pence) out.free_delivery_from = pounds(o.delivery.free_over_pence);
