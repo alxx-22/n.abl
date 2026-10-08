@@ -245,7 +245,7 @@ export function defaultClients(): ClientAnswer[] {
     c('oakfield', 'Oakfield Homes', 'agent', 30_000, 40_000, false, { name: 'Natalie Byrne', phone: '07700 900403', email: 'property@oakfield.example' }, 'over_limit'),
     c('ellis', 'Mrs J Ellis', 'landlord', 20_000, 30_000, false, { name: 'Jean Ellis', phone: '07700 900404', email: '' }, 'every_job',
       'Holds quote Q-2291: a £2,450 boiler replacement at her flat.'),
-    c('kaur', 'Mr R Kaur', 'landlord', 15_000, 25_000, false, { name: 'Raj Kaur', phone: '07700 900405', email: '' }, 'over_limit'),
+    c('kaur', 'Mr R Kaur', 'landlord', 15_000, 25_000, false, { name: 'Raj Kaur', phone: '07700 900405', email: 'raj@kaur-lettings.example' }, 'over_limit'),
     c('whitfield', 'Whitfield Properties', 'landlord', 25_000, 40_000, false, { name: 'Ben Whitfield', phone: '07700 900406', email: 'ben@whitfield.example' }, 'over_limit'),
     c('meadowbank', 'Meadowbank Housing', 'social', 50_000, 100_000, true, { name: 'Carl Mensah', phone: '07700 900407', email: 'repairs@meadowbank.example' }, 'every_job',
       "We act as Meadowbank's agent for repairs: report damp and mould the same day, with the time it was reported."),

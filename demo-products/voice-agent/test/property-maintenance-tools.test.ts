@@ -971,3 +971,31 @@ test('a business: the contract sets the priority; trading, access and the order 
   const row = (await repo.listJobs(t.id, { reference: booked.reference }))[0];
   assert.deepEqual([row.po, row.client_key, row.priority], ['CK-1182', 'copper_kettle', 'urgent']);
 });
+
+test('"what have I got due?": a landlord\'s homes from their own number, overdue first, a summary emailed, and all of it booked in one go', async () => {
+  const t = await fernhill('pm-portfolio');
+  // Only from the number on file.
+  const stranger = await call(t, '+447700900999');
+  assert.match((await stranger.run('compliance', { action: 'portfolio' })).message, /only for them, from the number we have on file/);
+  const raj = await call(t, '+447700900405');
+  const due = await raj.run('compliance', { action: 'portfolio' });
+  assert.deepEqual([due.client, due.homes], ['Mr R Kaur', 3]);
+  assert.equal(due.overdue.length, 1);
+  assert.match(due.overdue[0], /^Gas safety record at Flat 3, 6 Wharfside .*: ran out on /);
+  assert.equal(due.due_in_the_next_two_months.length, 2);
+  assert.match(due.due_in_the_next_two_months.join(' '), /Gas safety record at .*Charnwood.*Electrical installation condition report at .*Hazelmere/);
+  assert.match(due.say, /overdue first/);
+  assert.match(due.emailed, /email we have on file/);
+  assert.ok(raj.actions.some((a) => a.title === 'Summary emailed (demo)' && a.detail!.startsWith('To raj@kaur-lettings.example')));
+  // Booked all at once: each with its own tenant told; the register shows them booked.
+  const all = await raj.run('compliance', { action: 'book_all' });
+  assert.equal(all.booked, true, JSON.stringify(all));
+  assert.equal(all.jobs.length, 3);
+  const certs = (await repo.listCertificates(t.id)).filter((c) => ['wharfside_flat_3_6', 'charnwood_19', 'hazelmere_flat_4_120'].includes(c.property_key) && c.expires! <= '2026-12-07');
+  assert.ok(certs.length === 3 && certs.every((c) => c.booked_job), JSON.stringify(certs));
+  for (const j of all.jobs) assert.ok(raj.sent.some((x) => x.body.includes(`Ref ${j.reference}`) && x.to !== '+447700900405'), `${j.what}: the tenant is texted`);
+  assert.match(raj.sent.find((x) => x.to === '+447700900405')!.body, /^Fernhill Property Care: booked gas safety record/);
+  // Asked again: nothing left due, all of it booked.
+  const after = await raj.run('compliance', { action: 'portfolio' });
+  assert.deepEqual([after.overdue, after.due_in_the_next_two_months, after.already_booked.length], [[], [], 3]);
+});

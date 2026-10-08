@@ -1098,10 +1098,90 @@ const minusMonths = (date: string, n: number) => {
   return d.toISOString().slice(0, 10);
 };
 
+/** The planned job, its price and trade for one certificate, as book does it. */
+function plannedFor(m: MaintenanceSettings, kind: 'gas_record' | 'eicr' | 'boiler_service', appliances: number): { trade: string; price: number; description: string } {
+  if (kind === 'eicr') return { trade: 'electrical', price: m.planned.eicr_from_pence, description: 'Electrical installation condition report' };
+  if (kind === 'boiler_service') return { trade: 'boiler_servicing', price: m.planned.boiler_service_pence, description: 'Boiler service' };
+  return { trade: 'boiler_servicing', price: m.planned.gas_record_pence + Math.max(0, appliances - 1) * m.planned.extra_appliance_pence, description: 'Gas safety record' };
+}
+
+/**
+ * "What have I got due across my properties?" (presets/property-maintenance-use-cases.md): a landlord's or
+ * agent's register, only to the number on file. Overdue first, then the next two months; a summary goes to
+ * the email on file; book_all books each in its first free window, keeping a gas record's date, with the tenant told.
+ */
+async function portfolio(args: Args, ctx: ToolContext, action: 'portfolio' | 'book_all'): Promise<Record<string, unknown>> {
+  const m = mt(ctx);
+  const client = ctx.callerPhone ? m.clients.find((c) => normaliseUkPhone(c.contact.phone) === ctx.callerPhone) : undefined;
+  if (!client) return { done: false, message: "A landlord's or agent's certificates across their homes are only for them, from the number we have on file. Offer to take a message for the office." };
+  const l = local(ctx);
+  const homes = new Map((await ctx.repo.listMtProperties(ctx.tenant.id)).filter((p) => p.client === client.key).map((p) => [p.key, p]));
+  const certs = (await ctx.repo.listCertificates(ctx.tenant.id)).filter((c) => homes.has(c.property_key) && c.expires && ['gas_record', 'eicr', 'boiler_service'].includes(c.kind));
+  const horizon = addDays(l.date, 61);
+  const due = certs.filter((c) => !c.booked_job && c.expires! <= horizon).sort((a, b) => a.expires!.localeCompare(b.expires!));
+  const line = (c: Certificate) => `${cap(CERT_WORDS[c.kind])} at ${shortAddress(homes.get(c.property_key)!)}: ${c.expires! < l.date ? `ran out on ${spokenDate(c.expires!)}` : `runs to ${spokenDate(c.expires!)}`}`;
+  if (action === 'portfolio') {
+    const overdue = due.filter((c) => c.expires! < l.date).map(line);
+    const soon = due.filter((c) => c.expires! >= l.date).map(line);
+    const booked = certs.filter((c) => c.booked_job && c.expires! <= horizon).map((c) => `${cap(CERT_WORDS[c.kind])} at ${shortAddress(homes.get(c.property_key)!)}: booked, job ${c.booked_job}`);
+    const remedials = certs.flatMap((c) => c.remedials.filter((r) => !r.done).map((r) => `At ${shortAddress(homes.get(c.property_key)!)}: ${r.what}, to be put right by ${spokenDate(r.due)}`));
+    const email = client.contact.email;
+    if (email) {
+      ctx.action({ kind: 'note', title: 'Summary emailed (demo)', detail: `To ${email}: ${[...overdue, ...soon].join('; ') || 'nothing due in the next two months'}` });
+    }
+    return {
+      client: client.name, homes: homes.size,
+      overdue, due_in_the_next_two_months: soon, ...(booked.length ? { already_booked: booked } : {}), ...(remedials.length ? { remedials } : {}),
+      prices: plannedWords(m),
+      say: overdue.length ? 'Read what is overdue first and plainly, then what is due soon, home by home.' : 'Read what is due soon, home by home.',
+      ...(due.length ? { offer: 'Offer to book them all: compliance with action book_all books each in its first free window (a gas record keeping its date), and texts each tenant.' } : {}),
+      emailed: email ? 'A summary has gone to the email we have on file.' : 'There is no email on file: offer to text it instead, never to a new address.',
+    };
+  }
+  // Book them all: each in its first free window from the day that keeps its date.
+  const made: { what: string; when: string; engineer: string; price: string; reference: string }[] = [];
+  const missed: string[] = [];
+  let jobs = await ctx.repo.listJobs(ctx.tenant.id);
+  for (const c of due) {
+    const p = homes.get(c.property_key)!;
+    const kind = c.kind as 'gas_record' | 'eicr' | 'boiler_service';
+    const plan = plannedFor(m, kind, p.gas_appliances || 1);
+    if (!m.trades.some((t) => t.key === plan.trade)) { missed.push(`${line(c)}: we don't do that`); continue; }
+    const keeps = kind === 'gas_record' ? minusMonths(c.expires!, 2) : null;
+    const from = keeps && keeps > l.date ? keeps : l.date;
+    const slot = freeWindows(m, jobs, { trade: plan.trade, gas: kind !== 'eicr', district: p.district, from, now: l, limit: 1 })[0];
+    if (!slot) { missed.push(`${line(c)}: no free window soon; the office will call`); continue; }
+    const job = await ctx.repo.createJob(ctx.tenant, {
+      property_key: p.key, client_key: client.key, reporter: { name: client.contact.name, phone: ctx.callerPhone, role: client.kind === 'agent' ? 'agent' : 'landlord' }, trade: plan.trade, priority: 'routine',
+      reason: 'Planned: safety check', description: plan.description, kind, status: 'scheduled', visit_date: slot.date, window_key: slot.window.key, engineer_key: slot.engineers[0].key,
+      price_pence: plan.price, flags: kind === 'eicr' ? [] : ['gas'], source: source(ctx), call_id: ctx.callId || null,
+    });
+    jobs = [...jobs, job];
+    await ctx.repo.setCertificateBooked(ctx.tenant.id, p.key, kind, job.reference);
+    record(ctx, job.reference, 'job', 'committed');
+    ctx.state.jobsVerified.push(job.reference);
+    const when = windowWords(slot.window, slot.date, l.date);
+    if (p.occupant.phone && p.occupant.texts_ok) {
+      await smsTo(ctx, p.occupant.phone, `${ctx.tenant.profile.name}: your landlord has booked a ${plan.description.toLowerCase()} for ${when}. Someone over 18 needs to be in. Ref ${job.reference}. (Demo)`);
+    }
+    made.push({ what: `${cap(CERT_WORDS[kind])} at ${shortAddress(p)}`, when, engineer: slot.engineers[0].first_name, price: `${money(plan.price)}${incVat(m)}`, reference: job.reference });
+  }
+  if (made.length) {
+    await smsTo(ctx, ctx.callerPhone, `${ctx.tenant.profile.name}: booked ${made.map((x) => `${x.what.toLowerCase()}, ${x.when} (ref ${x.reference})`).join('; ')}. (Demo)`);
+    ctx.action({ kind: 'job_created', title: `${made.length} safety check${made.length === 1 ? '' : 's'} booked`, detail: `${client.name} · ${made.map((x) => x.reference).join(', ')}` });
+  }
+  return {
+    booked: made.length > 0, jobs: made, ...(missed.length ? { not_booked: missed } : {}),
+    say: 'Say each one: what, where and when. The tenants have been texted, and the records go to the email on file once done.',
+  };
+}
+
 async function compliance(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const gate = safetyGate(ctx);
   if (gate) return gate;
   const m = mt(ctx);
+  const asked = str(args.action)?.toLowerCase().replace(/[\s-]+/g, '_') ?? '';
+  if (asked === 'portfolio' || asked === 'book_all') return portfolio(args, ctx, asked);
   const key = str(args.property) ?? ctx.state.property;
   const p = key ? await ctx.repo.getMtProperty(ctx.tenant.id, key) : null;
   if (!p) return { done: false, message: 'Find the property first with find_property.' };
@@ -1455,10 +1535,10 @@ export const MAINTENANCE_TOOLS: Record<string, Tool> = {
     when: hasMt,
     decl: {
       name: 'compliance',
-      description: "A rented home's safety certificates, for the landlord or agent on file: status (what's due, and the date that keeps a gas record's date), or book a gas safety record, boiler service, both, or an EICR.",
+      description: "A rented home's safety certificates, for the landlord or agent on file: status (what's due, and the date that keeps a gas record's date), or book a gas safety record, boiler service, both, or an EICR. portfolio: everything due across the caller's homes; book_all books it all.",
       parameters: obj(
-        { property: S('From find_property'), action: S('status or book'), services: S('gas safety record, boiler service, both, or EICR'), date: S('YYYY-MM-DD'), window: S('The window key'), appliances: I('Gas appliances, if more than one'), name: S("The caller's name"), early: B('Book before the date that keeps the record, knowingly') },
-        ['property', 'action'],
+        { property: S('From find_property; not for portfolio or book_all'), action: S('status, book, portfolio or book_all'), services: S('gas safety record, boiler service, both, or EICR'), date: S('YYYY-MM-DD'), window: S('The window key'), appliances: I('Gas appliances, if more than one'), name: S("The caller's name"), early: B('Book before the date that keeps the record, knowingly') },
+        ['action'],
       ),
     },
     handler: compliance,

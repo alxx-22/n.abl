@@ -507,6 +507,12 @@ const plusYears = (date: string, n: number) => `${Number(date.slice(0, 4)) + n}$
 
 /** Days to go on the gas records due soonest; with 14 Elm Road's 40, six are due within six weeks and one is three days overdue. */
 const GAS_DUE = [9, 16, 23, 30, 37, -3];
+/** The EICRs due within two months. */
+const NEAR_EICR = [12, 24, 36, 48];
+/** The private landlord whose homes show a portfolio's year, and what is due at them. */
+const PORTFOLIO_CLIENT = 'kaur';
+const STORY_GAS = [-3, 16];
+const STORY_EICR = [24];
 
 /** The Electrical Safety Standards in the Social Rented Sector reach existing tenancies on this day. */
 const SOCIAL_ELECTRICAL_DEADLINE = '2026-11-01';
@@ -522,19 +528,29 @@ function certificates(props: MtProperty[], jobs: SeedJob[], today: string, socia
   // A housing association's homes: the electrical safety rules for social housing reach existing tenancies on 1 November 2026, PAT tests included.
   for (const p of props) if (p.client && social.has(p.client)) out.push({ property_key: p.key, kind: 'pat', issued: null, expires: SOCIAL_ELECTRICAL_DEADLINE, remedials: [], booked_job: null });
   const rented = props.filter((p) => p.client !== null);
-  let g = 0;
+  // Mr Kaur's homes carry "what have I got due?" (presets/property-maintenance-use-cases.md): a gas record three days
+  // overdue, another due in 16 days, and an EICR in 24. They come out of the same totals as everyone else's.
+  const story = (p: MtProperty) => p.client === PORTFOLIO_CLIENT;
+  const storyGas = STORY_GAS.slice(0, rented.filter((p) => story(p) && p.gas).length);
+  const gasDue = [...GAS_DUE];
+  for (const d of storyGas) gasDue.splice(gasDue.indexOf(d), 1);
+  const storyEicr = STORY_EICR.slice(0, rented.some(story) ? 1 : 0);
+  const eicrDue = NEAR_EICR.filter((d) => !storyEicr.includes(d));
+  let g = 0, sg = 0, e = 0, se = 0;
   rented.forEach((p, i) => {
+    const mine = story(p);
     if (p.gas) {
-      const days = p.key === 'elm_14' ? 40 : g < GAS_DUE.length ? GAS_DUE[g++] : 45 + ((i * 37) % 315);
+      const days = p.key === 'elm_14' ? 40 : mine && sg < storyGas.length ? storyGas[sg++] : !mine && g < gasDue.length ? gasDue[g++] : 45 + ((i * 37) % 315);
       const expires = addDays(today, days);
       out.push({ property_key: p.key, kind: 'gas_record', issued: plusYears(expires, -1), expires, remedials: [], booked_job: null });
     }
-    if (i === 4) {
+    if (i === 4 && !mine) {
       const issued = addDays(today, -19);
       out.push({ property_key: p.key, kind: 'eicr', issued, expires: plusYears(issued, 5), remedials: [{ what: 'C2: no RCD protection on the socket circuits', due: addDays(issued, 28) }], booked_job: null });
       return;
     }
-    const expires = addDays(today, i < 4 ? 12 + i * 12 : 70 + ((i * 53) % 1700));
+    const near = mine ? (se < storyEicr.length ? storyEicr[se++] : undefined) : e < eicrDue.length ? eicrDue[e++] : undefined;
+    const expires = addDays(today, near ?? 70 + ((i * 53) % 1700));
     out.push({ property_key: p.key, kind: 'eicr', issued: plusYears(expires, -5), expires, remedials: [], booked_job: null });
   });
   props.filter((p) => p.client === null && p.gas).forEach((p, i) => {
