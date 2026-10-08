@@ -357,9 +357,9 @@ test('workspace: a key owns a workspace that seeds into the database', async () 
   // A staff move is checked like a call: onto a free table of the right size.
   const b = rows.find((x) => x.party_size <= 2 && x.resource_key === 'T1')!;
   if (b) {
-    const moved = await repo.moveBookingToTable(ws.tenant, b.reference, 'T9');
+    const moved = await repo.moveBooking(ws.tenant, b.reference, 'T9');
     assert.ok(!moved.ok || moved.booking.resource_key === 'T9');
-    const tooSmall = await repo.moveBookingToTable(ws.tenant, rows.find((x) => x.party_size >= 5)?.reference ?? b.reference, 'T2');
+    const tooSmall = await repo.moveBooking(ws.tenant, rows.find((x) => x.party_size >= 5)?.reference ?? b.reference, 'T2');
     assert.equal(tooSmall.ok, false);
   }
   await repo.resetTenantData(ws.tenant.id);

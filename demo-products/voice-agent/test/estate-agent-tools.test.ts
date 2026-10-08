@@ -15,7 +15,7 @@ import { compilePrompt } from '../src/core/prompt.ts';
 import { displayUkPhone } from '../src/domain/phone.ts';
 import { toLocal } from '../src/domain/time.ts';
 import { knownTimes, rangesIn } from '../src/domain/clock-times.ts';
-import { unsaid } from '../src/domain/listings.ts';
+import { unsaid, viewingRules } from '../src/domain/listings.ts';
 import type { Tenant, TenantProfile } from '../src/domain/types.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
 import { tenantState } from '../src/server/state.ts';
@@ -974,4 +974,17 @@ test('a message from the buyer or seller in a sale under way is the progressor\'
   // A complaint stays a complaint; someone not in a sale is routed as before.
   assert.equal((await msg('+447700900004', { message: 'I want to complain about the delays.', category: 'complaint' })).category, 'complaint');
   assert.equal((await msg('+447700900161', { message: "Our mortgage has been refused.", category: 'general' })).category, 'general');
+});
+
+test('a viewing moved to someone else never goes to the one with a personal interest in the home', async () => {
+  // The move generalised from tables to people (HANDOFF.md, known items): the home's rule holds there too.
+  const t = await agency('ea-move-interest');
+  const home = t.profile.listings!.find((l) => l.personal_interest)!;
+  const interested = home.personal_interest!.staff;
+  const other = t.profile.booking!.resources.find((r) => r.kind === 'staff' && r.key !== interested && r.services.includes('viewing') && (!r.days || r.days.includes(2)))!;
+  const made = await repo.createBooking(t, { service: 'viewing', date: TUE, time: '15:00', party_size: 1, name: 'Ivy Lane', phone: '+447700900321', staff: other.key, source: 'console', listing: viewingRules(home, t.profile, 'viewing') }, NOW);
+  assert.ok(made.ok, JSON.stringify(made));
+  const r = await repo.moveBooking(t, made.booking.reference, interested);
+  assert.equal(r.ok, false);
+  assert.match((r as { message: string }).message, /has a personal interest in this home, so can't show it/);
 });

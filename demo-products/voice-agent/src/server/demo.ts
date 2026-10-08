@@ -11,6 +11,7 @@ import type { Ctx } from './context.ts';
 import { BASE, HttpError, clientIp, cookie, eventStream, json, overHttps, readJson, sameOrigin, setCookie } from './http.ts';
 import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
 import { tenantState } from './state.ts';
+import { estateText } from '../core/estate-tools.ts';
 import { applyOffice, invoiceAction, jobAction, officeAction, propertyAction, type OfficeState } from './maintenance.ts';
 import type { DemoKey, Workspace } from '../db/demo-repo.ts';
 import { SHARED_DEMO_MINUTES, SHARED_DRAFT_MINUTES, THROTTLE, hashKey, ipHash, newVisitor, normaliseKey, prefixOf, readSession, signSession, withFreePin } from '../demo/access.ts';
@@ -499,16 +500,27 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     if (!booking) throw new HttpError(404, 'That booking is not in the diary.');
     let message = '';
     if (b.action === 'move') {
-      const r = await repo.moveBookingToTable(t, ref, String(b.table ?? ''));
+      // To another table, or another person ("to"): an estate agency's viewing now, the barber's appointments later.
+      const r = await repo.moveBooking(t, ref, String(b.to ?? b.table ?? ''));
       if (!r.ok) throw new HttpError(409, r.message);
-      message = `Moved to ${t.profile.booking?.resources.find((x) => x.key === r.booking.resource_key)?.label ?? r.booking.resource_key}.`;
+      const res = t.profile.booking?.resources.find((x) => x.key === r.booking.resource_key);
+      message = `Moved to ${res?.label ?? r.booking.resource_key}.`;
+      // They were told who they'd see, so they're told who instead; a table changes nothing for them.
+      if (r.from && res?.kind === 'staff' && b.notify !== false && r.booking.phone) {
+        const l = toLocal(r.booking.starts_at, t.profile.timezone);
+        const what = t.profile.booking?.services.find((x) => x.key === r.booking.service_key)?.label ?? 'appointment';
+        await textCustomer(ctx, t.id, r.booking.phone, t.profile.estate
+          ? estateText(t, r.booking, 'changed')
+          : `${t.profile.name}: your ${what} on ${spokenDate(l.date)} at ${spokenTime(l.time)} is now with ${res.label.split(' ')[0]}. Ref ${r.booking.reference}. (Demo)`);
+        message = `Moved to ${res.label}. ${r.booking.name} has been texted.`;
+      }
     } else if (b.action === 'combine') {
       if (!preset.combineTables) throw new HttpError(400, 'Nothing here can be pushed together.');
       // Push two tables together for this booking: the pair if it exists, or
       // join them in the setup (same area, both real) and then use the pair.
       const pair = await combineTables(ctx, w, preset, String(b.tables?.[0] ?? ''), String(b.tables?.[1] ?? ''));
       const fresh = (await demo.getWorkspace(t.id))!.tenant;
-      const r = await repo.moveBookingToTable(fresh, ref, pair);
+      const r = await repo.moveBooking(fresh, ref, pair);
       if (!r.ok) throw new HttpError(409, r.message);
       message = `Now on ${fresh.profile.booking?.resources.find((x) => x.key === pair)?.label ?? pair}.`;
     } else if (b.action === 'visit') {

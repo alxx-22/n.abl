@@ -556,6 +556,59 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
   }
 });
 
+test('demo: an estate agency moves a viewing to someone else in the team: they do viewings, work that day and are free; the buyer is texted', async () => {
+  // The move generalised from tables to people (HANDOFF.md, known items), ahead of the barber's.
+  assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Ash Kerr', company: 'Hartwell & Green' });
+  const ash = client('10.0.0.14');
+  assert.equal((await ash.call('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+  const made = await ash.call('POST', '/demo/api/workspaces', { preset: 'estate_agent' });
+  const path = `/demo/api/workspaces/${made.data.id}`;
+  assert.equal((await ash.call('POST', `${path}/start`)).status, 200);
+  const state = async () => (await ash.call('GET', `${path}/state`)).data;
+  const texts = async (phone: string) => (await ash.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
+  const move = (ref: string, to: string) => ash.call('PATCH', `${path}/bookings/${ref}`, { action: 'move', to });
+  const s = await state();
+  const wd = (date: string) => new Date(`${date}T12:00:00Z`).getUTCDay();
+  const viewings = s.bookings.filter((b: any) => b.listing_key && b.status === 'confirmed' && b.starts_at > s.now && b.phone);
+  // Someone who doesn't do viewings, and someone not in that day.
+  const v = viewings[0];
+  const noViewings = s.team.find((m: any) => !m.does.includes('viewings'));
+  if (noViewings) {
+    const r = await move(v.reference, noViewings.key);
+    assert.equal(r.status, 409);
+    assert.match(r.data.error, /doesn't do viewings/);
+  }
+  const off = viewings.flatMap((b: any) => s.team.filter((m: any) => m.does.includes('viewings') && !m.days.includes(wd(b.date))).map((m: any) => [b, m]))[0];
+  if (off) {
+    const r = await move(off[0].reference, off[1].key);
+    assert.equal(r.status, 409);
+    assert.match(r.data.error, /isn't working that day/);
+  }
+  // Someone who can: the first who takes it; the others are busy then.
+  let done: any = null;
+  for (const b of viewings) {
+    for (const m of s.team.filter((x: any) => x.key !== b.resource_key && x.does.includes('viewings') && x.days.includes(wd(b.date)))) {
+      const r = await move(b.reference, m.key);
+      if (r.status === 200) { done = { b, m, r }; break; }
+      assert.equal(r.status, 409);
+      assert.match(r.data.error, /busy at that time|personal interest/);
+    }
+    if (done) break;
+  }
+  assert.ok(done, 'a viewing moved to someone free');
+  assert.match(done.r.data.message, new RegExp(`^Moved to ${done.m.name}\\. .+ has been texted\\.$`));
+  const after = (await state()).bookings.find((x: any) => x.reference === done.b.reference);
+  assert.equal(after.resource_key, done.m.key);
+  assert.match(after.history.at(-1).what, new RegExp(`moved from .+ to ${done.m.name}`));
+  assert.match((await texts(done.b.phone)).at(-1), new RegExp(`viewing changed, .*with ${done.m.first_name}\\. Ref ${done.b.reference}`));
+  // Back again, quietly: notify false sends nothing.
+  const before = (await texts(done.b.phone)).length;
+  assert.equal((await ash.call('PATCH', `${path}/bookings/${done.b.reference}`, { action: 'move', to: done.b.resource_key, notify: false })).status, 200);
+  assert.equal((await texts(done.b.phone)).length, before);
+  assert.equal((await move(done.b.reference, 'nobody')).status, 409);
+});
+
 test('demo: an estate agency\'s sales: milestones, dates, updates, keys on completion day, and a sale that falls through', async () => {
   assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
   const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Dan Fletcher', company: 'Hartwell & Green' });

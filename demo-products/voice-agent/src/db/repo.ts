@@ -12,7 +12,7 @@ import type {
 } from '../domain/types.ts';
 import { checkSlot, findService, depositFor, resourceFree, type BusyInterval, type Unavailable } from '../domain/availability.ts';
 import type { ListingRule } from '../domain/listings.ts';
-import { addDays, normaliseTime, toLocal, zonedToUtc, isIsoDate } from '../domain/time.ts';
+import { addDays, normaliseTime, toLocal, zonedToUtc, isIsoDate, weekdayOf } from '../domain/time.ts';
 import type { SeedPlan } from '../presets/common/types.ts';
 
 export interface TenantSummary {
@@ -637,7 +637,11 @@ export class Repo {
   // ── Staff actions from the back office ─────────────────────────────────
 
   /** Put a booking on another table (or a pushed-together pair), keeping its time. */
-  async moveBookingToTable(tenant: Tenant, reference: string, resourceKey: string): Promise<{ ok: true; booking: Booking } | { ok: false; message: string }> {
+  /**
+   * Moves a booking to another resource at the same time, from the back office: a table that seats the party, or a
+   * person who does the service and works that day (an estate agency's viewing, and the barber's appointments to come).
+   */
+  async moveBooking(tenant: Tenant, reference: string, resourceKey: string): Promise<{ ok: true; booking: Booking; from: string | null } | { ok: false; message: string }> {
     return this.db.tx(async (q) => {
       await q.query('select id from public.voice_tenants where id = $1 for update', [tenant.id]);
       const rows = await q.query<any>(`select * from public.voice_bookings where tenant_id = $1 and reference = $2 and status = 'confirmed'`, [
@@ -647,19 +651,30 @@ export class Repo {
       const b = mapBooking(rows[0]);
       const resources = tenant.profile.booking?.resources ?? [];
       const r = resources.find((x) => x.key === resourceKey);
-      if (!r) return { ok: false as const, message: 'There is no such table.' };
-      if (r.key === b.resource_key) return { ok: true as const, booking: b };
-      if ((r.capacity ?? 0) < b.party_size) return { ok: false as const, message: `${r.label} seats ${r.capacity}; this booking is for ${b.party_size}.` };
+      const person = r?.kind === 'staff';
+      if (!r) return { ok: false as const, message: person ? 'There is no such person.' : 'There is no such table.' };
+      if (r.key === b.resource_key) return { ok: true as const, booking: b, from: null };
       const date = toLocal(b.starts_at, tenant.profile.timezone).date;
+      if (person) {
+        const service = tenant.profile.booking?.services.find((x) => x.key === b.service_key);
+        if (b.service_key && !r.services.includes(b.service_key)) return { ok: false as const, message: `${r.label} doesn't do ${service ? `${service.label}s` : 'that'}.` };
+        if (r.days && !r.days.includes(weekdayOf(date))) return { ok: false as const, message: `${r.label} isn't working that day.` };
+        // The home's viewing rules keep whoever has a personal interest in it from showing it, on a call or a move.
+        const home = b.listing_key ? tenant.profile.listings?.find((l) => l.key === b.listing_key) : undefined;
+        if (home?.personal_interest?.staff === r.key) return { ok: false as const, message: `${r.label} has a personal interest in this home, so can't show it.` };
+      } else if ((r.capacity ?? 0) < b.party_size) {
+        return { ok: false as const, message: `${r.label} seats ${r.capacity}; this booking is for ${b.party_size}.` };
+      }
       const existing = await this.busyForDate(tenant, date, q);
       if (!resourceFree(r.key, b.starts_at, b.ends_at, Number(rows[0].buffer_minutes ?? 0), existing, resources, b.id)) {
-        return { ok: false as const, message: `${r.label} is taken at that time.` };
+        return { ok: false as const, message: person ? `${r.label} is busy at that time.` : `${r.label} is taken at that time.` };
       }
+      const from = labelOf(resources, b.resource_key);
       const updated = await q.query<any>(
         `update public.voice_bookings set resource_key = $2, area_key = $3, history = history || $4::jsonb, updated_at = now() where id = $1 returning *`,
-        [b.id, r.key, r.area ?? b.area_key ?? null, historyEntry('staff', `moved from ${labelOf(resources, b.resource_key)} to ${r.label}`)],
+        [b.id, r.key, r.area ?? b.area_key ?? null, historyEntry('staff', `moved from ${from} to ${r.label}`)],
       );
-      return { ok: true as const, booking: mapBooking(updated[0]) };
+      return { ok: true as const, booking: mapBooking(updated[0]), from };
     });
   }
 
