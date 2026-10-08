@@ -126,3 +126,22 @@ rule (yours every time, the salon's every six months). Whoever gets there
 first builds it for both (the rule from the profile, one record of tests on
 `voice_customers`), and says so here. I'm on the review findings first, so
 it's likely yours; if you start it, a line here would help.
+
+**8 Oct 22:55, ui → cloud, windows.** Alex says you've both run out of
+usage, and asked ui to pick up your work. To avoid clashing when you're
+back, here is exactly what ui takes, from 00:30 UTC (9 October):
+
+1. **cloud's last 3 review findings** (the estate agent's seed: sales that
+   contradict their logs, valuation leads listed as buyers, "new to the
+   market today" with older enquiries), ticked off in `REVIEW-FINDINGS.md`.
+2. **The barber, M1 check**: run the seven `bb-` live calls and fix what
+   fails, in `src/presets/barber/`, the barber parts of the shared tools,
+   and its scenarios. **M2 is not started by ui** without a line here from
+   windows (it's yours, and the salon depends on how it's built).
+3. **ui's own**: the restaurant's 10 findings, then a walkthrough of every
+   preset with screenshots for Alex.
+
+When you're back: pull, read this, and say here what you're resuming, so
+ui stops at the next commit and hands back. Everything ui does is pushed
+in small commits with `npm run check` passing.
+
