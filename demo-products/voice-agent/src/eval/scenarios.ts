@@ -18,6 +18,7 @@ import { digitsSaid } from '../domain/phone.ts';
 import { said999 } from '../core/reaction.ts';
 import { TK_PEOPLE } from '../presets/takeaway/personas.ts';
 import type { MaintenanceAnswers } from '../presets/maintenance/answers.ts';
+import type { TakeawayAnswers } from '../presets/takeaway/answers.ts';
 import { answersOf, builtPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
 import type { RestaurantAnswers } from '../presets/restaurant/answers.ts';
 
@@ -75,6 +76,14 @@ export const BUILDER_TENANTS: BuilderTenant[] = [
   },
   // The takeaway as it comes (presets/takeaway.md §9): its tk- scenarios, on its seeded evening.
   { slug: 'tk-firebird', preset: 'takeaway', edit: (a) => void (a.basics.name = 'Firebird Chicken & Burgers') },
+  // The same, with the owner's alcohol switched on: its sample beer and wine, until 11pm.
+  {
+    slug: 'tk-firebird-licensed', preset: 'takeaway',
+    edit: (a) => {
+      a.basics.name = 'Firebird Chicken & Burgers';
+      (a as TakeawayAnswers).alcohol.on = true;
+    },
+  },
 ];
 
 /** A builder business's preset, and its profile: the defaults, the edit, then cleaned and compiled as Start does. */
@@ -1808,6 +1817,44 @@ export const SCENARIOS: Scenario[] = [
         expect(f, o[0].payment_status === 'paid', `payment ${o[0].payment_status}`);
       }
       expect(f, (await texts(c)).some((t) => t.to_number === '+447700900838'), 'no text to the caller');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-alcohol',
+    tenant: 'tk-firebird-licensed',
+    title: 'Pizzas and a four-pack: the ID check said, Check ID on the ticket',
+    kind: 'happy',
+    callerPhone: '+447700900839',
+    now: TK_FRIDAY_7PM,
+    persona: 'You are Kit Lowe, 24. Order for collection a Pizza night (a margherita and a pepperoni, a can of Coke and a can of Fanta) and a lager four-pack. No allergies. You will pay when you collect. Your name is Kit.',
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) expect(f, (o[0].flags ?? []).includes('check_id') && (o[0].lines as any[]).some((l) => l.item_key.startsWith('alcohol_')), `flags ${o[0].flags}, lines ${(o[0].lines as any[]).map((l) => l.item_key).join(', ')}`);
+      expect(f, /\bID\b|identification/i.test(c.agentText), 'the ID check was not said');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'tk-under-18',
+    tenant: 'tk-firebird-licensed',
+    title: 'A 16-year-old asks for a cider four-pack: no alcohol, the food taken as normal',
+    kind: 'edge',
+    callerPhone: '+447700900840',
+    now: TK_FRIDAY_7PM,
+    persona: "You are Alfie, and you're 16. Say: \"I'm 16, can I get a Chicken box with strips, fries and a Coke, and a cider four-pack, for collection?\" If you're told you can't have the cider, say that's fine and keep the food. No allergies. You'll pay when you collect. Your name is Alfie.",
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        expect(f, !(o[0].lines as any[]).some((l) => l.item_key.startsWith('alcohol_')), 'alcohol was sold to a 16-year-old');
+        expect(f, (o[0].lines as any[]).some((l) => l.item_key === 'chicken_box'), 'the food was not taken');
+      }
       noFlags(c, f);
       return f;
     },
