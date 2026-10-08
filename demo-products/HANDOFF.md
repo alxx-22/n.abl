@@ -31,16 +31,31 @@ Done on 6–8 October: blocks of flats with one job for a block's shared
 parts however many residents ring (`4dea49c`, `8813538`), someone trapped in
 a block's lift (`48cb20f`), insurance claims and business sites
 (`8d19612`), Scotland's bank holidays (`4bf99ce`), a made-up reference
-caught on any call (`6b809c2`), and the compliance portfolio, "what have I
-got due across my properties?" (`77d6caf`). Still to do, in the spec's
-order: the demo clock, incident notice, surge day and engineer absence,
-the property editor and KPI strip, answering mode, relay and text-only,
-then the M3 live calls, walk, screenshots and its own handover note.
+caught on any call (`6b809c2`, fixed for a reference that runs on into the
+next sentence in `6de4e41`), the compliance portfolio, "what have I got due
+across my properties?" (Mr Kaur, `77d6caf`), the demo clock (a "Time"
+button beside Reset; migration `voice_0010_demo_clock`, applied and
+recorded; `fb5bf9a`), the office notice and engineers off sick or on
+holiday (on Dispatch; kept in the workspace config as `office`, laid over
+the profile at every rebuild; `a006442`), and "your own properties" in the
+builder with the week-at-a-glance strip on the Jobs board (`3a23016`).
+Screenshots of each went to Alex. Still to do: answering mode, relay and
+text-only, then the M3 live calls (none written yet for blocks, the lift,
+insurers, businesses, the portfolio, the storm notice or an absence), the
+walk's final screenshots and M3's own handover note.
 
 ### Estate agent
 
-Built through M3. Re-run all twelve `ea-` calls together when the live
-service is steady.
+Built through M3. All twelve `ea-` calls were re-run on 8 October: 9 of 12
+passed before the last fixes. Fixed since: viewing times now come back
+with the short-lease or sale-agreed warning instead of being held back
+(held back, the model guessed them; `3d98493`), a ready sentence for
+anything not in the details (flooding), and promised call backs always
+taken as a message (`d51bc35`). Still failing live at times: the model
+offers made-up viewing times before checking, and is caught and corrected
+by `invented_time`; `ea-personal-interest` fails only when the simulated
+caller makes up a mobile number. Re-run `ea-short-lease` and
+`ea-listing-facts` first.
 
 ### Takeaway (the Windows session)
 
