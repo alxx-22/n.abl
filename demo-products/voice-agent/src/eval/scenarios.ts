@@ -1435,7 +1435,8 @@ export const SCENARIOS: Scenario[] = [
       expect(f, /77-?23455/.test(String(job?.claim_ref ?? job?.notes ?? '')), 'the claim number is not on the job');
       expect(f, (await texts(c)).some((t) => t.to_number === PM.shaw && /77-23455/.test(t.body)), 'the policyholder was not texted');
       expect(f, !/£\s?\d|\bpounds\b/i.test(c.agentText), 'a price was said to the insurer');
-      expect(f, /insurer|policy (?:wording|documents?)|not (?:for|something) (?:me|us) to say|can'?t (?:say|advise|comment)|(?:not able|unable) to (?:say|comment)|answered by Bramley|for Bramley|Bramley (?:Mutual )?(?:would|will|can|to) (?:need to )?(?:confirm|decide|say|answer)/i.test(c.agentText), 'the cover question was not answered as theirs to decide');
+      // Any way of saying it isn't ours to say: "I can't say", "I wouldn't be able to say", "check with Bramley".
+      expect(f, /\b(?:can'?t|cannot|won'?t|wouldn'?t be able to|not able to|unable to) (?:say|comment|advise|tell)|\b(?:check|confirm) with Bramley|answered by Bramley|for Bramley|\binsurer\b|policy (?:wording|documents?)/i.test(c.agentText), 'the cover question was not answered as theirs to decide');
       noFlags(c, f);
       return f;
     },
