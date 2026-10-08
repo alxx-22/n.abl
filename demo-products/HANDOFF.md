@@ -1,4 +1,4 @@
-# Handover: the receptionist demo service (6 October 2026)
+# Handover: the receptionist demo service (8 October 2026)
 
 For the next session. Read `CLAUDE.md` (rules and commands) first, then this.
 
@@ -10,7 +10,102 @@ read only the files a step needs, run `npm run check` before each commit,
 commit and push after each finished step. Tell Alex in plain words what was
 done after each step.
 
-## Pick up here first (the last session stopped at the weekly usage limit)
+## Pick up here first (8 October): two sessions, split by preset
+
+Alex split the work on 7 October so two sessions can run at once without
+touching the same files:
+
+- **The cloud session** keeps **property maintenance** (repairs, M3).
+- **The Windows session** (Alex's PC) took the **takeaway**, the next
+  preset in the order.
+
+Each pushes to `voice-agent-DEV` and rebases on the other's commits before
+pushing (`git -c core.autocrlf=false rebase origin/voice-agent-DEV`). Shared
+files (`src/core/tools.ts`, `guardrails.ts`, `call.ts`, `src/db/repo.ts`)
+take small, separate edits; neither session changes the other's preset.
+Migrations take the next free number when they're written.
+
+### Property maintenance M3 (the cloud session)
+
+Done on 6–8 October: blocks of flats with one job for a block's shared
+parts however many residents ring (`4dea49c`, `8813538`), someone trapped in
+a block's lift (`48cb20f`), insurance claims and business sites
+(`8d19612`), Scotland's bank holidays (`4bf99ce`), a made-up reference
+caught on any call (`6b809c2`), and the compliance portfolio, "what have I
+got due across my properties?" (`77d6caf`). Still to do, in the spec's
+order: the demo clock, incident notice, surge day and engineer absence,
+the property editor and KPI strip, answering mode, relay and text-only,
+then the M3 live calls, walk, screenshots and its own handover note.
+
+### Estate agent
+
+Built through M3. Re-run all twelve `ea-` calls together when the live
+service is steady.
+
+### Takeaway (the Windows session)
+
+The spec is `presets/takeaway.md`, the use cases
+`presets/takeaway-use-cases.md`. **M1 is built and live in the catalogue**
+(7 October):
+
+- Server preset `src/presets/takeaway/` (Firebird Chicken & Burgers,
+  Nottingham; menu `fixtures/presets/takeaway-menu.json`); meal deals in
+  `src/presets/food/deals.ts` (builder side) and `src/domain/deals.ts`
+  (on a call: allergy answers choice by choice, the meal and saving offers
+  made once, a no that stands, "a cheeseburger meal" is the deal).
+- The kitchen, `src/core/kitchen.ts`: every order counted by when it must
+  be ready, so collection and delivery share the slots; postcode zones
+  with their own fee and minimum; free delivery over an amount; last
+  orders, with everything handed over by closing; `get_wait_times`;
+  `find_order` (today, by number or the calling phone, never the address).
+- Paying the driver: asked once, with the change note on the ticket.
+  Guardrails: made-up time, made-up price, card surcharge.
+- Seed: a busy Friday (`src/presets/takeaway/seed.ts`); seeded orders move
+  on with the clock (`advanceSeedOrders`).
+- Back office: the kitchen board with an Out column, Drivers, and Call as
+  (`src/presets/takeaway/personas.ts`). Builder: seven steps
+  (`web/src/reception/builder/takeaway/`), with a Deals editor.
+- Goldens: `test/fixtures/takeaway/` (`node scripts/takeaway-goldens.ts`).
+  Walk: `--only takeaway`; screenshots in `eval-results/demo-ui/takeaway/`,
+  sent to Alex on 8 October.
+- The prompt at its largest is about 6,940 characters (limit 7,000): new
+  guidance goes in tool answers.
+
+**Live calls**, the ten `tk-` scenarios on `tk-firebird`
+(`src/eval/scenarios.ts`): the first run on 7 October passed 1 of 10. The
+fixes are in `14d89d5`, `81818cb`, `abc0a10` and `0092177`. The second
+run passed `tk-busy-wait`, `tk-deal-choices`,
+`tk-out-of-area`, `tk-where-is-order` and `tk-last-orders` (with
+`tk-meal-deal` from the first, 6 of 10). `tk-deal-allergy` and
+`tk-short-minimum` ended when the simulated caller went quiet; re-run
+before reading anything into them.
+
+**M2 has started** (8 October): `find_order` now takes `action`
+(`add_allergy`, `request_cancel`, `request_change`, `report_problem`);
+cancellations and changes are requests on the ticket with Accept and
+Refuse, texted either way; complaints are messages for the manager; the
+owner's late and missing-item settings; the pay-on-the-phone list; Call as
+Chris Bell (delivered, fries missing) and Dean Walsh (on the list).
+Migration `voice_0009_takeaway` (requests, flags, linked_to) is applied to
+Supabase and recorded. **Still to do for M2**, in this order: the
+guardrails `refund_claim` and `address_read_back`; the anaphylaxis script
+(its own detector and tool gate in `src/core/safety.ts`, not the repairs
+kinds; 999 first); sold out tonight and the notice ("delivery paused",
+"long waits") from a Menu tonight view; a big order taking two slots
+(`kitchen.big_order_mains`); additions riding with an earlier order
+(`linked_to`); the evals `tk-missing-item` and `tk-anaphylaxis`; the walk
+with the M2 screens; screenshots to Alex; this note.
+
+### Working on Windows
+
+The system git setting turns line endings into CRLF, which breaks the
+goldens, so the Windows session works in its own worktree checked out with
+LF (`git -c core.autocrlf=false` for checkout and rebase). The Gemini key
+is in `voice-agent/.env.local` (git-ignored, never printed). Live calls:
+`npm run eval -- --only tk-busy-wait,tk-meal-deal`. The walk needs
+`CHROME_PATH="C:/Program Files/Google/Chrome/Application/chrome.exe"`.
+
+## Earlier: picked up on 4 October (the session before stopped at the weekly usage limit)
 
 The session of 4 October stopped at 97% of Alex's weekly limit (it resets
 on Thursday 8 October, 15:00 UK time). Its last two checks' results were
