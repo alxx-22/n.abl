@@ -89,6 +89,8 @@ export interface CallState {
   messageTaken: boolean;
   /** end_call refuses once to end a "message" call with no message taken, never in a loop. */
   messageChecked: boolean;
+  /** A message promised to the caller and reminded once (call.ts), still owed when end_call comes; refused once more there. */
+  messageOwed: boolean;
   // The estate agent's (presets/estate-agent.md §4.4). Empty for every
   // other business, and read only by the estate tools and guardrails.
   /** Set at the start of an estate agency's call: its guardrails apply. */
@@ -175,7 +177,7 @@ export function newCallState(): CallState {
   return {
     lines: [], nextLine: 1, basketVersion: 0, reviewedKey: null, fulfilment: null,
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
-    heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false,
+    heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false, messageOwed: false,
     estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
@@ -1434,6 +1436,12 @@ const TOOLS: Record<string, Tool> = {
       if (/message/i.test(str(args.outcome) ?? '') && !ctx.state.messageTaken && !ctx.state.messageChecked && !ctx.state.safetyDone.length && !ctx.state.safety) {
         ctx.state.messageChecked = true;
         return { ok: false, message: 'No message has been taken, so nobody would call them back. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then say goodbye and use end_call.' };
+      }
+      // A live estate call on 8 October: the reminder after "I'll pass that request on to Jess" went unheeded, and the
+      // call ended "answered" with the promise still owed. Whatever the outcome says, the caller is waiting for that call.
+      if (ctx.state.messageOwed && !ctx.state.messageTaken && !ctx.state.safetyDone.length && !ctx.state.safety) {
+        ctx.state.messageOwed = false;
+        return { ok: false, message: 'You promised to pass a message on, and none has been taken: nobody would get back to them. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then tell them it has been passed on, say goodbye and use end_call.' };
       }
       // An estate agency's call on 3 October ended "booked" after book_valuation had said "not done": nothing was in the diary.
       if (ctx.state.estate && /book/i.test(str(args.outcome) ?? '') && ctx.state.committed.length === 0 && !ctx.state.bookedChecked) {

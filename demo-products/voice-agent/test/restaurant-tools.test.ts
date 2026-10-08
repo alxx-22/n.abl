@@ -211,6 +211,23 @@ test('restaurant tools: a call promised a call-back does not end until the messa
   assert.equal((await runTool('end_call', { outcome: 'booked' }, (await call(t)).ctx)).ok, true, 'other calls end as before');
 });
 
+test('restaurant tools: a message promised and reminded about is asked for once more at end_call, whatever the outcome', async () => {
+  const t = await restaurant('tools-message-owed');
+  const { ctx } = await call(t);
+  // A live call on 8 October: the reminder after "I'll pass that request on" went unheeded, and the call ended "answered".
+  ctx.state.messageChecked = true;
+  ctx.state.messageOwed = true;
+  const early = await runTool('end_call', { outcome: 'answered' }, ctx);
+  assert.equal(early.ok, false);
+  assert.match(String(early.message), /take_message/);
+  assert.equal((await runTool('end_call', { outcome: 'answered' }, ctx)).ok, true, 'refused once, never in a loop');
+  const taken = await call(t);
+  taken.ctx.state.messageChecked = true;
+  taken.ctx.state.messageOwed = true;
+  await runTool('take_message', { name: 'Chris Dale', message: 'Has 22 Albion Road ever flooded?' }, taken.ctx);
+  assert.equal((await runTool('end_call', { outcome: 'answered' }, taken.ctx)).ok, true, 'a message taken settles it');
+});
+
 test('restaurant tools: collection slots the kitchen can handle, and pay on collection', async () => {
   const t = await restaurant('tools-slots', (a) => {
     a.serve.collection = { enabled: true, prep_minutes: 20, slot_minutes: 15, per_slot: 1, evenings_only: true };

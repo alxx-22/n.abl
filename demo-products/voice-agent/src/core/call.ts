@@ -192,7 +192,8 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
   damp_blame: "[Correction from the system: never suggest the tenant caused damp or mould, or tell them how to live. Correct yourself kindly: it's for the landlord to look into, and it has been passed on.]",
   medical_advice: "[Correction from the system: never give health advice. Correct yourself: for anyone unwell, their GP or NHS 111, or 999 in an emergency.]",
   invented_time:
-    "[Correction from the system: no tool has given that time. Never offer a time you haven't checked: say sorry, you haven't checked yet, then call check_availability and offer only the times it returns.]",
+    // A live call on 8 October said sorry and then three more unchecked times in the same breath: stop at the sorry.
+    "[Correction from the system: no tool has given that time. Never offer a time you haven't checked. Say only \"Sorry, I haven't checked that yet, one moment\", then call check_availability, saying no time until it answers; offer only the times it returns.]",
   cover_advice: "[Correction from the system: never say what a policy covers or whether a claim will be paid. Correct yourself: that is for their insurer to confirm.]",
   invented_price: "[Correction from the system: no tool or fact gave that price. Correct yourself: say you can't price that on the phone; the engineer prices it on the visit, or it is a free quote, and give only the prices your tools return.]",
   card_surcharge: "[Correction from the system: there is no extra charge for paying by card, and a shop may not add one. Correct yourself now.]",
@@ -583,6 +584,7 @@ export class CallSession extends EventEmitter<CallEvents> {
       void this.toolQueue.then(() => {
         if (this.state.messageTaken || this.state.messageChecked || this.ended) return;
         this.state.messageChecked = true;
+        this.state.messageOwed = true;
         this.session?.sendText('[From the system: you told the caller you would pass this on, but no message has been taken. Take it now with take_message, using what they have already told you (name, number, what they want), without asking anything more. Then tell them it has been passed on.]');
       });
     }
