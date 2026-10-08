@@ -55,6 +55,11 @@
   "message": "Delivery orders need paying: take card on the phone, or let the driver take payment."
  },
  {
+  "step": "money",
+  "level": "warning",
+  "message": "Not a UK phone number, so left off the pay-on-the-phone list: 07700 9008."
+ },
+ {
   "step": "policies",
   "level": "warning",
   "message": "1 question needs both the question and its answer before the receptionist can use it."

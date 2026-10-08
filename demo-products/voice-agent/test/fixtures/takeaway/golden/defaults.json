@@ -660,6 +660,11 @@
   "pay_driver": "cash_or_card",
   "card_minimum_pence": null
  },
+ "after": {
+  "late_after_minutes": 15,
+  "missing_items": "manager",
+  "pay_on_phone_numbers": ["07700 900804"]
+ },
  "policies": {
   "halal": "chicken",
   "hygiene_rating": 5,

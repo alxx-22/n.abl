@@ -121,7 +121,9 @@
    }
   ],
   "kitchen": {
-   "last_orders_minutes": 120
+   "last_orders_minutes": 120,
+   "late_after_minutes": 15,
+   "missing_items": "manager"
   },
   "pay_driver": "cash_or_card"
  },

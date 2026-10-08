@@ -136,6 +136,11 @@
   "pay_driver": "cash_or_card",
   "card_minimum_pence": 0
  },
+ "after": {
+  "late_after_minutes": 15,
+  "missing_items": "manager",
+  "pay_on_phone_numbers": ["xxxxxxxxxxxxxxxxxxxx"]
+ },
  "policies": {
   "halal": "chicken",
   "hygiene_rating": 5,

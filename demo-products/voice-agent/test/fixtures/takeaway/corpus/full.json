@@ -634,6 +634,11 @@
   "pay_driver": "cash",
   "card_minimum_pence": 500
  },
+ "after": {
+  "late_after_minutes": 30,
+  "missing_items": "send_out",
+  "pay_on_phone_numbers": []
+ },
  "policies": {
   "halal": "all",
   "hygiene_rating": 4,

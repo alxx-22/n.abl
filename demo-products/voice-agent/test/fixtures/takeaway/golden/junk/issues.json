@@ -23,5 +23,10 @@
   "step": "deals",
   "level": "warning",
   "message": "Junk: the \"Thing\" choice has nothing on the menu to choose from, so the deal is left out until you fix it."
+ },
+ {
+  "step": "money",
+  "level": "warning",
+  "message": "Not a UK phone number, so left off the pay-on-the-phone list: xxxxxxxxxxxxxxxxxxxx."
  }
 ]

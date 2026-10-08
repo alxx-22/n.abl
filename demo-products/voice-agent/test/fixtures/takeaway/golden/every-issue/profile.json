@@ -670,7 +670,9 @@
    }
   ],
   "kitchen": {
-   "last_orders_minutes": 15
+   "last_orders_minutes": 15,
+   "late_after_minutes": 15,
+   "missing_items": "manager"
   },
   "pay_driver": "no"
  },

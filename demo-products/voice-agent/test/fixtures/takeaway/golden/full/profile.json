@@ -858,7 +858,9 @@
    }
   ],
   "kitchen": {
-   "last_orders_minutes": 30
+   "last_orders_minutes": 30,
+   "late_after_minutes": 30,
+   "missing_items": "send_out"
   }
  },
  "policies": {

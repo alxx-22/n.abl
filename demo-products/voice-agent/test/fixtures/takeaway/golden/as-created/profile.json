@@ -949,9 +949,12 @@
    }
   ],
   "kitchen": {
-   "last_orders_minutes": 15
+   "last_orders_minutes": 15,
+   "late_after_minutes": 15,
+   "missing_items": "manager"
   },
-  "pay_driver": "cash_or_card"
+  "pay_driver": "cash_or_card",
+  "pay_on_phone": ["+447700900804"]
  },
  "policies": {
   "card_payments": "There's no extra charge for paying by card."

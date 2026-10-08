@@ -60,6 +60,11 @@
   "pay_driver": "gold",
   "card_minimum_pence": -3
  },
+ "after": {
+  "late_after_minutes": "soon",
+  "missing_items": "refund",
+  "pay_on_phone_numbers": [7,"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"]
+ },
  "policies": {
   "halal": "some",
   "hygiene_rating": "five",
