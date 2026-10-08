@@ -51,11 +51,14 @@ passed before the last fixes. Fixed since: viewing times now come back
 with the short-lease or sale-agreed warning instead of being held back
 (held back, the model guessed them; `3d98493`), a ready sentence for
 anything not in the details (flooding), and promised call backs always
-taken as a message (`d51bc35`). Still failing live at times: the model
-offers made-up viewing times before checking, and is caught and corrected
-by `invented_time`; `ea-personal-interest` fails only when the simulated
-caller makes up a mobile number. Re-run `ea-short-lease` and
-`ea-listing-facts` first.
+taken as a message (`d51bc35`). Later on 8 October a message promised
+and then forgotten is stopped at hang-up and taken (`5406d7f`), and the
+correction for an unchecked viewing time stops at "sorry, one moment".
+Re-run on that code: `ea-short-lease`, `ea-listing-facts` and
+`ea-personal-interest` all pass. Still seen at times: the model offers
+viewing times before checking, caught and corrected by `invented_time`
+(the scenario then fails on the flag, as it should); `ea-personal-interest`
+fails only when the simulated caller makes up a mobile number.
 
 ### Takeaway (the Windows session)
 
