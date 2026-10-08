@@ -771,6 +771,15 @@ test('find_party: who the calling number is to us, from their own records; never
   assert.equal((await party(null)).known, false);
 });
 
+test('get_marketing_update: an offer the seller came back on is waiting for the buyer, never "about to be put to you"', async () => {
+  const t = await agency('ea-vendor-countered');
+  const larkspur = (await repo.listOffers(t.id)).find((o) => o.status === 'sent' && o.amount_pence === 28_500_000)!;
+  await repo.setOfferStatus(t.id, larkspur.reference, 'countered', { note: 'Seller would take £295,000', from: ['sent'] });
+  const u = await (await call(t, '+447700900001')).run('get_marketing_update', { property: 'Larkspur Close' });
+  assert.match(String(u.say), /An offer of £285,000 from a first-time buyer, mortgage agreed in principle: you came back to them, and we're waiting for their answer\.$/);
+  assert.doesNotMatch(String(u.say), /about to be put to you/);
+});
+
 test('get_marketing_update: the seller of that home only, checked by number; viewings, feedback and offers by position, never names', async () => {
   const t = await agency('ea-vendor');
   const sarah = await call(t, '+447700900001');

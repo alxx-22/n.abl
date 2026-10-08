@@ -749,7 +749,8 @@ async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
   const agent = t.profile.team?.find((s) => s.key === home.negotiator)?.first_name ?? 'We';
   const name = t.profile.name;
   const note = typeof b.note === 'string' ? b.note.trim().slice(0, 300) || null : null;
-  const OPEN: OfferStatus[] = ['received', 'sent'];
+  // A countered offer is still open: the buyer may meet the seller, or walk away, and hears if another is accepted (review, 8 October).
+  const OPEN: OfferStatus[] = ['received', 'sent', 'countered'];
   const yours = `your offer of ${figure(offer.amount_pence)} for ${where}`;
   const text = (body: string) => textCustomer(ctx, t.id, offer.phone, `${name}: ${body} (Demo)`);
   /** Moves the offer on only from an open status, in one statement: a second click finds it decided. */

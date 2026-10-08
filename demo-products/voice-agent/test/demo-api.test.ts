@@ -609,6 +609,42 @@ test('demo: an estate agency moves a viewing to someone else in the team: they d
   assert.equal((await move(done.b.reference, 'nobody')).status, 409);
 });
 
+test('demo: an estate agency: an offer the seller countered can still be accepted, declined or withdrawn, and hears when another is accepted', async () => {
+  assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
+  const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Cal Moss', company: 'Moss Homes' });
+  const cal = client('10.0.0.16');
+  assert.equal((await cal.call('POST', '/demo/api/session', { key: key.data.key })).status, 200);
+  const made = await cal.call('POST', '/demo/api/workspaces', { preset: 'estate_agent' });
+  const path = `/demo/api/workspaces/${made.data.id}`;
+  assert.equal((await cal.call('POST', `${path}/start`)).status, 200);
+  const s = (await cal.call('GET', `${path}/state`)).data;
+  const texts = async (phone: string) => (await cal.call('GET', `${path}/phone?number=${encodeURIComponent(phone)}`)).data.messages.map((m: any) => m.body);
+  const act = (ref: string, action: string) => cal.call('PATCH', `${path}/offers/${ref}`, { action });
+  const tenant = (await app.repo.getTenantById(made.data.id))!;
+  const homes = s.listings.filter((l: any) => l.status === 'available' && !s.offers.some((o: any) => o.listing_key === l.key && ['received', 'sent', 'countered'].includes(o.status)));
+  const offer = (home: any, amount: number, name: string, phone: string) => app.repo.createOffer(tenant, { listing_key: home.key, amount_pence: amount, buyer_names: [name], phone, source: 'console' });
+  // Countered, then the buyer meets the seller halfway: the countered offer is accepted.
+  const a = await offer(homes[0], 25_000_000, 'Tia Bell', '+447700900781');
+  assert.equal((await act(a.reference, 'counter')).status, 200);
+  const took = await act(a.reference, 'accept');
+  assert.equal(took.status, 200, JSON.stringify(took.data));
+  assert.match((await texts('07700 900781')).at(-1), /accepted your offer/);
+  // Countered, then the buyer walks away: withdrawn. Countered, then the seller says no after all: declined.
+  const b = await offer(homes[1], 25_000_000, 'Max Hale', '+447700900782');
+  await act(b.reference, 'counter');
+  assert.equal((await act(b.reference, 'withdraw')).status, 200);
+  const c = await offer(homes[2], 25_000_000, 'Ola Penn', '+447700900783');
+  await act(c.reference, 'counter');
+  assert.equal((await act(c.reference, 'decline')).status, 200);
+  // Countered, and the seller accepts someone else's: the countered buyer is told, like any other bidder.
+  const d = await offer(homes[3], 25_000_000, 'Jo Reed', '+447700900784');
+  await act(d.reference, 'counter');
+  const rival = await offer(homes[3], 26_000_000, 'Kit Lowe', '+447700900785');
+  const won = await act(rival.reference, 'accept');
+  assert.match(won.data.message, /1 other buyer has been told/);
+  assert.match((await texts('07700 900784')).at(-1), /has accepted another offer, subject to contract/);
+});
+
 test('demo: an estate agency\'s sales: milestones, dates, updates, keys on completion day, and a sale that falls through', async () => {
   assert.equal((await team.call('POST', '/demo/api/admin/login', { password: 'team-pass' })).status, 200);
   const key = await team.call('POST', '/demo/api/admin/keys', { person_name: 'Dan Fletcher', company: 'Hartwell & Green' });

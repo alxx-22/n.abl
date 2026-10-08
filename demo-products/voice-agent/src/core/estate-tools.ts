@@ -1086,7 +1086,7 @@ async function getMarketingUpdate(args: Args, ctx: ToolContext): Promise<Record<
     `${cap(count(week.length, 'viewing'))} in the last seven days, ${count(launched, 'viewing')} since it went on the market${ahead.length ? `, and ${count(ahead.length, 'more', 'more')} booked: ${[...new Set(ahead.map((b) => dayWords(when(b.starts_at).date, day)))].join(' and ')}` : ''}.`,
     heard.join(' '),
     open.length
-      ? open.map((o) => `An offer of ${poundsWhole(o.amount_pence)} from ${positionWords(o.position ?? {}, o.buyer_names.length).replace(/\.$/, '').replace(/^([A-Z])/, (c) => `a ${c.toLowerCase()}`) || 'a buyer'}, ${o.status === 'sent' ? 'with you to consider' : 'about to be put to you'}.`).join(' ')
+      ? open.map((o) => `An offer of ${poundsWhole(o.amount_pence)} from ${positionWords(o.position ?? {}, o.buyer_names.length).replace(/\.$/, '').replace(/^([A-Z])/, (c) => `a ${c.toLowerCase()}`) || 'a buyer'}${o.status === 'sent' ? ', with you to consider' : o.status === 'countered' ? ": you came back to them, and we're waiting for their answer" : ', about to be put to you'}.`).join(' ')
       : 'No offers at the moment.',
   ].filter(Boolean).join(' ');
   return {

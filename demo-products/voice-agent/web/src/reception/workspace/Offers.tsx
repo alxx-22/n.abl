@@ -12,8 +12,9 @@ import { OFFER_STATUS, pounds, positionBadges, waited, when } from './estate.ts'
 
 const COLUMNS: { label: string; has: (o: LiveOffer) => boolean }[] = [
   { label: 'Received', has: (o) => o.status === 'received' },
-  { label: 'Sent to seller', has: (o) => o.status === 'sent' },
-  { label: 'Decided', has: (o) => !['received', 'sent'].includes(o.status) },
+  // Countered is still in play: the buyer's answer is awaited.
+  { label: 'Sent to seller', has: (o) => o.status === 'sent' || o.status === 'countered' },
+  { label: 'Decided', has: (o) => !['received', 'sent', 'countered'].includes(o.status) },
 ];
 
 const FLAGS: Record<string, string> = {
@@ -46,7 +47,7 @@ function OfferCard({ id, o, nowMs, nation, tz, onDone }: { id: string; o: LiveOf
   const [busy, setBusy] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [viewings, setViewings] = useState(true);
-  const open = o.status === 'received' || o.status === 'sent';
+  const open = o.status === 'received' || o.status === 'sent' || o.status === 'countered';
   const wait = o.status === 'received' ? waited(o.received_at, nowMs, nation, tz) : null;
   const act = async (body: Record<string, unknown>) => {
     setBusy(true);
