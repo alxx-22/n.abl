@@ -9,7 +9,7 @@
 import { EventEmitter } from 'node:events';
 import type { Config } from '../config.ts';
 import type { Repo } from '../db/repo.ts';
-import type { Tenant } from '../domain/types.ts';
+import type { MtNotice, Tenant } from '../domain/types.ts';
 import { LiveSession, connectWithFallback, type FunctionCall, type LiveSetup, type UsageMetadata } from './live.ts';
 import { compilePrompt } from './prompt.ts';
 import {
@@ -84,10 +84,13 @@ export interface CallSummary {
  * has this job in hand hears it.
  */
 export interface CallNote {
-  kind: 'approved' | 'declined' | 'accepted' | 'repaged';
+  kind: 'approved' | 'declined' | 'accepted' | 'repaged' | 'notice';
+  /** The job it is about; empty for the office's notice, which is for every call. */
   job: string;
   /** For the receptionist, in the system's words. */
   text: string;
+  /** The office's new notice (null when taken down), for this call's tools too. */
+  notice?: MtNotice | null;
 }
 
 export interface CallOptions {
@@ -818,7 +821,16 @@ export class CallSession extends EventEmitter<CallEvents> {
    * called booked, an accepting engineer named) and the receptionist is told.
    */
   note(n: CallNote): void {
-    if (this.ended || !this.state.jobsVerified.includes(n.job)) return;
+    if (this.ended) return;
+    if (n.kind === 'notice') {
+      // Every call hears the office's notice, and its tools read it from here on (a copy: the tenant may be shared).
+      const t = this.opts.tenant;
+      if (!t.profile.maintenance) return;
+      (this.opts as { tenant: Tenant }).tenant = { ...t, profile: { ...t.profile, maintenance: { ...t.profile.maintenance, notice: n.notice ?? null } } };
+      this.sendText(`[From the system: ${n.text}]`);
+      return;
+    }
+    if (!this.state.jobsVerified.includes(n.job)) return;
     if (n.kind === 'approved' || n.kind === 'declined') this.state.awaitingApproval = false;
     if (n.kind === 'accepted') this.state.paged = false;
     if (n.kind === 'approved') record(this, n.job, 'job', 'committed');

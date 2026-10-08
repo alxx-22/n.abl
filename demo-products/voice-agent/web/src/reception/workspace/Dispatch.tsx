@@ -5,9 +5,9 @@
 // cover, and says why. Tonight's on-call pair sits on top; jobs not yet in
 // a window wait in the tray.
 
-import { useState, type DragEvent } from 'react';
+import { useState, type DragEvent, type FormEvent } from 'react';
 import type { LiveEngineer, LiveJob, LiveMtWindow, LiveState } from '../types.ts';
-import { PRIORITY, hhmm, jobAct } from './maintenance.ts';
+import { PRIORITY, hhmm, jobAct, officeAct } from './maintenance.ts';
 
 const day = (iso: string) => new Date(`${iso}T12:00:00Z`);
 const label = (iso: string, today: string) =>
@@ -36,6 +36,7 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
   };
   return (
     <div className="dispatch">
+      <OfficeNotice id={id} state={state} onDone={onDone} />
       <p className="on-call small">
         <b>On call tonight:</b> {m?.on_call_tonight.length ? m.on_call_tonight.join(' and ') : 'nobody'} · duty manager {m?.duty_manager}
       </p>
@@ -58,12 +59,27 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
           </thead>
           <tbody>
             {engineers.map((e) => {
-              const off = !e.days.includes(day(date).getUTCDay());
+              // Off: not their working day, or off sick or on holiday (from the office board) through that day.
+              const away = e.off && date <= e.off.to ? e.off : null;
+              const off = !e.days.includes(day(date).getUTCDay()) || Boolean(away);
               return (
                 <tr key={e.key} className={off ? 'off' : ''}>
                   <th scope="row">
                     {e.first_name}
                     <span className="muted small"> {e.gas_safe ? 'Gas Safe · ' : ''}{e.trades.map((t) => m?.trades.find((x) => x.key === t)?.label.split(/[,;]| and /)[0] ?? `${t[0].toUpperCase()}${t.slice(1).replace(/_/g, ' ')} (off)`).join(', ')}</span>
+                    <span className="row-tools small">
+                      {e.off ? (
+                        <>
+                          <span className="badge warn">{e.off.reason === 'sick' ? 'Off sick' : 'On holiday'}</span>
+                          <button type="button" className="linkish" onClick={() => void officeAct(id, { action: 'back', engineer: e.key }, onDone)}>Back</button>
+                        </>
+                      ) : (
+                        <>
+                          <button type="button" className="linkish" onClick={() => void officeAct(id, { action: 'absent', engineer: e.key, reason: 'sick', days: 1 }, onDone)}>Off sick today</button>
+                          <button type="button" className="linkish" onClick={() => void officeAct(id, { action: 'absent', engineer: e.key, reason: 'holiday', days: 7 }, onDone)}>Holiday, a week</button>
+                        </>
+                      )}
+                    </span>
                   </th>
                   {windows.map((w) => {
                     const cell = `${e.key}|${w.key}`;
@@ -77,7 +93,12 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
                         onDrop={(ev) => drop(ev, e, w)}
                         aria-label={`${e.first_name}, ${w.label}: ${here.length} of ${e.per_window}`}
                       >
-                        {off ? <span className="muted small">Off</span> : here.map((j) => <JobChip key={j.reference} j={j} fresh={flash.has(j.reference)} />)}
+                        {off ? (
+                          <>
+                            <span className="muted small">{away ? (away.reason === 'sick' ? 'Off sick' : 'On holiday') : 'Off'}</span>
+                            {here.map((j) => <JobChip key={j.reference} j={j} fresh={flash.has(j.reference)} />)}
+                          </>
+                        ) : here.map((j) => <JobChip key={j.reference} j={j} fresh={flash.has(j.reference)} />)}
                       </td>
                     );
                   })}
@@ -97,13 +118,40 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
   );
 }
 
+/** The office's notice for today: every call hears it; "emergencies only" books nothing else (surge day). */
+function OfficeNotice({ id, state, onDone }: { id: string; state: LiveState; onDone: () => void }) {
+  const notice = state.maintenance?.notice ?? null;
+  const [text, setText] = useState('');
+  const [only, setOnly] = useState(false);
+  const put = (e: FormEvent) => {
+    e.preventDefault();
+    if (text.trim()) void officeAct(id, { action: 'notice', text, emergencies_only: only }, () => { setText(''); onDone(); });
+  };
+  if (notice) {
+    return (
+      <div className="office-notice on" role="status">
+        <b>Notice on every call:</b> {notice.text}{notice.emergencies_only ? <span className="badge bad">Emergencies only</span> : null}
+        <button type="button" onClick={() => void officeAct(id, { action: 'notice', text: '' }, onDone)}>Take down</button>
+      </div>
+    );
+  }
+  return (
+    <form className="office-notice" onSubmit={put}>
+      <label htmlFor="office-notice-text" className="small"><b>Office notice</b> for every call today</label>
+      <input id="office-notice-text" value={text} maxLength={140} placeholder="Storm Ellen: roofers on make-safe only today" onChange={(e) => setText(e.target.value)} />
+      <label className="small check"><input type="checkbox" checked={only} onChange={(e) => setOnly(e.target.checked)} /> Emergencies only</label>
+      <button type="submit" disabled={!text.trim()}>Put up</button>
+    </form>
+  );
+}
+
 function JobChip({ j, fresh }: { j: LiveJob; fresh: boolean }) {
   return (
     <span
-      className={`chip ${j.priority} ${fresh ? 'new' : ''}`}
+      className={`chip ${j.priority} ${fresh ? 'new' : ''} ${j.engineer_off ? 'needs-move' : ''}`}
       draggable={['new', 'scheduled', 'waiting'].includes(j.status)}
       onDragStart={(e) => e.dataTransfer.setData('text/plain', j.reference)}
-      title={`${PRIORITY[j.priority].label}: ${j.description} (${j.status.replace(/_/g, ' ')})`}
+      title={`${PRIORITY[j.priority].label}: ${j.description} (${j.status.replace(/_/g, ' ')})${j.engineer_off ? '. Its engineer is off: drag it to someone else.' : ''}`}
     >
       {j.address?.split(' (example)')[0] ?? j.reference} · {j.trade_label.split(/[,;]| and /)[0]}{j.flags.includes('gas') && !/gas/i.test(j.trade_label.split(/[,;]| and /)[0]) ? ' · gas' : ''}{j.status === 'on_the_way' ? ' · on the way' : j.status === 'on_site' ? ' · on site' : j.status === 'waiting' ? ' · waiting' : ''}
     </span>

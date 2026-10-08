@@ -58,7 +58,7 @@ export function checkWindow(m: MaintenanceSettings, jobs: readonly (Job | Omit<J
   if (!window) return { ok: false, reason: 'no_window' };
   const weekday = weekdayOf(q.date);
   if (!window.days.includes(weekday)) return { ok: false, reason: 'not_that_day', window };
-  const able = m.engineers.filter((e) => (!q.engineer || e.key === q.engineer) && e.days.includes(weekday) && !unable(m, e, q));
+  const able = m.engineers.filter((e) => (!q.engineer || e.key === q.engineer) && e.days.includes(weekday) && !absentOn(m, e.key, q.date) && !unable(m, e, q));
   if (!able.length) return { ok: false, reason: 'nobody', window };
   const free = able.filter((e) => windowLoad(m, jobs, e.key, q.date, window, q.exclude) < e.per_window);
   return free.length ? { ok: true, window, engineers: free } : { ok: false, reason: 'full', window };
@@ -108,5 +108,9 @@ export const windowAt = (m: MaintenanceSettings, date: string, time: string) =>
 export function onCallAt(m: MaintenanceSettings, date: string, time: string): MtEngineer[] {
   const night = minutesOf(time) < 12 * 60 ? addDays(date, -1) : date;
   const keys = m.on_call.nights.find((n) => n.day === weekdayOf(night))?.engineers ?? [];
-  return keys.map((k) => m.engineers.find((e) => e.key === k)).filter((e): e is MtEngineer => e !== undefined);
+  return keys.filter((k) => !absentOn(m, k, night)).map((k) => m.engineers.find((e) => e.key === k)).filter((e): e is MtEngineer => e !== undefined);
 }
+
+/** Why an engineer is off on a date (the back office's absences), if they are. */
+export const absentOn = (m: Pick<MaintenanceSettings, 'absent'>, engineer: string, date: string) =>
+  (m.absent ?? []).find((a) => a.engineer === engineer && a.from <= date && date <= a.to);

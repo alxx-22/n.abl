@@ -535,7 +535,15 @@ export interface MaintenanceSettings {
   gas: string;
   complaints_handler: string;
   data_lead: string;
+  // Set in the back office during the day, never compiled from the builder's answers (server/maintenance.ts, applyOffice).
+  /** The office's notice for today ("Storm Ellen: emergencies only"), heard on every call. */
+  notice?: MtNotice | null;
+  /** Engineers off: no new visits go to them on those days, and their booked jobs are flagged to move. */
+  absent?: MtAbsence[];
 }
+
+export interface MtNotice { text: string; emergencies_only: boolean; at: string }
+export interface MtAbsence { engineer: string; from: string; to: string; reason: 'sick' | 'holiday' }
 
 /** A buyer's position, as viewings, offers and registrations take it. */
 export interface BuyerPosition {

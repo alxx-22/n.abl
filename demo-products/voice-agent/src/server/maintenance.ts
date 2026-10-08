@@ -11,8 +11,8 @@ import type { Bus } from './bus.ts';
 import { certState } from '../core/maintenance-tools.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { addDays, isIsoDate, spokenDate, spokenTime, toLocal, tenantNow } from '../domain/time.ts';
-import type { Job, JobStatus, Tenant } from '../domain/types.ts';
-import { checkWindow, freeWindows, onCallAt, unable, windowOf } from '../domain/windows.ts';
+import type { Job, JobStatus, MtAbsence, MtNotice, Tenant, TenantProfile } from '../domain/types.ts';
+import { absentOn, checkWindow, freeWindows, onCallAt, unable, windowOf } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
 import { safetyScript, type SafetyKind } from '../presets/maintenance/nations.ts';
 import { shortAddress } from '../presets/maintenance/properties.ts';
@@ -44,8 +44,12 @@ export async function maintenanceState(repo: Repo, t: Tenant, now: Date) {
       escalate_minutes: m.on_call.escalate_minutes,
       reminder_weeks: m.planned.reminder_weeks,
       attend_hours: m.priorities.emergency.attend_hours,
+      notice: m.notice ?? null,
     },
-    engineers: m.engineers.map((e) => ({ ...e, mobile: mobile(e.key) })),
+    engineers: m.engineers.map((e) => {
+      const off = absentOn(m, e.key, today);
+      return { ...e, mobile: mobile(e.key), off: off ? { reason: off.reason, to: off.to } : null };
+    }),
     // The authorisers' phones are the second device: approvals are pressed there.
     clients: m.clients.map((c) => ({
       key: c.key, name: c.name, kind: c.kind, works_limit_pence: c.works_limit_pence, emergency_authority_pence: c.emergency_authority_pence,
@@ -67,6 +71,8 @@ export async function maintenanceState(repo: Repo, t: Tenant, now: Date) {
         clocks: j.clocks, flags: j.flags, waiting_for: j.waiting_for, access_attempts: j.access_attempts, notes: j.notes,
         history: j.history.slice(-6), source: j.source, created_at: j.created_at.toISOString(), done_at: j.done_at?.toISOString() ?? null,
         pets: p?.notes.pets || null, vulnerable: p?.vulnerable ?? [],
+        // Booked with someone now off that day: the board flags it to move.
+        engineer_off: Boolean(j.engineer_key && j.visit_date && OPEN.includes(j.status) && absentOn(m, j.engineer_key, j.visit_date)),
       };
     }),
     properties: props.map((p) => ({
@@ -104,6 +110,43 @@ export async function maintenanceState(repo: Repo, t: Tenant, now: Date) {
 }
 
 const OPEN: JobStatus[] = ['new', 'scheduled', 'awaiting_approval', 'waiting'];
+
+/** What the office changes during the day, kept with the workspace so a rebuild from the builder keeps it. */
+export interface OfficeState { notice?: MtNotice | null; absent?: MtAbsence[] }
+
+/** The profile with the office's notice and absences on it: a repairs contractor's only. */
+export function applyOffice(profile: TenantProfile, office: OfficeState | undefined): TenantProfile {
+  if (!profile.maintenance || !office) return profile;
+  return { ...profile, maintenance: { ...profile.maintenance, notice: office.notice ?? null, absent: office.absent ?? [] } };
+}
+
+/**
+ * The office's day (presets/property-maintenance-use-cases.md, surge day and engineer absence): a notice every
+ * call hears ("Storm Ellen: emergencies only today"), or an engineer off sick or on holiday, then back.
+ */
+export async function officeAction(repo: Repo, t: Tenant, office: OfficeState, b: any, now: Date): Promise<{ office: OfficeState; message: string; notice?: MtNotice | null }> {
+  const m = t.profile.maintenance;
+  if (!m) throw new HttpError(400, 'Only a repairs contractor has an office board.');
+  const today = toLocal(now, t.profile.timezone).date;
+  if (b.action === 'notice') {
+    const text = String(b.text ?? '').replace(/\s+/g, ' ').trim().slice(0, 140);
+    const notice: MtNotice | null = text ? { text, emergencies_only: b.emergencies_only === true, at: now.toISOString() } : null;
+    return { office: { ...office, notice }, notice, message: notice ? `Notice on: ${text}${notice.emergencies_only ? ' (emergencies only)' : ''}.` : 'Notice cleared.' };
+  }
+  const e = m.engineers.find((x) => x.key === String(b.engineer ?? ''));
+  if (!e) throw new HttpError(400, 'Which engineer?');
+  const others = (office.absent ?? []).filter((a) => a.engineer !== e.key || a.to < today);
+  if (b.action === 'back') return { office: { ...office, absent: others }, message: `${e.first_name} is back.` };
+  if (b.action !== 'absent') throw new HttpError(400, 'Unknown action.');
+  const reason = b.reason === 'holiday' ? 'holiday' : 'sick';
+  const days = Math.min(14, Math.max(1, Math.round(Number(b.days) || 1)));
+  const to = addDays(today, days - 1);
+  const moving = (await repo.listJobs(t.id)).filter((j) => j.engineer_key === e.key && j.visit_date && j.visit_date >= today && j.visit_date <= to && OPEN.includes(j.status));
+  return {
+    office: { ...office, absent: [...others, { engineer: e.key, from: today, to, reason }] },
+    message: `${e.first_name} is off ${reason === 'sick' ? 'sick' : 'on holiday'}${days > 1 ? ` until ${spokenDate(to)}` : ' today'}. ${moving.length ? `${moving.length} of their jobs need${moving.length === 1 ? 's' : ''} a new time: they're flagged on the board.` : 'None of their jobs need moving.'}`,
+  };
+}
 
 /**
  * A staff or engineer action on a job: assign or move it (through the

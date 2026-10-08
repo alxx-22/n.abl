@@ -317,3 +317,13 @@ test('a note from off the call: only a call with that job in hand hears it, and 
   assert.equal(c.flags().length, before, `no flag once approved: ${c.flags().join(', ')}`);
   await c.end();
 });
+
+test('a repairs call in progress hears the office notice the moment it goes up, and its tools say it from then on', async () => {
+  const c = await call(fernhill, '+447700900502');
+  const notice = { text: 'Storm Ellen: emergencies only today', emergencies_only: true, at: NOW.toISOString() };
+  c.note({ kind: 'notice', job: '', text: `The office has just put up a notice for today: "${notice.text}".`, notice });
+  assert.ok(c.reminders().some((t) => t.includes('Storm Ellen: emergencies only today')));
+  const tri = await c.tool('triage_fault', { description: 'A few slates have slipped' });
+  assert.equal(tri.office_notice, 'Storm Ellen: emergencies only today');
+  assert.equal(fernhill.profile.maintenance!.notice ?? null, null, 'the shared tenant is left as it was');
+});

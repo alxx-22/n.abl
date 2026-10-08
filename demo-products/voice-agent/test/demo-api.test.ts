@@ -745,6 +745,18 @@ test('demo: a workspace\'s own clock: a Friday night set, the week starts again 
   assert.equal(state.today, date);
   assert.match(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' }).format(new Date(state.now)), /^21:0[0-2]$/);
   assert.ok(state.maintenance.on_call_tonight.length, 'Friday night has engineers on call');
+  // The office's day: a notice and an engineer off, kept through a rebuild from the builder (the Voice settings).
+  const posted = await owen.call('POST', `${path}/office`, { action: 'notice', text: 'Storm Ellen: emergencies only today', emergencies_only: true });
+  assert.deepEqual([posted.status, posted.data.message], [200, 'Notice on: Storm Ellen: emergencies only today (emergencies only).']);
+  assert.equal((await owen.call('POST', `${path}/office`, { action: 'absent', engineer: 'nobody' })).status, 400);
+  const off = await owen.call('POST', `${path}/office`, { action: 'absent', engineer: 'callum', reason: 'sick' });
+  assert.match(off.data.message, /^Callum is off sick today\./);
+  assert.equal((await owen.call('PATCH', `${path}/settings`, { reply_speed: 'patient' })).status, 200);
+  const after = (await owen.call('GET', `${path}/state`)).data;
+  assert.equal(after.maintenance.notice.text, 'Storm Ellen: emergencies only today');
+  assert.equal(after.engineers.find((e: any) => e.key === 'callum').off.reason, 'sick');
+  assert.equal((await owen.call('POST', `${path}/office`, { action: 'notice', text: '' })).data.message, 'Notice cleared.');
+  assert.equal((await owen.call('GET', `${path}/state`)).data.maintenance.notice, null);
   // Back to real time.
   const real = await owen.call('POST', `${path}/clock`, { real: true });
   assert.equal(real.data.workspace.clock_offset_ms, 0);

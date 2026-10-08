@@ -547,3 +547,10 @@ svg.house .door { fill: var(--accent); }
 .clock-pop label { display: grid; gap: 4px; font-size: 13px; }
 .clock-pop .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .clock-pop .hint { margin: 0; }
+
+/* The office's notice for today, and a job whose engineer is off. */
+.office-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; margin: 0 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.office-notice.on { border-color: var(--amber); }
+.office-notice input:not([type=checkbox]) { flex: 1 1 220px; min-width: 0; }
+.office-notice .check { display: inline-flex; gap: 6px; align-items: center; }
+.chip.needs-move { outline: 2px dashed var(--danger); outline-offset: 1px; }

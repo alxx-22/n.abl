@@ -281,6 +281,8 @@ export interface LiveEngineer {
   districts: string[];
   per_window: number;
   mobile: string;
+  /** Off today, from the office board: sick or on holiday, and until when. */
+  off?: { reason: 'sick' | 'holiday'; to: string } | null;
 }
 
 /** A letting agent, landlord or other client, and the authoriser whose phone approves work over the limit. */
@@ -336,6 +338,8 @@ export interface LiveJob {
   done_at: string | null;
   pets: string | null;
   vulnerable: string[];
+  /** Booked with someone now off that day: it needs a new time. */
+  engineer_off?: boolean;
 }
 
 export interface LiveCertificate {
@@ -454,6 +458,8 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
     escalate_minutes: number;
     reminder_weeks: number;
     attend_hours: number;
+    /** The office's notice for today, which every call hears. */
+    notice?: { text: string; emergencies_only: boolean; at: string } | null;
   };
   engineers?: LiveEngineer[];
   clients?: LiveClient[];

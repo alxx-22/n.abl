@@ -15,7 +15,8 @@ import { armSafety, detectSafety, noteAdvice } from '../src/core/safety.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
 import { compilePrompt } from '../src/core/prompt.ts';
 import { redactCodes } from '../src/core/redact.ts';
-import { escalatePages, jobAction, maintenanceState } from '../src/server/maintenance.ts';
+import { applyOffice, escalatePages, jobAction, maintenanceState, officeAction } from '../src/server/maintenance.ts';
+import { freeWindows } from '../src/domain/windows.ts';
 import { digitsSaid, spokenNumber } from '../src/domain/phone.ts';
 import { addWorkingDays } from '../src/domain/listings.ts';
 import type { Tenant } from '../src/domain/types.ts';
@@ -998,4 +999,63 @@ test('"what have I got due?": a landlord\'s homes from their own number, overdue
   // Asked again: nothing left due, all of it booked.
   const after = await raj.run('compliance', { action: 'portfolio' });
   assert.deepEqual([after.overdue, after.due_in_the_next_two_months, after.already_booked.length], [[], [], 3]);
+});
+
+test('the office notice: "emergencies only" gives no times and logs the rest for a call back; an emergency is still paged', async () => {
+  const t = await fernhill('pm-storm');
+  const office = await officeAction(repo, t, {}, { action: 'notice', text: 'Storm Ellen: emergencies only today', emergencies_only: true }, NOW);
+  assert.match(office.message, /^Notice on: Storm Ellen/);
+  const storm: Tenant = { ...t, profile: applyOffice(t.profile, office.office) };
+  const c = await call(storm, '+447700900502');
+  await c.run('find_property', { postcode: 'NG6', number: '120', street: 'Larchfield' });
+  const tri = await c.run('triage_fault', { description: 'A few slates have slipped off the roof' });
+  assert.deepEqual([tri.office_notice, /Only emergencies/.test(tri.today)], ['Storm Ellen: emergencies only today', true]);
+  assert.deepEqual((await c.run('check_windows', { trade: 'roofing' })).windows, []);
+  const logged = await c.run('job', { action: 'create', description: 'A few slates have slipped', name: 'Aisha Patel' });
+  assert.equal(logged.logged_for_call_back, true, JSON.stringify(logged));
+  const row = (await repo.listJobs(t.id, { reference: logged.reference }))[0];
+  assert.deepEqual([row.status, row.visit_date, row.flags.includes('callback')], ['new', null, true]);
+  assert.match(c.sent.at(-1)!.body, /Storm Ellen: emergencies only today\. We'll call you to book a time/);
+  const found = await c.run('job', { action: 'find', reference: logged.reference });
+  assert.equal(found.jobs[0].status, 'logged; the office will call to book a time');
+  // A burst pipe is still an emergency: paged, not logged.
+  const burst = await call(storm, '+447700900503');
+  await burst.run('find_property', { postcode: 'NG7', number: '89', street: 'Wrenbury' });
+  burst.hear("A pipe has burst under the sink and it won't stop.");
+  const e = await burst.run('job', { action: 'create', description: "Burst pipe under the sink, won't stop", name: 'Tom Mistry' });
+  assert.deepEqual([e.booked, e.priority, e.logged_for_call_back], [true, 'emergency', undefined], JSON.stringify(e));
+  // Taken down: back to normal.
+  const clear = await officeAction(repo, t, office.office, { action: 'notice', text: '' }, NOW);
+  assert.deepEqual([clear.message, clear.office.notice], ['Notice cleared.', null]);
+});
+
+test('an engineer off sick: no new visits, their jobs flagged to move, and a caller on one is offered a new time', async () => {
+  const t = await fernhill('pm-absent');
+  const jobs = await repo.listJobs(t.id);
+  // Someone with a visit tomorrow.
+  const tomorrow = '2026-10-08';
+  const j = jobs.find((x) => x.status === 'scheduled' && x.visit_date === tomorrow && x.engineer_key && x.reporter.phone)!;
+  const who = j.engineer_key!;
+  const r = await officeAction(repo, t, {}, { action: 'absent', engineer: who, reason: 'sick', days: 2 }, NOW);
+  assert.match(r.message, /is off sick until .*of their jobs need/);
+  const sick: Tenant = { ...t, profile: applyOffice(t.profile, r.office) };
+  const st = await maintenanceState(repo, sick, NOW);
+  assert.ok(st.jobs.find((x) => x.reference === j.reference)!.engineer_off);
+  assert.equal(st.engineers.find((e) => e.key === who)!.off!.reason, 'sick');
+  // No window goes to them while they're off.
+  const m = sick.profile.maintenance!;
+  const until = r.office.absent![0].to;
+  for (const f of freeWindows(m, jobs, { trade: j.trade, from: '2026-10-07', days: 2, limit: 20 }).filter((x) => x.date <= until)) assert.ok(!f.engineers.some((e) => e.key === who), `${f.date} ${f.window.key}`);
+  // The caller on that job: sorry, and new times with someone else.
+  const c = await call(sick, j.reporter.phone);
+  const found = await c.run('job', { action: 'find', reference: j.reference });
+  assert.match(found.jobs[0].status, /is off sick then, so it needs a new time/);
+  assert.ok(found.jobs[0].new_time.windows.length, JSON.stringify(found.jobs[0]));
+  const w = found.jobs[0].new_time.windows[0];
+  const moved = await c.run('job', { action: 'move', reference: j.reference, date: w.date, window: w.window });
+  assert.equal(moved.moved ?? moved.booked ?? moved.done, true, JSON.stringify(moved));
+  assert.notEqual((await repo.listJobs(t.id, { reference: j.reference }))[0].engineer_key, who);
+  // Back again.
+  const back = await officeAction(repo, t, r.office, { action: 'back', engineer: who }, NOW);
+  assert.deepEqual(back.office.absent, []);
 });

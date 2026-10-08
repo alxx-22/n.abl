@@ -11,7 +11,7 @@ import type { Ctx } from './context.ts';
 import { BASE, HttpError, clientIp, cookie, eventStream, json, overHttps, readJson, sameOrigin, setCookie } from './http.ts';
 import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
 import { tenantState } from './state.ts';
-import { invoiceAction, jobAction, propertyAction } from './maintenance.ts';
+import { applyOffice, invoiceAction, jobAction, officeAction, propertyAction, type OfficeState } from './maintenance.ts';
 import type { DemoKey, Workspace } from '../db/demo-repo.ts';
 import { SHARED_DEMO_MINUTES, SHARED_DRAFT_MINUTES, THROTTLE, hashKey, ipHash, newVisitor, normaliseKey, prefixOf, readSession, signSession, withFreePin } from '../demo/access.ts';
 import { PRESETS, answersOf, builtPreset, getPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
@@ -50,11 +50,13 @@ export interface WorkspaceConfig {
   settings?: SettingsPatch;
   /** The website read for this workspace, if the prospect gave one. */
   scan?: { id: string; url: string };
+  /** A repairs contractor's day: the office notice and who is off (server/maintenance.ts). */
+  office?: OfficeState;
 }
 
 function configOf(w: Workspace): WorkspaceConfig {
   const c = (w.config ?? {}) as Partial<WorkspaceConfig>;
-  return { preset: c.preset ?? w.preset ?? 'restaurant', version: 1, answers: c.answers ?? {}, settings: c.settings, scan: c.scan };
+  return { preset: c.preset ?? w.preset ?? 'restaurant', version: 1, answers: c.answers ?? {}, settings: c.settings, scan: c.scan, office: c.office };
 }
 
 /** The profile the receptionist runs on: the preset's compile, then the call settings. */
@@ -73,7 +75,8 @@ const slugPart = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z
  * always kept; Start passes a PIN when the workspace has none yet.
  */
 async function rebuild(ctx: Ctx, w: Workspace, preset: Preset, answers: BaseAnswers, settings = configOf(w).settings, pin = w.tenant.profile.demo_pin): Promise<{ workspace: Workspace; profile: TenantProfile }> {
-  const profile = buildProfile(preset, answers, w.tenant.slug, settings);
+  // The office's notice and absences outlive a rebuild from the builder's answers.
+  const profile = applyOffice(buildProfile(preset, answers, w.tenant.slug, settings), configOf(w).office);
   if (pin) profile.demo_pin = pin;
   const workspace = await ctx.demo.saveWorkspace(w.tenant.id, profile, { ...configOf(w), answers, settings } satisfies WorkspaceConfig);
   return { workspace, profile };
@@ -629,6 +632,21 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     void usage('staff_action', { action: 'job' });
     refresh({ reason: 'staff', reference: ref.toUpperCase(), what: message });
     return json(res, 200, { ok: true, message }), true;
+  }
+  // The office's day: a notice for every call, an engineer off. Saved without a rebuild, and told to a call in progress.
+  if (sub === 'office' && req.method === 'POST') {
+    const cfgNow = configOf(w);
+    const r = await officeAction(repo, t, cfgNow.office ?? {}, await readJson(req, 4_000), tenantNow(t));
+    await demo.saveWorkspace(t.id, applyOffice(t.profile, r.office), { ...cfgNow, office: r.office } satisfies WorkspaceConfig);
+    if (r.notice !== undefined) {
+      bus.note(t.id, {
+        kind: 'notice', job: '', notice: r.notice,
+        text: r.notice ? `The office has just put up a notice for today: "${r.notice.text}".${r.notice.emergencies_only ? ' Only emergencies are being booked: anything else is logged for a call back, with no time promised.' : ' Mention it if it matters to this caller.'}` : 'The office notice has been taken down.',
+      });
+    }
+    void usage('staff_action', { action: 'office' });
+    refresh({ reason: 'staff', what: r.message });
+    return json(res, 200, { ok: true, message: r.message }), true;
   }
   if (sub === 'invoices' && ref && req.method === 'PATCH') {
     const message = await invoiceAction(repo, t, ref, await readJson(req, 10_000), (to, body) => textCustomer(ctx, t.id, to, body), tenantNow(t));

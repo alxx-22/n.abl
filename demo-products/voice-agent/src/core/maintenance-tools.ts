@@ -19,7 +19,7 @@ import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, weekday
 import { poundsIn } from '../domain/amounts.ts';
 import { processDemoPayment } from '../domain/payments.ts';
 import type { Certificate, Invoice, Job, JobKind, JobPriority, MaintenanceSettings, MtClient, MtProperty, MtWindow, ReporterRole, Tenant } from '../domain/types.ts';
-import { checkWindow, freeWindows, isGasTrade, onCallAt, unable, windowAt, windowOf, windowsOn } from '../domain/windows.ts';
+import { absentOn, checkWindow, freeWindows, isGasTrade, onCallAt, unable, windowAt, windowOf, windowsOn } from '../domain/windows.ts';
 import { inSentence } from '../presets/maintenance/answers.ts';
 import { SAFETY_KINDS, SAFETY_VERSION, safetyScript, type SafetyKind } from '../presets/maintenance/nations.ts';
 import { fullAddress, shortAddress } from '../presets/maintenance/properties.ts';
@@ -422,7 +422,19 @@ async function triageFault(args: Args, ctx: ToolContext): Promise<Record<string,
     ...(checks.length ? {} : { no_checks: 'Suggest nothing for them to try: no checks are allowed for this.' }),
     ...(homeowner ? { price: ooh && t.priority === 'emergency' ? `Out of hours: ${money(m.prices.ooh_first_hour_pence)}${incVat(m)} for the first hour.` : `Call-out ${money(m.prices.callout_pence)}${incVat(m)}, with the first hour; then ${money(m.prices.half_hour_pence)} a half hour.` } : {}),
     ...(part ? { shared_parts: `The ${part} is in the block's shared parts: no price and no window for them. Raise it with job create: it goes to the managing agent to instruct, or onto the job already open for it.` } : {}),
+    ...noticeWords(m),
     note: "Say the trade and how soon. Never say what's wrong, that it's safe, or what it will cost beyond the price above.",
+  };
+}
+
+// The office's notice for today (presets/property-maintenance-use-cases.md, surge day): every tool that books or
+// triages says it, and on an emergencies-only day nothing else gets a time.
+const emergenciesOnly = (m: MaintenanceSettings) => Boolean(m.notice?.emergencies_only);
+function noticeWords(m: MaintenanceSettings): Record<string, string> {
+  if (!m.notice) return {};
+  return {
+    office_notice: m.notice.text,
+    ...(m.notice.emergencies_only ? { today: 'Only emergencies are being booked today. Anything else is logged with job create for the office to call back and book: promise no time, and never a same-day visit.' } : {}),
   };
 }
 
@@ -449,6 +461,9 @@ function jobWords(ctx: ToolContext, j: Job, p: MtProperty | null): Record<string
   if (j.status === 'on_site' && who) status = `${who} is there now`;
   if (j.status === 'waiting' && j.waiting_for) status = `waiting for ${j.waiting_for}`;
   if (j.status === 'new' && j.priority === 'emergency' && j.attend_by) status = `raised as an emergency; the engineer has been paged and we aim to be there by ${spokenTime(toLocal(j.attend_by, ctx.tenant.profile.timezone).time)}`;
+  if (j.status === 'new' && j.flags.includes('callback')) status = 'logged; the office will call to book a time';
+  const off = j.status === 'scheduled' && j.engineer_key && j.visit_date ? absentOn(m, j.engineer_key, j.visit_date) : undefined;
+  if (off) status = `booked for ${w && j.visit_date ? windowWords(w, j.visit_date, l.date) : 'a visit'}, but ${who} is off ${off.reason === 'sick' ? 'sick' : 'on holiday'} then, so it needs a new time`;
   if ((j.status === 'done' || j.status === 'invoiced') && j.done_at) status = `done ${dayWords(toLocal(j.done_at, ctx.tenant.profile.timezone).date, l.date)}`;
   const due = j.priority === 'emergency' ? null : addWorkingDays(toLocal(j.created_at, ctx.tenant.profile.timezone).date, j.priority === 'urgent' ? m.priorities.urgent.working_days : m.priorities.routine.working_days, m.nation);
   const late = due && !['done', 'invoiced', 'cancelled'].includes(j.status) && (j.visit_date ?? '9999') > due && l.date > due;
@@ -778,6 +793,19 @@ async function createJob(args: Args, ctx: ToolContext): Promise<Record<string, u
     };
   }
 
+  // An emergencies-only day: logged, with no time, for the office to call back once things calm down (surge day).
+  if (emergenciesOnly(m) && !block) {
+    const job = await ctx.repo.createJob(ctx.tenant, { ...base, status: 'new', flags: [...flags, 'callback'], reason: `${base.reason ? `${base.reason}; ` : ''}logged during: ${m.notice!.text}` });
+    record(ctx, job.reference, 'job', 'committed');
+    ctx.state.jobsVerified.push(job.reference);
+    if (phone) await smsTo(ctx, phone, `${ctx.tenant.profile.name}: we've logged your ${tradeLabel(m, trade)} job, ref ${job.reference}. ${m.notice!.text}. We'll call you to book a time. (Demo)`);
+    if (client) await noticeToClient(ctx, client, job, p);
+    ctx.action({ kind: 'job_created', title: `Logged for a call back · ${cap(tradeLabel(m, trade))}`, detail: `${shortAddress(p)} · ref ${job.reference}`, data: { reference: job.reference } });
+    return {
+      booked: false, logged_for_call_back: true, reference: job.reference, reference_spoken: spokenReference(job.reference), office_notice: m.notice!.text,
+      say: "Say the office's notice, then that it's logged and the office will call to book a time. No time, and no visit today.",
+    };
+  }
   // Work already priced ("as per the quote") is checked against the limit, so the amount is needed first;
   // a tenant asking what it will cost has no quote.
   if (client && !estimate && /\b(?:quoted?|priced|estimated?)\b/i.test(`${description} ${str(args.reference) ?? ''} ${ctx.state.heard.join(' ')}`)) {
@@ -937,10 +965,21 @@ async function findJobs(args: Args, ctx: ToolContext): Promise<Record<string, un
     found: jobs.length,
     ...(sent?.request_sent ? { approval: sent } : {}),
     ...(visiting ? {} : { today: 'Nobody from us is booked to visit today.', ...(await atTheDoor(ctx, ctx.state.heard.slice(-4).join(' '))) }),
-    jobs: jobs.map((j) => {
+    jobs: await Promise.all(jobs.map(async (j) => {
       const q = j.status === 'awaiting_approval' ? quotes.find((x) => x.job_ref === j.reference && x.status === 'sent') : undefined;
-      return { ...jobWords(ctx, j, j.property_key ? props.get(j.property_key) ?? null : null), ...(q ? { quote: `${q.reference}, ${money(q.amount_pence)}${incVat(mt(ctx))}` } : {}) };
-    }),
+      const p = j.property_key ? props.get(j.property_key) ?? null : null;
+      // Its engineer is off that day: the caller is offered a new time now, rather than waiting for the office.
+      const off = j.status === 'scheduled' && j.engineer_key && j.visit_date && absentOn(m, j.engineer_key, j.visit_date);
+      const l = local(ctx);
+      const instead = off
+        ? freeWindows(m, await ctx.repo.listJobs(ctx.tenant.id), { trade: j.trade, gas: j.flags.includes('gas'), district: p?.district, from: l.date, now: l, exclude: j.reference })
+          .map((f) => ({ date: f.date, window: f.window.key, say: windowWords(f.window, f.date, l.date) }))
+        : [];
+      return {
+        ...jobWords(ctx, j, p), ...(q ? { quote: `${q.reference}, ${money(q.amount_pence)}${incVat(mt(ctx))}` } : {}),
+        ...(off ? { new_time: instead.length ? { say: "Say sorry: the engineer can't make it. Offer these, then job move with the one they choose.", windows: instead } : { say: "Say sorry: the engineer can't make it, and the office will call with a new time." } } : {}),
+      };
+    })),
   };
 }
 
@@ -1066,6 +1105,7 @@ async function checkWindowsTool(args: Args, ctx: ToolContext): Promise<Record<st
   if (!trade || !m.trades.some((t) => t.key === trade)) return { error: `trade must be one of: ${m.trades.map((t) => t.key).join(', ')}` };
   // An emergency has no window: the engineer is paged (a live call offered tomorrow's slots for a burst pipe, 6 October).
   if (ctx.state.emergencyTrade === trade) return { windows: [], message: 'This is an emergency: no window. Raise it now with job create; the engineer is paged and we aim to attend within the target.' };
+  if (emergenciesOnly(m)) return { windows: [], ...noticeWords(m) };
   const key = str(args.property) ?? ctx.state.property;
   const p = key ? await ctx.repo.getMtProperty(ctx.tenant.id, key) : null;
   const l = local(ctx);

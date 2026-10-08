@@ -31,8 +31,15 @@ export function Jobs({ id, state, nowMs, flash, onDone }: { id: string; state: L
   const until = last.toISOString().slice(0, 10);
   // A job just made on a call is always shown, whenever it is booked for.
   const soon = (j: LiveJob) => j.status !== 'scheduled' || !j.date || j.date <= until || flash.has(j.reference);
+  const notice = state.maintenance?.notice;
   return (
     <div className="jobs">
+      {notice ? (
+        <p className="office-notice on" role="status">
+          <b>Notice on every call:</b> {notice.text}{notice.emergencies_only ? <span className="badge bad">Emergencies only</span> : null}
+          <span className="muted small">Change it on Dispatch.</span>
+        </p>
+      ) : null}
       <div className="kitchen jobs-board">
         {COLUMNS.map((c) => {
           const all = jobs.filter(c.has);

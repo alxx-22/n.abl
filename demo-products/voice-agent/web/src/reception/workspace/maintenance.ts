@@ -31,6 +31,8 @@ export const PRIORITY: Record<LiveJob['priority'], { label: string; badge: strin
 /** The flags a card shows, in words a dispatcher reads at a glance. */
 export function jobBadges(j: LiveJob): { label: string; level: string }[] {
   const out: { label: string; level: string }[] = [];
+  if (j.engineer_off) out.push({ label: `${j.engineer ?? 'Engineer'} off: needs a new time`, level: 'bad' });
+  if (j.flags.includes('callback')) out.push({ label: 'Call back to book', level: 'warn' });
   if (j.flags.includes('gas')) out.push({ label: 'Gas', level: 'warn' });
   if (j.vulnerable.length || j.flags.includes('vulnerable')) out.push({ label: 'Vulnerable', level: 'bad' });
   // A clock counts down on the card: an Awaab's Law investigation by a day, an emergency hazard by a time.
@@ -73,4 +75,17 @@ export function jobWhen(j: LiveJob, timeZone: string): string {
 export function etaLeft(j: LiveJob, nowMs: number): number | null {
   if (j.status !== 'on_the_way' || !j.on_the_way_at || j.eta_minutes === null) return null;
   return Math.max(0, Math.round(j.eta_minutes - (nowMs - Date.parse(j.on_the_way_at)) / 60_000));
+}
+
+/** The office's day: the notice every call hears, or an engineer off and back (server/maintenance.ts, officeAction). */
+export async function officeAct(id: string, body: Record<string, unknown>, onDone: () => void): Promise<boolean> {
+  try {
+    const r = await demoApi<{ message: string }>(`/workspaces/${id}/office`, { method: 'POST', json: body });
+    toast(r.message);
+    onDone();
+    return true;
+  } catch (e) {
+    toast((e as Error).message);
+    return false;
+  }
 }
