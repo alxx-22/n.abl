@@ -22,6 +22,9 @@ const NORTHERN_IRELAND = [...ENGLAND, '2026-03-17', '2026-07-13', '2027-03-17', 
 
 const HOLIDAYS: Record<DayNation, string[]> = { england: ENGLAND, wales: ENGLAND, scotland: SCOTLAND, northern_ireland: NORTHERN_IRELAND };
 
+/** A bank holiday in that nation, as observed. */
+export const isBankHoliday = (date: string, nation: DayNation) => HOLIDAYS[nation].includes(date);
+
 export function isWorkingDay(date: string, nation: DayNation): boolean {
   const wd = weekdayOf(date);
   return wd !== 0 && wd !== 6 && !HOLIDAYS[nation].includes(date);

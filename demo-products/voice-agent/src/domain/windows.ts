@@ -5,6 +5,7 @@
 // their window is, and when the next free windows are.
 
 import { addDays, minutesOf, weekdayOf } from './time.ts';
+import { isBankHoliday, type DayNation } from './working-days.ts';
 import type { Job, MaintenanceSettings, MtEngineer, MtWindow, TenantProfile } from './types.ts';
 
 /** Shares time with another window: an all-day window holds the morning and the afternoon. */
@@ -13,9 +14,9 @@ export const overlaps = (a: Pick<MtWindow, 'from' | 'to'>, b: Pick<MtWindow, 'fr
 
 export const windowOf = (m: MaintenanceSettings, key: string | null | undefined) => m.windows.find((w) => w.key === key);
 
-/** The windows offered on a date, earliest first. */
+/** The windows offered on a date, earliest first: none on a bank holiday, when only the on-call pair work (review, 8 October). */
 export const windowsOn = (m: MaintenanceSettings, date: string) =>
-  m.windows.filter((w) => w.days.includes(weekdayOf(date))).sort((a, b) => minutesOf(a.from) - minutesOf(b.from));
+  isBankHoliday(date, m.nation) ? [] : m.windows.filter((w) => w.days.includes(weekdayOf(date))).sort((a, b) => minutesOf(a.from) - minutesOf(b.from));
 
 /** A trade is gas work: only a Gas Safe registered engineer may do it. */
 export const isGasTrade = (m: MaintenanceSettings, trade: string) => Boolean(m.trades.find((t) => t.key === trade)?.gas);
@@ -57,7 +58,7 @@ export function checkWindow(m: MaintenanceSettings, jobs: readonly (Job | Omit<J
   const window = windowOf(m, q.window);
   if (!window) return { ok: false, reason: 'no_window' };
   const weekday = weekdayOf(q.date);
-  if (!window.days.includes(weekday)) return { ok: false, reason: 'not_that_day', window };
+  if (!window.days.includes(weekday) || isBankHoliday(q.date, m.nation)) return { ok: false, reason: 'not_that_day', window };
   const able = m.engineers.filter((e) => (!q.engineer || e.key === q.engineer) && e.days.includes(weekday) && !absentOn(m, e.key, q.date) && !unable(m, e, q));
   if (!able.length) return { ok: false, reason: 'nobody', window };
   const free = able.filter((e) => windowLoad(m, jobs, e.key, q.date, window, q.exclude) < e.per_window);
@@ -111,9 +112,9 @@ export function onCallAt(m: MaintenanceSettings, date: string, time: string): Mt
   return keys.filter((k) => !absentOn(m, k, night)).map((k) => m.engineers.find((e) => e.key === k)).filter((e): e is MtEngineer => e !== undefined);
 }
 
-/** Out of the office's hours at a local moment: nights, days it's closed, and its closures. */
-export function officeShut(p: Pick<TenantProfile, 'opening_hours' | 'closures'>, date: string, time: string): boolean {
-  if (p.closures?.some((c) => c.date === date)) return true;
+/** Out of the office's hours at a local moment: nights, days it's closed, its closures, and its nation's bank holidays. */
+export function officeShut(p: Pick<TenantProfile, 'opening_hours' | 'closures'>, date: string, time: string, nation?: DayNation): boolean {
+  if (p.closures?.some((c) => c.date === date) || (nation && isBankHoliday(date, nation))) return true;
   const wd = weekdayOf(date);
   return !p.opening_hours.some((h) => h.days.includes(wd) && minutesOf(h.open) <= minutesOf(time) && minutesOf(time) < minutesOf(h.close));
 }

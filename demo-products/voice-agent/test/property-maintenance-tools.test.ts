@@ -531,6 +531,24 @@ test('a job waiting for parts, given a new visit, is booked again: the engineer 
   assert.match(await act({ action: 'on_the_way', eta_minutes: 20 }, new Date('2026-10-12T12:30:00Z')), /on the way/);
 });
 
+test('bank holidays: no visit windows on Christmas Day or its substitute day, and an emergency then goes to whoever is on call', async () => {
+  const t = await fernhill('pm-christmas');
+  const m = t.profile.maintenance!;
+  // From Christmas Eve: the 25th (Friday) and the 28th (the substitute Monday) are skipped.
+  const days = freeWindows(m, [], { trade: 'plumbing', from: '2026-12-24', days: 6, limit: 20 }).map((f) => f.date);
+  assert.ok(days.includes('2026-12-24') && days.includes('2026-12-29'), JSON.stringify(days));
+  assert.ok(!days.includes('2026-12-25') && !days.includes('2026-12-28'), JSON.stringify(days));
+  // 11am on Christmas Day: the office is shut, so the on-call pair (Thursday night's: Callum and Priya), not the day team.
+  const XMAS = new Date('2026-12-25T11:00:00Z');
+  const home = (await repo.listMtProperties(t.id)).find((p) => p.client === 'harbour')!;
+  const c = await call(t, home.occupant.phone, XMAS);
+  await c.run('find_property', { postcode: home.district, number: home.number, street: home.street });
+  const r = await c.run('job', { action: 'create', description: 'Burst pipe, water pouring through the ceiling', name: home.occupant.name });
+  const [job] = await repo.listJobs(t.id, { reference: r.reference });
+  assert.equal(job.engineer_key, 'callum', JSON.stringify(r));
+  assert.ok(job.flags.includes('out_of_hours'));
+});
+
 test('a homeowner told "ninety five pounds" has heard the price, and a job is never booked for "Owner"', async () => {
   const t = await fernhill('pm-price-words');
   const home = (await repo.listMtProperties(t.id)).find((p) => p.client === null && p.occupant.phone && p.occupant.name)!;

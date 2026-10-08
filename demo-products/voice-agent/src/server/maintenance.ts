@@ -246,7 +246,7 @@ export async function jobAction(
       const asked = triedOn(job, m);
       // Who can be paged now, as when it was raised: in the office's hours whoever is in today (not last night's
       // on-call pair), out of hours whoever is on call (review, 8 October).
-      const shut = officeShut(t.profile, l.date, l.time);
+      const shut = officeShut(t.profile, l.date, l.time, m.nation);
       const pool = pageable(m, shut, l.date, l.time).filter((e) => !asked.has(e.key));
       // Out of hours, whoever is on call makes it safe even outside their trade; gas still needs Gas Safe.
       const next = pool.find((e) => !unable(m, e, { trade: job.trade, gas: job.flags.includes('gas'), district: p?.district }))

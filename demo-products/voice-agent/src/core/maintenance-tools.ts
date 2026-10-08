@@ -368,7 +368,7 @@ function targetWords(m: MaintenanceSettings, p: JobPriority): string {
 /** Out of the office's hours: nights, Sundays and bank holidays. */
 function outOfHours(ctx: ToolContext): boolean {
   const l = local(ctx);
-  return officeShut(ctx.tenant.profile, l.date, l.time);
+  return officeShut(ctx.tenant.profile, l.date, l.time, mt(ctx).nation);
 }
 
 // Someone trapped in a lift: the lift company frees people, never us (LOLER 1998; presets/property-maintenance-use-cases.md).
