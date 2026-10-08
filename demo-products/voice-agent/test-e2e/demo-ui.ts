@@ -721,6 +721,8 @@ async function walkMaintenance({ shot }: Walk) {
   await saved();
   await shot(page, 'builder-trades');
   await next('Engineers and on call');
+  // Each engineer is one folded line: open the first to edit it.
+  await page.locator('ul[aria-label="Engineers"] .fold-head').first().click();
   await page.getByLabel('Jobs per window').first().fill('3');
   await saved();
   await shot(page, 'builder-engineers');
@@ -757,10 +759,12 @@ async function walkMaintenance({ shot }: Walk) {
   await next('Where you work');
   kept('the new district', (await page.getByLabel('Postcode districts you cover').inputValue()).endsWith('NG12'));
   await next('Who you work for');
+  await page.locator('ul[aria-label="Clients"] .fold-head').last().click();
   kept('the new client', (await page.locator('input[aria-label="Client name"]').last().inputValue()) === 'Parkside Lettings');
   await next('Trades');
   kept('decorating off', !(await page.getByRole('switch', { name: /^Decorating/ }).isChecked()));
   await next('Engineers and on call');
+  await page.locator('ul[aria-label="Engineers"] .fold-head').first().click();
   kept('jobs per window', (await page.getByLabel('Jobs per window').first().inputValue()) === '3');
   await next('Urgency and response');
   kept('the emergency target', (await page.getByLabel('Attend within').inputValue()) === '2');

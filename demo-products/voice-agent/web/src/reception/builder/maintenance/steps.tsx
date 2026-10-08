@@ -4,14 +4,16 @@
 // servicing, and policies. Each composes the shared pieces with what only a
 // repairs contractor asks. The safety scripts are shown, never edited.
 
+import { useId } from 'react';
 import type { MtNation } from '../../../../../src/domain/types.ts';
 import { CLIENT_KINDS, MAX_CLIENTS, MAX_ENGINEERS, MAX_OWN_PROPERTIES, MAX_TRADES, MAX_WINDOWS, type ClientAnswer, type MaintenanceAnswers, type OwnPropertyAnswer } from '../../../../../src/presets/maintenance/answers.ts';
 import { safetyScripts } from '../../../../../src/presets/maintenance/nations.ts';
 import { DayChips } from '../estate/steps.tsx';
 import { Hours, type HoursOptions } from '../common/Hours.tsx';
 import { Policies, PolicyText } from '../common/Policies.tsx';
-import { Choice, ListText, Num, Pounds, Select, Text, Toggle } from '../fields.tsx';
+import { Choice, Folds, ListText, Num, Pounds, Select, Text, Toggle } from '../fields.tsx';
 import type { StepProps } from '../registry.ts';
+import './maintenance.css';
 
 type Props = StepProps<MaintenanceAnswers>;
 
@@ -23,6 +25,25 @@ const NOTICE: { value: ClientAnswer['notice']; label: string }[] = [
 ];
 const NIGHTS: [number, string][] = [[1, 'Monday'], [2, 'Tuesday'], [3, 'Wednesday'], [4, 'Thursday'], [5, 'Friday'], [6, 'Saturday'], [0, 'Sunday']];
 const key = (s: string, fallback: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40) || fallback;
+const pounds = (p: number) => `£${(p / 100).toLocaleString('en-GB', { minimumFractionDigits: p % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
+/** "Gas, boilers and heating" is "Gas" in a one-line summary. */
+const shortTrade = (label: string) => label.split(/,| and /)[0].trim() || label;
+const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+/** Days as a person says them, Monday first: "Mon–Fri", "Mon, Wed, Sat". */
+function dayRange(days: number[]): string {
+  const week = [...new Set(days)].map((d) => (d === 0 ? 7 : d)).sort((x, y) => x - y);
+  if (!week.length) return 'no days';
+  const name = (d: number) => DAY_SHORT[d % 7];
+  const runs: string[] = [];
+  let from = week[0];
+  for (let i = 1; i <= week.length; i++) {
+    if (i < week.length && week[i] === week[i - 1] + 1) continue;
+    const to = week[i - 1];
+    runs.push(to - from >= 2 ? `${name(from)}–${name(to)}` : to > from ? `${name(from)}, ${name(to)}` : name(from));
+    if (i < week.length) from = week[i];
+  }
+  return runs.join(', ');
+}
 
 // ── Where you work ──────────────────────────────────────────────────────
 
@@ -57,78 +78,106 @@ export function StepCustomers({ a, set }: Props) {
     key: `client_${Date.now().toString(36)}`, name: '', kind: 'agent', works_limit_pence: 25_000, emergency_authority_pence: 40_000, po_required: false,
     contact: { name: '', phone: '', email: '' }, notice: 'over_limit', instructions: '', status: 'active', min_priority: null, example: false,
   }));
+  const clientName = (key: string | null) => a.clients.find((x) => x.key === key)?.name;
   return (
     <div className="fields">
       <p className="lead">Who rings you. Each kind of customer is handled their own way: a homeowner hears the price and pays, a tenant's repair goes ahead under their agent's or landlord's limit.</p>
-      <Toggle label="Homeowners" checked={c.homeowners} onChange={(v) => set((d) => void (d.customers.homeowners = v))} />
-      <Toggle label="Landlords" checked={c.landlords} onChange={(v) => set((d) => void (d.customers.landlords = v))} />
-      <Toggle label="Letting agents" checked={c.agents} onChange={(v) => set((d) => void (d.customers.agents = v))} />
-      <Toggle
-        label="Housing associations (social housing)" checked={c.social.on} onChange={(v) => set((d) => void (d.customers.social.on = v))}
-        hint="Damp and mould is told to them the same day, with the time it was reported, and never blamed on the tenant."
-      />
-      {c.social.on ? (
+      {/* Housing associations last, so the question it opens sits beside it. */}
+      <div className="mt-kinds">
+        <Toggle label="Homeowners" checked={c.homeowners} onChange={(v) => set((d) => void (d.customers.homeowners = v))} />
+        <Toggle label="Landlords" checked={c.landlords} onChange={(v) => set((d) => void (d.customers.landlords = v))} />
+        <Toggle label="Letting agents" checked={c.agents} onChange={(v) => set((d) => void (d.customers.agents = v))} />
         <Toggle
-          label="We act as their agent for repairs" checked={c.social.agent_of_landlord} onChange={(v) => set((d) => void (d.customers.social.agent_of_landlord = v))}
-          hint="In England, Awaab's Law then starts their 10-working-day damp and mould clock when we're told, and it counts down on the job."
+          label="Block and property managers" checked={c.blocks} onChange={(v) => set((d) => void (d.customers.blocks = v))}
+          hint="A fault in a block's common parts is one job however many residents ring; inside a flat is the leaseholder's own."
         />
-      ) : null}
-      <Toggle
-        label="Block and property managers" checked={c.blocks} onChange={(v) => set((d) => void (d.customers.blocks = v))}
-        hint="A fault in a block's common parts is one job however many residents ring; inside a flat is the leaseholder's own."
-      />
-      <Toggle label="Businesses" checked={c.commercial} onChange={(v) => set((d) => void (d.customers.commercial = v))} hint="Shops, offices and surgeries: trading hours, a PO and the contract's priority." />
-      <Toggle label="Insurers" checked={c.insurers} onChange={(v) => set((d) => void (d.customers.insurers = v))} hint="Claim work: the claim number on every job, and never a word on what a policy covers." />
-      <Choice
-        legend="A tenant whose landlord isn't one of your clients" value={c.tenant_no_client}
-        options={[
-          { value: 'contact_landlord', label: "We need the landlord's go-ahead first", hint: 'the receptionist takes the landlord\'s details as a message' },
-          { value: 'private', label: 'Book them as a private customer', hint: 'at your standard prices' },
-        ]}
-        onChange={(v) => set((d) => void (d.customers.tenant_no_client = v))}
-      />
-      <Toggle
-        label="Lockouts and tenant damage are recharged" checked={c.recharge_lockouts} onChange={(v) => set((d) => void (d.customers.recharge_lockouts = v))}
-        hint="Said to tenants as something their landlord or agent may decide, never decided on the call."
-      />
+        <Toggle label="Businesses" checked={c.commercial} onChange={(v) => set((d) => void (d.customers.commercial = v))} hint="Shops, offices and surgeries: trading hours, a PO and the contract's priority." />
+        <Toggle label="Insurers" checked={c.insurers} onChange={(v) => set((d) => void (d.customers.insurers = v))} hint="Claim work: the claim number on every job, and never a word on what a policy covers." />
+        <Toggle
+          label="Housing associations (social housing)" checked={c.social.on} onChange={(v) => set((d) => void (d.customers.social.on = v))}
+          hint="Damp and mould is told to them the same day, with the time it was reported, and never blamed on the tenant."
+        />
+        {c.social.on ? (
+          <Toggle
+            label="We act as their agent for repairs" checked={c.social.agent_of_landlord} onChange={(v) => set((d) => void (d.customers.social.agent_of_landlord = v))}
+            hint="In England, Awaab's Law then starts their 10-working-day damp and mould clock when we're told, and it counts down on the job."
+          />
+        ) : null}
+      </div>
+      <div className="mt-pair">
+        <Choice
+          legend="A tenant whose landlord isn't one of your clients" value={c.tenant_no_client}
+          options={[
+            { value: 'contact_landlord', label: "We need the landlord's go-ahead first", hint: 'the receptionist takes the landlord\'s details as a message' },
+            { value: 'private', label: 'Book them as a private customer', hint: 'at your standard prices' },
+          ]}
+          onChange={(v) => set((d) => void (d.customers.tenant_no_client = v))}
+        />
+        <Toggle
+          label="Lockouts and tenant damage are recharged" checked={c.recharge_lockouts} onChange={(v) => set((d) => void (d.customers.recharge_lockouts = v))}
+          hint="Said to tenants as something their landlord or agent may decide, never decided on the call."
+        />
+      </div>
 
       <h3 className="sub">Clients</h3>
       <p className="hint">Agents, landlords, housing associations, block managers, businesses and insurers who authorise work. Their contact approves anything over the limit on their own phone, never by voice.</p>
-      {a.clients.map((cl, i) => (
-        <div className="group on area-card" key={cl.key}>
-          <div className="area-head">
-            <input aria-label="Client name" className="area-name" placeholder="Harbour Lettings" value={cl.name} maxLength={80} onChange={(e) => set((d) => void (d.clients[i].name = e.target.value))} />
-            <select aria-label={`${cl.name || 'Client'} kind`} value={cl.kind} onChange={(e) => set((d) => void (d.clients[i].kind = e.target.value as ClientAnswer['kind']))}>
-              {CLIENT_KINDS.filter((k) => k === 'agent' || k === 'landlord' || (k === 'social' && c.social.on) || (k === 'block' && c.blocks) || (k === 'commercial' && c.commercial) || (k === 'insurer' && c.insurers) || k === cl.kind).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
-            </select>
-            {cl.example ? <span className="badge">Example</span> : null}
-            <button type="button" className="ghost small" onClick={() => {
-              if (!confirm(`Remove ${cl.name || 'this client'}? Their sample homes won't be in the demo.`)) return;
-              set((d) => void d.clients.splice(i, 1));
-            }}>Remove</button>
-          </div>
-          <div className="three">
-            <Pounds label="Go ahead without asking up to" pence={cl.works_limit_pence} onChange={(v) => set((d) => void (d.clients[i].works_limit_pence = v))} />
-            <Pounds label="Emergency make-safe up to" pence={cl.emergency_authority_pence} onChange={(v) => set((d) => void (d.clients[i].emergency_authority_pence = v))} />
-            <Select label="Tell them about" value={cl.notice} options={NOTICE} onChange={(v) => set((d) => void (d.clients[i].notice = v))} />
-          </div>
-          <div className="three">
-            <Text label="Contact" value={cl.contact.name} max={60} onChange={(v) => set((d) => void (d.clients[i].contact.name = v))} />
-            <Text label="Their mobile" value={cl.contact.phone} max={20} onChange={(v) => set((d) => void (d.clients[i].contact.phone = v))} hint="Approvals go here. Use a 07700 900 number in the demo." />
-            <Text label="Email" value={cl.contact.email} max={120} onChange={(v) => set((d) => void (d.clients[i].contact.email = v))} />
-          </div>
-          <Toggle label="A purchase order on every job" checked={cl.po_required} onChange={(v) => set((d) => void (d.clients[i].po_required = v))} />
-          {cl.kind === 'commercial' ? (
-            <Select
-              label="Their contract makes every job at least" value={cl.min_priority ?? ''}
-              options={[{ value: '', label: 'As triaged' }, { value: 'urgent', label: 'Urgent' }, { value: 'emergency', label: 'An emergency' }]}
-              onChange={(v) => set((d) => void (d.clients[i].min_priority = v === 'urgent' || v === 'emergency' ? v : null))}
-            />
-          ) : null}
-          <Toggle label="On stop" checked={cl.status === 'on_stop'} onChange={(v) => set((d) => void (d.clients[i].status = v ? 'on_stop' : 'active'))} hint="No new work is booked for them." />
-          <Text label="Notes for staff" value={cl.instructions} max={300} onChange={(v) => set((d) => void (d.clients[i].instructions = v))} hint="Never said to callers." />
-        </div>
-      ))}
+      <Folds
+        label="Clients" items={a.clients} keyOf={(cl) => cl.key}
+        summary={(cl) => (
+          <>
+            <b>{cl.name || 'New client'}</b>
+            <span className="muted">{KIND_LABEL[cl.kind]}</span>
+            <span>{pounds(cl.works_limit_pence)} without asking</span>
+            {cl.contact.name ? <span className="muted">{cl.contact.name}</span> : null}
+            {cl.po_required ? <span className="badge">PO</span> : null}
+          </>
+        )}
+        issue={(cl) =>
+          !cl.name ? 'Needs a name'
+          : (cl.po_required || cl.works_limit_pence > 0) && (!cl.contact.name || !cl.contact.phone) ? 'Needs a contact and mobile'
+          : cl.status === 'on_stop' ? 'On stop'
+          : null}
+      >
+        {(cl, i) => (
+          <>
+            <div className="area-head">
+              <input aria-label="Client name" className="area-name" placeholder="Harbour Lettings" value={cl.name} maxLength={80} onChange={(e) => set((d) => void (d.clients[i].name = e.target.value))} />
+              <select aria-label={`${cl.name || 'Client'} kind`} value={cl.kind} onChange={(e) => set((d) => void (d.clients[i].kind = e.target.value as ClientAnswer['kind']))}>
+                {CLIENT_KINDS.filter((k) => k === 'agent' || k === 'landlord' || (k === 'social' && c.social.on) || (k === 'block' && c.blocks) || (k === 'commercial' && c.commercial) || (k === 'insurer' && c.insurers) || k === cl.kind).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
+              </select>
+              {cl.example ? <span className="badge">Example</span> : null}
+              <button type="button" className="ghost small mt-push" onClick={() => {
+                if (!confirm(`Remove ${cl.name || 'this client'}? Their sample homes won't be in the demo.`)) return;
+                set((d) => void d.clients.splice(i, 1));
+              }}>Remove</button>
+            </div>
+            <div className="three">
+              <Pounds label="Go ahead without asking up to" pence={cl.works_limit_pence} onChange={(v) => set((d) => void (d.clients[i].works_limit_pence = v))} />
+              <Pounds label="Emergency make-safe up to" pence={cl.emergency_authority_pence} onChange={(v) => set((d) => void (d.clients[i].emergency_authority_pence = v))} />
+              <Select label="Tell them about" value={cl.notice} options={NOTICE} onChange={(v) => set((d) => void (d.clients[i].notice = v))} />
+              {cl.kind === 'commercial' ? (
+                <Select
+                  label="Their contract makes every job at least" value={cl.min_priority ?? ''}
+                  options={[{ value: '', label: 'As triaged' }, { value: 'urgent', label: 'Urgent' }, { value: 'emergency', label: 'An emergency' }]}
+                  onChange={(v) => set((d) => void (d.clients[i].min_priority = v === 'urgent' || v === 'emergency' ? v : null))}
+                />
+              ) : null}
+            </div>
+            <div className="three">
+              <Text label="Contact" value={cl.contact.name} max={60} onChange={(v) => set((d) => void (d.clients[i].contact.name = v))} />
+              <Text label="Their mobile" value={cl.contact.phone} max={20} onChange={(v) => set((d) => void (d.clients[i].contact.phone = v))} hint="Approvals go here. Use a 07700 900 number in the demo." />
+              <Text label="Email" value={cl.contact.email} max={120} onChange={(v) => set((d) => void (d.clients[i].contact.email = v))} />
+            </div>
+            <div className="mt-split">
+              <div className="mt-stack">
+                <Toggle label="A purchase order on every job" checked={cl.po_required} onChange={(v) => set((d) => void (d.clients[i].po_required = v))} />
+                <Toggle label="On stop" checked={cl.status === 'on_stop'} onChange={(v) => set((d) => void (d.clients[i].status = v ? 'on_stop' : 'active'))} hint="No new work is booked for them." />
+              </div>
+              <Text label="Notes for staff" value={cl.instructions} max={300} onChange={(v) => set((d) => void (d.clients[i].instructions = v))} hint="Never said to callers." />
+            </div>
+          </>
+        )}
+      </Folds>
       <div className="row-tools">
         <button type="button" className="small" disabled={a.clients.length >= MAX_CLIENTS} onClick={add}>+ Add a client</button>
       </div>
@@ -136,9 +185,26 @@ export function StepCustomers({ a, set }: Props) {
 
       <h3 className="sub">Your own properties</h3>
       <p className="hint">Add a few of your own, to ring about as the person who lives there: “Call as” lists them on the demo phone. Use made-up names and numbers (07700 900 numbers are safe): texts only ever appear in the demo.</p>
-      {a.properties.map((p, i) => (
-        <OwnProperty key={p.key} p={p} clients={a.clients} districts={a.area.districts} set={(edit) => set((d) => edit(d.properties[i]))} remove={() => set((d) => void d.properties.splice(i, 1))} />
-      ))}
+      {/* Mounted while empty too, so the first property added opens by itself. */}
+      <Folds
+        label="Your own properties" items={a.properties} keyOf={(p) => p.key}
+        summary={(p) => (
+          <>
+            <b>{[p.number, p.street].filter(Boolean).join(' ') || 'New property'}</b>
+            <span className="muted">{PROPERTY_KIND[p.kind]}{p.district ? `, ${p.district}` : ''}</span>
+            {p.occupant.name ? <span>{p.occupant.name}</span> : null}
+            <span className="muted">{clientName(p.client) ?? 'A homeowner’s own'}</span>
+          </>
+        )}
+        issue={(p) =>
+          !p.number || !p.street || !p.district ? 'Needs an address'
+          : !a.area.districts.includes(p.district) ? 'Outside your area'
+          : !p.occupant.phone ? 'Needs a phone'
+          : p.client && !clientName(p.client) ? 'Client removed'
+          : null}
+      >
+        {(p, i) => <OwnProperty p={p} clients={a.clients} districts={a.area.districts} set={(edit) => set((d) => edit(d.properties[i]))} remove={() => set((d) => void d.properties.splice(i, 1))} />}
+      </Folds>
       <div className="row-tools">
         <button
           type="button" className="small" disabled={a.properties.length >= MAX_OWN_PROPERTIES}
@@ -152,40 +218,32 @@ export function StepCustomers({ a, set }: Props) {
   );
 }
 
+const PROPERTY_KIND: Record<OwnPropertyAnswer['kind'], string> = { house: 'House', flat: 'Flat', bungalow: 'Bungalow', commercial: 'Business site' };
+
 function OwnProperty({ p, clients, districts, set, remove }: {
   p: OwnPropertyAnswer; clients: ClientAnswer[]; districts: string[]; set: (edit: (p: OwnPropertyAnswer) => void) => void; remove: () => void;
 }) {
-  const where = [p.number, p.street].filter(Boolean).join(' ') || 'New property';
   return (
-    <div className="group on area-card">
-      <div className="area-head">
-        <b className="area-name">{where}</b>
-        <button type="button" className="ghost small" onClick={remove}>Remove</button>
-      </div>
-      <div className="three">
-        <Text label="Number or name" value={p.number} max={30} onChange={(v) => set((x) => void (x.number = v))} hint="“14”, or “Flat 2, 7”" />
-        <Text label="Street" value={p.street} max={60} onChange={(v) => set((x) => void (x.street = v))} />
-        <Select label="Postcode district" value={p.district} options={districts.map((d) => ({ value: d, label: d }))} onChange={(v) => set((x) => void (x.district = v))} />
-      </div>
-      <div className="three">
-        <Select
-          label="What it is" value={p.kind}
-          options={[{ value: 'house', label: 'House' }, { value: 'flat', label: 'Flat' }, { value: 'bungalow', label: 'Bungalow' }, { value: 'commercial', label: 'Business site' }]}
-          onChange={(v) => set((x) => void (x.kind = v as OwnPropertyAnswer['kind']))}
-        />
-        <Select
-          label="Whose it is" value={p.client ?? ''}
-          options={[{ value: '', label: 'A homeowner’s own' }, ...clients.filter((c) => c.name).map((c) => ({ value: c.key, label: c.name }))]}
-          onChange={(v) => set((x) => void (x.client = v || null))}
-        />
-        <Toggle label="Gas supply" checked={p.gas} onChange={(v) => set((x) => void (x.gas = v))} />
-      </div>
-      <div className="three">
-        <Text label="Who lives or works there" value={p.occupant.name} max={60} onChange={(v) => set((x) => void (x.occupant.name = v))} />
-        <Text label="Their phone" value={p.occupant.phone} max={20} onChange={(v) => set((x) => void (x.occupant.phone = v))} hint="Ring as this number on the demo phone." />
-        <Text label="Stopcock" value={p.stopcock} max={80} onChange={(v) => set((x) => void (x.stopcock = v))} hint="Where it is, for a leak." />
-      </div>
+    <div className="mt-grid4">
+      <Text label="Number or name" value={p.number} max={30} onChange={(v) => set((x) => void (x.number = v))} hint="“14”, or “Flat 2, 7”" />
+      <Text label="Street" value={p.street} max={60} onChange={(v) => set((x) => void (x.street = v))} />
+      <Select label="Postcode district" value={p.district} options={districts.map((d) => ({ value: d, label: d }))} onChange={(v) => set((x) => void (x.district = v))} />
+      <Select
+        label="What it is" value={p.kind}
+        options={(Object.keys(PROPERTY_KIND) as OwnPropertyAnswer['kind'][]).map((k) => ({ value: k, label: PROPERTY_KIND[k] }))}
+        onChange={(v) => set((x) => void (x.kind = v))}
+      />
+      <Text label="Who lives or works there" value={p.occupant.name} max={60} onChange={(v) => set((x) => void (x.occupant.name = v))} />
+      <Text label="Their phone" value={p.occupant.phone} max={20} onChange={(v) => set((x) => void (x.occupant.phone = v))} hint="Ring as this number on the demo phone." />
+      <Select
+        label="Whose it is" value={p.client ?? ''}
+        options={[{ value: '', label: 'A homeowner’s own' }, ...clients.filter((c) => c.name).map((c) => ({ value: c.key, label: c.name }))]}
+        onChange={(v) => set((x) => void (x.client = v || null))}
+      />
+      <div className="mt-toggle-cell"><Toggle label="Gas supply" checked={p.gas} onChange={(v) => set((x) => void (x.gas = v))} /></div>
+      <Text label="Stopcock" value={p.stopcock} max={80} onChange={(v) => set((x) => void (x.stopcock = v))} hint="Where it is, for a leak." />
       <Text label="Boiler" value={p.boiler} max={80} onChange={(v) => set((x) => void (x.boiler = v))} hint="Make and where it is." />
+      <div className="mt-end"><button type="button" className="ghost small" onClick={remove}>Remove</button></div>
     </div>
   );
 }
@@ -196,11 +254,11 @@ export function StepTrades({ a, set }: Props) {
   return (
     <div className="fields">
       <p className="lead">What you do. Gas work goes only to engineers with a Gas Safe number.</p>
-      {a.trades.map((t, i) => (
-        <div className="toggle-row" key={t.key}>
-          <Toggle label={t.label} checked={t.on} onChange={(v) => set((d) => void (d.trades[i].on = v))} hint={t.gas ? 'Gas work' : undefined} />
-        </div>
-      ))}
+      <div className="mt-trades">
+        {a.trades.map((t, i) => (
+          <Toggle key={t.key} label={t.label} checked={t.on} onChange={(v) => set((d) => void (d.trades[i].on = v))} hint={t.gas ? 'Gas work' : undefined} />
+        ))}
+      </div>
       <div className="row-tools">
         <button type="button" className="small" disabled={a.trades.length >= MAX_TRADES} onClick={() => {
           const label = prompt('Your own trade, e.g. "Fencing and gates"');
@@ -209,13 +267,19 @@ export function StepTrades({ a, set }: Props) {
       </div>
       <h3 className="sub">What you don't do</h3>
       <p className="hint">And who to suggest instead, so a caller isn't left with nothing.</p>
-      {a.dont_do.map((x, i) => (
-        <div className="faq" key={i}>
-          <input aria-label="What you don't do" value={x.what} maxLength={60} onChange={(e) => set((d) => void (d.dont_do[i].what = e.target.value))} />
-          <input aria-label="Who to suggest" value={x.suggest} maxLength={160} onChange={(e) => set((d) => void (d.dont_do[i].suggest = e.target.value))} />
-          <button type="button" className="ghost" aria-label={`Remove ${x.what}`} onClick={() => set((d) => void d.dont_do.splice(i, 1))}>✕</button>
+      {a.dont_do.length ? (
+        <div className="mt-dont">
+          {/* Column names for the eye; each box carries its own label. */}
+          <div className="mt-dont-row mt-dont-head" aria-hidden="true"><span>What you don't do</span><span>Who to suggest</span></div>
+          {a.dont_do.map((x, i) => (
+            <div className="mt-dont-row" key={i}>
+              <input aria-label="What you don't do" value={x.what} maxLength={60} onChange={(e) => set((d) => void (d.dont_do[i].what = e.target.value))} />
+              <input aria-label="Who to suggest" value={x.suggest} maxLength={160} onChange={(e) => set((d) => void (d.dont_do[i].suggest = e.target.value))} />
+              <button type="button" className="ghost" aria-label={`Remove ${x.what}`} onClick={() => set((d) => void d.dont_do.splice(i, 1))}>✕</button>
+            </div>
+          ))}
         </div>
-      ))}
+      ) : null}
       <div className="row-tools">
         <button type="button" className="small" disabled={a.dont_do.length >= 8} onClick={() => set((d) => void d.dont_do.push({ what: '', suggest: '' }))}>+ Add one</button>
       </div>
@@ -227,6 +291,8 @@ export function StepTrades({ a, set }: Props) {
 
 export function StepEngineers({ a, set }: Props) {
   const trades = a.trades.filter((t) => t.on);
+  const gasTrades = new Set(a.trades.filter((t) => t.gas).map((t) => t.key));
+  const rota = useId();
   const add = () => set((d) => void d.engineers.push({
     key: `engineer_${Date.now().toString(36)}`, name: '', trades: [], gas_safe: '', niceic: false, oftec: false, days: [1, 2, 3, 4, 5], districts: [], per_window: 2, mobile: '',
   }));
@@ -234,62 +300,100 @@ export function StepEngineers({ a, set }: Props) {
   return (
     <div className="fields">
       <p className="lead">Who goes out. Callers hear first names only, and a job is booked only with someone who does that trade, covers that district and works that day.</p>
-      {a.engineers.map((e, i) => (
-        <div className="group on area-card" key={e.key}>
-          <div className="area-head">
-            <input aria-label="Engineer's name" className="area-name" placeholder="Full name" value={e.name} maxLength={60} onChange={(ev) => set((d) => void (d.engineers[i].name = ev.target.value))} />
-            <button type="button" className="ghost small" onClick={() => set((d) => {
-              d.engineers.splice(i, 1);
-              d.on_call.nights.forEach((n) => (n.engineers = n.engineers.filter((k) => k !== e.key)));
-            })}>Remove</button>
-          </div>
-          <fieldset className="chips">
-            <legend>Trades</legend>
-            {trades.map((t) => (
-              <label key={t.key} className={e.trades.includes(t.key) ? 'on' : ''}>
-                <input type="checkbox" checked={e.trades.includes(t.key)} onChange={(ev) => set((d) => void (d.engineers[i].trades = ev.target.checked ? [...e.trades, t.key] : e.trades.filter((x) => x !== t.key)))} />
-                {t.label}
-              </label>
-            ))}
-          </fieldset>
-          <div className="three">
-            <Text label="Gas Safe number" value={e.gas_safe} max={30} onChange={(v) => set((d) => void (d.engineers[i].gas_safe = v))} hint="Empty: no gas work." />
-            <Text label="Their mobile" value={e.mobile} max={20} onChange={(v) => set((d) => void (d.engineers[i].mobile = v))} hint="Pages land here in the demo; never given to callers." />
-            <Num label="Jobs per window" value={e.per_window} min={1} max={6} onChange={(v) => set((d) => void (d.engineers[i].per_window = v))} />
-          </div>
-          <Toggle label="NICEIC registered" checked={e.niceic} onChange={(v) => set((d) => void (d.engineers[i].niceic = v))} />
-          <DayChips legend="Works on" days={e.days} onChange={(days) => set((d) => void (d.engineers[i].days = days))} />
-          <ListText label="Districts" value={e.districts} placeholder="Empty: the whole area" onChange={(v) => set((d) => void (d.engineers[i].districts = v))} />
-        </div>
-      ))}
+      <Folds
+        label="Engineers" items={a.engineers} keyOf={(e) => e.key}
+        summary={(e) => (
+          <>
+            <b>{e.name || 'New engineer'}</b>
+            <span>{trades.filter((t) => e.trades.includes(t.key)).map((t) => shortTrade(t.label)).join(', ') || 'no trades'}</span>
+            <span className="muted">{dayRange(e.days)}</span>
+            <span className="muted">{e.per_window} {e.per_window === 1 ? 'job' : 'jobs'} a window</span>
+            {e.gas_safe ? <span className="badge ok">Gas Safe</span> : null}
+            {e.niceic ? <span className="badge">NICEIC</span> : null}
+          </>
+        )}
+        issue={(e) =>
+          !e.name ? 'Needs a name'
+          : !e.days.length ? 'Works no days'
+          : !e.gas_safe && e.trades.some((t) => gasTrades.has(t)) ? 'Needs a Gas Safe number'
+          : !e.trades.length ? 'No trades'
+          : null}
+      >
+        {(e, i) => (
+          <>
+            <div className="area-head">
+              <input aria-label="Engineer's name" className="area-name" placeholder="Full name" value={e.name} maxLength={60} onChange={(ev) => set((d) => void (d.engineers[i].name = ev.target.value))} />
+              <Toggle label="NICEIC registered" checked={e.niceic} onChange={(v) => set((d) => void (d.engineers[i].niceic = v))} />
+              <button type="button" className="ghost small mt-push" onClick={() => set((d) => {
+                d.engineers.splice(i, 1);
+                d.on_call.nights.forEach((n) => (n.engineers = n.engineers.filter((k) => k !== e.key)));
+              })}>Remove</button>
+            </div>
+            <fieldset className="chips">
+              <legend>Trades</legend>
+              {trades.map((t) => (
+                <label key={t.key} className={e.trades.includes(t.key) ? 'on' : ''}>
+                  <input type="checkbox" checked={e.trades.includes(t.key)} onChange={(ev) => set((d) => void (d.engineers[i].trades = ev.target.checked ? [...e.trades, t.key] : e.trades.filter((x) => x !== t.key)))} />
+                  {t.label}
+                </label>
+              ))}
+            </fieldset>
+            <div className="three">
+              <Text label="Gas Safe number" value={e.gas_safe} max={30} onChange={(v) => set((d) => void (d.engineers[i].gas_safe = v))} hint="Empty: no gas work." />
+              <Text label="Their mobile" value={e.mobile} max={20} onChange={(v) => set((d) => void (d.engineers[i].mobile = v))} hint="Pages land here in the demo; never given to callers." />
+              <Num label="Jobs per window" value={e.per_window} min={1} max={6} onChange={(v) => set((d) => void (d.engineers[i].per_window = v))} />
+            </div>
+            <div className="mt-days-row">
+              <DayChips legend="Works on" days={e.days} onChange={(days) => set((d) => void (d.engineers[i].days = days))} />
+              <ListText label="Districts" value={e.districts} placeholder="Empty: the whole area" onChange={(v) => set((d) => void (d.engineers[i].districts = v))} />
+            </div>
+          </>
+        )}
+      </Folds>
       <div className="row-tools">
         <button type="button" className="small" disabled={a.engineers.length >= MAX_ENGINEERS} onClick={add}>+ Add an engineer</button>
       </div>
 
       <h3 className="sub">On call at night</h3>
       <p className="hint">Two a night, one Gas Safe whenever you do gas work: an emergency pages them, and nobody is named to the caller until they accept.</p>
-      {NIGHTS.map(([day, label]) => {
-        const i = a.on_call.nights.findIndex((n) => n.day === day);
-        const pair = i >= 0 ? a.on_call.nights[i].engineers : [];
-        const setPair = (slot: number, v: string) => set((d) => {
-          let n = d.on_call.nights.find((x) => x.day === day);
-          if (!n) d.on_call.nights.push((n = { day, engineers: [] }));
-          const next = [...n.engineers];
-          next[slot] = v;
-          n.engineers = next.filter(Boolean);
-        });
-        return (
-          <div className="two" key={day}>
-            <Select label={`${label} night`} value={pair[0] ?? ''} options={options} onChange={(v) => setPair(0, v)} />
-            <Select label="With" value={pair[1] ?? ''} options={options} onChange={(v) => setPair(1, v)} />
-          </div>
-        );
-      })}
-      <Num
-        label="No answer to a page after" value={a.on_call.escalate_minutes} min={5} max={60} suffix="minutes"
-        onChange={(v) => set((d) => void (d.on_call.escalate_minutes = v))} hint="Then the other engineer on call is paged, and after them the duty manager."
-      />
-      <div className="two">
+      <table className="mt-rota">
+        <thead>
+          <tr><th scope="col">Night</th><th scope="col">On call</th><th scope="col">With</th></tr>
+        </thead>
+        <tbody>
+          {NIGHTS.map(([day, label]) => {
+            const i = a.on_call.nights.findIndex((n) => n.day === day);
+            const pair = i >= 0 ? a.on_call.nights[i].engineers : [];
+            const setPair = (slot: number, v: string) => set((d) => {
+              let n = d.on_call.nights.find((x) => x.day === day);
+              if (!n) d.on_call.nights.push((n = { day, engineers: [] }));
+              const next = [...n.engineers];
+              next[slot] = v;
+              n.engineers = next.filter(Boolean);
+            });
+            const id = `${rota}-${day}`;
+            return (
+              <tr key={day}>
+                <th scope="row" id={id}>{label}</th>
+                {[0, 1].map((slot) => (
+                  <td key={slot}>
+                    {/* The column heads are for the eye; a screen reader hears the night with each box. */}
+                    <label className="sr-only" htmlFor={`${id}-${slot}`}>{slot ? 'With' : `${label} night`}</label>
+                    <select id={`${id}-${slot}`} aria-describedby={slot ? id : undefined} value={pair[slot] ?? ''} onChange={(ev) => setPair(slot, ev.target.value)}>
+                      {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <div className="three">
+        <Num
+          label="No answer to a page after" value={a.on_call.escalate_minutes} min={5} max={60} suffix="minutes"
+          onChange={(v) => set((d) => void (d.on_call.escalate_minutes = v))} hint="Then the other engineer on call is paged, and after them the duty manager."
+        />
         <Text label="Duty manager" value={a.on_call.duty_manager.name} max={60} onChange={(v) => set((d) => void (d.on_call.duty_manager.name = v))} hint="Texted when nobody on call can take an emergency." />
         <Text label="Their mobile" value={a.on_call.duty_manager.mobile} max={20} onChange={(v) => set((d) => void (d.on_call.duty_manager.mobile = v))} />
       </div>
@@ -367,33 +471,39 @@ export function StepVisits(p: Props) {
   const { a, set } = p;
   const v = a.visits;
   return (
-    <div className="fields">
-      <Choice
-        legend="When the receptionist answers" value={a.answering}
-        options={[
-          { value: 'all', label: 'Every call', hint: 'it answers straight away, day and night' },
-          { value: 'overflow', label: 'When the office is busy', hint: 'calls your team can’t get to' },
-          { value: 'out_of_hours', label: 'Out of hours only', hint: 'evenings, nights and weekends, with the on-call engineers' },
-          { value: 'lunch', label: 'Over lunch', hint: 'while the office is at lunch' },
-        ]}
-        onChange={(val) => set((d) => void (d.answering = val as MaintenanceAnswers['answering']))}
-      />
+    // mt-visits tightens the shared week (common/Hours.tsx) from here, so other presets keep theirs.
+    <div className="fields mt-visits">
+      <div className="mt-answering">
+        <Choice
+          legend="When the receptionist answers" value={a.answering}
+          options={[
+            { value: 'all', label: 'Every call', hint: 'it answers straight away, day and night' },
+            { value: 'overflow', label: 'When the office is busy', hint: 'calls your team can’t get to' },
+            { value: 'out_of_hours', label: 'Out of hours only', hint: 'evenings, nights and weekends, with the on-call engineers' },
+            { value: 'lunch', label: 'Over lunch', hint: 'while the office is at lunch' },
+          ]}
+          onChange={(val) => set((d) => void (d.answering = val as MaintenanceAnswers['answering']))}
+        />
+      </div>
       <p className="hint">It changes how the receptionist says hello. The demo line always answers, so you can try it at any time.</p>
       <Hours {...p} options={OFFICE} add="+ Add hours" lead="When the office is open. Out of these hours, the engineers on call take emergencies.">
         <h3 className="sub">Visit windows</h3>
         <p className="hint">Callers book a window, never an exact time. An all-day window can hold a morning and an afternoon.</p>
-        {v.windows.map((w, i) => (
-          <div className="group on area-card" key={w.key}>
-            <div className="area-head">
-              <input aria-label="Window name" className="area-name" value={w.label} maxLength={30} onChange={(e) => set((d) => void (d.visits.windows[i].label = e.target.value))} />
-              <input aria-label={`${w.label} from`} type="time" value={w.from} onChange={(e) => set((d) => void (d.visits.windows[i].from = e.target.value))} />
-              <input aria-label={`${w.label} to`} type="time" value={w.to} onChange={(e) => set((d) => void (d.visits.windows[i].to = e.target.value))} />
-              <button type="button" className="ghost small" onClick={() => set((d) => void d.visits.windows.splice(i, 1))}>Remove</button>
+        <div className="mt-windows">
+          {v.windows.map((w, i) => (
+            <div className="mt-window" key={w.key}>
+              <div className="mt-window-head">
+                <input aria-label="Window name" className="area-name" value={w.label} maxLength={30} onChange={(e) => set((d) => void (d.visits.windows[i].label = e.target.value))} />
+                <input aria-label={`${w.label} from`} type="time" value={w.from} onChange={(e) => set((d) => void (d.visits.windows[i].from = e.target.value))} />
+                <span className="muted">to</span>
+                <input aria-label={`${w.label} to`} type="time" value={w.to} onChange={(e) => set((d) => void (d.visits.windows[i].to = e.target.value))} />
+                <Pounds label="Extra charge" pence={w.premium_pence} onChange={(x) => set((d) => void (d.visits.windows[i].premium_pence = x))} />
+                <button type="button" className="ghost small" onClick={() => set((d) => void d.visits.windows.splice(i, 1))}>Remove</button>
+              </div>
+              <DayChips legend="On" days={w.days} onChange={(days) => set((d) => void (d.visits.windows[i].days = days))} />
             </div>
-            <DayChips legend="On" days={w.days} onChange={(days) => set((d) => void (d.visits.windows[i].days = days))} />
-            <Pounds label="Extra charge" pence={w.premium_pence} onChange={(x) => set((d) => void (d.visits.windows[i].premium_pence = x))} />
-          </div>
-        ))}
+          ))}
+        </div>
         <div className="row-tools">
           <button type="button" className="small" disabled={v.windows.length >= MAX_WINDOWS} onClick={() => set((d) => void d.visits.windows.push({ key: `window_${Date.now().toString(36)}`, label: 'All day', from: '08:00', to: '17:00', premium_pence: 0, days: [1, 2, 3, 4, 5] }))}>+ Add a window</button>
         </div>
@@ -403,8 +513,10 @@ export function StepVisits(p: Props) {
         <Num label="Book up to" value={v.horizon_days} min={1} max={60} suffix="days ahead" onChange={(x) => set((d) => void (d.visits.horizon_days = x))} />
         <Pounds label="No access, no notice" pence={v.abortive_fee_pence} onChange={(x) => set((d) => void (d.visits.abortive_fee_pence = x))} hint="Charged for a wasted visit." />
       </div>
-      <Toggle label="Someone over 18 must be in" checked={v.adult_present} onChange={(x) => set((d) => void (d.visits.adult_present = x))} />
-      <Toggle label="The engineer texts when on the way" checked={v.call_ahead} onChange={(x) => set((d) => void (d.visits.call_ahead = x))} />
+      <div className="two">
+        <Toggle label="Someone over 18 must be in" checked={v.adult_present} onChange={(x) => set((d) => void (d.visits.adult_present = x))} />
+        <Toggle label="The engineer texts when on the way" checked={v.call_ahead} onChange={(x) => set((d) => void (d.visits.call_ahead = x))} />
+      </div>
     </div>
   );
 }
