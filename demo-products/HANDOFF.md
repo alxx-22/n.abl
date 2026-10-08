@@ -43,6 +43,19 @@ and works through a review's findings. It rebases before every push and
 keeps edits to shared files small; if you are changing the same screens,
 say so here.
 
+Since then (all pushed, each with `npm run check` and its walkthrough
+passing): the repairs builder's long steps (`3d48bfc`), the estate builder's
+hours, team and listings (`2d10681`), the estate Applicants (filters and a
+search) and Properties (Manage in a side panel) (`876c629`), the repairs
+back office: jobs, properties and compliance, clients and bills (`59b80ed`),
+coconut is not a nut allergy and a finished lunch is not "fully booked"
+(`aa1ebe6`), and a buyer who books a valuation stays a buyer (`1edede2`).
+The review's 28 unchecked findings are in `REVIEW-FINDINGS.md`, split in
+`SESSIONS.md` (cloud: repairs and estate agent; ui: restaurant). Paused at
+Alex's 5-hour usage limit; next: a walkthrough of every preset with
+screenshots for Alex, the restaurant's findings, and the menu step (its
+editor is shared with the takeaway: waiting on the windows session).
+
 ### Property maintenance M3 (the cloud session): built (8 October)
 
 M3 is done, and with it the repairs preset as the spec plans it
