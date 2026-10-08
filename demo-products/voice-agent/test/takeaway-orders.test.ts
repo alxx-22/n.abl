@@ -189,3 +189,14 @@ test('"my usual": the last order before today from the calling number, to add ag
   // A caller who says they're the driver hears nothing of the customer from the order.
   assert.match((await (await call(t, at('19:00'), '+447700900998')).run('find_order', { order_number: past.reference })).message ?? '', /^No order/, "last week's isn't today's");
 });
+
+test('a Relay UK caller: the order says so on the ticket', async () => {
+  const t = await firebird('tk-relay');
+  const c = await call(t, at('19:00'), AMY);
+  c.ctx.state.relay = true;
+  await c.run('add_to_order', { item: 'Pizza night', options: ['margherita', 'pepperoni', 'coke', 'fanta'] });
+  await c.run('set_fulfilment', { type: 'collection' });
+  await c.run('review_order', {});
+  const placed = await c.run('confirm_order', { name: 'Sam', allergy_notes: 'none' });
+  assert.deepEqual((await repo.getOrder(t.id, placed.order_number))!.flags, ['relay']);
+});

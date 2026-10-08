@@ -139,6 +139,7 @@ export function OrderBoard({ id, state, spec, nowMs, onDone }: { id: string; sta
                   <footer>
                     {o.flags?.includes('big') ? <span className="badge warn" title="Takes two of the kitchen's slots">Big order</span> : null}
                     {o.flags?.includes('check_id') ? <span className="badge warn" title="Alcohol: photo ID if they look under 25">Check ID</span> : null}
+                    {o.flags?.includes('relay') ? <span className="badge" title="The caller used Relay UK: text them rather than ring">Relay UK</span> : null}
                     <span className={`badge ${pay.ok ? 'ok' : 'warn'}`}>{pay.text}</span>
                     <span className="muted small">{o.total}</span>
                     {actions(o)}

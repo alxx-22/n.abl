@@ -1306,7 +1306,10 @@ const TOOLS: Record<string, Tool> = {
         lines: ctx.state.lines, subtotal_pence: subtotal, delivery_fee_pence: fee, total_pence: subtotal + fee,
         allergy_notes: namedAllergy(noneToNull(str(args.allergy_notes)), ctx.state.heard) ?? null, source: ctx.channel === 'phone' ? 'phone' : ctx.channel, call_id: ctx.callId,
         ...(payNote ? { pay_note: payNote } : {}),
-        ...(isBig(ctx) || hasAlcohol(ctx) ? { flags: [...(isBig(ctx) ? ['big'] : []), ...(hasAlcohol(ctx) ? ['check_id'] : [])] } : {}),
+        // Marks on the ticket: two slots, an ID check, a Relay UK caller (the driver or shop may need to text, not ring).
+        ...(isBig(ctx) || hasAlcohol(ctx) || ctx.state.relay
+          ? { flags: [...(isBig(ctx) ? ['big'] : []), ...(hasAlcohol(ctx) ? ['check_id'] : []), ...(ctx.state.relay ? ['relay'] : [])] }
+          : {}),
         ...(recipient ? { recipient } : {}),
       });
       record(ctx, order.reference, 'order', 'committed');
