@@ -23,6 +23,8 @@ import { amountsIn } from '../domain/amounts.ts';
 import { knownTimes, timesIn } from '../domain/clock-times.ts';
 import { tenantNow } from '../domain/time.ts';
 import { armSafety, noteAdvice, safetyCorrection } from './safety.ts';
+import { REACTION_NOW, REACTION_SCRIPT, armReaction, noteReactionSaid } from './reaction.ts';
+import { addDays, toLocal, zonedToUtc } from '../domain/time.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
 import { generateText } from './gemini.ts';
@@ -138,6 +140,7 @@ const CONTEXTUAL_WATCHDOG_MS = 4000;
 /** A repairs contractor's: its jobs are booked with the job tool, not create_booking. */
 // A takeaway's corrections, where the shared wording names another business's tools (presets/takeaway.md §8).
 const TAKEAWAY_CORRECTIONS: Partial<Record<Flag['rule'], string>> = {
+  safety_delayed: `[Correction from the system: this may be anaphylaxis. Before anything else, say: "${REACTION_SCRIPT.join(' ')}"]`,
   invented_time:
     "[Correction from the system: no tool has given that time. Never say a wait or a time you haven't checked: say sorry, let me check, then call get_wait_times (or set_fulfilment for their order) and say only what it returns.]",
   invented_price:
@@ -542,6 +545,11 @@ export class CallSession extends EventEmitter<CallEvents> {
       this.record('system', { event: 'safety_armed', kind });
       this.session?.sendText(safetyCorrection(kind, m.nation));
     }
+    // A takeaway's caller describing a severe allergic reaction: 999 first (core/reaction.ts).
+    if (this.state.takeaway && armReaction(this.state, clean)) {
+      this.record('system', { event: 'reaction_armed' });
+      this.session?.sendText(REACTION_NOW);
+    }
   }
 
   private flushAgent(interrupted: boolean): void {
@@ -553,8 +561,9 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.emitLine('agent', text, true);
     this.record('agent', { text: clean, interrupted });
     this.turns?.agentSaid(clean);
-    if (this.state.estate || this.state.maintenance) this.state.said.push(clean);
+    if (this.state.estate || this.state.maintenance || this.state.takeaway) this.state.said.push(clean);
     this.noteSafetySaid();
+    this.noteReaction();
     this.raiseHeld();
     for (const f of checkUtterance(text, this.state, this.staffNames, this.opts.tenant.profile.maintenance)) this.raise(f);
     if (!this.state.messageTaken && !this.state.messageChecked && PROMISED_MESSAGE.test(clean)) {
@@ -599,6 +608,35 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (!done) return;
     this.record('system', { event: 'safety_advice_said', kind: done.kind });
     if (done.incident) void this.opts.repo.updateIncident(this.opts.tenant.id, done.incident, { advised_at: this.now() }).catch(() => {});
+  }
+
+  /**
+   * A takeaway's caller with a severe allergic reaction: once 999 has been
+   * said, the tools open and the manager gets an urgent message with what the
+   * caller said, linked to their order today if they have one.
+   */
+  private noteReaction(): void {
+    if (!noteReactionSaid(this.state)) return;
+    const r = this.state.reaction!;
+    this.record('system', { event: 'reaction_advice_said' });
+    const t = this.opts.tenant;
+    const phone = this.opts.callerPhone ?? null;
+    const words = this.state.heard[r.armed_at - 1] ?? '';
+    void (async () => {
+      const tz = t.profile.timezone;
+      const date = toLocal(this.now(), tz).date;
+      const today = phone ? await this.opts.repo.ordersForPhone(t.id, phone, zonedToUtc(date, '00:00', tz), zonedToUtc(addDays(date, 1), '00:00', tz)) : [];
+      const order = today.find((o) => o.status !== 'cancelled');
+      await this.opts.repo.addMessage({
+        tenant_id: t.id, call_id: this.callId, kind: 'message', from_name: order?.name ?? null, from_phone: phone,
+        body: `Possible severe allergic reaction${order ? ` after order ${order.reference}` : ''}. The caller said: "${words}". Told to call 999 and use an auto-injector if they have one.`,
+        status: 'new', category: 'allergy', urgency: 'urgent', reference: order?.reference ?? null, details: { reaction: true },
+      });
+      const a: Action = { kind: 'safety_advice', title: 'Allergic reaction: 999 advised', detail: order ? `Order ${order.reference}` : undefined };
+      this.emit('action', a);
+      this.publish('action', { action: a });
+      this.record('action', a);
+    })().catch(() => {});
   }
 
   /**
@@ -680,9 +718,13 @@ export class CallSession extends EventEmitter<CallEvents> {
     // What the receptionist has said so far this turn counts too: it often
     // says a home's must-say line and asks for times in one breath, before
     // the turn's words are final.
+    // The caller's words that led to the call are heard before it runs: a tool that checks
+    // what they said (an address, "I'm collecting") must not miss their last line.
+    if (this.callerBuf.trim() && !this.agentBuf.trim()) this.flushCaller();
     const partial = this.agentBuf.trim();
-    if (partial && (this.state.estate || this.state.maintenance)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
+    if (partial && (this.state.estate || this.state.maintenance || this.state.takeaway)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
     this.noteSafetySaid();
+    this.noteReaction();
     const ctx: ToolContext = {
       tenant: this.opts.tenant,
       repo: this.opts.repo,

@@ -29,6 +29,7 @@ import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, 
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
+import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
 export { record, type RecordKind } from './tool-kit.ts';
@@ -156,6 +157,8 @@ export interface CallState {
   references: string[];
   /** A takeaway's fee and minimum for the postcode get_wait_times was given, before collection or delivery is set. */
   deliveryTerms: { fee_pence: number; min_order_pence: number } | null;
+  /** A takeaway caller describing a severe allergic reaction: every tool waits until 999 has been said (core/reaction.ts). */
+  reaction: ReactionState | null;
   /** The streets on orders find_order looked up: never said to the caller unless they said it first. */
   privateAddresses: string[];
   /** An estate agency's times of day the receptionist may say (minutes after midnight), and the ranges its tools gave. */
@@ -172,7 +175,7 @@ export function newCallState(): CallState {
     seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
-    invoice: null, emergencyTrade: null, amounts: [], references: [], deliveryTerms: null, privateAddresses: [], times: [], timeRanges: [],
+    invoice: null, emergencyTrade: null, amounts: [], references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
   };
 }
 
@@ -922,8 +925,13 @@ const TOOLS: Record<string, Tool> = {
       const mods = resolveModifiers(menu, item, [...requested, ...choicesIn(menu, item, words, requested)]);
       if (!mods.ok) {
         const meal = mods.unmatched.length ? dealForOptions(menu, item, mods.unmatched, requested) : null;
+        // A deal missing a choice stays one deal. Live, 8 October: a Pizza night without its drinks became two pizzas and two cans.
+        const deal = !mods.unmatched.length && dealOf(menu, item.key);
         return {
-          added: false, question: mods.question, nothing_added: 'Nothing was added yet. Ask the caller this, then call add_to_order again with their answer in options.',
+          added: false, question: mods.question,
+          nothing_added: deal
+            ? `Nothing was added yet. Ask the caller this, then call add_to_order again with item "${item.name}" and options ${JSON.stringify(requested)} plus their answer: it is all one ${item.name}, never separate items.`
+            : 'Nothing was added yet. Ask the caller this, then call add_to_order again with their answer in options.',
           ...(meal ? { as_a_meal: `${mods.unmatched.join(' and ')} ${mods.unmatched.length > 1 ? 'come' : 'comes'} with the ${meal.deal}. Ask if they'd like it as a ${meal.deal}, or the items on their own. For the meal: add_to_order with item "${meal.deal}" and options ${JSON.stringify(meal.options)}.` } : {}),
         };
       }
@@ -1420,6 +1428,8 @@ export function toolDeclarations(t: Tenant, o: ToolOptions = { canTransfer: fals
 export async function runTool(name: string, args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const tool = TOOLS[name];
   if (!tool || (tool.when && !tool.when(ctx.tenant, { canTransfer: Boolean(ctx.telephony) }))) return { error: `No tool called ${name}.` };
+  // A severe allergic reaction: 999 comes before any tool (core/reaction.ts).
+  if (ctx.state.reaction && !ctx.state.reaction.spoken && name !== 'end_call') return reactionFirst();
   try {
     const result = await tool.handler(args ?? {}, ctx);
     const json = JSON.stringify(result);

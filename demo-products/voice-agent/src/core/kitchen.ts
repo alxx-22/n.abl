@@ -123,6 +123,14 @@ async function firstDue(ctx: ToolContext, kind: Kind): Promise<{ due: Date } | {
   return { due: new Date(ready.getTime() + (kind === 'delivery' ? (o.delivery?.extra_minutes ?? 0) * 60000 : 0)) };
 }
 
+/** The street in an address is in what the caller said: "8 Ropewalk Way" in "eight rope walk way". The number may be said in words. */
+export function saidByCaller(address: string, heard: string[]): boolean {
+  const flat = (s: string) => s.toLowerCase().replace(/[^a-z]/g, '');
+  const street = flat(address.replace(/^\s*(?:flat\s+\w+,?\s*)?\d+[a-z]?\b,?/i, ''));
+  // Nothing heard at all (a tool driven without a caller, as the tests do): nothing to check against.
+  return !street || !heard.length || flat(heard.join(' ')).includes(street);
+}
+
 /** set_fulfilment for a takeaway: the kitchen's own queue, the postcode's zone, last orders. */
 export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<Record<string, unknown>> {
   const p = ctx.tenant.profile;
@@ -142,6 +150,8 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
     }
     address = str(args.address) ?? null;
     if (!address) return { ok: false, message: 'Need the first line of the address.' };
+    // Only an address the caller said. Live, 8 October: "99 Test Street" was passed before they had given one.
+    if (!saidByCaller(address, ctx.state.heard)) return { ok: false, message: "Ask for the first line of their address, and use it as they say it: that street isn't one they've said." };
     postcode = pc.full;
     terms = deliveryTerms(o, pc.district);
   }

@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { newCallState, runTool, toolDeclarations, type Action, type ToolContext } from '../src/core/tools.ts';
-import { saidCollection } from '../src/core/kitchen.ts';
+import { saidByCaller, saidCollection } from '../src/core/kitchen.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { defaultAnswers } from '../src/presets/takeaway/answers.ts';
 import { compileTakeaway } from '../src/presets/takeaway/compile.ts';
@@ -185,4 +185,17 @@ test('the kitchen: on a Saturday, nothing is handed over after midnight, and ord
   // Before opening, the first slot after it.
   const early = await call(t, at('11:30', '2026-10-10'));
   assert.equal((await early.run('get_wait_times', {})).collection, 'about 45 minutes, so around 12:15pm');
+});
+
+test('the kitchen: a delivery goes only to an address the caller said', async () => {
+  const t = await firebird('tk-address');
+  const c = await call(t);
+  await c.run('add_to_order', { item: 'Pizza night', options: ['margherita', 'pepperoni', 'coke', 'fanta'] });
+  // Live, 8 October: "99 Test Street" was passed before the caller had given an address.
+  c.ctx.state.heard.push('Can I have a Pizza night delivered, please?', "It's N G two, three E F.");
+  const made = await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG2 3EF', address: '99 Test Street' });
+  assert.deepEqual([made.ok, made.message], [false, "Ask for the first line of their address, and use it as they say it: that street isn't one they've said."]);
+  c.ctx.state.heard.push("It's eight rope walk way.");
+  assert.equal((await c.run('set_fulfilment', { type: 'delivery', postcode: 'NG2 3EF', address: '8 Ropewalk Way' })).ok, true, 'the number in words, the street as heard');
+  assert.equal(saidByCaller('Flat 2, 14 Larch Close', ['I live at flat two, fourteen Larch Close']), true);
 });

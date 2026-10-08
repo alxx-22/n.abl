@@ -9,6 +9,7 @@ import type { MaintenanceSettings } from '../domain/types.ts';
 import { amountsIn } from '../domain/amounts.ts';
 import { knownTimes, timesIn } from '../domain/clock-times.ts';
 import { adviceStarted } from './safety.ts';
+import { said999 } from './reaction.ts';
 import type { CallState } from './tools.ts';
 
 export interface Flag {
@@ -154,6 +155,8 @@ const SURCHARGE = /\b(?:card|contactless) (?:fee|surcharge|charge)\b|\b(?:fee|su
  */
 function takeawayFlags(text: string, state: CallState): Flag[] {
   const flags: Flag[] = [];
+  // A severe allergic reaction: a reply that isn't the 999 advice puts something else first (core/reaction.ts).
+  if (state.reaction && !state.reaction.spoken && !said999(text)) flags.push({ rule: 'safety_delayed', text: text.slice(0, 120) });
   const time = madeUpTime(text, state);
   if (time) flags.push({ rule: 'invented_time', text: time });
   const said = amountsIn(text);

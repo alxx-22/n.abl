@@ -167,3 +167,13 @@ test('ordering: a size already in the words is taken; a missing one is asked for
   assert.match(ask.nothing_added, /^Nothing was added yet\. Ask the caller this/);
   assert.equal(c.ctx.state.lines.length, 4);
 });
+
+test('meal deals: a deal missing a choice is asked for and added again as the same deal, never as separate items', async () => {
+  const t = await firebird('tk-deal-missing');
+  const c = await call(t);
+  // Live, 8 October: a Pizza night without its drinks became two 12 inch pizzas and two cans.
+  const ask = await c.run('add_to_order', { item: 'Pizza night', options: ['Margherita', 'Pepperoni'] });
+  assert.equal(ask.question, 'Pizza night needs a choice of Drinks: Coca-Cola, Diet Coke, Fanta Orange, Sprite.');
+  assert.equal(ask.nothing_added, 'Nothing was added yet. Ask the caller this, then call add_to_order again with item "Pizza night" and options ["Margherita","Pepperoni"] plus their answer: it is all one Pizza night, never separate items.');
+  assert.match((await c.run('add_to_order', { item: 'Pizza night', options: ['Margherita', 'Pepperoni', 'coke', 'fanta'] })).added, /^1 × Pizza night \(Margherita, Pepperoni, Coca-Cola, Fanta Orange\) — £19\.99$/);
+});
