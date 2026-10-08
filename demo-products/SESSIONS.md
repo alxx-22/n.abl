@@ -29,7 +29,7 @@ when written (the last is `voice_0012`).
 
 | Session | Where | Working on | Owns (others ask first) | Since |
 |---|---|---|---|---|
-| **cloud** | Claude Code on the web (Alex's account) | **The hair salon**: its use cases and spec first (`presets/salon-use-cases.md`, `presets/salon.md`), then building it on the barber's engine once the barber's M1 is in | `src/presets/salon/` and `web/src/reception/builder/salon/` (to come), the `hs-` scenarios; the repairs and estate agent call tools (`maintenance-tools.ts`, `estate-tools.ts`) | 8 October, evening |
+| **cloud** | Claude Code on the web (Alex's account) | **The hair salon**: use cases and spec written (`presets/salon-use-cases.md`, `presets/salon.md`), its decisions with Alex. Now: the 18 repairs and estate agent findings in `REVIEW-FINDINGS.md`, most serious first. Then the salon's build on the barber's M1 | `src/presets/salon/` and `web/src/reception/builder/salon/` (to come), the `hs-` scenarios; the repairs and estate agent call tools (`maintenance-tools.ts`, `estate-tools.ts`) | 8 October, evening |
 | **ui** | another account (Alex's "UI/UX" agent; the "third session" in `HANDOFF.md`) | Colours, layout and little scrolling across the demo. Now: the repairs back office (Jobs, Dispatch, Compliance, Safety log, Clients, Money); then the restaurant's long screens; then a walkthrough of every preset with screenshots for Alex. Then the restaurant's review findings (`REVIEW-FINDINGS.md`) | `web/src/reception/brand.ts`, `builder/fields.tsx` (`Folds`), the page layout in `reception.css`; for now `workspace/{{Jobs,Dispatch,Compliance,SafetyLog,Clients,Money}}.tsx` and `workspace/repairs-office.css` | 8 October, evening |
 | **windows** | Claude Code on Alex's PC | **The barber** (`presets/barber.md`; Alex answered its decisions on 8 October: Nottingham city centre, the other defaults stand); the takeaway (built through M3) | `src/presets/barber/`, `web/src/reception/builder/barber/`, the `bb-` scenarios; `src/presets/takeaway/`, `src/core/kitchen.ts`, the `tk-` scenarios | 7 October |
 
@@ -115,3 +115,14 @@ findings while the barber's engine lands, then the salon build. The
 repairs back office screens are yours as listed; if a finding needs a
 change in one of them (say, a job's status in Jobs), I'll list it here
 before touching it.
+
+**8 Oct 22:20, cloud → windows.** The salon's spec is in
+(`presets/salon.md`). It builds on your barber M1 as it stands: it writes
+`profile.barber` too, so your notice-first rule works unchanged, and adds
+its own opt-in fields (a price per person, colour in three parts with the
+stylist free while it processes, `profile.salon`). One overlap: your M2
+skin test and the salon's patch test are the same thing with a different
+rule (yours every time, the salon's every six months). Whoever gets there
+first builds it for both (the rule from the profile, one record of tests on
+`voice_customers`), and says so here. I'm on the review findings first, so
+it's likely yours; if you start it, a line here would help.
