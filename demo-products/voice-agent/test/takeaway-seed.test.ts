@@ -99,8 +99,14 @@ test('the seeded evening: a Friday at 7pm is busy, honest about it, and every de
 
 test('the seeded evening: before opening a few orders for opening time; after closing, everything done', async () => {
   const early = planTakeawaySeed(profile(), at('11:30', '2026-10-10'), 1);
-  assert.ok(early.orders.length <= 4, `${early.orders.length} pre-orders`);
-  for (const o of early.orders) assert.ok(o.ready_at!.getTime() <= at('12:30', '2026-10-10').getTime() && o.status === 'confirmed');
+  // Today's: Leah's usual is last week's.
+  const todays = early.orders.filter((o) => o.phone !== TK_PEOPLE.regular.phone);
+  assert.ok(todays.length <= 4, `${todays.length} pre-orders`);
+  for (const o of todays) assert.ok(o.ready_at!.getTime() <= at('12:30', '2026-10-10').getTime() && o.status === 'confirmed');
+  const usual = early.orders.find((o) => o.phone === TK_PEOPLE.regular.phone)!;
+  assert.deepEqual([usual.status, usual.fulfilment, usual.due_at.toISOString(), usual.lines.map((l) => [l.name, l.modifiers.map((m) => m.name)])], [
+    'completed', 'collection', '2026-10-03T10:30:00.000Z', [['Burger meal', ['Classic beef burger', 'Fries', 'Coca-Cola']], ['Fries', ['regular']]],
+  ]);
   assert.equal((await wait(await started('tk-seed-early', at('11:30', '2026-10-10'), 1), at('11:30', '2026-10-10'))).collection, 'about 45 minutes, so around 12:15pm');
   // Sunday after its 11pm close.
   const late = planTakeawaySeed(profile(), at('23:30', '2026-10-11'), 1);

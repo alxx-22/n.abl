@@ -84,6 +84,11 @@ function knowledge(a: TakeawayAnswers): KnowledgeEntry[] {
     entry('Can I tip the driver?', p.tips, ['tip', 'tips', 'tipping', 'driver']),
     entry('What is your food hygiene rating?', hygieneAnswer(a), ['hygiene', 'rating', 'clean', 'inspection', 'fsa']),
     entry('Do you sell alcohol?', alcoholAnswer(a), ['alcohol', 'beer', 'lager', 'wine', 'cider', 'drink', 'id', 'age']),
+    // Other callers (presets/takeaway-use-cases.md, "Other callers"): the same for every takeaway.
+    entry("I'm a supplier, the landlord or from the card-machine company", "Take a message for the manager: their name, company, number and what it's about. Give no account details.", ['supplier', 'invoice', 'landlord', 'card machine', 'account', 'delivery of stock']),
+    entry("I'm from the council: environmental health, licensing or trading standards", "Take an urgent message for the manager with the officer's name, council, reason and number. Make no commitments for the shop.", ['council', 'environmental health', 'licensing', 'trading standards', 'inspector', 'officer']),
+    entry("I'm calling about advertising, energy or a delivery app account", "Say no thank you, politely: the shop doesn't take sales calls by phone. Then end the call.", ['sales', 'advertising', 'energy', 'broker', 'marketing', 'business rates']),
+    entry('I left something in the shop, or I want to say thank you', "Take a message for the shop. For a compliment, thank them and say you'll pass it on.", ['lost', 'left', 'property', 'compliment', 'thank', 'great']),
     deliveryAppsEntry(a.ordering),
   ], p.faqs);
 }

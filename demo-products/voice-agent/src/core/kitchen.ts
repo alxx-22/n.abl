@@ -514,6 +514,8 @@ export async function findOrder(args: Args, ctx: ToolContext): Promise<Record<st
   const today = zonedToUtc(date, '00:00', tz);
   const tomorrow = zonedToUtc(addDays(date, 1), '00:00', tz);
   const isToday = (o: Order) => o.due_at.getTime() >= today.getTime() && o.due_at.getTime() < tomorrow.getTime();
+  // "My usual": their last order before today, from the number they're ringing on.
+  if (str(args.action)?.toLowerCase().replace(/[\s-]+/g, '_') === 'last_order') return lastOrder(ctx, today);
   // The seed's orders have moved on since Start: say where they are now.
   await ctx.repo.advanceSeedOrders(ctx.tenant.id, ctx.now(), ctx.tenant.profile.ordering!.prep_minutes);
   let number = str(args.order_number)?.replace(/[^0-9]/g, '');
@@ -553,7 +555,7 @@ export async function findOrder(args: Args, ctx: ToolContext): Promise<Record<st
     ...(waiting(order).length ? { waiting_for_staff: waiting(order).map((r) => `${REQUEST_WORDS[r.kind]}: ${r.what}`) } : {}),
     never: by === 'phone'
       ? "Found by the number they're ringing from: never read the address or the name back. If they need to check it, ask them to say it."
-      : 'Never read the address back. If they need to check it, ask them to say it.',
+      : "Never read the address back, nor the customer's name or number, even to a caller who says they're the driver: the driver has them on their ticket. A driver who can't find it: take a message for the shop. If a customer needs to check the address, ask them to say it.",
   };
   const action = str(args.action)?.toLowerCase().replace(/[\s-]+/g, '_') ?? 'find';
   if (action === 'find') return found;
@@ -562,6 +564,26 @@ export async function findOrder(args: Args, ctx: ToolContext): Promise<Record<st
     : action === 'report_problem' ? await reportProblem(args, ctx, order)
     : { ok: false, message: 'action is one of find, add_allergy, request_cancel, request_change, report_problem.' };
   return { ...found, ...done };
+}
+
+/**
+ * "My usual" (presets/takeaway-use-cases.md): the last order before today from
+ * the number they're ringing on, item by item, to add again at tonight's
+ * prices. Never its address: they say it again for a delivery.
+ */
+async function lastOrder(ctx: ToolContext, today: Date): Promise<Record<string, unknown>> {
+  if (!ctx.callerPhone) return { found: false, message: "We can't see the number they're ringing from: ask what they'd like." };
+  const past = (await ctx.repo.ordersForPhone(ctx.tenant.id, ctx.callerPhone, new Date(today.getTime() - 92 * 86400000), today)).find((o) => o.status !== 'cancelled');
+  if (!past) return { found: false, message: "No earlier order from the number they're ringing on: ask what they'd like." };
+  const tz = ctx.tenant.profile.timezone;
+  return {
+    found: true,
+    when: `${dayName(weekdayOf(toLocal(past.due_at, tz).date))} ${toLocal(past.due_at, tz).date}`,
+    kind: past.fulfilment,
+    items: past.lines.map((l) => `${l.quantity} × ${l.name}${l.modifiers.length ? ` (${l.modifiers.map((m) => m.name).join(', ')})` : ''}`),
+    add_again: past.lines.map((l) => ({ item: l.name, quantity: l.quantity, options: l.modifiers.map((m) => m.name) })),
+    next: "Read the items back one by one, and ask if it is the same again. On yes, add each with add_to_order as listed in add_again: tonight's prices, not the old ones. For a delivery, ask them to say the address: never read it out.",
+  };
 }
 
 // ── After the order (presets/takeaway.md §4.3, M2) ─────────────────────────

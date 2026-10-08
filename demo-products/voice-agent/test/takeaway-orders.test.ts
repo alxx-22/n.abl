@@ -169,3 +169,23 @@ test('a delivery for someone else, said as "to my mum": the caller is asked thei
   const placed = await c.run('confirm_order', { name: 'Ravi', allergy_notes: 'none', pay_driver: 'phone', recipient_name: 'Margaret Shah', recipient_phone: '07700 900820' });
   assert.deepEqual((await repo.getOrder(t.id, placed.order_number))!.recipient, { name: 'Margaret Shah', phone: '+447700900820' });
 });
+
+test('"my usual": the last order before today from the calling number, to add again at tonight\'s prices, never its address', async () => {
+  const t = await firebird('tk-usual');
+  const past = await repo.createOrder(t, {
+    name: 'Leah Grant', phone: '+447700900806', fulfilment: 'delivery', due_at: at('19:30', '2026-10-02'), address: '27 Larch Close', postcode: 'NG7 2AB',
+    lines: [{ line: 1, item_key: 'burger_meal', name: 'Burger meal', quantity: 1, unit_pence: 899, modifiers: [{ key: 'cheeseburger', name: 'Cheeseburger', price_pence: 50 }, { key: 'fries', name: 'Fries', price_pence: 0 }, { key: 'coca_cola', name: 'Coca-Cola', price_pence: 0 }] }],
+    subtotal_pence: 949, delivery_fee_pence: 250, total_pence: 1199, allergy_notes: null, source: 'phone', call_id: null,
+  });
+  await repo.setOrderStatus(t.id, past.reference, 'completed');
+  const c = await call(t, at('19:00'), '+447700900806');
+  const usual = await c.run('find_order', { action: 'last_order' });
+  assert.deepEqual([usual.found, usual.when, usual.kind, usual.items], [true, 'Friday 2026-10-02', 'delivery', ['1 × Burger meal (Cheeseburger, Fries, Coca-Cola)']]);
+  assert.doesNotMatch(JSON.stringify(usual), /Larch|NG7/, 'no address');
+  assert.match(usual.next, /tonight's prices, not the old ones\. For a delivery, ask them to say the address: never read it out\.$/);
+  const again = await c.run('add_to_order', usual.add_again[0]);
+  assert.match(again.added, /^1 × Burger meal \(Cheeseburger, Fries, Coca-Cola\) — £9\.49$/);
+  assert.equal((await (await call(t, at('19:00'), '+447700900999')).run('find_order', { action: 'last_order' })).message, "No earlier order from the number they're ringing on: ask what they'd like.");
+  // A caller who says they're the driver hears nothing of the customer from the order.
+  assert.match((await (await call(t, at('19:00'), '+447700900998')).run('find_order', { order_number: past.reference })).message ?? '', /^No order/, "last week's isn't today's");
+});

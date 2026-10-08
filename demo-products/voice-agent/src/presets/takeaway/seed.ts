@@ -185,7 +185,31 @@ export function planTakeawaySeed(profile: TenantProfile, now: Date, seed: number
     const what = burger(change) ? 'no onions on the burger, please' : 'add a can of Coke, please';
     change.requests = [{ kind: 'change', what, phone: change.phone, at: new Date(now.getTime() - 3 * MIN).toISOString(), answer: null, answered_at: null }];
   }
+  // Leah's usual: last week's collection, for "my usual". Chosen from the menu, not drawn, so every other order stays as it was.
+  const usual = usualLines(menu);
+  if (usual.length) {
+    const due = new Date(now.getTime() - 7 * 24 * 60 * MIN);
+    const subtotal = usual.reduce((s, l) => s + lineTotal(l), 0);
+    orders.push({
+      reference: '', name: TK_PEOPLE.regular.name, phone: TK_PEOPLE.regular.phone, fulfilment: 'collection', address: null, postcode: null, delivery_fee_pence: 0,
+      due_at: due, ready_at: due, lines: usual, subtotal_pence: subtotal, total_pence: subtotal, allergy_notes: null,
+      created_at: new Date(due.getTime() - 35 * MIN), status: 'completed', payment_status: 'paid', pay_note: null,
+    });
+  }
   orders.sort((a, b) => a.created_at!.getTime() - b.created_at!.getTime());
   orders.forEach((x, i) => (x.reference = String(101 + i)));
   return { bookings: [], orders, messages };
+}
+
+/** The first meal deal with its first choices, and a side with its first size: a regular's usual, the same whatever the draw. */
+function usualLines(menu: Menu): OrderLine[] {
+  const items = menu.categories.flatMap((c) => c.items.map((item) => ({ item, category: c })));
+  const firstChoices = (item: MenuItem) => (item.modifier_groups ?? []).flatMap((g) => {
+    const group = menu.modifier_groups[g];
+    return group && group.min > 0 ? group.options.slice(0, group.min).map((o) => ({ key: o.key, name: o.name, price_pence: o.price_pence })) : [];
+  });
+  const deal = menu.deals?.[0] ? items.find((x) => x.item.key === menu.deals![0].item_key)?.item : undefined;
+  const side = items.find((x) => /side/i.test(`${x.category.key} ${x.category.label}`) && x.item.available !== false)?.item;
+  return [deal, side].filter((i): i is MenuItem => Boolean(i))
+    .map((item, i) => ({ line: i + 1, item_key: item.key, name: item.name, quantity: 1, unit_pence: item.price_pence, modifiers: firstChoices(item) }));
 }
