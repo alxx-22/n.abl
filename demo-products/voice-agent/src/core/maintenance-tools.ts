@@ -126,7 +126,11 @@ function propertyBrief(ctx: ToolContext, p: MtProperty, role: Role, block?: MtPr
     looked_after_by: client ? (known ? client.name : `${KIND_WORDS[client.kind] ?? 'a client'} we work for`) : 'the homeowner',
     // "Not on file" read as "refuse" on a live call (6 October): it limits what they hear, not what they may report.
     caller_is: role === 'stranger' ? 'someone not on file: they may report a repair here, but hear no names, times or private details' : role,
-    ...(client?.kind === 'social' ? { damp: `Damp or mould here is a job: raise it with job create, never only a message. That tells ${known ? client.name : 'the landlord'} today with the time, and starts their clock.` } : {}),
+    ...(client?.kind === 'social' ? {
+      damp: `Damp or mould here is a job: raise it with job create, never only a message. That tells ${known ? client.name : 'the landlord'} today with the time, and starts their clock.`,
+      // Live, 8 October: "a healthcare professional" was said; the GP and NHS 111 are who to name.
+      if_asked_about_health: "I can't advise on health, I'm afraid: your GP or NHS 111 can, or 999 in an emergency.",
+    } : {}),
     ...(role === 'stranger' && client ? { reporting: `Raise their repair with job create, not a message: an agent's staff report jobs for their tenants. ${client.kind === 'agent' || client.kind === 'social' ? 'The client' : 'The landlord'} approves anything over their limit on their own phone.` } : {}),
     notes: {
       stopcock: p.notes.stopcock,
