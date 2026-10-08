@@ -586,11 +586,18 @@ async function walkEstate({ shot }: Walk) {
   await albion.waitFor();
   if (!(await albion.textContent())!.includes('£330,000')) throw new Error("Properties does not show the builder's new price");
   await shot(page, 'workspace-properties');
+  // Manage opens a panel over the list; Escape closes it, and focus goes back to the card's Manage button.
   await albion.locator('button:has-text("Manage")').click();
-  await albion.getByLabel('Price £').fill('320000');
-  await albion.locator('button:has-text("Change price")').click();
+  const manage = page.getByRole('dialog', { name: '22 Albion Road' });
+  await manage.getByLabel('Price £').fill('320000');
+  await manage.locator('button:has-text("Change price")').click();
   await page.waitForSelector('.toast:has-text("reduced to £320,000")', { timeout: 10000 });
+  await manage.getByRole('status').getByText('reduced to £320,000').waitFor();
   await shot(page, 'workspace-properties-manage');
+  await page.keyboard.press('Escape');
+  await manage.waitFor({ state: 'detached' });
+  if (!(await albion.locator('button:has-text("Manage")').evaluate((b) => b === document.activeElement))) throw new Error('closing Manage did not return focus to its button');
+  if (!(await albion.textContent())!.includes('£320,000')) throw new Error('the card does not show the new price');
 
   // Offers: one accepted; its home turns sale agreed, and the buyer is texted.
   await page.click('.tabs [role=tab]:has-text("Offers")');
@@ -615,6 +622,20 @@ async function walkEstate({ shot }: Walk) {
   await page.waitForSelector('.applicant');
   if (!(await page.locator('.applicants').textContent())!.includes('Alerts on')) throw new Error('no buyer with alerts on');
   await shot(page, 'workspace-applicants');
+  // The chips and the search narrow the list: alerts on only, then one buyer by their number typed without spaces.
+  const buyers = page.locator('.applicant');
+  const everyone = await buyers.count();
+  await page.locator('.ap-chip:has-text("Alerts on")').click();
+  if (!(await page.locator('.ap-chip[aria-pressed="true"]:has-text("Alerts on")').count())) throw new Error('the Alerts on chip is not pressed');
+  const alertsOn = await buyers.count();
+  if (!alertsOn || alertsOn >= everyone || (await page.locator('.applicant .badge:has-text("Alerts on")').count()) !== alertsOn) throw new Error('Alerts on did not narrow the list to buyers with alerts');
+  await shot(page, 'workspace-applicants-filtered');
+  const phone = (await buyers.first().locator('.ap-who .muted').textContent())!.replace(/\s/g, '');
+  await page.getByLabel('Search buyers').fill(phone);
+  if ((await buyers.count()) !== 1) throw new Error(`searching ${phone} did not find one buyer`);
+  await page.locator('.ap-chip:has-text("All")').click();
+  await page.getByLabel('Search buyers').fill('');
+  if ((await buyers.count()) !== everyone) throw new Error('All and an empty search did not bring everyone back');
   await page.click('.tabs [role=tab]:has-text("Valuations")');
   await page.waitForSelector('.valuation');
   if (!(await page.locator('.k-col[aria-label="Booked"] .valuation').count())) throw new Error('no valuation booked');

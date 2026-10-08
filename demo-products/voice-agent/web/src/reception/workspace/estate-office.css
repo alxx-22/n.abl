@@ -1,0 +1,132 @@
+/* ── The estate agent's back office: buyers, homes, offers, sales, valuations ──
+   The back office is a panel about 750px wide that scrolls inside itself on a
+   laptop, so these views are dense: a row per buyer, three homes across, and
+   the actions side by side. Colours come only from the page's variables: a
+   business's page can be light or dark. */
+
+/* Badges in these lists are read in passing: smaller than the site's, still uppercase. */
+.applicants .badge, div.homes .badge, .home-sheet .badge, .kitchen.offers .badge, .sales .badge {
+  font-size: 10px; padding: 1px 6px; letter-spacing: 0.04em;
+}
+
+/* ── Applicants: one row per buyer ─────────────────────────────────────── */
+.applicants { --ap-cols: 8.5rem minmax(0, 1fr) auto; display: grid; }
+.ap-head { display: grid; gap: 6px; padding-bottom: 6px; }
+.ap-tools { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.ap-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.ap-chip { padding: 3px 10px; font-size: 12px; border-radius: var(--r-full); gap: 6px; }
+.ap-chip .n { font: 500 11px/1 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.ap-chip[aria-pressed='true'] { background: rgba(var(--accent-rgb), 0.16); border-color: var(--accent); color: var(--heading); }
+.ap-chip[aria-pressed='true'] .n { color: var(--heading); }
+.ap-search { flex: 1 1 170px; min-width: 150px; }
+.ap-search input { padding: 5px 10px; font-size: 13px; }
+.ap-showing { margin: 0; }
+.ap-cols {
+  display: grid; grid-template-columns: var(--ap-cols); column-gap: 12px; padding: 0 8px;
+  font: 500 10px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim);
+}
+.ap-cols span:last-child { text-align: right; }
+.ap-list { list-style: none; margin: 0; padding: 0; }
+.ap-list .applicant {
+  display: grid; grid-template-columns: var(--ap-cols); grid-template-areas: 'who wants when' 'who foot foot';
+  column-gap: 12px; row-gap: 2px; align-items: center; padding: 5px 8px; border-bottom: 1px solid var(--line);
+}
+.ap-list .applicant:nth-child(even) { background: rgba(var(--cream-rgb), 0.025); }
+.ap-who { grid-area: who; display: grid; align-self: start; min-width: 0; line-height: 1.35; }
+.ap-who b { color: var(--heading); font-size: 14px; overflow-wrap: anywhere; }
+.ap-wants { grid-area: wants; margin: 0; font-size: 13px; line-height: 1.35; min-width: 0; }
+.ap-fit { color: var(--heading); font-weight: 600; }
+.ap-when { grid-area: when; margin: 0; text-align: right; white-space: nowrap; font-size: 12px; }
+/* The badges and the actions share the second line, so what they want can use the width the actions would take on the first. */
+.ap-foot { grid-area: foot; display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; min-width: 0; }
+.ap-list .buyer-actions { justify-content: flex-end; flex-wrap: nowrap; gap: 4px; margin: 0 0 0 auto; }
+.ap-list .buyer-actions button { padding: 1px 7px; font-size: 11.5px; }
+.applicants > .empty button { display: inline-flex; }
+
+/* On a laptop the list scrolls inside the back office: the chips and search stay in reach above it.
+   A sticky top counts from inside the panel's padding, so -14px keeps it flush with the edge. */
+@media (min-width: 981px) and (min-height: 600px) {
+  .ap-head { position: sticky; top: -14px; z-index: 2; margin: -14px -16px 0; padding: 12px 16px 6px; background: var(--surface-1); border-bottom: 1px solid var(--line); }
+}
+@media (max-width: 640px) {
+  .ap-cols { display: none; }
+  .ap-list .applicant { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'who when' 'wants wants' 'foot foot'; padding: 8px 6px; }
+  .ap-who { display: flex; flex-wrap: wrap; gap: 0 8px; align-items: baseline; }
+  .ap-list .buyer-actions { justify-content: flex-start; flex-wrap: wrap; margin-left: 0; }
+}
+
+/* ── Properties: three or more small cards across ─────────────────────── */
+div.homes { grid-template-columns: repeat(auto-fill, minmax(205px, 1fr)); gap: 8px; align-items: stretch; }
+div.homes .home-card { display: flex; flex-direction: column; gap: 4px; padding: 8px 9px; border-radius: 10px; min-width: 0; }
+div.homes .home-card.managing { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.home-top { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; align-items: center; }
+div.homes .home-pic { gap: 1px; justify-items: center; }
+div.homes .home-card svg.house { width: 44px; }
+div.homes .home-pic .example { font-size: 8px; letter-spacing: 0.06em; line-height: 1.2; }
+.home-top header { display: grid; min-width: 0; line-height: 1.3; }
+.home-top header > b { color: var(--heading); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-top .home-price b { font-size: 14px; color: var(--heading); }
+/* Two lines of "three-bedroom semi-detached house, …": the rest is in the tooltip and in Manage. */
+.home-desc { margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; line-height: 1.35; }
+div.homes .home-stats { gap: 1px 7px; font-size: 11.5px; line-height: 1.45; align-items: center; }
+div.homes .badges .badge { white-space: normal; border-radius: 8px; }
+.home-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 2px; }
+.home-foot .home-meter { flex: 1; min-width: 0; grid-template-columns: auto minmax(20px, 1fr) auto; gap: 6px; }
+.home-foot .home-meter .small { font-size: 11.5px; white-space: nowrap; }
+div.homes .home-foot button { flex: none; padding: 3px 10px; font-size: 12px; }
+@media (max-width: 560px) {
+  div.homes { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Manage: a panel over the right of the window, so the cards keep their places. */
+dialog.home-sheet {
+  margin: 0 0 0 auto; height: 100%; max-height: none; width: min(440px, 100%); max-width: 100%;
+  padding: 16px 18px 20px; border: none; border-left: 1px solid var(--line-strong); border-radius: 0;
+  background: var(--surface-1); color: var(--cream); box-shadow: var(--glow-md); overflow-y: auto; overscroll-behavior: contain;
+}
+dialog.home-sheet[open] { display: grid; gap: 14px; align-content: start; }
+dialog.home-sheet::backdrop { background: rgba(var(--bg-rgb), 0.5); }
+.sheet-head { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.sheet-head svg.house { width: 64px; }
+.sheet-head h3 { font-size: 1.15rem; }
+.sheet-head p { margin: 2px 0 0; }
+.sheet-now { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.sheet-now b { font-size: 16px; color: var(--heading); }
+.sheet-now .badge { align-self: center; }
+/* The toast is behind the panel: what the last change did is said here too. */
+.sheet-said { margin: 0; color: var(--heading); border-left: 3px solid var(--accent); padding: 5px 9px; background: rgba(var(--accent-rgb), 0.08); border-radius: 4px; }
+.sheet-said:empty { display: none; }
+.sheet-field { display: grid; gap: 5px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.sheet-field > label, .sheet-field > legend { font-weight: 600; font-size: 13px; color: var(--heading); padding: 0; }
+.sheet-field > legend { margin-bottom: 5px; }
+.sheet-field > select { padding: 6px 2.2rem 6px 10px; }
+.sheet-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.sheet-row input, .sheet-row select { width: auto; flex: 1 1 130px; min-width: 0; padding: 6px 10px; }
+.sheet-row button { flex: none; }
+.sheet-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 2px 0 2px 8px; border-left: 2px solid var(--line-strong); }
+.sheet-toggle { font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) {
+  dialog.home-sheet[open] { animation: sheet-in 160ms ease-out; }
+  @keyframes sheet-in { from { transform: translateX(24px); opacity: 0; } }
+}
+
+/* ── Offers and valuations: narrow columns, so the actions sit side by side ── */
+.kitchen.offers .ticket { gap: 3px; padding: 8px 10px; }
+.kitchen.offers .ticket header { flex-wrap: wrap; gap: 2px 8px; }
+.kitchen.offers .ticket .due { white-space: nowrap; }
+.kitchen.offers .ticket footer.offer-actions, .kitchen.offers .row-tools { justify-content: flex-start; gap: 4px; margin-top: 4px; }
+.kitchen.offers .ticket button.small { padding: 3px 8px; font-size: 12px; }
+.kitchen.offers .accept-box { display: grid; gap: 6px; margin-top: 4px; }
+
+/* ── Sales progress: the steps on one line, the dates and the log in a row ── */
+.sales { gap: 10px; }
+.sales .sale { gap: 6px; padding: 10px 12px; }
+.sales .milestones { gap: 3px; }
+.sales .milestones .step { font-size: 11.5px; padding: 3px 7px; }
+.sales .sale-dates { flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.sales .sale-dates label { display: inline-flex; align-items: center; gap: 6px; }
+.sales .sale-dates input { width: auto; padding: 4px 8px; margin: 0; }
+/* "Update from" kept its words: in a row with the note, the list had shrunk to its arrow. */
+.sales .field-row select { flex: none; width: auto; padding: 5px 2.2rem 5px 10px; }
+.sales .field-row input { padding: 5px 10px; }
+.sales .parties, .sales .updates { line-height: 1.4; }
