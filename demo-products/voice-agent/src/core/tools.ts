@@ -35,7 +35,7 @@ import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
 import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
-  BARBER_TOOLS, offTodayNote, offerFreedSlot, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
+  BARBER_TOOLS, lateHint, offTodayNote, offerFreedSlot, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
@@ -125,6 +125,8 @@ export interface CallState {
   textsHeld: string[];
   /** What the receptionist had said so far in the turn that called the tools (core/call.ts). */
   turnSaid: string;
+  /** A barber's call: times only from the tools, the instructions or the caller (presets/barber.md §7, invented_time). */
+  barber: boolean;
   /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
   readBack: { committed: number; tries: number } | null;
   saidYes: { committed: number; tries: number } | null;
@@ -193,7 +195,7 @@ export function newCallState(): CallState {
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false, messageOwed: false,
     estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
-    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '',
+    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false,
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
     invoice: null, emergencyTrade: null, amounts: [], relay: false, references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
@@ -800,7 +802,8 @@ const TOOLS: Record<string, Tool> = {
       if (!found.length) return { bookings: [], note: 'No upcoming bookings found. Ask for the reference or the name it was booked under.' };
       // A barber's booking with someone off today needs a new time (core/barber-tools.ts).
       const offNote = ctx.tenant.profile.barber ? await offTodayNote(ctx, found) : undefined;
-      return { bookings: found.map((b) => bookingSummary(ctx.tenant, b)), ...(offNote ? { note: offNote } : {}) };
+      const lateNext = ctx.tenant.profile.barber ? lateHint(ctx, found) : undefined;
+      return { bookings: found.map((b) => bookingSummary(ctx.tenant, b)), ...(offNote ? { note: offNote } : {}), ...(lateNext ? { next: lateNext } : {}) };
     },
   },
 
@@ -1594,8 +1597,8 @@ export async function runTool(name: string, args: Args, ctx: ToolContext): Promi
     ctx.state.references.push(...referencesIn(json));
     // A price a tool gave may be said; one nothing gave may not (a repairs call's invented_price).
     if (ctx.state.maintenance || ctx.state.takeaway) ctx.state.amounts.push(...amountsIn(json));
-    // So too a time (an estate agency's and a takeaway's invented_time).
-    if (ctx.state.estate || ctx.state.takeaway) {
+    // So too a time (an estate agency's, a takeaway's and a barber's invented_time).
+    if (ctx.state.estate || ctx.state.takeaway || ctx.state.barber) {
       ctx.state.times.push(...knownTimes(json));
       ctx.state.timeRanges.push(...rangesIn(json));
     }

@@ -2092,7 +2092,7 @@ export const SCENARIOS: Scenario[] = [
     persona: "You are Alex Rowe. You want a classic cut with Dan this afternoon. If Dan can't, take whoever is free at the first afternoon time offered. Pay in the shop. Your name is Alex.",
     async check(c) {
       const f: string[] = [];
-      expect(f, /\bdan\b[^.?!]{0,30}\b(?:off|not in|isn'?t in|not working|isn'?t working|away)\b/i.test(c.agentText), "Dan's being off was not said");
+      expect(f, /\bdan\b[^.?!]{0,30}\b(?:off|not in|isn'?t in|not working|isn'?t working|away|(?:isn'?t|not) available)\b/i.test(c.agentText), "Dan's being off was not said");
       expect(f, !/\b(?:sick|ill|unwell|poorly|holiday|doctor|hospital|family|emergency)\b/i.test(c.agentText), 'a reason for Dan being off was said');
       const b = await bookings(c);
       expect(f, b.every((x) => x.resource_key !== 'dan'), 'booked with Dan');

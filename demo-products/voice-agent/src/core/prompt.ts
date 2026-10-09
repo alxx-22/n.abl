@@ -150,7 +150,7 @@ export function compilePrompt(p: TenantProfile, ctx: PromptContext): string {
       ? `Booking, in this order: check_availability; get the name (and a number if you do not have one); read back ${p.barber ? 'the service, day, date, time, barber, price' : `day, date, time, people${tables && areas.length > 1 ? ', where they are sitting' : ''}`} and name, and ask "Shall I book that?"; on yes, call create_booking; only then say it is booked and read the reference one character at a time. Tell them the reference is on its way by text, and that to change the booking they can call and quote it.`
       : null,
     // A barber's shop floor (presets/barber.md §4.4, rules 4 to 6); the tools say the rest when it comes up.
-    p.barber ? 'Colour needs a skin test here 48 hours before; never call dye safe. A walk-in wait is only an estimate. Never say why a barber is off.' : null,
+    p.barber ? 'Colour needs a skin test here 48 hours before; never call dye safe. A walk-in wait is only an estimate. Never say why a barber is off. Running late: running_late.' : null,
     tables && areas.length > 1
       ? `Seating: ${areas.map((a) => a.label.toLowerCase()).join(' or ')}. When check_availability says more than one is free, ask once which they would like. If the one they want is full, offer the other at the same time before other times. For an outdoor area, say its weather note once, in a few words.`
       : null,

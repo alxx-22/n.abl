@@ -408,3 +408,15 @@ export const BARBER_TOOLS: Record<string, Tool> = {
     },
   },
 };
+
+/**
+ * A booking found that's today: if they're ringing to say they're late, the
+ * tool notes it. A live test (9 October) found Priya's booking and said
+ * "I've added that note for him" with no note made.
+ */
+export function lateHint(ctx: ToolContext, found: Booking[]): string | undefined {
+  const tz = ctx.tenant.profile.timezone;
+  const today = toLocal(ctx.now(), tz).date;
+  const b = found.find((x) => toLocal(x.starts_at, tz).date === today && x.ends_at > ctx.now());
+  return b ? `If they're running late for ${b.reference}, call running_late with it and the minutes, and say what it returns: nothing is noted for the barber until it does.` : undefined;
+}

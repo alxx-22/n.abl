@@ -258,6 +258,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.state.estate = Boolean(opts.tenant.profile.estate);
     this.state.maintenance = Boolean(opts.tenant.profile.maintenance);
     this.state.takeaway = Boolean(opts.tenant.profile.ordering?.kitchen);
+    this.state.barber = Boolean(opts.tenant.profile.barber);
   }
 
   private now(): Date {
@@ -322,7 +323,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (this.state.maintenance || this.state.takeaway) this.state.amounts.push(...amountsIn(prompt));
     // And every time in them (an estate agency's and a takeaway's invented_time), but not their ranges: an
     // opening-hours range would let any time through.
-    if (this.state.estate || this.state.takeaway) this.state.times.push(...knownTimes(prompt));
+    if (this.state.estate || this.state.takeaway || this.state.barber) this.state.times.push(...knownTimes(prompt));
     if (this.contextual) this.startTurnTaking();
     const pinned = tenant.profile.live_model;
     const models = this.opts.models ?? (pinned ? [pinned, ...config.liveModels.filter((m) => m !== pinned)] : config.liveModels);

@@ -348,5 +348,10 @@ export function checkUtterance(text: string, state: CallState, staff: string[] =
   if (state.estate) flags.push(...estateFlags(text, state, staff));
   if (state.maintenance) flags.push(...maintenanceFlags(text, state, staff, m));
   if (state.takeaway) flags.push(...takeawayFlags(text, state));
+  // A barber's: no time no tool, instruction or caller gave (presets/barber.md §7; a live call on 9 October offered Dan's unchecked).
+  if (state.barber) {
+    const made = madeUpTime(text, state);
+    if (made) flags.push({ rule: 'invented_time', text: made });
+  }
   return flags;
 }

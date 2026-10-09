@@ -308,15 +308,52 @@ defaults stand.
   the receptionist asked "Shall I change that for you?" and moved it
   without waiting for the yes. In `bb-womens-cut`, it said the £5 deposit
   is "due now, to secure the booking", though the shop doesn't insist on
-  it. The Windows session takes these next.
+  it. Both are fixed (9 October, windows). A booking, move or cancel made
+  while the turn so far ends by asking leave is refused until the caller
+  answers. An optional deposit is `deposit_optional`, and the text says
+  it's optional. Both calls passed on their re-runs.
 
 **The browser walk** (`test-e2e/demo-ui.ts --only barber`) passes. Its
 screenshots were sent to Alex on 8 October.
 
-**Next: M2.** Walk-ins and `get_wait_now`, off today, running late, the
-waiting list, and the skin test. The skin test will also serve as the
-salon's patch test, with the rule taken from the profile. M2's migration
-is `voice_0013`.
+**M2, the shop floor (9 October): the server side is built; the screens
+are ui's.**
+- Migration `voice_0013_barber` is applied on the shared project. It adds
+  `voice_tenants.today` (the barbers off today and a notice),
+  `voice_walkins`, `voice_waitlist` and `voice_customers.skin_test_at`.
+- The rules are pure, in `src/domain/shop-floor.ts`:
+  - the profile as it stands today: a barber off today isn't booked today;
+  - the wait now;
+  - the skin test 48 hours before colour, every time since the last colour
+    or within six months.
+- A shop with colour gets a free Skin test service, done by whoever does
+  colour.
+- On a call (`core/barber-tools.ts`):
+  - a barber off today is "off today", never why, and their bookings today
+    need a new time;
+  - colour is refused until a skin test is booked or taken 48 hours before;
+  - `get_wait_now`, `join_waiting_list` and `running_late`;
+  - a cancellation texts the first person it fits on that day's waiting
+    list.
+- The back office's state and actions are in `src/server/barber.ts`, to
+  the contract on the sessions board (9 October, 21:28):
+  - the state: today, the queue, the wait now, the waiting list and the
+    services;
+  - the actions: `PATCH today`, `POST walkins`, `PATCH walkins/:id`
+    (serve or left) and `PATCH waitlist/:id`.
+  ui builds the Queue, Today and Waiting list screens, and adds their view
+  ids to `barberWorkspace`.
+- The seed adds:
+  - Priya's cut later today (a Call as, to ring about running late);
+  - a booking today already marked running late;
+  - Ben's skin test two days ago;
+  - two walk-ins waiting when the shop is open;
+  - two on the next Saturday's waiting list.
+  Femi (a Call as) wants a beard colour, with no skin test yet.
+- Tests are in `test/barber-shop-floor.test.ts` and
+  `test/barber-demo.test.ts`.
+- The live calls are `bb-walk-in`, `bb-off-sick`, `bb-running-late` and
+  `bb-skin-test`.
 
 ### Working on Windows
 

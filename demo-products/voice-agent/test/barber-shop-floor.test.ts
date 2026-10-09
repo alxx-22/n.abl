@@ -7,6 +7,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
+import { checkUtterance } from '../src/core/guardrails.ts';
 import { newCallState, runTool, type ToolContext } from '../src/core/tools.ts';
 import { checkAvailability } from '../src/domain/availability.ts';
 import type { Tenant } from '../src/domain/types.ts';
@@ -200,4 +201,19 @@ test("the seed: Priya booked later today, someone already running late, Ben's sk
   assert.equal((await repo.listWaitingWalkIns(t.id)).length, 2);
   assert.equal((await repo.listWaitlist(t.id, '2026-10-15')).length, 2);
   assert.deepEqual(await repo.getSkinTest(t.id, BB_PEOPLE.tested.phone), ben.starts_at);
+});
+
+test("on a call: a time no tool gave is flagged, and a booking found today says how to note running late", async () => {
+  // A live call, 9 October: "Dan has time at quarter past two or quarter past four", with nothing checked.
+  const t = await fresh('kingsleys-guard');
+  const c = await call(t, BB_PEOPLE.late.phone);
+  c.ctx.state.barber = true;
+  assert.deepEqual(checkUtterance('Okay, Dan has time at quarter past two or quarter past four.', c.ctx.state).map((f) => f.rule), ['invented_time']);
+  const free = await c.run('check_availability', { service: 'Classic cut', staff: 'Jordan', date: '2026-10-15', time: '13:45' });
+  assert.equal(free.available, true);
+  assert.deepEqual(checkUtterance('Jordan has a quarter to two.', c.ctx.state), [], 'a time the tool gave');
+  // Priya's booking today, found: the next step names the tool.
+  const mine = await c.run('create_booking', { service: 'Classic cut', staff: 'Marcus', date: '2026-10-15', time: '14:15', name: 'Priya Shah' });
+  const found = await c.run('find_bookings', { reference: mine.reference });
+  assert.equal(found.next, `If they're running late for ${mine.reference}, call running_late with it and the minutes, and say what it returns: nothing is noted for the barber until it does.`);
 });
