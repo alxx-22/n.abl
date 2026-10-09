@@ -766,9 +766,17 @@ svg.house .door { fill: var(--accent); }
 .money td.actions button { white-space: nowrap; }
 .certs th, .certs td, .safety-log th, .safety-log td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .safety-log th, .certs th { color: var(--muted); font-weight: 600; font-size: 12px; }
+/* A wide table keeps its columns and scrolls sideways inside its own box. */
+.table-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
 @media (max-width: 640px) {
   .move-job { grid-template-columns: 1fr; }
-  .dispatch-grid { font-size: 12px; }
+  .dispatch-grid { font-size: 12px; min-width: 560px; }
+  /* The safety log as a card per call: each cell on its own line under its heading. */
+  .safety-log thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .safety-log, .safety-log tbody, .safety-log tr, .safety-log td { display: block; }
+  .safety-log tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .rx .office-main .safety-log td { border: none; padding: 3px 0 3px 7rem; position: relative; min-height: 1.5em; }
+  .safety-log td::before { content: attr(data-label); position: absolute; left: 0; top: 4px; width: 6.5rem; font-size: 12px; color: var(--muted); }
 }
 .job-sheet { display: grid; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line); }
 .page-alert { display: grid; gap: 4px; padding: 8px; border-radius: 10px; background: var(--danger-soft); border: 1px solid rgba(var(--danger-rgb), 0.4); }

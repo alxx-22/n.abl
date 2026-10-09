@@ -18,10 +18,10 @@
 }
 .rp-kpis li.bad { border-color: rgba(var(--danger-rgb), 0.45); border-left-color: var(--danger); }
 .rp-kpis li.warn { border-color: rgba(var(--warn-rgb), 0.45); border-left-color: var(--warn); }
-.rp-kpi-label { font-size: 11px; line-height: 1.3; color: var(--muted); }
+.rp-kpi-label { font-size: 12px; line-height: 1.3; color: var(--muted); }
 .rp-kpi-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; }
 .rp-kpi-value { font: 600 16px/1.25 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--heading); }
-.rp-kpi-note { font-size: 11px; color: var(--dim); }
+.rp-kpi-note { font-size: 12px; color: var(--dim); }
 
 /* Four columns in the panel: a little less padding gives each card a few more characters. */
 .kitchen.jobs-board { gap: 8px; }
@@ -37,14 +37,14 @@
 }
 .jc-where:not(:disabled):hover { background: rgba(var(--cream-rgb), 0.06); border-color: transparent; box-shadow: none; }
 .jc-where b { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12.5px; font-weight: 650; }
-.jc-pc { flex: none; font: 500 10.5px/1 var(--font-mono); color: var(--muted); }
-.jc-where::after { content: '▸' / ''; flex: none; margin-left: auto; padding-left: 2px; font-size: 10px; color: var(--dim); }
+.jc-pc { flex: none; font: 500 12px/1 var(--font-mono); color: var(--muted); }
+.jc-where::after { content: '▸' / ''; flex: none; margin-left: auto; padding-left: 2px; font-size: 12px; color: var(--dim); }
 .jc-where[aria-expanded='true']::after { content: '▾' / ''; color: var(--accent); }
 /* Who has it and what it waits on: two lines at most until the card is open; the number in "Awaiting approval: £2,450" stays in view. */
 .jc-who { color: var(--muted); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .ticket.job.open .jc-who { display: block; }
 .jobs-board .ticket.job .badges { gap: 3px; }
-.jobs-board .ticket.job .badge { font-size: 9.5px; line-height: 1.55; padding: 0 5px; letter-spacing: 0.04em; }
+.jobs-board .ticket.job .badge { font-size: 12px; line-height: 1.55; padding: 0 5px; letter-spacing: 0.04em; }
 .jc-more { display: grid; gap: 2px; margin-top: 2px; padding-top: 4px; border-top: 1px dashed var(--line); overflow-wrap: anywhere; }
 .jc-acts.row-tools { gap: 4px; margin-top: 2px; }
 .jc-acts button.small { padding: 2px 8px; font-size: 12px; }
@@ -65,7 +65,7 @@
 .rp-done-where, .rp-done-who, .rp-done-what { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rp-done-where b { color: var(--heading); }
 .rp-done-end { grid-area: end; display: flex; gap: 4px; align-items: center; justify-content: flex-end; }
-.rp-done .badge { font-size: 10px; padding: 1px 6px; letter-spacing: 0.04em; }
+.rp-done .badge { font-size: 12px; padding: 1px 6px; letter-spacing: 0.04em; }
 .rp-done button.small { padding: 2px 9px; font-size: 12px; }
 
 /* On a laptop the board fills the panel and each column scrolls inside it,
@@ -84,19 +84,19 @@
 .dispatch-grid .dp-eng { width: 36%; }
 .dp-who { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 8px; }
 .dp-who > b { font-size: 13px; }
-.dp-who .dp-off { justify-content: flex-end; flex-wrap: wrap; gap: 2px 8px; font-size: 11.5px; font-weight: 400; }
-.dp-who .dp-off .badge { font-size: 9.5px; padding: 0 5px; }
-.dp-trades { grid-column: 1 / -1; font-weight: 400; font-size: 11.5px; line-height: 1.35; }
+.dp-who .dp-off { justify-content: flex-end; flex-wrap: wrap; gap: 2px 8px; font-size: 12px; font-weight: 400; }
+.dp-who .dp-off .badge { font-size: 12px; padding: 0 5px; }
+.dp-trades { grid-column: 1 / -1; font-weight: 400; font-size: 12px; line-height: 1.35; }
 .dispatch .dispatch-grid td { height: 34px; }
 
 /* ── Lists: a row each, the detail on demand ──────────────────────────── */
 .compliance.rp-view { gap: 0; align-content: start; }
-.rp-view .badge { font-size: 10px; padding: 1px 6px; letter-spacing: 0.04em; }
+.rp-view .badge { font-size: 12px; padding: 1px 6px; letter-spacing: 0.04em; }
 .rp-head { display: grid; gap: 6px; padding-bottom: 6px; }
 .rp-tools { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
 .rp-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .rp-chip { padding: 3px 10px; font-size: 12px; border-radius: var(--r-full); gap: 6px; }
-.rp-chip .n { font: 500 11px/1 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.rp-chip .n { font: 500 12px/1 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
 .rp-chip[aria-pressed='true'] { background: rgba(var(--accent-rgb), 0.16); border-color: var(--accent); color: var(--heading); }
 .rp-chip[aria-pressed='true'] .n { color: var(--heading); }
 .rp-search { flex: 1 1 170px; min-width: 150px; }
@@ -104,7 +104,7 @@
 .rp-showing { margin: 0; }
 .rp-cols {
   display: grid; grid-template-columns: var(--rp-cols); column-gap: 12px; padding: 0 8px;
-  font: 500 10px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim);
+  font: 500 12px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; color: var(--dim);
 }
 .rp-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .rp-list > li { border-bottom: 1px solid var(--line); }
@@ -163,7 +163,7 @@ dialog.rp-sheet::backdrop { background: rgba(var(--bg-rgb), 0.5); }
 .rp-said { margin: 0; color: var(--heading); border-left: 3px solid var(--accent); padding: 5px 9px; background: rgba(var(--accent-rgb), 0.08); border-radius: 4px; }
 .rp-said:empty { display: none; }
 dialog.rp-sheet .facts-list { grid-template-columns: 88px minmax(0, 1fr); font-size: 13px; }
-dialog.rp-sheet .badge { font-size: 10px; padding: 1px 6px; letter-spacing: 0.04em; }
+dialog.rp-sheet .badge { font-size: 12px; padding: 1px 6px; letter-spacing: 0.04em; }
 .rp-sheet-part h4 { margin: 0 0 4px; font-size: 13px; color: var(--heading); }
 .rp-waits { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
 @media (prefers-reduced-motion: no-preference) {
@@ -201,7 +201,7 @@ dialog.rp-sheet .badge { font-size: 10px; padding: 1px 6px; letter-spacing: 0.04
   .rp-acts { grid-area: acts; justify-content: flex-start; }
   dl.rp-fold { margin-left: 8px; }
   .rp-done li { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'where end' 'who end' 'what what'; row-gap: 1px; padding: 6px; }
-  .dispatch-grid .dp-eng { width: 40%; }
+  .dispatch-grid .dp-eng { width: 150px; }
   .dp-who { grid-template-columns: minmax(0, 1fr); }
   .dp-who .dp-off { justify-content: flex-start; }
 }

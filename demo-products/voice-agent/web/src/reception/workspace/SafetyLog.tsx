@@ -23,18 +23,18 @@ export function SafetyLog({ state }: { state: LiveState }) {
           const follow = i.follow_up_job ? jobs.get(i.follow_up_job) : undefined;
           return (
             <tr key={i.id}>
-              <td>{day(i.created_at)}<span className="muted small block">{hhmm(i.created_at, tz)}</span></td>
-              <td>
+              <td data-label="When">{day(i.created_at)}<span className="muted small block">{hhmm(i.created_at, tz)}</span></td>
+              <td data-label="What">
                 <b>{i.title}</b>
                 <span className="small block">{i.address ?? 'Address not taken'}{i.caller_phone ? ` · ${i.caller_phone}` : ''}</span>
                 {i.number ? <span className="small muted block">Number given: {i.number}</span> : null}
               </td>
-              <td>
+              <td data-label="Advice given">
                 {i.advised_at
                   ? <><span className="badge ok">Said at {hhmm(i.advised_at, tz)}</span><span className="small muted block">Script v{i.advice_version}</span></>
                   : <span className="badge bad">Not confirmed as said</span>}
               </td>
-              <td>{i.follow_up_job ? <>{i.follow_up_job}<span className="small muted block">{follow ? `${follow.trade_label}, ${follow.status.replace(/_/g, ' ')}` : ''}</span></> : <span className="muted small">None yet</span>}</td>
+              <td data-label="Follow-up">{i.follow_up_job ? <>{i.follow_up_job}<span className="small muted block">{follow ? `${follow.trade_label}, ${follow.status.replace(/_/g, ' ')}` : ''}</span></> : <span className="muted small">None yet</span>}</td>
             </tr>
           );
         })}

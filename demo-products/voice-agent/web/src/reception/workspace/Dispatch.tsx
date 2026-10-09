@@ -53,6 +53,8 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
         </div>
       ) : null}
       {windows.length ? (
+        // On a phone the grid keeps its columns and scrolls sideways inside this box, not the page.
+        <div className="table-scroll">
         <table className="dispatch-grid">
           <thead>
             <tr><th scope="col" className="dp-eng">Engineer</th>{windows.map((w) => <th key={w.key} scope="col">{w.label}<span className="muted small"> {w.from}–{w.to}</span></th>)}</tr>
@@ -110,6 +112,7 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
             })}
           </tbody>
         </table>
+        </div>
       ) : (
         <p className="empty">No visit windows on {label(date, state.today)}.</p>
       )}
