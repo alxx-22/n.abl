@@ -24,16 +24,16 @@ commit, when it's fixed or shown to be wrong.
 
 **Restaurant**
 
-- [medium] Times inside the notice period, or already gone, are called "taken", and changing tonight's booking close to its start is refused (`src/domain/availability.ts:213`)
-- [medium] A table marked No-show or Finished stays taken for callers and staff moves, while the floor plan shows it Free (`src/db/repo.ts:446`)
-- [medium] The default restaurant takes phone bookings up to 10, but parties of 9 or 10 can never be booked and are told to try another day (`src/presets/seating/floor.ts:130`)
-- [medium] The restaurant's "Postcode districts" box drops every comma and space typed, so a second district cannot be entered (`web/src/reception/builder/food/Ordering.tsx:62`)
-- [medium] Deposit mode "Card details to secure" never takes a card, though the builder and the policy say it does (`src/presets/seating/floor.ts:98`)
-- [low] Tables in an enquiry-only private room are called walk-in tables in the Timeline, the click toast and the legend (`web/src/reception/workspace/Timeline.tsx:76`)
-- [low] Clearing a name and pausing refills the box with a placeholder; a cleared table name takes another table's number (`src/presets/seating/tables.ts:43`)
-- [low] On a closure day, Start fills the Kitchen with today's takeaway orders (`src/presets/food/seed.ts:17`)
-- [low] A restaurant whose tables all seat 6 or more starts with an empty week (`src/presets/seating/seed.ts:84`)
-- [low] Broken phrases the receptionist is given: "There is no the inside…", "in the inside", "(1 tables…)" (`src/domain/availability.ts:286`)
+- [x] [medium] Times inside the notice period, or already gone, are called "taken", and changing tonight's booking close to its start is refused (`src/domain/availability.ts:213`) Fixed in `81d5036`: "too soon: we need 30 minutes' notice", "has already gone", "no more bookings today", and a change that keeps the time needs no notice.
+- [x] [medium] A table marked No-show or Finished stays taken for callers and staff moves, while the floor plan shows it Free (`src/db/repo.ts:446`) Fixed in `b161203` (for every preset: a barber or negotiator is freed the same way).
+- [x] [medium] The default restaurant takes phone bookings up to 10, but parties of 9 or 10 can never be booked and are told to try another day (`src/presets/seating/floor.ts:130`) Fixed in `7ef729b` (goldens `bb60928`): the default limit is now 8, what the default tables seat; a party no table seats gets the callback; the builder warns when the limit is above the tables.
+- [x] [medium] The restaurant's "Postcode districts" box drops every comma and space typed, so a second district cannot be entered (`web/src/reception/builder/food/Ordering.tsx:62`) Fixed in `ded8158` (that field only; the box is shared with the takeaway).
+- [x] [medium] Deposit mode "Card details to secure" never takes a card, though the builder and the policy say it does (`src/presets/seating/floor.ts:98`) Fixed in `42b0bd7` (goldens `cc40749`) by removing the promise: the option is gone until a card hold is built, and a saved one reads as no deposit.
+- [x] [low] Tables in an enquiry-only private room are called walk-in tables in the Timeline, the click toast and the legend (`web/src/reception/workspace/Timeline.tsx:76`) Fixed in `673914f`.
+- [x] [low] Clearing a name and pausing refills the box with a placeholder; a cleared table name takes another table's number (`src/presets/seating/tables.ts:43`) Fixed in `61cfb57`: the builder leaves a box just emptied empty (the placeholder is still saved if it's left empty), and a table falls back to its own number.
+- [x] [low] On a closure day, Start fills the Kitchen with today's takeaway orders (`src/presets/food/seed.ts:17`) Fixed in `39cdf74`.
+- [x] [low] A restaurant whose tables all seat 6 or more starts with an empty week (`src/presets/seating/seed.ts:84`) Fixed in `92dace5` (no golden moved: the "max" golden has no seeded week).
+- [x] [low] Broken phrases the receptionist is given: "There is no the inside…", "in the inside", "(1 tables…)" (`src/domain/availability.ts:286`) Fixed in `da959f0` (goldens `5581633`).
 
 **Repairs (server)**
 
