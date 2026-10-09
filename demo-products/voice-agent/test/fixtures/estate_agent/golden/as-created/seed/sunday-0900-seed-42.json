@@ -1815,7 +1815,7 @@
     "listing": "riverside_5",
     "answered": false
    },
-   "created_at": "2026-10-10T08:00:00.000Z"
+   "created_at": "2026-10-11T06:30:00.000Z"
   },
   {
    "from_name": "Chloe Khan",
@@ -2179,7 +2179,7 @@
      "phone": "+447700900394"
     }
    ],
-   "marketed_at": "2026-10-11T08:00:00.000Z",
+   "marketed_at": "2026-10-11T05:00:00.000Z",
    "back_on_market_at": null,
    "set_from": {
     "status": "available",
@@ -2187,7 +2187,7 @@
    },
    "history": [
     {
-     "at": "2026-10-11T08:00:00.000Z",
+     "at": "2026-10-11T05:00:00.000Z",
      "by": "seed",
      "what": "on the market"
     }
@@ -2335,8 +2335,8 @@
    "blocked": [],
    "sellers": [
     {
-     "name": "Sophie Patel",
-     "phone": "+447700900656"
+     "name": "James Green",
+     "phone": "+447700900369"
     }
    ],
    "marketed_at": "2026-10-11T08:00:00.000Z",
@@ -2636,8 +2636,8 @@
    "phone": "+447700900964",
    "email": null,
    "position": {
-    "first_time_buyer": true,
-    "selling": "nothing",
+    "first_time_buyer": false,
+    "selling": "under_offer",
     "funding": "mortgage_aip"
    },
    "conditions": "subject to survey",
@@ -2784,23 +2784,23 @@
    "milestones": [
     {
      "key": "memorandum_sent",
-     "done_at": "2026-08-27T08:00:00.000Z"
+     "done_at": "2026-09-01T08:00:00.000Z"
     },
     {
      "key": "solicitors_instructed",
-     "done_at": "2026-08-30T08:00:00.000Z"
+     "done_at": "2026-09-10T08:00:00.000Z"
     },
     {
      "key": "searches",
-     "done_at": "2026-09-02T08:00:00.000Z"
+     "done_at": "2026-09-18T08:00:00.000Z"
     },
     {
      "key": "survey",
-     "done_at": "2026-09-05T08:00:00.000Z"
+     "done_at": "2026-09-27T08:00:00.000Z"
     },
     {
      "key": "mortgage_offer",
-     "done_at": "2026-09-08T08:00:00.000Z"
+     "done_at": "2026-10-05T08:00:00.000Z"
     },
     {
      "key": "enquiries_answered",
@@ -2858,31 +2858,31 @@
    "milestones": [
     {
      "key": "memorandum_sent",
-     "done_at": "2026-07-24T08:00:00.000Z"
+     "done_at": "2026-08-01T08:00:00.000Z"
     },
     {
      "key": "solicitors_instructed",
-     "done_at": "2026-07-27T08:00:00.000Z"
+     "done_at": "2026-08-12T08:00:00.000Z"
     },
     {
      "key": "searches",
-     "done_at": "2026-07-30T08:00:00.000Z"
+     "done_at": "2026-08-23T08:00:00.000Z"
     },
     {
      "key": "survey",
-     "done_at": "2026-08-02T08:00:00.000Z"
+     "done_at": "2026-09-03T08:00:00.000Z"
     },
     {
      "key": "mortgage_offer",
-     "done_at": "2026-08-05T08:00:00.000Z"
+     "done_at": "2026-09-14T08:00:00.000Z"
     },
     {
      "key": "enquiries_answered",
-     "done_at": "2026-08-08T08:00:00.000Z"
+     "done_at": "2026-09-25T08:00:00.000Z"
     },
     {
      "key": "exchange",
-     "done_at": "2026-08-11T08:00:00.000Z"
+     "done_at": "2026-10-06T08:00:00.000Z"
     },
     {
      "key": "completion",
@@ -3576,34 +3576,20 @@
    "phone": "+447700900369",
    "name": "James Green",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
-     "funding": "mortgage_aip"
-    },
-    "requirements": {
-     "areas": ["BK4","BK5"],
-     "max_price_pence": 29500000,
-     "min_beds": 1,
-     "types": ["cottage"],
-     "must_haves": [],
-     "timescale": "within six months"
-    },
-    "consent_at": "2026-08-12T08:00:00.000Z",
+    "roles": ["seller"],
     "last_contact": "2026-10-09T11:00:00.000Z",
     "source": "valuation"
    },
-   "marketing_consent": true
+   "marketing_consent": false
   },
   {
    "phone": "+447700900065",
    "name": "Zara Ahmed",
    "details": {
-    "roles": ["buyer"],
+    "roles": ["seller","buyer"],
     "position": {
      "first_time_buyer": false,
-     "selling": "on_market",
+     "selling": "not_on_market",
      "funding": "cash"
     },
     "requirements": {
@@ -3624,10 +3610,10 @@
    "phone": "+447700900747",
    "name": "Amara Taylor",
    "details": {
-    "roles": ["buyer"],
+    "roles": ["seller","buyer"],
     "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
+     "first_time_buyer": false,
+     "selling": "not_on_market",
      "funding": "mortgage_aip"
     },
     "requirements": {
@@ -3648,34 +3634,20 @@
    "phone": "+447700900826",
    "name": "Hannah Shah",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": false,
-     "selling": "not_on_market",
-     "funding": "mortgage_not_yet"
-    },
-    "requirements": {
-     "areas": ["BK4","BK1"],
-     "max_price_pence": 30500000,
-     "min_beds": 2,
-     "types": ["cottage"],
-     "must_haves": ["parking"],
-     "timescale": "within six months"
-    },
-    "consent_at": "2026-09-06T08:00:00.000Z",
+    "roles": ["seller"],
     "last_contact": "2026-10-11T08:00:00.000Z",
     "source": "valuation"
    },
-   "marketing_consent": true
+   "marketing_consent": false
   },
   {
    "phone": "+447700900843",
    "name": "Adam Chen",
    "details": {
-    "roles": ["buyer"],
+    "roles": ["seller","buyer"],
     "position": {
      "first_time_buyer": false,
-     "selling": "under_offer",
+     "selling": "not_on_market",
      "funding": "mortgage_aip"
     },
     "requirements": {
@@ -3696,45 +3668,17 @@
    "phone": "+447700900293",
    "name": "Adam Brown",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
-     "funding": "mortgage_aip"
-    },
-    "requirements": {
-     "areas": ["BK3","BK5"],
-     "max_price_pence": 32500000,
-     "min_beds": 2,
-     "types": ["detached"],
-     "must_haves": [],
-     "timescale": "within three months"
-    },
-    "consent_at": "2026-09-19T08:00:00.000Z",
+    "roles": ["seller"],
     "last_contact": "2026-10-11T08:00:00.000Z",
     "source": "valuation"
    },
-   "marketing_consent": true
+   "marketing_consent": false
   },
   {
    "phone": "+447700900516",
    "name": "Lucy Nowak",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": false,
-     "selling": "on_market",
-     "funding": "cash"
-    },
-    "requirements": {
-     "areas": ["BK4","BK2"],
-     "max_price_pence": 12500000,
-     "min_beds": 2,
-     "types": ["terraced"],
-     "must_haves": [],
-     "timescale": "as soon as possible"
-    },
-    "consent_at": null,
+    "roles": ["seller"],
     "last_contact": "2026-10-11T08:00:00.000Z",
     "source": "valuation"
    },
@@ -3770,8 +3714,8 @@
    "details": {
     "roles": ["buyer"],
     "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
+     "first_time_buyer": false,
+     "selling": "under_offer",
      "funding": "mortgage_aip"
     },
     "requirements": {

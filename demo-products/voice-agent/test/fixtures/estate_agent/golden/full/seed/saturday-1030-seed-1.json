@@ -1811,7 +1811,7 @@
     "listing": "riverside_5",
     "answered": false
    },
-   "created_at": "2026-10-09T09:30:00.000Z"
+   "created_at": "2026-10-10T08:00:00.000Z"
   },
   {
    "from_name": "Grace Green",
@@ -2175,7 +2175,7 @@
      "phone": "+447700900718"
     }
    ],
-   "marketed_at": "2026-10-10T09:30:00.000Z",
+   "marketed_at": "2026-10-10T06:30:00.000Z",
    "back_on_market_at": null,
    "set_from": {
     "status": "available",
@@ -2183,7 +2183,7 @@
    },
    "history": [
     {
-     "at": "2026-10-10T09:30:00.000Z",
+     "at": "2026-10-10T06:30:00.000Z",
      "by": "seed",
      "what": "on the market"
     }
@@ -2331,8 +2331,8 @@
    "blocked": [],
    "sellers": [
     {
-     "name": "Sophie Jones",
-     "phone": "+447700900944"
+     "name": "Daniel Okafor",
+     "phone": "+447700900937"
     }
    ],
    "marketed_at": "2026-10-10T09:30:00.000Z",
@@ -2633,7 +2633,7 @@
    "email": null,
    "position": {
     "first_time_buyer": false,
-    "selling": "not_on_market",
+    "selling": "under_offer",
     "funding": "mortgage_aip"
    },
    "conditions": "subject to survey",
@@ -2780,23 +2780,23 @@
    "milestones": [
     {
      "key": "memorandum_sent",
-     "done_at": "2026-08-26T09:30:00.000Z"
+     "done_at": "2026-08-31T09:30:00.000Z"
     },
     {
      "key": "solicitors_instructed",
-     "done_at": "2026-08-29T09:30:00.000Z"
+     "done_at": "2026-09-09T09:30:00.000Z"
     },
     {
      "key": "searches",
-     "done_at": "2026-09-01T09:30:00.000Z"
+     "done_at": "2026-09-17T09:30:00.000Z"
     },
     {
      "key": "survey",
-     "done_at": "2026-09-04T09:30:00.000Z"
+     "done_at": "2026-09-26T09:30:00.000Z"
     },
     {
      "key": "mortgage_offer",
-     "done_at": "2026-09-07T09:30:00.000Z"
+     "done_at": "2026-10-04T09:30:00.000Z"
     },
     {
      "key": "enquiries_answered",
@@ -2854,31 +2854,31 @@
    "milestones": [
     {
      "key": "memorandum_sent",
-     "done_at": "2026-07-23T09:30:00.000Z"
+     "done_at": "2026-07-31T09:30:00.000Z"
     },
     {
      "key": "solicitors_instructed",
-     "done_at": "2026-07-26T09:30:00.000Z"
+     "done_at": "2026-08-11T09:30:00.000Z"
     },
     {
      "key": "searches",
-     "done_at": "2026-07-29T09:30:00.000Z"
+     "done_at": "2026-08-22T09:30:00.000Z"
     },
     {
      "key": "survey",
-     "done_at": "2026-08-01T09:30:00.000Z"
+     "done_at": "2026-09-02T09:30:00.000Z"
     },
     {
      "key": "mortgage_offer",
-     "done_at": "2026-08-04T09:30:00.000Z"
+     "done_at": "2026-09-13T09:30:00.000Z"
     },
     {
      "key": "enquiries_answered",
-     "done_at": "2026-08-07T09:30:00.000Z"
+     "done_at": "2026-09-24T09:30:00.000Z"
     },
     {
      "key": "exchange",
-     "done_at": "2026-08-10T09:30:00.000Z"
+     "done_at": "2026-10-05T09:30:00.000Z"
     },
     {
      "key": "completion",
@@ -3595,34 +3595,20 @@
    "phone": "+447700900937",
    "name": "Daniel Okafor",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
-     "funding": "mortgage_aip"
-    },
-    "requirements": {
-     "areas": ["BK7","BK2"],
-     "max_price_pence": 12000000,
-     "min_beds": 4,
-     "types": ["flat"],
-     "must_haves": [],
-     "timescale": "within three months"
-    },
-    "consent_at": "2026-09-25T09:30:00.000Z",
+    "roles": ["seller"],
     "last_contact": "2026-10-08T11:00:00.000Z",
     "source": "valuation"
    },
-   "marketing_consent": true
+   "marketing_consent": false
   },
   {
    "phone": "+447700900957",
    "name": "Ravi Collins",
    "details": {
-    "roles": ["buyer"],
+    "roles": ["seller","buyer"],
     "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
+     "first_time_buyer": false,
+     "selling": "not_on_market",
      "funding": "mortgage_aip"
     },
     "requirements": {
@@ -3643,10 +3629,10 @@
    "phone": "+447700900580",
    "name": "Oliver Kelly",
    "details": {
-    "roles": ["buyer"],
+    "roles": ["seller","buyer"],
     "position": {
      "first_time_buyer": false,
-     "selling": "on_market",
+     "selling": "not_on_market",
      "funding": "mortgage_aip"
     },
     "requirements": {
@@ -3667,21 +3653,7 @@
    "phone": "+447700900491",
    "name": "Adam Green",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": false,
-     "selling": "on_market",
-     "funding": "cash"
-    },
-    "requirements": {
-     "areas": ["BK2","BK1"],
-     "max_price_pence": 31500000,
-     "min_beds": 3,
-     "types": ["flat"],
-     "must_haves": ["garden"],
-     "timescale": "as soon as possible"
-    },
-    "consent_at": null,
+    "roles": ["seller"],
     "last_contact": "2026-10-10T09:30:00.000Z",
     "source": "valuation"
    },
@@ -3691,10 +3663,10 @@
    "phone": "+447700900983",
    "name": "Adam Price",
    "details": {
-    "roles": ["buyer"],
+    "roles": ["seller","buyer"],
     "position": {
      "first_time_buyer": false,
-     "selling": "nothing",
+     "selling": "not_on_market",
      "funding": "cash"
     },
     "requirements": {
@@ -3715,49 +3687,21 @@
    "phone": "+447700900302",
    "name": "Hannah Collins",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": false,
-     "selling": "on_market",
-     "funding": "mortgage_aip"
-    },
-    "requirements": {
-     "areas": ["BK1","BK7"],
-     "max_price_pence": 12000000,
-     "min_beds": 4,
-     "types": ["cottage"],
-     "must_haves": ["step-free"],
-     "timescale": "as soon as possible"
-    },
-    "consent_at": "2026-10-08T09:30:00.000Z",
+    "roles": ["seller"],
     "last_contact": "2026-10-10T09:30:00.000Z",
     "source": "valuation"
    },
-   "marketing_consent": true
+   "marketing_consent": false
   },
   {
    "phone": "+447700900210",
    "name": "James Mensah",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": false,
-     "selling": "not_on_market",
-     "funding": "mortgage_aip"
-    },
-    "requirements": {
-     "areas": ["BK7","BK1"],
-     "max_price_pence": 24000000,
-     "min_beds": 1,
-     "types": ["semi"],
-     "must_haves": [],
-     "timescale": "just looking"
-    },
-    "consent_at": "2026-08-13T09:30:00.000Z",
+    "roles": ["seller"],
     "last_contact": "2026-10-10T09:30:00.000Z",
     "source": "valuation"
    },
-   "marketing_consent": true
+   "marketing_consent": false
   },
   {
    "phone": "+447700900774",
@@ -3887,7 +3831,7 @@
     "roles": ["buyer"],
     "position": {
      "first_time_buyer": false,
-     "selling": "not_on_market",
+     "selling": "under_offer",
      "funding": "mortgage_aip"
     },
     "requirements": {

@@ -1834,7 +1834,7 @@
     "listing": "riverside_5",
     "answered": false
    },
-   "created_at": "2026-10-10T08:00:00.000Z"
+   "created_at": "2026-10-11T06:30:00.000Z"
   },
   {
    "from_name": "Zara Jones",
@@ -2198,7 +2198,7 @@
      "phone": "+447700900394"
     }
    ],
-   "marketed_at": "2026-10-11T08:00:00.000Z",
+   "marketed_at": "2026-10-11T05:00:00.000Z",
    "back_on_market_at": null,
    "set_from": {
     "status": "available",
@@ -2206,7 +2206,7 @@
    },
    "history": [
     {
-     "at": "2026-10-11T08:00:00.000Z",
+     "at": "2026-10-11T05:00:00.000Z",
      "by": "seed",
      "what": "on the market"
     }
@@ -2354,8 +2354,8 @@
    "blocked": [],
    "sellers": [
     {
-     "name": "Sophie Patel",
-     "phone": "+447700900656"
+     "name": "Jack Kelly",
+     "phone": "+447700900414"
     }
    ],
    "marketed_at": "2026-10-11T08:00:00.000Z",
@@ -2656,7 +2656,7 @@
    "email": null,
    "position": {
     "first_time_buyer": false,
-    "selling": "on_market",
+    "selling": "under_offer",
     "funding": "mortgage_aip"
    },
    "conditions": "subject to survey",
@@ -2803,23 +2803,23 @@
    "milestones": [
     {
      "key": "memorandum_sent",
-     "done_at": "2026-08-27T08:00:00.000Z"
+     "done_at": "2026-09-01T08:00:00.000Z"
     },
     {
      "key": "solicitors_instructed",
-     "done_at": "2026-08-30T08:00:00.000Z"
+     "done_at": "2026-09-10T08:00:00.000Z"
     },
     {
      "key": "searches",
-     "done_at": "2026-09-02T08:00:00.000Z"
+     "done_at": "2026-09-18T08:00:00.000Z"
     },
     {
      "key": "survey",
-     "done_at": "2026-09-05T08:00:00.000Z"
+     "done_at": "2026-09-27T08:00:00.000Z"
     },
     {
      "key": "mortgage_offer",
-     "done_at": "2026-09-08T08:00:00.000Z"
+     "done_at": "2026-10-05T08:00:00.000Z"
     },
     {
      "key": "enquiries_answered",
@@ -2877,31 +2877,31 @@
    "milestones": [
     {
      "key": "memorandum_sent",
-     "done_at": "2026-07-24T08:00:00.000Z"
+     "done_at": "2026-08-01T08:00:00.000Z"
     },
     {
      "key": "solicitors_instructed",
-     "done_at": "2026-07-27T08:00:00.000Z"
+     "done_at": "2026-08-12T08:00:00.000Z"
     },
     {
      "key": "searches",
-     "done_at": "2026-07-30T08:00:00.000Z"
+     "done_at": "2026-08-23T08:00:00.000Z"
     },
     {
      "key": "survey",
-     "done_at": "2026-08-02T08:00:00.000Z"
+     "done_at": "2026-09-03T08:00:00.000Z"
     },
     {
      "key": "mortgage_offer",
-     "done_at": "2026-08-05T08:00:00.000Z"
+     "done_at": "2026-09-14T08:00:00.000Z"
     },
     {
      "key": "enquiries_answered",
-     "done_at": "2026-08-08T08:00:00.000Z"
+     "done_at": "2026-09-25T08:00:00.000Z"
     },
     {
      "key": "exchange",
-     "done_at": "2026-08-11T08:00:00.000Z"
+     "done_at": "2026-10-06T08:00:00.000Z"
     },
     {
      "key": "completion",
@@ -3667,21 +3667,7 @@
    "phone": "+447700900414",
    "name": "Jack Kelly",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
-     "funding": "mortgage_aip"
-    },
-    "requirements": {
-     "areas": ["BK7","BK2"],
-     "max_price_pence": 28500000,
-     "min_beds": 4,
-     "types": ["bungalow"],
-     "must_haves": [],
-     "timescale": "as soon as possible"
-    },
-    "consent_at": null,
+    "roles": ["seller"],
     "last_contact": "2026-10-09T11:00:00.000Z",
     "source": "valuation"
    },
@@ -3691,10 +3677,10 @@
    "phone": "+447700900283",
    "name": "Emily Taylor",
    "details": {
-    "roles": ["buyer"],
+    "roles": ["seller","buyer"],
     "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
+     "first_time_buyer": false,
+     "selling": "not_on_market",
      "funding": "mortgage_not_yet"
     },
     "requirements": {
@@ -3715,10 +3701,10 @@
    "phone": "+447700900761",
    "name": "Isla Ahmed",
    "details": {
-    "roles": ["buyer"],
+    "roles": ["seller","buyer"],
     "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
+     "first_time_buyer": false,
+     "selling": "not_on_market",
      "funding": "mortgage_aip"
     },
     "requirements": {
@@ -3739,21 +3725,7 @@
    "phone": "+447700900859",
    "name": "Ethan Mensah",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": false,
-     "selling": "nothing",
-     "funding": "cash"
-    },
-    "requirements": {
-     "areas": ["BK1","BK7"],
-     "max_price_pence": 33000000,
-     "min_beds": 2,
-     "types": ["detached"],
-     "must_haves": [],
-     "timescale": "just looking"
-    },
-    "consent_at": null,
+    "roles": ["seller"],
     "last_contact": "2026-10-11T08:00:00.000Z",
     "source": "valuation"
    },
@@ -3763,10 +3735,10 @@
    "phone": "+447700900480",
    "name": "Sophie Evans",
    "details": {
-    "roles": ["buyer"],
+    "roles": ["seller","buyer"],
     "position": {
-     "first_time_buyer": true,
-     "selling": "nothing",
+     "first_time_buyer": false,
+     "selling": "not_on_market",
      "funding": "mortgage_aip"
     },
     "requirements": {
@@ -3787,21 +3759,7 @@
    "phone": "+447700900313",
    "name": "Amara Chen",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": false,
-     "selling": "not_on_market",
-     "funding": "mortgage_aip"
-    },
-    "requirements": {
-     "areas": ["BK2"],
-     "max_price_pence": 31500000,
-     "min_beds": 2,
-     "types": ["detached"],
-     "must_haves": ["step-free"],
-     "timescale": "within three months"
-    },
-    "consent_at": null,
+    "roles": ["seller"],
     "last_contact": "2026-10-11T08:00:00.000Z",
     "source": "valuation"
    },
@@ -3811,25 +3769,11 @@
    "phone": "+447700900058",
    "name": "Isla Mensah",
    "details": {
-    "roles": ["buyer"],
-    "position": {
-     "first_time_buyer": false,
-     "selling": "under_offer",
-     "funding": "mortgage_aip"
-    },
-    "requirements": {
-     "areas": ["BK2"],
-     "max_price_pence": 26000000,
-     "min_beds": 4,
-     "types": ["cottage"],
-     "must_haves": ["step-free"],
-     "timescale": "within three months"
-    },
-    "consent_at": "2026-09-18T08:00:00.000Z",
+    "roles": ["seller"],
     "last_contact": "2026-10-11T08:00:00.000Z",
     "source": "valuation"
    },
-   "marketing_consent": true
+   "marketing_consent": false
   },
   {
    "phone": "+447700900155",
@@ -3959,7 +3903,7 @@
     "roles": ["buyer"],
     "position": {
      "first_time_buyer": false,
-     "selling": "on_market",
+     "selling": "under_offer",
      "funding": "mortgage_aip"
     },
     "requirements": {
