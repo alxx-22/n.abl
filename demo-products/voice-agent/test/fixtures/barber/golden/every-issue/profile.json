@@ -314,6 +314,7 @@
     "duration_minutes": 45,
     "price_pence": 2500,
     "price_from": true,
+    "colour": true,
     "description": "Softens the grey without a flat colour; needs a skin test first.",
     "windows": [
      {
@@ -355,6 +356,7 @@
     "slot_minutes": 15,
     "duration_minutes": 30,
     "price_pence": 1500,
+    "colour": true,
     "description": "Colour for the beard; needs a skin test first.",
     "windows": [
      {
@@ -388,13 +390,51 @@
     "deposit": {
      "flat_pence": 500
     }
+   },
+   {
+    "key": "skin_test",
+    "label": "Skin test",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 10,
+    "price_pence": 0,
+    "description": "A dab of the colour, 48 hours or more before it: it checks for a reaction.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:50"
+     },
+     {
+      "days": [2],
+      "first": "18:00",
+      "last": "18:00"
+     },
+     {
+      "days": [3,5],
+      "first": "09:00",
+      "last": "17:50"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:50"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:50"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28
    }
   ],
   "resources": [
    {
     "key": "marcus",
     "label": "Marcus",
-    "services": ["classic_cut","skin_fade","cut_and_beard","beard_trim","hot_towel_shave","kids_cut","grey_blending","beard_colour"],
+    "services": ["classic_cut","skin_fade","cut_and_beard","beard_trim","hot_towel_shave","kids_cut","grey_blending","beard_colour","skin_test"],
     "days": [0,2,3,4,5,6],
     "kind": "staff",
     "aliases": ["Marc"]
@@ -424,7 +464,7 @@
    {
     "key": "amira",
     "label": "Amira",
-    "services": ["classic_cut","skin_fade","grey_blending","beard_colour"],
+    "services": ["classic_cut","skin_fade","grey_blending","beard_colour","skin_test"],
     "days": [5,6],
     "kind": "staff"
    }

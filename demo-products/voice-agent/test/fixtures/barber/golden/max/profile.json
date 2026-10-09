@@ -62,6 +62,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -136,6 +137,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -210,6 +212,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -284,6 +287,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -358,6 +362,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -432,6 +437,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -506,6 +512,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -580,6 +587,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -654,6 +662,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -728,6 +737,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -802,6 +812,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -876,6 +887,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -950,6 +962,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -1024,6 +1037,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -1098,6 +1112,7 @@
     "duration_minutes": 240,
     "price_pence": 50000,
     "price_from": true,
+    "colour": true,
     "description": "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
     "windows": [
      {
@@ -1163,6 +1178,39 @@
     "deposit": {
      "flat_pence": 500
     }
+   },
+   {
+    "key": "skin_test",
+    "label": "Skin test",
+    "kind": "appointment",
+    "slot_minutes": 15,
+    "duration_minutes": 10,
+    "price_pence": 0,
+    "description": "A dab of the colour, 48 hours or more before it: it checks for a reaction.",
+    "windows": [
+     {
+      "days": [0],
+      "first": "10:00",
+      "last": "14:50"
+     },
+     {
+      "days": [2,3,5],
+      "first": "09:00",
+      "last": "17:50"
+     },
+     {
+      "days": [4],
+      "first": "09:00",
+      "last": "19:50"
+     },
+     {
+      "days": [6],
+      "first": "08:00",
+      "last": "16:50"
+     }
+    ],
+    "lead_minutes": 30,
+    "horizon_days": 28
    }
   ],
   "resources": [
@@ -1199,7 +1247,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1270,7 +1319,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1341,7 +1391,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1412,7 +1463,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1483,7 +1535,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1554,7 +1607,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1625,7 +1679,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1696,7 +1751,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1767,7 +1823,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1838,7 +1895,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1909,7 +1967,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
@@ -1980,7 +2039,8 @@
      "service_26",
      "service_27",
      "service_28",
-     "service_29"
+     "service_29",
+     "skin_test"
     ],
     "days": [0,1,2,3,4,5,6],
     "kind": "staff",
