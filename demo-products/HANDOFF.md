@@ -327,7 +327,7 @@ same flag (`git -c core.autocrlf=false stash`). Otherwise the stash writes
 files back with CRLF and the rebase refuses to start. The Gemini key
 is in `voice-agent/.env.local` (git-ignored, never printed). Live calls:
 `npm run eval -- --only tk-busy-wait,tk-meal-deal`. The walk needs
-`CHROME_PATH="C:/Program Files/Google/Chrome/Application/chrome.exe"`.
+`CHROME_PATH="C:/Program Files/Google/Chrome/Application/chrome.exe"`. Git Bash's `date` prints UTC even with `TZ=Europe/London`; for UK time use `node -e "console.log(new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' }))"`.
 
 ## Earlier: picked up on 4 October (the session before stopped at the weekly usage limit)
 

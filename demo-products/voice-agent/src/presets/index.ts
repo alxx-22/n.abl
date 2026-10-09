@@ -23,7 +23,9 @@ import { barber } from './barber/preset.ts';
  */
 export type ViewId =
   | 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls' | 'properties' | 'offers' | 'applicants' | 'valuations' | 'sales'
-  | 'jobs' | 'dispatch' | 'compliance' | 'safety' | 'clients' | 'money' | 'tonight';
+  | 'jobs' | 'dispatch' | 'compliance' | 'safety' | 'clients' | 'money' | 'tonight'
+  // A barber's shop floor (presets/barber.md §6): the walk-in queue, who's in today, the waiting list.
+  | 'queue' | 'today' | 'waitlist';
 
 /** The back office a workspace shows, in the preset's own words (PRESETS.md §2.5). */
 export interface WorkspaceSpec {

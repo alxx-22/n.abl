@@ -130,10 +130,12 @@ export interface LiveBooking {
   needs_new_time?: true;
 }
 
-/** A barber's shop floor (src/server/barber.ts; agreed on SESSIONS.md, 9 October 21:50). */
+/** A barber's shop floor (src/server/barber.ts; agreed on SESSIONS.md, 9 October 21:28). */
 export interface LiveShopFloor {
   /** Today's barbers off (resource keys) and one line for callers. */
   today: { date: string; off: string[]; notice: string | null };
+  /** What a walk-in can have, for "Add a walk-in". */
+  services: { key: string; label: string }[];
   /** Walk-ins waiting now, first in first; `resource_key` null for any barber. */
   queue: {
     id: string; name: string; phone: string | null; service: string; service_key: string;

@@ -69,6 +69,7 @@ test("demo: a barber's shop floor: Dan off today, a walk-in served into a free c
 
   const s = await state();
   assert.deepEqual(s.barber.today, { date: saturday, off: [], notice: null });
+  assert.deepEqual(s.barber.services.slice(0, 2), [{ key: 'classic_cut', label: 'Classic cut' }, { key: 'skin_fade', label: 'Skin fade' }]);
   assert.deepEqual(s.team.map((m: any) => m.first_name), ['Marcus', 'Dan', 'Jordan', 'Amira']);
   assert.ok(s.barber.wait_now.length >= 1 && s.barber.wait_now.every((x: any) => /^\d\d:\d\d$/.test(x.free_at)), JSON.stringify(s.barber.wait_now));
 

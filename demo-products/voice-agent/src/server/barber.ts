@@ -2,7 +2,7 @@
 // Diary's rows and marks, the walk-in queue and the wait now, today's
 // barbers off and the notice, and the waiting list; and the staff actions on
 // them. Only for a profile with `barber` (the hair salon writes it too). The
-// shape is the one agreed on SESSIONS.md (9 October, 21:50).
+// shape is the one agreed on SESSIONS.md (9 October, 21:28).
 
 import type { Repo } from '../db/repo.ts';
 import { findService } from '../domain/availability.ts';
@@ -31,6 +31,8 @@ export async function barberState(repo: Repo, t: Tenant, now: Date, today: strin
     team: barbers.map((r) => ({ key: r.key, name: r.label, first_name: r.label, role: 'other' as const, does: [], days: r.days ?? [0, 1, 2, 3, 4, 5, 6], mobile: '', services: r.services })),
     barber: {
       today: shop,
+      // What a walk-in can have, for "Add a walk-in" (ui's ask, SESSIONS.md 9 October).
+      services: (p.booking?.services ?? []).map((s) => ({ key: s.key, label: s.label })),
       queue: queue.map((w) => ({
         id: w.id, name: w.name, phone: displayUkPhone(w.phone), service: service(w.service_key), service_key: w.service_key,
         resource_key: w.resource_key, with: label(w.resource_key), joined_at: w.joined_at.toISOString(), waited_minutes: minutesSince(w.joined_at, now),

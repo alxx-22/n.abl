@@ -42,12 +42,13 @@ export function factSheet(a: BarberAnswers): string {
   ].join('\n');
 }
 
-/** The barber's back office (presets/barber.md §6): the day's Diary, a column per barber, then messages and calls. */
+/** The barber's back office (presets/barber.md §6): the day's Diary, a row per barber, the shop floor, then messages and calls. */
 export function barberWorkspace(profile: TenantProfile): WorkspaceSpec {
   const first = profile.booking?.resources[0]?.label ?? 'Marcus';
   return {
     views: [
       { id: 'timeline', label: 'Diary', of: 'staff' },
+      // The shop floor's queue, today and waitlist (M2) come with ui's screens: the web registry test needs both.
       { id: 'messages', label: 'Messages' },
       { id: 'calls', label: 'Calls' },
     ],
