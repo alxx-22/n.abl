@@ -17,6 +17,9 @@
    (max-width: 640px). */
 
 .rx { min-height: 100vh; }
+/* Nothing smaller than 12px: the site's smallest size is 0.75rem of a 15px page. */
+.rx { --t-xs: 12px; }
+.rx .badge, .rx .bubble .who { font-size: 12px; }
 .rx-main { padding: 28px 24px; max-width: 1560px; margin: 0 auto; }
 .rx-top .crumb { display: inline-flex; align-items: center; gap: 8px; color: var(--heading); }
 .workspace-page .rx-top .crumb b, .builder-page .rx-top .crumb b, .phone-head b, .step > header h1 { font-family: var(--brand-heading, inherit); }
@@ -106,7 +109,7 @@ h3.sub { margin-top: 12px; font-size: 1rem; }
 .steps button { width: 100%; justify-content: flex-start; text-align: left; background: transparent; border-color: transparent; color: var(--muted); box-shadow: none; }
 .steps button:not(:disabled):hover { color: var(--heading); background: rgba(var(--cream-rgb), 0.04); border-color: transparent; box-shadow: none; }
 .steps button[aria-current='step'] { background: var(--surface-2); border-color: var(--line); color: var(--heading); }
-.steps .n { width: 24px; height: 24px; border-radius: var(--r-sm); display: inline-grid; place-items: center; font: 500 11px/1 var(--font-mono); border: 1px solid var(--line-strong); flex: none; color: var(--dim); }
+.steps .n { width: 24px; height: 24px; border-radius: var(--r-sm); display: inline-grid; place-items: center; font: 500 12px/1 var(--font-mono); border: 1px solid var(--line-strong); flex: none; color: var(--dim); }
 .steps button[aria-current='step'] .n { background: var(--accent); color: var(--ink); border-color: var(--accent); box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.35); }
 .step.panel { padding: 24px 26px; }
 .step > header h1 { font-size: 1.6rem; letter-spacing: var(--track-tight); }
@@ -156,7 +159,7 @@ textarea.prose { font-family: var(--font); font-size: 14px; min-height: 0; resiz
 .choice.inline { display: flex; flex-wrap: wrap; gap: 8px 18px; }
 .choice.inline .hint { flex-basis: 100%; }
 
-.source { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; margin-left: 6px; letter-spacing: 0.02em; }
+.source { font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 999px; margin-left: 6px; letter-spacing: 0.02em; }
 .source.website { color: var(--ok); border: 1px solid rgba(var(--ok-rgb), 0.4); }
 .source.guess { color: var(--warn); border: 1px solid rgba(var(--warn-rgb), 0.4); }
 
@@ -312,7 +315,7 @@ svg.floor { width: 100%; height: auto; display: block; touch-action: none; user-
 .walk-tag { pointer-events: none; }
 .walk-tag rect { fill: #4f8f86; stroke: #15120f; stroke-width: 2; }
 .walk-tag text { fill: #f2fbf9; font-size: 15px; font-weight: 800; text-anchor: middle; letter-spacing: 0.02em; }
-.legend .l-walkin { width: auto; height: auto; padding: 0 7px; border-radius: 999px; background: #4f8f86; color: #f2fbf9; font-style: normal; font-weight: 800; font-size: 11px; line-height: 16px; }
+.legend .l-walkin { width: auto; height: auto; padding: 0 7px; border-radius: 999px; background: #4f8f86; color: #f2fbf9; font-style: normal; font-weight: 800; font-size: 12px; line-height: 16px; }
 .table.later .top { fill: #2b241d; }
 .table.arriving .top { fill: #3d3020; stroke: var(--warn); stroke-width: 3; }
 .table.booked .top { fill: color-mix(in srgb, var(--accent) 55%, #1a1613); }
@@ -425,11 +428,11 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .timeline { display: grid; gap: 8px; }
 .tl-grid { display: grid; gap: 2px; overflow-x: auto; }
 .tl-head, .tl-row { display: grid; grid-template-columns: 110px minmax(560px, 1fr); align-items: center; }
-.tl-scale { position: relative; height: 18px; font-size: 11px; color: var(--muted); }
+.tl-scale { position: relative; height: 18px; font-size: 12px; color: var(--muted); }
 .tl-scale span { position: absolute; transform: translateX(-50%); font-family: var(--mono); }
 .tl-row.area-start { margin-top: 10px; }
 .tl-label { font-size: 12px; position: relative; }
-.tl-area { position: absolute; top: -15px; left: 0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+.tl-area { position: absolute; top: -16px; left: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
 .tl-track { position: relative; height: 30px; background: var(--surface-2); border-radius: 6px; }
 .tl-row.walk-in .tl-track { background: repeating-linear-gradient(135deg, var(--surface-2) 0 8px, transparent 8px 16px); }
 .tl-walkin { position: absolute; inset: 0; display: flex; align-items: center; padding-left: 10px; font-size: 12px; color: var(--muted); pointer-events: none; }
@@ -438,7 +441,7 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .tl-row.can-drop .tl-track { background: color-mix(in srgb, var(--ok) 10%, transparent); }
 .tl-open { position: absolute; top: 0; bottom: 0; background: rgba(var(--cream-rgb), 0.04); border-left: 1px dashed var(--line); border-right: 1px dashed var(--line); }
 .tl-bar {
-  position: absolute; top: 3px; bottom: 3px; border-radius: 6px; padding: 0 6px; font-size: 11px; font-weight: 500; gap: 4px;
+  position: absolute; top: 3px; bottom: 3px; border-radius: 6px; padding: 0 6px; font-size: 12px; font-weight: 500; gap: 4px;
   /* A tint of the business's colour with an edge of it, and the page's own text: readable on a light or a dark page, with any accent. */
   background: color-mix(in srgb, var(--accent) 24%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--accent); color: var(--heading); border: 1px solid rgba(var(--accent-rgb), 0.35); overflow: hidden; white-space: nowrap; justify-content: flex-start; touch-action: none;
 }
@@ -450,6 +453,10 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .tl-now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--danger); pointer-events: none; }
 
 .kitchen { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; align-items: start; }
+/* A board too wide for its panel scrolls sideways by itself, so the view's controls above it stay put. */
+.kitchen { overflow-x: auto; overscroll-behavior-x: contain; }
+/* In a narrow column a badge wraps rather than poke out of its card. */
+.rx :is(.ticket, .rp-row, .rp-mrow, .drawer, .sale) .badge { white-space: normal; }
 /* A takeaway's five columns keep a readable width and scroll sideways in their panel, rather than squeeze. */
 .kitchen.with-out { grid-template-columns: repeat(5, minmax(180px, 1fr)); overflow-x: auto; padding-bottom: 4px; }
 /* A takeaway's drivers: a column each, then what is waiting for one. */
@@ -459,9 +466,7 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .ticket .request { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; margin: 6px 0; padding: 4px 8px; border-radius: 6px; border-left: 3px solid var(--amber); background: var(--surface-2); font-size: 13px; }
 .ticket .request.answered { border-left-color: var(--muted); color: var(--muted); }
 .ticket .request .row { display: flex; gap: 4px; }
-@media (max-width: 640px) {
-  .kitchen.with-out, .drivers { grid-template-columns: minmax(0, 1fr); }
-}
+
 
 /* ── An estate agency's back office ───────────────────────────────────── */
 .diary .tl-bar.valuation { background: color-mix(in srgb, var(--info) 24%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--info); border-color: rgba(var(--info-rgb), 0.35); }
@@ -487,7 +492,7 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .home-card { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
 .home-card.open { grid-column: 1 / -1; border-color: var(--accent); }
 .home-pic { position: relative; display: grid; align-content: start; gap: 4px; }
-.home-pic .example { font: 500 10px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); text-align: center; }
+.home-pic .example { font: 500 12px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); text-align: center; }
 svg.house { width: 96px; height: auto; display: block; }
 svg.house .ground { stroke: var(--line-strong); stroke-width: 2; }
 svg.house .wall { fill: color-mix(in srgb, var(--cream) 14%, transparent); stroke: var(--cream-300); stroke-width: 1.2; }
@@ -512,7 +517,6 @@ svg.house .door { fill: var(--accent); }
   .homes { grid-template-columns: minmax(0, 1fr); }
   .home-card { grid-template-columns: 56px minmax(0, 1fr); gap: 8px; }
   svg.house { width: 56px; }
-  .kitchen.offers { grid-template-columns: minmax(0, 1fr); }
 }
 .k-col { background: var(--surface-2); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 8px; min-height: 180px; align-content: start; border: 2px solid transparent; }
 .k-col.over { border-color: var(--accent); }
@@ -541,7 +545,7 @@ svg.house .door { fill: var(--accent); }
 .phone-thread { overflow-y: auto; padding: 12px 10px; display: flex; flex-direction: column; gap: 8px; }
 .sms { align-self: flex-start; max-width: 86%; background: #2c2c2e; border-radius: 18px 18px 18px 4px; padding: 8px 12px; font-size: 13px; line-height: 1.35; }
 .sms p { margin: 0; }
-.sms time { display: block; font-size: 10px; color: #8e8e93; margin-top: 3px; }
+.sms time { display: block; font-size: 12px; color: #8e8e93; margin-top: 3px; }
 .sms.fresh { animation: smsin 500ms ease-out; }
 @keyframes smsin { from { transform: translateY(12px) scale(0.96); opacity: 0; } }
 .phone-empty { color: #8e8e93; font-size: 12px; text-align: center; margin: 40px 12px 0; }
@@ -572,14 +576,21 @@ svg.house .door { fill: var(--accent); }
   .workspace.call-away { padding-left: 56px; }
   .workspace.phone-away { padding-right: 56px; }
 }
-@keyframes sheet-in { from { transform: translateX(100%); } }
+@keyframes slide-in-right { from { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) {
-  .spinner, .table.flash .top, .sms.fresh, .ws-bookmark, .preview.open { animation: none; }
+  .spinner, .table.flash .top, .sms.fresh, .ws-bookmark, .preview.open, .office-body > .drawer { animation: none; }
   .ws-call, .ws-phone { transition: none !important; }
 }
 
 /* Laptop: the call and the phone share the first column, and either can slide away from it. */
+@media (max-width: 1279px) {
+  /* The top bar keeps to one row: the person's name goes (Sign out stays). */
+  .rx-top > .muted.small { display: none; }
+}
 @media (min-width: 1024px) and (max-width: 1279px) {
+  .rx-top { gap: 10px 12px; }
+  .rx-top .brand .product { display: none; }
+  .rx-top button, .rx-top .button { padding: 6px 12px; }
   .workspace, .workspace.call-away, .workspace.phone-away { --call-col: minmax(300px, 1fr); grid-template-columns: var(--call-col) minmax(0, 2fr); grid-template-areas: 'side office'; }
   .workspace.call-away.phone-away { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'office'; }
   .workspace.call-away.phone-away .ws-side { display: none; }
@@ -615,7 +626,25 @@ svg.house .door { fill: var(--accent); }
   .ws-call > .pane-caret { top: 30px; right: 30px; }
   .ws-scrim { position: fixed; inset: 0; z-index: 44; background: rgba(var(--bg-rgb), 0.6); }
   .office-body { grid-template-columns: 1fr; }
-  .drawer { width: auto; border-width: 1px 0 0; max-height: none; }
+  /* A booking opens over the right of the screen, rather than below a view the size of the screen. */
+  .office-body > .drawer {
+    position: fixed; z-index: 45; top: 0; right: 0; bottom: 0; width: min(420px, calc(100vw - 32px)); max-height: none; overflow-y: auto; overscroll-behavior: contain;
+    border-radius: 0; border-width: 0 0 0 1px; box-shadow: var(--glow-md); animation: slide-in-right var(--dur) var(--ease);
+  }
+  /* Fingers, not a mouse: every button, tab and box at least 40px. Timeline bars keep their time-scaled width; a link in a sentence stays in its line. */
+  .rx :is(button, .button, select, textarea, [role='tab'], input:not([type='checkbox'], [type='radio'], [type='range'], [type='hidden'])):not(.tl-bar, p .linkish) { min-height: 40px; }
+  .rx :is(button, .button):not(.tl-bar, p .linkish) { min-width: 40px; }
+  .rx summary { padding-block: 10px; }
+  .chips label { display: inline-flex; align-items: center; min-height: 40px; padding: 4px 12px; }
+  .tl-track { height: 44px; }
+  .tl-bar { top: 2px; bottom: 2px; }
+  /* The top bar on one row: the buttons with an icon show only the icon, their names kept for screen readers and as a tooltip. */
+  .rx div.rx-top { gap: 8px 10px; padding-inline: 16px; }
+  .rx-top .brand .product { display: none; }
+  .rx-top .crumb { min-width: 0; max-width: 24vw; }
+  .rx-top .crumb > span { white-space: nowrap; flex: none; }
+  .rx-top .crumb b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .workspace-page .rx-top button:has(> svg) { font-size: 0; gap: 0; width: 40px; padding: 0; justify-content: center; }
   /* The builder: the steps a ribbon along the top that stays in view, then the step; the preview opens from a button. */
   .builder-page .rx-top { position: static; }
   .builder { display: block; padding-top: 0; }
@@ -625,32 +654,45 @@ svg.house .door { fill: var(--accent); }
   .preview { position: static; max-height: none; }
   .preview.open {
     position: fixed; z-index: 45; top: 0; right: 0; bottom: 0; width: min(420px, calc(100vw - 32px)); max-height: none; overflow-y: auto;
-    border-radius: 0; border-width: 0 0 0 1px; align-content: start; animation: sheet-in var(--dur) var(--ease);
+    border-radius: 0; border-width: 0 0 0 1px; align-content: start; animation: slide-in-right var(--dur) var(--ease);
   }
   .preview-scrim { position: fixed; inset: 0; z-index: 44; background: rgba(var(--bg-rgb), 0.6); }
   .floor-edit { grid-template-columns: 1fr; }
-  .kitchen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Boards keep their columns side by side and scroll sideways, a column at a time. */
+  .kitchen, .kitchen.with-out, .kitchen.offers, .drivers { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(210px, 1fr); overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 6px; }
+  .kitchen > .k-col, .drivers > * { scroll-snap-align: start; }
 }
 @media (max-width: 640px) {
   .rx-main { padding: 16px; }
   /* On a phone the top bar scrolls away and stays small: a quarter of the screen was going on it. */
   .rx-top { position: static; gap: 8px; padding: 10px 16px; }
-  .rx-top > .muted.small { display: none; }
-  .rx-top button, .rx-top .button { padding: 6px 10px; font-size: 13px; }
+  .rx-top .crumb { max-width: 56vw; }
+  .rx-top .button, .rx-top button:not(:has(> svg)) { padding: 6px 10px; font-size: 13px; }
   .step.panel { padding: 18px 16px; }
   .step-nav { margin: 18px -16px -18px; padding: 10px 16px; }
   .steps { margin: 0 -16px 12px; padding: 8px 16px; }
   .preview.open { width: 100vw; border-width: 0; }
   .two, .four { grid-template-columns: 1fr 1fr; }
   .day-row { grid-template-columns: 1fr; }
-  .service { grid-template-columns: 1fr 1fr; }
-  .service .midnight { grid-column: auto; }
+  /* A service on two lines: its name and remove, then its times. */
+  .service { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .service > input:first-child { grid-column: 1 / 3; grid-row: 1; }
+  .service > button { grid-column: 3; grid-row: 1; justify-self: end; }
+  .service > input:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .service > span.muted { grid-column: 2; grid-row: 2; }
+  .service > input:nth-child(4) { grid-column: 3; grid-row: 2; }
+  .service .midnight { grid-column: 3; grid-row: 3; }
   .dish { grid-template-columns: 1fr 100px; }
-  .kitchen { grid-template-columns: 1fr; }
+  /* A column and a glimpse of the next, so it is clear the board goes on sideways. */
+  .kitchen, .kitchen.with-out, .kitchen.offers, .drivers { grid-auto-columns: min(260px, 72vw); }
   .found li { grid-template-columns: 1fr; }
   /* The back office's tabs: one strip that scrolls sideways, the chosen one kept in view. */
   .ws-office > .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .ws-call, .ws-phone { width: 100vw; }
+  .ws-office > .tabs button, .day-tabs button { flex: none; }
+  /* The bookmarks low on the edges, icon and caret only, so they cover as little of the back office as they can. */
+  .ws-bookmark { top: auto; bottom: 84px; padding-block: 10px 8px; }
+  .ws-bookmark .bm-label { display: none; }
+  .ws-call, .ws-phone, .office-body > .drawer { width: 100vw; border-width: 0; }
 }
 
 /* ── Shared demos: when they go ───────────────────────────────────────── */
@@ -687,7 +729,7 @@ svg.house .door { fill: var(--accent); }
 .dispatch-grid td.over { border-color: var(--accent); }
 .dispatch-grid td.full { background: repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 6px, var(--surface) 6px, var(--surface) 12px); }
 .dispatch-grid tr.off th, .dispatch-grid tr.off td { opacity: 0.5; }
-.dispatch .chip { display: block; margin: 2px 0; font: 500 11px/1.3 var(--font-sans, inherit); white-space: normal; cursor: grab; }
+.dispatch .chip { display: block; margin: 2px 0; font: 500 12px/1.3 var(--font-sans, inherit); white-space: normal; cursor: grab; }
 .chip.emergency { border-color: rgba(var(--danger-rgb), 0.6); color: var(--danger); }
 .chip.urgent { border-color: rgba(var(--accent-rgb), 0.5); }
 .tray { display: grid; gap: 4px; }
@@ -705,7 +747,7 @@ svg.house .door { fill: var(--accent); }
 .safety-log th, .certs th { color: var(--muted); font-weight: 600; font-size: 12px; }
 @media (max-width: 640px) {
   .move-job { grid-template-columns: 1fr; }
-  .dispatch-grid { font-size: 11px; }
+  .dispatch-grid { font-size: 12px; }
 }
 .job-sheet { display: grid; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line); }
 .page-alert { display: grid; gap: 4px; padding: 8px; border-radius: 10px; background: var(--danger-soft); border: 1px solid rgba(var(--danger-rgb), 0.4); }

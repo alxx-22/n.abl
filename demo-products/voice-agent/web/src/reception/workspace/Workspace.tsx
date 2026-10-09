@@ -232,7 +232,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
             Deleted {minutesUntil(state.expires_at, clock)}
           </span>
         ) : null}
-        <button type="button" onClick={() => setSettingsOpen(true)}><SlidersIcon /> Voice</button>
+        <button type="button" onClick={() => setSettingsOpen(true)} title="The receptionist's voice"><SlidersIcon /> Voice</button>
         <Link to={`${R}/build/${id}`} className="button">Edit setup</Link>
         {spec.clock ? (
           <DemoClock
@@ -240,7 +240,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
             onSet={(message) => { setSelected(null); setView(null); void refresh(); toast(message); }}
           />
         ) : null}
-        <button type="button" onClick={reset} disabled={live.phase !== 'idle'}><ResetIcon /> Reset</button>
+        <button type="button" onClick={reset} disabled={live.phase !== 'idle'} title="Reset the demo"><ResetIcon /> Reset</button>
       </RxTop>
 
       <main className={`workspace ${panes.className}`} style={panes.style}>

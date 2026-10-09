@@ -11,6 +11,8 @@
 //   sideways   a box that scrolls sideways but isn't one of the strips meant
 //              to (the tabs, the steps, a board's columns, a timeline, a plan)
 //   small-text text under 12px
+//   small-drawing  text under 12px in a drawing (the floor plan), which is
+//              drawn to fit and has its own zoom
 //   small-target  on a tablet or phone, a button, tab or box under 40px
 //
 //   npm run screens                                   everything (builds the app first)
@@ -54,6 +56,7 @@ interface Measure {
   /** Boxes that scroll sideways, other than the strips meant to. */
   sideways: string[];
   smallText: string[];
+  smallDrawing: string[];
   smallTargets: string[];
 }
 interface Row { size: string; preset: string; screen: string; file: string; m: Measure; problems: { kind: string; detail: string }[] }
@@ -113,27 +116,32 @@ function measure([touch, strips]: [boolean, string]): Measure {
     sideways.push(`${name(el)} (${el.scrollWidth}px in ${el.clientWidth}px)`);
   }
   const smallText: string[] = [];
+  const smallDrawing: string[] = [];
   for (const el of all) {
     const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent!.trim());
     if (!own || !shown(el)) continue;
     let size = parseFloat(getComputedStyle(el).fontSize);
+    // Text sized to nothing is hidden on purpose (a button showing only its icon), not small.
+    if (size < 1) continue;
     // A drawing's text is drawn at the drawing's scale.
-    if (el instanceof SVGGraphicsElement) size *= el.getScreenCTM()?.a ?? 1;
-    if (size < 11.95) smallText.push(`${size.toFixed(1)}px ${name(el)} "${text(el)}"`);
+    const drawn = el instanceof SVGGraphicsElement;
+    if (drawn) size *= el.getScreenCTM()?.a ?? 1;
+    if (size < 11.95) (drawn ? smallDrawing : smallText).push(`${size.toFixed(1)}px ${name(el)} "${text(el)}"`);
   }
   const smallTargets: string[] = [];
   if (touch) {
     const targets = document.body.querySelectorAll('button, a.button, [role=tab], [role=button]:not(svg *), select, input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), textarea, summary');
     for (const el of targets) {
       const r = shown(el);
-      if (!r || el.closest('svg')) continue;
+      // A link inside a sentence is part of its line (as WCAG allows); a drawing's tables are dragged, not tapped small.
+      if (!r || el.closest('svg') || el.matches('p .linkish')) continue;
       if (Math.min(r.width, r.height) < 39.5) smallTargets.push(`${Math.round(r.width)}x${Math.round(r.height)} ${name(el)} "${text(el)}"`);
     }
   }
   return {
     scrollWidth: document.documentElement.scrollWidth, innerWidth: vw,
     scrollHeight: document.documentElement.scrollHeight, innerHeight: window.innerHeight,
-    escapes, sideways, smallText, smallTargets,
+    escapes, sideways, smallText, smallDrawing, smallTargets,
   };
 }
 
@@ -206,6 +214,7 @@ try {
         problems.push({ kind: 'page-scroll', detail: `${m.scrollHeight}px tall in ${m.innerHeight}px` });
       }
       if (m.smallText.length) problems.push({ kind: 'small-text', detail: `${m.smallText.length}: ${m.smallText.slice(0, 3).join('; ')}` });
+      if (m.smallDrawing.length) problems.push({ kind: 'small-drawing', detail: `${m.smallDrawing.length}: ${m.smallDrawing.slice(0, 3).join('; ')}` });
       if (m.smallTargets.length) problems.push({ kind: 'small-target', detail: `${m.smallTargets.length}: ${m.smallTargets.slice(0, 3).join('; ')}` });
       rows.push({ size, preset, screen, file, m, problems });
     };
@@ -254,7 +263,7 @@ try {
         if (await bar.count() && await bar.isVisible()) {
           await bar.click();
           if (await page.locator('.drawer').count()) {
-            await shoot(size, `ws-${name}-open`);
+            await shoot(size, `ws-${name}-open`, false);
             await page.locator('.drawer header button').first().click().catch(() => {});
           }
         }
@@ -283,7 +292,7 @@ try {
 mkdirSync(OUT, { recursive: true });
 writeFileSync(join(OUT, 'report.json'), JSON.stringify(rows, null, 1));
 const problems = rows.flatMap((r) => r.problems.map((p) => ({ ...p, size: r.size, preset: r.preset, screen: r.screen })));
-const kinds = ['overflow', 'sideways', 'page-scroll', 'small-text', 'small-target'];
+const kinds = ['overflow', 'sideways', 'page-scroll', 'small-text', 'small-drawing', 'small-target'];
 const pad = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s.padEnd(n));
 if (problems.length) {
   console.log(`\n${pad('size', 10)} ${pad('preset', 21)} ${pad('screen', 30)} ${pad('problem', 13)} detail`);
@@ -296,6 +305,7 @@ for (const r of rows) {
     ...r.m.escapes.map((e) => ['overflow', e.replace(/ \(.*$/, '')]),
     ...r.m.sideways.map((e) => ['sideways', e.replace(/ \(.*$/, '')]),
     ...r.m.smallText.map((e) => ['small-text', e.replace(/ ".*$/, '')]),
+    ...r.m.smallDrawing.map((e) => ['small-drawing', e.replace(/^[\d.]+px /, '').replace(/ ".*$/, '')]),
     ...r.m.smallTargets.map((e) => ['small-target', e.replace(/^\d+x\d+ /, '').replace(/ ".*$/, '')]),
   ];
   for (const [kind, what] of items) {
