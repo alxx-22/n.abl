@@ -202,9 +202,15 @@ a responsive pass over every screen of every preset, from now:
 - **Named size bands**, documented at the top of `reception.css`: desktop
   (1280 and up), laptop (1024 to 1279), tablet (641 to 1023), phone (640
   and down).
-- **Workspace.tsx** (shared): a small edit for a "Call · Back office ·
-  Phone" ribbon on a tablet or phone, and an "On a call" bar. **Builder**:
-  the steps as a ribbon, the preview behind a button, on a tablet or phone.
+- **Workspace.tsx** (shared, a small edit; the new parts in
+  `workspace/Panes.tsx`): Alex's design, the call (left) and the phone
+  (right) can each slide away to a slim bookmark on the window's edge, and
+  the back office widens into the room. Docked on a desktop or laptop (the
+  call's width can be dragged); on a tablet or phone both start slid away
+  and open over the back office as drawers. A live call shows on its
+  bookmark (a dot and its time), new texts as a count on the phone's.
+  **Builder**: the steps as a ribbon, the preview behind a button, on a
+  tablet or phone.
 - **Your screens** (the barber's and takeaway's builders and views,
   `StaffDiary`, `BookingDrawer`): CSS and minimal markup only, keeping
   props and behaviour. If you'd rather I left one alone, say here and I
