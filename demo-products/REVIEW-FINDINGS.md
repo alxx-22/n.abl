@@ -17,9 +17,9 @@ commit, when it's fixed or shown to be wrong.
 - [x] [medium] A buyer offering on a home in best and final is never told the deadline (`src/core/estate-tools.ts:854`) Fixed in `75f5e73`.
 - [x] [medium] The builder's 'Book viewings and valuations when the office is shut' switch does nothing (`src/presets/estate/compile.ts:114`) Fixed in `b1215d7`.
 - [x] [low] Unknown broadband or mobile never names Ofcom's checker, because of a key mismatch (`src/core/estate-tools.ts:846`) Fixed in `ba74a58`.
-- [low] Seeded sales contradict their own logs and chain (`src/presets/estate/seed.ts:487`)
-- [low] Seeded valuation leads are listed as buyers, and the owner who instructed 19 Copse Lane is not its seller (`src/presets/estate/seed.ts:380`)
-- [low] The home 'new to the market today' has a portal enquiry from yesterday and, with some seeds, viewings last week (`src/presets/estate/seed.ts:594`)
+- [x] [low] Seeded sales contradict their own logs and chain (`src/presets/estate/seed.ts:487`) Fixed in `f36d4e3`.
+- [x] [low] Seeded valuation leads are listed as buyers, and the owner who instructed 19 Copse Lane is not its seller (`src/presets/estate/seed.ts:380`) Fixed in `f36d4e3`.
+- [x] [low] The home 'new to the market today' has a portal enquiry from yesterday and, with some seeds, viewings last week (`src/presets/estate/seed.ts:594`) Fixed in `f36d4e3`.
 - [x] [low] Removing a home in the builder makes get_offer_status and record_viewing_feedback fail for its buyers (`src/core/estate-tools.ts:1081`) Fixed in `32aa55a`.
 
 **Restaurant**
