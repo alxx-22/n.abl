@@ -716,6 +716,10 @@ const TOOLS: Record<string, Tool> = {
             next: `Offer ${who} at ${other.slot.spoken} first, and book with staff "${who}" if they agree; if it must be ${str(args.staff)}, offer these times.`,
           };
         }
+        // Not a busy evening but a party no table seats, or a table that isn't there: say why, never "try another day".
+        if (a2.reason === 'party_too_large' || a2.reason === 'no_suitable_resource') {
+          return { booked: false, reason: a2.reason, message: a2.message, next: a2.reason === 'party_too_large' ? 'Take their details as a message for the manager, who will call back.' : 'Offer what check_availability finds instead.' };
+        }
         return {
           booked: false, reason: 'fully_booked', message: a2.message ?? r.message, alternatives: a2.alternatives,
           other_areas_free: a2.other_areas_free,

@@ -127,8 +127,12 @@ export function validateSeating<S extends string, F extends string>(s: SeatingAn
   if (s.max_party < 2) err('Allow bookings for at least two people.');
   const biggest = Math.max(0, ...s.tables.filter((t) => tableBookable(s, t)).map((t) => t.seats));
   const pair = Math.max(0, ...s.tables.flatMap((t) => t.joins.map((j) => t.seats + (s.tables.find((u) => u.key === j)?.seats ?? 0))));
-  if (Math.max(biggest, pair) < Math.min(s.max_party, 8)) {
-    out.push({ step: steps.seating, level: 'warning', message: `No table or pair of tables seats ${Math.min(s.max_party, 8)}; bigger parties will be offered a callback.` });
+  const top = Math.max(biggest, pair);
+  // With no table at all, "Nothing is bookable" says it already.
+  if (top > 0 && top < s.max_party) {
+    // Parties between the biggest table and the limit get the manager's callback too (the engine gives it), so say which.
+    const between = top + 1 === s.max_party ? `${s.max_party}` : top + 2 === s.max_party ? `${top + 1} or ${s.max_party}` : `${top + 1} to ${s.max_party}`;
+    out.push({ step: steps.seating, level: 'warning', message: `No table or pair of tables seats ${s.max_party}: parties of ${between} will be offered a callback, as bigger ones are.` });
   }
   for (const t of s.tables) {
     const clash = s.tables.find((u) => u !== t && u.area === t.area && Math.abs(u.x - t.x) < 30 && Math.abs(u.y - t.y) < 30);

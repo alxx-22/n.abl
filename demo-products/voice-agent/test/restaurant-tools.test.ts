@@ -13,6 +13,7 @@ import { DEFAULT_DEMO_CARDS } from '../src/domain/payments.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { defaultAnswers, type RestaurantAnswers } from '../src/presets/restaurant/answers.ts';
 import { compileRestaurant } from '../src/presets/restaurant/compile.ts';
+import { validateRestaurant } from '../src/presets/restaurant/validate.ts';
 import { seedAll } from '../src/db/seed.ts';
 import { minutesOf } from '../src/domain/time.ts';
 
@@ -429,4 +430,27 @@ test('restaurant tools: coconut, nutmeg and doughnuts are not tree nuts', async 
   assert.deepEqual(allergensNamed('tree nuts'), ['nuts']);
   assert.deepEqual(allergensNamed('peanuts'), ['peanuts']);
   assert.deepEqual(allergensNamed('walnuts and peanuts').sort(), ['nuts', 'peanuts']);
+});
+
+test('restaurant tools: a party no table seats gets the callback, never "try another day", and the builder says so', async () => {
+  // The review: phone bookings up to 10 by default, but the biggest pair seats 8, so 9 and 10 were told to try another day.
+  assert.equal(defaultAnswers().seating.max_party, 8, 'the default limit is what the default tables seat');
+  const t = await restaurant('tools-ten', (a) => void (a.seating.max_party = 10));
+  const ten = defaultAnswers();
+  ten.basics.name = 'Olive & Ember';
+  ten.seating.max_party = 10;
+  assert.ok(validateRestaurant(ten).some((i) => i.level === 'warning' && /seats 10.*9 or 10 .*callback/.test(i.message)), JSON.stringify(validateRestaurant(ten)));
+  const c = await call(t);
+  for (const party of [9, 10]) {
+    const r = await runTool('check_availability', { date: SAT, time: '19:00', party_size: party }, c.ctx);
+    assert.equal(r.reason, 'party_too_large', `${party}: ${r.message}`);
+    assert.match(String(r.message), /call back/);
+  }
+  const b = await runTool('create_booking', { date: SAT, time: '19:00', party_size: 10, name: 'Ana Silva', area: 'indoor' }, c.ctx);
+  assert.equal(b.booked, false);
+  assert.equal(b.reason, 'party_too_large', String(b.message));
+  assert.doesNotMatch(`${b.message} ${b.next}`, /another day|There is no the/);
+  // A step-free table for 8 is a different thing: none there, but the party is not too big.
+  const step = await runTool('check_availability', { date: SAT, time: '19:00', party_size: 8, accessible: true, area: 'terrace' }, c.ctx);
+  assert.notEqual(step.reason, 'party_too_large');
 });

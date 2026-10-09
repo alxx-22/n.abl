@@ -131,7 +131,8 @@ export function defaultAnswers(): RestaurantAnswers {
       fixtures: defaultFixtures(tables),
       plan: 2,
       sittings: { up_to_2: 75, up_to_4: 90, up_to_8: 120, larger: 150 },
-      max_party: 10,
+      // What the default tables seat (the biggest pair is 8): a higher limit left 9 and 10 with nowhere to sit.
+      max_party: 8,
       notice_minutes: 30,
       horizon_days: 60,
       highchairs: 3,

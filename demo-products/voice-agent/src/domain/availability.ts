@@ -287,6 +287,10 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   const res = suitableResources(service, profile.booking?.resources ?? [], req.partySize, req.staff, req);
   if (res === 'unknown_staff') return no('unknown_staff', `Nobody called "${req.staff}" does ${service.label}.`);
   if (!res.length) {
+    // No table or pair seats this many at all (a limit set above the biggest table): the manager's callback, as over the limit, never "another day".
+    if (service.kind === 'table' && !(suitableResources(service, profile.booking?.resources ?? [], req.partySize) as Resource[]).length) {
+      return no('party_too_large', `No table seats ${req.partySize}, so it can't be booked by phone: take their name, number, preferred date and time, and say the manager will call back.`);
+    }
     const where = req.area ? profile.booking?.areas?.find((a) => a.key === req.area)?.label.toLowerCase() : undefined;
     const what = [req.accessible ? 'a step-free table' : null, where ? `the ${where}` : null].filter(Boolean).join(' in ');
     return no('no_suitable_resource', what ? `There is no ${what} for a party of ${req.partySize}.` : `Nothing suits a party of ${req.partySize}.`);
