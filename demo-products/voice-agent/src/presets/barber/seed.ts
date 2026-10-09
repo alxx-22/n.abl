@@ -9,6 +9,7 @@ import type { BookableService, Resource, TenantProfile } from '../../domain/type
 import { addDays, closeMinutes, minutesOf, timeOf, toLocal, weekdayOf, zonedToUtc } from '../../domain/time.ts';
 import { ids, rng } from '../common/random.ts';
 import type { SeedBooking, SeedMessage, SeedPlan } from '../common/types.ts';
+import { SKIN_TEST_KEY } from './compile.ts';
 import { BB_PEOPLE } from './personas.ts';
 
 const MIN = 60000;
@@ -19,7 +20,8 @@ export function planBarberSeed(profile: TenantProfile, now: Date, seed: number):
   const random = rng(seed);
   const id = ids(random);
   const tz = profile.timezone;
-  const services = profile.booking?.services ?? [];
+  // The price list: a skin test is never part of the fill.
+  const services = (profile.booking?.services ?? []).filter((s) => s.key !== SKIN_TEST_KEY);
   const team = (profile.booking?.resources ?? []).filter((r) => r.kind === 'staff');
   const reserved = new Set(Object.values(BB_PEOPLE).map((p) => p.phone));
   const phone = () => { for (;;) { const p = id.phone(); if (!reserved.has(p)) return p; } };

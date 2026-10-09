@@ -15,6 +15,7 @@ import type { ListingRule } from '../domain/listings.ts';
 import { renewal } from '../domain/certificates.ts';
 import { addDays, normaliseTime, toLocal, zonedToUtc, isIsoDate, weekdayOf } from '../domain/time.ts';
 import type { SeedPlan } from '../presets/common/types.ts';
+import type { ShopToday, WaitlistEntry, WalkIn } from '../domain/shop-floor.ts';
 
 export interface TenantSummary {
   id: string;
@@ -1649,18 +1650,106 @@ export class Repo {
     return rows[0] ? mapInvoice(rows[0]) : null;
   }
 
+  // ── A barber's shop floor (presets/barber.md §5, M2) ──────────────────
+
+  /** Today's barbers off and notice for a local date: another day's reads as everyone in. */
+  async getToday(tenantId: string, date: string): Promise<ShopToday> {
+    const rows = await this.db.query<any>('select today from public.voice_tenants where id = $1', [tenantId]);
+    const t = rows[0]?.today ?? {};
+    return t.date === date ? { date, off: t.off ?? [], notice: t.notice ?? null } : { date, off: [], notice: null };
+  }
+
+  async setToday(tenantId: string, t: ShopToday): Promise<void> {
+    await this.db.query('update public.voice_tenants set today = $2::jsonb, updated_at = now() where id = $1', [tenantId, JSON.stringify(t)]);
+  }
+
+  async addWalkIn(tenantId: string, w: { name: string; phone: string | null; service_key: string; resource_key: string | null; source: string; joined_at?: Date }): Promise<WalkIn> {
+    const rows = await this.db.query<any>(
+      `insert into public.voice_walkins (tenant_id, name, phone, service_key, resource_key, source, joined_at)
+       values ($1, $2, $3, $4, $5, $6, coalesce($7, now())) returning *`,
+      [tenantId, w.name.trim(), w.phone, w.service_key, w.resource_key, w.source, w.joined_at ?? null],
+    );
+    return mapWalkIn(rows[0]);
+  }
+
+  /** Walk-ins waiting now, first in first. */
+  async listWaitingWalkIns(tenantId: string): Promise<WalkIn[]> {
+    const rows = await this.db.query<any>(
+      'select * from public.voice_walkins where tenant_id = $1 and served_at is null and left_at is null order by joined_at, id',
+      [tenantId],
+    );
+    return rows.map(mapWalkIn);
+  }
+
+  /** A walk-in served (with the booking for their chair) or gone; null if they had already been either. */
+  async closeWalkIn(tenantId: string, id: string, how: { served_at: Date; booking_id: string } | { left_at: Date }): Promise<WalkIn | null> {
+    const rows = await this.db.query<any>(
+      `update public.voice_walkins set served_at = $3, booking_id = $4, left_at = $5
+       where tenant_id = $1 and id = $2 and served_at is null and left_at is null returning *`,
+      [tenantId, id, 'served_at' in how ? how.served_at : null, 'served_at' in how ? how.booking_id : null, 'left_at' in how ? how.left_at : null],
+    );
+    return rows[0] ? mapWalkIn(rows[0]) : null;
+  }
+
+  async getWalkIn(tenantId: string, id: string): Promise<WalkIn | null> {
+    const rows = await this.db.query<any>('select * from public.voice_walkins where tenant_id = $1 and id = $2', [tenantId, id]);
+    return rows[0] ? mapWalkIn(rows[0]) : null;
+  }
+
+  async addToWaitlist(tenantId: string, e: { date: string; service_key: string; resource_key: string | null; name: string; phone: string | null; source: string; call_id?: string | null; created_at?: Date }): Promise<WaitlistEntry> {
+    const rows = await this.db.query<any>(
+      `insert into public.voice_waitlist (tenant_id, date, service_key, resource_key, name, phone, source, call_id, created_at)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, coalesce($9, now())) returning *, date::text as day`,
+      [tenantId, e.date, e.service_key, e.resource_key, e.name.trim(), e.phone, e.source, e.call_id ?? null, e.created_at ?? null],
+    );
+    return mapWaitlist(rows[0]);
+  }
+
+  /** The waiting list from a local date on, each day oldest first. */
+  async listWaitlist(tenantId: string, from: string): Promise<WaitlistEntry[]> {
+    const rows = await this.db.query<any>(
+      `select *, date::text as day from public.voice_waitlist where tenant_id = $1 and removed_at is null and date >= $2
+       order by date, created_at, id`,
+      [tenantId, from],
+    );
+    return rows.map(mapWaitlist);
+  }
+
+  async removeFromWaitlist(tenantId: string, id: string, at = new Date()): Promise<boolean> {
+    const rows = await this.db.query<any>(
+      'update public.voice_waitlist set removed_at = $3 where tenant_id = $1 and id = $2 and removed_at is null returning id',
+      [tenantId, id, at],
+    );
+    return rows.length > 0;
+  }
+
+  async markWaitlistNotified(tenantId: string, id: string, at: Date): Promise<void> {
+    await this.db.query('update public.voice_waitlist set notified_at = $3 where tenant_id = $1 and id = $2', [tenantId, id, at]);
+  }
+
+  /** When this customer last had a skin test here, if ever. */
+  async getSkinTest(tenantId: string, phone: string): Promise<Date | null> {
+    const rows = await this.db.query<any>('select skin_test_at from public.voice_customers where tenant_id = $1 and phone = $2', [tenantId, phone]);
+    return rows[0]?.skin_test_at ? new Date(rows[0].skin_test_at) : null;
+  }
+
+  async setSkinTest(tenantId: string, phone: string, name: string, at: Date): Promise<void> {
+    const id = await this.upsertCustomer(this.db, tenantId, phone, name);
+    if (id) await this.db.query('update public.voice_customers set skin_test_at = $2, updated_at = now() where id = $1', [id, at]);
+  }
+
   // ── Demo reset ─────────────────────────────────────────────────────────
 
   async resetTenantData(tenantId: string): Promise<void> {
     await this.db.tx(async (q) => {
       for (const t of [
-        'voice_payments', 'voice_orders', 'voice_bookings', 'voice_messages', 'voice_calls', 'voice_customers', 'voice_offers', 'voice_sales', 'voice_listings',
+        'voice_walkins', 'voice_waitlist', 'voice_payments', 'voice_orders', 'voice_bookings', 'voice_messages', 'voice_calls', 'voice_customers', 'voice_offers', 'voice_sales', 'voice_listings',
         'voice_mt_jobs', 'voice_mt_certificates', 'voice_mt_incidents', 'voice_mt_properties', 'voice_mt_quotes', 'voice_mt_invoices',
       ]) {
         await q.query(`delete from public.${t} where tenant_id = $1`, [tenantId]);
       }
       // A takeaway's sold-out switches and notice go with the demo's data.
-      await q.query(`update public.voice_tenants set tonight = '{}'::jsonb where id = $1`, [tenantId]);
+      await q.query(`update public.voice_tenants set tonight = '{}'::jsonb, today = '{}'::jsonb where id = $1`, [tenantId]);
     });
   }
 
@@ -1668,4 +1757,20 @@ export class Repo {
     const r = await this.db.query<any>('select 1 as ok');
     return r[0]?.ok === 1;
   }
+}
+
+function mapWalkIn(r: any): WalkIn {
+  return {
+    id: r.id, tenant_id: r.tenant_id, name: r.name, phone: r.phone ?? null, service_key: r.service_key, resource_key: r.resource_key ?? null,
+    joined_at: new Date(r.joined_at), served_at: r.served_at ? new Date(r.served_at) : null, booking_id: r.booking_id ?? null,
+    left_at: r.left_at ? new Date(r.left_at) : null, source: r.source,
+  };
+}
+
+function mapWaitlist(r: any): WaitlistEntry {
+  return {
+    id: r.id, tenant_id: r.tenant_id, date: r.day, service_key: r.service_key, resource_key: r.resource_key ?? null, name: r.name,
+    phone: r.phone ?? null, created_at: new Date(r.created_at), notified_at: r.notified_at ? new Date(r.notified_at) : null,
+    removed_at: r.removed_at ? new Date(r.removed_at) : null, source: r.source, call_id: r.call_id ?? null,
+  };
 }

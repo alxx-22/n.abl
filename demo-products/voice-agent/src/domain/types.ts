@@ -46,6 +46,8 @@ export interface BookableService {
   price_pence?: number;
   /** The price is where it starts ("from £25"). */
   price_from?: boolean;
+  /** Colour: needs a skin test 48 hours before (presets/barber.md §4.1; core/barber-tools.ts). */
+  colour?: boolean;
   description?: string;
   windows: Window[];
   max_party?: number;

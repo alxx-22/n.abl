@@ -135,10 +135,10 @@ test("barber: the back office's Diary has a row a barber, on their days, with wh
   const t = await repo.upsertTenant(compileBarber(named(), { slug: 'kingsleys-diary' }));
   const state = (await tenantState(repo, t, { activeFor: () => [] } as unknown as Bus)) as any;
   assert.deepEqual(state.team.map((s: any) => [s.first_name, s.days, s.services.length]), [
-    ['Marcus', [0, 2, 3, 4, 5, 6], 8],
+    ['Marcus', [0, 2, 3, 4, 5, 6], 9],
     ['Dan', [2, 3, 4, 5, 6], 6],
     ['Jordan', [2, 3, 4, 5, 6], 3],
-    ['Amira', [5, 6], 4],
+    ['Amira', [5, 6], 5],
   ]);
 });
 

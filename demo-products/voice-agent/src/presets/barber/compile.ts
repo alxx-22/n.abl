@@ -55,6 +55,9 @@ const PAY: Record<BarberAnswers['money']['payment'], string> = {
   either: 'Paid in the shop, cash or card, or by card when booking.',
 };
 
+/** The skin test's service key, added when a shop does colour. */
+export const SKIN_TEST_KEY = 'skin_test';
+
 export function compileBooking(a: BarberAnswers): NonNullable<TenantProfile['booking']> {
   const b = a.booking;
   const services: BookableService[] = bookable(a).map((s) => ({
@@ -65,17 +68,27 @@ export function compileBooking(a: BarberAnswers): NonNullable<TenantProfile['boo
     duration_minutes: s.minutes,
     price_pence: s.price_pence,
     ...(s.from ? { price_from: true } : {}),
+    ...(s.colour ? { colour: true } : {}),
     ...(s.description ? { description: s.description } : {}),
     windows: bookingWindows(a.hours, s.minutes),
     lead_minutes: b.lead_minutes,
     horizon_days: b.horizon_days,
     ...(a.money.deposit_pence ? { deposit: { flat_pence: a.money.deposit_pence } } : {}),
   }));
+  // Colour on the price list: the skin test is a service of its own, free, with whoever does the colour (§4.2).
+  const colour = new Set(services.filter((s) => s.colour).map((s) => s.key));
+  if (colour.size) {
+    services.push({
+      key: SKIN_TEST_KEY, label: 'Skin test', kind: 'appointment', slot_minutes: b.slot_minutes, duration_minutes: 10, price_pence: 0,
+      description: 'A dab of the colour, 48 hours or more before it: it checks for a reaction.',
+      windows: bookingWindows(a.hours, 10), lead_minutes: b.lead_minutes, horizon_days: b.horizon_days,
+    });
+  }
   const keys = new Set(services.map((s) => s.key));
   const resources: Resource[] = named(a).map((t) => ({
     key: t.key,
     label: t.name,
-    services: t.services.filter((s) => keys.has(s)),
+    services: [...t.services.filter((s) => keys.has(s)), ...(t.services.some((s) => colour.has(s)) ? [SKIN_TEST_KEY] : [])],
     days: t.days,
     kind: 'staff',
     ...(t.aliases.length ? { aliases: t.aliases } : {}),

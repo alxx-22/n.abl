@@ -6,7 +6,7 @@ import { applyBaseScan } from '../../scout/map.ts';
 import { hoursSentence } from '../common/hours.ts';
 import type { Preset, PreviewPayload, WorkspaceSpec } from '../index.ts';
 import { VERSION, defaultAnswers, type BarberAnswers } from './answers.ts';
-import { compileBarber, depositSentence, teamSentence } from './compile.ts';
+import { SKIN_TEST_KEY, compileBarber, depositSentence, teamSentence } from './compile.ts';
 import { sanitiseBarber } from './sanitise.ts';
 import { planBarberSeed } from './seed.ts';
 import { STEPS } from './steps.ts';
@@ -17,7 +17,7 @@ export const BARBER_HANDLES = 'booking, moving and cancelling appointments with 
 
 /** The builder's preview pane: what the receptionist will know, line by line. */
 export function barberPreview(a: BarberAnswers, profile: TenantProfile): PreviewPayload {
-  const services = profile.booking?.services.length ?? 0;
+  const services = profile.booking?.services.filter((s) => s.key !== SKIN_TEST_KEY).length ?? 0;
   const barbers = profile.booking?.resources.length ?? 0;
   return {
     lines: [
