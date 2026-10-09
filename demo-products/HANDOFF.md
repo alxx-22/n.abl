@@ -262,41 +262,69 @@ step and Beer and wine on Menu tonight.
 
 The M3 screens were sent to Alex on 8 October.
 
-**Next: the barber** (the next preset in Alex's order), taken by the
-Windows session so the two sessions don't both start it. First its use
-cases and spec (`presets/barber-use-cases.md`, `presets/barber.md`) with
-defaults and decisions for Alex, as the takeaway's were; building waits
-for his answers. The repairs demo's clock (`DemoClock.tsx`, the cloud
-session's) is repairs-only; turning it on for the takeaway would let a
-prospect try Saturday's last orders. After the takeaway, the next preset
-in Alex's order is the barber.
+The demo clock (`clock: true` in a preset's workspace spec) is off for the
+takeaway; turning it on would let a prospect try Saturday's last orders.
 
-### Barber (the Windows session's): M1 live check, by ui (9 October)
+### The barber (Windows session)
 
-Built by the Windows session through M1 (`presets/barber.md` §9; the
-preset `812c8cb`, its calls `c777ce5`, `df0f77e`, `82f4e65`). With windows
-out of usage, ui ran the seven M1 live calls on 9 October, about 1am:
-**6 of 7 passed first time**: `bb-any-barber`, `bb-named-barber`,
-`bb-unknown-barber`, `bb-move`, `bb-kids-and-dad` and `bb-womens-cut`.
+`presets/barber-use-cases.md` and `presets/barber.md`. Alex answered its
+decisions on 8 October: Nottingham city centre, and the other four
+defaults stand.
 
-- **`bb-cancel-late` failed**: the receptionist told Ollie "you'll keep the
-  five pound deposit", the opposite of the policy. The tool's notice now
-  gives the words to say ("your £5 deposit is kept by the shop if you
-  cancel. Do you still want to cancel?"), and the deposit after a cancel is
-  said the same way (`0eb0034`). Re-run twice: passed both times, said
-  plainly. The barber goldens did not move.
-- Worth a look (passed, but not quite right): in `bb-move` the receptionist
-  asked "Shall I change that for you?" and moved it in the same breath,
-  without waiting for the yes; in `bb-womens-cut` it said the £5 deposit is
-  "due now, to secure the booking", though the shop doesn't insist on it.
-- M2 (walk-ins, off today, running late, the waiting list, the skin test)
-  is not started: it's the Windows session's.
+**M1 is built (8 October).**
+- The preset is in `src/presets/barber/` and its builder in
+  `web/src/reception/builder/barber/`. It has 74 goldens
+  (`scripts/barber-goldens.ts`) and `test/barber.test.ts`.
+- The booking engine knows a barber's own hours and nicknames
+  (`Resource.hours`, `Resource.aliases`).
+- The call rules are in `core/barber-tools.ts`. They apply to any profile
+  with `barber`, so the salon gets them too:
+  - inside the notice period, the caller is told once, before anything
+    happens, that the deposit is kept;
+  - one person and one service per booking;
+  - the read-back includes the price, and says "from" when it is a
+    starting price;
+  - when the barber asked for is taken, another barber free at the same
+    time is offered first;
+  - `after` books someone straight after a booking, with the same barber;
+  - a call's bookings go in one text when the call ends (also on hang-up,
+    from `call.ts`);
+  - a caller moving a booking is steered to `modify_booking`.
+- The Diary shows a row per barber (`barberState` in `server/state.ts`).
+
+**Live calls.**
+- 8 October (windows): on the third run, 6 of the 7 `bb-` calls passed.
+  The move call made a second booking instead of moving the first. That
+  is fixed. On its re-run it passed, and so did the family call, now with
+  back-to-back bookings and one text.
+- 9 October, about 1am (ui, while windows was out of usage): 6 of 7
+  passed first time. `bb-cancel-late` told Ollie "you'll keep the five
+  pound deposit", the opposite of the policy. The tool's notice now gives
+  the words to say ("your £5 deposit is kept by the shop if you cancel. Do
+  you still want to cancel?"), and the deposit after a cancel is said the
+  same way (`0eb0034`). It passed twice after that, and the barber goldens
+  did not move.
+- Two calls passed but weren't quite right (ui, 9 October). In `bb-move`,
+  the receptionist asked "Shall I change that for you?" and moved it
+  without waiting for the yes. In `bb-womens-cut`, it said the £5 deposit
+  is "due now, to secure the booking", though the shop doesn't insist on
+  it. The Windows session takes these next.
+
+**The browser walk** (`test-e2e/demo-ui.ts --only barber`) passes. Its
+screenshots were sent to Alex on 8 October.
+
+**Next: M2.** Walk-ins and `get_wait_now`, off today, running late, the
+waiting list, and the skin test. The skin test will also serve as the
+salon's patch test, with the rule taken from the profile. M2's migration
+is `voice_0013`.
 
 ### Working on Windows
 
 The system git setting turns line endings into CRLF, which breaks the
 goldens, so the Windows session works in its own worktree checked out with
-LF (`git -c core.autocrlf=false` for checkout and rebase). The Gemini key
+LF (`git -c core.autocrlf=false` for checkout and rebase). Stash with the
+same flag (`git -c core.autocrlf=false stash`). Otherwise the stash writes
+files back with CRLF and the rebase refuses to start. The Gemini key
 is in `voice-agent/.env.local` (git-ignored, never printed). Live calls:
 `npm run eval -- --only tk-busy-wait,tk-meal-deal`. The walk needs
 `CHROME_PATH="C:/Program Files/Google/Chrome/Application/chrome.exe"`.
