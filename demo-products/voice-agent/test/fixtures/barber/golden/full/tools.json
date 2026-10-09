@@ -7,6 +7,8 @@
  "modify_booking",
  "cancel_booking",
  "take_demo_payment",
+ "join_waiting_list",
+ "running_late",
  "take_message",
  "end_call"
 ]
