@@ -46,6 +46,11 @@ export function span(b: LiveBooking): [number, number] {
   return [s, e];
 }
 
+/** Why a table is never booked by phone: a private room's is by enquiry; any other is kept for walk-ins. */
+export function keptFor(state: LiveState, t: { area: string | null }): 'enquiry' | 'walk-in' {
+  return state.plan?.areas.find((a) => a.key === t.area)?.enquiry_only ? 'enquiry' : 'walk-in';
+}
+
 /** A booking that holds its table or person: a no-show or a finished visit frees it, as the server counts it. */
 export const live = (b: LiveBooking) => b.status === 'confirmed' && b.visit_status !== 'finished' && b.visit_status !== 'no_show';
 

@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { FloorPlan, ZoomControls, unbookableTag } from '../FloorPlan.tsx';
 import type { LiveState } from '../types.ts';
-import { addDays, bookingOn, dayLabel, hhmm, live, looksAt, servicesOn, span } from './model.ts';
+import { addDays, bookingOn, dayLabel, hhmm, keptFor, live, looksAt, servicesOn, span } from './model.ts';
 
 export interface View {
   date: string;
@@ -133,7 +133,8 @@ export function FloorBoard(props: {
         <span><i className="l-booked" /> Booked now</span>
         <span><i className="l-seated" /> Seated</span>
         <span><i className="l-late" /> Late</span>
-        {plan.tables.some((t) => !t.bookable) ? <span><i className="l-walkin">Walk-in</i> Kept for walk-ins: never booked by phone</span> : null}
+        {plan.tables.some((t) => !t.bookable && keptFor(state, t) === 'walk-in') ? <span><i className="l-walkin">Walk-in</i> Kept for walk-ins: never booked by phone</span> : null}
+        {plan.tables.some((t) => !t.bookable && keptFor(state, t) === 'enquiry') ? <span><i className="l-walkin">Enquiries</i> Private hire, by enquiry: never booked by phone</span> : null}
         <span className="muted">Drag a booked table onto a free one to move the booking.</span>
       </div>
     </div>

@@ -4,7 +4,7 @@
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { LiveBooking, LiveState } from '../types.ts';
-import { hhmm, servicesOn, span } from './model.ts';
+import { hhmm, keptFor, servicesOn, span } from './model.ts';
 import { DayPicker, type View } from './FloorBoard.tsx';
 
 export function Timeline(props: {
@@ -73,7 +73,7 @@ export function Timeline(props: {
                 {t.label.replace(/^Table /, 'T')} <span className="muted">({t.seats})</span>
               </span>
               <div className="tl-track">
-                {t.bookable ? null : <span className="tl-walkin">Walk-ins only: not bookable</span>}
+                {t.bookable ? null : <span className="tl-walkin">{keptFor(state, t) === 'enquiry' ? 'Private hire, by enquiry: not bookable' : 'Walk-ins only: not bookable'}</span>}
                 {services.map((s) => <span key={s.label} className="tl-open" style={{ left: pct(s.open), width: `calc(${pct(s.close)} - ${pct(s.open)})` }} />)}
                 {day.filter((b) => b.tables.includes(t.key)).map((b) => {
                   const [s, e] = span(b);

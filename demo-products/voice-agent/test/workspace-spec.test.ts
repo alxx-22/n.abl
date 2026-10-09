@@ -114,3 +114,22 @@ test('workspace: a table whose booking is a no-show or finished can take a moved
   };
   assert.deepEqual(moveOptions(state as never, state.bookings[2] as never).map((x) => x.key), ['T1', 'T2']);
 });
+
+test('workspace: a private room\'s table is "by enquiry", never "kept for walk-ins"', async () => {
+  // The review: the Timeline, the click toast and the legend called a private dining room's table a walk-in table.
+  const { addArea } = await import('../web/src/reception/builder/restaurant/seating.ts');
+  const model = 'model.ts';
+  const { keptFor } = (await import(`../web/src/reception/workspace/${model}`)) as { keptFor: (state: never, t: never) => string };
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  addArea(a, 'private');
+  a.seating.tables.find((t) => t.area === 'indoor')!.walk_in = true;
+  const p = compileRestaurant(a, { slug: 'private-room' });
+  const state = { plan: { areas: p.booking!.areas!, tables: p.booking!.resources.filter((r) => !r.combines).map((r) => ({ key: r.key, area: r.area ?? null, bookable: r.services.length > 0 })) } };
+  const unbookable = state.plan.tables.filter((t) => !t.bookable);
+  const room = unbookable.find((t) => state.plan.areas.find((x) => x.key === t.area)?.enquiry_only)!;
+  const door = unbookable.find((t) => t.area === 'indoor')!;
+  assert.ok(room && door, JSON.stringify(unbookable));
+  assert.equal(keptFor(state as never, room as never), 'enquiry');
+  assert.equal(keptFor(state as never, door as never), 'walk-in');
+});

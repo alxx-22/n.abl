@@ -23,7 +23,7 @@ import { brandStyle } from '../brand.ts';
 import type { LiveBooking, LiveState, Me } from '../types.ts';
 import { BookingDrawer } from './BookingDrawer.tsx';
 import type { View } from './FloorBoard.tsx';
-import { bookingOn, hhmm, localNow, servicesOn } from './model.ts';
+import { bookingOn, hhmm, keptFor, localNow, servicesOn } from './model.ts';
 import { Phone, usePhoneNumber } from './Phone.tsx';
 import { fallbackSpec, focusTab, resetConfirm, resetToast, suggestionsFor } from './spec.ts';
 import { viewsOf, type ViewId } from './views.tsx';
@@ -178,7 +178,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
     setSelected(b ? { ref: b.reference } : null);
     if (!b) {
       const tb = state.plan?.tables.find((x) => x.key === key);
-      if (tb) toast(`${tb.label} (${tb.seats}) is free at ${hhmm(view.minute)}.${tb.bookable ? '' : ' It is kept for walk-ins.'}`);
+      if (tb) toast(`${tb.label} (${tb.seats}) is free at ${hhmm(view.minute)}.${tb.bookable ? '' : keptFor(state, tb) === 'enquiry' ? ' It is for private hire, by enquiry.' : ' It is kept for walk-ins.'}`);
     }
   };
   const moveBooking = async (b: LiveBooking, table: string) => {
