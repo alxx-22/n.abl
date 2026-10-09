@@ -71,6 +71,9 @@ test("demo: a barber's shop floor: Dan off today, a walk-in served into a free c
   assert.deepEqual(s.barber.today, { date: saturday, off: [], notice: null });
   assert.deepEqual(s.barber.services.slice(0, 2), [{ key: 'classic_cut', label: 'Classic cut' }, { key: 'skin_fade', label: 'Skin fade' }]);
   assert.deepEqual(s.team.map((m: any) => m.first_name), ['Marcus', 'Dan', 'Jordan', 'Amira']);
+  // Seeded: two walk-ins waiting (the shop is open), and two on the next Saturday's waiting list.
+  assert.equal(s.barber.queue.length, 2);
+  assert.deepEqual(s.barber.waitlist.map((e: any) => e.date), [addDays(saturday, 7), addDays(saturday, 7)]);
   assert.ok(s.barber.wait_now.length >= 1 && s.barber.wait_now.every((x: any) => /^\d\d:\d\d$/.test(x.free_at)), JSON.stringify(s.barber.wait_now));
 
   // Dan off today: his bookings still to come today need a new time; the notice is kept; someone not in the team is refused.
@@ -88,7 +91,7 @@ test("demo: a barber's shop floor: Dan off today, a walk-in served into a free c
   // A walk-in: refused without a real service; added; Dan can't take them; served into Jordan's chair once it's free.
   assert.equal((await marcus.call('POST', `${path}/walkins`, { name: 'Kai', service_key: 'perm', resource_key: null })).status, 400);
   assert.equal((await marcus.call('POST', `${path}/walkins`, { name: 'Kai', service_key: 'classic_cut', resource_key: null })).status, 200);
-  const kai = (await state()).barber.queue[0];
+  const kai = (await state()).barber.queue.find((w: any) => w.name === 'Kai');
   assert.deepEqual([kai.name, kai.service, kai.with, kai.waited_minutes], ['Kai', 'Classic cut', null, 0]);
   assert.equal((await marcus.call('PATCH', `${path}/walkins/${kai.id}`, { action: 'serve', resource_key: 'dan' })).status, 409, 'Dan is off');
   const tenAt = (b: any) => b.date === saturday && b.resource_key === 'jordan' && b.status === 'confirmed' && b.time < '10:30' && b.end_time > '10:00';
@@ -97,18 +100,17 @@ test("demo: a barber's shop floor: Dan off today, a walk-in served into a free c
   assert.equal(served.status, 200, JSON.stringify(served.data));
   assert.equal(served.data.message, "Kai is in Jordan's chair.");
   const s3 = await state();
-  assert.equal(s3.barber.queue.length, 0);
+  assert.ok(!s3.barber.queue.some((w: any) => w.name === 'Kai'));
   const chair = s3.bookings.find((b: any) => b.name === 'Kai');
   assert.deepEqual([chair.resource_key, chair.time, chair.visit_status, chair.tags], ['jordan', '10:00', 'arrived', ['walk_in']]);
   assert.equal((await marcus.call('PATCH', `${path}/walkins/${kai.id}`, { action: 'left' })).status, 404, 'served once');
 
   // One who gives up waiting.
   await marcus.call('POST', `${path}/walkins`, { name: 'Leo', service_key: 'classic_cut', resource_key: 'marcus' });
-  const leo = (await state()).barber.queue[0];
+  const leo = (await state()).barber.queue.find((w: any) => w.name === 'Leo');
   assert.deepEqual([leo.name, leo.with], ['Leo', 'Marcus']);
   assert.equal((await marcus.call('PATCH', `${path}/walkins/${leo.id}`, { action: 'left' })).data.message, 'Leo has gone.');
-  assert.equal((await state()).barber.queue.length, 0);
+  assert.equal((await state()).barber.queue.length, 2, 'the two seeded walk-ins still waiting');
 
-  assert.deepEqual((await state()).barber.waitlist, []);
   assert.equal((await marcus.call('PATCH', `${path}/waitlist/00000000-0000-0000-0000-000000000000`, { action: 'remove' })).status, 404);
 });

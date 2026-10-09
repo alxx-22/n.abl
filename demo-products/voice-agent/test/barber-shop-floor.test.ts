@@ -13,7 +13,9 @@ import type { Tenant } from '../src/domain/types.ts';
 import { profileOn, skinTestFor, waitNow, type ShopToday } from '../src/domain/shop-floor.ts';
 import { defaultAnswers } from '../src/presets/barber/answers.ts';
 import { compileBarber } from '../src/presets/barber/compile.ts';
+import { BB_PEOPLE } from '../src/presets/barber/personas.ts';
 import { sanitiseBarber } from '../src/presets/barber/sanitise.ts';
+import { planBarberSeed } from '../src/presets/barber/seed.ts';
 
 /** Thursday 15 October 2026, 11am BST. */
 const THURSDAY = new Date('2026-10-15T10:00:00Z');
@@ -174,4 +176,28 @@ test('on a call: the wait now, the waiting list texted when a slot comes up, and
   assert.equal(late.kept, false);
   assert.match(late.message, /^Later than the shop's 10 minutes, and Marcus has someone at 12:30pm, so Marcus may only fit a shorter classic cut\./);
   assert.deepEqual(((await repo.getBookingByReference(t.id, mine.reference))!.details as any).late, { minutes: 25, note: 'Stuck on the tram', at: THURSDAY.toISOString() });
+});
+
+test("the seed: Priya booked later today, someone already running late, Ben's skin test, two walk-ins if open, Saturday's waiting list", async () => {
+  const p = profile();
+  const plan = planBarberSeed(p, THURSDAY, 1);
+  const priya = plan.bookings.find((b) => b.phone === BB_PEOPLE.late.phone)!;
+  assert.ok(priya.starts_at.getTime() >= THURSDAY.getTime() + 30 * 60000 && priya.starts_at.getTime() < THURSDAY.getTime() + 4 * H, `Priya at ${priya.starts_at.toISOString()}`);
+  const late = plan.bookings.filter((b) => (b.details as any)?.late);
+  assert.equal(late.length, 1);
+  assert.deepEqual((late[0].details as any).late.minutes, 10);
+  const ben = plan.bookings.find((b) => b.phone === BB_PEOPLE.tested.phone)!;
+  assert.deepEqual([ben.service_key, ben.visit_status], ['skin_test', 'finished']);
+  assert.deepEqual(plan.skinTests, [{ ...BB_PEOPLE.tested, at: ben.starts_at }]);
+  assert.ok(THURSDAY.getTime() - ben.starts_at.getTime() >= 48 * H, 'two days or more ago');
+  assert.deepEqual(plan.walkins!.map((w) => [w.service_key, w.resource_key]), [['classic_cut', null], ['skin_fade', 'marcus']]);
+  assert.deepEqual(plan.waitlist!.map((e) => [e.date, e.service_key]), [['2026-10-17', 'skin_fade'], ['2026-10-17', 'classic_cut']]);
+  assert.ok(!plan.bookings.some((b) => b.phone === BB_PEOPLE.colour.phone), 'Femi has nothing booked');
+  assert.equal(planBarberSeed(p, new Date('2026-10-18T18:00:00Z'), 1).walkins!.length, 0, 'Sunday evening, closed: no one waiting');
+  // Written and read back.
+  const t = await repo.upsertTenant(compileBarber(sanitiseBarber({ ...defaultAnswers(), basics: { ...defaultAnswers().basics, name: "Kingsley's Barbers" } }), { slug: 'kingsleys-seed' }));
+  await repo.insertSeed(t.id, plan);
+  assert.equal((await repo.listWaitingWalkIns(t.id)).length, 2);
+  assert.equal((await repo.listWaitlist(t.id, '2026-10-15')).length, 2);
+  assert.deepEqual(await repo.getSkinTest(t.id, BB_PEOPLE.tested.phone), ben.starts_at);
 });

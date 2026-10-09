@@ -1405,6 +1405,21 @@ export class Repo {
           tenantId, t.to, t.body, t.created_at,
         ]);
       }
+      // A barber's shop floor.
+      for (const w of plan.walkins ?? []) {
+        await q.query(`insert into public.voice_walkins (tenant_id, name, phone, service_key, resource_key, joined_at, source) values ($1, $2, $3, $4, $5, $6, 'seed')`, [
+          tenantId, w.name, w.phone, w.service_key, w.resource_key, w.joined_at,
+        ]);
+      }
+      for (const e of plan.waitlist ?? []) {
+        await q.query(`insert into public.voice_waitlist (tenant_id, date, service_key, resource_key, name, phone, created_at, source) values ($1, $2, $3, $4, $5, $6, $7, 'seed')`, [
+          tenantId, e.date, e.service_key, e.resource_key, e.name, e.phone, e.created_at,
+        ]);
+      }
+      for (const s of plan.skinTests ?? []) {
+        const id = await this.upsertCustomer(q, tenantId, s.phone, s.name);
+        if (id) await q.query('update public.voice_customers set skin_test_at = $2 where id = $1', [id, s.at]);
+      }
     });
   }
 

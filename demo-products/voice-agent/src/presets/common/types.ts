@@ -188,4 +188,8 @@ export interface SeedPlan {
   /** Its quotes waiting for an answer or decided, and its invoices. */
   quotes?: Quote[];
   invoices?: Invoice[];
+  /** A barber's shop floor: walk-ins waiting, a day's waiting list, and customers' last skin tests. */
+  walkins?: { name: string; phone: string | null; service_key: string; resource_key: string | null; joined_at: Date }[];
+  waitlist?: { date: string; service_key: string; resource_key: string | null; name: string; phone: string; created_at: Date }[];
+  skinTests?: { name: string; phone: string; at: Date }[];
 }

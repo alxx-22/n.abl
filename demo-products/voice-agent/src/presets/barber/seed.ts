@@ -118,10 +118,56 @@ export function planBarberSeed(profile: TenantProfile, now: Date, seed: number):
     }
   }
 
+  // ── The shop floor (presets/barber.md §5.3, M2) ──
+  const nowMin = minutesOf(toLocal(now, tz).time);
+  // Priya's cut later today, her to ring and say she's running late: the first free time at least half an hour away.
+  if (cut) {
+    for (const r of team.filter((x) => x.services.includes(cut.key))) {
+      const at = firstFree(r, cut, today, nowMin + 30);
+      if (at && at.getTime() < now.getTime() + 4 * 60 * MIN) { add(r, cut, at, BB_PEOPLE.late, true); break; }
+    }
+  }
+  // Someone already rang to say they're running late: the next booking still to come today, marked for the Diary.
+  const next = bookings.filter((b) => b.visit_status === 'expected' && b.starts_at > now && toLocal(b.starts_at, tz).date === today && b.phone !== BB_PEOPLE.late.phone)
+    .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0];
+  if (next) next.details = { late: { minutes: 10, note: 'Parking', at: new Date(now.getTime() - 4 * MIN).toISOString() } };
+  // Ben's skin test two days ago, with whoever does colour: his colour can be booked.
+  const tester = team.find((r) => r.services.includes(SKIN_TEST_KEY));
+  const test = (profile.booking?.services ?? []).find((s) => s.key === SKIN_TEST_KEY);
+  const skinTests: NonNullable<SeedPlan['skinTests']> = [];
+  if (tester && test) {
+    for (let d = 2; d < 6; d++) {
+      const h = hoursOn(tester, addDays(today, -d));
+      if (!h) continue;
+      const at = zonedToUtc(addDays(today, -d), timeOf(Math.ceil((h[0] + 60) / 15) * 15), tz);
+      if (busy(tester.key, at, new Date(at.getTime() + (test.duration_minutes ?? 10) * MIN))) continue;
+      add(tester, test, at, BB_PEOPLE.tested);
+      skinTests.push({ ...BB_PEOPLE.tested, at });
+      break;
+    }
+  }
+  // Two walk-ins waiting, if the shop is open now.
+  const open = team.some((r) => { const h = hoursOn(r, today); return h && nowMin >= h[0] && nowMin < h[1] - 30; });
+  const walkins: NonNullable<SeedPlan['walkins']> = open && cut
+    ? [
+        { name: id.person().split(' ')[0], phone: null, service_key: cut.key, resource_key: null, joined_at: new Date(now.getTime() - 12 * MIN) },
+        { name: id.person().split(' ')[0], phone: null, service_key: (fade ?? cut).key, resource_key: marcus?.key ?? null, joined_at: new Date(now.getTime() - 5 * MIN) },
+      ]
+    : [];
+  // Two on the next Saturday's waiting list.
+  let saturday = addDays(today, 1);
+  while (weekdayOf(saturday) !== 6) saturday = addDays(saturday, 1);
+  const waitlist: NonNullable<SeedPlan['waitlist']> = fade && cut
+    ? [
+        { date: saturday, service_key: fade.key, resource_key: marcus?.key ?? null, name: id.person(), phone: phone(), created_at: new Date(now.getTime() - 26 * 60 * MIN) },
+        { date: saturday, service_key: cut.key, resource_key: null, name: id.person(), phone: phone(), created_at: new Date(now.getTime() - 3 * 60 * MIN) },
+      ]
+    : [];
+
   const messages: SeedMessage[] = [
     { from_name: id.person(), from_phone: phone(), body: "Asking if you're taking on an apprentice: finishing college in the summer." },
     { from_name: 'Barber Supplies Ltd', from_phone: phone(), body: 'Your order of clipper blades and neck strips will be with you on Thursday morning.' },
   ];
   bookings.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
-  return { bookings, orders: [], messages };
+  return { bookings, orders: [], messages, walkins, waitlist, skinTests };
 }
