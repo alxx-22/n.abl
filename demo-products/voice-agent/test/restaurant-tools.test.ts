@@ -480,3 +480,31 @@ test('restaurant tools: a table marked no-show or finished is free again, for ca
   const cat = await book('Cat Moss', 'T1', '19:30');
   assert.equal((await repo.moveBooking(t, cat.reference, 'T2')).ok, true, 'staff can move it onto the finished table');
 });
+
+test('restaurant tools: a time inside the notice period or already gone is said as that, never "taken", and tonight\'s booking can still change', async () => {
+  // The review: 7:15pm asked at 7pm was "taken", at 9:30pm tonight was "fully booked", and adding a guest at 6:45 to a 7pm booking was refused.
+  const t = await restaurant('tools-notice');
+  const c = await call(t);
+  const ask = async (now: string, time?: string) => {
+    c.ctx.now = () => new Date(now);
+    return runTool('check_availability', { date: '2026-10-06', ...(time ? { time } : {}), party_size: 2 }, c.ctx);
+  };
+  const soon = await ask('2026-10-06T18:00:00Z', '19:15');
+  assert.equal(soon.reason, 'too_soon');
+  assert.equal(soon.message, "7:15pm is too soon: we need 30 minutes' notice. The earliest we can book today is 7:30pm.");
+  const gone = await ask('2026-10-06T18:00:00Z', '18:30');
+  assert.equal(gone.reason, 'too_soon');
+  assert.match(String(gone.message), /^6:30pm has already gone\. The earliest we can book today is 7:30pm\.$/);
+  const late = await ask('2026-10-06T20:30:00Z');
+  assert.equal(late.reason, 'too_soon');
+  assert.equal(late.message, 'No more bookings today: the last booking time was 9pm.');
+  // Tonight's 7pm booking for four, at 6:45: one more guest is not a new booking, so no notice is needed.
+  const made = await repo.createBooking(t, { date: '2026-10-06', time: '19:00', party_size: 4, name: 'Sam Price', phone: '+447700900123', source: 'phone' }, new Date('2026-10-06T12:00:00Z'));
+  assert.ok(made.ok);
+  c.ctx.now = () => new Date('2026-10-06T17:45:00Z');
+  const five = await runTool('modify_booking', { reference: made.booking.reference, party_size: 5 }, c.ctx);
+  assert.equal(five.changed, true, String(five.message));
+  // Moving it to 7:15 at 6:50 is a new time, so the notice still applies.
+  c.ctx.now = () => new Date('2026-10-06T17:50:00Z');
+  assert.equal((await runTool('modify_booking', { reference: made.booking.reference, time: '19:15' }, c.ctx)).changed, false);
+});

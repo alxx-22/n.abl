@@ -721,7 +721,7 @@ const TOOLS: Record<string, Tool> = {
           return { booked: false, reason: a2.reason, message: a2.message, next: a2.reason === 'party_too_large' ? 'Take their details as a message for the manager, who will call back.' : 'Offer what check_availability finds instead.' };
         }
         return {
-          booked: false, reason: 'fully_booked', message: a2.message ?? r.message, alternatives: a2.alternatives,
+          booked: false, reason: a2.reason === 'too_soon' ? 'too_soon' : 'fully_booked', message: a2.message ?? r.message, alternatives: a2.alternatives,
           other_areas_free: a2.other_areas_free,
           next: a2.alternatives.length || a2.other_areas_free ? 'Offer these, then book the one they choose.' : 'Nothing close is free: offer another day, or take a message for the team.',
         };

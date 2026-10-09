@@ -68,7 +68,9 @@ export type Unavailable =
   | 'no_suitable_resource'
   | 'unknown_staff'
   | 'outside_hours'
-  | 'fully_booked';
+  | 'fully_booked'
+  /** Gone already, or inside the notice period: not taken, and said so. */
+  | 'too_soon';
 
 export interface AvailabilityResult {
   available: boolean;
@@ -257,6 +259,9 @@ function ranges(times: string[], step: number): string[] {
   return out;
 }
 
+/** A notice period as said: "30 minutes'", "an hour's", "2 hours'". */
+const noticeWords = (m: number) => (m % 60 ? `${m} minutes'` : m === 60 ? "an hour's" : `${m / 60} hours'`);
+
 export function checkAvailability(req: SlotRequest): AvailabilityResult {
   const { profile } = req;
   const service = findService(profile, req.serviceKey);
@@ -320,8 +325,18 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
     result.available = free.length > 0;
     result.available_ranges = ranges(free, service.slot_minutes);
     if (!free.length) {
-      result.reason = 'fully_booked';
-      result.message = `Fully booked on ${base.spoken_date} (open, but nothing left).`;
+      // Today, once the last time is gone or inside the notice period, there are no more bookings: not "fully booked".
+      const last = [...times].sort().at(-1)!;
+      const lastAt = zonedToUtc(req.date, last, profile.timezone).getTime();
+      if (req.date === today && lastAt < req.now.getTime() + (service.lead_minutes ?? 0) * 60000) {
+        result.reason = 'too_soon';
+        result.message = lastAt < req.now.getTime()
+          ? `No more bookings today: the last booking time was ${spokenTime(last)}.`
+          : `No more bookings today: the last booking time is ${spokenTime(last)}, and we need ${noticeWords(service.lead_minutes ?? 0)} notice.`;
+      } else {
+        result.reason = 'fully_booked';
+        result.message = `Fully booked on ${base.spoken_date} (open, but nothing left).`;
+      }
     }
     return result;
   }
@@ -364,6 +379,15 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   result.alternatives = [...before, ...after].map((t) => ({ time: t, spoken: spokenTime(t) }));
   // Nothing close: say what is free that day, rather than nothing.
   if (!result.alternatives.length && free.length) result.available_ranges = ranges(free, service.slot_minutes);
+  // Gone, or inside the notice period: that is not "taken", and nothing says a notice period exists unless this does.
+  const lead = service.lead_minutes ?? 0;
+  const startsAt = zonedToUtc(req.date, requested, profile.timezone).getTime();
+  if (times.includes(requested) && startsAt < req.now.getTime() + lead * 60000) {
+    result.reason = 'too_soon';
+    result.message = `${spokenTime(requested)} ${startsAt < req.now.getTime() ? 'has already gone' : `is too soon: we need ${noticeWords(lead)} notice`}.`
+      + (free.length ? ` The earliest we can book${req.date === today ? ' today' : ''} is ${spokenTime(free[0])}.` : ' Nothing later is free that day either.');
+    return result;
+  }
   result.reason = times.includes(requested) ? 'fully_booked' : 'outside_hours';
   const kind = [req.accessible ? 'step-free' : null].filter(Boolean).join(' ');
   const areaInfo = req.area ? profile.booking?.areas?.find((a) => a.key === req.area) : undefined;

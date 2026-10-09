@@ -599,7 +599,11 @@ export class Repo {
       const req = { profile: tenant.profile, serviceKey: service.key, date, time, partySize: party, now, existing, excludeBookingId: b.id, area, accessible: changes.accessible, keep: b.resource_key, listing: changes.listing };
       // A new name, number or note does not move the booking, even one starting soon.
       const moves = date !== local.date || time !== local.time || party !== b.party_size || (changes.area !== undefined && changes.area !== b.area_key) || changes.accessible !== undefined;
-      const slot = moves ? checkSlot(req, service, time) : { time, resource_key: b.resource_key, starts_at: b.starts_at, ends_at: b.ends_at };
+      // The same date and time (one more guest, another area) is not a new booking: no notice period, even once it has started.
+      const sameTime = date === local.date && time === local.time;
+      const slot = !moves ? { time, resource_key: b.resource_key, starts_at: b.starts_at, ends_at: b.ends_at }
+        : sameTime ? checkSlot({ ...req, now: new Date(Math.min(now.getTime(), b.starts_at.getTime())) }, { ...service, lead_minutes: 0 }, time)
+        : checkSlot(req, service, time);
       if (!slot) {
         const where = area ? tenant.profile.booking?.areas?.find((x) => x.key === area)?.label.toLowerCase() : undefined;
         return { ok: false as const, message: `That change does not fit${where ? ` in the ${where}` : ''}: the time is taken or not bookable.` };
