@@ -1218,8 +1218,92 @@ async function walkBarber({ shot }: Walk) {
   await calm();
   await shot(page, 'workspace-call-as');
 
+  // The shop floor (presets/barber.md §6). Setting the time draws the week afresh around it, so try mornings until
+  // a chair is free now and a walk-in can go straight into it.
+  const tab = async (name: string) => {
+    await page.click(`.tabs [role=tab]:has-text("${name}")`);
+    await calm();
+  };
+  const queued = page.locator('.bb-walkin', { hasText: 'Jamie Walker' });
+  let free: string | undefined;
+  // Tuesday to Thursday first: three barbers in and the lighter days, so a chair is likely free.
+  const midweek = (i: number) => [2, 3, 4].includes(new Date(Date.now() + i * 864e5).getDay());
+  const days = [1, 2, 3, 4, 5, 6, 7].sort((a, b) => Number(midweek(b)) - Number(midweek(a)));
+  for (const day of days) {
+    await page.click('.demo-clock > button');
+    await page.waitForSelector('.clock-pop');
+    await page.locator('.clock-pop select').selectOption({ index: day });
+    await page.fill('.clock-pop input[type=time]', '10:00');
+    await page.click('.clock-pop button[type=submit]');
+    await page.waitForSelector('.clock-pop', { state: 'detached' });
+    await page.waitForSelector('.demo-clock > button:has-text("10:00")');
+    await calm();
+    await tab('Queue');
+    // Add a walk-in, in the panel over the list.
+    await page.click('button:has-text("Add a walk-in")');
+    const sheet = page.locator('dialog.rp-sheet[open]');
+    await sheet.getByLabel('Name', { exact: true }).fill('Jamie Walker');
+    await sheet.getByLabel('Service').selectOption({ label: 'Classic cut' });
+    await sheet.getByLabel('Barber').selectOption({ label: 'Any barber' });
+    await sheet.getByLabel('Mobile').fill('07700 900777');
+    if (day === days[0]) await shot(page, 'workspace-queue-add');
+    await sheet.getByRole('button', { name: 'Add to the queue' }).click();
+    await page.waitForSelector('.toast:has-text("Jamie Walker is waiting")');
+    await queued.waitFor();
+    free = (await queued.locator('select option').allTextContents()).find((o) => o.endsWith('free now'));
+    if (free) break;
+  }
+  if (!free) throw new Error('no chair free now at 10:00 on any day of the week');
+  await queued.locator('select').selectOption({ label: free });
+  await calm();
+  await shot(page, 'workspace-queue');
+  // Next: into that chair now, and onto the Diary.
+  await queued.getByRole('button', { name: /^Next/ }).click();
+  const chair = free.split(' · ')[0];
+  await page.waitForSelector(`.toast:has-text("Jamie Walker is in ${chair}'s chair")`);
+  await queued.waitFor({ state: 'detached' });
+  await tab('Diary');
+  await page.waitForSelector('.diary .tl-bar:has-text("Jamie Walker")');
+  // The seeded caller who rang to say they're running late, said above the grid.
+  await page.waitForSelector('.tl-flags li.late:has-text("Running late")');
+  await shot(page, 'workspace-diary-walk-in');
+
+  // Today: a barber with bookings left goes off; the screen says first how many need a new time, then the Diary marks them.
+  await tab('Today');
+  const busy = page.locator('.bb-team li', { hasText: /[1-9]\d* bookings? left today/ }).first();
+  const barber = (await busy.locator('b').first().textContent())!;
+  await busy.getByRole('button', { name: 'Off today' }).click();
+  await page.waitForSelector('.bb-confirm');
+  await shot(page, 'workspace-today-confirm');
+  await page.click(`.bb-confirm button:has-text("Mark ${barber} off")`);
+  await page.waitForSelector(`.toast:has-text("Off today: ${barber}.")`);
+  await page.waitForSelector(`.bb-team li.off:has-text("${barber}"):has-text("a new time")`);
+  await page.getByLabel('Notice for callers').fill("We're a barber down today, so walk-in waits are longer.");
+  await page.click('button:has-text("Save notice")');
+  await page.waitForSelector('.bb-notice.on');
+  await calm();
+  await shot(page, 'workspace-today');
+  await tab('Diary');
+  await page.waitForSelector(`.tl-flags li.new-time:has-text("${barber}")`);
+  await page.waitForSelector(`.tl-row:has-text("${barber}") .tl-offmark`);
+  await shot(page, 'workspace-diary-off');
+
+  // The waiting list: the seeded callers from a full Saturday; one taken off.
+  await tab('Waiting list');
+  const entries = page.locator('.bb-wl-row');
+  await entries.first().waitFor();
+  const before = await entries.count();
+  await shot(page, 'workspace-waitlist');
+  await entries.first().getByRole('button', { name: /^Remove/ }).click();
+  await page.waitForSelector('.toast:has-text("Taken off the waiting list")');
+  await page.waitForFunction((n) => document.querySelectorAll('.bb-wl-row').length === n, before - 1);
+
   // Narrow screen.
   await page.setViewportSize({ width: 390, height: 900 });
   await shot(page, 'workspace-mobile');
+  await tab('Queue');
+  await shot(page, 'workspace-mobile-queue');
+  await tab('Today');
+  await shot(page, 'workspace-mobile-today');
   await page.context().close();
 }

@@ -75,7 +75,7 @@ export function Queue({ id, state, nowMs, nowMinute, onDone }: { id: string; sta
             <WalkInRow
               key={q.id} id={id} q={q} place={i + 1} tz={tz} onDone={onDone}
               waited={Math.max(q.waited_minutes, Math.floor((nowMs - Date.parse(q.joined_at)) / 60000))}
-              barbers={chairsFor(q)} nowMinute={nowMinute}
+              barbers={chairsFor(q)} nowMinute={nowMinute} wantedOff={Boolean(q.resource_key && b.today.off.includes(q.resource_key))}
             />
           ))}
         </ol>
@@ -88,13 +88,15 @@ export function Queue({ id, state, nowMs, nowMinute, onDone }: { id: string; sta
   );
 }
 
-function WalkInRow({ id, q, place, waited, barbers, nowMinute, tz, onDone }: {
+function WalkInRow({ id, q, place, waited, barbers, nowMinute, wantedOff, tz, onDone }: {
   id: string;
   q: LiveWalkIn;
   place: number;
   waited: number;
   barbers: { resource_key: string; with: string; at: number }[];
   nowMinute: number;
+  /** The barber they asked for has since been marked off today. */
+  wantedOff: boolean;
   tz: string;
   onDone: () => void;
 }) {
@@ -118,7 +120,7 @@ function WalkInRow({ id, q, place, waited, barbers, nowMinute, tz, onDone }: {
       </span>
       <span className="bb-what">
         <span>{q.service}</span>
-        <span className="muted small">{q.with ? `Wants ${q.with}` : 'Any barber'}</span>
+        {wantedOff ? <span className="small bb-flag">Wants {q.with}, off today</span> : <span className="muted small">{q.with ? `Wants ${q.with}` : 'Any barber'}</span>}
       </span>
       <span className={`bb-waited ${waited >= 30 ? 'long' : ''}`} title={`Came in at ${clockTime(q.joined_at, tz)}`}>
         <span className="visually-hidden">Waited </span>{mins(waited)}

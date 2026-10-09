@@ -59,7 +59,8 @@
 .bb-team > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 6px; align-items: center; }
 .bb-team .bb-who { grid-auto-flow: column; justify-content: start; align-items: center; gap: 10px; }
 .bb-team > li.off .bb-who b { text-decoration: line-through; text-decoration-color: var(--dim); }
-.bb-who > .bb-flag { white-space: normal; color: var(--danger); font-size: 12.5px; font-weight: 600; }
+.bb-flag { color: var(--danger); font-size: 12.5px; font-weight: 600; }
+.bb-who > .bb-flag { white-space: normal; }
 .bb-team > li.rota-off { color: var(--dim); }
 .bb-switch { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line-strong); border-radius: var(--r-full); }
 .bb-switch button.small { padding: 2px 12px; font-size: 12px; border: 0; border-radius: var(--r-full); box-shadow: none; }
@@ -101,7 +102,8 @@
   .bb-list > li { padding: 8px 6px; }
   .bb-walkin { grid-template-columns: 1.2rem minmax(0, 1fr) auto; grid-template-areas: 'place who waited' '. what what' '. acts acts'; row-gap: 4px; }
   .bb-walkin .bb-acts, .bb-wl-row .bb-acts { justify-content: flex-start; flex-wrap: wrap; }
-  .bb-walkin .bb-acts select { flex: 1 1 8rem; width: auto; }
+  /* The barber on a line of their own, so "Jordan · free 11:00" reads whole; Next and Left under it. */
+  .bb-walkin .bb-acts select { flex: 1 1 100%; width: auto; }
   .bb-wl-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'what acts' 'who texted' 'added texted'; row-gap: 2px; }
   .bb-texted { justify-content: flex-end; }
   .bb-team .bb-who { grid-auto-flow: row; gap: 2px; }

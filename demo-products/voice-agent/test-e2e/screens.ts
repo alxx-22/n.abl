@@ -163,6 +163,8 @@ const NAMES: Record<string, string> = {
   restaurant: 'Olive & Ember', takeaway: 'Golden Lantern', barber: 'Sharp & Co Barbers',
   estate_agent: 'Hartley & Webb', property_maintenance: 'Fixright Repairs',
 };
+/** When to set a preset's demo clock to, so its back office has something in every view: a barber's Thursday morning, with walk-ins waiting. */
+const BUSY_AT: Record<string, { weekday: number; time: string }> = { barber: { weekday: 4, time: '10:30' } };
 const slug = (s: string) => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const settle = async (page: Page) => {
   await page.evaluate(() => document.fonts.ready);
@@ -246,6 +248,14 @@ try {
     }
 
     await api(`/workspaces/${w.id}/start`, 'POST', {});
+    // A shop floor is empty out of hours: these presets are measured at a busy time, whatever the real one.
+    const at = BUSY_AT[preset];
+    if (at) {
+      const { today } = await api<{ today: string }>(`/workspaces/${w.id}/state`);
+      const day = new Date(`${today}T12:00:00Z`);
+      day.setUTCDate(day.getUTCDate() + ((at.weekday - day.getUTCDay() + 7) % 7 || 7));
+      await api(`/workspaces/${w.id}/clock`, 'POST', { date: day.toISOString().slice(0, 10), time: at.time });
+    }
     for (const size of sizes) {
       const [width, height] = size.split('x').map(Number);
       await page.setViewportSize({ width, height });
