@@ -6,6 +6,18 @@
    "of": "staff"
   },
   {
+   "id": "queue",
+   "label": "Queue"
+  },
+  {
+   "id": "today",
+   "label": "Today"
+  },
+  {
+   "id": "waitlist",
+   "label": "Waiting list"
+  },
+  {
    "id": "messages",
    "label": "Messages"
   },
