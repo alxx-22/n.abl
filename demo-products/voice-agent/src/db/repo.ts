@@ -10,7 +10,7 @@ import type {
   Booking, Buyer, BuyerDetails, BuyerPosition, Certificate, CertificateKind, Incident, Invoice, Job, JobStatus, ListingState, MtProperty, Offer, OfferStatus, Quote, QuoteStatus, Order, OrderLine, OrderRequest, Tonight,
   Sale, Tenant, TenantProfile,
 } from '../domain/types.ts';
-import { checkSlot, findService, depositFor, resourceFree, type BusyInterval, type Unavailable } from '../domain/availability.ts';
+import { checkSlot, findService, depositFor, resourceFree, whereIn, type BusyInterval, type Unavailable } from '../domain/availability.ts';
 import type { ListingRule } from '../domain/listings.ts';
 import { renewal } from '../domain/certificates.ts';
 import { addDays, normaliseTime, toLocal, zonedToUtc, isIsoDate, weekdayOf } from '../domain/time.ts';
@@ -605,8 +605,8 @@ export class Repo {
         : sameTime ? checkSlot({ ...req, now: new Date(Math.min(now.getTime(), b.starts_at.getTime())) }, { ...service, lead_minutes: 0 }, time)
         : checkSlot(req, service, time);
       if (!slot) {
-        const where = area ? tenant.profile.booking?.areas?.find((x) => x.key === area)?.label.toLowerCase() : undefined;
-        return { ok: false as const, message: `That change does not fit${where ? ` in the ${where}` : ''}: the time is taken or not bookable.` };
+        const where = whereIn(area ? tenant.profile.booking?.areas?.find((x) => x.key === area) : undefined);
+        return { ok: false as const, message: `That change does not fit${where}: the time is taken or not bookable.` };
       }
       const what = [
         changes.date || changes.time ? `moved to ${date} ${time}` : null,

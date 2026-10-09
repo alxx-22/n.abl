@@ -508,3 +508,28 @@ test('restaurant tools: a time inside the notice period or already gone is said 
   c.ctx.now = () => new Date('2026-10-06T17:50:00Z');
   assert.equal((await runTool('modify_booking', { reference: made.booking.reference, time: '19:15' }, c.ctx)).changed, false);
 });
+
+test('restaurant tools: what the receptionist is told reads as English: no "the the inside", no "1 tables"', async () => {
+  const { addArea } = await import('../web/src/reception/builder/restaurant/seating.ts');
+  const { checkAvailability } = await import('../src/domain/availability.ts');
+  const { sanitiseRestaurant } = await import('../src/presets/restaurant/validate.ts');
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  const p = compileRestaurant(a, { slug: 'words' });
+  const ask = (x: Record<string, unknown>) => checkAvailability({ profile: p, serviceKey: 'table', date: '2026-10-09', time: '19:00', now: NOW, existing: [], partySize: 2, ...x }).message;
+  assert.equal(ask({ area: 'terrace', accessible: true }), 'No step-free table on the terrace seats 2.');
+  assert.equal(ask({ partySize: 7, accessible: true }), 'No step-free table seats 7.');
+  // A change that does not fit says where in plain words.
+  const t = await restaurant('tools-words');
+  const made = await repo.createBooking(t, { date: SAT, time: '19:00', party_size: 2, name: 'Sam Price', source: 'phone', area: 'terrace' }, NOW);
+  assert.ok(made.ok);
+  const bigger = await repo.modifyBooking(t, made.booking.reference, { accessible: true }, NOW);
+  assert.equal(bigger.ok, false);
+  assert.equal(bigger.ok ? '' : bigger.message, 'That change does not fit on the terrace: the time is taken or not bookable.');
+  // A private room's one table, and three areas joined as a list.
+  const priv = defaultAnswers();
+  priv.basics.name = 'Olive & Ember';
+  addArea(priv, 'private');
+  const seating = compileRestaurant(sanitiseRestaurant(priv), { slug: 'words-private' }).core_facts.find((f) => f.startsWith('Seating'))!;
+  assert.match(seating, /^Seating: inside \(11 tables\), terrace \(4 tables\) and private dining room \(1 table, private hire by enquiry\)\./);
+});

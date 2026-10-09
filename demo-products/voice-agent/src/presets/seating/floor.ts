@@ -105,11 +105,12 @@ export function seatingSentence(s: SeatingAnswer, serve: SeatingServe): string |
   const counts = s.areas
     .map((x) => ({ x, n: s.tables.filter((t) => t.area === x.key).length }))
     .filter((c) => c.n > 0)
-    .map(({ x, n }) => `${x.label.toLowerCase()} (${n} tables${x.enquiry_only ? ', private hire by enquiry' : !x.reservable || x.weather_rule === 'walk_in_only' ? ', walk-in only' : ''})`);
+    .map(({ x, n }) => `${x.label.toLowerCase()} (${n} table${n === 1 ? '' : 's'}${x.enquiry_only ? ', private hire by enquiry' : !x.reservable || x.weather_rule === 'walk_in_only' ? ', walk-in only' : ''})`);
   const outdoor = s.areas.find((x) => x.kind === 'outdoor' && x.weather_rule);
   const kept = s.tables.some((t) => t.walk_in);
   const walk = serve.walk_ins ? (kept ? ' We keep some tables back for walk-ins.' : ' Walk-ins are welcome when a table is free.') : '';
-  return `Seating: ${counts.join(' and ')}.${outdoor ? ` ${weatherSentence(outdoor)}` : ''}${walk}`;
+  const areas = counts.length > 1 ? `${counts.slice(0, -1).join(', ')} and ${counts.at(-1)}` : counts.join('');
+  return `Seating: ${areas}.${outdoor ? ` ${weatherSentence(outdoor)}` : ''}${walk}`;
 }
 
 /** The answer to "Do you take walk-ins?". */

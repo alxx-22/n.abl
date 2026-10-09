@@ -259,6 +259,10 @@ function ranges(times: string[], step: number): string[] {
   return out;
 }
 
+/** Where an area is, as said after a table: " inside", " on the terrace", " in the bar". */
+export const whereIn = (a?: { kind?: string; label: string }) =>
+  !a ? '' : a.kind === 'indoor' ? ' inside' : a.kind === 'outdoor' ? ` on the ${a.label.toLowerCase()}` : ` in the ${a.label.toLowerCase()}`;
+
 /** A notice period as said: "30 minutes'", "an hour's", "2 hours'". */
 const noticeWords = (m: number) => (m % 60 ? `${m} minutes'` : m === 60 ? "an hour's" : `${m / 60} hours'`);
 
@@ -296,9 +300,10 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
     if (service.kind === 'table' && !(suitableResources(service, profile.booking?.resources ?? [], req.partySize) as Resource[]).length) {
       return no('party_too_large', `No table seats ${req.partySize}, so it can't be booked by phone: take their name, number, preferred date and time, and say the manager will call back.`);
     }
-    const where = req.area ? profile.booking?.areas?.find((a) => a.key === req.area)?.label.toLowerCase() : undefined;
-    const what = [req.accessible ? 'a step-free table' : null, where ? `the ${where}` : null].filter(Boolean).join(' in ');
-    return no('no_suitable_resource', what ? `There is no ${what} for a party of ${req.partySize}.` : `Nothing suits a party of ${req.partySize}.`);
+    const area = req.area ? profile.booking?.areas?.find((a) => a.key === req.area) : undefined;
+    return no('no_suitable_resource', area || req.accessible
+      ? `No ${req.accessible ? 'step-free ' : ''}table${whereIn(area)} seats ${req.partySize}.`
+      : `Nothing suits a party of ${req.partySize}.`);
   }
 
   const times = candidateTimes(service, req.date);
@@ -391,7 +396,7 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   result.reason = times.includes(requested) ? 'fully_booked' : 'outside_hours';
   const kind = [req.accessible ? 'step-free' : null].filter(Boolean).join(' ');
   const areaInfo = req.area ? profile.booking?.areas?.find((a) => a.key === req.area) : undefined;
-  const where = !areaInfo ? '' : areaInfo.kind === 'indoor' ? ' inside' : areaInfo.kind === 'outdoor' ? ` on the ${areaInfo.label.toLowerCase()}` : ` in the ${areaInfo.label.toLowerCase()}`;
+  const where = whereIn(areaInfo);
   result.message = times.includes(requested)
     ? `${spokenTime(requested)} is taken${kind || where ? ` for a ${kind ? `${kind} ` : ''}table${where}` : ''}.`
     : `${spokenTime(requested)} is not a bookable time for ${service.label} on ${base.spoken_date}.`;
