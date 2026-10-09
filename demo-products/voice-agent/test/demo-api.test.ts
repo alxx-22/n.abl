@@ -433,6 +433,15 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     assert.equal((await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'sent' })).status, 409, 'already sent');
     const rivals = openOn(offer.listing_key).filter((o: any) => o.reference !== offer.reference && o.phone !== offer.phone);
     assert.ok(rivals.length > 0, 'someone else to tell');
+    // The winning buyer has a viewing of the home booked too (about one seed in twelve did, and they were told it was cancelled
+    // because "the seller has accepted an offer"): it stands, and the acceptance is their last text.
+    const [own] = await app.repo.db.query<any>(
+      `update public.voice_bookings set phone = (select phone from public.voice_offers where tenant_id = $1 and reference = $2), listing_key = $3
+       where id = (select id from public.voice_bookings where tenant_id = $1 and service_key = 'viewing' and status = 'confirmed' and starts_at > now() and reference <> $4 order by starts_at limit 1)
+       returning reference`,
+      [made.data.id, offer.reference, offer.listing_key, viewing.reference],
+    );
+    assert.ok(own, 'a viewing to give the winning buyer');
     const accepted = await jo.call('PATCH', `${path}/offers/${offer.reference}`, { action: 'accept', viewings_continue: false });
     assert.equal(accepted.status, 200, JSON.stringify(accepted.data));
     assert.match(accepted.data.message, /other buyers? (?:has|have) been told/);
@@ -440,6 +449,7 @@ test('demo: an estate agency: Start, then offers, homes and feedback from the ba
     // (A rival with a viewing booked hears that it's cancelled too, as viewings don't continue.)
     for (const r of rivals) assert.ok((await texts(r.phone)).some((x: string) => /has accepted another offer, subject to contract/.test(x)), r.phone);
     const after = await state();
+    assert.equal(after.bookings.find((b: any) => b.reference === own.reference)?.status, 'confirmed', "the winning buyer's own viewing stands");
     const home = after.listings.find((l: any) => l.key === offer.listing_key);
     assert.equal(home.status, 'sale_agreed');
     assert.equal(home.marketing_continues, false);

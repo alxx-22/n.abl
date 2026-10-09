@@ -799,7 +799,7 @@ async function offerAction(ctx: Ctx, t: Tenant, ref: string, b: any): Promise<st
         others++;
         await textCustomer(ctx, t.id, o.phone, `${name}: the seller of ${where} has accepted another offer, subject to contract. Thank you for yours; we'll let you know if anything changes. (Demo)`);
       }
-      return `Accepted: ${where} is sale agreed${others ? `, and ${others} other buyer${others === 1 ? ' has' : 's have'} been told` : ''}.${await closeViewings(ctx, t, home.key, now)}`;
+      return `Accepted: ${where} is sale agreed${others ? `, and ${others} other buyer${others === 1 ? ' has' : 's have'} been told` : ''}.${await closeViewings(ctx, t, home.key, now, offer.phone)}`;
     }
     case 'decline': {
       await decide('declined');
@@ -1073,9 +1073,11 @@ async function saleAction(ctx: Ctx, t: Tenant, id: string, b: any): Promise<stri
  * A home that can't be viewed any more (withdrawn, sold, or no more viewings
  * since a sale was agreed): its viewings to come are cancelled, and each buyer
  * is texted why, so nobody turns up to a home that's gone (review, 8 October).
- * Says how many, for the staff message; empty when none.
+ * Says how many, for the staff message; empty when none. `buyer`, whose offer
+ * was just accepted, keeps their own: they were told it was cancelled because
+ * "the seller has accepted an offer".
  */
-async function closeViewings(ctx: Ctx, t: Tenant, key: string, now: Date): Promise<string> {
+async function closeViewings(ctx: Ctx, t: Tenant, key: string, now: Date, buyer?: string | null): Promise<string> {
   const live = await ctx.repo.listingState(t.id, key);
   const home = t.profile.listings?.find((l) => l.key === key);
   if (!live || !home) return '';
@@ -1085,7 +1087,7 @@ async function closeViewings(ctx: Ctx, t: Tenant, key: string, now: Date): Promi
   if (!why) return '';
   const tz = t.profile.timezone;
   const ahead = (await ctx.repo.listBookings(t.id, now, new Date(now.getTime() + 400 * 86_400_000)))
-    .filter((b) => b.listing_key === key && b.status === 'confirmed' && b.starts_at > now && (b.service_key === 'viewing' || b.service_key === 'second_viewing'));
+    .filter((b) => b.listing_key === key && b.status === 'confirmed' && b.starts_at > now && (b.service_key === 'viewing' || b.service_key === 'second_viewing') && !(buyer && b.phone === buyer));
   let n = 0;
   for (const b of ahead) {
     if (!(await ctx.repo.cancelBooking(t.id, b.reference, 'staff'))) continue;
