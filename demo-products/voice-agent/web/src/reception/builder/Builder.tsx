@@ -15,6 +15,7 @@ import type { BaseAnswers, Me, WorkspacePayload } from '../types.ts';
 import { Review } from './common/Review.tsx';
 import { REVIEW, builderFor, type StepProps, type Update } from './registry.ts';
 import { ScoutCard } from './Scout.tsx';
+import { keepCleared } from './section.ts';
 
 export function Builder({ id, me }: { id: string; me: Me }) {
   const [ws, setWs] = useState<WorkspacePayload | null>(null);
@@ -46,10 +47,11 @@ export function Builder({ id, me }: { id: string; me: Me }) {
     try {
       const w = await demoApi<WorkspacePayload>(`/workspaces/${id}/answers`, { method: 'PUT', json: body });
       setWs(w);
-      // Take the server's cleaned answers only if nothing was typed meanwhile.
+      // Take the server's cleaned answers only if nothing was typed meanwhile, leaving a box just emptied empty.
       if (edits.current === at) {
-        setAnswers(w.answers);
-        latest.current = w.answers;
+        const shown = keepCleared(body, w.answers);
+        setAnswers(shown);
+        latest.current = shown;
       }
       setSaving(edits.current === at ? 'saved' : 'pending');
     } catch (e) {

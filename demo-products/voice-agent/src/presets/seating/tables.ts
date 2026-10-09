@@ -40,7 +40,8 @@ export function sanitiseTables(v: unknown, areaKeys: Set<string>, d: TableAnswer
     const k = typeof x?.key === 'string' && /^[A-Za-z0-9]{1,8}$/.test(x.key) ? x.key : `T${i + 1}`;
     return {
       key: k,
-      label: str(x?.label, 30, `Table ${i + 1}`) || `Table ${i + 1}`,
+      // Its own number, not its place in the list: with table 3 removed, a cleared "Table 4" came back as "Table 3".
+      label: str(x?.label, 30, `Table ${k.replace(/^T/, '')}`) || `Table ${k.replace(/^T/, '')}`,
       area: typeof x?.area === 'string' && areaKeys.has(x.area) ? x.area : [...areaKeys][0] ?? 'indoor',
       seats,
       shape: oneOf(x?.shape, ['round', 'square', 'rect'] as const, seats <= 2 ? 'round' : seats <= 4 ? 'square' : 'rect'),

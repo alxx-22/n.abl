@@ -217,6 +217,13 @@ async function walkRestaurant({ shot }: Walk) {
     await delivery.uncheck();
     await page.waitForSelector('.save-state.saved', { timeout: 10000 });
     await next('Seating');
+    // An area's name cleared and left a moment stays clear for the new one: it used to refill as "Area 2", so typing gave "Area 2Patio".
+    const terraceName = page.getByLabel('Area name').nth(1);
+    await terraceName.fill('');
+    await page.waitForSelector('.save-state.saved', { timeout: 10000 });
+    if ((await terraceName.inputValue()) !== '') throw new Error(`the cleared area name came back as "${await terraceName.inputValue()}"`);
+    await terraceName.pressSequentially('Terrace', { delay: 30 });
+    await page.waitForSelector('.save-state.saved', { timeout: 10000 });
     // One more 6-seat table inside.
     await page.click('button[aria-label="One more 6-seat table in Inside"]');
     await page.waitForSelector('.save-state.saved', { timeout: 10000 });

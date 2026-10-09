@@ -419,3 +419,25 @@ test('restaurant seed: a restaurant whose tables all seat six or more still has 
     assert.ok(bookings.every((b) => b.party_size >= 3), 'every party fits a table');
   }
 });
+
+test('restaurant builder: a name the person has just cleared stays clear, and a table falls back to its own number', async () => {
+  // The review: clearing "Terrace" and pausing refilled the box with "Area 2", so typing gave "Area 2Patio";
+  // and with table 3 removed, a cleared "Table 4" came back as "Table 3".
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  a.seating.tables = a.seating.tables.filter((t) => t.key !== 'T3');
+  a.seating.areas[1].label = '';
+  a.seating.tables.find((t) => t.key === 'T4')!.label = '';
+  a.hours.days[2].services[0].label = '';
+  const saved = sanitiseRestaurant(structuredClone(a));
+  assert.equal(saved.seating.tables.find((t) => t.key === 'T4')!.label, 'Table 4', 'its own number, not its place in the list');
+  // What the builder shows when the saved answers come back: the boxes just cleared stay clear.
+  const mod = 'section.ts';
+  const { keepCleared } = (await import(`../web/src/reception/builder/${mod}`)) as { keepCleared: <T>(typed: T, saved: T) => T };
+  const shown = keepCleared(a, saved);
+  assert.deepEqual([shown.seating.areas[1].label, shown.seating.tables.find((t) => t.key === 'T4')!.label, shown.hours.days[2].services[0].label], ['', '', '']);
+  assert.equal(shown.seating.areas[0].label, saved.seating.areas[0].label, 'everything else is what was saved');
+  // A list the server changed (a table dropped) is the server's.
+  const fewer = { ...saved, seating: { ...saved.seating, tables: saved.seating.tables.slice(1) } };
+  assert.deepEqual(keepCleared(a, fewer).seating.tables, fewer.seating.tables);
+});
