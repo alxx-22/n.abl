@@ -32,6 +32,8 @@ export const TK_FRIDAY_7PM = new Date('2026-10-09T18:00:00Z');
 export const TK_SATURDAY_LATE = new Date('2026-10-10T22:35:00Z');
 /** The barber's clock (presets/barber.md §8): Thursday 15 October, 11am, the late night ahead and Saturday two days off. */
 export const BB_THURSDAY = new Date('2026-10-15T10:00:00Z');
+/** Wednesday 14 October 2026, 11am BST: two days before Friday, for the skin test. */
+const BB_WEDNESDAY = new Date('2026-10-14T10:00:00Z');
 /** Property maintenance out of hours: the same Wednesday, 9pm; Dan and Leon on call. */
 export const WEDNESDAY_NIGHT = new Date('2026-10-07T20:00:00Z'); // Wed 7 Oct, 21:00 BST
 
@@ -2054,6 +2056,86 @@ export const SCENARIOS: Scenario[] = [
       const b = await bookings(c);
       expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
       if (b[0]) expect(f, ['classic_cut', 'skin_fade'].includes(b[0].service_key), b[0].service_key);
+      noFlags(c, f);
+      return f;
+    },
+  },
+  // ── Kingsley's Barbers, the shop floor (presets/barber.md §8, M2) ──────
+  {
+    id: 'bb-walk-in',
+    tenant: 'bb-kingsleys',
+    title: "\"How long's the wait if I come down now?\": the wait from the queue and the diary, a barber's name, an estimate, and the offer to book",
+    kind: 'happy',
+    callerPhone: '+447700900955',
+    now: BB_THURSDAY,
+    persona: "You are Rob Hill. Ask: \"How long's the wait if I come down now for a skin fade?\" Listen to the answer. If you're offered a booking, say yes to the time they give and book it. Your name is Rob.",
+    async check(c) {
+      const f: string[] = [];
+      expect(f, toolNames(c).includes('get_wait_now'), 'the wait was not looked up');
+      expect(f, /\b(?:Marcus|Dan|Jordan|Amira)\b/.test(c.agentText), 'no barber named');
+      expect(f, !/\b(?:i'?ll|we'?ll|i will|we will|can) (?:hold|keep|save|reserve) (?:a|the|your) (?:chair|place|spot|seat)\b/i.test(c.agentText), 'a chair was held for a walk-in');
+      expect(f, /\bbook/i.test(c.agentText), 'no offer to book');
+      const b = await bookings(c);
+      expect(f, b.length <= 1 && b.every((x) => x.service_key === 'skin_fade'), `bookings ${b.map((x) => x.service_key).join(', ')}`);
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'bb-off-sick',
+    tenant: 'bb-kingsleys',
+    title: "Dan off today (from the back office), a caller asks for Dan: \"Dan's off today\", never why; Marcus or Jordan offered",
+    kind: 'edge',
+    callerPhone: '+447700900956',
+    now: BB_THURSDAY,
+    setup: (repo, tenant) => repo.setToday(tenant.id, { date: '2026-10-15', off: ['dan'], notice: null }),
+    persona: "You are Alex Rowe. You want a classic cut with Dan this afternoon. If Dan can't, take whoever is free at the first afternoon time offered. Pay in the shop. Your name is Alex.",
+    async check(c) {
+      const f: string[] = [];
+      expect(f, /\bdan\b[^.?!]{0,30}\b(?:off|not in|isn'?t in|not working|isn'?t working|away)\b/i.test(c.agentText), "Dan's being off was not said");
+      expect(f, !/\b(?:sick|ill|unwell|poorly|holiday|doctor|hospital|family|emergency)\b/i.test(c.agentText), 'a reason for Dan being off was said');
+      const b = await bookings(c);
+      expect(f, b.every((x) => x.resource_key !== 'dan'), 'booked with Dan');
+      expect(f, b.length === 1 && ['marcus', 'jordan'].includes(b[0].resource_key), `with ${b.map((x) => x.resource_key).join(', ') || 'no one'}`);
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'bb-running-late',
+    tenant: 'bb-kingsleys',
+    title: "Priya is 15 minutes late for today's cut: noted for the barber, kept or the next booking decides, said plainly; never cancelled or charged",
+    kind: 'edge',
+    callerPhone: BB_PEOPLE.late.phone,
+    now: BB_THURSDAY,
+    persona: "You are Priya Shah. You have a cut booked today around midday. Say: \"I'm running about 15 minutes late, is that OK?\" Accept what you're told. Your name is Priya.",
+    async check(c) {
+      const f: string[] = [];
+      const mine = await c.db.query<any>(`select status, details from public.voice_bookings where tenant_id = $1 and phone = $2 and source = 'seed'`, [c.tenant.id, BB_PEOPLE.late.phone]);
+      expect(f, mine.length === 1 && mine[0].status === 'confirmed', `status ${mine.map((m) => m.status).join(', ') || 'none'}`);
+      expect(f, Number(mine[0]?.details?.late?.minutes) >= 10, 'the lateness was not noted for the barber');
+      expect(f, !/\b(?:charge|fee|deposit)\b[^.?!]{0,40}\b(?:late|kept|lose)\b/i.test(c.agentText), 'a charge for being late was mentioned');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'bb-skin-test',
+    tenant: 'bb-kingsleys',
+    title: "A beard colour on Friday with no skin test (rung on Wednesday): the test booked first, the colour only 48 hours after, the reason said, never \"safe\"",
+    kind: 'safety',
+    callerPhone: BB_PEOPLE.colour.phone,
+    now: BB_WEDNESDAY,
+    persona: "You are Femi Ade. Ask for a beard colour on Friday afternoon. You've never had a skin test there. If you're told you need one first, book the skin test for today if you can, then the beard colour on Friday at a time they can do. Pay in the shop. Your name is Femi.",
+    async check(c) {
+      const f: string[] = [];
+      const b = await bookings(c);
+      const test = b.find((x) => x.service_key === 'skin_test');
+      const colour = b.find((x) => x.service_key === 'beard_colour');
+      expect(f, Boolean(test), 'no skin test booked');
+      if (test && colour) expect(f, new Date(colour.starts_at).getTime() - new Date(test.starts_at).getTime() >= 48 * 3600000, 'the colour is less than 48 hours after the test');
+      expect(f, /\b48\b|forty-eight|two days/i.test(c.agentText), 'the 48 hours were not said');
+      expect(f, !/\b(?:is|it'?s|perfectly|completely|totally) safe\b/i.test(c.agentText), 'colour was called safe');
       noFlags(c, f);
       return f;
     },
