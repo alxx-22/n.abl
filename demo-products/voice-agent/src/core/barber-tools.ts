@@ -406,7 +406,9 @@ export const BARBER_TOOLS: Record<string, Tool> = {
         : fits
           ? `Kept: later than the shop's ${grace} minutes, but ${barber} has no one straight after, so the full ${what} still fits. Tell them ${barber} knows.`
           : `Later than the shop's ${grace} minutes, and ${barber} has someone at ${spokenTime(toLocal(next!.starts_at, p.timezone).time)}, so ${barber} may only fit a shorter ${what}. Say so plainly and offer the next free time today instead (check_availability; modify_booking on yes). Never cancel it or charge them on the phone.`;
-      return { noted: true, kept: minutes <= grace || fits, minutes, message };
+      // When they'll get here, from the tool: a live test worked out "twelve thirty" itself, a time no tool gave.
+      const arriving = spokenTime(toLocal(new Date(b.starts_at.getTime() + minutes * 60000), p.timezone).time);
+      return { noted: true, kept: minutes <= grace || fits, minutes, arriving, message };
     },
   },
 };

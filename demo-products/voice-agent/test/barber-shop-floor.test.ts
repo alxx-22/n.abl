@@ -174,7 +174,7 @@ test('on a call: the wait now, the waiting list texted when a slot comes up, and
   // Running late today: 5 minutes is within the shop's 10; 25 runs into Marcus's next.
   const mine = await c2.run('create_booking', { service: 'Classic cut', staff: 'Marcus', date: '2026-10-15', time: '12:00', name: 'Joe Bloggs' });
   await c2.run('create_booking', { service: 'Classic cut', staff: 'Marcus', date: '2026-10-15', time: '12:30', name: 'Ann Next', phone: '07700 900984' });
-  assert.deepEqual(await c2.run('running_late', { reference: mine.reference, minutes: 5 }), { noted: true, kept: true, minutes: 5, message: "Kept: within the shop's 10 minutes. Tell them that's fine, and Marcus knows." });
+  assert.deepEqual(await c2.run('running_late', { reference: mine.reference, minutes: 5 }), { noted: true, kept: true, minutes: 5, arriving: '12:05pm', message: "Kept: within the shop's 10 minutes. Tell them that's fine, and Marcus knows." });
   const late = await c2.run('running_late', { reference: mine.reference, minutes: 25, note: 'Stuck on the tram' });
   assert.equal(late.kept, false);
   assert.match(late.message, /^Later than the shop's 10 minutes, and Marcus has someone at 12:30pm, so Marcus may only fit a shorter classic cut\./);
