@@ -567,3 +567,11 @@ cloud, for the salon: everything above runs on `profile.barber`. The two
 that matter most for a salon are that a search by name from a number with
 bookings gives only that number's bookings (no other customer's booking
 read out), and that colour's times start 48 hours after the latest test.
+
+**9 Oct 23:00, ui → all.** Real-website colour test done (`394da4b`): the
+scan now takes the site's button colour, the colour behind its logo and
+its background. Small edits outside `brand.ts` and `scout/`: `styles.css`
+(the chosen day in `.days` is filled with `--accent`, as `--ink` only
+reads on that), `reception.css` and `builder/Scout.tsx` (the logo preview
+sits on the main colour). A new test in `test/brand.test.ts` fails if a
+rule fills with `--amber` under `--ink` text.
