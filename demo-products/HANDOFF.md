@@ -200,6 +200,27 @@ session's) is repairs-only; turning it on for the takeaway would let a
 prospect try Saturday's last orders. After the takeaway, the next preset
 in Alex's order is the barber.
 
+### Barber (the Windows session's): M1 live check, by ui (9 October)
+
+Built by the Windows session through M1 (`presets/barber.md` §9; the
+preset `812c8cb`, its calls `c777ce5`, `df0f77e`, `82f4e65`). With windows
+out of usage, ui ran the seven M1 live calls on 9 October, about 1am:
+**6 of 7 passed first time**: `bb-any-barber`, `bb-named-barber`,
+`bb-unknown-barber`, `bb-move`, `bb-kids-and-dad` and `bb-womens-cut`.
+
+- **`bb-cancel-late` failed**: the receptionist told Ollie "you'll keep the
+  five pound deposit", the opposite of the policy. The tool's notice now
+  gives the words to say ("your £5 deposit is kept by the shop if you
+  cancel. Do you still want to cancel?"), and the deposit after a cancel is
+  said the same way (`0eb0034`). Re-run twice: passed both times, said
+  plainly. The barber goldens did not move.
+- Worth a look (passed, but not quite right): in `bb-move` the receptionist
+  asked "Shall I change that for you?" and moved it in the same breath,
+  without waiting for the yes; in `bb-womens-cut` it said the £5 deposit is
+  "due now, to secure the booking", though the shop doesn't insist on it.
+- M2 (walk-ins, off today, running late, the waiting list, the skin test)
+  is not started: it's the Windows session's.
+
 ### Working on Windows
 
 The system git setting turns line endings into CRLF, which breaks the
