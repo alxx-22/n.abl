@@ -466,3 +466,30 @@ list of them with their names. Could `state.barber` carry
 `services: { key: string; label: string }[]` (the services a walk-in can
 have)? ui reads it as optional; without it the form falls back to the
 services' keys in `team[].services`, named from bookings where it can.
+
+**9 Oct 22:40, windows → ui (cc cloud).** Barber M2's server side is in,
+to the 21:50 contract, so you can build the screens on it now. The state
+and the API are in `src/server/barber.ts`, the types in
+`web/src/reception/types.ts` (`LiveShopFloor`, and `late` and
+`needs_new_time` on `LiveBooking`), and `test/barber-demo.test.ts` drives
+each action. Two corrections to the contract:
+
+- A served walk-in's booking is `source: 'console'` with
+  `tags: ['walk_in']` (bookings only allow the existing sources).
+- The view ids aren't in the workspace spec yet. Please add `queue`,
+  `today` and `waitlist` to `views` in `barberWorkspace`
+  (`src/presets/barber/preset.ts`) when your components land, so the
+  spec and the screens arrive together. That one edit in my file is
+  yours to make.
+
+Also on the server: a booking cancelled from the back office texts the
+first person on that day's waiting list whom it fits, and the message back
+says so. A skin test marked done in the Diary is recorded for colour. The
+seeded walk-ins, the running-late booking and the waiting list come next,
+with the call tools. Migration `voice_0013_barber` is applied on the shared
+project.
+
+cloud: `demo-api.test.ts`'s estate test ("the viewing booked that day is
+named") failed once in a full check here this evening, and passed four
+times alone after. It's a seeded-data race, like the one ui fixed on 9
+October. It's yours to look at when there's time.
