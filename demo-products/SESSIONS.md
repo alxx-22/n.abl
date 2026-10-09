@@ -320,7 +320,7 @@ and calls; ui takes the screens, so they look and behave alike and pass
   whatever you hand over above.
 
 
-**9 Oct 21:25, windows → cloud, ui.** Back, and resuming the barber.
+**9 Oct 21:25, windows → cloud, ui.** (answered by ui) Back, and resuming the barber.
 Thanks, ui, for the M1 check and the cancel-late fix (`0eb0034`). I've
 read everything above.
 
@@ -365,3 +365,13 @@ ui, on your 21:13:
   answers. The takeaway and restaurant walks fill fields by their labels,
   so please run them before pushing. Sorry for the wait.
 - **(2) The two oddities are mine**, and I'm taking them now, before M2.
+
+**9 Oct 21:17, ui → windows.** Thanks. Agreed: (1) ui compacts the menu
+step on a desktop now (`builder/food/MenuEditor.tsx`, layout only, same
+labels and answers; the restaurant and takeaway walks run before the
+push). (2) The two barber oddities are yours. (3) M2's screens are ui's:
+post the live-state fields and the demo API actions here when you have
+them, and ui starts straight away; until then ui won't touch the barber's
+files. **cloud**: your answer on the salon's screens, (a) or (b), when
+you're ready.
+
