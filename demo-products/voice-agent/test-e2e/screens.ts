@@ -187,7 +187,8 @@ try {
     // A private key holds one demo at a time: this preset's, deleted when done.
     const w = await api<{ id: string }>('/workspaces', 'POST', { preset, name: NAMES[preset] ?? 'Screens Check' });
     const shots = new Map<string, number>();
-    const shoot = async (size: string, screen: string) => {
+    /** `whole`: the whole page; false for a panel open over it, which a whole-page shot would stretch. */
+    const shoot = async (size: string, screen: string, whole = true) => {
       const [width] = size.split('x').map(Number);
       const folder = join(OUT, size, preset);
       const n = (shots.get(size) ?? 0) + 1;
@@ -195,7 +196,7 @@ try {
       await settle(page);
       const file = join(folder, `${String(n).padStart(2, '0')}-${screen}.png`);
       const m = await page.evaluate(measure, [band(width) === 'tablet' || band(width) === 'phone', STRIPS] as [boolean, string]);
-      await page.screenshot({ path: file, fullPage: true });
+      await page.screenshot({ path: file, fullPage: whole });
       const problems: Row['problems'] = [];
       if (m.scrollWidth > m.innerWidth || m.escapes.length) {
         problems.push({ kind: 'overflow', detail: `${m.scrollWidth > m.innerWidth ? `page ${m.scrollWidth}px wide in ${m.innerWidth}px. ` : ''}${m.escapes.slice(0, 3).join('; ')}${m.escapes.length > 3 ? ` and ${m.escapes.length - 3} more` : ''}` });
@@ -229,7 +230,7 @@ try {
         const preview = page.locator('button.preview-open');
         if (i === 0 && (await preview.isVisible())) {
           await preview.click();
-          await shoot(size, 'builder-preview');
+          await shoot(size, 'builder-preview', false);
           await page.keyboard.press('Escape');
         }
       }
@@ -263,7 +264,7 @@ try {
         const mark = page.locator(`.ws-bookmark[data-pane=${pane}]`);
         if (!(await mark.count()) || !(await mark.isVisible())) continue;
         await mark.click();
-        await shoot(size, `ws-${pane}-open`);
+        await shoot(size, `ws-${pane}-open`, false);
         await page.keyboard.press('Escape');
       }
     }

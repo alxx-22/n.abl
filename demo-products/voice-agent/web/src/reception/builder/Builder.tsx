@@ -2,13 +2,15 @@
 // start. Every change saves itself (debounced) and comes back validated, so
 // the preview and the list of what is still missing are always the server's
 // view, not a guess. Which steps there are, and what each shows, comes from
-// the preset's builder (registry.ts).
+// the preset's builder (registry.ts). On a tablet or phone the steps are a
+// ribbon along the top and the preview opens from a button.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import { Link, navigate } from '../../router.tsx';
 import { R, RxTop, expiryLine } from '../Reception.tsx';
+import { keepInStrip, narrowBand, useBand } from '../bands.ts';
 import { brandStyle } from '../brand.ts';
 import { unnamed } from '../nouns.ts';
 import type { BaseAnswers, Me, WorkspacePayload } from '../types.ts';
@@ -26,6 +28,11 @@ export function Builder({ id, me }: { id: string; me: Me }) {
   const latest = useRef<BaseAnswers | null>(null);
   const edits = useRef(0);
   const scan = new URLSearchParams(location.search).get('scan') === '1';
+  const narrow = narrowBand(useBand());
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const ribbon = useRef<HTMLOListElement>(null);
+  const previewButton = useRef<HTMLButtonElement>(null);
+  const previewClose = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     demoApi<WorkspacePayload>(`/workspaces/${id}`)
@@ -81,6 +88,25 @@ export function Builder({ id, me }: { id: string; me: Me }) {
     [save],
   );
 
+  // The step being edited stays in view in the ribbon, whichever way it was reached.
+  useEffect(() => keepInStrip(ribbon.current?.querySelector('[aria-current=step]')?.parentElement, ribbon.current), [step, narrow, ws !== null]);
+  useEffect(() => {
+    if (!narrow) setPreviewOpen(false);
+  }, [narrow]);
+  useEffect(() => {
+    if (!previewOpen) return;
+    previewClose.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closePreview();
+    };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }, [previewOpen]);
+  const closePreview = () => {
+    setPreviewOpen(false);
+    previewButton.current?.focus();
+  };
+
   /** Save now (before leaving, or before Start). */
   const flush = useCallback(async () => {
     clearTimeout(timer.current);
@@ -135,7 +161,7 @@ export function Builder({ id, me }: { id: string; me: Me }) {
 
       <main className={`rx-main builder ${def.wide?.[current.key] ? 'wide-step' : ''}`}>
         <nav className="steps" aria-label="Setup steps">
-          <ol>
+          <ol ref={ribbon}>
             {steps.map((s, n) => {
               const errs = issuesFor(s.key).filter((x) => x.level === 'error').length;
               return (
@@ -156,6 +182,9 @@ export function Builder({ id, me }: { id: string; me: Me }) {
           <header>
             <h1 id="step-title">{current.label}</h1>
             <span className="muted small">Step {i + 1} of {steps.length}</span>
+            {narrow ? (
+              <button type="button" className="preview-open" ref={previewButton} aria-expanded={previewOpen} aria-controls="preview" onClick={() => setPreviewOpen(true)}>Preview</button>
+            ) : null}
           </header>
           {issuesFor(current.key).length ? (
             <ul className="issues">
@@ -179,8 +208,15 @@ export function Builder({ id, me }: { id: string; me: Me }) {
           </footer>
         </section>
 
-        <aside className="preview panel" aria-label="What the receptionist will say">
-          <h2>Preview</h2>
+        {previewOpen ? <div className="preview-scrim" aria-hidden="true" onClick={closePreview} /> : null}
+        <aside
+          className={`preview panel ${previewOpen ? 'open' : ''}`} id="preview" aria-label="What the receptionist will say"
+          role={narrow ? 'dialog' : undefined} hidden={narrow && !previewOpen ? true : undefined}
+        >
+          <header className="preview-head">
+            <h2>Preview</h2>
+            {narrow ? <button type="button" ref={previewClose} className="small" onClick={closePreview}>Close</button> : null}
+          </header>
           {ws.preview ? (def.preview ? def.preview(answers, ws) : <PreviewLines preview={ws.preview} />) : null}
         </aside>
       </main>

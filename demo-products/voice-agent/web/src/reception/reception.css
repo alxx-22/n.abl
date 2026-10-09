@@ -117,7 +117,14 @@ h3.sub { margin-top: 12px; font-size: 1rem; }
 .preview { position: sticky; top: 84px; display: grid; gap: 8px; max-height: calc(100vh - 100px); overflow-y: auto; }
 /* The floor plan needs the room more than the spoken preview does. */
 .builder.wide-step { grid-template-columns: 210px minmax(0, 1fr); }
-.builder.wide-step .preview { display: none; }
+@media (min-width: 1024px) {
+  .builder.wide-step .preview { display: none; }
+  .preview-open { display: none; }
+}
+.preview[hidden] { display: none; }
+.preview-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
+.step > header h1 { margin-right: auto; }
+.step > header { flex-wrap: wrap; }
 .preview p { margin: 0; }
 .preview .say { font-size: 15px; color: var(--heading); border-left: 3px solid var(--accent); padding-left: 10px; }
 .facts { margin: 0; padding-left: 18px; font-size: 13px; color: var(--cream); display: grid; gap: 4px; }
@@ -565,8 +572,9 @@ svg.house .door { fill: var(--accent); }
   .workspace.call-away { padding-left: 56px; }
   .workspace.phone-away { padding-right: 56px; }
 }
+@keyframes sheet-in { from { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) {
-  .spinner, .table.flash .top, .sms.fresh, .ws-bookmark { animation: none; }
+  .spinner, .table.flash .top, .sms.fresh, .ws-bookmark, .preview.open { animation: none; }
   .ws-call, .ws-phone { transition: none !important; }
 }
 
@@ -608,11 +616,18 @@ svg.house .door { fill: var(--accent); }
   .ws-scrim { position: fixed; inset: 0; z-index: 44; background: rgba(var(--bg-rgb), 0.6); }
   .office-body { grid-template-columns: 1fr; }
   .drawer { width: auto; border-width: 1px 0 0; max-height: none; }
-  .builder { grid-template-columns: 1fr; }
-  .steps { position: static; max-height: none; }
-  .steps ol { display: flex; overflow-x: auto; gap: 4px; }
-  .steps button { white-space: nowrap; }
-  .preview { grid-column: 1; position: static; max-height: none; }
+  /* The builder: the steps a ribbon along the top that stays in view, then the step; the preview opens from a button. */
+  .builder-page .rx-top { position: static; }
+  .builder { display: block; padding-top: 0; }
+  .steps { position: sticky; top: 0; z-index: 6; max-height: none; overflow: visible; margin: 0 -24px 14px; padding: 8px 24px; background: var(--ground); border-bottom: 1px solid var(--line); }
+  .steps ol { display: flex; overflow-x: auto; gap: 4px; scrollbar-width: none; }
+  .steps button { white-space: nowrap; min-height: 40px; }
+  .preview { position: static; max-height: none; }
+  .preview.open {
+    position: fixed; z-index: 45; top: 0; right: 0; bottom: 0; width: min(420px, calc(100vw - 32px)); max-height: none; overflow-y: auto;
+    border-radius: 0; border-width: 0 0 0 1px; align-content: start; animation: sheet-in var(--dur) var(--ease);
+  }
+  .preview-scrim { position: fixed; inset: 0; z-index: 44; background: rgba(var(--bg-rgb), 0.6); }
   .floor-edit { grid-template-columns: 1fr; }
   .kitchen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -624,6 +639,8 @@ svg.house .door { fill: var(--accent); }
   .rx-top button, .rx-top .button { padding: 6px 10px; font-size: 13px; }
   .step.panel { padding: 18px 16px; }
   .step-nav { margin: 18px -16px -18px; padding: 10px 16px; }
+  .steps { margin: 0 -16px 12px; padding: 8px 16px; }
+  .preview.open { width: 100vw; border-width: 0; }
   .two, .four { grid-template-columns: 1fr 1fr; }
   .day-row { grid-template-columns: 1fr; }
   .service { grid-template-columns: 1fr 1fr; }
