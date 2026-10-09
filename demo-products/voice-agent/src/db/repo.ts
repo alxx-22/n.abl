@@ -441,10 +441,12 @@ export class Repo {
 
   // ── Bookings ───────────────────────────────────────────────────────────
 
+  /** What holds a table or a person: a no-show or a finished visit frees it, as the floor plan shows (review, 8 October). */
   private async busy(q: Queryable, tenantId: string, from: Date, to: Date): Promise<BusyInterval[]> {
     const rows = await q.query<any>(
       `select id, resource_key, starts_at, ends_at, buffer_minutes, listing_key from public.voice_bookings
-       where tenant_id = $1 and status = 'confirmed' and starts_at < $3 and ends_at > $2`,
+       where tenant_id = $1 and status = 'confirmed' and coalesce(visit_status, 'expected') not in ('no_show', 'finished')
+         and starts_at < $3 and ends_at > $2`,
       [tenantId, from, to],
     );
     return rows.map((r) => ({

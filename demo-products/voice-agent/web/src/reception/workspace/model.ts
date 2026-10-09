@@ -46,7 +46,8 @@ export function span(b: LiveBooking): [number, number] {
   return [s, e];
 }
 
-const live = (b: LiveBooking) => b.status === 'confirmed' && b.visit_status !== 'finished' && b.visit_status !== 'no_show';
+/** A booking that holds its table or person: a no-show or a finished visit frees it, as the server counts it. */
+export const live = (b: LiveBooking) => b.status === 'confirmed' && b.visit_status !== 'finished' && b.visit_status !== 'no_show';
 
 /** Each table's state at one minute of one day, for the floor plan. */
 /** nowMinute: the real time when the date is today (lateness is about the clock, not the slider), else null. */
@@ -103,7 +104,7 @@ export function moveOptions(state: LiveState, b: LiveBooking): { key: string; la
   const plan = state.plan;
   if (!plan) return [];
   const [s, e] = span(b);
-  const others = state.bookings.filter((x) => x.id !== b.id && x.date === b.date && x.status === 'confirmed');
+  const others = state.bookings.filter((x) => x.id !== b.id && x.date === b.date && live(x));
   const busy = (keys: string[]) => others.some((x) => {
     const [xs, xe] = span(x);
     return xs < e && s < xe && x.tables.some((k) => keys.includes(k));
@@ -125,7 +126,7 @@ export function personOptions(state: LiveState, b: LiveBooking): { key: string; 
   if (b.status !== 'confirmed' || !team.some((m) => m.key === b.resource_key)) return [];
   const wd = weekday(b.date);
   const [s, e] = span(b);
-  const others = state.bookings.filter((x) => x.id !== b.id && x.date === b.date && x.status === 'confirmed');
+  const others = state.bookings.filter((x) => x.id !== b.id && x.date === b.date && live(x));
   const busy = (key: string) => others.some((x) => {
     if (x.resource_key !== key) return false;
     const [xs, xe] = span(x);
@@ -145,7 +146,7 @@ export function combineOptions(state: LiveState, b: LiveBooking): PlanTable[] {
   const mine = plan.tables.find((t) => t.key === b.tables[0]);
   if (!mine) return [];
   const [s, e] = span(b);
-  const others = state.bookings.filter((x) => x.id !== b.id && x.date === b.date && x.status === 'confirmed');
+  const others = state.bookings.filter((x) => x.id !== b.id && x.date === b.date && live(x));
   return plan.tables.filter((t) => t.key !== mine.key && t.area === mine.area && !others.some((x) => {
     const [xs, xe] = span(x);
     return xs < e && s < xe && x.tables.includes(t.key);

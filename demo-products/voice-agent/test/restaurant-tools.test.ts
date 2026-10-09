@@ -454,3 +454,29 @@ test('restaurant tools: a party no table seats gets the callback, never "try ano
   const step = await runTool('check_availability', { date: SAT, time: '19:00', party_size: 8, accessible: true, area: 'terrace' }, c.ctx);
   assert.notEqual(step.reason, 'party_too_large');
 });
+
+test('restaurant tools: a table marked no-show or finished is free again, for callers and for staff moves', async () => {
+  // The review: the floor plan showed both tables Free while callers heard "7:30pm is taken".
+  const t = await restaurant('tools-noshow', (a) => {
+    a.seating.areas = [a.seating.areas[0]];
+    a.seating.tables = a.seating.tables.filter((x) => ['T1', 'T2'].includes(x.key)).map((x) => ({ ...x, seats: 2, joins: [] }));
+    a.seating.fixtures = [];
+    a.seating.notice_minutes = 0;
+  });
+  const at = new Date('2026-10-06T18:20:00Z'); // Tuesday 7:20pm
+  const book = async (name: string, table: string, time = '19:00') => {
+    const r = await repo.createBooking(t, { date: '2026-10-06', time, party_size: 2, name, source: 'console', table, ignoreLead: true }, at);
+    assert.ok(r.ok, name);
+    return r.booking;
+  };
+  const ann = await book('Ann Lee', 'T1');
+  const bob = await book('Bob Hart', 'T2');
+  await repo.setVisitStatus(t.id, ann.reference, 'no_show');
+  await repo.setVisitStatus(t.id, bob.reference, 'finished');
+  const c = await call(t);
+  c.ctx.now = () => at;
+  const r = await runTool('check_availability', { date: '2026-10-06', time: '19:30', party_size: 2 }, c.ctx);
+  assert.equal(r.available, true, String(r.message));
+  const cat = await book('Cat Moss', 'T1', '19:30');
+  assert.equal((await repo.moveBooking(t, cat.reference, 'T2')).ok, true, 'staff can move it onto the finished table');
+});

@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { FloorPlan, ZoomControls, unbookableTag } from '../FloorPlan.tsx';
 import type { LiveState } from '../types.ts';
-import { addDays, bookingOn, dayLabel, hhmm, looksAt, servicesOn, span } from './model.ts';
+import { addDays, bookingOn, dayLabel, hhmm, live, looksAt, servicesOn, span } from './model.ts';
 
 export interface View {
   date: string;
@@ -68,7 +68,7 @@ export function FloorBoard(props: {
     const b = bookingOn(state, from, view.date, view.minute);
     const t = plan.tables.find((x) => x.key === to);
     if (!b || !t) return false;
-    return t.seats >= b.party_size && !state.bookings.some((x) => x.id !== b.id && x.date === b.date && x.status === 'confirmed' && x.tables.includes(to) && span(x)[0] < span(b)[1] && span(b)[0] < span(x)[1]);
+    return t.seats >= b.party_size && !state.bookings.some((x) => x.id !== b.id && x.date === b.date && live(x) && x.tables.includes(to) && span(x)[0] < span(b)[1] && span(b)[0] < span(x)[1]);
   };
 
   return (

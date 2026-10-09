@@ -101,3 +101,16 @@ test("estate back office: an offer's timer is the domain's, in the agency's time
   assert.match(when('2026-10-09T11:00:00Z', 'Europe/London'), /12:00/);
   assert.match(when('2026-10-09T11:00:00Z', 'America/New_York'), /07:00/);
 });
+
+test('workspace: a table whose booking is a no-show or finished can take a moved booking, as the floor plan shows it free', async () => {
+  // model.ts takes a type from a .tsx file, which this typecheck (no JSX) can't read; node erases it, so resolve it at run time only.
+  const model = 'model.ts';
+  const { moveOptions } = (await import(`../web/src/reception/workspace/${model}`)) as { moveOptions: (state: never, b: never) => { key: string }[] };
+  const booking = (id: string, table: string, time: string, visit_status: string) =>
+    ({ id, date: '2026-10-06', time, end_time: '20:15', status: 'confirmed', visit_status, party_size: 2, tables: [table], resource_key: table });
+  const state = {
+    plan: { tables: ['T1', 'T2', 'T3'].map((key) => ({ key, label: key, seats: 2, area: 'indoor', accessible: false })), pairs: [] },
+    bookings: [booking('a', 'T1', '19:00', 'no_show'), booking('b', 'T2', '19:00', 'finished'), booking('c', 'T3', '19:30', 'expected')],
+  };
+  assert.deepEqual(moveOptions(state as never, state.bookings[2] as never).map((x) => x.key), ['T1', 'T2']);
+});
