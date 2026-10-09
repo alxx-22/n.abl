@@ -33,7 +33,10 @@ import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf,
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule, viewingStopped } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
-import { barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, oneEach, readBackFirst, secondBooking, sendHeldTexts, servicePrice, waitForYes } from './barber-tools.ts';
+import {
+  barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
+  BARBER_TOOLS, offTodayNote, offerFreedSlot, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
+} from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -572,10 +575,16 @@ const TOOLS: Record<string, Tool> = {
       const p = ctx.tenant.profile;
       const each = oneEach(ctx, str(args.service), int(args.party_size) ?? 1, 'available');
       if (each) return each;
+      // A barber's day as it stands: who is off today (core/barber-tools.ts).
+      const shop = await shopToday(ctx);
+      const off = offToday(ctx, shop, str(args.staff), str(args.date) ?? '', 'available');
+      if (off) return off;
       const service = findService(p, str(args.service));
       if (!service) {
         return { available: false, message: `Not a bookable service. Services: ${p.booking!.services.map((s) => s.label).join(', ')}.` };
       }
+      const colour = await skinTestFirst(ctx, service, str(args.date) ?? '', str(args.time), ctx.callerPhone, 'available');
+      if (colour) return colour;
       const estate = await estateAvailability(args, ctx, service);
       if (estate) return estate;
       const area = resolveArea(ctx.tenant, str(args.area));
@@ -587,7 +596,7 @@ const TOOLS: Record<string, Tool> = {
       const date = str(args.date) ?? '';
       const existing = isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [];
       const r = checkAvailability({
-        profile: p, serviceKey: service.key, date, time: str(args.time), partySize: party,
+        profile: tenantOn(ctx, shop, date).profile, serviceKey: service.key, date, time: str(args.time), partySize: party,
         staff: str(args.staff), now: ctx.now(), existing, area: area.key, accessible: bool(args.accessible), prefer: preferences(args.prefer), only: table.key,
       });
       const out: Record<string, unknown> = { ...r, service: service.label };
@@ -644,6 +653,12 @@ const TOOLS: Record<string, Tool> = {
       if (follow?.args) args = { ...args, ...follow.args };
       const second = await secondBooking(ctx);
       if (second) return second;
+      const shop = await shopToday(ctx);
+      const off = offToday(ctx, shop, str(args.staff), str(args.date) ?? '', 'booked');
+      if (off) return off;
+      const colourService = p.barber ? findService(p, str(args.service)) : undefined;
+      const colour = colourService ? await skinTestFirst(ctx, colourService, str(args.date) ?? '', str(args.time), normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone, 'booked') : null;
+      if (colour) return colour;
       if (p.estate) {
         const service = findService(p, str(args.service));
         const estate = service ? await estateBooking(args, ctx, service) : null;
@@ -692,7 +707,7 @@ const TOOLS: Record<string, Tool> = {
         accessible ? 'Step-free table needed' : null,
       ].filter(Boolean).join('. ') || null;
       const r = await ctx.repo.createBooking(
-        ctx.tenant,
+        tenantOn(ctx, shop, str(args.date) ?? ''),
         {
           service: str(args.service), date: str(args.date) ?? '', time: str(args.time) ?? '',
           party_size: int(args.party_size) ?? 1, name, phone, notes,
@@ -711,7 +726,7 @@ const TOOLS: Record<string, Tool> = {
         });
         // A barber taken then while another is free: that one first. A live test put a child at 9:15 with Dan free at 10.
         const other = p.barber && str(args.staff)
-          ? checkAvailability({ profile: p, serviceKey: str(args.service), date, time: str(args.time), partySize: 1, now: ctx.now(), existing: isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [] })
+          ? checkAvailability({ profile: tenantOn(ctx, shop, date).profile, serviceKey: str(args.service), date, time: str(args.time), partySize: 1, now: ctx.now(), existing: isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [] })
           : null;
         if (other?.available && other.slot) {
           const who = other.slot.resource_label;
@@ -783,7 +798,9 @@ const TOOLS: Record<string, Tool> = {
       if (!found.length && !reference && phone && name) found = await ctx.repo.findBookings(ctx.tenant.id, { name }, ctx.now());
       for (const b of found) record(ctx, b.reference, 'booking', 'found');
       if (!found.length) return { bookings: [], note: 'No upcoming bookings found. Ask for the reference or the name it was booked under.' };
-      return { bookings: found.map((b) => bookingSummary(ctx.tenant, b)) };
+      // A barber's booking with someone off today needs a new time (core/barber-tools.ts).
+      const offNote = ctx.tenant.profile.barber ? await offTodayNote(ctx, found) : undefined;
+      return { bookings: found.map((b) => bookingSummary(ctx.tenant, b)), ...(offNote ? { note: offNote } : {}) };
     },
   },
 
@@ -818,8 +835,21 @@ const TOOLS: Record<string, Tool> = {
       if (str(args.name) && !realName(args.name)) return { changed: false, message: ASK_NAME };
       // A viewing moves only within its home's rules.
       const listing = ctx.tenant.profile.listings ? await moveRule(ctx, ref) : undefined;
+      // A barber's booking moving: not to a barber off today, and colour still 48 hours after its skin test.
+      const shop = await shopToday(ctx);
+      const was = shop && (str(args.date) || str(args.time)) ? await ctx.repo.getBookingByReference(ctx.tenant.id, ref.replace(/[^a-z0-9]/gi, '').toUpperCase()) : null;
+      const at = was ? toLocal(was.starts_at, ctx.tenant.profile.timezone) : null;
+      const newDate = str(args.date) ?? at?.date ?? '';
+      if (was && at) {
+        const r0 = ctx.tenant.profile.booking?.resources.find((x) => x.key === was.resource_key);
+        const off = offToday(ctx, shop, r0?.label, newDate, 'changed');
+        if (off) return off;
+        const s0 = findService(ctx.tenant.profile, was.service_key);
+        const colour = s0 ? await skinTestFirst(ctx, s0, newDate, str(args.time) ?? at.time, was.phone, 'changed', was.reference) : null;
+        if (colour) return colour;
+      }
       const r = await ctx.repo.modifyBooking(
-        ctx.tenant, ref,
+        tenantOn(ctx, shop, newDate), ref,
         {
           date: str(args.date), time: str(args.time), party_size: int(args.party_size), notes: str(args.notes), area: area.key,
           accessible: bool(args.accessible), allergies: namedAllergy(noneToNull(str(args.allergies)), ctx.state.heard), name: realName(args.name), phone: phone ?? undefined,
@@ -870,6 +900,8 @@ const TOOLS: Record<string, Tool> = {
       const held = ctx.state.textsHeld.indexOf(b.reference);
       if (held >= 0) ctx.state.textsHeld.splice(held, 1);
       else await smsTo(ctx, b.phone, ctx.tenant.profile.estate ? estateText(ctx.tenant, b, 'cancelled') : `${ctx.tenant.profile.name}: booking ${b.reference} for ${s.spoken_date} is cancelled.${deposit ? ` ${deposit}` : ''} To book again, just call us. (Demo)`);
+      // A barber's waiting list: the first this slot fits hears it's free.
+      await offerFreedSlot(ctx.repo, ctx.tenant, b, (to, body) => smsTo(ctx, to, body), ctx.now());
       return { cancelled: true, ...s, policy: ctx.tenant.profile.policies?.cancellation, ...(deposit ? { deposit } : {}) };
     },
   },
@@ -1466,6 +1498,7 @@ const TOOLS: Record<string, Tool> = {
 
   ...ESTATE_TOOLS,
   ...MAINTENANCE_TOOLS,
+  ...BARBER_TOOLS,
 
   take_message: {
     decl: {

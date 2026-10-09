@@ -115,6 +115,8 @@ test('barber: one person and one service a booking, the price in the read-back, 
   assert.match(three.message, /^Each person is their own booking/);
   assert.equal((await c.run('create_booking', { service: 'Kids cut', date: '2026-10-17', time: '10:00', party_size: 3, name: 'Sara Ahmed' })).booked, false);
   assert.match((await c.run('check_availability', { date: '2026-10-17', time: '10:00' })).message, /^Which service\? Ask what they are having: Classic cut, Skin fade, /);
+  // Grey blending is colour: a skin test here three days before.
+  await repo.setSkinTest(t.id, '+447700900960', 'Tom Reid', new Date(THURSDAY.getTime() - 3 * 86400000));
   const grey = await c.run('check_availability', { service: 'Grey blending', date: '2026-10-17', time: '10:00', staff: 'Marcus' });
   assert.deepEqual([grey.available, grey.price, grey.with], [true, 'from £25.00', 'Marcus']);
   assert.equal(grey.next, 'Read back the grey blending with Marcus, the day, the time and the price (from £25.00), and book with create_booking when they say yes. Nothing is booked and there is no reference until create_booking returns one.');

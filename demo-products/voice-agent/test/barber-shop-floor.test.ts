@@ -7,7 +7,9 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
+import { newCallState, runTool, type ToolContext } from '../src/core/tools.ts';
 import { checkAvailability } from '../src/domain/availability.ts';
+import type { Tenant } from '../src/domain/types.ts';
 import { profileOn, skinTestFor, waitNow, type ShopToday } from '../src/domain/shop-floor.ts';
 import { defaultAnswers } from '../src/presets/barber/answers.ts';
 import { compileBarber } from '../src/presets/barber/compile.ts';
@@ -96,4 +98,80 @@ test('shop floor: colour needs a skin test here 48 hours before; every time sinc
   assert.equal(skinTestFor('every_time', start, [before(24 * 40)], before(24 * 10)).ok, false, 'used by the last colour');
   assert.equal(skinTestFor('six_months', start, [before(24 * 40)], before(24 * 10)).ok, true, 'good for six months');
   assert.equal(skinTestFor('six_months', start, [before(24 * 200)], null).ok, false);
+});
+
+// ── On a call ─────────────────────────────────────────────────────────────
+
+async function call(tenant: Tenant, callerPhone: string, sent: { to: string; body: string }[] = [], now = THURSDAY) {
+  const ctx: ToolContext = {
+    tenant, repo, now: () => now, callId: await repo.createCall({ tenant_id: tenant.id, channel: 'eval' }), channel: 'eval', callerPhone,
+    state: newCallState(), demoCards: [], sms: { send: async (to: string, body: string) => (sent.push({ to, body }), 'simulated') }, telephony: null, action: () => {},
+  };
+  return { ctx, run: (name: string, args: Record<string, unknown>) => runTool(name, args, ctx) as Promise<any> };
+}
+const fresh = async (slug: string) => repo.upsertTenant(compileBarber(sanitiseBarber({ ...defaultAnswers(), basics: { ...defaultAnswers().basics, name: "Kingsley's Barbers" } }), { slug }));
+
+test("on a call: Dan off today is off, never why; his booking today needs a new time; the next Thursday he's in", async () => {
+  const t = await fresh('kingsleys-off');
+  const c = await call(t, '+447700900980');
+  const dans = await c.run('create_booking', { service: 'Classic cut', staff: 'Dan', date: '2026-10-15', time: '15:00', name: 'Ali Khan' });
+  assert.equal(dans.booked, true);
+  await repo.setToday(t.id, { date: '2026-10-15', off: ['dan'], notice: null });
+  const ask = await c.run('check_availability', { service: 'Classic cut', staff: 'Danny', date: '2026-10-15', time: '16:00' });
+  assert.deepEqual([ask.available, ask.reason, ask.message], [false, 'off_today', "Dan's off today. Say just that, never why. In today: Marcus, Jordan; offer them, or Dan on another day."]);
+  assert.notEqual((await c.run('check_availability', { service: 'Classic cut', date: '2026-10-15', time: '16:00' })).slot?.resource_label, 'Dan');
+  assert.equal((await c.run('create_booking', { service: 'Classic cut', staff: 'Dan', date: '2026-10-15', time: '16:00', name: 'Ali Khan' })).reason, 'off_today');
+  assert.equal((await c.run('check_availability', { service: 'Classic cut', staff: 'Dan', date: '2026-10-22', time: '16:00' })).available, true);
+  const found = await c.run('find_bookings', { reference: dans.reference });
+  assert.match(found.note, new RegExp(`^Dan is off today, so ${dans.reference} needs a new time\\. Say Dan's off today, never why`));
+});
+
+test('on a call: colour only 48 hours after a skin test here, booked first; every time since the last colour', async () => {
+  const t = await fresh('kingsleys-skin');
+  const c = await call(t, '+447700900981');
+  const none = await c.run('create_booking', { service: 'Beard colour', date: '2026-10-16', time: '11:00', name: 'Sam Lee' });
+  assert.deepEqual([none.booked, none.reason], [false, 'skin_test_needed']);
+  assert.match(none.message, /Book the skin test now \(service "Skin test": 10 minutes, free\), then the colour at least 48 hours after it\. The dye maker says/);
+  const test1 = await c.run('create_booking', { service: 'Skin test', date: '2026-10-15', time: '12:00', name: 'Sam Lee' });
+  assert.deepEqual([test1.booked, test1.with], [true, 'Marcus'], 'whoever does colour does the test');
+  const soon = await c.run('check_availability', { service: 'Beard colour', date: '2026-10-16', time: '11:00' });
+  assert.deepEqual([soon.available, soon.reason], [false, 'skin_test_too_close']);
+  assert.match(soon.message, /The colour can be from Saturday 17 October at 12 noon/);
+  const colour = await c.run('create_booking', { service: 'Beard colour', date: '2026-10-17', time: '13:00', name: 'Sam Lee' });
+  assert.equal(colour.booked, true, colour.message);
+  assert.equal((await c.run('create_booking', { service: 'Beard colour', date: '2026-10-24', time: '13:00', name: 'Sam Lee' })).reason, 'skin_test_needed', 'every time: the last colour used it');
+});
+
+test('on a call: the wait now, the waiting list texted when a slot comes up, and running late', async () => {
+  const t = await fresh('kingsleys-wait');
+  const sent: { to: string; body: string }[] = [];
+  const c = await call(t, '+447700900982', sent);
+  const wait = await c.run('get_wait_now', { service: 'Skin fade' });
+  assert.deepEqual([wait.waiting_now, wait.soonest[0]], [0, { with: 'Marcus', from: '11am', minutes: 0 }]);
+  assert.match(wait.next, /^Say Marcus is free now, as an estimate, and that only a booking holds a chair\./);
+  await repo.setToday(t.id, { date: '2026-10-15', off: ['dan'], notice: null });
+  assert.equal((await c.run('get_wait_now', { staff: 'Dan' })).reason, 'off_today');
+
+  // Saturday's waiting list: Kim wants Marcus for a skin fade; a cut with Marcus is cancelled; Kim hears.
+  const kim = await call(t, '+447700900983', sent);
+  const joined = await kim.run('join_waiting_list', { date: '2026-10-17', service: 'Skin fade', staff: 'Marcus', name: 'Kim Patel' });
+  assert.equal(joined.message, "On the waiting list for Saturday 17 October, skin fade with Marcus. Tell them it isn't a booking: if a slot comes up they'll get a text, and the first to call gets it.");
+  await kim.run('join_waiting_list', { date: '2026-10-17', service: 'Skin fade', staff: 'Marcus', name: 'Kim Patel' });
+  assert.equal((await repo.listWaitlist(t.id, '2026-10-17')).length, 1, 'once');
+  const cut = await c.run('create_booking', { service: 'Cut and beard', staff: 'Marcus', date: '2026-10-17', time: '10:00', name: 'Joe Bloggs' });
+  await c.run('end_call', { outcome: 'booked' });
+  sent.length = 0;
+  const c2 = await call(t, '+447700900982', sent);
+  assert.equal((await c2.run('cancel_booking', { reference: cut.reference })).cancelled, true);
+  assert.deepEqual(sent.find((x) => x.to === '+447700900983')?.body, "Kingsley's Barbers: a slot's come up on Saturday 17 October at 10am with Marcus, for your skin fade. Call us to book it: the first to call gets it. (Demo)");
+  assert.ok((await repo.listWaitlist(t.id, '2026-10-17'))[0].notified_at);
+
+  // Running late today: 5 minutes is within the shop's 10; 25 runs into Marcus's next.
+  const mine = await c2.run('create_booking', { service: 'Classic cut', staff: 'Marcus', date: '2026-10-15', time: '12:00', name: 'Joe Bloggs' });
+  await c2.run('create_booking', { service: 'Classic cut', staff: 'Marcus', date: '2026-10-15', time: '12:30', name: 'Ann Next', phone: '07700 900984' });
+  assert.deepEqual(await c2.run('running_late', { reference: mine.reference, minutes: 5 }), { noted: true, kept: true, minutes: 5, message: "Kept: within the shop's 10 minutes. Tell them that's fine, and Marcus knows." });
+  const late = await c2.run('running_late', { reference: mine.reference, minutes: 25, note: 'Stuck on the tram' });
+  assert.equal(late.kept, false);
+  assert.match(late.message, /^Later than the shop's 10 minutes, and Marcus has someone at 12:30pm, so Marcus may only fit a shorter classic cut\./);
+  assert.deepEqual(((await repo.getBookingByReference(t.id, mine.reference))!.details as any).late, { minutes: 25, note: 'Stuck on the tram', at: THURSDAY.toISOString() });
 });

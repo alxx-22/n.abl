@@ -1652,6 +1652,15 @@ export class Repo {
 
   // ── A barber's shop floor (presets/barber.md §5, M2) ──────────────────
 
+  /** A number's bookings still standing, past and to come, oldest first: a customer's skin tests and colour. */
+  async listBookingsByPhone(tenantId: string, phone: string): Promise<Booking[]> {
+    const rows = await this.db.query<any>(
+      `select * from public.voice_bookings where tenant_id = $1 and phone = $2 and status = 'confirmed' order by starts_at limit 100`,
+      [tenantId, phone],
+    );
+    return rows.map(mapBooking);
+  }
+
   /** Today's barbers off and notice for a local date: another day's reads as everyone in. */
   async getToday(tenantId: string, date: string): Promise<ShopToday> {
     const rows = await this.db.query<any>('select today from public.voice_tenants where id = $1', [tenantId]);

@@ -6,12 +6,13 @@
 
 import type { FunctionDeclaration } from './live.ts';
 import { findService } from '../domain/availability.ts';
-import { spokenDate, spokenTime, toLocal } from '../domain/time.ts';
-import type { WaitlistEntry } from '../domain/shop-floor.ts';
+import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
+import { SKIN_TEST_KEY, SKIN_TEST_HOURS, profileOn, skinTestFor, waitNow, type ShopToday, type WaitlistEntry } from '../domain/shop-floor.ts';
+import { normaliseUkPhone } from '../domain/phone.ts';
 import { pounds, type BookableService, type Booking, type Tenant } from '../domain/types.ts';
 import type { Repo } from '../db/repo.ts';
-import { S, smsTo, str } from './tool-kit.ts';
-import type { Args, ToolContext } from './tools.ts';
+import { ASK_NAME, I, S, int, obj, realName, smsTo, str } from './tool-kit.ts';
+import type { Args, Tool, ToolContext } from './tools.ts';
 
 /** "£5", as said: no pence when there are none. */
 const spokenPounds = (pence: number) => pounds(pence).replace(/\.00$/, '');
@@ -216,3 +217,194 @@ export async function offerFreedSlot(repo: Repo, t: Tenant, b: Booking, text: (t
   await repo.markWaitlistNotified(t.id, first.id, now);
   return first;
 }
+
+/** Today in the shop, read on every tool call so a switch in the back office takes effect at once. Null for anyone but a barber. */
+export async function shopToday(ctx: ToolContext): Promise<ShopToday | null> {
+  if (!ctx.tenant.profile.barber) return null;
+  return ctx.repo.getToday(ctx.tenant.id, toLocal(ctx.now(), ctx.tenant.profile.timezone).date);
+}
+
+/** The tenant as it stands on a date: a barber off today isn't booked today. */
+export function tenantOn(ctx: ToolContext, shop: ShopToday | null, date: string): Tenant {
+  if (!shop) return ctx.tenant;
+  const profile = profileOn(ctx.tenant.profile, date, shop);
+  return profile === ctx.tenant.profile ? ctx.tenant : { ...ctx.tenant, profile };
+}
+
+/** The barber a caller named, by name or nickname. */
+function barberNamed(t: Tenant, name: string | undefined) {
+  const n = name?.trim().toLowerCase();
+  if (!n) return undefined;
+  return t.profile.booking?.resources.find((r) => r.kind === 'staff' && (r.key === n || r.label.toLowerCase() === n || (r.aliases ?? []).some((a) => a.toLowerCase() === n)));
+}
+
+/**
+ * A named barber off today, asked for today: say they're off today, never
+ * why, and offer who is in (presets/barber-use-cases.md, "A barber who
+ * doesn't work there, or is off"). Null otherwise.
+ */
+export function offToday(ctx: ToolContext, shop: ShopToday | null, staff: string | undefined, date: string, key: 'available' | 'booked' | 'changed'): Record<string, unknown> | null {
+  const r = barberNamed(ctx.tenant, staff);
+  if (!shop || !r || date !== shop.date || !shop.off.includes(r.key)) return null;
+  const wd = new Date(`${date}T12:00:00Z`).getUTCDay();
+  const inToday = (ctx.tenant.profile.booking?.resources ?? []).filter((x) => x.kind === 'staff' && !shop.off.includes(x.key) && (!x.days || x.days.includes(wd))).map((x) => x.label);
+  return {
+    [key]: false, reason: 'off_today',
+    message: `${r.label}'s off today. Say just that, never why. ${inToday.length ? `In today: ${inToday.join(', ')}; offer them, or ${r.label} on another day.` : `Offer ${r.label} on another day.`}`,
+  };
+}
+
+/**
+ * Colour needs a skin test here 48 hours or more before (presets/barber.md
+ * §4.2): one taken or booked, and for `every_time`, since the last colour.
+ * Without one, the test is booked first. Null when the colour can go ahead
+ * (or the time isn't known yet and a test is in hand).
+ */
+export async function skinTestFirst(
+  ctx: ToolContext, service: BookableService, date: string, time: string | undefined, phone: string | null, key: 'available' | 'booked' | 'changed', moving?: string,
+): Promise<Record<string, unknown> | null> {
+  const bb = ctx.tenant.profile.barber;
+  if (!bb || !service.colour) return null;
+  const tz = ctx.tenant.profile.timezone;
+  // A colour being moved isn't the last colour before itself.
+  const mine = phone ? (await ctx.repo.listBookingsByPhone(ctx.tenant.id, phone)).filter((b) => b.reference !== moving) : [];
+  const taken = phone ? await ctx.repo.getSkinTest(ctx.tenant.id, phone) : null;
+  const tests = [...(taken ? [taken] : []), ...mine.filter((b) => b.service_key === SKIN_TEST_KEY && b.visit_status !== 'no_show').map((b) => b.starts_at)];
+  const start = time ? zonedToUtc(date, time, tz) : zonedToUtc(date, '23:59', tz);
+  const lastColour = mine.filter((b) => b.starts_at < start && b.visit_status !== 'no_show' && findService(ctx.tenant.profile, b.service_key)?.colour).at(-1)?.starts_at ?? null;
+  const r = skinTestFor(bb.skin_test, start, tests, lastColour);
+  if (r.ok) return null;
+  const say = 'The dye maker says a skin test 48 hours before colour; say that as the reason, and never that colour is safe. One done elsewhere does not count.';
+  if (r.earliest) {
+    const e = toLocal(r.earliest, tz);
+    return { [key]: false, reason: 'skin_test_too_close', message: `Not then: their skin test is less than ${SKIN_TEST_HOURS} hours before. The colour can be from ${spokenDate(e.date)} at ${spokenTime(e.time)}; offer a time from then with check_availability. ${say}` };
+  }
+  return {
+    [key]: false, reason: 'skin_test_needed',
+    message: `Colour needs a skin test here first, at least ${SKIN_TEST_HOURS} hours before${bb.skin_test === 'every_time' ? ', every time' : ''}. Book the skin test now (service "Skin test": 10 minutes, free), then the colour at least ${SKIN_TEST_HOURS} hours after it. ${say}`,
+  };
+}
+
+/** Their barber off today, on a booking they asked about: another barber today or another day, never why. */
+export async function offTodayNote(ctx: ToolContext, found: Booking[]): Promise<string | undefined> {
+  const shop = await shopToday(ctx);
+  if (!shop?.off.length) return undefined;
+  const tz = ctx.tenant.profile.timezone;
+  const hit = found.find((b) => toLocal(b.starts_at, tz).date === shop.date && shop.off.includes(b.resource_key));
+  if (!hit) return undefined;
+  const who = ctx.tenant.profile.booking?.resources.find((r) => r.key === hit.resource_key)?.label ?? 'Their barber';
+  return `${who} is off today, so ${hit.reference} needs a new time. Say ${who}'s off today, never why, and offer another barber today (check_availability) or ${who} another day; change it with modify_booking on yes.`;
+}
+
+const servicesSaid = (t: Tenant) => (t.profile.booking?.services ?? []).map((s) => s.label).join(', ');
+const barbersSaid = (t: Tenant) => (t.profile.booking?.resources ?? []).filter((r) => r.kind === 'staff').map((r) => r.label).join(', ');
+
+/** A barber's tools for the shop floor (presets/barber.md §4.3, M2): the wait now, the waiting list, running late. */
+export const BARBER_TOOLS: Record<string, Tool> = {
+  get_wait_now: {
+    when: (t) => Boolean(t.profile.barber?.walk_ins),
+    decl: {
+      name: 'get_wait_now',
+      description: "The walk-in wait right now, by barber, for a service: who could start it soonest, after whoever is in the chair and the walk-ins already waiting. Today only. An estimate: only a booking holds a chair.",
+      parameters: obj({ service: S('e.g. "skin fade"; leave out for a classic cut'), staff: S('A barber, if they asked for one') }),
+    },
+    async handler(args, ctx) {
+      const p = ctx.tenant.profile;
+      const now = ctx.now();
+      const local = toLocal(now, p.timezone);
+      const shop = (await shopToday(ctx))!;
+      const service = str(args.service) ? findService(p, str(args.service)) : p.booking?.services.find((s) => s.key !== SKIN_TEST_KEY);
+      if (!service) return { message: `Not on our price list. Services: ${servicesSaid(ctx.tenant)}.` };
+      const named = barberNamed(ctx.tenant, str(args.staff));
+      if (str(args.staff) && !named) return { reason: 'unknown_staff', message: `There's no ${str(args.staff)} here. Barbers: ${barbersSaid(ctx.tenant)}.` };
+      const off = offToday(ctx, shop, named?.label, local.date, 'available');
+      if (off) return off;
+      const queue = await ctx.repo.listWaitingWalkIns(ctx.tenant.id);
+      const all = waitNow({ profile: p, now, date: local.date, nowMinutes: minutesOf(local.time), serviceKey: service.key, existing: await ctx.repo.busyForDate(ctx.tenant, local.date), queue, today: shop });
+      const mine = named ? all.filter((x) => x.resource_key === named.key) : all;
+      if (!mine.length) {
+        return { service: service.label, free_today: false, message: `${named ? `${named.label} has` : 'There is'} no chair free for a walk-in for the rest of today.`, next: 'Offer to book another day with check_availability.' };
+      }
+      const first = mine[0];
+      return {
+        service: service.label, waiting_now: queue.length,
+        soonest: mine.slice(0, 3).map((x) => ({ with: x.with, from: spokenTime(x.free_at), minutes: x.minutes })),
+        ...(shop.notice ? { notice: shop.notice } : {}),
+        next: `Say ${first.minutes ? `it's about ${first.minutes} minutes, with ${first.with}` : `${first.with} is free now`}, as an estimate, and that only a booking holds a chair. Offer to book that time (check_availability, then create_booking).`,
+      };
+    },
+  },
+
+  join_waiting_list: {
+    when: (t) => Boolean(t.profile.barber),
+    decl: {
+      name: 'join_waiting_list',
+      description: "Put the caller on a day's waiting list for a cancellation, when no time that day suits them (after check_availability). Not a booking: if a slot comes up they get a text, and the first to call gets it.",
+      parameters: obj(
+        { date: S('YYYY-MM-DD'), service: S('The service they want'), staff: S('A barber, or leave out for any'), name: S("Caller's name"), phone: S('Only if not the calling number') },
+        ['date', 'service', 'name'],
+      ),
+    },
+    async handler(args, ctx) {
+      const p = ctx.tenant.profile;
+      const today = toLocal(ctx.now(), p.timezone).date;
+      const date = str(args.date) ?? '';
+      const horizon = p.booking?.services[0]?.horizon_days ?? 28;
+      if (!isIsoDate(date) || date < today || date > addDays(today, horizon)) return { added: false, message: `A day from today to ${horizon} days ahead, as YYYY-MM-DD.` };
+      const service = findService(p, str(args.service));
+      if (!service) return { added: false, message: `Not on our price list. Services: ${servicesSaid(ctx.tenant)}.` };
+      const named = barberNamed(ctx.tenant, str(args.staff));
+      if (str(args.staff) && !named && !/^any/i.test(str(args.staff)!)) return { added: false, message: `There's no ${str(args.staff)} here. Barbers: ${barbersSaid(ctx.tenant)}.` };
+      const name = realName(args.name);
+      if (!name) return { added: false, message: ASK_NAME };
+      const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+      if (!phone) return { added: false, message: 'A mobile number is needed, for the text if a slot comes up. Ask for it, digit by digit.' };
+      const already = (await ctx.repo.listWaitlist(ctx.tenant.id, date)).find((e) => e.date === date && e.phone === phone && e.service_key === service.key);
+      const who = named ? ` with ${named.label}` : ', any barber';
+      if (!already) {
+        await ctx.repo.addToWaitlist(ctx.tenant.id, { date, service_key: service.key, resource_key: named?.key ?? null, name, phone, source: ctx.channel, call_id: ctx.callId });
+        ctx.action({ kind: 'note', title: 'Waiting list', detail: `${name} · ${service.label} · ${spokenDate(date)}${who}` });
+      }
+      return {
+        added: true, spoken_date: spokenDate(date),
+        message: `On the waiting list for ${spokenDate(date)}, ${service.label.toLowerCase()}${who}. Tell them it isn't a booking: if a slot comes up they'll get a text, and the first to call gets it.`,
+      };
+    },
+  },
+
+  running_late: {
+    when: (t) => Boolean(t.profile.barber),
+    decl: {
+      name: 'running_late',
+      description: "A caller running late for today's booking: notes it for the barber and says whether the booking is kept. Find the booking first (find_bookings).",
+      parameters: obj({ reference: S('Booking reference'), minutes: I('How many minutes late'), note: S('Anything for the barber') }, ['reference', 'minutes']),
+    },
+    async handler(args, ctx) {
+      const p = ctx.tenant.profile;
+      const now = ctx.now();
+      const b = await ctx.repo.getBookingByReference(ctx.tenant.id, (str(args.reference) ?? '').replace(/[^a-z0-9]/gi, '').toUpperCase());
+      const date = b ? toLocal(b.starts_at, p.timezone).date : '';
+      if (!b || b.status !== 'confirmed' || date !== toLocal(now, p.timezone).date || b.ends_at <= now) {
+        return { noted: false, message: "No booking today with that reference. Find theirs with find_bookings; if it's another day, they aren't late." };
+      }
+      const minutes = Math.min(180, Math.max(0, int(args.minutes) ?? 0));
+      if (!minutes) return { noted: false, message: 'Ask how many minutes late they think they will be.' };
+      const grace = p.barber!.late_grace_minutes;
+      const barber = p.booking?.resources.find((r) => r.key === b.resource_key)?.label ?? 'the barber';
+      const what = findService(p, b.service_key)?.label.toLowerCase() ?? 'appointment';
+      const length = b.ends_at.getTime() - b.starts_at.getTime();
+      const next = (await ctx.repo.busyForDate(ctx.tenant, date))
+        .filter((x) => x.resource_key === b.resource_key && x.id !== b.id && x.starts_at >= b.ends_at)
+        .sort((x, y) => x.starts_at.getTime() - y.starts_at.getTime())[0];
+      const fits = !next || b.starts_at.getTime() + minutes * 60000 + length <= next.starts_at.getTime();
+      await ctx.repo.mergeBookingDetails(ctx.tenant.id, b.reference, { late: { minutes, note: str(args.note) ?? '', at: now.toISOString() } }, `Running ${minutes} minutes late`, 'receptionist', now);
+      ctx.action({ kind: 'booking_changed', title: 'Running late', detail: `${b.name} · ${minutes} minutes late · ${barber} · ref ${b.reference}` });
+      const message = minutes <= grace
+        ? `Kept: within the shop's ${grace} minutes. Tell them that's fine, and ${barber} knows.`
+        : fits
+          ? `Kept: later than the shop's ${grace} minutes, but ${barber} has no one straight after, so the full ${what} still fits. Tell them ${barber} knows.`
+          : `Later than the shop's ${grace} minutes, and ${barber} has someone at ${spokenTime(toLocal(next!.starts_at, p.timezone).time)}, so ${barber} may only fit a shorter ${what}. Say so plainly and offer the next free time today instead (check_availability; modify_booking on yes). Never cancel it or charge them on the phone.`;
+      return { noted: true, kept: minutes <= grace || fits, minutes, message };
+    },
+  },
+};
