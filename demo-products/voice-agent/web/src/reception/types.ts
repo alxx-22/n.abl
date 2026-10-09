@@ -151,6 +151,9 @@ export interface LiveShopFloor {
   }[];
 }
 
+export type LiveWalkIn = LiveShopFloor['queue'][number];
+export type LiveWaitlistEntry = LiveShopFloor['waitlist'][number];
+
 /** An estate agency's home in the back office: its facts joined with what staff changed (src/server/state.ts). */
 export interface LiveListing {
   key: string;

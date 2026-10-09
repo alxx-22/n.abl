@@ -48,7 +48,9 @@ export function barberWorkspace(profile: TenantProfile): WorkspaceSpec {
   return {
     views: [
       { id: 'timeline', label: 'Diary', of: 'staff' },
-      // The shop floor's queue, today and waitlist (M2) come with ui's screens: the web registry test needs both.
+      { id: 'queue', label: 'Queue' },
+      { id: 'today', label: 'Today' },
+      { id: 'waitlist', label: 'Waiting list' },
       { id: 'messages', label: 'Messages' },
       { id: 'calls', label: 'Calls' },
     ],

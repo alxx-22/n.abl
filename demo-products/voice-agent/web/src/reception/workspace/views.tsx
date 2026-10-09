@@ -24,9 +24,12 @@ import { OrderBoard } from './OrderBoard.tsx';
 import { Drivers } from './Drivers.tsx';
 import { MenuTonight } from './MenuTonight.tsx';
 import { Properties } from './Properties.tsx';
+import { Queue } from './Queue.tsx';
 import type { Shows, WorkspaceSpec } from './spec.ts';
 import { StaffDiary } from './StaffDiary.tsx';
 import { Timeline } from './Timeline.tsx';
+import { TodayOff } from './TodayOff.tsx';
+import { Waitlist } from './Waitlist.tsx';
 
 export type ViewId = WorkspaceSpec['views'][number]['id'];
 
@@ -144,6 +147,20 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
     shows: null,
     count: (s) => s.tonight?.sold_out.length ?? 0,
     render: (p) => <MenuTonight id={p.id} state={p.state} onDone={p.refresh} />,
+  },
+  // A barber's (presets/barber.md §6): the number in the tab is who's waiting.
+  queue: {
+    shows: null,
+    count: (s) => s.barber?.queue.length ?? 0,
+    render: (p) => <Queue id={p.id} state={p.state} nowMs={p.clock} nowMinute={p.nowMinute} onDone={p.refresh} />,
+  },
+  today: {
+    shows: null,
+    render: (p) => <TodayOff id={p.id} state={p.state} nowMinute={p.nowMinute} onDone={p.refresh} />,
+  },
+  waitlist: {
+    shows: null,
+    render: (p) => <Waitlist id={p.id} state={p.state} today={p.today} onDone={p.refresh} />,
   },
   messages: {
     shows: null,

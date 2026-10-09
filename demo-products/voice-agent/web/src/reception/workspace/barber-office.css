@@ -1,0 +1,108 @@
+/* ── The barber's back office: the queue, today, the waiting list, the Diary's marks ──
+   Read between customers, often on a tablet by the till, so each is a short
+   list of slim rows with the actions at the end, as in the repairs and estate
+   agent's lists. reception.css loads after this file, so a rule here that
+   changes one of its rules is the more specific. Colours come only from the
+   page's variables: a business's page can be light or dark. */
+
+.bb-view { display: grid; gap: 10px; align-content: start; max-width: 880px; }
+.bb-h { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 13px; font-weight: 600; color: var(--heading); }
+.bb-h .count { font: 500 12px/1 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.bb-h .muted { font-weight: 400; }
+.bb-view .badge { font-size: 12px; padding: 0 6px; letter-spacing: 0.04em; }
+.bb-view .hint { max-width: 64ch; }
+
+/* ── Rows ─────────────────────────────────────────────────────────────── */
+.bb-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.bb-list > li { padding: 5px 8px; border-bottom: 1px solid var(--line); font-size: 13px; line-height: 1.35; }
+.bb-list > li:nth-child(even) { background: rgba(var(--cream-rgb), 0.025); }
+.bb-who, .bb-what { display: grid; min-width: 0; }
+.bb-who > *, .bb-what > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bb-view b { color: var(--heading); }
+.bb-acts { display: flex; gap: 4px; align-items: center; justify-content: flex-end; }
+.bb-acts button.small { padding: 2px 9px; font-size: 12px; white-space: nowrap; }
+/* A set width, so the rows' columns line up whoever is in each list. */
+.bb-acts select { width: 10rem; padding: 3px 1.9rem 3px 8px; font-size: 12px; background-position: right 0.6rem center; }
+
+/* ── Queue: the wait now, a slim card a barber, then who's waiting ───── */
+.bb-wait { display: grid; gap: 6px; }
+/* A card a barber: the name and how long, then when. */
+.bb-wait-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.bb-wait-list li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 8px; row-gap: 1px; padding: 4px 9px 5px; min-width: 0; font-size: 12.5px; line-height: 1.35;
+  border: 1px solid var(--line); border-left: 3px solid var(--line-strong); border-radius: 8px; background: var(--surface-2);
+}
+.bb-wait-list li.free { border-left-color: var(--ok); }
+.bb-wait-list li.full { border-left-color: var(--line); background: transparent; }
+.bb-wait-list li.full b { color: var(--muted); }
+.bb-wait-list b { min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bb-wait-when { grid-column: 1 / -1; color: var(--muted); white-space: nowrap; }
+.bb-wait-list li.free .bb-wait-when { color: var(--ok); font-weight: 600; }
+.bb-mins { font: 600 13px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--heading); white-space: nowrap; }
+.bb-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.bb-head button.small { padding: 3px 12px; font-size: 13px; }
+
+.bb-walkin { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr) minmax(0, 1fr) 4.6rem auto; grid-template-areas: 'place who what waited acts'; column-gap: 10px; align-items: center; }
+.bb-place { grid-area: place; font: 500 12px/1 var(--font-mono); color: var(--dim); text-align: right; }
+.bb-walkin .bb-who { grid-area: who; }
+.bb-walkin .bb-what { grid-area: what; }
+.bb-walkin .bb-acts { grid-area: acts; }
+.bb-waited { grid-area: waited; font: 600 13px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--heading); text-align: right; white-space: nowrap; }
+/* Half an hour is when a walk-in starts to wonder: say so before they do. */
+.bb-waited.long { color: var(--warn-pale); }
+.bb-form { display: grid; gap: 12px; }
+.bb-form .row-tools { margin-top: 2px; }
+.bb-form .bb-err { color: var(--danger); }
+
+/* ── Today: In or Off today a barber, then the notice ────────────────── */
+.bb-today section { display: grid; gap: 6px; }
+.bb-team > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 6px; align-items: center; }
+.bb-team .bb-who { grid-auto-flow: column; justify-content: start; align-items: center; gap: 10px; }
+.bb-team > li.off .bb-who b { text-decoration: line-through; text-decoration-color: var(--dim); }
+.bb-who > .bb-flag { white-space: normal; color: var(--danger); font-size: 12.5px; font-weight: 600; }
+.bb-team > li.rota-off { color: var(--dim); }
+.bb-switch { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line-strong); border-radius: var(--r-full); }
+.bb-switch button.small { padding: 2px 12px; font-size: 12px; border: 0; border-radius: var(--r-full); box-shadow: none; }
+.bb-switch button[aria-pressed='false'] { background: transparent; color: var(--muted); }
+.bb-switch button[aria-pressed='true']:last-child { background: var(--danger-ground); color: var(--on-danger-ground); }
+.bb-switch button:disabled { opacity: 1; cursor: progress; }
+.bb-confirm { grid-column: 1 / -1; display: grid; gap: 6px; padding: 6px 10px; border-left: 3px solid var(--warn); border-radius: 4px; background: rgba(var(--warn-rgb), 0.08); }
+.bb-confirm p { margin: 0; max-width: 70ch; }
+.bb-confirm .row-tools { gap: 6px; }
+.bb-notice { display: grid; gap: 6px; max-width: 640px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.bb-notice.on { border-color: rgba(var(--accent-rgb), 0.6); box-shadow: inset 3px 0 0 var(--accent); }
+.bb-notice textarea { min-height: 0; padding: 6px 10px; font: inherit; font-size: 13px; resize: vertical; }
+.bb-notice .row-tools { gap: 6px; }
+
+/* ── Waiting list: a day at a time ────────────────────────────────────── */
+.bb-waitlist section { display: grid; gap: 4px; margin-top: 4px; }
+.bb-wl-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 7.6rem 4.4rem 4.6rem; grid-template-areas: 'what who added texted acts'; column-gap: 12px; align-items: center; }
+.bb-wl-row .bb-what { grid-area: what; }
+.bb-wl-row .bb-who { grid-area: who; }
+.bb-added { grid-area: added; white-space: nowrap; }
+.bb-texted { grid-area: texted; display: flex; }
+.bb-wl-row .bb-acts { grid-area: acts; }
+
+/* ── The Diary's marks: off today, running late, needs a new time ─────── */
+.tl-offmark { display: block; color: var(--danger); font-weight: 600; }
+.diary .tl-row .tl-bar.late { background: color-mix(in srgb, var(--warn) 26%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--warn); border-color: rgba(var(--warn-rgb), 0.7); }
+.diary .tl-row .tl-bar.needs-new-time { box-shadow: inset 3px 0 0 var(--danger); outline: 2px dashed var(--danger); outline-offset: -2px; }
+
+/* The same marks in words above the grid: a line each, the late ones open the booking. */
+.tl-flags { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; font-size: 12.5px; line-height: 1.4; }
+.tl-flags li { padding: 3px 9px; border-left: 3px solid var(--warn); border-radius: 4px; background: rgba(var(--warn-rgb), 0.08); }
+.tl-flags li.new-time { border-left-color: var(--danger); background: var(--danger-soft); }
+.tl-flags b { color: var(--heading); }
+.tl-flags .linkish { color: var(--cream); text-decoration-color: var(--dim); }
+
+/* ── A phone: rows stack, the actions on their own line ───────────────── */
+@media (max-width: 640px) {
+  .bb-wait-list { grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); }
+  .bb-list > li { padding: 8px 6px; }
+  .bb-walkin { grid-template-columns: 1.2rem minmax(0, 1fr) auto; grid-template-areas: 'place who waited' '. what what' '. acts acts'; row-gap: 4px; }
+  .bb-walkin .bb-acts, .bb-wl-row .bb-acts { justify-content: flex-start; flex-wrap: wrap; }
+  .bb-walkin .bb-acts select { flex: 1 1 8rem; width: auto; }
+  .bb-wl-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'what acts' 'who texted' 'added texted'; row-gap: 2px; }
+  .bb-texted { justify-content: flex-end; }
+  .bb-team .bb-who { grid-auto-flow: row; gap: 2px; }
+}

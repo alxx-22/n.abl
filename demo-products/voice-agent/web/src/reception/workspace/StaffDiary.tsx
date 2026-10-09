@@ -58,11 +58,34 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onM
   const hours: number[] = [];
   for (let h = Math.ceil(lo / 60) * 60; h <= hi; h += 60) hours.push(h);
   const wd = weekday(view.date);
+  // A barber's: whoever the shop marked off today, in Today, and the day's marks said in words above the
+  // grid, since a half-hour bar has no room for them.
+  const offToday = state.barber?.today.date === view.date ? state.barber.today.off : [];
+  const late = day.filter((b) => b.late && b.visit_status === 'expected');
+  const moving = team.flatMap((s) => {
+    const n = day.filter((b) => b.resource_key === s.key && b.needs_new_time).length;
+    return n ? [{ s, n }] : [];
+  });
 
   if (!team.length) return <p className="empty">No one in the team takes bookings. Add people in the setup’s “Your team”.</p>;
   return (
     <div className="timeline diary">
       <DayPicker state={state} today={today} view={view} setView={setView} />
+      {late.length || moving.length ? (
+        <ul className="tl-flags" aria-label="To sort out">
+          {moving.map(({ s, n }) => (
+            <li key={s.key} className="new-time">
+              <b>Needs a new time:</b> {n === 1 ? 'one booking' : `${n} bookings`} with {s.first_name}, who is off today. Drag each to another barber, or open it to cancel.
+            </li>
+          ))}
+          {late.map((b) => (
+            <li key={b.reference} className="late">
+              <button type="button" className="linkish" onClick={() => onOpen(b)}><b>Running late +{b.late!.minutes} min:</b> {b.time} {b.name} with {b.with}</button>
+              {b.late!.note ? <span className="muted"> · “{b.late!.note}”</span> : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <div className="tl-grid" style={{ '--rows': team.length } as React.CSSProperties}>
         <div className="tl-head">
           <span />
@@ -71,27 +94,34 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onM
           </div>
         </div>
         {team.map((s) => {
-          const off = !s.days.includes(wd);
+          const away = offToday.includes(s.key);
+          const off = away || !s.days.includes(wd);
           return (
             <div key={s.key} className={`tl-row ${off ? 'walk-in' : ''} ${drag?.moved && drag.ok.includes(s.key) ? 'can-drop' : ''} ${drag?.row === s.key ? 'drop' : ''}`} data-row={s.key}>
               <span className="tl-label">
                 {s.first_name} <span className="muted">{ROLE[s.role] ?? ''}</span>
+                {away ? <span className="tl-offmark">Off today</span> : null}
               </span>
               <div className="tl-track">
-                {off ? <span className="tl-walkin">Day off</span> : <span className="tl-open" style={{ left: pct(lo + 30), width: `calc(${pct(hi - 30)} - ${pct(lo + 30)})` }} />}
+                {away ? null : off ? <span className="tl-walkin">Day off</span> : <span className="tl-open" style={{ left: pct(lo + 30), width: `calc(${pct(hi - 30)} - ${pct(lo + 30)})` }} />}
                 {day.filter((b) => b.resource_key === s.key).map((b) => {
                   const [st, en] = span(b);
                   const k = kindOf(b);
                   const badges = (b.details?.badges as string[] | undefined) ?? [];
+                  const marks = [
+                    b.late ? `Running late +${b.late.minutes} min${b.late.note ? `: ${b.late.note}` : ''}` : '',
+                    b.needs_new_time ? `Needs a new time: ${s.first_name} is off today` : '',
+                  ].filter(Boolean);
                   return (
                     <button
-                      type="button" key={b.reference} className={`tl-bar ${b.visit_status} ${k.cls} ${drag?.ref === b.reference ? 'lifted' : ''}`}
+                      type="button" key={b.reference} className={`tl-bar ${b.visit_status} ${k.cls} ${b.late ? 'late' : ''} ${b.needs_new_time ? 'needs-new-time' : ''} ${drag?.ref === b.reference ? 'lifted' : ''}`}
                       style={{ left: pct(st), width: `calc(${pct(en)} - ${pct(st)} - 2px)` }}
                       onPointerDown={(e) => down(e, b)} onPointerMove={move} onPointerUp={(e) => up(e, b)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(b); } }}
-                      title={`${b.time}–${b.end_time} · ${k.label}${b.home ? ` of ${b.home}` : ''} · ${b.name}${badges.length ? ` · ${badges.join(', ')}` : ''}`}
+                      title={`${b.time}–${b.end_time} · ${k.label}${b.home ? ` of ${b.home}` : ''} · ${b.name}${badges.length ? ` · ${badges.join(', ')}` : ''}${marks.map((m) => ` · ${m}`).join('')}`}
                     >
                       <b>{b.time}</b> {b.home ?? k.label} · {b.name}
+                      {marks.length ? <span className="visually-hidden">. {marks.join('. ')}</span> : null}
                     </button>
                   );
                 })}
