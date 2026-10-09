@@ -59,7 +59,7 @@ export interface SeatingAnswer {
 }
 
 export interface DepositAnswer {
-  mode: 'none' | 'per_person' | 'per_booking' | 'card_hold';
+  mode: 'none' | 'per_person' | 'per_booking';
   amount_pence: number;
   min_party: number;
 }

@@ -380,3 +380,15 @@ test("restaurant builder: a half-filled question survives autosave, is warned ab
   assert.ok(p.knowledge.some((k) => k.q === 'Is there a kids menu?'));
   assert.ok(!p.knowledge.some((k) => k.q === 'Do you do bottomless brunch?'), 'an unanswered question is never given to callers');
 });
+
+test('restaurant: no deposit mode promises a card that is never taken', () => {
+  // The review: "Card details to secure" compiled to no deposit, yet the policy told callers a card holds larger bookings.
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  (a.money.deposit as { mode: string }).mode = 'card_hold';
+  const s = sanitiseRestaurant(a);
+  assert.equal(s.money.deposit.mode, 'none', 'a saved card hold reads as no deposit');
+  const p = compileRestaurant(s, { slug: 'no-card-hold' });
+  assert.equal(p.policies?.deposit, undefined);
+  assert.ok(!JSON.stringify(p).includes('card details'), 'nothing promises to take card details');
+});

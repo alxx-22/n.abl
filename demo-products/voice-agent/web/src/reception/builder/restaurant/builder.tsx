@@ -95,7 +95,7 @@ export const restaurantBuilder: BuilderDef<RestaurantAnswers, RestaurantStep> = 
         ['Serving', [a.serve.reservations && 'table bookings', a.serve.walk_ins && 'walk-ins', a.serve.collection.enabled && 'click and collect', a.serve.delivery.enabled && 'delivery'].filter(Boolean).join(', ') || 'questions only'],
         ...(a.serve.reservations ? [['Seating', <>{a.seating.areas.map((x) => x.label).join(', ')}: {tables.length} tables, {tables.reduce((n, t) => n + t.seats, 0)} covers</>] as [string, ReactNode]] : []),
         ['Menu', <>{(ws.preview as unknown as RestaurantPreview | null)?.dishes ?? 0} dishes in {a.menu.categories.length} sections</>],
-        ['Deposits', dep.mode === 'none' ? 'none' : dep.mode === 'card_hold' ? 'card to secure' : `£${(dep.amount_pence / 100).toFixed(2)} ${dep.mode === 'per_person' ? 'a head' : 'a booking'} for ${dep.min_party}+`],
+        ['Deposits', dep.mode === 'none' ? 'none' : `£${(dep.amount_pence / 100).toFixed(2)} ${dep.mode === 'per_person' ? 'a head' : 'a booking'} for ${dep.min_party}+`],
         ['Questions', <>{a.policies.faqs.length} of your own, plus the policies</>],
       ];
     },

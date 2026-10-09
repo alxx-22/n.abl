@@ -147,7 +147,6 @@ export function StepMoney({ a, set }: Props) {
           { value: 'none', label: 'No deposits' },
           { value: 'per_person', label: 'A deposit per person', hint: 'for larger groups' },
           { value: 'per_booking', label: 'A deposit per booking', hint: 'for larger groups' },
-          { value: 'card_hold', label: 'Card details to secure, no charge' },
         ]}
         onChange={(v) => set((d) => void (d.money.deposit.mode = v))}
       />

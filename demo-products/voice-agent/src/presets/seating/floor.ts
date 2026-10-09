@@ -47,7 +47,8 @@ export function sanitiseSeating(v: unknown, d: SeatingAnswer): SeatingAnswer {
 export function sanitiseDeposit(v: unknown, d: DepositAnswer): DepositAnswer {
   const x = (v ?? {}) as any;
   return {
-    mode: oneOf(x.mode, ['none', 'per_person', 'per_booking', 'card_hold'] as const, d.mode),
+    // "Card details to secure" was offered but no card was ever taken, though the policy said one would be: a saved one reads as none.
+    mode: x.mode === 'card_hold' ? 'none' : oneOf(x.mode, ['none', 'per_person', 'per_booking'] as const, d.mode),
     amount_pence: int(x.amount_pence, 0, 50000, d.amount_pence),
     min_party: int(x.min_party, 1, 60, d.min_party),
   };
@@ -95,7 +96,6 @@ export function compileBooking(s: SeatingAnswer, opts: { reservations: boolean; 
 export function depositSentence(d: DepositAnswer): string | null {
   if (d.mode === 'per_person') return `Tables of ${d.min_party} or more pay a ${pounds(d.amount_pence)} a head deposit when booking, taken off the bill on the night.`;
   if (d.mode === 'per_booking') return `Bookings for ${d.min_party} or more pay a ${pounds(d.amount_pence)} deposit when booking, taken off the bill on the night.`;
-  if (d.mode === 'card_hold') return 'We take card details to hold larger bookings; nothing is charged unless it is a no-show.';
   return null;
 }
 
@@ -142,5 +142,5 @@ export function validateSeating<S extends string, F extends string>(s: SeatingAn
 }
 
 export function validateDeposit<K extends string>(d: DepositAnswer, step: K): Issue<K>[] {
-  return d.mode !== 'none' && d.mode !== 'card_hold' && d.amount_pence <= 0 ? [{ step, level: 'error', message: 'Set the deposit amount.' }] : [];
+  return d.mode !== 'none' && d.amount_pence <= 0 ? [{ step, level: 'error', message: 'Set the deposit amount.' }] : [];
 }
