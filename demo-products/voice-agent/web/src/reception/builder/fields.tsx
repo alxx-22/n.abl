@@ -200,9 +200,11 @@ export function Folds<T>(props: {
   /** Short words for the row's state ("Needs a mobile"), shown in the closed row. */
   issue?: (item: T, index: number) => string | null;
   label: string;
+  /** The item open on arrival, where a step of closed rows would hide how an item is edited (the menu's first section). */
+  initial?: string;
 }) {
   const keys = props.items.map(props.keyOf);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(props.initial ?? null);
   const [seen, setSeen] = useState(keys);
   // An item added since the last render opens, so its empty boxes are in view.
   useEffect(() => {

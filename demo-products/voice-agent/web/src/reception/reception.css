@@ -183,7 +183,6 @@ textarea.prose { font-family: var(--font); font-size: 14px; min-height: 0; resiz
 
 .draft-box h3 { font-size: 1rem; }
 .draft-box .field-row select { width: auto; }
-.menu-cat { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; }
 .cat-head { display: flex; gap: 10px; align-items: center; }
 .cat-name { font-weight: 700; max-width: 280px; }
 .dishes { display: grid; gap: 8px; }
