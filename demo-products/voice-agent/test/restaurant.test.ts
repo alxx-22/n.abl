@@ -392,3 +392,15 @@ test('restaurant: no deposit mode promises a card that is never taken', () => {
   assert.equal(p.policies?.deposit, undefined);
   assert.ok(!JSON.stringify(p).includes('card details'), 'nothing promises to take card details');
 });
+
+test('restaurant seed: on a closure day the Kitchen has no orders, as the diary has no bookings', () => {
+  // The review: a private event on Friday, and Start still filled the Kitchen with ten orders due from 7:35pm.
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  a.hours.closures = [{ date: '2026-10-09', note: 'Private event' }];
+  const plan = planRestaurantSeed(compileRestaurant(a, { slug: 'closed-today' }), new Date('2026-10-09T17:00:00Z'), 7);
+  assert.equal(plan.bookings.filter((b) => b.starts_at.toISOString().startsWith('2026-10-09')).length, 0);
+  assert.deepEqual(plan.orders, []);
+  // The next day is open, and Start that day has orders as usual.
+  assert.ok(planRestaurantSeed(compileRestaurant(a, { slug: 'open-next' }), new Date('2026-10-10T17:00:00Z'), 7).orders.length > 0);
+});

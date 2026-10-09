@@ -12,6 +12,8 @@ export function planOrders(profile: TenantProfile, now: Date, random: () => numb
   const tz = profile.timezone;
   const today = toLocal(now, tz).date;
   const orders: SeedOrder[] = [];
+  // Closed today (a private event): no orders, as the diary has no bookings. Only the draws after this one move, on that day alone.
+  if (profile.closures?.some((c) => c.date === today)) return orders;
   const o = profile.ordering;
   const items = (profile.menu?.categories ?? []).flatMap((c) => c.items).filter((i) => i.available !== false && i.price_pence > 0);
   if (o?.collection && items.length) {
