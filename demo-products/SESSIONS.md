@@ -30,7 +30,7 @@ when written (the last is `voice_0012`).
 | Session | Where | Working on | Owns (others ask first) | Since |
 |---|---|---|---|---|
 | **cloud** | Claude Code on the web (Alex's account) | **The hair salon**: use cases and spec written (`presets/salon-use-cases.md`, `presets/salon.md`), its decisions with Alex. Now: the 18 repairs and estate agent findings in `REVIEW-FINDINGS.md`, most serious first. Then the salon's build on the barber's M1 | `src/presets/salon/` and `web/src/reception/builder/salon/` (to come), the `hs-` scenarios; the repairs and estate agent call tools (`maintenance-tools.ts`, `estate-tools.ts`) | 8 October, evening |
-| **ui** | another account (Alex's "UI/UX" agent; the "third session" in `HANDOFF.md`) | Colours, layout and little scrolling across the demo (done 8 October: website colours on every page, the workspace fitting the window, the long screens compacted). **9 October**, while cloud and windows were out of usage: cloud's last 3 estate findings, the barber's M1 live check, the restaurant's 10 findings (all 28 review findings now done), and a walkthrough of every preset (all pass). Stopped; see the 9 Oct message below. Next, if Alex wants: the restaurant's menu step, still waiting on windows' answer | `web/src/reception/brand.ts`, `builder/fields.tsx` (`Folds`), the page layout in `reception.css`; the repairs back office (`workspace/{Jobs,Dispatch,Compliance,SafetyLog,Clients,Money}.tsx`, `RepairsKit.tsx`, `repairs-office.css`, the engineer's job sheet in `Phone.tsx`); `estate-office.css` | 9 October, 03:10 |
+| **ui** | another account (Alex's "UI/UX" agent; the "third session" in `HANDOFF.md`) | **9 October, from 13:25**: a responsive pass over every screen of every preset, for Alex: designed for a Windows desktop or laptop first, comfortable on tablets and phones, with named size bands and a ribbon on smaller screens. Layout and CSS only, plus small markup where a screen needs a ribbon. Earlier (8 and 9 October): website colours on every page, the workspace fitting the window, the long screens compacted, all 28 review findings, a walkthrough of every preset | `web/src/reception/brand.ts`, `builder/fields.tsx` (`Folds`), the page layout in `reception.css`; the repairs back office (`workspace/{Jobs,Dispatch,Compliance,SafetyLog,Clients,Money}.tsx`, `RepairsKit.tsx`, `repairs-office.css`, the engineer's job sheet in `Phone.tsx`); `estate-office.css` | 9 October, 13:25 |
 | **windows** | Claude Code on Alex's PC | **The barber** (`presets/barber.md`; Alex answered its decisions on 8 October: Nottingham city centre, the other defaults stand); the takeaway (built through M3) | `src/presets/barber/`, `web/src/reception/builder/barber/`, the `bb-` scenarios; `src/presets/takeaway/`, `src/core/kitchen.ts`, the `tk-` scenarios | 7 October |
 
 Built and finished: restaurant, estate agent (M1 to M3), property
@@ -191,3 +191,26 @@ For **windows**:
 Also for both: the restaurant's default phone-booking limit is now 8, what
 its default tables seat (`7ef729b`), and "Card details to secure" is no
 longer offered, as no card was ever taken (`42b0bd7`).
+
+**9 Oct 13:25, ui → cloud, windows.** Alex asked for every screen to be
+Windows size first, and comfortable on tablets and phones too. ui is doing
+a responsive pass over every screen of every preset, from now:
+
+- **Layout and CSS only**, plus small markup where a screen needs a ribbon
+  (a strip of tabs on a tablet or phone). No server, API or saved-answer
+  changes.
+- **Named size bands**, documented at the top of `reception.css`: desktop
+  (1280 and up), laptop (1024 to 1279), tablet (641 to 1023), phone (640
+  and down).
+- **Workspace.tsx** (shared): a small edit for a "Call · Back office ·
+  Phone" ribbon on a tablet or phone, and an "On a call" bar. **Builder**:
+  the steps as a ribbon, the preview behind a button, on a tablet or phone.
+- **Your screens** (the barber's and takeaway's builders and views,
+  `StaffDiary`, `BookingDrawer`): CSS and minimal markup only, keeping
+  props and behaviour. If you'd rather I left one alone, say here and I
+  will.
+- A rerunnable screens check (`npm run screens`, `test-e2e/screens.ts`)
+  screenshots every builder step and workspace tab at nine sizes.
+
+Each step is its own commit with `npm run check` and the walkthrough of
+every preset passing.
