@@ -11,6 +11,8 @@ import { pounds, type BookableService, type Booking, type Tenant } from '../doma
 import { S, smsTo, str } from './tool-kit.ts';
 import type { Args, ToolContext } from './tools.ts';
 
+/** "£5", as said: no pence when there are none. */
+const spokenPounds = (pence: number) => pounds(pence).replace(/\.00$/, '');
 const insideNotice = (ctx: ToolContext, b: Booking) =>
   (b.starts_at.getTime() - ctx.now().getTime()) / 3600000 < (ctx.tenant.profile.barber?.notice_hours ?? 0);
 
@@ -27,9 +29,12 @@ export async function noticeFirst(ctx: ToolContext, reference: string, action: '
   const gate = `notice:${b.reference}:${action}`;
   if (ctx.state.gateAsked.includes(gate)) return null;
   ctx.state.gateAsked.push(gate);
+  const doing = action === 'cancel' ? 'cancel' : 'move it';
+  // Words to say as they are: a live call turned "the deposit is kept" into "you'll keep the deposit", the opposite.
   return {
     [action === 'cancel' ? 'cancelled' : 'changed']: false,
-    message: `Not done yet: it's less than ${bb.notice_hours} hours away, so the ${pounds(b.deposit_pence)} deposit is kept under the shop's policy if they ${action === 'cancel' ? 'cancel' : 'move it'}. Tell them once, plainly: never more than the deposit, never "by law". If they still want to, call ${action === 'cancel' ? 'cancel_booking' : 'modify_booking'} again.`,
+    say: `As it's less than ${bb.notice_hours} hours away, your ${spokenPounds(b.deposit_pence)} deposit is kept by the shop if you ${doing}. Do you still want to ${doing}?`,
+    message: `Not done yet. Say "say" once, as it is: the shop's policy, never more than the deposit, never "by law". If they still want to, call ${action === 'cancel' ? 'cancel_booking' : 'modify_booking'} again.`,
   };
 }
 
@@ -37,8 +42,8 @@ export async function noticeFirst(ctx: ToolContext, reference: string, action: '
 export function depositOnCancel(ctx: ToolContext, b: Booking): string | undefined {
   if (!ctx.tenant.profile.barber || !b.deposit_paid || !b.deposit_pence) return undefined;
   return insideNotice(ctx, b)
-    ? `The ${pounds(b.deposit_pence)} deposit is kept under the shop's policy.`
-    : `The ${pounds(b.deposit_pence)} deposit is refunded (in the demo, no money moves).`;
+    ? `Your ${spokenPounds(b.deposit_pence)} deposit is kept by the shop, under its policy.`
+    : `Your ${spokenPounds(b.deposit_pence)} deposit is refunded (in the demo, no money moves).`;
 }
 
 /** A service's price as said: "from £25.00" when that is where it starts. */

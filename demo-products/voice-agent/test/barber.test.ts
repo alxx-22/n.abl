@@ -94,15 +94,17 @@ test('barber: cancelling or moving inside the notice keeps the deposit, said fir
   assert.ok(ollie && ollie.deposit_paid, 'Ollie has a paid booking in the next day');
   const c = await call(t, BB_PEOPLE.soon.phone);
   const first = await c.run('cancel_booking', { reference: ollie.reference });
-  assert.deepEqual([first.cancelled, first.message], [false, `Not done yet: it's less than 24 hours away, so the £5.00 deposit is kept under the shop's policy if they cancel. Tell them once, plainly: never more than the deposit, never "by law". If they still want to, call cancel_booking again.`]);
+  // A live call turned "the deposit is kept" into "you'll keep the deposit": the words to say now name who keeps it.
+  assert.deepEqual([first.cancelled, first.say], [false, "As it's less than 24 hours away, your £5 deposit is kept by the shop if you cancel. Do you still want to cancel?"]);
+  assert.match(first.message, /^Not done yet\. Say "say" once, as it is: .*never "by law"\. If they still want to, call cancel_booking again\.$/);
   const done = await c.run('cancel_booking', { reference: ollie.reference });
-  assert.deepEqual([done.cancelled, done.deposit], [true, "The £5.00 deposit is kept under the shop's policy."]);
+  assert.deepEqual([done.cancelled, done.deposit], [true, 'Your £5 deposit is kept by the shop, under its policy.']);
   // Jay's, next week: refunded, and moving it is free.
   const jay = (await repo.listBookings(t.id, THURSDAY, new Date(THURSDAY.getTime() + 14 * 86400000), true)).find((b) => b.phone === BB_PEOPLE.regular.phone)!;
   const j = await call(t, BB_PEOPLE.regular.phone);
   const moved = await j.run('modify_booking', { reference: jay.reference, time: '16:00' });
   assert.notEqual(moved.message?.startsWith('Not done yet'), true, 'no notice to give a week ahead');
-  assert.equal((await j.run('cancel_booking', { reference: jay.reference })).deposit, 'The £5.00 deposit is refunded (in the demo, no money moves).');
+  assert.equal((await j.run('cancel_booking', { reference: jay.reference })).deposit, 'Your £5 deposit is refunded (in the demo, no money moves).');
 });
 
 test('barber: one person and one service a booking, the price in the read-back, the deposit by the demo card or in the shop', async () => {
