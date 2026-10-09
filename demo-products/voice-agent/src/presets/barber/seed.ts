@@ -13,8 +13,8 @@ import { SKIN_TEST_KEY } from '../../domain/shop-floor.ts';
 import { BB_PEOPLE } from './personas.ts';
 
 const MIN = 60000;
-/** How full each day is, by weekday (0 = Sunday): Saturday the busiest. */
-const FILL = [0.5, 0, 0.4, 0.4, 0.45, 0.55, 0.75];
+/** The share of each day booked, by weekday (0 = Sunday): Saturday the busiest, about 70% (presets/barber.md §5.3). */
+const FILL = [0.5, 0, 0.4, 0.4, 0.45, 0.55, 0.7];
 
 export function planBarberSeed(profile: TenantProfile, now: Date, seed: number): SeedPlan {
   const random = rng(seed);
@@ -103,9 +103,11 @@ export function planBarberSeed(profile: TenantProfile, now: Date, seed: number):
       const step = mine[0].slot_minutes || 15;
       let t = Math.ceil(h[0] / step) * step;
       while (t < h[1]) {
-        const p = wd === 4 && t >= 17 * 60 ? 0.8 : FILL[wd];
+        const share = wd === 4 && t >= 17 * 60 ? 0.8 : FILL[wd];
         const s = id.pick(mine);
         const minutes = s.duration_minutes ?? 30;
+        // A booking fills its minutes and a miss only one step, so the chance at each step is less than the share wanted.
+        const p = share ? (share * step) / (minutes * (1 - share) + share * step) : 0;
         if (t + minutes > h[1]) break;
         const starts = zonedToUtc(date, timeOf(t), tz);
         const ends = new Date(starts.getTime() + minutes * MIN);
