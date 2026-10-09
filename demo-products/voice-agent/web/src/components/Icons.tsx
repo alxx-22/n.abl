@@ -41,3 +41,10 @@ export const PlayIcon = () => (
     <path d="M8 5l11 7-11 7z" fill="currentColor" />
   </svg>
 );
+
+export const PhoneIcon = ({ size = 20 }: { size?: number }) => (
+  <svg {...base} width={size} height={size}>
+    <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+    <path d="M11 18.5h2" />
+  </svg>
+);

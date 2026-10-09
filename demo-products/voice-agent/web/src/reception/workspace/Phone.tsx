@@ -57,7 +57,7 @@ interface Engineers {
   onDone: () => void;
 }
 
-export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = [], crew, emptyHint }: { id: string; number: string; setNumber: (n: string) => void; sender: string; tick: number; nowLabel: string; callAs?: CallAs[]; crew?: Engineers; emptyHint?: string }) {
+export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = [], crew, emptyHint, onTexts }: { id: string; number: string; setNumber: (n: string) => void; sender: string; tick: number; nowLabel: string; callAs?: CallAs[]; crew?: Engineers; emptyHint?: string; /** How many texts are on the phone, each time it looks. */ onTexts?: (count: number) => void }) {
   const [texts, setTexts] = useState<Text[]>([]);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(number);
@@ -72,6 +72,7 @@ export function Phone({ id, number, setNumber, sender, tick, nowLabel, callAs = 
     demoApi<{ messages: Text[] }>(`/workspaces/${id}/phone?number=${encodeURIComponent(number)}`)
       .then((r) => {
         if (stop) return;
+        onTexts?.(r.messages.length);
         setTexts((prev) => {
           const last = r.messages.at(-1);
           if (last && prev.length && !prev.some((p) => p.id === last.id)) setLastNew(last.id);

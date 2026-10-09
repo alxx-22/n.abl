@@ -33,7 +33,7 @@
 .es-mobile { max-width: 320px; }
 
 /* ── Listings ─────────────────────────────────────────────────────────── */
-@media (min-width: 721px) {
+@media (min-width: 641px) {
   /* The stock box: what to draft on the left, how many and the button on the right. */
   .es-listings .draft-box { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: start; }
   .es-listings .draft-box > h3, .es-listings .draft-box > .hint { grid-column: 1 / -1; margin: 0; }

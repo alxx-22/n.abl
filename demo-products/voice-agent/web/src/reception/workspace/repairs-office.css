@@ -71,7 +71,7 @@
 /* On a laptop the board fills the panel and each column scrolls inside it,
    so the page and the panel stay still. The board is never squeezed below a
    few cards; opening the done list then scrolls the panel instead. */
-@media (min-width: 981px) and (min-height: 600px) {
+@media (min-width: 1024px) and (min-height: 600px) {
   .office-main > .jobs { display: flex; flex-direction: column; align-items: flex-start; height: 100%; }
   .jobs > * { flex: none; }
   .jobs > .jobs-board { flex: 0 1 auto; min-height: 280px; grid-template-rows: minmax(0, 1fr); }

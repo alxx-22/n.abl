@@ -1,6 +1,8 @@
 // The live workspace: ring the receptionist on the left, watch the back
 // office in the middle, and the customer's phone on the right. Everything a
 // call does arrives over the event stream and lands on all three at once.
+// The call and the phone can slide away to give the back office their room
+// (Panes.tsx); on a tablet or phone they open over it as drawers.
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { CALL_AS } from '../../../../src/presets/estate/personas.ts';
@@ -9,7 +11,7 @@ import { normaliseUkPhone } from '../../../../src/domain/phone.ts';
 import { TK_CALL_AS } from '../../../../src/presets/takeaway/personas.ts';
 import { BB_CALL_AS } from '../../../../src/presets/barber/personas.ts';
 import { ApiError, DEMO_API, demoApi } from '../../api.ts';
-import { ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
+import { MicIcon, PhoneIcon, ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
 import { DemoClock } from './DemoClock.tsx';
 import { LivePanel } from '../../components/LivePanel.tsx';
 import { SettingsDialog } from '../../components/SettingsDialog.tsx';
@@ -19,11 +21,13 @@ import { useLiveCall } from '../../live/useLiveCall.ts';
 import { Link } from '../../router.tsx';
 import type { BoardEvent } from '../../types.ts';
 import { R, RxTop, minutesUntil } from '../Reception.tsx';
+import { keepInStrip } from '../bands.ts';
 import { brandStyle } from '../brand.ts';
 import type { LiveBooking, LiveState, Me } from '../types.ts';
 import { BookingDrawer } from './BookingDrawer.tsx';
 import type { View } from './FloorBoard.tsx';
 import { bookingOn, hhmm, keptFor, localNow, servicesOn } from './model.ts';
+import { Bookmark, CallResize, PaneCaret, usePanes } from './Panes.tsx';
 import { Phone, usePhoneNumber } from './Phone.tsx';
 import { fallbackSpec, focusTab, resetConfirm, resetToast, suggestionsFor } from './spec.ts';
 import { viewsOf, type ViewId } from './views.tsx';
@@ -44,6 +48,9 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   const numberRef = useRef(number);
   numberRef.current = number;
   const live = useLiveCall({ workspace: id }, toast, () => numberRef.current);
+  const [texts, setTexts] = useState(-1);
+  const panes = usePanes(live.phase === 'live' || live.phase === 'connecting' || Boolean(stream.call?.live), texts);
+  const tabStrip = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   /** Set when the demo has been deleted (a shared demo's hour is up, or it was replaced). */
   const [gone, setGone] = useState<string | null>(null);
@@ -126,6 +133,9 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   useEffect(() => {
     if (state) document.title = `${state.tenant.name} · your demo · n.abl`;
   }, [state?.tenant.name]);
+
+  // On a phone the tabs scroll sideways: the chosen one stays in view, even when a call chose it.
+  useEffect(() => keepInStrip(tabStrip.current?.querySelector('[aria-selected=true]'), tabStrip.current), [tab, state?.workspace, panes.band]);
 
   if (gone) {
     return (
@@ -233,29 +243,43 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
         <button type="button" onClick={reset} disabled={live.phase !== 'idle'}><ResetIcon /> Reset</button>
       </RxTop>
 
-      <main className="workspace">
-        {/* The call and the phone: either side of the back office on a wide screen, one column on a narrower one. */}
+      <main className={`workspace ${panes.className}`} style={panes.style}>
+        {/* The call and the phone: either side of the back office on a wide screen, one column on a laptop, drawers on a tablet or phone. */}
         <div className="ws-side">
-          <div className="ws-call">
+          <div className="ws-call" id="ws-call" data-open={panes.isOpen('call') || undefined} role={panes.narrow ? 'dialog' : undefined} aria-label={panes.narrow ? 'The call' : undefined}>
+            <PaneCaret panes={panes} pane="call" />
             <LivePanel
               tenant={t} phase={live.phase} model={live.model} latencies={live.latencies} turn={live.turn} call={live.call}
               stream={stream} card={card} onStart={live.start} onStop={live.stop} suggestions={suggestionsFor(spec, state)}
             />
             <p className="hint privacy">Calls go through Google’s Gemini. Use made-up names and details, never a real customer’s.</p>
           </div>
+          <div className="ws-phone" id="ws-phone" data-open={panes.isOpen('phone') || undefined} role={panes.narrow ? 'dialog' : undefined} aria-label={panes.narrow ? "The customer's phone" : undefined}>
+          <div className="pane-head"><PaneCaret panes={panes} pane="phone" /><b>Customer’s phone</b></div>
           <Phone
-            id={id} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)}
+            id={id} onTexts={setTexts} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)}
             callAs={t.business_type === 'estate_agent' ? CALL_AS : t.business_type === 'property_maintenance' ? [...MT_CALL_AS, ...ownCallAs(state)] : t.business_type === 'takeaway' ? TK_CALL_AS : t.business_type === 'barber' ? BB_CALL_AS : []}
             emptyHint={t.business_type === 'takeaway' ? 'No texts yet. Order on the call: the confirmation, and "on its way" when it goes out with a driver, land here.'
               : t.business_type === 'barber' ? 'No texts yet. Book a cut on the call, and the confirmation lands here.' : undefined}
             crew={state.engineers ? { engineers: state.engineers, clients: state.clients ?? [], jobs: state.jobs ?? [], quotes: state.quotes ?? [], today: now.date, onDone: refreshSoon } : undefined}
           />
+          </div>
         </div>
+        <CallResize panes={panes} />
 
-        <section className="ws-office panel" aria-label="Back office">
-          <div className="tabs" role="tablist">
+        <section className="ws-office panel" aria-label="Back office" inert={panes.drawer !== null}>
+          <div className="tabs" role="tablist" ref={tabStrip} onKeyDown={(e) => {
+            // Arrow keys move along the tabs, as in any tab strip.
+            const at = views.findIndex((v) => v.id === current?.id);
+            const to = e.key === 'ArrowRight' ? at + 1 : e.key === 'ArrowLeft' ? at - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? views.length - 1 : null;
+            if (to === null || !views.length) return;
+            e.preventDefault();
+            const v = views[(to + views.length) % views.length];
+            setTab(v.id);
+            (e.currentTarget.children[views.indexOf(v)] as HTMLElement | undefined)?.focus();
+          }}>
             {views.map((v) => (
-              <button type="button" role="tab" key={v.id} aria-selected={current?.id === v.id} onClick={() => setTab(v.id)}>{v.label}</button>
+              <button type="button" role="tab" key={v.id} aria-selected={current?.id === v.id} tabIndex={current?.id === v.id ? 0 : -1} onClick={() => setTab(v.id)}>{v.label}</button>
             ))}
           </div>
           <div className="office-body">
@@ -274,6 +298,9 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
             ) : null}
           </div>
         </section>
+        {panes.drawer ? <div className="ws-scrim" aria-hidden="true" onClick={() => panes.hide(panes.drawer!)} /> : null}
+        <Bookmark panes={panes} pane="call" label="Call" icon={<MicIcon size={18} />} />
+        <Bookmark panes={panes} pane="phone" label="Phone" icon={<PhoneIcon size={18} />} badge={panes.unseen} />
       </main>
 
       <SettingsDialog target={{ workspace: id }} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => refreshSoon()} />

@@ -246,7 +246,7 @@ try {
       for (const tab of tabs) {
         await page.locator('.tabs [role=tab]', { hasText: tab }).first().click();
         // A tab's count ("Kitchen 11") changes from run to run; its name doesn't.
-        const name = slug(tab.replace(/\s*\d+$/, ''));
+        const name = slug(tab.replace(/\d+/g, ''));
         await shoot(size, `ws-${name}`);
         // A booking open beside its view, where the view shows bookings on a timeline.
         const bar = page.locator('.office-main .tl-bar').first();
