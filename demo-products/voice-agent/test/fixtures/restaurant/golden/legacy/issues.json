@@ -1,5 +1,10 @@
 [
  {
+  "step": "seating",
+  "level": "warning",
+  "message": "No table or pair of tables seats 10: parties of 9 or 10 will be offered a callback, as bigger ones are."
+ },
+ {
   "step": "menu",
   "level": "warning",
   "message": "The allergens are examples until you check them."

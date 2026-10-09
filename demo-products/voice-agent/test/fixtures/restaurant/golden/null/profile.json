@@ -150,8 +150,8 @@
       "last": "21:00"
      }
     ],
-    "max_party": 10,
-    "large_party_note": "For more than 10 people, take their name, number, preferred date and time, and say the manager will call back.",
+    "max_party": 8,
+    "large_party_note": "For more than 8 people, take their name, number, preferred date and time, and say the manager will call back.",
     "lead_minutes": 30,
     "horizon_days": 60,
     "deposit": {

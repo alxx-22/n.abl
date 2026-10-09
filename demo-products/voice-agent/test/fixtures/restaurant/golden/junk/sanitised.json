@@ -135,7 +135,7 @@
    "up_to_8": 120,
    "larger": 150
   },
-  "max_party": 10,
+  "max_party": 8,
   "notice_minutes": 30,
   "horizon_days": 60,
   "highchairs": 3,
