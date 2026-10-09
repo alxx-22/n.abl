@@ -81,8 +81,10 @@ export function planTableBookings(profile: TenantProfile, now: Date, random: () 
         // makes the demo look broken.
         const inside = areas.find((a) => a.kind === 'indoor' && a.reservable)?.key;
         const roomFor = (n: number) => (inside && bookable.some((r) => r.area === inside && (r.capacity ?? 0) >= n && (r.min ?? 1) <= n) ? inside : undefined);
+        // A size no table or pair ever seats (all tables for six or more) is not kept free: every draw failed, and the week stayed empty.
+        const seated = (n: number) => bookable.some((r) => (r.capacity ?? 0) >= n && (r.min ?? 1) <= n);
         const roomAt = (t: string) =>
-          [2, 4].every((n) => n > maxParty || checkSlot({ profile, serviceKey: service.key, date, time: t, partySize: n, now: new Date(0), existing, area: roomFor(n) }, { ...service, lead_minutes: 0 }, t));
+          [2, 4].every((n) => n > maxParty || !seated(n) || checkSlot({ profile, serviceKey: service.key, date, time: t, partySize: n, now: new Date(0), existing, area: roomFor(n) }, { ...service, lead_minutes: 0 }, t));
         // A time from the humps. Draws that fall outside the service are drawn
         // again rather than pinned to its edge, which piled bookings up at the
         // opening time. Most people book on the hour or the half hour.

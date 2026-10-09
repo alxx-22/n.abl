@@ -404,3 +404,18 @@ test('restaurant seed: on a closure day the Kitchen has no orders, as the diary 
   // The next day is open, and Start that day has orders as usual.
   assert.ok(planRestaurantSeed(compileRestaurant(a, { slug: 'open-next' }), new Date('2026-10-10T17:00:00Z'), 7).orders.length > 0);
 });
+
+test('restaurant seed: a restaurant whose tables all seat six or more still has a week of bookings', () => {
+  // The review: with only 6- and 8-seat tables, every draw was refused (a table for two must stay free, and none ever could), so the diary was empty.
+  const a = defaultAnswers();
+  a.basics.name = 'Long Table';
+  a.seating.tables = tablesFromCounts(a.seating.areas, { indoor: { 2: 0, 4: 0, 6: 6, 8: 2 }, terrace: { 2: 0, 4: 0, 6: 0, 8: 0 } });
+  a.seating.fixtures = [];
+  assert.deepEqual(validateRestaurant(a).filter((i) => i.level === 'error'), []);
+  const p = compileRestaurant(a, { slug: 'long-table' });
+  for (const seed of [1, 2, 3]) {
+    const bookings = planRestaurantSeed(p, new Date('2026-10-09T17:00:00Z'), seed).bookings;
+    assert.ok(bookings.length >= 20, `seed ${seed}: ${bookings.length} bookings`);
+    assert.ok(bookings.every((b) => b.party_size >= 3), 'every party fits a table');
+  }
+});
