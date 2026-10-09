@@ -108,7 +108,7 @@ phones too. Layout and CSS only (no server, API or saved-answer changes):
   along the top that stays in view, and the preview opens from a Preview
   button; on a laptop the preview folds under the step.
 - **Every preset** (`7e8af24`, then `5cba893` restaurant and takeaway,
-  `7384c5e` barber, `fbd6e1c` estate agent, `59041c9` repairs): nothing
+  `7384c5e` barber, `fbd6e1c` estate agent, `59041c9` repairs, `d271ce1`): nothing
   under 12px; buttons, tabs and boxes at least 40px on a tablet or phone;
   a one-row top bar on a laptop and tablet; a booking opens as a side
   sheet (full screen on a phone); boards scroll sideways by column; the

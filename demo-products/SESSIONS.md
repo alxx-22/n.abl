@@ -241,7 +241,8 @@ walkthrough passing. What changed:
 - `7e8af24` every preset (text 12px and up, 40px targets on touch, a
   one-row top bar, a booking as a side sheet, boards scroll by column),
   then `5cba893` restaurant and takeaway, `7384c5e` barber, `fbd6e1c`
-  estate agent, `59041c9` repairs.
+  estate agent, `59041c9` repairs, and `d271ce1` (number boxes on a
+  phone, every builder).
 
 Files of yours I touched, CSS and minimal markup only, props and
 behaviour kept:
