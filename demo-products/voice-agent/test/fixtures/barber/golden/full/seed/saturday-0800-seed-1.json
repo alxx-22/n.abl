@@ -16,7 +16,32 @@
    "deposit_pence": 1000,
    "deposit_paid": true,
    "visit_status": "expected",
-   "booked_via": "online"
+   "booked_via": "online",
+   "details": {
+    "late": {
+     "minutes": 10,
+     "note": "Parking",
+     "at": "2026-10-17T06:56:00.000Z"
+    }
+   }
+  },
+  {
+   "reference": "WX355",
+   "service_key": "classic_cut",
+   "resource_key": "ray",
+   "area_key": null,
+   "starts_at": "2026-10-17T08:00:00.000Z",
+   "ends_at": "2026-10-17T08:30:00.000Z",
+   "party_size": 1,
+   "name": "Priya Shah",
+   "phone": "+447700900904",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 1000,
+   "deposit_paid": true,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
   },
   {
    "reference": "QA315",
@@ -1030,14 +1055,34 @@
  "orders": [],
  "messages": [
   {
-   "from_name": "Ethan Price",
-   "from_phone": "+447700900284",
+   "from_name": "Kwame Robinson",
+   "from_phone": "+447700900966",
    "body": "Asking if you're taking on an apprentice: finishing college in the summer."
   },
   {
    "from_name": "Barber Supplies Ltd",
-   "from_phone": "+447700900173",
+   "from_phone": "+447700900974",
    "body": "Your order of clipper blades and neck strips will be with you on Thursday morning."
   }
- ]
+ ],
+ "walkins": [],
+ "waitlist": [
+  {
+   "date": "2026-10-24",
+   "service_key": "classic_cut",
+   "resource_key": "ray",
+   "name": "Daniel Shah",
+   "phone": "+447700900485",
+   "created_at": "2026-10-16T05:00:00.000Z"
+  },
+  {
+   "date": "2026-10-24",
+   "service_key": "classic_cut",
+   "resource_key": null,
+   "name": "Joe Taylor",
+   "phone": "+447700900980",
+   "created_at": "2026-10-17T04:00:00.000Z"
+  }
+ ],
+ "skinTests": []
 }

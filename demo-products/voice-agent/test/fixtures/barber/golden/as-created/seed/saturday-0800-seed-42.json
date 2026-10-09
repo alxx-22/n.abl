@@ -1,6 +1,24 @@
 {
  "bookings": [
   {
+   "reference": "YX698",
+   "service_key": "skin_test",
+   "resource_key": "marcus",
+   "area_key": null,
+   "starts_at": "2026-10-15T09:00:00.000Z",
+   "ends_at": "2026-10-15T09:10:00.000Z",
+   "party_size": 1,
+   "name": "Ben Carter",
+   "phone": "+447700900905",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist"
+  },
+  {
    "reference": "RW741",
    "service_key": "kids_cut",
    "resource_key": "marcus",
@@ -88,7 +106,14 @@
    "deposit_pence": 500,
    "deposit_paid": false,
    "visit_status": "expected",
-   "booked_via": "receptionist"
+   "booked_via": "receptionist",
+   "details": {
+    "late": {
+     "minutes": 10,
+     "note": "Parking",
+     "at": "2026-10-17T06:56:00.000Z"
+    }
+   }
   },
   {
    "reference": "YA241",
@@ -107,6 +132,24 @@
    "deposit_paid": true,
    "visit_status": "expected",
    "booked_via": "online"
+  },
+  {
+   "reference": "RW894",
+   "service_key": "classic_cut",
+   "resource_key": "dan",
+   "area_key": null,
+   "starts_at": "2026-10-17T07:45:00.000Z",
+   "ends_at": "2026-10-17T08:15:00.000Z",
+   "party_size": 1,
+   "name": "Priya Shah",
+   "phone": "+447700900904",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 500,
+   "deposit_paid": true,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
   },
   {
    "reference": "KX205",
@@ -3298,14 +3341,55 @@
  "orders": [],
  "messages": [
   {
-   "from_name": "Zara Hall",
-   "from_phone": "+447700900882",
+   "from_name": "Priya Wood",
+   "from_phone": "+447700900700",
    "body": "Asking if you're taking on an apprentice: finishing college in the summer."
   },
   {
    "from_name": "Barber Supplies Ltd",
-   "from_phone": "+447700900469",
+   "from_phone": "+447700900514",
    "body": "Your order of clipper blades and neck strips will be with you on Thursday morning."
+  }
+ ],
+ "walkins": [
+  {
+   "name": "Ben",
+   "phone": null,
+   "service_key": "classic_cut",
+   "resource_key": null,
+   "joined_at": "2026-10-17T06:48:00.000Z"
+  },
+  {
+   "name": "Isla",
+   "phone": null,
+   "service_key": "skin_fade",
+   "resource_key": "marcus",
+   "joined_at": "2026-10-17T06:55:00.000Z"
+  }
+ ],
+ "waitlist": [
+  {
+   "date": "2026-10-24",
+   "service_key": "skin_fade",
+   "resource_key": "marcus",
+   "name": "Amara Clarke",
+   "phone": "+447700900317",
+   "created_at": "2026-10-16T05:00:00.000Z"
+  },
+  {
+   "date": "2026-10-24",
+   "service_key": "classic_cut",
+   "resource_key": null,
+   "name": "Lucy Lewis",
+   "phone": "+447700900195",
+   "created_at": "2026-10-17T04:00:00.000Z"
+  }
+ ],
+ "skinTests": [
+  {
+   "name": "Ben Carter",
+   "phone": "+447700900905",
+   "at": "2026-10-15T09:00:00.000Z"
   }
  ]
 }

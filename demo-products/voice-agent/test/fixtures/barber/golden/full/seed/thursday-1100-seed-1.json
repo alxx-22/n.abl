@@ -88,7 +88,14 @@
    "deposit_pence": 1000,
    "deposit_paid": true,
    "visit_status": "expected",
-   "booked_via": "receptionist"
+   "booked_via": "receptionist",
+   "details": {
+    "late": {
+     "minutes": 10,
+     "note": "Parking",
+     "at": "2026-10-15T09:56:00.000Z"
+    }
+   }
   },
   {
    "reference": "RY762",
@@ -125,6 +132,24 @@
    "deposit_paid": true,
    "visit_status": "expected",
    "booked_via": "online"
+  },
+  {
+   "reference": "LL568",
+   "service_key": "classic_cut",
+   "resource_key": "ray",
+   "area_key": null,
+   "starts_at": "2026-10-15T11:00:00.000Z",
+   "ends_at": "2026-10-15T11:30:00.000Z",
+   "party_size": 1,
+   "name": "Priya Shah",
+   "phone": "+447700900904",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 1000,
+   "deposit_paid": true,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
   },
   {
    "reference": "XK418",
@@ -886,14 +911,49 @@
  "orders": [],
  "messages": [
   {
-   "from_name": "Amara Evans",
-   "from_phone": "+447700900521",
+   "from_name": "Mohammed Taylor",
+   "from_phone": "+447700900287",
    "body": "Asking if you're taking on an apprentice: finishing college in the summer."
   },
   {
    "from_name": "Barber Supplies Ltd",
-   "from_phone": "+447700900684",
+   "from_phone": "+447700900583",
    "body": "Your order of clipper blades and neck strips will be with you on Thursday morning."
   }
- ]
+ ],
+ "walkins": [
+  {
+   "name": "Holly",
+   "phone": null,
+   "service_key": "classic_cut",
+   "resource_key": null,
+   "joined_at": "2026-10-15T09:48:00.000Z"
+  },
+  {
+   "name": "Kwame",
+   "phone": null,
+   "service_key": "classic_cut",
+   "resource_key": "ray",
+   "joined_at": "2026-10-15T09:55:00.000Z"
+  }
+ ],
+ "waitlist": [
+  {
+   "date": "2026-10-17",
+   "service_key": "classic_cut",
+   "resource_key": "ray",
+   "name": "Hannah Chen",
+   "phone": "+447700900884",
+   "created_at": "2026-10-14T08:00:00.000Z"
+  },
+  {
+   "date": "2026-10-17",
+   "service_key": "classic_cut",
+   "resource_key": null,
+   "name": "Sam Brown",
+   "phone": "+447700900264",
+   "created_at": "2026-10-15T07:00:00.000Z"
+  }
+ ],
+ "skinTests": []
 }

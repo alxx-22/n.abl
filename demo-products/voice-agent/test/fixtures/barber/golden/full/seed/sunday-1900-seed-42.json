@@ -1192,14 +1192,34 @@
  "orders": [],
  "messages": [
   {
-   "from_name": "Liam Brown",
-   "from_phone": "+447700900377",
+   "from_name": "Ben Taylor",
+   "from_phone": "+447700900197",
    "body": "Asking if you're taking on an apprentice: finishing college in the summer."
   },
   {
    "from_name": "Barber Supplies Ltd",
-   "from_phone": "+447700900432",
+   "from_phone": "+447700900242",
    "body": "Your order of clipper blades and neck strips will be with you on Thursday morning."
   }
- ]
+ ],
+ "walkins": [],
+ "waitlist": [
+  {
+   "date": "2026-10-24",
+   "service_key": "classic_cut",
+   "resource_key": "ray",
+   "name": "Liam Brown",
+   "phone": "+447700900377",
+   "created_at": "2026-10-17T16:00:00.000Z"
+  },
+  {
+   "date": "2026-10-24",
+   "service_key": "classic_cut",
+   "resource_key": null,
+   "name": "Chloe Begum",
+   "phone": "+447700900329",
+   "created_at": "2026-10-18T15:00:00.000Z"
+  }
+ ],
+ "skinTests": []
 }
