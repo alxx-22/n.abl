@@ -636,7 +636,7 @@
  },
  "money": {
   "deposit": {
-   "mode": "card_hold",
+   "mode": "none",
    "amount_pence": 1000,
    "min_party": 7
   },
