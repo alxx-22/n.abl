@@ -35,7 +35,7 @@ import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
 import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
-  BARBER_TOOLS, lateHint, offTodayNote, offerFreedSlot, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
+  BARBER_TOOLS, colourFrom, lateHint, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
@@ -587,6 +587,9 @@ const TOOLS: Record<string, Tool> = {
       }
       const colour = await skinTestFirst(ctx, service, str(args.date) ?? '', str(args.time), ctx.callerPhone, 'available');
       if (colour) return colour;
+      // Colour's times start 48 hours after their skin test: offered no sooner.
+      const colourStart = await colourFrom(ctx, service, ctx.callerPhone);
+      const asOf = colourStart ? new Date(Math.max(ctx.now().getTime(), colourStart.getTime() - (service.lead_minutes ?? 0) * 60000)) : ctx.now();
       const estate = await estateAvailability(args, ctx, service);
       if (estate) return estate;
       const area = resolveArea(ctx.tenant, str(args.area));
@@ -599,9 +602,22 @@ const TOOLS: Record<string, Tool> = {
       const existing = isIsoDate(date) ? await ctx.repo.busyForDate(ctx.tenant, date) : [];
       const r = checkAvailability({
         profile: tenantOn(ctx, shop, date).profile, serviceKey: service.key, date, time: str(args.time), partySize: party,
-        staff: str(args.staff), now: ctx.now(), existing, area: area.key, accessible: bool(args.accessible), prefer: preferences(args.prefer), only: table.key,
+        staff: str(args.staff), now: asOf, existing, area: area.key, accessible: bool(args.accessible), prefer: preferences(args.prefer), only: table.key,
       });
       const out: Record<string, unknown> = { ...r, service: service.label };
+      if (p.barber) {
+        // A family booked at one time: who else is free then (a live test moved three cuts to 11 with three barbers free at 10).
+        if (r.slot && !str(args.staff)) {
+          const also = (p.booking?.resources ?? []).filter((x) => x.kind === 'staff' && x.key !== r.slot!.resource_key && x.services.includes(service.key)).filter((x) => checkAvailability({
+            profile: tenantOn(ctx, shop, date).profile, serviceKey: service.key, date, time: str(args.time), partySize: 1, staff: x.key, now: asOf, existing,
+          }).available).map((x) => x.label);
+          if (also.length) out.also_free_then = also;
+        }
+        // "How long's the wait if I come now?" is a walk-in's question.
+        const soon = str(args.time) && date === toLocal(ctx.now(), p.timezone).date && zonedToUtc(date, str(args.time)!, p.timezone).getTime() - ctx.now().getTime() < 60 * 60000;
+        if (soon && p.barber.walk_ins) out.walk_in = 'If they mean coming in now, get_wait_now gives the walk-in wait.';
+        if (colourStart) out.colour_from = `Colour only from ${spokenDate(toLocal(colourStart, p.timezone).date)} at ${spokenTime(toLocal(colourStart, p.timezone).time)}, 48 hours after their skin test.`;
+      }
       if (table.key) out.table = table.label;
       if (r.fully_booked) out.fully_booked_note = `Fully booked, not closed: ${r.fully_booked.join(' and ')}. Say it is fully booked, never that you are closed.`;
       if (r.slot && service.kind === 'appointment') out.with = r.slot.resource_label;
@@ -798,6 +814,7 @@ const TOOLS: Record<string, Tool> = {
       let found = await ctx.repo.findBookings(ctx.tenant.id, { reference, phone, name: reference || phone ? undefined : name }, ctx.now());
       // Callers quote a number other than the one they booked with: in a live test the right name was never searched.
       if (!found.length && !reference && phone && name) found = await ctx.repo.findBookings(ctx.tenant.id, { name }, ctx.now());
+      if (ctx.tenant.profile.barber) found = ownOnly(ctx, found);
       for (const b of found) record(ctx, b.reference, 'booking', 'found');
       if (!found.length) return { bookings: [], note: 'No upcoming bookings found. Ask for the reference or the name it was booked under.' };
       // A barber's booking with someone off today needs a new time (core/barber-tools.ts).

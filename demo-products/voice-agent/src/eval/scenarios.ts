@@ -2108,7 +2108,7 @@ export const SCENARIOS: Scenario[] = [
     kind: 'edge',
     callerPhone: BB_PEOPLE.late.phone,
     now: BB_THURSDAY,
-    persona: "You are Priya Shah. You have a cut booked today around midday. Say: \"I'm running about 15 minutes late, is that OK?\" Accept what you're told. Your name is Priya.",
+    persona: "You are Priya Shah. You have a cut booked today. Say: \"I'm running about 15 minutes late, is that OK?\" Accept what you're told. Your name is Priya Shah: give your full name when asked.",
     async check(c) {
       const f: string[] = [];
       const mine = await c.db.query<any>(`select status, details from public.voice_bookings where tenant_id = $1 and phone = $2 and source = 'seed'`, [c.tenant.id, BB_PEOPLE.late.phone]);

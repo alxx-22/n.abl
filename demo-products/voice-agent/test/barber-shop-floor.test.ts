@@ -134,7 +134,7 @@ test('on a call: colour only 48 hours after a skin test here, booked first; ever
   const c = await call(t, '+447700900981');
   const none = await c.run('create_booking', { service: 'Beard colour', date: '2026-10-16', time: '11:00', name: 'Sam Lee' });
   assert.deepEqual([none.booked, none.reason], [false, 'skin_test_needed']);
-  assert.match(none.message, /Book the skin test now \(service "Skin test": 10 minutes, free\), then the colour at least 48 hours after it\. The dye maker says/);
+  assert.match(none.message, /Book the skin test now \(service "Skin test": 10 minutes, free\), then the colour at least 48 hours after it\. Offer no colour times until the test is booked: check_availability gives them then\. The dye maker says/);
   const test1 = await c.run('create_booking', { service: 'Skin test', date: '2026-10-15', time: '12:00', name: 'Sam Lee' });
   assert.deepEqual([test1.booked, test1.with], [true, 'Marcus'], 'whoever does colour does the test');
   const soon = await c.run('check_availability', { service: 'Beard colour', date: '2026-10-16', time: '11:00' });
@@ -216,4 +216,28 @@ test("on a call: a time no tool gave is flagged, and a booking found today says 
   const mine = await c.run('create_booking', { service: 'Classic cut', staff: 'Marcus', date: '2026-10-15', time: '14:15', name: 'Priya Shah' });
   const found = await c.run('find_bookings', { reference: mine.reference });
   assert.equal(found.next, `If they're running late for ${mine.reference}, call running_late with it and the minutes, and say what it returns: nothing is noted for the barber until it does.`);
+});
+
+test('on a call: who else is free at that time, colour offered only from 48 hours after the test, the caller\'s own booking only, and running late passes it on', async () => {
+  const t = await fresh('kingsleys-fixes');
+  const c = await call(t, BB_PEOPLE.late.phone);
+  // Two kids and their dad at 10 on Saturday: Marcus, and Dan and Jordan free then too.
+  const kids = await c.run('check_availability', { service: "Kids' cut", date: '2026-10-17', time: '10:00' });
+  assert.deepEqual([kids.with, kids.also_free_then], ['Marcus', ['Dan', 'Jordan']]);
+  // Coming in now is the walk-in's question.
+  assert.equal((await c.run('check_availability', { service: 'Skin fade', date: '2026-10-15', time: '11:20' })).walk_in, 'If they mean coming in now, get_wait_now gives the walk-in wait.');
+  // A skin test today at noon: Saturday's colour times start at noon, not at 8.
+  await c.run('create_booking', { service: 'Skin test', date: '2026-10-15', time: '12:00', name: 'Priya Shah' });
+  const sat = await c.run('check_availability', { service: 'Beard colour', date: '2026-10-17' });
+  assert.equal(sat.colour_from, 'Colour only from Saturday 17 October at 12 noon, 48 hours after their skin test.');
+  assert.ok(!/^8am/.test(sat.available_ranges[0]), sat.available_ranges.join(', '));
+  // Another Priya booked today, and Priya Shah's own: only hers, by name, from her number.
+  const other = await call(t, '+447700900990');
+  await other.run('create_booking', { service: 'Kids\' cut', date: '2026-10-15', time: '12:30', name: 'Priya Jones' });
+  const mine = await c.run('create_booking', { service: 'Classic cut', date: '2026-10-15', time: '14:15', name: 'Priya Shah' });
+  const found = await c.run('find_bookings', { name: 'Priya' });
+  assert.deepEqual(found.bookings.map((b: any) => b.reference).sort(), [mine.reference, ...found.bookings.filter((b: any) => b.service === 'Skin test').map((b: any) => b.reference)].sort());
+  assert.ok(!found.bookings.some((b: any) => b.name === 'Priya Jones'), "another customer's booking is never read out");
+  assert.equal((await c.run('running_late', { reference: mine.reference, minutes: 5 })).noted, true);
+  assert.equal(c.ctx.state.messageTaken, true, '"passed on" is true');
 });

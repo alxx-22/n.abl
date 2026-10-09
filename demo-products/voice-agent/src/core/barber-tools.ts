@@ -281,7 +281,7 @@ export async function skinTestFirst(
   }
   return {
     [key]: false, reason: 'skin_test_needed',
-    message: `Colour needs a skin test here first, at least ${SKIN_TEST_HOURS} hours before${bb.skin_test === 'every_time' ? ', every time' : ''}. Book the skin test now (service "Skin test": 10 minutes, free), then the colour at least ${SKIN_TEST_HOURS} hours after it. ${say}`,
+    message: `Colour needs a skin test here first, at least ${SKIN_TEST_HOURS} hours before${bb.skin_test === 'every_time' ? ', every time' : ''}. Book the skin test now (service "Skin test": 10 minutes, free), then the colour at least ${SKIN_TEST_HOURS} hours after it. Offer no colour times until the test is booked: check_availability gives them then. ${say}`,
   };
 }
 
@@ -398,6 +398,8 @@ export const BARBER_TOOLS: Record<string, Tool> = {
         .sort((x, y) => x.starts_at.getTime() - y.starts_at.getTime())[0];
       const fits = !next || b.starts_at.getTime() + minutes * 60000 + length <= next.starts_at.getTime();
       await ctx.repo.mergeBookingDetails(ctx.tenant.id, b.reference, { late: { minutes, note: str(args.note) ?? '', at: now.toISOString() } }, `Running ${minutes} minutes late`, 'receptionist', now);
+      // The barber has it: "I've passed that on" is now true.
+      ctx.state.messageTaken = true;
       ctx.action({ kind: 'booking_changed', title: 'Running late', detail: `${b.name} · ${minutes} minutes late · ${barber} · ref ${b.reference}` });
       const message = minutes <= grace
         ? `Kept: within the shop's ${grace} minutes. Tell them that's fine, and ${barber} knows.`
@@ -419,4 +421,31 @@ export function lateHint(ctx: ToolContext, found: Booking[]): string | undefined
   const today = toLocal(ctx.now(), tz).date;
   const b = found.find((x) => toLocal(x.starts_at, tz).date === today && x.ends_at > ctx.now());
   return b ? `If they're running late for ${b.reference}, call running_late with it and the minutes, and say what it returns: nothing is noted for the barber until it does.` : undefined;
+}
+
+/**
+ * A barber's search by name: when some are booked from the number calling,
+ * only those. A live test (9 October) found two Priyas, read the other
+ * one's booking out, and noted the wrong one late.
+ */
+export function ownOnly(ctx: ToolContext, found: Booking[]): Booking[] {
+  const me = ctx.callerPhone;
+  const mine = me ? found.filter((b) => b.phone === me) : [];
+  return mine.length ? mine : found;
+}
+
+/**
+ * The earliest a colour can start for this caller: 48 hours after their
+ * latest skin test here, taken or booked. Null when there's none, or it's
+ * already past. A live test offered 2pm on Friday for a test at 2:15pm on
+ * Wednesday.
+ */
+export async function colourFrom(ctx: ToolContext, service: BookableService, phone: string | null): Promise<Date | null> {
+  if (!ctx.tenant.profile.barber || !service.colour || !phone) return null;
+  const taken = await ctx.repo.getSkinTest(ctx.tenant.id, phone);
+  const booked = (await ctx.repo.listBookingsByPhone(ctx.tenant.id, phone)).filter((b) => b.service_key === SKIN_TEST_KEY && b.visit_status !== 'no_show').map((b) => b.starts_at);
+  const latest = [...(taken ? [taken] : []), ...booked].sort((a, b) => b.getTime() - a.getTime())[0];
+  if (!latest) return null;
+  const from = new Date(latest.getTime() + SKIN_TEST_HOURS * 3600000);
+  return from > ctx.now() ? from : null;
 }
