@@ -120,6 +120,8 @@ test('barber: one person and one service a booking, the price in the read-back, 
   assert.equal(grey.next, 'Read back the grey blending with Marcus, the day, the time and the price (from £25.00), and book with create_booking when they say yes. Nothing is booked and there is no reference until create_booking returns one.');
   const booked = await c.run('create_booking', { service: 'Classic cut', date: '2026-10-17', time: '10:00', name: 'Tom Reid' });
   assert.equal(booked.booked, true);
+  // A live test called this optional deposit "due now".
+  assert.deepEqual([booked.deposit_due, booked.deposit_optional], [undefined, '£5.00: by card now if they like, or nothing until the shop']);
   assert.equal(booked.next, 'Offer the £5.00 deposit now by card with take_demo_payment (for "deposit"). If they would rather pay in the shop, that is fine: the booking stands.');
   // Marcus is now taken at 10, and Dan is free then: Dan first, not another time with Marcus.
   const again = await c.run('create_booking', { service: "Kids' cut", date: '2026-10-17', time: '10:00', staff: 'Marcus', name: 'Sara Ahmed' });
@@ -155,7 +157,7 @@ test('barber: two kids back to back and their dad with another barber, in one te
   assert.match((await c.run('create_booking', { service: "Kids' cut", after: 'ZZ999', name: 'Sara Ahmed' })).message, /^No booking ZZ999 to follow/);
   assert.equal((await c.run('end_call', { outcome: 'booked' })).ok, true);
   assert.equal(sent.length, 1, 'one text');
-  assert.equal(sent[0].body, `Kingsley's Barbers: Booked: Saturday 17 October 10am, Kids' cut (£13.00) with ${zak.with}, ref ${zak.reference}; Saturday 17 October 10am, Classic cut (£18.00) with ${dad.with}, ref ${dad.reference}; Saturday 17 October 10:30am, Kids' cut (£13.00) with ${zak.with}, ref ${musa.reference}. Deposit £5.00 each due. Free to cancel or move with 24 hours' notice. To change one, call us and quote its reference. (Demo)`);
+  assert.equal(sent[0].body, `Kingsley's Barbers: Booked: Saturday 17 October 10am, Kids' cut (£13.00) with ${zak.with}, ref ${zak.reference}; Saturday 17 October 10am, Classic cut (£18.00) with ${dad.with}, ref ${dad.reference}; Saturday 17 October 10:30am, Kids' cut (£13.00) with ${zak.with}, ref ${musa.reference}. The £5.00 deposits are optional: pay them by card ahead, or all in the shop. Free to cancel or move with 24 hours' notice. To change one, call us and quote its reference. (Demo)`);
   await c.run('end_call', { outcome: 'booked' });
   assert.equal(sent.length, 1, 'never twice');
 });
@@ -173,6 +175,11 @@ test('barber: a caller moving their booking is steered to modify_booking, never 
   const second = await c.run('create_booking', { service: 'Skin fade', staff: 'Marcus', date: '2026-10-17', time: '08:00', name: 'Jay Morgan' });
   assert.equal(second.booked, false);
   assert.match(second.message, new RegExp(`^Not booked yet: they already have ${jay.reference}, a skin fade on `));
+  // A live test, 9 October: "Shall I change that for you?" and moved in the same breath.
+  c.ctx.state.turnSaid = "That's your skin fade with Marcus moving to Saturday at 8am. Shall I change that for you?";
+  const early = await c.run('modify_booking', { reference: jay.reference, date: '2026-10-17', time: '08:00' });
+  assert.deepEqual([early.changed, early.message], [false, 'Not done yet: you have just asked them, and they have not answered. Stop and wait for their answer; on yes, call this again.']);
+  c.ctx.state.turnSaid = 'Lovely, changing that now.';
   assert.equal((await c.run('modify_booking', { reference: jay.reference, date: '2026-10-17', time: '08:00' })).changed, true);
   assert.equal((await c.run('create_booking', { service: 'Beard trim', date: '2026-10-17', time: '12:00', name: 'Jay Morgan' })).booked, true, 'asked once: another appointment as well is fine');
 });

@@ -116,6 +116,7 @@ export function barberText(t: Tenant, bookings: Booking[]): string {
   };
   const due = bookings.filter((b) => b.deposit_pence && !b.deposit_paid);
   const deposit = !due.length ? ''
+    : !p.barber?.deposit_required ? ` The ${pounds(due[0].deposit_pence!)} deposit${due.length > 1 ? 's are' : ' is'} optional: pay ${due.length > 1 ? 'them' : 'it'} by card ahead, or all in the shop.`
     : due.length === bookings.length ? ` Deposit ${pounds(due[0].deposit_pence!)}${due.length > 1 ? ' each' : ''} due.`
     : ` Deposit due on ${due.map((b) => b.reference).join(' and ')}.`;
   const notice = p.barber?.notice_hours ? ` Free to cancel or move with ${p.barber.notice_hours} hours' notice.` : '';
@@ -168,4 +169,24 @@ export async function secondBooking(ctx: ToolContext): Promise<Record<string, un
     };
   }
   return null;
+}
+
+/** A question asking leave to do it ("Shall I change that for you?"), at the end of what was just said. */
+const ASKED = /(?:\b(?:shall|should|can) i (?:go ahead|book|change|move|cancel|do|make|put)\b|\b(?:do you want|would you like) me to (?:book|change|move|cancel)\b|\bis that (?:all )?(?:right|correct|ok(?:ay)?)\b|\bdoes that (?:all )?(?:sound|look) (?:right|good)\b)[^?]*\?\s*$/i;
+
+/**
+ * Asked and done in the same breath, before the answer: not yet. A live
+ * test (9 October) asked "Shall I change that for you?" and moved the
+ * booking without waiting for the yes.
+ */
+export function waitForYes(ctx: ToolContext, key: 'booked' | 'changed' | 'cancelled'): Record<string, unknown> | null {
+  if (!ctx.tenant.profile.barber || !ASKED.test(ctx.state.turnSaid.trim())) return null;
+  return { [key]: false, message: 'Not done yet: you have just asked them, and they have not answered. Stop and wait for their answer; on yes, call this again.' };
+}
+
+/** The deposit on a barber's booking, as the tools say it: optional unless the shop insists (a live test called an optional one "due now"). */
+export function depositFields(ctx: ToolContext, b: Booking): Record<string, string> {
+  const bb = ctx.tenant.profile.barber;
+  if (!bb || !b.deposit_pence || b.deposit_paid) return {};
+  return bb.deposit_required ? { deposit_due: pounds(b.deposit_pence) } : { deposit_optional: `${pounds(b.deposit_pence)}: by card now if they like, or nothing until the shop` };
 }

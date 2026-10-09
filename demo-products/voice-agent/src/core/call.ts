@@ -794,6 +794,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     // what they said (an address, "I'm collecting") must not miss their last line.
     if (this.callerBuf.trim() && !this.agentBuf.trim()) this.flushCaller();
     const partial = this.agentBuf.trim();
+    this.state.turnSaid = redactLine(partial, this.opts.config.demoCards);
     if (partial && (this.state.estate || this.state.maintenance || this.state.takeaway)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
     this.noteSafetySaid();
     this.noteReaction();

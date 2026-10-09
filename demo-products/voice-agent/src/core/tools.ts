@@ -33,7 +33,7 @@ import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf,
 import { ESTATE_TOOLS, estateAvailability, estateBooking, estateHours, estateMessage, estateParams, estateSummary, estateText, moveRule, viewingStopped } from './estate-tools.ts';
 import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
-import { barberParams, depositNext, depositOnCancel, followOn, holdText, noticeFirst, oneEach, readBackFirst, secondBooking, sendHeldTexts, servicePrice } from './barber-tools.ts';
+import { barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, oneEach, readBackFirst, secondBooking, sendHeldTexts, servicePrice, waitForYes } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -120,6 +120,8 @@ export interface CallState {
   toolFlags: { rule: 'disclosure_missed'; text: string; recheck?: { items: SayItem[]; at: number; ifTimes?: boolean } }[];
   /** A barber's booking texts, held so the call's bookings go in one text when it ends (core/barber-tools.ts). */
   textsHeld: string[];
+  /** What the receptionist had said so far in the turn that called the tools (core/call.ts). */
+  turnSaid: string;
   /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
   readBack: { committed: number; tries: number } | null;
   saidYes: { committed: number; tries: number } | null;
@@ -188,7 +190,7 @@ export function newCallState(): CallState {
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false, messageOwed: false,
     estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
-    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [],
+    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '',
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
     invoice: null, emergencyTrade: null, amounts: [], relay: false, references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
@@ -635,6 +637,8 @@ const TOOLS: Record<string, Tool> = {
       const p = ctx.tenant.profile;
       const each = oneEach(ctx, str(args.service), int(args.party_size) ?? 1, 'booked');
       if (each) return each;
+      const wait = waitForYes(ctx, 'booked');
+      if (wait) return wait;
       const follow = await followOn(ctx, args);
       if (follow?.refusal) return follow.refusal;
       if (follow?.args) args = { ...args, ...follow.args };
@@ -744,7 +748,8 @@ const TOOLS: Record<string, Tool> = {
         booked: true,
         ...s,
         weather_note: areaInfo?.kind === 'outdoor' ? areaInfo.weather_note : undefined,
-        deposit_due: b.deposit_pence ? pounds(b.deposit_pence) : undefined,
+        deposit_due: b.deposit_pence && !p.barber ? pounds(b.deposit_pence) : undefined,
+        ...depositFields(ctx, b),
         note: [
           highchairs > chairs ? `We only have ${chairs} highchair${chairs === 1 ? '' : 's'}; say so.` : null,
           unmet.length ? `No ${unmet.map((f) => f.replace('_', ' ')).join(' or ')} table was free; say it is noted as a request.` : null,
@@ -798,6 +803,8 @@ const TOOLS: Record<string, Tool> = {
     tailor: (d, t) => tableParams(d, t, 'change'),
     async handler(args, ctx) {
       const ref = str(args.reference) ?? '';
+      const wait = waitForYes(ctx, 'changed');
+      if (wait) return wait;
       // A barber's deposit, moving a booking inside the notice: said before it happens (core/barber-tools.ts).
       const first = str(args.date) || str(args.time) ? await noticeFirst(ctx, ref, 'move') : null;
       if (first) return first;
@@ -834,7 +841,8 @@ const TOOLS: Record<string, Tool> = {
       if (!ctx.state.textsHeld.includes(r.booking.reference)) await smsTo(ctx, r.booking.phone, bookingText(ctx.tenant, r.booking, 'Changed:'));
       return {
         changed: true, ...s,
-        deposit_due: r.booking.deposit_pence && !r.booking.deposit_paid ? pounds(r.booking.deposit_pence) : undefined,
+        deposit_due: r.booking.deposit_pence && !r.booking.deposit_paid && !ctx.tenant.profile.barber ? pounds(r.booking.deposit_pence) : undefined,
+        ...depositFields(ctx, r.booking),
         confirmation_text: r.booking.phone ? 'a new text is on its way' : undefined,
       };
     },
@@ -848,6 +856,8 @@ const TOOLS: Record<string, Tool> = {
       parameters: obj({ reference: S('Booking reference') }, ['reference']),
     },
     async handler(args, ctx) {
+      const wait = waitForYes(ctx, 'cancelled');
+      if (wait) return wait;
       // A barber's deposit, inside the notice: said before it happens (core/barber-tools.ts).
       const first = await noticeFirst(ctx, str(args.reference) ?? '', 'cancel');
       if (first) return first;
