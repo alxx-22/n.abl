@@ -84,6 +84,49 @@ this session picked up their work (the split is in `SESSIONS.md`, 8 Oct
   barber's and estate Diary's booking blocks are too narrow to read at a
   1500px-wide window (`StaffDiary`, cloud's).
 
+**9 October, afternoon: every screen at every window size.** Alex asked
+for every screen to be Windows size first, and comfortable on tablets and
+phones too. Layout and CSS only (no server, API or saved-answer changes):
+
+- **Four named bands**, written at the top of `reception.css` and in
+  `web/src/reception/bands.ts` for code: desktop (1280px and up), laptop
+  (1024 to 1279), tablet (641 to 1023), phone (640 and down). Every media
+  query uses them; the six old breakpoints are gone. The workspace still
+  fits the window on a desktop or laptop.
+- **The workspace** (`84b8bcd`; the new parts in
+  `workspace/Panes.tsx`, a small edit to `Workspace.tsx`), Alex's design:
+  the call and the customer's phone each slide away to a slim bookmark on
+  the window's edge (icon, name, caret), and the back office widens into
+  the room. The call's width can be dragged (or set with the arrow keys).
+  Docked on a desktop or laptop; on a tablet or phone both start slid
+  away and open over the back office as drawers (caret, Escape or a tap
+  outside closes them, focus moves in and back). A live call shows on its
+  bookmark as a pulsing dot and its time; texts that arrive while the
+  phone is away show as a count. Each browser remembers its choice
+  (`localStorage` key `rx-workspace-panes`).
+- **The builder** (`c3364a5`): on a tablet or phone the steps are a ribbon
+  along the top that stays in view, and the preview opens from a Preview
+  button; on a laptop the preview folds under the step.
+- **Every preset** (`7e8af24`, then `5cba893` restaurant and takeaway,
+  `7384c5e` barber, `fbd6e1c` estate agent, `59041c9` repairs): nothing
+  under 12px; buttons, tabs and boxes at least 40px on a tablet or phone;
+  a one-row top bar on a laptop and tablet; a booking opens as a side
+  sheet (full screen on a phone); boards scroll sideways by column; the
+  menu step fits a phone; the Diary's half-hours are wide enough to read
+  and tap (CSS only; `StaffDiary` untouched); Dispatch's grid scrolls in
+  its own box and the safety log becomes a card per call on a phone.
+- **The screens check** (`c0e915f`): `npm run screens` (`test-e2e/screens.ts`) makes a
+  demo of each built preset and screenshots every builder step and
+  workspace tab (and the drawers and preview) at 1920x1080, 1536x864,
+  1366x768, 1280x800, 1024x768, 820x1180, 768x1024, 390x844 and 360x800,
+  into `eval-results/screens/<size>/<preset>/`, then prints a table of
+  problems (a page scrolling sideways, a box scrolling sideways that
+  shouldn't, a workspace page that scrolls on a desktop, text under 12px,
+  small buttons on a tablet or phone). Before this pass it found 1,064 problems on 711 screens (text under 12px on every screen, small buttons on 316, a sideways-scrolling page on 6, a box scrolling sideways on 13); after, none on 771 screens, bar the floor plan's own drawing text (18 screens). Run it after any layout
+  change; `--only` and `--sizes` narrow it.
+- Left as it is: the floor plan is drawn to fit the window, so on a phone
+  its table numbers are small; its own zoom (+) makes them readable.
+
 ### Property maintenance M3 (the cloud session): built (8 October)
 
 M3 is done, and with it the repairs preset as the spec plans it

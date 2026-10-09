@@ -30,7 +30,7 @@ when written (the last is `voice_0012`).
 | Session | Where | Working on | Owns (others ask first) | Since |
 |---|---|---|---|---|
 | **cloud** | Claude Code on the web (Alex's account) | **The hair salon**: use cases and spec written (`presets/salon-use-cases.md`, `presets/salon.md`), its decisions with Alex. Now: the 18 repairs and estate agent findings in `REVIEW-FINDINGS.md`, most serious first. Then the salon's build on the barber's M1 | `src/presets/salon/` and `web/src/reception/builder/salon/` (to come), the `hs-` scenarios; the repairs and estate agent call tools (`maintenance-tools.ts`, `estate-tools.ts`) | 8 October, evening |
-| **ui** | another account (Alex's "UI/UX" agent; the "third session" in `HANDOFF.md`) | **9 October, from 13:25**: a responsive pass over every screen of every preset, for Alex: designed for a Windows desktop or laptop first, comfortable on tablets and phones, with named size bands and a ribbon on smaller screens. Layout and CSS only, plus small markup where a screen needs a ribbon. Earlier (8 and 9 October): website colours on every page, the workspace fitting the window, the long screens compacted, all 28 review findings, a walkthrough of every preset | `web/src/reception/brand.ts`, `builder/fields.tsx` (`Folds`), the page layout in `reception.css`; the repairs back office (`workspace/{Jobs,Dispatch,Compliance,SafetyLog,Clients,Money}.tsx`, `RepairsKit.tsx`, `repairs-office.css`, the engineer's job sheet in `Phone.tsx`); `estate-office.css` | 9 October, 13:25 |
+| **ui** | another account (Alex's "UI/UX" agent; the "third session" in `HANDOFF.md`) | **9 October, afternoon: done.** A responsive pass over every screen of every preset, for Alex: four named size bands; the workspace's call and phone slide away to bookmarks (drawers on a tablet or phone); the builder's steps a ribbon with a Preview button on a tablet or phone; every preset's screens fixed at nine window sizes, checked by `npm run screens`. Stopped; see the 9 Oct 15:10 message. Earlier (8 and 9 October): website colours on every page, the workspace fitting the window, the long screens compacted, all 28 review findings, a walkthrough of every preset | `web/src/reception/brand.ts`, `bands.ts`, `workspace/Panes.tsx`, `test-e2e/screens.ts`, `builder/fields.tsx` (`Folds`), the page layout in `reception.css`; the repairs back office (`workspace/{Jobs,Dispatch,Compliance,SafetyLog,Clients,Money}.tsx`, `RepairsKit.tsx`, `repairs-office.css`, the engineer's job sheet in `Phone.tsx`); `estate-office.css` | 9 October, 15:10 |
 | **windows** | Claude Code on Alex's PC | **The barber** (`presets/barber.md`; Alex answered its decisions on 8 October: Nottingham city centre, the other defaults stand); the takeaway (built through M3) | `src/presets/barber/`, `web/src/reception/builder/barber/`, the `bb-` scenarios; `src/presets/takeaway/`, `src/core/kitchen.ts`, the `tk-` scenarios | 7 October |
 
 Built and finished: restaurant, estate agent (M1 to M3), property
@@ -220,3 +220,45 @@ a responsive pass over every screen of every preset, from now:
 
 Each step is its own commit with `npm run check` and the walkthrough of
 every preset passing.
+
+**9 Oct 15:10, ui → cloud, windows.** The responsive pass (13:25 above)
+is done and pushed; each step with `npm run check` and every preset's
+walkthrough passing. What changed:
+
+- `c0e915f` **A screens check**: `npm run screens` (or `-- --only barber
+  --sizes 390x844,820x1180`) screenshots every builder step and workspace
+  tab of each built preset at nine sizes into
+  `eval-results/screens/<size>/<preset>/` and lists what's wrong. Before:
+  1,064 problems on 711 screens; now none on 771 (bar the floor plan's
+  drawing text, which has its own zoom). **Please run it on a new
+  screen**, and use the four bands at the top of `reception.css`
+  (`bands.ts` in code) rather than new breakpoints.
+- `84b8bcd` **Workspace** (Alex's design): the call and the phone slide
+  away to a bookmark on the window's edge; drawers on a tablet or phone.
+  `Workspace.tsx` (shared): small, the new parts in `Panes.tsx`.
+- `c3364a5` **Builder**: steps ribbon and Preview button on a tablet or
+  phone (`Builder.tsx`, small).
+- `7e8af24` every preset (text 12px and up, 40px targets on touch, a
+  one-row top bar, a booking as a side sheet, boards scroll by column),
+  then `5cba893` restaurant and takeaway, `7384c5e` barber, `fbd6e1c`
+  estate agent, `59041c9` repairs.
+
+Files of yours I touched, CSS and minimal markup only, props and
+behaviour kept:
+
+- **cloud**: `StaffDiary` and `BookingDrawer` unchanged as files; in
+  `reception.css` the Diary's day is at least 900px (1,200px on a tablet
+  or phone, blocks at least 40px) and scrolls sideways inside itself, and
+  the booking drawer is a side sheet on a tablet (full screen on a
+  phone). `DemoClock` unchanged (icon-only on a tablet, by CSS).
+  `builder/estate/estate.css`: its 721px breakpoint is now 641px.
+- **windows**: `MenuEditor.tsx` unchanged as a file; on a phone, CSS
+  lays each dish on two lines (the menu step made the page 483px wide on
+  a phone). The takeaway's kitchen and drivers boards scroll by column on
+  a tablet or phone. The barber's services step: switches one to a line
+  and number boxes that fit, on a phone. Still not compacted: the menu
+  step on a desktop (waiting on your answer of 8 Oct 21:35).
+- Shared: `Phone.tsx` has an optional `onTexts` (the count on the
+  phone's bookmark); `Icons.tsx` a `PhoneIcon`; `Workspace.tsx` titles on
+  Voice and Reset. Badges in narrow cards wrap; boards (`.kitchen`)
+  scroll sideways by themselves.
