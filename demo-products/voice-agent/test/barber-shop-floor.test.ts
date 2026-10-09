@@ -119,7 +119,9 @@ test("on a call: Dan off today is off, never why; his booking today needs a new 
   const c = await call(t, '+447700900980');
   const dans = await c.run('create_booking', { service: 'Classic cut', staff: 'Dan', date: '2026-10-15', time: '15:00', name: 'Ali Khan' });
   assert.equal(dans.booked, true);
-  await repo.setToday(t.id, { date: '2026-10-15', off: ['dan'], notice: null });
+  await repo.setToday(t.id, { date: '2026-10-15', off: ['dan'], notice: 'Card machine down: cash only today.' });
+  // The shop's notice for today reaches the call.
+  assert.equal((await c.run('check_availability', { service: 'Classic cut', date: '2026-10-16' })).shop_notice, "Today's notice from the shop, to tell them once: Card machine down: cash only today.");
   const ask = await c.run('check_availability', { service: 'Classic cut', staff: 'Danny', date: '2026-10-15', time: '16:00' });
   assert.deepEqual([ask.available, ask.reason, ask.message], [false, 'off_today', "Dan's off today. Say just that, never why. In today: Marcus, Jordan; offer them, or Dan on another day."]);
   assert.notEqual((await c.run('check_availability', { service: 'Classic cut', date: '2026-10-15', time: '16:00' })).slot?.resource_label, 'Dan');

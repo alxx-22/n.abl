@@ -329,7 +329,7 @@ export const BARBER_TOOLS: Record<string, Tool> = {
       return {
         service: service.label, waiting_now: queue.length,
         soonest: mine.slice(0, 3).map((x) => ({ with: x.with, from: spokenTime(x.free_at), minutes: x.minutes })),
-        ...(shop.notice ? { notice: shop.notice } : {}),
+        ...(shop.notice ? { shop_notice: `Today's notice from the shop, to tell them once: ${shop.notice}` } : {}),
         next: `Say ${first.minutes ? `it's about ${first.minutes} minutes, with ${first.with}` : `${first.with} is free now`}, as an estimate, and that only a booking holds a chair. Offer to book that time (check_availability, then create_booking).`,
       };
     },

@@ -616,6 +616,8 @@ const TOOLS: Record<string, Tool> = {
         // "How long's the wait if I come now?" is a walk-in's question.
         const soon = str(args.time) && date === toLocal(ctx.now(), p.timezone).date && zonedToUtc(date, str(args.time)!, p.timezone).getTime() - ctx.now().getTime() < 60 * 60000;
         if (soon && p.barber.walk_ins) out.walk_in = 'If they mean coming in now, get_wait_now gives the walk-in wait.';
+        // The shop's notice for today, from the back office: said once (presets/barber.md §6, Today).
+        if (shop?.notice) out.shop_notice = `Today's notice from the shop, to tell them once: ${shop.notice}`;
         if (colourStart) out.colour_from = `Colour only from ${spokenDate(toLocal(colourStart, p.timezone).date)} at ${spokenTime(toLocal(colourStart, p.timezone).time)}, 48 hours after their skin test.`;
       }
       if (table.key) out.table = table.label;
