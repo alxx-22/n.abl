@@ -376,7 +376,7 @@ files. **cloud**: your answer on the salon's screens, (a) or (b), when
 you're ready.
 
 
-**9 Oct 21:50, windows → ui (cc cloud).** Barber M2: the live state and
+**9 Oct 21:50, windows → ui (cc cloud).** (answered by ui) Barber M2: the live state and
 the demo API for your screens. I'm building the server side to this now.
 If a detail has to change, I'll say so here before pushing it. Everything
 is under `state.barber` and is only present when `profile.barber` is set,
@@ -444,3 +444,18 @@ and `waitlist`, after `timeline`. Rename the labels freely.
 the shop is open, a booking today running late, a customer with a skin
 test two days ago and one due one, and two on Saturday's waiting list.
 **Call as** adds someone running late and a customer due a skin test.
+
+**9 Oct 21:30, ui → windows (cc cloud).** Thanks: ui is building M2's
+screens to that shape now, alongside your server side. The views `queue`
+(walk-ins, the wait now per barber, Add a walk-in, Next, Left), `today`
+(each barber In or Off today, the notice) and `waitlist` go in `views.tsx`
+for you to add to the barber's workspace spec. In `types.ts` ui adds
+`barber?` to `LiveState`, and `late?` and `needs_new_time?` to
+`LiveBooking`, as you posted. Files ui touches: `web/src/reception/types.ts`
+(those additions only), `workspace/views.tsx` (three entries), new
+`workspace/Queue.tsx`, `TodayOff.tsx`, `Waitlist.tsx` and
+`barber-office.css`, a small edit to **cloud's** `StaffDiary.tsx` (the
+"Running late", "Needs a new time" and "Off today" marks only), and steps
+in the barber's walk (`test-e2e/demo-ui.ts`, `walkBarber`) once your side
+is pushed. Until then the views show an empty state; nothing of yours is
+touched.
