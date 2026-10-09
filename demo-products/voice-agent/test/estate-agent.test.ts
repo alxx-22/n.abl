@@ -529,6 +529,69 @@ test('seed: a full fortnight, none on Sundays, the same for the same seed', () =
   assert.notDeepEqual(plan(WEDNESDAY, 8).bookings.map((b) => b.reference), p.bookings.map((b) => b.reference));
 });
 
+const SEEDS = [7, 11, 42, 99, 123];
+const dayOf = (iso: string | Date | null | undefined) => (iso ? localOf(new Date(iso)).date : null);
+
+test('seed: a sale\'s ticked steps agree with its updates, and the chain buyer is selling their own home', () => {
+  // The review found exchange ticked in August on a sale whose update says contracts exchanged on 2 October.
+  for (const seed of SEEDS) {
+    const p = plan(WEDNESDAY, seed);
+    for (const s of p.sales!) {
+      const ticked = s.milestones.filter((m) => m.done_at).map((m) => m.done_at!);
+      assert.deepEqual([...ticked].sort(), ticked, `${s.listing_key}: in order`);
+      assert.ok(ticked.every((d) => new Date(d) >= s.created_at && new Date(d) <= WEDNESDAY), `${s.listing_key}: between the acceptance and now`);
+    }
+    const sale = (key: string) => p.sales!.find((s) => s.listing_key === key)!;
+    const done = (key: string, step: string) => dayOf(sale(key).milestones.find((m) => m.key === step)!.done_at);
+    const update = (key: string, words: RegExp) => dayOf(sale(key).updates.find((u) => words.test(u.what))!.at);
+    assert.equal(done('elm_court_2', 'mortgage_offer'), update('elm_court_2', /mortgage offer/), `seed ${seed}`);
+    assert.equal(done('willow_gardens_8', 'exchange'), update('willow_gardens_8', /exchanged/), `seed ${seed}`);
+    assert.equal(done('willow_gardens_8', 'exchange'), sale('willow_gardens_8').exchange_target, `seed ${seed}`);
+    // "Our buyer is selling 5 Ash Grove", and their mortgage offer is in.
+    const chain = p.offers!.find((o) => o.reference === sale('elm_court_2').offer_ref)!;
+    assert.match(sale('elm_court_2').chain!, /Our buyer is selling/);
+    assert.deepEqual([chain.position.first_time_buyer, chain.position.selling, chain.position.funding], [false, 'under_offer', 'mortgage_aip'], `seed ${seed}`);
+  }
+});
+
+test('seed: valuation callers are sellers, buyers too only when they need to buy, and 19 Copse Lane\'s owner is its seller', () => {
+  for (const seed of SEEDS) {
+    const p = plan(WEDNESDAY, seed);
+    const vals = p.bookings.filter((b) => b.service_key === 'valuation');
+    assert.equal(vals.length, 7, `seed ${seed}`);
+    for (const v of vals) {
+      const d = v.details as { address: string; needs_to_buy: boolean };
+      const who = p.people!.find((x) => x.phone === v.phone)!;
+      assert.deepEqual(who.details.roles, d.needs_to_buy ? ['seller', 'buyer'] : ['seller'], `seed ${seed}, ${d.address}`);
+      if (!d.needs_to_buy) {
+        assert.equal(who.details.requirements, undefined, `seed ${seed}, ${d.address}: wants nothing`);
+        assert.equal(who.marketing_consent, false, `seed ${seed}, ${d.address}: no alerts`);
+      } else assert.notEqual(who.details.position?.first_time_buyer, true, `seed ${seed}, ${d.address}: owns a home`);
+    }
+    const instructed = vals.find((v) => (v.details as { outcome?: string }).outcome === 'instructed')!;
+    assert.equal((instructed.details as { became: string }).became, 'copse_lane_19');
+    assert.deepEqual(p.listings!.find((l) => l.listing_key === 'copse_lane_19')!.sellers, [{ name: instructed.name, phone: instructed.phone }], `seed ${seed}`);
+  }
+});
+
+test('seed: nothing happens to a home before it went on the market, the one new today included', () => {
+  for (const now of [WEDNESDAY, new Date('2026-10-07T15:30:00Z'), new Date('2026-10-10T08:00:00Z')]) {
+    for (const seed of SEEDS) {
+      const p = plan(now, seed);
+      const listed = new Map(p.listings!.map((l) => [l.listing_key, l.marketed_at]));
+      const riverside = listed.get('riverside_5')!;
+      assert.equal(dayOf(riverside), localOf(now).date, 'new to the market today');
+      assert.ok(riverside <= now);
+      const early = p.bookings.filter((b) => b.listing_key && b.starts_at < now && b.starts_at < listed.get(b.listing_key)!);
+      assert.deepEqual(early.map((b) => `${b.listing_key} ${b.starts_at.toISOString()}`), [], `seed ${seed} at ${now.toISOString()}`);
+      for (const m of p.messages.filter((x) => (x.details as { listing?: string } | undefined)?.listing)) {
+        const key = (m.details as { listing: string }).listing;
+        assert.ok(m.created_at! >= listed.get(key)! && m.created_at! <= now, `seed ${seed}: ${m.body} at ${m.created_at!.toISOString()}, listed ${listed.get(key)!.toISOString()}`);
+      }
+    }
+  }
+});
+
 // ── Finding homes from what callers say (presets/estate-agent.md §4.2) ────
 
 const FINDABLE = compile(named()).listings!.map((l) => ({ listing: l, price_pence: l.initial.price_pence, status: l.initial.status }));

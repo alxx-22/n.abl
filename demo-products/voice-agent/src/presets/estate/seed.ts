@@ -16,7 +16,7 @@ import {
   addWorkingDays, initialLive, insideRule, isWorkingDay, offerReceivedText, offerSentText, positionBadges, shortAddress, viewingRules, viewingText, type ListingLive,
 } from '../../domain/listings.ts';
 import { addDays, minutesOf, toLocal, weekdayOf, zonedToUtc } from '../../domain/time.ts';
-import { SALE_MILESTONES, type Buyer, type BuyerPosition, type HomeType, type Listing, type ListingState, type Offer, type Sale, type StaffMember, type TenantProfile } from '../../domain/types.ts';
+import { SALE_MILESTONES, type Buyer, type BuyerDetails, type BuyerPosition, type HomeType, type Listing, type ListingState, type Offer, type Sale, type StaffMember, type TenantProfile } from '../../domain/types.ts';
 import { FIRST_NAMES, LAST_NAMES, ids, rng } from '../common/random.ts';
 import type { SeedBooking, SeedMessage, SeedPlan, SeedText } from '../common/types.ts';
 import { featured } from './featured.ts';
@@ -112,15 +112,24 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
   const ben = person(PERSONAS.ben.name, PERSONAS.ben.phone, { first_time_buyer: true, selling: 'nothing', funding: 'mortgage_aip' });
   const megan = person(PERSONAS.megan.name, PERSONAS.megan.phone);
   const liam = person(PERSONAS.liam.name, PERSONAS.liam.phone, { first_time_buyer: false, selling: 'under_offer', funding: 'mortgage_aip' });
-  const known = new Map<string, { p: Person; last: Date; source: string; backup_for?: string[] }>();
+  const known = new Map<string, { p: Person; last: Date; source: string; backup_for?: string[]; owner?: { buying: boolean } }>();
   const met = (p: Person, when: Date, source = 'viewing') => {
     const k = known.get(p.phone);
     if (!k) known.set(p.phone, { p, last: when, source });
     else if (when > k.last) k.last = when;
   };
+  /** An owner who booked a valuation: a seller, as the live tool records them, and a buyer only if they need to buy. */
+  const metOwner = (p: Person, when: Date, details: Record<string, unknown>) => {
+    met(p, when, 'valuation');
+    known.get(p.phone)!.owner = { buying: details.needs_to_buy === true };
+  };
 
   // ── Homes as they stand ─────────────────────────────────────────────────
   const live = new Map<string, ListingLive>(listings.map((l) => [l.key, initialLive(l, now)]));
+  // A home new to the market today went live a few hours before Start (never before midnight), so its first enquiry can follow it.
+  for (const l of listings) {
+    if (l.marketed_days_ago === 0 && l.initial.status !== 'coming_soon') live.get(l.key)!.marketed_at = new Date(Math.max(at(today, '00:00').getTime(), now.getTime() - 3 * HOUR));
+  }
   const sellers = new Map<string, { name: string; phone: string }[]>();
   for (const l of listings) {
     sellers.set(l.key, l.key === f.seller?.key ? [{ name: PERSONAS.seller.name, phone: PERSONAS.seller.phone }] : [{ name: newName(), phone: newPhone() }]);
@@ -158,6 +167,8 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
     const service = findService(profile, o.service);
     if (!service || service.key !== o.service) return null;
     const starts = at(o.date, o.time);
+    // Nobody has already viewed a home before it went on the market (the review found last week's viewings on the home new today).
+    if (o.listing && starts.getTime() < now.getTime() && starts < live.get(o.listing.key)!.marketed_at) return null;
     const past = o.early || starts.getTime() < now.getTime();
     const slot = checkSlot(
       {
@@ -388,7 +399,11 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
     done.forEach((d, i) => {
       const date = pastWork[i] ?? addDays(today, -(i + 2));
       const p = person();
-      valuation(date, anyTime(date), d, p, 'finished') && met(p, at(date, '12:00'), 'valuation');
+      if (!valuation(date, anyTime(date), d, p, 'finished')) return;
+      metOwner(p, at(date, '12:00'), d);
+      // The owner who instructed us is the coming-soon home's seller, so their call for an update is recognised.
+      const became = (d as { became?: string | null }).became;
+      if (became) sellers.set(became, [{ name: p.name, phone: p.phone }]);
     });
     const soon = [
       lead('Ivy Cottage, 3 Church Lane', 'BK4 1EW', { property_type: 'cottage', bedrooms: 2, capacity: 'executor', reason: "selling their late mother's home", timescale: 'no rush', other_agent: null, needs_to_buy: false, dual_fee: false, hot: false, tone: 'Go gently. No rush.' }),
@@ -398,7 +413,7 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
       const date = valuerDays[i];
       if (!date) return;
       const p = person();
-      valuation(date, afternoon, d, p) && met(p, now, 'valuation');
+      if (valuation(date, afternoon, d, p)) metOwner(p, now, d);
     });
     const later = [
       lead('8 Thistle Close', 'BK5 2HB', { reason: 'separating', timescale: 'within six months', other_agent: null, needs_to_buy: false, dual_fee: false, hot: false }),
@@ -408,7 +423,7 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
       const date = nextDay(addDays(today, 4 + i * 2), (x) => works(valuer, x) && weekdayOf(x) !== 0);
       if (!date) return;
       const p = person();
-      valuation(date, anyTime(date), d, p) && met(p, now, 'valuation');
+      if (valuation(date, anyTime(date), d, p)) metOwner(p, now, d);
     });
   }
 
@@ -478,13 +493,18 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
   // Older: the accepted offers behind the other two sales, and the back-up buyer's on the first.
   const backup = pick(pool.filter((p) => p.position.funding === 'cash' || p.position.selling === 'nothing'));
   if (f.agreed) offer({ l: f.agreed, amount: round(priceOf(f.agreed) * 0.94), p: backup, received: officeBefore(240), status: 'declined', sent: officeBefore(238), decided: officeBefore(220), note: 'Would still buy if the sale falls through.' });
-  const solicitorBuyer = person();
+  // The chain line says this buyer is selling their own home, under offer, with a mortgage offer in; set after person() so the rest of the fortnight is unchanged.
+  const solicitorBuyer: Person = { ...person(), position: { first_time_buyer: false, selling: 'under_offer', funding: 'mortgage_aip' } };
   const chainOffer = f.chain ? offer({ l: f.chain, amount: round(priceOf(f.chain) * 0.98), p: solicitorBuyer, received: new Date(now.getTime() - 50 * DAY), status: 'accepted', sent: new Date(now.getTime() - 50 * DAY + 3 * HOUR), decided: new Date(now.getTime() - 48 * DAY) }) : null;
   const exchangedOffer = f.exchanged ? offer({ l: f.exchanged, amount: round(priceOf(f.exchanged) * 0.97), p: liam, received: new Date(now.getTime() - 84 * DAY), status: 'accepted', sent: new Date(now.getTime() - 84 * DAY + 2 * HOUR), decided: new Date(now.getTime() - 82 * DAY) }) : null;
 
   // ── Sales in progress ───────────────────────────────────────────────────
   const MILESTONES = SALE_MILESTONES;
-  const milestones = (done: number, from: Date) => MILESTONES.map((key, i) => ({ key, done_at: i < done ? new Date(from.getTime() + (i + 1) * 3 * DAY).toISOString() : null }));
+  /** The first `done` steps ticked, the last on the day its update says, the others spread in whole days before it. */
+  const milestones = (done: number, from: Date, last: Date) => {
+    const days = Math.round((last.getTime() - from.getTime()) / DAY);
+    return MILESTONES.map((key, i) => ({ key, done_at: i < done ? new Date(i === done - 1 ? last.getTime() : from.getTime() + Math.round(((i + 1) * days) / done) * DAY).toISOString() : null }));
+  };
   const solicitors = (buyerSide: { name: string; firm: string; phone: string }) => [
     { role: 'buyer_solicitor', ...buyerSide },
     { role: 'seller_solicitor', name: newName(), firm: 'Brackenford Legal (example)', phone: newPhone() },
@@ -505,24 +525,26 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
     const from = chainOffer.decided_at!;
     let exchange = addDays(today, 7);
     while (!isWorkingDay(exchange, nation)) exchange = addDays(exchange, 1);
+    const mortgageOffer = new Date(now.getTime() - 6 * DAY);
     sales.push({
       listing_key: f.chain.key, offer_ref: chainOffer.reference, buyer_name: solicitorBuyer.name, buyer_phone: solicitorBuyer.phone, agreed_pence: chainOffer.amount_pence,
-      milestones: milestones(5, from), exchange_target: exchange, completion_date: null,
+      milestones: milestones(5, from, mortgageOffer), exchange_target: exchange, completion_date: null,
       parties: [
         ...solicitors({ name: PERSONAS.solicitor.name, firm: 'Fenwick Law (example)', phone: PERSONAS.solicitor.phone }),
         { role: 'chain_agent', name: 'Harper & Co', firm: 'Harper & Co', phone: PERSONAS.chainAgent.phone },
       ],
       chain: 'Our buyer is selling 5 Ash Grove through Harper & Co; their buyer\'s mortgage valuation is booked.',
-      status: 'progressing', keys_released_at: null, updates: [hist('mortgage offer received by the buyer', new Date(now.getTime() - 6 * DAY))], created_at: from,
+      status: 'progressing', keys_released_at: null, updates: [hist('mortgage offer received by the buyer', mortgageOffer)], created_at: from,
     });
   }
   if (f.exchanged && exchangedOffer) {
     const from = exchangedOffer.decided_at!;
+    const exchanged = new Date(now.getTime() - 5 * DAY);
     sales.push({
       listing_key: f.exchanged.key, offer_ref: exchangedOffer.reference, buyer_name: liam.name, buyer_phone: liam.phone, agreed_pence: exchangedOffer.amount_pence,
-      milestones: milestones(7, from), exchange_target: addDays(today, -5), completion_date: addWorkingDays(today, 2, nation),
+      milestones: milestones(7, from, exchanged), exchange_target: local(exchanged).date, completion_date: addWorkingDays(today, 2, nation),
       parties: solicitors({ name: newName(), firm: 'Coldbrook Law (example)', phone: newPhone() }), chain: null,
-      status: 'exchanged', keys_released_at: null, updates: [hist('contracts exchanged', new Date(now.getTime() - 5 * DAY))], created_at: from,
+      status: 'exchanged', keys_released_at: null, updates: [hist('contracts exchanged', exchanged)], created_at: from,
     });
   }
 
@@ -551,6 +573,12 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
     if (isWorkingDay(complaintDay, nation)) n++;
   }
   const complaintRef = ref();
+  /** An office-hours time `hours` ago, or, for a home listed since, a time between its listing and now. */
+  const sinceListed = (l: Listing, hours: number) => {
+    const t = officeBefore(hours);
+    const listed = live.get(l.key)!.marketed_at;
+    return t >= listed ? t : new Date((listed.getTime() + now.getTime()) / 2);
+  };
   const vacant = listings.find((l) => l.viewing.occupied === 'vacant');
   const messages: SeedMessage[] = [
     ...(f.chain ? [{
@@ -593,7 +621,7 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
       from_name: newName(), from_phone: newPhone(), for_staff: f.busy.negotiator, category: 'viewing', urgency: 'today' as const,
       body: `Rightmove enquiry about ${shortAddress(f.busy)}: "Is it still available? Could we see it this weekend?"`,
       details: { portal: 'Rightmove', listing: f.busy.key, answered: false },
-      created_at: officeBefore(24),
+      created_at: sinceListed(f.busy, 24),
     }] : []),
     {
       from_name: newName(), from_phone: newPhone(), for_staff: estate?.complaints_handler ?? manager, category: 'complaint', urgency: 'this_week', reference: complaintRef,
@@ -605,22 +633,25 @@ export function planEstateSeed(profile: TenantProfile, now: Date, seed: number):
   if (f.house) met(megan, at(lastSaturday, '19:42'), 'Zoopla');
 
   // ── Everyone the agency knows ───────────────────────────────────────────
+  const asBuyer = (p: Person, owner?: { buying: boolean }): BuyerDetails => {
+    if (owner && !owner.buying) return { roles: ['seller'] };
+    const wants = { position: p.position, requirements: p.requirements, consent_at: p.consent?.toISOString() ?? null };
+    // An owner having their home valued is no first-time buyer, and that home is not on the market with us yet.
+    return owner ? { roles: ['seller', 'buyer'], ...wants, position: { ...p.position, first_time_buyer: false, selling: 'not_on_market' } } : { roles: ['buyer'], ...wants };
+  };
   for (const p of pool.slice(0, 10)) met(p, new Date(now.getTime() - between(10, 40) * DAY), pick(['Rightmove', 'Zoopla', 'walk-in', 'a board']));
-  const people: Buyer[] = [...known.values()].map(({ p, last, source, backup_for }) => ({
+  const people: Buyer[] = [...known.values()].map(({ p, last, source, backup_for, owner }) => ({
     phone: p.phone,
     name: p.name,
     details: {
-      roles: ['buyer'],
-      position: p.position,
-      requirements: p.requirements,
-      consent_at: p.consent?.toISOString() ?? null,
+      ...asBuyer(p, owner),
       ...(backup_for ? { backup_for } : {}),
       ...(p.investor ? { investor: true } : {}),
       ...(p === sam ? { tried_to_call: { by: team.find((t) => t.key === f.house?.negotiator && t.key !== f.seller?.negotiator)?.key ?? viewers.find((t) => t.key !== f.seller?.negotiator)?.key ?? 'tom', at: at(addDays(today, -1), '15:20').toISOString() } } : {}),
       last_contact: last.toISOString(),
       source,
     },
-    marketing_consent: Boolean(p.consent),
+    marketing_consent: Boolean(p.consent) && (!owner || owner.buying),
   }));
   if (f.seller) people.push({ phone: PERSONAS.seller.phone, name: PERSONAS.seller.name, details: { roles: ['seller'], last_contact: officeBefore(30).toISOString(), source: 'seller' }, marketing_consent: false });
 
