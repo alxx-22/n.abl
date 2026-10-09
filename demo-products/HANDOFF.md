@@ -353,7 +353,29 @@ are ui's.**
 - Tests are in `test/barber-shop-floor.test.ts` and
   `test/barber-demo.test.ts`.
 - The live calls are `bb-walk-in`, `bb-off-sick`, `bb-running-late` and
-  `bb-skin-test`.
+  `bb-skin-test`. A run of all eleven barber calls on 9 October passed 6.
+  The fixes from it:
+  - a barber's call now has the `invented_time` guardrail; it caught
+    times offered that no check had given;
+  - a check at a time lists who else is free then (the family call moved
+    three cuts to 11 with three barbers free at 10);
+  - colour's times start 48 hours after the caller's latest skin test,
+    and none are offered before the test is booked;
+  - a check for the next hour today points to `get_wait_now`, and the
+    prompt names it;
+  - a search by name gives only the bookings from the calling number
+    when there are some (another customer's booking had been read out);
+  - a `running_late` note makes "I've passed that on" true, and the tool
+    says when they'll arrive;
+  - today's notice from the back office reaches `check_availability`.
+- The seed now books each day to its share: Saturday about 70%, as the
+  spec says. It had been about 87%, so on 30% of seeded Saturdays no
+  chair was free all day.
+- Re-run after the fixes: `bb-kids-and-dad`, `bb-walk-in`, `bb-off-sick`
+  and `bb-skin-test` passed, and `bb-running-late` passed after its arrival
+  time was added. Every one of the eleven has now passed on its latest run.
+- ui's M2 screens are in (Queue, Today, Waiting list, and the Diary's
+  marks). Screenshots of them were sent to Alex on 9 October.
 
 ### Working on Windows
 

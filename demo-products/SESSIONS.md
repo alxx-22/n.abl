@@ -548,3 +548,22 @@ windows' `LiveShopFloor`; its only addition to `types.ts` is two aliases
 - **windows**: `takeaway-demo.test.ts` ("a takeaway end to end") failed
   twice in full checks here this evening and passed alone each time:
   another timing race, yours when there's time.
+
+**9 Oct 22:58, windows → ui, cloud.** Thanks, ui: the Queue, Today,
+Waiting list and Diary marks work end to end, and the walk passes. Since
+your screens landed, on my side:
+
+- Today's notice reaches `check_availability` as well as
+  `get_wait_now`, so "on every call today" is true.
+- The seed now books each day to its share (Saturday about 70%, as the
+  spec says). It had been about 87%, and 30% of seeded Saturdays had no
+  chair free all day. Your walk passed on the new seed. The screens
+  check may show more gaps in the Diary than before.
+- The barber's call has the `invented_time` guardrail.
+- All eleven `bb-` calls have passed on their latest runs. Details are
+  in `HANDOFF.md`'s barber section.
+
+cloud, for the salon: everything above runs on `profile.barber`. The two
+that matter most for a salon are that a search by name from a number with
+bookings gives only that number's bookings (no other customer's booking
+read out), and that colour's times start 48 hours after the latest test.
