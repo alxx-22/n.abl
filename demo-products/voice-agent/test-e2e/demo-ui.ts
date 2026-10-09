@@ -204,6 +204,18 @@ async function walkRestaurant({ shot }: Walk) {
     await next('How you serve');
     await page.getByRole('checkbox', { name: 'Deliveroo' }).check();
     await page.waitForSelector('.save-state.saved', { timeout: 10000 });
+    // Districts typed key by key, as a person does: the box used to drop every comma and space, so "NG1, NG2" became "NG1NG2".
+    const delivery = page.getByRole('switch', { name: /^Delivery by your own drivers/ });
+    await delivery.check();
+    const districts = page.getByLabel('Postcode districts', { exact: true });
+    await districts.fill('');
+    await districts.pressSequentially('ng1, ng2 ng3', { delay: 40 });
+    await page.waitForSelector('.save-state.saved', { timeout: 10000 });
+    if ((await districts.inputValue()) !== 'ng1, ng2 ng3') throw new Error(`the districts box changed what was typed: ${await districts.inputValue()}`);
+    await districts.blur();
+    await page.waitForFunction(() => (document.querySelector('input[placeholder="NG1, NG2, NG3, NG7"]') as HTMLInputElement | null)?.value === 'NG1, NG2, NG3');
+    await delivery.uncheck();
+    await page.waitForSelector('.save-state.saved', { timeout: 10000 });
     await next('Seating');
     // One more 6-seat table inside.
     await page.click('button[aria-label="One more 6-seat table in Inside"]');

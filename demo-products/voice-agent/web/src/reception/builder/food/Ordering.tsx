@@ -6,7 +6,7 @@
 
 import type { OrderingAnswer } from '../../../../../src/presets/food/ordering.ts';
 import type { Sources } from '../../../../../src/presets/common/types.ts';
-import { ListText, Num, Pounds, Select, Source, Text, Toggle } from '../fields.tsx';
+import { ListText, Num, Pounds, Select, Source, Toggle } from '../fields.tsx';
 import type { Section } from '../section.ts';
 
 const APPS = ['Deliveroo', 'Uber Eats', 'Just Eat'];
@@ -59,7 +59,8 @@ export function CollectionDelivery({ ordering, path, sources }: { ordering: Sect
         <Toggle label="Delivery by your own drivers" checked={dl.enabled} onChange={(v) => edit((d) => void (d.delivery.enabled = v))} hint="The receptionist checks the postcode, the minimum order and adds the fee." />
         {dl.enabled ? (
           <>
-            <Text label="Postcode districts" value={dl.districts.join(', ')} placeholder="NG1, NG2, NG3, NG7" onChange={(v) => edit((d) => void (d.delivery.districts = v.split(/[,\s]+/).map((x) => x.trim().toUpperCase()).filter(Boolean)))} hint="The first half of the postcode, like NG1." />
+            {/* ListText keeps what is typed while the box has focus: rebuilt on every key, a comma or space vanished and "NG1, NG2" became "NG1NG2". */}
+            <ListText label="Postcode districts" value={dl.districts} placeholder="NG1, NG2, NG3, NG7" onChange={(v) => edit((d) => void (d.delivery.districts = v.flatMap((x) => x.split(/\s+/)).map((x) => x.toUpperCase()).filter(Boolean)))} hint="The first half of the postcode, like NG1." />
             <div className="three">
               <Pounds label="Delivery fee" pence={dl.fee_pence} max={2000} onChange={(v) => edit((d) => void (d.delivery.fee_pence = v))} />
               <Pounds label="Minimum order" pence={dl.min_order_pence} max={10000} onChange={(v) => edit((d) => void (d.delivery.min_order_pence = v))} />
