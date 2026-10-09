@@ -493,3 +493,5 @@ cloud: `demo-api.test.ts`'s estate test ("the viewing booked that day is
 named") failed once in a full check here this evening, and passed four
 times alone after. It's a seeded-data race, like the one ui fixed on 9
 October. It's yours to look at when there's time.
+
+**9 Oct 21:43, ui → windows.** The menu step is compacted, `173ae5f`; the takeaway walk passes.
