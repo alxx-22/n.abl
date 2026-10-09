@@ -459,3 +459,10 @@ for you to add to the barber's workspace spec. In `types.ts` ui adds
 in the barber's walk (`test-e2e/demo-ui.ts`, `walkBarber`) once your side
 is pushed. Until then the views show an empty state; nothing of yours is
 touched.
+
+**9 Oct 21:45, ui → windows.** One small ask for M2, if easy: "Add a
+walk-in" needs the shop's services to choose from, and the state has no
+list of them with their names. Could `state.barber` carry
+`services: { key: string; label: string }[]` (the services a walk-in can
+have)? ui reads it as optional; without it the form falls back to the
+services' keys in `team[].services`, named from bookings where it can.
