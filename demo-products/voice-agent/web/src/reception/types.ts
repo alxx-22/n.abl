@@ -124,6 +124,29 @@ export interface LiveBooking {
   home?: string;
   /** What a viewing or valuation knows: the buyer's position and badges, feedback, a valuation's lead. */
   details?: Record<string, unknown>;
+  /** A barber's: the caller rang to say they're running late (src/server/barber.ts). */
+  late?: { minutes: number; note: string; at: string };
+  /** A barber's: today, with a barber who is off today. */
+  needs_new_time?: true;
+}
+
+/** A barber's shop floor (src/server/barber.ts; agreed on SESSIONS.md, 9 October 21:50). */
+export interface LiveShopFloor {
+  /** Today's barbers off (resource keys) and one line for callers. */
+  today: { date: string; off: string[]; notice: string | null };
+  /** Walk-ins waiting now, first in first; `resource_key` null for any barber. */
+  queue: {
+    id: string; name: string; phone: string | null; service: string; service_key: string;
+    resource_key: string | null; with: string | null; joined_at: string; waited_minutes: number;
+  }[];
+  /** Each barber in today, soonest free first: HH:MM, and minutes from now. */
+  wait_now: { resource_key: string; with: string; free_at: string; minutes: number }[];
+  /** Today onwards, each day oldest first; `notified_at` once texted that a slot's come up. */
+  waitlist: {
+    id: string; date: string; spoken_date: string; service: string; service_key: string;
+    resource_key: string | null; with: string | null; name: string; phone: string | null;
+    created_at: string; notified_at: string | null;
+  }[];
 }
 
 /** An estate agency's home in the back office: its facts joined with what staff changed (src/server/state.ts). */
@@ -454,6 +477,8 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   /** An estate agency's. */
   nation?: Nation;
   team?: LiveStaff[];
+  /** A barber's shop floor. */
+  barber?: LiveShopFloor;
   listings?: LiveListing[];
   offers?: LiveOffer[];
   buyers?: LiveBuyer[];

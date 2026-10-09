@@ -119,6 +119,9 @@ export function waitNow(o: {
   }));
 }
 
+/** The skin test's service key, added to a profile whose shop does colour. */
+export const SKIN_TEST_KEY = 'skin_test';
+
 /** The gap a skin test needs before colour (presets/barber-use-cases.md, "Colour"). */
 export const SKIN_TEST_HOURS = 48;
 const SIX_MONTHS_DAYS = 183;

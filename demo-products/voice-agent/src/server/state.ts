@@ -9,6 +9,7 @@ import { matches, requirementsWords, shortAddress } from '../domain/listings.ts'
 import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc, tenantNow } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from '../core/prompt.ts';
+import { barberMarks, barberState } from './barber.ts';
 import type { WorkspaceSpec } from '../presets/index.ts';
 import { maintenanceState } from './maintenance.ts';
 
@@ -64,6 +65,7 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
   const buffers = new Map((t.profile.booking?.services ?? []).map((s) => [s.key, s.buffer_minutes ?? 0]));
   const areas = new Map((t.profile.booking?.areas ?? []).map((a) => [a.key, a.label]));
   const homes = new Map((t.profile.listings ?? []).map((l) => [l.key, shortAddress(l)]));
+  const shop = t.profile.barber ? await repo.getToday(t.id, today) : null;
   return {
     tenant: {
       id: t.id, slug: t.slug, name: t.profile.name, business_type: t.profile.business_type, status: t.profile.status,
@@ -105,6 +107,8 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
         // A viewing's home, and what a viewing or valuation knows: an estate agency's only.
         ...(b.listing_key ? { listing_key: b.listing_key, home: homes.get(b.listing_key) ?? b.listing_key } : {}),
         ...(b.details && Object.keys(b.details).length ? { details: b.details } : {}),
+        // A barber's Diary marks: running late, and a new time needed with a barber off today.
+        ...(shop ? barberMarks(b, l.date, shop) : {}),
       };
     }),
     orders: orders.map((o) => ({
@@ -124,17 +128,11 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
     })),
     ...(t.profile.listings ? await estateState(repo, t, bookings, now) : {}),
     ...(t.profile.maintenance ? await maintenanceState(repo, t, now) : {}),
-    ...(t.profile.barber ? barberState(t) : {}),
+    // A barber's Diary rows and shop floor (server/barber.ts).
+    ...(t.profile.barber ? await barberState(repo, t, now, today) : {}),
   };
 }
 
-/** A barber shop's barbers, for its Diary: a row each, on their days (presets/barber.md §6). */
-function barberState(t: Tenant) {
-  const barbers = (t.profile.booking?.resources ?? []).filter((r) => r.kind === 'staff');
-  return {
-    team: barbers.map((r) => ({ key: r.key, name: r.label, first_name: r.label, role: 'other' as const, does: [], days: r.days ?? [0, 1, 2, 3, 4, 5, 6], mobile: '', services: r.services })),
-  };
-}
 
 const DAY = 86400000;
 

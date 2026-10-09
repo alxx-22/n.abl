@@ -7,7 +7,9 @@
 import type { FunctionDeclaration } from './live.ts';
 import { findService } from '../domain/availability.ts';
 import { spokenDate, spokenTime, toLocal } from '../domain/time.ts';
+import type { WaitlistEntry } from '../domain/shop-floor.ts';
 import { pounds, type BookableService, type Booking, type Tenant } from '../domain/types.ts';
+import type { Repo } from '../db/repo.ts';
 import { S, smsTo, str } from './tool-kit.ts';
 import type { Args, ToolContext } from './tools.ts';
 
@@ -189,4 +191,28 @@ export function depositFields(ctx: ToolContext, b: Booking): Record<string, stri
   const bb = ctx.tenant.profile.barber;
   if (!bb || !b.deposit_pence || b.deposit_paid) return {};
   return bb.deposit_required ? { deposit_due: pounds(b.deposit_pence) } : { deposit_optional: `${pounds(b.deposit_pence)}: by card now if they like, or nothing until the shop` };
+}
+
+/**
+ * A cancellation frees a slot: the first on that day's waiting list it fits
+ * (their service, with their barber or any) is texted, once (presets/barber.md
+ * §4.2). From a call's cancel_booking and from the back office alike.
+ */
+export async function offerFreedSlot(repo: Repo, t: Tenant, b: Booking, text: (to: string, body: string) => Promise<unknown>, now: Date): Promise<WaitlistEntry | null> {
+  const p = t.profile;
+  if (!p.barber || b.starts_at <= now) return null;
+  const local = toLocal(b.starts_at, p.timezone);
+  const freed = (b.ends_at.getTime() - b.starts_at.getTime()) / 60000;
+  const chair = p.booking?.resources.find((x) => x.key === b.resource_key);
+  const fits = (e: WaitlistEntry) => {
+    if (e.date !== local.date || e.notified_at || !e.phone || (e.resource_key && e.resource_key !== b.resource_key)) return false;
+    const s = findService(p, e.service_key);
+    return Boolean(s && (s.duration_minutes ?? 0) <= freed && (!chair || chair.services.includes(s.key)));
+  };
+  const first = (await repo.listWaitlist(t.id, local.date)).find(fits);
+  if (!first) return null;
+  const what = findService(p, first.service_key)?.label.toLowerCase() ?? 'appointment';
+  await text(first.phone!, `${p.name}: a slot's come up on ${spokenDate(local.date)} at ${spokenTime(local.time)}${chair ? ` with ${chair.label}` : ''}, for your ${what}. Call us to book it: the first to call gets it. (Demo)`);
+  await repo.markWaitlistNotified(t.id, first.id, now);
+  return first;
 }

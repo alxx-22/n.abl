@@ -5,6 +5,7 @@
 // the tools.
 
 import { pounds, type BookableService, type KnowledgeEntry, type Resource, type TenantProfile } from '../../domain/types.ts';
+import { SKIN_TEST_KEY } from '../../domain/shop-floor.ts';
 import { spokenTime } from '../../domain/time.ts';
 import { baseProfile, entry, mergeFaqs } from '../common/profile.ts';
 import { bookingWindows } from '../common/hours.ts';
@@ -54,9 +55,6 @@ const PAY: Record<BarberAnswers['money']['payment'], string> = {
   shop: 'Paid in the shop, cash or card.',
   either: 'Paid in the shop, cash or card, or by card when booking.',
 };
-
-/** The skin test's service key, added when a shop does colour. */
-export const SKIN_TEST_KEY = 'skin_test';
 
 export function compileBooking(a: BarberAnswers): NonNullable<TenantProfile['booking']> {
   const b = a.booking;

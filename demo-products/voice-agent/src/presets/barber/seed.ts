@@ -9,7 +9,7 @@ import type { BookableService, Resource, TenantProfile } from '../../domain/type
 import { addDays, closeMinutes, minutesOf, timeOf, toLocal, weekdayOf, zonedToUtc } from '../../domain/time.ts';
 import { ids, rng } from '../common/random.ts';
 import type { SeedBooking, SeedMessage, SeedPlan } from '../common/types.ts';
-import { SKIN_TEST_KEY } from './compile.ts';
+import { SKIN_TEST_KEY } from '../../domain/shop-floor.ts';
 import { BB_PEOPLE } from './personas.ts';
 
 const MIN = 60000;

@@ -13,6 +13,9 @@ import { isAdmin, voiceMeta, voicePreview } from './admin.ts';
 import { tenantState } from './state.ts';
 import { estateText } from '../core/estate-tools.ts';
 import { applyOffice, invoiceAction, jobAction, officeAction, propertyAction, type OfficeState } from './maintenance.ts';
+import { barberAction } from './barber.ts';
+import { offerFreedSlot } from '../core/barber-tools.ts';
+import { SKIN_TEST_KEY } from '../domain/shop-floor.ts';
 import type { DemoKey, Workspace } from '../db/demo-repo.ts';
 import { SHARED_DEMO_MINUTES, SHARED_DRAFT_MINUTES, THROTTLE, hashKey, ipHash, newVisitor, normaliseKey, prefixOf, readSession, signSession, withFreePin } from '../demo/access.ts';
 import { PRESETS, answersOf, builtPreset, getPreset, type BaseAnswers, type Preset } from '../presets/index.ts';
@@ -494,6 +497,14 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
   }
 
   // ── Staff actions from the back office ────────────────────────────────
+  // A barber's shop floor: today's barbers off, the walk-in queue, the waiting list (server/barber.ts).
+  if (t.profile.barber && ['today', 'walkins', 'waitlist'].includes(sub ?? '')) {
+    const message = await barberAction(repo, t, { sub: sub!, id: ref ?? null, method: req.method ?? '', body: req.method === 'GET' ? {} : await readJson(req, 10_000), now: tenantNow(t) });
+    if (message === null) throw new HttpError(404, 'Not found.');
+    void usage('staff_action', { action: `${sub}${ref ? '_change' : ''}` });
+    refresh({ reason: 'staff', what: message });
+    return json(res, 200, { ok: true, message }), true;
+  }
   if (sub === 'bookings' && ref && req.method === 'PATCH') {
     const b = await readJson(req, 20_000);
     const booking = await repo.getBookingByReference(t.id, ref);
@@ -528,6 +539,8 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
       if (!['expected', 'arrived', 'seated', 'finished', 'no_show'].includes(status)) throw new HttpError(400, 'Unknown visit state.');
       if (booking.status !== 'confirmed') throw new HttpError(409, 'That booking was cancelled.');
       await repo.setVisitStatus(t.id, ref, status as 'expected');
+      // A barber's skin test done: colour can follow 48 hours after it.
+      if (t.profile.barber && status === 'finished' && booking.service_key === SKIN_TEST_KEY && booking.phone) await repo.setSkinTest(t.id, booking.phone, booking.name, booking.starts_at);
       message = `Marked ${status.replace('_', '-')}.`;
     } else if (b.action === 'details') {
       const d: { notes?: string | null; allergies?: string | null; tags?: string[] } = {};
@@ -562,6 +575,9 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
       const l = toLocal(c.starts_at, t.profile.timezone);
       if (b.notify !== false) await textCustomer(ctx, t.id, c.phone, `${t.profile.name}: we've had to cancel your booking ${c.reference} for ${spokenDate(l.date)} at ${spokenTime(l.time)}. Sorry for the trouble; call us to rebook. (Demo)`);
       message = 'Cancelled.';
+      // A barber's waiting list: the first it fits hears the slot is free.
+      const offered = await offerFreedSlot(repo, t, c, (to, body) => textCustomer(ctx, t.id, to, body), tenantNow(t));
+      if (offered) message = `Cancelled. ${offered.name}, on the waiting list, has been texted.`;
     } else {
       throw new HttpError(400, 'Unknown action.');
     }
