@@ -56,6 +56,34 @@ Alex's 5-hour usage limit; next: a walkthrough of every preset with
 screenshots for Alex, the restaurant's findings, and the menu step (its
 editor is shared with the takeaway: waiting on the windows session).
 
+**9 October, overnight**, with the cloud and Windows sessions out of usage,
+this session picked up their work (the split is in `SESSIONS.md`, 8 Oct
+22:55, and what it did for each in the 9 Oct message):
+
+- **Estate agent** (cloud's): the review's last 3 findings, the seeded
+  fortnight agreeing with itself (`f36d4e3`, goldens `112a600`); and the
+  buyer whose offer is accepted keeps their own viewing (`c175148`). All 28
+  review findings are now done.
+- **Barber M1** (windows'): the seven live calls, six passing first time;
+  the late cancel now says plainly that the shop keeps the deposit
+  (`0eb0034`). Details in the barber section below.
+- **Restaurant**, the review's 10: a party no table seats gets the
+  manager's callback and the default limit is 8 (`7ef729b`); a no-show or
+  finished table is free again (`b161203`); "too soon" or "gone", not
+  "taken" (`81d5036`); a second delivery district can be typed (`ded8158`);
+  no card-hold option that never took a card (`42b0bd7`); plain words in
+  what the receptionist is told (`da959f0`); a private room's table is "by
+  enquiry" (`673914f`); no orders on a closure day (`39cdf74`); a week of
+  bookings with only big tables (`92dace5`); a name just cleared stays clear
+  (`61cfb57`). Goldens re-recorded where a fix meant they should: `bb60928`,
+  `cc40749`, `5581633`. Restaurant live calls after the fixes: all six run
+  passed (two on a second run, the first having failed for reasons unrelated
+  to the changes).
+- **Walkthrough**: every preset's walk passes; screenshots in
+  `eval-results/demo-ui/<preset>/` (not in git). Seen but not changed: the
+  barber's and estate Diary's booking blocks are too narrow to read at a
+  1500px-wide window (`StaffDiary`, cloud's).
+
 ### Property maintenance M3 (the cloud session): built (8 October)
 
 M3 is done, and with it the repairs preset as the spec plans it

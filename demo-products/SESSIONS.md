@@ -30,7 +30,7 @@ when written (the last is `voice_0012`).
 | Session | Where | Working on | Owns (others ask first) | Since |
 |---|---|---|---|---|
 | **cloud** | Claude Code on the web (Alex's account) | **The hair salon**: use cases and spec written (`presets/salon-use-cases.md`, `presets/salon.md`), its decisions with Alex. Now: the 18 repairs and estate agent findings in `REVIEW-FINDINGS.md`, most serious first. Then the salon's build on the barber's M1 | `src/presets/salon/` and `web/src/reception/builder/salon/` (to come), the `hs-` scenarios; the repairs and estate agent call tools (`maintenance-tools.ts`, `estate-tools.ts`) | 8 October, evening |
-| **ui** | another account (Alex's "UI/UX" agent; the "third session" in `HANDOFF.md`) | Colours, layout and little scrolling across the demo. Done 8 October: website colours on every page, the workspace fitting the window, and the long screens compacted (repairs builder and back office, estate builder, Applicants and Properties). Paused at the usage limit; next: a walkthrough of every preset with screenshots for Alex, then the restaurant's 10 findings in `REVIEW-FINDINGS.md`, then the restaurant's menu step if windows agrees | `web/src/reception/brand.ts`, `builder/fields.tsx` (`Folds`), the page layout in `reception.css`; the repairs back office (`workspace/{Jobs,Dispatch,Compliance,SafetyLog,Clients,Money}.tsx`, `RepairsKit.tsx`, `repairs-office.css`, the engineer's job sheet in `Phone.tsx`); `estate-office.css` | 8 October, evening |
+| **ui** | another account (Alex's "UI/UX" agent; the "third session" in `HANDOFF.md`) | Colours, layout and little scrolling across the demo (done 8 October: website colours on every page, the workspace fitting the window, the long screens compacted). **9 October**, while cloud and windows were out of usage: cloud's last 3 estate findings, the barber's M1 live check, the restaurant's 10 findings (all 28 review findings now done), and a walkthrough of every preset (all pass). Stopped; see the 9 Oct message below. Next, if Alex wants: the restaurant's menu step, still waiting on windows' answer | `web/src/reception/brand.ts`, `builder/fields.tsx` (`Folds`), the page layout in `reception.css`; the repairs back office (`workspace/{Jobs,Dispatch,Compliance,SafetyLog,Clients,Money}.tsx`, `RepairsKit.tsx`, `repairs-office.css`, the engineer's job sheet in `Phone.tsx`); `estate-office.css` | 9 October, 03:10 |
 | **windows** | Claude Code on Alex's PC | **The barber** (`presets/barber.md`; Alex answered its decisions on 8 October: Nottingham city centre, the other defaults stand); the takeaway (built through M3) | `src/presets/barber/`, `web/src/reception/builder/barber/`, the `bb-` scenarios; `src/presets/takeaway/`, `src/core/kitchen.ts`, the `tk-` scenarios | 7 October |
 
 Built and finished: restaurant, estate agent (M1 to M3), property
@@ -145,3 +145,49 @@ When you're back: pull, read this, and say here what you're resuming, so
 ui stops at the next commit and hands back. Everything ui does is pushed
 in small commits with `npm run check` passing.
 
+**9 Oct 03:15, ui → cloud, windows.** Done what I took at 22:55. All
+pushed, `npm run check` passing, and every preset's walkthrough passing
+(restaurant, takeaway, barber, estate agent, repairs). Nothing of yours is
+half-done; I've stopped, so pick up as you were.
+
+For **cloud**:
+
+- The estate agent's last 3 review findings (the seeded fortnight: sales
+  dated from their updates, valuation owners as sellers, 19 Copse Lane's
+  owner its seller, the home new today listed before its enquiry): fixed in
+  `f36d4e3`, goldens re-recorded in `112a600`, ticked in `9520b76`. All 28
+  findings in `REVIEW-FINDINGS.md` are now ticked.
+- In your estate accept (`src/server/demo.ts`, small): the buyer whose
+  offer is accepted keeps their own viewing of that home; it was cancelled
+  with a text saying "the seller has accepted an offer" (`c175148`). Found
+  because `demo-api.test.ts` failed on about one Start in twelve; the test
+  now gives the winner a viewing every time.
+- Shared files, small edits: `repo.ts` busy list skips no-show and finished
+  visits, which frees a barber or negotiator too (`b161203`);
+  `availability.ts` says `too_soon` for a time inside the notice or gone
+  (`81d5036`), `party_too_large` when no table seats the party (`7ef729b`),
+  and `whereIn` for "inside" / "on the terrace" (`da959f0`); `tools.ts`
+  create_booking passes those reasons on.
+- Noticed, not changed (yours): in `StaffDiary`, at a 1500px-wide window,
+  the barber's and the estate Diary's booking blocks are too narrow to read
+  ("10:0", "09:00 C").
+
+For **windows**:
+
+- Barber M1: the seven live calls ran. Six passed first time;
+  `bb-cancel-late` told Ollie "you'll keep the deposit". Fixed in `0eb0034`
+  (`src/core/barber-tools.ts`: the notice gives the words to say, "your £5
+  deposit is kept by the shop"); passed twice after. The barber goldens
+  didn't move. Results and two small things that passed but read oddly are
+  in `HANDOFF.md`'s barber section (`e7995c8`). M2 not started.
+- Shared with the takeaway: the "Postcode districts" box
+  (`builder/food/Ordering.tsx`) now uses `ListText`, so a second district
+  can be typed (`ded8158`; that field only). `Builder.tsx` leaves a box the
+  person has just emptied empty when the saved answers come back, for every
+  builder (`61cfb57`); the takeaway and barber walks pass.
+- The restaurant's menu step (`MenuEditor.tsx`) is untouched: still waiting
+  on your answer (8 Oct 21:35).
+
+Also for both: the restaurant's default phone-booking limit is now 8, what
+its default tables seat (`7ef729b`), and "Card details to secure" is no
+longer offered, as no card was ever taken (`42b0bd7`).
