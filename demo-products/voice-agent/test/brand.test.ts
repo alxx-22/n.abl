@@ -5,7 +5,8 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { brandPalette, brandStyle, contrast, modeOf, parseColour, type RGB } from '../web/src/reception/brand.ts';
+import { readFileSync } from 'node:fs';
+import { brandPalette, brandStyle, contrast, luminance, modeOf, parseColour, type RGB } from '../web/src/reception/brand.ts';
 
 const c = (v: string) => parseColour(v) as RGB;
 
@@ -74,4 +75,20 @@ test('brand colours: no colours, no change: only the fonts', () => {
   const s = brandStyle({ accent: '#e9ac57', background: '#ffffff' }) as Record<string, string>;
   assert.equal(s.colorScheme, 'light');
   assert.equal(s['color-scheme'], undefined);
+});
+
+test('brand colours: a dark website keeps its own background; a mid-tone one is deepened until text reads', () => {
+  const navy = brandPalette({ accent: '#04bbb1', primary: '#00344b', background: '#00344b' }).vars;
+  assert.equal(navy['--bg'], '#00344b', 'a navy site’s page is its own navy');
+  assert.equal(navy['--accent'], '#04bbb1');
+  const mid = brandPalette({ accent: '#04bbb1', background: '#4a6b8a' });
+  assert.equal(mid.mode, 'dark');
+  assert.ok(luminance(c(mid.vars['--bg'])) <= 0.035, mid.vars['--bg']);
+});
+
+test('brand colours: a fill under --ink text is the accent itself, never its text shade', () => {
+  // --ink is made to read on --accent; --amber is the accent darkened or lightened for text, so --ink may not read on it.
+  const css = ['web/src/styles.css', 'web/src/reception/reception.css'].map((f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8')).join('\n');
+  const bad = css.split('}').filter((rule) => /background:\s*var\(--amber/.test(rule) && /(^|[\s;{])color:\s*var\(--ink\)/.test(rule));
+  assert.deepEqual(bad.map((r) => r.trim().split('{')[0].trim()), []);
 });

@@ -246,7 +246,8 @@ table.keys .actions { text-align: right; white-space: nowrap; }
 
 .days { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
 .days button { padding: 4px 10px; font-size: 12px; gap: 6px; }
-.days button[aria-pressed='true'] { background: var(--amber); color: var(--ink); border-color: var(--amber); }
+/* The accent's own fill, which --ink is made to read on; --amber is the accent for text, darker or lighter than the fill. */
+.days button[aria-pressed='true'] { background: var(--accent); color: var(--ink); border-color: var(--accent); }
 .days .count { font-family: var(--mono); opacity: 0.8; }
 .slots { position: relative; display: flex; flex-direction: column; gap: 6px; max-height: 62vh; overflow-y: auto; }
 .slot { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: baseline; padding: 6px 8px; border-radius: 8px; background: var(--surface-2); font-size: 13px; }

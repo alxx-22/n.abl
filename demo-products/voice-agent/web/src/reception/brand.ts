@@ -135,9 +135,10 @@ export function brandPalette(t: BrandColours): { mode: Mode; vars: Record<string
       return i === 5 ? c : until(c, BLACK, panes, i < 2 ? 7 : 4.5);
     });
   } else {
-    // A dark website's background, deepened until cream text reads on it.
+    // A dark website's own background, as it is when cream text reads on it and on the panels lifted from it
+    // (a navy or charcoal site keeps its colour); a mid-tone one is deepened until it does.
     let deep = bgIn;
-    for (let i = 0; i < 40 && luminance(deep) > 0.014; i++) deep = mix(deep, BLACK, 0.14);
+    for (let i = 0; i < 40 && luminance(deep) > 0.035; i++) deep = mix(deep, BLACK, 0.14);
     // Panels are lifted towards the background's own hue (n.abl's warm brown, a navy site's blue), not towards grey.
     const lift = mix(tint, WHITE, 0.35);
     const cream = mix(WHITE, tint, 0.12);

@@ -125,7 +125,7 @@ export function ScoutCard({ id, website, onApplied }: { id: string; website: str
   return (
     <div className="scout panel done">
       <div className="is-this-you">
-        {f.identity.logo ? <img src={f.identity.logo} alt="" className="logo-preview" /> : null}
+        {f.identity.logo ? <img src={f.identity.logo} alt="" className="logo-preview" style={f.theme ? { background: f.theme.primary } : undefined} /> : null}
         <div>
           <b>Is this you?</b>
           <p className="small">

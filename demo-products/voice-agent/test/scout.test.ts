@@ -8,7 +8,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { closingAt, fontCategory, fontsOf, hoursFromWords, linkScore, menuPdf, pageText, parseClock, pencePrice, priceCount, readPage } from '../src/scout/extract.ts';
-import { contrast, hex, readableAccent, themeFrom } from '../src/scout/render.ts';
+import { chromiumPath, contrast, hex, readableAccent, renderPage, themeFrom } from '../src/scout/render.ts';
 import { startScan, digest, type ScanResult } from '../src/scout/scan.ts';
 import { applyScan, scanView } from '../src/scout/map.ts';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
@@ -152,6 +152,63 @@ test('scout: which links are worth a read, and fonts and colours into a readable
   // A header with no colour of its own takes the page's.
   const plain = themeFrom({ ...page, header_bg: null, painted: ['#ffffff'] }, { theme_color: null, colours: {}, fonts: [] })!;
   assert.equal(plain.primary, '#ffffff');
+});
+
+test('scout: the accent is a button or link colour that stands out, and the main colour is the header’s', () => {
+  const none = { theme_color: null, colours: {}, fonts: [] };
+  const base = { text: '', body_bg: '#ffffff', header_bg: '#ffffff', button_bg: null, button_fg: null, link: null, heading_font: null, body_font: null, logo: null, painted: ['#ffffff'] };
+  // A dark site with no filled buttons: its own background and its darker panels are not an accent; its teal links are.
+  const dark = themeFrom({ ...base, body_bg: '#00344b', header_bg: null, buttons: [], links: ['#ffffff', '#04bbb1'], painted: ['#00344b', '#00212f', '#04bbb1'] }, none)!;
+  assert.deepEqual([dark.accent, dark.primary, dark.background], ['#04bbb1', '#00344b', '#00344b']);
+  // White and charcoal buttons say nothing of the brand, nor does a faint tint painted on a white page.
+  const mono = themeFrom({ ...base, header_bg: '#303030', buttons: ['#ffffff', '#303030', '#000000', '#1d67cd'], painted: ['#ffffff', '#303030', '#e5ebfa'] }, none)!;
+  assert.equal(mono.accent, '#1d67cd');
+  assert.equal(mono.primary, '#303030', 'a charcoal header is the main colour, grey or not');
+  // The browser's own link blue is not the brand's.
+  assert.equal(themeFrom({ ...base, links: ['#0000ee'], painted: ['#ffffff', '#e5ebfa'] }, { ...none, colours: { '#94004f': 2 } })!.accent, '#94004f');
+  // A white header stays white: a teal painted further down the page is not the header's colour.
+  const white = themeFrom({ ...base, buttons: ['#94004f'], painted: ['#ffffff', '#000000', '#24a49a'] }, none)!;
+  assert.deepEqual([white.accent, white.primary], ['#94004f', '#ffffff']);
+  // A yellow button on a white page is pale, but it is the brand's.
+  assert.equal(themeFrom({ ...base, buttons: ['#ffe066'] }, none)!.accent, '#ffe066');
+});
+
+test('scout: the render reads the brand past cookie banners, hidden links and see-through headers', { skip: chromiumPath() ? false : 'no Chromium here' }, async () => {
+  const logo = `data:image/svg+xml;base64,${Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40"><rect width="120" height="40" fill="#fff"/></svg>').toString('base64')}`;
+  // A white page whose header is see-through over a charcoal layer (as Wix builds them), a "skip to content" link
+  // parked off screen in teal, green quote buttons far down the page, and a cookie banner with a stock blue button.
+  const html = `<!doctype html><html><head><title>Fixture</title><style>
+    body { margin: 0; background: #ffffff; font-family: sans-serif; }
+    .layer { position: absolute; top: 0; left: 0; right: 0; height: 120px; background: #303030; }
+    header { position: absolute; top: 0; left: 0; right: 0; height: 120px; }
+    .skip { position: absolute; left: -9999px; top: 10px; background: #24a49a; padding: 10px 20px; }
+    .cta { display: inline-block; background: #78ba2f; color: #fff; padding: 12px 20px; }
+    .notice { position: fixed; bottom: 0; left: 0; width: 400px; background: #000; color: #fff; padding: 20px; }
+    .notice button { background: #1863dc; color: #fff; padding: 10px 20px; border: 0; }
+    main { padding-top: 160px; }
+  </style></head><body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="layer"></div>
+    <header><img src="${logo}" alt="Fixture logo" class="logo" width="120" height="40" style="margin: 40px"></header>
+    <main id="main"><h1>Fixture plumbing</h1><p>Boilers, leaks and bathrooms.</p>
+      <div style="margin-top: 2400px"><a class="cta" href="/quote">Get a quote</a> <a class="cta" href="/call">Call us</a></div></main>
+    <div class="notice">We use cookies on this site. <button>Accept all</button></div>
+  </body></html>`;
+  const site = createServer((_req, res) => void res.writeHead(200, { 'content-type': 'text/html' }).end(html));
+  await new Promise<void>((r) => site.listen(0, r));
+  try {
+    const r = await renderPage(`http://localhost:${(site.address() as { port: number }).port}/`, { allowPrivate: true });
+    assert.ok(r, 'rendered');
+    assert.equal(r.header_bg, '#303030', 'the colour behind the logo, painted on a layer of its own');
+    assert.equal(r.button_bg, '#78ba2f', 'the quote buttons, though far down the page');
+    assert.ok(!r.buttons?.includes('#1863dc'), 'not the cookie banner’s button');
+    assert.ok(!r.painted.includes('#24a49a') && !r.buttons?.includes('#24a49a'), 'not the link parked off screen');
+    assert.match(r.logo ?? '', /^data:image\/svg\+xml;base64,/);
+    const t = themeFrom(r, { theme_color: null, colours: {}, fonts: [] })!;
+    assert.deepEqual([t.accent, t.primary, t.background], ['#78ba2f', '#303030', '#ffffff']);
+  } finally {
+    site.close();
+  }
 });
 
 const FACTS: FactsOut = {
