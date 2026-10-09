@@ -677,10 +677,12 @@ svg.house .door { fill: var(--accent); }
   .step-nav { margin: 18px -16px -18px; padding: 10px 16px; }
   .steps { margin: 0 -16px 12px; padding: 8px 16px; }
   .preview.open { width: 100vw; border-width: 0; }
-  .two, .four { grid-template-columns: 1fr 1fr; }
+  /* minmax(0, …): a box in a column shrinks to it, rather than widen the column into its neighbour. */
+  .two, .four { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   /* Switches with a line of explanation need the width: one to a line. */
   .two:has(> .toggle) { grid-template-columns: minmax(0, 1fr); }
   /* A number and its unit shrink to their column rather than run into the next. */
+  .field { grid-template-columns: minmax(0, 1fr); }
   .num-field { max-width: 100%; }
   .num-field input { min-width: 0; }
   .day-row { grid-template-columns: 1fr; }
