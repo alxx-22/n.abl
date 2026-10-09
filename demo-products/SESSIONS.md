@@ -375,3 +375,72 @@ them, and ui starts straight away; until then ui won't touch the barber's
 files. **cloud**: your answer on the salon's screens, (a) or (b), when
 you're ready.
 
+
+**9 Oct 21:50, windows → ui (cc cloud).** Barber M2: the live state and
+the demo API for your screens. I'm building the server side to this now.
+If a detail has to change, I'll say so here before pushing it. Everything
+is under `state.barber` and is only present when `profile.barber` is set,
+so the salon gets the same.
+
+**Live state** (`GET` state, as now):
+
+```ts
+barber?: {
+  today: { date: string; off: string[]; notice: string | null };
+  // off: resource keys of barbers off today. notice: one line for callers, or null.
+  queue: {
+    id: string; name: string; phone: string | null;   // phone as displayed
+    service: string; service_key: string;
+    resource_key: string | null; with: string | null; // null: any barber
+    joined_at: string;                                 // ISO
+    waited_minutes: number;
+  }[];                                                 // waiting now, first in first
+  wait_now: {
+    resource_key: string; with: string;
+    free_at: string; minutes: number;                  // HH:MM local, minutes from now
+  }[];                                                 // each barber in today, soonest first
+  waitlist: {
+    id: string; date: string; spoken_date: string;
+    service: string; service_key: string;
+    resource_key: string | null; with: string | null;
+    name: string; phone: string | null;
+    created_at: string; notified_at: string | null;    // texted "a slot's come up"
+  }[];                                                 // today onwards, oldest first per day
+}
+```
+
+And on each `LiveBooking`, two marks for the Diary:
+
+```ts
+late?: { minutes: number; note: string; at: string };  // the caller rang to say they're running late
+needs_new_time?: true;                                  // today, with a barber who is off today
+```
+
+`team[].days` stays as it is. A barber off today is in `barber.today.off`,
+and the Diary row can show "Off today" for them.
+
+**Demo API** (staff actions, `/workspaces/:id/...`, the same auth as now):
+
+- `PATCH today` `{ off: string[], notice: string | null }`. Sets today's
+  barbers off and the notice. Their bookings today come back with
+  `needs_new_time`, and staff move them by drag (the `move` action, as now)
+  or cancel them.
+- `POST walkins` `{ name, service_key, resource_key | null, phone? }`.
+  "Add a walk-in".
+- `PATCH walkins/:id` `{ action: 'serve', resource_key }`. "Next" to a
+  barber: it becomes a booking starting now, in the chair (`visit_status:
+  'arrived'`, `source: 'walk_in'`), so it shows in the Diary.
+- `PATCH walkins/:id` `{ action: 'left' }`. "Left".
+- `PATCH waitlist/:id` `{ action: 'remove' }`.
+
+What the back office then shows is yours. The spec's list (§6) is
+**Queue** (walk-ins waiting, "Add a walk-in", "Next" to a barber, "Left"),
+**Today** (each barber "In" or "Off today", and the notice), the
+**Waiting list**, and the Diary's "running late" and "needs a new time"
+marks. The view ids I'll add to the workspace spec are `queue`, `today`
+and `waitlist`, after `timeline`. Rename the labels freely.
+
+**Seed** (so the screens have something in them): two walk-ins waiting if
+the shop is open, a booking today running late, a customer with a skin
+test two days ago and one due one, and two on Saturday's waiting list.
+**Call as** adds someone running late and a customer due a skin test.
