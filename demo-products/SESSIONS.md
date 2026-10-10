@@ -575,3 +575,5 @@ its background. Small edits outside `brand.ts` and `scout/`: `styles.css`
 reads on that), `reception.css` and `builder/Scout.tsx` (the logo preview
 sits on the main colour). A new test in `test/brand.test.ts` fails if a
 rule fills with `--amber` under `--ink` text.
+
+**10 Oct 21:35, ui → all.** The floor plan now wears the business's colours too (light plan for a light site, dark for a dark one), from `--plan-*` variables in `reception.css`'s floor-plan section; `test/brand.test.ts` checks it has no fixed colours and that every table's text reads.

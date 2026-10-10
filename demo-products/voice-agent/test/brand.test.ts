@@ -92,3 +92,87 @@ test('brand colours: a fill under --ink text is the accent itself, never its tex
   const bad = css.split('}').filter((rule) => /background:\s*var\(--amber/.test(rule) && /(^|[\s;{])color:\s*var\(--ink\)/.test(rule));
   assert.deepEqual(bad.map((r) => r.trim().split('{')[0].trim()), []);
 });
+
+// The floor plan (reception.css) mixes its colours from the page's palette. These read its definitions and work
+// them out for each brand, as the browser would, so a change there that leaves a table's text unreadable fails here.
+const css = readFileSync(new URL('../web/src/reception/reception.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+const floorSection = css.slice(css.indexOf(':root, .builder-page, .workspace-page {'), css.indexOf('.workspace {'));
+
+/** Splits a function's arguments at its top-level commas. */
+const args = (s: string) => {
+  const out: string[] = [];
+  let depth = 0, from = 0;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '(') depth++;
+    else if (s[i] === ')') depth--;
+    else if (s[i] === ',' && depth === 0) { out.push(s.slice(from, i).trim()); from = i + 1; }
+  }
+  return [...out, s.slice(from).trim()];
+};
+
+/** The colour an expression of var() and color-mix(in srgb) comes to (opaque colours only). */
+function resolve(expr: string, vars: Record<string, string>): RGB {
+  const e = expr.trim();
+  const v = /^var\((--[\w-]+)\)$/.exec(e);
+  if (v) {
+    assert.ok(vars[v[1]], `${v[1]} is not defined`);
+    return resolve(vars[v[1]], vars);
+  }
+  const fn = /^([\w-]+)\(([\s\S]*)\)$/.exec(e);
+  if (fn?.[1] === 'color-mix') {
+    const [space, a, b] = args(fn[2]);
+    assert.equal(space, 'in srgb');
+    const pa = /\s(\d+)%$/.exec(a);
+    const t = pa ? Number(pa[1]) / 100 : 0.5;
+    const ca = resolve(pa ? a.slice(0, pa.index) : a, vars);
+    const cb = resolve(b, vars);
+    return ca.map((x, i) => x * t + cb[i] * (1 - t)) as RGB;
+  }
+  const c = parseColour(e);
+  assert.ok(c, `can't work out ${e}`);
+  return c;
+}
+
+test('floor plan: no fixed colours, so it wears the business’s', () => {
+  assert.ok(floorSection.includes('.table .top') && floorSection.includes('.legend .l-free'), 'the floor plan section is where the test expects it');
+  const fixed = floorSection.match(/#[0-9a-f]{3,8}\b|rgba?\(\s*\d|hsla?\(|\b(white|black)\b/gi) ?? [];
+  assert.deepEqual(fixed, []);
+  // The build rewrites light-dark() to follow the stylesheet's colour scheme, so a light website's plan would come out dark.
+  assert.ok(!floorSection.includes('light-dark('), 'light-dark() in the floor plan');
+});
+
+test('floor plan: the text on every table and tag reads (WCAG AA), whatever the website’s colours', () => {
+  const block = /:root, \.builder-page, \.workspace-page \{([^}]*)\}/.exec(css);
+  assert.ok(block, 'the floor plan’s colour block');
+  const planVars = Object.fromEntries([...block[1].matchAll(/(--plan-[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
+  // What sits on what, as in reception.css: [text, ground]. The captions are drawn at 90% opacity.
+  const cap = 'color-mix(in srgb, var(--cream) 90%, var(--plan-table))';
+  const pairs: [string, string][] = [
+    ['var(--heading)', 'var(--plan-table)'], [cap, 'var(--plan-table)'], ['var(--muted)', 'var(--plan-table)'],
+    ['var(--heading)', 'var(--plan-walk-in)'], ['var(--cream)', 'var(--plan-walk-in)'],
+    ['var(--ink)', 'var(--accent)'],
+    ...['--plan-arriving', '--plan-seated', '--plan-late'].flatMap((g): [string, string][] => [['var(--heading)', `var(${g})`], ['var(--cream)', `var(${g})`]]),
+    ['var(--surface-1)', 'var(--info)'],
+    ...['--danger', '--info', '--ok', '--warn'].map((g): [string, string] => ['var(--surface-1)', `var(${g})`]),
+    ['var(--surface-1)', 'color-mix(in srgb, var(--danger) 50%, var(--info))'],
+    ['var(--heading)', 'var(--danger-ground)'],
+    ['var(--cream)', 'var(--plan-bar)'],
+  ];
+  const levels = [0, 96, 192, 255];
+  const spread = levels.flatMap((r) => levels.flatMap((g) => levels.map((b) => `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`)));
+  const brands: [string | null, string | null, string | null][] = [
+    [null, null, null],
+    ['#ffe066', '#ffffff', '#ffffff'], ['#1b2a4a', '#1b2a4a', '#ffffff'], ['#d6336c', '#1b2a4a', '#ffffff'], ['#2ec4b6', '#0b3c49', '#06141b'],
+    ...spread.flatMap((x, i): [string, string, string][] => [[x, spread[(i * 7) % spread.length], spread[(i * 11 + 3) % spread.length]], [x, x, '#ffffff'], [x, x, '#0e0c0a']]),
+  ];
+  const failures: string[] = [];
+  for (const [accent, primary, background] of brands) {
+    const p = brandPalette({ accent, primary, background });
+    const vars = { ...p.vars, ...planVars };
+    for (const [fg, bg] of pairs) {
+      const r = contrast(resolve(fg, vars), resolve(bg, vars));
+      if (r < 4.5) failures.push(`${accent}/${primary}/${background}: ${fg} on ${bg}: ${r.toFixed(2)}`);
+    }
+  }
+  assert.deepEqual(failures.slice(0, 10), [], `${failures.length} unreadable pairs`);
+});

@@ -246,8 +246,37 @@ textarea.prose { font-family: var(--font); font-size: 14px; min-height: 0; resiz
 .swatch { width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--line); display: inline-block; }
 
 /* ── The floor plan ───────────────────────────────────────────────────── */
+/* The plan wears the business's colours like every other page: these are
+   mixed from the page's palette (brand.ts on a branded page, tokens.css for
+   n.abl's own). They are declared on the page roots as well as :root because
+   a custom property resolves where it is declared: on :root alone they would
+   mix n.abl's colours, not the business's. A light website gets a light plan
+   and a dark one a dark plan. test/brand.test.ts checks that this section
+   has no fixed colours and that every table's text reads, in any brand. */
+:root, .builder-page, .workspace-page {
+  /* Between the page and its panels: on a dark page a shade below the panel the plan sits in, on a light one nearly the panel's white. */
+  --plan-ground: color-mix(in srgb, var(--bg) 50%, var(--surface-1));
+  /* A free table is a raised surface, as the palette raises one: lighter on a dark page, a shade deeper on a light one.
+     (Not light-dark(): the build rewrites it to follow the stylesheet's colour scheme, not the page's.) */
+  --plan-table: var(--surface-3);
+  --plan-edge: var(--line-strong);
+  /* Chairs a step stronger than the table, towards the text colour: darker on a light page, lighter on a dark one. */
+  --plan-chair: color-mix(in srgb, var(--cream) 20%, var(--surface-1));
+  /* Booked is the business's own colour, with --ink on it, made to read on it; the edge keeps a pale accent visible on a pale floor. */
+  --plan-booked-edge: color-mix(in srgb, var(--accent) 62%, var(--heading));
+  /* The states that mean something keep their own colours, as tints the page's text still reads on. */
+  --plan-arriving: color-mix(in srgb, var(--warn) 20%, var(--plan-table));
+  --plan-seated: color-mix(in srgb, var(--ok) 24%, var(--plan-table));
+  --plan-late: color-mix(in srgb, var(--danger) 20%, var(--plan-table));
+  --plan-walk-in: color-mix(in srgb, var(--info) 8%, var(--plan-table));
+  /* The room is scenery: neutral tones of the text colour at low strength, so the tables stay the point. */
+  --plan-fixture: color-mix(in srgb, var(--cream) 12%, var(--plan-ground));
+  --plan-fixture-edge: color-mix(in srgb, var(--cream) 28%, var(--plan-ground));
+  --plan-bar: color-mix(in srgb, var(--cream) 18%, var(--plan-ground));
+  --plan-wall: color-mix(in srgb, var(--cream) 40%, var(--plan-ground));
+}
 .floor-edit { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 14px; align-items: start; }
-.floor-wrap { background: #15120f; border: 1px solid var(--line); border-radius: 12px; padding: 8px; display: grid; gap: 8px; }
+.floor-wrap { background: var(--plan-ground); border: 1px solid var(--line); border-radius: 12px; padding: 8px; display: grid; gap: 8px; }
 .table-panel { background: var(--surface-2); border-radius: 12px; padding: 12px; position: sticky; top: 16px; }
 .checks { display: grid; gap: 6px; font-size: 13px; }
 .checks label { display: flex; gap: 8px; align-items: flex-start; }
@@ -256,7 +285,8 @@ textarea.prose { font-family: var(--font); font-size: 14px; min-height: 0; resiz
 .chips legend { margin-bottom: 6px; }
 .chips label { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); cursor: pointer; }
 .chips label.on { background: var(--accent); color: var(--ink); border-color: var(--accent); }
-.chips label.on.walk { background: #4f8f86; border-color: #4f8f86; color: #f2fbf9; }
+/* Kept for walk-ins: the plan's walk-in colour. --info is made to read on the panels, so a panel's colour reads on it. */
+.chips label.on.walk { background: var(--info); border-color: var(--info); color: var(--surface-1); }
 .chips.walk-ins { margin: 4px 0 8px; }
 .chips.walk-ins legend { font-size: 13px; font-weight: 600; }
 .chips input { position: absolute; opacity: 0; width: 1px; height: 1px; }
@@ -265,7 +295,7 @@ textarea.prose { font-family: var(--font); font-size: 14px; min-height: 0; resiz
 svg.floor { width: 100%; height: auto; display: block; touch-action: none; user-select: none; }
 .plan-scroll { overflow: auto; max-height: 75vh; border-radius: 10px; }
 .plan-scroll svg.floor { min-width: 100%; }
-.grid-dot { fill: rgba(255, 255, 255, 0.09); }
+.grid-dot { fill: var(--line); }
 .guide { stroke: var(--info); stroke-width: 1.5; stroke-dasharray: 4 4; pointer-events: none; }
 .area-tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
 .area-tabs [role='tab'] { border-radius: 999px; padding: 6px 14px; font-weight: 600; }
@@ -283,60 +313,79 @@ svg.floor { width: 100%; height: auto; display: block; touch-action: none; user-
 .fixture { outline: none; }
 .edit .fixture { cursor: grab; }
 .fixture .hit { fill: transparent; }
-.fixture .shape { fill: #3a3027; stroke: #6b5a48; stroke-width: 2; }
-.f-bar .shape { fill: #4a3a2a; }
-.f-bar .stool { fill: #3a322b; stroke: #5a4b3c; stroke-width: 1.5; }
-.f-wall .shape { fill: #6b5a48; stroke: none; }
-.f-window .shape { fill: rgba(143, 184, 224, 0.25); stroke: #8fb8e0; stroke-width: 1.5; }
-.f-window .pane { stroke: #8fb8e0; stroke-width: 1; }
-.f-door .swing { fill: none; stroke: #8a7a68; stroke-width: 1.5; stroke-dasharray: 4 4; }
-.f-door .leaf { stroke: #c9b79f; stroke-width: 4; stroke-linecap: round; }
-.f-door .sill { stroke: var(--ground); stroke-width: 8; }
-.f-label { fill: var(--cream); font-size: 13px; font-weight: 700; text-anchor: middle; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; opacity: 0.8; }
-.fixture.selected .shape, .fixture:focus-visible .shape { stroke: var(--accent); stroke-width: 3; }
-.fixture.selected .leaf, .fixture:focus-visible .leaf { stroke: var(--accent); }
+.fixture .shape { fill: var(--plan-fixture); stroke: var(--plan-fixture-edge); stroke-width: 2; }
+.f-bar .shape { fill: var(--plan-bar); }
+.f-bar .stool { fill: var(--plan-fixture); stroke: var(--plan-fixture-edge); stroke-width: 1.5; }
+.f-wall .shape { fill: var(--plan-wall); stroke: none; }
+.f-window .shape { fill: color-mix(in srgb, var(--info) 25%, transparent); stroke: var(--info); stroke-width: 1.5; }
+.f-window .pane { stroke: var(--info); stroke-width: 1; }
+.f-door .swing { fill: none; stroke: color-mix(in srgb, var(--cream) 45%, var(--plan-ground)); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.f-door .leaf { stroke: color-mix(in srgb, var(--cream) 70%, var(--plan-ground)); stroke-width: 4; stroke-linecap: round; }
+/* The gap a door leaves in a wall: the floor's own colour. */
+.f-door .sill { stroke: var(--plan-ground); stroke-width: 8; }
+.f-label { fill: var(--cream); font-size: 13px; font-weight: 700; text-anchor: middle; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; }
+.fixture.selected .shape, .fixture:focus-visible .shape { stroke: var(--amber); stroke-width: 3; }
+.fixture.selected .leaf, .fixture:focus-visible .leaf { stroke: var(--amber); }
 .fixture.lifted { opacity: 0.7; }
-.zone rect { fill: rgba(255, 255, 255, 0.025); stroke: var(--line); stroke-width: 1.5; }
-.zone.outdoor rect { fill: rgba(140, 197, 138, 0.05); stroke: #3d5a3c; stroke-dasharray: 8 6; }
-.zone.private rect { fill: rgba(143, 184, 224, 0.05); stroke: #2f4760; }
+.zone rect { fill: rgba(var(--cream-rgb), 0.025); stroke: var(--line); stroke-width: 1.5; }
+.zone.outdoor rect { fill: color-mix(in srgb, var(--ok) 5%, transparent); stroke: color-mix(in srgb, var(--ok) 45%, transparent); stroke-dasharray: 8 6; }
+.zone.private rect { fill: color-mix(in srgb, var(--info) 5%, transparent); stroke: color-mix(in srgb, var(--info) 45%, transparent); }
 .zone text { fill: var(--muted); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.join { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 6 6; opacity: 0.7; }
-.join.live { stroke-dasharray: none; stroke-width: 10; opacity: 0.35; stroke-linecap: round; }
+/* The builder's dashed link in --amber, which shows on the floor however pale the brand; the live band behind a booked pair in the brand's own colour. */
+.join { stroke: var(--amber); stroke-width: 3; stroke-dasharray: 6 6; opacity: 0.8; }
+.join.live { stroke: var(--accent); stroke-dasharray: none; stroke-width: 10; opacity: 0.35; stroke-linecap: round; }
 .table { cursor: pointer; outline: none; }
 .edit .table { cursor: grab; }
-.table .top { fill: #2b241d; stroke: #5a4b3c; stroke-width: 2; transition: fill 200ms; }
-.table .chair { fill: #3a322b; }
+.table .top { fill: var(--plan-table); stroke: var(--plan-edge); stroke-width: 2; transition: fill 200ms; }
+.table .chair { fill: var(--plan-chair); }
 .table .num { fill: var(--heading); font-size: 17px; font-weight: 800; text-anchor: middle; pointer-events: none; }
 .table .cap { fill: var(--cream); font-size: 11px; text-anchor: middle; pointer-events: none; opacity: 0.9; }
 .table .cap.seats { fill: var(--muted); }
+/* --amber, not --accent: it reads against the plan's surfaces however pale the brand's colour is. */
 .table:hover .top, .table:focus-visible .top { stroke: var(--amber); }
-.table.selected .top { stroke: var(--accent); stroke-width: 4; }
-.table.walk-in .top, .table.unbookable .top { stroke-dasharray: 5 4; fill: #1d2624; stroke: #4f8f86; }
+.table.selected .top { stroke: var(--amber); stroke-width: 4; }
+.table.walk-in .top, .table.unbookable .top { stroke-dasharray: 5 4; fill: var(--plan-walk-in); stroke: var(--info); }
 .walk-tag { pointer-events: none; }
-.walk-tag rect { fill: #4f8f86; stroke: #15120f; stroke-width: 2; }
-.walk-tag text { fill: #f2fbf9; font-size: 15px; font-weight: 800; text-anchor: middle; letter-spacing: 0.02em; }
-.legend .l-walkin { width: auto; height: auto; padding: 0 7px; border-radius: 999px; background: #4f8f86; color: #f2fbf9; font-style: normal; font-weight: 800; font-size: 12px; line-height: 16px; }
-.table.later .top { fill: #2b241d; }
-.table.arriving .top { fill: #3d3020; stroke: var(--warn); stroke-width: 3; }
-.table.booked .top { fill: color-mix(in srgb, var(--accent) 55%, #1a1613); }
-.table.booked .num, .table.seated .num { fill: #fff; }
-.table.seated .top { fill: #35583a; stroke: var(--ok); }
-.table.late .top { fill: #4a2019; stroke: var(--danger); stroke-width: 3; }
+/* --info is made to read on the panels, so a panel's colour reads on it, light page or dark. */
+.walk-tag rect { fill: var(--info); stroke: var(--plan-ground); stroke-width: 2; }
+.walk-tag text { fill: var(--surface-1); font-size: 15px; font-weight: 800; text-anchor: middle; letter-spacing: 0.02em; }
+.table.later .top { fill: var(--plan-table); }
+.table.arriving .top { fill: var(--plan-arriving); stroke: var(--warn); stroke-width: 3; }
+.table.booked .top { fill: var(--accent); stroke: var(--plan-booked-edge); }
+.table.booked :is(.num, .cap, .cap.seats) { fill: var(--ink); opacity: 1; }
+/* On a table in the business's colour, the ring is the text colour, so it still shows when the colour is the same as --amber. */
+.table.booked:is(:hover, :focus-visible, .selected) .top { stroke: var(--heading); }
+.table.seated .top { fill: var(--plan-seated); stroke: var(--ok); }
+.table.late .top { fill: var(--plan-late); stroke: var(--danger); stroke-width: 3; }
+/* On a tinted table the small print is the full text colour, so it clears AA on the tint. */
+.table:is(.walk-in, .unbookable, .arriving, .seated, .late):not(.booked) :is(.cap, .cap.seats) { fill: var(--cream); opacity: 1; }
 .table.drop .top { stroke: var(--ok); stroke-width: 5; }
 .table.no-drop .top { stroke: var(--danger); stroke-width: 5; }
 .table.lifted { opacity: 0.85; }
 .table.lifted .top { stroke: var(--info); stroke-width: 3; }
 .table.clash .top { stroke: var(--danger); stroke-width: 4; fill: var(--danger-ground); }
+.table.clash :is(.num, .cap, .cap.seats) { fill: var(--heading); opacity: 1; }
 .table.flash .top { animation: tableflash 1.2s ease-in-out 3; }
-@keyframes tableflash { 50% { fill: var(--amber-light); } }
-.badge-dot circle { stroke: #15120f; stroke-width: 2; }
-.badge-dot text { font-size: 10px; font-weight: 800; text-anchor: middle; fill: #fff; pointer-events: none; }
-.b-allergy circle { fill: #c0392b; }
-.b-access circle { fill: #2f6fb0; }
-.b-occasion circle { fill: #9b59b6; }
-.b-deposit circle { fill: #4a7a3a; }
-.b-highchair circle { fill: #8a6d3b; }
-svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 4; pointer-events: none; }
+@keyframes tableflash { 50% { fill: color-mix(in srgb, var(--accent) 45%, var(--plan-table)); } }
+/* A booking's notes on a table's corner, in the colours that mean the same everywhere in the demo. Each is
+   made to read on the panels, so a panel's colour reads on it. The occasion's purple is the red and the blue mixed. */
+.badge-dot circle { stroke: var(--plan-ground); stroke-width: 2; }
+.badge-dot text { font-size: 10px; font-weight: 800; text-anchor: middle; fill: var(--surface-1); pointer-events: none; }
+.b-allergy circle { fill: var(--danger); }
+.b-access circle { fill: var(--info); }
+.b-occasion circle { fill: color-mix(in srgb, var(--danger) 50%, var(--info)); }
+.b-deposit circle { fill: var(--ok); }
+.b-highchair circle { fill: var(--warn); }
+svg.floor .ghost { fill: none; stroke: var(--amber); stroke-width: 2; stroke-dasharray: 5 4; pointer-events: none; }
+/* The key under the plan: each swatch drawn as the table it explains. */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; margin-top: 8px; align-items: center; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; border: 2px solid transparent; }
+.legend .l-free { background: var(--plan-table); border-color: var(--plan-edge); }
+.legend .l-arriving { background: var(--plan-arriving); border-color: var(--warn); }
+.legend .l-booked { background: var(--accent); border-color: var(--plan-booked-edge); }
+.legend .l-seated { background: var(--plan-seated); border-color: var(--ok); }
+.legend .l-late { background: var(--plan-late); border-color: var(--danger); }
+.legend .l-walkin { width: auto; height: auto; padding: 0 7px; border-radius: 999px; background: var(--info); color: var(--surface-1); font-style: normal; font-weight: 800; font-size: 12px; line-height: 16px; }
 
 /* ── The workspace ────────────────────────────────────────────────────── */
 /* On a desktop: the call, the back office and the phone side by side. Either
@@ -406,13 +455,6 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 .numbers { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
 .numbers b { color: var(--heading); font-size: 16px; }
 .floor-wrap.live { padding: 6px; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; margin-top: 8px; align-items: center; }
-.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; border: 2px solid transparent; }
-.l-free { background: #2b241d; border-color: #5a4b3c !important; }
-.l-arriving { background: #3d3020; border-color: var(--warn) !important; }
-.l-booked { background: color-mix(in srgb, var(--accent) 55%, #1a1613); }
-.l-seated { background: #35583a; border-color: var(--ok) !important; }
-.l-late { background: #4a2019; border-color: var(--danger) !important; }
 
 .drawer { width: 330px; border-radius: 0; border-width: 0 0 0 1px; display: grid; gap: 12px; align-content: start; max-height: 86vh; overflow-y: auto; padding: 16px; }
 .drawer header { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -449,7 +491,7 @@ svg.floor .ghost { fill: none; stroke: var(--accent); stroke-width: 2; stroke-da
 }
 .tl-bar.seated, .tl-bar.arrived { background: color-mix(in srgb, var(--ok) 26%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--ok); border-color: rgba(var(--ok-rgb), 0.35); }
 .tl-bar.finished, .tl-bar.no_show { opacity: 0.4; }
-.tl-bar.allergy { box-shadow: inset 3px 0 0 #e74c3c; }
+.tl-bar.allergy { box-shadow: inset 3px 0 0 var(--danger); }
 .tl-bar.paired { border-color: var(--amber-light); }
 .tl-bar.lifted { opacity: 0.6; outline: 2px dashed var(--accent); }
 .tl-now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--danger); pointer-events: none; }
