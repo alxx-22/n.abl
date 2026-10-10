@@ -21,7 +21,7 @@ function readable(vars: Record<string, string>): string[] {
       if (r < ratio) out.push(`${fg} on ${bg}: ${r.toFixed(2)}`);
     }
   }
-  for (const [fg, bg] of [['--ink', '--accent'], ['--on-primary', '--brand-primary'], ['--on-danger-ground', '--danger-ground']]) {
+  for (const [fg, bg] of [['--ink', '--accent'], ['--on-accent', '--accent-hover'], ['--on-primary', '--brand-primary'], ['--on-danger-ground', '--danger-ground']]) {
     const r = contrast(c(vars[fg]), c(vars[bg]));
     if (r < 4.5) out.push(`${fg} on ${bg}: ${r.toFixed(2)}`);
   }

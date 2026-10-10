@@ -62,6 +62,12 @@ h3.sub { margin-top: 12px; font-size: 1rem; }
 .builder-page .rx-top .badge, .workspace-page .rx-top .badge { color: var(--on-primary); background: rgba(var(--on-primary-rgb), 0.1); border-color: rgba(var(--on-primary-rgb), 0.35); }
 .builder-page .rx-top .badge.bad, .workspace-page .rx-top .badge.bad { background: #8e3128; color: #fff; border-color: transparent; }
 .builder-page .rx-top .badge.warn, .workspace-page .rx-top .badge.warn { background: #e9ac57; color: #24170a; border-color: transparent; }
+/* Main buttons (Next, Go live) in the business's own colour; n.abl's console keeps its cream ones. */
+.builder-page :is(button, .button).primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.workspace-page :is(button, .button).primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.builder-page :is(button:not(:disabled), .button).primary:hover, .workspace-page :is(button:not(:disabled), .button).primary:hover { background: var(--accent-hover, var(--accent)); border-color: var(--accent-hover, var(--accent)); box-shadow: var(--glow-accent); }
+/* On the top bar the button may be close to the bar's own colour: an edge in the bar's text colour keeps it a button. */
+.builder-page .rx-top :is(button, .button).primary, .workspace-page .rx-top :is(button, .button).primary { box-shadow: 0 0 0 1px rgba(var(--on-primary-rgb), 0.5); }
 
 /* A long list edited one item at a time (fields.tsx Folds): a line each, one open. */
 .folds { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }

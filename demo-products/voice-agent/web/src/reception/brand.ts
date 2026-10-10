@@ -159,6 +159,8 @@ export function brandPalette(t: BrandColours): { mode: Mode; vars: Record<string
   const onDark: RGB = mix(BLACK, tint, 0.09);
   let onAccent = contrast(onDark, fill) >= contrast(WHITE, fill) ? onDark : WHITE;
   fill = until(fill, onAccent === WHITE ? BLACK : WHITE, [onAccent], 4.5);
+  // A main button's hover: a step further from its text, so the text reads on it at least as well.
+  const fillHover = mix(fill, onAccent === WHITE ? BLACK : WHITE, 0.12);
   const accentText = until(fill, away, textPanes, 4.5);
   const accentTextSoft = until(mix(accentText, away, light ? 0.12 : 0.22), away, textPanes, 4.5);
 
@@ -196,7 +198,7 @@ export function brandPalette(t: BrandColours): { mode: Mode; vars: Record<string
       '--glow-xs': `0 0 12px ${a(light ? 0.06 : 0.05)}`, '--glow-sm': light ? `0 1px 3px ${a(0.08)}` : `0 0 24px ${a(0.07)}`,
       '--glow-md': light ? `0 4px 16px ${a(0.1)}` : `0 0 48px ${a(0.1)}`, '--glow-lg': light ? `0 8px 30px ${a(0.12)}` : `0 0 96px ${a(0.13)}`,
       '--glow-inset': `inset 0 1px 0 ${a(light ? 0.03 : 0.06)}`,
-      '--accent': hex(fill), '--accent-rgb': accentRgb, '--glow-accent': `0 0 32px rgba(${accentRgb}, ${light ? 0.25 : 0.2})`,
+      '--accent': hex(fill), '--accent-rgb': accentRgb, '--glow-accent': `0 0 32px rgba(${accentRgb}, ${light ? 0.25 : 0.2})`, '--accent-hover': hex(fillHover),
       '--ink': hex(onAccent), '--on-accent': hex(onAccent),
       '--amber': hex(accentText), '--amber-light': hex(accentTextSoft),
       '--brand-primary': hex(primary), '--on-primary': hex(onPrimary), '--on-primary-rgb': rgbList(onPrimary),
