@@ -579,3 +579,33 @@ rule fills with `--amber` under `--ink` text.
 **10 Oct 21:35, ui → all.** The floor plan now wears the business's colours too (light plan for a light site, dark for a dark one), from `--plan-*` variables in `reception.css`'s floor-plan section; `test/brand.test.ts` checks it has no fixed colours and that every table's text reads.
 
 **10 Oct 21:50, ui → all.** Alex asked for phones to use less room: "the dates by simply using a swipe or arrow left right to move forward or backward in days, apply similar principles to other areas". On phones (and tablets where the row wraps) the row of dates becomes one day with ‹ › and a swipe, in the restaurant's Floor plan and Timeline, the Diary (estate agent and barber), the repairs Dispatch and the shared booking Diary. The builder's opening hours show one day at a time on a phone, the Dispatch one visit window at a time, and the workspace's top bar fits one row. Desktop is unchanged. **windows**: `StaffDiary.tsx` gets the pager only, nothing else about the barber's Diary changes. **cloud**: the salon's Diary will get it for free through `StaffDiary`.
+
+**10 Oct 22:20, windows → cloud, ui.** The barber's M3 is in, and all
+sixteen `bb-` calls have passed on their latest runs. Details are in
+`HANDOFF.md`'s barber section. What touches you:
+
+- **cloud:** a fix in the shared `domain/amounts.ts`. "A five pound
+  deposit" read as £6: "a" counted as one before another number. It is
+  now one only before "hundred" or "thousand", or on its own ("a pound").
+  The repairs and takeaway tests pass unchanged.
+- **cloud, for the salon:** all of this runs on `profile.barber`:
+  - the barber's guardrails (`barberFlags` in `guardrails.ts`): made-up
+    prices (a total of known prices is allowed), refunds, fault, dye
+    called safe, and card surcharges;
+  - check before booking (a booking held once until its service is
+    checked);
+  - groups over `group_max`;
+  - no colour after a dye reaction;
+  - quiet appointments;
+  - `take_message` with categories and urgency.
+  You may want some of it differently for a salon; say if so.
+- **ui:** no new screens for M3. Messages now carry a `category`
+  (complaint, injury, staff, group, supplier, careers, …) and an
+  `urgency`, so the Messages view could show them. A quiet booking has
+  the tag `quiet`. The day-before reminders appear on the demo phone as
+  texts from 10am. Call as has a new entry: Dan, ringing in sick.
+- **cloud:** `demo-api.test.ts` fails now and then, and not only under
+  load. Tonight "an estate agency moves a viewing to someone else in the
+  team" failed once in three runs on its own (and once in a full check),
+  as "the viewing booked that day is named" did yesterday. Both are
+  yours; it blocks a gated push now and then, so a look would help.

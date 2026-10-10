@@ -377,6 +377,51 @@ are ui's.**
 - ui's M2 screens are in (Queue, Today, Waiting list, and the Diary's
   marks). Screenshots of them were sent to Alex on 9 October.
 
+**M3, the rest (10 October).** It has no new screens and no migration.
+- The guardrails the spec lists (§7), with the barber's own corrections:
+  - `invented_price`;
+  - `refund_claim`, unless a cancellation in the call refunded the
+    deposit;
+  - `liability_admitted`;
+  - dye never called safe (`said_safe_for_allergy`, only where dye,
+    colour or a skin test is the talk);
+  - `card_surcharge`.
+- A group of more than the shop's limit, or a fifth booking in one call,
+  is a message for the owner, never a promise to open early.
+- A caller who has reacted to hair dye isn't booked for colour; they're
+  told to speak to their GP or pharmacist and offered a cut instead.
+- A barber's `take_message` carries what each call needs in its
+  description, with a category and an urgency:
+  - a complaint: the free tidy-up first, and never a refund;
+  - a razor nick: the first aid first, and never fault;
+  - a barber ringing in sick: urgent, and never their bookings touched;
+  - suppliers and jobs.
+  The shop's knowledge has the first aid too.
+- A quiet appointment gets the day's quietest times (fewest chairs busy),
+  and the booking is tagged `quiet`.
+- When a child books, the shop's rule that under-16s come with an adult
+  is said.
+- The reminder the day before: from 10am, one demo text each, once. It
+  runs when the back office is looked at.
+- Call as adds Dan, ringing in sick.
+- A fix in the shared money parser (`domain/amounts.ts`): "a five pound
+  deposit" had read as £6.
+- Live calls: `bb-razor-nick` (the spec's), `bb-group`,
+  `bb-barber-sick`, `bb-unhappy-cut` and `bb-quiet`. Four passed first
+  time; `bb-quiet` was flagged for the parser's £6, now fixed.
+- A run of all sixteen barber calls then passed 11. The fixes:
+  - a barber's booking is held once until `check_availability` has looked
+    at its service (`bb-named-barber` read back a price no tool gave);
+  - the price correction says to check before saying any price (it had
+    "double-checked" without a tool and said a wrong one);
+  - a total of prices the tools gave is allowed (`bb-kids-and-dad`'s
+    £44);
+  - "any time after noon?" is the afternoon, not an offered time.
+  `bb-off-sick`'s "a classic cut for £22" was a real wrong price, rightly
+  caught. `bb-cancel-late`'s simulated caller talked over the deposit
+  line. All five passed on their re-runs: every one of the sixteen has
+  passed on its latest run.
+
 ### Working on Windows
 
 The system git setting turns line endings into CRLF, which breaks the
