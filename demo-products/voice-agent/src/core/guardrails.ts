@@ -348,10 +348,38 @@ export function checkUtterance(text: string, state: CallState, staff: string[] =
   if (state.estate) flags.push(...estateFlags(text, state, staff));
   if (state.maintenance) flags.push(...maintenanceFlags(text, state, staff, m));
   if (state.takeaway) flags.push(...takeawayFlags(text, state));
-  // A barber's: no time no tool, instruction or caller gave (presets/barber.md §7; a live call on 9 October offered Dan's unchecked).
-  if (state.barber) {
-    const made = madeUpTime(text, state);
-    if (made) flags.push({ rule: 'invented_time', text: made });
+  if (state.barber) flags.push(...barberFlags(text, state));
+  return flags;
+}
+
+// Dye called safe: "the colour is safe", "it'll be safe for your skin". Only where dye, colour or a skin test is the talk,
+// and never "it's safe to say".
+const DYE_SAFE = /\b(?:(?:the |hair |that |this )?(?:dye|colour|color|tint)|it|that)(?:'s| is|'ll be| will be| should be| would be)\s+(?:completely |totally |perfectly |100% |absolutely )?safe\b(?! to\b)|\bsafe (?:for|on) (?:you|your|his|her|their)(?: skin| hair| beard)?\b/i;
+const DYE_TALK = /\b(?:dye|colour|color|tint|skin test|patch test|allerg\w*|reaction|ppd)\b/i;
+
+/**
+ * A barber's (presets/barber.md §7): no time and no price that no tool,
+ * instruction or caller gave; no refund promised (the owner's fix is a
+ * tidy-up: Consumer Rights Act 2015 s55, repeat performance first), unless a
+ * cancellation in this call refunded the deposit; no fault admitted for a
+ * cut or a nick; and dye never said to be safe.
+ */
+function barberFlags(text: string, state: CallState): Flag[] {
+  const flags: Flag[] = [];
+  // A live call on 9 October offered Dan's times unchecked.
+  const time = madeUpTime(text, state);
+  if (time) flags.push({ rule: 'invented_time', text: time });
+  const said = amountsIn(text);
+  if (said.length) {
+    const known = new Set([...state.amounts, ...state.heard.flatMap(amountsIn)]);
+    const made = said.find((p) => !known.has(p));
+    if (made !== undefined) flags.push({ rule: 'invented_price', text: `£${(made / 100).toFixed(made % 100 ? 2 : 0)}` });
   }
+  const refund = REFUNDED.exec(text);
+  if (refund && !negated(text, refund.index) && !state.depositRefunded) flags.push({ rule: 'refund_claim', text: refund[0] });
+  const liable = LIABLE.exec(text);
+  if (liable && !negated(text, liable.index)) flags.push({ rule: 'liability_admitted', text: liable[0] });
+  const dye = DYE_TALK.test(text) || DYE_TALK.test(state.heard.slice(-2).join(' ')) ? DYE_SAFE.exec(text) : null;
+  if (dye && !negated(text, dye.index) && !IFFY.test(text.slice(Math.max(0, dye.index - 25), dye.index))) flags.push({ rule: 'said_safe_for_allergy', text: dye[0] });
   return flags;
 }

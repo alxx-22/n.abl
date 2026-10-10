@@ -161,6 +161,14 @@ const USUAL = /\b(?:my|the) usual\b|\bsame as (?:last time|last week|before|alwa
 /** "Hello, this is Relay UK", "you're through to a relay assistant": a text relay call. */
 const RELAY = /\b(?:relay uk|text ?relay|typetalk|relay (?:assistant|service|call|operator))\b/i;
 
+// A barber's corrections, where the shared wording names another business's tools (presets/barber.md §7).
+const BARBER_CORRECTIONS: Partial<Record<Flag['rule'], string>> = {
+  invented_price: "[Correction from the system: no tool gave that price. Correct yourself: prices come only from check_availability and search_knowledge. Say only what they return.]",
+  refund_claim: "[Correction from the system: never promise a refund: the owner decides. Correct yourself: say sorry, offer the shop's free tidy-up (search_knowledge), or take a message for the owner (take_message).]",
+  liability_admitted: "[Correction from the system: never admit fault or promise compensation. Correct yourself: say sorry it happened, and take a message for the owner (take_message, category injury or complaint).]",
+  said_safe_for_allergy: "[Correction from the system: never say dye or colour is safe for anyone. Correct yourself: the skin test 48 hours before is what the dye maker asks for, and anyone who has reacted to hair dye isn't coloured.]",
+};
+
 const CORRECTIONS: Record<Flag['rule'], string> = {
   unconfirmed_claim:
     '[Correction from the system: nothing has been booked or ordered yet. No create_booking, modify_booking or confirm_order has succeeded in this call. Tell the caller you just need to finalise it, read the details back, and call the tool now. Only then give the reference.]',
@@ -320,7 +328,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     });
     this.prompt = prompt;
     // Every price in its instructions may be said (a repairs call's invented_price).
-    if (this.state.maintenance || this.state.takeaway) this.state.amounts.push(...amountsIn(prompt));
+    if (this.state.maintenance || this.state.takeaway || this.state.barber) this.state.amounts.push(...amountsIn(prompt));
     // And every time in them (an estate agency's and a takeaway's invented_time), but not their ranges: an
     // opening-hours range would let any time through.
     if (this.state.estate || this.state.takeaway || this.state.barber) this.state.times.push(...knownTimes(prompt));
@@ -745,7 +753,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     // Correct it on the call, not just in the log: the next thing the
     // agent does is put it right.
     if (correct) {
-      const tk = this.state.takeaway ? TAKEAWAY_CORRECTIONS[f.rule] : undefined;
+      const tk = this.state.takeaway ? TAKEAWAY_CORRECTIONS[f.rule] : this.state.barber ? BARBER_CORRECTIONS[f.rule] : undefined;
       this.session?.sendText(tk ?? (f.rule === 'unconfirmed_claim' && this.state.maintenance ? MT_UNCONFIRMED : CORRECTIONS[f.rule]));
     }
   }

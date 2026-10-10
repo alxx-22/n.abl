@@ -243,3 +243,25 @@ test('on a call: who else is free at that time, colour offered only from 48 hour
   assert.equal((await c.run('running_late', { reference: mine.reference, minutes: 5 })).noted, true);
   assert.equal(c.ctx.state.messageTaken, true, '"passed on" is true');
 });
+
+test("guardrails: a barber's made-up price, a promised refund, fault admitted, and dye called safe; and what isn't", async () => {
+  const t = await fresh('kingsleys-guard2');
+  const c = await call(t, '+447700900991');
+  c.ctx.state.barber = true;
+  const rules = (text: string) => checkUtterance(text, c.ctx.state).map((f) => f.rule);
+  await c.run('check_availability', { service: 'Classic cut', date: '2026-10-16', time: '11:00' });
+  assert.deepEqual(rules('A classic cut is £18.'), [], 'the price the tool gave');
+  assert.deepEqual(rules('A skin fade is £25.'), ['invented_price']);
+  assert.deepEqual(rules("We'll give you a full refund for the cut."), ['refund_claim']);
+  assert.deepEqual(rules("I'm sorry, that's our fault and we'll pay for it."), ['liability_admitted']);
+  c.ctx.state.heard.push('Is the beard dye safe for me?');
+  assert.deepEqual(rules("Don't worry, the dye is completely safe."), ['said_safe_for_allergy']);
+  assert.deepEqual(rules("I can't say the dye is safe for you: that's what the skin test is for."), [], 'negated');
+  c.ctx.state.heard.length = 0;
+  assert.deepEqual(rules("It's safe to say Saturday is busy."), [], 'a figure of speech, and no dye in sight');
+  // A cancellation outside the notice refunds the deposit: saying so is true.
+  const b = await c.run('create_booking', { service: 'Classic cut', date: '2026-10-22', time: '11:00', name: 'Sam Lee' });
+  await db.query('update public.voice_bookings set deposit_paid = true where tenant_id = $1 and reference = $2', [t.id, b.reference]);
+  assert.match((await c.run('cancel_booking', { reference: b.reference })).deposit, / refunded /);
+  assert.deepEqual(rules("You'll get your money back for the deposit."), []);
+});

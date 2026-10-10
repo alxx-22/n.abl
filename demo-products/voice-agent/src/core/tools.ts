@@ -127,6 +127,8 @@ export interface CallState {
   turnSaid: string;
   /** A barber's call: times only from the tools, the instructions or the caller (presets/barber.md §7, invented_time). */
   barber: boolean;
+  /** A barber's cancellation in this call refunded the deposit: saying so is no false refund. */
+  depositRefunded: boolean;
   /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
   readBack: { committed: number; tries: number } | null;
   saidYes: { committed: number; tries: number } | null;
@@ -195,7 +197,7 @@ export function newCallState(): CallState {
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false, messageOwed: false,
     estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
-    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false,
+    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false, depositRefunded: false,
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
     invoice: null, emergencyTrade: null, amounts: [], relay: false, references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
@@ -916,6 +918,7 @@ const TOOLS: Record<string, Tool> = {
       const b = await ctx.repo.cancelBooking(ctx.tenant.id, str(args.reference) ?? '');
       if (!b) return { cancelled: false, message: 'No confirmed booking with that reference.' };
       const deposit = depositOnCancel(ctx, b);
+      if (deposit && / refunded /.test(deposit)) ctx.state.depositRefunded = true;
       record(ctx, b.reference, 'cancellation', 'committed');
       const s = bookingSummary(ctx.tenant, b);
       ctx.action({ kind: 'booking_cancelled', title: 'Booking cancelled', detail: `${s.spoken_date}, ${s.spoken_time} · ${b.name} · ref ${b.reference}` });
@@ -1615,7 +1618,7 @@ export async function runTool(name: string, args: Args, ctx: ToolContext): Promi
     const json = JSON.stringify(result);
     ctx.state.references.push(...referencesIn(json));
     // A price a tool gave may be said; one nothing gave may not (a repairs call's invented_price).
-    if (ctx.state.maintenance || ctx.state.takeaway) ctx.state.amounts.push(...amountsIn(json));
+    if (ctx.state.maintenance || ctx.state.takeaway || ctx.state.barber) ctx.state.amounts.push(...amountsIn(json));
     // So too a time (an estate agency's, a takeaway's and a barber's invented_time).
     if (ctx.state.estate || ctx.state.takeaway || ctx.state.barber) {
       ctx.state.times.push(...knownTimes(json));
