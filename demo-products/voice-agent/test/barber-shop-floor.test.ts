@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
+import { amountsIn } from '../src/domain/amounts.ts';
 import { sendReminders } from '../src/server/barber.ts';
 import { newCallState, runTool, toolDeclarations, type ToolContext } from '../src/core/tools.ts';
 import { checkAvailability } from '../src/domain/availability.ts';
@@ -253,6 +254,9 @@ test("guardrails: a barber's made-up price, a promised refund, fault admitted, a
   await c.run('check_availability', { service: 'Classic cut', date: '2026-10-16', time: '11:00' });
   assert.deepEqual(rules('A classic cut is £18.'), [], 'the price the tool gave');
   assert.deepEqual(rules('A skin fade is £25.'), ['invented_price']);
+  // "A five pound deposit" is £5: a live call on 10 October heard £6 and flagged it.
+  assert.deepEqual(amountsIn("There's a five pound deposit we take when booking."), [500]);
+  assert.deepEqual([amountsIn('a pound a day'), amountsIn('a fifty pound note'), amountsIn('a hundred and twenty quid')], [[100], [5000], [12000]]);
   assert.deepEqual(rules("We'll give you a full refund for the cut."), ['refund_claim']);
   assert.deepEqual(rules("I'm sorry, that's our fault and we'll pay for it."), ['liability_admitted']);
   assert.deepEqual(rules('There is a 50p charge for card.'), ['card_surcharge']);

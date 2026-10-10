@@ -14,10 +14,16 @@ function wordsToNumber(words: string): number | undefined {
   let total = 0;
   let part = 0;
   let any = false;
-  for (const w of words.toLowerCase().split(/[\s-]+/).filter(Boolean)) {
+  const list = words.toLowerCase().split(/[\s-]+/).filter(Boolean);
+  for (const [i, w] of list.entries()) {
     if (UNITS.includes(w)) part += UNITS.indexOf(w);
     else if (TENS.includes(w)) part += TENS.indexOf(w) * 10;
-    else if (w === 'a') part += 1;
+    // "a hundred", "a thousand" and "a pound" are one; the "a" of "a five pound deposit" is not (a barber's live call,
+    // 10 October, heard £6 there and flagged it as made up).
+    else if (w === 'a') {
+      if (list[i + 1] !== undefined && list[i + 1] !== 'hundred' && list[i + 1] !== 'thousand') continue;
+      part += 1;
+    }
     else if (w === 'hundred') part = (part || 1) * 100;
     else if (w === 'thousand') {
       total += (part || 1) * 1000;
