@@ -451,3 +451,82 @@ export async function colourFrom(ctx: ToolContext, service: BookableService, pho
   const from = new Date(latest.getTime() + SKIN_TEST_HOURS * 3600000);
   return from > ctx.now() ? from : null;
 }
+
+// ── Groups, messages, and dye (presets/barber.md §9, M3) ─────────────────
+
+/** First aid for a razor cut or nick, said before anything else (presets/barber-use-cases.md, "Cut or nicked by a razor"). */
+export const NICK_FIRST_AID = "If it's still bleeding, press on it with something clean for ten minutes. If it won't stop, or it's deep, call NHS 111 or go to A&E.";
+
+/** More people than the shop books by phone in one go: a message for the owner. Null when it fits. */
+export function overGroup(ctx: ToolContext, party: number, key: 'available' | 'booked'): Record<string, unknown> | null {
+  const max = ctx.tenant.profile.barber?.group_max ?? 0;
+  if (!max || (party <= max && ctx.state.textsHeld.length < max)) return null;
+  return {
+    [key]: false, reason: 'group',
+    message: `That's more than the shop books by phone in one go (${max} at most). Take a message for the owner (take_message, category group) with the date, time, how many and what each wants; the owner calls back to arrange it. Never promise the shop opens early.`,
+  };
+}
+
+/** A caller who said they've reacted to hair dye before. "I've never reacted" isn't one. */
+const REACTED = /\b(?:react(?:ed|ion|s)?|allergic|allergy|rash|swell(?:ing|ed)?|burn(?:ed|t|ing)?|blister\w*|itch(?:y|ing|ed)?)\b[^.?!]{0,50}\b(?:dye|colour|color|tint|ppd|black henna)\b|\b(?:dye|colour|color|tint|ppd|black henna)\b[^.?!]{0,50}\b(?:react(?:ed|ion|s)?|allergic|allergy|rash|swell(?:ing|ed)?|burn(?:ed|t)|blister\w*)\b/i;
+const NOT_REACTED = /\b(?:never|not|no|haven'?t|hasn'?t|didn'?t|don'?t|without)\b[^.?!]{0,30}$/i;
+export function reactedToDye(heard: string[]): boolean {
+  return heard.some((line) => {
+    const m = REACTED.exec(line);
+    return Boolean(m) && !NOT_REACTED.test(line.slice(0, m!.index + 12));
+  });
+}
+/** Colour refused for someone who has reacted to dye: speak to their GP or pharmacist; a cut instead. */
+export function dyeReaction(ctx: ToolContext, service: BookableService, key: 'available' | 'booked' | 'changed'): Record<string, unknown> | null {
+  if (!ctx.tenant.profile.barber || !service.colour || !reactedToDye(ctx.state.heard)) return null;
+  return {
+    [key]: false, reason: 'dye_reaction',
+    message: "They've reacted to hair dye before, so the shop won't colour their hair or beard. Say so kindly, suggest they speak to their GP or pharmacist, and offer a cut or a trim instead. Never say any dye is safe for them.",
+  };
+}
+
+const BB_CATEGORIES = ['booking', 'group', 'complaint', 'injury', 'staff', 'supplier', 'careers', 'lost_property', 'compliment', 'other'] as const;
+
+/** take_message for a barber: what each kind of call needs, and a category and urgency for the owner. */
+export function barberMessageParams(decl: FunctionDeclaration, t: Tenant): FunctionDeclaration {
+  const bb = t.profile.barber;
+  if (!bb) return decl;
+  const params = decl.parameters as { properties: Record<string, unknown>; required?: string[] };
+  return {
+    ...decl,
+    description: [
+      'A message for the owner, with a name and call-back number.',
+      `A group of more than ${bb.group_max || 'a few'}, or an early start: category group, with the date, time, how many and what each wants; never promise the shop opens early.`,
+      'Unhappy with a cut: say sorry and offer the free tidy-up first (search_knowledge); if they want the owner, category complaint. Never promise a refund.',
+      `A razor cut or nick: first say "${NICK_FIRST_AID}" Then category injury. Never admit fault.`,
+      "A barber ringing in sick: category staff, urgent. Never cancel or move their bookings: the owner does.",
+      'A supplier, landlord or chair renter: category supplier, no account details. A job: category careers.',
+    ].join(' '),
+    parameters: {
+      ...params,
+      properties: { ...params.properties, category: S(`One of: ${BB_CATEGORIES.join(', ')}`), urgency: S('urgent, today or this week') },
+    },
+  } as FunctionDeclaration;
+}
+
+/** A barber's message, kept with its category and urgency, and what to tell the caller after. Null for anyone else. */
+export async function barberMessage(args: Args, ctx: ToolContext): Promise<Record<string, unknown> | null> {
+  if (!ctx.tenant.profile.barber) return null;
+  const category = (BB_CATEGORIES as readonly string[]).includes(str(args.category) ?? '') ? str(args.category)! : 'other';
+  const urgency = category === 'staff' || category === 'injury' ? 'urgent' : (['urgent', 'today', 'this_week'] as const).find((u) => u === str(args.urgency)?.replace(' ', '_')) ?? null;
+  const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+  const name = str(args.name) ?? 'Unknown';
+  const body = str(args.message) ?? '';
+  await ctx.repo.addMessage({ tenant_id: ctx.tenant.id, call_id: ctx.callId, kind: 'message', from_name: name, from_phone: phone, body, status: 'new', category, urgency });
+  ctx.state.messageTaken = true;
+  ctx.action({ kind: 'message_taken', title: `Message from ${name}${urgency === 'urgent' ? ' (urgent)' : ''}`, detail: `${category} · ${body}` });
+  const owner = ctx.tenant.profile.owner_sms_number;
+  if (owner) await smsTo(ctx, owner, `${urgency === 'urgent' ? 'URGENT ' : ''}Message from ${name}: ${body}`);
+  const note: Record<string, string> = {
+    injury: `Taken for the owner. Make sure they've heard: "${NICK_FIRST_AID}" Tell them the owner will call back. Never admit fault or promise anything.`,
+    staff: "Passed to the owner now. Tell them to rest and that the owner will sort their bookings. Never cancel or move their bookings yourself.",
+    complaint: 'Taken for the owner, who will call back. Never promise a refund.',
+    group: 'Taken for the owner, who will call back to arrange it. Never promise the shop opens early.',
+  };
+  return { taken: true, category, ...(urgency ? { urgency } : {}), note: note[category] ?? 'Tell them the owner will call back.' };
+}

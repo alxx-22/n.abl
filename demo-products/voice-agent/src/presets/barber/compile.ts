@@ -122,6 +122,7 @@ function knowledge(a: BarberAnswers): KnowledgeEntry[] {
     entry('Where can I park?', p.parking, ['parking', 'park', 'car']),
     entry('Do you sell products?', p.products, ['products', 'wax', 'clay', 'oil', 'balm', 'buy']),
     entry('Can I tip my barber?', p.tips, ['tip', 'tips', 'tipping']),
+    entry('I was cut or nicked by the razor and it is still bleeding', "Sorry to hear that. If it's still bleeding, press on it with something clean for ten minutes. If it won't stop, or it's deep, call NHS 111 or go to A&E. We'll take a message for the owner.", ['cut', 'nick', 'nicked', 'bleeding', 'blood', 'razor', 'shave', 'injury']),
     entry('Are you hiring?', p.careers, ['job', 'jobs', 'hiring', 'apprentice', 'apprenticeship', 'work']),
     entry('Do you do home visits?', p.home_visits, ['home', 'visit', 'care home', 'house call']),
   ], p.faqs);

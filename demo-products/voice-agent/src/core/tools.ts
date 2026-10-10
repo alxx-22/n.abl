@@ -35,7 +35,7 @@ import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
 import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
-  BARBER_TOOLS, colourFrom, lateHint, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
+  BARBER_TOOLS, barberMessage, barberMessageParams, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
@@ -577,6 +577,8 @@ const TOOLS: Record<string, Tool> = {
     tailor: (d, t) => estateParams(tableParams(d, t, 'check'), t, 'check'),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
+      const group = overGroup(ctx, int(args.party_size) ?? 1, 'available');
+      if (group) return group;
       const each = oneEach(ctx, str(args.service), int(args.party_size) ?? 1, 'available');
       if (each) return each;
       // A barber's day as it stands: who is off today (core/barber-tools.ts).
@@ -587,6 +589,8 @@ const TOOLS: Record<string, Tool> = {
       if (!service) {
         return { available: false, message: `Not a bookable service. Services: ${p.booking!.services.map((s) => s.label).join(', ')}.` };
       }
+      const reacted = dyeReaction(ctx, service, 'available');
+      if (reacted) return reacted;
       const colour = await skinTestFirst(ctx, service, str(args.date) ?? '', str(args.time), ctx.callerPhone, 'available');
       if (colour) return colour;
       // Colour's times start 48 hours after their skin test: offered no sooner.
@@ -666,6 +670,8 @@ const TOOLS: Record<string, Tool> = {
     tailor: (d, t) => barberParams(estateParams(tableParams(d, t, 'book'), t, 'book'), t),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
+      const group = overGroup(ctx, int(args.party_size) ?? 1, 'booked');
+      if (group) return group;
       const each = oneEach(ctx, str(args.service), int(args.party_size) ?? 1, 'booked');
       if (each) return each;
       const wait = waitForYes(ctx, 'booked');
@@ -679,6 +685,8 @@ const TOOLS: Record<string, Tool> = {
       const off = offToday(ctx, shop, str(args.staff), str(args.date) ?? '', 'booked');
       if (off) return off;
       const colourService = p.barber ? findService(p, str(args.service)) : undefined;
+      const reacted = colourService ? dyeReaction(ctx, colourService, 'booked') : null;
+      if (reacted) return reacted;
       const colour = colourService ? await skinTestFirst(ctx, colourService, str(args.date) ?? '', str(args.time), normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone, 'booked') : null;
       if (colour) return colour;
       if (p.estate) {
@@ -1531,9 +1539,9 @@ const TOOLS: Record<string, Tool> = {
       description: 'A message for the team, with a name and call-back number.',
       parameters: obj({ name: S("Caller's name"), phone: S('Call-back number'), message: S('One or two sentences') }, ['name', 'message']),
     },
-    tailor: (d, t) => maintenanceParams(estateParams(d, t, 'message'), t, 'message'),
+    tailor: (d, t) => barberMessageParams(maintenanceParams(estateParams(d, t, 'message'), t, 'message'), t),
     async handler(args, ctx) {
-      const estate = (await estateMessage(args, ctx)) ?? (await maintenanceMessage(args, ctx));
+      const estate = (await estateMessage(args, ctx)) ?? (await maintenanceMessage(args, ctx)) ?? (await barberMessage(args, ctx));
       if (estate) return estate;
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
       const body = str(args.message) ?? '';

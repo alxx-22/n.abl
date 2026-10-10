@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
-import { newCallState, runTool, type ToolContext } from '../src/core/tools.ts';
+import { newCallState, runTool, toolDeclarations, type ToolContext } from '../src/core/tools.ts';
 import { checkAvailability } from '../src/domain/availability.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { profileOn, skinTestFor, waitNow, type ShopToday } from '../src/domain/shop-floor.ts';
@@ -264,4 +264,38 @@ test("guardrails: a barber's made-up price, a promised refund, fault admitted, a
   await db.query('update public.voice_bookings set deposit_paid = true where tenant_id = $1 and reference = $2', [t.id, b.reference]);
   assert.match((await c.run('cancel_booking', { reference: b.reference })).deposit, / refunded /);
   assert.deepEqual(rules("You'll get your money back for the deposit."), []);
+});
+
+test('M3 on a call: a group over the limit is a message, colour is refused after a dye reaction, and messages carry what to say', async () => {
+  const t = await fresh('kingsleys-m3');
+  const c = await call(t, '+447700900992');
+  // A wedding party of six: more than the shop books by phone.
+  const six = await c.run('check_availability', { service: 'Classic cut', date: '2026-10-17', time: '09:00', party_size: 6 });
+  assert.deepEqual([six.available, six.reason], [false, 'group']);
+  assert.match(six.message, /\(4 at most\)\. Take a message for the owner \(take_message, category group\)/);
+  for (const [i, time] of ['09:00', '09:30', '10:00', '10:30'].entries()) {
+    assert.equal((await c.run('create_booking', { service: 'Classic cut', date: '2026-10-17', time, name: `Groom ${i}` })).booked, true);
+  }
+  assert.equal((await c.run('create_booking', { service: 'Classic cut', date: '2026-10-17', time: '11:00', name: 'Best man' })).reason, 'group', 'the fifth in one call');
+  // Dye: a reaction before is no colour; "never reacted" is fine.
+  const d = await call(t, '+447700900993');
+  d.ctx.state.heard.push("I'd like a beard colour, but I had a reaction to hair dye a few years ago.");
+  const no = await d.run('check_availability', { service: 'Beard colour', date: '2026-10-20' });
+  assert.deepEqual([no.available, no.reason], [false, 'dye_reaction']);
+  assert.match(no.message, /speak to their GP or pharmacist/);
+  const e = await call(t, '+447700900994');
+  e.ctx.state.heard.push("I've never had a reaction to dye.");
+  assert.equal((await e.run('check_availability', { service: 'Beard colour', date: '2026-10-20' })).reason, 'skin_test_needed', 'on to the skin test');
+  // Messages: Dan ringing in sick is urgent; a razor nick gets the first aid; the description says what each needs.
+  const decl = toolDeclarations(t).find((x) => x.name === 'take_message')!;
+  assert.match(decl.description!, /A razor cut or nick: first say "If it's still bleeding, press on it with something clean for ten minutes\./);
+  const sick = await c.run('take_message', { name: 'Dan', message: "Not well, can't come in today.", category: 'staff' });
+  assert.deepEqual([sick.category, sick.urgency], ['staff', 'urgent']);
+  assert.match(sick.note, /Never cancel or move their bookings yourself/);
+  const nick = await d.run('take_message', { name: 'Ray Cole', message: 'Nicked on the neck yesterday, still bleeding a little.', category: 'injury' });
+  assert.match(nick.note, /press on it with something clean for ten minutes/);
+  const kept = await db.query<any>(`select category, urgency from public.voice_messages where tenant_id = $1 and kind = 'message' order by created_at`, [t.id]);
+  assert.deepEqual(kept.map((m) => [m.category, m.urgency]), [['staff', 'urgent'], ['injury', 'urgent']]);
+  // The knowledge has the first aid too.
+  assert.ok(t.profile.knowledge!.some((k) => /press on it with something clean for ten minutes/.test(k.a)));
 });
