@@ -2,30 +2,46 @@
 // a glance, every table coloured by what it is doing at the chosen minute.
 
 import { useState } from 'react';
+import { useBand } from '../bands.ts';
+import { DayPager, Pager, StripOrPager, dayItem } from '../DayPager.tsx';
 import { FloorPlan, ZoomControls, unbookableTag } from '../FloorPlan.tsx';
 import type { LiveState } from '../types.ts';
 import { addDays, bookingOn, dayLabel, hhmm, keptFor, live, looksAt, servicesOn, span } from './model.ts';
+
+/** The area pager's "All areas", which no area's key can be. */
+const ALL_AREAS = '*';
 
 export interface View {
   date: string;
   minute: number;
 }
 
+/** The week's days: a strip of buttons on a wide screen, one day with ‹ › and a swipe across the view on a phone. */
 export function DayPicker({ state, today, view, setView }: { state: LiveState; today: string; view: View; setView: (v: View) => void }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
+  const count = (d: string) => state.bookings.filter((b) => b.date === d && b.status === 'confirmed').length;
+  // Another day opens an hour into its first service, so the floor shows people rather than an empty room.
+  const pick = (d: string) => {
+    const first = servicesOn(state, d)[0];
+    setView({ date: d, minute: d === view.date ? view.minute : first ? first.open + 60 : view.minute });
+  };
   return (
-    <div className="days" role="group" aria-label="Day">
-      {days.map((d) => {
-        const n = state.bookings.filter((b) => b.date === d && b.status === 'confirmed').length;
-        const first = servicesOn(state, d)[0];
-        return (
-          <button type="button" key={d} aria-pressed={d === view.date} onClick={() => setView({ date: d, minute: d === view.date ? view.minute : first ? first.open + 60 : view.minute })}>
-            {dayLabel(d, today)}
-            {n ? <span className="count">{n}</span> : null}
-          </button>
-        );
-      })}
-    </div>
+    <StripOrPager
+      strip={
+        <div className="days" role="group" aria-label="Day">
+          {days.map((d) => {
+            const n = count(d);
+            return (
+              <button type="button" key={d} aria-pressed={d === view.date} onClick={() => pick(d)}>
+                {dayLabel(d, today)}
+                {n ? <span className="count">{n}</span> : null}
+              </button>
+            );
+          })}
+        </div>
+      }
+      pager={<DayPager days={days.map((d) => dayItem(d, dayLabel(d, today), count(d)))} value={view.date} onChange={pick} swipeParent />}
+    />
   );
 }
 
@@ -42,6 +58,7 @@ export function FloorBoard(props: {
 }) {
   const { state, view, setView, today } = props;
   const plan = state.plan;
+  const band = useBand();
   // null: every area, one under another.
   const [area, setArea] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -57,7 +74,9 @@ export function FloorBoard(props: {
   const inService = state.bookings.filter((b) => b.date === view.date && b.status === 'confirmed' && (!current || (span(b)[0] >= current.open - 30 && span(b)[0] <= current.close)));
   const covers = inService.reduce((n, b) => n + b.party_size, 0);
   const arriving = inService.filter((b) => b.visit_status === 'expected' && span(b)[0] >= view.minute && span(b)[0] - view.minute <= 30).length;
-  const free = Object.entries(looks).filter(([k, l]) => (l.state === 'free' || l.state === 'later') && plan.tables.find((t) => t.key === k)?.bookable).length;
+  /** Bookable tables free at the chosen minute, in one area or (null) every area. */
+  const freeIn = (area: string | null) => Object.entries(looks).filter(([k, l]) => (l.state === 'free' || l.state === 'later') && plan.tables.find((t) => t.key === k && (area === null || t.area === area))?.bookable).length;
+  const free = freeIn(null);
   const due = state.orders.filter((o) => o.status !== 'completed' && o.status !== 'cancelled').length;
 
   const areasWithTables = plan.areas.filter((a) => plan.tables.some((t) => t.area === a.key));
@@ -96,21 +115,36 @@ export function FloorBoard(props: {
         <span><b>{arriving}</b> arriving in the next half hour</span>
         {state.tenant.has_ordering ? <span><b>{due}</b> takeaway orders open</span> : null}
       </div>
-      <div className="area-tabs" role="tablist" aria-label="Seating areas">
-        {areasWithTables.length > 1 ? (
-          <button type="button" role="tab" aria-selected={!shownArea} onClick={() => setArea(null)}>All areas</button>
-        ) : null}
-        {areasWithTables.map((a) => {
-          const free = Object.entries(looks).filter(([k, l]) => (l.state === 'free' || l.state === 'later') && plan.tables.find((t) => t.key === k && t.area === a.key)?.bookable).length;
-          return (
+      {band === 'phone' ? (
+        // On a phone the areas are a pager beside the zoom, one row where the tabs and the zoom took two.
+        <div className="area-row">
+          {areasWithTables.length > 1 ? (
+            <Pager
+              noun="area" label="Seating areas" value={shownArea ?? ALL_AREAS} onChange={(k) => setArea(k === ALL_AREAS ? null : k)}
+              items={[{ key: ALL_AREAS, label: 'All areas' }, ...areasWithTables].map((a) => {
+                const n = freeIn(a.key === ALL_AREAS ? null : a.key);
+                const spoken = `${n} ${n === 1 ? 'table' : 'tables'} free`;
+                // Every area's free tables are in the numbers above already: "All areas" needs its room for its name.
+                return a.key === ALL_AREAS ? { key: a.key, label: a.label, spoken } : { key: a.key, label: a.label, count: `${n} free`, spoken };
+              })}
+            />
+          ) : null}
+          <ZoomControls zoom={zoom} setZoom={setZoom} compact />
+        </div>
+      ) : (
+        <div className="area-tabs" role="tablist" aria-label="Seating areas">
+          {areasWithTables.length > 1 ? (
+            <button type="button" role="tab" aria-selected={!shownArea} onClick={() => setArea(null)}>All areas</button>
+          ) : null}
+          {areasWithTables.map((a) => (
             <button type="button" role="tab" key={a.key} aria-selected={shownArea === a.key} onClick={() => setArea(a.key)}>
-              {a.label} <span className="count">{free} free</span>
+              {a.label} <span className="count">{freeIn(a.key)} free</span>
             </button>
-          );
-        })}
-        <span className="spacer" />
-        <ZoomControls zoom={zoom} setZoom={setZoom} />
-      </div>
+          ))}
+          <span className="spacer" />
+          <ZoomControls zoom={zoom} setZoom={setZoom} />
+        </div>
+      )}
       <div className="floor-wrap live plan-scroll">
         <FloorPlan
           mode="live"

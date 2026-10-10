@@ -6,6 +6,8 @@
 // a window wait in the tray.
 
 import { useState, type DragEvent, type FormEvent } from 'react';
+import { useBand } from '../bands.ts';
+import { DayPager, Pager, StripOrPager, dayItem } from '../DayPager.tsx';
 import type { LiveEngineer, LiveJob, LiveMtWindow, LiveState } from '../types.ts';
 import { PRIORITY, hhmm, jobAct, officeAct } from './maintenance.ts';
 
@@ -22,10 +24,15 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
   });
   const [date, setDate] = useState(state.today);
   const [over, setOver] = useState<string | null>(null);
+  // On a phone, one visit window at a time, so each engineer's row has the width; the one chosen is kept across days that have it.
+  const [win, setWin] = useState<string | null>(null);
+  const phone = useBand() === 'phone';
   const m = state.maintenance;
   const engineers = state.engineers ?? [];
   const jobs = (state.jobs ?? []).filter((j) => LIVE.includes(j.status));
   const windows = (m?.windows ?? []).filter((w) => w.days.includes(day(date).getUTCDay())).sort((a, b) => a.from.localeCompare(b.from));
+  const shownWin = windows.find((w) => w.key === win) ?? windows[0];
+  const columns = phone && shownWin ? [shownWin] : windows;
   const tray = jobs.filter((j) => !j.window_key && j.priority !== 'emergency');
   const emergencies = jobs.filter((j) => j.priority === 'emergency' && !j.window_key);
   const drop = (e: DragEvent, engineer: LiveEngineer, w: LiveMtWindow) => {
@@ -40,9 +47,14 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
       <p className="on-call small">
         <b>On call tonight:</b> {m?.on_call_tonight.length ? m.on_call_tonight.join(' and ') : 'nobody'} · duty manager {m?.duty_manager}
       </p>
-      <div className="day-tabs" role="tablist" aria-label="Day">
-        {days.map((d) => <button key={d} type="button" role="tab" aria-selected={d === date} onClick={() => setDate(d)}>{label(d, state.today)}</button>)}
-      </div>
+      <StripOrPager
+        strip={
+          <div className="day-tabs" role="tablist" aria-label="Day">
+            {days.map((d) => <button key={d} type="button" role="tab" aria-selected={d === date} onClick={() => setDate(d)}>{label(d, state.today)}</button>)}
+          </div>
+        }
+        pager={<DayPager days={days.map((d) => dayItem(d, label(d, state.today)))} value={date} onChange={setDate} swipeParent />}
+      />
       {emergencies.length ? (
         <div className="emergencies">
           {emergencies.map((j) => (
@@ -52,12 +64,23 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
           ))}
         </div>
       ) : null}
+      {/* Shown for a day of one window too: it is where a phone names the window, the grid's heading being hidden. */}
+      {phone && shownWin ? (
+        <Pager
+          noun="visit window" label="Visit window" value={shownWin.key} onChange={setWin}
+          items={windows.map((w) => {
+            const n = jobs.filter((j) => j.date === date && j.window_key === w.key).length;
+            // Its visits are said, not shown: the name and the hours fill the row.
+            return { key: w.key, label: w.label, detail: `${w.from}–${w.to}`, spoken: `${n || 'no'} ${n === 1 ? 'visit' : 'visits'}` };
+          })}
+        />
+      ) : null}
       {windows.length ? (
-        // On a phone the grid keeps its columns and scrolls sideways inside this box, not the page.
+        // A tablet keeps every window's column, and the grid scrolls sideways inside this box rather than the page.
         <div className="table-scroll">
-        <table className="dispatch-grid">
+        <table className={`dispatch-grid ${phone ? 'one-window' : ''}`}>
           <thead>
-            <tr><th scope="col" className="dp-eng">Engineer</th>{windows.map((w) => <th key={w.key} scope="col">{w.label}<span className="muted small"> {w.from}–{w.to}</span></th>)}</tr>
+            <tr><th scope="col" className="dp-eng">Engineer</th>{columns.map((w) => <th key={w.key} scope="col">{w.label}<span className="muted small"> {w.from}–{w.to}</span></th>)}</tr>
           </thead>
           <tbody>
             {engineers.map((e) => {
@@ -86,7 +109,7 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
                       <span className="dp-trades muted">{e.gas_safe ? 'Gas Safe · ' : ''}{e.trades.map((t) => m?.trades.find((x) => x.key === t)?.label.split(/[,;]| and /)[0] ?? `${t[0].toUpperCase()}${t.slice(1).replace(/_/g, ' ')} (off)`).join(', ')}</span>
                     </div>
                   </th>
-                  {windows.map((w) => {
+                  {columns.map((w) => {
                     const cell = `${e.key}|${w.key}`;
                     const here = jobs.filter((j) => j.engineer_key === e.key && j.date === date && j.window_key === w.key);
                     return (

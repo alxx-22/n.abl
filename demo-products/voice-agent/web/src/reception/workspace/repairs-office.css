@@ -204,4 +204,14 @@ dialog.rp-sheet .badge { font-size: 12px; padding: 1px 6px; letter-spacing: 0.04
   .dispatch-grid .dp-eng { width: 150px; }
   .dp-who { grid-template-columns: minmax(0, 1fr); }
   .dp-who .dp-off { justify-content: flex-start; }
+  /* One visit window at a time (the pager above chooses and names it): an engineer a card, the name
+     and both absence links on one line, the trades under them, then the window's visits full width. */
+  .dispatch-grid.one-window { min-width: 0; }
+  .dispatch-grid.one-window thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .dispatch-grid.one-window, .dispatch-grid.one-window tbody, .dispatch-grid.one-window th, .dispatch-grid.one-window td { display: block; }
+  .dispatch-grid.one-window tr { display: grid; gap: 2px; padding: 4px 0 8px; border-bottom: 1px solid var(--line); }
+  .dispatch-grid.one-window td { height: auto; min-height: 40px; }
+  .one-window .dp-who { grid-template-columns: auto minmax(0, 1fr); }
+  .one-window .dp-who .dp-off { justify-content: flex-end; gap: 0 14px; }
+  .one-window .dp-who .dp-off button { white-space: nowrap; }
 }

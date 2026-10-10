@@ -499,14 +499,18 @@ export function FloorPlan(props: {
   );
 }
 
-/** Zoom out, a percentage that resets to fit, zoom in. */
-export function ZoomControls({ zoom, setZoom }: { zoom: number; setZoom: (z: number) => void }) {
+/**
+ * Zoom out, a percentage that resets to fit, zoom in. `compact` leaves out
+ * the percentage, where a phone's row has room for two buttons (zooming out
+ * all the way fits it again).
+ */
+export function ZoomControls({ zoom, setZoom, compact = false }: { zoom: number; setZoom: (z: number) => void; compact?: boolean }) {
   const steps = [1, 1.25, 1.5, 2, 2.5];
   const i = steps.findIndex((s) => s >= zoom - 0.01);
   return (
-    <span className="zoom" role="group" aria-label="Zoom">
+    <span className="zoom" role="group" aria-label={compact ? `Zoom, ${Math.round(zoom * 100)}%` : 'Zoom'}>
       <button type="button" className="small" aria-label="Zoom out" disabled={i <= 0} onClick={() => setZoom(steps[Math.max(0, i - 1)])}>−</button>
-      <button type="button" className="small" aria-label="Fit to the width" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>
+      {compact ? null : <button type="button" className="small" aria-label="Fit to the width" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>}
       <button type="button" className="small" aria-label="Zoom in" disabled={i >= steps.length - 1} onClick={() => setZoom(steps[Math.min(steps.length - 1, i + 1)])}>+</button>
     </span>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { when } from '../api.ts';
+import { DayPager, StripOrPager, dayItem } from '../reception/DayPager.tsx';
 import type { TenantState } from '../types.ts';
 
 // Rows that arrived since the last refresh flash once, so a booking made on
@@ -31,6 +32,8 @@ export function Diary({ state, day, setDay }: { state: TenantState; day: string;
     days.push(d.toISOString().slice(0, 10));
   }
   for (const b of state.bookings) if (!days.includes(b.date)) days.push(b.date);
+  const shownDays = days.slice(0, 10);
+  const count = (d: string) => state.bookings.filter((b) => b.date === d && b.status === 'confirmed').length;
   const list = state.bookings.filter((b) => b.date === day);
   const isNew = useFresh(state.bookings.map((b) => `${b.reference}:${b.status}:${b.time}:${b.party_size}`));
   const table = state.tenant.business_type === 'restaurant' || state.tenant.business_type === 'pub';
@@ -49,17 +52,22 @@ export function Diary({ state, day, setDay }: { state: TenantState; day: string;
         <h2 id="diary-title">Diary</h2>
         <span className="muted">{list.filter((b) => b.status === 'confirmed').length} bookings</span>
       </header>
-      <div className="days" role="group" aria-label="Day">
-        {days.slice(0, 10).map((d, i) => {
-          const n = state.bookings.filter((b) => b.date === d && b.status === 'confirmed').length;
-          return (
-            <button type="button" key={d} aria-pressed={d === day} onClick={() => setDay(d)}>
-              {dayLabel(d, i)}
-              {n ? <span className="count">{n}</span> : null}
-            </button>
-          );
-        })}
-      </div>
+      <StripOrPager
+        strip={
+          <div className="days" role="group" aria-label="Day">
+            {shownDays.map((d, i) => {
+              const n = count(d);
+              return (
+                <button type="button" key={d} aria-pressed={d === day} onClick={() => setDay(d)}>
+                  {dayLabel(d, i)}
+                  {n ? <span className="count">{n}</span> : null}
+                </button>
+              );
+            })}
+          </div>
+        }
+        pager={<DayPager days={shownDays.map((d, i) => dayItem(d, dayLabel(d, i), count(d)))} value={day} onChange={setDay} swipeParent />}
+      />
       <div className="slots" ref={slots}>
         {list.length ? (
           list.map((b) => (
