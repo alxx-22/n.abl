@@ -35,7 +35,7 @@ import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
 import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
-  BARBER_TOOLS, barberMessage, barberMessageParams, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
+  BARBER_TOOLS, barberCheckParams, barberMessage, barberMessageParams, quietTimes, under16Note, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
@@ -574,7 +574,7 @@ const TOOLS: Record<string, Tool> = {
         ['date'],
       ),
     },
-    tailor: (d, t) => estateParams(tableParams(d, t, 'check'), t, 'check'),
+    tailor: (d, t) => barberCheckParams(estateParams(tableParams(d, t, 'check'), t, 'check'), t),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const group = overGroup(ctx, int(args.party_size) ?? 1, 'available');
@@ -623,6 +623,11 @@ const TOOLS: Record<string, Tool> = {
         const soon = str(args.time) && date === toLocal(ctx.now(), p.timezone).date && zonedToUtc(date, str(args.time)!, p.timezone).getTime() - ctx.now().getTime() < 60 * 60000;
         if (soon && p.barber.walk_ins) out.walk_in = 'If they mean coming in now, get_wait_now gives the walk-in wait.';
         // The shop's notice for today, from the back office: said once (presets/barber.md §6, Today).
+        // A quiet appointment: the day's quietest times, fewest chairs busy.
+        if (bool(args.quiet) && isIsoDate(date)) {
+          out.quiet_times = quietTimes(tenantOn(ctx, shop, date).profile, service, date, existing, asOf);
+          out.quiet_note = 'The quietest times that day, fewest chairs busy first. Book one with quiet set, so the barber knows.';
+        }
         if (shop?.notice) out.shop_notice = `Today's notice from the shop, to tell them once: ${shop.notice}`;
         if (colourStart) out.colour_from = `Colour only from ${spokenDate(toLocal(colourStart, p.timezone).date)} at ${spokenTime(toLocal(colourStart, p.timezone).time)}, 48 hours after their skin test.`;
       }
@@ -735,7 +740,9 @@ const TOOLS: Record<string, Tool> = {
         occasion ? occasion.charAt(0).toUpperCase() + occasion.slice(1) : null,
         highchairs ? `${highchairs} highchair${highchairs > 1 ? 's' : ''}` : null,
         accessible ? 'Step-free table needed' : null,
+        p.barber && bool(args.quiet) ? 'Quiet appointment' : null,
       ].filter(Boolean).join('. ') || null;
+      if (p.barber && bool(args.quiet)) tags.push('quiet');
       const r = await ctx.repo.createBooking(
         tenantOn(ctx, shop, str(args.date) ?? ''),
         {
@@ -798,6 +805,7 @@ const TOOLS: Record<string, Tool> = {
         note: [
           highchairs > chairs ? `We only have ${chairs} highchair${chairs === 1 ? '' : 's'}; say so.` : null,
           unmet.length ? `No ${unmet.map((f) => f.replace('_', ' ')).join(' or ')} table was free; say it is noted as a request.` : null,
+          p.barber ? under16Note(ctx, b.service_key) : null,
         ].filter(Boolean).join(' ') || undefined,
         next: depositNext(ctx, b) ?? (b.deposit_pence
           ? `A ${pounds(b.deposit_pence)} deposit secures this booking. Offer to take it now with take_demo_payment (for "deposit"), or say a payment link will be texted.`

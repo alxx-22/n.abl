@@ -5,13 +5,13 @@
 // profile with `barber` gets any of this.
 
 import type { FunctionDeclaration } from './live.ts';
-import { findService } from '../domain/availability.ts';
+import { candidateTimes, checkSlot, findService, type BusyInterval } from '../domain/availability.ts';
 import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
 import { SKIN_TEST_KEY, SKIN_TEST_HOURS, profileOn, skinTestFor, waitNow, type ShopToday, type WaitlistEntry } from '../domain/shop-floor.ts';
 import { normaliseUkPhone } from '../domain/phone.ts';
 import { pounds, type BookableService, type Booking, type Tenant } from '../domain/types.ts';
 import type { Repo } from '../db/repo.ts';
-import { ASK_NAME, I, S, int, obj, realName, smsTo, str } from './tool-kit.ts';
+import { ASK_NAME, B, I, S, int, obj, realName, smsTo, str } from './tool-kit.ts';
 import type { Args, Tool, ToolContext } from './tools.ts';
 
 /** "£5", as said: no pence when there are none. */
@@ -91,6 +91,7 @@ export function barberParams(decl: FunctionDeclaration, t: Tenant): FunctionDecl
   if (!t.profile.barber) return decl;
   const p = { ...(decl.parameters as { properties: Record<string, unknown> }).properties };
   p.after = S('Reference of a booking made in this call: book straight after it, with the same barber (date, time and barber come from it)');
+  p.quiet = B('A quiet appointment (autism, anxiety, a hearing aid): noted for the barber');
   return { ...decl, parameters: { ...(decl.parameters as object), properties: p } } as FunctionDeclaration;
 }
 
@@ -529,4 +530,35 @@ export async function barberMessage(args: Args, ctx: ToolContext): Promise<Recor
     group: 'Taken for the owner, who will call back to arrange it. Never promise the shop opens early.',
   };
   return { taken: true, category, ...(urgency ? { urgency } : {}), note: note[category] ?? 'Tell them the owner will call back.' };
+}
+
+// ── Access (presets/barber-use-cases.md, "A quiet appointment"; "A child ringing alone") ──
+
+/** check_availability's `quiet`, for a barber. */
+export function barberCheckParams(decl: FunctionDeclaration, t: Tenant): FunctionDeclaration {
+  if (!t.profile.barber) return decl;
+  const p = { ...(decl.parameters as { properties: Record<string, unknown> }).properties };
+  p.quiet = B('They want a quiet appointment: gives the quietest times that day');
+  return { ...decl, parameters: { ...(decl.parameters as object), properties: p } } as FunctionDeclaration;
+}
+
+/** The quietest free times on a day for a service: fewest other chairs busy then, earliest first among equals. At most three. */
+export function quietTimes(profile: Tenant['profile'], service: BookableService, date: string, existing: BusyInterval[], now: Date): string[] {
+  const staff = (profile.booking?.resources ?? []).filter((r) => r.kind === 'staff');
+  const free: { time: string; busy: number }[] = [];
+  for (const time of candidateTimes(service, date)) {
+    const slot = checkSlot({ profile, serviceKey: service.key, date, time, partySize: 1, now, existing }, service, time);
+    if (!slot) continue;
+    const busy = staff.filter((r) => existing.some((b) => b.resource_key === r.key && b.starts_at < slot.ends_at && slot.starts_at < b.ends_at)).length;
+    free.push({ time, busy });
+  }
+  return free.sort((a, b) => a.busy - b.busy || a.time.localeCompare(b.time)).slice(0, 3).map((x) => spokenTime(x.time));
+}
+
+/** The shop's rule for under-16s, said when a child books: a kids' cut, or a caller who says they're under 16. */
+const UNDER_16 = /\b(?:i'?m|i am)\s+(?:only\s+)?(?:1[0-5]|ten|eleven|twelve|thirteen|fourteen|fifteen)\b(?!\s*(?:minutes|mins|pounds|o'?clock))/i;
+export function under16Note(ctx: ToolContext, serviceKey: string): string | undefined {
+  if (!ctx.tenant.profile.barber?.under_16_with_adult) return undefined;
+  const kids = /kid|child|junior/i.test(serviceKey) || ctx.state.heard.some((h) => UNDER_16.test(h));
+  return kids ? "Under-16s come with an adult: say so, and take a parent's number if they offer one." : undefined;
 }

@@ -1667,6 +1667,16 @@ export class Repo {
 
   // ── A barber's shop floor (presets/barber.md §5, M2) ──────────────────
 
+  /** A booking's reminder marked sent, once: false if it already was (two windows open at once). */
+  async markReminded(tenantId: string, id: string, at: Date): Promise<boolean> {
+    const rows = await this.db.query<any>(
+      `update public.voice_bookings set details = details || jsonb_build_object('reminded_at', $3::text), updated_at = now()
+       where tenant_id = $1 and id = $2 and not (details ? 'reminded_at') returning id`,
+      [tenantId, id, at.toISOString()],
+    );
+    return rows.length > 0;
+  }
+
   /** A number's bookings still standing, past and to come, oldest first: a customer's skin tests and colour. */
   async listBookingsByPhone(tenantId: string, phone: string): Promise<Booking[]> {
     const rows = await this.db.query<any>(

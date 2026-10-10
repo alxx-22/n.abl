@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
+import { sendReminders } from '../src/server/barber.ts';
 import { newCallState, runTool, toolDeclarations, type ToolContext } from '../src/core/tools.ts';
 import { checkAvailability } from '../src/domain/availability.ts';
 import type { Tenant } from '../src/domain/types.ts';
@@ -295,7 +296,33 @@ test('M3 on a call: a group over the limit is a message, colour is refused after
   const nick = await d.run('take_message', { name: 'Ray Cole', message: 'Nicked on the neck yesterday, still bleeding a little.', category: 'injury' });
   assert.match(nick.note, /press on it with something clean for ten minutes/);
   const kept = await db.query<any>(`select category, urgency from public.voice_messages where tenant_id = $1 and kind = 'message' order by created_at`, [t.id]);
-  assert.deepEqual(kept.map((m) => [m.category, m.urgency]), [['staff', 'urgent'], ['injury', 'urgent']]);
+  // Two messages in the same millisecond have no order: compared as a set.
+  assert.deepEqual(kept.map((m) => `${m.category} ${m.urgency}`).sort(), ['injury urgent', 'staff urgent']);
   // The knowledge has the first aid too.
   assert.ok(t.profile.knowledge!.some((k) => /press on it with something clean for ten minutes/.test(k.a)));
+});
+
+test('M3: a quiet appointment at the quietest time, noted; under-16s come with an adult; the reminder the day before, once', async () => {
+  const t = await fresh('kingsleys-quiet');
+  const c = await call(t, '+447700900995');
+  await c.run('create_booking', { service: 'Classic cut', staff: 'Marcus', date: '2026-10-17', time: '08:00', name: 'Early One' });
+  await c.run('create_booking', { service: 'Classic cut', staff: 'Dan', date: '2026-10-17', time: '08:00', name: 'Early Two', phone: '07700 900996' });
+  const q = await call(t, '+447700900997');
+  const quiet = await q.run('check_availability', { service: 'Classic cut', date: '2026-10-17', quiet: true });
+  assert.equal(quiet.quiet_times[0], '8:30am', 'the first time no other chair is busy');
+  assert.ok(!quiet.quiet_times.includes('8am'));
+  const booked = await q.run('create_booking', { service: 'Classic cut', date: '2026-10-17', time: '08:30', name: 'Alfie Moss', quiet: true });
+  const row = (await repo.getBookingByReference(t.id, booked.reference))!;
+  assert.deepEqual([row.tags, row.notes], [['quiet'], 'Quiet appointment']);
+  // A young teenager booking a cut.
+  const kid = await call(t, '+447700900998');
+  kid.ctx.state.heard.push("I'm 14, can I book a skin fade?");
+  assert.match((await kid.run('create_booking', { service: 'Skin fade', date: '2026-10-17', time: '13:00', name: 'Leo Hart' })).note, /^Under-16s come with an adult/);
+  // Reminders: tomorrow's bookings with a number, from 10am, once each.
+  const fri = new Date('2026-10-16T09:30:00Z'); // 10:30am BST on Friday
+  assert.equal(await sendReminders(repo, t, new Date('2026-10-16T08:30:00Z'), '2026-10-16'), 0, 'not before 10am');
+  assert.equal(await sendReminders(repo, t, fri, '2026-10-16'), 4, 'the four booked for Saturday');
+  assert.equal(await sendReminders(repo, t, fri, '2026-10-16'), 0, 'once');
+  const text = await db.query<any>(`select body from public.voice_messages where tenant_id = $1 and kind = 'sms' and to_number = $2`, [t.id, '+447700900997']);
+  assert.deepEqual(text.map((m) => m.body), [`Kingsley's Barbers: a reminder of your classic cut with ${booked.with} tomorrow, Saturday 17 October, at 8:30am. Ref ${booked.reference}. To change it, call us and quote it. (Demo)`]);
 });

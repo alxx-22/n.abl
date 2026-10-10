@@ -8,7 +8,7 @@ import type { Repo } from '../db/repo.ts';
 import { findService } from '../domain/availability.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { SKIN_TEST_KEY, inOn, waitNow, type ShopToday } from '../domain/shop-floor.ts';
-import { minutesOf, spokenDate, toLocal } from '../domain/time.ts';
+import { addDays, minutesOf, spokenDate, spokenTime, toLocal, zonedToUtc } from '../domain/time.ts';
 import type { Booking, Tenant } from '../domain/types.ts';
 import { HttpError } from './http.ts';
 
@@ -21,6 +21,7 @@ export async function barberState(repo: Repo, t: Tenant, now: Date, today: strin
   const label = (k: string | null) => (k ? barbers.find((r) => r.key === k)?.label ?? k : null);
   const service = (k: string) => findService(p, k)?.label ?? k;
   const shop = await repo.getToday(t.id, today);
+  await sendReminders(repo, t, now, today);
   const queue = await repo.listWaitingWalkIns(t.id);
   // The wait now for the first thing on the price list (a classic cut, as it comes).
   const first = p.booking?.services.find((s) => s.key !== SKIN_TEST_KEY);
@@ -122,4 +123,30 @@ export async function barberAction(repo: Repo, t: Tenant, o: { sub: string; id: 
     return 'Taken off the waiting list.';
   }
   return null;
+}
+
+/**
+ * The reminder the day before (presets/barber.md §4.5): from 10am, each of
+ * tomorrow's bookings with a number gets one text, once. A demo text only,
+ * kept on the phone screen: never sent to a real network. It runs when the
+ * back office is looked at, as a takeaway's orders move on with the clock.
+ */
+export async function sendReminders(repo: Repo, t: Tenant, now: Date, today: string): Promise<number> {
+  const p = t.profile;
+  if (!p.barber || minutesOf(toLocal(now, p.timezone).time) < 10 * 60) return 0;
+  const tomorrow = addDays(today, 1);
+  const due = await repo.listBookings(t.id, zonedToUtc(tomorrow, '00:00', p.timezone), zonedToUtc(addDays(tomorrow, 1), '00:00', p.timezone));
+  let sent = 0;
+  for (const b of due) {
+    if (!b.phone || b.details?.reminded_at || !(await repo.markReminded(t.id, b.id, now))) continue;
+    const l = toLocal(b.starts_at, p.timezone);
+    const what = findService(p, b.service_key)?.label.toLowerCase() ?? 'appointment';
+    const who = p.booking?.resources.find((r) => r.key === b.resource_key)?.label;
+    await repo.addMessage({
+      tenant_id: t.id, kind: 'sms', to_number: b.phone, status: 'simulated',
+      body: `${p.name}: a reminder of your ${what}${who ? ` with ${who}` : ''} tomorrow, ${spokenDate(l.date)}, at ${spokenTime(l.time)}. Ref ${b.reference}. To change it, call us and quote it. (Demo)`,
+    });
+    sent++;
+  }
+  return sent;
 }
