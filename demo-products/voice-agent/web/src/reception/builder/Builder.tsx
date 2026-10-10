@@ -28,7 +28,10 @@ export function Builder({ id, me }: { id: string; me: Me }) {
   const latest = useRef<BaseAnswers | null>(null);
   const edits = useRef(0);
   const scan = new URLSearchParams(location.search).get('scan') === '1';
-  const narrow = narrowBand(useBand());
+  const band = useBand();
+  const narrow = narrowBand(band);
+  /** On a phone the top bar and the step's heading each keep to one row: their words are the short ones. */
+  const phone = band === 'phone';
   const [previewOpen, setPreviewOpen] = useState(false);
   const ribbon = useRef<HTMLOListElement>(null);
   const previewButton = useRef<HTMLButtonElement>(null);
@@ -146,18 +149,19 @@ export function Builder({ id, me }: { id: string; me: Me }) {
   return (
     <div className="builder-page" style={style}>
       <div className="accent-bar" />
-      <RxTop me={me}>
+      {/* On a phone Sign out goes behind More, as in the workspace, so the business's name has the room. */}
+      <RxTop me={me} keep={<>
         <span className="crumb">
           <b>{answers.basics.name || unnamed(ws.preset)}</b> <span className="muted">· setup</span>
         </span>
         {ws.expires_at ? <span className="expiry small">{expiryLine(ws)}</span> : null}
         <span className={`save-state ${saving}`} aria-live="polite">
-          {saving === 'saving' ? 'Saving…' : saving === 'pending' ? 'Unsaved changes' : saving === 'saved' ? 'All changes saved' : saving === 'error' ? 'Not saved' : ''}
+          {saving === 'saving' ? 'Saving…' : saving === 'pending' ? (phone ? 'Unsaved' : 'Unsaved changes') : saving === 'saved' ? (phone ? 'Saved' : 'All changes saved') : saving === 'error' ? 'Not saved' : ''}
         </span>
         {ws.started_at ? (
-          <Link to={`${R}/live/${id}`} className="button" onClick={() => void flush()}>Back to my demo</Link>
+          <Link to={`${R}/live/${id}`} className="button" onClick={() => void flush()}>{phone ? 'My demo' : 'Back to my demo'}</Link>
         ) : null}
-      </RxTop>
+      </>} />
 
       <main className={`rx-main builder ${def.wide?.[current.key] ? 'wide-step' : ''}`}>
         <nav className="steps" aria-label="Setup steps">
@@ -181,7 +185,7 @@ export function Builder({ id, me }: { id: string; me: Me }) {
           {scan && answers.basics.website ? <ScoutCard id={id} website={answers.basics.website} onApplied={(w) => { setWs(w); setAnswers(w.answers); latest.current = w.answers; }} /> : null}
           <header>
             <h1 id="step-title">{current.label}</h1>
-            <span className="muted small">Step {i + 1} of {steps.length}</span>
+            <span className="muted small">{phone ? `${i + 1} of ${steps.length}` : <>Step {i + 1} of {steps.length}</>}</span>
             {narrow ? (
               <button type="button" className="preview-open" ref={previewButton} aria-expanded={previewOpen} aria-controls="preview" onClick={() => setPreviewOpen(true)}>Preview</button>
             ) : null}

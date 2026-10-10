@@ -23,7 +23,7 @@ import { useLiveCall } from '../../live/useLiveCall.ts';
 import { Link } from '../../router.tsx';
 import type { BoardEvent } from '../../types.ts';
 import { R, RxTop, minutesUntil } from '../Reception.tsx';
-import { keepInStrip } from '../bands.ts';
+import { keepInStrip, useBand } from '../bands.ts';
 import { brandStyle } from '../brand.ts';
 import type { LiveBooking, LiveState, Me } from '../types.ts';
 import { BookingDrawer } from './BookingDrawer.tsx';
@@ -52,6 +52,8 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   const live = useLiveCall({ workspace: id }, toast, () => numberRef.current);
   const [texts, setTexts] = useState(-1);
   const panes = usePanes(live.phase === 'live' || live.phase === 'connecting' || Boolean(stream.call?.live), texts);
+  /** A phone's top bar keeps to one row, so its minutes chip is the short one. */
+  const phone = useBand() === 'phone';
   const tabStrip = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   /** Set when the demo has been deleted (a shared demo's hour is up, or it was replaced). */
@@ -61,12 +63,13 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
     else toast(e.message);
   }, []);
 
-  const refresh = useCallback(async () => {
+  /** `fresh`: the day and time shown are worked out again, as on opening (the demo's clock has moved). */
+  const refresh = useCallback(async (fresh = false) => {
     const s = await demoApi<LiveState>(`/workspaces/${id}/state`);
     setState(s);
     setTick((t) => t + 1);
     setView((v) => {
-      if (v) return v;
+      if (v && !fresh) return v;
       // The demo's own time when its clock is set: Friday's dinner, not whenever the real time is.
       const now = localNow(s.tenant.timezone, new Date(Date.now() + (s.clock_offset_ms ?? 0)));
       const services = servicesOn(s, now.date);
@@ -223,23 +226,28 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   return (
     <div className="workspace-page" style={style}>
       <div className="accent-bar" />
-      <RxTop me={me}>
+      {/* On a phone the bar keeps to one row: `keep` stays on it, the rest goes behind More (TopMenu.tsx). */}
+      <RxTop me={me} keep={<>
         <span className="crumb">
           {brand.logo ? <img src={brand.logo} alt="" className="logo-mini" /> : null}
           <b>{t.name}</b>
         </span>
-        <span className={`badge ${minutesLeft > 5 ? 'info' : 'bad'}`}>{minutesLeft} call min left today</span>
+        {/* "30 min" on a phone: its words are in the sheet. A shared demo's deletion takes its place there (phone.css). */}
+        <span className={`badge minutes ${minutesLeft > 5 ? 'info' : 'bad'}`}>{phone ? `${minutesLeft} min` : <>{minutesLeft} call min left today</>}</span>
         {state.expires_at ? (
-          <span className={`badge ${new Date(state.expires_at).getTime() - clock < 10 * 60000 ? 'bad' : 'warn'}`} title="Shared demos are deleted an hour after Start, with everything in them.">
+          <span className={`badge expires ${new Date(state.expires_at).getTime() - clock < 10 * 60000 ? 'bad' : 'warn'}`} title="Shared demos are deleted an hour after Start, with everything in them.">
             Deleted {minutesUntil(state.expires_at, clock)}
           </span>
         ) : null}
+      </>}>
+        <span className="rx-phone-only">{minutesLeft} call minutes left today</span>
         <button type="button" onClick={() => setSettingsOpen(true)} title="The receptionist's voice"><SlidersIcon /> Voice</button>
         <Link to={`${R}/build/${id}`} className="button">Edit setup</Link>
+        {/* A new time works the day and time shown out again, without clearing them first: cleared, the whole page was drawn afresh and focus was lost from the bar. */}
         {spec.clock ? (
           <DemoClock
             id={id} timeZone={t.timezone} realMs={clock} offsetMs={state.clock_offset_ms ?? 0} disabled={live.phase !== 'idle'}
-            onSet={(message) => { setSelected(null); setView(null); void refresh(); toast(message); }}
+            onSet={(message) => { setSelected(null); refresh(true).catch(failed); toast(message); }}
           />
         ) : null}
         <button type="button" onClick={reset} disabled={live.phase !== 'idle'} title="Reset the demo"><ResetIcon /> Reset</button>
@@ -287,7 +295,8 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
             ))}
           </div>
           <div className="office-body">
-            <div className="office-main">
+            {/* Keyed by the demo's clock: a new time starts the views again on its day, as opening the demo does (a view may keep a day of its own). */}
+            <div className="office-main" key={state.clock_offset_ms ?? 0}>
               {current?.def.render({
                 id, state, spec, today: now.date, nowMinute: now.minutes, clock: demoClock, view, setView,
                 selected: booking?.tables[0] ?? null, onSelectTable: selectTable, onDrop: dropOnTable, flash,

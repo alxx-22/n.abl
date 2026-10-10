@@ -2,7 +2,7 @@
 // a prospect can try a Friday night or a Sunday at 2am whatever the time really is. Setting it starts
 // the demo week again around that time, so the board, the seeded jobs and every call agree.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ClockIcon } from '../../components/Icons.tsx';
 import { demoApi } from '../../api.ts';
 
@@ -20,6 +20,28 @@ export function DemoClock({ id, timeZone, realMs, offsetMs, disabled, onSet }: {
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const box = useRef<HTMLSpanElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  // A popover: Escape or a tap elsewhere puts it away, so it is not left open
+  // behind the phone's More sheet it sits in when that closes.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      // Focus goes back to the button only from inside the form; in the sheet, More has taken it already.
+      if (box.current?.contains(document.activeElement)) button.current?.focus();
+      setOpen(false);
+    };
+    const onDown = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onDown);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onDown);
+    };
+  }, [open]);
   const shown = local(realMs + offsetMs, timeZone);
   const [date, setDate] = useState(shown.date);
   const [time, setTime] = useState('21:00');
@@ -30,10 +52,13 @@ export function DemoClock({ id, timeZone, realMs, offsetMs, disabled, onSet }: {
     return { date: l.date, label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : new Intl.DateTimeFormat('en-GB', { timeZone, weekday: 'long', day: 'numeric', month: 'short' }).format(new Date(ms)) };
   });
   const send = async (body: Record<string, unknown>, message: string) => {
+    // The form goes when the time is set, and focus with it: back to the button, unless it has moved on (to More, in the phone's sheet).
+    const inside = box.current?.contains(document.activeElement);
     setBusy(true);
     try {
       await demoApi(`/workspaces/${id}/clock`, { method: 'POST', json: body });
       setOpen(false);
+      if (inside && (document.activeElement === document.body || box.current?.contains(document.activeElement))) button.current?.focus();
       onSet(message);
     } catch (e) {
       onSet((e as Error).message);
@@ -42,8 +67,8 @@ export function DemoClock({ id, timeZone, realMs, offsetMs, disabled, onSet }: {
     }
   };
   return (
-    <span className="demo-clock">
-      <button type="button" onClick={() => setOpen(!open)} disabled={disabled} aria-expanded={open} title="Set the time in the demo, to try nights and weekends">
+    <span className="demo-clock" ref={box}>
+      <button type="button" ref={button} onClick={() => setOpen(!open)} disabled={disabled} aria-expanded={open} title="Set the time in the demo, to try nights and weekends">
         <ClockIcon /> {offsetMs ? `Demo time ${shown.label}` : 'Time'}
       </button>
       {open ? (

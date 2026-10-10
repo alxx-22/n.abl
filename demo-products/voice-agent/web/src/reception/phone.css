@@ -1,0 +1,119 @@
+/* A phone (640px and down) spends its height on the work, not the furniture.
+   Alex, 10 October: "you can save a lot of space on the mobile version …
+   apply similar principles to other areas". Kept apart from reception.css so
+   a phone's adjustments read together. It loads after reception.css and the
+   offices' own sheets, so it wins over them; styles.css loads later still,
+   so a rule here that adjusts one of its rules (.panel, .calls, .message)
+   has a page class in front to outweigh it.
+   Colours only from the page's variables: every business wears its own. */
+
+/* ── The top bar: one row, the rest behind More (TopMenu.tsx) ─────────── */
+/* Wider than a phone, the sheet's box steps aside and its buttons sit in the bar as they always have. */
+.rx-more { display: contents; }
+.rx-more-button, .rx-phone-only { display: none; }
+/* The person's name leaves the bar below a desktop; reception.css says so for the bar's own children, this for the ones in the box. */
+@media (max-width: 1279px) {
+  .rx-more > .muted.small { display: none; }
+}
+
+@media (max-width: 640px) {
+  /* The name takes the room that is left and is cut short with … ; the chips and buttons keep their size beside it. */
+  .rx div.rx-top { gap: 8px; padding-block: 8px; }
+  .rx-top .crumb { flex: 1 1 0; min-width: 0; max-width: none; }
+  .rx-top .crumb ~ .spacer { display: none; }
+  /* 44px for a thumb: as specific as reception.css's 40px rule for a tablet, which this raises. */
+  .rx .rx-top :is(button, .button):not(.tl-bar, p .linkish) { min-height: 44px; }
+  .rx-top .badge { flex: none; }
+  /* A shared demo's deletion is a warning, not an extra, so never tucked away: in the workspace its chip takes the
+     minutes chip's place (the minutes are in the sheet, in words); in the builder its sentence is a slim row under the bar. */
+  .rx-top:has(.badge.expires) .badge.minutes { display: none; }
+  .rx-top .expiry { order: 2; flex: 1 0 100%; text-align: center; }
+  /* The builder: the steps ribbon under the bar says it is the setup. */
+  .builder-page .rx-top .crumb > .muted { display: none; }
+  /* Shown even when empty: a live region has to be on the page already for its first change to be read out. */
+  .builder-page .rx-top .save-state { min-width: 0; flex: none; }
+
+  .rx-top.has-more { position: relative; }
+  .rx-more-button { display: inline-flex; flex: none; width: 44px; padding: 0; justify-content: center; font-size: 22px; line-height: 1; }
+  .rx-more { display: none; }
+  /* The sheet hangs from the bar, in the bar's colours, over the page (the bookmarks are at 40). */
+  .rx-more[data-open] {
+    position: absolute; z-index: 50; top: calc(100% + 4px); right: 12px; width: min(300px, calc(100vw - 24px));
+    display: grid; gap: 6px; padding: 10px; max-height: calc(100vh - 80px); overflow-y: auto;
+    background: var(--brand-primary); color: var(--on-primary); border: 1px solid var(--line-strong); border-radius: var(--r-md); box-shadow: var(--glow-md);
+  }
+  .rx-more > .spacer { display: none; }
+  .rx-more[data-open] > :is(.rx-phone-only, .muted.small) { display: block; padding: 2px 4px; font-size: 13px; }
+  /* Who is signed in, and Sign out, set apart from the demo's own controls, where there are any (the builder's sheet has only these). */
+  .rx-more[data-open] > :not(.spacer) ~ .muted.small { margin-top: 2px; padding-top: 10px; border-top: 1px solid var(--line); }
+  /* Every item a full-width row with its name: the ones that show only an icon in a narrow bar have room for their words here. */
+  .rx-more :is(button, .button) { width: 100%; padding: 0 14px; justify-content: flex-start; font-size: 14px; }
+  .workspace-page .rx-top .rx-more button:has(> svg) { width: 100%; padding: 0 14px; gap: 10px; font-size: 14px; justify-content: flex-start; }
+  /* The demo's clock opens its form inside the sheet rather than over it. */
+  .rx-more .demo-clock { display: grid; }
+  .rx-more .clock-pop { position: static; width: auto; padding: 6px 2px 2px; background: none; border: 0; box-shadow: none; }
+  .rx-more .clock-pop :is(input, select) { color: var(--on-primary); background-color: rgba(var(--on-primary-rgb), 0.08); border-color: var(--line-strong); }
+  .rx-more .clock-pop .row button { width: auto; flex: 1; justify-content: center; }
+}
+
+/* ── The back office: its width for the work ──────────────────────────── */
+/* The office's panel had an 18px border of its own inside the page's 16px
+   (styles.css's .panel padding, which .ws-office meant to set aside), then
+   the view's 16px: a third of a phone's width went on margins. */
+@media (max-width: 640px) {
+  .workspace-page .ws-office { padding: 0; }
+  .workspace-page .office-main { padding: 12px; }
+}
+
+/* ── The floor plan's figures: two by two, not four lines ─────────────── */
+@media (max-width: 640px) {
+  .numbers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; line-height: 1.35; }
+  /* A figure's words that run to a second line start under the first word, not under the number. */
+  .numbers > span { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 5px; align-items: baseline; }
+}
+
+/* ── Rows of filter chips and figures: one row that scrolls sideways ──── */
+/* As the tabs do. The estate agent's buyers, the repairs properties and
+   invoices (chips), and the repairs Monday figures, which keep to one row on
+   a desktop too. Each box is marked data-strip, the screens check's sign of
+   a strip meant to scroll. */
+@media (max-width: 640px) {
+  /* contain: the row's full length must not widen the list around it; it takes the width it is given and scrolls. */
+  .ap-chips, .rp-chips {
+    flex: 1 1 100%; min-width: 0; contain: inline-size;
+    flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity; padding-bottom: 2px;
+  }
+  .ap-chip, .rp-chip { flex: none; white-space: nowrap; scroll-snap-align: start; }
+  .rp-kpis { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: minmax(132px, max-content); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .rp-kpis li { scroll-snap-align: start; }
+}
+
+/* ── Side by side where the boxes are short ───────────────────────────── */
+@media (max-width: 640px) {
+  /* A builder step's heading, "4 of 8" and Preview on one row: a long name runs to a second line beside them, where Preview had a row to itself. */
+  .step > header { flex-wrap: nowrap; }
+  .step > header h1 { flex: 1 1 0; min-width: 0; overflow-wrap: break-word; }
+  .step > header > :not(h1) { flex: none; }
+  /* A sale's two dates next to each other, each under its name, then Save. */
+  .sales .sale-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
+  .sales .sale-dates label { display: grid; gap: 2px; min-width: 0; }
+  .sales .sale-dates input { width: 100%; min-width: 0; }
+  .sales .sale-dates button { grid-column: 1 / -1; justify-self: start; }
+  /* The restaurant's limits: two short number boxes to a row. */
+  .three.limits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* A name and its kind (an area, a person's role, a client's kind) on one row; what follows and Remove on the next. */
+  .area-head:has(> .area-name + select) > :is(.area-name, select) { flex: 1 1 40%; width: auto; min-width: 0; }
+  /* A callback's name, number and Mark done on one row, then what they said: the button had a row to itself, and the number a row of its own. */
+  .workspace-page .ws-messages .message:has(> button) { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0.35em; }
+  .workspace-page .ws-messages .message:has(> button) > div { order: 2; flex: 1 0 100%; }
+  .workspace-page .ws-messages .message:has(> button) > button { order: 1; flex: none; margin-left: auto; }
+}
+
+/* ── Calls: the list straight on the back office, not a card inside it ── */
+@media (max-width: 640px) {
+  .office-main > .panel.calls { padding: 0; border: 0; background: none; box-shadow: none; }
+  /* When it was and how it went on one row, what was said under them: three rows a call were two. */
+  .workspace-page .calls li { grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; }
+  .workspace-page .calls li > .badges { grid-row: 1; grid-column: 2; justify-content: flex-end; }
+  .workspace-page .calls li > :nth-child(2) { grid-column: 1 / -1; }
+}

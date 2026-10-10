@@ -221,7 +221,8 @@ function Kpis({ k }: { k: NonNullable<LiveState['kpis']> }) {
     { label: 'Unpaid bills', value: money(k.unpaid.pence), note: `${k.unpaid.count} bills, ${k.unpaid.overdue} overdue`, level: k.unpaid.overdue ? 'warn' : undefined },
   ];
   return (
-    <ul className="rp-kpis" aria-label="This week at a glance">
+    // data-strip: on a phone the tiles keep to one row, as on a desktop, and it scrolls sideways (phone.css).
+    <ul className="rp-kpis" aria-label="This week at a glance" data-strip>
       {tiles.map((t) => (
         <li key={t.label} className={t.level ?? ''}>
           <span className="rp-kpi-label">{t.label}</span>

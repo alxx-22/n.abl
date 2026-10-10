@@ -12,7 +12,8 @@ export function Chips<K extends string>({ label, chips, value, onChange }: {
   onChange: (k: K) => void;
 }) {
   return (
-    <div className="rp-chips" role="group" aria-label={label}>
+    // data-strip: on a phone the chips are one row that scrolls sideways (phone.css).
+    <div className="rp-chips" role="group" aria-label={label} data-strip>
       {chips.map((c) => (
         <button key={c.key} type="button" className="rp-chip" aria-pressed={value === c.key} onClick={() => onChange(c.key)}>
           {c.label} <span className="n">{c.n}</span>

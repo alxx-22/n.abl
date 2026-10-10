@@ -124,7 +124,8 @@ export function StepSeating({ a, set }: StepProps<SeatingOwner>) {
         <Num label="Larger" suffix="min" min={30} max={480} value={a.seating.sittings.larger} onChange={(v) => set((d) => void (d.seating.sittings.larger = v))} />
       </div>
       <p className="hint">How long a table is held, by party size.</p>
-      <div className="three">
+      {/* limits: two to a row on a phone (phone.css), as the short number boxes leave room for. */}
+      <div className="three limits">
         <Num label="Largest party by phone" min={2} max={60} value={a.seating.max_party} onChange={(v) => set((d) => void (d.seating.max_party = v))} hint="Bigger groups: the receptionist takes details for a callback." />
         <Num label="Booking notice" suffix="min" min={0} max={1440} value={a.seating.notice_minutes} onChange={(v) => set((d) => void (d.seating.notice_minutes = v))} />
         <Num label="Book up to" suffix="days ahead" min={1} max={365} value={a.seating.horizon_days} onChange={(v) => set((d) => void (d.seating.horizon_days = v))} />

@@ -14,7 +14,10 @@ import { untitled } from './nouns.ts';
 import { Workspace } from './workspace/Workspace.tsx';
 import type { Me, PresetInfo, WorkspacePayload, WorkspaceSummary } from './types.ts';
 import { Logo } from '../components/Logo.tsx';
+import { TopMenu } from './TopMenu.tsx';
 import './reception.css';
+// After reception.css, so a phone's adjustments win over the rules they adjust (phone.css says how it outweighs styles.css, which loads later).
+import './phone.css';
 
 export const R = `${BASE}/reception`;
 
@@ -86,16 +89,17 @@ export function Reception({ path }: { path: string }) {
   );
 }
 
-export function RxTop({ me, children }: { me: Me | null; children?: React.ReactNode }) {
+/**
+ * `keep`: what stays on the bar on a phone. Given it, the rest (`children`
+ * and Sign out) goes behind a More button there; wider, nothing moves.
+ */
+export function RxTop({ me, children, keep }: { me: Me | null; children?: React.ReactNode; keep?: React.ReactNode }) {
   const out = async () => {
     await demoApi('/session', { method: 'DELETE' }).catch(() => {});
     location.assign(R);
   };
-  return (
-    <div className="top rx-top">
-      <Link to={R} className="brand" aria-label="n.abl demo: home">
-        <Logo /> <span className="product">Demo</span>
-      </Link>
+  const rest = (
+    <>
       {children}
       <span className="spacer" />
       {me ? (
@@ -109,6 +113,14 @@ export function RxTop({ me, children }: { me: Me | null; children?: React.ReactN
           </button>
         </>
       ) : null}
+    </>
+  );
+  return (
+    <div className={`top rx-top${keep ? ' has-more' : ''}`}>
+      <Link to={R} className="brand" aria-label="n.abl demo: home">
+        <Logo /> <span className="product">Demo</span>
+      </Link>
+      {keep ? <>{keep}<TopMenu>{rest}</TopMenu></> : rest}
     </div>
   );
 }

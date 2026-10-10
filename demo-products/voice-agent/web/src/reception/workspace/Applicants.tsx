@@ -60,7 +60,8 @@ export function Applicants({ id, state, onDone }: { id: string; state: LiveState
     <div className="applicants">
       <div className="ap-head">
         <div className="ap-tools">
-          <div className="ap-chips" role="group" aria-label="Show">
+          {/* data-strip: on a phone the chips are one row that scrolls sideways (phone.css). */}
+          <div className="ap-chips" role="group" aria-label="Show" data-strip>
             {FILTERS.map((f) => (
               <button
                 key={f.key} type="button" className="ap-chip" aria-pressed={filter === f.key}
