@@ -112,6 +112,8 @@ async function call(tenant: Tenant, callerPhone: string, sent: { to: string; bod
     tenant, repo, now: () => now, callId: await repo.createCall({ tenant_id: tenant.id, channel: 'eval' }), channel: 'eval', callerPhone,
     state: newCallState(), demoCards: [], sms: { send: async (to: string, body: string) => (sent.push({ to, body }), 'simulated') }, telephony: null, action: () => {},
   };
+  // These tests book directly: every service counts as checked, and check-first has a test of its own.
+  ctx.state.checked = (tenant.profile.booking?.services ?? []).map((s) => s.key);
   return { ctx, run: (name: string, args: Record<string, unknown>) => runTool(name, args, ctx) as Promise<any> };
 }
 const fresh = async (slug: string) => repo.upsertTenant(compileBarber(sanitiseBarber({ ...defaultAnswers(), basics: { ...defaultAnswers().basics, name: "Kingsley's Barbers" } }), { slug }));
@@ -331,4 +333,21 @@ test('M3: a quiet appointment at the quietest time, noted; under-16s come with a
   assert.equal(await sendReminders(repo, t, fri, '2026-10-16'), 0, 'once');
   const text = await db.query<any>(`select body from public.voice_messages where tenant_id = $1 and kind = 'sms' and to_number = $2`, [t.id, '+447700900997']);
   assert.deepEqual(text.map((m) => m.body), [`Kingsley's Barbers: a reminder of your classic cut with ${booked.with} tomorrow, Saturday 17 October, at 8:30am. Ref ${booked.reference}. To change it, call us and quote it. (Demo)`]);
+});
+
+test("check first: a barber's booking with nothing checked is held once, so what's read back is real", async () => {
+  // A live call, 10 October: a skin fade's time and price read back with no check_availability, and booked.
+  const t = await fresh('kingsleys-checkfirst');
+  const c = await call(t, '+447700900999');
+  c.ctx.state.checked = [];
+  const first = await c.run('create_booking', { service: 'Skin fade', staff: 'Marcus', date: '2026-10-17', time: '09:00', name: 'Jay Patel' });
+  assert.deepEqual([first.booked, first.reason], [false, 'not_checked']);
+  assert.equal((await c.run('check_availability', { service: 'Skin fade', staff: 'Marcus', date: '2026-10-17', time: '09:00' })).available, true);
+  assert.equal((await c.run('create_booking', { service: 'Skin fade', staff: 'Marcus', date: '2026-10-17', time: '09:00', name: 'Jay Patel' })).booked, true);
+  // A family's total from the prices given is no invented price.
+  c.ctx.state.barber = true;
+  await c.run('check_availability', { service: "Kids' cut", date: '2026-10-17', time: '10:00' });
+  await c.run('check_availability', { service: 'Classic cut', date: '2026-10-17', time: '10:00' });
+  assert.deepEqual(checkUtterance('The total for all three is forty-four pounds.', c.ctx.state).map((f) => f.rule), []);
+  assert.deepEqual(checkUtterance("Is there any particular time after noon you'd prefer?", c.ctx.state).map((f) => f.rule), [], '"after noon" is the afternoon');
 });

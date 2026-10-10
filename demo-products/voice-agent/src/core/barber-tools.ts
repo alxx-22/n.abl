@@ -562,3 +562,16 @@ export function under16Note(ctx: ToolContext, serviceKey: string): string | unde
   const kids = /kid|child|junior/i.test(serviceKey) || ctx.state.heard.some((h) => UNDER_16.test(h));
   return kids ? "Under-16s come with an adult: say so, and take a parent's number if they offer one." : undefined;
 }
+
+/** A booking for a service no check_availability in this call has looked at: check it first, once. */
+export function checkFirst(ctx: ToolContext, service: string | undefined): Record<string, unknown> | null {
+  const s = findService(ctx.tenant.profile, service);
+  if (!s || ctx.state.checked.includes(s.key)) return null;
+  const gate = `checkfirst:${s.key}`;
+  if (ctx.state.gateAsked.includes(gate)) return null;
+  ctx.state.gateAsked.push(gate);
+  return {
+    booked: false, reason: 'not_checked',
+    message: `Not booked yet: check_availability for the ${s.label.toLowerCase()} first, so the time, barber and price you read back come from it. If anything you said differs, say so, read it back again, and book on yes.`,
+  };
+}

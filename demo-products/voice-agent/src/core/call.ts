@@ -163,7 +163,8 @@ const RELAY = /\b(?:relay uk|text ?relay|typetalk|relay (?:assistant|service|cal
 
 // A barber's corrections, where the shared wording names another business's tools (presets/barber.md §7).
 const BARBER_CORRECTIONS: Partial<Record<Flag['rule'], string>> = {
-  invented_price: "[Correction from the system: no tool gave that price. Correct yourself: prices come only from check_availability and search_knowledge. Say only what they return.]",
+  // A live call on 10 October, corrected for an unchecked price, "double-checked" without a tool and said a wrong one.
+  invented_price: "[Correction from the system: no tool has given that price. Say only \"Sorry, let me check that price\", then call check_availability for the service (or search_knowledge), and say only the price it returns.]",
   refund_claim: "[Correction from the system: never promise a refund: the owner decides. Correct yourself: say sorry, offer the shop's free tidy-up (search_knowledge), or take a message for the owner (take_message).]",
   liability_admitted: "[Correction from the system: never admit fault or promise compensation. Correct yourself: say sorry it happened, and take a message for the owner (take_message, category injury or complaint).]",
   said_safe_for_allergy: "[Correction from the system: never say dye or colour is safe for anyone. Correct yourself: the skin test 48 hours before is what the dye maker asks for, and anyone who has reacted to hair dye isn't coloured.]",

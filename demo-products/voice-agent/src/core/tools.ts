@@ -35,7 +35,7 @@ import type { SafetyState } from './safety.ts';
 import type { SafetyKind } from '../presets/maintenance/nations.ts';
 import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
-  BARBER_TOOLS, barberCheckParams, barberMessage, barberMessageParams, quietTimes, under16Note, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
+  BARBER_TOOLS, barberCheckParams, checkFirst, barberMessage, barberMessageParams, quietTimes, under16Note, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
@@ -129,6 +129,8 @@ export interface CallState {
   barber: boolean;
   /** A barber's cancellation in this call refunded the deposit: saying so is no false refund. */
   depositRefunded: boolean;
+  /** A barber's services checked with check_availability in this call. */
+  checked: string[];
   /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
   readBack: { committed: number; tries: number } | null;
   saidYes: { committed: number; tries: number } | null;
@@ -197,7 +199,7 @@ export function newCallState(): CallState {
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false, messageOwed: false,
     estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
-    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false, depositRefunded: false,
+    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false, depositRefunded: false, checked: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
     invoice: null, emergencyTrade: null, amounts: [], relay: false, references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
@@ -593,6 +595,7 @@ const TOOLS: Record<string, Tool> = {
       if (reacted) return reacted;
       const colour = await skinTestFirst(ctx, service, str(args.date) ?? '', str(args.time), ctx.callerPhone, 'available');
       if (colour) return colour;
+      if (p.barber && !ctx.state.checked.includes(service.key)) ctx.state.checked.push(service.key);
       // Colour's times start 48 hours after their skin test: offered no sooner.
       const colourStart = await colourFrom(ctx, service, ctx.callerPhone);
       const asOf = colourStart ? new Date(Math.max(ctx.now().getTime(), colourStart.getTime() - (service.lead_minutes ?? 0) * 60000)) : ctx.now();
@@ -690,6 +693,9 @@ const TOOLS: Record<string, Tool> = {
       const off = offToday(ctx, shop, str(args.staff), str(args.date) ?? '', 'booked');
       if (off) return off;
       const colourService = p.barber ? findService(p, str(args.service)) : undefined;
+      // Check first, so the time, barber and price read back are real (a live call, 10 October, read back a price no tool gave).
+      const unchecked = p.barber && !str(args.after) ? checkFirst(ctx, str(args.service)) : null;
+      if (unchecked) return unchecked;
       const reacted = colourService ? dyeReaction(ctx, colourService, 'booked') : null;
       if (reacted) return reacted;
       const colour = colourService ? await skinTestFirst(ctx, colourService, str(args.date) ?? '', str(args.time), normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone, 'booked') : null;

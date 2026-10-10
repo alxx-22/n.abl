@@ -44,6 +44,8 @@ async function call(tenant: Tenant, callerPhone: string, now = THURSDAY, sent: {
     tenant, repo, now: () => now, callId: await repo.createCall({ tenant_id: tenant.id, channel: 'eval' }), channel: 'eval', callerPhone,
     state: newCallState(), demoCards: [], sms: { send: async (to: string, body: string) => (sent.push({ to, body }), 'simulated') }, telephony: null, action: () => {},
   };
+  // These tests book directly: every service counts as checked, and check-first has a test of its own.
+  ctx.state.checked = (tenant.profile.booking?.services ?? []).map((s) => s.key);
   return { ctx, run: (name: string, args: Record<string, unknown>) => runTool(name, args, ctx) as Promise<any> };
 }
 

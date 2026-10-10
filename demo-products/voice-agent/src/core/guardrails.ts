@@ -364,15 +364,22 @@ const DYE_TALK = /\b(?:dye|colour|color|tint|skin test|patch test|allerg\w*|reac
  * cancellation in this call refunded the deposit; no fault admitted for a
  * cut or a nick; and dye never said to be safe.
  */
+/** Whether an amount is the sum of up to `n` known ones, each used any number of times. */
+function sumOf(amount: number, known: number[], n: number): boolean {
+  if (n === 0 || amount <= 0) return false;
+  return known.some((k) => k > 0 && k <= amount && (k === amount || sumOf(amount - k, known, n - 1)));
+}
+
 function barberFlags(text: string, state: CallState): Flag[] {
   const flags: Flag[] = [];
-  // A live call on 9 October offered Dan's times unchecked.
-  const time = madeUpTime(text, state);
+  // A live call on 9 October offered Dan's times unchecked. "Any time after noon?" asks about the afternoon, and offers no time.
+  const time = madeUpTime(text.replace(/\bafter noon\b/gi, 'afternoon'), state);
   if (time) flags.push({ rule: 'invented_time', text: time });
   const said = amountsIn(text);
   if (said.length) {
-    const known = new Set([...state.amounts, ...state.heard.flatMap(amountsIn)]);
-    const made = said.find((p) => !known.has(p));
+    const known = [...new Set([...state.amounts, ...state.heard.flatMap(amountsIn)])];
+    // A family's total from the prices the tools gave is no invention (a live call, 10 October: £13 + £13 + £18 = £44).
+    const made = said.find((p) => !known.includes(p) && !sumOf(p, known, 4));
     if (made !== undefined) flags.push({ rule: 'invented_price', text: `£${(made / 100).toFixed(made % 100 ? 2 : 0)}` });
   }
   const refund = REFUNDED.exec(text);
