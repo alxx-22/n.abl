@@ -255,6 +255,8 @@ test("guardrails: a barber's made-up price, a promised refund, fault admitted, a
   assert.deepEqual(rules('A skin fade is £25.'), ['invented_price']);
   assert.deepEqual(rules("We'll give you a full refund for the cut."), ['refund_claim']);
   assert.deepEqual(rules("I'm sorry, that's our fault and we'll pay for it."), ['liability_admitted']);
+  assert.deepEqual(rules('There is a 50p charge for card.'), ['card_surcharge']);
+  assert.deepEqual(rules("No, there's no charge for card."), []);
   c.ctx.state.heard.push('Is the beard dye safe for me?');
   assert.deepEqual(rules("Don't worry, the dye is completely safe."), ['said_safe_for_allergy']);
   assert.deepEqual(rules("I can't say the dye is safe for you: that's what the skin test is for."), [], 'negated');

@@ -15,6 +15,8 @@ export const BB_PEOPLE = {
   tested: { name: 'Ben Carter', phone: '+447700900905' },
   /** Wants colour, with no skin test yet. */
   colour: { name: 'Femi Ade', phone: '+447700900906' },
+  /** One of the barbers, ringing in sick. */
+  staff: { name: 'Dan', phone: '+447700900907' },
 };
 
 export const BB_CALL_AS: { phone: string; who: string; try: string }[] = [
@@ -23,4 +25,5 @@ export const BB_CALL_AS: { phone: string; who: string; try: string }[] = [
   { phone: BB_PEOPLE.parent.phone, who: `${BB_PEOPLE.parent.name}, a parent`, try: 'Book two kids\' cuts and one for their dad on Saturday morning.' },
   { phone: BB_PEOPLE.late.phone, who: `${BB_PEOPLE.late.name}, booked in later today`, try: 'Say you\'re running 15 minutes late: kept, or the next booking decides.' },
   { phone: BB_PEOPLE.colour.phone, who: `${BB_PEOPLE.colour.name}, after a beard colour, no skin test yet`, try: 'Ask for a beard colour on Friday: the skin test comes first, 48 hours before.' },
+  { phone: BB_PEOPLE.staff.phone, who: `${BB_PEOPLE.staff.name}, one of the barbers`, try: "Ring in sick: an urgent message for the owner, and none of your bookings touched. Then mark Dan off on Today." },
 ];

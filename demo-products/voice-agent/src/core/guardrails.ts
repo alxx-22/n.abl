@@ -379,6 +379,9 @@ function barberFlags(text: string, state: CallState): Flag[] {
   if (refund && !negated(text, refund.index) && !state.depositRefunded) flags.push({ rule: 'refund_claim', text: refund[0] });
   const liable = LIABLE.exec(text);
   if (liable && !negated(text, liable.index)) flags.push({ rule: 'liability_admitted', text: liable[0] });
+  // "Is there a charge for card?" No (presets/barber-use-cases.md; the Payment Surcharges Regulations 2012, as amended).
+  const surcharge = SURCHARGE.exec(text);
+  if (surcharge && !negated(text, surcharge.index) && !/\bno\b[^.?!]{0,20}$/i.test(text.slice(0, surcharge.index))) flags.push({ rule: 'card_surcharge', text: surcharge[0] });
   const dye = DYE_TALK.test(text) || DYE_TALK.test(state.heard.slice(-2).join(' ')) ? DYE_SAFE.exec(text) : null;
   if (dye && !negated(text, dye.index) && !IFFY.test(text.slice(Math.max(0, dye.index - 25), dye.index))) flags.push({ rule: 'said_safe_for_allergy', text: dye[0] });
   return flags;
