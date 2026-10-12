@@ -1364,6 +1364,10 @@ async function walkCafe({ shot }: Walk) {
   await shot(page, 'builder-booking');
   await next('Menu');
   await shot(page, 'builder-menu');
+  await next('Ordering to collect');
+  await page.getByRole('radio', { name: 'The caller chooses' }).check();
+  await saved();
+  await shot(page, 'builder-ordering');
   await next('Policies and questions');
   await page.getByRole('radio', { name: 'Outside only' }).check();
   await saved();
@@ -1378,6 +1382,8 @@ async function walkCafe({ shot }: Walk) {
   kept('the busy time', (await page.getByLabel("When it's busy").inputValue()) === 'Saturday lunchtime is our busiest.');
   kept('the afternoon tea price', (await page.getByLabel('A person', { exact: true }).inputValue()) === '26.00');
   await next('Menu');
+  await next('Ordering to collect');
+  kept('paying either way', await page.getByRole('radio', { name: 'The caller chooses' }).isChecked());
   await next('Policies and questions');
   kept('dogs outside only', await page.getByRole('radio', { name: 'Outside only' }).isChecked());
   await next('Review and start');
@@ -1409,6 +1415,17 @@ async function walkCafe({ shot }: Walk) {
   await page.waitForSelector('.tl-bar');
   if ((await page.locator('.tl-bar').count()) < 3) throw new Error('Saturday has fewer than three bookings');
   await shot(page, 'workspace-bookings');
+  // Today's orders to collect, and carrot cake sold out on Today.
+  await tab('Orders');
+  await page.waitForSelector('.kitchen');
+  await shot(page, 'workspace-orders');
+  await tab('Today');
+  await page.click('.tonight .chip:has-text("Carrot cake")');
+  await page.waitForSelector('.toast:has-text("Carrot cake: sold out today")');
+  await page.waitForSelector('.tonight .chip.out:has-text("Carrot cake")');
+  await page.waitForSelector('.tonight h3:has-text("Sold out today")');
+  await calm();
+  await shot(page, 'workspace-today');
   await tab('Messages');
   await page.waitForSelector('.ws-messages:has-text("chocolate cake")');
   await shot(page, 'workspace-messages');

@@ -72,7 +72,7 @@ export function cafeWorkspace(profile: TenantProfile): WorkspaceSpec {
       allergies: true,
       combine: true,
     },
-    ...(profile.ordering ? { orders: { board: 'Orders', done: { collection: 'Collected', delivery: 'Delivered' }, drivers: false, advance: false } } : {}),
+    ...(profile.ordering ? { orders: { board: 'Orders', done: { collection: 'Collected', delivery: profile.ordering.delivery ? 'Delivered' : 'Collected' }, drivers: false, advance: false } } : {}),
     suggestions: [
       ...(tea ? ['Can I book afternoon tea for four on Saturday? One of us is coeliac.'] : []),
       'Can six of us book a table for lunch on Saturday?',
