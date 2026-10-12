@@ -83,6 +83,8 @@ export const BUILDER_TENANTS: BuilderTenant[] = [
   { slug: 'tk-firebird', preset: 'takeaway', edit: (a) => void (a.basics.name = 'Firebird Chicken & Burgers') },
   // The barber as it comes (presets/barber.md §8): its bb- scenarios, on its seeded week.
   { slug: 'bb-kingsleys', preset: 'barber', edit: (a) => void (a.basics.name = "Kingsley's Barbers") },
+  // The café as it comes (presets/cafe.md §8): its cf- scenarios, on its seeded week.
+  { slug: 'cf-wren', preset: 'cafe', edit: (a) => void (a.basics.name = 'Wren Street Café') },
   // The same, with the owner's alcohol switched on: its sample beer and wine, until 11pm.
   {
     slug: 'tk-firebird-licensed', preset: 'takeaway',

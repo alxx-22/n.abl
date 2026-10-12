@@ -10,6 +10,7 @@ import { MT_CALL_AS } from '../../../../src/presets/maintenance/personas.ts';
 import { normaliseUkPhone } from '../../../../src/domain/phone.ts';
 import { TK_CALL_AS } from '../../../../src/presets/takeaway/personas.ts';
 import { BB_CALL_AS } from '../../../../src/presets/barber/personas.ts';
+import { CF_CALL_AS } from '../../../../src/presets/cafe/personas.ts';
 import { ApiError, DEMO_API, demoApi } from '../../api.ts';
 import { MicIcon, PhoneIcon, ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
 import { DemoClock } from './DemoClock.tsx';
@@ -258,9 +259,10 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
           <div className="pane-head"><PaneCaret panes={panes} pane="phone" /><b>Customer’s phone</b></div>
           <Phone
             id={id} onTexts={setTexts} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)}
-            callAs={t.business_type === 'estate_agent' ? CALL_AS : t.business_type === 'property_maintenance' ? [...MT_CALL_AS, ...ownCallAs(state)] : t.business_type === 'takeaway' ? TK_CALL_AS : t.business_type === 'barber' ? BB_CALL_AS : []}
+            callAs={t.business_type === 'estate_agent' ? CALL_AS : t.business_type === 'property_maintenance' ? [...MT_CALL_AS, ...ownCallAs(state)] : t.business_type === 'takeaway' ? TK_CALL_AS : t.business_type === 'barber' ? BB_CALL_AS : t.business_type === 'cafe' ? CF_CALL_AS : []}
             emptyHint={t.business_type === 'takeaway' ? 'No texts yet. Order on the call: the confirmation, and "on its way" when it goes out with a driver, land here.'
-              : t.business_type === 'barber' ? 'No texts yet. Book a cut on the call, and the confirmation lands here.' : undefined}
+              : t.business_type === 'barber' ? 'No texts yet. Book a cut on the call, and the confirmation lands here.'
+              : t.business_type === 'cafe' ? 'No texts yet. Book a table or afternoon tea on the call, and the confirmation lands here.' : undefined}
             crew={state.engineers ? { engineers: state.engineers, clients: state.clients ?? [], jobs: state.jobs ?? [], quotes: state.quotes ?? [], today: now.date, onDone: refreshSoon } : undefined}
           />
           </div>

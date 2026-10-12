@@ -3,7 +3,7 @@
 // the Seating and Floor plan steps.
 
 import { autoLayout } from '../../../../../src/presets/restaurant/layout.ts';
-import type { AreaAnswer, RestaurantAnswers, TableAnswer } from '../../types.ts';
+import type { AreaAnswer, SeatingOwner, TableAnswer } from '../../types.ts';
 
 export const FEATURES: { key: string; label: string }[] = [
   { key: 'window', label: 'Window' }, { key: 'booth', label: 'Booth' }, { key: 'quiet', label: 'Quiet' }, { key: 'heated', label: 'Heated' },
@@ -20,7 +20,7 @@ export function nextTableKey(tables: TableAnswer[]): number {
   return Math.max(0, ...tables.map((t) => Number(/^T(\d+)$/.exec(t.key)?.[1] ?? 0))) + 1;
 }
 
-export function addTable(d: RestaurantAnswers, area: string, seats: number): void {
+export function addTable(d: SeatingOwner, area: string, seats: number): void {
   const n = nextTableKey(d.seating.tables);
   d.seating.tables.push({
     key: `T${n}`, label: `Table ${n}`, area, seats, shape: seats <= 2 ? 'round' : seats <= 4 ? 'square' : 'rect',
@@ -29,7 +29,7 @@ export function addTable(d: RestaurantAnswers, area: string, seats: number): voi
   d.seating.tables = autoLayout(d.seating.areas, d.seating.tables);
 }
 
-export function removeTable(d: RestaurantAnswers, key: string): void {
+export function removeTable(d: SeatingOwner, key: string): void {
   d.seating.tables = d.seating.tables.filter((t) => t.key !== key);
   for (const t of d.seating.tables) t.joins = t.joins.filter((j) => j !== key);
 }
@@ -44,7 +44,7 @@ export function nextAreaKey(areas: AreaAnswer[], kind: AreaAnswer['kind']): stri
 }
 
 /** A new area with one table in it; returns its key. */
-export function addArea(d: RestaurantAnswers, kind: AreaAnswer['kind']): string {
+export function addArea(d: SeatingOwner, kind: AreaAnswer['kind']): string {
   const label = AREA_LABEL[kind];
   const key = nextAreaKey(d.seating.areas, kind);
   d.seating.areas.push({ key, label, kind, reservable: kind !== 'bar', enquiry_only: kind === 'private', weather_rule: kind === 'outdoor' ? 'move_inside' : null });

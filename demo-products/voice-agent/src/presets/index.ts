@@ -15,6 +15,7 @@ import { propertyMaintenance } from './maintenance/preset.ts';
 import { restaurant } from './restaurant/preset.ts';
 import { takeaway } from './takeaway/preset.ts';
 import { barber } from './barber/preset.ts';
+import { cafe } from './cafe/preset.ts';
 
 /**
  * properties, offers, applicants, valuations and sales are the estate
@@ -118,7 +119,7 @@ export interface Preset<A extends BaseAnswers = BaseAnswers> {
   combineTables?(a: A, x: string, y: string): A;
 }
 
-const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant, estate_agent: estateAgent, property_maintenance: propertyMaintenance, takeaway, barber };
+const BUILT: Record<string, Omit<Preset, 'info'>> = { restaurant, estate_agent: estateAgent, property_maintenance: propertyMaintenance, takeaway, barber, cafe };
 
 /** A preset prospects can use: built, and live in the catalogue. */
 export function getPreset(key: string): Preset | null {

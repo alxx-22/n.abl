@@ -38,8 +38,8 @@ export const PRESETS: PresetInfo[] = [
     noun: 'takeaway', business_type: 'takeaway', example: 'https://www.your-takeaway.co.uk',
   },
   {
-    key: 'cafe', label: 'Café and coffee shop', blurb: 'Takes pre-orders and office catering, and knows every milk and syrup.', status: 'soon',
-    covers: ['Drinks and food', 'Pre-orders', 'Catering'],
+    key: 'cafe', label: 'Café and coffee shop', blurb: 'Books groups and afternoon tea, and knows every milk and allergen.', status: 'live',
+    covers: ['Groups and afternoon tea', 'Allergens', 'Walk-ins'],
     noun: 'café', business_type: 'cafe', example: 'https://www.your-cafe.co.uk',
   },
   {

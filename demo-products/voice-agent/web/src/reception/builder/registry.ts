@@ -12,6 +12,7 @@ import { maintenanceBuilder } from './maintenance/builder.tsx';
 import { restaurantBuilder } from './restaurant/builder.tsx';
 import { takeawayBuilder } from './takeaway/builder.tsx';
 import { barberBuilder } from './barber/builder.tsx';
+import { cafeBuilder } from './cafe/builder.tsx';
 
 /** Change the answers: the function edits a copy, which is then saved. */
 export type Update<A extends BaseAnswers = BaseAnswers> = (fn: (draft: A) => void) => void;
@@ -65,6 +66,7 @@ const BUILDERS: Record<string, AnyBuilder> = {
   property_maintenance: entry(maintenanceBuilder),
   takeaway: entry(takeawayBuilder),
   barber: entry(barberBuilder),
+  cafe: entry(cafeBuilder),
 };
 
 /** The builder for a preset, or null when this kind of business has none yet. */

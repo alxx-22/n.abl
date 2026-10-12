@@ -9,7 +9,7 @@ import { PolicyText, Policies } from '../common/Policies.tsx';
 import { Choice, Num, Pounds, Select, Text, Toggle } from '../fields.tsx';
 import type { StepProps } from '../registry.ts';
 import { sectionOf } from '../section.ts';
-import type { AreaAnswer, RestaurantAnswers } from '../../types.ts';
+import type { AreaAnswer, RestaurantAnswers, SeatingOwner } from '../../types.ts';
 import { KINDS, addArea, addTable, removeTable } from './seating.ts';
 
 type Props = StepProps<RestaurantAnswers>;
@@ -28,7 +28,7 @@ export function StepServe({ a, set }: Props) {
 
 // ── Seating ─────────────────────────────────────────────────────────────
 
-export function StepSeating({ a, set }: Props) {
+export function StepSeating({ a, set }: StepProps<SeatingOwner>) {
   const sizes = [2, 4, 6, 8];
   const addArea_ = (kind: AreaAnswer['kind']) => set((d) => void addArea(d, kind));
   return (

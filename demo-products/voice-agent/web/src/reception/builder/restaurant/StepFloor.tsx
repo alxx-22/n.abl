@@ -8,13 +8,13 @@ import { useState } from 'react';
 import { FIXTURE_LABEL, FloorPlan, ZoomControls, unbookableTag } from '../../FloorPlan.tsx';
 import { toast } from '../../../components/Toaster.tsx';
 import { FIXTURE_LENGTH, autoLayout, fixtureRect, fixtureSize, freeSpot, tableRect } from '../../../../../src/presets/restaurant/layout.ts';
-import type { FixtureAnswer, RestaurantAnswers } from '../../types.ts';
+import type { FixtureAnswer, SeatingOwner } from '../../types.ts';
 import type { StepProps } from '../registry.ts';
 import { FEATURES, KINDS, addArea, addTable, nextAreaKey, nextTableKey, removeTable } from './seating.ts';
 
 const nextFixtureKey = (fixtures: FixtureAnswer[]) => `F${Math.max(0, ...fixtures.map((f) => Number(/^F(\d+)$/.exec(f.key)?.[1] ?? 0))) + 1}`;
 
-function addFixture(d: RestaurantAnswers, area: string, kind: FixtureAnswer['kind']): void {
+function addFixture(d: SeatingOwner, area: string, kind: FixtureAnswer['kind']): void {
   const f: FixtureAnswer = { key: nextFixtureKey(d.seating.fixtures), area, kind, x: 0, y: 0, length: FIXTURE_LENGTH[kind].start, rotation: 0 };
   // Somewhere clear of the tables, near the top left, so it is easy to find.
   const taken = [...d.seating.tables.filter((t) => t.area === area).map(tableRect), ...d.seating.fixtures.filter((x) => x.area === area).map(fixtureRect)];
@@ -22,7 +22,9 @@ function addFixture(d: RestaurantAnswers, area: string, kind: FixtureAnswer['kin
   d.seating.fixtures.push(f);
 }
 
-export function StepFloor({ a, set }: StepProps<RestaurantAnswers>) {
+export function StepFloor({ a, set }: StepProps<SeatingOwner>) {
+  // A restaurant may switch reservations off; a café always books its bigger tables.
+  const reservations = 'serve' in a ? Boolean((a as { serve?: { reservations?: boolean } }).serve?.reservations) : true;
   const [tab, setTab] = useState(a.seating.areas[0]?.key ?? '');
   const area = a.seating.areas.find((x) => x.key === tab) ?? a.seating.areas[0];
   const [sel, setSel] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export function StepFloor({ a, set }: StepProps<RestaurantAnswers>) {
               label={`${area.label}: drag tables to arrange them`}
               tables={a.seating.tables.map((x) => {
                 const ar = a.seating.areas.find((z) => z.key === x.area);
-                const bookable = a.serve.reservations && !x.walk_in && Boolean(ar?.reservable) && !ar?.enquiry_only && ar?.weather_rule !== 'walk_in_only';
+                const bookable = reservations && !x.walk_in && Boolean(ar?.reservable) && !ar?.enquiry_only && ar?.weather_rule !== 'walk_in_only';
                 return { ...x, bookable, tag: unbookableTag({ walk_in: x.walk_in, bookable }, ar) };
               })}
               fixtures={a.seating.fixtures}
