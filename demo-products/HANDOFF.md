@@ -437,7 +437,50 @@ are ui's.**
 - Alex answered on 12 October: Nottingham city centre; groups of five
   or more and afternoon tea booked; no deposit on afternoon tea; cakes and
   platters for another day left out for now (the spec keeps their design,
-  §10). The other defaults stand. M1 is being built.
+  §10). The other defaults stand.
+
+**Café M1: built and live on this branch (12 October)**.
+- **The preset**: `src/presets/cafe/`, live in the catalogue as "Café and
+  coffee shop". Its defaults are Wren Street Café, Nottingham NG1:
+  - eight tables inside, three outside that are walk-in only;
+  - a sample menu (`fixtures/menus/wren-street-cafe.json`) with its
+    milks and allergens;
+  - afternoon tea at £24.50 (£12 for under-12s), at 12, 2 and 3:30.
+  No migration: opt-in `profile.cafe` and `BookableService` fields.
+- **The builder**: the restaurant's Seating and Floor plan steps, now
+  typed for any answers with seating (`SeatingOwner`), the shared menu
+  editor, and the café's own steps for bookings, afternoon tea and
+  policies.
+- **On a call**:
+  - Tables for fewer than five are walk-in: refused with the busy time.
+  - Afternoon tea needs a day's notice, two for gluten-free or vegan. It
+    is priced per person with the total read back, and the diet is
+    noted on the booking.
+  - "Gluten-free" is said only of food marked so. Otherwise the answer
+    is "made without gluten ingredients", with the kitchen warning. The
+    new `gluten_free_claim` guardrail catches the claim.
+- **Seeded week**: group tables at lunchtime and afternoon teas most days,
+  busiest at the weekend. Helen Ward has afternoon tea for two on
+  Saturday. Call as: Helen, Asha (a parent, nut allergy) and Tom (an
+  office, platters).
+- **Shared fix**: `create_booking` and `modify_booking` now refuse a
+  time that isn't one of the service's start times that day, as
+  `check_availability` did. A live call had moved a tea to 2pm on a
+  Sunday, a sitting Sunday doesn't have. The café's facts now say which
+  days each sitting runs.
+- **Live calls**: `cf-walk-in`, `cf-group-table`,
+  `cf-afternoon-tea-coeliac`, `cf-afternoon-tea-move`, `cf-nut-allergy`
+  and `cf-gluten-free-question`. Four passed first time. The other two
+  found the fault above and a full Friday in the seeded week. Both
+  passed on their re-runs: all six have passed on their latest run.
+- **The walk**: `npm run e2e:demo -- --only cafe` passes; screenshots
+  in `eval-results/demo-ui/cafe/`.
+- **Small, not done**: booking a gluten-free tea, the receptionist noted
+  the diet but didn't add that the kitchen uses flour. Worth a line in
+  `create_booking`'s result for a gluten-free tea.
+- **Next, M2**: ordering to collect, "Today" (sold out), and a whole cake
+  or platters as a message for the owner (`cf-collect-coffee`,
+  `cf-sold-out`, `cf-cake-to-order`).
 
 ### Working on Windows
 
