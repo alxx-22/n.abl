@@ -4,6 +4,12 @@
 // phones and tablets and a mouse never does, and they keep coming while the
 // browser scrolls the page, where a pointer is cancelled as soon as it starts
 // to move. Listening passively means the page scrolls exactly as before.
+//
+// The swipe area takes the finger's sideways travel from the browser (touch-action),
+// because Chrome on a touch screen reads a sideways swipe the page cannot scroll as
+// Back or Forward: a flick right to yesterday could leave the demo. Up and down still
+// scroll the page and a pinch still zooms, and a box inside that scrolls sideways (the
+// timeline on a phone) still scrolls, as Chrome lets each scroller take its own pans.
 
 import { useCallback, useEffect, useRef } from 'react';
 import { NO_SWIPE_FROM, swipeDirection } from './swipe.ts';
@@ -58,11 +64,14 @@ export function useSwipe(onSwipe: (step: -1 | 1) => void, enabled = true) {
     const cancel = () => {
       from = null;
     };
+    const touchAction = root.style.touchAction;
+    root.style.touchAction = 'pan-y pinch-zoom';
     root.addEventListener('touchstart', down, { passive: true });
     root.addEventListener('touchmove', move, { passive: true });
     root.addEventListener('touchend', up, { passive: true });
     root.addEventListener('touchcancel', cancel, { passive: true });
     return () => {
+      root.style.touchAction = touchAction;
       root.removeEventListener('touchstart', down);
       root.removeEventListener('touchmove', move);
       root.removeEventListener('touchend', up);

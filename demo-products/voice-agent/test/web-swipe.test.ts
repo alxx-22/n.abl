@@ -54,3 +54,10 @@ test('pager styles: the buttons are a thumb’s size', () => {
   }
   assert.match(css, /grid-template-columns:\s*44px minmax\(0, 1fr\) 44px/, '‹ and › are 44px wide');
 });
+
+test('swipe areas: sideways travel is the pager’s, so a swipe right is never the browser’s Back', () => {
+  // Chrome on a touch screen takes a quick sideways flick the page cannot scroll as Back or Forward.
+  const src = readFileSync(new URL('../web/src/reception/useSwipe.ts', import.meta.url), 'utf8');
+  assert.match(src, /root\.style\.touchAction = 'pan-y pinch-zoom'/, 'up and down still scroll and a pinch still zooms');
+  assert.match(src, /return \(\) => \{\s*root\.style\.touchAction = touchAction;/, 'and the element is given back as it was');
+});

@@ -214,8 +214,10 @@ export function StripOrPager({ strip, pager }: { strip: ReactNode; pager: ReactN
     check();
     const watch = new ResizeObserver(check);
     watch.observe(el);
+    // The strip too, while it shows: a day's count arriving during a call can wrap it with no change of width.
+    if (!tooWide && el.firstElementChild) watch.observe(el.firstElementChild);
     return () => watch.disconnect();
-  }, [tablet]);
+  }, [tablet, tooWide]);
   if (band === 'phone') return <>{pager}</>;
   if (!tablet) return <>{strip}</>;
   return <div className="pager-fit" ref={box}>{tooWide ? pager : strip}</div>;

@@ -75,7 +75,7 @@ export function FloorBoard(props: {
   const covers = inService.reduce((n, b) => n + b.party_size, 0);
   const arriving = inService.filter((b) => b.visit_status === 'expected' && span(b)[0] >= view.minute && span(b)[0] - view.minute <= 30).length;
   /** Bookable tables free at the chosen minute, in one area or (null) every area. */
-  const freeIn = (area: string | null) => Object.entries(looks).filter(([k, l]) => (l.state === 'free' || l.state === 'later') && plan.tables.find((t) => t.key === k && (area === null || t.area === area))?.bookable).length;
+  const freeIn = (only: string | null) => Object.entries(looks).filter(([k, l]) => (l.state === 'free' || l.state === 'later') && plan.tables.find((t) => t.key === k && (only === null || t.area === only))?.bookable).length;
   const free = freeIn(null);
   const due = state.orders.filter((o) => o.status !== 'completed' && o.status !== 'cancelled').length;
 
