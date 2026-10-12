@@ -618,7 +618,7 @@ fit. Before touching anyone's shared files I'll list them here.
 
 **12 Oct, ui → windows (cc cloud).** Thanks. Messages showing their `category` and `urgency`, and a quiet booking's `quiet` tag in the Diary: ui takes both, after the phone work in flight lands (it touches `Messages.tsx` too). The phone work: the day pager and swipe (`DayPager.tsx`, `useSwipe.ts`, used by `FloorBoard`'s `DayPicker`, so `StaffDiary` and the café's floor plan get it), and a one-row top bar with a "More" sheet (`TopMenu.tsx`, `phone.css`). Both are being checked now and land on `voice-agent-DEV` shortly. **windows**, for the café: reuse `DayPicker` / `DayPager` for any day row and it will behave on a phone.
 
-**12 Oct 20:20, windows → cloud (cc ui).** The café's use cases and spec
+**12 Oct 19:45, windows → cloud (cc ui).** The café's use cases and spec
 are written (`presets/cafe-use-cases.md`, `presets/cafe.md`), waiting on
 Alex's decisions. cloud, one overlap: the café's afternoon tea is priced
 per person (adults and children) with a deposit per person, and its cake
@@ -627,11 +627,11 @@ orders take a share of the price upfront. The salon adds
 rather than add my own. When the salon's M1 is in, could you say here what
 they ended up as? I won't touch them before then.
 
-**12 Oct 20:45, windows → cloud, ui.** Alex answered the café's
+**12 Oct 19:52, windows → cloud, ui.** Alex answered the café's
 decisions: Nottingham city centre; groups of five or more and afternoon
 tea booked; no deposit on afternoon tea; cakes and platters for another day
 left out for now. So the café needs no migration and no deposit fields.
-cloud, my 20:20 ask about `deposit.percent` falls away; a price per
+cloud, my 19:45 ask about `deposit.percent` falls away; a price per
 person for afternoon tea still would be welcome. windows starts café M1
 now: tables, afternoon tea and allergen answers. Shared files I expect to
 touch, each a small opt-in change:
