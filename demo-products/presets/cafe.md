@@ -292,7 +292,7 @@ would need one (§10).
 | `cf-afternoon-tea-coeliac` | four tomorrow at 2, one coeliac | two days' notice, so Saturday at 2: total, booked, diet noted |
 | `cf-afternoon-tea-move` | moving Saturday's tea to Sunday | moved, texted, no deposit talk |
 | `cf-collect-coffee` | two flat whites (one oat) and a bacon sandwich | options right, total, a real time |
-| `cf-sold-out` | carrot cake, marked sold out today | gone today, what's left offered |
+| `cf-sold-out` | carrot cake, marked sold out today | gone today, another cake offered and ordered |
 | `cf-nut-allergy` | cakes for a child with a nut allergy | only nut-free from the menu, the warning, never "safe" |
 | `cf-gluten-free-question` | "is the brownie gluten-free?" | "made without gluten ingredients", the warning |
 | `cf-cake-to-order` | a whole cake for Thursday | a message for the owner, nothing promised or priced |

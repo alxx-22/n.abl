@@ -2425,4 +2425,74 @@ export const SCENARIOS: Scenario[] = [
       return f;
     },
   },
+  // ── Wren Street Café, orders to collect (presets/cafe.md §8, M2) ───────
+  {
+    id: 'cf-collect-coffee',
+    tenant: 'cf-wren',
+    title: 'Two flat whites (one oat) and a bacon sandwich to collect: the options right, the total, a real time, paid on collection',
+    kind: 'happy',
+    callerPhone: '+447700900938',
+    now: CF_THURSDAY,
+    persona: 'You are Sam Okoro. Order two flat whites, one of them with oat milk, and a bacon sandwich, to collect as soon as possible. No allergies. You will pay when you collect. Your name is Sam Okoro.',
+    async check(c) {
+      const f: string[] = [];
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        const lines = o[0].lines as any[];
+        const whites = lines.filter((l) => l.item_key === 'flat_white');
+        expect(f, whites.reduce((n, l) => n + l.quantity, 0) === 2, `${whites.length} flat white lines`);
+        expect(f, whites.filter((l) => (l.modifiers ?? []).some((m: any) => /oat/i.test(m.name))).reduce((n, l) => n + l.quantity, 0) === 1, 'not exactly one with oat milk');
+        expect(f, lines.some((l) => l.item_key === 'bacon_sandwich' && l.quantity === 1), 'no bacon sandwich');
+        expect(f, o[0].total_pence === 1210, `total ${o[0].total_pence}`);
+        expect(f, new Date(o[0].due_at).getTime() >= at('2026-10-15', '11:10').getTime(), `due ${new Date(o[0].due_at).toISOString()}`);
+      }
+      expect(f, /£12\.10|twelve pounds ten|twelve ten/i.test(c.agentText), 'the total (£12.10) was not said');
+      expect(f, (await payments(c)).length === 0, 'a card was taken');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'cf-sold-out',
+    tenant: 'cf-wren',
+    title: 'Carrot cake, marked sold out today: gone today, the other cakes offered, one ordered instead',
+    kind: 'edge',
+    callerPhone: '+447700900939',
+    now: CF_THURSDAY,
+    setup: (repo, tenant) => repo.setTonight(tenant.id, { date: '2026-10-15', sold_out: ['carrot_cake'], notice: null }),
+    persona: 'You are Jo Reed. Order a slice of carrot cake to collect in about half an hour. If there is none, ask what other cakes they have and take the first one they suggest instead. No allergies. You will pay when you collect. Your name is Jo Reed.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, /sold out|none left|run out|all gone|gone today|no carrot cake/i.test(c.agentText), 'sold out was not said');
+      const o = await orders(c);
+      expect(f, o.length === 1, `expected 1 order, found ${o.length}`);
+      if (o[0]) {
+        const keys = (o[0].lines as any[]).map((l) => l.item_key);
+        expect(f, !keys.includes('carrot_cake'), 'carrot cake was ordered');
+        expect(f, keys.some((k) => ['victoria_sponge', 'brownie', 'scone', 'banana_bread'].includes(k)), `ordered ${keys.join(', ')}`);
+      }
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'cf-cake-to-order',
+    tenant: 'cf-wren',
+    title: 'A whole birthday cake for next Thursday: a message for the owner, nothing promised, no price',
+    kind: 'edge',
+    callerPhone: '+447700900944',
+    now: CF_THURSDAY,
+    persona: 'You are Rachel Green. Ask: "Could you make a whole carrot cake for my mum\'s birthday next Thursday, with Happy Birthday Mum on it?" Then ask how much it would be. If they can\'t arrange it on the phone, leave a message with your name, this number, the cake, the date and the writing. Accept what you are told, say thanks and goodbye. Your name is Rachel Green.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, (await messages(c)).length >= 1, 'no message for the owner');
+      expect(f, (await orders(c)).length === 0 && (await cafeBookings(c)).length === 0, 'something was ordered or booked');
+      const promised = unsaid(c, /\bwe(?:'ll| will| can) (?:make|do|bake|have it)|\bthat'?s (?:booked|ordered|confirmed|sorted)\b|\b(?:order|cake) (?:is|has been) (?:placed|confirmed)\b/i);
+      expect(f, !promised.length, `the cake was promised: "${promised[0]}"`);
+      expect(f, !/£\s?\d|\bpounds?\b/i.test(c.agentText), 'a price was given');
+      noFlags(c, f);
+      return f;
+    },
+  },
 ];
