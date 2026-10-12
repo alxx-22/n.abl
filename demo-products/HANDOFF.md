@@ -422,6 +422,20 @@ are ui's.**
   line. All five passed on their re-runs: every one of the sixteen has
   passed on its latest run.
 
+### The café (Windows session)
+
+**The café**: `presets/cafe-use-cases.md` and `presets/cafe.md`, written
+12 October.
+- 35 use cases, researched against UK rules: the FSA's 2025 allergen best
+  practice, Natasha's Law, the gluten-free limit, cake cancellations,
+  assistance dogs, breastfeeding, tips, and the ban on hidden charges.
+- **The plan**: the restaurant's tables, the shared menu and ordering, and
+  the takeaway's "Today" and reaction script, plus:
+  - small tables walk-in;
+  - afternoon tea with notice and a deposit per person;
+  - orders for a later day (cakes and platters).
+- Building waits for Alex's answers to its six decisions.
+
 ### Working on Windows
 
 The system git setting turns line endings into CRLF, which breaks the
