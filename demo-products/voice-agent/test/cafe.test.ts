@@ -56,6 +56,7 @@ test('café: the defaults are tables, afternoon tea and a menu in Nottingham cit
   assert.deepEqual([table.key, table.min_party, tea.key, tea.notice_days, tea.diet_notice_days, tea.per_person], ['table', 5, 'afternoon_tea', 1, 2, { adult_pence: 2450, child_pence: 1200, child_under: 12 }]);
   // 2pm doesn't fit a Sunday (closes at 3); 3:30 only fits a Saturday (closes at 5).
   assert.deepEqual(tea.windows, [{ days: [0, 1, 2, 3, 4, 5, 6], first: '12:00', last: '12:00' }, { days: [1, 2, 3, 4, 5, 6], first: '14:00', last: '14:00' }, { days: [6], first: '15:30', last: '15:30' }]);
+  assert.ok(p.core_facts.some((f) => f.includes('sittings at 12 noon, 2pm (not Sundays) and 3:30pm (Saturdays only).')), p.core_facts.join('\n'));
   assert.ok(p.booking!.resources.filter((r) => r.area === 'outside').every((r) => !r.services.length), 'outside is walk-in');
   assert.equal(p.knowledge!.find((k) => k.q === 'Can I breastfeed in the café?')!.a, 'Of course: anywhere you like.');
   assert.match(p.menu!.allergen_statement, /one kitchen that uses nuts, gluten, milk and eggs/);
@@ -93,6 +94,12 @@ test('café on a call: two are walk-in, six are booked; afternoon tea needs a da
   assert.equal((await repo.getBookingByReference(t.id, sat.reference))!.notes, 'Diet: gluten-free for 1');
   // Moving a group down to four makes it a walk-in table.
   assert.equal((await c.run('modify_booking', { reference: six.reference, party_size: 3 })).reason, 'walk_in');
+  // A sitting the day doesn't have is never booked or moved to, even unchecked: Sunday shuts at 3, so only noon.
+  const sunday = await c.run('create_booking', { service: 'Afternoon tea', date: '2026-10-18', time: '14:00', party_size: 2, name: 'Helen Ward' });
+  assert.deepEqual([sunday.booked, sunday.reason, sunday.message], [false, 'outside_hours', '2pm is not a bookable time for Afternoon tea on Sunday 18 October. That day: 12 noon.']);
+  const moved = await c.run('modify_booking', { reference: sat.reference, date: '2026-10-18' });
+  assert.deepEqual([moved.changed, moved.reason], [false, 'outside_hours']);
+  assert.equal((await c.run('modify_booking', { reference: sat.reference, date: '2026-10-18', time: '12:00' })).changed, true);
 });
 
 test('café: "gluten-free" only for marked food, the menu says so, and the guardrail catches the claim; a reaction is 999 first', async () => {

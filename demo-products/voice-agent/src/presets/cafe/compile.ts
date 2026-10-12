@@ -7,7 +7,8 @@
 
 import { pounds, type BookableService, type KnowledgeEntry, type TenantProfile, type Window } from '../../domain/types.ts';
 import { closeMinutes, minutesOf, spokenTime } from '../../domain/time.ts';
-import { bookingWindows } from '../common/hours.ts';
+import { DAY_ORDER, bookingWindows } from '../common/hours.ts';
+import { DAY_NAMES } from '../common/validate.ts';
 import { baseProfile, entry, mergeFaqs } from '../common/profile.ts';
 import { compileMenu, hasMenu, menuItems } from '../food/menu.ts';
 import { compileBooking } from '../seating/floor.ts';
@@ -40,13 +41,30 @@ export function teaPrice(a: CafeAnswers): string {
   return `${pounds(t.adult_pence)} a person${t.child_pence ? `, ${pounds(t.child_pence)} for under-${t.child_under}s` : ''}`;
 }
 
+/**
+ * Each sitting, with the days it runs when that isn't every open day: "2pm
+ * (not Sundays)", "3:30pm (Saturdays only)". A live call (12 October) offered
+ * all three sittings on a Sunday, which only has room for the first.
+ */
+function sittingsSaid(a: CafeAnswers): string {
+  const open = DAY_ORDER.filter((d) => a.hours.days[d]?.open);
+  const days = (ds: number[], join: string) => list(ds.map((d) => `${DAY_NAMES[d]}s`)).replace(/ and ([^ ]+)$/, ` ${join} $1`);
+  return list(teaWindows(a).map((w) => {
+    const missing = open.filter((d) => !w.days.includes(d));
+    const on = open.filter((d) => w.days.includes(d));
+    const when = !missing.length ? '' : missing.length <= on.length ? ` (not ${days(missing, 'or')})` : ` (${days(on, 'and')} only)`;
+    return `${spokenTime(w.first)}${when}`;
+  }));
+}
+
 export function teaSentence(a: CafeAnswers): string | null {
   const t = a.afternoon_tea;
   if (!t.offered) return null;
   const notice = t.notice_days === 1 ? 'a day ahead' : `${t.notice_days} days ahead`;
   const named = list(t.diets);
   const diets = t.diets.length ? ` ${named.charAt(0).toUpperCase()}${named.slice(1)} with ${t.diet_notice_days} days' notice.` : '';
-  return `Afternoon tea, ${teaPrice(a)}, booked ${notice}, sittings at ${list(t.sittings.map(spokenTime))}.${diets}`;
+  const sittings = sittingsSaid(a);
+  return `Afternoon tea, ${teaPrice(a)}, booked ${notice}${sittings ? `, sittings at ${sittings}` : ''}.${diets}`;
 }
 
 export function bookingSentence(a: CafeAnswers): string {

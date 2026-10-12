@@ -322,7 +322,9 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
     .map((w) => {
       const first = minutesOf(w.first);
       const h = profile.opening_hours.find((x) => x.days.includes(wd) && minutesOf(x.open) <= first && first < closeMinutes(x.close));
-      return h?.label && !/all day/i.test(h.label) ? h.label.toLowerCase() : `${spokenTime(w.first)} to ${spokenTime(w.last)}`;
+      if (h?.label && !/all day/i.test(h.label)) return h.label.toLowerCase();
+      // A sitting at one time (afternoon tea at 2) is that time, not "2pm to 2pm".
+      return w.first === w.last ? spokenTime(w.first) : `${spokenTime(w.first)} to ${spokenTime(w.last)}`;
     });
   if (full.length && free.length) result.fully_booked = full;
 

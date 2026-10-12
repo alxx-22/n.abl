@@ -8,9 +8,9 @@
 import type { FunctionDeclaration } from './live.ts';
 import type { Repo } from '../db/repo.ts';
 import { spokenReference } from '../db/repo.ts';
-import type { Booking, OrderLine, SayItem, Tenant } from '../domain/types.ts';
+import type { BookableService, Booking, OrderLine, SayItem, Tenant } from '../domain/types.ts';
 import { pounds } from '../domain/types.ts';
-import { checkAvailability, findService } from '../domain/availability.ts';
+import { candidateTimes, checkAvailability, findService } from '../domain/availability.ts';
 import {
   addDays, closeMinutes, isIsoDate, minutesOf, normaliseTime, spokenDate, spokenTime, toLocal, weekdayOf, zonedToUtc,
 } from '../domain/time.ts';
@@ -391,6 +391,24 @@ function hoursFor(t: Tenant, date: string): string[] {
   return open.map((h) => `${h.label ? `${h.label} ` : ''}${spokenTime(h.open)} to ${spokenTime(h.close)}`);
 }
 
+/**
+ * A time the service never starts at that day (afternoon tea at 2 on a
+ * Sunday, when the café shuts at 3): refused, with that day's times, as
+ * check_availability refuses it. Booking and moving otherwise trust the time,
+ * and a live call (12 October) moved a tea to a sitting that doesn't exist.
+ */
+function notBookable(service: BookableService | undefined, date: string | undefined, time: string | undefined, key: 'booked' | 'changed'): Record<string, unknown> | null {
+  const t = time ? normaliseTime(time) : null;
+  if (!service || !date || !isIsoDate(date) || !t) return null;
+  const times = candidateTimes(service, date);
+  if (times.includes(t)) return null;
+  return {
+    [key]: false, reason: 'outside_hours',
+    message: `${spokenTime(t)} is not a bookable time for ${service.label} on ${spokenDate(date)}.${times.length ? ` That day: ${times.length > 6 ? `${spokenTime(times[0])} to ${spokenTime(times[times.length - 1])}` : times.map(spokenTime).join(', ')}.` : ' Nothing that day.'}`,
+    next: 'Offer a time check_availability gives for that day; never one it has not given.',
+  };
+}
+
 function bookingSummary(t: Tenant, b: { reference: string; starts_at: Date; party_size: number; name: string; service_key: string; resource_key: string; area_key?: string | null; allergies?: string | null; notes?: string | null; listing_key?: string | null; details?: Record<string, unknown> }) {
   if (t.profile.estate) return estateSummary(t, b);
   const local = toLocal(b.starts_at, t.profile.timezone);
@@ -709,6 +727,8 @@ const TOOLS: Record<string, Tool> = {
       const cafeService = p.cafe ? findService(p, str(args.service)) : undefined;
       const cafeBlock = cafeService ? (walkInFirst(ctx, cafeService, int(args.party_size) ?? 1, 'booked') ?? cafeNotice(ctx, cafeService, str(args.date) ?? '', args, 'booked')) : null;
       if (cafeBlock) return cafeBlock;
+      const offTime = str(args.after) ? null : notBookable(findService(p, str(args.service)), str(args.date), str(args.time), 'booked');
+      if (offTime) return offTime;
       const shop = await shopToday(ctx);
       const off = offToday(ctx, shop, str(args.staff), str(args.date) ?? '', 'booked');
       if (off) return off;
@@ -910,6 +930,13 @@ const TOOLS: Record<string, Tool> = {
         const s0 = now ? findService(ctx.tenant.profile, now.service_key) : undefined;
         const blocked = s0 ? ((int(args.party_size) ? walkInFirst(ctx, s0, int(args.party_size)!, 'booked') : null) ?? (str(args.date) ? cafeNotice(ctx, s0, str(args.date)!, args, 'changed') : null)) : null;
         if (blocked) return { ...blocked, changed: false };
+      }
+      // Moving to a time the service never starts at that day.
+      if (str(args.date) || str(args.time)) {
+        const b0 = await ctx.repo.getBookingByReference(ctx.tenant.id, ref.replace(/[^a-z0-9]/gi, '').toUpperCase());
+        const local0 = b0 ? toLocal(b0.starts_at, ctx.tenant.profile.timezone) : null;
+        const offTime = b0 && local0 ? notBookable(findService(ctx.tenant.profile, b0.service_key), str(args.date) ?? local0.date, str(args.time) ?? local0.time, 'changed') : null;
+        if (offTime) return offTime;
       }
       // A barber's booking moving: not to a barber off today, and colour still 48 hours after its skin test.
       const shop = await shopToday(ctx);
