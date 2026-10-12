@@ -787,6 +787,11 @@ const TOOLS: Record<string, Tool> = {
           }
         }
       }
+      // A café's diet that already covers what the caller said ("coeliac", booked as a gluten-free tea) is noted in their words,
+      // not asked about again: three live calls were refused here, and one then said a reference no tool gave.
+      if (cafeService && str(args.diet) && !str(args.allergies) && dietsAsked(ctx, cafeService, { diet: args.diet }).length) {
+        args = { ...args, allergies: mentionedAllergy(ctx.state.heard) ?? str(args.diet) };
+      }
       if (isTables(ctx.tenant)) {
         const nudge = allergyCheck(ctx, str(args.allergies), 'create_booking', 'allergies');
         if (nudge) return { booked: false, ...nudge };

@@ -92,9 +92,12 @@ test('café on a call: two are walk-in, six are booked; afternoon tea needs a da
   const coeliac = await c.run('check_availability', { service: 'Afternoon tea', date: '2026-10-16', time: '14:00', party_size: 4 });
   assert.deepEqual([coeliac.reason, coeliac.earliest], ['notice', '2026-10-17']);
   assert.match(coeliac.message, /^Afternoon tea needs booking 2 days ahead for a gluten-free version: the earliest is Saturday 17 October\. Offer that, or the standard afternoon tea on the day they asked for the rest of the table/);
-  const sat = await c.run('create_booking', { service: 'Afternoon tea', date: '2026-10-17', time: '14:00', party_size: 4, name: 'Helen Ward', diet: 'gluten-free for 1', allergies: 'Coeliac, one guest' });
+  // The diet covers the coeliac guest: booked at once, the caller's words kept for the kitchen.
+  const sat = await c.run('create_booking', { service: 'Afternoon tea', date: '2026-10-17', time: '14:00', party_size: 4, name: 'Helen Ward', diet: 'gluten-free for 1' });
   assert.deepEqual([sat.booked, sat.total], [true, '£98.00 for 4'], JSON.stringify(sat));
-  assert.equal((await repo.getBookingByReference(t.id, sat.reference))!.notes, 'Diet: gluten-free for 1');
+  assert.match(sat.next, /^Say the total, £98.00 for 4, paid on the day/);
+  const kept = (await repo.getBookingByReference(t.id, sat.reference))!;
+  assert.deepEqual([kept.notes, /coeliac/i.test(kept.allergies ?? '')], ['Diet: gluten-free for 1', true], kept.allergies ?? 'no allergies');
   // Moving a group down to four makes it a walk-in table.
   assert.equal((await c.run('modify_booking', { reference: six.reference, party_size: 3 })).reason, 'walk_in');
   // A sitting the day doesn't have is never booked or moved to, even unchecked: Sunday shuts at 3, so only noon.
