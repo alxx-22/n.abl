@@ -44,6 +44,7 @@ const WALKS: Record<string, (w: Walk) => Promise<void>> = {
   property_maintenance: walkMaintenance,
   takeaway: walkTakeaway,
   barber: walkBarber,
+  cafe: walkCafe,
 };
 
 const built = PRESETS.filter((p) => builtPreset(p.key)).map((p) => p.key);
@@ -1305,5 +1306,118 @@ async function walkBarber({ shot }: Walk) {
   await shot(page, 'workspace-mobile-queue');
   await tab('Today');
   await shot(page, 'workspace-mobile-today');
+  await page.context().close();
+}
+
+async function walkCafe({ shot }: Walk) {
+  const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+  const calm = () => page.waitForFunction(() => !document.querySelector('.toast'), undefined, { timeout: 15000 }).catch(() => {});
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  page.on('console', (m) => m.type() === 'error' && !/40[1349]|scout/.test(m.text()) && errors.push(`console: ${m.text()}`));
+  const saved = () => page.waitForSelector('.save-state.saved', { timeout: 10000 });
+  const next = async (title: string) => {
+    await page.click('.step-nav button.primary');
+    await page.waitForSelector(`#step-title:has-text("${title}")`);
+  };
+  const kept = (what: string, ok: boolean) => {
+    if (!ok) throw new Error(`after a reload, the builder lost ${what}`);
+  };
+  const tab = async (name: string) => {
+    await page.click(`.tabs [role=tab]:has-text("${name}")`);
+    await calm();
+  };
+
+  // A key from the team, and the café from the preset.
+  await page.goto(`${base}/`);
+  await page.waitForSelector('#password');
+  await page.fill('#password', 'team');
+  await page.click('.signin button[type=submit]');
+  await page.waitForSelector('#k-name');
+  await page.fill('#k-name', 'Jen Wren');
+  await page.fill('#k-company', 'Wren Street Café');
+  await page.click('button:has-text("Issue a private key")');
+  await page.waitForSelector('.issued code');
+  const raw = (await page.textContent('.issued code'))!.trim();
+  await page.goto(`${base}/demo/reception#key=${raw}`);
+  await page.waitForSelector('text=Welcome, Jen.');
+  await page.click('text=Build a new demo');
+  await page.waitForSelector('.preset');
+  await page.click('.preset:has-text("Café")');
+  await page.waitForSelector('#new-name');
+  await shot(page, 'pick-preset');
+  await page.click('text=Build from the preset');
+
+  // An edit on the café's own steps; the seating and floor plan are the restaurant's.
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  await shot(page, 'builder-basics');
+  await next('Opening hours');
+  await shot(page, 'builder-hours');
+  await next('Seating');
+  await shot(page, 'builder-seating');
+  await next('Floor plan');
+  await page.waitForSelector('svg.floor g.table');
+  await shot(page, 'builder-floor');
+  await next('Bookings and afternoon tea');
+  await page.getByLabel("When it's busy").fill('Saturday lunchtime is our busiest.');
+  await page.getByLabel('A person', { exact: true }).fill('26');
+  await saved();
+  await shot(page, 'builder-booking');
+  await next('Menu');
+  await shot(page, 'builder-menu');
+  await next('Policies and questions');
+  await page.getByRole('radio', { name: 'Outside only' }).check();
+  await saved();
+  await shot(page, 'builder-policies');
+  await next('Review and start');
+  await shot(page, 'builder-review');
+
+  // Reloaded, every edit is still there.
+  await page.reload();
+  await page.waitForSelector('#step-title:has-text("Basics")');
+  for (const title of ['Opening hours', 'Seating', 'Floor plan', 'Bookings and afternoon tea']) await next(title);
+  kept('the busy time', (await page.getByLabel("When it's busy").inputValue()) === 'Saturday lunchtime is our busiest.');
+  kept('the afternoon tea price', (await page.getByLabel('A person', { exact: true }).inputValue()) === '26.00');
+  await next('Menu');
+  await next('Policies and questions');
+  kept('dogs outside only', await page.getByRole('radio', { name: 'Outside only' }).isChecked());
+  await next('Review and start');
+  await page.click('button:has-text("Start my demo")');
+
+  // The floor plan, and Call as Helen, with afternoon tea on Saturday.
+  await page.waitForSelector('.workspace svg.floor g.table', { timeout: 20000 });
+  await page.waitForSelector('.phone');
+  await calm();
+  await shot(page, 'workspace-floor');
+  await page.getByLabel('Call as').selectOption({ label: 'Helen Ward, afternoon tea for two on Saturday' });
+  await page.waitForSelector('.phone-number:has-text("07700 900931")');
+  await calm();
+  await shot(page, 'workspace-call-as');
+
+  // Saturday at half twelve, the busiest: group tables and afternoon teas on the floor and on Bookings.
+  const saturday = [1, 2, 3, 4, 5, 6, 7].find((i) => new Date(Date.now() + i * 864e5).getDay() === 6)!;
+  await page.click('.demo-clock > button');
+  await page.waitForSelector('.clock-pop');
+  await page.locator('.clock-pop select').selectOption({ index: saturday });
+  await page.fill('.clock-pop input[type=time]', '12:30');
+  await page.click('.clock-pop button[type=submit]');
+  await page.waitForSelector('.clock-pop', { state: 'detached' });
+  await page.waitForSelector('.demo-clock > button:has-text("12:30")');
+  await page.waitForSelector('.workspace svg.floor g.table');
+  await calm();
+  await shot(page, 'workspace-floor-saturday');
+  await tab('Bookings');
+  await page.waitForSelector('.tl-bar');
+  if ((await page.locator('.tl-bar').count()) < 3) throw new Error('Saturday has fewer than three bookings');
+  await shot(page, 'workspace-bookings');
+  await tab('Messages');
+  await page.waitForSelector('.ws-messages:has-text("chocolate cake")');
+  await shot(page, 'workspace-messages');
+
+  // Narrow screen.
+  await page.setViewportSize({ width: 390, height: 900 });
+  await tab('Floor plan');
+  await shot(page, 'workspace-mobile');
+  await tab('Bookings');
+  await shot(page, 'workspace-mobile-bookings');
   await page.context().close();
 }

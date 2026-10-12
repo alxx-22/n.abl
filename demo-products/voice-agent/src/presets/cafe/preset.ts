@@ -18,13 +18,21 @@ export const CAFE_HANDLES = 'booking a table for a group or afternoon tea, and a
 
 /** The builder's preview pane: what the receptionist will know, line by line. */
 export function cafePreview(a: CafeAnswers, profile: TenantProfile): PreviewPayload {
-  const tables = profile.booking?.resources.filter((r) => r.layout && r.services.includes('table')).length ?? 0;
+  const rs = profile.booking?.resources ?? [];
+  const count = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
+  // Which tables a group fits, which take afternoon tea, and which are never booked.
+  const groups = rs.filter((r) => r.services.includes('table') && (r.capacity ?? 0) >= a.booking.min_party);
+  const joined = groups.filter((r) => r.combines?.length).length;
+  const single = groups.length - joined;
+  const teas = rs.filter((r) => r.layout && r.services.includes('afternoon_tea')).length;
+  const walkIn = rs.filter((r) => r.layout && !r.services.length).length;
   const dishes = profile.menu?.categories.reduce((n, c) => n + c.items.length, 0) ?? 0;
   return {
     lines: [
       profile.greeting,
       ...profile.core_facts,
-      `${tables} table${tables === 1 ? '' : 's'} take bookings for ${a.booking.min_party} or more; ${dishes} item${dishes === 1 ? '' : 's'} on the menu.`,
+      `Groups of ${a.booking.min_party} or more: ${single ? `${count(single, 'table')} seat${single === 1 ? 's' : ''} them` : 'no table seats them'}${joined ? `, or ${count(joined, 'pair')} joined` : ''}.`,
+      [teas ? `Afternoon tea at ${count(teas, 'table')}.` : null, walkIn ? `${count(walkIn, 'table')} walk-in only.` : null, `${count(dishes, 'item')} on the menu.`].filter(Boolean).join(' '),
     ],
   };
 }
