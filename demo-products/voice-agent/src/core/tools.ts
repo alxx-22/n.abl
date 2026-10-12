@@ -26,7 +26,7 @@ import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from './prompt.ts';
 import {
   PHONE_ONLY, alcoholRule, cateringOrder, forSomeoneElse, hasAlcohol, feeFor, findOrder, heardNotOrdered, impliedCollection, isBig, kitchenFulfilment, menuTonight, readBackNext, shortOfMinimum,
-  soldOutWords, waitTimes,
+  soldOutWords, tonight, tonightWord, waitTimes,
 } from './kitchen.ts';
 import { DECLINED, dealAllergenAnswer, dealByChoice, dealExtra, dealForOptions, dealHint, dealOf, mealHint } from '../domain/deals.ts';
 import { ASK_NAME, B, I, S, bool, int, obj, realName, record, smsTo, postcodeOf, str, strList } from './tool-kit.ts';
@@ -37,7 +37,7 @@ import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
   BARBER_TOOLS, barberCheckParams, checkFirst, barberMessage, barberMessageParams, quietTimes, under16Note, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
-import { cafeParams, dietsAsked, glutenAnswer, noticeFirst as cafeNotice, partyOf, perPerson, teaReadBack, walkInFirst } from './cafe-tools.ts';
+import { breakfastOver, cafeParams, dietsAsked, glutenAnswer, noticeFirst as cafeNotice, partyOf, perPerson, teaReadBack, walkInFirst } from './cafe-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -1042,7 +1042,7 @@ const TOOLS: Record<string, Tool> = {
             category: x.label,
             items: x.items.map((i) => ({
               name: i.name, price: pounds(i.price_pence), description: i.description, dietary: i.dietary,
-              available: i.available === false ? (soldOut.has(i.key) ? 'sold out tonight' : 'not today') : undefined,
+              available: i.available === false ? (soldOut.has(i.key) ? `sold out ${tonightWord(ctx.tenant.profile)}` : 'not today') : undefined,
             })),
           })),
         };
@@ -1079,7 +1079,7 @@ const TOOLS: Record<string, Tool> = {
         price: pounds(item.price_pence),
         description: item.description,
         dietary: item.dietary,
-        available: item.available === false ? (soldOut.has(item.key) ? 'sold out tonight' : 'not available today') : 'yes',
+        available: item.available === false ? (soldOut.has(item.key) ? `sold out ${tonightWord(ctx.tenant.profile)}` : 'not available today') : 'yes',
         options: optionsFor(menu, item).map((o) => priced(o.option)),
         ...(deal ? { choices: deal.parts.map((p) => `${p.label}: ${(menu.modifier_groups[p.group]?.options ?? []).map(priced).join(', ')}`) } : {}),
         allergens: allergensOf(menu, item),
@@ -1120,7 +1120,10 @@ const TOOLS: Record<string, Tool> = {
       const r = byChoice ? { ok: true as const, value: byChoice.item } : resolveItem(menu, words);
       if (!r.ok) return { added: false, question: r.question };
       const item = r.value;
-      if (item.available === false) return { added: false, message: soldOut.has(item.key) ? soldOutWords(menu, item.key, soldOut) : `${item.name} is not available today.` };
+      if (item.available === false) return { added: false, message: soldOut.has(item.key) ? soldOutWords(menu, item.key, soldOut, tonightWord(ctx.tenant.profile)) : `${item.name} is not available today.` };
+      // A café's breakfast stops at its time (core/cafe-tools.ts).
+      const late = breakfastOver(ctx, menu, item.key);
+      if (late) return { added: false, message: late };
       // Alcohol: not to under-18s, not after the last sale, in Scotland only 10am to 10pm; and the ID check said.
       const adult = item.age === 18 ? alcoholRule(ctx) : null;
       if (adult && 'refuse' in adult) return { added: false, message: adult.refuse };
@@ -1143,7 +1146,7 @@ const TOOLS: Record<string, Tool> = {
       // A meal deal's choice sold out tonight (a cheeseburger in the Burger meal): another choice, never the deal without it.
       const gone = mods.value.filter((m) => soldOut.has(m.key));
       if (gone.length) {
-        return { added: false, message: `${gone.map((m) => m.name).join(' and ')} ${gone.length > 1 ? 'are' : 'is'} sold out tonight. Say sorry, and ask them to choose another for their ${item.name}.`, nothing_added: 'Nothing was added yet.' };
+        return { added: false, message: `${gone.map((m) => m.name).join(' and ')} ${gone.length > 1 ? 'are' : 'is'} sold out ${tonightWord(ctx.tenant.profile)}. Say sorry, and ask them to choose another for their ${item.name}.`, nothing_added: 'Nothing was added yet.' };
       }
       let quantity = Math.min(Math.max(int(args.quantity) ?? 1, 1), 20);
       // "Six hot wings" passed as six of them: the six is the dish's own name.
@@ -1266,7 +1269,11 @@ const TOOLS: Record<string, Tool> = {
         if (!address) return { ok: false, message: 'Need the first line of the address.' };
         postcode = pc.full;
       }
-      const earliest = earliestDue(ctx, type);
+      let earliest = earliestDue(ctx, type);
+      // A café's busy notice on Today: nothing is ready sooner than the wait it gives (presets/cafe.md §4.2).
+      const busy = p.cafe ? (await tonight(ctx))?.notice : null;
+      const wait = busy?.kind === 'long_waits' ? busy.minutes : 0;
+      if (wait) earliest = new Date(Math.max(earliest.getTime(), Math.ceil((ctx.now().getTime() + wait * 60000) / 300000) * 300000));
       const t = str(args.time);
       const requested = t && !/asap|soon|now/i.test(t) ? normaliseTime(t) ?? t : 'asap';
       const prev = ctx.state.fulfilment;
@@ -1315,6 +1322,7 @@ const TOOLS: Record<string, Tool> = {
         ok: true, type, time: local.time, spoken_time: spokenTime(local.time),
         address: address ? `${address}, ${postcode}` : undefined,
         delivery_fee: type === 'delivery' ? pounds(o.delivery!.fee_pence) : undefined,
+        ...(wait ? { busy: `We're busy today: orders are taking about ${wait} minutes. Say so with the time.` } : {}),
       };
     },
   },

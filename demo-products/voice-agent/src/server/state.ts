@@ -9,6 +9,7 @@ import { matches, requirementsWords, shortAddress } from '../domain/listings.ts'
 import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc, tenantNow } from '../domain/time.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from '../core/prompt.ts';
+import { LONG_WAITS, tonightWord } from '../core/kitchen.ts';
 import { barberMarks, barberState } from './barber.ts';
 import type { WorkspaceSpec } from '../presets/index.ts';
 import { maintenanceState } from './maintenance.ts';
@@ -121,6 +122,8 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
         recipient: o.recipient ? { name: o.recipient.name, phone: displayUkPhone(o.recipient.phone) } : null } : {}),
     })),
     ...(kitchen ? { drivers: kitchen.delivery?.drivers ?? [], tonight: await tonightState(repo, t, today) } : {}),
+    // A café's Today: the same switches, said for the day.
+    ...(!kitchen && t.profile.cafe && t.profile.ordering ? { tonight: await tonightState(repo, t, today) } : {}),
     messages: (await repo.listMessages(t.id, 60)).map((m) => ({ ...m, to_number: displayUkPhone(m.to_number), from_phone: displayUkPhone(m.from_phone) })),
     calls: (await repo.listCalls(t.id, 12)).map((c) => ({
       id: c.id, channel: c.channel, started_at: c.started_at, ended_at: c.ended_at, outcome: c.outcome, summary: c.summary,
@@ -225,11 +228,14 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
   };
 }
 
-/** A takeaway's Menu tonight, with the menu to switch items off on (presets/takeaway.md §6). */
+/** A takeaway's Menu tonight, or a café's Today, with the menu to switch items off on (presets/takeaway.md §6). */
 async function tonightState(repo: Repo, t: Tenant, today: string) {
   const night = await repo.getTonight(t.id, today);
+  const when = tonightWord(t.profile);
   return {
     ...night,
+    when,
+    waits: [...LONG_WAITS[when]],
     delivery: Boolean(t.profile.ordering?.delivery),
     menu: (t.profile.menu?.categories ?? []).map((c) => ({ label: c.label, items: c.items.map((i) => ({ key: i.key, name: i.name, off: i.available === false })) })),
   };

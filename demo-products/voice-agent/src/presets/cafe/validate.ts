@@ -7,7 +7,7 @@ import type { Issue as BaseIssue } from '../common/types.ts';
 import { validateBase } from '../common/validate.ts';
 import { closeMinutes, minutesOf } from '../../domain/time.ts';
 import { sanitiseMenu, validateMenu } from '../food/menu.ts';
-import { sanitiseOrdering, validateOrdering } from '../food/ordering.ts';
+import { sanitiseOrdering, sanitisePayment, validateOrdering } from '../food/ordering.ts';
 import { sanitiseSeating, validateSeating } from '../seating/floor.ts';
 import { VERSION, defaultAnswers, type CafeAnswers } from './answers.ts';
 import type { CafeStep } from './steps.ts';
@@ -15,10 +15,10 @@ import type { CafeStep } from './steps.ts';
 export type { CafeStep };
 export type Issue = BaseIssue<CafeStep>;
 
-/** Sitting times, HH:MM, once each, in order, at most six. */
+/** Sitting times, HH:MM, once each, in order, at most four. */
 function sittings(v: unknown, d: string[]): string[] {
   if (!Array.isArray(v)) return d;
-  return [...new Set(arr(v).map((x) => time(x, '')).filter(Boolean))].sort().slice(0, 6);
+  return [...new Set(arr(v).map((x) => time(x, '')).filter(Boolean))].sort().slice(0, 4);
 }
 
 export function sanitiseCafe(input: unknown): CafeAnswers {
@@ -62,6 +62,7 @@ export function sanitiseCafe(input: unknown): CafeAnswers {
     ordering: { ...d.ordering, ...sanitiseOrdering(x.ordering, d.ordering) },
     menu: sanitiseMenu(x.menu, d.menu),
     money: {
+      payment: sanitisePayment(m.payment, d.money.payment),
       cash: bool(m.cash, d.money.cash),
       tips: str(m.tips, 200, d.money.tips),
     },
@@ -108,7 +109,7 @@ export function validateCafe(a: CafeAnswers): Issue[] {
     }
   }
   out.push(...validateMenu(a.menu, 'menu', { orderable: a.ordering.collection.enabled }));
-  out.push(...validateOrdering(a.ordering, 'menu'));
+  out.push(...validateOrdering(a.ordering, 'ordering'));
   const unanswered = a.policies.faqs.filter((f) => !f.q || !f.a).length;
   if (unanswered) out.push({ step: 'policies', level: 'warning', message: `${unanswered} question${unanswered === 1 ? ' needs' : 's need'} both the question and its answer before the receptionist can use ${unanswered === 1 ? 'it' : 'them'}.` });
   return out;

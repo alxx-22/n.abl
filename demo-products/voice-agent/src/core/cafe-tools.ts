@@ -4,8 +4,8 @@
 // food the owner marked so. Only a profile with `cafe` gets any of this.
 
 import type { FunctionDeclaration } from './live.ts';
-import { addDays, isIsoDate, spokenDate, toLocal } from '../domain/time.ts';
-import { pounds, type BookableService, type MenuItem, type Tenant } from '../domain/types.ts';
+import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal } from '../domain/time.ts';
+import { pounds, type BookableService, type Menu, type MenuItem, type Tenant } from '../domain/types.ts';
 import { I, S, int, str } from './tool-kit.ts';
 import type { Args, ToolContext } from './tools.ts';
 
@@ -87,4 +87,19 @@ export function glutenAnswer(ctx: ToolContext, item: MenuItem): string | undefin
     return 'Marked gluten-free by the café: you may say so.';
   }
   return 'Made without gluten ingredients, but in a kitchen that uses flour: say exactly that, and never call it gluten-free.';
+}
+
+/**
+ * Breakfast after its time ("until 11:30"), by when the order is ready:
+ * never added, and the rest of the menu offered. Null for anything else, or
+ * before then.
+ */
+export function breakfastOver(ctx: ToolContext, menu: Menu, key: string): string | null {
+  const until = ctx.tenant.profile.cafe?.breakfast_until;
+  if (!until) return null;
+  const c = menu.categories.find((x) => x.items.some((i) => i.key === key));
+  if (!c || !/breakfast/i.test(`${c.key} ${c.label}`)) return null;
+  const ready = ctx.state.fulfilment?.due_at ?? ctx.now();
+  if (minutesOf(toLocal(ready, ctx.tenant.profile.timezone).time) < minutesOf(until)) return null;
+  return `Breakfast is served until ${spokenTime(until)}. Say sorry, and offer something from lunch or the cakes.`;
 }

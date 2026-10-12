@@ -5,7 +5,7 @@
 
 import type { BaseAnswers, BasicsAnswer, ClosureAnswer, DayHours, FaqAnswer, Sources, ThemeAnswer } from '../common/types.ts';
 import { sampleMenu, type MenuAnswer } from '../food/menu.ts';
-import type { OrderingAnswer } from '../food/ordering.ts';
+import type { OrderPayment, OrderingAnswer } from '../food/ordering.ts';
 import { defaultFixtures } from '../seating/fixtures.ts';
 import { tablesFromCounts } from '../seating/tables.ts';
 import type { AreaAnswer, SeatingAnswer, TableAnswer } from '../seating/types.ts';
@@ -51,10 +51,12 @@ export interface CafeAnswers extends BaseAnswers {
     /** Per person, off the bill; 0 is none (Alex, 12 October). */
     deposit_pence: number;
   };
-  /** The shared ordering answer: collection only, in milestone 2. */
+  /** The shared ordering answer: collection only by default. */
   ordering: OrderingAnswer;
   menu: MenuAnswer;
   money: {
+    /** An order to collect: paid by card on the phone, when collecting, or either. */
+    payment: OrderPayment;
     cash: boolean;
     tips: string;
   };
@@ -162,6 +164,7 @@ export function defaultAnswers(): CafeAnswers {
     },
     menu: sampleMenu('menus/wren-street-cafe.json'),
     money: {
+      payment: 'collection',
       cash: true,
       tips: 'Tips are never expected; any paid by card go to the team in full.',
     },

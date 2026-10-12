@@ -65,7 +65,7 @@ function asCreated(): unknown {
   return a;
 }
 
-/** Every setting away from its default: bookings from six, a simpler afternoon tea with a deposit, dogs outside, card only. */
+/** Every setting away from its default: bookings from six, a simpler afternoon tea with a deposit, orders paid on the phone, dogs outside, card only. */
 function full(): unknown {
   const a = defaultAnswers();
   a.basics = { ...a.basics, name: 'The Old Bakehouse', style: 'Sourdough, soups and cream teas', town: 'Kirkhill', address: '2 Market Steps (example), Kirkhill', voice: 'Puck', greeting: "The Old Bakehouse, you're through to the AI assistant on this demo line. How can I help?" };
@@ -75,7 +75,8 @@ function full(): unknown {
   a.hours.kitchen_closes_before = 60;
   a.booking = { min_party: 6, busy_times: 'Saturdays are busiest.' };
   a.afternoon_tea = { ...a.afternoon_tea, adult_pence: 2200, child_pence: 0, notice_days: 2, diet_notice_days: 3, diets: ['gluten-free'], sittings: ['13:00', '15:00'], max_party: 6, deposit_pence: 500 };
-  a.money = { cash: false, tips: 'Tips go in the jar, shared by everyone.' };
+  a.money = { payment: 'phone', cash: false, tips: 'Tips go in the jar, shared by everyone.' };
+  a.ordering.collection = { ...a.ordering.collection, prep_minutes: 15, per_slot: 2 };
   a.policies = { ...a.policies, dogs: 'outside_only', baby_changing: false, tap_water: false, hygiene_rating: null, faqs: [{ q: 'Do you sell bread to take home?', a: 'Yes, sourdough loaves from 9am until they run out.' }] };
   a.theme = { ...a.theme, accent: '#8a5a2b' };
   return a;
@@ -108,6 +109,7 @@ function everyIssue(): unknown {
   a.hours.days[2] = { open: true, services: [{ label: 'Open', open: '18:00', close: '09:00' }] };
   a.booking.min_party = 12;
   a.afternoon_tea = { ...a.afternoon_tea, adult_pence: 0, sittings: ['16:30'] };
+  a.ordering.delivery.enabled = true;
   a.policies.faqs.push({ q: 'Half a question', a: '' });
   return a;
 }

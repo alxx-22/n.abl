@@ -8,6 +8,7 @@ import { menuItems } from '../food/menu.ts';
 import { joinTables } from '../seating/tables.ts';
 import type { Preset, PreviewPayload, WorkspaceSpec } from '../index.ts';
 import { VERSION, defaultAnswers, type CafeAnswers } from './answers.ts';
+import { takeawaySentence } from '../food/ordering.ts';
 import { bookingSentence, compileCafe, teaSentence } from './compile.ts';
 import { planCafeSeed } from './seed.ts';
 import { STEPS } from './steps.ts';
@@ -45,19 +46,21 @@ export function factSheet(a: CafeAnswers): string {
     `Hours: ${hoursSentence(a.hours)}`,
     bookingSentence(a),
     teaSentence(a) ?? 'No afternoon tea.',
+    takeawaySentence(a.ordering, a.money.payment) ?? 'No orders to collect.',
     `Menu: ${menuItems(a.menu).slice(0, 20).map((i) => i.name).join(', ')}.`,
     `Dogs: ${p.dogs.replace('_', ' ')}. Children: ${p.children} Access: ${p.accessibility} Wi-Fi: ${p.wifi} Laptops: ${p.laptops} Parking: ${p.parking}`,
     `Cash: ${a.money.cash ? 'yes' : 'card only'}. ${a.money.tips} Cups: ${p.reusable_cups} Hire: ${p.hire} Jobs: ${p.careers}`,
   ].join('\n');
 }
 
-/** The café's back office (presets/cafe.md §6): the floor plan and the day's bookings, then messages and calls. */
+/** The café's back office (presets/cafe.md §6): the floor plan and the day's bookings, today's orders and what's sold out, then messages and calls. */
 export function cafeWorkspace(profile: TenantProfile): WorkspaceSpec {
   const tea = profile.booking?.services.some((s) => s.key === 'afternoon_tea');
   return {
     views: [
       { id: 'floor', label: 'Floor plan' },
       { id: 'timeline', label: 'Bookings' },
+      ...(profile.ordering ? [{ id: 'orders', label: 'Orders' }, { id: 'tonight', label: 'Today' }] as const : []),
       { id: 'messages', label: 'Messages' },
       { id: 'calls', label: 'Calls' },
     ],
@@ -69,13 +72,15 @@ export function cafeWorkspace(profile: TenantProfile): WorkspaceSpec {
       allergies: true,
       combine: true,
     },
+    ...(profile.ordering ? { orders: { board: 'Orders', done: { collection: 'Collected', delivery: 'Delivered' }, drivers: false, advance: false } } : {}),
     suggestions: [
       ...(tea ? ['Can I book afternoon tea for four on Saturday? One of us is coeliac.'] : []),
       'Can six of us book a table for lunch on Saturday?',
       'My daughter has a nut allergy: which cakes can she have?',
       'Is the brownie gluten-free?',
+      ...(profile.ordering ? ['Two flat whites, one with oat milk, and a bacon sandwich to collect, please.'] : []),
     ],
-    resetLine: 'bookings',
+    resetLine: profile.ordering ? 'bookings and orders' : 'bookings',
     clock: true,
   };
 }

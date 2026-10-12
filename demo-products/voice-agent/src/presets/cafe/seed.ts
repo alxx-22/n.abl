@@ -7,8 +7,9 @@
 import { checkSlot, findService, type BusyInterval } from '../../domain/availability.ts';
 import { addDays, minutesOf, timeOf, toLocal, weekdayOf } from '../../domain/time.ts';
 import type { BookableService, TenantProfile } from '../../domain/types.ts';
+import { planOrders } from '../food/seed.ts';
 import { ids, rng } from '../common/random.ts';
-import type { SeedBooking, SeedMessage, SeedPlan } from '../common/types.ts';
+import type { SeedBooking, SeedMessage, SeedOrder, SeedPlan } from '../common/types.ts';
 import { CF_PEOPLE } from './personas.ts';
 
 /** Group tables a day, by weekday (0 = Sunday): the weekend busiest. */
@@ -96,5 +97,20 @@ export function planCafeSeed(profile: TenantProfile, now: Date, seed: number, da
     { from_name: id.person(), from_phone: phone(), body: "Wanting a whole chocolate cake for my mum's 70th on Saturday week, with a message on it. Please call back." },
     { from_name: 'Trent Valley Dairy', from_phone: phone(), body: 'Milk delivery moving to 7am on Mondays from next week.' },
   ];
-  return { bookings, orders: [], messages };
+  // Today's orders to collect, drawn last so the week's bookings stay as they were.
+  return { bookings, orders: noLateBreakfast(profile, planOrders(profile, now, random, id)), messages };
+}
+
+/** An order due after breakfast stops loses its breakfast; one with nothing else goes. */
+function noLateBreakfast(profile: TenantProfile, orders: SeedOrder[]): SeedOrder[] {
+  const until = profile.cafe?.breakfast_until;
+  const breakfast = new Set((profile.menu?.categories ?? []).filter((c) => /breakfast/i.test(`${c.key} ${c.label}`)).flatMap((c) => c.items.map((i) => i.key)));
+  if (!until || !breakfast.size) return orders;
+  return orders.flatMap((o) => {
+    if (minutesOf(toLocal(o.due_at, profile.timezone).time) < minutesOf(until)) return [o];
+    const lines = o.lines.filter((l) => !breakfast.has(l.item_key)).map((l, i) => ({ ...l, line: i + 1 }));
+    if (!lines.length) return [];
+    const subtotal = lines.reduce((s, l) => s + l.quantity * l.unit_pence, 0);
+    return [{ ...o, lines, subtotal_pence: subtotal, total_pence: subtotal }];
+  });
 }

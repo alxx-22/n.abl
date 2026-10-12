@@ -530,6 +530,10 @@ export interface Tonight {
   date: string;
   sold_out: string[];
   notice: { kind: 'delivery_paused' } | { kind: 'long_waits'; minutes: number } | null;
+  /** A takeaway's evening, or a café's day (its Today). */
+  when: 'today' | 'tonight';
+  /** The long waits to choose from, in minutes. */
+  waits: number[];
   delivery: boolean;
   menu: { label: string; items: { key: string; name: string; off: boolean }[] }[];
 }

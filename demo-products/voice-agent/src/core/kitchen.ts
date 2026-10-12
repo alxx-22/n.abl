@@ -239,9 +239,9 @@ export async function kitchenFulfilment(args: Args, ctx: ToolContext): Promise<R
 
 // ── Menu tonight (presets/takeaway.md §6) ─────────────────────────────────
 
-/** Tonight's sold-out items and notice, read on every order tool, so a back-office switch reaches a call at once. A takeaway's only. */
+/** Tonight's sold-out items and notice, read on every order tool, so a back-office switch reaches a call at once. A takeaway's, and a café's ("Today"). */
 export async function tonight(ctx: ToolContext): Promise<Tonight | null> {
-  if (!ctx.tenant.profile.ordering?.kitchen) return null;
+  if (!ctx.tenant.profile.ordering?.kitchen && !ctx.tenant.profile.cafe) return null;
   return ctx.repo.getTonight(ctx.tenant.id, toLocal(ctx.now(), ctx.tenant.profile.timezone).date);
 }
 
@@ -253,12 +253,18 @@ export async function menuTonight(ctx: ToolContext): Promise<{ menu: Menu; soldO
   return { menu: { ...menu, categories: menu.categories.map((c) => ({ ...c, items: c.items.map((i) => (soldOut.has(i.key) ? { ...i, available: false } : i)) })) }, soldOut };
 }
 
+/** A café's day ends at teatime: its "Menu tonight" is Today. */
+export const tonightWord = (p: { cafe?: unknown }): 'today' | 'tonight' => (p.cafe ? 'today' : 'tonight');
+
+/** The long waits the back office offers: a takeaway's evening, or a café's busy lunchtime. */
+export const LONG_WAITS = { tonight: [45, 60, 75, 90, 120], today: [15, 20, 30, 45, 60] } as const;
+
 /** "Sold out tonight", with what else that section has. */
-export function soldOutWords(menu: Menu, key: string, soldOut: Set<string>): string {
+export function soldOutWords(menu: Menu, key: string, soldOut: Set<string>, when: 'today' | 'tonight' = 'tonight'): string {
   const c = menu.categories.find((x) => x.items.some((i) => i.key === key));
   const item = c?.items.find((i) => i.key === key);
   const others = (c?.items ?? []).filter((i) => i.key !== key && i.available !== false && !soldOut.has(i.key)).slice(0, 3).map((i) => i.name);
-  return `${item?.name ?? 'That'} is sold out tonight.${others.length ? ` Other ${c!.label.toLowerCase()} tonight: ${others.join(', ')}.` : ''} Say sorry, and offer one of those.`;
+  return `${item?.name ?? 'That'} is sold out ${when}.${others.length ? ` Other ${c!.label.toLowerCase()} ${when}: ${others.join(', ')}.` : ''} Say sorry, and offer one of those.`;
 }
 
 // ── The read-back (presets/takeaway.md §4.5) ──────────────────────────────

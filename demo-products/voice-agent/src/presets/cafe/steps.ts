@@ -10,6 +10,7 @@ export const STEPS = [
   { key: 'floor', label: 'Floor plan' },
   { key: 'booking', label: 'Bookings and afternoon tea' },
   { key: 'menu', label: 'Menu' },
+  { key: 'ordering', label: 'Ordering to collect' },
   { key: 'policies', label: 'Policies and questions' },
 ] as const;
 

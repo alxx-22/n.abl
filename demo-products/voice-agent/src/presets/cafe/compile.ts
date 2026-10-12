@@ -6,11 +6,12 @@
 // café's cross-contact warning.
 
 import { pounds, type BookableService, type KnowledgeEntry, type TenantProfile, type Window } from '../../domain/types.ts';
-import { closeMinutes, minutesOf, spokenTime } from '../../domain/time.ts';
+import { closeMinutes, minutesOf, spokenTime, timeOf } from '../../domain/time.ts';
 import { DAY_ORDER, bookingWindows } from '../common/hours.ts';
 import { DAY_NAMES } from '../common/validate.ts';
 import { baseProfile, entry, mergeFaqs } from '../common/profile.ts';
 import { compileMenu, hasMenu, menuItems } from '../food/menu.ts';
+import { compileOrdering } from '../food/ordering.ts';
 import { compileBooking } from '../seating/floor.ts';
 import type { CafeAnswers } from './answers.ts';
 
@@ -79,6 +80,12 @@ function foodSentence(a: CafeAnswers): string | null {
   return parts.length ? `${parts.join('; ')}.` : null;
 }
 
+/** Access and high chairs, when short enough to carry in every call; longer, the knowledge has it. */
+function accessFact(a: CafeAnswers, max = 140): string | null {
+  const fact = [a.policies.accessibility, a.seating.highchairs ? `${a.seating.highchairs} high chairs.` : ''].filter(Boolean).join(' ');
+  return fact.length <= max ? fact : null;
+}
+
 function dogsAnswer(a: CafeAnswers): string {
   const outside = a.seating.areas.find((x) => x.kind === 'outdoor');
   if (a.policies.dogs === 'inside') return 'Well-behaved dogs are welcome inside, and assistance dogs always.';
@@ -113,10 +120,28 @@ function knowledge(a: CafeAnswers): KnowledgeEntry[] {
     entry('Can I have some tap water?', p.tap_water ? 'Of course, free.' : 'Ask at the counter.', ['water', 'tap water']),
     entry('Can I bring my own cup?', p.reusable_cups, ['cup', 'reusable', 'keep cup', 'mug']),
     ...(p.hygiene_rating !== null ? [entry('What is your food hygiene rating?', `${p.hygiene_rating} out of 5.`, ['hygiene', 'rating', 'scores on the doors', 'clean'])] : []),
+    // Ordering itself is the tools' to say (the ready time, how to pay), so the prompt carries none of it.
+    ...(a.ordering.collection.enabled && hasMenu(a.menu)
+      ? [entry('Can I order ahead to collect?', `Yes: ring us and it's ready in about ${a.ordering.collection.prep_minutes} minutes. ${{ phone: 'Pay by card on the phone.', collection: 'Pay when you collect.', either: 'Pay on the phone or when you collect.' }[a.money.payment]}`, ['order', 'collect', 'collection', 'takeaway', 'take away', 'ahead', 'pick up'])]
+      : []),
     entry('Do you make cakes to order, or sandwich platters?', 'Not by phone yet: I can take a message and the owner will call back about it.', ['cake to order', 'birthday cake', 'whole cake', 'platter', 'catering', 'office']),
     entry('Can we hire the café?', p.hire, ['hire', 'private', 'party', 'event', 'evening']),
     entry('Are you hiring?', p.careers, ['job', 'jobs', 'hiring', 'work', 'vacancy']),
   ], p.faqs);
+}
+
+/** Orders to collect are taken until food stops: closing, less the kitchen's minutes. */
+function foodHours(a: CafeAnswers): CafeAnswers['hours'] {
+  const cut = a.hours.kitchen_closes_before;
+  return {
+    ...a.hours,
+    days: a.hours.days.map((d) => ({
+      ...d,
+      services: d.services
+        .map((s) => ({ ...s, close: timeOf(Math.max(minutesOf(s.open), closeMinutes(s.close) - cut)) }))
+        .filter((s) => minutesOf(s.close) > minutesOf(s.open)),
+    })),
+  };
 }
 
 /** The profile's bookings: the shared tables with walk-in under the size, and afternoon tea at the tables inside. */
@@ -162,19 +187,21 @@ export function compileCafe(a: CafeAnswers, meta: { slug: string }): TenantProfi
     ...baseProfile(a, meta, {
       businessType: 'cafe',
       noun: 'café',
+      // Hours past this many characters are said in short, as the takeaway's: get_opening_hours has them.
+      hoursMax: 220,
+      // Walk-in under the booking size is a prompt rule (core/prompt.ts), so it isn't a fact as well.
       facts: [
-        bookingSentence(a),
         teaSentence(a),
         foodSentence(a),
-        [a.policies.accessibility, a.seating.highchairs ? `${a.seating.highchairs} high chairs.` : ''].filter(Boolean).join(' '),
+        accessFact(a),
       ],
     }),
     booking: cafeBooking(a),
     knowledge: knowledge(a),
     menu: hasMenu(a.menu) ? compileMenu(a.menu) : undefined,
+    ordering: hasMenu(a.menu) ? compileOrdering(a.ordering, foodHours(a), a.money.payment) : undefined,
+    // Dogs and card charges are in the knowledge; only what a tool reads (cancelling) is a policy.
     policies: {
-      dogs: dogsAnswer(a),
-      card_payments: "There's no extra charge for paying by card.",
       ...(a.afternoon_tea.offered ? { cancellation: a.afternoon_tea.deposit_pence ? `Afternoon tea's ${pounds(a.afternoon_tea.deposit_pence)} a person deposit is refunded with 48 hours' notice.` : 'Nothing is charged to move or cancel; a day’s notice is kind.' } : {}),
     },
     cafe: {

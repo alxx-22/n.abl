@@ -1,17 +1,19 @@
-// A takeaway's Menu tonight (presets/takeaway.md §6): switch a dish off when
-// it runs out, and put up one notice for callers, delivery paused or long
-// waits. The receptionist reads both on every order tool, so a call in
-// progress hears the change at once. It all starts again tomorrow.
+// A takeaway's Menu tonight (presets/takeaway.md §6), or a café's Today
+// (presets/cafe.md §6): switch a dish off when it runs out, and put up one
+// notice for callers, delivery paused or long waits. The receptionist reads
+// both on every order tool, so a call in progress hears the change at once.
+// It all starts again tomorrow.
 
 import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import type { LiveState, Tonight } from '../types.ts';
 
-const WAITS = [45, 60, 75, 90, 120];
-
 export function MenuTonight({ id, state, onDone }: { id: string; state: LiveState; onDone: () => void }) {
   const t = state.tonight;
   if (!t) return null;
+  const when = t.when;
+  // A takeaway's evening wait starts at an hour and a half; a café's lunchtime one at half an hour.
+  const first = t.waits.includes(90) ? 90 : t.waits[Math.floor(t.waits.length / 2)];
   const save = async (next: Pick<Tonight, 'sold_out' | 'notice'>, said: string) => {
     try {
       await demoApi(`/workspaces/${id}/tonight`, { method: 'PATCH', json: next });
@@ -23,7 +25,7 @@ export function MenuTonight({ id, state, onDone }: { id: string; state: LiveStat
   };
   const flip = (key: string, name: string) => {
     const out = t.sold_out.includes(key);
-    void save({ sold_out: out ? t.sold_out.filter((k) => k !== key) : [...t.sold_out, key], notice: t.notice }, out ? `${name} is back on.` : `${name}: sold out tonight. Callers are offered something else.`);
+    void save({ sold_out: out ? t.sold_out.filter((k) => k !== key) : [...t.sold_out, key], notice: t.notice }, out ? `${name} is back on.` : `${name}: sold out ${when}. Callers are offered something else.`);
   };
   const notice = t.notice?.kind ?? 'none';
   return (
@@ -31,7 +33,7 @@ export function MenuTonight({ id, state, onDone }: { id: string; state: LiveStat
       <fieldset className="choice">
         <legend>Tell callers</legend>
         <label>
-          <input type="radio" name="notice" checked={notice === 'none'} onChange={() => save({ sold_out: t.sold_out, notice: null }, 'No notice tonight.')} /> Nothing: business as usual
+          <input type="radio" name="notice" checked={notice === 'none'} onChange={() => save({ sold_out: t.sold_out, notice: null }, `No notice ${when}.`)} /> Nothing: business as usual
         </label>
         {t.delivery ? (
           <label>
@@ -39,17 +41,17 @@ export function MenuTonight({ id, state, onDone }: { id: string; state: LiveStat
           </label>
         ) : null}
         <label>
-          <input type="radio" name="notice" checked={notice === 'long_waits'} onChange={() => save({ sold_out: t.sold_out, notice: { kind: 'long_waits', minutes: 90 } }, 'Long waits: callers hear about 90 minutes.')} /> Long waits:
+          <input type="radio" name="notice" checked={notice === 'long_waits'} onChange={() => save({ sold_out: t.sold_out, notice: { kind: 'long_waits', minutes: first } }, `Long waits: callers hear about ${first} minutes.`)} /> Long waits:
           <select
-            aria-label="How long" value={t.notice?.kind === 'long_waits' ? t.notice.minutes : 90} disabled={notice !== 'long_waits'}
+            aria-label="How long" value={t.notice?.kind === 'long_waits' ? t.notice.minutes : first} disabled={notice !== 'long_waits'}
             onChange={(e) => save({ sold_out: t.sold_out, notice: { kind: 'long_waits', minutes: Number(e.target.value) } }, `Long waits: callers hear about ${e.target.value} minutes.`)}
           >
-            {WAITS.map((m) => <option key={m} value={m}>about {m} minutes</option>)}
+            {t.waits.map((m) => <option key={m} value={m}>about {m} minutes</option>)}
           </select>
         </label>
       </fieldset>
-      <h3 className="sub">Sold out tonight <span className="count">{t.sold_out.length || 'none'}</span></h3>
-      <p className="hint">Tap a dish when it runs out. The receptionist says sorry and offers another from the same section, and a meal deal won't take it as a choice.</p>
+      <h3 className="sub">Sold out {when} <span className="count">{t.sold_out.length || 'none'}</span></h3>
+      <p className="hint">Tap a dish when it runs out. The receptionist says sorry and offers another from the same section{when === 'tonight' ? ", and a meal deal won't take it as a choice" : ''}.</p>
       {t.menu.map((c) => (
         <section key={c.label} className="tonight-section" aria-label={c.label}>
           <h4>{c.label}</h4>

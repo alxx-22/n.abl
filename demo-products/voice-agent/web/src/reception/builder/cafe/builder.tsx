@@ -1,7 +1,7 @@
 // The café's builder (presets/cafe.md §3): its steps with the server's own
 // titles (src/presets/cafe/steps.ts). Seating and the floor plan are the
-// restaurant's; the menu is the shared editor; bookings and afternoon tea,
-// and the policies, are the café's own. The preview pane lists the server's
+// restaurant's; the menu and ordering to collect are the shared editors;
+// bookings and afternoon tea, and the policies, are the café's own. The preview pane lists the server's
 // lines.
 
 import { STEPS, type CafeStep } from '../../../../../src/presets/cafe/steps.ts';
@@ -10,6 +10,8 @@ import { Basics } from '../common/Basics.tsx';
 import { Hours } from '../common/Hours.tsx';
 import { PolicyText, Policies } from '../common/Policies.tsx';
 import { MenuEditor } from '../food/MenuEditor.tsx';
+import { CollectionDelivery } from '../food/Ordering.tsx';
+import { TakeawayPayment } from '../food/Payment.tsx';
 import { Choice, ListText, Num, Pounds, Select, Text, Toggle } from '../fields.tsx';
 import type { BuilderDef, StepProps } from '../registry.ts';
 import { StepFloor } from '../restaurant/StepFloor.tsx';
@@ -42,8 +44,8 @@ function StepBooking({ a, set }: Props) {
           </div>
           <ListText
             label="Sittings" value={t.sittings} placeholder="12:00, 14:00, 15:30"
-            onChange={(v) => set((d) => void (d.afternoon_tea.sittings = v.filter((x) => /^([01]\d|2[0-3]):[0-5]\d$/.test(x))))}
-            hint={`Times as 14:00. Each lasts ${t.minutes} minutes, and is only offered on days you're open long enough.`}
+            onChange={(v) => set((d) => void (d.afternoon_tea.sittings = v.filter((x) => /^([01]\d|2[0-3]):[0-5]\d$/.test(x)).slice(0, 4)))}
+            hint={`Up to four, as 14:00. Each lasts ${t.minutes} minutes, and is only offered on days you're open long enough.`}
           />
           <div className="two">
             <Select
@@ -62,6 +64,20 @@ function StepBooking({ a, set }: Props) {
         </>
       ) : null}
     </div>
+  );
+}
+
+function StepOrdering({ a, set }: Props) {
+  const h = a.hours;
+  return (
+    <>
+      <CollectionDelivery ordering={sectionOf(a, set, 'ordering')} path="ordering" sources={a.sources} />
+      <TakeawayPayment legend="Paying for an order" value={a.money.payment} onChange={(v) => set((d) => void (d.money.payment = v))} />
+      <p className="hint">
+        Orders are taken until food stops{h.kitchen_closes_before ? `, ${h.kitchen_closes_before} minutes before closing` : ''}{h.breakfast_until ? `, and breakfast only until ${h.breakfast_until}` : ''}: both are set with your opening hours.
+        Anything sold out today you switch off in your workspace, under Today.
+      </p>
+    </>
   );
 }
 
@@ -148,9 +164,10 @@ export const cafeBuilder: BuilderDef<CafeAnswers, CafeStep> = {
       <MenuEditor
         menu={sectionOf(a, set, 'menu')} path="menu" sources={a.sources} workspace={ws.id}
         draftsLeft={Math.max(0, me.limits.drafts_per_day - me.used.drafts)} style={a.basics.style}
-        takeaway={false}
+        takeaway={a.ordering.collection.enabled}
       />
     ),
+    ordering: (p) => <StepOrdering {...p} />,
     policies: (p) => <StepPolicies {...p} />,
   },
   wide: { floor: true },
@@ -160,9 +177,10 @@ export const cafeBuilder: BuilderDef<CafeAnswers, CafeStep> = {
       ['Tables', `${a.seating.tables.length} tables; bookings for ${a.booking.min_party} or more, smaller walk-in`],
       ['Afternoon tea', a.afternoon_tea.offered ? `${pounds(a.afternoon_tea.adult_pence)} a person, at ${a.afternoon_tea.sittings.join(', ')}` : 'not offered'],
       ['Menu', `${a.menu.categories.reduce((n, c) => n + c.items.length, 0)} items in ${a.menu.categories.length} sections`],
+      ['Orders', a.ordering.collection.enabled ? `to collect, ready in about ${a.ordering.collection.prep_minutes} minutes, paid ${{ phone: 'on the phone', collection: 'on collection', either: 'either way' }[a.money.payment]}` : 'not taken'],
       ['Questions', <>{a.policies.faqs.length} of your own, plus the policies</>],
     ],
-    start: 'Start builds your receptionist from these answers and fills the week ahead: group tables at lunchtime, busiest at the weekend, and afternoon teas most days.',
+    start: 'Start builds your receptionist from these answers and fills the week ahead: group tables at lunchtime, busiest at the weekend, afternoon teas most days, and today’s orders to collect.',
     restart: 'Your changes are saved and the receptionist already uses them. To refill the diary to match (new tables, hours or sittings), reset the demo data.',
     ready: (r) => `Ready: ${r.bookings} booking${r.bookings === 1 ? '' : 's'} this week, made from your setup.`,
   },

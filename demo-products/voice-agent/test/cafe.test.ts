@@ -1,13 +1,15 @@
 // The café preset (presets/cafe.md, milestone 1): the defaults compiled into
 // tables, afternoon tea and a menu; walk-in under the booking size;
 // afternoon tea's notice, longer for a diet, and its price per person; the
-// gluten-free wording and its guardrail; and the seeded week.
+// gluten-free wording and its guardrail; and the seeded week. Milestone 2:
+// orders to collect, breakfast's end, and Today (sold out, a busy notice).
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
+import { capabilities } from '../src/core/prompt.ts';
 import { armReaction } from '../src/core/reaction.ts';
 import { newCallState, runTool, type ToolContext } from '../src/core/tools.ts';
 import type { Tenant } from '../src/domain/types.ts';
@@ -36,9 +38,9 @@ const named = (edit?: (a: CafeAnswers) => void) => {
 };
 const fresh = (slug: string) => repo.upsertTenant(compileCafe(named(), { slug }));
 
-async function call(tenant: Tenant, callerPhone: string) {
+async function call(tenant: Tenant, callerPhone: string, now = THURSDAY) {
   const ctx: ToolContext = {
-    tenant, repo, now: () => THURSDAY, callId: await repo.createCall({ tenant_id: tenant.id, channel: 'eval' }), channel: 'eval', callerPhone,
+    tenant, repo, now: () => now, callId: await repo.createCall({ tenant_id: tenant.id, channel: 'eval' }), channel: 'eval', callerPhone,
     state: newCallState(), demoCards: [], sms: { send: async () => 'simulated' }, telephony: null, action: () => {},
   };
   ctx.state.cafe = true;
@@ -51,7 +53,8 @@ test('café: the defaults are tables, afternoon tea and a menu in Nottingham cit
   const p = compileCafe(a, { slug: 'wren' });
   assert.equal(p.business_type, 'cafe');
   assert.match(p.core_facts[0], /^Wren Street Café: .*, at 14 Wren Street \(example\), Nottingham NG1\.$/);
-  assert.ok(p.core_facts.includes('Tables for 5 or more can be booked, and afternoon tea; smaller tables are walk-in.'));
+  // The booking size is a prompt rule, not a fact as well; the knowledge says it with the busy times.
+  assert.match(p.knowledge!.find((k) => k.q === 'Can we just turn up? Do you take bookings?')!.a, /^Tables for 5 or more can be booked, and afternoon tea; smaller tables are walk-in. Saturday/);
   const [table, tea] = p.booking!.services;
   assert.deepEqual([table.key, table.min_party, tea.key, tea.notice_days, tea.diet_notice_days, tea.per_person], ['table', 5, 'afternoon_tea', 1, 2, { adult_pence: 2450, child_pence: 1200, child_under: 12 }]);
   // 2pm doesn't fit a Sunday (closes at 3); 3:30 only fits a Saturday (closes at 5).
@@ -116,6 +119,32 @@ test('café: "gluten-free" only for marked food, the menu says so, and the guard
   assert.equal(armReaction(c.ctx.state, "My daughter's lips are swelling after the cake"), true);
 });
 
+test('café orders to collect: oat milk free, a real time, paid on collection; breakfast stops at 11:30; Today sells out and slows', async () => {
+  const t = await fresh('wren-orders');
+  const o = t.profile.ordering!;
+  assert.deepEqual([o.collection, o.payment, o.prep_minutes, o.delivery], [true, 'collection', 10, undefined]);
+  // Orders stop when food does, half an hour before closing.
+  assert.ok(o.hours.some((h) => h.days.includes(4) && h.close === '15:30'), JSON.stringify(o.hours));
+  assert.equal(capabilities(t.profile).payments, false, 'nothing is ever paid on the phone');
+  const c = await call(t, '+447700900942');
+  for (const args of [{ item: 'flat white', options: ['oat milk'] }, { item: 'flat white' }, { item: 'bacon sandwich' }]) {
+    const r = await c.run('add_to_order', args);
+    assert.equal(typeof r.added, 'string', JSON.stringify(r));
+  }
+  const when = await c.run('set_fulfilment', { type: 'collection', time: 'asap' });
+  assert.deepEqual([when.ok, when.time, when.busy], [true, '11:10', undefined]);
+  assert.match(JSON.stringify(await c.run('review_order', {})), /£12.10/, 'two flat whites and a bacon sandwich, the oat milk free');
+  // At 11:45 breakfast is over.
+  const late = await call(t, '+447700900943', new Date('2026-10-15T10:45:00Z'));
+  assert.match((await late.run('add_to_order', { item: 'bacon sandwich' })).message, /^Breakfast is served until 11:30am./);
+  // Today: carrot cake sold out, said for the day with the other cakes; a busy notice puts the time back.
+  await repo.setTonight(t.id, { date: '2026-10-15', sold_out: ['carrot_cake'], notice: { kind: 'long_waits', minutes: 30 } });
+  assert.match((await late.run('add_to_order', { item: 'carrot cake' })).message, /^Carrot cake is sold out today. Other cakes and bakes today: Victoria sponge, Chocolate brownie, Scone with jam and cream./);
+  assert.equal((await late.run('get_item_details', { item: 'carrot cake' })).available, 'sold out today');
+  const busy = await late.run('set_fulfilment', { type: 'collection' });
+  assert.deepEqual([busy.time, busy.busy], ['12:15', "We're busy today: orders are taking about 30 minutes. Say so with the time."]);
+});
+
 test("café: the seeded week books only groups and afternoon teas, Helen's tea on Saturday", () => {
   const p = compileCafe(named(), { slug: 'wren' });
   for (const seed of [1, 7]) {
@@ -124,6 +153,11 @@ test("café: the seeded week books only groups and afternoon teas, Helen's tea o
     assert.ok(bookings.filter((b) => b.service_key === 'table').every((b) => b.party_size >= 5), 'only groups at tables');
     assert.ok(bookings.filter((b) => b.service_key === 'afternoon_tea').every((b) => ['11:00', '13:00', '14:30'].includes(b.starts_at.toISOString().slice(11, 16))), 'teas at the sittings');
     const helen = bookings.find((b) => b.phone === CF_PEOPLE.regular.phone)!;
+    // Today's orders to collect, and none with breakfast after 11:30.
+    const { orders } = planCafeSeed(p, THURSDAY, seed);
+    assert.ok(orders.length >= 5, `${orders.length} orders`);
+    const breakfast = new Set(p.menu!.categories.find((x) => x.key === 'breakfast')!.items.map((i) => i.key));
+    assert.ok(orders.every((o) => o.due_at.toISOString().slice(11, 16) < '10:30' || o.lines.every((l) => !breakfast.has(l.item_key))), 'breakfast after 11:30');
     assert.deepEqual([helen.service_key, helen.starts_at.toISOString()], ['afternoon_tea', '2026-10-17T13:00:00.000Z']);
     for (const r of p.booking!.resources) {
       const mine = bookings.filter((b) => b.resource_key === r.key).sort((a, b) => +a.starts_at - +b.starts_at);
