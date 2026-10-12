@@ -1,0 +1,37 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "The greeting must say it is an AI assistant and that this is a demo line."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Tuesday: Open closes before it opens."
+ },
+ {
+  "step": "booking",
+  "level": "warning",
+  "message": "Bookings start at 12, more than the largest party you take (8), so no table can be booked."
+ },
+ {
+  "step": "booking",
+  "level": "error",
+  "message": "Afternoon tea needs a price."
+ },
+ {
+  "step": "booking",
+  "level": "warning",
+  "message": "The 16:30 sitting runs past closing every day, so it can't be booked."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ },
+ {
+  "step": "policies",
+  "level": "warning",
+  "message": "1 question needs both the question and its answer before the receptionist can use it."
+ }
+]

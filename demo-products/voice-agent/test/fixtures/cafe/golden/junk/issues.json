@@ -1,0 +1,27 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the café a name."
+ },
+ {
+  "step": "seating",
+  "level": "error",
+  "message": "Nothing is bookable: add tables to an area that takes bookings."
+ },
+ {
+  "step": "booking",
+  "level": "error",
+  "message": "Add at least one afternoon tea sitting."
+ },
+ {
+  "step": "booking",
+  "level": "error",
+  "message": "Afternoon tea needs a price."
+ },
+ {
+  "step": "menu",
+  "level": "error",
+  "message": "Takeaway needs a menu: add some dishes or turn takeaway off."
+ }
+]
