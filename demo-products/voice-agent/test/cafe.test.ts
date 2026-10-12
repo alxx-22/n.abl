@@ -134,6 +134,9 @@ test('café orders to collect: oat milk free, a real time, paid on collection; b
   const when = await c.run('set_fulfilment', { type: 'collection', time: 'asap' });
   assert.deepEqual([when.ok, when.time, when.busy], [true, '11:10', undefined]);
   assert.match(JSON.stringify(await c.run('review_order', {})), /£12.10/, 'two flat whites and a bacon sandwich, the oat milk free');
+  // Half an hour said as +00:30 is understood; a time after food stops is out of hours, never full (a live call, 12 October).
+  assert.equal((await c.run('set_fulfilment', { type: 'collection', time: '+00:30' })).time, '11:30');
+  assert.equal((await c.run('set_fulfilment', { type: 'collection', time: '22:45' })).message, 'Orders are only taken for 8am to 3:30pm today. It is 11am now.');
   // At 11:45 breakfast is over.
   const late = await call(t, '+447700900943', new Date('2026-10-15T10:45:00Z'));
   assert.match((await late.run('add_to_order', { item: 'bacon sandwich' })).message, /^Breakfast is served until 11:30am./);

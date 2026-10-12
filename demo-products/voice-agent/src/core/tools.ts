@@ -514,6 +514,25 @@ function earliestDue(ctx: ToolContext, type: 'collection' | 'delivery'): Date {
   return new Date(Math.ceil(t / 300000) * 300000);
 }
 
+/** "+00:30", "in 30 minutes", "in half an hour", "in an hour": minutes from now; null for anything else. */
+function minutesFromNow(t: string): number | null {
+  const s = t.trim().toLowerCase();
+  const plus = /^\+\s*(\d{1,2}):(\d{2})$/.exec(s);
+  if (plus) return Number(plus[1]) * 60 + Number(plus[2]);
+  const mins = /^in\s+(?:about\s+)?(\d{1,3})\s*min(?:ute)?s?$/.exec(s);
+  if (mins) return Number(mins[1]);
+  if (/^in\s+(?:about\s+)?half\s+an\s+hour$/.test(s)) return 30;
+  if (/^in\s+(?:about\s+)?(?:an|one)\s+hour$/.test(s)) return 60;
+  return null;
+}
+
+/** After the day's last ordering period has closed: before opening, the slots move an order on to the first. */
+function pastLastOrders(ctx: ToolContext, due: Date): boolean {
+  const local = toLocal(due, ctx.tenant.profile.timezone);
+  const m = minutesOf(local.time);
+  return !ctx.tenant.profile.ordering!.hours.some((h) => h.days.includes(local.weekday) && m <= closeMinutes(h.close));
+}
+
 function withinOrderingHours(ctx: ToolContext, due: Date): boolean {
   const o = ctx.tenant.profile.ordering!;
   const local = toLocal(due, ctx.tenant.profile.timezone);
@@ -857,7 +876,9 @@ const TOOLS: Record<string, Tool> = {
         ].filter(Boolean).join(' ') || undefined,
         next: depositNext(ctx, b) ?? (b.deposit_pence
           ? `A ${pounds(b.deposit_pence)} deposit secures this booking. Offer to take it now with take_demo_payment (for "deposit"), or say a payment link will be texted.`
-          : undefined),
+          : cafeService && perPerson(cafeService, b.party_size, int(args.children) ?? 0)
+            ? `Say the total, ${perPerson(cafeService, b.party_size, int(args.children) ?? 0)!.total}, paid on the day, with the reference.`
+            : undefined),
         ...(cafeService && perPerson(cafeService, b.party_size, int(args.children) ?? 0) ? { total: perPerson(cafeService, b.party_size, int(args.children) ?? 0)!.total } : {}),
         confirmation_text: smsStatus === 'held' ? 'one text with every booking made in this call, sent when the call ends' : smsStatus ? 'sent by text, with the reference' : 'no number to text',
       };
@@ -1280,15 +1301,23 @@ const TOOLS: Record<string, Tool> = {
       // The same answer again keeps the time already given to the caller.
       let due = prev && requested === 'asap' && prev.requested === 'asap' && prev.type === type ? prev.due_at : earliest;
       if (t && !/asap|soon|now/i.test(t)) {
-        const hhmm = normaliseTime(t);
-        if (!hhmm) return { ok: false, message: 'Time must be HH:MM, or "asap".' };
+        const after = minutesFromNow(t);
+        const hhmm = after === null ? normaliseTime(t) : null;
+        if (after === null && !hhmm) return { ok: false, message: 'Time must be the clock time today as HH:MM, "in 30 minutes", or "asap".' };
         const today = toLocal(ctx.now(), p.timezone).date;
-        due = zonedToUtc(today, hhmm, p.timezone);
+        due = after !== null ? new Date(Math.ceil((ctx.now().getTime() + after * 60000) / 300000) * 300000) : zonedToUtc(today, hhmm!, p.timezone);
         if (due.getTime() < earliest.getTime()) {
           const e = toLocal(earliest, p.timezone).time;
           return { ok: false, message: `The earliest ${type} time is ${spokenTime(e)}.` };
         }
       }
+      // A time after the day's orders stop is out of hours, never "full" (a live call heard "full for the rest of today" for 10:45pm).
+      const outOfHours = () => {
+        const today = weekdayOf(toLocal(ctx.now(), p.timezone).date);
+        const hours = o.hours.filter((h) => h.days.includes(today)).map((h) => `${spokenTime(h.open)} to ${spokenTime(h.close)}`);
+        return { ok: false, message: `Orders are only taken for ${hours.length ? hours.join(' and ') : 'other days'} today. It is ${spokenTime(toLocal(ctx.now(), p.timezone).time)} now.` };
+      };
+      if (pastLastOrders(ctx, due)) return outOfHours();
       // Collection slots: times on the kitchen's grid, and only slots with room.
       if (type === 'collection' && o.slot_minutes) {
         const step = o.slot_minutes * 60000;
@@ -1310,11 +1339,7 @@ const TOOLS: Record<string, Tool> = {
           }
         }
       }
-      if (!withinOrderingHours(ctx, due)) {
-        const today = weekdayOf(toLocal(ctx.now(), p.timezone).date);
-        const hours = o.hours.filter((h) => h.days.includes(today)).map((h) => `${spokenTime(h.open)} to ${spokenTime(h.close)}`);
-        return { ok: false, message: `Orders are only taken for ${hours.length ? hours.join(' and ') : 'other days'} today.` };
-      }
+      if (!withinOrderingHours(ctx, due)) return outOfHours();
       ctx.state.fulfilment = { type, requested, due_at: due, postcode, address };
       changed(ctx);
       const local = toLocal(due, p.timezone);
