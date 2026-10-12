@@ -434,7 +434,10 @@ are ui's.**
   - small tables walk-in;
   - afternoon tea with notice and a deposit per person;
   - orders for a later day (cakes and platters).
-- Building waits for Alex's answers to its six decisions.
+- Alex answered on 12 October: Nottingham city centre; groups of five
+  or more and afternoon tea booked; no deposit on afternoon tea; cakes and
+  platters for another day left out for now (the spec keeps their design,
+  §10). The other defaults stand. M1 is being built.
 
 ### Working on Windows
 

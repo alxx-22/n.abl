@@ -16,12 +16,13 @@ the takeaway (a default; see Decisions for Alex).
 - **Tables**: walk-in first. Only tables for five or more, and afternoon
   tea, can be booked.
 - **Afternoon tea**: £24.50 a person (children £12), booked a day ahead,
-  with a £10 deposit a person. Gluten-free and vegan versions need two days'
-  notice.
+  with no deposit (Alex, 12 October). Gluten-free and vegan versions need
+  two days' notice.
 - **Click and collect**: coffee and food ordered by phone for today, paid
   by demo card or at the counter.
-- **To order**: whole cakes with three days' notice and half paid upfront,
-  and sandwich platters with a day's notice. Collection only.
+- **To order**: whole cakes and sandwich platters for another day are left
+  out of the demo for now (Alex, 12 October). Callers asking get a message
+  for the owner.
 - **Dogs**: well-behaved dogs are welcome inside, and assistance dogs
   always. Plant milks cost nothing extra. The café has three high chairs
   and is step-free.
@@ -50,16 +51,15 @@ the takeaway (a default; see Decisions for Alex).
 
 1. "Can I book afternoon tea for four on Saturday? One of us is coeliac":
    the gluten-free tea needs two days' notice (said if it's too soon), the
-   booking made, the £10-a-person deposit taken with the demo card, and the
-   dietary note on the booking for the kitchen.
+   booking made, the total said, and the dietary note on the booking for the
+   kitchen.
 2. "Two flat whites, one oat, and a bacon sandwich to collect in ten
    minutes": the order read back with the total, the collection time from
    how busy the counter is, paid by demo card or at the counter, and the
    order on the back office's board.
-3. "I need a birthday cake for Thursday, chocolate, with 'Happy 40th
-   Dad'": three days' notice checked, the price with the message, half paid
-   now, the collection day and time, and the cake on the back office's list
-   of orders to make.
+3. "A table for six on Saturday at 12, one in a wheelchair": a real
+   step-free table for six, booked and texted. (A birthday cake to order
+   was the third moment; cakes are left out for now, Alex, 12 October.)
 4. "My daughter has a nut allergy: what can she have?": the dishes without
    nuts from the menu's written allergen information, with "made in a
    kitchen that uses nuts" said plainly. Never "it's safe".
@@ -169,15 +169,14 @@ Never invents a voucher scheme.
 
 **Caller:** Customer
 
-**The receptionist:** With 48 hours' notice or more, moves or cancels it and
-the deposit is refunded (in the demo, nothing moves). Later than that, says
-plainly that the deposit is kept under the café's policy, once, and does
-what they ask. Never claims more than the deposit, never "by law".
+**The receptionist:** Moves or cancels it. There's no deposit (Alex, 12
+October), so nothing is kept and nothing about a deposit is said.
 
-**Rules:** A term making a consumer pay a disproportionately high sum on
-cancelling may be unfair (Consumer Rights Act 2015 Sch 2 para 5:
-https://www.legislation.gov.uk/ukpga/2015/15/schedule/2). The café keeps
-the deposit, and no more.
+**If the owner turns a deposit on:** with 48 hours' notice it's refunded;
+later, it's kept under the café's policy, said once, never "by law". A
+term making a consumer pay a disproportionately high sum on cancelling may
+be unfair (Consumer Rights Act 2015 Sch 2 para 5:
+https://www.legislation.gov.uk/ukpga/2015/15/schedule/2).
 
 ### Ordering to collect
 
@@ -218,7 +217,10 @@ promised for later today.
 **The system needs:** The takeaway's "Menu tonight" as the café's "Today":
 sold-out switches and a notice.
 
-### Cakes and catering to order
+### Cakes and catering to order (later: Alex, 12 October)
+
+Left out of the demo for now: a caller asking gets a message for the owner.
+These use cases stay here for when it's built (`cafe.md` §10).
 
 #### A whole cake to order (Must)
 

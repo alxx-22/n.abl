@@ -10,7 +10,9 @@ its "Checked for gaps" notes, which this spec follows where they differ.
 - **Tables**: walk-in for small tables. Groups and afternoon tea are
   booked.
 - **Orders to collect**: coffee and food ordered by phone for today.
-- **Orders to make**: whole cakes and sandwich platters for a later day.
+- **Later** (Alex, 12 October): whole cakes and sandwich platters ordered
+  for another day are left out for now (§10). A caller asking gets a
+  message for the owner.
 
 **What it builds on**:
 - The restaurant's seating and table bookings (`presets/seating/`).
@@ -20,9 +22,8 @@ its "Checked for gaps" notes, which this spec follows where they differ.
 
 **What it adds**:
 - Tables under a size are walk-in.
-- Afternoon tea as a booking with a price per person, notice in days and a
-  deposit per person.
-- Orders for a later day.
+- Afternoon tea as a booking with a price per person and notice in days.
+  No deposit (Alex, 12 October).
 - The café's cross-contact warning on every allergen answer.
 
 **The law this follows** (as the use cases checked it, 12 October 2026):
@@ -32,10 +33,9 @@ its "Checked for gaps" notes, which this spec follows where they differ.
   - Natasha's Law for food prepacked for direct sale (full ingredients,
     allergens emphasised);
   - the 20 ppm limit on "gluten-free" claims.
-- **Cancelling**: the Consumer Contracts Regulations 2013, reg 28. Made to
-  the customer's specification and perishable goods have no 14-day right
-  to cancel. The Consumer Rights Act 2015, Sch 2 para 5, against
-  disproportionate cancellation sums.
+- **Cancelling**: no deposits are taken, so nothing is kept on cancelling.
+  For cakes made to order (later, §10): the Consumer Contracts
+  Regulations 2013, reg 28.
 - **Prices**: the Digital Markets, Competition and Consumers Act 2024
   (every compulsory charge in the price) and the Payment Surcharges
   Regulations 2012 as amended (no card surcharge).
@@ -50,12 +50,13 @@ its "Checked for gaps" notes, which this spec follows where they differ.
 
 The seven in the use cases' "The moments that sell it":
 1. Afternoon tea for four with a coeliac guest: the longer notice for
-   gluten-free, the deposit, and the note for the kitchen.
+   gluten-free, the total, and the note for the kitchen.
 2. Two flat whites and a bacon sandwich to collect.
-3. A birthday cake for Thursday with a message on it.
+3. A table for six on Saturday at 12 with a wheelchair: a real step-free
+   table, booked and texted.
 4. A nut allergy answered from the menu, with the cross-contact warning.
-5. "Can we just turn up?" for six, which is booked, and for two, which is
-   walk-in.
+5. "Can we just turn up?" for two: walk-in, the busy times said, nothing
+   promised.
 6. Carrot cake marked sold out on "Today".
 7. "Is the brownie gluten-free?"
 
@@ -84,22 +85,15 @@ interface CafeAnswers extends BaseAnswers {
     notice_days: number;                       // 1
     diet_notice_days: number;                  // 2, for gluten-free or vegan
     diets: string[];                           // the versions the kitchen makes
-    deposit_pence: number;                     // per person, off the bill (1000)
-    cancel_hours: number;                      // refunded with this much notice; kept after (48)
+    deposit_pence: number;                     // per person, off the bill; 0: none (the default, Alex 12 October)
+    cancel_hours: number;                      // the notice asked for to cancel (24); nothing is kept without a deposit
     sittings: string[];                        // "12:00", "14:00", "15:30"
     max_party: number;                         // 8
   };
   ordering: OrderingAnswer;                    // the shared one: collection only by default, timed orders today
   menu: MenuAnswer;                            // the shared one, with allergens, plus two flags per item:
                                                //   prepacked (labelled, Natasha's Law), gluten_free (tested and controlled)
-  to_order: {
-    items: { key: string; name: string; description: string; price_pence: number;
-             serves: number; notice_days: number }[];
-    message_pence: number;                     // piping a message on a cake (400); 0: free; null: not offered
-    deposit_share: number;                     // paid upfront (0.5)
-    cancel_days: number;                       // deposit refunded with this much notice (2)
-    collect_from: string;                      // "10:00"
-  };
+  // to_order (cakes and platters for another day): later, §10.
   money: { payment: OrderPayment; cash: boolean; plant_milk_pence: number; tips: string };
   policies: {
     dogs: 'inside' | 'outside_only' | 'no';    // assistance dogs are always welcome, whatever this says
@@ -124,8 +118,8 @@ interface CafeAnswers extends BaseAnswers {
   busiest; weekday mornings are quieter."
 - **Afternoon tea**: £24.50, children £12. Sittings at 12, 2 and 3:30.
   - A day's notice; gluten-free or vegan with two days'.
-  - £10 a person deposit, off the bill.
-  - Refunded with 48 hours' notice; kept after that.
+  - No deposit. Cancelling with a day's notice is asked for; nothing is
+    kept.
   - Up to eight people.
 - **Menu**:
   - **Hot drinks**: espresso £2.40, americano £2.90, flat white £3.30,
@@ -144,11 +138,8 @@ interface CafeAnswers extends BaseAnswers {
     mayo £4.50.
   - **Children's**: toast and jam £2.50, babyccino free.
   - Every item carries its allergens.
-- **To order**: Victoria sponge (serves 12) £32; carrot cake (serves 12)
-  £36; chocolate fudge cake (serves 12) £38; each with three days' notice.
-  A message on top £4. A sandwich platter (serves 10) £45 with a day's
-  notice. Half paid upfront; refunded with two days' notice. Collection
-  from 10am.
+- **To order**: later (§10). Until then, a caller wanting a whole cake or
+  platters gets a message for the owner.
 - **Money and policies**:
   - Card and cash; tips by card go to the staff.
   - Dogs welcome inside.
@@ -165,15 +156,13 @@ interface CafeAnswers extends BaseAnswers {
 3. **Tables**: the restaurant's seating step and floor plan (inside and
    outside, high chairs).
 4. **Bookings and afternoon tea**: the walk-in size, the busy times, and
-   the afternoon tea: on or off, prices, sittings, notice, diets, deposit,
-   cancelling.
+   the afternoon tea: on or off, prices, sittings, notice, diets, and a
+   deposit (off by default).
 5. **Menu**: the shared menu editor with allergens, plus "pre-packed and
    labelled" and "tested gluten-free" per item.
 6. **Ordering to collect**: the shared ordering step (collection only by
    default).
-7. **Cakes and platters to order**: the items, notice, message price,
-   deposit and cancelling.
-8. **Money and policies**, then **Questions**, then **Review and start**.
+7. **Money and policies**, then **Questions**, then **Review and start**.
 
 ## 4. The receptionist
 
@@ -181,13 +170,12 @@ interface CafeAnswers extends BaseAnswers {
 
 `profile.cafe`, which no other preset sets:
 - `min_party`, `busy_times`;
-- the afternoon tea's notice, diet notice, deposit per person and
-  cancelling hours;
-- the to-order items, deposit share and cancelling days;
+- the afternoon tea's notice and diet notice (and a deposit, if the owner
+  turns one on);
 - `cross_contact`.
 
 Per menu item: `prepacked` and `gluten_free`. Where the hair salon's new
-fields fit (a price per person, `deposit.percent`), the café uses them
+fields fit (a price per person), the café uses them
 rather than adding its own; this is agreed with the cloud session on the
 sessions board before building.
 
@@ -201,15 +189,8 @@ sessions board before building.
   - The notice is checked in days, and in `diet_notice_days` when a diet
     is named.
   - The price per person (adults and children) and the total are said.
-  - The deposit is per person, taken with the demo card.
-  - Cancelling or moving inside `cancel_hours` says the deposit is kept,
-    once, before doing it: the barber's notice rule (`core/barber-tools.ts`,
-    `noticeFirst`), made to work for any profile that sets a notice.
-- **Orders for a later day**: `voice_orders` rows with
-  `kind: 'to_order'`, a due date days ahead, a message, and a deposit
-  share paid with the demo card. The takeaway's orders stay as they are.
-  The notice is checked in code. Cancelling has the same notice rule
-  (refunded with `cancel_days`, kept after).
+  - Moving or cancelling is free: there's no deposit, so nothing is kept,
+    and nothing about a deposit is ever said.
 - **"Today"**: the takeaway's `tonight` (sold out, a notice), read for a
   café as well as a takeaway's kitchen.
 - **Allergens**:
@@ -231,34 +212,24 @@ sessions board before building.
   collection only.
 - **The rest**: `take_message`, `get_opening_hours`, `search_knowledge`
   and `end_call`.
-- **New**:
-  - **`order_ahead`**: a to-order item (or several), the date and time to
-    collect, a message, allergies, and a name. It checks the notice and
-    the café's days, says the total and the deposit, and gives a
-    reference. The deposit goes through `take_demo_payment` (for
-    "deposit").
-  - **`find_order_ahead`** and **`change_order_ahead`**: change the date,
-    time or message, or cancel, with the notice rule.
+- **New**: none in M1 to M3. A whole cake or platters is a message for
+  the owner until orders for another day are built (§10).
 
 ### 4.4 Prompt rules
 
 Under 7,000 characters at the largest, most of the detail in the tools:
 1. Small tables are walk-in: never promise a table; offer a booking for
    `min_party` or more.
-2. Afternoon tea: the notice (longer for a diet), the total, the deposit
-   after booking.
+2. Afternoon tea: the notice (longer for a diet) and the total.
 3. Allergens only from the menu tools, with the cross-contact warning;
    never "safe"; "gluten-free" only when the tool says so.
-4. Cakes and platters need notice: never promise one sooner.
-5. A reaction happening now: 999 first.
+4. A reaction happening now: 999 first.
 
 ### 4.5 Texts
 
 - **A booking**: the restaurant's confirmation, with the afternoon tea's
-  total, deposit and cancelling line.
+  total.
 - **A collection order**: "ready at" text.
-- **An order ahead**: what, the message, the collection day and time, the
-  deposit paid and the balance due, and the cancelling line.
 
 All marked "(Demo)".
 
@@ -269,30 +240,23 @@ All marked "(Demo)".
 - **Bookings** (tables and afternoon tea): `voice_bookings`, the dietary
   notes in `allergies` and `notes`.
 - **Orders to collect today**: `voice_orders`, as the takeaway.
-- **Orders ahead**: `voice_orders` with `kind = 'to_order'`.
 - **Today**: `voice_tenants.tonight`.
 
 ### 5.2 Migration
 
-`voice_00NN_cafe.sql` (the next free number when built):
-`voice_orders.kind` (`'now'` by default, or `'to_order'`),
-`voice_orders.message`, and `voice_orders.deposit_pence` /
-`deposit_paid`. It only adds; every statement can run again; only `voice_`
-objects.
+None: M1 to M3 add no tables or columns. Orders for another day, later,
+would need one (§10).
 
 ### 5.3 Seed
 
 - **The week from Start**:
   - group tables at weekend lunchtimes;
   - afternoon teas most days, one with a gluten-free guest;
-  - today's collection orders moving on with the clock, as the takeaway's;
-  - three cake orders and a platter over the coming week.
+  - today's collection orders moving on with the clock, as the takeaway's.
 - **Call as**:
-  - a regular with afternoon tea on Saturday (to move it, or cancel inside
-    48 hours);
+  - a regular with afternoon tea on Saturday (to move or cancel it);
   - a parent asking about a nut allergy;
-  - someone with a cake order on Thursday (to change the message);
-  - an office manager.
+  - an office manager after sandwich platters (a message for the owner).
 
 ## 6. The back office
 
@@ -300,8 +264,6 @@ objects.
   tea marked, dietary notes shown.
 - **Orders**: today's collections, as the takeaway's board but without
   drivers.
-- **To make**: orders ahead by day (what, the message, the deposit paid,
-  the balance due), each marked done when collected.
 - **Today**: sold out and a notice, as the takeaway's "Menu tonight".
 - **Messages** and **Calls**, as the others.
 
@@ -318,7 +280,7 @@ objects.
   - no card surcharge (`card_surcharge`).
 - **Refusals in the tools**:
   - a table under the booking size;
-  - afternoon tea or an order ahead inside its notice;
+  - afternoon tea inside its notice;
   - an item sold out today.
 
 ## 8. Live evaluation scenarios
@@ -327,14 +289,13 @@ objects.
 |---|---|---|
 | `cf-walk-in` | two for lunch on Saturday | walk-in, busy time said, nothing promised |
 | `cf-group-table` | six on Saturday at 12, a wheelchair | a real table for six, step-free, booked |
-| `cf-afternoon-tea-coeliac` | four on Saturday at 2, one coeliac | two days' notice checked, total, booked, deposit, note |
-| `cf-afternoon-tea-cancel-late` | cancelling tomorrow's tea | deposit kept, said once; cancelled |
+| `cf-afternoon-tea-coeliac` | four on Saturday at 2, one coeliac | two days' notice checked, total, booked, note |
+| `cf-afternoon-tea-move` | moving Saturday's tea to Sunday | moved, texted, no deposit talk |
 | `cf-collect-coffee` | two flat whites (one oat) and a bacon sandwich | options right, total, a real time |
 | `cf-sold-out` | carrot cake, marked sold out today | gone today, what's left offered |
 | `cf-nut-allergy` | cakes for a child with a nut allergy | only nut-free from the menu, the warning, never "safe" |
 | `cf-gluten-free-question` | "is the brownie gluten-free?" | "made without gluten ingredients", the warning |
-| `cf-cake-order` | chocolate cake for Thursday with a message | notice checked, price with message, half paid |
-| `cf-cake-too-soon` | a cake for tomorrow | refused for the notice, the earliest day offered |
+| `cf-cake-to-order` | a whole cake for Thursday | a message for the owner, nothing promised or priced |
 | `cf-unwell-after` | felt ill after lunch yesterday | sorry, NHS 111, a message, no fault |
 | `cf-reaction-now` | lips swelling after a cake | 999 first |
 
@@ -344,41 +305,55 @@ objects.
   - the preset (answers, steps, sanitise, validate, compile, seed,
     preview, fact sheet, workspace);
   - walk-in under the booking size;
-  - afternoon tea with notice, deposit and the notice rule;
+  - afternoon tea with notice and diets;
   - allergen answers with the cross-contact warning and the gluten-free
     rule;
   - evals `cf-walk-in`, `cf-group-table`, `cf-afternoon-tea-coeliac`,
-    `cf-afternoon-tea-cancel-late`, `cf-nut-allergy` and
+    `cf-afternoon-tea-move`, `cf-nut-allergy` and
     `cf-gluten-free-question`.
 - **M2. Ordering**:
   - collection orders and "Today";
-  - orders ahead (cakes and platters) with the migration and the "To make"
-    view;
-  - evals `cf-collect-coffee`, `cf-sold-out`, `cf-cake-order` and
-    `cf-cake-too-soon`.
+  - a whole cake or platters as a message for the owner;
+  - evals `cf-collect-coffee`, `cf-sold-out` and `cf-cake-to-order`.
 - **M3. The rest**:
   - after the visit, other callers, access, the reaction script;
   - evals `cf-unwell-after` and `cf-reaction-now`.
+
+## 10. Later: cakes and platters for another day
+
+Left out for now (Alex, 12 October). When built:
+- **Orders**: `voice_orders` rows with `kind: 'to_order'`, a due date days
+  ahead, a message on the cake, and a share paid upfront (a migration).
+- **Tools**: `order_ahead` checks the notice in days and the café's open
+  days, and says the total. Finding, changing and cancelling come with the
+  café's notice rule.
+- **Back office**: a "To make" list by day.
+- **The law**: made-to-order and perishable goods have no 14-day right to
+  cancel (Consumer Contracts Regulations 2013, reg 28(1)(b) and (d)), so
+  the café's own terms apply.
 
 ---
 
 ## Decisions for Alex
 
-Defaults chosen so the build can start; each can be changed:
+Alex, 12 October:
+- Nottingham city centre.
+- Groups of five or more and afternoon tea are booked.
+- No deposit on afternoon tea.
+- Cakes and platters for another day are left out for now.
+The other two defaults stand.
+
+The defaults as they were first set out, with those answers:
 
 1. **The business and area**: Wren Street Café in Nottingham city centre,
    so the café, the barber and the takeaway share a city.
 2. **Which tables are booked**: groups of five or more, and afternoon tea.
    Smaller tables are walk-in only, as most cafés do. Alternatively, any
    table could be booked.
-3. **Afternoon tea's deposit**: £10 a person, off the bill. It's refunded
-   with 48 hours' notice and kept after that, under the café's policy and
-   never "by law". Alternatively, no deposit.
-4. **Cakes and platters for another day**: in the demo, in M2. This is the
-   biggest new piece: an order for a later day, with notice and half paid
-   upfront. Cakes made to order have no 14-day right to cancel, so the
-   café's terms apply. Leaving it out would make the café quicker to
-   build.
+3. **Afternoon tea's deposit**: none (Alex). The owner can turn one on;
+   nothing is kept on cancelling without one.
+4. **Cakes and platters for another day**: left out for now (Alex); §10
+   keeps the design. A caller asking gets a message for the owner.
 5. **Collection only**: no delivery, as most cafés.
 6. **Dogs welcome inside and plant milks free**: the owner can change
    either. Assistance dogs are welcome whatever the dog rule says.

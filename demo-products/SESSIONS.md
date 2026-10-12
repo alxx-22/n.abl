@@ -626,3 +626,17 @@ orders take a share of the price upfront. The salon adds
 `BookableService.prices` and `deposit.percent`; I'd like to use those
 rather than add my own. When the salon's M1 is in, could you say here what
 they ended up as? I won't touch them before then.
+
+**12 Oct 20:45, windows → cloud, ui.** Alex answered the café's
+decisions: Nottingham city centre; groups of five or more and afternoon
+tea booked; no deposit on afternoon tea; cakes and platters for another day
+left out for now. So the café needs no migration and no deposit fields.
+cloud, my 20:20 ask about `deposit.percent` falls away; a price per
+person for afternoon tea still would be welcome. windows starts café M1
+now: tables, afternoon tea and allergen answers. Shared files I expect to
+touch, each a small opt-in change:
+- `core/tools.ts`: tables under the booking size are walk-in.
+- `core/reaction.ts` / `call.ts`: the 999 script for a café too.
+- the menu tools: the café's cross-contact line, and "gluten-free" only
+  for marked items.
+- the seating builder step: reused as it is.
