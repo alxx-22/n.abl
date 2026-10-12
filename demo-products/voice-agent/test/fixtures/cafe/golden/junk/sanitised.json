@@ -156,6 +156,7 @@
   "allergens_are_examples": true
  },
  "money": {
+  "payment": "collection",
   "cash": true,
   "tips": "Tips are never expected; any paid by card go to the team in full."
  },

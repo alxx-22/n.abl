@@ -379,7 +379,208 @@
    "booked_via": "receptionist"
   }
  ],
- "orders": [],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "Grace Green",
+   "phone": "+447700900120",
+   "due_at": "2026-10-18T10:00:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "victoria_sponge",
+     "name": "Victoria sponge",
+     "quantity": 1,
+     "unit_pence": 380,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "veggie_breakfast",
+     "name": "Veggie breakfast",
+     "quantity": 1,
+     "unit_pence": 995,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1375,
+   "total_pence": 1375,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "102",
+   "name": "Amara Wright",
+   "phone": "+447700900436",
+   "due_at": "2026-10-18T10:35:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "tuna_melt",
+     "name": "Tuna melt",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 695,
+   "total_pence": 695,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "103",
+   "name": "Daniel Evans",
+   "phone": "+447700900965",
+   "due_at": "2026-10-18T11:10:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "scone",
+     "name": "Scone with jam and cream",
+     "quantity": 1,
+     "unit_pence": 425,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 425,
+   "total_pence": 425,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "105",
+   "name": "Isla Shah",
+   "phone": "+447700900189",
+   "due_at": "2026-10-18T11:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 350,
+   "total_pence": 350,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "106",
+   "name": "Oliver Patel",
+   "phone": "+447700900290",
+   "due_at": "2026-10-18T11:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cheese_onion_toastie",
+     "name": "Cheese and onion toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "tuna_melt",
+     "name": "Tuna melt",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1390,
+   "total_pence": 1390,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "107",
+   "name": "Joe Doyle",
+   "phone": "+447700900160",
+   "due_at": "2026-10-18T11:45:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "latte",
+     "name": "Latte",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "ham_cheese_toastie",
+     "name": "Ham and cheese toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "scone",
+     "name": "Scone with jam and cream",
+     "quantity": 1,
+     "unit_pence": 425,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1460,
+   "total_pence": 1460,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "109",
+   "name": "Hannah Wright",
+   "phone": "+447700900331",
+   "due_at": "2026-10-18T12:10:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "banana_bread",
+     "name": "Vegan banana bread",
+     "quantity": 1,
+     "unit_pence": 360,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 360,
+   "total_pence": 360,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "110",
+   "name": "Megan Robinson",
+   "phone": "+447700900698",
+   "due_at": "2026-10-18T13:05:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "scone",
+     "name": "Scone with jam and cream",
+     "quantity": 1,
+     "unit_pence": 425,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 425,
+   "total_pence": 425,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  }
+ ],
  "messages": [
   {
    "from_name": "Sam Wright",

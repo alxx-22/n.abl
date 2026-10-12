@@ -343,7 +343,324 @@
    "booked_via": "receptionist"
   }
  ],
- "orders": [],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "James Begum",
+   "phone": "+447700900119",
+   "due_at": "2026-10-15T08:15:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "full_breakfast",
+     "name": "Full breakfast",
+     "quantity": 2,
+     "unit_pence": 1050,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 2100,
+   "total_pence": 2100,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "102",
+   "name": "Mohammed Begum",
+   "phone": "+447700900022",
+   "due_at": "2026-10-15T08:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "jacket_potato",
+     "name": "Jacket potato",
+     "quantity": 1,
+     "unit_pence": 750,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 750,
+   "total_pence": 750,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "103",
+   "name": "Sarah Price",
+   "phone": "+447700900008",
+   "due_at": "2026-10-15T09:15:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "espresso",
+     "name": "Espresso",
+     "quantity": 1,
+     "unit_pence": 240,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "babyccino",
+     "name": "Babyccino",
+     "quantity": 1,
+     "unit_pence": 50,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 940,
+   "total_pence": 940,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "104",
+   "name": "Kwame Green",
+   "phone": "+447700900613",
+   "due_at": "2026-10-15T09:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "victoria_sponge",
+     "name": "Victoria sponge",
+     "quantity": 1,
+     "unit_pence": 380,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 380,
+   "total_pence": 380,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "105",
+   "name": "Niamh Taylor",
+   "phone": "+447700900908",
+   "due_at": "2026-10-15T09:55:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "americano",
+     "name": "Americano",
+     "quantity": 1,
+     "unit_pence": 290,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 640,
+   "total_pence": 640,
+   "allergy_notes": null,
+   "status": "ready",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "106",
+   "name": "Hannah Hall",
+   "phone": "+447700900391",
+   "due_at": "2026-10-15T10:50:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "bacon_sandwich",
+     "name": "Bacon sandwich",
+     "quantity": 1,
+     "unit_pence": 550,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 550,
+   "total_pence": 550,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "107",
+   "name": "Aisha Clarke",
+   "phone": "+447700900820",
+   "due_at": "2026-10-15T11:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "banana_bread",
+     "name": "Vegan banana bread",
+     "quantity": 1,
+     "unit_pence": 360,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "carrot_cake",
+     "name": "Carrot cake",
+     "quantity": 1,
+     "unit_pence": 395,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "scone",
+     "name": "Scone with jam and cream",
+     "quantity": 1,
+     "unit_pence": 425,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1180,
+   "total_pence": 1180,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "108",
+   "name": "Daniel Chen",
+   "phone": "+447700900422",
+   "due_at": "2026-10-15T11:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "espresso",
+     "name": "Espresso",
+     "quantity": 1,
+     "unit_pence": 240,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "toast_and_jam",
+     "name": "Toast and jam",
+     "quantity": 1,
+     "unit_pence": 250,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 490,
+   "total_pence": 490,
+   "allergy_notes": "Dairy-free",
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "109",
+   "name": "Megan Wright",
+   "phone": "+447700900574",
+   "due_at": "2026-10-15T11:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "porridge",
+     "name": "Porridge",
+     "quantity": 1,
+     "unit_pence": 475,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "salad_bowl",
+     "name": "Salad bowl",
+     "quantity": 1,
+     "unit_pence": 895,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "carrot_cake",
+     "name": "Carrot cake",
+     "quantity": 1,
+     "unit_pence": 395,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1765,
+   "total_pence": 1765,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "110",
+   "name": "Sam Doyle",
+   "phone": "+447700900369",
+   "due_at": "2026-10-15T11:55:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "flat_white",
+     "name": "Flat white",
+     "quantity": 1,
+     "unit_pence": 330,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 330,
+   "total_pence": 330,
+   "allergy_notes": "Coeliac",
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "111",
+   "name": "Ben Doyle",
+   "phone": "+447700900092",
+   "due_at": "2026-10-15T12:05:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 650,
+   "total_pence": 650,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "112",
+   "name": "Niamh Khan",
+   "phone": "+447700900414",
+   "due_at": "2026-10-15T14:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "salad_bowl",
+     "name": "Salad bowl",
+     "quantity": 1,
+     "unit_pence": 895,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 895,
+   "total_pence": 895,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  }
+ ],
  "messages": [
   {
    "from_name": "Daniel Hall",

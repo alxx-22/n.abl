@@ -9,6 +9,14 @@
    "label": "Bookings"
   },
   {
+   "id": "orders",
+   "label": "Orders"
+  },
+  {
+   "id": "tonight",
+   "label": "Today"
+  },
+  {
    "id": "messages",
    "label": "Messages"
   },
@@ -31,12 +39,22 @@
   "allergies": true,
   "combine": true
  },
+ "orders": {
+  "board": "Orders",
+  "done": {
+   "collection": "Collected",
+   "delivery": "Delivered"
+  },
+  "drivers": false,
+  "advance": false
+ },
  "suggestions": [
   "Can I book afternoon tea for four on Saturday? One of us is coeliac.",
   "Can six of us book a table for lunch on Saturday?",
   "My daughter has a nut allergy: which cakes can she have?",
-  "Is the brownie gluten-free?"
+  "Is the brownie gluten-free?",
+  "Two flat whites, one with oat milk, and a bacon sandwich to collect, please."
  ],
- "resetLine": "bookings",
+ "resetLine": "bookings and orders",
  "clock": true
 }

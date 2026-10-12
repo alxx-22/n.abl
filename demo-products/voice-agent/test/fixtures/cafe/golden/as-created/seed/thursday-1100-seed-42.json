@@ -379,7 +379,287 @@
    "booked_via": "receptionist"
   }
  ],
- "orders": [],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "Sam Collins",
+   "phone": "+447700900430",
+   "due_at": "2026-10-15T07:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "babyccino",
+     "name": "Babyccino",
+     "quantity": 1,
+     "unit_pence": 50,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "espresso",
+     "name": "Espresso",
+     "quantity": 1,
+     "unit_pence": 240,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 290,
+   "total_pence": 290,
+   "allergy_notes": "Dairy-free",
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "102",
+   "name": "Sophie Price",
+   "phone": "+447700900541",
+   "due_at": "2026-10-15T07:35:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "chicken_stuffing",
+     "name": "Chicken and stuffing sandwich",
+     "quantity": 1,
+     "unit_pence": 525,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 525,
+   "total_pence": 525,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "103",
+   "name": "Chloe Murphy",
+   "phone": "+447700900162",
+   "due_at": "2026-10-15T08:00:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "chicken_stuffing",
+     "name": "Chicken and stuffing sandwich",
+     "quantity": 1,
+     "unit_pence": 525,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "pot_of_tea",
+     "name": "Pot of tea",
+     "quantity": 1,
+     "unit_pence": 280,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 805,
+   "total_pence": 805,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "104",
+   "name": "Priya Hughes",
+   "phone": "+447700900253",
+   "due_at": "2026-10-15T09:05:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "toast_and_jam",
+     "name": "Toast and jam",
+     "quantity": 1,
+     "unit_pence": 250,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 900,
+   "total_pence": 900,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "105",
+   "name": "Liam Brown",
+   "phone": "+447700900486",
+   "due_at": "2026-10-15T10:05:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "carrot_cake",
+     "name": "Carrot cake",
+     "quantity": 1,
+     "unit_pence": 395,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 395,
+   "total_pence": 395,
+   "allergy_notes": null,
+   "status": "in_kitchen",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "106",
+   "name": "Mohammed Green",
+   "phone": "+447700900769",
+   "due_at": "2026-10-15T10:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "carrot_cake",
+     "name": "Carrot cake",
+     "quantity": 1,
+     "unit_pence": 395,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "brownie",
+     "name": "Chocolate brownie",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 745,
+   "total_pence": 745,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "107",
+   "name": "Joe Khan",
+   "phone": "+447700900888",
+   "due_at": "2026-10-15T10:50:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "latte",
+     "name": "Latte",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "babyccino",
+     "name": "Babyccino",
+     "quantity": 1,
+     "unit_pence": 50,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 390,
+   "total_pence": 390,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "108",
+   "name": "Sarah Lewis",
+   "phone": "+447700900195",
+   "due_at": "2026-10-15T11:45:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "chicken_stuffing",
+     "name": "Chicken and stuffing sandwich",
+     "quantity": 1,
+     "unit_pence": 525,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 525,
+   "total_pence": 525,
+   "allergy_notes": "Vegan",
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "110",
+   "name": "Ben Kelly",
+   "phone": "+447700900840",
+   "due_at": "2026-10-15T13:00:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "jacket_potato",
+     "name": "Jacket potato",
+     "quantity": 1,
+     "unit_pence": 750,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "cappuccino",
+     "name": "Cappuccino",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1090,
+   "total_pence": 1090,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "111",
+   "name": "Grace Begum",
+   "phone": "+447700900649",
+   "due_at": "2026-10-15T13:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "flat_white",
+     "name": "Flat white",
+     "quantity": 1,
+     "unit_pence": 330,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 330,
+   "total_pence": 330,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "112",
+   "name": "Amara Green",
+   "phone": "+447700900345",
+   "due_at": "2026-10-15T13:50:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "babyccino",
+     "name": "Babyccino",
+     "quantity": 1,
+     "unit_pence": 50,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 50,
+   "total_pence": 50,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  }
+ ],
  "messages": [
   {
    "from_name": "James Begum",

@@ -379,7 +379,211 @@
    "booked_via": "receptionist"
   }
  ],
- "orders": [],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "Liam Okafor",
+   "phone": "+447700900400",
+   "due_at": "2026-10-18T09:50:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "banana_bread",
+     "name": "Vegan banana bread",
+     "quantity": 1,
+     "unit_pence": 360,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "flat_white",
+     "name": "Flat white",
+     "quantity": 1,
+     "unit_pence": 330,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 690,
+   "total_pence": 690,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "102",
+   "name": "Lucy Patel",
+   "phone": "+447700900248",
+   "due_at": "2026-10-18T11:10:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "flat_white",
+     "name": "Flat white",
+     "quantity": 1,
+     "unit_pence": 330,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "latte",
+     "name": "Latte",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1020,
+   "total_pence": 1020,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "103",
+   "name": "Chloe Hughes",
+   "phone": "+447700900977",
+   "due_at": "2026-10-18T11:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cheese_onion_toastie",
+     "name": "Cheese and onion toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "pot_of_tea",
+     "name": "Pot of tea",
+     "quantity": 1,
+     "unit_pence": 280,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "ham_cheese_toastie",
+     "name": "Ham and cheese toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1670,
+   "total_pence": 1670,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "104",
+   "name": "Zara Lewis",
+   "phone": "+447700900711",
+   "due_at": "2026-10-18T11:45:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cappuccino",
+     "name": "Cappuccino",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 990,
+   "total_pence": 990,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "105",
+   "name": "Adam Brown",
+   "phone": "+447700900644",
+   "due_at": "2026-10-18T12:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "ham_cheese_toastie",
+     "name": "Ham and cheese toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1345,
+   "total_pence": 1345,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "106",
+   "name": "Kwame Ahmed",
+   "phone": "+447700900269",
+   "due_at": "2026-10-18T12:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "tuna_melt",
+     "name": "Tuna melt",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 695,
+   "total_pence": 695,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "107",
+   "name": "Daniel Patel",
+   "phone": "+447700900699",
+   "due_at": "2026-10-18T13:05:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "banana_bread",
+     "name": "Vegan banana bread",
+     "quantity": 1,
+     "unit_pence": 360,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 360,
+   "total_pence": 360,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  }
+ ],
  "messages": [
   {
    "from_name": "Isla Collins",

@@ -679,6 +679,7 @@
   "allergens_are_examples": true
  },
  "money": {
+  "payment": "collection",
   "cash": false,
   "tips": "Tips go in the jar, shared by everyone."
  },

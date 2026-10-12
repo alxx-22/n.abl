@@ -343,7 +343,258 @@
    "booked_via": "receptionist"
   }
  ],
- "orders": [],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "Hannah Khan",
+   "phone": "+447700900253",
+   "due_at": "2026-10-18T08:15:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "americano",
+     "name": "Americano",
+     "quantity": 1,
+     "unit_pence": 290,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 290,
+   "total_pence": 290,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "102",
+   "name": "Tom Kelly",
+   "phone": "+447700900858",
+   "due_at": "2026-10-18T09:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "latte",
+     "name": "Latte",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 340,
+   "total_pence": 340,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "103",
+   "name": "Lucy Shah",
+   "phone": "+447700900459",
+   "due_at": "2026-10-18T09:40:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "brownie",
+     "name": "Chocolate brownie",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 350,
+   "total_pence": 350,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "104",
+   "name": "Niamh Shah",
+   "phone": "+447700900347",
+   "due_at": "2026-10-18T10:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "salad_bowl",
+     "name": "Salad bowl",
+     "quantity": 1,
+     "unit_pence": 895,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 895,
+   "total_pence": 895,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "105",
+   "name": "Ravi Khan",
+   "phone": "+447700900465",
+   "due_at": "2026-10-18T10:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "egg_mayo",
+     "name": "Egg mayo sandwich",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 800,
+   "total_pence": 800,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "106",
+   "name": "James Nowak",
+   "phone": "+447700900262",
+   "due_at": "2026-10-18T10:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "tuna_melt",
+     "name": "Tuna melt",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "veggie_breakfast",
+     "name": "Veggie breakfast",
+     "quantity": 1,
+     "unit_pence": 995,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1690,
+   "total_pence": 1690,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "107",
+   "name": "Daniel Mensah",
+   "phone": "+447700900137",
+   "due_at": "2026-10-18T10:35:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "veggie_breakfast",
+     "name": "Veggie breakfast",
+     "quantity": 2,
+     "unit_pence": 995,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "babyccino",
+     "name": "Babyccino",
+     "quantity": 1,
+     "unit_pence": 50,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 2040,
+   "total_pence": 2040,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "108",
+   "name": "Aisha Walker",
+   "phone": "+447700900773",
+   "due_at": "2026-10-18T10:55:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cheese_onion_toastie",
+     "name": "Cheese and onion toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1345,
+   "total_pence": 1345,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "109",
+   "name": "Ben Robinson",
+   "phone": "+447700900834",
+   "due_at": "2026-10-18T11:15:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "americano",
+     "name": "Americano",
+     "quantity": 1,
+     "unit_pence": 290,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "espresso",
+     "name": "Espresso",
+     "quantity": 1,
+     "unit_pence": 240,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 530,
+   "total_pence": 530,
+   "allergy_notes": "Sesame allergy",
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "110",
+   "name": "Tom Ahmed",
+   "phone": "+447700900296",
+   "due_at": "2026-10-18T11:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "banana_bread",
+     "name": "Vegan banana bread",
+     "quantity": 1,
+     "unit_pence": 360,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 360,
+   "total_pence": 360,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  }
+ ],
  "messages": [
   {
    "from_name": "Lucy Chen",

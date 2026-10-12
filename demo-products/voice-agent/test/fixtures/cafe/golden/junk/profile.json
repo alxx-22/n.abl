@@ -20,7 +20,6 @@
  "core_facts": [
   "Your café: Coffee, breakfast, light lunches and homemade cakes, at 14 Wren Street (example), Nottingham NG1.",
   "Sunday: 10am till 3pm. Monday to Friday: 8am till 4pm. Saturday: 9am till 5pm.",
-  "Tables for 1 or more can be booked, and afternoon tea; smaller tables are walk-in.",
   "Afternoon tea, £0.00 a person, £12.00 for under-12s, booked 14 days ahead. Gluten-free and vegan with 14 days' notice.",
   "Breakfast until 11:30am.",
   "Step-free from the street, with an accessible toilet. 3 high chairs."
@@ -200,8 +199,6 @@
   }
  ],
  "policies": {
-  "dogs": "Well-behaved dogs are welcome inside, and assistance dogs always.",
-  "card_payments": "There's no extra charge for paying by card.",
   "cancellation": "Nothing is charged to move or cancel; a day’s notice is kind."
  },
  "cafe": {

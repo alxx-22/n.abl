@@ -379,7 +379,234 @@
    "booked_via": "receptionist"
   }
  ],
- "orders": [],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "Hannah Khan",
+   "phone": "+447700900253",
+   "due_at": "2026-10-15T07:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "americano",
+     "name": "Americano",
+     "quantity": 1,
+     "unit_pence": 290,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 290,
+   "total_pence": 290,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "102",
+   "name": "Callum Hall",
+   "phone": "+447700900698",
+   "due_at": "2026-10-15T09:10:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cheese_onion_toastie",
+     "name": "Cheese and onion toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 695,
+   "total_pence": 695,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "103",
+   "name": "Daniel Evans",
+   "phone": "+447700900965",
+   "due_at": "2026-10-15T10:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "scone",
+     "name": "Scone with jam and cream",
+     "quantity": 1,
+     "unit_pence": 425,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 425,
+   "total_pence": 425,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "104",
+   "name": "Amara Wright",
+   "phone": "+447700900436",
+   "due_at": "2026-10-15T10:55:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "latte",
+     "name": "Latte",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "tuna_melt",
+     "name": "Tuna melt",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1035,
+   "total_pence": 1035,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "105",
+   "name": "Isla Shah",
+   "phone": "+447700900189",
+   "due_at": "2026-10-15T10:55:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 350,
+   "total_pence": 350,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "106",
+   "name": "Ravi Khan",
+   "phone": "+447700900465",
+   "due_at": "2026-10-15T11:35:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "egg_mayo",
+     "name": "Egg mayo sandwich",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 800,
+   "total_pence": 800,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "107",
+   "name": "James Nowak",
+   "phone": "+447700900262",
+   "due_at": "2026-10-15T11:35:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "tuna_melt",
+     "name": "Tuna melt",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 695,
+   "total_pence": 695,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "108",
+   "name": "Holly Chen",
+   "phone": "+447700900931",
+   "due_at": "2026-10-15T13:10:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "ham_cheese_toastie",
+     "name": "Ham and cheese toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 695,
+   "total_pence": 695,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "109",
+   "name": "Tom Ahmed",
+   "phone": "+447700900296",
+   "due_at": "2026-10-15T13:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "banana_bread",
+     "name": "Vegan banana bread",
+     "quantity": 1,
+     "unit_pence": 360,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 360,
+   "total_pence": 360,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "110",
+   "name": "Megan Robinson",
+   "phone": "+447700900960",
+   "due_at": "2026-10-15T13:45:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "scone",
+     "name": "Scone with jam and cream",
+     "quantity": 1,
+     "unit_pence": 425,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 425,
+   "total_pence": 425,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  }
+ ],
  "messages": [
   {
    "from_name": "Callum Begum",

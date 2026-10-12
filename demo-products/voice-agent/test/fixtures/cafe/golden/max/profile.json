@@ -20,10 +20,8 @@
  "core_facts": [
   "Name Name Name Name Name Name Name Name Name Name Name Name: Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Style Styl, at Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address Address.",
   "Sunday: 10am till 3pm. Monday to Friday: 8am till 4pm. Saturday: 9am till 5pm.",
-  "Tables for 5 or more can be booked, and afternoon tea; smaller tables are walk-in.",
-  "Afternoon tea, £24.50 a person, £12.00 for under-12s, booked a day ahead, sittings at 10am, 11am, 12 noon, 1pm, 2pm (not Sundays) and 3pm (Saturdays only). Gluten-free, vegan, dairy-free and nut-free with 2 days' notice.",
-  "Breakfast until 11:30am; food until 30 minutes before closing, drinks and cakes until close.",
-  "accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility accessibility access 3 high chairs."
+  "Afternoon tea, £24.50 a person, £12.00 for under-12s, booked a day ahead, sittings at 10am, 11am, 12 noon and 1pm. Gluten-free, vegan, dairy-free and nut-free with 2 days' notice.",
+  "Breakfast until 11:30am; food until 30 minutes before closing, drinks and cakes until close."
  ],
  "opening_hours": [
   {
@@ -126,16 +124,6 @@
       "days": [0,1,2,3,4,5,6],
       "first": "13:00",
       "last": "13:00"
-     },
-     {
-      "days": [1,2,3,4,5,6],
-      "first": "14:00",
-      "last": "14:00"
-     },
-     {
-      "days": [6],
-      "first": "15:00",
-      "last": "15:00"
      }
     ],
     "max_party": 8,
@@ -450,6 +438,11 @@
    "q": "What is your food hygiene rating?",
    "a": "5 out of 5.",
    "tags": ["hygiene","rating","scores on the doors","clean"]
+  },
+  {
+   "q": "Can I order ahead to collect?",
+   "a": "Yes: ring us and it's ready in about 10 minutes. Pay when you collect.",
+   "tags": ["order","collect","collection","takeaway","take away","ahead","pick up"]
   },
   {
    "q": "Do you make cakes to order, or sandwich platters?",
@@ -905,9 +898,35 @@
   },
   "allergen_statement": "Everything is made in one kitchen that uses nuts, gluten, milk and eggs, so we can't promise any food is free from traces. Tell us about any allergy and we'll take care."
  },
+ "ordering": {
+  "collection": true,
+  "timed_orders": true,
+  "prep_minutes": 10,
+  "slot_minutes": 5,
+  "slot_capacity": 4,
+  "payment": "collection",
+  "hours": [
+   {
+    "days": [0],
+    "open": "10:00",
+    "close": "14:30",
+    "label": "takeaway"
+   },
+   {
+    "days": [1,2,3,4,5],
+    "open": "08:00",
+    "close": "15:30",
+    "label": "takeaway"
+   },
+   {
+    "days": [6],
+    "open": "09:00",
+    "close": "16:30",
+    "label": "takeaway"
+   }
+  ]
+ },
  "policies": {
-  "dogs": "Well-behaved dogs are welcome inside, and assistance dogs always.",
-  "card_payments": "There's no extra charge for paying by card.",
   "cancellation": "Nothing is charged to move or cancel; a day’s notice is kind."
  },
  "cafe": {

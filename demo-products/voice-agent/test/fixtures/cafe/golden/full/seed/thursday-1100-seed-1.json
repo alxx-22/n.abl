@@ -343,7 +343,224 @@
    "booked_via": "receptionist"
   }
  ],
- "orders": [],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "Megan Mensah",
+   "phone": "+447700900777",
+   "due_at": "2026-10-15T08:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "bacon_sandwich",
+     "name": "Bacon sandwich",
+     "quantity": 1,
+     "unit_pence": 550,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 900,
+   "total_pence": 900,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "102",
+   "name": "Ben Robinson",
+   "phone": "+447700900834",
+   "due_at": "2026-10-15T11:50:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "salad_bowl",
+     "name": "Salad bowl",
+     "quantity": 1,
+     "unit_pence": 895,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "americano",
+     "name": "Americano",
+     "quantity": 1,
+     "unit_pence": 290,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "espresso",
+     "name": "Espresso",
+     "quantity": 1,
+     "unit_pence": 240,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1425,
+   "total_pence": 1425,
+   "allergy_notes": "Sesame allergy",
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "103",
+   "name": "Priya Ahmed",
+   "phone": "+447700900081",
+   "due_at": "2026-10-15T12:05:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "porridge",
+     "name": "Porridge",
+     "quantity": 1,
+     "unit_pence": 475,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 825,
+   "total_pence": 825,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "104",
+   "name": "Niamh Shah",
+   "phone": "+447700900347",
+   "due_at": "2026-10-15T12:15:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "salad_bowl",
+     "name": "Salad bowl",
+     "quantity": 1,
+     "unit_pence": 895,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 895,
+   "total_pence": 895,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "105",
+   "name": "Aisha Okafor",
+   "phone": "+447700900670",
+   "due_at": "2026-10-15T12:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "espresso",
+     "name": "Espresso",
+     "quantity": 1,
+     "unit_pence": 240,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 240,
+   "total_pence": 240,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "106",
+   "name": "Daniel Mensah",
+   "phone": "+447700900137",
+   "due_at": "2026-10-15T12:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "veggie_breakfast",
+     "name": "Veggie breakfast",
+     "quantity": 2,
+     "unit_pence": 995,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "babyccino",
+     "name": "Babyccino",
+     "quantity": 1,
+     "unit_pence": 50,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 2040,
+   "total_pence": 2040,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "107",
+   "name": "Aisha Walker",
+   "phone": "+447700900773",
+   "due_at": "2026-10-15T13:00:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cheese_onion_toastie",
+     "name": "Cheese and onion toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1345,
+   "total_pence": 1345,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "108",
+   "name": "Daniel Mensah",
+   "phone": "+447700900977",
+   "due_at": "2026-10-15T13:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "carrot_cake",
+     "name": "Carrot cake",
+     "quantity": 1,
+     "unit_pence": 395,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 395,
+   "total_pence": 395,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  }
+ ],
  "messages": [
   {
    "from_name": "Sophie Clarke",

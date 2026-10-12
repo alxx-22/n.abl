@@ -20,7 +20,6 @@
  "core_facts": [
   "The Old Bakehouse: Sourdough, soups and cream teas, at 2 Market Steps (example), Kirkhill.",
   "Sunday: 9am till 2pm. Tuesday to Saturday: 9am till 5pm. Closed Mondays.",
-  "Tables for 6 or more can be booked, and afternoon tea; smaller tables are walk-in.",
   "Afternoon tea, £22.00 a person, booked 2 days ahead, sittings at 1pm (not Sundays) and 3pm (not Sundays). Gluten-free with 3 days' notice.",
   "food until 60 minutes before closing, drinks and cakes until close.",
   "Step-free from the street, with an accessible toilet. 3 high chairs."
@@ -425,6 +424,11 @@
    "tags": ["cup","reusable","keep cup","mug"]
   },
   {
+   "q": "Can I order ahead to collect?",
+   "a": "Yes: ring us and it's ready in about 10 minutes. Pay when you collect.",
+   "tags": ["order","collect","collection","takeaway","take away","ahead","pick up"]
+  },
+  {
    "q": "Do you make cakes to order, or sandwich platters?",
    "a": "Not by phone yet: I can take a message and the owner will call back about it.",
    "tags": ["cake to order","birthday cake","whole cake","platter","catering","office"]
@@ -783,9 +787,29 @@
   },
   "allergen_statement": "Everything is made in one kitchen that uses nuts, gluten, milk and eggs, so we can't promise any food is free from traces. Tell us about any allergy and we'll take care."
  },
+ "ordering": {
+  "collection": true,
+  "timed_orders": true,
+  "prep_minutes": 10,
+  "slot_minutes": 5,
+  "slot_capacity": 4,
+  "payment": "collection",
+  "hours": [
+   {
+    "days": [0],
+    "open": "09:00",
+    "close": "13:00",
+    "label": "takeaway"
+   },
+   {
+    "days": [2,3,4,5,6],
+    "open": "09:00",
+    "close": "16:00",
+    "label": "takeaway"
+   }
+  ]
+ },
  "policies": {
-  "dogs": "Dogs are welcome at the tables outside; inside, assistance dogs only.",
-  "card_payments": "There's no extra charge for paying by card.",
   "cancellation": "Afternoon tea's £5.00 a person deposit is refunded with 48 hours' notice."
  },
  "cafe": {

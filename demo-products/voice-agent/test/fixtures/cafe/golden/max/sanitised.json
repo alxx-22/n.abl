@@ -317,7 +317,7 @@
   "notice_days": 1,
   "diet_notice_days": 2,
   "diets": ["gluten-free","vegan","dairy-free","nut-free"],
-  "sittings": ["10:00","11:00","12:00","13:00","14:00","15:00"],
+  "sittings": ["10:00","11:00","12:00","13:00"],
   "minutes": 90,
   "max_party": 8,
   "deposit_pence": 0
@@ -680,6 +680,7 @@
   "allergens_are_examples": true
  },
  "money": {
+  "payment": "collection",
   "cash": true,
   "tips": "tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips tips"
  },
