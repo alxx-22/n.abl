@@ -478,9 +478,48 @@ are ui's.**
 - **Small, not done**: booking a gluten-free tea, the receptionist noted
   the diet but didn't add that the kitchen uses flour. Worth a line in
   `create_booking`'s result for a gluten-free tea.
-- **Next, M2**: ordering to collect, "Today" (sold out), and a whole cake
-  or platters as a message for the owner (`cf-collect-coffee`,
-  `cf-sold-out`, `cf-cake-to-order`).
+
+**Café M2: built and live on this branch (12 October, late)**.
+- **Orders to collect**: the restaurant's collection slots, ready in about
+  10 minutes with four orders every five minutes. Orders are taken until
+  food stops, half an hour before closing.
+  - Paid on collection by default (`money.payment`), so the café never
+    takes a card on the phone. `capabilities()` gives it no payments,
+    and its prompt has no card rule.
+  - A new builder step, Ordering to collect.
+- **Breakfast's end**: after 11:30, `add_to_order` refuses breakfast, by
+  when the order is ready, and offers lunch or the cakes.
+- **Today**: the takeaway's Menu tonight, opened to a café and said for
+  the day.
+  - Sold out today, with the other items from that section offered.
+  - A busy notice of 15 to 60 minutes puts the collection time back.
+  - The back office gains Orders and Today, and the seeded day has orders
+    to collect.
+- **A whole cake or platters**: a message for the owner, from the
+  knowledge.
+- **The prompt at its largest**: 6,986 characters, 14 under the limit. It
+  was over until:
+  - the walk-in size was said once, as a rule;
+  - access was carried as a fact only when short;
+  - dogs and card charges became knowledge only;
+  - hours past 220 characters were said in short;
+  - tea sittings were capped at four.
+  The next café line will need a cut elsewhere.
+- **Shared fixes from the live calls**:
+  - Collection: a time after the day's last orders is out of hours, not
+    "full". "+00:30" and "in 30 minutes" are understood.
+  - A café's diet that covers what the caller said ("coeliac", booked as
+    a gluten-free tea) is noted as the allergy, not refused.
+  - A per-person booking says its total once booked.
+  - The takeaway's demo test kept failing after 11:20pm (its orders fell
+    due tomorrow): fixed.
+- **Live calls**: all nine `cf-` calls have passed on their latest run.
+  The three new ones are `cf-collect-coffee`, `cf-sold-out` and
+  `cf-cake-to-order`.
+- **The walk** covers the ordering step, the Orders board and Today.
+- **Next, M3**: after the visit (felt unwell, NHS 111, a message, no
+  fault), other callers, and the reaction script (`cf-unwell-after`,
+  `cf-reaction-now`).
 
 ### Working on Windows
 
