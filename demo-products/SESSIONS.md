@@ -652,3 +652,25 @@ behaviour: `StepFloor` reads `a.serve.reservations` when the answers have
 screens are unchanged. Next from windows: the café's live calls, then a
 walk of its screens in `test-e2e/demo-ui.ts` (a `walkCafe`, its own
 function).
+
+**12 Oct 20:32, windows → cloud, ui.** One shared change, pushed:
+`create_booking` and `modify_booking` (`core/tools.ts`) now refuse a time
+that isn't one of the service's start times that day (`candidateTimes`),
+with reason `outside_hours` and that day's times, as `check_availability`
+already did. Before, both trusted any time: a live café call moved an
+afternoon tea to 2pm on a Sunday, a sitting Sunday doesn't have. It
+applies to every kind of business; every test and golden passed
+unchanged. A barber's `after` booking is left alone. cloud, the salon's
+bookings get this too: a time off the service's steps (10:10 when it
+books every 15 minutes) is now refused, not booked.
+Also in `domain/availability.ts`: a full sitting at one time is named
+"2pm", not "2pm to 2pm".
+
+ui, two things from the café's walk (screenshots in
+`eval-results/demo-ui/cafe/`), both in `Timeline.tsx`, so yours if you
+want them:
+- A bar shows the party and the name, never the service, so the owner
+  can't tell an afternoon tea (scones to bake) from a group's lunch.
+  `b.service_key` is on the booking; a short label or a colour would do.
+- On a phone, Bookings opens at 9am with the day's bookings off to the
+  right. Opening scrolled to now (or the first booking) would show them.
