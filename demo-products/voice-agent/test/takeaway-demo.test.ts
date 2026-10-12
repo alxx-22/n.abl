@@ -10,6 +10,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { loadConfig } from '../src/config.ts';
 import { startServer, type App } from '../src/server/main.ts';
+import { toLocal } from '../src/domain/time.ts';
+
+/** Minutes from now, but still today in the UK: after 11:20pm, 40 minutes on is tomorrow and off today's board. */
+const laterToday = (minutes: number): Date => {
+  const at = new Date(Date.now() + minutes * 60_000);
+  return toLocal(at, 'Europe/London').date === toLocal(new Date(), 'Europe/London').date ? at : new Date();
+};
 
 let dir: string;
 let app: App;
@@ -80,7 +87,7 @@ test('demo: a takeaway end to end: Start fills the kitchen, a delivery goes out 
   // Whatever the clock says, a delivery of our own, ready and waiting for a driver.
   const t = (await app.repo.getTenantById(made.data.id))!;
   const mine = await app.repo.createOrder(t, {
-    name: 'Amy Clarke', phone: '+447700900811', fulfilment: 'delivery', due_at: new Date(Date.now() + 40 * 60_000), address: '14 Larch Close', postcode: 'NG7 1AA',
+    name: 'Amy Clarke', phone: '+447700900811', fulfilment: 'delivery', due_at: laterToday(40), address: '14 Larch Close', postcode: 'NG7 1AA',
     lines: [{ line: 1, item_key: 'burger_meal', name: 'Burger meal', quantity: 1, unit_pence: 899, modifiers: [] }], subtotal_pence: 899, delivery_fee_pence: 250, total_pence: 1149, allergy_notes: null, source: 'phone', call_id: null, pay_note: 'Cash: change from £20',
   });
   const texts = async () => (await dev.call('GET', `${path}/phone?number=${encodeURIComponent('+447700900811')}`)).data.messages.map((m: any) => m.body);
@@ -98,7 +105,7 @@ test('demo: a takeaway end to end: Start fills the kitchen, a delivery goes out 
   assert.equal((await dev.call('PATCH', `${path}/orders/${mine.reference}`, { status: 'completed' })).status, 200);
   // A collection never goes out with a driver.
   const collect = await app.repo.createOrder(t, {
-    name: 'Dev', phone: '+447700900812', fulfilment: 'collection', due_at: new Date(Date.now() + 30 * 60_000), address: null, postcode: null,
+    name: 'Dev', phone: '+447700900812', fulfilment: 'collection', due_at: laterToday(30), address: null, postcode: null,
     lines: [], subtotal_pence: 500, delivery_fee_pence: 0, total_pence: 500, allergy_notes: null, source: 'phone', call_id: null,
   });
   assert.equal((await dev.call('PATCH', `${path}/orders/${collect.reference}`, { status: 'out_for_delivery', driver: 'Kai' })).status, 409);
