@@ -22,7 +22,9 @@ export interface Flag {
     | 'safety_delayed' | 'approval_claim' | 'invented_eta' | 'said_safe_appliance' | 'unsafe_diy' | 'liability_admitted' | 'legal_deadline'
     | 'damp_blame' | 'medical_advice' | 'invented_price' | 'cover_advice'
     // A takeaway's (presets/takeaway.md §8); it also uses invented_time and invented_price.
-    | 'card_surcharge' | 'refund_claim' | 'address_read_back';
+    | 'card_surcharge' | 'refund_claim' | 'address_read_back'
+    // A café's (presets/cafe.md §7).
+    | 'gluten_free_claim';
   text: string;
 }
 
@@ -348,7 +350,8 @@ export function checkUtterance(text: string, state: CallState, staff: string[] =
   if (state.estate) flags.push(...estateFlags(text, state, staff));
   if (state.maintenance) flags.push(...maintenanceFlags(text, state, staff, m));
   if (state.takeaway) flags.push(...takeawayFlags(text, state));
-  if (state.barber) flags.push(...barberFlags(text, state));
+  if (state.barber || state.cafe) flags.push(...barberFlags(text, state));
+  if (state.cafe) flags.push(...cafeFlags(text, state));
   return flags;
 }
 
@@ -364,6 +367,15 @@ const DYE_TALK = /\b(?:dye|colour|color|tint|skin test|patch test|allerg\w*|reac
  * cancellation in this call refunded the deposit; no fault admitted for a
  * cut or a nick; and dye never said to be safe.
  */
+// "It's gluten-free", "they're all gluten free": a regulated claim (20 ppm), said only of an item the café marked.
+const GLUTEN_FREE = /\b(?:it'?s|it is|is|are|they'?re|that'?s|they are|all|completely|totally|100%)\s+(?:all\s+|completely\s+|totally\s+)?gluten[- ]free\b/i;
+
+/** A café's (presets/cafe.md §7): "gluten-free" only when a tool said the item is marked so. */
+function cafeFlags(text: string, state: CallState): Flag[] {
+  const gf = GLUTEN_FREE.exec(text);
+  return gf && !negated(text, gf.index) && !state.glutenFreeSaid ? [{ rule: 'gluten_free_claim', text: gf[0] }] : [];
+}
+
 /** Whether an amount is the sum of up to `n` known ones, each used any number of times. */
 function sumOf(amount: number, known: number[], n: number): boolean {
   if (n === 0 || amount <= 0) return false;

@@ -37,6 +37,7 @@ import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
   BARBER_TOOLS, barberCheckParams, checkFirst, barberMessage, barberMessageParams, quietTimes, under16Note, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
+import { cafeParams, dietsAsked, glutenAnswer, noticeFirst as cafeNotice, partyOf, perPerson, teaReadBack, walkInFirst } from './cafe-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -131,6 +132,10 @@ export interface CallState {
   depositRefunded: boolean;
   /** A barber's services checked with check_availability in this call. */
   checked: string[];
+  /** A café's call (presets/cafe.md): its guardrails, and the reaction script. */
+  cafe: boolean;
+  /** A tool in this call said an item is marked gluten-free: saying so is no false claim. */
+  glutenFreeSaid: boolean;
   /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
   readBack: { committed: number; tries: number } | null;
   saidYes: { committed: number; tries: number } | null;
@@ -199,7 +204,7 @@ export function newCallState(): CallState {
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false, messageOwed: false,
     estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
-    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false, depositRefunded: false, checked: [],
+    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false, depositRefunded: false, checked: [], cafe: false, glutenFreeSaid: false,
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
     invoice: null, emergencyTrade: null, amounts: [], relay: false, references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
@@ -576,7 +581,7 @@ const TOOLS: Record<string, Tool> = {
         ['date'],
       ),
     },
-    tailor: (d, t) => barberCheckParams(estateParams(tableParams(d, t, 'check'), t, 'check'), t),
+    tailor: (d, t) => cafeParams(barberCheckParams(estateParams(tableParams(d, t, 'check'), t, 'check'), t), t),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const group = overGroup(ctx, int(args.party_size) ?? 1, 'available');
@@ -591,6 +596,11 @@ const TOOLS: Record<string, Tool> = {
       if (!service) {
         return { available: false, message: `Not a bookable service. Services: ${p.booking!.services.map((s) => s.label).join(', ')}.` };
       }
+      // A café: small tables are walk-in, and afternoon tea needs notice (core/cafe-tools.ts).
+      const walk = walkInFirst(ctx, service, int(args.party_size) ?? 1, 'available');
+      if (walk) return walk;
+      const notice = cafeNotice(ctx, service, str(args.date) ?? '', args, 'available');
+      if (notice) return notice;
       const reacted = dyeReaction(ctx, service, 'available');
       if (reacted) return reacted;
       const colour = await skinTestFirst(ctx, service, str(args.date) ?? '', str(args.time), ctx.callerPhone, 'available');
@@ -652,6 +662,13 @@ const TOOLS: Record<string, Tool> = {
       if (r.other_areas_free) out.next = `The ${p.booking?.areas?.find((a) => a.key === area.key)?.label.toLowerCase()} is full then, but ${r.other_areas_free.map((a) => a.toLowerCase()).join(' and ')} ${r.other_areas_free.length > 1 ? 'are' : 'is'} free at that time. Offer that first, then other times.`;
       if (service.price_pence) out.price = servicePrice(service);
       if (!out.next && (r.available || r.alternatives.length)) out.next = readBackFirst(ctx, service, (out.with as string | undefined) ?? str(args.staff));
+      // A café's afternoon tea: the price per person and the total for the party.
+      const teaPrice = p.cafe ? perPerson(service, partyOf(args).party, partyOf(args).children) : null;
+      if (teaPrice) {
+        out.price = teaPrice.price;
+        out.total = teaPrice.total;
+        if (!out.next && (r.available || r.alternatives.length)) out.next = teaReadBack(service, teaPrice.total, dietsAsked(ctx, service, args));
+      }
       return out;
     },
   },
@@ -675,7 +692,7 @@ const TOOLS: Record<string, Tool> = {
         ['date', 'time', 'name'],
       ),
     },
-    tailor: (d, t) => barberParams(estateParams(tableParams(d, t, 'book'), t, 'book'), t),
+    tailor: (d, t) => cafeParams(barberParams(estateParams(tableParams(d, t, 'book'), t, 'book'), t), t),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const group = overGroup(ctx, int(args.party_size) ?? 1, 'booked');
@@ -689,6 +706,9 @@ const TOOLS: Record<string, Tool> = {
       if (follow?.args) args = { ...args, ...follow.args };
       const second = await secondBooking(ctx);
       if (second) return second;
+      const cafeService = p.cafe ? findService(p, str(args.service)) : undefined;
+      const cafeBlock = cafeService ? (walkInFirst(ctx, cafeService, int(args.party_size) ?? 1, 'booked') ?? cafeNotice(ctx, cafeService, str(args.date) ?? '', args, 'booked')) : null;
+      if (cafeBlock) return cafeBlock;
       const shop = await shopToday(ctx);
       const off = offToday(ctx, shop, str(args.staff), str(args.date) ?? '', 'booked');
       if (off) return off;
@@ -747,6 +767,8 @@ const TOOLS: Record<string, Tool> = {
         highchairs ? `${highchairs} highchair${highchairs > 1 ? 's' : ''}` : null,
         accessible ? 'Step-free table needed' : null,
         p.barber && bool(args.quiet) ? 'Quiet appointment' : null,
+        p.cafe && str(args.diet) ? `Diet: ${str(args.diet)}` : null,
+        p.cafe && int(args.children) ? `${int(args.children)} children` : null,
       ].filter(Boolean).join('. ') || null;
       if (p.barber && bool(args.quiet)) tags.push('quiet');
       const r = await ctx.repo.createBooking(
@@ -816,6 +838,7 @@ const TOOLS: Record<string, Tool> = {
         next: depositNext(ctx, b) ?? (b.deposit_pence
           ? `A ${pounds(b.deposit_pence)} deposit secures this booking. Offer to take it now with take_demo_payment (for "deposit"), or say a payment link will be texted.`
           : undefined),
+        ...(cafeService && perPerson(cafeService, b.party_size, int(args.children) ?? 0) ? { total: perPerson(cafeService, b.party_size, int(args.children) ?? 0)!.total } : {}),
         confirmation_text: smsStatus === 'held' ? 'one text with every booking made in this call, sent when the call ends' : smsStatus ? 'sent by text, with the reference' : 'no number to text',
       };
     },
@@ -881,6 +904,13 @@ const TOOLS: Record<string, Tool> = {
       if (str(args.name) && !realName(args.name)) return { changed: false, message: ASK_NAME };
       // A viewing moves only within its home's rules.
       const listing = ctx.tenant.profile.listings ? await moveRule(ctx, ref) : undefined;
+      // A café's change: still the booking size, and afternoon tea's notice for a new day.
+      if (ctx.tenant.profile.cafe && (str(args.date) || int(args.party_size))) {
+        const now = await ctx.repo.getBookingByReference(ctx.tenant.id, ref.replace(/[^a-z0-9]/gi, '').toUpperCase());
+        const s0 = now ? findService(ctx.tenant.profile, now.service_key) : undefined;
+        const blocked = s0 ? ((int(args.party_size) ? walkInFirst(ctx, s0, int(args.party_size)!, 'booked') : null) ?? (str(args.date) ? cafeNotice(ctx, s0, str(args.date)!, args, 'changed') : null)) : null;
+        if (blocked) return { ...blocked, changed: false };
+      }
       // A barber's booking moving: not to a barber off today, and colour still 48 hours after its skin test.
       const shop = await shopToday(ctx);
       const was = shop && (str(args.date) || str(args.time)) ? await ctx.repo.getBookingByReference(ctx.tenant.id, ref.replace(/[^a-z0-9]/gi, '').toUpperCase()) : null;
@@ -972,7 +1002,7 @@ const TOOLS: Record<string, Tool> = {
             name: i.name, category, may_contain: i.may_contain?.filter((a) => avoid.includes(a)).length ? `may contain traces of ${avoid.join(', ')}` : undefined,
           })),
           unknown: items.filter(({ i }) => i.allergens_unknown).map(({ i }) => i.name),
-          say: `These are made without ${avoid.join(' or ')} as an ingredient. ${menu.allergen_statement} Never say a dish is safe.`,
+          say: `These are made without ${avoid.join(' or ')} as an ingredient. ${menu.allergen_statement} Never say a dish is safe.${ctx.tenant.profile.cafe && avoid.includes('gluten') ? ' Never call any of them gluten-free: the kitchen uses flour.' : ''}`,
         };
       }
       const c = str(args.category)?.toLowerCase();
@@ -1027,6 +1057,8 @@ const TOOLS: Record<string, Tool> = {
         ...(deal ? { choices: deal.parts.map((p) => `${p.label}: ${(menu.modifier_groups[p.group]?.options ?? []).map(priced).join(', ')}`) } : {}),
         allergens: allergensOf(menu, item),
         allergen_answer: deal ? dealAllergenAnswer(menu, deal, allergensNamed(`${str(args.item) ?? ''} ${ctx.state.heard.slice(-4).join(' ')}`)) : allergenAnswer(menu, item),
+        // A café's "gluten-free": only for an item the owner marked (core/cafe-tools.ts).
+        gluten: glutenAnswer(ctx, item),
       };
     },
   },
@@ -1640,9 +1672,9 @@ export async function runTool(name: string, args: Args, ctx: ToolContext): Promi
     const json = JSON.stringify(result);
     ctx.state.references.push(...referencesIn(json));
     // A price a tool gave may be said; one nothing gave may not (a repairs call's invented_price).
-    if (ctx.state.maintenance || ctx.state.takeaway || ctx.state.barber) ctx.state.amounts.push(...amountsIn(json));
+    if (ctx.state.maintenance || ctx.state.takeaway || ctx.state.barber || ctx.state.cafe) ctx.state.amounts.push(...amountsIn(json));
     // So too a time (an estate agency's, a takeaway's and a barber's invented_time).
-    if (ctx.state.estate || ctx.state.takeaway || ctx.state.barber) {
+    if (ctx.state.estate || ctx.state.takeaway || ctx.state.barber || ctx.state.cafe) {
       ctx.state.times.push(...knownTimes(json));
       ctx.state.timeRanges.push(...rangesIn(json));
     }

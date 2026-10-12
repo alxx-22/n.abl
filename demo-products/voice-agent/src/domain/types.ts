@@ -57,6 +57,15 @@ export interface BookableService {
   deposit?: { min_party?: number; per_person_pence?: number; flat_pence?: number };
   /** A viewing: booked at one of profile.listings, under that home's own rules (estate agent only). */
   needs_listing?: true;
+  /** A café's tables: a smaller party is walk-in, never booked, and hears this (presets/cafe.md §4.2). */
+  min_party?: number;
+  walk_in_note?: string;
+  /** Priced per person (a café's afternoon tea): adults, and children under an age. */
+  per_person?: { adult_pence: number; child_pence: number; child_under: number };
+  /** Booked at least this many days ahead; with one of `diets` asked for, `diet_notice_days`. */
+  notice_days?: number;
+  diet_notice_days?: number;
+  diets?: string[];
 }
 
 export interface Resource {
@@ -303,6 +312,15 @@ export interface TenantProfile {
    * writes it; without it a booking call runs as it always has.
    */
   barber?: BarberSettings;
+  /** A café (presets/cafe.md): walk-in tables and afternoon tea. */
+  cafe?: CafeSettings;
+}
+
+/** A café's own settings (presets/cafe.md §4.1): said to walk-ins, and when food is served. */
+export interface CafeSettings {
+  busy_times: string;
+  breakfast_until: string | null;
+  kitchen_closes_before: number;
 }
 
 export interface BarberSettings {
