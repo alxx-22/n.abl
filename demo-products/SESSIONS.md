@@ -31,7 +31,7 @@ when written (the last is `voice_0012`).
 |---|---|---|---|---|
 | **cloud** | Claude Code on the web (Alex's account) | **The hair salon, M1** (`presets/salon.md` §9): the preset, stylists' levels and a price per person, colour in three parts with the stylist free while it develops, the deposit as a percentage, the Diary with the stages; then the `hs-` live calls. Done: the use cases and spec, and the 15 of the 18 review findings ui didn't take | `src/presets/salon/` and `web/src/reception/builder/salon/` (to come), the `hs-` scenarios; the repairs and estate agent call tools (`maintenance-tools.ts`, `estate-tools.ts`) | 8 October, evening |
 | **ui** | another account (Alex's "UI/UX" agent; the "third session" in `HANDOFF.md`) | **10 October, evening.** Now: phones use less room (Alex's ask): one day with ‹ › arrows and a swipe instead of the row of dates, everywhere there is one; the same for the builder's opening hours (one day at a time), the repairs Dispatch (one visit window at a time), the workspace's top bar (one row, the rest in a menu) and the floor plan's controls. Phone and tablet only; desktop unchanged. Also the main buttons (Next, Go live) in the business's colour. Then screens for cloud's salon when asked | `web/src/reception/brand.ts`, `builder/fields.tsx` (`Folds`), `reception.css`'s layout and bands (`bands.ts`), `workspace/Panes.tsx`, a new `DayPager` (day arrows and swipe), `test-e2e/screens.ts`, the repairs and estate back-office screens it compacted. Small edits to `StaffDiary.tsx`, `FloorBoard.tsx`, `Dispatch.tsx`, `common/Hours.tsx` and `Workspace.tsx`'s top bar | 9 October |
-| **windows** | Claude Code on Alex's PC | **The barber** (`presets/barber.md`; Alex answered its decisions on 8 October: Nottingham city centre, the other defaults stand). M1 built and tested live on 8 October; next M2 (walk-ins, off today, running late, the waiting list, the skin test for the barber and the salon; migration `voice_0013`). The takeaway is built through M3 | `src/presets/barber/`, `web/src/reception/builder/barber/`, `core/barber-tools.ts`, the `bb-` scenarios; `src/presets/takeaway/`, `src/core/kitchen.ts`, the `tk-` scenarios | 7 October |
+| **windows** | Claude Code on Alex's PC | **The café** (from 12 October): use cases and spec first (`presets/cafe-use-cases.md`, `presets/cafe.md`) with defaults and decisions for Alex; building waits for the answers. Done: the barber (M1 to M3, all sixteen `bb-` calls passing) and the takeaway (M1 to M3) | `src/presets/cafe/` and `web/src/reception/builder/cafe/` (to come), the `cf-` scenarios; `src/presets/barber/`, `core/barber-tools.ts`, `src/server/barber.ts`, the `bb-` scenarios; `src/presets/takeaway/`, `src/core/kitchen.ts`, the `tk-` scenarios | 7 October |
 
 Built and finished: restaurant, estate agent (M1 to M3), property
 maintenance (M1 to M3), takeaway (M1 to M3). Next in Alex's order after the
@@ -609,3 +609,9 @@ sixteen `bb-` calls have passed on their latest runs. Details are in
   team" failed once in three runs on its own (and once in a full check),
   as "the viewing booked that day is named" did yesterday. Both are
   yours; it blocks a gated push now and then, so a look would help.
+
+**12 Oct 19:36, windows → cloud, ui.** Alex asked for the café next, so
+windows takes it: the use cases and spec first, as for the barber, with
+decisions for Alex; building waits for the answers. The café will reuse
+the restaurant's tables and menu and the takeaway's ordering where they
+fit. Before touching anyone's shared files I'll list them here.
