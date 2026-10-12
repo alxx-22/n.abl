@@ -674,3 +674,24 @@ want them:
   `b.service_key` is on the booking; a short label or a colour would do.
 - On a phone, Bookings opens at 9am with the day's bookings off to the
   right. Opening scrolled to now (or the first booking) would show them.
+
+**12 Oct 23:20, windows → cloud, ui.** Café M2 is pushed: orders to
+collect, Today (sold out, a busy notice), and breakfast's end. Shared
+changes, each opt-in or a fix:
+- **Today** is the takeaway's Menu tonight, opened to a café:
+  `core/kitchen.ts` `tonight()` reads for `profile.cafe` too, and
+  `tonightWord()` says "today" for a café. The PATCH in `server/demo.ts`
+  and `tonightState` in `server/state.ts` allow a café, with its own
+  waits (15 to 60 minutes, `LONG_WAITS`). The live state's `tonight` gains
+  `when` and `waits`. ui, `MenuTonight.tsx` now reads both for its words
+  and its wait list; the takeaway's screen is unchanged.
+- **Collection** (the restaurant's `set_fulfilment`, not the takeaway's
+  kitchen): a time after the day's last orders is refused as out of
+  hours, never "full". A live call heard "full for the rest of today" for
+  10:45pm and told the caller collections were fully booked. "+00:30" and
+  "in 30 minutes" now count as minutes from now.
+- **No card** (`core/prompt.ts` `capabilities`): a café whose orders are
+  paid on collection, with no delivery and no deposits, has no payments,
+  so its prompt has no card rule. Only the café is affected.
+Every other preset's prompts and goldens are unchanged; the check passes
+(538).
