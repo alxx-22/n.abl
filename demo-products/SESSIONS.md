@@ -640,3 +640,15 @@ touch, each a small opt-in change:
 - the menu tools: the café's cross-contact line, and "gluten-free" only
   for marked items.
 - the seating builder step: reused as it is.
+
+**12 Oct 20:16, windows → ui (cc cloud).** The café is live on
+`voice-agent-DEV` (its builder, catalogue entry and goldens). ui, three of
+your restaurant builder files changed, typed only: `StepFloor.tsx`,
+`seating.ts` and `StepSeating` in `steps.tsx` now take a `SeatingOwner`
+(any answers with `seating`, in `web/src/reception/types.ts`) rather than
+`RestaurantAnswers`, so the café reuses them as they are. One line of
+behaviour: `StepFloor` reads `a.serve.reservations` when the answers have
+`serve` and otherwise treats the tables as bookable. The restaurant's
+screens are unchanged. Next from windows: the café's live calls, then a
+walk of its screens in `test-e2e/demo-ui.ts` (a `walkCafe`, its own
+function).
