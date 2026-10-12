@@ -289,7 +289,7 @@ would need one (§10).
 |---|---|---|
 | `cf-walk-in` | two for lunch on Saturday | walk-in, busy time said, nothing promised |
 | `cf-group-table` | six on Saturday at 12, a wheelchair | a real table for six, step-free, booked |
-| `cf-afternoon-tea-coeliac` | four on Saturday at 2, one coeliac | two days' notice checked, total, booked, note |
+| `cf-afternoon-tea-coeliac` | four tomorrow at 2, one coeliac | two days' notice, so Saturday at 2: total, booked, diet noted |
 | `cf-afternoon-tea-move` | moving Saturday's tea to Sunday | moved, texted, no deposit talk |
 | `cf-collect-coffee` | two flat whites (one oat) and a bacon sandwich | options right, total, a real time |
 | `cf-sold-out` | carrot cake, marked sold out today | gone today, what's left offered |
