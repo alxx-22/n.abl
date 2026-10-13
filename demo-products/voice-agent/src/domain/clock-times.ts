@@ -24,6 +24,9 @@ const HOURS = ['twelve', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 
 const HOUR = `(${HOURS.join('|')})`;
 const PAST = new RegExp(`\\b(quarter|half|ten|five|twenty|twenty[- ]five) (past|to) ${HOUR}\\b`, 'gi');
 const SAID = new RegExp(`\\b${HOUR} (o'?clock|fifteen|thirty|forty[- ]five)\\b`, 'gi');
+// "Half twelve" is 12:30, as the prompt asks times to be said (a live café call, 13 October: the caller's own "half twelve" was unknown).
+// Not the prompt's own quoted example ("half seven"), which would make 7:30 known on every call.
+const HALF = new RegExp(`(?<!")\\bhalf ${HOUR}\\b`, 'gi');
 const PAST_MINUTES: Record<string, number> = { quarter: 15, half: 30, ten: 10, five: 5, twenty: 20, 'twenty five': 25, 'twenty-five': 25 };
 const SAID_MINUTES: Record<string, number> = { oclock: 0, "o'clock": 0, fifteen: 15, thirty: 30, 'forty five': 45, 'forty-five': 45 };
 
@@ -65,6 +68,7 @@ export function timesIn(text: string): { said: string; readings: number[] }[] {
     const by = SAID_MINUTES[m[2].toLowerCase()];
     if (by !== undefined) out.push({ said: m[0], readings: bothHalves(HOURS.indexOf(m[1].toLowerCase()), by) });
   }
+  for (const m of text.matchAll(HALF)) out.push({ said: m[0], readings: bothHalves(HOURS.indexOf(m[1].toLowerCase()), 30) });
   return out;
 }
 

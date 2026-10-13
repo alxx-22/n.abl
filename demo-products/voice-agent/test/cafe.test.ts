@@ -115,7 +115,7 @@ test('café: "gluten-free" only for marked food, the menu says so, and the guard
   const brownie = await c.run('get_item_details', { item: 'brownie' });
   assert.equal(brownie.gluten, 'Made without gluten ingredients, but in a kitchen that uses flour: say exactly that, and never call it gluten-free.');
   assert.equal((await c.run('get_item_details', { item: 'carrot cake' })).gluten, undefined, 'it has gluten');
-  assert.match((await c.run('get_menu', { free_from: 'gluten' })).say, /Never call any of them gluten-free: the kitchen uses flour\.$/);
+  assert.match((await c.run('get_menu', { free_from: 'gluten' })).say, /Never call any of them gluten-free: the kitchen uses flour\. Say just that: no disclaimer of your own\.$/);
   const nuts = await c.run('get_menu', { free_from: 'nuts' });
   assert.ok(!nuts.dishes.some((d: any) => d.name === 'Carrot cake'));
   assert.deepEqual(checkUtterance("Yes, the brownie's completely gluten-free.", c.ctx.state).map((f) => f.rule), ['gluten_free_claim']);
@@ -169,7 +169,15 @@ test("café after the visit: ill after eating is the owner's today, with NHS 111
   assert.deepEqual(rules("It's our fault, and we'll pay for it."), ['liability_admitted']);
   assert.deepEqual(rules("I'm so sorry. If you're still unwell, do call your GP or NHS 111, or 999 if it's serious."), []);
   assert.deepEqual(rules("I can't say what caused it: the owner will look into it."), []);
-  assert.deepEqual(rules('Their medical disclaimer: Not medical advice or diagnosis, see a healthcare professional or seek care.'), ['medical_advice'], 'a live call, 13 October');
+  assert.deepEqual(rules('Their medical disclaimer: Not medical advice or diagnosis, see a healthcare professional or seek care.'), ['disclaimer'], 'a live call, 13 October');
+  // The caller's own "half twelve" may be said back as twelve thirty; a time nobody said may not.
+  c.ctx.state.heard.push('A table for two on Saturday at half twelve, please.');
+  assert.deepEqual(rules("That twelve thirty time is when we're busiest."), []);
+  assert.deepEqual(rules('Come at half one instead.'), ['invented_time']);
+  // Which cakes are nut-free: the cakes only, with the kitchen warning and no disclaimer.
+  const nutFree = await c.run('get_menu', { category: 'cakes', free_from: 'nuts' });
+  assert.deepEqual(nutFree.dishes.map((d: any) => d.name), ['Victoria sponge', 'Chocolate brownie', 'Scone with jam and cream', 'Vegan banana bread']);
+  assert.match(nutFree.say, /one kitchen that uses nuts.*Say just that: no disclaimer of your own\.$/);
 });
 
 test("café: the seeded week books only groups and afternoon teas, Helen's tea on Saturday", () => {

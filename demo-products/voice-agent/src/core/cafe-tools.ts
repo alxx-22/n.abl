@@ -121,7 +121,7 @@ export function cafeMessageParams(decl: FunctionDeclaration, t: Tenant): Functio
     description: [
       'A message for the owner, with a name and call-back number.',
       'Unhappy with food or an order: say sorry; category complaint, with what and when. Never promise a refund.',
-      `Felt unwell after eating: say sorry, then "${UNWELL_ADVICE}"; category unwell, with what they ate and when. Never admit fault, guess the cause, or say it wasn't the food.`,
+      `Felt unwell after eating: say sorry, then "${UNWELL_ADVICE}" and nothing more on health, no disclaimer of your own; category unwell, with what they ate and when. Never admit fault, guess the cause, or say it wasn't the food.`,
       'A whole cake or platters: category cake_order, with the date, what and how many; never promise or price it.',
       'Hiring the café: category hire, with the date, how many and the idea; never quote a price.',
       "Lost property: category lost_property, with what and when; never say it's been found.",

@@ -24,7 +24,7 @@ export interface Flag {
     // A takeaway's (presets/takeaway.md §8); it also uses invented_time and invented_price.
     | 'card_surcharge' | 'refund_claim' | 'address_read_back'
     // A café's (presets/cafe.md §7); it also uses medical_advice.
-    | 'gluten_free_claim' | 'cause_guessed';
+    | 'gluten_free_claim' | 'cause_guessed' | 'disclaimer';
   text: string;
 }
 
@@ -384,7 +384,7 @@ function cafeFlags(text: string, state: CallState): Flag[] {
   const medical = CAFE_MEDICAL.exec(text);
   if (medical && !negated(text, medical.index)) flags.push({ rule: 'medical_advice', text: medical[0] });
   const disclaimer = DISCLAIMER.exec(text);
-  if (disclaimer && !medical) flags.push({ rule: 'medical_advice', text: disclaimer[0] });
+  if (disclaimer && !medical) flags.push({ rule: 'disclaimer', text: disclaimer[0] });
   const cause = CAUSE.exec(text);
   if (cause) flags.push({ rule: 'cause_guessed', text: cause[0] });
   return flags;

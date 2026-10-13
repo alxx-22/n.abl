@@ -221,6 +221,7 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
   cover_advice: "[Correction from the system: never say what a policy covers or whether a claim will be paid. Correct yourself: that is for their insurer to confirm.]",
   invented_price: "[Correction from the system: no tool or fact gave that price. Correct yourself: say you can't price that on the phone; the engineer prices it on the visit, or it is a free quote, and give only the prices your tools return.]",
   card_surcharge: "[Correction from the system: there is no extra charge for paying by card, and a shop may not add one. Correct yourself now.]",
+  disclaimer: "[Correction from the system: no disclaimers. Never say you aren't a medical professional or that this isn't advice: just carry on with what the caller asked, and don't apologise for it.]",
   cause_guessed: "[Correction from the system: never say what caused it, or that it couldn't have been the food: nobody knows yet. Correct yourself: say sorry, and that the owner will look into it and call back.]",
   gluten_free_claim: "[Correction from the system: never call food gluten-free unless a tool says it's marked so. Correct yourself now.]",
   refund_claim: "[Correction from the system: nothing has been cancelled, changed or refunded: staff decide, and the team will text them. Correct yourself now: it's with the kitchen, and they'll hear by text.]",

@@ -1047,21 +1047,24 @@ const TOOLS: Record<string, Tool> = {
       const { menu, soldOut } = await menuTonight(ctx);
       const avoid = allergensNamed(str(args.free_from) ?? '');
       if (str(args.free_from) && !avoid.length) return { message: `"${str(args.free_from)}" is not one of the 14 allergens the menu records. Say you will note it for the kitchen.` };
-      if (avoid.length) {
-        const items = menu.categories.flatMap((x) => x.items.map((i) => ({ i, category: x.label })));
-        return {
-          free_from: avoid,
-          dishes: items.filter(({ i }) => !i.allergens_unknown && !avoid.some((a) => i.allergens.includes(a))).map(({ i, category }) => ({
-            name: i.name, category, may_contain: i.may_contain?.filter((a) => avoid.includes(a)).length ? `may contain traces of ${avoid.join(', ')}` : undefined,
-          })),
-          unknown: items.filter(({ i }) => i.allergens_unknown).map(({ i }) => i.name),
-          say: `These are made without ${avoid.join(' or ')} as an ingredient. ${menu.allergen_statement} Never say a dish is safe.${ctx.tenant.profile.cafe && avoid.includes('gluten') ? ' Never call any of them gluten-free: the kitchen uses flour.' : ''}`,
-        };
-      }
       const c = str(args.category)?.toLowerCase();
       const cats = c
         ? menu.categories.filter((x) => x.label.toLowerCase().includes(c) || x.key.includes(c) || c.includes(x.key))
         : [];
+      if (avoid.length) {
+        // "Which cakes are nut-free?": the cakes only, when the category is one (a live call heard the coffees too).
+        const items = (cats.length ? cats : menu.categories).flatMap((x) => x.items.map((i) => ({ i, category: x.label })));
+        const cafe = ctx.tenant.profile.cafe;
+        return {
+          free_from: avoid,
+          dishes: items.filter(({ i }) => !i.allergens_unknown && !avoid.some((a) => i.allergens.includes(a))).map(({ i, category }) => ({
+            name: i.name, category, may_contain: i.may_contain?.filter((a) => avoid.includes(a)).length ? `may contain traces of ${avoid.join(', ')}` : undefined,
+            available: i.available === false ? (soldOut.has(i.key) ? `sold out ${tonightWord(ctx.tenant.profile)}` : 'not today') : undefined,
+          })),
+          unknown: items.filter(({ i }) => i.allergens_unknown).map(({ i }) => i.name),
+          say: `These are made without ${avoid.join(' or ')} as an ingredient. ${menu.allergen_statement} Never say a dish is safe.${cafe && avoid.includes('gluten') ? ' Never call any of them gluten-free: the kitchen uses flour.' : ''}${cafe ? ' Say just that: no disclaimer of your own.' : ''}`,
+        };
+      }
       if (c && cats.length) {
         return {
           categories: cats.map((x) => ({
