@@ -23,8 +23,8 @@ export interface Flag {
     | 'damp_blame' | 'medical_advice' | 'invented_price' | 'cover_advice'
     // A takeaway's (presets/takeaway.md §8); it also uses invented_time and invented_price.
     | 'card_surcharge' | 'refund_claim' | 'address_read_back'
-    // A café's (presets/cafe.md §7).
-    | 'gluten_free_claim';
+    // A café's (presets/cafe.md §7); it also uses medical_advice.
+    | 'gluten_free_claim' | 'cause_guessed';
   text: string;
 }
 
@@ -371,9 +371,23 @@ const DYE_TALK = /\b(?:dye|colour|color|tint|skin test|patch test|allerg\w*|reac
 const GLUTEN_FREE = /\b(?:it'?s|it is|is|are|they'?re|that'?s|they are|all|completely|totally|100%)\s+(?:all\s+|completely\s+|totally\s+)?gluten[- ]free\b/i;
 
 /** A café's (presets/cafe.md §7): "gluten-free" only when a tool said the item is marked so. */
+// Someone ill after eating: never a diagnosis or a remedy (that's for their GP or NHS 111), and never what caused it, either way.
+const CAFE_MEDICAL = /\b(?:(?:it'?s|that'?s|it sounds like|sounds like|it was|probably|likely)\s+(?:just\s+|only\s+)?(?:a (?:stomach |tummy )?bug|a virus|food poisoning|norovirus|nothing (?:serious|to worry about))|drink (?:plenty of|lots of) (?:water|fluids)|(?:take|try) (?:some )?(?:paracetamol|ibuprofen|rehydration|dioralyte|imodium|antihistamines?)|you'?ll (?:be|feel) (?:fine|better) (?:soon|in a day))\b/i;
+// The model's own boilerplate, read out on two live café calls: "Not medical advice or diagnosis, see a healthcare professional".
+const DISCLAIMER = /\b(?:medical disclaimer|not (?:medical|health) advice|(?:see|consult|speak to|talk to) a (?:healthcare|health care|medical) professional|seek(?:ing)? (?:medical )?care)\b/i;
+const CAUSE = /\b(?:it|that)\s+(?:couldn'?t|can'?t|could not|cannot|wouldn'?t|would not)\s+have\s+been\s+(?:from\s+)?(?:us|our|the food|anything (?:you|we))|\b(?:it|that)\s+(?:wasn'?t|was not|isn'?t|is not)\s+(?:from\s+)?(?:us|our (?:food|kitchen|café)|the food)\b|\b(?:it|that)\s+(?:was|is)\s+(?:probably|likely|definitely|almost certainly)\s+(?:the|our|from)\b/i;
+
 function cafeFlags(text: string, state: CallState): Flag[] {
+  const flags: Flag[] = [];
   const gf = GLUTEN_FREE.exec(text);
-  return gf && !negated(text, gf.index) && !state.glutenFreeSaid ? [{ rule: 'gluten_free_claim', text: gf[0] }] : [];
+  if (gf && !negated(text, gf.index) && !state.glutenFreeSaid) flags.push({ rule: 'gluten_free_claim', text: gf[0] });
+  const medical = CAFE_MEDICAL.exec(text);
+  if (medical && !negated(text, medical.index)) flags.push({ rule: 'medical_advice', text: medical[0] });
+  const disclaimer = DISCLAIMER.exec(text);
+  if (disclaimer && !medical) flags.push({ rule: 'medical_advice', text: disclaimer[0] });
+  const cause = CAUSE.exec(text);
+  if (cause) flags.push({ rule: 'cause_guessed', text: cause[0] });
+  return flags;
 }
 
 /** Whether an amount is the sum of up to `n` known ones, each used any number of times. */

@@ -3,6 +3,7 @@
 // afternoon tea's notice, longer for a diet, and its price per person; the
 // gluten-free wording and its guardrail; and the seeded week. Milestone 2:
 // orders to collect, breakfast's end, and Today (sold out, a busy notice).
+// Milestone 3: after the visit, and other callers.
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -149,6 +150,26 @@ test('café orders to collect: oat milk free, a real time, paid on collection; b
   assert.equal((await late.run('get_item_details', { item: 'carrot cake' })).available, 'sold out today');
   const busy = await late.run('set_fulfilment', { type: 'collection' });
   assert.deepEqual([busy.time, busy.busy], ['12:15', "We're busy today: orders are taking about 30 minutes. Say so with the time."]);
+});
+
+test("café after the visit: ill after eating is the owner's today, with NHS 111; never advice, a guess at the cause, or fault", async () => {
+  const t = await fresh('wren-after');
+  const c = await call(t, CF_PEOPLE.unwell.phone);
+  const ill = await c.run('take_message', { name: 'Chris Hall', message: 'Ill in the night after the tuna melt at lunch yesterday.', category: 'unwell' });
+  assert.deepEqual([ill.taken, ill.category, ill.urgency], [true, 'unwell', 'today']);
+  assert.match(ill.note, /your GP or NHS 111, or 999 if it's serious/);
+  assert.equal((await c.run('take_message', { name: 'Sophie Hart', message: 'Off sick today.', category: 'staff' })).urgency, 'urgent');
+  assert.match((await c.run('take_message', { name: 'Rachel Green', message: 'A whole carrot cake for next Thursday.', category: 'cake_order' })).note, /Never promise it or give a price/);
+  const rows = await db.query<any>(`select category, urgency from public.voice_messages where call_id = $1 and kind = 'message' order by created_at`, [c.ctx.callId]);
+  assert.deepEqual(rows.map((r) => `${r.category} ${r.urgency}`), ['unwell today', 'staff urgent', 'cake_order null']);
+  const rules = (s: string) => checkUtterance(s, c.ctx.state).map((x) => x.rule);
+  assert.deepEqual(rules('It sounds like a stomach bug, so drink plenty of water.'), ['medical_advice']);
+  assert.deepEqual(rules("It couldn't have been our food."), ['cause_guessed']);
+  assert.deepEqual(rules('It was probably the tuna.'), ['cause_guessed']);
+  assert.deepEqual(rules("It's our fault, and we'll pay for it."), ['liability_admitted']);
+  assert.deepEqual(rules("I'm so sorry. If you're still unwell, do call your GP or NHS 111, or 999 if it's serious."), []);
+  assert.deepEqual(rules("I can't say what caused it: the owner will look into it."), []);
+  assert.deepEqual(rules('Their medical disclaimer: Not medical advice or diagnosis, see a healthcare professional or seek care.'), ['medical_advice'], 'a live call, 13 October');
 });
 
 test("café: the seeded week books only groups and afternoon teas, Helen's tea on Saturday", () => {

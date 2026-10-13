@@ -79,6 +79,7 @@ export function cafeWorkspace(profile: TenantProfile): WorkspaceSpec {
       'My daughter has a nut allergy: which cakes can she have?',
       'Is the brownie gluten-free?',
       ...(profile.ordering ? ['Two flat whites, one with oat milk, and a bacon sandwich to collect, please.'] : []),
+      'I was ill in the night after lunch there yesterday. (Call as Chris)',
     ],
     resetLine: profile.ordering ? 'bookings and orders' : 'bookings',
     clock: true,

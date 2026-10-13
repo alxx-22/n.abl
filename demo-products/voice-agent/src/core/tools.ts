@@ -37,7 +37,7 @@ import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
   BARBER_TOOLS, barberCheckParams, checkFirst, barberMessage, barberMessageParams, quietTimes, under16Note, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
-import { breakfastOver, cafeParams, dietsAsked, glutenAnswer, noticeFirst as cafeNotice, partyOf, perPerson, teaReadBack, walkInFirst } from './cafe-tools.ts';
+import { breakfastOver, cafeMessage, cafeMessageParams, cafeParams, dietsAsked, glutenAnswer, noticeFirst as cafeNotice, partyOf, perPerson, teaReadBack, walkInFirst } from './cafe-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
 
@@ -1650,9 +1650,9 @@ const TOOLS: Record<string, Tool> = {
       description: 'A message for the team, with a name and call-back number.',
       parameters: obj({ name: S("Caller's name"), phone: S('Call-back number'), message: S('One or two sentences') }, ['name', 'message']),
     },
-    tailor: (d, t) => barberMessageParams(maintenanceParams(estateParams(d, t, 'message'), t, 'message'), t),
+    tailor: (d, t) => cafeMessageParams(barberMessageParams(maintenanceParams(estateParams(d, t, 'message'), t, 'message'), t), t),
     async handler(args, ctx) {
-      const estate = (await estateMessage(args, ctx)) ?? (await maintenanceMessage(args, ctx)) ?? (await barberMessage(args, ctx));
+      const estate = (await estateMessage(args, ctx)) ?? (await maintenanceMessage(args, ctx)) ?? (await barberMessage(args, ctx)) ?? (await cafeMessage(args, ctx));
       if (estate) return estate;
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
       const body = str(args.message) ?? '';

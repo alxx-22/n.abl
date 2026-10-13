@@ -6,7 +6,8 @@
 import type { FunctionDeclaration } from './live.ts';
 import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal } from '../domain/time.ts';
 import { pounds, type BookableService, type Menu, type MenuItem, type Tenant } from '../domain/types.ts';
-import { I, S, int, str } from './tool-kit.ts';
+import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
+import { I, S, int, smsTo, str } from './tool-kit.ts';
 import type { Args, ToolContext } from './tools.ts';
 
 /** check_availability's and create_booking's `children` and `diet`, for a café. */
@@ -102,4 +103,59 @@ export function breakfastOver(ctx: ToolContext, menu: Menu, key: string): string
   const ready = ctx.state.fulfilment?.due_at ?? ctx.now();
   if (minutesOf(toLocal(ready, ctx.tenant.profile.timezone).time) < minutesOf(until)) return null;
   return `Breakfast is served until ${spokenTime(until)}. Say sorry, and offer something from lunch or the cakes.`;
+}
+
+// ── After the visit, and other callers (presets/cafe-use-cases.md) ──────────
+
+const CF_CATEGORIES = ['booking', 'complaint', 'unwell', 'cake_order', 'hire', 'lost_property', 'staff', 'supplier', 'careers', 'compliment', 'other'] as const;
+
+/** Who to call if they're still unwell: never advice of our own. */
+export const UNWELL_ADVICE = "If you're still unwell, do call your GP or NHS 111, or 999 if it's serious.";
+
+/** take_message for a café: what each kind of call needs, and a category and urgency for the owner. */
+export function cafeMessageParams(decl: FunctionDeclaration, t: Tenant): FunctionDeclaration {
+  if (!t.profile.cafe) return decl;
+  const params = decl.parameters as { properties: Record<string, unknown>; required?: string[] };
+  return {
+    ...decl,
+    description: [
+      'A message for the owner, with a name and call-back number.',
+      'Unhappy with food or an order: say sorry; category complaint, with what and when. Never promise a refund.',
+      `Felt unwell after eating: say sorry, then "${UNWELL_ADVICE}"; category unwell, with what they ate and when. Never admit fault, guess the cause, or say it wasn't the food.`,
+      'A whole cake or platters: category cake_order, with the date, what and how many; never promise or price it.',
+      'Hiring the café: category hire, with the date, how many and the idea; never quote a price.',
+      "Lost property: category lost_property, with what and when; never say it's been found.",
+      'Staff ringing in sick: category staff. A supplier: category supplier, no account details. A job: category careers. A sales call: thank them, say no, take no message.',
+    ].join(' '),
+    parameters: {
+      ...params,
+      properties: { ...params.properties, category: S(`One of: ${CF_CATEGORIES.join(', ')}`), urgency: S('urgent, today or this week') },
+    },
+  } as FunctionDeclaration;
+}
+
+/** A café's message, kept with its category and urgency, and what to tell the caller after. Null for anyone else. */
+export async function cafeMessage(args: Args, ctx: ToolContext): Promise<Record<string, unknown> | null> {
+  if (!ctx.tenant.profile.cafe) return null;
+  const category = (CF_CATEGORIES as readonly string[]).includes(str(args.category) ?? '') ? str(args.category)! : 'other';
+  const asked = (['urgent', 'today', 'this_week'] as const).find((u) => u === str(args.urgency)?.replace(' ', '_')) ?? null;
+  // Staff off sick is urgent; someone ill after eating is for the owner today, whatever was said.
+  const urgency = category === 'staff' ? 'urgent' : category === 'unwell' ? (asked === 'urgent' ? 'urgent' : 'today') : asked;
+  const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+  const name = str(args.name) ?? 'Unknown';
+  const body = str(args.message) ?? '';
+  await ctx.repo.addMessage({ tenant_id: ctx.tenant.id, call_id: ctx.callId, kind: 'message', from_name: name, from_phone: phone, body, status: 'new', category, urgency });
+  ctx.state.messageTaken = true;
+  ctx.action({ kind: 'message_taken', title: `Message from ${name}${urgency === 'urgent' ? ' (urgent)' : ''}`, detail: `${category.replace('_', ' ')} · ${body}${phone ? ` · ${displayUkPhone(phone)}` : ''}` });
+  const owner = ctx.tenant.profile.owner_sms_number;
+  if (owner) await smsTo(ctx, owner, `${urgency === 'urgent' ? 'URGENT ' : ''}Message from ${name}: ${body}`);
+  const note: Record<string, string> = {
+    unwell: `Taken for the owner, who will call back today. Make sure they've heard: "${UNWELL_ADVICE}" Never admit fault or guess the cause.`,
+    complaint: 'Taken for the owner, who will call back. Never promise a refund.',
+    cake_order: 'Taken for the owner, who will call back about it. Never promise it or give a price.',
+    hire: 'Taken for the owner, who will call back about it. Never quote a price.',
+    lost_property: "Taken: the team will look and call back. Never say it's been found.",
+    staff: 'Passed to the owner now. Tell them to rest and that the owner will sort the day.',
+  };
+  return { taken: true, category, ...(urgency ? { urgency } : {}), note: note[category] ?? 'Tell them the owner will call back.' };
 }
