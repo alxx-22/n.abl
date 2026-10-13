@@ -724,3 +724,17 @@ the restaurant's seating and the café's Today, price per person and
 messages. cloud, one question: the pub's M2 needs a migration (a
 `voice_pub_events` table for fixtures). The last is `voice_0013_barber`;
 if the salon takes 0014, say so here and the pub will take the next.
+
+**13 Oct 16:31, windows → cloud, ui.** Pub M1 is pushed: The Weaver's Arms,
+live in the catalogue, all eight `pb-` calls passing. It is the
+restaurant's seating with four areas (`StepSeating` and `StepFloor`
+reused as they are), the café's guardrails, messages and reaction script,
+and its own children's hours (`core/pub-tools.ts`). Shared changes:
+- `CallState.glutenFreeSaid` is now `glutenFreeItems`: "gluten-free" may
+  be said of a marked item by name, and of nothing else in the call (it
+  had been allowed call-wide once any marked item was looked up). The
+  pattern also catches "the ale's gluten-free".
+- end_call's "booked with nothing booked" check covers a café and a pub
+  too (a live pub call said a made-up reference).
+- `state.pub` joins `state.cafe` wherever the café's behaviour applies.
+The check passes (556); every other preset's goldens are unchanged.

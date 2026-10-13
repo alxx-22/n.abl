@@ -69,7 +69,7 @@ interface PubAnswers extends BaseAnswers {
   version: 1;
   basics: BasicsAnswer;                        // name, style, town, address, phone, voice
   hours: HoursAnswer & {
-    food: DayHours[];                          // when the kitchen serves, per day (Sunday: roasts)
+    food: { from: string; until: string; sunday_until: string | null };  // 12:00, 21:00, 18:00 (Sunday roasts)
   };
   seating: SeatingAnswer;                      // the shared one: the bar, the dining room, the garden, the Loft
   booking: {
@@ -149,11 +149,12 @@ in the back office (§6), and the seed adds sample ones (§5.3).
 ## 3. Builder steps
 
 1. **Basics**: as the others.
-2. **Opening hours**: the shared hours, plus the food times per day.
+2. **Opening and food times**: the shared hours, plus when food is served
+   (from, until, and until on Sundays).
 3. **Seating**: the restaurant's seating step.
 4. **Floor plan**: the restaurant's.
-5. **Bookings and children**: the late grace, the bar during matches, and
-   children's hours.
+5. **Bookings and children**: the late grace and children's hours (the bar
+   during matches comes with M2).
 6. **What's on**: the quiz (on or off, the day, time, team size and
    entry), and weekly events.
 7. **Menu and drinks**: the shared menu editor, plus the ales on tap and
