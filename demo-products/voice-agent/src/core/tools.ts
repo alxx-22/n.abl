@@ -37,7 +37,7 @@ import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
   BARBER_TOOLS, barberCheckParams, checkFirst, barberMessage, barberMessageParams, quietTimes, under16Note, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
-import { childrenFirst, childrenOn, pubNotes, pubParams } from './pub-tools.ts';
+import { childrenAsk, childrenFirst, childrenOn, pubNotes, pubParams } from './pub-tools.ts';
 import { breakfastOver, cafeMessage, cafeMessageParams, cafeParams, dietsAsked, glutenAnswer, noticeFirst as cafeNotice, partyOf, perPerson, teaReadBack, walkInFirst } from './cafe-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
@@ -753,7 +753,7 @@ const TOOLS: Record<string, Tool> = {
       const cafeBlock = cafeService ? (walkInFirst(ctx, cafeService, int(args.party_size) ?? 1, 'booked') ?? cafeNotice(ctx, cafeService, str(args.date) ?? '', args, 'booked')) : null;
       if (cafeBlock) return cafeBlock;
       const pubService = p.pub ? findService(p, str(args.service)) : undefined;
-      const kids = pubService ? childrenFirst(ctx, pubService, str(args.time), args, 'booked') : null;
+      const kids = pubService ? (childrenAsk(ctx, pubService, str(args.time), args) ?? childrenFirst(ctx, pubService, str(args.time), args, 'booked')) : null;
       if (kids) return kids;
       const offTime = str(args.after) ? null : notBookable(findService(p, str(args.service)), str(args.date), str(args.time), 'booked');
       if (offTime) return offTime;
@@ -1732,7 +1732,8 @@ const TOOLS: Record<string, Tool> = {
       }
       // An estate agency's call on 3 October ended "booked" after book_valuation had said "not done": nothing was in the diary.
       // So did a repairs call on 8 October, with a made-up reference; there, being added to a job already open counts.
-      const nothing = ctx.state.committed.length === 0 && (ctx.state.estate || (ctx.state.maintenance && ctx.state.found.length === 0));
+      // And a pub's on 13 October: "I've booked that" and a reference, with no create_booking at all.
+      const nothing = ctx.state.committed.length === 0 && (ctx.state.estate || ctx.state.cafe || ctx.state.pub || (ctx.state.maintenance && ctx.state.found.length === 0));
       if (nothing && /book/i.test(str(args.outcome) ?? '') && !ctx.state.bookedChecked) {
         ctx.state.bookedChecked = true;
         return { ok: false, message: "Nothing has been booked in this call: no booking tool returned a reference. If they want it, call the tool now with what they've told you and give them the reference; if not, tell them it isn't booked. Then end_call." };

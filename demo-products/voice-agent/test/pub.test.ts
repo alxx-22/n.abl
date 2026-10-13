@@ -70,7 +70,13 @@ test('pub on a call: a table with children finishes by 9pm; a dog is noted; glut
   const booked = await c.run('create_booking', { date: '2026-10-17', time: '19:00', party_size: 4, children: 2, dog: true, area: 'dining', name: 'Gary Mills' });
   assert.equal(booked.booked, true, JSON.stringify(booked));
   const kept = (await repo.getBookingByReference(t.id, booked.reference))!;
-  assert.deepEqual([kept.notes, kept.tags?.includes('children'), kept.tags?.includes('dog')], ['2 children. A dog', true, true]);  // Moved later, the children still finish by 9.
+  assert.deepEqual([kept.notes, kept.tags?.includes('children'), kept.tags?.includes('dog')], ['2 children. A dog', true, true]);  // Booked past 9 without saying: asked once whether any are under 16; adults only, then booked.
+  const asked = await (await call(t, '+447700900983')).run('create_booking', { date: '2026-10-17', time: '20:30', party_size: 2, area: 'dining', name: 'Kate Moss' });
+  assert.match(String(asked.message), /^Not done yet: this table runs past 9pm, when it's adults only. Ask once whether any of the party are under 16/);
+  // A call that ends "booked" with nothing booked is told so, once.
+  const none = await call(t, '+447700900984');
+  assert.match(String((await none.run('end_call', { outcome: 'booked' })).message), /^Nothing has been booked in this call/);
+  // Moved later, the children still finish by 9.
   assert.equal((await c.run('modify_booking', { reference: booked.reference, time: '20:00' })).reason, 'children_hours');
   // Gluten-free: the marked lager only.
   assert.match((await c.run('get_item_details', { item: 'gluten-free lager' })).gluten, /^Marked gluten-free/);

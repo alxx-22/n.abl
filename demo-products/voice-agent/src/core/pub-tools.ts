@@ -56,3 +56,21 @@ export function childrenOn(notes: string | null | undefined, tags: string[] | nu
   const n = /\b(\d+)\s+child(?:ren)?\b/i.exec(notes ?? '');
   return n ? Number(n[1]) : tags?.includes('children') ? 1 : 0;
 }
+
+/**
+ * A table running past the children's hour, booked without saying whether
+ * any are under 16: asked once, before it's booked. A live call (13
+ * October) booked four at 8:30pm, two of them children, because nobody
+ * asked. Null when it ends in time, children was given, or it was asked.
+ */
+export function childrenAsk(ctx: ToolContext, service: BookableService, time: string | undefined, args: Args): Record<string, unknown> | null {
+  const until = ctx.tenant.profile.pub?.children_until;
+  const t = time ? normaliseTime(time) : null;
+  if (!until || !t || args.children !== undefined || ctx.state.gateAsked.includes('children')) return null;
+  if (minutesOf(t) + durationFor(service, int(args.party_size) ?? 2) <= minutesOf(until)) return null;
+  ctx.state.gateAsked.push('children');
+  return {
+    booked: false, done: false,
+    message: `Not done yet: this table runs past ${spokenTime(until)}, when it's adults only. Ask once whether any of the party are under 16, then call create_booking again with children (0 if none). Do not mention this check.`,
+  };
+}
