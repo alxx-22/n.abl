@@ -14,12 +14,14 @@ import { CallSession, type CallNote } from '../src/core/call.ts';
 import { loadConfig } from '../src/config.ts';
 import type { Tenant } from '../src/domain/types.ts';
 import { BUILDER_TENANTS, builderTenant } from '../src/eval/scenarios.ts';
+import { REACTION_SCRIPT } from '../src/core/reaction.ts';
 
 const NOW = new Date('2026-10-07T10:00:00Z');
 let repo: Repo;
 let estate: Tenant;
 let restaurant: Tenant;
 let fernhill: Tenant;
+let cafe: Tenant;
 
 before(async () => {
   const db = await openPglite();
@@ -34,6 +36,9 @@ before(async () => {
   const pm = builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'pm-fernhill')!);
   fernhill = await repo.upsertTenant({ ...pm.profile, slug: 'nudge-fernhill' });
   await repo.insertSeed(fernhill.id, pm.preset.seed(fernhill.profile, NOW, 7));
+  const cf = builderTenant(BUILDER_TENANTS.find((b) => b.slug === 'cf-wren')!);
+  cafe = await repo.upsertTenant({ ...cf.profile, slug: 'nudge-cafe' });
+  await repo.insertSeed(cafe.id, cf.preset.seed(cafe.profile, NOW, 7));
 });
 
 /** The live model, as far as the call can tell: it hears what the call sends and raises what the model would. */
@@ -355,6 +360,18 @@ test('a repairs call in progress hears the office notice the moment it goes up, 
   const tri = await c.tool('triage_fault', { description: 'A few slates have slipped' });
   assert.equal(tri.office_notice, 'Storm Ellen: emergencies only today');
   assert.equal(fernhill.profile.maintenance!.notice ?? null, null, 'the shared tenant is left as it was');
+});
+
+test("a café's reaction: every tool waits for 999; once it's said they work again, and the owner is told (a live call, 13 October)", async () => {
+  const c = await call(cafe, '+447700900932');
+  c.caller("My daughter's just had a cake from you and her lips are swelling.");
+  assert.equal((await c.tool('get_menu', {})).done, false, 'held until 999 is said');
+  await c.agent(REACTION_SCRIPT.join(' '));
+  const after = await c.tool('get_menu', {});
+  assert.notEqual(after.done, false, JSON.stringify(after).slice(0, 200));
+  await new Promise((r) => setTimeout(r, 50));
+  const m = await repo.db.query<any>(`select category, urgency from public.voice_messages where call_id = $1 and kind = 'message'`, [c.id()]);
+  assert.deepEqual(m.map((x) => `${x.category} ${x.urgency}`), ['allergy urgent']);
 });
 
 test('a Relay UK call: told once to speak to the caller directly and wait through the gaps', async () => {

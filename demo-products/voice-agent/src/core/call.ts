@@ -170,8 +170,12 @@ const BARBER_CORRECTIONS: Partial<Record<Flag['rule'], string>> = {
   said_safe_for_allergy: "[Correction from the system: never say dye or colour is safe for anyone. Correct yourself: the skin test 48 hours before is what the dye maker asks for, and anyone who has reacted to hair dye isn't coloured.]",
 };
 
-// A café's corrections (presets/cafe.md §7); the rest are the barber's.
+// A café's corrections (presets/cafe.md §7); the rest are the general ones. Not the barber's: theirs offer a free
+// tidy-up for a refund and the skin test for "safe".
 const CAFE_CORRECTIONS: Partial<Record<Flag['rule'], string>> = {
+  refund_claim: "[Correction from the system: never promise a refund: the owner decides. Correct yourself: say sorry, and take a message for the owner (take_message, category complaint).]",
+  liability_admitted: "[Correction from the system: never admit fault or promise compensation. Correct yourself: say sorry it happened, and take a message for the owner (take_message, category unwell or complaint).]",
+  medical_advice: "[Correction from the system: never give health advice or say what it might be. Correct yourself: if they're still unwell, their GP or NHS 111, or 999 if it's serious.]",
   invented_price: "[Correction from the system: no tool has given that price. Say only \"Sorry, let me check that price\", then call get_item_details (or check_availability for afternoon tea), and say only the price it returns.]",
   gluten_free_claim: "[Correction from the system: never call food gluten-free unless get_item_details says it's marked so. Correct yourself now: it's made without gluten ingredients, in a kitchen that uses flour.]",
 };
@@ -217,6 +221,7 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
   cover_advice: "[Correction from the system: never say what a policy covers or whether a claim will be paid. Correct yourself: that is for their insurer to confirm.]",
   invented_price: "[Correction from the system: no tool or fact gave that price. Correct yourself: say you can't price that on the phone; the engineer prices it on the visit, or it is a free quote, and give only the prices your tools return.]",
   card_surcharge: "[Correction from the system: there is no extra charge for paying by card, and a shop may not add one. Correct yourself now.]",
+  cause_guessed: "[Correction from the system: never say what caused it, or that it couldn't have been the food: nobody knows yet. Correct yourself: say sorry, and that the owner will look into it and call back.]",
   gluten_free_claim: "[Correction from the system: never call food gluten-free unless a tool says it's marked so. Correct yourself now.]",
   refund_claim: "[Correction from the system: nothing has been cancelled, changed or refunded: staff decide, and the team will text them. Correct yourself now: it's with the kitchen, and they'll hear by text.]",
   address_read_back: "[Correction from the system: never say the address on an order. If they need to check it, ask them to say it. Don't repeat it.]",
@@ -609,7 +614,8 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.emitLine('agent', text, true);
     this.record('agent', { text: clean, interrupted });
     this.turns?.agentSaid(clean);
-    if (this.state.estate || this.state.maintenance || this.state.takeaway) this.state.said.push(clean);
+    // A café's reaction script counts as said only from these: a live call (13 October) said it word for word and the owner never heard.
+    if (this.state.estate || this.state.maintenance || this.state.takeaway || this.state.cafe) this.state.said.push(clean);
     this.noteSafetySaid();
     this.noteReaction();
     this.raiseHeld();
@@ -762,7 +768,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     // Correct it on the call, not just in the log: the next thing the
     // agent does is put it right.
     if (correct) {
-      const tk = this.state.takeaway ? TAKEAWAY_CORRECTIONS[f.rule] : this.state.cafe ? CAFE_CORRECTIONS[f.rule] ?? BARBER_CORRECTIONS[f.rule] : this.state.barber ? BARBER_CORRECTIONS[f.rule] : undefined;
+      const tk = this.state.takeaway ? TAKEAWAY_CORRECTIONS[f.rule] : this.state.cafe ? CAFE_CORRECTIONS[f.rule] : this.state.barber ? BARBER_CORRECTIONS[f.rule] : undefined;
       this.session?.sendText(tk ?? (f.rule === 'unconfirmed_claim' && this.state.maintenance ? MT_UNCONFIRMED : CORRECTIONS[f.rule]));
     }
   }
@@ -813,7 +819,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (this.callerBuf.trim() && !this.agentBuf.trim()) this.flushCaller();
     const partial = this.agentBuf.trim();
     this.state.turnSaid = redactLine(partial, this.opts.config.demoCards);
-    if (partial && (this.state.estate || this.state.maintenance || this.state.takeaway)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
+    if (partial && (this.state.estate || this.state.maintenance || this.state.takeaway || this.state.cafe)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
     this.noteSafetySaid();
     this.noteReaction();
     const ctx = this.toolContext();
