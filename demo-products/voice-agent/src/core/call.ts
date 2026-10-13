@@ -26,6 +26,7 @@ import { tenantNow } from '../domain/time.ts';
 import { armSafety, nextSafety, noteAdvice, otherAdviceSaid, safetyCorrection } from './safety.ts';
 import { REACTION_NOW, REACTION_SCRIPT, armReaction, noteReactionSaid } from './reaction.ts';
 import { allergyQuestionDish } from './kitchen.ts';
+import { freeFromAsked } from './cafe-tools.ts';
 import { addDays, toLocal, zonedToUtc } from '../domain/time.ts';
 import { unsaid } from '../domain/listings.ts';
 import { rms } from './audio.ts';
@@ -597,6 +598,12 @@ export class CallSession extends EventEmitter<CallEvents> {
       if (dish && !this.state.gateAsked.includes(`allergy:${dish}`)) {
         this.state.gateAsked.push(`allergy:${dish}`);
         this.session?.sendText(`[From the system: the caller is asking about an allergy and the ${dish}. Call get_item_details for "${dish}" now and say its allergen_answer, caveat included. Never say safe.]`);
+      }
+      // A café's "which cakes can she have?": the menu's free-from list, not a guess (core/cafe-tools.ts).
+      const free = this.state.cafe && !dish ? freeFromAsked(this.opts.tenant.profile.menu, clean) : null;
+      if (free && !this.state.gateAsked.includes(`free_from:${free.allergen}`)) {
+        this.state.gateAsked.push(`free_from:${free.allergen}`);
+        this.session?.sendText(`[From the system: the caller is asking what they can have with an allergy. Call get_menu with free_from "${free.allergen}"${free.section ? ` and category "${free.section}"` : ''} now, and say what it returns with its kitchen warning. Never say safe, and no disclaimer.]`);
       }
       // "My usual": their last order is looked up, never guessed. Live, 8 October: "I don't know your usual".
       if (USUAL.test(clean) && !this.state.gateAsked.includes('usual')) {

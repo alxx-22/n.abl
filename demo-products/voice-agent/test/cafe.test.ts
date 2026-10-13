@@ -9,6 +9,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { openPglite, migrate, type Db } from '../src/db/db.ts';
 import { Repo } from '../src/db/repo.ts';
+import { freeFromAsked } from '../src/core/cafe-tools.ts';
 import { checkUtterance } from '../src/core/guardrails.ts';
 import { capabilities } from '../src/core/prompt.ts';
 import { armReaction } from '../src/core/reaction.ts';
@@ -178,6 +179,12 @@ test("café after the visit: ill after eating is the owner's today, with NHS 111
   const nutFree = await c.run('get_menu', { category: 'cakes', free_from: 'nuts' });
   assert.deepEqual(nutFree.dishes.map((d: any) => d.name), ['Victoria sponge', 'Chocolate brownie', 'Scone with jam and cream', 'Vegan banana bread']);
   assert.match(nutFree.say, /one kitchen that uses nuts.*Say just that: no disclaimer of your own\.$/);
+  // Asked what she can have: the allergen and the section, for that list. A booking's "my sister is coeliac" is no such question.
+  const menu = t.profile.menu!;
+  assert.deepEqual(freeFromAsked(menu, "Which of your cakes would be safe for my daughter? She has a severe nut allergy."), { allergen: 'nuts', section: 'Cakes and bakes' });
+  assert.deepEqual(freeFromAsked(menu, "Which sandwiches can he have? He's dairy-free."), { allergen: 'milk', section: 'Sandwiches to go' });
+  assert.deepEqual(freeFromAsked(menu, "What can I eat if I'm coeliac?"), { allergen: 'gluten' });
+  assert.equal(freeFromAsked(menu, 'Afternoon tea for four on Saturday; my sister is coeliac.'), null);
 });
 
 test("café: the seeded week books only groups and afternoon teas, Helen's tea on Saturday", () => {

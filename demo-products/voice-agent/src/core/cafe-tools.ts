@@ -5,6 +5,7 @@
 
 import type { FunctionDeclaration } from './live.ts';
 import { addDays, isIsoDate, minutesOf, spokenDate, spokenTime, toLocal } from '../domain/time.ts';
+import { allergensNamed } from '../domain/menu.ts';
 import { pounds, type BookableService, type Menu, type MenuItem, type Tenant } from '../domain/types.ts';
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { I, S, int, smsTo, str } from './tool-kit.ts';
@@ -158,4 +159,25 @@ export async function cafeMessage(args: Args, ctx: ToolContext): Promise<Record<
     staff: 'Passed to the owner now. Tell them to rest and that the owner will sort the day.',
   };
   return { taken: true, category, ...(urgency ? { urgency } : {}), note: note[category] ?? 'Tell them the owner will call back.' };
+}
+
+// ── "Which cakes can she have?" (presets/cafe-use-cases.md, allergens) ──────
+
+/** A question about what they can eat: "which ... can she have", "is anything safe for her". Not "my sister is coeliac" on its own. */
+const WHAT_CAN = /\b(?:which|what|anything|any of)\b[^.?!]{0,60}\b(?:can|could|would|is|are)\b[^.?!]{0,40}\b(?:have|eat|safe|ok(?:ay)?|fine|suitable|free)\b|\b(?:safe|suitable|ok(?:ay)?) for (?:her|him|them|me|my|someone|a)\b/i;
+
+/**
+ * "Which of your cakes would be safe for my daughter? She has a nut
+ * allergy": the allergen, and the menu section named, for get_menu's
+ * free_from. Null for anything else. A live call (13 October) answered
+ * this from nowhere, with a disclaimer, and never looked.
+ */
+export function freeFromAsked(menu: Menu, line: string): { allergen: string; section?: string } | null {
+  if (!WHAT_CAN.test(line)) return null;
+  const allergen = allergensNamed(line)[0];
+  if (!allergen) return null;
+  const said = line.toLowerCase();
+  const named = (w: string) => w.length > 3 && [w, w.replace(/s$/, ''), w.replace(/es$/, '')].some((x) => new RegExp(`\\b${x}`).test(said));
+  const section = menu.categories.find((c) => c.label.toLowerCase().split(/[^a-z']+/).some(named))?.label;
+  return section ? { allergen, section } : { allergen };
 }
