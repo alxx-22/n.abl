@@ -350,8 +350,8 @@ export function checkUtterance(text: string, state: CallState, staff: string[] =
   if (state.estate) flags.push(...estateFlags(text, state, staff));
   if (state.maintenance) flags.push(...maintenanceFlags(text, state, staff, m));
   if (state.takeaway) flags.push(...takeawayFlags(text, state));
-  if (state.barber || state.cafe) flags.push(...barberFlags(text, state));
-  if (state.cafe) flags.push(...cafeFlags(text, state));
+  if (state.barber || state.cafe || state.pub) flags.push(...barberFlags(text, state));
+  if (state.cafe || state.pub) flags.push(...cafeFlags(text, state));
   return flags;
 }
 
@@ -368,7 +368,8 @@ const DYE_TALK = /\b(?:dye|colour|color|tint|skin test|patch test|allerg\w*|reac
  * cut or a nick; and dye never said to be safe.
  */
 // "It's gluten-free", "they're all gluten free": a regulated claim (20 ppm), said only of an item the café marked.
-const GLUTEN_FREE = /\b(?:it'?s|it is|is|are|they'?re|that'?s|they are|all|completely|totally|100%)\s+(?:all\s+|completely\s+|totally\s+)?gluten[- ]free\b/i;
+// "The ale's gluten-free" too, not only "it's" and "is".
+const GLUTEN_FREE = /(?:\b(?:it'?s|it is|is|are|they'?re|that'?s|they are|all|completely|totally)|\w['’]s|100%)\s+(?:all\s+|completely\s+|totally\s+)?gluten[- ]free\b/i;
 
 /** A café's (presets/cafe.md §7): "gluten-free" only when a tool said the item is marked so. */
 // Someone ill after eating: never a diagnosis or a remedy (that's for their GP or NHS 111), and never what caused it, either way.
@@ -380,7 +381,9 @@ const CAUSE = /\b(?:it|that)\s+(?:couldn'?t|can'?t|could not|cannot|wouldn'?t|wo
 function cafeFlags(text: string, state: CallState): Flag[] {
   const flags: Flag[] = [];
   const gf = GLUTEN_FREE.exec(text);
-  if (gf && !negated(text, gf.index) && !state.glutenFreeSaid) flags.push({ rule: 'gluten_free_claim', text: gf[0] });
+  // Said of an item marked so, by name ("the gluten-free lager"), not of anything else in the call.
+  const named = state.glutenFreeItems.some((n) => text.toLowerCase().includes(n.toLowerCase().replace(/\s*\(.*\)$/, '')));
+  if (gf && !negated(text, gf.index) && !named) flags.push({ rule: 'gluten_free_claim', text: gf[0] });
   const medical = CAFE_MEDICAL.exec(text);
   if (medical && !negated(text, medical.index)) flags.push({ rule: 'medical_advice', text: medical[0] });
   const disclaimer = DISCLAIMER.exec(text);

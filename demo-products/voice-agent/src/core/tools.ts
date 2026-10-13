@@ -37,6 +37,7 @@ import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
   BARBER_TOOLS, barberCheckParams, checkFirst, barberMessage, barberMessageParams, quietTimes, under16Note, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
+import { childrenFirst, childrenOn, pubNotes, pubParams } from './pub-tools.ts';
 import { breakfastOver, cafeMessage, cafeMessageParams, cafeParams, dietsAsked, glutenAnswer, noticeFirst as cafeNotice, partyOf, perPerson, teaReadBack, walkInFirst } from './cafe-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
@@ -134,8 +135,10 @@ export interface CallState {
   checked: string[];
   /** A café's call (presets/cafe.md): its guardrails, and the reaction script. */
   cafe: boolean;
-  /** A tool in this call said an item is marked gluten-free: saying so is no false claim. */
-  glutenFreeSaid: boolean;
+  /** A pub's call (presets/pub.md): the café's guardrails and reaction script, and its own children's hours. */
+  pub: boolean;
+  /** Items a tool said are marked gluten-free: "gluten-free" may be said of these by name, and of nothing else. */
+  glutenFreeItems: string[];
   /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
   readBack: { committed: number; tries: number } | null;
   saidYes: { committed: number; tries: number } | null;
@@ -204,7 +207,7 @@ export function newCallState(): CallState {
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false, messageOwed: false,
     estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
-    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false, depositRefunded: false, checked: [], cafe: false, glutenFreeSaid: false,
+    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false, depositRefunded: false, checked: [], cafe: false, pub: false, glutenFreeItems: [],
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
     invoice: null, emergencyTrade: null, amounts: [], relay: false, references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
@@ -618,7 +621,7 @@ const TOOLS: Record<string, Tool> = {
         ['date'],
       ),
     },
-    tailor: (d, t) => cafeParams(barberCheckParams(estateParams(tableParams(d, t, 'check'), t, 'check'), t), t),
+    tailor: (d, t) => pubParams(cafeParams(barberCheckParams(estateParams(tableParams(d, t, 'check'), t, 'check'), t), t), t),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const group = overGroup(ctx, int(args.party_size) ?? 1, 'available');
@@ -638,6 +641,9 @@ const TOOLS: Record<string, Tool> = {
       if (walk) return walk;
       const notice = cafeNotice(ctx, service, str(args.date) ?? '', args, 'available');
       if (notice) return notice;
+      // A pub: a table with children finishes by their hour (core/pub-tools.ts).
+      const kids = childrenFirst(ctx, service, str(args.time), args, 'available');
+      if (kids) return kids;
       const reacted = dyeReaction(ctx, service, 'available');
       if (reacted) return reacted;
       const colour = await skinTestFirst(ctx, service, str(args.date) ?? '', str(args.time), ctx.callerPhone, 'available');
@@ -729,7 +735,7 @@ const TOOLS: Record<string, Tool> = {
         ['date', 'time', 'name'],
       ),
     },
-    tailor: (d, t) => cafeParams(barberParams(estateParams(tableParams(d, t, 'book'), t, 'book'), t), t),
+    tailor: (d, t) => pubParams(cafeParams(barberParams(estateParams(tableParams(d, t, 'book'), t, 'book'), t), t), t),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
       const group = overGroup(ctx, int(args.party_size) ?? 1, 'booked');
@@ -746,6 +752,9 @@ const TOOLS: Record<string, Tool> = {
       const cafeService = p.cafe ? findService(p, str(args.service)) : undefined;
       const cafeBlock = cafeService ? (walkInFirst(ctx, cafeService, int(args.party_size) ?? 1, 'booked') ?? cafeNotice(ctx, cafeService, str(args.date) ?? '', args, 'booked')) : null;
       if (cafeBlock) return cafeBlock;
+      const pubService = p.pub ? findService(p, str(args.service)) : undefined;
+      const kids = pubService ? childrenFirst(ctx, pubService, str(args.time), args, 'booked') : null;
+      if (kids) return kids;
       const offTime = str(args.after) ? null : notBookable(findService(p, str(args.service)), str(args.date), str(args.time), 'booked');
       if (offTime) return offTime;
       const shop = await shopToday(ctx);
@@ -813,7 +822,9 @@ const TOOLS: Record<string, Tool> = {
         p.barber && bool(args.quiet) ? 'Quiet appointment' : null,
         p.cafe && str(args.diet) ? `Diet: ${str(args.diet)}` : null,
         p.cafe && int(args.children) ? `${int(args.children)} children` : null,
+        ...pubNotes(ctx.tenant, args).notes,
       ].filter(Boolean).join('. ') || null;
+      tags.push(...pubNotes(ctx.tenant, args).tags);
       if (p.barber && bool(args.quiet)) tags.push('quiet');
       const r = await ctx.repo.createBooking(
         tenantOn(ctx, shop, str(args.date) ?? ''),
@@ -932,7 +943,7 @@ const TOOLS: Record<string, Tool> = {
         ['reference'],
       ),
     },
-    tailor: (d, t) => tableParams(d, t, 'change'),
+    tailor: (d, t) => pubParams(tableParams(d, t, 'change'), t),
     async handler(args, ctx) {
       const ref = str(args.reference) ?? '';
       const wait = waitForYes(ctx, 'changed');
@@ -956,6 +967,17 @@ const TOOLS: Record<string, Tool> = {
         const s0 = now ? findService(ctx.tenant.profile, now.service_key) : undefined;
         const blocked = s0 ? ((int(args.party_size) ? walkInFirst(ctx, s0, int(args.party_size)!, 'booked') : null) ?? (str(args.date) ? cafeNotice(ctx, s0, str(args.date)!, args, 'changed') : null)) : null;
         if (blocked) return { ...blocked, changed: false };
+      }
+      // A pub's table with children, moved later or made bigger: still finished by their hour.
+      if (ctx.tenant.profile.pub && (str(args.time) || str(args.date) || int(args.party_size) || int(args.children))) {
+        const b1 = await ctx.repo.getBookingByReference(ctx.tenant.id, ref.replace(/[^a-z0-9]/gi, '').toUpperCase());
+        const s1 = b1 ? findService(ctx.tenant.profile, b1.service_key) : undefined;
+        if (b1 && s1) {
+          const time1 = str(args.time) ?? toLocal(b1.starts_at, ctx.tenant.profile.timezone).time;
+          const kids1 = int(args.children) ?? childrenOn(b1.notes, b1.tags);
+          const late = childrenFirst(ctx, s1, time1, { ...args, party_size: int(args.party_size) ?? b1.party_size }, 'changed', kids1);
+          if (late) return late;
+        }
       }
       // Moving to a time the service never starts at that day.
       if (str(args.date) || str(args.time)) {
@@ -1054,7 +1076,8 @@ const TOOLS: Record<string, Tool> = {
       if (avoid.length) {
         // "Which cakes are nut-free?": the cakes only, when the category is one (a live call heard the coffees too).
         const items = (cats.length ? cats : menu.categories).flatMap((x) => x.items.map((i) => ({ i, category: x.label })));
-        const cafe = ctx.tenant.profile.cafe;
+        // A café's and a pub's kitchen warnings (core/cafe-tools.ts).
+        const cafe = Boolean(ctx.tenant.profile.cafe || ctx.tenant.profile.pub);
         return {
           free_from: avoid,
           dishes: items.filter(({ i }) => !i.allergens_unknown && !avoid.some((a) => i.allergens.includes(a))).map(({ i, category }) => ({
@@ -1740,9 +1763,9 @@ export async function runTool(name: string, args: Args, ctx: ToolContext): Promi
     const json = JSON.stringify(result);
     ctx.state.references.push(...referencesIn(json));
     // A price a tool gave may be said; one nothing gave may not (a repairs call's invented_price).
-    if (ctx.state.maintenance || ctx.state.takeaway || ctx.state.barber || ctx.state.cafe) ctx.state.amounts.push(...amountsIn(json));
+    if (ctx.state.maintenance || ctx.state.takeaway || ctx.state.barber || ctx.state.cafe || ctx.state.pub) ctx.state.amounts.push(...amountsIn(json));
     // So too a time (an estate agency's, a takeaway's and a barber's invented_time).
-    if (ctx.state.estate || ctx.state.takeaway || ctx.state.barber || ctx.state.cafe) {
+    if (ctx.state.estate || ctx.state.takeaway || ctx.state.barber || ctx.state.cafe || ctx.state.pub) {
       ctx.state.times.push(...knownTimes(json));
       ctx.state.timeRanges.push(...rangesIn(json));
     }

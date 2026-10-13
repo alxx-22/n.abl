@@ -283,6 +283,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.state.takeaway = Boolean(opts.tenant.profile.ordering?.kitchen);
     this.state.barber = Boolean(opts.tenant.profile.barber);
     this.state.cafe = Boolean(opts.tenant.profile.cafe);
+    this.state.pub = Boolean(opts.tenant.profile.pub);
   }
 
   private now(): Date {
@@ -344,10 +345,10 @@ export class CallSession extends EventEmitter<CallEvents> {
     });
     this.prompt = prompt;
     // Every price in its instructions may be said (a repairs call's invented_price).
-    if (this.state.maintenance || this.state.takeaway || this.state.barber || this.state.cafe) this.state.amounts.push(...amountsIn(prompt));
+    if (this.state.maintenance || this.state.takeaway || this.state.barber || this.state.cafe || this.state.pub) this.state.amounts.push(...amountsIn(prompt));
     // And every time in them (an estate agency's and a takeaway's invented_time), but not their ranges: an
     // opening-hours range would let any time through.
-    if (this.state.estate || this.state.takeaway || this.state.barber || this.state.cafe) this.state.times.push(...knownTimes(prompt));
+    if (this.state.estate || this.state.takeaway || this.state.barber || this.state.cafe || this.state.pub) this.state.times.push(...knownTimes(prompt));
     if (this.contextual) this.startTurnTaking();
     const pinned = tenant.profile.live_model;
     const models = this.opts.models ?? (pinned ? [pinned, ...config.liveModels.filter((m) => m !== pinned)] : config.liveModels);
@@ -588,11 +589,11 @@ export class CallSession extends EventEmitter<CallEvents> {
       this.record('system', { event: 'safety_armed', kind });
       this.session?.sendText(safetyCorrection(kind, m.nation, this.state.safety?.foreign));
     }
-    // A takeaway's or a café's caller describing a severe allergic reaction: 999 first (core/reaction.ts).
-    if ((this.state.takeaway || this.state.cafe) && armReaction(this.state, clean)) {
+    // A takeaway's, a café's or a pub's caller describing a severe allergic reaction: 999 first (core/reaction.ts).
+    if ((this.state.takeaway || this.state.cafe || this.state.pub) && armReaction(this.state, clean)) {
       this.record('system', { event: 'reaction_armed' });
       this.session?.sendText(REACTION_NOW);
-    } else if ((this.state.takeaway || this.state.cafe) && this.opts.tenant.profile.menu) {
+    } else if ((this.state.takeaway || this.state.cafe || this.state.pub) && this.opts.tenant.profile.menu) {
       // An allergy question about a dish: its answer comes from get_item_details, once per dish.
       const dish = allergyQuestionDish(this.opts.tenant.profile.menu, clean);
       if (dish && !this.state.gateAsked.includes(`allergy:${dish}`)) {
@@ -600,7 +601,7 @@ export class CallSession extends EventEmitter<CallEvents> {
         this.session?.sendText(`[From the system: the caller is asking about an allergy and the ${dish}. Call get_item_details for "${dish}" now and say its allergen_answer, caveat included. Never say safe.]`);
       }
       // A café's "which cakes can she have?": the menu's free-from list, not a guess (core/cafe-tools.ts).
-      const free = this.state.cafe && !dish ? freeFromAsked(this.opts.tenant.profile.menu, clean) : null;
+      const free = (this.state.cafe || this.state.pub) && !dish ? freeFromAsked(this.opts.tenant.profile.menu, clean) : null;
       if (free && !this.state.gateAsked.includes(`free_from:${free.allergen}`)) {
         this.state.gateAsked.push(`free_from:${free.allergen}`);
         this.session?.sendText(`[From the system: the caller is asking what they can have with an allergy. Call get_menu with free_from "${free.allergen}"${free.section ? ` and category "${free.section}"` : ''} now, and say what it returns with its kitchen warning. Never say safe, and no disclaimer.]`);
@@ -623,7 +624,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     this.record('agent', { text: clean, interrupted });
     this.turns?.agentSaid(clean);
     // A café's reaction script counts as said only from these: a live call (13 October) said it word for word and the owner never heard.
-    if (this.state.estate || this.state.maintenance || this.state.takeaway || this.state.cafe) this.state.said.push(clean);
+    if (this.state.estate || this.state.maintenance || this.state.takeaway || this.state.cafe || this.state.pub) this.state.said.push(clean);
     this.noteSafetySaid();
     this.noteReaction();
     this.raiseHeld();
@@ -776,7 +777,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     // Correct it on the call, not just in the log: the next thing the
     // agent does is put it right.
     if (correct) {
-      const tk = this.state.takeaway ? TAKEAWAY_CORRECTIONS[f.rule] : this.state.cafe ? CAFE_CORRECTIONS[f.rule] : this.state.barber ? BARBER_CORRECTIONS[f.rule] : undefined;
+      const tk = this.state.takeaway ? TAKEAWAY_CORRECTIONS[f.rule] : this.state.cafe || this.state.pub ? CAFE_CORRECTIONS[f.rule] : this.state.barber ? BARBER_CORRECTIONS[f.rule] : undefined;
       this.session?.sendText(tk ?? (f.rule === 'unconfirmed_claim' && this.state.maintenance ? MT_UNCONFIRMED : CORRECTIONS[f.rule]));
     }
   }
@@ -827,7 +828,7 @@ export class CallSession extends EventEmitter<CallEvents> {
     if (this.callerBuf.trim() && !this.agentBuf.trim()) this.flushCaller();
     const partial = this.agentBuf.trim();
     this.state.turnSaid = redactLine(partial, this.opts.config.demoCards);
-    if (partial && (this.state.estate || this.state.maintenance || this.state.takeaway || this.state.cafe)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
+    if (partial && (this.state.estate || this.state.maintenance || this.state.takeaway || this.state.cafe || this.state.pub)) this.state.said.push(redactLine(partial, this.opts.config.demoCards));
     this.noteSafetySaid();
     this.noteReaction();
     const ctx = this.toolContext();

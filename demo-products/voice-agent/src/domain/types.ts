@@ -314,6 +314,7 @@ export interface TenantProfile {
   barber?: BarberSettings;
   /** A café (presets/cafe.md): walk-in tables and afternoon tea. */
   cafe?: CafeSettings;
+  pub?: PubSettings;
 }
 
 /** A café's own settings (presets/cafe.md §4.1): said to walk-ins, and when food is served. */
@@ -321,6 +322,16 @@ export interface CafeSettings {
   busy_times: string;
   breakfast_until: string | null;
   kitchen_closes_before: number;
+}
+
+/** A pub's own settings (presets/pub.md §4.1): children's hours and when food is served. */
+export interface PubSettings {
+  /** Children (under 16) are welcome with an adult until this time, HH:MM; null: any time. */
+  children_until: string | null;
+  /** When the kitchen serves: from, until, and until on Sundays (roasts). */
+  food: { from: string; until: string; sunday_until: string | null };
+  /** The local taxi firm, for callers who ask. */
+  taxi: string;
 }
 
 export interface BarberSettings {

@@ -43,8 +43,8 @@ export const PRESETS: PresetInfo[] = [
     noun: 'café', business_type: 'cafe', example: 'https://www.your-cafe.co.uk',
   },
   {
-    key: 'pub', label: 'Pub and bar', blurb: 'Books tables and the beer garden, and knows when the match is on.', status: 'soon',
-    covers: ['Areas and tables', 'Food menu', 'Events and function room'],
+    key: 'pub', label: 'Pub and bar', blurb: 'Books tables for food, knows the ales and the menu’s allergens, and the rules on children and ID.', status: 'live',
+    covers: ['Tables for food', 'Children and ID', 'Allergens'],
     noun: 'pub', business_type: 'pub', example: 'https://www.your-pub.co.uk',
   },
   {

@@ -117,7 +117,7 @@ in the back office (§6), and the seed adds sample ones (§5.3).
     Sunday 12pm to 10:30pm.
   - Food Monday to Saturday 12pm to 9pm, Sunday 12pm to 6pm.
 - **Rooms and tables**:
-  - **The bar**: three tables for four that can be booked, by the fire,
+  - **The bar**: three booths for four that can be booked, two high tables,
     and the rest first come. The big screens.
   - **The dining room**: four tables for two, five for four and two for
     six, two of which join to make eight.

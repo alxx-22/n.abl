@@ -83,9 +83,9 @@ export const partyOf = (args: Args) => ({ party: int(args.party_size) ?? 1, chil
  * the 20 ppm rule). Undefined for an item with gluten, or not a café.
  */
 export function glutenAnswer(ctx: ToolContext, item: MenuItem): string | undefined {
-  if (!ctx.tenant.profile.cafe || item.allergens.includes('gluten')) return undefined;
+  if ((!ctx.tenant.profile.cafe && !ctx.tenant.profile.pub) || item.allergens.includes('gluten')) return undefined;
   if (item.dietary?.some((d) => /gluten[- ]free/i.test(d))) {
-    ctx.state.glutenFreeSaid = true;
+    if (!ctx.state.glutenFreeItems.includes(item.name)) ctx.state.glutenFreeItems.push(item.name);
     return 'Marked gluten-free by the café: you may say so.';
   }
   return 'Made without gluten ingredients, but in a kitchen that uses flour: say exactly that, and never call it gluten-free.';
@@ -115,7 +115,8 @@ export const UNWELL_ADVICE = "If you're still unwell, do call your GP or NHS 111
 
 /** take_message for a café: what each kind of call needs, and a category and urgency for the owner. */
 export function cafeMessageParams(decl: FunctionDeclaration, t: Tenant): FunctionDeclaration {
-  if (!t.profile.cafe) return decl;
+  // A pub's are the same (presets/pub.md §4.2).
+  if (!t.profile.cafe && !t.profile.pub) return decl;
   const params = decl.parameters as { properties: Record<string, unknown>; required?: string[] };
   return {
     ...decl,
@@ -124,7 +125,7 @@ export function cafeMessageParams(decl: FunctionDeclaration, t: Tenant): Functio
       'Unhappy with food or an order: say sorry; category complaint, with what and when. Never promise a refund.',
       `Felt unwell after eating: say sorry, then "${UNWELL_ADVICE}" and nothing more on health, no disclaimer of your own; category unwell, with what they ate and when. Never admit fault, guess the cause, or say it wasn't the food.`,
       'A whole cake or platters: category cake_order, with the date, what and how many; never promise or price it.',
-      'Hiring the café: category hire, with the date, how many and the idea; never quote a price.',
+      `Hiring ${t.profile.pub ? 'the room upstairs' : 'the café'}: category hire, with the date, how many and the idea; never quote a price.`,
       "Lost property: category lost_property, with what and when; never say it's been found.",
       'Staff ringing in sick: category staff. A supplier: category supplier, no account details. A job: category careers. A sales call: thank them, say no, take no message.',
     ].join(' '),
@@ -137,7 +138,7 @@ export function cafeMessageParams(decl: FunctionDeclaration, t: Tenant): Functio
 
 /** A café's message, kept with its category and urgency, and what to tell the caller after. Null for anyone else. */
 export async function cafeMessage(args: Args, ctx: ToolContext): Promise<Record<string, unknown> | null> {
-  if (!ctx.tenant.profile.cafe) return null;
+  if (!ctx.tenant.profile.cafe && !ctx.tenant.profile.pub) return null;
   const category = (CF_CATEGORIES as readonly string[]).includes(str(args.category) ?? '') ? str(args.category)! : 'other';
   const asked = (['urgent', 'today', 'this_week'] as const).find((u) => u === str(args.urgency)?.replace(' ', '_')) ?? null;
   // Staff off sick is urgent; someone ill after eating is for the owner today, whatever was said.

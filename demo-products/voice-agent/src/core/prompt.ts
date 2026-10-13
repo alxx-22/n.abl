@@ -162,6 +162,8 @@ export function compilePrompt(p: TenantProfile, ctx: PromptContext): string {
     p.barber ? 'Colour needs a skin test here 48 hours before; never call dye safe. Walk-in wait: get_wait_now, an estimate. Never say why a barber is off. Running late: running_late.' : null,
     // A café's (presets/cafe.md §4.4); the tools say the rest when it comes up.
     p.cafe ? `${cafeTables(p)}${caps.ordering ? '' : 'Allergens only from the menu tools, with the kitchen warning; never say safe. '}Gluten-free only if a tool says so.` : null,
+    // A pub's (presets/pub.md §4.4); the tools say the rest when it comes up.
+    p.pub ? `${p.pub.children_until ? `Children (under 16) are welcome until ${spokenTime(p.pub.children_until)}: pass children when booking. ` : ''}Dogs are welcome everywhere. Never promise anyone will be served alcohol: ID and the law are the staff's call. Gluten-free only if a tool says so.` : null,
     tables && areas.length > 1
       ? `Seating: ${areas.map((a) => a.label.toLowerCase()).join(' or ')}. When check_availability says more than one is free, ask once which they would like. If the one they want is full, offer the other at the same time before other times. For an outdoor area, say its weather note once, in a few words.`
       : null,

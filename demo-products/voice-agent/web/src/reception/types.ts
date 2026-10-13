@@ -6,11 +6,12 @@ import type { BuyerPosition, HomeType, ListingStatus, Nation, OfferStatus, Price
 import type { AreaAnswer, FixtureAnswer, RestaurantAnswers, TableAnswer } from '../../../src/presets/restaurant/answers.ts';
 import type { SeatingAnswer } from '../../../src/presets/seating/types.ts';
 import type { CafeAnswers } from '../../../src/presets/cafe/answers.ts';
+import type { PubAnswers } from '../../../src/presets/pub/answers.ts';
 import type { PresetInfo } from '../../../src/presets/catalogue.ts';
 import type { WorkspaceSpec } from '../../../src/presets/index.ts';
 import type { TenantState } from '../types.ts';
 
-export type { AreaAnswer, BaseAnswers, CafeAnswers, FixtureAnswer, Issue, PresetInfo, RestaurantAnswers, TableAnswer };
+export type { AreaAnswer, BaseAnswers, CafeAnswers, FixtureAnswer, Issue, PresetInfo, PubAnswers, RestaurantAnswers, TableAnswer };
 
 /** Any answers with tables to seat: the restaurant's and the café's, for the shared Seating and Floor plan steps. */
 export type SeatingOwner = BaseAnswers & { seating: SeatingAnswer };
