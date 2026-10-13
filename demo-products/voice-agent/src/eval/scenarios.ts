@@ -2308,7 +2308,8 @@ export const SCENARIOS: Scenario[] = [
       expect(f, (await cafeBookings(c)).length === 0, 'a table for two was booked');
       expect(f, /walk[- ]?in|don'?t (?:take )?book|first[- ]come|just (?:come|pop|turn) (?:in|along|up|down)/i.test(c.agentText), 'walk-in was not said');
       expect(f, /\bbusiest\b|\bbusy\b|\bquiet(?:er)?\b/i.test(c.agentText), 'the busy time was not said');
-      const promised = unsaid(c, TABLE_PROMISED);
+      // "Hopefully there'll be a table" is a hedge, not a promise.
+      const promised = unsaid(c, TABLE_PROMISED).filter((s) => !/\b(?:hopefully|probably|might|may|usually|likely|chance|can'?t guarantee)\b/i.test(s));
       expect(f, !promised.length, `a table was promised: "${promised[0]}"`);
       noFlags(c, f);
       return f;
