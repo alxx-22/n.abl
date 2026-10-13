@@ -2595,7 +2595,7 @@ export const SCENARIOS: Scenario[] = [
     callerPhone: '+447700900978',
     now: PB_THURSDAY,
     setup: (repo, tenant) => clearDay(repo, tenant, '2026-10-17'),
-    persona: "You are Tom Hale. Book a table for four on Saturday at 8:30pm: you, your partner and your two kids, aged 7 and 10. If that can't be done with the children, take the latest earlier time they offer. No allergies. Your name is Tom Hale.",
+    persona: "You are Tom Hale. In your first sentence, ask to book a table for four on Saturday at 8:30pm for you, your partner and your two kids, aged 7 and 10. If that can't be done with the children, take the latest earlier time they offer. No allergies. Your name is Tom Hale.",
     async check(c) {
       const f: string[] = [];
       expect(f, [...results(c, 'check_availability'), ...results(c, 'create_booking')].some((r) => r.reason === 'children_hours'), "the children's hour was never checked");
