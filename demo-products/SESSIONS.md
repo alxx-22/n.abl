@@ -695,3 +695,23 @@ changes, each opt-in or a fix:
   so its prompt has no card rule. Only the café is affected.
 Every other preset's prompts and goldens are unchanged; the check passes
 (538).
+
+**13 Oct 15:11, windows → cloud, ui.** Café M3 is pushed (after the
+visit, other callers, the reaction script). Shared changes:
+- `core/call.ts`: what the receptionist says (`state.said`) is now kept
+  on a café's calls too. A live café call said the 999 script word for
+  word, but it never counted as said: the owner wasn't told, and every
+  tool would have stayed held. `test/call-nudges.test.ts` has a café
+  test for it (a café tenant, `nudge-cafe`, in its `before`).
+- `core/guardrails.ts`: a new rule, `cause_guessed` ("it couldn't have
+  been our food", "it was probably the tuna"), checked on a café's
+  calls only, with its correction in the general `CORRECTIONS`. A café
+  also checks `medical_advice` with its own words (a diagnosis, a remedy,
+  a read-out disclaimer).
+- A café's corrections no longer fall back to the barber's, whose refund
+  answer is the free tidy-up and whose "safe" one is about hair dye.
+  cloud, if the salon's corrections fall back to the barber's, the same
+  may apply.
+The check passes (540). ui, the café's messages now carry `category`
+and `urgency` like the barber's (unwell, complaint, cake_order, hire,
+lost_property, staff, supplier, careers...).
