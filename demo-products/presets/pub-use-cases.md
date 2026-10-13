@@ -13,14 +13,13 @@ default; see Decisions for Alex).
   midnight, Sunday 12pm to 10:30pm.
 - **Food**: Monday to Saturday 12pm to 9pm. Sunday roasts from 12pm to 6pm.
 - **Rooms**:
-  - **The bar**: a few tables that can be booked, the rest first come.
-    Dogs welcome. The big screens are here.
-  - **The dining room**: every table can be booked. No dogs (assistance
-    dogs always).
-  - **The beer garden**: first come, weather permitting. Dogs welcome, and
-    smoking allowed.
+  - **The bar**: a few tables that can be booked, the rest first come. The
+    big screens are here.
+  - **The dining room**: every table can be booked.
+  - **The beer garden**: first come, weather permitting. Smoking allowed.
   - **The Loft**: the room upstairs, for up to 40. Hire by enquiry.
 - **Children**: welcome with an adult until 9pm.
+- **Dogs**: welcome everywhere (Alex, 13 October).
 - **What's on**:
   - the quiz on Thursdays at 8pm (teams of up to six, £2 a head);
   - live music on Saturdays from 9pm;
@@ -59,9 +58,10 @@ default; see Decisions for Alex).
    Then the honest answer on tables: the bar's aren't booked for big
    matches, so come early; the dining room can be booked, but it has no
    screen.
-2. "Sunday lunch for six at 1, two kids and our dog": a real table in the
-   bar, because the dining room is dog-free. The children are fine, it's
-   before 9pm. Booked and texted.
+2. "Sunday lunch for six at 1, two kids and our dog": all welcome (dogs
+   everywhere, children before 9pm), a real table, the dog noted for the
+   team, booked and texted. At 8:30pm with the children, the honest answer:
+   children are welcome until 9pm, so an earlier table.
 3. "Can my 17-year-old have a pint with his dinner?": the law said plainly.
    With a table meal, a 16 or 17-year-old may have beer, wine or cider
    that an adult buys; never at the bar, and staff will ask for ID.
@@ -153,9 +153,10 @@ the manager sets (15 minutes), and the caller is told how long.
 **Caller:** Dog owners
 
 **The receptionist:**
-- Dogs are welcome in the bar and the garden, not the dining room. A
-  booking with a dog goes to a bar table.
-- Assistance dogs are welcome everywhere, whatever the dog rule says.
+- Dogs are welcome everywhere (Alex, 13 October), noted on the booking so
+  there's a water bowl.
+- Assistance dogs are welcome whatever the dog rule says, should the
+  manager change it.
 
 **Rules:** Refusing an assistance dog is disability discrimination
 (Equality Act 2010).
@@ -494,9 +495,9 @@ the team.
 
 ## What the demo needs beyond the restaurant and the café
 
-- **Areas with their own rules**: the restaurant's areas, plus dogs welcome
-  or not, per area. The bar's tables are bookable, but not during big
-  matches.
+- **Areas with their own rules**: the restaurant's areas. The bar's tables
+  are bookable, but not during big matches. Dogs are welcome everywhere, so
+  there's no dog rule to keep.
 - **Children's hours**: a booking with children ends by 9pm.
 - **What's on**: the manager's list of events and fixtures, with times and
   where. A new tool answers "are you showing the match?" from it.
@@ -529,8 +530,8 @@ the team.
   staff's call on the night: the receptionist never promises anyone will
   be served.
 - **ID is never promised to be enough**: digital ID is the pub's choice.
-- **A dog booking never lands in the dining room**; assistance dogs are
-  always welcome.
+- **Dogs are welcome everywhere**, and assistance dogs always, whatever the
+  manager later sets.
 - **"Gluten-free" beer is only the labelled one.**
 - **The room upstairs is a message**, never a price or a promise.
 - **A reaction happening now is 999 first.**
