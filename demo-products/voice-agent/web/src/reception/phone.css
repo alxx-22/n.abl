@@ -72,6 +72,9 @@
 
 /* ── The floor plan's figures: two by two, not four lines ─────────────── */
 @media (max-width: 640px) {
+  /* The time slider's 200px floor pushed "Now" onto a row of its own. The slider takes the second
+     row whole (a wider track for a thumb), and the services and "Now" share the first. */
+  .service-bar .slider { order: 1; flex: 1 1 100%; min-width: 0; }
   .numbers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; line-height: 1.35; }
   /* A figure's words that run to a second line start under the first word, not under the number. */
   .numbers > span { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 5px; align-items: baseline; }
