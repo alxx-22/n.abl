@@ -555,6 +555,62 @@ three milestones are done.
     (asked of ui, 12 October);
   - a gluten-free tea's booking could add the kitchen warning.
 
+### The pub (Windows session)
+
+**The pub**: `presets/pub-use-cases.md` (43 use cases) and
+`presets/pub.md`, written 13 October.
+- Researched against UK rules:
+  - children in pubs, and 16 and 17-year-olds with a table meal
+    (Licensing Act 2003 s145, s149, s150);
+  - the mandatory conditions: small measures, free tap water, age checks,
+    and certified digital ID since 15 September 2026;
+  - drunk customers, measures, gluten-free beer, smoking and vaping, live
+    music, tips and fair deposits.
+- Alex answered on 13 October:
+  - the city-centre food pub;
+  - dogs welcome everywhere;
+  - sport with real club names marked "(example)", and the bar first come
+    during a listed match;
+  - Christmas parties later.
+  The other defaults stand: children until 9pm, no food to take away, and
+  the Loft by message.
+
+**Pub M1: built and live on this branch (13 October)**.
+- **The preset**: `src/presets/pub/`, The Weaver's Arms, Nottingham NG1.
+  - The restaurant's seating with four areas: the bar (three booths
+    booked, two high tables first come), the dining room, the beer garden
+    (first come) and the Loft (by enquiry).
+  - Tables are booked to eat: food 12 until 9, Sunday roasts until 6.
+  - A sample menu (`fixtures/menus/weavers-arms.json`) with every
+    allergen, draught by the half or pint, wine in the three legal glass
+    sizes, and a gluten-free lager marked so.
+- **Children's hours** (`core/pub-tools.ts`):
+  - A table with children must finish by 9pm; it's refused with the
+    latest start that fits, as the pub's rule.
+  - A table past 9 booked without saying is held once to ask whether any
+    are under 16.
+  - Dogs are noted on the booking.
+- **Age and ID**: the knowledge has the law on 16 and 17-year-olds and the
+  pub's ID (Challenge 25, digital ID). A caller asking nudges
+  `search_knowledge`; nothing promises anyone will be served.
+- **Shared with the café**: guardrails, corrections, the reaction script,
+  the free-from nudge, gluten-free wording and message categories.
+  - "Gluten-free" is now allowed only of a marked item, by name.
+  - end_call's "booked with nothing booked" check covers both.
+- **Live calls**: all eight M1 `pb-` calls have passed on their latest run
+  (`pb-book-dinner`, `pb-sunday-dog`, `pb-children-late`, `pb-garden`,
+  `pb-seventeen`, `pb-id`, `pb-nut-allergy`, `pb-gluten-free-beer`).
+  - The first run passed four.
+  - The fixes: asking about children, looking up age and ID, and the
+    booking claimed with no tool.
+- **The walk**: `npm run e2e:demo -- --only pub` passes.
+- **The prompt at its largest**: about 6,700 characters.
+- **Next, M2**: what's on and Today.
+  - A `voice_pub_events` migration for fixtures (the number asked of
+    cloud on SESSIONS.md), and a `whats_on` tool.
+  - The bar during matches, and `invented_fixture`.
+  - The quiz as a team booking, and Today with the ales on tap.
+
 ### Working on Windows
 
 The system git setting turns line endings into CRLF, which breaks the
