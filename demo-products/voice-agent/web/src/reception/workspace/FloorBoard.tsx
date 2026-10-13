@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useBand } from '../bands.ts';
-import { DayPager, Pager, StripOrPager, dayItem } from '../DayPager.tsx';
+import { DayPager, Pager, StripOrPager, dayItem, farDay, withShown } from '../DayPager.tsx';
 import { FloorPlan, ZoomControls, unbookableTag } from '../FloorPlan.tsx';
 import type { LiveState } from '../types.ts';
 import { addDays, bookingOn, dayLabel, hhmm, keptFor, live, looksAt, servicesOn, span } from './model.ts';
@@ -18,7 +18,9 @@ export interface View {
 
 /** The week's days: a strip of buttons on a wide screen, one day with ‹ › and a swipe across the view on a phone. */
 export function DayPicker({ state, today, view, setView }: { state: LiveState; today: string; view: View; setView: (v: View) => void }) {
-  const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
+  const week = Array.from({ length: 7 }, (_, i) => addDays(today, i));
+  const days = withShown(week, view.date);
+  const name = (d: string) => (week.includes(d) ? dayLabel(d, today) : farDay(d));
   const count = (d: string) => state.bookings.filter((b) => b.date === d && b.status === 'confirmed').length;
   // Another day opens an hour into its first service, so the floor shows people rather than an empty room.
   const pick = (d: string) => {
@@ -33,14 +35,14 @@ export function DayPicker({ state, today, view, setView }: { state: LiveState; t
             const n = count(d);
             return (
               <button type="button" key={d} aria-pressed={d === view.date} onClick={() => pick(d)}>
-                {dayLabel(d, today)}
+                {name(d)}
                 {n ? <span className="count">{n}</span> : null}
               </button>
             );
           })}
         </div>
       }
-      pager={<DayPager days={days.map((d) => dayItem(d, dayLabel(d, today), count(d)))} value={view.date} onChange={pick} swipeParent />}
+      pager={<DayPager days={days.map((d) => dayItem(d, name(d), count(d)))} value={view.date} onChange={pick} swipeParent />}
     />
   );
 }

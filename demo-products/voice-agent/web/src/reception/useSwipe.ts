@@ -3,13 +3,16 @@
 // Touch events rather than pointer events: a finger or a stylus sends them on
 // phones and tablets and a mouse never does, and they keep coming while the
 // browser scrolls the page, where a pointer is cancelled as soon as it starts
-// to move. Listening passively means the page scrolls exactly as before.
+// to move. Listening passively means the page scrolls, pans and zooms exactly
+// as before: a swipe is only ever read, never taken from the browser.
 //
-// The swipe area takes the finger's sideways travel from the browser (touch-action),
-// because Chrome on a touch screen reads a sideways swipe the page cannot scroll as
-// Back or Forward: a flick right to yesterday could leave the demo. Up and down still
-// scroll the page and a pinch still zooms, and a box inside that scrolls sideways (the
-// timeline on a phone) still scrolls, as Chrome lets each scroller take its own pans.
+// Chrome on a touch screen reads a sideways swipe that nothing can scroll as
+// Back or Forward, so a flick right to yesterday could leave the demo. Every
+// such swipe ends as an overscroll of the page itself, wherever it started
+// (a box that scrolls sideways hands it on at its end), so while a swipe area
+// is on screen the page's own sideways overscroll is switched off. Not
+// touch-action on the swipe area: Chrome lets a box inside it take sideways
+// pans again, and a pinch-zoomed page could no longer be panned to read it.
 
 import { useCallback, useEffect, useRef } from 'react';
 import { NO_SWIPE_FROM, swipeDirection } from './swipe.ts';
@@ -27,6 +30,27 @@ function inSidewaysScroll(el: Element, root: Element): boolean {
     if (e === root) break;
   }
   return false;
+}
+
+/** Pinch-zoomed in: a sideways finger pans the page to read it, as everywhere else, rather than changing the day. */
+const zoomedIn = () => (window.visualViewport?.scale ?? 1) > 1.01;
+
+// How many swipe areas are mounted, so the page's Back swipe comes back only once the last one goes.
+let areas = 0;
+let before = { html: '', body: '' };
+function holdBack(): () => void {
+  const html = document.documentElement.style;
+  const body = document.body.style;
+  if (areas++ === 0) {
+    before = { html: html.overscrollBehaviorX, body: body.overscrollBehaviorX };
+    html.overscrollBehaviorX = 'none';
+    body.overscrollBehaviorX = 'none';
+  }
+  return () => {
+    if (--areas > 0) return;
+    html.overscrollBehaviorX = before.html;
+    body.overscrollBehaviorX = before.body;
+  };
 }
 
 /**
@@ -47,7 +71,7 @@ export function useSwipe(onSwipe: (step: -1 | 1) => void, enabled = true) {
       taken.add(e);
       const t = e.touches.length === 1 ? e.touches[0] : null;
       const el = e.target instanceof Element ? e.target : null;
-      if (t && el && !el.closest(NO_SWIPE_FROM) && !inSidewaysScroll(el, root)) from = { x: t.clientX, y: t.clientY };
+      if (t && el && !zoomedIn() && !el.closest(NO_SWIPE_FROM) && !inSidewaysScroll(el, root)) from = { x: t.clientX, y: t.clientY };
     };
     // A second finger is a pinch, not a swipe.
     const move = (e: TouchEvent) => {
@@ -64,14 +88,13 @@ export function useSwipe(onSwipe: (step: -1 | 1) => void, enabled = true) {
     const cancel = () => {
       from = null;
     };
-    const touchAction = root.style.touchAction;
-    root.style.touchAction = 'pan-y pinch-zoom';
+    const release = holdBack();
     root.addEventListener('touchstart', down, { passive: true });
     root.addEventListener('touchmove', move, { passive: true });
     root.addEventListener('touchend', up, { passive: true });
     root.addEventListener('touchcancel', cancel, { passive: true });
     return () => {
-      root.style.touchAction = touchAction;
+      release();
       root.removeEventListener('touchstart', down);
       root.removeEventListener('touchmove', move);
       root.removeEventListener('touchend', up);

@@ -7,7 +7,7 @@
 
 import { useState, type DragEvent, type FormEvent } from 'react';
 import { useBand } from '../bands.ts';
-import { DayPager, Pager, StripOrPager, dayItem } from '../DayPager.tsx';
+import { DayPager, Pager, StripOrPager, dayItem, withShown } from '../DayPager.tsx';
 import type { LiveEngineer, LiveJob, LiveMtWindow, LiveState } from '../types.ts';
 import { PRIORITY, hhmm, jobAct, officeAct } from './maintenance.ts';
 
@@ -23,6 +23,7 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
     return d.toISOString().slice(0, 10);
   });
   const [date, setDate] = useState(state.today);
+  const offered = withShown(days, date);
   const [over, setOver] = useState<string | null>(null);
   // On a phone, one visit window at a time, so each engineer's row has the width; the one chosen is kept across days that have it.
   const [win, setWin] = useState<string | null>(null);
@@ -50,10 +51,10 @@ export function Dispatch({ id, state, flash, onDone }: { id: string; state: Live
       <StripOrPager
         strip={
           <div className="day-tabs" role="tablist" aria-label="Day">
-            {days.map((d) => <button key={d} type="button" role="tab" aria-selected={d === date} onClick={() => setDate(d)}>{label(d, state.today)}</button>)}
+            {offered.map((d) => <button key={d} type="button" role="tab" aria-selected={d === date} onClick={() => setDate(d)}>{label(d, state.today)}</button>)}
           </div>
         }
-        pager={<DayPager days={days.map((d) => dayItem(d, label(d, state.today)))} value={date} onChange={setDate} swipeParent />}
+        pager={<DayPager days={offered.map((d) => dayItem(d, label(d, state.today)))} value={date} onChange={setDate} swipeParent />}
       />
       {emergencies.length ? (
         <div className="emergencies">

@@ -1,10 +1,12 @@
 // The phone's pagers (web/src/reception/DayPager.tsx): a sideways swipe moves
 // a day, an area or a visit window, and nothing else does: not a tap, not a
-// thumb scrolling the page on a slant (web/src/reception/swipe.ts).
+// thumb scrolling the page on a slant (web/src/reception/swipe.ts). The day
+// on screen is always one the pager can name (web/src/reception/dayList.ts).
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { farDay, withShown } from '../web/src/reception/dayList.ts';
 import { SWIPE_MIN, SWIPE_RATIO, swipeDirection } from '../web/src/reception/swipe.ts';
 
 test('swipe: a finger drawn left moves to the next one, drawn right to the previous', () => {
@@ -53,11 +55,34 @@ test('pager styles: the buttons are a thumb’s size', () => {
     assert.match(rule, /(^|[\s;{])height:\s*44px/, `${sel} is 44px tall`);
   }
   assert.match(css, /grid-template-columns:\s*44px minmax\(0, 1fr\) 44px/, '‹ and › are 44px wide');
+  assert.match(css, /\.area-row \.zoom button \{[^}]*(^|[\s;{])width:\s*44px/, 'the floor plan’s − and + too');
 });
 
-test('swipe areas: sideways travel is the pager’s, so a swipe right is never the browser’s Back', () => {
-  // Chrome on a touch screen takes a quick sideways flick the page cannot scroll as Back or Forward.
-  const src = readFileSync(new URL('../web/src/reception/useSwipe.ts', import.meta.url), 'utf8');
-  assert.match(src, /root\.style\.touchAction = 'pan-y pinch-zoom'/, 'up and down still scroll and a pinch still zooms');
-  assert.match(src, /return \(\) => \{\s*root\.style\.touchAction = touchAction;/, 'and the element is given back as it was');
+test('swipe areas: a swipe right is never the browser’s Back, and the page still pans when zoomed', () => {
+  // Chrome on a touch screen takes a sideways swipe nothing can scroll as Back or Forward. It ends as an
+  // overscroll of the page itself wherever it starts, inside a box that scrolls sideways too, so that is
+  // switched off on the page while a swipe area is mounted, and given back when the last one goes.
+  const src = readFileSync(new URL('../web/src/reception/useSwipe.ts', import.meta.url), 'utf8').replace(/\/\/.*$/gm, '');
+  assert.match(src, /html\.overscrollBehaviorX = 'none';\s*body\.overscrollBehaviorX = 'none';/);
+  assert.match(src, /if \(--areas > 0\) return;\s*html\.overscrollBehaviorX = before\.html;\s*body\.overscrollBehaviorX = before\.body;/);
+  assert.match(src, /const release = holdBack\(\);[\s\S]*return \(\) => \{\s*release\(\);/);
+  // Taking the sideways travel from the browser on the swipe area stopped a pinch-zoomed page panning.
+  assert.doesNotMatch(src, /touchAction|touch-action/);
+  assert.match(src, /visualViewport\?\.scale/, 'pinch-zoomed in, a sideways finger pans the page rather than changing the day');
+});
+
+test('day lists: the day on screen is always one of them, in date order', () => {
+  const week = ['2026-10-13', '2026-10-14', '2026-10-15', '2026-10-16', '2026-10-17', '2026-10-18', '2026-10-19'];
+  assert.equal(withShown(week, '2026-10-15'), week, 'a day of the week: the list as it was');
+  assert.deepEqual(withShown(week, '2026-10-25'), [...week, '2026-10-25'], 'a call booked further ahead: added at the end');
+  assert.deepEqual(withShown(week, '2026-10-12'), ['2026-10-12', ...week], 'a day before: added at the start');
+  // The board's diary lists booking days after the week, in the order the bookings came.
+  assert.deepEqual(withShown(['2026-10-13', '2026-10-30', '2026-10-20'], '2026-10-25'), ['2026-10-13', '2026-10-20', '2026-10-25', '2026-10-30']);
+  assert.equal(withShown(week, ''), week, 'no day yet: nothing added');
+});
+
+test('day lists: a day beyond the week says its month', () => {
+  // Browsers put a comma after the weekday where Node may not: either reads the same.
+  assert.match(farDay('2026-10-25'), /^Sun,? 25 Oct$/);
+  assert.match(farDay('2026-12-01'), /^Tue,? 1 Dec$/);
 });

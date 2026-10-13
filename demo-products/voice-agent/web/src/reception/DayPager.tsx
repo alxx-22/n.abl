@@ -13,6 +13,8 @@ import { useBand } from './bands.ts';
 import { useSwipe } from './useSwipe.ts';
 import './pager.css';
 
+export { farDay, withShown } from './dayList.ts';
+
 export interface PagerItem {
   key: string;
   /** What the middle shows: "Today", "Inside", "Morning". */
@@ -42,31 +44,30 @@ export function Pager({ items, value, onChange, noun, label, swipeParent = false
   list?: boolean;
   className?: string;
 }) {
-  const found = items.findIndex((it) => it.key === value);
-  const i = Math.max(0, found);
+  // Screens add the item they show when it is not among their own (withShown), so this finds it.
+  const i = Math.max(0, items.findIndex((it) => it.key === value));
   const item: PagerItem | undefined = items[i];
   const [open, setOpen] = useState(false);
   const row = useRef<HTMLDivElement>(null);
   const middle = useRef<HTMLButtonElement>(null);
-  const prev = useRef<HTMLButtonElement>(null);
-  const next = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const listId = useId();
-  // Said when the item changes (a swipe, an arrow, a jump), not each time its count refreshes during a call.
+  // Said when the item changes (a swipe, an arrow, a jump), not each time its count refreshes during a call;
+  // left unsaid after a pick from the list, where the focus lands on the middle and it says the same.
   const [heard, setHeard] = useState('');
   const lastKey = useRef(item?.key);
+  const quiet = useRef(false);
   useEffect(() => {
-    if (item && item.key !== lastKey.current) setHeard(said(item));
+    if (item && item.key !== lastKey.current) setHeard(quiet.current ? '' : said(item));
+    quiet.current = false;
     lastKey.current = item?.key;
   }, [item?.key]);
 
+  // At the ends an arrow stays where it is and does nothing (aria-disabled, not disabled, which would drop
+  // its focus): one more press of the key that reached the last day must not land on another button.
   const go = (n: -1 | 1) => {
     const to = items[i + n];
-    if (!to) return;
-    // The end's button is about to be disabled, which would drop the focus to the page: it moves along instead.
-    const ending = n < 0 ? i + n === 0 && prev.current : i + n === items.length - 1 && next.current;
-    if (ending && document.activeElement === ending) (middle.current ?? (n < 0 ? next : prev).current)?.focus();
-    onChange(to.key);
+    if (to) onChange(to.key);
   };
   const swipe = useSwipe(go);
   // The day's screen is the element the pager heads (past the box StripOrPager measures it in, on a tablet).
@@ -95,7 +96,8 @@ export function Pager({ items, value, onChange, noun, label, swipeParent = false
   }, [open]);
 
   const keys = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    // Not while the list is open: the day would change under it, away from the item with the focus.
+    if (!open && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
       e.preventDefault();
       go(e.key === 'ArrowLeft' ? -1 : 1);
     } else if (e.key === 'Escape' && open) {
@@ -125,8 +127,14 @@ export function Pager({ items, value, onChange, noun, label, swipeParent = false
     </>
   );
   return (
-    <div className={`pager ${className}`} role="group" aria-label={label ?? noun[0].toUpperCase() + noun.slice(1)} ref={setRow} onKeyDown={keys}>
-      <button type="button" ref={prev} className="pager-step" aria-label={`Previous ${noun}`} disabled={i === 0} onClick={() => go(-1)}>
+    <div
+      className={`pager ${className}`} role="group" aria-label={label ?? noun[0].toUpperCase() + noun.slice(1)} ref={setRow} onKeyDown={keys}
+      // Tabbing on out of the open list closes it, as a tap elsewhere does.
+      onBlur={(e) => {
+        if (open && e.relatedTarget instanceof Node && !e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+      }}
+    >
+      <button type="button" className="pager-step" aria-label={`Previous ${noun}`} aria-disabled={i === 0 || undefined} onClick={() => go(-1)}>
         <Chevron turn={180} />
       </button>
       {list ? (
@@ -138,15 +146,16 @@ export function Pager({ items, value, onChange, noun, label, swipeParent = false
           <Chevron turn={90} small />
         </button>
       ) : (
-        <span className="pager-now">{face(item)}</span>
+        <span className="pager-now still">{face(item)}</span>
       )}
-      <button type="button" ref={next} className="pager-step" aria-label={`Next ${noun}`} disabled={i === items.length - 1} onClick={() => go(1)}>
+      <button type="button" className="pager-step" aria-label={`Next ${noun}`} aria-disabled={i === items.length - 1 || undefined} onClick={() => go(1)}>
         <Chevron turn={0} />
       </button>
       {/* So a screen reader hears where a swipe or an arrow has moved it. */}
       <span className="visually-hidden" aria-live="polite" aria-atomic="true">{heard}</span>
       {open ? (
-        <ul className="pager-list" id={listId} ref={listRef} aria-label={`Choose ${withArticle(noun)}`}>
+        // A swipe across the list scrolls it, not the day under it.
+        <ul className="pager-list" id={listId} ref={listRef} aria-label={`Choose ${withArticle(noun)}`} data-no-swipe>
           {items.map((it) => (
             <li key={it.key}>
               <button
@@ -154,6 +163,7 @@ export function Pager({ items, value, onChange, noun, label, swipeParent = false
                 onClick={() => {
                   setOpen(false);
                   middle.current?.focus();
+                  quiet.current = it.key !== item.key;
                   onChange(it.key);
                 }}
               >

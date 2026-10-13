@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { when } from '../api.ts';
-import { DayPager, StripOrPager, dayItem } from '../reception/DayPager.tsx';
+import { DayPager, StripOrPager, dayItem, farDay, withShown } from '../reception/DayPager.tsx';
 import type { TenantState } from '../types.ts';
 
 // Rows that arrived since the last refresh flash once, so a booking made on
@@ -32,7 +32,9 @@ export function Diary({ state, day, setDay }: { state: TenantState; day: string;
     days.push(d.toISOString().slice(0, 10));
   }
   for (const b of state.bookings) if (!days.includes(b.date)) days.push(b.date);
-  const shownDays = days.slice(0, 10);
+  const ten = days.slice(0, 10);
+  const shownDays = withShown(ten, day);
+  const name = (d: string) => (ten.includes(d) ? dayLabel(d, ten.indexOf(d)) : farDay(d));
   const count = (d: string) => state.bookings.filter((b) => b.date === d && b.status === 'confirmed').length;
   const list = state.bookings.filter((b) => b.date === day);
   const isNew = useFresh(state.bookings.map((b) => `${b.reference}:${b.status}:${b.time}:${b.party_size}`));
@@ -55,18 +57,18 @@ export function Diary({ state, day, setDay }: { state: TenantState; day: string;
       <StripOrPager
         strip={
           <div className="days" role="group" aria-label="Day">
-            {shownDays.map((d, i) => {
+            {shownDays.map((d) => {
               const n = count(d);
               return (
                 <button type="button" key={d} aria-pressed={d === day} onClick={() => setDay(d)}>
-                  {dayLabel(d, i)}
+                  {name(d)}
                   {n ? <span className="count">{n}</span> : null}
                 </button>
               );
             })}
           </div>
         }
-        pager={<DayPager days={shownDays.map((d, i) => dayItem(d, dayLabel(d, i), count(d)))} value={day} onChange={setDay} swipeParent />}
+        pager={<DayPager days={shownDays.map((d) => dayItem(d, name(d), count(d)))} value={day} onChange={setDay} swipeParent />}
       />
       <div className="slots" ref={slots}>
         {list.length ? (
