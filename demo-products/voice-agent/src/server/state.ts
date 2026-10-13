@@ -86,6 +86,8 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
           })),
           pairs: t.profile.booking.resources.filter((r) => r.combines).map((r) => ({ key: r.key, label: r.label, combines: r.combines!, capacity: r.capacity ?? 0, bookable: r.services.length > 0 })),
           fixtures: t.profile.booking.fixtures ?? [],
+          // So a bar can say which kind of booking it is where there's more than one (web Timeline.tsx).
+          services: t.profile.booking.services.map((s) => ({ key: s.key, label: s.label })),
         }
       : null,
     opening_hours: t.profile.opening_hours,

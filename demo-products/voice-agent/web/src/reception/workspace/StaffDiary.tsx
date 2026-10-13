@@ -3,10 +3,12 @@
 // or a busy afternoon shows at once. Click a bar to open it; drag it to
 // someone else's row to move it to them. A barber's Diary is the same, a row a barber.
 
-import { useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { DayPicker, type View } from './FloorBoard.tsx';
+import { isQuiet } from './marks.ts';
 import { hhmm, personOptions, span, weekday } from './model.ts';
+import { openingMinute, useOpenAt } from './openAt.ts';
 
 const ROLE: Record<string, string> = { manager: 'Manager', negotiator: 'Negotiator', valuer: 'Valuer', progressor: 'Progressor', adviser: 'Mortgages', other: '' };
 
@@ -29,6 +31,7 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onM
 }) {
   // A bar being dragged, the row under the pointer, and the rows it may go to (lit while dragging).
   const [drag, setDrag] = useState<{ ref: string; row: string | null; moved: boolean; ok: string[] } | null>(null);
+  const grid = useRef<HTMLDivElement>(null);
   const rowAt = (e: { clientX: number; clientY: number }) =>
     document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-row]')?.dataset.row ?? null;
   const down = (e: ReactPointerEvent<HTMLButtonElement>, b: LiveBooking) => {
@@ -54,6 +57,7 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onM
   // The office's day, stretched to every booking on it: viewings often run into the evening.
   const lo = Math.min(9 * 60, ...day.map((b) => span(b)[0])) - 30;
   const hi = Math.max(18 * 60, ...day.map((b) => span(b)[1])) + 30;
+  useOpenAt(grid, view.date, openingMinute({ isToday: view.date === today, now: nowMinute, lo, hi, starts: day.map((b) => span(b)[0]) }), lo, hi);
   const pct = (m: number) => `${((Math.min(hi, Math.max(lo, m)) - lo) / (hi - lo)) * 100}%`;
   const hours: number[] = [];
   for (let h = Math.ceil(lo / 60) * 60; h <= hi; h += 60) hours.push(h);
@@ -86,7 +90,7 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onM
           ))}
         </ul>
       ) : null}
-      <div className="tl-grid" style={{ '--rows': team.length } as React.CSSProperties}>
+      <div className="tl-grid" ref={grid} style={{ '--rows': team.length } as React.CSSProperties}>
         <div className="tl-head">
           <span />
           <div className="tl-scale">
@@ -108,6 +112,7 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onM
                   const [st, en] = span(b);
                   const k = kindOf(b);
                   const badges = (b.details?.badges as string[] | undefined) ?? [];
+                  const quiet = isQuiet(b);
                   const marks = [
                     b.late ? `Running late +${b.late.minutes} min${b.late.note ? `: ${b.late.note}` : ''}` : '',
                     b.needs_new_time ? `Needs a new time: ${s.first_name} is off today` : '',
@@ -118,8 +123,10 @@ export function StaffDiary({ state, today, nowMinute, view, setView, onOpen, onM
                       style={{ left: pct(st), width: `calc(${pct(en)} - ${pct(st)} - 2px)` }}
                       onPointerDown={(e) => down(e, b)} onPointerMove={move} onPointerUp={(e) => up(e, b)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(b); } }}
-                      title={`${b.time}–${b.end_time} · ${k.label}${b.home ? ` of ${b.home}` : ''} · ${b.name}${badges.length ? ` · ${badges.join(', ')}` : ''}${marks.map((m) => ` · ${m}`).join('')}`}
+                      title={`${b.time}–${b.end_time} · ${k.label}${b.home ? ` of ${b.home}` : ''} · ${b.name}${quiet ? ' · Quiet appointment' : ''}${badges.length ? ` · ${badges.join(', ')}` : ''}${marks.map((m) => ` · ${m}`).join('')}`}
                     >
+                      {/* First, so a half-hour bar too narrow for the rest still shows it. */}
+                      {quiet ? <span className="tl-mark">Quiet</span> : null}
                       <b>{b.time}</b> {b.home ?? k.label} · {b.name}
                       {marks.length ? <span className="visually-hidden">. {marks.join('. ')}</span> : null}
                     </button>

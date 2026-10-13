@@ -475,6 +475,8 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
     tables: PlanTable[];
     pairs: { key: string; label: string; combines: string[]; capacity: number; bookable: boolean }[];
     fixtures: { key: string; area: string; kind: 'bar' | 'door' | 'window' | 'wall'; x: number; y: number; length: number; rotation: number }[];
+    /** What can be booked, the plain booking first (a café's tables, then its afternoon tea). Missing from a server that predates it. */
+    services?: { key: string; label: string }[];
   } | null;
   opening_hours: { days: number[]; open: string; close: string; label?: string }[];
   /** What the back office shows, in the business's words; missing from a server that predates it. */

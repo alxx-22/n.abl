@@ -1,9 +1,11 @@
 // The back office's messages: callbacks the receptionist took, to mark done,
-// and every text it sent.
+// and every text it sent. A callback says how soon and what it is about, where
+// the receptionist said, so a sick barber is seen before a supplier's note.
 
 import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import type { LiveState } from '../types.ts';
+import { messageTags } from './marks.ts';
 
 export function Messages({ id, state, onDone }: { id: string; state: LiveState; onDone: () => void }) {
   const callbacks = state.messages.filter((m) => m.kind === 'message');
@@ -23,7 +25,10 @@ export function Messages({ id, state, onDone }: { id: string; state: LiveState; 
         <div className={`message ${m.status === 'read' ? 'done' : ''}`} key={m.id}>
           <span className="from">{m.from_name ?? 'A caller'}</span>
           {m.from_phone ? <span className="muted"> · {m.from_phone}</span> : null}
-          <div>{m.body}</div>
+          <div>
+            {messageTags(m).map((t) => <span key={t.label} className={`badge msg-tag ${t.tone ?? ''}`}>{t.label}</span>)}
+            {m.body}
+          </div>
           <button type="button" className="small" onClick={() => mark(m.id, m.status === 'read' ? 'new' : 'read')}>{m.status === 'read' ? 'Mark not done' : 'Mark done'}</button>
         </div>
       )) : <p className="empty">No messages. The receptionist takes one when a caller needs a person.</p>}

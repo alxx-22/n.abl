@@ -62,6 +62,9 @@ export interface Message {
   to_number?: string | null;
   from_name?: string | null;
   from_phone?: string | null;
+  /** What it is about (complaint, staff, cake_order...) and how soon: set by a preset's take_message, missing on older ones. */
+  category?: string | null;
+  urgency?: 'urgent' | 'today' | 'this_week' | null;
 }
 
 export interface CallRow {

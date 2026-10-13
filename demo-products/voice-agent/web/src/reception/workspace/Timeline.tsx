@@ -1,11 +1,14 @@
 // The classic reservations grid: a row per table, a bar per booking across
 // the day. The quickest way to see a gap or a clash. Drag a bar to another
-// row to move the booking there.
+// row to move the booking there. Where a business has more than one kind of
+// booking (a café's tables and its afternoon teas), a bar says which.
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { hhmm, keptFor, servicesOn, span } from './model.ts';
 import { DayPicker, type View } from './FloorBoard.tsx';
+import { shortService } from './marks.ts';
+import { openingMinute, useOpenAt } from './openAt.ts';
 
 export function Timeline(props: {
   state: LiveState;
@@ -20,15 +23,20 @@ export function Timeline(props: {
   const plan = state.plan;
   const grid = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ ref: string; row: string | null; moved: boolean } | null>(null);
-  if (!plan) return <p className="empty">This business takes no table bookings.</p>;
-
   const services = servicesOn(state, view.date);
   const lo = (services.length ? Math.min(...services.map((s) => s.open)) : 12 * 60) - 30;
   const hi = (services.length ? Math.max(...services.map((s) => s.close)) : 22 * 60) + 90;
+  const day = state.bookings.filter((b) => b.date === view.date && b.status === 'confirmed');
+  const opensAt = openingMinute({ isToday: view.date === props.today, now: props.nowMinute, lo, hi, starts: day.map((b) => span(b)[0]) });
+  useOpenAt(grid, view.date, opensAt, lo, hi);
+  if (!plan) return <p className="empty">This business takes no table bookings.</p>;
+
   const pct = (m: number) => `${((Math.min(hi, Math.max(lo, m)) - lo) / (hi - lo)) * 100}%`;
   const hours: number[] = [];
   for (let h = Math.ceil(lo / 60) * 60; h <= hi; h += 60) hours.push(h);
-  const day = state.bookings.filter((b) => b.date === view.date && b.status === 'confirmed');
+  // The first kind is the plain booking and keeps the plain bar; any other kind is named on its bars, in a shade of its own.
+  const kinds = plan.services ?? [];
+  const otherKind = (b: LiveBooking) => (kinds.length > 1 && b.service_key !== kinds[0].key ? kinds.find((k) => k.key === b.service_key) : undefined);
   const areas = new Map(plan.areas.map((a) => [a.key, a.label]));
   const rows = [...plan.tables].sort((a, b) => (a.area ?? '').localeCompare(b.area ?? '') || Number(a.key.slice(1)) - Number(b.key.slice(1)));
 
@@ -77,14 +85,16 @@ export function Timeline(props: {
                 {services.map((s) => <span key={s.label} className="tl-open" style={{ left: pct(s.open), width: `calc(${pct(s.close)} - ${pct(s.open)})` }} />)}
                 {day.filter((b) => b.tables.includes(t.key)).map((b) => {
                   const [s, e] = span(b);
+                  const kind = otherKind(b);
                   return (
                     <button
                       type="button" key={b.reference}
-                      className={`tl-bar ${b.visit_status} ${b.allergies ? 'allergy' : ''} ${b.tables.length > 1 ? 'paired' : ''} ${drag?.ref === b.reference ? 'lifted' : ''}`}
+                      className={`tl-bar ${kind ? 'other-kind' : ''} ${b.visit_status} ${b.allergies ? 'allergy' : ''} ${b.tables.length > 1 ? 'paired' : ''} ${drag?.ref === b.reference ? 'lifted' : ''}`}
                       style={{ left: pct(s), width: `calc(${pct(e)} - ${pct(s)} - 2px)` }}
                       onPointerDown={(ev) => down(ev, b)} onPointerMove={move} onPointerUp={(ev) => up(ev, b)} onPointerCancel={() => setDrag(null)}
-                      title={`${b.time}–${b.end_time} · ${b.name}, ${b.party_size}${b.allergies ? ` · allergy: ${b.allergies}` : ''}${b.notes ? ` · ${b.notes}` : ''}`}
+                      title={`${b.time}–${b.end_time} · ${kind ? `${kind.label} · ` : ''}${b.name}, ${b.party_size}${b.allergies ? ` · allergy: ${b.allergies}` : ''}${b.notes ? ` · ${b.notes}` : ''}`}
                     >
+                      {kind ? <span className="tl-mark">{shortService(kind.label)}</span> : null}
                       <b>{b.party_size}</b> {b.name}
                     </button>
                   );

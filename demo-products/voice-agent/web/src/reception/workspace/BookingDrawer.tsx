@@ -9,6 +9,7 @@ import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import type { LiveBooking, LiveState } from '../types.ts';
 import { bookingBadges } from './estate.ts';
+import { isQuiet } from './marks.ts';
 import { SOURCE, combineOptions, moveOptions, personOptions } from './model.ts';
 import type { WorkspaceSpec } from './spec.ts';
 
@@ -80,6 +81,8 @@ export function BookingDrawer({ id, state, booking, words, onPlan, onClose, onDo
         <div>
           <h3>{b.name}</h3>
           <span className="muted small mono">Ref {b.reference}</span>
+          {/* Asked for on the call (a barber's), for whoever has the chair: by the name, where it is seen first. */}
+          {byPerson && isQuiet(b) ? <span className="badge info quiet-mark">Quiet appointment</span> : null}
         </div>
         <button type="button" className="ghost" onClick={onClose} aria-label="Close">✕</button>
       </header>

@@ -474,18 +474,27 @@ svg.floor .ghost { fill: none; stroke: var(--amber); stroke-width: 2; stroke-das
 .history ol { padding-left: 18px; margin: 6px 0 0; font-size: 13px; display: grid; gap: 4px; }
 
 .timeline { display: grid; gap: 8px; }
-.tl-grid { display: grid; gap: 2px; overflow-x: auto; }
+.tl-grid { display: grid; gap: 2px; overflow-x: auto; scroll-padding-left: 110px; }
 .tl-head, .tl-row { display: grid; grid-template-columns: 110px minmax(560px, 1fr); align-items: center; }
 .tl-scale { position: relative; height: 18px; font-size: 12px; color: var(--muted); }
 .tl-scale span { position: absolute; transform: translateX(-50%); font-family: var(--mono); }
 .tl-row.area-start { margin-top: 10px; }
 /* A Diary's half-hour blocks wide enough to read their time: a long day scrolls sideways instead. */
 .diary .tl-head, .diary .tl-row { grid-template-columns: 110px minmax(900px, 1fr); }
-.tl-label { font-size: 12px; position: relative; }
-.tl-area { position: absolute; top: -16px; left: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+/* The rows' names stay at the left while a day too wide for the screen scrolls under them: it opens part-way along
+   (openAt.ts), and a bar with no table or person beside it can't be placed. Full height, so no bar shows above or below. */
+.tl-label {
+  font-size: 12px; position: sticky; left: 0; z-index: 1; align-self: stretch; background: var(--surface);
+  display: flex; flex-wrap: wrap; align-items: center; align-content: center; column-gap: 0.3em;
+}
+.tl-head > span:first-child { position: sticky; left: 0; z-index: 1; align-self: stretch; background: var(--surface); }
+/* An area's name just above its first row. */
+.tl-area { position: absolute; bottom: 100%; left: 0; font-size: 12px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+.tl-label > .tl-offmark { flex-basis: 100%; }
 .tl-track { position: relative; height: 30px; background: var(--surface-2); border-radius: 6px; }
 .tl-row.walk-in .tl-track { background: repeating-linear-gradient(135deg, var(--surface-2) 0 8px, transparent 8px 16px); }
-.tl-walkin { position: absolute; inset: 0; display: flex; align-items: center; padding-left: 10px; font-size: 12px; color: var(--muted); pointer-events: none; }
+/* Its words kept just right of the names as the day scrolls, rather than slid under them. */
+.tl-walkin { position: sticky; left: 110px; width: max-content; height: 100%; display: flex; align-items: center; padding-left: 10px; font-size: 12px; color: var(--muted); pointer-events: none; }
 .tl-row.drop .tl-track { outline: 2px solid var(--ok); }
 /* While a Diary bar is dragged: the people it could go to. */
 .tl-row.can-drop .tl-track { background: color-mix(in srgb, var(--ok) 10%, transparent); }
@@ -495,6 +504,10 @@ svg.floor .ghost { fill: none; stroke: var(--amber); stroke-width: 2; stroke-das
   /* A tint of the business's colour with an edge of it, and the page's own text: readable on a light or a dark page, with any accent. */
   background: color-mix(in srgb, var(--accent) 24%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--accent); color: var(--heading); border: 1px solid rgba(var(--accent-rgb), 0.35); overflow: hidden; white-space: nowrap; justify-content: flex-start; touch-action: none;
 }
+/* The business's other kind of booking (a café's afternoon tea) in a shade of its own. Before the visit's colours, which win. */
+.tl-bar.other-kind { background: color-mix(in srgb, var(--info) 24%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--info); border-color: color-mix(in srgb, var(--info) 35%, transparent); }
+/* A word on a bar (that kind's name, Quiet): first in the bar, so one too narrow for the rest still shows it. */
+.tl-bar .tl-mark { flex: none; padding: 0 4px; border: 1px solid currentColor; border-radius: 4px; font-weight: 600; line-height: 16px; }
 .tl-bar.seated, .tl-bar.arrived { background: color-mix(in srgb, var(--ok) 26%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--ok); border-color: rgba(var(--ok-rgb), 0.35); }
 .tl-bar.finished, .tl-bar.no_show { opacity: 0.4; }
 .tl-bar.allergy { box-shadow: inset 3px 0 0 var(--danger); }
@@ -580,6 +593,9 @@ svg.house .door { fill: var(--accent); }
 .ws-messages h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 6px; }
 .ws-messages .message { display: grid; gap: 4px; justify-items: start; }
 .ws-messages .message.done { opacity: 0.55; }
+/* How soon and what about, ahead of what was said. */
+.ws-messages .msg-tag { display: inline-block; margin-right: 6px; vertical-align: 1px; }
+.drawer .quiet-mark { display: inline-block; margin-left: 8px; vertical-align: 1px; }
 
 /* ── The customer's phone ─────────────────────────────────────────────── */
 .phone-col { display: grid; gap: 10px; justify-items: center; }
@@ -713,6 +729,7 @@ svg.house .door { fill: var(--accent); }
   .kitchen > .k-col, .drivers > * { scroll-snap-align: start; }
   /* A half-hour in the Diary wide enough to tap: the day scrolls sideways instead. */
   .rx .diary .tl-head, .rx .diary .tl-row { grid-template-columns: 96px minmax(1200px, 1fr); }
+  .rx .diary .tl-walkin { left: 96px; }
   .diary .tl-bar { min-width: 40px; }
 }
 @media (max-width: 640px) {
