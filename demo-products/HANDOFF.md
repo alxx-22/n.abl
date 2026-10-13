@@ -475,7 +475,7 @@ are ui's.**
   passed on their re-runs: all six have passed on their latest run.
 - **The walk**: `npm run e2e:demo -- --only cafe` passes; screenshots
   in `eval-results/demo-ui/cafe/`.
-- **Small, not done**: booking a gluten-free tea, the receptionist noted
+- **Small, not done** (still, 13 October): booking a gluten-free tea, the receptionist noted
   the diet but didn't add that the kitchen uses flour. Worth a line in
   `create_booking`'s result for a gluten-free tea.
 
@@ -517,9 +517,43 @@ are ui's.**
   The three new ones are `cf-collect-coffee`, `cf-sold-out` and
   `cf-cake-to-order`.
 - **The walk** covers the ordering step, the Orders board and Today.
-- **Next, M3**: after the visit (felt unwell, NHS 111, a message, no
-  fault), other callers, and the reaction script (`cf-unwell-after`,
-  `cf-reaction-now`).
+
+**Café M3: built and live on this branch (13 October)**. The café spec's
+three milestones are done.
+- **Messages with a category**: take_message for a café has a category
+  and an urgency, and says what each call needs:
+  - unhappy: complaint, no refund promised;
+  - ill after eating: unwell, for the owner today, with "your GP or NHS
+    111, or 999 if it's serious", no fault and no guess at the cause;
+  - a whole cake or platters: cake_order, never promised or priced;
+  - hiring the café: no price;
+  - lost property: never "found";
+  - staff off sick: urgent;
+  - suppliers and jobs; a polite no to sales calls.
+- **Guardrails**:
+  - no health advice ("sounds like a bug", "drink plenty of water");
+  - no guess at the cause either way (`cause_guessed`);
+  - no read-out disclaimer (`disclaimer`, with a gentle correction: the
+    model kept adding "I'm not a medical professional").
+- **Corrections**: the café has its own for a refund, fault and health. It
+  had fallen back to the barber's: the free tidy-up, and dye for "safe".
+- **Fixed from the live calls**:
+  - A café's reaction script never counted as said, because what the
+    receptionist said wasn't kept on a café's calls: the owner wasn't
+    told and the tools stayed held. `call-nudges` now has a café test.
+  - "Half twelve" is read as 12:30 (the shared time reader knew only
+    "half past twelve"), except the prompt's own quoted example.
+  - `get_menu` with a section and free_from lists that section only.
+  - "Which cakes can she have? She has a nut allergy" now nudges
+    get_menu's free_from; it had been answered from nowhere.
+- **Call as**: Chris Hall, ill in the night after lunch yesterday.
+- **Live calls**: all eleven `cf-` calls have passed on their latest run;
+  the two new ones are `cf-unwell-after` and `cf-reaction-now`.
+- **Left for later**:
+  - cakes and platters to order for another day (spec §10, Alex: later);
+  - the timeline marking afternoon teas, and opening at now on a phone
+    (asked of ui, 12 October);
+  - a gluten-free tea's booking could add the kitchen warning.
 
 ### Working on Windows
 
