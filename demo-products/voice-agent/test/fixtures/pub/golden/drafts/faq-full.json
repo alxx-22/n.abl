@@ -1,0 +1,49 @@
+{
+ "contents": [
+  {
+   "role": "user",
+   "parts": [
+    {
+     "text": [
+      "These are the facts about a UK pub, set by its owner for an AI phone receptionist demo.",
+      "Name: The Old Ferry. Style: Real ale and river views. Town: Newark, 1 Ferry Lane (example), Newark.",
+      "Hours: Sunday: 11am till 8pm. Tuesday to Saturday: 11am till 11:30pm. Closed Mondays. Food from 12:30pm until 8:30pm. Drinks until close.",
+      "Rooms: The bar, Dining room, Beer garden, The Loft. Children: Children are welcome with an adult until 9pm: there’s a children’s menu and colouring. Dogs: welcome everywhere.",
+      "Menu: Soup of the day with bread, Whitebait with tartare sauce, Garlic mushrooms on toast, Beer-battered fish and chips, Weaver's burger, Pie of the day, Sausage and mash, Wild mushroom risotto, Chickpea and spinach curry, Roast beef, Roast pork, Nut roast, Children's roast, Fish fingers and chips, Sausage and mash, Pasta in tomato sauce, Sticky toffee pudding, Apple crumble and custard, Chocolate brownie with ice cream, Lemon sorbet.",
+      "On tap: Ferryman’s Bitter (example).",
+      "ID: We run Challenge 25: anyone who looks under 25 is asked for ID. A passport, a photo driving licence, a PASS card or a certified digital ID app. Smoking: Smoking in the beer garden only. Access: Step-free into the bar and the dining room, with an accessible toilet. The Loft is up a flight of stairs. Parking: No parking of our own; the nearest car park is about five minutes’ walk.",
+      "Cash: card only. Tips go in the jar, shared by everyone. Hire: The Loft upstairs takes up to 40, for parties, wakes and work dos: the manager will call back to talk it through. Christmas: Our Christmas menu is served from late November: the manager will call back to arrange a party. Jobs: We’re often looking for bar and kitchen staff: leave your name and number and the manager will be in touch.",
+      "",
+      "Write the ten questions callers most often ask a pub like this that the facts above answer, each with a short spoken answer (one or two sentences, friendly, British English).",
+      "Use only these facts. Where the facts do not cover something, leave that question out rather than guess. No questions about booking a table for food, and answering about the menu, drinks and allergens themselves; the receptionist handles those."
+     ]
+    }
+   ]
+  }
+ ],
+ "generationConfig": {
+  "temperature": 0.4,
+  "responseMimeType": "application/json",
+  "responseSchema": {
+   "type": "OBJECT",
+   "properties": {
+    "faqs": {
+     "type": "ARRAY",
+     "items": {
+      "type": "OBJECT",
+      "properties": {
+       "q": {
+        "type": "STRING"
+       },
+       "a": {
+        "type": "STRING"
+       }
+      },
+      "required": ["q","a"]
+     }
+    }
+   },
+   "required": ["faqs"]
+  }
+ }
+}

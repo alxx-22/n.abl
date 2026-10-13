@@ -1,0 +1,73 @@
+{
+ "version": "nine",
+ "basics": {
+  "name": 42,
+  "voice": "Nobody",
+  "greeting": ["hi"]
+ },
+ "hours": {
+  "days": "every day",
+  "closures": [
+   {
+    "date": "soon"
+   }
+  ],
+  "food": {
+   "from": "noon",
+   "until": 25,
+   "sunday_until": "later"
+  }
+ },
+ "seating": {
+  "tables": "lots",
+  "areas": [
+   {
+    "key": 7
+   }
+  ]
+ },
+ "booking": {
+  "late_grace_minutes": -5,
+  "no_bar_bookings_for_matches": "yes"
+ },
+ "children": {
+  "until": "bedtime"
+ },
+ "quiz": {
+  "offered": "yes",
+  "day": 9,
+  "time": "late",
+  "team_max": 99,
+  "entry_pence": -1,
+  "minutes": 9999
+ },
+ "events": [
+  {
+   "day": "friday",
+   "time": 7,
+   "title": ["x"]
+  },
+  "a gig"
+ ],
+ "drinks": {
+  "on_tap": "everything"
+ },
+ "menu": {
+  "categories": "ales"
+ },
+ "money": {
+  "cash": "yes",
+  "tips": ["jar"]
+ },
+ "policies": {
+  "hygiene_rating": 9,
+  "baby_changing": "yes",
+  "faqs": {
+   "q": 1
+  }
+ },
+ "theme": {
+  "accent": "blue"
+ },
+ "sources": "web"
+}

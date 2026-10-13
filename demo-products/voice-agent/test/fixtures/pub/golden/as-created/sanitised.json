@@ -1,0 +1,975 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "The Weaver’s Arms",
+  "style": "Cask ales, pub classics and Sunday roasts",
+  "town": "Nottingham",
+  "address": "9 Lace Row (example), Nottingham NG1",
+  "phone_display": "0115 496 0823",
+  "website": "",
+  "voice": "Charon",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "22:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "00:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "00:00"
+     }
+    ]
+   }
+  ],
+  "closures": [],
+  "food": {
+   "from": "12:00",
+   "until": "21:00",
+   "sunday_until": "18:00"
+  }
+ },
+ "seating": {
+  "areas": [
+   {
+    "key": "bar",
+    "label": "The bar",
+    "kind": "bar",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   },
+   {
+    "key": "dining",
+    "label": "Dining room",
+    "kind": "indoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   },
+   {
+    "key": "garden",
+    "label": "Beer garden",
+    "kind": "outdoor",
+    "reservable": false,
+    "enquiry_only": false,
+    "weather_rule": "walk_in_only"
+   },
+   {
+    "key": "loft",
+    "label": "The Loft",
+    "kind": "private",
+    "reservable": false,
+    "enquiry_only": true,
+    "weather_rule": null
+   }
+  ],
+  "tables": [
+   {
+    "key": "T1",
+    "label": "Table 1",
+    "area": "bar",
+    "seats": 2,
+    "shape": "round",
+    "x": 40,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": true,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T2",
+    "label": "Table 2",
+    "area": "bar",
+    "seats": 2,
+    "shape": "round",
+    "x": 130,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": true,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T3",
+    "label": "Table 3",
+    "area": "bar",
+    "seats": 4,
+    "shape": "square",
+    "x": 220,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T4",
+    "label": "Table 4",
+    "area": "bar",
+    "seats": 4,
+    "shape": "square",
+    "x": 330,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T5",
+    "label": "Table 5",
+    "area": "bar",
+    "seats": 4,
+    "shape": "square",
+    "x": 440,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T6",
+    "label": "Table 6",
+    "area": "dining",
+    "seats": 2,
+    "shape": "round",
+    "x": 40,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["window"],
+    "joins": []
+   },
+   {
+    "key": "T7",
+    "label": "Table 7",
+    "area": "dining",
+    "seats": 2,
+    "shape": "round",
+    "x": 130,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T8",
+    "label": "Table 8",
+    "area": "dining",
+    "seats": 2,
+    "shape": "round",
+    "x": 220,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T9",
+    "label": "Table 9",
+    "area": "dining",
+    "seats": 2,
+    "shape": "round",
+    "x": 310,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T10",
+    "label": "Table 10",
+    "area": "dining",
+    "seats": 4,
+    "shape": "square",
+    "x": 400,
+    "y": 40,
+    "rotation": 0,
+    "accessible": true,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T11",
+    "label": "Table 11",
+    "area": "dining",
+    "seats": 4,
+    "shape": "square",
+    "x": 510,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T12",
+    "label": "Table 12",
+    "area": "dining",
+    "seats": 4,
+    "shape": "square",
+    "x": 620,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T13",
+    "label": "Table 13",
+    "area": "dining",
+    "seats": 4,
+    "shape": "square",
+    "x": 730,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T14",
+    "label": "Table 14",
+    "area": "dining",
+    "seats": 4,
+    "shape": "square",
+    "x": 840,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T15",
+    "label": "Table 15",
+    "area": "dining",
+    "seats": 6,
+    "shape": "rect",
+    "x": 40,
+    "y": 150,
+    "rotation": 0,
+    "accessible": true,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T16"]
+   },
+   {
+    "key": "T16",
+    "label": "Table 16",
+    "area": "dining",
+    "seats": 6,
+    "shape": "rect",
+    "x": 236,
+    "y": 150,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T15"]
+   },
+   {
+    "key": "T17",
+    "label": "Table 17",
+    "area": "garden",
+    "seats": 4,
+    "shape": "square",
+    "x": 40,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T18",
+    "label": "Table 18",
+    "area": "garden",
+    "seats": 4,
+    "shape": "square",
+    "x": 150,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T19",
+    "label": "Table 19",
+    "area": "garden",
+    "seats": 4,
+    "shape": "square",
+    "x": 260,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T20",
+    "label": "Table 20",
+    "area": "garden",
+    "seats": 4,
+    "shape": "square",
+    "x": 370,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T21",
+    "label": "Table 21",
+    "area": "garden",
+    "seats": 4,
+    "shape": "square",
+    "x": 480,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T22",
+    "label": "Table 22",
+    "area": "garden",
+    "seats": 4,
+    "shape": "square",
+    "x": 590,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T23",
+    "label": "Table 23",
+    "area": "loft",
+    "seats": 8,
+    "shape": "rect",
+    "x": 40,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T24",
+    "label": "Table 24",
+    "area": "loft",
+    "seats": 8,
+    "shape": "rect",
+    "x": 270,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   }
+  ],
+  "fixtures": [],
+  "plan": 2,
+  "sittings": {
+   "up_to_2": 90,
+   "up_to_4": 120,
+   "up_to_8": 120,
+   "larger": 150
+  },
+  "max_party": 8,
+  "notice_minutes": 60,
+  "horizon_days": 60,
+  "highchairs": 4,
+  "buffer_minutes": 0
+ },
+ "booking": {
+  "late_grace_minutes": 15,
+  "no_bar_bookings_for_matches": true
+ },
+ "children": {
+  "until": "21:00"
+ },
+ "quiz": {
+  "offered": true,
+  "day": 4,
+  "time": "20:00",
+  "team_max": 6,
+  "entry_pence": 200,
+  "minutes": 150
+ },
+ "events": [
+  {
+   "day": 6,
+   "time": "21:00",
+   "title": "Live music",
+   "place": "the bar",
+   "free": true
+  }
+ ],
+ "drinks": {
+  "on_tap": ["Lace Market Bitter (example)","Trent Pale (example)","Weaver’s Gold (example)","Castle Rock Stout (example)"]
+ },
+ "ordering": {
+  "collection": {
+   "enabled": false,
+   "prep_minutes": 20,
+   "slot_minutes": 10,
+   "per_slot": 3
+  },
+  "delivery": {
+   "enabled": false,
+   "districts": [],
+   "fee_pence": 0,
+   "min_order_pence": 0,
+   "extra_minutes": 0
+  },
+  "delivery_apps": [],
+  "timed_orders": true
+ },
+ "menu": {
+  "categories": [
+   {
+    "key": "starters",
+    "label": "Starters",
+    "items": [
+     {
+      "key": "soup",
+      "name": "Soup of the day with bread",
+      "price_pence": 650,
+      "allergens": ["celery","gluten","milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "whitebait",
+      "name": "Whitebait with tartare sauce",
+      "price_pence": 750,
+      "allergens": ["fish","gluten","eggs","mustard"]
+     },
+     {
+      "key": "garlic_mushrooms",
+      "name": "Garlic mushrooms on toast",
+      "price_pence": 700,
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"]
+     }
+    ]
+   },
+   {
+    "key": "mains",
+    "label": "Pub classics",
+    "items": [
+     {
+      "key": "fish_and_chips",
+      "name": "Beer-battered fish and chips",
+      "price_pence": 1650,
+      "description": "With mushy peas and tartare sauce (eggs, mustard).",
+      "allergens": ["fish","gluten"]
+     },
+     {
+      "key": "burger",
+      "name": "Weaver's burger",
+      "price_pence": 1550,
+      "description": "Beef burger in a brioche bun with fries.",
+      "allergens": ["gluten","eggs","mustard","sesame"],
+      "modifier_groups": ["burger_extra"]
+     },
+     {
+      "key": "pie",
+      "name": "Pie of the day",
+      "price_pence": 1600,
+      "description": "With mash or chips and greens.",
+      "allergens": ["gluten","milk","celery"]
+     },
+     {
+      "key": "sausage_mash",
+      "name": "Sausage and mash",
+      "price_pence": 1450,
+      "allergens": ["gluten","milk","sulphites","mustard"]
+     },
+     {
+      "key": "mushroom_risotto",
+      "name": "Wild mushroom risotto",
+      "price_pence": 1400,
+      "allergens": ["milk","celery","sulphites"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "chickpea_curry",
+      "name": "Chickpea and spinach curry",
+      "price_pence": 1350,
+      "description": "With rice. Made without gluten ingredients.",
+      "allergens": ["mustard"],
+      "dietary": ["vegan"]
+     }
+    ]
+   },
+   {
+    "key": "sunday",
+    "label": "Sunday roasts (Sundays, until 6pm)",
+    "items": [
+     {
+      "key": "roast_beef",
+      "name": "Roast beef",
+      "price_pence": 1895,
+      "description": "With Yorkshire pudding, roast potatoes, seasonal veg and gravy.",
+      "allergens": ["gluten","eggs","milk","celery","mustard"]
+     },
+     {
+      "key": "roast_pork",
+      "name": "Roast pork",
+      "price_pence": 1795,
+      "description": "With crackling, apple sauce, Yorkshire pudding and gravy.",
+      "allergens": ["gluten","eggs","milk","celery"]
+     },
+     {
+      "key": "nut_roast",
+      "name": "Nut roast",
+      "price_pence": 1595,
+      "description": "With roast potatoes, seasonal veg and vegan gravy.",
+      "allergens": ["nuts","gluten","celery"],
+      "dietary": ["vegan"]
+     },
+     {
+      "key": "kids_roast",
+      "name": "Children's roast",
+      "price_pence": 900,
+      "allergens": ["gluten","eggs","milk","celery"]
+     }
+    ]
+   },
+   {
+    "key": "children",
+    "label": "Children's menu",
+    "items": [
+     {
+      "key": "kids_fish",
+      "name": "Fish fingers and chips",
+      "price_pence": 750,
+      "allergens": ["fish","gluten"]
+     },
+     {
+      "key": "kids_sausage",
+      "name": "Sausage and mash",
+      "price_pence": 750,
+      "allergens": ["gluten","milk","sulphites"]
+     },
+     {
+      "key": "kids_pasta",
+      "name": "Pasta in tomato sauce",
+      "price_pence": 650,
+      "allergens": ["gluten"],
+      "dietary": ["vegan"]
+     }
+    ]
+   },
+   {
+    "key": "desserts",
+    "label": "Desserts",
+    "items": [
+     {
+      "key": "sticky_toffee",
+      "name": "Sticky toffee pudding",
+      "price_pence": 750,
+      "allergens": ["gluten","eggs","milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "crumble",
+      "name": "Apple crumble and custard",
+      "price_pence": 700,
+      "allergens": ["gluten","milk","eggs"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "brownie",
+      "name": "Chocolate brownie with ice cream",
+      "price_pence": 700,
+      "description": "Made without gluten ingredients.",
+      "allergens": ["eggs","milk","soya"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "sorbet",
+      "name": "Lemon sorbet",
+      "price_pence": 550,
+      "allergens": [],
+      "dietary": ["vegan"]
+     }
+    ]
+   },
+   {
+    "key": "ales",
+    "label": "Cask ales",
+    "items": [
+     {
+      "key": "cask_ale",
+      "name": "Cask ale",
+      "price_pence": 230,
+      "description": "Four on tap, changing every few days: today's on the board. £2.30 a half, £4.60 a pint.",
+      "allergens": ["gluten"],
+      "modifier_groups": ["measure_ale"]
+     }
+    ]
+   },
+   {
+    "key": "beer_cider",
+    "label": "Lager, stout and cider",
+    "items": [
+     {
+      "key": "lager",
+      "name": "Lager",
+      "price_pence": 260,
+      "description": "£2.60 a half, £5.20 a pint.",
+      "allergens": ["gluten"],
+      "modifier_groups": ["measure_lager"]
+     },
+     {
+      "key": "stout",
+      "name": "Guinness",
+      "price_pence": 280,
+      "description": "£2.80 a half, £5.60 a pint.",
+      "allergens": ["gluten"],
+      "modifier_groups": ["measure_stout"]
+     },
+     {
+      "key": "cider",
+      "name": "Cider",
+      "price_pence": 250,
+      "description": "£2.50 a half, £5.00 a pint.",
+      "allergens": ["sulphites"],
+      "modifier_groups": ["measure_cider"]
+     },
+     {
+      "key": "gf_lager",
+      "name": "Gluten-free lager (bottle)",
+      "price_pence": 500,
+      "description": "Brewed without barley (example).",
+      "allergens": [],
+      "dietary": ["gluten-free","vegan"]
+     },
+     {
+      "key": "af_beer",
+      "name": "Alcohol-free beer (bottle)",
+      "price_pence": 400,
+      "allergens": ["gluten"],
+      "dietary": ["vegan"]
+     }
+    ]
+   },
+   {
+    "key": "wine",
+    "label": "Wine",
+    "items": [
+     {
+      "key": "house_red",
+      "name": "House red",
+      "price_pence": 550,
+      "allergens": ["sulphites"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["wine_glass"]
+     },
+     {
+      "key": "house_white",
+      "name": "House white",
+      "price_pence": 550,
+      "allergens": ["sulphites"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["wine_glass"]
+     },
+     {
+      "key": "rose",
+      "name": "Rosé",
+      "price_pence": 550,
+      "allergens": ["sulphites"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["wine_glass"]
+     }
+    ]
+   },
+   {
+    "key": "soft",
+    "label": "Soft drinks",
+    "items": [
+     {
+      "key": "cola",
+      "name": "Cola",
+      "price_pence": 350,
+      "allergens": [],
+      "dietary": ["vegan"]
+     },
+     {
+      "key": "lemonade",
+      "name": "Lemonade",
+      "price_pence": 320,
+      "allergens": [],
+      "dietary": ["vegan"]
+     },
+     {
+      "key": "j2o",
+      "name": "Fruit juice",
+      "price_pence": 330,
+      "allergens": [],
+      "dietary": ["vegan"]
+     }
+    ]
+   }
+  ],
+  "modifier_groups": {
+   "wine_glass": {
+    "label": "Glass",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "small",
+      "name": "125ml",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "medium",
+      "name": "175ml",
+      "price_pence": 150,
+      "allergens": []
+     },
+     {
+      "key": "large",
+      "name": "250ml",
+      "price_pence": 350,
+      "allergens": []
+     },
+     {
+      "key": "bottle",
+      "name": "bottle",
+      "price_pence": 1700,
+      "allergens": []
+     }
+    ]
+   },
+   "burger_extra": {
+    "label": "Add",
+    "min": 0,
+    "max": 2,
+    "options": [
+     {
+      "key": "cheese",
+      "name": "cheese",
+      "price_pence": 100,
+      "allergens": ["milk"]
+     },
+     {
+      "key": "bacon",
+      "name": "bacon",
+      "price_pence": 150,
+      "allergens": []
+     }
+    ]
+   },
+   "measure_ale": {
+    "label": "Measure",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "half",
+      "name": "half",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "pint",
+      "name": "pint",
+      "price_pence": 230,
+      "allergens": []
+     }
+    ]
+   },
+   "measure_lager": {
+    "label": "Measure",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "half",
+      "name": "half",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "pint",
+      "name": "pint",
+      "price_pence": 260,
+      "allergens": []
+     }
+    ]
+   },
+   "measure_stout": {
+    "label": "Measure",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "half",
+      "name": "half",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "pint",
+      "name": "pint",
+      "price_pence": 280,
+      "allergens": []
+     }
+    ]
+   },
+   "measure_cider": {
+    "label": "Measure",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "half",
+      "name": "half",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "pint",
+      "name": "pint",
+      "price_pence": 250,
+      "allergens": []
+     }
+    ]
+   }
+  },
+  "allergen_statement": "Everything is cooked in one kitchen that uses nuts, gluten, milk, eggs, fish and mustard, so we can't promise any dish is free from traces. Tell us about any allergy and the kitchen will take care.",
+  "source": "sample",
+  "allergens_are_examples": true
+ },
+ "money": {
+  "payment": "collection",
+  "cash": true,
+  "tips": "Tips are never expected; any paid by card go to the team in full."
+ },
+ "policies": {
+  "children": "Children are welcome with an adult until 9pm: there’s a children’s menu and colouring.",
+  "baby_changing": true,
+  "accessibility": "Step-free into the bar and the dining room, with an accessible toilet. The Loft is up a flight of stairs.",
+  "parking": "No parking of our own; the nearest car park is about five minutes’ walk.",
+  "smoking": "Smoking in the beer garden only.",
+  "vaping": "Vaping in the beer garden only, please.",
+  "id": "We run Challenge 25: anyone who looks under 25 is asked for ID. A passport, a photo driving licence, a PASS card or a certified digital ID app.",
+  "own_cake": "You’re welcome to bring a birthday cake.",
+  "own_drink": "No drinks of your own, I’m afraid.",
+  "taxi": "Lace City Cars (example) on 0115 496 0999.",
+  "hire": "The Loft upstairs takes up to 40, for parties, wakes and work dos: the manager will call back to talk it through.",
+  "christmas": "Our Christmas menu is served from late November: the manager will call back to arrange a party.",
+  "careers": "We’re often looking for bar and kitchen staff: leave your name and number and the manager will be in touch.",
+  "hygiene_rating": 5,
+  "faqs": []
+ },
+ "theme": {
+  "accent": "#8a3b2e",
+  "primary": "#1f1a17",
+  "background": "#f4efe6",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}
