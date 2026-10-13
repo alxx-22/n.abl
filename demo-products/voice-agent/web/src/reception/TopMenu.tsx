@@ -17,18 +17,24 @@ export function TopMenu({ children }: { children: ReactNode }) {
   /** When it last closed: a tap on plain page right after should not leave focus nowhere. */
   const closedAt = useRef(0);
 
-  const close = () => {
+  /**
+   * Focus goes back to the button without moving the page, unless the sheet was put away from the keyboard: a
+   * tap further down a scrolled page would otherwise jump it back to the top and land on whatever then sat under
+   * the finger. From the keyboard the page may scroll, so that the focus can be seen.
+   */
+  const close = (byKey = false) => {
     setOpen(false);
     closedAt.current = Date.now();
-    button.current?.focus();
+    button.current?.focus({ preventScroll: !byKey });
   };
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') close(true);
     };
-    // A tap anywhere else closes it; whatever was tapped still gets the tap.
+    // A tap anywhere else closes it; whatever was tapped still gets the tap. Heard on the way down, before the
+    // page's own handlers: a floor-plan table stops its pointerdown going further, and the sheet would stay open.
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
       if (!sheet.current?.contains(t) && !button.current?.contains(t)) close();
@@ -37,14 +43,25 @@ export function TopMenu({ children }: { children: ReactNode }) {
     const wide = matchMedia(PHONE);
     const onWide = () => setOpen(false);
     document.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('pointerdown', onDown, true);
     wide.addEventListener('change', onWide);
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.removeEventListener('pointerdown', onDown);
+      document.removeEventListener('pointerdown', onDown, true);
       wide.removeEventListener('change', onWide);
     };
   }, [open]);
+
+  // A phone turned from landscape to upright folds the bar's buttons into the closed sheet. Focus on one of
+  // them would drop to the page with nothing to say so; it goes to More, where those buttons now are.
+  useEffect(() => {
+    const phone = matchMedia(PHONE);
+    const onPhone = () => {
+      if (phone.matches && sheet.current?.contains(document.activeElement)) button.current?.focus({ preventScroll: true });
+    };
+    phone.addEventListener('change', onPhone);
+    return () => phone.removeEventListener('change', onPhone);
+  }, []);
 
   // Picking an item closes the sheet and puts focus back on the button first,
   // so a dialog the item opens (the voice) hands focus back there when it
@@ -65,8 +82,12 @@ export function TopMenu({ children }: { children: ReactNode }) {
         onBlur={(e) => {
           // The tap that closed the sheet lands on plain page a moment later (on a touch screen, after the
           // finger lifts) and the browser drops focus to the page; it comes back here. A tap on a box or a
-          // button still focuses that.
-          if (!e.relatedTarget && Date.now() - closedAt.current < 1000) setTimeout(() => button.current?.focus());
+          // button still focuses that, and so does a drawer the tap opened: it comes back only if nothing has.
+          if (!e.relatedTarget && Date.now() - closedAt.current < 1000) {
+            setTimeout(() => {
+              if (!document.activeElement || document.activeElement === document.body) button.current?.focus({ preventScroll: true });
+            });
+          }
         }}
       >
         <span aria-hidden="true">⋯</span>

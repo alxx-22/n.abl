@@ -32,14 +32,15 @@ export function DemoClock({ id, timeZone, realMs, offsetMs, disabled, onSet }: {
       if (box.current?.contains(document.activeElement)) button.current?.focus();
       setOpen(false);
     };
+    // On the way down, as the More sheet listens: a floor-plan table stops its pointerdown going any further.
     const onDown = (e: PointerEvent) => {
       if (!box.current?.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('pointerdown', onDown, true);
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.removeEventListener('pointerdown', onDown);
+      document.removeEventListener('pointerdown', onDown, true);
     };
   }, [open]);
   const shown = local(realMs + offsetMs, timeZone);

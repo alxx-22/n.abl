@@ -186,6 +186,8 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
   const style = brandStyle({ accent: brand.accent ?? t.accent, primary: brand.primary, background: brand.background, font_heading: brand.font_heading, font_body: brand.font_body });
   const booking: LiveBooking | null = selected ? state.bookings.find((b) => b.reference === selected.ref) ?? null : null;
   const minutesLeft = Math.max(0, me.limits.call_minutes_per_day - me.used.call_minutes);
+  /** A shared demo's deletion: "in 45 min", or "now". */
+  const goes = state.expires_at ? minutesUntil(state.expires_at, clock) : null;
 
   const selectTable = (key: string | null) => {
     if (!key) return setSelected(null);
@@ -234,13 +236,15 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
         </span>
         {/* "30 min" on a phone: its words are in the sheet. A shared demo's deletion takes its place there (phone.css). */}
         <span className={`badge minutes ${minutesLeft > 5 ? 'info' : 'bad'}`}>{phone ? `${minutesLeft} min` : <>{minutesLeft} call min left today</>}</span>
-        {state.expires_at ? (
+        {/* On a phone "45 min left", short enough to leave the name some room; the sheet says what is deleted. */}
+        {state.expires_at && goes ? (
           <span className={`badge expires ${new Date(state.expires_at).getTime() - clock < 10 * 60000 ? 'bad' : 'warn'}`} title="Shared demos are deleted an hour after Start, with everything in them.">
-            Deleted {minutesUntil(state.expires_at, clock)}
+            {phone && goes !== 'now' ? `${goes.replace(/^in /, '')} left` : <>Deleted {goes}</>}
           </span>
         ) : null}
       </>}>
         <span className="rx-phone-only">{minutesLeft} call minutes left today</span>
+        {goes ? <span className="rx-phone-only">This demo is deleted {goes}, with everything in it.</span> : null}
         <button type="button" onClick={() => setSettingsOpen(true)} title="The receptionist's voice"><SlidersIcon /> Voice</button>
         <Link to={`${R}/build/${id}`} className="button">Edit setup</Link>
         {/* A new time works the day and time shown out again, without clearing them first: cleared, the whole page was drawn afresh and focus was lost from the bar. */}
