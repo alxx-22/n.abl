@@ -6,6 +6,7 @@
  "find_bookings",
  "modify_booking",
  "cancel_booking",
+ "whats_on",
  "take_message",
  "end_call"
 ]

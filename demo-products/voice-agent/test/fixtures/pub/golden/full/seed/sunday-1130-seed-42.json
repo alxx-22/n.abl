@@ -643,5 +643,19 @@
    "from_phone": "+447700900258",
    "body": "Thursday’s delivery is moving to Friday morning, 8am."
   }
+ ],
+ "events": [
+  {
+   "starts_at": "2026-10-24T14:00:00.000Z",
+   "title": "Nottingham Forest v Arsenal (example)",
+   "kind": "sport",
+   "place": "the bar’s big screens"
+  },
+  {
+   "starts_at": "2026-10-18T15:30:00.000Z",
+   "title": "Liverpool v Manchester City (example)",
+   "kind": "sport",
+   "place": "the bar’s big screens"
+  }
  ]
 }

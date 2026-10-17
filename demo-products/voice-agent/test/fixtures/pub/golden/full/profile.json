@@ -530,6 +530,11 @@
    "tags": ["cake","birthday","own drink","corkage","bring"]
   },
   {
+   "q": "Do you show the football?",
+   "a": "The big games are on the bar’s screens: ask and I’ll check this week’s list.",
+   "tags": ["football","sport","match","game","screen","rugby","cricket","boxing","sky","tnt"]
+  },
+  {
    "q": "Can you call me a taxi?",
    "a": "We don’t book them, but Lace City Cars (example) on 0115 496 0999.",
    "tags": ["taxi","cab","uber","lift home"]
@@ -1003,6 +1008,9 @@
    "until": "20:30",
    "sunday_until": null
   },
-  "taxi": "Lace City Cars (example) on 0115 496 0999."
+  "taxi": "Lace City Cars (example) on 0115 496 0999.",
+  "events": [],
+  "on_tap": ["Ferryman’s Bitter (example)"],
+  "no_bar_bookings_for_matches": false
  }
 }

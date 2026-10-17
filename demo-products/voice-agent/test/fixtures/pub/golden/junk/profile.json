@@ -85,6 +85,36 @@
     "large_party_note": "For more than 8 people, take their name, number, preferred date and time, and say the manager will call back.",
     "lead_minutes": 60,
     "horizon_days": 60
+   },
+   {
+    "key": "quiz",
+    "label": "Quiz team",
+    "kind": "table",
+    "slot_minutes": 15,
+    "duration_rules": [
+     {
+      "max_party": 100,
+      "minutes": 240
+     }
+    ],
+    "windows": [
+     {
+      "days": [6],
+      "first": "20:00",
+      "last": "20:00"
+     }
+    ],
+    "max_party": 12,
+    "large_party_note": "Quiz teams are up to 12: a bigger group makes two teams, booked one after the other.",
+    "lead_minutes": 60,
+    "horizon_days": 60,
+    "price_pence": 0,
+    "description": "The quiz, Saturdays at 8pm: £0 a head, paid on the night.",
+    "per_person": {
+     "adult_pence": 0,
+     "child_pence": 0,
+     "child_under": 0
+    }
    }
   ],
   "resources": [],
@@ -155,6 +185,11 @@
    "tags": ["cake","birthday","own drink","corkage","bring"]
   },
   {
+   "q": "Do you show the football?",
+   "a": "The big games are on the bar’s screens: ask and I’ll check this week’s list. The bar is first come during a match; the dining room can be booked, but has no screen.",
+   "tags": ["football","sport","match","game","screen","rugby","cricket","boxing","sky","tnt"]
+  },
+  {
    "q": "Can you call me a taxi?",
    "a": "We don’t book them, but Lace City Cars (example) on 0115 496 0999.",
    "tags": ["taxi","cab","uber","lift home"]
@@ -220,6 +255,24 @@
    "until": "21:00",
    "sunday_until": "18:00"
   },
-  "taxi": "Lace City Cars (example) on 0115 496 0999."
+  "taxi": "Lace City Cars (example) on 0115 496 0999.",
+  "events": [
+   {
+    "day": 6,
+    "time": "20:00",
+    "title": "An event",
+    "place": "the bar",
+    "free": true
+   },
+   {
+    "day": 6,
+    "time": "20:00",
+    "title": "An event",
+    "place": "the bar",
+    "free": true
+   }
+  ],
+  "on_tap": ["Lace Market Bitter (example)","Trent Pale (example)","Weaver’s Gold (example)","Castle Rock Stout (example)"],
+  "no_bar_bookings_for_matches": true
  }
 }

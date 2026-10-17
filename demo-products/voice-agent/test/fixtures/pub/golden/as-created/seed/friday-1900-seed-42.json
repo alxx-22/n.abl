@@ -1,22 +1,22 @@
 {
  "bookings": [
   {
-   "reference": "QW613",
+   "reference": "KK875",
    "service_key": "table",
    "resource_key": "T15+T16",
    "area_key": "dining",
    "starts_at": "2026-10-17T18:00:00.000Z",
    "ends_at": "2026-10-17T20:00:00.000Z",
    "party_size": 8,
-   "name": "Emily Evans",
-   "phone": "+447700900456",
+   "name": "Chloe Singh",
+   "phone": "+447700900086",
    "notes": "A 50th: a cake arriving at 6:30",
    "allergies": null,
    "tags": ["birthday"],
    "deposit_pence": 0,
    "deposit_paid": false,
    "visit_status": "expected",
-   "booked_via": "staff"
+   "booked_via": "receptionist"
   },
   {
    "reference": "XR777",
@@ -413,6 +413,60 @@
    "deposit_paid": false,
    "visit_status": "expected",
    "booked_via": "receptionist"
+  },
+  {
+   "reference": "QJ529",
+   "service_key": "quiz",
+   "resource_key": "T15",
+   "area_key": "dining",
+   "starts_at": "2026-10-22T19:00:00.000Z",
+   "ends_at": "2026-10-22T21:30:00.000Z",
+   "party_size": 6,
+   "name": "Ben Doyle",
+   "phone": "+447700900092",
+   "notes": "Team: The Usual Suspects",
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "XQ917",
+   "service_key": "quiz",
+   "resource_key": "T4",
+   "area_key": "bar",
+   "starts_at": "2026-10-22T19:00:00.000Z",
+   "ends_at": "2026-10-22T21:30:00.000Z",
+   "party_size": 3,
+   "name": "Sophie Khan",
+   "phone": "+447700900504",
+   "notes": "Team: Les Quizerables",
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "XH914",
+   "service_key": "quiz",
+   "resource_key": "T5",
+   "area_key": "bar",
+   "starts_at": "2026-10-22T19:00:00.000Z",
+   "ends_at": "2026-10-22T21:30:00.000Z",
+   "party_size": 3,
+   "name": "Hannah Chen",
+   "phone": "+447700900483",
+   "notes": "Team: The Lace Makers",
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
   }
  ],
  "orders": [],
@@ -424,8 +478,22 @@
   },
   {
    "from_name": "Trent Valley Brewery (example)",
-   "from_phone": "+447700900092",
+   "from_phone": "+447700900865",
    "body": "Thursday’s delivery is moving to Friday morning, 8am."
+  }
+ ],
+ "events": [
+  {
+   "starts_at": "2026-10-17T14:00:00.000Z",
+   "title": "Nottingham Forest v Arsenal (example)",
+   "kind": "sport",
+   "place": "the bar’s big screens"
+  },
+  {
+   "starts_at": "2026-10-18T15:30:00.000Z",
+   "title": "Liverpool v Manchester City (example)",
+   "kind": "sport",
+   "place": "the bar’s big screens"
   }
  ]
 }

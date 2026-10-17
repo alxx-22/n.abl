@@ -85,6 +85,36 @@
     "large_party_note": "For more than 8 people, take their name, number, preferred date and time, and say the manager will call back.",
     "lead_minutes": 60,
     "horizon_days": 60
+   },
+   {
+    "key": "quiz",
+    "label": "Quiz team",
+    "kind": "table",
+    "slot_minutes": 15,
+    "duration_rules": [
+     {
+      "max_party": 100,
+      "minutes": 150
+     }
+    ],
+    "windows": [
+     {
+      "days": [4],
+      "first": "20:00",
+      "last": "20:00"
+     }
+    ],
+    "max_party": 6,
+    "large_party_note": "Quiz teams are up to 6: a bigger group makes two teams, booked one after the other.",
+    "lead_minutes": 60,
+    "horizon_days": 60,
+    "price_pence": 200,
+    "description": "The quiz, Thursdays at 8pm: £2 a head, paid on the night.",
+    "per_person": {
+     "adult_pence": 200,
+     "child_pence": 0,
+     "child_under": 0
+    }
    }
   ],
   "resources": [
@@ -119,7 +149,7 @@
    {
     "key": "T3",
     "label": "Table 3",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 4,
     "min": 1,
     "area": "bar",
@@ -133,7 +163,7 @@
    {
     "key": "T4",
     "label": "Table 4",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 4,
     "min": 1,
     "area": "bar",
@@ -147,7 +177,7 @@
    {
     "key": "T5",
     "label": "Table 5",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 4,
     "min": 1,
     "area": "bar",
@@ -161,7 +191,7 @@
    {
     "key": "T6",
     "label": "Table 6",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 2,
     "min": 1,
     "area": "dining",
@@ -176,7 +206,7 @@
    {
     "key": "T7",
     "label": "Table 7",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 2,
     "min": 1,
     "area": "dining",
@@ -190,7 +220,7 @@
    {
     "key": "T8",
     "label": "Table 8",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 2,
     "min": 1,
     "area": "dining",
@@ -204,7 +234,7 @@
    {
     "key": "T9",
     "label": "Table 9",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 2,
     "min": 1,
     "area": "dining",
@@ -218,7 +248,7 @@
    {
     "key": "T10",
     "label": "Table 10",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 4,
     "min": 1,
     "area": "dining",
@@ -233,7 +263,7 @@
    {
     "key": "T11",
     "label": "Table 11",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 4,
     "min": 1,
     "area": "dining",
@@ -247,7 +277,7 @@
    {
     "key": "T12",
     "label": "Table 12",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 4,
     "min": 1,
     "area": "dining",
@@ -261,7 +291,7 @@
    {
     "key": "T13",
     "label": "Table 13",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 4,
     "min": 1,
     "area": "dining",
@@ -275,7 +305,7 @@
    {
     "key": "T14",
     "label": "Table 14",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 4,
     "min": 1,
     "area": "dining",
@@ -289,7 +319,7 @@
    {
     "key": "T15",
     "label": "Table 15",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 6,
     "min": 3,
     "area": "dining",
@@ -304,7 +334,7 @@
    {
     "key": "T16",
     "label": "Table 16",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 6,
     "min": 3,
     "area": "dining",
@@ -430,7 +460,7 @@
    {
     "key": "T15+T16",
     "label": "Table 15 and 16",
-    "services": ["table"],
+    "services": ["table","quiz"],
     "capacity": 12,
     "min": 7,
     "combines": ["T15","T16"],
@@ -529,6 +559,11 @@
    "q": "Can we bring a birthday cake or our own drinks?",
    "a": "own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake own_cake ow own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink own_drink",
    "tags": ["cake","birthday","own drink","corkage","bring"]
+  },
+  {
+   "q": "Do you show the football?",
+   "a": "The big games are on the bar’s screens: ask and I’ll check this week’s list. The bar is first come during a match; the dining room can be booked, but has no screen.",
+   "tags": ["football","sport","match","game","screen","rugby","cricket","boxing","sky","tnt"]
   },
   {
    "q": "Can you call me a taxi?",
@@ -1114,6 +1149,79 @@
    "until": "21:00",
    "sunday_until": "18:00"
   },
-  "taxi": "taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi"
+  "taxi": "taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi taxi",
+  "events": [
+   {
+    "day": 0,
+    "time": "20:00",
+    "title": "event event event event event event event event event event",
+    "place": "place place place place place place plac",
+    "free": true
+   },
+   {
+    "day": 1,
+    "time": "20:00",
+    "title": "event event event event event event event event event event",
+    "place": "place place place place place place plac",
+    "free": true
+   },
+   {
+    "day": 2,
+    "time": "20:00",
+    "title": "event event event event event event event event event event",
+    "place": "place place place place place place plac",
+    "free": true
+   },
+   {
+    "day": 3,
+    "time": "20:00",
+    "title": "event event event event event event event event event event",
+    "place": "place place place place place place plac",
+    "free": true
+   },
+   {
+    "day": 4,
+    "time": "20:00",
+    "title": "event event event event event event event event event event",
+    "place": "place place place place place place plac",
+    "free": true
+   },
+   {
+    "day": 5,
+    "time": "20:00",
+    "title": "event event event event event event event event event event",
+    "place": "place place place place place place plac",
+    "free": true
+   },
+   {
+    "day": 6,
+    "time": "20:00",
+    "title": "event event event event event event event event event event",
+    "place": "place place place place place place plac",
+    "free": true
+   },
+   {
+    "day": 0,
+    "time": "20:00",
+    "title": "event event event event event event event event event event",
+    "place": "place place place place place place plac",
+    "free": true
+   }
+  ],
+  "on_tap": [
+   "ale0 ale0 ale0 ale0 ale0 ale0 ale0 ale0",
+   "ale1 ale1 ale1 ale1 ale1 ale1 ale1 ale1",
+   "ale2 ale2 ale2 ale2 ale2 ale2 ale2 ale2",
+   "ale3 ale3 ale3 ale3 ale3 ale3 ale3 ale3",
+   "ale4 ale4 ale4 ale4 ale4 ale4 ale4 ale4",
+   "ale5 ale5 ale5 ale5 ale5 ale5 ale5 ale5",
+   "ale6 ale6 ale6 ale6 ale6 ale6 ale6 ale6",
+   "ale7 ale7 ale7 ale7 ale7 ale7 ale7 ale7",
+   "ale8 ale8 ale8 ale8 ale8 ale8 ale8 ale8",
+   "ale9 ale9 ale9 ale9 ale9 ale9 ale9 ale9",
+   "ale10 ale10 ale10 ale10 ale10 ale10 ale1",
+   "ale11 ale11 ale11 ale11 ale11 ale11 ale1"
+  ],
+  "no_bar_bookings_for_matches": true
  }
 }

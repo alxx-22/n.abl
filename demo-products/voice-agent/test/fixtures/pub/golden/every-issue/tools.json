@@ -8,6 +8,7 @@
  "cancel_booking",
  "get_menu",
  "get_item_details",
+ "whats_on",
  "take_message",
  "end_call"
 ]
