@@ -59,11 +59,13 @@ export function planPubSeed(profile: TenantProfile, now: Date, seed: number, day
         for (let m = minutesOf(w.first); m <= minutesOf(w.last); m += 30) out.push(timeOf(m));
         return out;
       });
+      const quizNight = Boolean(findService(profile, 'quiz')?.windows.some((w) => w.days.includes(wd)));
       // Sunday: lunch; other days: the evening, from 6.
       const busy = times.filter((t) => (wd === 0 ? minutesOf(t) <= 15 * 60 : minutesOf(t) >= 18 * 60));
       for (let i = 0, tries = 0; i < TABLES[wd] && busy.length && tries < 40; tries++) {
         const time = id.pick(busy);
-        const party = 2 + Math.floor(random() * 5);
+        // On quiz night, dinners of two to four: the big tables are for the teams.
+        const party = 2 + Math.floor(random() * (quizNight ? 3 : 5));
         const b = place(table, date, time, party);
         if (!b) continue;
         i++;
