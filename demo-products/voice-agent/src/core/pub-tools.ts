@@ -59,6 +59,9 @@ export function childrenOn(notes: string | null | undefined, tags: string[] | nu
   return n ? Number(n[1]) : tags?.includes('children') ? 1 : 0;
 }
 
+/** A caller saying there are no children: "we're all adults", "no kids", "adults only". */
+const ADULTS_ONLY = /\b(?:all|just|only) (?:adults|grown[- ]ups|over[- ]?(?:18|eighteen)s?)\b|\bno (?:kids|children|under[- ]?(?:16|18)s?)\b|\badults only\b|\bnobody under\b/i;
+
 /**
  * A table running past the children's hour, booked without saying whether
  * any are under 16: asked once, before it's booked. A live call (13
@@ -69,6 +72,8 @@ export function childrenAsk(ctx: ToolContext, service: BookableService, time: st
   const until = ctx.tenant.profile.pub?.children_until;
   const t = time ? normaliseTime(time) : null;
   if (!until || !t || args.children !== undefined || ctx.state.gateAsked.includes('children')) return null;
+  // Already said: "we're all adults" (a live call was asked again, and then claimed a booking it never made).
+  if (ADULTS_ONLY.test(ctx.state.heard.slice(-8).join(' '))) return null;
   if (minutesOf(t) + durationFor(service, int(args.party_size) ?? 2) <= minutesOf(until)) return null;
   ctx.state.gateAsked.push('children');
   return {
