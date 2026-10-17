@@ -157,7 +157,21 @@
   {
    "q": "What ID do you accept?",
    "a": "We run Challenge 25: anyone who looks under 25 is asked for ID. A passport, a photo driving licence, a PASS card or a certified digital ID app. It’s the staff’s decision on the night.",
-   "tags": ["id","identification","challenge 25","passport","driving licence","proof of age","digital id","pass card"]
+   "tags": [
+    "id",
+    "identification",
+    "challenge 25",
+    "passport",
+    "driving licence",
+    "proof of age",
+    "digital id",
+    "pass card",
+    "served",
+    "serve",
+    "age",
+    "app",
+    "old enough"
+   ]
   },
   {
    "q": "Do you do half pints, small wines and tap water?",
