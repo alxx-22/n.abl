@@ -745,6 +745,10 @@ const TOOLS: Record<string, Tool> = {
     tailor: (d, t) => pubParams(cafeParams(barberParams(estateParams(tableParams(d, t, 'book'), t, 'book'), t), t), t),
     async handler(args, ctx) {
       const p = ctx.tenant.profile;
+      // A table for an unknown number is never booked as one: a live pub call booked a quiz team of five as one, never asked.
+      if (int(args.party_size) === undefined && !p.estate && findService(p, str(args.service))?.kind === 'table') {
+        return { booked: false, done: false, message: 'Not done yet: ask how many people, then call create_booking again with party_size.' };
+      }
       const group = overGroup(ctx, int(args.party_size) ?? 1, 'booked');
       if (group) return group;
       const each = oneEach(ctx, str(args.service), int(args.party_size) ?? 1, 'booked');

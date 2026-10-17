@@ -2750,7 +2750,7 @@ export const SCENARIOS: Scenario[] = [
     kind: 'happy',
     callerPhone: '+447700900989',
     now: PB_THURSDAY,
-    persona: 'You are Rob Kerr. Ask to book a team of five for the quiz tonight. The team is called The Pint Glasses. All adults. If asked where, the dining room is fine. Your name is Rob Kerr.',
+    persona: 'You are Rob Kerr. In your first sentence, ask to book a team of five for the quiz tonight. The team is called The Pint Glasses. All adults. If asked where, the dining room is fine. Your name is Rob Kerr.',
     async check(c) {
       const f: string[] = [];
       const b = await cafeBookings(c);

@@ -126,6 +126,8 @@ test('pub quiz and Today: a team booked with its name and the entry; the ales on
   const c = await call(t, '+447700900986');
   const free = await c.run('check_availability', { service: 'Quiz team', date: '2026-10-22', time: '20:00', party_size: 5, children: 0 });
   assert.deepEqual([free.available, free.total], [true, '£10.00 for 5'], JSON.stringify(free));
+  // How many is asked before a table is booked: a live call booked a team of five as one.
+  assert.match((await c.run('create_booking', { service: 'Quiz team', date: '2026-10-22', time: '20:00', team: 'The Pint Glasses', name: 'Rob Kerr' })).message, /^Not done yet: ask how many people/);
   const team = await c.run('create_booking', { service: 'Quiz team', date: '2026-10-22', time: '20:00', party_size: 5, children: 0, team: 'The Pint Glasses', area: 'dining', name: 'Rob Kerr' });
   assert.equal(team.booked, true, JSON.stringify(team));
   assert.equal((await repo.getBookingByReference(t.id, team.reference))!.notes, 'Team: The Pint Glasses');
