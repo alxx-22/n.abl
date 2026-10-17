@@ -587,7 +587,7 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     return json(res, 200, { ok: true, message }), true;
   }
   // A takeaway's Menu tonight, or a café's Today: what's sold out, and one notice for callers. Calls read it on every order tool.
-  if (sub === 'tonight' && !ref && req.method === 'PATCH' && (t.profile.ordering?.kitchen || (t.profile.cafe && t.profile.ordering))) {
+  if (sub === 'tonight' && !ref && req.method === 'PATCH' && (t.profile.ordering?.kitchen || (t.profile.cafe && t.profile.ordering) || t.profile.pub)) {
     const when = tonightWord(t.profile);
     const b = await readJson(req, 10_000);
     const keys = new Set((t.profile.menu?.categories ?? []).flatMap((c) => c.items.map((i) => i.key)));
@@ -595,15 +595,46 @@ export async function handleDemo(ctx: Ctx, req: IncomingMessage, res: ServerResp
     if (!soldOut || soldOut.some((k) => !keys.has(k))) throw new HttpError(400, 'Sold out: items on the menu only.');
     const n = b.notice;
     const notice = n === null || n === undefined ? null
-      : n.kind === 'delivery_paused' && t.profile.ordering.delivery ? { kind: 'delivery_paused' as const }
-      : n.kind === 'long_waits' && (LONG_WAITS[when] as readonly number[]).includes(Number(n.minutes)) ? { kind: 'long_waits' as const, minutes: Number(n.minutes) }
+      : n.kind === 'delivery_paused' && t.profile.ordering?.delivery ? { kind: 'delivery_paused' as const }
+      : n.kind === 'long_waits' && t.profile.ordering && (LONG_WAITS[when] as readonly number[]).includes(Number(n.minutes)) ? { kind: 'long_waits' as const, minutes: Number(n.minutes) }
       : undefined;
     if (notice === undefined) throw new HttpError(400, `The notice is ${t.profile.ordering?.delivery ? 'delivery paused, or ' : ''}long waits of ${LONG_WAITS[when][0]} to ${LONG_WAITS[when].at(-1)} minutes.`);
-    await repo.setTonight(t.id, { date: toLocal(tenantNow(t), t.profile.timezone).date, sold_out: soldOut, notice });
+    const date = toLocal(tenantNow(t), t.profile.timezone).date;
+    // A pub's ales on today: the list sent, or the one already set today.
+    let onTap: string[] | undefined;
+    if (t.profile.pub) {
+      if (b.on_tap === undefined) onTap = (await repo.getTonight(t.id, date)).on_tap;
+      else if (Array.isArray(b.on_tap) && b.on_tap.length <= 12 && b.on_tap.every((x: unknown) => typeof x === 'string' && x.trim() && x.length <= 40)) onTap = [...new Set((b.on_tap as string[]).map((x) => x.trim()))];
+      else throw new HttpError(400, 'On tap: up to 12 ales, a name each.');
+    }
+    await repo.setTonight(t.id, { date, sold_out: soldOut, notice, ...(onTap ? { on_tap: onTap } : {}) });
     void usage('staff_action', { action: 'menu_tonight' });
-    const what = notice?.kind === 'delivery_paused' ? 'delivery paused' : notice ? `long waits, about ${notice.minutes} minutes` : `${soldOut.length} sold out`;
+    const what = notice?.kind === 'delivery_paused' ? 'delivery paused' : notice ? `long waits, about ${notice.minutes} minutes` : b.on_tap !== undefined && onTap ? `${onTap.length} ales on` : `${soldOut.length} sold out`;
     refresh({ reason: 'staff', what: `${when === 'today' ? 'Today' : 'Menu tonight'}: ${what}` });
     return json(res, 200, { ok: true }), true;
+  }
+  // A pub's fixtures and one-off events: added or removed, and calls hear it at once (core/pub-tools.ts).
+  if (sub === 'events' && t.profile.pub) {
+    if (!ref && req.method === 'POST') {
+      const b = await readJson(req, 10_000);
+      const date = String(b.date ?? '');
+      const time = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(b.time ?? '')) ? String(b.time) : null;
+      const title = String(b.title ?? '').trim();
+      if (!isIsoDate(date) || !time) throw new HttpError(400, 'A date and a time, like 15:00.');
+      if (!title || title.length > 80) throw new HttpError(400, 'What it is, 80 characters at most.');
+      const kind = ['sport', 'music', 'quiz', 'other'].includes(b.kind) ? b.kind : 'sport';
+      const place = b.place ? String(b.place).trim().slice(0, 60) : kind === 'sport' ? 'the bar’s big screens' : null;
+      await repo.addPubEvent(t.id, { starts_at: zonedToUtc(date, time, t.profile.timezone), title, kind, place, source: 'console' });
+      void usage('staff_action', { action: 'event_added' });
+      refresh({ reason: 'staff', what: `What's on: ${title}` });
+      return json(res, 200, { ok: true, message: `${title} is on the list.` }), true;
+    }
+    if (ref && req.method === 'DELETE') {
+      if (!(await repo.deletePubEvent(t.id, ref))) throw new HttpError(404, 'That event is not on the list.');
+      void usage('staff_action', { action: 'event_removed' });
+      refresh({ reason: 'staff', what: "What's on: one taken off" });
+      return json(res, 200, { ok: true, message: 'Taken off the list.' }), true;
+    }
   }
   if (sub === 'orders' && ref && req.method === 'PATCH') {
     const body = await readJson(req, 10_000);

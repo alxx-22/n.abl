@@ -3,7 +3,7 @@
 // needs (the rooms, food times); the rest is knowledge, found when asked:
 // age and ID, measures, smoking, dogs, the room upstairs.
 
-import type { KnowledgeEntry, TenantProfile } from '../../domain/types.ts';
+import type { BookableService, KnowledgeEntry, TenantProfile } from '../../domain/types.ts';
 import { closeMinutes, minutesOf, spokenTime, timeOf } from '../../domain/time.ts';
 import { bookingWindows } from '../common/hours.ts';
 import type { DayHours } from '../common/types.ts';
@@ -58,6 +58,7 @@ function knowledge(a: PubAnswers): KnowledgeEntry[] {
     entry('Is anything on the food menu gluten-free?', "We don’t call food gluten-free unless it’s tested: the kitchen uses flour. Some dishes are made without gluten ingredients; the menu says which.", ['gluten', 'gluten-free', 'coeliac', 'celiac', 'wheat', 'food']),
     entry('Can I smoke or vape?', `${p.smoking} ${p.vaping}`, ['smoke', 'smoking', 'vape', 'vaping', 'cigarette']),
     entry('Can we bring a birthday cake or our own drinks?', `${p.own_cake} ${p.own_drink}`, ['cake', 'birthday', 'own drink', 'corkage', 'bring']),
+    entry('Do you show the football?', `The big games are on the bar’s screens: ask and I’ll check this week’s list.${a.booking.no_bar_bookings_for_matches ? ' The bar is first come during a match; the dining room can be booked, but has no screen.' : ''}`, ['football', 'sport', 'match', 'game', 'screen', 'rugby', 'cricket', 'boxing', 'sky', 'tnt']),
     entry('Can you call me a taxi?', `We don’t book them, but ${p.taxi}`, ['taxi', 'cab', 'uber', 'lift home']),
     entry('Can we hire the room upstairs?', p.hire, ['hire', 'room', 'upstairs', 'loft', 'function', 'party', 'wake', 'christening', 'private']),
     entry('Do you do Christmas parties?', p.christmas, ['christmas', 'xmas', 'festive', 'office party', 'work do']),
@@ -72,12 +73,41 @@ function knowledge(a: PubAnswers): KnowledgeEntry[] {
   ], p.faqs);
 }
 
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/** The quiz as a team booking: one weekly time, a price a head, at any table that takes bookings (presets/pub.md §4.2). */
+function quizService(a: PubAnswers): BookableService | null {
+  const q = a.quiz;
+  if (!q.offered || !a.hours.days[q.day]?.open) return null;
+  return {
+    key: 'quiz',
+    label: 'Quiz team',
+    kind: 'table',
+    slot_minutes: 15,
+    duration_rules: [{ max_party: 100, minutes: q.minutes }],
+    windows: [{ days: [q.day], first: q.time, last: q.time }],
+    max_party: q.team_max,
+    large_party_note: `Quiz teams are up to ${q.team_max}: a bigger group makes two teams, booked one after the other.`,
+    lead_minutes: a.seating.notice_minutes,
+    horizon_days: a.seating.horizon_days,
+    price_pence: q.entry_pence,
+    description: `The quiz, ${DAYS[q.day]}s at ${spokenTime(q.time)}: ${pounds(q.entry_pence)} a head, paid on the night.`,
+    per_person: { adult_pence: q.entry_pence, child_pence: 0, child_under: 0 },
+  };
+}
+
 export function compilePub(a: PubAnswers, meta: { slug: string }): TenantProfile {
   const booking = compileBooking(a.seating, {
     reservations: true,
     windows: bookingWindows({ days: foodDays(a) }, LAST_TABLE_BEFORE_FOOD_STOPS),
     deposit: { mode: 'none', amount_pence: 0, min_party: 1 },
   });
+  const quiz = quizService(a);
+  if (quiz) {
+    booking.services.push(quiz);
+    // A team sits at any table that takes bookings, in the bar or the dining room.
+    for (const r of booking.resources) if (r.services.includes('table')) r.services.push('quiz');
+  }
   return {
     ...baseProfile(a, meta, {
       businessType: 'pub',
@@ -98,6 +128,9 @@ export function compilePub(a: PubAnswers, meta: { slug: string }): TenantProfile
       children_until: a.children.until,
       food: { ...a.hours.food },
       taxi: a.policies.taxi,
+      events: a.events.map((e) => ({ ...e })),
+      on_tap: [...a.drinks.on_tap],
+      no_bar_bookings_for_matches: a.booking.no_bar_bookings_for_matches,
     },
   };
 }

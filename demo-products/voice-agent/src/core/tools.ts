@@ -37,7 +37,7 @@ import {
   barberParams, depositFields, depositNext, depositOnCancel, followOn, holdText, noticeFirst, offToday, oneEach, readBackFirst, secondBooking, sendHeldTexts,
   BARBER_TOOLS, barberCheckParams, checkFirst, barberMessage, barberMessageParams, quietTimes, under16Note, colourFrom, dyeReaction, lateHint, overGroup, offTodayNote, offerFreedSlot, ownOnly, servicePrice, shopToday, skinTestFirst, tenantOn, waitForYes,
 } from './barber-tools.ts';
-import { childrenAsk, childrenFirst, childrenOn, pubNotes, pubParams } from './pub-tools.ts';
+import { alesToday, childrenAsk, childrenFirst, childrenOn, matchFirst, pubNotes, pubParams, whatsOn } from './pub-tools.ts';
 import { breakfastOver, cafeMessage, cafeMessageParams, cafeParams, dietsAsked, glutenAnswer, noticeFirst as cafeNotice, partyOf, perPerson, teaReadBack, walkInFirst } from './cafe-tools.ts';
 import { reactionFirst, type ReactionState } from './reaction.ts';
 import { MAINTENANCE_TOOLS, dampOwed, maintenanceHours, maintenanceMessage, maintenanceParams, maintenancePayment, maintenancePaymentParams } from './maintenance-tools.ts';
@@ -139,6 +139,8 @@ export interface CallState {
   pub: boolean;
   /** Items a tool said are marked gluten-free: "gluten-free" may be said of these by name, and of nothing else. */
   glutenFreeItems: string[];
+  /** A pub's whats_on has answered in this call: what's on may be said from it. */
+  whatsOnChecked: boolean;
   /** A booking, valuation or offer read back for a yes: records made, and booking tools tried, when it was asked or answered. */
   readBack: { committed: number; tries: number } | null;
   saidYes: { committed: number; tries: number } | null;
@@ -207,7 +209,7 @@ export function newCallState(): CallState {
     committed: [], found: [], lastOrderRef: null, lastBookingRef: null, paid: [], ending: false, transferRequested: false,
     heard: [], allergyAsked: false, dealOffers: [], dealHeard: null, owed: null, messageTaken: false, messageChecked: false, messageOwed: false,
     estate: false, takeaway: false, said: [], briefed: {}, gateAsked: [], verified: [], verifyMisses: 0, valuationOffered: false, conditionsAsked: false,
-    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false, depositRefunded: false, checked: [], cafe: false, pub: false, glutenFreeItems: [],
+    seen: { accepted: [], interest: false }, lastOfferRef: null, toolFlags: [], textsHeld: [], turnSaid: '', barber: false, depositRefunded: false, checked: [], cafe: false, pub: false, glutenFreeItems: [], whatsOnChecked: false,
     readBack: null, saidYes: null, commitTries: 0, bookNudged: false, outstanding: null, retryNudged: false, bookedChecked: false, fraudNudged: false, fraudReported: false,
     maintenance: false, safety: null, safetyDone: [], property: null, role: null, jobsVerified: [], priceAsked: false, awaitingApproval: false, paged: false,
     invoice: null, emergencyTrade: null, amounts: [], relay: false, references: [], deliveryTerms: null, privateAddresses: [], reaction: null, times: [], timeRanges: [],
@@ -654,6 +656,10 @@ const TOOLS: Record<string, Tool> = {
       const asOf = colourStart ? new Date(Math.max(ctx.now().getTime(), colourStart.getTime() - (service.lead_minutes ?? 0) * 60000)) : ctx.now();
       const estate = await estateAvailability(args, ctx, service);
       if (estate) return estate;
+      // A pub's bar during a listed match: first come, so the room that can be booked instead (core/pub-tools.ts).
+      const match = await matchFirst(ctx, service, str(args.date), str(args.time), args, 'available');
+      if (match?.refuse) return match.refuse;
+      if (match?.area) args = { ...args, area: match.area };
       const area = resolveArea(ctx.tenant, str(args.area));
       if (area.enquiry || area.walkIn || area.unknown) return { available: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
       const table = service.kind === 'table' ? resolveTable(ctx.tenant, str(args.table)) : {};
@@ -706,12 +712,13 @@ const TOOLS: Record<string, Tool> = {
       if (service.price_pence) out.price = servicePrice(service);
       if (!out.next && (r.available || r.alternatives.length)) out.next = readBackFirst(ctx, service, (out.with as string | undefined) ?? str(args.staff));
       // A café's afternoon tea: the price per person and the total for the party.
-      const teaPrice = p.cafe ? perPerson(service, partyOf(args).party, partyOf(args).children) : null;
+      const teaPrice = p.cafe || p.pub ? perPerson(service, partyOf(args).party, partyOf(args).children) : null;
       if (teaPrice) {
         out.price = teaPrice.price;
         out.total = teaPrice.total;
         if (!out.next && (r.available || r.alternatives.length)) out.next = teaReadBack(service, teaPrice.total, dietsAsked(ctx, service, args));
       }
+      if (match?.note) out.match = match.note;
       return out;
     },
   },
@@ -749,7 +756,8 @@ const TOOLS: Record<string, Tool> = {
       if (follow?.args) args = { ...args, ...follow.args };
       const second = await secondBooking(ctx);
       if (second) return second;
-      const cafeService = p.cafe ? findService(p, str(args.service)) : undefined;
+      // A café's, and a pub's quiz: priced per person (walk-in and notice stay the café's).
+      const cafeService = p.cafe || p.pub ? findService(p, str(args.service)) : undefined;
       const cafeBlock = cafeService ? (walkInFirst(ctx, cafeService, int(args.party_size) ?? 1, 'booked') ?? cafeNotice(ctx, cafeService, str(args.date) ?? '', args, 'booked')) : null;
       if (cafeBlock) return cafeBlock;
       const pubService = p.pub ? findService(p, str(args.service)) : undefined;
@@ -774,6 +782,10 @@ const TOOLS: Record<string, Tool> = {
         if (estate) return estate;
       }
       const phone = normaliseUkPhone(str(args.phone)) ?? ctx.callerPhone;
+      const matchService = p.pub ? findService(p, str(args.service)) : undefined;
+      const match = matchService ? await matchFirst(ctx, matchService, str(args.date), str(args.time), args, 'booked') : null;
+      if (match?.refuse) return match.refuse;
+      if (match?.area) args = { ...args, area: match.area };
       const area = resolveArea(ctx.tenant, str(args.area));
       if (area.enquiry || area.walkIn || area.unknown) return { booked: false, message: area.enquiry ?? area.walkIn ?? area.unknown };
       const table = isTables(ctx.tenant) ? resolveTable(ctx.tenant, str(args.table)) : {};
@@ -1088,8 +1100,11 @@ const TOOLS: Record<string, Tool> = {
           say: `These are made without ${avoid.join(' or ')} as an ingredient. ${menu.allergen_statement} Never say a dish is safe.${cafe && avoid.includes('gluten') ? ' Never call any of them gluten-free: the kitchen uses flour.' : ''}${cafe ? ' Say just that: no disclaimer of your own.' : ''}`,
         };
       }
+      // A pub's ales: today's, as set on Today (core/pub-tools.ts).
+      const ales = ctx.tenant.profile.pub && (!c || cats.some((x) => x.key === 'ales')) ? await alesToday(ctx, (await tonight(ctx))?.on_tap) : null;
       if (c && cats.length) {
         return {
+          ...(ales ? { ales_on_today: ales, say: `The ales on today: ${ales.join(', ')}. Say only these.` } : {}),
           categories: cats.map((x) => ({
             category: x.label,
             items: x.items.map((i) => ({
@@ -1099,7 +1114,7 @@ const TOOLS: Record<string, Tool> = {
           })),
         };
       }
-      return { categories: menu.categories.map((x) => ({ category: x.label, items: x.items.map((i) => i.name) })) };
+      return { ...(ales ? { ales_on_today: ales } : {}), categories: menu.categories.map((x) => ({ category: x.label, items: x.items.map((i) => i.name) })) };
     },
   },
 
@@ -1669,6 +1684,16 @@ const TOOLS: Record<string, Tool> = {
   ...ESTATE_TOOLS,
   ...MAINTENANCE_TOOLS,
   ...BARBER_TOOLS,
+
+  whats_on: {
+    when: (t) => Boolean(t.profile.pub),
+    decl: {
+      name: 'whats_on',
+      description: "This week's events: the matches on the big screens, the quiz, live music. With what, just that (\"the Forest game\"). Use before saying anything is on or shown.",
+      parameters: obj({ date: S('YYYY-MM-DD: one day only'), what: S('What they asked about, in their words') }),
+    },
+    handler: (args, ctx) => whatsOn(ctx, args),
+  },
 
   take_message: {
     decl: {

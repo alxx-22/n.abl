@@ -27,7 +27,9 @@ export type ViewId =
   | 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls' | 'properties' | 'offers' | 'applicants' | 'valuations' | 'sales'
   | 'jobs' | 'dispatch' | 'compliance' | 'safety' | 'clients' | 'money' | 'tonight'
   // A barber's shop floor (presets/barber.md §6): the walk-in queue, who's in today, the waiting list.
-  | 'queue' | 'today' | 'waitlist';
+  | 'queue' | 'today' | 'waitlist'
+  // A pub's (presets/pub.md §6): this week's fixtures and events.
+  | 'whats_on';
 
 /** The back office a workspace shows, in the preset's own words (PRESETS.md §2.5). */
 export interface WorkspaceSpec {

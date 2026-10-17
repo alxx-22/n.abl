@@ -6,7 +6,7 @@
 
 import { randomInt } from 'node:crypto';
 import type { Db, Queryable } from './db.ts';
-import type {
+import type { PubEvent,
   Booking, Buyer, BuyerDetails, BuyerPosition, Certificate, CertificateKind, Incident, Invoice, Job, JobStatus, ListingState, MtProperty, Offer, OfferStatus, Quote, QuoteStatus, Order, OrderLine, OrderRequest, Tonight,
   Sale, Tenant, TenantProfile,
 } from '../domain/types.ts';
@@ -354,7 +354,30 @@ export class Repo {
   async getTonight(tenantId: string, date: string): Promise<Tonight> {
     const rows = await this.db.query<any>('select tonight from public.voice_tenants where id = $1', [tenantId]);
     const t = rows[0]?.tonight ?? {};
-    return t.date === date ? { date, sold_out: t.sold_out ?? [], notice: t.notice ?? null } : { date, sold_out: [], notice: null };
+    return t.date === date ? { date, sold_out: t.sold_out ?? [], notice: t.notice ?? null, ...(Array.isArray(t.on_tap) ? { on_tap: t.on_tap } : {}) } : { date, sold_out: [], notice: null };
+  }
+
+  // ── A pub's fixtures and events (presets/pub.md §5) ────────────────────
+
+  /** Fixtures and one-off events starting in [from, to), soonest first. */
+  async listPubEvents(tenantId: string, from: Date, to: Date): Promise<PubEvent[]> {
+    const rows = await this.db.query<any>('select * from public.voice_pub_events where tenant_id = $1 and starts_at >= $2 and starts_at < $3 order by starts_at, title', [tenantId, from, to]);
+    return rows.map((r) => ({ id: r.id, starts_at: new Date(r.starts_at), title: r.title, kind: r.kind, place: r.place, notes: r.notes, source: r.source }));
+  }
+
+  async addPubEvent(tenantId: string, e: { starts_at: Date; title: string; kind: PubEvent['kind']; place: string | null; source: PubEvent['source'] }): Promise<string> {
+    const rows = await this.db.query<{ id: string }>(
+      'insert into public.voice_pub_events (tenant_id, starts_at, title, kind, place, source) values ($1, $2, $3, $4, $5, $6) returning id',
+      [tenantId, e.starts_at, e.title, e.kind, e.place, e.source],
+    );
+    return rows[0].id;
+  }
+
+  /** Removed: true when there was one with that id. */
+  async deletePubEvent(tenantId: string, id: string): Promise<boolean> {
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return false;
+    const rows = await this.db.query<{ id: string }>('delete from public.voice_pub_events where tenant_id = $1 and id = $2 returning id', [tenantId, id]);
+    return rows.length > 0;
   }
 
   async setTonight(tenantId: string, t: Tonight): Promise<void> {
@@ -1406,6 +1429,9 @@ export class Repo {
         ]);
       }
       // A barber's shop floor.
+      for (const e of plan.events ?? []) {
+        await q.query(`insert into public.voice_pub_events (tenant_id, starts_at, title, kind, place, source) values ($1, $2, $3, $4, $5, 'seed')`, [tenantId, e.starts_at, e.title, e.kind, e.place]);
+      }
       for (const w of plan.walkins ?? []) {
         await q.query(`insert into public.voice_walkins (tenant_id, name, phone, service_key, resource_key, joined_at, source) values ($1, $2, $3, $4, $5, $6, 'seed')`, [
           tenantId, w.name, w.phone, w.service_key, w.resource_key, w.joined_at,
@@ -1777,7 +1803,7 @@ export class Repo {
   async resetTenantData(tenantId: string): Promise<void> {
     await this.db.tx(async (q) => {
       for (const t of [
-        'voice_walkins', 'voice_waitlist', 'voice_payments', 'voice_orders', 'voice_bookings', 'voice_messages', 'voice_calls', 'voice_customers', 'voice_offers', 'voice_sales', 'voice_listings',
+        'voice_pub_events', 'voice_walkins', 'voice_waitlist', 'voice_payments', 'voice_orders', 'voice_bookings', 'voice_messages', 'voice_calls', 'voice_customers', 'voice_offers', 'voice_sales', 'voice_listings',
         'voice_mt_jobs', 'voice_mt_certificates', 'voice_mt_incidents', 'voice_mt_properties', 'voice_mt_quotes', 'voice_mt_invoices',
       ]) {
         await q.query(`delete from public.${t} where tenant_id = $1`, [tenantId]);

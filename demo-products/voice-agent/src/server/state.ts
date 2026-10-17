@@ -10,6 +10,7 @@ import { addDays, spokenDate, spokenTime, toLocal, zonedToUtc, tenantNow } from 
 import { displayUkPhone, normaliseUkPhone } from '../domain/phone.ts';
 import { capabilities } from '../core/prompt.ts';
 import { LONG_WAITS, tonightWord } from '../core/kitchen.ts';
+import { pubWeek } from '../core/pub-tools.ts';
 import { barberMarks, barberState } from './barber.ts';
 import type { WorkspaceSpec } from '../presets/index.ts';
 import { maintenanceState } from './maintenance.ts';
@@ -125,7 +126,9 @@ export async function tenantState(repo: Repo, t: Tenant, bus: Bus, workspace: Wo
     })),
     ...(kitchen ? { drivers: kitchen.delivery?.drivers ?? [], tonight: await tonightState(repo, t, today) } : {}),
     // A café's Today: the same switches, said for the day.
-    ...(!kitchen && t.profile.cafe && t.profile.ordering ? { tonight: await tonightState(repo, t, today) } : {}),
+    ...(!kitchen && ((t.profile.cafe && t.profile.ordering) || t.profile.pub) ? { tonight: await tonightState(repo, t, today) } : {}),
+    // A pub's week: the manager's fixtures, the weekly events and the quiz (core/pub-tools.ts).
+    ...(t.profile.pub ? { pub: { events: await pubWeek(repo, t, today, 7) } } : {}),
     messages: (await repo.listMessages(t.id, 60)).map((m) => ({ ...m, to_number: displayUkPhone(m.to_number), from_phone: displayUkPhone(m.from_phone) })),
     calls: (await repo.listCalls(t.id, 12)).map((c) => ({
       id: c.id, channel: c.channel, started_at: c.started_at, ended_at: c.ended_at, outcome: c.outcome, summary: c.summary,
@@ -230,15 +233,17 @@ async function estateState(repo: Repo, t: Tenant, bookings: Booking[], now: Date
   };
 }
 
-/** A takeaway's Menu tonight, or a café's Today, with the menu to switch items off on (presets/takeaway.md §6). */
+/** A takeaway's Menu tonight, or a café's or a pub's Today, with the menu to switch items off on (presets/takeaway.md §6). */
 async function tonightState(repo: Repo, t: Tenant, today: string) {
   const night = await repo.getTonight(t.id, today);
   const when = tonightWord(t.profile);
   return {
     ...night,
     when,
-    waits: [...LONG_WAITS[when]],
+    // Long waits only where there are orders to wait for; a pub's ales on today, or the usual ones.
+    waits: t.profile.ordering ? [...LONG_WAITS[when]] : [],
     delivery: Boolean(t.profile.ordering?.delivery),
+    ...(t.profile.pub ? { on_tap: night.on_tap ?? t.profile.pub.on_tap } : {}),
     menu: (t.profile.menu?.categories ?? []).map((c) => ({ label: c.label, items: c.items.map((i) => ({ key: i.key, name: i.name, off: i.available === false })) })),
   };
 }

@@ -23,6 +23,7 @@ import { Offers } from './Offers.tsx';
 import { OrderBoard } from './OrderBoard.tsx';
 import { Drivers } from './Drivers.tsx';
 import { MenuTonight } from './MenuTonight.tsx';
+import { WhatsOn } from './WhatsOn.tsx';
 import { Properties } from './Properties.tsx';
 import { Queue } from './Queue.tsx';
 import type { Shows, WorkspaceSpec } from './spec.ts';
@@ -147,6 +148,12 @@ export const VIEWS: Partial<Record<ViewId, ViewDef>> = {
     shows: null,
     count: (s) => s.tonight?.sold_out.length ?? 0,
     render: (p) => <MenuTonight id={p.id} state={p.state} onDone={p.refresh} />,
+  },
+  // A pub's (presets/pub.md §6): the number in the tab is this week's matches.
+  whats_on: {
+    shows: null,
+    count: (s) => (s.pub?.events ?? []).filter((e) => e.kind === 'sport').length,
+    render: (p) => <WhatsOn id={p.id} state={p.state} today={p.today} onDone={p.refresh} />,
   },
   // A barber's (presets/barber.md §6): the number in the tab is who's waiting.
   queue: {

@@ -1,20 +1,23 @@
 // A takeaway's Menu tonight (presets/takeaway.md §6), or a café's Today
-// (presets/cafe.md §6): switch a dish off when it runs out, and put up one
-// notice for callers, delivery paused or long waits. The receptionist reads
+// (presets/cafe.md §6), or a pub's (presets/pub.md §6, with the ales on
+// today): switch a dish off when it runs out, and put up one notice for
+// callers, delivery paused or long waits. The receptionist reads
 // both on every order tool, so a call in progress hears the change at once.
 // It all starts again tomorrow.
 
+import { useState } from 'react';
 import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
 import type { LiveState, Tonight } from '../types.ts';
 
 export function MenuTonight({ id, state, onDone }: { id: string; state: LiveState; onDone: () => void }) {
   const t = state.tonight;
+  const [ale, setAle] = useState('');
   if (!t) return null;
   const when = t.when;
   // A takeaway's evening wait starts at an hour and a half; a café's lunchtime one at half an hour.
   const first = t.waits.includes(90) ? 90 : t.waits[Math.floor(t.waits.length / 2)];
-  const save = async (next: Pick<Tonight, 'sold_out' | 'notice'>, said: string) => {
+  const save = async (next: Pick<Tonight, 'sold_out' | 'notice'> & { on_tap?: string[] }, said: string) => {
     try {
       await demoApi(`/workspaces/${id}/tonight`, { method: 'PATCH', json: next });
       toast(said);
@@ -30,6 +33,24 @@ export function MenuTonight({ id, state, onDone }: { id: string; state: LiveStat
   const notice = t.notice?.kind ?? 'none';
   return (
     <div className="tonight">
+      {t.on_tap ? (
+        <section className="tonight-section" aria-label="On tap today">
+          <h3 className="sub">On tap today <span className="count">{t.on_tap.length}</span></h3>
+          <p className="hint">Callers asking what's on hear these ales, and no others.</p>
+          <div className="chips">
+            {t.on_tap.map((name) => (
+              <button key={name} type="button" className="chip" aria-label={`Take ${name} off`} onClick={() => save({ sold_out: t.sold_out, notice: t.notice, on_tap: t.on_tap!.filter((x) => x !== name) }, `${name} is off.`)}>
+                {name} ×
+              </button>
+            ))}
+          </div>
+          <form className="tonight-add" onSubmit={(e) => { e.preventDefault(); if (ale.trim()) void save({ sold_out: t.sold_out, notice: t.notice, on_tap: [...t.on_tap!, ale.trim()] }, `${ale.trim()} is on.`).then(() => setAle('')); }}>
+            <input aria-label="An ale to put on" value={ale} maxLength={40} placeholder="Trent Pale" onChange={(e) => setAle(e.target.value)} />
+            <button type="submit" className="small" disabled={!ale.trim() || t.on_tap.length >= 12}>Put it on</button>
+          </form>
+        </section>
+      ) : null}
+      {t.delivery || t.waits.length ? (
       <fieldset className="choice">
         <legend>Tell callers</legend>
         <label>
@@ -40,6 +61,7 @@ export function MenuTonight({ id, state, onDone }: { id: string; state: LiveStat
             <input type="radio" name="notice" checked={notice === 'delivery_paused'} onChange={() => save({ sold_out: t.sold_out, notice: { kind: 'delivery_paused' } }, 'Delivery paused: callers are offered collection.')} /> Delivery is paused tonight
           </label>
         ) : null}
+        {t.waits.length ? (
         <label>
           <input type="radio" name="notice" checked={notice === 'long_waits'} onChange={() => save({ sold_out: t.sold_out, notice: { kind: 'long_waits', minutes: first } }, `Long waits: callers hear about ${first} minutes.`)} /> Long waits:
           <select
@@ -49,7 +71,9 @@ export function MenuTonight({ id, state, onDone }: { id: string; state: LiveStat
             {t.waits.map((m) => <option key={m} value={m}>about {m} minutes</option>)}
           </select>
         </label>
+        ) : null}
       </fieldset>
+      ) : null}
       <h3 className="sub">Sold out {when} <span className="count">{t.sold_out.length || 'none'}</span></h3>
       <p className="hint">Tap a dish when it runs out. The receptionist says sorry and offers another from the same section{when === 'tonight' ? ", and a meal deal won't take it as a choice" : ''}.</p>
       {t.menu.map((c) => (

@@ -487,6 +487,8 @@ export interface LiveState extends Omit<TenantState, 'bookings' | 'orders'> {
   drivers?: string[];
   /** A takeaway's Menu tonight, with the menu to switch dishes off on. */
   tonight?: Tonight;
+  /** A pub's week of fixtures and events. */
+  pub?: { events: WeekEvent[] };
   /** An estate agency's. */
   nation?: Nation;
   team?: LiveStaff[];
@@ -539,4 +541,17 @@ export interface Tonight {
   waits: number[];
   delivery: boolean;
   menu: { label: string; items: { key: string; name: string; off: boolean }[] }[];
+  /** A pub's ales on today. */
+  on_tap?: string[];
+}
+
+/** One event in a pub's week (core/pub-tools.ts): weekly ones have no id. */
+export interface WeekEvent {
+  id: string | null;
+  date: string;
+  time: string;
+  title: string;
+  kind: 'sport' | 'music' | 'quiz' | 'other';
+  place: string;
+  source: string;
 }

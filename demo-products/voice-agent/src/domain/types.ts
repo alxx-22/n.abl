@@ -332,6 +332,23 @@ export interface PubSettings {
   food: { from: string; until: string; sunday_until: string | null };
   /** The local taxi firm, for callers who ask. */
   taxi: string;
+  /** Weekly events (live music on Saturdays at 9): whats_on lists them every week. */
+  events: { day: number; time: string; title: string; place: string; free: boolean }[];
+  /** The ales usually on; "Today" changes them for the day. */
+  on_tap: string[];
+  /** The bar's tables aren't booked during a listed match: first come then. */
+  no_bar_bookings_for_matches: boolean;
+}
+
+/** A pub's fixture or one-off event (voice_pub_events): the match on the big screens, a band. */
+export interface PubEvent {
+  id: string;
+  starts_at: Date;
+  title: string;
+  kind: 'sport' | 'music' | 'quiz' | 'other';
+  place: string | null;
+  notes: string | null;
+  source: 'console' | 'seed' | 'eval';
 }
 
 export interface BarberSettings {
@@ -720,6 +737,8 @@ export interface Tonight {
   sold_out: string[];
   /** One notice for callers. */
   notice: { kind: 'delivery_paused' } | { kind: 'long_waits'; minutes: number } | null;
+  /** A pub's ales on today, when the manager has changed them; unset: the usual list. */
+  on_tap?: string[];
 }
 
 export interface OrderRequest {

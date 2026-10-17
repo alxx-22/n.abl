@@ -192,4 +192,6 @@ export interface SeedPlan {
   walkins?: { name: string; phone: string | null; service_key: string; resource_key: string | null; joined_at: Date }[];
   waitlist?: { date: string; service_key: string; resource_key: string | null; name: string; phone: string; created_at: Date }[];
   skinTests?: { name: string; phone: string; at: Date }[];
+  /** A pub's fixtures for the week (voice_pub_events). */
+  events?: { starts_at: Date; title: string; kind: 'sport' | 'music' | 'quiz' | 'other'; place: string | null }[];
 }

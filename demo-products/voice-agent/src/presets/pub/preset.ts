@@ -47,12 +47,14 @@ export function factSheet(a: PubAnswers): string {
   ].join('\n');
 }
 
-/** The pub's back office (presets/pub.md §6): the floor plan and the day's bookings, then messages and calls. */
+/** The pub's back office (presets/pub.md §6): the floor plan and the day's bookings, what's on this week, today's ales and what's sold out, then messages and calls. */
 export function pubWorkspace(_profile: TenantProfile): WorkspaceSpec {
   return {
     views: [
       { id: 'floor', label: 'Floor plan' },
       { id: 'timeline', label: 'Bookings' },
+      { id: 'whats_on', label: 'What’s on' },
+      { id: 'tonight', label: 'Today' },
       { id: 'messages', label: 'Messages' },
       { id: 'calls', label: 'Calls' },
     ],
@@ -67,6 +69,8 @@ export function pubWorkspace(_profile: TenantProfile): WorkspaceSpec {
     suggestions: [
       'Sunday lunch for six at 1, with two kids and our dog?',
       'Can my 17-year-old have a pint with his dinner?',
+      'Are you showing the Forest game on Saturday?',
+      'Can I book a team of five for the quiz?',
       'My son has a nut allergy: which desserts can he have?',
       'Do you have gluten-free beer?',
       'Can we hire the room upstairs for a 40th? (Call as Jess)',

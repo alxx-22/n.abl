@@ -29,6 +29,8 @@ import { allergyQuestionDish } from './kitchen.ts';
 import { freeFromAsked } from './cafe-tools.ts';
 
 /** A pub's caller asking about age or ID: "my 17-year-old", "what ID", "under 18s", "Challenge 25". */
+/** A pub's caller asking what's on: the match, the quiz, a band. */
+const WHATS_ON_ASKED = /\b(?:show(?:ing)?|screen(?:ing)?|put(?:ting)? on|have on|on (?:the )?(?:tv|telly|screens?))\b[^.?!]{0,40}\b(?:game|match|football|rugby|cricket|boxing|fight|race|grand prix|final|derby)\b|\b(?:game|match|fight|final|derby)\b[^.?!]{0,30}\b(?:on|showing|shown)\b|\bwhat'?s on\b|\bquiz\b|\blive music\b|\b(?:a )?band\b/i;
 const AGE_OR_ID = /\b(?:1[0-7]|sixteen|seventeen|fifteen)[- ]?(?:year[- ]olds?|yo)\b|\bunder[- ]?(?:18|eighteen)s?\b|\bID\b|\bidentification\b|\bproof of age\b|\bchallenge (?:21|25)\b|\bhow old\b/i;
 import { addDays, toLocal, zonedToUtc } from '../domain/time.ts';
 import { unsaid } from '../domain/listings.ts';
@@ -226,6 +228,7 @@ const CORRECTIONS: Record<Flag['rule'], string> = {
   invented_price: "[Correction from the system: no tool or fact gave that price. Correct yourself: say you can't price that on the phone; the engineer prices it on the visit, or it is a free quote, and give only the prices your tools return.]",
   card_surcharge: "[Correction from the system: there is no extra charge for paying by card, and a shop may not add one. Correct yourself now.]",
   disclaimer: "[Correction from the system: no disclaimers. Never say you aren't a medical professional or that this isn't advice: just carry on with what the caller asked, and don't apologise for it.]",
+  invented_fixture: "[Correction from the system: nothing has said that's on. Say only \"Let me check what's on\", then call whats_on with what they asked, and say only what it returns: if it isn't listed, it isn't on.]",
   cause_guessed: "[Correction from the system: never say what caused it, or that it couldn't have been the food: nobody knows yet. Correct yourself: say sorry, and that the owner will look into it and call back.]",
   gluten_free_claim: "[Correction from the system: never call food gluten-free unless a tool says it's marked so. Correct yourself now.]",
   refund_claim: "[Correction from the system: nothing has been cancelled, changed or refunded: staff decide, and the team will text them. Correct yourself now: it's with the kitchen, and they'll hear by text.]",
@@ -602,6 +605,11 @@ export class CallSession extends EventEmitter<CallEvents> {
       if (dish && !this.state.gateAsked.includes(`allergy:${dish}`)) {
         this.state.gateAsked.push(`allergy:${dish}`);
         this.session?.sendText(`[From the system: the caller is asking about an allergy and the ${dish}. Call get_item_details for "${dish}" now and say its allergen_answer, caveat included. Never say safe.]`);
+      }
+      // A pub's "are you showing the match?": whats_on's list, never a guess (core/pub-tools.ts).
+      if (this.state.pub && WHATS_ON_ASKED.test(clean) && !this.state.gateAsked.includes('whats_on')) {
+        this.state.gateAsked.push('whats_on');
+        this.session?.sendText("[From the system: the caller is asking what's on. Call whats_on now with what they asked, and say only what it returns.]");
       }
       // A pub's age and ID questions: the knowledge's answer, said plainly. Live, 13 October: "it's up to the staff" and nothing more.
       if (this.state.pub && AGE_OR_ID.test(clean) && !this.state.gateAsked.includes('age_id')) {

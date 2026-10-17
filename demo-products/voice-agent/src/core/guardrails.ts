@@ -24,7 +24,9 @@ export interface Flag {
     // A takeaway's (presets/takeaway.md §8); it also uses invented_time and invented_price.
     | 'card_surcharge' | 'refund_claim' | 'address_read_back'
     // A café's (presets/cafe.md §7); it also uses medical_advice.
-    | 'gluten_free_claim' | 'cause_guessed' | 'disclaimer';
+    | 'gluten_free_claim' | 'cause_guessed' | 'disclaimer'
+    // A pub's (presets/pub.md §7).
+    | 'invented_fixture';
   text: string;
 }
 
@@ -352,6 +354,7 @@ export function checkUtterance(text: string, state: CallState, staff: string[] =
   if (state.takeaway) flags.push(...takeawayFlags(text, state));
   if (state.barber || state.cafe || state.pub) flags.push(...barberFlags(text, state));
   if (state.cafe || state.pub) flags.push(...cafeFlags(text, state));
+  if (state.pub) flags.push(...pubFlags(text, state));
   return flags;
 }
 
@@ -377,6 +380,15 @@ const CAFE_MEDICAL = /\b(?:(?:it'?s|that'?s|it sounds like|sounds like|it was|pr
 // The model's own boilerplate, read out on two live café calls: "Not medical advice or diagnosis, see a healthcare professional".
 const DISCLAIMER = /\b(?:medical disclaimer|not (?:medical|health) advice|(?:see|consult|speak to|talk to) a (?:healthcare|health care|medical) professional|seek(?:ing)? (?:medical )?care)\b/i;
 const CAUSE = /\b(?:it|that)\s+(?:couldn'?t|can'?t|could not|cannot|wouldn'?t|would not)\s+have\s+been\s+(?:from\s+)?(?:us|our|the food|anything (?:you|we))|\b(?:it|that)\s+(?:wasn'?t|was not|isn'?t|is not)\s+(?:from\s+)?(?:us|our (?:food|kitchen|café)|the food)\b|\b(?:it|that)\s+(?:was|is)\s+(?:probably|likely|definitely|almost certainly)\s+(?:the|our|from)\b/i;
+
+// "We're showing it", "it'll be on the big screen": a match is on only if whats_on listed it, so before it has
+// answered in the call, saying one is shown is invented (the commonest pub complaint is a promised match that isn't on).
+const FIXTURE_CLAIM = /\b(?:we(?:'re| are|'ll| will)(?: definitely| probably| usually)? (?:be )?(?:showing|screening|putting (?:it|that|the (?:game|match|fight)) on|having (?:it|that|the (?:game|match|fight)) on)|(?:it|the (?:game|match|fight|race))(?:'ll| will)(?: definitely| probably)? be (?:on|shown|showing)\b|we (?:always|usually) (?:show|have) (?:it|the|all|every))/i;
+
+function pubFlags(text: string, state: CallState): Flag[] {
+  const claim = FIXTURE_CLAIM.exec(text);
+  return claim && !negated(text, claim.index) && !state.whatsOnChecked ? [{ rule: 'invented_fixture', text: claim[0] }] : [];
+}
 
 function cafeFlags(text: string, state: CallState): Flag[] {
   const flags: Flag[] = [];

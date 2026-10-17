@@ -6,7 +6,7 @@
 // a seed.
 
 import { checkSlot, findService, type BusyInterval } from '../../domain/availability.ts';
-import { addDays, minutesOf, timeOf, toLocal, weekdayOf } from '../../domain/time.ts';
+import { addDays, minutesOf, timeOf, toLocal, weekdayOf, zonedToUtc } from '../../domain/time.ts';
 import type { BookableService, TenantProfile } from '../../domain/types.ts';
 import { ids, rng } from '../common/random.ts';
 import type { SeedBooking, SeedMessage, SeedPlan } from '../common/types.ts';
@@ -83,6 +83,23 @@ export function planPubSeed(profile: TenantProfile, now: Date, seed: number, day
       }
     }
 
+    // Quiz teams on quiz night, in the bar and the dining room.
+    const quiz = findService(profile, 'quiz');
+    if (quiz) {
+      const TEAMS = ['The Usual Suspects', 'Quizteama Aguilera', 'Les Quizerables', 'Universally Challenged', 'The Lace Makers'];
+      for (let d = 0; d < days; d++) {
+        const date = addDays(today, d);
+        const w = quiz.windows.find((x) => x.days.includes(weekdayOf(date)));
+        if (!w) continue;
+        let n = 0;
+        for (const team of TEAMS) {
+          if (n >= 3 + Math.floor(random() * 2)) break;
+          const b = place(quiz, date, w.first, 3 + Math.floor(random() * 4));
+          if (b) { b.notes = `Team: ${team}`; n++; }
+        }
+      }
+    }
+
     // A party of eight in the dining room on Saturday at 7.
     let saturday = today;
     while (weekdayOf(saturday) !== 6) saturday = addDays(saturday, 1);
@@ -101,5 +118,15 @@ export function planPubSeed(profile: TenantProfile, now: Date, seed: number, day
     { from_name: PB_PEOPLE.party.name, from_phone: PB_PEOPLE.party.phone, body: 'Wanting the Loft for a 40th on a Saturday in March, about 40 people, with a buffet. Please call back.' },
     { from_name: 'Trent Valley Brewery (example)', from_phone: phone(), body: 'Thursday’s delivery is moving to Friday morning, 8am.' },
   ];
-  return { bookings, orders: [], messages };
+  return { bookings, orders: [], messages, events: fixtures(profile, today) };
+}
+
+/** Two sample fixtures in the coming week, real clubs marked "(example)" (Alex, 13 October): Saturday at 3, Sunday at 4:30. */
+function fixtures(profile: TenantProfile, today: string): NonNullable<SeedPlan['events']> {
+  const tz = profile.timezone;
+  const next = (weekday: number) => { let d = today; while (weekdayOf(d) !== weekday) d = addDays(d, 1); return d; };
+  return [
+    { starts_at: zonedToUtc(next(6), '15:00', tz), title: 'Nottingham Forest v Arsenal (example)', kind: 'sport', place: 'the bar’s big screens' },
+    { starts_at: zonedToUtc(next(0), '16:30', tz), title: 'Liverpool v Manchester City (example)', kind: 'sport', place: 'the bar’s big screens' },
+  ];
 }
