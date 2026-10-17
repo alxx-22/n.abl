@@ -2573,7 +2573,7 @@ export const SCENARIOS: Scenario[] = [
     callerPhone: '+447700900977',
     now: PB_THURSDAY,
     setup: (repo, tenant) => clearDay(repo, tenant, '2026-10-18'),
-    persona: 'You are Lisa Grant. Book Sunday lunch for six this Sunday at 1pm: four adults and two children, aged 6 and 9. Ask if you can bring your dog. Any room is fine. No allergies. Your name is Lisa Grant.',
+    persona: 'You are Lisa Grant. In your first sentence, ask for Sunday lunch for six this Sunday at 1pm: four adults and two children, aged 6 and 9. Ask if you can bring your dog. Any room is fine. No allergies. Your name is Lisa Grant.',
     async check(c) {
       const f: string[] = [];
       const b = await cafeBookings(c);
