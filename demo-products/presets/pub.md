@@ -317,7 +317,7 @@ Applied with the Supabase connector and recorded in
 | `pb-gluten-free-beer` | "do you have gluten-free beer?" | only the marked bottle; ales contain barley |
 | `pb-match` | "are you showing the Forest game on Saturday?" | from the list, the kick-off, the bar first come |
 | `pb-match-unlisted` | a match not on the list | "not on our list", never "probably" |
-| `pb-quiz-team` | a team of five for Thursday | booked, £2 a head said, the team name |
+| `pb-quiz-team` | a team of five for the quiz tonight | booked, £2 a head said, the team name |
 | `pb-on-tap` | "what ales are on?" | today's list only |
 | `pb-roast-sold-out` | roast beef, marked sold out today | gone, the pork or nut roast offered |
 | `pb-hire-loft` | a 40th in the Loft in March | a message, no price, nothing promised |

@@ -38,6 +38,8 @@ export const BB_THURSDAY = new Date('2026-10-15T10:00:00Z');
 export const CF_THURSDAY = new Date('2026-10-15T10:00:00Z');
 /** The pub's clock (presets/pub.md §8): the same Thursday, 3pm, before the evening; Friday, Saturday and Sunday ahead. */
 export const PB_THURSDAY = new Date('2026-10-15T14:00:00Z');
+/** Sunday 18 October 2026, 11:30am: before Sunday lunch. */
+const PB_SUNDAY = new Date('2026-10-18T10:30:00Z');
 /** Wednesday 14 October 2026, 11am BST: two days before Friday, for the skin test. */
 const BB_WEDNESDAY = new Date('2026-10-14T10:00:00Z');
 /** Property maintenance out of hours: the same Wednesday, 9pm; Dan and Leon on call. */
@@ -2700,6 +2702,99 @@ export const SCENARIOS: Scenario[] = [
       const f: string[] = [];
       expect(f, /gluten[- ]free lager/i.test(c.agentText), 'the gluten-free lager was not named');
       expect(f, /barley|wheat|not gluten[- ]free|aren'?t gluten[- ]free|isn'?t gluten[- ]free|contain(?:s)? gluten/i.test(c.agentText), 'the ales were not said to contain gluten');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  // ── The Weaver's Arms, what's on and Today (presets/pub.md §8, M2) ─────
+  {
+    id: 'pb-match',
+    tenant: 'pb-weavers',
+    title: '"Are you showing the Forest game?": from the list, the kick-off; the bar first come during it, the dining room offered without a screen',
+    kind: 'happy',
+    callerPhone: '+447700900987',
+    now: PB_THURSDAY,
+    persona: 'You are Dean Walsh. Ask: "Are you showing the Forest game on Saturday?" Then ask: "Can I book a table in the bar for six at half two, to watch it?" If the bar can\'t be booked, say you\'ll come early instead, thanks, and goodbye. Do not book the dining room.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, results(c, 'whats_on').some((r) => r.listed === true), 'whats_on never found the match');
+      expect(f, /\b3 ?pm\b|\bthree o'?clock\b|\b3 o'?clock\b/i.test(c.agentText), 'the kick-off was not said');
+      expect(f, /first[- ]come|can'?t be booked|aren'?t booked|not booked|isn'?t booked|don'?t book/i.test(c.agentText), 'the bar being first come was not said');
+      expect(f, (await cafeBookings(c)).length === 0, 'something was booked');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pb-match-unlisted',
+    tenant: 'pb-weavers',
+    title: 'A match not on the list: "not on our list", never "probably"; a message offered',
+    kind: 'edge',
+    callerPhone: '+447700900988',
+    now: PB_THURSDAY,
+    persona: 'You are Sunil Rao. Ask: "Are you showing the Leicester game on Saturday?" If they aren\'t sure, ask: "Will you probably have it on though?" Accept what you are told, say thanks and goodbye. Do not book anything.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, results(c, 'whats_on').length > 0, 'whats_on was never asked');
+      expect(f, !results(c, 'whats_on').some((r) => r.listed === true && JSON.stringify(r.events ?? []).toLowerCase().includes('leicester')), 'a Leicester game was listed');
+      const promised = unsaid(c, /\bprobably\b[^.?!]{0,40}\b(?:show|have it on|on)\b|\bshould be (?:on|showing)\b|\bwe(?:'ll| will) (?:probably |likely )?(?:have|show|put) it on\b|\bi(?:'m| am) sure (?:we|it)/i);
+      expect(f, !promised.length, `the match was half-promised: "${promised[0]}"`);
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pb-quiz-team',
+    tenant: 'pb-weavers',
+    title: 'A team of five for the quiz tonight: booked with the team name, £2 a head said',
+    kind: 'happy',
+    callerPhone: '+447700900989',
+    now: PB_THURSDAY,
+    persona: 'You are Rob Kerr. Ask to book a team of five for the quiz tonight. The team is called The Pint Glasses. All adults. If asked where, the dining room is fine. Your name is Rob Kerr.',
+    async check(c) {
+      const f: string[] = [];
+      const b = await cafeBookings(c);
+      expect(f, b.length === 1, `expected 1 booking, found ${b.length}`);
+      if (b[0]) {
+        expect(f, b[0].service_key === 'quiz' && b[0].party_size === 5, `${b[0].service_key} for ${b[0].party_size}`);
+        expect(f, new Date(b[0].starts_at).getTime() === at('2026-10-15', '20:00').getTime(), `at ${new Date(b[0].starts_at).toISOString()}`);
+        expect(f, /pint glasses/i.test(b[0].notes ?? ''), `the team name was not noted (${b[0].notes})`);
+      }
+      expect(f, /£2\b|£2\.00|two pounds|£10\b|ten pounds/i.test(c.agentText), 'the entry was not said');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pb-on-tap',
+    tenant: 'pb-weavers',
+    title: '"What ales are on?": today\'s list as the manager set it on Today, and none of the usual ones that are off',
+    kind: 'happy',
+    callerPhone: '+447700900990',
+    now: PB_THURSDAY,
+    setup: (repo, tenant) => repo.setTonight(tenant.id, { date: '2026-10-15', sold_out: [], notice: null, on_tap: ['Trent Pale (example)', 'Harvest Moon (example)', 'Black Lace Porter (example)'] }),
+    persona: 'You are Gill Hart. Ask: "What ales have you got on today?" Listen. Say thanks, you\'ll pop in later, and goodbye. Do not book anything.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, /harvest moon/i.test(c.agentText) && /black lace porter/i.test(c.agentText), "today's ales were not said");
+      expect(f, !/lace market bitter|weaver['’]s gold|castle rock/i.test(c.agentText), 'an ale that is off today was said');
+      noFlags(c, f);
+      return f;
+    },
+  },
+  {
+    id: 'pb-roast-sold-out',
+    tenant: 'pb-weavers',
+    title: 'Roast beef, marked sold out on Today: gone today, the pork or the nut roast offered',
+    kind: 'edge',
+    callerPhone: '+447700900991',
+    now: PB_SUNDAY,
+    setup: (repo, tenant) => repo.setTonight(tenant.id, { date: '2026-10-18', sold_out: ['roast_beef'], notice: null }),
+    persona: 'You are Pam Fisher. Say: "We\'re coming for lunch at 1 today. Is the roast beef on?" Listen, then say thanks, that\'s fine, and goodbye. Do not book anything.',
+    async check(c) {
+      const f: string[] = [];
+      expect(f, /sold out|none left|run out|all gone|gone today|no (?:roast )?beef|not on today/i.test(c.agentText), 'sold out was not said');
+      expect(f, /pork|nut roast/i.test(c.agentText), 'what is left was not offered');
       noFlags(c, f);
       return f;
     },
