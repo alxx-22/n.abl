@@ -1542,6 +1542,29 @@ async function walkPub({ shot }: Walk) {
   await page.waitForSelector('.tl-bar');
   if ((await page.locator('.tl-bar').count()) < 5) throw new Error('Saturday has fewer than five bookings');
   await shot(page, 'workspace-bookings');
+  // What's on: the sample fixtures and the weekly events; a fixture added, then taken off.
+  await tab('What’s on');
+  await page.waitForSelector('.whats-on-event:has-text("Nottingham Forest v Arsenal")');
+  await page.waitForSelector('.whats-on-event:has-text("Live music")');
+  await page.getByLabel('The match').fill('England v Wales (example)');
+  await page.click('.whats-on-add button:has-text("Add a fixture")');
+  await page.waitForSelector('.toast:has-text("England v Wales (example) is on the list")');
+  const added = page.locator('.whats-on-event', { hasText: 'England v Wales' });
+  await added.waitFor();
+  await calm();
+  await shot(page, 'workspace-whats-on');
+  await added.getByRole('button', { name: 'Take off' }).click();
+  await page.waitForSelector('.toast:has-text("is off the list")');
+  await added.waitFor({ state: 'detached' });
+  // Today: an ale put on, and the roast beef sold out.
+  await tab('Today');
+  await page.getByLabel('An ale to put on').fill('Harvest Moon (example)');
+  await page.click('.tonight-add button:has-text("Put it on")');
+  await page.waitForSelector('.toast:has-text("Harvest Moon (example) is on")');
+  await page.click('.tonight .chip:has-text("Roast beef")');
+  await page.waitForSelector('.tonight .chip.out:has-text("Roast beef")');
+  await calm();
+  await shot(page, 'workspace-today');
   await tab('Messages');
   await page.waitForSelector('.ws-messages:has-text("Loft")');
   await shot(page, 'workspace-messages');
