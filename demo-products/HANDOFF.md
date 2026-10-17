@@ -605,11 +605,50 @@ three milestones are done.
     booking claimed with no tool.
 - **The walk**: `npm run e2e:demo -- --only pub` passes.
 - **The prompt at its largest**: about 6,700 characters.
-- **Next, M2**: what's on and Today.
-  - A `voice_pub_events` migration for fixtures (the number asked of
-    cloud on SESSIONS.md), and a `whats_on` tool.
-  - The bar during matches, and `invented_fixture`.
-  - The quiz as a team booking, and Today with the ales on tap.
+
+**Pub M2: built and live on this branch (17 October)**.
+- **`voice_0014_pub_events`**: the manager's fixtures and one-off events.
+  - The server applies it at start. The Supabase connector wasn't
+    connected to apply it by hand.
+  - The seed adds two sample fixtures (real clubs marked "(example)").
+  - The demo reset clears them.
+- **`whats_on`** (`core/pub-tools.ts`): the week's fixtures, weekly
+  events and the quiz, or the one asked about.
+  - Anything not listed is "not on our list", never "probably".
+  - A caller asking what's on nudges it.
+  - `invented_fixture` catches "we're showing it" before it has answered.
+- **The bar during a match** (from half an hour before kick-off): asked
+  for, it's refused as first come. With no room named, the booking goes to
+  the dining room, said to have no screen.
+- **The quiz** is a team booking at its weekly time: £2 a head, the team
+  name on the booking. Seeded teams are three or four, and quiz-night
+  dinners two to four, so a caller's team of five fits.
+- **Today** for a pub: sold out, and the ales on tap, which `get_menu`
+  says.
+- **The back office** gains What's on (add or take off a fixture) and
+  Today.
+- **Shared fixes**:
+  - a table is never booked without asking how many;
+  - a sold-out item names what's left in its section;
+  - the knowledge search ignores "customer asking about";
+  - "all adults" already said counts as no children.
+- **Live calls**: all thirteen `pb-` calls have passed on their latest run.
+- **The walk** covers What's on and Today.
+- **The prompt at its largest**: about 6,750 characters.
+- **Next, M3**:
+  - the Loft (a message, no price);
+  - a neighbour's noise (urgent when it's now);
+  - lost property and other callers;
+  - the reaction script and after the visit, as the café's;
+  - evals `pb-hire-loft`, `pb-noise`, `pb-lost-phone`,
+    `pb-reaction-now`.
+
+**Windows worktree in Temp** (17 October): after four idle days, Windows
+had deleted 652 untouched files from the worktree (outside and inside
+`demo-products`) and part of `node_modules`. Nothing committed was
+lost. They were restored from git and `npm ci` reinstalled the rest (see
+the memory note). Moving the worktree to `C:\Users\alexa\n.abl.worktrees\`
+would stop it happening.
 
 ### Working on Windows
 
