@@ -264,7 +264,7 @@ export function soldOutWords(menu: Menu, key: string, soldOut: Set<string>, when
   const c = menu.categories.find((x) => x.items.some((i) => i.key === key));
   const item = c?.items.find((i) => i.key === key);
   const others = (c?.items ?? []).filter((i) => i.key !== key && i.available !== false && !soldOut.has(i.key)).slice(0, 3).map((i) => i.name);
-  return `${item?.name ?? 'That'} is sold out ${when}.${others.length ? ` Other ${c!.label.toLowerCase()} ${when}: ${others.join(', ')}.` : ''} Say sorry, and offer one of those.`;
+  return `${item?.name ?? 'That'} is sold out ${when}.${others.length ? ` Other ${c!.label.replace(/\s*\(.*\)\s*$/, '').toLowerCase()} ${when}: ${others.join(', ')}.` : ''} Say sorry, and offer one of those.`;
 }
 
 // ── The read-back (presets/takeaway.md §4.5) ──────────────────────────────

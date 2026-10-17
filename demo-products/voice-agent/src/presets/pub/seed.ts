@@ -94,7 +94,8 @@ export function planPubSeed(profile: TenantProfile, now: Date, seed: number, day
         let n = 0;
         for (const team of TEAMS) {
           if (n >= 3 + Math.floor(random() * 2)) break;
-          const b = place(quiz, date, w.first, 3 + Math.floor(random() * 4));
+          // Most teams are three or four, which leaves the big tables for a caller's team.
+          const b = place(quiz, date, w.first, 3 + Math.floor(random() * 2));
           if (b) { b.notes = `Team: ${team}`; n++; }
         }
       }

@@ -136,7 +136,9 @@ test('pub quiz and Today: a team booked with its name and the entry; the ales on
   const ales = await c.run('get_menu', { category: 'ales' });
   assert.deepEqual(ales.ales_on_today, ['Trent Pale', 'Harvest Moon']);
   assert.match(ales.say, /^The ales on today: Trent Pale, Harvest Moon. Say only these.$/);
-  assert.equal((await c.run('get_item_details', { item: 'roast beef' })).available, 'sold out today');
+  const beef = await c.run('get_item_details', { item: 'roast beef' });
+  assert.equal(beef.available, 'sold out today');
+  assert.match(beef.instead, /^Roast beef is sold out today. Other sunday roasts today: Roast pork, Nut roast, Children's roast./);
 });
 
 test("pub: the seeded week books tables at food times, children only on tables that finish by 9, Gary's Sunday lunch", () => {

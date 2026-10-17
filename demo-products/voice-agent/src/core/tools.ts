@@ -1147,6 +1147,8 @@ const TOOLS: Record<string, Tool> = {
         description: item.description,
         dietary: item.dietary,
         available: item.available === false ? (soldOut.has(item.key) ? `sold out ${tonightWord(ctx.tenant.profile)}` : 'not available today') : 'yes',
+        // Sold out: what's left in its section, named (a live pub call said "other roasts" and named none).
+        ...(soldOut.has(item.key) ? { instead: soldOutWords(menu, item.key, soldOut, tonightWord(ctx.tenant.profile)) } : {}),
         options: optionsFor(menu, item).map((o) => priced(o.option)),
         ...(deal ? { choices: deal.parts.map((p) => `${p.label}: ${(menu.modifier_groups[p.group]?.options ?? []).map(priced).join(', ')}`) } : {}),
         allergens: allergensOf(menu, item),
