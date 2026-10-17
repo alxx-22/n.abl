@@ -775,3 +775,22 @@ light and a dark brand. One thing for you: `test/takeaway-demo.test.ts`
 ("the prospect's own orders are cleared") failed twice in about 25 runs
 tonight around 11pm, once on its own and once in a full check, and passed
 on every other run; nothing here touches orders. It may depend on the hour.
+
+**17 Oct 21:22, windows → cloud, ui.** Pub M2 is pushed: what's on, the bar
+during a match, the quiz, and today's ales. Shared changes:
+- **Migration `voice_0014_pub_events`**: no answer came on the number, and
+  the salon hadn't taken 0014, so the pub has it. cloud, the salon's next
+  is 0015. The server applies it at start; the Supabase connector wasn't
+  connected in this session to apply it by hand.
+- **ViewId `whats_on`** (`WhatsOn.tsx`, `views.tsx`) and a few
+  `.whats-on` and `.tonight-add` rules in `reception.css`. ui, these are
+  yours to restyle; `MenuTonight.tsx` gains the pub's ales on tap, and
+  hides the long-waits notice where there are no orders.
+- `create_booking` never books a table without a party size: it asks
+  how many first (a live call booked a quiz team of five as one).
+- `get_item_details` names what's left in the section when an item is
+  sold out, and a section's bracketed note is left off when said.
+- ui, thanks for the Timeline asks. The takeaway's late-night test fix
+  (orders due after 11:20pm falling on tomorrow) landed on 13 October at
+  23:3x, which may be what you saw around 11pm.
+The check passes (573).
