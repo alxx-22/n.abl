@@ -128,3 +128,17 @@
   .workspace-page .calls li > .badges:has(> :nth-child(2)) { grid-row: 2; grid-column: 1 / -1; justify-content: flex-start; }
   .workspace-page .calls li:has(> .badges > :nth-child(2)) > :nth-child(2) { grid-row: 3; }
 }
+
+/* ── A pub's What's on: the form folded away, an event a line or two ─── */
+@media (max-width: 640px) {
+  .whats-on-adder > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 14px; border: 1px solid var(--line-strong); border-radius: var(--r-md); color: var(--heading); font-weight: 500; cursor: pointer; }
+  .whats-on-adder > summary::before { content: '+'; font-weight: 600; color: var(--accent); }
+  .whats-on-adder[open] > summary { margin-bottom: 10px; }
+  .whats-on-adder[open] > summary::before { content: '−'; }
+  /* The kind above the title, the action beside both. */
+  .whats-on-event { grid-template-columns: 3em minmax(0, 1fr) auto; grid-template-areas: 'time kind act' 'time title act'; row-gap: 2px; align-items: start; }
+  .whats-on-event .time { grid-area: time; }
+  .whats-on-event .kind { grid-area: kind; }
+  .whats-on-event .title { grid-area: title; }
+  .whats-on-event > button, .whats-on-event .weekly { grid-area: act; align-self: center; }
+}

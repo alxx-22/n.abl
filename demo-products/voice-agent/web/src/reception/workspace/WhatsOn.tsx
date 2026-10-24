@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { demoApi } from '../../api.ts';
 import { toast } from '../../components/Toaster.tsx';
+import { useBand } from '../bands.ts';
 import type { LiveState, WeekEvent } from '../types.ts';
 
 const dayLabel = (date: string) => new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
@@ -19,6 +20,8 @@ export function WhatsOn({ id, state, today, onDone }: { id: string; state: LiveS
   const [time, setTime] = useState('15:00');
   const [title, setTitle] = useState('');
   const [busy, setBusy] = useState(false);
+  // On a phone the form folds away behind its own button: the week's list is what the manager looks at.
+  const phone = useBand() === 'phone';
   const add = async () => {
     if (!title.trim()) return;
     setBusy(true);
@@ -44,6 +47,8 @@ export function WhatsOn({ id, state, today, onDone }: { id: string; state: LiveS
   };
   return (
     <div className="whats-on">
+      <details className="whats-on-adder" open={!phone || undefined} key={phone ? 'phone' : 'wide'}>
+      <summary>Add a fixture</summary>
       <form className="whats-on-add" onSubmit={(e) => { e.preventDefault(); void add(); }}>
         <label>
           Day
@@ -61,6 +66,7 @@ export function WhatsOn({ id, state, today, onDone }: { id: string; state: LiveS
         </label>
         <button type="submit" className="primary" disabled={busy || !title.trim()}>Add a fixture</button>
       </form>
+      </details>
       <p className="hint">Callers asking "are you showing the match?" hear only what's here. During a match the bar is first come; the dining room can still be booked.</p>
       {days.map((d) => {
         const on = week.filter((e) => e.date === d);
