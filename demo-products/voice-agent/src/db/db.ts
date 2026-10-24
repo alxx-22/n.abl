@@ -9,6 +9,7 @@
 import { readdirSync, readFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { rootCertificates } from 'node:tls';
 
 export interface Queryable {
   query<T = Record<string, any>>(sql: string, params?: unknown[]): Promise<T[]>;
@@ -22,6 +23,19 @@ export interface Db extends Queryable {
 }
 
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'migrations');
+// Supabase's own root certificate (public; from the dashboard's SSL settings), which signs the
+// direct db.<ref>.supabase.co address. SHA-256 80:70:25:AD:…:E6:CA:FA, valid to April 2031.
+const SUPABASE_ROOT = join(dirname(fileURLToPath(import.meta.url)), 'supabase-root-2021.crt');
+
+/**
+ * TLS for a database that is not on this machine, always verified, name included. The session
+ * pooler's certificate is from Amazon's public authority, among the usual roots; the direct address's
+ * is Supabase's own, so that root is trusted beside them.
+ */
+export function sslFor(url: string): false | { ca: string[]; rejectUnauthorized: true } {
+  if (/@(localhost|127\.0\.0\.1)[:/]/.test(url)) return false;
+  return { ca: [...rootCertificates, readFileSync(SUPABASE_ROOT, 'utf8')], rejectUnauthorized: true };
+}
 
 export async function openPglite(dir?: string): Promise<Db> {
   const { PGlite } = await import('@electric-sql/pglite');
@@ -51,11 +65,9 @@ export async function openPglite(dir?: string): Promise<Db> {
 export async function openPostgres(url: string): Promise<Db> {
   const pgmod = await import('pg');
   const Pool = pgmod.default.Pool;
-  const local = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
+  // An sslmode in the address would replace the verified settings below.
   const clean = url.replace(/[?&]sslmode=[^&]*/g, '');
-  // Supabase requires TLS. The pooler's certificate chain is Supabase's own CA,
-  // so verification is off here; the connection is still encrypted.
-  const pool = new Pool({ connectionString: clean, ssl: local ? false : { rejectUnauthorized: false }, max: 5 });
+  const pool = new Pool({ connectionString: clean, ssl: sslFor(url), max: 5 });
   const base: Queryable = {
     async query<T>(sql: string, params?: unknown[]) {
       return (await pool.query(sql, params as unknown[])).rows as T[];

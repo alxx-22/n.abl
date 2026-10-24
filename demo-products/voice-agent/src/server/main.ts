@@ -366,8 +366,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   console.log(`n.abl Reception on http://localhost:${app.port}${BASE}/ · ${config.databaseUrl ? 'Supabase' : `PGlite (${config.pgliteDir})`} · models ${config.liveModels.join(' → ')}`);
   void app.keyChecked.then(({ status, detail }) => {
     if (status === 'ok') console.log(`Gemini API key: accepted by Google. Open http://localhost:${app.port}${BASE}/admin and press Start a live call.`);
-    else if (status === 'missing') console.warn('GEMINI_API_KEY is not set, so calls cannot connect. Put GEMINI_API_KEY=<your key> in .env.local, then restart.');
-    else if (status === 'rejected') console.warn(`Google rejected GEMINI_API_KEY (${detail}). Fix it in .env.local (a Codespaces secret of the same name takes priority), then restart.`);
+    else if (status === 'missing') console.warn('GEMINI_API_KEY is not set, so calls cannot connect. Put GEMINI_API_KEY=<your key> in .env.local (on the Oracle server, /opt/nabl/secrets.env, then sudo nabl deploy), then restart.');
+    else if (status === 'rejected') console.warn(`Google rejected GEMINI_API_KEY (${detail}). Fix it in .env.local (a Codespaces secret of the same name takes priority; on the Oracle server, /opt/nabl/secrets.env, then sudo nabl deploy), then restart.`);
     else console.warn(`Could not reach Google to check GEMINI_API_KEY (${detail}). Calls may fail.`);
   });
   const stop = async () => {
