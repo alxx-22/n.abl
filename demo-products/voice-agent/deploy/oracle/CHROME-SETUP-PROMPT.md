@@ -56,7 +56,9 @@ differ, the guide wins.
 1. Open https://www.oracle.com/cloud/free/ and press **Start for free**.
 2. Hand over to me for the sign-up. Remind me: **Home Region = Germany
    Central (Frankfurt)** (it can't be changed later), stay on the free tier,
-   and the card is only for an identity check.
+   and the card is only for an identity check. If Oracle refuses the card,
+   a different card usually works (it often turns down prepaid and virtual
+   ones).
 3. When I say I'm signed in to the Oracle Cloud console, carry on.
 
 **Step 3. The server's settings (before creating it)**

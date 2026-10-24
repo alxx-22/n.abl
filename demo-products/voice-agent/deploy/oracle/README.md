@@ -172,14 +172,25 @@ merge it on GitHub. Until then, use `demo-origin.nabl.agency`.
 - opens ports 80 and 443 in Ubuntu's firewall;
 - stops the app's container from reaching Oracle's metadata service, where
   cloud-init's settings are kept;
+- lets the website scout's Chromium run in its own sandbox: the container
+  gets Docker's default seccomp filter plus the four calls the sandbox
+  needs ([`seccomp-chromium.json`](seccomp-chromium.json)), and Ubuntu's
+  limit on user namespaces goes back to how 22.04 shipped;
 - fetches only `demo-products/voice-agent` from GitHub;
 - builds the image and runs it on localhost, with Caddy in front for HTTPS;
 - installs a timer that runs `nabl update` every five minutes.
 
-The app's settings come from `/opt/nabl/secrets.env`, plus three the script
+The app's settings come from `/opt/nabl/secrets.env`, plus four the script
 adds:
 
 - a `SESSION_SECRET` that lasts across restarts, so people stay signed in;
 - `CLIENT_IP_HEADER=x-real-ip`, so the key throttle sees each visitor's real
   address, which Caddy sets on every request;
-- `MAX_CONCURRENT_CALLS=3`.
+- `MAX_CONCURRENT_CALLS=3`;
+- `CHROMIUM_SANDBOX=on`, so the scout renders prospects' sites inside
+  Chromium's sandbox (if it can't start, the scout reads the site's
+  stylesheets instead and `sudo nabl status` shows a warning).
+
+The database connection is encrypted and its certificate checked: the
+session pooler's is signed by a public authority, and Supabase's own root
+(for the direct address) ships with the code.
