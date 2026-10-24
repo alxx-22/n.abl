@@ -327,6 +327,8 @@ async function walkRestaurant({ shot }: Walk) {
 
     // Open a booked table on the timeline, then move it with the drawer.
     await page.click('.tabs button:has-text("Timeline")');
+    // Today may be a day the restaurant is shut (it closes on Mondays): then the first day with bookings.
+    await page.waitForSelector('.tl-bar', { timeout: 3000 }).catch(() => page.locator('.days button:has(.count)').first().click());
     await page.waitForSelector('.tl-bar');
     await shot(page, 'workspace-timeline');
     await page.locator('.tl-bar').first().click();
@@ -557,7 +559,11 @@ async function walkEstate({ shot }: Walk) {
   await page.waitForSelector('.diary', { timeout: 20000 });
   await page.waitForSelector('.phone');
   await shot(page, 'workspace-diary');
-  await page.locator('.days button:has(.count)').last().click();
+  // The week's last weekday with bookings: at a weekend the others may all be off, and the drag below needs one of them.
+  const booked = page.locator('.days button:has(.count)');
+  const labels = (await booked.allTextContents()).map((t) => t.trim());
+  const weekday = labels.map((t, i) => ({ t, i })).reverse().find(({ t }) => /^(Mon|Tue|Wed|Thu|Fri)\b/.test(t));
+  await booked.nth(weekday ? weekday.i : labels.length - 1).click();
   await page.locator('.diary .tl-bar.viewing').first().click();
   await page.waitForSelector('.drawer');
   await page.click('.drawer [aria-label="Feedback"] button:has-text("Keen")');
@@ -947,10 +953,13 @@ async function walkMaintenance({ shot }: Walk) {
   await page.getByLabel('Call as').selectOption({ label: 'Alex Test at 12 Test Road (yours)' });
   await page.waitForSelector('.phone-number:has-text("07700 900999")');
 
-  // The demo's own clock: tomorrow at 9pm, to try the on-call side whatever the real time.
+  // The demo's own clock: the next weekday at 9pm, to try the on-call side whatever the real time.
+  // A weekday, because Dispatch below needs visit windows and Fernhill has none on a Sunday.
   await page.click('.demo-clock > button');
   await page.waitForSelector('.clock-pop');
-  await page.locator('.clock-pop select').selectOption({ index: 1 });
+  const days = await page.locator('.clock-pop select option').evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value));
+  const weekday = days.slice(1).find((d) => { const w = new Date(`${d}T12:00:00Z`).getUTCDay(); return w >= 1 && w <= 5; });
+  await page.locator('.clock-pop select').selectOption(weekday ?? { index: 1 });
   await page.fill('.clock-pop input[type=time]', '21:00');
   await shot(page, 'workspace-clock-set');
   await page.click('.clock-pop button[type=submit]');

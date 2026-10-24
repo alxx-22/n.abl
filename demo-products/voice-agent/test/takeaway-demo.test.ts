@@ -128,7 +128,9 @@ test('demo: a takeaway end to end: Start fills the kitchen, a delivery goes out 
   // Reset refills the kitchen from the seed, and our own orders go.
   assert.equal((await dev.call('POST', `${path}/reset`)).status, 200);
   const again = await state();
-  assert.ok(!again.orders.some((o: any) => o.phone === '07700 900811'), 'the prospect\'s own orders are cleared');
+  // Ours by what it holds, not by number alone: the reseeded kitchen can draw 07700 900811 for an order of its own.
+  const ours = (o: any) => o.phone === '07700 900811' && o.address === '14 Larch Close, NG7 1AA' && o.lines.length === 1 && o.lines[0].item_key === 'burger_meal';
+  assert.ok(again.orders.length && !again.orders.some(ours), 'the prospect\'s own orders are cleared');
   assert.deepEqual(again.drivers, ['Kai', 'Priya', 'Tom']);
   assert.deepEqual([again.tonight.sold_out, again.tonight.notice], [[], null], 'Menu tonight starts again too');
 });
