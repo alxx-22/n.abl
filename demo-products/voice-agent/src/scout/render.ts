@@ -37,6 +37,15 @@ export function chromiumPath(): string | null {
 
 let queue: Promise<unknown> = Promise.resolve();
 
+/**
+ * Chromium's own sandbox, which keeps a hostile page from reaching the server's process and
+ * its settings. It needs user namespaces: the Oracle deploy allows them with
+ * deploy/oracle/seccomp-chromium.json and sets CHROMIUM_SANDBOX=on. Elsewhere (a Codespace,
+ * the tests) Docker's default filter refuses them, and Playwright's no-sandbox default stays.
+ */
+const sandboxed = () => process.env.CHROMIUM_SANDBOX === 'on';
+let sandboxWarned = false;
+
 export function renderPage(url: string, opts: { allowPrivate?: boolean; timeoutMs?: number } = {}): Promise<Rendered | null> {
   const run = queue.then(() => renderNow(url, opts)).catch(() => null);
   queue = run;
@@ -52,9 +61,17 @@ async function renderNow(url: string, opts: { allowPrivate?: boolean; timeoutMs?
   const loopback = /^(localhost|127\.\d+\.\d+\.\d+|\[::1\])$/.test(new URL(url).hostname);
   const browser = await chromium.launch({
     executablePath: exe,
-    args: process.getuid?.() === 0 ? ['--no-sandbox'] : [],
+    chromiumSandbox: sandboxed(),
+    args: process.getuid?.() === 0 && !sandboxed() ? ['--no-sandbox'] : [],
     // Chromium ignores HTTPS_PROXY; where the network needs one, say so.
     proxy: process.env.HTTPS_PROXY && !loopback ? { server: process.env.HTTPS_PROXY, bypass: process.env.NO_PROXY ?? process.env.no_proxy ?? 'localhost,127.0.0.1' } : undefined,
+  }).catch((e: Error) => {
+    // Never retried without the sandbox: the scout reads the site's stylesheets instead.
+    if (sandboxed() && !sandboxWarned) {
+      sandboxWarned = true;
+      console.warn(`The website scout's Chromium could not start in its sandbox, so sites are read without rendering (${e.message.split('\n')[0]}). On the Oracle server, sudo nabl deploy puts its seccomp profile back.`);
+    }
+    throw e;
   });
   const allowed = new Map<string, boolean>();
   try {

@@ -43,6 +43,7 @@ test('oracle: the app environment has every setting, unquoted, and a session sec
     assert.equal(env.DEMO_PROXY_SECRET, 'proxy0secret0value');
     assert.equal(env.CLIENT_IP_HEADER, 'x-real-ip');
     assert.equal(env.MAX_CONCURRENT_CALLS, '3');
+    assert.equal(env.CHROMIUM_SANDBOX, 'on', 'the scout\'s Chromium runs in its own sandbox on the server');
     assert.match(env.SESSION_SECRET, /^[0-9a-f]{64}$/);
     assert.equal(env.ORIGIN_HOST, undefined, 'the deploy\'s own settings stay out of the app');
     assert.equal(r.read('first.env'), r.read('app.env'), 'the session secret survives a redeploy, so sessions do too');
@@ -92,4 +93,17 @@ test('oracle: the cloud-init file asks for what the script checks, and fetches t
   assert.match(CLOUD_INIT, /^#cloud-config\n/);
   assert.match(CLOUD_INIT, /raw\.githubusercontent\.com\/alxx-22\/n\.abl\/voice-agent-DEV\/demo-products\/voice-agent\/deploy\/oracle\/nabl\.sh/);
   assert.match(readFileSync(SCRIPT, 'utf8'), /setting DEPLOY_BRANCH voice-agent-DEV/);
+});
+
+test('oracle: the container’s seccomp filter is Docker’s default plus only what Chromium’s sandbox needs', () => {
+  const profile = JSON.parse(readFileSync(join(import.meta.dirname, '..', 'deploy', 'oracle', 'seccomp-chromium.json'), 'utf8'));
+  assert.equal(profile.defaultAction, 'SCMP_ACT_ERRNO', 'anything not listed is refused');
+  const unconditional = profile.syscalls.filter((r: any) => r.action === 'SCMP_ACT_ALLOW' && !r.args && !r.includes && !r.excludes);
+  const added = unconditional.find((r: any) => r.names.includes('unshare'));
+  assert.deepEqual(added?.names.sort(), ['chroot', 'clone', 'setns', 'unshare']);
+  for (const name of ['mount', 'reboot', 'kexec_load', 'bpf', 'ptrace', 'init_module']) {
+    assert.ok(!unconditional.some((r: any) => r.names.includes(name)), `${name} is not opened up`);
+  }
+  const script = readFileSync(SCRIPT, 'utf8');
+  assert.match(script, /seccomp=\$APP\/deploy\/oracle\/seccomp-chromium\.json/, 'the app runs with it');
 });

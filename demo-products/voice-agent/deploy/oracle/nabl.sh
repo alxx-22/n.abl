@@ -56,6 +56,8 @@ write_env() {
     # Caddy writes X-Real-IP on every request; a visitor cannot.
     echo "CLIENT_IP_HEADER=x-real-ip"
     [ -n "$(setting MAX_CONCURRENT_CALLS)" ] || echo "MAX_CONCURRENT_CALLS=3"
+    # The website scout's Chromium in its own sandbox; run_image gives it the namespaces it needs.
+    [ -n "$(setting CHROMIUM_SANDBOX)" ] || echo "CHROMIUM_SANDBOX=on"
   } > "$tmp"
   chmod 600 "$tmp"
   mv -f "$tmp" "$DIR/app.env"
@@ -192,9 +194,23 @@ wait_healthy() {
   return 1
 }
 
+# Chromium's sandbox makes user namespaces, which Ubuntu 24.04 refuses to unprivileged
+# processes by default and Docker's seccomp filter refuses to containers. The filter is
+# Docker's own default plus those four calls (seccomp-chromium.json); the kernel setting goes
+# back to how Ubuntu 22.04 shipped. Without both, the scout reads sites without rendering.
+allow_userns() {
+  if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+    echo 'kernel.apparmor_restrict_unprivileged_userns = 0' > /etc/sysctl.d/60-nabl-chromium-sandbox.conf
+    sysctl -q -w kernel.apparmor_restrict_unprivileged_userns=0 || log "Could not allow user namespaces: the scout will read sites without rendering."
+  fi
+}
+
 run_image() {
+  local seccomp=()
+  [ -f "$APP/deploy/oracle/seccomp-chromium.json" ] && seccomp=(--security-opt "seccomp=$APP/deploy/oracle/seccomp-chromium.json")
   docker rm -f "$NAME" >/dev/null 2>&1 || true
   docker run -d --name "$NAME" --restart unless-stopped \
+    "${seccomp[@]}" \
     --env-file "$DIR/app.env" -e "APP_VERSION=$2" \
     -p "127.0.0.1:$PORT:$PORT" --memory 8g --shm-size 512m \
     --log-opt max-size=20m --log-opt max-file=5 \
@@ -204,6 +220,7 @@ run_image() {
 cmd_deploy() {
   check_settings
   write_env
+  allow_userns
   local rev previous i n
   rev=$(git -C "$SRC" rev-parse --short HEAD)
   log "Building $rev"
