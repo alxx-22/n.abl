@@ -10,6 +10,9 @@ Once set up it looks after itself. Every five minutes it checks GitHub, and
 a push to `voice-agent-DEV` goes live a few minutes later, once any call in
 progress has ended. If a new build fails, the previous one keeps running.
 
+This is where prospects use the demo. The GitHub Codespace
+(`.devcontainer/voice-agent`) stays for building and testing it.
+
 About 30 minutes, once. You need:
 
 - **A Gemini API key** from [Google AI Studio](https://aistudio.google.com/apikey).
@@ -18,6 +21,21 @@ About 30 minutes, once. You need:
   resetting it: a reset changes it for everything that uses it.
 - **A card for Oracle's identity check.** It is not charged on the free
   tier, but a small temporary hold may appear.
+- **The Supabase project awake** (step 0).
+
+## 0. Wake the database
+
+Supabase pauses a free project after a week with nothing using it, and the
+server can't start against a paused one.
+
+1. Open [supabase.com/dashboard](https://supabase.com/dashboard) and choose
+   the project **Persian Persuasion**.
+2. If it says the project is **paused**, press **Restore project** and wait
+   until it says it is healthy (a few minutes). It is shared with the
+   chatbot, which wakes up too; nothing in it changes.
+
+Once the server is running it keeps the database awake: it checks it every
+30 seconds.
 
 ## 1. Make an Oracle Cloud account
 
@@ -65,7 +83,12 @@ In the Oracle console: **☰ → Compute → Instances → Create instance**.
 
 Press **Create**. If it says **Out of capacity**, change **Placement** to
 another availability domain (AD-2 or AD-3) and try again. Failing that, try
-again later: free servers come free during the day.
+again later: free servers come free during the day. If it keeps saying it,
+upgrade the account to **Pay As You Go** (**☰ → Billing & Cost Management →
+Upgrade and Manage Payment**): free Arm servers are usually there straight
+away then, and nothing is charged while you only use *Always Free*
+resources. To be sure, add a budget of £1 with an email alert (**Billing &
+Cost Management → Budgets**).
 
 The server then sets itself up, which takes about ten minutes.
 
@@ -109,7 +132,10 @@ sign in with the console password, and issue yourself a key.
 
 **On nabl.agency itself**: the forwarding from `nabl.agency/demo` is on the
 `voice-agent-DEV` branch. It goes live when that branch is merged into
-`main`. Until then, use `demo-origin.nabl.agency`.
+`main`. Outside the demo's own folder the merge changes only the site's
+Worker (the forwarding), `wrangler.jsonc`, `robots.txt` and a test: the
+site's pages stay as they are. Ask Claude to open the pull request, then
+merge it on GitHub. Until then, use `demo-origin.nabl.agency`.
 
 ## Afterwards
 
