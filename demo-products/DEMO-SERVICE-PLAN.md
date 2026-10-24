@@ -1,8 +1,11 @@
 # n.abl Demo Service: build plan
 
-**Status: phases 1 to 6 built and tested (30 September 2026); not yet
-deployed.** Decisions D1 to D13 as recommended, except D12 and D13 as amended
-below. Branch: `voice-agent-DEV`. Where each phase stands is in section 10.
+**Status (24 October 2026): phases 1 to 6 built and tested, and seven kinds
+of business live on the branch. Not yet online:** the Oracle hosting kit is
+checked end to end and waits on Alex's setup. Decisions D1 to D13 as
+recommended, except D9, D12 and D13 as amended below. Branch:
+`voice-agent-DEV`. Where each phase stands is in section 10; what's left to
+go live is at the top of `HANDOFF.md`.
 
 The short version: a prospect gets a private link and a key. They pick their
 kind of business, build a believable version of it in about ten minutes
@@ -23,7 +26,7 @@ Built and tested in `demo-products/voice-agent/` (see its `README.md` and
 
 | Exists | Where |
 |---|---|
-| Live voice calls in the browser and over the phone, Gemini Live, fallback between two models, a watchdog that replays a missed turn to the other model | `src/core/call.ts`, `src/channels/` |
+| Live voice calls in the browser and over the phone, Gemini Live, fallback between two live models, a watchdog that replays a missed turn to the other model | `src/core/call.ts`, `src/channels/` |
 | Contextual turn-taking: waits through thinking pauses, chunked numbers and side conversations; "mm-hm" does not interrupt | `src/core/turns.ts` |
 | Tables with capacities, pushed-together tables (`combines`), sitting lengths by party size, booking windows, deposits | `src/domain/availability.ts`, `types.ts` |
 | Menu with allergens (the UK 14), may-contain, dietary tags, options with prices; ordering for collection and delivery, delivery districts | `src/domain/menu.ts` |
@@ -53,8 +56,9 @@ and does click and collect by phone.
    from anywhere). Sam pastes the key. The page greets them by name and company
    ("Your private demo, Sam. Nothing you set up here is shared."), with the key's
    expiry date.
-3. **Pick a business.** A grid of presets. Restaurant is live; the others show
-   as "coming soon" until they are built.
+3. **Pick a business.** A grid of presets. Seven are live: restaurant,
+   takeaway, café, pub, barber, estate agent and property maintenance. The
+   others show as "coming soon" until they are built.
 4. **Build it** (section 4.1 has every field). Seven short steps with a live
    preview on the right: basics and hours; how you serve (tables, walk-ins,
    click and collect, delivery); seating areas and tables; the floor plan;
@@ -108,11 +112,11 @@ Each has a recommendation; the plan assumes it unless you say otherwise.
 | D3 | Key lifetime and limits | 14 days; 30 minutes of live calls a day; 3 workspaces; 20 menu drafts a day; extendable from the CRM | Protects the free-tier quota from a forwarded link; generous for a real evaluation |
 | D4 | Where demo data lives | The voice demo Supabase project (`auivrancfnrdwyiqoakt`), `voice_` tables. The CRM stores only the key's first four characters and a usage summary | Keeps prospects' sandboxes away from client and CRM data |
 | D5 | CRM | A new stage, **Demo Sent**, plus a *Send demo* action from *Ready To Contact* onwards. A demo sent as a first approach goes through the same outreach approval gates as any first contact | It is outreach, and the compliance layer applies to it |
-| D6 | Menu drafting | Gemini 3.5 Flash (free tier, text) with a strict schema; generated allergens are labelled "examples: check before going live" | Already in use for summaries and setup |
+| D6 | Menu drafting | Gemini's text model (free tier) with a strict schema; generated allergens are labelled "examples: check before going live" | Already in use for summaries and setup |
 | D7 | The customer's phone | Simulated texts on an on-screen phone. Optional later: send the real text to the prospect's own mobile, off by default | No SMS cost, no consent question, and it shows just as well |
 | D8 | Capacity | The free tier holds about two busy calls per model at once, and on 30 September it slowed badly after heavy use. Cap concurrent demo calls at 4 with a friendly "all lines busy" message, and cost the paid tier before sending demos in volume | A prospect's first impression must not be a slow receptionist |
-| D9 | Order of presets | Restaurant (with click and collect) → takeaway and fast food → barber → hair salon → estate agent → café → pub → the rest | Restaurant exercises everything; takeaway reuses most of it; barber and salon introduce staff diaries; estate agent introduces a new domain |
-| D11 | Build from your website | A **scout** that reads the site with code first and a model second: plain fetching and parsing for facts, a headless browser for colours and fonts, and small Gemini Flash calls only for the menu and the gaps (section 4.7). No generated website or layout | Measured on ten real sites: a home page is 400 to 2,400 tokens, so the model part is cheap when it only sees what matters |
+| D9 | Order of presets | **Amended by Alex.** Built: restaurant (with click and collect), estate agent, property maintenance, takeaway, barber, café, pub (M1 and M2). Next: the hair salon (spec written; build it or drop it is Alex's call), beauty, spa, hotel, letting agent, gym, dog grooming, garage. First planned: restaurant → takeaway → barber → salon → estate agent → café → pub → the rest | Restaurant exercises everything; takeaway reuses most of it; barber and salon introduce staff diaries; estate agent introduces a new domain |
+| D11 | Build from your website | A **scout** that reads the site with code first and a model second: plain fetching and parsing for facts, a headless browser for colours and fonts, and small calls to the text model only for the menu and the gaps (section 4.7). No generated website or layout | Measured on ten real sites: a home page is 400 to 2,400 tokens, so the model part is cheap when it only sees what matters |
 | D12 | When the scout runs | **Decided: only when the prospect asks.** After choosing a preset, an optional "Your website" field; the scout fetches branding and menu only if it is filled in. Nothing is fetched at key issue | The prospect chooses what we read |
 | D13 | API keys | **Decided: one key for now** (`GEMINI_API_KEY`), with a key per job ready to switch on: `GEMINI_API_KEY_CALLS`, `GEMINI_API_KEY_SCOUT`, `GEMINI_API_KEY_TEXT`, each falling back to the main key. Using several free projects just to multiply one job's quota may breach Google's terms: check before relying on it | Isolation when needed, no extra setup now |
 | D10 | How real the back office is | Demo-grade but genuine: persisted, validated, live-updating, and staff actions work. Not a production reservations system: no staff logins, no emails, no real payments | It must survive being poked at by a restaurateur. A workspace can later be promoted into a real pilot (section 9.4) |
@@ -137,7 +141,7 @@ Each has a recommendation; the plan assumes it unless you say otherwise.
    │   deploy/oracle: redeploys itself from voice-agent-DEV)
    │  serves the React app under /demo/, the API under /demo/api,
    │  the call WebSocket under /demo/ws
-   ├──► Gemini Live (calls), Transcribe Live (turn-taking), Gemini Flash (menus)
+   ├──► Gemini: the live model (calls), the transcription model (turn-taking), the text model (menus)
    └──► Supabase auivrancfnrdwyiqoakt: voice_* tables
 ```
 
@@ -148,8 +152,9 @@ Each has a recommendation; the plan assumes it unless you say otherwise.
 - **Headers**: the site blocks the microphone everywhere
   (`Permissions-Policy: microphone=()`). Forwarded responses carry the demo
   server's own headers, which allow the microphone for the demo only
-  (`microphone=(self)`), with its own strict CSP. To confirm in phase 6: that
-  the site's `_headers` rules do not also apply to Worker-forwarded responses.
+  (`microphone=(self)`), with its own strict CSP. Confirmed in phase 6: the
+  site's `_headers` file applies to static assets only, so it neither adds
+  to nor overrides a forwarded response (`worker/index.ts`).
 - **Base path**: the React app builds with `base: '/demo/'`, so it works both
   behind the Worker and directly at `demo-origin.nabl.agency` (for testing).
 - **Search engines**: `X-Robots-Tag: noindex, nofollow` on every `/demo`
@@ -493,8 +498,8 @@ counts from Gemini's count endpoint, which uses no quota):
    others), and seating and policy signals ("terrace", "beer garden",
    "private dining", "dog friendly", "step-free", "gluten free", "vegan").
    Menu pages are ranked by price density, URL and title.
-4. **Model** (small, targeted, Gemini 3.5 Flash or Flash-Lite, structured
-   output):
+4. **Model** (small, targeted, the text model or its lighter fallback,
+   structured output):
    - *Facts*: a digest of at most about 4,000 tokens (structured data, the
      signals and the sentences around them) → style or cuisine line, summary,
      policies, and FAQs, filling only fields stages 1 to 3 left empty.
@@ -520,7 +525,7 @@ counts from Gemini's count endpoint, which uses no quota):
 **Cost per website, free tier**: 2 to 4 model requests and roughly 8,000 to
 20,000 tokens (a digest and a menu; more if the menu is a long PDF). The
 limit that bites on the free tier is requests per day, not tokens: divide the
-daily request limit for Flash or Flash-Lite shown in AI Studio by about four
+daily request limit for the text model shown in AI Studio by about four
 to get websites per day per key. Rendering costs server time, not quota.
 
 **What it will not do**: get past bot protection, read prices that are only in
@@ -702,19 +707,19 @@ column).
 Each phase ends with its tests passing, a live check where it touches Gemini,
 a commit to `voice-agent-DEV`, and the plan's status updated.
 
-Where it stands (2 October 2026, end of the third session):
+Where it stands (24 October 2026; the detail is in `HANDOFF.md`, "Where things stand"):
 
 | Phase | State | Notes |
 |---|---|---|
 | 1 | **Done** | Keys hashed, throttle trusts the Worker's address only with its shared secret; migration `voice_0002_demo` applied to `auivrancfnrdwyiqoakt`. 11 HTTP tests. `npm run demo:key` issues keys. |
 | 2 | **Done** | Nine steps (the seven, plus the floor plan and review), autosave, live preview, SVG floor plan editor (drag, keys, no overlaps), AI menu and FAQ drafts on the text key. Second round (1 October, from Alex): each seating area is its own room with its own tab (positions are within the area; older plans move into rooms once); line-up guides and a grid while dragging; a table dropped on another slides to the nearest clear space; touching tables are offered as a pair; bar, door, window and wall shapes for looks; zoom; the floor plan step uses the full width. Walk-in tables are tagged on the plan and chosen in Seating, and are off by default. Every screen restyled to the site's design (its tokens and fonts, kept in step by `test/design-tokens.test.ts`). |
-| 2b | **Done** | Tested on a local fake site (politeness, private addresses, bot wall, cache, "Is this you?", apply) and on one real site with the real model: 48 priced dishes from its menu page in 32 s, two requests. Not yet the scored 20-site run. Render works; in the build sandbox Chromium cannot pass the TLS proxy, so live renders were checked locally only, and the stylesheet fallback on the real site. Pici (`picinottingham.co.uk`, Webflow): its menu page priced with bare numbers was not counted as priced, so the festive set menu PDF was read instead. Fixed: bare prices count, tab panels keep their tab names as headings, seasonal and set-menu PDFs are skipped, prices are copied as written and turned into pence by code, and pages read the old way are not reused from the cache. Saved copy as a regression test. Run against the live site with the model on 2 October: the six sections, all 24 food prices matching the page (most runs also read the drinks tabs, 71 items in all). Hours written as day lists ("wed, thur 12-10pm") were read as the last day only, so Pici looked closed on Wednesdays and Fridays: fixed, and the saved copy now covers the hours. A failed model call now logs its reason. |
+| 2b | **Done** | Tested on a local fake site (politeness, private addresses, bot wall, cache, "Is this you?", apply) and on one real site with the real model: 48 priced dishes from its menu page in 32 s, two requests. **Not yet the scored 20-site run** (still to do, 24 October). Render works; in the build sandbox Chromium cannot pass the TLS proxy, so live renders were checked locally only, and the stylesheet fallback on the real site. Pici (`picinottingham.co.uk`, Webflow): its menu page priced with bare numbers was not counted as priced, so the festive set menu PDF was read instead. Fixed: bare prices count, tab panels keep their tab names as headings, seasonal and set-menu PDFs are skipped, prices are copied as written and turned into pence by code, and pages read the old way are not reused from the cache. Saved copy as a regression test. Run against the live site with the model on 2 October: the six sections, all 24 food prices matching the page (most runs also read the drinks tabs, 71 items in all). Hours written as day lists ("wed, thur 12-10pm") were read as the last day only, so Pici looked closed on Wednesdays and Fridays: fixed, and the saved copy now covers the hours. A failed model call now logs its reason. |
 | 3 | **Done** | Property tests over the defaults and 20 varied configs. Reworked on 1 October to look like a busy but bookable neighbourhood restaurant: quiet early week, busy weekend, never full (a table for two and for four always free inside, at every time, the weekend included), dinner round half seven and lunch round a quarter to one, mostly on the hour or half hour, at most four tables arriving at once. Tested over three seeds. |
 | 4 | **Done** | Floor plan board with time slider and states, drag a booking between tables, drawer (visit states, move, push together, details, cancel with a text), timeline with drag, kitchen board with the ready text, messages, calls, the customer's phone. Chromium walkthrough (`npm run e2e:demo`). |
 | 5 | **Done** | Areas ("inside or on the terrace?"), weather rule, step-free tables, preferences, allergies (with a once-per-call safety net if the caller mentioned one), occasions, highchairs, change by reference keeping the table, collection slots with kitchen capacity, the takeaway payment rule, texts that end "quote your reference". 7 tool tests; 5 new evaluation scenarios on a builder-made restaurant, all passing against the live model (cancel by reference, full terrace and full slot are covered by tool tests rather than scenarios). Fixes from the first live call (1 October): the seeded week keeps a table for two and for four inside at every time (bar Friday and Saturday 7–8pm), so a first call for Sunday lunch works; a full sitting is reported as full, never closed; a table can be asked for by number (walk-in tables say so, and are marked on the timeline); a booking needs a real name, and the name and number can be changed by reference; "dairy" is milk, the menu lists dishes free from an allergen, and a saved allergy always says what it is; a guardrail catches the receptionist reading out notes about the caller. 2 new scenarios. Later the same day: a booking records an allergy as said, with no menu lookup unless the caller asks what they can eat (prompt, tool description, and `ws-sunday-lunch-table4` fails on a lookup by allergen). Run against the live model on 2 October: all 25 scenarios, fixes, then a full run (21 of 25, all 7 builder-made ones passing; the 4 others were fixed during it and re-run: all 4 passed). Fixed from the transcripts: a booking that names no area when the caller had a choice is refused (a "terrace" booking had gone inside); the call does not hang up before the caller has heard the new reference; a promised call-back is taken (flag on "I've passed that on", a nudge after "I'll pass that on", and a "message" call cannot end without one); "we don't have any allergies" is a no; a partial reference is not searched; a booking is found by name when the number given is another; a clear "not placed yet" when an order skipped its read-back; no improvised health disclaimers (the model service's own stock notice still appears sometimes); an unanswered turn is timed afresh after the line to the model drops and reconnects; step-free is mentioned only when asked. `ws-inside-or-out` starts from a clear Sunday; `prompt-injection` fails only if food is given away. |
-| 6 | **Built, not deployed** | Worker forwards `/demo/*` including WebSockets (27/27 in `test:routes` against the real Workers runtime); robots; Dockerfile with Chromium. Hosting moved from Fly to Oracle Cloud's Always Free tier (no cost): `deploy/oracle` (cloud-init, `nabl.sh`: Docker, Caddy HTTPS, firewall, metadata guard, five-minute self-update that waits for calls and keeps the old build if the new one fails); checked behind a real Caddy (forwarded host, throttle, Secure cookies, call WebSocket). Needs: the Oracle account and instance, the DNS record and the Worker secret (guide in `deploy/oracle/README.md`), `voice-agent-DEV` merged to `main` for `nabl.agency/demo`, then a live smoke test from a phone. Before prospects: billing on the Gemini key (Google's terms allow only paid services for apps offered in the UK). Private and shared keys, with the retention sweeper, built and applied (`voice_0003_key_kinds`); 4 HTTP tests and the Chromium walkthrough cover both kinds. `origin/main` (the repositioned site and its scroll film) merged into `voice-agent-DEV` on 1 October with no conflicts; the site builds and `test:routes` passes 27/27 after the merge. |
+| 6 | **Built and checked; not yet online** | Worker forwards `/demo/*` including WebSockets (27/27 in `test:routes` against the real Workers runtime); robots; Dockerfile with Chromium. Hosting moved from Fly to Oracle Cloud's Always Free tier (no cost): `deploy/oracle` (cloud-init, `nabl.sh`: Docker, Caddy HTTPS, firewall, metadata guard, five-minute self-update that waits for calls and keeps the old build if the new one fails); checked behind a real Caddy (forwarded host, throttle, Secure cookies, call WebSocket). Checked end to end on 24 October: the image builds for Intel (amd64) and Arm (arm64, under emulation), runs against Postgres 17 with all 14 migrations applied at start (`voice_0001` to `voice_0014`), and all seven presets were built, started and opened in a browser through it, with Chromium working inside it; the setup script's packages all exist on Ubuntu 24.04. Fixed the same day: the database connection checks Supabase's certificate (`6ca284d`); on the server the scout's Chromium runs in its own sandbox with a seccomp profile (`2823e9d`); the guide wakes the paused database first, says what to do when Oracle is out of capacity, and has a Claude in Chrome prompt (`ea07cae`). Alex has asked for the demo to go on the server now. Needs: Alex's setup (the Oracle account and server, the DNS record `demo-origin.nabl.agency` and the Worker secret; guide in `deploy/oracle/README.md`), `voice-agent-DEV` merged to `main` for `nabl.agency/demo` (a fast-forward; outside `demo-products` it changes only the Worker, `wrangler.jsonc`, `robots.txt`, the routes check and `.devcontainer`), then a live smoke test from a phone. Before prospects: billing on the Gemini key (Google's terms allow only paid services for apps offered in the UK), and the legal check with `04-legal` (§3.5) before the first key goes out. Private and shared keys, with the retention sweeper (`src/demo/sweeper.ts`), built and applied (`voice_0003_key_kinds`); 4 HTTP tests and the Chromium walkthrough cover both kinds. `origin/main` (the repositioned site and its scroll film) merged into `voice-agent-DEV` on 1 October with no conflicts; the site builds and `test:routes` passes 27/27 after the merge. |
 | 7 | Not started | |
-| 8 | **In progress** | Estate agent milestone 1 live (3 October): its builder, back office (Diary, Properties, Offers), receptionist, 7 live scenarios, golden corpus, and `voice_0005_estate` applied. The property maintenance spec is written (`presets/property-maintenance.md`). Next: estate agent milestones 2 and 3, then property maintenance (HANDOFF.md). |
+| 8 | **In progress** | Seven presets live in the catalogue: the restaurant, estate agent (M1 to M3), property maintenance (M1 to M3), takeaway (M1 to M3), barber (M1 to M3), café (M1 to M3) and pub (M1 and M2). `npm run check`: 578 of 578; every built preset's Chromium walk passes; `npm run screens`: 1,101 screens, only the floor plans' own drawing text flagged. Next: pub M3 (the Loft, noise, lost property, other callers, the reaction script). The hair salon has a spec (`presets/salon.md`) but its decisions are unanswered and nothing is built. Then Alex's order: beauty, spa, hotel, letting agent, gym, dog grooming, garage (HANDOFF.md). |
 
 | Phase | Builds | Done when | Tested by |
 |---|---|---|---|
@@ -744,7 +749,7 @@ Where it stands (2 October 2026, end of the third session):
 | Prospects enter real customers' details | notice on the call panel; retention job; no audio stored |
 | A preset feels generic | the builder's cuisine or style text drives menu, greeting and FAQs; the accent colour and floor plan are theirs |
 | Sending demos breaks outreach compliance | the CRM action runs through the same gates; no automated sending |
-| The scout's Chromium renders a hostile page | Playwright launches Chromium without its own sandbox by default, so the container is the only wall: scans need a key and are limited per day, the container cannot reach the cloud metadata service, and only public addresses are fetched. Hardening to do: `chromiumSandbox: true` with a seccomp profile that allows Chromium's namespaces |
+| The scout's Chromium renders a hostile page | Playwright launches Chromium without its own sandbox by default, which left the container as the only wall: scans need a key and are limited per day, the container cannot reach the cloud metadata service, and only public addresses are fetched. Hardened on 24 October (`2823e9d`): on the Oracle server Chromium runs in its own sandbox (`CHROMIUM_SANDBOX=on`, with `deploy/oracle/seccomp-chromium.json`), and if the sandbox can't start the scout reads the site's stylesheets instead, never an unsandboxed browser |
 
 ## 12. Not in this plan
 

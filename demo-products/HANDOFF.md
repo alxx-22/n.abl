@@ -1,60 +1,153 @@
-# Handover: the receptionist demo service (8 October 2026)
+# Handover: the receptionist demo service (24 October 2026)
 
 For the next session. Read `CLAUDE.md` (rules and commands) first, then
 `SESSIONS.md` (the sessions working now, what each owns, and messages
-between them), then this.
+between them), then "Where things stand" just below. Everything after it
+is history: how each part was built, kept for its detail.
+
+## Where things stand (24 October)
+
+### What's built
+
+Seven kinds of business are live in the catalogue, on `voice-agent-DEV`:
+
+| Business | Built |
+|---|---|
+| Restaurant | Finished |
+| Estate agent | M1 to M3 |
+| Property maintenance (repairs) | M1 to M3 |
+| Takeaway | M1 to M3 |
+| Barber | M1 to M3 |
+| Café | M1 to M3 |
+| Pub | M1 and M2. Next, M3: the Loft, a neighbour's noise, lost property, other callers, and the reaction script (see "The pub" below) |
+
+- **The hair salon** has its use cases and spec (`presets/salon.md`), but
+  its decisions for Alex are unanswered and nothing is built. The cloud
+  session claimed it on 8 October and has made no commits since 9 October.
+- **Next in Alex's order** after the pub: the salon (if it's kept), beauty,
+  spa, hotel, letting agent, gym, dog grooming, garage. These show as
+  "coming soon" in the catalogue (`src/presets/catalogue.ts`).
+
+### Tests (24 October)
+
+- `npm run check`: 578 of 578 pass.
+- The Chromium walk passes for every built preset. The repairs, restaurant
+  and estate agent walks now pass on any day of the week (`9a86a1a`).
+- `npm run screens`: 1,101 screens. The only problem flagged is the floor
+  plans' own small drawing text (18 screens each for the restaurant, café
+  and pub).
+
+### Phones (10 to 13 October, the ui session)
+
+- A day pager, with ‹ › and a swipe, in every row of days.
+- Opening hours one day at a time, in every builder.
+- Repairs Dispatch: one visit window at a time.
+- One-row top bars, with a More sheet for the rest.
+- Main buttons in the business's own colour, and the floor plan in its
+  colours too.
+- The Timeline names a booking that isn't the plain kind (a café's "Tea"),
+  and a day opens at now or at its first booking (`de9d61f`).
+- Messages tagged with their category and how urgent they are; quiet
+  appointments marked.
+- On 24 October the pub's What's on was tidied (`cb4e000`).
+
+### Hosting: going on the Oracle server
+
+Alex has now asked for the demo to go on the Oracle server. That replaces
+his earlier decision to keep it offline until the whole demo was built.
+
+Checked on 24 October (the kit is in `voice-agent/deploy/oracle/`):
+
+- The Docker image builds for Intel servers (amd64) and for Arm (arm64,
+  under emulation).
+- It runs against Postgres 17 and applies all 14 migrations at start
+  (`voice_0001` to `voice_0014`).
+- All seven presets were built, started and opened in a browser through
+  it. Chromium works inside it.
+- The packages the setup script installs all exist on Ubuntu 24.04.
+
+Fixed on 24 October:
+
+- The database connection now checks Supabase's certificate (`6ca284d`).
+  Before, it didn't.
+- On the server, the scout's Chromium runs in its own sandbox, with a
+  seccomp profile (`2823e9d`).
+- The guide (`ea07cae`) now starts by waking the database (the Supabase
+  project, Persian Persuasion, is paused at the moment), says what to do
+  when Oracle is out of capacity, and has a prompt for Claude in Chrome to
+  walk Alex through the setup (`deploy/oracle/CHROME-SETUP-PROMPT.md`).
+
+**Still needed to go live:**
+
+1. Alex runs the setup in `voice-agent/deploy/oracle/README.md`: the
+   Oracle account and server, the DNS record `demo-origin.nabl.agency`, and
+   the Worker secret.
+2. `voice-agent-DEV` merged into `main`, for `nabl.agency/demo`. It is a
+   fast-forward. Outside `demo-products` it changes only `worker/index.ts`,
+   `wrangler.jsonc`, `public/robots.txt`, `scripts/check-worker-routes.mjs`
+   and `.devcontainer/`. Until then, once the server is set up, the demo
+   works at `demo-origin.nabl.agency`.
+3. Billing on the Gemini key, before prospects use it (`CLAUDE.md`).
+4. The legal check with `business/04-legal`, before the first key goes out
+   (`DEMO-SERVICE-PLAN.md` §3.5).
+5. The scored run of the scout over 20 real sites (`DEMO-SERVICE-PLAN.md`,
+   phase 2b): not done yet.
+
+### Decisions for Alex
+
+1. The hair salon: build it or drop it, and which session builds it.
+2. What comes after the pub.
+3. When to put billing on the Gemini key.
+4. When to merge `voice-agent-DEV` into `main`.
+5. The legal check with `04-legal`.
 
 ## How to work (Alex's request)
 
-Alex hit his usage limit many times in earlier sessions. **Do not use
-multi-agent workflows or spawn subagents.** Work directly, in small steps:
-read only the files a step needs, run `npm run check` before each commit,
-commit and push after each finished step. Tell Alex in plain words what was
-done after each step.
+Alex hit his usage limit many times in earlier sessions. Work directly, in
+small steps: read only the files a step needs, run `npm run check` before
+each commit, commit and push after each finished step. Tell Alex in plain
+words what was done after each step. Earlier he asked for no multi-agent
+workflows and no subagents; he has since allowed helpers and workflows
+when he asks for them. Without his asking, work directly.
 
-## Pick up here first (8 October): two sessions, split by preset
+## History: 7 to 17 October, the sessions split by preset
 
-Alex split the work on 7 October so two sessions can run at once without
+Alex split the work on 7 October so two sessions could run at once without
 touching the same files:
 
-- **The cloud session** keeps **property maintenance** (repairs, M3).
+- **The cloud session** kept **property maintenance** (repairs, M3).
 - **The Windows session** (Alex's PC) took the **takeaway**, the next
   preset in the order.
 
-Each pushes to `voice-agent-DEV` and rebases on the other's commits before
-pushing (`git -c core.autocrlf=false rebase origin/voice-agent-DEV`). Shared
-files (`src/core/tools.ts`, `guardrails.ts`, `call.ts`, `src/db/repo.ts`)
-take small, separate edits; neither session changes the other's preset.
-Migrations take the next free number when they're written.
+Each pushed to `voice-agent-DEV` and rebased on the other's commits before
+pushing (`git -c core.autocrlf=false rebase origin/voice-agent-DEV`), and
+every session still does. Shared files (`src/core/tools.ts`,
+`guardrails.ts`, `call.ts`, `src/db/repo.ts`) take small, separate edits;
+no session changes another's preset. Migrations take the next free number
+when they're written.
 
 ### A third session (8 October, evening): colours, layout, review fixes
 
-Alex asked a third session to review the restaurant, estate agent and
-repairs work, make the demo easy to get around with little scrolling, and
-carry a website's colours through the demo. Done so far: the website's
-three colours now drive every page (`web/src/reception/brand.ts`, light
-pages for a light site; `cfdd5f0`), the workspace fits the window with
-each column scrolling on its own (`a543053`), the builder keeps Back and
-Next in view (`f566de2`), a `Folds` list in `builder/fields.tsx` for long
-steps (`8f95fb1`), and four repairs safety fixes (`c3d9d7e`). Next it
-compacts the long builder steps and back-office lists (repairs clients,
-engineers and properties; estate hours, team, Applicants and Properties)
-and works through a review's findings. It rebases before every push and
-keeps edits to shared files small; if you are changing the same screens,
-say so here.
+Alex asked a third session (now called ui) to review the restaurant,
+estate agent and repairs work, make the demo easy to get around with
+little scrolling, and carry a website's colours through the demo. First:
+the website's three colours drive every page (`web/src/reception/brand.ts`,
+light pages for a light site; `cfdd5f0`), the workspace fits the window
+with each column scrolling on its own (`a543053`), the builder keeps Back
+and Next in view (`f566de2`), a `Folds` list in `builder/fields.tsx` for
+long steps (`8f95fb1`), and four repairs safety fixes (`c3d9d7e`).
 
-Since then (all pushed, each with `npm run check` and its walkthrough
-passing): the repairs builder's long steps (`3d48bfc`), the estate builder's
-hours, team and listings (`2d10681`), the estate Applicants (filters and a
-search) and Properties (Manage in a side panel) (`876c629`), the repairs
-back office: jobs, properties and compliance, clients and bills (`59b80ed`),
-coconut is not a nut allergy and a finished lunch is not "fully booked"
-(`aa1ebe6`), and a buyer who books a valuation stays a buyer (`1edede2`).
-The review's 28 unchecked findings are in `REVIEW-FINDINGS.md`, split in
-`SESSIONS.md` (cloud: repairs and estate agent; ui: restaurant). Paused at
-Alex's 5-hour usage limit; next: a walkthrough of every preset with
-screenshots for Alex, the restaurant's findings, and the menu step (its
-editor is shared with the takeaway: waiting on the windows session).
+It then compacted the long builder steps and back-office lists (all
+pushed, each with `npm run check` and its walkthrough passing): the
+repairs builder's long steps (`3d48bfc`), the estate builder's hours, team
+and listings (`2d10681`), the estate Applicants (filters and a search) and
+Properties (Manage in a side panel) (`876c629`), the repairs back office:
+jobs, properties and compliance, clients and bills (`59b80ed`), coconut is
+not a nut allergy and a finished lunch is not "fully booked" (`aa1ebe6`),
+and a buyer who books a valuation stays a buyer (`1edede2`). The review's
+28 findings are in `REVIEW-FINDINGS.md`, all done by 9 October (below).
+On 9 October every preset's walk was run with screenshots (below), and the
+menu step was compacted (`173ae5f`).
 
 **9 October, overnight**, with the cloud and Windows sessions out of usage,
 this session picked up their work (the split is in `SESSIONS.md`, 8 Oct
@@ -152,9 +245,9 @@ model's own translation (the number is always said in digits and texted).
 Vetted translations of the gas, CO, fire and electrics scripts would need
 a translator; flagged to Alex.
 
-What next for this session is Alex's call: the next preset in the order
-after the takeaway is the barber, which has no spec yet
-(`presets/barber.md` would come first, as for the others).
+The barber, next in the order after the takeaway, has since had its spec
+written (`presets/barber.md`) and been built, M1 to M3, by the windows
+session (see "The barber" below).
 
 ### Estate agent
 
@@ -551,9 +644,10 @@ three milestones are done.
   the two new ones are `cf-unwell-after` and `cf-reaction-now`.
 - **Left for later**:
   - cakes and platters to order for another day (spec §10, Alex: later);
-  - the timeline marking afternoon teas, and opening at now on a phone
-    (asked of ui, 12 October);
   - a gluten-free tea's booking could add the kitchen warning.
+- **Done since** (ui, 13 October, `de9d61f`): the Timeline names
+  afternoon teas, and a day too wide for the screen opens at now, or at
+  its first booking.
 
 ### The pub (Windows session)
 
@@ -710,7 +804,7 @@ Everything in A and B below is done, each fix reproduced by a test first:
 
 ### A. Re-check of the review fixes
 
-Five fix commits (listed under "Where things stand") were being re-checked
+Five fix commits (listed under "Where things stood") were being re-checked
 area by area. Not yet re-checked when the session stopped: data
 (`288aae9`). Re-check it yourself with `git show 288aae9`.
 
@@ -806,11 +900,11 @@ On 4 October, on the finished code:
 - `ea-short-lease`: failed: didn't offer the mortgage adviser or a
   solicitor.
 
-Then go on with "Do next" below.
+Then go on with "Done next" below.
 
-## Do next, in this order
+## Done next, in this order (5 and 6 October)
 
-### 1. Estate agent milestone 2 (M2): built, live calls being tuned
+### 1. Estate agent milestone 2 (M2): built (5 October)
 
 The spec is `presets/estate-agent.md` (§12, M2). Built on 5 October, each
 with tests (`test/estate-agent-tools.test.ts`, `test/demo-api.test.ts`) and
@@ -835,7 +929,8 @@ the walkthrough:
   selling position first, and the seller update gives a sentence to say
   first).
 
-Left for M2: re-run the seven M1 calls when the live service is steady.
+The seven M1 calls were re-run with all twelve `ea-` calls on 8 October
+(see "Estate agent" above).
 
 ### 2. Estate agent milestone 3 (M3): built (5 October)
 
@@ -862,8 +957,8 @@ Left for M2: re-run the seven M1 calls when the live service is steady.
 - `ea-fall-through` passes live (third run, after the routing fix).
 
 Not done: Applicants' "send matches" and the alerts are pretend texts only,
-as everywhere in the demo. Re-run all twelve `ea-` calls together when the
-live service is steady.
+as everywhere in the demo. All twelve `ea-` calls were re-run together on
+8 October, and every one has passed since (see "Estate agent" above).
 
 ### 3. Property maintenance: M1 built and live on this branch (5 October)
 
@@ -910,11 +1005,11 @@ step; windows and engineers live in `profile.maintenance`, not
 `profile.booking`; the Properties view's id is `compliance`; engineers keep
 the estate agent's staff roles (`other`).
 
-Not done (M3 in the spec): block managers, commercial sites and insurers,
-the compliance portfolio, the demo clock, incident notice and engineer
-absence, the property editor, the KPI strip, surge day, relay and
-language support, Scotland's bank holidays (it counts England's for now).
-M2 is section 4 below.
+M3 in the spec (block managers, commercial sites and insurers, the
+compliance portfolio, the demo clock, incident notice and engineer absence,
+the property editor, the KPI strip, surge day, relay and language support,
+Scotland's bank holidays) was built on 6 to 8 October: see "Property
+maintenance M3" above. M2 is section 4 below.
 
 ### 4. Property maintenance: M2 built (6 October)
 
@@ -962,7 +1057,7 @@ booking a social landlord's damp job.
 The prompt at its largest is now about 6,960 characters (limit 7,000):
 new guidance goes in tool answers.
 
-## Where things stand
+## Where things stood (3 to 5 October)
 
 - **Restaurant**: finished. Its goldens (`test/fixtures/restaurant/`)
   prove later changes leave it alone.
@@ -1001,9 +1096,11 @@ new guidance goes in tool answers.
 - **Framework** for every kind of business: done (`PRESETS.md`).
 - **Order of presets** (Alex): estate agent, property maintenance, then
   takeaway (PRESETS.md §5), barber, salon, café, pub, beauty, spa, hotel,
-  letting agent, gym, dog grooming, garage.
-- **Not online** until the whole demo is built (Alex's decision). The
-  Oracle hosting kit (`voice-agent/deploy/oracle/`) waits until then.
+  letting agent, gym, dog grooming, garage. The salon's spec still waits on
+  Alex's decisions; the café and the pub were built meanwhile.
+- **Online**: Alex first said not until the whole demo was built. On
+  24 October he asked for it to go on the Oracle server now
+  (`voice-agent/deploy/oracle/`): see "Where things stand" at the top.
 
 ## Live calls (property maintenance M3, 8 October)
 
@@ -1074,10 +1171,11 @@ door" from the board, and refuses visit windows for an emergency. Two
 real bugs the runs found: "both" booked the gas record alone at £75, and
 "nobody here is vulnerable" made a chirping CO alarm an emergency.
 
-Seen but not fixed: the receptionist once said a made-up price for
-replacing an alarm ("forty pounds"); no guardrail catches an invented
-price yet. The simulated caller still goes silent now and then; the run
-retries on the other model and carries on.
+The receptionist once said a made-up price for replacing an alarm ("forty
+pounds"). The `invented_price` guardrail now catches that on a repairs
+call (`d8ecdcc`, 6 October): a price must come from the settings, a tool
+or the caller. Seen but not fixed: the simulated caller still goes silent
+now and then; the run retries on the other model and carries on.
 
 Last full run (`eval-results/2026-10-06T18-45-54`, not in git): 7 of 11,
 then each of the four that failed was fixed in the tools and passed on
@@ -1134,29 +1232,31 @@ the session: see the latest folder in `voice-agent/eval-results/`.
   and `buffer_minutes`); the drawer has "Move to someone else", and
   `StaffDiary` takes `onMove` and drags a bar to another row, lighting the
   rows it can go to.
-- The takeaway's order fields (`ready_at`, `driver`) are written but not yet
-  read back (do it when the takeaway is built).
+- The takeaway's order fields (`ready_at`, `driver`) are written and read
+  back (`mapOrder` in `src/db/repo.ts`).
 - The demo clock (the Time button) is a switch in each preset's workspace
   spec now, `clock: true` (8 October, the cloud session; `de7fe18`,
-  `43c4a7c`): on for the restaurant, estate agent and repairs. For the
-  takeaway, its own session can switch it on once its staff actions stamp
-  `tenantNow(t)` rather than `new Date()` (`answerRequest` and
-  `sendOutOrder` in `src/server/demo.ts` still use the real time); the
-  back office already opens at the demo's day and time.
-- `test/takeaway-demo.test.ts` ("a takeaway end to end") fails about one
-  run in three: the seed's made-up phones can draw 07700 900811, the
-  number the test uses for its own order, so "the prospect's own orders are
-  cleared" finds a seeded one. Seen by the cloud session on 8 October and
-  left for the takeaway's session (reserve 900811 in the seed, or use a
-  number the seed never draws).
-- `NEXT-SESSION-PROMPT.md` is from an older session; use this file instead.
+  `43c4a7c`). It is on for six presets: the restaurant, estate agent,
+  repairs, barber, café and pub. For the takeaway, its own session can
+  switch it on once its staff actions stamp `tenantNow(t)` rather than
+  `new Date()` (`answerRequest` and `sendOutOrder` in `src/server/demo.ts`
+  still use the real time); the back office already opens at the demo's
+  day and time.
+- `test/takeaway-demo.test.ts` ("a takeaway end to end") used to fail about
+  one run in three: the seed's made-up phones can draw 07700 900811, the
+  number the test uses for its own order. Fixed on 24 October (`9a86a1a`):
+  the test now knows its own order by what it holds, not by the number
+  alone.
+- `NEXT-SESSION-PROMPT.md` is a short prompt to start the next session
+  (rewritten 24 October); this file has the detail.
 
 ## Testing as Alex does
 
-- **Codespace**:
+- **Codespace** (for building and testing; prospects will use the Oracle
+  server):
   `https://codespaces.new/alxx-22/n.abl/tree/voice-agent-DEV?devcontainer_path=.devcontainer%2Fvoice-agent%2Fdevcontainer.json`
   It installs Chromium. Then run `npm run check:all`.
 - **In the app**: in the console, issue a key, then open `/demo/reception` on
   the same address and enter it. After pulling new code, restart `npm run dev`
-  and press **Reset** in the demo. The estate agent is now on the "Build a new
-  demo" page.
+  and press **Reset** in the demo. All seven built presets are on the "Build
+  a new demo" page.

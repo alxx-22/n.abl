@@ -3,11 +3,14 @@
 An AI that answers the phone for hospitality businesses. It answers questions
 from the business's own information, books tables and appointments, takes
 orders, and takes (demo) payments, live on the call. A demo product: see
-[`BUILD-PLAN.md`](BUILD-PLAN.md) for the plan and where it stands, and
-[`docs/spike-results.md`](docs/spike-results.md) for what the models actually do.
+[`BUILD-PLAN.md`](BUILD-PLAN.md) for the first build plan,
+[`../HANDOFF.md`](../HANDOFF.md) and
+[`../DEMO-SERVICE-PLAN.md`](../DEMO-SERVICE-PLAN.md) for where things stand
+now, and [`docs/spike-results.md`](docs/spike-results.md) for what the models
+actually do.
 
 It is also the **demo service**: a private page at `nabl.agency/demo` where a
-prospect with a key builds the receptionist for their own restaurant (from our
+prospect with a key builds the receptionist for their own business (from our
 defaults or from their website), rings it, and works a real back office and a
 customer's phone. See [`../DEMO-SERVICE-PLAN.md`](../DEMO-SERVICE-PLAN.md) and
 [The demo service](#the-demo-service) below.
@@ -29,7 +32,9 @@ npm install
 npm run dev                       # then open http://localhost:8787/demo/admin
 ```
 
-**Without installing anything**, in a GitHub Codespace: on the repository
+**Without installing anything**, in a GitHub Codespace (for building and
+testing the demo; prospects use it on the Oracle server, see
+[Deploying](#deploying)): on the repository
 page choose **Code → Codespaces → ⋯ → New with options**, pick the
 **n.abl Reception (voice agent demo)** configuration, and paste your Gemini
 key when asked (or add `GEMINI_API_KEY` as a Codespaces secret first). The
@@ -44,7 +49,7 @@ shows a red banner if it did not.
 **Running the tests** (in the Codespace, open a second terminal with **+**):
 
 ```bash
-npm run check:all     # typecheck, 130 tests, then the browser walkthrough (no key needed)
+npm run check:all     # typecheck, 578 tests, then the browser walkthrough (no key needed)
 npm run e2e:browser   # a real call through Chromium with a recorded caller (uses the Gemini key)
 ```
 
@@ -83,7 +88,8 @@ nabl.agency.
 A prospect gets a link like `nabl.agency/demo/reception#key=DEMO-K7QX-M3RD-9WTF`
 (the key after the `#` never reaches a server log), and then:
 
-1. **Picks a kind of business.** Restaurant is live; the others show as coming soon.
+1. **Picks a kind of business.** Seven are live: restaurant, takeaway, café, pub,
+   barber, estate agent and property maintenance. The others show as coming soon.
 2. **Optionally gives their website.** The scout (`src/scout/`) reads it in the
    background, politely (robots.txt, one request a second, public addresses
    only), with no model for structured data, hours, phones, providers and
@@ -91,10 +97,11 @@ A prospect gets a link like `nabl.agency/demo/reception#key=DEMO-K7QX-M3RD-9WTF`
    model calls for the menu and the facts still missing. It then asks "Is this
    you?"; only what the prospect ticks is used, and every field it fills is
    marked. Cached for 14 days.
-3. **Builds it** in nine short steps with a live preview: basics, hours, how
-   they serve (tables, walk-ins, click and collect, delivery), seating areas,
-   the floor plan (drag the tables), the menu ("describe your food" and the AI
-   drafts it), money (deposits, takeaway payment), policies and questions, review.
+3. **Builds it** in short steps with a live preview. For a restaurant there
+   are nine: basics, hours, how they serve (tables, walk-ins, click and
+   collect, delivery), seating areas, the floor plan (drag the tables), the
+   menu ("describe your food" and the AI drafts it), money (deposits,
+   takeaway payment), policies and questions, review.
 4. **Presses Start.** The answers compile into the receptionist's profile and a
    believable week of bookings and today's orders is written to the database,
    shaped by their own tables, hours and menu.
@@ -137,7 +144,7 @@ things:
   0.5 s of silence, an open question 0.7 s, a name 0.9 s, and "what would
   you like?" or "what's your number?" 1.3 s, because people pause mid-list.
 - **What the caller has said so far**, from a second listener
-  (Transcribe Live) about a second behind:
+  (the transcription model) about a second behind:
 
 | The caller | The receptionist |
 |---|---|
@@ -182,9 +189,9 @@ Google.
 |---|---|---|
 | `npm run dev` | The server and the React app (hot reload), with PGlite, on one port | Gemini key |
 | `npm run build` then `npm start` | Production: the built app from `web/dist` | Gemini key |
-| `npm test` | 89 unit and integration tests, no network | nothing |
+| `npm test` | 578 unit and integration tests, no network | nothing |
 | `npm run typecheck` | `tsc` as a checker, for the server and the app | nothing |
-| `npm run eval` | 23 simulated callers against the receptionist (5 on a restaurant made in the builder); report in `eval-results/` | Gemini key |
+| `npm run eval` | 115 simulated callers against the receptionist, across the built presets (`--only id1,id2` runs some); report in `eval-results/` | Gemini key |
 | `npm run eval -- --audio` | The same, voices crossing as audio through a simulated phone line | Gemini key |
 | `npm run e2e:browser` | Headless Chromium with a fake microphone: a live call through the React app | Gemini key, Chromium |
 | `npm run e2e:phone` | Plays Twilio: μ-law frames into `/demo/twilio/stream`, a real booking out | Gemini key |
