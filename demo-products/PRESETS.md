@@ -214,18 +214,42 @@ interface WorkspaceSpec {
   views: { id: ViewId; label: string; of?: string }[];  // tab order; the first is the default
   bookings?: { resource: string; resources: string; party: string | null;
                visit: Partial<Record<VisitStatus, string>>; allergies: boolean;
-               combine?: boolean };                    // staff push tables together (combineTables)
+               combine?: boolean;                      // staff push tables together (combineTables)
+               property?: boolean };                   // a booking is at one of the business's homes (a viewing)
   orders?: { board: string; done: { collection: string; delivery: string };
              drivers: boolean; advance: boolean };      // advance: seeded orders move on with the clock
+  teamPhones?: { name: string; phone: string }[];       // the team's phones, to watch their urgent texts
+  callAs?: { label: string; phone: string }[];          // people the prospect can ring as
   suggestions: string[];                                 // templates; {ref} filled from state
   resetLine: string;                                     // "bookings and orders", "orders"
+  clock?: boolean;                                       // the demo's own clock (the Time button)
 }
-type ViewId = 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls';
+type ViewId =
+  | 'floor' | 'timeline' | 'orders' | 'drivers' | 'messages' | 'calls'
+  | 'properties' | 'offers' | 'applicants' | 'valuations' | 'sales'      // estate agent
+  | 'jobs' | 'dispatch' | 'compliance' | 'safety' | 'clients' | 'money'  // property maintenance
+  | 'tonight'                                                           // takeaway's Menu tonight; a café's or pub's Today
+  | 'queue' | 'today' | 'waitlist'                                      // barber's shop floor
+  | 'whats_on';                                                         // pub
 ```
 
-The restaurant's spec reproduces today's tabs, labels, buttons and texts
-exactly. `/state` returns it as `workspace`; later presets add views (rooms,
-classes, properties, repairs) and an optional `Resource.kind` for `of`.
+The type is `ViewId` in `src/presets/index.ts`; the web's views are in
+`web/src/reception/workspace/views.tsx` (24 October). Each built preset's
+tabs, in order:
+
+| Preset | Views (label) |
+|---|---|
+| Restaurant | `floor` (Floor plan), `timeline` (Timeline), `orders` (Kitchen), `messages`, `calls` |
+| Takeaway | `orders` (Kitchen), `drivers` (Drivers, when it delivers with drivers), `tonight` (Menu tonight), `messages`, `calls` |
+| Café | `floor`, `timeline` (Bookings), `orders` (Orders), `tonight` (Today), `messages`, `calls` |
+| Pub | `floor`, `timeline` (Bookings), `whats_on` (What's on), `tonight` (Today), `messages`, `calls` |
+| Barber | `timeline` (Diary, a row per barber: `of: 'staff'`), `queue` (Queue), `today` (Today), `waitlist` (Waiting list), `messages`, `calls` |
+| Estate agent | `timeline` (Diary, `of: 'staff'`), `properties`, `offers`, `sales` (Sales progress), `applicants`, `valuations`, `messages`, `calls` |
+| Property maintenance | `jobs`, `dispatch` (`of: 'engineer'`), `compliance` (Properties and compliance), `safety` (Safety log), `clients`, `money` (Quotes and invoices), `messages`, `calls` |
+
+The restaurant's spec reproduces its first tabs, labels, buttons and texts
+exactly. `/state` returns it as `workspace`. Later presets add views of
+their own, as above, and `of` says what a row is when it isn't a table.
 
 ## 3. Web: `web/src/reception/`
 
@@ -240,7 +264,7 @@ delivery, takeaway payment), each taking its paths as props. The restaurant's
 `BuilderDef` lists today's nine steps with today's titles.
 
 **Workspace.** A view registry maps `ViewId` to a component and declares what
-it shows (`'bookings' | 'orders' | null`); tabs come from `state.workspace.views`,
+it shows (`'bookings' | 'orders' | 'jobs' | null`); tabs come from `state.workspace.views`,
 the first is the default, and focus goes to the first view showing that kind.
 `Kitchen` becomes `OrderBoard`, configured by `workspace.orders` (the
 restaurant's columns and words unchanged). The drawer shows allergies and

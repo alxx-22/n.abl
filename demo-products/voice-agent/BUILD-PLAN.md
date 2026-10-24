@@ -8,11 +8,21 @@ It is a **product n.abl demos and sells**. It is not part of n.abl's own site,
 CRM or Supabase project. It lives in `demo-products/voice-agent/` and shares
 nothing with the rest of this repository.
 
+> **This is the first build plan (29 September 2026), kept as a record.**
+> For where things stand now, read [`../HANDOFF.md`](../HANDOFF.md) ("Where
+> things stand") and [`../DEMO-SERVICE-PLAN.md`](../DEMO-SERVICE-PLAN.md)
+> (§10). Corrected on 24 October where this file had gone out of date:
+> hosting, the Gemini billing rule, and the test counts. Models are named by
+> their role; their ids are in `src/config.ts`.
+
 ```
-Status:       building. Phases 0-4 done; Phase 5 built and waiting on a Twilio account; Phases 6-7 in part
+Status:       built (24 October 2026). Phases 0-4 done; Phase 5 built and waiting on a Twilio account;
+              Phase 6 grew into the demo service (../DEMO-SERVICE-PLAN.md, seven kinds of business live);
+              Phase 7 in part. Hosting: Oracle Cloud Always Free, waiting on Alex's setup (deploy/oracle/)
 Owner:        Alex
 Next review:  when the Twilio account and UK number exist (Phase 5 on a real phone)
-Evidence:     docs/spike-results.md; 65 tests (npm test); the evaluation suite (npm run eval: 18 of 18 after fixes, no guardrail flags, median reply 0.85 s);
+Evidence:     docs/spike-results.md; 578 tests (npm run check, 24 October); 115 simulated-caller scenarios
+              (npm run eval; on 29 September the first 18 passed after fixes, no guardrail flags, median reply 0.85 s);
               a browser end-to-end call that booked a table with no guardrail flags; the voice_ schema live
               in auivrancfnrdwyiqoakt
 ```
@@ -23,7 +33,11 @@ Evidence:     docs/spike-results.md; 65 tests (npm test); the evaluation suite (
   reads out a placeholder card (`1234 5678 9012 3456`) and a mock processor
   approves it (§10).
 - **Gemini runs on the free tier**, because this is a demo product. That
-  shapes what may be said on a demo line (§5, §14).
+  shapes what may be said on a demo line (§5, §14). *Corrected since
+  (`../CLAUDE.md`):* the free tier is for the team's own testing. Google's
+  terms (23 March 2026) allow only paid services for apps offered to people
+  in the UK, the EEA or Switzerland, so billing goes on the key before
+  prospects use the demo.
 - **The database is the Supabase project `auivrancfnrdwyiqoakt`**, shared with
   a text-chatbot demo being built by the other project member. Every object
   this product creates is prefixed `voice_`, and nothing else in the project
@@ -45,14 +59,14 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
 | 2. Data and bookings | **done** | `voice_` schema applied to the shared project, four demo tenants loaded there, booking engine with the tenant-row lock, caller recognition |
 | 3. Orders and demo payments | **done** | Menu matching, server-side basket, delivery areas, allergen wording, mock card processor, deposits |
 | 4. Evaluation suite | **done** | 18 simulated-caller scenarios with database checks; first run 11 of 18; after the fixes below, 16 of 18 with no guardrail flags and a median reply of 0.85 s; the two failures were the simulated caller (silent once, hanging up early once), and with the harness fixed both pass. Text and audio bridges |
-| 5. Telephony | **built, not yet on a real line** | TwiML, PIN router, μ-law media bridge, barge-in, hang-up marks, warm transfer with whisper, signature checks (verified against Twilio's documented example), SMS. `npm run e2e:phone` plays Twilio against the real server and books a table (see below), including with the primary model failing mid-call. `Dockerfile` and `fly.toml` ready. **Waiting on the Twilio account and UK number** |
+| 5. Telephony | **built, not yet on a real line** | TwiML, PIN router, μ-law media bridge, barge-in, hang-up marks, warm transfer with whisper, signature checks (verified against Twilio's documented example), SMS. `npm run e2e:phone` plays Twilio against the real server and books a table (see below), including with the primary model failing mid-call. `Dockerfile` ready; hosting is Oracle Cloud's Always Free tier (`deploy/oracle/`; `fly.toml` was removed on 1 October). **Waiting on the Twilio account and UK number** |
 | 6. Demo platform | **in part** | React app: console, setup wizard (website to draft profile, tested on a local fake site), live board built around the live call (level meters, reply times as they happen), receptionist settings (voice with spoken preview, greeting, language, reply speed, model), one-click reset, four seeded businesses. A Codespaces configuration runs it with no install. Not yet: console sign-in through Supabase Auth (a password for now), number pool admin, the owner's weekly report |
-| 7. Sales-floor readiness | **in part** | Fallback chain, session resumption, context compression, concurrency cap, Supabase keep-alive. Not yet: kill switch, alerts, retention job, privacy notice page, demo-day runbook |
+| 7. Sales-floor readiness | **in part** | Fallback chain, session resumption, context compression, concurrency cap, Supabase keep-alive, and since then the retention job (`src/demo/sweeper.ts`, once a minute). Not yet: kill switch, alerts, privacy notice page, demo-day runbook |
 
 **What testing found, and what changed because of it:**
 
 - **The false confirmation came back on the production prompt.** In the first
-  browser end-to-end call, 3 Flash Live said "That's booked for you" without
+  browser end-to-end call, the primary live model said "That's booked for you" without
   calling `create_booking`. The guardrail caught it. Three changes followed:
   the prompt spells out the booking and ordering steps, a flagged claim sends
   an immediate correction into the call, and the tool text was trimmed. The
@@ -69,18 +83,19 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
   real server (`npm run e2e:phone`) booked a table and hung up cleanly, with
   replies in 1.3 to 2.0 s. It also exposed two things. The test script raced a
   slow server start and sent its first line before the call had connected
-  (fixed). And after a day of heavy testing, 3 Flash Live intermittently
+  (fixed). And after a day of heavy testing, the primary live model intermittently
   stopped hearing audio on this free-tier key while still answering text:
   the same recording that it had heard four times out of four earlier went
-  unheard, and 3.8 Live heard it at once. A watchdog now hands the call to
+  unheard, and the fallback live model heard it at once. A watchdog now hands the call to
   the other model, with the transcript so far, when the caller has spoken
   and the model has shown no sign of life for 7 seconds; the new model
   apologises and asks the caller to repeat themselves. Resuming the same
   model was tried first and brought back the same deaf model.
-- **The phone path, verified three ways** on 29 September: 3.8 Live as
-  primary (booked, replies 0.8 to 1.7 s); 3 Flash Live as primary (booked,
-  1.3 to 2.1 s); and 3 Flash Live forced deaf (the watchdog handed over after
-  about 9 s, and the call still booked). No guardrail flags in any of them.
+- **The phone path, verified three ways** on 29 September: the fallback
+  live model as primary (booked, replies 0.8 to 1.7 s); the primary live
+  model as primary (booked, 1.3 to 2.1 s); and the primary live model forced
+  deaf (the watchdog handed over after about 9 s, and the call still
+  booked). No guardrail flags in any of them.
 - **VAD tuning matters.** With Google's default end-of-speech detection the
   reply to a phone caller took 6.9 s; with 600 ms of silence it took 1.4 s.
 
@@ -88,12 +103,12 @@ from the plan and why, and what is left. Run it with the steps in `README.md`.
 
 | Plan said | Built | Why |
 |---|---|---|
-| D7: 3.8 Live primary | **3 Flash Live primary**, 3.8 Live fallback | Same behaviour in every spike run; 3.8 Live went silent once. One setting (`LIVE_MODEL_PRIMARY`) |
+| D7: the other live model primary | **The faster live model primary** (now "the primary live model"), the other as fallback | Same behaviour in every spike run; the other went silent once. One setting (`LIVE_MODEL_PRIMARY`) |
 | npm workspaces; Fastify; React + Vite dashboard | One package; plain `node:http` + `ws`; the React + Vite app in `web/`, run by Vite inside the server in development | One process and one port for the app, the API and the live-call socket, so `npm run dev` is the whole setup. The first build used plain HTML pages; the React app replaced them on review (29 September) |
 | Supabase Realtime for the live board | Server-sent events from the server | Works identically on PGlite, and avoids changing the shared `supabase_realtime` publication at all |
 | Menu, knowledge, hours as tables | One JSON profile per tenant (`voice_tenants.profile`); transactional records are tables | The wizard produces a profile in one go and the console edits it in one go; demo menus are small |
-| Transcribe Live as a backup transcript | Not used | Built-in transcription was word-perfect on phone audio in the spike |
-| `gemini-3.8-flash` for offline text | `gemini-3.5-flash`, then 3.5 Flash Lite, then 3.8 Flash | 3.8 Flash answered 503 "high demand" on the free tier; 2.5 Flash has been withdrawn |
+| The transcription model as a backup transcript | Not used for that (since 30 September it is the second listener for turn-taking, below) | Built-in transcription was word-perfect on phone audio in the spike |
+| One text model for offline text | A list of three text models, tried in order (`TEXT_MODELS`) | The one planned answered 503 "high demand" on the free tier; an older one has been withdrawn |
 | Keypad card entry | Spoken demo card only | Payments are demo-only (review, 29 September) |
 
 **Contextual turn-taking (30 September).** Gemini's own detection ended
@@ -101,7 +116,7 @@ every turn after a fixed 0.6 s, so callers were answered mid-thought and
 their asides to the family were answered too. The server now marks turns
 itself (`activityStart`/`activityEnd`, spike in `docs/spike-results.md`) and
 decides from what the receptionist asked and the caller's words, which a
-parallel Transcribe Live listener supplies about a second behind. It waits
+parallel listener on the transcription model supplies about a second behind. It waits
 through thinking pauses and chunked phone numbers, says "take your time"
 and stays quiet through a side conversation, ignores "mm-hm", and needs
 longer speech to interrupt a read-back. A turn closed too early is reopened
@@ -116,8 +131,8 @@ hours of testing (the watchdog handed over each time).
 **Capacity on the free tier, measured:** a busy call uses about 30K tokens a
 minute on the receptionist model (the prompt and tools are about 3.3K tokens,
 and every turn re-counts the call so far). Against the 65K cap that is **about
-two busy calls at once per model**. `MAX_CONCURRENT_CALLS` is 3 on Fly. A
-billed key lifts this.
+two busy calls at once per model**. `MAX_CONCURRENT_CALLS` is 3 on the
+Oracle server (set by `deploy/oracle/nabl.sh`). A billed key lifts this.
 
 **How to use this document.** Read §1 and §3 first. §3 lists the decisions
 that are yours to make, each with a recommendation. Change anything, strike
@@ -173,33 +188,34 @@ book a table for four tomorrow at 7pm?". Audio out, text in.
 **This is a capability check, not a latency benchmark.** Real latency with
 8 kHz phone audio in is Phase 0's first job.
 
-| Your name for it | API model id | Opened? | Called the tool? | First audio (incl. tool round trip) | Tokens that turn | Notes |
-|---|---|---|---|---|---|---|
-| Gemini 3.8 Live | `gemini-3.8-live` | yes, 0.3–0.7 s | yes, correct args, ~0.7 s | ~1.5 s | ~920 (≈80 thinking) | Offered to book, or asked for a name first. Never claimed a booking. The right behaviour |
-| Gemini 3.8 Live Extended Thinking | `gemini-3.8-live-extended-thinking` | yes, **only with `thinkingLevel` set** | not within the probe's window | ~1.1 s (a holding line: "Let me check our availability for you") | **~3,300** | Speaks first, then thinks. Uses 3.5× the tokens of 3.8 Live per turn |
-| Gemini 3 Flash Live | `gemini-3.1-flash-live-preview` (the only Flash Live the key lists) | yes, 0.3 s | yes, ~0.4 s | ~1.1 s | ~825 | Offered to book, did not claim it had. Fastest |
-| Gemini 2.5 Flash Native Audio Dialog | `gemini-2.5-flash-native-audio-latest` | yes, 0.35 s | yes, ~1.5 s | **~4.5 s** | ~890 | **Said "Yes, that's confirmed for you" after only checking availability.** A false confirmation, with no booking made |
-| Gemini 3.5 Live Translate | `gemini-3.5-live-translate-preview` | yes, audio and text out | n/a | n/a | n/a | Session opens. Not exercised further |
-| Gemini 3.5 Transcribe Live | `gemini-3.5-transcribe-live` | yes, **text out only**. Audio out is rejected | n/a | n/a | n/a | Session opens. Not exercised further |
+| The model, by its role now | Opened? | Called the tool? | First audio (incl. tool round trip) | Tokens that turn | Notes |
+|---|---|---|---|---|---|
+| The fallback live model | yes, 0.3–0.7 s | yes, correct args, ~0.7 s | ~1.5 s | ~920 (≈80 thinking) | Offered to book, or asked for a name first. Never claimed a booking. The right behaviour |
+| The extended-thinking live model | yes, **only with `thinkingLevel` set** | not within the probe's window | ~1.1 s (a holding line: "Let me check our availability for you") | **~3,300** | Speaks first, then thinks. Uses 3.5× the tokens of the fallback live model per turn |
+| The primary live model (the only one of its kind the key lists) | yes, 0.3 s | yes, ~0.4 s | ~1.1 s | ~825 | Offered to book, did not claim it had. Fastest |
+| An older native-audio live model | yes, 0.35 s | yes, ~1.5 s | **~4.5 s** | ~890 | **Said "Yes, that's confirmed for you" after only checking availability.** A false confirmation, with no booking made |
+| The translation model | yes, audio and text out | n/a | n/a | n/a | Session opens. Not exercised further |
+| The transcription model | yes, **text out only**. Audio out is rejected | n/a | n/a | n/a | Session opens. Not exercised further |
 
 What this changes:
 
 - **The false confirmation is the headline risk, and it showed up on the first
   try.** The design answer is §6.4: a booking or order is never described as
   confirmed unless a tool has returned a reference, and the evaluation suite
-  (§13) fails any model that says otherwise. 2.5 Native Audio does not go
-  near a caller until it passes that suite.
+  (§13) fails any model that says otherwise. The native-audio model does
+  not go near a caller until it passes that suite.
 - **The token caps matter more than the request caps.** I read your quota table
   as RPM / TPM / RPD. Every Live model has unlimited requests. The limit is
-  tokens per minute: **65K for 3.8 Live and 3 Flash Live, 1M for 2.5 Native
-  Audio, 20K for Translate and Transcribe**. The Live API counts the session's
+  tokens per minute: **65K for each of the two live models now in use, 1M
+  for the native-audio model, 20K for the translation and transcription
+  models**. The Live API counts the session's
   accumulated context on every turn, and even a one-line prompt cost ~800–900
   tokens for a single turn. So a call with the whole menu pasted into the
-  prompt could use most of 3.8 Live's minute on its own. That drives two design rules: knowledge is fetched by
+  prompt could use most of a live model's minute on its own. That drives two design rules: knowledge is fetched by
   tools rather than stuffed into the prompt (§6.2), and there is a fallback
   chain across models with separate quotas (§5). Phase 0 measures how many
   tokens a real call actually uses per minute.
-- **Extended Thinking is not a default.** It speaks a holding line quickly,
+- **The extended-thinking model is not a default.** It speaks a holding line quickly,
   which is good on a phone, but at ~3,300 tokens a turn it would exhaust a
   65K-a-minute quota in a handful of turns. It is evaluated as an option for
   complex orders, not used by default.
@@ -220,7 +236,7 @@ D1–D4 are settled. D5, D6 and the Gemini tier were settled in review on
 | D4 | Hosting | Fly.io · Railway · Render · a VPS | **Now Oracle Cloud Always Free, Frankfurt** (1 October 2026: no paid hosting; see `deploy/oracle/README.md`). Originally: **Fly.io, London region.** A call is a long-lived WebSocket, which rules out Netlify functions. Fly runs a Docker image close to UK callers and scales by adding machines. Cloudflare Workers with Durable Objects could do it, but the audio work and session lifetimes make that the harder road for v1. The Supabase project is in Frankfurt, which adds roughly 15–20 ms to each database round trip from London. That is negligible next to model latency, and Fly's `fra` region is the alternative if it ever is not |
 | D5 | Database | — | **Settled:** Supabase project `auivrancfnrdwyiqoakt`, shared with the text-chatbot demo. Every table and every other object is prefixed `voice_` (§7.1). Tests run on PGlite (Postgres in-process), so test runs never write into the shared project |
 | D6 | Payments | — | **Settled: demo only.** A mock processor accepts placeholder cards read out on the call. There is no Stripe and no real card data (§10) |
-| D7 | Primary model | 3.8 Live · 3 Flash Live · Extended Thinking | **Settled by the spike: 3 Flash Live, with 3.8 Live as fallback** (`docs/spike-results.md`) |
+| D7 | Primary model | the two live models · the extended-thinking model | **Settled by the spike: the faster live model (now "the primary live model"), with the other as fallback** (`docs/spike-results.md`) |
 | D8 | Demo tenants to seed | — | **Four:** an Italian restaurant (tables and takeaway), a café-takeaway (orders and payment), a hotel (room enquiries and spa appointments), a barber or salon (appointments and deposits). The salons fit the lead-gen targets already saved |
 | D9 | Call recording | off · on | **Off by default.** Transcripts only, with 30-day retention for demo tenants. Recording adds consent wording and storage for little demo value |
 | D10 | Console branding | n.abl brand · neutral | **n.abl brand in the console. The prospect's name and colours on their own board.** The brand tokens can be copied, and no code is shared |
@@ -233,26 +249,30 @@ D1–D4 are settled. D5, D6 and the Gemini tier were settled in review on
 ### 4.1 The shape
 
 ```
-                     ┌──────────────── Fly.io (London) ────────────────┐
- Caller ── PSTN ──►  │                                                  │
-   Twilio number     │  server (Node 22, TypeScript, Fastify)           │
-   │  webhook ──────►│   ├─ /twilio/voice      TwiML: <Connect><Stream> │
-   │  media WS ◄────►│   ├─ /twilio/stream     μ-law 8k ⇄ PCM 16k/24k    │ ◄──► Gemini Live (WSS)
-   │                 │   ├─ /browser/stream    mic in the browser       │      3.8 Live (primary)
- Browser demo ◄─────►│   ├─ Session orchestrator (one per call)         │      3 Flash Live / 2.5 NA (fallback)
-                     │   │    prompt compiler · tool registry ·         │ ◄──► Gemini text (offline jobs)
-                     │   │    guardrails · state · transcript           │      ingestion, summaries, judging
-                     │   ├─ /api/*   console and business board         │
-                     │   ├─ mock payment processor (demo cards only)    │
-                     │   └─ serves the dashboard build                  │ ◄──► Twilio REST (SMS, transfer)
-                     └──────────────────────┬───────────────────────────┘
+            Everything arrives at nabl.agency/demo/*: the site's Cloudflare
+            Worker forwards it, WebSockets included, to the server below.
+                     ┌─────── Oracle Cloud Always Free (Frankfurt) ────────┐
+ Caller ── PSTN ──►  │  Caddy: HTTPS at demo-origin.nabl.agency            │
+   Twilio number     │  server (Node 22, TypeScript, node:http and ws)     │
+   │  webhook ──────►│   ├─ /demo/twilio/voice   TwiML: <Connect><Stream>  │
+   │  media WS ◄────►│   ├─ /demo/twilio/stream  μ-law 8k ⇄ PCM 16k/24k    │ ◄──► Gemini Live (WSS)
+   │                 │   ├─ /demo/ws/talk        mic in the browser        │      the primary live model
+ Browser demo ◄─────►│   ├─ Session orchestrator (one per call)            │      the fallback live model
+                     │   │    prompt compiler · tool registry ·            │ ◄──► Gemini text (offline jobs)
+                     │   │    guardrails · state · transcript              │      the text model: scout, summaries, judging
+                     │   ├─ /demo/api/*   builder, back office, console    │
+                     │   ├─ mock payment processor (demo cards only)       │
+                     │   └─ serves the React app under /demo/              │ ◄──► Twilio REST (SMS, transfer)
+                     └──────────────────────┬──────────────────────────────┘
                                             │
                           Supabase auivrancfnrdwyiqoakt (shared, eu-central-1)
-                          voice_* tables · Auth · Realtime ──► dashboard live board
+                          voice_* tables; the live board gets server-sent events
 ```
 
 One deployable service and one database. There are no queues, microservices
-or Redis in v1. A phone call is one process holding two WebSockets. Everything
+or Redis in v1. (Updated 24 October: the first sketch had Fly.io in London,
+Fastify and Supabase Realtime; the build departs as the table above says, and
+hosting moved to Oracle Cloud on 1 October: `deploy/oracle/README.md`.) A phone call is one process holding two WebSockets. Everything
 else is ordinary request/response.
 
 ### 4.2 One call, step by step
@@ -292,6 +312,9 @@ answered, the call comes back with a resumed Gemini session.
 
 ### 4.3 Repository layout
 
+As planned. The build is one package instead (see "Where the build departs
+from the plan" above), and `fly.toml` gave way to `deploy/oracle/`.
+
 ```
 voice-agent/
   BUILD-PLAN.md            this file
@@ -307,7 +330,7 @@ voice-agent/
     ingest/                website to tenant-profile extraction
     eval/                  simulated callers, scenarios, judge, reports
   fixtures/tenants/        the four seeded demo businesses (JSON)
-  Dockerfile, fly.toml
+  Dockerfile, fly.toml     (as planned; now Dockerfile and deploy/oracle/)
 ```
 
 `domain` has no I/O so the parts that must never be wrong (availability,
@@ -319,26 +342,35 @@ same orchestrator.
 
 ## 5. The models, and the job each one does
 
+Each model is named by the role it has now; the ids are in `src/config.ts`
+(and can be set in `.env.local`). The spike swapped the first two (D7).
+
 | Model | Job | Why this one |
 |---|---|---|
-| `gemini-3.8-live` | **The receptionist.** Every live call by default | Correct tool use in the probe, and it never claimed a booking it had not made. 65K TPM, so it is the model most likely to hit its quota. Watched closely |
-| `gemini-3.1-flash-live-preview` | **First fallback** when 3.8 Live returns a quota or availability error, and the default for the **simulated caller** in evaluation | Fastest in the probe and behaved correctly. It has its own 65K quota, so test calls never consume the receptionist's allowance |
-| `gemini-2.5-flash-native-audio-latest` | **Overflow** for busy demo days (1M TPM), once it passes the evaluation suite | The largest quota by far. It failed the confirmation test in the probe, so it is gated, not trusted |
-| `gemini-3.8-live-extended-thinking` | **Evaluated, not deployed.** A candidate for tenants with complex ordering (big menus, many modifiers) | Speaks a holding line fast, but ~3.5× the tokens per turn. Only used if the evaluation shows a real accuracy gain |
-| `gemini-3.5-transcribe-live` | **Backup transcript.** Only if the built-in transcription is poor on 8 kHz phone audio (Phase 0 measures this) | Text-only, confirmed. Runs as a parallel listener on the caller's audio |
-| `gemini-3.5-live-translate-preview` | **"Understand any caller" on the board (Phase 8).** When a caller speaks Polish, say, the receptionist answers in Polish and the owner sees English on screen | The receptionist is already multilingual. Translate earns its place on the owner's side of the glass, not the caller's |
-| `gemini-3.8-flash` (text, not Live) | Offline work: website extraction (§12.1), call summaries, evaluation judging | Nothing offline needs a Live model, and this keeps offline work off the Live quotas |
-| `gemini-3.8-flash-tts` (text to speech) | Evaluation fixtures: synthetic caller utterances with varied voices, accents and background noise | Deterministic audio test cases that can be replayed exactly |
+| **The fallback live model** | Planned as **the receptionist** for every live call. Since the spike (D7) it is the **fallback**, and the simulated caller in evaluation runs on it | Correct tool use in the probe, and it never claimed a booking it had not made. 65K TPM, so it is the model most likely to hit its quota. Watched closely |
+| **The primary live model** | Planned as **first fallback** and the simulated caller. Since the spike (D7) it is **the receptionist** | Fastest in the probe and behaved correctly. It has its own 65K quota, so test calls never consume the receptionist's allowance |
+| An older native-audio live model | **Overflow** for busy demo days (1M TPM), once it passes the evaluation suite | The largest quota by far. It failed the confirmation test in the probe, so it is gated, not trusted |
+| The extended-thinking live model | **Evaluated, not deployed.** A candidate for tenants with complex ordering (big menus, many modifiers) | Speaks a holding line fast, but ~3.5× the tokens per turn. Only used if the evaluation shows a real accuracy gain |
+| **The transcription model** | **Backup transcript.** Only if the built-in transcription is poor on 8 kHz phone audio (Phase 0 measures this). Since 30 September it is the second listener for turn-taking | Text-only, confirmed. Runs as a parallel listener on the caller's audio |
+| The translation model | **"Understand any caller" on the board (Phase 8).** When a caller speaks Polish, say, the receptionist answers in Polish and the owner sees English on screen | The receptionist is already multilingual. Translation earns its place on the owner's side of the glass, not the caller's |
+| **The text model** (text, not Live; a list tried in order) | Offline work: website extraction (§12.1), call summaries, evaluation judging | Nothing offline needs a Live model, and this keeps offline work off the Live quotas |
+| **The speech model** (text to speech) | Evaluation fixtures: synthetic caller utterances with varied voices, accents and background noise | Deterministic audio test cases that can be replayed exactly |
 
-**The fallback chain** is configuration, not code: `3.8 Live → 3 Flash Live →
-2.5 Native Audio (once gated in)`. If a session fails to open, the next model
-is tried before the caller hears anything. Every fallback is logged. Model ids
-are pinned in config, and a model change is a config change that has to pass
-the evaluation suite first. Preview models (`-preview`) can be withdrawn by
-Google, which is another reason the ids are not hard-coded.
+**The fallback chain** is configuration, not code. Planned: the model now
+used as fallback, then the one now primary, then the native-audio model once
+gated in. Built (D7): the primary live model, then the fallback live model.
+If a session fails to open, the next model is tried before the caller hears
+anything. Every fallback is logged. Model ids are pinned in config, and a
+model change is a config change that has to pass the evaluation suite first.
+Preview models can be withdrawn by Google, which is another reason the ids
+are not hard-coded.
 
-**Free tier, settled.** This is a demo product, so it runs on the Gemini free
-tier. Two consequences follow, and both are designed in rather than hoped for:
+**Free tier, settled for building and testing.** This is a demo product, so
+it runs on the Gemini free tier while the team builds and tests it. *Corrected
+since (`../CLAUDE.md`):* Google's terms (23 March 2026) allow only paid
+services for apps offered to people in the UK, the EEA or Switzerland, so
+billing goes on the key before prospects use the demo. On the free tier, two
+consequences follow, and both are designed in rather than hoped for:
 
 1. **On the free tier, Google may use what is sent to improve its products,
    and people may review it.** Everything said on a demo line should be
@@ -621,7 +653,7 @@ These are the parts that make it sellable rather than merely working.
 
 1. Paste the prospect's website address.
 2. The server fetches their pages (robots.txt respected, same-site links only,
-   a page cap). `gemini-3.8-flash` extracts a **tenant profile** with
+   a page cap). The text model extracts a **tenant profile** with
    structured output: hours, address, contact details, services and durations,
    menu with prices, allergens if published, policies, and FAQs. Every field
    carries the URL it came from.
@@ -682,9 +714,9 @@ caller.
    tool refuses every non-demo card; every migration touches only `voice_`
    objects.
 3. **The evaluation suite: simulated callers, full audio.** A second Live
-   session (3 Flash Live, on its own quota) plays a caller persona and talks to
+   session (on the other live model's quota) plays a caller persona and talks to
    the receptionist through an in-memory audio bridge, so the whole voice path
-   is exercised without a phone. Afterwards, `gemini-3.8-flash` judges the
+   is exercised without a phone. Afterwards, the text model judges the
    transcript, and **the database is checked against the scenario's
    expectation**: was the booking made, for the right slot, with the right
    total?
@@ -718,7 +750,7 @@ data processing terms and the caller-facing wording.
   demo, and the console carries the same warning.
 - **Roles, for when it is real.** The hospitality business would be the
   controller of its callers' data and n.abl its processor. Google (Gemini, on
-  a billed tier), Twilio, Supabase and Fly would be sub-processors, listed in
+  a billed tier), Twilio, Supabase and the host (now Oracle Cloud) would be sub-processors, listed in
   a data processing agreement. None of this applies until a pilot (§19).
 - **Telling callers.** The first line says it is an AI assistant, and a demo.
   The privacy notice (a short URL in the SMS confirmation) says what is
@@ -732,8 +764,8 @@ data processing terms and the caller-facing wording.
 - **Allergens.** The business is responsible for its allergen information. We
   repeat only what it gave us, verbatim in meaning, with the caveat. The
   onboarding checklist requires the business to confirm its allergen matrix.
-- **Secrets.** Fly secrets and environment variables only. `.env.local` stays
-  gitignored.
+- **Secrets.** Environment variables only: `/opt/nabl/secrets.env` on the
+  Oracle server (was Fly secrets). `.env.local` stays gitignored.
 - **Webhooks and sockets.** Twilio signatures are verified. Media WebSocket
   tokens are signed, short-lived and single-use. The console uses Supabase
   Auth, and row-level security checks `voice_staff` and scopes every query to
@@ -759,7 +791,8 @@ activations and p95 latency.
 **Cost.** Gemini is free on this tier, so it costs quota, not money. The number
 that matters is **tokens per minute of call**, because that decides how many
 calls can run at once. Phase 0 measures it. Money goes on Twilio (numbers,
-minutes, SMS) and hosting, with Supabase on its free plan. The console shows
+minutes, SMS). Hosting is Oracle Cloud's Always Free tier, and Supabase is on
+its free plan. The console shows
 Twilio usage per tenant. For a pilot, the same measurements price the billed
 Gemini tier (§19).
 
@@ -779,10 +812,10 @@ with an acceptance check, and I report against it before starting the next.
 | **2. Data and bookings** | `voice_` schema as migrations (committed, and applied to `auivrancfnrdwyiqoakt`), PGlite for tests, availability engine, booking tools, caller recognition, a minimal diary view | Phase 1 | M | Book, change and cancel by voice. Concurrent double-booking is impossible, proven by a test. The migration check proves nothing unprefixed was touched |
 | **3. Orders and demo payments** | Menu and modifiers, allergens, server-side basket, fulfilment and postcode checks, read-back, kitchen ticket view, the mock processor and deposits | Phase 2 | M | A three-item order with modifiers is priced right, read back right, paid with the demo card and shown on the ticket view. The allergy scenario gets the approved wording. A non-demo card is refused and never stored |
 | **4. Evaluation suite** | Simulated callers, TTS fixtures with noise, judge, database-state checks, report, nightly run | Phases 1–3 | M | 20+ scenarios with pass bars. First report shows zero false confirmations, or lists the failures being fixed |
-| **5. Telephony** | Twilio number and TwiML webhook, media-stream bridge, barge-in, `end_call`, transfer and whisper, taken messages, SMS confirmations, Fly deploy (staging) | Twilio, Fly (§17) | M | You ring a real UK number, book a table, pay with the demo card, receive the SMS, and ask for a human and get one |
+| **5. Telephony** | Twilio number and TwiML webhook, media-stream bridge, barge-in, `end_call`, transfer and whisper, taken messages, SMS confirmations, a staging deploy (now the Oracle server) | Twilio, hosting (§17) | M | You ring a real UK number, book a table, pay with the demo card, receive the SMS, and ask for a human and get one |
 | **6. Demo platform** | Console with auth, setup wizard from a website address, number pool and PIN router, live board, reset, the four seeded tenants, owner's report | Phases 1–5 | L | The §1 demo runs end to end on a real phone for a real local business's website, in under 15 minutes of setup, three times in a row |
 | **7. Ready for the sales floor** | Session resumption and `goAway` handling, the fallback chain proven, concurrency caps sized to the free quotas, kill switch, alerts, retention job, keep-alive for the free Supabase project, privacy notice page, demo-day runbook and backup plan | Phase 6 | M | The measured maximum of simultaneous calls holds up. Forcing a quota error fails over silently. The runbook is rehearsed |
-| **8. Stretch (choose)** | Live Translate on the board; outbound reminder calls; WhatsApp; the first real integration (ResDiary, SevenRooms, Fresha or Square); a pilot pack (billed Gemini, real payments, contract) | As chosen | — | Scoped when chosen |
+| **8. Stretch (choose)** | The translation model on the board; outbound reminder calls; WhatsApp; the first real integration (ResDiary, SevenRooms, Fresha or Square); a pilot pack (billed Gemini, real payments, contract) | As chosen | — | Scoped when chosen |
 
 Sizes are relative (S < M < L), not promises of days. The first two phases
 will calibrate them, and I will put real figures here after Phase 1.
@@ -796,16 +829,16 @@ will calibrate them, and I will put real figures here after Phase 1.
 | Approval of this plan, with D1–D4 settled | Phase 1 | Phase 0 can start on approval alone |
 | ~~Supabase project~~ | — | **Done:** `auivrancfnrdwyiqoakt`, connector enabled, `voice_` prefix agreed |
 | ~~Payment provider~~ | — | **Not needed:** payments are demo-only |
-| ~~Billed Gemini key~~ | — | **Not needed:** free tier, settled. Only needed for a pilot (§19) |
+| **Billed Gemini key** | Before prospects use the demo | **Needed** (corrected 24 October; `../CLAUDE.md`): Google's terms allow only paid services for apps offered to people in the UK, the EEA or Switzerland. The free tier stays for the team's own testing |
 | A word with the chatbot builder about the `voice_` prefix | Phase 2 | So they keep clear of it too. A `chat_` prefix on their side would make the project easy to read |
 | **Twilio** account, upgraded, and a **UK regulatory bundle** approved | Phase 5 | **Start the bundle now.** UK numbers need proof of address, and approval can take days. A trial account plays a trial notice on calls and restricts who can be texted, so prospect demos need an upgraded account. One local number first, two more for the pool in Phase 6 |
-| **Fly.io** account, with a card on file | Phase 5 | London region |
+| ~~Fly.io account~~ | — | **Not needed:** hosting is Oracle Cloud's Always Free tier, Frankfurt (1 October). Alex makes the Oracle account and server (`deploy/oracle/README.md`) |
 | A phone that can take transfers during testing | Phase 5 | Any mobile |
-| A subdomain for the console, e.g. `reception.nabl…` | Phase 6 | Optional. Fly gives a default hostname |
+| A subdomain for the server | Phase 6 | **Decided:** `demo-origin.nabl.agency` (a DNS record Alex adds); prospects use `nabl.agency/demo` through the site's Worker |
 | One or two friendly local businesses whose websites I can build demo tenants from | Phase 6 | Public websites only. No approach is made to them without you |
 
-Secrets go into Fly secrets and `.env.local`, never into this file or the
-repository. The variable names are listed in the appendix.
+Secrets go into `/opt/nabl/secrets.env` on the server and `.env.local`,
+never into this file or the repository. The variable names are listed in the appendix.
 
 **One practical constraint:** this build environment cannot receive inbound
 calls or webhooks, so phone testing (Phase 5 onwards) happens against the
@@ -818,9 +851,9 @@ deployed staging service.
 | Risk | Likelihood | Effect | Mitigation |
 |---|---|---|---|
 | The model says "confirmed" when nothing was booked | **Seen in the probe** | Double-booked or missing tables, angry customers | Reference-required rule, transcript monitor, evaluation gate (§6.4, §13) |
-| Hitting 3.8 Live's 65K free-tier TPM with a few concurrent calls | High on demo days | Calls fail to connect | Knowledge via tools, a small prompt, a fallback chain across quotas, a quota increase request once usage is measured |
+| Hitting a live model's 65K free-tier TPM with a few concurrent calls | High on demo days | Calls fail to connect | Knowledge via tools, a small prompt, a fallback chain across quotas, a quota increase request once usage is measured |
 | Phone audio (8 kHz) degrades understanding of names and postcodes | Medium | Wrong bookings, failed deliveries | Read-back, phonetic confirmation, postcode validation, SMS confirmation |
-| Latency feels robotic | Medium | The demo underwhelms | Phase 0 measures first. Holding lines for slow tools, London hosting, barge-in, VAD tuning |
+| Latency feels robotic | Medium | The demo underwhelms | Phase 0 measures first. Holding lines for slow tools, hosting beside the database (Frankfurt), barge-in, VAD tuning |
 | Preview models withdrawn or changed | Medium | Behaviour shifts overnight | Pinned ids, evaluation before any switch, the fallback chain |
 | Allergen answer wrong or overconfident | Low if rules hold | Serious harm, liability | Structured data only, approved wording, the caveat, handoff on severe allergies, the business signs off its matrix |
 | Someone reads a real card number on a free-tier line | Low–medium (people do it by habit) | A real card number reaches Google | The agent names the demo card before asking. It stops anything else. The tool refuses it and the transcript redacts it |
@@ -857,10 +890,10 @@ reconstructed.
 ## Appendix A. Environment variables
 
 ```
-GEMINI_API_KEY                 present in this environment (free tier)
-LIVE_MODEL_PRIMARY             gemini-3.8-live
-LIVE_MODEL_FALLBACKS           gemini-3.1-flash-live-preview
-TEXT_MODEL                     gemini-3.8-flash
+GEMINI_API_KEY                 present in this environment (free tier; billed before prospects)
+LIVE_MODEL_PRIMARY             the primary live model's id (default in src/config.ts)
+LIVE_MODEL_FALLBACKS           the fallback live model's id
+TEXT_MODELS                    the text models' ids, tried in order
 SUPABASE_URL                   https://auivrancfnrdwyiqoakt.supabase.co
 SUPABASE_SERVICE_ROLE_KEY      server only; shared with the chatbot demo
 SUPABASE_PUBLISHABLE_KEY       for the console's sign-in
@@ -868,7 +901,7 @@ DEMO_CARDS                     1234567890123456:12/34:123:approve,12345678000000
 TWILIO_ACCOUNT_SID             Phase 5
 TWILIO_API_KEY / TWILIO_API_SECRET
 TWILIO_AUTH_TOKEN              for webhook signature checks
-PUBLIC_BASE_URL                https://… (Fly hostname or subdomain)
+PUBLIC_BASE_URL                https://… (the public address, for Twilio's webhooks)
 STREAM_TOKEN_SECRET            signs media-socket tokens
 ```
 

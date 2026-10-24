@@ -1,13 +1,17 @@
-# Review findings still to check (8 October, evening)
+# Review findings (8 October): all 28 done
+
+All 28 are ticked, each with its commit; the last were fixed on 9 October.
+Nothing here is left to do. Kept as a record.
 
 A review of the restaurant, estate agent and repairs code found these, but
-its second check didn't run (the usage limit stopped it), so **reproduce
-each one before fixing it**: some may be wrong. The high ones are already
-fixed (`c3d9d7e` repairs safety mode, `aa1ebe6` restaurant allergy and
-"lunch fully booked", `1edede2` a buyer dropped from Applicants).
+its second check didn't run (the usage limit stopped it), so each one was
+reproduced before it was fixed. The high ones were fixed first (`c3d9d7e`
+repairs safety mode, `aa1ebe6` restaurant allergy and "lunch fully booked",
+`1edede2` a buyer dropped from Applicants). Who took which was agreed in
+`SESSIONS.md`.
 
-Who takes which is agreed in `SESSIONS.md`. Tick one off here, with its
-commit, when it's fixed or shown to be wrong.
+Paths are in `demo-products/voice-agent/`, with the line each pointed to on
+8 October.
 
 **Estate agent (server)**
 
@@ -37,11 +41,11 @@ commit, when it's fixed or shown to be wrong.
 
 **Repairs (server)**
 
-- [x] [medium] In-hours page declined or unanswered goes to last night's on-call pair (`/home/user/n.abl/src/server/maintenance.ts:245`) Fixed in `5e17c27`.
-- [x] [medium] In-hours emergency pages an engineer the office marked off sick (`/home/user/n.abl/src/core/maintenance-tools.ts:669`) Fixed in `5e17c27`.
-- [x] [medium] A waiting job given a new window stays 'waiting' and can't go on the way (`/home/user/n.abl/src/server/maintenance.ts:220`) Fixed in `ab7a2d8`.
-- [x] [medium] Register's booked_job: voice books twice, and cancel or done never clears it (`/home/user/n.abl/src/core/maintenance-tools.ts:1366`) Fixed in `b36dd5b` (a finished check also renews the record now).
-- [x] [medium] Call-out invoice ignored: job billed twice, and stays due after cancel (`/home/user/n.abl/src/server/maintenance.ts:330`) Fixed in `223107c`.
-- [x] [low] Gas record offer says '(£30 extra)' but the price excludes it; tenant told too (`/home/user/n.abl/src/core/maintenance-tools.ts:1370`) Fixed in `7d8dc51`.
-- [x] [low] Safety log shows every non-gated incident as 'Not confirmed as said', with no follow-up job (`/home/user/n.abl/src/core/maintenance-tools.ts:1422`) Fixed in `1c788d7`.
-- [x] [low] Bank holidays are working days: Christmas windows booked, emergencies paged in-hours (`/home/user/n.abl/src/core/maintenance-tools.ts:366`) Fixed in `0716ac0`.
+- [x] [medium] In-hours page declined or unanswered goes to last night's on-call pair (`src/server/maintenance.ts:245`) Fixed in `5e17c27`.
+- [x] [medium] In-hours emergency pages an engineer the office marked off sick (`src/core/maintenance-tools.ts:669`) Fixed in `5e17c27`.
+- [x] [medium] A waiting job given a new window stays 'waiting' and can't go on the way (`src/server/maintenance.ts:220`) Fixed in `ab7a2d8`.
+- [x] [medium] Register's booked_job: voice books twice, and cancel or done never clears it (`src/core/maintenance-tools.ts:1366`) Fixed in `b36dd5b` (a finished check also renews the record now).
+- [x] [medium] Call-out invoice ignored: job billed twice, and stays due after cancel (`src/server/maintenance.ts:330`) Fixed in `223107c`.
+- [x] [low] Gas record offer says '(£30 extra)' but the price excludes it; tenant told too (`src/core/maintenance-tools.ts:1370`) Fixed in `7d8dc51`.
+- [x] [low] Safety log shows every non-gated incident as 'Not confirmed as said', with no follow-up job (`src/core/maintenance-tools.ts:1422`) Fixed in `1c788d7`.
+- [x] [low] Bank holidays are working days: Christmas windows booked, emergencies paged in-hours (`src/core/maintenance-tools.ts:366`) Fixed in `0716ac0`.
