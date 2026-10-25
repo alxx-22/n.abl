@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { X509Certificate } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { rootCertificates } from 'node:tls';
-import { sslFor } from '../src/db/db.ts';
+import { otherPoolers, sslFor } from '../src/db/db.ts';
 
 const POOLER = 'postgresql://postgres.auivrancfnrdwyiqoakt:secret@aws-0-eu-central-1.pooler.supabase.com:5432/postgres';
 const DIRECT = 'postgresql://postgres:secret@db.auivrancfnrdwyiqoakt.supabase.co:5432/postgres';
@@ -32,4 +32,13 @@ test('database TLS: the bundled Supabase root is the one the dashboard gives, an
   assert.equal(cert.fingerprint256, '80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA');
   assert.ok(cert.ca, 'a certificate authority');
   assert.ok(new Date(cert.validTo) > new Date(), `expired ${cert.validTo}`);
+});
+
+test('database: a pooler address on the wrong cluster has the region\'s others to try, and nothing else does', () => {
+  assert.deepEqual(otherPoolers(POOLER), [
+    'postgresql://postgres.auivrancfnrdwyiqoakt:secret@aws-1-eu-central-1.pooler.supabase.com:5432/postgres',
+    'postgresql://postgres.auivrancfnrdwyiqoakt:secret@aws-2-eu-central-1.pooler.supabase.com:5432/postgres',
+  ]);
+  assert.deepEqual(otherPoolers(DIRECT), []);
+  assert.deepEqual(otherPoolers('postgresql://postgres:pw@127.0.0.1:5432/postgres'), []);
 });

@@ -62,12 +62,39 @@ export async function openPglite(dir?: string): Promise<Db> {
   };
 }
 
+/**
+ * The same address on the region's other shared poolers. Supabase puts each project on one of
+ * several pooler clusters (aws-0-…, aws-1-…), and the wrong one answers "Tenant or user not found".
+ */
+export function otherPoolers(url: string): string[] {
+  const m = /@aws-(\d+)-([a-z0-9-]+)\.pooler\.supabase\.com\b/.exec(url);
+  if (!m) return [];
+  return [0, 1, 2].filter((n) => String(n) !== m[1]).map((n) => url.replace(m[0], `@aws-${n}-${m[2]}.pooler.supabase.com`));
+}
+
 export async function openPostgres(url: string): Promise<Db> {
   const pgmod = await import('pg');
   const Pool = pgmod.default.Pool;
   // An sslmode in the address would replace the verified settings below.
-  const clean = url.replace(/[?&]sslmode=[^&]*/g, '');
-  const pool = new Pool({ connectionString: clean, ssl: sslFor(url), max: 5 });
+  const open = (u: string) => new Pool({ connectionString: u.replace(/[?&]sslmode=[^&]*/g, ''), ssl: sslFor(u), max: 5 });
+  let pool = open(url);
+  // A pooler address on the wrong cluster fails at once: try the region's others before giving up.
+  const first = await pool.query('select 1').then(() => null, (e: Error) => e);
+  if (first && /tenant or user not found/i.test(first.message)) {
+    let found = false;
+    for (const alt of otherPoolers(url)) {
+      const p = open(alt);
+      if (await p.query('select 1').then(() => true, () => false)) {
+        await pool.end().catch(() => {});
+        pool = p;
+        found = true;
+        console.warn(`DATABASE_URL names the wrong Supabase pooler; this project's is ${/@([^:/@]+\.pooler\.supabase\.com)/.exec(alt)?.[1]}. Connected there; put it in DATABASE_URL to skip this check.`);
+        break;
+      }
+      await p.end().catch(() => {});
+    }
+    if (!found) throw first;
+  }
   const base: Queryable = {
     async query<T>(sql: string, params?: unknown[]) {
       return (await pool.query(sql, params as unknown[])).rows as T[];
