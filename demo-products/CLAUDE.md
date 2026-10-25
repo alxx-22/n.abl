@@ -23,9 +23,9 @@ it, and answer messages addressed to you.
 - **Nothing paid without asking.** Alex wants free services only. Payments
   in the demo are pretend, with placeholder cards; no real card data
   anywhere.
-- **Gemini**: the free tier is for the team's own testing. Google's terms
-  (23 March 2026) allow only paid services for apps offered to people in the
-  UK, EEA or Switzerland, so billing goes on the key before prospects use it.
+- **Gemini**: demos run on the free tier; billing goes on the key when a
+  client signs and pays (Alex, 25 October). The demo shows a disclaimer that
+  calls go through Google's Gemini and to use made-up details.
 - **Secrets** never go in the repo. Never disable TLS verification.
 - **No model names or IDs** in commits, code or docs.
 - **Talking to Alex**: Alex is not a developer. Use plain words and

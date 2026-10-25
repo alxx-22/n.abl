@@ -274,8 +274,7 @@ value). `npm run test:routes` in the site checks the forwarding. For the phone
 line, add the Twilio variables in `.env.example` and `PUBLIC_BASE_URL`, and
 point the number's voice webhook at `https://nabl.agency/demo/twilio/voice`.
 
-**Gemini's terms**: Google allows only its paid service for apps made
-available to people in the UK, the EEA or Switzerland. The free tier is for
-the team's own testing; before keys go to prospects, turn on billing for the
-key's Google Cloud project (about 2p a call minute at published prices; the
-demo's per-key limits cap the minutes).
+**Gemini billing**: demos for prospects run on the free tier; when a client
+signs and pays, turn on billing for the key's Google Cloud project (Alex,
+25 October; about 2p a call minute at published prices, and the demo's
+per-key limits cap the minutes).

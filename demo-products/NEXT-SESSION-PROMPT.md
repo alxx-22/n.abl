@@ -20,13 +20,13 @@ Seven kinds of business are built. The pub is at M2, with M3 next. The
 demo is going on the Oracle server: the setup guide is
 `demo-products/voice-agent/deploy/oracle/README.md`. To go live it still
 needs my setup (the account, the server, the DNS record and the Worker
-secret), `voice-agent-DEV` merged into `main`, billing on the Gemini key
-before prospects use it, the legal check with `04-legal` before the first
-key goes out, and the scored 20-site run of the website scout.
+secret), `voice-agent-DEV` merged into `main`, and the scored 20-site run
+of the website scout. (Gemini billing goes on when a client signs and pays;
+no legal check is needed before keys go out: my decisions, 25 October.)
 
 Decisions waiting for me: build or drop the hair salon, and who builds it;
-what comes after the pub; when to turn on Gemini billing; when to merge
-into `main`; the legal check. Ask me about any you need.
+what comes after the pub; when to merge into `main`. Ask me about any you
+need.
 
 Then tell me what you'll do first.
 

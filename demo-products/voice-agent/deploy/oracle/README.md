@@ -139,11 +139,10 @@ merge it on GitHub. Until then, use `demo-origin.nabl.agency`.
 
 ## Afterwards
 
-- **Before prospects use it, the Gemini key needs billing turned on.**
-  Google's terms allow only its paid service for apps made available to people
-  in the UK, the EEA or Switzerland. The free tier is fine for your own
-  testing. In AI Studio, set up billing for the key's project: the key itself
-  stays the same. At published prices that's about 2p a call minute, and the
+- **When a client signs and pays, turn on billing for the Gemini key**
+  (Alex's decision, 25 October: demos for prospects stay on the free tier).
+  In AI Studio, set up billing for the key's project: the key itself stays
+  the same. At published prices that's about 2p a call minute, and the
   demo's per-key limits cap the minutes.
 - **If the site stops answering**: Oracle stops free servers it considers idle
   for a week (very little processor, memory and network use), and a quiet demo

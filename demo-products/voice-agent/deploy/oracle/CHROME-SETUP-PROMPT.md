@@ -171,9 +171,8 @@ next (try again later, or upgrade, which is my decision).
   team console is /demo/admin).
 - That `nabl.agency/demo` starts working once Claude Code merges
   `voice-agent-DEV` into `main`, which I'll ask for separately.
-- That before real prospects use it, the Gemini key needs billing turned
-  on in AI Studio (Google's terms for apps offered in the UK). That's my
-  decision and costs money, so don't do it.
+- That billing on the Gemini key goes on when a client signs and pays (my
+  decision), not now: don't turn it on.
 - That Oracle may stop a free server it thinks is idle; if the demo stops
   answering, **Compute → Instances → Start** brings it back with nothing
   lost.

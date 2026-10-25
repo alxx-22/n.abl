@@ -33,11 +33,9 @@ Evidence:     docs/spike-results.md; 578 tests (npm run check, 24 October); 115 
   reads out a placeholder card (`1234 5678 9012 3456`) and a mock processor
   approves it (§10).
 - **Gemini runs on the free tier**, because this is a demo product. That
-  shapes what may be said on a demo line (§5, §14). *Corrected since
-  (`../CLAUDE.md`):* the free tier is for the team's own testing. Google's
-  terms (23 March 2026) allow only paid services for apps offered to people
-  in the UK, the EEA or Switzerland, so billing goes on the key before
-  prospects use the demo.
+  shapes what may be said on a demo line (§5, §14). *Since (Alex,
+  25 October; `../CLAUDE.md`):* demos for prospects stay on the free tier,
+  and billing goes on the key when a client signs and pays.
 - **The database is the Supabase project `auivrancfnrdwyiqoakt`**, shared with
   a text-chatbot demo being built by the other project member. Every object
   this product creates is prefixed `voice_`, and nothing else in the project
@@ -366,10 +364,9 @@ Preview models can be withdrawn by Google, which is another reason the ids
 are not hard-coded.
 
 **Free tier, settled for building and testing.** This is a demo product, so
-it runs on the Gemini free tier while the team builds and tests it. *Corrected
-since (`../CLAUDE.md`):* Google's terms (23 March 2026) allow only paid
-services for apps offered to people in the UK, the EEA or Switzerland, so
-billing goes on the key before prospects use the demo. On the free tier, two
+it runs on the Gemini free tier while the team builds and tests it. *Since (Alex,
+25 October; `../CLAUDE.md`):* demos stay on the free tier, with a disclaimer
+in the demo, and billing goes on the key when a client signs and pays. On the free tier, two
 consequences follow, and both are designed in rather than hoped for:
 
 1. **On the free tier, Google may use what is sent to improve its products,
@@ -829,7 +826,7 @@ will calibrate them, and I will put real figures here after Phase 1.
 | Approval of this plan, with D1–D4 settled | Phase 1 | Phase 0 can start on approval alone |
 | ~~Supabase project~~ | — | **Done:** `auivrancfnrdwyiqoakt`, connector enabled, `voice_` prefix agreed |
 | ~~Payment provider~~ | — | **Not needed:** payments are demo-only |
-| **Billed Gemini key** | Before prospects use the demo | **Needed** (corrected 24 October; `../CLAUDE.md`): Google's terms allow only paid services for apps offered to people in the UK, the EEA or Switzerland. The free tier stays for the team's own testing |
+| **Billed Gemini key** | When a client signs and pays | Alex, 25 October (`../CLAUDE.md`): demos for prospects run on the free tier; billing goes on for paying clients |
 | A word with the chatbot builder about the `voice_` prefix | Phase 2 | So they keep clear of it too. A `chat_` prefix on their side would make the project easy to read |
 | **Twilio** account, upgraded, and a **UK regulatory bundle** approved | Phase 5 | **Start the bundle now.** UK numbers need proof of address, and approval can take days. A trial account plays a trial notice on calls and restricts who can be texted, so prospect demos need an upgraded account. One local number first, two more for the pool in Phase 6 |
 | ~~Fly.io account~~ | — | **Not needed:** hosting is Oracle Cloud's Always Free tier, Frankfurt (1 October). Alex makes the Oracle account and server (`deploy/oracle/README.md`) |
@@ -890,7 +887,7 @@ reconstructed.
 ## Appendix A. Environment variables
 
 ```
-GEMINI_API_KEY                 present in this environment (free tier; billed before prospects)
+GEMINI_API_KEY                 present in this environment (free tier; billed once a client signs and pays)
 LIVE_MODEL_PRIMARY             the primary live model's id (default in src/config.ts)
 LIVE_MODEL_FALLBACKS           the fallback live model's id
 TEXT_MODELS                    the text models' ids, tried in order

@@ -87,19 +87,18 @@ Fixed on 24 October:
    `wrangler.jsonc`, `public/robots.txt`, `scripts/check-worker-routes.mjs`
    and `.devcontainer/`. Until then, once the server is set up, the demo
    works at `demo-origin.nabl.agency`.
-3. Billing on the Gemini key, before prospects use it (`CLAUDE.md`).
-4. The legal check with `business/04-legal`, before the first key goes out
-   (`DEMO-SERVICE-PLAN.md` §3.5).
-5. The scored run of the scout over 20 real sites (`DEMO-SERVICE-PLAN.md`,
+3. The scored run of the scout over 20 real sites (`DEMO-SERVICE-PLAN.md`,
    phase 2b): not done yet.
+
+Decided by Alex on 25 October: demos for prospects stay on Gemini's free
+tier, and billing goes on the key when a client signs and pays
+(`CLAUDE.md`); no legal check is needed before keys go out.
 
 ### Decisions for Alex
 
 1. The hair salon: build it or drop it, and which session builds it.
 2. What comes after the pub.
-3. When to put billing on the Gemini key.
-4. When to merge `voice-agent-DEV` into `main`.
-5. The legal check with `04-legal`.
+3. When to merge `voice-agent-DEV` into `main`.
 
 ## How to work (Alex's request)
 
