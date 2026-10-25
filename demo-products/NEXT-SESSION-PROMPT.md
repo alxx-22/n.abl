@@ -30,7 +30,7 @@ need.
 
 Then tell me what you'll do first.
 
-I'm not a developer: talk to me in plain words, and give step-by-step
-instructions that say where to click when I need to do something. Use only
+Talk to me in plain English, short and without filler: what changed and
+what you need from me. Use only
 free services unless I agree otherwise. Keep the tests passing before every
 push. For screen work, send me screenshots from the Chromium walkthrough.

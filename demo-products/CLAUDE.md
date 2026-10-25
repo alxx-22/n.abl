@@ -28,8 +28,8 @@ it, and answer messages addressed to you.
   calls go through Google's Gemini and to use made-up details.
 - **Secrets** never go in the repo. Never disable TLS verification.
 - **No model names or IDs** in commits, code or docs.
-- **Talking to Alex**: Alex is not a developer. Use plain words and
-  step-by-step instructions that say where to click.
+- **Talking to Alex**: Alex is a developer. Plain English, short, no filler:
+  say what changed and what's needed, nothing more.
 
 ## Commands (in `voice-agent/`)
 
