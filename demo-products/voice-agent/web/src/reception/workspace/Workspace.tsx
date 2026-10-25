@@ -24,6 +24,7 @@ import { Link } from '../../router.tsx';
 import type { BoardEvent } from '../../types.ts';
 import { R, RxTop, minutesUntil } from '../Reception.tsx';
 import { keepInStrip, useBand } from '../bands.ts';
+import { DISCLAIMER } from '../disclaimer.ts';
 import { brandStyle } from '../brand.ts';
 import type { LiveBooking, LiveState, Me } from '../types.ts';
 import { BookingDrawer } from './BookingDrawer.tsx';
@@ -266,7 +267,7 @@ export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: ()
               tenant={t} phase={live.phase} model={live.model} latencies={live.latencies} turn={live.turn} call={live.call}
               stream={stream} card={card} onStart={live.start} onStop={live.stop} suggestions={suggestionsFor(spec, state)}
             />
-            <p className="hint privacy">Calls go through Google’s Gemini. Use made-up names and details, never a real customer’s.</p>
+            <p className="hint privacy">{DISCLAIMER}</p>
           </div>
           <div className="ws-phone" id="ws-phone" data-open={panes.isOpen('phone') || undefined} role={panes.narrow ? 'dialog' : undefined} aria-label={panes.narrow ? "The customer's phone" : undefined}>
           <div className="pane-head"><PaneCaret panes={panes} pane="phone" /><b>Customer’s phone</b></div>

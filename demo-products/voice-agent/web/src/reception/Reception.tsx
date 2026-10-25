@@ -11,6 +11,7 @@ import { Toaster, toast } from '../components/Toaster.tsx';
 import { Link, navigate } from '../router.tsx';
 import { Builder } from './builder/Builder.tsx';
 import { untitled } from './nouns.ts';
+import { DISCLAIMER } from './disclaimer.ts';
 import { Workspace } from './workspace/Workspace.tsx';
 import type { Me, PresetInfo, WorkspacePayload, WorkspaceSummary } from './types.ts';
 import { Logo } from '../components/Logo.tsx';
@@ -239,6 +240,7 @@ function Home({ me, onChange }: { me: Me; onChange: () => void }) {
               </p>
             </>
           )}
+          <p className="hint privacy">{DISCLAIMER}</p>
         </section>
 
         <div className="rx-usage">
