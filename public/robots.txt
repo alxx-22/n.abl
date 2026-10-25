@@ -16,6 +16,9 @@ Disallow: /crm
 # has the old URL should still be told not to fetch it.
 Disallow: /sales-intelligence
 Disallow: /portal
+# Private demos, each behind its own key. The demo server also sends
+# X-Robots-Tag: noindex on every response.
+Disallow: /demo
 
 # Everything else is public: /, /privacy, /terms, /cookies
 Allow: /

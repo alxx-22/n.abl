@@ -1,0 +1,49 @@
+{
+ "contents": [
+  {
+   "role": "user",
+   "parts": [
+    {
+     "text": [
+      "These are the facts about a UK barber shop, set by its owner for an AI phone receptionist demo.",
+      "Name: Sharp & Son. Style: Traditional barbering and wet shaves. Town: Kirkhill, 3 Mill Yard (example), Kirkhill.",
+      "Hours: Tuesday to Friday: 8:30am till 5:30pm. Saturday: 8:30am till 2pm. Closed Monday and Sunday.",
+      "Barbers: Ray (forty years with the razor); Tom.",
+      "Prices: Classic cut £20.00, Beard trim £12.00, Hot towel shave £20.00.",
+      "A £10 deposit secures a booking and comes off the price. Free to cancel or move with 48 hours' notice; later than that, the deposit is kept.",
+      "Walk-ins: no, appointments only. Kids: no kids' price.",
+      "Access: Step-free from the street, with room for a wheelchair at every chair. Ask for a quiet time and we will book one. Parking: There's no parking at the shop: the Lace Market and Victoria Centre car parks are a few minutes' walk. Products: We sell the wax, clay, oils and beard balm we use in the shop. Tips: Tips are welcome, and the barbers keep all of them. Jobs: We're always happy to hear from barbers and apprentices: drop your details in, or leave a message. Home visits: Ray visits care homes on Mondays: leave a message to arrange.",
+      "",
+      "Write the ten questions callers most often ask a barber shop like this that the facts above answer, each with a short spoken answer (one or two sentences, friendly, British English).",
+      "Use only these facts. Where the facts do not cover something, leave that question out rather than guess. No questions about booking, moving and cancelling appointments with any barber or a named one, and saying the prices themselves; the receptionist handles those."
+     ]
+    }
+   ]
+  }
+ ],
+ "generationConfig": {
+  "temperature": 0.4,
+  "responseMimeType": "application/json",
+  "responseSchema": {
+   "type": "OBJECT",
+   "properties": {
+    "faqs": {
+     "type": "ARRAY",
+     "items": {
+      "type": "OBJECT",
+      "properties": {
+       "q": {
+        "type": "STRING"
+       },
+       "a": {
+        "type": "STRING"
+       }
+      },
+      "required": ["q","a"]
+     }
+    }
+   },
+   "required": ["faqs"]
+  }
+ }
+}

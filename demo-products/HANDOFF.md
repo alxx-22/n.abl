@@ -1,0 +1,1262 @@
+# Handover: the receptionist demo service (24 October 2026)
+
+For the next session. Read `CLAUDE.md` (rules and commands) first, then
+`SESSIONS.md` (the sessions working now, what each owns, and messages
+between them), then "Where things stand" just below. Everything after it
+is history: how each part was built, kept for its detail.
+
+## Where things stand (24 October)
+
+### What's built
+
+Seven kinds of business are live in the catalogue, on `voice-agent-DEV`:
+
+| Business | Built |
+|---|---|
+| Restaurant | Finished |
+| Estate agent | M1 to M3 |
+| Property maintenance (repairs) | M1 to M3 |
+| Takeaway | M1 to M3 |
+| Barber | M1 to M3 |
+| Café | M1 to M3 |
+| Pub | M1 and M2. Next, M3: the Loft, a neighbour's noise, lost property, other callers, and the reaction script (see "The pub" below) |
+
+- **The hair salon** has its use cases and spec (`presets/salon.md`), but
+  its decisions for Alex are unanswered and nothing is built. The cloud
+  session claimed it on 8 October and has made no commits since 9 October.
+- **Next in Alex's order** after the pub: the salon (if it's kept), beauty,
+  spa, hotel, letting agent, gym, dog grooming, garage. These show as
+  "coming soon" in the catalogue (`src/presets/catalogue.ts`).
+
+### Tests (24 October)
+
+- `npm run check`: 578 of 578 pass.
+- The Chromium walk passes for every built preset. The repairs, restaurant
+  and estate agent walks now pass on any day of the week (`9a86a1a`).
+- `npm run screens`: 1,101 screens. The only problem flagged is the floor
+  plans' own small drawing text (18 screens each for the restaurant, café
+  and pub).
+
+### Phones (10 to 13 October, the ui session)
+
+- A day pager, with ‹ › and a swipe, in every row of days.
+- Opening hours one day at a time, in every builder.
+- Repairs Dispatch: one visit window at a time.
+- One-row top bars, with a More sheet for the rest.
+- Main buttons in the business's own colour, and the floor plan in its
+  colours too.
+- The Timeline names a booking that isn't the plain kind (a café's "Tea"),
+  and a day opens at now or at its first booking (`de9d61f`).
+- Messages tagged with their category and how urgent they are; quiet
+  appointments marked.
+- On 24 October the pub's What's on was tidied (`cb4e000`).
+
+### Hosting: going on the Oracle server
+
+Alex has now asked for the demo to go on the Oracle server. That replaces
+his earlier decision to keep it offline until the whole demo was built.
+
+Checked on 24 October (the kit is in `voice-agent/deploy/oracle/`):
+
+- The Docker image builds for Intel servers (amd64) and for Arm (arm64,
+  under emulation).
+- It runs against Postgres 17 and applies all 14 migrations at start
+  (`voice_0001` to `voice_0014`).
+- All seven presets were built, started and opened in a browser through
+  it. Chromium works inside it.
+- The packages the setup script installs all exist on Ubuntu 24.04.
+
+Fixed on 24 October:
+
+- The database connection now checks Supabase's certificate (`6ca284d`).
+  Before, it didn't.
+- On the server, the scout's Chromium runs in its own sandbox, with a
+  seccomp profile (`2823e9d`).
+- The guide (`ea07cae`) now starts by waking the database (the Supabase
+  project, Persian Persuasion, is paused at the moment), says what to do
+  when Oracle is out of capacity, and has a prompt for Claude in Chrome to
+  walk Alex through the setup (`deploy/oracle/CHROME-SETUP-PROMPT.md`).
+
+**Still needed to go live:**
+
+1. Alex runs the setup in `voice-agent/deploy/oracle/README.md`: the
+   Oracle account and server, the DNS record `demo-origin.nabl.agency`, and
+   the Worker secret.
+2. `voice-agent-DEV` merged into `main`, for `nabl.agency/demo`: [pull
+   request #2](https://github.com/alxx-22/n.abl/pull/2), to merge once the
+   server answers (step 9 of the Chrome prompt). It is a fast-forward. Outside `demo-products` it changes only `worker/index.ts`,
+   `wrangler.jsonc`, `public/robots.txt`, `scripts/check-worker-routes.mjs`
+   and `.devcontainer/`. Until then, once the server is set up, the demo
+   works at `demo-origin.nabl.agency`.
+3. The scored run of the scout over 20 real sites (`DEMO-SERVICE-PLAN.md`,
+   phase 2b): not done yet.
+
+Decided by Alex on 25 October: demos for prospects stay on Gemini's free
+tier, and billing goes on the key when a client signs and pays
+(`CLAUDE.md`); no legal check is needed before keys go out.
+
+### Decisions for Alex
+
+1. The hair salon: build it or drop it, and which session builds it.
+2. What comes after the pub.
+3. When to merge `voice-agent-DEV` into `main`.
+
+## How to work (Alex's request)
+
+Alex hit his usage limit many times in earlier sessions. Work directly, in
+small steps: read only the files a step needs, run `npm run check` before
+each commit, commit and push after each finished step. Tell Alex in plain
+words what was done after each step. Earlier he asked for no multi-agent
+workflows and no subagents; he has since allowed helpers and workflows
+when he asks for them. Without his asking, work directly.
+
+## History: 7 to 17 October, the sessions split by preset
+
+Alex split the work on 7 October so two sessions could run at once without
+touching the same files:
+
+- **The cloud session** kept **property maintenance** (repairs, M3).
+- **The Windows session** (Alex's PC) took the **takeaway**, the next
+  preset in the order.
+
+Each pushed to `voice-agent-DEV` and rebased on the other's commits before
+pushing (`git -c core.autocrlf=false rebase origin/voice-agent-DEV`), and
+every session still does. Shared files (`src/core/tools.ts`,
+`guardrails.ts`, `call.ts`, `src/db/repo.ts`) take small, separate edits;
+no session changes another's preset. Migrations take the next free number
+when they're written.
+
+### A third session (8 October, evening): colours, layout, review fixes
+
+Alex asked a third session (now called ui) to review the restaurant,
+estate agent and repairs work, make the demo easy to get around with
+little scrolling, and carry a website's colours through the demo. First:
+the website's three colours drive every page (`web/src/reception/brand.ts`,
+light pages for a light site; `cfdd5f0`), the workspace fits the window
+with each column scrolling on its own (`a543053`), the builder keeps Back
+and Next in view (`f566de2`), a `Folds` list in `builder/fields.tsx` for
+long steps (`8f95fb1`), and four repairs safety fixes (`c3d9d7e`).
+
+It then compacted the long builder steps and back-office lists (all
+pushed, each with `npm run check` and its walkthrough passing): the
+repairs builder's long steps (`3d48bfc`), the estate builder's hours, team
+and listings (`2d10681`), the estate Applicants (filters and a search) and
+Properties (Manage in a side panel) (`876c629`), the repairs back office:
+jobs, properties and compliance, clients and bills (`59b80ed`), coconut is
+not a nut allergy and a finished lunch is not "fully booked" (`aa1ebe6`),
+and a buyer who books a valuation stays a buyer (`1edede2`). The review's
+28 findings are in `REVIEW-FINDINGS.md`, all done by 9 October (below).
+On 9 October every preset's walk was run with screenshots (below), and the
+menu step was compacted (`173ae5f`).
+
+**9 October, overnight**, with the cloud and Windows sessions out of usage,
+this session picked up their work (the split is in `SESSIONS.md`, 8 Oct
+22:55, and what it did for each in the 9 Oct message):
+
+- **Estate agent** (cloud's): the review's last 3 findings, the seeded
+  fortnight agreeing with itself (`f36d4e3`, goldens `112a600`); and the
+  buyer whose offer is accepted keeps their own viewing (`c175148`). All 28
+  review findings are now done.
+- **Barber M1** (windows'): the seven live calls, six passing first time;
+  the late cancel now says plainly that the shop keeps the deposit
+  (`0eb0034`). Details in the barber section below.
+- **Restaurant**, the review's 10: a party no table seats gets the
+  manager's callback and the default limit is 8 (`7ef729b`); a no-show or
+  finished table is free again (`b161203`); "too soon" or "gone", not
+  "taken" (`81d5036`); a second delivery district can be typed (`ded8158`);
+  no card-hold option that never took a card (`42b0bd7`); plain words in
+  what the receptionist is told (`da959f0`); a private room's table is "by
+  enquiry" (`673914f`); no orders on a closure day (`39cdf74`); a week of
+  bookings with only big tables (`92dace5`); a name just cleared stays clear
+  (`61cfb57`). Goldens re-recorded where a fix meant they should: `bb60928`,
+  `cc40749`, `5581633`. Restaurant live calls after the fixes: all six run
+  passed (two on a second run, the first having failed for reasons unrelated
+  to the changes).
+- **Walkthrough**: every preset's walk passes; screenshots in
+  `eval-results/demo-ui/<preset>/` (not in git). Seen but not changed: the
+  barber's and estate Diary's booking blocks are too narrow to read at a
+  1500px-wide window (`StaffDiary`, cloud's).
+
+**9 October, afternoon: every screen at every window size.** Alex asked
+for every screen to be Windows size first, and comfortable on tablets and
+phones too. Layout and CSS only (no server, API or saved-answer changes):
+
+- **Four named bands**, written at the top of `reception.css` and in
+  `web/src/reception/bands.ts` for code: desktop (1280px and up), laptop
+  (1024 to 1279), tablet (641 to 1023), phone (640 and down). Every media
+  query uses them; the six old breakpoints are gone. The workspace still
+  fits the window on a desktop or laptop.
+- **The workspace** (`84b8bcd`; the new parts in
+  `workspace/Panes.tsx`, a small edit to `Workspace.tsx`), Alex's design:
+  the call and the customer's phone each slide away to a slim bookmark on
+  the window's edge (icon, name, caret), and the back office widens into
+  the room. The call's width can be dragged (or set with the arrow keys).
+  Docked on a desktop or laptop; on a tablet or phone both start slid
+  away and open over the back office as drawers (caret, Escape or a tap
+  outside closes them, focus moves in and back). A live call shows on its
+  bookmark as a pulsing dot and its time; texts that arrive while the
+  phone is away show as a count. Each browser remembers its choice
+  (`localStorage` key `rx-workspace-panes`).
+- **The builder** (`c3364a5`): on a tablet or phone the steps are a ribbon
+  along the top that stays in view, and the preview opens from a Preview
+  button; on a laptop the preview folds under the step.
+- **Every preset** (`7e8af24`, then `5cba893` restaurant and takeaway,
+  `7384c5e` barber, `fbd6e1c` estate agent, `59041c9` repairs, `d271ce1`): nothing
+  under 12px; buttons, tabs and boxes at least 40px on a tablet or phone;
+  a one-row top bar on a laptop and tablet; a booking opens as a side
+  sheet (full screen on a phone); boards scroll sideways by column; the
+  menu step fits a phone; the Diary's half-hours are wide enough to read
+  and tap (CSS only; `StaffDiary` untouched); Dispatch's grid scrolls in
+  its own box and the safety log becomes a card per call on a phone.
+- **The screens check** (`c0e915f`): `npm run screens` (`test-e2e/screens.ts`) makes a
+  demo of each built preset and screenshots every builder step and
+  workspace tab (and the drawers and preview) at 1920x1080, 1536x864,
+  1366x768, 1280x800, 1024x768, 820x1180, 768x1024, 390x844 and 360x800,
+  into `eval-results/screens/<size>/<preset>/`, then prints a table of
+  problems (a page scrolling sideways, a box scrolling sideways that
+  shouldn't, a workspace page that scrolls on a desktop, text under 12px,
+  small buttons on a tablet or phone). Before this pass it found 1,064 problems on 711 screens (text under 12px on every screen, small buttons on 316, a sideways-scrolling page on 6, a box scrolling sideways on 13); after, none on 771 screens, bar the floor plan's own drawing text (18 screens). Run it after any layout
+  change; `--only` and `--sizes` narrow it.
+- Left as it is: the floor plan is drawn to fit the window, so on a phone
+  its table numbers are small; its own zoom (+) makes them readable.
+
+### Property maintenance M3 (the cloud session): built (8 October)
+
+M3 is done, and with it the repairs preset as the spec plans it
+(`presets/property-maintenance.md` §12 has no M4). Built on 6–8 October:
+blocks of flats with one job for a block's shared parts however many
+residents ring (`4dea49c`, `8813538`), someone trapped in a block's lift
+(`48cb20f`), insurance claims and business sites (`8d19612`), Scotland's
+bank holidays (`4bf99ce`), a made-up reference caught on any call
+(`6b809c2`, `6de4e41`), the compliance portfolio, "what have I got due
+across my properties?" (Mr Kaur, `77d6caf`), the demo clock (a "Time"
+button beside Reset; migration `voice_0010_demo_clock`, applied and
+recorded; `fb5bf9a`), the office notice and engineers off sick or on
+holiday (on Dispatch; kept in the workspace config as `office`, laid over
+the profile at every rebuild; `a006442`), "your own properties" in the
+builder with the week-at-a-glance strip on the Jobs board (`3a23016`), and
+the answering mode, Relay UK calls and "texts only" (`2f4f997`). Ten M3
+live calls were written and run (`f61f789`; see "Live calls (property
+maintenance M3, 8 October)" below), and the walkthrough's final
+screenshots went to Alex.
+
+Not done, and needs a person: the safety advice in other languages is the
+model's own translation (the number is always said in digits and texted).
+Vetted translations of the gas, CO, fire and electrics scripts would need
+a translator; flagged to Alex.
+
+The barber, next in the order after the takeaway, has since had its spec
+written (`presets/barber.md`) and been built, M1 to M3, by the windows
+session (see "The barber" below).
+
+### Estate agent
+
+Built through M3. All twelve `ea-` calls were re-run on 8 October: 9 of 12
+passed before the last fixes. Fixed since: viewing times now come back
+with the short-lease or sale-agreed warning instead of being held back
+(held back, the model guessed them; `3d98493`), a ready sentence for
+anything not in the details (flooding), and promised call backs always
+taken as a message (`d51bc35`). Later on 8 October a message promised
+and then forgotten is stopped at hang-up and taken (`5406d7f`), and the
+correction for an unchecked viewing time stops at "sorry, one moment".
+Re-run on that code: `ea-short-lease`, `ea-listing-facts` and
+`ea-personal-interest` all pass. Still seen at times: the model offers
+viewing times before checking, caught and corrected by `invented_time`
+(the scenario then fails on the flag, as it should); `ea-personal-interest`
+fails only when the simulated caller makes up a mobile number.
+
+Evening of 8 October (the cloud session), all twelve re-run after the
+day's shared changes: 4 of 12 on the first run, most of the rest because
+the simulated caller went quiet after a turn or two. Fixed from it
+(`1e6ee66`, `e8c8266`): the buyer's position taken from their own words
+when the booking leaves it out (and so the valuation offer for a home to
+sell); "Thursday" booked as next week's Thursday is checked once against
+the nearest; a valuation asks once why and when they're moving and
+whether another agent has the home (not an executor); a placeholder such
+as "[Caller's Name]" is never taken as a name. Every one of the twelve
+has passed since (`eval-results/2026-10-08T18-10-55` and `T18-35-43`,
+not in git). The Diary can give a viewing to someone else (panel or drag;
+`4f8904b`), and the estate agent has the demo clock.
+
+### Takeaway (the Windows session)
+
+The spec is `presets/takeaway.md`, the use cases
+`presets/takeaway-use-cases.md`. **M1 is built and live in the catalogue**
+(7 October):
+
+- Server preset `src/presets/takeaway/` (Firebird Chicken & Burgers,
+  Nottingham; menu `fixtures/presets/takeaway-menu.json`); meal deals in
+  `src/presets/food/deals.ts` (builder side) and `src/domain/deals.ts`
+  (on a call: allergy answers choice by choice, the meal and saving offers
+  made once, a no that stands, "a cheeseburger meal" is the deal).
+- The kitchen, `src/core/kitchen.ts`: every order counted by when it must
+  be ready, so collection and delivery share the slots; postcode zones
+  with their own fee and minimum; free delivery over an amount; last
+  orders, with everything handed over by closing; `get_wait_times`;
+  `find_order` (today, by number or the calling phone, never the address).
+- Paying the driver: asked once, with the change note on the ticket.
+  Guardrails: made-up time, made-up price, card surcharge.
+- Seed: a busy Friday (`src/presets/takeaway/seed.ts`); seeded orders move
+  on with the clock (`advanceSeedOrders`).
+- Back office: the kitchen board with an Out column, Drivers, and Call as
+  (`src/presets/takeaway/personas.ts`). Builder: seven steps
+  (`web/src/reception/builder/takeaway/`), with a Deals editor.
+- Goldens: `test/fixtures/takeaway/` (`node scripts/takeaway-goldens.ts`).
+  Walk: `--only takeaway`; screenshots in `eval-results/demo-ui/takeaway/`,
+  sent to Alex on 8 October.
+- The prompt at its largest is about 6,940 characters (limit 7,000): new
+  guidance goes in tool answers.
+
+**Live calls**, twelve `tk-` scenarios on `tk-firebird`
+(`src/eval/scenarios.ts`): the ten for M1, and `tk-missing-item` and
+`tk-anaphylaxis` for M2. The first run (7 October) passed 1 of 10; the
+fixes since are in the commits titled "Takeaway calls: ...". Every one of
+the twelve has now passed live at least once (8 October): the last full
+run passed 7 of 12, and the five it failed passed or were fixed on re-runs
+(`tk-meal-deal`, `tk-deal-declined` and `tk-deal-choices` on the next run, `tk-deal-allergy` and `tk-short-minimum` on the one after). Results still vary from run to run: the
+simulated caller sometimes says "yes, bye" before it's asked anything,
+and the receptionist sometimes misspeaks a time it was given ("quarter
+past" for 7:45), which the guardrails catch. Re-run all twelve together
+before reading much into one result.
+
+**M2 is built** (8 October; the spec's §12 says what, and where it differs):
+`find_order` actions for after the order, with requests on the ticket
+(Accept and Refuse, texted either way) and complaints for the manager;
+the anaphylaxis script (`src/core/reaction.ts`, 999 first, every tool held
+until it's said); Menu tonight (sold out, delivery paused, long waits),
+read on every order tool; big orders taking two slots and catering going
+to the manager; the pay-on-the-phone list; guardrails `refund_claim` and
+`address_read_back`; Call as Chris Bell and Dean Walsh; one change request
+waiting after Start. Migrations `voice_0009_takeaway` and
+`voice_0011_tonight` are applied to Supabase and recorded. The walk covers
+the waiting request and Menu tonight; screenshots in
+`eval-results/demo-ui/takeaway/`, sent to Alex on 8 October.
+
+**M3 is built** too (8 October; the spec's §12 says what, and where it
+differs): delivery to someone else (`recipient`, migration
+`voice_0012_order_recipient`, applied and recorded); alcohol for an owner
+who switches it on (off by default; adults only, the ID check, Check ID on
+the ticket, Scotland's 10am to 10pm), with the shop's `nation`; "my usual"
+(`find_order` action `last_order`, Leah Grant in Call as); drivers and
+other callers; a Relay UK caller's order marked. Seven more test calls:
+`tk-for-someone-else`, `tk-alcohol` and `tk-under-18` (on
+`tk-firebird-licensed`), `tk-my-usual`, `tk-driver-asks`. Not built:
+energy drinks (a ban still subject to Parliament; no energy drinks on the
+sample menu), calories, "texts only".
+
+**All seventeen takeaway calls together** (8 October, `--max-seconds 360`,
+`eval-results/2026-10-08T12-13-32`, not in git): 13 passed, every M3 and
+M2 call among them. Of the four: `tk-busy-wait` and `tk-out-of-area`
+ended after two turns when the simulated caller went quiet; `tk-meal-deal`
+opened its read-back with "That's sorted" and `tk-pay-driver` said "your
+order is placed, number 246" before placing it. The guardrail caught both
+and the real order was placed each time. The walk covers the alcohol
+step and Beer and wine on Menu tonight.
+
+The M3 screens were sent to Alex on 8 October.
+
+The demo clock (`clock: true` in a preset's workspace spec) is off for the
+takeaway; turning it on would let a prospect try Saturday's last orders.
+
+### The barber (Windows session)
+
+`presets/barber-use-cases.md` and `presets/barber.md`. Alex answered its
+decisions on 8 October: Nottingham city centre, and the other four
+defaults stand.
+
+**M1 is built (8 October).**
+- The preset is in `src/presets/barber/` and its builder in
+  `web/src/reception/builder/barber/`. It has 74 goldens
+  (`scripts/barber-goldens.ts`) and `test/barber.test.ts`.
+- The booking engine knows a barber's own hours and nicknames
+  (`Resource.hours`, `Resource.aliases`).
+- The call rules are in `core/barber-tools.ts`. They apply to any profile
+  with `barber`, so the salon gets them too:
+  - inside the notice period, the caller is told once, before anything
+    happens, that the deposit is kept;
+  - one person and one service per booking;
+  - the read-back includes the price, and says "from" when it is a
+    starting price;
+  - when the barber asked for is taken, another barber free at the same
+    time is offered first;
+  - `after` books someone straight after a booking, with the same barber;
+  - a call's bookings go in one text when the call ends (also on hang-up,
+    from `call.ts`);
+  - a caller moving a booking is steered to `modify_booking`.
+- The Diary shows a row per barber (`barberState` in `server/state.ts`).
+
+**Live calls.**
+- 8 October (windows): on the third run, 6 of the 7 `bb-` calls passed.
+  The move call made a second booking instead of moving the first. That
+  is fixed. On its re-run it passed, and so did the family call, now with
+  back-to-back bookings and one text.
+- 9 October, about 1am (ui, while windows was out of usage): 6 of 7
+  passed first time. `bb-cancel-late` told Ollie "you'll keep the five
+  pound deposit", the opposite of the policy. The tool's notice now gives
+  the words to say ("your £5 deposit is kept by the shop if you cancel. Do
+  you still want to cancel?"), and the deposit after a cancel is said the
+  same way (`0eb0034`). It passed twice after that, and the barber goldens
+  did not move.
+- Two calls passed but weren't quite right (ui, 9 October). In `bb-move`,
+  the receptionist asked "Shall I change that for you?" and moved it
+  without waiting for the yes. In `bb-womens-cut`, it said the £5 deposit
+  is "due now, to secure the booking", though the shop doesn't insist on
+  it. Both are fixed (9 October, windows). A booking, move or cancel made
+  while the turn so far ends by asking leave is refused until the caller
+  answers. An optional deposit is `deposit_optional`, and the text says
+  it's optional. Both calls passed on their re-runs.
+
+**The browser walk** (`test-e2e/demo-ui.ts --only barber`) passes. Its
+screenshots were sent to Alex on 8 October.
+
+**M2, the shop floor (9 October): the server side is built; the screens
+are ui's.**
+- Migration `voice_0013_barber` is applied on the shared project. It adds
+  `voice_tenants.today` (the barbers off today and a notice),
+  `voice_walkins`, `voice_waitlist` and `voice_customers.skin_test_at`.
+- The rules are pure, in `src/domain/shop-floor.ts`:
+  - the profile as it stands today: a barber off today isn't booked today;
+  - the wait now;
+  - the skin test 48 hours before colour, every time since the last colour
+    or within six months.
+- A shop with colour gets a free Skin test service, done by whoever does
+  colour.
+- On a call (`core/barber-tools.ts`):
+  - a barber off today is "off today", never why, and their bookings today
+    need a new time;
+  - colour is refused until a skin test is booked or taken 48 hours before;
+  - `get_wait_now`, `join_waiting_list` and `running_late`;
+  - a cancellation texts the first person it fits on that day's waiting
+    list.
+- The back office's state and actions are in `src/server/barber.ts`, to
+  the contract on the sessions board (9 October, 21:28):
+  - the state: today, the queue, the wait now, the waiting list and the
+    services;
+  - the actions: `PATCH today`, `POST walkins`, `PATCH walkins/:id`
+    (serve or left) and `PATCH waitlist/:id`.
+  ui builds the Queue, Today and Waiting list screens, and adds their view
+  ids to `barberWorkspace`.
+- The seed adds:
+  - Priya's cut later today (a Call as, to ring about running late);
+  - a booking today already marked running late;
+  - Ben's skin test two days ago;
+  - two walk-ins waiting when the shop is open;
+  - two on the next Saturday's waiting list.
+  Femi (a Call as) wants a beard colour, with no skin test yet.
+- Tests are in `test/barber-shop-floor.test.ts` and
+  `test/barber-demo.test.ts`.
+- The live calls are `bb-walk-in`, `bb-off-sick`, `bb-running-late` and
+  `bb-skin-test`. A run of all eleven barber calls on 9 October passed 6.
+  The fixes from it:
+  - a barber's call now has the `invented_time` guardrail; it caught
+    times offered that no check had given;
+  - a check at a time lists who else is free then (the family call moved
+    three cuts to 11 with three barbers free at 10);
+  - colour's times start 48 hours after the caller's latest skin test,
+    and none are offered before the test is booked;
+  - a check for the next hour today points to `get_wait_now`, and the
+    prompt names it;
+  - a search by name gives only the bookings from the calling number
+    when there are some (another customer's booking had been read out);
+  - a `running_late` note makes "I've passed that on" true, and the tool
+    says when they'll arrive;
+  - today's notice from the back office reaches `check_availability`.
+- The seed now books each day to its share: Saturday about 70%, as the
+  spec says. It had been about 87%, so on 30% of seeded Saturdays no
+  chair was free all day.
+- Re-run after the fixes: `bb-kids-and-dad`, `bb-walk-in`, `bb-off-sick`
+  and `bb-skin-test` passed, and `bb-running-late` passed after its arrival
+  time was added. Every one of the eleven has now passed on its latest run.
+- ui's M2 screens are in (Queue, Today, Waiting list, and the Diary's
+  marks). Screenshots of them were sent to Alex on 9 October.
+
+**M3, the rest (10 October).** It has no new screens and no migration.
+- The guardrails the spec lists (§7), with the barber's own corrections:
+  - `invented_price`;
+  - `refund_claim`, unless a cancellation in the call refunded the
+    deposit;
+  - `liability_admitted`;
+  - dye never called safe (`said_safe_for_allergy`, only where dye,
+    colour or a skin test is the talk);
+  - `card_surcharge`.
+- A group of more than the shop's limit, or a fifth booking in one call,
+  is a message for the owner, never a promise to open early.
+- A caller who has reacted to hair dye isn't booked for colour; they're
+  told to speak to their GP or pharmacist and offered a cut instead.
+- A barber's `take_message` carries what each call needs in its
+  description, with a category and an urgency:
+  - a complaint: the free tidy-up first, and never a refund;
+  - a razor nick: the first aid first, and never fault;
+  - a barber ringing in sick: urgent, and never their bookings touched;
+  - suppliers and jobs.
+  The shop's knowledge has the first aid too.
+- A quiet appointment gets the day's quietest times (fewest chairs busy),
+  and the booking is tagged `quiet`.
+- When a child books, the shop's rule that under-16s come with an adult
+  is said.
+- The reminder the day before: from 10am, one demo text each, once. It
+  runs when the back office is looked at.
+- Call as adds Dan, ringing in sick.
+- A fix in the shared money parser (`domain/amounts.ts`): "a five pound
+  deposit" had read as £6.
+- Live calls: `bb-razor-nick` (the spec's), `bb-group`,
+  `bb-barber-sick`, `bb-unhappy-cut` and `bb-quiet`. Four passed first
+  time; `bb-quiet` was flagged for the parser's £6, now fixed.
+- A run of all sixteen barber calls then passed 11. The fixes:
+  - a barber's booking is held once until `check_availability` has looked
+    at its service (`bb-named-barber` read back a price no tool gave);
+  - the price correction says to check before saying any price (it had
+    "double-checked" without a tool and said a wrong one);
+  - a total of prices the tools gave is allowed (`bb-kids-and-dad`'s
+    £44);
+  - "any time after noon?" is the afternoon, not an offered time.
+  `bb-off-sick`'s "a classic cut for £22" was a real wrong price, rightly
+  caught. `bb-cancel-late`'s simulated caller talked over the deposit
+  line. All five passed on their re-runs: every one of the sixteen has
+  passed on its latest run.
+
+### The café (Windows session)
+
+**The café**: `presets/cafe-use-cases.md` and `presets/cafe.md`, written
+12 October.
+- 35 use cases, researched against UK rules: the FSA's 2025 allergen best
+  practice, Natasha's Law, the gluten-free limit, cake cancellations,
+  assistance dogs, breastfeeding, tips, and the ban on hidden charges.
+- **The plan**: the restaurant's tables, the shared menu and ordering, and
+  the takeaway's "Today" and reaction script, plus:
+  - small tables walk-in;
+  - afternoon tea with notice and a deposit per person;
+  - orders for a later day (cakes and platters).
+- Alex answered on 12 October: Nottingham city centre; groups of five
+  or more and afternoon tea booked; no deposit on afternoon tea; cakes and
+  platters for another day left out for now (the spec keeps their design,
+  §10). The other defaults stand.
+
+**Café M1: built and live on this branch (12 October)**.
+- **The preset**: `src/presets/cafe/`, live in the catalogue as "Café and
+  coffee shop". Its defaults are Wren Street Café, Nottingham NG1:
+  - eight tables inside, three outside that are walk-in only;
+  - a sample menu (`fixtures/menus/wren-street-cafe.json`) with its
+    milks and allergens;
+  - afternoon tea at £24.50 (£12 for under-12s), at 12, 2 and 3:30.
+  No migration: opt-in `profile.cafe` and `BookableService` fields.
+- **The builder**: the restaurant's Seating and Floor plan steps, now
+  typed for any answers with seating (`SeatingOwner`), the shared menu
+  editor, and the café's own steps for bookings, afternoon tea and
+  policies.
+- **On a call**:
+  - Tables for fewer than five are walk-in: refused with the busy time.
+  - Afternoon tea needs a day's notice, two for gluten-free or vegan. It
+    is priced per person with the total read back, and the diet is
+    noted on the booking.
+  - "Gluten-free" is said only of food marked so. Otherwise the answer
+    is "made without gluten ingredients", with the kitchen warning. The
+    new `gluten_free_claim` guardrail catches the claim.
+- **Seeded week**: group tables at lunchtime and afternoon teas most days,
+  busiest at the weekend. Helen Ward has afternoon tea for two on
+  Saturday. Call as: Helen, Asha (a parent, nut allergy) and Tom (an
+  office, platters).
+- **Shared fix**: `create_booking` and `modify_booking` now refuse a
+  time that isn't one of the service's start times that day, as
+  `check_availability` did. A live call had moved a tea to 2pm on a
+  Sunday, a sitting Sunday doesn't have. The café's facts now say which
+  days each sitting runs.
+- **Live calls**: `cf-walk-in`, `cf-group-table`,
+  `cf-afternoon-tea-coeliac`, `cf-afternoon-tea-move`, `cf-nut-allergy`
+  and `cf-gluten-free-question`. Four passed first time. The other two
+  found the fault above and a full Friday in the seeded week. Both
+  passed on their re-runs: all six have passed on their latest run.
+- **The walk**: `npm run e2e:demo -- --only cafe` passes; screenshots
+  in `eval-results/demo-ui/cafe/`.
+- **Small, not done** (still, 13 October): booking a gluten-free tea, the receptionist noted
+  the diet but didn't add that the kitchen uses flour. Worth a line in
+  `create_booking`'s result for a gluten-free tea.
+
+**Café M2: built and live on this branch (12 October, late)**.
+- **Orders to collect**: the restaurant's collection slots, ready in about
+  10 minutes with four orders every five minutes. Orders are taken until
+  food stops, half an hour before closing.
+  - Paid on collection by default (`money.payment`), so the café never
+    takes a card on the phone. `capabilities()` gives it no payments,
+    and its prompt has no card rule.
+  - A new builder step, Ordering to collect.
+- **Breakfast's end**: after 11:30, `add_to_order` refuses breakfast, by
+  when the order is ready, and offers lunch or the cakes.
+- **Today**: the takeaway's Menu tonight, opened to a café and said for
+  the day.
+  - Sold out today, with the other items from that section offered.
+  - A busy notice of 15 to 60 minutes puts the collection time back.
+  - The back office gains Orders and Today, and the seeded day has orders
+    to collect.
+- **A whole cake or platters**: a message for the owner, from the
+  knowledge.
+- **The prompt at its largest**: 6,986 characters, 14 under the limit. It
+  was over until:
+  - the walk-in size was said once, as a rule;
+  - access was carried as a fact only when short;
+  - dogs and card charges became knowledge only;
+  - hours past 220 characters were said in short;
+  - tea sittings were capped at four.
+  The next café line will need a cut elsewhere.
+- **Shared fixes from the live calls**:
+  - Collection: a time after the day's last orders is out of hours, not
+    "full". "+00:30" and "in 30 minutes" are understood.
+  - A café's diet that covers what the caller said ("coeliac", booked as
+    a gluten-free tea) is noted as the allergy, not refused.
+  - A per-person booking says its total once booked.
+  - The takeaway's demo test kept failing after 11:20pm (its orders fell
+    due tomorrow): fixed.
+- **Live calls**: all nine `cf-` calls have passed on their latest run.
+  The three new ones are `cf-collect-coffee`, `cf-sold-out` and
+  `cf-cake-to-order`.
+- **The walk** covers the ordering step, the Orders board and Today.
+
+**Café M3: built and live on this branch (13 October)**. The café spec's
+three milestones are done.
+- **Messages with a category**: take_message for a café has a category
+  and an urgency, and says what each call needs:
+  - unhappy: complaint, no refund promised;
+  - ill after eating: unwell, for the owner today, with "your GP or NHS
+    111, or 999 if it's serious", no fault and no guess at the cause;
+  - a whole cake or platters: cake_order, never promised or priced;
+  - hiring the café: no price;
+  - lost property: never "found";
+  - staff off sick: urgent;
+  - suppliers and jobs; a polite no to sales calls.
+- **Guardrails**:
+  - no health advice ("sounds like a bug", "drink plenty of water");
+  - no guess at the cause either way (`cause_guessed`);
+  - no read-out disclaimer (`disclaimer`, with a gentle correction: the
+    model kept adding "I'm not a medical professional").
+- **Corrections**: the café has its own for a refund, fault and health. It
+  had fallen back to the barber's: the free tidy-up, and dye for "safe".
+- **Fixed from the live calls**:
+  - A café's reaction script never counted as said, because what the
+    receptionist said wasn't kept on a café's calls: the owner wasn't
+    told and the tools stayed held. `call-nudges` now has a café test.
+  - "Half twelve" is read as 12:30 (the shared time reader knew only
+    "half past twelve"), except the prompt's own quoted example.
+  - `get_menu` with a section and free_from lists that section only.
+  - "Which cakes can she have? She has a nut allergy" now nudges
+    get_menu's free_from; it had been answered from nowhere.
+- **Call as**: Chris Hall, ill in the night after lunch yesterday.
+- **Live calls**: all eleven `cf-` calls have passed on their latest run;
+  the two new ones are `cf-unwell-after` and `cf-reaction-now`.
+- **Left for later**:
+  - cakes and platters to order for another day (spec §10, Alex: later);
+  - a gluten-free tea's booking could add the kitchen warning.
+- **Done since** (ui, 13 October, `de9d61f`): the Timeline names
+  afternoon teas, and a day too wide for the screen opens at now, or at
+  its first booking.
+
+### The pub (Windows session)
+
+**The pub**: `presets/pub-use-cases.md` (43 use cases) and
+`presets/pub.md`, written 13 October.
+- Researched against UK rules:
+  - children in pubs, and 16 and 17-year-olds with a table meal
+    (Licensing Act 2003 s145, s149, s150);
+  - the mandatory conditions: small measures, free tap water, age checks,
+    and certified digital ID since 15 September 2026;
+  - drunk customers, measures, gluten-free beer, smoking and vaping, live
+    music, tips and fair deposits.
+- Alex answered on 13 October:
+  - the city-centre food pub;
+  - dogs welcome everywhere;
+  - sport with real club names marked "(example)", and the bar first come
+    during a listed match;
+  - Christmas parties later.
+  The other defaults stand: children until 9pm, no food to take away, and
+  the Loft by message.
+
+**Pub M1: built and live on this branch (13 October)**.
+- **The preset**: `src/presets/pub/`, The Weaver's Arms, Nottingham NG1.
+  - The restaurant's seating with four areas: the bar (three booths
+    booked, two high tables first come), the dining room, the beer garden
+    (first come) and the Loft (by enquiry).
+  - Tables are booked to eat: food 12 until 9, Sunday roasts until 6.
+  - A sample menu (`fixtures/menus/weavers-arms.json`) with every
+    allergen, draught by the half or pint, wine in the three legal glass
+    sizes, and a gluten-free lager marked so.
+- **Children's hours** (`core/pub-tools.ts`):
+  - A table with children must finish by 9pm; it's refused with the
+    latest start that fits, as the pub's rule.
+  - A table past 9 booked without saying is held once to ask whether any
+    are under 16.
+  - Dogs are noted on the booking.
+- **Age and ID**: the knowledge has the law on 16 and 17-year-olds and the
+  pub's ID (Challenge 25, digital ID). A caller asking nudges
+  `search_knowledge`; nothing promises anyone will be served.
+- **Shared with the café**: guardrails, corrections, the reaction script,
+  the free-from nudge, gluten-free wording and message categories.
+  - "Gluten-free" is now allowed only of a marked item, by name.
+  - end_call's "booked with nothing booked" check covers both.
+- **Live calls**: all eight M1 `pb-` calls have passed on their latest run
+  (`pb-book-dinner`, `pb-sunday-dog`, `pb-children-late`, `pb-garden`,
+  `pb-seventeen`, `pb-id`, `pb-nut-allergy`, `pb-gluten-free-beer`).
+  - The first run passed four.
+  - The fixes: asking about children, looking up age and ID, and the
+    booking claimed with no tool.
+- **The walk**: `npm run e2e:demo -- --only pub` passes.
+- **The prompt at its largest**: about 6,700 characters.
+
+**Pub M2: built and live on this branch (17 October)**.
+- **`voice_0014_pub_events`**: the manager's fixtures and one-off events.
+  - The server applies it at start. The Supabase connector wasn't
+    connected to apply it by hand.
+  - The seed adds two sample fixtures (real clubs marked "(example)").
+  - The demo reset clears them.
+- **`whats_on`** (`core/pub-tools.ts`): the week's fixtures, weekly
+  events and the quiz, or the one asked about.
+  - Anything not listed is "not on our list", never "probably".
+  - A caller asking what's on nudges it.
+  - `invented_fixture` catches "we're showing it" before it has answered.
+- **The bar during a match** (from half an hour before kick-off): asked
+  for, it's refused as first come. With no room named, the booking goes to
+  the dining room, said to have no screen.
+- **The quiz** is a team booking at its weekly time: £2 a head, the team
+  name on the booking. Seeded teams are three or four, and quiz-night
+  dinners two to four, so a caller's team of five fits.
+- **Today** for a pub: sold out, and the ales on tap, which `get_menu`
+  says.
+- **The back office** gains What's on (add or take off a fixture) and
+  Today.
+- **Shared fixes**:
+  - a table is never booked without asking how many;
+  - a sold-out item names what's left in its section;
+  - the knowledge search ignores "customer asking about";
+  - "all adults" already said counts as no children.
+- **Live calls**: all thirteen `pb-` calls have passed on their latest run.
+- **The walk** covers What's on and Today.
+- **The prompt at its largest**: about 6,750 characters.
+- **Next, M3**:
+  - the Loft (a message, no price);
+  - a neighbour's noise (urgent when it's now);
+  - lost property and other callers;
+  - the reaction script and after the visit, as the café's;
+  - evals `pb-hire-loft`, `pb-noise`, `pb-lost-phone`,
+    `pb-reaction-now`.
+
+**Windows worktree in Temp** (17 October): after four idle days, Windows
+had deleted 652 untouched files from the worktree (outside and inside
+`demo-products`) and part of `node_modules`. Nothing committed was
+lost. They were restored from git and `npm ci` reinstalled the rest (see
+the memory note). Moving the worktree to `C:\Users\alexa\n.abl.worktrees\`
+would stop it happening.
+
+### Working on Windows
+
+The system git setting turns line endings into CRLF, which breaks the
+goldens, so the Windows session works in its own worktree checked out with
+LF (`git -c core.autocrlf=false` for checkout and rebase). Stash with the
+same flag (`git -c core.autocrlf=false stash`). Otherwise the stash writes
+files back with CRLF and the rebase refuses to start. The Gemini key
+is in `voice-agent/.env.local` (git-ignored, never printed). Live calls:
+`npm run eval -- --only tk-busy-wait,tk-meal-deal`. The walk needs
+`CHROME_PATH="C:/Program Files/Google/Chrome/Application/chrome.exe"`. Git Bash's `date` prints UTC even with `TZ=Europe/London`; for UK time use `node -e "console.log(new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' }))"`.
+
+## Earlier: picked up on 4 October (the session before stopped at the weekly usage limit)
+
+The session of 4 October stopped at 97% of Alex's weekly limit (it resets
+on Thursday 8 October, 15:00 UK time). Its last two checks' results were
+only in that session's container, so they are copied here. Work directly,
+in small steps; no subagents. Order: fix the confirmed call-engine problems
+(A), the three failed live calls (B), the other reported problems after
+reproducing each, re-check the data commit, then M2.
+
+**Progress since (the next session, 4–5 October, on `voice-agent-DEV`).**
+Everything in A and B below is done, each fix reproduced by a test first:
+
+- Call engine: new problems 1–5 (`5c1d9b4`), the three *partly* items
+  (`5553951`), and a new gap seen live: "I have you booked" with nothing
+  booked is now a claim (`4628f1c`).
+- B, the three failed live calls (`393f0c8`): never repeat the caller's
+  figure; a search for a named home gives no price (open `get_property`
+  first); a leasehold home's `mortgage_question` names the adviser and
+  the solicitor; `ea-listing-facts` accepts "the house".
+- Server: best and final always has two different bidders (`08657cc`);
+  accepting a raise closes only the same phone's offers (`81cb2cd`).
+- Back office: ID check badge back, no Cash before "anything to sell" is
+  known (`4fa58a4`).
+- Builder: shared ownership kept through a tenure change (`e99b839`), the
+  home list lines up (`5cebc0c`), copy buttons named by week (`8a4d60c`),
+  viewing hours with no days warned (`e0c0517`).
+- Data re-check of `288aae9`: one slip, a buyer's travel time now counts
+  from either booking (`ecb594d`).
+- Live calls **do** run in a cloud session (an earlier note here said they
+  couldn't; that was wrong). The live service is unsteady: a call can end
+  early when the receptionist's model falls back and the simulated caller
+  goes quiet. Re-run a call that ends after a turn or two before reading
+  anything into it.
+- Live run, night of 4–5 October (`eval-results/2026-10-04T22-51-23`, not
+  in git): 2 of 7 passed (`ea-short-lease`, `ea-bank-details-change`).
+  `ea-listing-facts` was right but the check read "no flood defences" as
+  "never flooded" (check fixed in `e58e691`). Four calls ended with the
+  receptionist silent mid-sentence for 45 s (after a tool's "not yet", or
+  with no tool at all); the code from before this session (`13d333d`)
+  stalls the same way on `ea-offer-taken`, so it is the live service that
+  night, not the code. Re-run all seven before trusting either result. One
+  real slip seen twice: a read-back phrased "I've booked ... is that
+  right?" (rule 1 and the guard already cover it).
+- The prompt at its largest is now about 6,960 characters (limit 7,000):
+  put new guidance in tool answers, not the prompt.
+- Next: M2 (below).
+
+### A. Re-check of the review fixes
+
+Five fix commits (listed under "Where things stood") were being re-checked
+area by area. Not yet re-checked when the session stopped: data
+(`288aae9`). Re-check it yourself with `git show 288aae9`.
+
+**Builder (`267e7a7`)**: eight findings fixed; one partly: the three
+"Copy Monday to Tuesday–Friday" buttons on the estate hours step still have
+the same name (`web/src/reception/builder/common/Hours.tsx` ~103; name them
+by week, as the day switches now are). New problems reported:
+
+- `estate/Listings.tsx` (~238): moving a home's tenure away from shared
+  ownership now wipes its share, rent and provider; moving back gives
+  defaults that get read out. Don't clear it in the builder (compile already
+  ignores a hidden block).
+- `estate/Listings.tsx` (~109): wrapping each home row in a `listitem` div
+  stops the rows stretching, so prices and badges no longer line up. Make
+  the wrapper the grid item (`display: contents` or move the class).
+- `estate/Listings.tsx` (~327): a viewing window with no days ticked is
+  kept and shown as if it applied, but compile drops it. Warn in
+  `validateEstate`, or show it as "no days chosen".
+
+**Back office (`bdddb2a`)**: four findings fixed; one partly: a cash buyer
+whose "anything to sell" answer is unknown still shows Cash on the screen
+(the domain gives no Cash then). New problem: the viewing drawer now shows
+only the position badges, so the "ID check" badge for an empty home (put in
+`details.badges` by the seed and `create_booking`) is lost. Show
+position badges plus any `details.badges` that aren't position badges.
+
+**Server (`705c78b`)**: all five findings fixed. Two new problems reported
+(this and the builder's and back office's were not double-checked:
+reproduce each before fixing):
+
+- `test/demo-api.test.ts` (~395): the estate test fails about 1 run in 40.
+  It needs a received offer with a rival bidder on another phone; only the
+  seed's best-and-final home has one, and its two buyers are drawn at
+  random, so now and then they are the same person. Make the seed pick two
+  different buyers there (and re-record the estate goldens), or set up the
+  rival in the test itself.
+- `src/server/demo.ts` (~635): accepting an offer withdraws every open offer
+  in its `revises` chain without checking it is the same buyer's. Only
+  follow `revises` to offers from the same phone.
+
+**Call engine (`7f815bd`)**: five findings fixed, two only partly:
+
+- *Partly*: a restaurant line like "Brilliant, 7pm is booked under Smith."
+  or "Saturday at 7pm is now booked." is not flagged as a false claim,
+  because `slotTaken` (`src/core/guardrails.ts`) treats it as "that time is
+  taken". The gap dates from `3ecdddb`. Fixing it touches the restaurant:
+  keep its goldens unchanged.
+- *Partly*: when staff mark the lease as being checked, `facts()`
+  (`src/domain/listings.ts`) still gives `tenure` from `tenureSentence()`,
+  which includes the years left on the lease.
+- *Partly*: when staff mark the price as being checked, `get_property`
+  leaves it out, but `search_properties` and `send_property_details` still
+  give the price.
+
+New problems, all confirmed by a second reviewer who reproduced them:
+
+1. `call.ts` (~558): after any earlier `find_bookings`/`modify_booking` in a
+   call, no read-back is reminded to be booked, so an offer read back later
+   is never recorded.
+2. `guardrails.ts` `saidYes()`: a "no", "not", "but" etc. anywhere later in
+   the caller's line, even in a separate sentence, cancels the yes
+   ("Yes, that's right. I'm not sure about parking though.").
+3. `guardrails.ts` READ_BACK: "Shall I go ahead and book that?" no longer
+   counts as a read-back, so a yes to it is never reminded.
+4. `guardrails.ts` (~110): `!MONEY.test(text)` also matches a mobile number's
+   six-digit group or "hundred"/"thousand", so a true "I've passed your
+   message on" line with a number in it is flagged.
+5. `guardrails.ts` (~126): THING is tested against the whole sentence, so a
+   natural "slot taken" line with "your" or "viewing" earlier in it is
+   flagged again (the 3 October false alarm).
+
+### B. Final run of the seven `ea-` live calls
+
+Results are not in git (`eval-results/` is ignored): re-run with
+`npm run eval -- --only ea-listing-facts,ea-short-lease,ea-book-viewing,ea-sale-agreed,ea-valuation-no-figure,ea-offer-taken,ea-bank-details-change`.
+On 4 October, on the finished code:
+
+- 4 of 7 passed: `ea-book-viewing`, `ea-sale-agreed`, `ea-offer-taken`
+  and `ea-bank-details-change`.
+- `ea-valuation-no-figure`: failed. The receptionist repeated the caller's
+  own figure back ("You mentioned next door went for four hundred; when was
+  that?"); the guardrail flagged it, it said the same line again, and the
+  valuation was never booked. Tell it never to repeat a figure the caller
+  gives (ask "when was that sale?" without the amount).
+- `ea-listing-facts`: failed. The simulated caller said "the house on
+  Albion Road" instead of "the one on Albion Road", so returning only the
+  house was right; the check should accept that (only ask "which" when the
+  caller didn't say house or flat). Two real slips: the receptionist gave
+  the price from `search_properties` before calling `get_property`, so the
+  full describe line (council tax band C, EPC D) was never said; and on
+  flooding it took a message for Jess without saying it isn't in the
+  details or naming the Environment Agency's service.
+- `ea-short-lease`: failed: didn't offer the mortgage adviser or a
+  solicitor.
+
+Then go on with "Done next" below.
+
+## Done next, in this order (5 and 6 October)
+
+### 1. Estate agent milestone 2 (M2): built (5 October)
+
+The spec is `presets/estate-agent.md` (§12, M2). Built on 5 October, each
+with tests (`test/estate-agent-tools.test.ts`, `test/demo-api.test.ts`) and
+the walkthrough:
+- Tools (`src/core/estate-tools.ts`): `find_party` (who the number is to
+  us: bookings, portal enquiries, offers, seller or not, a missed call;
+  booking from an enquiry marks it answered), `get_marketing_update`
+  (verified seller only, in code, three tries a call), `get_offer_status`
+  (the number that made it only), `record_viewing_feedback`,
+  `register_buyer`, `stop_alerts`; `record_offer` says other offers exist.
+  A verified seller's offer message is urgent and marked `seller_reply`.
+- Prompt rule 7 names the checking tools (largest prompt 6,946 characters).
+- Back office: *Call as* on the phone (`src/presets/estate/personas.ts`),
+  *Applicants* (with Mark hot, Send matches, Stop alerts:
+  `PATCH /workspaces/:id/buyers/:number`), *Valuations* (booked, done,
+  outcome), "Seller replied by phone" on offers.
+- Valuation outcomes (Instructed, Thinking with a follow-up day, Lost) are
+  set from the Valuations view; "Try saying" suggests the M2 calls.
+- Scenarios `ea-vendor-update`, `ea-stalker`, `ea-register-position`,
+  `ea-personal-interest` (`src/eval/scenarios.ts`): all four pass live (5
+  October, after `53adfb9`: registration now needs a search and the
+  selling position first, and the seller update gives a sentence to say
+  first).
+
+The seven M1 calls were re-run with all twelve `ea-` calls on 8 October
+(see "Estate agent" above).
+
+### 2. Estate agent milestone 3 (M3): built (5 October)
+
+- `get_sale_progress` (`src/core/estate-tools.ts`): by who is calling,
+  checked in code: buyer or seller (milestones, recorded dates, chain,
+  keys), a solicitor on the file (milestones; requests to the progressor),
+  an agent in the chain (the chain line), the broker (agreed price,
+  memorandum date); anyone else nothing.
+- Sale actions (`PATCH /workspaces/:id/sales/:id` in `src/server/demo.ts`):
+  tick a milestone (exchange makes the home exchanged), dates, log an
+  update, *Completed: release keys* (on or after the completion date; texts
+  the buyer), *Fell through* (a reason; back on the market texts back-up
+  and consenting matching buyers, else withdrawn).
+- `alertBuyers`: a price reduction or a return to the market texts
+  consenting buyers it fits (back-up buyers on a return only).
+- Back office: *Sales progress* tab (`web/src/reception/workspace/Sales.tsx`).
+- A message from the buyer or seller in a sale under way goes to the
+  progressor, urgent when pulling out; urgent messages say "will call you
+  today".
+- Rule 7 names `get_sale_progress` (largest prompt 6,965 characters).
+- *Call as* adds Ben, Liam, Nadia and Harper & Co.
+- *Describe your stock* (`src/presets/estate/stock.ts`): the Listings
+  step drafts homes on made-up streets, every check unknown.
+- `ea-fall-through` passes live (third run, after the routing fix).
+
+Not done: Applicants' "send matches" and the alerts are pretend texts only,
+as everywhere in the demo. All twelve `ea-` calls were re-run together on
+8 October, and every one has passed since (see "Estate agent" above).
+
+### 3. Property maintenance: M1 built and live on this branch (5 October)
+
+The spec is `presets/property-maintenance.md`. Alex's answers: go ahead,
+with the demo area changed to **Nottingham, Derby and Loughborough** (real
+districts NG1–NG11, DE1–DE3, DE21–DE24, LE11; every street invented and
+shown "(example)"); the other five defaults stand. Built, in this order,
+each with tests:
+
+- Server preset (`src/presets/maintenance/`): answers and defaults
+  (Fernhill Property Care, 8 engineers, 11 trades, 6 sample clients),
+  sanitise, validate (§3's rules), the four-nation pack with the fixed
+  safety scripts (`nations.ts`), compile (`profile.maintenance`; no
+  `profile.booking`, so no table tools), preview, fact sheet, workspace.
+- Data: 70 sample homes (`fixtures/presets/maintenance-properties.json`,
+  no key safe code stored anywhere), migration `voice_0006_maintenance`
+  (properties, jobs, certificates, incidents) applied to Supabase and
+  recorded, repository calls, and a seeded week that replays under the
+  window rules (`src/domain/windows.ts`; the replay is in
+  `test/seed-replay.ts`).
+- Receptionist: safety mode (`src/core/safety.ts`: an emergency in the
+  caller's words arms it; every other tool refuses until the advice and
+  the number are said), the tools (`src/core/maintenance-tools.ts`:
+  `safety_advice`, `find_property`, `triage_fault`, `job`, `check_windows`,
+  `compliance`), the prompt branch (about 5,400 characters; 6,460 at the
+  largest), the §8 guardrails, and access codes removed from every
+  transcript (all presets).
+- Back office (`src/server/maintenance.ts`, `web/src/reception/workspace/`):
+  Jobs, Dispatch (drag a job to an engineer's window), Properties and
+  compliance (Book from a row), Safety log, the engineer's phone (accept or
+  decline a page, On my way) and Call as.
+- Builder (`web/src/reception/builder/maintenance/`): the eleven steps.
+- Tests: `test/property-maintenance.test.ts`,
+  `test/property-maintenance-tools.test.ts`, an end-to-end HTTP test in
+  `test/demo-api.test.ts`, the golden corpus
+  (`scripts/maintenance-goldens.ts`, `test/property-maintenance-golden.test.ts`),
+  and the walk: `npm run e2e:demo -- --only property_maintenance`
+  (screenshots sent to Alex on 5 October).
+- Live calls, the seven `pm-` scenarios on `pm-fernhill`: see "Live calls
+  (property maintenance)" below.
+
+Deviations from the spec, written into it: office hours sit on the Visits
+step; windows and engineers live in `profile.maintenance`, not
+`profile.booking`; the Properties view's id is `compliance`; engineers keep
+the estate agent's staff roles (`other`).
+
+M3 in the spec (block managers, commercial sites and insurers, the
+compliance portfolio, the demo clock, incident notice and engineer absence,
+the property editor, the KPI strip, surge day, relay and language support,
+Scotland's bank holidays) was built on 6 to 8 October: see "Property
+maintenance M3" above. M2 is section 4 below.
+
+### 4. Property maintenance: M2 built (6 October)
+
+Alex said "go on next milestone", directly and in small steps. Each step
+was committed and pushed with `npm run check` green, and the repairs
+goldens re-recorded in their own named commit each time (the restaurant's
+and the estate agent's never changed):
+
+1. Quotes and invoices: migration `voice_0007_mt_money`
+   (`voice_mt_quotes`, `voice_mt_invoices`), applied to Supabase and
+   recorded. The seed has four quotes waiting (Q-2291 among them), one
+   approved, one declined, and 21 invoices (two from last month overdue;
+   Ellie Burke, a Call as homeowner, still owes). Jobs: *Invoice* on a
+   finished job.
+2. Approvals on the client's own phone, never by voice (decision 4). Call
+   as lists every client's phone, with Approve and Decline; Approve books
+   the first free window from tomorrow, without the evening's extra
+   charge, and texts the tenant. Off-call events reach a live call as a
+   note (`CallNote`, `Bus.note`, `CallSession.note`): approvals, and pages
+   accepted, declined or unanswered.
+3. `find_invoice` and the repairs `take_demo_payment` (demo card only);
+   *Homeowners pay the call-out by card when booking* in the prices step.
+4. Social housing: Meadowbank Housing (six sample homes; 76 in all), "we
+   act as their agent", the Awaab's Law 10-working-day clock on a damp
+   job (England, social, agent), a possible emergency hazard flagged for
+   the landlord to decide, consent before noting health, guardrails
+   `damp_blame` and `medical_advice`. Seed: an open damp case labelled
+   from Meadowbank's repairs policy, a hazard made safe, and the
+   1 November 2026 electrical deadline on its homes.
+5. Paging escalation: no answer in 15 minutes (a builder field) pages the
+   other engineer on call, then texts the duty manager (`startPager` in
+   `src/server/maintenance.ts`, every 30 s; *No answer* on the card).
+6. Views *Clients* and *Quotes and invoices* (Remind, Paid by bank), and
+   Call as: Jess at Harbour Lettings, Jean Ellis (Q-2291), Nadia Hussain
+   (Meadowbank, damp and asthma).
+7. The four M2 live calls (below), the walk with M2 screens, this note.
+
+How it differs from the spec: the client's contact is the authoriser (an
+agent's staff, like Jess, raise jobs; only the contact's phone approves);
+Invoiced is a badge in "done and invoiced" below the board, not a column;
+the job tool sends the approval itself when a caller asks to "go ahead
+with Q-2291" as a new job, and asks once about breathing problems before
+booking a social landlord's damp job.
+
+The prompt at its largest is now about 6,960 characters (limit 7,000):
+new guidance goes in tool answers.
+
+## Where things stood (3 to 5 October)
+
+- **Restaurant**: finished. Its goldens (`test/fixtures/restaurant/`)
+  prove later changes leave it alone.
+- **Estate agent M1: finished and live in the catalogue** (3 October).
+  - Builder: nine steps (`web/src/reception/builder/estate/`), including a
+    listings editor in tabs with a Part A meter and *Start from the sample*
+    (it reads `GET /workspaces/:id/defaults`).
+  - Back office: Diary (a row per person; a viewing's drawer has feedback
+    buttons), Properties (cards with a drawn house and a Manage panel:
+    status, price, blocked dates, facts being checked, best and final,
+    viewings after a sale), Offers (received, sent, decided, with waiting
+    timers; *Seller accepts* makes the home sale agreed, opens a sale and
+    texts the buyer and other bidders). `/state` carries `listings`,
+    `offers` and `team`. Staff actions are in `src/server/demo.ts`
+    (`offerAction`, `listingAction`, booking `feedback`), tested in
+    `test/demo-api.test.ts`.
+  - Builder saves after Start sync the homes (`repo.syncListings`).
+  - Walkthrough: `npm run e2e:demo -- --only estate_agent` (screenshots in
+    `eval-results/demo-ui/estate_agent/`, sent to Alex).
+  - Live calls: see "Live calls" below.
+  - Database: `voice_0005_estate` applied to the shared Supabase project and
+    recorded in `voice_schema_migrations` (3 October).
+  - Golden corpus: `test/fixtures/estate_agent/`, made by
+    `scripts/estate-goldens.ts`, checked by `test/estate-golden.test.ts`. The
+    shared helpers are in `scripts/goldens.ts`. Its `max` setup is the true
+    maximum and valid (every box at its cap, twenty long towns, thirty
+    districts not in a run, three different periods every day in all three
+    weeks): the prompt is 6,922 characters there. Very long hours, viewing
+    times and area lists are shortened in the prompt only (the open days and
+    "the tool has the times"; the first few towns and districts and a count);
+    the searchable answers keep them in full.
+  - Independent review (3 October, evening): 29 confirmed problems across the
+    call engine, staff actions, builder, back office and seed. All fixed in
+    five commits on 4 October (`7f815bd`, `705c78b`, `267e7a7`, `bdddb2a`,
+    `288aae9`), each with tests.
+- **Framework** for every kind of business: done (`PRESETS.md`).
+- **Order of presets** (Alex): estate agent, property maintenance, then
+  takeaway (PRESETS.md §5), barber, salon, café, pub, beauty, spa, hotel,
+  letting agent, gym, dog grooming, garage. The salon's spec still waits on
+  Alex's decisions; the café and the pub were built meanwhile.
+- **Online**: Alex first said not until the whole demo was built. On
+  24 October he asked for it to go on the Oracle server now
+  (`voice-agent/deploy/oracle/`): see "Where things stand" at the top.
+
+## Live calls (property maintenance M3, 8 October)
+
+Twenty-one `pm-` scenarios now: the eleven from M1 and M2 and ten for M3
+(`pm-communal-door`, `pm-block-roof-leak`, `pm-lift-trapped`,
+`pm-insurer-claim`, `pm-cafe-blocked-sink`, `pm-portfolio`,
+`pm-storm-notice`, `pm-engineer-absent`, `pm-relay`, `pm-polish-gas`).
+`pm-storm-notice` and `pm-engineer-absent` set the office notice or an
+absence through the scenario's `setup`, on the tenant the call is given.
+
+Every one has passed on the current code (the full run,
+`eval-results/2026-10-08T12-02-45`, not in git, was 15 of 21 before the
+last fixes; each of the six then passed on re-run). As before, the fixes
+went into the tools rather than the prompt:
+
+- Finding the home: the number someone rings from counts ("Flat 4, NG7",
+  "Elm Road"); a full address already on file is never added again;
+  "9, Riverside Court" reads 9 as the flat.
+- Blocks: a door entry goes to an electrician; a roof (or rain through a
+  ceiling) to a roofer, and is flagged as the block's shared parts as
+  soon as the flat is found, so no price is said; the make-safe's
+  reference is the one the caller is given.
+- Insurers: the policyholder taken from the name and phone given; the
+  confirmation to the claims desk and the claim text to the policyholder;
+  no window surcharge offered to a client or insurer.
+- Businesses: a missing purchase order asks the business questions even
+  when "access" was filled in.
+- Busy days: a repair taken as a message on an emergencies-only day is
+  logged on the board too; moving a visit because our engineer is off
+  costs nothing extra.
+- Safety: a gas smell recognised in Polish, Romanian, Portuguese, Spanish,
+  Italian, French and Lithuanian, with the advice in the caller's
+  language; if the advice is said but the safety step skipped, the call
+  logs it and texts the number as it ends; a chirping CO alarm named
+  again stays a chirp.
+- Damp: consent said aloud counts; "vulnerabilities" is read as
+  vulnerable; hanging up on damp at a housing association's home with
+  nothing raised is stopped once; a ready line for health questions (GP,
+  NHS 111).
+- Saying "booked" with nothing booked: a repairs call can't end "booked"
+  without a job (stopped once); a landlord's gas check asked for as a
+  repair is booked on the register by the job step itself; "the
+  reference for that job is ..." is checked for being made up.
+- Checks that were wrong: "nobody from us is booked", "speak to your GP
+  about whether to keep him out of the room", and a reference written
+  by the call but not read out (a block repair's) were all being flagged.
+
+Seen but not fixed: the model sometimes adds "Not medical advice or
+diagnosis; see a healthcare professional" to its health answers, in its
+own words; the simulated caller still goes quiet now and then (the run
+retries on the other model).
+
+## Live calls (property maintenance M2, 6 October)
+
+Eleven `pm-` scenarios now (the seven M1 ones and `pm-agent-over-limit`,
+`pm-landlord-approves`, `pm-damp-asthma`, `pm-someone-at-door`).
+`pm-landlord-approves` presses Approve on Mrs Ellis's phone mid-call
+through the scenario hook `during` (`src/eval/scenarios.ts`), which acts
+off the call as a second device would.
+
+Every one has passed on the current code. The model varies from run to
+run, so most fixes went into the tools rather than the prompt (it is at
+about 6,960 of 7,000 characters at its largest): the job tool sends a
+quote's approval itself, reads a price said in words, treats quoted work
+as planned (not an emergency page), asks once about breathing problems
+for a social landlord's damp job and for consent, answers "someone at my
+door" from the board, and refuses visit windows for an emergency. Two
+real bugs the runs found: "both" booked the gas record alone at £75, and
+"nobody here is vulnerable" made a chirping CO alarm an emergency.
+
+The receptionist once said a made-up price for replacing an alarm ("forty
+pounds"). The `invented_price` guardrail now catches that on a repairs
+call (`d8ecdcc`, 6 October): a price must come from the settings, a tool
+or the caller. Seen but not fixed: the simulated caller still goes silent
+now and then; the run retries on the other model and carries on.
+
+Last full run (`eval-results/2026-10-06T18-45-54`, not in git): 7 of 11,
+then each of the four that failed was fixed in the tools and passed on
+re-run (`pm-gas-record`, `pm-landlord-approves`, `pm-damp-asthma`,
+`pm-agent-over-limit`; the last one also stalled once mid-call). Expect a
+call or two to fail on any one full run: re-run before reading anything
+into it, and fix what repeats.
+
+## Live calls (property maintenance, 5 October)
+
+The seven `pm-` scenarios on `pm-fernhill` (`node src/eval/run.ts --only
+pm-...`; reports in `voice-agent/eval-results/`, not in git):
+
+- Passing live: `pm-gas-smell` (first run), `pm-co-chirp`, `pm-burst-ooh`,
+  `pm-diy-refused`, `pm-homeowner-repair`, `pm-eta`.
+- `pm-gas-record`: every part has passed, in different runs (the register
+  read and the date said; Callum booked in a morning at £75 with the row
+  marked booked), but the last two runs stalled mid-call with the
+  receptionist silent, as the live service does. Re-run it when the
+  service is steady.
+- Real slips fixed from these runs: the call-out price guessed for a gas
+  record (the register now carries the prices); the street-flooding
+  script for a burst pipe (the kinds are now described one by one, and
+  the rules say stopcock first); "ninety five pounds" without a hyphen
+  not counted as said; a job booked under the name "Owner"; refusing to
+  give repressurising steps flagged as giving them; the record's end date
+  not said unless asked. Several first-run failures were the checks, not
+  the receptionist, and the checks are fixed.
+
+## Live calls (estate agent, 3 October)
+
+First run of the seven `ea-` scenarios: `ea-short-lease`, `ea-book-viewing`
+and `ea-valuation-no-figure` passed. Fixed from the other four's transcripts:
+`get_property` now gives a `describe` sentence (price, tenure, council tax
+band, EPC) to say first; `search_properties` offers similar homes when the
+one asked for is withdrawn or sold; a caller who talked about bank or account
+details always leaves an urgent fraud message; and two checks were too
+narrow ("the details don't confirm it" about flooding, and "I can't comment
+on whether it will be accepted"). The four were being re-run at the end of
+the session: see the latest folder in `voice-agent/eval-results/`.
+
+## Known small items
+
+- Moving a booking to another person is generic now (8 October, the cloud
+  session; `4b4ed60`, `4f8904b`), ready for the barber: `repo.moveBooking`
+  takes a table or a person (`kind: 'staff'`): a person must do the
+  booking's service, work that weekday, be free (buffers kept) and have no
+  personal interest in the home. The PATCH `move` action takes `to` (or
+  the old `table`) and texts the customer who they'll now see (an estate
+  agency's own "changed" text, or a plain one for any other business);
+  `notify: false` sends nothing. On the web, `personOptions()` in
+  `workspace/model.ts` lists who it can go to (the team in `/state` now
+  carries each person's `services`, and each booking its `service_key`
+  and `buffer_minutes`); the drawer has "Move to someone else", and
+  `StaffDiary` takes `onMove` and drags a bar to another row, lighting the
+  rows it can go to.
+- The takeaway's order fields (`ready_at`, `driver`) are written and read
+  back (`mapOrder` in `src/db/repo.ts`).
+- The demo clock (the Time button) is a switch in each preset's workspace
+  spec now, `clock: true` (8 October, the cloud session; `de7fe18`,
+  `43c4a7c`). It is on for six presets: the restaurant, estate agent,
+  repairs, barber, café and pub. For the takeaway, its own session can
+  switch it on once its staff actions stamp `tenantNow(t)` rather than
+  `new Date()` (`answerRequest` and `sendOutOrder` in `src/server/demo.ts`
+  still use the real time); the back office already opens at the demo's
+  day and time.
+- `test/takeaway-demo.test.ts` ("a takeaway end to end") used to fail about
+  one run in three: the seed's made-up phones can draw 07700 900811, the
+  number the test uses for its own order. Fixed on 24 October (`9a86a1a`):
+  the test now knows its own order by what it holds, not by the number
+  alone.
+- `NEXT-SESSION-PROMPT.md` is a short prompt to start the next session
+  (rewritten 24 October); this file has the detail.
+
+## Testing as Alex does
+
+- **Codespace** (for building and testing; prospects will use the Oracle
+  server):
+  `https://codespaces.new/alxx-22/n.abl/tree/voice-agent-DEV?devcontainer_path=.devcontainer%2Fvoice-agent%2Fdevcontainer.json`
+  It installs Chromium. Then run `npm run check:all`.
+- **In the app**: in the console, issue a key, then open `/demo/reception` on
+  the same address and enter it. After pulling new code, restart `npm run dev`
+  and press **Reset** in the demo. All seven built presets are on the "Build
+  a new demo" page.

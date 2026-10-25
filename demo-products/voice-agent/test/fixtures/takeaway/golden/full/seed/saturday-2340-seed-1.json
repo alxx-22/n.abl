@@ -1,0 +1,6420 @@
+{
+ "bookings": [],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "Leah Grant",
+   "phone": "+447700900806",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-03T22:40:00.000Z",
+   "ready_at": "2026-10-03T22:40:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "classic_burger",
+       "name": "Classic beef burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ]
+    },
+    {
+     "line": 2,
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_regular",
+       "name": "regular",
+       "price_pence": 0
+      }
+     ]
+    }
+   ],
+   "subtotal_pence": 1198,
+   "total_pence": 1198,
+   "allergy_notes": null,
+   "created_at": "2026-10-03T22:05:00.000Z",
+   "status": "completed",
+   "payment_status": "paid",
+   "pay_note": null
+  },
+  {
+   "reference": "102",
+   "name": "Liam Walker",
+   "phone": "+447700900176",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T16:00:00.000Z",
+   "ready_at": "2026-10-10T16:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "popcorn_chicken",
+     "name": "Popcorn chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "veggie_burger",
+       "name": "Veggie burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      },
+      {
+       "key": "extra_patty",
+       "name": "extra beef patty",
+       "price_pence": 200
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "cola",
+     "name": "Coca-Cola",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_bottle",
+       "name": "1.25 litre bottle",
+       "price_pence": 200
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1948,
+   "total_pence": 1948,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T15:26:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "103",
+   "name": "Adam Collins",
+   "phone": "+447700900363",
+   "fulfilment": "delivery",
+   "address": "69 Weaver Lane (example)",
+   "postcode": "NG3 3RA",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T15:50:00.000Z",
+   "ready_at": "2026-10-10T15:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "onion_rings",
+     "name": "Onion rings",
+     "quantity": 1,
+     "unit_pence": 299,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "double_cheeseburger",
+     "name": "Double cheeseburger",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [],
+     "line": 3
+    },
+    {
+     "item_key": "veggie_supreme",
+     "name": "Veggie supreme",
+     "quantity": 1,
+     "unit_pence": 999,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      }
+     ],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 3296,
+   "total_pence": 3696,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T15:30:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "104",
+   "name": "Priya Taylor",
+   "phone": "+447700900966",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T16:10:00.000Z",
+   "ready_at": "2026-10-10T16:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "double_cheeseburger",
+       "name": "Double cheeseburger",
+       "price_pence": 250
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "classic_burger",
+       "name": "Classic beef burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2947,
+   "total_pence": 2947,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T15:31:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "105",
+   "name": "Grace Doyle",
+   "phone": "+447700900642",
+   "fulfilment": "delivery",
+   "address": "42 Foundry Lane (example)",
+   "postcode": "NG1 7UY",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T16:20:00.000Z",
+   "ready_at": "2026-10-10T15:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "water",
+     "name": "Bottled water",
+     "quantity": 1,
+     "unit_pence": 100,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "lemonade",
+     "name": "Sprite",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_bottle",
+       "name": "1.25 litre bottle",
+       "price_pence": 200
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_wrap",
+     "name": "Chicken wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 3
+    },
+    {
+     "item_key": "ice_cream",
+     "name": "Vanilla ice cream tub",
+     "quantity": 1,
+     "unit_pence": 299,
+     "modifiers": [],
+     "line": 4
+    },
+    {
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_large",
+       "name": "large",
+       "price_pence": 100
+      }
+     ],
+     "line": 5
+    }
+   ],
+   "subtotal_pence": 1647,
+   "total_pence": 1947,
+   "allergy_notes": "Coeliac",
+   "created_at": "2026-10-10T15:33:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "106",
+   "name": "Priya Wood",
+   "phone": "+447700900366",
+   "fulfilment": "delivery",
+   "address": "3 Hosiery Row (example)",
+   "postcode": "NG2 5BU",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T16:10:00.000Z",
+   "ready_at": "2026-10-10T15:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "double_cheeseburger",
+       "name": "Double cheeseburger",
+       "price_pence": 250
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "veggie_supreme",
+     "name": "Veggie supreme",
+     "quantity": 1,
+     "unit_pence": 999,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 3147,
+   "total_pence": 3447,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T15:47:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "107",
+   "name": "Mohammed Shah",
+   "phone": "+447700900624",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T16:30:00.000Z",
+   "ready_at": "2026-10-10T16:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 549,
+   "total_pence": 549,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T15:57:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "108",
+   "name": "Ravi Patel",
+   "phone": "+447700900645",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T16:40:00.000Z",
+   "ready_at": "2026-10-10T16:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "corn_cob",
+     "name": "Corn on the cob",
+     "quantity": 1,
+     "unit_pence": 199,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "veggie_burger",
+       "name": "Veggie burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      },
+      {
+       "key": "extra_patty",
+       "name": "extra beef patty",
+       "price_pence": 200
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1348,
+   "total_pence": 1348,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T15:58:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "109",
+   "name": "James Begum",
+   "phone": "+447700900089",
+   "fulfilment": "delivery",
+   "address": "74 Canalside Walk (example)",
+   "postcode": "NG3 5TZ",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T16:30:00.000Z",
+   "ready_at": "2026-10-10T16:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "water",
+     "name": "Bottled water",
+     "quantity": 1,
+     "unit_pence": 100,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "margherita",
+     "name": "Margherita",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "popcorn_chicken",
+     "name": "Popcorn chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 4
+    },
+    {
+     "item_key": "coleslaw",
+     "name": "Coleslaw",
+     "quantity": 1,
+     "unit_pence": 149,
+     "modifiers": [],
+     "line": 5
+    }
+   ],
+   "subtotal_pence": 2146,
+   "total_pence": 2546,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:03:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "110",
+   "name": "Lucy Robinson",
+   "phone": "+447700900382",
+   "fulfilment": "delivery",
+   "address": "85 Kiln Street (example)",
+   "postcode": "NG1 7HJ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T16:40:00.000Z",
+   "ready_at": "2026-10-10T16:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_strips",
+     "name": "Three chicken strips",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "veggie_supreme",
+     "name": "Veggie supreme",
+     "quantity": 1,
+     "unit_pence": 999,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1798,
+   "total_pence": 2098,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:06:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "111",
+   "name": "Priya Ahmed",
+   "phone": "+447700900081",
+   "fulfilment": "delivery",
+   "address": "112 Chapel Mews (example)",
+   "postcode": "NG1 2TE",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T17:00:00.000Z",
+   "ready_at": "2026-10-10T16:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_regular",
+       "name": "regular",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "veggie_burger",
+     "name": "Veggie burger",
+     "quantity": 1,
+     "unit_pence": 599,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "margherita",
+     "name": "Margherita",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1747,
+   "total_pence": 2047,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:11:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "112",
+   "name": "Kwame Ahmed",
+   "phone": "+447700900464",
+   "fulfilment": "delivery",
+   "address": "48 Lacemaker Road (example)",
+   "postcode": "NG2 1AR",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T16:50:00.000Z",
+   "ready_at": "2026-10-10T16:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "veggie_burger",
+     "name": "Veggie burger",
+     "quantity": 1,
+     "unit_pence": 599,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "margherita",
+     "name": "Margherita",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "alcohol_1",
+     "name": "Craft lager",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1948,
+   "total_pence": 2248,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:26:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "113",
+   "name": "Amara Ahmed",
+   "phone": "+447700900702",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T17:20:00.000Z",
+   "ready_at": "2026-10-10T17:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1598,
+   "total_pence": 1598,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:40:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "114",
+   "name": "Sarah Murphy",
+   "phone": "+447700900043",
+   "fulfilment": "delivery",
+   "address": "25 Bobbin Court (example)",
+   "postcode": "NG2 3PR",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T17:20:00.000Z",
+   "ready_at": "2026-10-10T16:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "cheesy_fries",
+     "name": "Cheesy fries",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1947,
+   "total_pence": 2247,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:43:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "115",
+   "name": "Niamh Nowak",
+   "phone": "+447700900795",
+   "fulfilment": "delivery",
+   "address": "90 Kiln Street (example)",
+   "postcode": "NG2 7ZS",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T17:30:00.000Z",
+   "ready_at": "2026-10-10T17:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "veggie_burger",
+     "name": "Veggie burger",
+     "quantity": 1,
+     "unit_pence": 599,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "diet_cola",
+     "name": "Diet Coke",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_can",
+       "name": "can",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "cheeseburger",
+       "name": "Cheeseburger",
+       "price_pence": 50
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1748,
+   "total_pence": 2048,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:45:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "116",
+   "name": "Daniel Evans",
+   "phone": "+447700900977",
+   "fulfilment": "delivery",
+   "address": "112 Hosiery Row (example)",
+   "postcode": "NG2 5HD",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T17:20:00.000Z",
+   "ready_at": "2026-10-10T16:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "double_cheeseburger",
+       "name": "Double cheeseburger",
+       "price_pence": 250
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "corn_cob",
+     "name": "Corn on the cob",
+     "quantity": 1,
+     "unit_pence": 199,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_large",
+       "name": "large",
+       "price_pence": 100
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1747,
+   "total_pence": 2047,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:46:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "117",
+   "name": "Zara Lewis",
+   "phone": "+447700900004",
+   "fulfilment": "delivery",
+   "address": "108 Foundry Lane (example)",
+   "postcode": "NG1 5PN",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T17:10:00.000Z",
+   "ready_at": "2026-10-10T16:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1628,
+   "total_pence": 1928,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:48:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "118",
+   "name": "Priya Jones",
+   "phone": "+447700900623",
+   "fulfilment": "delivery",
+   "address": "37 Carding Close (example)",
+   "postcode": "NG1 8HS",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T17:30:00.000Z",
+   "ready_at": "2026-10-10T17:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "cheesy_fries",
+     "name": "Cheesy fries",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "spicy_chicken_burger",
+     "name": "Firebird spicy burger",
+     "quantity": 1,
+     "unit_pence": 679,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1827,
+   "total_pence": 2127,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:53:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "119",
+   "name": "Amara Evans",
+   "phone": "+447700900521",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T17:40:00.000Z",
+   "ready_at": "2026-10-10T17:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_burger",
+     "name": "Crispy chicken burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 649,
+   "total_pence": 649,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T16:56:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "120",
+   "name": "Ethan Clarke",
+   "phone": "+447700900974",
+   "fulfilment": "delivery",
+   "address": "107 Bobbin Court (example)",
+   "postcode": "NG3 4EX",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T17:30:00.000Z",
+   "ready_at": "2026-10-10T17:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "coleslaw",
+     "name": "Coleslaw",
+     "quantity": 1,
+     "unit_pence": 149,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "popcorn_chicken",
+     "name": "Popcorn chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 3
+    },
+    {
+     "item_key": "two_piece",
+     "name": "Two pieces of chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 4
+    },
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 5
+    }
+   ],
+   "subtotal_pence": 2495,
+   "total_pence": 2895,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:00:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "121",
+   "name": "Ravi Walker",
+   "phone": "+447700900750",
+   "fulfilment": "delivery",
+   "address": "44 Weaver Lane (example)",
+   "postcode": "NG2 4YN",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T17:40:00.000Z",
+   "ready_at": "2026-10-10T17:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "double_cheeseburger",
+     "name": "Double cheeseburger",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "two_piece",
+     "name": "Two pieces of chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1847,
+   "total_pence": 2147,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:02:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "122",
+   "name": "Megan Wright",
+   "phone": "+447700900084",
+   "fulfilment": "delivery",
+   "address": "62 Larch Close (example)",
+   "postcode": "NG1 3EH",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T17:50:00.000Z",
+   "ready_at": "2026-10-10T17:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "veggie_burger",
+       "name": "Veggie burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "cheeseburger",
+     "name": "Cheeseburger",
+     "quantity": 1,
+     "unit_pence": 699,
+     "modifiers": [],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1648,
+   "total_pence": 1948,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:03:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "123",
+   "name": "Lucy Jones",
+   "phone": "+447700900388",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T17:30:00.000Z",
+   "ready_at": "2026-10-10T17:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "garlic_bread",
+     "name": "Garlic bread",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1697,
+   "total_pence": 1697,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:06:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "124",
+   "name": "Hannah Chen",
+   "phone": "+447700900310",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T18:00:00.000Z",
+   "ready_at": "2026-10-10T18:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "cheeseburger",
+       "name": "Cheeseburger",
+       "price_pence": 50
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2777,
+   "total_pence": 2777,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:12:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "125",
+   "name": "Mohammed Wright",
+   "phone": "+447700900511",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T17:50:00.000Z",
+   "ready_at": "2026-10-10T17:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 799,
+   "total_pence": 799,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:13:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "126",
+   "name": "Isla Kelly",
+   "phone": "+447700900257",
+   "fulfilment": "delivery",
+   "address": "14 Brewhouse Yard (example)",
+   "postcode": "NG3 3WA",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T17:40:00.000Z",
+   "ready_at": "2026-10-10T17:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "chicken_burger",
+       "name": "Crispy chicken burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "two_piece",
+     "name": "Two pieces of chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "pepperoni",
+     "name": "Pepperoni",
+     "quantity": 1,
+     "unit_pence": 1049,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2747,
+   "total_pence": 3147,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:14:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "127",
+   "name": "Kwame Wright",
+   "phone": "+447700900600",
+   "fulfilment": "delivery",
+   "address": "91 Hosiery Row (example)",
+   "postcode": "NG1 3QE",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T17:50:00.000Z",
+   "ready_at": "2026-10-10T17:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "diet_cola",
+     "name": "Diet Coke",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_can",
+       "name": "can",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "alcohol_1",
+     "name": "Craft lager",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": [],
+     "line": 3
+    },
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 2048,
+   "total_pence": 2348,
+   "allergy_notes": "Coeliac",
+   "created_at": "2026-10-10T17:14:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "128",
+   "name": "Niamh Jones",
+   "phone": "+447700900270",
+   "fulfilment": "delivery",
+   "address": "98 Larch Close (example)",
+   "postcode": "NG3 6LH",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T17:40:00.000Z",
+   "ready_at": "2026-10-10T17:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "ice_cream",
+     "name": "Vanilla ice cream tub",
+     "quantity": 1,
+     "unit_pence": 299,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "ice_cream",
+     "name": "Vanilla ice cream tub",
+     "quantity": 1,
+     "unit_pence": 299,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "cookie_dough",
+     "name": "Cookie dough",
+     "quantity": 1,
+     "unit_pence": 399,
+     "modifiers": [],
+     "line": 3
+    },
+    {
+     "item_key": "cheeseburger",
+     "name": "Cheeseburger",
+     "quantity": 1,
+     "unit_pence": 699,
+     "modifiers": [],
+     "line": 4
+    },
+    {
+     "item_key": "brownie",
+     "name": "Chocolate brownie",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 5
+    }
+   ],
+   "subtotal_pence": 2045,
+   "total_pence": 2445,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:19:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "129",
+   "name": "Sam Lewis",
+   "phone": "+447700900713",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T17:50:00.000Z",
+   "ready_at": "2026-10-10T17:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_strips",
+     "name": "Three chicken strips",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1847,
+   "total_pence": 1847,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:21:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "130",
+   "name": "Grace Robinson",
+   "phone": "+447700900915",
+   "fulfilment": "delivery",
+   "address": "25 Carding Close (example)",
+   "postcode": "NG3 2UX",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T18:00:00.000Z",
+   "ready_at": "2026-10-10T17:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "chicken_strips",
+       "name": "Three chicken strips",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "cola",
+     "name": "Coca-Cola",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_bottle",
+       "name": "1.25 litre bottle",
+       "price_pence": 200
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "hot_and_spicy",
+     "name": "Hot and spicy",
+     "quantity": 1,
+     "unit_pence": 1099,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      },
+      {
+       "key": "pizza_pepperoni",
+       "name": "extra pepperoni",
+       "price_pence": 120
+      }
+     ],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 3467,
+   "total_pence": 3867,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:23:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "131",
+   "name": "James Walker",
+   "phone": "+447700900868",
+   "fulfilment": "delivery",
+   "address": "110 Kiln Street (example)",
+   "postcode": "NG1 1ZJ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:10:00.000Z",
+   "ready_at": "2026-10-10T17:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "chicken_burger",
+       "name": "Crispy chicken burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "cola",
+     "name": "Coca-Cola",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_can",
+       "name": "can",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [
+      {
+       "key": "jalapenos",
+       "name": "jalapeños",
+       "price_pence": 50
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1798,
+   "total_pence": 2098,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:27:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "132",
+   "name": "Isla Price",
+   "phone": "+447700900339",
+   "fulfilment": "delivery",
+   "address": "82 Bobbin Court (example)",
+   "postcode": "NG2 4JS",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:00:00.000Z",
+   "ready_at": "2026-10-10T17:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "margherita",
+     "name": "Margherita",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      },
+      {
+       "key": "pizza_peppers",
+       "name": "peppers",
+       "price_pence": 70
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "water",
+     "name": "Bottled water",
+     "quantity": 1,
+     "unit_pence": 100,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_large",
+       "name": "large",
+       "price_pence": 100
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "family_bucket",
+     "name": "Family bucket",
+     "quantity": 1,
+     "unit_pence": 2299,
+     "modifiers": [],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 3717,
+   "total_pence": 4017,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:30:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "133",
+   "name": "Adam Collins",
+   "phone": "+447700900425",
+   "fulfilment": "delivery",
+   "address": "55 Kiln Street (example)",
+   "postcode": "NG2 3UA",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:10:00.000Z",
+   "ready_at": "2026-10-10T17:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "family_bucket",
+     "name": "Family bucket",
+     "quantity": 1,
+     "unit_pence": 2299,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 3278,
+   "total_pence": 3578,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:41:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "134",
+   "name": "Callum Hughes",
+   "phone": "+447700900783",
+   "fulfilment": "delivery",
+   "address": "51 Carding Close (example)",
+   "postcode": "NG2 9PZ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:30:00.000Z",
+   "ready_at": "2026-10-10T18:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "brownie",
+     "name": "Chocolate brownie",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "two_piece",
+     "name": "Two pieces of chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1597,
+   "total_pence": 1897,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:49:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "135",
+   "name": "Sarah Price",
+   "phone": "+447700900103",
+   "fulfilment": "delivery",
+   "address": "69 Hosiery Row (example)",
+   "postcode": "NG1 4HQ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:20:00.000Z",
+   "ready_at": "2026-10-10T17:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "alcohol_1",
+     "name": "Craft lager",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_strips",
+     "name": "Three chicken strips",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1748,
+   "total_pence": 2048,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:50:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "136",
+   "name": "Priya Clarke",
+   "phone": "+447700900308",
+   "fulfilment": "delivery",
+   "address": "11 Mill Yard (example)",
+   "postcode": "NG2 3RZ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:30:00.000Z",
+   "ready_at": "2026-10-10T18:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "chicken_burger",
+       "name": "Crispy chicken burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "onion_rings",
+     "name": "Onion rings",
+     "quantity": 1,
+     "unit_pence": 299,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "hot_and_spicy",
+     "name": "Hot and spicy",
+     "quantity": 1,
+     "unit_pence": 1099,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2647,
+   "total_pence": 2947,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:54:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "137",
+   "name": "Grace Chen",
+   "phone": "+447700900829",
+   "fulfilment": "delivery",
+   "address": "33 Hosiery Row (example)",
+   "postcode": "NG2 9EB",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:30:00.000Z",
+   "ready_at": "2026-10-10T18:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2127,
+   "total_pence": 2427,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:54:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "138",
+   "name": "Sarah Robinson",
+   "phone": "+447700900248",
+   "fulfilment": "delivery",
+   "address": "107 Tanners Walk (example)",
+   "postcode": "NG1 7GZ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:40:00.000Z",
+   "ready_at": "2026-10-10T18:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "coleslaw",
+     "name": "Coleslaw",
+     "quantity": 1,
+     "unit_pence": 149,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "double_cheeseburger",
+     "name": "Double cheeseburger",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "veggie_supreme",
+     "name": "Veggie supreme",
+     "quantity": 1,
+     "unit_pence": 999,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2347,
+   "total_pence": 2647,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:54:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "139",
+   "name": "Megan Wright",
+   "phone": "+447700900286",
+   "fulfilment": "delivery",
+   "address": "87 Mill Yard (example)",
+   "postcode": "NG2 3US",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:40:00.000Z",
+   "ready_at": "2026-10-10T18:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "veggie_burger",
+     "name": "Veggie burger",
+     "quantity": 1,
+     "unit_pence": 599,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "double_cheeseburger",
+     "name": "Double cheeseburger",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1997,
+   "total_pence": 2297,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T17:58:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "140",
+   "name": "Ben Ahmed",
+   "phone": "+447700900347",
+   "fulfilment": "delivery",
+   "address": "73 Spindle Street (example)",
+   "postcode": "NG2 8TD",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:50:00.000Z",
+   "ready_at": "2026-10-10T18:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_burger",
+     "name": "Crispy chicken burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "water",
+     "name": "Bottled water",
+     "quantity": 1,
+     "unit_pence": 100,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1548,
+   "total_pence": 1848,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:05:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "141",
+   "name": "Daniel Doyle",
+   "phone": "+447700900768",
+   "fulfilment": "delivery",
+   "address": "26 Canalside Walk (example)",
+   "postcode": "NG2 8EL",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:40:00.000Z",
+   "ready_at": "2026-10-10T18:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "double_cheeseburger",
+       "name": "Double cheeseburger",
+       "price_pence": 250
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1998,
+   "total_pence": 2298,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:08:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "142",
+   "name": "Emily Wright",
+   "phone": "+447700900519",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T18:40:00.000Z",
+   "ready_at": "2026-10-10T18:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "alcohol_1",
+     "name": "Craft lager",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": [],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 450,
+   "total_pence": 450,
+   "allergy_notes": "Vegan",
+   "created_at": "2026-10-10T18:12:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "143",
+   "name": "Ravi Mensah",
+   "phone": "+447700900953",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T18:50:00.000Z",
+   "ready_at": "2026-10-10T18:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "two_piece",
+     "name": "Two pieces of chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 449,
+   "total_pence": 449,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:12:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "144",
+   "name": "Emily Walker",
+   "phone": "+447700900999",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:00:00.000Z",
+   "ready_at": "2026-10-10T19:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "chicken_strips",
+       "name": "Three chicken strips",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 799,
+   "total_pence": 799,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:13:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "145",
+   "name": "Zara Taylor",
+   "phone": "+447700900509",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T18:40:00.000Z",
+   "ready_at": "2026-10-10T18:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "hot_and_spicy",
+     "name": "Hot and spicy",
+     "quantity": 1,
+     "unit_pence": 1099,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "veggie_burger",
+       "name": "Veggie burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 2048,
+   "total_pence": 2048,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:17:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "146",
+   "name": "Daniel Khan",
+   "phone": "+447700900468",
+   "fulfilment": "delivery",
+   "address": "118 Foundry Lane (example)",
+   "postcode": "NG1 8FZ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:00:00.000Z",
+   "ready_at": "2026-10-10T18:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "cheeseburger",
+     "name": "Cheeseburger",
+     "quantity": 1,
+     "unit_pence": 699,
+     "modifiers": [
+      {
+       "key": "jalapenos",
+       "name": "jalapeños",
+       "price_pence": 50
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2197,
+   "total_pence": 2497,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:23:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "147",
+   "name": "Grace Doyle",
+   "phone": "+447700900637",
+   "fulfilment": "delivery",
+   "address": "17 Mill Yard (example)",
+   "postcode": "NG1 9NH",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T18:50:00.000Z",
+   "ready_at": "2026-10-10T18:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "cheeseburger",
+     "name": "Cheeseburger",
+     "quantity": 1,
+     "unit_pence": 699,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "diet_cola",
+     "name": "Diet Coke",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_can",
+       "name": "can",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_regular",
+       "name": "regular",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "bbq_chicken",
+     "name": "BBQ chicken",
+     "quantity": 1,
+     "unit_pence": 1099,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      },
+      {
+       "key": "pizza_chicken",
+       "name": "chicken",
+       "price_pence": 150
+      }
+     ],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 2347,
+   "total_pence": 2647,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:25:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "148",
+   "name": "Hannah Clarke",
+   "phone": "+447700900098",
+   "fulfilment": "delivery",
+   "address": "40 Carding Close (example)",
+   "postcode": "NG3 1LT",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T18:50:00.000Z",
+   "ready_at": "2026-10-10T18:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "veggie_burger",
+       "name": "Veggie burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "spicy_chicken_burger",
+     "name": "Firebird spicy burger",
+     "quantity": 1,
+     "unit_pence": 679,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "veggie_burger",
+       "name": "Veggie burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2577,
+   "total_pence": 2977,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:25:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "149",
+   "name": "Priya Singh",
+   "phone": "+447700900085",
+   "fulfilment": "delivery",
+   "address": "60 Canalside Walk (example)",
+   "postcode": "NG2 9RZ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:00:00.000Z",
+   "ready_at": "2026-10-10T18:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "chicken_strips",
+       "name": "Three chicken strips",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "popcorn_chicken",
+     "name": "Popcorn chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1747,
+   "total_pence": 2047,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:25:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "150",
+   "name": "Adam Collins",
+   "phone": "+447700900973",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T18:50:00.000Z",
+   "ready_at": "2026-10-10T18:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "veggie_burger",
+     "name": "Veggie burger",
+     "quantity": 1,
+     "unit_pence": 599,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1398,
+   "total_pence": 1398,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:27:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "151",
+   "name": "Liam Mensah",
+   "phone": "+447700900719",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:10:00.000Z",
+   "ready_at": "2026-10-10T19:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 979,
+   "total_pence": 979,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:27:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "152",
+   "name": "Adam Collins",
+   "phone": "+447700900586",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:20:00.000Z",
+   "ready_at": "2026-10-10T19:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "coleslaw",
+     "name": "Coleslaw",
+     "quantity": 1,
+     "unit_pence": 149,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "corn_cob",
+     "name": "Corn on the cob",
+     "quantity": 1,
+     "unit_pence": 199,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "cheesy_fries",
+     "name": "Cheesy fries",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 697,
+   "total_pence": 697,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:31:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "153",
+   "name": "Aisha Walker",
+   "phone": "+447700900677",
+   "fulfilment": "delivery",
+   "address": "93 Canalside Walk (example)",
+   "postcode": "NG1 7BA",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:20:00.000Z",
+   "ready_at": "2026-10-10T18:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "classic_burger",
+       "name": "Classic beef burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "ice_cream",
+     "name": "Vanilla ice cream tub",
+     "quantity": 1,
+     "unit_pence": 299,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1897,
+   "total_pence": 2197,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:37:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "154",
+   "name": "Emily Jones",
+   "phone": "+447700900779",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:10:00.000Z",
+   "ready_at": "2026-10-10T19:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_burger",
+     "name": "Crispy chicken burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "cookie_dough",
+     "name": "Cookie dough",
+     "quantity": 1,
+     "unit_pence": 399,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1847,
+   "total_pence": 1847,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:38:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "155",
+   "name": "Jack Okafor",
+   "phone": "+447700900673",
+   "fulfilment": "delivery",
+   "address": "14 Lacemaker Road (example)",
+   "postcode": "NG1 1UE",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:00:00.000Z",
+   "ready_at": "2026-10-10T18:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "spicy_chicken_burger",
+     "name": "Firebird spicy burger",
+     "quantity": 1,
+     "unit_pence": 679,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_strips",
+     "name": "Three chicken strips",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "double_cheeseburger",
+     "name": "Double cheeseburger",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [
+      {
+       "key": "turkey_rasher",
+       "name": "turkey rasher",
+       "price_pence": 120
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2197,
+   "total_pence": 2497,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:39:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "156",
+   "name": "Priya Wood",
+   "phone": "+447700900262",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:10:00.000Z",
+   "ready_at": "2026-10-10T19:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "chicken_strips",
+       "name": "Three chicken strips",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "classic_burger",
+       "name": "Classic beef burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2547,
+   "total_pence": 2547,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:39:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "157",
+   "name": "Sam Clarke",
+   "phone": "+447700900738",
+   "fulfilment": "delivery",
+   "address": "112 Brewhouse Yard (example)",
+   "postcode": "NG1 3DF",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:20:00.000Z",
+   "ready_at": "2026-10-10T18:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "veggie_supreme",
+     "name": "Veggie supreme",
+     "quantity": 1,
+     "unit_pence": 999,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "cheeseburger",
+       "name": "Cheeseburger",
+       "price_pence": 50
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2797,
+   "total_pence": 3097,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:40:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "158",
+   "name": "Ravi Kelly",
+   "phone": "+447700900727",
+   "fulfilment": "delivery",
+   "address": "92 Brewhouse Yard (example)",
+   "postcode": "NG1 4HU",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:30:00.000Z",
+   "ready_at": "2026-10-10T19:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "water",
+     "name": "Bottled water",
+     "quantity": 1,
+     "unit_pence": 100,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "corn_cob",
+     "name": "Corn on the cob",
+     "quantity": 1,
+     "unit_pence": 199,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "cheesy_fries",
+     "name": "Cheesy fries",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 3
+    },
+    {
+     "item_key": "alcohol_1",
+     "name": "Craft lager",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": [],
+     "line": 4
+    },
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 5
+    }
+   ],
+   "subtotal_pence": 1647,
+   "total_pence": 1947,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:49:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "159",
+   "name": "Adam Mensah",
+   "phone": "+447700900273",
+   "fulfilment": "delivery",
+   "address": "28 Kiln Street (example)",
+   "postcode": "NG2 1RN",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:10:00.000Z",
+   "ready_at": "2026-10-10T18:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "chicken_strips",
+       "name": "Three chicken strips",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1997,
+   "total_pence": 2297,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:50:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "160",
+   "name": "Ben Ahmed",
+   "phone": "+447700900177",
+   "fulfilment": "delivery",
+   "address": "110 Tanners Walk (example)",
+   "postcode": "NG3 1EE",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T19:30:00.000Z",
+   "ready_at": "2026-10-10T19:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "spicy_chicken_burger",
+     "name": "Firebird spicy burger",
+     "quantity": 1,
+     "unit_pence": 679,
+     "modifiers": [
+      {
+       "key": "hash_brown",
+       "name": "hash brown",
+       "price_pence": 80
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 3
+    },
+    {
+     "item_key": "chicken_wrap",
+     "name": "Chicken wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 2456,
+   "total_pence": 2856,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T18:51:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "161",
+   "name": "Niamh Wood",
+   "phone": "+447700900280",
+   "fulfilment": "delivery",
+   "address": "8 Ropewalk Way (example)",
+   "postcode": "NG2 8YP",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:30:00.000Z",
+   "ready_at": "2026-10-10T19:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "bbq_chicken",
+     "name": "BBQ chicken",
+     "quantity": 1,
+     "unit_pence": 1099,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_large",
+       "name": "large",
+       "price_pence": 100
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "family_bucket",
+     "name": "Family bucket",
+     "quantity": 1,
+     "unit_pence": 2299,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 4047,
+   "total_pence": 4347,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:00:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "162",
+   "name": "Ethan Lewis",
+   "phone": "+447700900758",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:50:00.000Z",
+   "ready_at": "2026-10-10T19:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "veggie_supreme",
+     "name": "Veggie supreme",
+     "quantity": 1,
+     "unit_pence": 999,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      },
+      {
+       "key": "pizza_cheese",
+       "name": "extra cheese",
+       "price_pence": 100
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "coleslaw",
+     "name": "Coleslaw",
+     "quantity": 1,
+     "unit_pence": 149,
+     "modifiers": [],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1548,
+   "total_pence": 1548,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:01:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "163",
+   "name": "Emily Green",
+   "phone": "+447700900732",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:40:00.000Z",
+   "ready_at": "2026-10-10T19:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "chicken_burger",
+       "name": "Crispy chicken burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 949,
+   "total_pence": 949,
+   "allergy_notes": "Vegan",
+   "created_at": "2026-10-10T19:02:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "164",
+   "name": "Kwame Evans",
+   "phone": "+447700900775",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:40:00.000Z",
+   "ready_at": "2026-10-10T19:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "bbq_chicken",
+     "name": "BBQ chicken",
+     "quantity": 1,
+     "unit_pence": 1099,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "orange",
+     "name": "Fanta Orange",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_can",
+       "name": "can",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1249,
+   "total_pence": 1249,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:06:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "165",
+   "name": "James Hall",
+   "phone": "+447700900299",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:50:00.000Z",
+   "ready_at": "2026-10-10T19:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "cheeseburger",
+       "name": "Cheeseburger",
+       "price_pence": 50
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 999,
+   "total_pence": 999,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:12:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "166",
+   "name": "Jack Hughes",
+   "phone": "+447700900082",
+   "fulfilment": "delivery",
+   "address": "78 Hosiery Row (example)",
+   "postcode": "NG1 7FD",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:50:00.000Z",
+   "ready_at": "2026-10-10T19:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_strips",
+     "name": "Three chicken strips",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "coleslaw",
+     "name": "Coleslaw",
+     "quantity": 1,
+     "unit_pence": 149,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_regular",
+       "name": "regular",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 4
+    },
+    {
+     "item_key": "diet_cola",
+     "name": "Diet Coke",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_bottle",
+       "name": "1.25 litre bottle",
+       "price_pence": 200
+      }
+     ],
+     "line": 5
+    }
+   ],
+   "subtotal_pence": 1746,
+   "total_pence": 2046,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:13:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "167",
+   "name": "Amara Kelly",
+   "phone": "+447700900906",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T19:50:00.000Z",
+   "ready_at": "2026-10-10T19:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "chicken_strips",
+       "name": "Three chicken strips",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 799,
+   "total_pence": 799,
+   "allergy_notes": "Shellfish allergy",
+   "created_at": "2026-10-10T19:14:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "168",
+   "name": "Mohammed Chen",
+   "phone": "+447700900956",
+   "fulfilment": "delivery",
+   "address": "62 Lacemaker Road (example)",
+   "postcode": "NG3 3RT",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T20:00:00.000Z",
+   "ready_at": "2026-10-10T19:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "alcohol_1",
+     "name": "Craft lager",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "cheeseburger",
+       "name": "Cheeseburger",
+       "price_pence": 50
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "brownie",
+     "name": "Chocolate brownie",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 2297,
+   "total_pence": 2697,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:20:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "169",
+   "name": "Sarah Ahmed",
+   "phone": "+447700900621",
+   "fulfilment": "delivery",
+   "address": "31 Bobbin Court (example)",
+   "postcode": "NG2 2BF",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T19:50:00.000Z",
+   "ready_at": "2026-10-10T19:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "lemonade",
+     "name": "Sprite",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_can",
+       "name": "can",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      },
+      {
+       "key": "extra_cheese",
+       "name": "extra cheese",
+       "price_pence": 80
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "classic_burger",
+     "name": "Classic beef burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1858,
+   "total_pence": 2158,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:21:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "170",
+   "name": "Sophie Shah",
+   "phone": "+447700900920",
+   "fulfilment": "delivery",
+   "address": "10 Kiln Street (example)",
+   "postcode": "NG3 1XN",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T20:20:00.000Z",
+   "ready_at": "2026-10-10T19:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "veggie_burger",
+     "name": "Veggie burger",
+     "quantity": 1,
+     "unit_pence": 599,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "spicy_chicken_burger",
+     "name": "Firebird spicy burger",
+     "quantity": 1,
+     "unit_pence": 679,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2077,
+   "total_pence": 2477,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:33:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "171",
+   "name": "Lucy Ahmed",
+   "phone": "+447700900278",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T20:00:00.000Z",
+   "ready_at": "2026-10-10T20:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "chicken_burger",
+       "name": "Crispy chicken burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2297,
+   "total_pence": 2297,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:35:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "172",
+   "name": "Callum Begum",
+   "phone": "+447700900222",
+   "fulfilment": "delivery",
+   "address": "34 Foundry Lane (example)",
+   "postcode": "NG1 8YU",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T20:00:00.000Z",
+   "ready_at": "2026-10-10T19:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "veggie_burger",
+       "name": "Veggie burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      },
+      {
+       "key": "extra_patty",
+       "name": "extra beef patty",
+       "price_pence": 200
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1698,
+   "total_pence": 1998,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:37:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "173",
+   "name": "Ben Okafor",
+   "phone": "+447700900862",
+   "fulfilment": "delivery",
+   "address": "60 Canalside Walk (example)",
+   "postcode": "NG2 5NQ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T20:00:00.000Z",
+   "ready_at": "2026-10-10T19:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "spicy_chicken_wrap",
+     "name": "Spicy chicken wrap",
+     "quantity": 1,
+     "unit_pence": 579,
+     "modifiers": [],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1558,
+   "total_pence": 1858,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:38:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "174",
+   "name": "Isla Mensah",
+   "phone": "+447700900494",
+   "fulfilment": "delivery",
+   "address": "89 Larch Close (example)",
+   "postcode": "NG1 1RD",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T20:10:00.000Z",
+   "ready_at": "2026-10-10T19:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "family_bucket",
+     "name": "Family bucket",
+     "quantity": 1,
+     "unit_pence": 2299,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "chicken_strips",
+       "name": "Three chicken strips",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 4077,
+   "total_pence": 4377,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:39:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "175",
+   "name": "Oliver Khan",
+   "phone": "+447700900471",
+   "fulfilment": "delivery",
+   "address": "11 Kiln Street (example)",
+   "postcode": "NG2 3XP",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T20:30:00.000Z",
+   "ready_at": "2026-10-10T20:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "ice_cream",
+     "name": "Vanilla ice cream tub",
+     "quantity": 1,
+     "unit_pence": 299,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "classic_burger",
+       "name": "Classic beef burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1747,
+   "total_pence": 2047,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:41:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "176",
+   "name": "Adam Price",
+   "phone": "+447700900040",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T20:10:00.000Z",
+   "ready_at": "2026-10-10T20:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "ice_cream",
+     "name": "Vanilla ice cream tub",
+     "quantity": 1,
+     "unit_pence": 299,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "brownie",
+     "name": "Chocolate brownie",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1447,
+   "total_pence": 1447,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:49:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "177",
+   "name": "Tom Evans",
+   "phone": "+447700900290",
+   "fulfilment": "delivery",
+   "address": "24 Foundry Lane (example)",
+   "postcode": "NG3 2WB",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T20:40:00.000Z",
+   "ready_at": "2026-10-10T20:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_wrap",
+     "name": "Chicken wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2147,
+   "total_pence": 2547,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:53:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "178",
+   "name": "Isla Brown",
+   "phone": "+447700900481",
+   "fulfilment": "delivery",
+   "address": "112 Larch Close (example)",
+   "postcode": "NG1 7ZE",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T20:40:00.000Z",
+   "ready_at": "2026-10-10T20:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "garlic_bread",
+     "name": "Garlic bread",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "spicy_chicken_burger",
+     "name": "Firebird spicy burger",
+     "quantity": 1,
+     "unit_pence": 679,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2007,
+   "total_pence": 2307,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T19:58:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "179",
+   "name": "Holly Okafor",
+   "phone": "+447700900487",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T20:40:00.000Z",
+   "ready_at": "2026-10-10T20:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "cheeseburger",
+     "name": "Cheeseburger",
+     "quantity": 1,
+     "unit_pence": 699,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "water",
+     "name": "Bottled water",
+     "quantity": 1,
+     "unit_pence": 100,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "cheeseburger",
+       "name": "Cheeseburger",
+       "price_pence": 50
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1798,
+   "total_pence": 1798,
+   "allergy_notes": "Coeliac",
+   "created_at": "2026-10-10T19:58:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "180",
+   "name": "James Murphy",
+   "phone": "+447700900007",
+   "fulfilment": "delivery",
+   "address": "27 Hosiery Row (example)",
+   "postcode": "NG3 2DT",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T20:30:00.000Z",
+   "ready_at": "2026-10-10T20:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "family_bucket",
+     "name": "Family bucket",
+     "quantity": 1,
+     "unit_pence": 2299,
+     "modifiers": [],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 2299,
+   "total_pence": 2699,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:06:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "181",
+   "name": "Callum Price",
+   "phone": "+447700900345",
+   "fulfilment": "delivery",
+   "address": "67 Lacemaker Road (example)",
+   "postcode": "NG1 4UU",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T21:00:00.000Z",
+   "ready_at": "2026-10-10T20:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "pepperoni",
+     "name": "Pepperoni",
+     "quantity": 1,
+     "unit_pence": 1049,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      },
+      {
+       "key": "pizza_mushrooms",
+       "name": "mushrooms",
+       "price_pence": 70
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 2218,
+   "total_pence": 2518,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:17:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "182",
+   "name": "Hannah Ahmed",
+   "phone": "+447700900592",
+   "fulfilment": "delivery",
+   "address": "57 Orchard Rise (example)",
+   "postcode": "NG2 3ER",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T21:00:00.000Z",
+   "ready_at": "2026-10-10T20:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "two_piece",
+     "name": "Two pieces of chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2227,
+   "total_pence": 2527,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:18:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "183",
+   "name": "Amara Hughes",
+   "phone": "+447700900601",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T21:00:00.000Z",
+   "ready_at": "2026-10-10T21:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_strips",
+     "name": "Three chicken strips",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 998,
+   "total_pence": 998,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:26:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "184",
+   "name": "James Murphy",
+   "phone": "+447700900108",
+   "fulfilment": "delivery",
+   "address": "27 Hosiery Row (example)",
+   "postcode": "NG3 5UQ",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T20:50:00.000Z",
+   "ready_at": "2026-10-10T20:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "classic_burger",
+       "name": "Classic beef burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "cheesy_fries",
+     "name": "Cheesy fries",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "spicy_chicken_burger",
+     "name": "Firebird spicy burger",
+     "quantity": 1,
+     "unit_pence": 679,
+     "modifiers": [],
+     "line": 3
+    },
+    {
+     "item_key": "family_bucket",
+     "name": "Family bucket",
+     "quantity": 1,
+     "unit_pence": 2299,
+     "modifiers": [],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 4276,
+   "total_pence": 4676,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:29:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "185",
+   "name": "Priya Hughes",
+   "phone": "+447700900776",
+   "fulfilment": "delivery",
+   "address": "58 Hosiery Row (example)",
+   "postcode": "NG3 9AH",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T20:50:00.000Z",
+   "ready_at": "2026-10-10T20:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "double_cheeseburger",
+       "name": "Double cheeseburger",
+       "price_pence": 250
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "garlic_bread",
+     "name": "Garlic bread",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "orange",
+     "name": "Fanta Orange",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_can",
+       "name": "can",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 2247,
+   "total_pence": 2647,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:30:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "186",
+   "name": "Joe Walker",
+   "phone": "+447700900156",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T21:10:00.000Z",
+   "ready_at": "2026-10-10T21:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "alcohol_1",
+     "name": "Craft lager",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "margherita",
+     "name": "Margherita",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      },
+      {
+       "key": "pizza_cheese",
+       "name": "extra cheese",
+       "price_pence": 100
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2548,
+   "total_pence": 2548,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:33:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "187",
+   "name": "Holly Okafor",
+   "phone": "+447700900914",
+   "fulfilment": "delivery",
+   "address": "36 Hosiery Row (example)",
+   "postcode": "NG1 9JQ",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T21:10:00.000Z",
+   "ready_at": "2026-10-10T20:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "double_cheeseburger",
+     "name": "Double cheeseburger",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [
+      {
+       "key": "turkey_rasher",
+       "name": "turkey rasher",
+       "price_pence": 120
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "brownie",
+     "name": "Chocolate brownie",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2167,
+   "total_pence": 2467,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:44:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "188",
+   "name": "Chloe Lewis",
+   "phone": "+447700900316",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T21:20:00.000Z",
+   "ready_at": "2026-10-10T21:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "popcorn_chicken",
+     "name": "Popcorn chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "chicken_strips",
+       "name": "Three chicken strips",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2047,
+   "total_pence": 2047,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:44:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "189",
+   "name": "James Hughes",
+   "phone": "+447700900399",
+   "fulfilment": "delivery",
+   "address": "24 Bobbin Court (example)",
+   "postcode": "NG1 2EA",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T21:20:00.000Z",
+   "ready_at": "2026-10-10T20:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "cheesy_fries",
+     "name": "Cheesy fries",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 3
+    },
+    {
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_regular",
+       "name": "regular",
+       "price_pence": 0
+      }
+     ],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 1646,
+   "total_pence": 1946,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:52:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "190",
+   "name": "Ravi Wright",
+   "phone": "+447700900379",
+   "fulfilment": "delivery",
+   "address": "71 Weaver Lane (example)",
+   "postcode": "NG1 9SF",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T21:20:00.000Z",
+   "ready_at": "2026-10-10T20:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "family_bucket",
+     "name": "Family bucket",
+     "quantity": 1,
+     "unit_pence": 2299,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 3777,
+   "total_pence": 4077,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:53:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "191",
+   "name": "Callum Kelly",
+   "phone": "+447700900453",
+   "fulfilment": "delivery",
+   "address": "1 Bobbin Court (example)",
+   "postcode": "NG3 1UB",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T21:40:00.000Z",
+   "ready_at": "2026-10-10T21:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_strips",
+     "name": "Three chicken strips",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "coleslaw",
+     "name": "Coleslaw",
+     "quantity": 1,
+     "unit_pence": 149,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "lemonade",
+     "name": "Sprite",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_can",
+       "name": "can",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "garlic_bread",
+     "name": "Garlic bread",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 4
+    },
+    {
+     "item_key": "cookie_dough",
+     "name": "Cookie dough",
+     "quantity": 1,
+     "unit_pence": 399,
+     "modifiers": [],
+     "line": 5
+    },
+    {
+     "item_key": "pepperoni",
+     "name": "Pepperoni",
+     "quantity": 1,
+     "unit_pence": 1049,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 6
+    }
+   ],
+   "subtotal_pence": 2595,
+   "total_pence": 2995,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T20:56:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "192",
+   "name": "Adam Hughes",
+   "phone": "+447700900633",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T21:50:00.000Z",
+   "ready_at": "2026-10-10T21:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "bbq_chicken",
+     "name": "BBQ chicken",
+     "quantity": 1,
+     "unit_pence": 1099,
+     "modifiers": [
+      {
+       "key": "size_12",
+       "name": "12 inch",
+       "price_pence": 300
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 2378,
+   "total_pence": 2378,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T21:05:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "completed"
+  },
+  {
+   "reference": "193",
+   "name": "Aisha Robinson",
+   "phone": "+447700900891",
+   "fulfilment": "delivery",
+   "address": "96 Foundry Lane (example)",
+   "postcode": "NG3 8ZP",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T21:50:00.000Z",
+   "ready_at": "2026-10-10T21:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "chicken_strips",
+       "name": "Three chicken strips",
+       "price_pence": 0
+      },
+      {
+       "key": "onion_rings",
+       "name": "Onion rings",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "cola",
+     "name": "Coca-Cola",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_can",
+       "name": "can",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "veggie_supreme",
+     "name": "Veggie supreme",
+     "quantity": 1,
+     "unit_pence": 999,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "popcorn_chicken",
+     "name": "Popcorn chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 2397,
+   "total_pence": 2797,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T21:25:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "194",
+   "name": "Niamh Hall",
+   "phone": "+447700900958",
+   "fulfilment": "delivery",
+   "address": "78 Canalside Walk (example)",
+   "postcode": "NG2 8HG",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T22:00:00.000Z",
+   "ready_at": "2026-10-10T21:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "two_piece",
+       "name": "Two pieces of chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "alcohol_1",
+     "name": "Craft lager",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "hot_and_spicy",
+     "name": "Hot and spicy",
+     "quantity": 1,
+     "unit_pence": 1099,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2348,
+   "total_pence": 2648,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T21:33:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "195",
+   "name": "Chris Bell",
+   "phone": "+447700900805",
+   "fulfilment": "delivery",
+   "address": "73 Mill Yard (example)",
+   "postcode": "NG1 7TT",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T22:20:00.000Z",
+   "ready_at": "2026-10-10T21:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "popcorn_chicken",
+     "name": "Popcorn chicken",
+     "quantity": 1,
+     "unit_pence": 449,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "brownie",
+     "name": "Chocolate brownie",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "veggie_burger",
+     "name": "Veggie burger",
+     "quantity": 1,
+     "unit_pence": 599,
+     "modifiers": [
+      {
+       "key": "extra_cheese",
+       "name": "extra cheese",
+       "price_pence": 80
+      }
+     ],
+     "line": 3
+    },
+    {
+     "item_key": "pepperoni",
+     "name": "Pepperoni",
+     "quantity": 1,
+     "unit_pence": 1049,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 4
+    }
+   ],
+   "subtotal_pence": 2526,
+   "total_pence": 2826,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T21:35:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "196",
+   "name": "Daniel Hughes",
+   "phone": "+447700900149",
+   "fulfilment": "delivery",
+   "address": "93 Lacemaker Road (example)",
+   "postcode": "NG2 4WW",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T22:30:00.000Z",
+   "ready_at": "2026-10-10T22:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "diet_cola",
+     "name": "Diet Coke",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_bottle",
+       "name": "1.25 litre bottle",
+       "price_pence": 200
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "double_cheeseburger",
+       "name": "Double cheeseburger",
+       "price_pence": 250
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "diet_cola",
+       "name": "Diet Coke",
+       "price_pence": 0
+      },
+      {
+       "key": "jalapenos",
+       "name": "jalapeños",
+       "price_pence": 50
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1599,
+   "total_pence": 1899,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T21:41:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "197",
+   "name": "Mohammed Ahmed",
+   "phone": "+447700900994",
+   "fulfilment": "delivery",
+   "address": "48 Brewhouse Yard (example)",
+   "postcode": "NG1 2SB",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T22:10:00.000Z",
+   "ready_at": "2026-10-10T21:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "pepperoni",
+     "name": "Pepperoni",
+     "quantity": 1,
+     "unit_pence": 1049,
+     "modifiers": [
+      {
+       "key": "size_10",
+       "name": "10 inch",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "cheesy_fries",
+     "name": "Cheesy fries",
+     "quantity": 1,
+     "unit_pence": 349,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_wrap",
+     "name": "Chicken wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1947,
+   "total_pence": 2247,
+   "allergy_notes": "Vegan",
+   "created_at": "2026-10-10T21:43:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "completed"
+  },
+  {
+   "reference": "198",
+   "name": "Kwame Robinson",
+   "phone": "+447700900289",
+   "fulfilment": "delivery",
+   "address": "36 Mill Yard (example)",
+   "postcode": "NG2 1AG",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T22:40:00.000Z",
+   "ready_at": "2026-10-10T22:10:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "popcorn_chicken",
+       "name": "Popcorn chicken",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1598,
+   "total_pence": 1898,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T21:53:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "out_for_delivery",
+   "out_at": "2026-10-10T22:12:00.000Z"
+  },
+  {
+   "reference": "199",
+   "name": "Adam Lewis",
+   "phone": "+447700900995",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T22:30:00.000Z",
+   "ready_at": "2026-10-10T22:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "fries",
+     "name": "Fries",
+     "quantity": 1,
+     "unit_pence": 249,
+     "modifiers": [
+      {
+       "key": "fries_regular",
+       "name": "regular",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "spicy_chicken_burger",
+     "name": "Firebird spicy burger",
+     "quantity": 1,
+     "unit_pence": 679,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1907,
+   "total_pence": 1907,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T21:54:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "ready"
+  },
+  {
+   "reference": "200",
+   "name": "Kwame Wood",
+   "phone": "+447700900326",
+   "fulfilment": "delivery",
+   "address": "99 Mill Yard (example)",
+   "postcode": "NG3 7SN",
+   "delivery_fee_pence": 400,
+   "due_at": "2026-10-10T22:20:00.000Z",
+   "ready_at": "2026-10-10T21:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "family_bucket",
+     "name": "Family bucket",
+     "quantity": 1,
+     "unit_pence": 2299,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "hot_wings",
+     "name": "Six hot wings",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 2798,
+   "total_pence": 3198,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T21:55:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Bea",
+   "status": "completed"
+  },
+  {
+   "reference": "201",
+   "name": "Holly Wright",
+   "phone": "+447700900721",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T22:40:00.000Z",
+   "ready_at": "2026-10-10T22:40:00.000Z",
+   "lines": [
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "chicken_burger",
+       "name": "Crispy chicken burger",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    },
+    {
+     "item_key": "double_cheeseburger",
+     "name": "Double cheeseburger",
+     "quantity": 1,
+     "unit_pence": 899,
+     "modifiers": [],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 1848,
+   "total_pence": 1848,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T21:55:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "ready"
+  },
+  {
+   "reference": "202",
+   "name": "Aisha Ahmed",
+   "phone": "+447700900681",
+   "fulfilment": "delivery",
+   "address": "5 Canalside Walk (example)",
+   "postcode": "NG1 7BS",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T22:50:00.000Z",
+   "ready_at": "2026-10-10T22:20:00.000Z",
+   "lines": [
+    {
+     "item_key": "halloumi_wrap",
+     "name": "Halloumi wrap",
+     "quantity": 1,
+     "unit_pence": 549,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "burger_meal",
+     "name": "Burger meal",
+     "quantity": 1,
+     "unit_pence": 949,
+     "modifiers": [
+      {
+       "key": "spicy_chicken_burger",
+       "name": "Firebird spicy burger",
+       "price_pence": 30
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "lemonade",
+       "name": "Sprite",
+       "price_pence": 0
+      }
+     ],
+     "line": 2
+    },
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "cola",
+       "name": "Coca-Cola",
+       "price_pence": 0
+      }
+     ],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 2327,
+   "total_pence": 2627,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T22:01:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "out_for_delivery",
+   "out_at": "2026-10-10T22:22:00.000Z"
+  },
+  {
+   "reference": "203",
+   "name": "Liam Wood",
+   "phone": "+447700900150",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T22:50:00.000Z",
+   "ready_at": "2026-10-10T22:50:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_strips",
+     "name": "Three chicken strips",
+     "quantity": 1,
+     "unit_pence": 499,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "cola",
+     "name": "Coca-Cola",
+     "quantity": 1,
+     "unit_pence": 150,
+     "modifiers": [
+      {
+       "key": "drink_bottle",
+       "name": "1.25 litre bottle",
+       "price_pence": 200
+      }
+     ],
+     "line": 2
+    }
+   ],
+   "subtotal_pence": 849,
+   "total_pence": 849,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T22:02:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "in_kitchen"
+  },
+  {
+   "reference": "204",
+   "name": "Ethan Brown",
+   "phone": "+447700900192",
+   "fulfilment": "collection",
+   "address": null,
+   "postcode": null,
+   "delivery_fee_pence": 0,
+   "due_at": "2026-10-10T23:00:00.000Z",
+   "ready_at": "2026-10-10T23:00:00.000Z",
+   "lines": [
+    {
+     "item_key": "chicken_box",
+     "name": "Chicken box",
+     "quantity": 1,
+     "unit_pence": 799,
+     "modifiers": [
+      {
+       "key": "hot_wings",
+       "name": "Six hot wings",
+       "price_pence": 0
+      },
+      {
+       "key": "fries",
+       "name": "Fries",
+       "price_pence": 0
+      },
+      {
+       "key": "orange",
+       "name": "Fanta Orange",
+       "price_pence": 0
+      }
+     ],
+     "line": 1
+    }
+   ],
+   "subtotal_pence": 799,
+   "total_pence": 799,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T22:11:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "status": "in_kitchen"
+  },
+  {
+   "reference": "205",
+   "name": "Amy Clarke",
+   "phone": "+447700900801",
+   "fulfilment": "delivery",
+   "address": "77 Foundry Lane (example)",
+   "postcode": "NG2 5DD",
+   "delivery_fee_pence": 300,
+   "due_at": "2026-10-10T23:00:00.000Z",
+   "ready_at": "2026-10-10T22:30:00.000Z",
+   "lines": [
+    {
+     "item_key": "veggie_burger",
+     "name": "Veggie burger",
+     "quantity": 1,
+     "unit_pence": 599,
+     "modifiers": [],
+     "line": 1
+    },
+    {
+     "item_key": "chicken_burger",
+     "name": "Crispy chicken burger",
+     "quantity": 1,
+     "unit_pence": 649,
+     "modifiers": [],
+     "line": 2
+    },
+    {
+     "item_key": "cheeseburger",
+     "name": "Cheeseburger",
+     "quantity": 1,
+     "unit_pence": 699,
+     "modifiers": [],
+     "line": 3
+    }
+   ],
+   "subtotal_pence": 1947,
+   "total_pence": 2247,
+   "allergy_notes": null,
+   "created_at": "2026-10-10T22:15:00.000Z",
+   "payment_status": "paid",
+   "pay_note": null,
+   "driver": "Ali",
+   "status": "out_for_delivery",
+   "out_at": "2026-10-10T22:32:00.000Z"
+  }
+ ],
+ "messages": [
+  {
+   "from_name": "Sarah Collins",
+   "from_phone": "+447700900616",
+   "body": "Wanting 30 wraps and some fries for an office lunch next Friday. Please call back with a price."
+  },
+  {
+   "from_name": "Priya Ahmed",
+   "from_phone": "+447700900173",
+   "body": "Asking whether you are hiring delivery drivers for weekends."
+  }
+ ]
+}

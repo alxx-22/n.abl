@@ -1,0 +1,35 @@
+#cloud-config
+# n.abl Reception on an Oracle Cloud Always Free server.
+#
+# Fill in the four values below, then paste this whole file into
+# "Show advanced options" → "Management" → "Paste cloud-init script" when you
+# create the instance (image Canonical Ubuntu 24.04, shape VM.Standard.A1.Flex).
+# The server sets itself up in about ten minutes. Guide: deploy/oracle/README.md
+#
+# The values are kept on the server in /opt/nabl/secrets.env, readable by root
+# only. To change one later: sudo nano /opt/nabl/secrets.env, then
+# sudo nabl deploy.
+
+write_files:
+  - path: /opt/nabl/secrets.env
+    permissions: "0600"
+    content: |
+      # Google AI Studio key (aistudio.google.com/apikey).
+      GEMINI_API_KEY=PASTE-HERE
+
+      # Supabase → the project → Connect → Session pooler, with the database
+      # password in place of [YOUR-PASSWORD]. It starts
+      # postgresql://postgres.auivrancfnrdwyiqoakt:
+      DATABASE_URL=PASTE-HERE
+
+      # The team console's password. Make one up: long.
+      CONSOLE_PASSWORD=PASTE-HERE
+
+      # Make one up (long, letters and numbers), and give the site's Worker
+      # the same value as its DEMO_PROXY_SECRET in Cloudflare.
+      DEMO_PROXY_SECRET=PASTE-HERE
+
+runcmd:
+  - mkdir -p /opt/nabl
+  - curl -fsSL -o /opt/nabl/nabl.sh https://raw.githubusercontent.com/alxx-22/n.abl/voice-agent-DEV/demo-products/voice-agent/deploy/oracle/nabl.sh
+  - bash /opt/nabl/nabl.sh install >> /var/log/nabl-install.log 2>&1

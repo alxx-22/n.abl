@@ -1,0 +1,606 @@
+{
+  "_about": "The Weaver's Arms' sample menu (presets/pub.md §2.2): allergens on every item and option; Sunday roasts; draught priced by the half with a pint as the option (an option is never negative), cask ales (today's names come from Today); wine in the three glass sizes the law asks for; a gluten-free lager marked gluten-free, brewed without barley; alcohol-free beer.",
+  "menu": {
+    "allergen_statement": "Everything is cooked in one kitchen that uses nuts, gluten, milk, eggs, fish and mustard, so we can't promise any dish is free from traces. Tell us about any allergy and the kitchen will take care.",
+    "modifier_groups": {
+      "wine_glass": {
+        "label": "Glass",
+        "min": 1,
+        "max": 1,
+        "options": [
+          {
+            "key": "small",
+            "name": "125ml",
+            "price_pence": 0,
+            "aliases": [
+              "small",
+              "125"
+            ]
+          },
+          {
+            "key": "medium",
+            "name": "175ml",
+            "price_pence": 150,
+            "aliases": [
+              "medium",
+              "175"
+            ]
+          },
+          {
+            "key": "large",
+            "name": "250ml",
+            "price_pence": 350,
+            "aliases": [
+              "large",
+              "250"
+            ]
+          },
+          {
+            "key": "bottle",
+            "name": "bottle",
+            "price_pence": 1700,
+            "aliases": [
+              "bottle"
+            ]
+          }
+        ]
+      },
+      "burger_extra": {
+        "label": "Add",
+        "min": 0,
+        "max": 2,
+        "options": [
+          {
+            "key": "cheese",
+            "name": "cheese",
+            "price_pence": 100,
+            "allergens": [
+              "milk"
+            ]
+          },
+          {
+            "key": "bacon",
+            "name": "bacon",
+            "price_pence": 150
+          }
+        ]
+      },
+      "measure_ale": {
+        "label": "Measure",
+        "min": 1,
+        "max": 1,
+        "options": [
+          {
+            "key": "half",
+            "name": "half",
+            "price_pence": 0,
+            "aliases": [
+              "half",
+              "half pint",
+              "a half"
+            ]
+          },
+          {
+            "key": "pint",
+            "name": "pint",
+            "price_pence": 230,
+            "aliases": [
+              "pint",
+              "a pint"
+            ]
+          }
+        ]
+      },
+      "measure_lager": {
+        "label": "Measure",
+        "min": 1,
+        "max": 1,
+        "options": [
+          {
+            "key": "half",
+            "name": "half",
+            "price_pence": 0,
+            "aliases": [
+              "half",
+              "half pint",
+              "a half"
+            ]
+          },
+          {
+            "key": "pint",
+            "name": "pint",
+            "price_pence": 260,
+            "aliases": [
+              "pint",
+              "a pint"
+            ]
+          }
+        ]
+      },
+      "measure_stout": {
+        "label": "Measure",
+        "min": 1,
+        "max": 1,
+        "options": [
+          {
+            "key": "half",
+            "name": "half",
+            "price_pence": 0,
+            "aliases": [
+              "half",
+              "half pint",
+              "a half"
+            ]
+          },
+          {
+            "key": "pint",
+            "name": "pint",
+            "price_pence": 280,
+            "aliases": [
+              "pint",
+              "a pint"
+            ]
+          }
+        ]
+      },
+      "measure_cider": {
+        "label": "Measure",
+        "min": 1,
+        "max": 1,
+        "options": [
+          {
+            "key": "half",
+            "name": "half",
+            "price_pence": 0,
+            "aliases": [
+              "half",
+              "half pint",
+              "a half"
+            ]
+          },
+          {
+            "key": "pint",
+            "name": "pint",
+            "price_pence": 250,
+            "aliases": [
+              "pint",
+              "a pint"
+            ]
+          }
+        ]
+      }
+    },
+    "categories": [
+      {
+        "key": "starters",
+        "label": "Starters",
+        "items": [
+          {
+            "key": "soup",
+            "name": "Soup of the day with bread",
+            "price_pence": 650,
+            "allergens": [
+              "celery",
+              "gluten",
+              "milk"
+            ],
+            "dietary": [
+              "vegetarian"
+            ]
+          },
+          {
+            "key": "whitebait",
+            "name": "Whitebait with tartare sauce",
+            "price_pence": 750,
+            "allergens": [
+              "fish",
+              "gluten",
+              "eggs",
+              "mustard"
+            ]
+          },
+          {
+            "key": "garlic_mushrooms",
+            "name": "Garlic mushrooms on toast",
+            "price_pence": 700,
+            "allergens": [
+              "gluten",
+              "milk"
+            ],
+            "dietary": [
+              "vegetarian"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "mains",
+        "label": "Pub classics",
+        "items": [
+          {
+            "key": "fish_and_chips",
+            "name": "Beer-battered fish and chips",
+            "price_pence": 1650,
+            "allergens": [
+              "fish",
+              "gluten"
+            ],
+            "description": "With mushy peas and tartare sauce (eggs, mustard)."
+          },
+          {
+            "key": "burger",
+            "name": "Weaver's burger",
+            "price_pence": 1550,
+            "allergens": [
+              "gluten",
+              "eggs",
+              "mustard",
+              "sesame"
+            ],
+            "description": "Beef burger in a brioche bun with fries.",
+            "modifier_groups": [
+              "burger_extra"
+            ]
+          },
+          {
+            "key": "pie",
+            "name": "Pie of the day",
+            "price_pence": 1600,
+            "allergens": [
+              "gluten",
+              "milk",
+              "celery"
+            ],
+            "description": "With mash or chips and greens."
+          },
+          {
+            "key": "sausage_mash",
+            "name": "Sausage and mash",
+            "price_pence": 1450,
+            "allergens": [
+              "gluten",
+              "milk",
+              "sulphites",
+              "mustard"
+            ]
+          },
+          {
+            "key": "mushroom_risotto",
+            "name": "Wild mushroom risotto",
+            "price_pence": 1400,
+            "allergens": [
+              "milk",
+              "celery",
+              "sulphites"
+            ],
+            "dietary": [
+              "vegetarian"
+            ]
+          },
+          {
+            "key": "chickpea_curry",
+            "name": "Chickpea and spinach curry",
+            "price_pence": 1350,
+            "allergens": [
+              "mustard"
+            ],
+            "dietary": [
+              "vegan"
+            ],
+            "description": "With rice. Made without gluten ingredients."
+          }
+        ]
+      },
+      {
+        "key": "sunday",
+        "label": "Sunday roasts (Sundays, until 6pm)",
+        "items": [
+          {
+            "key": "roast_beef",
+            "name": "Roast beef",
+            "price_pence": 1895,
+            "allergens": [
+              "gluten",
+              "eggs",
+              "milk",
+              "celery",
+              "mustard"
+            ],
+            "description": "With Yorkshire pudding, roast potatoes, seasonal veg and gravy."
+          },
+          {
+            "key": "roast_pork",
+            "name": "Roast pork",
+            "price_pence": 1795,
+            "allergens": [
+              "gluten",
+              "eggs",
+              "milk",
+              "celery"
+            ],
+            "description": "With crackling, apple sauce, Yorkshire pudding and gravy."
+          },
+          {
+            "key": "nut_roast",
+            "name": "Nut roast",
+            "price_pence": 1595,
+            "allergens": [
+              "nuts",
+              "gluten",
+              "celery"
+            ],
+            "dietary": [
+              "vegan"
+            ],
+            "description": "With roast potatoes, seasonal veg and vegan gravy."
+          },
+          {
+            "key": "kids_roast",
+            "name": "Children's roast",
+            "price_pence": 900,
+            "allergens": [
+              "gluten",
+              "eggs",
+              "milk",
+              "celery"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "children",
+        "label": "Children's menu",
+        "items": [
+          {
+            "key": "kids_fish",
+            "name": "Fish fingers and chips",
+            "price_pence": 750,
+            "allergens": [
+              "fish",
+              "gluten"
+            ]
+          },
+          {
+            "key": "kids_sausage",
+            "name": "Sausage and mash",
+            "price_pence": 750,
+            "allergens": [
+              "gluten",
+              "milk",
+              "sulphites"
+            ]
+          },
+          {
+            "key": "kids_pasta",
+            "name": "Pasta in tomato sauce",
+            "price_pence": 650,
+            "allergens": [
+              "gluten"
+            ],
+            "dietary": [
+              "vegan"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "desserts",
+        "label": "Desserts",
+        "items": [
+          {
+            "key": "sticky_toffee",
+            "name": "Sticky toffee pudding",
+            "price_pence": 750,
+            "allergens": [
+              "gluten",
+              "eggs",
+              "milk"
+            ],
+            "dietary": [
+              "vegetarian"
+            ]
+          },
+          {
+            "key": "crumble",
+            "name": "Apple crumble and custard",
+            "price_pence": 700,
+            "allergens": [
+              "gluten",
+              "milk",
+              "eggs"
+            ],
+            "dietary": [
+              "vegetarian"
+            ]
+          },
+          {
+            "key": "brownie",
+            "name": "Chocolate brownie with ice cream",
+            "price_pence": 700,
+            "allergens": [
+              "eggs",
+              "milk",
+              "soya"
+            ],
+            "dietary": [
+              "vegetarian"
+            ],
+            "description": "Made without gluten ingredients."
+          },
+          {
+            "key": "sorbet",
+            "name": "Lemon sorbet",
+            "price_pence": 550,
+            "allergens": [],
+            "dietary": [
+              "vegan"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ales",
+        "label": "Cask ales",
+        "items": [
+          {
+            "key": "cask_ale",
+            "name": "Cask ale",
+            "price_pence": 230,
+            "allergens": [
+              "gluten"
+            ],
+            "description": "Four on tap, changing every few days: today's on the board. £2.30 a half, £4.60 a pint.",
+            "modifier_groups": [
+              "measure_ale"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "beer_cider",
+        "label": "Lager, stout and cider",
+        "items": [
+          {
+            "key": "lager",
+            "name": "Lager",
+            "price_pence": 260,
+            "allergens": [
+              "gluten"
+            ],
+            "modifier_groups": [
+              "measure_lager"
+            ],
+            "description": "£2.60 a half, £5.20 a pint."
+          },
+          {
+            "key": "stout",
+            "name": "Guinness",
+            "price_pence": 280,
+            "allergens": [
+              "gluten"
+            ],
+            "modifier_groups": [
+              "measure_stout"
+            ],
+            "description": "£2.80 a half, £5.60 a pint."
+          },
+          {
+            "key": "cider",
+            "name": "Cider",
+            "price_pence": 250,
+            "allergens": [
+              "sulphites"
+            ],
+            "modifier_groups": [
+              "measure_cider"
+            ],
+            "description": "£2.50 a half, £5.00 a pint."
+          },
+          {
+            "key": "gf_lager",
+            "name": "Gluten-free lager (bottle)",
+            "price_pence": 500,
+            "allergens": [],
+            "dietary": [
+              "gluten-free",
+              "vegan"
+            ],
+            "description": "Brewed without barley (example)."
+          },
+          {
+            "key": "af_beer",
+            "name": "Alcohol-free beer (bottle)",
+            "price_pence": 400,
+            "allergens": [
+              "gluten"
+            ],
+            "dietary": [
+              "vegan"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "wine",
+        "label": "Wine",
+        "items": [
+          {
+            "key": "house_red",
+            "name": "House red",
+            "price_pence": 550,
+            "allergens": [
+              "sulphites"
+            ],
+            "dietary": [
+              "vegan"
+            ],
+            "modifier_groups": [
+              "wine_glass"
+            ]
+          },
+          {
+            "key": "house_white",
+            "name": "House white",
+            "price_pence": 550,
+            "allergens": [
+              "sulphites"
+            ],
+            "dietary": [
+              "vegan"
+            ],
+            "modifier_groups": [
+              "wine_glass"
+            ]
+          },
+          {
+            "key": "rose",
+            "name": "Rosé",
+            "price_pence": 550,
+            "allergens": [
+              "sulphites"
+            ],
+            "dietary": [
+              "vegan"
+            ],
+            "modifier_groups": [
+              "wine_glass"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "soft",
+        "label": "Soft drinks",
+        "items": [
+          {
+            "key": "cola",
+            "name": "Cola",
+            "price_pence": 350,
+            "allergens": [],
+            "dietary": [
+              "vegan"
+            ]
+          },
+          {
+            "key": "lemonade",
+            "name": "Lemonade",
+            "price_pence": 320,
+            "allergens": [],
+            "dietary": [
+              "vegan"
+            ]
+          },
+          {
+            "key": "j2o",
+            "name": "Fruit juice",
+            "price_pence": 330,
+            "allergens": [],
+            "dietary": [
+              "vegan"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

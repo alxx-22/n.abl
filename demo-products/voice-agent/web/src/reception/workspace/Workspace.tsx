@@ -1,0 +1,337 @@
+// The live workspace: ring the receptionist on the left, watch the back
+// office in the middle, and the customer's phone on the right. Everything a
+// call does arrives over the event stream and lands on all three at once.
+// The call and the phone can slide away to give the back office their room
+// (Panes.tsx); on a tablet or phone they open over it as drawers.
+
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { CALL_AS } from '../../../../src/presets/estate/personas.ts';
+import { MT_CALL_AS } from '../../../../src/presets/maintenance/personas.ts';
+import { normaliseUkPhone } from '../../../../src/domain/phone.ts';
+import { TK_CALL_AS } from '../../../../src/presets/takeaway/personas.ts';
+import { BB_CALL_AS } from '../../../../src/presets/barber/personas.ts';
+import { CF_CALL_AS } from '../../../../src/presets/cafe/personas.ts';
+import { PB_CALL_AS } from '../../../../src/presets/pub/personas.ts';
+import { ApiError, DEMO_API, demoApi } from '../../api.ts';
+import { MicIcon, PhoneIcon, ResetIcon, SlidersIcon } from '../../components/Icons.tsx';
+import { DemoClock } from './DemoClock.tsx';
+import { LivePanel } from '../../components/LivePanel.tsx';
+import { SettingsDialog } from '../../components/SettingsDialog.tsx';
+import { toast } from '../../components/Toaster.tsx';
+import { initialStream, streamReducer } from '../../live/stream.ts';
+import { useLiveCall } from '../../live/useLiveCall.ts';
+import { Link } from '../../router.tsx';
+import type { BoardEvent } from '../../types.ts';
+import { R, RxTop, minutesUntil } from '../Reception.tsx';
+import { keepInStrip, useBand } from '../bands.ts';
+import { DISCLAIMER } from '../disclaimer.ts';
+import { brandStyle } from '../brand.ts';
+import type { LiveBooking, LiveState, Me } from '../types.ts';
+import { BookingDrawer } from './BookingDrawer.tsx';
+import type { View } from './FloorBoard.tsx';
+import { bookingOn, hhmm, keptFor, localNow, servicesOn } from './model.ts';
+import { Bookmark, CallResize, PaneCaret, usePanes } from './Panes.tsx';
+import { Phone, usePhoneNumber } from './Phone.tsx';
+import { fallbackSpec, focusTab, resetConfirm, resetToast, suggestionsFor } from './spec.ts';
+import { viewsOf, type ViewId } from './views.tsx';
+
+export function Workspace({ id, me, onUsage }: { id: string; me: Me; onUsage: () => void }) {
+  const [state, setState] = useState<LiveState | null>(null);
+  const [card, setCard] = useState<{ spoken: string; expiry: string; cvc: string } | null>(null);
+  /** null: the spec's first view. */
+  const [tab, setTab] = useState<ViewId | null>(null);
+  const [view, setView] = useState<View | null>(null);
+  const [selected, setSelected] = useState<{ ref: string } | null>(null);
+  const [flash, setFlash] = useState<Set<string>>(new Set());
+  const [tick, setTick] = useState(0);
+  const [clock, setClock] = useState(Date.now());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [stream, dispatch] = useReducer(streamReducer, initialStream);
+  const [number, setNumber] = usePhoneNumber(id);
+  const numberRef = useRef(number);
+  numberRef.current = number;
+  const live = useLiveCall({ workspace: id }, toast, () => numberRef.current);
+  const [texts, setTexts] = useState(-1);
+  const panes = usePanes(live.phase === 'live' || live.phase === 'connecting' || Boolean(stream.call?.live), texts);
+  /** A phone's top bar keeps to one row, so its minutes chip is the short one. */
+  const phone = useBand() === 'phone';
+  const tabStrip = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  /** Set when the demo has been deleted (a shared demo's hour is up, or it was replaced). */
+  const [gone, setGone] = useState<string | null>(null);
+  const failed = useCallback((e: Error) => {
+    if (e instanceof ApiError && (e.status === 410 || e.status === 404)) setGone(e.message);
+    else toast(e.message);
+  }, []);
+
+  /** `fresh`: the day and time shown are worked out again, as on opening (the demo's clock has moved). */
+  const refresh = useCallback(async (fresh = false) => {
+    const s = await demoApi<LiveState>(`/workspaces/${id}/state`);
+    setState(s);
+    setTick((t) => t + 1);
+    setView((v) => {
+      if (v && !fresh) return v;
+      // The demo's own time when its clock is set: Friday's dinner, not whenever the real time is.
+      const now = localNow(s.tenant.timezone, new Date(Date.now() + (s.clock_offset_ms ?? 0)));
+      const services = servicesOn(s, now.date);
+      const inService = services.some((x) => now.minutes >= x.open - 30 && now.minutes <= x.close);
+      return { date: now.date, minute: inService || !services.length ? now.minutes : (services.find((x) => x.open > now.minutes) ?? services[services.length - 1]).open + 60 };
+    });
+  }, [id]);
+
+  const refreshSoon = useCallback(() => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => refresh().catch(failed), 250);
+  }, [refresh, failed]);
+
+  useEffect(() => {
+    demoApi<{ demo_cards: { spoken: string; expiry: string; cvc: string; result: string }[] }>('/config')
+      .then((c) => setCard(c.demo_cards.find((d) => d.result === 'approve') ?? null))
+      .catch(() => {});
+    refresh().catch(failed);
+    const es = new EventSource(`${DEMO_API}/workspaces/${id}/events`);
+    es.onmessage = (m) => {
+      const e = JSON.parse(m.data) as BoardEvent;
+      if (e.type === 'refresh' && (e as { reason?: string }).reason === 'deleted') {
+        setGone('This demo has been deleted, with everything in it.');
+        es.close();
+        return;
+      }
+      dispatch({ type: 'event', event: e });
+      // Whatever a tool did may show in the back office; only the goodbye changes nothing.
+      if ((e.type === 'action' && e.action.kind !== 'call_ending') || e.type === 'call_ended' || e.type === 'refresh' || e.type === 'call_started') refreshSoon();
+      if (e.type === 'call_ended') onUsage();
+    };
+    es.onerror = () => setTimeout(refreshSoon, 2000);
+    const clockTimer = setInterval(() => setClock(Date.now()), 30000);
+    return () => {
+      es.close();
+      clearTimeout(timer.current);
+      clearInterval(clockTimer);
+    };
+  }, [id, refresh, refreshSoon, onUsage, failed]);
+
+  // A booking made or changed on the call: jump to its day and time, flash
+  // its table, and bring forward the first view that shows bookings, unless
+  // one already is.
+  useEffect(() => {
+    if (!stream.focusRef || !state) return;
+    const b = state.bookings.find((x) => x.reference === stream.focusRef);
+    // A repairs job raised or changed on the call: flash its card and bring the jobs board forward.
+    const job = b ? undefined : state.jobs?.find((x) => x.reference === stream.focusRef);
+    if (job) {
+      setFlash(new Set([job.reference]));
+      setTab((t) => focusTab(viewsOf(state.workspace ?? fallbackSpec(state), state), t, 'jobs'));
+      dispatch({ type: 'focused' });
+      const t = setTimeout(() => setFlash(new Set()), 3500);
+      return () => clearTimeout(t);
+    }
+    if (!b) return;
+    setView({ date: b.date, minute: Number(b.time.slice(0, 2)) * 60 + Number(b.time.slice(3, 5)) });
+    setFlash(new Set(b.tables));
+    const views = viewsOf(state.workspace ?? fallbackSpec(state), state);
+    setTab((t) => focusTab(views, t, 'bookings'));
+    dispatch({ type: 'focused' });
+    const t = setTimeout(() => setFlash(new Set()), 3500);
+    return () => clearTimeout(t);
+  }, [stream.focusRef, state]);
+
+  useEffect(() => {
+    if (state) document.title = `${state.tenant.name} · your demo · n.abl`;
+  }, [state?.tenant.name]);
+
+  // On a phone the tabs scroll sideways: the chosen one stays in view, even when a call chose it.
+  useEffect(() => keepInStrip(tabStrip.current?.querySelector('[aria-selected=true]'), tabStrip.current), [tab, state?.workspace, panes.band]);
+
+  if (gone) {
+    return (
+      <>
+        <RxTop me={me} />
+        <main className="rx-main">
+          <section className="panel ended">
+            <h1>This demo has ended</h1>
+            <p className="muted">{gone}</p>
+            <Link to={`${R}/new`} className="button primary">Build another</Link>
+          </section>
+        </main>
+      </>
+    );
+  }
+  if (!state || !view) {
+    return (
+      <>
+        <RxTop me={me} />
+        <main className="rx-main"><p className="empty">Opening your demo…</p></main>
+      </>
+    );
+  }
+  if (!state.started_at) {
+    return (
+      <>
+        <RxTop me={me} />
+        <main className="rx-main">
+          <p>This demo has not been started yet. <Link to={`${R}/build/${id}`}>Finish the setup</Link> and press Start.</p>
+        </main>
+      </>
+    );
+  }
+
+  const spec = state.workspace ?? fallbackSpec(state);
+  const views = viewsOf(spec, state);
+  const current = views.find((v) => v.id === tab) ?? views[0];
+  // The workspace's own clock: the board, the timers and the phone keep to it; the expiry badge keeps to real time.
+  const demoClock = clock + (state.clock_offset_ms ?? 0);
+  const now = localNow(state.tenant.timezone, new Date(demoClock));
+  const t = state.tenant;
+  const brand = t.brand ?? {};
+  const style = brandStyle({ accent: brand.accent ?? t.accent, primary: brand.primary, background: brand.background, font_heading: brand.font_heading, font_body: brand.font_body });
+  const booking: LiveBooking | null = selected ? state.bookings.find((b) => b.reference === selected.ref) ?? null : null;
+  const minutesLeft = Math.max(0, me.limits.call_minutes_per_day - me.used.call_minutes);
+  /** A shared demo's deletion: "in 45 min", or "now". */
+  const goes = state.expires_at ? minutesUntil(state.expires_at, clock) : null;
+
+  const selectTable = (key: string | null) => {
+    if (!key) return setSelected(null);
+    const b = bookingOn(state, key, view.date, view.minute);
+    setSelected(b ? { ref: b.reference } : null);
+    if (!b) {
+      const tb = state.plan?.tables.find((x) => x.key === key);
+      if (tb) toast(`${tb.label} (${tb.seats}) is free at ${hhmm(view.minute)}.${tb.bookable ? '' : keptFor(state, tb) === 'enquiry' ? ' It is for private hire, by enquiry.' : ' It is kept for walk-ins.'}`);
+    }
+  };
+  const moveBooking = async (b: LiveBooking, table: string) => {
+    try {
+      const r = await demoApi<{ message: string }>(`/workspaces/${id}/bookings/${b.reference}`, { method: 'PATCH', json: { action: 'move', table } });
+      toast(`${b.name}: ${r.message}`);
+      setSelected({ ref: b.reference });
+      refreshSoon();
+    } catch (e) {
+      toast((e as Error).message);
+    }
+  };
+  const dropOnTable = (from: string, to: string) => {
+    const b = bookingOn(state, from, view.date, view.minute);
+    if (b) void moveBooking(b, to);
+  };
+  const reset = async () => {
+    if (!confirm(resetConfirm(spec))) return;
+    try {
+      const r = await demoApi<{ bookings: number; orders: number; jobs?: number }>(`/workspaces/${id}/reset`, { method: 'POST' });
+      dispatch({ type: 'note', text: 'Demo reset.' });
+      setSelected(null);
+      await refresh();
+      toast(resetToast(spec, r));
+    } catch (e) {
+      toast((e as Error).message);
+    }
+  };
+
+  return (
+    <div className="workspace-page" style={style}>
+      <div className="accent-bar" />
+      {/* On a phone the bar keeps to one row: `keep` stays on it, the rest goes behind More (TopMenu.tsx). */}
+      <RxTop me={me} keep={<>
+        <span className="crumb">
+          {brand.logo ? <img src={brand.logo} alt="" className="logo-mini" /> : null}
+          <b>{t.name}</b>
+        </span>
+        {/* "30 min" on a phone: its words are in the sheet. A shared demo's deletion takes its place there (phone.css). */}
+        <span className={`badge minutes ${minutesLeft > 5 ? 'info' : 'bad'}`}>{phone ? `${minutesLeft} min` : <>{minutesLeft} call min left today</>}</span>
+        {/* On a phone "45 min left", short enough to leave the name some room; the sheet says what is deleted. */}
+        {state.expires_at && goes ? (
+          <span className={`badge expires ${new Date(state.expires_at).getTime() - clock < 10 * 60000 ? 'bad' : 'warn'}`} title="Shared demos are deleted an hour after Start, with everything in them.">
+            {phone && goes !== 'now' ? `${goes.replace(/^in /, '')} left` : <>Deleted {goes}</>}
+          </span>
+        ) : null}
+      </>}>
+        <span className="rx-phone-only">{minutesLeft} call minutes left today</span>
+        {goes ? <span className="rx-phone-only">This demo is deleted {goes}, with everything in it.</span> : null}
+        <button type="button" onClick={() => setSettingsOpen(true)} title="The receptionist's voice"><SlidersIcon /> Voice</button>
+        <Link to={`${R}/build/${id}`} className="button">Edit setup</Link>
+        {/* A new time works the day and time shown out again, without clearing them first: cleared, the whole page was drawn afresh and focus was lost from the bar. */}
+        {spec.clock ? (
+          <DemoClock
+            id={id} timeZone={t.timezone} realMs={clock} offsetMs={state.clock_offset_ms ?? 0} disabled={live.phase !== 'idle'}
+            onSet={(message) => { setSelected(null); refresh(true).catch(failed); toast(message); }}
+          />
+        ) : null}
+        <button type="button" onClick={reset} disabled={live.phase !== 'idle'} title="Reset the demo"><ResetIcon /> Reset</button>
+      </RxTop>
+
+      <main className={`workspace ${panes.className}`} style={panes.style}>
+        {/* The call and the phone: either side of the back office on a wide screen, one column on a laptop, drawers on a tablet or phone. */}
+        <div className="ws-side">
+          <div className="ws-call" id="ws-call" data-open={panes.isOpen('call') || undefined} role={panes.narrow ? 'dialog' : undefined} aria-label={panes.narrow ? 'The call' : undefined}>
+            <PaneCaret panes={panes} pane="call" />
+            <LivePanel
+              tenant={t} phase={live.phase} model={live.model} latencies={live.latencies} turn={live.turn} call={live.call}
+              stream={stream} card={card} onStart={live.start} onStop={live.stop} suggestions={suggestionsFor(spec, state)}
+            />
+            <p className="hint privacy">{DISCLAIMER}</p>
+          </div>
+          <div className="ws-phone" id="ws-phone" data-open={panes.isOpen('phone') || undefined} role={panes.narrow ? 'dialog' : undefined} aria-label={panes.narrow ? "The customer's phone" : undefined}>
+          <div className="pane-head"><PaneCaret panes={panes} pane="phone" /><b>Customer’s phone</b></div>
+          <Phone
+            id={id} onTexts={setTexts} number={number} setNumber={setNumber} sender={t.name} tick={tick} nowLabel={hhmm(now.minutes)}
+            callAs={t.business_type === 'estate_agent' ? CALL_AS : t.business_type === 'property_maintenance' ? [...MT_CALL_AS, ...ownCallAs(state)] : t.business_type === 'takeaway' ? TK_CALL_AS : t.business_type === 'barber' ? BB_CALL_AS : t.business_type === 'cafe' ? CF_CALL_AS : t.business_type === 'pub' ? PB_CALL_AS : []}
+            emptyHint={t.business_type === 'takeaway' ? 'No texts yet. Order on the call: the confirmation, and "on its way" when it goes out with a driver, land here.'
+              : t.business_type === 'barber' ? 'No texts yet. Book a cut on the call, and the confirmation lands here.'
+              : t.business_type === 'cafe' ? 'No texts yet. Book a table or afternoon tea on the call, and the confirmation lands here.'
+              : t.business_type === 'pub' ? 'No texts yet. Book a table on the call, and the confirmation lands here.' : undefined}
+            crew={state.engineers ? { engineers: state.engineers, clients: state.clients ?? [], jobs: state.jobs ?? [], quotes: state.quotes ?? [], today: now.date, onDone: refreshSoon } : undefined}
+          />
+          </div>
+        </div>
+        <CallResize panes={panes} />
+
+        <section className="ws-office panel" aria-label="Back office" inert={panes.drawer !== null}>
+          <div className="tabs" role="tablist" ref={tabStrip} onKeyDown={(e) => {
+            // Arrow keys move along the tabs, as in any tab strip.
+            const at = views.findIndex((v) => v.id === current?.id);
+            const to = e.key === 'ArrowRight' ? at + 1 : e.key === 'ArrowLeft' ? at - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? views.length - 1 : null;
+            if (to === null || !views.length) return;
+            e.preventDefault();
+            const v = views[(to + views.length) % views.length];
+            setTab(v.id);
+            (e.currentTarget.children[views.indexOf(v)] as HTMLElement | undefined)?.focus();
+          }}>
+            {views.map((v) => (
+              <button type="button" role="tab" key={v.id} aria-selected={current?.id === v.id} tabIndex={current?.id === v.id ? 0 : -1} onClick={() => setTab(v.id)}>{v.label}</button>
+            ))}
+          </div>
+          <div className="office-body">
+            {/* Keyed by the demo's clock: a new time starts the views again on its day, as opening the demo does (a view may keep a day of its own). */}
+            <div className="office-main" key={state.clock_offset_ms ?? 0}>
+              {current?.def.render({
+                id, state, spec, today: now.date, nowMinute: now.minutes, clock: demoClock, view, setView,
+                selected: booking?.tables[0] ?? null, onSelectTable: selectTable, onDrop: dropOnTable, flash,
+                onOpen: (b) => setSelected({ ref: b.reference }), onMove: moveBooking, refresh: refreshSoon,
+              })}
+            </div>
+            {booking && spec.bookings && current?.shows === 'bookings' ? (
+              <BookingDrawer
+                id={id} state={state} booking={booking} words={spec.bookings} onPlan={views.some((v) => v.id === 'floor')}
+                onClose={() => setSelected(null)} onDone={refreshSoon}
+              />
+            ) : null}
+          </div>
+        </section>
+        {panes.drawer ? <div className="ws-scrim" aria-hidden="true" onClick={() => panes.hide(panes.drawer!)} /> : null}
+        <Bookmark panes={panes} pane="call" label="Call" icon={<MicIcon size={18} />} />
+        <Bookmark panes={panes} pane="phone" label="Phone" icon={<PhoneIcon size={18} />} badge={panes.unseen} />
+      </main>
+
+      <SettingsDialog target={{ workspace: id }} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => refreshSoon()} />
+    </div>
+  );
+}
+
+/** A repairs prospect's own properties from the builder: ring as whoever lives there. */
+function ownCallAs(state: LiveState): { phone: string; who: string; try: string }[] {
+  return (state.properties ?? []).filter((p) => p.key.startsWith('own_')).flatMap((p) => {
+    const phone = normaliseUkPhone(p.occupant.phone);
+    return phone && !MT_CALL_AS.some((c) => c.phone === phone)
+      ? [{ phone, who: `${p.occupant.name || 'Whoever lives'} at ${p.address.replace(/,\s*[A-Z]{1,2}\d.*$/, '')} (yours)`, try: 'Report a repair at your own property.' }]
+      : [];
+  });
+}

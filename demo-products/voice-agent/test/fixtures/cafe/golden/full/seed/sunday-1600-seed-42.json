@@ -1,0 +1,695 @@
+{
+ "bookings": [
+  {
+   "reference": "QW323",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-18T11:00:00.000Z",
+   "ends_at": "2026-10-18T12:30:00.000Z",
+   "party_size": 8,
+   "name": "Zara Wood",
+   "phone": "+447700900712",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "XR777",
+   "service_key": "table",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-18T11:00:00.000Z",
+   "ends_at": "2026-10-18T12:30:00.000Z",
+   "party_size": 6,
+   "name": "Sophie Ahmed",
+   "phone": "+447700900570",
+   "notes": null,
+   "allergies": "Nut allergy",
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "finished",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "QJ236",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-20T12:00:00.000Z",
+   "ends_at": "2026-10-20T13:30:00.000Z",
+   "party_size": 5,
+   "name": "Grace Price",
+   "phone": "+447700900351",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "WK382",
+   "service_key": "afternoon_tea",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-20T12:00:00.000Z",
+   "ends_at": "2026-10-20T13:30:00.000Z",
+   "party_size": 5,
+   "name": "Niamh Evans",
+   "phone": "+447700900564",
+   "notes": "Birthday: a candle in a scone",
+   "allergies": null,
+   "tags": ["birthday"],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "HW825",
+   "service_key": "afternoon_tea",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-21T12:00:00.000Z",
+   "ends_at": "2026-10-21T13:30:00.000Z",
+   "party_size": 5,
+   "name": "Daniel Evans",
+   "phone": "+447700900075",
+   "notes": "Birthday: a candle in a scone",
+   "allergies": "Gluten-free afternoon tea for 1",
+   "tags": ["birthday"],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff"
+  },
+  {
+   "reference": "QH770",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-21T12:30:00.000Z",
+   "ends_at": "2026-10-21T14:00:00.000Z",
+   "party_size": 5,
+   "name": "Grace Jones",
+   "phone": "+447700900876",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "YW594",
+   "service_key": "afternoon_tea",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-22T12:00:00.000Z",
+   "ends_at": "2026-10-22T13:30:00.000Z",
+   "party_size": 6,
+   "name": "Ethan Collins",
+   "phone": "+447700900151",
+   "notes": null,
+   "allergies": "Gluten-free afternoon tea for 1",
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "LW570",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-22T12:30:00.000Z",
+   "ends_at": "2026-10-22T14:00:00.000Z",
+   "party_size": 5,
+   "name": "Priya Brown",
+   "phone": "+447700900213",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "JJ615",
+   "service_key": "afternoon_tea",
+   "resource_key": "T5",
+   "area_key": "indoor",
+   "starts_at": "2026-10-22T14:00:00.000Z",
+   "ends_at": "2026-10-22T15:30:00.000Z",
+   "party_size": 3,
+   "name": "Jack Evans",
+   "phone": "+447700900639",
+   "notes": null,
+   "allergies": "Gluten-free afternoon tea for 1",
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "KY204",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-23T11:30:00.000Z",
+   "ends_at": "2026-10-23T13:00:00.000Z",
+   "party_size": 7,
+   "name": "Ravi Collins",
+   "phone": "+447700900533",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "RL863",
+   "service_key": "afternoon_tea",
+   "resource_key": "T5",
+   "area_key": "indoor",
+   "starts_at": "2026-10-23T12:00:00.000Z",
+   "ends_at": "2026-10-23T13:30:00.000Z",
+   "party_size": 4,
+   "name": "Sarah Clarke",
+   "phone": "+447700900924",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "JL332",
+   "service_key": "afternoon_tea",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-23T14:00:00.000Z",
+   "ends_at": "2026-10-23T15:30:00.000Z",
+   "party_size": 6,
+   "name": "Sophie Murphy",
+   "phone": "+447700900837",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "LA333",
+   "service_key": "table",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-24T11:00:00.000Z",
+   "ends_at": "2026-10-24T12:30:00.000Z",
+   "party_size": 6,
+   "name": "Jack Kelly",
+   "phone": "+447700900477",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "JY574",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-24T11:30:00.000Z",
+   "ends_at": "2026-10-24T13:00:00.000Z",
+   "party_size": 8,
+   "name": "Ben Hughes",
+   "phone": "+447700900865",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "AR199",
+   "service_key": "afternoon_tea",
+   "resource_key": "T1",
+   "area_key": "indoor",
+   "starts_at": "2026-10-24T12:00:00.000Z",
+   "ends_at": "2026-10-24T13:30:00.000Z",
+   "party_size": 2,
+   "name": "Helen Ward",
+   "phone": "+447700900931",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff"
+  },
+  {
+   "reference": "YH986",
+   "service_key": "afternoon_tea",
+   "resource_key": "T5",
+   "area_key": "indoor",
+   "starts_at": "2026-10-24T12:00:00.000Z",
+   "ends_at": "2026-10-24T13:30:00.000Z",
+   "party_size": 4,
+   "name": "Chloe Walker",
+   "phone": "+447700900425",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "AA918",
+   "service_key": "table",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-24T12:30:00.000Z",
+   "ends_at": "2026-10-24T14:00:00.000Z",
+   "party_size": 5,
+   "name": "Isla Clarke",
+   "phone": "+447700900083",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "YH679",
+   "service_key": "afternoon_tea",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-24T14:00:00.000Z",
+   "ends_at": "2026-10-24T15:30:00.000Z",
+   "party_size": 6,
+   "name": "Niamh Khan",
+   "phone": "+447700900414",
+   "notes": "Birthday: a candle in a scone",
+   "allergies": "Gluten-free afternoon tea for 1",
+   "tags": ["birthday"],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "AL124",
+   "service_key": "afternoon_tea",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-24T14:00:00.000Z",
+   "ends_at": "2026-10-24T15:30:00.000Z",
+   "party_size": 6,
+   "name": "Oliver Mensah",
+   "phone": "+447700900243",
+   "notes": "Birthday: a candle in a scone",
+   "allergies": "Gluten-free afternoon tea for 1",
+   "tags": ["birthday"],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff"
+  }
+ ],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "Liam Okafor",
+   "phone": "+447700900400",
+   "due_at": "2026-10-18T08:45:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "banana_bread",
+     "name": "Vegan banana bread",
+     "quantity": 1,
+     "unit_pence": 360,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "flat_white",
+     "name": "Flat white",
+     "quantity": 1,
+     "unit_pence": 330,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 690,
+   "total_pence": 690,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "102",
+   "name": "Joe Evans",
+   "phone": "+447700900577",
+   "due_at": "2026-10-18T08:55:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "latte",
+     "name": "Latte",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "egg_mayo",
+     "name": "Egg mayo sandwich",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1140,
+   "total_pence": 1140,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "103",
+   "name": "Megan Taylor",
+   "phone": "+447700900054",
+   "due_at": "2026-10-18T09:00:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "banana_bread",
+     "name": "Vegan banana bread",
+     "quantity": 1,
+     "unit_pence": 360,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "victoria_sponge",
+     "name": "Victoria sponge",
+     "quantity": 1,
+     "unit_pence": 380,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "salad_bowl",
+     "name": "Salad bowl",
+     "quantity": 1,
+     "unit_pence": 895,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1635,
+   "total_pence": 1635,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "104",
+   "name": "Grace Begum",
+   "phone": "+447700900649",
+   "due_at": "2026-10-18T09:35:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "porridge",
+     "name": "Porridge",
+     "quantity": 1,
+     "unit_pence": 475,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "bacon_sandwich",
+     "name": "Bacon sandwich",
+     "quantity": 1,
+     "unit_pence": 550,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "flat_white",
+     "name": "Flat white",
+     "quantity": 1,
+     "unit_pence": 330,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1355,
+   "total_pence": 1355,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "105",
+   "name": "Chloe Okafor",
+   "phone": "+447700900267",
+   "due_at": "2026-10-18T09:50:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "ham_cheese_toastie",
+     "name": "Ham and cheese toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 695,
+   "total_pence": 695,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "106",
+   "name": "Lucy Patel",
+   "phone": "+447700900248",
+   "due_at": "2026-10-18T09:55:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "flat_white",
+     "name": "Flat white",
+     "quantity": 1,
+     "unit_pence": 330,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "latte",
+     "name": "Latte",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1020,
+   "total_pence": 1020,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "107",
+   "name": "Chloe Hughes",
+   "phone": "+447700900977",
+   "due_at": "2026-10-18T10:15:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cheese_onion_toastie",
+     "name": "Cheese and onion toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "pot_of_tea",
+     "name": "Pot of tea",
+     "quantity": 1,
+     "unit_pence": 280,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "ham_cheese_toastie",
+     "name": "Ham and cheese toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1670,
+   "total_pence": 1670,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "108",
+   "name": "Callum Green",
+   "phone": "+447700900093",
+   "due_at": "2026-10-18T10:15:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "tuna_melt",
+     "name": "Tuna melt",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 695,
+   "total_pence": 695,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "109",
+   "name": "Zara Lewis",
+   "phone": "+447700900711",
+   "due_at": "2026-10-18T10:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cappuccino",
+     "name": "Cappuccino",
+     "quantity": 1,
+     "unit_pence": 340,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 990,
+   "total_pence": 990,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "110",
+   "name": "Adam Brown",
+   "phone": "+447700900644",
+   "due_at": "2026-10-18T11:00:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "ham_cheese_toastie",
+     "name": "Ham and cheese toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1345,
+   "total_pence": 1345,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  },
+  {
+   "reference": "111",
+   "name": "Kwame Ahmed",
+   "phone": "+447700900269",
+   "due_at": "2026-10-18T11:05:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "tuna_melt",
+     "name": "Tuna melt",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 695,
+   "total_pence": 695,
+   "allergy_notes": null,
+   "status": "completed",
+   "payment_status": "paid"
+  }
+ ],
+ "messages": [
+  {
+   "from_name": "Adam Khan",
+   "from_phone": "+447700900041",
+   "body": "Wanting a whole chocolate cake for my mum's 70th on Saturday week, with a message on it. Please call back."
+  },
+  {
+   "from_name": "Trent Valley Dairy",
+   "from_phone": "+447700900699",
+   "body": "Milk delivery moving to 7am on Mondays from next week."
+  }
+ ]
+}

@@ -1,0 +1,231 @@
+{
+ "url": "https://www.bellavista.example/",
+ "faqs": [
+  {
+   "a": "Dogs are welcome in the bar area.",
+   "q": "Can I bring my dog?"
+  },
+  {
+   "a": "Yes, gluten-free pizza bases.",
+   "q": "Do you do gluten free?"
+  }
+ ],
+ "menu": {
+  "dishes": 5,
+  "priced": 5,
+  "categories": [
+   {
+    "key": "pizza",
+    "items": [
+     {
+      "key": "margherita",
+      "name": "Margherita",
+      "dietary": [
+       "vegetarian"
+      ],
+      "allergens": [],
+      "description": "Tomato, fior di latte, basil",
+      "price_pence": 1050,
+      "allergens_unknown": true
+     },
+     {
+      "key": "diavola",
+      "name": "Diavola",
+      "allergens": [
+       "gluten",
+       "milk"
+      ],
+      "price_pence": 1250
+     },
+     {
+      "key": "quattro_formaggi",
+      "name": "Quattro Formaggi",
+      "dietary": [
+       "vegetarian"
+      ],
+      "allergens": [
+       "gluten",
+       "milk"
+      ],
+      "price_pence": 1300
+     }
+    ],
+    "label": "Pizza"
+   },
+   {
+    "key": "pasta",
+    "items": [
+     {
+      "key": "carbonara",
+      "name": "Carbonara",
+      "allergens": [],
+      "price_pence": 1200,
+      "allergens_unknown": true
+     },
+     {
+      "key": "arrabbiata",
+      "name": "Arrabbiata",
+      "dietary": [
+       "vegan",
+       "spicy"
+      ],
+      "allergens": [
+       "gluten"
+      ],
+      "description": "Spicy tomato",
+      "price_pence": 1000
+     }
+    ],
+    "label": "Pasta"
+   }
+  ],
+  "source_url": "https://www.bellavista.example/menu",
+  "allergen_statement": "Our kitchen handles all 14 allergens. Ask us before you order."
+ },
+ "site": "bellavista.example",
+ "hours": [
+  {
+   "open": true,
+   "services": [
+    {
+     "open": "12:00",
+     "close": "20:00",
+     "label": "All day"
+    }
+   ]
+  },
+  {
+   "open": false,
+   "services": []
+  },
+  {
+   "open": true,
+   "services": [
+    {
+     "open": "12:00",
+     "close": "14:30",
+     "label": "Lunch"
+    },
+    {
+     "open": "17:00",
+     "close": "22:00",
+     "label": "Dinner"
+    }
+   ]
+  },
+  {
+   "open": true,
+   "services": [
+    {
+     "open": "12:00",
+     "close": "14:30",
+     "label": "Lunch"
+    },
+    {
+     "open": "17:00",
+     "close": "22:00",
+     "label": "Dinner"
+    }
+   ]
+  },
+  {
+   "open": true,
+   "services": [
+    {
+     "open": "12:00",
+     "close": "14:30",
+     "label": "Lunch"
+    },
+    {
+     "open": "17:00",
+     "close": "22:00",
+     "label": "Dinner"
+    }
+   ]
+  },
+  {
+   "open": true,
+   "services": [
+    {
+     "open": "12:00",
+     "close": "14:30",
+     "label": "Lunch"
+    },
+    {
+     "open": "17:00",
+     "close": "22:00",
+     "label": "Dinner"
+    }
+   ]
+  },
+  {
+   "open": true,
+   "services": [
+    {
+     "open": "12:00",
+     "close": "22:30",
+     "label": "All day"
+    }
+   ]
+  }
+ ],
+ "notes": [],
+ "pages": [
+  "https://www.bellavista.example/",
+  "https://www.bellavista.example/menu",
+  "https://www.bellavista.example/find-us",
+  "https://www.bellavista.example/faq"
+ ],
+ "theme": {
+  "accent": "#679079",
+  "primary": "#2a2217",
+  "font_body": "system-ui",
+  "background": "#0e0c0a",
+  "font_heading": "Playfair Display",
+  "body_category": "sans",
+  "heading_category": "serif"
+ },
+ "reader": 2,
+ "signals": [
+  "terrace",
+  "beer garden",
+  "garden",
+  "dog friendly",
+  "takeaway",
+  "reservations",
+  "parking",
+  "gluten free"
+ ],
+ "identity": {
+  "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "name": "Bella Vista",
+  "town": "Nottingham",
+  "phone": "0115 496 0999",
+  "style": "Wood-fired pizza and fresh pasta",
+  "address": "212 Mansfield Road, NG5 2BU",
+  "description": "A family Italian kitchen in Nottingham."
+ },
+ "policies": {
+  "dogs": "inside",
+  "corkage": "£10 a bottle corkage.",
+  "dietary": "Gluten-free pizza bases.",
+  "parking": "Free parking on Hucknall Road after 6pm.",
+  "children": "Children are welcome; we have two highchairs.",
+  "vouchers": "Gift vouchers from the bar.",
+  "accessibility": "Step-free at the front door."
+ },
+ "requests": 8,
+ "services": {
+  "takeaway": true,
+  "providers": [
+   "OpenTable",
+   "Deliveroo"
+  ],
+  "own_delivery": false,
+  "reservations": true,
+  "delivery_apps": [
+   "Deliveroo"
+  ]
+ },
+ "not_hospitality": false
+}

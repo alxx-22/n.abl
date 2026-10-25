@@ -9,6 +9,7 @@
 import { readdirSync, readFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { rootCertificates } from 'node:tls';
 
 export interface Queryable {
   query<T = Record<string, any>>(sql: string, params?: unknown[]): Promise<T[]>;
@@ -22,6 +23,19 @@ export interface Db extends Queryable {
 }
 
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'migrations');
+// Supabase's own root certificate (public; from the dashboard's SSL settings), which signs the
+// direct db.<ref>.supabase.co address. SHA-256 80:70:25:AD:…:E6:CA:FA, valid to April 2031.
+const SUPABASE_ROOT = join(dirname(fileURLToPath(import.meta.url)), 'supabase-root-2021.crt');
+
+/**
+ * TLS for a database that is not on this machine, always verified, name included. The session
+ * pooler's certificate is from Amazon's public authority, among the usual roots; the direct address's
+ * is Supabase's own, so that root is trusted beside them.
+ */
+export function sslFor(url: string): false | { ca: string[]; rejectUnauthorized: true } {
+  if (/@(localhost|127\.0\.0\.1)[:/]/.test(url)) return false;
+  return { ca: [...rootCertificates, readFileSync(SUPABASE_ROOT, 'utf8')], rejectUnauthorized: true };
+}
 
 export async function openPglite(dir?: string): Promise<Db> {
   const { PGlite } = await import('@electric-sql/pglite');
@@ -48,14 +62,39 @@ export async function openPglite(dir?: string): Promise<Db> {
   };
 }
 
+/**
+ * The same address on the region's other shared poolers. Supabase puts each project on one of
+ * several pooler clusters (aws-0-…, aws-1-…), and the wrong one answers "Tenant or user not found".
+ */
+export function otherPoolers(url: string): string[] {
+  const m = /@aws-(\d+)-([a-z0-9-]+)\.pooler\.supabase\.com\b/.exec(url);
+  if (!m) return [];
+  return [0, 1, 2].filter((n) => String(n) !== m[1]).map((n) => url.replace(m[0], `@aws-${n}-${m[2]}.pooler.supabase.com`));
+}
+
 export async function openPostgres(url: string): Promise<Db> {
   const pgmod = await import('pg');
   const Pool = pgmod.default.Pool;
-  const local = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
-  const clean = url.replace(/[?&]sslmode=[^&]*/g, '');
-  // Supabase requires TLS. The pooler's certificate chain is Supabase's own CA,
-  // so verification is off here; the connection is still encrypted.
-  const pool = new Pool({ connectionString: clean, ssl: local ? false : { rejectUnauthorized: false }, max: 5 });
+  // An sslmode in the address would replace the verified settings below.
+  const open = (u: string) => new Pool({ connectionString: u.replace(/[?&]sslmode=[^&]*/g, ''), ssl: sslFor(u), max: 5 });
+  let pool = open(url);
+  // A pooler address on the wrong cluster fails at once: try the region's others before giving up.
+  const first = await pool.query('select 1').then(() => null, (e: Error) => e);
+  if (first && /tenant or user not found/i.test(first.message)) {
+    let found = false;
+    for (const alt of otherPoolers(url)) {
+      const p = open(alt);
+      if (await p.query('select 1').then(() => true, () => false)) {
+        await pool.end().catch(() => {});
+        pool = p;
+        found = true;
+        console.warn(`DATABASE_URL names the wrong Supabase pooler; this project's is ${/@([^:/@]+\.pooler\.supabase\.com)/.exec(alt)?.[1]}. Connected there; put it in DATABASE_URL to skip this check.`);
+        break;
+      }
+      await p.end().catch(() => {});
+    }
+    if (!found) throw first;
+  }
   const base: Queryable = {
     async query<T>(sql: string, params?: unknown[]) {
       return (await pool.query(sql, params as unknown[])).rows as T[];

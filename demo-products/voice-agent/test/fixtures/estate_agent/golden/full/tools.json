@@ -1,0 +1,23 @@
+[
+ "get_opening_hours",
+ "search_knowledge",
+ "check_availability",
+ "create_booking",
+ "find_bookings",
+ "modify_booking",
+ "cancel_booking",
+ "search_properties",
+ "find_party",
+ "get_marketing_update",
+ "get_offer_status",
+ "record_viewing_feedback",
+ "register_buyer",
+ "stop_alerts",
+ "get_sale_progress",
+ "get_property",
+ "send_property_details",
+ "book_valuation",
+ "record_offer",
+ "take_message",
+ "end_call"
+]

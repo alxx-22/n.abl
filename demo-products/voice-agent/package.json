@@ -5,33 +5,49 @@
   "type": "module",
   "description": "n.abl Reception: an AI phone receptionist for hospitality businesses. A demo product.",
   "engines": {
-    "node": ">=22.18"
+    "node": ">=22.12"
   },
   "scripts": {
-    "dev": "node --env-file-if-exists=.env.local src/server/main.ts",
+    "dev": "node --env-file-if-exists=.env.local src/server/main.ts --dev",
+    "build": "vite build --config web/vite.config.ts",
     "start": "node src/server/main.ts",
     "test": "node --test --test-reporter=spec \"test/**/*.test.ts\"",
-    "typecheck": "tsc -p .",
+    "typecheck": "tsc -p . && tsc -p web",
     "check": "npm run typecheck && npm test",
+    "check:all": "npm run check && npm run e2e:demo",
     "db:migrate": "node --env-file-if-exists=.env.local src/db/cli.ts migrate",
     "db:seed": "node --env-file-if-exists=.env.local src/db/cli.ts seed",
     "spike:probe": "node --env-file-if-exists=.env.local src/spike/probe.ts",
     "spike:audio": "node --env-file-if-exists=.env.local src/spike/audio.ts",
     "spike:voices": "node --env-file-if-exists=.env.local src/spike/voices.ts",
     "eval": "node --env-file-if-exists=.env.local src/eval/run.ts",
-    "e2e:browser": "node --env-file-if-exists=.env.local test-e2e/browser.ts"
+    "e2e:browser": "node --env-file-if-exists=.env.local test-e2e/browser.ts",
+    "e2e:phone": "node --env-file-if-exists=.env.local test-e2e/phone.ts",
+    "e2e:ingest": "node --env-file-if-exists=.env.local test-e2e/ingest.ts",
+    "e2e:turns": "node --env-file-if-exists=.env.local test-e2e/turns.ts",
+    "spike:turns": "node --env-file-if-exists=.env.local src/spike/turns.ts",
+    "demo:key": "node --env-file-if-exists=.env.local src/demo/cli.ts",
+    "e2e:demo": "npm run build && node --env-file-if-exists=.env.local test-e2e/demo-ui.ts",
+    "e2e:scout": "node --env-file-if-exists=.env.local test-e2e/scout.ts",
+    "screens": "npm run build && node --env-file-if-exists=.env.local test-e2e/screens.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.0",
     "https-proxy-agent": "^7.0.6",
     "pg": "^8.13.0",
+    "playwright-core": "1.56",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/pg": "^8.11.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@types/ws": "^8.5.13",
-    "playwright-core": "1.56",
-    "typescript": "^5.9.0"
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.1"
   }
 }

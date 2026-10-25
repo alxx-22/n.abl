@@ -1,0 +1,904 @@
+/* The prospect's demo: door, builder, workspace. The site's tokens, through
+   styles.css; each business's own colour comes in as --accent.
+
+   Window sizes. Every screen is laid out for a Windows desktop first, and
+   rearranges itself at the same four bands (bands.ts names them for code):
+     desktop  1280px and up   everything side by side
+     laptop   1024 to 1279px  the builder's preview under the step; the
+                              workspace's call and phone share a column
+     tablet   641 to 1023px   one column: the builder's steps a ribbon, the
+                              preview and the workspace's call and phone
+                              behind a button or bookmark
+     phone    640px and down  as a tablet, tighter, with the top bar small
+   On a desktop or laptop the workspace fits the window: the page doesn't
+   scroll, each column scrolls on its own. Media queries use these widths
+   and no others: (min-width: 1280px), (max-width: 1279px),
+   (min-width: 1024px), (max-width: 1023px), (min-width: 641px) and
+   (max-width: 640px). */
+
+.rx { min-height: 100vh; }
+/* Nothing smaller than 12px: the site's smallest size is 0.75rem of a 15px page. */
+.rx { --t-xs: 12px; }
+.rx .badge, .rx .bubble .who { font-size: 12px; }
+.rx-main { padding: 28px 24px; max-width: 1560px; margin: 0 auto; }
+.rx-top .crumb { display: inline-flex; align-items: center; gap: 8px; color: var(--heading); }
+.workspace-page .rx-top .crumb b, .builder-page .rx-top .crumb b, .phone-head b, .step > header h1 { font-family: var(--brand-heading, inherit); }
+.warn-line { margin: 0; color: var(--warn-light); font-size: 13px; }
+.rx-top .small { font-size: 13px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+button.small, .button.small { padding: 4px 10px; font-size: 13px; }
+button.big { padding: 12px 26px; font-size: 16px; }
+button.danger, .danger { color: var(--danger); }
+button[aria-pressed='true'] { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+.linkish { background: none; border: none; padding: 0; color: var(--amber-light); text-decoration: underline; font-weight: 400; cursor: pointer; text-align: left; }
+.logo-mini { height: 24px; width: auto; border-radius: 4px; }
+.colours { border: none; padding: 0; margin: 0; }
+.colours legend { padding: 0; margin-bottom: 6px; font-weight: 500; color: var(--heading); }
+.colour-row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.colour { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.colour input[type='color'] { width: 40px; height: 32px; padding: 2px; flex: none; }
+/* The logo on its own ground: the main colour is the colour the website shows it on. */
+.logo-preview { max-height: 44px; max-width: 140px; border-radius: 6px; background: var(--brand-primary); padding: 2px; }
+.allergy { color: var(--on-danger-ground); background: var(--danger-ground); border-radius: 6px; padding: 4px 8px; margin: 6px 0; font-weight: 600; font-size: 13px; }
+h3.sub { margin-top: 12px; font-size: 1rem; }
+.lead { margin: 0 0 4px; color: var(--muted); }
+
+/* ── A business's own pages: its builder and workspace ───────────────────── */
+/* brand.ts sets every colour on these roots from the business's colours, so
+   the ground, panels, text and the top bar are theirs, light or dark. */
+.builder-page, .workspace-page {
+  min-height: 100vh; background-color: var(--ground); color: var(--cream);
+  background-image: radial-gradient(90ch 60ch at 12% -10%, rgba(var(--accent-rgb), 0.07), transparent 60%);
+}
+/* The top bar in the business's main colour, with text that reads on it. */
+.builder-page .rx-top, .workspace-page .rx-top {
+  background: var(--brand-primary); color: var(--on-primary); border-bottom-color: rgba(var(--on-primary-rgb), 0.16);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  --heading: var(--on-primary); --cream: var(--on-primary); --cream-100: var(--on-primary); --muted: var(--on-primary); --dim: var(--on-primary);
+  --amber: var(--on-primary); --amber-light: var(--on-primary);
+  --cream-rgb: var(--on-primary-rgb); --line: rgba(var(--on-primary-rgb), 0.22); --line-strong: rgba(var(--on-primary-rgb), 0.38);
+}
+.builder-page .rx-top .badge, .workspace-page .rx-top .badge { color: var(--on-primary); background: rgba(var(--on-primary-rgb), 0.1); border-color: rgba(var(--on-primary-rgb), 0.35); }
+.builder-page .rx-top .badge.bad, .workspace-page .rx-top .badge.bad { background: #8e3128; color: #fff; border-color: transparent; }
+.builder-page .rx-top .badge.warn, .workspace-page .rx-top .badge.warn { background: #e9ac57; color: #24170a; border-color: transparent; }
+/* Main buttons (Next, Go live) in the business's own colour; n.abl's console keeps its cream ones. */
+.builder-page :is(button, .button).primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.workspace-page :is(button, .button).primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.builder-page :is(button:not(:disabled), .button).primary:hover, .workspace-page :is(button:not(:disabled), .button).primary:hover { background: var(--accent-hover, var(--accent)); border-color: var(--accent-hover, var(--accent)); box-shadow: var(--glow-accent); }
+/* On the top bar the button may be close to the bar's own colour: an edge in the bar's text colour keeps it a button. */
+.builder-page .rx-top :is(button, .button).primary, .workspace-page .rx-top :is(button, .button).primary { box-shadow: 0 0 0 1px rgba(var(--on-primary-rgb), 0.5); }
+
+/* A long list edited one item at a time (fields.tsx Folds): a line each, one open. */
+.folds { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fold { border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.fold.open { border-color: rgba(var(--accent-rgb), 0.55); box-shadow: inset 3px 0 0 var(--accent); }
+.fold.has-issue:not(.open) { border-color: rgba(var(--warn-rgb), 0.45); }
+.fold-head { width: 100%; display: flex; align-items: center; gap: 10px; border: none; border-radius: 10px; background: transparent; padding: 9px 12px; text-align: left; font-weight: 400; box-shadow: none; }
+.fold-head:not(:disabled):hover { background: rgba(var(--cream-rgb), 0.04); box-shadow: none; }
+.fold-sum { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.fold-sum b { color: var(--heading); }
+.fold-chev { font: 500 18px/1 var(--font-mono); color: var(--muted); width: 18px; text-align: center; flex: none; }
+.fold-body { padding: 4px 12px 12px; display: grid; gap: 12px; }
+
+/* ── Door and home ────────────────────────────────────────────────────── */
+/* The site's hero beside the key: big type, its square full stop, a lead. */
+.rx-door { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 440px); gap: clamp(24px, 5vw, 72px); align-items: center; min-height: calc(100vh - 90px); max-width: 1180px; }
+.door-hero { display: grid; gap: 18px; }
+.door-hero h1 { font-size: var(--t-4xl); line-height: 1; letter-spacing: var(--track-tight); }
+.door-hero .lead { font-size: var(--t-lg); color: var(--muted); max-width: 46ch; }
+.door { display: grid; gap: 14px; padding: 28px; }
+.door form { display: grid; gap: 12px; }
+.door label { font: 500 var(--t-xs)/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: var(--track-wide); color: var(--dim); }
+.door button.primary { justify-content: center; padding: 12px 18px; }
+.key-input { font-size: 20px; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; padding: 12px; }
+.rx-usage { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 20px; }
+.new-card { text-decoration: none; color: inherit; border-style: dashed; border-color: var(--line-strong); justify-content: center; }
+.new-card h3::after { display: none; }
+.new-card .plus { font: 300 36px/1 var(--font-display); color: var(--accent); text-shadow: 0 0 18px rgba(var(--accent-rgb), 0.45); }
+.presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--gap); margin-bottom: 20px; }
+.preset { display: grid; gap: 8px; text-align: left; align-content: start; border-radius: var(--radius); font-weight: 400; padding: 18px; background: var(--surface); border-color: var(--line); }
+.preset:disabled { opacity: 0.5; }
+.preset.chosen, .preset.chosen:hover { border-color: rgba(var(--accent-rgb), 0.6); box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.6) inset, var(--glow-accent); }
+.preset-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; color: var(--heading); font: 600 1.1rem/1.2 var(--font-display); letter-spacing: var(--track-snug); }
+.preset .covers { font-size: 12px; color: var(--amber-light); }
+.new-form { display: grid; gap: 8px; max-width: 620px; }
+.new-form label { font-weight: 600; margin-top: 6px; }
+
+/* ── Builder ──────────────────────────────────────────────────────────── */
+.save-state { font-size: 12px; color: var(--muted); min-width: 110px; }
+.save-state.saved { color: var(--ok); }
+.save-state.error { color: var(--danger); }
+.builder { display: grid; grid-template-columns: 210px minmax(0, 1fr) 300px; gap: var(--gap); align-items: start; }
+/* The steps and the preview stay in view under the top bar; Back and Next stay at the bottom of the window. */
+.steps { position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow-y: auto; }
+.steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.steps button { width: 100%; justify-content: flex-start; text-align: left; background: transparent; border-color: transparent; color: var(--muted); box-shadow: none; }
+.steps button:not(:disabled):hover { color: var(--heading); background: rgba(var(--cream-rgb), 0.04); border-color: transparent; box-shadow: none; }
+.steps button[aria-current='step'] { background: var(--surface-2); border-color: var(--line); color: var(--heading); }
+.steps .n { width: 24px; height: 24px; border-radius: var(--r-sm); display: inline-grid; place-items: center; font: 500 12px/1 var(--font-mono); border: 1px solid var(--line-strong); flex: none; color: var(--dim); }
+.steps button[aria-current='step'] .n { background: var(--accent); color: var(--ink); border-color: var(--accent); box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.35); }
+.step.panel { padding: 24px 26px; }
+.step > header h1 { font-size: 1.6rem; letter-spacing: var(--track-tight); }
+.issues { list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 6px; }
+.issues li { font-size: 13px; padding: 6px 10px; border-radius: 8px; background: var(--surface-2); border-left: 3px solid var(--warn); }
+.issues li.error { border-color: var(--danger); background: var(--error-ground); }
+.step-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; bottom: 0; z-index: 2; margin: 24px -26px -24px; padding: 12px 26px; border-top: 1px solid var(--line); background: var(--surface-1); border-radius: 0 0 var(--radius) var(--radius); box-shadow: 0 -10px 18px -14px rgba(var(--bg-rgb), 0.9); }
+.preview { position: sticky; top: 84px; display: grid; gap: 8px; max-height: calc(100vh - 100px); overflow-y: auto; }
+/* The floor plan needs the room more than the spoken preview does. */
+.builder.wide-step { grid-template-columns: 210px minmax(0, 1fr); }
+@media (min-width: 1024px) {
+  .builder.wide-step .preview { display: none; }
+  .preview-open { display: none; }
+}
+.preview[hidden] { display: none; }
+.preview-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
+.step > header h1 { margin-right: auto; }
+.step > header { flex-wrap: wrap; }
+.preview p { margin: 0; }
+.preview .say { font-size: 15px; color: var(--heading); border-left: 3px solid var(--accent); padding-left: 10px; }
+.facts { margin: 0; padding-left: 18px; font-size: 13px; color: var(--cream); display: grid; gap: 4px; }
+
+.fields { display: grid; gap: 14px; }
+.field { display: grid; gap: 5px; min-width: 0; }
+.field > label, .choice legend, .chips legend { font-weight: 600; color: var(--heading); font-size: 14px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+.three { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 16px; align-items: start; }
+.four { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+textarea.prose { font-family: var(--font); font-size: 14px; min-height: 0; resize: vertical; }
+.num-field { display: inline-flex; align-items: center; gap: 8px; }
+.num-field input { width: 110px; }
+.num-field.money input { width: 100px; }
+.group { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 12px; }
+.group.on { background: rgba(var(--cream-rgb), 0.02); }
+.row-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.toggle { display: flex; gap: 10px; align-items: flex-start; }
+.toggle input { appearance: none; width: 40px; height: 22px; border-radius: 999px; background: var(--line); position: relative; flex: none; cursor: pointer; padding: 0; border: none; margin-top: 1px; transition: background 150ms; }
+.toggle input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--cream); transition: transform 150ms; }
+.toggle input:checked { background: var(--accent); box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35); }
+.toggle input:checked::after { transform: translateX(18px); background: var(--ink); }
+.toggle label { display: grid; gap: 2px; cursor: pointer; }
+.toggle label > span:first-child { font-weight: 600; color: var(--heading); }
+.choice { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 10px; display: grid; gap: 6px; margin: 0; }
+.choice label { display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
+.choice input { width: auto; accent-color: var(--accent); }
+.choice.inline { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.choice.inline .hint { flex-basis: 100%; }
+
+.source { font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 999px; margin-left: 6px; letter-spacing: 0.02em; }
+.source.website { color: var(--ok); border: 1px solid rgba(var(--ok-rgb), 0.4); }
+.source.guess { color: var(--warn); border: 1px solid rgba(var(--warn-rgb), 0.4); }
+
+.hours { display: grid; gap: 8px; }
+.day-row { display: grid; grid-template-columns: 170px 1fr; gap: 12px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.services { display: grid; gap: 6px; }
+.service { display: grid; grid-template-columns: minmax(80px, 140px) 118px auto 118px auto; gap: 8px; align-items: center; }
+.service input[type='time'] { padding: 7px 8px; }
+/* Under the closing time it names: a row of its own, so the boxes above stay put. */
+.service .midnight { grid-column: 4; }
+
+.area-card { gap: 10px; }
+.area-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.area-name { width: 200px; font-weight: 700; }
+.area-head select { width: auto; }
+.counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.size-count { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--surface-2); border-radius: 10px; padding: 6px 10px; font-size: 13px; }
+.stepper { display: inline-flex; align-items: center; gap: 10px; }
+.stepper button { width: 28px; height: 28px; padding: 0; justify-content: center; }
+.stepper b { min-width: 16px; text-align: center; font-variant-numeric: tabular-nums; }
+
+.draft-box h3 { font-size: 1rem; }
+.draft-box .field-row select { width: auto; }
+.cat-head { display: flex; gap: 10px; align-items: center; }
+.cat-name { font-weight: 700; max-width: 280px; }
+.dishes { display: grid; gap: 8px; }
+.dish { display: grid; grid-template-columns: minmax(140px, 1fr) 110px minmax(120px, 0.8fr) auto auto; gap: 6px 8px; align-items: center; background: var(--surface-2); border-radius: 10px; padding: 8px; }
+.dish.off { opacity: 0.75; }
+.dish .dish-desc { grid-column: 1 / -1; font-size: 13px; padding: 6px 10px; }
+.dish input { padding: 6px 9px; }
+.allergen-btn { justify-content: flex-start; font-weight: 400; color: var(--muted); border: 1px dashed var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.allergen-btn.has { color: var(--warn-light); }
+.tiny-toggle { display: inline-flex; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); }
+.tiny-toggle input { width: auto; accent-color: var(--accent); }
+.allergen-grid { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; padding: 4px 2px; }
+.allergen-grid label { display: inline-flex; gap: 5px; align-items: center; text-transform: capitalize; }
+.allergen-grid input { width: auto; accent-color: var(--danger); }
+.faq { display: grid; grid-template-columns: 1fr auto; gap: 6px; background: var(--surface-2); padding: 8px; border-radius: 10px; }
+.faq textarea { grid-column: 1; }
+.faq button { grid-row: 1; grid-column: 2; }
+
+/* ── The estate agent's homes ─────────────────────────────────────────── */
+.home-list { display: grid; gap: 6px; }
+/* Full width inside its listitem, so every row's price and badges line up at the right. */
+.home-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; text-align: left; font-weight: 400; padding: 8px 12px; width: 100%; }
+.home-row.on { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+/* As wide as the longest status ("UNDER OFFER"), so the prices beside it form a column. */
+.home-status { min-width: calc(11ch + 0.66em + 20px); text-align: center; }
+.home-name { font-weight: 600; color: var(--heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-editor .tabs { padding: 0; margin: 0 -2px; }
+.check-list { display: grid; gap: 6px; }
+.check-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(160px, 1.2fr) minmax(140px, 1.2fr); gap: 8px; align-items: center; font-size: 13px; }
+.check-row input, .check-row select { padding: 6px 9px; }
+.group.window { gap: 8px; padding: 8px 12px; }
+.facts.locked { color: var(--muted); }
+@media (max-width: 640px) {
+  .home-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .check-row { grid-template-columns: 1fr; gap: 4px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+}
+
+.review .summary { display: grid; grid-template-columns: 130px 1fr; gap: 6px 14px; margin: 0; }
+.review dt { color: var(--muted); }
+.review dd { margin: 0; color: var(--heading); }
+.issues-box { border-radius: 10px; padding: 10px 14px; background: var(--surface-2); border-left: 3px solid var(--warn); font-size: 14px; }
+.issues-box.bad { border-color: var(--danger); background: var(--error-ground); }
+.issues-box ul { margin: 6px 0 0; padding-left: 18px; }
+.start-box { text-align: center; display: grid; gap: 12px; justify-items: center; padding: 16px 0 4px; }
+.start-box p { max-width: 60ch; margin: 0; color: var(--muted); }
+
+/* ── Scout ────────────────────────────────────────────────────────────── */
+.scout { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; border-color: var(--accent); flex-wrap: wrap; }
+.scout.done { display: grid; }
+.scout p { margin: 2px 0 0; }
+.scout.failed { border-color: var(--danger); justify-content: space-between; }
+.spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: spin 0.9s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.is-this-you { display: flex; gap: 12px; align-items: center; }
+.found { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.found li { display: grid; grid-template-columns: 200px 1fr; gap: 10px; align-items: baseline; }
+.found label { display: flex; gap: 8px; align-items: center; }
+.found input { width: auto; accent-color: var(--accent); }
+.swatches { display: inline-flex; gap: 6px; align-items: center; }
+.swatch { width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--line); display: inline-block; }
+
+/* ── The floor plan ───────────────────────────────────────────────────── */
+/* The plan wears the business's colours like every other page: these are
+   mixed from the page's palette (brand.ts on a branded page, tokens.css for
+   n.abl's own). They are declared on the page roots as well as :root because
+   a custom property resolves where it is declared: on :root alone they would
+   mix n.abl's colours, not the business's. A light website gets a light plan
+   and a dark one a dark plan. test/brand.test.ts checks that this section
+   has no fixed colours and that every table's text reads, in any brand. */
+:root, .builder-page, .workspace-page {
+  /* Between the page and its panels: on a dark page a shade below the panel the plan sits in, on a light one nearly the panel's white. */
+  --plan-ground: color-mix(in srgb, var(--bg) 50%, var(--surface-1));
+  /* A free table is a raised surface, as the palette raises one: lighter on a dark page, a shade deeper on a light one.
+     (Not light-dark(): the build rewrites it to follow the stylesheet's colour scheme, not the page's.) */
+  --plan-table: var(--surface-3);
+  --plan-edge: var(--line-strong);
+  /* Chairs a step stronger than the table, towards the text colour: darker on a light page, lighter on a dark one. */
+  --plan-chair: color-mix(in srgb, var(--cream) 20%, var(--surface-1));
+  /* Booked is the business's own colour, with --ink on it, made to read on it; the edge keeps a pale accent visible on a pale floor. */
+  --plan-booked-edge: color-mix(in srgb, var(--accent) 62%, var(--heading));
+  /* The states that mean something keep their own colours, as tints the page's text still reads on. */
+  --plan-arriving: color-mix(in srgb, var(--warn) 20%, var(--plan-table));
+  --plan-seated: color-mix(in srgb, var(--ok) 24%, var(--plan-table));
+  --plan-late: color-mix(in srgb, var(--danger) 20%, var(--plan-table));
+  --plan-walk-in: color-mix(in srgb, var(--info) 8%, var(--plan-table));
+  /* The room is scenery: neutral tones of the text colour at low strength, so the tables stay the point. */
+  --plan-fixture: color-mix(in srgb, var(--cream) 12%, var(--plan-ground));
+  --plan-fixture-edge: color-mix(in srgb, var(--cream) 28%, var(--plan-ground));
+  --plan-bar: color-mix(in srgb, var(--cream) 18%, var(--plan-ground));
+  --plan-wall: color-mix(in srgb, var(--cream) 40%, var(--plan-ground));
+}
+.floor-edit { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 14px; align-items: start; }
+.floor-wrap { background: var(--plan-ground); border: 1px solid var(--line); border-radius: 12px; padding: 8px; display: grid; gap: 8px; }
+.table-panel { background: var(--surface-2); border-radius: 12px; padding: 12px; position: sticky; top: 16px; }
+.checks { display: grid; gap: 6px; font-size: 13px; }
+.checks label { display: flex; gap: 8px; align-items: flex-start; }
+.checks input { width: auto; accent-color: var(--accent); margin-top: 3px; }
+.chips { border: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.chips legend { margin-bottom: 6px; }
+.chips label { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); cursor: pointer; }
+.chips label.on { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+/* Kept for walk-ins: the plan's walk-in colour. --info is made to read on the panels, so a panel's colour reads on it. */
+.chips label.on.walk { background: var(--info); border-color: var(--info); color: var(--surface-1); }
+.chips.walk-ins { margin: 4px 0 8px; }
+.chips.walk-ins legend { font-size: 13px; font-weight: 600; }
+.chips input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.chips label:focus-within { outline: 2px solid var(--amber); outline-offset: 1px; }
+
+svg.floor { width: 100%; height: auto; display: block; touch-action: none; user-select: none; }
+.plan-scroll { overflow: auto; max-height: 75vh; border-radius: 10px; }
+.plan-scroll svg.floor { min-width: 100%; }
+.grid-dot { fill: var(--line); }
+.guide { stroke: var(--info); stroke-width: 1.5; stroke-dasharray: 4 4; pointer-events: none; }
+.area-tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.area-tabs [role='tab'] { border-radius: 999px; padding: 6px 14px; font-weight: 600; }
+.area-tabs [role='tab'] .count { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 4px; }
+.area-tabs [role='tab'][aria-selected='true'] { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+.area-tabs [role='tab'][aria-selected='true'] .count { color: var(--ink); opacity: 0.75; }
+.area-tabs .add-area { width: auto; padding: 6px 12px; border-radius: 999px; font-size: 13px; }
+.plan-tools { flex-wrap: wrap; }
+.tool-group { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.zoom { display: inline-flex; gap: 2px; }
+.zoom button { min-width: 34px; }
+.join-offer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, var(--info) 14%, var(--surface-2)); border: 1px solid color-mix(in srgb, var(--info) 45%, transparent); font-size: 13px; }
+.join-offer span { flex: 1; min-width: 200px; }
+/* Room shapes: muted, so the tables stay the point. */
+.fixture { outline: none; }
+.edit .fixture { cursor: grab; }
+.fixture .hit { fill: transparent; }
+.fixture .shape { fill: var(--plan-fixture); stroke: var(--plan-fixture-edge); stroke-width: 2; }
+.f-bar .shape { fill: var(--plan-bar); }
+.f-bar .stool { fill: var(--plan-fixture); stroke: var(--plan-fixture-edge); stroke-width: 1.5; }
+.f-wall .shape { fill: var(--plan-wall); stroke: none; }
+.f-window .shape { fill: color-mix(in srgb, var(--info) 25%, transparent); stroke: var(--info); stroke-width: 1.5; }
+.f-window .pane { stroke: var(--info); stroke-width: 1; }
+.f-door .swing { fill: none; stroke: color-mix(in srgb, var(--cream) 45%, var(--plan-ground)); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.f-door .leaf { stroke: color-mix(in srgb, var(--cream) 70%, var(--plan-ground)); stroke-width: 4; stroke-linecap: round; }
+/* The gap a door leaves in a wall: the floor's own colour. */
+.f-door .sill { stroke: var(--plan-ground); stroke-width: 8; }
+.f-label { fill: var(--cream); font-size: 13px; font-weight: 700; text-anchor: middle; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; }
+.fixture.selected .shape, .fixture:focus-visible .shape { stroke: var(--amber); stroke-width: 3; }
+.fixture.selected .leaf, .fixture:focus-visible .leaf { stroke: var(--amber); }
+.fixture.lifted { opacity: 0.7; }
+.zone rect { fill: rgba(var(--cream-rgb), 0.025); stroke: var(--line); stroke-width: 1.5; }
+.zone.outdoor rect { fill: color-mix(in srgb, var(--ok) 5%, transparent); stroke: color-mix(in srgb, var(--ok) 45%, transparent); stroke-dasharray: 8 6; }
+.zone.private rect { fill: color-mix(in srgb, var(--info) 5%, transparent); stroke: color-mix(in srgb, var(--info) 45%, transparent); }
+.zone text { fill: var(--muted); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+/* The builder's dashed link in --amber, which shows on the floor however pale the brand; the live band behind a booked pair in the brand's own colour. */
+.join { stroke: var(--amber); stroke-width: 3; stroke-dasharray: 6 6; opacity: 0.8; }
+.join.live { stroke: var(--accent); stroke-dasharray: none; stroke-width: 10; opacity: 0.35; stroke-linecap: round; }
+.table { cursor: pointer; outline: none; }
+.edit .table { cursor: grab; }
+.table .top { fill: var(--plan-table); stroke: var(--plan-edge); stroke-width: 2; transition: fill 200ms; }
+.table .chair { fill: var(--plan-chair); }
+.table .num { fill: var(--heading); font-size: 17px; font-weight: 800; text-anchor: middle; pointer-events: none; }
+.table .cap { fill: var(--cream); font-size: 11px; text-anchor: middle; pointer-events: none; opacity: 0.9; }
+.table .cap.seats { fill: var(--muted); }
+/* --amber, not --accent: it reads against the plan's surfaces however pale the brand's colour is. */
+.table:hover .top, .table:focus-visible .top { stroke: var(--amber); }
+.table.selected .top { stroke: var(--amber); stroke-width: 4; }
+.table.walk-in .top, .table.unbookable .top { stroke-dasharray: 5 4; fill: var(--plan-walk-in); stroke: var(--info); }
+.walk-tag { pointer-events: none; }
+/* --info is made to read on the panels, so a panel's colour reads on it, light page or dark. */
+.walk-tag rect { fill: var(--info); stroke: var(--plan-ground); stroke-width: 2; }
+.walk-tag text { fill: var(--surface-1); font-size: 15px; font-weight: 800; text-anchor: middle; letter-spacing: 0.02em; }
+.table.later .top { fill: var(--plan-table); }
+.table.arriving .top { fill: var(--plan-arriving); stroke: var(--warn); stroke-width: 3; }
+.table.booked .top { fill: var(--accent); stroke: var(--plan-booked-edge); }
+.table.booked :is(.num, .cap, .cap.seats) { fill: var(--ink); opacity: 1; }
+/* On a table in the business's colour, the ring is the text colour, so it still shows when the colour is the same as --amber. */
+.table.booked:is(:hover, :focus-visible, .selected) .top { stroke: var(--heading); }
+.table.seated .top { fill: var(--plan-seated); stroke: var(--ok); }
+.table.late .top { fill: var(--plan-late); stroke: var(--danger); stroke-width: 3; }
+/* On a tinted table the small print is the full text colour, so it clears AA on the tint. */
+.table:is(.walk-in, .unbookable, .arriving, .seated, .late):not(.booked) :is(.cap, .cap.seats) { fill: var(--cream); opacity: 1; }
+.table.drop .top { stroke: var(--ok); stroke-width: 5; }
+.table.no-drop .top { stroke: var(--danger); stroke-width: 5; }
+.table.lifted { opacity: 0.85; }
+.table.lifted .top { stroke: var(--info); stroke-width: 3; }
+.table.clash .top { stroke: var(--danger); stroke-width: 4; fill: var(--danger-ground); }
+.table.clash :is(.num, .cap, .cap.seats) { fill: var(--heading); opacity: 1; }
+.table.flash .top { animation: tableflash 1.2s ease-in-out 3; }
+@keyframes tableflash { 50% { fill: color-mix(in srgb, var(--accent) 45%, var(--plan-table)); } }
+/* A booking's notes on a table's corner, in the colours that mean the same everywhere in the demo. Each is
+   made to read on the panels, so a panel's colour reads on it. The occasion's purple is the red and the blue mixed. */
+.badge-dot circle { stroke: var(--plan-ground); stroke-width: 2; }
+.badge-dot text { font-size: 10px; font-weight: 800; text-anchor: middle; fill: var(--surface-1); pointer-events: none; }
+.b-allergy circle { fill: var(--danger); }
+.b-access circle { fill: var(--info); }
+.b-occasion circle { fill: color-mix(in srgb, var(--danger) 50%, var(--info)); }
+.b-deposit circle { fill: var(--ok); }
+.b-highchair circle { fill: var(--warn); }
+svg.floor .ghost { fill: none; stroke: var(--amber); stroke-width: 2; stroke-dasharray: 5 4; pointer-events: none; }
+/* The key under the plan: each swatch drawn as the table it explains. */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; margin-top: 8px; align-items: center; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; border: 2px solid transparent; }
+.legend .l-free { background: var(--plan-table); border-color: var(--plan-edge); }
+.legend .l-arriving { background: var(--plan-arriving); border-color: var(--warn); }
+.legend .l-booked { background: var(--accent); border-color: var(--plan-booked-edge); }
+.legend .l-seated { background: var(--plan-seated); border-color: var(--ok); }
+.legend .l-late { background: var(--plan-late); border-color: var(--danger); }
+.legend .l-walkin { width: auto; height: auto; padding: 0 7px; border-radius: 999px; background: var(--info); color: var(--surface-1); font-style: normal; font-weight: 800; font-size: 12px; line-height: 16px; }
+
+/* ── The workspace ────────────────────────────────────────────────────── */
+/* On a desktop: the call, the back office and the phone side by side. Either
+   side panel can slide away to a bookmark on the window's edge (Panes.tsx),
+   and the back office takes its room. --call-col is the call's width: its
+   own, or as dragged. */
+.workspace {
+  --call-col: minmax(320px, 0.9fr);
+  display: grid; grid-template-columns: var(--call-col) minmax(0, 2fr) 300px; grid-template-areas: 'call office phone';
+  gap: var(--gap); padding: 20px 24px; align-items: start; max-width: 1800px; margin: 0 auto;
+}
+.workspace.call-away { grid-template-columns: minmax(0, 1fr) 300px; grid-template-areas: 'office phone'; }
+.workspace.phone-away { grid-template-columns: var(--call-col) minmax(0, 2fr); grid-template-areas: 'call office'; }
+.workspace.call-away.phone-away { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'office'; }
+/* The wrapper only matters on a laptop, where the call and the phone share a column. */
+.ws-side { display: contents; }
+.ws-call { grid-area: call; display: grid; gap: 8px; position: sticky; top: 12px; }
+.ws-office { grid-area: office; }
+.ws-phone { grid-area: phone; display: grid; gap: 6px; align-content: start; position: sticky; top: 12px; }
+/* Slide a panel away: a caret in the call's header, and one above the phone. */
+.pane-caret { width: 32px; height: 32px; padding: 0; justify-content: center; flex: none; color: var(--muted); }
+.pane-caret .caret::before { content: '\25C2'; font-size: 16px; line-height: 1; }
+.ws-phone .pane-caret .caret::before { content: '\25B8'; }
+.ws-call > .pane-caret { position: absolute; top: 14px; right: 14px; z-index: 2; }
+.ws-call .live > header { padding-right: 40px; }
+.pane-head { display: flex; align-items: center; gap: 8px; justify-self: center; width: 100%; max-width: 300px; font-size: 14px; color: var(--heading); }
+/* The call's inner edge: drag it to make the call wider or narrower. It sits in the gap beside the call. */
+.ws-resize { grid-area: call; justify-self: end; align-self: stretch; width: 12px; margin-right: -14px; position: relative; z-index: 2; cursor: col-resize; touch-action: none; border-radius: 6px; }
+.ws-resize::after { content: ''; position: absolute; top: 8px; bottom: 8px; left: 5px; width: 2px; border-radius: 2px; background: var(--accent); opacity: 0; transition: opacity var(--dur-fast) var(--ease); }
+.ws-resize:hover::after, .ws-resize:focus-visible::after, .ws-resize.dragging::after { opacity: 1; }
+/* What a slid-away panel leaves on the window's edge: its icon, its name and a caret to bring it back. */
+.ws-bookmark {
+  position: fixed; z-index: var(--z-sticky); top: max(96px, 30vh); display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-width: 40px; padding: 12px 4px 10px; background: var(--surface-2); color: var(--heading); border: 1px solid rgba(var(--accent-rgb), 0.5);
+  box-shadow: var(--glow-md); font-weight: 600; animation: bookmark-in var(--dur) var(--ease);
+}
+.ws-bookmark[data-pane='call'] { left: 0; border-left: none; border-radius: 0 12px 12px 0; --from: -100%; }
+.ws-bookmark[data-pane='phone'] { right: 0; border-right: none; border-radius: 12px 0 0 12px; --from: 100%; }
+.ws-bookmark.live { border-color: var(--ok); }
+.bm-label { writing-mode: vertical-rl; font-size: 13px; letter-spacing: 0.04em; }
+.bm-live { display: grid; justify-items: center; gap: 6px; }
+.bm-live time { font-size: 12px; }
+.bm-count { min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: var(--ink); font: 600 12px/22px var(--font-mono); text-align: center; }
+.bm-caret::before { content: '\25B8'; font-size: 14px; color: var(--muted); }
+.ws-bookmark[data-pane='phone'] .bm-caret::before { content: '\25C2'; }
+@keyframes bookmark-in { from { transform: translateX(var(--from)); } }
+.ws-call .stream { max-height: 38vh; }
+.ws-call .console { gap: 14px; }
+.ws-call .talk { width: 104px; height: 104px; font-size: 12px; }
+.ws-call .call-status { font-size: 13px; font-weight: 500; align-items: flex-start; }
+.ws-call .meter { grid-template-columns: 96px 1fr; }
+.days button[aria-pressed='true'] .count { color: var(--ink); opacity: 1; }
+.privacy { font-size: 12px; }
+.ws-office { padding: 0; overflow: hidden; }
+/* Every tab in view: they wrap rather than hide off the edge. */
+.tabs { display: flex; flex-wrap: wrap; gap: 2px 2px; border-bottom: 1px solid var(--line); padding: 8px 12px 0; }
+.tabs button { padding: 7px 11px; font-size: 14px; }
+.tabs button { border-radius: var(--r-md) var(--r-md) 0 0; border: none; background: transparent; font-weight: 500; color: var(--muted); white-space: nowrap; box-shadow: none; }
+.tabs button:not(:disabled):hover { color: var(--heading); background: rgba(var(--cream-rgb), 0.04); box-shadow: none; }
+.tabs button[aria-selected='true'] { color: var(--heading); box-shadow: inset 0 -2px 0 var(--accent), 0 6px 18px -10px var(--accent); }
+.office-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.office-main { padding: 14px 16px; min-width: 0; }
+.service-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.slider { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 200px; }
+.slider input { padding: 0; accent-color: var(--accent); }
+.slider .mono { color: var(--heading); font-size: 18px; min-width: 52px; }
+.numbers { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.numbers b { color: var(--heading); font-size: 16px; }
+.floor-wrap.live { padding: 6px; }
+
+.drawer { width: 330px; border-radius: 0; border-width: 0 0 0 1px; display: grid; gap: 12px; align-content: start; max-height: 86vh; overflow-y: auto; padding: 16px; }
+.drawer header { display: flex; justify-content: space-between; align-items: flex-start; }
+.drawer h3 { font-size: 1.15rem; }
+.facts-list { display: grid; grid-template-columns: 80px 1fr; gap: 4px 10px; margin: 0; font-size: 14px; }
+.facts-list dt { color: var(--muted); }
+.facts-list dd { margin: 0; color: var(--heading); }
+.visit { display: flex; flex-wrap: wrap; gap: 4px; }
+.visit button { padding: 4px 9px; font-size: 12px; }
+.history summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+.history ol { padding-left: 18px; margin: 6px 0 0; font-size: 13px; display: grid; gap: 4px; }
+
+.timeline { display: grid; gap: 8px; }
+.tl-grid { display: grid; gap: 2px; overflow-x: auto; scroll-padding-left: 110px; }
+.tl-head, .tl-row { display: grid; grid-template-columns: 110px minmax(560px, 1fr); align-items: center; }
+.tl-scale { position: relative; height: 18px; font-size: 12px; color: var(--muted); }
+.tl-scale span { position: absolute; transform: translateX(-50%); font-family: var(--mono); }
+.tl-row.area-start { margin-top: 10px; }
+/* A Diary's half-hour blocks wide enough to read their time: a long day scrolls sideways instead. */
+.diary .tl-head, .diary .tl-row { grid-template-columns: 110px minmax(900px, 1fr); }
+/* The rows' names stay at the left while a day too wide for the screen scrolls under them: it opens part-way along
+   (openAt.ts), and a bar with no table or person beside it can't be placed. Full height, so no bar shows above or below. */
+.tl-label {
+  font-size: 12px; position: sticky; left: 0; z-index: 1; align-self: stretch; background: var(--surface);
+  display: flex; flex-wrap: wrap; align-items: center; align-content: center; column-gap: 0.3em;
+}
+.tl-head > span:first-child { position: sticky; left: 0; z-index: 1; align-self: stretch; background: var(--surface); }
+/* An area's name just above its first row. */
+.tl-area { position: absolute; bottom: 100%; left: 0; font-size: 12px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+.tl-label > .tl-offmark { flex-basis: 100%; }
+.tl-track { position: relative; height: 30px; background: var(--surface-2); border-radius: 6px; }
+.tl-row.walk-in .tl-track { background: repeating-linear-gradient(135deg, var(--surface-2) 0 8px, transparent 8px 16px); }
+/* Its words kept just right of the names as the day scrolls, rather than slid under them. */
+.tl-walkin { position: sticky; left: 110px; width: max-content; height: 100%; display: flex; align-items: center; padding-left: 10px; font-size: 12px; color: var(--muted); pointer-events: none; }
+.tl-row.drop .tl-track { outline: 2px solid var(--ok); }
+/* While a Diary bar is dragged: the people it could go to. */
+.tl-row.can-drop .tl-track { background: color-mix(in srgb, var(--ok) 10%, transparent); }
+.tl-open { position: absolute; top: 0; bottom: 0; background: rgba(var(--cream-rgb), 0.04); border-left: 1px dashed var(--line); border-right: 1px dashed var(--line); }
+.tl-bar {
+  position: absolute; top: 3px; bottom: 3px; margin: 0; border-radius: 6px; padding: 0 6px; font-size: 12px; font-weight: 500; gap: 4px;
+  /* A tint of the business's colour with an edge of it, and the page's own text: readable on a light or a dark page, with any accent. */
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--accent); color: var(--heading); border: 1px solid rgba(var(--accent-rgb), 0.35); overflow: hidden; white-space: nowrap; justify-content: flex-start; touch-action: none;
+}
+/* The business's other kind of booking (a café's afternoon tea) in a shade of its own. Before the visit's colours, which win. */
+.tl-bar.other-kind { background: color-mix(in srgb, var(--info) 24%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--info); border-color: color-mix(in srgb, var(--info) 35%, transparent); }
+/* A word on a bar (that kind's name, Quiet): first in the bar, so one too narrow for the rest still shows it. */
+.tl-bar .tl-mark { flex: none; padding: 0 4px; border: 1px solid currentColor; border-radius: 4px; font-weight: 600; line-height: 16px; }
+.tl-bar.seated, .tl-bar.arrived { background: color-mix(in srgb, var(--ok) 26%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--ok); border-color: rgba(var(--ok-rgb), 0.35); }
+.tl-bar.finished, .tl-bar.no_show { opacity: 0.4; }
+.tl-bar.allergy { box-shadow: inset 3px 0 0 var(--danger); }
+.tl-bar.paired { border-color: var(--amber-light); }
+.tl-bar.lifted { opacity: 0.6; outline: 2px dashed var(--accent); }
+.tl-now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--danger); pointer-events: none; }
+
+.kitchen { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; align-items: start; }
+/* A board too wide for its panel scrolls sideways by itself, so the view's controls above it stay put. */
+.kitchen { overflow-x: auto; overscroll-behavior-x: contain; }
+/* In a narrow column a badge wraps rather than poke out of its card. */
+.rx :is(.ticket, .rp-row, .rp-mrow, .drawer, .sale) .badge { white-space: normal; }
+/* A takeaway's five columns keep a readable width and scroll sideways in their panel, rather than squeeze. */
+.kitchen.with-out { grid-template-columns: repeat(5, minmax(180px, 1fr)); overflow-x: auto; padding-bottom: 4px; }
+/* A takeaway's drivers: a column each, then what is waiting for one. */
+.drivers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: start; }
+.drivers .ticket footer { flex-wrap: wrap; }
+/* A caller's request on a ticket, waiting for staff to accept or refuse. */
+.ticket .request { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; margin: 6px 0; padding: 4px 8px; border-radius: 6px; border-left: 3px solid var(--amber); background: var(--surface-2); font-size: 13px; }
+.ticket .request.answered { border-left-color: var(--muted); color: var(--muted); }
+.ticket .request .row { display: flex; gap: 4px; }
+
+
+/* ── An estate agency's back office ───────────────────────────────────── */
+.diary .tl-bar.valuation { background: color-mix(in srgb, var(--info) 24%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--info); border-color: rgba(var(--info-rgb), 0.35); }
+.diary .tl-bar.other { background: color-mix(in srgb, var(--ok) 24%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--ok); border-color: rgba(var(--ok-rgb), 0.35); }
+.badges { display: flex; gap: 4px; flex-wrap: wrap; }
+.kitchen.offers { grid-template-columns: repeat(3, minmax(200px, 1fr)); }
+.kitchen.offers .ticket { cursor: default; display: grid; gap: 4px; }
+.valuation .badges { flex-wrap: wrap; }
+/* ── Sales progress ───────────────────────────────────────────────────── */
+.sales { display: grid; gap: 12px; }
+.sale { display: grid; gap: 8px; background: var(--surface-2); border-radius: 12px; padding: 12px 14px; }
+.sale.done { opacity: 0.6; }
+.sale header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.milestones { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.milestones .step { font-size: 12px; padding: 4px 9px; border-radius: var(--r-full); font-weight: 500; }
+.milestones .step.on { background: rgba(var(--accent-rgb), 0.18); border-color: var(--accent); color: var(--heading); }
+.sale-dates input { padding: 4px 8px; margin-left: 4px; }
+.parties, .updates { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.valuation .badge { white-space: normal; }
+.offer-actions { justify-content: flex-start !important; }
+.accept-box { display: grid; gap: 6px; margin-top: 6px; padding: 8px; border-radius: 8px; background: var(--surface-2); }
+.homes { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; align-items: start; }
+.home-card { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.home-card.open { grid-column: 1 / -1; border-color: var(--accent); }
+.home-pic { position: relative; display: grid; align-content: start; gap: 4px; }
+.home-pic .example { font: 500 12px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); text-align: center; }
+svg.house { width: 96px; height: auto; display: block; }
+svg.house .ground { stroke: var(--line-strong); stroke-width: 2; }
+svg.house .wall { fill: color-mix(in srgb, var(--cream) 14%, transparent); stroke: var(--cream-300); stroke-width: 1.2; }
+svg.house .roof { fill: color-mix(in srgb, var(--accent) 45%, transparent); stroke: var(--accent); stroke-width: 1.2; }
+svg.house .window { fill: color-mix(in srgb, var(--info) 35%, transparent); }
+svg.house .door { fill: var(--accent); }
+.home-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; min-width: 0; align-content: start; }
+.home-body header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.home-body header b { color: var(--heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.home-body header .badge { flex: none; }
+.home-price b { font-size: 16px; color: var(--heading); }
+.home-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--muted); }
+.home-meter { display: grid; grid-template-columns: auto minmax(60px, 1fr) auto; gap: 8px; align-items: center; }
+.home-meter .meter-fill { display: block; height: 100%; }
+.home-meter .meter-fill.ok { background: var(--ok); }
+.home-meter .meter-fill.warn { background: var(--warn); }
+.home-body > button { justify-self: start; }
+.home-manage { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+.home-manage .field-row { flex-wrap: wrap; align-items: center; }
+.home-manage .field-row input, .home-manage .field-row select { width: auto; padding: 5px 8px; }
+@media (max-width: 640px) {
+  .homes { grid-template-columns: minmax(0, 1fr); }
+  .home-card { grid-template-columns: 56px minmax(0, 1fr); gap: 8px; }
+  svg.house { width: 56px; }
+}
+.k-col { background: var(--surface-2); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 8px; min-height: 180px; align-content: start; border: 2px solid transparent; }
+.k-col.over { border-color: var(--accent); }
+.k-col h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: flex; justify-content: space-between; }
+.k-col .count { font-family: var(--mono); color: var(--heading); }
+.k-col .ticket { background: var(--surface); cursor: grab; }
+.ticket footer { display: flex; gap: 6px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 6px; }
+.ticket .due { font-family: var(--mono); font-size: 12px; color: var(--amber-light); }
+.ticket .due.late { color: var(--danger); }
+.ws-messages { display: grid; gap: 8px; }
+.ws-messages h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 6px; }
+.ws-messages .message { display: grid; gap: 4px; justify-items: start; }
+.ws-messages .message.done { opacity: 0.55; }
+/* How soon and what about, ahead of what was said. */
+.ws-messages .msg-tag { display: inline-block; margin-right: 6px; vertical-align: 1px; }
+.drawer .quiet-mark { display: inline-block; margin-left: 8px; vertical-align: 1px; }
+
+/* ── The customer's phone ─────────────────────────────────────────────── */
+.phone-col { display: grid; gap: 10px; justify-items: center; }
+.phone {
+  width: 280px; height: 560px; border-radius: 42px; background: #0a0a0a; border: 10px solid #1d1d1f; box-shadow: 0 0 0 2px #3a3a3c, 0 20px 50px rgba(0, 0, 0, 0.5);
+  display: grid; grid-template-rows: auto auto 1fr; overflow: hidden; color: #f2f2f7; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+}
+.phone-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 18px 4px; font-size: 12px; font-weight: 600; }
+.phone-bar .notch { width: 80px; height: 22px; background: #000; border-radius: 14px; }
+.phone-head { display: grid; justify-items: center; gap: 2px; padding: 6px 10px 10px; border-bottom: 1px solid #2c2c2e; background: #111; }
+.phone-head b { font-size: 13px; color: #fff; max-width: 220px; text-align: center; }
+.avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: var(--ink); display: grid; place-items: center; font-weight: 800; }
+.phone-thread { overflow-y: auto; padding: 12px 10px; display: flex; flex-direction: column; gap: 8px; }
+.sms { align-self: flex-start; max-width: 86%; background: #2c2c2e; border-radius: 18px 18px 18px 4px; padding: 8px 12px; font-size: 13px; line-height: 1.35; }
+.sms p { margin: 0; }
+.sms time { display: block; font-size: 12px; color: #8e8e93; margin-top: 3px; }
+.sms.fresh { animation: smsin 500ms ease-out; }
+@keyframes smsin { from { transform: translateY(12px) scale(0.96); opacity: 0; } }
+.phone-empty { color: #8e8e93; font-size: 12px; text-align: center; margin: 40px 12px 0; }
+.phone-number { width: 280px; text-align: center; }
+.phone-number p { margin: 0; }
+.call-as { display: grid; gap: 4px; margin: 0 0 8px; text-align: left; }
+.applicant { position: relative; }
+.buyer-actions { margin: 2px 0 0; }
+
+/* On a desktop or laptop the workspace fits the window: the call, the back
+   office and the phone each scroll on their own, the tabs stay in view, and
+   the page itself never scrolls. A long board column scrolls inside itself. */
+@media (min-width: 1024px) and (min-height: 600px) {
+  .workspace-page { height: 100vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .workspace-page > .workspace { flex: 1; min-height: 0; width: 100%; align-items: stretch; padding-top: 14px; padding-bottom: 14px; }
+  .ws-call, .ws-phone, .ws-side { position: relative; top: auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; align-content: start; scrollbar-gutter: stable; }
+  .ws-office { display: flex; flex-direction: column; min-height: 0; }
+  .ws-office > .tabs { flex: none; }
+  .office-body { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  .office-main { min-height: 0; overflow: auto; overscroll-behavior: contain; }
+  .office-body > .drawer { max-height: none; min-height: 0; }
+  .k-col { max-height: max(260px, calc(100vh - 250px)); overflow-y: auto; overscroll-behavior: contain; }
+  .k-col h3 { position: sticky; top: -10px; margin: -10px -10px 0; padding: 10px 10px 6px; background: var(--surface-2); z-index: 1; }
+}
+@media (min-width: 1024px) {
+  /* A slid-away panel is gone from the grid; its bookmark gets a strip of the page's edge to itself. */
+  .workspace.call-away .ws-call, .workspace.phone-away .ws-phone { display: none; }
+  .workspace.call-away { padding-left: 56px; }
+  .workspace.phone-away { padding-right: 56px; }
+}
+@keyframes slide-in-right { from { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .spinner, .table.flash .top, .sms.fresh, .ws-bookmark, .preview.open, .office-body > .drawer { animation: none; }
+  .ws-call, .ws-phone { transition: none !important; }
+}
+
+/* Laptop: the call and the phone share the first column, and either can slide away from it. */
+@media (max-width: 1279px) {
+  /* The top bar keeps to one row: the person's name goes (Sign out stays). */
+  .rx-top > .muted.small { display: none; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .rx-top { gap: 10px 12px; }
+  .rx-top .brand .product { display: none; }
+  .rx-top button, .rx-top .button { padding: 6px 12px; }
+  .workspace, .workspace.call-away, .workspace.phone-away { --call-col: minmax(300px, 1fr); grid-template-columns: var(--call-col) minmax(0, 2fr); grid-template-areas: 'side office'; }
+  .workspace.call-away.phone-away { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'office'; }
+  .workspace.call-away.phone-away .ws-side { display: none; }
+  .ws-side { display: grid; grid-area: side; gap: var(--gap); align-content: start; position: sticky; top: 12px; }
+  .ws-call, .ws-phone { grid-area: auto; }
+  .ws-resize { grid-area: side; }
+  /* Both bookmarks on the left, where their panels open. */
+  .workspace.call-away, .workspace.phone-away { padding-left: 56px; padding-right: 24px; }
+  .ws-phone .pane-caret .caret::before { content: '\25C2'; }
+  .ws-bookmark[data-pane='phone'] { left: 0; right: auto; top: calc(max(96px, 30vh) + 160px); border-left: none; border-right: 1px solid rgba(var(--accent-rgb), 0.5); border-radius: 0 12px 12px 0; --from: -100%; }
+  .ws-bookmark[data-pane='phone'] .bm-caret::before { content: '\25B8'; }
+  .builder { grid-template-columns: 190px minmax(0, 1fr); }
+  .preview { grid-column: 2; position: static; max-height: none; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) and (min-height: 600px) {
+  /* Stacked in one column, the call and the phone keep their full height and the column scrolls. */
+  .ws-side { grid-auto-rows: max-content; }
+  .ws-side .ws-call, .ws-side .ws-phone { overflow: visible; min-height: auto; }
+}
+
+/* Tablet and phone: the back office has the screen; the call and the phone open over it as drawers. */
+@media (max-width: 1023px) {
+  .rx-door { grid-template-columns: 1fr; min-height: 0; padding-top: 40px; }
+  .workspace { display: block; padding: 16px; }
+  .ws-call, .ws-phone {
+    position: fixed; z-index: 45; top: 0; bottom: 0; width: min(420px, calc(100vw - 32px)); overflow-y: auto; overscroll-behavior: contain;
+    padding: 16px; background: var(--ground); align-content: start;
+    visibility: hidden; transition: transform var(--dur) var(--ease), visibility 0s linear var(--dur);
+  }
+  .ws-call { left: 0; transform: translateX(-100%); border-right: 1px solid var(--line); }
+  .ws-phone { right: 0; transform: translateX(100%); border-left: 1px solid var(--line); }
+  .ws-call[data-open], .ws-phone[data-open] { visibility: visible; transform: none; transition: transform var(--dur) var(--ease), visibility 0s; box-shadow: var(--glow-md); }
+  .ws-call > .pane-caret { top: 30px; right: 30px; }
+  .ws-scrim { position: fixed; inset: 0; z-index: 44; background: rgba(var(--bg-rgb), 0.6); }
+  .office-body { grid-template-columns: 1fr; }
+  /* A booking opens over the right of the screen, rather than below a view the size of the screen. */
+  .office-body > .drawer {
+    position: fixed; z-index: 45; top: 0; right: 0; bottom: 0; width: min(420px, calc(100vw - 32px)); max-height: none; overflow-y: auto; overscroll-behavior: contain;
+    border-radius: 0; border-width: 0 0 0 1px; box-shadow: var(--glow-md); animation: slide-in-right var(--dur) var(--ease);
+  }
+  /* Fingers, not a mouse: every button, tab and box at least 40px. Timeline bars keep their time-scaled width; a link in a sentence stays in its line. */
+  .rx :is(button, .button, select, textarea, [role='tab'], input:not([type='checkbox'], [type='radio'], [type='range'], [type='hidden'])):not(.tl-bar, p .linkish) { min-height: 40px; }
+  .rx :is(button, .button):not(.tl-bar, p .linkish) { min-width: 40px; }
+  .rx summary { padding-block: 10px; }
+  .chips label { display: inline-flex; align-items: center; min-height: 40px; padding: 4px 12px; }
+  .tl-track { height: 44px; }
+  .tl-bar { top: 2px; bottom: 2px; }
+  /* The top bar on one row: the buttons with an icon show only the icon, their names kept for screen readers and as a tooltip. */
+  .rx div.rx-top { gap: 8px 10px; padding-inline: 16px; }
+  .rx-top .brand .product { display: none; }
+  .rx-top .crumb { min-width: 0; max-width: 24vw; }
+  .rx-top .crumb > span { white-space: nowrap; flex: none; }
+  .rx-top .crumb b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .workspace-page .rx-top button:has(> svg) { font-size: 0; gap: 0; width: 40px; padding: 0; justify-content: center; }
+  /* The builder: the steps a ribbon along the top that stays in view, then the step; the preview opens from a button. */
+  .builder-page .rx-top { position: static; }
+  .builder { display: block; padding-top: 0; }
+  .steps { position: sticky; top: 0; z-index: 6; max-height: none; overflow: visible; margin: 0 -24px 14px; padding: 8px 24px; background: var(--ground); border-bottom: 1px solid var(--line); }
+  .steps ol { display: flex; overflow-x: auto; gap: 4px; scrollbar-width: none; }
+  .steps button { white-space: nowrap; min-height: 40px; }
+  .preview { position: static; max-height: none; }
+  .preview.open {
+    position: fixed; z-index: 45; top: 0; right: 0; bottom: 0; width: min(420px, calc(100vw - 32px)); max-height: none; overflow-y: auto;
+    border-radius: 0; border-width: 0 0 0 1px; align-content: start; animation: slide-in-right var(--dur) var(--ease);
+  }
+  .preview-scrim { position: fixed; inset: 0; z-index: 44; background: rgba(var(--bg-rgb), 0.6); }
+  .floor-edit { grid-template-columns: 1fr; }
+  /* Boards keep their columns side by side and scroll sideways, a column at a time. */
+  .kitchen, .kitchen.with-out, .kitchen.offers, .drivers { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(210px, 1fr); overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 6px; }
+  .kitchen > .k-col, .drivers > * { scroll-snap-align: start; }
+  /* A half-hour in the Diary wide enough to tap: the day scrolls sideways instead. */
+  .rx .diary .tl-head, .rx .diary .tl-row { grid-template-columns: 96px minmax(1200px, 1fr); }
+  .rx .diary .tl-walkin { left: 96px; }
+  .diary .tl-bar { min-width: 40px; }
+}
+@media (max-width: 640px) {
+  .rx-main { padding: 16px; }
+  /* On a phone the top bar scrolls away and stays small: a quarter of the screen was going on it. */
+  .rx-top { position: static; gap: 8px; padding: 10px 16px; }
+  .rx-top .crumb { max-width: 56vw; }
+  .rx-top .button, .rx-top button:not(:has(> svg)) { padding: 6px 10px; font-size: 13px; }
+  .step.panel { padding: 18px 16px; }
+  .step-nav { margin: 18px -16px -18px; padding: 10px 16px; }
+  .steps { margin: 0 -16px 12px; padding: 8px 16px; }
+  .preview.open { width: 100vw; border-width: 0; }
+  /* minmax(0, …): a box in a column shrinks to it, rather than widen the column into its neighbour. */
+  .two, .four { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* Switches with a line of explanation need the width: one to a line. */
+  .two:has(> .toggle) { grid-template-columns: minmax(0, 1fr); }
+  /* A number and its unit shrink to their column rather than run into the next. */
+  .field { grid-template-columns: minmax(0, 1fr); }
+  .num-field { max-width: 100%; }
+  .num-field input { min-width: 0; }
+  .day-row { grid-template-columns: 1fr; }
+  /* A service on two lines: its name and remove, then its times. */
+  .service { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .service > input:first-child { grid-column: 1 / 3; grid-row: 1; }
+  .service > button { grid-column: 3; grid-row: 1; justify-self: end; }
+  .service > input:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .service > span.muted { grid-column: 2; grid-row: 2; }
+  .service > input:nth-child(4) { grid-column: 3; grid-row: 2; }
+  .service .midnight { grid-column: 3; grid-row: 3; }
+  /* The menu on a phone: a dish's name and remove on one line, its price, allergens and takeaway switch on the next. */
+  .draft-box .field-row { flex-wrap: wrap; }
+  .draft-box .field-row select { flex: 1 1 140px; }
+  .cat-head { flex-wrap: wrap; }
+  .cat-name { flex: 1 1 160px; min-width: 0; }
+  .dish { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .dish .dish-name { grid-column: 1 / 3; grid-row: 1; }
+  .dish > button.ghost:not(.allergen-btn) { grid-column: 3; grid-row: 1; }
+  .dish .price { grid-column: 1; grid-row: 2; }
+  .dish .allergen-btn { grid-column: 2 / -1; grid-row: 2; }
+  .dish:has(.tiny-toggle) .allergen-btn { grid-column: 2; }
+  .dish .tiny-toggle { grid-column: 3; grid-row: 2; }
+  /* A column and a glimpse of the next, so it is clear the board goes on sideways. */
+  .kitchen, .kitchen.with-out, .kitchen.offers, .drivers { grid-auto-columns: min(260px, 72vw); }
+  .found li { grid-template-columns: 1fr; }
+  /* The back office's tabs: one strip that scrolls sideways, the chosen one kept in view. */
+  .ws-office > .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .ws-office > .tabs button, .day-tabs button { flex: none; }
+  /* The bookmarks low on the edges, icon and caret only, so they cover as little of the back office as they can. */
+  .ws-bookmark { top: auto; bottom: 84px; padding-block: 10px 8px; }
+  .ws-bookmark .bm-label { display: none; }
+  .ws-call, .ws-phone, .office-body > .drawer { width: 100vw; border-width: 0; }
+}
+
+/* ── Shared demos: when they go ───────────────────────────────────────── */
+.expiry { color: var(--warn-light); font-size: 13px; margin: 0; }
+.replace-box { border: 1px solid var(--warn); border-radius: 10px; padding: 8px 12px 10px; display: grid; gap: 6px; margin: 4px 0; }
+.replace-box legend { font-weight: 700; color: var(--heading); }
+.replace-box p { margin: 0; }
+.replace-box label { display: flex; gap: 8px; align-items: center; }
+.replace-box input { width: auto; accent-color: var(--accent); }
+.ended { max-width: 560px; margin: 40px auto; display: grid; gap: 12px; justify-items: start; }
+
+/* ── A repairs contractor's back office (presets/property-maintenance.md §6) ── */
+.block { display: block; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.jobs { display: grid; gap: 10px; justify-items: start; }
+.jobs-board { width: 100%; }
+.jobs-board .ticket.job { cursor: default; display: grid; gap: 4px; border-left: 4px solid var(--line-strong); }
+.ticket.job.urgent { border-left-color: var(--accent); }
+.ticket.job.emergency { border-left-color: var(--danger); background: var(--danger-soft); }
+.ticket.job header b { font-size: 13px; }
+.move-job { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; align-items: end; }
+.move-job button { grid-column: 1 / -1; justify-self: start; }
+.done-jobs { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+.dispatch { display: grid; gap: 10px; min-width: 0; }
+.on-call { margin: 0; }
+.day-tabs { display: flex; gap: 4px; overflow-x: auto; }
+.day-tabs button { white-space: nowrap; font-size: 12px; padding: 4px 10px; }
+.day-tabs button[aria-selected='true'] { border-color: var(--accent); color: var(--heading); }
+.emergencies { display: flex; gap: 6px; flex-wrap: wrap; }
+.dispatch-grid { width: 100%; border-collapse: separate; border-spacing: 4px; font-size: 12px; table-layout: fixed; }
+.dispatch-grid th { text-align: left; font-weight: 600; color: var(--heading); vertical-align: top; }
+.dispatch-grid th .muted { display: block; font-weight: 400; }
+.dispatch-grid td { background: var(--surface-2); border: 2px solid transparent; border-radius: 8px; padding: 4px; vertical-align: top; min-height: 36px; height: 40px; }
+.dispatch-grid td.over { border-color: var(--accent); }
+.dispatch-grid td.full { background: repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 6px, var(--surface) 6px, var(--surface) 12px); }
+.dispatch-grid tr.off th, .dispatch-grid tr.off td { opacity: 0.5; }
+.dispatch .chip { display: block; margin: 2px 0; font: 500 12px/1.3 var(--font-sans, inherit); white-space: normal; cursor: grab; }
+.chip.emergency { border-color: rgba(var(--danger-rgb), 0.6); color: var(--danger); }
+.chip.urgent { border-color: rgba(var(--accent-rgb), 0.5); }
+.tray { display: grid; gap: 4px; }
+.tray h3 { margin: 0; }
+.compliance { display: grid; gap: 10px; }
+.register { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.register-row { width: 100%; text-align: left; display: grid; gap: 4px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; }
+.register-detail { padding: 8px 10px; display: grid; gap: 10px; }
+.certs, .safety-log { width: 100%; border-collapse: collapse; font-size: 13px; }
+/* Quotes and invoices: a reference on one line, and the two buttons side by side. */
+.money td:first-child b, .money td:nth-child(3) { white-space: nowrap; }
+.money td.actions .row-tools { flex-wrap: nowrap; }
+.money td.actions button { white-space: nowrap; }
+.certs th, .certs td, .safety-log th, .safety-log td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.safety-log th, .certs th { color: var(--muted); font-weight: 600; font-size: 12px; }
+/* A wide table keeps its columns and scrolls sideways inside its own box. */
+.table-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+@media (max-width: 640px) {
+  .move-job { grid-template-columns: 1fr; }
+  .dispatch-grid { font-size: 12px; min-width: 560px; }
+  /* The safety log as a card per call: each cell on its own line under its heading. */
+  .safety-log thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .safety-log, .safety-log tbody, .safety-log tr, .safety-log td { display: block; }
+  .safety-log tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .rx .office-main .safety-log td { border: none; padding: 3px 0 3px 7rem; position: relative; min-height: 1.5em; }
+  .safety-log td::before { content: attr(data-label); position: absolute; left: 0; top: 4px; width: 6.5rem; font-size: 12px; color: var(--muted); }
+}
+.job-sheet { display: grid; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line); }
+.page-alert { display: grid; gap: 4px; padding: 8px; border-radius: 10px; background: var(--danger-soft); border: 1px solid rgba(var(--danger-rgb), 0.4); }
+.sheet-job { display: grid; gap: 2px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.inline-check { display: inline-flex; gap: 6px; align-items: center; }
+.inline-check input { width: auto; }
+
+/* The demo's own clock: a small form under its button. */
+.demo-clock { position: relative; display: inline-flex; }
+.clock-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; display: grid; gap: 10px; width: min(280px, calc(100vw - 32px)); padding: 14px; }
+.clock-pop label { display: grid; gap: 4px; font-size: 13px; }
+.clock-pop .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.clock-pop .hint { margin: 0; }
+
+/* The office's notice for today, and a job whose engineer is off. */
+.office-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; margin: 0 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.office-notice.on { border-color: var(--amber); }
+.office-notice input:not([type=checkbox]) { flex: 1 1 220px; min-width: 0; }
+.office-notice .check { display: inline-flex; gap: 6px; align-items: center; }
+.chip.needs-move { outline: 2px dashed var(--danger); outline-offset: 1px; }
+
+/* A takeaway's Menu tonight: the notice, then each section's dishes to switch off. */
+.tonight { display: grid; gap: 12px; max-width: 760px; }
+.tonight .choice label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tonight select { width: auto; min-width: 0; margin-left: 4px; }
+.tonight-section h4 { margin: 6px 0; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.tonight .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tonight-add { display: flex; gap: 8px; margin-top: 8px; max-width: 420px; align-items: center; }
+.tonight-add input { flex: 1 1 auto; min-width: 0; }
+.tonight-add button { white-space: nowrap; flex: none; }
+/* A pub's What's on (presets/pub.md §6). */
+.whats-on { display: grid; gap: 12px; max-width: 760px; }
+.whats-on-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.whats-on-add label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.whats-on-add label.grow { flex: 1 1 220px; }
+.whats-on-day h4 { margin: 6px 0; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.whats-on-day ul { list-style: none; margin: 0; padding: 0; }
+/* One row an event: the time, what kind, what it is, and its action (or "Every week") at the end. */
+.whats-on-event { display: grid; grid-template-columns: 3.2em 4.6em minmax(0, 1fr) auto; align-items: baseline; column-gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.whats-on-event .time { font-variant-numeric: tabular-nums; }
+.whats-on-event .kind { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.whats-on-event .place, .whats-on-event .weekly { color: var(--muted); font-size: 13px; }
+.whats-on-event > button, .whats-on-event .weekly { justify-self: end; }
+/* The form's own heading, a button where it folds away (a phone) and plain text where it is always open. */
+.whats-on-adder > summary { list-style: none; display: none; }
+.whats-on-adder > summary::-webkit-details-marker { display: none; }
+.tonight .sub .count { display: inline-block; margin-left: 6px; padding: 1px 9px; border-radius: 999px; font: 500 12px/1.6 var(--mono); color: var(--muted); background: var(--surface-3); vertical-align: middle; }
+.tonight .chip { border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.tonight .chip.out { background: var(--danger-ground); color: var(--on-danger-ground); text-decoration: line-through; }
+
+/* A repairs contractor's Monday view along the top of the board. */
+.kpis { list-style: none; margin: 0 0 12px; padding: 0; width: 100%; box-sizing: border-box; display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 8px; }
+.kpis li { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.kpis li.bad { border-color: var(--danger); }
+.kpis li.warn { border-color: var(--amber); }
+.kpi-label { font-size: 12px; color: var(--muted); }
+.kpi-value { font: 600 20px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--heading); }
+.kpi-note { font-size: 12px; color: var(--dim); }

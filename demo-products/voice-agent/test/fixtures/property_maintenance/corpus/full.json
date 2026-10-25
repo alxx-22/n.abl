@@ -1,0 +1,480 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "Glenburn Repairs",
+  "style": "Repairs and safety checks for homes and landlords",
+  "town": "Glenburn",
+  "address": "2 Mill Wynd, Glenburn NG1 (example)",
+  "phone_display": "0115 496 0456",
+  "website": "https://www.glenburn.example",
+  "voice": "Puck",
+  "greeting": "Morning, Glenburn Repairs. I'm the AI assistant on this demo line; how can I help?"
+ },
+ "hours": {
+  "days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "12:00"
+     }
+    ]
+   }
+  ],
+  "closures": [
+   {
+    "date": "2026-12-25",
+    "note": "Christmas Day"
+   }
+  ]
+ },
+ "area": {
+  "nation": "scotland",
+  "districts": ["NG1","NG2","NG3"],
+  "towns": ["Glenburn","Kirkhill"]
+ },
+ "customers": {
+  "homeowners": true,
+  "landlords": true,
+  "agents": false,
+  "blocks": false,
+  "social": {
+   "on": false,
+   "agent_of_landlord": false
+  },
+  "commercial": false,
+  "insurers": false,
+  "tenant_no_client": "private",
+  "recharge_lockouts": false
+ },
+ "clients": [
+  {
+   "key": "ellis",
+   "name": "Mrs J Ellis",
+   "kind": "landlord",
+   "works_limit_pence": 20000,
+   "emergency_authority_pence": 30000,
+   "po_required": false,
+   "contact": {
+    "name": "Jean Ellis",
+    "phone": "07700 900404",
+    "email": ""
+   },
+   "notice": "every_job",
+   "instructions": "Holds quote Q-2291: a £2,450 boiler replacement at her flat.",
+   "status": "on_stop",
+   "example": true
+  },
+  {
+   "key": "kaur",
+   "name": "Mr R Kaur",
+   "kind": "landlord",
+   "works_limit_pence": 15000,
+   "emergency_authority_pence": 25000,
+   "po_required": false,
+   "contact": {
+    "name": "Raj Kaur",
+    "phone": "07700 900405",
+    "email": ""
+   },
+   "notice": "over_limit",
+   "instructions": "",
+   "status": "active",
+   "example": true
+  },
+  {
+   "key": "whitfield",
+   "name": "Whitfield Properties",
+   "kind": "landlord",
+   "works_limit_pence": 25000,
+   "emergency_authority_pence": 40000,
+   "po_required": false,
+   "contact": {
+    "name": "Ben Whitfield",
+    "phone": "07700 900406",
+    "email": "ben@whitfield.example"
+   },
+   "notice": "over_limit",
+   "instructions": "",
+   "status": "active",
+   "example": true
+  }
+ ],
+ "trades": [
+  {
+   "key": "gas_heating",
+   "label": "Gas, boilers and heating",
+   "on": true,
+   "gas": true
+  },
+  {
+   "key": "boiler_servicing",
+   "label": "Boiler servicing and gas safety records",
+   "on": true,
+   "gas": true
+  },
+  {
+   "key": "plumbing",
+   "label": "Plumbing and leaks",
+   "on": true
+  },
+  {
+   "key": "drainage",
+   "label": "Drains and blockages",
+   "on": true
+  },
+  {
+   "key": "electrical",
+   "label": "Electrics, EICRs and PAT",
+   "on": true
+  },
+  {
+   "key": "roofing",
+   "label": "Roofs and gutters",
+   "on": true
+  },
+  {
+   "key": "carpentry",
+   "label": "Carpentry and handyman",
+   "on": true
+  },
+  {
+   "key": "locksmith",
+   "label": "Locks and lockouts",
+   "on": true
+  },
+  {
+   "key": "glazing",
+   "label": "Glazing and boarding up",
+   "on": true
+  },
+  {
+   "key": "decorating",
+   "label": "Decorating",
+   "on": false
+  },
+  {
+   "key": "damp_mould",
+   "label": "Damp and mould",
+   "on": true
+  },
+  {
+   "key": "fencing",
+   "label": "Fencing and gates",
+   "on": true
+  }
+ ],
+ "dont_do": [
+  {
+   "what": "pest control",
+   "suggest": "the council"
+  }
+ ],
+ "engineers": [
+  {
+   "key": "dan",
+   "name": "Dan Hughes",
+   "trades": ["gas_heating","plumbing"],
+   "gas_safe": "512345 (example)",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5,6],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900301"
+  },
+  {
+   "key": "callum",
+   "name": "Callum Price",
+   "trades": ["boiler_servicing","gas_heating","plumbing"],
+   "gas_safe": "587210 (example)",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900302"
+  },
+  {
+   "key": "marek",
+   "name": "Marek Nowak",
+   "trades": ["plumbing","drainage"],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5,6],
+   "districts": ["NG1","NG2"],
+   "per_window": 2,
+   "mobile": "07700 900303"
+  },
+  {
+   "key": "priya",
+   "name": "Priya Shah",
+   "trades": ["electrical"],
+   "gas_safe": "",
+   "niceic": true,
+   "oftec": false,
+   "days": [1,2,3,4,5],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900304"
+  },
+  {
+   "key": "tom",
+   "name": "Tom Reilly",
+   "trades": ["roofing"],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900305"
+  },
+  {
+   "key": "shaz",
+   "name": "Shaz Ahmed",
+   "trades": ["carpentry","fencing"],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900306"
+  },
+  {
+   "key": "leon",
+   "name": "Leon Clarke",
+   "trades": ["locksmith","glazing"],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5,6],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900307"
+  },
+  {
+   "key": "grace",
+   "name": "Grace Okafor",
+   "trades": ["decorating","damp_mould"],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900308"
+  }
+ ],
+ "on_call": {
+  "nights": [
+   {
+    "day": 0,
+    "engineers": ["callum","priya"]
+   },
+   {
+    "day": 1,
+    "engineers": ["dan","leon"]
+   },
+   {
+    "day": 2,
+    "engineers": ["callum","priya"]
+   },
+   {
+    "day": 3,
+    "engineers": ["dan","leon"]
+   },
+   {
+    "day": 4,
+    "engineers": ["callum","priya"]
+   },
+   {
+    "day": 5,
+    "engineers": ["dan","leon"]
+   },
+   {
+    "day": 6,
+    "engineers": ["callum","priya"]
+   }
+  ],
+  "escalate_minutes": 15,
+  "duty_manager": {
+   "name": "Helen Ward",
+   "mobile": "07700 900310"
+  }
+ },
+ "priorities": {
+  "emergency": {
+   "attend_hours": 2,
+   "make_safe_hours": 24,
+   "examples": [
+    "no heating or hot water for a vulnerable household",
+    "an uncontrollable leak",
+    "no power at all",
+    "a door that won't lock",
+    "sewage coming up inside"
+   ]
+  },
+  "urgent": {
+   "working_days": 3,
+   "examples": ["no heating in winter","a toilet not flushing (the only one)","a partial loss of power","a roof leak in heavy rain"]
+  },
+  "routine": {
+   "working_days": 20,
+   "examples": ["a dripping tap","a sticking door","a cracked tile","a loose handrail"]
+  },
+  "vulnerable_uplift": false,
+  "winter_heating": false
+ },
+ "checks": {
+  "prepayment": false,
+  "thermostat": true,
+  "trip_reset": false,
+  "boiler_pressure": false
+ },
+ "visits": {
+  "windows": [
+   {
+    "key": "am",
+    "label": "Morning",
+    "from": "08:00",
+    "to": "12:00",
+    "premium_pence": 0,
+    "days": [1,2,3,4,5,6]
+   },
+   {
+    "key": "pm",
+    "label": "Afternoon",
+    "from": "12:00",
+    "to": "16:00",
+    "premium_pence": 0,
+    "days": [1,2,3,4,5]
+   },
+   {
+    "key": "all_day",
+    "label": "All day",
+    "from": "08:00",
+    "to": "16:00",
+    "premium_pence": 1500,
+    "days": [1,2,3,4,5]
+   }
+  ],
+  "notice_hours": 4,
+  "horizon_days": 14,
+  "adult_present": false,
+  "call_ahead": false,
+  "abortive_fee_pence": 4500
+ },
+ "prices": {
+  "vat_registered": false,
+  "callout_pence": 7500,
+  "half_hour_pence": 3000,
+  "ooh_first_hour_pence": 15000,
+  "minimum_pence": 9500,
+  "lockout_from_pence": 12000,
+  "free_quote_over_pence": 50000,
+  "card_on_booking": false,
+  "account_days": 14,
+  "guarantee_months": 12,
+  "cancellation": "Cancel any time before we set off."
+ },
+ "planned": {
+  "gas_record_pence": 6500,
+  "extra_appliance_pence": 1500,
+  "boiler_service_pence": 8500,
+  "combined_pence": 13000,
+  "eicr_from_pence": 15000,
+  "reminder_weeks": 4
+ },
+ "compliance": {
+  "gas_safe_number": "512345 (example)",
+  "niceic": false,
+  "napit": true,
+  "oftec": false,
+  "insurance": "£5 million public liability (example)",
+  "waste_carrier": "Registered upper-tier waste carrier (example)",
+  "complaints_handler": "Iain Ross",
+  "data_lead": "Helen Ward",
+  "recording": "Calls on this demo line are transcribed so the team can see what was said."
+ },
+ "policies": {
+  "faqs": [
+   {
+    "q": "Do you clear gutters?",
+    "a": "Yes, with a ladder inspection first."
+   }
+  ],
+  "guarantee": "Our workmanship is guaranteed for 12 months; parts carry the maker’s warranty.",
+  "asbestos": "If we find anything that might be asbestos, we stop and arrange for it to be tested before any work goes on.",
+  "parking": "Please let us know about any parking restrictions; a permit or a space on the drive helps.",
+  "payment": "Homeowners pay on completion by card or bank transfer; landlords and agents on account, within 14 days.",
+  "careers": "We’re always glad to hear from qualified engineers: take a message and the office will call back."
+ },
+ "theme": {
+  "accent": "#3a7d5c",
+  "primary": "#1f3347",
+  "background": "#0f151b",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

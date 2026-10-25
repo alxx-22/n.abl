@@ -1,0 +1,111 @@
+{
+ "views": [
+  {
+   "id": "timeline",
+   "label": "Diary",
+   "of": "staff"
+  },
+  {
+   "id": "properties",
+   "label": "Properties"
+  },
+  {
+   "id": "offers",
+   "label": "Offers"
+  },
+  {
+   "id": "sales",
+   "label": "Sales progress"
+  },
+  {
+   "id": "applicants",
+   "label": "Applicants"
+  },
+  {
+   "id": "valuations",
+   "label": "Valuations"
+  },
+  {
+   "id": "messages",
+   "label": "Messages"
+  },
+  {
+   "id": "calls",
+   "label": "Calls"
+  }
+ ],
+ "bookings": {
+  "resource": "person",
+  "resources": "team",
+  "party": null,
+  "visit": {
+   "expected": "Booked",
+   "finished": "Done",
+   "no_show": "No-show"
+  },
+  "allergies": false,
+  "combine": false,
+  "property": true
+ },
+ "teamPhones": [
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  },
+  {
+   "name": "Person",
+   "phone": "07700 900099"
+  }
+ ],
+ "suggestions": [
+  "Tell me about the flat on Street Street Street Street Street Street Street Street Street Street  0.",
+  "Can I view 2 Street Street Street Street Street Street Street Street Street Street  1 on Saturday at 11?",
+  "What's my house worth? Next door went for four hundred.",
+  "I'd like to make an offer on 2 Street Street Street Street Street Street Street Street Street Street  1.",
+  "I've got a viewing, reference {ref}. Can I move it?",
+  "Calling as Sarah: how's it going at Street Street Street Street Street Street Street Street Street Street  2?",
+  "Put me on your list: a three-bed with a garden, and text me when one comes up."
+ ],
+ "resetLine": "viewings, valuations, offers and sales",
+ "clock": true
+}

@@ -1,0 +1,60 @@
+{
+ "version": "nine",
+ "basics": {
+  "name": 42,
+  "voice": "Nobody",
+  "greeting": ["hi"]
+ },
+ "hours": {
+  "days": "every day",
+  "closures": [
+   {
+    "date": "soon"
+   }
+  ],
+  "breakfast_until": "late",
+  "kitchen_closes_before": -5
+ },
+ "seating": {
+  "tables": "lots",
+  "areas": [
+   {
+    "key": 7
+   }
+  ]
+ },
+ "booking": {
+  "min_party": 0,
+  "busy_times": 9
+ },
+ "afternoon_tea": {
+  "offered": "yes",
+  "adult_pence": -1,
+  "notice_days": 99,
+  "diet_notice_days": "x",
+  "diets": "all",
+  "sittings": ["noon",25],
+  "minutes": 9999,
+  "max_party": -2,
+  "deposit_pence": "free"
+ },
+ "menu": {
+  "categories": "cakes"
+ },
+ "money": {
+  "cash": "yes",
+  "tips": ["jar"]
+ },
+ "policies": {
+  "dogs": "cats",
+  "hygiene_rating": 9,
+  "tap_water": "yes",
+  "faqs": {
+   "q": 1
+  }
+ },
+ "theme": {
+  "accent": "blue"
+ },
+ "sources": "web"
+}

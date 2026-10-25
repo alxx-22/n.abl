@@ -1,0 +1,535 @@
+// The receptionist's restaurant behaviours (DEMO-SERVICE-PLAN.md §4.2), on a
+// restaurant compiled from the builder's defaults: inside or on the terrace,
+// step-free tables, allergies and occasions, changes by reference that keep
+// the table, collection slots the kitchen can handle, and the payment rule.
+
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { openPglite, migrate, type Db } from '../src/db/db.ts';
+import { Repo } from '../src/db/repo.ts';
+import { mentionedAllergy, namedAllergy, newCallState, runTool, toolDeclarations, unsaidReference, type Action, type ToolContext } from '../src/core/tools.ts';
+import { compilePrompt } from '../src/core/prompt.ts';
+import { DEFAULT_DEMO_CARDS } from '../src/domain/payments.ts';
+import type { Tenant } from '../src/domain/types.ts';
+import { defaultAnswers, type RestaurantAnswers } from '../src/presets/restaurant/answers.ts';
+import { compileRestaurant } from '../src/presets/restaurant/compile.ts';
+import { validateRestaurant } from '../src/presets/restaurant/validate.ts';
+import { seedAll } from '../src/db/seed.ts';
+import { minutesOf } from '../src/domain/time.ts';
+
+// Friday 2 October 2026, 4pm BST.
+const NOW = new Date('2026-10-02T15:00:00Z');
+const SAT = '2026-10-03';
+let db: Db;
+let repo: Repo;
+
+before(async () => {
+  db = await openPglite();
+  await migrate(db);
+  repo = new Repo(db);
+});
+after(async () => db.close());
+
+async function restaurant(slug: string, edit: (a: RestaurantAnswers) => void = () => {}): Promise<Tenant> {
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  edit(a);
+  return repo.upsertTenant(compileRestaurant(a, { slug }));
+}
+
+async function call(tenant: Tenant, callerPhone: string | null = '+447700900123') {
+  const actions: Action[] = [];
+  const sent: { to: string; body: string }[] = [];
+  const ctx: ToolContext = {
+    tenant, repo, now: () => NOW, callId: await repo.createCall({ tenant_id: tenant.id, channel: 'eval' }), channel: 'eval', callerPhone,
+    state: newCallState(), demoCards: DEFAULT_DEMO_CARDS, sms: { send: async (to, body) => (sent.push({ to, body }), 'simulated') }, telephony: null,
+    action: (x) => actions.push(x),
+  };
+  return { ctx, actions, sent };
+}
+
+test('restaurant tools: only a restaurant is asked about areas, access, allergies and highchairs', async () => {
+  const t = await restaurant('tools-decl');
+  const props = (name: string, tenant: Tenant) => Object.keys((toolDeclarations(tenant).find((d) => d.name === name)!.parameters as any).properties);
+  for (const k of ['area', 'accessible', 'prefer', 'allergies', 'occasion', 'highchairs']) assert.ok(props('create_booking', t).includes(k), k);
+  assert.ok(props('check_availability', t).includes('area'));
+  assert.ok(!props('check_availability', t).includes('allergies'));
+  const [barber] = (await seedAll(repo, NOW, { diary: false })).filter((x) => x.slug === 'fade-and-co');
+  assert.ok(!props('create_booking', barber).includes('area'), 'a barber has no seating areas');
+  const prompt = compilePrompt(t.profile, { now: NOW, callerPhone: null, knownCustomer: null, demoCards: DEFAULT_DEMO_CARDS, canTransfer: false } as never);
+  assert.match(prompt, /inside or terrace/i);
+  assert.match(prompt, /allergies or dietary needs/);
+  assert.match(prompt, /do not look the allergy up on the menu/, 'a booking records an allergy without a menu lookup');
+  assert.match(prompt, /quote it/);
+});
+
+test('restaurant tools: inside or on the terrace, and the weather rule', async () => {
+  const t = await restaurant('tools-areas');
+  const { ctx, sent, actions } = await call(t);
+  const both = await runTool('check_availability', { date: SAT, time: '19:30', party_size: 4 }, ctx);
+  assert.equal(both.available, true);
+  assert.deepEqual(both.areas_free, ['Inside', 'Terrace']);
+  assert.match(String(both.next), /inside or terrace/);
+  assert.equal((both.slot as any).resource_label, undefined, 'callers do not hear table numbers');
+
+  const booked = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: 'Sam Price', area: 'outside please', allergies: "Coeliac, quite severe", occasion: 'his birthday' }, ctx);
+  assert.equal(booked.booked, true, JSON.stringify(booked));
+  assert.equal(booked.area, 'Terrace');
+  assert.match(String(booked.weather_note), /inside/i);
+  const b = (await repo.getBookingByReference(t.id, String(booked.reference)))!;
+  assert.equal(b.area_key, 'terrace');
+  assert.equal(b.allergies, 'Coeliac, quite severe');
+  assert.deepEqual(b.tags, ['birthday']);
+  assert.match(b.notes ?? '', /birthday/i);
+  // The text: when, where, the reference and how to change it.
+  assert.match(sent[0].body, /^Olive & Ember: Booked: Saturday 3 October 7:30pm, 4 people, terrace\. Ref [A-Z0-9]+\. To change it, call us and quote your reference\./);
+  assert.match(actions.find((x) => x.kind === 'booking_created')!.detail ?? '', /ALLERGY: Coeliac/);
+
+  // Fill the terrace at 19:30: the tool offers inside at the same time first.
+  for (let i = 0; i < 4; i++) {
+    const r = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: `Terrace ${i}`, area: 'terrace' }, ctx);
+    if (!r.booked) break;
+  }
+  const full = await runTool('check_availability', { date: SAT, time: '19:30', party_size: 4, area: 'terrace' }, ctx);
+  assert.equal(full.available, false);
+  assert.deepEqual(full.other_areas_free, ['Inside']);
+  assert.match(String(full.next), /inside is free at that time/i);
+});
+
+test('restaurant tools: with inside and the terrace both free, the booking names the one the caller chose', async () => {
+  const t = await restaurant('tools-area-choice');
+  const { ctx } = await call(t);
+  // From a live test: read back as "on the terrace", booked with no area, and seated inside.
+  const r = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: 'Sam Price', allergies: 'none' }, ctx);
+  assert.equal(r.booked, false);
+  assert.match(String(r.message), /Inside and Terrace are both free then, and this booking named neither\. Call create_booking again with area/);
+  const ok = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: 'Sam Price', allergies: 'none', area: 'Terrace' }, ctx);
+  assert.equal(ok.booked, true, JSON.stringify(ok));
+  assert.equal(ok.area, 'Terrace');
+  // Once the terrace is full at that time there is no choice to make, so no area is needed.
+  for (let i = 0; i < 3; i++) await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: `Terrace ${i}`, allergies: 'none', area: 'terrace' }, ctx);
+  const inside = await runTool('create_booking', { date: SAT, time: '19:30', party_size: 4, name: 'Tom Wright', allergies: 'none' }, ctx);
+  assert.equal(inside.booked, true, JSON.stringify(inside));
+  assert.equal(inside.area, 'Inside');
+});
+
+test('restaurant tools: a wheelchair gets a step-free table; wishes are kept or noted', async () => {
+  const t = await restaurant('tools-access');
+  const { ctx } = await call(t);
+  const r = await runTool('create_booking', { area: 'inside', date: SAT, time: '18:00', party_size: 3, name: 'Priya Shah', accessible: true, highchairs: 5, prefer: 'window' }, ctx);
+  assert.equal(r.booked, true, JSON.stringify(r));
+  const b = (await repo.getBookingByReference(t.id, String(r.reference)))!;
+  const table = t.profile.booking!.resources.find((x) => x.key === b.resource_key)!;
+  assert.equal(table.accessible, true);
+  assert.ok(b.tags?.includes('wheelchair') && b.tags?.includes('highchair'));
+  assert.match(String(r.note), /only have 3 highchairs/);
+  assert.match(String(r.note), /window/, 'no step-free window table: noted as a request');
+  // Step-free is mentioned only when asked: unasked, it led to a booking marked as needing step-free access.
+  const plain = await runTool('check_availability', { date: SAT, time: '18:00', party_size: 3, area: 'inside' }, ctx);
+  assert.equal((plain.slot as any)?.accessible, undefined, JSON.stringify(plain));
+  const asked = await runTool('check_availability', { date: SAT, time: '18:30', party_size: 3, area: 'inside', accessible: true }, ctx);
+  assert.equal((asked.slot as any)?.accessible, true, JSON.stringify(asked));
+  const w = await runTool('create_booking', { area: 'inside', date: SAT, time: '12:30', party_size: 2, name: 'Tom Wright', prefer: 'by the window' }, ctx);
+  const wb = (await repo.getBookingByReference(t.id, String(w.reference)))!;
+  assert.ok(t.profile.booking!.resources.find((x) => x.key === wb.resource_key)!.features?.includes('window'));
+});
+
+test('restaurant tools: a private room is an enquiry; an unknown area says what there is', async () => {
+  const t = await restaurant('tools-private', (a) => {
+    a.seating.areas.push({ key: 'private', label: 'Private dining room', kind: 'private', reservable: true, enquiry_only: true, weather_rule: null });
+    a.seating.tables.push({ key: 'T20', label: 'Table 20', area: 'private', seats: 12, shape: 'rect', x: 0, y: 0, rotation: 0, accessible: false, walk_in: false, features: [], joins: [] });
+  });
+  const { ctx } = await call(t);
+  const r = await runTool('check_availability', { date: SAT, time: '19:00', party_size: 12, area: 'the private room' }, ctx);
+  assert.equal(r.available, false);
+  assert.match(String(r.message), /take_message/);
+  const u = await runTool('create_booking', { date: SAT, time: '19:00', party_size: 2, name: 'X', area: 'the roof' }, ctx);
+  assert.equal(u.booked, false);
+  assert.match(String(u.message), /Areas: Inside, Terrace, Private dining room/);
+});
+
+test('restaurant tools: changes by reference keep the table when it fits, with a new text', async () => {
+  const t = await restaurant('tools-change');
+  const { ctx, sent } = await call(t);
+  const r = await runTool('create_booking', { area: 'inside', date: SAT, time: '19:00', party_size: 2, name: 'Grace Wood' }, ctx);
+  const before = (await repo.getBookingByReference(t.id, String(r.reference)))!;
+  const later = await runTool('modify_booking', { reference: String(r.reference).toLowerCase(), time: '19:30' }, ctx);
+  assert.equal(later.changed, true, JSON.stringify(later));
+  const after1 = (await repo.getBookingByReference(t.id, String(r.reference)))!;
+  assert.equal(after1.resource_key, before.resource_key, 'same table, half an hour later');
+  const bigger = await runTool('modify_booking', { reference: String(r.reference), party_size: 5, allergies: 'Nut allergy' }, ctx);
+  assert.equal(bigger.changed, true);
+  const after2 = (await repo.getBookingByReference(t.id, String(r.reference)))!;
+  assert.ok((t.profile.booking!.resources.find((x) => x.key === after2.resource_key)!.capacity ?? 0) >= 5, 'a table for five');
+  assert.equal(after2.allergies, 'Nut allergy');
+  assert.match(sent.at(-1)!.body, /^Olive & Ember: Changed: Saturday 3 October 7:30pm, 5 people, inside\. Ref .* quote your reference/);
+  const found = await runTool('find_bookings', { reference: String(r.reference) }, ctx);
+  assert.equal((found.bookings as any[])[0].party_size, 5);
+  assert.equal((found.bookings as any[])[0].allergies, 'Nut allergy');
+  // Booked from one phone, quoting another: the name still finds it.
+  const byName = await runTool('find_bookings', { name: 'Grace Wood', phone: '07700 900999' }, ctx);
+  assert.equal((byName.bookings as any[])[0]?.reference, r.reference, JSON.stringify(byName));
+  // A caller reading the reference a character at a time: the first ones are part of it, not a booking that is missing.
+  const part = await runTool('find_bookings', { reference: String(r.reference).slice(0, 2).toLowerCase() }, ctx);
+  assert.deepEqual(part.bookings, []);
+  assert.match(String(part.note), /only part of a reference/);
+  assert.doesNotMatch(String(part.note), /No upcoming bookings/);
+});
+
+test('restaurant tools: the call does not end before the caller has heard the new reference', async () => {
+  const t = await restaurant('tools-owed');
+  const { ctx } = await call(t);
+  const r = await runTool('create_booking', { area: 'inside', date: SAT, time: '19:00', party_size: 2, name: 'Sam Price' }, ctx);
+  const ref = String(r.reference);
+  assert.equal(ctx.state.owed, ref);
+  // Booked and hung up in one go, as in a live test: the caller heard nothing.
+  assert.equal(unsaidReference(ctx.state, 'Shall I book that for you?'), ref);
+  assert.equal(unsaidReference(ctx.state, ''), null, 'asked once, never in a loop');
+  // Read out a character at a time, with commas and spaces: heard.
+  await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Sam Price' }, ctx);
+  const spoken = `That's booked. Your reference is ${ctx.state.owed!.split('').join(', ')}. Goodbye!`;
+  assert.equal(unsaidReference(ctx.state, spoken), null);
+  ctx.state.owed = 'XW105';
+  assert.equal(unsaidReference(ctx.state, 'Your reference is X, W, one, oh, five.'), null, 'numbers said as words');
+  // A change keeps the reference the caller already has, so nothing new is owed.
+  await runTool('modify_booking', { reference: ref, time: '19:30' }, ctx);
+  assert.equal(ctx.state.owed, null);
+});
+
+test('restaurant tools: a call promised a call-back does not end until the message is taken', async () => {
+  const t = await restaurant('tools-message');
+  const { ctx } = await call(t);
+  // From a live test: "I'll pass those details on", then hung up with no message.
+  const early = await runTool('end_call', { outcome: 'message' }, ctx);
+  assert.equal(early.ok, false);
+  assert.match(String(early.message), /take_message/);
+  assert.equal(ctx.state.ending, false);
+  assert.equal((await runTool('end_call', { outcome: 'message' }, ctx)).ok, true, 'refused once, never in a loop');
+  const other = await call(t);
+  await runTool('take_message', { name: 'Eleanor Grant', message: 'Double room, two nights from Friday 23 October.' }, other.ctx);
+  assert.equal((await runTool('end_call', { outcome: 'message' }, other.ctx)).ok, true);
+  assert.equal(other.ctx.state.ending, true);
+  assert.equal((await runTool('end_call', { outcome: 'booked' }, (await call(t)).ctx)).ok, true, 'other calls end as before');
+});
+
+test('restaurant tools: a message promised and reminded about is asked for once more at end_call, whatever the outcome', async () => {
+  const t = await restaurant('tools-message-owed');
+  const { ctx } = await call(t);
+  // A live call on 8 October: the reminder after "I'll pass that request on" went unheeded, and the call ended "answered".
+  ctx.state.messageChecked = true;
+  ctx.state.messageOwed = true;
+  const early = await runTool('end_call', { outcome: 'answered' }, ctx);
+  assert.equal(early.ok, false);
+  assert.match(String(early.message), /take_message/);
+  assert.equal((await runTool('end_call', { outcome: 'answered' }, ctx)).ok, true, 'refused once, never in a loop');
+  const taken = await call(t);
+  taken.ctx.state.messageChecked = true;
+  taken.ctx.state.messageOwed = true;
+  await runTool('take_message', { name: 'Chris Dale', message: 'Has 22 Albion Road ever flooded?' }, taken.ctx);
+  assert.equal((await runTool('end_call', { outcome: 'answered' }, taken.ctx)).ok, true, 'a message taken settles it');
+});
+
+test('restaurant tools: collection slots the kitchen can handle, and pay on collection', async () => {
+  const t = await restaurant('tools-slots', (a) => {
+    a.serve.collection = { enabled: true, prep_minutes: 20, slot_minutes: 15, per_slot: 1, evenings_only: true };
+    a.money.takeaway_payment = 'collection';
+  });
+  const order = async (time: string) => {
+    const { ctx, sent } = await call(t);
+    const item = t.profile.menu!.categories[0].items[0];
+    await runTool('add_to_order', { item: item.name, quantity: 1 }, ctx);
+    const f = await runTool('set_fulfilment', { type: 'collection', time }, ctx);
+    return { ctx, sent, f };
+  };
+  const first = await order('19:10');
+  assert.equal(first.f.ok, true, JSON.stringify(first.f));
+  assert.equal(first.f.time, '19:15', 'on the 15-minute grid');
+  const review = await runTool('review_order', {}, first.ctx);
+  assert.match(String(review.payment), /Payment is on collection/);
+  const placed = await runTool('confirm_order', { name: 'Ben Walker' }, first.ctx);
+  assert.equal(placed.placed, true);
+  assert.match(String(placed.payment), /do not take a card/);
+  assert.match(first.sent.at(-1)!.body, /Pay when you collect\. Quote \d+ if you call us/);
+  const pay = await runTool('take_demo_payment', { card_number: DEFAULT_DEMO_CARDS[0].number }, first.ctx);
+  assert.equal(pay.result, 'not_needed');
+
+  // The 7:15 slot now has its one order: the next caller is offered the next ones.
+  const second = await order('19:15');
+  assert.equal(second.f.ok, false);
+  assert.match(String(second.f.message), /full at 7:15pm\. 7:30pm, 7:45pm, 8pm have room/);
+  const asap = await order('asap');
+  assert.equal(asap.f.ok, true);
+});
+
+test('restaurant tools: an allergy the caller mentioned is never dropped', async () => {
+  assert.equal(mentionedAllergy(['Table for four please.', 'My son is coeliac, so no gluten at all.']), 'My son is coeliac, so no gluten at all.');
+  assert.equal(mentionedAllergy(['No allergies, thanks.']), null);
+  assert.equal(mentionedAllergy(["My name is Dan Hughes, and we don't have any allergies."]), null, 'from a live test');
+  assert.equal(mentionedAllergy(['She doesn’t have any allergies or dietary needs.']), null);
+  assert.equal(mentionedAllergy(['No allergies, but my son is coeliac.']), 'No allergies, but my son is coeliac.');
+  assert.equal(mentionedAllergy(['Saturday at seven, please.']), null);
+  const t = await restaurant('tools-allergy');
+  const { ctx } = await call(t);
+  ctx.state.heard.push('Hi, a table for two on Saturday at eight.', 'My wife has a severe nut allergy.');
+  const first = await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Joe Doyle' }, ctx);
+  assert.equal(first.booked, false);
+  assert.match(String(first.message), /severe nut allergy.*allergies/);
+  const second = await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Joe Doyle', allergies: 'Severe nut allergy (wife)' }, ctx);
+  assert.equal(second.booked, true);
+  assert.equal((await repo.getBookingByReference(t.id, String(second.reference)))!.allergies, 'Severe nut allergy (wife)');
+  // Asked once per call: "none" is accepted and stored as no allergy.
+  const other = await call(t);
+  other.ctx.state.heard.push('Do you do gluten-free pizza?');
+  assert.equal((await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Amy Hall' }, other.ctx)).booked, false);
+  const none = await runTool('create_booking', { area: 'inside', date: SAT, time: '20:00', party_size: 2, name: 'Amy Hall', allergies: 'none' }, other.ctx);
+  assert.equal(none.booked, true);
+  assert.equal((await repo.getBookingByReference(t.id, String(none.reference)))!.allergies, null);
+});
+
+// From a call on 1 October: no name was taken, the name could not be changed,
+// "table 4" could not be checked, and "dairy" was looked up as a dish.
+
+test('restaurant tools: a booking needs a real name, and the name and number can be changed later', async () => {
+  const t = await restaurant('tools-names');
+  const { ctx, sent } = await call(t);
+  for (const stand_in of ['Caller', 'the caller', 'guest', 'N/A', '']) {
+    const r = await runTool('create_booking', { area: 'inside', date: SAT, time: '12:30', party_size: 2, name: stand_in, allergies: 'none' }, ctx);
+    assert.equal(r.booked, false, stand_in);
+    assert.match(String(r.message), /caller's name/);
+  }
+  const booked = await runTool('create_booking', { area: 'inside', date: SAT, time: '12:30', party_size: 2, name: 'Pat', allergies: 'none' }, ctx);
+  assert.equal(booked.booked, true, JSON.stringify(booked));
+
+  // Today, twenty minutes from now: inside the notice period, so a move would be refused, but a new name is not a move.
+  const soon = await repo.createBooking(t, { date: '2026-10-02', time: '16:15', party_size: 2, name: 'Caller', phone: '+447700900123', source: 'eval', ignoreLead: true, allergies: null }, NOW);
+  assert.ok(soon.ok);
+  const renamed = await runTool('modify_booking', { reference: soon.ok ? soon.booking.reference : '', name: 'Alex Cohen' }, ctx);
+  assert.equal(renamed.changed, true, JSON.stringify(renamed));
+  assert.equal(renamed.name, 'Alex Cohen');
+  const b = (await repo.getBookingByReference(t.id, soon.ok ? soon.booking.reference : ''))!;
+  assert.equal(b.name, 'Alex Cohen');
+  assert.match(b.history?.at(-1)?.what ?? '', /name Caller → Alex Cohen/);
+  assert.match(sent.at(-1)!.body, /^Olive & Ember: Changed:/);
+
+  const renumbered = await runTool('modify_booking', { reference: b.reference, phone: '07700 900456' }, ctx);
+  assert.equal(renumbered.changed, true);
+  assert.equal((await repo.getBookingByReference(t.id, b.reference))!.phone, '+447700900456');
+  assert.equal((await runTool('modify_booking', { reference: b.reference, phone: 'twelve' }, ctx)).changed, false);
+  assert.equal((await runTool('modify_booking', { reference: b.reference, name: 'caller' }, ctx)).changed, false);
+});
+
+test('restaurant tools: a particular table by number, and the one kept for walk-ins', async () => {
+  const t = await restaurant('tools-table', (a) => void (a.seating.tables.find((x) => x.key === 'T4')!.walk_in = true));
+  const { ctx } = await call(t);
+  const walkIn = await runTool('check_availability', { date: SAT, time: '13:00', party_size: 2, table: 'table four' }, ctx);
+  assert.equal(walkIn.available, false);
+  assert.match(String(walkIn.message), /Table 4 is kept for walk-ins/);
+  const small = await runTool('check_availability', { date: SAT, time: '13:00', party_size: 5, table: '2' }, ctx);
+  assert.match(String(small.message), /Table 2 seats 2, not 5/);
+  assert.match(String((await runTool('check_availability', { date: SAT, party_size: 2, table: '99' }, ctx)).message), /no table "99"/);
+
+  const five = await runTool('check_availability', { date: SAT, party_size: 2, table: 'T5' }, ctx);
+  assert.equal(five.table, 'Table 5');
+  assert.ok((five.available_ranges as string[]).length, 'how busy that table is: its free times that day');
+  const at = await runTool('check_availability', { date: SAT, time: '13:00', party_size: 2, table: 'five' }, ctx);
+  assert.equal(at.available, true);
+  assert.equal((at.slot as any).resource_label, 'Table 5', 'they asked for it by number, so they hear it');
+  assert.equal(at.next, undefined, 'no "inside or terrace?" once they have chosen a table');
+  const booked = await runTool('create_booking', { date: SAT, time: '13:00', party_size: 2, name: 'Pat', table: '5', allergies: 'none' }, ctx);
+  assert.equal(booked.booked, true);
+  assert.equal(booked.table, 'Table 5');
+  const again = await runTool('create_booking', { date: SAT, time: '13:00', party_size: 2, name: 'Sam', table: '5', allergies: 'none' }, ctx);
+  assert.equal(again.booked, false, 'that table is now taken at 1pm');
+});
+
+test('restaurant tools: a saved allergy always says what it is', () => {
+  const heard = ['A table for two on Sunday, please.', 'Yes, one of us has a dairy allergy.'];
+  assert.equal(namedAllergy('Intolerance, not anaphylactic.', heard), 'Dairy: intolerance, not anaphylactic.');
+  assert.equal(namedAllergy('Severe nut allergy', heard), 'Severe nut allergy', 'already says what it is');
+  assert.equal(namedAllergy('Vegan', heard), 'Vegan');
+  assert.equal(namedAllergy('Quite severe', ['No allergies here.']), 'Quite severe', 'nothing to add from');
+  assert.equal(namedAllergy(undefined, heard), undefined);
+});
+
+test('restaurant tools: dairy is milk, and the menu can say which dishes are made without it', async () => {
+  const t = await restaurant('tools-dairy');
+  const { ctx } = await call(t);
+  const asDish = await runTool('get_item_details', { item: 'dairy' }, ctx);
+  assert.equal(asDish.found, false);
+  assert.match(String(asDish.message), /allergy \(milk\), not a dish.*record it as the allergy/);
+  const free = await runTool('get_menu', { free_from: 'dairy' }, ctx);
+  assert.deepEqual(free.free_from, ['milk']);
+  const menu = t.profile.menu!;
+  const withMilk = menu.categories.flatMap((c) => c.items).filter((i) => i.allergens.includes('milk')).map((i) => i.name);
+  assert.ok(withMilk.length, 'the default menu has dishes with milk');
+  const listed = (free.dishes as { name: string }[]).map((d) => d.name);
+  assert.ok(listed.length && listed.every((n) => !withMilk.includes(n)), 'no dish with milk is listed');
+  assert.match(String(free.say), /Never say a dish is safe/);
+  assert.match(String((await runTool('get_menu', { free_from: 'kiwi' }, ctx)).message), /not one of the 14 allergens/);
+});
+
+test('restaurant tools: a full lunch is fully booked, not closed', async () => {
+  const t = await restaurant('tools-full-lunch');
+  const { ctx } = await call(t);
+  // Fill Saturday lunch for two: every start time, until nothing more fits.
+  const svc = t.profile.booking!.services[0];
+  const lunch = svc.windows.find((w) => w.days.includes(6) && w.first < '15:00')!;
+  for (let m = minutesOf(lunch.first); m <= minutesOf(lunch.last); m += svc.slot_minutes) {
+    const time = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    for (let i = 0; i < 30; i++) {
+      const r = await repo.createBooking(t, { date: SAT, time, party_size: 2, name: 'Lunch filler', source: 'eval', allergies: null }, NOW);
+      if (!r.ok) break;
+    }
+  }
+  const day = await runTool('check_availability', { date: SAT, party_size: 2 }, ctx);
+  assert.equal(day.available, true, 'dinner is still free');
+  assert.deepEqual(day.fully_booked, ['lunch']);
+  assert.match(String(day.fully_booked_note), /Fully booked, not closed: lunch\. .*never that you are closed/);
+  const later = await runTool('check_availability', { date: SAT, time: lunch.first, party_size: 2 }, ctx);
+  assert.equal(later.available, false);
+  assert.ok((later.alternatives as unknown[]).length || (later.available_ranges as string[]).length, 'something to offer instead');
+});
+
+test('restaurant tools: a place that shuts at midnight takes a collection for half eleven, and says midnight', async () => {
+  // Friday's dinner runs to midnight; the call is Friday at 4pm.
+  const t = await restaurant('tools-midnight', (a) => {
+    a.hours.days[5] = { open: true, services: [{ label: 'Dinner', open: '17:30', close: '24:00' }] };
+  });
+  const order = async (time: string) => {
+    const { ctx } = await call(t);
+    await runTool('add_to_order', { item: t.profile.menu!.categories[0].items[0].name, quantity: 1 }, ctx);
+    return runTool('set_fulfilment', { type: 'collection', time }, ctx);
+  };
+  const late = await order('23:30');
+  assert.equal(late.ok, true, JSON.stringify(late));
+  assert.equal(late.spoken_time, '11:30pm');
+  assert.equal((await order('23:45')).ok, true, 'the last slot before midnight');
+
+  const { ctx } = await call(t);
+  const hours = await runTool('get_opening_hours', { date: '2026-10-02' }, ctx) as { days: Record<string, unknown>[] };
+  assert.deepEqual(hours.days[0].open, ['Dinner 5:30pm to midnight']);
+  assert.deepEqual(hours.days[0].orders, ['5:30pm to midnight']);
+  assert.deepEqual(hours.days[0].last_booking_times, ['11pm'], 'an hour before closing, as on any other night');
+  const table = await runTool('check_availability', { date: '2026-10-02', time: '23:00', party_size: 2 }, ctx);
+  assert.equal(table.available, true, JSON.stringify(table));
+});
+
+test('restaurant tools: a lunch already over is not "fully booked" when a caller asks about tonight', async () => {
+  // Friday at 4pm, an empty diary: lunch finished at 2:30.
+  const t = await restaurant('tools-lunch-over');
+  const { ctx } = await call(t);
+  const r = await runTool('check_availability', { date: '2026-10-02', time: '19:30', party_size: 2 }, ctx);
+  assert.equal(r.available, true);
+  assert.equal(r.fully_booked_note, undefined, String(r.fully_booked_note));
+});
+
+test('restaurant tools: coconut, nutmeg and doughnuts are not tree nuts', async () => {
+  const { allergensNamed } = await import('../src/domain/menu.ts');
+  for (const w of ['coconut', 'nutmeg', 'a doughnut', 'butternut squash']) assert.deepEqual(allergensNamed(w), [], w);
+  assert.deepEqual(allergensNamed('a nut allergy'), ['nuts']);
+  assert.deepEqual(allergensNamed('tree nuts'), ['nuts']);
+  assert.deepEqual(allergensNamed('peanuts'), ['peanuts']);
+  assert.deepEqual(allergensNamed('walnuts and peanuts').sort(), ['nuts', 'peanuts']);
+});
+
+test('restaurant tools: a party no table seats gets the callback, never "try another day", and the builder says so', async () => {
+  // The review: phone bookings up to 10 by default, but the biggest pair seats 8, so 9 and 10 were told to try another day.
+  assert.equal(defaultAnswers().seating.max_party, 8, 'the default limit is what the default tables seat');
+  const t = await restaurant('tools-ten', (a) => void (a.seating.max_party = 10));
+  const ten = defaultAnswers();
+  ten.basics.name = 'Olive & Ember';
+  ten.seating.max_party = 10;
+  assert.ok(validateRestaurant(ten).some((i) => i.level === 'warning' && /seats 10.*9 or 10 .*callback/.test(i.message)), JSON.stringify(validateRestaurant(ten)));
+  const c = await call(t);
+  for (const party of [9, 10]) {
+    const r = await runTool('check_availability', { date: SAT, time: '19:00', party_size: party }, c.ctx);
+    assert.equal(r.reason, 'party_too_large', `${party}: ${r.message}`);
+    assert.match(String(r.message), /call back/);
+  }
+  const b = await runTool('create_booking', { date: SAT, time: '19:00', party_size: 10, name: 'Ana Silva', area: 'indoor' }, c.ctx);
+  assert.equal(b.booked, false);
+  assert.equal(b.reason, 'party_too_large', String(b.message));
+  assert.doesNotMatch(`${b.message} ${b.next}`, /another day|There is no the/);
+  // A step-free table for 8 is a different thing: none there, but the party is not too big.
+  const step = await runTool('check_availability', { date: SAT, time: '19:00', party_size: 8, accessible: true, area: 'terrace' }, c.ctx);
+  assert.notEqual(step.reason, 'party_too_large');
+});
+
+test('restaurant tools: a table marked no-show or finished is free again, for callers and for staff moves', async () => {
+  // The review: the floor plan showed both tables Free while callers heard "7:30pm is taken".
+  const t = await restaurant('tools-noshow', (a) => {
+    a.seating.areas = [a.seating.areas[0]];
+    a.seating.tables = a.seating.tables.filter((x) => ['T1', 'T2'].includes(x.key)).map((x) => ({ ...x, seats: 2, joins: [] }));
+    a.seating.fixtures = [];
+    a.seating.notice_minutes = 0;
+  });
+  const at = new Date('2026-10-06T18:20:00Z'); // Tuesday 7:20pm
+  const book = async (name: string, table: string, time = '19:00') => {
+    const r = await repo.createBooking(t, { date: '2026-10-06', time, party_size: 2, name, source: 'console', table, ignoreLead: true }, at);
+    assert.ok(r.ok, name);
+    return r.booking;
+  };
+  const ann = await book('Ann Lee', 'T1');
+  const bob = await book('Bob Hart', 'T2');
+  await repo.setVisitStatus(t.id, ann.reference, 'no_show');
+  await repo.setVisitStatus(t.id, bob.reference, 'finished');
+  const c = await call(t);
+  c.ctx.now = () => at;
+  const r = await runTool('check_availability', { date: '2026-10-06', time: '19:30', party_size: 2 }, c.ctx);
+  assert.equal(r.available, true, String(r.message));
+  const cat = await book('Cat Moss', 'T1', '19:30');
+  assert.equal((await repo.moveBooking(t, cat.reference, 'T2')).ok, true, 'staff can move it onto the finished table');
+});
+
+test('restaurant tools: a time inside the notice period or already gone is said as that, never "taken", and tonight\'s booking can still change', async () => {
+  // The review: 7:15pm asked at 7pm was "taken", at 9:30pm tonight was "fully booked", and adding a guest at 6:45 to a 7pm booking was refused.
+  const t = await restaurant('tools-notice');
+  const c = await call(t);
+  const ask = async (now: string, time?: string) => {
+    c.ctx.now = () => new Date(now);
+    return runTool('check_availability', { date: '2026-10-06', ...(time ? { time } : {}), party_size: 2 }, c.ctx);
+  };
+  const soon = await ask('2026-10-06T18:00:00Z', '19:15');
+  assert.equal(soon.reason, 'too_soon');
+  assert.equal(soon.message, "7:15pm is too soon: we need 30 minutes' notice. The earliest we can book today is 7:30pm.");
+  const gone = await ask('2026-10-06T18:00:00Z', '18:30');
+  assert.equal(gone.reason, 'too_soon');
+  assert.match(String(gone.message), /^6:30pm has already gone\. The earliest we can book today is 7:30pm\.$/);
+  const late = await ask('2026-10-06T20:30:00Z');
+  assert.equal(late.reason, 'too_soon');
+  assert.equal(late.message, 'No more bookings today: the last booking time was 9pm.');
+  // Tonight's 7pm booking for four, at 6:45: one more guest is not a new booking, so no notice is needed.
+  const made = await repo.createBooking(t, { date: '2026-10-06', time: '19:00', party_size: 4, name: 'Sam Price', phone: '+447700900123', source: 'phone' }, new Date('2026-10-06T12:00:00Z'));
+  assert.ok(made.ok);
+  c.ctx.now = () => new Date('2026-10-06T17:45:00Z');
+  const five = await runTool('modify_booking', { reference: made.booking.reference, party_size: 5 }, c.ctx);
+  assert.equal(five.changed, true, String(five.message));
+  // Moving it to 7:15 at 6:50 is a new time, so the notice still applies.
+  c.ctx.now = () => new Date('2026-10-06T17:50:00Z');
+  assert.equal((await runTool('modify_booking', { reference: made.booking.reference, time: '19:15' }, c.ctx)).changed, false);
+});
+
+test('restaurant tools: what the receptionist is told reads as English: no "the the inside", no "1 tables"', async () => {
+  const { addArea } = await import('../web/src/reception/builder/restaurant/seating.ts');
+  const { checkAvailability } = await import('../src/domain/availability.ts');
+  const { sanitiseRestaurant } = await import('../src/presets/restaurant/validate.ts');
+  const a = defaultAnswers();
+  a.basics.name = 'Olive & Ember';
+  const p = compileRestaurant(a, { slug: 'words' });
+  const ask = (x: Record<string, unknown>) => checkAvailability({ profile: p, serviceKey: 'table', date: '2026-10-09', time: '19:00', now: NOW, existing: [], partySize: 2, ...x }).message;
+  assert.equal(ask({ area: 'terrace', accessible: true }), 'No step-free table on the terrace seats 2.');
+  assert.equal(ask({ partySize: 7, accessible: true }), 'No step-free table seats 7.');
+  // A change that does not fit says where in plain words.
+  const t = await restaurant('tools-words');
+  const made = await repo.createBooking(t, { date: SAT, time: '19:00', party_size: 2, name: 'Sam Price', source: 'phone', area: 'terrace' }, NOW);
+  assert.ok(made.ok);
+  const bigger = await repo.modifyBooking(t, made.booking.reference, { accessible: true }, NOW);
+  assert.equal(bigger.ok, false);
+  assert.equal(bigger.ok ? '' : bigger.message, 'That change does not fit on the terrace: the time is taken or not bookable.');
+  // A private room's one table, and three areas joined as a list.
+  const priv = defaultAnswers();
+  priv.basics.name = 'Olive & Ember';
+  addArea(priv, 'private');
+  const seating = compileRestaurant(sanitiseRestaurant(priv), { slug: 'words-private' }).core_facts.find((f) => f.startsWith('Seating'))!;
+  assert.match(seating, /^Seating: inside \(11 tables\), terrace \(4 tables\) and private dining room \(1 table, private hire by enquiry\)\./);
+});

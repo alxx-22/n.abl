@@ -1,0 +1,12 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the pub a name."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ }
+]

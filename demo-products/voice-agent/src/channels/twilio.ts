@@ -1,10 +1,13 @@
 // The phone line: Twilio Programmable Voice with bidirectional Media Streams.
+// Everything sits under /demo, like the rest of the server, so one origin
+// (nabl.agency/demo behind the site's Worker, or the server directly) serves
+// Twilio too.
 //
-//   POST /twilio/voice      a call arrives; answer with <Connect><Stream>
-//   POST /twilio/pin        the shared demo number: four digits choose the tenant
-//   WS   /twilio/stream     20 ms frames of 8 kHz μ-law each way
-//   POST /twilio/after-dial a transfer ended; unanswered comes back to the agent
-//   POST /twilio/whisper    the one line a staff member hears before connecting
+//   POST /demo/twilio/voice      a call arrives; answer with <Connect><Stream>
+//   POST /demo/twilio/pin        the shared demo number: four digits choose the tenant
+//   WS   /demo/twilio/stream     20 ms frames of 8 kHz μ-law each way
+//   POST /demo/twilio/after-dial a transfer ended; unanswered comes back to the agent
+//   POST /demo/twilio/whisper    the one line a staff member hears before connecting
 //
 // Every webhook is checked against Twilio's signature. The media socket is
 // authorised by a short-lived HMAC token placed in the TwiML we returned.
@@ -13,11 +16,13 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { WebSocket } from 'ws';
 import type { Config } from '../config.ts';
 import type { Repo } from '../db/repo.ts';
-import { CallSession } from '../core/call.ts';
+import { CallSession, type CallOptions } from '../core/call.ts';
 import { Resampler, mulawDecode, mulawEncode } from '../core/audio.ts';
 import type { SmsSender, Telephony } from '../core/tools.ts';
 import type { Bus } from '../server/bus.ts';
 import { maskPhone } from '../domain/phone.ts';
+
+export const TWILIO_BASE = '/demo/twilio';
 
 // ── Signatures and tokens ────────────────────────────────────────────────
 
@@ -99,8 +104,8 @@ export function twilioTelephony(config: Config, callSid: string, tenantSlug: str
       const base = config.publicBaseUrl;
       const twiml = dialTwiml(
         to,
-        `${base}/twilio/whisper?text=${encodeURIComponent(whisper.slice(0, 200))}`,
-        `${base}/twilio/after-dial?tenant=${encodeURIComponent(tenantSlug)}`,
+        `${base}${TWILIO_BASE}/whisper?text=${encodeURIComponent(whisper.slice(0, 200))}`,
+        `${base}${TWILIO_BASE}/after-dial?tenant=${encodeURIComponent(tenantSlug)}`,
         callerId,
       );
       return updateCall(config.twilio, callSid, { Twiml: twiml });
@@ -117,8 +122,9 @@ export interface StreamDeps {
   config: Config;
   bus: Bus;
   sms: SmsSender;
-  /** Tests replace the REST hangup. */
+  /** Tests replace the REST hangup, and the call itself. */
   hangup?: (callSid: string) => Promise<void>;
+  createCall?: (opts: CallOptions) => CallSession;
 }
 
 export function handleTwilioStream(ws: WebSocket, deps: StreamDeps): void {
@@ -156,7 +162,7 @@ export function handleTwilioStream(ws: WebSocket, deps: StreamDeps): void {
           ws.close(1008, 'unauthorised stream');
           return;
         }
-        call = new CallSession({
+        call = (deps.createCall ?? ((o: CallOptions) => new CallSession(o)))({
           tenant,
           repo: deps.repo,
           config: deps.config,
@@ -167,6 +173,7 @@ export function handleTwilioStream(ws: WebSocket, deps: StreamDeps): void {
           sms: deps.sms,
           telephony: twilioTelephony(deps.config, callSid, tenant.slug, p.to || undefined),
           publish: deps.bus.publish,
+          notes: (fn) => deps.bus.onNote(tenant.id, fn),
           openingCue: p.cue || undefined,
         });
         call.on('audio', (pcm24) => {

@@ -12,6 +12,7 @@ import type { Config } from '../config.ts';
 import { generateJson } from '../core/gemini.ts';
 import { ALLERGENS, type BusinessType, type TenantProfile, type Window } from '../domain/types.ts';
 import { minutesOf, timeOf } from '../domain/time.ts';
+import { freePin } from '../demo/access.ts';
 
 const USEFUL = /menu|food|drink|eat|about|contact|find|visit|location|faq|question|book|reserv|hours|opening|allergen|price|service|treatment|spa|room|stay|takeaway|order|deliver|policy|terms/i;
 const MAX_PAGES = 8;
@@ -27,19 +28,22 @@ function privateAddress(ip: string): boolean {
 }
 
 /** Only public http(s) sites: the wizard must not become a way to probe the server's own network. */
-export async function assertPublicUrl(raw: string): Promise<URL> {
+export async function assertPublicUrl(raw: string, allowPrivate = false): Promise<URL> {
   let u: URL;
   try {
     u = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
   } catch {
     throw new Error('That is not a web address.');
   }
+  if (allowPrivate) return u;
   if (!['http:', 'https:'].includes(u.protocol) || (u.port && !['80', '443'].includes(u.port))) throw new Error('Only ordinary http(s) websites.');
   if (/^(localhost|.*\.local|.*\.internal)$/i.test(u.hostname)) throw new Error('Not a public website.');
   const addrs = isIP(u.hostname) ? [{ address: u.hostname }] : await lookup(u.hostname, { all: true });
   if (addrs.some((a) => privateAddress(a.address))) throw new Error('Not a public website.');
   return u;
 }
+
+let ALLOW_PRIVATE = false;
 
 async function fetchLimited(u: URL, accept = 'text/html'): Promise<{ type: string; body: Buffer } | null> {
   try {
@@ -50,7 +54,7 @@ async function fetchLimited(u: URL, accept = 'text/html'): Promise<{ type: strin
     });
     if (!res.ok || !res.body) return null;
     const final = new URL(res.url);
-    await assertPublicUrl(final.href);
+    await assertPublicUrl(final.href, ALLOW_PRIVATE);
     const chunks: Buffer[] = [];
     let size = 0;
     for await (const c of res.body as unknown as AsyncIterable<Uint8Array>) {
@@ -134,7 +138,7 @@ const SCHEMA = {
     },
     takes_table_bookings: { type: 'BOOLEAN' },
     takes_appointments: { type: 'BOOLEAN' },
-    takes_food_orders: { type: 'BOOLEAN' },
+    takes_food_orders: { type: 'BOOLEAN', description: 'True if the site mentions takeaway, collection, delivery or phone orders.' },
     offers_delivery: { type: 'BOOLEAN' },
     appointment_services: {
       type: 'ARRAY',
@@ -156,7 +160,8 @@ const SCHEMA = {
                 description: { type: 'STRING' },
                 price_pence: { type: 'INTEGER' },
                 allergens_stated: { type: 'BOOLEAN', description: 'True only if the site states this dish’s allergens.' },
-                allergens: { type: 'ARRAY', items: { type: 'STRING', enum: [...ALLERGENS] } },
+                allergens: { type: 'ARRAY', items: { type: 'STRING', enum: [...ALLERGENS] }, description: 'What the dish contains.' },
+                may_contain: { type: 'ARRAY', items: { type: 'STRING', enum: [...ALLERGENS] }, description: 'Only "may contain" or trace warnings.' },
                 dietary: { type: 'ARRAY', items: { type: 'STRING' } },
               },
               required: ['name', 'price_pence', 'allergens_stated'],
@@ -190,17 +195,20 @@ interface Extracted {
   offers_delivery?: boolean;
   appointment_services?: { name: string; duration_minutes?: number; price_pence?: number }[];
   staff_names?: string[];
-  menu?: { category: string; items: { name: string; description?: string; price_pence: number; allergens_stated: boolean; allergens?: string[]; dietary?: string[] }[] }[];
+  menu?: { category: string; items: { name: string; description?: string; price_pence: number; allergens_stated: boolean; allergens?: string[]; may_contain?: string[]; dietary?: string[] }[] }[];
   faqs: { q: string; a: string; source_url?: string }[];
   policies?: { topic: string; text: string }[];
   core_facts: string[];
   missing_or_unclear?: string[];
 }
 
+const isAllergen = (a: string): a is (typeof ALLERGENS)[number] => (ALLERGENS as readonly string[]).includes(a);
+
 const slugify = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'new-business';
 const key = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
 
-export function toProfile(x: Extracted, site: string): TenantProfile & { review_notes: string[] } {
+/** `pin`: the demo line PIN the drafted business will answer to. */
+export function toProfile(x: Extracted, site: string, pin: string): TenantProfile & { review_notes: string[] } {
   const notes = [...(x.missing_or_unclear ?? []).map((m) => `Not found on the site: ${m}`)];
   const hours = new Map<string, { days: number[]; open: string; close: string; label?: string }>();
   for (const h of x.opening_hours) {
@@ -220,9 +228,9 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
     business_type: x.business_type,
     timezone: 'Europe/London',
     status: 'demo',
-    demo_pin: String(1000 + Math.floor(Math.random() * 9000)),
+    demo_pin: pin,
     voice: x.business_type === 'barber' ? 'Charon' : 'Kore',
-    greeting: `Hello, ${x.name}. I'm the AI assistant, and this is a demo line. How can I help?`,
+    greeting: `Hello, you're through to ${x.name}. I'm the AI assistant, and this is a demo line. How can I help?`,
     summary: x.summary,
     address: x.address ?? '',
     phone_display: x.phone,
@@ -231,7 +239,10 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
     opening_hours: opening,
     knowledge: [
       ...x.faqs.map((f) => ({ q: f.q, a: f.a, source: f.source_url })),
-      ...(x.policies ?? []).map((p) => ({ q: `${p.topic}?`, a: p.text, tags: [p.topic] })),
+      // A policy the FAQs already state is not repeated.
+      ...(x.policies ?? [])
+        .filter((p) => !x.faqs.some((f) => f.a.trim().toLowerCase() === p.text.trim().toLowerCase()))
+        .map((p) => ({ q: `${p.topic}?`, a: p.text, tags: [p.topic] })),
     ],
     review_notes: notes,
   };
@@ -268,7 +279,9 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
     profile.booking = { services, resources: staff.map((n) => ({ key: key(n), label: n, services: services.map((s) => s.key) })) };
   }
 
-  if (x.takes_food_orders && x.menu?.length) {
+  // The menu is kept whenever dishes were found: it answers questions even
+  // where the business takes no orders. Ordering needs both.
+  if (x.menu?.some((c) => c.items.length)) {
     const noAllergens = x.menu.flatMap((c) => c.items).filter((i) => !i.allergens_stated).length;
     if (noAllergens) notes.push(`${noAllergens} dishes have no published allergens: the agent will say it cannot confirm allergens for them. Add the business's allergen matrix before any real use.`);
     profile.menu = {
@@ -278,25 +291,40 @@ export function toProfile(x: Extracted, site: string): TenantProfile & { review_
         key: key(c.category), label: c.category,
         items: c.items.filter((i) => i.name && i.price_pence > 0).map((i) => ({
           key: key(i.name), name: i.name, price_pence: i.price_pence, description: i.description,
-          allergens: i.allergens_stated ? (i.allergens ?? []).filter((a): a is (typeof ALLERGENS)[number] => (ALLERGENS as readonly string[]).includes(a)) : [],
+          allergens: i.allergens_stated ? (i.allergens ?? []).filter(isAllergen).filter((a) => !(i.may_contain ?? []).includes(a)) : [],
+          may_contain: i.allergens_stated && i.may_contain?.length ? i.may_contain.filter(isAllergen) : undefined,
           allergens_unknown: !i.allergens_stated,
           dietary: i.dietary,
         })),
       })),
     };
-    profile.ordering = {
-      collection: true,
-      delivery: x.offers_delivery ? { districts: [], fee_pence: 250, min_order_pence: 1500, extra_minutes: 20 } : undefined,
-      prep_minutes: 20,
-      hours: opening,
-    };
-    if (x.offers_delivery) notes.push('Delivery postcodes, fee and minimum order are not set. Add the postcode districts before publishing.');
+    if (x.takes_food_orders) {
+      profile.ordering = {
+        collection: true,
+        delivery: x.offers_delivery ? { districts: [], fee_pence: 250, min_order_pence: 1500, extra_minutes: 20 } : undefined,
+        prep_minutes: 20,
+        hours: opening,
+      };
+      if (x.offers_delivery) notes.push('Delivery postcodes, fee and minimum order are not set. Add the postcode districts before publishing.');
+    }
   }
   return profile;
 }
 
-export async function ingestWebsite(raw: string, config: Config): Promise<TenantProfile & { review_notes: string[]; pages: string[] }> {
-  const start = await assertPublicUrl(raw);
+/**
+ * `pinTaken` says whether a business already holds a demo line PIN, so the
+ * draft gets a free one, drawn as Start draws them: never 1000 to 1099,
+ * which are kept for our own businesses. Without it (the end-to-end test,
+ * which saves nothing) any PIN is taken to be free.
+ */
+export async function ingestWebsite(
+  raw: string,
+  config: Config,
+  opts: { allowPrivate?: boolean; pinTaken?: (pin: string) => Promise<boolean> } = {},
+): Promise<TenantProfile & { review_notes: string[]; pages: string[] }> {
+  // Only the local end-to-end test reads a private address.
+  ALLOW_PRIVATE = Boolean(opts.allowPrivate);
+  const start = await assertPublicUrl(raw, ALLOW_PRIVATE);
   const disallow = await robotsDisallows(start);
   const allowed = (u: URL) => !disallow.some((d) => u.pathname.startsWith(d));
   const home = await fetchLimited(start);
@@ -324,6 +352,7 @@ export async function ingestWebsite(raw: string, config: Config): Promise<Tenant
     const r = await fetchLimited(pdf, 'application/pdf');
     if (r && r.type.includes('pdf')) parts.push({ inlineData: { mimeType: 'application/pdf', data: r.body.toString('base64') } });
   }
-  const extracted = await generateJson<Extracted>(config.textModel, parts, config.geminiApiKey, SCHEMA, { temperature: 0.1 });
-  return { ...toProfile(extracted, start.href), pages: pages.map((p) => p.url) };
+  const extracted = await generateJson<Extracted>(config.textModel, parts, config.keys.scout, SCHEMA, { temperature: 0.1 });
+  const pin = await freePin(opts.pinTaken ?? (async () => false));
+  return { ...toProfile(extracted, start.href, pin), pages: pages.map((p) => p.url) };
 }

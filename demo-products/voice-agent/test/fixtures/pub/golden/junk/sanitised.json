@@ -1,0 +1,208 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "",
+  "style": "Cask ales, pub classics and Sunday roasts",
+  "town": "Nottingham",
+  "address": "9 Lace Row (example), Nottingham NG1",
+  "phone_display": "0115 496 0823",
+  "website": "",
+  "voice": "Charon",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "22:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "24:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "12:00",
+      "close": "24:00"
+     }
+    ]
+   }
+  ],
+  "closures": [],
+  "food": {
+   "from": "12:00",
+   "until": "21:00",
+   "sunday_until": "18:00"
+  }
+ },
+ "seating": {
+  "areas": [
+   {
+    "key": "area_1",
+    "label": "Area 1",
+    "kind": "indoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   }
+  ],
+  "tables": [],
+  "fixtures": [],
+  "plan": 2,
+  "sittings": {
+   "up_to_2": 90,
+   "up_to_4": 120,
+   "up_to_8": 120,
+   "larger": 150
+  },
+  "max_party": 8,
+  "notice_minutes": 60,
+  "horizon_days": 60,
+  "highchairs": 4,
+  "buffer_minutes": 0
+ },
+ "booking": {
+  "late_grace_minutes": 0,
+  "no_bar_bookings_for_matches": true
+ },
+ "children": {
+  "until": "21:00"
+ },
+ "quiz": {
+  "offered": true,
+  "day": 6,
+  "time": "20:00",
+  "team_max": 12,
+  "entry_pence": 0,
+  "minutes": 240
+ },
+ "events": [
+  {
+   "day": 6,
+   "time": "20:00",
+   "title": "An event",
+   "place": "the bar",
+   "free": true
+  },
+  {
+   "day": 6,
+   "time": "20:00",
+   "title": "An event",
+   "place": "the bar",
+   "free": true
+  }
+ ],
+ "drinks": {
+  "on_tap": ["Lace Market Bitter (example)","Trent Pale (example)","Weaver’s Gold (example)","Castle Rock Stout (example)"]
+ },
+ "ordering": {
+  "collection": {
+   "enabled": false,
+   "prep_minutes": 20,
+   "slot_minutes": 10,
+   "per_slot": 3
+  },
+  "delivery": {
+   "enabled": false,
+   "districts": [],
+   "fee_pence": 0,
+   "min_order_pence": 0,
+   "extra_minutes": 0
+  },
+  "delivery_apps": [],
+  "timed_orders": true
+ },
+ "menu": {
+  "categories": [],
+  "modifier_groups": {},
+  "allergen_statement": "Everything is cooked in one kitchen that uses nuts, gluten, milk, eggs, fish and mustard, so we can't promise any dish is free from traces. Tell us about any allergy and the kitchen will take care.",
+  "source": "manual",
+  "allergens_are_examples": true
+ },
+ "money": {
+  "payment": "collection",
+  "cash": true,
+  "tips": "Tips are never expected; any paid by card go to the team in full."
+ },
+ "policies": {
+  "children": "Children are welcome with an adult until 9pm: there’s a children’s menu and colouring.",
+  "baby_changing": true,
+  "accessibility": "Step-free into the bar and the dining room, with an accessible toilet. The Loft is up a flight of stairs.",
+  "parking": "No parking of our own; the nearest car park is about five minutes’ walk.",
+  "smoking": "Smoking in the beer garden only.",
+  "vaping": "Vaping in the beer garden only, please.",
+  "id": "We run Challenge 25: anyone who looks under 25 is asked for ID. A passport, a photo driving licence, a PASS card or a certified digital ID app.",
+  "own_cake": "You’re welcome to bring a birthday cake.",
+  "own_drink": "No drinks of your own, I’m afraid.",
+  "taxi": "Lace City Cars (example) on 0115 496 0999.",
+  "hire": "The Loft upstairs takes up to 40, for parties, wakes and work dos: the manager will call back to talk it through.",
+  "christmas": "Our Christmas menu is served from late November: the manager will call back to arrange a party.",
+  "careers": "We’re often looking for bar and kitchen staff: leave your name and number and the manager will be in touch.",
+  "hygiene_rating": 5,
+  "faqs": []
+ },
+ "theme": {
+  "accent": "#8a3b2e",
+  "primary": "#1f1a17",
+  "background": "#f4efe6",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

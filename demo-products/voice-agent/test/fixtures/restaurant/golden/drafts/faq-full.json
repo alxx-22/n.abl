@@ -1,0 +1,50 @@
+{
+ "contents": [
+  {
+   "role": "user",
+   "parts": [
+    {
+     "text": [
+      "These are the facts about a UK restaurant, set by its owner for an AI phone receptionist demo.",
+      "Name: The Copper Pot. Style: Modern British small plates and Sunday roasts. Town: Leeds, 14 Call Lane, Leeds LS1 6DT.",
+      "Hours: Sunday: 12 noon till 5pm. Tuesday to Thursday: lunch 12 noon till 3pm, dinner 6pm till 10:30pm. Friday and Saturday: brunch 9:30am till 11:30am, lunch 12 noon till 3pm, dinner 5pm till 11pm. Closed Mondays.",
+      "Table bookings: yes, up to 14 by phone; areas Main room, Courtyard, Bar (walk-in only), The Snug (enquiries only), Mezzanine. Walk-ins: welcome.",
+      "Click and collect: yes, 25 minutes' notice. Delivery: own drivers to LS1, LS2, LS6, LS11; on Deliveroo, Just Eat.",
+      "Deposits: per booking for parties of 8 or more. Cancel up to 24 hours before for a full refund of your deposit. A 10% service charge is added to every bill.",
+      "Children: Children are welcome until 8pm. Dogs: inside. Access: Level access, with a ramp at the side door and an accessible toilet. Parking: Pay and display on Swinegate, two minutes away.",
+      "Dress code: Smart casual. Corkage: Corkage is £15 a bottle, wine only. Cakes: Bring a cake and we will serve it with candles for £2 a head. Vouchers: Vouchers are sold online and at the bar. Dietary: Most dishes can be made gluten-free; tell us when you book.",
+      "Menu: Small plates: Whipped feta, honey and thyme, Crispy squid, Sourdough and cultured butter; Mains: Roast sirloin of beef, Chestnut and mushroom roast, Smoked haddock fish pie; Puddings: Sticky toffee pudding, Blood orange sorbet.",
+      "",
+      "Write the ten questions callers most often ask a restaurant like this that the facts above answer, each with a short spoken answer (one or two sentences, friendly, British English).",
+      "Use only these facts. Where the facts do not cover something, leave that question out rather than guess. No questions about booking a table or ordering food themselves; the receptionist handles those."
+     ]
+    }
+   ]
+  }
+ ],
+ "generationConfig": {
+  "temperature": 0.4,
+  "responseMimeType": "application/json",
+  "responseSchema": {
+   "type": "OBJECT",
+   "properties": {
+    "faqs": {
+     "type": "ARRAY",
+     "items": {
+      "type": "OBJECT",
+      "properties": {
+       "q": {
+        "type": "STRING"
+       },
+       "a": {
+        "type": "STRING"
+       }
+      },
+      "required": ["q","a"]
+     }
+    }
+   },
+   "required": ["faqs"]
+  }
+ }
+}

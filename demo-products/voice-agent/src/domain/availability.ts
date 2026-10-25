@@ -6,8 +6,9 @@
 // locked, so two callers can never take the last table between check and commit.
 
 import type { BookableService, Resource, TenantProfile } from './types.ts';
+import { insideRule, type ListingRule } from './listings.ts';
 import {
-  addDays, isIsoDate, minutesOf, normaliseTime, spokenDate, spokenTime, timeOf, toLocal, weekdayOf, zonedToUtc,
+  LAST_START, addDays, closeMinutes, isIsoDate, minutesOf, normaliseTime, spokenDate, spokenTime, timeOf, toLocal, weekdayOf, zonedToUtc,
 } from './time.ts';
 
 export interface BusyInterval {
@@ -16,6 +17,8 @@ export interface BusyInterval {
   starts_at: Date;
   ends_at: Date;
   buffer_minutes?: number;
+  /** A viewing's home: two viewings of one home never overlap, whoever shows them. */
+  listing_key?: string | null;
 }
 
 export interface SlotRequest {
@@ -29,6 +32,22 @@ export interface SlotRequest {
   existing: BusyInterval[];
   /** When moving a booking, its own interval does not block it. */
   excludeBookingId?: string;
+  /** Tables: only this seating area (inside, terrace). */
+  area?: string;
+  /** Tables: step-free with room for a wheelchair. A hard requirement. */
+  accessible?: boolean;
+  /** Tables: nice to have (window, booth, quiet); tables with more of them are tried first. */
+  prefer?: string[];
+  /** When changing a booking: its current table, kept if it still fits. */
+  keep?: string;
+  /** Tables: only this one (the caller asked for "table 4"). */
+  only?: string;
+  /**
+   * A viewing: the home's own rules on top of the service's (its windows,
+   * notice, blocked dates, who may not show it, office hours for an empty
+   * home). Only the estate agent's tools pass it; without it nothing changes.
+   */
+  listing?: ListingRule;
 }
 
 export interface Slot {
@@ -49,7 +68,9 @@ export type Unavailable =
   | 'no_suitable_resource'
   | 'unknown_staff'
   | 'outside_hours'
-  | 'fully_booked';
+  | 'fully_booked'
+  /** Gone already, or inside the notice period: not taken, and said so. */
+  | 'too_soon';
 
 export interface AvailabilityResult {
   available: boolean;
@@ -58,9 +79,22 @@ export interface AvailabilityResult {
   spoken_date: string;
   party_size: number;
   requested_time?: string;
-  slot?: { time: string; spoken: string; resource_key: string; resource_label: string; duration_minutes: number };
+  slot?: {
+    time: string; spoken: string; resource_key: string; resource_label: string; duration_minutes: number;
+    /** Tables in a business with seating areas. */
+    area?: string;
+    weather_note?: string;
+    accessible?: boolean;
+    features?: string[];
+  };
   alternatives: { time: string; spoken: string }[];
   available_ranges?: string[];
+  /** More than one area has a table free at that time: ask which the caller would like. */
+  areas_free?: string[];
+  /** The asked-for area is full then, but these are not. */
+  other_areas_free?: string[];
+  /** Sittings that day with nothing left ("lunch"): full, not closed. */
+  fully_booked?: string[];
   reason?: Unavailable;
   message?: string;
 }
@@ -89,7 +123,8 @@ export function candidateTimes(service: BookableService, date: string): string[]
   const set = new Set<number>();
   for (const w of service.windows) {
     if (!w.days.includes(wd)) continue;
-    for (let t = minutesOf(w.first); t <= minutesOf(w.last); t += service.slot_minutes) set.add(t);
+    // Nothing starts at midnight: that is the next day's first minute.
+    for (let t = minutesOf(w.first); t <= Math.min(minutesOf(w.last), LAST_START); t += service.slot_minutes) set.add(t);
   }
   return [...set].sort((a, b) => a - b).map(timeOf);
 }
@@ -108,6 +143,13 @@ export function blockingKeys(key: string, resources: Resource[]): Set<string> {
 
 function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): boolean {
   return aStart < bEnd && bStart < aEnd;
+}
+
+/** Staff moves: is this table free for this interval (pushed-together pairs and their parts count)? */
+export function resourceFree(
+  key: string, start: Date, end: Date, buffer: number, existing: BusyInterval[], resources: Resource[], excludeId?: string,
+): boolean {
+  return isFree(key, start, end, buffer, existing, resources, excludeId);
 }
 
 function isFree(
@@ -136,14 +178,23 @@ export function suitableResources(
   resources: Resource[],
   party: number,
   staff?: string,
+  needs: { area?: string; accessible?: boolean; prefer?: string[]; only?: string; weekday?: number } = {},
 ): Resource[] | 'unknown_staff' {
   let list = resources.filter((r) => r.services.includes(service.key));
+  // Someone who works only some days cannot be booked on the others.
+  if (needs.weekday !== undefined) list = list.filter((r) => !r.days || r.days.includes(needs.weekday!));
   if (service.kind === 'table') {
+    if (needs.only) list = list.filter((r) => r.key === needs.only);
     list = list.filter((r) => (r.capacity ?? 0) >= party && (r.min ?? 1) <= party);
-    list.sort((a, b) => (a.capacity ?? 0) - (b.capacity ?? 0));
+    if (needs.area) list = list.filter((r) => r.area === needs.area);
+    if (needs.accessible) list = list.filter((r) => r.accessible);
+    const liked = (r: Resource) => (needs.prefer ?? []).filter((f) => r.features?.includes(f)).length;
+    // Most wanted features first, then the smallest table that fits, then single tables before pushed-together pairs.
+    list.sort((a, b) => liked(b) - liked(a) || (a.capacity ?? 0) - (b.capacity ?? 0) || (a.combines ? 1 : 0) - (b.combines ? 1 : 0));
   } else if (staff && !/^any/i.test(staff.trim())) {
     const s = staff.trim().toLowerCase();
-    const named = list.filter((r) => r.key.toLowerCase() === s || r.label.toLowerCase().startsWith(s));
+    // By key, name or a nickname a barber is known by ("Marc" for Marcus).
+    const named = list.filter((r) => r.key.toLowerCase() === s || r.label.toLowerCase().startsWith(s) || (r.aliases ?? []).some((a) => a.toLowerCase() === s));
     if (!named.length) return 'unknown_staff';
     list = named;
   }
@@ -154,19 +205,40 @@ export function suitableResources(
 export function checkSlot(req: SlotRequest, service: BookableService, time: string): Slot | null {
   const { profile } = req;
   const resources = profile.booking?.resources ?? [];
-  const res = suitableResources(service, resources, req.partySize, req.staff);
+  const rule = req.listing;
+  // Only the estate agent's people carry working days, so for anyone else this filters nothing.
+  const res = suitableResources(service, resources, req.partySize, req.staff, { ...req, weekday: weekdayOf(req.date) });
   if (res === 'unknown_staff') return null;
   const starts = zonedToUtc(req.date, time, profile.timezone);
   const minutes = durationFor(service, req.partySize);
   const ends = new Date(starts.getTime() + minutes * 60000);
   const lead = (service.lead_minutes ?? 0) * 60000;
   if (starts.getTime() < req.now.getTime() + lead) return null;
-  for (const r of res) {
+  if (rule) {
+    if (!insideRule(rule, req.date, minutesOf(time), minutesOf(time) + minutes)) return null;
+    if (starts.getTime() < req.now.getTime() + rule.notice_minutes * 60000) return null;
+    const home = req.existing.some((b) => b.listing_key === rule.key && b.id !== req.excludeBookingId && overlaps(starts.getTime(), ends.getTime(), b.starts_at.getTime(), b.ends_at.getTime()));
+    if (home) return null;
+  }
+  const order = req.keep ? [...res.filter((r) => r.key === req.keep), ...res.filter((r) => r.key !== req.keep)] : res;
+  const weekday = weekdayOf(req.date);
+  for (const r of order) {
+    if (rule?.exclude_staff.includes(r.key)) continue;
+    // A barber's own hours that day: the booking starts and finishes inside them.
+    const own = r.hours?.find((h) => h.day === weekday);
+    if (own && (minutesOf(time) < minutesOf(own.open) || minutesOf(time) + minutes > closeMinutes(own.close))) continue;
     if (isFree(r.key, starts, ends, service.buffer_minutes ?? 0, req.existing, resources, req.excludeBookingId)) {
       return { time, resource_key: r.key, starts_at: starts, ends_at: ends };
     }
   }
   return null;
+}
+
+/** Bookable areas with a table free at that time, when a business has more than one ("inside or on the terrace?"). */
+export function areasFreeAt(req: SlotRequest, service: BookableService, time: string): string[] {
+  const areas = (req.profile.booking?.areas ?? []).filter((a) => a.reservable && !a.enquiry_only);
+  if (areas.length < 2) return [];
+  return areas.filter((a) => checkSlot({ ...req, area: a.key }, service, time)).map((a) => a.label);
 }
 
 function ranges(times: string[], step: number): string[] {
@@ -186,6 +258,13 @@ function ranges(times: string[], step: number): string[] {
   if (start !== null) out.push(start === timeOf(prev) ? spokenTime(start) : `${spokenTime(start)} to ${spokenTime(timeOf(prev))}`);
   return out;
 }
+
+/** Where an area is, as said after a table: " inside", " on the terrace", " in the bar". */
+export const whereIn = (a?: { kind?: string; label: string }) =>
+  !a ? '' : a.kind === 'indoor' ? ' inside' : a.kind === 'outdoor' ? ` on the ${a.label.toLowerCase()}` : ` in the ${a.label.toLowerCase()}`;
+
+/** A notice period as said: "30 minutes'", "an hour's", "2 hours'". */
+const noticeWords = (m: number) => (m % 60 ? `${m} minutes'` : m === 60 ? "an hour's" : `${m / 60} hours'`);
 
 export function checkAvailability(req: SlotRequest): AvailabilityResult {
   const { profile } = req;
@@ -214,9 +293,18 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   if (service.max_party && req.partySize > service.max_party) {
     return no('party_too_large', service.large_party_note ?? `Phone bookings are for up to ${service.max_party}.`);
   }
-  const res = suitableResources(service, profile.booking?.resources ?? [], req.partySize, req.staff);
+  const res = suitableResources(service, profile.booking?.resources ?? [], req.partySize, req.staff, req);
   if (res === 'unknown_staff') return no('unknown_staff', `Nobody called "${req.staff}" does ${service.label}.`);
-  if (!res.length) return no('no_suitable_resource', `Nothing suits a party of ${req.partySize}.`);
+  if (!res.length) {
+    // No table or pair seats this many at all (a limit set above the biggest table): the manager's callback, as over the limit, never "another day".
+    if (service.kind === 'table' && !(suitableResources(service, profile.booking?.resources ?? [], req.partySize) as Resource[]).length) {
+      return no('party_too_large', `No table seats ${req.partySize}, so it can't be booked by phone: take their name, number, preferred date and time, and say the manager will call back.`);
+    }
+    const area = req.area ? profile.booking?.areas?.find((a) => a.key === req.area) : undefined;
+    return no('no_suitable_resource', area || req.accessible
+      ? `No ${req.accessible ? 'step-free ' : ''}table${whereIn(area)} seats ${req.partySize}.`
+      : `Nothing suits a party of ${req.partySize}.`);
+  }
 
   const times = candidateTimes(service, req.date);
   if (!times.length) return no('closed', `No ${service.label} bookings on ${base.spoken_date}.`);
@@ -224,12 +312,38 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   const free = times.filter((t) => checkSlot(req, service, t) !== null);
   const result: AvailabilityResult = { ...base, available: false, alternatives: [] };
 
+  // Each sitting that has nothing left, by its name ("lunch"), so a full lunch is never mistaken for a closed one.
+  // Today, a sitting already over is over, not full: "lunch is fully booked" at 3pm misled every caller about tonight.
+  const wd = weekdayOf(req.date);
+  const earliest = req.date === today ? minutesOf(toLocal(req.now, profile.timezone).time) + (service.lead_minutes ?? 0) : -1;
+  const full = service.windows
+    .filter((w) => w.days.includes(wd) && minutesOf(w.last) >= earliest)
+    .filter((w) => !free.some((t) => t >= w.first && t <= w.last))
+    .map((w) => {
+      const first = minutesOf(w.first);
+      const h = profile.opening_hours.find((x) => x.days.includes(wd) && minutesOf(x.open) <= first && first < closeMinutes(x.close));
+      if (h?.label && !/all day/i.test(h.label)) return h.label.toLowerCase();
+      // A sitting at one time (afternoon tea at 2) is that time, not "2pm to 2pm".
+      return w.first === w.last ? spokenTime(w.first) : `${spokenTime(w.first)} to ${spokenTime(w.last)}`;
+    });
+  if (full.length && free.length) result.fully_booked = full;
+
   if (!requested) {
     result.available = free.length > 0;
     result.available_ranges = ranges(free, service.slot_minutes);
     if (!free.length) {
-      result.reason = 'fully_booked';
-      result.message = `Nothing left on ${base.spoken_date}.`;
+      // Today, once the last time is gone or inside the notice period, there are no more bookings: not "fully booked".
+      const last = [...times].sort().at(-1)!;
+      const lastAt = zonedToUtc(req.date, last, profile.timezone).getTime();
+      if (req.date === today && lastAt < req.now.getTime() + (service.lead_minutes ?? 0) * 60000) {
+        result.reason = 'too_soon';
+        result.message = lastAt < req.now.getTime()
+          ? `No more bookings today: the last booking time was ${spokenTime(last)}.`
+          : `No more bookings today: the last booking time is ${spokenTime(last)}, and we need ${noticeWords(service.lead_minutes ?? 0)} notice.`;
+      } else {
+        result.reason = 'fully_booked';
+        result.message = `Fully booked on ${base.spoken_date} (open, but nothing left).`;
+      }
     }
     return result;
   }
@@ -238,6 +352,7 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
   const slot = times.includes(requested) ? checkSlot(req, service, requested) : null;
   if (slot) {
     const r = profile.booking!.resources.find((x) => x.key === slot.resource_key)!;
+    const area = r.area ? profile.booking?.areas?.find((a) => a.key === r.area) : undefined;
     result.available = true;
     result.slot = {
       time: requested,
@@ -245,20 +360,47 @@ export function checkAvailability(req: SlotRequest): AvailabilityResult {
       resource_key: r.key,
       resource_label: r.label,
       duration_minutes: durationFor(service, req.partySize),
+      area: area?.label,
+      weather_note: area?.weather_note,
+      accessible: r.accessible || undefined,
+      features: r.features?.length ? r.features : undefined,
     };
+    if (!req.area) {
+      const free = areasFreeAt(req, service, requested);
+      if (free.length > 1) result.areas_free = free;
+    }
     return result;
   }
 
+  // The asked-for area is full at that time: say which other areas are free then, before other times.
+  if (req.area && times.includes(requested)) {
+    const others = areasFreeAt({ ...req, area: undefined }, service, requested);
+    if (others.length) result.other_areas_free = others;
+  }
   // Two nearest free times either side, never a list of ten.
   // Within three hours of the request: lunch is not an alternative to dinner.
   const target = minutesOf(requested);
-  const near = free.filter((t) => Math.abs(minutesOf(t) - target) <= 180);
+  const near = free.filter((t) => Math.abs(minutesOf(t) - target) <= (req.accessible ? 360 : 180));
   const before = near.filter((t) => minutesOf(t) < target).slice(-2);
   const after = near.filter((t) => minutesOf(t) > target).slice(0, 2);
   result.alternatives = [...before, ...after].map((t) => ({ time: t, spoken: spokenTime(t) }));
+  // Nothing close: say what is free that day, rather than nothing.
+  if (!result.alternatives.length && free.length) result.available_ranges = ranges(free, service.slot_minutes);
+  // Gone, or inside the notice period: that is not "taken", and nothing says a notice period exists unless this does.
+  const lead = service.lead_minutes ?? 0;
+  const startsAt = zonedToUtc(req.date, requested, profile.timezone).getTime();
+  if (times.includes(requested) && startsAt < req.now.getTime() + lead * 60000) {
+    result.reason = 'too_soon';
+    result.message = `${spokenTime(requested)} ${startsAt < req.now.getTime() ? 'has already gone' : `is too soon: we need ${noticeWords(lead)} notice`}.`
+      + (free.length ? ` The earliest we can book${req.date === today ? ' today' : ''} is ${spokenTime(free[0])}.` : ' Nothing later is free that day either.');
+    return result;
+  }
   result.reason = times.includes(requested) ? 'fully_booked' : 'outside_hours';
+  const kind = [req.accessible ? 'step-free' : null].filter(Boolean).join(' ');
+  const areaInfo = req.area ? profile.booking?.areas?.find((a) => a.key === req.area) : undefined;
+  const where = whereIn(areaInfo);
   result.message = times.includes(requested)
-    ? `${spokenTime(requested)} is taken.`
+    ? `${spokenTime(requested)} is taken${kind || where ? ` for a ${kind ? `${kind} ` : ''}table${where}` : ''}.`
     : `${spokenTime(requested)} is not a bookable time for ${service.label} on ${base.spoken_date}.`;
   if (!free.length) result.message += ` Nothing else is free that day either.`;
   return result;

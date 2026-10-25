@@ -1,0 +1,52 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "The greeting must say it is an AI assistant and that this is a demo line."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Tuesday: Open closes before it opens."
+ },
+ {
+  "step": "services",
+  "level": "error",
+  "message": "Every service needs a name."
+ },
+ {
+  "step": "services",
+  "level": "warning",
+  "message": "Free thing has no price: callers will hear it's free."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Every barber needs a name."
+ },
+ {
+  "step": "team",
+  "level": "warning",
+  "message": "Lee does no services, so they can't be booked."
+ },
+ {
+  "step": "team",
+  "level": "warning",
+  "message": "Lee works Monday, when the shop is closed."
+ },
+ {
+  "step": "team",
+  "level": "error",
+  "message": "Lee's Monday finishes before it starts."
+ },
+ {
+  "step": "services",
+  "level": "warning",
+  "message": "No barber does Free thing, so it can't be booked."
+ },
+ {
+  "step": "policies",
+  "level": "warning",
+  "message": "1 question needs both the question and its answer before the receptionist can use it."
+ }
+]

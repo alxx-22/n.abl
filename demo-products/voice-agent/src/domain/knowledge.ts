@@ -13,6 +13,8 @@ const QUESTION_WORDS = new Set([
   // Verbs that say nothing about the topic: "do you sell petrol" is about petrol.
   'sell', 'bring', 'buy', 'need', 'want', 'like', 'book', 'make', 'take', 'come', 'go', 'know', 'tell', 'got',
   'allowed', 'allow', 'ok', 'okay', 'possible', 'much', 'many', 'any', 'there', 'also',
+  // How the receptionist puts a caller's question to the search: "customer asking about ID for service" is about ID.
+  'customer', 'customers', 'caller', 'callers', 'asking', 'asks', 'asked', 'question', 'wants', 'wondering',
 ]);
 
 function terms(s: string): string[] {

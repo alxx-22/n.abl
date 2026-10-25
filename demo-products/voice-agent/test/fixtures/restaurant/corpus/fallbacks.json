@@ -1,0 +1,292 @@
+{
+ "version": 7,
+ "basics": {
+  "name": "   ",
+  "style": "",
+  "town": 42,
+  "address": null,
+  "phone_display": ["x"],
+  "website": "  https://padded.example  ",
+  "voice": "Nobody",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "",
+      "open": "9am",
+      "close": "25:00"
+     }
+    ]
+   },
+   {
+    "open": "yes",
+    "services": [
+     {
+      "open": "12:00",
+      "close": "14:00"
+     },
+     {
+      "label": null,
+      "open": "18:00",
+      "close": "22:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": []
+   },
+   {
+    "open": false
+   },
+   {},
+   {
+    "open": true,
+    "services": "all day"
+   },
+   null
+  ],
+  "last_booking_before_close": "soon",
+  "closures": [
+   {
+    "date": "2026-13-45",
+    "note": "Matches the pattern only"
+   },
+   {
+    "date": "next tuesday",
+    "note": "Not a date"
+   },
+   {
+    "note": "No date"
+   },
+   {
+    "date": "2026-11-05",
+    "note": 42
+   }
+  ]
+ },
+ "serve": {
+  "reservations": "true",
+  "walk_ins": 0,
+  "collection": {
+   "enabled": null,
+   "prep_minutes": 2,
+   "slot_minutes": 7,
+   "per_slot": -3,
+   "evenings_only": "no"
+  },
+  "delivery": {
+   "enabled": true,
+   "districts": ["ng1","NG 7","Nottingham","W1A",12,"SW1A1"],
+   "fee_pence": 99999,
+   "min_order_pence": "12.5",
+   "extra_minutes": null
+  },
+  "delivery_apps": ["Deliveroo",7,"A name far longer than twenty characters"]
+ },
+ "seating": {
+  "plan": 2,
+  "areas": [
+   {
+    "key": "Inside Room!",
+    "label": "",
+    "kind": "rooftop",
+    "reservable": "no",
+    "enquiry_only": 1
+   },
+   {
+    "key": "inside_room",
+    "label": "Duplicate"
+   },
+   {
+    "label": "Garden",
+    "kind": "outdoor",
+    "weather_rule": "pray"
+   },
+   {
+    "key": "!!!",
+    "kind": "bar",
+    "weather_rule": "own_risk"
+   }
+  ],
+  "tables": [
+   {
+    "key": "T1",
+    "label": "",
+    "area": "inside_room",
+    "seats": 0,
+    "shape": "hexagon",
+    "x": -5,
+    "y": 99999,
+    "rotation": 720,
+    "accessible": "yes",
+    "walk_in": 1,
+    "features": ["window","disco",7],
+    "joins": ["T1","T9","T2",5]
+   },
+   {
+    "key": "Table two",
+    "area": "nowhere",
+    "seats": "6",
+    "joins": []
+   },
+   {
+    "key": "T2",
+    "seats": 4
+   },
+   null,
+   {
+    "key": "T5",
+    "label": "Garden table",
+    "area": "area_3",
+    "seats": 99,
+    "shape": "square",
+    "joins": ["T4","T4"]
+   }
+  ],
+  "fixtures": [
+   {
+    "key": "F1",
+    "area": "inside_room",
+    "kind": "pillar",
+    "length": 5,
+    "rotation": 100,
+    "x": "a"
+   },
+   {
+    "key": "F1",
+    "area": "inside_room",
+    "kind": "door"
+   },
+   {
+    "area": "nowhere",
+    "kind": "bar"
+   },
+   {
+    "key": "bad key!",
+    "area": "area_3",
+    "kind": "window",
+    "length": 99999,
+    "rotation": -90
+   }
+  ],
+  "sittings": {
+   "up_to_2": 5,
+   "up_to_4": "long",
+   "up_to_8": 1000,
+   "larger": null
+  },
+  "max_party": 0,
+  "notice_minutes": -1,
+  "horizon_days": 0,
+  "highchairs": 2.6,
+  "buffer_minutes": 61
+ },
+ "menu": {
+  "categories": [
+   {
+    "label": "",
+    "items": [
+     {
+      "name": "",
+      "price_pence": -100,
+      "allergens": ["gluten","gluten","peanut","Milk"],
+      "may_contain": [],
+      "dietary": [7,"vegan"],
+      "modifier_groups": ["missing","big_extras"],
+      "aliases": [],
+      "available": "no"
+     },
+     {
+      "key": "dup",
+      "name": "Dup"
+     },
+     {
+      "key": "dup",
+      "name": "Dup again",
+      "description": "   "
+     }
+    ]
+   },
+   {
+    "key": "***",
+    "items": "none"
+   }
+  ],
+  "modifier_groups": {
+   "Big Extras!": {
+    "label": 7,
+    "min": -1,
+    "max": 0,
+    "options": [
+     {
+      "name": "Cheese",
+      "price_pence": "free"
+     },
+     null
+    ]
+   },
+   "": {
+    "label": "Empty key",
+    "options": "none"
+   }
+  },
+  "allergen_statement": "   ",
+  "source": "ai",
+  "allergens_are_examples": "no"
+ },
+ "money": {
+  "deposit": {
+   "mode": "always",
+   "amount_pence": -5,
+   "min_party": 0
+  },
+  "cancellation_policy": 5,
+  "takeaway_payment": "cash",
+  "service_charge": ""
+ },
+ "policies": {
+  "children": "",
+  "dogs": "sometimes",
+  "accessibility": "   ",
+  "parking": null,
+  "dress_code": "",
+  "corkage": "",
+  "cakes": "",
+  "vouchers": "",
+  "dietary": "",
+  "faqs": [
+   {
+    "q": "",
+    "a": "No question"
+   },
+   {
+    "q": "No answer?",
+    "a": ""
+   },
+   null,
+   {
+    "q": "  Spaced?  ",
+    "a": "  Yes.  "
+   }
+  ]
+ },
+ "theme": {
+  "accent": "red",
+  "primary": "#12345",
+  "background": "#GGGGGG",
+  "font_heading": "\"@#$%",
+  "font_body": "!!!",
+  "logo": "https://elsewhere.example/logo.png"
+ },
+ "sources": {
+  "basics.name": "website",
+  "Bad Key": "website",
+  "basics.town": "maybe",
+  "hours.days": "guess"
+ }
+}

@@ -1,6 +1,7 @@
 // End to end through a real browser: headless Chromium, a fake microphone
-// playing a recorded caller, the live board, the server and a live Gemini
-// session. Needs GEMINI_API_KEY and network; not part of `npm test`.
+// playing a recorded caller, the React app (served by Vite inside the
+// server, as `npm run dev` does), the server and a live Gemini session.
+// Needs GEMINI_API_KEY and network; not part of `npm test`.
 //
 //   npm run e2e:browser
 //
@@ -13,6 +14,7 @@ import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 import { loadConfig } from '../src/config.ts';
 import { startServer } from '../src/server/main.ts';
+import { chromiumPath } from '../src/scout/render.ts';
 import { concatPcm16, wavFromPcm16 } from '../src/core/audio.ts';
 import { speak } from '../src/core/gemini.ts';
 
@@ -47,10 +49,10 @@ const wav = join(OUT, 'caller.wav');
 writeFileSync(wav, wavFromPcm16(concatPcm16(parts), 24000));
 
 const dir = join(tmpdir(), `va-e2e-${Date.now()}`);
-const app = await startServer({ ...config, port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: undefined });
+const app = await startServer({ ...config, port: 0, pgliteDir: dir, databaseUrl: undefined, consolePassword: undefined }, { web: 'dev' });
 const base = `http://localhost:${app.port}`;
 const browser = await chromium.launch({
-  executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+  executablePath: chromiumPath() ?? '/usr/bin/chromium',
   args: [
     '--use-fake-ui-for-media-stream',
     '--use-fake-device-for-media-stream',
@@ -64,10 +66,10 @@ try {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/demo/admin`);
   await page.waitForSelector('.tenant-card');
   await page.screenshot({ path: join(OUT, '1-console.png') });
-  await page.goto(`${base}/board/lucas-trattoria?phone=07700900123`);
+  await page.goto(`${base}/demo/admin/board/lucas-trattoria?phone=07700900123`);
   await page.waitForSelector('.slot');
   await page.screenshot({ path: join(OUT, '2-board-idle.png') });
 
@@ -81,6 +83,7 @@ try {
   // Let the scripted caller finish (or the agent hang up).
   await page.waitForFunction(() => /Call ended/.test(document.getElementById('call-text')?.textContent ?? ''), null, { timeout: 90000 }).catch(() => {});
   await page.waitForTimeout(1500);
+  console.log('reply times on screen:', (await page.textContent('.replies'))?.replace(/\s+/g, ' '));
   await page.screenshot({ path: join(OUT, '4-board-after-call.png'), fullPage: true });
   const transcript = await page.$$eval('#stream > *', (els) => els.map((e) => e.textContent?.replace(/\s+/g, ' ').trim()));
   writeFileSync(join(OUT, 'transcript.txt'), transcript.join('\n'));

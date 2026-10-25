@@ -1,0 +1,711 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "",
+  "style": "Coffee, breakfast, light lunches and homemade cakes",
+  "town": "Nottingham",
+  "address": "14 Wren Street (example), Nottingham NG1",
+  "phone_display": "0115 496 0812",
+  "website": "",
+  "voice": "Aoede",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "10:00",
+      "close": "15:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "09:00",
+      "close": "17:00"
+     }
+    ]
+   }
+  ],
+  "closures": [],
+  "breakfast_until": "11:30",
+  "kitchen_closes_before": 30
+ },
+ "seating": {
+  "areas": [
+   {
+    "key": "indoor",
+    "label": "Inside",
+    "kind": "indoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   },
+   {
+    "key": "outside",
+    "label": "Outside",
+    "kind": "outdoor",
+    "reservable": false,
+    "enquiry_only": false,
+    "weather_rule": "walk_in_only"
+   }
+  ],
+  "tables": [
+   {
+    "key": "T1",
+    "label": "Table 1",
+    "area": "indoor",
+    "seats": 2,
+    "shape": "round",
+    "x": 40,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["sofa"],
+    "joins": []
+   },
+   {
+    "key": "T2",
+    "label": "Table 2",
+    "area": "indoor",
+    "seats": 2,
+    "shape": "round",
+    "x": 130,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T3",
+    "label": "Table 3",
+    "area": "indoor",
+    "seats": 2,
+    "shape": "round",
+    "x": 220,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T4",
+    "label": "Table 4",
+    "area": "indoor",
+    "seats": 2,
+    "shape": "round",
+    "x": 310,
+    "y": 50,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T5",
+    "label": "Table 5",
+    "area": "indoor",
+    "seats": 4,
+    "shape": "square",
+    "x": 400,
+    "y": 40,
+    "rotation": 0,
+    "accessible": true,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T6",
+    "label": "Table 6",
+    "area": "indoor",
+    "seats": 4,
+    "shape": "square",
+    "x": 510,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T7"]
+   },
+   {
+    "key": "T7",
+    "label": "Table 7",
+    "area": "indoor",
+    "seats": 4,
+    "shape": "square",
+    "x": 620,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["T6"]
+   },
+   {
+    "key": "T8",
+    "label": "Table 8",
+    "area": "indoor",
+    "seats": 8,
+    "shape": "rect",
+    "x": 730,
+    "y": 43,
+    "rotation": 0,
+    "accessible": true,
+    "walk_in": false,
+    "features": ["window"],
+    "joins": []
+   },
+   {
+    "key": "T9",
+    "label": "Table 9",
+    "area": "outside",
+    "seats": 2,
+    "shape": "round",
+    "x": 40,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T10",
+    "label": "Table 10",
+    "area": "outside",
+    "seats": 2,
+    "shape": "round",
+    "x": 130,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "T11",
+    "label": "Table 11",
+    "area": "outside",
+    "seats": 2,
+    "shape": "round",
+    "x": 220,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   }
+  ],
+  "fixtures": [
+   {
+    "key": "F1",
+    "area": "indoor",
+    "kind": "window",
+    "x": 720,
+    "y": 10,
+    "length": 216,
+    "rotation": 0
+   },
+   {
+    "key": "F2",
+    "area": "indoor",
+    "kind": "bar",
+    "x": 686,
+    "y": 166,
+    "length": 240,
+    "rotation": 0
+   },
+   {
+    "key": "F3",
+    "area": "indoor",
+    "kind": "door",
+    "x": 40,
+    "y": 156,
+    "length": 70,
+    "rotation": 0
+   }
+  ],
+  "plan": 2,
+  "sittings": {
+   "up_to_2": 60,
+   "up_to_4": 75,
+   "up_to_8": 90,
+   "larger": 105
+  },
+  "max_party": 8,
+  "notice_minutes": 60,
+  "horizon_days": 30,
+  "highchairs": 3,
+  "buffer_minutes": 0
+ },
+ "booking": {
+  "min_party": 5,
+  "busy_times": "Saturday from 11 till 2 is our busiest; weekday mornings and mid-afternoons are quieter."
+ },
+ "afternoon_tea": {
+  "offered": true,
+  "adult_pence": 2450,
+  "child_pence": 1200,
+  "child_under": 12,
+  "description": "Finger sandwiches, scones with jam and clotted cream, a selection of cakes, and a pot of tea or a coffee each.",
+  "notice_days": 1,
+  "diet_notice_days": 2,
+  "diets": ["gluten-free","vegan"],
+  "sittings": ["12:00","14:00","15:30"],
+  "minutes": 90,
+  "max_party": 8,
+  "deposit_pence": 0
+ },
+ "ordering": {
+  "collection": {
+   "enabled": true,
+   "prep_minutes": 10,
+   "slot_minutes": 5,
+   "per_slot": 4
+  },
+  "delivery": {
+   "enabled": false,
+   "districts": [],
+   "fee_pence": 0,
+   "min_order_pence": 0,
+   "extra_minutes": 0
+  },
+  "delivery_apps": [],
+  "timed_orders": true
+ },
+ "menu": {
+  "categories": [
+   {
+    "key": "hot_drinks",
+    "label": "Hot drinks",
+    "items": [
+     {
+      "key": "espresso",
+      "name": "Espresso",
+      "price_pence": 240,
+      "allergens": [],
+      "dietary": ["vegan"],
+      "modifier_groups": ["coffee_extras"]
+     },
+     {
+      "key": "americano",
+      "name": "Americano",
+      "price_pence": 290,
+      "allergens": [],
+      "dietary": ["vegan"],
+      "modifier_groups": ["milk","coffee_extras"]
+     },
+     {
+      "key": "flat_white",
+      "name": "Flat white",
+      "price_pence": 330,
+      "allergens": ["milk"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["milk","coffee_extras"]
+     },
+     {
+      "key": "cappuccino",
+      "name": "Cappuccino",
+      "price_pence": 340,
+      "allergens": ["milk"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["milk","coffee_extras"]
+     },
+     {
+      "key": "latte",
+      "name": "Latte",
+      "price_pence": 340,
+      "allergens": ["milk"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["milk","coffee_extras"]
+     },
+     {
+      "key": "pot_of_tea",
+      "name": "Pot of tea",
+      "price_pence": 280,
+      "description": "English breakfast, Earl Grey, peppermint or green.",
+      "allergens": [],
+      "dietary": ["vegan"],
+      "modifier_groups": ["milk"],
+      "aliases": ["tea"]
+     },
+     {
+      "key": "hot_chocolate",
+      "name": "Hot chocolate",
+      "price_pence": 350,
+      "allergens": ["milk"],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["milk"]
+     }
+    ]
+   },
+   {
+    "key": "breakfast",
+    "label": "Breakfast (until 11:30)",
+    "items": [
+     {
+      "key": "full_breakfast",
+      "name": "Full breakfast",
+      "price_pence": 1050,
+      "description": "Bacon, sausage, egg, beans, mushrooms, tomato and toast.",
+      "allergens": ["gluten","eggs","milk","sulphites"]
+     },
+     {
+      "key": "veggie_breakfast",
+      "name": "Veggie breakfast",
+      "price_pence": 995,
+      "description": "Veggie sausage, egg, beans, mushrooms, tomato, avocado and toast.",
+      "allergens": ["gluten","eggs","milk","soya"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "avocado_sourdough",
+      "name": "Avocado on sourdough",
+      "price_pence": 850,
+      "allergens": ["gluten"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["add_egg"],
+      "aliases": ["avocado toast","smashed avocado"]
+     },
+     {
+      "key": "bacon_sandwich",
+      "name": "Bacon sandwich",
+      "price_pence": 550,
+      "allergens": ["gluten"],
+      "aliases": ["bacon butty","bacon roll","bacon sarnie"]
+     },
+     {
+      "key": "porridge",
+      "name": "Porridge",
+      "price_pence": 475,
+      "description": "With honey or jam.",
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"]
+     }
+    ]
+   },
+   {
+    "key": "lunch",
+    "label": "Lunch",
+    "items": [
+     {
+      "key": "soup",
+      "name": "Soup of the day with bread",
+      "price_pence": 650,
+      "allergens": ["celery","gluten","milk"],
+      "dietary": ["vegetarian"],
+      "aliases": ["soup"]
+     },
+     {
+      "key": "ham_cheese_toastie",
+      "name": "Ham and cheese toastie",
+      "price_pence": 695,
+      "allergens": ["gluten","milk","mustard"]
+     },
+     {
+      "key": "cheese_onion_toastie",
+      "name": "Cheese and onion toastie",
+      "price_pence": 695,
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "tuna_melt",
+      "name": "Tuna melt",
+      "price_pence": 695,
+      "allergens": ["gluten","milk","fish","eggs"]
+     },
+     {
+      "key": "jacket_potato",
+      "name": "Jacket potato",
+      "price_pence": 750,
+      "allergens": [],
+      "dietary": ["vegetarian"],
+      "modifier_groups": ["jacket_filling"],
+      "aliases": ["jacket"]
+     },
+     {
+      "key": "salad_bowl",
+      "name": "Salad bowl",
+      "price_pence": 895,
+      "description": "Grains, roast vegetables, hummus and seeds.",
+      "allergens": ["sesame","mustard"],
+      "dietary": ["vegan"]
+     }
+    ]
+   },
+   {
+    "key": "cakes",
+    "label": "Cakes and bakes",
+    "items": [
+     {
+      "key": "victoria_sponge",
+      "name": "Victoria sponge",
+      "price_pence": 380,
+      "allergens": ["gluten","eggs","milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "carrot_cake",
+      "name": "Carrot cake",
+      "price_pence": 395,
+      "description": "With walnuts and cream cheese icing.",
+      "allergens": ["gluten","eggs","milk","nuts"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "brownie",
+      "name": "Chocolate brownie",
+      "price_pence": 350,
+      "description": "Made without gluten ingredients.",
+      "allergens": ["eggs","milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "scone",
+      "name": "Scone with jam and cream",
+      "price_pence": 425,
+      "allergens": ["gluten","eggs","milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "banana_bread",
+      "name": "Vegan banana bread",
+      "price_pence": 360,
+      "allergens": ["gluten"],
+      "dietary": ["vegan"]
+     }
+    ]
+   },
+   {
+    "key": "sandwiches",
+    "label": "Sandwiches to go",
+    "items": [
+     {
+      "key": "chicken_stuffing",
+      "name": "Chicken and stuffing sandwich",
+      "price_pence": 525,
+      "description": "Pre-packed here, labelled with full ingredients.",
+      "allergens": ["gluten","eggs","mustard","celery"]
+     },
+     {
+      "key": "egg_mayo",
+      "name": "Egg mayo sandwich",
+      "price_pence": 450,
+      "description": "Pre-packed here, labelled with full ingredients.",
+      "allergens": ["gluten","eggs","mustard"],
+      "dietary": ["vegetarian"]
+     }
+    ]
+   },
+   {
+    "key": "children",
+    "label": "Children's",
+    "items": [
+     {
+      "key": "toast_and_jam",
+      "name": "Toast and jam",
+      "price_pence": 250,
+      "allergens": ["gluten","milk"],
+      "dietary": ["vegetarian"]
+     },
+     {
+      "key": "babyccino",
+      "name": "Babyccino",
+      "price_pence": 50,
+      "allergens": ["milk"],
+      "dietary": ["vegetarian"]
+     }
+    ]
+   }
+  ],
+  "modifier_groups": {
+   "milk": {
+    "label": "Milk",
+    "min": 0,
+    "max": 1,
+    "options": [
+     {
+      "key": "oat",
+      "name": "oat milk",
+      "price_pence": 0,
+      "allergens": ["gluten"]
+     },
+     {
+      "key": "soya",
+      "name": "soya milk",
+      "price_pence": 0,
+      "allergens": ["soya"]
+     },
+     {
+      "key": "almond",
+      "name": "almond milk",
+      "price_pence": 0,
+      "allergens": ["nuts"]
+     },
+     {
+      "key": "skimmed",
+      "name": "skimmed milk",
+      "price_pence": 0,
+      "allergens": ["milk"]
+     }
+    ]
+   },
+   "coffee_extras": {
+    "label": "Extras",
+    "min": 0,
+    "max": 2,
+    "options": [
+     {
+      "key": "extra_shot",
+      "name": "extra shot",
+      "price_pence": 60,
+      "allergens": []
+     },
+     {
+      "key": "decaf",
+      "name": "decaf",
+      "price_pence": 0,
+      "allergens": []
+     }
+    ]
+   },
+   "add_egg": {
+    "label": "Add",
+    "min": 0,
+    "max": 1,
+    "options": [
+     {
+      "key": "poached_egg",
+      "name": "a poached egg",
+      "price_pence": 150,
+      "allergens": ["eggs"]
+     }
+    ]
+   },
+   "jacket_filling": {
+    "label": "Filling",
+    "min": 1,
+    "max": 1,
+    "options": [
+     {
+      "key": "cheese",
+      "name": "cheese",
+      "price_pence": 0,
+      "allergens": ["milk"]
+     },
+     {
+      "key": "beans",
+      "name": "beans",
+      "price_pence": 0,
+      "allergens": []
+     },
+     {
+      "key": "tuna_mayo",
+      "name": "tuna mayo",
+      "price_pence": 0,
+      "allergens": ["fish","eggs"]
+     }
+    ]
+   }
+  },
+  "allergen_statement": "Everything is made in one kitchen that uses nuts, gluten, milk and eggs, so we can't promise any food is free from traces. Tell us about any allergy and we'll take care.",
+  "source": "sample",
+  "allergens_are_examples": true
+ },
+ "money": {
+  "payment": "collection",
+  "cash": true,
+  "tips": "Tips are never expected; any paid by card go to the team in full."
+ },
+ "policies": {
+  "dogs": "inside",
+  "children": "Children are very welcome: there’s a children’s menu and babyccinos.",
+  "baby_changing": true,
+  "accessibility": "Step-free from the street, with an accessible toilet.",
+  "wifi": "Free Wi-Fi; the password is on the counter.",
+  "laptops": "Laptops are welcome, except at weekend lunchtimes when we need the tables.",
+  "parking": "No parking of our own; the nearest car park is about five minutes’ walk.",
+  "tap_water": true,
+  "hygiene_rating": 5,
+  "reusable_cups": "Bring your own cup and we’ll happily fill it.",
+  "careers": "We sometimes have weekend roles: leave your name and number and the owner will be in touch.",
+  "hire": "The café can be hired in the evenings for parties: the owner will call back to talk it through.",
+  "faqs": []
+ },
+ "theme": {
+  "accent": "#c9814a",
+  "primary": "#2b2420",
+  "background": "#f7f1ea",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

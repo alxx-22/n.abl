@@ -92,6 +92,40 @@ export function optionsFor(menu: Menu, item: MenuItem): { group: string; option:
   );
 }
 
+/**
+ * A required choice already in the words for the item: "regular fries", "a can of Coke", "12 inch
+ * margherita". Only a group that must be chosen, only when the words name as many as it needs, and only
+ * when none was asked for already. A live takeaway call on 8 October passed "regular fries" with no
+ * options, was asked "regular or large?", and the fries never reached the order.
+ */
+export function choicesIn(menu: Menu, item: MenuItem, words: string, requested: string[]): string[] {
+  const said = ` ${normalise(words).join(' ')} `;
+  const asked = new Set(requested.map((r) => normalise(r).join(' ')));
+  const out: string[] = [];
+  for (const g of item.modifier_groups ?? []) {
+    const group = menu.modifier_groups[g];
+    if (!group || group.min < 1) continue;
+    const named = (o: ModifierOption) => [o.name, ...(o.aliases ?? [])].map((n) => normalise(n).join(' ')).filter(Boolean);
+    if (group.options.some((o) => named(o).some((n) => asked.has(n)))) continue;
+    const hits = group.options.filter((o) => named(o).some((n) => said.includes(` ${n} `)));
+    if (hits.length === group.min) out.push(...hits.map((o) => o.name));
+  }
+  return out;
+}
+
+const COUNTS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+
+/**
+ * A count in a dish's own name: "Six hot wings" is 6, so six of them asked for
+ * is one portion. Live, 8 October: "six hot wings" went in as six portions of
+ * Six hot wings, £29.94.
+ */
+export function countInName(name: string): number | null {
+  const w = name.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
+  const n = /^\d+$/.test(w) ? Number(w) : w === 'twenty' ? 20 : COUNTS.indexOf(w);
+  return n > 1 ? n : null;
+}
+
 export function resolveModifiers(
   menu: Menu,
   item: MenuItem,
@@ -102,7 +136,7 @@ export function resolveModifiers(
   const unmatched: string[] = [];
   for (const r of requested.map((x) => x.trim()).filter(Boolean)) {
     const scored = available
-      .map((a) => ({ ...a, s: Math.max(score(r, a.option.name), score(r, a.option.key.replace(/_/g, ' '))) }))
+      .map((a) => ({ ...a, s: Math.max(score(r, a.option.name), score(r, a.option.key.replace(/_/g, ' ')), ...(a.option.aliases ?? []).map((x) => score(r, x))) }))
       .sort((a, b) => b.s - a.s);
     if (scored[0] && scored[0].s >= 0.7) picked.push(scored[0]);
     else unmatched.push(r);
@@ -147,6 +181,31 @@ export function allergensOf(menu: Menu, item: MenuItem, modifiers: ModifierOptio
   const set = new Set<Allergen>(item.allergens);
   for (const m of modifiers) for (const a of m.allergens ?? []) set.add(a);
   return [...set].sort();
+}
+
+const ALLERGEN_WORDS: [RegExp, Allergen[]][] = [
+  [/dairy|lactose|milk|cheese|cream|butter(?!nut)/, ['milk']],
+  [/gluten|coeliac|celiac|wheat|barley|\brye\b/, ['gluten']],
+  [/peanut/, ['peanuts']],
+  // Whole words only: coconut, nutmeg, doughnut and butternut squash are not tree nuts, and peanuts have their own line.
+  [/\b(?:tree ?)?nuts?\b|almond|walnut|hazelnut|cashew|pistachio|pecan|brazil ?nuts?|macadamia/, ['nuts']],
+  [/shellfish/, ['crustaceans', 'molluscs']],
+  [/crustacean|prawn|shrimp|crab|lobster|langoustine/, ['crustaceans']],
+  [/mollusc|mussel|oyster|squid|clam|scallop|octopus/, ['molluscs']],
+  [/\beggs?\b/, ['eggs']],
+  [/\bfish\b/, ['fish']],
+  [/\bsoy|soya/, ['soya']],
+  [/sesame/, ['sesame']],
+  [/celery|celeriac/, ['celery']],
+  [/mustard/, ['mustard']],
+  [/lupin/, ['lupin']],
+  [/sulph|sulfite/, ['sulphites']],
+];
+
+/** The 14 allergens a caller's words name: "dairy" is milk, "shellfish" is crustaceans and molluscs. */
+export function allergensNamed(text: string): Allergen[] {
+  const s = text.toLowerCase();
+  return [...new Set(ALLERGEN_WORDS.filter(([re]) => re.test(s)).flatMap(([, a]) => a))];
 }
 
 /** The approved allergen wording: data first, then the kitchen caveat, never "safe". */

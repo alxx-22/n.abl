@@ -1,144 +1,97 @@
-// n.abl Reception: the server. One process holds every call.
+// n.abl Reception: the server. One process holds every call, the API and
+// the React app, all under /demo so it can sit behind nabl.agency's Worker
+// (nabl.agency/demo/*) or run on its own:
 //
-//   npm run dev      PGlite in .data/, seeded on first run, http://localhost:8787
-//   npm start        production (DATABASE_URL, PUBLIC_BASE_URL, CONSOLE_PASSWORD)
+//   /demo/reception…        prospects: key entry, builder, live workspace
+//   /demo/admin…            the team console (CONSOLE_PASSWORD)
+//   /demo/api/…             the prospect API (demo.ts) and /demo/api/admin (admin.ts)
+//   /demo/ws/talk           a call from the browser
+//   /demo/twilio/…          the phone line
+//
+//   npm run dev      PGlite in .data/, seeded on first run, the React app with
+//                    hot reload, all on http://localhost:8787/demo/
+//   npm run build    builds the React app into web/dist
+//   npm start        production: serves web/dist (DATABASE_URL, PUBLIC_BASE_URL, CONSOLE_PASSWORD)
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { createHmac, timingSafeEqual } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { createServer as createNetServer } from 'node:net';
+import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, type WebSocket } from 'ws';
+import type { ViteDevServer } from 'vite';
 import { loadConfig, type Config } from '../config.ts';
 import { migrate, openDb } from '../db/db.ts';
 import { Repo } from '../db/repo.ts';
-import { seedAll, seedDiary } from '../db/seed.ts';
+import { DemoRepo } from '../db/demo-repo.ts';
+import { seedAll } from '../db/seed.ts';
 import { Bus } from './bus.ts';
 import { smsSender } from '../channels/sms.ts';
 import { handleBrowserCall } from '../channels/browser.ts';
 import {
-  connectTwiml, handleTwilioStream, pinTwiml, sayTwiml, signatureValid, streamToken,
+  TWILIO_BASE, connectTwiml, handleTwilioStream, pinTwiml, sayTwiml, signatureValid, streamToken,
 } from '../channels/twilio.ts';
-import { toLocal, spokenDate, spokenTime, addDays, zonedToUtc } from '../domain/time.ts';
-import { pounds, type TenantProfile } from '../domain/types.ts';
-import { displayUkPhone } from '../domain/phone.ts';
-import { ingestWebsite } from '../ingest/ingest.ts';
+import { checkApiKey, type KeyStatus } from '../core/gemini.ts';
+import type { Ctx } from './context.ts';
+import { BASE, DEV_HEADERS, HttpError, SECURITY_HEADERS, json, readBody, sameOrigin, xmlReply } from './http.ts';
+import { handleAdmin, isAdmin } from './admin.ts';
+import { DEMO_CALLS_PER_KEY, DEMO_CALLS_TOTAL, callSecondsLeft, callerId, callsByKey, demoSms, ended, handleDemo, owns, sessionWho } from './demo.ts';
+import { startSweeper } from '../demo/sweeper.ts';
+import { startPager } from './maintenance.ts';
 
-const PUBLIC = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'public');
+const WEB = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'web');
+const DIST = join(WEB, 'dist');
+const HMR_PATH = `${BASE}/__vite_hmr`;
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml', '.json': 'application/json', '.ico': 'image/x-icon', '.png': 'image/png',
+  '.svg': 'image/svg+xml', '.json': 'application/json', '.map': 'application/json', '.ico': 'image/x-icon', '.png': 'image/png',
+  '.woff2': 'font/woff2', '.webp': 'image/webp', '.txt': 'text/plain; charset=utf-8',
 };
-const SECURITY_HEADERS = {
-  'content-security-policy':
-    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ws: wss:; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-  'x-content-type-options': 'nosniff',
-  'referrer-policy': 'no-referrer',
-  'permissions-policy': 'microphone=(self), camera=(), geolocation=()',
-};
+
+export interface ServerOptions {
+  /** 'dev' runs Vite inside the server; 'dist' serves the built app. */
+  web?: 'dev' | 'dist';
+  /** Ask Google whether GEMINI_API_KEY works, and tell the console. */
+  checkKey?: boolean;
+  /** Tests only: the scout reads a local site with a stand-in model. */
+  scoutTest?: Ctx['scoutTest'];
+  /** Run the clean-up of expired demos every minute (default on). */
+  sweep?: boolean;
+}
 
 export interface App {
   config: Config;
   repo: Repo;
+  demo: DemoRepo;
   bus: Bus;
+  /** Settles once Google has answered, when started with checkKey. */
+  keyChecked: Promise<{ status: KeyStatus; detail?: string }>;
   close: () => Promise<void>;
   port: number;
 }
 
-function sessionCookie(config: Config): string {
-  return createHmac('sha256', config.sessionSecret).update('console').digest('base64url');
+/** A demo call refused after the handshake, so the page can say why. */
+function refuseCall(ws: WebSocket, message: string): void {
+  ws.send(JSON.stringify({ type: 'error', message }));
+  ws.close(1008, 'refused');
 }
 
-function authed(req: IncomingMessage, config: Config): boolean {
-  if (!config.consolePassword) return true;
-  const cookie = /(?:^|;\s*)va_session=([^;]+)/.exec(req.headers.cookie ?? '')?.[1];
-  if (!cookie) return false;
-  const want = Buffer.from(sessionCookie(config));
-  const got = Buffer.from(cookie);
-  return want.length === got.length && timingSafeEqual(want, got);
-}
-
-async function body(req: IncomingMessage, limit = 2_000_000): Promise<string> {
-  const chunks: Buffer[] = [];
-  let size = 0;
-  for await (const c of req) {
-    size += (c as Buffer).length;
-    if (size > limit) throw new Error('body too large');
-    chunks.push(c as Buffer);
-  }
-  return Buffer.concat(chunks).toString('utf8');
-}
-
-function json(res: ServerResponse, status: number, data: unknown): void {
-  res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', ...SECURITY_HEADERS });
-  res.end(JSON.stringify(data));
-}
-
-function xmlReply(res: ServerResponse, twiml: string): void {
-  res.writeHead(200, { 'content-type': 'text/xml' });
-  res.end(twiml);
-}
-
-function validProfile(p: any): p is TenantProfile {
-  return (
-    p && typeof p === 'object' && typeof p.slug === 'string' && /^[a-z0-9-]{2,40}$/.test(p.slug) &&
-    typeof p.name === 'string' && typeof p.greeting === 'string' && Array.isArray(p.core_facts) &&
-    Array.isArray(p.opening_hours) && Array.isArray(p.knowledge) && typeof p.timezone === 'string'
-  );
-}
-
-async function tenantState(repo: Repo, slug: string, bus: Bus) {
-  const t = await repo.getTenant(slug);
-  if (!t) return null;
-  const tz = t.profile.timezone;
-  const now = new Date();
-  const today = toLocal(now, tz).date;
-  const from = zonedToUtc(today, '00:00', tz);
-  const to = zonedToUtc(addDays(today, 14), '00:00', tz);
-  const bookings = await repo.listBookings(t.id, from, to, true);
-  const orders = await repo.listOrders(t.id, new Date(now.getTime() - 36 * 3600000));
-  const resources = new Map((t.profile.booking?.resources ?? []).map((r) => [r.key, r.label]));
-  const services = new Map((t.profile.booking?.services ?? []).map((s) => [s.key, s.label]));
-  return {
-    tenant: {
-      id: t.id, slug: t.slug, name: t.profile.name, business_type: t.profile.business_type, status: t.profile.status,
-      phone_display: t.profile.phone_display, demo_pin: t.profile.demo_pin, accent: t.profile.brand?.accent,
-      summary: t.profile.summary, greeting: t.profile.greeting, voice: t.profile.voice,
-      has_booking: Boolean(t.profile.booking?.services.length), has_ordering: Boolean(t.profile.ordering),
-    },
-    today,
-    active_calls: bus.activeFor(t.id),
-    bookings: bookings.map((b) => {
-      const l = toLocal(b.starts_at, tz);
-      return {
-        reference: b.reference, date: l.date, day: spokenDate(l.date), time: l.time, spoken_time: spokenTime(l.time),
-        party_size: b.party_size, name: b.name, phone: displayUkPhone(b.phone), notes: b.notes, status: b.status,
-        source: b.source, with: resources.get(b.resource_key) ?? b.resource_key, service: services.get(b.service_key) ?? b.service_key,
-        deposit: b.deposit_pence ? pounds(b.deposit_pence) : null, deposit_paid: b.deposit_paid,
-      };
-    }),
-    orders: orders.map((o) => ({
-      reference: o.reference, name: o.name, fulfilment: o.fulfilment, due: spokenTime(toLocal(o.due_at, tz).time),
-      address: o.address ? `${o.address}, ${o.postcode}` : null, lines: o.lines, total: pounds(o.total_pence),
-      allergy_notes: o.allergy_notes, status: o.status, payment_status: o.payment_status, created_at: o.created_at,
-    })),
-    messages: (await repo.listMessages(t.id)).map((m) => ({ ...m, to_number: displayUkPhone(m.to_number), from_phone: displayUkPhone(m.from_phone) })),
-    calls: (await repo.listCalls(t.id, 12)).map((c) => ({
-      id: c.id, channel: c.channel, started_at: c.started_at, ended_at: c.ended_at, outcome: c.outcome, summary: c.summary,
-      model: c.model, guardrail_flags: c.guardrail_flags, latency: c.latency, usage: c.usage,
-    })),
-  };
-}
-
-export async function startServer(config: Config = loadConfig()): Promise<App> {
+export async function startServer(config: Config = loadConfig(), opts: ServerOptions = {}): Promise<App> {
   const db = await openDb({ databaseUrl: config.databaseUrl, pgliteDir: config.pgliteDir });
   await migrate(db);
   const repo = new Repo(db);
+  const demo = new DemoRepo(db);
+  await demo.failStaleScans();
   if (!(await repo.listTenants()).length) await seedAll(repo);
   const bus = new Bus();
   const sms = smsSender(config);
   const maxCalls = Number(process.env.MAX_CONCURRENT_CALLS ?? 6);
+  let keyStatus: KeyStatus = opts.checkKey ? 'checking' : config.geminiApiKey ? 'ok' : 'missing';
+  const keyChecked = opts.checkKey
+    ? checkApiKey(config.geminiApiKey).then((r) => ((keyStatus = r.status), r))
+    : Promise.resolve({ status: keyStatus });
+  const ctx: Ctx = { config, repo, demo, bus, sms, maxCalls, keyStatus: () => keyStatus, scoutTest: opts.scoutTest };
 
   const twilioOk = (req: IncomingMessage, path: string, params: Record<string, string>) => {
     if (!config.twilio) return false;
@@ -148,7 +101,7 @@ export async function startServer(config: Config = loadConfig()): Promise<App> {
 
   const connectCall = async (res: ServerResponse, tenantId: string, params: Record<string, string>, cue?: string) => {
     if (bus.activeCalls() >= maxCalls) return xmlReply(res, sayTwiml('Sorry, every line is busy on this demo right now. Please try again in a minute.'));
-    const wsUrl = `${config.publicBaseUrl!.replace(/^http/, 'ws')}/twilio/stream`;
+    const wsUrl = `${config.publicBaseUrl!.replace(/^http/, 'ws')}${TWILIO_BASE}/stream`;
     const p: Record<string, string> = {
       tenant_id: tenantId, token: streamToken(config.sessionSecret, params.CallSid, tenantId),
       from: params.From ?? '', to: params.To ?? '',
@@ -157,172 +110,266 @@ export async function startServer(config: Config = loadConfig()): Promise<App> {
     xmlReply(res, connectTwiml(wsUrl, p));
   };
 
+  const twilio = async (req: IncomingMessage, res: ServerResponse, path: string, url: URL) => {
+    const params = Object.fromEntries(new URLSearchParams(await readBody(req)));
+    if (!twilioOk(req, `${path}${url.search}`, params)) return json(res, 403, { error: 'bad signature' });
+    const hook = path.slice(TWILIO_BASE.length);
+    if (hook === '/voice') {
+      const route = await repo.routeNumber(params.To ?? '');
+      if (route?.purpose === 'pin_router' || !route) {
+        if (!route && !process.env.PIN_ROUTER_FALLBACK) return xmlReply(res, sayTwiml('This number is not set up for a demo yet.'));
+        return xmlReply(res, pinTwiml(`${config.publicBaseUrl}${TWILIO_BASE}/pin`));
+      }
+      return connectCall(res, route.tenant_id!, params);
+    }
+    if (hook === '/pin') {
+      const id = await repo.tenantForPin((params.Digits ?? '').trim());
+      if (!id) return xmlReply(res, pinTwiml(`${config.publicBaseUrl}${TWILIO_BASE}/pin`, true));
+      return connectCall(res, id, params);
+    }
+    if (hook === '/whisper') return xmlReply(res, sayTwiml(url.searchParams.get('text') ?? 'A caller from the AI assistant.', false));
+    if (hook === '/after-dial') {
+      if (params.DialCallStatus === 'completed') return xmlReply(res, '<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>');
+      const t = await repo.getTenant(url.searchParams.get('tenant') ?? '');
+      if (!t) return xmlReply(res, sayTwiml('Sorry, nobody could take the call. Goodbye.'));
+      return connectCall(res, t.id, params, '[You tried to transfer this caller but nobody answered. Apologise briefly and offer to take a message.]');
+    }
+    return json(res, 404, { error: 'not found' });
+  };
+
+  const redirect = (res: ServerResponse, to: string) => {
+    res.writeHead(302, { location: to, ...SECURITY_HEADERS });
+    res.end();
+  };
+
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', 'http://local');
     const path = url.pathname;
     try {
       // ── Health ──────────────────────────────────────────────────────
-      if (path === '/healthz') return json(res, 200, { ok: await repo.ping(), calls: bus.activeCalls() });
+      if (path === '/healthz' || path === `${BASE}/healthz`) return json(res, 200, { ok: await repo.ping(), calls: bus.activeCalls(), version: process.env.APP_VERSION ?? null });
 
       // ── Twilio webhooks ─────────────────────────────────────────────
-      if (path.startsWith('/twilio/') && req.method === 'POST') {
-        const params = Object.fromEntries(new URLSearchParams(await body(req)));
-        const fullPath = `${path}${url.search}`;
-        if (!twilioOk(req, fullPath, params)) return json(res, 403, { error: 'bad signature' });
-        if (path === '/twilio/voice') {
-          const route = await repo.routeNumber(params.To ?? '');
-          if (route?.purpose === 'pin_router' || !route) {
-            if (!route && !process.env.PIN_ROUTER_FALLBACK) return xmlReply(res, sayTwiml('This number is not set up for a demo yet.'));
-            return xmlReply(res, pinTwiml(`${config.publicBaseUrl}/twilio/pin`));
-          }
-          return connectCall(res, route.tenant_id!, params);
-        }
-        if (path === '/twilio/pin') {
-          const id = await repo.tenantForPin((params.Digits ?? '').trim());
-          if (!id) return xmlReply(res, pinTwiml(`${config.publicBaseUrl}/twilio/pin`, true));
-          return connectCall(res, id, params);
-        }
-        if (path === '/twilio/whisper') return xmlReply(res, sayTwiml(url.searchParams.get('text') ?? 'A caller from the AI assistant.', false));
-        if (path === '/twilio/after-dial') {
-          if (params.DialCallStatus === 'completed') return xmlReply(res, '<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>');
-          const t = await repo.getTenant(url.searchParams.get('tenant') ?? '');
-          if (!t) return xmlReply(res, sayTwiml('Sorry, nobody could take the call. Goodbye.'));
-          return connectCall(res, t.id, params, '[You tried to transfer this caller but nobody answered. Apologise briefly and offer to take a message.]');
-        }
-        return json(res, 404, { error: 'not found' });
-      }
+      if (path.startsWith(`${TWILIO_BASE}/`) && req.method === 'POST') return await twilio(req, res, path, url);
 
-      // ── Console API ─────────────────────────────────────────────────
-      if (path === '/api/login' && req.method === 'POST') {
-        const { password } = JSON.parse((await body(req)) || '{}');
-        const want = Buffer.from(config.consolePassword ?? '');
-        const got = Buffer.from(String(password ?? ''));
-        if (config.consolePassword && (want.length !== got.length || !timingSafeEqual(want, got))) return json(res, 401, { error: 'wrong password' });
-        res.setHeader('set-cookie', `va_session=${sessionCookie(config)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000${config.publicBaseUrl?.startsWith('https') ? '; Secure' : ''}`);
-        return json(res, 200, { ok: true });
-      }
-      if (path.startsWith('/api/')) {
-        if (!authed(req, config)) return json(res, 401, { error: 'sign in' });
-        const m = /^\/api\/tenants(?:\/([a-z0-9-]+))?(?:\/(state|reset|events))?$/.exec(path);
-        if (path === '/api/config') {
-          return json(res, 200, {
-            models: config.liveModels, demo_cards: config.demoCards.map((c) => ({ ...c, spoken: c.number.replace(/(\d{4})(?=\d)/g, '$1 ') })),
-            telephony: Boolean(config.twilio), sms: Boolean(config.twilio?.smsFrom), numbers: await repo.listNumbers(),
-            active_calls: bus.activeCalls(), max_calls: maxCalls,
-          });
-        }
-        if (path === '/api/ingest' && req.method === 'POST') {
-          const { url: site } = JSON.parse((await body(req)) || '{}');
-          const profile = await ingestWebsite(String(site ?? ''), config);
-          return json(res, 200, { profile });
-        }
-        const call = /^\/api\/calls\/([0-9a-f-]{36})\/events$/.exec(path);
-        if (call) return json(res, 200, { events: await repo.listEvents(call[1]) });
-        if (m && !m[1] && req.method === 'GET') return json(res, 200, { tenants: await repo.listTenants() });
-        if (m && m[1] && !m[2] && req.method === 'GET') {
-          const t = await repo.getTenant(m[1]);
-          return t ? json(res, 200, { profile: t.profile }) : json(res, 404, { error: 'no such tenant' });
-        }
-        if (m && m[1] && !m[2] && req.method === 'PUT') {
-          const profile = JSON.parse(await body(req));
-          if (!validProfile(profile) || profile.slug !== m[1]) return json(res, 400, { error: 'invalid profile' });
-          const t = await repo.upsertTenant(profile);
-          return json(res, 200, { ok: true, id: t.id });
-        }
-        if (m && m[1] && m[2] === 'state') {
-          const s = await tenantState(repo, m[1], bus);
-          return s ? json(res, 200, s) : json(res, 404, { error: 'no such tenant' });
-        }
-        if (m && m[1] && m[2] === 'reset' && req.method === 'POST') {
-          const t = await repo.getTenant(m[1]);
-          if (!t) return json(res, 404, { error: 'no such tenant' });
-          await repo.resetTenantData(t.id);
-          const made = await seedDiary(repo, t, new Date());
-          bus.publish({ type: 'refresh', tenant_id: t.id, call_id: '', at: new Date().toISOString() });
-          return json(res, 200, { ok: true, bookings: made });
-        }
-        if (m && m[1] && m[2] === 'events') {
-          const t = await repo.getTenant(m[1]);
-          if (!t) return json(res, 404, { error: 'no such tenant' });
-          res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive', 'x-accel-buffering': 'no' });
-          res.write(': hello\n\n');
-          const off = bus.subscribe(t.id, (e) => res.write(`data: ${JSON.stringify(e)}\n\n`));
-          const ping = setInterval(() => res.write(': ping\n\n'), 20000);
-          req.on('close', () => {
-            off();
-            clearInterval(ping);
-          });
-          return;
-        }
-        return json(res, 404, { error: 'not found' });
-      }
+      // ── The APIs ────────────────────────────────────────────────────
+      if (await handleAdmin(ctx, req, res, path, url)) return;
+      if (await handleDemo(ctx, req, res, path, url)) return;
+      if (path.startsWith(`${BASE}/api/`)) return json(res, 404, { error: 'Not found.' });
 
-      // ── Static console and board ────────────────────────────────────
+      // ── The React app ───────────────────────────────────────────────
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'method not allowed' });
-      let file = path === '/' ? '/index.html' : /^\/board\/[a-z0-9-]+\/?$/.test(path) ? '/board.html' : path;
-      file = normalize(file).replace(/^(\.\.[/\\])+/, '');
-      const full = join(PUBLIC, file);
-      if (!full.startsWith(PUBLIC) || !existsSync(full)) return json(res, 404, { error: 'not found' });
+      // Behind the site's Worker only /demo/* arrives. Run directly (locally, a
+      // Codespace, the demo server's own address), the root is the team's console.
+      if (path === '/') return redirect(res, `${BASE}/admin`);
+      if (path === BASE) return redirect(res, `${BASE}/`);
+      if (!path.startsWith(`${BASE}/`)) return json(res, 404, { error: 'not found' });
+      if (path === `${BASE}/robots.txt`) {
+        res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', ...SECURITY_HEADERS });
+        return res.end('User-agent: *\nDisallow: /\n');
+      }
+      if (vite) {
+        for (const [k, v] of Object.entries(DEV_HEADERS)) res.setHeader(k, v);
+        return vite.middlewares(req, res, () => json(res, 404, { error: 'not found' }));
+      }
+      if (!existsSync(join(DIST, 'index.html'))) {
+        res.writeHead(503, { 'content-type': 'text/plain; charset=utf-8' });
+        return res.end('The web app has not been built. Run `npm run dev` to develop, or `npm run build` and then `npm start`.');
+      }
+      const rel = path.slice(BASE.length);
+      const file = normalize(rel).replace(/^(\.\.[/\\])+/, '');
+      let full = join(DIST, file);
+      const isFile = full.startsWith(DIST) && (await stat(full).then((s) => s.isFile(), () => false));
+      if (!isFile) {
+        if (rel.startsWith('/assets/') || extname(rel)) return json(res, 404, { error: 'not found' });
+        full = join(DIST, 'index.html'); // client-side routes: /demo/reception/live/<id>
+      }
       const data = await readFile(full);
-      res.writeHead(200, { 'content-type': TYPES[extname(full)] ?? 'application/octet-stream', 'cache-control': 'no-cache', ...SECURITY_HEADERS });
-      res.end(data);
+      res.writeHead(200, {
+        'content-type': TYPES[extname(full)] ?? 'application/octet-stream',
+        'cache-control': full.includes(`${join(DIST, 'assets')}`) ? 'public, max-age=31536000, immutable' : 'no-cache',
+        ...SECURITY_HEADERS,
+      });
+      res.end(req.method === 'HEAD' ? undefined : data);
     } catch (err) {
+      if (err instanceof HttpError) {
+        if (!res.headersSent) json(res, err.status, { error: err.message });
+        else res.end();
+        return;
+      }
       console.error(`${req.method} ${path}: ${(err as Error).message}`);
-      if (!res.headersSent) json(res, 500, { error: (err as Error).message.slice(0, 200) });
+      if (!res.headersSent) json(res, 500, { error: 'Something went wrong on our side. Try again in a moment.' });
       else res.end();
     }
   });
 
+  let vite: ViteDevServer | null = null;
+  if (opts.web === 'dev') {
+    const { createServer: createVite } = await import('vite');
+    vite = await createVite({
+      configFile: join(WEB, 'vite.config.ts'),
+      // localhost is always allowed; GitHub Codespaces forwards the port under app.github.dev.
+      server: { middlewareMode: true, hmr: { server, path: '/__vite_hmr' }, allowedHosts: ['.app.github.dev'] },
+      appType: 'spa',
+    });
+  }
+
   const wss = new WebSocketServer({ noServer: true, maxPayload: 1024 * 1024 });
+  const reject = (socket: import('node:stream').Duplex, status = '403 Forbidden') => {
+    socket.write(`HTTP/1.1 ${status}\r\n\r\n`);
+    socket.destroy();
+  };
   server.on('upgrade', async (req, socket, head) => {
     const url = new URL(req.url ?? '/', 'http://local');
-    if (url.pathname === '/twilio/stream') {
+    if (url.pathname === `${TWILIO_BASE}/stream`) {
       // Authorised by the token inside the stream's start message.
       wss.handleUpgrade(req, socket, head, (ws) => handleTwilioStream(ws, { repo, config, bus, sms }));
       return;
     }
-    if (url.pathname === '/ws/talk') {
-      const slug = url.searchParams.get('tenant') ?? '';
-      const origin = req.headers.origin;
-      const host = req.headers.host;
-      const sameOrigin = !origin || new URL(origin).host === host;
-      const tenant = await repo.getTenant(slug).catch(() => null);
-      if (!authed(req, config) || !sameOrigin || !tenant || bus.activeCalls() >= maxCalls) {
-        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
-        socket.destroy();
-        return;
+    if (url.pathname === `${BASE}/ws/talk`) {
+      try {
+        if (!sameOrigin(req)) return reject(socket);
+        const phone = url.searchParams.get('phone');
+        const workspaceId = url.searchParams.get('workspace');
+        if (workspaceId) return await talkToWorkspace(req, socket, head, workspaceId, phone);
+        // Our own demo businesses, from the team console.
+        const tenant = await repo.getTenant(url.searchParams.get('tenant') ?? '').catch(() => null);
+        if (!isAdmin(req, ctx) || !tenant || bus.activeCalls() >= maxCalls) return reject(socket);
+        wss.handleUpgrade(req, socket, head, (ws) => void handleBrowserCall(ws, { tenant, repo, config, bus, sms, callerPhone: phone }));
+      } catch (err) {
+        console.error(`upgrade ${url.pathname}: ${(err as Error).message}`);
+        reject(socket, '500 Internal Server Error');
       }
-      wss.handleUpgrade(req, socket, head, (ws) => {
-        void handleBrowserCall(ws, { tenant, repo, config, bus, sms, callerPhone: url.searchParams.get('phone') });
-      });
       return;
     }
+    if (vite && url.pathname === HMR_PATH) return; // Vite's own listener takes it
     socket.destroy();
   });
 
+  /** A prospect ringing their own demo: their session, their workspace, their minutes. */
+  async function talkToWorkspace(req: IncomingMessage, socket: import('node:stream').Duplex, head: Buffer, id: string, phone: string | null) {
+    const who = await sessionWho(ctx, req);
+    const w = await demo.getWorkspace(id);
+    const team = !who && isAdmin(req, ctx);
+    if (!w || (!team && (!who || !owns(w, who)))) return reject(socket);
+    const caller = who ? callerId(who) : null;
+    let refusal = '';
+    let maxSeconds: number | undefined;
+    if (ended(w)) refusal = 'This demo has ended: shared demos are deleted an hour after Start.';
+    else if (!w.started_at) refusal = 'Press Start first, so the receptionist has your setup and a diary to work with.';
+    else if (bus.activeCalls() >= maxCalls || [...callsByKey.values()].reduce((a, b) => a + b, 0) >= DEMO_CALLS_TOTAL) {
+      refusal = 'Every demo line is busy right now. Try again in a minute.';
+    } else if (who && caller) {
+      if ((callsByKey.get(caller) ?? 0) >= DEMO_CALLS_PER_KEY) refusal = 'You already have a call open. Hang that one up first.';
+      else {
+        const left = await callSecondsLeft(ctx, who);
+        maxSeconds = left.seconds;
+        if (maxSeconds < 20) {
+          refusal = left.by === 'link'
+            ? 'This demo link has used all its call time for today. Come back tomorrow, or ask us for a link of your own.'
+            : `That's the ${who.key.limits.call_minutes_per_day} minutes of calls you have for today. Come back tomorrow, or ask us for more.`;
+        }
+      }
+    }
+    // A shared demo's call ends in time for the demo's deletion.
+    if (!refusal && w.expires_at) {
+      const left = Math.floor((w.expires_at.getTime() - Date.now()) / 1000);
+      if (left < 30) refusal = 'This demo is about to be deleted. Build another to keep trying.';
+      maxSeconds = Math.min(maxSeconds ?? Infinity, Math.max(0, left - 75));
+    }
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      if (refusal) return refuseCall(ws, refusal);
+      if (caller) {
+        callsByKey.set(caller, (callsByKey.get(caller) ?? 0) + 1);
+        ws.once('close', () => {
+          const n = (callsByKey.get(caller) ?? 1) - 1;
+          if (n > 0) callsByKey.set(caller, n);
+          else callsByKey.delete(caller);
+        });
+      }
+      void handleBrowserCall(ws, {
+        tenant: w.tenant, repo, config, bus, sms: demoSms, callerPhone: phone, maxSeconds,
+        onEnded: (s) => {
+          if (!who) return;
+          const made = (name: string) => s.tools.filter((t) => t.name === name && (t.result as any)?.ok !== false && !(t.result as any)?.error).length;
+          const done = (name: string, key: string) => s.tools.filter((t) => t.name === name && (t.result as any)?.[key] === true).length;
+          void demo.recordUsage(who.key.id, w.tenant.id, 'call', {
+            seconds: s.duration_s, outcome: s.outcome, model: s.model,
+            bookings: made('create_booking'), changes: made('modify_booking'), orders: made('confirm_order'),
+            // An estate agency's calls also count valuations booked and offers taken; no new usage kind.
+            ...(w.tenant.profile.estate ? { valuations: done('book_valuation', 'booked'), offers: done('record_offer', 'recorded') } : {}),
+          }, who.visitor).catch(() => {});
+        },
+      });
+    });
+  }
+
   // Free Supabase projects pause after a week idle; a query every six hours keeps it awake.
   const keepAlive = setInterval(() => void repo.ping().catch(() => {}), 6 * 3600000);
+  // Shared demos go an hour after Start; private ones 30 days after their key ends.
+  const stopSweeper = opts.sweep === false ? () => {} : startSweeper({ demo, bus });
+  // Emergency pages nobody answered go to the next engineer on call, then the duty manager.
+  const stopPager = opts.sweep === false ? () => {} : startPager({ repo, bus });
 
-  await new Promise<void>((resolve) => server.listen(config.port, resolve));
+  await new Promise<void>((resolve, reject) => server.once('error', reject).listen(config.port, resolve));
   const address = server.address();
   const port = typeof address === 'object' && address ? address.port : config.port;
   return {
-    config, repo, bus, port,
+    config, repo, demo, bus, port, keyChecked,
     close: async () => {
       clearInterval(keepAlive);
+      stopSweeper();
+      stopPager();
       for (const c of wss.clients) c.terminate();
+      await vite?.close();
+      server.closeAllConnections();
       await new Promise<void>((r) => server.close(() => r()));
       await db.close();
     },
   };
 }
 
+function portFree(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const probe = createNetServer();
+    probe.once('error', () => resolve(false));
+    probe.once('listening', () => probe.close(() => resolve(true)));
+    probe.listen(port);
+  });
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const config = loadConfig();
-  if (!config.geminiApiKey) console.warn('GEMINI_API_KEY is not set: calls will fail to connect.');
-  if (!config.consolePassword) console.warn('CONSOLE_PASSWORD is not set: the console is open to anyone who can reach it.');
-  const app = await startServer(config);
-  console.log(`n.abl Reception on http://localhost:${app.port} · ${config.databaseUrl ? 'Supabase' : `PGlite (${config.pgliteDir})`} · models ${config.liveModels.join(' → ')}`);
+  // Checked before the database opens: two servers must never share one PGlite folder.
+  if (!(await portFree(config.port))) {
+    console.error(
+      `Port ${config.port} is already in use, most likely by n.abl Reception running in another terminal ` +
+        `(in a Codespace it starts by itself, in the "Codespaces" terminal tab).\n` +
+        `Use that one, or stop it first: press Ctrl+C in its terminal, or run  pkill -f server/main.ts  and then start again.`,
+    );
+    process.exit(1);
+  }
+  const dev = process.argv.includes('--dev');
+  if (!config.consolePassword) {
+    // Public and open would hand the console, and every prospect's workspace, to anyone.
+    if (!dev && config.publicBaseUrl?.startsWith('https')) {
+      console.error('CONSOLE_PASSWORD must be set when the server is public (PUBLIC_BASE_URL is https).');
+      process.exit(1);
+    }
+    console.warn('CONSOLE_PASSWORD is not set: the team console is open to anyone who can reach it.');
+  }
+  if (!config.demoProxySecret && config.publicBaseUrl?.startsWith('https://nabl.agency')) {
+    console.warn('DEMO_PROXY_SECRET is not set: behind the site\'s Worker every visitor looks like one address to the key throttle.');
+  }
+  if (!process.env.SESSION_SECRET && !dev) console.warn('SESSION_SECRET is not set: sessions and demo keys\' cookies end whenever the server restarts.');
+  const app = await startServer(config, { web: dev ? 'dev' : 'dist', checkKey: true });
+  console.log(`n.abl Reception on http://localhost:${app.port}${BASE}/ · ${config.databaseUrl ? 'Supabase' : `PGlite (${config.pgliteDir})`} · models ${config.liveModels.join(' → ')}`);
+  void app.keyChecked.then(({ status, detail }) => {
+    if (status === 'ok') console.log(`Gemini API key: accepted by Google. Open http://localhost:${app.port}${BASE}/admin and press Start a live call.`);
+    else if (status === 'missing') console.warn('GEMINI_API_KEY is not set, so calls cannot connect. Put GEMINI_API_KEY=<your key> in .env.local (on the Oracle server, /opt/nabl/secrets.env, then sudo nabl deploy), then restart.');
+    else if (status === 'rejected') console.warn(`Google rejected GEMINI_API_KEY (${detail}). Fix it in .env.local (a Codespaces secret of the same name takes priority; on the Oracle server, /opt/nabl/secrets.env, then sudo nabl deploy), then restart.`);
+    else console.warn(`Could not reach Google to check GEMINI_API_KEY (${detail}). Calls may fail.`);
+  });
   const stop = async () => {
     await app.close();
     process.exit(0);

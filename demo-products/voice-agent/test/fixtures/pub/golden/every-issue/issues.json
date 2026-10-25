@@ -1,0 +1,52 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "The greeting must say it is an AI assistant and that this is a demo line."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Tuesday: Open closes before it opens."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Friday: Open closes before it opens."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Saturday: Open closes before it opens."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Food has to stop after it starts."
+ },
+ {
+  "step": "hours",
+  "level": "warning",
+  "message": "The food times fall outside the opening hours, so no table can be booked."
+ },
+ {
+  "step": "booking",
+  "level": "warning",
+  "message": "Children are welcome only until 12:30, which leaves little time for a meal."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ },
+ {
+  "step": "menu",
+  "level": "error",
+  "message": "List the postcode districts you deliver to, like NG1."
+ },
+ {
+  "step": "policies",
+  "level": "warning",
+  "message": "1 question needs both the question and its answer before the receptionist can use it."
+ }
+]

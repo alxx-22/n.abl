@@ -1,0 +1,12 @@
+[
+ {
+  "step": "booking",
+  "level": "warning",
+  "message": "No afternoon tea sitting fits on Sunday."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ }
+]

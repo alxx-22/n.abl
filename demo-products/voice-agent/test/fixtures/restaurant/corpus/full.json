@@ -1,0 +1,674 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "The Copper Pot",
+  "style": "Modern British small plates and Sunday roasts",
+  "town": "Leeds",
+  "address": "14 Call Lane, Leeds LS1 6DT",
+  "phone_display": "0113 496 0456",
+  "website": "https://www.copperpot.example",
+  "voice": "Puck",
+  "greeting": "Good evening, you've reached The Copper Pot. I'm the AI assistant on this demo line; how can I help?"
+ },
+ "hours": {
+  "days": [
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Roast",
+      "open": "12:00",
+      "close": "17:00"
+     }
+    ]
+   },
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "15:00"
+     },
+     {
+      "label": "Dinner",
+      "open": "18:00",
+      "close": "22:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "15:00"
+     },
+     {
+      "label": "Dinner",
+      "open": "18:00",
+      "close": "22:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "15:00"
+     },
+     {
+      "label": "Dinner",
+      "open": "18:00",
+      "close": "22:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Brunch",
+      "open": "09:30",
+      "close": "11:30"
+     },
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "15:00"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:00",
+      "close": "23:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Brunch",
+      "open": "09:30",
+      "close": "11:30"
+     },
+     {
+      "label": "Lunch",
+      "open": "12:00",
+      "close": "15:00"
+     },
+     {
+      "label": "Dinner",
+      "open": "17:00",
+      "close": "23:00"
+     }
+    ]
+   }
+  ],
+  "last_booking_before_close": 45,
+  "closures": [
+   {
+    "date": "2026-10-13",
+    "note": "Private event"
+   },
+   {
+    "date": "2026-12-25",
+    "note": "Christmas Day"
+   }
+  ]
+ },
+ "serve": {
+  "reservations": true,
+  "walk_ins": true,
+  "collection": {
+   "enabled": true,
+   "prep_minutes": 25,
+   "slot_minutes": 10,
+   "per_slot": 6,
+   "evenings_only": false
+  },
+  "delivery": {
+   "enabled": true,
+   "districts": ["LS1","LS2","LS6","LS11"],
+   "fee_pence": 300,
+   "min_order_pence": 2000,
+   "extra_minutes": 25
+  },
+  "delivery_apps": ["Deliveroo","Just Eat"]
+ },
+ "seating": {
+  "areas": [
+   {
+    "key": "main",
+    "label": "Main room",
+    "kind": "indoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   },
+   {
+    "key": "courtyard",
+    "label": "Courtyard",
+    "kind": "outdoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": "own_risk"
+   },
+   {
+    "key": "bar",
+    "label": "Bar",
+    "kind": "bar",
+    "reservable": false,
+    "enquiry_only": false,
+    "weather_rule": null
+   },
+   {
+    "key": "snug",
+    "label": "The Snug",
+    "kind": "private",
+    "reservable": true,
+    "enquiry_only": true,
+    "weather_rule": null
+   },
+   {
+    "key": "mezzanine",
+    "label": "Mezzanine",
+    "kind": "other",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   }
+  ],
+  "tables": [
+   {
+    "key": "M1",
+    "label": "Table M1",
+    "area": "main",
+    "seats": 2,
+    "shape": "round",
+    "x": 40,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["window"],
+    "joins": ["M2"]
+   },
+   {
+    "key": "M2",
+    "label": "Table M2",
+    "area": "main",
+    "seats": 2,
+    "shape": "round",
+    "x": 130,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["window"],
+    "joins": ["M1"]
+   },
+   {
+    "key": "M3",
+    "label": "Table M3",
+    "area": "main",
+    "seats": 4,
+    "shape": "square",
+    "x": 230,
+    "y": 40,
+    "rotation": 0,
+    "accessible": true,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "M4",
+    "label": "Table M4",
+    "area": "main",
+    "seats": 4,
+    "shape": "square",
+    "x": 340,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": true,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "M5",
+    "label": "Table M5",
+    "area": "main",
+    "seats": 6,
+    "shape": "rect",
+    "x": 40,
+    "y": 160,
+    "rotation": 90,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["booth"],
+    "joins": ["M6"]
+   },
+   {
+    "key": "M6",
+    "label": "Table M6",
+    "area": "main",
+    "seats": 6,
+    "shape": "rect",
+    "x": 200,
+    "y": 160,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["quiet"],
+    "joins": ["M5"]
+   },
+   {
+    "key": "M7",
+    "label": "Table M7",
+    "area": "main",
+    "seats": 8,
+    "shape": "rect",
+    "x": 400,
+    "y": 160,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["view","high_table"],
+    "joins": ["C4"]
+   },
+   {
+    "key": "C1",
+    "label": "Table C1",
+    "area": "courtyard",
+    "seats": 2,
+    "shape": "round",
+    "x": 40,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["heated","covered"],
+    "joins": []
+   },
+   {
+    "key": "C2",
+    "label": "Table C2",
+    "area": "courtyard",
+    "seats": 4,
+    "shape": "square",
+    "x": 140,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["dog_friendly"],
+    "joins": ["C3"]
+   },
+   {
+    "key": "C3",
+    "label": "Table C3",
+    "area": "courtyard",
+    "seats": 4,
+    "shape": "square",
+    "x": 250,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["C2"]
+   },
+   {
+    "key": "C4",
+    "label": "Table C4",
+    "area": "courtyard",
+    "seats": 6,
+    "shape": "rect",
+    "x": 40,
+    "y": 150,
+    "rotation": 180,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "B1",
+    "label": "Table B1",
+    "area": "bar",
+    "seats": 2,
+    "shape": "round",
+    "x": 40,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["high_table"],
+    "joins": []
+   },
+   {
+    "key": "B2",
+    "label": "Table B2",
+    "area": "bar",
+    "seats": 2,
+    "shape": "round",
+    "x": 120,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   },
+   {
+    "key": "S1",
+    "label": "Table S1",
+    "area": "snug",
+    "seats": 10,
+    "shape": "rect",
+    "x": 40,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": ["sofa"],
+    "joins": []
+   },
+   {
+    "key": "Z1",
+    "label": "Table Z1",
+    "area": "mezzanine",
+    "seats": 4,
+    "shape": "square",
+    "x": 40,
+    "y": 40,
+    "rotation": 0,
+    "accessible": true,
+    "walk_in": false,
+    "features": [],
+    "joins": ["Z2"]
+   },
+   {
+    "key": "Z2",
+    "label": "Table Z2",
+    "area": "mezzanine",
+    "seats": 4,
+    "shape": "square",
+    "x": 150,
+    "y": 40,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": ["Z1"]
+   },
+   {
+    "key": "Z3",
+    "label": "Table Z3",
+    "area": "mezzanine",
+    "seats": 12,
+    "shape": "rect",
+    "x": 40,
+    "y": 160,
+    "rotation": 0,
+    "accessible": false,
+    "walk_in": false,
+    "features": [],
+    "joins": []
+   }
+  ],
+  "fixtures": [
+   {
+    "key": "F1",
+    "area": "main",
+    "kind": "window",
+    "x": 30,
+    "y": 10,
+    "length": 200,
+    "rotation": 0
+   },
+   {
+    "key": "F2",
+    "area": "main",
+    "kind": "bar",
+    "x": 300,
+    "y": 300,
+    "length": 300,
+    "rotation": 0
+   },
+   {
+    "key": "F3",
+    "area": "main",
+    "kind": "door",
+    "x": 40,
+    "y": 330,
+    "length": 80,
+    "rotation": 90
+   },
+   {
+    "key": "F4",
+    "area": "courtyard",
+    "kind": "wall",
+    "x": 10,
+    "y": 10,
+    "length": 400,
+    "rotation": 180
+   },
+   {
+    "key": "F5",
+    "area": "courtyard",
+    "kind": "door",
+    "x": 420,
+    "y": 60,
+    "length": 90,
+    "rotation": 270
+   },
+   {
+    "key": "F6",
+    "area": "bar",
+    "kind": "bar",
+    "x": 40,
+    "y": 120,
+    "length": 260,
+    "rotation": 0
+   }
+  ],
+  "plan": 2,
+  "sittings": {
+   "up_to_2": 90,
+   "up_to_4": 105,
+   "up_to_8": 135,
+   "larger": 180
+  },
+  "max_party": 14,
+  "notice_minutes": 60,
+  "horizon_days": 90,
+  "highchairs": 5,
+  "buffer_minutes": 15
+ },
+ "menu": {
+  "categories": [
+   {
+    "key": "small_plates",
+    "label": "Small plates",
+    "items": [
+     {
+      "key": "whipped_feta",
+      "name": "Whipped feta, honey and thyme",
+      "price_pence": 650,
+      "description": "With warm flatbread",
+      "allergens": ["milk","gluten"],
+      "dietary": ["vegetarian"],
+      "aliases": ["feta"]
+     },
+     {
+      "key": "crispy_squid",
+      "name": "Crispy squid",
+      "price_pence": 850,
+      "allergens": ["molluscs","gluten","eggs"],
+      "may_contain": ["crustaceans"],
+      "modifier_groups": ["dips"]
+     },
+     {
+      "key": "sourdough",
+      "name": "Sourdough and cultured butter",
+      "price_pence": 450,
+      "allergens": ["gluten","milk"],
+      "available": false
+     }
+    ]
+   },
+   {
+    "key": "mains",
+    "label": "Mains",
+    "items": [
+     {
+      "key": "roast_beef",
+      "name": "Roast sirloin of beef",
+      "price_pence": 2200,
+      "description": "Yorkshire pudding, roast potatoes, gravy",
+      "allergens": ["gluten","eggs","milk","celery","sulphites"],
+      "modifier_groups": ["sides"]
+     },
+     {
+      "key": "nut_roast",
+      "name": "Chestnut and mushroom roast",
+      "price_pence": 1600,
+      "allergens": ["nuts","celery"],
+      "dietary": ["vegan"],
+      "modifier_groups": ["sides"]
+     },
+     {
+      "key": "fish_pie",
+      "name": "Smoked haddock fish pie",
+      "price_pence": 1750,
+      "allergens": [],
+      "allergens_unknown": true
+     }
+    ]
+   },
+   {
+    "key": "puddings",
+    "label": "Puddings",
+    "items": [
+     {
+      "key": "sticky_toffee",
+      "name": "Sticky toffee pudding",
+      "price_pence": 750,
+      "allergens": ["gluten","eggs","milk"],
+      "aliases": ["STP","toffee pudding"]
+     },
+     {
+      "key": "sorbet",
+      "name": "Blood orange sorbet",
+      "price_pence": 600,
+      "allergens": [],
+      "dietary": ["vegan","gluten-free"]
+     }
+    ]
+   }
+  ],
+  "modifier_groups": {
+   "dips": {
+    "label": "Dips",
+    "min": 0,
+    "max": 2,
+    "options": [
+     {
+      "key": "aioli",
+      "name": "Aioli",
+      "price_pence": 100,
+      "allergens": ["eggs","mustard"]
+     },
+     {
+      "key": "chilli_jam",
+      "name": "Chilli jam",
+      "price_pence": 100,
+      "allergens": []
+     }
+    ]
+   },
+   "sides": {
+    "label": "Extra sides",
+    "min": 0,
+    "max": 3,
+    "options": [
+     {
+      "key": "cauliflower_cheese",
+      "name": "Cauliflower cheese",
+      "price_pence": 400,
+      "allergens": ["milk","mustard"]
+     },
+     {
+      "key": "yorkshire",
+      "name": "Extra Yorkshire pudding",
+      "price_pence": 200,
+      "allergens": ["gluten","eggs","milk"]
+     }
+    ]
+   }
+  },
+  "allergen_statement": "We handle all 14 major allergens in one small kitchen. Tell us about any allergy when you book or order.",
+  "source": "manual",
+  "allergens_are_examples": false
+ },
+ "money": {
+  "deposit": {
+   "mode": "per_booking",
+   "amount_pence": 2500,
+   "min_party": 8
+  },
+  "cancellation_policy": "Cancel up to 24 hours before for a full refund of your deposit.",
+  "takeaway_payment": "phone",
+  "service_charge": "A 10% service charge is added to every bill."
+ },
+ "policies": {
+  "children": "Children are welcome until 8pm.",
+  "dogs": "inside",
+  "accessibility": "Level access, with a ramp at the side door and an accessible toilet.",
+  "parking": "Pay and display on Swinegate, two minutes away.",
+  "dress_code": "Smart casual.",
+  "corkage": "Corkage is £15 a bottle, wine only.",
+  "cakes": "Bring a cake and we will serve it with candles for £2 a head.",
+  "vouchers": "Vouchers are sold online and at the bar.",
+  "dietary": "Most dishes can be made gluten-free; tell us when you book.",
+  "faqs": [
+   {
+    "q": "Do you have a private room?",
+    "a": "Yes, The Snug seats ten; ask us about it."
+   },
+   {
+    "q": "Is there live music?",
+    "a": "A jazz trio plays on Thursday evenings."
+   },
+   {
+    "q": "Can I book the courtyard?",
+    "a": "Yes, though we cannot promise a table inside if it rains."
+   }
+  ]
+ },
+ "theme": {
+  "accent": "#2f6f4e",
+  "primary": "#1b1b1b",
+  "background": "#faf7f2",
+  "font_heading": "Playfair Display",
+  "font_body": "Source Sans 3",
+  "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+ },
+ "sources": {
+  "basics.name": "website",
+  "basics.style": "guess",
+  "hours.days": "website",
+  "menu.categories": "website",
+  "theme.accent": "website"
+ }
+}

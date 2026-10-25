@@ -1,0 +1,17 @@
+[
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Friday: Open closes before it opens."
+ },
+ {
+  "step": "hours",
+  "level": "error",
+  "message": "Saturday: Open closes before it opens."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ }
+]

@@ -1,0 +1,12 @@
+[
+ {
+  "step": "serve",
+  "level": "warning",
+  "message": "With no bookings and no takeaway, the receptionist can only answer questions."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ }
+]

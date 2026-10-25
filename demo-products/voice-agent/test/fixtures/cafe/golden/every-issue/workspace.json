@@ -1,0 +1,60 @@
+{
+ "views": [
+  {
+   "id": "floor",
+   "label": "Floor plan"
+  },
+  {
+   "id": "timeline",
+   "label": "Bookings"
+  },
+  {
+   "id": "orders",
+   "label": "Orders"
+  },
+  {
+   "id": "tonight",
+   "label": "Today"
+  },
+  {
+   "id": "messages",
+   "label": "Messages"
+  },
+  {
+   "id": "calls",
+   "label": "Calls"
+  }
+ ],
+ "bookings": {
+  "resource": "table",
+  "resources": "tables",
+  "party": "Party",
+  "visit": {
+   "expected": "Expected",
+   "arrived": "Arrived",
+   "seated": "Seated",
+   "finished": "Finished",
+   "no_show": "No-show"
+  },
+  "allergies": true,
+  "combine": true
+ },
+ "orders": {
+  "board": "Orders",
+  "done": {
+   "collection": "Collected",
+   "delivery": "Collected"
+  },
+  "drivers": false,
+  "advance": false
+ },
+ "suggestions": [
+  "Can six of us book a table for lunch on Saturday?",
+  "My daughter has a nut allergy: which cakes can she have?",
+  "Is the brownie gluten-free?",
+  "Two flat whites, one with oat milk, and a bacon sandwich to collect, please.",
+  "I was ill in the night after lunch there yesterday. (Call as Chris)"
+ ],
+ "resetLine": "bookings and orders",
+ "clock": true
+}

@@ -1,0 +1,63 @@
+{
+ "version": "nine",
+ "basics": {
+  "name": 42,
+  "voice": "Nobody",
+  "greeting": ["hi"]
+ },
+ "hours": {
+  "days": "every day",
+  "closures": [
+   {
+    "date": "soon"
+   }
+  ]
+ },
+ "team": [
+  {
+   "name": 7,
+   "days": [9,"x",-1],
+   "hours": "late",
+   "services": "all",
+   "aliases": "Marc"
+  },
+  "barber"
+ ],
+ "services": [
+  {
+   "name": "Junk",
+   "minutes": 999,
+   "price_pence": -1,
+   "from": "yes",
+   "colour": "no"
+  },
+  "cut"
+ ],
+ "booking": {
+  "slot_minutes": 7,
+  "lead_minutes": -5,
+  "horizon_days": 999,
+  "walk_ins": "yes",
+  "group_max": 0,
+  "late_grace_minutes": 99,
+  "kids_under": "kids",
+  "under_16_with_adult": 1
+ },
+ "money": {
+  "deposit_pence": -3,
+  "deposit_required": "yes",
+  "notice_hours": 999,
+  "payment": "cheque"
+ },
+ "policies": {
+  "skin_test": "never",
+  "fix_days": "soon",
+  "faqs": {
+   "q": 1
+  }
+ },
+ "theme": {
+  "accent": "blue"
+ },
+ "sources": "web"
+}

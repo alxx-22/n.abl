@@ -1,0 +1,51 @@
+{
+ "contents": [
+  {
+   "role": "user",
+   "parts": [
+    {
+     "text": [
+      "These are the facts about a UK property maintenance company, set by its owner for an AI phone receptionist demo.",
+      "Name: Fernhill Property Care. Style: Repairs and maintenance for homes, landlords and letting agents. Address: Unit 4, Fernhill Trade Park, Nottingham NG7 (example). Works in England.",
+      "Area: We cover Nottingham, Derby, Loughborough, Beeston, West Bridgford and Long Eaton: NG1 to NG11, DE1 to DE3, DE21 to DE24 and LE11.",
+      "Office hours: Monday to Friday: 8am till 5:30pm. Saturday: 9am till 12 noon. Closed Sundays. Out of hours, an engineer is on call for emergencies.",
+      "Trades: gas, boilers and heating; boiler servicing and gas safety records; plumbing and leaks; drains and blockages; electrics, EICRs and PAT; roofs and gutters; carpentry and handyman; locks and lockouts; glazing and boarding up; decorating; damp and mould. Doesn't do: pest control (suggest the council's pest service, or a member of the British Pest Control Association), lifts (suggest the building's lift contractor), white goods (suggest the manufacturer or the shop it came from), asbestos removal (suggest a licensed contractor: the HSE keeps a register).",
+      "Visits: morning 8am to 12 noon, afternoon 12 noon to 5pm, evening 5pm to 8pm (£30 extra) and Saturday morning 9am to 12 noon. Emergencies, day and night: we aim to attend within 4 hours and make safe within 24.",
+      "Prices: Call-out £95 including VAT, with the first hour, then £40 a half hour. Nights and weekends: £150 for the first hour. A landlord's gas safety record is £75 including VAT for one appliance, plus £15 for each extra one. A boiler service is £85, or £130 for both on one visit. Free quotes over £500. Guarantee: Our workmanship is guaranteed for 12 months; parts carry the maker’s warranty.",
+      "Payment: Homeowners pay on completion by card or bank transfer; landlords and agents on account, within 14 days. Cancellation: You can cancel free of charge until 5pm the working day before your visit.",
+      "Accreditations: Gas Safe 512345 (example), NICEIC. Insurance: £5 million public liability (example).",
+      "Asbestos: If we find anything that might be asbestos, we stop and arrange for it to be tested before any work goes on. Parking: Please let us know about any parking restrictions; a permit or a space on the drive helps. Careers: We’re always glad to hear from qualified engineers: take a message and the office will call back.",
+      "",
+      "Write the ten questions callers most often ask a property maintenance company like this that the facts above answer, each with a short spoken answer (one or two sentences, friendly, British English).",
+      "Use only these facts. Where the facts do not cover something, leave that question out rather than guess. No questions about emergencies and repairs, booking engineers, safety checks and quotes, and job updates themselves; the receptionist handles those."
+     ]
+    }
+   ]
+  }
+ ],
+ "generationConfig": {
+  "temperature": 0.4,
+  "responseMimeType": "application/json",
+  "responseSchema": {
+   "type": "OBJECT",
+   "properties": {
+    "faqs": {
+     "type": "ARRAY",
+     "items": {
+      "type": "OBJECT",
+      "properties": {
+       "q": {
+        "type": "STRING"
+       },
+       "a": {
+        "type": "STRING"
+       }
+      },
+      "required": ["q","a"]
+     }
+    }
+   },
+   "required": ["faqs"]
+  }
+ }
+}

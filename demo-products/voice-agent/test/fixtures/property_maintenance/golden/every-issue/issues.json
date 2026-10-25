@@ -1,0 +1,112 @@
+[
+ {
+  "step": "area",
+  "level": "error",
+  "message": "Add at least one postcode district you cover."
+ },
+ {
+  "step": "customers",
+  "level": "error",
+  "message": "Harbour Lettings: add the contact who approves work, with their phone."
+ },
+ {
+  "step": "customers",
+  "level": "warning",
+  "message": "Castle Gate Residential is on stop: the receptionist won't book work for them."
+ },
+ {
+  "step": "customers",
+  "level": "error",
+  "message": "Every client needs a name."
+ },
+ {
+  "step": "customers",
+  "level": "warning",
+  "message": "Social housing is on, but you haven't said you act as the landlord's agent, so damp and mould clocks are the landlord's to start."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "No engineer does roofs and gutters: add one, or turn it off."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "No engineer does decorating: add one, or turn it off."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "No engineer does damp and mould: add one, or turn it off."
+ },
+ {
+  "step": "trades",
+  "level": "warning",
+  "message": "Say who to suggest for pest control."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Marek Nowak is down for gas work: add their Gas Safe number, or take the gas trades off."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Grace Okafor works no days: pick at least one."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Every engineer needs a name."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Idle Ivy has no trades, so is never booked."
+ },
+ {
+  "step": "engineers",
+  "level": "error",
+  "message": "Sunday night: put a Gas Safe engineer on call."
+ },
+ {
+  "step": "engineers",
+  "level": "warning",
+  "message": "Add the duty manager's name and mobile, for emergencies nobody accepts."
+ },
+ {
+  "step": "priorities",
+  "level": "error",
+  "message": "The urgent target must be shorter than the routine one."
+ },
+ {
+  "step": "visits",
+  "level": "error",
+  "message": "The evening window ends before it starts."
+ },
+ {
+  "step": "visits",
+  "level": "warning",
+  "message": "The Saturday morning window has no days ticked, so it is never offered."
+ },
+ {
+  "step": "visits",
+  "level": "error",
+  "message": "The morning and afternoon windows overlap on Monday."
+ },
+ {
+  "step": "prices",
+  "level": "warning",
+  "message": "You're not VAT registered, so callers hear your prices as they are, with no VAT."
+ },
+ {
+  "step": "planned",
+  "level": "warning",
+  "message": "Reminders more than 8 weeks ahead invite gas safety checks booked over 2 months early, which lose the record's date."
+ },
+ {
+  "step": "policies",
+  "level": "warning",
+  "message": "1 question needs both the question and its answer before the receptionist can use it."
+ }
+]

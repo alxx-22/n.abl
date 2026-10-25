@@ -1,0 +1,15 @@
+{
+ "greeting": "Hello, you're through to The Quiet Room. I'm the AI assistant on this demo line. How can I help?",
+ "core_facts": [
+  "The Quiet Room: Neapolitan pizza, fresh pasta and Italian small plates, in Nottingham.",
+  "Sunday: 12 noon till 8pm. Tuesday to Saturday: lunch 12 noon till 2:30pm, dinner 5:30pm till 10pm. Closed Mondays.",
+  "We don’t take bookings; it’s walk-in only.",
+  "Step-free entrance, level floor throughout the ground floor, and an accessible toilet. Children are very welcome, with highchairs and a kids’ menu. 3 highchairs.",
+  "No car park of our own; the nearest multi-storey is about five minutes’ walk."
+ ],
+ "hours": "Sunday: 12 noon till 8pm. Tuesday to Saturday: lunch 12 noon till 2:30pm, dinner 5:30pm till 10pm. Closed Mondays.",
+ "covers": [],
+ "bookable_tables": 0,
+ "pairs": [],
+ "dishes": 16
+}

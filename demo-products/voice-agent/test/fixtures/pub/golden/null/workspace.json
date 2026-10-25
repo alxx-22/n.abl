@@ -1,0 +1,53 @@
+{
+ "views": [
+  {
+   "id": "floor",
+   "label": "Floor plan"
+  },
+  {
+   "id": "timeline",
+   "label": "Bookings"
+  },
+  {
+   "id": "whats_on",
+   "label": "What’s on"
+  },
+  {
+   "id": "tonight",
+   "label": "Today"
+  },
+  {
+   "id": "messages",
+   "label": "Messages"
+  },
+  {
+   "id": "calls",
+   "label": "Calls"
+  }
+ ],
+ "bookings": {
+  "resource": "table",
+  "resources": "tables",
+  "party": "Party",
+  "visit": {
+   "expected": "Expected",
+   "arrived": "Arrived",
+   "seated": "Seated",
+   "finished": "Finished",
+   "no_show": "No-show"
+  },
+  "allergies": true,
+  "combine": true
+ },
+ "suggestions": [
+  "Sunday lunch for six at 1, with two kids and our dog?",
+  "Can my 17-year-old have a pint with his dinner?",
+  "Are you showing the Forest game on Saturday?",
+  "Can I book a team of five for the quiz?",
+  "My son has a nut allergy: which desserts can he have?",
+  "Do you have gluten-free beer?",
+  "Can we hire the room upstairs for a 40th? (Call as Jess)"
+ ],
+ "resetLine": "bookings",
+ "clock": true
+}

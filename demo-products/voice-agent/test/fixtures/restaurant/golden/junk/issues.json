@@ -1,0 +1,22 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the restaurant a name."
+ },
+ {
+  "step": "seating",
+  "level": "error",
+  "message": "Add at least one seating area."
+ },
+ {
+  "step": "seating",
+  "level": "error",
+  "message": "Nothing is bookable: add tables to an area that takes bookings."
+ },
+ {
+  "step": "menu",
+  "level": "error",
+  "message": "Takeaway needs a menu: add some dishes or turn takeaway off."
+ }
+]

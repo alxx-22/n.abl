@@ -1,0 +1,187 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "",
+  "style": "Coffee, breakfast, light lunches and homemade cakes",
+  "town": "Nottingham",
+  "address": "14 Wren Street (example), Nottingham NG1",
+  "phone_display": "0115 496 0812",
+  "website": "",
+  "voice": "Aoede",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "10:00",
+      "close": "15:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "08:00",
+      "close": "16:00"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "All day",
+      "open": "09:00",
+      "close": "17:00"
+     }
+    ]
+   }
+  ],
+  "closures": [],
+  "breakfast_until": "11:30",
+  "kitchen_closes_before": 0
+ },
+ "seating": {
+  "areas": [
+   {
+    "key": "area_1",
+    "label": "Area 1",
+    "kind": "indoor",
+    "reservable": true,
+    "enquiry_only": false,
+    "weather_rule": null
+   }
+  ],
+  "tables": [],
+  "fixtures": [],
+  "plan": 2,
+  "sittings": {
+   "up_to_2": 60,
+   "up_to_4": 75,
+   "up_to_8": 90,
+   "larger": 105
+  },
+  "max_party": 8,
+  "notice_minutes": 60,
+  "horizon_days": 30,
+  "highchairs": 3,
+  "buffer_minutes": 0
+ },
+ "booking": {
+  "min_party": 1,
+  "busy_times": "Saturday from 11 till 2 is our busiest; weekday mornings and mid-afternoons are quieter."
+ },
+ "afternoon_tea": {
+  "offered": true,
+  "adult_pence": 0,
+  "child_pence": 1200,
+  "child_under": 12,
+  "description": "Finger sandwiches, scones with jam and clotted cream, a selection of cakes, and a pot of tea or a coffee each.",
+  "notice_days": 14,
+  "diet_notice_days": 14,
+  "diets": ["gluten-free","vegan"],
+  "sittings": [],
+  "minutes": 240,
+  "max_party": 1,
+  "deposit_pence": 0
+ },
+ "ordering": {
+  "collection": {
+   "enabled": true,
+   "prep_minutes": 10,
+   "slot_minutes": 5,
+   "per_slot": 4
+  },
+  "delivery": {
+   "enabled": false,
+   "districts": [],
+   "fee_pence": 0,
+   "min_order_pence": 0,
+   "extra_minutes": 0
+  },
+  "delivery_apps": [],
+  "timed_orders": true
+ },
+ "menu": {
+  "categories": [],
+  "modifier_groups": {},
+  "allergen_statement": "Everything is made in one kitchen that uses nuts, gluten, milk and eggs, so we can't promise any food is free from traces. Tell us about any allergy and we'll take care.",
+  "source": "manual",
+  "allergens_are_examples": true
+ },
+ "money": {
+  "payment": "collection",
+  "cash": true,
+  "tips": "Tips are never expected; any paid by card go to the team in full."
+ },
+ "policies": {
+  "dogs": "inside",
+  "children": "Children are very welcome: there’s a children’s menu and babyccinos.",
+  "baby_changing": true,
+  "accessibility": "Step-free from the street, with an accessible toilet.",
+  "wifi": "Free Wi-Fi; the password is on the counter.",
+  "laptops": "Laptops are welcome, except at weekend lunchtimes when we need the tables.",
+  "parking": "No parking of our own; the nearest car park is about five minutes’ walk.",
+  "tap_water": true,
+  "hygiene_rating": 5,
+  "reusable_cups": "Bring your own cup and we’ll happily fill it.",
+  "careers": "We sometimes have weekend roles: leave your name and number and the owner will be in touch.",
+  "hire": "The café can be hired in the evenings for parties: the owner will call back to talk it through.",
+  "faqs": []
+ },
+ "theme": {
+  "accent": "#c9814a",
+  "primary": "#2b2420",
+  "background": "#f7f1ea",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

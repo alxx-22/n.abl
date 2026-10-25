@@ -1,0 +1,8 @@
+node_modules
+.data
+eval-results
+spike-output
+web/dist
+*.wav
+*.log
+.env.local

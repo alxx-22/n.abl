@@ -1,0 +1,578 @@
+{
+ "version": 1,
+ "basics": {
+  "name": "Every Issue Repairs",
+  "style": "Repairs and maintenance for homes, landlords and letting agents",
+  "town": "Nottingham",
+  "address": "Unit 4, Fernhill Trade Park, Nottingham NG7 (example)",
+  "phone_display": "0115 496 0456",
+  "website": "",
+  "voice": "Charon",
+  "greeting": ""
+ },
+ "hours": {
+  "days": [
+   {
+    "open": false,
+    "services": []
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "08:00",
+      "close": "17:30"
+     }
+    ]
+   },
+   {
+    "open": true,
+    "services": [
+     {
+      "label": "Open",
+      "open": "09:00",
+      "close": "12:00"
+     }
+    ]
+   }
+  ],
+  "closures": []
+ },
+ "area": {
+  "nation": "england",
+  "districts": [],
+  "towns": ["Nottingham","Derby","Loughborough","Beeston","West Bridgford","Long Eaton"]
+ },
+ "customers": {
+  "homeowners": false,
+  "landlords": false,
+  "agents": false,
+  "blocks": false,
+  "social": {
+   "on": true,
+   "agent_of_landlord": false
+  },
+  "commercial": false,
+  "insurers": false,
+  "tenant_no_client": "contact_landlord",
+  "recharge_lockouts": true
+ },
+ "clients": [
+  {
+   "key": "harbour",
+   "name": "Harbour Lettings",
+   "kind": "agent",
+   "works_limit_pence": 25000,
+   "emergency_authority_pence": 40000,
+   "po_required": true,
+   "contact": {
+    "name": "Sophie Grant",
+    "phone": "",
+    "email": "maintenance@harbour-lettings.example"
+   },
+   "notice": "over_limit",
+   "instructions": "Always ring the tenant 30 minutes before arriving.",
+   "status": "active",
+   "example": true
+  },
+  {
+   "key": "castle_gate",
+   "name": "Castle Gate Residential",
+   "kind": "agent",
+   "works_limit_pence": 15000,
+   "emergency_authority_pence": 30000,
+   "po_required": false,
+   "contact": {
+    "name": "Imran Akhtar",
+    "phone": "07700 900402",
+    "email": "repairs@castlegate.example"
+   },
+   "notice": "every_job",
+   "instructions": "",
+   "status": "on_stop",
+   "example": true
+  },
+  {
+   "key": "oakfield",
+   "name": "Oakfield Homes",
+   "kind": "agent",
+   "works_limit_pence": 30000,
+   "emergency_authority_pence": 40000,
+   "po_required": false,
+   "contact": {
+    "name": "Natalie Byrne",
+    "phone": "07700 900403",
+    "email": "property@oakfield.example"
+   },
+   "notice": "over_limit",
+   "instructions": "",
+   "status": "active",
+   "example": true
+  },
+  {
+   "key": "ellis",
+   "name": "Mrs J Ellis",
+   "kind": "landlord",
+   "works_limit_pence": 20000,
+   "emergency_authority_pence": 30000,
+   "po_required": false,
+   "contact": {
+    "name": "Jean Ellis",
+    "phone": "07700 900404",
+    "email": ""
+   },
+   "notice": "every_job",
+   "instructions": "Holds quote Q-2291: a £2,450 boiler replacement at her flat.",
+   "status": "active",
+   "example": true
+  },
+  {
+   "key": "kaur",
+   "name": "Mr R Kaur",
+   "kind": "landlord",
+   "works_limit_pence": 15000,
+   "emergency_authority_pence": 25000,
+   "po_required": false,
+   "contact": {
+    "name": "Raj Kaur",
+    "phone": "07700 900405",
+    "email": ""
+   },
+   "notice": "over_limit",
+   "instructions": "",
+   "status": "active",
+   "example": true
+  },
+  {
+   "key": "whitfield",
+   "name": "Whitfield Properties",
+   "kind": "landlord",
+   "works_limit_pence": 25000,
+   "emergency_authority_pence": 40000,
+   "po_required": false,
+   "contact": {
+    "name": "Ben Whitfield",
+    "phone": "07700 900406",
+    "email": "ben@whitfield.example"
+   },
+   "notice": "over_limit",
+   "instructions": "",
+   "status": "active",
+   "example": true
+  },
+  {
+   "key": "nameless",
+   "name": "",
+   "kind": "agent",
+   "works_limit_pence": 25000,
+   "emergency_authority_pence": 40000,
+   "po_required": true,
+   "contact": {
+    "name": "Sophie Grant",
+    "phone": "",
+    "email": "maintenance@harbour-lettings.example"
+   },
+   "notice": "over_limit",
+   "instructions": "Always ring the tenant 30 minutes before arriving.",
+   "status": "active",
+   "example": true
+  }
+ ],
+ "trades": [
+  {
+   "key": "gas_heating",
+   "label": "Gas, boilers and heating",
+   "on": true,
+   "gas": true
+  },
+  {
+   "key": "boiler_servicing",
+   "label": "Boiler servicing and gas safety records",
+   "on": true,
+   "gas": true
+  },
+  {
+   "key": "plumbing",
+   "label": "Plumbing and leaks",
+   "on": true
+  },
+  {
+   "key": "drainage",
+   "label": "Drains and blockages",
+   "on": true
+  },
+  {
+   "key": "electrical",
+   "label": "Electrics, EICRs and PAT",
+   "on": true
+  },
+  {
+   "key": "roofing",
+   "label": "Roofs and gutters",
+   "on": true
+  },
+  {
+   "key": "carpentry",
+   "label": "Carpentry and handyman",
+   "on": true
+  },
+  {
+   "key": "locksmith",
+   "label": "Locks and lockouts",
+   "on": true
+  },
+  {
+   "key": "glazing",
+   "label": "Glazing and boarding up",
+   "on": true
+  },
+  {
+   "key": "decorating",
+   "label": "Decorating",
+   "on": true
+  },
+  {
+   "key": "damp_mould",
+   "label": "Damp and mould",
+   "on": true
+  }
+ ],
+ "dont_do": [
+  {
+   "what": "pest control",
+   "suggest": ""
+  },
+  {
+   "what": "lifts",
+   "suggest": "the building's lift contractor"
+  },
+  {
+   "what": "white goods",
+   "suggest": "the manufacturer or the shop it came from"
+  },
+  {
+   "what": "asbestos removal",
+   "suggest": "a licensed contractor: the HSE keeps a register"
+  }
+ ],
+ "engineers": [
+  {
+   "key": "dan",
+   "name": "Dan Hughes",
+   "trades": ["gas_heating","plumbing"],
+   "gas_safe": "512345 (example)",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5,6],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900301"
+  },
+  {
+   "key": "callum",
+   "name": "Callum Price",
+   "trades": ["boiler_servicing","gas_heating","plumbing"],
+   "gas_safe": "587210 (example)",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900302"
+  },
+  {
+   "key": "marek",
+   "name": "Marek Nowak",
+   "trades": ["plumbing","drainage","gas_heating"],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5,6],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900303"
+  },
+  {
+   "key": "priya",
+   "name": "Priya Shah",
+   "trades": ["electrical"],
+   "gas_safe": "",
+   "niceic": true,
+   "oftec": false,
+   "days": [1,2,3,4,5],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900304"
+  },
+  {
+   "key": "shaz",
+   "name": "Shaz Ahmed",
+   "trades": ["carpentry"],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900306"
+  },
+  {
+   "key": "leon",
+   "name": "Leon Clarke",
+   "trades": ["locksmith","glazing"],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5,6],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900307"
+  },
+  {
+   "key": "grace",
+   "name": "Grace Okafor",
+   "trades": ["decorating","damp_mould"],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900308"
+  },
+  {
+   "key": "nobody",
+   "name": "",
+   "trades": [],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5,6],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900301"
+  },
+  {
+   "key": "idle",
+   "name": "Idle Ivy",
+   "trades": [],
+   "gas_safe": "",
+   "niceic": false,
+   "oftec": false,
+   "days": [1,2,3,4,5,6],
+   "districts": [],
+   "per_window": 2,
+   "mobile": "07700 900301"
+  }
+ ],
+ "on_call": {
+  "nights": [
+   {
+    "day": 0,
+    "engineers": ["priya"]
+   },
+   {
+    "day": 1,
+    "engineers": ["dan","leon"]
+   },
+   {
+    "day": 2,
+    "engineers": ["callum","priya"]
+   },
+   {
+    "day": 3,
+    "engineers": ["dan","leon"]
+   },
+   {
+    "day": 4,
+    "engineers": ["callum","priya"]
+   },
+   {
+    "day": 5,
+    "engineers": ["dan","leon"]
+   },
+   {
+    "day": 6,
+    "engineers": ["callum","priya"]
+   }
+  ],
+  "escalate_minutes": 15,
+  "duty_manager": {
+   "name": "Helen Ward",
+   "mobile": ""
+  }
+ },
+ "priorities": {
+  "emergency": {
+   "attend_hours": 4,
+   "make_safe_hours": 24,
+   "examples": [
+    "no heating or hot water for a vulnerable household",
+    "an uncontrollable leak",
+    "no power at all",
+    "a door that won't lock",
+    "sewage coming up inside"
+   ]
+  },
+  "urgent": {
+   "working_days": 3,
+   "examples": ["no heating in winter","a toilet not flushing (the only one)","a partial loss of power","a roof leak in heavy rain"]
+  },
+  "routine": {
+   "working_days": 2,
+   "examples": ["a dripping tap","a sticking door","a cracked tile","a loose handrail"]
+  },
+  "vulnerable_uplift": true,
+  "winter_heating": true
+ },
+ "checks": {
+  "prepayment": true,
+  "thermostat": true,
+  "trip_reset": true,
+  "boiler_pressure": true
+ },
+ "visits": {
+  "windows": [
+   {
+    "key": "am",
+    "label": "Morning",
+    "from": "08:00",
+    "to": "13:00",
+    "premium_pence": 0,
+    "days": [1,2,3,4,5]
+   },
+   {
+    "key": "pm",
+    "label": "Afternoon",
+    "from": "12:00",
+    "to": "17:00",
+    "premium_pence": 0,
+    "days": [1,2,3,4,5]
+   },
+   {
+    "key": "evening",
+    "label": "Evening",
+    "from": "17:00",
+    "to": "16:00",
+    "premium_pence": 3000,
+    "days": [1,2,3,4,5]
+   },
+   {
+    "key": "sat_am",
+    "label": "Saturday morning",
+    "from": "09:00",
+    "to": "12:00",
+    "premium_pence": 0,
+    "days": []
+   }
+  ],
+  "notice_hours": 2,
+  "horizon_days": 21,
+  "adult_present": true,
+  "call_ahead": true,
+  "abortive_fee_pence": 4500
+ },
+ "prices": {
+  "vat_registered": false,
+  "callout_pence": 9500,
+  "half_hour_pence": 4000,
+  "ooh_first_hour_pence": 15000,
+  "minimum_pence": 9500,
+  "lockout_from_pence": 12000,
+  "free_quote_over_pence": 50000,
+  "card_on_booking": false,
+  "account_days": 14,
+  "guarantee_months": 12,
+  "cancellation": "You can cancel free of charge until 5pm the working day before your visit."
+ },
+ "planned": {
+  "gas_record_pence": 7500,
+  "extra_appliance_pence": 1500,
+  "boiler_service_pence": 8500,
+  "combined_pence": 13000,
+  "eicr_from_pence": 15000,
+  "reminder_weeks": 12
+ },
+ "compliance": {
+  "gas_safe_number": "512345 (example)",
+  "niceic": true,
+  "napit": false,
+  "oftec": false,
+  "insurance": "£5 million public liability (example)",
+  "waste_carrier": "Registered upper-tier waste carrier (example)",
+  "complaints_handler": "Helen Ward",
+  "data_lead": "Helen Ward",
+  "recording": "Calls on this demo line are transcribed so the team can see what was said."
+ },
+ "policies": {
+  "faqs": [
+   {
+    "q": "Do you work on Sundays?",
+    "a": "The office is closed on Sundays, but an engineer is on call for emergencies day and night."
+   },
+   {
+    "q": "Are your engineers DBS checked?",
+    "a": "Yes, every engineer has a basic DBS check and carries ID. You can ask to see it at the door."
+   },
+   {
+    "q": "Half a question",
+    "a": ""
+   }
+  ],
+  "guarantee": "Our workmanship is guaranteed for 12 months; parts carry the maker’s warranty.",
+  "asbestos": "If we find anything that might be asbestos, we stop and arrange for it to be tested before any work goes on.",
+  "parking": "Please let us know about any parking restrictions; a permit or a space on the drive helps.",
+  "payment": "Homeowners pay on completion by card or bank transfer; landlords and agents on account, within 14 days.",
+  "careers": "We’re always glad to hear from qualified engineers: take a message and the office will call back."
+ },
+ "theme": {
+  "accent": "#e0a23b",
+  "primary": "#1f3347",
+  "background": "#0f151b",
+  "font_heading": "system-ui",
+  "font_body": "system-ui",
+  "logo": null
+ },
+ "sources": {}
+}

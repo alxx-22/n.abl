@@ -1,0 +1,32 @@
+{
+ "categories": [
+  {
+   "label": "Antipasti",
+   "items": [
+    { "name": "Garlic Bread", "description": "Wood-fired, with rosemary", "price_pence": 550, "allergens": ["gluten", "milk"], "dietary": ["vegetarian"], "takeaway": true },
+    { "name": "Burrata", "description": "Heritage tomatoes, basil oil", "price_pence": 895, "allergens": ["milk"], "dietary": ["vegetarian", "gluten-free option"], "takeaway": false },
+    { "name": "Garlic Bread", "price_pence": 650, "allergens": ["gluten", "milk", "mustard"], "modifier_groups": ["Dips & Sauces"] }
+   ]
+  },
+  {
+   "label": "Pizza",
+   "items": [
+    { "name": "Margherita", "price_pence": 1050, "allergens": ["gluten", "milk"], "dietary": ["vegetarian"], "modifier_groups": ["Pizza Extras!", "size"] },
+    { "name": "Diavola", "description": "Spicy salami, chilli honey", "price_pence": 1295, "allergens": ["gluten", "milk", "celery"], "dietary": ["spicy"], "modifier_groups": ["pizza extras", "missing_group"] },
+    { "name": "Funghi", "price_pence": 1150.4, "allergens": ["gluten", "milk", "shellfish"] }
+   ]
+  },
+  {
+   "label": "Dolci",
+   "items": [
+    { "name": "Tiramisu", "price_pence": 650, "allergens": ["eggs", "milk", "gluten"], "takeaway": false }
+   ]
+  }
+ ],
+ "modifier_groups": [
+  { "key": "Pizza Extras!", "label": "Pizza extras", "min": 0, "max": 4, "options": [{ "name": "Extra mozzarella", "price_pence": 150, "allergens": ["milk"] }, { "name": "Nduja", "price_pence": 200 }] },
+  { "key": "size", "label": "Size", "min": 1, "max": 0, "options": [{ "name": "Regular", "price_pence": 0 }, { "name": "Large", "price_pence": 300 }] },
+  { "key": "Dips & Sauces", "label": "Dips", "min": 0, "max": 2, "options": [{ "name": "Garlic mayo", "price_pence": 100, "allergens": ["eggs"] }] }
+ ],
+ "allergen_statement": "All our dishes are made in a kitchen that handles the 14 major allergens. Please tell us about any allergy before you order."
+}

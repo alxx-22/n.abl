@@ -1,0 +1,668 @@
+{
+ "bookings": [
+  {
+   "reference": "LR656",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-17T10:30:00.000Z",
+   "ends_at": "2026-10-17T12:00:00.000Z",
+   "party_size": 7,
+   "name": "Grace Robinson",
+   "phone": "+447700900019",
+   "notes": null,
+   "allergies": "Nut allergy",
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "AY599",
+   "service_key": "table",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-17T11:00:00.000Z",
+   "ends_at": "2026-10-17T12:30:00.000Z",
+   "party_size": 8,
+   "name": "Niamh Jones",
+   "phone": "+447700900850",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "JX340",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-17T12:00:00.000Z",
+   "ends_at": "2026-10-17T13:30:00.000Z",
+   "party_size": 5,
+   "name": "Daniel Evans",
+   "phone": "+447700900468",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "WX596",
+   "service_key": "afternoon_tea",
+   "resource_key": "T5",
+   "area_key": "indoor",
+   "starts_at": "2026-10-17T12:00:00.000Z",
+   "ends_at": "2026-10-17T13:30:00.000Z",
+   "party_size": 3,
+   "name": "Ethan Mensah",
+   "phone": "+447700900328",
+   "notes": "Birthday: a candle in a scone",
+   "allergies": null,
+   "tags": ["birthday"],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff"
+  },
+  {
+   "reference": "WJ191",
+   "service_key": "afternoon_tea",
+   "resource_key": "T1",
+   "area_key": "indoor",
+   "starts_at": "2026-10-17T12:00:00.000Z",
+   "ends_at": "2026-10-17T13:30:00.000Z",
+   "party_size": 2,
+   "name": "Aisha Wright",
+   "phone": "+447700900056",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "YK962",
+   "service_key": "afternoon_tea",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-17T14:00:00.000Z",
+   "ends_at": "2026-10-17T15:30:00.000Z",
+   "party_size": 6,
+   "name": "Ravi Ahmed",
+   "phone": "+447700900345",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff"
+  },
+  {
+   "reference": "WY141",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-18T11:30:00.000Z",
+   "ends_at": "2026-10-18T13:00:00.000Z",
+   "party_size": 6,
+   "name": "Tom Doyle",
+   "phone": "+447700900076",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "HX884",
+   "service_key": "table",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-18T12:00:00.000Z",
+   "ends_at": "2026-10-18T13:30:00.000Z",
+   "party_size": 5,
+   "name": "Chloe Jones",
+   "phone": "+447700900250",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "AL893",
+   "service_key": "afternoon_tea",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-20T12:00:00.000Z",
+   "ends_at": "2026-10-20T13:30:00.000Z",
+   "party_size": 5,
+   "name": "Amara Begum",
+   "phone": "+447700900049",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "YQ761",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-20T12:30:00.000Z",
+   "ends_at": "2026-10-20T14:00:00.000Z",
+   "party_size": 5,
+   "name": "Joe Clarke",
+   "phone": "+447700900265",
+   "notes": null,
+   "allergies": "Coeliac: no gluten",
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff"
+  },
+  {
+   "reference": "AH736",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-21T12:00:00.000Z",
+   "ends_at": "2026-10-21T13:30:00.000Z",
+   "party_size": 7,
+   "name": "Amara Hughes",
+   "phone": "+447700900742",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff"
+  },
+  {
+   "reference": "XA763",
+   "service_key": "afternoon_tea",
+   "resource_key": "T5",
+   "area_key": "indoor",
+   "starts_at": "2026-10-21T12:00:00.000Z",
+   "ends_at": "2026-10-21T13:30:00.000Z",
+   "party_size": 3,
+   "name": "Liam Mensah",
+   "phone": "+447700900861",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "YK161",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-22T11:00:00.000Z",
+   "ends_at": "2026-10-22T12:30:00.000Z",
+   "party_size": 6,
+   "name": "Jack Chen",
+   "phone": "+447700900964",
+   "notes": null,
+   "allergies": "Nut allergy",
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "JY579",
+   "service_key": "afternoon_tea",
+   "resource_key": "T1",
+   "area_key": "indoor",
+   "starts_at": "2026-10-22T14:00:00.000Z",
+   "ends_at": "2026-10-22T15:30:00.000Z",
+   "party_size": 2,
+   "name": "Sophie Hall",
+   "phone": "+447700900730",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "RW377",
+   "service_key": "afternoon_tea",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-22T14:00:00.000Z",
+   "ends_at": "2026-10-22T15:30:00.000Z",
+   "party_size": 5,
+   "name": "Grace Wood",
+   "phone": "+447700900474",
+   "notes": "Birthday: a candle in a scone",
+   "allergies": null,
+   "tags": ["birthday"],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff"
+  },
+  {
+   "reference": "YW926",
+   "service_key": "table",
+   "resource_key": "T8",
+   "area_key": "indoor",
+   "starts_at": "2026-10-23T11:30:00.000Z",
+   "ends_at": "2026-10-23T13:00:00.000Z",
+   "party_size": 6,
+   "name": "Ben Murphy",
+   "phone": "+447700900455",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "staff"
+  },
+  {
+   "reference": "KR197",
+   "service_key": "afternoon_tea",
+   "resource_key": "T6+T7",
+   "area_key": "indoor",
+   "starts_at": "2026-10-23T12:00:00.000Z",
+   "ends_at": "2026-10-23T13:30:00.000Z",
+   "party_size": 5,
+   "name": "Sarah Mensah",
+   "phone": "+447700900608",
+   "notes": "Birthday: a candle in a scone",
+   "allergies": null,
+   "tags": ["birthday"],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "QK464",
+   "service_key": "afternoon_tea",
+   "resource_key": "T5",
+   "area_key": "indoor",
+   "starts_at": "2026-10-23T14:00:00.000Z",
+   "ends_at": "2026-10-23T15:30:00.000Z",
+   "party_size": 4,
+   "name": "Grace Hughes",
+   "phone": "+447700900577",
+   "notes": null,
+   "allergies": "Gluten-free afternoon tea for 1",
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  },
+  {
+   "reference": "AA654",
+   "service_key": "afternoon_tea",
+   "resource_key": "T1",
+   "area_key": "indoor",
+   "starts_at": "2026-10-24T12:00:00.000Z",
+   "ends_at": "2026-10-24T13:30:00.000Z",
+   "party_size": 2,
+   "name": "Helen Ward",
+   "phone": "+447700900931",
+   "notes": null,
+   "allergies": null,
+   "tags": [],
+   "deposit_pence": 0,
+   "deposit_paid": false,
+   "visit_status": "expected",
+   "booked_via": "receptionist"
+  }
+ ],
+ "orders": [
+  {
+   "reference": "101",
+   "name": "Hannah Khan",
+   "phone": "+447700900253",
+   "due_at": "2026-10-17T08:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "americano",
+     "name": "Americano",
+     "quantity": 1,
+     "unit_pence": 290,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 290,
+   "total_pence": 290,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "102",
+   "name": "Megan Mensah",
+   "phone": "+447700900777",
+   "due_at": "2026-10-17T08:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "bacon_sandwich",
+     "name": "Bacon sandwich",
+     "quantity": 1,
+     "unit_pence": 550,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 900,
+   "total_pence": 900,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "103",
+   "name": "Callum Hall",
+   "phone": "+447700900698",
+   "due_at": "2026-10-17T10:05:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cheese_onion_toastie",
+     "name": "Cheese and onion toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 695,
+   "total_pence": 695,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "104",
+   "name": "Ben Robinson",
+   "phone": "+447700900834",
+   "due_at": "2026-10-17T11:50:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "salad_bowl",
+     "name": "Salad bowl",
+     "quantity": 1,
+     "unit_pence": 895,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "americano",
+     "name": "Americano",
+     "quantity": 1,
+     "unit_pence": 290,
+     "modifiers": []
+    },
+    {
+     "line": 3,
+     "item_key": "espresso",
+     "name": "Espresso",
+     "quantity": 1,
+     "unit_pence": 240,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1425,
+   "total_pence": 1425,
+   "allergy_notes": "Sesame allergy",
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "105",
+   "name": "Niamh Shah",
+   "phone": "+447700900347",
+   "due_at": "2026-10-17T12:15:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "salad_bowl",
+     "name": "Salad bowl",
+     "quantity": 1,
+     "unit_pence": 895,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 895,
+   "total_pence": 895,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "106",
+   "name": "Ravi Khan",
+   "phone": "+447700900465",
+   "due_at": "2026-10-17T12:15:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "egg_mayo",
+     "name": "Egg mayo sandwich",
+     "quantity": 1,
+     "unit_pence": 450,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "hot_chocolate",
+     "name": "Hot chocolate",
+     "quantity": 1,
+     "unit_pence": 350,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 800,
+   "total_pence": 800,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "107",
+   "name": "James Nowak",
+   "phone": "+447700900262",
+   "due_at": "2026-10-17T12:20:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "tuna_melt",
+     "name": "Tuna melt",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "veggie_breakfast",
+     "name": "Veggie breakfast",
+     "quantity": 1,
+     "unit_pence": 995,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1690,
+   "total_pence": 1690,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "108",
+   "name": "Aisha Okafor",
+   "phone": "+447700900670",
+   "due_at": "2026-10-17T12:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "espresso",
+     "name": "Espresso",
+     "quantity": 1,
+     "unit_pence": 240,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 240,
+   "total_pence": 240,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "109",
+   "name": "Daniel Mensah",
+   "phone": "+447700900137",
+   "due_at": "2026-10-17T12:30:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "veggie_breakfast",
+     "name": "Veggie breakfast",
+     "quantity": 2,
+     "unit_pence": 995,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "babyccino",
+     "name": "Babyccino",
+     "quantity": 1,
+     "unit_pence": 50,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 2040,
+   "total_pence": 2040,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "110",
+   "name": "Aisha Walker",
+   "phone": "+447700900773",
+   "due_at": "2026-10-17T13:00:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "cheese_onion_toastie",
+     "name": "Cheese and onion toastie",
+     "quantity": 1,
+     "unit_pence": 695,
+     "modifiers": []
+    },
+    {
+     "line": 2,
+     "item_key": "soup",
+     "name": "Soup of the day with bread",
+     "quantity": 1,
+     "unit_pence": 650,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 1345,
+   "total_pence": 1345,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "111",
+   "name": "Daniel Mensah",
+   "phone": "+447700900977",
+   "due_at": "2026-10-17T13:25:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "carrot_cake",
+     "name": "Carrot cake",
+     "quantity": 1,
+     "unit_pence": 395,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 395,
+   "total_pence": 395,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  },
+  {
+   "reference": "112",
+   "name": "Tom Ahmed",
+   "phone": "+447700900296",
+   "due_at": "2026-10-17T14:00:00.000Z",
+   "lines": [
+    {
+     "line": 1,
+     "item_key": "banana_bread",
+     "name": "Vegan banana bread",
+     "quantity": 1,
+     "unit_pence": 360,
+     "modifiers": []
+    }
+   ],
+   "subtotal_pence": 360,
+   "total_pence": 360,
+   "allergy_notes": null,
+   "status": "confirmed",
+   "payment_status": "unpaid"
+  }
+ ],
+ "messages": [
+  {
+   "from_name": "Hannah Walker",
+   "from_phone": "+447700900539",
+   "body": "Wanting a whole chocolate cake for my mum's 70th on Saturday week, with a message on it. Please call back."
+  },
+  {
+   "from_name": "Trent Valley Dairy",
+   "from_phone": "+447700900081",
+   "body": "Milk delivery moving to 7am on Mondays from next week."
+  }
+ ]
+}

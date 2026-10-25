@@ -31,6 +31,8 @@ export interface LiveSetup {
   transcribeOutput?: boolean;
   /** Voice activity detection tuning; omitted fields keep Google's defaults. */
   vad?: {
+    /** Turn Google's detection off: the client marks each turn with activityStart and activityEnd. */
+    disabled?: boolean;
     silenceDurationMs?: number;
     prefixPaddingMs?: number;
     startSensitivity?: 'START_SENSITIVITY_HIGH' | 'START_SENSITIVITY_LOW';
@@ -123,6 +125,7 @@ export function buildSetupMessage(setup: LiveSetup): Record<string, unknown> {
     if (setup.vad.prefixPaddingMs !== undefined) aad.prefixPaddingMs = setup.vad.prefixPaddingMs;
     if (setup.vad.startSensitivity) aad.startOfSpeechSensitivity = setup.vad.startSensitivity;
     if (setup.vad.endSensitivity) aad.endOfSpeechSensitivity = setup.vad.endSensitivity;
+    if (setup.vad.disabled) aad.disabled = true;
     msg.realtimeInputConfig = { automaticActivityDetection: aad };
   }
   if (setup.resumption) msg.sessionResumption = setup.resumption.handle ? { handle: setup.resumption.handle } : {};
@@ -203,6 +206,16 @@ export class LiveSession extends EventEmitter<LiveEvents> {
 
   sendAudio(pcm: Int16Array, rate = 16000): void {
     this.send({ realtimeInput: { audio: { data: pcm16ToBase64(pcm), mimeType: `audio/pcm;rate=${rate}` } } });
+  }
+
+  /** Manual turn-taking: the caller has started speaking (interrupts the model if it is talking). */
+  sendActivityStart(): void {
+    this.send({ realtimeInput: { activityStart: {} } });
+  }
+
+  /** Manual turn-taking: the caller's turn is over; the model replies. */
+  sendActivityEnd(): void {
+    this.send({ realtimeInput: { activityEnd: {} } });
   }
 
   /** Tell the server the audio stream has paused (flushes any cached audio). */

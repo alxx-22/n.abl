@@ -1,0 +1,17 @@
+[
+ {
+  "step": "basics",
+  "level": "error",
+  "message": "Give the takeaway a name."
+ },
+ {
+  "step": "ordering",
+  "level": "error",
+  "message": "List the postcode districts you deliver to, like NG1."
+ },
+ {
+  "step": "menu",
+  "level": "warning",
+  "message": "The allergens are examples until you check them."
+ }
+]

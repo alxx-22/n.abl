@@ -1,0 +1,39 @@
+{
+ "id": "golden",
+ "status": "done",
+ "stage": "",
+ "pages": 4,
+ "error": null,
+ "notes": [],
+ "found": {
+  "identity": {
+   "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+   "name": "Bella Vista",
+   "town": "Nottingham",
+   "phone": "0115 496 0999",
+   "style": "Wood-fired pizza and fresh pasta",
+   "address": "212 Mansfield Road, NG5 2BU",
+   "description": "A family Italian kitchen in Nottingham."
+  },
+  "hours": {
+   "days": 6,
+   "sentence": "Sunday: 12 noon till 8pm. Tuesday to Friday: lunch 12 noon till 2:30pm, dinner 5pm till 10pm. Saturday: 12 noon till 10:30pm. Closed Mondays."
+  },
+  "menu": {
+   "dishes": 5,
+   "priced": 5,
+   "sections": ["Pizza","Pasta"],
+   "source": "https://www.bellavista.example/menu"
+  },
+  "theme": {
+   "accent": "#679079",
+   "primary": "#2a2217",
+   "background": "#0e0c0a",
+   "font_heading": "Playfair Display",
+   "font_body": "system-ui"
+  },
+  "services": ["table bookings (through OpenTable)","takeaway","on Deliveroo","outdoor seating"],
+  "policies": ["dogs","corkage","dietary","parking","children","vouchers","access"],
+  "faqs": 2
+ }
+}
