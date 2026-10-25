@@ -82,8 +82,9 @@ Fixed on 24 October:
 1. Alex runs the setup in `voice-agent/deploy/oracle/README.md`: the
    Oracle account and server, the DNS record `demo-origin.nabl.agency`, and
    the Worker secret.
-2. `voice-agent-DEV` merged into `main`, for `nabl.agency/demo`. It is a
-   fast-forward. Outside `demo-products` it changes only `worker/index.ts`,
+2. `voice-agent-DEV` merged into `main`, for `nabl.agency/demo`: [pull
+   request #2](https://github.com/alxx-22/n.abl/pull/2), to merge once the
+   server answers (step 9 of the Chrome prompt). It is a fast-forward. Outside `demo-products` it changes only `worker/index.ts`,
    `wrangler.jsonc`, `public/robots.txt`, `scripts/check-worker-routes.mjs`
    and `.devcontainer/`. Until then, once the server is set up, the demo
    works at `demo-origin.nabl.agency`.

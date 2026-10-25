@@ -3,7 +3,8 @@
 Paste everything below the line into Claude in Chrome, in a new tab, signed
 in to your Google, Supabase, Cloudflare and (once made) Oracle accounts.
 It does the clicking; you type every password, key and card number
-yourself. About 45 minutes, most of it waiting. The written guide it follows
+yourself. About an hour, most of it waiting. It ends with the demo live
+at nabl.agency/demo. The written guide it follows
 is [`README.md`](README.md) in this folder.
 
 ---
@@ -165,14 +166,27 @@ next (try again later, or upgrade, which is my decision).
    `sudo nabl deploy`. Anything else: I'll take it to Claude Code. Never
    paste the contents of `secrets.env` anywhere.
 
+**Step 9. Go live on nabl.agency** (only once step 8 works)
+
+1. Open https://github.com/alxx-22/n.abl/pull/2 ("The AI receptionist
+   demo at nabl.agency/demo"). Check it says it can be merged. Hand over to
+   me to press **Merge pull request** and confirm (or press it yourself
+   once I say "merge it").
+2. In Cloudflare: **Workers & Pages → n-abl → Deployments**. A new
+   build from `main` starts within a minute or two. Wait until it says
+   it's deployed (refresh every minute; usually under five). If the build
+   fails, stop and tell me what it says.
+3. Open https://nabl.agency/demo/healthz: it should show
+   `{"ok":true,…}`. Then https://nabl.agency (the normal site should look
+   as before), and https://nabl.agency/demo/admin, where I sign in.
+4. Tell me to open https://nabl.agency/demo/reception on my phone with my
+   key and make a test call.
+
 **When it's all working, finish by telling me**
 
-- The demo's address: https://demo-origin.nabl.agency/demo/reception (the
-  team console is /demo/admin).
-- That `nabl.agency/demo` starts working once Claude Code merges
-  `voice-agent-DEV` into `main`, which I'll ask for separately.
-- That billing on the Gemini key goes on when a client signs and pays (my
-  decision), not now: don't turn it on.
+- The demo's address: https://nabl.agency/demo/reception (the team console
+  is https://nabl.agency/demo/admin). The server's own address,
+  https://demo-origin.nabl.agency/demo/reception, keeps working too.
 - That Oracle may stop a free server it thinks is idle; if the demo stops
   answering, **Compute → Instances → Start** brings it back with nothing
   lost.

@@ -132,10 +132,11 @@ sign in with the console password, and issue yourself a key.
 
 **On nabl.agency itself**: the forwarding from `nabl.agency/demo` is on the
 `voice-agent-DEV` branch. It goes live when that branch is merged into
-`main`. Outside the demo's own folder the merge changes only the site's
-Worker (the forwarding), `wrangler.jsonc`, `robots.txt` and a test: the
-site's pages stay as they are. Ask Claude to open the pull request, then
-merge it on GitHub. Until then, use `demo-origin.nabl.agency`.
+`main`: merge [pull request #2](https://github.com/alxx-22/n.abl/pull/2)
+once step 7 works, and Cloudflare deploys the site a few minutes later.
+Outside the demo's own folder the merge changes only the site's Worker
+(the forwarding), `wrangler.jsonc`, `robots.txt` and a test: the site's
+pages stay as they are. Until then, use `demo-origin.nabl.agency`.
 
 ## Afterwards
 
