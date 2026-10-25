@@ -9,9 +9,9 @@ is [`README.md`](README.md) in this folder.
 
 ---
 
-You're helping me, Alex (not a developer), put my company's AI receptionist
-demo on a free Oracle Cloud server. Work in this browser, one step at a
-time, and tell me in plain words what you did after each step. The full
+You're helping me put my company's AI receptionist demo on a free Oracle
+Cloud server and live at nabl.agency/demo. Work in this browser, one step
+at a time, and tell me briefly what you did after each step. The full
 written guide is at
 https://github.com/alxx-22/n.abl/blob/voice-agent-DEV/demo-products/voice-agent/deploy/oracle/README.md
 — open it first and keep it in a tab; where this prompt and the guide
