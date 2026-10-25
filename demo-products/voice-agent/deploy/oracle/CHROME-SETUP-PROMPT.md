@@ -25,9 +25,12 @@ differ, the guide wins.
   to type there, and wait for me to say "done". Don't read them back from
   the screen either.
 - **Nothing paid.** Everything here is free. Never choose anything that
-  isn't marked *Always Free* or free, never upgrade an account, and stop
-  and ask me if a page asks for payment, shows a price or says something
-  will be charged.
+  isn't marked *Always Free* or free, never upgrade an account or open
+  billing, and stop and ask me if a page asks for payment, shows a price or
+  says something will be charged. In Oracle, create only the one instance,
+  the network its wizard makes, and the two ingress rules; stay in the home
+  region; and change the shape to Ampere A1 even if another is preselected
+  (the default is often a paid one).
 - **Accounts and identity checks are mine.** If a sign-up, a card check, a
   phone code or a captcha appears, hand over to me and wait.
 - **Ask before anything that can't be undone** (deleting, resetting a
