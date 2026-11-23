@@ -1,0 +1,44 @@
+/* The mark reel: the cream page and its headline, the n drawn close up by
+   its own full stop, and the lamp that lights the name. */
+
+/* the page the headline is typed on, the site's cream, lit a little in the middle */
+.k-page { background: radial-gradient(ellipse 85% 80% at 50% 45%, #F6F0E5 0%, #EDE4D4 70%, #E2D7C4 100%); }
+.k-line { position: absolute; left: 50%; top: 50%; font-family: var(--display); font-weight: 600; color: #17130F; letter-spacing: -.035em;
+  line-height: 1.04; white-space: nowrap; }
+.k-line .ln { display: block; }
+.k-line .stop { display: inline-block; width: .28em; height: .28em; margin-left: .08em; vertical-align: baseline; }
+/* the caret, which is the full stop, which is the nib: the site's square dot */
+.k-cur { position: absolute; left: 50%; top: 50%; background: #E9AC57; box-shadow: 0 0 18px rgba(233, 172, 87, .45); }
+
+/* the n, close up */
+.k-n { position: absolute; left: 50%; top: 50%; }
+.k-n svg { display: block; }
+.k-n .ink { fill: none; stroke: #F0E7D8; stroke-width: 13; stroke-linecap: butt; }
+.k-n .hot { fill: none; stroke: #F6CF94; stroke-width: 13; stroke-linecap: butt; }
+.k-n .nib { fill: #E9AC57; }
+.k-n .halo { fill: #F2C57E; }
+/* the warm light the nib throws round itself */
+.k-glow { position: absolute; left: 50%; top: 50%; width: 2200px; height: 2200px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(233, 172, 87, .2), rgba(233, 172, 87, .06) 45%, transparent); }
+
+/* the mark and the name, and the same again in gold where the lamp lights it */
+.k-mark { position: absolute; left: 50%; top: 50%; }
+.k-mark svg { display: block; }
+.k-gold { filter: drop-shadow(0 0 14px rgba(246, 207, 148, .55)); }
+.k-gold g { stroke: #F8D9A4; }
+.k-gold [data-k="dot"] { fill: #FFC877; }
+.k-url { position: absolute; left: 50%; top: 50%; font: 500 34px var(--mono); letter-spacing: .1em; color: rgba(240, 231, 216, .62); white-space: nowrap; }
+
+/* the lamp: its cord, its shade, its beam with dust in it, and the pool it lays on the floor */
+.k-lamp { position: absolute; left: 50%; top: 50%; width: 300px; height: 160px; transform-origin: 150px 0; }
+.k-lamp svg { display: block; }
+.k-cord { position: absolute; left: 50%; top: 50%; width: 2px; transform-origin: 1px 0; background: linear-gradient(180deg, rgba(90, 82, 73, 0), #5A5249 30%, #3A3129); }
+.k-beam { position: absolute; left: 50%; top: 50%; filter: blur(16px); }
+.k-beam .core { position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255, 236, 200, .42) 0%, rgba(246, 207, 148, .2) 30%, rgba(233, 172, 87, .07) 65%, rgba(233, 172, 87, 0) 100%); }
+.k-dust { position: absolute; left: 50%; top: 50%; }
+.k-dust i { position: absolute; left: 0; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #FFE9C4; box-shadow: 0 0 6px rgba(255, 233, 196, .8); }
+.k-dust i:nth-child(3n) { width: 2.5px; height: 2.5px; }
+.k-dust i:nth-child(5n) { width: 6px; height: 6px; filter: blur(1.5px); }
+.k-pool { position: absolute; left: 50%; top: 50%; width: 1500px; height: 620px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(233, 172, 87, .2), rgba(233, 172, 87, .07) 55%, transparent); }
