@@ -1,96 +1,97 @@
 # The full stop: the mark reel
 
-A 13-second reel (12.9 s) that reveals n.abl's mark, the **n.**: the n and
-its square full stop. Cut to music with no voice, in every social format
-from one timeline: 16:9, 1:1, 4:5 and 9:16. It uses the stage and kit of
-the other reels (`film/stage.js`, `film/kit.js`) with its own track.
+A 13-second reel (12.9 s) that reveals n.abl's mark, the **n.**, then the
+name, *n.abl agency*, and what it does, *AI automation specialists*. Cut to
+music with no voice, in every social format from one timeline: 16:9, 1:1,
+4:5 and 9:16.
 
-## 1. The reference, frame by frame
+## 1. The brief
 
-The reference is a phone recording of a screen playing a reel of logo
-reveals (12.77 s, 60 fps, each frame shown twice, so 30 distinct frames a
-second), cut to a driving electronic track at about 122 BPM: eighth notes
-for the first four seconds, quarter notes after, and every cut on a beat.
-Six reveals, each a different idea:
+Three parts and nothing else: the n. animates in; *n.abl agency* shows,
+followed by *AI automation specialists*; an outro. With far more motion
+blur, depth of field, glow and particles than the other reels, and with its
+own ideas rather than borrowed ones. (A first cut followed a reference reel
+of logo reveals too closely, a typed headline, close-ups of the strokes and
+a pendant lamp, and was thrown away.)
 
-| Time | Reveal | What happens, frame by frame | What it teaches |
-|---|---|---|---|
-| 0.00–2.05 | **kyras** | A screenshot of the product, a table, sits on dark green. A circular iris closes on it while four rounded corner brackets, two green and two black, fly in from outside with motion blur and orbit it, turning about 90°. As the circle shrinks the ground brightens from dark green to light grey and the circle fills mint: it has become the logo's core, the brackets its frame. The icon slides left and the wordmark types in letter by letter, each letter blurring in with wide tracking that tightens; a small *by …* line under it. | The product becomes the mark: no cut, a change of shape. The ground flips from dark to light as the mark resolves. |
-| 2.05–4.08 | **PlaniTeam** | A thin line on a cream ground swells into the icon's outline, huge and tilted in 3D; its second part, a check stroke, slides in from the lower right. It shrinks, straightens to face the camera and moves left. *Plani* fades in letter by letter from blur while the ground fades from cream to navy; then *Team* in blue, the same way; the lockup scales down. | Strokes that assemble in depth, then settle flat. The ground goes light to dark under the type. |
-| 4.08–6.42 | **Plaany** | A sentence, *What if it was ● even simpler*, has a black ball in place of a word. The words blur away; the ball rolls off, shrinking into depth, and leaves a soft purple glowing trail that traces the logo. The camera pushes in, the ground turns from cream to a deep blue-violet with a dark vignette, *Plaany* blurs in under the icon, and the stacked lockup rearranges into a row; anamorphic streaks drift across the corners. | **An object from the copy becomes the pen that draws the mark.** Light-painting: the trail is the logo. |
-| 6.42–7.08 | **Nodes** | A dark interface: three orange nodes joined by lines inside a dashed ring, purple arcs above and below, turning slowly. | A breather between reveals. |
-| 7.08–9.78 | **ℓ.** | Extreme close-ups of the mark's own strokes, too close to read: a broad cream band crossing the frame on dark navy, turning slowly (7.08); a whip; a cream arch, **∩**, rotating upright (7.73); another whip with rotation (8.23); a stroke's end on the left and a **circle**, the full stop, sliding in from the right (8.38); then a fast zoom out, blurred, to the whole mark, small, a looped *ℓ* and its dot (9.33), held. Soft edges, a little chromatic fringing. | **Abstraction before recognition**: the mark's geometry seen as shapes, one per beat, then the smash pull-back that makes them a mark. The arch and the dot are the n. |
-| 9.78–12.77 | **ØST agency** | A pendant lamp, a dark cone with a glowing amber rim, hangs top right; its beam is a hazy volume with dust. *ILS SONT REMARQUABLES* is lit gold where the beam lands and grey where it does not. The lamp swings left; the line slides out with an echoing motion trail and the logo slides in, *ØST agency*, landing in the light, gold where lit. The lamp swings on and out of frame; the logo keeps a warm glow. | **Light as a reveal**: the mark lit by a physical light, gold only where the light falls. |
+## 2. The idea: the full stop holds the light
 
-Throughout: film grain, a vignette, soft depth of field, motion blur on
-every move, and grounds that change between light and dark.
-
-## 2. The idea: the full stop draws the n
-
-The mark (`public/brand/mark.svg`) is one 13-unit stroke, a stem, a
-circular shoulder and a stem, and a 13-unit square full stop. The square
-is exactly as wide as the stroke, so **the full stop, dragged along the
-n's path, draws the n exactly**. The brand notes say the circular shoulder
-is the point of the mark because it plays against the square dot; the reel
-makes them one gesture.
-
-And the site's headline already ends on that square: *AI, built into your
-business* with an amber square for its full stop (`Hero.jsx`, `.dot`). So
-the reel starts there, as the Plaany reveal does with its ball in a
-sentence. From the reference it takes the object from the copy that becomes
-the pen, the close-ups of the mark's own geometry and the smash pull-back,
-the flip from a light ground to a dark one, and the lamp that lights the
-mark gold. The palette stays n.abl's: the site's cream page, its near-black
-stage, amber for the full stop.
+The mark (`public/brand/mark.svg`) is an n and a square full stop, and the
+brand notes say the square is the signature: the round shoulder of the n is
+there to play against it. So in this reel the full stop is where the energy
+lives. **Everything comes out of the square and goes back into it**: light
+gathers into it, it fires the n, and at the end the whole name burns back
+into it and it goes off. The reel opens and closes on the full stop.
 
 ## 3. The reel
 
 The tempo is the music's, 120.5 BPM; every move lands on its beat.
 
-| Time | Shot | What happens | Camera |
+| Time | Part | What happens | Camera |
 |---|---|---|---|
-| 0.00 | **Line** | A cream page, lit in the middle with a dark vignette. A square amber caret blinks twice, then the headline types out behind it, a word to each eighth note: *AI, built into your business*. On the beat (1.49 s) the caret comes to rest as its full stop, with a small bounce. | Holds, then dives into the full stop (1.69 s), faster and faster, keeping it dead centre as the words blur away past the frame. |
-| 1.99 | **Write** | On the drop the page is gone: the full stop, now a block of amber a third of the frame high, flares and begins to draw the n on a dark stage. Up the stem, over the shoulder (2.74), down the other stem (4.23): a cream band runs out behind it, hot amber at the nib and cooling to cream, with specks of light at every depth. At the foot (4.98) it backs up onto the stroke, leaving the end square, and flips over, turning once, up into its place beside the n (5.85). | Rides with the nib, looking a little ahead of it, the floor tilted away like a road, and turning with it so it always runs up the frame: the world turns half round over the shoulder. Then, as it flips, it slams back, spinning the other half turn, to the whole mark. |
-| 5.60 | *Breath* | The music stops for the last three quarters of a beat as the camera flies out. | |
-| 5.97 | **Mark** | On the hit, the **n.**, small and still in the middle of the dark, with a flash of warm light. | Stops dead, with a shake. |
-| 6.22 | **Lamp** | A pendant lamp drops in from above, swinging, and clicks on (6.40). Its beam sweeps across the mark and back, crossing it on each beat and dying away, with dust in it; wherever it lands the mark lights gold, and the floor round it glows. By 9.46 it hangs still over the mark. | Rises a little to take the lamp in. |
-| 9.96 | **Name** | Under the lamp the rest of the name draws itself in round the mark, *abl*, as the mark slides left to make room. Then the address, *nabl.agency*, under it (10.95). | Settles back; out at 12.94. |
+| 0.00 | **Gather** | Out of the dark, thousands of motes spiral in from every depth towards one point of light, faster as they near it, each a streak of its own motion; out of focus, the near and far ones open into soft discs. The point brightens and throws light shafts. | Drifts in from a low angle towards the point. |
+| 1.74 | **The square** | The point pinches down into the amber square, with a small shockwave. Then a breath: the music stops for half a beat. | Settles on it. |
+| 1.99 | **The n** | On the drop the square fires: a flash, a shockwave that bends the frame, an anamorphic streak. Its motes fly out in arcs and land along the n, which sets white-hot where they land, from its right foot up and over the shoulder to its left foot (2.88), and cools to cream, shedding embers. A light runs along it (3.24). | Shakes with the shot, then eases round to frame the n. and pushes in. |
+| 3.98 | **n.abl** | The rest of the name ignites on the sixteenths: the a's bowl, its stem, the b's stem, its bowl, the l, each drawn in 0.3 s with a white-hot head that sheds sparks and cools behind it. | Pulls back and across to the whole name. |
+| 4.98 | **agency** | *agency* falls out of the air beside the name, letter by letter, out of focus near the camera and sharpening as it lands on the plane. | |
+| 5.97 | **AI automation specialists** | On the brightest part of the track a line of light draws out under the name, and *AI AUTOMATION SPECIALISTS* decodes in above it, each letter cycling through others before it settles with a flash; the line fades. A light runs across the name (7.47); the full stop glows on each beat. | Holds, drifting. |
+| 9.46 | **Burn** | It all burns away from the right, the line first, then *agency*, then the name, with a hot edge eating through it; every bit turns to embers that spiral back into the square, which glows hotter as it takes them in. | Pushes in on the square. |
+| 10.95 | **Out** | The square pinches and goes off: a flash, a shockwave, a streak and a burst of sparks. It cools back to the amber full stop, and the address, *nabl.agency*, falls into focus under it (11.50). | Settles; out at 12.94. |
 
-All the words are the site's own: the headline, the name and the address.
+All the words are the brand's: the name, *agency*, the address.
 
-## 4. Sound
+## 4. The look
+
+The reel is drawn by its own WebGL renderer (`films/mark/gl.js`), one frame
+per seek like every other film here, so it renders frame by frame in the
+same pipeline and in every format:
+
+- **The mark** is drawn as exact signed distance fields of the wordmark's
+  own geometry (a 13-unit monoline of segments and true circles, butt-ended
+  on the baseline), on a plane seen by a real perspective camera. So it is
+  crisp at 4K, blurs by depth of field, glows, sets, draws itself on and
+  burns away analytically.
+- **The type** is distance-field glyphs made at load from the site's own
+  fonts (Space Grotesk for *agency*, JetBrains Mono for the line and the
+  address), so it blurs, glows and burns the same way.
+- **The particles**, about 14,000, are each drawn as a capsule from where
+  they were half a frame ago to where they are, so every one carries its
+  own motion blur; out of focus they open into bokeh discs and dim to keep
+  their light.
+- **The lens**: an HDR frame with bloom down and back up a mip chain, light
+  shafts from the square, an anamorphic streak and shockwaves on the hits,
+  chromatic aberration, camera motion blur, a hue-preserving filmic tone
+  curve (so the cream and amber stay the site's #F0E7D8 and #E9AC57, and
+  only real highlights go to white) and a vignette; render.mjs adds grain.
+
+## 5. Sound
 
 **Music**: its own track, dark minimal tech house in D minor at 120.5 BPM,
-made for this reel with Lyria RealTime (`films/mark/music/mark-1.wav`, its
-plan in `music/plans/mark.json`; two more takes from the same plan are kept
-beside it). The plan follows the reel: ticking hats and rimshots under the
-typing, the groove with the kick and a rolling bass on the drop, tension
-into the mark, the biggest section for the mark and the lamp, and pads
-under the name. The take's beat 8 (4.065 s) lands on the drop.
-- **Under the typing:** the take with its low end held back and a filter
-  slowly opening, so the kick arrives on the drop.
-- **The drop** (1.99 s), as the full stop starts to draw.
-- **A breath**, three quarters of a beat of silence, as the camera slams
-  back; then a low hit and the brightest section on the mark.
-- **Under the name** it thins to pads and fades out over the last two
-  seconds.
+made with Lyria RealTime (`films/mark/music/mark-1.wav`, its plan in
+`music/plans/mark.json`; two more takes from the same plan are kept beside
+it). The take's beat 8 (4.065 s) lands on the drop as the square fires.
+- **Under the gathering** the take with its low end held back and a filter
+  slowly opening.
+- **A breath** of half a beat as the point becomes the square, then the
+  drop and a low hit as it fires.
+- **The brightest section** of the take under the line, from 5.97 s.
+- **Under the burn and the end** it thins to pads and fades out over the
+  last two seconds.
 
-**Effects**, drowned under the music as in the other reels (a low-pass at
-2.6 kHz, a slight waver, a short dark room), with the dry click on the
-front of every water drop: two ticks as the caret blinks, a key for every
-letter, a drop as the full stop lands, a riser and a whoosh into the dive,
-a soft impact on the drop, the scratch of the nib drawing, drops as it
-turns into the shoulder, out of it and at the foot, a flip as it turns
-over, a riser and a whoosh as the camera slams back, a drop as the full
-stop lands in its place, then an impact and shimmer on the mark; a whoosh
-as the lamp swings in, its click, a whoosh on each pass of the beam, a drop
-when it first finds the full stop, a chime as it comes to rest, the stroke
-of the name drawing in, a drop as it completes and another for the address.
+**Effects**, drowned under the music as in the other reels, with the dry
+click on the front of every water drop: a low swell, a riser and a stream
+of air as the light gathers, an implosion and a drop as it becomes the
+square; an impact, shimmer and whoosh as it fires, and four drops climbing
+as the n sets; a drop for each stroke of the name, rising, and a swish; a
+tick for each letter of *agency*; a scan for the line of light, typing as
+the letters decode and a chime as they settle; a riser, a swell and a
+stream of air as it burns back into the square, then an implosion, an
+impact, shimmer and a double drop as it goes off; ticks for the address.
 
 **Mix**: the music about 1 dB over the effects; −14 LUFS integrated, true
 peak below −1 dBTP on the delivered AAC.
 
-## 5. Delivery
+## 6. Delivery
 
 Rendered at twice the size: each format at its usual size (scaled down from
 the large frames) and as `-4k`; H.264 High, 60 fps, AAC 256k.

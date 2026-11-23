@@ -2,19 +2,21 @@
 The mark reel: n.abl's mark, the n and its square full stop, revealed in
 13 seconds, cut to music with no voice.
 
-The idea comes from the mark itself (public/brand/mark.svg): the n is one
-13-unit stroke, and the full stop is a 13-unit square. Dragged along the
-n's path, the square draws the n exactly. So the reel opens on the site's
-own headline being typed, AI, built into your business, and ending on its
-square full stop; the full stop leaves the sentence and, close up, draws
-the n; the camera slams back to reveal the mark as the square drops into
-place beside it; a pendant lamp swings in and lights it; and the rest of
-the name draws in under the light. The brief and the frame-by-frame study
-of the reference are SCRIPT.md; the animation is scenes.js.
+The full stop is where the energy lives: everything comes out of it and goes
+back into it. Motes spiral in out of the dark to one point of light, which
+pinches down into the amber square; on the drop the square fires and the n
+sets white-hot from its right foot over the shoulder to its left foot. The
+rest of the name ignites stroke by stroke, agency falls into focus beside it
+and AI AUTOMATION SPECIALISTS decodes in under a line of light. Then it all
+burns away into embers that spiral back into the square, which goes off and
+settles as the full stop over the address. Drawn by its own WebGL renderer
+(gl.js): the mark as exact distance fields, motion-blurred particles with
+depth of field, bloom, light shafts and shockwaves. The brief is SCRIPT.md;
+the animation is scenes.js.
 """
 
 TITLE = "n.abl · The full stop"
-COVER = 11.8          # seconds: the frame the cover images are taken from (the name, under the lamp)
+COVER = 8.4           # seconds: the frame the cover images are taken from (the name and the line)
 
 # the track's tempo, measured; the reel is choreographed on it directly
 BPM = 120.52
@@ -26,13 +28,13 @@ VOICE_PROVIDER = "none"
 VOICE, LANG, SPEED, SHORT_SPEED = "bm_fable", "en-gb", 1.2, 1.36
 SAY = {"n.abl": "enable"}
 
-# beats: the shot's length. The drop lands on the cut into the full stop;
-# the second drop on the reveal, after a breath.
+# beats: the shot's length. The point pinches into the square half a beat
+# before the drop; a breath; the square fires on the drop. The name starts on
+# a bar, the line on the take's brightest section, the outro on its last.
 SCENES = [
-    dict(id="line",  beats=4, lines=[]),   # the headline types out on a cream page and ends on its square full stop
-    dict(id="write", beats=8, lines=[]),   # close up, the full stop draws the n; the camera slams back to the mark
-    dict(id="light", beats=8, lines=[]),   # a pendant lamp swings in and lights the mark
-    dict(id="name",  beats=6, lines=[]),   # the rest of the name draws in under the lamp; the address
+    dict(id="form", beats=8,  lines=[]),   # motes spiral into a point; it pinches to the square; on the drop the square fires and the n sets
+    dict(id="name", beats=11, lines=[]),   # abl ignites stroke by stroke; agency falls into focus; AI AUTOMATION SPECIALISTS decodes in
+    dict(id="out",  beats=7,  lines=[]),   # it burns away into the square, which goes off; the full stop and the address
 ]
 
 MUSIC = "file"
