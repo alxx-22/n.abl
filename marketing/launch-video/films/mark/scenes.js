@@ -36,7 +36,7 @@ const b = k => k * B                                    // the reel is choreogra
 const tCollapse = b(3.5), tBurst = b(4)                   // the point pinches into the square; it fires, on the drop
 const tName = b(8), tAbl = [0, .25, .5, .75, 1].map(k => b(8 + k))
 const tAgency = b(10), tTag = b(12), tSheenN = b(6.5), tSheenL = b(15)
-const tBurn = b(19), tPinch = b(21.5), tHit = b(22), tUrl = b(23.1)
+const tBurn = b(19), tPinch = b(21.5), tHit = b(22), tUrl = b(23.7)
 
 /* ---------- the mark, in the wordmark's units ---------- */
 const DOT = [84.5, 75.5], MC = [54.5, 51.75]
@@ -132,7 +132,7 @@ function buildReel(s) {
   for (let i = 0; i < 2700; i++) {
     const th = rr(0, 6.283), rad = rr(140, 950) * Math.pow(r(), .35)
     const st = [DOT[0] + rad * Math.cos(th), DOT[1] + rad * Math.sin(th) * .75, rr(-900, 90)]
-    const tb = rr(.02, 1.05), ta = Math.max(tb + .55, rr(.85, tCollapse - .03))
+    const tb = rr(-.7, .95), ta = Math.max(tb + .6, rr(.7, tCollapse - .03))      // some already on their way at the first frame
     add(1, r(), r(), rr(.8, 2), [...st, tb], [DOT[0], DOT[1], 0, Math.min(ta, tCollapse - .01)], [(r() < .88 ? 1 : -1) * rr(2.4, 6), 0, 0, rr(.3, .75)])
   }
   // thrown from the square on the drop to land along the n, from its right foot round to its left
@@ -253,7 +253,7 @@ function buildReel(s) {
     const dotScale = t < tBurst ? lerp(.2, 1, born) * (1 + .12 * bell(t, tCollapse, tCollapse + .05, tBurst, E.out)) : lerp(1, .62, P(t, tPinch, tHit, E.in2)) * (1 + .5 * bell(t, tHit, tHit + .03, tHit + .5))
     const dotHeat = Math.max(.8 * (1 - P(t, tCollapse, tBurst + .3)), bell(t, tBurst - .02, tBurst, tBurst + .4) * .7, fill * .6 * (1 - P(t, tHit, tHit + .9)) + .7 * bell(t, tHit - .03, tHit, tHit + .9))
     const at = toScreen(c, [DOT[0], DOT[1], 0])
-    const coreI = P(t, .15, tCollapse, E.in2) * (1 - P(t, tCollapse - .02, tCollapse + .06))
+    const coreI = (.12 + .88 * P(t, 0, tCollapse, E.in2)) * (1 - P(t, tCollapse - .02, tCollapse + .06))
     const s0 = toScreen(c, [MC[0], MC[1], 0]), s1 = toScreen(cp, [MC[0], MC[1], 0])
     const mbScale = 1 + 2.5 * bell(t, tPinch - .3, tPinch, tHit)
     draw({
@@ -266,7 +266,7 @@ function buildReel(s) {
       core: [DOT[0], DOT[1], 0], coreI,
       haze: [t < tName ? MC[0] : LC, t < tName ? MC[1] : blockY, .35 + .65 * P(t, tBurst - .1, tBurst + .6)],
       glyphs: glyphs(t), spread: SPREAD,
-      dust: P(t, .1, 1.1) * (1 - .4 * P(t, tHit, tHit + 1)),
+      dust: P(t, 0, .4) * (1 - .4 * P(t, tHit, tHit + 1)),
       threshold: 1.3, bloom: .65 + .2 * bell(t, tBurst, tBurst + .03, tBurst + .7) + .25 * bell(t, tHit, tHit + .03, tHit + .9),
       rays: .4 * P(t, .3, tCollapse, E.in2) * (1 - P(t, tBurst + .2, tBurst + 1.4)) + .3 * bell(t, tPinch - .4, tHit, tHit + 1),
       rayAt: [at[0] / cv.width, 1 - at[1] / cv.height],
@@ -276,7 +276,7 @@ function buildReel(s) {
       ca: .0018 + .004 * bell(t, tBurst, tBurst + .02, tBurst + .5) + .005 * bell(t, tHit, tHit + .02, tHit + .7),
       exposure: 1 + .4 * bell(t, tBurst, tBurst + .015, tBurst + .25) + .45 * bell(t, tHit, tHit + .015, tHit + .3) + .15 * bell(t, tCollapse, tCollapse + .02, tCollapse + .2),
       mb: [(s0[0] - s1[0]) / cv.width * mbScale, -(s0[1] - s1[1]) / cv.height * mbScale],
-      fade: P(t, 0, .35) * (1 - P(t, TL.duration - .5, TL.duration, E.in2)),
+      fade: P(t, 0, .12) * (1 - P(t, TL.duration - .5, TL.duration, E.in2)),
     })
   }
 }

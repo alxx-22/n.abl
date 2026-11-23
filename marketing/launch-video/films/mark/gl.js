@@ -136,7 +136,13 @@ float ring(vec2 p, vec2 c, float r, float a0, float front, out float age){
   // the drawn part of a circle: a true ring once whole; while drawing, an arc whose ends are rounded
   vec2 q = p - c; float a = mod(atan(q.y, q.x) - a0, 6.2831853), drawn = clamp(front / r, 0., 6.2831853);
   if (front <= 0.) { age = 0.; return 1e4; }
-  if (a <= drawn) { age = front - a * r; return abs(length(q) - r) - HW; }
+  if (a <= drawn) {
+    age = front - a * r;
+    // where a closed ring meets its own start, its hottest end and its coolest meet: blend the two across the seam
+    float ws = smoothstep(.5, 0., min(a, 6.2831853 - a)) * smoothstep(6.2831853 * r - 30., 6.2831853 * r, front);
+    age = mix(age, .5 * (front + max(front - 6.2831853 * r, 0.)), ws);
+    return abs(length(q) - r) - HW;
+  }
   vec2 e0 = c + r * vec2(cos(a0), sin(a0)), e1 = c + r * vec2(cos(a0 + drawn), sin(a0 + drawn));
   float d0 = length(p - e0), d1 = length(p - e1);
   age = front * (a - drawn) / max(6.2831853 - drawn, 1e-3);     // round the undrawn gap, from the head's heat to the start's
