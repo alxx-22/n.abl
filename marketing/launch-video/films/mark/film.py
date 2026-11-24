@@ -37,14 +37,16 @@ SCENES = [
     dict(id="out",  beats=7,  lines=[]),   # it burns away into the square, which goes off; the full stop and the address
 ]
 
-# No music: a score of sound design (audio.py's cinematic cues, from the
-# film's own cues in scenes.js): a drone bed with no beat or tune, reverse
-# swells and reversed halls breathing in before each hit, deep impacts with a
-# sub drop and a low braam, granular sparkle for light, crackle for embers.
-# The Lyria takes in music/ are kept, unused. The tempo still sets the cuts.
+# No music: sound design (audio.py's cinematic cues, from the film's own cues
+# in scenes.js), none of it synthesised on a note: air moving for a bed,
+# whooshes, reverse swells and the hall drawn in backwards before each hit,
+# short punchy impacts in a room, crystalline glitter for light, crackle for
+# embers, a split-flap board for the type decoding. The Lyria takes in music/
+# are kept, unused. The tempo still sets the cuts.
 MUSIC = "none"
 SFX_TRIM = {}
 MUSIC_GAIN, SFX_GAIN = 0.0, 1.0
 SFX_DROWN = None          # full range: nothing under water
 DROP_CLICK = 0
 LOUDNESS = -14.5          # a little under the others, to leave the hits their headroom
+CEILING = -3.0            # the limiter's ceiling: the hits' sharp fronts overshoot the AAC encoder by a decibel or so

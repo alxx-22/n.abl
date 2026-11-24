@@ -1825,43 +1825,85 @@ def drown(x, cut=1400, wobble=0.0035, room=0.45):
 
 # ------------------------------------------------------------------ cinematic
 # Sound design without music, for a film that wants the weight of a trailer
-# (MUSIC = "none"): a drone bed with no beat or tune, reverse swells and
-# reversed halls breathing in before each hit, deep impacts with a sub drop
-# and a low braam on the big ones, granular sparkle for light, crackle for
-# embers, and a long, dark hall for everything to ring out in.
+# but not a synth in it (MUSIC = "none"): moving air for a bed, whooshes,
+# reverse swells and the hall drawn in backwards before each hit, short
+# punchy impacts in a natural room, crystalline glitter for light, crackle
+# for embers, the clatter of a split-flap board for type. All of it noise
+# shaped into things, nothing held on a pitch.
 
 IR_BIG = make_ir(5.5, 1.7, 3600, pre=0.02)
 
 def cine_noise(d, seed):
     return np.random.default_rng(seed).standard_normal(int(d * SR))
 
-def sfx_boom(v=1.0, d=4.5, seed=0):
-    """A cinematic impact: a sub that drops in pitch and rings, a body of low air, a crack, a low metallic
-    ring, saturated, then a long dark hall."""
-    x = tt(d)
-    sub = np.sin(2 * np.pi * np.cumsum(30 + 95 * np.exp(-x / 0.055)) / SR) * np.exp(-x / 1.3)
-    sub += 0.35 * np.sin(2 * np.pi * np.cumsum(60 + 120 * np.exp(-x / 0.05)) / SR) * np.exp(-x / 0.5)
-    body = lp(cine_noise(d, seed + 1), 380, 4) * np.exp(-x / 0.22) * 1.6
-    crack = hp(cine_noise(d, seed + 2), 900) * np.exp(-x / 0.012) * 0.9
-    ring = sum(np.sin(2 * np.pi * f * x + k) * a for k, (f, a) in enumerate([(147, .5), (221, .32), (311, .22), (443, .14)])) * np.exp(-x / 0.7) * 0.22
-    y = np.tanh(1.6 * (sub * 1.25 + body + crack + ring)) * np.minimum(1, x / 0.0015)
-    return reverb(y, IR_BIG, 0.55) * v
+def pink(d, seed):
+    """Pink noise, shaped in the frequency domain: the spectrum of wind and air."""
+    w = cine_noise(d, seed); n = len(w)
+    X = np.fft.rfft(w); f = np.maximum(np.fft.rfftfreq(n, 1 / SR), 20.)
+    y = np.fft.irfft(X / np.sqrt(f), n)
+    return y / (np.abs(y).max() + 1e-9)
 
-def sfx_braam(v=1.0, d=3.4, root=26):
-    """A low brass-like blast on D: detuned saws an octave, a fifth and two octaves up, the filter thrown open
-    and closing slowly, driven, in the big hall."""
-    x = tt(d); out = np.zeros((len(x), 2))
-    cut = 140 + 1900 * np.exp(-x / 0.55) * np.minimum(1, x / 0.05) + 180 * np.exp(-x / 2.0)
+def drift(d, rate, seed):
+    """A smooth random wander, 0 to 1, about `rate` times a second."""
+    r = np.random.default_rng(seed); k = max(4, int(d * rate) + 3)
+    pts = r.random(k); x = np.linspace(0, k - 1, int(d * SR))
+    i = np.minimum(x.astype(int), k - 2); f = x - i; f = f * f * (3 - 2 * f)
+    return pts[i] * (1 - f) + pts[i + 1] * f
+
+def sfx_air(d, v=1.0, rise=0.0, seed=0):
+    """The bed: air moving in a large space, a wind that gathers and falls away; with rise, it builds and brightens."""
+    x = tt(d); p = x / d
+    out = np.zeros((len(x), 2))
     for c in range(2):
-        tone = np.zeros(len(x))
-        for m, a in ((root + 12, 1.0), (root + 19, .6), (root + 24, .45)):
-            for dt in (-.11, 0, .13):
-                f = mtof(m) * 2 ** ((dt + (c - .5) * .05) / 12) * (1 + .003 * np.sin(2 * np.pi * 4.6 * x + m))
-                tone += blsaw(f, d) * a
-        out[:, c] = sweep_lp(tone, cut, q=1.1)
-    env = np.minimum(1, x / 0.018) * np.exp(-x / 1.5)
-    y = np.tanh(1.8 * out * env[:, None] * .35)
-    return reverb(y, IR_BIG, 0.5) * v
+        nz = hp(pink(d, seed + 31 + c), 90)
+        cut = (700 + 1500 * drift(d, .5, seed + 41 + c)) * (1 + 2.2 * rise * p ** 1.6)
+        out[:, c] = sweep_lp(nz, cut, q=.75) * (.55 + .45 * drift(d, .7, seed + 51 + c)) + hp(cine_noise(d, seed + 61 + c), 6000) * .015 * (1 + 4 * rise * p ** 2)
+    env = np.minimum(1, x / min(.8, d * .3)) * np.minimum(1, (d - x) / min(1.0, d * .3)) * (1 + 1.6 * rise * p ** 2)
+    return out * env[:, None] * v * .9
+
+def sfx_punch(v=1.0, d=2.2, seed=0):
+    """An impact you feel in the chest, not a doom: a short thump, a whump of air, a crack, in a real room."""
+    x = tt(d)
+    thump = np.sin(2 * np.pi * np.cumsum(50 + 60 * np.exp(-x / 0.03)) / SR) * np.exp(-x / 0.16)
+    whump = lp(pink(d, seed + 1), 1100, 2) * np.exp(-x / 0.07) * 2.2
+    crack = bp(cine_noise(d, seed + 2), 2200, 9000) * np.exp(-x / 0.006) * .8 + bp(cine_noise(d, seed + 3), 700, 3200) * np.exp(-x / 0.025) * .7
+    y = np.tanh(1.3 * (thump * .9 + whump + crack)) * np.minimum(1, x / 0.0015)     # (a soft front: sharp ones overshoot the encoder)
+    return reverb(y, IR_HALL, 0.32) * v
+
+def sfx_glitter(d, v=1.0, density=150, shape="even", seed=0):
+    """Light as sound: crystalline grains, tiny resonant ticks high up, scattered across the stereo field,
+    never on a note."""
+    r = np.random.default_rng(seed + 71); n = int(density * d)
+    out = np.zeros((at(d) + at(0.1), 2))
+    for _ in range(n):
+        u = r.random()
+        t0 = (u ** .45 if shape == "rise" else u ** 2.2 if shape == "burst" else u) * d
+        L = int(r.uniform(.002, .012) * SR); g = np.arange(L) / SR
+        fc = r.uniform(4500, 10000)
+        grain = bp(r.standard_normal(L + 96), fc * .85, fc * 1.12, 2)[96:] * np.exp(-g / (L / SR * .25)) * np.minimum(1, g / .0004)
+        amp = r.uniform(.15, 1.0) * ((t0 / d) ** .8 if shape == "rise" else 1.0)
+        pan = r.uniform(-1, 1); i = at(t0)
+        seg = np.stack([grain * np.cos((pan + 1) * np.pi / 4), grain * np.sin((pan + 1) * np.pi / 4)], 1) * amp
+        out[i:i + len(seg)] += seg[: len(out) - i]
+    return reverb(out, IR_ROOM, .5) * v * 1.25
+
+def sfx_flap(d, v=1.0, seed=0):
+    """Type decoding: the clatter of a split-flap board, quick at first, slowing, with a firmer clack as it settles."""
+    r = np.random.default_rng(seed + 81)
+    out = np.zeros((at(d) + at(0.2), 2)); t0 = 0.0
+    while t0 < d:
+        p = t0 / d; L = int(.03 * SR); g = np.arange(L) / SR
+        hit = hp(r.standard_normal(L), 1500) * np.exp(-g / .0012) * .8
+        body = bp(r.standard_normal(L + 64), r.uniform(1700, 3200), 4200, 2)[64:] * np.exp(-g / .012)
+        low = np.sin(2 * np.pi * r.uniform(260, 380) * g) * np.exp(-g / .008) * .4
+        c = (hit + body + low) * r.uniform(.45, 1.0)
+        pan = r.uniform(-.5, .5); i = at(t0)
+        out[i:i + L, 0] += c * np.cos((pan + 1) * np.pi / 4); out[i:i + L, 1] += c * np.sin((pan + 1) * np.pi / 4)
+        t0 += r.uniform(.016, .028) * (1 + 1.8 * p * p)
+    i = at(d); L = int(.06 * SR); g = np.arange(L) / SR
+    clack = (hp(r.standard_normal(L), 1000) * np.exp(-g / .002) + bp(r.standard_normal(L + 64), 1200, 2600, 2)[64:] * np.exp(-g / .02)) * 1.3
+    out[i:i + L] += clack[:, None]
+    return reverb(out, IR_ROOM, .35) * v * .5
 
 def sfx_swell(d, v=1.0, seed=0):
     """A reverse cymbal: bright noise swelling into the hit and stopping dead on it."""
@@ -1875,48 +1917,13 @@ def sfx_swell(d, v=1.0, seed=0):
 def sfx_suck(d, v=1.0, seed=0):
     """A breath in: a hit's own tail in the big hall, played backwards, so the hall gathers into the moment."""
     L = 3.0; x = tt(L)
-    burst = (lp(cine_noise(L, seed + 21), 2500) * np.exp(-x / 0.06) + np.sin(2 * np.pi * 70 * x) * np.exp(-x / 0.15) * .6)
+    burst = lp(cine_noise(L, seed + 21), 3500) * np.exp(-x / 0.05)
     tail = reverb(burst, IR_BIG, 1.0)[::-1]
     return tail[-at(d):] * v * .6
 
-def sfx_subdrop(d=1.8, v=1.0):
-    """A sub falling away under the hit."""
-    x = tt(d); p = x / d
-    return np.sin(2 * np.pi * np.cumsum(72 - 44 * p ** .6) / SR) * np.exp(-p * 2.2) * np.minimum(1, x / 0.01) * v
-
-def sfx_drone(d, v=1.0, rise=0.0, seed=0):
-    """The bed: low D and its fifth, slowly beating, under a wind that moves; with rise, it opens and climbs."""
-    x = tt(d); p = x / d
-    out = np.zeros((len(x), 2))
-    for c in range(2):
-        tone = (np.sin(2 * np.pi * 36.71 * x) * .9 + np.sin(2 * np.pi * (73.42 + .21 + .1 * c) * x) * .5
-                + sweep_lp(blsaw(110.0 * 2 ** ((.07 - .14 * c) / 12), d), 260 + 900 * rise * p ** 2, q=.8) * .35)
-        wind_cut = (420 + 380 * np.sin(2 * np.pi * (.11 + .03 * c) * x + c)) * (1 + 2.5 * rise * p ** 2)
-        wind = sweep_lp(bp(cine_noise(d, seed + 31 + c), 120, 3000), wind_cut, q=2.2) * (0.7 + 0.3 * np.sin(2 * np.pi * .23 * x + 2 * c))
-        air = hp(cine_noise(d, seed + 41 + c), 5000) * .04 * (1 + 3 * rise * p ** 2)
-        out[:, c] = tone * .55 + wind * .9 + air
-    env = np.minimum(1, x / min(.9, d * .3)) * np.minimum(1, (d - x) / min(1.0, d * .3)) * (1 + rise * 1.4 * p ** 2)
-    return out * env[:, None] * v * .5
-
-def sfx_sparkle(d, v=1.0, density=60, shape="even", seed=0):
-    """Light as sound: glints, high and quick, scattered across the stereo field on the D minor pentatonic."""
-    r = np.random.default_rng(seed + 51); n = int(density * d)
-    out = np.zeros((at(d) + at(0.3), 2)); scale = [74, 77, 79, 81, 84]
-    for _ in range(n):
-        u = r.random()
-        t0 = (u ** .45 if shape == "rise" else u ** 2.2 if shape == "burst" else u) * d
-        m = scale[r.integers(0, 5)] + 12 * r.integers(1, 3)
-        L = r.uniform(.03, .14); g = tt(L)
-        ping = np.sin(2 * np.pi * mtof(m) * (1 + r.uniform(-.004, .004)) * g) * np.exp(-g / (L * .3)) * np.minimum(1, g / .001)
-        amp = r.uniform(.2, 1.0) * ((t0 / d) ** .8 if shape == "rise" else 1.0)
-        pan = r.uniform(-1, 1); i = at(t0)
-        seg = np.stack([ping * np.cos((pan + 1) * np.pi / 4), ping * np.sin((pan + 1) * np.pi / 4)], 1) * amp
-        out[i:i + len(seg)] += seg[: len(out) - i]
-    return reverb(out, IR_HALL, .45) * v * .25
-
 def sfx_crackle(d, v=1.0, density=90, seed=0):
     """Embers: dry crackle over a low breath of flame and a hiss."""
-    r = np.random.default_rng(seed + 61); x = tt(d); p = x / d
+    r = np.random.default_rng(seed + 61); x = tt(d)
     out = np.zeros((len(x), 2))
     for _ in range(int(density * d)):
         L = int(r.uniform(.0008, .004) * SR); i = int(r.random() * (len(x) - L))
@@ -1924,17 +1931,17 @@ def sfx_crackle(d, v=1.0, density=90, seed=0):
         pan = r.uniform(-.9, .9)
         out[i:i + L, 0] += click * np.cos((pan + 1) * np.pi / 4); out[i:i + L, 1] += click * np.sin((pan + 1) * np.pi / 4)
     for c in range(2):
-        out[:, c] += lp(cine_noise(d, seed + 71 + c), 260) * .35 * (0.7 + 0.3 * np.sin(2 * np.pi * .9 * x + c))
+        out[:, c] += lp(pink(d, seed + 71 + c), 500) * .3 * (0.6 + 0.4 * drift(d, 2, seed + 75 + c))
         out[:, c] += hp(cine_noise(d, seed + 81 + c), 6500) * .05
     env = np.minimum(1, x / .08) * np.minimum(1, (d - x) / .35)
     return reverb(out * env[:, None], IR_ROOM, .25) * v
 
 def sfx_ignite(v=1.0, seed=0):
-    """A stroke catching fire: a quick rush of flame up the spectrum and a low thump."""
+    """A stroke catching fire: a quick rush of flame up the spectrum and a soft thump."""
     d = .55; x = tt(d); p = np.clip(x / .2, 0, 1)
-    rush = sweep_lp(hp(cine_noise(d, seed + 91), 250), 400 + 6000 * p ** 1.5, q=1.6) * np.minimum(1, x / .01) * np.exp(-np.maximum(x - .18, 0) / .08)
-    thump = np.sin(2 * np.pi * np.cumsum(58 + 80 * np.exp(-x / .03)) / SR) * np.exp(-x / .12)
-    return reverb(np.tanh(1.4 * (rush * .6 + thump * .7)), IR_ROOM, .3) * v
+    rush = sweep_lp(hp(pink(d, seed + 91), 250), 400 + 6000 * p ** 1.5, q=.9) * np.minimum(1, x / .01) * np.exp(-np.maximum(x - .18, 0) / .08)
+    thump = lp(pink(d, seed + 93), 300) * np.exp(-x / .05) * 1.5
+    return reverb(np.tanh(1.4 * (rush * 1.2 + thump * .6)), IR_ROOM, .3) * v
 
 
 # ------------------------------------------------------------------ reel: four directions
@@ -2476,20 +2483,18 @@ def build_sfx():
             add(out, sfx_hum(c["d"], v), t, 0.3)
         elif k == "glitch":
             add(out, sfx_glitch(c["d"]), t, 0.3)
-        elif k == "boom":
-            add(out, sfx_boom(v, c.get("d", 4.5), seed=int(t * 100)), t - .002, 0.55)
-        elif k == "braam":
-            add(out, sfx_braam(v, c.get("d", 3.4)), t, 0.5)
+        elif k == "air":
+            add(out, sfx_air(c["d"], v, c.get("rise", 0.0), seed=int(t * 100)), t, 0.45)
+        elif k == "punch":
+            add(out, sfx_punch(v, c.get("d", 2.2), seed=int(t * 100)), t - .002, 0.55)
+        elif k == "glitter":
+            add(out, sfx_glitter(c["d"], v, c.get("density", 150), c.get("shape", "even"), seed=int(t * 100)), t, 0.4)
+        elif k == "flap":
+            add(out, sfx_flap(c["d"], v, seed=int(t * 100)), t, 0.4)
         elif k == "swell":
             d = c["d"]; add(out, sfx_swell(d, v, seed=int(t * 100)), t - d, 0.3)
         elif k == "suck":
             d = c["d"]; add(out, sfx_suck(d, v, seed=int(t * 100)), t - d, 0.5)
-        elif k == "subdrop":
-            add(out, sfx_subdrop(c.get("d", 1.8), v), t, 0.55)
-        elif k == "drone":
-            add(out, sfx_drone(c["d"], v, c.get("rise", 0.0), seed=int(t * 100)), t, 0.45)
-        elif k == "sparkle":
-            add(out, sfx_sparkle(c["d"], v, c.get("density", 60), c.get("shape", "even"), seed=int(t * 100)), t, 0.4)
         elif k == "crackle":
             add(out, sfx_crackle(c["d"], v, c.get("density", 90), seed=int(t * 100)), t, 0.4)
         elif k == "ignite":
@@ -2587,7 +2592,7 @@ def main():
     for _ in range(3):
         loud = meter.integrated_loudness(mix)
         mix = mix * 10 ** ((target - loud) / 20)
-        mix = limiter(mix, -2.0)
+        mix = limiter(mix, getattr(F, "CEILING", -2.0))
     loud = meter.integrated_loudness(mix)
     tp = 20 * np.log10(np.abs(signal.resample_poly(mix, 4, 1, axis=0)).max())
     sf.write(os.path.join(BUILD, "mix.wav"), mix, SR, subtype="PCM_24")

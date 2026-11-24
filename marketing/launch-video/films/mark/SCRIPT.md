@@ -66,31 +66,32 @@ same pipeline and in every format:
 
 ## 5. Sound
 
-**No music.** The score is sound design, made in `audio.py` from the film's
-own cues (its cinematic cues: `drone`, `swell`, `suck`, `boom`, `braam`,
-`subdrop`, `sparkle`, `crackle`, `ignite`), full range and in a long dark
-hall, with no beat and no tune. The cuts still land on a 120.5 BPM grid.
-(The Lyria takes the first cut used are kept in `music/`, unused.)
+**No music, and nothing synthesised on a note.** The sound is designed in
+`audio.py` from the film's own cues (its cinematic cues: `air`, `whoosh`,
+`swell`, `suck`, `punch`, `glitter`, `crackle`, `ignite`, `flap`), all of
+it noise shaped into things, in a natural room. The cuts still land on a
+120.5 BPM grid. (The Lyria takes the first cut used are kept in `music/`,
+unused.)
 
-- **The gathering**: a low drone on D that opens and climbs, glints of light
-  as the motes stream in, a reverse swell into the point, and a small
-  impact and shimmer as it becomes the square.
+- **The gathering**: air moving in a large space, building and brightening,
+  crystalline glitter as the motes stream in, a reverse swell into the
+  point, and a small hit as it becomes the square.
 - **The breath**: the hall drawn in backwards, so the room gathers into the
-  moment, then the square fires: a deep impact with a sub that drops away,
-  a low braam, a rush of air, a burst of glints and the crackle of embers
-  as the n sets. The drone settles under it.
+  moment, then the square fires: a short punch (a thump, a whump of air and
+  a crack), a rush of air, a burst of glitter and the crackle of embers as
+  the n sets. The air settles under it.
 - **The name**: a rush of air as the camera pulls out, and each stroke
-  catching fire on the sixteenths, a flare up the spectrum and a thump.
-- **The line**: a short swell, a lower hit and a softer braam, data
-  chatter as the letters decode and a shimmer as they settle; a few glints
-  under the hold.
-- **The burn**: crackle, the drone climbing, a stream of air and a reverse
+  catching fire on the sixteenths, a flare of flame up the spectrum.
+- **The line**: a short swell and a lighter hit, then the clatter of a
+  split-flap board as the letters decode, slowing and clacking as they
+  settle; a few glints under the hold.
+- **The burn**: crackle, the air building, a stream of air and a reverse
   swell as it spirals into the square, the hall drawn in again, then the
-  biggest hit, braam and sub drop as it goes off, ringing out under the
-  full stop and the address.
+  biggest punch and a burst of glitter as it goes off, ringing out in the
+  room under the full stop and the address.
 
-**Mix**: −14.5 LUFS integrated, a little under the other reels to leave
-the hits their headroom; true peak below −1 dBTP on the delivered AAC.
+**Mix**: −14.5 LUFS integrated; true peak below −1 dBTP on the delivered
+AAC.
 
 ## 6. Delivery
 

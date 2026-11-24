@@ -208,54 +208,49 @@ function buildReel(s) {
     return G.subarray(0, n * 20)
   }
 
-  /* ---------- the sound: no music, a score of sound design ---------- */
+  /* ---------- the sound: no music, sound design from air, light and fire ---------- */
   const T = TL.duration
-  // the dark, gathering: a drone that opens and climbs, glints as the motes stream in, a reverse swell into the point
-  cue('drone', 0, { d: tCollapse + .15, v: .9, rise: 1 })
-  cue('sparkle', 0, { d: tCollapse, v: .7, density: 70, shape: 'rise' })
-  cue('whoosh', 1.2, { d: 1, v: .4 })
-  cue('swell', tCollapse, { d: 1.5, v: .55 })
-  cue('boom', tCollapse, { v: .35, d: 1.6 })                // the point pinches into the square
-  cue('shimmer', tCollapse + .02, { d: .8, v: .25 })
+  // the dark, gathering: air moving and building, glitter as the motes stream in, a reverse swell into the point
+  cue('air', 0, { d: tCollapse + .15, v: 1.2, rise: 1 })
+  cue('glitter', 0, { d: tCollapse, v: .8, density: 160, shape: 'rise' })
+  cue('whoosh', 1.2, { d: 1, v: .45 })
+  cue('swell', tCollapse, { d: 1.4, v: .5 })
+  cue('punch', tCollapse, { v: .35, d: 1.4 })               // the point pinches into the square
+  cue('glitter', tCollapse, { d: .4, v: .4, density: 120, shape: 'burst' })
   // the breath: the hall drawn in backwards, then the square fires
   cue('suck', tBurst, { d: tBurst - tCollapse - .02, v: .9 })
-  cue('boom', tBurst, { v: 1, d: 5 })
-  cue('braam', tBurst + .01, { v: .85, d: 3.6 })
-  cue('subdrop', tBurst, { d: 2, v: .8 })
-  cue('whoosh', tBurst + .06, { d: .5, v: .6 })
-  cue('sparkle', tBurst + .02, { d: 1.6, v: .9, density: 140, shape: 'burst' })
-  cue('crackle', tBurst + .12, { d: 1.9, v: .55, density: 110 })   // the n setting, shedding embers
-  cue('drone', tBurst + .1, { d: tBurn - tBurst + 1.3, v: .6 })     // the bed under the n and the name, into the burn
-  cue('shimmer', tSheenN, { d: 1.3, v: .28 })
+  cue('punch', tBurst, { v: .6, d: 2.4 })
+  cue('whoosh', tBurst + .06, { d: .5, v: .65 })
+  cue('glitter', tBurst + .02, { d: 1.4, v: .7, density: 320, shape: 'burst' })
+  cue('crackle', tBurst + .12, { d: 1.9, v: .6, density: 110 })   // the n setting, shedding embers
+  cue('air', tBurst + .1, { d: tBurn - tBurst + 1.3, v: .85 })     // the bed under the n and the name, into the burn
+  cue('glitter', tSheenN, { d: .9, v: .35, density: 60 })
   // the name: a rush of air as the camera pulls out, each stroke catching fire on the sixteenths
   cue('whoosh', tName + .12, { d: .7, v: .45 })
   tAbl.forEach((ta, i) => cue('ignite', ta, { v: .55 + .05 * i }))
-  cue('sparkle', tName, { d: 1.2, v: .5, density: 70, shape: 'burst' })
+  cue('glitter', tName, { d: 1.1, v: .5, density: 130, shape: 'burst' })
   cue('whoosh', tAgency + .1, { d: .55, v: .25 })            // agency falling into focus
-  cue('sparkle', tAgency, { d: .6, v: .25, density: 30 })
-  // the line: a short swell into it, a low hit, the letters decoding, and a shimmer as they settle
-  cue('swell', tTag, { d: .45, v: .4 })
-  cue('boom', tTag, { v: .45, d: 3 })
-  cue('braam', tTag + .01, { v: .32, d: 2.6 })
-  cue('glitch', tTag + .3, { d: TAG.length * .036 + .05, v: .5 })
-  cue('shimmer', tTag + .3 + TAG.length * .036, { d: 1.8, v: .35 })
-  cue('shimmer', tSheenL, { d: 1.4, v: .22 })
-  cue('sparkle', tTag + 1.4, { d: tBurn - tTag - 1.2, v: .22, density: 7 })   // a few glints under the hold
-  // the burn: crackle, a rising swell and the drone climbing as it all spirals into the square; a breath in
-  cue('crackle', tBurn, { d: tPinch - tBurn + .2, v: .65, density: 150 })
-  cue('drone', tBurn - .1, { d: tHit - tBurn + .2, v: .55, rise: 1 })
-  cue('whoosh', tB0 + .5, { d: 1.3, v: .45 })
-  cue('sparkle', tBurn, { d: tHit - tBurn, v: .55, density: 90, shape: 'rise' })
-  cue('swell', tPinch, { d: 1.4, v: .55 })
+  cue('glitter', tAgency, { d: .6, v: .3, density: 50 })
+  // the line: a short swell into it, a lighter hit, the board clattering as the letters decode
+  cue('swell', tTag, { d: .45, v: .35 })
+  cue('punch', tTag, { v: .3, d: 1.6 })
+  cue('flap', tTag + .28, { d: TAG.length * .036 + .04, v: .8 })
+  cue('glitter', tTag + .3 + TAG.length * .036, { d: .8, v: .4, density: 70 })
+  cue('glitter', tSheenL, { d: 1, v: .3, density: 50 })
+  cue('glitter', tTag + 1.4, { d: tBurn - tTag - 1.2, v: .25, density: 12 })   // a few glints under the hold
+  // the burn: crackle, the air building and a stream of air as it all spirals into the square; a breath in
+  cue('crackle', tBurn, { d: tPinch - tBurn + .2, v: .7, density: 150 })
+  cue('air', tBurn - .1, { d: tHit - tBurn + .2, v: .8, rise: 1 })
+  cue('whoosh', tB0 + .5, { d: 1.3, v: .5 })
+  cue('glitter', tBurn, { d: tHit - tBurn, v: .6, density: 180, shape: 'rise' })
+  cue('swell', tPinch, { d: 1.4, v: .5 })
   cue('suck', tHit, { d: tHit - tPinch, v: .9 })
-  // and it goes off, ringing out under the full stop and the address
-  cue('boom', tHit, { v: 1, d: 5.5 })
-  cue('braam', tHit + .01, { v: .9, d: 4 })
-  cue('subdrop', tHit, { d: 2.2, v: .8 })
-  cue('shimmer', tHit + .03, { d: 3, v: .5 })
-  cue('sparkle', tHit + .02, { d: 2, v: .8, density: 120, shape: 'burst' })
-  cue('drone', tHit + .2, { d: T - tHit - .2, v: .4 })
-  cue('sparkle', tUrl - .4, { d: .7, v: .25, density: 25 })
+  // and it goes off, ringing out in the room under the full stop and the address
+  cue('punch', tHit, { v: .65, d: 2.6 })
+  cue('whoosh', tHit + .05, { d: .6, v: .55 })
+  cue('glitter', tHit + .02, { d: 1.8, v: .65, density: 280, shape: 'burst' })
+  cue('air', tHit + .2, { d: T - tHit - .2, v: .6 })
+  cue('glitter', tUrl - .4, { d: .7, v: .3, density: 45 })
 
   /* ---------- the frame ---------- */
   const shock = (c, at, t, size, str, dur) => {
