@@ -2,6 +2,14 @@
 
 The n.abl icon is the main brand. HPE appears on the job-title line. The HTML is built for email: tables, inline styles, Arial and fixed image sizes.
 
+## The quick way
+
+Once the site is deployed, open **https://nabl.agency/email-signature** on a computer. Click **Copy signature**, then paste into Outlook.com or Gmail; the steps are on that page.
+
+The page and its five images are in `public/email-signature/`, so they go live with the next deploy of `main`. The page is marked `noindex` and isn't linked from the site. The build rewrites that folder, so edit `build.cjs` rather than those files.
+
+The rest of this file covers the details.
+
 | File | What it is |
 |---|---|
 | `signature.html` | The email-ready signature |

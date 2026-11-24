@@ -188,6 +188,111 @@ function signatureHtml(base) {
 </table>`
 }
 
+// ---------- The hosted copy page: nabl.agency/email-signature ----------
+// Lives in the site's public/ folder, so the next deploy of main publishes
+// it together with the images it uses. The site's CSP is script-src 'self',
+// so the copy logic is a separate file rather than an inline script.
+function copyPageHtml(sig) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Email Signature</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#F4EFE6; color:#14110E; font:16px/1.55 system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:40px 16px 56px; }
+  h1 { font-size:24px; line-height:1.25; margin:0 0 6px; }
+  h2 { font-size:16px; margin:0 0 8px; }
+  p { margin:0 0 16px; color:#5A5249; }
+  .card { background:#FFFFFF; border:1px solid #E2D9CA; border-radius:12px; padding:28px 24px; overflow-x:auto; }
+  .actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:20px 0 32px; }
+  button { font:inherit; font-weight:600; font-size:17px; padding:12px 22px; border-radius:8px; border:0; background:#E9AC57; color:#24170A; cursor:pointer; }
+  button:focus-visible { outline:3px solid #B87718; outline-offset:2px; }
+  #status { color:#14110E; font-weight:600; }
+  .steps { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:640px) { .steps { grid-template-columns:1fr; } }
+  .steps section { background:#FFFFFF; border:1px solid #E2D9CA; border-radius:12px; padding:18px 20px; }
+  ol { margin:0; padding-left:20px; } li { margin:0 0 6px; }
+  .note { font-size:14px; margin-top:24px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Email signature</h1>
+  <p>Click <strong>Copy signature</strong>, then paste it into your email settings.</p>
+  <div class="card"><div id="sig">${sig}</div></div>
+  <div class="actions">
+    <button type="button" id="copy">Copy signature</button>
+    <span id="status" role="status" aria-live="polite"></span>
+  </div>
+  <div class="steps">
+    <section>
+      <h2>Outlook.com / Hotmail</h2>
+      <ol>
+        <li>Settings (gear icon) → <strong>Account</strong> → <strong>Signatures</strong></li>
+        <li>Name it, click in the box, press <strong>Ctrl+V</strong> (<strong>Cmd+V</strong> on Mac)</li>
+        <li>Choose it as the default for new messages and replies</li>
+        <li>Click <strong>Save</strong></li>
+      </ol>
+    </section>
+    <section>
+      <h2>Gmail</h2>
+      <ol>
+        <li>Settings (gear icon) → <strong>See all settings</strong></li>
+        <li>General → <strong>Signature</strong> → <strong>Create new</strong></li>
+        <li>Paste into the box and set it as the default</li>
+        <li>Scroll down and click <strong>Save Changes</strong></li>
+      </ol>
+    </section>
+  </div>
+  <p class="note">Do this on a computer. The Outlook and Gmail phone apps only take plain-text signatures.</p>
+</main>
+<script src="copy.js"></script>
+</body>
+</html>
+`
+}
+
+const COPY_JS = `/* Copies the signature as rich HTML so it pastes with its layout and images. */
+(function () {
+  var btn = document.getElementById('copy')
+  var status = document.getElementById('status')
+  var sig = document.getElementById('sig')
+  function say(t) { status.textContent = t }
+  function selectSig() {
+    var r = document.createRange(); r.selectNodeContents(sig)
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r)
+  }
+  btn.addEventListener('click', function () {
+    var html = sig.innerHTML
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([sig.innerText], { type: 'text/plain' })
+      })]).then(function () {
+        say('Copied. Now paste it into your signature settings.')
+      }, fallback)
+    } else {
+      fallback()
+    }
+  })
+  function fallback() {
+    selectSig()
+    var ok = false
+    try { ok = document.execCommand('copy') } catch (e) {}
+    say(ok ? 'Copied. Now paste it into your signature settings.'
+           : 'Selected. Press Ctrl+C (Cmd+C on Mac) to copy it.')
+  }
+})()
+`
+
+// The images the signature actually uses, published next to the page.
+const SIGNATURE_IMAGES = ['nabl-icon.png', 'hpe-logo-email.png', ...NABL_SOCIAL.map(s => `social-${s.key}.png`)]
+
 function previewHtml(sig) {
   return `<!doctype html>
 <html lang="en">
@@ -291,4 +396,14 @@ function previewHtml(sig) {
   fs.writeFileSync(path.join(HERE, 'signature.html'), sig + '\n')
   fs.writeFileSync(path.join(HERE, 'preview.html'), previewHtml(sig))
   console.log('  signature.html, preview.html')
+
+  // Only publish to the site when the images are meant to live there.
+  if (IMAGE_BASE_URL === 'https://nabl.agency/email-signature/') {
+    const SITE = path.join(ROOT, 'public', 'email-signature')
+    fs.mkdirSync(SITE, { recursive: true })
+    fs.writeFileSync(path.join(SITE, 'index.html'), copyPageHtml(sig))
+    fs.writeFileSync(path.join(SITE, 'copy.js'), COPY_JS)
+    for (const f of SIGNATURE_IMAGES) fs.copyFileSync(path.join(PNG, f), path.join(SITE, f))
+    console.log(`  public/email-signature/: index.html, copy.js, ${SIGNATURE_IMAGES.length} images`)
+  }
 })()
