@@ -251,7 +251,7 @@ function copyPageHtml(sig) {
   </div>
   <p class="note">Do this on a computer. The Outlook and Gmail phone apps only take plain-text signatures.</p>
 </main>
-<script src="copy.js"></script>
+<script src="/email-signature/copy.js"></script>
 </body>
 </html>
 `
